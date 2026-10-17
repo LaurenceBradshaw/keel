@@ -1,0 +1,163 @@
+// M9.6: `a op b` and `-a` on a user type call the left operand's operator, with the right as its
+// argument. The right operand may be any one type and the result any type; a literal on the right
+// adopts the parameter's type, and a string literal on the left adopts the right's through
+// `from<str>`. Precedence is the built-in operators'. `label` owns its bytes, so each temporary
+// must be dropped once. Exits with the failing check.
+struct vec
+{
+    f64 x;
+    f64 y;
+
+    vec operator+( const ref vec other ) const { return vec { x + other.x, y + other.y }; }
+    vec operator-( const ref vec other ) const { return vec { x - other.x, y - other.y }; }
+    vec operator*( f64 by ) const { return vec { x * by, y * by }; }
+    vec operator/( f64 by ) const { return vec { x / by, y / by }; }
+    vec operator-() const { return vec { 0.0 - x, 0.0 - y }; }
+    bool operator==( const ref vec other ) const { return x == other.x && y == other.y; }
+};
+
+struct bits
+{
+    u8 v;
+
+    bits operator&( bits other ) const { return bits { v & other.v }; }
+    bits operator|( bits other ) const { return bits { v | other.v }; }
+    bits operator^( bits other ) const { return bits { v ^ other.v }; }
+    bits operator~() const { return bits { ~v }; }
+};
+
+struct hours
+{
+    i64 h;
+
+    hours operator%( i64 day ) const { return hours { h % day }; }
+};
+
+struct seconds
+{
+    f64 s;
+};
+
+struct speed
+{
+    f64 per_second;
+};
+
+struct meters
+{
+    f64 m;
+
+    speed operator/( const ref seconds t ) const { return speed { m / t.s }; }
+};
+
+class pair<T> where T : numeric
+{
+    pair( T l, T r )
+    {
+        left  = l;
+        right = r;
+    }
+
+    public pair<T> operator+( const ref pair<T> other ) const { return pair<T>( left + other.left, right + other.right ); }
+
+    public T left;
+    public T right;
+};
+
+class label implements from<str>
+{
+    u8[*] bytes;
+    u64   length;
+
+    public label( u64 n )
+    {
+        unsafe { bytes = alloc<u8>( n + 1 ); }
+        length = n;
+    }
+
+    ~label() { unsafe { free( bytes ); } }
+
+    public static label from( str text ) { return label( text.size ); }
+    public u64 size() const { return length; }
+    public label operator+( const ref label other ) const { return label( length + other.length ); }
+};
+
+vec middle( const ref vec a, const ref vec b )
+{
+    return ( a + b ) / 2.0;
+}
+
+i32 main()
+{
+    vec a = vec { 1.0, 2.0 };
+    vec b = vec { 3.0, 4.0 };
+
+    if( !( a + b == vec { 4.0, 6.0 } ) || !( b - a == vec { 2.0, 2.0 } ) )
+    {
+        return 1;
+    }
+
+    if( !( a * 2 == vec { 2.0, 4.0 } ) || !( b / 2.0 == vec { 1.5, 2.0 } ) )
+    {
+        return 2;
+    }
+
+    if( !( -a == vec { -1.0, -2.0 } ) || !( b - -a == vec { 4.0, 6.0 } ) )
+    {
+        return 3;
+    }
+
+    // `*` before `+`; parentheses first; a chain calls on each temporary in turn.
+    if( !( a + b * 2.0 == vec { 7.0, 10.0 } ) || !( ( a + b ) * 2.0 == vec { 8.0, 12.0 } ) || !( a + b + a == vec { 5.0, 8.0 } ) )
+    {
+        return 4;
+    }
+
+    if( !( middle( a, b ) == vec { 2.0, 3.0 } ) || !( vec { 1.0, 1.0 } + a == vec { 2.0, 3.0 } ) )
+    {
+        return 5;
+    }
+
+    bits m = bits { 12 };
+    bits n = bits { 10 };
+
+    if( ( m & n ).v != 8 || ( m | n ).v != 14 || ( m ^ n ).v != 6 || ( ~m ).v != 243 )
+    {
+        return 6;
+    }
+
+    if( ( hours { 50 } % 24 ).h != 2 )
+    {
+        return 7;
+    }
+
+    speed s = meters { 100.0 } / seconds { 8.0 };
+
+    if( s.per_second != 12.5 )
+    {
+        return 8;
+    }
+
+    pair<i32> p = pair<i32>( 1, 2 ) + pair<i32>( 10, 20 );
+    pair<f64> q = pair<f64>( 0.5, 1.0 ) + pair<f64>( 0.5, 1.0 );
+
+    if( p.left != 11 || p.right != 22 || q.left != 1.0 || q.right != 2.0 )
+    {
+        return 9;
+    }
+
+    label l = label( 3 );
+    label joined = l + label( 4 ) + l;
+
+    if( joined.size() != 10 || l.size() != 3 )
+    {
+        return 10;
+    }
+
+    if( ( "ab" + l ).size() != 5 || ( l + "abcd" ).size() != 7 )
+    {
+        return 11;
+    }
+
+    return 0;
+}

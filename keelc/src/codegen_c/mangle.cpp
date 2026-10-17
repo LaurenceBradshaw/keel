@@ -3,6 +3,7 @@
 
 #include "codegen_c/mangle.h"
 #include <fmt/format.h>
+#include <utility>
 
 namespace keel
 {
@@ -12,19 +13,31 @@ namespace
 
 std::string c_name( std::string_view name )
 {
-    if( name == "operator==" )
-    {
-        return "operator_eq";
-    }
+    static constexpr std::pair<std::string_view, std::string_view> k_operators[] = {
+        { "operator==", "operator_eq" },
+        { "operator[]", "operator_index" },
+        { "operator<=>", "operator_compare" },
+        { "operator+", "operator_add" },
+        { "operator-", "operator_sub" },
+        { "operator*", "operator_mul" },
+        { "operator/", "operator_div" },
+        { "operator%", "operator_rem" },
+        { "operator&", "operator_and" },
+        { "operator|", "operator_or" },
+        { "operator^", "operator_xor" },
+        { "operator~", "operator_not" },
+    };
 
-    if( name == "operator[]" )
-    {
-        return "operator_index";
-    }
+    // A compound assignment is its base's name with `_assign`: `operator+=` is `operator_add_assign`.
+    const bool             compound = name.size() > 1 && name.back() == '=' && name != "operator==";
+    const std::string_view base     = compound ? name.substr( 0, name.size() - 1 ) : name;
 
-    if( name == "operator<=>" )
+    for( const auto& [spelling, mangled] : k_operators )
     {
-        return "operator_compare";
+        if( base == spelling )
+        {
+            return compound ? fmt::format( "{}_assign", mangled ) : std::string( mangled );
+        }
     }
 
     return std::string( name );
@@ -326,8 +339,8 @@ std::string mangle_constructor(
 
 std::string mangle_local( std::string_view name, u32 declaration )
 {
-    // kl_<name>_<node id>
-    return fmt::format( "kl_{}_{}", name, declaration );
+    // kl_<name>_<node id>; a vtable slot may be an operator's.
+    return fmt::format( "kl_{}_{}", c_name( name ), declaration );
 }
 
 std::string
@@ -531,7 +544,7 @@ TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
 // The property the length prefixes exist for. The previous scheme spelled a type's name with `*`
 // rewritten to `p`, and said in its own comment that it was safe only while every type name was a
 // plain word - a generic aggregate ends that, and a struct may be called anything L15 allows.
-// `operator==`, `operator[]` and `operator<=>` are not C identifiers, so the punctuation is spelled out.
+// An operator's name is not a C identifier, so the punctuation is spelled out.
 TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][operator]" )
 {
     Type_table table;
@@ -545,6 +558,7 @@ TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][oper
 
     REQUIRE( mangle_function( "", "operator[]", index, table, {}, box ) == "kl__operator_index__S3Box_3u64" );
     REQUIRE( mangle_function( "", "operator<=>", other, table, {}, box ) == "kl__operator_compare__S3Box_3Box" );
+    REQUIRE( mangle_function( "", "operator+=", other, table, {}, box ) == "kl__operator_add_assign__S3Box_3Box" );
 }
 
 TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )

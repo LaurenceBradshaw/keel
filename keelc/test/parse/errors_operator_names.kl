@@ -1,6 +1,6 @@
-// `operator==`, `operator[]` and `operator<=>` are the operators a type may declare so far: `!=`
-// comes from `==` and `<` from `<=>`, `&&` and `||` never can be, `[` needs its `]`, and an operator
-// outside a type has no left operand.
+// The operator names a type may not declare: `!=` comes from `==` and `<` from `<=>`, `&&` and
+// `||` never can be, `!` not yet, shifts, `++` and `--` are kept for numbers, `[` needs its `]`, and
+// an operator outside a type has no left operand.
 struct a
 {
     i32 x;
@@ -20,9 +20,26 @@ struct a
         return false;
     }
 
-    a operator+( const ref a other ) const
+    bool operator!() const
     {
-        return other;
+        return false;
+    }
+
+    a operator<<( u64 by ) const
+    {
+        return a { x };
+    }
+
+    void operator>>=( u64 by )
+    {
+    }
+
+    void operator++()
+    {
+    }
+
+    void operator--()
+    {
     }
 
     bool operator( const ref a other ) const

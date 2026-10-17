@@ -1,0 +1,160 @@
+// M9.6: `a op= b` on a user type calls its `operator op=` when it declares one, in place, and
+// otherwise is `a = a op b`. Either way `a`'s place is evaluated once. `label` owns its bytes, so
+// the fallback must drop the old value as it stores the new. Exits with the failing check.
+struct tally
+{
+    i32 total;
+    i32 in_place;
+
+    tally operator+( i32 n ) const { return tally { total + n, in_place }; }
+    void operator+=( i32 n )
+    {
+        total    += n;
+        in_place += 1;
+    }
+};
+
+struct only_compound
+{
+    i32 x;
+
+    void operator*=( i32 by ) { x *= by; }
+    void operator^=( only_compound other ) { x ^= other.x; }
+};
+
+struct only_binary
+{
+    i32 x;
+
+    only_binary operator-( i32 n ) const { return only_binary { x - n }; }
+    only_binary operator&( only_binary other ) const { return only_binary { x & other.x }; }
+};
+
+struct mixed
+{
+    f64 x;
+
+    mixed operator-( const ref mixed other ) const { return mixed { x - other.x }; }
+    void operator-=( f64 n ) { x -= n; }
+};
+
+class shelf
+{
+    shelf( only_binary first, only_binary second )
+    {
+        unsafe
+        {
+            cells = alloc<only_binary>( 2 );
+            cells[0] = first;
+            cells[1] = second;
+        }
+    }
+
+    ~shelf() { unsafe { free( cells ); } }
+
+    public only_binary* operator[]( u64 i ) const
+    {
+        unsafe
+        {
+            return &cells[i];
+        }
+    }
+
+    private only_binary[*] cells;
+};
+
+class label
+{
+    u8[*] bytes;
+    u64   length;
+
+    public label( u64 n )
+    {
+        unsafe { bytes = alloc<u8>( n + 1 ); }
+        length = n;
+    }
+
+    ~label() { unsafe { free( bytes ); } }
+
+    public u64 size() const { return length; }
+    public label operator+( const ref label other ) const { return label( length + other.length ); }
+};
+
+struct holder
+{
+    tally t;
+};
+
+u64 next( ref i32 count )
+{
+    count += 1;
+    return 1;
+}
+
+i32 main()
+{
+    tally t = tally { 0, 0 };
+    t += 5;
+    t += 2;
+
+    if( t.total != 7 || t.in_place != 2 )
+    {
+        return 1;
+    }
+
+    only_compound c = only_compound { 3 };
+    c *= 4;
+    c ^= only_compound { 8 };
+
+    if( c.x != 4 )
+    {
+        return 2;
+    }
+
+    only_binary b = only_binary { 10 };
+    b -= 3;
+    b &= only_binary { 6 };
+
+    if( b.x != 6 )
+    {
+        return 3;
+    }
+
+    // `-=` is declared, taking a different type from `-`.
+    mixed m = mixed { 5.0 };
+    m -= 1.5;
+
+    if( m.x != 3.5 )
+    {
+        return 4;
+    }
+
+    holder h = holder { tally { 1, 0 } };
+    h.t += 1;
+
+    if( h.t.total != 2 || h.t.in_place != 1 )
+    {
+        return 5;
+    }
+
+    // The index is computed once though the fallback both reads and writes the element.
+    shelf s     = shelf( only_binary { 1 }, only_binary { 20 } );
+    i32   calls = 0;
+    s[next( ref calls )] -= 5;
+
+    if( calls != 1 || s[1].x != 15 || s[0].x != 1 )
+    {
+        return 6;
+    }
+
+    label l = label( 2 );
+    l += label( 3 );
+    l += l;
+
+    if( l.size() != 10 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

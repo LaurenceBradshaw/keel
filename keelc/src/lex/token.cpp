@@ -311,4 +311,56 @@ Token_kind base_operator( Token_kind assignment )
     }
 }
 
+std::optional<Operator_name> operator_of( Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return Operator_name::Equal_equal;
+    case Token_kind::Less:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater:
+    case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
+        return Operator_name::Compare;
+    case Token_kind::Plus:
+        return Operator_name::Plus;
+    case Token_kind::Minus:
+        return Operator_name::Minus;
+    case Token_kind::Star:
+        return Operator_name::Star;
+    case Token_kind::Slash:
+        return Operator_name::Slash;
+    case Token_kind::Percent:
+        return Operator_name::Percent;
+    case Token_kind::Amp:
+        return Operator_name::Amp;
+    case Token_kind::Pipe:
+        return Operator_name::Pipe;
+    case Token_kind::Caret:
+        return Operator_name::Caret;
+    case Token_kind::Tilde:
+        return Operator_name::Tilde;
+    case Token_kind::Plus_equal:
+        return Operator_name::Plus_equal;
+    case Token_kind::Minus_equal:
+        return Operator_name::Minus_equal;
+    case Token_kind::Star_equal:
+        return Operator_name::Star_equal;
+    case Token_kind::Slash_equal:
+        return Operator_name::Slash_equal;
+    case Token_kind::Percent_equal:
+        return Operator_name::Percent_equal;
+    case Token_kind::Amp_equal:
+        return Operator_name::Amp_equal;
+    case Token_kind::Pipe_equal:
+        return Operator_name::Pipe_equal;
+    case Token_kind::Caret_equal:
+        return Operator_name::Caret_equal;
+    default:
+        return std::nullopt;
+    }
+}
+
 } // namespace keel

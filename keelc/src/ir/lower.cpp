@@ -135,6 +135,15 @@ private:
                      std::vector<Type_id>     type_arguments
                  );
     Operand lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments );
+    // `object.method( arguments )` for an operator, with `object` as the receiver.
+    Operand call_operator(
+        Node_id                  id,
+        Node_id                  method,
+        Place                    object,
+        std::span<const Node_id> arguments,
+        const Bindings&          bindings,
+        std::vector<Type_id>     type_arguments
+    );
     // In an instance, the method of `held`'s own conformance that `op` calls, or invalid where the
     // operator is the compiler's.
     Node_id bound_operator( Token_kind op, Type_id held ) const;
@@ -157,6 +166,7 @@ private:
     void lower_return( Node_id id );
     void lower_var( Node_id id );
     void lower_assign( Node_id id );
+    void store( Place target, Operand value, Type_id type, Node_id target_node, Span span );
     void lower_increment( Node_id id );
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
@@ -1601,8 +1611,66 @@ Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
     return types_.conformances().method_for( table, held, interface, members[0] );
 }
 
-// `a == b` calls `a.operator==( b )`, and `a != b` negates it; `a < b` compares what
-// `a.operator<=>( b )` answers with a variant.
+Operand Lowering::call_operator(
+    Node_id                  id,
+    Node_id                  method,
+    Place                    object,
+    std::span<const Node_id> arguments,
+    const Bindings&          bindings,
+    std::vector<Type_id>     type_arguments
+)
+{
+    // A bound's operator: through an interface's vtable, or the instance's implementer called directly.
+    if( ast_.is_requirement( method ) )
+    {
+        const Node_id operand = ast_.kind( id ) == Node_kind::Binary_expr  ? ast_.lhs( id )
+                                : ast_.kind( id ) == Node_kind::Unary_expr ? ast_.operand( id )
+                                                                           : ast_.target( id );
+        Type_table&   table   = types_.table();
+        const Type_id held    = type_of( operand );
+
+        if( table.is_interface( held ) )
+        {
+            const bool    reads    = ast_.is_const_method( method );
+            const Operand receiver = address_operand(
+                object,
+                table.pointer_to( held, reads ),
+                ast_.span( id ),
+                reads ? Address_purpose::Read : Address_purpose::Borrow
+            );
+            const Bindings instance = table.instance_bindings( held );
+
+            return lower_method_call_on( id, method, receiver, arguments, type_under( method, instance ), instance, {} );
+        }
+
+        const Node_id implementer =
+            types_.conformances().method_for( table, held, table.substitute( types_.through_of( id ), bindings_ ), method );
+        const std::span<const Type_id> held_arguments = table.get( held ).arguments;
+
+        return call_operator(
+            id,
+            implementer,
+            object,
+            arguments,
+            aggregate_bindings( ast_, table, held, types_.recorded() ),
+            std::vector<Type_id>( held_arguments.begin(), held_arguments.end() )
+        );
+    }
+
+    const Operand receiver = address_operand(
+        object,
+        binding_type_under( ast_.params( method )[0], bindings ),
+        ast_.span( id ),
+        ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
+    );
+
+    return lower_method_call_on(
+        id, method, receiver, arguments, type_under( method, bindings ), bindings, std::move( type_arguments )
+    );
+}
+
+// `a + b` calls `a.operator+( b )`, as `a == b` calls `a.operator==( b )`; `a != b` negates it, and
+// `a < b` compares what `a.operator<=>( b )` answers with a variant.
 Operand
 Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments )
 {
@@ -1610,19 +1678,10 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
     const Node_id    rhs  = ast_.rhs( id );
     const Token_kind op   = ast_.op( id );
 
-    const std::span<const Node_id> parameters = ast_.params( method );
+    const Operand result =
+        call_operator( id, method, lower_place( ast_.lhs( id ) ), { &rhs, 1 }, bindings, std::move( type_arguments ) );
 
-    const Operand receiver = address_operand(
-        lower_place( ast_.lhs( id ) ),
-        binding_type_under( parameters[0], bindings ),
-        span,
-        ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
-    );
-    const Operand result = lower_method_call_on(
-        id, method, receiver, { &rhs, 1 }, type_under( method, bindings ), bindings, std::move( type_arguments )
-    );
-
-    if( op == Token_kind::Equal_equal || op == Token_kind::Less_equal_greater )
+    if( !is_comparison( op ) || op == Token_kind::Equal_equal || op == Token_kind::Less_equal_greater )
     {
         return result;
     }
@@ -1678,6 +1737,14 @@ Operand Lowering::lower_unary( Node_id id )
     const Token_kind op   = ast_.op( id );
     const Type_id    type = type_of( id );
     const Span       span = ast_.span( id );
+
+    // `-a` on an aggregate, where the checker chose its operator.
+    if( const Node_id method = types_.callee_of( id ); method.is_valid() && op != Token_kind::Amp )
+    {
+        return call_operator(
+            id, method, lower_place( ast_.operand( id ) ), {}, bindings_for_call( id ), type_arguments_for_call( id )
+        );
+    }
 
     // Both of these are settled before the operand is lowered, because neither reads it the
     // way an arithmetic operator does: `*p` names a place, and `&x` wants where x lives rather
@@ -2565,6 +2632,14 @@ Place Lowering::lower_place( Node_id id )
         // Same lookup as lower_expression's, but producing where the value lives rather than a
         // read of it.
         const Node_id decl = resolution_.declaration_of( id );
+
+        // A variant, as `-sign::minus`'s receiver: a value, held in a temporary.
+        if( !decl.is_valid() )
+        {
+            const Operand value = lower_expression( id );
+            return builder_.place( builder_.into_temp( use( value ), value.type, ast_.span( id ) ) );
+        }
+
         return place_for( decl, static_owner( id, decl ) );
     }
     case Node_kind::Field_expr:
@@ -2604,6 +2679,12 @@ Place Lowering::lower_place( Node_id id )
     }
     case Node_kind::Unary_expr: // Star only; Amp is not a place
     {
+        // `-a` on an aggregate is a call, and its result a temporary.
+        if( ast_.op( id ) != Token_kind::Star && ast_.op( id ) != Token_kind::Amp )
+        {
+            return lower_expression( id ).place;
+        }
+
         if( ast_.op( id ) == Token_kind::Amp )
         {
             assert( false && "unary & not a place" );
@@ -2646,6 +2727,8 @@ Place Lowering::lower_place( Node_id id )
     // already put the result in a local. The same answer a call in this position gets.
     case Node_kind::Conditional_expr:
     case Node_kind::String_literal:
+    case Node_kind::Binary_expr: // `a + b` in `a + b + c`
+    case Node_kind::Struct_literal:
     {
         return lower_expression( id ).place;
     }
@@ -2778,31 +2861,33 @@ void Lowering::lower_assign( Node_id id )
 {
     const Span       span   = ast_.span( id );
     const Place      target = lower_place( ast_.target( id ) );
-    const Operand    value  = lower_expression( ast_.value( id ) );
     const Token_kind op     = ast_.op( id );
     // The *target's* type, not type_of( id ): the checker records nothing on a statement, so that
     // would be an invalid Type_id. It is also the type the checker measured the value against.
-    const Type_id type = type_of( ast_.target( id ) );
-    if( op == Token_kind::Equal )
+    const Type_id type   = type_of( ast_.target( id ) );
+    const Node_id method = types_.callee_of( id );
+
+    // `a op= b` on a user type: `operator op=` in place, or `a = a op b` with the place read once.
+    if( method.is_valid() )
     {
-        // Same reason as an initialiser: an owning value is never copied, or both copies would be
-        // dropped. A compound assignment cannot reach here for one - arithmetic on an owning type
-        // has no meaning.
-        Operand source = moved_if_owning( united( value, type, span ) );
+        const Node_id value = ast_.value( id );
+        const Operand result =
+            call_operator( id, method, target, { &value, 1 }, bindings_for_call( id ), type_arguments_for_call( id ) );
 
-        // The old value is destroyed first, after the new one is read: `o = move o` goes through a
-        // temporary so the drop cannot reach it.
-        if( owns( type ) && !initialises_field( target ) && !writes_a_slot( ast_.target( id ) ) )
+        if( ast_.is_const_method( method ) )
         {
-            if( source.kind != Operand_kind::Constant && !source.place.is_global() && source.place.local == target.local )
-            {
-                source = move( builder_.place( builder_.into_temp( use( source ), type, span ) ), type );
-            }
-
-            drop_place( target, type, span, true );
+            store( target, result, type, ast_.target( id ), span );
         }
 
-        builder_.assign( target, use( source ), span );
+        drop_statement_temporaries( span );
+        return;
+    }
+
+    const Operand value = lower_expression( ast_.value( id ) );
+
+    if( op == Token_kind::Equal )
+    {
+        store( target, value, type, ast_.target( id ), span );
     }
     else
     {
@@ -2815,6 +2900,27 @@ void Lowering::lower_assign( Node_id id )
         builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span ), span );
     }
     drop_statement_temporaries( span );
+}
+
+// Same reason as an initialiser: an owning value is never copied, or both copies would be dropped.
+// A compound assignment reaches here only as a user type's `a = a op b`.
+void Lowering::store( Place target, Operand value, Type_id type, Node_id target_node, Span span )
+{
+    Operand source = moved_if_owning( united( value, type, span ) );
+
+    // The old value is destroyed first, after the new one is read: `o = move o` goes through a
+    // temporary so the drop cannot reach it.
+    if( owns( type ) && !initialises_field( target ) && !writes_a_slot( target_node ) )
+    {
+        if( source.kind != Operand_kind::Constant && !source.place.is_global() && source.place.local == target.local )
+        {
+            source = move( builder_.place( builder_.into_temp( use( source ), type, span ) ), type );
+        }
+
+        drop_place( target, type, span, true );
+    }
+
+    builder_.assign( target, use( source ), span );
 }
 
 void Lowering::lower_increment( Node_id id )

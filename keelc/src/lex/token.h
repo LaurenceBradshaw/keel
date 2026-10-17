@@ -6,6 +6,7 @@
 #include "common/literal_pool.h"
 #include "common/span.h"
 
+#include <optional>
 #include <string_view>
 #include <type_traits>
 
@@ -112,6 +113,10 @@ std::string_view token_kind_spelling( Token_kind kind );
 // path computes the result - C's compound assignment has conversion rules of its own, and they are
 // not §6.4's.
 Token_kind base_operator( Token_kind assignment );
+
+// The operator method `op` declares or calls: `+=` is `operator+=`, and `!=` and `<` are
+// `operator==` and `operator<=>`. None for an operator no type may declare.
+std::optional<Operator_name> operator_of( Token_kind op );
 
 // The six operators whose answer is a `bool` about two values rather than a value of their own.
 // D41 turns on that distinction, and both the lowering that picks their domain and the backend

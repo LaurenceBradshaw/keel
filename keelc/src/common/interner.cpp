@@ -46,14 +46,22 @@ Interner::Interner()
     // Catches a duplicate spelling in the table, which the static_assert cannot see.
     assert( texts_.size() == static_cast<std::size_t>( Keyword::Count ) && "duplicate keyword spelling" );
 
-    [[maybe_unused]] const Symbol_id op_equal_equal = intern( "operator==" );
-    assert( op_equal_equal.v == operator_name( Operator_name::Equal_equal ).v && "operator name id out of order" );
+    static constexpr std::string_view k_operator_spellings[] = {
+        "operator==", "operator[]", "operator<=>", "operator+",  "operator-",  "operator*",  "operator/",
+        "operator%",  "operator&",  "operator|",   "operator^",  "operator~",  "operator+=", "operator-=",
+        "operator*=", "operator/=", "operator%=",  "operator&=", "operator|=", "operator^=",
+    };
 
-    [[maybe_unused]] const Symbol_id op_index = intern( "operator[]" );
-    assert( op_index.v == operator_name( Operator_name::Index ).v && "operator name id out of order" );
+    static_assert(
+        std::size( k_operator_spellings ) == static_cast<std::size_t>( Operator_name::Count ),
+        "operator spelling table out of sync with the Operator_name enum"
+    );
 
-    [[maybe_unused]] const Symbol_id op_compare = intern( "operator<=>" );
-    assert( op_compare.v == operator_name( Operator_name::Compare ).v && "operator name id out of order" );
+    for( std::size_t i = 0; i < std::size( k_operator_spellings ); ++i )
+    {
+        [[maybe_unused]] const Symbol_id id = intern( k_operator_spellings[i] );
+        assert( id.v == static_cast<u32>( Keyword::Count ) + narrow_cast<u32>( i ) && "operator name id out of order" );
+    }
 }
 
 Symbol_id Interner::intern( std::string_view text )
@@ -102,6 +110,16 @@ bool Interner::is_operator_name( Symbol_id id )
 {
     return id.v >= static_cast<u32>( Keyword::Count ) &&
            id.v < static_cast<u32>( Keyword::Count ) + static_cast<u32>( Operator_name::Count );
+}
+
+Operator_name Interner::base_of( Operator_name compound )
+{
+    assert( compound >= Operator_name::Plus_equal && compound <= Operator_name::Caret_equal && "not a compound assignment" );
+
+    // The compounds follow their bases in the same order.
+    return static_cast<Operator_name>(
+        static_cast<u32>( compound ) - static_cast<u32>( Operator_name::Plus_equal ) + static_cast<u32>( Operator_name::Plus )
+    );
 }
 
 std::size_t Interner::Sv_hash::operator()( std::string_view sv ) const
@@ -262,6 +280,13 @@ TEST_CASE( "interner_reserves_operator_names_after_the_keywords", "[common][inte
 
     REQUIRE( compare.v == index.v + 1 );
     REQUIRE( Interner::is_operator_name( compare ) );
+
+    const Symbol_id plus_equal = Interner::operator_name( Operator_name::Plus_equal );
+
+    REQUIRE( in.text( plus_equal ) == "operator+=" );
+    REQUIRE( in.intern( "operator+=" ) == plus_equal );
+    REQUIRE( Interner::is_operator_name( plus_equal ) );
+    REQUIRE( Interner::base_of( Operator_name::Caret_equal ) == Operator_name::Caret );
     REQUIRE_FALSE( Interner::is_operator_name( in.intern( "operator" ) ) );
     REQUIRE_FALSE( Interner::is_operator_name( in.intern( "index" ) ) );
 }

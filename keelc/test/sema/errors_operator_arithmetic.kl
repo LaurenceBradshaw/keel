@@ -1,0 +1,38 @@
+// M9.6: what `a op b` and `-a` need when an operand is a user type. The left operand's type must
+// declare the operator, the right must fit its parameter, and the result is what it returns. A
+// built-in left operand never calls the right's operator, and a string literal on the left adopts
+// only through `from<str>`.
+struct vec
+{
+    f64 x;
+
+    vec operator*( f64 by ) const { return vec { x * by }; }
+    vec operator-( const ref vec other ) const { return vec { x - other.x }; }
+};
+
+struct plain
+{
+    i32 x;
+};
+
+i32 main()
+{
+    vec   v = vec { 1.0 };
+    vec   w = vec { 2.0 };
+    plain p = plain { 1 };
+    f64   k = 2.0;
+
+    vec sum  = v + w;
+    vec both = v * w;
+    vec neg  = -v;
+    vec flip = ~v;
+    vec left = 2.0 * v;
+    vec held = k * v;
+    i32 n    = v - w;
+
+    plain glued = "ab" + p;
+    vec   moved = v << 1;
+    bool  not_v = !v;
+
+    return 0;
+}

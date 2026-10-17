@@ -1,0 +1,152 @@
+// M9.6: an interface may require an operator, and a generic bounded by it writes the operator on
+// its `T`: binary, unary and compound, with `a += b` falling back to `a = a + b` when the bound has
+// only `+`. Each instance calls the implementer's operator directly. A block's operator is called
+// through the bound and, as an enum's `==` is, in plain code. An interface whose operator does not
+// mention `self` is called through its vtable. Exits with the failing check.
+interface addable
+{
+    self operator+( const ref self other ) const;
+};
+
+interface negatable
+{
+    self operator-() const;
+};
+
+interface accumulates<T>
+{
+    void operator+=( T value );
+};
+
+interface scaled
+{
+    f64 operator*( f64 by ) const;
+};
+
+struct vec implements addable, negatable
+{
+    i32 x;
+    i32 y;
+
+    vec operator+( const ref vec other ) const { return vec { x + other.x, y + other.y }; }
+    vec operator-() const { return vec { 0 - x, 0 - y }; }
+};
+
+struct bag implements accumulates<i32>
+{
+    i32 total;
+
+    void operator+=( i32 value ) { total += value; }
+};
+
+struct votes implements accumulates<bool>
+{
+    i32 yes;
+
+    void operator+=( bool value )
+    {
+        if( value )
+        {
+            yes += 1;
+        }
+    }
+};
+
+struct length implements scaled
+{
+    f64 m;
+
+    f64 operator*( f64 by ) const { return m * by; }
+};
+
+enum sign
+{
+    plus,
+    minus
+};
+
+implements negatable for sign
+{
+    sign operator-() const
+    {
+        if( this == sign::plus )
+        {
+            return sign::minus;
+        }
+
+        return sign::plus;
+    }
+};
+
+T sum3<T>( T a, T b, T c ) where T : copyable & addable
+{
+    return a + b + c;
+}
+
+T grow<T>( T a, T b ) where T : copyable & addable
+{
+    a += b;
+    return a;
+}
+
+T negate<T>( T a ) where T : negatable
+{
+    return -a;
+}
+
+void fill<A, T>( ref A acc, T value ) where A : accumulates<T>
+{
+    acc += value;
+    acc += value;
+}
+
+f64 doubled( const ref scaled s )
+{
+    return s * 2.0;
+}
+
+i32 main()
+{
+    vec a = vec { 1, 2 };
+    vec b = vec { 10, 20 };
+
+    vec s = sum3<vec>( a, b, a );
+    if( s.x != 12 || s.y != 24 )
+    {
+        return 1;
+    }
+
+    vec g = grow<vec>( a, b );
+    if( g.x != 11 || g.y != 22 )
+    {
+        return 2;
+    }
+
+    vec n = negate<vec>( a );
+    if( n.x != -1 || n.y != -2 )
+    {
+        return 3;
+    }
+
+    if( negate<sign>( sign::plus ) != sign::minus || -sign::minus != sign::plus )
+    {
+        return 4;
+    }
+
+    bag   held = bag { 0 };
+    votes v    = votes { 0 };
+    fill<bag, i32>( ref held, 4 );
+    fill<votes, bool>( ref v, true );
+    if( held.total != 8 || v.yes != 2 )
+    {
+        return 5;
+    }
+
+    length l = length { 1.5 };
+    if( doubled( l ) != 3.0 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

@@ -16,34 +16,58 @@ error: `operator<` cannot be declared
 18 |     bool operator<( const ref a other ) const
    |          ^^^^^^^^^ ordering is declared once, as `operator<=>`, and `<`, `<=`, `>` and `>=` come from it
 
-error: `operator+` cannot be declared yet
-  --> parse/errors_operator_names.kl:23:7
+error: `operator!` cannot be declared yet
+  --> parse/errors_operator_names.kl:23:10
    |
-23 |     a operator+( const ref a other ) const
-   |       ^^^^^^^^^
+23 |     bool operator!() const
+   |          ^^^^^^^^^
+
+error: `operator<<` cannot be declared
+  --> parse/errors_operator_names.kl:28:7
+   |
+28 |     a operator<<( u64 by ) const
+   |       ^^^^^^^^^^ a shift is kept for the built-in integers
+
+error: `operator>>=` cannot be declared
+  --> parse/errors_operator_names.kl:33:10
+   |
+33 |     void operator>>=( u64 by )
+   |          ^^^^^^^^^^^ a shift is kept for the built-in integers
+
+error: `operator++` cannot be declared
+  --> parse/errors_operator_names.kl:37:10
+   |
+37 |     void operator++()
+   |          ^^^^^^^^^^ `++` and `--` are kept for the built-in numbers; declare `operator+=`
+
+error: `operator--` cannot be declared
+  --> parse/errors_operator_names.kl:41:10
+   |
+41 |     void operator--()
+   |          ^^^^^^^^^^ `++` and `--` are kept for the built-in numbers; declare `operator+=`
 
 error: expected an operator after `operator`
-  --> parse/errors_operator_names.kl:28:10
+  --> parse/errors_operator_names.kl:45:10
    |
-28 |     bool operator( const ref a other ) const
+45 |     bool operator( const ref a other ) const
    |          ^^^^^^^^
 
 error: `operator[` cannot be declared
-  --> parse/errors_operator_names.kl:33:10
+  --> parse/errors_operator_names.kl:50:10
    |
-33 |     i32* operator[( u64 index ) const
+50 |     i32* operator[( u64 index ) const
    |          ^^^^^^^^^ write `operator[]`
 
 error: an operator is declared inside the type of its left operand
-  --> parse/errors_operator_names.kl:39:6
+  --> parse/errors_operator_names.kl:56:6
    |
-39 | bool operator==( const ref a l, const ref a r )
+56 | bool operator==( const ref a l, const ref a r )
    |      ^^^^^^^^^^ move it into that type as a `const` method
 
 error: an operator is declared inside the type of its left operand
-  --> parse/errors_operator_names.kl:44:6
+  --> parse/errors_operator_names.kl:61:6
    |
-44 | i32* operator[]( u64 index )
+61 | i32* operator[]( u64 index )
    |      ^^^^^^^^^^ move it into that type as a `const` method
 
-8 errors generated
+12 errors generated

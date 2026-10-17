@@ -1,0 +1,31 @@
+error: `wrong`'s `operator+` does not match the one `addable` declares
+  --> sema/errors_operator_bounds.kl:13:25
+   |
+13 | struct wrong implements addable
+   |                         ^^^^^^^ `addable` wants `wrong operator+( const ref wrong other ) const`
+
+error: `missing` implements `negatable` but has no method `operator-`
+  --> sema/errors_operator_bounds.kl:20:27
+   |
+20 | struct missing implements negatable
+   |                           ^^^^^^^^^ add `missing operator-() const` to `missing`
+
+error: no operator `+` for `T` and `T`
+  --> sema/errors_operator_bounds.kl:27:12
+   |
+27 |     return a + b;
+   |            ^^^^^ `+` needs `numeric`; write `where T : numeric` on `unbounded`
+
+error: no operator `+=` for `T`
+  --> sema/errors_operator_bounds.kl:32:5
+   |
+32 |     a += b;
+   |     ^^^^^^^
+
+error: no operator `*` for `T` and `T`
+  --> sema/errors_operator_bounds.kl:33:12
+   |
+33 |     return a * b;
+   |            ^^^^^ `*` needs `numeric`; write `where T : numeric` on `other_bound`
+
+5 errors generated

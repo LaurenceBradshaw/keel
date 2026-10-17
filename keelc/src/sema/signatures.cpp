@@ -988,12 +988,13 @@ void Signatures::check_operators()
 {
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
-        if( !is_aggregate( ast_.kind( decl ) ) )
+        if( !has_members( ast_.kind( decl ) ) )
         {
             continue;
         }
 
-        std::array<Node_id, static_cast<size_t>( Operator_name::Count )> first {};
+        // One slot per name, and one more for `operator-()`, which shares `operator-( x )`'s.
+        std::array<Node_id, static_cast<size_t>( Operator_name::Count ) + 1> first {};
 
         for( const Node_id member : ast_.members( decl ) )
         {
@@ -1003,8 +1004,9 @@ void Signatures::check_operators()
                 continue;
             }
 
-            const Operator_name op   = static_cast<Operator_name>( name.v - Interner::operator_name( Operator_name {} ).v );
-            Node_id&            seen = first[static_cast<size_t>( op )];
+            const Operator_name op       = static_cast<Operator_name>( name.v - Interner::operator_name( Operator_name {} ).v );
+            const bool          negation = op == Operator_name::Minus && ast_.params( member ).size() == 1;
+            Node_id& seen = first[negation ? static_cast<size_t>( Operator_name::Count ) : static_cast<size_t>( op )];
 
             if( seen.is_valid() )
             {
@@ -1037,21 +1039,60 @@ void Signatures::check_operators()
                 continue;
             }
 
+            // These compare with the receiver's type, which conformance checks for `self` and a block.
+            const bool aggregate = is_aggregate( ast_.kind( decl ) );
+
             switch( op )
             {
             case Operator_name::Equal_equal:
-                check_comparison_operator( member, table_.builtin( Type_kind::Bool ) );
+                if( aggregate )
+                {
+                    check_comparison_operator( member, table_.builtin( Type_kind::Bool ) );
+                }
                 break;
 
             case Operator_name::Index:
-                check_index_operator( member );
+                if( aggregate )
+                {
+                    check_index_operator( member );
+                }
                 break;
 
             case Operator_name::Compare:
-                check_comparison_operator( member, table_.ordering() );
+                if( aggregate )
+                {
+                    check_comparison_operator( member, table_.ordering() );
+                }
+                break;
+
+            case Operator_name::Minus:
+                if( ast_.params( member ).size() == 2 )
+                {
+                    check_binary_operator( member );
+                }
+                else
+                {
+                    check_unary_operator( member );
+                }
+                break;
+
+            case Operator_name::Tilde:
+                check_unary_operator( member );
+                break;
+
+            case Operator_name::Plus_equal:
+            case Operator_name::Minus_equal:
+            case Operator_name::Star_equal:
+            case Operator_name::Slash_equal:
+            case Operator_name::Percent_equal:
+            case Operator_name::Amp_equal:
+            case Operator_name::Pipe_equal:
+            case Operator_name::Caret_equal:
+                check_compound_operator( member );
                 break;
 
             default:
+                check_binary_operator( member );
                 break;
             }
         }
@@ -1095,6 +1136,122 @@ void Signatures::check_comparison_operator( Node_id decl, Type_id result )
             ast_.name_span( decl ),
             fmt::format( "`{}` must be `const`", op_name ),
             "write `const` after its parameter list; comparing reads both operands"
+        );
+    }
+}
+
+// The operand of a binary or compound operator: exactly one, passed by value or `const ref`.
+void Signatures::check_operand( Node_id decl )
+{
+    const std::span<const Node_id> params  = ast_.params( decl );
+    const std::string_view         op_name = interner_.text( ast_.name( decl ) );
+
+    if( params.size() != 2 )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.param_list( decl ) ), fmt::format( "`{}` takes one parameter, the right-hand operand", op_name )
+        );
+    }
+    else if( ast_.call_marker( params[1] ) != Keyword::Count )
+    {
+        reporter_.error_at(
+            ast_.span( params[1] ),
+            fmt::format( "`{}` takes its right operand by value or `const ref`", op_name ),
+            fmt::format( "`a {} b` has nowhere to write a `ref`, `out` or `move`", operator_symbol( decl ) )
+        );
+    }
+}
+
+std::string_view Signatures::operator_symbol( Node_id decl ) const
+{
+    return interner_.text( ast_.name( decl ) ).substr( std::string_view( "operator" ).size() );
+}
+
+bool Signatures::returns_void( Node_id decl ) const
+{
+    return types_.type_of( decl ) == table_.builtin( Type_kind::Void );
+}
+
+void Signatures::check_binary_operator( Node_id decl )
+{
+    const std::string_view op_name = interner_.text( ast_.name( decl ) );
+    const std::string_view sym     = operator_symbol( decl );
+
+    check_operand( decl );
+
+    if( returns_void( decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.return_type( decl ) ),
+            fmt::format( "`{}` must return a value", op_name ),
+            fmt::format( "`a {0} b` is an expression; to change `a` in place, declare `operator{0}=`", sym )
+        );
+    }
+
+    if( !ast_.is_const_method( decl ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ),
+            fmt::format( "`{}` must be `const`", op_name ),
+            fmt::format( "write `const` after its parameter list; `a {} b` reads both operands", sym )
+        );
+    }
+}
+
+void Signatures::check_compound_operator( Node_id decl )
+{
+    const std::string_view op_name = interner_.text( ast_.name( decl ) );
+    const Type_id          result  = types_.type_of( decl );
+
+    check_operand( decl );
+
+    if( !table_.is_error( result ) && !returns_void( decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.return_type( decl ) ),
+            fmt::format( "`{}` must return `void`", op_name ),
+            fmt::format( "`a {} b` is a statement and changes `a` in place", operator_symbol( decl ) )
+        );
+    }
+
+    if( ast_.is_const_method( decl ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ), fmt::format( "`{}` cannot be `const`", op_name ), "it changes its left operand"
+        );
+    }
+}
+
+void Signatures::check_unary_operator( Node_id decl )
+{
+    const std::span<const Node_id> params  = ast_.params( decl );
+    const std::string_view         op_name = interner_.text( ast_.name( decl ) );
+    const std::string_view         sym     = operator_symbol( decl );
+
+    if( sym == "-" && params.size() > 2 )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.param_list( decl ) ), "`operator-` takes no parameter, for `-a`, or one, for `a - b`"
+        );
+    }
+    else if( sym == "~" && params.size() > 1 )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.param_list( decl ) ), "`operator~` takes no parameter", "`~a` has one operand, the object"
+        );
+    }
+
+    if( returns_void( decl ) )
+    {
+        reporter_.error_at( ast_.span( ast_.return_type( decl ) ), fmt::format( "`{}` must return a value", op_name ) );
+    }
+
+    if( !ast_.is_const_method( decl ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ),
+            fmt::format( "`{}` must be `const`", op_name ),
+            fmt::format( "write `const` after its parameter list; `{}a` reads its operand", sym )
         );
     }
 }

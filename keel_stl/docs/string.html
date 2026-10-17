@@ -115,8 +115,14 @@ the number, and <code>overflow</code> as soon as the number leaves the range of 
 <p>If the string is empty.</p>
 </div>
 </div>
-<div class="group" id="string.append">
-<pre class="signature"><a class="anchor" href="#string.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">append</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other )</code></pre>
+<div class="group" id="string.operator+">
+<pre class="signature"><a class="anchor" href="#string.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string holding these bytes and then <code>other</code>'s bytes.</p>
+</div>
+</div>
+<div class="group" id="string.operator+=">
+<pre class="signature"><a class="anchor" href="#string.operator+=" aria-label="Link to operator+=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator+=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> other )</code></pre>
 <div class="doc">
 <p>Adds a copy of every byte of <code>other</code> at the end.</p>
 </div>

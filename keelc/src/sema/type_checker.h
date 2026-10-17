@@ -69,6 +69,7 @@ public:
         std::vector<Node_id>                    struct_order,
         std::unordered_map<u32, Constant_value> constants,
         std::unordered_map<u32, Node_id>        callees,
+        std::unordered_map<u32, Type_id>        through,
         std::vector<Instantiation>              instantiations,
         std::unordered_map<u32, u32>            instantiation_of,
         std::vector<Generic_call>               generic_calls,
@@ -79,6 +80,7 @@ public:
           struct_order_( std::move( struct_order ) ),
           constants_( std::move( constants ) ),
           callees_( std::move( callees ) ),
+          through_( std::move( through ) ),
           instantiations_( std::move( instantiations ) ),
           instantiation_of_( std::move( instantiation_of ) ),
           generic_calls_( std::move( generic_calls ) ),
@@ -130,6 +132,14 @@ public:
         return found == callees_.end() ? Node_id {} : found->second;
     }
 
+    // The bound's instance an operator on a type parameter went through, as the generic wrote it.
+    Type_id through_of( Node_id use ) const
+    {
+        const auto found = through_.find( use.v );
+
+        return found == through_.end() ? Type_id {} : found->second;
+    }
+
     const std::vector<Node_id>& struct_order() const
     {
         return struct_order_;
@@ -169,6 +179,7 @@ private:
     std::vector<Node_id>                    struct_order_;
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
     std::unordered_map<u32, Node_id>        callees_;   // Call_expr -> the callable it resolved to
+    std::unordered_map<u32, Type_id>        through_;   // operator on a parameter -> its bound's instance
     std::vector<Instantiation>              instantiations_;
     std::unordered_map<u32, u32>            instantiation_of_;
     std::vector<Generic_call>               generic_calls_;

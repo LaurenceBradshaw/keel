@@ -4,6 +4,7 @@
 #pragma once
 #include <unordered_map>
 #include "ast/node.h"
+#include "sema/type.h"
 
 namespace keel::sema
 {
@@ -32,13 +33,32 @@ public:
         return found->second;
     }
 
+    // The bound's instance an operator on a type parameter went through; it has no callee node.
+    void record_through( Node_id use, Type_id interface )
+    {
+        through_.emplace( use.v, interface );
+    }
+
+    Type_id through_of( Node_id use ) const
+    {
+        const auto found = through_.find( use.v );
+
+        return found == through_.end() ? Type_id {} : found->second;
+    }
+
     std::unordered_map<u32, Node_id> take()
     {
         return std::move( callees_ );
     }
 
+    std::unordered_map<u32, Type_id> take_through()
+    {
+        return std::move( through_ );
+    }
+
 private:
     std::unordered_map<u32, Node_id> callees_;
+    std::unordered_map<u32, Type_id> through_;
 };
 
 } // namespace keel::sema

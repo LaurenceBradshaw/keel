@@ -100,6 +100,17 @@ class meter implements from<str>
     {
         return count;
     }
+
+    // An operator is a method on the left operand; `+=` falls back to `a = a + b`.
+    meter operator+( const ref meter other ) const
+    {
+        return meter( count + other.count );
+    }
+
+    meter operator-() const
+    {
+        return meter( -count );
+    }
 };
 
 T larger<T>( T a, T b ) where T : copyable & comparable
@@ -259,6 +270,7 @@ i32 main()
     meter tally = meter( 1 );
     meter named = "three";
     meter blank = fresh<meter>();
+    tally += -named + "two";
 
     extra::Length run = extra::Length { 3, extra::Unit::Metre };
     i32 tenths        = extra::in_tenths( run ) + extra::scale;

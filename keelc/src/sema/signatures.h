@@ -105,6 +105,13 @@ private:
     void check_operators();
     void check_comparison_operator( Node_id decl, Type_id result );
     void check_index_operator( Node_id decl );
+    void check_binary_operator( Node_id decl );
+    void check_compound_operator( Node_id decl );
+    void check_unary_operator( Node_id decl );
+    void check_operand( Node_id decl );
+
+    std::string_view operator_symbol( Node_id decl ) const;
+    bool             returns_void( Node_id decl ) const;
 
     const Ast&        ast_;
     const Interner&   interner_;

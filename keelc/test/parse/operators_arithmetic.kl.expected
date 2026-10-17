@@ -1,0 +1,299 @@
+Source_file                             1:1-34:1
+  Struct_decl                           4:1-27:3    name=v
+    <none>                              -
+    <none>                              -
+    Field_decl                          6:5-6:11    name=x
+      Named_type                        6:5-6:8     "i32"
+    Method_decl                         8:5-8:61
+      Named_type                        8:5-8:6     "v"
+      Param_list                        8:16-8:37
+        Param_decl                      8:5-8:6     name=this
+          Const_type                    8:5-8:6
+            Mode_type                   8:5-8:6     mode=ref
+              Named_type                8:5-8:6     "v"
+        Param_decl                      8:18-8:35   name=other
+          Const_type                    8:18-8:29
+            Mode_type                   8:18-8:27   mode=ref
+              Named_type                8:28-8:29   "v"
+      Block                             8:44-8:61
+        Return_stmt                     8:46-8:59
+          Name_expr                     8:53-8:58   "other"
+      <none>                            -
+      <none>                            -
+    Method_decl                         9:5-9:61
+      Named_type                        9:5-9:6     "v"
+      Param_list                        9:16-9:37
+        Param_decl                      9:5-9:6     name=this
+          Const_type                    9:5-9:6
+            Mode_type                   9:5-9:6     mode=ref
+              Named_type                9:5-9:6     "v"
+        Param_decl                      9:18-9:35   name=other
+          Const_type                    9:18-9:29
+            Mode_type                   9:18-9:27   mode=ref
+              Named_type                9:28-9:29   "v"
+      Block                             9:44-9:61
+        Return_stmt                     9:46-9:59
+          Name_expr                     9:53-9:58   "other"
+      <none>                            -
+      <none>                            -
+    Method_decl                         10:5-10:57
+      Named_type                        10:5-10:6   "v"
+      Param_list                        10:16-10:26
+        Param_decl                      10:5-10:6   name=this
+          Const_type                    10:5-10:6
+            Mode_type                   10:5-10:6   mode=ref
+              Named_type                10:5-10:6   "v"
+        Param_decl                      10:18-10:24 name=by
+          Named_type                    10:18-10:21 "i32"
+      Block                             10:33-10:57
+        Return_stmt                     10:35-10:55
+          Struct_literal                10:42-10:54 name=v
+            Field_init                  10:46-10:52
+              Binary_expr               10:46-10:52 op=*
+                Name_expr               10:46-10:47 "x"
+                Name_expr               10:50-10:52 "by"
+      <none>                            -
+      <none>                            -
+    Method_decl                         11:5-11:57
+      Named_type                        11:5-11:6   "v"
+      Param_list                        11:16-11:26
+        Param_decl                      11:5-11:6   name=this
+          Const_type                    11:5-11:6
+            Mode_type                   11:5-11:6   mode=ref
+              Named_type                11:5-11:6   "v"
+        Param_decl                      11:18-11:24 name=by
+          Named_type                    11:18-11:21 "i32"
+      Block                             11:33-11:57
+        Return_stmt                     11:35-11:55
+          Struct_literal                11:42-11:54 name=v
+            Field_init                  11:46-11:52
+              Binary_expr               11:46-11:52 op=/
+                Name_expr               11:46-11:47 "x"
+                Name_expr               11:50-11:52 "by"
+      <none>                            -
+      <none>                            -
+    Method_decl                         12:5-12:57
+      Named_type                        12:5-12:6   "v"
+      Param_list                        12:16-12:26
+        Param_decl                      12:5-12:6   name=this
+          Const_type                    12:5-12:6
+            Mode_type                   12:5-12:6   mode=ref
+              Named_type                12:5-12:6   "v"
+        Param_decl                      12:18-12:24 name=by
+          Named_type                    12:18-12:21 "i32"
+      Block                             12:33-12:57
+        Return_stmt                     12:35-12:55
+          Struct_literal                12:42-12:54 name=v
+            Field_init                  12:46-12:52
+              Binary_expr               12:46-12:52 op=%
+                Name_expr               12:46-12:47 "x"
+                Name_expr               12:50-12:52 "by"
+      <none>                            -
+      <none>                            -
+    Method_decl                         13:5-13:61
+      Named_type                        13:5-13:6   "v"
+      Param_list                        13:16-13:37
+        Param_decl                      13:5-13:6   name=this
+          Const_type                    13:5-13:6
+            Mode_type                   13:5-13:6   mode=ref
+              Named_type                13:5-13:6   "v"
+        Param_decl                      13:18-13:35 name=other
+          Const_type                    13:18-13:29
+            Mode_type                   13:18-13:27 mode=ref
+              Named_type                13:28-13:29 "v"
+      Block                             13:44-13:61
+        Return_stmt                     13:46-13:59
+          Name_expr                     13:53-13:58 "other"
+      <none>                            -
+      <none>                            -
+    Method_decl                         14:5-14:61
+      Named_type                        14:5-14:6   "v"
+      Param_list                        14:16-14:37
+        Param_decl                      14:5-14:6   name=this
+          Const_type                    14:5-14:6
+            Mode_type                   14:5-14:6   mode=ref
+              Named_type                14:5-14:6   "v"
+        Param_decl                      14:18-14:35 name=other
+          Const_type                    14:18-14:29
+            Mode_type                   14:18-14:27 mode=ref
+              Named_type                14:28-14:29 "v"
+      Block                             14:44-14:61
+        Return_stmt                     14:46-14:59
+          Name_expr                     14:53-14:58 "other"
+      <none>                            -
+      <none>                            -
+    Method_decl                         15:5-15:61
+      Named_type                        15:5-15:6   "v"
+      Param_list                        15:16-15:37
+        Param_decl                      15:5-15:6   name=this
+          Const_type                    15:5-15:6
+            Mode_type                   15:5-15:6   mode=ref
+              Named_type                15:5-15:6   "v"
+        Param_decl                      15:18-15:35 name=other
+          Const_type                    15:18-15:29
+            Mode_type                   15:18-15:27 mode=ref
+              Named_type                15:28-15:29 "v"
+      Block                             15:44-15:61
+        Return_stmt                     15:46-15:59
+          Name_expr                     15:53-15:58 "other"
+      <none>                            -
+      <none>                            -
+    Method_decl                         16:5-16:48
+      Named_type                        16:5-16:6   "v"
+      Param_list                        16:16-16:18
+        Param_decl                      16:5-16:6   name=this
+          Const_type                    16:5-16:6
+            Mode_type                   16:5-16:6   mode=ref
+              Named_type                16:5-16:6   "v"
+      Block                             16:25-16:48
+        Return_stmt                     16:27-16:46
+          Struct_literal                16:34-16:45 name=v
+            Field_init                  16:38-16:43
+              Binary_expr               16:38-16:43 op=-
+                Int_literal             16:38-16:39 "0"
+                Name_expr               16:42-16:43 "x"
+      <none>                            -
+      <none>                            -
+    Method_decl                         17:5-17:45
+      Named_type                        17:5-17:6   "v"
+      Param_list                        17:16-17:18
+        Param_decl                      17:5-17:6   name=this
+          Const_type                    17:5-17:6
+            Mode_type                   17:5-17:6   mode=ref
+              Named_type                17:5-17:6   "v"
+      Block                             17:25-17:45
+        Return_stmt                     17:27-17:43
+          Struct_literal                17:34-17:42 name=v
+            Field_init                  17:38-17:40
+              Unary_expr                17:38-17:40 op=~
+                Name_expr               17:39-17:40 "x"
+      <none>                            -
+      <none>                            -
+    Method_decl                         19:5-19:45
+      Named_type                        19:5-19:9   "void"
+      Param_list                        19:20-19:41
+        Param_decl                      19:5-19:9   name=this
+          Mode_type                     19:5-19:9   mode=ref
+            Named_type                  19:5-19:9   "void"  name=v
+        Param_decl                      19:22-19:39 name=other
+          Const_type                    19:22-19:33
+            Mode_type                   19:22-19:31 mode=ref
+              Named_type                19:32-19:33 "v"
+      Block                             19:42-19:45 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         20:5-20:45
+      Named_type                        20:5-20:9   "void"
+      Param_list                        20:20-20:41
+        Param_decl                      20:5-20:9   name=this
+          Mode_type                     20:5-20:9   mode=ref
+            Named_type                  20:5-20:9   "void"  name=v
+        Param_decl                      20:22-20:39 name=other
+          Const_type                    20:22-20:33
+            Mode_type                   20:22-20:31 mode=ref
+              Named_type                20:32-20:33 "v"
+      Block                             20:42-20:45 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         21:5-21:34
+      Named_type                        21:5-21:9   "void"
+      Param_list                        21:20-21:30
+        Param_decl                      21:5-21:9   name=this
+          Mode_type                     21:5-21:9   mode=ref
+            Named_type                  21:5-21:9   "void"  name=v
+        Param_decl                      21:22-21:28 name=by
+          Named_type                    21:22-21:25 "i32"
+      Block                             21:31-21:34 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         22:5-22:34
+      Named_type                        22:5-22:9   "void"
+      Param_list                        22:20-22:30
+        Param_decl                      22:5-22:9   name=this
+          Mode_type                     22:5-22:9   mode=ref
+            Named_type                  22:5-22:9   "void"  name=v
+        Param_decl                      22:22-22:28 name=by
+          Named_type                    22:22-22:25 "i32"
+      Block                             22:31-22:34 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         23:5-23:34
+      Named_type                        23:5-23:9   "void"
+      Param_list                        23:20-23:30
+        Param_decl                      23:5-23:9   name=this
+          Mode_type                     23:5-23:9   mode=ref
+            Named_type                  23:5-23:9   "void"  name=v
+        Param_decl                      23:22-23:28 name=by
+          Named_type                    23:22-23:25 "i32"
+      Block                             23:31-23:34 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         24:5-24:45
+      Named_type                        24:5-24:9   "void"
+      Param_list                        24:20-24:41
+        Param_decl                      24:5-24:9   name=this
+          Mode_type                     24:5-24:9   mode=ref
+            Named_type                  24:5-24:9   "void"  name=v
+        Param_decl                      24:22-24:39 name=other
+          Const_type                    24:22-24:33
+            Mode_type                   24:22-24:31 mode=ref
+              Named_type                24:32-24:33 "v"
+      Block                             24:42-24:45 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         25:5-25:45
+      Named_type                        25:5-25:9   "void"
+      Param_list                        25:20-25:41
+        Param_decl                      25:5-25:9   name=this
+          Mode_type                     25:5-25:9   mode=ref
+            Named_type                  25:5-25:9   "void"  name=v
+        Param_decl                      25:22-25:39 name=other
+          Const_type                    25:22-25:33
+            Mode_type                   25:22-25:31 mode=ref
+              Named_type                25:32-25:33 "v"
+      Block                             25:42-25:45 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         26:5-26:45
+      Named_type                        26:5-26:9   "void"
+      Param_list                        26:20-26:41
+        Param_decl                      26:5-26:9   name=this
+          Mode_type                     26:5-26:9   mode=ref
+            Named_type                  26:5-26:9   "void"  name=v
+        Param_decl                      26:22-26:39 name=other
+          Const_type                    26:22-26:33
+            Mode_type                   26:22-26:31 mode=ref
+              Named_type                26:32-26:33 "v"
+      Block                             26:42-26:45 "{ }"
+      <none>                            -
+      <none>                            -
+  Interface_decl                        29:1-33:3   name=addable
+    <none>                              -
+    <none>                              -
+    Method_decl                         31:5-31:50
+      Named_type                        31:5-31:9   "self"
+      Param_list                        31:19-31:43
+        Param_decl                      31:5-31:9   name=this
+          Const_type                    31:5-31:9
+            Mode_type                   31:5-31:9   mode=ref
+              Named_type                31:5-31:9   "self"  name=addable
+        Param_decl                      31:21-31:41 name=other
+          Const_type                    31:21-31:35
+            Mode_type                   31:21-31:30 mode=ref
+              Named_type                31:31-31:35 "self"
+      <none>                            -
+      <none>                            -
+      <none>                            -
+    Method_decl                         32:5-32:45
+      Named_type                        32:5-32:9   "void"
+      Param_list                        32:20-32:44
+        Param_decl                      32:5-32:9   name=this
+          Mode_type                     32:5-32:9   mode=ref
+            Named_type                  32:5-32:9   "void"  name=addable
+        Param_decl                      32:22-32:42 name=other
+          Const_type                    32:22-32:36
+            Mode_type                   32:22-32:31 mode=ref
+              Named_type                32:32-32:36 "self"
+      <none>                            -
+      <none>                            -
+      <none>                            -

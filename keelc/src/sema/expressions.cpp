@@ -20,21 +20,9 @@ namespace
 // The method an aggregate declares for `op`, or none.
 Symbol_id operator_for( Token_kind op )
 {
-    switch( op )
-    {
-    case Token_kind::Equal_equal:
-    case Token_kind::Bang_equal:
-        return Interner::operator_name( Operator_name::Equal_equal );
-    case Token_kind::Less:
-    case Token_kind::Less_equal:
-    case Token_kind::Greater:
-    case Token_kind::Greater_equal:
-    case Token_kind::Less_equal_greater:
-        return Interner::operator_name( Operator_name::Compare );
+    const std::optional<Operator_name> name = operator_of( op );
 
-    default:
-        return {};
-    }
+    return name ? Interner::operator_name( *name ) : Symbol_id {};
 }
 
 } // namespace
@@ -1252,6 +1240,7 @@ Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> sh
 Type_id Expressions::infer_binary( Node_id id )
 {
     const Token_kind op    = ast_.op( id );
+    const Symbol_id  name  = operator_for( op );
     const Node_id    left  = ast_.lhs( id );
     const Node_id    right = ast_.rhs( id );
     const Type_id    error = table_.builtin( Type_kind::Error );
@@ -1266,8 +1255,8 @@ Type_id Expressions::infer_binary( Node_id id )
     // A comparison adopts only a bare literal: D41 answers `n < 0 - 1` rather than refusing it.
     const auto adopts = [&]( Node_id side )
     {
-        return is_comparison( op ) ? literals_.is_literal_expression( side ) || ast_.kind( side ) == Node_kind::String_literal
-                                   : takes_context( side );
+        return ast_.kind( side ) == Node_kind::String_literal ||
+               ( is_comparison( op ) ? literals_.is_literal_expression( side ) : takes_context( side ) );
     };
 
     if( adopts( left ) != adopts( right ) )
@@ -1279,16 +1268,30 @@ Type_id Expressions::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
-        if( !literal_on_the_left && calls_operator( known, op ) )
+        if( !literal_on_the_left && calls_operator( known, name ) )
         {
-            return infer_operator_call( id, left, right, operator_for( op ) );
+            return infer_operator_call( id, left, right, name );
         }
 
         // `"a" < s`: the literal adopts and is the object, which keeps the operator's order.
-        if( ast_.kind( literal_side ) == Node_kind::String_literal && calls_operator( known, op ) )
+        if( ast_.kind( literal_side ) == Node_kind::String_literal && calls_operator( known, name ) )
         {
+            const std::size_t before = reporter_.error_count();
+
             check( left, known );
-            return infer_operator_call( id, left, right, operator_for( op ), true );
+
+            if( reporter_.error_count() != before )
+            {
+                return types_.poison( id );
+            }
+
+            return infer_operator_call( id, left, right, name, true );
+        }
+
+        // `2.0 * v`: a number literal on the left never calls the right's operator.
+        if( !is_comparison( op ) && has_operator( known, name ) )
+        {
+            return refuse_reversed_operator( id, infer( left ), known );
         }
 
         // D41: a literal the other operand cannot hold is not a type error, because the comparison
@@ -1300,7 +1303,8 @@ Type_id Expressions::infer_binary( Node_id id )
         // A failed operand gives nothing to adopt, and check() absorbs an error expectation - so
         // the literal is carried along rather than asked to invent a type it has no basis for.
         Type_id adopted {};
-        if( ( table_.is_pointer( known ) || table_.is_many_pointer( known ) ) &&
+        // A struct reaching here has no operator for `op`, so the literal has nothing to adopt.
+        if( ( table_.is_pointer( known ) || table_.is_many_pointer( known ) || table_.is_struct( known ) ) &&
             ast_.kind( literal_side ) != Node_kind::Null_literal )
         {
             adopted = infer( literal_side );
@@ -1317,12 +1321,17 @@ Type_id Expressions::infer_binary( Node_id id )
     {
         lhs_type = infer( left );
 
-        if( calls_operator( lhs_type, op ) )
+        if( calls_operator( lhs_type, name ) )
         {
-            return infer_operator_call( id, left, right, operator_for( op ) );
+            return infer_operator_call( id, left, right, name );
         }
 
         rhs_type = infer( right );
+
+        if( !is_comparison( op ) && !table_.is_error( lhs_type ) && has_operator( rhs_type, name ) )
+        {
+            return refuse_reversed_operator( id, lhs_type, rhs_type );
+        }
     }
 
     // An operand that is already wrong was reported where it went wrong. Repeating it here is the
@@ -1887,6 +1896,11 @@ Type_id Expressions::infer_unary( Node_id id )
         return types_.record( id, error );
     }
 
+    if( ( op == Token_kind::Minus || op == Token_kind::Tilde ) && calls_operator( operand_type, operator_for( op ) ) )
+    {
+        return infer_unary_operator( id, operand_type, operator_for( op ) );
+    }
+
     // Neither of these is in the rule table: that table assumes the result type is the operand's,
     // and both of these change it. Address-of is a question about places besides, which is why the
     // two stay here rather than following the other four into Operators.
@@ -1979,35 +1993,65 @@ Type_id Expressions::infer_unary( Node_id id )
     return constant_folder_.record_constant( id, result );
 }
 
-bool Expressions::calls_operator( Type_id type, Token_kind op ) const
+bool Expressions::calls_operator( Type_id type, Symbol_id name ) const
 {
-    if( !operator_for( op ).is_valid() )
+    return name.is_valid() && ( table_.is_struct( type ) || has_operator( type, name ) );
+}
+
+bool Expressions::has_operator( Type_id type, Symbol_id name ) const
+{
+    if( !name.is_valid() )
     {
         return false;
     }
 
-    const Type_id interface = interface_for( table_, op );
+    if( table_.is_enum( type ) )
+    {
+        return block_for( type, name ).is_valid();
+    }
 
-    return table_.is_struct( type ) ||
-           ( table_.is_enum( type ) && interface.is_valid() && table_.implements( type, interface ) );
+    // A bound's `==` and `<=>` are the prelude's, which result_of_binary answers.
+    if( !table_.is_struct( type ) && ( name == Interner::operator_name( Operator_name::Equal_equal ) ||
+                                       name == Interner::operator_name( Operator_name::Compare ) ) )
+    {
+        return false;
+    }
+
+    const std::vector<Type_id> owners = method_owners( type, name );
+
+    return !owners.empty() && aggregates_.find_method( table_.get( owners.front() ).declaration, name ).is_valid();
 }
 
-// `a == b`, `a < b` or `a <=> b` on an aggregate, or on an enum whose own block declares it: a call
-// of the left operand's operator, with the right as its argument.
+// What an operator's signature is read under: the receiver's arguments, `self`, and through a bound,
+// its instance's.
+Bindings Expressions::operator_bindings( Node_id id, Type_id object_type, Node_id method ) const
+{
+    return aggregates_.receiver_bindings( object_type, method, callees_.through_of( id ) );
+}
+
+// `a op b` on an aggregate, an interface, a parameter whose bound requires `op`, or an enum whose own
+// block declares it: a call of the left operand's operator, with the right as its argument.
 Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed )
 {
-    const Type_id object_type = types_.type_of( object );
-    const Node_id method      = find_operator(
+    const Type_id          object_type = types_.type_of( object );
+    const std::string_view type_name   = table_.name( object_type );
+    const bool             equality    = name == Interner::operator_name( Operator_name::Equal_equal );
+    const bool             comparison  = equality || name == Interner::operator_name( Operator_name::Compare );
+
+    const Node_id method = find_operator(
         id,
         object_type,
         argument,
         name,
         fmt::format(
             "{} {}( const ref {} other ) const",
-            name == Interner::operator_name( Operator_name::Equal_equal ) ? "bool" : "ordering",
+            equality     ? "bool"
+            : comparison ? "ordering"
+                         : type_name,
             interner_.text( name ),
-            table_.name( object_type )
-        )
+            type_name
+        ),
+        1
     );
 
     if( !method.is_valid() )
@@ -2015,20 +2059,133 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         return types_.poison( id );
     }
 
-    const std::span<const Node_id> params = ast_.params( method );
+    const Bindings                 bindings = operator_bindings( id, object_type, method );
+    const std::span<const Node_id> params   = ast_.params( method );
 
     if( !argument_typed )
     {
-        check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
+        check( argument, table_.substitute( types_.type_of( params[1] ), bindings ) );
     }
 
     callees_.record( id, method );
     record_method_instantiation( id, method, object_type );
 
-    const Type_id record_type =
-        ast_.op( id ) == Token_kind::Less_equal_greater ? table_.ordering() : table_.builtin( Type_kind::Bool );
+    // `<` tests the variant `<=>` answers, so a comparison's result is not the method's.
+    if( comparison )
+    {
+        return types_.record(
+            id, ast_.op( id ) == Token_kind::Less_equal_greater ? table_.ordering() : table_.builtin( Type_kind::Bool )
+        );
+    }
 
-    return types_.record( id, record_type );
+    return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
+}
+
+bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id target_type )
+{
+    const Token_kind op       = ast_.op( id );
+    const Symbol_id  compound = operator_for( op );
+    const Symbol_id  base     = operator_for( base_operator( op ) );
+
+    if( !calls_operator( target_type, compound ) && !has_operator( target_type, base ) )
+    {
+        return false;
+    }
+
+    const std::string_view type_name = table_.name( target_type );
+    const std::string_view sym       = token_kind_spelling( base_operator( op ) );
+
+    if( !has_operator( target_type, compound ) && !has_operator( target_type, base ) )
+    {
+        infer( value );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), type_name ),
+            fmt::format( "declare `operator{0}=`, or `operator{0}` returning `{1}`", sym, type_name )
+        );
+        return true;
+    }
+
+    const bool    in_place = has_operator( target_type, compound );
+    const Node_id method   = find_operator( id, target_type, value, in_place ? compound : base, {}, 1 );
+
+    if( !method.is_valid() )
+    {
+        return true;
+    }
+
+    const Bindings bindings = operator_bindings( id, target_type, method );
+    const Type_id  param    = table_.substitute( types_.type_of( ast_.params( method )[1] ), bindings );
+
+    check( value, param );
+    callees_.record( id, method );
+    record_method_instantiation( id, method, target_type );
+
+    const Type_id returned = table_.substitute( types_.type_of( method ), bindings );
+
+    if( !in_place && returned != target_type && !table_.references_error( returned ) )
+    {
+        const std::string_view target = reporter_.text( ast_.span( ast_.target( id ) ) );
+
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{0} {1}= {2}` is `{0} = {0} {1} {2}`, but `{1}` on `{3}` gives `{4}`",
+                target,
+                sym,
+                reporter_.text( ast_.span( value ) ),
+                type_name,
+                table_.name( returned )
+            ),
+            fmt::format( "declare `void operator{}=( {} other )` on `{}`", sym, table_.name( param ), type_name )
+        );
+    }
+
+    return true;
+}
+
+// `-a` or `~a` on an aggregate: a call of its operator, with no argument.
+Type_id Expressions::infer_unary_operator( Node_id id, Type_id operand_type, Symbol_id name )
+{
+    const Node_id method = find_operator(
+        id,
+        operand_type,
+        Node_id {},
+        name,
+        fmt::format( "{0} {1}() const", table_.name( operand_type ), interner_.text( name ) ),
+        0
+    );
+
+    if( !method.is_valid() )
+    {
+        return types_.poison( id );
+    }
+
+    callees_.record( id, method );
+    record_method_instantiation( id, method, operand_type );
+
+    return types_.record( id, table_.substitute( types_.type_of( method ), operator_bindings( id, operand_type, method ) ) );
+}
+
+// `2.0 * v`: the operator belongs to the left operand, and a built-in one has none to call.
+Type_id Expressions::refuse_reversed_operator( Node_id id, Type_id left, Type_id right )
+{
+    const std::string_view sym   = token_kind_spelling( ast_.op( id ) );
+    const std::string_view named = table_.name( right );
+
+    reporter_.error_at(
+        ast_.span( id ),
+        fmt::format( "`{}` on `{}` cannot take a `{}`", sym, table_.name( left ), named ),
+        fmt::format(
+            "`{0}`'s `operator{1}` is called on a `{0}` on the left; write `{2} {1} {3}` if the operation allows it",
+            named,
+            sym,
+            reporter_.text( ast_.span( ast_.rhs( id ) ) ),
+            reporter_.text( ast_.span( ast_.lhs( id ) ) )
+        )
+    );
+
+    return types_.poison( id );
 }
 
 // `v[i]` on an aggregate: the element its `operator[]` points at.
@@ -2036,7 +2193,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 {
     const Node_id index  = ast_.index( id );
     const Node_id method = find_operator(
-        id, object_type, index, Interner::operator_name( Operator_name::Index ), "T* operator[]( u64 index ) const"
+        id, object_type, index, Interner::operator_name( Operator_name::Index ), "T* operator[]( u64 index ) const", 1
     );
 
     if( !method.is_valid() )
@@ -2062,22 +2219,58 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     return types_.record( id, table_.get( returned ).element );
 }
 
-// The operator method a use calls, or nothing once reported. The argument is typed either way.
+// The operator method a use calls with `operands` right-hand operands, or nothing once reported. The
+// argument, if any, is typed either way.
 Node_id Expressions::find_operator(
-    Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text
+    Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text, std::size_t operands
 )
 {
-    // An enum's operator is its block's; a block missing it was reported as a conformance error.
-    const Node_id block       = table_.is_enum( object_type ) ? block_for( object_type, name ) : Node_id {};
-    const Node_id declaration = block.is_valid() ? block : table_.get( object_type ).declaration;
-    const Node_id method      = aggregates_.find_method( declaration, name );
+    // An enum's operator is its block's; a block missing it was reported as a conformance error. A
+    // parameter's is its bound's, and an implementer missing it was reported the same way.
+    const Node_id              block       = table_.is_enum( object_type ) ? block_for( object_type, name ) : Node_id {};
+    const std::vector<Type_id> owners      = block.is_valid() ? std::vector<Type_id> {} : method_owners( object_type, name );
+    const Node_id              declaration = block.is_valid() ? block : table_.get( owners.front() ).declaration;
 
-    if( !method.is_valid() )
+    const auto type_argument = [&]
     {
-        if( !types_.type_of( argument ).is_valid() )
+        if( argument.is_valid() && !types_.type_of( argument ).is_valid() )
         {
             infer( argument );
         }
+    };
+
+    // `-` is two operators, told apart by their operands; any other count was reported where it was
+    // written.
+    Node_id method;
+    bool    malformed = false;
+
+    for( const Node_id member : ast_.members( declaration ) )
+    {
+        if( ast_.kind( member ) != Node_kind::Method_decl || ast_.name( member ) != name )
+        {
+            continue;
+        }
+
+        const std::size_t count = ast_.params( member ).size();
+
+        if( count == operands + 1 )
+        {
+            method = member;
+            break;
+        }
+
+        malformed = malformed || name != Interner::operator_name( Operator_name::Minus ) || count > 2;
+    }
+
+    if( !method.is_valid() && malformed )
+    {
+        type_argument();
+        return Node_id {};
+    }
+
+    if( !method.is_valid() )
+    {
+        type_argument();
 
         // Only a type the author can edit is worth telling them to edit.
         const bool own_package =
@@ -2094,16 +2287,15 @@ Node_id Expressions::find_operator(
 
     if( !ast_.is_visible_from( method, current_type() ) )
     {
-        infer( argument );
+        type_argument();
         report_private( id, method );
         return Node_id {};
     }
 
-    // A malformed declaration was reported where it was written.
-    if( ast_.params( method ).size() != 2 || !ast_.is_const_method( method ) )
+    // Lowering reads which instance the operator went through.
+    if( table_.is_parameter( object_type ) )
     {
-        infer( argument );
-        return Node_id {};
+        callees_.record_through( id, owners.front() );
     }
 
     return method;

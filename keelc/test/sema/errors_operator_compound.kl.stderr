@@ -1,0 +1,61 @@
+error: `c` is `const`
+  --> sema/errors_operator_compound.kl:31:5
+   |
+31 |     c += 1;
+   |     ^ remove `const` to modify it
+
+error: no operator `+=` for `plain`
+  --> sema/errors_operator_compound.kl:37:5
+   |
+37 |     p += plain { 2 };
+   |     ^^^^^^^^^^^^^^^^^ declare `operator+=`, or `operator+` returning `plain`
+
+error: `m /= 2.0` is `m = m / 2.0`, but `/` on `meters` gives `speed`
+  --> sema/errors_operator_compound.kl:40:5
+   |
+40 |     m /= 2.0;
+   |     ^^^^^^^^^ declare `void operator/=( f64 other )` on `meters`
+
+error: `fixed` is `const`
+  --> sema/errors_operator_compound.kl:43:5
+   |
+43 |     fixed += 1;
+   |     ^^^^^ remove `const` to modify it
+
+error: `fixed` is `const`
+  --> sema/errors_operator_compound.kl:44:5
+   |
+44 |     fixed -= 1;
+   |     ^^^^^ remove `const` to modify it
+
+error: expected `i32`, but got `counter`
+  --> sema/errors_operator_compound.kl:47:10
+   |
+47 |     c += counter { 1 };
+   |          ^^^^^^^^^^^^^
+
+error: no operator `<<=` for `counter`
+  --> sema/errors_operator_compound.kl:48:5
+   |
+48 |     c <<= 1;
+   |     ^^^^^^^^
+
+error: no operator `++` for `counter`
+  --> sema/errors_operator_compound.kl:49:5
+   |
+49 |     c++;
+   |     ^^^^ `++` and `--` are kept for the built-in numbers; write `c += 1`
+
+error: no operator `--` for `counter`
+  --> sema/errors_operator_compound.kl:50:5
+   |
+50 |     c--;
+   |     ^^^^ `++` and `--` are kept for the built-in numbers; write `c -= 1`
+
+error: expected `i32`, but got `counter`
+  --> sema/errors_operator_compound.kl:53:10
+   |
+53 |     n += c;
+   |          ^
+
+10 errors generated

@@ -209,6 +209,7 @@ Types Checker::run()
         aggregates_.take_struct_order(),
         constant_folder_.take_values(),
         callees_.take(),
+        callees_.take_through(),
         generic_recursion_.take_instantiations(),
         overloads_.take_instantiations(),
         generic_recursion_.take_generic_calls(),

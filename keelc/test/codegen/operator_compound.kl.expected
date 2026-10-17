@@ -1,0 +1,521 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "operator_compound.kl.prelude.c"
+
+struct kl__tally;
+struct kl__only_compound;
+struct kl__only_binary;
+struct kl__mixed;
+struct kl__shelf;
+struct kl__label;
+struct kl__holder;
+
+struct kl__tally
+{
+    int32_t kl_total_1;
+    int32_t kl_in_place_3;
+};
+
+struct kl__only_compound
+{
+    int32_t kl_x_39;
+};
+
+struct kl__only_binary
+{
+    int32_t kl_x_67;
+};
+
+struct kl__mixed
+{
+    double kl_x_103;
+};
+
+struct kl__shelf
+{
+    struct kl__only_binary* kl_cells_191;
+};
+
+struct kl__label
+{
+    uint8_t* kl_bytes_195;
+    uint64_t kl_length_197;
+};
+
+struct kl__holder
+{
+    struct kl__tally kl_t_259;
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+struct kl__tally kl__operator_add__S5tally_3i32( struct kl__tally*, int32_t );
+void kl__operator_add_assign__S5tally_3i32( struct kl__tally*, int32_t );
+void kl__operator_mul_assign__S13only_compound_3i32( struct kl__only_compound*, int32_t );
+void kl__operator_xor_assign__S13only_compound_13only_compound( struct kl__only_compound*, struct kl__only_compound );
+struct kl__only_binary kl__operator_sub__S11only_binary_3i32( struct kl__only_binary*, int32_t );
+struct kl__only_binary kl__operator_and__S11only_binary_11only_binary( struct kl__only_binary*, struct kl__only_binary );
+struct kl__mixed kl__operator_sub__S5mixed_5mixed( struct kl__mixed*, struct kl__mixed* );
+void kl__operator_sub_assign__S5mixed_3f64( struct kl__mixed*, double );
+void kl__shelf__R5shelf_11only_binary_11only_binary__ctor( struct kl__shelf*, struct kl__only_binary, struct kl__only_binary );
+void kl__shelf__dtor( struct kl__shelf* );
+struct kl__only_binary* kl__operator_index__S5shelf_3u64( struct kl__shelf*, uint64_t );
+void kl__label__R5label_3u64__ctor( struct kl__label*, uint64_t );
+void kl__label__dtor( struct kl__label* );
+uint64_t kl__size__S5label( struct kl__label* );
+struct kl__label kl__operator_add__S5label_5label( struct kl__label*, struct kl__label* );
+uint64_t kl__next__R3i32( int32_t* );
+int32_t kl__main__( void );
+
+struct kl__tally kl__operator_add__S5tally_3i32( struct kl__tally* kl_this_1, int32_t kl_n_2 )
+{
+    struct kl__tally kl_t0;
+    struct kl__tally kl_t3;
+    int32_t kl_t4;
+#line 9 "codegen/operator_compound.kl"
+    kl_t4 = ( *kl_this_1 ).kl_total_1 + kl_n_2;
+    kl_t3.kl_total_1 = kl_t4;
+    kl_t3.kl_in_place_3 = ( *kl_this_1 ).kl_in_place_3;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__operator_add_assign__S5tally_3i32( struct kl__tally* kl_this_1, int32_t kl_n_2 )
+{
+#line 12 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_total_1 = ( *kl_this_1 ).kl_total_1 + kl_n_2;
+#line 13 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_in_place_3 = ( *kl_this_1 ).kl_in_place_3 + 1;
+    return;
+}
+
+void kl__operator_mul_assign__S13only_compound_3i32( struct kl__only_compound* kl_this_1, int32_t kl_by_2 )
+{
+#line 21 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_x_39 = ( *kl_this_1 ).kl_x_39 * kl_by_2;
+    return;
+}
+
+void kl__operator_xor_assign__S13only_compound_13only_compound( struct kl__only_compound* kl_this_1, struct kl__only_compound kl_other_2 )
+{
+#line 22 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_x_39 = ( *kl_this_1 ).kl_x_39 ^ kl_other_2.kl_x_39;
+    return;
+}
+
+struct kl__only_binary kl__operator_sub__S11only_binary_3i32( struct kl__only_binary* kl_this_1, int32_t kl_n_2 )
+{
+    struct kl__only_binary kl_t0;
+    struct kl__only_binary kl_t3;
+    int32_t kl_t4;
+#line 29 "codegen/operator_compound.kl"
+    kl_t4 = ( *kl_this_1 ).kl_x_67 - kl_n_2;
+    kl_t3.kl_x_67 = kl_t4;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+struct kl__only_binary kl__operator_and__S11only_binary_11only_binary( struct kl__only_binary* kl_this_1, struct kl__only_binary kl_other_2 )
+{
+    struct kl__only_binary kl_t0;
+    struct kl__only_binary kl_t3;
+    int32_t kl_t4;
+#line 30 "codegen/operator_compound.kl"
+    kl_t4 = ( *kl_this_1 ).kl_x_67 & kl_other_2.kl_x_67;
+    kl_t3.kl_x_67 = kl_t4;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+struct kl__mixed kl__operator_sub__S5mixed_5mixed( struct kl__mixed* kl_this_1, struct kl__mixed* kl_other_2 )
+{
+    struct kl__mixed kl_t0;
+    struct kl__mixed kl_t3;
+    double kl_t4;
+#line 37 "codegen/operator_compound.kl"
+    kl_t4 = ( *kl_this_1 ).kl_x_103 - ( *kl_other_2 ).kl_x_103;
+    kl_t3.kl_x_103 = kl_t4;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__operator_sub_assign__S5mixed_3f64( struct kl__mixed* kl_this_1, double kl_n_2 )
+{
+#line 38 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_x_103 = ( *kl_this_1 ).kl_x_103 - kl_n_2;
+    return;
+}
+
+void kl__shelf__R5shelf_11only_binary_11only_binary__ctor( struct kl__shelf* kl_this_1, struct kl__only_binary kl_first_2, struct kl__only_binary kl_second_3 )
+{
+    struct kl__only_binary* kl_t4;
+    struct kl__only_binary* kl_t5;
+    struct kl__only_binary* kl_t6;
+#line 47 "codegen/operator_compound.kl"
+    kl_t4 = ( struct kl__only_binary* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__only_binary ), "codegen/operator_compound.kl", 47, "out of memory: alloc<only_binary>( 2 )" );
+    ( *kl_this_1 ).kl_cells_191 = kl_t4;
+#line 48 "codegen/operator_compound.kl"
+    kl_t5 = ( *kl_this_1 ).kl_cells_191 + 0;
+    ( *kl_t5 ) = kl_first_2;
+#line 49 "codegen/operator_compound.kl"
+    kl_t6 = ( *kl_this_1 ).kl_cells_191 + 1;
+    ( *kl_t6 ) = kl_second_3;
+    return;
+}
+
+void kl__shelf__dtor( struct kl__shelf* kl_this_1 )
+{
+#line 53 "codegen/operator_compound.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_cells_191 );
+    return;
+}
+
+struct kl__only_binary* kl__operator_index__S5shelf_3u64( struct kl__shelf* kl_this_1, uint64_t kl_i_2 )
+{
+    struct kl__only_binary* kl_t0;
+    struct kl__only_binary* kl_t3;
+    struct kl__only_binary* kl_t4;
+#line 59 "codegen/operator_compound.kl"
+    kl_t3 = ( *kl_this_1 ).kl_cells_191 + kl_i_2;
+    kl_t4 = &( *kl_t3 );
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t kl_t3;
+    uint8_t* kl_t4;
+#line 73 "codegen/operator_compound.kl"
+    kl_t3 = kl_n_2 + 1;
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( uint8_t ), "codegen/operator_compound.kl", 73, "out of memory: alloc<u8>( n + 1 )" );
+    ( *kl_this_1 ).kl_bytes_195 = kl_t4;
+#line 74 "codegen/operator_compound.kl"
+    ( *kl_this_1 ).kl_length_197 = kl_n_2;
+    return;
+}
+
+void kl__label__dtor( struct kl__label* kl_this_1 )
+{
+#line 77 "codegen/operator_compound.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_bytes_195 );
+    return;
+}
+
+uint64_t kl__size__S5label( struct kl__label* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 79 "codegen/operator_compound.kl"
+    kl_t0 = ( *kl_this_1 ).kl_length_197;
+    return kl_t0;
+}
+
+struct kl__label kl__operator_add__S5label_5label( struct kl__label* kl_this_1, struct kl__label* kl_other_2 )
+{
+    struct kl__label kl_t0;
+    struct kl__label kl_t3;
+    struct kl__label* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t7;
+#line 80 "codegen/operator_compound.kl"
+    kl_t7 = false;
+    kl_t7 = false;
+    kl_t4 = &kl_t3;
+    kl_t7 = true;
+    kl_t5 = ( *kl_this_1 ).kl_length_197 + ( *kl_other_2 ).kl_length_197;
+    kl__label__R5label_3u64__ctor( kl_t4, kl_t5 );
+    kl_t0 = kl_t3;
+    kl_t7 = false;
+    if ( kl_t7 ) kl__label__dtor( &kl_t3 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+uint64_t kl__next__R3i32( int32_t* kl_count_1 )
+{
+    uint64_t kl_t0;
+#line 90 "codegen/operator_compound.kl"
+    ( *kl_count_1 ) = ( *kl_count_1 ) + 1;
+#line 91 "codegen/operator_compound.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__tally kl_t_1;
+    struct kl__tally kl_t2;
+    struct kl__tally* kl_t3;
+    struct kl__tally* kl_t5;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    struct kl__only_compound kl_c_10;
+    struct kl__only_compound kl_t11;
+    struct kl__only_compound* kl_t12;
+    struct kl__only_compound* kl_t14;
+    struct kl__only_compound kl_t15;
+    bool kl_t17;
+    struct kl__only_binary kl_b_18;
+    struct kl__only_binary kl_t19;
+    struct kl__only_binary* kl_t20;
+    struct kl__only_binary kl_t21;
+    struct kl__only_binary* kl_t22;
+    struct kl__only_binary kl_t23;
+    struct kl__only_binary kl_t24;
+    bool kl_t25;
+    struct kl__mixed kl_m_26;
+    struct kl__mixed kl_t27;
+    struct kl__mixed* kl_t28;
+    bool kl_t30;
+    struct kl__holder kl_h_31;
+    struct kl__holder kl_t32;
+    struct kl__tally kl_t33;
+    struct kl__tally* kl_t34;
+    bool kl_t36;
+    bool kl_t37;
+    bool kl_t38;
+    struct kl__shelf kl_s_39;
+    struct kl__shelf* kl_t40;
+    struct kl__only_binary kl_t41;
+    struct kl__only_binary kl_t42;
+    int32_t kl_calls_44;
+    struct kl__shelf* kl_t45;
+    int32_t* kl_t46;
+    uint64_t kl_t47;
+    struct kl__only_binary* kl_t48;
+    struct kl__only_binary* kl_t49;
+    struct kl__only_binary kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    struct kl__shelf* kl_t54;
+    struct kl__only_binary* kl_t55;
+    bool kl_t56;
+    struct kl__shelf* kl_t57;
+    struct kl__only_binary* kl_t58;
+    bool kl_t59;
+    struct kl__label kl_l_60;
+    struct kl__label* kl_t61;
+    struct kl__label* kl_t63;
+    struct kl__label kl_t64;
+    struct kl__label* kl_t65;
+    struct kl__label* kl_t67;
+    struct kl__label kl_t68;
+    struct kl__label* kl_t69;
+    struct kl__label* kl_t70;
+    struct kl__label kl_t71;
+    struct kl__label* kl_t72;
+    uint64_t kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    bool kl_t76;
+    bool kl_t77;
+#line 150 "codegen/operator_compound.kl"
+    kl_t75 = false;
+#line 151 "codegen/operator_compound.kl"
+    kl_t76 = false;
+#line 152 "codegen/operator_compound.kl"
+    kl_t77 = false;
+#line 96 "codegen/operator_compound.kl"
+    kl_t2.kl_total_1 = 0;
+    kl_t2.kl_in_place_3 = 0;
+    kl_t_1 = kl_t2;
+#line 97 "codegen/operator_compound.kl"
+    kl_t3 = &kl_t_1;
+    kl__operator_add_assign__S5tally_3i32( kl_t3, 5 );
+#line 98 "codegen/operator_compound.kl"
+    kl_t5 = &kl_t_1;
+    kl__operator_add_assign__S5tally_3i32( kl_t5, 2 );
+#line 100 "codegen/operator_compound.kl"
+    kl_t8 = kl_t_1.kl_total_1 != 7;
+    kl_t7 = kl_t8;
+    if ( kl_t7 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t9 = kl_t_1.kl_in_place_3 != 2;
+    kl_t7 = kl_t9;
+    goto bb2;
+    bb2:
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 102 "codegen/operator_compound.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb4:
+#line 105 "codegen/operator_compound.kl"
+    kl_t11.kl_x_39 = 3;
+    kl_c_10 = kl_t11;
+#line 106 "codegen/operator_compound.kl"
+    kl_t12 = &kl_c_10;
+    kl__operator_mul_assign__S13only_compound_3i32( kl_t12, 4 );
+#line 107 "codegen/operator_compound.kl"
+    kl_t14 = &kl_c_10;
+    kl_t15.kl_x_39 = 8;
+    kl__operator_xor_assign__S13only_compound_13only_compound( kl_t14, kl_t15 );
+#line 109 "codegen/operator_compound.kl"
+    kl_t17 = kl_c_10.kl_x_39 != 4;
+    if ( kl_t17 ) goto bb5; else goto bb6;
+    bb5:
+#line 111 "codegen/operator_compound.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 114 "codegen/operator_compound.kl"
+    kl_t19.kl_x_67 = 10;
+    kl_b_18 = kl_t19;
+#line 115 "codegen/operator_compound.kl"
+    kl_t20 = &kl_b_18;
+    kl_t21 = kl__operator_sub__S11only_binary_3i32( kl_t20, 3 );
+    kl_b_18 = kl_t21;
+#line 116 "codegen/operator_compound.kl"
+    kl_t22 = &kl_b_18;
+    kl_t23.kl_x_67 = 6;
+    kl_t24 = kl__operator_and__S11only_binary_11only_binary( kl_t22, kl_t23 );
+    kl_b_18 = kl_t24;
+#line 118 "codegen/operator_compound.kl"
+    kl_t25 = kl_b_18.kl_x_67 != 6;
+    if ( kl_t25 ) goto bb7; else goto bb8;
+    bb7:
+#line 120 "codegen/operator_compound.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+#line 124 "codegen/operator_compound.kl"
+    kl_t27.kl_x_103 = 5.0;
+    kl_m_26 = kl_t27;
+#line 125 "codegen/operator_compound.kl"
+    kl_t28 = &kl_m_26;
+    kl__operator_sub_assign__S5mixed_3f64( kl_t28, 1.5 );
+#line 127 "codegen/operator_compound.kl"
+    kl_t30 = kl_m_26.kl_x_103 != 3.5;
+    if ( kl_t30 ) goto bb9; else goto bb10;
+    bb9:
+#line 129 "codegen/operator_compound.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb10:
+#line 132 "codegen/operator_compound.kl"
+    kl_t33.kl_total_1 = 1;
+    kl_t33.kl_in_place_3 = 0;
+    kl_t32.kl_t_259 = kl_t33;
+    kl_h_31 = kl_t32;
+#line 133 "codegen/operator_compound.kl"
+    kl_t34 = &kl_h_31.kl_t_259;
+    kl__operator_add_assign__S5tally_3i32( kl_t34, 1 );
+#line 135 "codegen/operator_compound.kl"
+    kl_t37 = kl_h_31.kl_t_259.kl_total_1 != 2;
+    kl_t36 = kl_t37;
+    if ( kl_t36 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t38 = kl_h_31.kl_t_259.kl_in_place_3 != 1;
+    kl_t36 = kl_t38;
+    goto bb12;
+    bb12:
+    if ( kl_t36 ) goto bb13; else goto bb14;
+    bb13:
+#line 137 "codegen/operator_compound.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+#line 141 "codegen/operator_compound.kl"
+    kl_t40 = &kl_s_39;
+    kl_t41.kl_x_67 = 1;
+    kl_t42.kl_x_67 = 20;
+    kl__shelf__R5shelf_11only_binary_11only_binary__ctor( kl_t40, kl_t41, kl_t42 );
+#line 142 "codegen/operator_compound.kl"
+    kl_calls_44 = 0;
+#line 143 "codegen/operator_compound.kl"
+    kl_t45 = &kl_s_39;
+    kl_t46 = &kl_calls_44;
+    kl_t47 = kl__next__R3i32( kl_t46 );
+    kl_t48 = kl__operator_index__S5shelf_3u64( kl_t45, kl_t47 );
+    kl_t49 = &( *kl_t48 );
+    kl_t50 = kl__operator_sub__S11only_binary_3i32( kl_t49, 5 );
+    ( *kl_t48 ) = kl_t50;
+#line 145 "codegen/operator_compound.kl"
+    kl_t53 = kl_calls_44 != 1;
+    kl_t52 = kl_t53;
+    if ( kl_t52 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t54 = &kl_s_39;
+    kl_t55 = kl__operator_index__S5shelf_3u64( kl_t54, 1 );
+    kl_t56 = ( *kl_t55 ).kl_x_67 != 15;
+    kl_t52 = kl_t56;
+    goto bb16;
+    bb16:
+    kl_t51 = kl_t52;
+    if ( kl_t51 ) goto bb18; else goto bb17;
+    bb17:
+    kl_t57 = &kl_s_39;
+    kl_t58 = kl__operator_index__S5shelf_3u64( kl_t57, 0 );
+    kl_t59 = ( *kl_t58 ).kl_x_67 != 1;
+    kl_t51 = kl_t59;
+    goto bb18;
+    bb18:
+    if ( kl_t51 ) goto bb19; else goto bb20;
+    bb19:
+#line 147 "codegen/operator_compound.kl"
+    kl_t0 = 6;
+    kl__shelf__dtor( &kl_s_39 );
+    return kl_t0;
+    bb20:
+#line 150 "codegen/operator_compound.kl"
+    kl_t75 = false;
+    kl_t61 = &kl_l_60;
+    kl_t75 = true;
+    kl__label__R5label_3u64__ctor( kl_t61, 2 );
+#line 151 "codegen/operator_compound.kl"
+    kl_t63 = &kl_l_60;
+    kl_t65 = &kl_t64;
+    kl__label__R5label_3u64__ctor( kl_t65, 3 );
+    kl_t67 = &kl_t64;
+    kl_t68 = kl__operator_add__S5label_5label( kl_t63, kl_t67 );
+    kl_t76 = true;
+    if ( kl_t75 ) kl__label__dtor( &kl_l_60 );
+    kl_l_60 = kl_t68;
+    kl_t76 = false;
+    kl_t75 = true;
+    if ( kl_t76 ) kl__label__dtor( &kl_t68 );
+    kl__label__dtor( &kl_t64 );
+    kl_t76 = false;
+#line 152 "codegen/operator_compound.kl"
+    kl_t69 = &kl_l_60;
+    kl_t70 = &kl_l_60;
+    kl_t71 = kl__operator_add__S5label_5label( kl_t69, kl_t70 );
+    kl_t77 = true;
+    if ( kl_t75 ) kl__label__dtor( &kl_l_60 );
+    kl_l_60 = kl_t71;
+    kl_t77 = false;
+    kl_t75 = true;
+    if ( kl_t77 ) kl__label__dtor( &kl_t71 );
+    kl_t77 = false;
+#line 154 "codegen/operator_compound.kl"
+    kl_t72 = &kl_l_60;
+    kl_t73 = kl__size__S5label( kl_t72 );
+    kl_t74 = kl_t73 != 10;
+    if ( kl_t74 ) goto bb21; else goto bb22;
+    bb21:
+#line 156 "codegen/operator_compound.kl"
+    kl_t0 = 7;
+    if ( kl_t75 ) kl__label__dtor( &kl_l_60 );
+    kl_t75 = false;
+    kl__shelf__dtor( &kl_s_39 );
+    return kl_t0;
+    bb22:
+#line 159 "codegen/operator_compound.kl"
+    kl_t0 = 0;
+    if ( kl_t75 ) kl__label__dtor( &kl_l_60 );
+    kl_t75 = false;
+    kl__shelf__dtor( &kl_s_39 );
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

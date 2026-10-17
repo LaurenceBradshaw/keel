@@ -466,6 +466,11 @@ void Statements::visit_assign( Node_id id )
         return;
     }
 
+    if( expressions_.check_compound_operator( id, value, target_type ) )
+    {
+        return;
+    }
+
     // A compound assignment is `x = x op y`, so the value is *checked* against the target rather
     // than inferred. Inferring it would settle a literal on its default type first, and `u8 x;
     // x += 3;` would then combine u8 with i32 and have nowhere to put the result.
@@ -473,14 +478,16 @@ void Statements::visit_assign( Node_id id )
     // Checking also subsumes the range rule: whatever holds in the target can be combined with it
     // and stored back, and whatever does not is rejected here with a clearer message than
     // "cannot hold the i32 this produces".
-    expressions_.check( value, target_type );
-
     if( !table_.is_integer( target_type ) && !table_.is_float( target_type ) )
     {
         reporter_.error_at(
             ast_.span( id ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( target_type ) )
         );
+        expressions_.absorb( value );
+        return;
     }
+
+    expressions_.check( value, target_type );
 }
 
 // PLAN D7/D30/D34. The scrutinee and the arm bodies; every rule about a label is `Coverage`'s. Only
@@ -614,8 +621,17 @@ void Statements::visit_increment( Node_id id )
 
     if( !table_.is_integer( operand_type ) && !table_.is_float( operand_type ) )
     {
+        const bool user = table_.is_struct( operand_type ) || table_.is_interface( operand_type );
+
         reporter_.error_at(
-            ast_.span( id ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( operand_type ) )
+            ast_.span( id ),
+            fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( operand_type ) ),
+            user ? fmt::format(
+                       "`++` and `--` are kept for the built-in numbers; write `{} {}= 1`",
+                       reporter_.text( ast_.span( operand ) ),
+                       op == Token_kind::Plus_plus ? "+" : "-"
+                   )
+                 : std::string {}
         );
     }
 }

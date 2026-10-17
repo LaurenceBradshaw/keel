@@ -109,6 +109,8 @@ public:
     void leave_unsafe( Span at, bool enclosing_used );
 
     void step_pointer( Node_id statement, Token_kind op, Type_id pointer, Node_id value );
+    // `a op= b` on a user type: its `operator op=`, or `a = a op b`. False when the type is not one.
+    bool check_compound_operator( Node_id statement, Node_id value, Type_id target_type );
 
     void refuse_run_value( Node_id at ); // a run is only ever borrowed
 
@@ -174,12 +176,23 @@ private:
     // is a question about places rather than types.
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
-    // Whether `op` on `type` calls a method: any struct's, or an enum's own block's.
-    bool    calls_operator( Type_id type, Token_kind op ) const;
-    Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
-    Type_id infer_index_operator( Node_id id, Type_id object_type );
-    Node_id
-    find_operator( Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text );
+    // Whether the operator `name` on `type` calls a method: any struct's, or one has_operator finds.
+    bool calls_operator( Type_id type, Symbol_id name ) const;
+    // Whether `type` declares the operator `name`: itself, in an enum's block, or in a parameter's bound.
+    bool     has_operator( Type_id type, Symbol_id name ) const;
+    Bindings operator_bindings( Node_id id, Type_id object_type, Node_id method ) const;
+    Type_id  infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
+    Type_id  infer_unary_operator( Node_id id, Type_id operand_type, Symbol_id name );
+    Type_id  refuse_reversed_operator( Node_id id, Type_id left, Type_id right );
+    Type_id  infer_index_operator( Node_id id, Type_id object_type );
+    Node_id  find_operator(
+         Node_id          id,
+         Type_id          object_type,
+         Node_id          argument,
+         Symbol_id        name,
+         std::string_view declaration_text,
+         std::size_t      operands
+     );
     // `&f`: the operand names a function, so the type is its signature and not a pointer to it.
     Type_id function_address( Node_id id, Node_id declaration );
     // `&C::f`: an instance method's signature, with its receiver as parameter 0.

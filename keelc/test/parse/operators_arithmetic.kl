@@ -1,0 +1,33 @@
+// M9.6: every operator a type may declare beside `==`, `<=>` and `[]` parses as a method named
+// after it: arithmetic, bitwise, their compound assignments, and unary `-` and `~`, with `-`
+// declared both ways on one type. An interface may require one.
+struct v
+{
+    i32 x;
+
+    v operator+( const ref v other ) const { return other; }
+    v operator-( const ref v other ) const { return other; }
+    v operator*( i32 by ) const { return v { x * by }; }
+    v operator/( i32 by ) const { return v { x / by }; }
+    v operator%( i32 by ) const { return v { x % by }; }
+    v operator&( const ref v other ) const { return other; }
+    v operator|( const ref v other ) const { return other; }
+    v operator^( const ref v other ) const { return other; }
+    v operator-() const { return v { 0 - x }; }
+    v operator~() const { return v { ~x }; }
+
+    void operator+=( const ref v other ) { }
+    void operator-=( const ref v other ) { }
+    void operator*=( i32 by ) { }
+    void operator/=( i32 by ) { }
+    void operator%=( i32 by ) { }
+    void operator&=( const ref v other ) { }
+    void operator|=( const ref v other ) { }
+    void operator^=( const ref v other ) { }
+};
+
+interface addable
+{
+    self operator+( const ref self other ) const;
+    void operator+=( const ref self other );
+};

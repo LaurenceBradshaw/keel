@@ -468,7 +468,42 @@ Symbol_id Parser::expect_operator_name()
         return Symbol_id {};
 
     case Token_kind::Less_equal_greater:
-        return Interner::operator_name( Operator_name::Compare );
+    case Token_kind::Plus:
+    case Token_kind::Minus:
+    case Token_kind::Star:
+    case Token_kind::Slash:
+    case Token_kind::Percent:
+    case Token_kind::Amp:
+    case Token_kind::Pipe:
+    case Token_kind::Caret:
+    case Token_kind::Tilde:
+    case Token_kind::Plus_equal:
+    case Token_kind::Minus_equal:
+    case Token_kind::Star_equal:
+    case Token_kind::Slash_equal:
+    case Token_kind::Percent_equal:
+    case Token_kind::Amp_equal:
+    case Token_kind::Pipe_equal:
+    case Token_kind::Caret_equal:
+        return Interner::operator_name( *operator_of( op ) );
+
+    case Token_kind::Less_less:
+    case Token_kind::Greater_greater:
+    case Token_kind::Less_less_equal:
+    case Token_kind::Greater_greater_equal:
+        recovery_.error_at(
+            span, fmt::format( "`{}` cannot be declared", sm_.text( span ) ), "a shift is kept for the built-in integers"
+        );
+        return Symbol_id {};
+
+    case Token_kind::Plus_plus:
+    case Token_kind::Minus_minus:
+        recovery_.error_at(
+            span,
+            fmt::format( "`{}` cannot be declared", sm_.text( span ) ),
+            "`++` and `--` are kept for the built-in numbers; declare `operator+=`"
+        );
+        return Symbol_id {};
 
     case Token_kind::L_bracket:
         if( cursor_.previous().kind != Token_kind::R_bracket )

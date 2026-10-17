@@ -1,0 +1,53 @@
+// `kl::string`'s `+` builds a new string from any `textual` right operand, and `+=` appends one in
+// place; a string literal on the left adopts `kl::string`. Every temporary is dropped once. Each
+// check returns its own code.
+import kl::string;
+
+i32 main()
+{
+    kl::string a = "ab";
+    kl::string b = "cd";
+
+    if( !( a + b == "abcd" ) || !( a == "ab" ) || !( b == "cd" ) )
+    {
+        return 1;
+    }
+
+    if( !( a + "xy" == "abxy" ) || !( "xy" + a == "xyab" ) )
+    {
+        return 2;
+    }
+
+    str  s = "!";
+    if( !( a + s == "ab!" ) )
+    {
+        return 3;
+    }
+
+    if( !( a + b + a + "." == "abcdab." ) )
+    {
+        return 4;
+    }
+
+    kl::string built = "";
+    for( u64 i = 0; i < 3; i++ )
+    {
+        built += a;
+        built += "-";
+        built += s;
+    }
+
+    if( !( built == "ab-!ab-!ab-!" ) || built.size() != 12 )
+    {
+        return 5;
+    }
+
+    kl::string copy = built + "";
+    copy += kl::string::from( 42 );
+    if( !( copy == "ab-!ab-!ab-!42" ) || !( built == "ab-!ab-!ab-!" ) )
+    {
+        return 6;
+    }
+
+    return 0;
+}

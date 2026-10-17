@@ -1,0 +1,61 @@
+error: `vec` has no `operator+`
+  --> sema/errors_operator_arithmetic.kl:25:16
+   |
+25 |     vec sum  = v + w;
+   |                ^^^^^ declare `vec operator+( const ref vec other ) const` in it
+
+error: expected `f64`, but got `vec`
+  --> sema/errors_operator_arithmetic.kl:26:20
+   |
+26 |     vec both = v * w;
+   |                    ^
+
+error: `vec` has no `operator-`
+  --> sema/errors_operator_arithmetic.kl:27:16
+   |
+27 |     vec neg  = -v;
+   |                ^^ declare `vec operator-() const` in it
+
+error: `vec` has no `operator~`
+  --> sema/errors_operator_arithmetic.kl:28:16
+   |
+28 |     vec flip = ~v;
+   |                ^^ declare `vec operator~() const` in it
+
+error: `*` on `f64` cannot take a `vec`
+  --> sema/errors_operator_arithmetic.kl:29:16
+   |
+29 |     vec left = 2.0 * v;
+   |                ^^^^^^^ `vec`'s `operator*` is called on a `vec` on the left; write `v * 2.0` if the operation allows it
+
+error: `*` on `f64` cannot take a `vec`
+  --> sema/errors_operator_arithmetic.kl:30:16
+   |
+30 |     vec held = k * v;
+   |                ^^^^^ `vec`'s `operator*` is called on a `vec` on the left; write `v * k` if the operation allows it
+
+error: expected `i32`, but got `vec`
+  --> sema/errors_operator_arithmetic.kl:31:16
+   |
+31 |     i32 n    = v - w;
+   |                ^^^^^
+
+error: expected `plain`, but got `str`
+  --> sema/errors_operator_arithmetic.kl:33:19
+   |
+33 |     plain glued = "ab" + p;
+   |                   ^^^^ a string literal becomes a `plain` only if `plain` implements the prelude's `from<str>`
+
+error: no operator `<<` for `vec` and `i32`
+  --> sema/errors_operator_arithmetic.kl:34:19
+   |
+34 |     vec   moved = v << 1;
+   |                   ^^^^^^ both operands must be integers
+
+error: no operator `!` for `vec`
+  --> sema/errors_operator_arithmetic.kl:35:19
+   |
+35 |     bool  not_v = !v;
+   |                   ^^ both operands must be `bool`
+
+10 errors generated

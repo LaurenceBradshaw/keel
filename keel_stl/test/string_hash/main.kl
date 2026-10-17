@@ -32,7 +32,7 @@ i32 main()
 
     kl::string built = kl::string( "hel" );
 
-    built.append( kl::string( "lo" ) );
+    built += kl::string( "lo" );
 
     if( !( built == hello ) || digest( built ) != digest( hello ) )
     {

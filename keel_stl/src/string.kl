@@ -83,7 +83,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         u64 magnitude = 0 - wrap<u64>( value );
         string result = string();
         result.push( 45 ); // '-'
-        result.append( from( magnitude ) );
+        result += from( magnitude );
 
         return result;
     }
@@ -152,12 +152,32 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return bytes_.pop();
     }
 
-    /// Adds a copy of every byte of `other` at the end.
-    public void append( const ref string other )
+    /// A new string holding these bytes and then `other`'s bytes.
+    public string operator+( const ref textual other ) const
     {
-        for( u64 i = 0; i < other.size(); i++ )
+        const ref u8[] text = other.as_text();
+        string result = string::with_capacity( size() + text.size );
+
+        for( u64 i = 0; i < size(); i++ )
         {
-            bytes_.push( other[i] );
+            result.push( bytes_[i] );
+        }
+
+        for( u64 i = 0; i < text.size; i++ )
+        {
+            result.push( text[i] );
+        }
+
+        return result;
+    }
+
+    /// Adds a copy of every byte of `other` at the end.
+    public void operator+=( const ref textual other )
+    {
+        const ref u8[] text = other.as_text();
+        for( u64 i = 0; i < text.size; i++ )
+        {
+            bytes_.push( text[i] );
         }
     }
 

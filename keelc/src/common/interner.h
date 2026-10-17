@@ -93,6 +93,23 @@ enum class Operator_name : u32
     Equal_equal,
     Index,
     Compare,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Amp,
+    Pipe,
+    Caret,
+    Tilde,
+    Plus_equal,
+    Minus_equal,
+    Star_equal,
+    Slash_equal,
+    Percent_equal,
+    Amp_equal,
+    Pipe_equal,
+    Caret_equal,
     Count
 };
 
@@ -119,6 +136,9 @@ public:
     {
         return Symbol_id { static_cast<u32>( Keyword::Count ) + static_cast<u32>( op ) };
     }
+
+    // The operator a compound assignment applies: `Plus_equal` is `Plus`.
+    static Operator_name base_of( Operator_name compound );
 
 private:
     struct Sv_hash
