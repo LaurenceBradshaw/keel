@@ -63,6 +63,8 @@ struct Conformances
     const Conformance* of( const Type_table& table, Type_id type, Type_id interface ) const;
     Node_id            method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement )
         const; // invalid where none answers
+    // The `implements ... for type` block declaring `name`, or invalid.
+    Node_id block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
 };
 
 // Asked of each aggregate's `implements` list, and of each block, once every signature is typed.

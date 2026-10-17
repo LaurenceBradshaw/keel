@@ -11,6 +11,7 @@
 #include "sema/annotations.h"
 #include "sema/bounds.h"
 #include "sema/callees.h"
+#include "sema/conformances.h"
 #include "sema/constant_folder.h"
 #include "sema/generic_recursion.h"
 #include "sema/literals.h"
@@ -34,21 +35,22 @@ class Expressions
 {
 public:
     Expressions(
-        const Ast&         ast,
-        const Interner&    interner,
-        const Resolution&  resolution,
-        Types_builder&     types,
-        Aggregates&        aggregates,
-        Bounds&            bounds,
-        Annotations&       annotations,
-        Constant_folder&   constant_folder,
-        Callees&           callees,
-        Places&            places,
-        Generic_recursion& generic_recursion,
-        Literals&          literals,
-        Operators&         operators,
-        Overloads&         overloads,
-        Reporter&          reporter
+        const Ast&          ast,
+        const Interner&     interner,
+        const Resolution&   resolution,
+        Types_builder&      types,
+        Aggregates&         aggregates,
+        Bounds&             bounds,
+        Annotations&        annotations,
+        Constant_folder&    constant_folder,
+        Callees&            callees,
+        Places&             places,
+        Generic_recursion&  generic_recursion,
+        Literals&           literals,
+        Operators&          operators,
+        Overloads&          overloads,
+        const Conformances& conformances,
+        Reporter&           reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -65,6 +67,7 @@ public:
           literals_( literals ),
           operators_( operators ),
           overloads_( overloads ),
+          conformances_( conformances ),
           reporter_( reporter )
     {
     }
@@ -140,9 +143,7 @@ private:
     Type_id              infer_method_call( Node_id id );
     std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;
     std::string          reached_only_as( Type_id type, Symbol_id name ) const;
-    // The `implements ... for type` block declaring `name`, or invalid.
-    Node_id block_for( Type_id type, Symbol_id name ) const;
-    Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
+    Type_id              infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments. `through` holds the instances
     // a bound reaches the method through, and `interface` the one chosen.
@@ -275,22 +276,23 @@ private:
     // The family every literal deciding its type shares, or none: Integer or Floating only.
     std::optional<Argument_kind> literal_family( Node_id id ) const;
 
-    const Ast&         ast_;
-    const Interner&    interner_;
-    const Resolution&  resolution_;
-    Types_builder&     types_;
-    Type_table&        table_;
-    Aggregates&        aggregates_;
-    Bounds&            bounds_;
-    Annotations&       annotations_;
-    Constant_folder&   constant_folder_;
-    Callees&           callees_;
-    Places&            places_;
-    Generic_recursion& generic_recursion_;
-    Literals&          literals_;
-    Operators&         operators_;
-    Overloads&         overloads_;
-    Reporter&          reporter_;
+    const Ast&          ast_;
+    const Interner&     interner_;
+    const Resolution&   resolution_;
+    Types_builder&      types_;
+    Type_table&         table_;
+    Aggregates&         aggregates_;
+    Bounds&             bounds_;
+    Annotations&        annotations_;
+    Constant_folder&    constant_folder_;
+    Callees&            callees_;
+    Places&             places_;
+    Generic_recursion&  generic_recursion_;
+    Literals&           literals_;
+    Operators&          operators_;
+    Overloads&          overloads_;
+    const Conformances& conformances_; // filled once every signature is typed, before any body
+    Reporter&           reporter_;
 
     // Whether a bare variant path here names the variant rather than standing for a value of
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`

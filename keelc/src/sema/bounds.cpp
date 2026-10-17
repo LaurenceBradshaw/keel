@@ -420,6 +420,7 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
     const Type_id equatable = table_.prelude_interface( Prelude_interface::Equatable );
     std::string   place;
 
+    // A scan, not Conformances: a signature's annotation reaches here before those are built.
     for( const Node_id block : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( block ) == Node_kind::Implements_decl && types_.type_of( block ) == type &&

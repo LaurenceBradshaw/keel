@@ -890,32 +890,11 @@ std::vector<Type_id> Expressions::method_owners( Type_id receiver, Symbol_id nam
     return interfaces.empty() ? std::vector<Type_id> {} : std::vector { interfaces.front() };
 }
 
-Node_id Expressions::block_for( Type_id type, Symbol_id name ) const
-{
-    for( const Node_id block : ast_.declarations( ast_.root() ) )
-    {
-        if( ast_.kind( block ) != Node_kind::Implements_decl || types_.type_of( block ) != type )
-        {
-            continue;
-        }
-
-        for( const Node_id member : ast_.members( block ) )
-        {
-            if( ast_.kind( member ) == Node_kind::Method_decl && ast_.name( member ) == name )
-            {
-                return block;
-            }
-        }
-    }
-
-    return Node_id {};
-}
-
 // A block's method answers its interface and is not the type's, so a direct call is pointed at the
 // interface. Empty when no block for `type` declares `name`.
 std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
 {
-    const Node_id block = block_for( type, name );
+    const Node_id block = conformances_.block_declaring( ast_, type, name );
 
     // The compiler's conformance has no method, and no vtable either.
     if( !block.is_valid() )
@@ -2007,7 +1986,7 @@ bool Expressions::has_operator( Type_id type, Symbol_id name ) const
 
     if( table_.is_enum( type ) )
     {
-        return block_for( type, name ).is_valid();
+        return conformances_.block_declaring( ast_, type, name ).is_valid();
     }
 
     // A bound's `==` and `<=>` are the prelude's, which result_of_binary answers.
@@ -2227,7 +2206,7 @@ Node_id Expressions::find_operator(
 {
     // An enum's operator is its block's; a block missing it was reported as a conformance error. A
     // parameter's is its bound's, and an implementer missing it was reported the same way.
-    const Node_id              block       = table_.is_enum( object_type ) ? block_for( object_type, name ) : Node_id {};
+    const Node_id block = table_.is_enum( object_type ) ? conformances_.block_declaring( ast_, object_type, name ) : Node_id {};
     const std::vector<Type_id> owners      = block.is_valid() ? std::vector<Type_id> {} : method_owners( object_type, name );
     const Node_id              declaration = block.is_valid() ? block : table_.get( owners.front() ).declaration;
 

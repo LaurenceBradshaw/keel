@@ -200,6 +200,27 @@ Node_id Conformances::method_for( const Type_table& table, Type_id type, Type_id
     return Node_id {};
 }
 
+Node_id Conformances::block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const
+{
+    for( const Conformance& conformance : conformances )
+    {
+        if( ast.kind( conformance.implementer ) != Node_kind::Implements_decl || conformance.type != type )
+        {
+            continue;
+        }
+
+        for( const Node_id member : ast.members( conformance.implementer ) )
+        {
+            if( ast.kind( member ) == Node_kind::Method_decl && ast.name( member ) == name )
+            {
+                return conformance.implementer;
+            }
+        }
+    }
+
+    return Node_id {};
+}
+
 namespace
 {
 

@@ -96,6 +96,14 @@ private:
     Bindings             bindings_for_call( Node_id call );
     std::vector<Type_id> type_arguments_for_call( Node_id call );
 
+    // A call of a method at the instance `held` names: its bindings and type arguments.
+    struct Instance_target
+    {
+        Bindings             bound;
+        std::vector<Type_id> type_arguments;
+    };
+    Instance_target at_instance( Type_id held ) const;
+
     Place   place_for( Node_id declaration, Type_id owner = {} );
     Type_id static_owner( Node_id named, Node_id decl );
     Node_id field_of( Type_id type, Symbol_id name ) const;
@@ -112,9 +120,6 @@ private:
     Operand lower_indirect_call( Node_id id );
     Operand lower_field_application( Node_id id );
     Operand lower_method_call( Node_id id );
-    Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
-    Operand
-    lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type );
     Operand lower_method_call_on(
         Node_id                  id,
         Node_id                  method,
@@ -126,14 +131,18 @@ private:
     );
     Operand              lower_interface_call( Node_id id, Node_id requirement );
     Operand              lower_static_interface_call( Node_id id, Node_id requirement );
-    std::vector<Operand> lower_call_arguments( Node_id id, Node_id callee, const Bindings& callee_bound );
-    Operand              emit_call(
-                     Node_id                  id,
-                     Node_id                  callee,
-                     std::span<const Operand> operands,
-                     const Bindings&          callee_bound,
-                     std::vector<Type_id>     type_arguments
-                 );
+    std::vector<Operand> lower_call_arguments(
+        std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
+    );
+    // `type` is the call's language type, `type_of( id )` when not given.
+    Operand emit_call(
+        Node_id                  id,
+        Node_id                  callee,
+        std::span<const Operand> operands,
+        const Bindings&          callee_bound,
+        std::vector<Type_id>     type_arguments,
+        Type_id                  type = {}
+    );
     Operand lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments );
     // `object.method( arguments )` for an operator, with `object` as the receiver.
     Operand call_operator(
@@ -466,6 +475,16 @@ Bindings Lowering::bindings_for_call( Node_id call )
     }
 
     return bindings;
+}
+
+Lowering::Instance_target Lowering::at_instance( Type_id held ) const
+{
+    const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+
+    return {
+        aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
+        std::vector<Type_id>( arguments.begin(), arguments.end() )
+    };
 }
 
 Place Lowering::place_for( Node_id declaration, Type_id owner )
@@ -1516,11 +1535,10 @@ Operand Lowering::lower_string_literal( Node_id id )
 
     assert( method.is_valid() && "an adopted literal's type implements `from<str>`" );
 
-    const Bindings                 bound     = aggregate_bindings( ast_, table, type, types_.recorded() );
-    const std::span<const Type_id> arguments = table.get( type ).arguments;
-    const Operand                  operand[] = { copy( builder_.place( local ), text ) };
+    Instance_target target    = at_instance( type );
+    const Operand   operand[] = { copy( builder_.place( local ), text ) };
 
-    return emit_call( id, method, operand, bound, std::vector<Type_id>( arguments.begin(), arguments.end() ) );
+    return emit_call( id, method, operand, target.bound, std::move( target.type_arguments ) );
 }
 
 Operand Lowering::lower_binary( Node_id id )
@@ -1543,14 +1561,9 @@ Operand Lowering::lower_binary( Node_id id )
     // Under a bound, at a type whose own conformance answers the operator.
     if( const Type_id held = type_of( ast_.lhs( id ) ); bound_operator( op, held ).is_valid() )
     {
-        const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+        Instance_target target = at_instance( held );
 
-        return lower_operator_call(
-            id,
-            bound_operator( op, held ),
-            aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
-            std::vector<Type_id>( arguments.begin(), arguments.end() )
-        );
+        return lower_operator_call( id, bound_operator( op, held ), target.bound, std::move( target.type_arguments ) );
     }
 
     const Span    span      = ast_.span( id );
@@ -1645,16 +1658,9 @@ Operand Lowering::call_operator(
 
         const Node_id implementer =
             types_.conformances().method_for( table, held, table.substitute( types_.through_of( id ), bindings_ ), method );
-        const std::span<const Type_id> held_arguments = table.get( held ).arguments;
+        Instance_target target = at_instance( held );
 
-        return call_operator(
-            id,
-            implementer,
-            object,
-            arguments,
-            aggregate_bindings( ast_, table, held, types_.recorded() ),
-            std::vector<Type_id>( held_arguments.begin(), held_arguments.end() )
-        );
+        return call_operator( id, implementer, object, arguments, target.bound, std::move( target.type_arguments ) );
     }
 
     const Operand receiver = address_operand(
@@ -1729,7 +1735,9 @@ Operand Lowering::lower_operator_index( Node_id id, Node_id method )
         lower_place( ast_.object( id ) ), binding_type_under( ast_.params( method )[0], bindings ), span, Address_purpose::Read
     );
 
-    return lower_method_call_on( id, method, receiver, { &index, 1 }, type_under( method, bindings ) );
+    return lower_method_call_on(
+        id, method, receiver, { &index, 1 }, type_under( method, bindings ), bindings, type_arguments_for_call( id )
+    );
 }
 
 Operand Lowering::lower_unary( Node_id id )
@@ -2048,7 +2056,11 @@ Operand Lowering::lower_method_call( Node_id id )
                                        ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
                                    );
 
-    return lower_method_call_on( id, method, receiver );
+    // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
+    // reads `T` out of the declaration, and only this instance says what it is.
+    return lower_method_call_on(
+        id, method, receiver, ast_.arguments( id ), type_of( id ), bindings_for_call( id ), type_arguments_for_call( id )
+    );
 }
 
 // A method an interface declares. On an interface the call stays a call of that method, and C
@@ -2113,7 +2125,7 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
         return copy( builder_.place( result ), type_of( id ) );
     }
 
-    const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+    Instance_target target = at_instance( held );
 
     return lower_method_call_on(
         id,
@@ -2121,32 +2133,16 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
         receiver( types_.table().pointer_to( held, reads ) ),
         ast_.arguments( id ),
         type_of( id ),
-        aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
-        std::vector<Type_id>( arguments.begin(), arguments.end() )
+        target.bound,
+        std::move( target.type_arguments )
     );
 }
 
-// The half both call shapes share. What differs is only where the receiver came from - an object
-// written at the call site, or the one the enclosing method was given.
-Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver )
-{
-    return lower_method_call_on( id, method, receiver, ast_.arguments( id ), type_of( id ) );
-}
-
-// The arguments and the result's type are given rather than read from `id`, so an operator's
-// operand can be one, and `v[i]`'s call can return the pointer rather than the element.
-Operand
-Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type )
-{
-    // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
-    // reads `T` out of the declaration, and only this instance says what it is.
-    return lower_method_call_on(
-        id, method, receiver, arguments, type, bindings_for_call( id ), type_arguments_for_call( id )
-    );
-}
-
-// With the callee's bindings and type arguments given, for a call whose callee is not the one the
-// checker recorded: an implementer's method reached through a bound.
+// Every method call: the receiver, already lowered, then the written arguments against the
+// parameters from 1. The arguments and the result's type are given rather than read from `id`, so an
+// operator's operand can be one, and `v[i]`'s call can return the pointer rather than the element;
+// the bindings are given for a callee the checker did not record, an implementer reached through a
+// bound.
 Operand Lowering::lower_method_call_on(
     Node_id                  id,
     Node_id                  method,
@@ -2157,51 +2153,14 @@ Operand Lowering::lower_method_call_on(
     std::vector<Type_id>     type_arguments
 )
 {
-    const Span span = ast_.span( id );
+    std::vector<Operand> operands { receiver };
 
-    const std::span<const Node_id> parameters = ast_.params( method );
-
-    std::vector<Operand> operands;
-
-    operands.reserve( arguments.size() + 1 );
-    operands.push_back( receiver );
-
-    // Every argument is lowered before any is converted, so the order the statements come out in is
-    // the order the arguments were written - §7.1's guarantee, which C leaves unspecified.
-    for( std::size_t i = 0; i < arguments.size(); ++i )
+    for( const Operand& argument : lower_call_arguments( arguments, ast_.params( method ).subspan( 1 ), callee_bound ) )
     {
-        operands.push_back( lower_argument( arguments[i], parameters[i + 1], callee_bound ) );
+        operands.push_back( argument );
     }
 
-    // From 1: parameter 0 is the receiver, which was never written at the call site.
-    for( std::size_t i = 0; i < arguments.size() && i + 1 < parameters.size(); ++i )
-    {
-        operands[i + 1] =
-            converted( operands[i + 1], binding_type_under( parameters[i + 1], callee_bound ), ast_.span( arguments[i] ) );
-
-        if( is_move_parameter( parameters[i + 1] ) )
-        {
-            operands[i + 1] = moved_if_owning( operands[i + 1] );
-        }
-    }
-
-    const u32 first = builder_.add_operands( operands );
-
-    // The same split lower_call makes for a free function: a callee that returns a binding hands
-    // back an address, so the call's own type is that pointer and the temporary holding it is one
-    // too. Dereferencing once here is what makes both uses at the call site fall out - a copy reads
-    // `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
-    const bool    binding     = is_borrowed_binding( ast_, types_, method );
-    const Type_id result_type = binding ? binding_type_under( method, callee_bound ) : type;
-
-    const Local_id result = call_result(
-        id,
-        call( method, first, static_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
-        result_type,
-        span
-    );
-
-    return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
+    return emit_call( id, method, operands, callee_bound, std::move( type_arguments ), type );
 }
 
 Operand Lowering::lower_call( Node_id id )
@@ -2265,7 +2224,11 @@ Operand Lowering::lower_call( Node_id id )
                 binding_type_under( ast_.params( callee )[0], bindings_for_call( id ) ),
                 ast_.span( id ),
                 ast_.is_const_method( callee ) ? Address_purpose::Read : Address_purpose::Borrow
-            )
+            ),
+            ast_.arguments( id ),
+            type_of( id ),
+            bindings_for_call( id ),
+            type_arguments_for_call( id )
         );
     }
 
@@ -2289,7 +2252,11 @@ Operand Lowering::lower_call( Node_id id )
     const Bindings callee_bound = bindings_for_call( id );
 
     return emit_call(
-        id, callee, lower_call_arguments( id, callee, callee_bound ), callee_bound, type_arguments_for_call( id )
+        id,
+        callee,
+        lower_call_arguments( ast_.arguments( id ), ast_.params( callee ), callee_bound ),
+        callee_bound,
+        type_arguments_for_call( id )
     );
 }
 
@@ -2302,24 +2269,25 @@ Operand Lowering::lower_static_interface_call( Node_id id, Node_id requirement )
 
     assert( method.is_valid() && "a static requirement is answered by a declared method" );
 
-    const Bindings                 bound     = aggregate_bindings( ast_, types_.table(), held, types_.recorded() );
-    const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+    Instance_target target = at_instance( held );
 
     return emit_call(
-        id, method, lower_call_arguments( id, method, bound ), bound, std::vector<Type_id>( arguments.begin(), arguments.end() )
+        id,
+        method,
+        lower_call_arguments( ast_.arguments( id ), ast_.params( method ), target.bound ),
+        target.bound,
+        std::move( target.type_arguments )
     );
 }
 
 // The written arguments, lowered in order and then converted to `callee`'s parameters.
-std::vector<Operand> Lowering::lower_call_arguments( Node_id id, Node_id callee, const Bindings& callee_bound )
+// `parameters` are the callee's, from its Param_list, and a method's start after the receiver. An
+// argument's own type is not the same thing: §6.4 may have widened it to reach the parameter, and
+// reading the type off the argument would make every conversion a no-op.
+std::vector<Operand> Lowering::lower_call_arguments(
+    std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
+)
 {
-    const std::span<const Node_id> arguments = ast_.arguments( id );
-
-    // The *parameter* types, from the callee's Param_list. An argument's own type is not the
-    // same thing: §6.4 may have widened it to reach the parameter, and reading the type off
-    // the argument would make every conversion a no-op.
-    const std::span<const Node_id> parameters = ast_.params( callee );
-
     // Every argument is lowered before any is converted, so the order the statements come out
     // in is the order the arguments were written - which is what §7.1 guarantees and C leaves
     // unspecified.
@@ -2357,7 +2325,8 @@ Operand Lowering::emit_call(
     Node_id                  callee,
     std::span<const Operand> operands,
     const Bindings&          callee_bound,
-    std::vector<Type_id>     type_arguments
+    std::vector<Type_id>     type_arguments,
+    Type_id                  given
 )
 {
     const u32 first = builder_.add_operands( operands );
@@ -2366,7 +2335,7 @@ Operand Lowering::emit_call(
     // total is worth more than avoiding it: an optional destination would mean every consumer
     // handling a statement that writes nowhere. It is what MIR does with the unit type, and a
     // backend spells it by emitting the call and dropping the assignment.
-    const Type_id type = type_of( id );
+    const Type_id type = given.is_valid() ? given : type_of( id );
 
     // A callee that returns a binding hands back an address, so the call's own type is that pointer
     // and so is the temporary holding it - `type` above is the language type, `T`, and the two
