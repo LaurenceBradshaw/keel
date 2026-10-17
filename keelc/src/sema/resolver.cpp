@@ -54,17 +54,18 @@ private:
     void push_scope( Scope_kind kind = Scope_kind::Transparent );
     void pop_scope();
 
-    void    declare( Scope& scope, Symbol_id name, Node_id decl );
-    void    bind( Node_id use, Node_id decl );
-    bool    chain_overload( Node_id existing, Node_id added );
-    Node_id lookup( Symbol_id name, Node_id use );
-    Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
-    Node_id prelude_declaration( std::string_view name ) const;
-    Node_id lookup_qualified( Node_id package, Node_id use );
-    Node_id visible_from( Node_id use, Node_id head );
-    bool    refuse_builtin_name( Symbol_id name, Node_id decl );
-    void    refuse_unimported( Node_id use, Node_id decl );
-    void    refuse_other_package( Node_id use, Node_id decl );
+    void          declare( Scope& scope, Symbol_id name, Node_id decl );
+    void          bind( Node_id use, Node_id decl );
+    bool          chain_overload( Node_id existing, Node_id added );
+    Node_id       lookup( Symbol_id name, Node_id use );
+    Node_id       lookup_in( Symbol_id package, Symbol_id name, Node_id use );
+    Node_id       prelude_declaration( std::string_view name ) const;
+    Prelude_items prelude_items() const;
+    Node_id       lookup_qualified( Node_id package, Node_id use );
+    Node_id       visible_from( Node_id use, Node_id head );
+    bool          refuse_builtin_name( Symbol_id name, Node_id decl );
+    void          refuse_unimported( Node_id use, Node_id decl );
+    void          refuse_other_package( Node_id use, Node_id decl );
 
     const Ast& ast_;
 
@@ -129,7 +130,12 @@ Resolution Resolver::run()
     visit( ast_.root() );
 
     return Resolution(
-        std::move( bindings_ ), std::move( unresolved_ ), std::move( next_overload_ ), std::move( fallbacks_ ), imports_
+        std::move( bindings_ ),
+        std::move( unresolved_ ),
+        std::move( next_overload_ ),
+        std::move( fallbacks_ ),
+        prelude_items(),
+        imports_
     );
 }
 
@@ -203,33 +209,6 @@ void Resolver::visit( Node_id id )
         visit( ast_.annotation( id ) );
         visit( ast_.initialiser( id ) );
         declare( scopes_.back(), ast_.name( id ), id );
-        return;
-    case Node_kind::String_literal:
-        if( !bindings_[id.v].is_valid() )
-        {
-            bindings_[id.v] = prelude_declaration( "str" );
-        }
-        return;
-    case Node_kind::Panic_expr:
-        visit( ast_.operand( id ) );
-        if( !bindings_[id.v].is_valid() )
-        {
-            bindings_[id.v] = prelude_declaration( "str" );
-        }
-        return;
-    case Node_kind::Try_expr:
-        visit( ast_.operand( id ) );
-        if( !bindings_[id.v].is_valid() )
-        {
-            bindings_[id.v] = prelude_declaration( "result" );
-        }
-        return;
-    case Node_kind::Expr_stmt:
-        visit( ast_.expression( id ) );
-        if( !bindings_[id.v].is_valid() )
-        {
-            bindings_[id.v] = prelude_declaration( "result" );
-        }
         return;
     case Node_kind::Name_expr:
     {
@@ -903,6 +882,43 @@ Node_id Resolver::prelude_declaration( std::string_view name ) const
     const Symbol_id decl_symbol = interner_.find( name );
     const auto      found       = scope->second.names.find( decl_symbol );
     return found != scope->second.names.end() ? found->second : Node_id {};
+}
+
+Prelude_items Resolver::prelude_items() const
+{
+    const auto named = [this]( std::string_view name, auto is_kind )
+    {
+        const Node_id decl = prelude_declaration( name );
+        return decl.is_valid() && is_kind( ast_.kind( decl ) ) ? decl : Node_id {};
+    };
+    const auto any          = []( Node_kind ) { return true; };
+    const auto an_interface = []( Node_kind kind ) { return kind == Node_kind::Interface_decl; };
+    const auto an_enum      = []( Node_kind kind ) { return kind == Node_kind::Enum_decl; };
+    const auto an_aggregate = []( Node_kind kind ) { return is_aggregate( kind ); };
+
+    Prelude_items items;
+    items.str        = named( "str", any );
+    items.result     = named( "result", any );
+    items.box        = named( "box", an_aggregate );
+    items.from       = named( "from", an_interface );
+    items.ordering   = named( "ordering", an_enum );
+    items.equatable  = named( "equatable", an_interface );
+    items.comparable = named( "comparable", an_interface );
+    items.hashable   = named( "hashable", an_interface );
+
+    if( const Node_id hasher = named( "hasher", an_aggregate ); hasher.is_valid() )
+    {
+        for( const Node_id member : ast_.members( hasher ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Method_decl && interner_.text( ast_.name( member ) ) == "write" )
+            {
+                items.hasher_write = member;
+                break;
+            }
+        }
+    }
+
+    return items;
 }
 
 Node_id Resolver::visible_from( Node_id use, Node_id head )
@@ -2176,7 +2192,7 @@ public:
     }
 
     // The file, without `.kl`, whose declaration main.kl's `nth` `kind` named `name` is bound to, as
-    // `a`, `kl/geom` or `<prelude>`; empty when it is bound to nothing. A string literal has no name.
+    // `a`, `kl/geom` or `<prelude>`; empty when it is bound to nothing.
     std::string bound_into( Node_kind kind, std::string_view name, u32 nth = 0 ) const
     {
         const Ast& ast = program_.ast;
@@ -2186,8 +2202,7 @@ public:
             const Node_id id { i };
 
             if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
-                ( kind != Node_kind::String_literal && kind != Node_kind::Try_expr && kind != Node_kind::Expr_stmt &&
-                  interner_.text( Symbol_id { ast.aux( id ) } ) != name ) )
+                interner_.text( Symbol_id { ast.aux( id ) } ) != name )
             {
                 continue;
             }
@@ -2198,23 +2213,38 @@ public:
                 continue;
             }
 
-            const Node_id decl = resolution_.declaration_of( id );
-            if( !decl.is_valid() )
-            {
-                return {};
-            }
-
-            if( sm_.file( ast.span( decl ).file ).path == prelude_path )
-            {
-                return std::string( prelude_path );
-            }
-
-            std::filesystem::path file = std::filesystem::path( sm_.file( ast.span( decl ).file ).path );
-            return file.lexically_relative( dir_.path ).replace_extension().generic_string();
+            return declared_in( resolution_.declaration_of( id ) );
         }
 
         FAIL( "main.kl has no such node" );
         return {};
+    }
+
+    // The file `decl` is declared in, as bound_into names it; empty for an invalid one.
+    std::string declared_in( Node_id decl ) const
+    {
+        if( !decl.is_valid() )
+        {
+            return {};
+        }
+
+        if( sm_.file( program_.ast.span( decl ).file ).path == prelude_path )
+        {
+            return std::string( prelude_path );
+        }
+
+        std::filesystem::path file = std::filesystem::path( sm_.file( program_.ast.span( decl ).file ).path );
+        return file.lexically_relative( dir_.path ).replace_extension().generic_string();
+    }
+
+    const Prelude_items& prelude() const
+    {
+        return resolution_.prelude();
+    }
+
+    std::string_view name_of( Node_id decl ) const
+    {
+        return interner_.text( program_.ast.name( decl ) );
     }
 
 private:
@@ -2452,101 +2482,46 @@ TEST_CASE( "resolver_looks_in_the_prelude_after_the_file's_own_package", "[sema]
     }
 }
 
-// By declaration: the program's own `str` is a different type, and a literal is never one.
-TEST_CASE( "resolver_binds_a_string_literal_to_the_prelude's_str", "[sema][resolve][prelude]" )
+// By declaration: a program's own `str` or `result` is a different type, and only shadows the name.
+TEST_CASE( "resolver_finds_the_prelude's_items", "[sema][resolve][prelude]" )
 {
-    constexpr std::string_view prelude = "class str { i32 n; private str() { n = 0; } };\n";
+    constexpr std::string_view prelude = "class str { i32 n; private str() { n = 0; } };\n"
+                                         "enum result<T, E> { ok( T value ), err( E error ) };\n"
+                                         "interface equatable { };\n"
+                                         "struct hasher { u64 h; void write( u64 word ) { } };\n"
+                                         "i32 box() { return 0; }\n";
 
-    SECTION( "a literal is bound to it" )
-    {
-        const Resolved_program p( { { "main.kl", "i32 main() { auto s = \"abc\"; return 0; }\n" } }, prelude );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::String_literal, {} ) == "<prelude>" );
-    }
-
-    SECTION( "even where the program declares a `str` of its own" )
+    SECTION( "even where the program declares a `str` and a `result` of its own" )
     {
         const Resolved_program p(
-            { { "main.kl", "struct str { i32 n; };\ni32 main() { auto s = \"abc\"; return 0; }\n" } }, prelude
+            { { "main.kl", "struct str { i32 n; };\nenum result { ok };\ni32 main() { return 0; }\n" } }, prelude
         );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::String_literal, {} ) == "<prelude>" );
+        REQUIRE( p.declared_in( p.prelude().str ) == "<prelude>" );
+        REQUIRE( p.declared_in( p.prelude().result ) == "<prelude>" );
+        REQUIRE( p.declared_in( p.prelude().equatable ) == "<prelude>" );
+        REQUIRE( p.name_of( p.prelude().hasher_write ) == "write" );
     }
 
-    SECTION( "and to nothing where the prelude has none" )
+    SECTION( "but not one of the wrong kind" )
     {
-        const Resolved_program p( { { "main.kl", "struct str { i32 n; };\ni32 main() { auto s = \"abc\"; return 0; }\n" } } );
+        const Resolved_program p( { { "main.kl", "i32 main() { return 0; }\n" } }, prelude );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::String_literal, {} ).empty() );
+        REQUIRE_FALSE( p.prelude().box.is_valid() );
     }
-}
 
-// The same link for `try`, so a program's own `result` only shadows the name.
-TEST_CASE( "resolver_binds_try_to_the_prelude's_result", "[sema][resolve][prelude]" )
-{
-    constexpr std::string_view prelude = "enum result<T, E> { ok( T value ), err( E error ) };\n";
-    constexpr std::string_view body    = "i32 f() { return 1; }\ni32 main() { return try f(); }\n";
-
-    SECTION( "a `try` is bound to it" )
+    SECTION( "and none where there is no prelude" )
     {
-        const Resolved_program p( { { "main.kl", body } }, prelude );
+        const Resolved_program p( { { "main.kl", "struct str { i32 n; };\ni32 main() { return 0; }\n" } } );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ) == "<prelude>" );
-    }
-
-    SECTION( "even where the program declares a `result` of its own" )
-    {
-        const Resolved_program p(
-            { { "main.kl", "enum result<T, E> { ok( T value ), err( E error ) };\n" + std::string( body ) } }, prelude
-        );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ) == "<prelude>" );
-    }
-
-    SECTION( "and to nothing where the prelude has none" )
-    {
-        const Resolved_program p( { { "main.kl", body } } );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ).empty() );
-    }
-}
-
-// And for an expression statement, which may not discard one (D52).
-TEST_CASE( "resolver_binds_an_expression_statement_to_the_prelude's_result", "[sema][resolve][prelude]" )
-{
-    constexpr std::string_view prelude = "enum result<T, E> { ok( T value ), err( E error ) };\n";
-    constexpr std::string_view body    = "void f() { }\ni32 main() { f(); return 0; }\n";
-
-    SECTION( "even where the program declares a `result` of its own" )
-    {
-        const Resolved_program p(
-            { { "main.kl", "enum result<T, E> { ok( T value ), err( E error ) };\n" + std::string( body ) } }, prelude
-        );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::Expr_stmt, {} ) == "<prelude>" );
-    }
-
-    SECTION( "and to nothing where the prelude has none" )
-    {
-        const Resolved_program p( { { "main.kl", body } } );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.bound_into( Node_kind::Expr_stmt, {} ).empty() );
+        REQUIRE_FALSE( p.prelude().str.is_valid() );
+        REQUIRE_FALSE( p.prelude().result.is_valid() );
     }
 }
 

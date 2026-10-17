@@ -370,13 +370,13 @@ Type_id interface_for( const Type_table& table, Token_kind op )
     {
     case Token_kind::Equal_equal:
     case Token_kind::Bang_equal:
-        return table.prelude_interface( Prelude_interface::Equatable );
+        return table.declared( table.prelude().equatable );
     case Token_kind::Less:
     case Token_kind::Greater:
     case Token_kind::Less_equal:
     case Token_kind::Greater_equal:
     case Token_kind::Less_equal_greater:
-        return table.prelude_interface( Prelude_interface::Comparable );
+        return table.declared( table.prelude().comparable );
 
     default:
         return Type_id {};
@@ -394,13 +394,12 @@ bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Ty
 
     const bool number = table.is_integer( type ) || table.is_float( type );
 
-    if( interface == table.prelude_interface( Prelude_interface::Comparable ) )
+    if( interface == table.declared( table.prelude().comparable ) )
     {
         return number;
     }
 
-    if( interface != table.prelude_interface( Prelude_interface::Equatable ) &&
-        interface != table.prelude_interface( Prelude_interface::Hashable ) )
+    if( interface != table.declared( table.prelude().equatable ) && interface != table.declared( table.prelude().hashable ) )
     {
         return false;
     }
@@ -414,7 +413,7 @@ bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Ty
 bool supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
 {
     return supplied_by_kind( ast, table, type, interface ) && !table.implements( type, interface ) &&
-           !table.implements( type, table.prelude_interface( Prelude_interface::Equatable ) );
+           !table.implements( type, table.declared( table.prelude().equatable ) );
 }
 
 } // namespace keel

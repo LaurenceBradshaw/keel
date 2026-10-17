@@ -843,7 +843,7 @@ Operand Lowering::three_way( Operand left, Operand right, Span span )
 {
     const Type_table& table    = types_.table();
     const Type_id     boolean  = table.builtin( Type_kind::Bool );
-    const Type_id     ordering = table.ordering();
+    const Type_id     ordering = table.declared( table.prelude().ordering );
 
     const auto test = [&]( Token_kind op, Operand a, Operand b ) -> Operand
     { return temporary( binary( op, a, b, boolean ), boolean, span ); };
@@ -1528,7 +1528,7 @@ Operand Lowering::lower_string_literal( Node_id id )
     }
 
     Type_table&   table       = types_.table();
-    const Node_id from        = table.from_declaration();
+    const Node_id from        = table.prelude().from;
     const Node_id requirement = ast_.members( from )[0];
     const Type_id interface   = table.interface( from, std::array { text }, "from" );
     const Node_id method      = types_.conformances().method_for( table, type, interface, requirement );
@@ -2107,8 +2107,7 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
     if( !method.is_valid() )
     {
         assert(
-            ast_.enclosing_aggregate( requirement ) ==
-                types_.table().get( types_.table().prelude_interface( Prelude_interface::Hashable ) ).declaration &&
+            ast_.enclosing_aggregate( requirement ) == types_.table().prelude().hashable &&
             "a bound is met only by a declared `implements` or the compiler's hash"
         );
 
@@ -2118,7 +2117,7 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
         const Operand hasher = lower_argument( ast_.arguments( id )[0], ast_.params( requirement )[1], {} );
         const u32     first  = builder_.add_operands( std::vector<Operand> { hasher, word } );
 
-        const Node_id write = types_.table().hasher_write();
+        const Node_id write = types_.table().prelude().hasher_write;
         assert( write.is_valid() && "the prelude's `hasher` has a `write`" );
 
         const Local_id result = call_result( id, call( write, first, 2, type_of( id ) ), type_of( id ), ast_.span( id ) );

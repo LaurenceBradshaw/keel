@@ -98,7 +98,7 @@ Type_id Expressions::infer( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Void ) );
 
     case Node_kind::Panic_expr:
-        check( ast_.operand( id ), types_.type_of( resolution_.declaration_of( id ) ) );
+        check( ast_.operand( id ), types_.type_of( table_.prelude().str ) );
         return types_.record( id, table_.builtin( Type_kind::Never ) );
 
     case Node_kind::Try_expr:
@@ -216,10 +216,10 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     }
 
     // Typed against the parameter chosen, where it may adopt that parameter's type.
-    if( ast_.kind( value ) == Node_kind::String_literal && resolution_.declaration_of( value ).is_valid() )
+    if( ast_.kind( value ) == Node_kind::String_literal && table_.prelude().str.is_valid() )
     {
         shape.kind = Argument_kind::Text;
-        shape.type = types_.type_of( resolution_.declaration_of( value ) );
+        shape.type = types_.type_of( table_.prelude().str );
         return shape;
     }
 
@@ -328,7 +328,7 @@ Type_id Expressions::infer_call( Node_id id )
     if( is_aggregate( ast_.kind( decl ) ) )
     {
         // An interface argument is reached only by conversion, so the help says how to convert.
-        if( decl == table_.box_declaration() && type_args.is_valid() && ast_.children( type_args ).size() == 1 )
+        if( decl == table_.prelude().box && type_args.is_valid() && ast_.children( type_args ).size() == 1 )
         {
             const Node_id argument    = ast_.children( type_args )[0];
             const Node_id declaration = resolution_.declaration_of( argument );
@@ -532,8 +532,7 @@ std::vector<Node_id> Expressions::constructor_candidates( Node_id callee, Node_i
 
     if( candidates.empty() && hidden != 0 )
     {
-        const bool is_prelude_str =
-            name == "str" && resolution_.package_of( ast_.span( aggregate ).file ) == resolution_.prelude_package();
+        const bool is_prelude_str = aggregate == table_.prelude().str;
 
         bool has_factory = false;
         for( const Node_id member : ast_.members( aggregate ) )
@@ -899,10 +898,9 @@ std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
     // The compiler's conformance has no method, and no vtable either.
     if( !block.is_valid() )
     {
-        for( const Prelude_interface which :
-             { Prelude_interface::Equatable, Prelude_interface::Comparable, Prelude_interface::Hashable } )
+        for( const Node_id which : { table_.prelude().equatable, table_.prelude().comparable, table_.prelude().hashable } )
         {
-            const Type_id interface = table_.prelude_interface( which );
+            const Type_id interface = table_.declared( which );
 
             if( interface.is_valid() && aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() &&
                 supplies( ast_, table_, type, interface ) )
@@ -2053,7 +2051,9 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     if( comparison )
     {
         return types_.record(
-            id, ast_.op( id ) == Token_kind::Less_equal_greater ? table_.ordering() : table_.builtin( Type_kind::Bool )
+            id,
+            ast_.op( id ) == Token_kind::Less_equal_greater ? table_.declared( table_.prelude().ordering )
+                                                            : table_.builtin( Type_kind::Bool )
         );
     }
 
@@ -3216,7 +3216,7 @@ Type_id Expressions::infer_field( Node_id id )
 
 Type_id Expressions::infer_string_literal( Node_id id )
 {
-    const Node_id decl = resolution_.declaration_of( id );
+    const Node_id decl = table_.prelude().str;
 
     if( !decl.is_valid() )
     {
@@ -3240,9 +3240,7 @@ bool Expressions::is_prelude_str( Type_id type ) const
         return false;
     }
 
-    const Node_id decl = table_.get( type ).declaration;
-    return interner_.text( ast_.name( decl ) ) == "str" &&
-           resolution_.package_of( ast_.span( decl ).file ) == resolution_.prelude_package();
+    return table_.get( type ).declaration == table_.prelude().str;
 }
 
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
@@ -3749,9 +3747,7 @@ Type_id Expressions::infer_try( Node_id id )
         return types_.poison( id );
     }
 
-    const Node_id result = resolution_.declaration_of( id );
-
-    if( !is_result( operand_type, result ) )
+    if( !is_result( operand_type ) )
     {
         reporter_.error_at(
             ast_.span( operand ), fmt::format( "`try` needs a `result`, and this is `{}`", table_.name( operand_type ) )
@@ -3779,7 +3775,7 @@ Type_id Expressions::infer_try( Node_id id )
         return types_.record( id, payload );
     }
 
-    if( !is_result( returned, result ) )
+    if( !is_result( returned ) )
     {
         reporter_.error_at(
             ast_.span( id ),
@@ -3823,8 +3819,9 @@ Type_id Expressions::infer_try( Node_id id )
     return types_.record( id, payload );
 }
 
-bool Expressions::is_result( Type_id type, Node_id result ) const
+bool Expressions::is_result( Type_id type ) const
 {
+    const Node_id result = table_.prelude().result;
     return result.is_valid() && table_.is_enum( type ) && table_.get( type ).declaration == result;
 }
 

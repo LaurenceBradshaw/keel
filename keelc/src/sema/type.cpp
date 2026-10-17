@@ -1354,77 +1354,46 @@ Node_id Type_table::bound_only_method( Type_id interface ) const
     return found == bound_only_.end() ? Node_id {} : found->second;
 }
 
-void Type_table::declare_box( Node_id declaration )
+void Type_table::set_prelude( const Prelude_items& items )
 {
-    box_ = declaration;
+    prelude_ = items;
+}
+
+const Prelude_items& Type_table::prelude() const
+{
+    return prelude_;
 }
 
 bool Type_table::is_box( Type_id type ) const
 {
-    if( !type.is_valid() || !box_.is_valid() )
-    {
-        return false;
-    }
-
-    return get( type ).declaration == box_;
-}
-
-Node_id Type_table::box_declaration() const
-{
-    return box_;
-}
-
-void Type_table::declare_from( Node_id declaration )
-{
-    from_ = declaration;
-}
-
-Node_id Type_table::from_declaration() const
-{
-    return from_;
-}
-
-void Type_table::declare_ordering( Node_id declaration )
-{
-    ordering_ = declaration;
-}
-
-Type_id Type_table::ordering() const
-{
-    if( !ordering_.is_valid() )
-    {
-        return Type_id {};
-    }
-
-    const auto found = composites_.find( ordering_.v );
-    return found == composites_.end() ? Type_id {} : found->second[0].type;
-}
-
-void Type_table::declare_hasher_write( Node_id method )
-{
-    hasher_write_ = method;
-}
-
-Node_id Type_table::hasher_write() const
-{
-    return hasher_write_;
-}
-
-void Type_table::declare_prelude_interface( Prelude_interface which, Node_id declaration )
-{
-    prelude_interfaces_[static_cast<u8>( which )] = declaration;
-}
-
-Type_id Type_table::prelude_interface( Prelude_interface which ) const
-{
-    const auto found = interfaces_.find( prelude_interfaces_[static_cast<u8>( which )].v );
-    return found == interfaces_.end() ? Type_id {} : found->second.front().type;
+    return type.is_valid() && prelude_.box.is_valid() && get( type ).declaration == prelude_.box;
 }
 
 bool Type_table::is_prelude_interface( Type_id interface ) const
 {
-    return interface.is_valid() && is_interface( interface ) &&
-           std::ranges::find( prelude_interfaces_, get( interface ).declaration ) != std::end( prelude_interfaces_ );
+    if( !interface.is_valid() || !is_interface( interface ) )
+    {
+        return false;
+    }
+
+    const Node_id decl = get( interface ).declaration;
+    return decl == prelude_.equatable || decl == prelude_.comparable || decl == prelude_.hashable;
+}
+
+Type_id Type_table::declared( Node_id declaration ) const
+{
+    if( !declaration.is_valid() )
+    {
+        return Type_id {};
+    }
+
+    if( const auto found = interfaces_.find( declaration.v ); found != interfaces_.end() )
+    {
+        return found->second.front().type;
+    }
+
+    const auto found = composites_.find( declaration.v );
+    return found == composites_.end() ? Type_id {} : found->second.front().type;
 }
 
 Type_id Type_table::add( const Type& type, std::string_view name )
@@ -3253,7 +3222,9 @@ TEST_CASE( "type_table_holds_a_box_of_an_implementer_as_a_box_of_its_interface",
         REQUIRE_FALSE( table.holds( boxed( point ), boxed( shape ) ) );
     }
 
-    table.declare_box( Node_id { 9 } );
+    Prelude_items prelude;
+    prelude.box = Node_id { 9 };
+    table.set_prelude( prelude );
 
     REQUIRE( table.is_box( boxed( point ) ) );
     REQUIRE( table.is_box( boxed( shape ) ) );

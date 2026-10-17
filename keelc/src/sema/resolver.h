@@ -9,6 +9,7 @@
 #include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
+#include "sema/prelude_items.h"
 
 namespace keel
 {
@@ -25,12 +26,14 @@ public:
         std::vector<bool>    unresolved,
         std::vector<Node_id> next_overload,
         std::vector<Node_id> fallbacks,
+        const Prelude_items& prelude,
         const Imports&       imports
     )
         : bindings_( std::move( bindings ) ),
           unresolved_( std::move( unresolved ) ),
           next_overload_( std::move( next_overload ) ),
           fallbacks_( std::move( fallbacks ) ),
+          prelude_( prelude ),
           imports_( imports )
     {
     }
@@ -76,6 +79,11 @@ public:
         return imports_.prelude_package();
     }
 
+    const Prelude_items& prelude() const
+    {
+        return prelude_;
+    }
+
     // A qualified name the resolver could not bind, and has already answered for.
     bool is_unresolved( Node_id use ) const
     {
@@ -87,6 +95,7 @@ private:
     std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
+    Prelude_items        prelude_;
     Imports              imports_;
 };
 

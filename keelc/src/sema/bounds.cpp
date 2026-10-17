@@ -231,7 +231,7 @@ bool Bounds::conforms( Type_id type, Type_id interface ) const
 
 bool Bounds::adopts_text( Type_id type, Type_id text ) const
 {
-    const Node_id from = table_.from_declaration();
+    const Node_id from = table_.prelude().from;
 
     if( !from.is_valid() || !type.is_valid() || table_.is_error( type ) || type == text || table_.is_interface( type ) )
     {
@@ -254,7 +254,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
         const auto found = bounds_.find( parameter.v );
         const bool not_a_number =
             found != bounds_.end() && contains( found->second, Bound::Numeric ) && !satisfies( argument, Bound::Numeric );
-        const Type_id comparable = table_.prelude_interface( Prelude_interface::Comparable );
+        const Type_id comparable = table_.declared( table_.prelude().comparable );
 
         std::vector<Type_id> failing;
 
@@ -417,7 +417,7 @@ std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise 
 
 std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
 {
-    const Type_id equatable = table_.prelude_interface( Prelude_interface::Equatable );
+    const Type_id equatable = table_.declared( table_.prelude().equatable );
     std::string   place;
 
     // A scan, not Conformances: a signature's annotation reaches here before those are built.
@@ -432,10 +432,9 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
 
     std::vector<std::string_view> dropped;
 
-    for( const Prelude_interface which :
-         { Prelude_interface::Equatable, Prelude_interface::Comparable, Prelude_interface::Hashable } )
+    for( const Node_id which : { table_.prelude().equatable, table_.prelude().comparable, table_.prelude().hashable } )
     {
-        const Type_id each = table_.prelude_interface( which );
+        const Type_id each = table_.declared( which );
 
         if( supplied_by_kind( ast_, table_, type, each ) && !supplies( ast_, table_, type, each ) )
         {
@@ -730,7 +729,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         }
 
         // A number orders, so `numeric` promises `comparable`, and through it `equatable`.
-        if( const Type_id comparable = table_.prelude_interface( Prelude_interface::Comparable );
+        if( const Type_id comparable = table_.declared( table_.prelude().comparable );
             contains( direct_bounds, Bound::Numeric ) && comparable.is_valid() )
         {
             std::vector<Type_id>& named = interfaces_[it->v];

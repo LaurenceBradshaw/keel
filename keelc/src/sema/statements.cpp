@@ -53,7 +53,7 @@ void Statements::visit( Node_id id )
     case Node_kind::Expr_stmt:
     {
         const Type_id type = expressions_.infer( ast_.expression( id ) );
-        if( expressions_.is_result( type, resolution_.declaration_of( id ) ) )
+        if( expressions_.is_result( type ) )
         {
             const Span span = ast_.span( ast_.expression( id ) );
             reporter_.error_at(

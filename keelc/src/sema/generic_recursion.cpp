@@ -237,7 +237,7 @@ namespace keel
 std::size_t program_edges( const Typed& p )
 {
     return static_cast<std::size_t>( std::ranges::count_if(
-        p.types().generic_calls(), [&]( const Generic_call& call ) { return call.to != p.types().table().box_declaration(); }
+        p.types().generic_calls(), [&]( const Generic_call& call ) { return call.to != p.types().table().prelude().box; }
     ) );
 }
 

@@ -248,7 +248,7 @@ Binary_result Operators::result_of_binary(
         // arithmetic answers `T`.
         if( op == Token_kind::Less_equal_greater )
         {
-            return { table_.ordering() };
+            return { table_.declared( table_.prelude().ordering ) };
         }
 
         return { against_a_number || interface.is_valid() ? bool_type : lhs_type };
@@ -348,7 +348,7 @@ Binary_result Operators::result_of_binary(
     if( rule->result == Result::Ordering && accepts( table_, Operands::Numeric, lhs_type ) &&
         accepts( table_, Operands::Numeric, rhs_type ) )
     {
-        return { table_.ordering(), false };
+        return { table_.declared( table_.prelude().ordering ), false };
     }
 
     if( rule->result == Result::Left )

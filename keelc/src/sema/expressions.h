@@ -103,7 +103,7 @@ public:
         return current_function_;
     }
 
-    bool is_result( Type_id type, Node_id result ) const; // an instance of the prelude's `result`
+    bool is_result( Type_id type ) const; // an instance of the prelude's `result`
 
     // D35's block. The caller visits the children between these two - they are statements, which is
     // why the block cannot move here - and both of the block's own diagnostics are statements about

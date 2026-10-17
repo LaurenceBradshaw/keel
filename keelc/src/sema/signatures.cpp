@@ -1061,7 +1061,7 @@ void Signatures::check_operators()
             case Operator_name::Compare:
                 if( aggregate )
                 {
-                    check_comparison_operator( member, table_.ordering() );
+                    check_comparison_operator( member, table_.declared( table_.prelude().ordering ) );
                 }
                 break;
 

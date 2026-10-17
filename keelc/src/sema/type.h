@@ -11,6 +11,7 @@
 #include <vector>
 #include "ast/node.h"
 #include "common/types.h"
+#include "sema/prelude_items.h"
 
 namespace keel
 {
@@ -92,14 +93,6 @@ bool is_builtin_type_name( std::string_view spelling );
 // A type parameter bound to a concrete type, keyed by the parameter's own Type_id. Named because
 // it travels from the checker's call site through to the lowerer's instantiation.
 using Bindings = std::unordered_map<u32, Type_id>;
-
-// The prelude's three interfaces, which the compiler supplies for some kinds of type.
-enum class Prelude_interface : u8
-{
-    Equatable,
-    Comparable,
-    Hashable,
-};
 
 class Type_table
 {
@@ -250,22 +243,13 @@ public:
     // The same, between Interface_decl nodes, whatever the arguments.
     bool refines_declaration( Node_id interface, Node_id other ) const;
 
-    void    declare_box( Node_id declaration );
-    bool    is_box( Type_id type ) const;
-    Node_id box_declaration() const;
-
-    void    declare_from( Node_id declaration );
-    Node_id from_declaration() const;
-
-    void    declare_ordering( Node_id declaration );
-    Type_id ordering() const;
-
-    void    declare_hasher_write( Node_id method );
-    Node_id hasher_write() const;
-
-    void    declare_prelude_interface( Prelude_interface which, Node_id declaration );
-    Type_id prelude_interface( Prelude_interface which ) const; // invalid without a prelude
-    bool    is_prelude_interface( Type_id interface ) const;
+    // A copy of the resolver's, for the free functions and the emitter, which see only this table.
+    void                 set_prelude( const Prelude_items& items );
+    const Prelude_items& prelude() const;
+    bool                 is_box( Type_id type ) const;
+    bool                 is_prelude_interface( Type_id interface ) const; // equatable, comparable or hashable
+    // A non-generic declaration's one type, or invalid when it has none yet.
+    Type_id declared( Node_id declaration ) const;
 
     // The first method whose signature mentions `self`, or invalid when the interface may be a type.
     void    declare_bound_only( Node_id interface, Node_id method );
@@ -307,11 +291,7 @@ private:
     std::unordered_map<u32, Type_id>               params_;      // Type_param_decl node -> type parameter
     std::deque<std::string>                        composed_;
 
-    Node_id box_ {};
-    Node_id from_ {};
-    Node_id ordering_ {};
-    Node_id hasher_write_ {};
-    Node_id prelude_interfaces_[3] {};
+    Prelude_items prelude_;
 
     std::unordered_map<u32, Node_id> bound_only_; // Interface_decl node -> its first method naming `self`
 

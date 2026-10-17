@@ -350,7 +350,7 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     std::vector<Type_id> arguments;
 
-    if( decl == table_.box_declaration() && ast_.children( type_args ).size() == 1 )
+    if( decl == table_.prelude().box && ast_.children( type_args ).size() == 1 )
     {
         addressed_ = ast_.children( type_args )[0];
     }
