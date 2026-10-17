@@ -11,6 +11,7 @@
 #include <vector>
 #include "ast/node.h"
 #include "ir/builder.h"
+#include "ir/drop_scopes.h"
 #include "ir/instances.h"
 
 namespace keel
@@ -18,54 +19,6 @@ namespace keel
 
 namespace
 {
-
-// D2's drop of one place, expanded: a destructor of its own, then each field in reverse. Free
-// because an enum's synthesised destructor drops its payload the same way and has no Lowering.
-void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Type_id type, Span span, bool replacing )
-{
-    if( !instance_owns( ast, types.table(), type, types.recorded() ) )
-    {
-        return;
-    }
-
-    // Which payload is live is known only at run time, so the drop is a call to the enum's
-    // synthesised destructor rather than an expansion here (D30); a union's likewise, and an
-    // interface's goes through its vtable.
-    if( types.table().is_enum( type ) || types.table().is_union( type ) || types.table().is_interface( type ) )
-    {
-        builder.drop( place, span, replacing );
-        return;
-    }
-
-    const Node_id decl = types.table().get( type ).declaration;
-
-    if( ast.has_destructor( decl ) )
-    {
-        builder.drop( place, span, replacing );
-    }
-
-    // Reverse declaration order.
-    const auto members = ast.members( decl );
-    for( std::size_t i = members.size(); i > 0; --i )
-    {
-        const Node_id member = members[i - 1];
-
-        if( ast.kind( member ) == Node_kind::Field_decl )
-        {
-            // Through the instance being dropped, not the enclosing function: the field of a
-            // `Box<Buffer>` is declared `T`, and only this instance says what that is.
-            drop_place(
-                builder,
-                ast,
-                types,
-                builder.field( place, member ),
-                field_type( ast, types.table(), type, member, types.recorded() ),
-                span,
-                replacing
-            );
-        }
-    }
-}
 
 class Lowering
 {
@@ -234,16 +187,7 @@ private:
 
     bool is_move_parameter( Node_id param ) const;
 
-    u32  scope_depth() const;
-    void push_scope();
-    void pop_scope( Span span );
-    void unwind_to( u32 depth, Span span );
     void drop_place( Place place, Type_id type, Span span, bool replacing = false );
-    // Drop what the statement has built so far, in reverse: the order destructors run in. The
-    // first also ends their storage, clearing a one-path flag for the next time round a loop, and
-    // clears the list; a `try`'s exit uses the second, since the `ok` path still owns it.
-    void drop_statement_temporaries( Span span );
-    void drop_built_temporaries( Span span );
     // A call whose callee names a type rather than a function.
     bool is_construction( Node_id id ) const;
 
@@ -255,9 +199,6 @@ private:
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
     void lower_construction( Place target, Node_id call_expr );
-
-    // Each temporary listed from `first` on was built in a branch, so its drop needs a flag.
-    void mark_one_path_since( std::size_t first );
 
     // `break` binds to the nearest enclosing loop *or* switch, so it is always loops_.back() and
     // needs no finder. `continue` looks past switches, and needs the entry rather than just its
@@ -293,20 +234,15 @@ private:
     std::unordered_map<u32, Local_id> locals_;
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
-    // scope by run(), because scope_locals_ has no scope to go into until then.
+    // scope by run(), because drops_ has no scope to put them in until then.
     std::vector<Local_id>   owned_parameters_;
     std::unordered_set<u32> borrowed_bindings_;       // declarations whose local holds an address
     Node_id                 receiver_declaration_ {}; // the Param_decl, so place_for can be reused for it
 
-    // Owning temporaries built by the statement being lowered. They have an owner - the caller -
-    // and therefore a drop, and the right moment for it is the end of the statement, which is after
-    // every use of them within it.
-    std::vector<Local_id> statement_temporaries_;
-    Node_id               discarded_ {};
+    Drop_scopes drops_;
+    Node_id     discarded_ {};
 
     std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
-    std::vector<Local_id>     scope_locals_;
-    std::vector<u32>          scope_marks_;
 };
 
 Lowering::Lowering(
@@ -321,7 +257,8 @@ Lowering::Lowering(
       builder_(
           declaration, types.table().substitute( binding_type( ast, types, declaration ), bindings_ ), ast_.span( declaration )
       ),
-      locals_()
+      locals_(),
+      drops_( builder_, ast_, types_ )
 {
     for( const Node_id param : ast_.params( declaration ) )
     {
@@ -367,18 +304,18 @@ Function Lowering::run()
     // An owned parameter is dropped like a local, in a scope *enclosing* the body - which is what
     // makes `return`'s unwind_to( 0 ) reach it, since depth 0 is this scope's mark rather than the
     // body's. Pushed after the mark so the parameters sit above it.
-    push_scope();
+    drops_.push_scope();
 
     for( const Local_id parameter : owned_parameters_ )
     {
-        scope_locals_.push_back( parameter );
+        drops_.add_to_scope( parameter );
     }
 
     lower_statement( ast_.body( declaration_ ) );
 
     // The fall-off-the-end path: a `return` has already unwound to 0, and unwind_to is a no-op on a
     // terminated block, so this only fires where nothing returned.
-    pop_scope( span );
+    drops_.pop_scope( span );
 
     if( !builder_.is_terminated() )
     {
@@ -634,10 +571,7 @@ Operand Lowering::united( Operand operand, Type_id to, Span span )
     );
     builder_.assign( builder_.member( place, operand.type ), use( moved_if_owning( operand ) ), span );
 
-    if( owns( to ) )
-    {
-        statement_temporaries_.push_back( local );
-    }
+    drops_.own_temporary( local );
 
     return copy( place, to );
 }
@@ -1033,63 +967,9 @@ bool Lowering::is_move_parameter( Node_id param ) const
     return ast_.kind( annotation ) == Node_kind::Mode_type && ast_.keyword( annotation ) == Keyword::Move;
 }
 
-u32 Lowering::scope_depth() const
-{
-    return narrow_cast<u32>( scope_marks_.size() );
-}
-
-void Lowering::push_scope()
-{
-    scope_marks_.push_back( narrow_cast<u32>( scope_locals_.size() ) );
-}
-
-void Lowering::pop_scope( Span span )
-{
-    unwind_to( scope_depth() - 1, span );
-    scope_locals_.resize( scope_marks_.back() );
-    scope_marks_.pop_back();
-}
-
-void Lowering::unwind_to( u32 depth, Span span )
-{
-    // A break or return already left this block; nothing after its terminator can run.
-    if( builder_.is_terminated() )
-    {
-        return;
-    }
-
-    for( std::size_t i = scope_locals_.size(); i > scope_marks_[depth]; --i )
-    {
-        const Local_id local = scope_locals_[i - 1];
-
-        drop_place( builder_.place( local ), builder_.type_of( local ), span );
-        builder_.storage_dead( local, span );
-    }
-}
-
 void Lowering::drop_place( Place place, Type_id type, Span span, bool replacing )
 {
     keel::drop_place( builder_, ast_, types_, place, type, span, replacing );
-}
-
-void Lowering::drop_statement_temporaries( Span span )
-{
-    drop_built_temporaries( span );
-    for( const Local_id temporary : statement_temporaries_ )
-    {
-        builder_.storage_dead( temporary, span );
-    }
-    statement_temporaries_.clear();
-}
-
-void Lowering::drop_built_temporaries( Span span )
-{
-    for( std::size_t i = statement_temporaries_.size(); i > 0; --i )
-    {
-        const Local_id temporary = statement_temporaries_[i - 1];
-
-        drop_place( builder_.place( temporary ), builder_.type_of( temporary ), span );
-    }
 }
 
 bool Lowering::is_construction( Node_id id ) const
@@ -1256,14 +1136,6 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     );
 }
 
-void Lowering::mark_one_path_since( std::size_t first )
-{
-    for( std::size_t i = first; i < statement_temporaries_.size(); ++i )
-    {
-        builder_.mark_one_path( statement_temporaries_[i] );
-    }
-}
-
 Block_id Lowering::break_target()
 {
     assert( !loops_.empty() && "the checker rejects a break outside a loop or switch" );
@@ -1310,10 +1182,7 @@ Local_id Lowering::call_result( Node_id id, Rvalue call, Type_id result_type, Sp
     {
         const Local_id result_temp = builder_.into_temp( call, result_type, span );
 
-        if( owns( result_type ) )
-        {
-            statement_temporaries_.push_back( result_temp );
-        }
+        drops_.own_temporary( result_temp );
 
         return result_temp;
     }
@@ -1370,14 +1239,14 @@ Operand Lowering::lower_short_circuit( Node_id id )
         copy( builder_.place( result ), type ), is_and ? right_block : join, is_and ? join : right_block, span
     );
 
-    std::size_t first = statement_temporaries_.size();
+    const std::size_t first = drops_.mark();
     builder_.switch_to( right_block );
     builder_.assign( builder_.place( result ), use( lower_expression( ast_.rhs( id ) ) ), span );
 
     // From wherever lowering ended up, not from right_block: a nested `&&` on the right leaves the
     // cursor in its own join.
     builder_.terminate_goto( join, span );
-    mark_one_path_since( first );
+    drops_.one_path_since( first );
 
     builder_.switch_to( join );
 
@@ -1405,12 +1274,12 @@ Operand Lowering::lower_conditional( Node_id id )
         // Widened, because an expectation reaches an arm without retyping it - `i64 x = c ? a :
         // b;` leaves both arms i32 - and moved when it owns, because a copy would leave the arm
         // and the result holding one resource between them.
-        std::size_t   first = statement_temporaries_.size();
-        const Operand value = converted( lower_expression( arm ), type, ast_.span( arm ) );
+        const std::size_t first = drops_.mark();
+        const Operand     value = converted( lower_expression( arm ), type, ast_.span( arm ) );
 
         builder_.assign( builder_.place( result ), use( moved_if_owning( value ) ), ast_.span( arm ) );
         builder_.terminate_goto( join, span );
-        mark_one_path_since( first );
+        drops_.one_path_since( first );
     };
 
     builder_.switch_to( then_block );
@@ -1423,10 +1292,7 @@ Operand Lowering::lower_conditional( Node_id id )
 
     // Nothing else drops the result when the arms own. Listed after the join, once an arm has
     // filled it.
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( result );
-    }
+    drops_.own_temporary( result );
 
     return copy( builder_.place( result ), type );
 }
@@ -1485,10 +1351,7 @@ Operand Lowering::lower_struct_literal( Node_id id )
         index += 1;
     }
 
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( temp );
-    }
+    drops_.own_temporary( temp );
 
     return copy( builder_.place( temp ), type );
 }
@@ -1851,7 +1714,7 @@ void Lowering::bind_variant_pattern( Place matched, Type_id matched_type, Node_i
 
         if( consumes )
         {
-            scope_locals_.push_back( local );
+            drops_.add_to_scope( local );
         }
 
         if( borrowed )
@@ -1935,10 +1798,7 @@ Operand Lowering::lower_variant_construction( Node_id id )
         builder_.assign( builder_.field( place, payload[i] ), use( moved_if_owning( values[i] ) ), span );
     }
 
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( local );
-    }
+    drops_.own_temporary( local );
 
     return copy( place, type );
 }
@@ -2000,8 +1860,8 @@ Operand Lowering::lower_try( Node_id id )
         );
     }
 
-    drop_built_temporaries( span );
-    unwind_to( 0, span );
+    drops_.drop_built( span );
+    drops_.unwind_to( 0, span );
     builder_.terminate_return( span );
 
     builder_.switch_to( ok_block );
@@ -2014,10 +1874,7 @@ Operand Lowering::lower_try( Node_id id )
 
     const Local_id value = builder_.into_temp( use( copy( builder_.field( taken, ok_fields[0] ), yielded ) ), yielded, span );
 
-    if( owns( yielded ) )
-    {
-        statement_temporaries_.push_back( value );
-    }
+    drops_.own_temporary( value );
 
     return copy( builder_.place( value ), yielded );
 }
@@ -2183,10 +2040,7 @@ Operand Lowering::lower_call( Node_id id )
 
         lower_construction( builder_.place( local ), id );
 
-        if( owns( type ) )
-        {
-            statement_temporaries_.push_back( local );
-        }
+        drops_.own_temporary( local );
 
         return copy( builder_.place( local ), type );
     }
@@ -2720,7 +2574,7 @@ Place Lowering::lower_place( Node_id id )
 
 void Lowering::lower_block( Node_id id )
 {
-    push_scope();
+    drops_.push_scope();
     for( const Node_id child : ast_.children( id ) )
     {
         // Everything after a return in the same block is unreachable. Dropping it here is what
@@ -2732,7 +2586,7 @@ void Lowering::lower_block( Node_id id )
 
         lower_statement( child );
     }
-    pop_scope( ast_.span( id ) );
+    drops_.pop_scope( ast_.span( id ) );
     return;
 }
 
@@ -2765,8 +2619,8 @@ void Lowering::lower_return( Node_id id )
             );
         }
     }
-    drop_statement_temporaries( span );
-    unwind_to( 0, span ); // everything in the function is dead after a return
+    drops_.end_statement( span );
+    drops_.unwind_to( 0, span ); // everything in the function is dead after a return
 
     builder_.terminate_return( span );
     return;
@@ -2821,8 +2675,8 @@ void Lowering::lower_var( Node_id id )
         }
     }
     // In scope only once it holds a value: a `try` in the initialiser leaves before then.
-    scope_locals_.push_back( local );
-    drop_statement_temporaries( span );
+    drops_.add_to_scope( local );
+    drops_.end_statement( span );
 }
 
 void Lowering::lower_assign( Node_id id )
@@ -2847,7 +2701,7 @@ void Lowering::lower_assign( Node_id id )
             store( target, result, type, ast_.target( id ), span );
         }
 
-        drop_statement_temporaries( span );
+        drops_.end_statement( span );
         return;
     }
 
@@ -2867,7 +2721,7 @@ void Lowering::lower_assign( Node_id id )
 
         builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span ), span );
     }
-    drop_statement_temporaries( span );
+    drops_.end_statement( span );
 }
 
 // Same reason as an initialiser: an owning value is never copied, or both copies would be dropped.
@@ -2910,7 +2764,7 @@ void Lowering::lower_increment( Node_id id )
 
     // The target's type again, for the same reason: a statement carries none of its own.
     builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
-    drop_statement_temporaries( ast_.span( id ) );
+    drops_.end_statement( ast_.span( id ) );
 }
 
 // PLAN D30. A `switch` is a chain of equality tests, so KIR gains nothing for it: this is
@@ -3037,7 +2891,7 @@ void Lowering::lower_arm_body( Node_id arm, Place matched, Type_id matched_type,
     // A consuming switch's bindings own their payloads, so they drop when the arm ends.
     if( consumes )
     {
-        push_scope();
+        drops_.push_scope();
     }
 
     // D7: a pattern's bindings are written at the top of the arm's own block, before anything in it
@@ -3056,7 +2910,7 @@ void Lowering::lower_arm_body( Node_id arm, Place matched, Type_id matched_type,
 
     if( consumes )
     {
-        pop_scope( ast_.span( arm ) );
+        drops_.pop_scope( ast_.span( arm ) );
     }
 }
 
@@ -3081,7 +2935,7 @@ void Lowering::lower_switch( Node_id id )
 
     // The switch's own scope, which keeps an owning temporary alive across the arms: a binding
     // borrows it in place.
-    push_scope();
+    drops_.push_scope();
 
     // D7: a consuming switch moves the value into a local of its own, dropped at the end unless an
     // arm takes its payload.
@@ -3092,17 +2946,14 @@ void Lowering::lower_switch( Node_id id )
 
         builder_.storage_live( taken, taken_span );
         builder_.assign( builder_.place( taken ), use( scrutinee ), taken_span );
-        scope_locals_.push_back( taken );
+        drops_.add_to_scope( taken );
 
         matched = builder_.place( taken );
     }
 
-    const auto held = std::find( statement_temporaries_.begin(), statement_temporaries_.end(), matched.local );
-
-    if( !matched.is_global() && matched.num_projections == 0 && held != statement_temporaries_.end() )
+    if( !matched.is_global() && matched.num_projections == 0 )
     {
-        scope_locals_.push_back( *held );
-        statement_temporaries_.erase( held );
+        drops_.adopt_into_scope( matched.local );
     }
 
     if( payloads )
@@ -3112,12 +2963,12 @@ void Lowering::lower_switch( Node_id id )
         scrutinee = copy( builder_.tag( matched ), tag_type );
     }
 
-    drop_statement_temporaries( span );
+    drops_.end_statement( span );
 
     // A switch is a break target like a loop is, and the block after it is the block `break` jumps
     // to - so the two are the same block by construction rather than by two pieces of code
     // agreeing. Allocated on demand by break_target(), exactly as a loop's exit is.
-    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth(), true } );
+    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, drops_.depth(), true } );
 
     const auto leave = [&]()
     {
@@ -3232,7 +3083,7 @@ void Lowering::lower_switch( Node_id id )
         builder_.switch_to( after );
     }
 
-    pop_scope( span );
+    drops_.pop_scope( span );
 }
 
 void Lowering::lower_if( Node_id id )
@@ -3248,7 +3099,7 @@ void Lowering::lower_if( Node_id id )
     const Block_id then_block = builder_.add_block();
     const Block_id else_block = builder_.add_block();
 
-    drop_statement_temporaries( span );
+    drops_.end_statement( span );
 
     builder_.terminate_branch( test, then_block, else_block, span );
 
@@ -3311,7 +3162,7 @@ void Lowering::lower_while( Node_id id )
     builder_.terminate_goto( header, span );
 
     // A while has no update, so continue re-tests immediately.
-    loops_.push_back( Loop_targets { Block_id {}, header, scope_depth() } );
+    loops_.push_back( Loop_targets { Block_id {}, header, drops_.depth() } );
 
     builder_.switch_to( header );
 
@@ -3319,7 +3170,7 @@ void Lowering::lower_while( Node_id id )
     // moved on to. The back edge still targets the header, so the whole condition re-runs.
     const Operand test = lower_expression( condition );
 
-    drop_statement_temporaries( span );
+    drops_.end_statement( span );
 
     builder_.terminate_branch( test, body_block, break_target(), span );
 
@@ -3348,7 +3199,7 @@ void Lowering::lower_for( Node_id id )
     const Node_id body      = ast_.body( id );
     const Span    span      = ast_.span( id );
 
-    push_scope();
+    drops_.push_scope();
 
     // The init runs once, in the block being left.
     if( init.is_valid() )
@@ -3363,11 +3214,11 @@ void Lowering::lower_for( Node_id id )
 
     // The latch is left invalid: it holds the update and is what continue targets, and a body
     // that always returns reaches neither.
-    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth() } );
+    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, drops_.depth() } );
 
     builder_.switch_to( header );
 
-    drop_statement_temporaries( span );
+    drops_.end_statement( span );
 
     if( condition.is_valid() )
     {
@@ -3413,7 +3264,7 @@ void Lowering::lower_for( Node_id id )
         builder_.switch_to( exit );
     }
 
-    pop_scope( span );
+    drops_.pop_scope( span );
 
     return;
 }
@@ -3425,9 +3276,7 @@ Operand Lowering::temporary( Rvalue value, Type_id type, Span span )
 
 void Lowering::lower_statement( Node_id id )
 {
-    // Every statement that builds a temporary drops it before finishing, so by the time the next
-    // one starts the list is empty. Cheaper to assert than to find a leak in a golden later.
-    assert( statement_temporaries_.empty() && "a statement left an owning temporary undropped" );
+    drops_.begin_statement();
 
     // A table of contents: what a statement can be, and nothing about how any of them lowers. The
     // shape the checker's visit_* already uses, and the reason a construct can grow without the
@@ -3474,29 +3323,29 @@ void Lowering::lower_statement( Node_id id )
         if( ast_.kind( id ) == Node_kind::Discard_stmt && ast_.kind( discarded_ ) == Node_kind::Marker_expr && owns( type ) )
         {
             const Local_id temp = builder_.into_temp( use( operand ), type, span );
-            statement_temporaries_.push_back( temp );
+            drops_.own_temporary( temp );
         }
         discarded_ = old_discarded;
-        drop_statement_temporaries( span );
+        drops_.end_statement( span );
         return;
     }
 
     // One edge each. The checker already rejected either outside a loop, so the asserts in the
     // target helpers document that rather than handle it.
     case Node_kind::Break_stmt:
-        unwind_to( loops_.back().depth, ast_.span( id ) );
+        drops_.unwind_to( loops_.back().depth, ast_.span( id ) );
         builder_.terminate_goto( break_target(), ast_.span( id ) );
         return;
 
     case Node_kind::Continue_stmt:
         // The *loop's* depth. loops_.back() may be a switch between here and it, and unwinding to
         // that would leave the loop's own locals undropped.
-        unwind_to( enclosing_loop().depth, ast_.span( id ) );
+        drops_.unwind_to( enclosing_loop().depth, ast_.span( id ) );
         builder_.terminate_goto( continue_target(), ast_.span( id ) );
         return;
 
     case Node_kind::Fallthrough_stmt:
-        unwind_to( loops_.back().depth, ast_.span( id ) );
+        drops_.unwind_to( loops_.back().depth, ast_.span( id ) );
         builder_.terminate_goto( fallthrough_target_, ast_.span( id ) );
         return;
 
