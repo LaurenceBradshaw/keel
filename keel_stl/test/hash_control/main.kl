@@ -128,29 +128,67 @@ i32 main()
         return 6;
     }
 
-    // A full group leaves a tombstone, which costs room until the table is rebuilt.
-    for( u64 i = 0; i < 8; i++ )
+    // A full group leaves a tombstone, which costs room until the table is rebuilt. Sixteen slots,
+    // so a full group stays within the 7/8 a table may fill; even hashes all probe group 0.
+    kl::hash_control full = kl::hash_control( 16, 1, 2 );
+
+    for( u64 i : 0..8 )
     {
-        control.occupy( i, i );
+        if( full.occupy( i, i * 2 ) != i ) // entries are numbered in the order they arrive
+        {
+            return 10;
+        }
     }
 
-    control.vacate( 3 );
+    // Entry 3 leaves; entry 7, in slot 7, moves into its place.
+    if( full.vacate( 3 ) != 3 || full.entry( 7 ) != 3 || full.entry( 6 ) != 6 )
+    {
+        return 11;
+    }
 
-    if( control.size() != 7 || control.capacity() != 6 || control.free_slot( 0 ) != 3 )
+    if( full.size() != 7 || full.capacity() != 13 || full.free_slot( 0 ) != 3 )
     {
         return 7;
     }
 
-    control.occupy( 3, 3 );
-
-    if( control.capacity() != 7 || control.needs_growth() )
+    if( full.occupy( 3, 3 ) != 7 || full.capacity() != 14 || full.needs_growth() )
     {
         return 8;
     }
 
-    control.clear();
+    // The last entry leaving moves nothing.
+    if( full.vacate( 3 ) != 7 || full.entry( 7 ) != 3 || full.size() != 7 )
+    {
+        return 12;
+    }
 
-    if( control.size() != 0 || control.capacity() != 7 || control.is_full( 0 ) )
+    // A rebuild keeps every entry's index: entry e's hash is e * 2, except entry 3's, which is 14.
+    kl::hash_control grown = full.resized( 32 );
+
+    for( u64 e : 0..7 )
+    {
+        u64 hash = e * 2;
+        if( e == 3 )
+        {
+            hash = 14;
+        }
+
+        kl::hash_probe probe = grown.probe( hash );
+        u64 slot = probe.next();
+        while( slot != grown.slots() && grown.entry( slot ) != e )
+        {
+            slot = probe.next();
+        }
+
+        if( slot == grown.slots() )
+        {
+            return 13;
+        }
+    }
+
+    full.clear();
+
+    if( full.size() != 0 || full.capacity() != 14 || full.is_full( 0 ) )
     {
         return 9;
     }

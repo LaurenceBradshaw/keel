@@ -6,7 +6,9 @@ import optional;
 
 /// A hash table from keys of type `K` to values of type `V`, each key held at most once.
 ///
-/// Keys are kept in no particular order, and the order changes as the map grows. Each map hashes
+/// Keys are kept in the order they were inserted until a removal, which moves the last key into the
+/// removed one's place. `key_at` and `value_at` count over them: `for( u64 i : 0..m.size() )`.
+/// Each map hashes
 /// under its own random key, so which keys collide cannot be chosen from outside. A full map
 /// doubles, so `insert` takes amortised constant time; `with_capacity` and `reserve` make room in
 /// advance. Dropping the map drops every key and value.
@@ -68,10 +70,12 @@ class map<K, V> where K : hashable
 
         if( found != control_.slots() )
         {
+            const u64 entry = control_.entry( found );
+
             unsafe
             {
-                V old = move values_[found];
-                values_[found] = move value;
+                V old = move values_[entry];
+                values_[entry] = move value;
                 return optional::some( move old );
             }
         }
@@ -81,13 +85,12 @@ class map<K, V> where K : hashable
             resize( control_.grown_slots() );
         }
 
-        const u64 slot = control_.free_slot( hash );
-        control_.occupy( slot, hash );
+        const u64 entry = control_.occupy( control_.free_slot( hash ), hash );
 
         unsafe
         {
-            keys_[slot] = move key;
-            values_[slot] = move value;
+            keys_[entry] = move key;
+            values_[entry] = move value;
         }
 
         return optional::none;
@@ -105,7 +108,7 @@ class map<K, V> where K : hashable
 
         unsafe
         {
-            return optional::some( &values_[slot] );
+            return optional::some( &values_[control_.entry( slot )] );
         }
     }
 
@@ -125,7 +128,38 @@ class map<K, V> where K : hashable
 
         unsafe
         {
-            return &values_[slot];
+            return &values_[control_.entry( slot )];
+        }
+    }
+
+    /// A pointer to the key of entry `i`, counting from 0 in insertion order until a removal.
+    /// `const`, since a changed key would sit in the wrong slot.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `size()`.
+    public const K* key_at( u64 i ) const
+    {
+        assert( i < control_.size() );
+
+        unsafe
+        {
+            return &keys_[i];
+        }
+    }
+
+    /// A pointer to the value of entry `i`, the value under `key_at( i )`.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `size()`.
+    public V* value_at( u64 i ) const
+    {
+        assert( i < control_.size() );
+
+        unsafe
+        {
+            return &values_[i];
         }
     }
 
@@ -135,7 +169,8 @@ class map<K, V> where K : hashable
         return slot_of( key ) != control_.slots();
     }
 
-    /// Removes `key` and returns its value, or `none` if the map does not hold it.
+    /// Removes `key` and returns its value, or `none` if the map does not hold it. The last entry
+    /// takes its place.
     public optional<V> remove( const ref K key )
     {
         const u64 slot = slot_of( key );
@@ -145,12 +180,21 @@ class map<K, V> where K : hashable
             return optional::none;
         }
 
-        control_.vacate( slot );
+        const u64 entry = control_.vacate( slot );
+        const u64 last = control_.size();
 
         unsafe
         {
-            destroy( keys_ + slot, 1 );
-            return optional::some( move values_[slot] );
+            destroy( keys_ + entry, 1 );
+            V old = move values_[entry];
+
+            if( entry != last )
+            {
+                keys_[entry] = move keys_[last]; // the last entry is raw after this
+                values_[entry] = move values_[last];
+            }
+
+            return optional::some( move old );
         }
     }
 
@@ -202,7 +246,7 @@ class map<K, V> where K : hashable
         {
             unsafe
             {
-                if( keys_[slot] == key )
+                if( keys_[control_.entry( slot )] == key )
                 {
                     return slot;
                 }
@@ -225,33 +269,24 @@ class map<K, V> where K : hashable
         return slot_of_hashed( key, hash_of( key ) );
     }
 
-    // Moves every entry into a table of `slots` slots, under the same key.
+    // Moves every entry into arrays sized for a table of `slots` slots, at the same index.
     private void resize( u64 slots )
     {
-        hash_control fresh = control_.resized( slots );
-
         K[*] keys;
         V[*] values;
 
         unsafe
         {
-            keys = alloc<K>( slots );
-            values = alloc<V>( slots );
+            keys = alloc<K>( hash_control::usable( slots ) );
+            values = alloc<V>( hash_control::usable( slots ) );
         }
 
-        for( u64 i = 0; i < control_.slots(); i++ )
+        for( u64 i : 0..control_.size() )
         {
-            if( control_.is_full( i ) )
+            unsafe
             {
-                unsafe
-                {
-                    const u64 hash = hash_of( keys_[i] );
-                    const u64 slot = fresh.free_slot( hash );
-                    fresh.occupy( slot, hash );
-
-                    keys[slot] = move keys_[i]; // the old slots are raw after this
-                    values[slot] = move values_[i];
-                }
+                keys[i] = move keys_[i]; // the old entries are raw after this
+                values[i] = move values_[i];
             }
         }
 
@@ -273,25 +308,22 @@ class map<K, V> where K : hashable
 
         keys_ = keys;
         values_ = values;
-        control_ = move fresh;
+        control_ = control_.resized( slots );
     }
 
     private void drop_all()
     {
-        for( u64 i = 0; i < control_.slots(); i++ )
+        for( u64 i : 0..control_.size() )
         {
-            if( control_.is_full( i ) )
+            unsafe
             {
-                unsafe
-                {
-                    destroy( keys_ + i, 1 );
-                    destroy( values_ + i, 1 );
-                }
+                destroy( keys_ + i, 1 );
+                destroy( values_ + i, 1 );
             }
         }
     }
 
-    // Slot `i` of both arrays is live exactly when `control_.is_full( i )`.
+    // Entries `0..control_.size()` of both arrays are live.
     private hash_control control_;
     private K[*] keys_;
     private V[*] values_;

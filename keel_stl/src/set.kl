@@ -5,8 +5,9 @@ import hash_control;
 
 /// A hash table of keys of type `K`, each held at most once.
 ///
-/// `kl::map` without the values: keys are kept in no particular order, each set hashes under its
-/// own random key, and `insert` takes amortised constant time. Dropping the set drops every key.
+/// `kl::map` without the values: keys are kept in insertion order until a removal moves the last
+/// key into the removed one's place, `key_at` counts over them, each set hashes under its own
+/// random key, and `insert` takes amortised constant time. Dropping the set drops every key.
 class set<K> where K : hashable
 {
     /// An empty set. Allocates nothing until the first key arrives.
@@ -62,15 +63,30 @@ class set<K> where K : hashable
             resize( control_.grown_slots() );
         }
 
-        const u64 slot = control_.free_slot( hash );
-        control_.occupy( slot, hash );
+        const u64 entry = control_.occupy( control_.free_slot( hash ), hash );
 
         unsafe
         {
-            keys_[slot] = move key;
+            keys_[entry] = move key;
         }
 
         return true;
+    }
+
+    /// A pointer to key `i`, counting from 0 in insertion order until a removal. `const`, since a
+    /// changed key would sit in the wrong slot.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `size()`.
+    public const K* key_at( u64 i ) const
+    {
+        assert( i < control_.size() );
+
+        unsafe
+        {
+            return &keys_[i];
+        }
     }
 
     /// Whether the set holds `key`.
@@ -79,7 +95,7 @@ class set<K> where K : hashable
         return slot_of( key ) != control_.slots();
     }
 
-    /// Removes `key`, and returns whether the set held it.
+    /// Removes `key`, and returns whether the set held it. The last key takes its place.
     public bool remove( const ref K key )
     {
         const u64 slot = slot_of( key );
@@ -89,11 +105,17 @@ class set<K> where K : hashable
             return false;
         }
 
-        control_.vacate( slot );
+        const u64 entry = control_.vacate( slot );
+        const u64 last = control_.size();
 
         unsafe
         {
-            destroy( keys_ + slot, 1 );
+            destroy( keys_ + entry, 1 );
+
+            if( entry != last )
+            {
+                keys_[entry] = move keys_[last]; // the last entry is raw after this
+            }
         }
 
         return true;
@@ -147,7 +169,7 @@ class set<K> where K : hashable
         {
             unsafe
             {
-                if( keys_[slot] == key )
+                if( keys_[control_.entry( slot )] == key )
                 {
                     return slot;
                 }
@@ -170,30 +192,21 @@ class set<K> where K : hashable
         return slot_of_hashed( key, hash_of( key ) );
     }
 
-    // Moves every key into a table of `slots` slots, under the same key.
+    // Moves every key into an array sized for a table of `slots` slots, at the same index.
     private void resize( u64 slots )
     {
-        hash_control fresh = control_.resized( slots );
-
         K[*] keys;
 
         unsafe
         {
-            keys = alloc<K>( slots );
+            keys = alloc<K>( hash_control::usable( slots ) );
         }
 
-        for( u64 i = 0; i < control_.slots(); i++ )
+        for( u64 i : 0..control_.size() )
         {
-            if( control_.is_full( i ) )
+            unsafe
             {
-                unsafe
-                {
-                    const u64 hash = hash_of( keys_[i] );
-                    const u64 slot = fresh.free_slot( hash );
-                    fresh.occupy( slot, hash );
-
-                    keys[slot] = move keys_[i]; // the old slots are raw after this
-                }
+                keys[i] = move keys_[i]; // the old entries are raw after this
             }
         }
 
@@ -206,24 +219,21 @@ class set<K> where K : hashable
         }
 
         keys_ = keys;
-        control_ = move fresh;
+        control_ = control_.resized( slots );
     }
 
     private void drop_all()
     {
-        for( u64 i = 0; i < control_.slots(); i++ )
+        for( u64 i : 0..control_.size() )
         {
-            if( control_.is_full( i ) )
+            unsafe
             {
-                unsafe
-                {
-                    destroy( keys_ + i, 1 );
-                }
+                destroy( keys_ + i, 1 );
             }
         }
     }
 
-    // Slot `i` of `keys_` is live exactly when `control_.is_full( i )`.
+    // Entries `0..control_.size()` of `keys_` are live.
     private hash_control control_;
     private K[*] keys_;
 };

@@ -1,0 +1,153 @@
+// `kl::map`'s entries are dense: counted over by `key_at` and `value_at` in insertion order, with
+// the last entry moved into a removed one's place. Owning keys and values, so valgrind checks
+// that moving an entry neither leaks nor double-drops.
+import kl::map;
+import kl::optional;
+import kl::string;
+
+i32 main()
+{
+    kl::map<u64, u64> m = kl::map<u64, u64>();
+
+    for( u64 i : 0..5 )
+    {
+        m.insert( i * 10, i );
+    }
+
+    for( u64 i : 0..m.size() )
+    {
+        if( *m.key_at( i ) != i * 10 || *m.value_at( i ) != i )
+        {
+            return 1;
+        }
+    }
+
+    // Removing 10, entry 1, moves 40, the last, into its place.
+    if( kl::is_none( m.remove( 10 ) ) )
+    {
+        return 13;
+    }
+
+    if( m.size() != 4 || *m.key_at( 1 ) != 40 || *m.value_at( 1 ) != 4 || *m.key_at( 3 ) != 30 )
+    {
+        return 2;
+    }
+
+    // Removing the last entry moves nothing; the moved key is still found.
+    if( kl::is_none( m.remove( 30 ) ) )
+    {
+        return 14;
+    }
+
+    if( m.size() != 3 || *m.key_at( 2 ) != 20 || m[ 40 ] != 4 || m.contains( 30 ) )
+    {
+        return 3;
+    }
+
+    for( u64 i : 0..m.size() )
+    {
+        *m.value_at( i ) *= 2;
+    }
+
+    if( m[ 0 ] != 0 || m[ 40 ] != 8 || m[ 20 ] != 4 )
+    {
+        return 4;
+    }
+
+    // Growth past several doublings keeps every key with its value, in insertion order.
+    kl::map<u64, u64> big = kl::map<u64, u64>();
+
+    for( u64 i : 0..1000 )
+    {
+        big.insert( i * 7, i );
+    }
+
+    for( u64 i : 0..1000 )
+    {
+        if( *big.key_at( i ) != i * 7 || big[ i * 7 ] != i )
+        {
+            return 5;
+        }
+    }
+
+    // Churn: tombstones force same-size rebuilds, and every live key stays findable.
+    kl::map<u64, u64> churn = kl::map<u64, u64>::with_capacity( 14 );
+
+    for( u64 round : 0..200 )
+    {
+        churn.insert( round, round );
+
+        if( round >= 5 )
+        {
+            if( kl::is_none( churn.remove( round - 5 ) ) )
+            {
+                return 15;
+            }
+        }
+    }
+
+    if( churn.size() != 5 || churn.capacity() > 14 )
+    {
+        return 6;
+    }
+
+    for( u64 i : 0..churn.size() )
+    {
+        if( churn[ *churn.key_at( i ) ] != *churn.key_at( i ) || *churn.key_at( i ) < 195 )
+        {
+            return 7;
+        }
+    }
+
+    // Owning keys and values: moved, removed, re-inserted, cleared.
+    kl::map<kl::string, kl::string> names = kl::map<kl::string, kl::string>();
+
+    for( u64 i : 0..50 )
+    {
+        names.insert( move kl::string::from( i ), move kl::string::from( i * 2 ) );
+    }
+
+    for( u64 i : 0..25 )
+    {
+        kl::string gone = kl::unwrap( move names.remove( kl::string::from( i * 2 ) ) );
+
+        if( !( gone == kl::string::from( i * 4 ) ) )
+        {
+            return 8;
+        }
+    }
+
+    for( u64 i : 0..names.size() )
+    {
+        if( !( names[ *names.key_at( i ) ] == *names.value_at( i ) ) )
+        {
+            return 9;
+        }
+    }
+
+    names.insert( move "0", move "zero" );
+
+    if( names.size() != 26 || !( *names.key_at( 25 ) == "0" ) )
+    {
+        return 10;
+    }
+
+    names.clear();
+
+    if( names.size() != 0 )
+    {
+        return 11;
+    }
+
+    names.insert( move "again", move "1" );
+
+    // The only entry leaving.
+    kl::unwrap( move names.remove( "again" ) );
+
+    if( !names.is_empty() )
+    {
+        return 12;
+    }
+
+    return 0;
+}

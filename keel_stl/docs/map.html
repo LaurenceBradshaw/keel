@@ -17,7 +17,9 @@
 <pre class="signature"><a class="anchor" href="#map" aria-label="Link to map">#</a><code><span class="kw">class</span> <span class="type">map</span>&lt;K, V&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
 <div class="doc">
 <p>A hash table from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once.</p>
-<p>Keys are kept in no particular order, and the order changes as the map grows. Each map hashes
+<p>Keys are kept in the order they were inserted until a removal, which moves the last key into the
+removed one's place. <code>key_at</code> and <code>value_at</code> count over them: <code>for( u64 i : 0..m.size() )</code>.
+Each map hashes
 under its own random key, so which keys collide cannot be chosen from outside. A full map
 doubles, so <code>insert</code> takes amortised constant time; <code>with_capacity</code> and <code>reserve</code> make room in
 advance. Dropping the map drops every key and value.</p>
@@ -68,6 +70,23 @@ Does nothing if the capacity is already that large.</p>
 <p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
 </div>
 </div>
+<div class="group" id="map.key_at">
+<pre class="signature"><a class="anchor" href="#map.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the key of entry <code>i</code>, counting from 0 in insertion order until a removal.
+<code>const</code>, since a changed key would sit in the wrong slot.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="map.value_at">
+<pre class="signature"><a class="anchor" href="#map.value_at" aria-label="Link to value_at">#</a><code><span class="kw">public</span> V* <span class="fn">value_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value of entry <code>i</code>, the value under <code>key_at( i )</code>.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
 <div class="group" id="map.contains">
 <pre class="signature"><a class="anchor" href="#map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -77,7 +96,8 @@ Does nothing if the capacity is already that large.</p>
 <div class="group" id="map.remove">
 <pre class="signature"><a class="anchor" href="#map.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
 <div class="doc">
-<p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it.</p>
+<p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it. The last entry
+takes its place.</p>
 </div>
 </div>
 <div class="group" id="map.size">

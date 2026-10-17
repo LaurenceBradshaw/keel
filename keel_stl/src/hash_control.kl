@@ -13,6 +13,9 @@
 //
 // A tag match sets a byte's top bit, 0x80, in the answer, and leaves its other bits clear. Such a
 // word of flags is called `matches` below.
+//
+// Entries are dense: the table's keys sit in entries `0..size()`, in the owner's arrays. A full
+// slot holds its entry's index, and each entry's hash is kept, so a rebuild never rehashes a key.
 
 // The process's SipHash key, the low half one more on each call, so no two tables share a key.
 extern void kl_rt_hash_key( u64* low, u64* high );
@@ -23,8 +26,8 @@ const u64 EMPTY_SLOTS_MASK = 0xffff_ffff_ffff_ffff;
 
 /// The control bytes, counts and key of a hash table, without its keys or values.
 ///
-/// `kl::map` and `kl::set` hold one each beside their own arrays, and a slot of those arrays is live
-/// exactly when `is_full` says so. Use `kl::map` or `kl::set` rather than this directly.
+/// `kl::map` and `kl::set` hold one each beside their own arrays, whose entries `0..size()` are
+/// live. Use `kl::map` or `kl::set` rather than this directly.
 class hash_control
 {
     /// A table of `slots` empty slots, 0 or a power of two of at least 8, keyed by the two halves.
@@ -36,6 +39,8 @@ class hash_control
         count_ = 0;
         growth_left_ = usable( slots_ );
         groups_ = nullptr;
+        entries_ = nullptr;
+        hashes_ = nullptr;
 
         if( slots > 0 )
         {
@@ -47,6 +52,9 @@ class hash_control
                 {
                     groups_[g] = EMPTY_SLOTS_MASK;
                 }
+
+                entries_ = alloc<u64>( slots );
+                hashes_ = alloc<u64>( usable( slots ) );
             }
         }
     }
@@ -58,6 +66,22 @@ class hash_control
             unsafe
             {
                 free( groups_ );
+            }
+        }
+
+        if( entries_ != nullptr )
+        {
+            unsafe
+            {
+                free( entries_ );
+            }
+        }
+
+        if( hashes_ != nullptr )
+        {
+            unsafe
+            {
+                free( hashes_ );
             }
         }
     }
@@ -75,10 +99,22 @@ class hash_control
         return hash_control( 0, low, high );
     }
 
-    /// An empty table of `slots` slots under this one's key, so a hash taken for this one is still valid.
+    /// A table of `slots` slots holding this one's entries at the same indices, under the same key.
     public hash_control resized( u64 slots ) const
     {
-        return hash_control( slots, key_low_, key_high_ );
+        hash_control result = hash_control( slots, key_low_, key_high_ );
+
+        // In entry order, so each entry keeps its index.
+        for( u64 e : 0..count_ )
+        {
+            unsafe
+            {
+                const u64 hash = hashes_[e];
+                result.occupy( result.free_slot( hash ), hash );
+            }
+        }
+
+        return result;
     }
 
     /// A hasher under this table's key, for hashing one key.
@@ -211,6 +247,15 @@ class hash_control
         return byte( slot ) < 0x80;
     }
 
+    /// The entry that the full `slot` holds.
+    public u64 entry( u64 slot ) const
+    {
+        unsafe
+        {
+            return entries_[slot];
+        }
+    }
+
     /// The slots that may hold a key of this hash, in the order it would have been placed.
     /// Valid until the table is rebuilt.
     public hash_probe probe( u64 hash ) const
@@ -248,8 +293,9 @@ class hash_control
         }
     }
 
-    /// Marks `slot`, which `free_slot` gave, full with the tag of `hash`.
-    public void occupy( u64 slot, u64 hash )
+    /// Marks `slot`, which `free_slot` gave, full with the tag of `hash`, and answers its entry, the
+    /// next past the last.
+    public u64 occupy( u64 slot, u64 hash )
     {
         if( byte( slot ) == 0xff ) // reusing a tombstone costs no room
         {
@@ -257,16 +303,48 @@ class hash_control
         }
 
         set_byte( slot, hash >> 57 );
+        const u64 added = count_;
+        unsafe
+        {
+            entries_[slot] = added;
+            hashes_[added] = hash;
+        }
         count_ += 1;
+
+        return added;
     }
 
-    /// Marks the full `slot` empty, or deleted if a lookup may have passed it.
-    public void vacate( u64 slot )
+    /// Marks the full `slot` empty, or deleted if a lookup may have passed it. Answers the entry it
+    /// held, which the last entry has now replaced, unless it was the last.
+    public u64 vacate( u64 slot )
     {
         u64 word = 0;
         unsafe
         {
             word = groups_[slot >> 3];
+        }
+
+        const u64 removed = entry( slot );
+        const u64 last = count_ - 1;
+
+        // The last entry moves into the hole, so the slot holding it is pointed there. `slot` is
+        // still full, but holds `removed`, so the search passes it.
+        if( removed != last )
+        {
+            unsafe
+            {
+                hash_probe candidates = probe( hashes_[last] );
+                u64 moved = candidates.next();
+
+                while( entries_[moved] != last )
+                {
+                    moved = candidates.next();
+                    assert( moved != slots_ ); // the last entry is in the table
+                }
+
+                entries_[moved] = removed;
+                hashes_[removed] = hashes_[last];
+            }
         }
 
         // A lookup stops at the first group holding an empty slot. A group holding one now has
@@ -283,6 +361,7 @@ class hash_control
         }
 
         count_ -= 1;
+        return removed;
     }
 
     /// Empties every slot, keeping them.
@@ -300,13 +379,16 @@ class hash_control
         growth_left_ = usable( slots_ );
     }
 
-    // At most 7/8 of the slots fill, so lookups meet an empty slot soon.
-    private static u64 usable( u64 slots )
+    /// How many keys a table of `slots` slots holds: 7/8 of them, so lookups meet an empty slot
+    /// soon. `kl::map` and `kl::set` size their arrays by it.
+    public static u64 usable( u64 slots )
     {
         return ( slots / 8 ) * 7;
     }
 
     private u64[*] groups_;     // one per 8 slots; `nullptr` when there are none
+    private u64[*] entries_;    // per slot: the entry a full slot holds
+    private u64[*] hashes_;     // per entry: its hash, so a rebuild never rehashes a key
     private u64 slots_;
     private u64 count_;         // full slots
     private u64 growth_left_;   // empty slots that may still fill; tombstones do not give it back

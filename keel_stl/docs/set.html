@@ -17,8 +17,9 @@
 <pre class="signature"><a class="anchor" href="#set" aria-label="Link to set">#</a><code><span class="kw">class</span> <span class="type">set</span>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
 <div class="doc">
 <p>A hash table of keys of type <code>K</code>, each held at most once.</p>
-<p><code>kl::map</code> without the values: keys are kept in no particular order, each set hashes under its
-own random key, and <code>insert</code> takes amortised constant time. Dropping the set drops every key.</p>
+<p><code>kl::map</code> without the values: keys are kept in insertion order until a removal moves the last
+key into the removed one's place, <code>key_at</code> counts over them, each set hashes under its own
+random key, and <code>insert</code> takes amortised constant time. Dropping the set drops every key.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -52,6 +53,15 @@ Does nothing if the capacity is already that large.</p>
 dropped.</p>
 </div>
 </div>
+<div class="group" id="set.key_at">
+<pre class="signature"><a class="anchor" href="#set.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to key <code>i</code>, counting from 0 in insertion order until a removal. <code>const</code>, since a
+changed key would sit in the wrong slot.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
 <div class="group" id="set.contains">
 <pre class="signature"><a class="anchor" href="#set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -61,7 +71,7 @@ dropped.</p>
 <div class="group" id="set.remove">
 <pre class="signature"><a class="anchor" href="#set.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
 <div class="doc">
-<p>Removes <code>key</code>, and returns whether the set held it.</p>
+<p>Removes <code>key</code>, and returns whether the set held it. The last key takes its place.</p>
 </div>
 </div>
 <div class="group" id="set.size">
