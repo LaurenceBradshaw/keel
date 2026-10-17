@@ -1256,11 +1256,60 @@ std::string Overloads::candidate_list( std::span<const Node_id> candidates, std:
     return text;
 }
 
-void Overloads::record_instantiation( Node_id call, std::size_t instance )
+Node_id Overloads::next_visible( Node_id use, Node_id candidate ) const
 {
-    instantiation_of_.emplace( call.v, narrow_cast<u32>( instance ) );
+    candidate = next_overload( candidate );
+
+    while( candidate.is_valid() )
+    {
+        if( resolution_.sees( ast_.span( use ).file, ast_.span( candidate ).file ) )
+        {
+            return candidate;
+        }
+
+        candidate = next_overload( candidate );
+    }
+
+    return Node_id {};
 }
 
+// The edge, then the instance. The edge only matters from inside a generic: a call in `main` is
+// already an instance rather than a step towards one.
+void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved )
+{
+    generic_recursion_.record_call( from, callable, resolved, ast_.span( call ) );
+
+    instantiation_of_.emplace(
+        call.v, narrow_cast<u32>( generic_recursion_.record_instantiation( callable, std::move( resolved ) ) )
+    );
+}
+
+// The receiver's type arguments, then the method's own. A call on a receiver writes the first
+// nowhere, so the path that records a written call's instantiation never runs for one; without
+// this a method of a generic is checked and then emitted by nobody.
+void Overloads::record_method_instantiation(
+    Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own
+)
+{
+    std::vector<Type_id> arguments;
+
+    if( receiver.is_valid() && table_.is_struct( receiver ) )
+    {
+        const std::span<const Type_id> from_receiver = table_.get( receiver ).arguments;
+        arguments.assign( from_receiver.begin(), from_receiver.end() );
+    }
+
+    arguments.insert( arguments.end(), own.begin(), own.end() );
+
+    if( arguments.empty() )
+    {
+        return;
+    }
+
+    // The same edge a written call records: from inside a generic this names a template, and the
+    // worklist is what turns it into an instance once the enclosing one is known.
+    record_instance( from, id, method, std::move( arguments ) );
+}
 std::unordered_map<u32, u32> Overloads::take_instantiations()
 {
     return std::move( instantiation_of_ );

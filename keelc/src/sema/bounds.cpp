@@ -3,6 +3,8 @@
 
 #include "sema/bounds.h"
 #include <fmt/format.h>
+#include <algorithm>
+#include <iterator>
 #include "sema/conformances.h"
 #include "sema/type_checker.h"
 
@@ -463,6 +465,100 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
         place,
         list,
         table_.name( interface )
+    );
+}
+
+// Where a receiver's methods are declared: an aggregate or an interface itself, or for a parameter,
+// every instance its `where` clause names of the first interface declaring `name`, else the first
+// it names at all. Empty when the type has no methods.
+std::vector<Type_id> Bounds::method_owners( Type_id receiver, Symbol_id name ) const
+{
+    if( table_.is_struct( receiver ) || table_.is_interface( receiver ) )
+    {
+        return { receiver };
+    }
+
+    const std::span<const Type_id> interfaces = interfaces_of( receiver );
+
+    for( const Type_id interface : interfaces )
+    {
+        const Node_id declaration = table_.get( interface ).declaration;
+
+        if( aggregates_.find_method( declaration, name ).is_valid() )
+        {
+            std::vector<Type_id> owners;
+            std::ranges::copy_if(
+                interfaces,
+                std::back_inserter( owners ),
+                [&]( Type_id other ) { return table_.get( other ).declaration == declaration; }
+            );
+            return owners;
+        }
+    }
+
+    return interfaces.empty() ? std::vector<Type_id> {} : std::vector { interfaces.front() };
+}
+
+bool Bounds::calls_operator( Type_id type, Symbol_id name ) const
+{
+    return name.is_valid() && ( table_.is_struct( type ) || has_operator( type, name ) );
+}
+
+bool Bounds::has_operator( Type_id type, Symbol_id name ) const
+{
+    if( !name.is_valid() )
+    {
+        return false;
+    }
+
+    if( table_.is_enum( type ) )
+    {
+        return types_.conformances().block_declaring( ast_, type, name ).is_valid();
+    }
+
+    // A bound's `==` and `<=>` are the prelude's, which result_of_binary answers.
+    if( !table_.is_struct( type ) && ( name == Interner::operator_name( Operator_name::Equal_equal ) ||
+                                       name == Interner::operator_name( Operator_name::Compare ) ) )
+    {
+        return false;
+    }
+
+    const std::vector<Type_id> owners = method_owners( type, name );
+
+    return !owners.empty() && aggregates_.find_method( table_.get( owners.front() ).declaration, name ).is_valid();
+}
+
+// A block's method answers its interface and is not the type's, so a direct call is pointed at the
+// interface. Empty when no block for `type` declares `name`.
+std::string Bounds::reached_only_as( Type_id type, Symbol_id name ) const
+{
+    const Node_id block = types_.conformances().block_declaring( ast_, type, name );
+
+    // The compiler's conformance has no method, and no vtable either.
+    if( !block.is_valid() )
+    {
+        for( const Node_id which : { table_.prelude().equatable, table_.prelude().comparable, table_.prelude().hashable } )
+        {
+            const Type_id interface = table_.declared( which );
+
+            if( interface.is_valid() && aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() &&
+                types_.conformances().supplies( ast_, table_, type, interface ) )
+            {
+                return fmt::format(
+                    "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter",
+                    interner_.text( name ),
+                    table_.name( interface )
+                );
+            }
+        }
+
+        return {};
+    }
+
+    return fmt::format(
+        "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
+        interner_.text( name ),
+        table_.name( types_.type_of( ast_.implemented( block )[0] ) )
     );
 }
 

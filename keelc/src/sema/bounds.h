@@ -101,6 +101,15 @@ public:
     // Whether a string literal becomes a `type`: only through the prelude's `from<str>`.
     bool adopts_text( Type_id type, Type_id text ) const;
 
+    // What a type exposes. Where a receiver's methods are declared: itself, or a parameter's bounds.
+    std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;
+    // Whether the operator `name` on `type` calls a method: any struct's, or one has_operator finds.
+    bool calls_operator( Type_id type, Symbol_id name ) const;
+    // Whether `type` declares the operator `name`: itself, in an enum's block, or in a parameter's bound.
+    bool has_operator( Type_id type, Symbol_id name ) const;
+    // Why a method a conformance supplies cannot be called directly. Empty when none does.
+    std::string reached_only_as( Type_id type, Symbol_id name ) const;
+
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.
     u8 narrowest_admissible_width( Type_id parameter ) const;

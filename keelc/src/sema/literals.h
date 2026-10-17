@@ -8,14 +8,25 @@
 #include "lex/token.h"
 #include "sema/bounds.h"
 #include "sema/constant_folder.h"
+#include "sema/operators.h"
 #include "sema/reporter.h"
 #include "sema/types_builder.h"
 
 namespace keel::sema
 {
 
+// D13/D26/D41: whether an expression is a literal, or arithmetic made only of them, and the family
+// its literals share. `Other` is one with no single numeric family: a `bool`, a `null`, or a mix.
+enum class Adoption : u8
+{
+    None, // has a type of its own
+    Integer,
+    Floating,
+    Other,
+};
+
 // Where a literal gets its type. D26: a literal has a value rather than a type until something
-// tells it what to be, so these five answer one question and the class needs no state of its own.
+// tells it what to be, so these answer one question and the class needs no state of its own.
 class Literals
 {
 public:
@@ -39,6 +50,10 @@ public:
 
     // Whether context can give this expression a type, rather than it having one of its own.
     bool is_literal_expression( Node_id id ) const;
+
+    // What check() may give the expected type to: a literal, a minus over one that may, an
+    // arithmetic operator whose operands both may, and a shift whose left operand may.
+    Adoption adoption( Node_id id ) const;
 
     // The fallback defaults, for a literal with nothing to give it a type. `nullptr` has none.
     Type_id infer_literal( Node_id id );

@@ -21,6 +21,9 @@ enum class Result_source : u8
     Left_operand, // a shift's result is its left operand's, so only that one does
 };
 
+// A free function: it reads the rule table and nothing else.
+Result_source result_source( Token_kind op );
+
 // What the caller must still do with a binary result the rules accepted.
 struct Binary_result
 {
@@ -43,9 +46,8 @@ struct Conversion_result
     bool needs_unsafe = false;
 };
 
-// What an operator answers, given operand types the caller has already inferred. A service takes
-// `ast_` is read for a help line and an enum's variants, and is never walked.
-// `ast_` is here for one help line and is never walked.
+// What an operator answers, given operand types the caller has already inferred. `ast_` is read
+// for a help line and an enum's variants, and is never walked.
 class Operators
 {
 public:
@@ -65,8 +67,6 @@ public:
           reporter_( reporter )
     {
     }
-
-    Result_source result_source( Token_kind op ) const;
 
     // Binary. D11's generic branch, pointer and enum identity, then the rule table: operand
     // classes, D41's bool answer for a comparison, a shift's left operand, and §6.4's common type.

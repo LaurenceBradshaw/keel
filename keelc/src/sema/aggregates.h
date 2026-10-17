@@ -49,6 +49,13 @@ public:
     Node_id find_member( Node_id decl, Node_kind kind ) const;
     Node_id find_method( Node_id decl, Symbol_id name ) const;
     Node_id find_field( Type_id type, Symbol_id name ) const;
+    // `C::C`: the name a class's constructor was declared with, which only `C( ... )` reaches.
+    bool names_constructor( Node_id aggregate, Symbol_id name ) const;
+    // The operator `name` taking `operands` right-hand operands, or invalid; `malformed` when one of
+    // another count was declared, which was reported where it was written.
+    Node_id find_operator( Node_id decl, Symbol_id name, std::size_t operands, bool& malformed ) const;
+
+    void report_private( Node_id at, Node_id member ) const;
 
     // What binds an aggregate's type parameters to what it was instantiated at. Empty for a
     // non-generic one, and the identity for the open form, so callers need no branch.

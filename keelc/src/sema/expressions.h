@@ -7,13 +7,13 @@
 #include <string>
 #include "ast/ast.h"
 #include "common/interner.h"
+#include "sema/addresses.h"
 #include "sema/aggregates.h"
 #include "sema/annotations.h"
 #include "sema/bounds.h"
 #include "sema/callees.h"
 #include "sema/conformances.h"
 #include "sema/constant_folder.h"
-#include "sema/generic_recursion.h"
 #include "sema/literals.h"
 #include "sema/operators.h"
 #include "sema/overloads.h"
@@ -35,21 +35,21 @@ class Expressions
 {
 public:
     Expressions(
-        const Ast&         ast,
-        const Interner&    interner,
-        const Resolution&  resolution,
-        Types_builder&     types,
-        Aggregates&        aggregates,
-        Bounds&            bounds,
-        Annotations&       annotations,
-        Constant_folder&   constant_folder,
-        Callees&           callees,
-        Places&            places,
-        Generic_recursion& generic_recursion,
-        Literals&          literals,
-        Operators&         operators,
-        Overloads&         overloads,
-        Reporter&          reporter
+        const Ast&        ast,
+        const Interner&   interner,
+        const Resolution& resolution,
+        Types_builder&    types,
+        Aggregates&       aggregates,
+        Bounds&           bounds,
+        Annotations&      annotations,
+        Constant_folder&  constant_folder,
+        Callees&          callees,
+        Places&           places,
+        Literals&         literals,
+        Operators&        operators,
+        Overloads&        overloads,
+        Addresses&        addresses,
+        Reporter&         reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -62,10 +62,10 @@ public:
           constant_folder_( constant_folder ),
           callees_( callees ),
           places_( places ),
-          generic_recursion_( generic_recursion ),
           literals_( literals ),
           operators_( operators ),
           overloads_( overloads ),
+          addresses_( addresses ),
           reporter_( reporter )
     {
     }
@@ -132,16 +132,13 @@ private:
     // Bindings of a written or deduced instance, empty for a non-generic; none after reporting.
     std::optional<Bindings>
     instantiate( const Call_site& site, Node_id callable, std::vector<Type_id> resolved, std::span<const Node_id> bound_by );
-    void record_instance( Node_id call, Node_id callable, std::vector<Type_id> resolved );
 
     // What an argument can say about itself before a candidate has been chosen. It takes a node and
     // infers it, which is the half `Overloads` may not do - so the walk keeps it.
     Argument_shape argument_shape( Node_id argument );
 
-    Type_id              infer_method_call( Node_id id );
-    std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;
-    std::string          reached_only_as( Type_id type, Symbol_id name ) const;
-    Type_id              infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
+    Type_id infer_method_call( Node_id id );
+    Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments. `through` holds the instances
     // a bound reaches the method through, and `interface` the one chosen.
@@ -158,7 +155,6 @@ private:
         Type_id                         interface = {}
     );
     void shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
-    void record_method_instantiation( Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {} );
 
     void check_deduced_bounds(
         std::span<const Node_id> parameters,
@@ -173,12 +169,8 @@ private:
     // These two infer their operands and hand the types to `Operators`, which holds the rules.
     // Address-of and dereference stay in infer_unary: neither is in the rule table, and the first
     // is a question about places rather than types.
-    Type_id infer_binary( Node_id id );
-    Type_id infer_unary( Node_id id );
-    // Whether the operator `name` on `type` calls a method: any struct's, or one has_operator finds.
-    bool calls_operator( Type_id type, Symbol_id name ) const;
-    // Whether `type` declares the operator `name`: itself, in an enum's block, or in a parameter's bound.
-    bool     has_operator( Type_id type, Symbol_id name ) const;
+    Type_id  infer_binary( Node_id id );
+    Type_id  infer_unary( Node_id id );
     Bindings operator_bindings( Node_id id, Type_id object_type, Node_id method ) const;
     Type_id  infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
     Type_id  infer_unary_operator( Node_id id, Type_id operand_type, Symbol_id name );
@@ -192,23 +184,9 @@ private:
          std::string_view declaration_text,
          std::size_t      operands
      );
-    // `&f`: the operand names a function, so the type is its signature and not a pointer to it.
-    Type_id function_address( Node_id id, Node_id declaration );
-    // `&C::f`: an instance method's signature, with its receiver as parameter 0.
-    Type_id method_address( Node_id id, Node_id aggregate );
-    // `C::C`: the name a class's constructor was declared with, which only `C( ... )` reaches.
-    bool names_constructor( Node_id aggregate, Symbol_id name ) const;
-
-    // `&C::x`: the offset of a field, typed `field( C ) -> T` at the qualifier's instance.
-    Type_id field_address( Node_id id, Node_id aggregate, Node_id field );
     // `p( obj )`, where `p` holds an offset: a copy of that field of `obj`.
     Type_id field_application( Node_id id, Type_id offset );
 
-    // The function type a declaration would be written as; refused receives the first parameter carrying a mode.
-    Type_id written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused );
-    // Which overload the expected signature names, or nothing - reported - when the set holds no such one.
-    Node_id
-    overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature, const Bindings& bindings );
     Type_id indirect_call( Node_id id, Node_id declaration, Type_id signature );
 
     Type_id     infer_field( Node_id id );
@@ -242,9 +220,6 @@ private:
     // is as much inside its type as an instance method is.
     Node_id current_type() const;
 
-    // The shared half of the five refusals, which differ only in what they return afterwards.
-    void    report_private( Node_id at, Node_id member );
-    Type_id qualifier_type( Node_id path, Node_id declaration );
     Type_id infer_static_call( Node_id id, Node_id aggregate );
     Type_id infer_bound_static_call( Node_id id, Node_id parameter );
 
@@ -266,30 +241,22 @@ private:
 
     bool refuses_many_member( Node_id field_expr, Type_id base_type );
 
-    Node_id next_visible( Node_id use, Node_id candidate ) const;
-
-    // A literal, or arithmetic made only of them: what check() may give the expected type to.
-    bool takes_context( Node_id id ) const;
-
-    // The family every literal deciding its type shares, or none: Integer or Floating only.
-    std::optional<Argument_kind> literal_family( Node_id id ) const;
-
-    const Ast&         ast_;
-    const Interner&    interner_;
-    const Resolution&  resolution_;
-    Types_builder&     types_;
-    Type_table&        table_;
-    Aggregates&        aggregates_;
-    Bounds&            bounds_;
-    Annotations&       annotations_;
-    Constant_folder&   constant_folder_;
-    Callees&           callees_;
-    Places&            places_;
-    Generic_recursion& generic_recursion_;
-    Literals&          literals_;
-    Operators&         operators_;
-    Overloads&         overloads_;
-    Reporter&          reporter_;
+    const Ast&        ast_;
+    const Interner&   interner_;
+    const Resolution& resolution_;
+    Types_builder&    types_;
+    Type_table&       table_;
+    Aggregates&       aggregates_;
+    Bounds&           bounds_;
+    Annotations&      annotations_;
+    Constant_folder&  constant_folder_;
+    Callees&          callees_;
+    Places&           places_;
+    Literals&         literals_;
+    Operators&        operators_;
+    Overloads&        overloads_;
+    Addresses&        addresses_;
+    Reporter&         reporter_;
 
     // Whether a bare variant path here names the variant rather than standing for a value of
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`

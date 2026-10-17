@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <algorithm>
 #include "common/source_manager.h"
+#include "sema/addresses.h"
 #include "sema/aggregates.h"
 #include "sema/annotations.h"
 #include "sema/bounds.h"
@@ -58,7 +59,8 @@ public:
           generic_recursion_( ast, interner, table_, reporter_ ),
           literals_( ast, literals, types_, bounds_, constant_folder_, reporter_ ),
           operators_( ast, interner, table_, types_.conformances(), bounds_, reporter_ ),
-          overloads_( ast, interner, resolution, types_, aggregates_, bounds_, annotations_, reporter_ ),
+          overloads_( ast, interner, resolution, types_, aggregates_, bounds_, annotations_, generic_recursion_, reporter_ ),
+          addresses_( ast, interner, types_, aggregates_, bounds_, annotations_, callees_, overloads_, reporter_ ),
           expressions_(
               ast,
               interner,
@@ -70,10 +72,10 @@ public:
               constant_folder_,
               callees_,
               places_,
-              generic_recursion_,
               literals_,
               operators_,
               overloads_,
+              addresses_,
               reporter_
           ),
           coverage_( ast, interner, types_, aggregates_, constant_folder_, expressions_, reporter_ ),
@@ -130,6 +132,7 @@ private:
     Literals          literals_;
     Operators         operators_;
     Overloads         overloads_;
+    Addresses         addresses_;
     Expressions       expressions_;
     Coverage          coverage_;
     Statements        statements_;

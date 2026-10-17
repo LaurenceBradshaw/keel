@@ -285,6 +285,47 @@ Node_id Aggregates::find_method( Node_id decl, Symbol_id name ) const
     return Node_id {};
 }
 
+bool Aggregates::names_constructor( Node_id aggregate, Symbol_id name ) const
+{
+    return name == ast_.name( aggregate ) && find_member( aggregate, Node_kind::Constructor_decl ).is_valid();
+}
+
+// `-` is two operators, told apart by their operands; any other count was reported where it was written.
+Node_id Aggregates::find_operator( Node_id decl, Symbol_id name, std::size_t operands, bool& malformed ) const
+{
+    malformed = false;
+
+    for( const Node_id member : ast_.members( decl ) )
+    {
+        if( ast_.kind( member ) != Node_kind::Method_decl || ast_.name( member ) != name )
+        {
+            continue;
+        }
+
+        const std::size_t count = ast_.params( member ).size();
+
+        if( count == operands + 1 )
+        {
+            return member;
+        }
+
+        malformed = malformed || name != Interner::operator_name( Operator_name::Minus ) || count > 2;
+    }
+
+    return Node_id {};
+}
+
+void Aggregates::report_private( Node_id at, Node_id member ) const
+{
+    const Node_id owner = ast_.enclosing_aggregate( member );
+
+    reporter_.error_at(
+        ast_.span( at ),
+        fmt::format( "`{}` is private to `{}`", interner_.text( ast_.name( member ) ), interner_.text( ast_.name( owner ) ) ),
+        "only that type's own members may name it"
+    );
+}
+
 Node_id Aggregates::find_field( Type_id type, Symbol_id name ) const
 {
     const Node_id decl = table_.get( type ).declaration;

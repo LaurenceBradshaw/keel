@@ -43,6 +43,59 @@ bool Literals::is_literal_expression( Node_id id ) const
     }
 }
 
+Adoption Literals::adoption( Node_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return Adoption::None;
+    }
+
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Int_literal:
+    case Node_kind::Char_literal:
+        return Adoption::Integer;
+
+    case Node_kind::Float_literal:
+        return Adoption::Floating;
+
+    case Node_kind::Bool_literal:
+    case Node_kind::Null_literal:
+        return Adoption::Other;
+
+    case Node_kind::Unary_expr:
+        return ast_.op( id ) == Token_kind::Minus ? adoption( ast_.operand( id ) ) : Adoption::None;
+
+    case Node_kind::Binary_expr:
+        switch( result_source( ast_.op( id ) ) )
+        {
+        case Result_source::Left_operand:
+            return adoption( ast_.lhs( id ) ); // a shift's count never decides its type
+
+        case Result_source::Operands:
+        {
+            const Adoption left  = adoption( ast_.lhs( id ) );
+            const Adoption right = adoption( ast_.rhs( id ) );
+
+            if( left == Adoption::None || right == Adoption::None )
+            {
+                return Adoption::None;
+            }
+
+            return left == right ? left : Adoption::Other;
+        }
+
+        case Result_source::None:
+            return Adoption::None;
+        }
+
+        return Adoption::None;
+
+    default:
+        return Adoption::None;
+    }
+}
+
 Type_id Literals::infer_literal( Node_id id )
 {
     switch( ast_.kind( id ) )

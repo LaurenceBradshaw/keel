@@ -9,6 +9,7 @@
 #include "common/interner.h"
 #include "sema/annotations.h"
 #include "sema/bounds.h"
+#include "sema/generic_recursion.h"
 #include "sema/reporter.h"
 #include "sema/resolver.h"
 #include "sema/type.h"
@@ -81,14 +82,15 @@ class Overloads
 {
 public:
     Overloads(
-        const Ast&        ast,
-        const Interner&   interner,
-        const Resolution& resolution,
-        Types_builder&    types,
-        const Aggregates& aggregates,
-        const Bounds&     bounds,
-        Annotations&      annotations,
-        Reporter&         reporter
+        const Ast&         ast,
+        const Interner&    interner,
+        const Resolution&  resolution,
+        Types_builder&     types,
+        const Aggregates&  aggregates,
+        const Bounds&      bounds,
+        Annotations&       annotations,
+        Generic_recursion& generic_recursion,
+        Reporter&          reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -98,6 +100,7 @@ public:
           aggregates_( aggregates ),
           bounds_( bounds ),
           annotations_( annotations ),
+          generic_recursion_( generic_recursion ),
           reporter_( reporter )
     {
     }
@@ -149,12 +152,17 @@ public:
 
     // Which instantiation each generic call resolved to. Carried rather than recomputed, for the
     // reason callees_ is: resolving a type argument to a type is this pass's rule, and lowering
-    // repeating it is how the two would drift. Shaped after Types_builder's record and take.
-    void                         record_instantiation( Node_id call, std::size_t instance );
+    // repeating it is how the two would drift. `from` is the function the call is written in.
+    void record_instance( Node_id from, Node_id call, Node_id callable, std::vector<Type_id> resolved );
+    void record_method_instantiation(
+        Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {}
+    );
     std::unordered_map<u32, u32> take_instantiations();
 
     bool    refused( Node_id id ) const;
     Node_id next_overload( Node_id id ) const;
+    // The next overload after `candidate` that `use`'s file can see.
+    Node_id next_visible( Node_id use, Node_id candidate ) const;
 
     // D45's quiet trial: whether any of `candidates` takes the call, by either tier. Reports nothing.
     bool applies(
@@ -218,6 +226,7 @@ private:
     const Aggregates&    aggregates_;
     const Bounds&        bounds_;
     Annotations&         annotations_;
+    Generic_recursion&   generic_recursion_;
     Reporter&            reporter_;
 
     std::unordered_map<u32, u32> instantiation_of_;

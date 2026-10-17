@@ -893,6 +893,58 @@ Type_id Annotations::addressed_interface(
     return interface;
 }
 
+// Which instance the qualifier names. `Box<i32>::of` carries its own arguments on the path, there
+// being no receiver to read them off - which is the second source for something that has only ever
+// had one. Without them a generic qualifier is the open form, which is a template rather than a
+// type a call can be checked against, so it is refused rather than left to fail on the parameters.
+Type_id Annotations::qualifier_type( Node_id path, Node_id declaration )
+{
+    const Node_id          type_args = ast_.type_arg_list( path );
+    const std::string_view name      = interner_.text( ast_.name( ast_.qualifier( path ) ) );
+
+    if( !type_args.is_valid() )
+    {
+        if( ast_.is_generic( declaration ) )
+        {
+            reporter_.error_at(
+                ast_.span( ast_.qualifier( path ) ),
+                fmt::format( "`{}` needs its type arguments here", name ),
+                fmt::format( "write `{}< ... >::{}`", name, interner_.text( ast_.name( path ) ) )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return types_.type_of( declaration );
+    }
+
+    if( !ast_.is_generic( declaration ) )
+    {
+        reporter_.error_at( ast_.span( path ), fmt::format( "`{}` is not a generic", name ) );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    std::vector<Type_id> arguments;
+
+    if( !resolve_type_arguments( ast_.type_parameters( ast_.type_param_list( declaration ) ), type_args, name, arguments ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    // An argument that failed to resolve makes the whole type an error rather than interning
+    // `Box<<error>>`, which spells nothing and which every later diagnostic would name.
+    for( const Type_id argument : arguments )
+    {
+        if( !argument.is_valid() || table_.is_error( argument ) )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+    }
+
+    return table_.structure( declaration, arguments, name );
+}
+
 } // namespace keel::sema
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>

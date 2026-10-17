@@ -141,7 +141,7 @@ bool accepts( const Type_table& table, Operands operands, Type_id type )
 
 } // namespace
 
-Result_source Operators::result_source( Token_kind op ) const
+Result_source result_source( Token_kind op )
 {
     const Binary_rule* rule = binary_rule_for( op );
 
@@ -660,10 +660,10 @@ TEST_CASE( "operators_take_a_shift_from_its_left_operand_only", "[sema][operator
 
     SECTION( "and an expectation reaches that operand alone" )
     {
-        REQUIRE( operators.result_source( Token_kind::Less_less ) == sema::Result_source::Left_operand );
-        REQUIRE( operators.result_source( Token_kind::Plus ) == sema::Result_source::Operands );
-        REQUIRE( operators.result_source( Token_kind::Less ) == sema::Result_source::None );
-        REQUIRE( operators.result_source( Token_kind::Question ) == sema::Result_source::None );
+        REQUIRE( sema::result_source( Token_kind::Less_less ) == sema::Result_source::Left_operand );
+        REQUIRE( sema::result_source( Token_kind::Plus ) == sema::Result_source::Operands );
+        REQUIRE( sema::result_source( Token_kind::Less ) == sema::Result_source::None );
+        REQUIRE( sema::result_source( Token_kind::Question ) == sema::Result_source::None );
     }
 }
 
