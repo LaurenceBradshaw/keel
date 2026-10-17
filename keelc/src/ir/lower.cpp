@@ -2171,6 +2171,12 @@ Operand Lowering::lower_indirect_call( Node_id id )
         {
             operands[i] = converted( operands[i], arguments[i], ast_.span( ast_.arg_list( id ) ) );
         }
+
+        // As lower_call_arguments: by the mode, so a bare temporary is not also dropped here.
+        if( modes[i] == Param_mode::Move )
+        {
+            operands[i] = moved_if_owning( operands[i] );
+        }
     }
 
     const u32 first = builder_.add_operands( operands );

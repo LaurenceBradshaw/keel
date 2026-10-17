@@ -59,7 +59,9 @@ public:
           generic_recursion_( ast, interner, table_, reporter_ ),
           literals_( ast, literals, types_, bounds_, constant_folder_, reporter_ ),
           operators_( ast, interner, table_, types_.conformances(), bounds_, reporter_ ),
-          overloads_( ast, interner, resolution, types_, aggregates_, bounds_, annotations_, generic_recursion_, reporter_ ),
+          overloads_(
+              ast, interner, resolution, types_, aggregates_, bounds_, places_, annotations_, generic_recursion_, reporter_
+          ),
           addresses_( ast, interner, types_, aggregates_, bounds_, annotations_, callees_, overloads_, reporter_ ),
           expressions_(
               ast,

@@ -10,6 +10,7 @@
 #include "sema/annotations.h"
 #include "sema/bounds.h"
 #include "sema/generic_recursion.h"
+#include "sema/places.h"
 #include "sema/reporter.h"
 #include "sema/resolver.h"
 #include "sema/type.h"
@@ -88,6 +89,7 @@ public:
         Types_builder&     types,
         const Aggregates&  aggregates,
         const Bounds&      bounds,
+        const Places&      places,
         Annotations&       annotations,
         Generic_recursion& generic_recursion,
         Reporter&          reporter
@@ -99,6 +101,7 @@ public:
           table_( types.table() ),
           aggregates_( aggregates ),
           bounds_( bounds ),
+          places_( places ),
           annotations_( annotations ),
           generic_recursion_( generic_recursion ),
           reporter_( reporter )
@@ -225,6 +228,7 @@ private:
     Type_table&          table_;
     const Aggregates&    aggregates_;
     const Bounds&        bounds_;
+    const Places&        places_;
     Annotations&         annotations_;
     Generic_recursion&   generic_recursion_;
     Reporter&            reporter_;

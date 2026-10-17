@@ -125,7 +125,7 @@ i32 main()
         }
     }
 
-    names.insert( move "0", move "zero" );
+    names.insert( "0", "zero" );
 
     if( names.size() != 26 || !( *names.key_at( 25 ) == "0" ) )
     {
@@ -139,7 +139,7 @@ i32 main()
         return 11;
     }
 
-    names.insert( move "again", move "1" );
+    names.insert( "again", "1" );
 
     // The only entry leaving.
     kl::unwrap( move names.remove( "again" ) );

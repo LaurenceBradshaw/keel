@@ -3070,10 +3070,8 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    // A named variable, or a temporary this scope owns. The second is what makes
-    // `consume( move Buffer( 16 ) )` expressible: the temporary is built in the caller's frame and
-    // handed over, so a transfer genuinely happens and D2 wants it marked - even though no variable
-    // is left behind for a use-after-move to catch.
+    // A named variable, or a temporary this scope owns. A temporary transfers bare too, so `move`
+    // on one is accepted though not needed.
     if( !named && bounds_.satisfies( value, Bound::Copyable ) )
     {
         reporter_.error_at( ast_.span( operand ), "only a variable or an owned temporary can be moved" );
@@ -7371,7 +7369,8 @@ TEST_CASE( "type_checker_checks_a_method_calls_markers", "[sema][method]" )
                                       "  public void take( move B b ) { }\n"
                                       "  public void look( B b ) { }\n"
                                       "  public void keep( move i32 a ) { }\n"
-                                      "  public static void own( move B b ) { } };\n";
+                                      "  public static void own( move B b ) { } };\n"
+                                      "class W { public B b; W() { b = B( 1 ); } ~W() { } };\n";
 
     struct Case
     {
@@ -7385,9 +7384,10 @@ TEST_CASE( "type_checker_checks_a_method_calls_markers", "[sema][method]" )
                  Case { "i32 a = 1; h.bump( a );", "`bump` may modify this argument" },
                  Case { "i32 a = 1; h.read( ref a );", "`read` does not modify this argument" },
                  Case { "B b = B( 1 ); h.take( b );", "`take` takes ownership of this argument" },
-                 Case { "h.take( B( 1 ) );", "`take` takes ownership of this argument" },
                  Case { "B b = B( 1 ); h.look( move b );", "`look` borrows this argument" },
-                 Case { "H::own( B( 1 ) );", "`own` takes ownership of this argument" },
+                 // Each of these names a place, so a variable of the caller's would give it up.
+                 Case { "h.take( W().b );", "`take` takes ownership of this argument" },
+                 Case { "B* p = nullptr; h.take( *p );", "`take` takes ownership of this argument" },
              } )
         {
             const Typed p( std::string( head ) + "i32 main() { H h = H(); " + c.body + " return 0; }\n" );
@@ -7415,6 +7415,19 @@ TEST_CASE( "type_checker_checks_a_method_calls_markers", "[sema][method]" )
     {
         const Typed p(
             std::string( head ) + "i32 main() { H h = H(); i32 a = 1; h.keep( a ); h.keep( move a ); h.read( 2 ); "
+                                  "h.take( move B( 1 ) ); return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // D31: no variable of the caller's gives a temporary up, so it transfers bare.
+    SECTION( "and a temporary needs no move" )
+    {
+        const Typed p(
+            std::string( head ) + "B make() { return B( 2 ); }\n"
+                                  "i32 main() { H h = H(); h.take( B( 1 ) ); H::own( B( 1 ) ); h.take( make() ); "
                                   "h.take( move B( 1 ) ); return 0; }\n"
         );
 

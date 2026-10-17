@@ -1,5 +1,6 @@
 // A `kl::list` of an owning type keeps its elements: one is copied out of it nowhere, leaves it
-// only through a method that hands it over, and goes in only by `move`.
+// only through a method that hands it over, and goes in by `move` from a variable, or bare as a
+// temporary.
 import kl::list;
 
 class name
@@ -27,7 +28,7 @@ i32 main()
 
     name copied = names[0];
     name taken = move names[0];
-    names.push( name( 2 ) );
+    names.push( name( 2 ) ); // accepted: no variable gives it up
 
     name held = name( 3 );
     names.push( held );

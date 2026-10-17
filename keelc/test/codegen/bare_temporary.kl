@@ -1,0 +1,87 @@
+// D31: a temporary reaches a `move` parameter bare, and is dropped exactly once, by the callee.
+// Each `Tracked` counts its drops through a pointer, and holds a heap block, so valgrind also sees a
+// double free or a leak.
+class Tracked
+{
+    public Tracked( u64* drops )
+    {
+        drops_ = drops;
+        unsafe
+        {
+            block_ = alloc<u8>( 16 );
+        }
+    }
+
+    ~Tracked()
+    {
+        *drops_ += 1;
+        unsafe
+        {
+            free( block_ );
+        }
+    }
+
+    private u64*  drops_;
+    private u8[*] block_;
+};
+
+class Holder
+{
+    public Holder()
+    {
+        taken_ = 0;
+    }
+
+    public void take( move Tracked t )
+    {
+        taken_ += 1;
+    }
+
+    public static void own( move Tracked t )
+    {
+    }
+
+    private u64 taken_;
+};
+
+void consume( move Tracked t )
+{
+}
+
+Tracked make( u64* drops )
+{
+    return Tracked( drops );
+}
+
+i32 main()
+{
+    u64 drops = 0;
+
+    consume( Tracked( &drops ) );
+    assert( drops == 1 );
+
+    consume( make( &drops ) );
+    assert( drops == 2 );
+
+    Holder h = Holder();
+    h.take( Tracked( &drops ) );
+    Holder::own( Tracked( &drops ) );
+    assert( drops == 4 );
+
+    fn( move Tracked ) -> void through = &consume;
+    through( Tracked( &drops ) );
+    assert( drops == 5 );
+
+    // A box owns its value: dropped once, when the box is.
+    {
+        box<Tracked> b = box<Tracked>( Tracked( &drops ) );
+        assert( drops == 5 );
+    }
+    assert( drops == 6 );
+
+    // `move` on a temporary is still accepted, and means the same.
+    consume( move Tracked( &drops ) );
+    assert( drops == 7 );
+
+    return 0;
+}

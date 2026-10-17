@@ -942,6 +942,12 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
         return;
     }
 
+    // A temporary needs no marker: no variable of the caller's gives it up (D31).
+    if( wanted == Keyword::Move && given == Keyword::Count && !places_.is_assignable( argument ) )
+    {
+        return;
+    }
+
     if( wanted == Keyword::Ref )
     {
         reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` may modify this argument", name ), "write `ref`" );
