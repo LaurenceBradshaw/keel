@@ -20,10 +20,7 @@ namespace keel
 namespace
 {
 
-// Pratt binding power. Higher binds tighter; 0 means "not an infix operator", which ends the loop.
-// `++` and `--` are deliberately absent (PLAN §6.3 D12), so `a[i++]` fails with no special case.
-// Above every binary operator and below a call, so `-a * b` is `(-a) * b` while `-f( x )` is
-// `-(f(x))`. Not part of binding_power: unary operators are prefix, not infix.
+// Above every binary operator and below a call: `-a * b` is `(-a) * b`, `-f( x )` is `-(f(x))`.
 constexpr u8 k_unary_power = 105;
 
 u8 binding_power( Token_kind kind );
@@ -114,6 +111,11 @@ private:
 
     Node_id parse_type();
     Node_id parse_type_term();
+    Node_id parse_function_type( Span start );
+    Node_id parse_field_type( Span start );
+    Node_id parse_named_type( Span start );
+    Node_id parse_type_suffixes( Node_id type, Span start );
+    Node_id adjacent_suffix( Node_id type, Span start, u32 tokens, std::string_view spelling, Node_kind kind );
     Node_id parse_type_with_mode();
     Node_id parse_param();
 
@@ -148,10 +150,8 @@ private:
         Case_bound        // kept whole when broken, so a pattern can still be read from it
     };
 
-    // Pratt: consumes only operators binding at least as tightly as min_power. Left associativity
-    // comes from recursing with power + 1. `enclosing` is the operator whose recursion we are inside,
-    // or End_of_file at the top level: D16 needs it, since a tighter operator is consumed inside the
-    // looser one's recursion and never appears with a Binary_expr on its left.
+    // Pratt: consumes operators binding at least as tightly as min_power; left associativity recurses
+    // with power + 1. `enclosing` is the operator whose recursion this is, for D16.
     Node_id parse_expression(
         u8 min_power, Token_kind enclosing = Token_kind::End_of_file, Expression_use use = Expression_use::Value
     );
@@ -173,9 +173,7 @@ private:
     // identifier is consumed and a `{` is seen behind it.
     Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
 
-    // One initialiser. aux carries the field name in the designated form and stays invalid in the
-    // positional one - Symbol_id has its own sentinel, so "no name" is representable rather than
-    // borrowed from a real id.
+    // One initialiser. aux is the field name in the designated form, invalid in the positional one.
     Node_id parse_field_init();
 
     void mark_parenthesised( Node_id id );
@@ -190,17 +188,13 @@ private:
     Diagnostics&           diags_;
     Recovery               recovery_;
 
-    // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
-    // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
-    // nothing downstream should see - so it is tracked here, indexed by Node_id, not in the AST.
+    // Grouping parentheses leave no node, so D16's `a & b == c` against `(a & b) == c` is tracked here
+    // by Node_id rather than in the AST.
     std::vector<bool> parenthesised_;
 };
 
-// Powers are spaced by 10 so a level can be inserted later without renumbering. 0 means "not an
-// infix operator", which is what ends the Pratt loop.
-//
-// Assignment and `++`/`--` are deliberately absent: both are statements (L11, D12), so `if( x = 5 )`
-// and `a[i++]` cannot parse at all rather than needing a special check.
+// Spaced by 10 so a level can be inserted. 0 is not an infix operator, which ends the Pratt loop.
+// Assignment and `++`/`--` are statements (L11, D12), so `if( x = 5 )` and `a[i++]` cannot parse.
 u8 binding_power( Token_kind kind )
 {
     switch( kind )
@@ -312,26 +306,15 @@ Operator_class classify( Token_kind kind )
     }
 }
 
-// The pairs C groups in a way people reliably misread (PLAN §6.3 D16). Concretely, every
-// combination below is rejected in both orders unless one side is parenthesised:
+// D16: the pairs C groups in a way people misread, refused in both orders unless one side is
+// parenthesised:
 //
-//   bitwise x comparison    a & b == c    a | b != c    a ^ b < c
-//                           a == b & c    a != b | c    a < b ^ c
-//     C reads these as  a & (b == c)  - the mistake Ritchie acknowledged.
+//   bitwise x comparison    a & b == c     a == b & c
+//   shift x additive        a << b + c     a + b << c
+//   shift x comparison      a << b < c     a < b << c
+//   && x ||                 a && b || c    a || b && c
 //
-//   shift x additive        a << b + c    a >> b - c
-//                           a + b << c    a - b >> c
-//     C reads these as  a << (b + c)  - shift is looser than `+`, which almost nobody expects.
-//
-//   shift x comparison      a << b < c    a >> b == c
-//                           a < b << c    a == b >> c
-//     C reads these as  (a << b) < c  - correct, but only by luck; the neighbouring case is not.
-//
-//   && x ||                 a && b || c   a || b && c
-//     C reads these as  (a && b) || c  - right, but gcc still warns, and the reader still pauses.
-//
-// Everything else keeps C++ precedence untouched: arithmetic (`1 + 2 * 3`), comparison chains,
-// and same-class runs (`a & b & c`, `a + b + c`) all parse exactly as they do in C++.
+// Everything else keeps C++ precedence.
 bool needs_parentheses( Token_kind inner, Token_kind outer )
 {
     const Operator_class a = classify( inner );
@@ -555,9 +538,8 @@ Node_id Parser::error_node( Span span, Symbol_id name, Span name_span )
     return error;
 }
 
-// `Box` inside `Box<T>` is `Box<T>`: the arguments are the parameters, by name. Built as the
-// arguments a written annotation would have - fresh Named_type nodes rather than the
-// Type_param_decls themselves - so the receiver resolves through the ordinary path.
+// `Box` inside `Box<T>` is `Box<T>`, its arguments fresh Named_types for the parameters, so the
+// receiver resolves through the ordinary path.
 Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
 {
     std::vector<Node_id> arguments;
@@ -572,9 +554,8 @@ Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
     return ast_.add( Node_kind::Generic_type, span, 0, { named, list } );
 }
 
-// D32: the receiver is a binding, not a pointer. `ref T` when the method may write the object,
-// `const ref T` when it may not, which is what a trailing `const` on the method says. Built out of
-// the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
+// D32: the receiver is `ref T`, or `const ref T` under a trailing `const`, built from the nodes a
+// written parameter would be.
 Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const )
 {
     const Node_id named =
@@ -776,9 +757,8 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     const Symbol_id name      = !is_operator && !cursor_.check( Token_kind::L_paren ) ? expect_name() : Symbol_id {};
     const Span      name_span = cursor_.previous().span;
 
-    // The parameters and the `where` clauses that constrain them end up in one node, but they are
-    // written either side of the parameter list - so the parts are collected here and the node is
-    // built once both halves are in hand.
+    // The parameters and their `where` clauses sit either side of the parameter list, so both halves
+    // are collected before the node is built.
     const Span           generic_start = cursor_.peek().span;
     const bool           generic       = cursor_.check( Token_kind::Less );
     std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
@@ -799,9 +779,8 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
         reach_commit( *commit );
     }
 
-    // A body contradicts `extern` rather than merely being redundant. Recover as an ordinary
-    // definition - the body is right there, so that is the reading that lets the rest of the file
-    // compile, and leaving the braces unconsumed reads their statements as declarations.
+    // A body contradicts `extern`. Recovered as a definition, since leaving the braces unconsumed
+    // would read their statements as declarations.
     if( is_extern && cursor_.check( Token_kind::L_brace ) )
     {
         recovery_.error_at(
@@ -832,11 +811,8 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
 
     const Node_id body = parse_block();
 
-    // Fixed arity - always these three, even when one of them is an Error node.
-    // A declaration with no name is not one: sema reads every declaration's name to report
-    // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it. Everything inside was still parsed, so the errors in
-    // there are already reported.
+    // A nameless declaration is not one: sema reads every declaration's name. Errors inside are
+    // already reported.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
@@ -905,9 +881,8 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
 
     const Node_id own = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
-    // The aggregate's parameters then the method's, and the same for their clauses, so binding an
-    // instance's arguments by position covers both. A method of `Box<T>` is generic in T without
-    // writing any of its own, and everything downstream asks this slot rather than who owns it.
+    // The aggregate's parameters then the method's, so an instance's arguments bind by position: a
+    // method of `Box<T>` is generic in T without writing any of its own.
     Node_id combined = type_params.is_valid() ? type_params : own;
 
     if( type_params.is_valid() && own.is_valid() )
@@ -1024,9 +999,8 @@ std::vector<Node_id> Parser::parse_type_params()
     return params;
 }
 
-// D40: `&` joins bounds because all of them must hold and `&` says so. The two plausible wrong
-// guesses are `,` - which C# and Swift use - and `|`, which reads as the opposite of what this
-// means. Both are named once here; left unhandled they derail the clause and then the signature.
+// D40: `&` joins bounds. `,` and `|` are the plausible wrong guesses, named here so they do not
+// derail the signature.
 bool Parser::match_bound_separator()
 {
     if( cursor_.match( Token_kind::Amp ) )
@@ -1215,10 +1189,8 @@ Node_id Parser::parse_aggregate_decl()
     recovery_.expect( Token_kind::R_brace );
     recovery_.expect( Token_kind::Semicolon );
 
-    // A declaration with no name is not one: sema reads every declaration's name to report
-    // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it. Everything inside was still parsed, so the errors in
-    // there are already reported.
+    // A nameless declaration is not one: sema reads every declaration's name. Errors inside are
+    // already reported.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
@@ -1610,10 +1582,8 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
         break;
     }
 
-    // A `class` hides its representation, and its representation is its fields: a method, a
-    // constructor and a destructor are how one is used rather than what it holds, so the
-    // default reaches fields only. Decided after the flip was written the other way and every
-    // getter in the test suite stopped compiling - see PLAN D29.
+    // D29: a `class` hides its representation, its fields; methods, constructors and destructors stay
+    // public by default.
     const bool private_by_default = is_class && ( head.kind == Member_kind::Field || head.kind == Member_kind::Static_var );
 
     ast_.set_access(
@@ -1675,10 +1645,8 @@ Node_id Parser::parse_enum_decl()
         }
     }
 
-    // Child 0 is the type parameter list and child 1 the underlying type, both invalid when
-    // unwritten - the convention Var_decl uses for a missing annotation. Fixed slots rather than
-    // optional ones so the variants always start at 2, which Ast::variants is the only reader of.
-    // Child 0 matches an aggregate's, so Ast::type_param_list needs no separate rule for an enum.
+    // Child 0 is the type parameter list and child 1 the underlying type, each invalid when unwritten,
+    // so the variants start at 2 and child 0 matches an aggregate's.
     bool                 dropped_variant = false;
     bool                 gave_up         = false;
     const std::size_t    list_errors     = diags_.error_count();
@@ -1754,10 +1722,8 @@ Node_id Parser::parse_variant_decl()
     const Symbol_id name      = expect_name();
     const Span      name_span = cursor_.previous().span;
 
-    // D7: a variant may carry a payload, `Circle( f64 radius )`. The fields reuse Field_decl - a
-    // name and a type is exactly what one is - so every rule the checker already has for a field
-    // applies to a payload without being written twice. They are comma-separated rather than
-    // semicolon-terminated, because a payload reads as a parameter list and is one.
+    // D7: a payload, `Circle( f64 radius )`, reuses Field_decl so a field's rules apply to it.
+    // Comma-separated, since it reads as a parameter list.
     std::vector<Node_id> payload;
 
     if( cursor_.match( Token_kind::L_paren ) )
@@ -1835,9 +1801,7 @@ Node_id Parser::parse_field_decl( u32 commit )
     reach_commit( commit );
     recovery_.expect( Token_kind::Semicolon );
 
-    // A declaration with no name is not one: sema reads every declaration's name to report
-    // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it.
+    // A nameless declaration is not one: sema reads every declaration's name.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
@@ -1937,79 +1901,95 @@ Node_id Parser::parse_type_term()
     // parse_type has to as well, or the scan and the parse disagree.
     const bool leading_const = cursor_.match_keyword( Keyword::Const );
 
+    // A function or field type ends at its return type, which takes its own suffixes.
+    bool    callable = true;
+    Node_id type;
+
     if( cursor_.match_keyword( Keyword::Fn ) )
     {
-        const Span open = cursor_.peek().span;
-
-        recovery_.expect( Token_kind::L_paren );
-
-        // The same shape as parse_param_list, so that a trailing comma is refused in a function
-        // type exactly as it is in the signature the type stands for.
-        std::vector<Node_id> params;
-
-        if( !cursor_.check( Token_kind::R_paren ) )
+        type = parse_function_type( start );
+    }
+    else if( cursor_.match_keyword( Keyword::Field ) )
+    {
+        type = parse_field_type( start );
+    }
+    else
+    {
+        if( !recovery_.expect( Token_kind::Identifier ) )
         {
-            const std::size_t list_errors = diags_.error_count();
-            do
+            return error_node( start );
+        }
+
+        type     = parse_named_type( start );
+        callable = false;
+    }
+
+    if( leading_const )
+    {
+        type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
+    }
+
+    return callable ? type : parse_type_suffixes( type, start );
+}
+
+// `fn( … ) -> T`, past the `fn`.
+Node_id Parser::parse_function_type( Span start )
+{
+    const Span open = cursor_.peek().span;
+
+    recovery_.expect( Token_kind::L_paren );
+
+    // The same shape as parse_param_list, so that a trailing comma is refused in a function
+    // type exactly as it is in the signature the type stands for.
+    std::vector<Node_id> params;
+
+    if( !cursor_.check( Token_kind::R_paren ) )
+    {
+        const std::size_t list_errors = diags_.error_count();
+        do
+        {
+            const Span    at   = cursor_.peek().span;
+            const Node_id type = parse_type_with_mode();
+
+            params.push_back(
+                ast_.add( Node_kind::Param_decl, Span::merge( at, cursor_.previous().span ), k_invalid_symbol, { type } )
+            );
+
+            if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
-                const Span    at   = cursor_.peek().span;
-                const Node_id type = parse_type_with_mode();
-
-                params.push_back(
-                    ast_.add( Node_kind::Param_decl, Span::merge( at, cursor_.previous().span ), k_invalid_symbol, { type } )
-                );
-
-                if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
-                {
-                    break;
-                }
-            } while( cursor_.match( Token_kind::Comma ) );
-        }
-
-        recovery_.expect( Token_kind::R_paren );
-
-        const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, cursor_.previous().span ), 0, params );
-
-        recovery_.expect( Token_kind::Arrow );
-        const Node_id return_type = parse_type_with_mode();
-
-        Node_id fn_type =
-            ast_.add( Node_kind::Function_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, param_list } );
-
-        if( leading_const )
-        {
-            fn_type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { fn_type } );
-        }
-        return fn_type;
+                break;
+            }
+        } while( cursor_.match( Token_kind::Comma ) );
     }
 
-    if( cursor_.match_keyword( Keyword::Field ) )
-    {
-        recovery_.expect( Token_kind::L_paren );
+    recovery_.expect( Token_kind::R_paren );
 
-        const Node_id aggregate_type = parse_type_with_mode();
+    const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, cursor_.previous().span ), 0, params );
 
-        recovery_.expect( Token_kind::R_paren );
-        recovery_.expect( Token_kind::Arrow );
+    recovery_.expect( Token_kind::Arrow );
+    const Node_id return_type = parse_type_with_mode();
 
-        const Node_id return_type = parse_type_with_mode();
+    return ast_.add( Node_kind::Function_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, param_list } );
+}
 
-        Node_id field_type = ast_.add(
-            Node_kind::Field_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, aggregate_type }
-        );
+// `field( C ) -> T`, past the `field`.
+Node_id Parser::parse_field_type( Span start )
+{
+    recovery_.expect( Token_kind::L_paren );
 
-        if( leading_const )
-        {
-            field_type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { field_type } );
-        }
-        return field_type;
-    }
+    const Node_id aggregate_type = parse_type_with_mode();
 
-    if( !recovery_.expect( Token_kind::Identifier ) )
-    {
-        return error_node( start );
-    }
+    recovery_.expect( Token_kind::R_paren );
+    recovery_.expect( Token_kind::Arrow );
 
+    const Node_id return_type = parse_type_with_mode();
+
+    return ast_.add( Node_kind::Field_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, aggregate_type } );
+}
+
+// A name, possibly qualified and possibly generic, past its first identifier.
+Node_id Parser::parse_named_type( Span start )
+{
     Symbol_id  name       = cursor_.previous().symbol;
     const Span name_start = cursor_.previous().span;
 
@@ -2059,16 +2039,16 @@ Node_id Parser::parse_type_term()
         }
     }
 
-    if( leading_const )
-    {
-        type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
-    }
+    return type;
+}
 
+// A trailing `const`, `[]`, `[*]`, `&` or `*`, each wrapping what precedes it.
+Node_id Parser::parse_type_suffixes( Node_id type, Span start )
+{
     while( true )
     {
-        // A `>` from a split `>>` is still owed to whoever opened the enclosing list, and every
-        // token after it belongs to *them*. Without this, the inner type in `Bad<Box<T>>*` reads
-        // the `*` as its own and the field becomes `Bad<Box<T>*>` - a different type, silently.
+        // A `>` from a split `>>` is still owed to the enclosing list, and so is every token after it:
+        // `Bad<Box<T>>*` must not become `Bad<Box<T>*>`.
         if( cursor_.owes_greater() )
         {
             break;
@@ -2118,64 +2098,14 @@ Node_id Parser::parse_type_term()
 
         if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::R_bracket )
         {
-            const Span run_start = cursor_.peek().span;
-            bool       detatched = !cursor_.peek_is_adjacent();
-            if( detatched )
-            {
-                recovery_.error_at(
-                    run_start,
-                    "`[]` must touch the type it modifies",
-                    fmt::format( "write `{}[]`", sm_.text( ast_.span( type ) ) )
-                );
-            }
-
-            cursor_.advance(); // [
-            bool spaced = !cursor_.peek_is_adjacent();
-            cursor_.advance(); // ]
-
-            if( spaced && !detatched )
-            {
-                recovery_.error_at(
-                    Span::merge( run_start, cursor_.previous().span ),
-                    "`[]` is written without spaces",
-                    fmt::format( "write `{}[]`", sm_.text( ast_.span( type ) ) )
-                );
-            }
-
-            type = ast_.add( Node_kind::Run_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
+            type = adjacent_suffix( type, start, 2, "[]", Node_kind::Run_type );
             continue;
         }
 
         if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::Star &&
             cursor_.peek( 2 ).kind == Token_kind::R_bracket )
         {
-            const Span many_item_start = cursor_.peek().span;
-            bool       detatched       = !cursor_.peek_is_adjacent();
-            if( detatched )
-            {
-                recovery_.error_at(
-                    many_item_start,
-                    "`[*]` must touch the type it modifies",
-                    fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
-                );
-            }
-
-            cursor_.advance(); // [
-            bool spaced = !cursor_.peek_is_adjacent();
-            cursor_.advance(); // *
-            spaced |= !cursor_.peek_is_adjacent();
-            cursor_.advance(); // ]
-
-            if( spaced && !detatched )
-            {
-                recovery_.error_at(
-                    Span::merge( many_item_start, cursor_.previous().span ),
-                    "`[*]` is written without spaces",
-                    fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
-                );
-            }
-
-            type = ast_.add( Node_kind::Many_pointer_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
+            type = adjacent_suffix( type, start, 3, "[*]", Node_kind::Many_pointer_type );
             continue;
         }
 
@@ -2184,9 +2114,8 @@ Node_id Parser::parse_type_term()
             break;
         }
 
-        // D32: `&` means address-of and nothing else. Reported before D17's adjacency check below,
-        // or `i32 &r` would give two diagnostics for one mistake - and the first of them would be
-        // advice about how to space a spelling that no longer exists.
+        // D32: `&` is address-of only. Reported before D17's adjacency check, so `i32 &r` gives one
+        // diagnostic.
         if( cursor_.check( Token_kind::Amp ) )
         {
             recovery_.error_at( cursor_.peek().span, "`&` is not a type", "write `ref T` for a reference binding" );
@@ -2194,9 +2123,7 @@ Node_id Parser::parse_type_term()
             continue;
         }
 
-        // D17: `*` belongs to the type, so it must touch it. `u32 *p` is rejected rather than
-        // silently read as a multiplication, which is what C's declarator syntax does. `&` is no
-        // longer among them, which is why this reads as one token rather than two.
+        // D17: `*` must touch its type, so `u32 *p` is refused rather than read as a multiplication.
         if( !cursor_.peek_is_adjacent() )
         {
             recovery_.error_at(
@@ -2212,6 +2139,38 @@ Node_id Parser::parse_type_term()
     }
 
     return type;
+}
+
+// `[]` or `[*]`: refused unless it touches the type and its own tokens touch each other.
+Node_id Parser::adjacent_suffix( Node_id type, Span start, u32 tokens, std::string_view spelling, Node_kind kind )
+{
+    const Span suffix_start = cursor_.peek().span;
+    const bool detached     = !cursor_.peek_is_adjacent();
+    const auto help         = [&] { return fmt::format( "write `{}{}`", sm_.text( ast_.span( type ) ), spelling ); };
+
+    if( detached )
+    {
+        recovery_.error_at( suffix_start, fmt::format( "`{}` must touch the type it modifies", spelling ), help() );
+    }
+
+    bool spaced = false;
+
+    for( u32 i = 0; i < tokens; ++i )
+    {
+        spaced |= i > 0 && !cursor_.peek_is_adjacent();
+        cursor_.advance();
+    }
+
+    if( spaced && !detached )
+    {
+        recovery_.error_at(
+            Span::merge( suffix_start, cursor_.previous().span ),
+            fmt::format( "`{}` is written without spaces", spelling ),
+            help()
+        );
+    }
+
+    return ast_.add( kind, Span::merge( start, cursor_.previous().span ), 0, { type } );
 }
 
 Node_id Parser::parse_type_with_mode()
@@ -2235,9 +2194,8 @@ Node_id Parser::parse_type_with_mode()
     const Keyword mode = cursor_.peek().keyword();
     cursor_.advance();
 
-    // D32 gives one order. Without this, `ref const T` falls through to parse_type's leading-const
-    // branch and becomes Mode_type( Const_type( T ) ) - an inner const, which the checker reports as
-    // "a pointer to `const` is not supported yet": the right refusal for the wrong reason.
+    // D32 gives one order: `ref const T` would otherwise reach the leading-const branch and be refused
+    // for the wrong reason.
     if( cursor_.check_keyword( Keyword::Const ) )
     {
         recovery_.error_at(
@@ -2265,14 +2223,11 @@ Node_id Parser::parse_param()
 {
     const Span start = cursor_.peek().span;
 
-    // D31: the marker appears in the signature as well as at the call site, and the two must agree.
-    // Wrapped around the type rather than stored on the Param_decl, because aux already holds the
-    // name and this is the shape Ref_type had - one node in type position, generalised.
+    // D31: the mode wraps the type, since aux holds the name.
     Node_id type = parse_type_with_mode();
 
-    // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
-    // a second child. A nameless parameter stays a parameter, the way a function type's does, because
-    // it still counts towards the signature.
+    // The name goes in aux, as Function_decl's does. A nameless parameter stays one: it still counts
+    // towards the signature.
     const Symbol_id name      = expect_name();
     const Span      name_span = cursor_.previous().span;
 
@@ -2287,9 +2242,7 @@ Node_id Parser::parse_type_param()
     const Symbol_id name      = expect_name();
     const Span      name_span = cursor_.previous().span;
 
-    // `<comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
-    // Naming it costs one lookahead; without it the stray name derails the parameter list and then
-    // the signature after it, which is a dozen diagnostics for one habit.
+    // `<comparable T>` is C++'s terse form. Named here, or the stray name derails the parameter list.
     if( cursor_.check( Token_kind::Identifier ) )
     {
         recovery_.error_at(
@@ -2301,9 +2254,7 @@ Node_id Parser::parse_type_param()
         cursor_.advance();
     }
 
-    // A parameter with no name is not one: every pass downstream reads the name to report about
-    // it, so handing one over means a stray comma or a keyword crashes a pass that had no reason to
-    // expect it. The same reading parse_aggregate_decl takes of a nameless declaration.
+    // A nameless type parameter is not one: every later pass reads its name.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( at, cursor_.previous().span ) );
@@ -2421,9 +2372,8 @@ bool Parser::can_start_expression() const
     case Token_kind::Amp:
         return true;
 
-    // Must agree with parse_prefix's Keyword case, which is the other half of this list. Three
-    // features in a row have needed both edited together; a keyword missing from here parses fine
-    // in an argument or an initialiser and fails only in statement position.
+    // Must agree with parse_prefix's Keyword case: a keyword missing here parses everywhere but
+    // statement position.
     case Token_kind::Keyword:
         return cursor_.check_keyword( Keyword::True ) || cursor_.check_keyword( Keyword::False ) ||
                cursor_.check_keyword( Keyword::Nullptr ) || cursor_.check_keyword( Keyword::Move ) ||
@@ -2500,9 +2450,7 @@ Node_id Parser::dispatch_statement()
         return parse_for_stmt();
     }
 
-    // A struct in a function body. Recognised here so it can be consumed whole: synchronise()
-    // would stop at the first `;` *inside* the struct, and everything after it would then be read
-    // as a top-level declaration - one mistake becoming five.
+    // A struct in a function body, consumed whole: synchronise() would stop at its first `;`.
     if( cursor_.check_keyword( Keyword::Struct ) || cursor_.check_keyword( Keyword::Class ) )
     {
         const Span start = cursor_.peek().span;
@@ -2556,9 +2504,8 @@ Node_id Parser::dispatch_statement()
         return parse_var_decl();
     }
 
-    // Anything that can begin an expression becomes an expression statement; D15 then decides
-    // whether it is one with an effect.
-    // `++` and `--` are only accepted to be later refused. Keel has no prefix increment operators.
+    // Anything that can begin an expression is an expression statement, for D15 to judge. `++` and
+    // `--` are accepted only to be refused.
     if( can_start_expression() || cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
     {
         return parse_expression_stmt();
@@ -2626,10 +2573,8 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
     }
 
     recovery_.expect( Token_kind::Semicolon );
-    // A declaration with no name is not one: sema reads every declaration's name to report
-    // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it. Everything inside was still parsed, so the errors in
-    // there are already reported.
+    // A nameless declaration is not one: sema reads every declaration's name. Errors inside are
+    // already reported.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
@@ -2704,10 +2649,8 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 
     if( discarded && !recovery_.failed_since( first ) && ( consume_semicolon || cursor_.check( Token_kind::R_paren ) ) )
     {
-        // `u32 *ptr;` and `u32 &r;` are what a C++ programmer writes from habit, and neither reaches
-        // the type parser: the first is a multiplication under D17, the second a bitwise and now
-        // that D32 has taken `&` out of type position. Without this both land on the generic "no
-        // effect" message, which explains nothing.
+        // `u32 *ptr;` and `u32 &r;` from C++ habit parse as a multiplication (D17) and a bitwise and
+        // (D32); named here rather than left to the generic "no effect" message.
         const Token_kind op = ast_.kind( expr ) == Node_kind::Binary_expr ? ast_.op( expr ) : Token_kind::Unknown;
 
         const bool looks_like_a_declaration = ( op == Token_kind::Star || op == Token_kind::Amp ) &&
@@ -2869,9 +2812,7 @@ Node_id Parser::parse_for_stmt()
 
 Node_id Parser::parse_switch_stmt()
 {
-    // `switch( e )` then a braced list of arms. The parenthesised scrutinee is C++'s spelling, and
-    // D3's mandatory braces apply to the switch body as to every other control-flow construct -
-    // but *not* to an arm, which is a label group rather than a body.
+    // `switch( e )` then braced arms. D3's braces apply to the body, not to an arm.
     assert( cursor_.check_keyword( Keyword::Switch ) );
 
     const Span start = cursor_.peek().span;
@@ -2895,9 +2836,8 @@ Node_id Parser::parse_switch_stmt()
         const u32  before    = cursor_.position();
         const Span arm_start = cursor_.peek().span;
 
-        // Labels first, as many as are stacked. An arm ends when something that is not a label
-        // appears, which is what makes `case A: case B:` share one body with no fallthrough rule
-        // to write - and what makes falling out of a non-empty arm impossible to express.
+        // Labels first, as many as are stacked, so `case A: case B:` shares one body and falling out of a
+        // non-empty arm cannot be written.
         std::vector<Node_id> children;
 
         bool is_default = false;
@@ -2923,14 +2863,8 @@ Node_id Parser::parse_switch_stmt()
             {
                 const Node_id lower = parse_case_bound();
 
-                // D7: `case Shape::Circle( r ):` binds names rather than reading them. The
-                // postfix loop has already folded the `(` into a Call_expr, so the pattern is
-                // recovered from that rather than parsed with a lower binding power - which would
-                // also stop `::`, since both are 110.
-                //
-                // Converting here is what keeps the bindings away from the resolver: as Name_exprs
-                // they would be looked up, and it would report about variables that do not exist
-                // instead of about the pattern.
+                // D7: `case Shape::Circle( r ):` binds names. The postfix loop already folded it into a Call_expr,
+                // so the pattern is converted from that, which also keeps the bindings away from the resolver.
                 if( ast_.kind( lower ) == Node_kind::Call_expr && ast_.kind( ast_.callee( lower ) ) == Node_kind::Path_expr )
                 {
                     std::vector<Node_id> parts { ast_.callee( lower ) };
@@ -2957,9 +2891,7 @@ Node_id Parser::parse_switch_stmt()
                     continue;
                 }
 
-                // D34: a range is syntax, parsed only here and as an index, where it is legal,
-                // rather than in the expression grammar - which would make `i32 x = 1..5;` parse
-                // and need a diagnostic to un-parse it.
+                // D34: a range is parsed only here and as an index, not in the expression grammar.
                 if( cursor_.match( Token_kind::Dot_dot ) )
                 {
                     const Node_id upper = parse_expression( 0 );
@@ -2986,10 +2918,8 @@ Node_id Parser::parse_switch_stmt()
             );
         }
 
-        // The body is the statements up to the next label, wrapped in a Block so that scoping and
-        // lowering treat an arm like any other. Synthesised rather than parsed: an arm has no
-        // braces of its own, and giving it a Block anyway is what keeps every consumer from having
-        // to special-case a bare statement list.
+        // The statements up to the next label, wrapped in a synthesised Block so an arm scopes and lowers
+        // like any body.
         const Span body_start = cursor_.peek().span;
 
         std::vector<Node_id> statements;
@@ -3069,10 +2999,8 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, Expression
             continue;
         }
 
-        // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
-        // reaches `||` with a Binary_expr(&&) on its left. A tighter one never does: in
-        // `a & b == c` the `==` is consumed inside the `&` recursion, which is what `enclosing`
-        // catches. Parenthesised operands are unambiguous by construction.
+        // D16 looks both ways: a looser operator folds into `left` (`a && b || c`), and a tighter one is
+        // consumed inside the recursion, which `enclosing` catches (`a & b == c`).
         Token_kind conflicting = Token_kind::End_of_file;
 
         if( needs_parentheses( enclosing, cursor_.peek().kind ) )
@@ -3172,10 +3100,8 @@ Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
             continue;
         }
 
-        // Field access produces its own node rather than a Binary_expr. The field name goes in aux, not
-        // into a Name_expr child: it resolves against the object's type, not through the scope stack.
-        // D22: `.` reaches through a pointer, so `->` is refused by name and recovered as `.`, rather than
-        // lexed as `-` then `>` and reported as arithmetic.
+        // A Field_expr with the name in aux, since it resolves against the object's type. D22: `->` is
+        // refused by name and recovered as `.`.
         const bool arrow = cursor_.check( Token_kind::Arrow );
 
         if( arrow || cursor_.check( Token_kind::Dot ) )
@@ -3254,10 +3180,8 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
 
     const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, cursor_.previous().span ), 0, arguments );
 
-    // `Box<i32>::of( 7 )`. The arguments belong to the *qualifier* rather than to a call, so
-    // they are carried on the path instead - a static call has no receiver to read them off,
-    // which makes this the only place they can come from. The trailing `( 7 )` is then an
-    // ordinary call over the path, handled by parse_postfix.
+    // `Box<i32>::of( 7 )`: the type arguments belong to the qualifier, so the path carries them; the
+    // call over it is parse_postfix's.
     if( cursor_.check( Token_kind::Colon_colon ) || cursor_.check( Token_kind::Dot ) )
     {
         const bool is_dot   = cursor_.check( Token_kind::Dot );
@@ -3315,9 +3239,7 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
     return ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, types } );
 }
 
-// A member access with no name is not one: every later pass reads the name to report about it, and
-// an invalid Symbol_id aborts the interner rather than degrading. The parser has already said what it
-// found in the name's place.
+// A member access with no name is not one: every later pass reads the name.
 Node_id Parser::member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments )
 {
     const Span span = Span::merge( ast_.span( left ), cursor_.previous().span );
@@ -3336,8 +3258,7 @@ Node_id Parser::member_access( Node_id left, Node_kind kind, Symbol_id name, Nod
 }
 
 // The keyword-headed expressions: literals with no digits, the three call-site markers, and the
-// two conversions. Split out because it is the only case here with real branching - the rest of
-// parse_prefix is one line per token kind.
+// two conversions.
 Node_id Parser::parse_keyword_prefix( Span start )
 {
     if( cursor_.check_keyword( Keyword::True ) || cursor_.check_keyword( Keyword::False ) )
@@ -3547,9 +3468,7 @@ Node_id Parser::parse_prefix()
             return parse_struct_literal( start, cursor_.previous().symbol, package_node );
         }
 
-        // No ambiguity with a block: a block is a statement and starts with `{`, so an expression
-        // is never followed by one. Rust needs a rule here only because its `if` takes no
-        // parentheses - Keel's conditions end at `)`.
+        // `Name {` is a struct literal: a block is a statement, so an expression is never followed by one.
         if( cursor_.check( Token_kind::L_brace ) )
         {
             return parse_struct_literal( start, name );
@@ -3573,9 +3492,8 @@ Node_id Parser::parse_prefix()
         // The operator is captured before the operand is parsed, and the span read after it.
         const Token op = cursor_.advance();
 
-        // Recursing at the same power makes unary right-associative, so `- -x` nests. No enclosing
-        // operator is passed: unary is not in D16's classification, and claiming it were would make
-        // `-a << b` a spurious "cannot be mixed" error.
+        // Same power, so unary is right-associative. No enclosing operator: unary is outside D16, and
+        // passing one would refuse `-a << b`.
         const Node_id operand = parse_expression( k_unary_power );
 
         return ast_.add(
@@ -3695,9 +3613,7 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
             continue;
         }
 
-        // A trailing comma is allowed, unlike in an argument list - C++ permits one in a braced
-        // initialiser and rejects one in a call, and §5.1 says to follow it rather than to be
-        // internally tidy.
+        // A trailing comma is allowed, as C++ allows one in a braced initialiser (§5.1).
         cursor_.match( Token_kind::Comma );
     }
 
@@ -4065,9 +3981,7 @@ TEST_CASE( "parser_minimal_function_shape", "[parse]" )
     const Node_id func = p.child( p.root(), 0 );
     REQUIRE( p.kind( func ) == Node_kind::Function_decl );
 
-    // Fixed arity: return type, parameter list, body.
-    // Four: return type, parameters, body, type parameters - the last invalid unless the
-    // declaration is generic, so every function-like kind has the same arity.
+    // Return type, parameters, body, type parameters: every function-like kind has the same arity.
     REQUIRE( p.children( func ).size() == 4 );
     REQUIRE_FALSE( p.child( func, 3 ).is_valid() );
     REQUIRE( p.kind( p.child( func, 0 ) ) == Node_kind::Named_type );
@@ -4833,7 +4747,7 @@ TEST_CASE( "parser_grouping_produces_no_node", "[parse]" )
     }
 }
 
-// PLAN §6.3 D16. Both directions matter: a tighter operator is consumed inside the looser one's
+// D16. Both directions matter: a tighter operator is consumed inside the looser one's
 // recursion and never appears with a Binary_expr on its left, so the two took different paths.
 TEST_CASE( "parser_calls", "[parse]" )
 {
@@ -4885,12 +4799,7 @@ TEST_CASE( "parser_calls_chain", "[parse]" )
     REQUIRE( shape_of( "f()()" ) == "call(call(f,[]),[])" );
 }
 
-// D18 removed the need for forward declarations, so a `;` where a body belongs is a mistake a C++
-// author makes out of habit. It used to cascade: parse_block carried on and read the declarations
-// that followed as statements.
-// PLAN §6.2: `struct Point { f64 x; f64 y; };` - C++'s spelling, trailing semicolon included.
-// PLAN §6.2: `Point { 0.0, 0.0 }`. No ambiguity with a block - Keel's conditions end at `)`, and a
-// block is a statement, so an expression is never directly followed by one.
+// §6.2: `Point { 0.0, 0.0 }`. A block is a statement, so an expression is never followed by one.
 TEST_CASE( "parser_parses_struct_literals", "[parse]" )
 {
     SECTION( "positional initialisers carry no name" )
@@ -4991,10 +4900,7 @@ TEST_CASE( "parser_parses_struct_literals", "[parse]" )
     }
 }
 
-// `move x`, `out x`, `ref x`. One node kind: they are syntactically identical, and aux carries
-// which one, the way Binary_expr carries its operator.
-// `move`, `out` and `ref` are ordinary identifiers in C++, so a program can arrive here without
-// its author suspecting the *name* is the problem.
+// `move`, `out` and `ref` are ordinary identifiers in C++, so the author may not suspect the name.
 TEST_CASE( "parser_explains_a_keyword_used_as_a_name", "[parse]" )
 {
     static const char* sources[] = {
@@ -5055,6 +4961,7 @@ TEST_CASE( "parser_makes_a_nameless_declaration_an_error_node", "[parse]" )
     }
 }
 
+// `move x`, `out x`, `ref x`: one node kind, aux carrying which.
 TEST_CASE( "parser_parses_passing_markers", "[parse]" )
 {
     struct Case
@@ -5085,11 +4992,7 @@ TEST_CASE( "parser_parses_passing_markers", "[parse]" )
     }
 }
 
-// A marker annotates a whole argument rather than binding as an operator, so it takes the
-// expression up to the boundary. Under unary binding `f( move a + b )` would be `( move a ) + b`,
-// which passes the *sum* by copy - leaving a `move` at the call site saying nothing about what the
-// callee receives, which is the one thing D2 exists to guarantee. Whether the operand is a place
-// is sema's question, not the grammar's.
+// A marker takes the whole argument: as a unary, `f( move a + b )` would pass the sum by copy.
 TEST_CASE( "parser_binds_a_passing_marker_to_the_whole_argument", "[parse]" )
 {
     SECTION( "field access is part of it" )
@@ -5151,9 +5054,8 @@ TEST_CASE( "parser_accepts_markers_outside_argument_lists", "[parse]" )
     }
 }
 
-// can_start_expression() gates statement position only - argument lists and initialisers reach
-// parse_prefix directly. Without the markers listed there, `move b;` is "expected a statement,
-// found `move`" rather than D15 explaining that the statement does nothing.
+// can_start_expression() gates statement position only, so it must list the markers or `move b;`
+// misses D15's diagnostic.
 TEST_CASE( "parser_reaches_a_marker_in_statement_position", "[parse]" )
 {
     const Parsed p( "i32 main() { move b; return 0; }" );
@@ -5402,6 +5304,7 @@ TEST_CASE( "parser_rejects_the_arrow_operator", "[parse]" )
     }
 }
 
+// §6.2: `struct Point { f64 x; f64 y; };`, trailing semicolon included.
 TEST_CASE( "parser_parses_a_struct_declaration", "[parse]" )
 {
     const Parsed p( "struct Point\n{\n    f64 x;\n    f64 y;\n};\n" );
@@ -5490,9 +5393,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
         REQUIRE_FALSE( p.has_errors() );
     }
 
-    // Duplicate names and shadowed type spellings are sema's business, not the parser's: `i32` is
-    // an ordinary identifier (D1), and a repeated field is the same kind of error as a repeated
-    // parameter.
+    // Duplicate names and shadowed type spellings are sema's business (D1).
     SECTION( "the parser does not judge field names" )
     {
         REQUIRE_FALSE( Parsed( "struct P { f64 x; f64 x; };" ).has_errors() );
@@ -5608,6 +5509,7 @@ TEST_CASE( "parser_recovers_after_a_malformed_struct", "[parse]" )
     REQUIRE( found_main );
 }
 
+// D18: a `;` where a body belongs is a C++ habit, and must not read what follows as statements.
 TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
 {
     SECTION( "one error, naming the brace" )
@@ -5639,9 +5541,8 @@ TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
     }
 }
 
-// D18's corollary made a body-less function a parse error; `extern` is the one rule that produces
-// one on purpose. The absent body IS the marker - nothing carries a flag - so these check the shape
-// as closely as the acceptance.
+// D18's corollary refuses a body-less function; `extern` is the one rule that writes one, and the
+// absent body is the whole marker.
 TEST_CASE( "parser_parses_an_extern_declaration", "[parse][extern]" )
 {
     SECTION( "it is a Function_decl with no body" )
@@ -5823,9 +5724,8 @@ TEST_CASE( "parser_rejects_a_malformed_extern", "[parse][extern]" )
     }
 }
 
-// `alloc<T>()` is D28's shape - a keyword carrying a type argument, so the `<` can only be a
-// bracket and never a comparison. `free( p )` is its pair rather than a call, because Keel has no
-// `void*` for an extern `free` to take.
+// D28: `alloc<T>()` is a keyword, so the `<` is a bracket. `free( p )` is its pair, since Keel has
+// no `void*`.
 TEST_CASE( "parser_parses_alloc", "[parse][alloc]" )
 {
     SECTION( "it is an Alloc_expr holding its type" )
@@ -6058,12 +5958,8 @@ TEST_CASE( "parser_points_a_forward_declaration_at_extern", "[parse][extern]" )
     REQUIRE( p.errors().find( "`extern`" ) != std::string::npos );
 }
 
-// A keyword after `.` or `::` used to abort the compiler. The parser guarded `previous()` - so the
-// dot's own symbol could not become the name - but still built a Field_expr carrying an *invalid*
-// Symbol_id, and every later pass reads that name to report about it. `Interner::text` asserts.
-//
-// The rule is the one parse_function_decl already states for declarations, one level down: a member
-// access with no name is not one, so it is an Error node instead.
+// A keyword after `.` or `::` once aborted the compiler through an invalid Symbol_id. A member
+// access with no name is an Error node instead.
 TEST_CASE( "parser_rejects_a_keyword_as_a_member_name", "[parse][members]" )
 {
     // Every keyword class: a statement keyword, a type-position one, an expression one, a mode, and
@@ -6132,9 +6028,7 @@ TEST_CASE( "parser_refuses_to_name_a_destructor_after_colon_colon", "[parse][mem
     }
 }
 
-// The same hole reached through three other constructs, each of which builds on one of the two
-// nodes above. Grouped because one guard closed all of them, and a future change that reopens any
-// one should fail here rather than in whichever pass reads the name first.
+// The same hole through three other constructs, closed by one guard.
 TEST_CASE( "parser_survives_a_keyword_member_in_every_position", "[parse][members]" )
 {
     SECTION( "assigned to" )
@@ -6177,16 +6071,12 @@ TEST_CASE( "parser_survives_a_keyword_member_in_every_position", "[parse][member
         INFO( p.errors() );
         REQUIRE( p.errors().find( "expected an identifier, found `this`" ) != std::string::npos );
 
-        // The whole chain becomes the Error, not just the broken link: `a.inner` was built and is
-        // then left unreferenced, which is what an append-only tree costs and is why nothing
-        // downstream can reach a half-formed access.
+        // The whole chain becomes the Error, so nothing downstream reaches a half-formed access.
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Field_expr ).is_valid() );
     }
 }
 
-// One mistake, one error. A bare expect() reports without consuming, so the keyword was re-parsed
-// as the start of a new statement and three mistakes produced sixteen diagnostics; expect_name
-// consumes it, which is exactly the reason that helper exists.
+// One mistake, one error: expect_name consumes the keyword, so it is not re-parsed as a statement.
 TEST_CASE( "parser_does_not_cascade_from_a_keyword_member", "[parse][members]" )
 {
     SECTION( "one access" )
@@ -6430,12 +6320,8 @@ TEST_CASE( "parser_parses_fallthrough", "[parse][fallthrough]" )
     }
 }
 
-// D39: type parameters go on the name, not in a `template<...>` prefix, so the declaration reads
-// the way the call site already does. Nothing here checks them - slice 1a is the shape only.
-// The members of an aggregate are read through one accessor rather than off its children, because
-// a generic one will carry its type parameters in the same list - in a leading slot, exactly as an
-// `enum` carries its underlying type in one. Today the two answers coincide; the accessor exists so
-// that the day they stop coinciding is one edit rather than nineteen.
+// The members of an aggregate are read through one accessor, since a generic one carries its type
+// parameters in a leading slot.
 TEST_CASE( "ast_members_are_an_aggregate_s_own", "[parse][ast]" )
 {
     SECTION( "fields, methods and the special members, in declaration order" )
@@ -6471,10 +6357,8 @@ TEST_CASE( "ast_members_are_an_aggregate_s_own", "[parse][ast]" )
     }
 }
 
-// `>>` closes two lists, and the second close is still owed when the inner type finishes parsing.
-// Any token after it belongs to whoever opened the enclosing list - so a postfix operator read by
-// the inner type lands one level too deep, and does so silently: `Bad<Box<T>>*` and `Bad<Box<T>*>`
-// are both well-formed types, and the compiler would pick the wrong one with nothing to report.
+// `>>` closes two lists, so a postfix after it belongs to the enclosing one: `Bad<Box<T>>*` is not
+// `Bad<Box<T>*>`, and both are well-formed.
 TEST_CASE( "parser_closes_nested_generics_before_reading_a_postfix", "[parse][generic]" )
 {
     // The field's annotation, rendered as the chain of node kinds down to the first leaf. `shape()`
@@ -6538,6 +6422,7 @@ TEST_CASE( "parser_closes_nested_generics_before_reading_a_postfix", "[parse][ge
     }
 }
 
+// D39: type parameters go on the name, not in a `template<...>` prefix.
 TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
 {
     SECTION( "one parameter" )
@@ -6605,9 +6490,8 @@ TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
     }
 }
 
-// Every function-like declaration carries the same four children, so the one walk that visits them
-// does not have to ask which kind it is looking at. A method adds a fifth, its own type parameters. Three separate
-// out-of-bounds reads came from the two shapes disagreeing while this was being added.
+// Every function-like declaration carries the same four children, so one walk visits them all; a
+// method adds a fifth, its own type parameters.
 TEST_CASE( "parser_gives_every_declaration_the_same_arity", "[parse][generic]" )
 {
     SECTION( "a plain function" )
@@ -6702,9 +6586,8 @@ TEST_CASE( "parser_rejects_a_malformed_type_parameter_list", "[parse][generic]" 
     }
 }
 
-// `id<i32>( 1 )` against `a < b > ( c )`, decided on shape alone because the parser has no symbol
-// table (L17). Committing to the generic reading is safe because the comparison reading has no
-// valid typing to fall back to - see §12.
+// `id<i32>( 1 )` against `a < b > ( c )`, decided on shape since the parser has no symbol table
+// (L17). The comparison reading has no valid typing to fall back to (§12).
 TEST_CASE( "parser_parses_a_generic_call", "[parse][generic]" )
 {
     const auto call_of = []( const Parsed& p ) { return find_first( p.ast(), p.root(), Node_kind::Call_expr ); };
@@ -6762,10 +6645,8 @@ TEST_CASE( "parser_parses_a_generic_call", "[parse][generic]" )
     }
 }
 
-// M7 slice 5. `&id<i32>` names one instance and is not a call, so the list has nowhere to hang but
-// the name itself - the slot a path already gives `Colour::Red`. What makes it readable without a
-// symbol table is that the token closing the list cannot begin an operand, so a comparison's right
-// operand can never be mistaken for it.
+// `&id<i32>` names one instance, so the list hangs on the name. The closing token cannot begin an
+// operand, so a comparison is never mistaken for it.
 TEST_CASE( "parser_parses_type_arguments_on_a_bare_name", "[parse][generic][m7]" )
 {
     // The operand of the `&`, which is the only Unary_expr in any of these.
@@ -6873,9 +6754,8 @@ TEST_CASE( "parser_parses_type_arguments_on_a_bare_name", "[parse][generic][m7]"
     }
 }
 
-// The other half of the same decision: what must stay a comparison. The scan requires the list to
-// close *and* be followed by a token that cannot begin an operand, which is what keeps these
-// unchanged - a comparison always has a right operand, so its `>` is never followed by one of them.
+// What must stay a comparison: the list must close and be followed by a token that cannot begin an
+// operand.
 TEST_CASE( "parser_still_reads_comparisons_as_comparisons", "[parse][generic]" )
 {
     for( const char* body : {
@@ -7082,9 +6962,7 @@ TEST_CASE( "parser_variable_declarations", "[parse]" )
         REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Int_literal );
     }
 
-    // previous() is the `auto` keyword when expect() fails, so an unguarded read would silently
-    // give the variable that symbol as its name. Only `auto` reaches this path: `i32 = 5;` is a
-    // well-formed assignment to a variable called `i32`, since type names are ordinary identifiers.
+    // previous() is `auto` when expect() fails, so an unguarded read would name the variable `auto`.
     SECTION( "a missing name reports rather than reusing the previous token" )
     {
         const Parsed p( "i32 main() { auto = 5; }" );
@@ -7166,7 +7044,7 @@ TEST_CASE( "parser_assignment_and_increment", "[parse]" )
     }
 }
 
-// PLAN §6.3 D15.
+// D15.
 TEST_CASE( "parser_expression_statements_must_have_an_effect", "[parse]" )
 {
     SECTION( "a call is allowed" )
@@ -7199,7 +7077,7 @@ TEST_CASE( "parser_expression_statements_must_have_an_effect", "[parse]" )
     }
 }
 
-// PLAN §6.3 D17: `*` and `&` bind to the type, so they must touch it.
+// D17: `*` binds to the type, so it must touch it; D32 refuses `&` there.
 TEST_CASE( "parser_pointer_and_reference_types", "[parse]" )
 {
     SECTION( "adjacent forms parse" )
@@ -7638,9 +7516,7 @@ TEST_CASE( "parser_nameless_parameter_is_still_a_parameter", "[parse]" )
     }
 }
 
-// Nothing else starts with `fn`, so the declaration reading is committed to before the arrow is
-// looked for - without that the statement falls through to an expression and the message is about
-// `fn` not being one.
+// Nothing else starts with `fn`, so the declaration reading is committed before the arrow.
 TEST_CASE( "parser_function_type_requires_an_arrow", "[parse]" )
 {
     const Parsed p( "i32 main() { fn( i32 ) i32 f; }" );
@@ -7835,7 +7711,7 @@ TEST_CASE( "parser_if_statement", "[parse]" )
         REQUIRE( p.kind( p.child( inner, 2 ) ) == Node_kind::Block );
     }
 
-    // PLAN §6.3 D3.
+    // D3.
     SECTION( "a braceless body is rejected" )
     {
         for( const char* source : { "if( x ) return 1;", "if( x ) { } else return 2;" } )
@@ -8082,10 +7958,8 @@ TEST_CASE( "parser_ends_a_skip_at_a_block_inside_an_unclosed_bracket", "[parse]"
     }
 }
 
-// D12: prefix `++` is refused with its postfix spelling, and recovered as that spelling so nothing
-// after it reports again.
-// One spelling for each meaning: `const` goes before the type it applies to, and a second one
-// after it is either a C++ habit or a pointer written without its `*`.
+// One spelling per meaning: `const` goes before its type, and one after is a C++ habit or a
+// pointer missing its `*`.
 TEST_CASE( "parser_refuses_const_after_a_named_type", "[parse][const]" )
 {
     SECTION( "before a pointer, it names the pointer to const" )
@@ -8161,6 +8035,7 @@ TEST_CASE( "parser_refuses_const_written_twice", "[parse][const]" )
     REQUIRE( p.kind( p.child( p.child( type, 0 ), 0 ) ) == Node_kind::Named_type );
 }
 
+// D12: prefix `++` is refused and recovered as its postfix spelling.
 TEST_CASE( "parser_refuses_prefix_increment", "[parse]" )
 {
     SECTION( "as a statement" )
@@ -9177,9 +9052,7 @@ TEST_CASE( "parser_terminates_on_adversarial_input", "[parse]" )
     }
 }
 
-// `break` and `continue` are statements, not expressions, so they are matched before the
-// expression fallback - which is why can_start_expression needs nothing for them. The first
-// feature that has not had to edit both halves of that list.
+// `break` and `continue` are statements, matched before the expression fallback.
 TEST_CASE( "parser_parses_break_and_continue", "[parse][loops]" )
 {
     SECTION( "both, with no children and no aux" )
@@ -9238,9 +9111,8 @@ TEST_CASE( "parser_parses_break_and_continue", "[parse][loops]" )
     }
 }
 
-// At file scope a function and a variable both open with a type and a name; only what follows
-// the name tells them apart. Getting that wrong in either direction is silent - a variable read as
-// a function, or a function read as a variable - so both sides are pinned.
+// At file scope a function and a variable both open with a type and a name, so both readings are
+// pinned.
 TEST_CASE( "parser_parses_file_scope_variables", "[parse][globals]" )
 {
     SECTION( "a variable with an initialiser" )
@@ -9339,9 +9211,7 @@ TEST_CASE( "parser_reports_each_mistake_once", "[parse]" )
     REQUIRE( p.error_count() == 1 );
 }
 
-// `cast` and `wrap` are keywords precisely so the `<` that follows can only be a bracket. As
-// identifiers they would inherit C++'s `a < b > ( c )` ambiguity, which is the reason for the
-// choice - so the shape of what they parse into is worth pinning.
+// `cast` and `wrap` are keywords so the `<` after them is a bracket.
 TEST_CASE( "parser_parses_cast_and_wrap", "[parse]" )
 {
     SECTION( "children are the type then the operand" )
@@ -9406,9 +9276,8 @@ TEST_CASE( "parser_parses_cast_and_wrap", "[parse]" )
         REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Cast_expr );
     }
 
-    // can_start_expression gates statement position, and it is the half that keeps being forgotten
-    // when the other half gains a keyword. A conversion really has no effect, so the message that
-    // survives is that one - not "expected a statement", which is what a missing keyword gives.
+    // can_start_expression gates statement position. A conversion has no effect, which is the message
+    // that should survive.
     SECTION( "it can open a statement" )
     {
         const Parsed p( "i32 main() { wrap<u8>( x ); return 0; }" );
@@ -9437,9 +9306,8 @@ TEST_CASE( "parser_parses_cast_and_wrap", "[parse]" )
     }
 }
 
-// D29 gives a struct and a class different rules and the same shape, so the parser's job is only
-// to record which keyword was written and to accept a destructor as a member. Every rule about
-// which may have one belongs to the checker, which can say why.
+// D29: a struct and a class share a shape. The parser records the keyword and accepts a
+// destructor; the checker owns the rules.
 TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
 {
     SECTION( "a class is its own node kind, holding the same fields a struct would" )
@@ -9488,9 +9356,7 @@ TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
         REQUIRE( p.aux( cls ) != p.aux( str ) );
     }
 
-    // `class x;` is C++'s forward declaration and Keel has no answer for it yet. The struct path
-    // already swallows the terminator so it does not come back as a stray `;`; the class path
-    // must not diverge.
+    // `class x;` is C++'s forward declaration. It eats its `;`, as the struct path does.
     SECTION( "a body-less class is an error, and eats its semicolon" )
     {
         const Parsed p( "class Buffer;" );
@@ -9511,9 +9377,8 @@ TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
     }
 }
 
-// A destructor is shaped exactly like a Function_decl minus its return type, so that lower()'s
-// linear scan finds one nested in a class body and reads its parameters and body from the same
-// indices. The always-invalid first child is what buys that.
+// A destructor is a Function_decl minus its return type: an always-invalid child 0 keeps the
+// indices the same.
 TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
 {
     SECTION( "shaped like a function, with no return type" )
@@ -9688,9 +9553,8 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
     }
 }
 
-// A constructor is decided on shape, not on name: `Identifier (` cannot be a field, which is
-// `Type name;`. Keying on the name instead would send `Wrong( u64 n ) {}` to parse_field_decl and
-// produce nonsense rather than the mismatch diagnostic the checker gives it.
+// A constructor is decided on shape, `Identifier (`, not name, so `Wrong( u64 n ) {}` reaches the
+// checker's mismatch diagnostic.
 TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
 {
     SECTION( "shaped like a function, with no return type" )
@@ -9818,9 +9682,8 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
     }
 }
 
-// PLAN D32. `ref` is a binding mode in every position, so it opens a local declaration as well as a
-// parameter. It needs no lookahead the way a type name does: as an expression a bare marker has no
-// effect and D15 rejects it, so `ref` at the start of a statement is always a declaration.
+// D32. `ref` opens a local declaration as well as a parameter: as an expression a bare marker has
+// no effect, so no lookahead is needed.
 TEST_CASE( "parser_parses_a_ref_binding", "[parse]" )
 {
     SECTION( "in statement position" )
@@ -9874,10 +9737,8 @@ TEST_CASE( "parser_parses_a_ref_binding", "[parse]" )
     }
 }
 
-// PLAN D32. `const ref T` is the read-only borrow, and it is spelled in one order - `const ref i32`
-// where C++ has `const i32&` and `i32 const&` meaning the same thing. The const wraps the mode, so
-// the annotation is Const_type( Mode_type( T ) ) and every question about the mode has to see
-// through one layer.
+// D32. `const ref T` is spelled in one order, and the const wraps the mode:
+// Const_type( Mode_type( T ) ).
 TEST_CASE( "parser_parses_a_const_ref", "[parse]" )
 {
     SECTION( "as a parameter" )
@@ -9928,7 +9789,7 @@ TEST_CASE( "parser_parses_a_const_ref", "[parse]" )
     }
 }
 
-// PLAN D32 and §8. A return type is a binding position like any other, so `const ref T` is spelled
+// D32 and §8. A return type is a binding position like any other, so `const ref T` is spelled
 // there the same way and builds the same Const_type( Mode_type( T ) ).
 TEST_CASE( "parser_parses_a_const_ref_return", "[parse]" )
 {
@@ -9961,9 +9822,7 @@ TEST_CASE( "parser_parses_a_const_ref_return", "[parse]" )
     }
 }
 
-// §8: a reference may not be stored in a struct. D32 makes that disappear into the grammar rather
-// than needing a rule - a field is not a binding, so there is nowhere for a mode to go, and `ref`
-// in field position is simply not a name.
+// §8: no reference in a struct. A field is not a binding, so `ref` there is simply not a name.
 TEST_CASE( "parser_refuses_a_reference_field", "[parse]" )
 {
     const Parsed p( "struct S { ref i32 r; };\ni32 main() { return 0; }" );
@@ -9972,10 +9831,8 @@ TEST_CASE( "parser_refuses_a_reference_field", "[parse]" )
     REQUIRE( p.has_errors() );
 }
 
-// PLAN D30. One `enum` keyword carrying `enum class` semantics. The type parameter list is child 0
-// and the underlying type child 1, each invalid when unwritten - the convention Var_decl already
-// uses for a missing annotation, so the variants start at 2 and no consumer has to ask which kind
-// the last child is.
+// D30. One `enum` keyword with `enum class` semantics. Child 0 is the type parameters and child 1
+// the underlying type, each invalid when unwritten, so the variants start at 2.
 TEST_CASE( "parser_parses_an_enum", "[parse]" )
 {
     SECTION( "with an underlying type" )
@@ -10298,9 +10155,7 @@ TEST_CASE( "parser_parses_a_path", "[parse]" )
     }
 }
 
-// PLAN D7. An arm holds its own labels, which is what makes stacking fall out of the grammar: the
-// parser takes labels until something that is not one appears, and they all attach to one arm. No
-// fallthrough rule has to be written, and falling out of a non-empty arm cannot be expressed.
+// D7. An arm holds its stacked labels, so no fallthrough rule is needed.
 TEST_CASE( "parser_parses_a_switch", "[parse]" )
 {
     SECTION( "stacked labels share one arm" )
@@ -10361,7 +10216,7 @@ TEST_CASE( "parser_parses_a_switch", "[parse]" )
     }
 }
 
-// PLAN D7. A variant carries a payload: `Circle( f64 radius )`. The payload fields reuse Field_decl
+// D7. A variant carries a payload: `Circle( f64 radius )`. The payload fields reuse Field_decl
 // - a name and a type is exactly what one is - so the checker's field machinery applies unchanged.
 TEST_CASE( "parser_parses_a_payload_variant", "[parse]" )
 {
@@ -10404,9 +10259,7 @@ TEST_CASE( "parser_parses_a_payload_variant", "[parse]" )
     }
 }
 
-// An enum takes type parameters the way an aggregate does, and in the same slot: child 0, so that
-// Ast::type_param_list answers for both with one predicate. The underlying type moves to child 1
-// and the variants to 2, which Ast::variants is the only reader of.
+// An enum's type parameters are child 0, as an aggregate's, so Ast::type_param_list answers both.
 TEST_CASE( "parser_parses_a_generic_enum", "[parse][generic][enum]" )
 {
     SECTION( "the list is child 0 and the variants follow the underlying type" )
@@ -10466,9 +10319,8 @@ TEST_CASE( "parser_parses_a_generic_enum", "[parse][generic][enum]" )
     }
 }
 
-// A `case` label that destructures is a **pattern**, not an expression: its arguments are names
-// being *bound*, and parsing them as expressions would send the resolver looking for variables that
-// do not exist yet. So the parser builds bindings directly, where it knows it is in a pattern.
+// A destructuring `case` label is a pattern: its arguments are bindings, built directly so the
+// resolver never looks them up.
 TEST_CASE( "parser_parses_a_variant_pattern", "[parse]" )
 {
     SECTION( "binding the payload" )
@@ -10506,10 +10358,6 @@ TEST_CASE( "parser_parses_a_variant_pattern", "[parse]" )
     }
 }
 
-// PLAN D29/D32. A method is a function whose parameter 0 is the receiver, and the trailing `const`
-// decides which binding mode that parameter carries - `ref T` when the method may write the object,
-// `const ref T` when it may not. Written as C++ writes it, and meaning what Keel's `const` already
-// means, so no rule had to be invented for either half.
 TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
 {
     SECTION( "`operator==` is a method under its reserved name" )
@@ -10591,6 +10439,8 @@ TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
     }
 }
 
+// D29/D32. A method's parameter 0 is the receiver: `ref T`, or `const ref T` under a trailing
+// `const`.
 TEST_CASE( "parser_parses_a_method", "[parse]" )
 {
     SECTION( "the receiver is a `ref T` binding" )
@@ -10631,9 +10481,8 @@ TEST_CASE( "parser_parses_a_method", "[parse]" )
         REQUIRE( p.kind( p.child( p.child( receiver, 0 ), 0 ) ) == Node_kind::Mode_type );
     }
 
-    // The three member shapes are told apart by what precedes the parenthesis, and a constructor is
-    // a method minus the type - so it has to be tested first or `P( i32 x )` reads as a method
-    // returning `P`.
+    // A constructor is a method minus the type, so it is tested first or `P( i32 x )` reads as a
+    // method returning `P`.
     SECTION( "a constructor is still a constructor" )
     {
         const Parsed p( "struct P { i32 x; P( i32 v ) { x = v; } };" );
@@ -10654,9 +10503,8 @@ TEST_CASE( "parser_parses_a_method", "[parse]" )
     }
 }
 
-// M9.5. A method's own type parameters follow its name, and its `where` clauses its trailing
-// `const`. Slot 3 lists the aggregate's parameters then the method's, so an instance's arguments
-// bind by position; slot 4 is the method's own.
+// A method's own type parameters follow its name and its `where` clauses its `const`. Slot 3 lists
+// the aggregate's then the method's; slot 4 is the method's own.
 TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
 {
     SECTION( "on a type that is not generic, both slots are its own list" )
@@ -10751,11 +10599,8 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
     }
 }
 
-// PLAN D29, M7. A `class` hides its representation, so its fields are private unless a member says
-// otherwise - and its methods are not, because they are the interface rather than the representation.
-// `public` and `private` are written on the member rather than as a section label: a label is parser
-// state that outlives the declaration it applies to, and every other marker here - `static`, `const`,
-// `ref` - is written on the thing it changes.
+// D29. A class's fields are private by default and its methods public. `public` and `private` are
+// written on the member, as `static` and `const` are, not as section labels.
 TEST_CASE( "parser_reads_a_member_s_access", "[parse][access]" )
 {
     // A field of a class is what the default is about, and it is the only thing the default reaches.
@@ -10830,9 +10675,7 @@ TEST_CASE( "parser_reads_a_member_s_access", "[parse][access]" )
         REQUIRE( p.children( p.child( method, 1 ) ).empty() ); // no receiver, so still static
     }
 
-    // D29: a struct is a type whose representation *is* its interface, so there is nothing for a
-    // marker to say. Refused on the written marker rather than on the resulting access, which every
-    // member of every aggregate has.
+    // D29: a struct's representation is its interface, so a written marker is refused.
     SECTION( "a struct refuses a marker outright" )
     {
         const Parsed p( "struct P { private i32 x; };" );
@@ -11536,9 +11379,8 @@ TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recove
     }
 }
 
-// PLAN §6.7. A static method is a member with no receiver, and `static` is what says so. The
-// declaration is otherwise a method's, so it stays a Method_decl - the difference is an absence, the
-// same shape `extern` already has as a Function_decl with no body rather than a kind of its own.
+// §6.7. A static method is a Method_decl with no receiver, as `extern` is a Function_decl with no
+// body.
 TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
 {
     SECTION( "the parameter list has no receiver" )
@@ -11606,9 +11448,8 @@ TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
         REQUIRE( p.has_errors() );
     }
 
-    // The type parameter slot holds the *enclosing* aggregate's list, which is how a method of
-    // `Box<T>` is generic in T without writing any of its own. A static one is generic in exactly
-    // the same way and through the same slot - it has no receiver to carry `T` in instead.
+    // The type parameter slot holds the enclosing aggregate's list, so a static method of `Box<T>` is
+    // generic in T as any method is.
     SECTION( "a generic aggregate's type parameters still reach it" )
     {
         const Parsed p( "struct Box<T> { T v; static Box<T> of( T x ) { return Box { x }; } };" );
@@ -11633,11 +11474,8 @@ TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
     }
 }
 
-// PLAN §6.7. `Vector<i32>::with_capacity( n )` is the shape M8's first customer is written in,
-// and the qualifier is where it breaks before the call is ever reached: a type-argument list in
-// expression position is only recognised when a `(` follows it, which is true of `id<i32>( 1 )` and
-// false of every scoped spelling. The type arguments are also the only place a static call can read
-// them from, there being no receiver to carry them.
+// §6.7. `Vector<i32>::with_capacity( n )`: a type-argument list in expression position is
+// recognised before `::` as well as `(`, and is where a static call reads its arguments.
 TEST_CASE( "parser_parses_a_scoped_call_on_a_generic_type", "[parse][static][generic]" )
 {
     SECTION( "the type arguments are followed by `::` rather than by a call" )
@@ -12580,7 +12418,7 @@ TEST_CASE( "parser_parses_a_static_field_as_a_variable", "[parse][static]" )
     }
 }
 
-// M9.5. An interface is its methods' signatures, each with the receiver a class's method would have
+// An interface is its methods' signatures, each with the receiver a class's method would have
 // and no body; child 0 is the Type_param_list slot, invalid when the interface is not generic.
 TEST_CASE( "parser_parses_an_interface", "[parse][interfaces]" )
 {
@@ -12773,7 +12611,7 @@ TEST_CASE( "parser_reads_an_interface_refinement", "[parse][interfaces]" )
     }
 }
 
-// M9.5. A generic interface's list is the slot a struct's is, after the name, with `where` after
+// A generic interface's list is the slot a struct's is, after the name, with `where` after
 // `implements`; each method carries it, as an aggregate's methods do.
 TEST_CASE( "parser_parses_a_generic_interface", "[parse][interfaces][generic]" )
 {

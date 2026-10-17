@@ -36,15 +36,13 @@ public:
 
 private:
     // A node's type, and a declaration's binding type, with this instantiation's parameters bound.
-    // Every read of a type goes through one of these: a `Parameter` that escapes into the emitter
-    // hits Spelling::type's assert, which is loud but late.
+    // Every type read goes through these: an escaped `Parameter` trips Spelling::type's assert.
     Type_id type_of( Node_id id );
     Type_id type_under( Node_id id, const Bindings& bindings );
     Type_id binding_type_of( Node_id decl );
 
-    // A declaration's binding type under an explicit set of bindings, and the set a *call* is made
-    // under. lower_call needs the callee's rather than this function's: a plain `main` calling
-    // `id<i32>` has none of its own, while the callee's parameters and return are `T`.
+    // A binding type under explicit bindings, and the bindings a call is made under: the callee's,
+    // since a `main` calling `id<i32>` has none of its own.
     Type_id              binding_type_under( Node_id decl, const Bindings& bindings );
     Bindings             bindings_for_call( Node_id call );
     std::vector<Type_id> type_arguments_for_call( Node_id call );
@@ -149,14 +147,11 @@ private:
 
     Operand temporary( Rvalue value, Type_id type, Span span );
 
-    // Where a `fallthrough` in the arm being lowered goes: the next arm's body. Saved and restored
-    // around each arm rather than kept in a stack, which is what makes a nested switch's arms
-    // restore the outer one's target on the way out.
+    // Where a `fallthrough` in the current arm goes. Saved and restored around each arm, so a nested
+    // switch gives the outer target back.
     Block_id fallthrough_target_;
 
-    // Where `break` and `continue` jump to. In KIR these are plain edges - no labels, no
-    // emit-the-label-only-if-used, and no -Wunused-label to design around. That is the whole of
-    // what the C emitter needed a stack of names and a used-flag for.
+    // Where `break` and `continue` jump to.
     struct Loop_targets
     {
         Block_id break_target;    // the exit block
@@ -210,9 +205,8 @@ private:
     // returns nothing and writes through the pointer it is handed.
     void lower_construction( Place target, Node_id call_expr );
 
-    // `break` binds to the nearest enclosing loop *or* switch, so it is always loops_.back() and
-    // needs no finder. `continue` looks past switches, and needs the entry rather than just its
-    // block: the scope depth it unwinds to has to be the loop's, not the switch's.
+    // `break` binds to the nearest loop or switch, so it is loops_.back(). `continue` looks past
+    // switches, and unwinds to the loop's scope depth.
     Loop_targets& enclosing_loop();
 
     Local_id call_result( Node_id id, Rvalue call, Type_id result_type, Span span );
@@ -295,9 +289,8 @@ Lowering::Lowering(
                 owned_parameters_.push_back( local );
             }
 
-            // The parser puts the receiver first, and it is what a bare field name is reached
-            // through. Captured from the walk rather than assumed to be local 1, so it survives
-            // anything that adds a local before this runs.
+            // The receiver, which a bare field name is reached through: the first parameter, captured here
+            // rather than assumed to be local 1.
             if( !receiver_.is_valid() && ast_.has_receiver( declaration ) )
             {
                 receiver_             = local;
@@ -311,9 +304,7 @@ Function Lowering::run()
 {
     const Span span = ast_.span( declaration_ );
 
-    // An owned parameter is dropped like a local, in a scope *enclosing* the body - which is what
-    // makes `return`'s unwind_to( 0 ) reach it, since depth 0 is this scope's mark rather than the
-    // body's. Pushed after the mark so the parameters sit above it.
+    // Owned parameters sit in a scope enclosing the body, so `return`'s unwind_to( 0 ) drops them.
     drops_.push_scope();
 
     for( const Local_id parameter : owned_parameters_ )
@@ -379,10 +370,8 @@ Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
     return types_.table().substitute( binding_type( ast_, types_, decl ), bindings );
 }
 
-// What the symbol is mangled with. The checker recorded which instantiation this call resolved to,
-// because turning a type argument into a type is its rule rather than the lowerer's. Substituted
-// for the reason bindings_for_call substitutes: the recorded arguments are what the call *wrote*,
-// and a call inside a generic wrote `T` - the mangled name has to be the instance's.
+// What the symbol is mangled with: the recorded instantiation's arguments, substituted, because a
+// call inside a generic wrote `T`.
 std::vector<Type_id> Lowering::type_arguments_for_call( Node_id call )
 {
     std::vector<Type_id> type_arguments;
@@ -414,10 +403,8 @@ Bindings Lowering::bindings_for_call( Node_id call )
 
     for( std::size_t i = 0; i < parameters.size() && i < chosen.arguments.size(); ++i )
     {
-        // Through this instance's own bindings first. What the checker recorded is what the call
-        // *wrote*, and inside a generic that is `T` - so `g<T>( a )` in an instance of `f<i32>`
-        // resolves to `g<i32>` here and nowhere else. An empty map makes it the identity, which is
-        // every call outside a generic.
+        // The recorded arguments are what the call wrote, `T` inside a generic, so substitute through
+        // this instance's bindings: `g<T>( a )` in `f<i32>` is `g<i32>`.
         bindings.emplace( types_.type_of( parameters[i] ).v, types_.table().substitute( chosen.arguments[i], bindings_ ) );
     }
 
@@ -504,21 +491,15 @@ Node_id Lowering::field_of( Type_id type, Symbol_id name ) const
     return Node_id {};
 }
 
-// Not always the type the operation *produces*: a comparison yields bool while its operands still
-// meet at their common type, and §6.4's answer for that is recorded nowhere on the node.
+// Not always the result type: a comparison yields bool while its operands meet at their common type.
 Type_id Lowering::operation_type( Node_id node )
 {
-    // type_of and not types_.type_of: inside an instance the operands are recorded as `T`, and a
-    // `T` has no C spelling. arithmetic_result has no answer for one either, so the fallback below
-    // would carry it into the emitter as the operation's own type.
+    // type_of, not types_.type_of: inside an instance the operands are recorded as `T`.
     const Type_id left  = type_of( ast_.lhs( node ) );
     const Type_id right = type_of( ast_.rhs( node ) );
 
-    // D41: a comparison meets in the narrowest type that holds both operands exactly, and is not
-    // held to arithmetic_result's further demand that C++ would pick that type too. That demand
-    // protects a *result*, and a comparison's result is a bool. An invalid answer here means no
-    // type holds both - `i64` against `u64`, or either against a float - which lower_binary
-    // answers by cases rather than by a conversion.
+    // D41: a comparison meets in the narrowest type holding both exactly. Invalid means none does,
+    // `i64` against `u64` or either against a float, and lower_binary answers that by cases.
     if( is_comparison( ast_.op( node ) ) )
     {
         return types_.table().common( left, right );
@@ -531,9 +512,8 @@ Type_id Lowering::operation_type( Node_id node )
     return common.is_valid() ? common : left;
 }
 
-// How far an operand of such a comparison widens on its own. Every pair with no common type
-// reduces to i64/u64, i64/f64 or u64/f64 this way, which is what leaves the backend three guards
-// to write rather than eight.
+// How far a comparison operand widens on its own, so every pair with no common type reduces to
+// i64/u64, i64/f64 or u64/f64, and the backend writes three guards.
 Type_id Lowering::comparison_width( Type_id type ) const
 {
     const Type_table& table = types_.table();
@@ -541,14 +521,8 @@ Type_id Lowering::comparison_width( Type_id type ) const
     return table.is_float( type ) ? table.floating( 64 ) : table.integer( 64, table.get( type ).is_signed );
 }
 
-// Both operands of a binary end up sharing a type, so a backend can read KIR without re-deriving
-// §6.4 - and so an LLVM backend gets what it already requires of an add. Most code produces no
-// conversion at all: a literal has already adopted its type from the checker.
-//
-// D41 is the one exception, and it is deliberate: a comparison whose operands meet in no type
-// leaves them unequal, because there is no domain to convert to and a comparison has no result
-// for the mismatch to corrupt. A backend answers it by cases - the C one with a guard function,
-// an LLVM one with the branch it would have to emit anyway, since no C helper is available to it.
+// Converts to `to`, so a binary's operands share a type in KIR and no backend re-derives §6.4.
+// D41's exception: a comparison with no common type keeps its operands unequal.
 Operand Lowering::converted( Operand operand, Type_id to, Span span )
 {
     if( operand.type == to )
@@ -1237,9 +1211,7 @@ Block_id Lowering::continue_target()
     return loop.continue_target;
 }
 
-// The result is a local rather than an operand because it has to be readable after the join
-// whichever path ran. This is the one place so far where a local exists purely to merge two paths -
-// in an SSA IR it would be a phi node, which is what §3.1 chose not to have.
+// A local rather than an operand: the result is read after the join, and KIR has no phi (§3.1).
 Operand Lowering::lower_short_circuit( Node_id id )
 {
     const Token_kind op   = ast_.op( id );
@@ -1288,14 +1260,11 @@ Operand Lowering::lower_conditional( Node_id id )
 
     builder_.terminate_branch( lower_expression( ast_.condition( id ) ), then_block, else_block, span );
 
-    // An arm is lowered, then assigned from wherever lowering ended up: a nested conditional in
-    // an arm leaves the cursor in its own join, so neither the assignment nor the goto may name
-    // the block this one created.
+    // Assigned from wherever lowering the arm ended, since a nested conditional leaves the cursor in
+    // its own join.
     const auto lower_arm = [&]( Node_id arm )
     {
-        // Widened, because an expectation reaches an arm without retyping it - `i64 x = c ? a :
-        // b;` leaves both arms i32 - and moved when it owns, because a copy would leave the arm
-        // and the result holding one resource between them.
+        // Widened, since an expectation reaches an arm without retyping it, and moved when it owns.
         const std::size_t first = drops_.mark();
         const Operand     value = converted( lower_expression( arm ), type, ast_.span( arm ) );
 
@@ -1457,10 +1426,8 @@ Operand Lowering::lower_binary( Node_id id )
     // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
     const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
 
-    // D41's other case: the operands meet in no type at all, so each widens as far as its own kind
-    // reaches and the backend compares them where they are. This is the one binary whose operands
-    // reach KIR with different types, and the only reason it may: a comparison answers `bool`
-    // whatever the operands are, so there is no result for the mismatch to corrupt.
+    // D41's other case: no common type, so each operand widens within its own kind and the backend
+    // compares them as they are. The only binary whose operands reach KIR with different types.
     const bool by_cases = is_comparison( op ) && !operation.is_valid();
 
     const bool offsets = types_.table().is_many_pointer( raw_left.type );
@@ -1626,10 +1593,8 @@ Operand Lowering::lower_unary( Node_id id )
         );
     }
 
-    // Both of these are settled before the operand is lowered, because neither reads it the
-    // way an arithmetic operator does: `*p` names a place, and `&x` wants where x lives rather
-    // than what is in it. Lowering the operand as an expression first would read it, and for
-    // `&*get()` would run the call twice.
+    // Settled before the operand is lowered: `*p` names a place and `&x` wants where x lives, so
+    // reading first would run `&*get()`'s call twice.
     if( op == Token_kind::Star )
     {
         return copy( lower_place( id ), type );
@@ -1637,9 +1602,8 @@ Operand Lowering::lower_unary( Node_id id )
 
     if( op == Token_kind::Amp )
     {
-        // A function is not a place, so the callee travels on the rvalue rather than through
-        // lower_place, which resolves a name to a local or a global and asserts on anything else.
-        // The callable the checker chose, not the name the resolver bound: an overload set's name is only its first candidate.
+        // A function is not a place, so the callee travels on the rvalue: the callable the checker chose,
+        // since an overload set's name binds only its first candidate.
         if( types_.table().is_function( type ) )
         {
             const Rvalue address = function_address( types_.callee_of( id ), type, type_arguments_for_call( id ) );
@@ -1665,11 +1629,6 @@ Operand Lowering::lower_unary( Node_id id )
     return temporary( unary( op, a, type ), type, span );
 }
 
-// D7. `Shape::Circle( 1.0 )` builds a value: write the tag, then each payload field. The same shape
-// as a struct literal, and for the same reason - a constructed enum is assembled in place rather
-// than copied in from somewhere.
-// A variant with no payload, in an enum that has them elsewhere: still a struct, so it is a local
-// with its tag written and nothing else.
 // D7. `case Shape::Circle( r ):` gives `r` a local. An owning field is borrowed in place, as D31
 // borrows a bare owning parameter; anything else is copied. A consuming switch moves the whole value
 // out first, so the switch's own drop is skipped, and each binding owns its field.
@@ -1738,6 +1697,7 @@ void Lowering::bind_variant_pattern( Place matched, Type_id matched_type, Node_i
     }
 }
 
+// A variant with no payload, in an enum that has them elsewhere: a local with only its tag written.
 Operand Lowering::lower_empty_variant( Node_id id )
 {
     const Type_id type = type_of( id );
@@ -1759,6 +1719,7 @@ Operand Lowering::lower_empty_variant( Node_id id )
     return copy( place, type );
 }
 
+// D7. `Shape::Circle( 1.0 )` is assembled in place, as a struct literal is: the tag, then each field.
 Operand Lowering::lower_variant_construction( Node_id id )
 {
     const Node_id                  path      = ast_.callee( id );
@@ -1781,9 +1742,8 @@ Operand Lowering::lower_variant_construction( Node_id id )
 
     const std::vector<Node_id> payload = paired_payload( type, variant, arguments.size() );
 
-    // Each field's type through *this* instance: the declaration records `T`, which no local can
-    // hold. `type` is already substituted through the enclosing instantiation, so this is concrete.
-    // Every value is lowered before the tag is written, as a struct literal's are.
+    // Each field's type through this instance, since the declaration records `T`. Every value is
+    // lowered before the tag is written, as a struct literal's are.
     std::vector<Operand> values;
 
     for( std::size_t i = 0; i < arguments.size() && i < payload.size(); ++i )
@@ -1888,10 +1848,7 @@ Operand Lowering::lower_try( Node_id id )
     return copy( builder_.place( value ), yielded );
 }
 
-// D29/D32. A method call is an ordinary call whose first argument is the receiver's **address**.
-// The receiver is a `ref T` or `const ref T` binding, so this is the same address_operand step
-// lower_argument takes for any borrow - the only difference is that the argument was never written
-// at the call site, so it is prepended here.
+// D29/D32. A method call is an ordinary call with the receiver's address prepended as argument 0.
 Operand Lowering::lower_method_call( Node_id id )
 {
     const Node_id callee = ast_.callee( id );
@@ -1908,9 +1865,8 @@ Operand Lowering::lower_method_call( Node_id id )
 
     const std::span<const Node_id> parameters = ast_.params( method );
 
-    // D22 reaches through a pointer, so `q.area()` on a `Point*` calls the method on the pointee -
-    // and the pointer's *value* is already the address the receiver wants. Taking its address
-    // instead would hand the method a `Point**`, which type-checks nowhere and miscompiles here.
+    // D22: on a `Point*` the pointer's value is already the receiver's address; taking its address
+    // would pass a `Point**`.
     const Type_id object_type = type_of( object );
 
     const Operand receiver = types_.table().is_pointer( object_type )
@@ -1988,11 +1944,9 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
     );
 }
 
-// Every method call: the receiver, already lowered, then the written arguments against the
-// parameters from 1. The arguments and the result's type are given rather than read from `id`, so an
-// operator's operand can be one, and `v[i]`'s call can return the pointer rather than the element;
-// the bindings are given for a callee the checker did not record, an implementer reached through a
-// bound.
+// Every method call: the lowered receiver, then the written arguments against parameters from 1.
+// Arguments, result type and bindings are given, so an operator's operand, `v[i]`'s pointer result
+// and an implementer reached through a bound can use it.
 Operand Lowering::lower_method_call_on(
     Node_id                  id,
     Node_id                  method,
@@ -2015,10 +1969,8 @@ Operand Lowering::lower_method_call_on(
 
 Operand Lowering::lower_call( Node_id id )
 {
-    // D7: a call whose callee is a path is a variant being constructed, not a function being
-    // called. Checked first, because everything below reaches for a Function_decl. M7's
-    // `P::make( 7 )` wears the same shape, and what tells them apart is that the checker chose a
-    // callable for one and recorded an ordinal for the other.
+    // D7: a call whose callee is a path may construct a variant. Checked first: the checker recorded
+    // an ordinal for a variant and a callable for `P::make( 7 )`.
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Path_expr && !types_.callee_of( id ).is_valid() )
     {
         return lower_variant_construction( id );
@@ -2057,10 +2009,8 @@ Operand Lowering::lower_call( Node_id id )
         return lower_static_interface_call( id, callee );
     }
 
-    // A bare `add( by )` inside a method. The receiver is the one this function was given, borrowed
-    // again as `&(*this)` as an explicit `this.add( by )` is, so the loans pass sees the call may
-    // change it. A static method has none to pass, so it falls through to the ordinary path below,
-    // where its written parameters are the whole of its signature.
+    // A bare `add( by )` inside a method borrows this function's receiver again, as `this.add( by )`
+    // does. A static method has none, and takes the ordinary path.
     if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl && ast_.has_receiver( callee ) )
     {
         return lower_method_call_on(
@@ -2124,24 +2074,18 @@ Operand Lowering::lower_static_interface_call( Node_id id, Node_id requirement )
     );
 }
 
-// The written arguments, lowered in order and then converted to `callee`'s parameters.
-// `parameters` are the callee's, from its Param_list, and a method's start after the receiver. An
-// argument's own type is not the same thing: §6.4 may have widened it to reach the parameter, and
-// reading the type off the argument would make every conversion a no-op.
+// The written arguments, lowered in order and converted to `callee`'s parameters, a method's
+// starting after the receiver. Converted against the parameter, not the argument's own type.
 std::vector<Operand> Lowering::lower_call_arguments(
     std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
 )
 {
-    // Every argument is lowered before any is converted, so the order the statements come out
-    // in is the order the arguments were written - which is what §7.1 guarantees and C leaves
-    // unspecified.
+    // All lowered before any is converted, so statements come out in written order (§7.1).
     std::vector<Operand> operands;
 
     operands.reserve( arguments.size() );
 
-    // The callee's bindings, not this function's. Every type below belongs to the callee's
-    // signature, which is written in *its* parameters - so substituting with `bindings_` would ask
-    // `main` to bind a `T` it has never heard of.
+    // The callee's bindings, not this function's: its signature is written in its own parameters.
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
         operands.push_back( lower_argument( arguments[i], parameters[i], callee_bound ) );
@@ -2151,10 +2095,8 @@ std::vector<Operand> Lowering::lower_call_arguments(
     {
         operands[i] = converted( operands[i], binding_type_under( parameters[i], callee_bound ), ast_.span( arguments[i] ) );
 
-        // The parameter's mode rather than what was written at the call: KIR records what
-        // happens. Today they coincide, because the checker requires the marker - but the
-        // invariant is what stops the caller's end-of-statement drop firing on something it
-        // handed away.
+        // The parameter's mode rather than what the call wrote, so the caller's end-of-statement drop
+        // never fires on what it handed away.
         if( is_move_parameter( parameters[i] ) )
         {
             operands[i] = moved_if_owning( operands[i] );
@@ -2175,16 +2117,11 @@ Operand Lowering::emit_call(
 {
     const u32 first = builder_.add_operands( operands );
 
-    // A void call still assigns, to a local of type void that nothing reads. Keeping Assign
-    // total is worth more than avoiding it: an optional destination would mean every consumer
-    // handling a statement that writes nowhere. It is what MIR does with the unit type, and a
-    // backend spells it by emitting the call and dropping the assignment.
+    // A void call still assigns, to a void local nothing reads, so Assign always has a destination.
     const Type_id type = given.is_valid() ? given : type_of( id );
 
-    // A callee that returns a binding hands back an address, so the call's own type is that pointer
-    // and so is the temporary holding it - `type` above is the language type, `T`, and the two
-    // differ only here. Dereferencing once is what makes both uses at the call site fall out: a
-    // copy reads `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
+    // A callee returning a binding hands back an address, so the call and its temporary are typed as
+    // that pointer. Dereferenced once: a copy reads `(*_t)`, and a binding takes `&(*_t)`.
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
     const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
 
@@ -2276,11 +2213,8 @@ Operand Lowering::lower_expression( Node_id id )
         // aux is the Literal_id, and the checker recorded the type context gave it.
         const Type_id type = type_of( id );
 
-        // An integer literal in float context. §6.4 lets a literal adopt the type context gives
-        // it, so `f64 x = 1;` is legal - but the value sits in the integer pool, and everything
-        // downstream reads a float constant out of the float pool. Converted here, where the
-        // checker's decision becomes a concrete value; without it the emitter asks Literal_pool for a
-        // float it never stored, and the compiler aborts on a program that type-checked.
+        // §6.4: an integer literal in float context becomes a float constant here, since the emitter
+        // reads a float type's value from the float pool.
         if( types_.table().is_float( type ) )
         {
             const u64 magnitude = literal_pool_.integer( ast_.literal( id ) );
@@ -2293,9 +2227,7 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Float_literal:
         return constant( ast_.literal( id ), type_of( id ) );
     case Node_kind::Null_literal:
-        // Unlike the other literals, aux carries no Literal_id - the parser records nothing for
-        // `nullptr`, and Literal_id { 0 } is the invalid sentinel. A null pointer is the integer
-        // zero here, the same way a bool is 0 or 1.
+        // `nullptr` carries no Literal_id, so it is the integer zero, as a bool is 0 or 1.
         return constant( literal_pool_.add_integer( 0 ), type_of( id ) );
     case Node_kind::Bool_literal:
     {
@@ -2382,11 +2314,8 @@ Operand Lowering::lower_expression( Node_id id )
         const Node_id operand = ast_.operand( id );
         const Type_id type    = type_of( id );
 
-        // A named variable is already a place, and moving it empties that place. A temporary is
-        // not: it has to be built somewhere before it can be handed over. lower_expression puts it
-        // in a local of its own and registers it as a statement temporary, so if the transfer never
-        // happens the caller still drops it - and if it does, the move clears the flag and the
-        // caller's drop is skipped.
+        // A named variable is a place, and moving empties it. A temporary is built into a statement
+        // temporary first, so the caller still drops it unless the move clears its flag.
         if( ast_.kind( operand ) == Node_kind::Name_expr )
         {
             return move( lower_place( operand ), type );
@@ -2408,18 +2337,15 @@ Operand Lowering::lower_expression( Node_id id )
             return copy( place_for( decl, static_owner( id, decl ) ), type_of( id ) );
         }
 
-        // D7: a payload enum is a struct, so a bare path names a variant with no payload and has to
-        // be built rather than named. The checker has already refused a bare path to a variant that
-        // carries one.
+        // D7: a bare path to a variant of a payload enum builds the struct. The checker refused one that
+        // carries a payload.
         if( types_.table().is_enum( type_of( id ) ) &&
             ast_.enum_has_payload( types_.table().get( type_of( id ) ).declaration ) )
         {
             return lower_empty_variant( id );
         }
 
-        // The variant's *ordinal*, which the checker recorded as a constant. aux holds its name, so
-        // reading that here would emit an interner index as the enum's value - which would compile,
-        // run, and be wrong in a way no golden would show.
+        // The variant's ordinal, recorded by the checker. aux holds its name.
         const std::optional<Constant_value> value = types_.constant_of( id );
 
         assert( value.has_value() && "the checker records an ordinal for every variant it accepts" );
@@ -2472,9 +2398,7 @@ Place Lowering::lower_place( Node_id id )
             return builder_.place( builder_.into_temp( value, type, ast_.span( id ) ) );
         }
 
-        // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
-        // lowers to the same two projections. It takes the pointer's *value* rather than its
-        // place - the Star case below is the same shape, written out.
+        // D22: `p.x` on a pointer is `( *p ).x`, two projections off the pointer's value.
         if( types_.table().is_pointer( object_type ) )
         {
             const Operand pointer = lower_expression( object );
@@ -2587,10 +2511,7 @@ void Lowering::lower_return( Node_id id )
     const Span    span  = ast_.span( id );
     if( value.is_valid() )
     {
-        // Returning transfers ownership out of the function, so the value is read as a move: without
-        // it the callee's scope exit drops what the caller now holds. §8 exempts `return` from
-        // needing a written marker precisely because the transfer is unambiguous here - there is no
-        // later use for one to warn about.
+        // Returning moves the value out, or the callee's scope exit drops what the caller now holds.
         if( is_borrowed_binding( ast_, types_, declaration_ ) )
         {
             // The address, not a read of it: a read would return a copy of the referent and the
@@ -2635,9 +2556,8 @@ void Lowering::lower_var( Node_id id )
     const Node_id init = ast_.initialiser( id );
     if( init.is_valid() )
     {
-        // A binding stores the address, so the initialiser is lowered as a place rather than read.
-        // Nothing else about the local changes: it is storage_live like any other, and a pointer
-        // owns nothing, so no drop is elaborated for it.
+        // A binding stores the address, so the initialiser is lowered as a place. A pointer owns nothing,
+        // so no drop is elaborated.
         if( borrowed )
         {
             builder_.assign(
@@ -2657,9 +2577,7 @@ void Lowering::lower_var( Node_id id )
         }
         else
         {
-            // An owning value is never copied: the copy would share the resource, and both would be
-            // dropped. Where the source is a temporary that is exactly right - it has no other
-            // owner.
+            // An owning value is never copied, or both copies would be dropped.
             builder_.assign(
                 builder_.place( local ), use( moved_if_owning( united( lower_expression( init ), type, span ) ) ), span
             );
@@ -2743,9 +2661,7 @@ void Lowering::lower_increment( Node_id id )
     const Token_kind op          = ast_.op( id );
     const Token_kind base_op     = op == Token_kind::Plus_plus ? Token_kind::Plus : Token_kind::Minus;
     const Operand    left        = copy( target, target_type );
-    // Into the table the *type* will be read from. Literals live in two tables and an operand
-    // says which by its type, so an integer 1 typed f64 sends every reader to the float table
-    // at that index - a valid Literal_id naming an unrelated value.
+    // The literal pool matching the type: an integer 1 typed f64 would name an unrelated float.
     const Literal_id one =
         types_.table().is_float( target_type ) ? literal_pool_.add_float( 1.0 ) : literal_pool_.add_integer( 1 );
 
@@ -2758,28 +2674,15 @@ void Lowering::lower_increment( Node_id id )
     drops_.end_statement( ast_.span( id ) );
 }
 
-// PLAN D30. A `switch` is a chain of equality tests, so KIR gains nothing for it: this is
-// lower_if's plumbing repeated per arm. The scrutinee is read **once**, before any block exists -
-// re-reading it per test would evaluate a call scrutinee once per arm.
-//
-// Stacked labels are an OR, and an OR of equalities is a chain of branches whose false edge is the
-// next label rather than the next arm. The checker has already proved the set is exhaustive or has
-// a `default`, so the last false edge is never a hole.
-// One label's test. Leaves the builder in the block a *failed* test falls into, which is the
-// contract lower_switch's chain is built on: the next label, the next arm, or the fallback goto.
-//
-// A range is two comparisons, and there is no conjunction in KIR to hold them - `&&` short-circuits
-// and the lowerer already builds that out of blocks. So a range is one more link in the same chain:
-// `low <= x` failing leaves the arm exactly as a failed equality does, and succeeding falls into a
-// block that tests `x < high`. No new rvalue, and nothing downstream learns that ranges exist.
+// One label's test. Leaves the builder in the block a failed test falls into: the next label, the
+// next arm, or the fallback. D34: a range is two chained comparisons, so KIR needs no conjunction.
 void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body )
 {
     const Span    span    = ast_.span( label );
     const Type_id boolean = types_.table().builtin( Type_kind::Bool );
 
-    // What a label compares against. A variant is its *ordinal*, taken from what the checker
-    // recorded rather than lowered - lowering a path to a payload enum would build a whole struct,
-    // and the scrutinee here is already just the tag.
+    // What a label compares against: a variant's recorded ordinal, since the scrutinee is already the
+    // tag.
     const auto value_of = [&]( Node_id bound ) -> Operand
     {
         const Type_id bound_type = type_of( bound );
@@ -2905,6 +2808,8 @@ void Lowering::lower_arm_body( Node_id arm, Place matched, Type_id matched_type,
     }
 }
 
+// D30. A chain of equality tests over a scrutinee read once. Stacked labels are an OR, each false
+// edge going to the next label; the checker proved the set exhaustive or given a `default`.
 void Lowering::lower_switch( Node_id id )
 {
     const std::span<const Node_id> arms = ast_.arms( id );
@@ -2913,9 +2818,8 @@ void Lowering::lower_switch( Node_id id )
     Operand       scrutinee      = lower_expression( ast_.scrutinee( id ) );
     const Type_id scrutinee_type = scrutinee.type;
 
-    // D7: a payload enum is a struct, so what a label compares against is its *tag*. Read once here
-    // alongside the scrutinee, so the arms below are unchanged - they still compare one operand
-    // against one constant, and never learn that payloads exist.
+    // D7: a payload enum is compared by its tag, read once here, so the arms compare one operand
+    // against one constant.
     const bool payloads = types_.table().is_union( scrutinee.type ) ||
                           ( types_.table().is_enum( scrutinee.type ) &&
                             ast_.enum_has_payload( types_.table().get( scrutinee.type ).declaration ) );
@@ -2956,9 +2860,8 @@ void Lowering::lower_switch( Node_id id )
 
     drops_.end_statement( span );
 
-    // A switch is a break target like a loop is, and the block after it is the block `break` jumps
-    // to - so the two are the same block by construction rather than by two pieces of code
-    // agreeing. Allocated on demand by break_target(), exactly as a loop's exit is.
+    // A switch is a break target, so the block after it is the block `break` jumps to, allocated on
+    // demand by break_target().
     loops_.push_back( Loop_targets { Block_id {}, Block_id {}, drops_.depth(), true } );
 
     const auto leave = [&]()
@@ -2971,16 +2874,8 @@ void Lowering::lower_switch( Node_id id )
         builder_.terminate_goto( break_target(), span );
     };
 
-    // One arm is the fallback: where every test's final false edge goes, tested for nothing itself.
-    // It is the `default` when there is one - held aside rather than reordered, so the arms keep
-    // their spans - and **the last arm when there is not**.
-    //
-    // That second case is what makes an exhaustive switch generate honest C. The checker has
-    // already proved the labels cover the enum, so reaching the end of the tests means the last
-    // arm; giving it a test anyway would leave a path that returns nothing, which C cannot see is
-    // impossible and reports as a possibly-uninitialised return value. It also drops one
-    // comparison per switch, which is the same thing a real backend does with a jump table's
-    // default.
+    // The fallback, where the last false edge goes: the `default`, held aside so the arms keep their
+    // spans, or else the last arm. Testing that arm anyway would leave C a path returning nothing.
     Node_id     fallback;
     std::size_t fallback_index = 0; // into `bodies` below
 
@@ -2999,9 +2894,7 @@ void Lowering::lower_switch( Node_id id )
         fallback_index = arms.size() - 1;
     }
 
-    // One block per arm, all allocated before any is lowered. `fallthrough` jumps into the *next*
-    // arm's body, and that arm has not been lowered yet when it does - so its block has to exist
-    // first. The fallback's is one of these rather than an allocation of its own.
+    // One block per arm, allocated first so `fallthrough` can jump to an arm not yet lowered.
     std::vector<Block_id> bodies;
 
     bodies.reserve( arms.size() );
@@ -3051,9 +2944,7 @@ void Lowering::lower_switch( Node_id id )
         builder_.terminate_goto( fallback_block, span );
         builder_.switch_to( fallback_block );
 
-        // The fallback is lowered last but sits wherever it was written, so its `fallthrough` goes
-        // to whatever follows it in source order - which may be a block lowered long ago. An edge
-        // backwards is still just an edge.
+        // The fallback is lowered last, so its `fallthrough` may jump back to a block lowered earlier.
         lower_arm_body(
             fallback,
             matched,
@@ -3094,9 +2985,7 @@ void Lowering::lower_if( Node_id id )
 
     builder_.terminate_branch( test, then_block, else_block, span );
 
-    // Allocated only when an arm actually falls out of the `if`. When both arms return there
-    // is nothing to join, and a block created anyway would be unreachable - which verify
-    // rejects, correctly. Blocks are indices, so one built by mistake cannot be taken back.
+    // Allocated only when an arm falls out of the `if`; an unreachable block fails verify.
     Block_id join;
 
     const auto leave = [&]()
@@ -3269,9 +3158,7 @@ void Lowering::lower_statement( Node_id id )
 {
     drops_.begin_statement();
 
-    // A table of contents: what a statement can be, and nothing about how any of them lowers. The
-    // shape the checker's visit_* already uses, and the reason a construct can grow without the
-    // switch growing with it.
+    // What a statement can be, and nothing about how each lowers.
     switch( ast_.kind( id ) )
     {
     case Node_kind::Block:
@@ -3356,17 +3243,14 @@ Operand Lowering::lower_argument( Node_id argument, Node_id parameter, const Bin
     return borrowed_argument( argument, binding_type_under( parameter, bindings ) );
 }
 
-// What a borrow lowers to, given the pointer type it travels as. Its own member because a call
-// through a variable reads the mode off a function type and has no Param_decl to hand over, and a
-// borrow may not lower one way through a name and another through a variable.
+// What a borrow lowers to, given its pointer type. Its own member because a call through a
+// variable reads the mode off a function type and has no Param_decl.
 Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
 {
     const Span span = ast_.span( argument );
 
-    // `ref x` is stepped through: the marker says how the argument travels and has no value of its
-    // own to produce. A bare borrow has no marker to step through, and a temporary has no place
-    // until it is built - so both go through lower_expression and the address is taken of
-    // wherever it landed, which is also what drops the temporary afterwards.
+    // `ref x` is stepped through. A bare borrow and a temporary are lowered first and their address
+    // taken where they landed, which also leaves the temporary to be dropped.
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
         const Keyword marker = ast_.keyword( argument );
@@ -3380,11 +3264,8 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
 
     const Operand value = lower_expression( argument );
 
-    // A constant has no address, and a borrowed parameter travels as one. This is reachable only
-    // through a generic: a bare `T a` borrows unless the `where` clause promises `copyable`, so
-    // `f<i32>( 1 )` hands a literal to a by-address parameter. Materialise it and borrow that - the
-    // callee may only read through the borrow, so a temporary living to the end of the statement is
-    // exactly long enough, and a type that reaches here has no destructor to run on it.
+    // A constant has no address; reachable only through a generic, as `f<i32>( 1 )` against a bare
+    // `T a`. Materialised into a temporary that lives to the end of the statement.
     const Place place = value.kind == Operand_kind::Constant
                             ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
                             : value.place;
@@ -3551,9 +3432,8 @@ bool implements_anything( const Types& types, Type_id type )
     );
 }
 
-// Every closed owning enum the table holds, each owning union, and each owning implementer's drop
-// function, struct or enum. Repeated until nothing new appears, because lowering one destructor can intern another:
-// `Option<Option<Buf>>` names `Option<Buf>`.
+// Every closed owning enum, owning union and owning implementer's drop function. Repeated until
+// nothing new appears, since one destructor can intern another: `Option<Option<Buf>>`.
 void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
 {
     std::vector<Type_id> done;
@@ -3645,8 +3525,7 @@ namespace keel
 namespace
 {
 
-// The whole front end, so what is lowered is a genuinely typed AST rather than one assembled by
-// hand. A lowering bug that only appears on real input is the kind worth catching.
+// The whole front end, so lowering runs on a genuinely typed AST.
 struct Lowered : Compiled
 {
     explicit Lowered( std::string_view source )
@@ -3676,8 +3555,7 @@ struct Lowered : Compiled
         return {};
     }
 };
-// Which index a function landed at is never what a lowering case is about, and a class contributes
-// its own, so verification is asked of the whole list rather than of one entry.
+// A class contributes functions of its own, so verification is asked of the whole list.
 bool every_function_verifies( Lowered& p )
 {
     for( const Function& function : p.functions )
@@ -3707,8 +3585,7 @@ TEST_CASE( "lower_produces_a_function_per_declaration", "[ir][lower]" )
     REQUIRE( p.text( 2 ).find( "fn main" ) != std::string::npos );
 }
 
-// Everything the builder produces has to satisfy verify. This is the assertion that matters most
-// while the lowerer grows: a shape it cannot express shows up here rather than three passes later.
+// Everything the builder produces has to satisfy verify.
 TEST_CASE( "lower_produces_functions_that_verify", "[ir][lower]" )
 {
     for( const char* source :
@@ -3766,9 +3643,7 @@ TEST_CASE( "lower_maps_parameters_onto_locals", "[ir][lower]" )
     REQUIRE( text.find( "let _2: u8; // parameter b" ) != std::string::npos );
 }
 
-// A void function's body simply ends. Without a terminator the function would not verify, and
-// nothing checks that a non-void function returns on every path yet - that needs the CFG being
-// built here.
+// A void function's body that falls off the end still gets a terminator.
 TEST_CASE( "lower_terminates_a_body_that_falls_off_the_end", "[ir][lower]" )
 {
     Lowered p( "void nothing() { }\ni32 main() { return 0; }" );
@@ -3878,9 +3753,8 @@ TEST_CASE( "lower_reads_a_parameter_by_name", "[ir][lower]" )
     REQUIRE( p.text( 0 ).find( "_0 = copy _1" ) != std::string::npos );
 }
 
-// Each literal kind reaches KIR as a constant. Two of them carry no Literal_id in aux and have to
-// make one: a bool's value lives in aux directly, and `nullptr` records nothing at all - so
-// Literal_id { aux } would be the invalid sentinel, which verify rejects.
+// Each literal kind reaches KIR as a constant, including a bool and `nullptr`, which carry no
+// Literal_id.
 TEST_CASE( "lower_turns_every_literal_into_a_constant", "[ir][lower]" )
 {
     struct Case
@@ -3929,9 +3803,7 @@ TEST_CASE( "lower_keeps_shadowed_names_apart", "[ir][lower]" )
     REQUIRE( text.find( "_0 = copy _1" ) != std::string::npos );
 }
 
-// Three-address form: every intermediate result becomes a named local, in the order the operands
-// were evaluated. That order is §7.1's guarantee, and here it is structural rather than a rule -
-// the lowering calls happen left to right, so the statements do too.
+// Three-address form: every intermediate becomes a local, in evaluation order (§7.1).
 TEST_CASE( "lower_puts_every_operation_in_a_temporary", "[ir][lower]" )
 {
     Lowered p( "i32 f( i32 a, i32 b, i32 c ) { return a + b * c; }\ni32 main() { return 0; }" );
@@ -3950,8 +3822,7 @@ TEST_CASE( "lower_puts_every_operation_in_a_temporary", "[ir][lower]" )
     REQUIRE( verify( p.functions[0] ).empty() );
 }
 
-// §6.4 says an operation happens at the common type of its operands. Making that explicit here is
-// what lets a backend read KIR without re-deriving the table.
+// §6.4: an operation happens at its operands' common type, and KIR makes that explicit.
 TEST_CASE( "lower_makes_conversions_explicit", "[ir][lower]" )
 {
     SECTION( "operands already at one type need none" )
@@ -4189,9 +4060,7 @@ TEST_CASE( "lower_builds_an_if", "[ir][lower][cfg]" )
     }
 }
 
-// Not operators over two operands: the right side must not run unless the left demands it.
-// Lowering them as ordinary binaries evaluates both, which is invisible for parameters and wrong
-// for anything with an effect - `p != nullptr && (*p).x > 0` would dereference null.
+// The right side runs only if the left demands it: `p != nullptr && (*p).x > 0`.
 TEST_CASE( "lower_short_circuits_and_and_or", "[ir][lower][cfg]" )
 {
     SECTION( "and evaluates the right side when the left is true" )
@@ -4258,9 +4127,7 @@ TEST_CASE( "lower_short_circuits_and_and_or", "[ir][lower][cfg]" )
     }
 }
 
-// A conditional is `&&`'s shape without the asymmetry: one result local, two arms, one join. The
-// two things the short-circuit template does not cover are here - the arms may need widening, and
-// they may own.
+// A conditional: one result local, two arms, one join. The arms may need widening, and may own.
 TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
 {
     SECTION( "three blocks, and the result is one local written by both paths" )
@@ -4337,9 +4204,8 @@ TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
         REQUIRE( every_function_verifies( p ) );
     }
 
-    // An arm written `move a` already arrives as a move; an arm that *builds* an owning value
-    // arrives as a copy of its own temporary, and that is the one moved_if_owning converts. A copy
-    // would leave the arm's temporary and the result holding one resource between them.
+    // `move a` already arrives as a move; an arm that builds an owning value is a copy of its own
+    // temporary, which moved_if_owning converts.
     SECTION( "an owning arm built in place is moved, not copied" )
     {
         Lowered p( "class Owner { public i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
@@ -4513,9 +4379,7 @@ TEST_CASE( "lower_builds_calls", "[ir][lower][calls]" )
         }
     }
 
-    // A void call still assigns, to a local nothing reads. Keeping Assign total is worth more than
-    // avoiding it - an optional destination would mean every consumer handling a statement that
-    // writes nowhere. A backend emits the call and drops the assignment.
+    // A void call still assigns, to a local nothing reads, which a backend emits as a bare call.
     SECTION( "a void call assigns to a void local" )
     {
         Lowered p( "void nothing() { return; }\ni32 main() { nothing(); return 0; }" );
@@ -4532,8 +4396,7 @@ TEST_CASE( "lower_builds_calls", "[ir][lower][calls]" )
     }
 }
 
-// M7 slice 3. The callee is an operand rather than a declaration: there is no Node_id to name, and
-// the local holding the address is what the call reads.
+// Through a function-typed variable the callee is an operand: the local holding the address.
 TEST_CASE( "lower_calls_through_a_function_typed_variable", "[ir][lower][calls][m7]" )
 {
     SECTION( "the callee is a local, not a symbol" )
@@ -4639,8 +4502,7 @@ TEST_CASE( "lower_calls_through_a_function_typed_variable", "[ir][lower][calls][
     }
 }
 
-// M7 slice 4. Both overloads share a name, so which declaration travels on the rvalue is the whole
-// of the difference - and only its return type tells the two apart.
+// Overloads share a name, so the declaration on the rvalue is what tells them apart.
 TEST_CASE( "lower_takes_the_address_of_the_chosen_overload", "[ir][lower][m7]" )
 {
     constexpr std::string_view pair = "i32 f( i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n";
@@ -4684,9 +4546,8 @@ TEST_CASE( "lower_takes_the_address_of_the_chosen_overload", "[ir][lower][m7]" )
     }
 }
 
-// M7 slice 5. Two instances of one generic share a declaration, so the Node_id on the rvalue no
-// longer names a function on its own - the type arguments beside it are what tell them apart, the
-// same pair a call already carries.
+// Two instances share a declaration, so the type arguments beside the Node_id tell them apart, as
+// a call's do.
 TEST_CASE( "lower_takes_the_address_of_a_generic_instance", "[ir][lower][m7][generic]" )
 {
     constexpr std::string_view id = "T id<T>( T a ) where T : copyable { return a; }\n";
@@ -4782,9 +4643,7 @@ TEST_CASE( "lower_builds_a_while", "[ir][lower][loops]" )
     REQUIRE( verify( p.functions[0] ).empty() );
 }
 
-// The latch is why a for is not just a while: continue has to run the update before re-testing.
-// In the C emitter this needed a generated label, a used-flag, and care about -Wunused-label. Here
-// it is an edge to a block.
+// `continue` in a for runs the update before re-testing: an edge to the latch block.
 TEST_CASE( "lower_builds_a_for", "[ir][lower][loops]" )
 {
     SECTION( "the update lives in a latch the body falls into" )
@@ -5062,9 +4921,7 @@ TEST_CASE( "lower_builds_casts", "[ir][lower][places]" )
     }
 }
 
-// A struct literal is a temporary plus one assignment per field. There is no aggregate rvalue -
-// dropping Struct_init from the enum is what makes source order fall out of statement order,
-// where the C emitter needed two phases because it was building a single expression.
+// A struct literal is a temporary plus one assignment per field, so fields run in source order.
 TEST_CASE( "lower_builds_struct_literals", "[ir][lower][structs]" )
 {
     SECTION( "designated form" )
@@ -5144,8 +5001,7 @@ TEST_CASE( "lower_builds_struct_literals", "[ir][lower][structs]" )
     }
 }
 
-// The whole corpus, through the lowerer and the verifier. This is the assertion that says the IR
-// can express the language rather than just the examples chosen to test it.
+// The whole corpus, through the lowerer and the verifier.
 TEST_CASE( "lower_handles_every_construct_in_the_corpus", "[ir][lower]" )
 {
     for( const char* source : {
@@ -5171,9 +5027,8 @@ TEST_CASE( "lower_handles_every_construct_in_the_corpus", "[ir][lower]" )
     }
 }
 
-// A file-scope variable has no slot in the frame - it outlives every one - so a place is rooted in
-// either a local or a global. Everything above the root is unchanged: the same projections, the
-// same copies, the same assignments.
+// A file-scope variable has no frame slot, so a place is rooted in a local or a global; the
+// projections above the root are unchanged.
 TEST_CASE( "lower_roots_places_in_globals", "[ir][lower][globals]" )
 {
     SECTION( "reading one" )
@@ -5212,9 +5067,7 @@ TEST_CASE( "lower_roots_places_in_globals", "[ir][lower][globals]" )
         REQUIRE( p.text( 0 ).find( "counter = copy counter + const 3" ) != std::string::npos );
     }
 
-    // The root travels with the projections. field() and deref() build their result from the base,
-    // so a place that started global stays global - dropping that is what makes `counter.x` a
-    // place rooted in nothing.
+    // field() and deref() keep the base's root, so a place that started global stays global.
     SECTION( "taking its address" )
     {
         Lowered p( "i32 counter = 1;\ni32* f() { return &counter; }\ni32 main() { return 0; }" );
@@ -5242,9 +5095,8 @@ TEST_CASE( "lower_roots_places_in_globals", "[ir][lower][globals]" )
 namespace
 {
 
-// The three helpers below exist because a marker test is about *order*, not about which number a
-// local happens to have. Asserting on `_3` breaks the moment a temporary appears earlier in the
-// function, which is exactly the kind of edit these tests must survive.
+// These helpers let marker tests assert order rather than local numbers, which shift whenever a
+// temporary is added earlier.
 
 // Where a line appears, so one can be asserted to precede another.
 std::size_t at( const std::string& text, std::string_view needle )
@@ -5533,9 +5385,7 @@ TEST_CASE( "lower_keeps_every_function_verifiable_with_markers", "[ir][lower][st
     REQUIRE( count( text, "storage_live " + local_of( text, "step" ) ) == 1 );
 }
 
-// A destructor is a Function like any other: its declaration is a Destructor_decl rather than a
-// Function_decl, and everything else - the return slot, the parameter walk, the body at children[2]
-// - is the shape run() already handles. Nothing in KIR knows what a destructor is.
+// A destructor is an ordinary Function whose declaration is a Destructor_decl.
 TEST_CASE( "lower_lowers_a_destructor", "[ir][lower][aggregates]" )
 {
     SECTION( "it becomes a function, with `this` as its only parameter" )
@@ -5731,9 +5581,8 @@ TEST_CASE( "lower_checks_a_narrowing_cast", "[ir][lower][cast]" )
     }
 }
 
-// A constructor lowers like a destructor - an ordinary Function whose first parameter is the
-// receiver - but its *call* is a new shape: it returns nothing and writes through `this`, so an
-// initialisation is a call taking the local's address rather than an assignment.
+// A constructor is an ordinary Function with the receiver first; its call returns nothing and
+// takes the local's address.
 TEST_CASE( "lower_lowers_a_constructor", "[ir][lower][aggregates]" )
 {
     SECTION( "it becomes a function, receiver first" )
@@ -5792,9 +5641,7 @@ TEST_CASE( "lower_lowers_a_constructor", "[ir][lower][aggregates]" )
     }
 }
 
-// The whole of what `move` costs in KIR: the same place, read with Move instead of Copy. Nothing
-// downstream distinguishes them yet - the C backend emits identical text, because a move *is* a
-// byte copy there - so this changes the dump and nothing else.
+// `move` reads the same place with Move instead of Copy.
 TEST_CASE( "lower_reads_a_move_as_a_move", "[ir][lower][move]" )
 {
     SECTION( "an argument" )
@@ -5855,9 +5702,8 @@ TEST_CASE( "lower_reads_a_move_as_a_move", "[ir][lower][move]" )
     }
 }
 
-// PLAN D32. In KIR a ref binding is a pointer local and every use of the name is a deref - exactly
-// the shape the receiver already has. That is what keeps the mode out of every pass below sema:
-// verify, the move analysis and drop elaboration all see an ordinary pointer.
+// D32. A ref binding is a pointer local and every use a deref, so passes below sema see an
+// ordinary pointer.
 TEST_CASE( "lower_binds_a_ref_parameter_through_a_pointer", "[ir][lower][ref]" )
 {
     Lowered p( "void bump( ref i32 n ) { n = n + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }" );
@@ -5870,9 +5716,7 @@ TEST_CASE( "lower_binds_a_ref_parameter_through_a_pointer", "[ir][lower][ref]" )
     INFO( text );
     REQUIRE( text.find( "let _1: i32*; // parameter n" ) != std::string::npos );
 
-    // Both ends of the assignment go through the binding: reading the name and writing to it are
-    // the same place, which is the one thing a mode that is not a type has to get right. The
-    // binary lands in a temporary on the way, as every other assignment of one already does.
+    // Reading and writing the name are the same place, through the binding.
     REQUIRE( text.find( "_2 = copy (*_1) + const 1" ) != std::string::npos );
     REQUIRE( text.find( "(*_1) = copy _2" ) != std::string::npos );
 }
@@ -5935,9 +5779,7 @@ TEST_CASE( "lower_lends_a_class_by_ref", "[ir][lower][ref]" )
     REQUIRE( text.find( "drop" ) == std::string::npos );
 }
 
-// PLAN D31. A bare parameter of an owning type travels by address, exactly as `ref` does: the local
-// is a pointer and every use of the name is a deref. KIR shows the two borrows as one shape,
-// because the difference between them is entirely what the checker permits through each.
+// D31. A bare owning parameter travels by address as `ref` does; only the checker tells them apart.
 TEST_CASE( "lower_passes_a_bare_owning_parameter_by_address", "[ir][lower][borrow]" )
 {
     Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
@@ -5969,9 +5811,7 @@ TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
     INFO( text );
     REQUIRE( text.find( "= &read _1" ) != std::string::npos );
 
-    // The two halves that make it a borrow: nothing is moved, and the caller still drops. Before
-    // this, the argument was `copy _1` - a struct copy of an owning value, which is the one thing
-    // "an owning value is never copied" forbids, and which freed the resource twice.
+    // A borrow: nothing is moved and the caller still drops. A copy here would free the resource twice.
     REQUIRE( text.find( "move" ) == std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
@@ -6133,8 +5973,7 @@ TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
     REQUIRE( text.find( "= &read (*_1)" ) != std::string::npos );
 }
 
-// The regression the borrow rule broke once, and the reason it tests the *mode* rather than only
-// the type: a `move` parameter is owned, so it stays a value and the callee is what drops it.
+// A `move` parameter is owned, so it stays a value and the callee drops it.
 TEST_CASE( "lower_keeps_a_move_parameter_by_value", "[ir][lower][borrow]" )
 {
     Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
@@ -6157,9 +5996,7 @@ TEST_CASE( "lower_keeps_a_move_parameter_by_value", "[ir][lower][borrow]" )
     REQUIRE( caller.find( "move" ) != std::string::npos );
 }
 
-// PLAN D32. A `ref` local is a pointer local holding an address, and every use of the name is a
-// deref of it - the same shape a `ref` parameter and the receiver already have. The initialiser is
-// lowered as a *place* rather than read, which is the only thing that distinguishes it.
+// D32. A `ref` local is a pointer holding an address, its initialiser lowered as a place.
 TEST_CASE( "lower_binds_a_ref_local_to_an_address", "[ir][lower][binding]" )
 {
     Lowered p( "i32 main() { i32 x = 1; ref i32 r = x; r = 5; return x; }" );
@@ -6221,7 +6058,7 @@ TEST_CASE( "lower_never_drops_a_ref_binding", "[ir][lower][binding]" )
     REQUIRE( text.find( "move" ) == std::string::npos );
 }
 
-// PLAN D32. `const ref` travels by address exactly as `ref` does, marked as only read through, which
+// D32. `const ref` travels by address exactly as `ref` does, marked as only read through, which
 // is what lets a borrow check tell a call that could change its argument from one that cannot.
 TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constref]" )
 {
@@ -6238,9 +6075,8 @@ TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constre
     REQUIRE( callee.find( "let _1: P*; // parameter p" ) != std::string::npos );
     REQUIRE( callee.find( "copy (*_1).x" ) != std::string::npos );
 
-    // The win this form exists for: a struct that would have been copied is borrowed instead. The
-    // claim is about what travels, not which temporary holds it - the struct literal takes an index
-    // of its own, so naming one here would pin the wrong thing.
+    // A struct that would have been copied is borrowed. Asserts what travels, not which temporary
+    // holds it.
     const std::string caller = p.named( "main" );
 
     INFO( caller );
@@ -6282,9 +6118,7 @@ TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
 
-// PLAN §8. A `const ref` return travels as an address, like every other binding: the return slot
-// holds a pointer, and `return a` hands back the address the parameter already holds rather than a
-// read of what is there.
+// §8. A `const ref` return travels as an address: the return slot holds a pointer.
 TEST_CASE( "lower_returns_a_const_ref_as_an_address", "[ir][lower][escape]" )
 {
     Lowered p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
@@ -6299,10 +6133,7 @@ TEST_CASE( "lower_returns_a_const_ref_as_an_address", "[ir][lower][escape]" )
     REQUIRE( callee.find( "let _0: i32*; // return slot" ) != std::string::npos );
     REQUIRE( callee.find( "let _1: i32*; // parameter a" ) != std::string::npos );
 
-    // The address, not a read of it - a read would return a copy of the referent and the form
-    // would buy nothing. It comes out as `&(*_1)` rather than `copy _1` because the parameter is
-    // itself a binding, so lower_place derefs it and the address is taken straight back: the same
-    // round trip forwarding a borrow already prints, and one a C compiler folds for free.
+    // The address, not a read: `&(*_1)`, since the parameter is itself a binding.
     REQUIRE( callee.find( "_0 = &read (*_1)" ) != std::string::npos );
 }
 
@@ -6359,10 +6190,8 @@ TEST_CASE( "lower_uses_the_result_of_a_const_ref_return", "[ir][lower][escape]" 
     }
 }
 
-// PLAN D31. An `out` parameter travels by address exactly as a borrow does - the local is a pointer
-// and every use of the name is a deref. What KIR records on top is which locals arrive empty,
-// because nothing in the graph says so: the pointer itself is perfectly valid, and it is the
-// referent that has not been written.
+// D31. An `out` parameter travels by address as a borrow does, and KIR records which locals arrive
+// empty, since the pointer is valid but its referent unwritten.
 TEST_CASE( "lower_passes_an_out_parameter_by_address", "[ir][lower][out]" )
 {
     Lowered p( "void init( out i32 n ) { n = 1; }\ni32 main() { i32 x = 0; init( out x ); return x; }" );
@@ -6410,10 +6239,8 @@ TEST_CASE( "lower_records_no_out_parameters_where_there_are_none", "[ir][lower][
     REQUIRE( p.functions[0].out_parameters.empty() );
 }
 
-// PLAN D30. A variant lowers to its **ordinal** - its position in the declaration. The first
-// version of this read `aux`, which holds the variant's *name*, and emitted an interner index as
-// the enum's value: it compiled, it ran, and every number was wrong. A golden would have recorded
-// those numbers as correct, which is why this case checks the values themselves.
+// D30. A variant lowers to its ordinal, not the name in aux. Checked by value, since a golden
+// would record wrong numbers as correct.
 TEST_CASE( "lower_gives_a_variant_its_ordinal", "[ir][lower][enum]" )
 {
     Lowered p( "enum Colour : u8 { Red, Green, Blue };\n"
@@ -6449,9 +6276,7 @@ TEST_CASE( "lower_compares_enums_as_integers", "[ir][lower][enum]" )
     REQUIRE( text.find( "copy _1 == const 1" ) != std::string::npos );
 }
 
-// PLAN D30. A switch is a chain of equality tests, so KIR gains nothing for it - which is the claim
-// worth checking, because it means verify, the move analysis and drop elaboration all keep working
-// with no case added for a construct they have never heard of.
+// D30. A switch is a chain of equality tests, so KIR and the passes over it gain no case.
 TEST_CASE( "lower_turns_a_switch_into_a_branch_chain", "[ir][lower][switch]" )
 {
     Lowered p( "enum Colour { Red, Green, Blue };\n"
@@ -6472,9 +6297,7 @@ TEST_CASE( "lower_turns_a_switch_into_a_branch_chain", "[ir][lower][switch]" )
     REQUIRE( text.find( "switch" ) == std::string::npos );
 }
 
-// `fallthrough` jumps into the *next* arm's body - which has not been lowered when the jump is
-// emitted, so every arm's block is allocated before any of them is filled. Without that the target
-// would not exist yet.
+// `fallthrough` jumps into the next arm's body, so every arm's block exists before any is filled.
 TEST_CASE( "lower_sends_a_fallthrough_into_the_next_arm", "[ir][lower][switch]" )
 {
     Lowered p( "enum Colour { Red, Green, Blue };\n"
@@ -6615,10 +6438,7 @@ TEST_CASE( "lower_reads_the_scrutinee_once", "[ir][lower][switch]" )
     REQUIRE( calls == 1 );
 }
 
-// §6.4 lets a literal adopt the type context gives it, so `f64 x = 1;` type-checks - and until
-// this was found, it then **aborted the compiler**: the value sits in the integer pool and the
-// emitter asked Literal_pool for a float it never stored. Found through a float range label, whose
-// bounds are integers by D34, but it was never about ranges.
+// §6.4: `f64 x = 1;` stores an integer literal, which lowering turns into a float constant.
 TEST_CASE( "lower_converts_an_integer_literal_in_float_context", "[ir][lower]" )
 {
     Lowered p( "i32 main() { f64 x = 1; f32 y = 2; return 0; }" );
@@ -6633,9 +6453,7 @@ TEST_CASE( "lower_converts_an_integer_literal_in_float_context", "[ir][lower]" )
     REQUIRE( text.find( "let _2: f32; // y" ) != std::string::npos );
 }
 
-// PLAN D34. A range is two comparisons, and there is no conjunction in KIR to hold them - `&&`
-// short-circuits and the lowerer builds that out of blocks. So a range is one more link in the
-// chain a stacked label list already builds, and nothing downstream learns that ranges exist.
+// D34. A range label is two comparisons, one more link in the label chain.
 TEST_CASE( "lower_turns_a_range_label_into_two_comparisons", "[ir][lower][range]" )
 {
     Lowered p( "i32 f( i32 n ) { switch( n ) { case 1..5: return 1; default: return 0; } }\ni32 main() { return 0; }" );
@@ -6687,9 +6505,8 @@ TEST_CASE( "lower_compares_a_float_range_as_floats", "[ir][lower][range]" )
     REQUIRE( text.find( ">= const 1" ) != std::string::npos );
 }
 
-// PLAN D7. Two representations, chosen by whether any variant carries a payload. A payload-free
-// enum stays its underlying integer - which is what keeps every existing enum unchanged - and one
-// with payloads becomes a struct holding a tag and the payload fields.
+// D7. An enum with a payload anywhere is a struct of tag and payload fields; one without stays its
+// underlying integer.
 TEST_CASE( "lower_gives_a_payload_enum_a_tag", "[ir][lower][payload]" )
 {
     Lowered p( "enum Shape { Circle( f64 radius ), Dot };\n"
@@ -6724,8 +6541,7 @@ TEST_CASE( "lower_builds_a_payload_free_variant_of_a_payload_enum", "[ir][lower]
     REQUIRE( text.find( ".tag = const 1" ) != std::string::npos );
 }
 
-// And an enum with no payloads anywhere keeps the old representation exactly - no tag, no struct,
-// just the ordinal. This is the case that would break every existing enum if it changed.
+// An enum with no payloads keeps the plain ordinal: no tag, no struct.
 TEST_CASE( "lower_leaves_a_payload_free_enum_as_an_integer", "[ir][lower][payload]" )
 {
     Lowered p( "enum Colour { Red, Green };\ni32 main() { Colour c = Colour::Green; return 0; }" );
@@ -6740,10 +6556,7 @@ TEST_CASE( "lower_leaves_a_payload_free_enum_as_an_integer", "[ir][lower][payloa
     REQUIRE( text.find( ".tag" ) == std::string::npos );
 }
 
-// The regression M5's acceptance sample found. With no `default`, the **last arm is the fallback**
-// and is skipped by the loop that binds patterns - so an exhaustive switch whose final arm
-// destructures bound nothing and crashed lowering. It went unnoticed because every earlier fixture
-// happened to end on a payload-free variant, which binds nothing anyway.
+// With no `default` the last arm is the fallback, and still binds its pattern.
 TEST_CASE( "lower_binds_a_pattern_in_the_fallback_arm", "[ir][lower][payload]" )
 {
     Lowered p( "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ) };\n"
@@ -6790,7 +6603,7 @@ TEST_CASE( "lower_switches_on_the_tag_and_binds_the_payload", "[ir][lower][paylo
     REQUIRE( text.find( "// h" ) != std::string::npos );
 }
 
-// PLAN D30. An owning enum is dropped by one synthesised destructor that tests the tag and drops
+// D30. An owning enum is dropped by one synthesised destructor that tests the tag and drops
 // only the live variant's payload; a variant that owns nothing gets no test.
 TEST_CASE( "lower_synthesises_an_owning_enum's_destructor", "[ir][lower][payload][drop]" )
 {
@@ -7056,9 +6869,7 @@ TEST_CASE( "lower_try_runs_before_an_aggregate_is_written", "[ir][lower][try]" )
     }
 }
 
-// PLAN D32. A method call is an ordinary call whose first argument is the receiver's **address** -
-// the same address_operand step lower_argument takes for any borrow, except that the argument was
-// never written at the call site, so it is prepended.
+// D32. A method call's first argument is the receiver's address.
 TEST_CASE( "lower_passes_the_receiver_by_address", "[ir][lower][method]" )
 {
     Lowered p( "struct P { i32 x; i32 get() const { return x; } };\n"
@@ -7155,9 +6966,7 @@ TEST_CASE( "lower_calls_a_method_through_a_pointer", "[ir][lower][method]" )
     REQUIRE( caller.find( "= &_2" ) == std::string::npos );
 }
 
-// The lowering half of §8's receiver clause. The method hands back an address, so the call's own
-// type is that pointer - typing it as the language type produced C that assigned an `int*` to an
-// `int`, which only -Werror caught.
+// §8. A method returning a binding hands back an address, so the call is typed as that pointer.
 TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
 {
     Lowered p( "struct P { i32 x; const ref i32 get() const { return x; } };\n"
@@ -7180,10 +6989,8 @@ TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
     REQUIRE( caller.find( "copy (*_3)" ) != std::string::npos );
 }
 
-// PLAN §6.7. The parameter walk captures the receiver from the first parameter of anything that
-// is not a free function, which is the node kind standing in for a question about the signature. A
-// static method is the second declaration with no receiver, and without this the walk adopts its
-// first written parameter as `this` - so a bare field name would project off an `i32`.
+// §6.7. A static method has no receiver, so the parameter walk must not take its first parameter
+// as `this`.
 TEST_CASE( "lower_gives_a_static_method_no_receiver", "[ir][lower][static]" )
 {
     Lowered p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
@@ -7215,8 +7022,7 @@ TEST_CASE( "lower_prepends_no_receiver_to_a_static_call", "[ir][lower][static]" 
     REQUIRE( caller.find( "call make(const 7)" ) != std::string::npos );
 }
 
-// A plain method declared beside one keeps everything it had. Here rather than left to the method
-// cases above, because what breaks it is the receiver test being removed rather than narrowed.
+// A plain method beside a static one still gets its receiver.
 TEST_CASE( "lower_still_passes_a_plain_method_its_receiver", "[ir][lower][static]" )
 {
     Lowered p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } i32 get() const { return x; } };\n"
