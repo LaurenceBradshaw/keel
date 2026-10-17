@@ -49,17 +49,17 @@ i32 main()
 
     kl::set<kl::string> words = kl::set<kl::string>::with_capacity( 4 );
 
-    words.insert( move kl::string( "a" ) );
-    words.insert( move kl::string( "b" ) );
+    words.insert( "a" );
+    words.insert( "b" );
 
-    if( words.insert( move kl::string( "a" ) ) || !words.contains( kl::string( "b" ) ) || words.size() != 2 )
+    if( words.insert( "a" ) || !words.contains( kl::string( "b" ) ) || words.size() != 2 )
     {
         return 7;
     }
 
     words.remove( kl::string( "a" ) );
     words.clear();
-    words.insert( move kl::string( "kept" ) );
+    words.insert( "kept" );
 
     return 0;
 }

@@ -104,12 +104,12 @@ i32 main()
 
     for( u64 i : 0..50 )
     {
-        names.insert( move kl::string::from( i ), move kl::string::from( i * 2 ) );
+        names.insert( kl::string::from( i ), kl::string::from( i * 2 ) );
     }
 
     for( u64 i : 0..25 )
     {
-        kl::string gone = kl::unwrap( move names.remove( kl::string::from( i * 2 ) ) );
+        kl::string gone = kl::unwrap( names.remove( kl::string::from( i * 2 ) ) );
 
         if( !( gone == kl::string::from( i * 4 ) ) )
         {
@@ -142,7 +142,7 @@ i32 main()
     names.insert( "again", "1" );
 
     // The only entry leaving.
-    kl::unwrap( move names.remove( "again" ) );
+    kl::unwrap( names.remove( "again" ) );
 
     if( !names.is_empty() )
     {

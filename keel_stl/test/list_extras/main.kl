@@ -53,7 +53,7 @@ kl::list<owned> counting( u64 n )
     kl::list<owned> values = kl::list<owned>();
     for( u64 i = 1; i <= n; i++ )
     {
-        values.push( move owned( i ) );
+        values.push( owned( i ) );
     }
     return values;
 }
@@ -62,11 +62,11 @@ kl::list<owned> counting( u64 n )
 i32 inserts()
 {
     kl::list<owned> values = kl::list<owned>();
-    values.insert( 0, move owned( 2 ) );
-    values.push( move owned( 4 ) );
-    values.insert( 1, move owned( 3 ) );
-    values.insert( 0, move owned( 1 ) );
-    values.insert( 4, move owned( 5 ) );
+    values.insert( 0, owned( 2 ) );
+    values.push( owned( 4 ) );
+    values.insert( 1, owned( 3 ) );
+    values.insert( 0, owned( 1 ) );
+    values.insert( 4, owned( 5 ) );
     if( live != 5 || values.size() != 5 || values.capacity() != 8 || digits( values ) != 12345 )
     {
         return 1;
@@ -109,8 +109,8 @@ i32 ends()
         return 5;
     }
 
-    *values.first() = move owned( 7 );
-    *values.last() = move owned( 9 );
+    *values.first() = owned( 7 );
+    *values.last() = owned( 9 );
     if( live != 3 || digits( values ) != 729 )
     {
         return 6;
@@ -130,7 +130,7 @@ i32 try_pops()
 {
     kl::list<owned> values = counting( 3 );
     {
-        owned three = kl::unwrap( move values.try_pop() );
+        owned three = kl::unwrap( values.try_pop() );
         if( three.value() != 3 || live != 3 || digits( values ) != 12 )
         {
             return 8;
@@ -164,7 +164,7 @@ i32 reverses()
     kl::list<owned> values = kl::list<owned>();
     values.reverse();
 
-    values.push( move owned( 1 ) );
+    values.push( owned( 1 ) );
     values.reverse();
     if( digits( values ) != 1 )
     {
@@ -188,9 +188,9 @@ i32 reverses()
 i32 shrinks()
 {
     kl::list<owned> values = kl::list<owned>::with_capacity( 8 );
-    values.push( move owned( 1 ) );
-    values.push( move owned( 2 ) );
-    values.push( move owned( 3 ) );
+    values.push( owned( 1 ) );
+    values.push( owned( 2 ) );
+    values.push( owned( 3 ) );
     values.shrink_to_fit();
     if( live != 3 || values.capacity() != 3 || digits( values ) != 123 )
     {
@@ -210,7 +210,7 @@ i32 shrinks()
         return 16;
     }
 
-    values.push( move owned( 4 ) );
+    values.push( owned( 4 ) );
     if( live != 1 || values.capacity() != 1 || digits( values ) != 4 )
     {
         return 17;
@@ -225,18 +225,18 @@ i32 appends()
 {
     kl::list<owned> values = counting( 2 );
     kl::list<owned> more = kl::list<owned>();
-    more.push( move owned( 3 ) );
-    more.push( move owned( 4 ) );
-    more.push( move owned( 5 ) );
+    more.push( owned( 3 ) );
+    more.push( owned( 4 ) );
+    more.push( owned( 5 ) );
     values.append( move more );
     if( live != 5 || digits( values ) != 12345 )
     {
         return 18;
     }
 
-    values.append( move kl::list<owned>() );
+    values.append( kl::list<owned>() );
     kl::list<owned> empty = kl::list<owned>();
-    empty.append( move counting( 3 ) );
+    empty.append( counting( 3 ) );
     if( live != 8 || digits( values ) != 12345 || digits( empty ) != 123 )
     {
         return 19;

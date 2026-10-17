@@ -54,7 +54,7 @@ kl::ring<owned> counting()
     kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
     for( u64 i = 1; i <= 3; i++ )
     {
-        values.push_back( move owned( i ) );
+        values.push_back( owned( i ) );
     }
     return values;
 }
@@ -76,9 +76,9 @@ i32 wraps_at_the_back()
         }
     }
 
-    values.push_back( move owned( 4 ) );
+    values.push_back( owned( 4 ) );
     _ = values.pop_front();
-    values.push_back( move owned( 5 ) );
+    values.push_back( owned( 5 ) );
     if( live != 3 || digits( values ) != 345 || values.first().value() != 3 || values.last().value() != 5 )
     {
         return 3;
@@ -91,9 +91,9 @@ i32 wraps_at_the_back()
 i32 wraps_at_the_front()
 {
     kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
-    values.push_front( move owned( 1 ) );
-    values.push_back( move owned( 2 ) );
-    values.push_front( move owned( 3 ) );
+    values.push_front( owned( 1 ) );
+    values.push_back( owned( 2 ) );
+    values.push_front( owned( 3 ) );
     if( live != 3 || digits( values ) != 312 )
     {
         return 4;
@@ -122,7 +122,7 @@ i32 try_pushes()
     kl::ring<owned> values = counting();
     _ = values.pop_front();
 
-    result<void, owned> room = values.try_push_front( move owned( 7 ) );
+    result<void, owned> room = values.try_push_front( owned( 7 ) );
     switch( move room )
     {
         case result::ok:
@@ -131,7 +131,7 @@ i32 try_pushes()
             return 7;
     }
 
-    result<void, owned> full = values.try_push_back( move owned( 9 ) );
+    result<void, owned> full = values.try_push_back( owned( 9 ) );
     switch( move full )
     {
         case result::ok:
@@ -144,7 +144,7 @@ i32 try_pushes()
             break;
     }
 
-    _ = values.try_push_front( move owned( 8 ) );
+    _ = values.try_push_front( owned( 8 ) );
     if( live != 3 || digits( values ) != 723 )
     {
         return 10;
@@ -159,7 +159,7 @@ i32 evicts()
 {
     kl::ring<owned> values = counting();
     {
-        owned one = kl::unwrap( move values.push_back_evict( move owned( 4 ) ) );
+        owned one = kl::unwrap( values.push_back_evict( owned( 4 ) ) );
         if( one.value() != 1 || live != 4 || digits( values ) != 234 )
         {
             return 11;
@@ -167,7 +167,7 @@ i32 evicts()
     }
 
     {
-        owned four = kl::unwrap( move values.push_front_evict( move owned( 5 ) ) );
+        owned four = kl::unwrap( values.push_front_evict( owned( 5 ) ) );
         if( four.value() != 4 || digits( values ) != 523 )
         {
             return 12;
@@ -175,7 +175,7 @@ i32 evicts()
     }
 
     _ = values.pop_back();
-    if( !kl::is_none( values.push_back_evict( move owned( 6 ) ) ) || live != 3 || digits( values ) != 526 )
+    if( !kl::is_none( values.push_back_evict( owned( 6 ) ) ) || live != 3 || digits( values ) != 526 )
     {
         return 13;
     }
@@ -188,8 +188,8 @@ i32 try_pops()
 {
     kl::ring<owned> values = counting();
     {
-        owned three = kl::unwrap( move values.try_pop_back() );
-        owned one = kl::unwrap( move values.try_pop_front() );
+        owned three = kl::unwrap( values.try_pop_back() );
+        owned one = kl::unwrap( values.try_pop_front() );
         if( three.value() != 3 || one.value() != 1 || digits( values ) != 2 )
         {
             return 14;
@@ -211,7 +211,7 @@ i32 reserves()
 {
     kl::ring<owned> values = counting();
     _ = values.pop_front();
-    values.push_back( move owned( 4 ) );
+    values.push_back( owned( 4 ) );
 
     values.reserve( 2 );
     if( values.capacity() != 3 )
@@ -225,8 +225,8 @@ i32 reserves()
         return 17;
     }
 
-    values.push_back( move owned( 5 ) );
-    values.push_front( move owned( 1 ) );
+    values.push_back( owned( 5 ) );
+    values.push_front( owned( 1 ) );
     if( !values.is_full() || live != 5 || digits( values ) != 12345 )
     {
         return 18;
@@ -240,7 +240,7 @@ i32 clears()
 {
     kl::ring<owned> values = counting();
     _ = values.pop_front();
-    values.push_back( move owned( 4 ) );
+    values.push_back( owned( 4 ) );
 
     values.clear();
     if( live != 0 || !values.is_empty() || values.capacity() != 3 )
@@ -248,7 +248,7 @@ i32 clears()
         return 19;
     }
 
-    values.push_back( move owned( 6 ) );
+    values.push_back( owned( 6 ) );
     if( live != 1 || digits( values ) != 6 )
     {
         return 20;
@@ -262,7 +262,7 @@ i32 drops_wrapped()
 {
     kl::ring<owned> values = counting();
     _ = values.pop_front();
-    values.push_back( move owned( 4 ) );
+    values.push_back( owned( 4 ) );
     return live == 3 ? 0 : 21;
 }
 

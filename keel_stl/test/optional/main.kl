@@ -62,7 +62,7 @@ i32 takes_out()
     }
 
     {
-        owned five = kl::expect( move lookup( 5 ), "five is there" );
+        owned five = kl::expect( lookup( 5 ), "five is there" );
         if( five.value() != 5 || live != 1 )
         {
             return 3;
@@ -140,7 +140,7 @@ i32 reads()
 i32 falls_back()
 {
     {
-        owned held = kl::value_or( move lookup( 1 ), move owned( 2 ) );
+        owned held = kl::value_or( lookup( 1 ), owned( 2 ) );
         if( held.value() != 1 || live != 1 )
         {
             return 12;
@@ -153,7 +153,7 @@ i32 falls_back()
 
     {
         owned fallback = owned( 3 );
-        owned held = kl::value_or( move lookup( 0 ), move fallback );
+        owned held = kl::value_or( lookup( 0 ), move fallback );
         if( held.value() != 3 || live != 1 )
         {
             return 14;

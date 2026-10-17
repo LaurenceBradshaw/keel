@@ -52,7 +52,7 @@ i32 grows()
     kl::list<owned> values = kl::list<owned>();
     for( u64 i = 0; i < 5; i++ )
     {
-        values.push( move owned( i ) );
+        values.push( owned( i ) );
     }
 
     if( live != 5 || values.capacity() != 8 || digits( values ) != 1234 )
@@ -68,7 +68,7 @@ i32 takes_out()
     kl::list<owned> values = kl::list<owned>();
     for( u64 i = 0; i < 5; i++ )
     {
-        values.push( move owned( i ) );
+        values.push( owned( i ) );
     }
 
     {
@@ -96,7 +96,7 @@ i32 takes_out()
     }
 
     {
-        owned old = values.replace( 1, move owned( 9 ) );
+        owned old = values.replace( 1, owned( 9 ) );
         if( old.value() != 2 || live != 3 || digits( values ) != 39 )
         {
             return 5;
@@ -116,7 +116,7 @@ i32 takes_out()
         return 7;
     }
 
-    values.push( move owned( 6 ) );
+    values.push( owned( 6 ) );
     if( live != 1 || digits( values ) != 6 )
     {
         return 8;
@@ -129,8 +129,8 @@ i32 takes_out()
 kl::list<owned> filled()
 {
     kl::list<owned> values = kl::list<owned>::with_capacity( 2 );
-    values.push( move owned( 1 ) );
-    values.push( move owned( 2 ) );
+    values.push( owned( 1 ) );
+    values.push( owned( 2 ) );
     return values;
 }
 

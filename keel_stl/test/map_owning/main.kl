@@ -11,7 +11,7 @@ i32 main()
 
     for( u64 i = 0; i < 200; i++ )
     {
-        names.insert( move kl::string::from( i ), move kl::string::from( i * 2 ) );
+        names.insert( kl::string::from( i ), kl::string::from( i * 2 ) );
     }
 
     if( names.size() != 200 || !( names[ kl::string( "150" ) ] == kl::string( "300" ) ) )
@@ -19,7 +19,7 @@ i32 main()
         return 1;
     }
 
-    kl::string old = kl::unwrap( move names.insert( move kl::string( "10" ), move kl::string( "ten" ) ) );
+    kl::string old = kl::unwrap( names.insert( "10", "ten" ) );
 
     if( !( old == kl::string( "20" ) ) || !( names[ kl::string( "10" ) ] == kl::string( "ten" ) ) )
     {
@@ -40,7 +40,7 @@ i32 main()
     }
 
     names.clear();
-    names.insert( move kl::string( "kept" ), move kl::string( "until the end" ) );
+    names.insert( "kept", "until the end" );
 
     return 0;
 }

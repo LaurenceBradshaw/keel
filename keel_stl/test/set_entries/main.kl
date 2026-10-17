@@ -46,7 +46,7 @@ i32 main()
 
     for( u64 i : 0..40 )
     {
-        names.insert( move kl::string::from( i ) );
+        names.insert( kl::string::from( i ) );
     }
 
     for( u64 i : 0..20 )

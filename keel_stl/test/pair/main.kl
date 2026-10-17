@@ -39,13 +39,13 @@ class owned
 // Both halves are read in place, and writing one drops what it held.
 i32 holds()
 {
-    kl::pair<owned, u64> p = kl::pair<owned, u64>( move owned( 1 ), 2 );
+    kl::pair<owned, u64> p = kl::pair<owned, u64>( owned( 1 ), 2 );
     if( live != 1 || p.first.value() != 1 || p.second != 2 )
     {
         return 1;
     }
 
-    p.first = move owned( 3 );
+    p.first = owned( 3 );
     p.second = 4;
     if( live != 1 || p.first.value() != 3 || p.second != 4 )
     {
@@ -59,7 +59,7 @@ i32 holds()
 kl::pair<owned, owned> made()
 {
     owned left = owned( 5 );
-    return kl::pair<owned, owned>( move left, move owned( 6 ) );
+    return kl::pair<owned, owned>( move left, owned( 6 ) );
 }
 
 i32 moves_whole()
@@ -77,7 +77,7 @@ i32 moves_whole()
 // A pair inside an optional: unwrapping hands the whole pair out.
 i32 nests()
 {
-    kl::optional<kl::pair<owned, u64>> found = kl::optional::some( kl::pair<owned, u64>( move owned( 7 ), 8 ) );
+    kl::optional<kl::pair<owned, u64>> found = kl::optional::some( kl::pair<owned, u64>( owned( 7 ), 8 ) );
     kl::pair<owned, u64> p = kl::unwrap( move found );
     if( live != 1 || p.first.value() != 7 || p.second != 8 )
     {

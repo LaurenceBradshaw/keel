@@ -35,10 +35,10 @@ class owned
 i32 list_onto_full()
 {
     kl::list<owned> kept = kl::list<owned>();
-    kept.push( move owned( 1 ) );
-    kept.push( move owned( 2 ) );
+    kept.push( owned( 1 ) );
+    kept.push( owned( 2 ) );
     kl::list<owned> other = kl::list<owned>();
-    other.push( move owned( 3 ) );
+    other.push( owned( 3 ) );
 
     kept = move other;
     if( live != 1 || kept.size() != 1 || kept[0].id != 3 )
@@ -58,7 +58,7 @@ i32 list_onto_full()
 i32 list_onto_itself()
 {
     kl::list<owned> values = kl::list<owned>();
-    values.push( move owned( 7 ) );
+    values.push( owned( 7 ) );
 
     values = move values;
     if( live != 1 || values.size() != 1 || values[0].id != 7 )
@@ -78,8 +78,8 @@ i32 list_zero_capacity()
         return 4;
     }
 
-    values.push( move owned( 1 ) );
-    values.push( move owned( 2 ) );
+    values.push( owned( 1 ) );
+    values.push( owned( 2 ) );
     if( values.capacity() != 2 || live != 2 )
     {
         return 5;
@@ -92,11 +92,11 @@ i32 list_zero_capacity()
 i32 ring_onto_full()
 {
     kl::ring<owned> kept = kl::ring<owned>::with_capacity( 3 );
-    kept.push_back( move owned( 1 ) );
-    kept.push_back( move owned( 2 ) );
-    kept.push_front( move owned( 0 ) );
+    kept.push_back( owned( 1 ) );
+    kept.push_back( owned( 2 ) );
+    kept.push_front( owned( 0 ) );
     kl::ring<owned> other = kl::ring<owned>::with_capacity( 1 );
-    other.push_back( move owned( 9 ) );
+    other.push_back( owned( 9 ) );
 
     kept = move other;
     if( live != 1 || kept.size() != 1 || kept[0].id != 9 )

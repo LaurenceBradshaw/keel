@@ -42,7 +42,7 @@ box<Shape> make( u64 i )
         return box<Square>( Square { cast<f64>( i ) } );
     }
 
-    box<Labelled> labelled = box<Labelled>( move Labelled( i ) );
+    box<Labelled> labelled = box<Labelled>( Labelled( i ) );
     return labelled;
 }
 
@@ -52,7 +52,7 @@ i32 main()
 
     for( u64 i = 0; i < 6; i++ )
     {
-        shapes.push( move make( i ) );
+        shapes.push( make( i ) );
     }
 
     f64 total = 0.0;

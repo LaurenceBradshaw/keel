@@ -17,20 +17,20 @@ struct kl__owned
 
 struct kl_2kl_pair__I5owned_5ownedE
 {
-    struct kl__owned kl_first_370;
-    struct kl__owned kl_second_372;
+    struct kl__owned kl_first_366;
+    struct kl__owned kl_second_368;
 };
 
 struct kl_2kl_pair__I5owned_3u64E
 {
-    struct kl__owned kl_first_370;
-    uint64_t kl_second_372;
+    struct kl__owned kl_first_366;
+    uint64_t kl_second_368;
 };
 
 struct kl_2kl_optional__IQ2kl4pairI5owned_3u64EE
 {
     int32_t tag;
-    struct kl_2kl_pair__I5owned_3u64E kl_value_377;
+    struct kl_2kl_pair__I5owned_3u64E kl_value_373;
 };
 
 int32_t kl_live_5;
@@ -131,7 +131,7 @@ int32_t kl__holds__( void )
     kl_t8 = kl_t9;
     if ( kl_t8 ) goto bb2; else goto bb1;
     bb1:
-    kl_t10 = &kl_p_1.kl_first_370;
+    kl_t10 = &kl_p_1.kl_first_366;
     kl_t11 = kl__value__S5owned( kl_t10 );
     kl_t12 = kl_t11 != 1;
     kl_t8 = kl_t12;
@@ -140,7 +140,7 @@ int32_t kl__holds__( void )
     kl_t7 = kl_t8;
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
-    kl_t13 = kl_p_1.kl_second_372 != 2;
+    kl_t13 = kl_p_1.kl_second_368 != 2;
     kl_t7 = kl_t13;
     goto bb4;
     bb4:
@@ -148,7 +148,7 @@ int32_t kl__holds__( void )
     bb5:
 #line 45 "pair/main.kl"
     kl_t0 = 1;
-    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_370 );
+    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_366 );
     kl_t24 = false;
     return kl_t0;
     bb6:
@@ -157,21 +157,21 @@ int32_t kl__holds__( void )
     kl_t15 = &kl_t14;
     kl_t26 = true;
     kl__owned__R5owned_3u64__ctor( kl_t15, 3 );
-    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_370 );
-    kl_p_1.kl_first_370 = kl_t14;
+    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_366 );
+    kl_p_1.kl_first_366 = kl_t14;
     kl_t26 = false;
     kl_t24 = true;
     if ( kl_t26 ) kl__owned__dtor( &kl_t14 );
     kl_t26 = false;
 #line 49 "pair/main.kl"
-    kl_p_1.kl_second_372 = 4;
+    kl_p_1.kl_second_368 = 4;
     kl_t24 = true;
 #line 50 "pair/main.kl"
     kl_t19 = kl_live_5 != 1;
     kl_t18 = kl_t19;
     if ( kl_t18 ) goto bb8; else goto bb7;
     bb7:
-    kl_t20 = &kl_p_1.kl_first_370;
+    kl_t20 = &kl_p_1.kl_first_366;
     kl_t21 = kl__value__S5owned( kl_t20 );
     kl_t22 = kl_t21 != 3;
     kl_t18 = kl_t22;
@@ -180,7 +180,7 @@ int32_t kl__holds__( void )
     kl_t17 = kl_t18;
     if ( kl_t17 ) goto bb10; else goto bb9;
     bb9:
-    kl_t23 = kl_p_1.kl_second_372 != 4;
+    kl_t23 = kl_p_1.kl_second_368 != 4;
     kl_t17 = kl_t23;
     goto bb10;
     bb10:
@@ -188,13 +188,13 @@ int32_t kl__holds__( void )
     bb11:
 #line 52 "pair/main.kl"
     kl_t0 = 2;
-    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_370 );
+    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_366 );
     kl_t24 = false;
     return kl_t0;
     bb12:
 #line 55 "pair/main.kl"
     kl_t0 = 0;
-    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_370 );
+    if ( kl_t24 ) kl__owned__dtor( &kl_p_1.kl_first_366 );
     kl_t24 = false;
     return kl_t0;
 }
@@ -234,8 +234,8 @@ struct kl_2kl_pair__I5owned_5ownedE kl__made__( void )
     kl_t12 = false;
     kl_t0 = kl_t4;
     kl_t11 = false;
-    if ( kl_t11 ) kl__owned__dtor( &kl_t4.kl_second_372 );
-    if ( kl_t11 ) kl__owned__dtor( &kl_t4.kl_first_370 );
+    if ( kl_t11 ) kl__owned__dtor( &kl_t4.kl_second_368 );
+    if ( kl_t11 ) kl__owned__dtor( &kl_t4.kl_first_366 );
     if ( kl_t12 ) kl__owned__dtor( &kl_t6 );
     kl_t12 = false;
     kl_t11 = false;
@@ -270,8 +270,8 @@ int32_t kl__moves_whole__( void )
     kl_held_1 = kl_t2;
     kl_t14 = false;
     kl_t13 = true;
-    if ( kl_t14 ) kl__owned__dtor( &kl_t2.kl_second_372 );
-    if ( kl_t14 ) kl__owned__dtor( &kl_t2.kl_first_370 );
+    if ( kl_t14 ) kl__owned__dtor( &kl_t2.kl_second_368 );
+    if ( kl_t14 ) kl__owned__dtor( &kl_t2.kl_first_366 );
     kl_t14 = false;
 #line 68 "pair/main.kl"
     kl_moved_3 = kl_held_1;
@@ -281,7 +281,7 @@ int32_t kl__moves_whole__( void )
     kl_t5 = kl_t6;
     if ( kl_t5 ) goto bb2; else goto bb1;
     bb1:
-    kl_t7 = &kl_moved_3.kl_first_370;
+    kl_t7 = &kl_moved_3.kl_first_366;
     kl_t8 = kl__value__S5owned( kl_t7 );
     kl_t9 = kl_t8 != 5;
     kl_t5 = kl_t9;
@@ -290,7 +290,7 @@ int32_t kl__moves_whole__( void )
     kl_t4 = kl_t5;
     if ( kl_t4 ) goto bb4; else goto bb3;
     bb3:
-    kl_t10 = &kl_moved_3.kl_second_372;
+    kl_t10 = &kl_moved_3.kl_second_368;
     kl_t11 = kl__value__S5owned( kl_t10 );
     kl_t12 = kl_t11 != 6;
     kl_t4 = kl_t12;
@@ -300,19 +300,19 @@ int32_t kl__moves_whole__( void )
     bb5:
 #line 71 "pair/main.kl"
     kl_t0 = 3;
-    kl__owned__dtor( &kl_moved_3.kl_second_372 );
-    kl__owned__dtor( &kl_moved_3.kl_first_370 );
-    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_second_372 );
-    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_first_370 );
+    kl__owned__dtor( &kl_moved_3.kl_second_368 );
+    kl__owned__dtor( &kl_moved_3.kl_first_366 );
+    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_second_368 );
+    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_first_366 );
     kl_t13 = false;
     return kl_t0;
     bb6:
 #line 74 "pair/main.kl"
     kl_t0 = 0;
-    kl__owned__dtor( &kl_moved_3.kl_second_372 );
-    kl__owned__dtor( &kl_moved_3.kl_first_370 );
-    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_second_372 );
-    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_first_370 );
+    kl__owned__dtor( &kl_moved_3.kl_second_368 );
+    kl__owned__dtor( &kl_moved_3.kl_first_366 );
+    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_second_368 );
+    if ( kl_t13 ) kl__owned__dtor( &kl_held_1.kl_first_366 );
     kl_t13 = false;
     return kl_t0;
 }
@@ -360,14 +360,14 @@ int32_t kl__nests__( void )
     kl_t21 = false;
     kl_t2.tag = 0;
     kl_t19 = true;
-    kl_t2.kl_value_377 = kl_t3;
+    kl_t2.kl_value_373 = kl_t3;
     kl_t20 = false;
     kl_t19 = true;
     kl_found_1 = kl_t2;
     kl_t19 = false;
     kl_t18 = true;
     if ( kl_t19 ) kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( &kl_t2 );
-    if ( kl_t20 ) kl__owned__dtor( &kl_t3.kl_first_370 );
+    if ( kl_t20 ) kl__owned__dtor( &kl_t3.kl_first_366 );
     if ( kl_t21 ) kl__owned__dtor( &kl_t5 );
     kl_t21 = false;
     kl_t20 = false;
@@ -378,14 +378,14 @@ int32_t kl__nests__( void )
     kl_t22 = true;
     kl_p_9 = kl_t10;
     kl_t22 = false;
-    if ( kl_t22 ) kl__owned__dtor( &kl_t10.kl_first_370 );
+    if ( kl_t22 ) kl__owned__dtor( &kl_t10.kl_first_366 );
     kl_t22 = false;
 #line 82 "pair/main.kl"
     kl_t13 = kl_live_5 != 1;
     kl_t12 = kl_t13;
     if ( kl_t12 ) goto bb2; else goto bb1;
     bb1:
-    kl_t14 = &kl_p_9.kl_first_370;
+    kl_t14 = &kl_p_9.kl_first_366;
     kl_t15 = kl__value__S5owned( kl_t14 );
     kl_t16 = kl_t15 != 7;
     kl_t12 = kl_t16;
@@ -394,7 +394,7 @@ int32_t kl__nests__( void )
     kl_t11 = kl_t12;
     if ( kl_t11 ) goto bb4; else goto bb3;
     bb3:
-    kl_t17 = kl_p_9.kl_second_372 != 8;
+    kl_t17 = kl_p_9.kl_second_368 != 8;
     kl_t11 = kl_t17;
     goto bb4;
     bb4:
@@ -402,14 +402,14 @@ int32_t kl__nests__( void )
     bb5:
 #line 84 "pair/main.kl"
     kl_t0 = 4;
-    kl__owned__dtor( &kl_p_9.kl_first_370 );
+    kl__owned__dtor( &kl_p_9.kl_first_366 );
     if ( kl_t18 ) kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( &kl_found_1 );
     kl_t18 = false;
     return kl_t0;
     bb6:
 #line 87 "pair/main.kl"
     kl_t0 = 0;
-    kl__owned__dtor( &kl_p_9.kl_first_370 );
+    kl__owned__dtor( &kl_p_9.kl_first_366 );
     if ( kl_t18 ) kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( &kl_found_1 );
     kl_t18 = false;
     return kl_t0;
@@ -496,10 +496,10 @@ void kl_2kl_pair__I5owned_3u64E__RQ2kl4pairI5owned_3u64E_M5owned_M3u64__ctor( st
 #line 8 "../src/pair.kl"
     kl_t4 = true;
 #line 10 "../src/pair.kl"
-    ( *kl_this_1 ).kl_first_370 = kl_a_2;
+    ( *kl_this_1 ).kl_first_366 = kl_a_2;
     kl_t4 = false;
 #line 11 "../src/pair.kl"
-    ( *kl_this_1 ).kl_second_372 = kl_b_3;
+    ( *kl_this_1 ).kl_second_368 = kl_b_3;
 #line 8 "../src/pair.kl"
     if ( kl_t4 ) kl__owned__dtor( &kl_a_2 );
     kl_t4 = false;
@@ -514,10 +514,10 @@ void kl_2kl_pair__I5owned_5ownedE__RQ2kl4pairI5owned_5ownedE_M5owned_M5owned__ct
     kl_t4 = true;
     kl_t5 = true;
 #line 10 "../src/pair.kl"
-    ( *kl_this_1 ).kl_first_370 = kl_a_2;
+    ( *kl_this_1 ).kl_first_366 = kl_a_2;
     kl_t4 = false;
 #line 11 "../src/pair.kl"
-    ( *kl_this_1 ).kl_second_372 = kl_b_3;
+    ( *kl_this_1 ).kl_second_368 = kl_b_3;
     kl_t5 = false;
 #line 8 "../src/pair.kl"
     if ( kl_t5 ) kl__owned__dtor( &kl_b_3 );
@@ -558,12 +558,12 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     kl_t4 = kl_t2;
     kl_t11 = false;
     kl_t12 = false;
-    kl_v_5 = kl_t4.kl_value_377;
+    kl_v_5 = kl_t4.kl_value_373;
     kl_t12 = true;
 #line 23 "../src/optional.kl"
     kl_t0 = kl_v_5;
     kl_t12 = false;
-    if ( kl_t12 ) kl__owned__dtor( &kl_v_5.kl_first_370 );
+    if ( kl_t12 ) kl__owned__dtor( &kl_v_5.kl_first_366 );
     kl_t12 = false;
     if ( kl_t11 ) kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( &kl_t2 );
     kl_t11 = false;
@@ -575,7 +575,7 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_573, kl_t6.kl_size_576 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_569, kl_t6.kl_size_572 );
 }
 
 void kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( struct kl_2kl_optional__IQ2kl4pairI5owned_3u64EE* kl_t1 )
@@ -587,7 +587,7 @@ void kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( struct kl_2kl_optional__IQ
     bb1:
     return;
     bb2:
-    kl__owned__dtor( &( *kl_t1 ).kl_value_377.kl_first_370 );
+    kl__owned__dtor( &( *kl_t1 ).kl_value_373.kl_first_366 );
     goto bb1;
 }
 
