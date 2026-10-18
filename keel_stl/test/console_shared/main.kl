@@ -1,6 +1,7 @@
 // Every reader of standard input shares one buffer, so `kl::input`, a second `standard_input()`'s
 // `read_line` and a third's `read_all` take turns and lose nothing. Then the four ways of writing
-// keep their order through a pipe. Each check returns its own code.
+// keep their order through a pipe. A temporary `file` is called as a local one is, since its state
+// is outside it. Each check returns its own code.
 import kl::console;
 import kl::os;
 import kl::string;
@@ -14,9 +15,7 @@ i32 main()
         return 1;
     }
 
-    kl::file second = kl::file::standard_input();
-
-    switch( second.read_line( ref line ) )
+    switch( kl::file::standard_input().read_line( ref line ) )
     {
         case result::ok( more ):
             if( !more || line != "2" )
@@ -44,9 +43,7 @@ i32 main()
 
     kl::println( "println" );
 
-    kl::file output = kl::file::standard_output();
-
-    switch( output.write( "standard_output" ) )
+    switch( kl::file::standard_output().write( "standard_output" ) )
     {
         case result::ok:
             break;

@@ -52,7 +52,7 @@ void Statements::visit( Node_id id )
 
     case Node_kind::Expr_stmt:
     {
-        const Type_id type = expressions_.infer( ast_.expression( id ) );
+        const Type_id type = expressions_.infer_discarded( ast_.expression( id ) );
         if( expressions_.is_result( type ) )
         {
             const Span span = ast_.span( ast_.expression( id ) );
@@ -501,13 +501,15 @@ void Statements::visit_switch( Node_id id )
     coverage_.type_bindings_as_errors( id );
 
     // Every arm body is visited whatever the scrutinee turned out to be: one mistake there should
-    // not hide every mistake inside the arms.
+    // not hide every mistake inside the arms. They are still a switch body, so `break` stays quiet.
     const auto visit_bodies = [&]()
     {
+        breakable_depth_ += 1;
         for( const Node_id arm : ast_.arms( id ) )
         {
             visit( ast_.body( arm ) );
         }
+        breakable_depth_ -= 1;
     };
 
     if( table_.is_error( type ) )
@@ -2184,6 +2186,24 @@ TEST_CASE( "type_checker_binds_break_to_a_switch_as_well_as_a_loop", "[sema][swi
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "outside a loop or switch" ) != std::string::npos );
+    }
+
+    SECTION( "an arm's break is still in a switch when the head is refused" )
+    {
+        const Typed p( "void f( bool b ) { switch( b ) { default: break; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`switch` needs an `enum` or a number" ) != std::string::npos );
+    }
+
+    SECTION( "and when the head's type is an error" )
+    {
+        const Typed p( "void f() { switch( nowhere ) { default: break; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`nowhere` is not declared" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "outside a loop or switch" ) == std::string::npos );
     }
 }
 

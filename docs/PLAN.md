@@ -798,7 +798,10 @@ place that is read, `( c ? a : b ).t`.
 
 **Writing into a temporary is refused.** `g().t = 1;` and `( c ? a : b ).t = 1;` on by-value
 results are refused, and a place rooted in a call that returns a reference is read-only, since only
-`const ref` may be returned.
+`const ref` may be returned. A non-`const` method on a temporary is refused only when the call is a
+whole expression statement, so `g().clear();` is refused; one whose answer is used is accepted,
+since a handle such as `file` keeps its state outside the object:
+`switch( file::standard_output().write( "x" ) )`.
 
 **An aggregate with no fields is refused**, naming a one-variant `enum` as the tag-only
 alternative; standard C has no zero-size struct. A class with only methods counts as empty.

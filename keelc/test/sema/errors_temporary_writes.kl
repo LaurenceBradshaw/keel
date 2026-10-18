@@ -15,6 +15,12 @@ struct P
     {
         t = v;
     }
+
+    i32 bump()
+    {
+        t += 1;
+        return t;
+    }
 };
 
 P by_value()
@@ -36,6 +42,10 @@ i32 main()
     // assignment - so it reaches the rule from the method call instead.
     by_value().set( 3 );
 
+    // Its answer dropped, a method returning a value is the same. Used, it is not refused.
+    by_value().bump();
+    i32 n = by_value().bump();
+
     // A mutable borrow of a temporary is refused for the stronger reason: it would outlive it.
     ref i32 r = by_value().t;
 
@@ -51,7 +61,7 @@ i32 main()
 
     if( ( c ? a : b ).t == 1 )
     {
-        return v;
+        return v + n;
     }
 
     return 0;

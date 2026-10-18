@@ -125,6 +125,14 @@ Type_id Expressions::infer( Node_id id )
     }
 }
 
+Type_id Expressions::infer_discarded( Node_id id )
+{
+    discarded_         = id;
+    const Type_id type = infer( id );
+    discarded_         = Node_id {};
+    return type;
+}
+
 Type_id Expressions::infer_name( Node_id id )
 {
     const Node_id decl = resolution_.declaration_of( id );
@@ -868,9 +876,10 @@ Type_id Expressions::infer_method_call( Node_id id )
     // question - asked of the object rather than of an assignment - so a `const` local, a
     // read-only borrow and a pattern binding are all refused here by the rules that already refuse
     // them elsewhere, each with its own message. Through a pointer the pointee is the receiver, and a
-    // non-`const` pointer may write it, however the pointer itself is held.
+    // non-`const` pointer may write it, however the pointer itself is held. A temporary receiver is
+    // refused only when the call's answer is dropped: a handle's state is outside the object.
     if( !ast_.is_const_method( method ) && !table_.is_pointer( result ) &&
-        !places_.check_writable( object, current_function_ ) )
+        !places_.check_writable( object, current_function_, false, id != discarded_ ) )
     {
         return types_.poison( id );
     }

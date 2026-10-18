@@ -73,6 +73,7 @@ public:
     // Every branch of both ends in a `types_.record`, including the error ones: a node the walk
     // reached and left untyped is what later passes assert on rather than report.
     Type_id infer( Node_id id );                   // expression, no expectation
+    Type_id infer_discarded( Node_id id );         // an expression statement's, whose answer is dropped
     Type_id check( Node_id id, Type_id expected ); // expression, with one
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
@@ -272,6 +273,7 @@ private:
     // overload - so nothing nested inside reads an expectation that belongs to its parent.
     Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
+    Node_id discarded_ {};     // set by infer_discarded while it runs
 
     u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
     bool unsafe_used_  = false;

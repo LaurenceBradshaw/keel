@@ -109,7 +109,8 @@ bool Places::call_returns_a_binding( Node_id call ) const
 
 // D31/D32: what may be written. A `const` declaration says so itself; a borrow is read-only because
 // someone else owns it - different reasons, so different messages and different fixes.
-bool Places::check_writable( Node_id target, Node_id current_function, bool replaces )
+// `temporary_ok` accepts a temporary, for a method call whose answer is used.
+bool Places::check_writable( Node_id target, Node_id current_function, bool replaces, bool temporary_ok )
 {
     // Above place_root, which resolves only a `Name_expr`: a call root reaches it as an invalid id
     // and the guard below reads that as permission. `returns_a_binding` rather than
@@ -147,7 +148,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
             temporary = callee.is_valid();
         }
 
-        if( temporary )
+        if( temporary && !temporary_ok )
         {
             // The source rather than the target: there is no declaration to name, so the span is
             // what says where the value came from.

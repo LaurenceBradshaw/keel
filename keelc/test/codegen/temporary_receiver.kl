@@ -1,0 +1,66 @@
+// A non-`const` method may be called on a temporary whose answer is used: a handle's state is
+// outside the object. Each temporary drops once, at the end of its statement.
+
+import t::console;
+
+class counter
+{
+    public counter( i32 n )
+    {
+        n_ = n;
+    }
+
+    ~counter()
+    {
+        t::println( "drop" );
+    }
+
+    public i32 bump()
+    {
+        n_ += 1;
+        return n_;
+    }
+
+    public result<i32, i32> checked()
+    {
+        n_ += 1;
+        return result::ok( n_ );
+    }
+
+    private i32 n_;
+};
+
+result<void, i32> run()
+{
+    // In an initialiser.
+    i32 a = counter( 1 ).bump();
+    t::println( a );
+
+    // Under `try`.
+    i32 b = try counter( 2 ).checked();
+    t::println( b );
+
+    // After `_ =`.
+    _ = counter( 3 ).checked();
+
+    // In a `switch` head.
+    switch( counter( 4 ).checked() )
+    {
+        case result::ok( v ):
+            t::println( v );
+            break;
+        case result::err( e ):
+            break;
+    }
+
+    // As an argument.
+    t::println( counter( 5 ).bump() );
+
+    return result::ok();
+}
+
+i32 main()
+{
+    _ = run();
+    return 0;
+}
