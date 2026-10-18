@@ -1,2 +1,2 @@
 before
-codegen/hash_nan.kl:11: NaN has no hash: v.hash( ref h )
+codegen/hash_nan.kl:13: NaN has no hash: v.hash( ref h )

@@ -2,6 +2,8 @@
 // assigned on every other path is definitely assigned, and an `i32` function ending in one needs
 // no `return`. Every `panic` here is on a path the program does not take, so it exits 0, and the
 // one `dropped` is `got`'s, valgrind-clean.
+import t::console;
+
 class Noisy
 {
     public i32 id;
@@ -13,7 +15,7 @@ class Noisy
 
     ~Noisy()
     {
-        println( "dropped" );
+        t::println( "dropped" );
     }
 };
 

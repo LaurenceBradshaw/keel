@@ -1,0 +1,59 @@
+// `read_line` on an ordinary file: lines without their `\n`, a last line without one, then `false`.
+// Each check returns its own code. The program runs in its own emptied directory.
+import kl::os;
+import kl::string;
+
+// The next line of `f`, or "<end>" at its end and "<error>" on a failure.
+kl::string next( ref kl::file f )
+{
+    kl::string line = kl::string();
+
+    switch( f.read_line( ref line ) )
+    {
+        case result::ok( more ):
+            if( !more )
+            {
+                return "<end>";
+            }
+            return line;
+        case result::err( e ):
+            return "<error>";
+    }
+}
+
+i32 main()
+{
+    switch( kl::write_file( "a.txt", "first\n\nlast" ) )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 1;
+    }
+
+    switch( move kl::file::open( "a.txt", kl::file_mode::read ) )
+    {
+        case result::ok( f ):
+            if( next( ref f ) != "first" )
+            {
+                return 2;
+            }
+            if( next( ref f ) != "" )
+            {
+                return 3;
+            }
+            if( next( ref f ) != "last" )
+            {
+                return 4;
+            }
+            if( next( ref f ) != "<end>" )
+            {
+                return 5;
+            }
+            break;
+        case result::err( e ):
+            return 6;
+    }
+
+    return 0;
+}

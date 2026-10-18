@@ -1,16 +1,18 @@
 // A failed `assert` after a `print` still shows what was printed: the panic flushes stdout first, so
 // both streams read back in the order the program wrote them, and nothing after the assert runs.
+import t::console;
+
 i32 main()
 {
     i32 x = 0;
 
-    print( "before " );
-    println( cast<i64>( 42 ) );
-    eprintln( "to stderr" );
-    print( "unterminated" );
+    t::print( "before " );
+    t::println( cast<i64>( 42 ) );
+    t::eprintln( "to stderr" );
+    t::print( "unterminated" );
 
     assert( x == 1 );
 
-    println( "never" );
+    t::println( "never" );
     return 0;
 }

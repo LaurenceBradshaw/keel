@@ -1,2 +1,2 @@
 2
-codegen/run_slice_bounds.kl:5: out of bounds: text[ a..b ]
+codegen/run_slice_bounds.kl:7: out of bounds: text[ a..b ]

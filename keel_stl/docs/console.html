@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::console</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::console</h1>
+<ul class="contents">
+<li><a href="#print"><code>print</code></a> <span class="kind">function</span></li>
+<li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
+<li><a href="#println"><code>println</code></a> <span class="kind">function</span></li>
+<li><a href="#eprintln"><code>eprintln</code></a> <span class="kind">function</span></li>
+<li><a href="#input"><code>input</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">print</span></h2>
+<div class="group" id="print">
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>Writes text to standard output, ending no line.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a float in the fewest digits that read back as the same value.</p>
+<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes <code>true</code> or <code>false</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">eprint</span></h2>
+<div class="group" id="eprint">
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>Writes text to standard error, ending no line.</p>
+<p>Standard output is flushed first, so what both show stays in order.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a float in the fewest digits that read back as the same value.</p>
+<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes <code>true</code> or <code>false</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">println</span></h2>
+<div class="group" id="println">
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">println</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>Writes text and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">println</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">println</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">println</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">println</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">eprintln</span></h2>
+<div class="group" id="eprintln">
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprintln</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>Writes text and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprintln</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprintln</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprintln</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprintln</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">input</span></h2>
+<div class="group" id="input">
+<pre class="signature"><a class="anchor" href="#input" aria-label="Link to input">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">input</span>( <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> line )</code></pre>
+<div class="doc">
+<p>Reads the next line of standard input into <code>line</code>, without its <code>\n</code>, answering <code>false</code> at the
+end of input. A read error is also <code>false</code>; the careful path is <code>file::standard_input()</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

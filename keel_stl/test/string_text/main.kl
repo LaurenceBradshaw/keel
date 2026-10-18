@@ -1,5 +1,6 @@
 // `kl::string` is a `textual`: it prints, it searches with another string, and a string made from
 // one copies its bytes. `list::as_run` lends the elements. Each check returns its own code.
+import kl::console;
 import kl::string;
 import kl::list;
 import kl::optional;
@@ -20,9 +21,9 @@ i32 main()
     kl::string text = kl::string( "hello, world" );
     kl::string word = kl::string( "world" );
 
-    println( text );
-    print( word );
-    println( "" );
+    kl::println( text );
+    kl::print( word );
+    kl::println( "" );
 
     // A temporary `kl::string` borrowed as a `textual` is dropped after the call.
     if( !text.ends_with( word ) || !text.starts_with( kl::string( "hello" ) ) || text.starts_with( word ) )
@@ -38,7 +39,7 @@ i32 main()
     // Its own buffer: changing the copy leaves the original as it was.
     kl::string copy = kl::string( text );
     copy.push( 33 );
-    println( copy );
+    kl::println( copy );
 
     if( copy.size() != 13 || text.size() != 12 )
     {

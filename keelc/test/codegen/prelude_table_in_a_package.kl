@@ -1,0 +1,9 @@
+// A prelude type seen as a prelude interface by a package alone: `t::println( bool )` turns a `str`
+// into a `textual`, and the program never does. The table is the prelude's to write all the same.
+import t::console;
+
+i32 main()
+{
+    t::println( true );
+    return 0;
+}

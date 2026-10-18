@@ -1,5 +1,6 @@
 // `operator[]` on a key `kl::ordered_map` does not hold aborts, naming the check in the library;
 // `get` is the way to ask without one.
+import kl::console;
 import kl::ordered_map;
 
 i32 main()
@@ -7,6 +8,6 @@ i32 main()
     kl::ordered_map<i32, i32> values = kl::ordered_map<i32, i32>();
 
     values.insert( 1, 2 );
-    println( "looking" );
+    kl::println( "looking" );
     return values[ 3 ];
 }

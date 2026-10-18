@@ -202,6 +202,61 @@ static void error_kinds( void )
     }
 }
 
+// Puts `text` on standard input as a pipe already closed, so its end is the input's end.
+static void pipe_stdin( const char* text )
+{
+    int ends[2];
+    if( pipe( ends ) != 0 || write( ends[1], text, strlen( text ) ) != (ssize_t) strlen( text ) )
+    {
+        exit( 2 );
+    }
+    close( ends[1] );
+    dup2( ends[0], 0 );
+    close( ends[0] );
+}
+
+// What one read brings in is handed out until taken, with no read in between, then 0 at the end.
+static void input_fill_take( void )
+{
+    pipe_stdin( "ab\ncd" );
+
+    uint8_t* data = NULL;
+    uint64_t a = 9, b = 9, c = 9;
+    kl_rt_input_fill( &data, &a );
+    kl_rt_input_take( 3 );
+    kl_rt_input_fill( &data, &b );
+    printf( "%llu %llu %.2s ", (unsigned long long) a, (unsigned long long) b, (const char*) data );
+    kl_rt_input_take( 2 );
+    printf( "%d ", kl_rt_input_fill( &data, &c ) );
+    printf( "%llu", (unsigned long long) c );
+}
+
+// Reading standard input flushes a prompt first; a raw write after it lands after it.
+static void input_flushes_stdout( void )
+{
+    pipe_stdin( "x" );
+
+    uint8_t* data = NULL;
+    uint64_t size = 0;
+    kl_rt_write( 1, (const uint8_t*) "prompt", 6 );
+    kl_rt_input_fill( &data, &size );
+    if( write( 1, "|after", 6 ) != 6 )
+    {
+        exit( 2 );
+    }
+}
+
+// A file write to stdout goes after what `kl_rt_write` buffered, and is out before it returns.
+static void file_write_keeps_order( void )
+{
+    kl_rt_write( 1, (const uint8_t*) "a", 1 );
+    kl_rt_file_write( 1, (const uint8_t*) "b", 1 );
+    if( write( 1, "c", 1 ) != 1 )
+    {
+        exit( 2 );
+    }
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -247,12 +302,24 @@ int main( void )
     check( "error_kinds", "stdout", r.out, "122345670" );
     check_exit( "error_kinds", &r, false );
 
+    r = run( input_fill_take );
+    check( "input_fill_take", "stdout", r.out, "5 2 cd 0 0" );
+    check_exit( "input_fill_take", &r, false );
+
+    r = run( input_flushes_stdout );
+    check( "input_flushes_stdout", "stdout", r.out, "prompt|after" );
+    check_exit( "input_flushes_stdout", &r, false );
+
+    r = run( file_write_keeps_order );
+    check( "file_write_keeps_order", "stdout", r.out, "abc" );
+    check_exit( "file_write_keeps_order", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "9 runtime tests passed\n" );
+    printf( "12 runtime tests passed\n" );
     return 0;
 }

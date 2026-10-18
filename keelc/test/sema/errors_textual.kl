@@ -1,4 +1,6 @@
 // Only a `textual` is text: anything else reaches no `print`.
+import t::console;
+
 struct Point
 {
     i32 x;
@@ -7,7 +9,7 @@ struct Point
 i32 main()
 {
     Point p = Point { 1 };
-    println( p );
-    eprint( &p );
+    t::println( p );
+    t::eprint( &p );
     return 0;
 }

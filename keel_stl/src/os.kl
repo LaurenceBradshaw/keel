@@ -12,6 +12,8 @@ private extern i32 kl_rt_file_read( i32 fd, ref u8[] buffer, u64* count );
 private extern i32 kl_rt_file_write( i32 fd, const ref u8[] data );
 private extern i32 kl_rt_file_close( i32 fd );
 private extern i32 kl_rt_error_kind( i32 code );
+private extern i32 kl_rt_input_fill( u8[*]* data, u64* size );
+private extern void kl_rt_input_take( u64 count );
 
 /// A failure any call to the system can meet.
 enum os_error
@@ -100,13 +102,14 @@ enum file_mode
     create_new
 };
 
-// The bytes `read_all` asks for at a time.
+// The bytes a file reads at a time.
 private const u64 FILE_BUFFER = 65536;
 
 /// An open file, closed when it is dropped.
 ///
-/// Made only by `file::open`. Reads and writes go straight to the system, except what a whole
-/// read leaves buffered.
+/// Made by `file::open`, or for the program's own streams by `standard_input`, `standard_output`
+/// and `standard_error`, which never close them. Reads go through a buffer, and writes straight to
+/// the system.
 class file
 {
     // `owns` is false only for a descriptor the program must never close.
@@ -117,6 +120,7 @@ class file
         buffer_ = nullptr;
         start_ = 0;
         end_ = 0;
+        shared_ = false;
     }
 
     ~file()
@@ -129,7 +133,7 @@ class file
                 kl_rt_file_close( fd_ );
             }
 
-            if( buffer_ != nullptr )
+            if( buffer_ != nullptr && !shared_ )
             {
                 free( buffer_ );
             }
@@ -155,37 +159,42 @@ class file
         return result::ok( file( fd, true ) );
     }
 
+    /// The program's standard input. Every one shares a buffer, so none loses what another read.
+    public static file standard_input()
+    {
+        file f = file( 0, false );
+        f.shared_ = true;
+        return f;
+    }
+
+    /// The program's standard output, flushed by every write.
+    public static file standard_output()
+    {
+        return file( 1, false );
+    }
+
+    /// The program's standard error. Standard output is flushed first, so the two keep their order.
+    public static file standard_error()
+    {
+        return file( 2, false );
+    }
+
     /// Reads into `into`, answering how many bytes it put there: at most `into.size`, and 0 only
     /// at the end of the file. Fewer than asked for is not the end; ask again.
     public result<u64, file_error> read( ref u8[] into )
     {
-        if( start_ < end_ )
-        {
-            const u64 count = end_ - start_ < into.size ? end_ - start_ : into.size;
+        try fill();
+        const u64 count = end_ - start_ < into.size ? end_ - start_ : into.size;
 
-            for( u64 i : 0..count )
+        for( u64 i : 0..count )
+        {
+            unsafe
             {
-                unsafe
-                {
-                    into[i] = buffer_[start_ + i];
-                }
+                into[i] = buffer_[start_ + i];
             }
-            start_ += count;
-            return result::ok( count );
         }
 
-        u64 count = 0;
-        i32 status = 0;
-        unsafe
-        {
-            status = kl_rt_file_read( fd_, ref into, &count );
-        }
-
-        if( status != 0 )
-        {
-            return result::err( file_error_of( status ) );
-        }
-
+        take( count );
         return result::ok( count );
     }
 
@@ -211,27 +220,73 @@ class file
     {
         string text = string();
 
-        unsafe
-        {
-            if( buffer_ == nullptr )
-            {
-                buffer_ = alloc<u8>( FILE_BUFFER );
-            }
-
-            text.append( buffer_[start_..end_] );
-        }
-
-        start_ = 0;
-        end_ = 0;
-
         while( true )
         {
-            u64 count = 0;
-            i32 status = 0;
+            try fill();
+
+            if( start_ == end_ )
+            {
+                break;
+            }
 
             unsafe
             {
-                status = kl_rt_file_read( fd_, ref buffer_[0..FILE_BUFFER], &count );
+                text.append( buffer_[start_..end_] );
+            }
+
+            take( end_ - start_ );
+        }
+
+        return result::ok( move text );
+    }
+
+    /// Reads up to the next `\n`, which is dropped, into `line`, replacing what it held. `false`
+    /// only when the input ends before any byte, so a last line without `\n` is still a line.
+    public result<bool, file_error> read_line( ref string line )
+    {
+        line.clear();
+        bool any = false;
+
+        while( true )
+        {
+            try fill();
+
+            if( start_ == end_ )
+            {
+                return result::ok( any );
+            }
+
+            any = true;
+            for( u64 i : start_..end_ )
+            {
+                unsafe
+                {
+                    if( buffer_[i] == '\n' )
+                    {
+                        line.append( buffer_[start_..i] );
+                        take( i + 1 - start_ );
+                        return result::ok( true );
+                    }
+                }
+            }
+
+            unsafe
+            {
+                line.append( buffer_[start_..end_] );
+            }
+            take( end_ - start_ );
+        }
+    }
+
+    // Makes `buffer_[start_..end_]` hold something, unless the input has ended.
+    private result<void, file_error> fill()
+    {
+        i32 status = 0;
+        if( shared_ )
+        {
+            unsafe
+            {
+                status = kl_rt_input_fill( &buffer_, &end_ );
             }
 
             if( status != 0 )
@@ -239,25 +294,55 @@ class file
                 return result::err( file_error_of( status ) );
             }
 
-            if( count == 0 )
-            {
-                break;
-            }
+            start_ = 0;
+            return result::ok();
+        }
 
+        if( start_ == end_ )
+        {
+            u64 count = 0;
             unsafe
             {
-                text.append( buffer_[0..count] );
+                if( buffer_ == nullptr )
+                {
+                    buffer_ = alloc<u8>( FILE_BUFFER );
+                }
+
+                status = kl_rt_file_read( fd_, ref buffer_[0..FILE_BUFFER], &count );
+
+                if( status != 0 )
+                {
+                    return result::err( file_error_of( status ) );
+                }
+
+                start_ = 0;
+                end_ = count;
             }
         }
 
-        return result::ok( move text );
+        return result::ok();
+    }
+
+    // Drops the first `count` buffered bytes, which the caller has used.
+    private void take( u64 count )
+    {
+        start_ += count;
+
+        if( shared_ )
+        {
+            unsafe
+            {
+                kl_rt_input_take( count );
+            }
+        }
     }
 
     private i32 fd_;
     private bool owns_;
-    private u8[*] buffer_; // `nullptr` until `read_all` first runs
+    private u8[*] buffer_; // `nullptr` until first read
     private u64 start_;    // the buffered bytes are `buffer_[start_..end_]`
     private u64 end_;
+    private bool shared_; // reading through the runtime's shared standard-input buffer
 };
 
 /// The whole of the file at `name`.

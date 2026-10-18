@@ -2,6 +2,8 @@
 // an error into a union holding it; a member converts into one wherever a value meets a known type.
 // Each Buf holds heap memory and says when it goes, so the output is the drop order and
 // KEEL_VALGRIND=1 sees a drop missed, run twice, or run on the wrong member.
+import t::console;
+
 class Buf
 {
     u64* data;
@@ -18,8 +20,8 @@ class Buf
 
     ~Buf()
     {
-        print( "drop " );
-        println( *data );
+        t::print( "drop " );
+        t::println( *data );
 
         unsafe
         {
@@ -117,21 +119,21 @@ void report( move Parse_error | Io_error | Lost e )
     switch( move e )
     {
     case Io_error::missing:
-        println( "missing" );
+        t::println( "missing" );
         break;
     case Io_error::denied:
-        println( "denied" );
+        t::println( "denied" );
         break;
     case Parse_error::bad_line( line ):
-        print( "bad line " );
-        println( line );
+        t::print( "bad line " );
+        t::println( line );
         break;
     case Parse_error::empty:
-        println( "empty" );
+        t::println( "empty" );
         break;
     case Lost::gone( b ):
-        print( "gone " );
-        println( b.get() );
+        t::print( "gone " );
+        t::println( b.get() );
         break;
     }
 }
@@ -141,8 +143,8 @@ void show( move result<u64, Io_error | Lost | Parse_error> r )
     switch( move r )
     {
     case result::ok( v ):
-        print( "ok " );
-        println( v );
+        t::print( "ok " );
+        t::println( v );
         break;
     case result::err( e ):
         report( move e );
@@ -156,18 +158,18 @@ void peek( result<u64, Io_error | Lost | Parse_error> r )
     switch( r )
     {
     case result::ok( v ):
-        print( "peek ok " );
-        println( v );
+        t::print( "peek ok " );
+        t::println( v );
         break;
     case result::err( e ):
         switch( e )
         {
         case Lost::gone( b ):
-            print( "peek gone " );
-            println( b.get() );
+            t::print( "peek gone " );
+            t::println( b.get() );
             break;
         default:
-            println( "peek other" );
+            t::println( "peek other" );
             break;
         }
         break;
@@ -181,10 +183,10 @@ void bare( move Io_error | Lost e )
     {
     case Io_error::missing:
     case Io_error::denied:
-        println( "io" );
+        t::println( "io" );
         break;
     case Lost::gone:
-        println( "gone" );
+        t::println( "gone" );
         break;
     }
 }
@@ -213,7 +215,7 @@ void held()
     h.last   = Io_error::denied;
 
     Opt<Io_error | Lost> o = Opt::some( Lost::gone( Buf( 61 ) ) );
-    println( "held" );
+    t::println( "held" );
 }
 
 // A generic member, found by its declaration.
@@ -232,21 +234,21 @@ void show_optional( result<u64, Io_error | Opt<u64>> r )
     switch( r )
     {
     case result::ok( v ):
-        println( v );
+        t::println( v );
         break;
     case result::err( e ):
         switch( e )
         {
         case Opt::some( v ):
-            print( "some " );
-            println( v );
+            t::print( "some " );
+            t::println( v );
             break;
         case Opt::none:
-            println( "none" );
+            t::println( "none" );
             break;
         case Io_error::missing:
         case Io_error::denied:
-            println( "io" );
+            t::println( "io" );
             break;
         }
         break;
@@ -255,26 +257,26 @@ void show_optional( result<u64, Io_error | Opt<u64>> r )
 
 i32 main()
 {
-    println( "load" );
+    t::println( "load" );
     show( move same( 0 ) );
     show( move same( 1 ) );
     show( move same( 7 ) );
     show( move same( 9 ) );
     show( move same( 3 ) );
 
-    println( "peek" );
+    t::println( "peek" );
     peek( same( 1 ) );
     peek( same( 0 ) );
     peek( same( 4 ) );
 
-    println( "locals" );
+    t::println( "locals" );
     locals( true );
     locals( false );
 
-    println( "held" );
+    t::println( "held" );
     held();
 
-    println( "optional" );
+    t::println( "optional" );
     show_optional( optional( true ) );
     show_optional( optional( false ) );
     return 0;

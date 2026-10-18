@@ -18,6 +18,22 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 </div>
 <h2>Modules</h2>
 <section class="module">
+<h3><a href="console.html">console</a></h3>
+<dl class="summaries">
+<dt><a href="console.html#print"><code>print</code></a> <span class="kind">function</span></dt>
+<dd>Writes text to standard output, ending no line.</dd>
+<dt><a href="console.html#eprint"><code>eprint</code></a> <span class="kind">function</span></dt>
+<dd>Writes text to standard error, ending no line.</dd>
+<dt><a href="console.html#println"><code>println</code></a> <span class="kind">function</span></dt>
+<dd>Writes text and then a newline, as <code>print</code> does.</dd>
+<dt><a href="console.html#eprintln"><code>eprintln</code></a> <span class="kind">function</span></dt>
+<dd>Writes text and then a newline, as <code>eprint</code> does.</dd>
+<dt><a href="console.html#input"><code>input</code></a> <span class="kind">function</span></dt>
+<dd>Reads the next line of standard input into <code>line</code>, without its <code>\n</code>, answering <code>false</code> at the
+end of input. A read error is also <code>false</code>; the careful path is <code>file::standard_input()</code>.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="hash_control.html">hash_control</a></h3>
 <dl class="summaries">
 <dt><a href="hash_control.html#hash_control"><code>hash_control</code></a> <span class="kind">class</span></dt>

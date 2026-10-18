@@ -1,5 +1,7 @@
 // A borrowed run crosses a C call as two parameters, `data` and `size`, and the callee rebuilds the
 // struct its body names. Through a `fn` value and a vtable too, where a thunk passes both straight on.
+import t::console;
+
 interface Measure
 {
     i32 total( const ref i32[] values ) const;
@@ -64,15 +66,15 @@ i32 main()
     {
         const ref i32[] all = data[ 0..4 ];
 
-        println( cast<i64>( sum( all ) ) );
-        println( cast<i64>( tail_sum( all ) ) );
+        t::println( cast<i64>( sum( all ) ) );
+        t::println( cast<i64>( tail_sum( all ) ) );
 
         fn( const ref i32[] ) -> i32 f = &sum;
-        println( cast<i64>( f( all[ 1..3 ] ) ) );
+        t::println( cast<i64>( f( all[ 1..3 ] ) ) );
 
         Scaled s = Scaled( 10 );
-        println( cast<i64>( s.total( all ) ) );
-        println( cast<i64>( through( s, all ) ) );
+        t::println( cast<i64>( s.total( all ) ) );
+        t::println( cast<i64>( through( s, all ) ) );
 
         free( data );
     }

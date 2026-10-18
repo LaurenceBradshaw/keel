@@ -1,5 +1,7 @@
 // A zero divisor the compiler cannot see prints the file, the line and the division as written,
 // and aborts.
+import t::console;
+
 i32 divide( i32 a, i32 b )
 {
     return a / b;
@@ -7,6 +9,6 @@ i32 divide( i32 a, i32 b )
 
 i32 main()
 {
-    println( "before" );
+    t::println( "before" );
     return divide( 7, 0 );
 }

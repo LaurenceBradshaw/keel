@@ -1,6 +1,7 @@
 // PLAN §6.7 and D26. A literal argument goes to the closest overload that holds its value: the type
 // it would be with nothing to say, else the narrowest, signed before unsigned. A negative literal
 // never reaches an unsigned one, and arithmetic on literals ranks as a lone literal does.
+import t::console;
 
 i32 width( i8 a )
 {
@@ -34,10 +35,10 @@ i32 nearest( i8 a )
 
 i32 main()
 {
-    println( 42 );
-    println( -42 );
-    println( 9223372036854775808 );
-    println( 1 + 2 );
+    t::println( 42 );
+    t::println( -42 );
+    t::println( 9223372036854775808 );
+    t::println( 1 + 2 );
 
     assert( width( 1 ) == 8 );
     assert( width( 300 ) == 16 );

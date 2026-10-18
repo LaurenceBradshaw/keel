@@ -1,1 +1,1 @@
---check
+--check --package t=../test_lib

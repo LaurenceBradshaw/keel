@@ -64,8 +64,8 @@ struct kl_2kl_parse_error
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_value_3123;
-    struct kl_2kl_parse_error kl_error_3126;
+    int64_t kl_value_2767;
+    struct kl_2kl_parse_error kl_error_2770;
 };
 
 struct kl_2kl_optional__I3u64E
@@ -1373,7 +1373,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
 #line 108 "../../keel_stl/src/string.kl"
     kl_t18.tag = 0;
     kl_t17.tag = 1;
-    kl_t17.kl_error_3126 = kl_t18;
+    kl_t17.kl_error_2770 = kl_t18;
     kl_t0 = kl_t17;
     return kl_t0;
     bb10:
@@ -1409,7 +1409,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
     kl_t31.tag = 1;
     kl_t31.kl_index_743 = kl_i_20;
     kl_t30.tag = 1;
-    kl_t30.kl_error_3126 = kl_t31;
+    kl_t30.kl_error_2770 = kl_t31;
     kl_t0 = kl_t30;
     return kl_t0;
     bb17:
@@ -1425,7 +1425,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
 #line 124 "../../keel_stl/src/string.kl"
     kl_t38.tag = 2;
     kl_t37.tag = 1;
-    kl_t37.kl_error_3126 = kl_t38;
+    kl_t37.kl_error_2770 = kl_t38;
     kl_t0 = kl_t37;
     return kl_t0;
     bb19:
@@ -1451,7 +1451,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
     if ( kl_t47 ) goto bb25; else goto bb24;
     bb23:
     kl_t41.tag = 0;
-    kl_t41.kl_value_3123 = kl_t42;
+    kl_t41.kl_value_2767 = kl_t42;
     kl_t0 = kl_t41;
     return kl_t0;
     bb24:

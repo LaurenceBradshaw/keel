@@ -2,6 +2,7 @@
 // `result<kl::string, Io_error>` and the `Parse_error` of another, with no conversion written. The
 // string is dropped on every path, which KEEL_VALGRIND=1 checks.
 import kl::string;
+import t::console;
 
 enum Io_error
 {
@@ -45,17 +46,17 @@ void show( result<u64, Parse_error | Io_error> r )
     switch( r )
     {
     case result::ok( size ):
-        print( "loaded " );
-        println( size );
+        t::print( "loaded " );
+        t::println( size );
         break;
     case result::err( e ):
         switch( e )
         {
         case Io_error::missing:
-            println( "missing" );
+            t::println( "missing" );
             break;
         case Parse_error::empty:
-            println( "empty" );
+            t::println( "empty" );
             break;
         }
         break;

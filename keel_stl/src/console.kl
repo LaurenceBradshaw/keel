@@ -1,0 +1,190 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The program's console: the easy path, which reports no errors. `file::standard_input()` and its
+// siblings are the careful one.
+
+import os;
+import string;
+
+private extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
+private extern void kl_rt_write_i64( i32 stream, i64 value );
+private extern void kl_rt_write_u64( i32 stream, u64 value );
+private extern void kl_rt_write_f64( i32 stream, f64 value );
+
+/// Writes text to standard output, ending no line.
+void print( const ref textual text )
+{
+    const ref u8[] r = text.as_text();
+    unsafe
+    {
+        kl_rt_write( 1, r.data, r.size );
+    }
+}
+
+/// Writes an integer in decimal.
+void print( i64 value )
+{
+    unsafe
+    {
+        kl_rt_write_i64( 1, value );
+    }
+}
+
+/// Writes an integer in decimal.
+void print( u64 value )
+{
+    unsafe
+    {
+        kl_rt_write_u64( 1, value );
+    }
+}
+
+/// Writes a float in the fewest digits that read back as the same value.
+///
+/// A whole number gains `.0`, and a NaN is written `nan`.
+void print( f64 value )
+{
+    unsafe
+    {
+        kl_rt_write_f64( 1, value );
+    }
+}
+
+/// Writes `true` or `false`.
+void print( bool value )
+{
+    print( value ? "true" : "false" );
+}
+
+/// Writes text to standard error, ending no line.
+///
+/// Standard output is flushed first, so what both show stays in order.
+void eprint( const ref textual text )
+{
+    const ref u8[] r = text.as_text();
+    unsafe
+    {
+        kl_rt_write( 2, r.data, r.size );
+    }
+}
+
+/// Writes an integer in decimal.
+void eprint( i64 value )
+{
+    unsafe
+    {
+        kl_rt_write_i64( 2, value );
+    }
+}
+
+/// Writes an integer in decimal.
+void eprint( u64 value )
+{
+    unsafe
+    {
+        kl_rt_write_u64( 2, value );
+    }
+}
+
+/// Writes a float in the fewest digits that read back as the same value.
+///
+/// A whole number gains `.0`, and a NaN is written `nan`.
+void eprint( f64 value )
+{
+    unsafe
+    {
+        kl_rt_write_f64( 2, value );
+    }
+}
+
+/// Writes `true` or `false`.
+void eprint( bool value )
+{
+    eprint( value ? "true" : "false" );
+}
+
+/// Writes text and then a newline, as `print` does.
+void println( const ref textual text )
+{
+    print( text );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( i64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( u64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( f64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( bool value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes text and then a newline, as `eprint` does.
+void eprintln( const ref textual text )
+{
+    eprint( text );
+    eprint( "\n" );
+}
+
+/// Writes a value and then a newline, as `eprint` does.
+void eprintln( i64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+/// Writes a value and then a newline, as `eprint` does.
+void eprintln( u64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+/// Writes a value and then a newline, as `eprint` does.
+void eprintln( f64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+/// Writes a value and then a newline, as `eprint` does.
+void eprintln( bool value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+/// Reads the next line of standard input into `line`, without its `\n`, answering `false` at the
+/// end of input. A read error is also `false`; the careful path is `file::standard_input()`.
+bool input( ref string line )
+{
+    file in = file::standard_input();
+
+    switch( in.read_line( ref line ) )
+    {
+        case result::ok( more ):
+            return more;
+        case result::err( e ):
+            return false;
+    }
+}

@@ -1,13 +1,13 @@
 error: no `println` matches these arguments
-  --> sema/errors_textual.kl:10:5
+  --> sema/errors_textual.kl:12:5
    |
-10 |     println( p );
-   |     ^^^^^^^^^^^^ the ones declared take `( textual )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
+12 |     t::println( p );
+   |     ^^^^^^^^^^^^^^^ the ones declared take `( textual )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
 
 error: no `eprint` matches these arguments
-  --> sema/errors_textual.kl:11:5
+  --> sema/errors_textual.kl:13:5
    |
-11 |     eprint( &p );
-   |     ^^^^^^^^^^^^ the ones declared take `( textual )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
+13 |     t::eprint( &p );
+   |     ^^^^^^^^^^^^^^^ the ones declared take `( textual )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
 
 2 errors generated

@@ -24,12 +24,12 @@ struct kl_6shapes_Tracked
 
 struct kl_7prelude_box__I8MeasuredE
 {
-    struct kl__Measured__ref kl_p__830;
+    struct kl__Measured__ref kl_p__474;
 };
 
 struct kl_7prelude_box__IQ6shapes7TrackedE
 {
-    struct kl_6shapes_Tracked* kl_p__830;
+    struct kl_6shapes_Tracked* kl_p__474;
 };
 
 struct kl__Measured__vtable
@@ -260,7 +260,7 @@ int32_t kl__main__( void )
     kl_6shapes_Tracked__RQ6shapes7Tracked_3i64__ctor( kl_t27, 3 );
     kl_7prelude_box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6shapes7Tracked__ctor( kl_t25, kl_t26 );
     kl_t40 = false;
-    kl_t30 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t24.kl_p__830, &kl_6shapes_Tracked__as_kl__Measured } };
+    kl_t30 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t24.kl_p__474, &kl_6shapes_Tracked__as_kl__Measured } };
     kl_t39 = false;
     kl_t_23 = kl_t30;
     if ( kl_t39 ) kl_7prelude_box__IQ6shapes7TrackedE__dtor( &kl_t24 );
@@ -352,20 +352,20 @@ void kl_7prelude_box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6sh
     struct kl_6shapes_Tracked* kl_t6;
     struct kl_6shapes_Tracked* kl_t7;
     bool kl_t8;
-#line 247 "<prelude>"
+#line 80 "<prelude>"
     kl_t8 = true;
-#line 252 "<prelude>"
-    kl_t4 = ( struct kl_6shapes_Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl_6shapes_Tracked ), "<prelude>", 252, "out of memory: alloc<T>( 1 )" );
+#line 85 "<prelude>"
+    kl_t4 = ( struct kl_6shapes_Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl_6shapes_Tracked ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 253 "<prelude>"
+#line 86 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
     kl_t8 = false;
-#line 254 "<prelude>"
+#line 87 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__830 = kl_t7;
-#line 247 "<prelude>"
+    ( *kl_this_1 ).kl_p__474 = kl_t7;
+#line 80 "<prelude>"
     if ( kl_t8 ) kl_6shapes_Tracked__dtor( &kl_value_2 );
     kl_t8 = false;
     return;
@@ -374,30 +374,30 @@ void kl_7prelude_box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6sh
 struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t0;
-#line 270 "<prelude>"
-    kl_t0 = ( *kl_this_1 ).kl_p__830;
+#line 103 "<prelude>"
+    kl_t0 = ( *kl_this_1 ).kl_p__474;
     return kl_t0;
 }
 
 void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t2;
-#line 262 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__830;
+#line 95 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__474;
     kl_t2.vtable->drop( kl_t2.self );
-#line 263 "<prelude>"
-    kl_rt_free( ( ( *kl_this_1 ).kl_p__830 ).self );
+#line 96 "<prelude>"
+    kl_rt_free( ( ( *kl_this_1 ).kl_p__474 ).self );
     return;
 }
 
 void kl_7prelude_box__IQ6shapes7TrackedE__dtor( struct kl_7prelude_box__IQ6shapes7TrackedE* kl_this_1 )
 {
     struct kl_6shapes_Tracked* kl_t2;
-#line 262 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__830;
+#line 95 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__474;
     kl_6shapes_Tracked__dtor( &( *kl_t2 ) );
-#line 263 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__830 );
+#line 96 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__474 );
     return;
 }
 

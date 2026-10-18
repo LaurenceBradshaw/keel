@@ -235,6 +235,17 @@ int32_t kl_rt_file_read( int32_t fd, uint8_t* data, uint64_t size, uint64_t* cou
 
 int32_t kl_rt_file_write( int32_t fd, const uint8_t* data, uint64_t size )
 {
+    if( fd == 1 || fd == 2 )
+    {
+        FILE* out = kl_rt_stream( fd );
+        if( fwrite( data, 1, size, out ) != size || fflush( out ) != 0 )
+        {
+            return errno;
+        }
+
+        return 0;
+    }
+
     uint64_t done = 0;
 
     while( done < size )
@@ -277,4 +288,33 @@ int32_t kl_rt_error_kind( int32_t code )
     default:
         return KL_RT_OTHER;
     }
+}
+
+// Shared by every reader of standard input and lives here until a Keel global can hold it.
+static uint8_t  kl_rt_input[65536];
+static uint64_t kl_rt_input_start = 0;
+static uint64_t kl_rt_input_end   = 0;
+
+int32_t kl_rt_input_fill( uint8_t** data, uint64_t* size )
+{
+    if( kl_rt_input_start == kl_rt_input_end )
+    {
+        fflush( stdout );
+        ssize_t got = read( 0, kl_rt_input, sizeof kl_rt_input );
+        if( got == -1 )
+        {
+            return errno;
+        }
+        kl_rt_input_end   = (uint64_t) got;
+        kl_rt_input_start = 0;
+    }
+
+    *data = kl_rt_input + kl_rt_input_start;
+    *size = kl_rt_input_end - kl_rt_input_start;
+    return 0;
+}
+
+void kl_rt_input_take( uint64_t count )
+{
+    kl_rt_input_start += count;
 }

@@ -1,0 +1,15 @@
+// `kl::input` at once at the end of input answers `false`, and leaves `line` empty.
+import kl::console;
+import kl::string;
+
+i32 main()
+{
+    kl::string line = "left over";
+
+    if( kl::input( ref line ) )
+    {
+        return 1;
+    }
+
+    return line.is_empty() ? 0 : 2;
+}

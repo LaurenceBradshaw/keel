@@ -1,2 +1,2 @@
 before
-codegen/alloc_too_large.kl:10: out of memory: alloc<u8>( n )
+codegen/alloc_too_large.kl:12: out of memory: alloc<u8>( n )

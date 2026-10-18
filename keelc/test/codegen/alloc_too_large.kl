@@ -1,7 +1,9 @@
 // An allocation the system refuses prints the file, the line and the `alloc` as written, and aborts.
+import t::console;
+
 i32 main()
 {
-    println( "before" );
+    t::println( "before" );
 
     u64 n = 4611686018427387904;
     u8[*] bytes;

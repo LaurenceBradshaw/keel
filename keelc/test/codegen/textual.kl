@@ -1,5 +1,7 @@
 // `print` takes any `textual`: a literal is borrowed as one through `str`'s vtable, written in the
 // prelude's C, and a program's own type through a vtable in the program's.
+import t::console;
+
 struct Name implements textual
 {
     const u8[*] data;
@@ -16,18 +18,18 @@ struct Name implements textual
 
 void show( str s )
 {
-    print( "exact " );
+    t::print( "exact " );
 }
 
 void show( const ref textual t )
 {
-    print( "borrowed " );
+    t::print( "borrowed " );
 }
 
 // One candidate, so the conditional is checked against `textual`: its arms stay `str`s.
 void one( const ref textual t )
 {
-    println( t );
+    t::println( t );
 }
 
 i32 main()
@@ -36,15 +38,15 @@ i32 main()
     Name name  = Name { hello.data, 3 };
     bool yes   = true;
 
-    println( "text" );
-    println( name );
-    println( yes );
-    print( yes ? "a" : "b" );
-    println( 42 );
-    eprintln( name );
+    t::println( "text" );
+    t::println( name );
+    t::println( yes );
+    t::print( yes ? "a" : "b" );
+    t::println( 42 );
+    t::eprintln( name );
     show( hello );
     show( name );
-    println( "" );
+    t::println( "" );
     one( yes ? "c" : "d" );
     return 0;
 }

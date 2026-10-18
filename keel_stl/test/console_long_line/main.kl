@@ -1,0 +1,31 @@
+// A line longer than the 64 KiB standard input is read through comes back whole, and the line
+// after it is not lost. Each check returns its own code.
+import kl::console;
+import kl::string;
+
+i32 main()
+{
+    kl::string line = kl::string();
+
+    if( !kl::input( ref line ) )
+    {
+        return 1;
+    }
+
+    if( line.size() != 70000 )
+    {
+        return 2;
+    }
+
+    if( !kl::input( ref line ) || line != "tail" )
+    {
+        return 3;
+    }
+
+    if( kl::input( ref line ) )
+    {
+        return 4;
+    }
+
+    return 0;
+}

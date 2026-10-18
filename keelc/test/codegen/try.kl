@@ -1,6 +1,8 @@
 // D6. `try` yields an `ok` payload, and passes an `err` on to the caller through the drops the
 // function owes. Each Buf holds heap memory and says when it goes, so the output is the drop order
 // and KEEL_VALGRIND=1 sees a drop missed, run twice, or run on a value never built.
+import t::console;
+
 class Buf
 {
     u64* data;
@@ -17,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        print( "drop " );
-        println( *data );
+        t::print( "drop " );
+        t::println( *data );
 
         unsafe
         {
@@ -70,7 +72,7 @@ result<void, Bad> check( bool fine )
         return result::err( Bad::nope );
     }
 
-    println( "checked" );
+    t::println( "checked" );
     return result::ok();
 }
 
@@ -87,7 +89,7 @@ result<void, Bad> steps( bool fine )
 {
     try check( true );
     try check( fine );
-    println( "after" );
+    t::println( "after" );
     return result::ok();
 }
 
@@ -186,11 +188,11 @@ void show( result<u64, Bad> r )
     switch( r )
     {
     case result::ok( v ):
-        print( "ok " );
-        println( v );
+        t::print( "ok " );
+        t::println( v );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }
@@ -200,10 +202,10 @@ void show_void( result<void, Bad> r )
     switch( r )
     {
     case result::ok:
-        println( "ok" );
+        t::println( "ok" );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }
@@ -213,11 +215,11 @@ void show_buf( move result<Buf, Bad> r )
     switch( move r )
     {
     case result::ok( b ):
-        print( "ok " );
-        println( b.get() );
+        t::print( "ok " );
+        t::println( b.get() );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }
@@ -227,54 +229,54 @@ void show_lost( move result<u64, Lost> r )
     switch( move r )
     {
     case result::ok( v ):
-        print( "ok " );
-        println( v );
+        t::print( "ok " );
+        t::println( v );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }
 
 i32 main()
 {
-    println( "one" );
+    t::println( "one" );
     show( one( 1 ) );
     show( one( 3 ) );
 
-    println( "steps" );
+    t::println( "steps" );
     show_void( steps( true ) );
     show_void( steps( false ) );
 
-    println( "early" );
+    t::println( "early" );
     show( early( 2 ) );
     show( early( 3 ) );
 
-    println( "wrapped" );
+    t::println( "wrapped" );
     show_buf( move wrapped( 2 ) );
     show_buf( move wrapped( 3 ) );
 
-    println( "paired" );
+    t::println( "paired" );
     show( paired( 2 ) );
     show( paired( 3 ) );
 
-    println( "chosen" );
+    t::println( "chosen" );
     show( chosen( 2 ) );
     show( chosen( 3 ) );
 
-    println( "relay" );
+    t::println( "relay" );
     show_lost( move relay( true ) );
     show_lost( move relay( false ) );
 
-    println( "refill" );
+    t::println( "refill" );
     show( refill( 0 ) );
     show( refill( 1 ) );
 
-    println( "total" );
+    t::println( "total" );
     show( total( 3 ) );
     show( total( 5 ) );
 
-    println( "branch" );
+    t::println( "branch" );
     show( branch( 1 ) );
     show( branch( 2 ) );
     show( branch( 3 ) );

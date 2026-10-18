@@ -1416,6 +1416,20 @@ void Overloads::refuse_both(
 
 namespace keel
 {
+namespace
+{
+
+// The shipped prelude has no free function for D45's fallback to reach, so its tests add these.
+std::string with_print()
+{
+    return std::string( prelude_source() ) + "void print( const ref textual text ) { }\n"
+                                             "void print( i64 value ) { }\n"
+                                             "void print( u64 value ) { }\n"
+                                             "void print( f64 value ) { }\n"
+                                             "void print( bool value ) { }\n";
+}
+
+} // namespace
 
 // `Buffer( 16 )` is a Call_expr whose callee names a type rather than a function. Its result is the
 // type itself, and its parameters are the constructor's with the receiver skipped.
@@ -2097,7 +2111,7 @@ TEST_CASE( "overloads_report_a_wrong_marker_against_the_one_it_would_reach", "[s
 {
     SECTION( "an `out` on the prelude's `print`" )
     {
-        const Typed p( "i32 main() { i64 v = 0; print( out v ); return 0; }" );
+        const Typed p( "i32 main() { i64 v = 0; print( out v ); return 0; }", with_print() );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -2109,9 +2123,12 @@ TEST_CASE( "overloads_report_a_wrong_marker_against_the_one_it_would_reach", "[s
     // D45: a marker never carries the call out of its own set to one taking a copy.
     SECTION( "but not past a set of the program's" )
     {
-        const Typed p( "struct Point { i64 x; };\n"
-                       "void print( Point p ) { }\n"
-                       "i32 main() { i64 v = 0; print( out v ); return 0; }" );
+        const Typed p(
+            "struct Point { i64 x; };\n"
+            "void print( Point p ) { }\n"
+            "i32 main() { i64 v = 0; print( out v ); return 0; }",
+            with_print()
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -2399,9 +2416,8 @@ TEST_CASE( "overloads_rank_a_literal_by_distance", "[sema][overload][literal]" )
     }
 }
 
-// The shipped prelude's `print` family: five overloads under each of four names, called with no
-// `unsafe`, and chosen by §6.7 like any other set.
-TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelude][print]" )
+// A prelude set of five, chosen by §6.7 like any other set.
+TEST_CASE( "a_prelude_set_takes_text_numbers_and_truth", "[sema][overload][prelude]" )
 {
     // What the `index`th call's chosen overload takes, provided it is the prelude's.
     const auto takes = []( const Typed& p, std::size_t index ) -> std::string
@@ -2418,8 +2434,11 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
 
     SECTION( "each of the five types reaches its own" )
     {
-        const Typed p( "i32 main() { i64 a = -1; u64 b = 2; f64 c = 1.5; bool d = true;\n"
-                       "print( \"x\" ); print( a ); print( b ); print( c ); print( d ); return 0; }" );
+        const Typed p(
+            "i32 main() { i64 a = -1; u64 b = 2; f64 c = 1.5; bool d = true;\n"
+            "print( \"x\" ); print( a ); print( b ); print( c ); print( d ); return 0; }",
+            with_print()
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -2430,26 +2449,13 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
         REQUIRE( takes( p, 4 ) == "bool" );
     }
 
-    SECTION( "under every name" )
-    {
-        for( const std::string_view name : { "print", "println", "eprint", "eprintln" } )
-        {
-            const std::string call =
-                fmt::format( "{}( \"x\" ); {}( a ); {}( b ); {}( c ); {}( d );", name, name, name, name, name );
-            const Typed p( "i32 main() { i64 a = -1; u64 b = 2; f64 c = 1.5; bool d = true;\n" + call + " return 0; }" );
-
-            INFO( name );
-            INFO( p.rendered() );
-            REQUIRE( p.clean() );
-            REQUIRE( takes( p, 0 ) == "textual" );
-            REQUIRE( takes( p, 4 ) == "bool" );
-        }
-    }
-
     SECTION( "a narrower number widens to the one that keeps its kind and signedness" )
     {
-        const Typed p( "i32 main() { i8 a = -1; i32 b = 2; u8 c = 3; u32 d = 4; f32 e = 0.5;\n"
-                       "print( a ); print( b ); print( c ); print( d ); print( e ); return 0; }" );
+        const Typed p(
+            "i32 main() { i8 a = -1; i32 b = 2; u8 c = 3; u32 d = 4; f32 e = 0.5;\n"
+            "print( a ); print( b ); print( c ); print( d ); print( e ); return 0; }",
+            with_print()
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -2462,7 +2468,7 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
 
     SECTION( "an integer literal goes to `i64`, and to `u64` only past it" )
     {
-        const Typed p( "i32 main() { print( 5 ); print( -5 ); print( 9223372036854775808 ); return 0; }" );
+        const Typed p( "i32 main() { print( 5 ); print( -5 ); print( 9223372036854775808 ); return 0; }", with_print() );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -2473,7 +2479,7 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
 
     SECTION( "and a float literal is not, having one float to go to" )
     {
-        const Typed p( "i32 main() { print( 2.5 ); return 0; }" );
+        const Typed p( "i32 main() { print( 2.5 ); return 0; }", with_print() );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -2483,23 +2489,16 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
     // D45's own example: the program's set takes what it can, and the prelude's the rest.
     SECTION( "a program's `print` of its own leaves the prelude's working" )
     {
-        const Typed p( "struct Point { i32 x; };\nvoid print( Point p ) { }\n"
-                       "i32 main() { Point q = Point { 1 }; print( q ); print( \"hi\" ); return 0; }" );
+        const Typed p(
+            "struct Point { i32 x; };\nvoid print( Point p ) { }\n"
+            "i32 main() { Point q = Point { 1 }; print( q ); print( \"hi\" ); return 0; }",
+            with_print()
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.chose( 0 ) == "t:2" );
         REQUIRE( takes( p, 1 ) == "textual" );
-    }
-
-    // The runtime's writers are declared beside them, and calling one is still an `extern` call.
-    SECTION( "the writers they call still need `unsafe`" )
-    {
-        const Typed p( "i32 main() { kl_rt_write_i64( 1, 5 ); return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "calling `kl_rt_write_i64` needs an `unsafe` block" ) != std::string::npos );
     }
 }
 

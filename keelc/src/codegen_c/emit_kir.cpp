@@ -286,6 +286,7 @@ class Kir_emitter
 public:
     Kir_emitter(
         const std::vector<Function>& functions,
+        std::vector<Vtable>          vtables,
         const Ast&                   ast,
         Types&                       types,
         const Literal_pool&          literals,
@@ -388,6 +389,7 @@ private:
 
 Kir_emitter::Kir_emitter(
     const std::vector<Function>& functions,
+    std::vector<Vtable>          vtables,
     const Ast&                   ast,
     Types&                       types,
     const Literal_pool&          literals,
@@ -409,7 +411,7 @@ Kir_emitter::Kir_emitter(
       imports_( imports ),
       part_( part ),
       include_( include ),
-      vtables_( vtables_needed( ast, types, functions ) )
+      vtables_( std::move( vtables ) )
 {
     std::erase_if(
         vtables_, [&]( const Vtable& vtable ) { return keel::half_of( ast, types.table(), imports, vtable ) != part; }
@@ -2173,6 +2175,8 @@ std::string emit_c_from_kir(
 {
     const std::vector<Type_id> order = emitted_struct_order( ast, types, imports, part );
 
+    std::vector<Vtable> vtables = vtables_needed( ast, types, functions );
+
     std::vector<Function> half;
     for( const Function& function : functions )
     {
@@ -2182,7 +2186,7 @@ std::string emit_c_from_kir(
         }
     }
 
-    return Kir_emitter( half, ast, types, literals, sm, interner, order, imports, part, include ).run();
+    return Kir_emitter( half, std::move( vtables ), ast, types, literals, sm, interner, order, imports, part, include ).run();
 }
 
 } // namespace keel

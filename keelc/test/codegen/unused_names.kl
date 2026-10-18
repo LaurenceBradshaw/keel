@@ -1,6 +1,8 @@
 // The C keelc emits compiles under `-Wall -Wextra -Werror` whatever the program leaves unread: a
 // parameter, a receiver, a local, and a `case` binding, copied, borrowed or owned. A call whose
 // result goes unread still runs, and an owning binding left unread is still dropped.
+import t::console;
+
 class Noisy
 {
     u64 n;
@@ -12,8 +14,8 @@ class Noisy
 
     ~Noisy()
     {
-        print( "drop " );
-        println( n );
+        t::print( "drop " );
+        t::println( n );
     }
 };
 
@@ -50,7 +52,7 @@ enum Lost
 
 u64 noisy( u64 v )
 {
-    println( "noisy" );
+    t::println( "noisy" );
     return v;
 }
 
@@ -74,10 +76,10 @@ void borrowed( bool fine )
     switch( fetch( fine ) )
     {
     case result::ok( v ):
-        println( "ok" );
+        t::println( "ok" );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }
@@ -88,10 +90,10 @@ void consumed( bool fine )
     switch( move fetch( fine ) )
     {
     case result::ok( v ):
-        println( "ok" );
+        t::println( "ok" );
         break;
     case result::err( e ):
-        println( "err" );
+        t::println( "err" );
         break;
     }
 }

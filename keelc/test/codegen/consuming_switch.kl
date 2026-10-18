@@ -2,6 +2,8 @@
 // ends unless moved out, and an arm that binds nothing leaves the value whole, to drop when the switch
 // ends. Each Buf holds heap memory and says when it goes, so the output is the drop order and
 // KEEL_VALGRIND=1 sees a drop missed or run twice.
+import t::console;
+
 class Buf
 {
     u64* data;
@@ -18,8 +20,8 @@ class Buf
 
     ~Buf()
     {
-        print( "drop " );
-        println( *data );
+        t::print( "drop " );
+        t::println( *data );
 
         unsafe
         {
@@ -70,7 +72,7 @@ Buf maybe( bool c, move Holder h )
                 return move b;
             }
 
-            println( "kept" );
+            t::println( "kept" );
             return Buf( 0 );
         case Holder::Pair( extra, left, right ):
             return Buf( extra );
@@ -85,7 +87,7 @@ u64 count( move Holder h )
     switch( move h )
     {
         case Holder::Full:
-            println( "full" );
+            t::println( "full" );
             break;
         case Holder::Pair( extra, left, right ):
             return extra;
@@ -93,7 +95,7 @@ u64 count( move Holder h )
             break;
     }
 
-    println( "after" );
+    t::println( "after" );
     return 0;
 }
 
@@ -120,36 +122,36 @@ void through( move Holder h )
     switch( move h )
     {
         case Holder::Full( b ):
-            println( b.get() );
+            t::println( b.get() );
             fallthrough;
         case Holder::Empty:
-            println( "through" );
+            t::println( "through" );
             break;
         case Holder::Pair( extra, left, right ):
             break;
     }
 
-    println( "done" );
+    t::println( "done" );
 }
 
 i32 main()
 {
     Buf a = take( move Holder::Full( Buf( 1 ) ) );
-    println( a.get() );
+    t::println( a.get() );
 
     Buf r = take( move Holder::Pair( 5, Buf( 2 ), Buf( 3 ) ) );
-    println( r.get() );
+    t::println( r.get() );
 
     Buf m = maybe( true, move make( 4 ) );
-    println( m.get() );
+    t::println( m.get() );
 
     Buf k = maybe( false, move make( 5 ) );
-    println( k.get() );
+    t::println( k.get() );
 
-    println( count( move make( 6 ) ) );
-    println( count( move Holder::Pair( 7, Buf( 8 ), Buf( 9 ) ) ) );
+    t::println( count( move make( 6 ) ) );
+    t::println( count( move Holder::Pair( 7, Buf( 8 ), Buf( 9 ) ) ) );
 
-    println( refill( move make( 10 ) ) );
+    t::println( refill( move make( 10 ) ) );
 
     through( move make( 11 ) );
 
@@ -167,8 +169,8 @@ i32 main()
             break;
     }
 
-    println( kept.get() );
+    t::println( kept.get() );
 
-    println( "end" );
+    t::println( "end" );
     return 0;
 }

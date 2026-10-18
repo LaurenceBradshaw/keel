@@ -1,0 +1,71 @@
+// Every reader of standard input shares one buffer, so `kl::input`, a second `standard_input()`'s
+// `read_line` and a third's `read_all` take turns and lose nothing. Then the four ways of writing
+// keep their order through a pipe. Each check returns its own code.
+import kl::console;
+import kl::os;
+import kl::string;
+
+i32 main()
+{
+    kl::string line = kl::string();
+
+    if( !kl::input( ref line ) || line != "1" )
+    {
+        return 1;
+    }
+
+    kl::file second = kl::file::standard_input();
+
+    switch( second.read_line( ref line ) )
+    {
+        case result::ok( more ):
+            if( !more || line != "2" )
+            {
+                return 2;
+            }
+            break;
+        case result::err( e ):
+            return 3;
+    }
+
+    kl::file third = kl::file::standard_input();
+
+    switch( third.read_all() )
+    {
+        case result::ok( rest ):
+            if( rest != "3\n4" )
+            {
+                return 4;
+            }
+            break;
+        case result::err( e ):
+            return 5;
+    }
+
+    kl::println( "println" );
+
+    kl::file output = kl::file::standard_output();
+
+    switch( output.write( "standard_output" ) )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 6;
+    }
+
+    kl::eprintln( "" );
+    kl::print( "print\n" );
+
+    kl::file error = kl::file::standard_error();
+
+    switch( error.write( "standard_error\n" ) )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 7;
+    }
+
+    return 0;
+}

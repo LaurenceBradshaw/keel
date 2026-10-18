@@ -133,8 +133,9 @@
 <pre class="signature"><a class="anchor" href="#file" aria-label="Link to file">#</a><code><span class="kw">class</span> <span class="type">file</span></code></pre>
 <div class="doc">
 <p>An open file, closed when it is dropped.</p>
-<p>Made only by <code>file::open</code>. Reads and writes go straight to the system, except what a whole
-read leaves buffered.</p>
+<p>Made by <code>file::open</code>, or for the program's own streams by <code>standard_input</code>, <code>standard_output</code>
+and <code>standard_error</code>, which never close them. Reads go through a buffer, and writes straight to
+the system.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -146,6 +147,24 @@ read leaves buffered.</p>
 <pre class="signature"><a class="anchor" href="#file.open" aria-label="Link to open">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#file">file</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">open</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <a class="type" href="#file_mode">file_mode</a> mode )</code></pre>
 <div class="doc">
 <p>Opens the file at <code>name</code> in <code>mode</code>.</p>
+</div>
+</div>
+<div class="group" id="file.standard_input">
+<pre class="signature"><a class="anchor" href="#file.standard_input" aria-label="Link to standard_input">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#file">file</a> <span class="fn">standard_input</span>()</code></pre>
+<div class="doc">
+<p>The program's standard input. Every one shares a buffer, so none loses what another read.</p>
+</div>
+</div>
+<div class="group" id="file.standard_output">
+<pre class="signature"><a class="anchor" href="#file.standard_output" aria-label="Link to standard_output">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#file">file</a> <span class="fn">standard_output</span>()</code></pre>
+<div class="doc">
+<p>The program's standard output, flushed by every write.</p>
+</div>
+</div>
+<div class="group" id="file.standard_error">
+<pre class="signature"><a class="anchor" href="#file.standard_error" aria-label="Link to standard_error">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#file">file</a> <span class="fn">standard_error</span>()</code></pre>
+<div class="doc">
+<p>The program's standard error. Standard output is flushed first, so the two keep their order.</p>
 </div>
 </div>
 <div class="group" id="file.read">
@@ -165,6 +184,13 @@ at the end of the file. Fewer than asked for is not the end; ask again.</p>
 <pre class="signature"><a class="anchor" href="#file.read_all" aria-label="Link to read_all">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="string.html#string">string</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read_all</span>()</code></pre>
 <div class="doc">
 <p>Reads the rest of the file.</p>
+</div>
+</div>
+<div class="group" id="file.read_line">
+<pre class="signature"><a class="anchor" href="#file.read_line" aria-label="Link to read_line">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#bool">bool</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read_line</span>( <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> line )</code></pre>
+<div class="doc">
+<p>Reads up to the next <code>\n</code>, which is dropped, into <code>line</code>, replacing what it held. <code>false</code>
+only when the input ends before any byte, so a last line without <code>\n</code> is still a line.</p>
 </div>
 </div>
 </section>

@@ -1,6 +1,8 @@
 // PLAN D30. An enum whose payload owns is destroyed by a synthesised destructor that drops the
 // active variant only. Each Buf holds heap memory and says when it goes, so the output is the drop
 // order and KEEL_VALGRIND=1 sees a drop missed or run twice.
+import t::console;
+
 class Buf
 {
     u64* data;
@@ -17,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        print( "drop " );
-        println( *data );
+        t::print( "drop " );
+        t::println( *data );
 
         unsafe
         {
@@ -82,8 +84,8 @@ Holder make( u64 n )
 
 void consume( move Holder h )
 {
-    print( "consumed " );
-    println( size( h ) );
+    t::print( "consumed " );
+    t::println( size( h ) );
 }
 
 u64 nested( Option<Holder> o )
@@ -101,14 +103,14 @@ i32 main()
 {
     Buf    x = Buf( 1 );
     Holder h = Holder::Full( move x );
-    println( size( h ) );
+    t::println( size( h ) );
 
     // Right before left: a payload drops in reverse, as fields do.
     Holder p = Holder::Pair( 10, Buf( 2 ), Buf( 3 ) );
-    println( size( p ) );
+    t::println( size( p ) );
 
     // A temporary, dropped at the end of its statement.
-    println( size( make( 4 ) ) );
+    t::println( size( make( 4 ) ) );
 
     consume( move h );
 
@@ -124,7 +126,7 @@ i32 main()
     switch( make( 8 ) )
     {
         case Holder::Full( b ):
-            println( b.get() );
+            t::println( b.get() );
             break;
         case Holder::Pair( extra, left, right ):
             return 1;
@@ -132,10 +134,10 @@ i32 main()
             return 2;
     }
 
-    println( nested( Option::Some( Holder::Full( Buf( 9 ) ) ) ) );
+    t::println( nested( Option::Some( Holder::Full( Buf( 9 ) ) ) ) );
 
     Keeper k = Keeper( move Holder::Full( Buf( 11 ) ) );
 
-    println( "end" );
+    t::println( "end" );
     return 0;
 }

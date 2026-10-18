@@ -1,2 +1,2 @@
 before
-codegen/compare_nan.kl:19: NaN has no order: nan <=> 1.0
+codegen/compare_nan.kl:21: NaN has no order: nan <=> 1.0

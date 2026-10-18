@@ -1,0 +1,20 @@
+// `kl::input` over piped lines: an empty line is a line, and so is a last one without its `\n`.
+// Each is echoed between brackets, and the count is checked.
+import kl::console;
+import kl::string;
+
+i32 main()
+{
+    kl::string line = kl::string();
+    i32 count = 0;
+
+    while( kl::input( ref line ) )
+    {
+        kl::print( "[" );
+        kl::print( line );
+        kl::println( "]" );
+        count++;
+    }
+
+    return count == 4 ? 0 : 1;
+}

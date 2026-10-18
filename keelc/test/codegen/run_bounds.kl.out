@@ -1,2 +1,2 @@
 9
-codegen/run_bounds.kl:5: out of bounds: text[ i ]
+codegen/run_bounds.kl:7: out of bounds: text[ i ]

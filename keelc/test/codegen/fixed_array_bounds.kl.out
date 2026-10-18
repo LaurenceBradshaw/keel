@@ -1,2 +1,2 @@
 4
-codegen/fixed_array_bounds.kl:5: out of bounds: values[ i ]
+codegen/fixed_array_bounds.kl:7: out of bounds: values[ i ]

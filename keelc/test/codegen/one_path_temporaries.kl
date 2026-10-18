@@ -1,6 +1,8 @@
 // An owning temporary built on one path of an expression - one arm of `?:`, or the right of `&&` or
 // `||` - drops at the end of its statement only if that path ran. Each Buf holds heap memory and says
 // when it goes, so the output is the drop order and KEEL_VALGRIND=1 sees a drop of a Buf never built.
+import t::console;
+
 class Buf
 {
     public u64 n;
@@ -20,8 +22,8 @@ class Buf
 
     ~Buf()
     {
-        print( "drop " );
-        println( *data );
+        t::print( "drop " );
+        t::println( *data );
 
         unsafe
         {
@@ -113,39 +115,39 @@ u64 guarded()
 
 i32 main()
 {
-    println( "projected" );
-    println( projected( true ) );
-    println( projected( false ) );
+    t::println( "projected" );
+    t::println( projected( true ) );
+    t::println( projected( false ) );
 
-    println( "method" );
-    println( method( true ) );
-    println( method( false ) );
+    t::println( "method" );
+    t::println( method( true ) );
+    t::println( method( false ) );
 
-    println( "both" );
-    println( both( true ) );
-    println( both( false ) );
+    t::println( "both" );
+    t::println( both( true ) );
+    t::println( both( false ) );
 
-    println( "either" );
-    println( either( true ) );
-    println( either( false ) );
+    t::println( "either" );
+    t::println( either( true ) );
+    t::println( either( false ) );
 
-    println( "nested" );
-    println( nested( true, true ) );
-    println( nested( true, false ) );
-    println( nested( false, true ) );
+    t::println( "nested" );
+    t::println( nested( true, true ) );
+    t::println( nested( true, false ) );
+    t::println( nested( false, true ) );
 
-    println( "lent" );
-    println( lent( true ) );
-    println( lent( false ) );
+    t::println( "lent" );
+    t::println( lent( true ) );
+    t::println( lent( false ) );
 
-    println( "mixed" );
-    println( mixed( true ) );
-    println( mixed( false ) );
+    t::println( "mixed" );
+    t::println( mixed( true ) );
+    t::println( mixed( false ) );
 
-    println( "looped" );
-    println( looped( 4 ) );
+    t::println( "looped" );
+    t::println( looped( 4 ) );
 
-    println( "guarded" );
-    println( guarded() );
+    t::println( "guarded" );
+    t::println( guarded() );
     return 0;
 }
