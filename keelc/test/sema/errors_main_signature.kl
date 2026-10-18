@@ -1,5 +1,5 @@
-// C's main returns int and takes nothing, so Keel's must line up or the generated C cannot be
-// called. Reported here rather than left to the C compiler.
+// C's main returns int, so Keel's must return `i32` or the generated C cannot be called; and it
+// takes nothing or its arguments. Reported here rather than left to the C compiler.
 u8 main( i32 argc )
 {
     return 0;

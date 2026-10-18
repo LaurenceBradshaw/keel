@@ -1,0 +1,47 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main_no_arguments.kl.prelude.c"
+
+int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+
+int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
+{
+    int32_t kl_t0;
+    struct kl__run__LQ7prelude3str__ref kl_args_1 = { kl_args_1_data, kl_args_1_size };
+    int32_t kl_t2;
+    uint64_t kl_t3;
+    bool kl_t4;
+#line 4 "codegen/main_no_arguments.kl"
+    kl_t3 = ( kl_args_1 ).size;
+    kl_t4 = kl_t3 == 0;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t2 = 0;
+    goto bb3;
+    bb2:
+    kl_t2 = 1;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+size_t strlen( const char* );
+
+int main( int argc, char** argv )
+{
+    uint64_t count = argc > 0 ? ( uint64_t ) argc - 1 : 0;
+    struct kl_7prelude_str* args = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) count, sizeof( struct kl_7prelude_str ), "<main>", 0, "out of memory building `main`'s arguments" );
+    for( uint64_t i = 0; i < count; ++i )
+    {
+        args[i].kl_data_42 = ( uint8_t* ) argv[i + 1];
+        args[i].kl_size_45 = strlen( argv[i + 1] );
+    }
+    int result = (int) kl__main__LQ7prelude3str( args, count );
+    kl_rt_free( args );
+    return result;
+}

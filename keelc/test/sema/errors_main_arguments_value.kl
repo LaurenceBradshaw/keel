@@ -1,0 +1,5 @@
+// The arguments are borrowed from the runtime, never moved into `main`.
+i32 main( str[] args )
+{
+    return 0;
+}

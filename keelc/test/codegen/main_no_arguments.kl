@@ -1,0 +1,5 @@
+// `main` taking its arguments gets an empty run when there are none.
+i32 main( const ref str[] args )
+{
+    return args.size == 0 ? 0 : 1;
+}

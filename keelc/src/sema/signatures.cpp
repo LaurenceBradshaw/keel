@@ -545,12 +545,27 @@ void Signatures::declare_functions()
                 );
             }
 
-            // parameters
-            // Keel currently doesn't support command line args, or arrays,
-            // so `main` must be parameterless.
             if( !ast_.children( param_list ).empty() )
             {
-                reporter_.error_at( ast_.span( param_list ), "`main` must not take any parameters" );
+                const Node_id param      = ast_.child( param_list, 0 );
+                const Type_id param_type = types_.type_of( param );
+
+                // An unknown type has its own error already.
+                const bool already_reported =
+                    param_type.is_valid() &&
+                    ( table_.is_error( param_type ) ||
+                      ( table_.is_run( param_type ) && table_.is_error( table_.get( param_type ).element ) ) );
+
+                const bool has_one_parameter = ast_.children( param_list ).size() == 1;
+                const bool is_const_ref      = parameter_mode_of( ast_, param ) == Param_mode::Const_ref;
+                const bool is_a_run_of_prelude_str =
+                    param_type.is_valid() && table_.is_run( param_type ) &&
+                    table_.get( table_.get( param_type ).element ).declaration == table_.prelude().str;
+
+                if( !already_reported && ( !has_one_parameter || !is_const_ref || !is_a_run_of_prelude_str ) )
+                {
+                    reporter_.error_at( ast_.span( param_list ), "`main` takes no parameters, or `const ref str[] args`" );
+                }
             }
         }
     }

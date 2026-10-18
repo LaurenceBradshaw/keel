@@ -19,7 +19,8 @@
 # the file is absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
 # correct - and the codegen fixtures are written to check their own answers, which is worth
 # nothing if nothing runs them. Where <name>.kl.out exists, the program's stdout and stderr together
-# must match it too. A fixture expected to exit 134 is one that aborts, and is never run under
+# must match it too. <name>.kl.args holds the program's arguments, one per line, and <name>.kl.stdin
+# its standard input (/dev/null if absent). A fixture expected to exit 134 is one that aborts, and is never run under
 # valgrind: an abort leaves memory reachable on purpose, and valgrind reports the signal.
 #
 #   CC          the C compiler keelc runs         (default: cc)
@@ -224,15 +225,23 @@ check_run()
     local expected_run=0
     [ -f "${src}.run" ] && expected_run="$( cat "${src}.run" )"
 
+    local args=()
+    [ -f "${src}.args" ] && mapfile -t args < "${src}.args"
+
+    local stdin=/dev/null
+    [ -f "${src}.stdin" ] && stdin="${src}.stdin"
+
     if [ -n "$valgrind_run" ] && [ "$expected_run" -ne 134 ]; then
         # Its own log, and judged by that rather than by an exit code: a program killed by a signal
         # reports the signal, not --error-exitcode, so a segfault would otherwise slip through. With
         # -q the file stays empty unless valgrind has something to say.
         rm -f "$vg_log"
-        timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" "$stem" > "$run_log" 2>&1
+        timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" "$stem" "${args[@]}" \
+            < "$stdin" > "$run_log" 2>&1
     else
         # The program's streams only: timeout's own word on a signal is not the program's output.
-        timeout "$run_timeout" sh -c 'exec "$0" > "$1" 2>&1' "$stem" "$run_log" 2> "${build_dir}/timeout.log"
+        timeout "$run_timeout" sh -c 'log="$1"; shift; exec "$0" "$@" > "$log" 2>&1' \
+            "$stem" "$run_log" "${args[@]}" < "$stdin" 2> "${build_dir}/timeout.log"
     fi
 
     local ran=$?
@@ -368,7 +377,7 @@ fi
 # and every stream comparison still passes because neither appears on stdout or stderr.
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
-    ! -name '*.kl.run' ! -name '*.kl.out' \
+    ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' \
     ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 
 if [ -n "$stray" ]; then

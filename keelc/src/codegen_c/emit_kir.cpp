@@ -318,6 +318,7 @@ private:
     void emit_externs();
     void emit_functions();
     void emit_main_shim();
+    void emit_main_shim_with_arguments( const std::string& symbol, Type_id str_type );
 
     void emit_statement( const Statement& statement );
     void emit_terminator( const Terminator& terminator, const Function& function );
@@ -1146,10 +1147,66 @@ void Kir_emitter::emit_main_shim()
     // signature calls the function that actually exists.
     const std::string symbol = spelling_.function( keel_main );
 
+    const std::span<const Node_id> params = ast_.children( ast_.param_list( keel_main ) );
+    if( !params.empty() )
+    {
+        emit_main_shim_with_arguments( symbol, types_.table().get( types_.type_of( params[0] ) ).element );
+        return;
+    }
+
     write_line( "int main( void )" );
     write_line( "{" );
     indent_ += 4;
     write_line( fmt::format( "return (int) {}();", symbol ) );
+    indent_ -= 4;
+    write_line( "}" );
+}
+
+// `str`'s fields are set directly: the shim is the runtime's side of the boundary, as a literal is
+// the compiler's. Its own prototypes, since a repeated matching one is legal C.
+void Kir_emitter::emit_main_shim_with_arguments( const std::string& symbol, Type_id str_type )
+{
+    std::string data_field;
+    std::string size_field;
+    for( const Node_id member : ast_.members( types_.table().get( str_type ).declaration ) )
+    {
+        const std::string_view name = interner_.text( ast_.name( member ) );
+        if( name == "data" )
+        {
+            data_field = spelling_.field( member );
+        }
+        else if( name == "size" )
+        {
+            size_field = spelling_.field( member );
+        }
+    }
+    assert( !data_field.empty() && !size_field.empty() );
+
+    const std::string str = spelling_.type( str_type );
+
+    write_line( "void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );" );
+    write_line( "void  kl_rt_free( void* );" );
+    write_line( "size_t strlen( const char* );" );
+    write_line( "" );
+    write_line( "int main( int argc, char** argv )" );
+    write_line( "{" );
+    indent_ += 4;
+    write_line( "uint64_t count = argc > 0 ? ( uint64_t ) argc - 1 : 0;" ); // an empty argv has no name
+    write_line( fmt::format(
+        "{0}* args = ( {0}* ) kl_rt_alloc_many( ( size_t ) count, sizeof( {0} ), \"<main>\", 0, "
+        "\"out of memory building `main`'s arguments\" );",
+        str
+    ) );
+    write_line( "for( uint64_t i = 0; i < count; ++i )" );
+    write_line( "{" );
+    indent_ += 4;
+    write_line( fmt::format( "args[i].{} = ( uint8_t* ) argv[i + 1];", data_field ) );
+    write_line( fmt::format( "args[i].{} = strlen( argv[i + 1] );", size_field ) );
+    indent_ -= 4;
+    write_line( "}" );
+    write_line( fmt::format( "int result = (int) {}( args, count );", symbol ) );
+    write_line( "kl_rt_free( args );" );
+    write_line( "return result;" );
     indent_ -= 4;
     write_line( "}" );
 }

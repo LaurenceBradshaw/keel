@@ -1,0 +1,5 @@
+// Each argument is a `str`, not a run of bytes.
+i32 main( const ref u8[] args )
+{
+    return 0;
+}

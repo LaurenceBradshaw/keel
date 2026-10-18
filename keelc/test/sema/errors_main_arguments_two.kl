@@ -1,0 +1,5 @@
+// The count travels inside the run; there is no `argc`.
+i32 main( const ref str[] args, u64 count )
+{
+    return 0;
+}

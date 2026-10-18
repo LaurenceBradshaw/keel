@@ -1,0 +1,13 @@
+// `main` gets the program's arguments without its name, each as a `str` of its bytes.
+i32 main( const ref str[] args )
+{
+    println( args.size );
+
+    for( u64 i : 0..args.size )
+    {
+        println( args[ i ] );
+        println( args[ i ].size );
+    }
+
+    return 0;
+}
