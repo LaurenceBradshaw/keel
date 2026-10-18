@@ -1,0 +1,30 @@
+// Every refusal a private declaration brings. What is accepted is in codegen/module_private.
+import helper;
+import vault::store;
+
+i32 count( ref counter c )
+{
+    return 0;
+}
+
+i32 measure<T>( const ref T v ) where T : measured
+{
+    return 0;
+}
+
+i32 main()
+{
+    i32 a = BASE;
+    auto p = pair_of { 1, 2 };
+    i32 d = cast<i32>( shade::dark );
+    i32 s = secret();
+    fn( i32 ) -> i32 g = &scale; // only scale( i64 ) is visible
+    i32 m = 0;
+    unsafe
+    {
+        m = abs( -1 );
+    }
+    i32 k = vault::key();
+    i32 b = key(); // private, so naming its package would not help
+    return a + d + s + m + k + b + vault::open();
+}

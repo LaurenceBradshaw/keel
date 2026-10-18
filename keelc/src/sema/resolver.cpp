@@ -65,6 +65,8 @@ private:
     Node_id       visible_from( Node_id use, Node_id head );
     bool          refuse_builtin_name( Symbol_id name, Node_id decl );
     void          refuse_unimported( Node_id use, Node_id decl );
+    void          refuse_private( Node_id use, Node_id decl );
+    std::string   module_name( File_id file ) const;
     void          refuse_other_package( Node_id use, Node_id decl );
 
     const Ast& ast_;
@@ -370,7 +372,7 @@ void Resolver::visit_path( Node_id id )
         return;
     }
 
-    const Node_id name = lookup( ast_.name( qualifier ), qualifier );
+    const Node_id name = bindings_[qualifier.v];
     if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
     {
         for( const Node_id member : ast_.members( name ) )
@@ -815,7 +817,14 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
 
         if( const auto found = scope.names.find( name ); found != scope.names.end() )
         {
-            refuse_other_package( use, found->second );
+            if( ast_.access( found->second ) == Access::Private )
+            {
+                refuse_private( use, found->second );
+            }
+            else
+            {
+                refuse_other_package( use, found->second );
+            }
             return found->second;
         }
     }
@@ -927,13 +936,20 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
 
     for( Node_id d = head; d.is_valid(); d = next_overload_[d.v] )
     {
-        if( imports_.sees( uses_file, ast_.span( d ).file ) )
+        if( can_name( imports_, ast_, uses_file, d ) )
         {
             return d;
         }
     }
 
-    refuse_unimported( use, head );
+    if( ast_.access( head ) == Access::Private )
+    {
+        refuse_private( use, head );
+    }
+    else
+    {
+        refuse_unimported( use, head );
+    }
     return head;
 }
 
@@ -961,17 +977,29 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
     return false;
 }
 
+std::string Resolver::module_name( File_id file ) const
+{
+    return qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
+}
+
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
 {
-    const File_id     file = ast_.span( decl ).file;
-    std::string_view  name = interner_.text( ast_.name( decl ) );
-    const std::string module_name =
-        qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
+    std::string_view  name   = interner_.text( ast_.name( decl ) );
+    const std::string module = module_name( ast_.span( decl ).file );
 
     reporter_.error_at(
         ast_.span( use ),
-        fmt::format( "`{}` is in `{}`, which this file does not import", name, module_name ),
-        fmt::format( "write `import {};` at the top of the file", module_name )
+        fmt::format( "`{}` is in `{}`, which this file does not import", name, module ),
+        fmt::format( "write `import {};` at the top of the file", module )
+    );
+}
+
+void Resolver::refuse_private( Node_id use, Node_id decl )
+{
+    reporter_.error_at(
+        ast_.span( use ),
+        fmt::format( "`{}` is private to `{}`", interner_.text( ast_.name( decl ) ), module_name( ast_.span( decl ).file ) ),
+        "only that module's own declarations may name it"
     );
 }
 

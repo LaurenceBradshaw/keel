@@ -1,0 +1,19 @@
+// A module's private declarations work inside it and are skipped from outside. Every check returns
+// a distinct code; what an importer may not name is refused in sema/errors_module_private.
+import helper;
+
+i32 main()
+{
+    // helper.kl's private scale( i32 ) is the exact match, but this file sees only scale( i64 ).
+    if( scale( 3 ) != 1 ) { return 1; }
+    if( scale_here( 3 ) != 30 ) { return 2; }
+
+    if( magnitude( -4 ) != 4 ) { return 3; }
+    if( total() != 42 ) { return 4; }
+    if( count_twice() != 7 ) { return 5; }
+    if( darkness() != 1 ) { return 6; }
+    if( measure() != 5 ) { return 7; }
+    if( keep<i32>( 9 ) != 9 ) { return 8; }
+
+    return 0;
+}

@@ -1269,7 +1269,7 @@ Node_id Overloads::next_visible( Node_id use, Node_id candidate ) const
 
     while( candidate.is_valid() )
     {
-        if( resolution_.sees( ast_.span( use ).file, ast_.span( candidate ).file ) )
+        if( resolution_.sees( ast_, ast_.span( use ).file, candidate ) )
         {
             return candidate;
         }

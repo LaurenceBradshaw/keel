@@ -18,11 +18,11 @@
 // slot holds its entry's index, and each entry's hash is kept, so a rebuild never rehashes a key.
 
 // The process's SipHash key, the low half one more on each call, so no two tables share a key.
-extern void kl_rt_hash_key( u64* low, u64* high );
+private extern void kl_rt_hash_key( u64* low, u64* high );
 
-const u64 BYTE_ONES = 0x0101_0101_0101_0101;
-const u64 BYTE_MSB_MASK = 0x8080_8080_8080_8080;
-const u64 EMPTY_SLOTS_MASK = 0xffff_ffff_ffff_ffff;
+private const u64 BYTE_ONES = 0x0101_0101_0101_0101;
+private const u64 BYTE_MSB_MASK = 0x8080_8080_8080_8080;
+private const u64 EMPTY_SLOTS_MASK = 0xffff_ffff_ffff_ffff;
 
 /// The control bytes, counts and key of a hash table, without its keys or values.
 ///

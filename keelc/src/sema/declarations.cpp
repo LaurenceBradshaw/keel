@@ -137,7 +137,10 @@ void Declaration_collector::add( Node_id decl, std::string_view kind, Node_id pa
         { ast_.name_span( decl ),
           kind,
           ast_.access( decl ),
-          print_signature( ast_, resolution_, types_, interner_, decl ),
+          // A member's printed access is the printer's; a top-level one is written only when private.
+          !parent.is_valid() && ast_.access( decl ) == Access::Private
+              ? "private " + print_signature( ast_, resolution_, types_, interner_, decl )
+              : print_signature( ast_, resolution_, types_, interner_, decl ),
           !parent.is_valid()                                  ? std::string {}
           : ast_.kind( parent ) == Node_kind::Implements_decl ? block_name( parent )
                                                               : std::string( interner_.text( ast_.name( parent ) ) ),

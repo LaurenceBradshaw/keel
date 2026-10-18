@@ -1,0 +1,61 @@
+error: `counter` is private to `helper`
+ --> sema/errors_module_private/main.kl:5:16
+  |
+5 | i32 count( ref counter c )
+  |                ^^^^^^^ only that module's own declarations may name it
+
+error: `measured` is private to `helper`
+  --> sema/errors_module_private/main.kl:10:43
+   |
+10 | i32 measure<T>( const ref T v ) where T : measured
+   |                                           ^^^^^^^^ only that module's own declarations may name it
+
+error: `BASE` is private to `helper`
+  --> sema/errors_module_private/main.kl:17:13
+   |
+17 |     i32 a = BASE;
+   |             ^^^^ only that module's own declarations may name it
+
+error: `pair_of` is private to `helper`
+  --> sema/errors_module_private/main.kl:18:14
+   |
+18 |     auto p = pair_of { 1, 2 };
+   |              ^^^^^^^^^^^^^^^^ only that module's own declarations may name it
+
+error: `shade` is private to `helper`
+  --> sema/errors_module_private/main.kl:19:24
+   |
+19 |     i32 d = cast<i32>( shade::dark );
+   |                        ^^^^^ only that module's own declarations may name it
+
+error: `secret` is private to `helper`
+  --> sema/errors_module_private/main.kl:20:13
+   |
+20 |     i32 s = secret();
+   |             ^^^^^^ only that module's own declarations may name it
+
+error: expected `fn( i32 ) -> i32`, but got `fn( i64 ) -> i32`
+  --> sema/errors_module_private/main.kl:21:26
+   |
+21 |     fn( i32 ) -> i32 g = &scale; // only scale( i64 ) is visible
+   |                          ^^^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: `abs` is private to `helper`
+  --> sema/errors_module_private/main.kl:25:13
+   |
+25 |         m = abs( -1 );
+   |             ^^^ only that module's own declarations may name it
+
+error: `key` is private to `vault::store`
+  --> sema/errors_module_private/main.kl:27:13
+   |
+27 |     i32 k = vault::key();
+   |             ^^^^^^^^^^ only that module's own declarations may name it
+
+error: `key` is private to `vault::store`
+  --> sema/errors_module_private/main.kl:28:13
+   |
+28 |     i32 b = key(); // private, so naming its package would not help
+   |             ^^^ only that module's own declarations may name it
+
+10 errors generated

@@ -14,6 +14,13 @@
 namespace keel
 {
 
+// A use in `from` may name `decl` when it imports the module, and the declaration is its own or not private.
+inline bool can_name( const Imports& imports, const Ast& ast, File_id from, Node_id decl )
+{
+    const File_id file = ast.span( decl ).file;
+    return imports.sees( from, file ) && ( from == file || ast.access( decl ) != Access::Private );
+}
+
 // Which declaration each use refers to, indexed by the use's Node_id. A side table rather than a
 // field on Node: aux still holds the Symbol_id that diagnostics need, and the AST stays immutable
 // after parsing.
@@ -59,9 +66,9 @@ public:
         return declaration.v < next_overload_.size() ? next_overload_[declaration.v] : Node_id {};
     }
 
-    bool sees( File_id from, File_id to ) const
+    bool sees( const Ast& ast, File_id from, Node_id decl ) const
     {
-        return imports_.sees( from, to );
+        return can_name( imports_, ast, from, decl );
     }
 
     Symbol_id package_of( File_id file ) const

@@ -1,0 +1,26 @@
+// Where `private` cannot go, and the `public` a top-level declaration never writes. Each refusal
+// drops the word and keeps the declaration, so nothing after it is reported.
+private import other;
+
+interface sized
+{
+    u64 length() const;
+};
+
+private implements sized for str
+{
+    u64 length() const
+    {
+        return 0;
+    }
+};
+
+public i32 twice( i32 v )
+{
+    return v * 2;
+}
+
+i32 main()
+{
+    return twice( seven() ) - 14;
+}

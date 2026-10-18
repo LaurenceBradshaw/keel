@@ -712,25 +712,60 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
     assert( cursor_.position() == head.start );
     recovery_.begin_body();
 
+    // Consumed here because head.start includes it.
+    const Span access_span  = cursor_.peek().span;
+    const bool wrote_public = cursor_.match_keyword( Keyword::Public );
+    bool       is_private   = !wrote_public && cursor_.match_keyword( Keyword::Private );
+
+    if( wrote_public )
+    {
+        recovery_.error_at( access_span, "a top-level declaration needs no `public`", "it is public unless written `private`" );
+    }
+    else if( is_private && head.kind == Declaration_kind::Import )
+    {
+        recovery_.error_at(
+            access_span, "an `import` cannot be `private`", "what a file imports is never seen by the files importing it"
+        );
+        is_private = false;
+    }
+    else if( is_private && head.kind == Declaration_kind::Implements )
+    {
+        recovery_.error_at( access_span, "an `implements` block cannot be `private`", "it declares no name to hide" );
+        is_private = false;
+    }
+
+    Node_id decl = Node_id {};
     switch( head.kind )
     {
     case Declaration_kind::Import:
-        return parse_import();
+        decl = parse_import();
+        break;
     case Declaration_kind::Aggregate:
-        return parse_aggregate_decl();
+        decl = parse_aggregate_decl();
+        break;
     case Declaration_kind::Enum:
-        return parse_enum_decl();
+        decl = parse_enum_decl();
+        break;
     case Declaration_kind::Function:
-        return parse_function_decl( head.commit );
+        decl = parse_function_decl( head.commit );
+        break;
     case Declaration_kind::Variable:
-        return parse_var_decl( head.commit );
+        decl = parse_var_decl( head.commit );
+        break;
     case Declaration_kind::Interface:
-        return parse_interface_decl();
+        decl = parse_interface_decl();
+        break;
     case Declaration_kind::Implements:
-        return parse_implements_decl();
+        decl = parse_implements_decl();
+        break;
     }
 
-    return error_node( cursor_.peek().span );
+    if( is_private )
+    {
+        ast_.set_access( decl, Access::Private );
+    }
+
+    return decl;
 }
 
 Node_id Parser::parse_function_decl( std::optional<u32> commit )

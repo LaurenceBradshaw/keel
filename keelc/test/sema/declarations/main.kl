@@ -2,6 +2,12 @@
 
 import geo::shapes;
 
+/// Kept to this file, and said so in its signature.
+private i32 helper()
+{
+    return 1;
+}
+
 /// Where the program starts.
 i32 main()
 {

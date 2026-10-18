@@ -1,0 +1,19 @@
+error: an `import` cannot be `private`
+ --> sema/errors_private_placement/main.kl:3:1
+  |
+3 | private import other;
+  | ^^^^^^^ what a file imports is never seen by the files importing it
+
+error: an `implements` block cannot be `private`
+  --> sema/errors_private_placement/main.kl:10:1
+   |
+10 | private implements sized for str
+   | ^^^^^^^ it declares no name to hide
+
+error: a top-level declaration needs no `public`
+  --> sema/errors_private_placement/main.kl:18:1
+   |
+18 | public i32 twice( i32 v )
+   | ^^^^^^ it is public unless written `private`
+
+3 errors generated

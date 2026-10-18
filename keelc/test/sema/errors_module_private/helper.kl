@@ -1,0 +1,46 @@
+// Every kind of top-level declaration, private, plus one public overload beside a private one.
+private const i32 BASE = 40;
+
+private struct pair_of
+{
+    i32 a;
+    i32 b;
+};
+
+private class counter
+{
+    i32 n;
+
+    counter()
+    {
+        n = 0;
+    }
+};
+
+private enum shade
+{
+    light,
+    dark
+};
+
+private interface measured
+{
+    i32 size() const;
+};
+
+private extern i32 abs( i32 v );
+
+private i32 secret()
+{
+    return 1;
+}
+
+private i32 scale( i32 v )
+{
+    return v;
+}
+
+i32 scale( i64 v )
+{
+    return 1;
+}

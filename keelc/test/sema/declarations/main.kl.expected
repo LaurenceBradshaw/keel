@@ -5,7 +5,8 @@
 {"kind":"file","path":"sema/declarations/geo/shapes.kl"}
 {"kind":"package","name":"","doc":"The program's own package: its documentation, keyed by the empty name."}
 {"kind":"package","name":"geo","doc":"Plane geometry.\n\nEvery length is in metres."}
-{"kind":"declaration","declares":"function","name":"main","file":"sema/declarations/main.kl","line":6,"col":5,"end_col":9,"access":"public","signature":"i32 main()","doc":"Where the program starts."}
+{"kind":"declaration","declares":"function","name":"helper","file":"sema/declarations/main.kl","line":6,"col":13,"end_col":19,"access":"private","signature":"private i32 helper()","doc":"Kept to this file, and said so in its signature."}
+{"kind":"declaration","declares":"function","name":"main","file":"sema/declarations/main.kl","line":12,"col":5,"end_col":9,"access":"public","signature":"i32 main()","doc":"Where the program starts."}
 {"kind":"declaration","declares":"enum","name":"Shape","file":"sema/declarations/geo/shapes.kl","line":2,"col":6,"end_col":11,"access":"public","signature":"enum Shape","doc":"A shape in the plane."}
 {"kind":"declaration","declares":"variant","name":"Circle","file":"sema/declarations/geo/shapes.kl","line":5,"col":5,"end_col":11,"access":"public","signature":"Circle( f64 radius )","parent":"Shape","doc":"A circle about the origin."}
 {"kind":"declaration","declares":"variant","name":"Dot","file":"sema/declarations/geo/shapes.kl","line":6,"col":5,"end_col":8,"access":"public","signature":"Dot","parent":"Shape"}

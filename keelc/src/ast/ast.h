@@ -14,7 +14,7 @@
 namespace keel
 {
 
-// Stamped on every member by the parser, so an unstamped node reads as public.
+// Stamped by the parser on every member and on a `private` top-level declaration; unstamped reads as public.
 enum class Access : u8
 {
     Public,
@@ -205,7 +205,7 @@ private:
     std::vector<Node_id> children_; // every child of every node, back to back
     Node_id              root_;
 
-    std::unordered_map<u32, Access> access_; // members only; absence means public
+    std::unordered_map<u32, Access> access_; // absence means public
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
 

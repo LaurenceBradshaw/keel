@@ -25,3 +25,19 @@ i32 times( i32 n )
 {
     return n;
 }
+
+/// Hidden, with its member, though both are documented.
+private struct scratch
+{
+    /// Hidden with its type.
+    f64 value;
+};
+
+/// Hidden, so `larger` lists only its two public overloads.
+private i32 larger( i32 a, i32 b )
+{
+    return a > b ? a : b;
+}
+
+/// Hidden.
+private const i32 LIMIT = 3;

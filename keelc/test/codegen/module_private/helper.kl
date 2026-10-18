@@ -1,0 +1,104 @@
+// Everything private here is used by this file's public declarations, and main.kl names none of it.
+
+/// The C library's, hidden behind magnitude().
+private extern i32 abs( i32 v );
+
+private const i32 BASE = 40;
+
+
+private class counter
+{
+    i32 n;
+
+    counter( i32 start )
+    {
+        n = start;
+    }
+
+    i32 next()
+    {
+        n += 1;
+        return n;
+    }
+};
+
+private enum shade
+{
+    light,
+    dark
+};
+
+private interface measured
+{
+    i32 size() const;
+};
+
+private struct pair_of implements measured
+{
+    i32 a;
+    i32 b;
+
+    i32 size() const
+    {
+        return a + b;
+    }
+};
+
+private i32 add( pair_of p )
+{
+    return p.a + p.b;
+}
+
+// The private overload is closer for an i32, but only this file can pick it.
+private i32 scale( i32 v )
+{
+    return v * 10;
+}
+
+i32 scale( i64 v )
+{
+    return 1;
+}
+
+i32 scale_here( i32 v )
+{
+    return scale( v );
+}
+
+i32 magnitude( i32 v )
+{
+    unsafe
+    {
+        return abs( v );
+    }
+}
+
+i32 total()
+{
+    return BASE + add( pair_of { 1, 1 } );
+}
+
+i32 count_twice()
+{
+    counter c = counter( 5 );
+    c.next();
+    return c.next();
+}
+
+i32 darkness()
+{
+    shade s = shade::dark;
+    return cast<i32>( s );
+}
+
+i32 measure()
+{
+    pair_of p = pair_of { 2, 3 };
+    return p.size();
+}
+
+// Instantiated from main.kl, whose file sees none of what the body names.
+T keep<T>( T v ) where T : numeric
+{
+    return v + cast<T>( BASE - BASE );
+}

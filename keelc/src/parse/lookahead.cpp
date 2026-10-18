@@ -129,6 +129,11 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     failure_ = Scan_failure {};
     site_    = site;
 
+    if( site == Scan_site::File && !cursor_.match_keyword( Keyword::Public ) )
+    {
+        cursor_.match_keyword( Keyword::Private );
+    }
+
     if( cursor_.check_keyword( Keyword::Import ) )
     {
         return make_head( Declaration_kind::Import, at );
@@ -248,8 +253,13 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
             cursor_.seek( at );
             Declaration_kind kind = Declaration_kind::Variable;
 
-            if( cursor_.tokens()[at].kind == Token_kind::Keyword &&
-                static_cast<Keyword>( cursor_.tokens()[at].symbol.v ) == Keyword::Extern )
+            const auto is_keyword = [this]( u32 i, Keyword k ) {
+                return cursor_.tokens()[i].kind == Token_kind::Keyword &&
+                       static_cast<Keyword>( cursor_.tokens()[i].symbol.v ) == k;
+            };
+            const u32 head = is_keyword( at, Keyword::Public ) || is_keyword( at, Keyword::Private ) ? at + 1 : at;
+
+            if( is_keyword( head, Keyword::Extern ) )
             {
                 kind = Declaration_kind::Function;
             }
