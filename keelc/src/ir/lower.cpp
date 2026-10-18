@@ -74,6 +74,7 @@ private:
     // One per construct, dispatched from lower_expression. The small cases stay inline there:
     // extracting a two-line literal would cost a name and buy nothing.
     Operand lower_struct_literal( Node_id id );
+    Operand lower_array_literal( Node_id id );
     Operand lower_string_literal( Node_id id );
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
@@ -130,6 +131,8 @@ private:
     Operand borrowed_argument( Node_id argument, Type_id address );
 
     Operand address_operand( Place place, Type_id type, Span span, Address_purpose purpose );
+    // address_of, but a `T[N]` borrowed as a `T[]` is lent as a run of its elements.
+    Rvalue borrow_of( Place place, Type_id held, Type_id address, Address_purpose purpose, Span span );
 
     // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
     void lower_block( Node_id id );
@@ -189,6 +192,7 @@ private:
 
     Operand run_pointer( Node_id run );
     Place   lower_slice_or_run_index( Node_id id );
+    Place   lower_array_index( Node_id id );
 
     bool is_move_parameter( Node_id param ) const;
 
@@ -956,6 +960,38 @@ Place Lowering::lower_slice_or_run_index( Node_id id )
     return builder_.deref( builder_.place( slice ) );
 }
 
+// A constant index was checked against N by sema, so only a run-time one is checked here.
+Place Lowering::lower_array_index( Node_id id )
+{
+    const Node_id object = ast_.object( id );
+    const Span    span   = ast_.span( id );
+    const Type_id u64    = types_.table().integer( 64, false );
+
+    const Place    base  = lower_place( object );
+    const Operand  index = converted( lower_expression( ast_.index( id ) ), u64, span );
+    const Local_id local = builder_.into_temp( use( index ), u64, span ); // ponytail: one per constant index too
+
+    if( index.kind != Operand_kind::Constant )
+    {
+        const Type_id  boolean = types_.table().builtin( Type_kind::Bool );
+        const Operand  count   = constant( literal_pool_.add_integer( types_.table().get( type_of( object ) ).count ), u64 );
+        const Block_id pass    = builder_.add_block();
+        const Block_id fail    = builder_.add_block();
+
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Less, copy( builder_.place( local ), u64 ), count, boolean ), boolean, span ),
+            pass,
+            fail,
+            span
+        );
+        builder_.switch_to( fail );
+        builder_.terminate_panic( span, Failure::Bounds );
+        builder_.switch_to( pass );
+    }
+
+    return builder_.index( base, local );
+}
+
 bool Lowering::is_move_parameter( Node_id param ) const
 {
     const Node_id annotation = ast_.annotation( param );
@@ -987,7 +1023,9 @@ bool Lowering::initialises_field( const Place& target ) const
 
 bool Lowering::writes_a_slot( Node_id target ) const
 {
-    if( ast_.kind( target ) == Node_kind::Index_expr && !types_.callee_of( target ).is_valid() )
+    // An array's element is part of it, so writing one replaces what was there.
+    if( ast_.kind( target ) == Node_kind::Index_expr && !types_.callee_of( target ).is_valid() &&
+        !types_.table().is_array( types_.type_of( ast_.object( target ) ) ) )
     {
         return true;
     }
@@ -1340,6 +1378,39 @@ Operand Lowering::lower_struct_literal( Node_id id )
         );
 
         index += 1;
+    }
+
+    drops_.own_temporary( temp );
+
+    return copy( builder_.place( temp ), type );
+}
+
+// As lower_struct_literal: every value is lowered before any element is written.
+Operand Lowering::lower_array_literal( Node_id id )
+{
+    const Type_id  type    = type_of( id );
+    const Type_id  element = types_.table().get( type ).element;
+    const Type_id  u64     = types_.table().integer( 64, false );
+    const Span     span    = ast_.span( id );
+    const Local_id temp    = builder_.add_local( type, span );
+
+    builder_.storage_live( temp, span );
+
+    const std::span<const Node_id> elements = ast_.children( id );
+    std::vector<Operand>           values;
+
+    for( const Node_id value : elements )
+    {
+        values.push_back( converted( lower_expression( value ), element, ast_.span( value ) ) );
+    }
+
+    for( std::size_t k = 0; k < values.size(); ++k )
+    {
+        const Local_id at = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), u64 ) ), u64, span );
+
+        builder_.assign(
+            builder_.index( builder_.place( temp ), at ), use( moved_if_owning( values[k] ) ), ast_.span( elements[k] )
+        );
     }
 
     drops_.own_temporary( temp );
@@ -1991,6 +2062,20 @@ Operand Lowering::lower_call( Node_id id )
         return copy( builder_.place( local ), type );
     }
 
+    // `a.size()` on a `T[N]` is N. The object is still lowered, so a call there still runs.
+    if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
+    {
+        const Node_id object = ast_.object( ast_.callee( id ) );
+        const Type_id held   = types_.table().is_pointer( type_of( object ) ) ? types_.table().get( type_of( object ) ).element
+                                                                              : type_of( object );
+
+        if( types_.table().is_array( held ) )
+        {
+            lower_expression( object );
+            return constant( literal_pool_.add_integer( types_.table().get( held ).count ), type_of( id ) );
+        }
+    }
+
     // `p.area()` - the callee is a Field_expr rather than a name, and the receiver is its object.
     // Handled before the lookup below, which reaches for a declaration a Field_expr does not have.
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr && types_.callee_of( id ).is_valid() )
@@ -2242,6 +2327,8 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Struct_literal:
         return lower_struct_literal( id );
+    case Node_kind::Array_literal:
+        return lower_array_literal( id );
     case Node_kind::String_literal:
         return lower_string_literal( id );
     case Node_kind::Binary_expr:
@@ -2451,6 +2538,11 @@ Place Lowering::lower_place( Node_id id )
             return builder_.deref( lower_operator_index( id, method ).place );
         }
 
+        if( types_.table().is_array( type_of( ast_.object( id ) ) ) )
+        {
+            return lower_array_index( id );
+        }
+
         if( ast_.kind( ast_.index( id ) ) == Node_kind::Range_expr || types_.table().is_run( type_of( ast_.object( id ) ) ) )
         {
             return lower_slice_or_run_index( id );
@@ -2472,6 +2564,7 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::String_literal:
     case Node_kind::Binary_expr: // `a + b` in `a + b + c`
     case Node_kind::Struct_literal:
+    case Node_kind::Array_literal:
     {
         return lower_expression( id ).place;
     }
@@ -2525,7 +2618,9 @@ void Lowering::lower_return( Node_id id )
             const Type_id address = binding_type_of( declaration_ );
 
             builder_.assign(
-                builder_.place( k_return_slot ), address_of( lower_place( value ), address, Address_purpose::Read ), span
+                builder_.place( k_return_slot ),
+                borrow_of( lower_place( value ), type_of( value ), address, Address_purpose::Read, span ),
+                span
             );
         }
         else
@@ -2568,8 +2663,12 @@ void Lowering::lower_var( Node_id id )
         {
             builder_.assign(
                 builder_.place( local ),
-                address_of(
-                    lower_place( init ), type, ast_.is_const_binding( id ) ? Address_purpose::Read : Address_purpose::Borrow
+                borrow_of(
+                    lower_place( init ),
+                    type_of( init ),
+                    type,
+                    ast_.is_const_binding( id ) ? Address_purpose::Read : Address_purpose::Borrow,
+                    span
                 ),
                 span
             );
@@ -3306,12 +3405,18 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
     // taken where they landed, which also leaves the temporary to be dropped.
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
-        const Keyword marker = ast_.keyword( argument );
-        return address_operand(
-            lower_place( ast_.operand( argument ) ),
+        const Keyword marker  = ast_.keyword( argument );
+        const Node_id operand = ast_.operand( argument );
+        return temporary(
+            borrow_of(
+                lower_place( operand ),
+                type_of( operand ),
+                address,
+                marker == Keyword::Out ? Address_purpose::Initialise : Address_purpose::Borrow,
+                span
+            ),
             address,
-            span,
-            marker == Keyword::Out ? Address_purpose::Initialise : Address_purpose::Borrow
+            span
         );
     }
 
@@ -3323,12 +3428,30 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
                             ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
                             : value.place;
 
-    return address_operand( place, address, span, Address_purpose::Read );
+    return temporary( borrow_of( place, value.type, address, Address_purpose::Read, span ), address, span );
 }
 
 Operand Lowering::address_operand( Place place, Type_id type, Span span, Address_purpose purpose )
 {
     return temporary( address_of( place, type, purpose ), type, span );
+}
+
+Rvalue Lowering::borrow_of( Place place, Type_id held, Type_id address, Address_purpose purpose, Span span )
+{
+    Type_table& table = types_.table();
+
+    if( !table.is_run_pointer( address ) || !held.is_valid() || !table.is_array( held ) )
+    {
+        return address_of( place, address, purpose );
+    }
+
+    const Type_id  u64   = table.integer( 64, false );
+    const Type_id  data  = table.many_pointer_to( table.get( held ).element );
+    const Local_id zero  = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+    const Operand  first = temporary( address_of( builder_.index( place, zero ), data, purpose ), data, span );
+    const Operand  count = constant( literal_pool_.add_integer( table.get( held ).count ), u64 );
+
+    return run_of( first, count, address );
 }
 
 // D30: `~E( E* self )`, testing the tag against each variant whose payload owns and dropping that
@@ -3457,6 +3580,60 @@ Function union_destructor( const Ast& ast, Types& types, Literal_pool& literals,
     return function;
 }
 
+// `~T[N]( T[N]* self )`, dropping the elements last to first. Declared by nothing; its type
+// argument is the array.
+Function array_destructor( const Ast& ast, Types& types, Literal_pool& literals, Type_id array )
+{
+    Type_table&   table   = types.table();
+    const Type_id element = table.get( array ).element;
+    const Type_id u64     = table.integer( 64, false );
+    const Type_id boolean = table.builtin( Type_kind::Bool );
+
+    Type_id named = element;
+    while( table.is_array( named ) )
+    {
+        named = table.get( named ).element;
+    }
+    const Span span = table.get( named ).declaration.is_valid() ? ast.span( table.get( named ).declaration ) : Span {};
+
+    Builder builder( Node_id {}, table.builtin( Type_kind::Void ), span );
+
+    const Local_id self = builder.add_parameter( table.pointer_to( array ), span, Symbol_id {} );
+    const Local_id left =
+        builder.into_temp( use( constant( literals.add_integer( table.get( array ).count ), u64 ) ), u64, span );
+
+    const Block_id header = builder.add_block();
+    const Block_id body   = builder.add_block();
+    const Block_id done   = builder.add_block();
+
+    builder.terminate_goto( header, span );
+    builder.switch_to( header );
+
+    const Local_id more = builder.into_temp(
+        binary( Token_kind::Less, constant( literals.add_integer( 0 ), u64 ), copy( builder.place( left ), u64 ), boolean ),
+        boolean,
+        span
+    );
+
+    builder.terminate_branch( copy( builder.place( more ), boolean ), body, done, span );
+    builder.switch_to( body );
+    builder.assign(
+        builder.place( left ),
+        binary( Token_kind::Minus, copy( builder.place( left ), u64 ), constant( literals.add_integer( 1 ), u64 ), u64 ),
+        span
+    );
+    drop_place( builder, ast, types, builder.index( builder.deref( builder.place( self ) ), left ), element, span, false );
+    builder.terminate_goto( header, span );
+
+    builder.switch_to( done );
+    builder.terminate_return( span );
+
+    Function function = builder.finish();
+    function.type_arguments.push_back( array );
+
+    return function;
+}
+
 // A vtable's drop slot: the implementer's whole drop, its `~` and then its fields, which no
 // function of its own does. Declared by nothing; its type argument is the implementer.
 Function drop_function( const Ast& ast, Types& types, Type_id implementer )
@@ -3515,6 +3692,15 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
         if( instance_owns( ast, types.table(), type, types.recorded() ) )
         {
             functions.push_back( union_destructor( ast, types, literals, type ) );
+        }
+    }
+
+    // Last, since an enum's destructor may intern an array but not the reverse.
+    for( const Type_id type : types.table().array_types() )
+    {
+        if( !types.table().mentions_parameter( type ) && instance_owns( ast, types.table(), type, types.recorded() ) )
+        {
+            functions.push_back( array_destructor( ast, types, literals, type ) );
         }
     }
 
@@ -7511,6 +7697,126 @@ TEST_CASE( "lower_reaches_what_lowering_an_instance_interns", "[ir][lower][gener
         INFO( text );
         REQUIRE( text.find( "let _1: Pair<i64>*; // parameter this" ) != std::string::npos );
     }
+}
+
+// D60: an element is an `Index` projection off the array's own place, so the checks see `a[i]` as
+// part of `a`. A run-time index is checked against N first; a literal one sema has already checked.
+TEST_CASE( "lower_indexes_a_fixed_array", "[ir][lower][fixed_array]" )
+{
+    SECTION( "a run-time index is checked" )
+    {
+        Lowered p( "i32 at( i32[4] a, u64 i ) { return a[ i ]; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "at" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _1: i32[4]; // parameter a" ) != std::string::npos );
+        REQUIRE( text.find( "out_of_bounds" ) != std::string::npos );
+        REQUIRE( text.find( "copy _1[_" ) != std::string::npos );
+    }
+
+    SECTION( "a literal index is not" )
+    {
+        Lowered p( "i32 third( i32[4] a ) { return a[ 2 ]; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "third" );
+
+        INFO( text );
+        REQUIRE( text.find( "out_of_bounds" ) == std::string::npos );
+        REQUIRE( text.find( "copy _1[_" ) != std::string::npos );
+    }
+
+    SECTION( "through a borrow, and written" )
+    {
+        Lowered p( "void set( ref i32[4] a ) { a[ 1 ] = 7; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "set" );
+
+        INFO( text );
+        REQUIRE( text.find( "(*_1)[_" ) != std::string::npos );
+        REQUIRE( text.find( "= const 7" ) != std::string::npos );
+    }
+
+    SECTION( "the size is the constant N" )
+    {
+        Lowered p( "u64 n( i32[4] a ) { return a.size(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.named( "n" ).find( "_0 = const 4" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "lower_fills_an_array_from_a_literal", "[ir][lower][fixed_array]" )
+{
+    Lowered p( "i32 main() { i32[3] a = [ 1, 2, 3 ]; return a[ 0 ]; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "] = const 1" ) != std::string::npos );
+    REQUIRE( text.find( "] = const 3" ) != std::string::npos );
+    REQUIRE( text.find( "out_of_bounds" ) == std::string::npos );
+}
+
+// One synthesised destructor per owning array type, looping over the elements, as a union's is
+// one function rather than an expansion at every drop.
+TEST_CASE( "lower_drops_every_element_of_an_owning_array", "[ir][lower][fixed_array][drop]" )
+{
+    Lowered p( "class Tok { u8 b; public Tok() { b = 0; } ~Tok() { } };\n"
+               "void keep( move Tok[3] a ) { }\n"
+               "void reset( ref Tok[3] a ) { a[ 0 ] = Tok(); }\n"
+               "void plain( i32[3] a ) { }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    REQUIRE( p.named( "keep" ).find( "drop _1" ) != std::string::npos );
+
+    // Assigning an element drops the one it replaces.
+    REQUIRE( p.named( "reset" ).find( "drop (*_1)[_" ) != std::string::npos );
+
+    const std::string destructor = p.named( "~Tok[3]" );
+
+    INFO( destructor );
+    REQUIRE( destructor.find( "let _1: Tok[3]*; // parameter" ) != std::string::npos );
+    REQUIRE( destructor.find( "drop (*_1)[_" ) != std::string::npos );
+
+    REQUIRE( p.named( "~i32[3]" ).empty() );
+}
+
+TEST_CASE( "lower_lends_an_array_as_a_run", "[ir][lower][fixed_array][run]" )
+{
+    Lowered p( "i32 sum( const ref i32[] v ) { return v[ 0 ]; }\n"
+               "i32 main() { i32[2] a = [ 1, 2 ]; const ref i32[] r = a; return sum( a ) + r[ 1 ]; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( count( text, "run( " ) == 2 );
+    REQUIRE( text.find( ", const 2 )" ) != std::string::npos );
 }
 
 } // namespace keel

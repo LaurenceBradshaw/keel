@@ -43,6 +43,7 @@ public:
     // variant is live - the only part of one a `switch` reads without a pattern.
     Place tag( Place base );
     Place member( Place base, Type_id member );
+    Place index( Place base, Local_id index );
 
     Type_id type_of( Local_id id ) const;
 

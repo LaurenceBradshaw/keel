@@ -445,10 +445,17 @@ Node_id Ast::inner_type( Node_id id ) const
 {
     assert(
         ( kind( id ) == Node_kind::Pointer_type || kind( id ) == Node_kind::Many_pointer_type ||
-          kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Const_type || kind( id ) == Node_kind::Run_type ) &&
+          kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Const_type || kind( id ) == Node_kind::Run_type ||
+          kind( id ) == Node_kind::Array_type ) &&
         "this kind wraps no type"
     );
     return child( id, 0 );
+}
+
+Node_id Ast::array_size( Node_id array_type ) const
+{
+    assert( kind( array_type ) == Node_kind::Array_type );
+    return child( array_type, 1 );
 }
 
 Node_id Ast::generic_name( Node_id generic_type ) const

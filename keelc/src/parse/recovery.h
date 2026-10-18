@@ -40,6 +40,7 @@ public:
 
     // Consume or report.
     bool expect( Token_kind kind );
+    bool expect( Token_kind kind, Hint_place place ); // with stop_hint's help on failure
 
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".

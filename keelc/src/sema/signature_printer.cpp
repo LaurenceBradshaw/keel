@@ -195,6 +195,16 @@ std::string Signature_printer::type( Node_id annotation ) const
         return type( ast_.inner_type( annotation ) ) + "[*]";
     case Node_kind::Run_type:
         return type( ast_.inner_type( annotation ) ) + "[]";
+    case Node_kind::Array_type:
+    {
+        // A name prints as written; a literal by the value Annotations recorded for it.
+        const Node_id                       size  = ast_.array_size( annotation );
+        const std::optional<Constant_value> value = types_.constant_of( size );
+        return ast_.kind( size ) == Node_kind::Name_expr
+                   ? fmt::format( "{}[{}]", type( ast_.inner_type( annotation ) ), text( ast_.name( size ) ) )
+               : value.has_value() ? fmt::format( "{}[{}]", type( ast_.inner_type( annotation ) ), value->magnitude )
+                                   : type( ast_.inner_type( annotation ) ) + "[?]";
+    }
     case Node_kind::Mode_type:
         return fmt::format(
             "{} {}", text( Interner::keyword( ast_.keyword( annotation ) ) ), type( ast_.inner_type( annotation ) )

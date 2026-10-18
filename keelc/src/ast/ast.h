@@ -120,7 +120,8 @@ public:
     Node_id declared_type( Node_id decl ) const; // the annotation, or what a function or Field_type returns
 
     // Types.
-    Node_id inner_type( Node_id id ) const; // Pointer_, Many_pointer_, Run_, Mode_ and Const_type
+    Node_id inner_type( Node_id id ) const; // Pointer_, Many_pointer_, Run_, Array_, Mode_ and Const_type
+    Node_id array_size( Node_id array_type ) const;
     Node_id generic_name( Node_id generic_type ) const;
 
     // Expressions.

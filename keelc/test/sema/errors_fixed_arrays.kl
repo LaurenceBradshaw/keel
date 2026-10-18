@@ -1,0 +1,79 @@
+// D60: a `T[N]` holds N values inline. Its size is known at compile time, an index is a `u64`, and
+// it moves only as a whole. Each mistake below is one diagnostic.
+class Tok
+{
+    u8 b;
+
+    public Tok()
+    {
+        b = 0;
+    }
+
+    ~Tok()
+    {
+    }
+};
+
+const u64 FOUR = 4;
+
+// The size.
+void empty( i32[0] a )
+{
+}
+
+void unknown( u64 n )
+{
+    i32[n] a = [ 1 ];
+}
+
+void nothing( void[2] a )
+{
+}
+
+// Indexing.
+i32 past( i32[4] a )
+{
+    return a[ FOUR ];
+}
+
+void sliced( i32[4] a )
+{
+    const ref i32[] r = a[ 0..2 ];
+}
+
+u64 measured( i32[4] a )
+{
+    return a.length();
+}
+
+// Ownership.
+void taken( move Tok[2] a )
+{
+    Tok t = move a[ 0 ];
+}
+
+void copied( move Tok[2] a )
+{
+    Tok t = a[ 0 ];
+}
+
+struct Holds
+{
+    Tok[2] toks;
+};
+
+// The literal.
+void short_literal()
+{
+    i32[3] a = [ 1, 2 ];
+}
+
+void untyped()
+{
+    auto a = [ 1, 2 ];
+}
+
+i32 main()
+{
+    return 0;
+}

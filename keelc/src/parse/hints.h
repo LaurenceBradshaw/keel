@@ -14,6 +14,7 @@ enum class Hint_place : u8
 {
     Member,
     Declaration,
+    Statement,
 };
 
 // Help for a word dropped at `place`, or empty when there is none.

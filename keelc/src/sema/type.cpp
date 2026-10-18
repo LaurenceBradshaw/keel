@@ -123,6 +123,21 @@ Type_id Type_table::run_of( Type_id element )
     return id;
 }
 
+Type_id Type_table::array_of( Type_id element, u64 count )
+{
+    const auto it = arrays_.find( { element.v, count } );
+    if( it != arrays_.end() )
+    {
+        return it->second;
+    }
+
+    const Type_id id =
+        add( { .kind = Type_kind::Array, .element = element, .count = count },
+             fmt::format( "{}[{}]", name( element ), count ) );
+    arrays_.emplace( std::pair { element.v, count }, id );
+    return id;
+}
+
 Type_id Type_table::function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode )
 {
     for( const Type_id id : functions_ )
@@ -264,6 +279,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
     case Type_kind::Run:
+    case Type_kind::Array:
         return mentions_parameter( described.element );
     case Type_kind::Enum:
     case Type_kind::Struct:
@@ -334,6 +350,10 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     case Type_kind::Run:
     {
         return run_of( substitute( described.element, bindings ) );
+    }
+    case Type_kind::Array:
+    {
+        return array_of( substitute( described.element, bindings ), described.count );
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -499,6 +519,8 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     case Type_kind::Many_pointer:
     case Type_kind::Run:
         return deduce( p.element, a.element, into );
+    case Type_kind::Array:
+        return p.count == a.count && deduce( p.element, a.element, into );
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
@@ -634,6 +656,20 @@ std::vector<Type_id> Type_table::interface_types() const
     return result;
 }
 
+std::vector<Type_id> Type_table::array_types() const
+{
+    std::vector<Type_id> result;
+
+    for( const auto& [key, type] : arrays_ )
+    {
+        result.push_back( type );
+    }
+
+    std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+
+    return result;
+}
+
 std::vector<Type_id> Type_table::run_types() const
 {
     std::vector<Type_id> result;
@@ -680,6 +716,12 @@ bool Type_table::holds( Type_id from, Type_id to ) const
         ( t.kind == Type_kind::Many_pointer && f.kind == Type_kind::Many_pointer ) )
     {
         return ( t.element == f.element ) && ( !f.const_element || t.const_element );
+    }
+
+    // Only a borrow reaches a run, so this is an array lent as a `T[]`.
+    if( f.kind == Type_kind::Array && t.kind == Type_kind::Run )
+    {
+        return t.element == f.element;
     }
 
     // int -> int: same signdness, from.width <= to.width
@@ -922,6 +964,12 @@ bool Type_table::is_many_pointer( Type_id id ) const
     return get( id ).kind == Type_kind::Many_pointer;
 }
 
+bool Type_table::is_array( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Array;
+}
+
 bool Type_table::is_run( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1162,6 +1210,8 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
     case Type_kind::Many_pointer:
     case Type_kind::Run:
         return p.const_element == a.const_element && substitutes_to( p.element, bindings, a.element );
+    case Type_kind::Array:
+        return p.count == a.count && substitutes_to( p.element, bindings, a.element );
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
@@ -2917,6 +2967,47 @@ TEST_CASE( "type_table_keeps_an_interface_apart_from_the_structs", "[sema][type]
         REQUIRE_FALSE( table.is_interface_pointer( table.pointer_to( table.pointer_to( shape ) ) ) );
         REQUIRE_FALSE( table.is_interface_pointer( Type_id {} ) );
     }
+}
+
+// D60: keyed by the element and the count together, so `i32[3]` and `i32[4]` are two types.
+TEST_CASE( "type_table_interns_a_fixed_array", "[sema][type][fixed_array]" )
+{
+    Type_table table;
+
+    const Type_id i32   = table.integer( 32, true );
+    const Type_id u8    = table.integer( 8, false );
+    const Type_id four  = table.array_of( i32, 4 );
+    const Type_id t     = table.parameter( Node_id { 1 }, "T" );
+    const Type_id t_two = table.array_of( t, 2 );
+
+    REQUIRE( table.array_of( i32, 4 ) == four );
+    REQUIRE( table.array_of( i32, 3 ) != four );
+    REQUIRE( table.array_of( u8, 4 ) != four );
+    REQUIRE( table.is_array( four ) );
+    REQUIRE_FALSE( table.is_array( table.run_of( i32 ) ) );
+    REQUIRE( table.get( four ).element == i32 );
+    REQUIRE( table.get( four ).count == 4 );
+
+    REQUIRE( table.name( four ) == "i32[4]" );
+    REQUIRE( table.name( table.array_of( table.array_of( i32, 3 ), 2 ) ) == "i32[3][2]" );
+    REQUIRE(
+        table.array_types() ==
+        std::vector {
+            four, t_two, table.array_of( i32, 3 ), table.array_of( u8, 4 ), table.array_of( table.array_of( i32, 3 ), 2 )
+        }
+    );
+
+    // Lent where a run of the same element is borrowed, and nowhere else.
+    REQUIRE( table.holds( four, table.run_of( i32 ) ) );
+    REQUIRE_FALSE( table.holds( four, table.run_of( u8 ) ) );
+    REQUIRE_FALSE( table.holds( four, table.array_of( i32, 3 ) ) );
+
+    Bindings bindings;
+    REQUIRE( table.mentions_parameter( t_two ) );
+    REQUIRE( table.substitute( t_two, { { t.v, u8 } } ) == table.array_of( u8, 2 ) );
+    REQUIRE( table.deduce( t_two, table.array_of( u8, 2 ), bindings ) );
+    REQUIRE( bindings.at( t.v ) == u8 );
+    REQUIRE_FALSE( table.deduce( t_two, table.array_of( u8, 3 ), bindings ) );
 }
 
 TEST_CASE( "type_table_interns_a_run", "[sema][type][run]" )

@@ -164,6 +164,9 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
         return table_.run_of( element );
     }
 
+    case Node_kind::Array_type:
+        return resolve_array( annotation );
+
     // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
     // on the declaration is the underlying type and nothing downstream meets the wrapper - anything
     // needing the mode reads it back off the annotation, which is what parameter_mode does.
@@ -812,6 +815,77 @@ bool Annotations::refuse_never( Node_id annotation, Type_id type, std::string_vi
     return false;
 }
 
+Type_id Annotations::resolve_array( Node_id annotation )
+{
+    const Type_id            element = resolve( ast_.inner_type( annotation ), false );
+    const std::optional<u64> count   = array_size( ast_.array_size( annotation ) );
+
+    if( table_.is_error( element ) )
+    {
+        return element;
+    }
+
+    if( table_.is_void( element ) || table_.is_never( element ) )
+    {
+        const std::string size = count ? fmt::format( "{}", *count ) : "N";
+
+        if( table_.is_void( element ) )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ),
+                fmt::format( "`void[{}]` has no element to hold", size ),
+                fmt::format( "name the element's type, as in `u8[{}]`", size )
+            );
+        }
+        else
+        {
+            reporter_.error_at( ast_.span( annotation ), "`never` is only a return type" );
+        }
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !count )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    return table_.array_of( element, *count );
+}
+
+std::optional<u64> Annotations::array_size( Node_id size )
+{
+    // An unresolved name was reported by the resolver.
+    if( ast_.kind( size ) == Node_kind::Name_expr && !resolution_.declaration_of( size ).is_valid() )
+    {
+        return std::nullopt;
+    }
+
+    const Folded folded = constant_folder_.fold_named( size, resolution_ );
+
+    if( !folded.constant || folded.overflowed || folded.value.negative )
+    {
+        reporter_.error_at(
+            ast_.span( size ),
+            "an array's size must be known at compile time",
+            "write an integer literal, or the name of a `const`"
+        );
+        return std::nullopt;
+    }
+
+    if( folded.value.magnitude == 0 )
+    {
+        reporter_.error_at( ast_.span( size ), "an array's size must be at least 1" );
+        return std::nullopt;
+    }
+
+    // What Signature_printer reads back for a literal size.
+    constant_folder_.record_value(
+        size, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = folded.value.magnitude }
+    );
+    return folded.value.magnitude;
+}
+
 Span Annotations::const_keyword( Node_id const_type ) const
 {
     const Span const_type_span = ast_.span( const_type );
@@ -981,7 +1055,8 @@ public:
           reporter_( sm_, diags_ ),
           aggregates_( ast_, interner_, types_, reporter_ ),
           bounds_( ast_, interner_, literal_pool_, types_, aggregates_, reporter_ ),
-          annotations_( ast_, interner_, resolution_, types_, bounds_, reporter_ )
+          constant_folder_( ast_, literal_pool_, types_, bounds_, reporter_ ),
+          annotations_( ast_, interner_, resolution_, types_, bounds_, constant_folder_, reporter_ )
     {
         types_.size_to( ast_.node_count() );
 
@@ -1078,11 +1153,12 @@ private:
     Ast            ast_;
     Resolution     resolution_;
 
-    sema::Types_builder types_;
-    sema::Reporter      reporter_;
-    sema::Aggregates    aggregates_;
-    sema::Bounds        bounds_;
-    sema::Annotations   annotations_;
+    sema::Types_builder   types_;
+    sema::Reporter        reporter_;
+    sema::Aggregates      aggregates_;
+    sema::Bounds          bounds_;
+    sema::Constant_folder constant_folder_;
+    sema::Annotations     annotations_;
 
     std::size_t earlier_ = 0;
 };

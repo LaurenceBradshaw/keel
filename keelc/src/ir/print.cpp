@@ -85,6 +85,10 @@ struct Printer
             case Projection_kind::Member:
                 text = fmt::format( "{}.({})", text, type_name( projection.member ) );
                 break;
+
+            case Projection_kind::Index:
+                text = fmt::format( "{}[_{}]", text, projection.index.v );
+                break;
             }
         }
 
@@ -292,7 +296,7 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
     // Declared by nothing, and named for its type argument: a union's destructor, or an implementer's
     // drop function, which is not its `~` and so does not print as one.
     const bool synthesised = !func.declaration.is_valid() && !func.type_arguments.empty();
-    const bool united      = synthesised && types.is_union( func.type_arguments[0] );
+    const bool united = synthesised && ( types.is_union( func.type_arguments[0] ) || types.is_array( func.type_arguments[0] ) );
 
     std::string out = fmt::format(
         "fn {}{} {{\n",

@@ -84,5 +84,6 @@ std::string
 mangle_static_field( std::string_view name, u32 declaration, std::span<const Type_id> type_arguments, const Type_table& types );
 
 std::string mangle_run( Type_id run, const Type_table& types );
+std::string mangle_array( Type_id array, const Type_table& types );
 
 } // namespace keel

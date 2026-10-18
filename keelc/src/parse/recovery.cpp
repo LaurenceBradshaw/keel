@@ -84,6 +84,17 @@ bool Recovery::expect( Token_kind kind )
     return true;
 }
 
+bool Recovery::expect( Token_kind kind, Hint_place place )
+{
+    if( !cursor_.match( kind ) )
+    {
+        error_expected( kind, std::string( stop_hint( kind, cursor_.peek().kind, place ) ) );
+        return false;
+    }
+
+    return true;
+}
+
 void Recovery::error_at( Span span, std::string message, std::string help )
 {
     diags_.syntax_error( span, std::move( message ), std::move( help ) );

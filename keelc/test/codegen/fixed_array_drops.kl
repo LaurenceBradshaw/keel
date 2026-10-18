@@ -1,0 +1,75 @@
+// D60: dropping an array of an owning type drops each element, assigning an element drops the one
+// it replaces, and moving the array moves every element with it. The count is checked at each step.
+i32 dropped;
+
+class Token
+{
+    i32 id;
+
+    public Token( i32 id )
+    {
+        this.id = id;
+    }
+
+    ~Token()
+    {
+        dropped = dropped + 1;
+    }
+};
+
+Token[3] make()
+{
+    return [ Token( 1 ), Token( 2 ), Token( 3 ) ];
+}
+
+class Holder
+{
+    Token[2] tokens;
+
+    public Holder()
+    {
+        tokens = [ Token( 7 ), Token( 8 ) ];
+    }
+};
+
+i32 main()
+{
+    {
+        Token[3] a = make();
+
+        if( dropped != 0 )
+        {
+            return 1;
+        }
+
+        a[ 1 ] = Token( 4 );
+
+        if( dropped != 1 )
+        {
+            return 2;
+        }
+
+        Token[3] b = move a;
+
+        if( dropped != 1 )
+        {
+            return 3;
+        }
+    }
+
+    if( dropped != 4 )
+    {
+        return 4;
+    }
+
+    {
+        Holder h = Holder();
+    }
+
+    if( dropped != 6 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

@@ -907,7 +907,8 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
     if( ( mode == Param_mode::Ref || mode == Param_mode::Const_ref || mode == Param_mode::Out ) && given == wanted &&
         !table_.references_error( types_.type_of( argument ) ) && !table_.references_error( expected ) &&
         types_.type_of( argument ) != expected && types_.conformances().holds( table_, types_.type_of( argument ), expected ) &&
-        !table_.is_interface( expected ) ) // borrowing an implementer as one borrows that very object
+        !table_.is_interface( expected ) && // borrowing an implementer as one borrows that very object
+        !table_.is_run( expected ) )        // nor an array as a run of its elements
     {
         reporter_.error_at(
             ast_.span( argument ),

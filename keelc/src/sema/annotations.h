@@ -7,6 +7,7 @@
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "sema/bounds.h"
+#include "sema/constant_folder.h"
 #include "sema/reporter.h"
 #include "sema/resolver.h"
 #include "sema/types_builder.h"
@@ -26,6 +27,7 @@ public:
         const Resolution& resolution,
         Types_builder&    types,
         Bounds&           bounds,
+        Constant_folder&  constant_folder,
         Reporter&         reporter
     )
         : ast_( ast ),
@@ -34,6 +36,7 @@ public:
           types_( types ),
           table_( types.table() ),
           bounds_( bounds ),
+          constant_folder_( constant_folder ),
           reporter_( reporter )
     {
     }
@@ -74,6 +77,9 @@ private:
     Type_id resolve_function_type( Node_id annotation );
     Type_id resolve_field_type( Node_id annotation );
     Type_id resolve_union( Node_id annotation );
+    Type_id resolve_array( Node_id annotation );
+
+    std::optional<u64> array_size( Node_id size ); // empty when not known at compile time
 
     Span const_keyword( Node_id const_type ) const;
 
@@ -90,6 +96,7 @@ private:
     Types_builder&    types_;
     Type_table&       table_;
     Bounds&           bounds_;
+    Constant_folder&  constant_folder_;
     Reporter&         reporter_;
 
     Node_id addressed_ {};     // the Named_type a `*` or a `ref` just wrapped: the one place an interface may be named

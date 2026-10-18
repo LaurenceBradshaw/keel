@@ -1,0 +1,16 @@
+// An index at or past N prints the file, the line and the index as written, and aborts: the exit
+// code is SIGABRT's, and nothing after it runs.
+i32 at( const ref i32[4] values, u64 i )
+{
+    return values[ i ];
+}
+
+i32 main()
+{
+    i32[4] a = [ 1, 2, 3, 4 ];
+
+    println( at( a, 3 ) );
+    println( at( a, 4 ) );
+    println( "unreached" );
+    return 0;
+}

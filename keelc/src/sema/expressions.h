@@ -197,6 +197,7 @@ private:
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in Literals::infer_literal.
     Type_id infer_struct_literal( Node_id id );
+    Type_id infer_array_literal( Node_id id );
     Type_id no_instance_named( Span at, Node_id declaration, Type_id expectation );
 
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
@@ -230,6 +231,7 @@ private:
     Type_id infer_destroy( Node_id id );
 
     Type_id infer_index( Node_id id );
+    Type_id infer_array_index( Node_id id, Type_id array );
 
     // D35: an operation on the enumerated list is permitted inside an unsafe block and reported
     // outside one. The `why` is the operation's own reason - what the author is asserting by writing

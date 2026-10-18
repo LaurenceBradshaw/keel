@@ -962,9 +962,9 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
             fmt::format(
                 "a struct cannot contain `{}`, which {}",
                 table_.name( field_type ),
-                table_.mentions_parameter( field_type ) ? "may own a resource"
-                : ast_.has_destructor( field_decl )     ? "has a destructor"
-                                                        : "owns a resource"
+                table_.mentions_parameter( field_type )                      ? "may own a resource"
+                : field_decl.is_valid() && ast_.has_destructor( field_decl ) ? "has a destructor"
+                                                                             : "owns a resource"
             ),
             table_.is_parameter( field_type )
                 ? fmt::format(

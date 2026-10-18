@@ -116,6 +116,7 @@ private:
     Node_id parse_named_type( Span start );
     Node_id parse_type_suffixes( Node_id type, Span start );
     Node_id adjacent_suffix( Node_id type, Span start, u32 tokens, std::string_view spelling, Node_kind kind );
+    Node_id parse_array_suffix( Node_id type, Span start );
     Node_id parse_type_with_mode();
     Node_id parse_param();
 
@@ -173,6 +174,7 @@ private:
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
     Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
+    Node_id parse_array_literal();
 
     // One initialiser. aux is the field name in the designated form, invalid in the positional one.
     Node_id parse_field_init();
@@ -2110,6 +2112,14 @@ Node_id Parser::parse_type_suffixes( Node_id type, Span start )
             continue;
         }
 
+        if( cursor_.check( Token_kind::L_bracket ) &&
+            ( cursor_.peek( 1 ).kind == Token_kind::Int_literal || cursor_.peek( 1 ).kind == Token_kind::Identifier ) &&
+            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+        {
+            type = parse_array_suffix( type, start );
+            continue;
+        }
+
         if( !cursor_.check( Token_kind::Star ) && !cursor_.check( Token_kind::Amp ) )
         {
             break;
@@ -2143,6 +2153,43 @@ Node_id Parser::parse_type_suffixes( Node_id type, Span start )
 }
 
 // `[]` or `[*]`: refused unless it touches the type and its own tokens touch each other.
+// `[N]` after a type: only the `[` must touch it, so `i32[ 4 ]` is fine.
+Node_id Parser::parse_array_suffix( Node_id type, Span start )
+{
+    const Token size_token = cursor_.peek( 1 );
+
+    if( !cursor_.peek_is_adjacent() )
+    {
+        recovery_.error_at(
+            cursor_.peek().span,
+            "`[` must touch the type it modifies",
+            fmt::format( "write `{}[{}]`", sm_.text( ast_.span( type ) ), sm_.text( size_token.span ) )
+        );
+    }
+
+    cursor_.advance(); // the `[`
+    cursor_.advance(); // the size
+
+    const Node_id size = ast_.add(
+        size_token.kind == Token_kind::Int_literal ? Node_kind::Int_literal : Node_kind::Name_expr,
+        size_token.span,
+        size_token.symbol.v,
+        {}
+    );
+
+    cursor_.advance(); // the `]`
+
+    // An array is its elements, so `const i32[4]` is a `const` array rather than one of `const i32`.
+    const Span span = Span::merge( start, cursor_.previous().span );
+    if( ast_.kind( type ) == Node_kind::Const_type )
+    {
+        const Node_id array = ast_.add( Node_kind::Array_type, span, 0, { ast_.inner_type( type ), size } );
+        return ast_.add( Node_kind::Const_type, span, 0, { array } );
+    }
+
+    return ast_.add( Node_kind::Array_type, span, 0, { type, size } );
+}
+
 Node_id Parser::adjacent_suffix( Node_id type, Span start, u32 tokens, std::string_view spelling, Node_kind kind )
 {
     const Span suffix_start = cursor_.peek().span;
@@ -2573,7 +2620,7 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
         value = parse_expression( 0 );
     }
 
-    recovery_.expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::Semicolon, Hint_place::Statement );
     // A nameless declaration is not one: sema reads every declaration's name. Errors inside are
     // already reported.
     if( !name.is_valid() )
@@ -3577,6 +3624,9 @@ Node_id Parser::parse_prefix()
 
     // Grouping: the inner node is returned unchanged, so the parentheses leave no trace in the
     // tree. Only D16 needs to know they were there, which is what mark_parenthesised records.
+    case Token_kind::L_bracket:
+        return parse_array_literal();
+
     case Token_kind::L_paren:
     {
         cursor_.advance();
@@ -3634,6 +3684,43 @@ Node_id Parser::parse_arg_list()
 
     recovery_.expect( Token_kind::R_paren );
     return ast_.add( Node_kind::Arg_list, Span::merge( start, cursor_.previous().span ), 0, args );
+}
+
+Node_id Parser::parse_array_literal()
+{
+    const Span start = cursor_.advance().span; // the `[`
+
+    std::vector<Node_id> elements;
+
+    const std::size_t list_errors = diags_.error_count();
+    bool              closed      = true;
+    while( !cursor_.check( Token_kind::R_bracket ) && !cursor_.at_end() )
+    {
+        const u32 before = cursor_.position();
+
+        elements.push_back( parse_expression( 0 ) );
+
+        if( !recovery_.end_list_element( Token_kind::R_bracket, list_errors, Recovery::List_site::Literal ) )
+        {
+            closed = false;
+            break;
+        }
+
+        if( cursor_.position() == before )
+        {
+            cursor_.advance();
+            continue;
+        }
+
+        cursor_.match( Token_kind::Comma ); // a trailing comma is allowed, as in a struct literal
+    }
+
+    if( closed )
+    {
+        recovery_.expect( Token_kind::R_bracket );
+    }
+
+    return ast_.add( Node_kind::Array_literal, Span::merge( start, cursor_.previous().span ), 0, elements );
 }
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
@@ -11092,7 +11179,7 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
 
         REQUIRE( array.error_count() == 1 );
         REQUIRE( has( array, "expected `;`, found `[`" ) );
-        REQUIRE( has( array, "fixed-size array" ) );
+        REQUIRE( has( array, "the size goes after the element type" ) );
         REQUIRE( member_names( array ) == "c" );
     }
 
@@ -11383,7 +11470,7 @@ TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recove
 
         REQUIRE( array.error_count() == 1 );
         REQUIRE( has( array, "expected `;`, found `[`" ) );
-        REQUIRE( has( array, "a variable cannot be a fixed-size array" ) );
+        REQUIRE( has( array, "the size goes after the element type" ) );
         REQUIRE( names( array ) == "c" );
     }
 
@@ -11858,7 +11945,6 @@ TEST_CASE( "parser_rejects_a_malformed_many_item_pointer_type", "[parse][many]" 
     SECTION( "the other malformed spellings report" )
     {
         for( const char* body : {
-                 "i32[4] p;",           // a count, which a pointer type has no room for
                  "i32[* p = nullptr;",  // unterminated
                  "[*]i32 p = nullptr;", // the prefix order, which is Zig's rather than Keel's
              } )
@@ -11982,14 +12068,6 @@ TEST_CASE( "parser_rejects_a_malformed_index", "[parse][many]" )
         // The `[` itself was understood; what is reported is what is wrong inside it.
         REQUIRE( p.errors().find( "found `[`" ) == std::string::npos );
     }
-
-    SECTION( "nothing indexed" )
-    {
-        const Parsed p( "i32 main() { i32 v = [ 0 ]; return 0; }" );
-
-        INFO( p.errors() );
-        REQUIRE( p.has_errors() );
-    }
 }
 
 // `T[]` is a suffix like `[*]`, read right to left. Where a run may be written is sema's question,
@@ -12071,7 +12149,7 @@ TEST_CASE( "parser_parses_a_run_type", "[parse][run]" )
 
     SECTION( "a comparison with an index is still a comparison" )
     {
-        const Parsed p( "void f() { bool b = a < c[ 0 ] > ( d ); }" );
+        const Parsed p( "void f() { bool b = a < c[ i + 1 ] > ( d ); }" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -13015,6 +13093,132 @@ TEST_CASE( "parser_attaches_doc_comments_to_an_interface", "[parse][docs][interf
     REQUIRE( doc_comment( p.text( p.ast().doc_span( decl ) ), "///" ) == "A shape." );
     REQUIRE( p.ast().doc_span( method ).is_valid() );
     REQUIRE( doc_comment( p.text( p.ast().doc_span( method ) ), "///" ) == "Its area." );
+}
+
+// D60: `T[N]` is a suffix like `[]`, so `i32[4][2]` is two `i32[4]`s. The size is any expression
+// here; whether it is known at compile time is sema's question.
+TEST_CASE( "parser_parses_a_fixed_array_type", "[parse][fixed_array]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "i32[4] a = x;", "Array_type(i32,4)" },
+            { "i32[N] a = x;", "Array_type(i32,N)" },
+            { "i32[4][2] a = x;", "Array_type(Array_type(i32,4),2)" },
+            { "i32*[4] a = x;", "Array_type(Pointer_type(i32),4)" },
+            { "i32[4]* a = x;", "Pointer_type(Array_type(i32,4))" },
+            { "i32[4][*] a = x;", "Many_pointer_type(Array_type(i32,4))" },
+            { "const ref i32[4] a = x;", "Const_type(Mode_type(Array_type(i32,4)))" },
+            { "const i32[4] a = x;", "Const_type(Array_type(i32,4))" }, // an array is its elements
+            { "list<i32[4]> l;", "Generic_type(list,Type_arg_list(Array_type(i32,4)))" },
+        };
+
+        for( const auto& [body, expected] : cases )
+        {
+            INFO( body );
+            REQUIRE( declared_type( body ) == expected );
+        }
+    }
+
+    SECTION( "the span covers the suffix" )
+    {
+        const Parsed p( "void f( i32[4] a ) { }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.text( first_named( p, "Array_type" ) ) == "i32[4]" );
+    }
+
+    SECTION( "in every type position" )
+    {
+        for( const char* source : {
+                 "void f( i32[4] a ) { }",
+                 "void f( const ref i32[4] a ) { }",
+                 "i32[4] f() { return x; }",
+                 "struct S { i32[4] cells; };",
+                 "class C { i32[SIZE] cells; };",
+                 "i32[4] g = x;",
+                 "void f() { auto p = make<i32[4]>(); }",
+                 "void f() { auto p = &take<i32[4]>; }",
+                 "enum shape { square( f64[2] corner ), dot };",
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( first_named( p, "Array_type" ).is_valid() );
+        }
+    }
+
+    // `name[ size ]` then a name is a declaration; anything else after the `]` is an index.
+    SECTION( "indexing at a statement's start stays an expression" )
+    {
+        for( const char* body : { "a[ 4 ] = x;", "a[ N ] = x;", "a[ i ][ j ] = x;", "a[ 0 ].f();", "a[ 1 ]++;" } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE_FALSE( first_named( p, "Array_type" ).is_valid() );
+            REQUIRE( first_named( p, "Index_expr" ).is_valid() );
+        }
+    }
+
+    // D17, as for `[]` and `[*]`.
+    SECTION( "the suffix must touch its type" )
+    {
+        const Parsed p( "i32 main() { i32 [4] a = x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "must touch the type it modifies" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `i32[4]`" ) != std::string::npos );
+    }
+
+    // C's declarator, in each of the three places a declaration is written.
+    SECTION( "the size after the name is refused, with the Keel spelling" )
+    {
+        for( const char* source : {
+                 "struct S { i32 cells[4]; };",
+                 "i32 g[2];",
+                 "i32 main() { i32 a[4]; return 0; }",
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+            REQUIRE( p.errors().find( "the size goes after the element type, as in `i32[4] a`" ) != std::string::npos );
+        }
+    }
+}
+
+TEST_CASE( "parser_parses_an_array_literal", "[parse][fixed_array]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "[ 1, 2, 3 ]", "Array_literal(1,2,3)" },
+            { "[ 1, 2, ]", "Array_literal(1,2)" },
+            { "[ a[ 0 ], b + 1 ]", "Array_literal(Index_expr(a,0),Binary_expr(b,1))" },
+            { "[ [ 1, 2 ], [ 3, 4 ] ]", "Array_literal(Array_literal(1,2),Array_literal(3,4))" },
+            { "[ 1, 2 ][ 0 ]", "Index_expr(Array_literal(1,2),0)" },
+        };
+
+        for( const auto& [expression, expected] : cases )
+        {
+            INFO( expression );
+            REQUIRE( index_outline( expression ) == expected );
+        }
+    }
+
+    SECTION( "an unclosed one reports once" )
+    {
+        const Parsed p( "i32 main() { i32[2] a = [ 1, 2; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
 }
 
 } // namespace keel

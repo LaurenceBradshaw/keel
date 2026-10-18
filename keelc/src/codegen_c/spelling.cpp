@@ -86,6 +86,7 @@ std::string Spelling::type( Type_id type ) const
 
     case Type_kind::Struct:
     case Type_kind::Union:
+    case Type_kind::Array:
         return structure( type );
 
     case Type_kind::Pointer:
@@ -128,6 +129,11 @@ std::string Spelling::structure( Type_id type ) const
     if( types.table().is_union( type ) )
     {
         return fmt::format( "struct {}", mangle_union( type, types.table() ) );
+    }
+
+    if( types.table().is_array( type ) )
+    {
+        return fmt::format( "struct {}", mangle_array( type, types.table() ) );
     }
 
     return fmt::format(
@@ -221,12 +227,13 @@ std::string Spelling::field( Node_id declaration ) const
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
 {
-    // Declared by nothing, and named for its one type argument: a union's destructor, or an
-    // implementer's drop function.
+    // Declared by nothing, and named for its one type argument: a union's or an array's destructor,
+    // or an implementer's drop function.
     if( !declaration.is_valid() )
     {
-        return types.table().is_union( type_arguments[0] ) ? destructor_of( type_arguments[0] )
-                                                           : drop_function( type_arguments[0] );
+        return types.table().is_union( type_arguments[0] ) || types.table().is_array( type_arguments[0] )
+                   ? destructor_of( type_arguments[0] )
+                   : drop_function( type_arguments[0] );
     }
 
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
@@ -308,6 +315,11 @@ std::string Spelling::destructor_of( Type_id type ) const
     if( types.table().is_union( type ) )
     {
         return fmt::format( "{}__dtor", mangle_union( type, types.table() ) );
+    }
+
+    if( types.table().is_array( type ) )
+    {
+        return fmt::format( "{}__dtor", mangle_array( type, types.table() ) );
     }
 
     const Node_id declaration = types.table().get( type ).declaration;

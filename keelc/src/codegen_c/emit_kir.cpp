@@ -631,6 +631,17 @@ void Kir_emitter::emit_composites()
             continue;
         }
 
+        if( types_.table().is_array( type ) )
+        {
+            write_line( fmt::format(
+                "{} e[{}];", spelling_.type( types_.table().get( type ).element ), types_.table().get( type ).count
+            ) );
+            indent_ -= 4;
+            write_line( "};" );
+            write_line( "" );
+            continue;
+        }
+
         // Which variant is held is not a field of any variant, so it is written first and once.
         if( types_.table().is_enum( type ) )
         {
@@ -1690,6 +1701,9 @@ std::string Kir_emitter::place( const Place& place ) const
         case Projection_kind::Member:
             text = fmt::format( "{}.e{}", text, types_.table().error_tag( proj.member ) );
             break;
+        case Projection_kind::Index:
+            text = fmt::format( "{}.e[{}]", text, local_name( proj.index.v ) );
+            break;
         }
     }
 
@@ -2011,7 +2025,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
         // integer - so admitting one would forward-declare a struct that is an `int`. The kind is
         // checked first because enum_has_payload asserts on anything but an Enum_decl.
         const bool writes_a_struct =
-            types.table().is_struct( type ) || types.table().is_union( type ) ||
+            types.table().is_struct( type ) || types.table().is_union( type ) || types.table().is_array( type ) ||
             ( types.table().is_enum( type ) && ast.enum_has_payload( types.table().get( type ).declaration ) );
 
         if( !writes_a_struct )
@@ -2038,6 +2052,10 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
             {
                 self( self, member );
             }
+        }
+        else if( types.table().is_array( type ) )
+        {
+            self( self, types.table().get( type ).element );
         }
         else
         {
@@ -2066,6 +2084,11 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
     if( part == C_part::Program )
     {
         for( const Type_id type : types.table().union_types() )
+        {
+            visit( visit, type );
+        }
+
+        for( const Type_id type : types.table().array_types() )
         {
             visit( visit, type );
         }

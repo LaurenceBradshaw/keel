@@ -377,9 +377,10 @@ void Statements::visit_var( Node_id id )
             );
         }
         // A type that does not convert was already reported by check(); an implementer borrowed
-        // as its interface is still that very object.
+        // as its interface, or an array as a run, is still that very object.
         else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) &&
-                 types_.conformances().holds( table_, types_.type_of( init ), type ) && !table_.is_interface( type ) )
+                 types_.conformances().holds( table_, types_.type_of( init ), type ) && !table_.is_interface( type ) &&
+                 !table_.is_run( type ) )
         {
             reporter_.error_at(
                 ast_.span( init ),

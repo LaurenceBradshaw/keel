@@ -90,6 +90,14 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // `i32[4]` is `A4_3i32`: `A` starts no other encoding, and the `_` ends the count.
+    if( types.is_array( id ) )
+    {
+        out += fmt::format( "A{}_", types.get( id ).count );
+        encode_type( out, types.get( id ).element, types );
+        return;
+    }
+
     // `L` because `S` is the receiver's prefix.
     if( types.is_run( id ) )
     {
@@ -358,6 +366,13 @@ mangle_static_field( std::string_view name, u32 declaration, std::span<const Typ
     }
 }
 
+std::string mangle_array( Type_id array, const Type_table& types )
+{
+    std::string encoded;
+    encode_type( encoded, array, types );
+    return fmt::format( "kl__{}", encoded );
+}
+
 std::string mangle_run( Type_id run, const Type_table& types )
 {
     std::string encoded;
@@ -605,6 +620,8 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         REQUIRE( mangle_function( "", "at", run, table ) == "kl__at__L3Box_3i32" );
         REQUIRE( mangle_function( "", "at", run, table ) != mangle_function( "", "at", own, table, {}, box ) );
         REQUIRE( mangle_run( table.run_of( i32 ), table ) == "kl__run__L3i32" );
+        REQUIRE( mangle_array( table.array_of( i32, 4 ), table ) == "kl__A4_3i32" );
+        REQUIRE( mangle_array( table.array_of( table.array_of( i32, 3 ), 2 ), table ) == "kl__A2_A3_3i32" );
     }
 
     SECTION( "two parameters cannot be read as one" )

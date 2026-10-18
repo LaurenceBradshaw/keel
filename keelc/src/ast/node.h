@@ -38,6 +38,8 @@ enum class Node_kind : u16
     Many_pointer_type,
     // `T[]`; children: the element.
     Run_type,
+    // `T[N]`; children: the element, then the size (an Int_literal or Name_expr).
+    Array_type,
     // aux: the Keyword (`ref`, `out`, `move`); children: the type.
     Mode_type,
     // children: the type.
@@ -120,6 +122,8 @@ enum class Node_kind : u16
     Index_expr,
     // aux: the type's name; children: the package Name_expr when written, then the Field_inits.
     Struct_literal,
+    // `[ a, b ]`; children: the elements.
+    Array_literal,
     // aux: the field's name (invalid when positional); children: the value.
     Field_init,
     // `move`, `out`, `ref`: an operator that does not change its operand's type. aux: the Keyword;

@@ -1,0 +1,317 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "fixed_array_drops.kl.prelude.c"
+
+struct kl__Token;
+struct kl__A2_5Token;
+struct kl__Holder;
+struct kl__A3_5Token;
+
+struct kl__Token
+{
+    int32_t kl_id_3;
+};
+
+struct kl__A2_5Token
+{
+    struct kl__Token e[2];
+};
+
+struct kl__Holder
+{
+    struct kl__A2_5Token kl_tokens_51;
+};
+
+struct kl__A3_5Token
+{
+    struct kl__Token e[3];
+};
+
+int32_t kl_dropped_1;
+
+void kl__Token__R5Token_3i32__ctor( struct kl__Token*, int32_t );
+void kl__Token__dtor( struct kl__Token* );
+struct kl__A3_5Token kl__make__( void );
+void kl__Holder__R6Holder__ctor( struct kl__Holder* );
+int32_t kl__main__( void );
+void kl__A2_5Token__dtor( struct kl__A2_5Token* );
+void kl__A3_5Token__dtor( struct kl__A3_5Token* );
+
+void kl__Token__R5Token_3i32__ctor( struct kl__Token* kl_this_1, int32_t kl_id_2 )
+{
+#line 11 "codegen/fixed_array_drops.kl"
+    ( *kl_this_1 ).kl_id_3 = kl_id_2;
+    return;
+}
+
+void kl__Token__dtor( struct kl__Token* kl_this_1 )
+{
+    int32_t kl_t2;
+    ( void ) kl_this_1;
+#line 16 "codegen/fixed_array_drops.kl"
+    kl_t2 = kl_dropped_1 + 1;
+    kl_dropped_1 = kl_t2;
+    return;
+}
+
+struct kl__A3_5Token kl__make__( void )
+{
+    struct kl__A3_5Token kl_t0;
+    struct kl__A3_5Token kl_t1;
+    struct kl__Token kl_t2;
+    struct kl__Token* kl_t3;
+    struct kl__Token kl_t5;
+    struct kl__Token* kl_t6;
+    struct kl__Token kl_t8;
+    struct kl__Token* kl_t9;
+    uint64_t kl_t11;
+    uint64_t kl_t12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    ( void ) kl_t11;
+    ( void ) kl_t12;
+    ( void ) kl_t13;
+#line 22 "codegen/fixed_array_drops.kl"
+    kl_t14 = false;
+    kl_t15 = false;
+    kl_t16 = false;
+    kl_t17 = false;
+    kl_t14 = false;
+    kl_t15 = false;
+    kl_t3 = &kl_t2;
+    kl_t15 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t3, 1 );
+    kl_t16 = false;
+    kl_t6 = &kl_t5;
+    kl_t16 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t6, 2 );
+    kl_t17 = false;
+    kl_t9 = &kl_t8;
+    kl_t17 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t9, 3 );
+    kl_t11 = 0;
+    kl_t1.e[kl_t11] = kl_t2;
+    kl_t15 = false;
+    kl_t14 = true;
+    kl_t12 = 1;
+    kl_t1.e[kl_t12] = kl_t5;
+    kl_t16 = false;
+    kl_t14 = true;
+    kl_t13 = 2;
+    kl_t1.e[kl_t13] = kl_t8;
+    kl_t17 = false;
+    kl_t14 = true;
+    kl_t0 = kl_t1;
+    kl_t14 = false;
+    if ( kl_t14 ) kl__A3_5Token__dtor( &kl_t1 );
+    if ( kl_t17 ) kl__Token__dtor( &kl_t8 );
+    if ( kl_t16 ) kl__Token__dtor( &kl_t5 );
+    if ( kl_t15 ) kl__Token__dtor( &kl_t2 );
+    kl_t15 = false;
+    kl_t16 = false;
+    kl_t17 = false;
+    kl_t14 = false;
+    return kl_t0;
+}
+
+void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
+{
+    struct kl__A2_5Token kl_t2;
+    struct kl__Token kl_t3;
+    struct kl__Token* kl_t4;
+    struct kl__Token kl_t6;
+    struct kl__Token* kl_t7;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    ( void ) kl_t9;
+    ( void ) kl_t10;
+#line 31 "codegen/fixed_array_drops.kl"
+    kl_t11 = false;
+    kl_t12 = false;
+    kl_t13 = false;
+    kl_t11 = false;
+    kl_t12 = false;
+    kl_t4 = &kl_t3;
+    kl_t12 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t4, 7 );
+    kl_t13 = false;
+    kl_t7 = &kl_t6;
+    kl_t13 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t7, 8 );
+    kl_t9 = 0;
+    kl_t2.e[kl_t9] = kl_t3;
+    kl_t12 = false;
+    kl_t11 = true;
+    kl_t10 = 1;
+    kl_t2.e[kl_t10] = kl_t6;
+    kl_t13 = false;
+    kl_t11 = true;
+    ( *kl_this_1 ).kl_tokens_51 = kl_t2;
+    kl_t11 = false;
+    if ( kl_t11 ) kl__A2_5Token__dtor( &kl_t2 );
+    if ( kl_t13 ) kl__Token__dtor( &kl_t6 );
+    if ( kl_t12 ) kl__Token__dtor( &kl_t3 );
+    kl_t12 = false;
+    kl_t13 = false;
+    kl_t11 = false;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A3_5Token kl_a_1;
+    struct kl__A3_5Token kl_t2;
+    bool kl_t3;
+    uint64_t kl_t4;
+    struct kl__Token kl_t5;
+    struct kl__Token* kl_t6;
+    bool kl_t8;
+    struct kl__A3_5Token kl_b_9;
+    bool kl_t10;
+    bool kl_t11;
+    struct kl__Holder kl_h_12;
+    struct kl__Holder* kl_t13;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    ( void ) kl_t4;
+#line 38 "codegen/fixed_array_drops.kl"
+    kl_t16 = false;
+    kl_t17 = false;
+#line 45 "codegen/fixed_array_drops.kl"
+    kl_t18 = false;
+#line 38 "codegen/fixed_array_drops.kl"
+    kl_t16 = false;
+    kl_t2 = kl__make__(  );
+    kl_t17 = true;
+    kl_a_1 = kl_t2;
+    kl_t17 = false;
+    kl_t16 = true;
+    if ( kl_t17 ) kl__A3_5Token__dtor( &kl_t2 );
+    kl_t17 = false;
+#line 40 "codegen/fixed_array_drops.kl"
+    kl_t3 = kl_dropped_1 != 0;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 42 "codegen/fixed_array_drops.kl"
+    kl_t0 = 1;
+    if ( kl_t16 ) kl__A3_5Token__dtor( &kl_a_1 );
+    kl_t16 = false;
+    return kl_t0;
+    bb2:
+#line 45 "codegen/fixed_array_drops.kl"
+    kl_t4 = 1;
+    kl_t18 = false;
+    kl_t6 = &kl_t5;
+    kl_t18 = true;
+    kl__Token__R5Token_3i32__ctor( kl_t6, 4 );
+    if ( kl_t16 ) kl__Token__dtor( &kl_a_1.e[kl_t4] );
+    kl_a_1.e[kl_t4] = kl_t5;
+    kl_t18 = false;
+    kl_t16 = true;
+    if ( kl_t18 ) kl__Token__dtor( &kl_t5 );
+    kl_t18 = false;
+#line 47 "codegen/fixed_array_drops.kl"
+    kl_t8 = kl_dropped_1 != 1;
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+#line 49 "codegen/fixed_array_drops.kl"
+    kl_t0 = 2;
+    if ( kl_t16 ) kl__A3_5Token__dtor( &kl_a_1 );
+    kl_t16 = false;
+    return kl_t0;
+    bb4:
+#line 52 "codegen/fixed_array_drops.kl"
+    kl_b_9 = kl_a_1;
+    kl_t16 = false;
+#line 54 "codegen/fixed_array_drops.kl"
+    kl_t10 = kl_dropped_1 != 1;
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 56 "codegen/fixed_array_drops.kl"
+    kl_t0 = 3;
+    kl__A3_5Token__dtor( &kl_b_9 );
+    if ( kl_t16 ) kl__A3_5Token__dtor( &kl_a_1 );
+    kl_t16 = false;
+    return kl_t0;
+    bb6:
+#line 37 "codegen/fixed_array_drops.kl"
+    kl__A3_5Token__dtor( &kl_b_9 );
+    if ( kl_t16 ) kl__A3_5Token__dtor( &kl_a_1 );
+    kl_t16 = false;
+#line 60 "codegen/fixed_array_drops.kl"
+    kl_t11 = kl_dropped_1 != 4;
+    if ( kl_t11 ) goto bb7; else goto bb8;
+    bb7:
+#line 62 "codegen/fixed_array_drops.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 66 "codegen/fixed_array_drops.kl"
+    kl_t13 = &kl_h_12;
+    kl__Holder__R6Holder__ctor( kl_t13 );
+#line 65 "codegen/fixed_array_drops.kl"
+    kl__A2_5Token__dtor( &kl_h_12.kl_tokens_51 );
+#line 69 "codegen/fixed_array_drops.kl"
+    kl_t15 = kl_dropped_1 != 6;
+    if ( kl_t15 ) goto bb9; else goto bb10;
+    bb9:
+#line 71 "codegen/fixed_array_drops.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb10:
+#line 74 "codegen/fixed_array_drops.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+void kl__A2_5Token__dtor( struct kl__A2_5Token* kl_t1 )
+{
+    uint64_t kl_t2;
+    bool kl_t3;
+#line 5 "codegen/fixed_array_drops.kl"
+    kl_t2 = 2;
+    goto bb1;
+    bb1:
+    kl_t3 = 0 < kl_t2;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t2 = kl_t2 - 1;
+    kl__Token__dtor( &( *kl_t1 ).e[kl_t2] );
+    goto bb1;
+    bb3:
+    return;
+}
+
+void kl__A3_5Token__dtor( struct kl__A3_5Token* kl_t1 )
+{
+    uint64_t kl_t2;
+    bool kl_t3;
+#line 5 "codegen/fixed_array_drops.kl"
+    kl_t2 = 3;
+    goto bb1;
+    bb1:
+    kl_t3 = 0 < kl_t2;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t2 = kl_t2 - 1;
+    kl__Token__dtor( &( *kl_t1 ).e[kl_t2] );
+    goto bb1;
+    bb3:
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

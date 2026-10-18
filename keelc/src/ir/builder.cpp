@@ -89,6 +89,11 @@ Place Builder::member( Place base, Type_id member )
     return projected( base, Projection { .kind = Projection_kind::Member, .member = member } );
 }
 
+Place Builder::index( Place base, Local_id index )
+{
+    return projected( base, Projection { .kind = Projection_kind::Index, .index = index } );
+}
+
 Type_id Builder::type_of( Local_id id ) const
 {
     assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );

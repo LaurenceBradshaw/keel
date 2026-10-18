@@ -81,6 +81,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Struct_literal:
         return infer_struct_literal( id );
 
+    case Node_kind::Array_literal:
+        return infer_array_literal( id );
+
     case Node_kind::Cast_expr:
         return infer_cast( id );
 
@@ -243,7 +246,8 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     }
 
     // `nullptr`, which every pointer accepts
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Struct_literal )
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Struct_literal ||
+        ast_.kind( value ) == Node_kind::Array_literal )
     {
         return shape;
     }
@@ -702,6 +706,29 @@ Type_id Expressions::infer_method_call( Node_id id )
         }
 
         return types_.poison( id );
+    }
+
+    // An array's one method.
+    if( table_.is_array( object_type ) )
+    {
+        const bool is_size = interner_.text( ast_.name( callee ) ) == "size" && ast_.arguments( id ).empty();
+
+        for( const Node_id argument : ast_.arguments( id ) )
+        {
+            infer( argument );
+        }
+
+        if( !is_size )
+        {
+            reporter_.error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
+                "an array has only `size()`"
+            );
+            return types_.poison( id );
+        }
+
+        return types_.record( id, table_.integer( 64, false ) );
     }
 
     const std::vector<Type_id> owners = bounds_.method_owners( object_type, ast_.name( callee ) );
@@ -2177,6 +2204,17 @@ Type_id Expressions::infer_index( Node_id id )
 
     const Type_id base = infer( ast_.object( id ) );
 
+    if( table_.is_array( base ) )
+    {
+        if( is_range )
+        {
+            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be sliced", table_.name( base ) ) );
+            return types_.poison( id );
+        }
+
+        return infer_array_index( id, base );
+    }
+
     if( table_.is_struct( base ) )
     {
         if( is_range )
@@ -2620,6 +2658,94 @@ Type_id Expressions::no_instance_named( Span at, Node_id declaration, Type_id ex
     return table_.builtin( Type_kind::Error );
 }
 
+// A constant index is checked here, so lowering checks only the rest.
+Type_id Expressions::infer_array_index( Node_id id, Type_id array )
+{
+    const Node_id index = ast_.index( id );
+    const u64     count = table_.get( array ).count;
+
+    if( table_.is_error( check( index, table_.integer( 64, false ) ) ) )
+    {
+        return types_.poison( id );
+    }
+
+    const Folded folded = constant_folder_.fold_named( index, resolution_ );
+
+    if( folded.constant && !folded.overflowed && !folded.value.negative && folded.value.magnitude >= count )
+    {
+        reporter_.error_at(
+            ast_.span( index ),
+            fmt::format( "index {} is past the end of `{}`", folded.value.magnitude, table_.name( array ) ),
+            fmt::format( "its indices run from 0 to {}", count - 1 )
+        );
+        return types_.poison( id );
+    }
+
+    return types_.record( id, table_.get( array ).element );
+}
+
+Type_id Expressions::infer_array_literal( Node_id id )
+{
+    const Type_id                  expectation = take_expectation();
+    const std::span<const Node_id> elements    = ast_.children( id );
+
+    const auto absorb_all = [&]
+    {
+        for( const Node_id element : elements )
+        {
+            absorb( element );
+        }
+    };
+
+    if( !expectation.is_valid() || table_.is_error( expectation ) )
+    {
+        if( !expectation.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                "an array literal needs a type to fill",
+                "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`"
+            );
+        }
+
+        absorb_all();
+        return types_.poison( id );
+    }
+
+    if( !table_.is_array( expectation ) )
+    {
+        reporter_.error_at( ast_.span( id ), fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ) );
+        absorb_all();
+        return types_.poison( id );
+    }
+
+    const Type_id element = table_.get( expectation ).element;
+
+    if( elements.size() != table_.get( expectation ).count )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` holds {} values, but this lists {}",
+                table_.name( expectation ),
+                table_.get( expectation ).count,
+                elements.size()
+            ),
+            "a literal lists every element"
+        );
+        absorb_all();
+        return types_.poison( id );
+    }
+
+    for( const Node_id value : elements )
+    {
+        check( value, element );
+        places_.check_owning_source( value, element );
+    }
+
+    return types_.record( id, expectation );
+}
+
 Type_id Expressions::infer_struct_literal( Node_id id )
 {
     const Type_id expectation = take_expectation();
@@ -3049,6 +3175,14 @@ Type_id Expressions::infer_marker( Node_id id )
             "moving it would leave the object partly moved - move the whole object instead"
         );
 
+        return types_.poison( id );
+    }
+
+    if( places_.is_array_index( operand ) )
+    {
+        reporter_.error_at(
+            ast_.span( operand ), "an element of an array cannot be moved out", "the array moves only as a whole"
+        );
         return types_.poison( id );
     }
 
@@ -9148,6 +9282,147 @@ TEST_CASE( "expressions_refuse_what_an_interface_does_not_declare", "[sema][inte
         {
             REQUIRE( rendered.find( "`where` clause" ) == std::string::npos );
         }
+    }
+}
+
+// D60: `T[N]` holds N values inline. Its size is known at compile time, every element is always
+// live, and it moves only as a whole.
+TEST_CASE( "type_checker_types_a_fixed_array", "[sema][fixed_array]" )
+{
+    SECTION( "an element, a nested element and the size" )
+    {
+        const Typed p(
+            "const u64 SIDE = 3;\n"
+            "u64 f( i32[4] a, i32[SIDE][2] grid ) { i32 x = a[ 1 ] + grid[ 1 ][ 2 ]; return a.size() + grid.size(); }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "i32" );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 1 ) ) == "i32[3]" );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 2 ) ) == "i32" );
+        REQUIRE( p.type_name( nth_named( p, "Call_expr", 0 ) ) == "u64" );
+    }
+
+    // Anything that folds, a local `const` included.
+    SECTION( "a size known at compile time" )
+    {
+        const Typed p( "const u64 FULL = 4;\n"
+                       "void f( i32[FULL] a ) { const u64 n = 2; i32[n] b = [ 1, 2 ]; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a literal fills one, element by element" )
+    {
+        const Typed p( "struct P { i32 x; };\n"
+                       "i32 main() { i32[3] a = [ 1, 2, 3 ]; P[2] ps = [ P { .x = 1 }, P { .x = 2 } ]; "
+                       "u8[2][2] m = [ [ 1, 2 ], [ 3, 4 ] ]; return a[ 0 ] + ps[ 1 ].x + m[ 1 ][ 0 ]; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Array_literal", 0 ) ) == "i32[3]" );
+    }
+
+    SECTION( "one is copied when its element is, and assigned whole or by element" )
+    {
+        const Typed p( "i32[2] swap( i32[2] a ) { i32[2] b = a; b[ 0 ] = a[ 1 ]; b[ 1 ] = a[ 0 ]; a = b; return a; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an owning one moves whole, and an element is replaced in place" )
+    {
+        const Typed p( "class Tok { u8 b; public Tok() { b = 0; } ~Tok() { } };\n"
+                       "Tok[2] pass( move Tok[2] a ) { a[ 0 ] = Tok(); Tok[2] b = move a; return b; }\n"
+                       "class Holder { Tok[2] toks; public Holder() { toks = [ Tok(), Tok() ]; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A `T[N]` lends its elements as a borrowed `T[]`, as a slice does.
+    SECTION( "it converts to a run where one is borrowed" )
+    {
+        const Typed p( "i32 sum( const ref i32[] v ) { return v[ 0 ]; }\n"
+                       "void fill( ref i32[] v ) { v[ 0 ] = 1; }\n"
+                       "i32 main() { i32[2] a = [ 1, 2 ]; fill( ref a ); const ref i32[] r = a; return sum( a ) + r[ 1 ]; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_array]" )
+{
+    const std::string declared = "class Tok { u8 b; public Tok() { b = 0; } ~Tok() { } };\nconst u64 FOUR = 4;\n";
+
+    struct Case
+    {
+        const char* source;
+        const char* message;
+        const char* help;
+    };
+
+    const Case cases[] = {
+        // The size.
+        { "void f( i32[0] a ) { }", "an array's size must be at least 1", "" },
+        { "const u64 NONE = 0;\nvoid f( i32[NONE] a ) { }", "an array's size must be at least 1", "" },
+        { "void f( u64 n ) { i32[n] a = [ 1 ]; }",
+          "an array's size must be known at compile time",
+          "write an integer literal, or the name of a `const`" },
+        { "u64 n = 2;\nvoid f( i32[n] a ) { }", "an array's size must be known at compile time", "" },
+        { "void f( void[2] a ) { }", "`void[2]` has no element to hold", "name the element's type, as in `u8[2]`" },
+
+        // Indexing.
+        { "i32 f( i32[4] a, i32 i ) { return a[ i ]; }", "expected `u64`, but got `i32`", "" },
+        { "i32 f( i32[4] a ) { return a[ 4 ]; }", "index 4 is past the end of `i32[4]`", "its indices run from 0 to 3" },
+        { "i32 f( i32[4] a ) { return a[ FOUR ]; }", "index 4 is past the end of `i32[4]`", "" },
+        { "void f( i32[4] a ) { const ref i32[] r = a[ 0..2 ]; }", "`i32[4]` cannot be sliced", "" },
+        { "void f() { const i32[2] a = [ 1, 2 ]; a[ 0 ] = 3; }", "`a` is `const`", "remove `const` to modify it" },
+
+        // Ownership.
+        { "void f( move Tok[2] a ) { Tok t = move a[ 0 ]; }",
+          "an element of an array cannot be moved out",
+          "the array moves only as a whole" },
+        { "void f( move Tok[2] a ) { Tok t = a[ 0 ]; }",
+          "an owning value is transferred, not copied",
+          "it stays in the array, which moves only as a whole" },
+        { "Tok f( move Tok[2] a ) { return a[ 0 ]; }",
+          "an owning value is transferred, not copied",
+          "still belongs to what holds it" },
+        { "void f( move Tok[2] a ) { Tok[2] b = a; }", "an owning value is transferred, not copied", "write `move a`" },
+        { "struct S { Tok[2] toks; };", "a struct cannot contain `Tok[2]`, which owns a resource", "" },
+        { "struct S { S[2] inner; };", "`S` contains itself, so it has no size", "" },
+
+        // The literal.
+        { "void f() { i32[3] a = [ 1, 2 ]; }", "`i32[3]` holds 3 values, but this lists 2", "a literal lists every element" },
+        { "void f() { auto a = [ 1, 2 ]; }",
+          "an array literal needs a type to fill",
+          "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`" },
+        { "void f() { i32 a = [ 1 ]; }", "an array literal cannot become `i32`", "" },
+        { "void f() { u8[2] a = [ 1, 300 ]; }", "300", "" },
+
+        // The conversion is to a borrowed run of the same element, and only that.
+        { "void f( i32[2] a ) { const ref i64[] r = a; }", "expected `i64[]`, but got `i32[2]`", "" },
+        { "void f( i32[2] a ) { i32[3] b = a; }", "expected `i32[3]`, but got `i32[2]`", "" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( declared + c.source + "\ni32 main() { return 0; }" );
+
+        INFO( c.source << "\n" << p.rendered() );
+        const std::string rendered = p.rendered();
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( rendered.find( c.message ) != std::string::npos );
+        REQUIRE( rendered.find( c.help ) != std::string::npos );
     }
 }
 

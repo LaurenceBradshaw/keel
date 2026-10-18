@@ -1,0 +1,42 @@
+// D60: a `kl::string[3]` built from a literal owns its elements. Replacing one drops the old, moving
+// the array moves them all, and each is dropped once at the end, which valgrind checks. Each check
+// returns its own code.
+import kl::string;
+
+u64 total( const ref kl::string[] words )
+{
+    u64 sum = 0;
+
+    for( u64 i : 0..words.size )
+    {
+        sum += words[i].size();
+    }
+
+    return sum;
+}
+
+i32 main()
+{
+    kl::string[3] words = [ "one", "two", "three" ];
+
+    if( total( words ) != 11 || words.size() != 3 )
+    {
+        return 1;
+    }
+
+    words[1] = "seven";
+
+    if( words[1] != "seven" || total( words ) != 13 )
+    {
+        return 2;
+    }
+
+    kl::string[3] moved = move words;
+
+    if( moved[0] != "one" || moved[2] != "three" )
+    {
+        return 3;
+    }
+
+    return 0;
+}

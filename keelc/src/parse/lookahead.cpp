@@ -8,6 +8,17 @@
 namespace keel
 {
 
+namespace
+{
+
+// What a `T[N]`'s size may be written as.
+bool is_array_size( Token_kind kind )
+{
+    return kind == Token_kind::Int_literal || kind == Token_kind::Identifier;
+}
+
+} // namespace
+
 Lookahead::Lookahead( std::span<const Token> tokens )
     : cursor_( tokens )
 {
@@ -415,6 +426,11 @@ bool Lookahead::looks_like_type_arguments( u32 at )
                 cursor_.advance(); // `[`
                 cursor_.advance(); // `*`
             }
+            else if( is_array_size( cursor_.peek( 1 ).kind ) && cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+                cursor_.advance(); // the size
+            }
             else
             {
                 return false;
@@ -807,6 +823,15 @@ bool Lookahead::scan_type_term()
             continue;
         }
 
+        if( cursor_.check( Token_kind::L_bracket ) && is_array_size( cursor_.peek( 1 ).kind ) &&
+            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+        {
+            cursor_.advance(); // `[`
+            cursor_.advance(); // the size
+            cursor_.advance(); // `]`
+            continue;
+        }
+
         if( cursor_.match( Token_kind::Star ) || cursor_.match( Token_kind::Amp ) )
         {
             continue;
@@ -913,6 +938,15 @@ bool Lookahead::scan_type_and_name()
             if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::R_bracket )
             {
                 cursor_.advance(); // `[`
+                cursor_.advance(); // `]`
+                continue;
+            }
+
+            if( cursor_.check( Token_kind::L_bracket ) && is_array_size( cursor_.peek( 1 ).kind ) &&
+                cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+                cursor_.advance(); // the size
                 cursor_.advance(); // `]`
                 continue;
             }

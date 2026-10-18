@@ -47,13 +47,14 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place )
 {
     // clang-format off
-    constexpr std::array<Stop_hint, 8> hints = {
+    constexpr std::array<Stop_hint, 9> hints = {
         Stop_hint { Token_kind::Semicolon, Token_kind::Equal, "a field cannot be given a value here yet: set it in the constructor", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each field with its own type", Hint_place::Member },
-        Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "a field cannot be a fixed-size array yet", Hint_place::Member },
+        Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Member },
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each variable with its own type", Hint_place::Declaration },
-        Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "a variable cannot be a fixed-size array yet", Hint_place::Declaration },
+        Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Declaration },
+        Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Statement },
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C", Hint_place::Declaration },
         Stop_hint { Token_kind::L_brace, Token_kind::Colon, "Keel has no initialiser lists: put the initialisation in the constructor's body", Hint_place::Member },
     };
@@ -119,9 +120,7 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
     {
         REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::Equal, member ), "set it in the constructor" ) );
         REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::Comma, member ), "each field with its own type" ) );
-        REQUIRE(
-            has( stop_hint( Token_kind::Semicolon, Token_kind::L_bracket, member ), "a field cannot be a fixed-size array" )
-        );
+        REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::L_bracket, member ), "`i32[4] a`" ) );
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, member ), "no forward declarations" ) );
         REQUIRE_FALSE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, member ), "extern" ) );
     }
@@ -129,9 +128,7 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
     SECTION( "for a declaration that stopped short" )
     {
         REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::Comma, declaration ), "each variable with its own type" ) );
-        REQUIRE( has(
-            stop_hint( Token_kind::Semicolon, Token_kind::L_bracket, declaration ), "a variable cannot be a fixed-size array"
-        ) );
+        REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::L_bracket, declaration ), "`i32[4] a`" ) );
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, declaration ), "no forward declarations" ) );
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, declaration ), "`extern` if it is defined in C" )
         );

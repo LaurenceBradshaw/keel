@@ -596,6 +596,19 @@ Type_id Constant_folder::record_constant( Node_id id, Type_id type )
     return types_.record( id, type );
 }
 
+Folded Constant_folder::fold_named( Node_id id, const Resolution& resolution ) const
+{
+    if( id.is_valid() && ast_.kind( id ) == Node_kind::Name_expr )
+    {
+        const Node_id decl     = resolution.declaration_of( id );
+        const bool    is_const = decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl && ast_.is_const_binding( decl );
+
+        return is_const ? fold_integer( ast_.initialiser( decl ) ) : not_constant();
+    }
+
+    return fold_integer( id );
+}
+
 void Constant_folder::record_value( Node_id id, Constant_value value )
 {
     constants_.emplace( id.v, value );

@@ -9,6 +9,7 @@
 #include "common/types.h"
 #include "sema/bounds.h"
 #include "sema/reporter.h"
+#include "sema/resolver.h"
 #include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
@@ -55,6 +56,8 @@ public:
     // `known` is the type the caller already settled on - see check_constant for why it is needed.
     Folded             fold_integer( Node_id id, Type_id known = Type_id {} ) const;
     std::optional<f64> fold_float( Node_id id ) const;
+    // fold_integer, but a name of a `const` folds its initialiser: an array's size or index.
+    Folded fold_named( Node_id id, const Resolution& resolution ) const;
 
     bool    check_constant( Node_id id, Type_id type );
     Type_id record_constant( Node_id id, Type_id type );

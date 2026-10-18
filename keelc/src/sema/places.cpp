@@ -120,7 +120,8 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
     {
         // A conditional materialises its result even when both arms are places, and a literal has
         // no storage at all - neither has a declaration, which is why they are named here directly.
-        bool temporary = ast_.kind( source ) == Node_kind::Conditional_expr || ast_.kind( source ) == Node_kind::Struct_literal;
+        bool temporary = ast_.kind( source ) == Node_kind::Conditional_expr ||
+                         ast_.kind( source ) == Node_kind::Struct_literal || ast_.kind( source ) == Node_kind::Array_literal;
 
         if( ast_.kind( source ) == Node_kind::Call_expr )
         {
@@ -349,7 +350,7 @@ Node_id Places::through_const_pointer( Node_id place ) const
             }
 
             // A run's type carries no `const`, so a slice of a `const T[*]` is asked of the pointer beneath.
-            if( is_run_index( place ) )
+            if( is_run_index( place ) || is_array_index( place ) )
             {
                 place = ast_.object( place );
                 continue;
@@ -489,7 +490,7 @@ Node_id Places::place_root( Node_id id, Node_id current_function ) const
 
 Node_id Places::place_source( Node_id id ) const
 {
-    while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) || is_run_index( id ) )
+    while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) || is_run_index( id ) || is_array_index( id ) )
     {
         const Node_id object = ast_.object( id );
 
@@ -522,6 +523,17 @@ bool Places::is_operator_index( Node_id id ) const
 bool Places::is_run_index( Node_id id ) const
 {
     return ast_.kind( id ) == Node_kind::Index_expr && is_run_typed( ast_.object( id ) );
+}
+
+bool Places::is_array_index( Node_id id ) const
+{
+    if( ast_.kind( id ) != Node_kind::Index_expr )
+    {
+        return false;
+    }
+
+    const Type_id type = types_.type_of( ast_.object( id ) );
+    return type.is_valid() && table_.is_array( type );
 }
 
 bool Places::describes_run( Node_id place ) const
@@ -727,6 +739,16 @@ void Places::check_owning_source( Node_id value, Type_id type )
         return;
     }
 
+    if( is_array_index( value ) )
+    {
+        reporter_.error_at(
+            ast_.span( value ),
+            "an owning value is transferred, not copied",
+            "it stays in the array, which moves only as a whole"
+        );
+        return;
+    }
+
     if( ast_.kind( value ) == Node_kind::Name_expr &&
         ast_.kind( resolution_.declaration_of( value ) ) == Node_kind::Binding_decl &&
         !owns_binding( resolution_.declaration_of( value ) ) )
@@ -768,7 +790,7 @@ bool Places::check_owning_return( Node_id value, Type_id type )
     const Span  span    = ast_.span( value );
     std::string message = "an owning value is transferred, not copied";
 
-    if( ast_.kind( value ) == Node_kind::Index_expr && !is_operator_index( value ) )
+    if( ast_.kind( value ) == Node_kind::Index_expr && !is_operator_index( value ) && !is_array_index( value ) )
     {
         reporter_.error_at( span, message, fmt::format( "write `move {}`", reporter_.text( span ) ) );
     }

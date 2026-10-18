@@ -53,8 +53,8 @@ public:
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
           bounds_( ast, interner, literals, types_, aggregates_, reporter_ ),
-          annotations_( ast, interner, resolution, types_, bounds_, reporter_ ),
           constant_folder_( ast, literals, types_, bounds_, reporter_ ),
+          annotations_( ast, interner, resolution, types_, bounds_, constant_folder_, reporter_ ),
           places_( ast, interner, resolution, types_, bounds_, callees_, reporter_ ),
           generic_recursion_( ast, interner, table_, reporter_ ),
           literals_( ast, literals, types_, bounds_, constant_folder_, reporter_ ),
@@ -126,8 +126,8 @@ private:
 
     Aggregates        aggregates_;
     Bounds            bounds_;
-    Annotations       annotations_;
     Constant_folder   constant_folder_;
+    Annotations       annotations_;
     Callees           callees_;
     Places            places_;
     Generic_recursion generic_recursion_;
@@ -322,6 +322,11 @@ bool may_own(
         return parameter_owns( instance );
     }
 
+    if( table.is_array( instance ) )
+    {
+        return may_own( ast, table, table.get( instance ).element, recorded, visiting, parameter_owns );
+    }
+
     if( table.is_union( instance ) )
     {
         const std::span<const Type_id> members = table.get( instance ).arguments;
@@ -407,6 +412,11 @@ static bool holds_address(
     if( table.is_pointer( instance ) || table.is_many_pointer( instance ) || table.is_run( instance ) )
     {
         return true;
+    }
+
+    if( table.is_array( instance ) )
+    {
+        return holds_address( ast, table, table.get( instance ).element, recorded, visiting );
     }
 
     if( table.is_union( instance ) )

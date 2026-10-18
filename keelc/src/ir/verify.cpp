@@ -299,6 +299,15 @@ void check_projections( const Function& func, std::vector<std::string>& errors )
             }
 
             break;
+
+        case Projection_kind::Index:
+            if( projection.field.is_valid() || projection.member.is_valid() || !projection.index.is_valid() ||
+                projection.index.v >= func.locals.size() )
+            {
+                errors.push_back( fmt::format( "projection {}: an index carries its local and nothing else", i ) );
+            }
+
+            break;
         }
     }
 }

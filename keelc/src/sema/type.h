@@ -3,6 +3,7 @@
 
 #pragma once
 #include <deque>
+#include <map>
 #include <span>
 #include <string>
 #include <string_view>
@@ -37,6 +38,7 @@ enum class Type_kind : u8
     Pointer,
     Many_pointer, // T[*]
     Run,          // T[]
+    Array,        // T[N]
     Struct,       // `declaration` says which one
     Enum,
     Parameter, // a generic type parameter.
@@ -86,6 +88,7 @@ struct Type
     // the one returning borrow the language has, and the rest are refused where they are written.
     Param_mode return_mode   = Param_mode::Value;
     bool       const_element = false; // Pointer and Many_pointer: the element is read-only through it.
+    u64        count         = 0;     // Array: the number of elements
 };
 
 bool is_builtin_type_name( std::string_view spelling );
@@ -105,6 +108,7 @@ public:
     Type_id pointer_to( Type_id element, bool const_element = false ); // interns; same element -> same id
     Type_id many_pointer_to( Type_id element, bool const_element = false );
     Type_id run_of( Type_id element );
+    Type_id array_of( Type_id element, u64 count );
     Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
     Type_id field( Type_id aggregate, Type_id member ); // `field( C ) -> T`: C in arguments, T in element
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
@@ -152,6 +156,7 @@ public:
     std::vector<Type_id> composite_types() const;
     std::vector<Type_id> interface_types() const; // in interning order; no open form, which has no vtable
     std::vector<Type_id> run_types() const;       // in interning order
+    std::vector<Type_id> array_types() const;     // in interning order
     // Every function type interned, in interning order. Separate from composite_types because the
     // one consumer of that list wants types that become a C struct, and a function type becomes a
     // typedef instead.
@@ -170,6 +175,7 @@ public:
     bool is_pointer( Type_id id ) const;
     bool is_many_pointer( Type_id id ) const;
     bool is_run( Type_id id ) const;
+    bool is_array( Type_id id ) const;
     bool points_to_const( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
@@ -252,9 +258,10 @@ private:
     Type_id integers_[4][2];              // [width index][0 = signed, 1 = unsigned]
     Type_id floats_[2];
 
-    std::unordered_map<u32, Type_id> pointers_;      // element.v * 2 + const -> pointer id
-    std::unordered_map<u32, Type_id> many_pointers_; // element.v * 2 + const -> many pointer id
-    std::unordered_map<u32, Type_id> runs_;          // element.v -> run id
+    std::unordered_map<u32, Type_id>       pointers_;      // element.v * 2 + const -> pointer id
+    std::unordered_map<u32, Type_id>       many_pointers_; // element.v * 2 + const -> many pointer id
+    std::unordered_map<u32, Type_id>       runs_;          // element.v -> run id
+    std::map<std::pair<u32, u64>, Type_id> arrays_;        // (element.v, count) -> array id
     // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
     // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
     // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same

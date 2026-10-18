@@ -90,7 +90,13 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
         // Read back what the field pass recorded. Calling Annotations::resolve again would report
         // every unknown type and D1 suggestion a second time.
-        const Type_id field_type = types_.type_of( field );
+        Type_id field_type = types_.type_of( field );
+
+        // An array holds its elements by value.
+        while( field_type.is_valid() && table_.is_array( field_type ) )
+        {
+            field_type = table_.get( field_type ).element;
+        }
 
         // A pointer to a struct is finite, so only by-value containment counts - which is what
         // makes `struct Node { Node* next; }` legal once pointers arrive at M3.
@@ -120,6 +126,11 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 // A field's type contains its declaration, and every argument that declaration holds by value.
 bool Aggregates::contains_through( Type_id type, std::vector<Node_id>& path )
 {
+    while( table_.is_array( type ) )
+    {
+        type = table_.get( type ).element;
+    }
+
     const Node_id decl = table_.get( type ).declaration;
     if( !table_.is_struct( type ) || !is_aggregate( ast_.kind( decl ) ) )
     {
@@ -209,6 +220,11 @@ bool Aggregates::mentions_by_value( Type_id type, Type_id parameter, std::vector
         return true;
     }
 
+    if( table_.is_array( type ) )
+    {
+        return mentions_by_value( table_.get( type ).element, parameter, visiting );
+    }
+
     if( !table_.is_struct( type ) )
     {
         return false;
@@ -235,6 +251,11 @@ bool Aggregates::is_acyclic( Node_id decl ) const
 
 bool Aggregates::mentions_a_cycle( Type_id type ) const
 {
+    if( table_.is_array( type ) )
+    {
+        return mentions_a_cycle( table_.get( type ).element );
+    }
+
     if( table_.is_struct( type ) && !is_acyclic( table_.get( type ).declaration ) )
     {
         return true;

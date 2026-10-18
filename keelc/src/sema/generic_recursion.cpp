@@ -40,6 +40,7 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
     case Type_kind::Run:
+    case Type_kind::Array:
         record_generic_uses( from, described.element, at );
         break;
 

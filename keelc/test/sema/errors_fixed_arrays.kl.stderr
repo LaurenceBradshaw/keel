@@ -1,0 +1,67 @@
+error: an array's size must be at least 1
+  --> sema/errors_fixed_arrays.kl:20:17
+   |
+20 | void empty( i32[0] a )
+   |                 ^
+
+error: an array's size must be known at compile time
+  --> sema/errors_fixed_arrays.kl:26:9
+   |
+26 |     i32[n] a = [ 1 ];
+   |         ^ write an integer literal, or the name of a `const`
+
+error: `void[2]` has no element to hold
+  --> sema/errors_fixed_arrays.kl:29:15
+   |
+29 | void nothing( void[2] a )
+   |               ^^^^^^^ name the element's type, as in `u8[2]`
+
+error: index 4 is past the end of `i32[4]`
+  --> sema/errors_fixed_arrays.kl:36:15
+   |
+36 |     return a[ FOUR ];
+   |               ^^^^ its indices run from 0 to 3
+
+error: `i32[4]` cannot be sliced
+  --> sema/errors_fixed_arrays.kl:41:25
+   |
+41 |     const ref i32[] r = a[ 0..2 ];
+   |                         ^^^^^^^^^
+
+error: `i32[4]` has no method `length`
+  --> sema/errors_fixed_arrays.kl:46:12
+   |
+46 |     return a.length();
+   |            ^^^^^^^^ an array has only `size()`
+
+error: an element of an array cannot be moved out
+  --> sema/errors_fixed_arrays.kl:52:18
+   |
+52 |     Tok t = move a[ 0 ];
+   |                  ^^^^^^ the array moves only as a whole
+
+error: an owning value is transferred, not copied
+  --> sema/errors_fixed_arrays.kl:57:13
+   |
+57 |     Tok t = a[ 0 ];
+   |             ^^^^^^ it stays in the array, which moves only as a whole
+
+error: a struct cannot contain `Tok[2]`, which owns a resource
+  --> sema/errors_fixed_arrays.kl:62:5
+   |
+62 |     Tok[2] toks;
+   |     ^^^^^^^^^^^^ a struct is copied freely, so declare `Holds` as a class if it owns this
+
+error: `i32[3]` holds 3 values, but this lists 2
+  --> sema/errors_fixed_arrays.kl:68:16
+   |
+68 |     i32[3] a = [ 1, 2 ];
+   |                ^^^^^^^^ a literal lists every element
+
+error: an array literal needs a type to fill
+  --> sema/errors_fixed_arrays.kl:73:14
+   |
+73 |     auto a = [ 1, 2 ];
+   |              ^^^^^^^^ write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`
+
+11 errors generated

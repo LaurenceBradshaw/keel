@@ -1,0 +1,110 @@
+// D60: a `T[N]` holds its N values inline, as a C struct of one array, so it is copied, passed and
+// returned by value. An index is a `u64` checked against N, and the array lends its elements as a
+// `T[]` wherever one is borrowed.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Row
+{
+    i32[3] cells;
+};
+
+const u64 SIDE = 3;
+
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+
+    for( u64 i : 0..values.size )
+    {
+        total += values[ i ];
+    }
+
+    return total;
+}
+
+i32[4] doubled( i32[4] values )
+{
+    for( u64 i : 0..values.size() )
+    {
+        values[ i ] = values[ i ] * 2;
+    }
+
+    return values;
+}
+
+void bump( ref i32[4] values )
+{
+    values[ 0 ] += 1;
+}
+
+i32 main()
+{
+    i32[4] a = [ 1, 2, 3, 4 ];
+
+    // A copy: changing `b` leaves `a` alone.
+    i32[4] b = a;
+    b[ 0 ]   = 10;
+
+    if( a[ 0 ] != 1 || b[ 0 ] != 10 )
+    {
+        return 1;
+    }
+
+    i32[4] d = doubled( a );
+
+    if( d[ 3 ] != 8 || a[ 3 ] != 4 )
+    {
+        return 2;
+    }
+
+    if( sum( a ) != 10 )
+    {
+        return 3;
+    }
+
+    Point[2] points = [ Point { .x = 1, .y = 2 }, Point { .x = 3, .y = 4 } ];
+    points[ 1 ].y   = 7;
+
+    if( points[ 0 ].x + points[ 1 ].y != 8 )
+    {
+        return 4;
+    }
+
+    // Two rows of three: the suffix nearest the name is the outer one.
+    i32[SIDE][2] grid = [ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
+
+    if( grid[ 1 ][ 2 ] != 6 || grid.size() != 2 || grid[ 0 ].size() != 3 )
+    {
+        return 5;
+    }
+
+    bump( ref a );
+
+    if( a[ 0 ] != 2 )
+    {
+        return 6;
+    }
+
+    {
+        ref i32 last = a[ 3 ];
+        last         = 9;
+    }
+
+    if( a[ 3 ] != 9 )
+    {
+        return 7;
+    }
+
+    Row row = Row { .cells = [ 7, 8, 9 ] };
+
+    if( sum( row.cells ) != 24 )
+    {
+        return 8;
+    }
+
+    return 0;
+}
