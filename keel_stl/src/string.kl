@@ -171,14 +171,20 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return result;
     }
 
+    /// Adds a copy of every byte of `bytes` at the end.
+    public void append( const ref u8[] bytes )
+    {
+        for( u64 i = 0; i < bytes.size; i++ )
+        {
+            bytes_.push( bytes[i] );
+        }
+    }
+
     /// Adds a copy of every byte of `other` at the end.
     public void operator+=( const ref textual other )
     {
         const ref u8[] text = other.as_text();
-        for( u64 i = 0; i < text.size; i++ )
-        {
-            bytes_.push( text[i] );
-        }
+        append( text );
     }
 
     /// Removes every byte and releases the storage.

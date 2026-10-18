@@ -6,6 +6,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -140,6 +141,67 @@ static void hash_key_varies( void )
     printf( "%s", low[1] == low[0] + 1 && high[1] == high[0] ? "varies" : "same" );
 }
 
+// A path holding a 0 byte, and a mode out of range, are refused before `open` runs.
+static void file_open_refusals( void )
+{
+    int32_t fd = -1;
+    printf( "%d %d ", kl_rt_file_open( (const uint8_t*) "a\0b", 3, 0, &fd ), fd );
+    printf( "%d %d", kl_rt_file_open( (const uint8_t*) "a", 1, 4, &fd ), fd );
+}
+
+// Bytes written through a pipe come back in pieces, then the end of the file as a count of 0.
+static void file_round_trip( void )
+{
+    int ends[2];
+    if( pipe( ends ) != 0 )
+    {
+        exit( 2 );
+    }
+
+    const int32_t wrote  = kl_rt_file_write( ends[1], (const uint8_t*) "hello", 5 );
+    const int32_t closed = kl_rt_file_close( ends[1] );
+
+    uint8_t       buf[3];
+    uint64_t      first = 9, second = 9, end = 9;
+    const int32_t a = kl_rt_file_read( ends[0], buf, 3, &first );
+    const int32_t b = kl_rt_file_read( ends[0], buf, 3, &second );
+    const int32_t c = kl_rt_file_read( ends[0], buf, 3, &end );
+    printf(
+        "%d %d %d %d %d %llu %llu %llu",
+        wrote,
+        closed,
+        a,
+        b,
+        c,
+        (unsigned long long) first,
+        (unsigned long long) second,
+        (unsigned long long) end
+    );
+}
+
+// A descriptor that isn't open is the system's own `EBADF`, for each call.
+static void file_bad_descriptor( void )
+{
+    uint8_t  buf[1];
+    uint64_t count = 0;
+    printf(
+        "%d %d %d",
+        kl_rt_file_read( -1, buf, 1, &count ) == EBADF,
+        kl_rt_file_write( -1, buf, 1 ) == EBADF,
+        kl_rt_file_close( -1 ) == EBADF
+    );
+}
+
+// Each mapped `errno` value, and one that is not.
+static void error_kinds( void )
+{
+    const int codes[] = { ENOENT, EACCES, EPERM, EEXIST, EISDIR, ENOTDIR, EINTR, ENOMEM, EINVAL };
+    for( size_t i = 0; i < sizeof codes / sizeof codes[0]; i++ )
+    {
+        printf( "%d", kl_rt_error_kind( codes[i] ) );
+    }
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -169,12 +231,28 @@ int main( void )
     check( "hash_key_varies", "stdout", r.out, "varies" );
     check_exit( "hash_key_varies", &r, false );
 
+    r = run( file_open_refusals );
+    check( "file_open_refusals", "stdout", r.out, "22 -1 22 -1" );
+    check_exit( "file_open_refusals", &r, false );
+
+    r = run( file_round_trip );
+    check( "file_round_trip", "stdout", r.out, "0 0 0 0 0 3 2 0" );
+    check_exit( "file_round_trip", &r, false );
+
+    r = run( file_bad_descriptor );
+    check( "file_bad_descriptor", "stdout", r.out, "1 1 1" );
+    check_exit( "file_bad_descriptor", &r, false );
+
+    r = run( error_kinds );
+    check( "error_kinds", "stdout", r.out, "122345670" );
+    check_exit( "error_kinds", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "5 runtime tests passed\n" );
+    printf( "9 runtime tests passed\n" );
     return 0;
 }

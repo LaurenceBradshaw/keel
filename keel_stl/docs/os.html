@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::os</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::os</h1>
+<ul class="contents">
+<li><a href="#os_error"><code>os_error</code></a> <span class="kind">enum</span></li>
+<li><a href="#file_error"><code>file_error</code></a> <span class="kind">enum</span></li>
+<li><a href="#file_mode"><code>file_mode</code></a> <span class="kind">enum</span></li>
+<li><a href="#file"><code>file</code></a> <span class="kind">class</span></li>
+<li><a href="#read_file"><code>read_file</code></a> <span class="kind">function</span></li>
+<li><a href="#write_file"><code>write_file</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">os_error</span></h2>
+<div class="group" id="os_error">
+<pre class="signature"><a class="anchor" href="#os_error" aria-label="Link to os_error">#</a><code><span class="kw">enum</span> <span class="type">os_error</span></code></pre>
+<div class="doc">
+<p>A failure any call to the system can meet.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="os_error.interrupted">
+<pre class="signature"><a class="anchor" href="#os_error.interrupted" aria-label="Link to interrupted">#</a><code>interrupted</code></pre>
+<div class="doc">
+<p>A signal arrived before the call finished; trying again may succeed.</p>
+</div>
+</div>
+<div class="group" id="os_error.out_of_memory">
+<pre class="signature"><a class="anchor" href="#os_error.out_of_memory" aria-label="Link to out_of_memory">#</a><code>out_of_memory</code></pre>
+<div class="doc">
+<p>The system had no memory for the call.</p>
+</div>
+</div>
+<div class="group" id="os_error.other">
+<pre class="signature"><a class="anchor" href="#os_error.other" aria-label="Link to other">#</a><code>other( <a class="prim" href="prelude.html#i32">i32</a> code )</code></pre>
+<div class="doc">
+<p>Any other failure, with the system's own <code>errno</code> value.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">file_error</span></h2>
+<div class="group" id="file_error">
+<pre class="signature"><a class="anchor" href="#file_error" aria-label="Link to file_error">#</a><code><span class="kw">enum</span> <span class="type">file_error</span></code></pre>
+<div class="doc">
+<p>Why a file could not be opened, read or written.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="file_error.not_found">
+<pre class="signature"><a class="anchor" href="#file_error.not_found" aria-label="Link to not_found">#</a><code>not_found</code></pre>
+<div class="doc">
+<p>Nothing exists at the path.</p>
+</div>
+</div>
+<div class="group" id="file_error.denied">
+<pre class="signature"><a class="anchor" href="#file_error.denied" aria-label="Link to denied">#</a><code>denied</code></pre>
+<div class="doc">
+<p>The file or a directory on its path does not allow it.</p>
+</div>
+</div>
+<div class="group" id="file_error.exists">
+<pre class="signature"><a class="anchor" href="#file_error.exists" aria-label="Link to exists">#</a><code>exists</code></pre>
+<div class="doc">
+<p>The file already exists, and <code>file_mode::create_new</code> was asked for.</p>
+</div>
+</div>
+<div class="group" id="file_error.is_directory">
+<pre class="signature"><a class="anchor" href="#file_error.is_directory" aria-label="Link to is_directory">#</a><code>is_directory</code></pre>
+<div class="doc">
+<p>The path names a directory where a file was wanted.</p>
+</div>
+</div>
+<div class="group" id="file_error.not_directory">
+<pre class="signature"><a class="anchor" href="#file_error.not_directory" aria-label="Link to not_directory">#</a><code>not_directory</code></pre>
+<div class="doc">
+<p>A name on the path that should be a directory is not one.</p>
+</div>
+</div>
+<div class="group" id="file_error.os">
+<pre class="signature"><a class="anchor" href="#file_error.os" aria-label="Link to os">#</a><code>os( <a class="type" href="#os_error">os_error</a> error )</code></pre>
+<div class="doc">
+<p>A failure that is not particular to files.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">file_mode</span></h2>
+<div class="group" id="file_mode">
+<pre class="signature"><a class="anchor" href="#file_mode" aria-label="Link to file_mode">#</a><code><span class="kw">enum</span> <span class="type">file_mode</span></code></pre>
+<div class="doc">
+<p>How <code>file::open</code> opens a file. Every mode but <code>read</code> creates a file that does not exist.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="file_mode.read">
+<pre class="signature"><a class="anchor" href="#file_mode.read" aria-label="Link to read">#</a><code>read</code></pre>
+<div class="doc">
+<p>Read only, from the start.</p>
+</div>
+</div>
+<div class="group" id="file_mode.write">
+<pre class="signature"><a class="anchor" href="#file_mode.write" aria-label="Link to write">#</a><code>write</code></pre>
+<div class="doc">
+<p>Write only, emptying the file first.</p>
+</div>
+</div>
+<div class="group" id="file_mode.append">
+<pre class="signature"><a class="anchor" href="#file_mode.append" aria-label="Link to append">#</a><code>append</code></pre>
+<div class="doc">
+<p>Write only, every write going at the end.</p>
+</div>
+</div>
+<div class="group" id="file_mode.create_new">
+<pre class="signature"><a class="anchor" href="#file_mode.create_new" aria-label="Link to create_new">#</a><code>create_new</code></pre>
+<div class="doc">
+<p>Write only, failing with <code>file_error::exists</code> if the file is there already.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">file</span></h2>
+<div class="group" id="file">
+<pre class="signature"><a class="anchor" href="#file" aria-label="Link to file">#</a><code><span class="kw">class</span> <span class="type">file</span></code></pre>
+<div class="doc">
+<p>An open file, closed when it is dropped.</p>
+<p>Made only by <code>file::open</code>. Reads and writes go straight to the system, except what a whole
+read leaves buffered.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="file.~file">
+<pre class="signature"><a class="anchor" href="#file.~file" aria-label="Link to ~file">#</a><code><span class="type">~file</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="file.open">
+<pre class="signature"><a class="anchor" href="#file.open" aria-label="Link to open">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#file">file</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">open</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <a class="type" href="#file_mode">file_mode</a> mode )</code></pre>
+<div class="doc">
+<p>Opens the file at <code>name</code> in <code>mode</code>.</p>
+</div>
+</div>
+<div class="group" id="file.read">
+<pre class="signature"><a class="anchor" href="#file.read" aria-label="Link to read">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read</span>( <span class="kw">ref</span> <a class="prim" href="prelude.html#u8">u8</a>[] into )</code></pre>
+<div class="doc">
+<p>Reads into <code>into</code>, answering how many bytes it put there: at most <code>into.size</code>, and 0 only
+at the end of the file. Fewer than asked for is not the end; ask again.</p>
+</div>
+</div>
+<div class="group" id="file.write">
+<pre class="signature"><a class="anchor" href="#file.write" aria-label="Link to write">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">write</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> data )</code></pre>
+<div class="doc">
+<p>Writes all of <code>data</code>.</p>
+</div>
+</div>
+<div class="group" id="file.read_all">
+<pre class="signature"><a class="anchor" href="#file.read_all" aria-label="Link to read_all">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="string.html#string">string</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read_all</span>()</code></pre>
+<div class="doc">
+<p>Reads the rest of the file.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">read_file</span></h2>
+<div class="group" id="read_file">
+<pre class="signature"><a class="anchor" href="#read_file" aria-label="Link to read_file">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="string.html#string">string</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read_file</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name )</code></pre>
+<div class="doc">
+<p>The whole of the file at <code>name</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">write_file</span></h2>
+<div class="group" id="write_file">
+<pre class="signature"><a class="anchor" href="#write_file" aria-label="Link to write_file">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">write_file</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> data )</code></pre>
+<div class="doc">
+<p>Writes <code>data</code> to the file at <code>name</code>, replacing what it held, or creating it.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

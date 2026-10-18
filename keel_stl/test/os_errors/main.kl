@@ -1,0 +1,96 @@
+// `kl::os` failures, each reaching the program as its `file_error`, never as a raw number except
+// through `os_error::other`. Each check returns its own code. The program runs in its own emptied
+// directory, so the files it makes go nowhere else.
+import kl::os;
+
+// Why reading `name` failed, as a number: 1 to 5 for `not_found` to `not_directory`, 10 plus the
+// code for `os( other( code ) )`, 6 and 7 for the other `os` kinds, and 0 if it was read.
+i32 reason( kl::file_error e )
+{
+    switch( e )
+    {
+        case kl::file_error::not_found:
+            return 1;
+        case kl::file_error::denied:
+            return 2;
+        case kl::file_error::exists:
+            return 3;
+        case kl::file_error::is_directory:
+            return 4;
+        case kl::file_error::not_directory:
+            return 5;
+        case kl::file_error::os( inner ):
+            switch( inner )
+            {
+                case kl::os_error::interrupted:
+                    return 6;
+                case kl::os_error::out_of_memory:
+                    return 7;
+                case kl::os_error::other( code ):
+                    return 10 + code;
+            }
+    }
+}
+
+i32 read_reason( str name )
+{
+    switch( move kl::read_file( name ) )
+    {
+        case result::ok( text ):
+            return 0;
+        case result::err( e ):
+            return reason( e );
+    }
+}
+
+i32 open_reason( str name, kl::file_mode mode )
+{
+    switch( move kl::file::open( name, mode ) )
+    {
+        case result::ok( f ):
+            return 0;
+        case result::err( e ):
+            return reason( e );
+    }
+}
+
+i32 main()
+{
+    if( read_reason( "missing.txt" ) != 1 )
+    {
+        return 1;
+    }
+
+    // Creating a file in a directory that is not there.
+    if( open_reason( "missing/a.txt", kl::file_mode::create_new ) != 1 )
+    {
+        return 2;
+    }
+
+    if( open_reason( ".", kl::file_mode::write ) != 4 )
+    {
+        return 3;
+    }
+
+    switch( kl::write_file( "a.txt", "x" ) )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 4;
+    }
+
+    // A file where the path needs a directory.
+    if( read_reason( "a.txt/b.txt" ) != 5 )
+    {
+        return 5;
+    }
+
+    // A name holding a 0 byte is refused before the system sees it, as `EINVAL`.
+    if( read_reason( "a.txt\0b" ) != 10 + 22 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

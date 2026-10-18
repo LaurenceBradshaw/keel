@@ -1,0 +1,35 @@
+// `kl::os` with a file several times `read_all`'s buffer and not a multiple of it, so the last
+// read is a short one. Exit 1 when the write fails, 2 when the read does, 3 when the bytes differ.
+import kl::os;
+import kl::string;
+
+i32 main()
+{
+    kl::string big = kl::string();
+    for( u64 i : 0..200_003 )
+    {
+        big.push( cast<u8>( 'a' + i % 26 ) );
+    }
+
+    switch( kl::write_file( "big.txt", big ) )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 1;
+    }
+
+    switch( move kl::read_file( "big.txt" ) )
+    {
+        case result::ok( text ):
+            if( text.size() != 200_003 || text != big )
+            {
+                return 3;
+            }
+            break;
+        case result::err( e ):
+            return 2;
+    }
+
+    return 0;
+}

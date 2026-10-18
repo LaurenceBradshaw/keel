@@ -20,7 +20,9 @@
 # correct - and the codegen fixtures are written to check their own answers, which is worth
 # nothing if nothing runs them. Where <name>.kl.out exists, the program's stdout and stderr together
 # must match it too. <name>.kl.args holds the program's arguments, one per line, and <name>.kl.stdin
-# its standard input (/dev/null if absent). A fixture expected to exit 134 is one that aborts, and is never run under
+# its standard input (/dev/null if absent). It runs in its own build directory, emptied before each
+# build, so a file it writes by a relative name is left in neither the suite nor the next run. A
+# fixture expected to exit 134 is one that aborts, and is never run under
 # valgrind: an abort leaves memory reachable on purpose, and valgrind reports the signal.
 #
 #   CC          the C compiler keelc runs         (default: cc)
@@ -105,6 +107,8 @@ valgrind_run="${KEEL_VALGRIND:-}"
 # A fixture that aborts would otherwise leave a core file in the suite.
 ulimit -c 0
 mkdir -p "$artifacts" || exit 2
+# Absolute, since a program runs inside its own build directory.
+artifacts="$( cd "$artifacts" && pwd )"
 
 if [ -t 1 ]; then
     red=$'\033[31m'; green=$'\033[32m'; dim=$'\033[2m'; reset=$'\033[0m'
@@ -236,12 +240,12 @@ check_run()
         # reports the signal, not --error-exitcode, so a segfault would otherwise slip through. With
         # -q the file stays empty unless valgrind has something to say.
         rm -f "$vg_log"
-        timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" "$stem" "${args[@]}" \
-            < "$stdin" > "$run_log" 2>&1
+        ( cd "$build_dir" && exec timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" \
+            "$stem" "${args[@]}" ) < "$stdin" > "$run_log" 2>&1
     else
         # The program's streams only: timeout's own word on a signal is not the program's output.
-        timeout "$run_timeout" sh -c 'log="$1"; shift; exec "$0" "$@" > "$log" 2>&1' \
-            "$stem" "$run_log" "${args[@]}" < "$stdin" 2> "${build_dir}/timeout.log"
+        ( cd "$build_dir" && exec timeout "$run_timeout" sh -c 'log="$1"; shift; exec "$0" "$@" > "$log" 2>&1' \
+            "$stem" "$run_log" "${args[@]}" ) < "$stdin" 2> "${build_dir}/timeout.log"
     fi
 
     local ran=$?

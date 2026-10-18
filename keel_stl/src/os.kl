@@ -1,0 +1,275 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Files, through the runtime's `kl_rt_file_*` calls. Each call answers 0 or an `errno` value,
+// which only the runtime turns into a kind, since the numbers differ between systems.
+
+import string;
+
+// The runtime's calls; a run crosses as its data and size.
+private extern i32 kl_rt_file_open( const ref u8[] path, i32 mode, i32* fd );
+private extern i32 kl_rt_file_read( i32 fd, ref u8[] buffer, u64* count );
+private extern i32 kl_rt_file_write( i32 fd, const ref u8[] data );
+private extern i32 kl_rt_file_close( i32 fd );
+private extern i32 kl_rt_error_kind( i32 code );
+
+/// A failure any call to the system can meet.
+enum os_error
+{
+    /// A signal arrived before the call finished; trying again may succeed.
+    interrupted,
+    /// The system had no memory for the call.
+    out_of_memory,
+    /// Any other failure, with the system's own `errno` value.
+    other( i32 code )
+};
+
+/// Why a file could not be opened, read or written.
+enum file_error
+{
+    /// Nothing exists at the path.
+    not_found,
+    /// The file or a directory on its path does not allow it.
+    denied,
+    /// The file already exists, and `file_mode::create_new` was asked for.
+    exists,
+    /// The path names a directory where a file was wanted.
+    is_directory,
+    /// A name on the path that should be a directory is not one.
+    not_directory,
+    /// A failure that is not particular to files.
+    os( os_error error )
+};
+
+// A runtime status as an `os_error`, asking the runtime for its kind.
+private os_error os_error_of( i32 code )
+{
+    i32 kind = 0;
+    unsafe
+    {
+        kind = kl_rt_error_kind( code );
+    }
+
+    switch( kind )
+    {
+        case 6:
+            return os_error::interrupted;
+        case 7:
+            return os_error::out_of_memory;
+        default:
+            return os_error::other( code );
+    }
+}
+
+// A runtime status as a `file_error`; the kinds not particular to files become `os`.
+private file_error file_error_of( i32 code )
+{
+    i32 kind = 0;
+    unsafe
+    {
+        kind = kl_rt_error_kind( code );
+    }
+
+    switch( kind )
+    {
+        case 1:
+            return file_error::not_found;
+        case 2:
+            return file_error::denied;
+        case 3:
+            return file_error::exists;
+        case 4:
+            return file_error::is_directory;
+        case 5:
+            return file_error::not_directory;
+        default:
+            return file_error::os( os_error_of( code ) );
+    }
+}
+
+/// How `file::open` opens a file. Every mode but `read` creates a file that does not exist.
+enum file_mode
+{
+    /// Read only, from the start.
+    read,
+    /// Write only, emptying the file first.
+    write,
+    /// Write only, every write going at the end.
+    append,
+    /// Write only, failing with `file_error::exists` if the file is there already.
+    create_new
+};
+
+// The bytes `read_all` asks for at a time.
+private const u64 FILE_BUFFER = 65536;
+
+/// An open file, closed when it is dropped.
+///
+/// Made only by `file::open`. Reads and writes go straight to the system, except what a whole
+/// read leaves buffered.
+class file
+{
+    // `owns` is false only for a descriptor the program must never close.
+    private file( i32 fd, bool owns )
+    {
+        fd_ = fd;
+        owns_ = owns;
+        buffer_ = nullptr;
+        start_ = 0;
+        end_ = 0;
+    }
+
+    ~file()
+    {
+        unsafe
+        {
+            if( owns_ )
+            {
+                // A destructor has nowhere to report a failed close.
+                kl_rt_file_close( fd_ );
+            }
+
+            if( buffer_ != nullptr )
+            {
+                free( buffer_ );
+            }
+        }
+    }
+
+    /// Opens the file at `name` in `mode`.
+    public static result<file, file_error> open( const ref textual name, file_mode mode )
+    {
+        i32 fd = 0;
+        i32 status = 0;
+
+        unsafe
+        {
+            status = kl_rt_file_open( name.as_text(), cast<i32>( mode ), &fd );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok( file( fd, true ) );
+    }
+
+    /// Reads into `into`, answering how many bytes it put there: at most `into.size`, and 0 only
+    /// at the end of the file. Fewer than asked for is not the end; ask again.
+    public result<u64, file_error> read( ref u8[] into )
+    {
+        if( start_ < end_ )
+        {
+            const u64 count = end_ - start_ < into.size ? end_ - start_ : into.size;
+
+            for( u64 i : 0..count )
+            {
+                unsafe
+                {
+                    into[i] = buffer_[start_ + i];
+                }
+            }
+            start_ += count;
+            return result::ok( count );
+        }
+
+        u64 count = 0;
+        i32 status = 0;
+        unsafe
+        {
+            status = kl_rt_file_read( fd_, ref into, &count );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok( count );
+    }
+
+    /// Writes all of `data`.
+    public result<void, file_error> write( const ref textual data )
+    {
+        i32 status = 0;
+        unsafe
+        {
+            status = kl_rt_file_write( fd_, data.as_text() );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok();
+    }
+
+    /// Reads the rest of the file.
+    public result<string, file_error> read_all()
+    {
+        string text = string();
+
+        unsafe
+        {
+            if( buffer_ == nullptr )
+            {
+                buffer_ = alloc<u8>( FILE_BUFFER );
+            }
+
+            text.append( buffer_[start_..end_] );
+        }
+
+        start_ = 0;
+        end_ = 0;
+
+        while( true )
+        {
+            u64 count = 0;
+            i32 status = 0;
+
+            unsafe
+            {
+                status = kl_rt_file_read( fd_, ref buffer_[0..FILE_BUFFER], &count );
+            }
+
+            if( status != 0 )
+            {
+                return result::err( file_error_of( status ) );
+            }
+
+            if( count == 0 )
+            {
+                break;
+            }
+
+            unsafe
+            {
+                text.append( buffer_[0..count] );
+            }
+        }
+
+        return result::ok( move text );
+    }
+
+    private i32 fd_;
+    private bool owns_;
+    private u8[*] buffer_; // `nullptr` until `read_all` first runs
+    private u64 start_;    // the buffered bytes are `buffer_[start_..end_]`
+    private u64 end_;
+};
+
+/// The whole of the file at `name`.
+result<string, file_error> read_file( const ref textual name )
+{
+    file f = try file::open( name, file_mode::read );
+    return f.read_all();
+}
+
+/// Writes `data` to the file at `name`, replacing what it held, or creating it.
+result<void, file_error> write_file( const ref textual name, const ref textual data )
+{
+    file f = try file::open( name, file_mode::write );
+    return f.write( data );
+}

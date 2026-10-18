@@ -3,6 +3,8 @@
 
 #define _DEFAULT_SOURCE
 #include "kl_rt.h"
+#include <errno.h>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
@@ -154,4 +156,125 @@ void kl_rt_hash_key( uint64_t* low, uint64_t* high )
 
     *low  = key[0]++;
     *high = key[1];
+}
+
+static char* c_path( const uint8_t* data, uint64_t size, int* error )
+{
+    if( memchr( data, 0, size ) != NULL )
+    {
+        *error = EINVAL;
+        return NULL;
+    }
+
+    char* name = malloc( size + 1 );
+    if( name == NULL )
+    {
+        *error = ENOMEM;
+        return NULL;
+    }
+
+    memcpy( name, data, size );
+    name[size] = '\0';
+    return name;
+}
+
+int32_t kl_rt_file_open( const uint8_t* path, uint64_t size, int32_t mode, int32_t* fd )
+{
+    int error = 0;
+
+    int flags = 0;
+    switch( mode )
+    {
+    case 0:
+        flags = O_RDONLY;
+        break;
+    case 1:
+        flags = O_WRONLY | O_CREAT | O_TRUNC;
+        break;
+    case 2:
+        flags = O_WRONLY | O_CREAT | O_APPEND;
+        break;
+    case 3:
+        flags = O_WRONLY | O_CREAT | O_EXCL;
+        break;
+    default:
+        return EINVAL;
+    }
+    flags |= O_CLOEXEC;
+
+    char* name = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    int opened = open( name, flags, 0666 );
+    int saved  = errno;
+    free( name );
+
+    if( opened == -1 )
+    {
+        return saved;
+    }
+
+    *fd = opened;
+    return 0;
+}
+
+int32_t kl_rt_file_read( int32_t fd, uint8_t* data, uint64_t size, uint64_t* count )
+{
+    ssize_t got = read( fd, data, size );
+    if( got == -1 )
+    {
+        return errno;
+    }
+
+    *count = (uint64_t) got;
+    return 0;
+}
+
+int32_t kl_rt_file_write( int32_t fd, const uint8_t* data, uint64_t size )
+{
+    uint64_t done = 0;
+
+    while( done < size )
+    {
+        ssize_t put = write( fd, data + done, size - done );
+        if( put == -1 )
+        {
+            return errno;
+        }
+        done += (uint64_t) put;
+    }
+
+    return 0;
+}
+
+int32_t kl_rt_file_close( int32_t fd )
+{
+    return close( fd ) == -1 ? errno : 0;
+}
+
+int32_t kl_rt_error_kind( int32_t code )
+{
+    switch( code )
+    {
+    case ENOENT:
+        return KL_RT_NOT_FOUND;
+    case EACCES:
+    case EPERM:
+        return KL_RT_DENIED;
+    case EEXIST:
+        return KL_RT_EXISTS;
+    case EISDIR:
+        return KL_RT_IS_DIRECTORY;
+    case ENOTDIR:
+        return KL_RT_NOT_DIRECTORY;
+    case EINTR:
+        return KL_RT_INTERRUPTED;
+    case ENOMEM:
+        return KL_RT_OUT_OF_MEMORY;
+    default:
+        return KL_RT_OTHER;
+    }
 }

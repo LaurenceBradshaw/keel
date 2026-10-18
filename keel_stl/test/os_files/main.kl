@@ -1,0 +1,149 @@
+// `kl::os` files: writing and reading whole files, each mode, and `read` in small pieces sharing
+// the file's position with `read_all`. Each check returns its own code. The program runs in its
+// own emptied directory, so the files it makes go nowhere else.
+import kl::os;
+import kl::string;
+
+// Whether a write succeeded.
+bool wrote( result<void, kl::file_error> r )
+{
+    switch( r )
+    {
+        case result::ok:
+            return true;
+        case result::err( e ):
+            return false;
+    }
+}
+
+// Whether the file at `name` holds exactly `want`.
+bool holds( str name, str want )
+{
+    switch( move kl::read_file( name ) )
+    {
+        case result::ok( text ):
+            return text == kl::string( want );
+        case result::err( e ):
+            return false;
+    }
+}
+
+// Whether `mode` refuses to open `name` with `file_error::exists`.
+bool refused_as_existing( str name, kl::file_mode mode )
+{
+    switch( move kl::file::open( name, mode ) )
+    {
+        case result::ok( f ):
+            return false;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::file_error::exists:
+                    return true;
+                default:
+                    return false;
+            }
+    }
+}
+
+i32 main()
+{
+    if( !wrote( kl::write_file( "a.txt", "hello" ) ) || !holds( "a.txt", "hello" ) )
+    {
+        return 1;
+    }
+
+    // `write` empties the file first.
+    if( !wrote( kl::write_file( "a.txt", "hi" ) ) || !holds( "a.txt", "hi" ) )
+    {
+        return 2;
+    }
+
+    switch( move kl::file::open( "a.txt", kl::file_mode::append ) )
+    {
+        case result::ok( f ):
+            if( !wrote( f.write( " there" ) ) )
+            {
+                return 3;
+            }
+            break;
+        case result::err( e ):
+            return 4;
+    }
+
+    if( !holds( "a.txt", "hi there" ) )
+    {
+        return 5;
+    }
+
+    switch( move kl::file::open( "b.txt", kl::file_mode::create_new ) )
+    {
+        case result::ok( f ):
+            if( !wrote( f.write( "new" ) ) )
+            {
+                return 6;
+            }
+            break;
+        case result::err( e ):
+            return 7;
+    }
+
+    if( !holds( "b.txt", "new" ) || !refused_as_existing( "b.txt", kl::file_mode::create_new ) )
+    {
+        return 8;
+    }
+
+    // An empty file reads as an empty string.
+    if( !wrote( kl::write_file( "empty.txt", "" ) ) || !holds( "empty.txt", "" ) )
+    {
+        return 9;
+    }
+
+    // Three bytes at a time, then the rest by `read_all`, which carries on from there.
+    switch( move kl::file::open( "a.txt", kl::file_mode::read ) )
+    {
+        case result::ok( f ):
+            u8[3] piece = [ 0, 0, 0 ];
+            switch( f.read( ref piece ) )
+            {
+                case result::ok( count ):
+                    if( count != 3 || piece[0] != 'h' || piece[1] != 'i' || piece[2] != ' ' )
+                    {
+                        return 10;
+                    }
+                    break;
+                case result::err( e ):
+                    return 11;
+            }
+
+            switch( move f.read_all() )
+            {
+                case result::ok( rest ):
+                    if( rest != kl::string( "there" ) )
+                    {
+                        return 12;
+                    }
+                    break;
+                case result::err( e ):
+                    return 13;
+            }
+
+            // At the end, `read` answers 0.
+            switch( f.read( ref piece ) )
+            {
+                case result::ok( count ):
+                    if( count != 0 )
+                    {
+                        return 14;
+                    }
+                    break;
+                case result::err( e ):
+                    return 15;
+            }
+            break;
+        case result::err( e ):
+            return 16;
+    }
+
+    return 0;
+}
