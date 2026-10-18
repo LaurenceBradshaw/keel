@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::ordered_control</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ordered_control</h1>
+<ul class="contents">
+<li><a href="#ORDERED_KEYS"><code>ORDERED_KEYS</code></a> <span class="kind">global</span></li>
+<li><a href="#ORDERED_MIN"><code>ORDERED_MIN</code></a> <span class="kind">global</span></li>
+<li><a href="#ORDERED_NO_NODE"><code>ORDERED_NO_NODE</code></a> <span class="kind">global</span></li>
+<li><a href="#key_run"><code>key_run</code></a> <span class="kind">struct</span></li>
+<li><a href="#key_moves"><code>key_moves</code></a> <span class="kind">struct</span></li>
+<li><a href="#ordered_control"><code>ordered_control</code></a> <span class="kind">class</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">ORDERED_KEYS</span></h2>
+<div class="group" id="ORDERED_KEYS">
+<pre class="signature"><a class="anchor" href="#ORDERED_KEYS" aria-label="Link to ORDERED_KEYS">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u8">u8</a> ORDERED_KEYS</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">ORDERED_MIN</span></h2>
+<div class="group" id="ORDERED_MIN">
+<pre class="signature"><a class="anchor" href="#ORDERED_MIN" aria-label="Link to ORDERED_MIN">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u8">u8</a> ORDERED_MIN</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">ORDERED_NO_NODE</span></h2>
+<div class="group" id="ORDERED_NO_NODE">
+<pre class="signature"><a class="anchor" href="#ORDERED_NO_NODE" aria-label="Link to ORDERED_NO_NODE">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> ORDERED_NO_NODE</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">key_run</span></h2>
+<div class="group" id="key_run">
+<pre class="signature"><a class="anchor" href="#key_run" aria-label="Link to key_run">#</a><code><span class="kw">struct</span> <span class="type">key_run</span></code></pre>
+<div class="doc">
+<p><code>count</code> key slots moving from <code>from..</code> to <code>to..</code>. The two may overlap.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="key_run.from">
+<pre class="signature"><a class="anchor" href="#key_run.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <a class="type" href="prelude.html#from">from</a></code></pre>
+</div>
+<div class="group" id="key_run.to">
+<pre class="signature"><a class="anchor" href="#key_run.to" aria-label="Link to to">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> to</code></pre>
+</div>
+<div class="group" id="key_run.count">
+<pre class="signature"><a class="anchor" href="#key_run.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> count</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">key_moves</span></h2>
+<div class="group" id="key_moves">
+<pre class="signature"><a class="anchor" href="#key_moves" aria-label="Link to key_moves">#</a><code><span class="kw">struct</span> <span class="type">key_moves</span></code></pre>
+<div class="doc">
+<p>Up to three runs, applied in order. A run not needed has <code>count</code> 0.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="key_moves.first">
+<pre class="signature"><a class="anchor" href="#key_moves.first" aria-label="Link to first">#</a><code><span class="kw">public</span> <a class="type" href="#key_run">key_run</a> first</code></pre>
+</div>
+<div class="group" id="key_moves.second">
+<pre class="signature"><a class="anchor" href="#key_moves.second" aria-label="Link to second">#</a><code><span class="kw">public</span> <a class="type" href="#key_run">key_run</a> second</code></pre>
+</div>
+<div class="group" id="key_moves.third">
+<pre class="signature"><a class="anchor" href="#key_moves.third" aria-label="Link to third">#</a><code><span class="kw">public</span> <a class="type" href="#key_run">key_run</a> third</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="key_moves.none">
+<pre class="signature"><a class="anchor" href="#key_moves.none" aria-label="Link to none">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#key_moves">key_moves</a> <span class="fn">none</span>()</code></pre>
+<div class="doc">
+<p>No moves.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">ordered_control</span></h2>
+<div class="group" id="ordered_control">
+<pre class="signature"><a class="anchor" href="#ordered_control" aria-label="Link to ordered_control">#</a><code><span class="kw">class</span> <span class="type">ordered_control</span></code></pre>
+<div class="doc">
+<p>The shape of a B-tree: each node's children, key count and subtree size, and the free nodes.</p>
+<p><code>kl::ordered_map</code> and <code>kl::ordered_set</code> hold one each beside their own arrays. Use them rather
+than this directly.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="ordered_control.ordered_control">
+<pre class="signature"><a class="anchor" href="#ordered_control.ordered_control" aria-label="Link to ordered_control">#</a><code><span class="kw">public</span> <span class="type">ordered_control</span>()</code></pre>
+<div class="doc">
+<p>An empty tree. Allocates nothing until the first <code>grow</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.~ordered_control">
+<pre class="signature"><a class="anchor" href="#ordered_control.~ordered_control" aria-label="Link to ~ordered_control">#</a><code><span class="type">~ordered_control</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="ordered_control.clear">
+<pre class="signature"><a class="anchor" href="#ordered_control.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Forgets every node, keeping the capacity. The owner has already dropped its keys.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.key_slot">
+<pre class="signature"><a class="anchor" href="#ordered_control.key_slot" aria-label="Link to key_slot">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">key_slot</span>( <a class="prim" href="prelude.html#u64">u64</a> node, <a class="prim" href="prelude.html#u64">u64</a> j )</code></pre>
+<div class="doc">
+<p>The owner's slot for key <code>j</code> of <code>node</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.child">
+<pre class="signature"><a class="anchor" href="#ordered_control.child" aria-label="Link to child">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">child</span>( <a class="prim" href="prelude.html#u64">u64</a> node, <a class="prim" href="prelude.html#u64">u64</a> c ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Child <code>c</code> of <code>node</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.is_leaf">
+<pre class="signature"><a class="anchor" href="#ordered_control.is_leaf" aria-label="Link to is_leaf">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_leaf</span>( <a class="prim" href="prelude.html#u64">u64</a> node ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether <code>node</code> has no children.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.count">
+<pre class="signature"><a class="anchor" href="#ordered_control.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">count</span>( <a class="prim" href="prelude.html#u64">u64</a> node ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys in <code>node</code>, which are its first slots.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.subtree">
+<pre class="signature"><a class="anchor" href="#ordered_control.subtree" aria-label="Link to subtree">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">subtree</span>( <a class="prim" href="prelude.html#u64">u64</a> node, <a class="prim" href="prelude.html#u64">u64</a> c ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys under child <code>c</code> of <code>node</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.root">
+<pre class="signature"><a class="anchor" href="#ordered_control.root" aria-label="Link to root">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">root</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The root, or <code>ORDERED_NO_NODE</code> when the tree is empty.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.used">
+<pre class="signature"><a class="anchor" href="#ordered_control.used" aria-label="Link to used">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">used</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Nodes <code>0..used()</code> are every node that may hold keys.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.size">
+<pre class="signature"><a class="anchor" href="#ordered_control.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.needs_growth">
+<pre class="signature"><a class="anchor" href="#ordered_control.needs_growth" aria-label="Link to needs_growth">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">needs_growth</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether an insertion could need more nodes than are spare: one per level and a new root.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.grown_nodes">
+<pre class="signature"><a class="anchor" href="#ordered_control.grown_nodes" aria-label="Link to grown_nodes">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">grown_nodes</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The node capacity to grow to.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.grow">
+<pre class="signature"><a class="anchor" href="#ordered_control.grow" aria-label="Link to grow">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">grow</span>( <a class="prim" href="prelude.html#u64">u64</a> nodes )</code></pre>
+<div class="doc">
+<p>Makes room for <code>nodes</code> nodes. The owner grows its arrays to <code>nodes * ORDERED_KEYS</code> with it.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.split_child">
+<pre class="signature"><a class="anchor" href="#ordered_control.split_child" aria-label="Link to split_child">#</a><code><span class="kw">public</span> <a class="type" href="#key_moves">key_moves</a> <span class="fn">split_child</span>( <a class="prim" href="prelude.html#u64">u64</a> parent, <a class="prim" href="prelude.html#u64">u64</a> c )</code></pre>
+<div class="doc">
+<p>Splits the full child <code>c</code> of <code>parent</code> in two, its middle key rising into <code>parent</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.prepare_insert">
+<pre class="signature"><a class="anchor" href="#ordered_control.prepare_insert" aria-label="Link to prepare_insert">#</a><code><span class="kw">public</span> <a class="type" href="#key_moves">key_moves</a> <span class="fn">prepare_insert</span>()</code></pre>
+<div class="doc">
+<p>Makes room at the root for a key not yet present: a first leaf, or a new root above a full
+one.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.descend_insert">
+<pre class="signature"><a class="anchor" href="#ordered_control.descend_insert" aria-label="Link to descend_insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">descend_insert</span>( <a class="prim" href="prelude.html#u64">u64</a> node, <a class="prim" href="prelude.html#u64">u64</a> j )</code></pre>
+<div class="doc">
+<p>Counts a key about to be inserted under <code>node</code>, and answers its child <code>j</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.insert_in_leaf">
+<pre class="signature"><a class="anchor" href="#ordered_control.insert_in_leaf" aria-label="Link to insert_in_leaf">#</a><code><span class="kw">public</span> <a class="type" href="#key_run">key_run</a> <span class="fn">insert_in_leaf</span>( <a class="prim" href="prelude.html#u64">u64</a> leaf, <a class="prim" href="prelude.html#u64">u64</a> j )</code></pre>
+<div class="doc">
+<p>Opens slot <code>j</code> of <code>leaf</code> for a new key, which the owner writes after applying the run.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.slot_at">
+<pre class="signature"><a class="anchor" href="#ordered_control.slot_at" aria-label="Link to slot_at">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">slot_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The owner's slot for the <code>i</code>th smallest key.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.merge">
+<pre class="signature"><a class="anchor" href="#ordered_control.merge" aria-label="Link to merge">#</a><code><span class="kw">public</span> <a class="type" href="#key_moves">key_moves</a> <span class="fn">merge</span>( <a class="prim" href="prelude.html#u64">u64</a> parent, <a class="prim" href="prelude.html#u64">u64</a> c )</code></pre>
+<div class="doc">
+<p>Joins children <code>c</code> and <code>c + 1</code> of <code>parent</code>, each holding <code>ORDERED_MIN</code> keys, around the
+parent's key <code>c</code> into child <code>c</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.thicken">
+<pre class="signature"><a class="anchor" href="#ordered_control.thicken" aria-label="Link to thicken">#</a><code><span class="kw">public</span> <a class="type" href="#key_moves">key_moves</a> <span class="fn">thicken</span>( <a class="prim" href="prelude.html#u64">u64</a> parent, <a class="prim" href="prelude.html#u64">u64</a> c, <span class="kw">out</span> <a class="prim" href="prelude.html#u64">u64</a> entered )</code></pre>
+<div class="doc">
+<p>Before entering child <code>c</code> of <code>parent</code>, gives it more than <code>ORDERED_MIN</code> keys by borrowing
+from a sibling or merging with one. <code>entered</code> is the child now holding what child <code>c</code> held.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.descend_remove">
+<pre class="signature"><a class="anchor" href="#ordered_control.descend_remove" aria-label="Link to descend_remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">descend_remove</span>( <a class="prim" href="prelude.html#u64">u64</a> node, <a class="prim" href="prelude.html#u64">u64</a> c )</code></pre>
+<div class="doc">
+<p>Counts a key about to leave from under <code>node</code>, and answers its child <code>c</code>. A root a merge
+has emptied is freed instead, and the child becomes the root.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.remove_from_leaf">
+<pre class="signature"><a class="anchor" href="#ordered_control.remove_from_leaf" aria-label="Link to remove_from_leaf">#</a><code><span class="kw">public</span> <a class="type" href="#key_run">key_run</a> <span class="fn">remove_from_leaf</span>( <a class="prim" href="prelude.html#u64">u64</a> leaf, <a class="prim" href="prelude.html#u64">u64</a> j )</code></pre>
+<div class="doc">
+<p>Closes slot <code>j</code> of <code>leaf</code>, whose key the owner has already taken. Empties the tree when it
+was the last key.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

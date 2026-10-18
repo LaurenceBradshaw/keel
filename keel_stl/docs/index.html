@@ -64,6 +64,38 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 </dl>
 </section>
 <section class="module">
+<h3><a href="ordered_control.html">ordered_control</a></h3>
+<dl class="summaries">
+<dt><a href="ordered_control.html#ORDERED_KEYS"><code>ORDERED_KEYS</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="ordered_control.html#ORDERED_MIN"><code>ORDERED_MIN</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="ordered_control.html#ORDERED_NO_NODE"><code>ORDERED_NO_NODE</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="ordered_control.html#key_run"><code>key_run</code></a> <span class="kind">struct</span></dt>
+<dd><code>count</code> key slots moving from <code>from..</code> to <code>to..</code>. The two may overlap.</dd>
+<dt><a href="ordered_control.html#key_moves"><code>key_moves</code></a> <span class="kind">struct</span></dt>
+<dd>Up to three runs, applied in order. A run not needed has <code>count</code> 0.</dd>
+<dt><a href="ordered_control.html#ordered_control"><code>ordered_control</code></a> <span class="kind">class</span></dt>
+<dd>The shape of a B-tree: each node's children, key count and subtree size, and the free nodes.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="ordered_map.html">ordered_map</a></h3>
+<dl class="summaries">
+<dt><a href="ordered_map.html#ordered_map"><code>ordered_map</code></a> <span class="kind">class</span></dt>
+<dd>A B-tree from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once, in ascending
+order.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="ordered_set.html">ordered_set</a></h3>
+<dl class="summaries">
+<dt><a href="ordered_set.html#ordered_set"><code>ordered_set</code></a> <span class="kind">class</span></dt>
+<dd>A B-tree of keys of type <code>K</code>, each held at most once, in ascending order.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="pair.html">pair</a></h3>
 <dl class="summaries">
 <dt><a href="pair.html#pair"><code>pair</code></a> <span class="kind">class</span></dt>

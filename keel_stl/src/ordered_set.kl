@@ -1,0 +1,397 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import ordered_control;
+
+/// A B-tree of keys of type `K`, each held at most once, in ascending order.
+///
+/// `kl::ordered_map` without the values: `key_at` counts over the keys from the smallest, and
+/// `rank` finds where a key sits among them, both in logarithmic time. Dropping the set drops every
+/// key.
+class ordered_set<K> where K : comparable
+{
+    /// An empty set. Allocates nothing until the first key arrives.
+    public ordered_set()
+    {
+        control_ = ordered_control();
+        keys_ = nullptr;
+    }
+
+    ~ordered_set()
+    {
+        drop_all();
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+    }
+
+    /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is
+    /// dropped.
+    public bool insert( move K key )
+    {
+        if( slot_of( key ) != ORDERED_NO_NODE )
+        {
+            return false;
+        }
+
+        if( control_.needs_growth() )
+        {
+            grow();
+        }
+
+        apply( control_.prepare_insert() );
+        u64 n = control_.root();
+
+        while( true )
+        {
+            u64 j = position( n, key );
+
+            if( control_.is_leaf( n ) )
+            {
+                move_run( control_.insert_in_leaf( n, j ) );
+                const u64 slot = ordered_control::key_slot( n, j );
+
+                unsafe
+                {
+                    keys_[slot] = move key;
+                }
+
+                return true;
+            }
+
+            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
+            {
+                apply( control_.split_child( n, j ) );
+
+                unsafe
+                {
+                    if( keys_[ordered_control::key_slot( n, j )] < key )
+                    {
+                        j++; // `key` belongs in the new right half
+                    }
+                }
+            }
+
+            n = control_.descend_insert( n, j );
+        }
+    }
+
+    /// A pointer to the `i`th smallest key, counting from 0. `const`, since a changed key would be
+    /// out of order.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `size()`.
+    public const K* key_at( u64 i ) const
+    {
+        unsafe
+        {
+            return &keys_[control_.slot_at( i )];
+        }
+    }
+
+    /// The number of keys less than `key`, which is where `key` sits or would sit.
+    public u64 rank( const ref K key ) const
+    {
+        if( control_.size() == 0 )
+        {
+            return 0;
+        }
+
+        u64 n = control_.root();
+        u64 below = 0;
+
+        while( true )
+        {
+            const u64 j = position( n, key );
+            const bool leaf = control_.is_leaf( n );
+            below += j;
+
+            if( !leaf )
+            {
+                for( u64 c : 0..j )
+                {
+                    below += control_.subtree( n, c );
+                }
+            }
+
+            if( holds_at( n, j, key ) )
+            {
+                if( !leaf )
+                {
+                    below += control_.subtree( n, j );
+                }
+
+                return below;
+            }
+
+            if( leaf )
+            {
+                return below;
+            }
+
+            n = control_.child( n, j );
+        }
+    }
+
+    /// Whether the set holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != ORDERED_NO_NODE;
+    }
+
+    /// Removes `key`, and returns whether the set held it.
+    public bool remove( const ref K key )
+    {
+        if( !contains( key ) )
+        {
+            return false;
+        }
+
+        u64 n = control_.root();
+
+        while( true )
+        {
+            const u64 j = position( n, key );
+            const u64 slot = ordered_control::key_slot( n, j );
+
+            if( holds_at( n, j, key ) )
+            {
+                if( control_.is_leaf( n ) )
+                {
+                    drop_key( slot );
+                    move_run( control_.remove_from_leaf( n, j ) );
+                    return true;
+                }
+
+                if( control_.count( control_.child( n, j ) ) > ORDERED_MIN )
+                {
+                    drop_key( slot );
+                    take_last( control_.descend_remove( n, j ), slot ); // the predecessor fills it
+                    return true;
+                }
+
+                if( control_.count( control_.child( n, j + 1 ) ) > ORDERED_MIN )
+                {
+                    drop_key( slot );
+                    take_first( control_.descend_remove( n, j + 1 ), slot ); // the successor fills it
+                    return true;
+                }
+
+                apply( control_.merge( n, j ) ); // brings the key down into child `j`
+                n = control_.descend_remove( n, j );
+            }
+            else
+            {
+                u64 c;
+                apply( control_.thicken( n, j, out c ) );
+                n = control_.descend_remove( n, c );
+            }
+        }
+    }
+
+    /// The number of keys.
+    public u64 size() const
+    {
+        return control_.size();
+    }
+
+    /// Whether the set holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// Drops every key; the capacity is kept.
+    public void clear()
+    {
+        drop_all();
+        control_.clear();
+    }
+
+    // The first key of `node` not less than `key`, or its count.
+    private u64 position( u64 node, const ref K key ) const
+    {
+        const u64 first = ordered_control::key_slot( node, 0 );
+
+        for( u64 j : 0..control_.count( node ) )
+        {
+            unsafe
+            {
+                if( !( keys_[first + j] < key ) )
+                {
+                    return j;
+                }
+            }
+        }
+
+        return control_.count( node );
+    }
+
+    private bool holds_at( u64 node, u64 j, const ref K key ) const
+    {
+        if( j >= control_.count( node ) )
+        {
+            return false;
+        }
+
+        unsafe
+        {
+            return keys_[ordered_control::key_slot( node, j )] == key;
+        }
+    }
+
+    // The slot holding `key`, or `ORDERED_NO_NODE`.
+    private u64 slot_of( const ref K key ) const
+    {
+        if( control_.size() == 0 )
+        {
+            return ORDERED_NO_NODE;
+        }
+
+        u64 n = control_.root();
+
+        while( true )
+        {
+            const u64 j = position( n, key );
+
+            if( holds_at( n, j, key ) )
+            {
+                return ordered_control::key_slot( n, j );
+            }
+
+            if( control_.is_leaf( n ) )
+            {
+                return ORDERED_NO_NODE;
+            }
+
+            n = control_.child( n, j );
+        }
+    }
+
+    // Drops the key in `slot`, leaving the slot raw.
+    private void drop_key( u64 slot )
+    {
+        unsafe
+        {
+            destroy( keys_ + slot, 1 );
+        }
+    }
+
+    // Moves the largest key under `node` into the raw slot `into`.
+    private void take_last( u64 node, u64 into )
+    {
+        u64 n = node;
+
+        while( !control_.is_leaf( n ) )
+        {
+            u64 c;
+            apply( control_.thicken( n, control_.count( n ), out c ) );
+            n = control_.descend_remove( n, c );
+        }
+
+        const u64 j = control_.count( n ) - 1;
+        move_run( key_run { .from = ordered_control::key_slot( n, j ), .to = into, .count = 1 } );
+        move_run( control_.remove_from_leaf( n, j ) );
+    }
+
+    // Moves the smallest key under `node` into the raw slot `into`.
+    private void take_first( u64 node, u64 into )
+    {
+        u64 n = node;
+
+        while( !control_.is_leaf( n ) )
+        {
+            u64 c;
+            apply( control_.thicken( n, 0, out c ) );
+            n = control_.descend_remove( n, c );
+        }
+
+        move_run( key_run { .from = ordered_control::key_slot( n, 0 ), .to = into, .count = 1 } );
+        move_run( control_.remove_from_leaf( n, 0 ) );
+    }
+
+    private void apply( key_moves moves )
+    {
+        move_run( moves.first );
+        move_run( moves.second );
+        move_run( moves.third );
+    }
+
+    // Moves the run's keys, in the direction that does not overwrite one not yet moved.
+    private void move_run( key_run run )
+    {
+        unsafe
+        {
+            if( run.to < run.from )
+            {
+                for( u64 i : 0..run.count )
+                {
+                    keys_[run.to + i] = move keys_[run.from + i];
+                }
+            }
+            else
+            {
+                for( u64 i = run.count; i > 0; i-- )
+                {
+                    keys_[run.to + i - 1] = move keys_[run.from + i - 1];
+                }
+            }
+        }
+    }
+
+    // Moves every live key into arrays sized for `control_.grown_nodes()` nodes.
+    private void grow()
+    {
+        const u64 nodes = control_.grown_nodes();
+        K[*] keys;
+
+        unsafe
+        {
+            keys = alloc<K>( nodes * ORDERED_KEYS );
+        }
+
+        for( u64 n : 0..control_.used() )
+        {
+            const u64 first = ordered_control::key_slot( n, 0 );
+
+            for( u64 j : 0..control_.count( n ) )
+            {
+                unsafe
+                {
+                    keys[first + j] = move keys_[first + j]; // the old slots are raw after this
+                }
+            }
+        }
+
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+
+        keys_ = keys;
+        control_.grow( nodes );
+    }
+
+    private void drop_all()
+    {
+        for( u64 n : 0..control_.used() )
+        {
+            unsafe
+            {
+                destroy( keys_ + ordered_control::key_slot( n, 0 ), control_.count( n ) );
+            }
+        }
+    }
+
+    // Node `n`'s first `control_.count( n )` slots from `key_slot( n, 0 )` are live.
+    private ordered_control control_;
+    private K[*] keys_;
+};

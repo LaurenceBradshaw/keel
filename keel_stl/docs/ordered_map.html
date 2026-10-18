@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::ordered_map</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ordered_map</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">ordered_map</span></h2>
+<div class="group" id="ordered_map">
+<pre class="signature"><a class="anchor" href="#ordered_map" aria-label="Link to ordered_map">#</a><code><span class="kw">class</span> <span class="type">ordered_map</span>&lt;K, V&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<div class="doc">
+<p>A B-tree from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once, in ascending
+order.</p>
+<p><code>key_at</code> and <code>value_at</code> count over the keys from the smallest, and <code>rank</code> finds where a key sits
+among them, all in logarithmic time: <code>for( u64 i : m.rank( lo )..m.rank( hi ) )</code> visits the keys
+from <code>lo</code> up to but not including <code>hi</code>. Dropping the map drops every key and value.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="ordered_map.ordered_map">
+<pre class="signature"><a class="anchor" href="#ordered_map.ordered_map" aria-label="Link to ordered_map">#</a><code><span class="kw">public</span> <span class="type">ordered_map</span>()</code></pre>
+<div class="doc">
+<p>An empty map. Allocates nothing until the first key arrives.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.~ordered_map">
+<pre class="signature"><a class="anchor" href="#ordered_map.~ordered_map" aria-label="Link to ~ordered_map">#</a><code><span class="type">~ordered_map</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="ordered_map.insert">
+<pre class="signature"><a class="anchor" href="#ordered_map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
+<div class="doc">
+<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
+<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.get">
+<pre class="signature"><a class="anchor" href="#ordered_map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value under <code>key</code>, or <code>none</code> if the map does not hold it.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.operator[]">
+<pre class="signature"><a class="anchor" href="#ordered_map.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> V* <span class="fn">operator[]</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value under <code>key</code>.</p>
+<h4>Panics</h4>
+<p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.key_at">
+<pre class="signature"><a class="anchor" href="#ordered_map.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the <code>i</code>th smallest key, counting from 0. <code>const</code>, since a changed key would be
+out of order.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.value_at">
+<pre class="signature"><a class="anchor" href="#ordered_map.value_at" aria-label="Link to value_at">#</a><code><span class="kw">public</span> V* <span class="fn">value_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value under <code>key_at( i )</code>.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.rank">
+<pre class="signature"><a class="anchor" href="#ordered_map.rank" aria-label="Link to rank">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">rank</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys less than <code>key</code>, which is where <code>key</code> sits or would sit.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.contains">
+<pre class="signature"><a class="anchor" href="#ordered_map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds <code>key</code>.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.remove">
+<pre class="signature"><a class="anchor" href="#ordered_map.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
+<div class="doc">
+<p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.size">
+<pre class="signature"><a class="anchor" href="#ordered_map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.is_empty">
+<pre class="signature"><a class="anchor" href="#ordered_map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds no keys.</p>
+</div>
+</div>
+<div class="group" id="ordered_map.clear">
+<pre class="signature"><a class="anchor" href="#ordered_map.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Drops every key and value; the capacity is kept.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

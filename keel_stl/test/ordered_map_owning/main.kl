@@ -1,0 +1,80 @@
+// `kl::ordered_map` with owning keys and values, through enough inserts and removes that nodes
+// split, borrow from both sides, merge, shrink the root and are reused from the free list, so
+// valgrind checks that reshaping neither leaks nor double-drops.
+import kl::ordered_map;
+import kl::optional;
+import kl::string;
+
+// An owning key, ordered by its number.
+class tag implements comparable, equatable
+{
+    public tag( u64 n )
+    {
+        n_ = n;
+        text_ = kl::string::from( n );
+    }
+
+    public bool operator==( const ref tag other ) const
+    {
+        return n_ == other.n_;
+    }
+
+    public ordering operator<=>( const ref tag other ) const
+    {
+        return n_ <=> other.n_;
+    }
+
+    private u64 n_;
+    private kl::string text_;
+};
+
+i32 main()
+{
+    kl::ordered_map<tag, kl::string> m = kl::ordered_map<tag, kl::string>();
+
+    for( u64 i : 0..300 )
+    {
+        const u64 k = i * 101 % 300;
+        m.insert( tag( k ), kl::string::from( k ) );
+    }
+
+    // An overwrite keeps the map's key, drops the one passed, and hands back the old value.
+    if( !( kl::unwrap( m.insert( tag( 7 ), "seven" ) ) == kl::string( "7" ) ) || !( m[tag( 7 )] == kl::string( "seven" ) ) )
+    {
+        return 1;
+    }
+
+    // From the middle outwards, so keys leave inner nodes as well as leaves.
+    for( u64 i : 0..100 )
+    {
+        if( kl::is_none( m.remove( tag( 150 + i ) ) ) || kl::is_none( m.remove( tag( 149 - i ) ) ) )
+        {
+            return 2;
+        }
+    }
+
+    if( m.size() != 100 || m.rank( tag( 250 ) ) != 50 || !( *m.value_at( 49 ) == kl::string( "49" ) ) )
+    {
+        return 3;
+    }
+
+    // Refilled into reused nodes, then dropped by `clear` and again at the end.
+    for( u64 i : 50..250 )
+    {
+        m.insert( tag( i ), kl::string::from( i ) );
+    }
+
+    if( m.size() != 300 )
+    {
+        return 4;
+    }
+
+    m.clear();
+
+    for( u64 i : 0..40 )
+    {
+        m.insert( tag( 39 - i ), "x" );
+    }
+
+    return m.size() == 40 ? 0 : 5;
+}

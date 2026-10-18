@@ -1,0 +1,100 @@
+// `kl::ordered_map` over enough keys for three levels of nodes, inserted out of order so leaves,
+// inner nodes and the root all split, then removed by halves so nodes borrow, merge and the root
+// shrinks. `key_at` and `rank` are checked against the keys' order after each phase.
+import kl::ordered_map;
+import kl::optional;
+
+// The keys `0..n` that remain, in order, are exactly those `keep` says.
+bool ordered( const ref kl::ordered_map<u64, u64> m, u64 n, u64 step )
+{
+    u64 i = 0;
+
+    for( u64 k : 0..n )
+    {
+        if( k % step != 0 )
+        {
+            continue;
+        }
+
+        if( *m.key_at( i ) != k || *m.value_at( i ) != k * 2 || m.rank( k ) != i )
+        {
+            return false;
+        }
+
+        i += 1;
+    }
+
+    return i == m.size();
+}
+
+i32 main()
+{
+    kl::ordered_map<u64, u64> m = kl::ordered_map<u64, u64>();
+
+    for( u64 i : 0..1000 )
+    {
+        const u64 k = i * 7919 % 1000;
+        if( kl::is_some( m.insert( k, k * 2 ) ) )
+        {
+            return 1;
+        }
+    }
+
+    if( m.size() != 1000 || !ordered( m, 1000, 1 ) )
+    {
+        return 2;
+    }
+
+    if( kl::unwrap( m.insert( 500, 1000 ) ) != 1000 || m[500] != 1000 || m.size() != 1000 )
+    {
+        return 3;
+    }
+
+    if( !m.contains( 999 ) || m.contains( 1000 ) || kl::is_some( m.get( 1000 ) ) || m.rank( 1000 ) != 1000 )
+    {
+        return 4;
+    }
+
+    // Every odd key, in a scrambled order.
+    for( u64 i : 0..1000 )
+    {
+        const u64 k = i * 7919 % 1000;
+        if( k % 2 == 1 && kl::unwrap( m.remove( k ) ) != k * 2 )
+        {
+            return 5;
+        }
+    }
+
+    if( m.size() != 500 || !ordered( m, 1000, 2 ) || m.rank( 3 ) != 2 || kl::is_some( m.remove( 3 ) ) )
+    {
+        return 6;
+    }
+
+    // The rest, smallest first, then the map is used again.
+    for( u64 k : 0..500 )
+    {
+        if( kl::unwrap( m.remove( k * 2 ) ) != k * 4 )
+        {
+            return 7;
+        }
+    }
+
+    if( !m.is_empty() || m.rank( 5 ) != 0 )
+    {
+        return 8;
+    }
+
+    for( u64 k : 0..100 )
+    {
+        m.insert( 99 - k, ( 99 - k ) * 2 );
+    }
+
+    if( !ordered( m, 100, 1 ) )
+    {
+        return 9;
+    }
+
+    m.clear();
+    m.insert( 7, 14 );
+    return m.size() == 1 && m[7] == 14 ? 0 : 10;
+}

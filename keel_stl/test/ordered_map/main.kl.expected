@@ -1,0 +1,3623 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl_2kl_key_run;
+struct kl_2kl_key_moves;
+struct kl_2kl_ordered_control;
+struct kl_2kl_ordered_map__I3u64_3u64E;
+struct kl_2kl_optional__I3u64E;
+struct kl_2kl_optional__IP3u64E;
+
+struct kl_2kl_key_run
+{
+    uint64_t kl_from_2028;
+    uint64_t kl_to_2030;
+    uint64_t kl_count_2032;
+};
+
+struct kl_2kl_key_moves
+{
+    struct kl_2kl_key_run kl_first_2035;
+    struct kl_2kl_key_run kl_second_2037;
+    struct kl_2kl_key_run kl_third_2039;
+};
+
+struct kl_2kl_ordered_control
+{
+    uint64_t* kl_children__3765;
+    uint64_t* kl_counts__3768;
+    uint64_t* kl_totals__3771;
+    uint64_t kl_root__3773;
+    uint64_t kl_height__3775;
+    uint64_t kl_used__3777;
+    uint64_t kl_capacity__3779;
+    uint64_t kl_free__3781;
+    uint64_t kl_free_count__3783;
+};
+
+struct kl_2kl_ordered_map__I3u64_3u64E
+{
+    struct kl_2kl_ordered_control kl_control__2007;
+    uint64_t* kl_keys__2010;
+    uint64_t* kl_values__2013;
+};
+
+struct kl_2kl_optional__I3u64E
+{
+    int32_t tag;
+    uint64_t kl_value_389;
+};
+
+struct kl_2kl_optional__IP3u64E
+{
+    int32_t tag;
+    uint64_t* kl_value_389;
+};
+
+uint8_t kl_ORDERED_KEYS_2018 = 11;
+uint8_t kl_ORDERED_MIN_2022 = 5;
+uint64_t kl_ORDERED_NO_NODE_2026 = 18446744073709551615ull;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+
+bool kl__ordered__Q2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t );
+int32_t kl__main__( void );
+struct kl_2kl_key_moves kl_2kl_none__SQ2kl9key_moves( void );
+void kl_2kl_ordered_control__RQ2kl15ordered_control__ctor( struct kl_2kl_ordered_control* );
+void kl_2kl_ordered_control__dtor( struct kl_2kl_ordered_control* );
+void kl_2kl_clear__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+uint64_t kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( uint64_t, uint64_t );
+uint64_t kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+bool kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+uint64_t kl_2kl_count__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+uint64_t kl_2kl_subtree__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+uint64_t kl_2kl_root__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+uint64_t kl_2kl_used__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+uint64_t kl_2kl_size__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+bool kl_2kl_needs_growth__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+uint64_t kl_2kl_grown_nodes__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+void kl_2kl_grow__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+void kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t, uint64_t );
+uint64_t kl_2kl_new_node__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+void kl_2kl_free_node__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+void kl_2kl_recount__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+struct kl_2kl_key_run kl_2kl_open_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_run kl_2kl_close_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_moves kl_2kl_split_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_moves kl_2kl_prepare_insert__SQ2kl15ordered_control( struct kl_2kl_ordered_control* );
+uint64_t kl_2kl_descend_insert__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_run kl_2kl_insert_in_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+uint64_t kl_2kl_slot_at__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control*, uint64_t );
+struct kl_2kl_key_moves kl_2kl_merge__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_moves kl_2kl_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t, uint64_t* );
+uint64_t kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_run kl_2kl_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_moves kl_2kl_borrow_from_left__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+struct kl_2kl_key_moves kl_2kl_borrow_from_right__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control*, uint64_t, uint64_t );
+uint64_t* kl_2kl_key_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t );
+uint64_t* kl_2kl_value_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t );
+uint64_t kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+uint64_t kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* );
+void kl_2kl_ordered_map__I3u64_3u64E__RQ2kl11ordered_mapI3u64_3u64E__ctor( struct kl_2kl_ordered_map__I3u64_3u64E* );
+struct kl_2kl_optional__I3u64E kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t );
+bool kl_2kl_is_some__I3u64E__Q2kl8optionalI3u64E( struct kl_2kl_optional__I3u64E* );
+uint64_t kl_2kl_unwrap__I3u64E__MQ2kl8optionalI3u64E( struct kl_2kl_optional__I3u64E );
+uint64_t* kl_2kl_operator_index__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+bool kl_2kl_contains__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+struct kl_2kl_optional__IP3u64E kl_2kl_get__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+bool kl_2kl_is_some__IP3u64E__Q2kl8optionalIP3u64E( struct kl_2kl_optional__IP3u64E* );
+struct kl_2kl_optional__I3u64E kl_2kl_remove__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+bool kl_2kl_is_empty__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* );
+void kl_2kl_clear__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* );
+void kl_2kl_ordered_map__I3u64_3u64E__dtor( struct kl_2kl_ordered_map__I3u64_3u64E* );
+uint64_t kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t* );
+bool kl_2kl_holds_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t, uint64_t* );
+uint64_t kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t* );
+void kl_2kl_grow__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* );
+void kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( struct kl_2kl_ordered_map__I3u64_3u64E*, struct kl_2kl_key_moves );
+void kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( struct kl_2kl_ordered_map__I3u64_3u64E*, struct kl_2kl_key_run );
+uint64_t kl_2kl_take_value__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t );
+void kl_2kl_take_last__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t );
+void kl_2kl_take_first__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E*, uint64_t, uint64_t );
+void kl_2kl_drop_all__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* );
+
+bool kl__ordered__Q2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_m_1, uint64_t kl_n_2, uint64_t kl_step_3 )
+{
+    bool kl_t0;
+    uint64_t kl_i_4;
+    uint64_t kl_k_5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t13;
+    uint64_t* kl_t14;
+    bool kl_t15;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t16;
+    uint64_t* kl_t17;
+    uint64_t kl_t18;
+    bool kl_t19;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t20;
+    uint64_t* kl_t21;
+    uint64_t kl_t22;
+    bool kl_t23;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+#line 10 "ordered_map/main.kl"
+    kl_i_4 = 0;
+#line 12 "ordered_map/main.kl"
+    kl_k_5 = 0;
+    kl_t6 = kl_n_2;
+    goto bb1;
+    bb1:
+    kl_t7 = kl_k_5 < kl_t6;
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 14 "ordered_map/main.kl"
+    kl_t8 = kl_step_3 != 0;
+    if ( kl_t8 ) goto bb5; else goto bb4;
+    bb3:
+#line 27 "ordered_map/main.kl"
+    kl_t24 = &( *kl_m_1 );
+    kl_t25 = kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t24 );
+    kl_t26 = kl_i_4 == kl_t25;
+    kl_t0 = kl_t26;
+    return kl_t0;
+    bb4:
+    kl_rt_panic( "ordered_map/main.kl", 14, "remainder by zero: k % step" );
+    bb5:
+#line 14 "ordered_map/main.kl"
+    kl_t9 = kl_k_5 % kl_step_3;
+    kl_t10 = kl_t9 != 0;
+    if ( kl_t10 ) goto bb6; else goto bb7;
+    bb6:
+#line 12 "ordered_map/main.kl"
+    kl_k_5 = kl_k_5 + 1;
+    goto bb1;
+    bb7:
+#line 19 "ordered_map/main.kl"
+    kl_t13 = &( *kl_m_1 );
+    kl_t14 = kl_2kl_key_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t13, kl_i_4 );
+    kl_t15 = ( *kl_t14 ) != kl_k_5;
+    kl_t12 = kl_t15;
+    if ( kl_t12 ) goto bb9; else goto bb8;
+    bb8:
+    kl_t16 = &( *kl_m_1 );
+    kl_t17 = kl_2kl_value_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t16, kl_i_4 );
+    kl_t18 = kl_k_5 * 2;
+    kl_t19 = ( *kl_t17 ) != kl_t18;
+    kl_t12 = kl_t19;
+    goto bb9;
+    bb9:
+    kl_t11 = kl_t12;
+    if ( kl_t11 ) goto bb11; else goto bb10;
+    bb10:
+    kl_t20 = &( *kl_m_1 );
+    kl_t21 = &kl_k_5;
+    kl_t22 = kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t20, kl_t21 );
+    kl_t23 = kl_t22 != kl_i_4;
+    kl_t11 = kl_t23;
+    goto bb11;
+    bb11:
+    if ( kl_t11 ) goto bb12; else goto bb13;
+    bb12:
+#line 21 "ordered_map/main.kl"
+    kl_t0 = false;
+    return kl_t0;
+    bb13:
+#line 24 "ordered_map/main.kl"
+    kl_i_4 = kl_i_4 + 1;
+    goto bb6;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ordered_map__I3u64_3u64E kl_m_1;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t2;
+    uint64_t kl_i_4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_k_7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t10;
+    uint64_t kl_t11;
+    struct kl_2kl_optional__I3u64E kl_t12;
+    struct kl_2kl_optional__I3u64E* kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t24;
+    struct kl_2kl_optional__I3u64E kl_t25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t28;
+    uint64_t kl_t29;
+    uint64_t* kl_t30;
+    uint64_t* kl_t31;
+    bool kl_t32;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t33;
+    uint64_t kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    bool kl_t38;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t39;
+    uint64_t kl_t40;
+    uint64_t* kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t44;
+    uint64_t kl_t45;
+    uint64_t* kl_t46;
+    bool kl_t47;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t48;
+    uint64_t kl_t49;
+    uint64_t* kl_t50;
+    struct kl_2kl_optional__IP3u64E kl_t51;
+    struct kl_2kl_optional__IP3u64E* kl_t52;
+    bool kl_t53;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t54;
+    uint64_t kl_t55;
+    uint64_t* kl_t56;
+    uint64_t kl_t57;
+    bool kl_t58;
+    uint64_t kl_i_59;
+    uint64_t kl_t60;
+    bool kl_t61;
+    uint64_t kl_k_62;
+    uint64_t kl_t63;
+    uint64_t kl_t64;
+    bool kl_t65;
+    uint64_t kl_t66;
+    bool kl_t67;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t68;
+    uint64_t* kl_t69;
+    struct kl_2kl_optional__I3u64E kl_t70;
+    uint64_t kl_t71;
+    uint64_t kl_t72;
+    bool kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    bool kl_t76;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t77;
+    uint64_t kl_t78;
+    bool kl_t79;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t80;
+    bool kl_t81;
+    bool kl_t82;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t83;
+    uint64_t kl_t84;
+    uint64_t* kl_t85;
+    uint64_t kl_t86;
+    bool kl_t87;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t88;
+    uint64_t kl_t89;
+    uint64_t* kl_t90;
+    struct kl_2kl_optional__I3u64E kl_t91;
+    struct kl_2kl_optional__I3u64E* kl_t92;
+    bool kl_t93;
+    uint64_t kl_k_94;
+    uint64_t kl_t95;
+    bool kl_t96;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t97;
+    uint64_t kl_t98;
+    uint64_t* kl_t99;
+    struct kl_2kl_optional__I3u64E kl_t100;
+    uint64_t kl_t101;
+    uint64_t kl_t102;
+    bool kl_t103;
+    bool kl_t104;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t105;
+    bool kl_t106;
+    bool kl_t107;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t108;
+    uint64_t kl_t109;
+    uint64_t* kl_t110;
+    uint64_t kl_t111;
+    bool kl_t112;
+    uint64_t kl_k_113;
+    uint64_t kl_t114;
+    bool kl_t115;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t116;
+    uint64_t kl_t117;
+    uint64_t kl_t118;
+    uint64_t kl_t119;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t121;
+    bool kl_t122;
+    bool kl_t123;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t124;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t126;
+    int32_t kl_t128;
+    bool kl_t129;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t130;
+    uint64_t kl_t131;
+    bool kl_t132;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t133;
+    uint64_t kl_t134;
+    uint64_t* kl_t135;
+    uint64_t* kl_t136;
+    bool kl_t137;
+#line 32 "ordered_map/main.kl"
+    kl_t2 = &kl_m_1;
+    kl_2kl_ordered_map__I3u64_3u64E__RQ2kl11ordered_mapI3u64_3u64E__ctor( kl_t2 );
+#line 34 "ordered_map/main.kl"
+    kl_i_4 = 0;
+    kl_t5 = 1000;
+    goto bb1;
+    bb1:
+    kl_t6 = kl_i_4 < kl_t5;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 36 "ordered_map/main.kl"
+    kl_t8 = kl_i_4 * 7919;
+    kl_t9 = kl_t8 % 1000;
+    kl_k_7 = kl_t9;
+#line 37 "ordered_map/main.kl"
+    kl_t10 = &kl_m_1;
+    kl_t11 = kl_k_7 * 2;
+    kl_t12 = kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( kl_t10, kl_k_7, kl_t11 );
+    kl_t13 = &kl_t12;
+    kl_t14 = kl_2kl_is_some__I3u64E__Q2kl8optionalI3u64E( kl_t13 );
+    if ( kl_t14 ) goto bb4; else goto bb5;
+    bb3:
+#line 43 "ordered_map/main.kl"
+    kl_t16 = &kl_m_1;
+    kl_t17 = kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t16 );
+    kl_t18 = kl_t17 != 1000;
+    kl_t15 = kl_t18;
+    if ( kl_t15 ) goto bb8; else goto bb7;
+    bb4:
+#line 39 "ordered_map/main.kl"
+    kl_t0 = 1;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 34 "ordered_map/main.kl"
+    kl_i_4 = kl_i_4 + 1;
+    goto bb1;
+    bb7:
+#line 43 "ordered_map/main.kl"
+    kl_t19 = &kl_m_1;
+    kl_t20 = kl__ordered__Q2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t19, 1000, 1 );
+    kl_t21 = !kl_t20;
+    kl_t15 = kl_t21;
+    goto bb8;
+    bb8:
+    if ( kl_t15 ) goto bb9; else goto bb10;
+    bb9:
+#line 45 "ordered_map/main.kl"
+    kl_t0 = 2;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb10:
+#line 48 "ordered_map/main.kl"
+    kl_t24 = &kl_m_1;
+    kl_t25 = kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( kl_t24, 500, 1000 );
+    kl_t26 = kl_2kl_unwrap__I3u64E__MQ2kl8optionalI3u64E( kl_t25 );
+    kl_t27 = kl_t26 != 1000;
+    kl_t23 = kl_t27;
+    if ( kl_t23 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t28 = &kl_m_1;
+    kl_t29 = 500;
+    kl_t30 = &kl_t29;
+    kl_t31 = kl_2kl_operator_index__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t28, kl_t30 );
+    kl_t32 = ( *kl_t31 ) != 1000;
+    kl_t23 = kl_t32;
+    goto bb12;
+    bb12:
+    kl_t22 = kl_t23;
+    if ( kl_t22 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t33 = &kl_m_1;
+    kl_t34 = kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t33 );
+    kl_t35 = kl_t34 != 1000;
+    kl_t22 = kl_t35;
+    goto bb14;
+    bb14:
+    if ( kl_t22 ) goto bb15; else goto bb16;
+    bb15:
+#line 50 "ordered_map/main.kl"
+    kl_t0 = 3;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb16:
+#line 53 "ordered_map/main.kl"
+    kl_t39 = &kl_m_1;
+    kl_t40 = 999;
+    kl_t41 = &kl_t40;
+    kl_t42 = kl_2kl_contains__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t39, kl_t41 );
+    kl_t43 = !kl_t42;
+    kl_t38 = kl_t43;
+    if ( kl_t38 ) goto bb18; else goto bb17;
+    bb17:
+    kl_t44 = &kl_m_1;
+    kl_t45 = 1000;
+    kl_t46 = &kl_t45;
+    kl_t47 = kl_2kl_contains__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t44, kl_t46 );
+    kl_t38 = kl_t47;
+    goto bb18;
+    bb18:
+    kl_t37 = kl_t38;
+    if ( kl_t37 ) goto bb20; else goto bb19;
+    bb19:
+    kl_t48 = &kl_m_1;
+    kl_t49 = 1000;
+    kl_t50 = &kl_t49;
+    kl_t51 = kl_2kl_get__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t48, kl_t50 );
+    kl_t52 = &kl_t51;
+    kl_t53 = kl_2kl_is_some__IP3u64E__Q2kl8optionalIP3u64E( kl_t52 );
+    kl_t37 = kl_t53;
+    goto bb20;
+    bb20:
+    kl_t36 = kl_t37;
+    if ( kl_t36 ) goto bb22; else goto bb21;
+    bb21:
+    kl_t54 = &kl_m_1;
+    kl_t55 = 1000;
+    kl_t56 = &kl_t55;
+    kl_t57 = kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t54, kl_t56 );
+    kl_t58 = kl_t57 != 1000;
+    kl_t36 = kl_t58;
+    goto bb22;
+    bb22:
+    if ( kl_t36 ) goto bb23; else goto bb24;
+    bb23:
+#line 55 "ordered_map/main.kl"
+    kl_t0 = 4;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb24:
+#line 59 "ordered_map/main.kl"
+    kl_i_59 = 0;
+    kl_t60 = 1000;
+    goto bb25;
+    bb25:
+    kl_t61 = kl_i_59 < kl_t60;
+    if ( kl_t61 ) goto bb26; else goto bb27;
+    bb26:
+#line 61 "ordered_map/main.kl"
+    kl_t63 = kl_i_59 * 7919;
+    kl_t64 = kl_t63 % 1000;
+    kl_k_62 = kl_t64;
+#line 62 "ordered_map/main.kl"
+    kl_t66 = kl_k_62 % 2;
+    kl_t67 = kl_t66 == 1;
+    kl_t65 = kl_t67;
+    if ( kl_t65 ) goto bb28; else goto bb29;
+    bb27:
+#line 68 "ordered_map/main.kl"
+    kl_t77 = &kl_m_1;
+    kl_t78 = kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t77 );
+    kl_t79 = kl_t78 != 500;
+    kl_t76 = kl_t79;
+    if ( kl_t76 ) goto bb34; else goto bb33;
+    bb28:
+#line 62 "ordered_map/main.kl"
+    kl_t68 = &kl_m_1;
+    kl_t69 = &kl_k_62;
+    kl_t70 = kl_2kl_remove__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t68, kl_t69 );
+    kl_t71 = kl_2kl_unwrap__I3u64E__MQ2kl8optionalI3u64E( kl_t70 );
+    kl_t72 = kl_k_62 * 2;
+    kl_t73 = kl_t71 != kl_t72;
+    kl_t65 = kl_t73;
+    goto bb29;
+    bb29:
+    if ( kl_t65 ) goto bb30; else goto bb31;
+    bb30:
+#line 64 "ordered_map/main.kl"
+    kl_t0 = 5;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb31:
+    goto bb32;
+    bb32:
+#line 59 "ordered_map/main.kl"
+    kl_i_59 = kl_i_59 + 1;
+    goto bb25;
+    bb33:
+#line 68 "ordered_map/main.kl"
+    kl_t80 = &kl_m_1;
+    kl_t81 = kl__ordered__Q2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t80, 1000, 2 );
+    kl_t82 = !kl_t81;
+    kl_t76 = kl_t82;
+    goto bb34;
+    bb34:
+    kl_t75 = kl_t76;
+    if ( kl_t75 ) goto bb36; else goto bb35;
+    bb35:
+    kl_t83 = &kl_m_1;
+    kl_t84 = 3;
+    kl_t85 = &kl_t84;
+    kl_t86 = kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t83, kl_t85 );
+    kl_t87 = kl_t86 != 2;
+    kl_t75 = kl_t87;
+    goto bb36;
+    bb36:
+    kl_t74 = kl_t75;
+    if ( kl_t74 ) goto bb38; else goto bb37;
+    bb37:
+    kl_t88 = &kl_m_1;
+    kl_t89 = 3;
+    kl_t90 = &kl_t89;
+    kl_t91 = kl_2kl_remove__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t88, kl_t90 );
+    kl_t92 = &kl_t91;
+    kl_t93 = kl_2kl_is_some__I3u64E__Q2kl8optionalI3u64E( kl_t92 );
+    kl_t74 = kl_t93;
+    goto bb38;
+    bb38:
+    if ( kl_t74 ) goto bb39; else goto bb40;
+    bb39:
+#line 70 "ordered_map/main.kl"
+    kl_t0 = 6;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb40:
+#line 74 "ordered_map/main.kl"
+    kl_k_94 = 0;
+    kl_t95 = 500;
+    goto bb41;
+    bb41:
+    kl_t96 = kl_k_94 < kl_t95;
+    if ( kl_t96 ) goto bb42; else goto bb43;
+    bb42:
+#line 76 "ordered_map/main.kl"
+    kl_t97 = &kl_m_1;
+    kl_t98 = kl_k_94 * 2;
+    kl_t99 = &kl_t98;
+    kl_t100 = kl_2kl_remove__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t97, kl_t99 );
+    kl_t101 = kl_2kl_unwrap__I3u64E__MQ2kl8optionalI3u64E( kl_t100 );
+    kl_t102 = kl_k_94 * 4;
+    kl_t103 = kl_t101 != kl_t102;
+    if ( kl_t103 ) goto bb44; else goto bb45;
+    bb43:
+#line 82 "ordered_map/main.kl"
+    kl_t105 = &kl_m_1;
+    kl_t106 = kl_2kl_is_empty__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t105 );
+    kl_t107 = !kl_t106;
+    kl_t104 = kl_t107;
+    if ( kl_t104 ) goto bb47; else goto bb46;
+    bb44:
+#line 78 "ordered_map/main.kl"
+    kl_t0 = 7;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb45:
+#line 74 "ordered_map/main.kl"
+    kl_k_94 = kl_k_94 + 1;
+    goto bb41;
+    bb46:
+#line 82 "ordered_map/main.kl"
+    kl_t108 = &kl_m_1;
+    kl_t109 = 5;
+    kl_t110 = &kl_t109;
+    kl_t111 = kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t108, kl_t110 );
+    kl_t112 = kl_t111 != 0;
+    kl_t104 = kl_t112;
+    goto bb47;
+    bb47:
+    if ( kl_t104 ) goto bb48; else goto bb49;
+    bb48:
+#line 84 "ordered_map/main.kl"
+    kl_t0 = 8;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb49:
+#line 87 "ordered_map/main.kl"
+    kl_k_113 = 0;
+    kl_t114 = 100;
+    goto bb50;
+    bb50:
+    kl_t115 = kl_k_113 < kl_t114;
+    if ( kl_t115 ) goto bb51; else goto bb52;
+    bb51:
+#line 89 "ordered_map/main.kl"
+    kl_t116 = &kl_m_1;
+    kl_t117 = 99 - kl_k_113;
+    kl_t118 = 99 - kl_k_113;
+    kl_t119 = kl_t118 * 2;
+    kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( kl_t116, kl_t117, kl_t119 );
+    goto bb53;
+    bb52:
+#line 92 "ordered_map/main.kl"
+    kl_t121 = &kl_m_1;
+    kl_t122 = kl__ordered__Q2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t121, 100, 1 );
+    kl_t123 = !kl_t122;
+    if ( kl_t123 ) goto bb54; else goto bb55;
+    bb53:
+#line 87 "ordered_map/main.kl"
+    kl_k_113 = kl_k_113 + 1;
+    goto bb50;
+    bb54:
+#line 94 "ordered_map/main.kl"
+    kl_t0 = 9;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb55:
+#line 97 "ordered_map/main.kl"
+    kl_t124 = &kl_m_1;
+    kl_2kl_clear__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t124 );
+#line 98 "ordered_map/main.kl"
+    kl_t126 = &kl_m_1;
+    kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( kl_t126, 7, 14 );
+#line 99 "ordered_map/main.kl"
+    kl_t130 = &kl_m_1;
+    kl_t131 = kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t130 );
+    kl_t132 = kl_t131 == 1;
+    kl_t129 = kl_t132;
+    if ( kl_t129 ) goto bb59; else goto bb60;
+    bb56:
+    kl_t128 = 0;
+    goto bb58;
+    bb57:
+    kl_t128 = 10;
+    goto bb58;
+    bb58:
+    kl_t0 = kl_t128;
+    kl_2kl_ordered_map__I3u64_3u64E__dtor( &kl_m_1 );
+    kl_2kl_ordered_control__dtor( &kl_m_1.kl_control__2007 );
+    return kl_t0;
+    bb59:
+    kl_t133 = &kl_m_1;
+    kl_t134 = 7;
+    kl_t135 = &kl_t134;
+    kl_t136 = kl_2kl_operator_index__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t133, kl_t135 );
+    kl_t137 = ( *kl_t136 ) == 14;
+    kl_t129 = kl_t137;
+    goto bb60;
+    bb60:
+    if ( kl_t129 ) goto bb56; else goto bb57;
+}
+
+struct kl_2kl_key_moves kl_2kl_none__SQ2kl9key_moves( void )
+{
+    struct kl_2kl_key_moves kl_t0;
+    struct kl_2kl_key_moves kl_result_1;
+    struct kl_2kl_key_moves kl_t2;
+    struct kl_2kl_key_run kl_t3;
+    struct kl_2kl_key_run kl_t4;
+    struct kl_2kl_key_run kl_t5;
+#line 38 "../src/ordered_control.kl"
+    kl_t3.kl_from_2028 = kl_ORDERED_NO_NODE_2026;
+    kl_t3.kl_to_2030 = kl_ORDERED_NO_NODE_2026;
+    kl_t3.kl_count_2032 = 0;
+#line 39 "../src/ordered_control.kl"
+    kl_t4.kl_from_2028 = kl_ORDERED_NO_NODE_2026;
+    kl_t4.kl_to_2030 = kl_ORDERED_NO_NODE_2026;
+    kl_t4.kl_count_2032 = 0;
+#line 40 "../src/ordered_control.kl"
+    kl_t5.kl_from_2028 = kl_ORDERED_NO_NODE_2026;
+    kl_t5.kl_to_2030 = kl_ORDERED_NO_NODE_2026;
+    kl_t5.kl_count_2032 = 0;
+#line 38 "../src/ordered_control.kl"
+    kl_t2.kl_first_2035 = kl_t3;
+#line 39 "../src/ordered_control.kl"
+    kl_t2.kl_second_2037 = kl_t4;
+#line 40 "../src/ordered_control.kl"
+    kl_t2.kl_third_2039 = kl_t5;
+#line 37 "../src/ordered_control.kl"
+    kl_result_1 = kl_t2;
+#line 42 "../src/ordered_control.kl"
+    kl_t0 = kl_result_1;
+    return kl_t0;
+}
+
+void kl_2kl_ordered_control__RQ2kl15ordered_control__ctor( struct kl_2kl_ordered_control* kl_this_1 )
+{
+#line 55 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_children__3765 = NULL;
+#line 56 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_counts__3768 = NULL;
+#line 57 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_totals__3771 = NULL;
+#line 58 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_root__3773 = kl_ORDERED_NO_NODE_2026;
+#line 59 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = 0;
+#line 60 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_used__3777 = 0;
+#line 61 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_capacity__3779 = 0;
+#line 62 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free__3781 = kl_ORDERED_NO_NODE_2026;
+#line 63 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free_count__3783 = 0;
+    return;
+}
+
+void kl_2kl_ordered_control__dtor( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    bool kl_t2;
+    bool kl_t4;
+    bool kl_t6;
+#line 68 "../src/ordered_control.kl"
+    kl_t2 = ( *kl_this_1 ).kl_children__3765 != NULL;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 72 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_children__3765 );
+    goto bb2;
+    bb2:
+#line 76 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_counts__3768 != NULL;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 80 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_counts__3768 );
+    goto bb4;
+    bb4:
+#line 84 "../src/ordered_control.kl"
+    kl_t6 = ( *kl_this_1 ).kl_totals__3771 != NULL;
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
+#line 88 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_totals__3771 );
+    goto bb6;
+    bb6:
+    return;
+}
+
+void kl_2kl_clear__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+#line 96 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_root__3773 = kl_ORDERED_NO_NODE_2026;
+#line 97 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = 0;
+#line 98 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_used__3777 = 0;
+#line 99 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free__3781 = kl_ORDERED_NO_NODE_2026;
+#line 100 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free_count__3783 = 0;
+    return;
+}
+
+uint64_t kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( uint64_t kl_node_1, uint64_t kl_j_2 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+#line 106 "../src/ordered_control.kl"
+    kl_t3 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t4 = kl_node_1 * kl_t3;
+    kl_t5 = kl_t4 + kl_j_2;
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
+{
+    uint64_t kl_t0;
+    uint8_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t* kl_t8;
+#line 114 "../src/ordered_control.kl"
+    kl_t4 = kl_ORDERED_KEYS_2018 + 1;
+    kl_t5 = ( uint64_t ) kl_t4;
+    kl_t6 = kl_node_2 * kl_t5;
+    kl_t7 = kl_t6 + kl_c_3;
+    kl_t8 = ( *kl_this_1 ).kl_children__3765 + kl_t7;
+    kl_t0 = ( *kl_t8 );
+    return kl_t0;
+}
+
+bool kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2 )
+{
+    bool kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+#line 121 "../src/ordered_control.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t3, kl_node_2, 0 );
+    kl_t5 = kl_t4 == kl_ORDERED_NO_NODE_2026;
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_count__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2 )
+{
+    uint64_t kl_t0;
+    uint64_t* kl_t3;
+#line 129 "../src/ordered_control.kl"
+    kl_t3 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_t0 = ( *kl_t3 );
+    return kl_t0;
+}
+
+uint64_t kl_2kl_subtree__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
+{
+    uint64_t kl_t0;
+    struct kl_2kl_ordered_control* kl_t4;
+    uint64_t kl_t5;
+    uint64_t* kl_t6;
+#line 138 "../src/ordered_control.kl"
+    kl_t4 = &( *kl_this_1 );
+    kl_t5 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t4, kl_node_2, kl_c_3 );
+    kl_t6 = ( *kl_this_1 ).kl_totals__3771 + kl_t5;
+    kl_t0 = ( *kl_t6 );
+    return kl_t0;
+}
+
+uint64_t kl_2kl_root__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 145 "../src/ordered_control.kl"
+    kl_t0 = ( *kl_this_1 ).kl_root__3773;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_used__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 151 "../src/ordered_control.kl"
+    kl_t0 = ( *kl_this_1 ).kl_used__3777;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_size__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    uint64_t* kl_t3;
+#line 157 "../src/ordered_control.kl"
+    kl_t2 = ( *kl_this_1 ).kl_root__3773 == kl_ORDERED_NO_NODE_2026;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 159 "../src/ordered_control.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+#line 164 "../src/ordered_control.kl"
+    kl_t3 = ( *kl_this_1 ).kl_totals__3771 + ( *kl_this_1 ).kl_root__3773;
+    kl_t0 = ( *kl_t3 );
+    return kl_t0;
+}
+
+bool kl_2kl_needs_growth__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    bool kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+#line 171 "../src/ordered_control.kl"
+    kl_t2 = ( *kl_this_1 ).kl_capacity__3779 - ( *kl_this_1 ).kl_used__3777;
+    kl_t3 = kl_t2 + ( *kl_this_1 ).kl_free_count__3783;
+    kl_t4 = ( *kl_this_1 ).kl_height__3775 + 1;
+    kl_t5 = kl_t3 < kl_t4;
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_grown_nodes__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    uint64_t kl_t3;
+#line 177 "../src/ordered_control.kl"
+    kl_t2 = ( *kl_this_1 ).kl_capacity__3779 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 179 "../src/ordered_control.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb2:
+#line 182 "../src/ordered_control.kl"
+    kl_t3 = ( *kl_this_1 ).kl_capacity__3779 * 2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl_2kl_grow__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_nodes_2 )
+{
+    uint64_t* kl_children_3;
+    uint64_t* kl_counts_4;
+    uint64_t* kl_totals_5;
+    uint8_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t* kl_t9;
+    uint64_t* kl_t10;
+    uint64_t* kl_t11;
+    uint64_t kl_n_12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    uint64_t* kl_t15;
+    uint64_t* kl_t16;
+    uint64_t* kl_t17;
+    uint64_t* kl_t18;
+    struct kl_2kl_ordered_control* kl_t19;
+    bool kl_t20;
+    uint8_t kl_t21;
+    uint64_t kl_t22;
+    uint64_t kl_t23;
+    uint64_t* kl_t24;
+    struct kl_2kl_ordered_control* kl_t25;
+    uint64_t kl_t26;
+    uint64_t kl_num_children_27;
+    uint64_t* kl_t28;
+    uint64_t kl_t29;
+    uint64_t kl_c_30;
+    uint64_t kl_t31;
+    bool kl_t32;
+    uint8_t kl_t33;
+    uint64_t kl_t34;
+    uint64_t kl_t35;
+    uint64_t kl_t36;
+    uint64_t* kl_t37;
+    struct kl_2kl_ordered_control* kl_t38;
+    uint64_t kl_t39;
+    bool kl_t40;
+    bool kl_t42;
+    bool kl_t44;
+#line 188 "../src/ordered_control.kl"
+    kl_children_3 = NULL;
+#line 189 "../src/ordered_control.kl"
+    kl_counts_4 = NULL;
+#line 190 "../src/ordered_control.kl"
+    kl_totals_5 = NULL;
+#line 194 "../src/ordered_control.kl"
+    kl_t6 = kl_ORDERED_KEYS_2018 + 1;
+    kl_t7 = ( uint64_t ) kl_t6;
+    kl_t8 = kl_nodes_2 * kl_t7;
+    kl_t9 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, sizeof( uint64_t ), "../src/ordered_control.kl", 194, "out of memory: alloc<u64>( nodes * ( ORDERED_KEYS + 1 ) )" );
+    kl_children_3 = kl_t9;
+#line 195 "../src/ordered_control.kl"
+    kl_t10 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../src/ordered_control.kl", 195, "out of memory: alloc<u64>( nodes )" );
+    kl_counts_4 = kl_t10;
+#line 196 "../src/ordered_control.kl"
+    kl_t11 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../src/ordered_control.kl", 196, "out of memory: alloc<u64>( nodes )" );
+    kl_totals_5 = kl_t11;
+#line 199 "../src/ordered_control.kl"
+    kl_n_12 = 0;
+    kl_t13 = ( *kl_this_1 ).kl_used__3777;
+    goto bb1;
+    bb1:
+    kl_t14 = kl_n_12 < kl_t13;
+    if ( kl_t14 ) goto bb2; else goto bb3;
+    bb2:
+#line 203 "../src/ordered_control.kl"
+    kl_t15 = kl_counts_4 + kl_n_12;
+    kl_t16 = ( *kl_this_1 ).kl_counts__3768 + kl_n_12;
+    ( *kl_t15 ) = ( *kl_t16 );
+#line 204 "../src/ordered_control.kl"
+    kl_t17 = kl_totals_5 + kl_n_12;
+    kl_t18 = ( *kl_this_1 ).kl_totals__3771 + kl_n_12;
+    ( *kl_t17 ) = ( *kl_t18 );
+#line 207 "../src/ordered_control.kl"
+    kl_t19 = &( *kl_this_1 );
+    kl_t20 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t19, kl_n_12 );
+    if ( kl_t20 ) goto bb4; else goto bb5;
+    bb3:
+#line 227 "../src/ordered_control.kl"
+    kl_t40 = ( *kl_this_1 ).kl_children__3765 != NULL;
+    if ( kl_t40 ) goto bb11; else goto bb12;
+    bb4:
+#line 211 "../src/ordered_control.kl"
+    kl_t21 = kl_ORDERED_KEYS_2018 + 1;
+    kl_t22 = ( uint64_t ) kl_t21;
+    kl_t23 = kl_n_12 * kl_t22;
+    kl_t24 = kl_children_3 + kl_t23;
+    kl_t25 = &( *kl_this_1 );
+    kl_t26 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t25, kl_n_12, 0 );
+    ( *kl_t24 ) = kl_t26;
+    goto bb10;
+    bb5:
+#line 218 "../src/ordered_control.kl"
+    kl_t28 = ( *kl_this_1 ).kl_counts__3768 + kl_n_12;
+    kl_t29 = ( *kl_t28 ) + 1;
+    kl_num_children_27 = kl_t29;
+#line 219 "../src/ordered_control.kl"
+    kl_c_30 = 0;
+    kl_t31 = kl_num_children_27;
+    goto bb6;
+    bb6:
+    kl_t32 = kl_c_30 < kl_t31;
+    if ( kl_t32 ) goto bb7; else goto bb8;
+    bb7:
+#line 221 "../src/ordered_control.kl"
+    kl_t33 = kl_ORDERED_KEYS_2018 + 1;
+    kl_t34 = ( uint64_t ) kl_t33;
+    kl_t35 = kl_n_12 * kl_t34;
+    kl_t36 = kl_t35 + kl_c_30;
+    kl_t37 = kl_children_3 + kl_t36;
+    kl_t38 = &( *kl_this_1 );
+    kl_t39 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t38, kl_n_12, kl_c_30 );
+    ( *kl_t37 ) = kl_t39;
+    goto bb9;
+    bb8:
+    goto bb10;
+    bb9:
+#line 219 "../src/ordered_control.kl"
+    kl_c_30 = kl_c_30 + 1;
+    goto bb6;
+    bb10:
+#line 199 "../src/ordered_control.kl"
+    kl_n_12 = kl_n_12 + 1;
+    goto bb1;
+    bb11:
+#line 231 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_children__3765 );
+    goto bb12;
+    bb12:
+#line 235 "../src/ordered_control.kl"
+    kl_t42 = ( *kl_this_1 ).kl_counts__3768 != NULL;
+    if ( kl_t42 ) goto bb13; else goto bb14;
+    bb13:
+#line 239 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_counts__3768 );
+    goto bb14;
+    bb14:
+#line 243 "../src/ordered_control.kl"
+    kl_t44 = ( *kl_this_1 ).kl_totals__3771 != NULL;
+    if ( kl_t44 ) goto bb15; else goto bb16;
+    bb15:
+#line 247 "../src/ordered_control.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_totals__3771 );
+    goto bb16;
+    bb16:
+#line 251 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_children__3765 = kl_children_3;
+#line 252 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_counts__3768 = kl_counts_4;
+#line 253 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_totals__3771 = kl_totals_5;
+#line 254 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_capacity__3779 = kl_nodes_2;
+    return;
+}
+
+void kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3, uint64_t kl_to_4 )
+{
+    uint8_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t* kl_t9;
+#line 261 "../src/ordered_control.kl"
+    kl_t5 = kl_ORDERED_KEYS_2018 + 1;
+    kl_t6 = ( uint64_t ) kl_t5;
+    kl_t7 = kl_node_2 * kl_t6;
+    kl_t8 = kl_t7 + kl_c_3;
+    kl_t9 = ( *kl_this_1 ).kl_children__3765 + kl_t8;
+    ( *kl_t9 ) = kl_to_4;
+    return;
+}
+
+uint64_t kl_2kl_new_node__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_node_2;
+    bool kl_t3;
+    struct kl_2kl_ordered_control* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t* kl_t7;
+    uint64_t* kl_t8;
+    struct kl_2kl_ordered_control* kl_t9;
+#line 269 "../src/ordered_control.kl"
+    kl_t3 = ( *kl_this_1 ).kl_free__3781 != kl_ORDERED_NO_NODE_2026;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 271 "../src/ordered_control.kl"
+    kl_node_2 = ( *kl_this_1 ).kl_free__3781;
+#line 272 "../src/ordered_control.kl"
+    kl_t4 = &( *kl_this_1 );
+    kl_t5 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t4, kl_node_2, 0 );
+    ( *kl_this_1 ).kl_free__3781 = kl_t5;
+#line 273 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free_count__3783 = ( *kl_this_1 ).kl_free_count__3783 - 1;
+    goto bb3;
+    bb2:
+#line 277 "../src/ordered_control.kl"
+    kl_t6 = ( *kl_this_1 ).kl_used__3777 < ( *kl_this_1 ).kl_capacity__3779;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb3:
+#line 284 "../src/ordered_control.kl"
+    kl_t7 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    ( *kl_t7 ) = 0;
+#line 285 "../src/ordered_control.kl"
+    kl_t8 = ( *kl_this_1 ).kl_totals__3771 + kl_node_2;
+    ( *kl_t8 ) = 0;
+#line 288 "../src/ordered_control.kl"
+    kl_t9 = &( *kl_this_1 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t9, kl_node_2, 0, kl_ORDERED_NO_NODE_2026 );
+#line 289 "../src/ordered_control.kl"
+    kl_t0 = kl_node_2;
+    return kl_t0;
+    bb4:
+#line 278 "../src/ordered_control.kl"
+    kl_node_2 = ( *kl_this_1 ).kl_used__3777;
+#line 279 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_used__3777 = ( *kl_this_1 ).kl_used__3777 + 1;
+    goto bb3;
+    bb5:
+    kl_rt_panic( "../src/ordered_control.kl", 277, "assertion failed: used_ < capacity_" );
+}
+
+void kl_2kl_free_node__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2 )
+{
+    uint64_t* kl_t3;
+    uint64_t* kl_t4;
+    struct kl_2kl_ordered_control* kl_t5;
+#line 296 "../src/ordered_control.kl"
+    kl_t3 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    ( *kl_t3 ) = 0;
+#line 297 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_totals__3771 + kl_node_2;
+    ( *kl_t4 ) = 0;
+#line 300 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t5, kl_node_2, 0, ( *kl_this_1 ).kl_free__3781 );
+#line 301 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free__3781 = kl_node_2;
+#line 302 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_free_count__3783 = ( *kl_this_1 ).kl_free_count__3783 + 1;
+    return;
+}
+
+void kl_2kl_recount__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2 )
+{
+    uint64_t kl_total_3;
+    uint64_t* kl_t4;
+    struct kl_2kl_ordered_control* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    uint64_t kl_c_8;
+    uint64_t kl_t9;
+    uint64_t* kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    uint64_t kl_t14;
+    uint64_t* kl_t15;
+    uint64_t* kl_t16;
+#line 310 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_total_3 = ( *kl_t4 );
+#line 313 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t5, kl_node_2 );
+    kl_t7 = !kl_t6;
+    if ( kl_t7 ) goto bb1; else goto bb6;
+    bb1:
+#line 317 "../src/ordered_control.kl"
+    kl_c_8 = 0;
+    kl_t10 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_t11 = ( *kl_t10 ) + 1;
+    kl_t9 = kl_t11;
+    goto bb2;
+    bb2:
+    kl_t12 = kl_c_8 < kl_t9;
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+#line 319 "../src/ordered_control.kl"
+    kl_t13 = &( *kl_this_1 );
+    kl_t14 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t13, kl_node_2, kl_c_8 );
+    kl_t15 = ( *kl_this_1 ).kl_totals__3771 + kl_t14;
+    kl_total_3 = kl_total_3 + ( *kl_t15 );
+    goto bb5;
+    bb4:
+    goto bb6;
+    bb5:
+#line 317 "../src/ordered_control.kl"
+    kl_c_8 = kl_c_8 + 1;
+    goto bb2;
+    bb6:
+#line 326 "../src/ordered_control.kl"
+    kl_t16 = ( *kl_this_1 ).kl_totals__3771 + kl_node_2;
+    ( *kl_t16 ) = kl_total_3;
+    return;
+}
+
+struct kl_2kl_key_run kl_2kl_open_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
+{
+    struct kl_2kl_key_run kl_t0;
+    uint64_t kl_num_4;
+    uint64_t* kl_t5;
+    struct kl_2kl_ordered_control* kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    uint64_t kl_c_9;
+    bool kl_t10;
+    struct kl_2kl_ordered_control* kl_t11;
+    uint64_t kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    uint64_t kl_t14;
+    struct kl_2kl_key_run kl_t16;
+    uint64_t kl_t17;
+    uint64_t kl_t18;
+    uint64_t kl_t19;
+    uint64_t kl_t20;
+#line 334 "../src/ordered_control.kl"
+    kl_t5 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_num_4 = ( *kl_t5 );
+#line 336 "../src/ordered_control.kl"
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t6, kl_node_2 );
+    kl_t8 = !kl_t7;
+    if ( kl_t8 ) goto bb1; else goto bb6;
+    bb1:
+#line 338 "../src/ordered_control.kl"
+    kl_c_9 = kl_num_4;
+    goto bb2;
+    bb2:
+    kl_t10 = kl_c_9 > kl_j_3;
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb3:
+#line 340 "../src/ordered_control.kl"
+    kl_t11 = &( *kl_this_1 );
+    kl_t12 = kl_c_9 + 1;
+    kl_t13 = &( *kl_this_1 );
+    kl_t14 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t13, kl_node_2, kl_c_9 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t11, kl_node_2, kl_t12, kl_t14 );
+    goto bb5;
+    bb4:
+    goto bb6;
+    bb5:
+#line 338 "../src/ordered_control.kl"
+    kl_c_9 = kl_c_9 - 1;
+    goto bb2;
+    bb6:
+#line 345 "../src/ordered_control.kl"
+    kl_t17 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
+#line 346 "../src/ordered_control.kl"
+    kl_t18 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
+    kl_t19 = kl_t18 + 1;
+#line 347 "../src/ordered_control.kl"
+    kl_t20 = kl_num_4 - kl_j_3;
+#line 345 "../src/ordered_control.kl"
+    kl_t16.kl_from_2028 = kl_t17;
+#line 346 "../src/ordered_control.kl"
+    kl_t16.kl_to_2030 = kl_t19;
+#line 347 "../src/ordered_control.kl"
+    kl_t16.kl_count_2032 = kl_t20;
+#line 344 "../src/ordered_control.kl"
+    kl_t0 = kl_t16;
+    return kl_t0;
+}
+
+struct kl_2kl_key_run kl_2kl_close_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
+{
+    struct kl_2kl_key_run kl_t0;
+    uint64_t kl_num_4;
+    uint64_t* kl_t5;
+    struct kl_2kl_ordered_control* kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    uint64_t kl_c_9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    uint64_t kl_t14;
+    struct kl_2kl_ordered_control* kl_t15;
+    uint64_t kl_t16;
+    uint64_t* kl_t18;
+    uint64_t kl_t19;
+    struct kl_2kl_key_run kl_t20;
+    uint64_t kl_t21;
+    uint64_t kl_t22;
+    uint64_t kl_t23;
+    uint64_t kl_t24;
+    uint64_t kl_t25;
+#line 356 "../src/ordered_control.kl"
+    kl_t5 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_num_4 = ( *kl_t5 );
+#line 358 "../src/ordered_control.kl"
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t6, kl_node_2 );
+    kl_t8 = !kl_t7;
+    if ( kl_t8 ) goto bb1; else goto bb6;
+    bb1:
+#line 360 "../src/ordered_control.kl"
+    kl_t10 = kl_j_3 + 2;
+    kl_c_9 = kl_t10;
+    goto bb2;
+    bb2:
+    kl_t11 = kl_num_4 + 1;
+    kl_t12 = kl_c_9 < kl_t11;
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+#line 362 "../src/ordered_control.kl"
+    kl_t13 = &( *kl_this_1 );
+    kl_t14 = kl_c_9 - 1;
+    kl_t15 = &( *kl_this_1 );
+    kl_t16 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t15, kl_node_2, kl_c_9 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t13, kl_node_2, kl_t14, kl_t16 );
+    goto bb5;
+    bb4:
+    goto bb6;
+    bb5:
+#line 360 "../src/ordered_control.kl"
+    kl_c_9 = kl_c_9 + 1;
+    goto bb2;
+    bb6:
+#line 366 "../src/ordered_control.kl"
+    kl_t18 = ( *kl_this_1 ).kl_counts__3768 + kl_node_2;
+    kl_t19 = kl_num_4 - 1;
+    ( *kl_t18 ) = kl_t19;
+#line 368 "../src/ordered_control.kl"
+    kl_t21 = kl_j_3 + 1;
+    kl_t22 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_t21 );
+#line 369 "../src/ordered_control.kl"
+    kl_t23 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
+#line 370 "../src/ordered_control.kl"
+    kl_t24 = kl_num_4 - kl_j_3;
+    kl_t25 = kl_t24 - 1;
+#line 368 "../src/ordered_control.kl"
+    kl_t20.kl_from_2028 = kl_t22;
+#line 369 "../src/ordered_control.kl"
+    kl_t20.kl_to_2030 = kl_t23;
+#line 370 "../src/ordered_control.kl"
+    kl_t20.kl_count_2032 = kl_t25;
+#line 367 "../src/ordered_control.kl"
+    kl_t0 = kl_t20;
+    return kl_t0;
+}
+
+struct kl_2kl_key_moves kl_2kl_split_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    uint64_t kl_left_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    uint64_t* kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    uint64_t kl_right_10;
+    struct kl_2kl_ordered_control* kl_t11;
+    uint64_t kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    uint64_t kl_k_16;
+    uint64_t kl_t17;
+    uint8_t kl_t18;
+    bool kl_t19;
+    struct kl_2kl_ordered_control* kl_t20;
+    struct kl_2kl_ordered_control* kl_t21;
+    uint8_t kl_t22;
+    uint64_t kl_t23;
+    uint64_t kl_t24;
+    uint64_t kl_t25;
+    uint64_t* kl_t27;
+    uint64_t* kl_t28;
+    struct kl_2kl_key_run kl_gap_29;
+    struct kl_2kl_ordered_control* kl_t30;
+    struct kl_2kl_key_run kl_t31;
+    struct kl_2kl_ordered_control* kl_t32;
+    uint64_t kl_t33;
+    uint64_t* kl_t35;
+    struct kl_2kl_ordered_control* kl_t36;
+    struct kl_2kl_ordered_control* kl_t38;
+    struct kl_2kl_key_moves kl_t40;
+    struct kl_2kl_key_run kl_t41;
+    uint64_t kl_t42;
+    uint64_t kl_t43;
+    uint64_t kl_t44;
+    struct kl_2kl_key_run kl_t45;
+    uint8_t kl_t46;
+    uint64_t kl_t47;
+    uint64_t kl_t48;
+    uint64_t kl_t49;
+    uint64_t kl_t50;
+#line 378 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
+    kl_left_4 = kl_t6;
+#line 382 "../src/ordered_control.kl"
+    kl_t7 = ( *kl_this_1 ).kl_counts__3768 + kl_left_4;
+    kl_t8 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t9 = ( *kl_t7 ) == kl_t8;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+#line 385 "../src/ordered_control.kl"
+    kl_t11 = &( *kl_this_1 );
+    kl_t12 = kl_2kl_new_node__SQ2kl15ordered_control( kl_t11 );
+    kl_right_10 = kl_t12;
+#line 387 "../src/ordered_control.kl"
+    kl_t13 = &( *kl_this_1 );
+    kl_t14 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t13, kl_left_4 );
+    kl_t15 = !kl_t14;
+    if ( kl_t15 ) goto bb3; else goto bb8;
+    bb2:
+    kl_rt_panic( "../src/ordered_control.kl", 382, "assertion failed: counts_[left] == ORDERED_KEYS" );
+    bb3:
+#line 389 "../src/ordered_control.kl"
+    kl_k_16 = 0;
+    kl_t18 = kl_ORDERED_MIN_2022 + 1;
+    kl_t17 = kl_t18;
+    goto bb4;
+    bb4:
+    kl_t19 = kl_k_16 < kl_t17;
+    if ( kl_t19 ) goto bb5; else goto bb6;
+    bb5:
+#line 391 "../src/ordered_control.kl"
+    kl_t20 = &( *kl_this_1 );
+    kl_t21 = &( *kl_this_1 );
+    kl_t22 = kl_ORDERED_MIN_2022 + 1;
+    kl_t23 = ( uint64_t ) kl_t22;
+    kl_t24 = kl_t23 + kl_k_16;
+    kl_t25 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t21, kl_left_4, kl_t24 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t20, kl_right_10, kl_k_16, kl_t25 );
+    goto bb7;
+    bb6:
+    goto bb8;
+    bb7:
+#line 389 "../src/ordered_control.kl"
+    kl_k_16 = kl_k_16 + 1;
+    goto bb4;
+    bb8:
+#line 397 "../src/ordered_control.kl"
+    kl_t27 = ( *kl_this_1 ).kl_counts__3768 + kl_right_10;
+    ( *kl_t27 ) = kl_ORDERED_MIN_2022;
+#line 398 "../src/ordered_control.kl"
+    kl_t28 = ( *kl_this_1 ).kl_counts__3768 + kl_left_4;
+    ( *kl_t28 ) = kl_ORDERED_MIN_2022;
+#line 401 "../src/ordered_control.kl"
+    kl_t30 = &( *kl_this_1 );
+    kl_t31 = kl_2kl_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t30, kl_parent_2, kl_c_3 );
+    kl_gap_29 = kl_t31;
+#line 402 "../src/ordered_control.kl"
+    kl_t32 = &( *kl_this_1 );
+    kl_t33 = kl_c_3 + 1;
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t32, kl_parent_2, kl_t33, kl_right_10 );
+#line 405 "../src/ordered_control.kl"
+    kl_t35 = ( *kl_this_1 ).kl_counts__3768 + kl_parent_2;
+    ( *kl_t35 ) = ( *kl_t35 ) + 1;
+#line 408 "../src/ordered_control.kl"
+    kl_t36 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t36, kl_left_4 );
+#line 409 "../src/ordered_control.kl"
+    kl_t38 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t38, kl_right_10 );
+#line 414 "../src/ordered_control.kl"
+    kl_t42 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t43 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t42 );
+#line 415 "../src/ordered_control.kl"
+    kl_t44 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
+#line 414 "../src/ordered_control.kl"
+    kl_t41.kl_from_2028 = kl_t43;
+#line 415 "../src/ordered_control.kl"
+    kl_t41.kl_to_2030 = kl_t44;
+#line 416 "../src/ordered_control.kl"
+    kl_t41.kl_count_2032 = 1;
+#line 419 "../src/ordered_control.kl"
+    kl_t46 = kl_ORDERED_MIN_2022 + 1;
+    kl_t47 = ( uint64_t ) kl_t46;
+    kl_t48 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t47 );
+#line 420 "../src/ordered_control.kl"
+    kl_t49 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_10, 0 );
+#line 421 "../src/ordered_control.kl"
+    kl_t50 = ( uint64_t ) kl_ORDERED_MIN_2022;
+#line 419 "../src/ordered_control.kl"
+    kl_t45.kl_from_2028 = kl_t48;
+#line 420 "../src/ordered_control.kl"
+    kl_t45.kl_to_2030 = kl_t49;
+#line 421 "../src/ordered_control.kl"
+    kl_t45.kl_count_2032 = kl_t50;
+#line 412 "../src/ordered_control.kl"
+    kl_t40.kl_first_2035 = kl_gap_29;
+#line 413 "../src/ordered_control.kl"
+    kl_t40.kl_second_2037 = kl_t41;
+#line 418 "../src/ordered_control.kl"
+    kl_t40.kl_third_2039 = kl_t45;
+#line 411 "../src/ordered_control.kl"
+    kl_t0 = kl_t40;
+    return kl_t0;
+}
+
+struct kl_2kl_key_moves kl_2kl_prepare_insert__SQ2kl15ordered_control( struct kl_2kl_ordered_control* kl_this_1 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    bool kl_t2;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    struct kl_2kl_key_moves kl_t5;
+    uint64_t* kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    uint64_t kl_above_9;
+    struct kl_2kl_ordered_control* kl_t10;
+    uint64_t kl_t11;
+    struct kl_2kl_ordered_control* kl_t12;
+    uint64_t* kl_t14;
+    uint64_t* kl_t15;
+    struct kl_2kl_ordered_control* kl_t16;
+    struct kl_2kl_key_moves kl_t17;
+    struct kl_2kl_key_moves kl_t18;
+#line 430 "../src/ordered_control.kl"
+    kl_t2 = ( *kl_this_1 ).kl_root__3773 == kl_ORDERED_NO_NODE_2026;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 432 "../src/ordered_control.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = kl_2kl_new_node__SQ2kl15ordered_control( kl_t3 );
+    ( *kl_this_1 ).kl_root__3773 = kl_t4;
+#line 433 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = 1;
+#line 434 "../src/ordered_control.kl"
+    kl_t5 = kl_2kl_none__SQ2kl9key_moves(  );
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb2:
+#line 439 "../src/ordered_control.kl"
+    kl_t6 = ( *kl_this_1 ).kl_counts__3768 + ( *kl_this_1 ).kl_root__3773;
+    kl_t7 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t8 = ( *kl_t6 ) == kl_t7;
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+#line 441 "../src/ordered_control.kl"
+    kl_t10 = &( *kl_this_1 );
+    kl_t11 = kl_2kl_new_node__SQ2kl15ordered_control( kl_t10 );
+    kl_above_9 = kl_t11;
+#line 442 "../src/ordered_control.kl"
+    kl_t12 = &( *kl_this_1 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t12, kl_above_9, 0, ( *kl_this_1 ).kl_root__3773 );
+#line 443 "../src/ordered_control.kl"
+    kl_t14 = ( *kl_this_1 ).kl_totals__3771 + kl_above_9;
+    kl_t15 = ( *kl_this_1 ).kl_totals__3771 + ( *kl_this_1 ).kl_root__3773;
+    ( *kl_t14 ) = ( *kl_t15 );
+#line 444 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_root__3773 = kl_above_9;
+#line 445 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = ( *kl_this_1 ).kl_height__3775 + 1;
+#line 446 "../src/ordered_control.kl"
+    kl_t16 = &( *kl_this_1 );
+    kl_t17 = kl_2kl_split_child__SQ2kl15ordered_control_3u64_3u64( kl_t16, kl_above_9, 0 );
+    kl_t0 = kl_t17;
+    return kl_t0;
+    bb4:
+#line 450 "../src/ordered_control.kl"
+    kl_t18 = kl_2kl_none__SQ2kl9key_moves(  );
+    kl_t0 = kl_t18;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_descend_insert__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
+{
+    uint64_t kl_t0;
+    uint64_t* kl_t4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+#line 458 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_totals__3771 + kl_node_2;
+    ( *kl_t4 ) = ( *kl_t4 ) + 1;
+#line 461 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_node_2, kl_j_3 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+struct kl_2kl_key_run kl_2kl_insert_in_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_leaf_2, uint64_t kl_j_3 )
+{
+    struct kl_2kl_key_run kl_t0;
+    uint64_t* kl_t4;
+    struct kl_2kl_key_run kl_gap_5;
+    struct kl_2kl_ordered_control* kl_t6;
+    struct kl_2kl_key_run kl_t7;
+    uint64_t* kl_t8;
+#line 469 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_totals__3771 + kl_leaf_2;
+    ( *kl_t4 ) = ( *kl_t4 ) + 1;
+#line 470 "../src/ordered_control.kl"
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl_2kl_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t6, kl_leaf_2, kl_j_3 );
+    kl_gap_5 = kl_t7;
+#line 471 "../src/ordered_control.kl"
+    kl_t8 = ( *kl_this_1 ).kl_counts__3768 + kl_leaf_2;
+    ( *kl_t8 ) = ( *kl_t8 ) + 1;
+#line 472 "../src/ordered_control.kl"
+    kl_t0 = kl_gap_5;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_slot_at__SQ2kl15ordered_control_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_i_2 )
+{
+    uint64_t kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_n_6;
+    uint64_t kl_left_7;
+    struct kl_2kl_ordered_control* kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    uint64_t kl_next_11;
+    struct kl_2kl_ordered_control* kl_t12;
+    uint64_t* kl_t13;
+    uint64_t kl_t14;
+    uint64_t kl_j_15;
+    uint64_t kl_t16;
+    uint64_t* kl_t17;
+    bool kl_t18;
+    uint64_t kl_below_19;
+    struct kl_2kl_ordered_control* kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    struct kl_2kl_ordered_control* kl_t23;
+    uint64_t kl_t24;
+    bool kl_t25;
+    uint64_t kl_t26;
+    uint64_t kl_t27;
+    uint64_t kl_t28;
+#line 479 "../src/ordered_control.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = kl_2kl_size__SQ2kl15ordered_control( kl_t3 );
+    kl_t5 = kl_i_2 < kl_t4;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 480 "../src/ordered_control.kl"
+    kl_n_6 = ( *kl_this_1 ).kl_root__3773;
+#line 481 "../src/ordered_control.kl"
+    kl_left_7 = kl_i_2;
+    goto bb3;
+    bb2:
+    kl_rt_panic( "../src/ordered_control.kl", 479, "assertion failed: i < size()" );
+    bb3:
+#line 485 "../src/ordered_control.kl"
+    kl_t8 = &( *kl_this_1 );
+    kl_t9 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t8, kl_n_6 );
+    kl_t10 = !kl_t9;
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb4:
+#line 487 "../src/ordered_control.kl"
+    kl_t12 = &( *kl_this_1 );
+    kl_t13 = ( *kl_this_1 ).kl_counts__3768 + kl_n_6;
+    kl_t14 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t12, kl_n_6, ( *kl_t13 ) );
+    kl_next_11 = kl_t14;
+#line 489 "../src/ordered_control.kl"
+    kl_j_15 = 0;
+    kl_t17 = ( *kl_this_1 ).kl_counts__3768 + kl_n_6;
+    kl_t16 = ( *kl_t17 );
+    goto bb6;
+    bb5:
+#line 511 "../src/ordered_control.kl"
+    kl_t28 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_6, kl_left_7 );
+    kl_t0 = kl_t28;
+    return kl_t0;
+    bb6:
+#line 489 "../src/ordered_control.kl"
+    kl_t18 = kl_j_15 < kl_t16;
+    if ( kl_t18 ) goto bb7; else goto bb8;
+    bb7:
+#line 491 "../src/ordered_control.kl"
+    kl_t20 = &( *kl_this_1 );
+    kl_t21 = kl_2kl_subtree__SQ2kl15ordered_control_3u64_3u64( kl_t20, kl_n_6, kl_j_15 );
+    kl_below_19 = kl_t21;
+#line 493 "../src/ordered_control.kl"
+    kl_t22 = kl_left_7 < kl_below_19;
+    if ( kl_t22 ) goto bb9; else goto bb10;
+    bb8:
+#line 507 "../src/ordered_control.kl"
+    kl_n_6 = kl_next_11;
+    goto bb3;
+    bb9:
+#line 495 "../src/ordered_control.kl"
+    kl_t23 = &( *kl_this_1 );
+    kl_t24 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t23, kl_n_6, kl_j_15 );
+    kl_next_11 = kl_t24;
+    goto bb8;
+    bb10:
+#line 499 "../src/ordered_control.kl"
+    kl_t25 = kl_left_7 == kl_below_19;
+    if ( kl_t25 ) goto bb11; else goto bb12;
+    bb11:
+#line 501 "../src/ordered_control.kl"
+    kl_t26 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_6, kl_j_15 );
+    kl_t0 = kl_t26;
+    return kl_t0;
+    bb12:
+#line 504 "../src/ordered_control.kl"
+    kl_t27 = kl_below_19 + 1;
+    kl_left_7 = kl_left_7 - kl_t27;
+    goto bb13;
+    bb13:
+#line 489 "../src/ordered_control.kl"
+    kl_j_15 = kl_j_15 + 1;
+    goto bb6;
+}
+
+struct kl_2kl_key_moves kl_2kl_merge__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    uint64_t kl_left_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_right_7;
+    struct kl_2kl_ordered_control* kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    struct kl_2kl_ordered_control* kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    uint64_t kl_k_14;
+    uint64_t kl_t15;
+    uint8_t kl_t16;
+    bool kl_t17;
+    struct kl_2kl_ordered_control* kl_t18;
+    uint8_t kl_t19;
+    uint64_t kl_t20;
+    uint64_t kl_t21;
+    struct kl_2kl_ordered_control* kl_t22;
+    uint64_t kl_t23;
+    uint64_t* kl_t25;
+    struct kl_2kl_key_run kl_down_26;
+    struct kl_2kl_key_run kl_t27;
+    uint64_t kl_t28;
+    uint64_t kl_t29;
+    uint64_t kl_t30;
+    struct kl_2kl_key_run kl_across_31;
+    struct kl_2kl_key_run kl_t32;
+    uint64_t kl_t33;
+    uint8_t kl_t34;
+    uint64_t kl_t35;
+    uint64_t kl_t36;
+    uint64_t kl_t37;
+    struct kl_2kl_key_run kl_gap_38;
+    struct kl_2kl_ordered_control* kl_t39;
+    struct kl_2kl_key_run kl_t40;
+    struct kl_2kl_ordered_control* kl_t41;
+    struct kl_2kl_ordered_control* kl_t43;
+    struct kl_2kl_key_moves kl_t45;
+#line 518 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
+    kl_left_4 = kl_t6;
+#line 519 "../src/ordered_control.kl"
+    kl_t8 = &( *kl_this_1 );
+    kl_t9 = kl_c_3 + 1;
+    kl_t10 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t9 );
+    kl_right_7 = kl_t10;
+#line 521 "../src/ordered_control.kl"
+    kl_t11 = &( *kl_this_1 );
+    kl_t12 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t11, kl_left_4 );
+    kl_t13 = !kl_t12;
+    if ( kl_t13 ) goto bb1; else goto bb6;
+    bb1:
+#line 523 "../src/ordered_control.kl"
+    kl_k_14 = 0;
+    kl_t16 = kl_ORDERED_MIN_2022 + 1;
+    kl_t15 = kl_t16;
+    goto bb2;
+    bb2:
+    kl_t17 = kl_k_14 < kl_t15;
+    if ( kl_t17 ) goto bb3; else goto bb4;
+    bb3:
+#line 525 "../src/ordered_control.kl"
+    kl_t18 = &( *kl_this_1 );
+    kl_t19 = kl_ORDERED_MIN_2022 + 1;
+    kl_t20 = ( uint64_t ) kl_t19;
+    kl_t21 = kl_t20 + kl_k_14;
+    kl_t22 = &( *kl_this_1 );
+    kl_t23 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t22, kl_right_7, kl_k_14 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t18, kl_left_4, kl_t21, kl_t23 );
+    goto bb5;
+    bb4:
+    goto bb6;
+    bb5:
+#line 523 "../src/ordered_control.kl"
+    kl_k_14 = kl_k_14 + 1;
+    goto bb2;
+    bb6:
+#line 531 "../src/ordered_control.kl"
+    kl_t25 = ( *kl_this_1 ).kl_counts__3768 + kl_left_4;
+    ( *kl_t25 ) = kl_ORDERED_KEYS_2018;
+#line 534 "../src/ordered_control.kl"
+    kl_t28 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
+    kl_t29 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t30 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t29 );
+    kl_t27.kl_from_2028 = kl_t28;
+    kl_t27.kl_to_2030 = kl_t30;
+    kl_t27.kl_count_2032 = 1;
+    kl_down_26 = kl_t27;
+#line 536 "../src/ordered_control.kl"
+    kl_t33 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_7, 0 );
+#line 537 "../src/ordered_control.kl"
+    kl_t34 = kl_ORDERED_MIN_2022 + 1;
+    kl_t35 = ( uint64_t ) kl_t34;
+    kl_t36 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t35 );
+#line 538 "../src/ordered_control.kl"
+    kl_t37 = ( uint64_t ) kl_ORDERED_MIN_2022;
+#line 536 "../src/ordered_control.kl"
+    kl_t32.kl_from_2028 = kl_t33;
+#line 537 "../src/ordered_control.kl"
+    kl_t32.kl_to_2030 = kl_t36;
+#line 538 "../src/ordered_control.kl"
+    kl_t32.kl_count_2032 = kl_t37;
+#line 535 "../src/ordered_control.kl"
+    kl_across_31 = kl_t32;
+#line 540 "../src/ordered_control.kl"
+    kl_t39 = &( *kl_this_1 );
+    kl_t40 = kl_2kl_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t39, kl_parent_2, kl_c_3 );
+    kl_gap_38 = kl_t40;
+#line 542 "../src/ordered_control.kl"
+    kl_t41 = &( *kl_this_1 );
+    kl_2kl_free_node__SQ2kl15ordered_control_3u64( kl_t41, kl_right_7 );
+#line 543 "../src/ordered_control.kl"
+    kl_t43 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t43, kl_left_4 );
+#line 544 "../src/ordered_control.kl"
+    kl_t45.kl_first_2035 = kl_down_26;
+    kl_t45.kl_second_2037 = kl_across_31;
+    kl_t45.kl_third_2039 = kl_gap_38;
+    kl_t0 = kl_t45;
+    return kl_t0;
+}
+
+struct kl_2kl_key_moves kl_2kl_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3, uint64_t* kl_entered_4 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    struct kl_2kl_ordered_control* kl_t5;
+    struct kl_2kl_ordered_control* kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    struct kl_2kl_key_moves kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    struct kl_2kl_ordered_control* kl_t14;
+    struct kl_2kl_ordered_control* kl_t15;
+    uint64_t kl_t16;
+    uint64_t kl_t17;
+    uint64_t kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl_2kl_ordered_control* kl_t21;
+    struct kl_2kl_key_moves kl_t22;
+    bool kl_t23;
+    struct kl_2kl_ordered_control* kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    struct kl_2kl_ordered_control* kl_t27;
+    struct kl_2kl_ordered_control* kl_t28;
+    uint64_t kl_t29;
+    uint64_t kl_t30;
+    uint64_t kl_t31;
+    uint64_t kl_t32;
+    bool kl_t33;
+    struct kl_2kl_ordered_control* kl_t34;
+    struct kl_2kl_key_moves kl_t35;
+    struct kl_2kl_ordered_control* kl_t36;
+    uint64_t kl_t37;
+    bool kl_t38;
+    struct kl_2kl_ordered_control* kl_t39;
+    struct kl_2kl_key_moves kl_t40;
+    uint64_t kl_t41;
+    struct kl_2kl_ordered_control* kl_t42;
+    uint64_t kl_t43;
+    struct kl_2kl_key_moves kl_t44;
+#line 551 "../src/ordered_control.kl"
+    ( *kl_entered_4 ) = kl_c_3;
+#line 553 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t6, kl_parent_2, kl_c_3 );
+    kl_t8 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t5, kl_t7 );
+    kl_t9 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t10 = kl_t8 > kl_t9;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 555 "../src/ordered_control.kl"
+    kl_t11 = kl_2kl_none__SQ2kl9key_moves(  );
+    kl_t0 = kl_t11;
+    return kl_t0;
+    bb2:
+#line 558 "../src/ordered_control.kl"
+    kl_t13 = kl_c_3 > 0;
+    kl_t12 = kl_t13;
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t14 = &( *kl_this_1 );
+    kl_t15 = &( *kl_this_1 );
+    kl_t16 = kl_c_3 - 1;
+    kl_t17 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t15, kl_parent_2, kl_t16 );
+    kl_t18 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t14, kl_t17 );
+    kl_t19 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t20 = kl_t18 > kl_t19;
+    kl_t12 = kl_t20;
+    goto bb4;
+    bb4:
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+#line 560 "../src/ordered_control.kl"
+    kl_t21 = &( *kl_this_1 );
+    kl_t22 = kl_2kl_borrow_from_left__SQ2kl15ordered_control_3u64_3u64( kl_t21, kl_parent_2, kl_c_3 );
+    kl_t0 = kl_t22;
+    return kl_t0;
+    bb6:
+#line 563 "../src/ordered_control.kl"
+    kl_t24 = &( *kl_this_1 );
+    kl_t25 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t24, kl_parent_2 );
+    kl_t26 = kl_c_3 < kl_t25;
+    kl_t23 = kl_t26;
+    if ( kl_t23 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t27 = &( *kl_this_1 );
+    kl_t28 = &( *kl_this_1 );
+    kl_t29 = kl_c_3 + 1;
+    kl_t30 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t28, kl_parent_2, kl_t29 );
+    kl_t31 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t27, kl_t30 );
+    kl_t32 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t33 = kl_t31 > kl_t32;
+    kl_t23 = kl_t33;
+    goto bb8;
+    bb8:
+    if ( kl_t23 ) goto bb9; else goto bb10;
+    bb9:
+#line 565 "../src/ordered_control.kl"
+    kl_t34 = &( *kl_this_1 );
+    kl_t35 = kl_2kl_borrow_from_right__SQ2kl15ordered_control_3u64_3u64( kl_t34, kl_parent_2, kl_c_3 );
+    kl_t0 = kl_t35;
+    return kl_t0;
+    bb10:
+#line 568 "../src/ordered_control.kl"
+    kl_t36 = &( *kl_this_1 );
+    kl_t37 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t36, kl_parent_2 );
+    kl_t38 = kl_c_3 < kl_t37;
+    if ( kl_t38 ) goto bb11; else goto bb12;
+    bb11:
+#line 570 "../src/ordered_control.kl"
+    kl_t39 = &( *kl_this_1 );
+    kl_t40 = kl_2kl_merge__SQ2kl15ordered_control_3u64_3u64( kl_t39, kl_parent_2, kl_c_3 );
+    kl_t0 = kl_t40;
+    return kl_t0;
+    bb12:
+#line 573 "../src/ordered_control.kl"
+    kl_t41 = kl_c_3 - 1;
+    ( *kl_entered_4 ) = kl_t41;
+#line 574 "../src/ordered_control.kl"
+    kl_t42 = &( *kl_this_1 );
+    kl_t43 = kl_c_3 - 1;
+    kl_t44 = kl_2kl_merge__SQ2kl15ordered_control_3u64_3u64( kl_t42, kl_parent_2, kl_t43 );
+    kl_t0 = kl_t44;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_next_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    struct kl_2kl_ordered_control* kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    struct kl_2kl_ordered_control* kl_t10;
+    uint64_t* kl_t12;
+#line 581 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_node_2, kl_c_3 );
+    kl_next_4 = kl_t6;
+#line 583 "../src/ordered_control.kl"
+    kl_t7 = &( *kl_this_1 );
+    kl_t8 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t7, kl_node_2 );
+    kl_t9 = kl_t8 == 0;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+#line 585 "../src/ordered_control.kl"
+    kl_t10 = &( *kl_this_1 );
+    kl_2kl_free_node__SQ2kl15ordered_control_3u64( kl_t10, kl_node_2 );
+#line 586 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_root__3773 = kl_next_4;
+#line 587 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = ( *kl_this_1 ).kl_height__3775 - 1;
+#line 588 "../src/ordered_control.kl"
+    kl_t0 = kl_next_4;
+    return kl_t0;
+    bb2:
+#line 593 "../src/ordered_control.kl"
+    kl_t12 = ( *kl_this_1 ).kl_totals__3771 + kl_node_2;
+    ( *kl_t12 ) = ( *kl_t12 ) - 1;
+#line 596 "../src/ordered_control.kl"
+    kl_t0 = kl_next_4;
+    return kl_t0;
+}
+
+struct kl_2kl_key_run kl_2kl_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_leaf_2, uint64_t kl_j_3 )
+{
+    struct kl_2kl_key_run kl_t0;
+    uint64_t* kl_t4;
+    struct kl_2kl_key_run kl_gap_5;
+    struct kl_2kl_ordered_control* kl_t6;
+    struct kl_2kl_key_run kl_t7;
+    struct kl_2kl_ordered_control* kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    struct kl_2kl_ordered_control* kl_t11;
+#line 605 "../src/ordered_control.kl"
+    kl_t4 = ( *kl_this_1 ).kl_totals__3771 + kl_leaf_2;
+    ( *kl_t4 ) = ( *kl_t4 ) - 1;
+#line 608 "../src/ordered_control.kl"
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl_2kl_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t6, kl_leaf_2, kl_j_3 );
+    kl_gap_5 = kl_t7;
+#line 610 "../src/ordered_control.kl"
+    kl_t8 = &( *kl_this_1 );
+    kl_t9 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t8, kl_leaf_2 );
+    kl_t10 = kl_t9 == 0;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 612 "../src/ordered_control.kl"
+    kl_t11 = &( *kl_this_1 );
+    kl_2kl_free_node__SQ2kl15ordered_control_3u64( kl_t11, kl_leaf_2 );
+#line 613 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_root__3773 = kl_ORDERED_NO_NODE_2026;
+#line 614 "../src/ordered_control.kl"
+    ( *kl_this_1 ).kl_height__3775 = 0;
+    goto bb2;
+    bb2:
+#line 617 "../src/ordered_control.kl"
+    kl_t0 = kl_gap_5;
+    return kl_t0;
+}
+
+struct kl_2kl_key_moves kl_2kl_borrow_from_left__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    uint64_t kl_node_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_left_7;
+    struct kl_2kl_ordered_control* kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_last_11;
+    struct kl_2kl_ordered_control* kl_t12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    struct kl_2kl_key_run kl_gap_15;
+    struct kl_2kl_ordered_control* kl_t16;
+    struct kl_2kl_key_run kl_t17;
+    struct kl_2kl_ordered_control* kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    struct kl_2kl_ordered_control* kl_t21;
+    struct kl_2kl_ordered_control* kl_t22;
+    uint64_t kl_t23;
+    struct kl_2kl_ordered_control* kl_t25;
+    struct kl_2kl_ordered_control* kl_t26;
+    struct kl_2kl_ordered_control* kl_t27;
+    uint64_t kl_t28;
+    uint64_t kl_t29;
+    uint64_t* kl_t31;
+    uint64_t* kl_t32;
+    struct kl_2kl_ordered_control* kl_t33;
+    struct kl_2kl_ordered_control* kl_t35;
+    struct kl_2kl_key_moves kl_t37;
+    struct kl_2kl_key_run kl_t38;
+    uint64_t kl_t39;
+    uint64_t kl_t40;
+    uint64_t kl_t41;
+    struct kl_2kl_key_run kl_t42;
+    uint64_t kl_t43;
+    uint64_t kl_t44;
+    uint64_t kl_t45;
+#line 623 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
+    kl_node_4 = kl_t6;
+#line 624 "../src/ordered_control.kl"
+    kl_t8 = &( *kl_this_1 );
+    kl_t9 = kl_c_3 - 1;
+    kl_t10 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t9 );
+    kl_left_7 = kl_t10;
+#line 625 "../src/ordered_control.kl"
+    kl_t12 = &( *kl_this_1 );
+    kl_t13 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t12, kl_left_7 );
+    kl_t14 = kl_t13 - 1;
+    kl_last_11 = kl_t14;
+#line 627 "../src/ordered_control.kl"
+    kl_t16 = &( *kl_this_1 );
+    kl_t17 = kl_2kl_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t16, kl_node_4, 0 );
+    kl_gap_15 = kl_t17;
+#line 629 "../src/ordered_control.kl"
+    kl_t18 = &( *kl_this_1 );
+    kl_t19 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t18, kl_node_4 );
+    kl_t20 = !kl_t19;
+    if ( kl_t20 ) goto bb1; else goto bb2;
+    bb1:
+#line 631 "../src/ordered_control.kl"
+    kl_t21 = &( *kl_this_1 );
+    kl_t22 = &( *kl_this_1 );
+    kl_t23 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t22, kl_node_4, 0 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t21, kl_node_4, 1, kl_t23 );
+#line 632 "../src/ordered_control.kl"
+    kl_t25 = &( *kl_this_1 );
+    kl_t26 = &( *kl_this_1 );
+    kl_t27 = &( *kl_this_1 );
+    kl_t28 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t27, kl_left_7 );
+    kl_t29 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t26, kl_left_7, kl_t28 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t25, kl_node_4, 0, kl_t29 );
+    goto bb2;
+    bb2:
+#line 637 "../src/ordered_control.kl"
+    kl_t31 = ( *kl_this_1 ).kl_counts__3768 + kl_node_4;
+    ( *kl_t31 ) = ( *kl_t31 ) + 1;
+#line 638 "../src/ordered_control.kl"
+    kl_t32 = ( *kl_this_1 ).kl_counts__3768 + kl_left_7;
+    ( *kl_t32 ) = ( *kl_t32 ) - 1;
+#line 641 "../src/ordered_control.kl"
+    kl_t33 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t33, kl_node_4 );
+#line 642 "../src/ordered_control.kl"
+    kl_t35 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t35, kl_left_7 );
+#line 646 "../src/ordered_control.kl"
+    kl_t39 = kl_c_3 - 1;
+    kl_t40 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_t39 );
+    kl_t41 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_4, 0 );
+    kl_t38.kl_from_2028 = kl_t40;
+    kl_t38.kl_to_2030 = kl_t41;
+    kl_t38.kl_count_2032 = 1;
+#line 647 "../src/ordered_control.kl"
+    kl_t43 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_7, kl_last_11 );
+    kl_t44 = kl_c_3 - 1;
+    kl_t45 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_t44 );
+    kl_t42.kl_from_2028 = kl_t43;
+    kl_t42.kl_to_2030 = kl_t45;
+    kl_t42.kl_count_2032 = 1;
+#line 645 "../src/ordered_control.kl"
+    kl_t37.kl_first_2035 = kl_gap_15;
+#line 646 "../src/ordered_control.kl"
+    kl_t37.kl_second_2037 = kl_t38;
+#line 647 "../src/ordered_control.kl"
+    kl_t37.kl_third_2039 = kl_t42;
+#line 644 "../src/ordered_control.kl"
+    kl_t0 = kl_t37;
+    return kl_t0;
+}
+
+struct kl_2kl_key_moves kl_2kl_borrow_from_right__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
+{
+    struct kl_2kl_key_moves kl_t0;
+    uint64_t kl_node_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_right_7;
+    struct kl_2kl_ordered_control* kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_end_11;
+    struct kl_2kl_ordered_control* kl_t12;
+    uint64_t kl_t13;
+    struct kl_2kl_ordered_control* kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    struct kl_2kl_ordered_control* kl_t17;
+    uint64_t kl_t18;
+    struct kl_2kl_ordered_control* kl_t19;
+    uint64_t kl_t20;
+    struct kl_2kl_ordered_control* kl_t22;
+    struct kl_2kl_ordered_control* kl_t23;
+    uint64_t kl_t24;
+    uint64_t* kl_t26;
+    struct kl_2kl_key_run kl_down_27;
+    struct kl_2kl_key_run kl_t28;
+    uint64_t kl_t29;
+    uint64_t kl_t30;
+    struct kl_2kl_key_run kl_up_31;
+    struct kl_2kl_key_run kl_t32;
+    uint64_t kl_t33;
+    uint64_t kl_t34;
+    struct kl_2kl_key_run kl_gap_35;
+    struct kl_2kl_ordered_control* kl_t36;
+    struct kl_2kl_key_run kl_t37;
+    struct kl_2kl_ordered_control* kl_t38;
+    struct kl_2kl_ordered_control* kl_t40;
+    struct kl_2kl_key_moves kl_t42;
+#line 654 "../src/ordered_control.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
+    kl_node_4 = kl_t6;
+#line 655 "../src/ordered_control.kl"
+    kl_t8 = &( *kl_this_1 );
+    kl_t9 = kl_c_3 + 1;
+    kl_t10 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t9 );
+    kl_right_7 = kl_t10;
+#line 656 "../src/ordered_control.kl"
+    kl_t12 = &( *kl_this_1 );
+    kl_t13 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t12, kl_node_4 );
+    kl_end_11 = kl_t13;
+#line 658 "../src/ordered_control.kl"
+    kl_t14 = &( *kl_this_1 );
+    kl_t15 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t14, kl_node_4 );
+    kl_t16 = !kl_t15;
+    if ( kl_t16 ) goto bb1; else goto bb2;
+    bb1:
+#line 660 "../src/ordered_control.kl"
+    kl_t17 = &( *kl_this_1 );
+    kl_t18 = kl_end_11 + 1;
+    kl_t19 = &( *kl_this_1 );
+    kl_t20 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t19, kl_right_7, 0 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t17, kl_node_4, kl_t18, kl_t20 );
+#line 661 "../src/ordered_control.kl"
+    kl_t22 = &( *kl_this_1 );
+    kl_t23 = &( *kl_this_1 );
+    kl_t24 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t23, kl_right_7, 1 );
+    kl_2kl_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t22, kl_right_7, 0, kl_t24 );
+    goto bb2;
+    bb2:
+#line 666 "../src/ordered_control.kl"
+    kl_t26 = ( *kl_this_1 ).kl_counts__3768 + kl_node_4;
+    ( *kl_t26 ) = ( *kl_t26 ) + 1;
+#line 669 "../src/ordered_control.kl"
+    kl_t29 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
+    kl_t30 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_4, kl_end_11 );
+    kl_t28.kl_from_2028 = kl_t29;
+    kl_t28.kl_to_2030 = kl_t30;
+    kl_t28.kl_count_2032 = 1;
+    kl_down_27 = kl_t28;
+#line 670 "../src/ordered_control.kl"
+    kl_t33 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_7, 0 );
+    kl_t34 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
+    kl_t32.kl_from_2028 = kl_t33;
+    kl_t32.kl_to_2030 = kl_t34;
+    kl_t32.kl_count_2032 = 1;
+    kl_up_31 = kl_t32;
+#line 671 "../src/ordered_control.kl"
+    kl_t36 = &( *kl_this_1 );
+    kl_t37 = kl_2kl_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t36, kl_right_7, 0 );
+    kl_gap_35 = kl_t37;
+#line 673 "../src/ordered_control.kl"
+    kl_t38 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t38, kl_node_4 );
+#line 674 "../src/ordered_control.kl"
+    kl_t40 = &( *kl_this_1 );
+    kl_2kl_recount__SQ2kl15ordered_control_3u64( kl_t40, kl_right_7 );
+#line 675 "../src/ordered_control.kl"
+    kl_t42.kl_first_2035 = kl_down_27;
+    kl_t42.kl_second_2037 = kl_up_31;
+    kl_t42.kl_third_2039 = kl_gap_35;
+    kl_t0 = kl_t42;
+    return kl_t0;
+}
+
+uint64_t* kl_2kl_key_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_i_2 )
+{
+    uint64_t* kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    uint64_t* kl_t5;
+    uint64_t* kl_t6;
+#line 149 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 ).kl_control__2007;
+    kl_t4 = kl_2kl_slot_at__SQ2kl15ordered_control_3u64( kl_t3, kl_i_2 );
+    kl_t5 = ( *kl_this_1 ).kl_keys__2010 + kl_t4;
+    kl_t6 = &( *kl_t5 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+uint64_t* kl_2kl_value_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_i_2 )
+{
+    uint64_t* kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    uint64_t* kl_t5;
+    uint64_t* kl_t6;
+#line 162 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 ).kl_control__2007;
+    kl_t4 = kl_2kl_slot_at__SQ2kl15ordered_control_3u64( kl_t3, kl_i_2 );
+    kl_t5 = ( *kl_this_1 ).kl_values__2013 + kl_t4;
+    kl_t6 = &( *kl_t5 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_rank__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    uint64_t kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_n_6;
+    struct kl_2kl_ordered_control* kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_below_9;
+    uint64_t kl_j_10;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t11;
+    uint64_t* kl_t12;
+    uint64_t kl_t13;
+    bool kl_leaf_14;
+    struct kl_2kl_ordered_control* kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    uint64_t kl_c_18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl_2kl_ordered_control* kl_t21;
+    uint64_t kl_t22;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t23;
+    uint64_t* kl_t24;
+    bool kl_t25;
+    bool kl_t26;
+    struct kl_2kl_ordered_control* kl_t27;
+    uint64_t kl_t28;
+    struct kl_2kl_ordered_control* kl_t29;
+    uint64_t kl_t30;
+#line 169 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 ).kl_control__2007;
+    kl_t4 = kl_2kl_size__SQ2kl15ordered_control( kl_t3 );
+    kl_t5 = kl_t4 == 0;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 171 "../src/ordered_map.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+#line 174 "../src/ordered_map.kl"
+    kl_t7 = &( *kl_this_1 ).kl_control__2007;
+    kl_t8 = kl_2kl_root__SQ2kl15ordered_control( kl_t7 );
+    kl_n_6 = kl_t8;
+#line 175 "../src/ordered_map.kl"
+    kl_below_9 = 0;
+    goto bb3;
+    bb3:
+#line 179 "../src/ordered_map.kl"
+    kl_t11 = &( *kl_this_1 );
+    kl_t12 = &( *kl_key_2 );
+    kl_t13 = kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t11, kl_n_6, kl_t12 );
+    kl_j_10 = kl_t13;
+#line 180 "../src/ordered_map.kl"
+    kl_t15 = &( *kl_this_1 ).kl_control__2007;
+    kl_t16 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t15, kl_n_6 );
+    kl_leaf_14 = kl_t16;
+#line 181 "../src/ordered_map.kl"
+    kl_below_9 = kl_below_9 + kl_j_10;
+#line 183 "../src/ordered_map.kl"
+    kl_t17 = !kl_leaf_14;
+    if ( kl_t17 ) goto bb4; else goto bb9;
+    bb4:
+#line 185 "../src/ordered_map.kl"
+    kl_c_18 = 0;
+    kl_t19 = kl_j_10;
+    goto bb5;
+    bb5:
+    kl_t20 = kl_c_18 < kl_t19;
+    if ( kl_t20 ) goto bb6; else goto bb7;
+    bb6:
+#line 187 "../src/ordered_map.kl"
+    kl_t21 = &( *kl_this_1 ).kl_control__2007;
+    kl_t22 = kl_2kl_subtree__SQ2kl15ordered_control_3u64_3u64( kl_t21, kl_n_6, kl_c_18 );
+    kl_below_9 = kl_below_9 + kl_t22;
+    goto bb8;
+    bb7:
+    goto bb9;
+    bb8:
+#line 185 "../src/ordered_map.kl"
+    kl_c_18 = kl_c_18 + 1;
+    goto bb5;
+    bb9:
+#line 191 "../src/ordered_map.kl"
+    kl_t23 = &( *kl_this_1 );
+    kl_t24 = &( *kl_key_2 );
+    kl_t25 = kl_2kl_holds_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64_3u64( kl_t23, kl_n_6, kl_j_10, kl_t24 );
+    if ( kl_t25 ) goto bb10; else goto bb13;
+    bb10:
+#line 193 "../src/ordered_map.kl"
+    kl_t26 = !kl_leaf_14;
+    if ( kl_t26 ) goto bb11; else goto bb12;
+    bb11:
+#line 195 "../src/ordered_map.kl"
+    kl_t27 = &( *kl_this_1 ).kl_control__2007;
+    kl_t28 = kl_2kl_subtree__SQ2kl15ordered_control_3u64_3u64( kl_t27, kl_n_6, kl_j_10 );
+    kl_below_9 = kl_below_9 + kl_t28;
+    goto bb12;
+    bb12:
+#line 198 "../src/ordered_map.kl"
+    kl_t0 = kl_below_9;
+    return kl_t0;
+    bb13:
+    if ( kl_leaf_14 ) goto bb14; else goto bb15;
+    bb14:
+#line 203 "../src/ordered_map.kl"
+    kl_t0 = kl_below_9;
+    return kl_t0;
+    bb15:
+#line 206 "../src/ordered_map.kl"
+    kl_t29 = &( *kl_this_1 ).kl_control__2007;
+    kl_t30 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t29, kl_n_6, kl_j_10 );
+    kl_n_6 = kl_t30;
+    goto bb3;
+}
+
+uint64_t kl_2kl_size__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    uint64_t kl_t0;
+    struct kl_2kl_ordered_control* kl_t2;
+    uint64_t kl_t3;
+#line 269 "../src/ordered_map.kl"
+    kl_t2 = &( *kl_this_1 ).kl_control__2007;
+    kl_t3 = kl_2kl_size__SQ2kl15ordered_control( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl_2kl_ordered_map__I3u64_3u64E__RQ2kl11ordered_mapI3u64_3u64E__ctor( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    struct kl_2kl_ordered_control kl_t2;
+    struct kl_2kl_ordered_control* kl_t3;
+    bool kl_t5;
+#line 18 "../src/ordered_map.kl"
+    kl_t5 = false;
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl_2kl_ordered_control__RQ2kl15ordered_control__ctor( kl_t3 );
+    ( *kl_this_1 ).kl_control__2007 = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl_2kl_ordered_control__dtor( &kl_t2 );
+    kl_t5 = false;
+#line 19 "../src/ordered_map.kl"
+    ( *kl_this_1 ).kl_keys__2010 = NULL;
+#line 20 "../src/ordered_map.kl"
+    ( *kl_this_1 ).kl_values__2013 = NULL;
+    return;
+}
+
+struct kl_2kl_optional__I3u64E kl_2kl_insert__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_M3u64_M3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_key_2, uint64_t kl_value_3 )
+{
+    struct kl_2kl_optional__I3u64E kl_t0;
+    uint64_t kl_found_4;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t5;
+    uint64_t* kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    uint64_t kl_old_9;
+    uint64_t* kl_t10;
+    uint64_t* kl_t11;
+    struct kl_2kl_optional__I3u64E kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    bool kl_t14;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t15;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t17;
+    struct kl_2kl_ordered_control* kl_t18;
+    struct kl_2kl_key_moves kl_t19;
+    uint64_t kl_n_21;
+    struct kl_2kl_ordered_control* kl_t22;
+    uint64_t kl_t23;
+    uint64_t kl_j_24;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t25;
+    uint64_t* kl_t26;
+    uint64_t kl_t27;
+    struct kl_2kl_ordered_control* kl_t28;
+    bool kl_t29;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t30;
+    struct kl_2kl_ordered_control* kl_t31;
+    struct kl_2kl_key_run kl_t32;
+    uint64_t kl_slot_34;
+    uint64_t kl_t35;
+    uint64_t* kl_t36;
+    uint64_t* kl_t37;
+    struct kl_2kl_optional__I3u64E kl_t38;
+    struct kl_2kl_ordered_control* kl_t39;
+    struct kl_2kl_ordered_control* kl_t40;
+    uint64_t kl_t41;
+    uint64_t kl_t42;
+    uint64_t kl_t43;
+    bool kl_t44;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t45;
+    struct kl_2kl_ordered_control* kl_t46;
+    struct kl_2kl_key_moves kl_t47;
+    uint64_t kl_t49;
+    uint64_t* kl_t50;
+    bool kl_t51;
+    struct kl_2kl_ordered_control* kl_t52;
+    uint64_t kl_t53;
+#line 48 "../src/ordered_map.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = &kl_key_2;
+    kl_t7 = kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t5, kl_t6 );
+    kl_found_4 = kl_t7;
+#line 50 "../src/ordered_map.kl"
+    kl_t8 = kl_found_4 != kl_ORDERED_NO_NODE_2026;
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 54 "../src/ordered_map.kl"
+    kl_t10 = ( *kl_this_1 ).kl_values__2013 + kl_found_4;
+    kl_old_9 = ( *kl_t10 );
+#line 55 "../src/ordered_map.kl"
+    kl_t11 = ( *kl_this_1 ).kl_values__2013 + kl_found_4;
+    ( *kl_t11 ) = kl_value_3;
+#line 56 "../src/ordered_map.kl"
+    kl_t12.tag = 0;
+    kl_t12.kl_value_389 = kl_old_9;
+    kl_t0 = kl_t12;
+    return kl_t0;
+    bb2:
+#line 60 "../src/ordered_map.kl"
+    kl_t13 = &( *kl_this_1 ).kl_control__2007;
+    kl_t14 = kl_2kl_needs_growth__SQ2kl15ordered_control( kl_t13 );
+    if ( kl_t14 ) goto bb3; else goto bb4;
+    bb3:
+#line 62 "../src/ordered_map.kl"
+    kl_t15 = &( *kl_this_1 );
+    kl_2kl_grow__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t15 );
+    goto bb4;
+    bb4:
+#line 65 "../src/ordered_map.kl"
+    kl_t17 = &( *kl_this_1 );
+    kl_t18 = &( *kl_this_1 ).kl_control__2007;
+    kl_t19 = kl_2kl_prepare_insert__SQ2kl15ordered_control( kl_t18 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t17, kl_t19 );
+#line 66 "../src/ordered_map.kl"
+    kl_t22 = &( *kl_this_1 ).kl_control__2007;
+    kl_t23 = kl_2kl_root__SQ2kl15ordered_control( kl_t22 );
+    kl_n_21 = kl_t23;
+    goto bb5;
+    bb5:
+#line 70 "../src/ordered_map.kl"
+    kl_t25 = &( *kl_this_1 );
+    kl_t26 = &kl_key_2;
+    kl_t27 = kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t25, kl_n_21, kl_t26 );
+    kl_j_24 = kl_t27;
+#line 72 "../src/ordered_map.kl"
+    kl_t28 = &( *kl_this_1 ).kl_control__2007;
+    kl_t29 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t28, kl_n_21 );
+    if ( kl_t29 ) goto bb6; else goto bb7;
+    bb6:
+#line 74 "../src/ordered_map.kl"
+    kl_t30 = &( *kl_this_1 );
+    kl_t31 = &( *kl_this_1 ).kl_control__2007;
+    kl_t32 = kl_2kl_insert_in_leaf__SQ2kl15ordered_control_3u64_3u64( kl_t31, kl_n_21, kl_j_24 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t30, kl_t32 );
+#line 75 "../src/ordered_map.kl"
+    kl_t35 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_21, kl_j_24 );
+    kl_slot_34 = kl_t35;
+#line 79 "../src/ordered_map.kl"
+    kl_t36 = ( *kl_this_1 ).kl_keys__2010 + kl_slot_34;
+    ( *kl_t36 ) = kl_key_2;
+#line 80 "../src/ordered_map.kl"
+    kl_t37 = ( *kl_this_1 ).kl_values__2013 + kl_slot_34;
+    ( *kl_t37 ) = kl_value_3;
+#line 83 "../src/ordered_map.kl"
+    kl_t38.tag = 1;
+    kl_t0 = kl_t38;
+    return kl_t0;
+    bb7:
+#line 86 "../src/ordered_map.kl"
+    kl_t39 = &( *kl_this_1 ).kl_control__2007;
+    kl_t40 = &( *kl_this_1 ).kl_control__2007;
+    kl_t41 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t40, kl_n_21, kl_j_24 );
+    kl_t42 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t39, kl_t41 );
+    kl_t43 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t44 = kl_t42 == kl_t43;
+    if ( kl_t44 ) goto bb8; else goto bb10;
+    bb8:
+#line 88 "../src/ordered_map.kl"
+    kl_t45 = &( *kl_this_1 );
+    kl_t46 = &( *kl_this_1 ).kl_control__2007;
+    kl_t47 = kl_2kl_split_child__SQ2kl15ordered_control_3u64_3u64( kl_t46, kl_n_21, kl_j_24 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t45, kl_t47 );
+#line 92 "../src/ordered_map.kl"
+    kl_t49 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_21, kl_j_24 );
+    kl_t50 = ( *kl_this_1 ).kl_keys__2010 + kl_t49;
+    kl_t51 = ( *kl_t50 ) < kl_key_2;
+    if ( kl_t51 ) goto bb9; else goto bb10;
+    bb9:
+#line 94 "../src/ordered_map.kl"
+    kl_j_24 = kl_j_24 + 1;
+    goto bb10;
+    bb10:
+#line 99 "../src/ordered_map.kl"
+    kl_t52 = &( *kl_this_1 ).kl_control__2007;
+    kl_t53 = kl_2kl_descend_insert__SQ2kl15ordered_control_3u64_3u64( kl_t52, kl_n_21, kl_j_24 );
+    kl_n_21 = kl_t53;
+    goto bb5;
+}
+
+bool kl_2kl_is_some__I3u64E__Q2kl8optionalI3u64E( struct kl_2kl_optional__I3u64E* kl_o_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+    uint64_t kl_v_3;
+    ( void ) kl_v_3;
+#line 64 "../src/optional.kl"
+    kl_t2 = ( *kl_o_1 ).tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_v_3 = ( *kl_o_1 ).kl_value_389;
+#line 65 "../src/optional.kl"
+    kl_t0 = true;
+    return kl_t0;
+    bb2:
+#line 67 "../src/optional.kl"
+    kl_t0 = false;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_unwrap__I3u64E__MQ2kl8optionalI3u64E( struct kl_2kl_optional__I3u64E kl_o_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    uint64_t kl_v_3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+#line 22 "../src/optional.kl"
+    kl_t2 = kl_o_1.tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_v_3 = kl_o_1.kl_value_389;
+#line 23 "../src/optional.kl"
+    kl_t0 = kl_v_3;
+    return kl_t0;
+    bb2:
+#line 25 "../src/optional.kl"
+    kl_t5 = &kl_t4;
+    kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_3810, kl_t4.kl_size_3813 );
+}
+
+uint64_t* kl_2kl_operator_index__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    uint64_t* kl_t0;
+    uint64_t kl_slot_3;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t4;
+    uint64_t* kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    uint64_t* kl_t12;
+    uint64_t* kl_t13;
+#line 126 "../src/ordered_map.kl"
+    kl_t4 = &( *kl_this_1 );
+    kl_t5 = &( *kl_key_2 );
+    kl_t6 = kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t4, kl_t5 );
+    kl_slot_3 = kl_t6;
+#line 128 "../src/ordered_map.kl"
+    kl_t7 = kl_slot_3 == kl_ORDERED_NO_NODE_2026;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 130 "../src/ordered_map.kl"
+    kl_t9 = &kl_t8;
+    kl_t10 = ( uint8_t* ) "no such key in the map";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 22 );
+    kl_rt_panic_message( "../src/ordered_map.kl", 130, kl_t8.kl_data_3810, kl_t8.kl_size_3813 );
+    bb2:
+#line 135 "../src/ordered_map.kl"
+    kl_t12 = ( *kl_this_1 ).kl_values__2013 + kl_slot_3;
+    kl_t13 = &( *kl_t12 );
+    kl_t0 = kl_t13;
+    return kl_t0;
+}
+
+bool kl_2kl_contains__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    bool kl_t0;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t3;
+    uint64_t* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+#line 213 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = &( *kl_key_2 );
+    kl_t5 = kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t3, kl_t4 );
+    kl_t6 = kl_t5 != kl_ORDERED_NO_NODE_2026;
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+struct kl_2kl_optional__IP3u64E kl_2kl_get__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    struct kl_2kl_optional__IP3u64E kl_t0;
+    uint64_t kl_slot_3;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t4;
+    uint64_t* kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    struct kl_2kl_optional__IP3u64E kl_t8;
+    struct kl_2kl_optional__IP3u64E kl_t9;
+    uint64_t* kl_t10;
+    uint64_t* kl_t11;
+#line 106 "../src/ordered_map.kl"
+    kl_t4 = &( *kl_this_1 );
+    kl_t5 = &( *kl_key_2 );
+    kl_t6 = kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t4, kl_t5 );
+    kl_slot_3 = kl_t6;
+#line 108 "../src/ordered_map.kl"
+    kl_t7 = kl_slot_3 == kl_ORDERED_NO_NODE_2026;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 110 "../src/ordered_map.kl"
+    kl_t8.tag = 1;
+    kl_t0 = kl_t8;
+    return kl_t0;
+    bb2:
+#line 115 "../src/ordered_map.kl"
+    kl_t10 = ( *kl_this_1 ).kl_values__2013 + kl_slot_3;
+    kl_t11 = &( *kl_t10 );
+    kl_t9.tag = 0;
+    kl_t9.kl_value_389 = kl_t11;
+    kl_t0 = kl_t9;
+    return kl_t0;
+}
+
+bool kl_2kl_is_some__IP3u64E__Q2kl8optionalIP3u64E( struct kl_2kl_optional__IP3u64E* kl_o_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+    uint64_t* kl_v_3;
+    ( void ) kl_v_3;
+#line 64 "../src/optional.kl"
+    kl_t2 = ( *kl_o_1 ).tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_v_3 = ( *kl_o_1 ).kl_value_389;
+#line 65 "../src/optional.kl"
+    kl_t0 = true;
+    return kl_t0;
+    bb2:
+#line 67 "../src/optional.kl"
+    kl_t0 = false;
+    return kl_t0;
+}
+
+struct kl_2kl_optional__I3u64E kl_2kl_remove__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    struct kl_2kl_optional__I3u64E kl_t0;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t3;
+    uint64_t* kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    struct kl_2kl_optional__I3u64E kl_t7;
+    uint64_t kl_n_8;
+    struct kl_2kl_ordered_control* kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_j_11;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t12;
+    uint64_t* kl_t13;
+    uint64_t kl_t14;
+    uint64_t kl_slot_15;
+    uint64_t kl_t16;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t17;
+    uint64_t* kl_t18;
+    bool kl_t19;
+    struct kl_2kl_ordered_control* kl_t20;
+    bool kl_t21;
+    uint64_t kl_old_22;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t23;
+    uint64_t kl_t24;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t25;
+    struct kl_2kl_ordered_control* kl_t26;
+    struct kl_2kl_key_run kl_t27;
+    struct kl_2kl_optional__I3u64E kl_t29;
+    struct kl_2kl_ordered_control* kl_t30;
+    struct kl_2kl_ordered_control* kl_t31;
+    uint64_t kl_t32;
+    uint64_t kl_t33;
+    uint64_t kl_t34;
+    bool kl_t35;
+    uint64_t kl_old_36;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t37;
+    uint64_t kl_t38;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t39;
+    struct kl_2kl_ordered_control* kl_t40;
+    uint64_t kl_t41;
+    struct kl_2kl_optional__I3u64E kl_t43;
+    struct kl_2kl_ordered_control* kl_t44;
+    struct kl_2kl_ordered_control* kl_t45;
+    uint64_t kl_t46;
+    uint64_t kl_t47;
+    uint64_t kl_t48;
+    uint64_t kl_t49;
+    bool kl_t50;
+    uint64_t kl_old_51;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t52;
+    uint64_t kl_t53;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t54;
+    struct kl_2kl_ordered_control* kl_t55;
+    uint64_t kl_t56;
+    uint64_t kl_t57;
+    struct kl_2kl_optional__I3u64E kl_t59;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t60;
+    struct kl_2kl_ordered_control* kl_t61;
+    struct kl_2kl_key_moves kl_t62;
+    struct kl_2kl_ordered_control* kl_t64;
+    uint64_t kl_t65;
+    uint64_t kl_c_66;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t67;
+    struct kl_2kl_ordered_control* kl_t68;
+    uint64_t* kl_t69;
+    struct kl_2kl_key_moves kl_t70;
+    struct kl_2kl_ordered_control* kl_t72;
+    uint64_t kl_t73;
+#line 219 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = &( *kl_key_2 );
+    kl_t5 = kl_2kl_contains__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t3, kl_t4 );
+    kl_t6 = !kl_t5;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 221 "../src/ordered_map.kl"
+    kl_t7.tag = 1;
+    kl_t0 = kl_t7;
+    return kl_t0;
+    bb2:
+#line 224 "../src/ordered_map.kl"
+    kl_t9 = &( *kl_this_1 ).kl_control__2007;
+    kl_t10 = kl_2kl_root__SQ2kl15ordered_control( kl_t9 );
+    kl_n_8 = kl_t10;
+    goto bb3;
+    bb3:
+#line 228 "../src/ordered_map.kl"
+    kl_t12 = &( *kl_this_1 );
+    kl_t13 = &( *kl_key_2 );
+    kl_t14 = kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t12, kl_n_8, kl_t13 );
+    kl_j_11 = kl_t14;
+#line 229 "../src/ordered_map.kl"
+    kl_t16 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_8, kl_j_11 );
+    kl_slot_15 = kl_t16;
+#line 231 "../src/ordered_map.kl"
+    kl_t17 = &( *kl_this_1 );
+    kl_t18 = &( *kl_key_2 );
+    kl_t19 = kl_2kl_holds_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64_3u64( kl_t17, kl_n_8, kl_j_11, kl_t18 );
+    if ( kl_t19 ) goto bb4; else goto bb5;
+    bb4:
+#line 233 "../src/ordered_map.kl"
+    kl_t20 = &( *kl_this_1 ).kl_control__2007;
+    kl_t21 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t20, kl_n_8 );
+    if ( kl_t21 ) goto bb6; else goto bb7;
+    bb5:
+#line 260 "../src/ordered_map.kl"
+    kl_t67 = &( *kl_this_1 );
+    kl_t68 = &( *kl_this_1 ).kl_control__2007;
+    kl_t69 = &kl_c_66;
+    kl_t70 = kl_2kl_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( kl_t68, kl_n_8, kl_j_11, kl_t69 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t67, kl_t70 );
+#line 261 "../src/ordered_map.kl"
+    kl_t72 = &( *kl_this_1 ).kl_control__2007;
+    kl_t73 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t72, kl_n_8, kl_c_66 );
+    kl_n_8 = kl_t73;
+    goto bb12;
+    bb6:
+#line 235 "../src/ordered_map.kl"
+    kl_t23 = &( *kl_this_1 );
+    kl_t24 = kl_2kl_take_value__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t23, kl_slot_15 );
+    kl_old_22 = kl_t24;
+#line 236 "../src/ordered_map.kl"
+    kl_t25 = &( *kl_this_1 );
+    kl_t26 = &( *kl_this_1 ).kl_control__2007;
+    kl_t27 = kl_2kl_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( kl_t26, kl_n_8, kl_j_11 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t25, kl_t27 );
+#line 237 "../src/ordered_map.kl"
+    kl_t29.tag = 0;
+    kl_t29.kl_value_389 = kl_old_22;
+    kl_t0 = kl_t29;
+    return kl_t0;
+    bb7:
+#line 240 "../src/ordered_map.kl"
+    kl_t30 = &( *kl_this_1 ).kl_control__2007;
+    kl_t31 = &( *kl_this_1 ).kl_control__2007;
+    kl_t32 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t31, kl_n_8, kl_j_11 );
+    kl_t33 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t30, kl_t32 );
+    kl_t34 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t35 = kl_t33 > kl_t34;
+    if ( kl_t35 ) goto bb8; else goto bb9;
+    bb8:
+#line 242 "../src/ordered_map.kl"
+    kl_t37 = &( *kl_this_1 );
+    kl_t38 = kl_2kl_take_value__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t37, kl_slot_15 );
+    kl_old_36 = kl_t38;
+#line 243 "../src/ordered_map.kl"
+    kl_t39 = &( *kl_this_1 );
+    kl_t40 = &( *kl_this_1 ).kl_control__2007;
+    kl_t41 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t40, kl_n_8, kl_j_11 );
+    kl_2kl_take_last__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t39, kl_t41, kl_slot_15 );
+#line 244 "../src/ordered_map.kl"
+    kl_t43.tag = 0;
+    kl_t43.kl_value_389 = kl_old_36;
+    kl_t0 = kl_t43;
+    return kl_t0;
+    bb9:
+#line 247 "../src/ordered_map.kl"
+    kl_t44 = &( *kl_this_1 ).kl_control__2007;
+    kl_t45 = &( *kl_this_1 ).kl_control__2007;
+    kl_t46 = kl_j_11 + 1;
+    kl_t47 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t45, kl_n_8, kl_t46 );
+    kl_t48 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t44, kl_t47 );
+    kl_t49 = ( uint64_t ) kl_ORDERED_MIN_2022;
+    kl_t50 = kl_t48 > kl_t49;
+    if ( kl_t50 ) goto bb10; else goto bb11;
+    bb10:
+#line 249 "../src/ordered_map.kl"
+    kl_t52 = &( *kl_this_1 );
+    kl_t53 = kl_2kl_take_value__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( kl_t52, kl_slot_15 );
+    kl_old_51 = kl_t53;
+#line 250 "../src/ordered_map.kl"
+    kl_t54 = &( *kl_this_1 );
+    kl_t55 = &( *kl_this_1 ).kl_control__2007;
+    kl_t56 = kl_j_11 + 1;
+    kl_t57 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t55, kl_n_8, kl_t56 );
+    kl_2kl_take_first__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t54, kl_t57, kl_slot_15 );
+#line 251 "../src/ordered_map.kl"
+    kl_t59.tag = 0;
+    kl_t59.kl_value_389 = kl_old_51;
+    kl_t0 = kl_t59;
+    return kl_t0;
+    bb11:
+#line 254 "../src/ordered_map.kl"
+    kl_t60 = &( *kl_this_1 );
+    kl_t61 = &( *kl_this_1 ).kl_control__2007;
+    kl_t62 = kl_2kl_merge__SQ2kl15ordered_control_3u64_3u64( kl_t61, kl_n_8, kl_j_11 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t60, kl_t62 );
+#line 255 "../src/ordered_map.kl"
+    kl_t64 = &( *kl_this_1 ).kl_control__2007;
+    kl_t65 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t64, kl_n_8, kl_j_11 );
+    kl_n_8 = kl_t65;
+    goto bb12;
+    bb12:
+    goto bb3;
+}
+
+bool kl_2kl_is_empty__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    bool kl_t0;
+    struct kl_2kl_ordered_control* kl_t2;
+    uint64_t kl_t3;
+    bool kl_t4;
+#line 275 "../src/ordered_map.kl"
+    kl_t2 = &( *kl_this_1 ).kl_control__2007;
+    kl_t3 = kl_2kl_size__SQ2kl15ordered_control( kl_t2 );
+    kl_t4 = kl_t3 == 0;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+void kl_2kl_clear__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t2;
+    struct kl_2kl_ordered_control* kl_t4;
+#line 281 "../src/ordered_map.kl"
+    kl_t2 = &( *kl_this_1 );
+    kl_2kl_drop_all__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t2 );
+#line 282 "../src/ordered_map.kl"
+    kl_t4 = &( *kl_this_1 ).kl_control__2007;
+    kl_2kl_clear__SQ2kl15ordered_control( kl_t4 );
+    return;
+}
+
+void kl_2kl_ordered_map__I3u64_3u64E__dtor( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t2;
+    bool kl_t4;
+    bool kl_t6;
+#line 25 "../src/ordered_map.kl"
+    kl_t2 = &( *kl_this_1 );
+    kl_2kl_drop_all__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( kl_t2 );
+#line 26 "../src/ordered_map.kl"
+    kl_t4 = ( *kl_this_1 ).kl_keys__2010 != NULL;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 30 "../src/ordered_map.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2010 );
+    goto bb2;
+    bb2:
+#line 34 "../src/ordered_map.kl"
+    kl_t6 = ( *kl_this_1 ).kl_values__2013 != NULL;
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+#line 38 "../src/ordered_map.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_values__2013 );
+    goto bb4;
+    bb4:
+    return;
+}
+
+uint64_t kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_node_2, uint64_t* kl_key_3 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_first_4;
+    uint64_t kl_t5;
+    uint64_t kl_j_6;
+    uint64_t kl_t7;
+    struct kl_2kl_ordered_control* kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint64_t* kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl_2kl_ordered_control* kl_t15;
+    uint64_t kl_t16;
+#line 288 "../src/ordered_map.kl"
+    kl_t5 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, 0 );
+    kl_first_4 = kl_t5;
+#line 290 "../src/ordered_map.kl"
+    kl_j_6 = 0;
+    kl_t8 = &( *kl_this_1 ).kl_control__2007;
+    kl_t9 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t8, kl_node_2 );
+    kl_t7 = kl_t9;
+    goto bb1;
+    bb1:
+    kl_t10 = kl_j_6 < kl_t7;
+    if ( kl_t10 ) goto bb2; else goto bb3;
+    bb2:
+#line 294 "../src/ordered_map.kl"
+    kl_t11 = kl_first_4 + kl_j_6;
+    kl_t12 = ( *kl_this_1 ).kl_keys__2010 + kl_t11;
+    kl_t13 = ( *kl_t12 ) < ( *kl_key_3 );
+    kl_t14 = !kl_t13;
+    if ( kl_t14 ) goto bb4; else goto bb5;
+    bb3:
+#line 301 "../src/ordered_map.kl"
+    kl_t15 = &( *kl_this_1 ).kl_control__2007;
+    kl_t16 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t15, kl_node_2 );
+    kl_t0 = kl_t16;
+    return kl_t0;
+    bb4:
+#line 296 "../src/ordered_map.kl"
+    kl_t0 = kl_j_6;
+    return kl_t0;
+    bb5:
+#line 290 "../src/ordered_map.kl"
+    kl_j_6 = kl_j_6 + 1;
+    goto bb1;
+}
+
+bool kl_2kl_holds_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3, uint64_t* kl_key_4 )
+{
+    bool kl_t0;
+    struct kl_2kl_ordered_control* kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    uint64_t kl_t8;
+    uint64_t* kl_t9;
+    bool kl_t10;
+#line 306 "../src/ordered_map.kl"
+    kl_t5 = &( *kl_this_1 ).kl_control__2007;
+    kl_t6 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t5, kl_node_2 );
+    kl_t7 = kl_j_3 >= kl_t6;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 308 "../src/ordered_map.kl"
+    kl_t0 = false;
+    return kl_t0;
+    bb2:
+#line 313 "../src/ordered_map.kl"
+    kl_t8 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
+    kl_t9 = ( *kl_this_1 ).kl_keys__2010 + kl_t8;
+    kl_t10 = ( *kl_t9 ) == ( *kl_key_4 );
+    kl_t0 = kl_t10;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_slot_of__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t* kl_key_2 )
+{
+    uint64_t kl_t0;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_n_6;
+    struct kl_2kl_ordered_control* kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_j_9;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t10;
+    uint64_t* kl_t11;
+    uint64_t kl_t12;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t13;
+    uint64_t* kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
+    struct kl_2kl_ordered_control* kl_t17;
+    bool kl_t18;
+    struct kl_2kl_ordered_control* kl_t19;
+    uint64_t kl_t20;
+#line 320 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 ).kl_control__2007;
+    kl_t4 = kl_2kl_size__SQ2kl15ordered_control( kl_t3 );
+    kl_t5 = kl_t4 == 0;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 322 "../src/ordered_map.kl"
+    kl_t0 = kl_ORDERED_NO_NODE_2026;
+    return kl_t0;
+    bb2:
+#line 325 "../src/ordered_map.kl"
+    kl_t7 = &( *kl_this_1 ).kl_control__2007;
+    kl_t8 = kl_2kl_root__SQ2kl15ordered_control( kl_t7 );
+    kl_n_6 = kl_t8;
+    goto bb3;
+    bb3:
+#line 329 "../src/ordered_map.kl"
+    kl_t10 = &( *kl_this_1 );
+    kl_t11 = &( *kl_key_2 );
+    kl_t12 = kl_2kl_position__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( kl_t10, kl_n_6, kl_t11 );
+    kl_j_9 = kl_t12;
+#line 331 "../src/ordered_map.kl"
+    kl_t13 = &( *kl_this_1 );
+    kl_t14 = &( *kl_key_2 );
+    kl_t15 = kl_2kl_holds_at__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64_3u64( kl_t13, kl_n_6, kl_j_9, kl_t14 );
+    if ( kl_t15 ) goto bb4; else goto bb5;
+    bb4:
+#line 333 "../src/ordered_map.kl"
+    kl_t16 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_6, kl_j_9 );
+    kl_t0 = kl_t16;
+    return kl_t0;
+    bb5:
+#line 336 "../src/ordered_map.kl"
+    kl_t17 = &( *kl_this_1 ).kl_control__2007;
+    kl_t18 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t17, kl_n_6 );
+    if ( kl_t18 ) goto bb6; else goto bb7;
+    bb6:
+#line 338 "../src/ordered_map.kl"
+    kl_t0 = kl_ORDERED_NO_NODE_2026;
+    return kl_t0;
+    bb7:
+#line 341 "../src/ordered_map.kl"
+    kl_t19 = &( *kl_this_1 ).kl_control__2007;
+    kl_t20 = kl_2kl_child__SQ2kl15ordered_control_3u64_3u64( kl_t19, kl_n_6, kl_j_9 );
+    kl_n_6 = kl_t20;
+    goto bb3;
+}
+
+void kl_2kl_grow__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    uint64_t kl_nodes_2;
+    struct kl_2kl_ordered_control* kl_t3;
+    uint64_t kl_t4;
+    uint64_t* kl_keys_5;
+    uint64_t* kl_values_6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t* kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    uint64_t* kl_t12;
+    uint64_t kl_n_13;
+    uint64_t kl_t14;
+    struct kl_2kl_ordered_control* kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    uint64_t kl_first_18;
+    uint64_t kl_t19;
+    uint64_t kl_j_20;
+    uint64_t kl_t21;
+    struct kl_2kl_ordered_control* kl_t22;
+    uint64_t kl_t23;
+    bool kl_t24;
+    uint64_t kl_t25;
+    uint64_t* kl_t26;
+    uint64_t kl_t27;
+    uint64_t* kl_t28;
+    uint64_t kl_t29;
+    uint64_t* kl_t30;
+    uint64_t kl_t31;
+    uint64_t* kl_t32;
+    bool kl_t33;
+    bool kl_t35;
+    struct kl_2kl_ordered_control* kl_t37;
+#line 422 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 ).kl_control__2007;
+    kl_t4 = kl_2kl_grown_nodes__SQ2kl15ordered_control( kl_t3 );
+    kl_nodes_2 = kl_t4;
+#line 428 "../src/ordered_map.kl"
+    kl_t7 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t8 = kl_nodes_2 * kl_t7;
+    kl_t9 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, sizeof( uint64_t ), "../src/ordered_map.kl", 428, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
+    kl_keys_5 = kl_t9;
+#line 429 "../src/ordered_map.kl"
+    kl_t10 = ( uint64_t ) kl_ORDERED_KEYS_2018;
+    kl_t11 = kl_nodes_2 * kl_t10;
+    kl_t12 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t11, sizeof( uint64_t ), "../src/ordered_map.kl", 429, "out of memory: alloc<V>( nodes * ORDERED_KEYS )" );
+    kl_values_6 = kl_t12;
+#line 432 "../src/ordered_map.kl"
+    kl_n_13 = 0;
+    kl_t15 = &( *kl_this_1 ).kl_control__2007;
+    kl_t16 = kl_2kl_used__SQ2kl15ordered_control( kl_t15 );
+    kl_t14 = kl_t16;
+    goto bb1;
+    bb1:
+    kl_t17 = kl_n_13 < kl_t14;
+    if ( kl_t17 ) goto bb2; else goto bb3;
+    bb2:
+#line 434 "../src/ordered_map.kl"
+    kl_t19 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_13, 0 );
+    kl_first_18 = kl_t19;
+#line 436 "../src/ordered_map.kl"
+    kl_j_20 = 0;
+    kl_t22 = &( *kl_this_1 ).kl_control__2007;
+    kl_t23 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t22, kl_n_13 );
+    kl_t21 = kl_t23;
+    goto bb4;
+    bb3:
+#line 446 "../src/ordered_map.kl"
+    kl_t33 = ( *kl_this_1 ).kl_keys__2010 != NULL;
+    if ( kl_t33 ) goto bb9; else goto bb10;
+    bb4:
+#line 436 "../src/ordered_map.kl"
+    kl_t24 = kl_j_20 < kl_t21;
+    if ( kl_t24 ) goto bb5; else goto bb6;
+    bb5:
+#line 440 "../src/ordered_map.kl"
+    kl_t25 = kl_first_18 + kl_j_20;
+    kl_t26 = kl_keys_5 + kl_t25;
+    kl_t27 = kl_first_18 + kl_j_20;
+    kl_t28 = ( *kl_this_1 ).kl_keys__2010 + kl_t27;
+    ( *kl_t26 ) = ( *kl_t28 );
+#line 441 "../src/ordered_map.kl"
+    kl_t29 = kl_first_18 + kl_j_20;
+    kl_t30 = kl_values_6 + kl_t29;
+    kl_t31 = kl_first_18 + kl_j_20;
+    kl_t32 = ( *kl_this_1 ).kl_values__2013 + kl_t31;
+    ( *kl_t30 ) = ( *kl_t32 );
+    goto bb7;
+    bb6:
+    goto bb8;
+    bb7:
+#line 436 "../src/ordered_map.kl"
+    kl_j_20 = kl_j_20 + 1;
+    goto bb4;
+    bb8:
+#line 432 "../src/ordered_map.kl"
+    kl_n_13 = kl_n_13 + 1;
+    goto bb1;
+    bb9:
+#line 450 "../src/ordered_map.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2010 );
+    goto bb10;
+    bb10:
+#line 454 "../src/ordered_map.kl"
+    kl_t35 = ( *kl_this_1 ).kl_values__2013 != NULL;
+    if ( kl_t35 ) goto bb11; else goto bb12;
+    bb11:
+#line 458 "../src/ordered_map.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_values__2013 );
+    goto bb12;
+    bb12:
+#line 462 "../src/ordered_map.kl"
+    ( *kl_this_1 ).kl_keys__2010 = kl_keys_5;
+#line 463 "../src/ordered_map.kl"
+    ( *kl_this_1 ).kl_values__2013 = kl_values_6;
+#line 464 "../src/ordered_map.kl"
+    kl_t37 = &( *kl_this_1 ).kl_control__2007;
+    kl_2kl_grow__SQ2kl15ordered_control_3u64( kl_t37, kl_nodes_2 );
+    return;
+}
+
+void kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, struct kl_2kl_key_moves kl_moves_2 )
+{
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t3;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t5;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t7;
+#line 390 "../src/ordered_map.kl"
+    kl_t3 = &( *kl_this_1 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t3, kl_moves_2.kl_first_2035 );
+#line 391 "../src/ordered_map.kl"
+    kl_t5 = &( *kl_this_1 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t5, kl_moves_2.kl_second_2037 );
+#line 392 "../src/ordered_map.kl"
+    kl_t7 = &( *kl_this_1 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t7, kl_moves_2.kl_third_2039 );
+    return;
+}
+
+void kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, struct kl_2kl_key_run kl_run_2 )
+{
+    bool kl_t3;
+    uint64_t kl_i_4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    uint64_t* kl_t8;
+    uint64_t kl_t9;
+    uint64_t* kl_t10;
+    uint64_t kl_t11;
+    uint64_t* kl_t12;
+    uint64_t kl_t13;
+    uint64_t* kl_t14;
+    uint64_t kl_i_15;
+    bool kl_t16;
+    uint64_t kl_t17;
+    uint64_t kl_t18;
+    uint64_t* kl_t19;
+    uint64_t kl_t20;
+    uint64_t kl_t21;
+    uint64_t* kl_t22;
+    uint64_t kl_t23;
+    uint64_t kl_t24;
+    uint64_t* kl_t25;
+    uint64_t kl_t26;
+    uint64_t kl_t27;
+    uint64_t* kl_t28;
+#line 400 "../src/ordered_map.kl"
+    kl_t3 = kl_run_2.kl_to_2030 < kl_run_2.kl_from_2028;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 402 "../src/ordered_map.kl"
+    kl_i_4 = 0;
+    kl_t5 = kl_run_2.kl_count_2032;
+    goto bb3;
+    bb2:
+#line 410 "../src/ordered_map.kl"
+    kl_i_15 = kl_run_2.kl_count_2032;
+    goto bb8;
+    bb3:
+#line 402 "../src/ordered_map.kl"
+    kl_t6 = kl_i_4 < kl_t5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+#line 404 "../src/ordered_map.kl"
+    kl_t7 = kl_run_2.kl_to_2030 + kl_i_4;
+    kl_t8 = ( *kl_this_1 ).kl_keys__2010 + kl_t7;
+    kl_t9 = kl_run_2.kl_from_2028 + kl_i_4;
+    kl_t10 = ( *kl_this_1 ).kl_keys__2010 + kl_t9;
+    ( *kl_t8 ) = ( *kl_t10 );
+#line 405 "../src/ordered_map.kl"
+    kl_t11 = kl_run_2.kl_to_2030 + kl_i_4;
+    kl_t12 = ( *kl_this_1 ).kl_values__2013 + kl_t11;
+    kl_t13 = kl_run_2.kl_from_2028 + kl_i_4;
+    kl_t14 = ( *kl_this_1 ).kl_values__2013 + kl_t13;
+    ( *kl_t12 ) = ( *kl_t14 );
+    goto bb6;
+    bb5:
+    goto bb7;
+    bb6:
+#line 402 "../src/ordered_map.kl"
+    kl_i_4 = kl_i_4 + 1;
+    goto bb3;
+    bb7:
+    return;
+    bb8:
+#line 410 "../src/ordered_map.kl"
+    kl_t16 = kl_i_15 > 0;
+    if ( kl_t16 ) goto bb9; else goto bb10;
+    bb9:
+#line 412 "../src/ordered_map.kl"
+    kl_t17 = kl_run_2.kl_to_2030 + kl_i_15;
+    kl_t18 = kl_t17 - 1;
+    kl_t19 = ( *kl_this_1 ).kl_keys__2010 + kl_t18;
+    kl_t20 = kl_run_2.kl_from_2028 + kl_i_15;
+    kl_t21 = kl_t20 - 1;
+    kl_t22 = ( *kl_this_1 ).kl_keys__2010 + kl_t21;
+    ( *kl_t19 ) = ( *kl_t22 );
+#line 413 "../src/ordered_map.kl"
+    kl_t23 = kl_run_2.kl_to_2030 + kl_i_15;
+    kl_t24 = kl_t23 - 1;
+    kl_t25 = ( *kl_this_1 ).kl_values__2013 + kl_t24;
+    kl_t26 = kl_run_2.kl_from_2028 + kl_i_15;
+    kl_t27 = kl_t26 - 1;
+    kl_t28 = ( *kl_this_1 ).kl_values__2013 + kl_t27;
+    ( *kl_t25 ) = ( *kl_t28 );
+    goto bb11;
+    bb10:
+    goto bb7;
+    bb11:
+#line 410 "../src/ordered_map.kl"
+    kl_i_15 = kl_i_15 - 1;
+    goto bb8;
+}
+
+uint64_t kl_2kl_take_value__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_slot_2 )
+{
+    uint64_t kl_t0;
+    uint64_t* kl_t3;
+    uint64_t* kl_t4;
+    ( void ) kl_t3;
+#line 350 "../src/ordered_map.kl"
+    kl_t3 = ( *kl_this_1 ).kl_keys__2010 + kl_slot_2;
+#line 351 "../src/ordered_map.kl"
+    kl_t4 = ( *kl_this_1 ).kl_values__2013 + kl_slot_2;
+    kl_t0 = ( *kl_t4 );
+    return kl_t0;
+}
+
+void kl_2kl_take_last__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_node_2, uint64_t kl_into_3 )
+{
+    uint64_t kl_n_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    uint64_t kl_c_8;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t9;
+    struct kl_2kl_ordered_control* kl_t10;
+    struct kl_2kl_ordered_control* kl_t11;
+    uint64_t kl_t12;
+    uint64_t* kl_t13;
+    struct kl_2kl_key_moves kl_t14;
+    struct kl_2kl_ordered_control* kl_t16;
+    uint64_t kl_t17;
+    uint64_t kl_j_18;
+    struct kl_2kl_ordered_control* kl_t19;
+    uint64_t kl_t20;
+    uint64_t kl_t21;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t22;
+    struct kl_2kl_key_run kl_t23;
+    uint64_t kl_t24;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t26;
+    struct kl_2kl_ordered_control* kl_t27;
+    struct kl_2kl_key_run kl_t28;
+#line 358 "../src/ordered_map.kl"
+    kl_n_4 = kl_node_2;
+    goto bb1;
+    bb1:
+#line 360 "../src/ordered_map.kl"
+    kl_t5 = &( *kl_this_1 ).kl_control__2007;
+    kl_t6 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t5, kl_n_4 );
+    kl_t7 = !kl_t6;
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 363 "../src/ordered_map.kl"
+    kl_t9 = &( *kl_this_1 );
+    kl_t10 = &( *kl_this_1 ).kl_control__2007;
+    kl_t11 = &( *kl_this_1 ).kl_control__2007;
+    kl_t12 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t11, kl_n_4 );
+    kl_t13 = &kl_c_8;
+    kl_t14 = kl_2kl_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( kl_t10, kl_n_4, kl_t12, kl_t13 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t9, kl_t14 );
+#line 364 "../src/ordered_map.kl"
+    kl_t16 = &( *kl_this_1 ).kl_control__2007;
+    kl_t17 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t16, kl_n_4, kl_c_8 );
+    kl_n_4 = kl_t17;
+    goto bb1;
+    bb3:
+#line 367 "../src/ordered_map.kl"
+    kl_t19 = &( *kl_this_1 ).kl_control__2007;
+    kl_t20 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t19, kl_n_4 );
+    kl_t21 = kl_t20 - 1;
+    kl_j_18 = kl_t21;
+#line 368 "../src/ordered_map.kl"
+    kl_t22 = &( *kl_this_1 );
+    kl_t24 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_4, kl_j_18 );
+    kl_t23.kl_from_2028 = kl_t24;
+    kl_t23.kl_to_2030 = kl_into_3;
+    kl_t23.kl_count_2032 = 1;
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t22, kl_t23 );
+#line 369 "../src/ordered_map.kl"
+    kl_t26 = &( *kl_this_1 );
+    kl_t27 = &( *kl_this_1 ).kl_control__2007;
+    kl_t28 = kl_2kl_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( kl_t27, kl_n_4, kl_j_18 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t26, kl_t28 );
+    return;
+}
+
+void kl_2kl_take_first__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_3u64_3u64( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1, uint64_t kl_node_2, uint64_t kl_into_3 )
+{
+    uint64_t kl_n_4;
+    struct kl_2kl_ordered_control* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    uint64_t kl_c_8;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t9;
+    struct kl_2kl_ordered_control* kl_t10;
+    uint64_t* kl_t11;
+    struct kl_2kl_key_moves kl_t12;
+    struct kl_2kl_ordered_control* kl_t14;
+    uint64_t kl_t15;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t16;
+    struct kl_2kl_key_run kl_t17;
+    uint64_t kl_t18;
+    struct kl_2kl_ordered_map__I3u64_3u64E* kl_t20;
+    struct kl_2kl_ordered_control* kl_t21;
+    struct kl_2kl_key_run kl_t22;
+#line 375 "../src/ordered_map.kl"
+    kl_n_4 = kl_node_2;
+    goto bb1;
+    bb1:
+#line 377 "../src/ordered_map.kl"
+    kl_t5 = &( *kl_this_1 ).kl_control__2007;
+    kl_t6 = kl_2kl_is_leaf__SQ2kl15ordered_control_3u64( kl_t5, kl_n_4 );
+    kl_t7 = !kl_t6;
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 380 "../src/ordered_map.kl"
+    kl_t9 = &( *kl_this_1 );
+    kl_t10 = &( *kl_this_1 ).kl_control__2007;
+    kl_t11 = &kl_c_8;
+    kl_t12 = kl_2kl_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( kl_t10, kl_n_4, 0, kl_t11 );
+    kl_2kl_apply__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl9key_moves( kl_t9, kl_t12 );
+#line 381 "../src/ordered_map.kl"
+    kl_t14 = &( *kl_this_1 ).kl_control__2007;
+    kl_t15 = kl_2kl_descend_remove__SQ2kl15ordered_control_3u64_3u64( kl_t14, kl_n_4, kl_c_8 );
+    kl_n_4 = kl_t15;
+    goto bb1;
+    bb3:
+#line 384 "../src/ordered_map.kl"
+    kl_t16 = &( *kl_this_1 );
+    kl_t18 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_4, 0 );
+    kl_t17.kl_from_2028 = kl_t18;
+    kl_t17.kl_to_2030 = kl_into_3;
+    kl_t17.kl_count_2032 = 1;
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t16, kl_t17 );
+#line 385 "../src/ordered_map.kl"
+    kl_t20 = &( *kl_this_1 );
+    kl_t21 = &( *kl_this_1 ).kl_control__2007;
+    kl_t22 = kl_2kl_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( kl_t21, kl_n_4, 0 );
+    kl_2kl_move_run__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E_Q2kl7key_run( kl_t20, kl_t22 );
+    return;
+}
+
+void kl_2kl_drop_all__I3u64_3u64E__SQ2kl11ordered_mapI3u64_3u64E( struct kl_2kl_ordered_map__I3u64_3u64E* kl_this_1 )
+{
+    uint64_t kl_n_2;
+    uint64_t kl_t3;
+    struct kl_2kl_ordered_control* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    uint64_t* kl_t8;
+    struct kl_2kl_ordered_control* kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    uint64_t* kl_t12;
+    struct kl_2kl_ordered_control* kl_t13;
+    uint64_t kl_t14;
+    ( void ) kl_t8;
+    ( void ) kl_t10;
+    ( void ) kl_t12;
+    ( void ) kl_t14;
+#line 469 "../src/ordered_map.kl"
+    kl_n_2 = 0;
+    kl_t4 = &( *kl_this_1 ).kl_control__2007;
+    kl_t5 = kl_2kl_used__SQ2kl15ordered_control( kl_t4 );
+    kl_t3 = kl_t5;
+    goto bb1;
+    bb1:
+    kl_t6 = kl_n_2 < kl_t3;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 473 "../src/ordered_map.kl"
+    kl_t7 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_2, 0 );
+    kl_t8 = ( *kl_this_1 ).kl_keys__2010 + kl_t7;
+    kl_t9 = &( *kl_this_1 ).kl_control__2007;
+    kl_t10 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t9, kl_n_2 );
+#line 474 "../src/ordered_map.kl"
+    kl_t11 = kl_2kl_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_2, 0 );
+    kl_t12 = ( *kl_this_1 ).kl_values__2013 + kl_t11;
+    kl_t13 = &( *kl_this_1 ).kl_control__2007;
+    kl_t14 = kl_2kl_count__SQ2kl15ordered_control_3u64( kl_t13, kl_n_2 );
+    goto bb4;
+    bb3:
+    return;
+    bb4:
+#line 469 "../src/ordered_map.kl"
+    kl_n_2 = kl_n_2 + 1;
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
