@@ -1,0 +1,50 @@
+// A call's result holds an address only if its type can: a struct of numbers returned by a method
+// goes straight back into a call that changes the same object, as `kl::ordered_map` passes its
+// control's key moves. Exits with the failing check.
+struct span
+{
+    u64 from;
+    u64 count;
+};
+
+struct moves
+{
+    span first;
+    span second;
+};
+
+class counter
+{
+    public counter()
+    {
+        total_ = 0;
+    }
+
+    public moves plan( u64 n ) const
+    {
+        return moves { span { 0, n }, span { n, n + 1 } };
+    }
+
+    public void take( moves m )
+    {
+        total_ += m.first.count + m.second.count;
+    }
+
+    public u64 total() const
+    {
+        return total_;
+    }
+
+    private u64 total_;
+};
+
+i32 main()
+{
+    counter c = counter();
+    c.take( c.plan( 2 ) );
+
+    const moves later = c.plan( 3 );
+    c.take( later );
+
+    return c.total() == 12 ? 0 : 1;
+}

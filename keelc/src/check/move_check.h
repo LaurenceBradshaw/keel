@@ -31,7 +31,9 @@ struct Move_error
 };
 
 // PLAN §8. Flow-sensitive, per local, over the CFG. `owning` is check/borrow_check's
-// owning_locals: only an owner can be freed under an argument that aliases it.
-std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning, const Type_table& types );
+// owning_locals: only an owner can be freed under an argument that aliases it. `addressing` is its
+// addressing_locals: only a call result that can hold an address may reach into an argument.
+std::vector<Move_error>
+check_moves( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing );
 
 } // namespace keel

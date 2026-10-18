@@ -262,9 +262,22 @@ std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& ty
     return owning;
 }
 
-std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning, const Type_table& types )
+std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types& types )
 {
-    const std::vector<Borrow> borrows = borrows_of( func, types );
+    std::vector<bool> addressing( func.locals.size(), false );
+
+    for( std::size_t l = 0; l < func.locals.size(); ++l )
+    {
+        addressing[l] = instance_holds_address( ast, types.table(), func.locals[l].type, types.recorded() );
+    }
+
+    return addressing;
+}
+
+std::vector<Loan_error>
+check_loans( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing )
+{
+    const std::vector<Borrow> borrows = borrows_of( func, addressing );
     const std::vector<Live>   live    = live_in( func );
 
     std::vector<Local_id> holders;
@@ -353,19 +366,21 @@ struct Loaned : Compiled
             // A synthesised drop function is declared by nothing.
             if( functions[f].declaration.is_valid() && interner.text( ast.name( functions[f].declaration ) ) == under_test )
             {
-                tested = f;
-                owning = owning_locals( functions[f], ast, types );
+                tested     = f;
+                owning     = owning_locals( functions[f], ast, types );
+                addressing = addressing_locals( functions[f], ast, types );
             }
         }
     }
 
     std::vector<Loan_error> errors() const
     {
-        return check_loans( functions[tested], owning, types.table() );
+        return check_loans( functions[tested], owning, addressing );
     }
 
     std::size_t       tested = 0;
     std::vector<bool> owning;
+    std::vector<bool> addressing;
 
     std::string_view name_of( Local_id local ) const
     {

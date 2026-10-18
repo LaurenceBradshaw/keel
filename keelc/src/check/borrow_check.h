@@ -32,7 +32,12 @@ struct Loan_error
 // what an indirect loan reaches.
 std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& types );
 
-// D54. Each holder is reported once, at its first conflict.
-std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning, const Type_table& types );
+// Per local, whether its value can hold an address, which a call may have returned into its arguments.
+std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types& types );
+
+// D54. Each holder is reported once, at its first conflict. `owning` and `addressing` are the two
+// functions above.
+std::vector<Loan_error>
+check_loans( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing );
 
 } // namespace keel

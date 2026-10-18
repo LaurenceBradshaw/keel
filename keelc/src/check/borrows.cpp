@@ -6,7 +6,7 @@
 namespace keel
 {
 
-std::vector<Borrow> borrows_of( const Function& func, const Type_table& types )
+std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& addressing )
 {
     std::vector<Borrow> borrows( func.locals.size() );
 
@@ -76,8 +76,8 @@ std::vector<Borrow> borrows_of( const Function& func, const Type_table& types )
         {
             borrow.at = statement.span;
 
-            // A number or `bool` holds no address, so it cannot reach into the receiver.
-            if( !types.is_builtin( func.locals[statement.place.local.v].type ) )
+            // A value that can hold no address cannot reach into the receiver.
+            if( addressing[statement.place.local.v] )
             {
                 borrow.through = &value;
             }

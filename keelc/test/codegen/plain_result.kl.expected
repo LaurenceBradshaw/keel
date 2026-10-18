@@ -1,0 +1,128 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "plain_result.kl.prelude.c"
+
+struct kl__span;
+struct kl__moves;
+struct kl__counter;
+
+struct kl__span
+{
+    uint64_t kl_from_1;
+    uint64_t kl_count_3;
+};
+
+struct kl__moves
+{
+    struct kl__span kl_first_6;
+    struct kl__span kl_second_8;
+};
+
+struct kl__counter
+{
+    uint64_t kl_total__74;
+};
+
+void kl__counter__R7counter__ctor( struct kl__counter* );
+struct kl__moves kl__plan__S7counter_3u64( struct kl__counter*, uint64_t );
+void kl__take__S7counter_5moves( struct kl__counter*, struct kl__moves );
+uint64_t kl__total__S7counter( struct kl__counter* );
+int32_t kl__main__( void );
+
+void kl__counter__R7counter__ctor( struct kl__counter* kl_this_1 )
+{
+#line 20 "codegen/plain_result.kl"
+    ( *kl_this_1 ).kl_total__74 = 0;
+    return;
+}
+
+struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64_t kl_n_2 )
+{
+    struct kl__moves kl_t0;
+    struct kl__moves kl_t3;
+    struct kl__span kl_t4;
+    struct kl__span kl_t5;
+    uint64_t kl_t6;
+    ( void ) kl_this_1;
+#line 25 "codegen/plain_result.kl"
+    kl_t4.kl_from_1 = 0;
+    kl_t4.kl_count_3 = kl_n_2;
+    kl_t6 = kl_n_2 + 1;
+    kl_t5.kl_from_1 = kl_n_2;
+    kl_t5.kl_count_3 = kl_t6;
+    kl_t3.kl_first_6 = kl_t4;
+    kl_t3.kl_second_8 = kl_t5;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves kl_m_2 )
+{
+    uint64_t kl_t3;
+#line 30 "codegen/plain_result.kl"
+    kl_t3 = kl_m_2.kl_first_6.kl_count_3 + kl_m_2.kl_second_8.kl_count_3;
+    ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t3;
+    return;
+}
+
+uint64_t kl__total__S7counter( struct kl__counter* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 35 "codegen/plain_result.kl"
+    kl_t0 = ( *kl_this_1 ).kl_total__74;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__counter kl_c_1;
+    struct kl__counter* kl_t2;
+    struct kl__counter* kl_t4;
+    struct kl__counter* kl_t5;
+    struct kl__moves kl_t6;
+    struct kl__moves kl_later_8;
+    struct kl__counter* kl_t9;
+    struct kl__moves kl_t10;
+    struct kl__counter* kl_t11;
+    int32_t kl_t13;
+    struct kl__counter* kl_t14;
+    uint64_t kl_t15;
+    bool kl_t16;
+#line 43 "codegen/plain_result.kl"
+    kl_t2 = &kl_c_1;
+    kl__counter__R7counter__ctor( kl_t2 );
+#line 44 "codegen/plain_result.kl"
+    kl_t4 = &kl_c_1;
+    kl_t5 = &kl_c_1;
+    kl_t6 = kl__plan__S7counter_3u64( kl_t5, 2 );
+    kl__take__S7counter_5moves( kl_t4, kl_t6 );
+#line 46 "codegen/plain_result.kl"
+    kl_t9 = &kl_c_1;
+    kl_t10 = kl__plan__S7counter_3u64( kl_t9, 3 );
+    kl_later_8 = kl_t10;
+#line 47 "codegen/plain_result.kl"
+    kl_t11 = &kl_c_1;
+    kl__take__S7counter_5moves( kl_t11, kl_later_8 );
+#line 49 "codegen/plain_result.kl"
+    kl_t14 = &kl_c_1;
+    kl_t15 = kl__total__S7counter( kl_t14 );
+    kl_t16 = kl_t15 == 12;
+    if ( kl_t16 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t13 = 0;
+    goto bb3;
+    bb2:
+    kl_t13 = 1;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t13;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

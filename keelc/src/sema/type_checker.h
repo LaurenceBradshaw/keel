@@ -206,6 +206,8 @@ bool may_own(
 // D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
 // a drop is elaborated against this one.
 bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
+// Whether a value of this type can hold an address: a pointer, T[*], a run, or an aggregate containing one.
+bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
 // An aggregate's type-parameter bindings, and a field's type seen through them. Free because the
 // emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );

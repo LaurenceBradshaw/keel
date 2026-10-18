@@ -389,6 +389,87 @@ bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::sp
     return may_own( ast, table, instance, recorded, visiting, []( Type_id ) { return true; } );
 }
 
+// The recursion behind instance_holds_address, guarded as may_own's is.
+static bool holds_address(
+    const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded, std::vector<Type_id>& visiting
+)
+{
+    if( !instance.is_valid() || table.is_error( instance ) )
+    {
+        return false;
+    }
+
+    if( table.is_parameter( instance ) )
+    {
+        return true;
+    }
+
+    if( table.is_pointer( instance ) || table.is_many_pointer( instance ) || table.is_run( instance ) )
+    {
+        return true;
+    }
+
+    if( table.is_union( instance ) )
+    {
+        const std::span<const Type_id> members = table.get( instance ).arguments;
+
+        for( const Type_id member : members )
+        {
+            if( holds_address( ast, table, member, recorded, visiting ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Some implementer may hold one, and only the vtable knows which.
+    if( table.is_interface( instance ) )
+    {
+        return true;
+    }
+
+    if( !table.is_struct( instance ) && !table.is_enum( instance ) )
+    {
+        return false;
+    }
+
+    const Node_id declaration = table.get( instance ).declaration;
+
+    if( !declaration.is_valid() )
+    {
+        return false;
+    }
+
+    if( std::find( visiting.begin(), visiting.end(), instance ) != visiting.end() )
+    {
+        return false;
+    }
+
+    visiting.push_back( instance );
+
+    // field_type applies this instance's bindings.
+    for( const Node_id field : ast.contained_fields( declaration ) )
+    {
+        if( holds_address( ast, table, field_type( ast, table, instance, field, recorded ), recorded, visiting ) )
+        {
+            visiting.pop_back();
+            return true;
+        }
+    }
+
+    visiting.pop_back();
+    return false;
+}
+
+bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded )
+{
+    std::vector<Type_id> visiting;
+
+    return holds_address( ast, table, instance, recorded, visiting );
+}
+
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
     return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.declared_type( param ) ) : types.type_of( param );
