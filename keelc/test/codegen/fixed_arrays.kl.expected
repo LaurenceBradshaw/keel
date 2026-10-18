@@ -5,11 +5,8 @@
 #include "fixed_arrays.kl.prelude.c"
 
 struct kl__Point;
-struct kl__A3_3i32;
 struct kl__Row;
-struct kl__A4_3i32;
 struct kl__A2_5Point;
-struct kl__A2_A3_3i32;
 
 struct kl__Point
 {
@@ -17,29 +14,14 @@ struct kl__Point
     int32_t kl_y_3;
 };
 
-struct kl__A3_3i32
-{
-    int32_t e[3];
-};
-
 struct kl__Row
 {
     struct kl__A3_3i32 kl_cells_8;
 };
 
-struct kl__A4_3i32
-{
-    int32_t e[4];
-};
-
 struct kl__A2_5Point
 {
     struct kl__Point e[2];
-};
-
-struct kl__A2_A3_3i32
-{
-    struct kl__A3_3i32 e[2];
 };
 
 uint64_t kl_SIDE_13 = 3;

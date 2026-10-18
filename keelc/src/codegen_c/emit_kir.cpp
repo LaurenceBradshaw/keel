@@ -214,51 +214,71 @@ std::string float_guard( Guard guard, Token_kind op )
     );
 }
 
-bool in_prelude( const Ast& ast, const Imports& imports, Node_id declaration )
+// Which C file each thing goes in (D46). The program's includes the prelude's, never the reverse:
+//
+//   declaration           the file it is written in
+//   aggregate, interface  the prelude's if declared there and every type argument is
+//   union                 the program's: nothing in the prelude names one
+//   array, run            its element's
+//   function type         its parameters' and result's, and the program writes them all again
+//   function              the prelude's if declared there and every type argument is; a
+//                         synthesised one is the program's
+//   vtable                the prelude's if its implementer and interface are both declared there
+//
+// A built-in type is the prelude's.
+C_part half_of( const Ast& ast, const Imports& imports, Node_id declaration )
 {
-    return ast.span( declaration ).file == imports.prelude_file();
+    return ast.span( declaration ).file == imports.prelude_file() ? C_part::Prelude : C_part::Program;
 }
 
-// Whether a type names an aggregate declared outside the prelude.
-bool mentions_program_type( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
+C_part half_of( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
 {
     if( !type.is_valid() )
     {
-        return false;
+        return C_part::Prelude;
     }
 
     const Type& described = table.get( type );
+    const auto  program   = [&]( Type_id part ) { return half_of( ast, table, imports, part ) == C_part::Program; };
 
-    if( described.declaration.is_valid() && !in_prelude( ast, imports, described.declaration ) )
+    if( table.is_union( type ) ||
+        ( described.declaration.is_valid() && half_of( ast, imports, described.declaration ) == C_part::Program ) ||
+        program( described.element ) || std::ranges::any_of( described.arguments, program ) )
     {
-        return true;
+        return C_part::Program;
     }
 
-    if( mentions_program_type( ast, table, imports, described.element ) )
+    return C_part::Prelude;
+}
+
+C_part half_of( const Ast& ast, const Type_table& table, const Imports& imports, const Function& function )
+{
+    if( !function.declaration.is_valid() || half_of( ast, imports, function.declaration ) == C_part::Program ||
+        std::ranges::any_of(
+            function.type_arguments,
+            [&]( Type_id argument ) { return half_of( ast, table, imports, argument ) == C_part::Program; }
+        ) )
     {
-        return true;
+        return C_part::Program;
     }
 
-    return std::ranges::any_of(
-        described.arguments, [&]( Type_id argument ) { return mentions_program_type( ast, table, imports, argument ); }
-    );
+    return C_part::Prelude;
 }
 
-// D46: an instance of a prelude generic at a program type is the program's.
-// A union is the program's: nothing in the prelude names one.
-bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
+C_part half_of( const Ast& ast, const Type_table& table, const Imports& imports, const Vtable& vtable )
 {
-    return table.get( type ).declaration.is_valid() && in_prelude( ast, imports, table.get( type ).declaration ) &&
-           !mentions_program_type( ast, table, imports, type );
+    const bool declared = table.get( vtable.implementer ).declaration.is_valid();
+
+    return declared && half_of( ast, table, imports, vtable.implementer ) == C_part::Prelude &&
+                   half_of( ast, table, imports, vtable.interface ) == C_part::Prelude
+               ? C_part::Prelude
+               : C_part::Program;
 }
 
-bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, const Function& function )
+// The one thing both halves write: a function type, typedef'd twice, which C11 allows.
+bool writes_in( const Ast& ast, const Type_table& table, const Imports& imports, Type_id signature, C_part part )
 {
-    return function.declaration.is_valid() && in_prelude( ast, imports, function.declaration ) &&
-           std::ranges::none_of(
-               function.type_arguments,
-               [&]( Type_id argument ) { return mentions_program_type( ast, table, imports, argument ); }
-           );
+    return part == C_part::Program || half_of( ast, table, imports, signature ) == C_part::Prelude;
 }
 
 class Kir_emitter
@@ -305,9 +325,9 @@ private:
 
     std::string local_name( u32 index ) const;
 
-    // Whether a top-level declaration belongs to the half being written.
-    bool shows( Node_id declaration ) const;
-    bool shows_type( Type_id type ) const;
+    // Which half a top-level declaration or a type belongs to; this one writes only `part_`'s.
+    C_part half_of( Node_id declaration ) const;
+    C_part half_of( Type_id type ) const;
 
     bool uses_runtime() const;
     // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
@@ -391,14 +411,7 @@ Kir_emitter::Kir_emitter(
       vtables_( vtables_needed( ast, types, functions ) )
 {
     std::erase_if(
-        vtables_,
-        [&]( const Vtable& vtable )
-        {
-            const bool in_prelude = in_prelude_half( ast, types.table(), imports, vtable.implementer ) &&
-                                    in_prelude_half( ast, types.table(), imports, vtable.interface );
-
-            return in_prelude != ( part == C_part::Prelude );
-        }
+        vtables_, [&]( const Vtable& vtable ) { return keel::half_of( ast, types.table(), imports, vtable ) != part; }
     );
 }
 
@@ -475,10 +488,7 @@ void Kir_emitter::emit_function_types()
     // An open signature has no C spelling at all; the instance's own is interned beside it.
     for( const Type_id signature : types_.table().function_types() )
     {
-        // The prelude's half cannot spell a program type. One both halves write is typedef'd twice,
-        // which C11 allows.
-        if( !types_.table().mentions_parameter( signature ) &&
-            !( part_ == C_part::Prelude && mentions_program_type( ast_, types_.table(), imports_, signature ) ) )
+        if( !types_.table().mentions_parameter( signature ) && writes_in( ast_, types_.table(), imports_, signature, part_ ) )
         {
             signatures.push_back( signature );
         }
@@ -571,10 +581,7 @@ void Kir_emitter::emit_run_references()
 
     for( const Type_id run : types_.table().run_types() )
     {
-        // A run has no declaration: it is the prelude's unless its element names a program type.
-        const bool in_prelude = !mentions_program_type( ast_, types_.table(), imports_, run );
-
-        if( types_.table().mentions_parameter( run ) || in_prelude != ( part_ == C_part::Prelude ) )
+        if( types_.table().mentions_parameter( run ) || half_of( run ) != part_ )
         {
             continue;
         }
@@ -686,7 +693,7 @@ void Kir_emitter::emit_interface_references()
     for( const Type_id interface : types_.table().interface_types() )
     {
         // A bound-only interface is never a type, so it has neither a reference nor a vtable.
-        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !shows_type( interface ) )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || half_of( interface ) != part_ )
         {
             continue;
         }
@@ -712,7 +719,7 @@ void Kir_emitter::emit_vtable_types()
 {
     for( const Type_id interface : types_.table().interface_types() )
     {
-        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !shows_type( interface ) )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || half_of( interface ) != part_ )
         {
             continue;
         }
@@ -859,7 +866,7 @@ void Kir_emitter::emit_globals()
 
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( !shows( child ) )
+        if( half_of( child ) != part_ )
         {
             continue;
         }
@@ -1077,7 +1084,7 @@ void Kir_emitter::emit_externs()
 
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
-        if( !shows( decl ) )
+        if( half_of( decl ) != part_ )
         {
             continue;
         }
@@ -1112,7 +1119,7 @@ void Kir_emitter::emit_main_shim()
 
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( !shows( child ) )
+        if( half_of( child ) != part_ )
         {
             continue;
         }
@@ -1581,14 +1588,14 @@ std::string Kir_emitter::local_name( u32 index ) const
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
 }
 
-bool Kir_emitter::shows( Node_id declaration ) const
+C_part Kir_emitter::half_of( Node_id declaration ) const
 {
-    return in_prelude( ast_, imports_, declaration ) == ( part_ == C_part::Prelude );
+    return keel::half_of( ast_, imports_, declaration );
 }
 
-bool Kir_emitter::shows_type( Type_id type ) const
+C_part Kir_emitter::half_of( Type_id type ) const
 {
-    return in_prelude_half( ast_, types_.table(), imports_, type ) == ( part_ == C_part::Prelude );
+    return keel::half_of( ast_, types_.table(), imports_, type );
 }
 
 // Asked of KIR rather than the tree: the question is whether the C about to be written calls the
@@ -2033,7 +2040,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
             return;
         }
 
-        if( part == C_part::Program && in_prelude_half( ast, types.table(), imports, type ) )
+        if( part == C_part::Program && half_of( ast, types.table(), imports, type ) == C_part::Prelude )
         {
             return;
         }
@@ -2075,22 +2082,20 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
     {
         const Type_id type = types.table().composite_types()[at];
 
-        if( part == C_part::Program || in_prelude_half( ast, types.table(), imports, type ) )
+        if( half_of( ast, types.table(), imports, type ) == part )
         {
             visit( visit, type );
         }
     }
 
-    if( part == C_part::Program )
+    for( const auto& types_of_kind : { types.table().union_types(), types.table().array_types() } )
     {
-        for( const Type_id type : types.table().union_types() )
+        for( const Type_id type : types_of_kind )
         {
-            visit( visit, type );
-        }
-
-        for( const Type_id type : types.table().array_types() )
-        {
-            visit( visit, type );
+            if( half_of( ast, types.table(), imports, type ) == part )
+            {
+                visit( visit, type );
+            }
         }
     }
 
@@ -2114,7 +2119,7 @@ std::string emit_c_from_kir(
     std::vector<Function> half;
     for( const Function& function : functions )
     {
-        if( in_prelude_half( ast, types.table(), imports, function ) == ( part == C_part::Prelude ) )
+        if( half_of( ast, types.table(), imports, function ) == part )
         {
             half.push_back( function );
         }

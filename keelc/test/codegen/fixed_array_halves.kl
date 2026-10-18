@@ -1,0 +1,25 @@
+// D46: an array is in its element's C half, so a prelude generic at an array of built-ins, and a
+// run of such arrays, spell the one struct the prelude's half defines.
+result<i32[2], i32> make( bool ok )
+{
+    if( ok )
+    {
+        return result::ok( [ 1, 2 ] );
+    }
+    return result::err( 3 );
+}
+
+u64 count( const ref i32[2][] rows )
+{
+    return rows.size;
+}
+
+i32 main()
+{
+    i32[2][3] rows = [ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ] ];
+    switch( make( true ) )
+    {
+        case result::ok( v ): return v[ 1 ] - 2 + ( count( rows ) == 3 ? 0 : 1 );
+        case result::err( e ): return e;
+    }
+}

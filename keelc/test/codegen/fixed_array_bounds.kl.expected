@@ -4,13 +4,6 @@
 
 #include "fixed_array_bounds.kl.prelude.c"
 
-struct kl__A4_3i32;
-
-struct kl__A4_3i32
-{
-    int32_t e[4];
-};
-
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__at__A4_3i32_3u64( struct kl__A4_3i32*, uint64_t );
