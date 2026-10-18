@@ -1,0 +1,35 @@
+// A positional literal fills the fields in order, whatever members come before or between them.
+
+import t::console;
+
+class noisy
+{
+    noisy( i32 n ) { n_ = n; }
+    ~noisy() { t::println( n_ ); }
+    private i32 n_;
+};
+
+class pair
+{
+    public static pair make( i32 a, i32 b ) { return pair { a, noisy( b ) }; }
+    public i32 first() const { return a_; }
+    private i32 a_;
+    public void touch() { }
+    private noisy b_;
+};
+
+struct point
+{
+    i32 x;
+    i32 length() const { return x + y; }
+    i32 y;
+};
+
+i32 main()
+{
+    pair p = pair::make( 1, 2 );
+    t::println( p.first() );
+    point q = point { 3, 4 };
+    t::println( q.length() );
+    return 0;
+}

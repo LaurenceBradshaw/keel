@@ -1337,8 +1337,17 @@ Operand Lowering::lower_struct_literal( Node_id id )
     builder_.storage_live( temp, span );
 
     // Positional form names no field, so the i-th initialiser fills the i-th field. The two
-    // forms cannot be mixed - the checker rejects that - so an index is enough here.
-    const std::span<const Node_id> fields = ast_.members( types_.table().get( type ).declaration );
+    // forms cannot be mixed - the checker rejects that - so an index is enough here. Fields only,
+    // as the checker counts them: a method declared before them would misalign every one.
+    std::vector<Node_id> fields;
+
+    for( const Node_id member : ast_.members( types_.table().get( type ).declaration ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Field_decl )
+        {
+            fields.push_back( member );
+        }
+    }
 
     std::vector<std::pair<Node_id, Operand>> values;
     std::size_t                              index = 0;
