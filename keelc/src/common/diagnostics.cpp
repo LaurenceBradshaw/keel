@@ -113,7 +113,7 @@ void Diagnostics::warning( Span span, std::string message, std::string help )
     items_.push_back( { Severity::Warning, span, std::move( message ), std::move( help ) } );
 }
 
-void Diagnostics::tokens( File_id file, std::vector<Span> bounds )
+void Diagnostics::set_token_bounds( File_id file, std::vector<Span> bounds )
 {
     tokens_[file.v] = std::move( bounds );
 }
@@ -205,27 +205,46 @@ std::vector<u32> Diagnostics::in_source_order() const
 
 std::vector<bool> Diagnostics::kept() const
 {
-    std::vector<bool> keep( items_.size(), false );
+    std::vector<bool> keep( items_.size(), true );
+    drop_silenced( keep );
+    drop_claimed( keep );
+    keep_first_after_unbalanced( keep );
+    return keep;
+}
 
+// A judgment starting in a silenced head is about the misreading.
+void Diagnostics::drop_silenced( std::vector<bool>& keep ) const
+{
+    for( u32 i = 0; i < items_.size(); ++i )
+    {
+        const Diagnostic& d = items_[i];
+
+        if( d.severity != Severity::Error || !d.span.is_valid() || d.syntax )
+        {
+            continue;
+        }
+
+        if( std::any_of(
+                silenced_.begin(),
+                silenced_.end(),
+                [&]( const Span& s ) { return s.file == d.span.file && s.start <= d.span.start && d.span.start < s.end; }
+            ) )
+        {
+            keep[i] = false;
+        }
+    }
+}
+
+// In emission order, a kept syntax error claims its tokens; a later error touching one is dropped.
+void Diagnostics::drop_claimed( std::vector<bool>& keep ) const
+{
     std::map<u32, std::vector<bool>> claimed;
 
     for( u32 i = 0; i < items_.size(); ++i )
     {
         const Diagnostic& d = items_[i];
 
-        if( d.severity != Severity::Error || !d.span.is_valid() )
-        {
-            keep[i] = true;
-            continue;
-        }
-
-        // A judgment starting in a silenced head is about the misreading.
-        if( !d.syntax &&
-            std::any_of(
-                silenced_.begin(),
-                silenced_.end(),
-                [&]( const Span& s ) { return s.file == d.span.file && s.start <= d.span.start && d.span.start < s.end; }
-            ) )
+        if( !keep[i] || d.severity != Severity::Error || !d.span.is_valid() )
         {
             continue;
         }
@@ -233,7 +252,6 @@ std::vector<bool> Diagnostics::kept() const
         const auto it = tokens_.find( d.span.file.v );
         if( it == tokens_.end() )
         {
-            keep[i] = true;
             continue;
         }
 
@@ -262,20 +280,23 @@ std::vector<bool> Diagnostics::kept() const
             any_claimed |= claims[t];
         }
 
-        if( !any_claimed )
+        if( any_claimed )
         {
-            keep[i] = true;
-
-            if( d.syntax )
+            keep[i] = false;
+        }
+        else if( d.syntax )
+        {
+            for( u32 t = lo; t < hi; ++t )
             {
-                for( u32 t = lo; t < hi; ++t )
-                {
-                    claims[t] = true;
-                }
+                claims[t] = true;
             }
         }
     }
+}
 
+// An unbalanced brace misparses the rest of its file: keep the brace report and the earliest other.
+void Diagnostics::keep_first_after_unbalanced( std::vector<bool>& keep ) const
+{
     for( const auto& [file, index] : unbalanced_ )
     {
         u32 earliest = std::numeric_limits<u32>::max();
@@ -307,8 +328,6 @@ std::vector<bool> Diagnostics::kept() const
             }
         }
     }
-
-    return keep;
 }
 
 void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
@@ -789,7 +808,7 @@ TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[comm
     };
 
     Diagnostics diags;
-    diags.tokens( f, bounds );
+    diags.set_token_bounds( f, bounds );
 
     SECTION( "a later error touching a claimed token is dropped" )
     {
@@ -831,7 +850,7 @@ TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[comm
     {
         // return <eof>
         const File_id g = sm.add_file( "b.kl", "return\n" );
-        diags.tokens( g, { { g, 0, 6 }, { g, 7, 7 } } );
+        diags.set_token_bounds( g, { { g, 0, 6 }, { g, 7, 7 } } );
 
         diags.syntax_error( Span::point( g, 6 ), "expected `;`, found end of file" );
         diags.syntax_error( Span::point( g, 7 ), "expected `}`, found end of file" );
@@ -866,7 +885,7 @@ TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[comm
     SECTION( "each file claims its own tokens" )
     {
         const File_id g = sm.add_file( "b.kl", "i32 x = a + b;" );
-        diags.tokens( g, { { g, 0, 3 } } );
+        diags.set_token_bounds( g, { { g, 0, 3 } } );
 
         diags.syntax_error( Span { f, 0, 3 }, "in a.kl" );
         diags.syntax_error( Span { g, 0, 3 }, "in b.kl" );
@@ -977,7 +996,7 @@ TEST_CASE( "diagnostics_keep_the_first_error_of_an_unbalanced_file", "[common][d
     };
 
     Diagnostics diags;
-    diags.tokens( f, bounds );
+    diags.set_token_bounds( f, bounds );
 
     SECTION( "the earliest error and the brace stand" )
     {

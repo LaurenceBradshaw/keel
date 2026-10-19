@@ -27,15 +27,27 @@ struct Diagnostic
     bool        syntax = false;
 };
 
+// One mistake gets one error. Errors that only follow from another are dropped when rendered or
+// counted, by three rules applied in order:
+//
+//   silenced    a non-syntax error starting in a silence()d span
+//   claimed     an error overlapping a token an earlier-emitted syntax error covers
+//   unbalanced  in a file with an unbalanced() brace, every error but that and the earliest other
+//
+// Warnings, notes and errors without a span are always kept.
 class Diagnostics
 {
 public:
     void error( Span span, std::string message, std::string help = {} );
+    // Claims the tokens it covers, if the file's bounds are set.
     void syntax_error( Span span, std::string message, std::string help = {} );
+    // A brace the lexer could not pair: its file keeps this and one other error.
     void unbalanced( Span span, std::string message, std::string help = {} );
     void warning( Span span, std::string message, std::string help = {} );
 
-    void tokens( File_id file, std::vector<Span> bounds );
+    // The file's token spans, in order, so a syntax error can claim them.
+    void set_token_bounds( File_id file, std::vector<Span> bounds );
+    // A construct the parser misread: the checker's judgments starting in it are dropped.
     void silence( Span span );
 
     bool   has_errors() const;
@@ -52,6 +64,9 @@ public:
 private:
     std::vector<u32>  in_source_order() const;
     std::vector<bool> kept() const;
+    void              drop_silenced( std::vector<bool>& keep ) const;
+    void              drop_claimed( std::vector<bool>& keep ) const;
+    void              keep_first_after_unbalanced( std::vector<bool>& keep ) const;
 
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v

@@ -928,7 +928,7 @@ std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& intern
     {
         token_spans.push_back( token.span );
     }
-    diags.tokens( file, std::move( token_spans ) );
+    diags.set_token_bounds( file, std::move( token_spans ) );
     check_braces( tokens, diags );
     return tokens;
 }
