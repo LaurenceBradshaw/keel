@@ -26,6 +26,8 @@ struct kl__Window
     double kl_hi_10;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__Window__R6Window_3f64_3f64__ctor( struct kl__Window*, double, double );
 struct kl__Window kl__around__S6Window_3f64_3f64( double, double );
 bool kl__holds__S6Window_3f64( struct kl__Window*, double );
@@ -139,17 +141,20 @@ int32_t kl__count_inside__FK6Window3f64E4bool_6Window_D3Fix3f64_3Fix_3Fix_3Fix( 
     struct kl__Fix* kl_t9;
     double kl_t10;
     bool kl_t11;
-    int32_t kl_t12;
-    struct kl__Window* kl_t13;
-    struct kl__Fix* kl_t14;
-    double kl_t15;
-    bool kl_t16;
-    int32_t kl_t17;
-    struct kl__Window* kl_t18;
-    struct kl__Fix* kl_t19;
-    double kl_t20;
-    bool kl_t21;
-    int32_t kl_t22;
+    bool kl_t12;
+    int32_t kl_t13;
+    struct kl__Window* kl_t14;
+    struct kl__Fix* kl_t15;
+    double kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    int32_t kl_t19;
+    struct kl__Window* kl_t20;
+    struct kl__Fix* kl_t21;
+    double kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    int32_t kl_t25;
 #line 64 "codegen/sample_m7.kl"
     kl_n_7 = 0;
 #line 66 "codegen/sample_m7.kl"
@@ -157,37 +162,52 @@ int32_t kl__count_inside__FK6Window3f64E4bool_6Window_D3Fix3f64_3Fix_3Fix_3Fix( 
     kl_t9 = &( *kl_a_4 );
     kl_t10 = *( double* )( ( char* ) kl_t9 + kl_axis_3 );
     kl_t11 = kl_test_1( kl_t8, kl_t10 );
-    if ( kl_t11 ) goto bb1; else goto bb2;
+    if ( kl_t11 ) goto bb1; else goto bb4;
     bb1:
 #line 68 "codegen/sample_m7.kl"
-    kl_t12 = kl_n_7 + 1;
-    kl_n_7 = kl_t12;
-    goto bb2;
+    kl_t12 = __builtin_add_overflow( kl_n_7, 1, &( int32_t ) { 0 } );
+    if ( kl_t12 ) goto bb2; else goto bb3;
     bb2:
-#line 71 "codegen/sample_m7.kl"
-    kl_t13 = &( *kl_w_2 );
-    kl_t14 = &( *kl_b_5 );
-    kl_t15 = *( double* )( ( char* ) kl_t14 + kl_axis_3 );
-    kl_t16 = kl_test_1( kl_t13, kl_t15 );
-    if ( kl_t16 ) goto bb3; else goto bb4;
+    kl_rt_panic( "codegen/sample_m7.kl", 68, "arithmetic overflow: n + 1" );
     bb3:
-#line 73 "codegen/sample_m7.kl"
-    kl_t17 = kl_n_7 + 1;
-    kl_n_7 = kl_t17;
+    kl_t13 = kl_n_7 + 1;
+    kl_n_7 = kl_t13;
     goto bb4;
     bb4:
-#line 76 "codegen/sample_m7.kl"
-    kl_t18 = &( *kl_w_2 );
-    kl_t19 = &( *kl_c_6 );
-    kl_t20 = *( double* )( ( char* ) kl_t19 + kl_axis_3 );
-    kl_t21 = kl_test_1( kl_t18, kl_t20 );
-    if ( kl_t21 ) goto bb5; else goto bb6;
+#line 71 "codegen/sample_m7.kl"
+    kl_t14 = &( *kl_w_2 );
+    kl_t15 = &( *kl_b_5 );
+    kl_t16 = *( double* )( ( char* ) kl_t15 + kl_axis_3 );
+    kl_t17 = kl_test_1( kl_t14, kl_t16 );
+    if ( kl_t17 ) goto bb5; else goto bb8;
     bb5:
-#line 78 "codegen/sample_m7.kl"
-    kl_t22 = kl_n_7 + 1;
-    kl_n_7 = kl_t22;
-    goto bb6;
+#line 73 "codegen/sample_m7.kl"
+    kl_t18 = __builtin_add_overflow( kl_n_7, 1, &( int32_t ) { 0 } );
+    if ( kl_t18 ) goto bb6; else goto bb7;
     bb6:
+    kl_rt_panic( "codegen/sample_m7.kl", 73, "arithmetic overflow: n + 1" );
+    bb7:
+    kl_t19 = kl_n_7 + 1;
+    kl_n_7 = kl_t19;
+    goto bb8;
+    bb8:
+#line 76 "codegen/sample_m7.kl"
+    kl_t20 = &( *kl_w_2 );
+    kl_t21 = &( *kl_c_6 );
+    kl_t22 = *( double* )( ( char* ) kl_t21 + kl_axis_3 );
+    kl_t23 = kl_test_1( kl_t20, kl_t22 );
+    if ( kl_t23 ) goto bb9; else goto bb12;
+    bb9:
+#line 78 "codegen/sample_m7.kl"
+    kl_t24 = __builtin_add_overflow( kl_n_7, 1, &( int32_t ) { 0 } );
+    if ( kl_t24 ) goto bb10; else goto bb11;
+    bb10:
+    kl_rt_panic( "codegen/sample_m7.kl", 78, "arithmetic overflow: n + 1" );
+    bb11:
+    kl_t25 = kl_n_7 + 1;
+    kl_n_7 = kl_t25;
+    goto bb12;
+    bb12:
 #line 81 "codegen/sample_m7.kl"
     kl_t0 = kl_n_7;
     return kl_t0;

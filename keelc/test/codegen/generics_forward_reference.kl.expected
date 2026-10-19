@@ -37,6 +37,8 @@ struct kl__Counted__I3i32E
 
 int32_t kl_destroyed_2 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__in_a_local__( void );
 int32_t kl__through_a_parameter__3BoxI3i32E( struct kl__Box__I3i32E );
 struct kl__Box__I3i32E kl__as_a_return__3i32( int32_t );
@@ -165,11 +167,17 @@ int32_t kl__main__( void )
 
 void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 120 "codegen/generics_forward_reference.kl"
-    kl_t2 = kl_destroyed_2 + 1;
-    kl_destroyed_2 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_destroyed_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generics_forward_reference.kl", 120, "arithmetic overflow: destroyed + 1" );
+    bb2:
+    kl_t3 = kl_destroyed_2 + 1;
+    kl_destroyed_2 = kl_t3;
     return;
 }
 

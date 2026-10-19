@@ -4,6 +4,8 @@
 
 #include "generics_composition.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 int32_t kl__quadrupled__I3i32E__3i32( int32_t );
 double kl__quadrupled__I3f64E__3f64( double );
@@ -107,8 +109,9 @@ int32_t kl__countdown__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
+    int32_t kl_t5;
 #line 30 "codegen/generics_composition.kl"
     kl_t2 = kl_a_1 < 1;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -118,9 +121,14 @@ int32_t kl__countdown__I3i32E__3i32( int32_t kl_a_1 )
     return kl_t0;
     bb2:
 #line 35 "codegen/generics_composition.kl"
-    kl_t3 = kl_a_1 - 1;
-    kl_t4 = kl__countdown__I3i32E__3i32( kl_t3 );
-    kl_t0 = kl_t4;
+    kl_t3 = __builtin_sub_overflow( kl_a_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/generics_composition.kl", 35, "arithmetic overflow: a - 1" );
+    bb4:
+    kl_t4 = kl_a_1 - 1;
+    kl_t5 = kl__countdown__I3i32E__3i32( kl_t4 );
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -156,12 +164,18 @@ int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
-    int32_t kl_t4;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 17 "codegen/generics_composition.kl"
     kl_t2 = kl__identity__I3i32E__3i32( kl_a_1 );
     kl_t3 = kl__identity__I3i32E__3i32( kl_a_1 );
-    kl_t4 = kl_t2 + kl_t3;
-    kl_t0 = kl_t4;
+    kl_t4 = __builtin_add_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generics_composition.kl", 17, "arithmetic overflow: identity<T>( a ) + identity<T>( a )" );
+    bb2:
+    kl_t5 = kl_t2 + kl_t3;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 

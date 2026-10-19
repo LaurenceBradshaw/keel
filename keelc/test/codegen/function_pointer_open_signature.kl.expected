@@ -7,6 +7,8 @@
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef int64_t ( *kl__fn__F3i64E3i64 )( int64_t );
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__twice32__3i32( int32_t );
 int64_t kl__twice64__3i64( int64_t );
 int32_t kl__main__( void );
@@ -20,20 +22,32 @@ int64_t kl__bounded__I3i64E__3i64( int64_t );
 int32_t kl__twice32__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 27 "codegen/function_pointer_open_signature.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_open_signature.kl", 27, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int64_t kl__twice64__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
-    int64_t kl_t2;
+    bool kl_t2;
+    int64_t kl_t3;
 #line 32 "codegen/function_pointer_open_signature.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_open_signature.kl", 32, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -142,20 +156,32 @@ int64_t kl__forwarded__I3i64E__3i64( int64_t kl_a_1 )
 int32_t kl__bounded__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 7 "codegen/function_pointer_open_signature.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_open_signature.kl", 7, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int64_t kl__bounded__I3i64E__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
-    int64_t kl_t2;
+    bool kl_t2;
+    int64_t kl_t3;
 #line 7 "codegen/function_pointer_open_signature.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_open_signature.kl", 7, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

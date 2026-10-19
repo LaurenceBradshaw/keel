@@ -44,6 +44,8 @@ struct kl__Node__I3i32E
     struct kl__Node__I3i32E* kl_next_42;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 
 int32_t kl__main__( void )
@@ -62,11 +64,16 @@ int32_t kl__main__( void )
     bool kl_t11;
     struct kl__Node__I3i32E kl_node_12;
     bool kl_t13;
-    int32_t kl_t14;
+    bool kl_t14;
     int32_t kl_t15;
-    int32_t kl_t16;
+    bool kl_t16;
     int32_t kl_t17;
-    int32_t kl_t18;
+    bool kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    int32_t kl_t21;
+    bool kl_t22;
+    int32_t kl_t23;
 #line 42 "codegen/generics_aggregates.kl"
     kl_whole_1.kl_v_5 = 7;
 #line 43 "codegen/generics_aggregates.kl"
@@ -142,12 +149,37 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 102 "codegen/generics_aggregates.kl"
-    kl_t14 = kl_whole_1.kl_v_5 + kl_both_6.kl_first_15;
-    kl_t15 = kl_t14 + kl_twice_8.kl_v_5.kl_v_5;
-    kl_t16 = kl_t15 + kl_held_10.kl_tag_29;
-    kl_t17 = kl_t16 + kl_node_12.kl_value_36;
-    kl_t18 = kl_t17 + 17;
-    kl_t0 = kl_t18;
+    kl_t14 = __builtin_add_overflow( kl_whole_1.kl_v_5, kl_both_6.kl_first_15, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb15; else goto bb16;
+    bb15:
+    kl_rt_panic( "codegen/generics_aggregates.kl", 102, "arithmetic overflow: whole.v + both.first" );
+    bb16:
+    kl_t15 = kl_whole_1.kl_v_5 + kl_both_6.kl_first_15;
+    kl_t16 = __builtin_add_overflow( kl_t15, kl_twice_8.kl_v_5.kl_v_5, &( int32_t ) { 0 } );
+    if ( kl_t16 ) goto bb17; else goto bb18;
+    bb17:
+    kl_rt_panic( "codegen/generics_aggregates.kl", 102, "arithmetic overflow: whole.v + both.first + twice.v.v" );
+    bb18:
+    kl_t17 = kl_t15 + kl_twice_8.kl_v_5.kl_v_5;
+    kl_t18 = __builtin_add_overflow( kl_t17, kl_held_10.kl_tag_29, &( int32_t ) { 0 } );
+    if ( kl_t18 ) goto bb19; else goto bb20;
+    bb19:
+    kl_rt_panic( "codegen/generics_aggregates.kl", 102, "arithmetic overflow: whole.v + both.first + twice.v.v + held.tag" );
+    bb20:
+    kl_t19 = kl_t17 + kl_held_10.kl_tag_29;
+    kl_t20 = __builtin_add_overflow( kl_t19, kl_node_12.kl_value_36, &( int32_t ) { 0 } );
+    if ( kl_t20 ) goto bb21; else goto bb22;
+    bb21:
+    kl_rt_panic( "codegen/generics_aggregates.kl", 102, "arithmetic overflow: whole.v + both.first + twice.v.v + held.tag + node.value" );
+    bb22:
+    kl_t21 = kl_t19 + kl_node_12.kl_value_36;
+    kl_t22 = __builtin_add_overflow( kl_t21, 17, &( int32_t ) { 0 } );
+    if ( kl_t22 ) goto bb23; else goto bb24;
+    bb23:
+    kl_rt_panic( "codegen/generics_aggregates.kl", 102, "arithmetic overflow: whole.v + both.first + twice.v.v + held.tag + node.value + 17" );
+    bb24:
+    kl_t23 = kl_t21 + 17;
+    kl_t0 = kl_t23;
     return kl_t0;
 }
 

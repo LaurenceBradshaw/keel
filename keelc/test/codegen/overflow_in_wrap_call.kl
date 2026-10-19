@@ -1,0 +1,16 @@
+// `wrap` reaches only through operators: the `+` inside a call in its operand is still checked.
+i32 id( i32 x )
+{
+    return x;
+}
+
+i64 wide( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    _ = wrap<i64>( wide( cast<i64>( id( 2147483647 ) + 1 ) ) );
+    return 0;
+}

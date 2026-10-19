@@ -2,12 +2,20 @@ fn Buffer {
     let _0: void; // return slot
     let _1: Buffer*; // parameter this
     let _2: u64; // parameter n
-    let _3: u64;
+    let _3: bool;
+    let _4: u64;
 
     bb0:
         (*_1).len = copy _2
-        _3 = copy _2 + copy _2
-        (*_1).capacity = copy _3
+        _3 = overflows copy _2 + copy _2
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _4 = copy _2 + copy _2
+        (*_1).capacity = copy _4
         return
 }
 fn Shadowed {

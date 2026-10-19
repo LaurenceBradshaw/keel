@@ -1,0 +1,17 @@
+// --debug turns on overflow checks: `MIN / -1` aborts, where without them it wraps to `MIN`.
+i32 id( i32 x )
+{
+    return x;
+}
+
+i64 wide( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    i64 min = wide( -9223372036854775807 - 1 );
+    _ = min / wide( -1 );
+    return 0;
+}

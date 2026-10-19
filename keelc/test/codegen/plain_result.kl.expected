@@ -25,6 +25,8 @@ struct kl__counter
     uint64_t kl_total__74;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__counter__R7counter__ctor( struct kl__counter* );
 struct kl__moves kl__plan__S7counter_3u64( struct kl__counter*, uint64_t );
 void kl__take__S7counter_5moves( struct kl__counter*, struct kl__moves );
@@ -44,14 +46,20 @@ struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64
     struct kl__moves kl_t3;
     struct kl__span kl_t4;
     struct kl__span kl_t5;
-    uint64_t kl_t6;
+    bool kl_t6;
+    uint64_t kl_t7;
     ( void ) kl_this_1;
 #line 25 "codegen/plain_result.kl"
     kl_t4.kl_from_1 = 0;
     kl_t4.kl_count_3 = kl_n_2;
-    kl_t6 = kl_n_2 + 1;
+    kl_t6 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/plain_result.kl", 25, "arithmetic overflow: n + 1" );
+    bb2:
+    kl_t7 = kl_n_2 + 1;
     kl_t5.kl_from_1 = kl_n_2;
-    kl_t5.kl_count_3 = kl_t6;
+    kl_t5.kl_count_3 = kl_t7;
     kl_t3.kl_first_6 = kl_t4;
     kl_t3.kl_second_8 = kl_t5;
     kl_t0 = kl_t3;
@@ -60,10 +68,22 @@ struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64
 
 void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves kl_m_2 )
 {
-    uint64_t kl_t3;
+    bool kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
 #line 30 "codegen/plain_result.kl"
-    kl_t3 = kl_m_2.kl_first_6.kl_count_3 + kl_m_2.kl_second_8.kl_count_3;
-    ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_m_2.kl_first_6.kl_count_3, kl_m_2.kl_second_8.kl_count_3, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: m.first.count + m.second.count" );
+    bb2:
+    kl_t4 = kl_m_2.kl_first_6.kl_count_3 + kl_m_2.kl_second_8.kl_count_3;
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_total__74, kl_t4, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: total_ += m.first.count + m.second.count;" );
+    bb4:
+    ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t4;
     return;
 }
 

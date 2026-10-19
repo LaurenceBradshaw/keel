@@ -36,7 +36,7 @@ Front_end run_front_end(
 
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
-    front.functions = lower( ast, front.resolution, front.types, literals );
+    front.functions = lower( ast, front.resolution, front.types, literals, build.overflow_checks );
 
     if( through == Stage::Lowered )
     {
@@ -69,7 +69,7 @@ Front_end run_front_end(
         .true_literal  = literals.add_integer( 1 )
     };
 
-    const Literal_id debug = build == Build::Debug ? vocabulary.true_literal : vocabulary.false_literal;
+    const Literal_id debug = build.asserts ? vocabulary.true_literal : vocabulary.false_literal;
 
     // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
     // only this build's.

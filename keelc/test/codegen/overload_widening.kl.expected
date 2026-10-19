@@ -11,6 +11,8 @@ struct kl__Built
     int64_t kl_held_86;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int64_t kl__as_signed__3i64( int64_t );
 int64_t kl__as_signed__3f64( double );
 uint64_t kl__as_unsigned__3u64( uint64_t );
@@ -62,23 +64,41 @@ uint64_t kl__as_unsigned__3i64( int64_t kl_a_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_t2;
-    uint64_t kl_t3;
+    bool kl_t3;
     uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
 #line 27 "codegen/overload_widening.kl"
     kl_t2 = ( uint64_t ) kl_a_1;
-    kl_t3 = kl_t2 * 0;
-    kl_t4 = 2000 + kl_t3;
-    kl_t0 = kl_t4;
+    kl_t3 = __builtin_mul_overflow( kl_t2, 0, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overload_widening.kl", 27, "arithmetic overflow: wrap<u64>( a ) * 0" );
+    bb2:
+    kl_t4 = kl_t2 * 0;
+    kl_t5 = __builtin_add_overflow( 2000, kl_t4, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/overload_widening.kl", 27, "arithmetic overflow: 2000 + wrap<u64>( a ) * 0" );
+    bb4:
+    kl_t6 = 2000 + kl_t4;
+    kl_t0 = kl_t6;
     return kl_t0;
 }
 
 int32_t kl__narrowest__3i16( int16_t kl_a_1 )
 {
     int32_t kl_t0;
-    int16_t kl_t2;
+    bool kl_t2;
+    int16_t kl_t3;
 #line 32 "codegen/overload_widening.kl"
-    kl_t2 = 10 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( 10, kl_a_1, &( int16_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overload_widening.kl", 32, "arithmetic overflow: 10 + a" );
+    bb2:
+    kl_t3 = 10 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -86,13 +106,25 @@ int32_t kl__narrowest__3u32( uint32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
 #line 37 "codegen/overload_widening.kl"
     kl_t2 = ( int32_t ) kl_a_1;
-    kl_t3 = kl_t2 * 0;
-    kl_t4 = 20 + kl_t3;
-    kl_t0 = kl_t4;
+    kl_t3 = __builtin_mul_overflow( kl_t2, 0, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overload_widening.kl", 37, "arithmetic overflow: wrap<i32>( a ) * 0" );
+    bb2:
+    kl_t4 = kl_t2 * 0;
+    kl_t5 = __builtin_add_overflow( 20, kl_t4, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/overload_widening.kl", 37, "arithmetic overflow: 20 + wrap<i32>( a ) * 0" );
+    bb4:
+    kl_t6 = 20 + kl_t4;
+    kl_t0 = kl_t6;
     return kl_t0;
 }
 
@@ -131,10 +163,16 @@ void kl__Built__R5Built_4bool__ctor( struct kl__Built* kl_this_1, bool kl_t2 )
 int64_t kl__plus__S5Built_3i64( struct kl__Built* kl_this_1, int64_t kl_n_2 )
 {
     int64_t kl_t0;
-    int64_t kl_t3;
+    bool kl_t3;
+    int64_t kl_t4;
 #line 66 "codegen/overload_widening.kl"
-    kl_t3 = ( *kl_this_1 ).kl_held_86 + kl_n_2;
-    kl_t0 = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_held_86, kl_n_2, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overload_widening.kl", 66, "arithmetic overflow: held + n" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_held_86 + kl_n_2;
+    kl_t0 = kl_t4;
     return kl_t0;
 }
 

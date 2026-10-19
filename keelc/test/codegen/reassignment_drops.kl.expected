@@ -22,6 +22,7 @@ int32_t kl_dropped_2 = 0;
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__Owned__R5Owned__ctor( struct kl__Owned* );
 void kl__Owned__dtor( struct kl__Owned* );
@@ -44,10 +45,16 @@ void kl__Owned__R5Owned__ctor( struct kl__Owned* kl_this_1 )
 
 void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 19 "codegen/reassignment_drops.kl"
-    kl_t2 = kl_dropped_2 + 1;
-    kl_dropped_2 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_dropped_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/reassignment_drops.kl", 19, "arithmetic overflow: dropped + 1" );
+    bb2:
+    kl_t3 = kl_dropped_2 + 1;
+    kl_dropped_2 = kl_t3;
 #line 23 "codegen/reassignment_drops.kl"
     kl_rt_free( ( *kl_this_1 ).kl_p_5 );
     return;

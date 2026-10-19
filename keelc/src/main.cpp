@@ -51,24 +51,25 @@ int main( int argc, char** argv )
 
     // clang-format off
     options.add_options()
-        ( "o,output",      "Write the executable here (default: the input's stem)", cxxopts::value<std::string>() )
-        ( "dump-tokens",   "Print the token stream and stop" )
-        ( "dump-ast",      "Print the parsed AST and stop" )
-        ( "dump-kir",      "Print the lowered KIR and stop" )
-        ( "emit-c",        "Print the generated C and stop" )
-        ( "check",         "Run the front end and report diagnostics, emitting nothing" )
-        ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
-        ( "names",         "With --diagnostics=json, also say what each name refers to" )
-        ( "declarations",  "With --diagnostics=json, also list every declaration with its signature and doc" )
-        ( "with-prelude",  "With --declarations, list the prelude's declarations too" )
-        ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
-        ( "W",             "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
-        ( "debug",         "Keep assert; without it the condition is checked but never run" )
-        ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
-        ( "print-prelude", "Print the prelude every program sees, and exit" )
-        ( "v,version",     "Print version information and exit" )
-        ( "h,help",        "Print usage and exit" )
-        ( "input",         "Source file",                        cxxopts::value<std::string>() );
+        ( "o,output",        "Write the executable here (default: the input's stem)", cxxopts::value<std::string>() )
+        ( "dump-tokens",     "Print the token stream and stop" )
+        ( "dump-ast",        "Print the parsed AST and stop" )
+        ( "dump-kir",        "Print the lowered KIR and stop" )
+        ( "emit-c",          "Print the generated C and stop" )
+        ( "check",           "Run the front end and report diagnostics, emitting nothing" )
+        ( "diagnostics",     "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
+        ( "names",           "With --diagnostics=json, also say what each name refers to" )
+        ( "declarations",    "With --diagnostics=json, also list every declaration with its signature and doc" )
+        ( "with-prelude",    "With --declarations, list the prelude's declarations too" )
+        ( "package",         "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
+        ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
+        ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
+        ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
+        ( "runtime",         "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
+        ( "print-prelude",   "Print the prelude every program sees, and exit" )
+        ( "v,version",       "Print version information and exit" )
+        ( "h,help",          "Print usage and exit" )
+        ( "input",           "Source file",                        cxxopts::value<std::string>() );
     // clang-format on
 
     options.parse_positional( { "input" } );
@@ -300,11 +301,13 @@ int main( int argc, char** argv )
         return finish();
     }
 
+    const bool debug = args.count( "debug" ) > 0;
+
     // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
     keel::Front_end front = keel::run_front_end(
         file_id.value(),
         keel::Stage::Elaborated,
-        args.count( "debug" ) ? keel::Build::Debug : keel::Build::Release,
+        keel::Build { .asserts = debug, .overflow_checks = debug || args.count( "overflow-checks" ) > 0 },
         sm,
         interner,
         literals,

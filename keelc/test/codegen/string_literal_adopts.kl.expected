@@ -33,6 +33,7 @@ struct kl__holder
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__label__R5label_3u64__ctor( struct kl__label*, uint64_t );
 void kl__label__dtor( struct kl__label* );
@@ -55,12 +56,18 @@ void kl__label__drop( struct kl__label* );
 
 void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
 {
-    uint64_t kl_t3;
-    uint8_t* kl_t4;
+    bool kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
 #line 12 "codegen/string_literal_adopts.kl"
-    kl_t3 = kl_n_2 + 1;
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( uint8_t ), "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
-    ( *kl_this_1 ).kl_bytes_7 = kl_t4;
+    kl_t3 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/string_literal_adopts.kl", 12, "arithmetic overflow: n + 1" );
+    bb2:
+    kl_t4 = kl_n_2 + 1;
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
+    ( *kl_this_1 ).kl_bytes_7 = kl_t5;
 #line 13 "codegen/string_literal_adopts.kl"
     ( *kl_this_1 ).kl_length_9 = kl_n_2;
     return;

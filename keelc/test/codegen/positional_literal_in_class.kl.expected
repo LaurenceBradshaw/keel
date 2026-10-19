@@ -25,6 +25,8 @@ struct kl__point
     int32_t kl_y_82;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
@@ -121,10 +123,16 @@ void kl__touch__S4pair( struct kl__pair* kl_this_1 )
 int32_t kl__length__S5point( struct kl__point* kl_this_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 24 "codegen/positional_literal_in_class.kl"
-    kl_t2 = ( *kl_this_1 ).kl_x_68 + ( *kl_this_1 ).kl_y_82;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_x_68, ( *kl_this_1 ).kl_y_82, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/positional_literal_in_class.kl", 24, "arithmetic overflow: x + y" );
+    bb2:
+    kl_t3 = ( *kl_this_1 ).kl_x_68 + ( *kl_this_1 ).kl_y_82;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

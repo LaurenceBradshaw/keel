@@ -67,11 +67,12 @@ int32_t kl__main__( void )
     int32_t kl_i_3;
     bool kl_t4;
     bool kl_t5;
-    int32_t kl_n_6;
-    bool kl_t7;
-    int32_t kl_t8;
-    bool kl_t9;
+    bool kl_t6;
+    int32_t kl_n_7;
+    bool kl_t8;
+    int32_t kl_t9;
     bool kl_t10;
+    bool kl_t11;
     goto bb1;
     bb1:
 #line 33 "codegen/assert.kl"
@@ -89,8 +90,8 @@ int32_t kl__main__( void )
     if ( kl_t4 ) goto bb6; else goto bb5;
     bb5:
 #line 40 "codegen/assert.kl"
-    kl_n_6 = 7;
-    goto bb9;
+    kl_n_7 = 7;
+    goto bb11;
     bb6:
 #line 37 "codegen/assert.kl"
     kl_t5 = kl_i_3 < 4;
@@ -99,28 +100,33 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/assert.kl", 37, "assertion failed: i < 4" );
     bb8:
 #line 35 "codegen/assert.kl"
+    kl_t6 = __builtin_add_overflow( kl_i_3, 1, &( int32_t ) { 0 } );
+    if ( kl_t6 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/assert.kl", 35, "arithmetic overflow: i++" );
+    bb10:
     kl_i_3 = kl_i_3 + 1;
     goto bb4;
-    bb9:
+    bb11:
 #line 41 "codegen/assert.kl"
-    kl_t8 = kl_n_6 % 2;
-    kl_t9 = kl_t8 == 1;
-    kl_t7 = kl_t9;
-    if ( kl_t7 ) goto bb12; else goto bb13;
-    bb10:
+    kl_t9 = kl_n_7 % 2;
+    kl_t10 = kl_t9 == 1;
+    kl_t8 = kl_t10;
+    if ( kl_t8 ) goto bb14; else goto bb15;
+    bb12:
 #line 44 "codegen/assert.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb11:
-    kl_rt_panic( "codegen/assert.kl", 41, "assertion failed: n % 2 == 1 && n > 5" );
-    bb12:
-#line 42 "codegen/assert.kl"
-    kl_t10 = kl_n_6 > 5;
-#line 41 "codegen/assert.kl"
-    kl_t7 = kl_t10;
-    goto bb13;
     bb13:
-    if ( kl_t7 ) goto bb10; else goto bb11;
+    kl_rt_panic( "codegen/assert.kl", 41, "assertion failed: n % 2 == 1 && n > 5" );
+    bb14:
+#line 42 "codegen/assert.kl"
+    kl_t11 = kl_n_7 > 5;
+#line 41 "codegen/assert.kl"
+    kl_t8 = kl_t11;
+    goto bb15;
+    bb15:
+    if ( kl_t8 ) goto bb12; else goto bb13;
 }
 
 int main( void )

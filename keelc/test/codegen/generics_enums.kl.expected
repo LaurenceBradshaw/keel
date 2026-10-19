@@ -67,6 +67,8 @@ struct kl__Span2__I3i32_3f64E
     double kl_second_52;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E, int32_t );
 double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E, double );
@@ -109,10 +111,13 @@ int32_t kl__main__( void )
     double kl_second_33;
     bool kl_t34;
     bool kl_t35;
-    int32_t kl_t36;
+    bool kl_t36;
     int32_t kl_t37;
     int32_t kl_t38;
-    int32_t kl_t39;
+    bool kl_t39;
+    int32_t kl_t40;
+    bool kl_t41;
+    int32_t kl_t42;
     ( void ) kl_late_1;
 #line 68 "codegen/generics_enums.kl"
     kl_t3.tag = 1;
@@ -243,11 +248,26 @@ int32_t kl__main__( void )
     return kl_t0;
     bb22:
 #line 156 "codegen/generics_enums.kl"
-    kl_t36 = 30 + kl_s_21.kl_tag_40;
-    kl_t37 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_a_2, 0 );
-    kl_t38 = kl_t36 + kl_t37;
-    kl_t39 = kl_t38 + 2;
-    kl_t0 = kl_t39;
+    kl_t36 = __builtin_add_overflow( 30, kl_s_21.kl_tag_40, &( int32_t ) { 0 } );
+    if ( kl_t36 ) goto bb23; else goto bb24;
+    bb23:
+    kl_rt_panic( "codegen/generics_enums.kl", 156, "arithmetic overflow: 30 + s.tag" );
+    bb24:
+    kl_t37 = 30 + kl_s_21.kl_tag_40;
+    kl_t38 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_a_2, 0 );
+    kl_t39 = __builtin_add_overflow( kl_t37, kl_t38, &( int32_t ) { 0 } );
+    if ( kl_t39 ) goto bb25; else goto bb26;
+    bb25:
+    kl_rt_panic( "codegen/generics_enums.kl", 156, "arithmetic overflow: 30 + s.tag + unwrap<i32>( a, 0 )" );
+    bb26:
+    kl_t40 = kl_t37 + kl_t38;
+    kl_t41 = __builtin_add_overflow( kl_t40, 2, &( int32_t ) { 0 } );
+    if ( kl_t41 ) goto bb27; else goto bb28;
+    bb27:
+    kl_rt_panic( "codegen/generics_enums.kl", 156, "arithmetic overflow: 30 + s.tag + unwrap<i32>( a, 0 ) + 2" );
+    bb28:
+    kl_t42 = kl_t40 + 2;
+    kl_t0 = kl_t42;
     return kl_t0;
 }
 

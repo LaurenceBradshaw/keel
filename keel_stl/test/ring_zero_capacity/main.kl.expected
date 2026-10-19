@@ -17,6 +17,7 @@ struct kl_2kl_ring__I3i32E
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 int32_t kl__main__( void );
@@ -109,37 +110,56 @@ void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
 {
     uint64_t kl_run_2;
     uint64_t kl_t3;
-    uint64_t kl_t4;
-    bool kl_t5;
-    uint64_t kl_t6;
-    int32_t* kl_t7;
-    bool kl_t8;
-    uint64_t kl_t9;
-    ( void ) kl_t7;
+    bool kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    uint64_t kl_t8;
+    int32_t* kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    uint64_t kl_t12;
     ( void ) kl_t9;
+    ( void ) kl_t12;
 #line 328 "../src/ring.kl"
-    kl_t4 = ( *kl_this_1 ).kl_cap__809 - ( *kl_this_1 ).kl_head__805;
-    kl_t5 = ( *kl_this_1 ).kl_count__807 < kl_t4;
-    if ( kl_t5 ) goto bb1; else goto bb2;
+    kl_t4 = __builtin_sub_overflow( ( *kl_this_1 ).kl_cap__809, ( *kl_this_1 ).kl_head__805, &( uint64_t ) { 0 } );
+    if ( kl_t4 ) goto bb4; else goto bb5;
     bb1:
     kl_t3 = ( *kl_this_1 ).kl_count__807;
     goto bb3;
     bb2:
-    kl_t6 = ( *kl_this_1 ).kl_cap__809 - ( *kl_this_1 ).kl_head__805;
-    kl_t3 = kl_t6;
-    goto bb3;
+    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_cap__809, ( *kl_this_1 ).kl_head__805, &( uint64_t ) { 0 } );
+    if ( kl_t7 ) goto bb6; else goto bb7;
     bb3:
     kl_run_2 = kl_t3;
 #line 331 "../src/ring.kl"
-    kl_t7 = ( *kl_this_1 ).kl_data__803 + ( *kl_this_1 ).kl_head__805;
+    kl_t9 = ( *kl_this_1 ).kl_data__803 + ( *kl_this_1 ).kl_head__805;
 #line 333 "../src/ring.kl"
-    kl_t8 = ( *kl_this_1 ).kl_count__807 > kl_run_2;
-    if ( kl_t8 ) goto bb4; else goto bb5;
+    kl_t10 = ( *kl_this_1 ).kl_count__807 > kl_run_2;
+    if ( kl_t10 ) goto bb8; else goto bb11;
     bb4:
-#line 335 "../src/ring.kl"
-    kl_t9 = ( *kl_this_1 ).kl_count__807 - kl_run_2;
-    goto bb5;
+    kl_rt_panic( "../src/ring.kl", 328, "arithmetic overflow: cap_ - head_" );
     bb5:
+#line 328 "../src/ring.kl"
+    kl_t5 = ( *kl_this_1 ).kl_cap__809 - ( *kl_this_1 ).kl_head__805;
+    kl_t6 = ( *kl_this_1 ).kl_count__807 < kl_t5;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb6:
+    kl_rt_panic( "../src/ring.kl", 328, "arithmetic overflow: cap_ - head_" );
+    bb7:
+    kl_t8 = ( *kl_this_1 ).kl_cap__809 - ( *kl_this_1 ).kl_head__805;
+    kl_t3 = kl_t8;
+    goto bb3;
+    bb8:
+#line 335 "../src/ring.kl"
+    kl_t11 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__807, kl_run_2, &( uint64_t ) { 0 } );
+    if ( kl_t11 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "../src/ring.kl", 335, "arithmetic overflow: count_ - run" );
+    bb10:
+    kl_t12 = ( *kl_this_1 ).kl_count__807 - kl_run_2;
+    goto bb11;
+    bb11:
     return;
 }
 

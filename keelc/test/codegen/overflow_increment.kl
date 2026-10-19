@@ -1,0 +1,17 @@
+// --debug turns on overflow checks: `x++` on a `u8` at 255 aborts.
+i32 id( i32 x )
+{
+    return x;
+}
+
+i64 wide( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    u8 x = wrap<u8>( id( 255 ) );
+    x++;
+    return 0;
+}

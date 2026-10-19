@@ -11,6 +11,8 @@ struct kl__counter
     int32_t kl_n__58;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
@@ -69,7 +71,13 @@ void kl__counter__dtor( struct kl__counter* kl_this_1 )
 int32_t kl__bump__S7counter( struct kl__counter* kl_this_1 )
 {
     int32_t kl_t0;
+    bool kl_t2;
 #line 20 "codegen/temporary_receiver.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n__58, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/temporary_receiver.kl", 20, "arithmetic overflow: n_ += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_n__58 = ( *kl_this_1 ).kl_n__58 + 1;
 #line 21 "codegen/temporary_receiver.kl"
     kl_t0 = ( *kl_this_1 ).kl_n__58;
@@ -79,13 +87,19 @@ int32_t kl__bump__S7counter( struct kl__counter* kl_this_1 )
 struct kl_7prelude_result__I3i32_3i32E kl__checked__S7counter( struct kl__counter* kl_this_1 )
 {
     struct kl_7prelude_result__I3i32_3i32E kl_t0;
-    struct kl_7prelude_result__I3i32_3i32E kl_t2;
+    bool kl_t2;
+    struct kl_7prelude_result__I3i32_3i32E kl_t3;
 #line 26 "codegen/temporary_receiver.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n__58, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/temporary_receiver.kl", 26, "arithmetic overflow: n_ += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_n__58 = ( *kl_this_1 ).kl_n__58 + 1;
 #line 27 "codegen/temporary_receiver.kl"
-    kl_t2.tag = 0;
-    kl_t2.kl_value_598 = ( *kl_this_1 ).kl_n__58;
-    kl_t0 = kl_t2;
+    kl_t3.tag = 0;
+    kl_t3.kl_value_598 = ( *kl_this_1 ).kl_n__58;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

@@ -1,11 +1,19 @@
 fn bump {
     let _0: void; // return slot
     let _1: i32*; // parameter n
-    let _2: i32;
+    let _2: bool;
+    let _3: i32;
 
     bb0:
-        _2 = copy (*_1) + const 1
-        (*_1) = copy _2
+        _2 = overflows copy (*_1) + const 1
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _3 = copy (*_1) + const 1
+        (*_1) = copy _3
         return
 }
 fn twice {
@@ -45,7 +53,8 @@ fn main {
     let _7: Point;
     let _8: Point*;
     let _9: void;
-    let _10: i32;
+    let _10: bool;
+    let _11: i32;
 
     bb0:
         storage_live _1
@@ -60,8 +69,15 @@ fn main {
         _6 = copy _7
         _8 = &borrow _6
         _9 = call slide(copy _8)
-        _10 = copy _1 + copy _6.x
-        _0 = copy _10
+        _10 = overflows copy _1 + copy _6.x
+        branch copy _10 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _11 = copy _1 + copy _6.x
+        _0 = copy _11
         storage_dead _6
         storage_dead _1
         return

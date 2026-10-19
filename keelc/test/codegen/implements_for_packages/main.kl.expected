@@ -44,6 +44,7 @@ int32_t kl_drops_296 = 0;
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int64_t kl__measure__SQ6shapes3RodC8Measured( struct kl_6shapes_Rod* );
 void kl__grow__SQ6shapes3RodC8Measured_3i64( struct kl_6shapes_Rod*, int64_t );
@@ -99,19 +100,31 @@ static const struct kl__Measured__vtable kl_6shapes_Tracked__as_kl__Measured = {
 int64_t kl__measure__SQ6shapes3RodC8Measured( struct kl_6shapes_Rod* kl_this_1 )
 {
     int64_t kl_t0;
-    int64_t kl_t2;
+    bool kl_t2;
+    int64_t kl_t3;
 #line 14 "codegen/implements_for_packages/main.kl"
-    kl_t2 = ( *kl_this_1 ).kl_length_298 * 10;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( ( *kl_this_1 ).kl_length_298, 10, &( int64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for_packages/main.kl", 14, "arithmetic overflow: this.length * 10" );
+    bb2:
+    kl_t3 = ( *kl_this_1 ).kl_length_298 * 10;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 void kl__grow__SQ6shapes3RodC8Measured_3i64( struct kl_6shapes_Rod* kl_this_1, int64_t kl_by_2 )
 {
-    int64_t kl_t3;
+    bool kl_t3;
+    int64_t kl_t4;
 #line 15 "codegen/implements_for_packages/main.kl"
-    kl_t3 = ( *kl_this_1 ).kl_length_298 + kl_by_2;
-    ( *kl_this_1 ).kl_length_298 = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_length_298, kl_by_2, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for_packages/main.kl", 15, "arithmetic overflow: this.length + by" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_length_298 + kl_by_2;
+    ( *kl_this_1 ).kl_length_298 = kl_t4;
     return;
 }
 
@@ -125,10 +138,16 @@ int64_t kl__measure__SQ6shapes7TrackedC8Measured( struct kl_6shapes_Tracked* kl_
 
 void kl__grow__SQ6shapes7TrackedC8Measured_3i64( struct kl_6shapes_Tracked* kl_this_1, int64_t kl_by_2 )
 {
-    int64_t kl_t3;
+    bool kl_t3;
+    int64_t kl_t4;
 #line 21 "codegen/implements_for_packages/main.kl"
-    kl_t3 = ( *kl_this_1 ).kl_n_301 + kl_by_2;
-    ( *kl_this_1 ).kl_n_301 = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_301, kl_by_2, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for_packages/main.kl", 21, "arithmetic overflow: this.n + by" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_n_301 + kl_by_2;
+    ( *kl_this_1 ).kl_n_301 = kl_t4;
     return;
 }
 
@@ -305,11 +324,17 @@ void kl_6shapes_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes_Tracked
 
 void kl_6shapes_Tracked__dtor( struct kl_6shapes_Tracked* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    kl_t2 = kl_drops_296 + 1;
-    kl_drops_296 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_drops_296, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for_packages/shapes/kinds.kl", 14, "arithmetic overflow: drops + 1" );
+    bb2:
+    kl_t3 = kl_drops_296 + 1;
+    kl_drops_296 = kl_t3;
     return;
 }
 
@@ -320,14 +345,20 @@ int64_t kl__total__IQ6shapes3RodE__Q6shapes3Rod_Q6shapes3Rod( struct kl_6shapes_
     int64_t kl_t4;
     struct kl_6shapes_Rod* kl_t5;
     int64_t kl_t6;
-    int64_t kl_t7;
+    bool kl_t7;
+    int64_t kl_t8;
 #line 26 "codegen/implements_for_packages/main.kl"
     kl_t3 = &( *kl_a_1 );
     kl_t4 = kl__measure__SQ6shapes3RodC8Measured( kl_t3 );
     kl_t5 = &( *kl_b_2 );
     kl_t6 = kl__measure__SQ6shapes3RodC8Measured( kl_t5 );
-    kl_t7 = kl_t4 + kl_t6;
-    kl_t0 = kl_t7;
+    kl_t7 = __builtin_add_overflow( kl_t4, kl_t6, &( int64_t ) { 0 } );
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for_packages/main.kl", 26, "arithmetic overflow: a.measure() + b.measure()" );
+    bb2:
+    kl_t8 = kl_t4 + kl_t6;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 

@@ -21,6 +21,8 @@ struct kl__Slot
     int32_t kl_value_12;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 double kl__area__5Shape( struct kl__Shape );
 int32_t kl__unwrap__4Slot_3i32( struct kl__Slot, int32_t );
 int32_t kl__main__( void );
@@ -104,10 +106,12 @@ int32_t kl__main__( void )
     bool kl_t16;
     struct kl__Slot kl_t17;
     int32_t kl_t18;
-    int32_t kl_t19;
-    struct kl__Slot kl_t20;
-    int32_t kl_t21;
+    bool kl_t19;
+    int32_t kl_t20;
+    struct kl__Slot kl_t21;
     int32_t kl_t22;
+    bool kl_t23;
+    int32_t kl_t24;
 #line 45 "codegen/payloads.kl"
     kl_total_1 = 0;
 #line 49 "codegen/payloads.kl"
@@ -163,11 +167,21 @@ int32_t kl__main__( void )
     kl_t17.tag = 1;
     kl_t17.kl_value_12 = 5;
     kl_t18 = kl__unwrap__4Slot_3i32( kl_t17, 0 );
-    kl_t19 = kl_t18 * 10;
-    kl_t20.tag = 0;
-    kl_t21 = kl__unwrap__4Slot_3i32( kl_t20, 3 );
-    kl_t22 = kl_t19 + kl_t21;
-    kl_total_1 = kl_t22;
+    kl_t19 = __builtin_mul_overflow( kl_t18, 10, &( int32_t ) { 0 } );
+    if ( kl_t19 ) goto bb11; else goto bb12;
+    bb11:
+    kl_rt_panic( "codegen/payloads.kl", 58, "arithmetic overflow: unwrap( Slot::Taken( 5 ), 0 ) * 10" );
+    bb12:
+    kl_t20 = kl_t18 * 10;
+    kl_t21.tag = 0;
+    kl_t22 = kl__unwrap__4Slot_3i32( kl_t21, 3 );
+    kl_t23 = __builtin_add_overflow( kl_t20, kl_t22, &( int32_t ) { 0 } );
+    if ( kl_t23 ) goto bb13; else goto bb14;
+    bb13:
+    kl_rt_panic( "codegen/payloads.kl", 58, "arithmetic overflow: unwrap( Slot::Taken( 5 ), 0 ) * 10 + unwrap( Slot::Empty, 3 )" );
+    bb14:
+    kl_t24 = kl_t20 + kl_t22;
+    kl_total_1 = kl_t24;
 #line 60 "codegen/payloads.kl"
     kl_t0 = kl_total_1;
     return kl_t0;

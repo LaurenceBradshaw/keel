@@ -21,6 +21,8 @@ struct kl__Big
 
 uint64_t kl_freed_2 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__B__R1B_3u64__ctor( struct kl__B*, uint64_t );
 void kl__B__dtor( struct kl__B* );
 uint64_t kl__peek__1B( struct kl__B* );
@@ -37,11 +39,17 @@ void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 
 void kl__B__dtor( struct kl__B* kl_this_1 )
 {
-    uint64_t kl_t2;
+    bool kl_t2;
+    uint64_t kl_t3;
     ( void ) kl_this_1;
 #line 21 "codegen/const_ref.kl"
-    kl_t2 = kl_freed_2 + 1;
-    kl_freed_2 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_freed_2, 1, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/const_ref.kl", 21, "arithmetic overflow: freed + 1" );
+    bb2:
+    kl_t3 = kl_freed_2 + 1;
+    kl_freed_2 = kl_t3;
     return;
 }
 
@@ -68,12 +76,24 @@ uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
 int32_t kl__sum__3Big( struct kl__Big* kl_g_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
     int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 45 "codegen/const_ref.kl"
-    kl_t2 = ( *kl_g_1 ).kl_a_29 + ( *kl_g_1 ).kl_b_31;
-    kl_t3 = kl_t2 + ( *kl_g_1 ).kl_c_33;
-    kl_t0 = kl_t3;
+    kl_t2 = __builtin_add_overflow( ( *kl_g_1 ).kl_a_29, ( *kl_g_1 ).kl_b_31, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/const_ref.kl", 45, "arithmetic overflow: g.a + g.b" );
+    bb2:
+    kl_t3 = ( *kl_g_1 ).kl_a_29 + ( *kl_g_1 ).kl_b_31;
+    kl_t4 = __builtin_add_overflow( kl_t3, ( *kl_g_1 ).kl_c_33, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/const_ref.kl", 45, "arithmetic overflow: g.a + g.b + g.c" );
+    bb4:
+    kl_t5 = kl_t3 + ( *kl_g_1 ).kl_c_33;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -86,20 +106,25 @@ int32_t kl__main__( void )
     struct kl__B* kl_t5;
     uint64_t kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
-    struct kl__Big kl_g_9;
-    struct kl__Big kl_t10;
-    struct kl__Big* kl_t11;
-    int32_t kl_t12;
+    bool kl_t8;
+    int32_t kl_t9;
+    struct kl__Big kl_g_10;
+    struct kl__Big kl_t11;
+    struct kl__Big* kl_t12;
     int32_t kl_t13;
-    struct kl__Big kl_frozen_14;
-    struct kl__Big kl_t15;
-    struct kl__Big* kl_t16;
-    int32_t kl_t17;
-    int32_t kl_t18;
+    bool kl_t14;
+    int32_t kl_t15;
+    struct kl__Big kl_frozen_16;
+    struct kl__Big kl_t17;
+    struct kl__Big* kl_t18;
     int32_t kl_t19;
-    int32_t kl_t20;
+    bool kl_t20;
     int32_t kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    int32_t kl_t24;
+    bool kl_t25;
+    int32_t kl_t26;
 #line 50 "codegen/const_ref.kl"
     kl_total_1 = 0;
 #line 53 "codegen/const_ref.kl"
@@ -109,35 +134,60 @@ int32_t kl__main__( void )
     kl_t5 = &kl_a_2;
     kl_t6 = kl__forward__1B( kl_t5 );
     kl_t7 = ( int32_t ) kl_t6;
-    kl_t8 = kl_total_1 + kl_t7;
-    kl_total_1 = kl_t8;
+    kl_t8 = __builtin_add_overflow( kl_total_1, kl_t7, &( int32_t ) { 0 } );
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/const_ref.kl", 55, "arithmetic overflow: total + wrap<i32>( forward( a ) )" );
+    bb2:
+    kl_t9 = kl_total_1 + kl_t7;
+    kl_total_1 = kl_t9;
 #line 52 "codegen/const_ref.kl"
     kl__B__dtor( &kl_a_2 );
 #line 58 "codegen/const_ref.kl"
-    kl_t10.kl_a_29 = 1;
-    kl_t10.kl_b_31 = 2;
-    kl_t10.kl_c_33 = 3;
-    kl_g_9 = kl_t10;
+    kl_t11.kl_a_29 = 1;
+    kl_t11.kl_b_31 = 2;
+    kl_t11.kl_c_33 = 3;
+    kl_g_10 = kl_t11;
 #line 60 "codegen/const_ref.kl"
-    kl_t11 = &kl_g_9;
-    kl_t12 = kl__sum__3Big( kl_t11 );
-    kl_t13 = kl_total_1 + kl_t12;
-    kl_total_1 = kl_t13;
+    kl_t12 = &kl_g_10;
+    kl_t13 = kl__sum__3Big( kl_t12 );
+    kl_t14 = __builtin_add_overflow( kl_total_1, kl_t13, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/const_ref.kl", 60, "arithmetic overflow: total + sum( g )" );
+    bb4:
+    kl_t15 = kl_total_1 + kl_t13;
+    kl_total_1 = kl_t15;
 #line 63 "codegen/const_ref.kl"
-    kl_t15.kl_a_29 = 4;
-    kl_t15.kl_b_31 = 5;
-    kl_t15.kl_c_33 = 6;
-    kl_frozen_14 = kl_t15;
+    kl_t17.kl_a_29 = 4;
+    kl_t17.kl_b_31 = 5;
+    kl_t17.kl_c_33 = 6;
+    kl_frozen_16 = kl_t17;
 #line 65 "codegen/const_ref.kl"
-    kl_t16 = &kl_frozen_14;
-    kl_t17 = kl__sum__3Big( kl_t16 );
-    kl_t18 = kl_total_1 + kl_t17;
-    kl_total_1 = kl_t18;
+    kl_t18 = &kl_frozen_16;
+    kl_t19 = kl__sum__3Big( kl_t18 );
+    kl_t20 = __builtin_add_overflow( kl_total_1, kl_t19, &( int32_t ) { 0 } );
+    if ( kl_t20 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/const_ref.kl", 65, "arithmetic overflow: total + sum( frozen )" );
+    bb6:
+    kl_t21 = kl_total_1 + kl_t19;
+    kl_total_1 = kl_t21;
 #line 69 "codegen/const_ref.kl"
-    kl_t19 = ( int32_t ) kl_freed_2;
-    kl_t20 = kl_t19 * 100;
-    kl_t21 = kl_t20 + kl_total_1;
-    kl_t0 = kl_t21;
+    kl_t22 = ( int32_t ) kl_freed_2;
+    kl_t23 = __builtin_mul_overflow( kl_t22, 100, &( int32_t ) { 0 } );
+    if ( kl_t23 ) goto bb7; else goto bb8;
+    bb7:
+    kl_rt_panic( "codegen/const_ref.kl", 69, "arithmetic overflow: wrap<i32>( freed ) * 100" );
+    bb8:
+    kl_t24 = kl_t22 * 100;
+    kl_t25 = __builtin_add_overflow( kl_t24, kl_total_1, &( int32_t ) { 0 } );
+    if ( kl_t25 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/const_ref.kl", 69, "arithmetic overflow: wrap<i32>( freed ) * 100 + total" );
+    bb10:
+    kl_t26 = kl_t24 + kl_total_1;
+    kl_t0 = kl_t26;
     return kl_t0;
 }
 

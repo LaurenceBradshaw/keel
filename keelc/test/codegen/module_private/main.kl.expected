@@ -29,6 +29,8 @@ struct kl__measured__vtable
 
 int32_t kl_BASE_94 = 40;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t abs( int32_t );
 
 int32_t kl__main__( void );
@@ -146,7 +148,13 @@ void kl__counter__R7counter_3i32__ctor( struct kl__counter* kl_this_1, int32_t k
 int32_t kl__next__S7counter( struct kl__counter* kl_this_1 )
 {
     int32_t kl_t0;
+    bool kl_t2;
 #line 20 "codegen/module_private/helper.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_96, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 20, "arithmetic overflow: n += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_n_96 = ( *kl_this_1 ).kl_n_96 + 1;
 #line 21 "codegen/module_private/helper.kl"
     kl_t0 = ( *kl_this_1 ).kl_n_96;
@@ -156,30 +164,48 @@ int32_t kl__next__S7counter( struct kl__counter* kl_this_1 )
 int32_t kl__size__S7pair_of( struct kl__pair_of* kl_this_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 43 "codegen/module_private/helper.kl"
-    kl_t2 = ( *kl_this_1 ).kl_a_135 + ( *kl_this_1 ).kl_b_137;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a_135, ( *kl_this_1 ).kl_b_137, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 43, "arithmetic overflow: a + b" );
+    bb2:
+    kl_t3 = ( *kl_this_1 ).kl_a_135 + ( *kl_this_1 ).kl_b_137;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int32_t kl__add__7pair_of( struct kl__pair_of kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 49 "codegen/module_private/helper.kl"
-    kl_t2 = kl_p_1.kl_a_135 + kl_p_1.kl_b_137;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_p_1.kl_a_135, kl_p_1.kl_b_137, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 49, "arithmetic overflow: p.a + p.b" );
+    bb2:
+    kl_t3 = kl_p_1.kl_a_135 + kl_p_1.kl_b_137;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int32_t kl__scale__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 55 "codegen/module_private/helper.kl"
-    kl_t2 = kl_v_1 * 10;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 55, "arithmetic overflow: v * 10" );
+    bb2:
+    kl_t3 = kl_v_1 * 10;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -217,13 +243,19 @@ int32_t kl__total__( void )
     int32_t kl_t0;
     struct kl__pair_of kl_t1;
     int32_t kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 78 "codegen/module_private/helper.kl"
     kl_t1.kl_a_135 = 1;
     kl_t1.kl_b_137 = 1;
     kl_t2 = kl__add__7pair_of( kl_t1 );
-    kl_t3 = kl_BASE_94 + kl_t2;
-    kl_t0 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_BASE_94, kl_t2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 78, "arithmetic overflow: BASE + add( pair_of { 1, 1 } )" );
+    bb2:
+    kl_t4 = kl_BASE_94 + kl_t2;
+    kl_t0 = kl_t4;
     return kl_t0;
 }
 
@@ -282,12 +314,24 @@ int32_t kl__measure__( void )
 int32_t kl__keep__I3i32E__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
     int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 103 "codegen/module_private/helper.kl"
-    kl_t2 = kl_BASE_94 - kl_BASE_94;
-    kl_t3 = kl_v_1 + kl_t2;
-    kl_t0 = kl_t3;
+    kl_t2 = __builtin_sub_overflow( kl_BASE_94, kl_BASE_94, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: BASE - BASE" );
+    bb2:
+    kl_t3 = kl_BASE_94 - kl_BASE_94;
+    kl_t4 = __builtin_add_overflow( kl_v_1, kl_t3, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: v + cast<T>( BASE - BASE )" );
+    bb4:
+    kl_t5 = kl_v_1 + kl_t3;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 

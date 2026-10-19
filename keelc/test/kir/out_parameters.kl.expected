@@ -16,9 +16,12 @@ fn divide {
     let _6: i32;
     let _7: i32;
     let _8: bool;
-    let _9: i32;
+    let _9: bool;
     let _10: i32;
-    let _11: i32;
+    let _11: bool;
+    let _12: i32;
+    let _13: bool;
+    let _14: i32;
 
     bb0:
         _5 = copy _2 != const 0
@@ -33,19 +36,40 @@ fn divide {
         branch copy _8 -> bb3, bb4
 
     bb3:
-        _7 = -copy _1
-        goto -> bb5
+        _9 = overflows const 0 - copy _1
+        branch copy _9 -> bb6, bb7
 
     bb4:
         _7 = copy _1 / copy _2
         goto -> bb5
 
     bb5:
-        _9 = copy _7
-        (*_3) = copy _9
-        _10 = copy (*_3) * copy _2
-        _11 = copy _1 - copy _10
-        (*_4) = copy _11
+        _10 = copy _7
+        (*_3) = copy _10
+        _11 = overflows copy (*_3) * copy _2
+        branch copy _11 -> bb8, bb9
+
+    bb6:
+        overflow
+
+    bb7:
+        _7 = -copy _1
+        goto -> bb5
+
+    bb8:
+        overflow
+
+    bb9:
+        _12 = copy (*_3) * copy _2
+        _13 = overflows copy _1 - copy _12
+        branch copy _13 -> bb10, bb11
+
+    bb10:
+        overflow
+
+    bb11:
+        _14 = copy _1 - copy _12
+        (*_4) = copy _14
         return
 }
 fn build {
@@ -71,10 +95,14 @@ fn main {
     let _10: Point;
     let _11: Point*;
     let _12: void;
-    let _13: i32;
+    let _13: bool;
     let _14: i32;
-    let _15: i32;
+    let _15: bool;
     let _16: i32;
+    let _17: bool;
+    let _18: i32;
+    let _19: bool;
+    let _20: i32;
 
     bb0:
         storage_live _1
@@ -95,11 +123,39 @@ fn main {
         _9 = copy _10
         _11 = &init _9
         _12 = call build(copy _11)
-        _13 = copy _1 + copy _4
-        _14 = copy _13 + copy _5
-        _15 = copy _14 + copy _9.x
-        _16 = copy _15 + copy _9.y
-        _0 = copy _16
+        _13 = overflows copy _1 + copy _4
+        branch copy _13 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _14 = copy _1 + copy _4
+        _15 = overflows copy _14 + copy _5
+        branch copy _15 -> bb3, bb4
+
+    bb3:
+        overflow
+
+    bb4:
+        _16 = copy _14 + copy _5
+        _17 = overflows copy _16 + copy _9.x
+        branch copy _17 -> bb5, bb6
+
+    bb5:
+        overflow
+
+    bb6:
+        _18 = copy _16 + copy _9.x
+        _19 = overflows copy _18 + copy _9.y
+        branch copy _19 -> bb7, bb8
+
+    bb7:
+        overflow
+
+    bb8:
+        _20 = copy _18 + copy _9.y
+        _0 = copy _20
         storage_dead _9
         storage_dead _5
         storage_dead _4

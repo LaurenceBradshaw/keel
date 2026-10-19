@@ -198,7 +198,7 @@ class hash_control
         // byte above, flagging it if that byte is 0x01: a tag differing from ours in its lowest
         // bit, so a full slot.
         const u64 x = word ^ tags;
-        return ( x - BYTE_ONES ) & ~x & BYTE_MSB_MASK;
+        return wrap<u64>( x - BYTE_ONES ) & ~x & BYTE_MSB_MASK;
     }
 
     /// Flags each empty byte of `word`.
@@ -221,8 +221,8 @@ class hash_control
         // `matches & ( 0 - matches )` keeps only the lowest flag, bit `8k + 7`. Shifting it down by
         // 7 and subtracting 1 gives 0xff in each of the `k` bytes below it. Keeping one bit of each
         // and multiplying by 0x0101... adds every byte into the top one, which is then `k`.
-        const u64 below = ( ( matches & ( 0 - matches ) ) >> 7 ) - 1;
-        return ( ( below & BYTE_ONES ) * BYTE_ONES ) >> 56;
+        const u64 below = ( ( matches & wrap<u64>( 0 - matches ) ) >> 7 ) - 1;
+        return wrap<u64>( ( below & BYTE_ONES ) * BYTE_ONES ) >> 56;
     }
 
     // The control byte of `slot`: its group is `slot / 8` and its byte `slot % 8`.

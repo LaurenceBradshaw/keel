@@ -27,6 +27,8 @@ struct kl__Box__I3i32E
     kl__fn__FM3i32E3i32 kl_f_88;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__twice__3i32( int32_t );
 int32_t kl__negate__3i32( int32_t );
 int32_t kl__twice_moved__M3i32( int32_t );
@@ -39,39 +41,63 @@ int32_t kl__apply__I3i32E__S3BoxI3i32E_M3i32( struct kl__Box__I3i32E*, int32_t )
 int32_t kl__twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 5 "codegen/function_pointer_field_call.kl"
-    kl_t2 = kl_a_1 * 2;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_a_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_field_call.kl", 5, "arithmetic overflow: a * 2" );
+    bb2:
+    kl_t3 = kl_a_1 * 2;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int32_t kl__negate__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 10 "codegen/function_pointer_field_call.kl"
-    kl_t2 = -kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_field_call.kl", 10, "arithmetic overflow: -a" );
+    bb2:
+    kl_t3 = -kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int32_t kl__twice_moved__M3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 15 "codegen/function_pointer_field_call.kl"
-    kl_t2 = kl_a_1 * 2;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_a_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_field_call.kl", 15, "arithmetic overflow: a * 2" );
+    bb2:
+    kl_t3 = kl_a_1 * 2;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 void kl__bump__R3i32( int32_t* kl_v_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 20 "codegen/function_pointer_field_call.kl"
-    kl_t2 = ( *kl_v_1 ) + 1;
-    ( *kl_v_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_v_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_field_call.kl", 20, "arithmetic overflow: v + 1" );
+    bb2:
+    kl_t3 = ( *kl_v_1 ) + 1;
+    ( *kl_v_1 ) = kl_t3;
     return;
 }
 

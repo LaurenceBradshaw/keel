@@ -17,6 +17,7 @@ int32_t kl_live_1;
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
 void kl__owned__dtor( struct kl__owned* );
@@ -27,21 +28,33 @@ void kl__end_all__I3i32E__N3i32_3u64( int32_t*, uint64_t );
 void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
+    bool kl_t4;
 #line 10 "codegen/destroy.kl"
     ( *kl_this_1 ).kl_id_36 = kl_n_2;
 #line 13 "codegen/destroy.kl"
     kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "codegen/destroy.kl", 13, "out of memory: alloc<u64>( 1 )" );
     ( *kl_this_1 ).kl_block_39 = kl_t3;
 #line 15 "codegen/destroy.kl"
+    kl_t4 = __builtin_add_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/destroy.kl", 15, "arithmetic overflow: live += 1;" );
+    bb2:
     kl_live_1 = kl_live_1 + 1;
     return;
 }
 
 void kl__owned__dtor( struct kl__owned* kl_this_1 )
 {
+    bool kl_t3;
 #line 22 "codegen/destroy.kl"
     kl_rt_free( ( *kl_this_1 ).kl_block_39 );
 #line 24 "codegen/destroy.kl"
+    kl_t3 = __builtin_sub_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/destroy.kl", 24, "arithmetic overflow: live -= 1;" );
+    bb2:
     kl_live_1 = kl_live_1 - 1;
     return;
 }

@@ -1,0 +1,65 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "overflow_negate.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__id__3i32( int32_t );
+int64_t kl__wide__3i64( int64_t );
+int32_t kl__main__( void );
+
+int32_t kl__id__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 4 "codegen/overflow_negate.kl"
+    kl_t0 = kl_x_1;
+    return kl_t0;
+}
+
+int64_t kl__wide__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+#line 9 "codegen/overflow_negate.kl"
+    kl_t0 = kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_min_1;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_t7;
+    ( void ) kl_t7;
+#line 14 "codegen/overflow_negate.kl"
+    kl_t2 = -2147483647;
+    kl_t3 = __builtin_sub_overflow( kl_t2, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overflow_negate.kl", 14, "arithmetic overflow: -2147483647 - 1" );
+    bb2:
+    kl_t4 = kl_t2 - 1;
+    kl_t5 = kl__id__3i32( kl_t4 );
+    kl_min_1 = kl_t5;
+#line 15 "codegen/overflow_negate.kl"
+    kl_t6 = __builtin_sub_overflow( 0, kl_min_1, &( int32_t ) { 0 } );
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/overflow_negate.kl", 15, "arithmetic overflow: -min" );
+    bb4:
+    kl_t7 = -kl_min_1;
+#line 16 "codegen/overflow_negate.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

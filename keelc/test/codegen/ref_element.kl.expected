@@ -14,6 +14,7 @@ struct kl__buffer
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__buffer__R6buffer__ctor( struct kl__buffer* );
 void kl__buffer__dtor( struct kl__buffer* );
@@ -58,10 +59,11 @@ int32_t kl__main__( void )
     int32_t* kl_bound_6;
     struct kl__buffer* kl_t7;
     int32_t* kl_t8;
-    int32_t kl_t9;
-    int32_t* kl_seen_10;
-    struct kl__buffer* kl_t11;
-    int32_t* kl_t12;
+    bool kl_t9;
+    int32_t kl_t10;
+    int32_t* kl_seen_11;
+    struct kl__buffer* kl_t12;
+    int32_t* kl_t13;
 #line 13 "codegen/ref_element.kl"
     kl_t2 = &kl_values_1;
     kl__buffer__R6buffer__ctor( kl_t2 );
@@ -74,14 +76,19 @@ int32_t kl__main__( void )
     kl_t8 = kl__operator_index__S6buffer_3u64( kl_t7, 1 );
     kl_bound_6 = &( *kl_t8 );
 #line 16 "codegen/ref_element.kl"
-    kl_t9 = ( *kl_bound_6 ) + 2;
-    ( *kl_bound_6 ) = kl_t9;
+    kl_t9 = __builtin_add_overflow( ( *kl_bound_6 ), 2, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/ref_element.kl", 16, "arithmetic overflow: bound + 2" );
+    bb2:
+    kl_t10 = ( *kl_bound_6 ) + 2;
+    ( *kl_bound_6 ) = kl_t10;
 #line 17 "codegen/ref_element.kl"
-    kl_t11 = &kl_values_1;
-    kl_t12 = kl__operator_index__S6buffer_3u64( kl_t11, 1 );
-    kl_seen_10 = &( *kl_t12 );
+    kl_t12 = &kl_values_1;
+    kl_t13 = kl__operator_index__S6buffer_3u64( kl_t12, 1 );
+    kl_seen_11 = &( *kl_t13 );
 #line 18 "codegen/ref_element.kl"
-    kl_t0 = ( *kl_seen_10 );
+    kl_t0 = ( *kl_seen_11 );
     kl__buffer__dtor( &kl_values_1 );
     return kl_t0;
 }

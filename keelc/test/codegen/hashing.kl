@@ -12,7 +12,7 @@ u64 fnv_byte( u64 hash, u8 value )
 {
     u64 mixed = hash ^ cast<u64>( value );
 
-    return mixed * 1099511628211;
+    return wrap<u64>( mixed * 1099511628211 );
 }
 
 // Four steps, least significant byte first. `wrap` is the whole point: each shift leaves the byte
@@ -50,7 +50,7 @@ u32 xorshift( u32 state )
 // bits that survive are the output.
 u32 lcg( u32 state )
 {
-    return state * 1103515245 + 12345;
+    return wrap<u32>( state * 1103515245 + 12345 );
 }
 
 // Sum of squares, deliberately past what u32 holds. The exact answer for 1..3000 is 9004500500,
@@ -61,7 +61,7 @@ u32 checksum( u32 limit )
 
     for ( u32 i = 1; i <= limit; i++ )
     {
-        total += i * i;
+        total = wrap<u32>( total + i * i );
     }
 
     return total;

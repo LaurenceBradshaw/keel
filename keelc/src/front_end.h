@@ -26,11 +26,11 @@ enum class Stage : u8
     Elaborated, // drops made explicit, as the emitter reads them
 };
 
-// Whether an `assert` runs. The diagnostics are the same for both.
-enum class Build : u8
+// What a build adds at run time. The diagnostics are the same for every build.
+struct Build
 {
-    Debug,
-    Release
+    bool asserts         = false;
+    bool overflow_checks = false;
 };
 
 struct Front_end

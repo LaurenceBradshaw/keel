@@ -23,6 +23,7 @@ struct kl__Holder
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
@@ -444,103 +445,110 @@ uint64_t kl__refill__M6Holder( struct kl__Holder kl_h_1 )
     struct kl__Buf* kl_t8;
     struct kl__Buf* kl_t9;
     uint64_t kl_t10;
-    uint64_t kl_t11;
-    bool kl_t13;
-    struct kl__Holder kl_t14;
-    uint64_t kl_extra_15;
-    struct kl__Buf kl_left_16;
-    struct kl__Buf kl_right_17;
-    struct kl__Buf kl_t18;
-    struct kl__Buf* kl_t19;
-    uint64_t kl_t20;
-    bool kl_t21;
+    bool kl_t11;
+    uint64_t kl_t12;
+    bool kl_t14;
+    struct kl__Holder kl_t15;
+    uint64_t kl_extra_16;
+    struct kl__Buf kl_left_17;
+    struct kl__Buf kl_right_18;
+    struct kl__Buf kl_t19;
+    struct kl__Buf* kl_t20;
+    uint64_t kl_t21;
     bool kl_t22;
     bool kl_t23;
     bool kl_t24;
+    bool kl_t25;
 #line 103 "codegen/consuming_switch.kl"
-    kl_t21 = true;
-#line 105 "codegen/consuming_switch.kl"
-    kl_t22 = false;
-#line 108 "codegen/consuming_switch.kl"
-    kl_t23 = false;
-    kl_t24 = false;
-#line 105 "codegen/consuming_switch.kl"
-    kl_t22 = false;
-    kl_t2 = kl_h_1;
-    kl_t21 = false;
     kl_t22 = true;
+#line 105 "codegen/consuming_switch.kl"
+    kl_t23 = false;
+#line 108 "codegen/consuming_switch.kl"
+    kl_t24 = false;
+    kl_t25 = false;
+#line 105 "codegen/consuming_switch.kl"
+    kl_t23 = false;
+    kl_t2 = kl_h_1;
+    kl_t22 = false;
+    kl_t23 = true;
 #line 107 "codegen/consuming_switch.kl"
     kl_t3 = kl_t2.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb4;
     bb1:
     kl_t4 = kl_t2;
-    kl_t22 = false;
+    kl_t23 = false;
     kl_b_5 = kl_t4.kl_b_58;
 #line 108 "codegen/consuming_switch.kl"
-    kl_t24 = false;
+    kl_t25 = false;
     kl_t8 = &kl_t7;
-    kl_t24 = true;
+    kl_t25 = true;
     kl_t9 = &kl_b_5;
     kl_t10 = kl__get__S3Buf( kl_t9 );
-    kl_t11 = kl_t10 + 100;
-    kl__Buf__R3Buf_3u64__ctor( kl_t8, kl_t11 );
-    kl_t6.tag = 0;
-    kl_t23 = true;
-    kl_t6.kl_b_58 = kl_t7;
-    kl_t24 = false;
-    kl_t23 = true;
-    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
-    kl_h_1 = kl_t6;
-    kl_t23 = false;
-    kl_t21 = true;
-    if ( kl_t23 ) kl__Holder__dtor( &kl_t6 );
-    if ( kl_t24 ) kl__Buf__dtor( &kl_t7 );
-    kl_t24 = false;
-    kl_t23 = false;
-#line 109 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_b_5 );
-    goto bb5;
+    kl_t11 = __builtin_add_overflow( kl_t10, 100, &( uint64_t ) { 0 } );
+    if ( kl_t11 ) goto bb5; else goto bb6;
     bb2:
 #line 110 "codegen/consuming_switch.kl"
-    kl_t14 = kl_t2;
-    kl_t22 = false;
-    kl_extra_15 = kl_t14.kl_extra_62;
-    kl_left_16 = kl_t14.kl_left_64;
-    kl_right_17 = kl_t14.kl_right_66;
+    kl_t15 = kl_t2;
+    kl_t23 = false;
+    kl_extra_16 = kl_t15.kl_extra_62;
+    kl_left_17 = kl_t15.kl_left_64;
+    kl_right_18 = kl_t15.kl_right_66;
 #line 111 "codegen/consuming_switch.kl"
-    kl_t0 = kl_extra_15;
-    kl__Buf__dtor( &kl_right_17 );
-    kl__Buf__dtor( &kl_left_16 );
-    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
+    kl_t0 = kl_extra_16;
+    kl__Buf__dtor( &kl_right_18 );
+    kl__Buf__dtor( &kl_left_17 );
+    if ( kl_t23 ) kl__Holder__dtor( &kl_t2 );
+    kl_t23 = false;
+    if ( kl_t22 ) kl__Holder__dtor( &kl_h_1 );
     kl_t22 = false;
-    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
-    kl_t21 = false;
     return kl_t0;
     bb3:
 #line 113 "codegen/consuming_switch.kl"
     kl_t0 = 0;
-    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
+    if ( kl_t23 ) kl__Holder__dtor( &kl_t2 );
+    kl_t23 = false;
+    if ( kl_t22 ) kl__Holder__dtor( &kl_h_1 );
     kl_t22 = false;
-    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
-    kl_t21 = false;
     return kl_t0;
     bb4:
 #line 110 "codegen/consuming_switch.kl"
-    kl_t13 = kl_t2.tag == 2;
-    if ( kl_t13 ) goto bb2; else goto bb3;
+    kl_t14 = kl_t2.tag == 2;
+    if ( kl_t14 ) goto bb2; else goto bb3;
     bb5:
+    kl_rt_panic( "codegen/consuming_switch.kl", 108, "arithmetic overflow: b.get() + 100" );
+    bb6:
+#line 108 "codegen/consuming_switch.kl"
+    kl_t12 = kl_t10 + 100;
+    kl__Buf__R3Buf_3u64__ctor( kl_t8, kl_t12 );
+    kl_t6.tag = 0;
+    kl_t24 = true;
+    kl_t6.kl_b_58 = kl_t7;
+    kl_t25 = false;
+    kl_t24 = true;
+    if ( kl_t22 ) kl__Holder__dtor( &kl_h_1 );
+    kl_h_1 = kl_t6;
+    kl_t24 = false;
+    kl_t22 = true;
+    if ( kl_t24 ) kl__Holder__dtor( &kl_t6 );
+    if ( kl_t25 ) kl__Buf__dtor( &kl_t7 );
+    kl_t25 = false;
+    kl_t24 = false;
+#line 109 "codegen/consuming_switch.kl"
+    kl__Buf__dtor( &kl_b_5 );
+    goto bb7;
+    bb7:
 #line 105 "codegen/consuming_switch.kl"
-    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
-    kl_t22 = false;
+    if ( kl_t23 ) kl__Holder__dtor( &kl_t2 );
+    kl_t23 = false;
 #line 116 "codegen/consuming_switch.kl"
-    kl_t18 = kl__take__M6Holder( kl_h_1 );
-    kl_t21 = false;
-    kl_t19 = &kl_t18;
-    kl_t20 = kl__get__S3Buf( kl_t19 );
-    kl_t0 = kl_t20;
-    kl__Buf__dtor( &kl_t18 );
-    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
-    kl_t21 = false;
+    kl_t19 = kl__take__M6Holder( kl_h_1 );
+    kl_t22 = false;
+    kl_t20 = &kl_t19;
+    kl_t21 = kl__get__S3Buf( kl_t20 );
+    kl_t0 = kl_t21;
+    kl__Buf__dtor( &kl_t19 );
+    if ( kl_t22 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t22 = false;
     return kl_t0;
 }
 

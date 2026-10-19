@@ -19,6 +19,8 @@ struct kl__Owned
 
 uint64_t kl_freed_82 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__read__S7Counter( struct kl__Counter* );
 void kl__add__S7Counter_3i32( struct kl__Counter*, int32_t );
 void kl__twice__S7Counter_3i32( struct kl__Counter*, int32_t );
@@ -41,10 +43,16 @@ int32_t kl__read__S7Counter( struct kl__Counter* kl_this_1 )
 
 void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
 {
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 16 "codegen/methods.kl"
-    kl_t3 = ( *kl_this_1 ).kl_value_1 + kl_by_2;
-    ( *kl_this_1 ).kl_value_1 = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_value_1, kl_by_2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/methods.kl", 16, "arithmetic overflow: value + by" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_value_1 + kl_by_2;
+    ( *kl_this_1 ).kl_value_1 = kl_t4;
     return;
 }
 
@@ -68,14 +76,20 @@ int32_t kl__doubled__S7Counter( struct kl__Counter* kl_this_1 )
     int32_t kl_t3;
     struct kl__Counter* kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
+    bool kl_t6;
+    int32_t kl_t7;
 #line 30 "codegen/methods.kl"
     kl_t2 = &( *kl_this_1 );
     kl_t3 = kl__read__S7Counter( kl_t2 );
     kl_t4 = &( *kl_this_1 );
     kl_t5 = kl__read__S7Counter( kl_t4 );
-    kl_t6 = kl_t3 + kl_t5;
-    kl_t0 = kl_t6;
+    kl_t6 = __builtin_add_overflow( kl_t3, kl_t5, &( int32_t ) { 0 } );
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/methods.kl", 30, "arithmetic overflow: read() + read()" );
+    bb2:
+    kl_t7 = kl_t3 + kl_t5;
+    kl_t0 = kl_t7;
     return kl_t0;
 }
 
@@ -100,11 +114,17 @@ void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_sta
 
 void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 {
-    uint64_t kl_t2;
+    bool kl_t2;
+    uint64_t kl_t3;
     ( void ) kl_this_1;
 #line 59 "codegen/methods.kl"
-    kl_t2 = kl_freed_82 + 1;
-    kl_freed_82 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_freed_82, 1, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/methods.kl", 59, "arithmetic overflow: freed + 1" );
+    bb2:
+    kl_t3 = kl_freed_82 + 1;
+    kl_freed_82 = kl_t3;
     return;
 }
 
@@ -118,10 +138,16 @@ uint64_t kl__read__S5Owned( struct kl__Owned* kl_this_1 )
 
 void kl__add__S5Owned_3u64( struct kl__Owned* kl_this_1, uint64_t kl_by_2 )
 {
-    uint64_t kl_t3;
+    bool kl_t3;
+    uint64_t kl_t4;
 #line 69 "codegen/methods.kl"
-    kl_t3 = ( *kl_this_1 ).kl_n_84 + kl_by_2;
-    ( *kl_this_1 ).kl_n_84 = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_84, kl_by_2, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/methods.kl", 69, "arithmetic overflow: n + by" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_n_84 + kl_by_2;
+    ( *kl_this_1 ).kl_n_84 = kl_t4;
     return;
 }
 

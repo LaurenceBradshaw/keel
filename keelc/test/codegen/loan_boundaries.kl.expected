@@ -191,9 +191,11 @@ int32_t kl__fresh_each_iteration__( void )
     int32_t* kl_x_7;
     struct kl__buffer* kl_t8;
     int32_t* kl_t9;
-    int32_t kl_t10;
-    struct kl__buffer* kl_t11;
-    int32_t kl_t13;
+    bool kl_t10;
+    int32_t kl_t11;
+    struct kl__buffer* kl_t12;
+    bool kl_t14;
+    int32_t kl_t15;
 #line 76 "codegen/loan_boundaries.kl"
     kl_t2 = &kl_v_1;
     kl__buffer__R6buffer__ctor( kl_t2 );
@@ -211,21 +213,32 @@ int32_t kl__fresh_each_iteration__( void )
     kl_t9 = kl__operator_index__S6buffer_3u64( kl_t8, 0 );
     kl_x_7 = &( *kl_t9 );
 #line 82 "codegen/loan_boundaries.kl"
-    kl_t10 = kl_s_4 + ( *kl_x_7 );
-    kl_s_4 = kl_t10;
-#line 83 "codegen/loan_boundaries.kl"
-    kl_t11 = &kl_v_1;
-    kl__grow__S6buffer( kl_t11 );
-    goto bb4;
+    kl_t10 = __builtin_add_overflow( kl_s_4, ( *kl_x_7 ), &( int32_t ) { 0 } );
+    if ( kl_t10 ) goto bb4; else goto bb5;
     bb3:
 #line 86 "codegen/loan_boundaries.kl"
     kl_t0 = kl_s_4;
     kl__buffer__dtor( &kl_v_1 );
     return kl_t0;
     bb4:
+    kl_rt_panic( "codegen/loan_boundaries.kl", 82, "arithmetic overflow: s + x" );
+    bb5:
+#line 82 "codegen/loan_boundaries.kl"
+    kl_t11 = kl_s_4 + ( *kl_x_7 );
+    kl_s_4 = kl_t11;
+#line 83 "codegen/loan_boundaries.kl"
+    kl_t12 = &kl_v_1;
+    kl__grow__S6buffer( kl_t12 );
+    goto bb6;
+    bb6:
 #line 79 "codegen/loan_boundaries.kl"
-    kl_t13 = kl_i_5 + 1;
-    kl_i_5 = kl_t13;
+    kl_t14 = __builtin_add_overflow( kl_i_5, 1, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb7; else goto bb8;
+    bb7:
+    kl_rt_panic( "codegen/loan_boundaries.kl", 79, "arithmetic overflow: i + 1" );
+    bb8:
+    kl_t15 = kl_i_5 + 1;
+    kl_i_5 = kl_t15;
     goto bb1;
 }
 
@@ -303,13 +316,15 @@ int32_t kl__main__( void )
     bool kl_t4;
     bool kl_t5;
     int32_t kl_t6;
-    int32_t kl_t7;
-    uint64_t kl_t8;
-    int32_t kl_t9;
-    uint64_t kl_t10;
-    bool kl_t11;
+    bool kl_t7;
+    int32_t kl_t8;
+    uint64_t kl_t9;
+    int32_t kl_t10;
+    uint64_t kl_t11;
     bool kl_t12;
-    int32_t kl_t13;
+    bool kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
 #line 111 "codegen/loan_boundaries.kl"
     kl_t1 = kl__field_across_owner__(  );
     kl_t2 = ( int32_t ) kl_t1;
@@ -323,20 +338,30 @@ int32_t kl__main__( void )
     if ( kl_t5 ) goto bb3; else goto bb1;
     bb3:
     kl_t6 = kl__fresh_each_iteration__(  );
-    kl_t7 = kl_t2 + kl_t6;
-    kl_t8 = kl__payload_before_assign__(  );
-    kl_t9 = ( int32_t ) kl_t8;
-    kl_t10 = ( uint64_t ) kl_t9;
-    kl_t11 = kl_t10 == kl_t8;
-    if ( kl_t11 ) goto bb5; else goto bb4;
+    kl_t7 = __builtin_add_overflow( kl_t2, kl_t6, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb4; else goto bb5;
     bb4:
-    kl_rt_panic( "codegen/loan_boundaries.kl", 111, "cast out of range: cast<i32>( payload_before_assign() )" );
+    kl_rt_panic( "codegen/loan_boundaries.kl", 111, "arithmetic overflow: cast<i32>( field_across_owner() ) + fresh_each_iteration()" );
     bb5:
-    kl_t12 = kl_t9 >= 0;
-    if ( kl_t12 ) goto bb6; else goto bb4;
+    kl_t8 = kl_t2 + kl_t6;
+    kl_t9 = kl__payload_before_assign__(  );
+    kl_t10 = ( int32_t ) kl_t9;
+    kl_t11 = ( uint64_t ) kl_t10;
+    kl_t12 = kl_t11 == kl_t9;
+    if ( kl_t12 ) goto bb7; else goto bb6;
     bb6:
-    kl_t13 = kl_t7 + kl_t9;
-    kl_t0 = kl_t13;
+    kl_rt_panic( "codegen/loan_boundaries.kl", 111, "cast out of range: cast<i32>( payload_before_assign() )" );
+    bb7:
+    kl_t13 = kl_t10 >= 0;
+    if ( kl_t13 ) goto bb8; else goto bb6;
+    bb8:
+    kl_t14 = __builtin_add_overflow( kl_t8, kl_t10, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/loan_boundaries.kl", 111, "arithmetic overflow: cast<i32>( field_across_owner() ) + fresh_each_iteration() + cast<i32>( payload_before_assign() )" );
+    bb10:
+    kl_t15 = kl_t8 + kl_t10;
+    kl_t0 = kl_t15;
     return kl_t0;
 }
 

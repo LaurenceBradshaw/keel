@@ -123,6 +123,7 @@ enum class Rvalue_kind : u8
     Use,
     Binary,
     Unary,
+    Overflows, // bool: whether `a op b` overflows `a`'s type; `op` is `+`, `-` or `*`
     Cast,
     Bits,     // a float's bits as the unsigned integer of its width; a is the float
     Run_of,   // `a` is the T[*] data, `b` is the u64 count, and the type is the run pointer
@@ -212,6 +213,7 @@ enum class Failure : u8
     Unordered,  // span: the comparison
     Unhashable, // span: the call
     Bounds,     // span: the index or slice
+    Overflow,   // span: the operation
 };
 
 struct Terminator
@@ -359,6 +361,11 @@ inline Rvalue binary( Token_kind op, Operand a, Operand b, Type_id type )
 inline Rvalue unary( Token_kind op, Operand a, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Unary, .type = type, .op = op, .a = a };
+}
+
+inline Rvalue overflows( Token_kind op, Operand a, Operand b, Type_id boolean )
+{
+    return Rvalue { .kind = Rvalue_kind::Overflows, .type = boolean, .op = op, .a = a, .b = b };
 }
 
 inline Rvalue cast_to( Operand a, Type_id type )

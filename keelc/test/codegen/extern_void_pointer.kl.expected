@@ -6,6 +6,7 @@
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void* malloc( uint64_t );
 void* memset( void*, int32_t, uint64_t );
@@ -30,7 +31,8 @@ int32_t kl__main__( void )
     int32_t kl_t13;
     uint8_t* kl_t14;
     int32_t kl_t15;
-    int32_t kl_t16;
+    bool kl_t16;
+    int32_t kl_t17;
 #line 8 "codegen/extern_void_pointer.kl"
     kl_total_1 = 0;
 #line 12 "codegen/extern_void_pointer.kl"
@@ -53,8 +55,13 @@ int32_t kl__main__( void )
     kl_t13 = ( int32_t ) ( *kl_t12 );
     kl_t14 = kl_tail_7 + 3;
     kl_t15 = ( int32_t ) ( *kl_t14 );
-    kl_t16 = kl_t13 + kl_t15;
-    kl_total_1 = kl_t16;
+    kl_t16 = __builtin_add_overflow( kl_t13, kl_t15, &( int32_t ) { 0 } );
+    if ( kl_t16 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/extern_void_pointer.kl", 19, "arithmetic overflow: cast<i32>( bytes[ 0 ] ) + cast<i32>( tail[ 3 ] )" );
+    bb2:
+    kl_t17 = kl_t13 + kl_t15;
+    kl_total_1 = kl_t17;
 #line 20 "codegen/extern_void_pointer.kl"
     kl_rt_free( kl_bytes_5 );
 #line 23 "codegen/extern_void_pointer.kl"

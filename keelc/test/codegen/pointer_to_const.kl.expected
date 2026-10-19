@@ -21,6 +21,7 @@ struct kl__Counter
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__Counter__R7Counter__ctor( struct kl__Counter* );
 int32_t kl__peek__S7Counter( struct kl__Counter* );
@@ -63,6 +64,8 @@ int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
     uint64_t kl_i_4;
     bool kl_t5;
     int32_t* kl_t6;
+    bool kl_t7;
+    bool kl_t8;
 #line 33 "codegen/pointer_to_const.kl"
     kl_total_3 = 0;
 #line 35 "codegen/pointer_to_const.kl"
@@ -74,14 +77,25 @@ int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
     bb2:
 #line 39 "codegen/pointer_to_const.kl"
     kl_t6 = kl_values_1 + kl_i_4;
-    kl_total_3 = kl_total_3 + ( *kl_t6 );
-    goto bb4;
+    kl_t7 = __builtin_add_overflow( kl_total_3, ( *kl_t6 ), &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
 #line 43 "codegen/pointer_to_const.kl"
     kl_t0 = kl_total_3;
     return kl_t0;
     bb4:
+    kl_rt_panic( "codegen/pointer_to_const.kl", 39, "arithmetic overflow: total += values[ i ];" );
+    bb5:
+#line 39 "codegen/pointer_to_const.kl"
+    kl_total_3 = kl_total_3 + ( *kl_t6 );
+    goto bb6;
+    bb6:
 #line 35 "codegen/pointer_to_const.kl"
+    kl_t8 = __builtin_add_overflow( kl_i_4, 1, &( uint64_t ) { 0 } );
+    if ( kl_t8 ) goto bb7; else goto bb8;
+    bb7:
+    kl_rt_panic( "codegen/pointer_to_const.kl", 35, "arithmetic overflow: i++" );
+    bb8:
     kl_i_4 = kl_i_4 + 1;
     goto bb1;
 }
@@ -89,10 +103,16 @@ int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
 int32_t kl__read__PK5Point( struct kl__Point* kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 48 "codegen/pointer_to_const.kl"
-    kl_t2 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_p_1 ).kl_x_1, ( *kl_p_1 ).kl_y_3, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/pointer_to_const.kl", 48, "arithmetic overflow: p.x + ( *p ).y" );
+    bb2:
+    kl_t3 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

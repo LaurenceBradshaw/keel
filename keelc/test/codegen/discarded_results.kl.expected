@@ -15,6 +15,8 @@ struct kl__Counter
 
 int32_t kl_drops_2 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter*, uint64_t );
 void kl__Counter__dtor( struct kl__Counter* );
 struct kl__Counter kl__twin__S7Counter( struct kl__Counter* );
@@ -33,11 +35,17 @@ void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t 
 
 void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 17 "codegen/discarded_results.kl"
-    kl_t2 = kl_drops_2 + 1;
-    kl_drops_2 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_drops_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/discarded_results.kl", 17, "arithmetic overflow: drops + 1" );
+    bb2:
+    kl_t3 = kl_drops_2 + 1;
+    kl_drops_2 = kl_t3;
     return;
 }
 
@@ -123,15 +131,16 @@ int32_t kl__main__( void )
     int32_t kl_i_16;
     bool kl_t17;
     struct kl__Counter kl_t18;
-    int32_t kl_t19;
-    struct kl__Counter kl_kept_20;
-    struct kl__Counter kl_t21;
-    struct kl__Counter* kl_t22;
-    bool kl_t25;
+    bool kl_t19;
+    int32_t kl_t20;
+    struct kl__Counter kl_kept_21;
+    struct kl__Counter kl_t22;
+    struct kl__Counter* kl_t23;
+    bool kl_t26;
     ( void ) kl_n_10;
     ( void ) kl_m_12;
 #line 66 "codegen/discarded_results.kl"
-    kl_t25 = false;
+    kl_t26 = false;
 #line 48 "codegen/discarded_results.kl"
     kl_t1 = kl__make__(  );
     kl__Counter__dtor( &kl_t1 );
@@ -171,17 +180,17 @@ int32_t kl__main__( void )
     goto bb4;
     bb3:
 #line 66 "codegen/discarded_results.kl"
-    kl_t21 = kl__make__(  );
-    kl_t25 = true;
-    kl_kept_20 = kl_t21;
-    kl_t25 = false;
-    if ( kl_t25 ) kl__Counter__dtor( &kl_t21 );
-    kl_t25 = false;
+    kl_t22 = kl__make__(  );
+    kl_t26 = true;
+    kl_kept_21 = kl_t22;
+    kl_t26 = false;
+    if ( kl_t26 ) kl__Counter__dtor( &kl_t22 );
+    kl_t26 = false;
 #line 65 "codegen/discarded_results.kl"
-    kl__Counter__dtor( &kl_kept_20 );
+    kl__Counter__dtor( &kl_kept_21 );
 #line 70 "codegen/discarded_results.kl"
-    kl_t22 = &kl_held_5;
-    kl__keep__7Counter( kl_t22 );
+    kl_t23 = &kl_held_5;
+    kl__keep__7Counter( kl_t23 );
 #line 73 "codegen/discarded_results.kl"
     kl__seven__(  );
 #line 75 "codegen/discarded_results.kl"
@@ -190,8 +199,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 59 "codegen/discarded_results.kl"
-    kl_t19 = kl_i_16 + 1;
-    kl_i_16 = kl_t19;
+    kl_t19 = __builtin_add_overflow( kl_i_16, 1, &( int32_t ) { 0 } );
+    if ( kl_t19 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/discarded_results.kl", 59, "arithmetic overflow: i + 1" );
+    bb6:
+    kl_t20 = kl_i_16 + 1;
+    kl_i_16 = kl_t20;
     goto bb1;
 }
 

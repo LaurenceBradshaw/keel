@@ -14,6 +14,7 @@ struct kl__Node
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 struct kl__Node* kl__push__P4Node_3i32( struct kl__Node*, int32_t );
 int32_t kl__sum_and_release__P4Node( struct kl__Node* );
@@ -44,7 +45,8 @@ int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
     int32_t kl_total_2;
     bool kl_t3;
     struct kl__Node* kl_next_4;
-    int32_t kl_t5;
+    bool kl_t5;
+    int32_t kl_t6;
 #line 31 "codegen/alloc_free.kl"
     kl_total_2 = 0;
     goto bb1;
@@ -56,17 +58,23 @@ int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
 #line 35 "codegen/alloc_free.kl"
     kl_next_4 = ( *kl_head_1 ).kl_next_4;
 #line 37 "codegen/alloc_free.kl"
-    kl_t5 = kl_total_2 + ( *kl_head_1 ).kl_value_1;
-    kl_total_2 = kl_t5;
+    kl_t5 = __builtin_add_overflow( kl_total_2, ( *kl_head_1 ).kl_value_1, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb4; else goto bb5;
+    bb3:
+#line 47 "codegen/alloc_free.kl"
+    kl_t0 = kl_total_2;
+    return kl_t0;
+    bb4:
+    kl_rt_panic( "codegen/alloc_free.kl", 37, "arithmetic overflow: total + head.value" );
+    bb5:
+#line 37 "codegen/alloc_free.kl"
+    kl_t6 = kl_total_2 + ( *kl_head_1 ).kl_value_1;
+    kl_total_2 = kl_t6;
 #line 41 "codegen/alloc_free.kl"
     kl_rt_free( kl_head_1 );
 #line 44 "codegen/alloc_free.kl"
     kl_head_1 = kl_next_4;
     goto bb1;
-    bb3:
-#line 47 "codegen/alloc_free.kl"
-    kl_t0 = kl_total_2;
-    return kl_t0;
 }
 
 int32_t kl__main__( void )
@@ -75,15 +83,18 @@ int32_t kl__main__( void )
     struct kl__Node* kl_head_1;
     int32_t kl_i_2;
     bool kl_t3;
-    int32_t kl_t4;
-    struct kl__Node* kl_t5;
-    int32_t kl_t6;
-    struct kl__Node* kl_lone_7;
-    struct kl__Node* kl_t8;
-    int32_t kl_total_9;
-    int32_t kl_t10;
-    int32_t kl_t11;
+    bool kl_t4;
+    int32_t kl_t5;
+    struct kl__Node* kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    struct kl__Node* kl_lone_9;
+    struct kl__Node* kl_t10;
+    int32_t kl_total_11;
     int32_t kl_t12;
+    int32_t kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
 #line 52 "codegen/alloc_free.kl"
     kl_head_1 = NULL;
 #line 53 "codegen/alloc_free.kl"
@@ -95,24 +106,41 @@ int32_t kl__main__( void )
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
 #line 57 "codegen/alloc_free.kl"
-    kl_t4 = kl_i_2 * 3;
-    kl_t5 = kl__push__P4Node_3i32( kl_head_1, kl_t4 );
-    kl_head_1 = kl_t5;
-#line 58 "codegen/alloc_free.kl"
-    kl_t6 = kl_i_2 + 1;
-    kl_i_2 = kl_t6;
-    goto bb1;
+    kl_t4 = __builtin_mul_overflow( kl_i_2, 3, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
 #line 62 "codegen/alloc_free.kl"
-    kl_t8 = kl__push__P4Node_3i32( NULL, 12 );
-    kl_lone_7 = kl_t8;
+    kl_t10 = kl__push__P4Node_3i32( NULL, 12 );
+    kl_lone_9 = kl_t10;
 #line 64 "codegen/alloc_free.kl"
-    kl_t10 = kl__sum_and_release__P4Node( kl_head_1 );
-    kl_t11 = kl__sum_and_release__P4Node( kl_lone_7 );
-    kl_t12 = kl_t10 + kl_t11;
-    kl_total_9 = kl_t12;
+    kl_t12 = kl__sum_and_release__P4Node( kl_head_1 );
+    kl_t13 = kl__sum_and_release__P4Node( kl_lone_9 );
+    kl_t14 = __builtin_add_overflow( kl_t12, kl_t13, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb8; else goto bb9;
+    bb4:
+    kl_rt_panic( "codegen/alloc_free.kl", 57, "arithmetic overflow: i * 3" );
+    bb5:
+#line 57 "codegen/alloc_free.kl"
+    kl_t5 = kl_i_2 * 3;
+    kl_t6 = kl__push__P4Node_3i32( kl_head_1, kl_t5 );
+    kl_head_1 = kl_t6;
+#line 58 "codegen/alloc_free.kl"
+    kl_t7 = __builtin_add_overflow( kl_i_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb6; else goto bb7;
+    bb6:
+    kl_rt_panic( "codegen/alloc_free.kl", 58, "arithmetic overflow: i + 1" );
+    bb7:
+    kl_t8 = kl_i_2 + 1;
+    kl_i_2 = kl_t8;
+    goto bb1;
+    bb8:
+    kl_rt_panic( "codegen/alloc_free.kl", 64, "arithmetic overflow: sum_and_release( head ) + sum_and_release( lone )" );
+    bb9:
+#line 64 "codegen/alloc_free.kl"
+    kl_t15 = kl_t12 + kl_t13;
+    kl_total_11 = kl_t15;
 #line 66 "codegen/alloc_free.kl"
-    kl_t0 = kl_total_9;
+    kl_t0 = kl_total_11;
     return kl_t0;
 }
 

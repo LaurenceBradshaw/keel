@@ -4,6 +4,8 @@
 
 #include "switch.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__weight__6Colour( int32_t );
 int32_t kl__exhaustive__6Colour( int32_t );
 int32_t kl__main__( void );
@@ -79,37 +81,67 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_total_1;
     int32_t kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
+    bool kl_t6;
     int32_t kl_t7;
     int32_t kl_t8;
-    int32_t kl_t9;
+    bool kl_t9;
     int32_t kl_t10;
     int32_t kl_t11;
+    bool kl_t12;
+    int32_t kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    int32_t kl_t16;
 #line 46 "codegen/switch.kl"
     kl_total_1 = 0;
 #line 48 "codegen/switch.kl"
     kl_t2 = kl__weight__6Colour( 0 );
-    kl_t3 = kl_total_1 + kl_t2;
-    kl_total_1 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_total_1, kl_t2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/switch.kl", 48, "arithmetic overflow: total + weight( Colour::Red )" );
+    bb2:
+    kl_t4 = kl_total_1 + kl_t2;
+    kl_total_1 = kl_t4;
 #line 49 "codegen/switch.kl"
-    kl_t4 = kl__weight__6Colour( 1 );
-    kl_t5 = kl_total_1 + kl_t4;
-    kl_total_1 = kl_t5;
-#line 50 "codegen/switch.kl"
-    kl_t6 = kl__weight__6Colour( 2 );
-    kl_t7 = kl_total_1 + kl_t6;
+    kl_t5 = kl__weight__6Colour( 1 );
+    kl_t6 = __builtin_add_overflow( kl_total_1, kl_t5, &( int32_t ) { 0 } );
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/switch.kl", 49, "arithmetic overflow: total + weight( Colour::Green )" );
+    bb4:
+    kl_t7 = kl_total_1 + kl_t5;
     kl_total_1 = kl_t7;
+#line 50 "codegen/switch.kl"
+    kl_t8 = kl__weight__6Colour( 2 );
+    kl_t9 = __builtin_add_overflow( kl_total_1, kl_t8, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/switch.kl", 50, "arithmetic overflow: total + weight( Colour::Blue )" );
+    bb6:
+    kl_t10 = kl_total_1 + kl_t8;
+    kl_total_1 = kl_t10;
 #line 51 "codegen/switch.kl"
-    kl_t8 = kl__weight__6Colour( 3 );
-    kl_t9 = kl_total_1 + kl_t8;
-    kl_total_1 = kl_t9;
+    kl_t11 = kl__weight__6Colour( 3 );
+    kl_t12 = __builtin_add_overflow( kl_total_1, kl_t11, &( int32_t ) { 0 } );
+    if ( kl_t12 ) goto bb7; else goto bb8;
+    bb7:
+    kl_rt_panic( "codegen/switch.kl", 51, "arithmetic overflow: total + weight( Colour::Violet )" );
+    bb8:
+    kl_t13 = kl_total_1 + kl_t11;
+    kl_total_1 = kl_t13;
 #line 53 "codegen/switch.kl"
-    kl_t10 = kl__exhaustive__6Colour( 3 );
-    kl_t11 = kl_total_1 + kl_t10;
-    kl_total_1 = kl_t11;
+    kl_t14 = kl__exhaustive__6Colour( 3 );
+    kl_t15 = __builtin_add_overflow( kl_total_1, kl_t14, &( int32_t ) { 0 } );
+    if ( kl_t15 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/switch.kl", 53, "arithmetic overflow: total + exhaustive( Colour::Violet )" );
+    bb10:
+    kl_t16 = kl_total_1 + kl_t14;
+    kl_total_1 = kl_t16;
 #line 55 "codegen/switch.kl"
     kl_t0 = kl_total_1;
     return kl_t0;

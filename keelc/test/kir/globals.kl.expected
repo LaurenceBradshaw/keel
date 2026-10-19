@@ -14,8 +14,16 @@ fn write {
 }
 fn accumulate {
     let _0: void; // return slot
+    let _1: bool;
 
     bb0:
+        _1 = overflows copy counter + const 3
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
         counter = copy counter + const 3
         return
 }
@@ -41,11 +49,19 @@ fn shadowed {
 }
 fn both {
     let _0: i32; // return slot
-    let _1: i32;
+    let _1: bool;
+    let _2: i32;
 
     bb0:
-        _1 = copy counter + copy limit
-        _0 = copy _1
+        _1 = overflows copy counter + copy limit
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _2 = copy counter + copy limit
+        _0 = copy _2
         return
 }
 fn main {

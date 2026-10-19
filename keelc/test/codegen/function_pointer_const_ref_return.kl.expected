@@ -15,6 +15,8 @@ struct kl__Point
     int32_t kl_y_3;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t* kl__picks__3i32_3i32( int32_t*, int32_t* );
 int32_t* kl__gets__5Point( struct kl__Point* );
 int32_t kl__main__( void );
@@ -62,8 +64,10 @@ int32_t kl__main__( void )
     int32_t kl_copied_13;
     struct kl__Point* kl_t14;
     int32_t* kl_t15;
-    int32_t kl_t16;
+    bool kl_t16;
     int32_t kl_t17;
+    bool kl_t18;
+    int32_t kl_t19;
 #line 28 "codegen/function_pointer_const_ref_return.kl"
     kl_t2 = kl__picks__3i32_3i32;
     kl_pick_1 = kl_t2;
@@ -92,9 +96,19 @@ int32_t kl__main__( void )
 #line 44 "codegen/function_pointer_const_ref_return.kl"
     kl_v_11.kl_y_3 = 99;
 #line 46 "codegen/function_pointer_const_ref_return.kl"
-    kl_t16 = ( *kl_bound_7 ) + kl_copied_13;
-    kl_t17 = kl_t16 - 57;
-    kl_t0 = kl_t17;
+    kl_t16 = __builtin_add_overflow( ( *kl_bound_7 ), kl_copied_13, &( int32_t ) { 0 } );
+    if ( kl_t16 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_const_ref_return.kl", 46, "arithmetic overflow: bound + copied" );
+    bb2:
+    kl_t17 = ( *kl_bound_7 ) + kl_copied_13;
+    kl_t18 = __builtin_sub_overflow( kl_t17, 57, &( int32_t ) { 0 } );
+    if ( kl_t18 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/function_pointer_const_ref_return.kl", 46, "arithmetic overflow: bound + copied - 57" );
+    bb4:
+    kl_t19 = kl_t17 - 57;
+    kl_t0 = kl_t19;
     return kl_t0;
 }
 

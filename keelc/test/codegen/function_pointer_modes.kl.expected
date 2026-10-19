@@ -18,6 +18,8 @@ struct kl__P
     int32_t kl_y_3;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__bump__R3i32( int32_t* );
 int32_t kl__fill__O3i32( int32_t* );
 int32_t kl__total__1P( struct kl__P* );
@@ -28,10 +30,16 @@ int32_t kl__main__( void );
 int32_t kl__bump__R3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 9 "codegen/function_pointer_modes.kl"
-    kl_t2 = ( *kl_a_1 ) + 1;
-    ( *kl_a_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_a_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_modes.kl", 9, "arithmetic overflow: a + 1" );
+    bb2:
+    kl_t3 = ( *kl_a_1 ) + 1;
+    ( *kl_a_1 ) = kl_t3;
 #line 10 "codegen/function_pointer_modes.kl"
     kl_t0 = ( *kl_a_1 );
     return kl_t0;
@@ -50,20 +58,32 @@ int32_t kl__fill__O3i32( int32_t* kl_a_1 )
 int32_t kl__total__1P( struct kl__P* kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 21 "codegen/function_pointer_modes.kl"
-    kl_t2 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_p_1 ).kl_x_1, ( *kl_p_1 ).kl_y_3, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_modes.kl", 21, "arithmetic overflow: p.x + p.y" );
+    bb2:
+    kl_t3 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
 int32_t kl__twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 26 "codegen/function_pointer_modes.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_modes.kl", 26, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

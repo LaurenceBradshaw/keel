@@ -1,0 +1,89 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "overflow_min_div.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__id__3i32( int32_t );
+int64_t kl__wide__3i64( int64_t );
+int32_t kl__main__( void );
+
+int32_t kl__id__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 4 "codegen/overflow_min_div.kl"
+    kl_t0 = kl_x_1;
+    return kl_t0;
+}
+
+int64_t kl__wide__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+#line 9 "codegen/overflow_min_div.kl"
+    kl_t0 = kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_min_1;
+    int64_t kl_t2;
+    bool kl_t3;
+    int64_t kl_t4;
+    int64_t kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+    bool kl_t8;
+    int64_t kl_t9;
+    int64_t kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    int64_t kl_t13;
+    ( void ) kl_t13;
+#line 14 "codegen/overflow_min_div.kl"
+    kl_t2 = -9223372036854775807;
+    kl_t3 = __builtin_sub_overflow( kl_t2, 1, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/overflow_min_div.kl", 14, "arithmetic overflow: -9223372036854775807 - 1" );
+    bb2:
+    kl_t4 = kl_t2 - 1;
+    kl_t5 = kl__wide__3i64( kl_t4 );
+    kl_min_1 = kl_t5;
+#line 15 "codegen/overflow_min_div.kl"
+    kl_t6 = -1;
+    kl_t7 = kl__wide__3i64( kl_t6 );
+    kl_t8 = kl_t7 != 0;
+    if ( kl_t8 ) goto bb4; else goto bb3;
+    bb3:
+    kl_rt_panic( "codegen/overflow_min_div.kl", 15, "division by zero: min / wide( -1 )" );
+    bb4:
+    kl_t9 = -1;
+    kl_t11 = kl_t7 == kl_t9;
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t12 = __builtin_sub_overflow( 0, kl_min_1, &( int64_t ) { 0 } );
+    if ( kl_t12 ) goto bb8; else goto bb9;
+    bb6:
+    kl_t10 = kl_min_1 / kl_t7;
+    goto bb7;
+    bb7:
+    kl_t13 = kl_t10;
+#line 16 "codegen/overflow_min_div.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb8:
+    kl_rt_panic( "codegen/overflow_min_div.kl", 15, "arithmetic overflow: min / wide( -1 )" );
+    bb9:
+#line 15 "codegen/overflow_min_div.kl"
+    kl_t10 = -kl_min_1;
+    goto bb7;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

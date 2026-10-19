@@ -28,6 +28,8 @@ struct kl_7prelude_result__I4void_3BadE
 
 int32_t kl_drops_4 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
@@ -70,11 +72,17 @@ void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t 
 
 void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 18 "codegen/discards.kl"
-    kl_t2 = kl_drops_4 + 1;
-    kl_drops_4 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_drops_4, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/discards.kl", 18, "arithmetic overflow: drops + 1" );
+    bb2:
+    kl_t3 = kl_drops_4 + 1;
+    kl_drops_4 = kl_t3;
     return;
 }
 

@@ -46,6 +46,8 @@ struct kl__Wrapper
 
 int32_t kl_released_1;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__release__P2u8( uint8_t* );
 void kl__Buffer__dtor( struct kl__Buffer* );
 void kl__Counter__dtor( struct kl__Counter* );
@@ -55,11 +57,17 @@ int32_t kl__main__( void );
 
 void kl__release__P2u8( uint8_t* kl_t1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_t1;
 #line 8 "codegen/destructors.kl"
-    kl_t2 = kl_released_1 + 1;
-    kl_released_1 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_released_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/destructors.kl", 8, "arithmetic overflow: released + 1" );
+    bb2:
+    kl_t3 = kl_released_1 + 1;
+    kl_released_1 = kl_t3;
     return;
 }
 
@@ -72,14 +80,26 @@ void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
 
 void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
 {
-    uint64_t kl_t2;
+    bool kl_t2;
     uint64_t kl_t3;
+    bool kl_t4;
+    uint64_t kl_t5;
 #line 30 "codegen/destructors.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count_32 + 1;
-    ( *kl_this_1 ).kl_count_32 = kl_t2;
-#line 31 "codegen/destructors.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_32, 1, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/destructors.kl", 30, "arithmetic overflow: count + 1" );
+    bb2:
     kl_t3 = ( *kl_this_1 ).kl_count_32 + 1;
     ( *kl_this_1 ).kl_count_32 = kl_t3;
+#line 31 "codegen/destructors.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_32, 1, &( uint64_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/destructors.kl", 31, "arithmetic overflow: this.count + 1" );
+    bb4:
+    kl_t5 = ( *kl_this_1 ).kl_count_32 + 1;
+    ( *kl_this_1 ).kl_count_32 = kl_t5;
     return;
 }
 
@@ -88,7 +108,8 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
     bool kl_t2;
     uint64_t kl_i_3;
     bool kl_t4;
-    uint64_t kl_t6;
+    bool kl_t6;
+    uint64_t kl_t7;
 #line 44 "codegen/destructors.kl"
     kl_t2 = ( *kl_this_1 ).kl_len_53 == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -106,11 +127,16 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
 #line 52 "codegen/destructors.kl"
     kl__release__P2u8( ( *kl_this_1 ).kl_ptr_56 );
 #line 53 "codegen/destructors.kl"
-    kl_t6 = kl_i_3 + 1;
-    kl_i_3 = kl_t6;
-    goto bb3;
+    kl_t6 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb6; else goto bb7;
     bb5:
     return;
+    bb6:
+    kl_rt_panic( "codegen/destructors.kl", 53, "arithmetic overflow: i + 1" );
+    bb7:
+    kl_t7 = kl_i_3 + 1;
+    kl_i_3 = kl_t7;
+    goto bb3;
 }
 
 int32_t kl__early__3i32( int32_t kl_n_1 )
@@ -162,21 +188,24 @@ int32_t kl__main__( void )
     bool kl_t11;
     struct kl__Buffer kl_b_12;
     struct kl__Buffer kl_t13;
-    int32_t kl_t14;
-    int32_t kl_t17;
-    int32_t kl_t18;
-    bool kl_t19;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t18;
+    int32_t kl_t19;
     bool kl_t20;
-    bool kl_t21;
+    int32_t kl_t21;
     bool kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    bool kl_t25;
     ( void ) kl_h_3;
 #line 97 "codegen/destructors.kl"
-    kl_t19 = false;
-#line 102 "codegen/destructors.kl"
-    kl_t20 = false;
-    kl_t21 = false;
-#line 109 "codegen/destructors.kl"
     kl_t22 = false;
+#line 102 "codegen/destructors.kl"
+    kl_t23 = false;
+    kl_t24 = false;
+#line 109 "codegen/destructors.kl"
+    kl_t25 = false;
 #line 92 "codegen/destructors.kl"
     kl_t2.kl_x_92 = 3;
     kl_t2.kl_y_94 = 4;
@@ -185,33 +214,33 @@ int32_t kl__main__( void )
     kl_t4.kl_value_89 = 7;
     kl_h_3 = kl_t4;
 #line 97 "codegen/destructors.kl"
-    kl_t19 = false;
+    kl_t22 = false;
     kl_t6.kl_ptr_16 = NULL;
-    kl_t19 = true;
+    kl_t22 = true;
     kl_t6.kl_len_18 = 0;
-    kl_t19 = true;
+    kl_t22 = true;
     kl_b_5 = kl_t6;
-    kl_t19 = false;
-    if ( kl_t19 ) kl__Buffer__dtor( &kl_t6 );
-    kl_t19 = false;
+    kl_t22 = false;
+    if ( kl_t22 ) kl__Buffer__dtor( &kl_t6 );
+    kl_t22 = false;
 #line 96 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_b_5 );
 #line 102 "codegen/destructors.kl"
-    kl_t20 = false;
-    kl_t21 = false;
+    kl_t23 = false;
+    kl_t24 = false;
     kl_t9.kl_ptr_16 = NULL;
-    kl_t21 = true;
+    kl_t24 = true;
     kl_t9.kl_len_18 = 0;
-    kl_t21 = true;
+    kl_t24 = true;
     kl_t8.kl_inner_97 = kl_t9;
-    kl_t21 = false;
-    kl_t20 = true;
+    kl_t24 = false;
+    kl_t23 = true;
     kl_w_7 = kl_t8;
-    kl_t20 = false;
-    if ( kl_t20 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
-    if ( kl_t21 ) kl__Buffer__dtor( &kl_t9 );
-    kl_t21 = false;
-    kl_t20 = false;
+    kl_t23 = false;
+    if ( kl_t23 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
+    if ( kl_t24 ) kl__Buffer__dtor( &kl_t9 );
+    kl_t24 = false;
+    kl_t23 = false;
 #line 101 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_w_7.kl_inner_97 );
 #line 106 "codegen/destructors.kl"
@@ -223,30 +252,47 @@ int32_t kl__main__( void )
     if ( kl_t11 ) goto bb2; else goto bb3;
     bb2:
 #line 109 "codegen/destructors.kl"
-    kl_t22 = false;
+    kl_t25 = false;
     kl_t13.kl_ptr_16 = NULL;
-    kl_t22 = true;
+    kl_t25 = true;
     kl_t13.kl_len_18 = 0;
-    kl_t22 = true;
+    kl_t25 = true;
     kl_b_12 = kl_t13;
-    kl_t22 = false;
-    if ( kl_t22 ) kl__Buffer__dtor( &kl_t13 );
-    kl_t22 = false;
+    kl_t25 = false;
+    if ( kl_t25 ) kl__Buffer__dtor( &kl_t13 );
+    kl_t25 = false;
 #line 110 "codegen/destructors.kl"
-    kl_t14 = kl_i_10 + 1;
-    kl_i_10 = kl_t14;
-#line 108 "codegen/destructors.kl"
-    kl__Buffer__dtor( &kl_b_12 );
-    goto bb1;
+    kl_t14 = __builtin_add_overflow( kl_i_10, 1, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb4; else goto bb5;
     bb3:
 #line 113 "codegen/destructors.kl"
     kl__early__3i32( 0 );
 #line 114 "codegen/destructors.kl"
     kl__early__3i32( 1 );
 #line 117 "codegen/destructors.kl"
-    kl_t17 = kl_p_1.kl_x_92 + kl_p_1.kl_y_94;
-    kl_t18 = kl_t17 + kl_released_1;
-    kl_t0 = kl_t18;
+    kl_t18 = __builtin_add_overflow( kl_p_1.kl_x_92, kl_p_1.kl_y_94, &( int32_t ) { 0 } );
+    if ( kl_t18 ) goto bb6; else goto bb7;
+    bb4:
+    kl_rt_panic( "codegen/destructors.kl", 110, "arithmetic overflow: i + 1" );
+    bb5:
+#line 110 "codegen/destructors.kl"
+    kl_t15 = kl_i_10 + 1;
+    kl_i_10 = kl_t15;
+#line 108 "codegen/destructors.kl"
+    kl__Buffer__dtor( &kl_b_12 );
+    goto bb1;
+    bb6:
+    kl_rt_panic( "codegen/destructors.kl", 117, "arithmetic overflow: p.x + p.y" );
+    bb7:
+#line 117 "codegen/destructors.kl"
+    kl_t19 = kl_p_1.kl_x_92 + kl_p_1.kl_y_94;
+    kl_t20 = __builtin_add_overflow( kl_t19, kl_released_1, &( int32_t ) { 0 } );
+    if ( kl_t20 ) goto bb8; else goto bb9;
+    bb8:
+    kl_rt_panic( "codegen/destructors.kl", 117, "arithmetic overflow: p.x + p.y + released" );
+    bb9:
+    kl_t21 = kl_t19 + kl_released_1;
+    kl_t0 = kl_t21;
     return kl_t0;
 }
 

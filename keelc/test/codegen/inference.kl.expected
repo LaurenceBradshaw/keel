@@ -23,6 +23,8 @@ struct kl__Held__I3i32E
     int32_t kl_v_197;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__either__3i32( int32_t );
 int32_t kl__main__( void );
 int32_t kl__id__I3i32E__3i32( int32_t );
@@ -44,12 +46,24 @@ int32_t kl__get__I3i32E__S4HeldI3i32E( struct kl__Held__I3i32E* );
 int32_t kl__either__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
     int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 78 "codegen/inference.kl"
-    kl_t2 = kl_a_1 * 0;
-    kl_t3 = 300 + kl_t2;
-    kl_t0 = kl_t3;
+    kl_t2 = __builtin_mul_overflow( kl_a_1, 0, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/inference.kl", 78, "arithmetic overflow: a * 0" );
+    bb2:
+    kl_t3 = kl_a_1 * 0;
+    kl_t4 = __builtin_add_overflow( 300, kl_t3, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/inference.kl", 78, "arithmetic overflow: 300 + a * 0" );
+    bb4:
+    kl_t5 = 300 + kl_t3;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -340,10 +354,16 @@ int32_t kl__through_pointer__I3i32E__P3i32( int32_t* kl_p_1 )
 
 void kl__bumped__I3i32E__R3i32( int32_t* kl_a_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 53 "codegen/inference.kl"
-    kl_t2 = ( *kl_a_1 ) + 1;
-    ( *kl_a_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_a_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/inference.kl", 53, "arithmetic overflow: a + wrap<T>( 1 )" );
+    bb2:
+    kl_t3 = ( *kl_a_1 ) + 1;
+    ( *kl_a_1 ) = kl_t3;
     return;
 }
 

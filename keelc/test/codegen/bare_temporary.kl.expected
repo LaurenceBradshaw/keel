@@ -55,7 +55,13 @@ void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t
 
 void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
+    bool kl_t2;
 #line 17 "codegen/bare_temporary.kl"
+    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_drops__34 ), 1, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/bare_temporary.kl", 17, "arithmetic overflow: *drops_ += 1;" );
+    bb2:
     ( *( *kl_this_1 ).kl_drops__34 ) = ( *( *kl_this_1 ).kl_drops__34 ) + 1;
 #line 20 "codegen/bare_temporary.kl"
     kl_rt_free( ( *kl_this_1 ).kl_block__37 );
@@ -71,7 +77,13 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 
 void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t2 )
 {
+    bool kl_t3;
 #line 37 "codegen/bare_temporary.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_taken__69, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/bare_temporary.kl", 37, "arithmetic overflow: taken_ += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_taken__69 = ( *kl_this_1 ).kl_taken__69 + 1;
 #line 35 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t2 );

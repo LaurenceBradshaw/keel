@@ -19,6 +19,8 @@ struct kl__Pair__I3i32E
     int32_t kl_right_68;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 bool kl__operator_eq__S7Version_7Version( struct kl__Version*, struct kl__Version* );
 int32_t kl__operator_compare__S7Version_7Version( struct kl__Version*, struct kl__Version* );
 bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t*, int32_t* );
@@ -119,8 +121,9 @@ bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_o
     bool kl_t6;
     uint8_t kl_t7;
     uint8_t kl_t8;
-    uint8_t kl_t9;
-    bool kl_t10;
+    bool kl_t9;
+    uint8_t kl_t10;
+    bool kl_t11;
 #line 50 "codegen/bounds_user_types.kl"
     kl_t4 = ( uint8_t ) ( *kl_this_1 );
     kl_t5 = ( uint8_t ) ( *kl_other_2 );
@@ -130,13 +133,18 @@ bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_o
     bb1:
     kl_t7 = ( uint8_t ) ( *kl_this_1 );
     kl_t8 = ( uint8_t ) ( *kl_other_2 );
-    kl_t9 = kl_t7 + kl_t8;
-    kl_t10 = kl_t9 == 1;
-    kl_t3 = kl_t10;
-    goto bb2;
+    kl_t9 = __builtin_add_overflow( kl_t7, kl_t8, &( uint8_t ) { 0 } );
+    if ( kl_t9 ) goto bb3; else goto bb4;
     bb2:
     kl_t0 = kl_t3;
     return kl_t0;
+    bb3:
+    kl_rt_panic( "codegen/bounds_user_types.kl", 50, "arithmetic overflow: cast<u8>( this ) + cast<u8>( other )" );
+    bb4:
+    kl_t10 = kl_t7 + kl_t8;
+    kl_t11 = kl_t10 == 1;
+    kl_t3 = kl_t11;
+    goto bb2;
 }
 
 int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int32_t* kl_other_2 )

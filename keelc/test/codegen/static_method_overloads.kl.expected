@@ -17,6 +17,8 @@ struct kl__Box__I3i32E
     int32_t kl_unused_88;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__from__S6Number_3i64( int64_t );
 int32_t kl__from__S6Number_3u64( uint64_t );
 int32_t kl__from__S6Number_4bool( bool );
@@ -92,21 +94,33 @@ int32_t kl__bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
     int64_t kl_a_2;
     uint64_t kl_b_3;
     int32_t kl_t4;
-    int32_t kl_t5;
-    struct kl__Number* kl_t6;
-    int32_t kl_t7;
+    bool kl_t5;
+    int32_t kl_t6;
+    struct kl__Number* kl_t7;
     int32_t kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
 #line 42 "codegen/static_method_overloads.kl"
     kl_a_2 = 0;
 #line 43 "codegen/static_method_overloads.kl"
     kl_b_3 = 0;
 #line 44 "codegen/static_method_overloads.kl"
     kl_t4 = kl__from__S6Number_3i64( kl_a_2 );
-    kl_t5 = kl_t4 * 10;
-    kl_t6 = &( *kl_this_1 );
-    kl_t7 = kl__mixed__S6Number_3u64( kl_t6, kl_b_3 );
-    kl_t8 = kl_t5 + kl_t7;
-    kl_t0 = kl_t8;
+    kl_t5 = __builtin_mul_overflow( kl_t4, 10, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/static_method_overloads.kl", 44, "arithmetic overflow: from( a ) * 10" );
+    bb2:
+    kl_t6 = kl_t4 * 10;
+    kl_t7 = &( *kl_this_1 );
+    kl_t8 = kl__mixed__S6Number_3u64( kl_t7, kl_b_3 );
+    kl_t9 = __builtin_add_overflow( kl_t6, kl_t8, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/static_method_overloads.kl", 44, "arithmetic overflow: from( a ) * 10 + mixed( b )" );
+    bb4:
+    kl_t10 = kl_t6 + kl_t8;
+    kl_t0 = kl_t10;
     return kl_t0;
 }
 

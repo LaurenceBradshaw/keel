@@ -4,6 +4,8 @@
 
 #include "shift_constant.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 uint64_t kl__high_flag__3u64( uint64_t );
 int64_t kl__bit_i64__3i64( int64_t );
 uint32_t kl__bit_u32__3u32( uint32_t );
@@ -13,14 +15,20 @@ int32_t kl__main__( void );
 uint64_t kl__high_flag__3u64( uint64_t kl_byte_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
+    bool kl_t2;
     uint64_t kl_t3;
     uint64_t kl_t4;
+    uint64_t kl_t5;
 #line 6 "codegen/shift_constant.kl"
-    kl_t2 = kl_byte_1 * 8;
-    kl_t3 = kl_t2 & 63;
-    kl_t4 = ( uint64_t ) 128 << kl_t3;
-    kl_t0 = kl_t4;
+    kl_t2 = __builtin_mul_overflow( kl_byte_1, 8, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/shift_constant.kl", 6, "arithmetic overflow: byte * 8" );
+    bb2:
+    kl_t3 = kl_byte_1 * 8;
+    kl_t4 = kl_t3 & 63;
+    kl_t5 = ( uint64_t ) 128 << kl_t4;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 

@@ -3,13 +3,29 @@ fn nested {
     let _1: i32; // parameter a
     let _2: i32; // parameter b
     let _3: i32; // parameter c
-    let _4: i32;
+    let _4: bool;
     let _5: i32;
+    let _6: bool;
+    let _7: i32;
 
     bb0:
-        _4 = copy _2 * copy _3
-        _5 = copy _1 + copy _4
-        _0 = copy _5
+        _4 = overflows copy _2 * copy _3
+        branch copy _4 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _5 = copy _2 * copy _3
+        _6 = overflows copy _1 + copy _5
+        branch copy _6 -> bb3, bb4
+
+    bb3:
+        overflow
+
+    bb4:
+        _7 = copy _1 + copy _5
+        _0 = copy _7
         return
 }
 fn widened {
@@ -17,12 +33,20 @@ fn widened {
     let _1: u8; // parameter small
     let _2: i64; // parameter wide
     let _3: i64;
-    let _4: i64;
+    let _4: bool;
+    let _5: i64;
 
     bb0:
         _3 = copy _1 as i64
-        _4 = copy _3 + copy _2
-        _0 = copy _4
+        _4 = overflows copy _3 + copy _2
+        branch copy _4 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _5 = copy _3 + copy _2
+        _0 = copy _5
         return
 }
 fn compared {
@@ -55,11 +79,19 @@ fn unchanged {
     let _0: i32; // return slot
     let _1: i32; // parameter a
     let _2: i32; // parameter b
-    let _3: i32;
+    let _3: bool;
+    let _4: i32;
 
     bb0:
-        _3 = copy _1 + copy _2
-        _0 = copy _3
+        _3 = overflows copy _1 + copy _2
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _4 = copy _1 + copy _2
+        _0 = copy _4
         return
 }
 fn unary_operators {
@@ -68,16 +100,24 @@ fn unary_operators {
     let _2: bool; // parameter flag
     let _3: u32; // parameter bits
     let _4: i32; // negated
-    let _5: i32;
-    let _6: bool;
-    let _7: u32;
+    let _5: bool;
+    let _6: i32;
+    let _7: bool;
+    let _8: u32;
 
     bb0:
         storage_live _4
-        _5 = -copy _1
-        _4 = copy _5
-        _6 = !copy _2
-        _7 = ~copy _3
+        _5 = overflows const 0 - copy _1
+        branch copy _5 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _6 = -copy _1
+        _4 = copy _6
+        _7 = !copy _2
+        _8 = ~copy _3
         _0 = copy _4
         storage_dead _4
         return
@@ -85,13 +125,37 @@ fn unary_operators {
 fn assignments {
     let _0: i32; // return slot
     let _1: u8; // x
+    let _2: bool;
+    let _3: bool;
+    let _4: bool;
 
     bb0:
         storage_live _1
         _1 = const 1
         _1 = const 2
+        _2 = overflows copy _1 + const 3
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
         _1 = copy _1 + const 3
+        _3 = overflows copy _1 + const 1
+        branch copy _3 -> bb3, bb4
+
+    bb3:
+        overflow
+
+    bb4:
         _1 = copy _1 + const 1
+        _4 = overflows copy _1 - const 1
+        branch copy _4 -> bb5, bb6
+
+    bb5:
+        overflow
+
+    bb6:
         _1 = copy _1 - const 1
         _0 = const 0
         storage_dead _1

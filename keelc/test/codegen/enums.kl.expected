@@ -4,6 +4,8 @@
 
 #include "enums.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__weight__6Colour( uint8_t );
 uint8_t kl__turn__6Colour( uint8_t );
 int32_t kl__heading__9Direction( int32_t );
@@ -77,11 +79,14 @@ int32_t kl__main__( void )
     int32_t kl_t3;
     uint8_t kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
+    bool kl_t6;
     int32_t kl_t7;
     int32_t kl_t8;
-    int32_t kl_t9;
+    bool kl_t9;
     int32_t kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    int32_t kl_t13;
 #line 58 "codegen/enums.kl"
     kl_c_1 = 1;
 #line 60 "codegen/enums.kl"
@@ -90,16 +95,31 @@ int32_t kl__main__( void )
 #line 62 "codegen/enums.kl"
     kl_t4 = kl__turn__6Colour( kl_c_1 );
     kl_t5 = kl__weight__6Colour( kl_t4 );
-    kl_t6 = kl_total_2 + kl_t5;
-    kl_total_2 = kl_t6;
+    kl_t6 = __builtin_add_overflow( kl_total_2, kl_t5, &( int32_t ) { 0 } );
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/enums.kl", 62, "arithmetic overflow: total + weight( turn( c ) )" );
+    bb2:
+    kl_t7 = kl_total_2 + kl_t5;
+    kl_total_2 = kl_t7;
 #line 64 "codegen/enums.kl"
-    kl_t7 = kl__weight__6Colour( 2 );
-    kl_t8 = kl_total_2 + kl_t7;
-    kl_total_2 = kl_t8;
-#line 66 "codegen/enums.kl"
-    kl_t9 = kl__heading__9Direction( 3 );
-    kl_t10 = kl_total_2 + kl_t9;
+    kl_t8 = kl__weight__6Colour( 2 );
+    kl_t9 = __builtin_add_overflow( kl_total_2, kl_t8, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/enums.kl", 64, "arithmetic overflow: total + weight( Colour::Blue )" );
+    bb4:
+    kl_t10 = kl_total_2 + kl_t8;
     kl_total_2 = kl_t10;
+#line 66 "codegen/enums.kl"
+    kl_t11 = kl__heading__9Direction( 3 );
+    kl_t12 = __builtin_add_overflow( kl_total_2, kl_t11, &( int32_t ) { 0 } );
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/enums.kl", 66, "arithmetic overflow: total + heading( Direction::West )" );
+    bb6:
+    kl_t13 = kl_total_2 + kl_t11;
+    kl_total_2 = kl_t13;
 #line 68 "codegen/enums.kl"
     kl_t0 = kl_total_2;
     return kl_t0;

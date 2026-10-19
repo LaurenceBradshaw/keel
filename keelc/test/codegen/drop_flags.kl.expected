@@ -13,6 +13,8 @@ struct kl__Owned
 
 int32_t kl_live_1;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__release__( void );
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
 void kl__Owned__dtor( struct kl__Owned* );
@@ -22,21 +24,33 @@ int32_t kl__main__( void );
 
 void kl__release__( void )
 {
-    int32_t kl_t1;
+    bool kl_t1;
+    int32_t kl_t2;
 #line 9 "codegen/drop_flags.kl"
-    kl_t1 = kl_live_1 - 1;
-    kl_live_1 = kl_t1;
+    kl_t1 = __builtin_sub_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/drop_flags.kl", 9, "arithmetic overflow: live - 1" );
+    bb2:
+    kl_t2 = kl_live_1 - 1;
+    kl_live_1 = kl_t2;
     return;
 }
 
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 18 "codegen/drop_flags.kl"
     ( *kl_this_1 ).kl_id_12 = kl_n_2;
 #line 19 "codegen/drop_flags.kl"
-    kl_t3 = kl_live_1 + 1;
-    kl_live_1 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/drop_flags.kl", 19, "arithmetic overflow: live + 1" );
+    bb2:
+    kl_t4 = kl_live_1 + 1;
+    kl_live_1 = kl_t4;
     return;
 }
 
@@ -89,8 +103,10 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_after_kept_2;
     int32_t kl_after_moved_4;
-    int32_t kl_t5;
+    bool kl_t5;
     int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
 #line 51 "codegen/drop_flags.kl"
     kl__run__3i32( 1 );
 #line 52 "codegen/drop_flags.kl"
@@ -100,9 +116,19 @@ int32_t kl__main__( void )
 #line 57 "codegen/drop_flags.kl"
     kl_after_moved_4 = kl_live_1;
 #line 60 "codegen/drop_flags.kl"
-    kl_t5 = kl_after_kept_2 * 10;
-    kl_t6 = kl_t5 + kl_after_moved_4;
-    kl_t0 = kl_t6;
+    kl_t5 = __builtin_mul_overflow( kl_after_kept_2, 10, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/drop_flags.kl", 60, "arithmetic overflow: after_kept * 10" );
+    bb2:
+    kl_t6 = kl_after_kept_2 * 10;
+    kl_t7 = __builtin_add_overflow( kl_t6, kl_after_moved_4, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/drop_flags.kl", 60, "arithmetic overflow: after_kept * 10 + after_moved" );
+    bb4:
+    kl_t8 = kl_t6 + kl_after_moved_4;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 

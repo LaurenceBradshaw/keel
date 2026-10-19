@@ -31,6 +31,8 @@ struct kl__Two__I4voidE
     int32_t kl_y_23;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
@@ -210,9 +212,11 @@ int32_t kl__main__( void )
     int32_t kl_t24;
     struct kl_7prelude_result__I4void_3BadE kl_t25;
     int32_t kl_t26;
-    int32_t kl_t27;
-    int64_t kl_t28;
-    int32_t kl_t30;
+    bool kl_t27;
+    int32_t kl_t28;
+    int64_t kl_t29;
+    bool kl_t31;
+    int32_t kl_t32;
 #line 87 "codegen/void_type_argument.kl"
     kl__note__(  );
     kl__same__I4voidE__4void(  );
@@ -254,14 +258,24 @@ int32_t kl__main__( void )
     kl_t24 = kl__report__Q7prelude6resultI4void_3BadE( kl_t23 );
     kl_t25 = kl__steps__4bool( true );
     kl_t26 = kl__report__Q7prelude6resultI4void_3BadE( kl_t25 );
-    kl_t27 = kl_t24 + kl_t26;
-    kl_failures_22 = kl_t27;
+    kl_t27 = __builtin_add_overflow( kl_t24, kl_t26, &( int32_t ) { 0 } );
+    if ( kl_t27 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/void_type_argument.kl", 105, "arithmetic overflow: report( steps( false ) ) + report( steps( true ) )" );
+    bb4:
+    kl_t28 = kl_t24 + kl_t26;
+    kl_failures_22 = kl_t28;
 #line 106 "codegen/void_type_argument.kl"
-    kl_t28 = ( int64_t ) kl_failures_22;
-    kl_1t_println__3i64( kl_t28 );
+    kl_t29 = ( int64_t ) kl_failures_22;
+    kl_1t_println__3i64( kl_t29 );
 #line 107 "codegen/void_type_argument.kl"
-    kl_t30 = kl_failures_22 - 1;
-    kl_t0 = kl_t30;
+    kl_t31 = __builtin_sub_overflow( kl_failures_22, 1, &( int32_t ) { 0 } );
+    if ( kl_t31 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/void_type_argument.kl", 107, "arithmetic overflow: failures - 1" );
+    bb6:
+    kl_t32 = kl_failures_22 - 1;
+    kl_t0 = kl_t32;
     return kl_t0;
 }
 

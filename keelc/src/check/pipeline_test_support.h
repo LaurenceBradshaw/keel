@@ -37,11 +37,11 @@ struct Compiled
     std::vector<Function> all;       // every function lowered, the prelude's included
     std::vector<Function> functions; // the program's C half, in the order lowered
 
-    explicit Compiled( std::string_view source, Stage through = Stage::Simplified )
+    explicit Compiled( std::string_view source, Stage through = Stage::Simplified, Build build = { .asserts = true } )
     {
         file = sm.add_file( "t.kl", std::string( source ) );
 
-        Front_end front = run_front_end( file, through, Build::Debug, sm, interner, literals, diags );
+        Front_end front = run_front_end( file, through, build, sm, interner, literals, diags );
 
         const Halves halves( front.program.ast, front.types.table(), front.program.imports );
         std::ranges::copy_if(

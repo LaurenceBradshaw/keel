@@ -26,6 +26,7 @@ struct kl__opt__I5NoisyE
     struct kl__Noisy kl_value_33;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 _Noreturn void kl_rt_unreachable( void );
 
@@ -151,48 +152,55 @@ int32_t kl__checked__3i32( int32_t kl_v_1 )
     int32_t kl_t0;
     int32_t kl_result_2;
     bool kl_t3;
-    int32_t kl_t4;
-    struct kl_7prelude_str kl_t5;
-    int32_t kl_t6;
-    bool kl_t7;
-    struct kl_7prelude_str kl_t8;
-    struct kl_7prelude_str* kl_t9;
-    uint8_t* kl_t10;
-    struct kl_7prelude_str kl_t12;
-    struct kl_7prelude_str* kl_t13;
-    uint8_t* kl_t14;
+    bool kl_t4;
+    int32_t kl_t5;
+    struct kl_7prelude_str kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+    struct kl_7prelude_str kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
 #line 90 "codegen/never.kl"
     kl_t3 = kl_v_1 >= 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 92 "codegen/never.kl"
-    kl_t4 = kl_v_1 * 2;
-    kl_result_2 = kl_t4;
-    goto bb3;
+    kl_t4 = __builtin_mul_overflow( kl_v_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
 #line 96 "codegen/never.kl"
-    kl_t6 = -100;
-    kl_t7 = kl_v_1 < kl_t6;
-    if ( kl_t7 ) goto bb4; else goto bb5;
+    kl_t7 = -100;
+    kl_t8 = kl_v_1 < kl_t7;
+    if ( kl_t8 ) goto bb6; else goto bb7;
     bb3:
+    kl_rt_panic( "codegen/never.kl", 92, "arithmetic overflow: v * 2" );
+    bb4:
+#line 92 "codegen/never.kl"
+    kl_t5 = kl_v_1 * 2;
+    kl_result_2 = kl_t5;
+    goto bb5;
+    bb5:
 #line 99 "codegen/never.kl"
     kl_t0 = kl_result_2;
     return kl_t0;
-    bb4:
-#line 96 "codegen/never.kl"
-    kl_t9 = &kl_t8;
-    kl_t10 = ( uint8_t* ) "far below zero";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 14 );
-    kl_t5 = kl_t8;
-    goto bb6;
-    bb5:
-    kl_t13 = &kl_t12;
-    kl_t14 = ( uint8_t* ) "negative";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t13, kl_t14, 8 );
-    kl_t5 = kl_t12;
-    goto bb6;
     bb6:
-    kl_rt_panic_message( "codegen/never.kl", 96, kl_t5.kl_data_730, kl_t5.kl_size_733 );
+#line 96 "codegen/never.kl"
+    kl_t10 = &kl_t9;
+    kl_t11 = ( uint8_t* ) "far below zero";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 14 );
+    kl_t6 = kl_t9;
+    goto bb8;
+    bb7:
+    kl_t14 = &kl_t13;
+    kl_t15 = ( uint8_t* ) "negative";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 8 );
+    kl_t6 = kl_t13;
+    goto bb8;
+    bb8:
+    kl_rt_panic_message( "codegen/never.kl", 96, kl_t6.kl_data_730, kl_t6.kl_size_733 );
 }
 
 int32_t kl__sign__3i32( int32_t kl_v_1 )

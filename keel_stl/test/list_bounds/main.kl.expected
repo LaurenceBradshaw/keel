@@ -16,6 +16,7 @@ struct kl_2kl_list__I3i32E
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 int32_t kl__main__( void );
@@ -108,6 +109,7 @@ void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E* kl
 {
     struct kl_2kl_list__I3i32E* kl_t3;
     int32_t* kl_t5;
+    bool kl_t6;
 #line 59 "../src/list.kl"
     kl_t3 = &( *kl_this_1 );
     kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
@@ -115,6 +117,11 @@ void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E* kl
     kl_t5 = ( *kl_this_1 ).kl_data__947 + ( *kl_this_1 ).kl_count__949;
     ( *kl_t5 ) = kl_value_2;
 #line 65 "../src/list.kl"
+    kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__949, 1, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "../src/list.kl", 65, "arithmetic overflow: count_ += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_count__949 = ( *kl_this_1 ).kl_count__949 + 1;
     return;
 }
@@ -176,26 +183,32 @@ void kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__
     struct kl_2kl_list__I3i32E* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
-    uint64_t kl_t6;
+    bool kl_t6;
+    uint64_t kl_t7;
 #line 435 "../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count__949 == ( *kl_this_1 ).kl_cap__951;
-    if ( kl_t2 ) goto bb1; else goto bb5;
+    if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
 #line 437 "../src/list.kl"
     kl_t3 = &( *kl_this_1 );
     kl_t5 = ( *kl_this_1 ).kl_cap__951 > 0;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-    kl_t6 = ( *kl_this_1 ).kl_cap__951 * 2;
-    kl_t4 = kl_t6;
-    goto bb4;
+    kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap__951, 2, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
     kl_t4 = 1;
     goto bb4;
     bb4:
     kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
-    goto bb5;
+    goto bb7;
     bb5:
+    kl_rt_panic( "../src/list.kl", 437, "arithmetic overflow: cap_ * 2" );
+    bb6:
+    kl_t7 = ( *kl_this_1 ).kl_cap__951 * 2;
+    kl_t4 = kl_t7;
+    goto bb4;
+    bb7:
     return;
 }
 
@@ -208,12 +221,13 @@ void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32
     bool kl_t7;
     int32_t* kl_t8;
     int32_t* kl_t9;
+    bool kl_t10;
 #line 408 "../src/list.kl"
     kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../src/list.kl", 408, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 411 "../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__947 != NULL;
-    if ( kl_t5 ) goto bb1; else goto bb6;
+    if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
 #line 413 "../src/list.kl"
     kl_i_6 = 0;
@@ -230,12 +244,17 @@ void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32
     bb4:
 #line 424 "../src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data__947 );
-    goto bb6;
+    goto bb8;
     bb5:
 #line 413 "../src/list.kl"
+    kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
+    if ( kl_t10 ) goto bb6; else goto bb7;
+    bb6:
+    kl_rt_panic( "../src/list.kl", 413, "arithmetic overflow: i++" );
+    bb7:
     kl_i_6 = kl_i_6 + 1;
     goto bb2;
-    bb6:
+    bb8:
 #line 428 "../src/list.kl"
     ( *kl_this_1 ).kl_data__947 = kl_new_data_3;
 #line 429 "../src/list.kl"

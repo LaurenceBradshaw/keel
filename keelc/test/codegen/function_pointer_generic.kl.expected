@@ -16,6 +16,8 @@ struct kl__Holder
     kl__fn__F3i32E3i32 kl_cb_122;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
 double kl__apply_f__F3f64E3f64_3f64( kl__fn__F3f64E3f64, double );
 int32_t kl__main__( void );
@@ -246,10 +248,16 @@ double kl__id__I3f64E__3f64( double kl_a_1 )
 int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 20 "codegen/function_pointer_generic.kl"
-    kl_t2 = kl_a_1 + kl_a_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_generic.kl", 20, "arithmetic overflow: a + a" );
+    bb2:
+    kl_t3 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -288,10 +296,16 @@ int32_t kl__via__I3i32E__FR3i32E3i32_R3i32( kl__fn__FR3i32E3i32 kl_f_1, int32_t*
 int32_t kl__raise__I3i32E__R3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 28 "codegen/function_pointer_generic.kl"
-    kl_t2 = ( *kl_a_1 ) + 1;
-    ( *kl_a_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_a_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_generic.kl", 28, "arithmetic overflow: a + 1" );
+    bb2:
+    kl_t3 = ( *kl_a_1 ) + 1;
+    ( *kl_a_1 ) = kl_t3;
 #line 29 "codegen/function_pointer_generic.kl"
     kl_t0 = ( *kl_a_1 );
     return kl_t0;
@@ -312,10 +326,16 @@ int64_t kl__via__I3i64E__FR3i64E3i64_R3i64( kl__fn__FR3i64E3i64 kl_f_1, int64_t*
 int64_t kl__raise__I3i64E__R3i64( int64_t* kl_a_1 )
 {
     int64_t kl_t0;
-    int64_t kl_t2;
+    bool kl_t2;
+    int64_t kl_t3;
 #line 28 "codegen/function_pointer_generic.kl"
-    kl_t2 = ( *kl_a_1 ) + 1;
-    ( *kl_a_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_a_1 ), 1, &( int64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_generic.kl", 28, "arithmetic overflow: a + 1" );
+    bb2:
+    kl_t3 = ( *kl_a_1 ) + 1;
+    ( *kl_a_1 ) = kl_t3;
 #line 29 "codegen/function_pointer_generic.kl"
     kl_t0 = ( *kl_a_1 );
     return kl_t0;

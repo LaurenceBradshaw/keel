@@ -17,6 +17,6 @@ namespace keel
 std::vector<Function>
 // Types is mutable only for its table: lowering interns types the checker never named - `T*` as
 // `i32*` in an instance, `i32*` for a borrowed argument. Nothing the checker recorded changes.
-lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals );
+lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, bool overflow_checks );
 
 } // namespace keel

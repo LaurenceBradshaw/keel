@@ -14,6 +14,8 @@ struct kl__Point
 
 int32_t kl_count_65 = 0;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__twice__3i32( int32_t );
 int32_t kl__main__( void );
 int32_t kl__bump__3i32( int32_t );
@@ -22,10 +24,16 @@ int32_t kl__area__5Point( struct kl__Point );
 int32_t kl__twice__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 9 "codegen/modules/main.kl"
-    kl_t2 = kl_v_1 * 2;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_v_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/modules/main.kl", 9, "arithmetic overflow: v * 2" );
+    bb2:
+    kl_t3 = kl_v_1 * 2;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -85,11 +93,17 @@ int32_t kl__bump__3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 8 "codegen/modules/tally.kl"
     kl_t2 = kl__twice__3i32( kl_by_1 );
-    kl_t3 = kl_count_65 + kl_t2;
-    kl_count_65 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_count_65, kl_t2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/modules/tally.kl", 8, "arithmetic overflow: count + twice( by )" );
+    bb2:
+    kl_t4 = kl_count_65 + kl_t2;
+    kl_count_65 = kl_t4;
 #line 9 "codegen/modules/tally.kl"
     kl_t0 = kl_count_65;
     return kl_t0;
@@ -98,10 +112,16 @@ int32_t kl__bump__3i32( int32_t kl_by_1 )
 int32_t kl__area__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 10 "codegen/modules/shape.kl"
-    kl_t2 = kl_p_1.kl_x_83 * kl_p_1.kl_y_85;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_p_1.kl_x_83, kl_p_1.kl_y_85, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/modules/shape.kl", 10, "arithmetic overflow: p.x * p.y" );
+    bb2:
+    kl_t3 = kl_p_1.kl_x_83 * kl_p_1.kl_y_85;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

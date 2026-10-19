@@ -12,7 +12,13 @@ int32_t kl__main__( void );
 uint64_t kl__bump__R3u64_3u64( uint64_t* kl_calls_1, uint64_t kl_value_2 )
 {
     uint64_t kl_t0;
+    bool kl_t3;
 #line 6 "codegen/counting.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_calls_1 ), 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/counting.kl", 6, "arithmetic overflow: calls += 1;" );
+    bb2:
     ( *kl_calls_1 ) = ( *kl_calls_1 ) + 1;
 #line 7 "codegen/counting.kl"
     kl_t0 = kl_value_2;
@@ -27,48 +33,54 @@ int32_t kl__main__( void )
     uint64_t kl_t3;
     bool kl_t4;
     bool kl_t5;
-    int32_t kl_odd_6;
-    int32_t kl_i_7;
-    int32_t kl_t8;
-    bool kl_t9;
-    int32_t kl_t10;
-    bool kl_t11;
+    bool kl_t6;
+    int32_t kl_odd_7;
+    int32_t kl_i_8;
+    int32_t kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
     bool kl_t12;
-    int32_t kl_t13;
-    int32_t kl_t14;
-    bool kl_t15;
-    uint64_t kl_calls_16;
-    uint64_t kl_steps_17;
-    uint64_t kl_i_18;
-    uint64_t kl_t19;
-    uint64_t* kl_t20;
-    uint64_t kl_t21;
-    uint64_t* kl_t22;
-    uint64_t kl_t23;
-    bool kl_t24;
-    bool kl_t25;
-    bool kl_t26;
-    uint64_t kl_i_27;
-    uint64_t kl_t28;
+    bool kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    uint64_t kl_calls_19;
+    uint64_t kl_steps_20;
+    uint64_t kl_i_21;
+    uint64_t kl_t22;
+    uint64_t* kl_t23;
+    uint64_t kl_t24;
+    uint64_t* kl_t25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    bool kl_t28;
     bool kl_t29;
-    uint64_t kl_top_30;
+    bool kl_t30;
     uint64_t kl_i_31;
     uint64_t kl_t32;
     bool kl_t33;
-    bool kl_t34;
-    uint8_t kl_n_35;
-    uint8_t kl_last_36;
-    uint8_t kl_i_37;
-    uint8_t kl_t38;
+    uint64_t kl_top_34;
+    uint64_t kl_i_35;
+    uint64_t kl_t36;
+    bool kl_t37;
+    bool kl_t38;
     bool kl_t39;
-    bool kl_t40;
-    int32_t kl_neg_41;
-    int32_t kl_i_42;
-    int32_t kl_t43;
-    int32_t kl_t44;
+    uint8_t kl_n_40;
+    uint8_t kl_last_41;
+    uint8_t kl_i_42;
+    uint8_t kl_t43;
+    bool kl_t44;
     bool kl_t45;
-    int32_t kl_t46;
-    bool kl_t47;
+    int32_t kl_neg_46;
+    int32_t kl_i_47;
+    int32_t kl_t48;
+    int32_t kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    int32_t kl_t52;
+    bool kl_t53;
 #line 12 "codegen/counting.kl"
     kl_sum_1 = 0;
 #line 13 "codegen/counting.kl"
@@ -80,190 +92,222 @@ int32_t kl__main__( void )
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
 #line 15 "codegen/counting.kl"
-    kl_sum_1 = kl_sum_1 + kl_i_2;
-    goto bb4;
+    kl_t5 = __builtin_add_overflow( kl_sum_1, kl_i_2, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
-    goto bb5;
+    goto bb7;
     bb4:
+    kl_rt_panic( "codegen/counting.kl", 15, "arithmetic overflow: sum += i;" );
+    bb5:
+    kl_sum_1 = kl_sum_1 + kl_i_2;
+    goto bb6;
+    bb6:
 #line 13 "codegen/counting.kl"
     kl_i_2 = kl_i_2 + 1;
     goto bb1;
-    bb5:
-#line 17 "codegen/counting.kl"
-    kl_t5 = kl_sum_1 == 10;
-    if ( kl_t5 ) goto bb6; else goto bb7;
-    bb6:
-#line 19 "codegen/counting.kl"
-    kl_odd_6 = 0;
-#line 20 "codegen/counting.kl"
-    kl_i_7 = 0;
-    kl_t8 = 10;
-    goto bb8;
     bb7:
-    kl_rt_panic( "codegen/counting.kl", 17, "assertion failed: sum == 10" );
+#line 17 "codegen/counting.kl"
+    kl_t6 = kl_sum_1 == 10;
+    if ( kl_t6 ) goto bb8; else goto bb9;
     bb8:
-    kl_t9 = kl_i_7 < kl_t8;
-    if ( kl_t9 ) goto bb9; else goto bb10;
-    bb9:
-#line 22 "codegen/counting.kl"
-    kl_t10 = kl_i_7 % 2;
-    kl_t11 = kl_t10 == 0;
-    if ( kl_t11 ) goto bb11; else goto bb12;
-    bb10:
-    goto bb14;
-    bb11:
+#line 19 "codegen/counting.kl"
+    kl_odd_7 = 0;
 #line 20 "codegen/counting.kl"
-    kl_i_7 = kl_i_7 + 1;
-    goto bb8;
+    kl_i_8 = 0;
+    kl_t9 = 10;
+    goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/counting.kl", 17, "assertion failed: sum == 10" );
+    bb10:
+    kl_t10 = kl_i_8 < kl_t9;
+    if ( kl_t10 ) goto bb11; else goto bb12;
+    bb11:
+#line 22 "codegen/counting.kl"
+    kl_t11 = kl_i_8 % 2;
+    kl_t12 = kl_t11 == 0;
+    if ( kl_t12 ) goto bb13; else goto bb14;
     bb12:
-#line 26 "codegen/counting.kl"
-    kl_t12 = kl_i_7 == 7;
-    if ( kl_t12 ) goto bb10; else goto bb13;
+    goto bb18;
     bb13:
-#line 30 "codegen/counting.kl"
-    kl_odd_6 = kl_odd_6 + kl_i_7;
-    goto bb11;
+#line 20 "codegen/counting.kl"
+    kl_i_8 = kl_i_8 + 1;
+    goto bb10;
     bb14:
-#line 32 "codegen/counting.kl"
-    kl_t13 = 1 + 3;
-    kl_t14 = kl_t13 + 5;
-    kl_t15 = kl_odd_6 == kl_t14;
-    if ( kl_t15 ) goto bb15; else goto bb16;
+#line 26 "codegen/counting.kl"
+    kl_t13 = kl_i_8 == 7;
+    if ( kl_t13 ) goto bb12; else goto bb15;
     bb15:
-#line 34 "codegen/counting.kl"
-    kl_calls_16 = 0;
-#line 35 "codegen/counting.kl"
-    kl_steps_17 = 0;
-#line 36 "codegen/counting.kl"
-    kl_t20 = &kl_calls_16;
-    kl_t21 = kl__bump__R3u64_3u64( kl_t20, 1 );
-    kl_i_18 = kl_t21;
-    kl_t22 = &kl_calls_16;
-    kl_t23 = kl__bump__R3u64_3u64( kl_t22, 4 );
-    kl_t19 = kl_t23;
-    goto bb17;
+#line 30 "codegen/counting.kl"
+    kl_t14 = __builtin_add_overflow( kl_odd_7, kl_i_8, &( int32_t ) { 0 } );
+    if ( kl_t14 ) goto bb16; else goto bb17;
     bb16:
-    kl_rt_panic( "codegen/counting.kl", 32, "assertion failed: odd == 1 + 3 + 5" );
+    kl_rt_panic( "codegen/counting.kl", 30, "arithmetic overflow: odd += i;" );
     bb17:
-    kl_t24 = kl_i_18 < kl_t19;
-    if ( kl_t24 ) goto bb18; else goto bb19;
+    kl_odd_7 = kl_odd_7 + kl_i_8;
+    goto bb13;
     bb18:
-#line 38 "codegen/counting.kl"
-    kl_steps_17 = kl_steps_17 + 1;
-    goto bb20;
+#line 32 "codegen/counting.kl"
+    kl_t15 = 1 + 3;
+    kl_t16 = __builtin_add_overflow( kl_t15, 5, &( int32_t ) { 0 } );
+    if ( kl_t16 ) goto bb21; else goto bb22;
     bb19:
-    goto bb21;
-    bb20:
+#line 34 "codegen/counting.kl"
+    kl_calls_19 = 0;
+#line 35 "codegen/counting.kl"
+    kl_steps_20 = 0;
 #line 36 "codegen/counting.kl"
-    kl_i_18 = kl_i_18 + 1;
-    goto bb17;
+    kl_t23 = &kl_calls_19;
+    kl_t24 = kl__bump__R3u64_3u64( kl_t23, 1 );
+    kl_i_21 = kl_t24;
+    kl_t25 = &kl_calls_19;
+    kl_t26 = kl__bump__R3u64_3u64( kl_t25, 4 );
+    kl_t22 = kl_t26;
+    goto bb23;
+    bb20:
+    kl_rt_panic( "codegen/counting.kl", 32, "assertion failed: odd == 1 + 3 + 5" );
     bb21:
-#line 40 "codegen/counting.kl"
-    kl_t25 = kl_calls_16 == 2;
-    if ( kl_t25 ) goto bb23; else goto bb22;
+    kl_rt_panic( "codegen/counting.kl", 32, "arithmetic overflow: 1 + 3 + 5" );
     bb22:
-    kl_rt_panic( "codegen/counting.kl", 40, "assertion failed: calls == 2" );
+#line 32 "codegen/counting.kl"
+    kl_t17 = kl_t15 + 5;
+    kl_t18 = kl_odd_7 == kl_t17;
+    if ( kl_t18 ) goto bb19; else goto bb20;
     bb23:
-#line 41 "codegen/counting.kl"
-    kl_t26 = kl_steps_17 == 3;
-    if ( kl_t26 ) goto bb24; else goto bb25;
+#line 36 "codegen/counting.kl"
+    kl_t27 = kl_i_21 < kl_t22;
+    if ( kl_t27 ) goto bb24; else goto bb25;
     bb24:
-#line 43 "codegen/counting.kl"
-    kl_i_27 = 3;
-    kl_t28 = 3;
-    goto bb26;
+#line 38 "codegen/counting.kl"
+    kl_t28 = __builtin_add_overflow( kl_steps_20, 1, &( uint64_t ) { 0 } );
+    if ( kl_t28 ) goto bb26; else goto bb27;
     bb25:
-    kl_rt_panic( "codegen/counting.kl", 41, "assertion failed: steps == 3" );
+    goto bb29;
     bb26:
-    kl_t29 = kl_i_27 < kl_t28;
-    if ( kl_t29 ) goto bb28; else goto bb27;
+    kl_rt_panic( "codegen/counting.kl", 38, "arithmetic overflow: steps += 1;" );
     bb27:
-#line 48 "codegen/counting.kl"
-    kl_top_30 = 0;
-#line 49 "codegen/counting.kl"
-    kl_i_31 = 18446744073709551614ull;
-    kl_t32 = 18446744073709551615ull;
-    goto bb29;
+    kl_steps_20 = kl_steps_20 + 1;
+    goto bb28;
     bb28:
-    kl_rt_panic( "codegen/counting.kl", 45, "assertion failed: false" );
+#line 36 "codegen/counting.kl"
+    kl_i_21 = kl_i_21 + 1;
+    goto bb23;
     bb29:
-    kl_t33 = kl_i_31 < kl_t32;
-    if ( kl_t33 ) goto bb30; else goto bb31;
+#line 40 "codegen/counting.kl"
+    kl_t29 = kl_calls_19 == 2;
+    if ( kl_t29 ) goto bb31; else goto bb30;
     bb30:
-#line 51 "codegen/counting.kl"
-    kl_top_30 = kl_top_30 + 1;
-    goto bb32;
+    kl_rt_panic( "codegen/counting.kl", 40, "assertion failed: calls == 2" );
     bb31:
-    goto bb33;
+#line 41 "codegen/counting.kl"
+    kl_t30 = kl_steps_20 == 3;
+    if ( kl_t30 ) goto bb32; else goto bb33;
     bb32:
-#line 49 "codegen/counting.kl"
-    kl_i_31 = kl_i_31 + 1;
-    goto bb29;
+#line 43 "codegen/counting.kl"
+    kl_i_31 = 3;
+    kl_t32 = 3;
+    goto bb34;
     bb33:
-#line 53 "codegen/counting.kl"
-    kl_t34 = kl_top_30 == 1;
-    if ( kl_t34 ) goto bb34; else goto bb35;
+    kl_rt_panic( "codegen/counting.kl", 41, "assertion failed: steps == 3" );
     bb34:
-#line 55 "codegen/counting.kl"
-    kl_n_35 = 4;
-#line 56 "codegen/counting.kl"
-    kl_last_36 = 0;
-#line 57 "codegen/counting.kl"
-    kl_i_37 = 0;
-    kl_t38 = kl_n_35;
-    goto bb36;
+    kl_t33 = kl_i_31 < kl_t32;
+    if ( kl_t33 ) goto bb36; else goto bb35;
     bb35:
-    kl_rt_panic( "codegen/counting.kl", 53, "assertion failed: top == 1" );
+#line 48 "codegen/counting.kl"
+    kl_top_34 = 0;
+#line 49 "codegen/counting.kl"
+    kl_i_35 = 18446744073709551614ull;
+    kl_t36 = 18446744073709551615ull;
+    goto bb37;
     bb36:
-    kl_t39 = kl_i_37 < kl_t38;
-    if ( kl_t39 ) goto bb37; else goto bb38;
+    kl_rt_panic( "codegen/counting.kl", 45, "assertion failed: false" );
     bb37:
-#line 59 "codegen/counting.kl"
-    kl_last_36 = kl_i_37;
-    goto bb39;
+    kl_t37 = kl_i_35 < kl_t36;
+    if ( kl_t37 ) goto bb38; else goto bb39;
     bb38:
-    goto bb40;
+#line 51 "codegen/counting.kl"
+    kl_t38 = __builtin_add_overflow( kl_top_34, 1, &( uint64_t ) { 0 } );
+    if ( kl_t38 ) goto bb40; else goto bb41;
     bb39:
-#line 57 "codegen/counting.kl"
-    kl_i_37 = kl_i_37 + 1;
-    goto bb36;
-    bb40:
-#line 61 "codegen/counting.kl"
-    kl_t40 = kl_last_36 == 3;
-    if ( kl_t40 ) goto bb41; else goto bb42;
-    bb41:
-#line 63 "codegen/counting.kl"
-    kl_neg_41 = 0;
-#line 64 "codegen/counting.kl"
-    kl_t44 = -3;
-    kl_i_42 = kl_t44;
-    kl_t43 = 0;
     goto bb43;
+    bb40:
+    kl_rt_panic( "codegen/counting.kl", 51, "arithmetic overflow: top += 1;" );
+    bb41:
+    kl_top_34 = kl_top_34 + 1;
+    goto bb42;
     bb42:
-    kl_rt_panic( "codegen/counting.kl", 61, "assertion failed: last == 3" );
+#line 49 "codegen/counting.kl"
+    kl_i_35 = kl_i_35 + 1;
+    goto bb37;
     bb43:
-    kl_t45 = kl_i_42 < kl_t43;
-    if ( kl_t45 ) goto bb44; else goto bb45;
+#line 53 "codegen/counting.kl"
+    kl_t39 = kl_top_34 == 1;
+    if ( kl_t39 ) goto bb44; else goto bb45;
     bb44:
-#line 66 "codegen/counting.kl"
-    kl_neg_41 = kl_neg_41 + kl_i_42;
+#line 55 "codegen/counting.kl"
+    kl_n_40 = 4;
+#line 56 "codegen/counting.kl"
+    kl_last_41 = 0;
+#line 57 "codegen/counting.kl"
+    kl_i_42 = 0;
+    kl_t43 = kl_n_40;
     goto bb46;
     bb45:
-    goto bb47;
+    kl_rt_panic( "codegen/counting.kl", 53, "assertion failed: top == 1" );
     bb46:
-#line 64 "codegen/counting.kl"
-    kl_i_42 = kl_i_42 + 1;
-    goto bb43;
+    kl_t44 = kl_i_42 < kl_t43;
+    if ( kl_t44 ) goto bb47; else goto bb48;
     bb47:
-#line 68 "codegen/counting.kl"
-    kl_t46 = -6;
-    kl_t47 = kl_neg_41 == kl_t46;
-    if ( kl_t47 ) goto bb48; else goto bb49;
+#line 59 "codegen/counting.kl"
+    kl_last_41 = kl_i_42;
+    goto bb49;
     bb48:
+    goto bb50;
+    bb49:
+#line 57 "codegen/counting.kl"
+    kl_i_42 = kl_i_42 + 1;
+    goto bb46;
+    bb50:
+#line 61 "codegen/counting.kl"
+    kl_t45 = kl_last_41 == 3;
+    if ( kl_t45 ) goto bb51; else goto bb52;
+    bb51:
+#line 63 "codegen/counting.kl"
+    kl_neg_46 = 0;
+#line 64 "codegen/counting.kl"
+    kl_t49 = -3;
+    kl_i_47 = kl_t49;
+    kl_t48 = 0;
+    goto bb53;
+    bb52:
+    kl_rt_panic( "codegen/counting.kl", 61, "assertion failed: last == 3" );
+    bb53:
+    kl_t50 = kl_i_47 < kl_t48;
+    if ( kl_t50 ) goto bb54; else goto bb55;
+    bb54:
+#line 66 "codegen/counting.kl"
+    kl_t51 = __builtin_add_overflow( kl_neg_46, kl_i_47, &( int32_t ) { 0 } );
+    if ( kl_t51 ) goto bb56; else goto bb57;
+    bb55:
+    goto bb59;
+    bb56:
+    kl_rt_panic( "codegen/counting.kl", 66, "arithmetic overflow: neg += i;" );
+    bb57:
+    kl_neg_46 = kl_neg_46 + kl_i_47;
+    goto bb58;
+    bb58:
+#line 64 "codegen/counting.kl"
+    kl_i_47 = kl_i_47 + 1;
+    goto bb53;
+    bb59:
+#line 68 "codegen/counting.kl"
+    kl_t52 = -6;
+    kl_t53 = kl_neg_46 == kl_t52;
+    if ( kl_t53 ) goto bb60; else goto bb61;
+    bb60:
 #line 69 "codegen/counting.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb49:
+    bb61:
     kl_rt_panic( "codegen/counting.kl", 68, "assertion failed: neg == -6" );
 }
 

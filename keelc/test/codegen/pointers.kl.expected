@@ -18,6 +18,8 @@ struct kl__Cell
     int32_t kl_n_6;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__read__P3i32( int32_t* );
 void kl__bump__P3i32( int32_t* );
 int32_t kl__main__( void );
@@ -32,10 +34,16 @@ int32_t kl__read__P3i32( int32_t* kl_q_1 )
 
 void kl__bump__P3i32( int32_t* kl_q_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 8 "codegen/pointers.kl"
-    kl_t2 = ( *kl_q_1 ) + 1;
-    ( *kl_q_1 ) = kl_t2;
+    kl_t2 = __builtin_add_overflow( ( *kl_q_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/pointers.kl", 8, "arithmetic overflow: *q + 1" );
+    bb2:
+    kl_t3 = ( *kl_q_1 ) + 1;
+    ( *kl_q_1 ) = kl_t3;
     return;
 }
 
@@ -71,6 +79,8 @@ int32_t kl__main__( void )
     struct kl__Cell* kl_t28;
     bool kl_t29;
     bool kl_t30;
+    bool kl_t31;
+    bool kl_t32;
 #line 12 "codegen/pointers.kl"
     kl_v_1 = 41;
 #line 13 "codegen/pointers.kl"
@@ -173,23 +183,33 @@ int32_t kl__main__( void )
     kl_t28 = &kl_c_25;
     kl_d_27 = kl_t28;
 #line 48 "codegen/pointers.kl"
-    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 5;
-#line 49 "codegen/pointers.kl"
-    kl_t29 = kl_c_25.kl_n_6 != 15;
+    kl_t29 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 5, &( int32_t ) { 0 } );
     if ( kl_t29 ) goto bb19; else goto bb20;
     bb19:
-    kl_t0 = 10;
-    return kl_t0;
+    kl_rt_panic( "codegen/pointers.kl", 48, "arithmetic overflow: (*d).n += 5;" );
     bb20:
-#line 51 "codegen/pointers.kl"
-    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 1;
-#line 52 "codegen/pointers.kl"
-    kl_t30 = kl_c_25.kl_n_6 != 16;
+    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 5;
+#line 49 "codegen/pointers.kl"
+    kl_t30 = kl_c_25.kl_n_6 != 15;
     if ( kl_t30 ) goto bb21; else goto bb22;
     bb21:
-    kl_t0 = 11;
+    kl_t0 = 10;
     return kl_t0;
     bb22:
+#line 51 "codegen/pointers.kl"
+    kl_t31 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 1, &( int32_t ) { 0 } );
+    if ( kl_t31 ) goto bb23; else goto bb24;
+    bb23:
+    kl_rt_panic( "codegen/pointers.kl", 51, "arithmetic overflow: (*d).n++;" );
+    bb24:
+    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 1;
+#line 52 "codegen/pointers.kl"
+    kl_t32 = kl_c_25.kl_n_6 != 16;
+    if ( kl_t32 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 11;
+    return kl_t0;
+    bb26:
 #line 54 "codegen/pointers.kl"
     kl_t0 = 0;
     return kl_t0;

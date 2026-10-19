@@ -76,6 +76,8 @@ std::string_view failure_prefix( Failure failure )
         return "NaN has no hash: ";
     case Failure::Bounds:
         return "out of bounds: ";
+    case Failure::Overflow:
+        return "arithmetic overflow: ";
     }
 }
 
@@ -1783,6 +1785,20 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
     case Rvalue_kind::Unary:
         return fmt::format( "{}{}", token_kind_spelling( rvalue.op ), operand( rvalue.a ) );
+
+    // The builtin judges the fit by its third argument's type.
+    case Rvalue_kind::Overflows:
+    {
+        const std::string_view name = rvalue.op == Token_kind::Plus ? "add" : rvalue.op == Token_kind::Minus ? "sub" : "mul";
+
+        return fmt::format(
+            "__builtin_{}_overflow( {}, {}, &( {} ) {{ 0 }} )",
+            name,
+            operand( rvalue.a ),
+            operand( rvalue.b ),
+            spelling_.type( rvalue.a.type )
+        );
+    }
 
     case Rvalue_kind::Cast:
         if( types_.table().is_interface_pointer( rvalue.type ) )

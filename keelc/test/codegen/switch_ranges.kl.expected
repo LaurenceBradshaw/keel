@@ -4,6 +4,8 @@
 
 #include "switch_ranges.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__bucket__3i32( int32_t );
 int32_t kl__grade__3f64( double );
 int32_t kl__main__( void );
@@ -113,12 +115,16 @@ int32_t kl__main__( void )
     int32_t kl_t25;
     bool kl_t26;
     int32_t kl_t27;
-    int32_t kl_t28;
+    bool kl_t28;
     int32_t kl_t29;
     int32_t kl_t30;
-    int32_t kl_t31;
+    bool kl_t31;
     int32_t kl_t32;
-    int32_t kl_t33;
+    bool kl_t33;
+    int32_t kl_t34;
+    int32_t kl_t35;
+    bool kl_t36;
+    int32_t kl_t37;
 #line 38 "codegen/switch_ranges.kl"
     kl_total_1 = 0;
 #line 41 "codegen/switch_ranges.kl"
@@ -220,13 +226,33 @@ int32_t kl__main__( void )
     bb24:
 #line 56 "codegen/switch_ranges.kl"
     kl_t27 = kl__bucket__3i32( 3 );
-    kl_t28 = kl_t27 * 100;
-    kl_t29 = kl__bucket__3i32( 7 );
-    kl_t30 = kl_t29 * 10;
-    kl_t31 = kl_t28 + kl_t30;
-    kl_t32 = kl__grade__3f64( 0.25 );
-    kl_t33 = kl_t31 + kl_t32;
-    kl_total_1 = kl_t33;
+    kl_t28 = __builtin_mul_overflow( kl_t27, 100, &( int32_t ) { 0 } );
+    if ( kl_t28 ) goto bb25; else goto bb26;
+    bb25:
+    kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100" );
+    bb26:
+    kl_t29 = kl_t27 * 100;
+    kl_t30 = kl__bucket__3i32( 7 );
+    kl_t31 = __builtin_mul_overflow( kl_t30, 10, &( int32_t ) { 0 } );
+    if ( kl_t31 ) goto bb27; else goto bb28;
+    bb27:
+    kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 7 ) * 10" );
+    bb28:
+    kl_t32 = kl_t30 * 10;
+    kl_t33 = __builtin_add_overflow( kl_t29, kl_t32, &( int32_t ) { 0 } );
+    if ( kl_t33 ) goto bb29; else goto bb30;
+    bb29:
+    kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100 + bucket( 7 ) * 10" );
+    bb30:
+    kl_t34 = kl_t29 + kl_t32;
+    kl_t35 = kl__grade__3f64( 0.25 );
+    kl_t36 = __builtin_add_overflow( kl_t34, kl_t35, &( int32_t ) { 0 } );
+    if ( kl_t36 ) goto bb31; else goto bb32;
+    bb31:
+    kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100 + bucket( 7 ) * 10 + grade( 0.25 )" );
+    bb32:
+    kl_t37 = kl_t34 + kl_t35;
+    kl_total_1 = kl_t37;
 #line 58 "codegen/switch_ranges.kl"
     kl_t0 = kl_total_1;
     return kl_t0;

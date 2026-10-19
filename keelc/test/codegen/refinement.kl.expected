@@ -28,6 +28,8 @@ struct kl__Shape__vtable
     double ( *kl_area_16 )( void* );
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__id__S6Square( struct kl__Square* );
 double kl__area__S6Square( struct kl__Square* );
 int32_t kl__id__S4TileC5Named( int32_t* );
@@ -160,9 +162,10 @@ double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
     int32_t kl_t5;
     struct kl__Square* kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
-    double kl_t9;
+    bool kl_t8;
+    int32_t kl_t9;
     double kl_t10;
+    double kl_t11;
 #line 54 "codegen/refinement.kl"
     kl_t2 = &( *kl_t_1 );
     kl_t3 = kl__area__S6Square( kl_t2 );
@@ -170,10 +173,15 @@ double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
     kl_t5 = kl__id__S6Square( kl_t4 );
     kl_t6 = &( *kl_t_1 );
     kl_t7 = kl__identify__I6SquareE__6Square( kl_t6 );
-    kl_t8 = kl_t5 + kl_t7;
-    kl_t9 = ( double ) kl_t8;
-    kl_t10 = kl_t3 * kl_t9;
-    kl_t0 = kl_t10;
+    kl_t8 = __builtin_add_overflow( kl_t5, kl_t7, &( int32_t ) { 0 } );
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/refinement.kl", 54, "arithmetic overflow: t.id() + identify( t )" );
+    bb2:
+    kl_t9 = kl_t5 + kl_t7;
+    kl_t10 = ( double ) kl_t9;
+    kl_t11 = kl_t3 * kl_t10;
+    kl_t0 = kl_t11;
     return kl_t0;
 }
 
@@ -186,9 +194,10 @@ double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
     int32_t kl_t5;
     int32_t* kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
-    double kl_t9;
+    bool kl_t8;
+    int32_t kl_t9;
     double kl_t10;
+    double kl_t11;
 #line 54 "codegen/refinement.kl"
     kl_t2 = &( *kl_t_1 );
     kl_t3 = kl__area__S4TileC5Shape( kl_t2 );
@@ -196,10 +205,15 @@ double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
     kl_t5 = kl__id__S4TileC5Named( kl_t4 );
     kl_t6 = &( *kl_t_1 );
     kl_t7 = kl__identify__I4TileE__4Tile( kl_t6 );
-    kl_t8 = kl_t5 + kl_t7;
-    kl_t9 = ( double ) kl_t8;
-    kl_t10 = kl_t3 * kl_t9;
-    kl_t0 = kl_t10;
+    kl_t8 = __builtin_add_overflow( kl_t5, kl_t7, &( int32_t ) { 0 } );
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/refinement.kl", 54, "arithmetic overflow: t.id() + identify( t )" );
+    bb2:
+    kl_t9 = kl_t5 + kl_t7;
+    kl_t10 = ( double ) kl_t9;
+    kl_t11 = kl_t3 * kl_t10;
+    kl_t0 = kl_t11;
     return kl_t0;
 }
 

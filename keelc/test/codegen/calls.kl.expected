@@ -4,6 +4,8 @@
 
 #include "calls.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__g__3i32( int32_t );
 int32_t kl__even__3i32( int32_t );
 int32_t kl__odd__3i32( int32_t );
@@ -21,8 +23,9 @@ int32_t kl__even__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
+    int32_t kl_t5;
 #line 5 "codegen/calls.kl"
     kl_t2 = kl_n_1 == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -30,9 +33,14 @@ int32_t kl__even__3i32( int32_t kl_n_1 )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__odd__3i32( kl_t3 );
-    kl_t0 = kl_t4;
+    kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/calls.kl", 5, "arithmetic overflow: n - 1" );
+    bb4:
+    kl_t4 = kl_n_1 - 1;
+    kl_t5 = kl__odd__3i32( kl_t4 );
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -40,8 +48,9 @@ int32_t kl__odd__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
+    int32_t kl_t5;
 #line 6 "codegen/calls.kl"
     kl_t2 = kl_n_1 == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -49,9 +58,14 @@ int32_t kl__odd__3i32( int32_t kl_n_1 )
     kl_t0 = 0;
     return kl_t0;
     bb2:
-    kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__even__3i32( kl_t3 );
-    kl_t0 = kl_t4;
+    kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/calls.kl", 6, "arithmetic overflow: n - 1" );
+    bb4:
+    kl_t4 = kl_n_1 - 1;
+    kl_t5 = kl__even__3i32( kl_t4 );
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -60,18 +74,30 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_t1;
     int32_t kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
     int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
 #line 10 "codegen/calls.kl"
     kl_t1 = kl__g__3i32( 1 );
     kl_t2 = kl__g__3i32( 2 );
-    kl_t3 = kl_t1 + kl_t2;
-    kl_t4 = kl__g__3i32( kl_t3 );
-    kl_t5 = kl__even__3i32( 4 );
-    kl_t6 = kl_t4 + kl_t5;
-    kl_t0 = kl_t6;
+    kl_t3 = __builtin_add_overflow( kl_t1, kl_t2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/calls.kl", 10, "arithmetic overflow: g( 1 ) + g( 2 )" );
+    bb2:
+    kl_t4 = kl_t1 + kl_t2;
+    kl_t5 = kl__g__3i32( kl_t4 );
+    kl_t6 = kl__even__3i32( 4 );
+    kl_t7 = __builtin_add_overflow( kl_t5, kl_t6, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/calls.kl", 10, "arithmetic overflow: g( g( 1 ) + g( 2 ) ) + even( 4 )" );
+    bb4:
+    kl_t8 = kl_t5 + kl_t6;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 

@@ -28,6 +28,8 @@ struct kl__holder
 
 int32_t kl_live_1;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
 void kl__Owned__dtor( struct kl__Owned* );
 void kl__holder__R6holder_3big_R3i32_M5Owned__ctor( struct kl__holder*, struct kl__big*, int32_t*, struct kl__Owned );
@@ -35,44 +37,74 @@ int32_t kl__main__( void );
 
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 12 "codegen/constructor_borrows.kl"
     ( *kl_this_1 ).kl_id_3 = kl_n_2;
 #line 13 "codegen/constructor_borrows.kl"
-    kl_t3 = kl_live_1 + 1;
-    kl_live_1 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/constructor_borrows.kl", 13, "arithmetic overflow: live + 1" );
+    bb2:
+    kl_t4 = kl_live_1 + 1;
+    kl_live_1 = kl_t4;
     return;
 }
 
 void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 18 "codegen/constructor_borrows.kl"
-    kl_t2 = kl_live_1 - 1;
-    kl_live_1 = kl_t2;
+    kl_t2 = __builtin_sub_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/constructor_borrows.kl", 18, "arithmetic overflow: live - 1" );
+    bb2:
+    kl_t3 = kl_live_1 - 1;
+    kl_live_1 = kl_t3;
     return;
 }
 
 void kl__holder__R6holder_3big_R3i32_M5Owned__ctor( struct kl__holder* kl_this_1, struct kl__big* kl_source_2, int32_t* kl_counter_3, struct kl__Owned kl_o_4 )
 {
-    int64_t kl_t5;
+    bool kl_t5;
     int64_t kl_t6;
     bool kl_t7;
+    int64_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
 #line 34 "codegen/constructor_borrows.kl"
-    kl_t7 = true;
+    kl_t10 = true;
 #line 36 "codegen/constructor_borrows.kl"
-    kl_t5 = ( *kl_source_2 ).kl_a_33 + ( *kl_source_2 ).kl_b_35;
-    kl_t6 = kl_t5 + ( *kl_source_2 ).kl_c_37;
-    ( *kl_this_1 ).kl_sum_40 = kl_t6;
+    kl_t5 = __builtin_add_overflow( ( *kl_source_2 ).kl_a_33, ( *kl_source_2 ).kl_b_35, &( int64_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/constructor_borrows.kl", 36, "arithmetic overflow: source.a + source.b" );
+    bb2:
+    kl_t6 = ( *kl_source_2 ).kl_a_33 + ( *kl_source_2 ).kl_b_35;
+    kl_t7 = __builtin_add_overflow( kl_t6, ( *kl_source_2 ).kl_c_37, &( int64_t ) { 0 } );
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/constructor_borrows.kl", 36, "arithmetic overflow: source.a + source.b + source.c" );
+    bb4:
+    kl_t8 = kl_t6 + ( *kl_source_2 ).kl_c_37;
+    ( *kl_this_1 ).kl_sum_40 = kl_t8;
 #line 37 "codegen/constructor_borrows.kl"
+    kl_t9 = __builtin_add_overflow( ( *kl_counter_3 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/constructor_borrows.kl", 37, "arithmetic overflow: counter += 1;" );
+    bb6:
     ( *kl_counter_3 ) = ( *kl_counter_3 ) + 1;
 #line 38 "codegen/constructor_borrows.kl"
     ( *kl_this_1 ).kl_kept_42 = kl_o_4;
-    kl_t7 = false;
+    kl_t10 = false;
 #line 34 "codegen/constructor_borrows.kl"
-    if ( kl_t7 ) kl__Owned__dtor( &kl_o_4 );
-    kl_t7 = false;
+    if ( kl_t10 ) kl__Owned__dtor( &kl_o_4 );
+    kl_t10 = false;
     return;
 }
 

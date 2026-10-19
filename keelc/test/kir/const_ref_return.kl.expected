@@ -37,7 +37,8 @@ fn main {
     let _9: i32; // copied
     let _10: Point*;
     let _11: i32*;
-    let _12: i32;
+    let _12: bool;
+    let _13: i32;
 
     bb0:
         storage_live _1
@@ -58,8 +59,15 @@ fn main {
         _10 = &read _7
         _11 = call gets(copy _10)
         _9 = copy (*_11)
-        _12 = copy (*_3) + copy _9
-        _0 = copy _12
+        _12 = overflows copy (*_3) + copy _9
+        branch copy _12 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _13 = copy (*_3) + copy _9
+        _0 = copy _13
         storage_dead _9
         storage_dead _7
         storage_dead _3

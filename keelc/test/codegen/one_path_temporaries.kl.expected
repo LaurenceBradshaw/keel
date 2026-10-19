@@ -14,6 +14,7 @@ struct kl__Buf
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
@@ -366,11 +367,14 @@ uint64_t kl__looped__3u64( uint64_t kl_count_1 )
     bool kl_t8;
     struct kl__Buf kl_t9;
     struct kl__Buf* kl_t10;
-    uint64_t kl_t11;
-    uint64_t kl_t13;
+    bool kl_t11;
+    uint64_t kl_t12;
     bool kl_t14;
+    uint64_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
 #line 96 "codegen/one_path_temporaries.kl"
-    kl_t14 = false;
+    kl_t17 = false;
 #line 92 "codegen/one_path_temporaries.kl"
     kl_all_2 = 0;
 #line 94 "codegen/one_path_temporaries.kl"
@@ -390,26 +394,43 @@ uint64_t kl__looped__3u64( uint64_t kl_count_1 )
     return kl_t0;
     bb4:
 #line 96 "codegen/one_path_temporaries.kl"
-    kl_t14 = false;
+    kl_t17 = false;
     kl_t10 = &kl_t9;
-    kl_t14 = true;
-    kl_t11 = 20 + kl_i_3;
-    kl__Buf__R3Buf_3u64__ctor( kl_t10, kl_t11 );
-    kl_t6 = kl_t9.kl_n_3;
-    goto bb6;
+    kl_t17 = true;
+    kl_t11 = __builtin_add_overflow( 20, kl_i_3, &( uint64_t ) { 0 } );
+    if ( kl_t11 ) goto bb7; else goto bb8;
     bb5:
     kl_t6 = 0;
     goto bb6;
     bb6:
     kl_got_5 = kl_t6;
-    if ( kl_t14 ) kl__Buf__dtor( &kl_t9 );
-    kl_t14 = false;
+    if ( kl_t17 ) kl__Buf__dtor( &kl_t9 );
+    kl_t17 = false;
 #line 97 "codegen/one_path_temporaries.kl"
-    kl_t13 = kl_all_2 + kl_got_5;
-    kl_all_2 = kl_t13;
-    goto bb7;
+    kl_t14 = __builtin_add_overflow( kl_all_2, kl_got_5, &( uint64_t ) { 0 } );
+    if ( kl_t14 ) goto bb9; else goto bb10;
     bb7:
+    kl_rt_panic( "codegen/one_path_temporaries.kl", 96, "arithmetic overflow: 20 + i" );
+    bb8:
+#line 96 "codegen/one_path_temporaries.kl"
+    kl_t12 = 20 + kl_i_3;
+    kl__Buf__R3Buf_3u64__ctor( kl_t10, kl_t12 );
+    kl_t6 = kl_t9.kl_n_3;
+    goto bb6;
+    bb9:
+    kl_rt_panic( "codegen/one_path_temporaries.kl", 97, "arithmetic overflow: all + got" );
+    bb10:
+#line 97 "codegen/one_path_temporaries.kl"
+    kl_t15 = kl_all_2 + kl_got_5;
+    kl_all_2 = kl_t15;
+    goto bb11;
+    bb11:
 #line 94 "codegen/one_path_temporaries.kl"
+    kl_t16 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
+    if ( kl_t16 ) goto bb12; else goto bb13;
+    bb12:
+    kl_rt_panic( "codegen/one_path_temporaries.kl", 94, "arithmetic overflow: i++" );
+    bb13:
     kl_i_3 = kl_i_3 + 1;
     goto bb1;
 }
@@ -422,12 +443,14 @@ uint64_t kl__guarded__( void )
     bool kl_t3;
     struct kl__Buf kl_t4;
     struct kl__Buf* kl_t5;
-    uint64_t kl_t6;
-    struct kl__Buf* kl_t8;
-    bool kl_t9;
+    bool kl_t6;
+    uint64_t kl_t7;
+    struct kl__Buf* kl_t9;
     bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
 #line 108 "codegen/one_path_temporaries.kl"
-    kl_t10 = false;
+    kl_t12 = false;
 #line 106 "codegen/one_path_temporaries.kl"
     kl_i_1 = 0;
     goto bb1;
@@ -438,27 +461,38 @@ uint64_t kl__guarded__( void )
     if ( kl_t2 ) goto bb3; else goto bb4;
     bb2:
 #line 110 "codegen/one_path_temporaries.kl"
-    kl_i_1 = kl_i_1 + 1;
-    goto bb1;
+    kl_t11 = __builtin_add_overflow( kl_i_1, 1, &( uint64_t ) { 0 } );
+    if ( kl_t11 ) goto bb8; else goto bb9;
     bb3:
 #line 108 "codegen/one_path_temporaries.kl"
-    kl_t10 = false;
+    kl_t12 = false;
     kl_t5 = &kl_t4;
-    kl_t10 = true;
-    kl_t6 = 30 + kl_i_1;
-    kl__Buf__R3Buf_3u64__ctor( kl_t5, kl_t6 );
-    kl_t8 = &kl_t4;
-    kl_t9 = kl__positive__S3Buf( kl_t8 );
-    kl_t2 = kl_t9;
-    goto bb4;
+    kl_t12 = true;
+    kl_t6 = __builtin_add_overflow( 30, kl_i_1, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb5; else goto bb6;
     bb4:
-    if ( kl_t10 ) kl__Buf__dtor( &kl_t4 );
-    kl_t10 = false;
-    if ( kl_t2 ) goto bb2; else goto bb5;
+    if ( kl_t12 ) kl__Buf__dtor( &kl_t4 );
+    kl_t12 = false;
+    if ( kl_t2 ) goto bb2; else goto bb7;
     bb5:
+    kl_rt_panic( "codegen/one_path_temporaries.kl", 108, "arithmetic overflow: 30 + i" );
+    bb6:
+    kl_t7 = 30 + kl_i_1;
+    kl__Buf__R3Buf_3u64__ctor( kl_t5, kl_t7 );
+    kl_t9 = &kl_t4;
+    kl_t10 = kl__positive__S3Buf( kl_t9 );
+    kl_t2 = kl_t10;
+    goto bb4;
+    bb7:
 #line 113 "codegen/one_path_temporaries.kl"
     kl_t0 = kl_i_1;
     return kl_t0;
+    bb8:
+    kl_rt_panic( "codegen/one_path_temporaries.kl", 110, "arithmetic overflow: i++;" );
+    bb9:
+#line 110 "codegen/one_path_temporaries.kl"
+    kl_i_1 = kl_i_1 + 1;
+    goto bb1;
 }
 
 int32_t kl__main__( void )

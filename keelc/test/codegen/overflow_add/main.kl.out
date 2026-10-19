@@ -1,0 +1,2 @@
+before
+codegen/overflow_add/main.kl:7: arithmetic overflow: a + b

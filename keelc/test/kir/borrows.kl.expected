@@ -56,16 +56,17 @@ fn main {
     let _9: void;
     let _10: B*;
     let _11: u64;
-    let _12: u64;
-    let _13: B;
-    let _14: B*;
-    let _15: void;
+    let _12: bool;
+    let _13: u64;
+    let _14: B;
+    let _15: B*;
     let _16: void;
-    let _17: i32;
-    let _18: bool;
+    let _17: void;
+    let _18: i32;
+    let _19: bool;
 
     bb0:
-        _18 = const 0
+        _19 = const 0
         storage_live _1
         _2 = &init _1
         _3 = call B(copy _2, const 1)
@@ -78,22 +79,29 @@ fn main {
         _9 = call B(copy _8, const 2)
         _10 = &read _7
         _11 = call peek(copy _10)
-        _12 = copy _4 + copy _11
-        _4 = copy _12
+        _12 = overflows copy _4 + copy _11
+        branch copy _12 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _13 = copy _4 + copy _11
+        _4 = copy _13
         drop _7
         storage_dead _7
-        storage_live _13
-        _18 = const 0
-        _14 = &init _13
-        _18 = const 1
-        _15 = call B(copy _14, const 3)
-        _16 = call own(move _13)
-        _18 = const 0
-        drop _13 if _18
-        storage_dead _13
-        _18 = const 0
-        _17 = copy _4 as i32
-        _0 = copy _17
+        storage_live _14
+        _19 = const 0
+        _15 = &init _14
+        _19 = const 1
+        _16 = call B(copy _15, const 3)
+        _17 = call own(move _14)
+        _19 = const 0
+        drop _14 if _19
+        storage_dead _14
+        _19 = const 0
+        _18 = copy _4 as i32
+        _0 = copy _18
         storage_dead _4
         drop _1
         storage_dead _1

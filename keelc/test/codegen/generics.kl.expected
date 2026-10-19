@@ -4,6 +4,8 @@
 
 #include "generics.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__doubled__3i32( int32_t );
 int32_t kl__main__( void );
 int32_t kl__id__I3i32E__3i32( int32_t );
@@ -17,10 +19,16 @@ int32_t kl__relay__I4boolE__4bool( bool );
 int32_t kl__doubled__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 35 "codegen/generics.kl"
-    kl_t2 = kl_v_1 + kl_v_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_v_1, kl_v_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generics.kl", 35, "arithmetic overflow: v + v" );
+    bb2:
+    kl_t3 = kl_v_1 + kl_v_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -43,12 +51,17 @@ int32_t kl__main__( void )
     bool kl_t15;
     int32_t kl_f_16;
     int32_t* kl_t17;
-    int32_t kl_t19;
+    bool kl_t19;
     int32_t kl_t20;
-    int32_t kl_t21;
+    bool kl_t21;
     int32_t kl_t22;
-    int32_t kl_t23;
+    bool kl_t23;
     int32_t kl_t24;
+    bool kl_t25;
+    int32_t kl_t26;
+    int32_t kl_t27;
+    bool kl_t28;
+    int32_t kl_t29;
 #line 45 "codegen/generics.kl"
     kl_t2 = kl__id__I3i32E__3i32( 7 );
     kl_a_1 = kl_t2;
@@ -88,13 +101,38 @@ int32_t kl__main__( void )
     kl_t17 = &kl_f_16;
     kl__first_write__I3i32E__O3i32_3i32( kl_t17, 1 );
 #line 72 "codegen/generics.kl"
-    kl_t19 = kl_a_1 + kl_c_5;
-    kl_t20 = kl_t19 + kl_d_7;
-    kl_t21 = kl_t20 + kl_e_10;
-    kl_t22 = kl_t21 + kl_f_16;
-    kl_t23 = kl__relay__I4boolE__4bool( true );
-    kl_t24 = kl_t22 - kl_t23;
-    kl_t0 = kl_t24;
+    kl_t19 = __builtin_add_overflow( kl_a_1, kl_c_5, &( int32_t ) { 0 } );
+    if ( kl_t19 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c" );
+    bb6:
+    kl_t20 = kl_a_1 + kl_c_5;
+    kl_t21 = __builtin_add_overflow( kl_t20, kl_d_7, &( int32_t ) { 0 } );
+    if ( kl_t21 ) goto bb7; else goto bb8;
+    bb7:
+    kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d" );
+    bb8:
+    kl_t22 = kl_t20 + kl_d_7;
+    kl_t23 = __builtin_add_overflow( kl_t22, kl_e_10, &( int32_t ) { 0 } );
+    if ( kl_t23 ) goto bb9; else goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e" );
+    bb10:
+    kl_t24 = kl_t22 + kl_e_10;
+    kl_t25 = __builtin_add_overflow( kl_t24, kl_f_16, &( int32_t ) { 0 } );
+    if ( kl_t25 ) goto bb11; else goto bb12;
+    bb11:
+    kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e + f" );
+    bb12:
+    kl_t26 = kl_t24 + kl_f_16;
+    kl_t27 = kl__relay__I4boolE__4bool( true );
+    kl_t28 = __builtin_sub_overflow( kl_t26, kl_t27, &( int32_t ) { 0 } );
+    if ( kl_t28 ) goto bb13; else goto bb14;
+    bb13:
+    kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e + f - relay<bool>( true )" );
+    bb14:
+    kl_t29 = kl_t26 - kl_t27;
+    kl_t0 = kl_t29;
     return kl_t0;
 }
 

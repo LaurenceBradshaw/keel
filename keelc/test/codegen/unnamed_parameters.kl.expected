@@ -20,6 +20,8 @@ struct kl__shape__vtable
     int32_t ( *kl_area_7 )( void*, int32_t );
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__square__R6square_3i32__ctor( struct kl__square*, int32_t );
 int32_t kl__area__S6square_3i32( struct kl__square*, int32_t );
 int32_t kl__second__3i32_3i32( int32_t, int32_t );
@@ -48,11 +50,17 @@ void kl__square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_s
 int32_t kl__area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
 {
     int32_t kl_t0;
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
     ( void ) kl_t2;
 #line 19 "codegen/unnamed_parameters.kl"
-    kl_t3 = ( *kl_this_1 ).kl_side_12 * ( *kl_this_1 ).kl_side_12;
-    kl_t0 = kl_t3;
+    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_side_12, ( *kl_this_1 ).kl_side_12, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/unnamed_parameters.kl", 19, "arithmetic overflow: side * side" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ).kl_side_12 * ( *kl_this_1 ).kl_side_12;
+    kl_t0 = kl_t4;
     return kl_t0;
 }
 

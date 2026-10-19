@@ -82,8 +82,9 @@ bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t* kl_this_1, int32_t* 
     bool kl_t6;
     uint8_t kl_t7;
     uint8_t kl_t8;
-    uint8_t kl_t9;
-    bool kl_t10;
+    bool kl_t9;
+    uint8_t kl_t10;
+    bool kl_t11;
 #line 42 "codegen/hash.kl"
     kl_t4 = ( uint8_t ) ( *kl_this_1 );
     kl_t5 = ( uint8_t ) ( *kl_other_2 );
@@ -93,13 +94,18 @@ bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t* kl_this_1, int32_t* 
     bb1:
     kl_t7 = ( uint8_t ) ( *kl_this_1 );
     kl_t8 = ( uint8_t ) ( *kl_other_2 );
-    kl_t9 = kl_t7 + kl_t8;
-    kl_t10 = kl_t9 == 1;
-    kl_t3 = kl_t10;
-    goto bb2;
+    kl_t9 = __builtin_add_overflow( kl_t7, kl_t8, &( uint8_t ) { 0 } );
+    if ( kl_t9 ) goto bb3; else goto bb4;
     bb2:
     kl_t0 = kl_t3;
     return kl_t0;
+    bb3:
+    kl_rt_panic( "codegen/hash.kl", 42, "arithmetic overflow: cast<u8>( this ) + cast<u8>( other )" );
+    bb4:
+    kl_t10 = kl_t7 + kl_t8;
+    kl_t11 = kl_t10 == 1;
+    kl_t3 = kl_t11;
+    goto bb2;
 }
 
 void kl__hash__S6ColourC8hashable_RQ7prelude6hasher( int32_t* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )

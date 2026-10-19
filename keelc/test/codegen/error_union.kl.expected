@@ -140,6 +140,7 @@ struct kl__Opt__IU8Io_error4LostEE
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
@@ -259,7 +260,8 @@ struct kl_7prelude_result__I3u64_11Parse_errorE kl__parse__3u64( uint64_t kl_n_1
     struct kl_7prelude_result__I3u64_11Parse_errorE kl_t3;
     struct kl__Parse_error kl_t4;
     struct kl_7prelude_result__I3u64_11Parse_errorE kl_t5;
-    uint64_t kl_t6;
+    bool kl_t6;
+    uint64_t kl_t7;
 #line 73 "codegen/error_union.kl"
     kl_t2 = kl_n_1 == 7;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -273,9 +275,14 @@ struct kl_7prelude_result__I3u64_11Parse_errorE kl__parse__3u64( uint64_t kl_n_1
     return kl_t0;
     bb2:
 #line 78 "codegen/error_union.kl"
-    kl_t6 = kl_n_1 * 2;
+    kl_t6 = __builtin_mul_overflow( kl_n_1, 2, &( uint64_t ) { 0 } );
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/error_union.kl", 78, "arithmetic overflow: n * 2" );
+    bb4:
+    kl_t7 = kl_n_1 * 2;
     kl_t5.tag = 0;
-    kl_t5.kl_value_1330 = kl_t6;
+    kl_t5.kl_value_1330 = kl_t7;
     kl_t0 = kl_t5;
     return kl_t0;
 }
@@ -417,25 +424,26 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
     bool kl_t10;
     bool kl_t11;
     uint64_t kl_t12;
-    uint64_t kl_t13;
-    bool kl_t14;
+    bool kl_t13;
+    uint64_t kl_t14;
     bool kl_t15;
+    bool kl_t16;
 #line 106 "codegen/error_union.kl"
-    kl_t14 = false;
-#line 107 "codegen/error_union.kl"
     kl_t15 = false;
+#line 107 "codegen/error_union.kl"
+    kl_t16 = false;
 #line 106 "codegen/error_union.kl"
     kl_t3 = kl__fetch__3u64( kl_n_1 );
-    kl_t14 = true;
+    kl_t15 = true;
     kl_t4 = kl_t3;
-    kl_t14 = false;
+    kl_t15 = false;
     kl_t5 = kl_t4.tag == 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
     kl_t6 = kl_t4.kl_value_1330;
     kl_got_2 = kl_t6;
-    if ( kl_t14 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
-    kl_t14 = false;
+    if ( kl_t15 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
+    kl_t15 = false;
 #line 107 "codegen/error_union.kl"
     kl_t8 = kl__load__3u64( kl_got_2 );
     kl_t9 = kl_t8;
@@ -446,21 +454,13 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
     kl_t0.tag = 1;
     kl_t0.kl_error_1333.tag = 1;
     kl_t0.kl_error_1333.e1 = kl_t4.kl_error_1333;
-    if ( kl_t14 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
+    if ( kl_t15 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
     return kl_t0;
     bb3:
 #line 107 "codegen/error_union.kl"
     kl_t12 = kl_t9.kl_value_1330;
-    kl_t13 = kl_t12 + 1;
-    kl_t7.tag = 0;
-    kl_t15 = true;
-    kl_t7.kl_value_1330 = kl_t13;
-    kl_t15 = true;
-    kl_t0 = kl_t7;
-    kl_t15 = false;
-    if ( kl_t15 ) kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE__dtor( &kl_t7 );
-    kl_t15 = false;
-    return kl_t0;
+    kl_t13 = __builtin_add_overflow( kl_t12, 1, &( uint64_t ) { 0 } );
+    if ( kl_t13 ) goto bb8; else goto bb9;
     bb4:
     kl_t0.tag = 1;
     kl_t0.kl_error_1333.tag = kl_t9.kl_error_1333.tag;
@@ -474,6 +474,19 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
     bb7:
     kl_t0.kl_error_1333.e2 = kl_t9.kl_error_1333.e2;
     goto bb5;
+    bb8:
+    kl_rt_panic( "codegen/error_union.kl", 107, "arithmetic overflow: try load( got ) + 1" );
+    bb9:
+    kl_t14 = kl_t12 + 1;
+    kl_t7.tag = 0;
+    kl_t16 = true;
+    kl_t7.kl_value_1330 = kl_t14;
+    kl_t16 = true;
+    kl_t0 = kl_t7;
+    kl_t16 = false;
+    if ( kl_t16 ) kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE__dtor( &kl_t7 );
+    kl_t16 = false;
+    return kl_t0;
 }
 
 struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__same__3u64( uint64_t kl_n_1 )

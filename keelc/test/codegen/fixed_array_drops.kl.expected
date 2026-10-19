@@ -31,6 +31,8 @@ struct kl__A3_5Token
 
 int32_t kl_dropped_1;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__Token__R5Token_3i32__ctor( struct kl__Token*, int32_t );
 void kl__Token__dtor( struct kl__Token* );
 struct kl__A3_5Token kl__make__( void );
@@ -48,11 +50,17 @@ void kl__Token__R5Token_3i32__ctor( struct kl__Token* kl_this_1, int32_t kl_id_2
 
 void kl__Token__dtor( struct kl__Token* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 16 "codegen/fixed_array_drops.kl"
-    kl_t2 = kl_dropped_1 + 1;
-    kl_dropped_1 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_dropped_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/fixed_array_drops.kl", 16, "arithmetic overflow: dropped + 1" );
+    bb2:
+    kl_t3 = kl_dropped_1 + 1;
+    kl_dropped_1 = kl_t3;
     return;
 }
 

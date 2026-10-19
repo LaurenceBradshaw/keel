@@ -132,6 +132,9 @@ struct Printer
         case Rvalue_kind::Binary:
             return fmt::format( "{} {} {}", operand( value.a ), token_kind_spelling( value.op ), operand( value.b ) );
 
+        case Rvalue_kind::Overflows:
+            return fmt::format( "overflows {} {} {}", operand( value.a ), token_kind_spelling( value.op ), operand( value.b ) );
+
         case Rvalue_kind::Unary:
             return fmt::format( "{}{}", token_kind_spelling( value.op ), operand( value.a ) );
 
@@ -272,6 +275,8 @@ struct Printer
                 return "unhashable";
             case Failure::Bounds:
                 return "out_of_bounds";
+            case Failure::Overflow:
+                return "overflow";
             }
 
         case Terminator_kind::Unreachable:

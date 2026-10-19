@@ -4,6 +4,8 @@
 
 #include "runtime_write.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
@@ -58,15 +60,16 @@ int32_t kl__main__( void )
     uint8_t* kl_t32;
     int64_t kl_t38;
     int64_t kl_t43;
-    int64_t kl_t44;
-    double kl_t51;
-    double kl_t54;
-    double kl_t59;
-    double kl_t68;
-    double kl_t71;
+    bool kl_t44;
+    int64_t kl_t45;
+    double kl_t52;
+    double kl_t55;
+    double kl_t60;
+    double kl_t69;
     double kl_t72;
-    double kl_t75;
-    int64_t kl_t78;
+    double kl_t73;
+    double kl_t76;
+    int64_t kl_t79;
 #line 18 "codegen/runtime_write.kl"
     kl_zero_1 = 0.0;
 #line 22 "codegen/runtime_write.kl"
@@ -117,8 +120,13 @@ int32_t kl__main__( void )
     kl__line__3i32( 1 );
 #line 37 "codegen/runtime_write.kl"
     kl_t43 = -9223372036854775807;
-    kl_t44 = kl_t43 - 1;
-    kl_rt_write_i64( 1, kl_t44 );
+    kl_t44 = __builtin_sub_overflow( kl_t43, 1, &( int64_t ) { 0 } );
+    if ( kl_t44 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/runtime_write.kl", 37, "arithmetic overflow: -9223372036854775807 - 1" );
+    bb2:
+    kl_t45 = kl_t43 - 1;
+    kl_rt_write_i64( 1, kl_t45 );
 #line 38 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 40 "codegen/runtime_write.kl"
@@ -130,13 +138,13 @@ int32_t kl__main__( void )
 #line 45 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 46 "codegen/runtime_write.kl"
-    kl_t51 = 0.1 + 0.2;
-    kl_rt_write_f64( 1, kl_t51 );
+    kl_t52 = 0.1 + 0.2;
+    kl_rt_write_f64( 1, kl_t52 );
 #line 47 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 48 "codegen/runtime_write.kl"
-    kl_t54 = 1.0 / 3.0;
-    kl_rt_write_f64( 1, kl_t54 );
+    kl_t55 = 1.0 / 3.0;
+    kl_rt_write_f64( 1, kl_t55 );
 #line 49 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 50 "codegen/runtime_write.kl"
@@ -144,8 +152,8 @@ int32_t kl__main__( void )
 #line 51 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 52 "codegen/runtime_write.kl"
-    kl_t59 = -0.0;
-    kl_rt_write_f64( 1, kl_t59 );
+    kl_t60 = -0.0;
+    kl_rt_write_f64( 1, kl_t60 );
 #line 53 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 54 "codegen/runtime_write.kl"
@@ -161,24 +169,24 @@ int32_t kl__main__( void )
 #line 59 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 60 "codegen/runtime_write.kl"
-    kl_t68 = 1.0 / kl_zero_1;
-    kl_rt_write_f64( 1, kl_t68 );
+    kl_t69 = 1.0 / kl_zero_1;
+    kl_rt_write_f64( 1, kl_t69 );
 #line 61 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 62 "codegen/runtime_write.kl"
-    kl_t71 = -1.0;
-    kl_t72 = kl_t71 / kl_zero_1;
-    kl_rt_write_f64( 1, kl_t72 );
+    kl_t72 = -1.0;
+    kl_t73 = kl_t72 / kl_zero_1;
+    kl_rt_write_f64( 1, kl_t73 );
 #line 63 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 66 "codegen/runtime_write.kl"
-    kl_t75 = kl_zero_1 / kl_zero_1;
-    kl_rt_write_f64( 1, kl_t75 );
+    kl_t76 = kl_zero_1 / kl_zero_1;
+    kl_rt_write_f64( 1, kl_t76 );
 #line 67 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 69 "codegen/runtime_write.kl"
-    kl_t78 = -7;
-    kl_rt_write_i64( 2, kl_t78 );
+    kl_t79 = -7;
+    kl_rt_write_i64( 2, kl_t79 );
 #line 70 "codegen/runtime_write.kl"
     kl__line__3i32( 2 );
 #line 71 "codegen/runtime_write.kl"

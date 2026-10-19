@@ -21,6 +21,8 @@ int32_t kl_made_2 = 0;
 int32_t kl_limit_5 = 10;
 int32_t kl_made_53 = 100;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__Counter__R7Counter__ctor( struct kl__Counter* );
 int32_t kl__total__S7Counter( struct kl__Counter* );
 int32_t kl__count__S7Counter( void );
@@ -29,10 +31,16 @@ int32_t kl__main__( void );
 
 void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 13 "codegen/static_fields.kl"
-    kl_t2 = kl_made_2 + 1;
-    kl_made_2 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_made_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/static_fields.kl", 13, "arithmetic overflow: made + 1" );
+    bb2:
+    kl_t3 = kl_made_2 + 1;
+    kl_made_2 = kl_t3;
 #line 14 "codegen/static_fields.kl"
     ( *kl_this_1 ).kl_id_7 = kl_made_2;
     return;
@@ -78,18 +86,20 @@ int32_t kl__main__( void )
     bool kl_t12;
     int32_t kl_t13;
     bool kl_t14;
-    int32_t kl_t15;
-    bool kl_t16;
+    bool kl_t15;
+    int32_t kl_t16;
     bool kl_t17;
-    int32_t kl_t18;
-    bool kl_t19;
-    struct kl__Counter* kl_t20;
-    struct kl__Counter* kl_t22;
-    int32_t kl_t23;
-    bool kl_t24;
-    int32_t kl_t25;
-    int32_t* kl_at_26;
-    int32_t* kl_t27;
+    bool kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    struct kl__Counter* kl_t21;
+    struct kl__Counter* kl_t23;
+    int32_t kl_t24;
+    bool kl_t25;
+    bool kl_t26;
+    int32_t kl_t27;
+    int32_t* kl_at_28;
+    int32_t* kl_t29;
 #line 43 "codegen/static_fields.kl"
     kl_t2 = &kl_a_1;
     kl__Counter__R7Counter__ctor( kl_t2 );
@@ -122,45 +132,55 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 52 "codegen/static_fields.kl"
-    kl_t15 = kl_made_53 + 1;
-    kl_made_53 = kl_t15;
-#line 54 "codegen/static_fields.kl"
-    kl_t17 = kl_made_53 != 101;
-    kl_t16 = kl_t17;
-    if ( kl_t16 ) goto bb8; else goto bb7;
+    kl_t15 = __builtin_add_overflow( kl_made_53, 1, &( int32_t ) { 0 } );
+    if ( kl_t15 ) goto bb7; else goto bb8;
     bb7:
-    kl_t18 = kl__count__S7Counter(  );
-    kl_t19 = kl_t18 != 2;
-    kl_t16 = kl_t19;
-    goto bb8;
+    kl_rt_panic( "codegen/static_fields.kl", 52, "arithmetic overflow: Tally::made + 1" );
     bb8:
-    if ( kl_t16 ) goto bb9; else goto bb10;
+    kl_t16 = kl_made_53 + 1;
+    kl_made_53 = kl_t16;
+#line 54 "codegen/static_fields.kl"
+    kl_t18 = kl_made_53 != 101;
+    kl_t17 = kl_t18;
+    if ( kl_t17 ) goto bb10; else goto bb9;
     bb9:
+    kl_t19 = kl__count__S7Counter(  );
+    kl_t20 = kl_t19 != 2;
+    kl_t17 = kl_t20;
+    goto bb10;
+    bb10:
+    if ( kl_t17 ) goto bb11; else goto bb12;
+    bb11:
 #line 56 "codegen/static_fields.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb10:
+    bb12:
 #line 59 "codegen/static_fields.kl"
-    kl_t20 = &kl_a_1;
-    kl__reset__S7Counter( kl_t20 );
+    kl_t21 = &kl_a_1;
+    kl__reset__S7Counter( kl_t21 );
 #line 61 "codegen/static_fields.kl"
-    kl_t22 = &kl_b_4;
-    kl_t23 = kl__total__S7Counter( kl_t22 );
-    kl_t24 = kl_t23 != 0;
-    if ( kl_t24 ) goto bb11; else goto bb12;
-    bb11:
+    kl_t23 = &kl_b_4;
+    kl_t24 = kl__total__S7Counter( kl_t23 );
+    kl_t25 = kl_t24 != 0;
+    if ( kl_t25 ) goto bb13; else goto bb14;
+    bb13:
 #line 63 "codegen/static_fields.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb12:
+    bb14:
 #line 66 "codegen/static_fields.kl"
-    kl_t25 = kl_limit_5 + 5;
-    kl_limit_5 = kl_t25;
+    kl_t26 = __builtin_add_overflow( kl_limit_5, 5, &( int32_t ) { 0 } );
+    if ( kl_t26 ) goto bb15; else goto bb16;
+    bb15:
+    kl_rt_panic( "codegen/static_fields.kl", 66, "arithmetic overflow: Counter::limit + 5" );
+    bb16:
+    kl_t27 = kl_limit_5 + 5;
+    kl_limit_5 = kl_t27;
 #line 68 "codegen/static_fields.kl"
-    kl_t27 = &kl_limit_5;
-    kl_at_26 = kl_t27;
+    kl_t29 = &kl_limit_5;
+    kl_at_28 = kl_t29;
 #line 70 "codegen/static_fields.kl"
-    kl_t0 = ( *kl_at_26 );
+    kl_t0 = ( *kl_at_28 );
     return kl_t0;
 }
 

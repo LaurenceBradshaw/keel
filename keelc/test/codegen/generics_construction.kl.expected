@@ -31,6 +31,8 @@ struct kl__Outer__I3f64E
     int32_t kl_tag_17;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E );
 int32_t kl__main__( void );
 struct kl__Box__I3i32E kl__hold__I3i32E__3i32( int32_t );
@@ -79,10 +81,14 @@ int32_t kl__main__( void )
     struct kl__Box__I3f64E kl_t30;
     bool kl_t31;
     bool kl_t32;
-    int32_t kl_t33;
+    bool kl_t33;
     int32_t kl_t34;
-    int32_t kl_t35;
+    bool kl_t35;
     int32_t kl_t36;
+    bool kl_t37;
+    int32_t kl_t38;
+    bool kl_t39;
+    int32_t kl_t40;
 #line 37 "codegen/generics_construction.kl"
     kl_t2.kl_v_5 = 7;
     kl_a_1 = kl_t2;
@@ -210,11 +216,31 @@ int32_t kl__main__( void )
     return kl_t0;
     bb24:
 #line 122 "codegen/generics_construction.kl"
-    kl_t33 = 30 + kl_nested_18.kl_tag_17;
-    kl_t34 = kl_t33 + kl_wide_nest_23.kl_tag_17;
-    kl_t35 = kl_t34 + kl_held_27.kl_v_5;
-    kl_t36 = kl_t35 + 2;
-    kl_t0 = kl_t36;
+    kl_t33 = __builtin_add_overflow( 30, kl_nested_18.kl_tag_17, &( int32_t ) { 0 } );
+    if ( kl_t33 ) goto bb25; else goto bb26;
+    bb25:
+    kl_rt_panic( "codegen/generics_construction.kl", 122, "arithmetic overflow: 30 + nested.tag" );
+    bb26:
+    kl_t34 = 30 + kl_nested_18.kl_tag_17;
+    kl_t35 = __builtin_add_overflow( kl_t34, kl_wide_nest_23.kl_tag_17, &( int32_t ) { 0 } );
+    if ( kl_t35 ) goto bb27; else goto bb28;
+    bb27:
+    kl_rt_panic( "codegen/generics_construction.kl", 122, "arithmetic overflow: 30 + nested.tag + wide_nest.tag" );
+    bb28:
+    kl_t36 = kl_t34 + kl_wide_nest_23.kl_tag_17;
+    kl_t37 = __builtin_add_overflow( kl_t36, kl_held_27.kl_v_5, &( int32_t ) { 0 } );
+    if ( kl_t37 ) goto bb29; else goto bb30;
+    bb29:
+    kl_rt_panic( "codegen/generics_construction.kl", 122, "arithmetic overflow: 30 + nested.tag + wide_nest.tag + held.v" );
+    bb30:
+    kl_t38 = kl_t36 + kl_held_27.kl_v_5;
+    kl_t39 = __builtin_add_overflow( kl_t38, 2, &( int32_t ) { 0 } );
+    if ( kl_t39 ) goto bb31; else goto bb32;
+    bb31:
+    kl_rt_panic( "codegen/generics_construction.kl", 122, "arithmetic overflow: 30 + nested.tag + wide_nest.tag + held.v + 2" );
+    bb32:
+    kl_t40 = kl_t38 + 2;
+    kl_t0 = kl_t40;
     return kl_t0;
 }
 

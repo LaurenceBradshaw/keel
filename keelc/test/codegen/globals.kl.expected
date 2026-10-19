@@ -23,6 +23,8 @@ double kl_scaled_69 = 3.0;
 bool kl_compared_74 = true;
 uint32_t kl_all_ones_81 = 4294967295;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__read_counter__( void );
 void kl__bump__( void );
 int32_t kl__read_later__( void );
@@ -40,7 +42,13 @@ int32_t kl__read_counter__( void )
 
 void kl__bump__( void )
 {
+    bool kl_t1;
 #line 48 "codegen/globals.kl"
+    kl_t1 = __builtin_add_overflow( kl_counter_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/globals.kl", 48, "arithmetic overflow: counter += 1;" );
+    bb2:
     kl_counter_2 = kl_counter_2 + 1;
     return;
 }

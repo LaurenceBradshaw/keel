@@ -1,0 +1,17 @@
+// --debug turns on overflow checks: a compound assignment is checked as its operation is.
+i32 id( i32 x )
+{
+    return x;
+}
+
+i64 wide( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    i32 a = id( 65536 );
+    a *= 65536;
+    return 0;
+}

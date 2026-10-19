@@ -4,6 +4,8 @@
 
 #include "control_flow.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 
 int32_t kl__main__( void )
@@ -13,9 +15,13 @@ int32_t kl__main__( void )
     int32_t kl_i_2;
     bool kl_t3;
     bool kl_t4;
-    int32_t kl_t5;
+    bool kl_t5;
     int32_t kl_t6;
     bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    bool kl_t11;
 #line 5 "codegen/control_flow.kl"
     kl_total_1 = 0;
 #line 7 "codegen/control_flow.kl"
@@ -29,29 +35,51 @@ int32_t kl__main__( void )
     kl_t4 = kl_i_2 == 2;
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
-    goto bb7;
+    goto bb13;
     bb4:
-    kl_t5 = kl_total_1 + 10;
-    kl_total_1 = kl_t5;
-    goto bb6;
+    kl_t5 = __builtin_add_overflow( kl_total_1, 10, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb6; else goto bb7;
     bb5:
 #line 10 "codegen/control_flow.kl"
-    kl_t6 = kl_total_1 + 1;
-    kl_total_1 = kl_t6;
-    goto bb6;
+    kl_t7 = __builtin_add_overflow( kl_total_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb8; else goto bb9;
     bb6:
+    kl_rt_panic( "codegen/control_flow.kl", 9, "arithmetic overflow: total + 10" );
+    bb7:
+#line 9 "codegen/control_flow.kl"
+    kl_t6 = kl_total_1 + 10;
+    kl_total_1 = kl_t6;
+    goto bb10;
+    bb8:
+    kl_rt_panic( "codegen/control_flow.kl", 10, "arithmetic overflow: total + 1" );
+    bb9:
+#line 10 "codegen/control_flow.kl"
+    kl_t8 = kl_total_1 + 1;
+    kl_total_1 = kl_t8;
+    goto bb10;
+    bb10:
 #line 7 "codegen/control_flow.kl"
+    kl_t9 = __builtin_add_overflow( kl_i_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t9 ) goto bb11; else goto bb12;
+    bb11:
+    kl_rt_panic( "codegen/control_flow.kl", 7, "arithmetic overflow: i++" );
+    bb12:
     kl_i_2 = kl_i_2 + 1;
     goto bb1;
-    bb7:
+    bb13:
 #line 13 "codegen/control_flow.kl"
-    kl_t7 = kl_total_1 > 3;
-    if ( kl_t7 ) goto bb8; else goto bb9;
-    bb8:
+    kl_t10 = kl_total_1 > 3;
+    if ( kl_t10 ) goto bb14; else goto bb17;
+    bb14:
 #line 15 "codegen/control_flow.kl"
+    kl_t11 = __builtin_sub_overflow( kl_total_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t11 ) goto bb15; else goto bb16;
+    bb15:
+    kl_rt_panic( "codegen/control_flow.kl", 15, "arithmetic overflow: total--;" );
+    bb16:
     kl_total_1 = kl_total_1 - 1;
-    goto bb7;
-    bb9:
+    goto bb13;
+    bb17:
 #line 27 "codegen/control_flow.kl"
     kl_t0 = kl_total_1;
     return kl_t0;

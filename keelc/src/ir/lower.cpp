@@ -29,6 +29,7 @@ public:
         const Resolution& resolution,
         Types&            types,
         Literal_pool&     literals,
+        bool              overflow_checks,
         Bindings          bindings = {}
     );
 
@@ -185,7 +186,11 @@ private:
     void    write_error( Place target, Type_id to, Place source, Type_id from, Span span );
     Operand checked_cast( Operand operand, Type_id to, Span span );
     // A variable shift count is masked to the width; a variable divisor panics at zero, and MIN / -1 wraps.
-    Rvalue  checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span );
+    // Under --overflow-checks, + - * and MIN / -1 panic unless `wraps`.
+    Rvalue checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span, bool wraps );
+    // Under --overflow-checks, panics before `left op right` would leave `type`.
+    void    check_overflow( Token_kind op, Operand left, Operand right, Type_id type, Span span );
+    void    mark_wrapping( Node_id id );
     Operand three_way( Operand left, Operand right, Span span );
     Operand supplied_hash( Operand value, Span span );
     Operand moved_if_owning( Operand operand );
@@ -237,6 +242,7 @@ private:
     Literal_pool& literal_pool_;
 
     const Node_id declaration_;
+    const bool    overflow_checks_;
 
     Builder                           builder_;
     std::unordered_map<u32, Local_id> locals_;
@@ -244,7 +250,9 @@ private:
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because drops_ has no scope to put them in until then.
     std::vector<Local_id>   owned_parameters_;
-    std::unordered_set<u32> borrowed_bindings_;       // declarations whose local holds an address
+    std::unordered_set<u32> borrowed_bindings_; // declarations whose local holds an address
+    // Operator nodes in a `wrap`'s operand, reached only through operators: they wrap, unchecked.
+    std::unordered_set<u32> wrapping_;
     Node_id                 receiver_declaration_ {}; // the Param_decl, so place_for can be reused for it
 
     Drop_scopes drops_;
@@ -254,7 +262,13 @@ private:
 };
 
 Lowering::Lowering(
-    Node_id declaration, const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, Bindings bindings
+    Node_id           declaration,
+    const Ast&        ast,
+    const Resolution& resolution,
+    Types&            types,
+    Literal_pool&     literals,
+    bool              overflow_checks,
+    Bindings          bindings
 )
     : ast_( ast ),
       resolution_( resolution ),
@@ -262,6 +276,7 @@ Lowering::Lowering(
       bindings_( std::move( bindings ) ),
       literal_pool_( literals ),
       declaration_( declaration ),
+      overflow_checks_( overflow_checks ),
       builder_(
           declaration, types.table().substitute( binding_type( ast, types, declaration ), bindings_ ), ast_.span( declaration )
       ),
@@ -692,10 +707,15 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
     return value;
 }
 
-Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span )
+Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span, bool wraps )
 {
     const Type_table& table   = types_.table();
     const Type_id     boolean = table.builtin( Type_kind::Bool );
+
+    if( !wraps )
+    {
+        check_overflow( op, left, right, type, span );
+    }
 
     if( !table.is_integer( type ) || right.kind == Operand_kind::Constant ||
         ( op != Token_kind::Slash && op != Token_kind::Percent && op != Token_kind::Less_less &&
@@ -756,6 +776,12 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
     );
 
     builder_.switch_to( negate );
+
+    if( op == Token_kind::Slash && !wraps )
+    {
+        check_overflow( Token_kind::Minus, constant( literal_pool_.add_integer( 0 ), type ), left, type, span );
+    }
+
     builder_.assign(
         builder_.place( result ),
         op == Token_kind::Slash ? unary( Token_kind::Minus, left, type )
@@ -770,6 +796,43 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
 
     builder_.switch_to( join );
     return use( copy( builder_.place( result ), type ) );
+}
+
+void Lowering::check_overflow( Token_kind op, Operand left, Operand right, Type_id type, Span span )
+{
+    const Type_table& table = types_.table();
+
+    if( !overflow_checks_ || !table.is_integer( type ) ||
+        ( op != Token_kind::Plus && op != Token_kind::Minus && op != Token_kind::Star ) ||
+        ( left.kind == Operand_kind::Constant && right.kind == Operand_kind::Constant ) )
+    {
+        return;
+    }
+
+    const Type_id  boolean = table.builtin( Type_kind::Bool );
+    const Block_id fail    = builder_.add_block();
+    const Block_id pass    = builder_.add_block();
+
+    builder_.terminate_branch( temporary( overflows( op, left, right, boolean ), boolean, span ), fail, pass, span );
+
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, Failure::Overflow );
+    builder_.switch_to( pass );
+}
+
+void Lowering::mark_wrapping( Node_id id )
+{
+    if( ast_.kind( id ) == Node_kind::Binary_expr )
+    {
+        wrapping_.insert( id.v );
+        mark_wrapping( ast_.lhs( id ) );
+        mark_wrapping( ast_.rhs( id ) );
+    }
+    else if( ast_.kind( id ) == Node_kind::Unary_expr )
+    {
+        wrapping_.insert( id.v );
+        mark_wrapping( ast_.operand( id ) );
+    }
 }
 
 // `<=>` is two comparisons and a choice of variant, and a NaN has no answer.
@@ -1524,7 +1587,7 @@ Operand Lowering::lower_binary( Node_id id )
     {
         return three_way( left, right, span );
     }
-    return temporary( checked_arithmetic( op, left, right, type, span ), type, span );
+    return temporary( checked_arithmetic( op, left, right, type, span, wrapping_.contains( id.v ) ), type, span );
 }
 
 Lowering::Requirement_target Lowering::bound_operator( Token_kind op, Type_id held ) const
@@ -1705,6 +1768,11 @@ Operand Lowering::lower_unary( Node_id id )
     }
 
     const Operand a = lower_expression( ast_.operand( id ) );
+
+    if( op == Token_kind::Minus && !wrapping_.contains( id.v ) )
+    {
+        check_overflow( Token_kind::Minus, constant( literal_pool_.add_integer( 0 ), type ), a, type, span );
+    }
 
     return temporary( unary( op, a, type ), type, span );
 }
@@ -2355,6 +2423,7 @@ Operand Lowering::lower_expression( Node_id id )
         {
             return checked_cast( lower_expression( ast_.operand( id ) ), type_of( id ), ast_.span( id ) );
         }
+        mark_wrapping( ast_.operand( id ) );
         return converted( lower_expression( ast_.operand( id ) ), type_of( id ), ast_.span( id ) );
     case Node_kind::Alloc_expr:
     {
@@ -2751,7 +2820,7 @@ void Lowering::lower_assign( Node_id id )
         const Operand left  = copy( target, type );
         const Operand right = offsets ? value : converted( value, type, span );
 
-        builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span ), span );
+        builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span, false ), span );
     }
     drops_.end_statement( span );
 }
@@ -2793,7 +2862,7 @@ void Lowering::lower_increment( Node_id id )
     const Operand right = constant( one, step );
 
     // The target's type again, for the same reason: a statement carries none of its own.
-    builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
+    builder_.assign( target, checked_arithmetic( base_op, left, right, target_type, ast_.span( id ), false ), ast_.span( id ) );
     drops_.end_statement( ast_.span( id ) );
 }
 
@@ -3734,7 +3803,8 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
 
 } // namespace
 
-std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals )
+std::vector<Function>
+lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, bool overflow_checks )
 {
     std::vector<Function> functions;
 
@@ -3744,7 +3814,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
         // emitted from, and emitting it directly would try to give `T` a C spelling.
         if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) )
         {
-            Lowering lowering( id, ast, resolution, types, literals );
+            Lowering lowering( id, ast, resolution, types, literals, overflow_checks );
             functions.push_back( lowering.run() );
         }
     }
@@ -3753,7 +3823,9 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
 
     while( const std::optional<Instantiation> instance = instances.next() )
     {
-        Lowering lowering( instance->declaration, ast, resolution, types, literals, bindings_for( ast, types, *instance ) );
+        Lowering lowering(
+            instance->declaration, ast, resolution, types, literals, overflow_checks, bindings_for( ast, types, *instance )
+        );
 
         Function emitted = lowering.run();
 
@@ -3785,8 +3857,8 @@ namespace
 // The whole front end, so lowering runs on a genuinely typed AST.
 struct Lowered : Compiled
 {
-    explicit Lowered( std::string_view source )
-        : Compiled( source, Stage::Lowered )
+    explicit Lowered( std::string_view source, Build build = { .asserts = true } )
+        : Compiled( source, Stage::Lowered, build )
     {
     }
 
@@ -5784,6 +5856,46 @@ TEST_CASE( "lower_lowers_assert_to_a_branch_and_a_failed_terminator", "[ir][lowe
     for( const Function& function : p.functions )
     {
         REQUIRE( verify( function ).empty() );
+    }
+}
+
+TEST_CASE( "lower_checks_overflow_only_outside_wrap", "[ir][lower][overflow]" )
+{
+    const Build checked { .overflow_checks = true };
+
+    SECTION( "a bare sum is checked" )
+    {
+        Lowered p( "i32 f( i32 a, i32 b ) { return a + b; }", checked );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "overflows copy _1 + copy _2" ) != std::string::npos );
+        REQUIRE( text.find( "        overflow\n" ) != std::string::npos );
+    }
+
+    SECTION( "a sum inside wrap is not" )
+    {
+        Lowered p( "i32 f( i32 a, i32 b ) { return wrap<i32>( -( a + b ) * 2 ); }", checked );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "overflows" ) == std::string::npos );
+        REQUIRE( text.find( "copy _1 + copy _2" ) != std::string::npos );
+    }
+
+    SECTION( "nor without the flag" )
+    {
+        Lowered p( "i32 f( i32 a, i32 b ) { return a + b; }" );
+
+        REQUIRE( p.named( "f" ).find( "overflows" ) == std::string::npos );
     }
 }
 

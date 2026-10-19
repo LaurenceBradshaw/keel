@@ -21,6 +21,8 @@ struct kl__Owner
 int32_t kl_calls_1;
 int32_t kl_drops_21;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__counted__3i32( int32_t );
 void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner*, int32_t );
 void kl__Owner__dtor( struct kl__Owner* );
@@ -32,10 +34,16 @@ int32_t kl__main__( void );
 int32_t kl__counted__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 7 "codegen/conditional.kl"
-    kl_t2 = kl_calls_1 + 1;
-    kl_calls_1 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_calls_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/conditional.kl", 7, "arithmetic overflow: calls + 1" );
+    bb2:
+    kl_t3 = kl_calls_1 + 1;
+    kl_calls_1 = kl_t3;
 #line 8 "codegen/conditional.kl"
     kl_t0 = kl_v_1;
     return kl_t0;
@@ -50,11 +58,17 @@ void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner* kl_this_1, int32_t kl_t_2 
 
 void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 30 "codegen/conditional.kl"
-    kl_t2 = kl_drops_21 + 1;
-    kl_drops_21 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_drops_21, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/conditional.kl", 30, "arithmetic overflow: drops + 1" );
+    bb2:
+    kl_t3 = kl_drops_21 + 1;
+    kl_drops_21 = kl_t3;
     return;
 }
 

@@ -52,6 +52,7 @@ struct kl__holder
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 struct kl__tally kl__operator_add__S5tally_3i32( struct kl__tally*, int32_t );
 void kl__operator_add_assign__S5tally_3i32( struct kl__tally*, int32_t );
@@ -75,10 +76,16 @@ struct kl__tally kl__operator_add__S5tally_3i32( struct kl__tally* kl_this_1, in
 {
     struct kl__tally kl_t0;
     struct kl__tally kl_t3;
-    int32_t kl_t4;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 9 "codegen/operator_compound.kl"
-    kl_t4 = ( *kl_this_1 ).kl_total_1 + kl_n_2;
-    kl_t3.kl_total_1 = kl_t4;
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_total_1, kl_n_2, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 9, "arithmetic overflow: total + n" );
+    bb2:
+    kl_t5 = ( *kl_this_1 ).kl_total_1 + kl_n_2;
+    kl_t3.kl_total_1 = kl_t5;
     kl_t3.kl_in_place_3 = ( *kl_this_1 ).kl_in_place_3;
     kl_t0 = kl_t3;
     return kl_t0;
@@ -86,16 +93,34 @@ struct kl__tally kl__operator_add__S5tally_3i32( struct kl__tally* kl_this_1, in
 
 void kl__operator_add_assign__S5tally_3i32( struct kl__tally* kl_this_1, int32_t kl_n_2 )
 {
+    bool kl_t3;
+    bool kl_t4;
 #line 12 "codegen/operator_compound.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_total_1, kl_n_2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 12, "arithmetic overflow: total += n;" );
+    bb2:
     ( *kl_this_1 ).kl_total_1 = ( *kl_this_1 ).kl_total_1 + kl_n_2;
 #line 13 "codegen/operator_compound.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_in_place_3, 1, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/operator_compound.kl", 13, "arithmetic overflow: in_place += 1;" );
+    bb4:
     ( *kl_this_1 ).kl_in_place_3 = ( *kl_this_1 ).kl_in_place_3 + 1;
     return;
 }
 
 void kl__operator_mul_assign__S13only_compound_3i32( struct kl__only_compound* kl_this_1, int32_t kl_by_2 )
 {
+    bool kl_t3;
 #line 21 "codegen/operator_compound.kl"
+    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_x_39, kl_by_2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 21, "arithmetic overflow: x *= by;" );
+    bb2:
     ( *kl_this_1 ).kl_x_39 = ( *kl_this_1 ).kl_x_39 * kl_by_2;
     return;
 }
@@ -111,10 +136,16 @@ struct kl__only_binary kl__operator_sub__S11only_binary_3i32( struct kl__only_bi
 {
     struct kl__only_binary kl_t0;
     struct kl__only_binary kl_t3;
-    int32_t kl_t4;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 29 "codegen/operator_compound.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_67 - kl_n_2;
-    kl_t3.kl_x_67 = kl_t4;
+    kl_t4 = __builtin_sub_overflow( ( *kl_this_1 ).kl_x_67, kl_n_2, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 29, "arithmetic overflow: x - n" );
+    bb2:
+    kl_t5 = ( *kl_this_1 ).kl_x_67 - kl_n_2;
+    kl_t3.kl_x_67 = kl_t5;
     kl_t0 = kl_t3;
     return kl_t0;
 }
@@ -188,12 +219,18 @@ struct kl__only_binary* kl__operator_index__S5shelf_3u64( struct kl__shelf* kl_t
 
 void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
 {
-    uint64_t kl_t3;
-    uint8_t* kl_t4;
+    bool kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
 #line 73 "codegen/operator_compound.kl"
-    kl_t3 = kl_n_2 + 1;
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( uint8_t ), "codegen/operator_compound.kl", 73, "out of memory: alloc<u8>( n + 1 )" );
-    ( *kl_this_1 ).kl_bytes_195 = kl_t4;
+    kl_t3 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 73, "arithmetic overflow: n + 1" );
+    bb2:
+    kl_t4 = kl_n_2 + 1;
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/operator_compound.kl", 73, "out of memory: alloc<u8>( n + 1 )" );
+    ( *kl_this_1 ).kl_bytes_195 = kl_t5;
 #line 74 "codegen/operator_compound.kl"
     ( *kl_this_1 ).kl_length_197 = kl_n_2;
     return;
@@ -219,26 +256,38 @@ struct kl__label kl__operator_add__S5label_5label( struct kl__label* kl_this_1, 
     struct kl__label kl_t0;
     struct kl__label kl_t3;
     struct kl__label* kl_t4;
-    uint64_t kl_t5;
-    bool kl_t7;
+    bool kl_t5;
+    uint64_t kl_t6;
+    bool kl_t8;
 #line 80 "codegen/operator_compound.kl"
-    kl_t7 = false;
-    kl_t7 = false;
+    kl_t8 = false;
+    kl_t8 = false;
     kl_t4 = &kl_t3;
-    kl_t7 = true;
-    kl_t5 = ( *kl_this_1 ).kl_length_197 + ( *kl_other_2 ).kl_length_197;
-    kl__label__R5label_3u64__ctor( kl_t4, kl_t5 );
+    kl_t8 = true;
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_length_197, ( *kl_other_2 ).kl_length_197, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 80, "arithmetic overflow: length + other.length" );
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_length_197 + ( *kl_other_2 ).kl_length_197;
+    kl__label__R5label_3u64__ctor( kl_t4, kl_t6 );
     kl_t0 = kl_t3;
-    kl_t7 = false;
-    if ( kl_t7 ) kl__label__dtor( &kl_t3 );
-    kl_t7 = false;
+    kl_t8 = false;
+    if ( kl_t8 ) kl__label__dtor( &kl_t3 );
+    kl_t8 = false;
     return kl_t0;
 }
 
 uint64_t kl__next__R3i32( int32_t* kl_count_1 )
 {
     uint64_t kl_t0;
+    bool kl_t2;
 #line 90 "codegen/operator_compound.kl"
+    kl_t2 = __builtin_add_overflow( ( *kl_count_1 ), 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_compound.kl", 90, "arithmetic overflow: count += 1;" );
+    bb2:
     ( *kl_count_1 ) = ( *kl_count_1 ) + 1;
 #line 91 "codegen/operator_compound.kl"
     kl_t0 = 1;

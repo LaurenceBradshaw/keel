@@ -4,6 +4,8 @@
 
 #include "conversions.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 
 int32_t kl__main__( void )
@@ -44,8 +46,9 @@ int32_t kl__main__( void )
     int64_t kl_total_33;
     int64_t kl_t34;
     int64_t kl_t35;
-    int64_t kl_t36;
-    bool kl_t37;
+    bool kl_t36;
+    int64_t kl_t37;
+    bool kl_t38;
 #line 7 "codegen/conversions.kl"
     kl_big_1 = 300;
 #line 8 "codegen/conversions.kl"
@@ -149,15 +152,20 @@ int32_t kl__main__( void )
 #line 46 "codegen/conversions.kl"
     kl_t34 = ( int64_t ) kl_small_14;
     kl_t35 = ( int64_t ) kl_byte_10;
-    kl_t36 = kl_t34 + kl_t35;
-    kl_total_33 = kl_t36;
-#line 47 "codegen/conversions.kl"
-    kl_t37 = kl_total_33 != 207;
-    if ( kl_t37 ) goto bb19; else goto bb20;
+    kl_t36 = __builtin_add_overflow( kl_t34, kl_t35, &( int64_t ) { 0 } );
+    if ( kl_t36 ) goto bb19; else goto bb20;
     bb19:
+    kl_rt_panic( "codegen/conversions.kl", 46, "arithmetic overflow: cast<i64>( small ) + wrap<i64>( byte )" );
+    bb20:
+    kl_t37 = kl_t34 + kl_t35;
+    kl_total_33 = kl_t37;
+#line 47 "codegen/conversions.kl"
+    kl_t38 = kl_total_33 != 207;
+    if ( kl_t38 ) goto bb21; else goto bb22;
+    bb21:
     kl_t0 = 10;
     return kl_t0;
-    bb20:
+    bb22:
 #line 49 "codegen/conversions.kl"
     kl_t0 = 0;
     return kl_t0;

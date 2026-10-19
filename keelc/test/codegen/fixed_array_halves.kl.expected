@@ -4,6 +4,8 @@
 
 #include "fixed_array_halves.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool );
 uint64_t kl__count__LA2_3i32( struct kl__A2_3i32*, uint64_t );
 int32_t kl__main__( void );
@@ -69,15 +71,17 @@ int32_t kl__main__( void )
     bool kl_t16;
     struct kl__A2_3i32 kl_v_17;
     uint64_t kl_t18;
-    int32_t kl_t19;
+    bool kl_t19;
     int32_t kl_t20;
-    uint64_t kl_t21;
-    struct kl__A2_3i32* kl_t22;
-    struct kl__run__LA2_3i32__ref kl_t23;
-    uint64_t kl_t24;
-    bool kl_t25;
-    int32_t kl_t26;
-    int32_t kl_e_27;
+    int32_t kl_t21;
+    uint64_t kl_t22;
+    struct kl__A2_3i32* kl_t23;
+    struct kl__run__LA2_3i32__ref kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    bool kl_t27;
+    int32_t kl_t28;
+    int32_t kl_e_29;
     ( void ) kl_t4;
     ( void ) kl_t5;
     ( void ) kl_t7;
@@ -88,7 +92,7 @@ int32_t kl__main__( void )
     ( void ) kl_t13;
     ( void ) kl_t14;
     ( void ) kl_t18;
-    ( void ) kl_t21;
+    ( void ) kl_t22;
 #line 19 "codegen/fixed_array_halves.kl"
     kl_t4 = 0;
     kl_t3.e[kl_t4] = 1;
@@ -117,28 +121,38 @@ int32_t kl__main__( void )
     bb1:
     kl_v_17 = kl_t15.kl_value_178;
     kl_t18 = 1;
-    kl_t19 = kl_v_17.e[kl_t18] - 2;
-    kl_t21 = 0;
-    kl_t22 = &kl_rows_1.e[kl_t21];
-    kl_t23 = ( struct kl__run__LA2_3i32__ref ) { ( struct kl__A2_3i32* ) kl_t22, 3 };
-    kl_t24 = kl__count__LA2_3i32( ( kl_t23 ).data, ( kl_t23 ).size );
-    kl_t25 = kl_t24 == 3;
-    if ( kl_t25 ) goto bb3; else goto bb4;
+    kl_t19 = __builtin_sub_overflow( kl_v_17.e[kl_t18], 2, &( int32_t ) { 0 } );
+    if ( kl_t19 ) goto bb3; else goto bb4;
     bb2:
 #line 23 "codegen/fixed_array_halves.kl"
-    kl_e_27 = kl_t15.kl_error_181;
-    kl_t0 = kl_e_27;
+    kl_e_29 = kl_t15.kl_error_181;
+    kl_t0 = kl_e_29;
     return kl_t0;
     bb3:
-#line 22 "codegen/fixed_array_halves.kl"
-    kl_t20 = 0;
-    goto bb5;
+    kl_rt_panic( "codegen/fixed_array_halves.kl", 22, "arithmetic overflow: v[ 1 ] - 2" );
     bb4:
-    kl_t20 = 1;
-    goto bb5;
+#line 22 "codegen/fixed_array_halves.kl"
+    kl_t20 = kl_v_17.e[kl_t18] - 2;
+    kl_t22 = 0;
+    kl_t23 = &kl_rows_1.e[kl_t22];
+    kl_t24 = ( struct kl__run__LA2_3i32__ref ) { ( struct kl__A2_3i32* ) kl_t23, 3 };
+    kl_t25 = kl__count__LA2_3i32( ( kl_t24 ).data, ( kl_t24 ).size );
+    kl_t26 = kl_t25 == 3;
+    if ( kl_t26 ) goto bb5; else goto bb6;
     bb5:
-    kl_t26 = kl_t19 + kl_t20;
-    kl_t0 = kl_t26;
+    kl_t21 = 0;
+    goto bb7;
+    bb6:
+    kl_t21 = 1;
+    goto bb7;
+    bb7:
+    kl_t27 = __builtin_add_overflow( kl_t20, kl_t21, &( int32_t ) { 0 } );
+    if ( kl_t27 ) goto bb8; else goto bb9;
+    bb8:
+    kl_rt_panic( "codegen/fixed_array_halves.kl", 22, "arithmetic overflow: v[ 1 ] - 2 + ( count( rows ) == 3 \077 0 : 1" );
+    bb9:
+    kl_t28 = kl_t20 + kl_t21;
+    kl_t0 = kl_t28;
     return kl_t0;
 }
 

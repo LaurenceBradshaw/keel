@@ -19,6 +19,8 @@ struct kl_5plane_Point
     int32_t kl_x_131;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__area__3i32( int32_t );
 int32_t kl__pick__3i64( int64_t );
 int32_t kl__main__( void );
@@ -64,15 +66,16 @@ int32_t kl__main__( void )
     struct kl_5plane_Point kl_t13;
     struct kl__Point kl_q_14;
     struct kl__Point kl_t15;
-    int32_t kl_t16;
-    bool kl_t17;
-    int32_t kl_t18;
-    bool kl_t19;
-    int64_t kl_t20;
-    int32_t kl_t21;
-    bool kl_t22;
-    int32_t kl_t23;
-    bool kl_t24;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    int64_t kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    int32_t kl_t24;
+    bool kl_t25;
 #line 24 "codegen/packages/main.kl"
     kl_x_1 = 3;
 #line 26 "codegen/packages/main.kl"
@@ -117,38 +120,43 @@ int32_t kl__main__( void )
     kl_t15.kl_x_20 = 5;
     kl_q_14 = kl_t15;
 #line 38 "codegen/packages/main.kl"
-    kl_t16 = kl_p_12.kl_x_131 + kl_q_14.kl_x_20;
-    kl_t17 = kl_t16 != 12;
-    if ( kl_t17 ) goto bb9; else goto bb10;
+    kl_t16 = __builtin_add_overflow( kl_p_12.kl_x_131, kl_q_14.kl_x_20, &( int32_t ) { 0 } );
+    if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
+    kl_rt_panic( "codegen/packages/main.kl", 38, "arithmetic overflow: p.x + q.x" );
+    bb10:
+    kl_t17 = kl_p_12.kl_x_131 + kl_q_14.kl_x_20;
+    kl_t18 = kl_t17 != 12;
+    if ( kl_t18 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 5;
     return kl_t0;
-    bb10:
+    bb12:
 #line 41 "codegen/packages/main.kl"
-    kl_t18 = kl__perimeter__3i32( 2 );
-    kl_t19 = kl_t18 != 8;
-    if ( kl_t19 ) goto bb11; else goto bb12;
-    bb11:
+    kl_t19 = kl__perimeter__3i32( 2 );
+    kl_t20 = kl_t19 != 8;
+    if ( kl_t20 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 6;
     return kl_t0;
-    bb12:
+    bb14:
 #line 43 "codegen/packages/main.kl"
-    kl_t20 = ( int64_t ) kl_x_1;
-    kl_t21 = kl__pick__3i64( kl_t20 );
-    kl_t22 = kl_t21 != 1;
-    if ( kl_t22 ) goto bb13; else goto bb14;
-    bb13:
+    kl_t21 = ( int64_t ) kl_x_1;
+    kl_t22 = kl__pick__3i64( kl_t21 );
+    kl_t23 = kl_t22 != 1;
+    if ( kl_t23 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 7;
     return kl_t0;
-    bb14:
+    bb16:
 #line 44 "codegen/packages/main.kl"
-    kl_t23 = kl_5plane_pick__3i32( kl_x_1 );
-    kl_t24 = kl_t23 != 2;
-    if ( kl_t24 ) goto bb15; else goto bb16;
-    bb15:
+    kl_t24 = kl_5plane_pick__3i32( kl_x_1 );
+    kl_t25 = kl_t24 != 2;
+    if ( kl_t25 ) goto bb17; else goto bb18;
+    bb17:
     kl_t0 = 8;
     return kl_t0;
-    bb16:
+    bb18:
 #line 46 "codegen/packages/main.kl"
     kl_t0 = 0;
     return kl_t0;
@@ -167,10 +175,16 @@ struct kl_5plane_Point kl_5plane_origin__( void )
 int32_t kl_5plane_area__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 16 "codegen/packages/plane/geom.kl"
-    kl_t2 = kl_side_1 * kl_side_1;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_side_1, kl_side_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/packages/plane/geom.kl", 16, "arithmetic overflow: side * side" );
+    bb2:
+    kl_t3 = kl_side_1 * kl_side_1;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 
@@ -179,12 +193,18 @@ int32_t kl_5plane_cube__3i32( int32_t kl_s_1 )
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
-    int32_t kl_t4;
+    bool kl_t4;
+    int32_t kl_t5;
 #line 21 "codegen/packages/plane/geom.kl"
     kl_t2 = kl_5plane_area__3i32( kl_s_1 );
     kl_t3 = kl_5plane_identity__3i32( kl_s_1 );
-    kl_t4 = kl_t2 * kl_t3;
-    kl_t0 = kl_t4;
+    kl_t4 = __builtin_mul_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/packages/plane/geom.kl", 21, "arithmetic overflow: area( s ) * plane::identity( s )" );
+    bb2:
+    kl_t5 = kl_t2 * kl_t3;
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 
@@ -208,10 +228,16 @@ int32_t kl_5plane_identity__3i32( int32_t kl_v_1 )
 int32_t kl__perimeter__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 4 "codegen/packages/geom.kl"
-    kl_t2 = kl_side_1 * 4;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_side_1, 4, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/packages/geom.kl", 4, "arithmetic overflow: side * 4" );
+    bb2:
+    kl_t3 = kl_side_1 * 4;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

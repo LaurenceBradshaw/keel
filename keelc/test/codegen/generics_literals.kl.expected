@@ -4,6 +4,8 @@
 
 #include "generics_literals.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__main__( void );
 int32_t kl__abs__I3i32E__3i32( int32_t );
 double kl__abs__I3f64E__3f64( double );
@@ -141,16 +143,22 @@ int32_t kl__abs__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 9 "codegen/generics_literals.kl"
     kl_t2 = kl_a_1 < 0;
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 11 "codegen/generics_literals.kl"
-    kl_t3 = 0 - kl_a_1;
-    kl_t0 = kl_t3;
-    return kl_t0;
+    kl_t3 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
+    kl_rt_panic( "codegen/generics_literals.kl", 11, "arithmetic overflow: 0 - a" );
+    bb3:
+    kl_t4 = 0 - kl_a_1;
+    kl_t0 = kl_t4;
+    return kl_t0;
+    bb4:
 #line 14 "codegen/generics_literals.kl"
     kl_t0 = kl_a_1;
     return kl_t0;

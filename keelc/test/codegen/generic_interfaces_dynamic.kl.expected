@@ -59,6 +59,7 @@ struct kl__sink__I4boolE__vtable
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__tally__R5tally__ctor( struct kl__tally* );
 void kl__put__S5tally_3i64( struct kl__tally*, int64_t );
@@ -144,17 +145,35 @@ void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 
 void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
 {
+    bool kl_t3;
+    bool kl_t4;
 #line 24 "codegen/generic_interfaces_dynamic.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_sum__34, kl_value_2, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 24, "arithmetic overflow: sum_ += value;" );
+    bb2:
     ( *kl_this_1 ).kl_sum__34 = ( *kl_this_1 ).kl_sum__34 + kl_value_2;
 #line 25 "codegen/generic_interfaces_dynamic.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__36, 1, &( uint64_t ) { 0 } );
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 25, "arithmetic overflow: count_ += 1;" );
+    bb4:
     ( *kl_this_1 ).kl_count__36 = ( *kl_this_1 ).kl_count__36 + 1;
     return;
 }
 
 void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_t2 )
 {
+    bool kl_t3;
     ( void ) kl_t2;
 #line 28 "codegen/generic_interfaces_dynamic.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__36, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 28, "arithmetic overflow: count_ += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_count__36 = ( *kl_this_1 ).kl_count__36 + 1;
     return;
 }
@@ -200,10 +219,22 @@ void kl__held__dtor( struct kl__held* kl_this_1 )
 void kl__put__S4held_3i64( struct kl__held* kl_this_1, int64_t kl_value_2 )
 {
     int64_t* kl_t3;
+    bool kl_t4;
+    bool kl_t5;
 #line 61 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = ( *kl_this_1 ).kl_slot__104 + 0;
+    kl_t4 = __builtin_add_overflow( ( *kl_t3 ), kl_value_2, &( int64_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 61, "arithmetic overflow: slot_[0] += value;" );
+    bb2:
     ( *kl_t3 ) = ( *kl_t3 ) + kl_value_2;
 #line 63 "codegen/generic_interfaces_dynamic.kl"
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__106, 1, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 63, "arithmetic overflow: count_ += 1;" );
+    bb4:
     ( *kl_this_1 ).kl_count__106 = ( *kl_this_1 ).kl_count__106 + 1;
     return;
 }

@@ -39,21 +39,33 @@ int32_t kl__main__( void );
 void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
+    bool kl_t4;
 #line 11 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_id_46 = kl_n_2;
 #line 14 "codegen/owning_writes.kl"
     kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "codegen/owning_writes.kl", 14, "out of memory: alloc<u64>( 1 )" );
     ( *kl_this_1 ).kl_block_49 = kl_t3;
 #line 16 "codegen/owning_writes.kl"
+    kl_t4 = __builtin_add_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/owning_writes.kl", 16, "arithmetic overflow: live += 1;" );
+    bb2:
     kl_live_1 = kl_live_1 + 1;
     return;
 }
 
 void kl__owned__dtor( struct kl__owned* kl_this_1 )
 {
+    bool kl_t3;
 #line 23 "codegen/owning_writes.kl"
     kl_rt_free( ( *kl_this_1 ).kl_block_49 );
 #line 25 "codegen/owning_writes.kl"
+    kl_t3 = __builtin_sub_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/owning_writes.kl", 25, "arithmetic overflow: live -= 1;" );
+    bb2:
     kl_live_1 = kl_live_1 - 1;
     return;
 }
@@ -80,8 +92,9 @@ void kl__slots__R5slots__ctor( struct kl__slots* kl_this_1 )
 void kl__slots__dtor( struct kl__slots* kl_this_1 )
 {
     bool kl_t2;
-    struct kl__owned kl_dying_3;
-    struct kl__owned* kl_t4;
+    bool kl_t3;
+    struct kl__owned kl_dying_4;
+    struct kl__owned* kl_t5;
     goto bb1;
     bb1:
 #line 50 "codegen/owning_writes.kl"
@@ -89,46 +102,64 @@ void kl__slots__dtor( struct kl__slots* kl_this_1 )
     if ( kl_t2 ) goto bb2; else goto bb3;
     bb2:
 #line 52 "codegen/owning_writes.kl"
-    ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 - 1;
-#line 55 "codegen/owning_writes.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
-    kl_dying_3 = ( *kl_t4 );
-#line 53 "codegen/owning_writes.kl"
-    kl__owned__dtor( &kl_dying_3 );
-    goto bb1;
+    kl_t3 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_153, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb4; else goto bb5;
     bb3:
 #line 61 "codegen/owning_writes.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_151 );
     return;
+    bb4:
+    kl_rt_panic( "codegen/owning_writes.kl", 52, "arithmetic overflow: count -= 1;" );
+    bb5:
+#line 52 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 - 1;
+#line 55 "codegen/owning_writes.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
+    kl_dying_4 = ( *kl_t5 );
+#line 53 "codegen/owning_writes.kl"
+    kl__owned__dtor( &kl_dying_4 );
+    goto bb1;
 }
 
 void kl__push__S5slots_M5owned( struct kl__slots* kl_this_1, struct kl__owned kl_value_2 )
 {
     struct kl__owned* kl_t3;
     bool kl_t4;
+    bool kl_t5;
 #line 65 "codegen/owning_writes.kl"
-    kl_t4 = true;
+    kl_t5 = true;
 #line 69 "codegen/owning_writes.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
     ( *kl_t3 ) = kl_value_2;
-    kl_t4 = false;
+    kl_t5 = false;
 #line 71 "codegen/owning_writes.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_153, 1, &( uint64_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/owning_writes.kl", 71, "arithmetic overflow: count += 1;" );
+    bb2:
     ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 + 1;
 #line 65 "codegen/owning_writes.kl"
-    if ( kl_t4 ) kl__owned__dtor( &kl_value_2 );
-    kl_t4 = false;
+    if ( kl_t5 ) kl__owned__dtor( &kl_value_2 );
+    kl_t5 = false;
     return;
 }
 
 struct kl__owned kl__pop__S5slots( struct kl__slots* kl_this_1 )
 {
     struct kl__owned kl_t0;
-    struct kl__owned* kl_t2;
+    bool kl_t2;
+    struct kl__owned* kl_t3;
 #line 76 "codegen/owning_writes.kl"
+    kl_t2 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_153, 1, &( uint64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/owning_writes.kl", 76, "arithmetic overflow: count -= 1;" );
+    bb2:
     ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 - 1;
 #line 79 "codegen/owning_writes.kl"
-    kl_t2 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
-    kl_t0 = ( *kl_t2 );
+    kl_t3 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
+    kl_t0 = ( *kl_t3 );
     return kl_t0;
 }
 

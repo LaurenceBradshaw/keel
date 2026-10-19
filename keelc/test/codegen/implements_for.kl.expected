@@ -45,6 +45,7 @@ int32_t kl_drops_21 = 0;
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__Tracked__R7Tracked_3i64__ctor( struct kl__Tracked*, int64_t );
 void kl__Tracked__dtor( struct kl__Tracked* );
@@ -128,11 +129,17 @@ void kl__Tracked__R7Tracked_3i64__ctor( struct kl__Tracked* kl_this_1, int64_t k
 
 void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
     ( void ) kl_this_1;
 #line 27 "codegen/implements_for.kl"
-    kl_t2 = kl_drops_21 + 1;
-    kl_drops_21 = kl_t2;
+    kl_t2 = __builtin_add_overflow( kl_drops_21, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for.kl", 27, "arithmetic overflow: drops + 1" );
+    bb2:
+    kl_t3 = kl_drops_21 + 1;
+    kl_drops_21 = kl_t3;
     return;
 }
 
@@ -146,10 +153,16 @@ int64_t kl__measure__S3i64C8Measured( int64_t* kl_this_1 )
 
 void kl__grow__S3i64C8Measured_3i64( int64_t* kl_this_1, int64_t kl_by_2 )
 {
-    int64_t kl_t3;
+    bool kl_t3;
+    int64_t kl_t4;
 #line 39 "codegen/implements_for.kl"
-    kl_t3 = ( *kl_this_1 ) + kl_by_2;
-    ( *kl_this_1 ) = kl_t3;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ), kl_by_2, &( int64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for.kl", 39, "arithmetic overflow: this + by" );
+    bb2:
+    kl_t4 = ( *kl_this_1 ) + kl_by_2;
+    ( *kl_this_1 ) = kl_t4;
     return;
 }
 
@@ -515,14 +528,20 @@ int64_t kl__total__I3i64E__3i64_3i64( int64_t* kl_a_1, int64_t* kl_b_2 )
     int64_t kl_t4;
     int64_t* kl_t5;
     int64_t kl_t6;
-    int64_t kl_t7;
+    bool kl_t7;
+    int64_t kl_t8;
 #line 76 "codegen/implements_for.kl"
     kl_t3 = &( *kl_a_1 );
     kl_t4 = kl__measure__S3i64C8Measured( kl_t3 );
     kl_t5 = &( *kl_b_2 );
     kl_t6 = kl__measure__S3i64C8Measured( kl_t5 );
-    kl_t7 = kl_t4 + kl_t6;
-    kl_t0 = kl_t7;
+    kl_t7 = __builtin_add_overflow( kl_t4, kl_t6, &( int64_t ) { 0 } );
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for.kl", 76, "arithmetic overflow: a.measure() + b.measure()" );
+    bb2:
+    kl_t8 = kl_t4 + kl_t6;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 
@@ -533,14 +552,20 @@ int64_t kl__total__I4SizeE__4Size_4Size( int32_t* kl_a_1, int32_t* kl_b_2 )
     int64_t kl_t4;
     int32_t* kl_t5;
     int64_t kl_t6;
-    int64_t kl_t7;
+    bool kl_t7;
+    int64_t kl_t8;
 #line 76 "codegen/implements_for.kl"
     kl_t3 = &( *kl_a_1 );
     kl_t4 = kl__measure__S4SizeC8Measured( kl_t3 );
     kl_t5 = &( *kl_b_2 );
     kl_t6 = kl__measure__S4SizeC8Measured( kl_t5 );
-    kl_t7 = kl_t4 + kl_t6;
-    kl_t0 = kl_t7;
+    kl_t7 = __builtin_add_overflow( kl_t4, kl_t6, &( int64_t ) { 0 } );
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/implements_for.kl", 76, "arithmetic overflow: a.measure() + b.measure()" );
+    bb2:
+    kl_t8 = kl_t4 + kl_t6;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 

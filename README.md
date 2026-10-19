@@ -227,7 +227,7 @@ noted in its row.
 | Fixed-width primitives only: `i32`, `u64`, `f64`. `int`, `long`, `char` and `unsigned` are hard errors naming the replacement. | Sizes are a platform question. | One spelling per type. Aliases would mean every reader has to know both. |
 | No lossy implicit conversions. A binary operator widens both sides to the smallest type that holds both, and is an error where C++'s result type would not. | Integral promotion and the usual arithmetic conversions. | The conversions that lose information are the ones nobody writes on purpose. |
 | Functions, methods and constructors overload, and selection is by exact type first. Only when nothing matches does an argument widen, to the closest candidate: the same kind (integer or float), then the narrowest, then the same signedness. A literal carries a family, not a type, so `f( 1 )` against `f( i32 )` and `f( i64 )` is ambiguous. | Every viable candidate is ranked across promotions, standard conversions and user-defined conversions. | One widening step ranked by one rule is enough for `print( i64 )` to take any integer, and a call either matches exactly or says why not. |
-| Integer arithmetic wraps. A variable shift count is masked to the operand's width, dividing by zero panics, and `MIN / -1` wraps to `MIN`. | Signed overflow, an oversized shift and `MIN / -1` are undefined behaviour. | Each is defined at the cost of nothing a programmer would want, and the division check is one branch the hardware needs anyway. |
+| Integer arithmetic wraps, unless `--overflow-checks` or `--debug` asks for a panic. A variable shift count is masked to the operand's width, dividing by zero panics, and `MIN / -1` wraps to `MIN`. | Signed overflow, an oversized shift and `MIN / -1` are undefined behaviour. | Each is defined at the cost of nothing a programmer would want, and the division check is one branch the hardware needs anyway. |
 | Mixed-signedness and int/float comparisons are answered by cases. | Compiles, and answers thirteen pairs wrongly. | The one divergence in the permissive direction: it removes a silent wrong answer rather than creating one. |
 | `cast<T>( x )` preserves the value, and aborts at run time if it does not fit; `wrap<T>( x )` keeps the low bits. Neither does float↔int or int↔bool. | `static_cast`, C casts, implicit narrowing. | The failure policy is the interesting part, and one spelling hides which you meant. |
 | A leading zero on a decimal is an error: `010` does not compile. | `010` is octal, so it is 8. | Keel has no octal, so accepting it would silently change the value of valid C++. |
@@ -354,7 +354,8 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--with-prelude` | With `--declarations`, list the prelude's declarations too |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
-| `--debug` | Run each `assert`; without it the condition is checked but never run |
+| `--debug` | Run each `assert`, and check overflow as `--overflow-checks` does; without it an assert's condition is checked but never run |
+| `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--runtime <path>` | Link this runtime library instead of the installed one |
 | `--package name=<dir>` | Make a package importable as `name`; may be repeated |

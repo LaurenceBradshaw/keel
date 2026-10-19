@@ -4,6 +4,8 @@
 
 #include "popcount.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 uint32_t kl__popcount__3u32( uint32_t );
 int32_t kl__main__( void );
 
@@ -13,7 +15,8 @@ uint32_t kl__popcount__3u32( uint32_t kl_bits_1 )
     uint32_t kl_count_2;
     bool kl_t3;
     uint32_t kl_t4;
-    uint32_t kl_t5;
+    bool kl_t5;
+    uint32_t kl_t6;
 #line 6 "codegen/popcount.kl"
     kl_count_2 = 0;
     goto bb1;
@@ -24,15 +27,21 @@ uint32_t kl__popcount__3u32( uint32_t kl_bits_1 )
     bb2:
 #line 10 "codegen/popcount.kl"
     kl_t4 = kl_bits_1 & 1;
-    kl_count_2 = kl_count_2 + kl_t4;
-#line 11 "codegen/popcount.kl"
-    kl_t5 = kl_bits_1 >> 1;
-    kl_bits_1 = kl_t5;
-    goto bb1;
+    kl_t5 = __builtin_add_overflow( kl_count_2, kl_t4, &( uint32_t ) { 0 } );
+    if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 14 "codegen/popcount.kl"
     kl_t0 = kl_count_2;
     return kl_t0;
+    bb4:
+    kl_rt_panic( "codegen/popcount.kl", 10, "arithmetic overflow: count += bits & 1;" );
+    bb5:
+#line 10 "codegen/popcount.kl"
+    kl_count_2 = kl_count_2 + kl_t4;
+#line 11 "codegen/popcount.kl"
+    kl_t6 = kl_bits_1 >> 1;
+    kl_bits_1 = kl_t6;
+    goto bb1;
 }
 
 int32_t kl__main__( void )

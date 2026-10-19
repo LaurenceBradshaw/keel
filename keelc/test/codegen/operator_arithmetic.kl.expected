@@ -280,12 +280,18 @@ struct kl__speed kl__operator_div__S6meters_7seconds( struct kl__meters* kl_this
 
 void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
 {
-    uint64_t kl_t3;
-    uint8_t* kl_t4;
+    bool kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
 #line 74 "codegen/operator_arithmetic.kl"
-    kl_t3 = kl_n_2 + 1;
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( uint8_t ), "codegen/operator_arithmetic.kl", 74, "out of memory: alloc<u8>( n + 1 )" );
-    ( *kl_this_1 ).kl_bytes_317 = kl_t4;
+    kl_t3 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_arithmetic.kl", 74, "arithmetic overflow: n + 1" );
+    bb2:
+    kl_t4 = kl_n_2 + 1;
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/operator_arithmetic.kl", 74, "out of memory: alloc<u8>( n + 1 )" );
+    ( *kl_this_1 ).kl_bytes_317 = kl_t5;
 #line 75 "codegen/operator_arithmetic.kl"
     ( *kl_this_1 ).kl_length_319 = kl_n_2;
     return;
@@ -330,19 +336,25 @@ struct kl__label kl__operator_add__S5label_5label( struct kl__label* kl_this_1, 
     struct kl__label kl_t0;
     struct kl__label kl_t3;
     struct kl__label* kl_t4;
-    uint64_t kl_t5;
-    bool kl_t7;
+    bool kl_t5;
+    uint64_t kl_t6;
+    bool kl_t8;
 #line 82 "codegen/operator_arithmetic.kl"
-    kl_t7 = false;
-    kl_t7 = false;
+    kl_t8 = false;
+    kl_t8 = false;
     kl_t4 = &kl_t3;
-    kl_t7 = true;
-    kl_t5 = ( *kl_this_1 ).kl_length_319 + ( *kl_other_2 ).kl_length_319;
-    kl__label__R5label_3u64__ctor( kl_t4, kl_t5 );
+    kl_t8 = true;
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_length_319, ( *kl_other_2 ).kl_length_319, &( uint64_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_arithmetic.kl", 82, "arithmetic overflow: length + other.length" );
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_length_319 + ( *kl_other_2 ).kl_length_319;
+    kl__label__R5label_3u64__ctor( kl_t4, kl_t6 );
     kl_t0 = kl_t3;
-    kl_t7 = false;
-    if ( kl_t7 ) kl__label__dtor( &kl_t3 );
-    kl_t7 = false;
+    kl_t8 = false;
+    if ( kl_t8 ) kl__label__dtor( &kl_t3 );
+    kl_t8 = false;
     return kl_t0;
 }
 
@@ -982,13 +994,25 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
     struct kl__pair__I3i32E kl_t0;
     struct kl__pair__I3i32E kl_t3;
     struct kl__pair__I3i32E* kl_t4;
-    int32_t kl_t5;
+    bool kl_t5;
     int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
 #line 61 "codegen/operator_arithmetic.kl"
     kl_t4 = &kl_t3;
-    kl_t5 = ( *kl_this_1 ).kl_left_306 + ( *kl_other_2 ).kl_left_306;
-    kl_t6 = ( *kl_this_1 ).kl_right_308 + ( *kl_other_2 ).kl_right_308;
-    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t4, kl_t5, kl_t6 );
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_left_306, ( *kl_other_2 ).kl_left_306, &( int32_t ) { 0 } );
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/operator_arithmetic.kl", 61, "arithmetic overflow: left + other.left" );
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_left_306 + ( *kl_other_2 ).kl_left_306;
+    kl_t7 = __builtin_add_overflow( ( *kl_this_1 ).kl_right_308, ( *kl_other_2 ).kl_right_308, &( int32_t ) { 0 } );
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_rt_panic( "codegen/operator_arithmetic.kl", 61, "arithmetic overflow: right + other.right" );
+    bb4:
+    kl_t8 = ( *kl_this_1 ).kl_right_308 + ( *kl_other_2 ).kl_right_308;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t4, kl_t6, kl_t8 );
     kl_t0 = kl_t3;
     return kl_t0;
 }

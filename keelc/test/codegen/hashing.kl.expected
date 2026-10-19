@@ -4,6 +4,8 @@
 
 #include "hashing.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 uint64_t kl__fnv_byte__3u64_2u8( uint64_t, uint8_t );
 uint64_t kl__fnv_u32__3u64_3u32( uint64_t, uint32_t );
 uint64_t kl__fnv_basis__( void );
@@ -124,6 +126,8 @@ uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
     uint32_t kl_i_3;
     bool kl_t4;
     uint32_t kl_t5;
+    uint32_t kl_t6;
+    bool kl_t7;
 #line 60 "codegen/hashing.kl"
     kl_total_2 = 0;
 #line 62 "codegen/hashing.kl"
@@ -135,7 +139,8 @@ uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
     bb2:
 #line 64 "codegen/hashing.kl"
     kl_t5 = kl_i_3 * kl_i_3;
-    kl_total_2 = kl_total_2 + kl_t5;
+    kl_t6 = kl_total_2 + kl_t5;
+    kl_total_2 = kl_t6;
     goto bb4;
     bb3:
 #line 67 "codegen/hashing.kl"
@@ -143,6 +148,11 @@ uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
     return kl_t0;
     bb4:
 #line 62 "codegen/hashing.kl"
+    kl_t7 = __builtin_add_overflow( kl_i_3, 1, &( uint32_t ) { 0 } );
+    if ( kl_t7 ) goto bb5; else goto bb6;
+    bb5:
+    kl_rt_panic( "codegen/hashing.kl", 62, "arithmetic overflow: i++" );
+    bb6:
     kl_i_3 = kl_i_3 + 1;
     goto bb1;
 }

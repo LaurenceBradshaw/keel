@@ -1,0 +1,17 @@
+// --debug turns on overflow checks: negating `MIN` aborts.
+i32 id( i32 x )
+{
+    return x;
+}
+
+i64 wide( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    i32 min = id( -2147483647 - 1 );
+    _ = -min;
+    return 0;
+}

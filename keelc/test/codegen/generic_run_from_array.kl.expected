@@ -205,7 +205,8 @@ int32_t kl__total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_
     int32_t* kl_t8;
     bool kl_t9;
     int32_t* kl_t10;
-    int32_t kl_t11;
+    bool kl_t11;
+    int32_t kl_t12;
 #line 11 "codegen/generic_run_from_array.kl"
     kl_sum_2 = 0;
 #line 12 "codegen/generic_run_from_array.kl"
@@ -231,10 +232,15 @@ int32_t kl__total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_
     bb5:
 #line 14 "codegen/generic_run_from_array.kl"
     kl_t10 = kl_t8 + kl_i_3;
-    kl_t11 = kl_sum_2 + ( *kl_t10 );
-    kl_sum_2 = kl_t11;
-    goto bb6;
+    kl_t11 = __builtin_add_overflow( kl_sum_2, ( *kl_t10 ), &( int32_t ) { 0 } );
+    if ( kl_t11 ) goto bb6; else goto bb7;
     bb6:
+    kl_rt_panic( "codegen/generic_run_from_array.kl", 14, "arithmetic overflow: sum + values[i]" );
+    bb7:
+    kl_t12 = kl_sum_2 + ( *kl_t10 );
+    kl_sum_2 = kl_t12;
+    goto bb8;
+    bb8:
 #line 12 "codegen/generic_run_from_array.kl"
     kl_i_3 = kl_i_3 + 1;
     goto bb1;

@@ -1,0 +1,14 @@
+// Without --overflow-checks or --debug, arithmetic wraps: the sum `overflow_add` refuses prints
+// `i32`'s minimum.
+import t::console;
+
+i32 add( i32 a, i32 b )
+{
+    return a + b;
+}
+
+i32 main()
+{
+    t::println( add( 2147483647, 1 ) );
+    return 0;
+}

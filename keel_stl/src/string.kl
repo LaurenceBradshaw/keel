@@ -80,7 +80,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
             return from( cast<u64>( value ) );
         }
 
-        u64 magnitude = 0 - wrap<u64>( value );
+        u64 magnitude = wrap<u64>( 0 - value );
         string result = string();
         result.push( 45 ); // '-'
         result += from( magnitude );

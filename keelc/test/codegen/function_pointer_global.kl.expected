@@ -10,6 +10,8 @@ typedef int32_t ( *kl__fn__FF3i32E3i323i32E3i32 )( kl__fn__F3i32E3i32, int32_t )
 kl__fn__F3i32E3i32 kl_handler_32;
 kl__fn__FF3i32E3i323i32E3i32 kl_applier_44;
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 int32_t kl__twice__3i32( int32_t );
 int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
 int32_t kl__main__( void );
@@ -17,10 +19,16 @@ int32_t kl__main__( void );
 int32_t kl__twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
+    bool kl_t2;
+    int32_t kl_t3;
 #line 5 "codegen/function_pointer_global.kl"
-    kl_t2 = kl_a_1 * 2;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( kl_a_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/function_pointer_global.kl", 5, "arithmetic overflow: a * 2" );
+    bb2:
+    kl_t3 = kl_a_1 * 2;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

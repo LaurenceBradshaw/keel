@@ -37,6 +37,7 @@ struct kl__Box__I3i32E
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int64_t kl__widened__S5Plain( struct kl__Plain* );
 void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
@@ -63,15 +64,21 @@ int64_t kl__widened__S5Plain( struct kl__Plain* kl_this_1 )
     struct kl__Plain* kl_t3;
     int64_t kl_t4;
     int64_t kl_t5;
-    int64_t kl_t6;
+    bool kl_t6;
+    int64_t kl_t7;
 #line 34 "codegen/generic_methods.kl"
     kl_t3 = &( *kl_this_1 );
     kl_t4 = kl__as__I3i64E__S5Plain_3i64( kl_t3, 5 );
     kl_x_2 = kl_t4;
 #line 35 "codegen/generic_methods.kl"
     kl_t5 = ( int64_t ) ( *kl_this_1 ).kl_n_107;
-    kl_t6 = kl_x_2 + kl_t5;
-    kl_t0 = kl_t6;
+    kl_t6 = __builtin_add_overflow( kl_x_2, kl_t5, &( int64_t ) { 0 } );
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generic_methods.kl", 35, "arithmetic overflow: x + cast<i64>( n )" );
+    bb2:
+    kl_t7 = kl_x_2 + kl_t5;
+    kl_t0 = kl_t7;
     return kl_t0;
 }
 
@@ -124,10 +131,16 @@ bool kl__positive__3i32( int32_t* kl_x_1 )
 int64_t kl__double_it__3i64( int64_t* kl_x_1 )
 {
     int64_t kl_t0;
-    int64_t kl_t2;
+    bool kl_t2;
+    int64_t kl_t3;
 #line 68 "codegen/generic_methods.kl"
-    kl_t2 = ( *kl_x_1 ) * 2;
-    kl_t0 = kl_t2;
+    kl_t2 = __builtin_mul_overflow( ( *kl_x_1 ), 2, &( int64_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generic_methods.kl", 68, "arithmetic overflow: x * 2" );
+    bb2:
+    kl_t3 = ( *kl_x_1 ) * 2;
+    kl_t0 = kl_t3;
     return kl_t0;
 }
 

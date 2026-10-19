@@ -16,6 +16,7 @@ int32_t kl_destroyed_5 = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__Cell__R4Cell__ctor( struct kl__Cell* );
 void kl__Cell__dtor( struct kl__Cell* );
@@ -27,24 +28,36 @@ void kl__inspect__I4CellE__4Cell( struct kl__Cell* );
 void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
 {
     int32_t* kl_t2;
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 16 "codegen/generics_owning.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/generics_owning.kl", 16, "out of memory: alloc<i32>()" );
     ( *kl_this_1 ).kl_slot_8 = kl_t2;
 #line 17 "codegen/generics_owning.kl"
-    kl_t3 = kl_built_2 + 1;
-    kl_built_2 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_built_2, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generics_owning.kl", 17, "arithmetic overflow: built + 1" );
+    bb2:
+    kl_t4 = kl_built_2 + 1;
+    kl_built_2 = kl_t4;
     return;
 }
 
 void kl__Cell__dtor( struct kl__Cell* kl_this_1 )
 {
-    int32_t kl_t3;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 22 "codegen/generics_owning.kl"
     kl_rt_free( ( *kl_this_1 ).kl_slot_8 );
 #line 23 "codegen/generics_owning.kl"
-    kl_t3 = kl_destroyed_5 + 1;
-    kl_destroyed_5 = kl_t3;
+    kl_t3 = __builtin_add_overflow( kl_destroyed_5, 1, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/generics_owning.kl", 23, "arithmetic overflow: destroyed + 1" );
+    bb2:
+    kl_t4 = kl_destroyed_5 + 1;
+    kl_destroyed_5 = kl_t4;
     return;
 }
 
