@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
@@ -577,4 +578,62 @@ int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
 
     *status = WIFEXITED( st ) ? WEXITSTATUS( st ) : 128 + WTERMSIG( st );
     return 0;
+}
+
+static const clockid_t kl_rt_clocks[] = { CLOCK_REALTIME, CLOCK_MONOTONIC, CLOCK_MONOTONIC_RAW };
+
+int32_t kl_rt_clock( int32_t which, int64_t* nanoseconds )
+{
+    if( which < 0 || which >= (int32_t) ( sizeof kl_rt_clocks / sizeof kl_rt_clocks[0] ) )
+    {
+        return EINVAL;
+    }
+
+    struct timespec ts;
+    if( clock_gettime( kl_rt_clocks[which], &ts ) == -1 )
+    {
+        return errno;
+    }
+
+    *nanoseconds = (int64_t) ts.tv_sec * 1000000000 + ts.tv_nsec;
+    return 0;
+}
+
+int32_t kl_rt_clock_resolution( int32_t which, int64_t* nanoseconds )
+{
+    if( which < 0 || which >= (int32_t) ( sizeof kl_rt_clocks / sizeof kl_rt_clocks[0] ) )
+    {
+        return EINVAL;
+    }
+
+    struct timespec ts;
+    if( clock_getres( kl_rt_clocks[which], &ts ) == -1 )
+    {
+        return errno;
+    }
+
+    *nanoseconds = (int64_t) ts.tv_sec * 1000000000 + ts.tv_nsec;
+    return 0;
+}
+
+extern char** environ;
+
+// Lends the value from environ; a name never set (empty, holding '=' or 0) is ENOENT.
+int32_t kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, uint64_t* value_size )
+{
+    if( size == 0 || memchr( name, '=', size ) || memchr( name, 0, size ) )
+    {
+        return ENOENT;
+    }
+
+    for( char** e = environ; *e; ++e )
+    {
+        if( strncmp( *e, (const char*) name, size ) == 0 && ( *e )[size] == '=' )
+        {
+            *value      = (uint8_t*) *e + size + 1;
+            *value_size = strlen( (const char*) *value );
+            return 0;
+        }
+    }
+    return ENOENT;
 }

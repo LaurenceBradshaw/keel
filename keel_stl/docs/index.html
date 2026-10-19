@@ -149,6 +149,9 @@ until it does.</dd>
 <dt><a href="os.html#run"><code>run</code></a> <span class="kind">function</span></dt>
 <dd>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code, as <code>process::wait</code> does.
 Input this program has already buffered is not seen by the child.</dd>
+<dt><a href="os.html#environment"><code>environment</code></a> <span class="kind">function</span></dt>
+<dd>The value of the environment variable <code>name</code>, or <code>none</code> when it is not set; a name that is
+empty or holds <code>=</code> never is.</dd>
 </dl>
 </section>
 <section class="module">
@@ -179,6 +182,23 @@ Input this program has already buffered is not seen by the child.</dd>
 <dd>Why <code>string::parse_i64</code> refused its text.</dd>
 <dt><a href="string.html#string"><code>string</code></a> <span class="kind">class</span></dt>
 <dd>A growable sequence of bytes that owns its storage.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="time.html">time</a></h3>
+<dl class="summaries">
+<dt><a href="time.html#duration"><code>duration</code></a> <span class="kind">class</span></dt>
+<dd>A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
+way.</dd>
+<dt><a href="time.html#instant"><code>instant</code></a> <span class="kind">class</span></dt>
+<dd>A reading of the monotonic clock, which never goes backwards and is never stepped, but is
+rate-corrected towards true seconds. Only meaningful against another <code>instant</code>.</dd>
+<dt><a href="time.html#raw_instant"><code>raw_instant</code></a> <span class="kind">class</span></dt>
+<dd>A reading of the oscillator's own clock, never corrected, for comparing this machine's clock
+against another's. Use <code>instant</code> for measuring.</dd>
+<dt><a href="time.html#wall_time"><code>wall_time</code></a> <span class="kind">function</span></dt>
+<dd>Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
+<code>instant</code>.</dd>
 </dl>
 </section>
 <h2>Prelude</h2>

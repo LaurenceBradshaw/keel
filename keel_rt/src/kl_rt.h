@@ -47,5 +47,8 @@ int32_t        kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* 
 void           kl_rt_directory_close( uint64_t handle );
 int32_t        kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid );
 int32_t        kl_rt_process_wait( int64_t pid, int32_t* status );
+int32_t        kl_rt_clock( int32_t which, int64_t* nanoseconds );
+int32_t        kl_rt_clock_resolution( int32_t which, int64_t* nanoseconds );
+int32_t        kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, uint64_t* value_size );
 
 #endif // KL_RT_H

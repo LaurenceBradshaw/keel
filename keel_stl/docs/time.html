@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::time</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::time</h1>
+<ul class="contents">
+<li><a href="#duration"><code>duration</code></a> <span class="kind">class</span></li>
+<li><a href="#instant"><code>instant</code></a> <span class="kind">class</span></li>
+<li><a href="#raw_instant"><code>raw_instant</code></a> <span class="kind">class</span></li>
+<li><a href="#wall_time"><code>wall_time</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">duration</span></h2>
+<div class="group" id="duration">
+<pre class="signature"><a class="anchor" href="#duration" aria-label="Link to duration">#</a><code><span class="kw">class</span> <span class="type">duration</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<div class="doc">
+<p>A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
+way.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="duration.of_nanoseconds">
+<pre class="signature"><a class="anchor" href="#duration.of_nanoseconds" aria-label="Link to of_nanoseconds">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">of_nanoseconds</span>( <a class="prim" href="prelude.html#i64">i64</a> nanoseconds )</code></pre>
+<div class="doc">
+<p>A span of <code>nanoseconds</code>.</p>
+</div>
+</div>
+<div class="group" id="duration.nanoseconds">
+<pre class="signature"><a class="anchor" href="#duration.nanoseconds" aria-label="Link to nanoseconds">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i64">i64</a> <span class="fn">nanoseconds</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The span in nanoseconds.</p>
+</div>
+</div>
+<div class="group" id="duration.operator+">
+<pre class="signature"><a class="anchor" href="#duration.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="duration.operator-">
+<pre class="signature"><a class="anchor" href="#duration.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="duration.operator==">
+<pre class="signature"><a class="anchor" href="#duration.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="duration.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#duration.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#duration">duration</a> other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">instant</span></h2>
+<div class="group" id="instant">
+<pre class="signature"><a class="anchor" href="#instant" aria-label="Link to instant">#</a><code><span class="kw">class</span> <span class="type">instant</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<div class="doc">
+<p>A reading of the monotonic clock, which never goes backwards and is never stepped, but is
+rate-corrected towards true seconds. Only meaningful against another <code>instant</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="instant.now">
+<pre class="signature"><a class="anchor" href="#instant.now" aria-label="Link to now">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#instant">instant</a> <span class="fn">now</span>()</code></pre>
+<div class="doc">
+<p>The clock's reading now.</p>
+</div>
+</div>
+<div class="group" id="instant.resolution">
+<pre class="signature"><a class="anchor" href="#instant.resolution" aria-label="Link to resolution">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">resolution</span>()</code></pre>
+<div class="doc">
+<p>The clock's resolution.</p>
+</div>
+</div>
+<div class="group" id="instant.operator-">
+<pre class="signature"><a class="anchor" href="#instant.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#instant">instant</a> earlier ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The time from <code>earlier</code> to this one, negative if <code>earlier</code> is later.</p>
+</div>
+</div>
+<div class="group" id="instant.operator==">
+<pre class="signature"><a class="anchor" href="#instant.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#instant">instant</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="instant.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#instant.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#instant">instant</a> other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">raw_instant</span></h2>
+<div class="group" id="raw_instant">
+<pre class="signature"><a class="anchor" href="#raw_instant" aria-label="Link to raw_instant">#</a><code><span class="kw">class</span> <span class="type">raw_instant</span> <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<div class="doc">
+<p>A reading of the oscillator's own clock, never corrected, for comparing this machine's clock
+against another's. Use <code>instant</code> for measuring.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="raw_instant.now">
+<pre class="signature"><a class="anchor" href="#raw_instant.now" aria-label="Link to now">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#raw_instant">raw_instant</a> <span class="fn">now</span>()</code></pre>
+<div class="doc">
+<p>The clock's reading now.</p>
+</div>
+</div>
+<div class="group" id="raw_instant.resolution">
+<pre class="signature"><a class="anchor" href="#raw_instant.resolution" aria-label="Link to resolution">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#duration">duration</a> <span class="fn">resolution</span>()</code></pre>
+<div class="doc">
+<p>The clock's resolution.</p>
+</div>
+</div>
+<div class="group" id="raw_instant.operator-">
+<pre class="signature"><a class="anchor" href="#raw_instant.operator-" aria-label="Link to operator-">#</a><code><span class="kw">public</span> <a class="type" href="#duration">duration</a> <span class="fn">operator-</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#raw_instant">raw_instant</a> earlier ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The time from <code>earlier</code> to this one, negative if <code>earlier</code> is later.</p>
+</div>
+</div>
+<div class="group" id="raw_instant.operator==">
+<pre class="signature"><a class="anchor" href="#raw_instant.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#raw_instant">raw_instant</a> other ) <span class="kw">const</span></code></pre>
+</div>
+<div class="group" id="raw_instant.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#raw_instant.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#raw_instant">raw_instant</a> other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">wall_time</span></h2>
+<div class="group" id="wall_time">
+<pre class="signature"><a class="anchor" href="#wall_time" aria-label="Link to wall_time">#</a><code><a class="prim" href="prelude.html#i64">i64</a> <span class="fn">wall_time</span>()</code></pre>
+<div class="doc">
+<p>Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
+<code>instant</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

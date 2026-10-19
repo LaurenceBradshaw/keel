@@ -30,6 +30,7 @@
 <li><a href="#list_directory"><code>list_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#process"><code>process</code></a> <span class="kind">class</span></li>
 <li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
+<li><a href="#environment"><code>environment</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">os_error</span></h2>
@@ -432,6 +433,16 @@ a signal ended it. Asked again, it answers the same.</p>
 <div class="doc">
 <p>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code, as <code>process::wait</code> does.
 Input this program has already buffered is not seen by the child.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">environment</span></h2>
+<div class="group" id="environment">
+<pre class="signature"><a class="anchor" href="#environment" aria-label="Link to environment">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">environment</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name )</code></pre>
+<div class="doc">
+<p>The value of the environment variable <code>name</code>, or <code>none</code> when it is not set; a name that is
+empty or holds <code>=</code> never is.</p>
 </div>
 </div>
 </section>

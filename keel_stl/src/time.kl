@@ -1,0 +1,199 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The clocks, through the runtime's calls: whole nanoseconds in an `i64`, never through `f64`.
+
+private extern i32 kl_rt_clock( i32 which, i64* nanoseconds );
+private extern i32 kl_rt_clock_resolution( i32 which, i64* nanoseconds );
+
+// Clock `which`'s reading in nanoseconds: 0 the wall clock, 1 monotonic, 2 raw, as the runtime
+// numbers them. Every supported system has all three, so a failure is a bug, not a `result`.
+private i64 clock_reading( i32 which )
+{
+    i64 nanoseconds = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_clock( which, &nanoseconds );
+    }
+
+    assert( status == 0 );
+    return nanoseconds;
+}
+
+// Clock `which`'s resolution in nanoseconds, numbered as for `clock_reading`.
+private i64 clock_resolution( i32 which )
+{
+    i64 nanoseconds = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_clock_resolution( which, &nanoseconds );
+    }
+
+    assert( status == 0 );
+    return nanoseconds;
+}
+
+/// A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
+/// way.
+class duration implements equatable, comparable
+{
+    private duration( i64 nanoseconds )
+    {
+        nanoseconds_ = nanoseconds;
+    }
+
+    /// A span of `nanoseconds`.
+    public static duration of_nanoseconds( i64 nanoseconds )
+    {
+        return duration( nanoseconds );
+    }
+
+    /// The span in nanoseconds.
+    public i64 nanoseconds() const
+    {
+        return nanoseconds_;
+    }
+
+    public duration operator+( const ref duration other ) const
+    {
+        return duration( nanoseconds_ + other.nanoseconds_ );
+    }
+
+    public duration operator-( const ref duration other ) const
+    {
+        return duration( nanoseconds_ - other.nanoseconds_ );
+    }
+
+    public bool operator==( const ref duration other ) const
+    {
+        return nanoseconds_ == other.nanoseconds_;
+    }
+
+    public ordering operator<=>( const ref duration other ) const
+    {
+        if( nanoseconds_ < other.nanoseconds_ )
+        {
+            return ordering::less;
+        }
+
+        if( nanoseconds_ > other.nanoseconds_ )
+        {
+            return ordering::greater;
+        }
+
+        return ordering::equal;
+    }
+
+    private i64 nanoseconds_;
+};
+
+/// A reading of the monotonic clock, which never goes backwards and is never stepped, but is
+/// rate-corrected towards true seconds. Only meaningful against another `instant`.
+class instant implements equatable, comparable
+{
+    private instant( i64 nanoseconds )
+    {
+        nanoseconds_ = nanoseconds;
+    }
+
+    /// The clock's reading now.
+    public static instant now()
+    {
+        return instant( clock_reading( 1 ) );
+    }
+
+    /// The clock's resolution.
+    public static duration resolution()
+    {
+        return duration::of_nanoseconds( clock_resolution( 1 ) );
+    }
+
+    /// The time from `earlier` to this one, negative if `earlier` is later.
+    public duration operator-( const ref instant earlier ) const
+    {
+        return duration::of_nanoseconds( nanoseconds_ - earlier.nanoseconds_ );
+    }
+
+    public bool operator==( const ref instant other ) const
+    {
+        return nanoseconds_ == other.nanoseconds_;
+    }
+
+    public ordering operator<=>( const ref instant other ) const
+    {
+        if( nanoseconds_ < other.nanoseconds_ )
+        {
+            return ordering::less;
+        }
+
+        if( nanoseconds_ > other.nanoseconds_ )
+        {
+            return ordering::greater;
+        }
+
+        return ordering::equal;
+    }
+
+    private i64 nanoseconds_;
+};
+
+/// A reading of the oscillator's own clock, never corrected, for comparing this machine's clock
+/// against another's. Use `instant` for measuring.
+class raw_instant implements equatable, comparable
+{
+    private raw_instant( i64 nanoseconds )
+    {
+        nanoseconds_ = nanoseconds;
+    }
+
+    /// The clock's reading now.
+    public static raw_instant now()
+    {
+        return raw_instant( clock_reading( 2 ) );
+    }
+
+    /// The clock's resolution.
+    public static duration resolution()
+    {
+        return duration::of_nanoseconds( clock_resolution( 2 ) );
+    }
+
+    /// The time from `earlier` to this one, negative if `earlier` is later.
+    public duration operator-( const ref raw_instant earlier ) const
+    {
+        return duration::of_nanoseconds( nanoseconds_ - earlier.nanoseconds_ );
+    }
+
+    public bool operator==( const ref raw_instant other ) const
+    {
+        return nanoseconds_ == other.nanoseconds_;
+    }
+
+    public ordering operator<=>( const ref raw_instant other ) const
+    {
+        if( nanoseconds_ < other.nanoseconds_ )
+        {
+            return ordering::less;
+        }
+
+        if( nanoseconds_ > other.nanoseconds_ )
+        {
+            return ordering::greater;
+        }
+
+        return ordering::equal;
+    }
+
+    private i64 nanoseconds_;
+};
+
+/// Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
+/// `instant`.
+i64 wall_time()
+{
+    return clock_reading( 0 );
+}

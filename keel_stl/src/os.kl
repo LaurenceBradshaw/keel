@@ -1,11 +1,12 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Files, paths, directories and processes, through the runtime's calls. Each call answers 0 or
-// an `errno` value, which only the runtime turns into a kind, since the numbers differ between
-// systems.
+// Files, paths, directories, processes and the environment, through the runtime's calls. Each
+// call answers 0 or an `errno` value, which only the runtime turns into a kind, since the numbers
+// differ between systems.
 
 import list;
+import optional;
 import string;
 
 // The runtime's calls; a run crosses as its data and size.
@@ -25,6 +26,7 @@ private extern i32 kl_rt_directory_next( u64 handle, u8[*]* name, u64* size );
 private extern void kl_rt_directory_close( u64 handle );
 private extern i32 kl_rt_process_start( const ref u8[] packed, u64 count, i64* pid );
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
+private extern i32 kl_rt_environment( const ref u8[] name, u8[*]* value, u64* size );
 
 /// A failure any call to the system can meet.
 enum os_error
@@ -782,4 +784,31 @@ result<i32, file_error> run<T>( const ref textual program, const ref T[] argumen
         case result::err( e ):
             return result::err( file_error::os( e ) );
     }
+}
+
+/// The value of the environment variable `name`, or `none` when it is not set; a name that is
+/// empty or holds `=` never is.
+optional<string> environment( const ref textual name )
+{
+    u8[*] bytes = nullptr;
+    u64 size = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_environment( name.as_text(), &bytes, &size );
+    }
+
+    if( status != 0 )
+    {
+        return optional::none;
+    }
+
+    string value = string();
+    unsafe
+    {
+        value.append( bytes[0..size] );
+    }
+
+    return optional::some( move value );
 }

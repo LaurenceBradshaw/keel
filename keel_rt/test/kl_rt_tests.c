@@ -366,6 +366,40 @@ static void process_round_trip( void )
 #undef PACKED
 }
 
+// Each clock reads and has a resolution, and a clock past the table is refused.
+static void clocks( void )
+{
+    int64_t ns = -1;
+    for( int32_t which = 0; which < 3; ++which )
+    {
+        int64_t res = -1;
+        printf( "%d%d ", kl_rt_clock( which, &ns ) == 0 && ns > 0, kl_rt_clock_resolution( which, &res ) == 0 && res > 0 );
+    }
+    printf( "%d %d", kl_rt_clock( 3, &ns ) == EINVAL, kl_rt_clock_resolution( -1, &ns ) == EINVAL );
+}
+
+// A variable reads back, an empty one is size 0, and an unset name, `=` in one and a 0 byte in one
+// are refused.
+static void environment( void )
+{
+#define NAME( text ) (const uint8_t*) text, sizeof text - 1
+
+    setenv( "KL_RT_SET", "value", 1 );
+    setenv( "KL_RT_EMPTY", "", 1 );
+
+    uint8_t* value = NULL;
+    uint64_t size  = 9;
+    printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET" ), &value, &size ) );
+    printf( "%.*s ", (int) size, (const char*) value );
+    printf( "%d %d ", kl_rt_environment( NAME( "KL_RT_EMPTY" ), &value, &size ), (int) size );
+    printf( "%d ", kl_rt_environment( NAME( "KL_RT" ), &value, &size ) == ENOENT );
+    printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET=value" ), &value, &size ) == ENOENT );
+    printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET\0" ), &value, &size ) == ENOENT );
+    printf( "%d", kl_rt_environment( NAME( "" ), &value, &size ) == ENOENT );
+
+#undef NAME
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -435,12 +469,20 @@ int main( void )
     check( "process_round_trip", "stdout", r.out, "before|child0 0 0 3 137 1 7 1 1 1 1 1|after" );
     check_exit( "process_round_trip", &r, false );
 
+    r = run( clocks );
+    check( "clocks", "stdout", r.out, "11 11 11 1 1" );
+    check_exit( "clocks", &r, false );
+
+    r = run( environment );
+    check( "environment", "stdout", r.out, "0 value 0 0 1 1 1 1" );
+    check_exit( "environment", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "15 runtime tests passed\n" );
+    printf( "17 runtime tests passed\n" );
     return 0;
 }

@@ -1,0 +1,618 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl_2kl_duration;
+struct kl_2kl_instant;
+struct kl_2kl_raw_instant;
+
+struct kl_2kl_duration
+{
+    int64_t kl_nanoseconds__378;
+};
+
+struct kl_2kl_instant
+{
+    int64_t kl_nanoseconds__491;
+};
+
+struct kl_2kl_raw_instant
+{
+    int64_t kl_nanoseconds__604;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_rt_clock( int32_t, int64_t* );
+int32_t kl_rt_clock_resolution( int32_t, int64_t* );
+
+int32_t kl__main__( void );
+int64_t kl_2kl_clock_reading__3i32( int32_t );
+int64_t kl_2kl_clock_resolution__3i32( int32_t );
+void kl_2kl_duration__RQ2kl8duration_3i64__ctor( struct kl_2kl_duration*, int64_t );
+struct kl_2kl_duration kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( int64_t );
+int64_t kl_2kl_nanoseconds__SQ2kl8duration( struct kl_2kl_duration* );
+struct kl_2kl_duration kl_2kl_operator_add__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration*, struct kl_2kl_duration* );
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration*, struct kl_2kl_duration* );
+bool kl_2kl_operator_eq__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration*, struct kl_2kl_duration* );
+int32_t kl_2kl_operator_compare__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration*, struct kl_2kl_duration* );
+void kl_2kl_instant__RQ2kl7instant_3i64__ctor( struct kl_2kl_instant*, int64_t );
+struct kl_2kl_instant kl_2kl_now__SQ2kl7instant( void );
+struct kl_2kl_duration kl_2kl_resolution__SQ2kl7instant( void );
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant*, struct kl_2kl_instant* );
+bool kl_2kl_operator_eq__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant*, struct kl_2kl_instant* );
+int32_t kl_2kl_operator_compare__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant*, struct kl_2kl_instant* );
+void kl_2kl_raw_instant__RQ2kl11raw_instant_3i64__ctor( struct kl_2kl_raw_instant*, int64_t );
+struct kl_2kl_raw_instant kl_2kl_now__SQ2kl11raw_instant( void );
+struct kl_2kl_duration kl_2kl_resolution__SQ2kl11raw_instant( void );
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant*, struct kl_2kl_raw_instant* );
+bool kl_2kl_operator_eq__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant*, struct kl_2kl_raw_instant* );
+int32_t kl_2kl_operator_compare__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant*, struct kl_2kl_raw_instant* );
+int64_t kl_2kl_wall_time__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_instant kl_a_1;
+    struct kl_2kl_instant kl_t2;
+    struct kl_2kl_raw_instant kl_r_3;
+    struct kl_2kl_raw_instant kl_t4;
+    uint64_t kl_i_5;
+    bool kl_t6;
+    struct kl_2kl_instant kl_b_7;
+    struct kl_2kl_instant kl_t8;
+    struct kl_2kl_instant* kl_t9;
+    struct kl_2kl_instant* kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    struct kl_2kl_raw_instant kl_s_13;
+    struct kl_2kl_raw_instant kl_t14;
+    struct kl_2kl_raw_instant* kl_t15;
+    struct kl_2kl_raw_instant* kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    struct kl_2kl_instant kl_later_19;
+    struct kl_2kl_instant kl_t20;
+    bool kl_t21;
+    struct kl_2kl_instant* kl_t22;
+    struct kl_2kl_instant* kl_t23;
+    struct kl_2kl_duration kl_t24;
+    struct kl_2kl_duration* kl_t25;
+    int64_t kl_t26;
+    bool kl_t27;
+    struct kl_2kl_instant* kl_t28;
+    struct kl_2kl_instant* kl_t29;
+    struct kl_2kl_duration kl_t30;
+    struct kl_2kl_duration* kl_t31;
+    struct kl_2kl_duration kl_t32;
+    struct kl_2kl_duration* kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    struct kl_2kl_duration kl_two_36;
+    struct kl_2kl_duration kl_t37;
+    struct kl_2kl_duration kl_five_38;
+    struct kl_2kl_duration kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    struct kl_2kl_duration* kl_t42;
+    struct kl_2kl_duration* kl_t43;
+    struct kl_2kl_duration kl_t44;
+    struct kl_2kl_duration* kl_t45;
+    struct kl_2kl_duration* kl_t46;
+    struct kl_2kl_duration kl_t47;
+    struct kl_2kl_duration* kl_t48;
+    struct kl_2kl_duration* kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    struct kl_2kl_duration* kl_t52;
+    struct kl_2kl_duration* kl_t53;
+    int32_t kl_t54;
+    bool kl_t55;
+    bool kl_t56;
+    struct kl_2kl_duration* kl_t57;
+    struct kl_2kl_duration* kl_t58;
+    struct kl_2kl_duration kl_t59;
+    struct kl_2kl_duration* kl_t60;
+    int64_t kl_t61;
+    int64_t kl_t62;
+    bool kl_t63;
+    bool kl_t64;
+    struct kl_2kl_duration kl_t65;
+    struct kl_2kl_duration* kl_t66;
+    int64_t kl_t67;
+    bool kl_t68;
+    struct kl_2kl_duration kl_t69;
+    struct kl_2kl_duration* kl_t70;
+    int64_t kl_t71;
+    bool kl_t72;
+    int64_t kl_t73;
+    bool kl_t74;
+#line 7 "time/main.kl"
+    kl_t2 = kl_2kl_now__SQ2kl7instant(  );
+    kl_a_1 = kl_t2;
+#line 8 "time/main.kl"
+    kl_t4 = kl_2kl_now__SQ2kl11raw_instant(  );
+    kl_r_3 = kl_t4;
+#line 9 "time/main.kl"
+    kl_i_5 = 0;
+    goto bb1;
+    bb1:
+    kl_t6 = kl_i_5 < 10000;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 11 "time/main.kl"
+    kl_t8 = kl_2kl_now__SQ2kl7instant(  );
+    kl_b_7 = kl_t8;
+#line 12 "time/main.kl"
+    kl_t9 = &kl_b_7;
+    kl_t10 = &kl_a_1;
+    kl_t11 = kl_2kl_operator_compare__SQ2kl7instant_Q2kl7instant( kl_t9, kl_t10 );
+    kl_t12 = kl_t11 == 0;
+    if ( kl_t12 ) goto bb4; else goto bb5;
+    bb3:
+#line 26 "time/main.kl"
+    kl_t20 = kl_2kl_now__SQ2kl7instant(  );
+    kl_later_19 = kl_t20;
+#line 27 "time/main.kl"
+    kl_t22 = &kl_later_19;
+    kl_t23 = &kl_a_1;
+    kl_t24 = kl_2kl_operator_sub__SQ2kl7instant_Q2kl7instant( kl_t22, kl_t23 );
+    kl_t25 = &kl_t24;
+    kl_t26 = kl_2kl_nanoseconds__SQ2kl8duration( kl_t25 );
+    kl_t27 = kl_t26 < 0;
+    kl_t21 = kl_t27;
+    if ( kl_t21 ) goto bb10; else goto bb9;
+    bb4:
+#line 14 "time/main.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb5:
+#line 16 "time/main.kl"
+    kl_a_1 = kl_b_7;
+#line 18 "time/main.kl"
+    kl_t14 = kl_2kl_now__SQ2kl11raw_instant(  );
+    kl_s_13 = kl_t14;
+#line 19 "time/main.kl"
+    kl_t15 = &kl_s_13;
+    kl_t16 = &kl_r_3;
+    kl_t17 = kl_2kl_operator_compare__SQ2kl11raw_instant_Q2kl11raw_instant( kl_t15, kl_t16 );
+    kl_t18 = kl_t17 == 0;
+    if ( kl_t18 ) goto bb6; else goto bb7;
+    bb6:
+#line 21 "time/main.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb7:
+#line 23 "time/main.kl"
+    kl_r_3 = kl_s_13;
+    goto bb8;
+    bb8:
+#line 9 "time/main.kl"
+    kl_i_5 = kl_i_5 + 1;
+    goto bb1;
+    bb9:
+#line 27 "time/main.kl"
+    kl_t28 = &kl_a_1;
+    kl_t29 = &kl_a_1;
+    kl_t30 = kl_2kl_operator_sub__SQ2kl7instant_Q2kl7instant( kl_t28, kl_t29 );
+    kl_t31 = &kl_t30;
+    kl_t32 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( 0 );
+    kl_t33 = &kl_t32;
+    kl_t34 = kl_2kl_operator_eq__SQ2kl8duration_Q2kl8duration( kl_t31, kl_t33 );
+    kl_t35 = !kl_t34;
+    kl_t21 = kl_t35;
+    goto bb10;
+    bb10:
+    if ( kl_t21 ) goto bb11; else goto bb12;
+    bb11:
+#line 29 "time/main.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb12:
+#line 32 "time/main.kl"
+    kl_t37 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( 2 );
+    kl_two_36 = kl_t37;
+#line 33 "time/main.kl"
+    kl_t39 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( 5 );
+    kl_five_38 = kl_t39;
+#line 34 "time/main.kl"
+    kl_t42 = &kl_two_36;
+    kl_t43 = &kl_five_38;
+    kl_t44 = kl_2kl_operator_add__SQ2kl8duration_Q2kl8duration( kl_t42, kl_t43 );
+    kl_t45 = &kl_t44;
+    kl_t46 = &kl_five_38;
+    kl_t47 = kl_2kl_operator_sub__SQ2kl8duration_Q2kl8duration( kl_t45, kl_t46 );
+    kl_t48 = &kl_t47;
+    kl_t49 = &kl_two_36;
+    kl_t50 = kl_2kl_operator_eq__SQ2kl8duration_Q2kl8duration( kl_t48, kl_t49 );
+    kl_t51 = !kl_t50;
+    kl_t41 = kl_t51;
+    if ( kl_t41 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t52 = &kl_two_36;
+    kl_t53 = &kl_five_38;
+    kl_t54 = kl_2kl_operator_compare__SQ2kl8duration_Q2kl8duration( kl_t52, kl_t53 );
+    kl_t55 = kl_t54 == 0;
+    kl_t56 = !kl_t55;
+    kl_t41 = kl_t56;
+    goto bb14;
+    bb14:
+    kl_t40 = kl_t41;
+    if ( kl_t40 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t57 = &kl_two_36;
+    kl_t58 = &kl_five_38;
+    kl_t59 = kl_2kl_operator_sub__SQ2kl8duration_Q2kl8duration( kl_t57, kl_t58 );
+    kl_t60 = &kl_t59;
+    kl_t61 = kl_2kl_nanoseconds__SQ2kl8duration( kl_t60 );
+    kl_t62 = -3;
+    kl_t63 = kl_t61 != kl_t62;
+    kl_t40 = kl_t63;
+    goto bb16;
+    bb16:
+    if ( kl_t40 ) goto bb17; else goto bb18;
+    bb17:
+#line 36 "time/main.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb18:
+#line 39 "time/main.kl"
+    kl_t65 = kl_2kl_resolution__SQ2kl7instant(  );
+    kl_t66 = &kl_t65;
+    kl_t67 = kl_2kl_nanoseconds__SQ2kl8duration( kl_t66 );
+    kl_t68 = kl_t67 <= 0;
+    kl_t64 = kl_t68;
+    if ( kl_t64 ) goto bb20; else goto bb19;
+    bb19:
+#line 40 "time/main.kl"
+    kl_t69 = kl_2kl_resolution__SQ2kl11raw_instant(  );
+    kl_t70 = &kl_t69;
+    kl_t71 = kl_2kl_nanoseconds__SQ2kl8duration( kl_t70 );
+    kl_t72 = kl_t71 <= 0;
+#line 39 "time/main.kl"
+    kl_t64 = kl_t72;
+    goto bb20;
+    bb20:
+    if ( kl_t64 ) goto bb21; else goto bb22;
+    bb21:
+#line 42 "time/main.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb22:
+#line 46 "time/main.kl"
+    kl_t73 = kl_2kl_wall_time__(  );
+    kl_t74 = kl_t73 < 1767225600000000000;
+    if ( kl_t74 ) goto bb23; else goto bb24;
+    bb23:
+#line 48 "time/main.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb24:
+#line 51 "time/main.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int64_t kl_2kl_clock_reading__3i32( int32_t kl_which_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_nanoseconds_2;
+    int32_t kl_status_3;
+    int64_t* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 13 "../src/time.kl"
+    kl_nanoseconds_2 = 0;
+#line 14 "../src/time.kl"
+    kl_status_3 = 0;
+#line 18 "../src/time.kl"
+    kl_t4 = &kl_nanoseconds_2;
+    kl_t5 = kl_rt_clock( kl_which_1, kl_t4 );
+    kl_status_3 = kl_t5;
+#line 21 "../src/time.kl"
+    kl_t6 = kl_status_3 == 0;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 22 "../src/time.kl"
+    kl_t0 = kl_nanoseconds_2;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/time.kl", 21, "assertion failed: status == 0" );
+}
+
+int64_t kl_2kl_clock_resolution__3i32( int32_t kl_which_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_nanoseconds_2;
+    int32_t kl_status_3;
+    int64_t* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 28 "../src/time.kl"
+    kl_nanoseconds_2 = 0;
+#line 29 "../src/time.kl"
+    kl_status_3 = 0;
+#line 33 "../src/time.kl"
+    kl_t4 = &kl_nanoseconds_2;
+    kl_t5 = kl_rt_clock_resolution( kl_which_1, kl_t4 );
+    kl_status_3 = kl_t5;
+#line 36 "../src/time.kl"
+    kl_t6 = kl_status_3 == 0;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 37 "../src/time.kl"
+    kl_t0 = kl_nanoseconds_2;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/time.kl", 36, "assertion failed: status == 0" );
+}
+
+void kl_2kl_duration__RQ2kl8duration_3i64__ctor( struct kl_2kl_duration* kl_this_1, int64_t kl_nanoseconds_2 )
+{
+#line 46 "../src/time.kl"
+    ( *kl_this_1 ).kl_nanoseconds__378 = kl_nanoseconds_2;
+    return;
+}
+
+struct kl_2kl_duration kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( int64_t kl_nanoseconds_1 )
+{
+    struct kl_2kl_duration kl_t0;
+    struct kl_2kl_duration kl_t2;
+    struct kl_2kl_duration* kl_t3;
+#line 52 "../src/time.kl"
+    kl_t3 = &kl_t2;
+    kl_2kl_duration__RQ2kl8duration_3i64__ctor( kl_t3, kl_nanoseconds_1 );
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int64_t kl_2kl_nanoseconds__SQ2kl8duration( struct kl_2kl_duration* kl_this_1 )
+{
+    int64_t kl_t0;
+#line 58 "../src/time.kl"
+    kl_t0 = ( *kl_this_1 ).kl_nanoseconds__378;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_operator_add__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration* kl_this_1, struct kl_2kl_duration* kl_other_2 )
+{
+    struct kl_2kl_duration kl_t0;
+    struct kl_2kl_duration kl_t3;
+    struct kl_2kl_duration* kl_t4;
+    int64_t kl_t5;
+#line 63 "../src/time.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( *kl_this_1 ).kl_nanoseconds__378 + ( *kl_other_2 ).kl_nanoseconds__378;
+    kl_2kl_duration__RQ2kl8duration_3i64__ctor( kl_t4, kl_t5 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration* kl_this_1, struct kl_2kl_duration* kl_other_2 )
+{
+    struct kl_2kl_duration kl_t0;
+    struct kl_2kl_duration kl_t3;
+    struct kl_2kl_duration* kl_t4;
+    int64_t kl_t5;
+#line 68 "../src/time.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( *kl_this_1 ).kl_nanoseconds__378 - ( *kl_other_2 ).kl_nanoseconds__378;
+    kl_2kl_duration__RQ2kl8duration_3i64__ctor( kl_t4, kl_t5 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+bool kl_2kl_operator_eq__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration* kl_this_1, struct kl_2kl_duration* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 73 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__378 == ( *kl_other_2 ).kl_nanoseconds__378;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl_2kl_operator_compare__SQ2kl8duration_Q2kl8duration( struct kl_2kl_duration* kl_this_1, struct kl_2kl_duration* kl_other_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+#line 78 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__378 < ( *kl_other_2 ).kl_nanoseconds__378;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 80 "../src/time.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+#line 83 "../src/time.kl"
+    kl_t4 = ( *kl_this_1 ).kl_nanoseconds__378 > ( *kl_other_2 ).kl_nanoseconds__378;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 85 "../src/time.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 88 "../src/time.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+void kl_2kl_instant__RQ2kl7instant_3i64__ctor( struct kl_2kl_instant* kl_this_1, int64_t kl_nanoseconds_2 )
+{
+#line 100 "../src/time.kl"
+    ( *kl_this_1 ).kl_nanoseconds__491 = kl_nanoseconds_2;
+    return;
+}
+
+struct kl_2kl_instant kl_2kl_now__SQ2kl7instant( void )
+{
+    struct kl_2kl_instant kl_t0;
+    struct kl_2kl_instant kl_t1;
+    struct kl_2kl_instant* kl_t2;
+    int64_t kl_t3;
+#line 106 "../src/time.kl"
+    kl_t2 = &kl_t1;
+    kl_t3 = kl_2kl_clock_reading__3i32( 1 );
+    kl_2kl_instant__RQ2kl7instant_3i64__ctor( kl_t2, kl_t3 );
+    kl_t0 = kl_t1;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_resolution__SQ2kl7instant( void )
+{
+    struct kl_2kl_duration kl_t0;
+    int64_t kl_t1;
+    struct kl_2kl_duration kl_t2;
+#line 112 "../src/time.kl"
+    kl_t1 = kl_2kl_clock_resolution__3i32( 1 );
+    kl_t2 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( kl_t1 );
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant* kl_this_1, struct kl_2kl_instant* kl_earlier_2 )
+{
+    struct kl_2kl_duration kl_t0;
+    int64_t kl_t3;
+    struct kl_2kl_duration kl_t4;
+#line 118 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__491 - ( *kl_earlier_2 ).kl_nanoseconds__491;
+    kl_t4 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( kl_t3 );
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+bool kl_2kl_operator_eq__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant* kl_this_1, struct kl_2kl_instant* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 123 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__491 == ( *kl_other_2 ).kl_nanoseconds__491;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl_2kl_operator_compare__SQ2kl7instant_Q2kl7instant( struct kl_2kl_instant* kl_this_1, struct kl_2kl_instant* kl_other_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+#line 128 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__491 < ( *kl_other_2 ).kl_nanoseconds__491;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 130 "../src/time.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+#line 133 "../src/time.kl"
+    kl_t4 = ( *kl_this_1 ).kl_nanoseconds__491 > ( *kl_other_2 ).kl_nanoseconds__491;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 135 "../src/time.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 138 "../src/time.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+void kl_2kl_raw_instant__RQ2kl11raw_instant_3i64__ctor( struct kl_2kl_raw_instant* kl_this_1, int64_t kl_nanoseconds_2 )
+{
+#line 150 "../src/time.kl"
+    ( *kl_this_1 ).kl_nanoseconds__604 = kl_nanoseconds_2;
+    return;
+}
+
+struct kl_2kl_raw_instant kl_2kl_now__SQ2kl11raw_instant( void )
+{
+    struct kl_2kl_raw_instant kl_t0;
+    struct kl_2kl_raw_instant kl_t1;
+    struct kl_2kl_raw_instant* kl_t2;
+    int64_t kl_t3;
+#line 156 "../src/time.kl"
+    kl_t2 = &kl_t1;
+    kl_t3 = kl_2kl_clock_reading__3i32( 2 );
+    kl_2kl_raw_instant__RQ2kl11raw_instant_3i64__ctor( kl_t2, kl_t3 );
+    kl_t0 = kl_t1;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_resolution__SQ2kl11raw_instant( void )
+{
+    struct kl_2kl_duration kl_t0;
+    int64_t kl_t1;
+    struct kl_2kl_duration kl_t2;
+#line 162 "../src/time.kl"
+    kl_t1 = kl_2kl_clock_resolution__3i32( 2 );
+    kl_t2 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( kl_t1 );
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+struct kl_2kl_duration kl_2kl_operator_sub__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant* kl_this_1, struct kl_2kl_raw_instant* kl_earlier_2 )
+{
+    struct kl_2kl_duration kl_t0;
+    int64_t kl_t3;
+    struct kl_2kl_duration kl_t4;
+#line 168 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__604 - ( *kl_earlier_2 ).kl_nanoseconds__604;
+    kl_t4 = kl_2kl_of_nanoseconds__SQ2kl8duration_3i64( kl_t3 );
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+bool kl_2kl_operator_eq__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant* kl_this_1, struct kl_2kl_raw_instant* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 173 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__604 == ( *kl_other_2 ).kl_nanoseconds__604;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl_2kl_operator_compare__SQ2kl11raw_instant_Q2kl11raw_instant( struct kl_2kl_raw_instant* kl_this_1, struct kl_2kl_raw_instant* kl_other_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+#line 178 "../src/time.kl"
+    kl_t3 = ( *kl_this_1 ).kl_nanoseconds__604 < ( *kl_other_2 ).kl_nanoseconds__604;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 180 "../src/time.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+#line 183 "../src/time.kl"
+    kl_t4 = ( *kl_this_1 ).kl_nanoseconds__604 > ( *kl_other_2 ).kl_nanoseconds__604;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 185 "../src/time.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 188 "../src/time.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+int64_t kl_2kl_wall_time__( void )
+{
+    int64_t kl_t0;
+    int64_t kl_t1;
+#line 198 "../src/time.kl"
+    kl_t1 = kl_2kl_clock_reading__3i32( 0 );
+    kl_t0 = kl_t1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

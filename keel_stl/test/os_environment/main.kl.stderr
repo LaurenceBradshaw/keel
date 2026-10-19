@@ -1,0 +1,19 @@
+error: `optional` is in the package `kl`
+ --> os_environment/main.kl:6:11
+  |
+6 | bool set( optional<kl::string> v )
+  |           ^^^^^^^^ write `kl::optional`
+
+error: `optional` is in the package `kl`
+  --> os_environment/main.kl:10:14
+   |
+10 |         case optional::some( s ):
+   |              ^^^^^^^^ write `kl::optional`
+
+error: `optional` is in the package `kl`
+  --> os_environment/main.kl:12:14
+   |
+12 |         case optional::none:
+   |              ^^^^^^^^ write `kl::optional`
+
+3 errors generated
