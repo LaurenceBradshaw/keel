@@ -1,0 +1,48 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#pragma once
+#include <span>
+#include <vector>
+#include "common/diagnostics.h"
+#include "common/interner.h"
+#include "common/literal_pool.h"
+#include "common/source_manager.h"
+#include "ir/kir.h"
+#include "parse/loader.h"
+#include "sema/resolver.h"
+#include "sema/type_checker.h"
+
+namespace keel
+{
+
+// How far the front end runs past checking, in order. Each stage runs only if nothing before it
+// reported an error.
+enum class Stage : u8
+{
+    Lowered,    // as lowered, before anything rewrites it
+    Simplified, // what every analysis reads
+    Reported,   // the dataflow checks, worded
+    Elaborated, // drops made explicit, as the emitter reads them
+};
+
+struct Front_end
+{
+    Program               program;
+    Resolution            resolution;
+    Types                 types;
+    std::vector<Function> functions; // every function lowered, the prelude's included
+};
+
+// The driver and the test fixture both run this, so the tests run the compiler's own pipeline.
+Front_end run_front_end(
+    File_id                  input,
+    Stage                    through,
+    Source_manager&          sm,
+    Interner&                interner,
+    Literal_pool&            literals,
+    Diagnostics&             diags,
+    std::span<const Package> packages = {}
+);
+
+} // namespace keel

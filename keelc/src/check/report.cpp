@@ -326,7 +326,7 @@ TEST_CASE( "report_names_the_moved_local", "[check][report]" )
     const Compiled p(
         "void sink( i32 x ) { }\n"
         "i32 main() { i32 a = 1; sink( move a ); sink( a ); return 0; }\n",
-        Through::report
+        Stage::Reported
     );
 
     REQUIRE( p.rendered().find( "`a` is used after it was moved" ) != std::string::npos );
@@ -340,7 +340,7 @@ TEST_CASE( "report_names_both_aliased_arguments", "[check][report][m9]" )
         "class V { i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } };\n"
         "void pair( ref V v, ref i32 e ) { }\n"
         "i32 main() { V v = V(); pair( ref v, ref v[0] ); return 0; }\n",
-        Through::report
+        Stage::Reported
     );
 
     INFO( element.rendered() );
@@ -351,7 +351,7 @@ TEST_CASE( "report_names_both_aliased_arguments", "[check][report][m9]" )
     const Compiled twice(
         "void outs( out i32 a, out i32 b ) { a = 1; b = 2; }\n"
         "i32 main() { i32 n = 0; outs( out n, out n ); return n; }\n",
-        Through::report
+        Stage::Reported
     );
 
     INFO( twice.rendered() );
@@ -366,7 +366,7 @@ TEST_CASE( "report_names_a_broken_loan", "[check][report][m9]" )
         "class B { public u64 n; B() { n = 0; } ~B() { } };\n"
         "void take( move B b ) { }\n"
         "i32 main() { B b = B(); ref B r = b; take( move b ); u64 k = r.n; return 0; }\n",
-        Through::report
+        Stage::Reported
     );
 
     INFO( moved.rendered() );
@@ -378,14 +378,14 @@ TEST_CASE( "report_names_a_broken_loan", "[check][report][m9]" )
         "public void push( i32 e ) { } };\n";
 
     const Compiled changed(
-        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v.push( 1 ); return x; }\n", Through::report
+        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v.push( 1 ); return x; }\n", Stage::Reported
     );
 
     INFO( changed.rendered() );
     REQUIRE( changed.rendered().find( "this could change `v` while `x` still borrows from it" ) != std::string::npos );
 
     const Compiled assigned(
-        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v = V(); return x; }\n", Through::report
+        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v = V(); return x; }\n", Stage::Reported
     );
 
     INFO( assigned.rendered() );
@@ -397,7 +397,7 @@ TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )
     const Compiled p(
         "void fill( out i32 v ) { }\n"
         "i32 main() { return 0; }\n",
-        Through::report
+        Stage::Reported
     );
 
     REQUIRE( p.rendered().find( "`v` is never assigned" ) != std::string::npos );

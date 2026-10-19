@@ -14,8 +14,6 @@
 #include <unordered_map>
 #include <vector>
 #include "ast/dump.h"
-#include "check/drop_flags.h"
-#include "check/report.h"
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
 #include "common/diagnostics.h"
@@ -24,16 +22,12 @@
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
-#include "ir/lower.h"
+#include "front_end.h"
 #include "ir/print.h"
-#include "ir/simplify.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
-#include "parse/loader.h"
 #include "sema/declarations.h"
 #include "sema/names.h"
-#include "sema/resolver.h"
-#include "sema/type_checker.h"
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
@@ -283,26 +277,25 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    // Parsing is part of compiling, not a debug feature: --dump-ast only controls output.
-    const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics, packages );
-    const keel::Ast&    ast  = prog.ast;
-
+    // The tree alone: a debugging view, not a pipeline stage.
     if( stop == Stop::Ast )
     {
-        keel::dump_ast( ast, sm, interner, std::cout, prog.imports.prelude_file() );
+        const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics, packages );
+        keel::dump_ast( prog.ast, sm, interner, std::cout, prog.imports.prelude_file() );
         return finish();
     }
 
-    // Resolution is part of compiling, not a debug feature - same reasoning as parsing.
-    const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics, prog.imports );
+    // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
+    keel::Front_end front =
+        keel::run_front_end( file_id.value(), keel::Stage::Elaborated, sm, interner, literals, diagnostics, packages );
+    const keel::Program&               prog      = front.program;
+    const keel::Ast&                   ast       = prog.ast;
+    keel::Types&                       types     = front.types;
+    const std::vector<keel::Function>& functions = front.functions;
 
-    // Type checking is part of compiling too - same reasoning as parsing and resolution.
-    keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
-
-    // After checking, which alone binds a field or method named after a `.`.
     if( args.count( "names" ) )
     {
-        names = keel::collect_names( ast, resolution, types, sm, interner );
+        names = keel::collect_names( ast, front.resolution, types, sm, interner );
 
         // The prelude is not on disk for an editor to open; a use of it still names it.
         std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.imports.prelude_file(); } );
@@ -310,7 +303,7 @@ int main( int argc, char** argv )
 
     if( args.count( "declarations" ) )
     {
-        declarations = keel::collect_declarations( ast, resolution, types, sm, interner );
+        declarations = keel::collect_declarations( ast, front.resolution, types, sm, interner );
 
         // The prelude belongs to no package, so only a doc tool writing its page asks for it.
         if( !args.count( "with-prelude" ) )
@@ -322,48 +315,7 @@ int main( int argc, char** argv )
         package_docs = prog.package_docs;
     }
 
-    // Nothing is emitted for a program that did not check: the emitter takes no Diagnostics
-    // because by here there is nothing left for it to object to.
-    if( diagnostics.has_errors() )
-    {
-        return finish();
-    }
-
-    // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
-    // the same functions rather than each lowering a copy of its own.
-    std::vector<keel::Function> functions = keel::lower( ast, resolution, types, literals );
-
-    for( keel::Function& function : functions )
-    {
-        keel::simplify( function, literals );
-    }
-
-    // Move checking is part of the front end, not of emission: --check is what an editor wants, and
-    // an editor wants use-after-move underlined. Which is why this runs above that early return
-    // rather than beside the emitter.
-    keel::report_dataflow_errors( functions, ast, sm, interner, types, diagnostics );
-
-    if( diagnostics.has_errors() )
-    {
-        return finish();
-    }
-
-    // Built once rather than per function: the two literals are interned, so asking for them each
-    // time would add one entry per function that moves anything.
-    const keel::Flag_vocabulary flag_vocabulary {
-        .bool_type     = types.table().builtin( keel::Type_kind::Bool ),
-        .false_literal = literals.add_integer( 0 ),
-        .true_literal  = literals.add_integer( 1 )
-    };
-
-    for( keel::Function& function : functions )
-    {
-        keel::elaborate_drops( function, flag_vocabulary );
-    }
-
-    // Everything the front end can say has been said by here. --check is what an editor or a
-    // diagnostics-only test wants, and it leaves no artefacts behind.
-    if( stop == Stop::Check )
+    if( diagnostics.has_errors() || stop == Stop::Check )
     {
         return finish();
     }
@@ -372,11 +324,13 @@ int main( int argc, char** argv )
     // each step of the lowerer visible as it lands.
     if( stop == Stop::Kir )
     {
-        bool well_formed = true;
+        bool               well_formed = true;
+        const keel::Halves halves( ast, types.table(), prog.imports );
 
+        // The program's half: what its own C file holds.
         for( const keel::Function& function : functions )
         {
-            if( function.declaration.is_valid() && ast.span( function.declaration ).file == prog.imports.prelude_file() )
+            if( halves.of( function ) == keel::C_part::Prelude )
             {
                 continue;
             }

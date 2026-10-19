@@ -3777,7 +3777,7 @@ namespace
 struct Lowered : Compiled
 {
     explicit Lowered( std::string_view source )
-        : Compiled( source, Through::lower )
+        : Compiled( source, Stage::Lowered )
     {
     }
 

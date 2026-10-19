@@ -174,7 +174,7 @@ namespace
 struct Dropping : Compiled
 {
     Dropping()
-        : Compiled( "class Owner { i32 t; ~Owner() { } };\ni32 main() { return 0; }\n", Through::lower )
+        : Compiled( "class Owner { i32 t; ~Owner() { } };\ni32 main() { return 0; }\n", Stage::Lowered )
     {
     }
 

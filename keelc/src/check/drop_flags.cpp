@@ -274,7 +274,7 @@ namespace
 struct Elaborated : Compiled
 {
     explicit Elaborated( std::string_view source )
-        : Compiled( source, Through::elaborate )
+        : Compiled( source, Stage::Elaborated )
     {
     }
 
