@@ -1,0 +1,66 @@
+// `@located` functions receive their caller's location. A chain passes it on, so the panic names
+// the line in `main`, not the `panic`'s or `expect_positive`'s. Each instance of a generic, and a
+// method, gets the hidden parameter too.
+import t::console;
+
+@located
+void expect( bool ok, str why )
+{
+    if( !ok )
+    {
+        panic( why, @caller() );
+    }
+}
+
+@located
+void expect_positive( i64 v )
+{
+    expect( v > 0, "not positive" );
+}
+
+@located
+u32 line_of_call()
+{
+    return @caller().line;
+}
+
+@located
+T same<T>( move T v )
+{
+    expect( @caller().line == 53, "wrong line" );
+    return v;
+}
+
+struct Counter
+{
+    i32 n;
+
+    @located
+    void bump()
+    {
+        expect( n < 2, "bumped too often" );
+        n += 1;
+    }
+};
+
+i32 main()
+{
+    if( line_of_call() != 48 )
+    {
+        return 1;
+    }
+
+    if( same<i32>( 3 ) != 3 || !same<bool>( true ) )
+    {
+        return 2;
+    }
+
+    Counter c = Counter { 0 };
+    c.bump();
+    c.bump();
+
+    expect_positive( 5 );
+    t::println( "before" );
+    expect_positive( -1 );
+    return 0;
+}

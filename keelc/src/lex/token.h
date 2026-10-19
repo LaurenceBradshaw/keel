@@ -92,6 +92,7 @@ enum class Token_kind : u16
     Greater_greater_equal, // >>=
 
     Question, // ? - the conditional's, `a ? b : c`
+    At,       // @ - opens a directive, `@located`
 
     // Statements, never expressions (PLAN §6.3 D12): `i++;` is fine, `x = a[i++]` is an error.
     Plus_plus,   // ++

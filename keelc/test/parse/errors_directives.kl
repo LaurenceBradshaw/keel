@@ -1,0 +1,22 @@
+// Each directive below is misplaced or unknown; the functions around them still parse.
+@located
+struct Point { i32 x; };
+
+@located
+extern void abs();
+
+@located @located
+void twice() { }
+
+@inline
+void unknown() { }
+
+@caller
+void expression_only() { }
+
+i32 main()
+{
+    i32 a = @located;
+    i32 b = @inline();
+    return 0;
+}

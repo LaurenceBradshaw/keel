@@ -37,6 +37,7 @@ enum class Conformance_problem : u8
     Repeated,    // the type already conforms to the interface
     Unrequested, // a block's method the interface does not declare
     Unrefined,   // the type does not conform to an interface this one requires
+    Located,     // the implementer's receives a location the interface's callers cannot pass
 };
 
 struct Conformance_error

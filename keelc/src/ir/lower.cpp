@@ -24,13 +24,14 @@ class Lowering
 {
 public:
     Lowering(
-        Node_id           declaration,
-        const Ast&        ast,
-        const Resolution& resolution,
-        Types&            types,
-        Literal_pool&     literals,
-        bool              overflow_checks,
-        Bindings          bindings = {}
+        Node_id               declaration,
+        const Ast&            ast,
+        const Resolution&     resolution,
+        Types&                types,
+        Literal_pool&         literals,
+        const Source_manager& sm,
+        bool                  overflow_checks,
+        Bindings              bindings = {}
     );
 
     Function run();
@@ -77,6 +78,11 @@ private:
     Operand lower_struct_literal( Node_id id );
     Operand lower_array_literal( Node_id id );
     Operand lower_string_literal( Node_id id );
+    // Runs `str`'s constructor on `target`, for `bytes`.
+    void construct_str( Place target, Node_id constructor, Literal_id bytes, Span span );
+    // D69: the location an `@located` callee receives, passed on from this function's own caller
+    // when it is `@located` too.
+    Operand caller_location( Span span );
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
@@ -238,8 +244,9 @@ private:
 
     // This instantiation's type parameters, bound. Empty for an ordinary function, which is
     // what makes the substitution below the identity and lets one path serve both.
-    Bindings      bindings_;
-    Literal_pool& literal_pool_;
+    Bindings              bindings_;
+    Literal_pool&         literal_pool_;
+    const Source_manager& sm_;
 
     const Node_id declaration_;
     const bool    overflow_checks_;
@@ -247,6 +254,7 @@ private:
     Builder                           builder_;
     std::unordered_map<u32, Local_id> locals_;
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
+    Local_id                          caller_ {};   // The hidden last parameter of an `@located` function.
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because drops_ has no scope to put them in until then.
     std::vector<Local_id>   owned_parameters_;
@@ -262,19 +270,21 @@ private:
 };
 
 Lowering::Lowering(
-    Node_id           declaration,
-    const Ast&        ast,
-    const Resolution& resolution,
-    Types&            types,
-    Literal_pool&     literals,
-    bool              overflow_checks,
-    Bindings          bindings
+    Node_id               declaration,
+    const Ast&            ast,
+    const Resolution&     resolution,
+    Types&                types,
+    Literal_pool&         literals,
+    const Source_manager& sm,
+    bool                  overflow_checks,
+    Bindings              bindings
 )
     : ast_( ast ),
       resolution_( resolution ),
       types_( types ),
       bindings_( std::move( bindings ) ),
       literal_pool_( literals ),
+      sm_( sm ),
       declaration_( declaration ),
       overflow_checks_( overflow_checks ),
       builder_(
@@ -316,6 +326,13 @@ Lowering::Lowering(
                 receiver_declaration_ = param;
             }
         }
+    }
+
+    if( ast_.is_located( declaration ) )
+    {
+        caller_ = builder_.add_parameter(
+            types_.type_of( types_.table().prelude().location ), ast_.span( declaration ), Symbol_id {}
+        );
     }
 }
 
@@ -1496,28 +1513,11 @@ Operand Lowering::lower_string_literal( Node_id id )
     const Type_id type        = type_of( id );
     const Node_id constructor = types_.callee_of( id );
 
-    // `str( this, data, size )`, called as the checker lets no program call it.
-    const std::span<const Node_id> parameters = ast_.params( constructor );
-
-    const Type_id    receiver_type = binding_type_under( parameters[0], {} );
-    const Type_id    data_type     = type_under( parameters[1], {} );
-    const Type_id    size_type     = type_under( parameters[2], {} );
-    const Literal_id bytes         = ast_.literal( id );
-
     // Built into `str` itself, which an adopted literal then hands to its type's `from`.
     const Type_id  text  = types_.type_of( ast_.enclosing_aggregate( constructor ) );
     const Local_id local = builder_.add_local( text, span );
 
-    const Operand operands[] = {
-        temporary( address_of( builder_.place( local ), receiver_type, Address_purpose::Initialise ), receiver_type, span ),
-        temporary( literal_bytes( bytes, data_type ), data_type, span ),
-        constant( literal_pool_.add_integer( literal_pool_.string( bytes ).size() ), size_type ),
-    };
-
-    const u32     first = builder_.add_operands( operands );
-    const Type_id none  = type_of( constructor );
-
-    builder_.into_temp( call( constructor, first, 3, none ), none, span );
+    construct_str( builder_.place( local ), constructor, ast_.literal( id ), span );
 
     if( type == text )
     {
@@ -1533,6 +1533,67 @@ Operand Lowering::lower_string_literal( Node_id id )
     const Operand operand[] = { copy( builder_.place( local ), text ) };
 
     return emit_call( id, target.method, operand, target.at.bound, std::move( target.at.type_arguments ) );
+}
+
+// `str( this, data, size )`, called as the checker lets no program call it.
+void Lowering::construct_str( Place target, Node_id constructor, Literal_id bytes, Span span )
+{
+    const std::span<const Node_id> parameters = ast_.params( constructor );
+
+    const Type_id receiver_type = binding_type_under( parameters[0], {} );
+    const Type_id data_type     = type_under( parameters[1], {} );
+    const Type_id size_type     = type_under( parameters[2], {} );
+
+    const Operand operands[] = {
+        temporary( address_of( target, receiver_type, Address_purpose::Initialise ), receiver_type, span ),
+        temporary( literal_bytes( bytes, data_type ), data_type, span ),
+        constant( literal_pool_.add_integer( literal_pool_.string( bytes ).size() ), size_type ),
+    };
+
+    const u32     first = builder_.add_operands( operands );
+    const Type_id none  = type_of( constructor );
+
+    builder_.into_temp( call( constructor, first, 3, none ), none, span );
+}
+
+Operand Lowering::caller_location( Span span )
+{
+    const Prelude_items& prelude  = types_.table().prelude();
+    const Type_id        location = types_.type_of( prelude.location );
+
+    if( caller_.is_valid() )
+    {
+        return copy( builder_.place( caller_ ), location );
+    }
+
+    Node_id constructor {};
+
+    for( const Node_id member : ast_.members( prelude.str ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Constructor_decl )
+        {
+            constructor = member;
+        }
+    }
+
+    const Local_id temp = builder_.add_local( location, span );
+
+    builder_.storage_live( temp, span );
+
+    // `file` then `line`, as the prelude declares them.
+    const std::span<const Node_id> fields = ast_.members( prelude.location );
+
+    const Literal_id file = literal_pool_.add_string( sm_.file( span.file ).path );
+    const u32        line = sm_.line_col( span.file, span.start ).line;
+
+    construct_str( builder_.field( builder_.place( temp ), fields[0] ), constructor, file, span );
+    builder_.assign(
+        builder_.field( builder_.place( temp ), fields[1] ),
+        use( constant( literal_pool_.add_integer( line ), binding_type_under( fields[1], {} ) ) ),
+        span
+    );
+
+    return copy( builder_.place( temp ), location );
 }
 
 Operand Lowering::lower_binary( Node_id id )
@@ -2277,7 +2338,16 @@ Operand Lowering::emit_call(
     Type_id                  given
 )
 {
-    const u32 first = builder_.add_operands( operands );
+    std::vector<Operand> all( operands.begin(), operands.end() );
+
+    // Built before add_operands, since building it lays out operands of its own.
+    if( ast_.is_located( callee ) )
+    {
+        all.push_back( caller_location( ast_.span( id ) ) );
+    }
+
+    const u32 first = builder_.add_operands( all );
+    const u32 count = narrow_cast<u32>( all.size() );
 
     // A void call still assigns, to a void local nothing reads, so Assign always has a destination.
     const Type_id type = given.is_valid() ? given : type_of( id );
@@ -2287,12 +2357,8 @@ Operand Lowering::emit_call(
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
     const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
 
-    const Local_id result = call_result(
-        id,
-        call( callee, first, narrow_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
-        result_type,
-        ast_.span( id )
-    );
+    const Local_id result =
+        call_result( id, call( callee, first, count, result_type, std::move( type_arguments ) ), result_type, ast_.span( id ) );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
 }
@@ -2467,10 +2533,13 @@ Operand Lowering::lower_expression( Node_id id )
 
         return Operand { .type = types_.table().builtin( Type_kind::Void ) };
     }
+    case Node_kind::Caller_expr:
+        return caller_location( ast_.span( id ) );
     case Node_kind::Panic_expr:
     {
-        Operand op = lower_expression( ast_.operand( id ) );
-        builder_.terminate_panic( ast_.span( id ), Failure::Message, op );
+        const Operand op = lower_expression( ast_.operand( id ) );
+        const Node_id at = ast_.panic_location( id );
+        builder_.terminate_panic( ast_.span( id ), Failure::Message, op, at.is_valid() ? lower_expression( at ) : Operand {} );
         return Operand { .type = types_.table().builtin( Type_kind::Void ) };
     }
     case Node_kind::Free_expr:
@@ -2652,6 +2721,7 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Binary_expr: // `a + b` in `a + b + c`
     case Node_kind::Struct_literal:
     case Node_kind::Array_literal:
+    case Node_kind::Caller_expr:
     {
         return lower_expression( id ).place;
     }
@@ -3803,8 +3873,14 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
 
 } // namespace
 
-std::vector<Function>
-lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, bool overflow_checks )
+std::vector<Function> lower(
+    const Ast&            ast,
+    const Resolution&     resolution,
+    Types&                types,
+    Literal_pool&         literals,
+    const Source_manager& sm,
+    bool                  overflow_checks
+)
 {
     std::vector<Function> functions;
 
@@ -3814,7 +3890,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool&
         // emitted from, and emitting it directly would try to give `T` a C spelling.
         if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) )
         {
-            Lowering lowering( id, ast, resolution, types, literals, overflow_checks );
+            Lowering lowering( id, ast, resolution, types, literals, sm, overflow_checks );
             functions.push_back( lowering.run() );
         }
     }
@@ -3824,7 +3900,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool&
     while( const std::optional<Instantiation> instance = instances.next() )
     {
         Lowering lowering(
-            instance->declaration, ast, resolution, types, literals, overflow_checks, bindings_for( ast, types, *instance )
+            instance->declaration, ast, resolution, types, literals, sm, overflow_checks, bindings_for( ast, types, *instance )
         );
 
         Function emitted = lowering.run();

@@ -256,3 +256,12 @@ interface hashable implements equatable
     /// Feeds this value to `h`.
     void hash( ref hasher h ) const;
 };
+
+/// Where a call was written, as `@caller()` gives it inside an `@located` function.
+struct location
+{
+    /// The file holding the call, as the compiler was given it.
+    str file;
+    /// The call's line, counting from 1.
+    u32 line;
+};

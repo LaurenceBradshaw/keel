@@ -246,6 +246,11 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
             if( terminator.failure == Failure::Message )
             {
                 check_operand( func, terminator.message, fmt::format( "{} message", where ), errors );
+
+                if( terminator.at.type.is_valid() )
+                {
+                    check_operand( func, terminator.at, fmt::format( "{} location", where ), errors );
+                }
             }
             break;
 

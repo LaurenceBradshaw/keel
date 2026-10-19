@@ -49,6 +49,7 @@ std::vector<bool> locals_needing_flags( const Function& func )
     {
         note( block.terminator.condition );
         note( block.terminator.message );
+        note( block.terminator.at );
     }
 
     // Intersected with the drops, which is what turns "was moved" into "needs a flag".

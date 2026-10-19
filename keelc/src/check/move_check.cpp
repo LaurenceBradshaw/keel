@@ -210,6 +210,7 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
     // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
     read_operand( b.terminator.condition, b.terminator.span, flow, errors );
     read_operand( b.terminator.message, b.terminator.span, flow, errors );
+    read_operand( b.terminator.at, b.terminator.span, flow, errors );
 }
 
 // A call handed a local both by `move` and by address: the callee would own it and borrow it at once.

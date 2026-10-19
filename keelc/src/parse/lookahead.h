@@ -186,6 +186,9 @@ private:
     // Any `where` clauses, as parse_where_clause reads them.
     bool scan_where_clauses();
 
+    // Past any `@name` directives, which come before everything else in a declaration.
+    void skip_directives();
+
     // Past one token a retry cannot start from, or a whole `{ }` group.
     void step_over_junk();
 

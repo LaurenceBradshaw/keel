@@ -1,5 +1,5 @@
 // `unwrap` on an empty `kl::optional` panics: what was printed shows, then the panic names the line
-// in the library, and the program aborts.
+// in `main` that called `unwrap`, and the program aborts.
 import kl::console;
 import kl::optional;
 

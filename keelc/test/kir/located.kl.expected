@@ -1,0 +1,240 @@
+fn expect {
+    let _0: void; // return slot
+    let _1: bool; // parameter ok
+    let _2: str; // parameter why
+    let _3: location; // parameter
+    let _4: bool;
+
+    bb0:
+        _4 = !copy _1
+        branch copy _4 -> bb1, bb2
+
+    bb1:
+        panic copy _2 at copy _3
+
+    bb2:
+        return
+}
+fn expect_positive {
+    let _0: void; // return slot
+    let _1: i64; // parameter v
+    let _2: location; // parameter
+    let _3: bool;
+    let _4: str;
+    let _5: str*;
+    let _6: const u8[*];
+    let _7: void;
+    let _8: void;
+
+    bb0:
+        _3 = copy _1 > const 0
+        _5 = &init _4
+        _6 = bytes "not positive"
+        _7 = call str(copy _5, copy _6, const 12)
+        _8 = call expect(copy _3, copy _4, copy _2)
+        return
+}
+fn line_of_call {
+    let _0: u32; // return slot
+    let _1: location; // parameter
+
+    bb0:
+        _0 = copy _1.line
+        return
+}
+fn bump {
+    let _0: void; // return slot
+    let _1: Counter*; // parameter this
+    let _2: location; // parameter
+    let _3: bool;
+    let _4: str;
+    let _5: str*;
+    let _6: const u8[*];
+    let _7: void;
+    let _8: void;
+    let _9: bool;
+
+    bb0:
+        _3 = copy (*_1).n < const 2
+        _5 = &init _4
+        _6 = bytes "bumped too often"
+        _7 = call str(copy _5, copy _6, const 16)
+        _8 = call expect(copy _3, copy _4, copy _2)
+        _9 = overflows copy (*_1).n + const 1
+        branch copy _9 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        (*_1).n = copy (*_1).n + const 1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: location;
+    let _2: str*;
+    let _3: const u8[*];
+    let _4: void;
+    let _5: u32;
+    let _6: bool;
+    let _7: bool;
+    let _8: location;
+    let _9: str*;
+    let _10: const u8[*];
+    let _11: void;
+    let _12: i32;
+    let _13: bool;
+    let _14: location;
+    let _15: str*;
+    let _16: const u8[*];
+    let _17: void;
+    let _18: bool;
+    let _19: bool;
+    let _20: Counter; // c
+    let _21: Counter;
+    let _22: Counter*;
+    let _23: location;
+    let _24: str*;
+    let _25: const u8[*];
+    let _26: void;
+    let _27: void;
+    let _28: Counter*;
+    let _29: location;
+    let _30: str*;
+    let _31: const u8[*];
+    let _32: void;
+    let _33: void;
+    let _34: location;
+    let _35: str*;
+    let _36: const u8[*];
+    let _37: void;
+    let _38: void;
+    let _39: i64;
+    let _40: location;
+    let _41: str*;
+    let _42: const u8[*];
+    let _43: void;
+    let _44: void;
+
+    bb0:
+        storage_live _1
+        _2 = &init _1.file
+        _3 = bytes "kir/located.kl"
+        _4 = call str(copy _2, copy _3, const 14)
+        _1.line = const 47
+        _5 = call line_of_call(copy _1)
+        _6 = copy _5 != const 47
+        branch copy _6 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        storage_live _8
+        _9 = &init _8.file
+        _10 = bytes "kir/located.kl"
+        _11 = call str(copy _9, copy _10, const 14)
+        _8.line = const 52
+        _12 = call same(const 3, copy _8)
+        _13 = copy _12 != const 3
+        _7 = copy _13
+        branch copy _7 -> bb4, bb3
+
+    bb3:
+        storage_live _14
+        _15 = &init _14.file
+        _16 = bytes "kir/located.kl"
+        _17 = call str(copy _15, copy _16, const 14)
+        _14.line = const 52
+        _18 = call same(const 1, copy _14)
+        _19 = !copy _18
+        _7 = copy _19
+        goto -> bb4
+
+    bb4:
+        branch copy _7 -> bb5, bb6
+
+    bb5:
+        _0 = const 2
+        return
+
+    bb6:
+        storage_live _20
+        storage_live _21
+        _21.n = const 0
+        _20 = copy _21
+        _22 = &borrow _20
+        storage_live _23
+        _24 = &init _23.file
+        _25 = bytes "kir/located.kl"
+        _26 = call str(copy _24, copy _25, const 14)
+        _23.line = const 58
+        _27 = call bump(copy _22, copy _23)
+        _28 = &borrow _20
+        storage_live _29
+        _30 = &init _29.file
+        _31 = bytes "kir/located.kl"
+        _32 = call str(copy _30, copy _31, const 14)
+        _29.line = const 59
+        _33 = call bump(copy _28, copy _29)
+        storage_live _34
+        _35 = &init _34.file
+        _36 = bytes "kir/located.kl"
+        _37 = call str(copy _35, copy _36, const 14)
+        _34.line = const 61
+        _38 = call expect_positive(const 5, copy _34)
+        _39 = -const 1
+        storage_live _40
+        _41 = &init _40.file
+        _42 = bytes "kir/located.kl"
+        _43 = call str(copy _41, copy _42, const 14)
+        _40.line = const 62
+        _44 = call expect_positive(copy _39, copy _40)
+        _0 = const 0
+        storage_dead _20
+        return
+}
+fn same {
+    let _0: i32; // return slot
+    let _1: i32; // parameter v
+    let _2: location; // parameter
+    let _3: bool;
+    let _4: str;
+    let _5: str*;
+    let _6: const u8[*];
+    let _7: void;
+    let _8: void;
+
+    bb0:
+        _3 = copy _2.line == const 52
+        _5 = &init _4
+        _6 = bytes "wrong line"
+        _7 = call str(copy _5, copy _6, const 10)
+        _8 = call expect(copy _3, copy _4, copy _2)
+        _0 = copy _1
+        storage_dead _1
+        return
+}
+fn same {
+    let _0: bool; // return slot
+    let _1: bool; // parameter v
+    let _2: location; // parameter
+    let _3: bool;
+    let _4: str;
+    let _5: str*;
+    let _6: const u8[*];
+    let _7: void;
+    let _8: void;
+
+    bb0:
+        _3 = copy _2.line == const 52
+        _5 = &init _4
+        _6 = bytes "wrong line"
+        _7 = call str(copy _5, copy _6, const 10)
+        _8 = call expect(copy _3, copy _4, copy _2)
+        _0 = copy _1
+        storage_dead _1
+        return
+}

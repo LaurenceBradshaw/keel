@@ -102,7 +102,33 @@ Type_id Expressions::infer( Node_id id )
 
     case Node_kind::Panic_expr:
         check( ast_.operand( id ), types_.type_of( table_.prelude().str ) );
+        if( ast_.panic_location( id ).is_valid() )
+        {
+            check( ast_.panic_location( id ), types_.type_of( table_.prelude().location ) );
+        }
         return types_.record( id, table_.builtin( Type_kind::Never ) );
+
+    case Node_kind::Caller_expr:
+    {
+        const Type_id type = types_.type_of( table_.prelude().location );
+        if( !type.is_valid() )
+        {
+            return types_.poison( id );
+        }
+
+        if( !current_function_.is_valid() || !ast_.is_located( current_function_ ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                "`@caller()` is only meaningful inside an `@located` function",
+                current_function_.is_valid()
+                    ? fmt::format( "write `@located` on the line above `{}`", interner_.text( ast_.name( current_function_ ) ) )
+                    : ""
+            );
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+        return types_.record( id, type );
+    }
 
     case Node_kind::Try_expr:
         return infer_try( id );
@@ -9432,6 +9458,37 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
         REQUIRE( p.errors() == 1 );
         REQUIRE( rendered.find( c.message ) != std::string::npos );
         REQUIRE( rendered.find( c.help ) != std::string::npos );
+    }
+}
+
+// D69: what an `@located` function may do, beside what the golden refuses.
+TEST_CASE( "expressions_type_what_a_located_function_reads", "[sema][directive]" )
+{
+    SECTION( "`@caller()` is a `location`, and `panic` takes one" )
+    {
+        const Typed p( "@located\nvoid f() { location at = @caller(); panic( \"no\", at ); }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Caller_expr, 0 ) ) == "location" );
+    }
+
+    SECTION( "a generic is instantiated" )
+    {
+        const Typed p( "@located\nT same<T>( move T v ) { return v; }\ni32 main() { return same( 1 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an operator answering no interface" )
+    {
+        const Typed p( "struct vec\n{\n    i32 x;\n"
+                       "    @located\n    vec operator+( const ref vec other ) const { return vec { x + other.x }; }\n};\n"
+                       "i32 main() { vec a = vec { 1 }; vec b = a + a; return b.x; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

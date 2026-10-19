@@ -224,6 +224,7 @@ struct Terminator
     Operand         condition {};  // Branch
     Block_id        targets[2] {}; // [0] for Goto; [0] true and [1] false for Branch
     Operand         message {};    // Panic: the message
+    Operand         at {};         // Panic: the `location` a message was given, if any
 };
 
 // Exactly one terminator, and terminators appear nowhere else. verify() checks this first: it is

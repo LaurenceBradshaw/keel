@@ -1,2 +1,2 @@
 looking
-../src/optional.kl:25: panic: unwrap on an empty optional
+optional_unwrap_empty/main.kl:10: panic: unwrap on an empty optional

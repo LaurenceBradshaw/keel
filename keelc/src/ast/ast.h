@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <span>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "ast/node.h"
 #include "common/interner.h"
@@ -37,6 +38,7 @@ public:
 
     void set_root( Node_id id );
     void set_access( Node_id id, Access access );
+    void set_located( Node_id decl );
     void set_name_span( Node_id decl, Span span );
     void set_type_name_span( Node_id literal, Span span );
 
@@ -56,6 +58,9 @@ public:
 
     // Public for any node the parser did not stamp, so this never asks what kind `id` is.
     Access access( Node_id id ) const;
+
+    // D69: written `@located`, so it receives its caller's location.
+    bool is_located( Node_id decl ) const;
 
     // The span of a declaration's name, else of the whole declaration.
     Span name_span( Node_id decl ) const;
@@ -127,7 +132,8 @@ public:
     // Expressions.
     Node_id                  lhs( Node_id binary ) const;
     Node_id                  rhs( Node_id binary ) const;
-    Node_id                  operand( Node_id id ) const; // Unary_expr, Marker_expr, Cast_expr, Increment_stmt, Try_expr
+    Node_id                  operand( Node_id id ) const;        // Unary_expr, Marker_expr, Cast_expr, Increment_stmt, Try_expr
+    Node_id                  panic_location( Node_id id ) const; // a Panic_expr's second argument; invalid when not written
     Node_id                  callee( Node_id call ) const;
     Node_id                  arg_list( Node_id call ) const;
     std::span<const Node_id> arguments( Node_id call ) const;
@@ -206,6 +212,7 @@ private:
     Node_id              root_;
 
     std::unordered_map<u32, Access> access_; // absence means public
+    std::unordered_set<u32>         located_;
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
 

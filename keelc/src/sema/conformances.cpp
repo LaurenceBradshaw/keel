@@ -129,6 +129,11 @@ std::optional<Conformance_problem> answer(
             return Conformance_problem::Not_const;
         }
 
+        if( ast.is_located( member ) )
+        {
+            return Conformance_problem::Located;
+        }
+
         if( ast.access( member ) == Access::Private )
         {
             return Conformance_problem::Private;
@@ -719,6 +724,17 @@ void report_conformance_errors(
                 "a call through the interface reaches one compiled method, which cannot be every instance"
             );
             break;
+        case Conformance_problem::Located:
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}`'s `{}` cannot be `@located`, since it answers `{}`", type, method, interface ),
+                fmt::format( 
+                    "a call through `{0}` passes no location; move the `@located` work into a method `{0}` "
+                    "does not declare", 
+                    interface 
+                )
+            );
+            break;
         case Conformance_problem::Private:
             reporter.error_at(
                 error.at,
@@ -1028,6 +1044,10 @@ TEST_CASE( "conformances_report_each_problem", "[sema][interfaces]" )
           Conformance_problem::Private,
           "`Sq`'s `grow` is private, but `Shape` makes it callable by anyone",
           "make `grow` public" },
+        { "f64 area() const { return s; } @located void grow( f64 by ) { }",
+          Conformance_problem::Located,
+          "`Sq`'s `grow` cannot be `@located`, since it answers `Shape`",
+          "a call through `Shape` passes no location" },
     };
 
     for( const Case& c : cases )

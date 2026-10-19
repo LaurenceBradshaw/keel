@@ -16,9 +16,9 @@ struct kl_2kl_set__IQ2kl6stringE;
 
 struct kl_2kl_list__I2u8E
 {
-    uint8_t* kl_data__2231;
-    uint64_t kl_count__2233;
-    uint64_t kl_cap__2235;
+    uint8_t* kl_data__2233;
+    uint64_t kl_count__2235;
+    uint64_t kl_cap__2237;
 };
 
 struct kl_2kl_string
@@ -28,26 +28,26 @@ struct kl_2kl_string
 
 struct kl_2kl_hash_control
 {
-    uint64_t* kl_groups__3659;
-    uint64_t* kl_entries__3662;
-    uint64_t* kl_hashes__3665;
-    uint64_t kl_slots__3667;
-    uint64_t kl_count__3669;
-    uint64_t kl_growth_left__3671;
-    uint64_t kl_key_low__3673;
-    uint64_t kl_key_high__3675;
+    uint64_t* kl_groups__3661;
+    uint64_t* kl_entries__3664;
+    uint64_t* kl_hashes__3667;
+    uint64_t kl_slots__3669;
+    uint64_t kl_count__3671;
+    uint64_t kl_growth_left__3673;
+    uint64_t kl_key_low__3675;
+    uint64_t kl_key_high__3677;
 };
 
 struct kl_2kl_hash_probe
 {
-    uint64_t* kl_groups__3803;
-    uint64_t kl_mask__3805;
-    uint64_t kl_group__3807;
-    uint64_t kl_stride__3809;
-    uint64_t kl_tags__3811;
-    uint64_t kl_word__3813;
-    uint64_t kl_matches__3815;
-    uint64_t kl_end__3817;
+    uint64_t* kl_groups__3805;
+    uint64_t kl_mask__3807;
+    uint64_t kl_group__3809;
+    uint64_t kl_stride__3811;
+    uint64_t kl_tags__3813;
+    uint64_t kl_word__3815;
+    uint64_t kl_matches__3817;
+    uint64_t kl_end__3819;
 };
 
 struct kl_2kl_parse_error
@@ -59,8 +59,8 @@ struct kl_2kl_parse_error
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_value_3893;
-    struct kl_2kl_parse_error kl_error_3896;
+    int64_t kl_value_3895;
+    struct kl_2kl_parse_error kl_error_3898;
 };
 
 struct kl_2kl_optional__I3u64E
@@ -71,19 +71,19 @@ struct kl_2kl_optional__I3u64E
 
 struct kl_2kl_set__I3u64E
 {
-    struct kl_2kl_hash_control kl_control__2837;
-    uint64_t* kl_keys__2840;
+    struct kl_2kl_hash_control kl_control__2839;
+    uint64_t* kl_keys__2842;
 };
 
 struct kl_2kl_set__IQ2kl6stringE
 {
-    struct kl_2kl_hash_control kl_control__2837;
-    struct kl_2kl_string* kl_keys__2840;
+    struct kl_2kl_hash_control kl_control__2839;
+    struct kl_2kl_string* kl_keys__2842;
 };
 
-uint64_t kl_BYTE_ONES_2854 = 72340172838076673;
-uint64_t kl_BYTE_MSB_MASK_2858 = 9259542123273814144ull;
-uint64_t kl_EMPTY_SLOTS_MASK_2862 = 18446744073709551615ull;
+uint64_t kl_BYTE_ONES_2856 = 72340172838076673;
+uint64_t kl_BYTE_MSB_MASK_2860 = 9259542123273814144ull;
+uint64_t kl_EMPTY_SLOTS_MASK_2864 = 18446744073709551615ull;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -189,12 +189,12 @@ static void kl_2kl_string__as_kl_7prelude_textual__drop( void* self )
     kl_2kl_string__drop( ( struct kl_2kl_string* ) self );
 }
 
-static struct kl__run__L2u8__ref kl_2kl_string__as_kl_7prelude_textual__kl_as_text_3828( void* self )
+static struct kl__run__L2u8__ref kl_2kl_string__as_kl_7prelude_textual__kl_as_text_3830( void* self )
 {
     return kl_2kl_as_text__SQ2kl6string( ( struct kl_2kl_string* ) self );
 }
 
-static const struct kl_7prelude_textual__vtable kl_2kl_string__as_kl_7prelude_textual = { kl_2kl_string__as_kl_7prelude_textual__drop, kl_2kl_string__as_kl_7prelude_textual__kl_as_text_3828 };
+static const struct kl_7prelude_textual__vtable kl_2kl_string__as_kl_7prelude_textual = { kl_2kl_string__as_kl_7prelude_textual__drop, kl_2kl_string__as_kl_7prelude_textual__kl_as_text_3830 };
 
 int32_t kl__main__( void )
 {
@@ -378,7 +378,7 @@ int32_t kl__main__( void )
 #line 19 "set_entries/main.kl"
     kl_t0 = 1;
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb13:
 #line 15 "set_entries/main.kl"
@@ -417,7 +417,7 @@ int32_t kl__main__( void )
 #line 26 "set_entries/main.kl"
     kl_t0 = 2;
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb21:
 #line 30 "set_entries/main.kl"
@@ -496,9 +496,9 @@ int32_t kl__main__( void )
 #line 41 "set_entries/main.kl"
     kl_t0 = 3;
     kl_2kl_set__I3u64E__dtor( &kl_big_40 );
-    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb38:
 #line 37 "set_entries/main.kl"
@@ -558,11 +558,11 @@ int32_t kl__main__( void )
 #line 56 "set_entries/main.kl"
     kl_t0 = 4;
     kl_2kl_set__IQ2kl6stringE__dtor( &kl_names_65 );
-    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_big_40 );
-    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb49:
 #line 52 "set_entries/main.kl"
@@ -592,11 +592,11 @@ int32_t kl__main__( void )
 #line 64 "set_entries/main.kl"
     kl_t0 = 5;
     kl_2kl_set__IQ2kl6stringE__dtor( &kl_names_65 );
-    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_big_40 );
-    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb54:
 #line 60 "set_entries/main.kl"
@@ -639,21 +639,21 @@ int32_t kl__main__( void )
 #line 70 "set_entries/main.kl"
     kl_t0 = 6;
     kl_2kl_set__IQ2kl6stringE__dtor( &kl_names_65 );
-    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_big_40 );
-    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
     bb60:
 #line 73 "set_entries/main.kl"
     kl_t0 = 0;
     kl_2kl_set__IQ2kl6stringE__dtor( &kl_names_65 );
-    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_names_65.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_big_40 );
-    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_big_40.kl_control__2839 );
     kl_2kl_set__I3u64E__dtor( &kl_s_1 );
-    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2837 );
+    kl_2kl_hash_control__dtor( &kl_s_1.kl_control__2839 );
     return kl_t0;
 }
 
@@ -696,7 +696,7 @@ void kl_2kl_string__RQ2kl6string_7textual__ctor( struct kl_2kl_string* kl_this_1
     kl_t18 = false;
 #line 32 "../src/string.kl"
     kl_t4 = kl_text_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_bytes_3 = kl_t5;
 #line 34 "../src/string.kl"
     kl_t6 = ( kl_bytes_3 ).size;
@@ -1055,7 +1055,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
 #line 108 "../src/string.kl"
     kl_t18.tag = 0;
     kl_t17.tag = 1;
-    kl_t17.kl_error_3896 = kl_t18;
+    kl_t17.kl_error_3898 = kl_t18;
     kl_t0 = kl_t17;
     return kl_t0;
     bb10:
@@ -1091,7 +1091,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
     kl_t31.tag = 1;
     kl_t31.kl_index_259 = kl_i_20;
     kl_t30.tag = 1;
-    kl_t30.kl_error_3896 = kl_t31;
+    kl_t30.kl_error_3898 = kl_t31;
     kl_t0 = kl_t30;
     return kl_t0;
     bb17:
@@ -1117,7 +1117,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
 #line 124 "../src/string.kl"
     kl_t40.tag = 2;
     kl_t39.tag = 1;
-    kl_t39.kl_error_3896 = kl_t40;
+    kl_t39.kl_error_3898 = kl_t40;
     kl_t0 = kl_t39;
     return kl_t0;
     bb23:
@@ -1158,7 +1158,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl_parse_i64__SQ2kl6stri
     if ( kl_t52 ) goto bb35; else goto bb34;
     bb33:
     kl_t46.tag = 0;
-    kl_t46.kl_value_3893 = kl_t47;
+    kl_t46.kl_value_3895 = kl_t47;
     kl_t0 = kl_t46;
     return kl_t0;
     bb34:
@@ -1241,7 +1241,7 @@ struct kl_2kl_string kl_2kl_operator_add__SQ2kl6string_7textual( struct kl_2kl_s
     kl_t33 = false;
 #line 158 "../src/string.kl"
     kl_t4 = kl_other_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_text_3 = kl_t5;
 #line 159 "../src/string.kl"
     kl_t32 = false;
@@ -1380,7 +1380,7 @@ void kl_2kl_operator_add_assign__SQ2kl6string_7textual( struct kl_2kl_string* kl
     struct kl__run__L2u8__ref kl_t7;
 #line 186 "../src/string.kl"
     kl_t4 = kl_other_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_text_3 = kl_t5;
 #line 187 "../src/string.kl"
     kl_t6 = &( *kl_this_1 );
@@ -1537,7 +1537,7 @@ bool kl_2kl_starts_with__SQ2kl6string_7textual( struct kl_2kl_string* kl_this_1,
     bool kl_t8;
 #line 247 "../src/string.kl"
     kl_t4 = kl_prefix_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_text_3 = kl_t5;
 #line 248 "../src/string.kl"
     kl_t6 = &( *kl_this_1 );
@@ -1567,7 +1567,7 @@ bool kl_2kl_ends_with__SQ2kl6string_7textual( struct kl_2kl_string* kl_this_1, s
     bool kl_t17;
 #line 254 "../src/string.kl"
     kl_t4 = kl_suffix_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_text_3 = kl_t5;
 #line 255 "../src/string.kl"
     kl_t6 = ( kl_text_3 ).size;
@@ -1623,7 +1623,7 @@ struct kl_2kl_optional__I3u64E kl_2kl_find__SQ2kl6string_7textual( struct kl_2kl
     struct kl_2kl_optional__I3u64E kl_t23;
 #line 266 "../src/string.kl"
     kl_t4 = kl_needle_2;
-    kl_t5 = kl_t4.vtable->kl_as_text_3828( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl_as_text_3830( kl_t4.self );
     kl_text_3 = kl_t5;
 #line 268 "../src/string.kl"
     kl_t6 = ( kl_text_3 ).size;
@@ -1736,7 +1736,7 @@ struct kl_2kl_string kl_2kl_substring__SQ2kl6string_3u64_3u64( struct kl_2kl_str
     kl_t14 = &kl_t13;
     kl_t15 = ( uint8_t* ) "substring out of range";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 22 );
-    kl_rt_panic_message( "../src/string.kl", 293, kl_t13.kl_data_3844, kl_t13.kl_size_3847 );
+    kl_rt_panic_message( "../src/string.kl", 293, kl_t13.kl_data_3846, kl_t13.kl_size_3849 );
     bb6:
 #line 296 "../src/string.kl"
     kl_t28 = false;
@@ -1887,22 +1887,22 @@ void kl_2kl_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor( struct kl_2k
     uint64_t kl_t15;
     uint64_t* kl_t16;
 #line 36 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_slots__3667 = kl_slots_2;
+    ( *kl_this_1 ).kl_slots__3669 = kl_slots_2;
 #line 37 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_key_low__3673 = kl_key_low_3;
+    ( *kl_this_1 ).kl_key_low__3675 = kl_key_low_3;
 #line 38 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_key_high__3675 = kl_key_high_4;
+    ( *kl_this_1 ).kl_key_high__3677 = kl_key_high_4;
 #line 39 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_count__3669 = 0;
+    ( *kl_this_1 ).kl_count__3671 = 0;
 #line 40 "../src/hash_control.kl"
-    kl_t5 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3667 );
-    ( *kl_this_1 ).kl_growth_left__3671 = kl_t5;
+    kl_t5 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3669 );
+    ( *kl_this_1 ).kl_growth_left__3673 = kl_t5;
 #line 41 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_groups__3659 = NULL;
+    ( *kl_this_1 ).kl_groups__3661 = NULL;
 #line 42 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_entries__3662 = NULL;
+    ( *kl_this_1 ).kl_entries__3664 = NULL;
 #line 43 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_hashes__3665 = NULL;
+    ( *kl_this_1 ).kl_hashes__3667 = NULL;
 #line 45 "../src/hash_control.kl"
     kl_t6 = kl_slots_2 > 0;
     if ( kl_t6 ) goto bb1; else goto bb8;
@@ -1910,7 +1910,7 @@ void kl_2kl_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor( struct kl_2k
 #line 49 "../src/hash_control.kl"
     kl_t7 = kl_slots_2 / 8;
     kl_t8 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t7, sizeof( uint64_t ), "../src/hash_control.kl", 49, "out of memory: alloc<u64>( slots / 8 )" );
-    ( *kl_this_1 ).kl_groups__3659 = kl_t8;
+    ( *kl_this_1 ).kl_groups__3661 = kl_t8;
 #line 51 "../src/hash_control.kl"
     kl_g_9 = 0;
     goto bb2;
@@ -1920,17 +1920,17 @@ void kl_2kl_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor( struct kl_2k
     if ( kl_t11 ) goto bb3; else goto bb4;
     bb3:
 #line 53 "../src/hash_control.kl"
-    kl_t12 = ( *kl_this_1 ).kl_groups__3659 + kl_g_9;
-    ( *kl_t12 ) = kl_EMPTY_SLOTS_MASK_2862;
+    kl_t12 = ( *kl_this_1 ).kl_groups__3661 + kl_g_9;
+    ( *kl_t12 ) = kl_EMPTY_SLOTS_MASK_2864;
     goto bb5;
     bb4:
 #line 56 "../src/hash_control.kl"
     kl_t14 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_slots_2, sizeof( uint64_t ), "../src/hash_control.kl", 56, "out of memory: alloc<u64>( slots )" );
-    ( *kl_this_1 ).kl_entries__3662 = kl_t14;
+    ( *kl_this_1 ).kl_entries__3664 = kl_t14;
 #line 57 "../src/hash_control.kl"
     kl_t15 = kl_2kl_usable__SQ2kl12hash_control_3u64( kl_slots_2 );
     kl_t16 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t15, sizeof( uint64_t ), "../src/hash_control.kl", 57, "out of memory: alloc<u64>( usable( slots ) )" );
-    ( *kl_this_1 ).kl_hashes__3665 = kl_t16;
+    ( *kl_this_1 ).kl_hashes__3667 = kl_t16;
     goto bb8;
     bb5:
 #line 51 "../src/hash_control.kl"
@@ -1951,27 +1951,27 @@ void kl_2kl_hash_control__dtor( struct kl_2kl_hash_control* kl_this_1 )
     bool kl_t4;
     bool kl_t6;
 #line 64 "../src/hash_control.kl"
-    kl_t2 = ( *kl_this_1 ).kl_groups__3659 != NULL;
+    kl_t2 = ( *kl_this_1 ).kl_groups__3661 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 68 "../src/hash_control.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_groups__3659 );
+    kl_rt_free( ( *kl_this_1 ).kl_groups__3661 );
     goto bb2;
     bb2:
 #line 72 "../src/hash_control.kl"
-    kl_t4 = ( *kl_this_1 ).kl_entries__3662 != NULL;
+    kl_t4 = ( *kl_this_1 ).kl_entries__3664 != NULL;
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
 #line 76 "../src/hash_control.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_entries__3662 );
+    kl_rt_free( ( *kl_this_1 ).kl_entries__3664 );
     goto bb4;
     bb4:
 #line 80 "../src/hash_control.kl"
-    kl_t6 = ( *kl_this_1 ).kl_hashes__3665 != NULL;
+    kl_t6 = ( *kl_this_1 ).kl_hashes__3667 != NULL;
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
 #line 84 "../src/hash_control.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_hashes__3665 );
+    kl_rt_free( ( *kl_this_1 ).kl_hashes__3667 );
     goto bb6;
     bb6:
     return;
@@ -2028,17 +2028,17 @@ struct kl_2kl_hash_control kl_2kl_resized__SQ2kl12hash_control_3u64( struct kl_2
     kl_t15 = false;
     kl_t4 = &kl_result_3;
     kl_t15 = true;
-    kl_2kl_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor( kl_t4, kl_slots_2, ( *kl_this_1 ).kl_key_low__3673, ( *kl_this_1 ).kl_key_high__3675 );
+    kl_2kl_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor( kl_t4, kl_slots_2, ( *kl_this_1 ).kl_key_low__3675, ( *kl_this_1 ).kl_key_high__3677 );
 #line 108 "../src/hash_control.kl"
     kl_e_6 = 0;
-    kl_t7 = ( *kl_this_1 ).kl_count__3669;
+    kl_t7 = ( *kl_this_1 ).kl_count__3671;
     goto bb1;
     bb1:
     kl_t8 = kl_e_6 < kl_t7;
     if ( kl_t8 ) goto bb2; else goto bb3;
     bb2:
 #line 112 "../src/hash_control.kl"
-    kl_t10 = ( *kl_this_1 ).kl_hashes__3665 + kl_e_6;
+    kl_t10 = ( *kl_this_1 ).kl_hashes__3667 + kl_e_6;
     kl_hash_9 = ( *kl_t10 );
 #line 113 "../src/hash_control.kl"
     kl_t11 = &kl_result_3;
@@ -2066,7 +2066,7 @@ struct kl_7prelude_hasher kl_2kl_start_hash__SQ2kl12hash_control( struct kl_2kl_
     struct kl_7prelude_hasher* kl_t3;
 #line 123 "../src/hash_control.kl"
     kl_t3 = &kl_t2;
-    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, ( *kl_this_1 ).kl_key_low__3673, ( *kl_this_1 ).kl_key_high__3675 );
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, ( *kl_this_1 ).kl_key_low__3675, ( *kl_this_1 ).kl_key_high__3677 );
     kl_t0 = kl_t2;
     return kl_t0;
 }
@@ -2075,7 +2075,7 @@ uint64_t kl_2kl_slots__SQ2kl12hash_control( struct kl_2kl_hash_control* kl_this_
 {
     uint64_t kl_t0;
 #line 129 "../src/hash_control.kl"
-    kl_t0 = ( *kl_this_1 ).kl_slots__3667;
+    kl_t0 = ( *kl_this_1 ).kl_slots__3669;
     return kl_t0;
 }
 
@@ -2083,7 +2083,7 @@ uint64_t kl_2kl_size__SQ2kl12hash_control( struct kl_2kl_hash_control* kl_this_1
 {
     uint64_t kl_t0;
 #line 135 "../src/hash_control.kl"
-    kl_t0 = ( *kl_this_1 ).kl_count__3669;
+    kl_t0 = ( *kl_this_1 ).kl_count__3671;
     return kl_t0;
 }
 
@@ -2093,12 +2093,12 @@ uint64_t kl_2kl_capacity__SQ2kl12hash_control( struct kl_2kl_hash_control* kl_th
     bool kl_t2;
     uint64_t kl_t3;
 #line 142 "../src/hash_control.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3669, ( *kl_this_1 ).kl_growth_left__3671, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3671, ( *kl_this_1 ).kl_growth_left__3673, &( uint64_t ) { 0 } );
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_rt_panic( "../src/hash_control.kl", 142, "arithmetic overflow: count_ + growth_left_" );
     bb2:
-    kl_t3 = ( *kl_this_1 ).kl_count__3669 + ( *kl_this_1 ).kl_growth_left__3671;
+    kl_t3 = ( *kl_this_1 ).kl_count__3671 + ( *kl_this_1 ).kl_growth_left__3673;
     kl_t0 = kl_t3;
     return kl_t0;
 }
@@ -2108,7 +2108,7 @@ bool kl_2kl_needs_growth__SQ2kl12hash_control( struct kl_2kl_hash_control* kl_th
     bool kl_t0;
     bool kl_t2;
 #line 148 "../src/hash_control.kl"
-    kl_t2 = ( *kl_this_1 ).kl_growth_left__3671 == 0;
+    kl_t2 = ( *kl_this_1 ).kl_growth_left__3673 == 0;
     kl_t0 = kl_t2;
     return kl_t0;
 }
@@ -2141,7 +2141,7 @@ uint64_t kl_2kl_slots_for__SQ2kl12hash_control_3u64( uint64_t kl_n_1 )
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "too many keys";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 13 );
-    kl_rt_panic_message( "../src/hash_control.kl", 162, kl_t4.kl_data_3844, kl_t4.kl_size_3847 );
+    kl_rt_panic_message( "../src/hash_control.kl", 162, kl_t4.kl_data_3846, kl_t4.kl_size_3849 );
     bb4:
 #line 165 "../src/hash_control.kl"
     kl_result_8 = 8;
@@ -2183,15 +2183,15 @@ uint64_t kl_2kl_grown_slots__SQ2kl12hash_control( struct kl_2kl_hash_control* kl
     uint64_t kl_t12;
     uint64_t kl_t13;
 #line 179 "../src/hash_control.kl"
-    kl_t3 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3667 );
+    kl_t3 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3669 );
     kl_limit_2 = kl_t3;
 #line 181 "../src/hash_control.kl"
-    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3669, 1, &( uint64_t ) { 0 } );
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3671, 1, &( uint64_t ) { 0 } );
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
     kl_rt_panic( "../src/hash_control.kl", 181, "arithmetic overflow: count_ + 1" );
     bb2:
-    kl_t5 = ( *kl_this_1 ).kl_count__3669 + 1;
+    kl_t5 = ( *kl_this_1 ).kl_count__3671 + 1;
     kl_t6 = kl_limit_2 / 2;
     kl_t7 = kl_t5 > kl_t6;
     if ( kl_t7 ) goto bb3; else goto bb6;
@@ -2208,12 +2208,12 @@ uint64_t kl_2kl_grown_slots__SQ2kl12hash_control( struct kl_2kl_hash_control* kl
     return kl_t0;
     bb6:
 #line 186 "../src/hash_control.kl"
-    kl_t11 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3669, 1, &( uint64_t ) { 0 } );
+    kl_t11 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3671, 1, &( uint64_t ) { 0 } );
     if ( kl_t11 ) goto bb7; else goto bb8;
     bb7:
     kl_rt_panic( "../src/hash_control.kl", 186, "arithmetic overflow: count_ + 1" );
     bb8:
-    kl_t12 = ( *kl_this_1 ).kl_count__3669 + 1;
+    kl_t12 = ( *kl_this_1 ).kl_count__3671 + 1;
     kl_t13 = kl_2kl_slots_for__SQ2kl12hash_control_3u64( kl_t12 );
     kl_t0 = kl_t13;
     return kl_t0;
@@ -2232,10 +2232,10 @@ uint64_t kl_2kl_match_tags__SQ2kl12hash_control_3u64_3u64( uint64_t kl_word_1, u
     kl_t4 = kl_word_1 ^ kl_tags_2;
     kl_x_3 = kl_t4;
 #line 201 "../src/hash_control.kl"
-    kl_t5 = kl_x_3 - kl_BYTE_ONES_2854;
+    kl_t5 = kl_x_3 - kl_BYTE_ONES_2856;
     kl_t6 = ~kl_x_3;
     kl_t7 = kl_t5 & kl_t6;
-    kl_t8 = kl_t7 & kl_BYTE_MSB_MASK_2858;
+    kl_t8 = kl_t7 & kl_BYTE_MSB_MASK_2860;
     kl_t0 = kl_t8;
     return kl_t0;
 }
@@ -2249,7 +2249,7 @@ uint64_t kl_2kl_match_empty__SQ2kl12hash_control_3u64( uint64_t kl_word_1 )
 #line 209 "../src/hash_control.kl"
     kl_t2 = kl_word_1 << 1;
     kl_t3 = kl_word_1 & kl_t2;
-    kl_t4 = kl_t3 & kl_BYTE_MSB_MASK_2858;
+    kl_t4 = kl_t3 & kl_BYTE_MSB_MASK_2860;
     kl_t0 = kl_t4;
     return kl_t0;
 }
@@ -2259,7 +2259,7 @@ uint64_t kl_2kl_match_free__SQ2kl12hash_control_3u64( uint64_t kl_word_1 )
     uint64_t kl_t0;
     uint64_t kl_t2;
 #line 215 "../src/hash_control.kl"
-    kl_t2 = kl_word_1 & kl_BYTE_MSB_MASK_2858;
+    kl_t2 = kl_word_1 & kl_BYTE_MSB_MASK_2860;
     kl_t0 = kl_t2;
     return kl_t0;
 }
@@ -2288,8 +2288,8 @@ uint64_t kl_2kl_lowest__SQ2kl12hash_control_3u64( uint64_t kl_matches_1 )
     kl_t7 = kl_t5 - 1;
     kl_below_2 = kl_t7;
 #line 225 "../src/hash_control.kl"
-    kl_t8 = kl_below_2 & kl_BYTE_ONES_2854;
-    kl_t9 = kl_t8 * kl_BYTE_ONES_2854;
+    kl_t8 = kl_below_2 & kl_BYTE_ONES_2856;
+    kl_t9 = kl_t8 * kl_BYTE_ONES_2856;
     kl_t10 = kl_t9 >> 56;
     kl_t0 = kl_t10;
     return kl_t0;
@@ -2308,7 +2308,7 @@ uint64_t kl_2kl_byte__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl_t
     uint64_t kl_t10;
 #line 233 "../src/hash_control.kl"
     kl_t3 = kl_slot_2 >> 3;
-    kl_t4 = ( *kl_this_1 ).kl_groups__3659 + kl_t3;
+    kl_t4 = ( *kl_this_1 ).kl_groups__3661 + kl_t3;
     kl_t5 = kl_slot_2 & 7;
     kl_t6 = __builtin_mul_overflow( kl_t5, 8, &( uint64_t ) { 0 } );
     if ( kl_t6 ) goto bb1; else goto bb2;
@@ -2351,9 +2351,9 @@ void kl_2kl_set_byte__SQ2kl12hash_control_3u64_3u64( struct kl_2kl_hash_control*
     kl_shift_4 = kl_t7;
 #line 244 "../src/hash_control.kl"
     kl_t8 = kl_slot_2 >> 3;
-    kl_t9 = ( *kl_this_1 ).kl_groups__3659 + kl_t8;
+    kl_t9 = ( *kl_this_1 ).kl_groups__3661 + kl_t8;
     kl_t10 = kl_slot_2 >> 3;
-    kl_t11 = ( *kl_this_1 ).kl_groups__3659 + kl_t10;
+    kl_t11 = ( *kl_this_1 ).kl_groups__3661 + kl_t10;
     kl_t12 = kl_shift_4 & 63;
     kl_t13 = ( uint64_t ) 255 << kl_t12;
     kl_t14 = ~kl_t13;
@@ -2384,7 +2384,7 @@ uint64_t kl_2kl_entry__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl_
     uint64_t kl_t0;
     uint64_t* kl_t3;
 #line 259 "../src/hash_control.kl"
-    kl_t3 = ( *kl_this_1 ).kl_entries__3662 + kl_slot_2;
+    kl_t3 = ( *kl_this_1 ).kl_entries__3664 + kl_slot_2;
     kl_t0 = ( *kl_t3 );
     return kl_t0;
 }
@@ -2398,12 +2398,12 @@ struct kl_2kl_hash_probe kl_2kl_probe__SQ2kl12hash_control_3u64( struct kl_2kl_h
     goto bb1;
     bb1:
 #line 267 "../src/hash_control.kl"
-    kl_t3 = ( *kl_this_1 ).kl_slots__3667 > 0;
+    kl_t3 = ( *kl_this_1 ).kl_slots__3669 > 0;
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
 #line 268 "../src/hash_control.kl"
     kl_t5 = &kl_t4;
-    kl_2kl_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( kl_t5, ( *kl_this_1 ).kl_groups__3659, ( *kl_this_1 ).kl_slots__3667, kl_hash_2 );
+    kl_2kl_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( kl_t5, ( *kl_this_1 ).kl_groups__3661, ( *kl_this_1 ).kl_slots__3669, kl_hash_2 );
     kl_t0 = kl_t4;
     return kl_t0;
     bb3:
@@ -2435,7 +2435,7 @@ uint64_t kl_2kl_free_slot__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control*
     uint64_t kl_t22;
     uint64_t kl_t23;
 #line 277 "../src/hash_control.kl"
-    kl_t4 = ( *kl_this_1 ).kl_slots__3667 >> 3;
+    kl_t4 = ( *kl_this_1 ).kl_slots__3669 >> 3;
     kl_t5 = __builtin_sub_overflow( kl_t4, 1, &( uint64_t ) { 0 } );
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -2453,7 +2453,7 @@ uint64_t kl_2kl_free_slot__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control*
 #line 283 "../src/hash_control.kl"
     kl_word_10 = 0;
 #line 286 "../src/hash_control.kl"
-    kl_t11 = ( *kl_this_1 ).kl_groups__3659 + kl_group_7;
+    kl_t11 = ( *kl_this_1 ).kl_groups__3661 + kl_group_7;
     kl_word_10 = ( *kl_t11 );
 #line 289 "../src/hash_control.kl"
     kl_t13 = kl_2kl_match_free__SQ2kl12hash_control_3u64( kl_word_10 );
@@ -2518,12 +2518,12 @@ uint64_t kl_2kl_occupy__SQ2kl12hash_control_3u64_3u64( struct kl_2kl_hash_contro
     if ( kl_t6 ) goto bb1; else goto bb4;
     bb1:
 #line 306 "../src/hash_control.kl"
-    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_growth_left__3671, 1, &( uint64_t ) { 0 } );
+    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_growth_left__3673, 1, &( uint64_t ) { 0 } );
     if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
     kl_rt_panic( "../src/hash_control.kl", 306, "arithmetic overflow: growth_left_ -= 1;" );
     bb3:
-    ( *kl_this_1 ).kl_growth_left__3671 = ( *kl_this_1 ).kl_growth_left__3671 - 1;
+    ( *kl_this_1 ).kl_growth_left__3673 = ( *kl_this_1 ).kl_growth_left__3673 - 1;
     goto bb4;
     bb4:
 #line 309 "../src/hash_control.kl"
@@ -2531,20 +2531,20 @@ uint64_t kl_2kl_occupy__SQ2kl12hash_control_3u64_3u64( struct kl_2kl_hash_contro
     kl_t9 = kl_hash_3 >> 57;
     kl_2kl_set_byte__SQ2kl12hash_control_3u64_3u64( kl_t8, kl_slot_2, kl_t9 );
 #line 310 "../src/hash_control.kl"
-    kl_added_11 = ( *kl_this_1 ).kl_count__3669;
+    kl_added_11 = ( *kl_this_1 ).kl_count__3671;
 #line 313 "../src/hash_control.kl"
-    kl_t12 = ( *kl_this_1 ).kl_entries__3662 + kl_slot_2;
+    kl_t12 = ( *kl_this_1 ).kl_entries__3664 + kl_slot_2;
     ( *kl_t12 ) = kl_added_11;
 #line 314 "../src/hash_control.kl"
-    kl_t13 = ( *kl_this_1 ).kl_hashes__3665 + kl_added_11;
+    kl_t13 = ( *kl_this_1 ).kl_hashes__3667 + kl_added_11;
     ( *kl_t13 ) = kl_hash_3;
 #line 316 "../src/hash_control.kl"
-    kl_t14 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3669, 1, &( uint64_t ) { 0 } );
+    kl_t14 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__3671, 1, &( uint64_t ) { 0 } );
     if ( kl_t14 ) goto bb5; else goto bb6;
     bb5:
     kl_rt_panic( "../src/hash_control.kl", 316, "arithmetic overflow: count_ += 1;" );
     bb6:
-    ( *kl_this_1 ).kl_count__3669 = ( *kl_this_1 ).kl_count__3669 + 1;
+    ( *kl_this_1 ).kl_count__3671 = ( *kl_this_1 ).kl_count__3671 + 1;
 #line 318 "../src/hash_control.kl"
     kl_t0 = kl_added_11;
     return kl_t0;
@@ -2588,19 +2588,19 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     kl_word_3 = 0;
 #line 328 "../src/hash_control.kl"
     kl_t4 = kl_slot_2 >> 3;
-    kl_t5 = ( *kl_this_1 ).kl_groups__3659 + kl_t4;
+    kl_t5 = ( *kl_this_1 ).kl_groups__3661 + kl_t4;
     kl_word_3 = ( *kl_t5 );
 #line 331 "../src/hash_control.kl"
     kl_t7 = &( *kl_this_1 );
     kl_t8 = kl_2kl_entry__SQ2kl12hash_control_3u64( kl_t7, kl_slot_2 );
     kl_removed_6 = kl_t8;
 #line 332 "../src/hash_control.kl"
-    kl_t10 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__3669, 1, &( uint64_t ) { 0 } );
+    kl_t10 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__3671, 1, &( uint64_t ) { 0 } );
     if ( kl_t10 ) goto bb1; else goto bb2;
     bb1:
     kl_rt_panic( "../src/hash_control.kl", 332, "arithmetic overflow: count_ - 1" );
     bb2:
-    kl_t11 = ( *kl_this_1 ).kl_count__3669 - 1;
+    kl_t11 = ( *kl_this_1 ).kl_count__3671 - 1;
     kl_last_9 = kl_t11;
 #line 336 "../src/hash_control.kl"
     kl_t12 = kl_removed_6 != kl_last_9;
@@ -2608,7 +2608,7 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     bb3:
 #line 340 "../src/hash_control.kl"
     kl_t14 = &( *kl_this_1 );
-    kl_t15 = ( *kl_this_1 ).kl_hashes__3665 + kl_last_9;
+    kl_t15 = ( *kl_this_1 ).kl_hashes__3667 + kl_last_9;
     kl_t16 = kl_2kl_probe__SQ2kl12hash_control_3u64( kl_t14, ( *kl_t15 ) );
     kl_candidates_13 = kl_t16;
 #line 341 "../src/hash_control.kl"
@@ -2618,7 +2618,7 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     goto bb4;
     bb4:
 #line 343 "../src/hash_control.kl"
-    kl_t20 = ( *kl_this_1 ).kl_entries__3662 + kl_moved_17;
+    kl_t20 = ( *kl_this_1 ).kl_entries__3664 + kl_moved_17;
     kl_t21 = ( *kl_t20 ) != kl_last_9;
     if ( kl_t21 ) goto bb5; else goto bb6;
     bb5:
@@ -2629,16 +2629,16 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     goto bb7;
     bb6:
 #line 349 "../src/hash_control.kl"
-    kl_t25 = ( *kl_this_1 ).kl_entries__3662 + kl_moved_17;
+    kl_t25 = ( *kl_this_1 ).kl_entries__3664 + kl_moved_17;
     ( *kl_t25 ) = kl_removed_6;
 #line 350 "../src/hash_control.kl"
-    kl_t26 = ( *kl_this_1 ).kl_hashes__3665 + kl_removed_6;
-    kl_t27 = ( *kl_this_1 ).kl_hashes__3665 + kl_last_9;
+    kl_t26 = ( *kl_this_1 ).kl_hashes__3667 + kl_removed_6;
+    kl_t27 = ( *kl_this_1 ).kl_hashes__3667 + kl_last_9;
     ( *kl_t26 ) = ( *kl_t27 );
     goto bb9;
     bb7:
 #line 346 "../src/hash_control.kl"
-    kl_t24 = kl_moved_17 != ( *kl_this_1 ).kl_slots__3667;
+    kl_t24 = kl_moved_17 != ( *kl_this_1 ).kl_slots__3669;
     if ( kl_t24 ) goto bb4; else goto bb8;
     bb8:
     kl_rt_panic( "../src/hash_control.kl", 346, "assertion failed: moved != slots_" );
@@ -2652,7 +2652,7 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     kl_t30 = &( *kl_this_1 );
     kl_2kl_set_byte__SQ2kl12hash_control_3u64_3u64( kl_t30, kl_slot_2, 255 );
 #line 360 "../src/hash_control.kl"
-    kl_t32 = __builtin_add_overflow( ( *kl_this_1 ).kl_growth_left__3671, 1, &( uint64_t ) { 0 } );
+    kl_t32 = __builtin_add_overflow( ( *kl_this_1 ).kl_growth_left__3673, 1, &( uint64_t ) { 0 } );
     if ( kl_t32 ) goto bb12; else goto bb13;
     bb11:
 #line 364 "../src/hash_control.kl"
@@ -2663,16 +2663,16 @@ uint64_t kl_2kl_vacate__SQ2kl12hash_control_3u64( struct kl_2kl_hash_control* kl
     kl_rt_panic( "../src/hash_control.kl", 360, "arithmetic overflow: growth_left_ += 1;" );
     bb13:
 #line 360 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_growth_left__3671 = ( *kl_this_1 ).kl_growth_left__3671 + 1;
+    ( *kl_this_1 ).kl_growth_left__3673 = ( *kl_this_1 ).kl_growth_left__3673 + 1;
     goto bb14;
     bb14:
 #line 367 "../src/hash_control.kl"
-    kl_t35 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__3669, 1, &( uint64_t ) { 0 } );
+    kl_t35 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__3671, 1, &( uint64_t ) { 0 } );
     if ( kl_t35 ) goto bb15; else goto bb16;
     bb15:
     kl_rt_panic( "../src/hash_control.kl", 367, "arithmetic overflow: count_ -= 1;" );
     bb16:
-    ( *kl_this_1 ).kl_count__3669 = ( *kl_this_1 ).kl_count__3669 - 1;
+    ( *kl_this_1 ).kl_count__3671 = ( *kl_this_1 ).kl_count__3671 - 1;
 #line 368 "../src/hash_control.kl"
     kl_t0 = kl_removed_6;
     return kl_t0;
@@ -2690,20 +2690,20 @@ void kl_2kl_clear__SQ2kl12hash_control( struct kl_2kl_hash_control* kl_this_1 )
     kl_g_2 = 0;
     goto bb1;
     bb1:
-    kl_t3 = ( *kl_this_1 ).kl_slots__3667 / 8;
+    kl_t3 = ( *kl_this_1 ).kl_slots__3669 / 8;
     kl_t4 = kl_g_2 < kl_t3;
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
 #line 378 "../src/hash_control.kl"
-    kl_t5 = ( *kl_this_1 ).kl_groups__3659 + kl_g_2;
-    ( *kl_t5 ) = kl_EMPTY_SLOTS_MASK_2862;
+    kl_t5 = ( *kl_this_1 ).kl_groups__3661 + kl_g_2;
+    ( *kl_t5 ) = kl_EMPTY_SLOTS_MASK_2864;
     goto bb4;
     bb3:
 #line 382 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_count__3669 = 0;
+    ( *kl_this_1 ).kl_count__3671 = 0;
 #line 383 "../src/hash_control.kl"
-    kl_t7 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3667 );
-    ( *kl_this_1 ).kl_growth_left__3671 = kl_t7;
+    kl_t7 = kl_2kl_usable__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_slots__3669 );
+    ( *kl_this_1 ).kl_growth_left__3673 = kl_t7;
     return;
     bb4:
 #line 374 "../src/hash_control.kl"
@@ -2746,7 +2746,7 @@ void kl_2kl_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( struct kl_2kl_h
     uint64_t* kl_t12;
     uint64_t kl_t13;
 #line 411 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_groups__3803 = kl_groups_2;
+    ( *kl_this_1 ).kl_groups__3805 = kl_groups_2;
 #line 412 "../src/hash_control.kl"
     kl_t5 = kl_slots_3 >> 3;
     kl_t6 = __builtin_sub_overflow( kl_t5, 1, &( uint64_t ) { 0 } );
@@ -2755,29 +2755,29 @@ void kl_2kl_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( struct kl_2kl_h
     kl_rt_panic( "../src/hash_control.kl", 412, "arithmetic overflow: slots >> 3 ) - 1" );
     bb2:
     kl_t7 = kl_t5 - 1;
-    ( *kl_this_1 ).kl_mask__3805 = kl_t7;
+    ( *kl_this_1 ).kl_mask__3807 = kl_t7;
 #line 413 "../src/hash_control.kl"
-    kl_t8 = kl_hash_4 & ( *kl_this_1 ).kl_mask__3805;
-    ( *kl_this_1 ).kl_group__3807 = kl_t8;
+    kl_t8 = kl_hash_4 & ( *kl_this_1 ).kl_mask__3807;
+    ( *kl_this_1 ).kl_group__3809 = kl_t8;
 #line 414 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_stride__3809 = 0;
+    ( *kl_this_1 ).kl_stride__3811 = 0;
 #line 415 "../src/hash_control.kl"
-    ( *kl_this_1 ).kl_end__3817 = kl_slots_3;
+    ( *kl_this_1 ).kl_end__3819 = kl_slots_3;
 #line 416 "../src/hash_control.kl"
     kl_t9 = kl_hash_4 >> 57;
-    kl_t10 = __builtin_mul_overflow( kl_t9, kl_BYTE_ONES_2854, &( uint64_t ) { 0 } );
+    kl_t10 = __builtin_mul_overflow( kl_t9, kl_BYTE_ONES_2856, &( uint64_t ) { 0 } );
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
     kl_rt_panic( "../src/hash_control.kl", 416, "arithmetic overflow: hash >> 57 ) * BYTE_ONES" );
     bb4:
-    kl_t11 = kl_t9 * kl_BYTE_ONES_2854;
-    ( *kl_this_1 ).kl_tags__3811 = kl_t11;
+    kl_t11 = kl_t9 * kl_BYTE_ONES_2856;
+    ( *kl_this_1 ).kl_tags__3813 = kl_t11;
 #line 420 "../src/hash_control.kl"
-    kl_t12 = ( *kl_this_1 ).kl_groups__3803 + ( *kl_this_1 ).kl_group__3807;
-    ( *kl_this_1 ).kl_word__3813 = ( *kl_t12 );
+    kl_t12 = ( *kl_this_1 ).kl_groups__3805 + ( *kl_this_1 ).kl_group__3809;
+    ( *kl_this_1 ).kl_word__3815 = ( *kl_t12 );
 #line 423 "../src/hash_control.kl"
-    kl_t13 = kl_2kl_match_tags__SQ2kl12hash_control_3u64_3u64( ( *kl_this_1 ).kl_word__3813, ( *kl_this_1 ).kl_tags__3811 );
-    ( *kl_this_1 ).kl_matches__3815 = kl_t13;
+    kl_t13 = kl_2kl_match_tags__SQ2kl12hash_control_3u64_3u64( ( *kl_this_1 ).kl_word__3815, ( *kl_this_1 ).kl_tags__3813 );
+    ( *kl_this_1 ).kl_matches__3817 = kl_t13;
     return;
 }
 
@@ -2804,17 +2804,17 @@ uint64_t kl_2kl_next__SQ2kl10hash_probe( struct kl_2kl_hash_probe* kl_this_1 )
     goto bb1;
     bb1:
 #line 432 "../src/hash_control.kl"
-    kl_t2 = ( *kl_this_1 ).kl_matches__3815 != 0;
+    kl_t2 = ( *kl_this_1 ).kl_matches__3817 != 0;
     if ( kl_t2 ) goto bb2; else goto bb9;
     bb2:
 #line 434 "../src/hash_control.kl"
-    kl_t4 = __builtin_mul_overflow( ( *kl_this_1 ).kl_group__3807, 8, &( uint64_t ) { 0 } );
+    kl_t4 = __builtin_mul_overflow( ( *kl_this_1 ).kl_group__3809, 8, &( uint64_t ) { 0 } );
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_rt_panic( "../src/hash_control.kl", 434, "arithmetic overflow: group_ * 8" );
     bb4:
-    kl_t5 = ( *kl_this_1 ).kl_group__3807 * 8;
-    kl_t6 = kl_2kl_lowest__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_matches__3815 );
+    kl_t5 = ( *kl_this_1 ).kl_group__3809 * 8;
+    kl_t6 = kl_2kl_lowest__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_matches__3817 );
     kl_t7 = __builtin_add_overflow( kl_t5, kl_t6, &( uint64_t ) { 0 } );
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
@@ -2823,48 +2823,48 @@ uint64_t kl_2kl_next__SQ2kl10hash_probe( struct kl_2kl_hash_probe* kl_this_1 )
     kl_t8 = kl_t5 + kl_t6;
     kl_slot_3 = kl_t8;
 #line 435 "../src/hash_control.kl"
-    kl_t9 = __builtin_sub_overflow( ( *kl_this_1 ).kl_matches__3815, 1, &( uint64_t ) { 0 } );
+    kl_t9 = __builtin_sub_overflow( ( *kl_this_1 ).kl_matches__3817, 1, &( uint64_t ) { 0 } );
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
     kl_rt_panic( "../src/hash_control.kl", 435, "arithmetic overflow: matches_ - 1" );
     bb8:
-    kl_t10 = ( *kl_this_1 ).kl_matches__3815 - 1;
-    ( *kl_this_1 ).kl_matches__3815 = ( *kl_this_1 ).kl_matches__3815 & kl_t10;
+    kl_t10 = ( *kl_this_1 ).kl_matches__3817 - 1;
+    ( *kl_this_1 ).kl_matches__3817 = ( *kl_this_1 ).kl_matches__3817 & kl_t10;
 #line 436 "../src/hash_control.kl"
     kl_t0 = kl_slot_3;
     return kl_t0;
     bb9:
 #line 440 "../src/hash_control.kl"
-    kl_t11 = kl_2kl_match_empty__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_word__3813 );
+    kl_t11 = kl_2kl_match_empty__SQ2kl12hash_control_3u64( ( *kl_this_1 ).kl_word__3815 );
     kl_t12 = kl_t11 != 0;
     if ( kl_t12 ) goto bb10; else goto bb11;
     bb10:
 #line 442 "../src/hash_control.kl"
-    kl_t0 = ( *kl_this_1 ).kl_end__3817;
+    kl_t0 = ( *kl_this_1 ).kl_end__3819;
     return kl_t0;
     bb11:
 #line 445 "../src/hash_control.kl"
-    kl_t13 = __builtin_add_overflow( ( *kl_this_1 ).kl_stride__3809, 1, &( uint64_t ) { 0 } );
+    kl_t13 = __builtin_add_overflow( ( *kl_this_1 ).kl_stride__3811, 1, &( uint64_t ) { 0 } );
     if ( kl_t13 ) goto bb12; else goto bb13;
     bb12:
     kl_rt_panic( "../src/hash_control.kl", 445, "arithmetic overflow: stride_ += 1;" );
     bb13:
-    ( *kl_this_1 ).kl_stride__3809 = ( *kl_this_1 ).kl_stride__3809 + 1;
+    ( *kl_this_1 ).kl_stride__3811 = ( *kl_this_1 ).kl_stride__3811 + 1;
 #line 446 "../src/hash_control.kl"
-    kl_t14 = __builtin_add_overflow( ( *kl_this_1 ).kl_group__3807, ( *kl_this_1 ).kl_stride__3809, &( uint64_t ) { 0 } );
+    kl_t14 = __builtin_add_overflow( ( *kl_this_1 ).kl_group__3809, ( *kl_this_1 ).kl_stride__3811, &( uint64_t ) { 0 } );
     if ( kl_t14 ) goto bb14; else goto bb15;
     bb14:
     kl_rt_panic( "../src/hash_control.kl", 446, "arithmetic overflow: group_ + stride_" );
     bb15:
-    kl_t15 = ( *kl_this_1 ).kl_group__3807 + ( *kl_this_1 ).kl_stride__3809;
-    kl_t16 = kl_t15 & ( *kl_this_1 ).kl_mask__3805;
-    ( *kl_this_1 ).kl_group__3807 = kl_t16;
+    kl_t15 = ( *kl_this_1 ).kl_group__3809 + ( *kl_this_1 ).kl_stride__3811;
+    kl_t16 = kl_t15 & ( *kl_this_1 ).kl_mask__3807;
+    ( *kl_this_1 ).kl_group__3809 = kl_t16;
 #line 449 "../src/hash_control.kl"
-    kl_t17 = ( *kl_this_1 ).kl_groups__3803 + ( *kl_this_1 ).kl_group__3807;
-    ( *kl_this_1 ).kl_word__3813 = ( *kl_t17 );
+    kl_t17 = ( *kl_this_1 ).kl_groups__3805 + ( *kl_this_1 ).kl_group__3809;
+    ( *kl_this_1 ).kl_word__3815 = ( *kl_t17 );
 #line 452 "../src/hash_control.kl"
-    kl_t18 = kl_2kl_match_tags__SQ2kl12hash_control_3u64_3u64( ( *kl_this_1 ).kl_word__3813, ( *kl_this_1 ).kl_tags__3811 );
-    ( *kl_this_1 ).kl_matches__3815 = kl_t18;
+    kl_t18 = kl_2kl_match_tags__SQ2kl12hash_control_3u64_3u64( ( *kl_this_1 ).kl_word__3815, ( *kl_this_1 ).kl_tags__3813 );
+    ( *kl_this_1 ).kl_matches__3817 = kl_t18;
     goto bb1;
 }
 
@@ -2876,12 +2876,12 @@ void kl_2kl_set__I3u64E__RQ2kl3setI3u64E__ctor( struct kl_2kl_set__I3u64E* kl_th
     kl_t3 = false;
     kl_t2 = kl_2kl_fresh__SQ2kl12hash_control(  );
     kl_t3 = true;
-    ( *kl_this_1 ).kl_control__2837 = kl_t2;
+    ( *kl_this_1 ).kl_control__2839 = kl_t2;
     kl_t3 = false;
     if ( kl_t3 ) kl_2kl_hash_control__dtor( &kl_t2 );
     kl_t3 = false;
 #line 17 "../src/set.kl"
-    ( *kl_this_1 ).kl_keys__2840 = NULL;
+    ( *kl_this_1 ).kl_keys__2842 = NULL;
     return;
 }
 
@@ -2918,7 +2918,7 @@ bool kl_2kl_insert__I3u64E__SQ2kl3setI3u64E_M3u64( struct kl_2kl_set__I3u64E* kl
     kl_t7 = &( *kl_this_1 );
     kl_t8 = &kl_key_2;
     kl_t9 = kl_2kl_slot_of_hashed__I3u64E__SQ2kl3setI3u64E_3u64_3u64( kl_t7, kl_t8, kl_hash_3 );
-    kl_t10 = &( *kl_this_1 ).kl_control__2837;
+    kl_t10 = &( *kl_this_1 ).kl_control__2839;
     kl_t11 = kl_2kl_slots__SQ2kl12hash_control( kl_t10 );
     kl_t12 = kl_t9 != kl_t11;
     if ( kl_t12 ) goto bb1; else goto bb2;
@@ -2928,25 +2928,25 @@ bool kl_2kl_insert__I3u64E__SQ2kl3setI3u64E_M3u64( struct kl_2kl_set__I3u64E* kl
     return kl_t0;
     bb2:
 #line 61 "../src/set.kl"
-    kl_t13 = &( *kl_this_1 ).kl_control__2837;
+    kl_t13 = &( *kl_this_1 ).kl_control__2839;
     kl_t14 = kl_2kl_needs_growth__SQ2kl12hash_control( kl_t13 );
     if ( kl_t14 ) goto bb3; else goto bb4;
     bb3:
 #line 63 "../src/set.kl"
     kl_t15 = &( *kl_this_1 );
-    kl_t16 = &( *kl_this_1 ).kl_control__2837;
+    kl_t16 = &( *kl_this_1 ).kl_control__2839;
     kl_t17 = kl_2kl_grown_slots__SQ2kl12hash_control( kl_t16 );
     kl_2kl_resize__I3u64E__SQ2kl3setI3u64E_3u64( kl_t15, kl_t17 );
     goto bb4;
     bb4:
 #line 66 "../src/set.kl"
-    kl_t20 = &( *kl_this_1 ).kl_control__2837;
-    kl_t21 = &( *kl_this_1 ).kl_control__2837;
+    kl_t20 = &( *kl_this_1 ).kl_control__2839;
+    kl_t21 = &( *kl_this_1 ).kl_control__2839;
     kl_t22 = kl_2kl_free_slot__SQ2kl12hash_control_3u64( kl_t21, kl_hash_3 );
     kl_t23 = kl_2kl_occupy__SQ2kl12hash_control_3u64_3u64( kl_t20, kl_t22, kl_hash_3 );
     kl_entry_19 = kl_t23;
 #line 70 "../src/set.kl"
-    kl_t24 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_19;
+    kl_t24 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_19;
     ( *kl_t24 ) = kl_key_2;
 #line 73 "../src/set.kl"
     kl_t0 = true;
@@ -2959,7 +2959,7 @@ uint64_t kl_2kl_size__I3u64E__SQ2kl3setI3u64E( struct kl_2kl_set__I3u64E* kl_thi
     struct kl_2kl_hash_control* kl_t2;
     uint64_t kl_t3;
 #line 130 "../src/set.kl"
-    kl_t2 = &( *kl_this_1 ).kl_control__2837;
+    kl_t2 = &( *kl_this_1 ).kl_control__2839;
     kl_t3 = kl_2kl_size__SQ2kl12hash_control( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
@@ -2977,7 +2977,7 @@ uint64_t* kl_2kl_key_at__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E
     uint64_t* kl_t10;
     uint64_t* kl_t11;
 #line 84 "../src/set.kl"
-    kl_t3 = &( *kl_this_1 ).kl_control__2837;
+    kl_t3 = &( *kl_this_1 ).kl_control__2839;
     kl_t4 = kl_2kl_size__SQ2kl12hash_control( kl_t3 );
     kl_t5 = kl_i_2 >= kl_t4;
     if ( kl_t5 ) goto bb1; else goto bb2;
@@ -2986,10 +2986,10 @@ uint64_t* kl_2kl_key_at__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "index out of range";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 18 );
-    kl_rt_panic_message( "../src/set.kl", 86, kl_t6.kl_data_3844, kl_t6.kl_size_3847 );
+    kl_rt_panic_message( "../src/set.kl", 86, kl_t6.kl_data_3846, kl_t6.kl_size_3849 );
     bb2:
 #line 91 "../src/set.kl"
-    kl_t10 = ( *kl_this_1 ).kl_keys__2840 + kl_i_2;
+    kl_t10 = ( *kl_this_1 ).kl_keys__2842 + kl_i_2;
     kl_t11 = &( *kl_t10 );
     kl_t0 = kl_t11;
     return kl_t0;
@@ -3022,7 +3022,7 @@ bool kl_2kl_remove__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* kl_
     kl_t6 = kl_2kl_slot_of__I3u64E__SQ2kl3setI3u64E_3u64( kl_t4, kl_t5 );
     kl_slot_3 = kl_t6;
 #line 106 "../src/set.kl"
-    kl_t7 = &( *kl_this_1 ).kl_control__2837;
+    kl_t7 = &( *kl_this_1 ).kl_control__2839;
     kl_t8 = kl_2kl_slots__SQ2kl12hash_control( kl_t7 );
     kl_t9 = kl_slot_3 == kl_t8;
     if ( kl_t9 ) goto bb1; else goto bb2;
@@ -3032,22 +3032,22 @@ bool kl_2kl_remove__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* kl_
     return kl_t0;
     bb2:
 #line 111 "../src/set.kl"
-    kl_t11 = &( *kl_this_1 ).kl_control__2837;
+    kl_t11 = &( *kl_this_1 ).kl_control__2839;
     kl_t12 = kl_2kl_vacate__SQ2kl12hash_control_3u64( kl_t11, kl_slot_3 );
     kl_entry_10 = kl_t12;
 #line 112 "../src/set.kl"
-    kl_t14 = &( *kl_this_1 ).kl_control__2837;
+    kl_t14 = &( *kl_this_1 ).kl_control__2839;
     kl_t15 = kl_2kl_size__SQ2kl12hash_control( kl_t14 );
     kl_last_13 = kl_t15;
 #line 116 "../src/set.kl"
-    kl_t16 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_10;
+    kl_t16 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_10;
 #line 118 "../src/set.kl"
     kl_t17 = kl_entry_10 != kl_last_13;
     if ( kl_t17 ) goto bb3; else goto bb4;
     bb3:
 #line 120 "../src/set.kl"
-    kl_t18 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_10;
-    kl_t19 = ( *kl_this_1 ).kl_keys__2840 + kl_last_13;
+    kl_t18 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_10;
+    kl_t19 = ( *kl_this_1 ).kl_keys__2842 + kl_last_13;
     ( *kl_t18 ) = ( *kl_t19 );
     goto bb4;
     bb4:
@@ -3069,7 +3069,7 @@ bool kl_2kl_contains__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* k
     kl_t3 = &( *kl_this_1 );
     kl_t4 = &( *kl_key_2 );
     kl_t5 = kl_2kl_slot_of__I3u64E__SQ2kl3setI3u64E_3u64( kl_t3, kl_t4 );
-    kl_t6 = &( *kl_this_1 ).kl_control__2837;
+    kl_t6 = &( *kl_this_1 ).kl_control__2839;
     kl_t7 = kl_2kl_slots__SQ2kl12hash_control( kl_t6 );
     kl_t8 = kl_t5 != kl_t7;
     kl_t0 = kl_t8;
@@ -3084,12 +3084,12 @@ void kl_2kl_set__IQ2kl6stringE__RQ2kl3setIQ2kl6stringE__ctor( struct kl_2kl_set_
     kl_t3 = false;
     kl_t2 = kl_2kl_fresh__SQ2kl12hash_control(  );
     kl_t3 = true;
-    ( *kl_this_1 ).kl_control__2837 = kl_t2;
+    ( *kl_this_1 ).kl_control__2839 = kl_t2;
     kl_t3 = false;
     if ( kl_t3 ) kl_2kl_hash_control__dtor( &kl_t2 );
     kl_t3 = false;
 #line 17 "../src/set.kl"
-    ( *kl_this_1 ).kl_keys__2840 = NULL;
+    ( *kl_this_1 ).kl_keys__2842 = NULL;
     return;
 }
 
@@ -3129,7 +3129,7 @@ bool kl_2kl_insert__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_MQ2kl6string( struct k
     kl_t7 = &( *kl_this_1 );
     kl_t8 = &kl_key_2;
     kl_t9 = kl_2kl_slot_of_hashed__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string_3u64( kl_t7, kl_t8, kl_hash_3 );
-    kl_t10 = &( *kl_this_1 ).kl_control__2837;
+    kl_t10 = &( *kl_this_1 ).kl_control__2839;
     kl_t11 = kl_2kl_slots__SQ2kl12hash_control( kl_t10 );
     kl_t12 = kl_t9 != kl_t11;
     if ( kl_t12 ) goto bb1; else goto bb2;
@@ -3141,25 +3141,25 @@ bool kl_2kl_insert__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_MQ2kl6string( struct k
     return kl_t0;
     bb2:
 #line 61 "../src/set.kl"
-    kl_t13 = &( *kl_this_1 ).kl_control__2837;
+    kl_t13 = &( *kl_this_1 ).kl_control__2839;
     kl_t14 = kl_2kl_needs_growth__SQ2kl12hash_control( kl_t13 );
     if ( kl_t14 ) goto bb3; else goto bb4;
     bb3:
 #line 63 "../src/set.kl"
     kl_t15 = &( *kl_this_1 );
-    kl_t16 = &( *kl_this_1 ).kl_control__2837;
+    kl_t16 = &( *kl_this_1 ).kl_control__2839;
     kl_t17 = kl_2kl_grown_slots__SQ2kl12hash_control( kl_t16 );
     kl_2kl_resize__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64( kl_t15, kl_t17 );
     goto bb4;
     bb4:
 #line 66 "../src/set.kl"
-    kl_t20 = &( *kl_this_1 ).kl_control__2837;
-    kl_t21 = &( *kl_this_1 ).kl_control__2837;
+    kl_t20 = &( *kl_this_1 ).kl_control__2839;
+    kl_t21 = &( *kl_this_1 ).kl_control__2839;
     kl_t22 = kl_2kl_free_slot__SQ2kl12hash_control_3u64( kl_t21, kl_hash_3 );
     kl_t23 = kl_2kl_occupy__SQ2kl12hash_control_3u64_3u64( kl_t20, kl_t22, kl_hash_3 );
     kl_entry_19 = kl_t23;
 #line 70 "../src/set.kl"
-    kl_t24 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_19;
+    kl_t24 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_19;
     ( *kl_t24 ) = kl_key_2;
     kl_t25 = false;
 #line 73 "../src/set.kl"
@@ -3200,7 +3200,7 @@ bool kl_2kl_remove__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct kl
     kl_t6 = kl_2kl_slot_of__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( kl_t4, kl_t5 );
     kl_slot_3 = kl_t6;
 #line 106 "../src/set.kl"
-    kl_t7 = &( *kl_this_1 ).kl_control__2837;
+    kl_t7 = &( *kl_this_1 ).kl_control__2839;
     kl_t8 = kl_2kl_slots__SQ2kl12hash_control( kl_t7 );
     kl_t9 = kl_slot_3 == kl_t8;
     if ( kl_t9 ) goto bb1; else goto bb2;
@@ -3210,15 +3210,15 @@ bool kl_2kl_remove__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct kl
     return kl_t0;
     bb2:
 #line 111 "../src/set.kl"
-    kl_t11 = &( *kl_this_1 ).kl_control__2837;
+    kl_t11 = &( *kl_this_1 ).kl_control__2839;
     kl_t12 = kl_2kl_vacate__SQ2kl12hash_control_3u64( kl_t11, kl_slot_3 );
     kl_entry_10 = kl_t12;
 #line 112 "../src/set.kl"
-    kl_t14 = &( *kl_this_1 ).kl_control__2837;
+    kl_t14 = &( *kl_this_1 ).kl_control__2839;
     kl_t15 = kl_2kl_size__SQ2kl12hash_control( kl_t14 );
     kl_last_13 = kl_t15;
 #line 116 "../src/set.kl"
-    kl_t16 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_10;
+    kl_t16 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_10;
     kl_t17 = kl_t16;
     kl_t18 = 1;
     kl_t19 = 0;
@@ -3237,8 +3237,8 @@ bool kl_2kl_remove__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct kl
     if ( kl_t22 ) goto bb6; else goto bb7;
     bb6:
 #line 120 "../src/set.kl"
-    kl_t23 = ( *kl_this_1 ).kl_keys__2840 + kl_entry_10;
-    kl_t24 = ( *kl_this_1 ).kl_keys__2840 + kl_last_13;
+    kl_t23 = ( *kl_this_1 ).kl_keys__2842 + kl_entry_10;
+    kl_t24 = ( *kl_this_1 ).kl_keys__2842 + kl_last_13;
     ( *kl_t23 ) = ( *kl_t24 );
     goto bb7;
     bb7:
@@ -3253,7 +3253,7 @@ uint64_t kl_2kl_size__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE( struct kl_2kl_set__
     struct kl_2kl_hash_control* kl_t2;
     uint64_t kl_t3;
 #line 130 "../src/set.kl"
-    kl_t2 = &( *kl_this_1 ).kl_control__2837;
+    kl_t2 = &( *kl_this_1 ).kl_control__2839;
     kl_t3 = kl_2kl_size__SQ2kl12hash_control( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
@@ -3271,7 +3271,7 @@ struct kl_2kl_string* kl_2kl_key_at__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64(
     struct kl_2kl_string* kl_t10;
     struct kl_2kl_string* kl_t11;
 #line 84 "../src/set.kl"
-    kl_t3 = &( *kl_this_1 ).kl_control__2837;
+    kl_t3 = &( *kl_this_1 ).kl_control__2839;
     kl_t4 = kl_2kl_size__SQ2kl12hash_control( kl_t3 );
     kl_t5 = kl_i_2 >= kl_t4;
     if ( kl_t5 ) goto bb1; else goto bb2;
@@ -3280,10 +3280,10 @@ struct kl_2kl_string* kl_2kl_key_at__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64(
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "index out of range";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 18 );
-    kl_rt_panic_message( "../src/set.kl", 86, kl_t6.kl_data_3844, kl_t6.kl_size_3847 );
+    kl_rt_panic_message( "../src/set.kl", 86, kl_t6.kl_data_3846, kl_t6.kl_size_3849 );
     bb2:
 #line 91 "../src/set.kl"
-    kl_t10 = ( *kl_this_1 ).kl_keys__2840 + kl_i_2;
+    kl_t10 = ( *kl_this_1 ).kl_keys__2842 + kl_i_2;
     kl_t11 = &( *kl_t10 );
     kl_t0 = kl_t11;
     return kl_t0;
@@ -3302,7 +3302,7 @@ bool kl_2kl_contains__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct 
     kl_t3 = &( *kl_this_1 );
     kl_t4 = &( *kl_key_2 );
     kl_t5 = kl_2kl_slot_of__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( kl_t3, kl_t4 );
-    kl_t6 = &( *kl_this_1 ).kl_control__2837;
+    kl_t6 = &( *kl_this_1 ).kl_control__2839;
     kl_t7 = kl_2kl_slots__SQ2kl12hash_control( kl_t6 );
     kl_t8 = kl_t5 != kl_t7;
     kl_t0 = kl_t8;
@@ -3312,11 +3312,11 @@ bool kl_2kl_contains__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( struct 
 void kl_2kl_list__I2u8E__RQ2kl4listI2u8E__ctor( struct kl_2kl_list__I2u8E* kl_this_1 )
 {
 #line 15 "../src/list.kl"
-    ( *kl_this_1 ).kl_data__2231 = NULL;
+    ( *kl_this_1 ).kl_data__2233 = NULL;
 #line 16 "../src/list.kl"
-    ( *kl_this_1 ).kl_count__2233 = 0;
+    ( *kl_this_1 ).kl_count__2235 = 0;
 #line 17 "../src/list.kl"
-    ( *kl_this_1 ).kl_cap__2235 = 0;
+    ( *kl_this_1 ).kl_cap__2237 = 0;
     return;
 }
 
@@ -3334,14 +3334,14 @@ struct kl_2kl_list__I2u8E kl_2kl_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( uin
     kl_t6 = true;
     kl_2kl_list__I2u8E__RQ2kl4listI2u8E__ctor( kl_t3 );
 #line 24 "../src/list.kl"
-    kl_result_2.kl_cap__2235 = kl_capacity_1;
+    kl_result_2.kl_cap__2237 = kl_capacity_1;
     kl_t6 = true;
 #line 25 "../src/list.kl"
-    kl_result_2.kl_count__2233 = 0;
+    kl_result_2.kl_count__2235 = 0;
     kl_t6 = true;
 #line 29 "../src/list.kl"
     kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( uint8_t ), "../src/list.kl", 29, "out of memory: alloc<T>( capacity )" );
-    kl_result_2.kl_data__2231 = kl_t5;
+    kl_result_2.kl_data__2233 = kl_t5;
     kl_t6 = true;
 #line 32 "../src/list.kl"
     kl_t0 = kl_result_2;
@@ -3360,15 +3360,15 @@ void kl_2kl_push__I2u8E__SQ2kl4listI2u8E_M2u8( struct kl_2kl_list__I2u8E* kl_thi
     kl_t3 = &( *kl_this_1 );
     kl_2kl_reallocate_if_needed__I2u8E__SQ2kl4listI2u8E( kl_t3 );
 #line 63 "../src/list.kl"
-    kl_t5 = ( *kl_this_1 ).kl_data__2231 + ( *kl_this_1 ).kl_count__2233;
+    kl_t5 = ( *kl_this_1 ).kl_data__2233 + ( *kl_this_1 ).kl_count__2235;
     ( *kl_t5 ) = kl_value_2;
 #line 65 "../src/list.kl"
-    kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__2233, 1, &( uint64_t ) { 0 } );
+    kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__2235, 1, &( uint64_t ) { 0 } );
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
     kl_rt_panic( "../src/list.kl", 65, "arithmetic overflow: count_ += 1;" );
     bb2:
-    ( *kl_this_1 ).kl_count__2233 = ( *kl_this_1 ).kl_count__2233 + 1;
+    ( *kl_this_1 ).kl_count__2235 = ( *kl_this_1 ).kl_count__2235 + 1;
     return;
 }
 
@@ -3385,7 +3385,7 @@ void kl_2kl_reverse__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this_
     uint64_t kl_t10;
     bool kl_t12;
 #line 314 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__2233 < 2;
+    kl_t2 = ( *kl_this_1 ).kl_count__2235 < 2;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     return;
@@ -3394,20 +3394,20 @@ void kl_2kl_reverse__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this_
     kl_i_3 = 0;
     goto bb3;
     bb3:
-    kl_t4 = ( *kl_this_1 ).kl_count__2233 / 2;
+    kl_t4 = ( *kl_this_1 ).kl_count__2235 / 2;
     kl_t5 = kl_i_3 < kl_t4;
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb4:
 #line 321 "../src/list.kl"
     kl_t6 = &( *kl_this_1 );
-    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__2233, 1, &( uint64_t ) { 0 } );
+    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__2235, 1, &( uint64_t ) { 0 } );
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb5:
     return;
     bb6:
     kl_rt_panic( "../src/list.kl", 321, "arithmetic overflow: count_ - 1" );
     bb7:
-    kl_t8 = ( *kl_this_1 ).kl_count__2233 - 1;
+    kl_t8 = ( *kl_this_1 ).kl_count__2235 - 1;
     kl_t9 = __builtin_sub_overflow( kl_t8, kl_i_3, &( uint64_t ) { 0 } );
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
@@ -3437,17 +3437,17 @@ uint8_t* kl_2kl_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list_
     uint8_t* kl_t8;
     uint8_t* kl_t9;
 #line 201 "../src/list.kl"
-    kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count__2233;
+    kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count__2235;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 203 "../src/list.kl"
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "index out of range";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
-    kl_rt_panic_message( "../src/list.kl", 203, kl_t4.kl_data_3844, kl_t4.kl_size_3847 );
+    kl_rt_panic_message( "../src/list.kl", 203, kl_t4.kl_data_3846, kl_t4.kl_size_3849 );
     bb2:
 #line 208 "../src/list.kl"
-    kl_t8 = ( *kl_this_1 ).kl_data__2231 + kl_index_2;
+    kl_t8 = ( *kl_this_1 ).kl_data__2233 + kl_index_2;
     kl_t9 = &( *kl_t8 );
     kl_t0 = kl_t9;
     return kl_t0;
@@ -3463,13 +3463,13 @@ struct kl__run__L2u8__ref kl_2kl_as_run__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_l
     struct kl__run__L2u8__ref kl_t6;
 #line 52 "../src/list.kl"
     kl_t2 = ( uint64_t ) 0;
-    kl_t3 = kl_t2 <= ( *kl_this_1 ).kl_count__2233;
+    kl_t3 = kl_t2 <= ( *kl_this_1 ).kl_count__2235;
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
     kl_rt_panic( "../src/list.kl", 52, "out of bounds: data_[0..count_]" );
     bb2:
-    kl_t4 = ( *kl_this_1 ).kl_data__2231 + kl_t2;
-    kl_t5 = ( *kl_this_1 ).kl_count__2233 - kl_t2;
+    kl_t4 = ( *kl_this_1 ).kl_data__2233 + kl_t2;
+    kl_t5 = ( *kl_this_1 ).kl_count__2235 - kl_t2;
     kl_t6 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t4, kl_t5 };
     kl_t0 = kl_t6;
     return kl_t0;
@@ -3485,24 +3485,24 @@ uint8_t kl_2kl_pop__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this_1
     bool kl_t7;
     uint8_t* kl_t8;
 #line 75 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__2233 == 0;
+    kl_t2 = ( *kl_this_1 ).kl_count__2235 == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 77 "../src/list.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "the list is empty";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 17 );
-    kl_rt_panic_message( "../src/list.kl", 77, kl_t3.kl_data_3844, kl_t3.kl_size_3847 );
+    kl_rt_panic_message( "../src/list.kl", 77, kl_t3.kl_data_3846, kl_t3.kl_size_3849 );
     bb2:
 #line 79 "../src/list.kl"
-    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__2233, 1, &( uint64_t ) { 0 } );
+    kl_t7 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__2235, 1, &( uint64_t ) { 0 } );
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
     kl_rt_panic( "../src/list.kl", 79, "arithmetic overflow: count_ -= 1;" );
     bb4:
-    ( *kl_this_1 ).kl_count__2233 = ( *kl_this_1 ).kl_count__2233 - 1;
+    ( *kl_this_1 ).kl_count__2235 = ( *kl_this_1 ).kl_count__2235 - 1;
 #line 82 "../src/list.kl"
-    kl_t8 = ( *kl_this_1 ).kl_data__2231 + ( *kl_this_1 ).kl_count__2233;
+    kl_t8 = ( *kl_this_1 ).kl_data__2233 + ( *kl_this_1 ).kl_count__2235;
     kl_t0 = ( *kl_t8 );
     return kl_t0;
 }
@@ -3511,7 +3511,7 @@ uint64_t kl_2kl_size__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this
 {
     uint64_t kl_t0;
 #line 345 "../src/list.kl"
-    kl_t0 = ( *kl_this_1 ).kl_count__2233;
+    kl_t0 = ( *kl_this_1 ).kl_count__2235;
     return kl_t0;
 }
 
@@ -3520,7 +3520,7 @@ bool kl_2kl_is_empty__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this
     bool kl_t0;
     bool kl_t2;
 #line 357 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__2233 == 0;
+    kl_t2 = ( *kl_this_1 ).kl_count__2235 == 0;
     kl_t0 = kl_t2;
     return kl_t0;
 }
@@ -3529,11 +3529,11 @@ void kl_2kl_list__I2u8E__dtor( struct kl_2kl_list__I2u8E* kl_this_1 )
 {
     bool kl_t2;
 #line 37 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_data__2231 != NULL;
+    kl_t2 = ( *kl_this_1 ).kl_data__2233 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 42 "../src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data__2231 );
+    kl_rt_free( ( *kl_this_1 ).kl_data__2233 );
     goto bb2;
     bb2:
     return;
@@ -3547,11 +3547,11 @@ void kl_2kl_set__I3u64E__dtor( struct kl_2kl_set__I3u64E* kl_this_1 )
     kl_t2 = &( *kl_this_1 );
     kl_2kl_drop_all__I3u64E__SQ2kl3setI3u64E( kl_t2 );
 #line 23 "../src/set.kl"
-    kl_t4 = ( *kl_this_1 ).kl_keys__2840 != NULL;
+    kl_t4 = ( *kl_this_1 ).kl_keys__2842 != NULL;
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 27 "../src/set.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_keys__2840 );
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2842 );
     goto bb2;
     bb2:
     return;
@@ -3565,11 +3565,11 @@ void kl_2kl_set__IQ2kl6stringE__dtor( struct kl_2kl_set__IQ2kl6stringE* kl_this_
     kl_t2 = &( *kl_this_1 );
     kl_2kl_drop_all__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE( kl_t2 );
 #line 23 "../src/set.kl"
-    kl_t4 = ( *kl_this_1 ).kl_keys__2840 != NULL;
+    kl_t4 = ( *kl_this_1 ).kl_keys__2842 != NULL;
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 27 "../src/set.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_keys__2840 );
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2842 );
     goto bb2;
     bb2:
     return;
@@ -3585,7 +3585,7 @@ uint64_t kl_2kl_hash_of__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E
     struct kl_7prelude_hasher* kl_t8;
     uint64_t kl_t9;
 #line 154 "../src/set.kl"
-    kl_t4 = &( *kl_this_1 ).kl_control__2837;
+    kl_t4 = &( *kl_this_1 ).kl_control__2839;
     kl_t5 = kl_2kl_start_hash__SQ2kl12hash_control( kl_t4 );
     kl_h_3 = kl_t5;
 #line 155 "../src/set.kl"
@@ -3621,11 +3621,11 @@ uint64_t kl_2kl_slot_of_hashed__I3u64E__SQ2kl3setI3u64E_3u64_3u64( struct kl_2kl
     struct kl_2kl_hash_probe* kl_t21;
     uint64_t kl_t22;
 #line 162 "../src/set.kl"
-    kl_t5 = &( *kl_this_1 ).kl_control__2837;
+    kl_t5 = &( *kl_this_1 ).kl_control__2839;
     kl_t6 = kl_2kl_slots__SQ2kl12hash_control( kl_t5 );
     kl_end_4 = kl_t6;
 #line 163 "../src/set.kl"
-    kl_t7 = &( *kl_this_1 ).kl_control__2837;
+    kl_t7 = &( *kl_this_1 ).kl_control__2839;
     kl_t8 = kl_2kl_size__SQ2kl12hash_control( kl_t7 );
     kl_t9 = kl_t8 == 0;
     if ( kl_t9 ) goto bb1; else goto bb2;
@@ -3635,7 +3635,7 @@ uint64_t kl_2kl_slot_of_hashed__I3u64E__SQ2kl3setI3u64E_3u64_3u64( struct kl_2kl
     return kl_t0;
     bb2:
 #line 168 "../src/set.kl"
-    kl_t11 = &( *kl_this_1 ).kl_control__2837;
+    kl_t11 = &( *kl_this_1 ).kl_control__2839;
     kl_t12 = kl_2kl_probe__SQ2kl12hash_control_3u64( kl_t11, kl_hash_3 );
     kl_probe_10 = kl_t12;
 #line 169 "../src/set.kl"
@@ -3649,9 +3649,9 @@ uint64_t kl_2kl_slot_of_hashed__I3u64E__SQ2kl3setI3u64E_3u64_3u64( struct kl_2kl
     if ( kl_t16 ) goto bb4; else goto bb5;
     bb4:
 #line 175 "../src/set.kl"
-    kl_t17 = &( *kl_this_1 ).kl_control__2837;
+    kl_t17 = &( *kl_this_1 ).kl_control__2839;
     kl_t18 = kl_2kl_entry__SQ2kl12hash_control_3u64( kl_t17, kl_slot_13 );
-    kl_t19 = ( *kl_this_1 ).kl_keys__2840 + kl_t18;
+    kl_t19 = ( *kl_this_1 ).kl_keys__2842 + kl_t18;
     kl_t20 = ( *kl_t19 ) == ( *kl_key_2 );
     if ( kl_t20 ) goto bb6; else goto bb7;
     bb5:
@@ -3694,7 +3694,7 @@ void kl_2kl_resize__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* kl_
     kl_keys_3 = kl_t5;
 #line 208 "../src/set.kl"
     kl_i_6 = 0;
-    kl_t8 = &( *kl_this_1 ).kl_control__2837;
+    kl_t8 = &( *kl_this_1 ).kl_control__2839;
     kl_t9 = kl_2kl_size__SQ2kl12hash_control( kl_t8 );
     kl_t7 = kl_t9;
     goto bb1;
@@ -3704,12 +3704,12 @@ void kl_2kl_resize__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* kl_
     bb2:
 #line 212 "../src/set.kl"
     kl_t11 = kl_keys_3 + kl_i_6;
-    kl_t12 = ( *kl_this_1 ).kl_keys__2840 + kl_i_6;
+    kl_t12 = ( *kl_this_1 ).kl_keys__2842 + kl_i_6;
     ( *kl_t11 ) = ( *kl_t12 );
     goto bb4;
     bb3:
 #line 216 "../src/set.kl"
-    kl_t13 = ( *kl_this_1 ).kl_keys__2840 != NULL;
+    kl_t13 = ( *kl_this_1 ).kl_keys__2842 != NULL;
     if ( kl_t13 ) goto bb5; else goto bb6;
     bb4:
 #line 208 "../src/set.kl"
@@ -3717,17 +3717,17 @@ void kl_2kl_resize__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E* kl_
     goto bb1;
     bb5:
 #line 220 "../src/set.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_keys__2840 );
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2842 );
     goto bb6;
     bb6:
 #line 224 "../src/set.kl"
-    ( *kl_this_1 ).kl_keys__2840 = kl_keys_3;
+    ( *kl_this_1 ).kl_keys__2842 = kl_keys_3;
 #line 225 "../src/set.kl"
-    kl_t15 = &( *kl_this_1 ).kl_control__2837;
+    kl_t15 = &( *kl_this_1 ).kl_control__2839;
     kl_t16 = kl_2kl_resized__SQ2kl12hash_control_3u64( kl_t15, kl_slots_2 );
     kl_t17 = true;
-    kl_2kl_hash_control__dtor( &( *kl_this_1 ).kl_control__2837 );
-    ( *kl_this_1 ).kl_control__2837 = kl_t16;
+    kl_2kl_hash_control__dtor( &( *kl_this_1 ).kl_control__2839 );
+    ( *kl_this_1 ).kl_control__2839 = kl_t16;
     kl_t17 = false;
     if ( kl_t17 ) kl_2kl_hash_control__dtor( &kl_t16 );
     kl_t17 = false;
@@ -3749,13 +3749,13 @@ uint64_t kl_2kl_slot_of__I3u64E__SQ2kl3setI3u64E_3u64( struct kl_2kl_set__I3u64E
     uint64_t kl_t12;
     uint64_t kl_t13;
 #line 190 "../src/set.kl"
-    kl_t3 = &( *kl_this_1 ).kl_control__2837;
+    kl_t3 = &( *kl_this_1 ).kl_control__2839;
     kl_t4 = kl_2kl_size__SQ2kl12hash_control( kl_t3 );
     kl_t5 = kl_t4 == 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 192 "../src/set.kl"
-    kl_t6 = &( *kl_this_1 ).kl_control__2837;
+    kl_t6 = &( *kl_this_1 ).kl_control__2839;
     kl_t7 = kl_2kl_slots__SQ2kl12hash_control( kl_t6 );
     kl_t0 = kl_t7;
     return kl_t0;
@@ -3782,7 +3782,7 @@ uint64_t kl_2kl_hash_of__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( stru
     struct kl_7prelude_hasher* kl_t9;
     uint64_t kl_t10;
 #line 154 "../src/set.kl"
-    kl_t4 = &( *kl_this_1 ).kl_control__2837;
+    kl_t4 = &( *kl_this_1 ).kl_control__2839;
     kl_t5 = kl_2kl_start_hash__SQ2kl12hash_control( kl_t4 );
     kl_h_3 = kl_t5;
 #line 155 "../src/set.kl"
@@ -3821,11 +3821,11 @@ uint64_t kl_2kl_slot_of_hashed__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6strin
     struct kl_2kl_hash_probe* kl_t23;
     uint64_t kl_t24;
 #line 162 "../src/set.kl"
-    kl_t5 = &( *kl_this_1 ).kl_control__2837;
+    kl_t5 = &( *kl_this_1 ).kl_control__2839;
     kl_t6 = kl_2kl_slots__SQ2kl12hash_control( kl_t5 );
     kl_end_4 = kl_t6;
 #line 163 "../src/set.kl"
-    kl_t7 = &( *kl_this_1 ).kl_control__2837;
+    kl_t7 = &( *kl_this_1 ).kl_control__2839;
     kl_t8 = kl_2kl_size__SQ2kl12hash_control( kl_t7 );
     kl_t9 = kl_t8 == 0;
     if ( kl_t9 ) goto bb1; else goto bb2;
@@ -3835,7 +3835,7 @@ uint64_t kl_2kl_slot_of_hashed__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6strin
     return kl_t0;
     bb2:
 #line 168 "../src/set.kl"
-    kl_t11 = &( *kl_this_1 ).kl_control__2837;
+    kl_t11 = &( *kl_this_1 ).kl_control__2839;
     kl_t12 = kl_2kl_probe__SQ2kl12hash_control_3u64( kl_t11, kl_hash_3 );
     kl_probe_10 = kl_t12;
 #line 169 "../src/set.kl"
@@ -3849,9 +3849,9 @@ uint64_t kl_2kl_slot_of_hashed__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6strin
     if ( kl_t16 ) goto bb4; else goto bb5;
     bb4:
 #line 175 "../src/set.kl"
-    kl_t17 = &( *kl_this_1 ).kl_control__2837;
+    kl_t17 = &( *kl_this_1 ).kl_control__2839;
     kl_t18 = kl_2kl_entry__SQ2kl12hash_control_3u64( kl_t17, kl_slot_13 );
-    kl_t19 = ( *kl_this_1 ).kl_keys__2840 + kl_t18;
+    kl_t19 = ( *kl_this_1 ).kl_keys__2842 + kl_t18;
     kl_t20 = &( *kl_t19 );
     kl_t21 = &( *kl_key_2 );
     kl_t22 = kl_2kl_operator_eq__SQ2kl6string_Q2kl6string( kl_t20, kl_t21 );
@@ -3896,7 +3896,7 @@ void kl_2kl_resize__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64( struct kl_2kl_se
     kl_keys_3 = kl_t5;
 #line 208 "../src/set.kl"
     kl_i_6 = 0;
-    kl_t8 = &( *kl_this_1 ).kl_control__2837;
+    kl_t8 = &( *kl_this_1 ).kl_control__2839;
     kl_t9 = kl_2kl_size__SQ2kl12hash_control( kl_t8 );
     kl_t7 = kl_t9;
     goto bb1;
@@ -3906,12 +3906,12 @@ void kl_2kl_resize__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64( struct kl_2kl_se
     bb2:
 #line 212 "../src/set.kl"
     kl_t11 = kl_keys_3 + kl_i_6;
-    kl_t12 = ( *kl_this_1 ).kl_keys__2840 + kl_i_6;
+    kl_t12 = ( *kl_this_1 ).kl_keys__2842 + kl_i_6;
     ( *kl_t11 ) = ( *kl_t12 );
     goto bb4;
     bb3:
 #line 216 "../src/set.kl"
-    kl_t13 = ( *kl_this_1 ).kl_keys__2840 != NULL;
+    kl_t13 = ( *kl_this_1 ).kl_keys__2842 != NULL;
     if ( kl_t13 ) goto bb5; else goto bb6;
     bb4:
 #line 208 "../src/set.kl"
@@ -3919,17 +3919,17 @@ void kl_2kl_resize__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_3u64( struct kl_2kl_se
     goto bb1;
     bb5:
 #line 220 "../src/set.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_keys__2840 );
+    kl_rt_free( ( *kl_this_1 ).kl_keys__2842 );
     goto bb6;
     bb6:
 #line 224 "../src/set.kl"
-    ( *kl_this_1 ).kl_keys__2840 = kl_keys_3;
+    ( *kl_this_1 ).kl_keys__2842 = kl_keys_3;
 #line 225 "../src/set.kl"
-    kl_t15 = &( *kl_this_1 ).kl_control__2837;
+    kl_t15 = &( *kl_this_1 ).kl_control__2839;
     kl_t16 = kl_2kl_resized__SQ2kl12hash_control_3u64( kl_t15, kl_slots_2 );
     kl_t17 = true;
-    kl_2kl_hash_control__dtor( &( *kl_this_1 ).kl_control__2837 );
-    ( *kl_this_1 ).kl_control__2837 = kl_t16;
+    kl_2kl_hash_control__dtor( &( *kl_this_1 ).kl_control__2839 );
+    ( *kl_this_1 ).kl_control__2839 = kl_t16;
     kl_t17 = false;
     if ( kl_t17 ) kl_2kl_hash_control__dtor( &kl_t16 );
     kl_t17 = false;
@@ -3951,13 +3951,13 @@ uint64_t kl_2kl_slot_of__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE_Q2kl6string( stru
     uint64_t kl_t12;
     uint64_t kl_t13;
 #line 190 "../src/set.kl"
-    kl_t3 = &( *kl_this_1 ).kl_control__2837;
+    kl_t3 = &( *kl_this_1 ).kl_control__2839;
     kl_t4 = kl_2kl_size__SQ2kl12hash_control( kl_t3 );
     kl_t5 = kl_t4 == 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 192 "../src/set.kl"
-    kl_t6 = &( *kl_this_1 ).kl_control__2837;
+    kl_t6 = &( *kl_this_1 ).kl_control__2839;
     kl_t7 = kl_2kl_slots__SQ2kl12hash_control( kl_t6 );
     kl_t0 = kl_t7;
     return kl_t0;
@@ -3982,15 +3982,15 @@ void kl_2kl_reallocate_if_needed__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2
     bool kl_t6;
     uint64_t kl_t7;
 #line 435 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__2233 == ( *kl_this_1 ).kl_cap__2235;
+    kl_t2 = ( *kl_this_1 ).kl_count__2235 == ( *kl_this_1 ).kl_cap__2237;
     if ( kl_t2 ) goto bb1; else goto bb7;
     bb1:
 #line 437 "../src/list.kl"
     kl_t3 = &( *kl_this_1 );
-    kl_t5 = ( *kl_this_1 ).kl_cap__2235 > 0;
+    kl_t5 = ( *kl_this_1 ).kl_cap__2237 > 0;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-    kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap__2235, 2, &( uint64_t ) { 0 } );
+    kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap__2237, 2, &( uint64_t ) { 0 } );
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb3:
     kl_t4 = 1;
@@ -4001,7 +4001,7 @@ void kl_2kl_reallocate_if_needed__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2
     bb5:
     kl_rt_panic( "../src/list.kl", 437, "arithmetic overflow: cap_ * 2" );
     bb6:
-    kl_t7 = ( *kl_this_1 ).kl_cap__2235 * 2;
+    kl_t7 = ( *kl_this_1 ).kl_cap__2237 * 2;
     kl_t4 = kl_t7;
     goto bb4;
     bb7:
@@ -4023,11 +4023,11 @@ void kl_2kl_swap__I2u8E__SQ2kl4listI2u8E_3u64_3u64( struct kl_2kl_list__I2u8E* k
     uint8_t* kl_t15;
     uint8_t* kl_t16;
 #line 293 "../src/list.kl"
-    kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count__2233;
+    kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count__2235;
     kl_t4 = kl_t5;
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-    kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count__2233;
+    kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count__2235;
     kl_t4 = kl_t6;
     goto bb2;
     bb2:
@@ -4037,7 +4037,7 @@ void kl_2kl_swap__I2u8E__SQ2kl4listI2u8E_3u64_3u64( struct kl_2kl_list__I2u8E* k
     kl_t8 = &kl_t7;
     kl_t9 = ( uint8_t* ) "index out of range";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
-    kl_rt_panic_message( "../src/list.kl", 295, kl_t7.kl_data_3844, kl_t7.kl_size_3847 );
+    kl_rt_panic_message( "../src/list.kl", 295, kl_t7.kl_data_3846, kl_t7.kl_size_3849 );
     bb4:
 #line 298 "../src/list.kl"
     kl_t11 = kl_a_2 == kl_b_3;
@@ -4046,14 +4046,14 @@ void kl_2kl_swap__I2u8E__SQ2kl4listI2u8E_3u64_3u64( struct kl_2kl_list__I2u8E* k
     return;
     bb6:
 #line 305 "../src/list.kl"
-    kl_t13 = ( *kl_this_1 ).kl_data__2231 + kl_a_2;
+    kl_t13 = ( *kl_this_1 ).kl_data__2233 + kl_a_2;
     kl_temp_12 = ( *kl_t13 );
 #line 306 "../src/list.kl"
-    kl_t14 = ( *kl_this_1 ).kl_data__2231 + kl_a_2;
-    kl_t15 = ( *kl_this_1 ).kl_data__2231 + kl_b_3;
+    kl_t14 = ( *kl_this_1 ).kl_data__2233 + kl_a_2;
+    kl_t15 = ( *kl_this_1 ).kl_data__2233 + kl_b_3;
     ( *kl_t14 ) = ( *kl_t15 );
 #line 307 "../src/list.kl"
-    kl_t16 = ( *kl_this_1 ).kl_data__2231 + kl_b_3;
+    kl_t16 = ( *kl_this_1 ).kl_data__2233 + kl_b_3;
     ( *kl_t16 ) = kl_temp_12;
     return;
 }
@@ -4069,7 +4069,7 @@ void kl_2kl_drop_all__I3u64E__SQ2kl3setI3u64E( struct kl_2kl_set__I3u64E* kl_thi
     ( void ) kl_t7;
 #line 230 "../src/set.kl"
     kl_i_2 = 0;
-    kl_t4 = &( *kl_this_1 ).kl_control__2837;
+    kl_t4 = &( *kl_this_1 ).kl_control__2839;
     kl_t5 = kl_2kl_size__SQ2kl12hash_control( kl_t4 );
     kl_t3 = kl_t5;
     goto bb1;
@@ -4078,7 +4078,7 @@ void kl_2kl_drop_all__I3u64E__SQ2kl3setI3u64E( struct kl_2kl_set__I3u64E* kl_thi
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
 #line 234 "../src/set.kl"
-    kl_t7 = ( *kl_this_1 ).kl_keys__2840 + kl_i_2;
+    kl_t7 = ( *kl_this_1 ).kl_keys__2842 + kl_i_2;
     goto bb4;
     bb3:
     return;
@@ -4103,7 +4103,7 @@ void kl_2kl_drop_all__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE( struct kl_2kl_set__
     struct kl_2kl_string* kl_t12;
 #line 230 "../src/set.kl"
     kl_i_2 = 0;
-    kl_t4 = &( *kl_this_1 ).kl_control__2837;
+    kl_t4 = &( *kl_this_1 ).kl_control__2839;
     kl_t5 = kl_2kl_size__SQ2kl12hash_control( kl_t4 );
     kl_t3 = kl_t5;
     goto bb1;
@@ -4112,7 +4112,7 @@ void kl_2kl_drop_all__IQ2kl6stringE__SQ2kl3setIQ2kl6stringE( struct kl_2kl_set__
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
 #line 234 "../src/set.kl"
-    kl_t7 = ( *kl_this_1 ).kl_keys__2840 + kl_i_2;
+    kl_t7 = ( *kl_this_1 ).kl_keys__2842 + kl_i_2;
     kl_t8 = kl_t7;
     kl_t9 = 1;
     kl_t10 = 0;
@@ -4147,24 +4147,24 @@ void kl_2kl_reallocate__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* 
     kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "../src/list.kl", 408, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 411 "../src/list.kl"
-    kl_t5 = ( *kl_this_1 ).kl_data__2231 != NULL;
+    kl_t5 = ( *kl_this_1 ).kl_data__2233 != NULL;
     if ( kl_t5 ) goto bb1; else goto bb8;
     bb1:
 #line 413 "../src/list.kl"
     kl_i_6 = 0;
     goto bb2;
     bb2:
-    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count__2233;
+    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count__2235;
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
 #line 417 "../src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-    kl_t9 = ( *kl_this_1 ).kl_data__2231 + kl_i_6;
+    kl_t9 = ( *kl_this_1 ).kl_data__2233 + kl_i_6;
     ( *kl_t8 ) = ( *kl_t9 );
     goto bb5;
     bb4:
 #line 424 "../src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data__2231 );
+    kl_rt_free( ( *kl_this_1 ).kl_data__2233 );
     goto bb8;
     bb5:
 #line 413 "../src/list.kl"
@@ -4177,9 +4177,9 @@ void kl_2kl_reallocate__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* 
     goto bb2;
     bb8:
 #line 428 "../src/list.kl"
-    ( *kl_this_1 ).kl_data__2231 = kl_new_data_3;
+    ( *kl_this_1 ).kl_data__2233 = kl_new_data_3;
 #line 429 "../src/list.kl"
-    ( *kl_this_1 ).kl_cap__2235 = kl_n_2;
+    ( *kl_this_1 ).kl_cap__2237 = kl_n_2;
     return;
 }
 

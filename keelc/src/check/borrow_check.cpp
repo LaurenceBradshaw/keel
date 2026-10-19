@@ -68,6 +68,7 @@ void step_back_terminator( const Terminator& terminator, Live& live )
 {
     use_operand( terminator.condition, live );
     use_operand( terminator.message, live );
+    use_operand( terminator.at, live );
 }
 
 // Live on leaving `block`: live on entering any successor.

@@ -97,6 +97,8 @@ std::string_view token_kind_name( Token_kind kind )
         return "Caret";
     case Token_kind::Tilde:
         return "Tilde";
+    case Token_kind::At:
+        return "At";
     case Token_kind::Less_less:
         return "Less_less";
     case Token_kind::Greater_greater:
@@ -223,6 +225,8 @@ std::string_view token_kind_spelling( Token_kind kind )
         return "^";
     case Token_kind::Tilde:
         return "~";
+    case Token_kind::At:
+        return "@";
     case Token_kind::Less_less:
         return "<<";
     case Token_kind::Greater_greater:

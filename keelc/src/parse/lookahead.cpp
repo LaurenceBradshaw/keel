@@ -61,6 +61,8 @@ Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing, Member_site si
             cursor_.seek( at );
             Member_kind kind = Member_kind::Field;
 
+            skip_directives();
+
             // Match public, or failing that private, but never both.
             if( !cursor_.match_keyword( Keyword::Public ) )
             {
@@ -128,6 +130,11 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     cursor_.seek( at );
     failure_ = Scan_failure {};
     site_    = site;
+
+    if( site == Scan_site::File )
+    {
+        skip_directives();
+    }
 
     if( site == Scan_site::File && !cursor_.match_keyword( Keyword::Public ) )
     {
@@ -253,13 +260,14 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
             cursor_.seek( at );
             Declaration_kind kind = Declaration_kind::Variable;
 
-            const auto is_keyword = [this]( u32 i, Keyword k ) {
-                return cursor_.tokens()[i].kind == Token_kind::Keyword &&
-                       static_cast<Keyword>( cursor_.tokens()[i].symbol.v ) == k;
-            };
-            const u32 head = is_keyword( at, Keyword::Public ) || is_keyword( at, Keyword::Private ) ? at + 1 : at;
+            skip_directives();
 
-            if( is_keyword( head, Keyword::Extern ) )
+            if( !cursor_.match_keyword( Keyword::Public ) )
+            {
+                cursor_.match_keyword( Keyword::Private );
+            }
+
+            if( cursor_.check_keyword( Keyword::Extern ) )
             {
                 kind = Declaration_kind::Function;
             }
@@ -482,6 +490,8 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
     cursor_.seek( at );
     failure_ = Scan_failure {};
     site_    = Scan_site::File;
+
+    skip_directives();
 
     // Match public, or failing that private, but never both.
     if( !cursor_.match_keyword( Keyword::Public ) )
@@ -1111,6 +1121,14 @@ bool Lookahead::scan_where_clauses()
     }
 
     return true;
+}
+
+void Lookahead::skip_directives()
+{
+    while( cursor_.match( Token_kind::At ) )
+    {
+        cursor_.match( Token_kind::Identifier );
+    }
 }
 
 void Lookahead::step_over_junk()

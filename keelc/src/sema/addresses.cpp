@@ -72,6 +72,17 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
         return types_.record( id, error );
     }
 
+    if( ast_.is_located( declaration ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is `@located`, so it has no address", name ),
+            "a call through a pointer has no caller to pass on; call it directly, or wrap it in a function that is not "
+            "`@located`"
+        );
+        return types_.record( id, error );
+    }
+
     std::vector<Type_id> resolved;
     Bindings             bindings;
     if( type_args.is_valid() )
@@ -194,6 +205,17 @@ Type_id Addresses::method_address( Node_id id, Node_id aggregate, Type_id expect
             "assigning it to a variable of one signature will choose between them"
         );
 
+        return types_.poison( id );
+    }
+
+    if( ast_.is_located( method ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is `@located`, so it has no address", interner_.text( name ) ),
+            "a call through a pointer has no caller to pass on; call it directly, or wrap it in a function that is not "
+            "`@located`"
+        );
         return types_.poison( id );
     }
 

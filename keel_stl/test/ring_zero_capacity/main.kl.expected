@@ -66,7 +66,7 @@ struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "a ring needs a capacity";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 23 );
-    kl_rt_panic_message( "../src/ring.kl", 23, kl_t3.kl_data_1010, kl_t3.kl_size_1013 );
+    kl_rt_panic_message( "../src/ring.kl", 23, kl_t3.kl_data_1012, kl_t3.kl_size_1015 );
     bb2:
 #line 25 "../src/ring.kl"
     kl_t10 = false;

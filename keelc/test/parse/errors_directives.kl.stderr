@@ -1,0 +1,43 @@
+error: `@located` marks a function or a method
+ --> parse/errors_directives.kl:2:1
+  |
+2 | @located
+  | ^^^^^^^^
+
+error: an `extern` function cannot be `@located`
+ --> parse/errors_directives.kl:5:1
+  |
+5 | @located
+  | ^^^^^^^^ it is defined in C, which takes no location
+
+error: `@located` is written twice
+ --> parse/errors_directives.kl:8:10
+  |
+8 | @located @located
+  |          ^^^^^^^^
+
+error: there is no directive `@inline`
+  --> parse/errors_directives.kl:11:1
+   |
+11 | @inline
+   | ^^^^^^^ the directive a declaration takes is `@located`
+
+error: `@caller()` is an expression, not a declaration's directive
+  --> parse/errors_directives.kl:14:1
+   |
+14 | @caller
+   | ^^^^^^^ write `@located` to receive the caller
+
+error: `@located` marks a declaration
+  --> parse/errors_directives.kl:19:13
+   |
+19 |     i32 a = @located;
+   |             ^^^^^^^^ write it before the function's signature
+
+error: there is no directive `@inline`
+  --> parse/errors_directives.kl:20:13
+   |
+20 |     i32 b = @inline();
+   |             ^^^^^^^ the directive in an expression is `@caller()`
+
+7 errors generated

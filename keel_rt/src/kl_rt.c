@@ -70,6 +70,16 @@ _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8
     abort();
 }
 
+// `panic( message, at )`: the file is a `str`, so it has a length and no terminator.
+_Noreturn void kl_rt_panic_at( const uint8_t* file, uint64_t file_size, uint32_t line, const uint8_t* data, uint64_t size )
+{
+    fflush( stdout );
+    fprintf( stderr, "%.*s:%u: panic: ", (int) file_size, (const char*) file, (unsigned) line );
+    fwrite( data, 1, size, stderr );
+    fputc( '\n', stderr );
+    abort();
+}
+
 // Reached only if a `never` function returned, which its body check refuses.
 _Noreturn void kl_rt_unreachable( void )
 {

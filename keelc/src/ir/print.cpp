@@ -262,7 +262,9 @@ struct Printer
             case Failure::Assert:
                 return "assert_failed";
             case Failure::Message:
-                return fmt::format( "panic {}", operand( terminator.message ) );
+                return terminator.at.type.is_valid()
+                           ? fmt::format( "panic {} at {}", operand( terminator.message ), operand( terminator.at ) )
+                           : fmt::format( "panic {}", operand( terminator.message ) );
             case Failure::Cast:
                 return "cast_failed";
             case Failure::Division:

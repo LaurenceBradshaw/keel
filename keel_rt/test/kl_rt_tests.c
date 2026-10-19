@@ -122,6 +122,11 @@ static void panic_message( void )
     kl_rt_panic_message( "main.kl", 7, (const uint8_t*) "emptyXYZ", 5 );
 }
 
+static void panic_at( void )
+{
+    kl_rt_panic_at( (const uint8_t*) "caller.klXYZ", 9, 12, (const uint8_t*) "emptyXYZ", 5 );
+}
+
 // Prints one key, so two children can be compared: each process draws its own.
 static void hash_key( void )
 {
@@ -414,6 +419,10 @@ int main( void )
     check( "panic_message", "stdout", r.out, "before" );
     check( "panic_message", "stderr", r.err, "main.kl:7: panic: empty\n" );
     check_exit( "panic_message", &r, true );
+
+    r = run( panic_at );
+    check( "panic_at", "stderr", r.err, "caller.kl:12: panic: empty\n" );
+    check_exit( "panic_at", &r, true );
 
     const Run first  = run( hash_key );
     const Run second = run( hash_key );

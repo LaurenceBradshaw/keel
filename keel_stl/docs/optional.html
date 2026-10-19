@@ -44,22 +44,22 @@
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">unwrap</span></h2>
 <div class="group" id="unwrap">
-<pre class="signature"><a class="anchor" href="#unwrap" aria-label="Link to unwrap">#</a><code>T <span class="fn">unwrap</span>&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#unwrap" aria-label="Link to unwrap">#</a><code>@located T <span class="fn">unwrap</span>&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
 <div class="doc">
 <p>Takes the value out of an optional, panicking if there is none.</p>
 <h4>Panics</h4>
-<p>If <code>o</code> is <code>none</code>.</p>
+<p>If <code>o</code> is <code>none</code>, at the line that called it.</p>
 </div>
 </div>
 </section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">expect</span></h2>
 <div class="group" id="expect">
-<pre class="signature"><a class="anchor" href="#expect" aria-label="Link to expect">#</a><code>T <span class="fn">expect</span>&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, <a class="type" href="prelude.html#str">str</a> message )</code></pre>
+<pre class="signature"><a class="anchor" href="#expect" aria-label="Link to expect">#</a><code>@located T <span class="fn">expect</span>&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, <a class="type" href="prelude.html#str">str</a> message )</code></pre>
 <div class="doc">
 <p>Takes the value out of an optional, panicking with a given message if there is none.</p>
 <h4>Panics</h4>
-<p>If <code>o</code> is <code>none</code>, with <code>message</code>.</p>
+<p>If <code>o</code> is <code>none</code>, with <code>message</code>, at the line that called it.</p>
 </div>
 </div>
 </section>

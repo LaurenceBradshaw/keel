@@ -58,7 +58,8 @@ std::string Signature_printer::declaration( Node_id decl ) const
     {
     case Node_kind::Function_decl:
         return fmt::format(
-            "{}{} {}{}{}{}",
+            "{}{}{} {}{}{}{}",
+            ast_.is_located( decl ) ? "@located " : "",
             ast_.is_extern( decl ) ? "extern " : "",
             type( ast_.return_type( decl ) ),
             text( ast_.name( decl ) ),
@@ -69,7 +70,8 @@ std::string Signature_printer::declaration( Node_id decl ) const
     case Node_kind::Method_decl:
         // Its own type parameters only: the aggregate's are on the aggregate's line.
         return fmt::format(
-            "{}{}{} {}{}{}{}{}",
+            "{}{}{}{} {}{}{}{}{}",
+            ast_.is_located( decl ) ? "@located " : "",
             access( decl ),
             ast_.is_static_method( decl ) ? "static " : "",
             type( ast_.return_type( decl ) ),
@@ -433,7 +435,8 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
                            "extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );\n"
                            "T larger<T>( T a, T b ) where T : copyable & numeric { return a; }\n"
                            "void take( fn( i32 ) -> bool p, i32* const q, const i32* r ) {}\n"
-                           "void fill( ref i32[] out_run, const ref u8[] text ) {}\n" );
+                           "void fill( ref i32[] out_run, const ref u8[] text ) {}\n"
+                           "@located\nvoid traced() {}\n" );
 
     REQUIRE( printed( Node_kind::Function_decl, "add" ) == "i32 add( i32 a, const ref i32 b )" );
     REQUIRE( printed( Node_kind::Function_decl, "none" ) == "void none()" );
@@ -444,6 +447,7 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
     REQUIRE( printed( Node_kind::Function_decl, "larger" ) == "T larger<T>( T a, T b ) where T : copyable & numeric" );
     REQUIRE( printed( Node_kind::Function_decl, "take" ) == "void take( fn( i32 ) -> bool p, i32* const q, const i32* r )" );
     REQUIRE( printed( Node_kind::Function_decl, "fill" ) == "void fill( ref i32[] out_run, const ref u8[] text )" );
+    REQUIRE( printed( Node_kind::Function_decl, "traced" ) == "@located void traced()" );
     REQUIRE( printed( Node_kind::Param_decl, "b" ) == "const ref i32 b" );
     REQUIRE( printed( Node_kind::Type_param_decl, "T" ) == "T" );
 }
@@ -457,6 +461,7 @@ TEST_CASE( "signatures_print_members_with_their_access", "[sema][signature]" )
                            "    public void push( move T v ) { value = move v; }\n"
                            "    public const T* get() const { return &value; }\n"
                            "    public static Box<T> of( move T v ) { return Box<T>( move v ); }\n"
+                           "    @located\n    public void trace() {}\n"
                            "    private T value;\n"
                            "    const i32 count;\n"
                            "    static i32 made = 0;\n"
@@ -468,6 +473,7 @@ TEST_CASE( "signatures_print_members_with_their_access", "[sema][signature]" )
     REQUIRE( printed( Node_kind::Method_decl, "push" ) == "public void push( move T v )" );
     REQUIRE( printed( Node_kind::Method_decl, "get" ) == "public const T* get() const" );
     REQUIRE( printed( Node_kind::Method_decl, "of" ) == "public static Box<T> of( move T v )" );
+    REQUIRE( printed( Node_kind::Method_decl, "trace" ) == "@located public void trace()" );
     REQUIRE( printed( Node_kind::Field_decl, "value" ) == "private T value" );
     REQUIRE( printed( Node_kind::Field_decl, "count" ) == "private const i32 count" );
     REQUIRE( printed( Node_kind::Var_decl, "made" ) == "private static i32 made" );

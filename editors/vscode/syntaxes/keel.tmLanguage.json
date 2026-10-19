@@ -25,6 +25,9 @@
             "include": "#declarations"
         },
         {
+            "include": "#directives"
+        },
+        {
             "include": "#keywords"
         },
         {
@@ -44,6 +47,14 @@
         }
     ],
     "repository": {
+        "directives": {
+            "patterns": [
+                {
+                    "name": "storage.type.annotation.keel",
+                    "match": "@[A-Za-z_]\\w*"
+                }
+            ]
+        },
         "comments": {
             "patterns": [
                 {

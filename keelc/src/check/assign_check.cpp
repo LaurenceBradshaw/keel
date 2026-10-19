@@ -263,6 +263,7 @@ void transfer_block(
     // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
     read_operand( func, b.terminator.condition, b.terminator.span, flow, reads );
     read_operand( func, b.terminator.message, b.terminator.span, flow, reads );
+    read_operand( func, b.terminator.at, b.terminator.span, flow, reads );
 }
 
 Flow entry_flow( const Function& func )

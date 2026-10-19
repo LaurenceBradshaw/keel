@@ -793,6 +793,9 @@ void Scanner::scan_punctuation( char c, u32 start )
     case '~':
         push( Token_kind::Tilde, start );
         return;
+    case '@':
+        push( Token_kind::At, start );
+        return;
     case '?':
         push( Token_kind::Question, start );
         return;
@@ -1502,6 +1505,7 @@ TEST_CASE( "lexer_maximal_munch", "[lex]" )
         { "^", Token_kind::Caret },
         { "^=", Token_kind::Caret_equal },
         { "~", Token_kind::Tilde },
+        { "@", Token_kind::At },
         { "?", Token_kind::Question },
         { ".", Token_kind::Dot },
         { "..", Token_kind::Dot_dot },
@@ -1802,8 +1806,8 @@ TEST_CASE( "lexer_unexpected_characters", "[lex]" )
 {
     SECTION( "printable" )
     {
-        const Lexed lexed( "@" );
-        REQUIRE( lexed.rendered().find( "unexpected character `@`" ) != std::string::npos );
+        const Lexed lexed( "$" );
+        REQUIRE( lexed.rendered().find( "unexpected character `$`" ) != std::string::npos );
         REQUIRE( lexed.kind( 0 ) == Token_kind::Unknown );
     }
 
@@ -1828,10 +1832,21 @@ TEST_CASE( "lexer_unexpected_characters", "[lex]" )
     }
 }
 
+// D69: `@` opens a directive, and the name after it stays an identifier.
+TEST_CASE( "lexer_lexes_a_directive_as_at_and_a_name", "[lex][directive]" )
+{
+    const Lexed lexed( "@located" );
+
+    REQUIRE_FALSE( lexed.has_errors() );
+    REQUIRE( lexed.kind( 0 ) == Token_kind::At );
+    REQUIRE( lexed.kind( 1 ) == Token_kind::Identifier );
+    REQUIRE( lexed.text( 1 ) == "located" );
+}
+
 // Recovery: a bad character must not stop the stream or spin the loop.
 TEST_CASE( "lexer_recovers_and_keeps_going", "[lex]" )
 {
-    const Lexed lexed( "a @ b @ c" );
+    const Lexed lexed( "a $ b $ c" );
 
     REQUIRE( lexed.count() == 5 );
     REQUIRE( lexed.error_count() == 2 );

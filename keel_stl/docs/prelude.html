@@ -39,6 +39,7 @@ functions.</p>
 <li><a href="#comparable"><code>comparable</code></a> <span class="kind">interface</span></li>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
+<li><a href="#location"><code>location</code></a> <span class="kind">struct</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">primitive</span> <span class="prim">bool</span></h2>
@@ -414,6 +415,28 @@ panics on a NaN.</p>
 <pre class="signature"><a class="anchor" href="#hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Feeds this value to <code>h</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">location</span></h2>
+<div class="group" id="location">
+<pre class="signature"><a class="anchor" href="#location" aria-label="Link to location">#</a><code><span class="kw">struct</span> <span class="type">location</span></code></pre>
+<div class="doc">
+<p>Where a call was written, as <code>@caller()</code> gives it inside an <code>@located</code> function.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="location.file">
+<pre class="signature"><a class="anchor" href="#location.file" aria-label="Link to file">#</a><code><span class="kw">public</span> <a class="type" href="#str">str</a> <a class="type" href="os.html#file">file</a></code></pre>
+<div class="doc">
+<p>The file holding the call, as the compiler was given it.</p>
+</div>
+</div>
+<div class="group" id="location.line">
+<pre class="signature"><a class="anchor" href="#location.line" aria-label="Link to line">#</a><code><span class="kw">public</span> <a class="prim" href="#u32">u32</a> line</code></pre>
+<div class="doc">
+<p>The call's line, counting from 1.</p>
 </div>
 </div>
 </section>

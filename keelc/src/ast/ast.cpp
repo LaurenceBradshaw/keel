@@ -33,6 +33,11 @@ void Ast::set_access( Node_id id, Access access )
     access_[id.v] = access;
 }
 
+void Ast::set_located( Node_id decl )
+{
+    located_.insert( decl.v );
+}
+
 void Ast::set_name_span( Node_id decl, Span span )
 {
     name_spans_[decl.v] = span;
@@ -92,6 +97,17 @@ Access Ast::access( Node_id id ) const
 {
     const auto it = access_.find( id.v );
     return it != access_.end() ? it->second : Access::Public;
+}
+
+Node_id Ast::panic_location( Node_id id ) const
+{
+    assert( kind( id ) == Node_kind::Panic_expr && "only a panic takes a location" );
+    return children( id ).size() > 1 ? child( id, 1 ) : Node_id {};
+}
+
+bool Ast::is_located( Node_id decl ) const
+{
+    return located_.contains( decl.v );
 }
 
 Span Ast::name_span( Node_id decl ) const

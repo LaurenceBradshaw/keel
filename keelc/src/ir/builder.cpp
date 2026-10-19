@@ -170,9 +170,11 @@ void Builder::terminate_return( Span span )
     set_terminator( Terminator { .kind = Terminator_kind::Return, .span = span } );
 }
 
-void Builder::terminate_panic( Span span, Failure failure, Operand message )
+void Builder::terminate_panic( Span span, Failure failure, Operand message, Operand at )
 {
-    set_terminator( Terminator { .kind = Terminator_kind::Panic, .failure = failure, .span = span, .message = message } );
+    set_terminator(
+        Terminator { .kind = Terminator_kind::Panic, .failure = failure, .span = span, .message = message, .at = at }
+    );
 }
 
 void Builder::terminate_unreachable( Span span )

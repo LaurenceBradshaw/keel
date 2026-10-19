@@ -218,6 +218,23 @@ void Signatures::declare_interface_requirements()
             continue;
         }
 
+        for( const Node_id member : ast_.members( child ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Method_decl )
+            {
+                continue;
+            }
+
+            if( ast_.is_located( member ) )
+            {
+                reporter_.error_at(
+                    ast_.span( member ),
+                    "an interface's method cannot be `@located`",
+                    "a call through the interface has no caller to pass on"
+                );
+            }
+        }
+
         const Type_id interface = types_.type_of( child );
 
         for( const Node_id written : ast_.implemented( child ) )
@@ -534,6 +551,13 @@ void Signatures::declare_functions()
             if( ast_.is_extern( child ) )
             {
                 reporter_.error_at( ast_.span( child ), "`main` may not be marked `extern`" );
+            }
+
+            if( ast_.is_located( child ) )
+            {
+                reporter_.error_at(
+                    ast_.span( child ), "`main` cannot be `@located`", "nothing in the program calls it, so it has no caller"
+                );
             }
 
             // return type

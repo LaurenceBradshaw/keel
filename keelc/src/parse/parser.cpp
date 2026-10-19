@@ -64,6 +64,15 @@ private:
     // D53: the `///` lines between `first_token` and the token before it document `decl`.
     void attach_doc( Node_id decl, u32 first_token );
 
+    // D69: the `@name` directives opening a declaration, before its access and `static`.
+    struct Directives
+    {
+        std::optional<Span> located;
+    };
+
+    Directives parse_directives();
+    void       apply_directives( Node_id decl, const Directives& directives );
+
     // --- declarations ---
 
     Node_id parse_import();
@@ -712,6 +721,8 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
     assert( cursor_.position() == head.start );
     recovery_.begin_body();
 
+    const Directives directives = parse_directives();
+
     // Consumed here because head.start includes it.
     const Span access_span  = cursor_.peek().span;
     const bool wrote_public = cursor_.match_keyword( Keyword::Public );
@@ -765,7 +776,78 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
         ast_.set_access( decl, Access::Private );
     }
 
+    apply_directives( decl, directives );
+
     return decl;
+}
+
+Parser::Directives Parser::parse_directives()
+{
+    Directives directives;
+
+    while( cursor_.check( Token_kind::At ) )
+    {
+        const Span at = cursor_.advance().span;
+
+        if( !cursor_.check( Token_kind::Identifier ) )
+        {
+            recovery_.error_at( at, "expected a directive's name after `@`", "the directive here is `@located`" );
+            continue;
+        }
+
+        const Span             span = Span::merge( at, cursor_.advance().span );
+        const std::string_view name = sm_.text( cursor_.previous().span );
+
+        if( name == "located" )
+        {
+            if( directives.located )
+            {
+                recovery_.error_at( span, "`@located` is written twice" );
+            }
+
+            directives.located = span;
+        }
+        else if( name == "caller" )
+        {
+            recovery_.error_at(
+                span, "`@caller()` is an expression, not a declaration's directive", "write `@located` to receive the caller"
+            );
+        }
+        else
+        {
+            recovery_.error_at(
+                span, fmt::format( "there is no directive `@{}`", name ), "the directive a declaration takes is `@located`"
+            );
+        }
+    }
+
+    return directives;
+}
+
+void Parser::apply_directives( Node_id decl, const Directives& directives )
+{
+    if( !directives.located || ast_.kind( decl ) == Node_kind::Error )
+    {
+        return;
+    }
+
+    const Node_kind kind = ast_.kind( decl );
+
+    if( kind != Node_kind::Function_decl && kind != Node_kind::Method_decl )
+    {
+        recovery_.error_at( *directives.located, "`@located` marks a function or a method" );
+        return;
+    }
+
+    if( ast_.is_extern( decl ) )
+    {
+        recovery_.error_at(
+            *directives.located, "an `extern` function cannot be `@located`", "it is defined in C, which takes no location"
+        );
+        return;
+    }
+
+    ast_.set_located( decl );
 }
 
 Node_id Parser::parse_function_decl( std::optional<u32> commit )
@@ -1558,6 +1640,8 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
 {
     assert( cursor_.position() == head.start );
 
+    const Directives directives = parse_directives();
+
     // Consumed here because head.start includes them.
     const Span access_span   = cursor_.peek().span;
     const bool wrote_public  = cursor_.match_keyword( Keyword::Public );
@@ -1629,6 +1713,8 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
         wrote_access ? ( wrote_private ? Access::Private : Access::Public )
                      : ( private_by_default ? Access::Private : Access::Public )
     );
+
+    apply_directives( member, directives );
 
     return member;
 }
@@ -2452,6 +2538,7 @@ bool Parser::can_start_expression() const
     case Token_kind::String_literal:
     case Token_kind::Char_literal:
     case Token_kind::L_paren:
+    case Token_kind::At:
         return true;
 
     // Unary operators. parse_prefix does not handle all of them yet, but `*p = 1;` is a
@@ -3495,9 +3582,12 @@ Node_id Parser::parse_keyword_prefix( Span start )
         cursor_.advance();
         recovery_.expect( Token_kind::L_paren );
         const Node_id message = parse_expression( 0 );
+        const Node_id at      = cursor_.match( Token_kind::Comma ) ? parse_expression( 0 ) : Node_id {};
         recovery_.expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Panic_expr, Span::merge( start, cursor_.previous().span ), 0, { message } );
+        const Span span = Span::merge( start, cursor_.previous().span );
+        return at.is_valid() ? ast_.add( Node_kind::Panic_expr, span, 0, { message, at } )
+                             : ast_.add( Node_kind::Panic_expr, span, 0, { message } );
     }
 
     if( cursor_.check_keyword( Keyword::Cast ) || cursor_.check_keyword( Keyword::Wrap ) )
@@ -3596,6 +3686,42 @@ Node_id Parser::parse_prefix()
         return ast_.add(
             Node_kind::Char_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
         );
+
+    // D69: `@caller()` is the one directive in expression position.
+    case Token_kind::At:
+    {
+        cursor_.advance();
+
+        const std::string_view name = cursor_.check( Token_kind::Identifier ) ? sm_.text( cursor_.advance().span ) : "";
+        const Span             span = Span::merge( start, cursor_.previous().span );
+
+        if( name == "caller" )
+        {
+            recovery_.expect( Token_kind::L_paren );
+            recovery_.expect( Token_kind::R_paren );
+
+            return ast_.add( Node_kind::Caller_expr, Span::merge( start, cursor_.previous().span ), 0, {} );
+        }
+
+        if( name == "located" )
+        {
+            recovery_.error_at( span, "`@located` marks a declaration", "write it before the function's signature" );
+        }
+        else if( name.empty() )
+        {
+            recovery_.error_at(
+                span, "expected a directive's name after `@`", "the directive in an expression is `@caller()`"
+            );
+        }
+        else
+        {
+            recovery_.error_at(
+                span, fmt::format( "there is no directive `@{}`", name ), "the directive in an expression is `@caller()`"
+            );
+        }
+
+        return error_node( span );
+    }
 
     case Token_kind::Identifier:
     {
@@ -5912,6 +6038,89 @@ TEST_CASE( "parser_rejects_a_malformed_extern", "[parse][extern]" )
 
 // D28: `alloc<T>()` is a keyword, so the `<` is a bracket. `free( p )` is its pair, since Keel has
 // no `void*`.
+// D69: directives open a declaration, before its access and `static`, on its line or the one above.
+TEST_CASE( "parser_reads_located_before_a_declaration", "[parse][directive]" )
+{
+    SECTION( "a function, on the line above" )
+    {
+        const Parsed p( "@located\nvoid f() { }\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.ast().is_located( p.child( p.root(), 0 ) ) );
+    }
+
+    SECTION( "on the same line, before `private`" )
+    {
+        const Parsed p( "@located private void f() { }\nvoid g() { }\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.ast().is_located( p.child( p.root(), 0 ) ) );
+        REQUIRE( p.ast().access( p.child( p.root(), 0 ) ) == Access::Private );
+        REQUIRE_FALSE( p.ast().is_located( p.child( p.root(), 1 ) ) );
+    }
+
+    SECTION( "a method, before `public static`" )
+    {
+        const Parsed p( "class C\n{\n    i32 a;\n    @located\n    public static void f() { }\n    void g() { }\n};\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        const Node_id c = p.child( p.root(), 0 );
+        REQUIRE( p.ast().is_located( p.members( c )[1] ) );
+        REQUIRE_FALSE( p.ast().is_located( p.members( c )[2] ) );
+    }
+
+    SECTION( "`located` stays a name" )
+    {
+        const Parsed p( "void f() { bool located = false; i32 caller = 1; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+TEST_CASE( "parser_refuses_a_misplaced_directive", "[parse][directive]" )
+{
+    const auto refuses = []( std::string_view source, std::string_view message )
+    {
+        const Parsed p( source );
+
+        INFO( source );
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( message ) != std::string::npos );
+    };
+
+    refuses( "@located\nstruct S { i32 a; };\n", "`@located` marks a function or a method" );
+    refuses( "class C\n{\n    i32 a;\n    @located\n    C() { }\n};\n", "`@located` marks a function or a method" );
+    refuses( "@located\nextern void f();\n", "an `extern` function cannot be `@located`" );
+    refuses( "@located @located\nvoid f() { }\n", "`@located` is written twice" );
+    refuses( "@caller\nvoid f() { }\n", "`@caller()` is an expression" );
+    refuses( "@inline\nvoid f() { }\n", "there is no directive `@inline`" );
+    refuses( "void f() { i32 a = @located; }\n", "`@located` marks a declaration" );
+    refuses( "void f() { i32 a = @inline(); }\n", "there is no directive `@inline`" );
+}
+
+TEST_CASE( "parser_reads_caller_and_a_panic's_location", "[parse][directive]" )
+{
+    const Parsed p( "@located\nvoid f() { location at = @caller(); panic( \"no\", @caller() ); }\n" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id caller = find_first( p.ast(), p.root(), Node_kind::Caller_expr );
+    REQUIRE( caller.is_valid() );
+    REQUIRE( p.text( caller ) == "@caller()" );
+
+    const Node_id panic = find_first( p.ast(), p.root(), Node_kind::Panic_expr );
+    REQUIRE( p.kind( p.ast().panic_location( panic ) ) == Node_kind::Caller_expr );
+
+    const Parsed bare( "void f() { panic( \"no\" ); }\n" );
+    REQUIRE_FALSE( bare.ast().panic_location( find_first( bare.ast(), bare.root(), Node_kind::Panic_expr ) ).is_valid() );
+}
+
 TEST_CASE( "parser_parses_alloc", "[parse][alloc]" )
 {
     SECTION( "it is an Alloc_expr holding its type" )

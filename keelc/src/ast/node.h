@@ -154,8 +154,10 @@ enum class Node_kind : u16
     Free_expr,
     // `assert( c )`; children: the condition.
     Assert_expr,
-    // `panic( "message" )`; children: the message.
+    // `panic( "message" )` or `panic( "message", at )`; children: the message, then the location if written.
     Panic_expr,
+    // `@caller()`, D69; no children.
+    Caller_expr,
     // `destroy( p, n )`; children: the pointer, then the count.
     Destroy_expr,
     Fallthrough_stmt,

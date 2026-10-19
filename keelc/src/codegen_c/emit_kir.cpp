@@ -264,7 +264,7 @@ private:
 
     bool uses_runtime() const;
     // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
-    bool ends_a_block( Terminator_kind kind, bool with_message = false ) const;
+    bool ends_a_block( Terminator_kind kind, bool with_message = false, bool located = false ) const;
     bool uses_counted_allocation() const;
 
     // Which of D41's three guards a Binary needs, or None for the ordinary infix case. `mirror` is
@@ -905,6 +905,12 @@ void Kir_emitter::emit_runtime_prototypes()
         any = true;
     }
 
+    if( ends_a_block( Terminator_kind::Panic, true, true ) )
+    {
+        write_line( "_Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t*, uint64_t );" );
+        any = true;
+    }
+
     if( ends_a_block( Terminator_kind::Unreachable ) )
     {
         write_line( "_Noreturn void kl_rt_unreachable( void );" );
@@ -1285,25 +1291,42 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
         if( terminator.failure == Failure::Message )
         {
             const std::string message = operand( terminator.message );
-            const Node_id     str     = types_.table().get( terminator.message.type ).declaration;
 
-            const auto field = [&]( std::string_view name )
+            const auto field = [&]( const std::string& base, Type_id type, std::string_view name )
             {
-                for( const Node_id member : ast_.members( str ) )
+                for( const Node_id member : ast_.members( types_.table().get( type ).declaration ) )
                 {
                     if( ast_.kind( member ) == Node_kind::Field_decl && interner_.text( ast_.name( member ) ) == name )
                     {
-                        return fmt::format( "{}.{}", message, spelling_.field( member ) );
+                        return fmt::format( "{}.{}", base, spelling_.field( member ) );
                     }
                 }
 
-                assert( false && "the prelude's `str` has `data` and `size`" );
+                assert( false && "the prelude's `str` and `location` have these fields" );
                 return std::string {};
             };
 
-            write_line( fmt::format(
-                "kl_rt_panic_message( {}, {}, {} );", location( terminator.span ), field( "data" ), field( "size" )
-            ) );
+            const Type_id     str  = terminator.message.type;
+            const std::string data = field( message, str, "data" );
+            const std::string size = field( message, str, "size" );
+
+            if( terminator.at.type.is_valid() )
+            {
+                const std::string at   = operand( terminator.at );
+                const std::string file = field( at, terminator.at.type, "file" );
+
+                write_line( fmt::format(
+                    "kl_rt_panic_at( {}, {}, {}, {}, {} );",
+                    field( file, str, "data" ),
+                    field( file, str, "size" ),
+                    field( at, terminator.at.type, "line" ),
+                    data,
+                    size
+                ) );
+                return;
+            }
+
+            write_line( fmt::format( "kl_rt_panic_message( {}, {}, {} );", location( terminator.span ), data, size ) );
             return;
         }
 
@@ -1355,6 +1378,7 @@ std::vector<bool> mentioned_locals( const Function& function )
     {
         mark( block.terminator.condition.place );
         mark( block.terminator.message.place );
+        mark( block.terminator.at.place );
     }
 
     return mentioned;
@@ -1397,6 +1421,7 @@ std::vector<bool> read_locals( const Function& function )
     {
         mark( block.terminator.condition.place );
         mark( block.terminator.message.place );
+        mark( block.terminator.at.place );
     }
 
     if( function.returns_a_value )
@@ -1604,13 +1629,16 @@ bool Kir_emitter::uses_runtime() const
     return false;
 }
 
-bool Kir_emitter::ends_a_block( Terminator_kind kind, bool with_message ) const
+bool Kir_emitter::ends_a_block( Terminator_kind kind, bool with_message, bool located ) const
 {
     for( const Function& function : functions_ )
     {
         for( const Block& block : function.blocks )
         {
-            if( block.terminator.kind == kind && ( block.terminator.failure == Failure::Message ) == with_message )
+            const Terminator& terminator = block.terminator;
+
+            if( terminator.kind == kind && ( terminator.failure == Failure::Message ) == with_message &&
+                terminator.at.type.is_valid() == located )
             {
                 return true;
             }

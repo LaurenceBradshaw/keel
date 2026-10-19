@@ -14,7 +14,8 @@ enum optional<T>
 ///
 /// ### Panics
 ///
-/// If `o` is `none`.
+/// If `o` is `none`, at the line that called it.
+@located
 T unwrap<T>( move optional<T> o )
 {
     switch( move o )
@@ -22,7 +23,7 @@ T unwrap<T>( move optional<T> o )
         case optional::some( v ):
             return v;
         case optional::none:
-            panic( "unwrap on an empty optional" );
+            panic( "unwrap on an empty optional", @caller() );
     }
 }
 
@@ -30,7 +31,8 @@ T unwrap<T>( move optional<T> o )
 ///
 /// ### Panics
 ///
-/// If `o` is `none`, with `message`.
+/// If `o` is `none`, with `message`, at the line that called it.
+@located
 T expect<T>( move optional<T> o, str message )
 {
     switch( move o )
@@ -38,7 +40,7 @@ T expect<T>( move optional<T> o, str message )
         case optional::some( v ):
             return v;
         case optional::none:
-            panic( message );
+            panic( message, @caller() );
     }
 }
 
