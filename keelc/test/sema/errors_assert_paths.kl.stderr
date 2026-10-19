@@ -1,0 +1,13 @@
+error: `x` may be used before it is initialised
+  --> sema/errors_assert_paths.kl:28:5
+   |
+28 |     return x;
+   |     ^^^^^^^^^ it is assigned on some paths to here, but not all
+
+error: `b` may already have been moved
+  --> sema/errors_assert_paths.kl:35:9
+   |
+35 |     _ = consume( move b );
+   |         ^^^^^^^^^^^^^^^^^ moved at 34:13 on some path to here
+
+2 errors generated

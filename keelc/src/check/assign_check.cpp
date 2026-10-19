@@ -124,7 +124,7 @@ void read_operand(
     const Function& func, const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
 {
-    if( reads == nullptr || operand.kind == Operand_kind::Constant || operand.place.is_global() )
+    if( reads == nullptr || !operand.has_place() || operand.place.is_global() )
     {
         return;
     }

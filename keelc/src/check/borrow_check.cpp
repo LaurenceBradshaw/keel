@@ -25,7 +25,7 @@ void use_place( const Place& place, Live& live )
 
 void use_operand( const Operand& operand, Live& live )
 {
-    if( operand.kind != Operand_kind::Constant )
+    if( operand.has_place() )
     {
         use_place( operand.place, live );
     }

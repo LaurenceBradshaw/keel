@@ -13,6 +13,7 @@ namespace keel
 Front_end run_front_end(
     File_id                  input,
     Stage                    through,
+    Build                    build,
     Source_manager&          sm,
     Interner&                interner,
     Literal_pool&            literals,
@@ -68,8 +69,14 @@ Front_end run_front_end(
         .true_literal  = literals.add_integer( 1 )
     };
 
+    const Literal_id debug = build == Build::Debug ? vocabulary.true_literal : vocabulary.false_literal;
+
+    // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
+    // only this build's.
     for( Function& function : front.functions )
     {
+        settle_debug( function, debug );
+        simplify( function, literals );
         elaborate_drops( function, vocabulary );
     }
 

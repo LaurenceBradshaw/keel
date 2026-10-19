@@ -1,0 +1,41 @@
+// Without --debug, an `assert` is checked but never runs: a false one passes, and nothing in its
+// condition happens - no call, and no temporary built or dropped. The temporary's drop flag stays
+// until drop elaboration asks what may be initialised (M11).
+import t::console;
+
+class Noisy
+{
+    public Noisy()
+    {
+        ok_ = false;
+        t::println( "built" );
+    }
+
+    ~Noisy()
+    {
+        t::println( "dropped" );
+    }
+
+    public bool ok() const
+    {
+        return ok_;
+    }
+
+    bool ok_;
+};
+
+bool shout()
+{
+    t::println( "ran" );
+    return false;
+}
+
+i32 main()
+{
+    assert( false );
+    assert( shout() );
+    assert( Noisy().ok() );
+
+    t::println( "done" );
+    return 0;
+}

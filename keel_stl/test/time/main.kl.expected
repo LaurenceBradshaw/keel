@@ -311,14 +311,16 @@ int64_t kl_2kl_clock_reading__3i32( int32_t kl_which_1 )
     kl_t4 = &kl_nanoseconds_2;
     kl_t5 = kl_rt_clock( kl_which_1, kl_t4 );
     kl_status_3 = kl_t5;
+    goto bb1;
+    bb1:
 #line 21 "../src/time.kl"
     kl_t6 = kl_status_3 == 0;
-    if ( kl_t6 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
 #line 22 "../src/time.kl"
     kl_t0 = kl_nanoseconds_2;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "../src/time.kl", 21, "assertion failed: status == 0" );
 }
 
@@ -338,14 +340,16 @@ int64_t kl_2kl_clock_resolution__3i32( int32_t kl_which_1 )
     kl_t4 = &kl_nanoseconds_2;
     kl_t5 = kl_rt_clock_resolution( kl_which_1, kl_t4 );
     kl_status_3 = kl_t5;
+    goto bb1;
+    bb1:
 #line 36 "../src/time.kl"
     kl_t6 = kl_status_3 == 0;
-    if ( kl_t6 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
 #line 37 "../src/time.kl"
     kl_t0 = kl_nanoseconds_2;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "../src/time.kl", 36, "assertion failed: status == 0" );
 }
 

@@ -2374,13 +2374,22 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Assert_expr:
     {
         const Node_id condition = ast_.condition( id );
-        const Operand op        = lower_expression( condition );
-        const Span    span      = ast_.span( id );
 
-        const Block_id pass = builder_.add_block();
-        const Block_id fail = builder_.add_block();
+        const Block_id check = builder_.add_block();
+        const Block_id pass  = builder_.add_block();
+        const Block_id fail  = builder_.add_block();
+        const Span     span  = ast_.span( id );
+
+        builder_.terminate_branch(
+            Operand { .kind = Operand_kind::Debug, .type = types_.table().builtin( Type_kind::Bool ) }, check, pass, span
+        );
+        builder_.switch_to( check );
+        const std::size_t first = drops_.mark();
+
+        const Operand op = lower_expression( condition );
 
         builder_.terminate_branch( op, pass, fail, span );
+        drops_.one_path_since( first );
 
         builder_.switch_to( fail );
         builder_.terminate_panic( ast_.span( condition ), Failure::Assert );
@@ -5753,8 +5762,8 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
     }
 }
 
-// A branch whose failing side ends the program. Nothing is dropped on that side: the program
-// aborts, and runs no destructor on the way out.
+// A branch on the build, then one whose failing side ends the program. Nothing is dropped on that
+// side: the program aborts, and runs no destructor on the way out.
 TEST_CASE( "lower_lowers_assert_to_a_branch_and_a_failed_terminator", "[ir][lower][assert]" )
 {
     Lowered p( "class Owner { public Owner() { unsafe { q = alloc<i32>(); } } ~Owner() { unsafe { free( q ); } } i32* q; };\n"
@@ -5767,9 +5776,10 @@ TEST_CASE( "lower_lowers_assert_to_a_branch_and_a_failed_terminator", "[ir][lowe
 
     INFO( text );
     REQUIRE( text.find( "_5 = copy _1 > const 0" ) != std::string::npos );
-    REQUIRE( text.find( "branch copy _5 -> bb1, bb2" ) != std::string::npos );
-    REQUIRE( text.find( "bb2:\n        assert_failed\n" ) != std::string::npos );
-    REQUIRE( text.find( "drop _2" ) < text.find( "bb2:" ) ); // only on the passing side
+    REQUIRE( text.find( "branch debug -> bb1, bb2" ) != std::string::npos ); // the check may not run
+    REQUIRE( text.find( "branch copy _5 -> bb2, bb3" ) != std::string::npos );
+    REQUIRE( text.find( "bb3:\n        assert_failed\n" ) != std::string::npos );
+    REQUIRE( text.find( "drop _2" ) < text.find( "bb3:" ) ); // only on the passing side
 
     for( const Function& function : p.functions )
     {

@@ -74,14 +74,16 @@ int32_t* kl__operator_index__S4view_3u64( struct kl__view* kl_this_1, uint64_t k
 {
     int32_t* kl_t0;
     bool kl_t3;
+    goto bb1;
+    bb1:
 #line 64 "codegen/operator_index.kl"
     kl_t3 = kl_index_2 == 0;
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 65 "codegen/operator_index.kl"
     kl_t0 = ( *kl_this_1 ).kl_first_136;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "codegen/operator_index.kl", 64, "assertion failed: index == 0" );
 }
 
@@ -478,16 +480,18 @@ int32_t* kl__operator_index__I3i32E__S6bufferI3i32E_3u64( struct kl__buffer__I3i
     bool kl_t3;
     int32_t* kl_t4;
     int32_t* kl_t5;
+    goto bb1;
+    bb1:
 #line 37 "codegen/operator_index.kl"
     kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_size_99;
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 41 "codegen/operator_index.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_97 + kl_index_2;
     kl_t5 = &( *kl_t4 );
     kl_t0 = kl_t5;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
 }
 
@@ -537,16 +541,18 @@ struct kl__point* kl__operator_index__I5pointE__S6bufferI5pointE_3u64( struct kl
     bool kl_t3;
     struct kl__point* kl_t4;
     struct kl__point* kl_t5;
+    goto bb1;
+    bb1:
 #line 37 "codegen/operator_index.kl"
     kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_size_99;
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 41 "codegen/operator_index.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_97 + kl_index_2;
     kl_t5 = &( *kl_t4 );
     kl_t0 = kl_t5;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
 }
 

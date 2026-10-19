@@ -41,7 +41,7 @@ struct Compiled
     {
         file = sm.add_file( "t.kl", std::string( source ) );
 
-        Front_end front = run_front_end( file, through, sm, interner, literals, diags );
+        Front_end front = run_front_end( file, through, Build::Debug, sm, interner, literals, diags );
 
         const Halves halves( front.program.ast, front.types.table(), front.program.imports );
         std::ranges::copy_if(

@@ -76,10 +76,12 @@ int32_t kl__main__( void )
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t16, kl_t17, 12 );
     kl_t19 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_7prelude_str__as_kl_7prelude_textual };
     kl_1t_print__7textual( kl_t19 );
+    goto bb1;
+    bb1:
 #line 14 "codegen/print_then_assert.kl"
     kl_t21 = kl_x_1 == 1;
-    if ( kl_t21 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t21 ) goto bb2; else goto bb3;
+    bb2:
 #line 16 "codegen/print_then_assert.kl"
     kl_t23 = &kl_t22;
     kl_t24 = ( uint8_t* ) "never";
@@ -89,7 +91,7 @@ int32_t kl__main__( void )
 #line 17 "codegen/print_then_assert.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "codegen/print_then_assert.kl", 14, "assertion failed: x == 1" );
 }
 

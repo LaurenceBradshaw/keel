@@ -156,7 +156,11 @@ class hash_control
             return 0;
         }
 
-        assert( n <= 0x0700_0000_0000_0000 ); // past this, the doubling overflows
+        // past this, the doubling overflows
+        if( n > 0x0700_0000_0000_0000 )
+        {
+            panic( "too many keys" );
+        }
 
         u64 result = 8;
         while( usable( result ) < n )

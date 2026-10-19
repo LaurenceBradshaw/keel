@@ -18,7 +18,10 @@ class ring<T>
     /// If `capacity` is 0.
     public static ring<T> with_capacity( u64 capacity )
     {
-        assert( capacity > 0 );
+        if( capacity == 0 )
+        {
+            panic( "a ring needs a capacity" );
+        }
         return ring<T>( capacity );
     }
 
@@ -49,7 +52,10 @@ class ring<T>
     /// If the ring is full; `try_push_back` hands the element back instead.
     public void push_back( move T value )
     {
-        assert( count_ < cap_ );
+        if( count_ == cap_ )
+        {
+            panic( "the ring is full" );
+        }
 
         unsafe
         {
@@ -65,7 +71,10 @@ class ring<T>
     /// If the ring is full; `try_push_front` hands the element back instead.
     public void push_front( move T value )
     {
-        assert( count_ < cap_ );
+        if( count_ == cap_ )
+        {
+            panic( "the ring is full" );
+        }
 
         retreat_head();
 
@@ -139,7 +148,10 @@ class ring<T>
     /// If the ring is empty; `try_pop_front` answers `none` instead.
     public T pop_front()
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
 
         T result;
         unsafe
@@ -160,7 +172,10 @@ class ring<T>
     /// If the ring is empty; `try_pop_back` answers `none` instead.
     public T pop_back()
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
 
         count_ -= 1;
         unsafe
@@ -199,7 +214,10 @@ class ring<T>
     /// If `index` is not less than `size()`.
     public T* operator[]( u64 index ) const
     {
-        assert( index < count_ );
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
         unsafe
         {
             return &data_[slot( index )];
@@ -213,7 +231,10 @@ class ring<T>
     /// If the ring is empty.
     public T* first() const
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
         unsafe
         {
             return &data_[head_];
@@ -227,7 +248,10 @@ class ring<T>
     /// If the ring is empty.
     public T* last() const
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
         unsafe
         {
             return &data_[slot( count_ - 1 )];

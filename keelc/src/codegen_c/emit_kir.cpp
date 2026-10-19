@@ -1731,6 +1731,9 @@ std::string Kir_emitter::operand( const Operand& operand ) const
     case Operand_kind::Copy:
     case Operand_kind::Move:
         return place( operand.place );
+    case Operand_kind::Debug:
+        assert( false && "settled before emission" );
+        return "<debug>";
 
     default:
         assert( false && "unknown operand kind" );

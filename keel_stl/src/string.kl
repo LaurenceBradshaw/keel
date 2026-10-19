@@ -288,8 +288,10 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// If those bytes do not all lie within the string.
     public string substring( u64 start, u64 count ) const
     {
-        assert( start <= size() );
-        assert( count <= size() - start );
+        if( start > size() || count > size() - start )
+        {
+            panic( "substring out of range" );
+        }
 
         string result = string::with_capacity( count );
         for( u64 i = 0; i < count; i++ )

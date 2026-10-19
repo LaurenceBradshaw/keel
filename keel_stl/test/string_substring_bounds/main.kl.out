@@ -1,2 +1,2 @@
 cutting
-../src/string.kl:292: assertion failed: count <= size() - start
+../src/string.kl:293: panic: substring out of range

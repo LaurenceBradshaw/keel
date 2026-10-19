@@ -81,7 +81,10 @@ class set<K> where K : hashable
     /// If `i` is not less than `size()`.
     public const K* key_at( u64 i ) const
     {
-        assert( i < control_.size() );
+        if( i >= control_.size() )
+        {
+            panic( "index out of range" );
+        }
 
         unsafe
         {

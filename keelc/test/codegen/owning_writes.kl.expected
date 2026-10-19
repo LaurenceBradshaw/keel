@@ -138,16 +138,18 @@ struct kl__owned* kl__operator_index__S5slots_3u64( struct kl__slots* kl_this_1,
     bool kl_t3;
     struct kl__owned* kl_t4;
     struct kl__owned* kl_t5;
+    goto bb1;
+    bb1:
 #line 85 "codegen/owning_writes.kl"
     kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_count_153;
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 89 "codegen/owning_writes.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_151 + kl_index_2;
     kl_t5 = &( *kl_t4 );
     kl_t0 = kl_t5;
     return kl_t0;
-    bb2:
+    bb3:
     kl_rt_panic( "codegen/owning_writes.kl", 85, "assertion failed: index < count" );
 }
 

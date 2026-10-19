@@ -188,9 +188,25 @@ void simplify( Function& func, const Literal_pool& literals )
     prune( func, reachable( func ) );
 }
 
+void settle_debug( Function& func, Literal_id value )
+{
+    for( Block& block : func.blocks )
+    {
+        Terminator& terminator = block.terminator;
+        if( terminator.kind != Terminator_kind::Branch || terminator.condition.kind != Operand_kind::Debug )
+        {
+            continue;
+        }
+
+        terminator.condition.kind     = Operand_kind::Constant;
+        terminator.condition.constant = value;
+    }
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 
@@ -432,6 +448,40 @@ TEST_CASE( "simplify_is_a_fixpoint_after_one_sweep", "[ir][simplify]" )
     REQUIRE( p.first().blocks.size() == blocks );
     REQUIRE( p.first().statements.size() == statements );
     REQUIRE( p.problems().empty() );
+}
+
+// The checks saw both sides of the `debug` branch; settling it keeps only the build's.
+TEST_CASE( "settle_debug_keeps_only_the_builds_side_of_an_assert", "[ir][simplify][assert]" )
+{
+    Simplified p( "i32 f( i32 a ) { assert( a > 0 ); return a; }" + k_main );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const auto panics = []( const Function& func ) {
+        return std::ranges::any_of( func.blocks, []( const Block& b ) { return b.terminator.kind == Terminator_kind::Panic; } );
+    };
+
+    SECTION( "release drops the condition and the failure" )
+    {
+        Function func = p.first();
+        settle_debug( func, p.literals.add_integer( 0 ) );
+        simplify( func, p.literals );
+
+        REQUIRE( verify( func ).empty() );
+        REQUIRE_FALSE( panics( func ) );
+        REQUIRE( func.statements.size() == 1 ); // the return slot's assignment
+    }
+
+    SECTION( "debug keeps both" )
+    {
+        Function func = p.first();
+        settle_debug( func, p.literals.add_integer( 1 ) );
+        simplify( func, p.literals );
+
+        REQUIRE( verify( func ).empty() );
+        REQUIRE( panics( func ) );
+    }
 }
 
 } // namespace keel

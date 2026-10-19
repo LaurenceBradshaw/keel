@@ -75,8 +75,8 @@ bool merge_into( Flow& into, const Flow& from )
 // both walks share one traversal.
 void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Move_error>* errors )
 {
-    // A constant names no local, and a global has no scope to be moved out of.
-    if( operand.kind == Operand_kind::Constant || operand.place.is_global() )
+    // Only a copy or move names a local, and a global has no scope to be moved out of.
+    if( !operand.has_place() || operand.place.is_global() )
     {
         return;
     }

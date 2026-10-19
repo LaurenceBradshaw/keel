@@ -25,13 +25,13 @@ class Buffer
 
     public void set( u64 i, i32 value )
     {
-        assert( i < count );
+        if( i >= count ) { panic( "index out of range" ); }   // on in every build
         unsafe { data[ i ] = value; }
     }
 
     public i32 get( u64 i ) const
     {
-        assert( i < count );
+        if( i >= count ) { panic( "index out of range" ); }   // on in every build
         unsafe { return data[ i ]; }
     }
 
@@ -253,7 +253,7 @@ noted in its row.
 | No headers and no preprocessor; `#include` is an error directing to `import`. | Textual inclusion. | A header is not a translation unit, which is why C++ needs `namespace` as a second mechanism. A module is one. |
 | `import kl::list;` loads a module; the package is the namespace, so its names are written `kl::list<i32>`. Imports are not transitive, and there is no `using`. | `#include`, `namespace` and `using`, three mechanisms. | A file's imports list what it uses, and a library name can never collide with a local one. |
 | A few declarations every program needs, `str` among them, live in a prelude seen without an import. A program's own declaration of the same name shadows it, except a function's overloads, which fall back: a call goes to the prelude's set only when the program's has no candidate for it, so declaring `print( Point )` leaves `print( "hi" )` working. `--print-prelude` shows it. | The language and `std` are separate; overloads in different namespaces are merged into one set. | Adding to the prelude must never break a program that already used the name, and a merged set would let a closer prelude overload silently take a call. |
-| `assert( cond )` is a keyword, always on, and a failure prints the file, line and condition, then aborts without running any destructor. | A macro that `NDEBUG` removes. | There is no debug mode yet to turn it off in, and destructors run on state the program has just said is broken would make things worse. |
+| `assert( cond )` is a keyword that runs under `--debug`, and a failure prints the file, line and condition, then aborts without running any destructor. A release build still checks the condition, so diagnostics never depend on the build. | A macro that `NDEBUG` removes, unchecked. | A check that costs nothing where it is not wanted; a guard on memory is a `panic`, on in every build. Destructors run on state the program has just said is broken would make things worse. |
 | `panic( "message" )` is a keyword that prints the file, line and message and aborts the same way. A function that never returns is declared `never`, and one that could is refused. | `std::abort`, and `[[noreturn]]` as an unchecked promise. | Only the compiler knows the caller's line, and a promise the compiler checks is one a reader can rely on. |
 
 ### Aggregates
@@ -354,6 +354,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--with-prelude` | With `--declarations`, list the prelude's declarations too |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
+| `--debug` | Run each `assert`; without it the condition is checked but never run |
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--runtime <path>` | Link this runtime library instead of the installed one |
 | `--package name=<dir>` | Make a package importable as `name`; may be repeated |

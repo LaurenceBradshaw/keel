@@ -16,20 +16,22 @@ int32_t kl__main__( void )
     bool kl_t3;
 #line 5 "codegen/assert_fails.kl"
     kl_x_1 = 0;
+    goto bb1;
+    bb1:
 #line 7 "codegen/assert_fails.kl"
     kl_t2 = kl_x_1 == 0;
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 8 "codegen/assert_fails.kl"
-    kl_t3 = kl_x_1 > 1;
-    if ( kl_t3 ) goto bb3; else goto bb4;
+    if ( kl_t2 ) goto bb3; else goto bb2;
     bb2:
     kl_rt_panic( "codegen/assert_fails.kl", 7, "assertion failed: x == 0" );
     bb3:
+#line 8 "codegen/assert_fails.kl"
+    kl_t3 = kl_x_1 > 1;
+    if ( kl_t3 ) goto bb4; else goto bb5;
+    bb4:
 #line 11 "codegen/assert_fails.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb4:
+    bb5:
     kl_rt_panic( "codegen/assert_fails.kl", 8, "assertion failed: x > 1" );
 }
 

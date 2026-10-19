@@ -26,6 +26,13 @@ enum class Stage : u8
     Elaborated, // drops made explicit, as the emitter reads them
 };
 
+// Whether an `assert` runs. The diagnostics are the same for both.
+enum class Build : u8
+{
+    Debug,
+    Release
+};
+
 struct Front_end
 {
     Program               program;
@@ -38,6 +45,7 @@ struct Front_end
 Front_end run_front_end(
     File_id                  input,
     Stage                    through,
+    Build                    build,
     Source_manager&          sm,
     Interner&                interner,
     Literal_pool&            literals,

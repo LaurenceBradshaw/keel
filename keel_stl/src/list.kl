@@ -72,7 +72,10 @@ class list<T>
     /// If the list is empty; `try_pop` answers `none` instead.
     public T pop()
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
         count_ -= 1;
         unsafe
         {
@@ -98,7 +101,10 @@ class list<T>
     /// If `index` is greater than `size()`. An index equal to it adds at the end.
     public void insert( u64 index, move T value )
     {
-        assert( index <= count_ );
+        if( index > count_ )
+        {
+            panic( "index out of range" );
+        }
 
         reallocate_if_needed();
 
@@ -156,7 +162,10 @@ class list<T>
     /// If the list is empty.
     public T* first() const
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
 
         unsafe
         {
@@ -171,7 +180,10 @@ class list<T>
     /// If the list is empty.
     public T* last() const
     {
-        assert( count_ > 0 );
+        if( count_ == 0 )
+        {
+            panic( "the list is empty" );
+        }
 
         unsafe
         {
@@ -186,7 +198,10 @@ class list<T>
     /// If `index` is not less than `size()`.
     public T* operator[]( u64 index ) const
     {
-        assert( index < count_ );
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
 
         unsafe
         {
@@ -202,7 +217,10 @@ class list<T>
     /// If `index` is not less than `size()`.
     public T remove( u64 index )
     {
-        assert( index < count_ );
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
 
         unsafe
         {
@@ -226,7 +244,10 @@ class list<T>
     /// If `index` is not less than `size()`.
     public T swap_remove( u64 index )
     {
-        assert( index < count_ );
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
 
         count_ -= 1;
         unsafe
@@ -249,7 +270,10 @@ class list<T>
     /// If `index` is not less than `size()`.
     public T replace( u64 index, move T value )
     {
-        assert( index < count_ );
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
 
         unsafe
         {
@@ -266,8 +290,10 @@ class list<T>
     /// If either is not less than `size()`.
     public void swap( u64 a, u64 b )
     {
-        assert( a < count_ );
-        assert( b < count_ );
+        if( a >= count_ || b >= count_ )
+        {
+            panic( "index out of range" );
+        }
 
         if( a == b )
         {

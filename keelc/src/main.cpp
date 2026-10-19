@@ -63,6 +63,7 @@ int main( int argc, char** argv )
         ( "with-prelude",  "With --declarations, list the prelude's declarations too" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "W",             "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
+        ( "debug",         "Keep assert; without it the condition is checked but never run" )
         ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
         ( "print-prelude", "Print the prelude every program sees, and exit" )
         ( "v,version",     "Print version information and exit" )
@@ -300,8 +301,16 @@ int main( int argc, char** argv )
     }
 
     // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
-    keel::Front_end front =
-        keel::run_front_end( file_id.value(), keel::Stage::Elaborated, sm, interner, literals, diagnostics, packages );
+    keel::Front_end front = keel::run_front_end(
+        file_id.value(),
+        keel::Stage::Elaborated,
+        args.count( "debug" ) ? keel::Build::Debug : keel::Build::Release,
+        sm,
+        interner,
+        literals,
+        diagnostics,
+        packages
+    );
     const keel::Program&               prog      = front.program;
     const keel::Ast&                   ast       = prog.ast;
     keel::Types&                       types     = front.types;

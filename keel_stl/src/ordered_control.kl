@@ -476,7 +476,10 @@ class ordered_control
     /// The owner's slot for the `i`th smallest key.
     public u64 slot_at( u64 i ) const
     {
-        assert( i < size() );
+        if( i >= size() )
+        {
+            panic( "index out of range" );
+        }
         u64 n = root_;
         u64 left = i;
 

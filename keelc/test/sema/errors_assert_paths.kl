@@ -1,0 +1,41 @@
+// An `assert` may not run - it is off without --debug - so the checks see its condition on one
+// path only, whatever the build. One refusal per function.
+class Box
+{
+    public Box()
+    {
+        n_ = 1;
+    }
+
+    i32 n_;
+};
+
+bool fill( out i32 x )
+{
+    x = 1;
+    return true;
+}
+
+bool consume( move Box _ )
+{
+    return true;
+}
+
+i32 read_after_out()
+{
+    i32 x;
+    assert( fill( out x ) );
+    return x;
+}
+
+void use_after_move()
+{
+    Box b = Box();
+    assert( consume( move b ) );
+    _ = consume( move b );
+}
+
+i32 main()
+{
+    return 0;
+}

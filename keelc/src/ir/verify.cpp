@@ -51,7 +51,9 @@ void check_operand( const Function& func, const Operand& operand, std::string_vi
         {
             errors.push_back( fmt::format( "{}: constant is not set", where ) );
         }
+        return;
 
+    case Operand_kind::Debug:
         return;
     }
 }

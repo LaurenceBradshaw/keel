@@ -8,4 +8,7 @@
 namespace keel
 {
 void simplify( Function& func, const Literal_pool& literals );
-}
+
+// Every `debug` branch condition becomes the constant `value`: true under --debug, false otherwise.
+void settle_debug( Function& func, Literal_id value );
+} // namespace keel

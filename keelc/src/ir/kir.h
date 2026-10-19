@@ -98,7 +98,8 @@ enum class Operand_kind : u8
 {
     Copy,
     Move, // M4 gives this meaning: the place is dead afterwards. Inert until then.
-    Constant
+    Constant,
+    Debug // true under --debug; settled after the checks, which see both paths
 };
 
 // A value being read.
@@ -110,6 +111,11 @@ struct Operand
     Place        place {};    // Copy and Move
     Literal_id   constant {}; // Constant
     Type_id      type {};
+
+    bool has_place() const
+    {
+        return kind == Operand_kind::Copy || kind == Operand_kind::Move;
+    }
 };
 
 enum class Rvalue_kind : u8

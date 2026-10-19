@@ -22,35 +22,38 @@ fn pick {
     let _13: void;
 
     bb0:
-        _3 = copy _1 != const 3
-        branch copy _3 -> bb1, bb2
+        goto -> bb1
 
     bb1:
+        _3 = copy _1 != const 3
+        branch copy _3 -> bb2, bb3
+
+    bb2:
         storage_live _4
         _5 = copy _2 as i32
         _6 = copy _5 as i64
         _7 = copy _6 == copy _2
-        branch copy _7 -> bb4, bb3
-
-    bb2:
-        assert_failed
+        branch copy _7 -> bb5, bb4
 
     bb3:
-        cast_failed
+        assert_failed
 
     bb4:
-        _4 = copy _5
-        _8 = copy _1 > copy _4
-        branch copy _8 -> bb5, bb6
+        cast_failed
 
     bb5:
+        _4 = copy _5
+        _8 = copy _1 > copy _4
+        branch copy _8 -> bb6, bb7
+
+    bb6:
         _10 = &init _9
         _11 = bytes "too big"
         _12 = call str(copy _10, copy _11, const 7)
         _13 = call fail(copy _9)
         unreachable
 
-    bb6:
+    bb7:
         _0 = copy _1
         storage_dead _4
         return

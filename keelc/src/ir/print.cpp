@@ -115,6 +115,8 @@ struct Printer
             // integer 0 or 1.
             return types.is_float( operand.type ) ? fmt::format( "const {}", literals.floating( operand.constant ) )
                                                   : fmt::format( "const {}", literals.integer( operand.constant ) );
+        case Operand_kind::Debug:
+            return "debug";
         }
 
         return "<bad operand>";
