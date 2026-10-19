@@ -195,7 +195,7 @@ static void file_bad_descriptor( void )
 // Each mapped `errno` value, and one that is not.
 static void error_kinds( void )
 {
-    const int codes[] = { ENOENT, EACCES, EPERM, EEXIST, EISDIR, ENOTDIR, EINTR, ENOMEM, EINVAL };
+    const int codes[] = { ENOENT, EACCES, EPERM, EEXIST, EISDIR, ENOTDIR, EINTR, ENOMEM, ENOTEMPTY, EINVAL };
     for( size_t i = 0; i < sizeof codes / sizeof codes[0]; i++ )
     {
         printf( "%d", kl_rt_error_kind( codes[i] ) );
@@ -257,6 +257,78 @@ static void file_write_keeps_order( void )
     }
 }
 
+// Each answer of `kl_rt_path_kind`, inside a fresh directory: missing covers `ENOTDIR` too.
+static void path_kinds( void )
+{
+    char dir[] = "/tmp/kl_rt_XXXXXX";
+    if( mkdtemp( dir ) == NULL || chdir( dir ) != 0 )
+    {
+        exit( 2 );
+    }
+
+    int32_t fd = -1;
+    if( kl_rt_file_open( (const uint8_t*) "a", 1, 1, &fd ) != 0 || kl_rt_file_close( fd ) != 0 )
+    {
+        exit( 2 );
+    }
+
+    const char* paths[] = { ".", "a", "a/b", "none", "/dev/null" };
+    for( size_t i = 0; i < sizeof paths / sizeof paths[0]; i++ )
+    {
+        int32_t       kind   = 9;
+        const int32_t status = kl_rt_path_kind( (const uint8_t*) paths[i], strlen( paths[i] ), &kind );
+        printf( "%d%d ", status, kind );
+    }
+
+    int32_t kind = 9;
+    printf( "%d %d", kl_rt_path_kind( (const uint8_t*) "a\0b", 3, &kind ), kind );
+
+    unlink( "a" );
+    rmdir( dir );
+}
+
+// A directory made, refused twice, listed, each delete refusing the other kind, then emptied.
+static void directory_round_trip( void )
+{
+    char dir[] = "/tmp/kl_rt_XXXXXX";
+    if( mkdtemp( dir ) == NULL || chdir( dir ) != 0 )
+    {
+        exit( 2 );
+    }
+
+    const uint8_t* d = (const uint8_t*) "d";
+    printf( "%d ", kl_rt_create_directory( d, 1 ) );
+    printf( "%d ", kl_rt_create_directory( d, 1 ) == EEXIST );
+
+    int32_t fd = -1;
+    if( kl_rt_file_open( (const uint8_t*) "d/x", 3, 1, &fd ) != 0 || kl_rt_file_close( fd ) != 0 )
+    {
+        exit( 2 );
+    }
+
+    uint64_t handle = 0;
+    printf( "%d ", kl_rt_directory_open( d, 1, &handle ) );
+
+    uint8_t* name = NULL;
+    uint64_t size = 9;
+    printf( "%d ", kl_rt_directory_next( handle, &name, &size ) );
+    printf( "%.*s ", (int) size, (const char*) name );
+    printf( "%d %llu ", kl_rt_directory_next( handle, &name, &size ), (unsigned long long) size );
+    kl_rt_directory_close( handle );
+
+    const uint8_t* x = (const uint8_t*) "d/x";
+    printf( "%d ", kl_rt_delete_directory( d, 1 ) == ENOTEMPTY );
+    printf( "%d ", kl_rt_delete_file( d, 1 ) == EISDIR );
+    printf( "%d ", kl_rt_delete_directory( x, 3 ) == ENOTDIR );
+    printf( "%d ", kl_rt_delete_file( x, 3 ) );
+    printf( "%d ", kl_rt_delete_file( x, 3 ) == ENOENT );
+    printf( "%d ", kl_rt_delete_directory( d, 1 ) );
+    printf( "%d ", kl_rt_delete_directory( d, 1 ) == ENOENT );
+    printf( "%d", kl_rt_directory_open( d, 1, &handle ) == ENOENT );
+
+    rmdir( dir );
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -299,7 +371,7 @@ int main( void )
     check_exit( "file_bad_descriptor", &r, false );
 
     r = run( error_kinds );
-    check( "error_kinds", "stdout", r.out, "122345670" );
+    check( "error_kinds", "stdout", r.out, "1223456780" );
     check_exit( "error_kinds", &r, false );
 
     r = run( input_fill_take );
@@ -314,12 +386,20 @@ int main( void )
     check( "file_write_keeps_order", "stdout", r.out, "abc" );
     check_exit( "file_write_keeps_order", &r, false );
 
+    r = run( path_kinds );
+    check( "path_kinds", "stdout", r.out, "02 01 00 00 03 22 9" );
+    check_exit( "path_kinds", &r, false );
+
+    r = run( directory_round_trip );
+    check( "directory_round_trip", "stdout", r.out, "0 1 0 0 x 0 0 1 1 1 0 1 0 1 1" );
+    check_exit( "directory_round_trip", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "12 runtime tests passed\n" );
+    printf( "14 runtime tests passed\n" );
     return 0;
 }

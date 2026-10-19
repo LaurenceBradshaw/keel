@@ -1,0 +1,92 @@
+// `kl::path`'s pure operations: joining, parent, file name and extension, each edge case returning
+// its own code. Nothing here touches the file system.
+import kl::os;
+import kl::string;
+
+bool is( const ref textual got, str want )
+{
+    return kl::string( got ) == kl::string( want );
+}
+
+i32 main()
+{
+    kl::path a = "a";
+
+    if( !is( a / "b", "a/b" ) )
+    {
+        return 1;
+    }
+
+    // A trailing `/` is not doubled.
+    if( !is( kl::path::of( "a/" ) / "b", "a/b" ) )
+    {
+        return 2;
+    }
+
+    // An absolute part replaces the path.
+    if( !is( a / "/abs", "/abs" ) )
+    {
+        return 3;
+    }
+
+    if( !is( kl::path::of( "" ) / "b", "b" ) )
+    {
+        return 4;
+    }
+
+    // A `kl::string` joins as a literal does.
+    if( !is( a / kl::string( "c" ), "a/c" ) )
+    {
+        return 5;
+    }
+
+    if( !is( kl::path::of( "a/b" ).parent(), "a" ) )
+    {
+        return 6;
+    }
+
+    if( !is( kl::path::of( "/a" ).parent(), "/" ) || !is( kl::path::of( "/" ).parent(), "/" ) )
+    {
+        return 7;
+    }
+
+    if( !is( a.parent(), "" ) )
+    {
+        return 8;
+    }
+
+    // Held as written: nothing is normalised.
+    if( !is( kl::path::of( "a/../b" ).parent(), "a/.." ) )
+    {
+        return 9;
+    }
+
+    if( !is( kl::path::of( "a/b.txt" ).file_name(), "b.txt" ) || !is( a.file_name(), "a" ) )
+    {
+        return 10;
+    }
+
+    if( !is( kl::path::of( "a/" ).file_name(), "" ) )
+    {
+        return 11;
+    }
+
+    if( !is( kl::path::of( "d/b.tar.gz" ).extension(), ".gz" ) )
+    {
+        return 12;
+    }
+
+    if( !is( kl::path::of( "b.txt" ).extension(), ".txt" ) )
+    {
+        return 13;
+    }
+
+    // A leading dot is not an extension, nor are `.` and `..`.
+    if( !is( kl::path::of( "d/.bashrc" ).extension(), "" ) || !is( kl::path::of( "." ).extension(), "" )
+        || !is( kl::path::of( "d/.." ).extension(), "" ) || !is( a.extension(), "" ) )
+    {
+        return 14;
+    }
+
+    return 0;
+}

@@ -1,0 +1,172 @@
+// `kl::os` directories and kinds: a directory created, filled, listed, refused by each wrong call
+// with its own `file_error`, then emptied and deleted. Each check returns its own code. The program
+// runs in its own emptied directory.
+import kl::os;
+import kl::string;
+
+// The failure as a number: 1 to 5 for `not_found` to `not_directory`, 8 for `not_empty`, 9 for any
+// `os` failure, and 0 for success.
+i32 reason( result<void, kl::file_error> r )
+{
+    switch( r )
+    {
+        case result::ok:
+            return 0;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::file_error::not_found:
+                    return 1;
+                case kl::file_error::denied:
+                    return 2;
+                case kl::file_error::exists:
+                    return 3;
+                case kl::file_error::is_directory:
+                    return 4;
+                case kl::file_error::not_directory:
+                    return 5;
+                case kl::file_error::not_empty:
+                    return 8;
+                case kl::file_error::os( inner ):
+                    return 9;
+            }
+    }
+}
+
+// What `list_directory` refused `name` with, as `reason` numbers it, or 0 if it listed.
+i32 list_reason( str name )
+{
+    switch( move kl::list_directory( name ) )
+    {
+        case result::ok( entries ):
+            return 0;
+        case result::err( e ):
+            return reason( result::err( e ) );
+    }
+}
+
+bool is( const ref textual got, str want )
+{
+    return kl::string( got ) == kl::string( want );
+}
+
+i32 main()
+{
+    if( reason( kl::create_directory( "d" ) ) != 0 )
+    {
+        return 1;
+    }
+
+    if( reason( kl::create_directory( "d" ) ) != 3 )
+    {
+        return 2;
+    }
+
+    // An empty directory lists nothing.
+    switch( move kl::list_directory( "d" ) )
+    {
+        case result::ok( entries ):
+            if( !entries.is_empty() )
+            {
+                return 3;
+            }
+            break;
+        case result::err( e ):
+            return 4;
+    }
+
+    if( reason( kl::write_file( "d/a.txt", "a" ) ) != 0 || reason( kl::write_file( "d/b.txt", "b" ) ) != 0 )
+    {
+        return 5;
+    }
+
+    // Both entries, joined onto the directory, in whatever order the system gives.
+    switch( move kl::list_directory( "d" ) )
+    {
+        case result::ok( entries ):
+            const ref kl::path[] run = entries.as_run();
+            if( run.size != 2 )
+            {
+                return 6;
+            }
+            if( !( is( run[0], "d/a.txt" ) && is( run[1], "d/b.txt" ) )
+                && !( is( run[0], "d/b.txt" ) && is( run[1], "d/a.txt" ) ) )
+            {
+                return 7;
+            }
+            break;
+        case result::err( e ):
+            return 8;
+    }
+
+    if( !kl::exists( "d" ) || !kl::is_directory( "d" ) || kl::is_file( "d" ) )
+    {
+        return 9;
+    }
+
+    if( !kl::is_file( "d/a.txt" ) || kl::is_directory( "d/a.txt" ) )
+    {
+        return 10;
+    }
+
+    // A path through a file is missing, not an error.
+    if( kl::exists( "missing" ) || kl::exists( "d/a.txt/x" ) )
+    {
+        return 11;
+    }
+
+    // `/dev/null` is a device: there, but neither a file nor a directory.
+    if( !kl::exists( "/dev/null" ) || kl::is_file( "/dev/null" ) || kl::is_directory( "/dev/null" ) )
+    {
+        return 12;
+    }
+
+    // Each wrong call, refused with its own error.
+    if( list_reason( "missing" ) != 1 || list_reason( "d/a.txt" ) != 5 )
+    {
+        return 13;
+    }
+
+    if( reason( kl::create_directory( "d/a.txt" ) ) != 3 || reason( kl::create_directory( "missing/x" ) ) != 1 )
+    {
+        return 14;
+    }
+
+    if( reason( kl::delete_directory( "d" ) ) != 8 )
+    {
+        return 15;
+    }
+
+    if( reason( kl::delete_file( "d" ) ) != 4 )
+    {
+        return 16;
+    }
+
+    if( reason( kl::delete_directory( "d/a.txt" ) ) != 5 )
+    {
+        return 17;
+    }
+
+    // Emptied, then deleted, then each delete again finds nothing.
+    if( reason( kl::delete_file( "d/a.txt" ) ) != 0 || reason( kl::delete_file( "d/b.txt" ) ) != 0 )
+    {
+        return 18;
+    }
+
+    if( reason( kl::delete_file( "d/a.txt" ) ) != 1 )
+    {
+        return 19;
+    }
+
+    if( reason( kl::delete_directory( "d" ) ) != 0 || reason( kl::delete_directory( "d" ) ) != 1 )
+    {
+        return 20;
+    }
+
+    if( kl::exists( "d" ) )
+    {
+        return 21;
+    }
+
+    return 0;
+}

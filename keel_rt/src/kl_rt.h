@@ -16,7 +16,8 @@ enum kl_rt_kind
     KL_RT_IS_DIRECTORY  = 4,
     KL_RT_NOT_DIRECTORY = 5,
     KL_RT_INTERRUPTED   = 6,
-    KL_RT_OUT_OF_MEMORY = 7
+    KL_RT_OUT_OF_MEMORY = 7,
+    KL_RT_NOT_EMPTY     = 8
 };
 
 void*          kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message );
@@ -37,5 +38,12 @@ int32_t        kl_rt_file_close( int32_t fd );
 int32_t        kl_rt_error_kind( int32_t code );
 int32_t        kl_rt_input_fill( uint8_t** data, uint64_t* size );
 void           kl_rt_input_take( uint64_t count );
+int32_t        kl_rt_path_kind( const uint8_t* path, uint64_t size, int32_t* kind );
+int32_t        kl_rt_create_directory( const uint8_t* path, uint64_t size );
+int32_t        kl_rt_delete_directory( const uint8_t* path, uint64_t size );
+int32_t        kl_rt_delete_file( const uint8_t* path, uint64_t size );
+int32_t        kl_rt_directory_open( const uint8_t* path, uint64_t size, uint64_t* handle );
+int32_t        kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* size );
+void           kl_rt_directory_close( uint64_t handle );
 
 #endif // KL_RT_H

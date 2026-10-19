@@ -3,6 +3,7 @@
 
 #define _DEFAULT_SOURCE
 #include "kl_rt.h"
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -12,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
@@ -285,6 +287,8 @@ int32_t kl_rt_error_kind( int32_t code )
         return KL_RT_INTERRUPTED;
     case ENOMEM:
         return KL_RT_OUT_OF_MEMORY;
+    case ENOTEMPTY:
+        return KL_RT_NOT_EMPTY;
     default:
         return KL_RT_OTHER;
     }
@@ -317,4 +321,139 @@ int32_t kl_rt_input_fill( uint8_t** data, uint64_t* size )
 void kl_rt_input_take( uint64_t count )
 {
     kl_rt_input_start += count;
+}
+
+int32_t kl_rt_path_kind( const uint8_t* path, uint64_t size, int32_t* kind )
+{
+    int   error = 0;
+    char* name  = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    struct stat st;
+    if( stat( name, &st ) == -1 )
+    {
+        int saved = errno;
+        free( name );
+        if( saved == ENOENT || saved == ENOTDIR )
+        {
+            *kind = 0;
+            return 0;
+        }
+        return saved;
+    }
+
+    if( S_ISREG( st.st_mode ) )
+    {
+        *kind = 1;
+    }
+    else if( S_ISDIR( st.st_mode ) )
+    {
+        *kind = 2;
+    }
+    else
+    {
+        *kind = 3;
+    }
+
+    free( name );
+    return 0;
+}
+
+int32_t kl_rt_create_directory( const uint8_t* path, uint64_t size )
+{
+    int   error = 0;
+    char* name  = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    int saved = mkdir( name, 0777 ) == -1 ? errno : 0;
+    free( name );
+    return saved;
+}
+
+int32_t kl_rt_delete_directory( const uint8_t* path, uint64_t size )
+{
+    int   error = 0;
+    char* name  = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    int saved = rmdir( name ) == -1 ? errno : 0;
+    free( name );
+    return saved;
+}
+
+int32_t kl_rt_delete_file( const uint8_t* path, uint64_t size )
+{
+    int   error = 0;
+    char* name  = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    int saved = unlink( name ) == -1 ? errno : 0;
+    free( name );
+    return saved;
+}
+
+int32_t kl_rt_directory_open( const uint8_t* path, uint64_t size, uint64_t* handle )
+{
+    int   error = 0;
+    char* name  = c_path( path, size, &error );
+    if( name == NULL )
+    {
+        return error;
+    }
+
+    DIR* dir = opendir( name );
+    if( dir == NULL )
+    {
+        error = errno;
+        free( name );
+        return error;
+    }
+
+    *handle = (uint64_t) (uintptr_t) dir;
+    free( name );
+    return 0;
+}
+
+int32_t kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* size )
+{
+    DIR* dir = (DIR*) (uintptr_t) handle;
+
+    while( true )
+    {
+        // Cleared first: readdir returns NULL both at the end and on failure.
+        errno                = 0;
+        struct dirent* entry = readdir( dir );
+        if( entry == NULL )
+        {
+            *size = 0;
+            return errno;
+        }
+
+        if( strcmp( entry->d_name, "." ) != 0 && strcmp( entry->d_name, ".." ) != 0 )
+        {
+            // Lent until the next call on this handle.
+            *name = (uint8_t*) entry->d_name;
+            *size = strlen( entry->d_name );
+            return 0;
+        }
+    }
+}
+
+void kl_rt_directory_close( uint64_t handle )
+{
+    DIR* dir = (DIR*) (uintptr_t) handle;
+
+    closedir( dir );
 }

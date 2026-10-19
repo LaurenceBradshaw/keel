@@ -111,7 +111,19 @@ order.</dd>
 <dt><a href="os.html#os_error"><code>os_error</code></a> <span class="kind">enum</span></dt>
 <dd>A failure any call to the system can meet.</dd>
 <dt><a href="os.html#file_error"><code>file_error</code></a> <span class="kind">enum</span></dt>
-<dd>Why a file could not be opened, read or written.</dd>
+<dd>Why a call on a file, a path or a directory failed.</dd>
+<dt><a href="os.html#path"><code>path</code></a> <span class="kind">class</span></dt>
+<dd>A file-system path, held as written and never normalised: <code>a/../b</code> stays as it is.</dd>
+<dt><a href="os.html#path_kind"><code>path_kind</code></a> <span class="kind">enum</span></dt>
+<dd>What, if anything, is at a path. A symbolic link counts as what it points to.</dd>
+<dt><a href="os.html#path_kind_of"><code>path_kind_of</code></a> <span class="kind">function</span></dt>
+<dd>What is at <code>name</code>. Nothing there is <code>path_kind::missing</code>, not an error.</dd>
+<dt><a href="os.html#exists"><code>exists</code></a> <span class="kind">function</span></dt>
+<dd>Whether anything is at <code>name</code>; <code>false</code> too when the system cannot say.</dd>
+<dt><a href="os.html#is_file"><code>is_file</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>name</code> is a regular file; <code>false</code> too when the system cannot say.</dd>
+<dt><a href="os.html#is_directory"><code>is_directory</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>name</code> is a directory; <code>false</code> too when the system cannot say.</dd>
 <dt><a href="os.html#file_mode"><code>file_mode</code></a> <span class="kind">enum</span></dt>
 <dd>How <code>file::open</code> opens a file. Every mode but <code>read</code> creates a file that does not exist.</dd>
 <dt><a href="os.html#file"><code>file</code></a> <span class="kind">class</span></dt>
@@ -120,6 +132,17 @@ order.</dd>
 <dd>The whole of the file at <code>name</code>.</dd>
 <dt><a href="os.html#write_file"><code>write_file</code></a> <span class="kind">function</span></dt>
 <dd>Writes <code>data</code> to the file at <code>name</code>, replacing what it held, or creating it.</dd>
+<dt><a href="os.html#delete_file"><code>delete_file</code></a> <span class="kind">function</span></dt>
+<dd>Deletes the file at <code>name</code>. A directory is <code>file_error::is_directory</code>.</dd>
+<dt><a href="os.html#create_directory"><code>create_directory</code></a> <span class="kind">function</span></dt>
+<dd>Creates the directory <code>name</code>, whose parent must exist. Anything already there is
+<code>file_error::exists</code>.</dd>
+<dt><a href="os.html#delete_directory"><code>delete_directory</code></a> <span class="kind">function</span></dt>
+<dd>Deletes the empty directory <code>name</code>. One still holding something is <code>file_error::not_empty</code>,
+and a file is <code>file_error::not_directory</code>.</dd>
+<dt><a href="os.html#list_directory"><code>list_directory</code></a> <span class="kind">function</span></dt>
+<dd>Every entry in the directory <code>name</code> but <code>.</code> and <code>..</code>, each joined onto <code>name</code>, in the system's
+order.</dd>
 </dl>
 </section>
 <section class="module">

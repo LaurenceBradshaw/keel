@@ -3,8 +3,9 @@
 // directory, so the files it makes go nowhere else.
 import kl::os;
 
-// Why reading `name` failed, as a number: 1 to 5 for `not_found` to `not_directory`, 10 plus the
-// code for `os( other( code ) )`, 6 and 7 for the other `os` kinds, and 0 if it was read.
+// Why reading `name` failed, as a number: 1 to 5 for `not_found` to `not_directory`, 8 for
+// `not_empty`, 6 and 7 for the other `os` kinds, 10 plus the code for `os( other( code ) )`, and 0
+// if it was read.
 i32 reason( kl::file_error e )
 {
     switch( e )
@@ -19,6 +20,8 @@ i32 reason( kl::file_error e )
             return 4;
         case kl::file_error::not_directory:
             return 5;
+        case kl::file_error::not_empty:
+            return 8;
         case kl::file_error::os( inner ):
             switch( inner )
             {

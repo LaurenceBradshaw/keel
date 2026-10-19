@@ -1,9 +1,10 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Files, through the runtime's `kl_rt_file_*` calls. Each call answers 0 or an `errno` value,
-// which only the runtime turns into a kind, since the numbers differ between systems.
+// Files, paths and directories, through the runtime's calls. Each call answers 0 or an `errno`
+// value, which only the runtime turns into a kind, since the numbers differ between systems.
 
+import list;
 import string;
 
 // The runtime's calls; a run crosses as its data and size.
@@ -14,6 +15,13 @@ private extern i32 kl_rt_file_close( i32 fd );
 private extern i32 kl_rt_error_kind( i32 code );
 private extern i32 kl_rt_input_fill( u8[*]* data, u64* size );
 private extern void kl_rt_input_take( u64 count );
+private extern i32 kl_rt_path_kind( const ref u8[] path, i32* kind );
+private extern i32 kl_rt_create_directory( const ref u8[] path );
+private extern i32 kl_rt_delete_directory( const ref u8[] path );
+private extern i32 kl_rt_delete_file( const ref u8[] path );
+private extern i32 kl_rt_directory_open( const ref u8[] path, u64* handle );
+private extern i32 kl_rt_directory_next( u64 handle, u8[*]* name, u64* size );
+private extern void kl_rt_directory_close( u64 handle );
 
 /// A failure any call to the system can meet.
 enum os_error
@@ -26,19 +34,22 @@ enum os_error
     other( i32 code )
 };
 
-/// Why a file could not be opened, read or written.
+/// Why a call on a file, a path or a directory failed.
 enum file_error
 {
     /// Nothing exists at the path.
     not_found,
     /// The file or a directory on its path does not allow it.
     denied,
-    /// The file already exists, and `file_mode::create_new` was asked for.
+    /// Something is already at the path, and `file_mode::create_new` or `create_directory` was
+    /// asked for.
     exists,
     /// The path names a directory where a file was wanted.
     is_directory,
-    /// A name on the path that should be a directory is not one.
+    /// A name on the path, or the path itself, should be a directory and is not one.
     not_directory,
+    /// The directory to delete still holds something.
+    not_empty,
     /// A failure that is not particular to files.
     os( os_error error )
 };
@@ -84,8 +95,205 @@ private file_error file_error_of( i32 code )
             return file_error::is_directory;
         case 5:
             return file_error::not_directory;
+        case 8:
+            return file_error::not_empty;
         default:
             return file_error::os( os_error_of( code ) );
+    }
+}
+
+// The index of the last `/` in `text`, or `text.size` when there is none.
+private u64 last_slash( const ref u8[] text )
+{
+    u64 i = text.size;
+    while( i > 0 )
+    {
+        i -= 1;
+
+        if( text[i] == '/' )
+        {
+            return i;
+        }
+    }
+
+    return text.size;
+}
+
+/// A file-system path, held as written and never normalised: `a/../b` stays as it is.
+///
+/// A literal converts to one, so `kl::path p = "a";` works.
+class path implements textual, from<str>
+{
+    private path( move string text )
+    {
+        text_ = move text;
+    }
+
+    /// The path `text`, which is how a literal becomes one.
+    public static path from( str text )
+    {
+        return path::of( text );
+    }
+
+    /// The path `text`, from a `kl::string`, another path or anything `textual`.
+    public static path of( const ref textual text )
+    {
+        return path( string( text ) );
+    }
+
+    /// The path's bytes, as written.
+    public const ref u8[] as_text() const
+    {
+        return text_.as_text();
+    }
+
+    /// `part` joined on with one `/`. An absolute `part`, or an empty path, gives `part` alone.
+    public path operator/( const ref textual part ) const
+    {
+        const ref u8[] part_bytes = part.as_text();
+        if( text_.is_empty() || ( part_bytes.size != 0 && part_bytes[0] == '/' ) )
+        {
+            return path::of( part );
+        }
+
+        string joined = string( text_ );
+        joined += text_.ends_with( "/" ) ? "" : "/";
+        joined.append( part_bytes );
+        return path( move joined );
+    }
+
+    /// Everything before the last `/`: `a/b` gives `a`, `/a` and `/` give `/`, and `a` gives the
+    /// empty path.
+    public path parent() const
+    {
+        const ref u8[] bytes = text_.as_text();
+        u64 slash = last_slash( bytes );
+
+        if( slash == bytes.size )
+        {
+            return path::of( "" );
+        }
+
+        return path( text_.substring( 0, slash == 0 ? 1 : slash ) );
+    }
+
+    /// Everything after the last `/`, or the whole path with none: `a/` has the empty name.
+    public string file_name() const
+    {
+        const ref u8[] bytes = text_.as_text();
+        u64 slash = last_slash( bytes );
+
+        if( slash == bytes.size )
+        {
+            return string( text_ );
+        }
+
+        return text_.substring( slash + 1, bytes.size - slash - 1 );
+    }
+
+    /// The file name from its last `.`, the dot included: `b.tar.gz` gives `.gz`. Empty with no
+    /// dot, and a leading dot does not count, so `.bashrc`, `.` and `..` have none.
+    public string extension() const
+    {
+        string name = file_name();
+
+        if( name == ".." )
+        {
+            return string();
+        }
+
+        u64 dot = name.size();
+        while( dot > 1 )
+        {
+            dot--;
+
+            if( name[dot] == '.' )
+            {
+                return name.substring( dot, name.size() - dot );
+            }
+        }
+
+        return string();
+    }
+
+    private string text_;
+};
+
+/// What, if anything, is at a path. A symbolic link counts as what it points to.
+enum path_kind
+{
+    /// Nothing, including a path through something that is not a directory.
+    missing,
+    /// A regular file.
+    file,
+    /// A directory.
+    directory,
+    /// Anything else, such as a device or a pipe.
+    other
+};
+
+/// What is at `name`. Nothing there is `path_kind::missing`, not an error.
+result<path_kind, file_error> path_kind_of( const ref textual name )
+{
+    i32 kind = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_path_kind( name.as_text(), &kind );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    switch( kind )
+    {
+        case 1:
+            return result::ok( path_kind::file );
+        case 2:
+            return result::ok( path_kind::directory );
+        case 3:
+            return result::ok( path_kind::other );
+        default:
+            return result::ok( path_kind::missing );
+    }
+}
+
+/// Whether anything is at `name`; `false` too when the system cannot say.
+bool exists( const ref textual name )
+{
+    switch( path_kind_of( name ) )
+    {
+        case result::ok( kind ):
+            return kind != path_kind::missing;
+        case result::err( e ):
+            return false;
+    }
+}
+
+/// Whether `name` is a regular file; `false` too when the system cannot say.
+bool is_file( const ref textual name )
+{
+    switch( path_kind_of( name ) )
+    {
+        case result::ok( kind ):
+            return kind == path_kind::file;
+        case result::err( e ):
+            return false;
+    }
+}
+
+/// Whether `name` is a directory; `false` too when the system cannot say.
+bool is_directory( const ref textual name )
+{
+    switch( path_kind_of( name ) )
+    {
+        case result::ok( kind ):
+            return kind == path_kind::directory;
+        case result::err( e ):
+            return false;
     }
 }
 
@@ -357,4 +565,112 @@ result<void, file_error> write_file( const ref textual name, const ref textual d
 {
     file f = try file::open( name, file_mode::write );
     return f.write( data );
+}
+
+/// Deletes the file at `name`. A directory is `file_error::is_directory`.
+result<void, file_error> delete_file( const ref textual name )
+{
+    i32 status = 0;
+    unsafe
+    {
+        status = kl_rt_delete_file( name.as_text() );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    return result::ok();
+}
+
+/// Creates the directory `name`, whose parent must exist. Anything already there is
+/// `file_error::exists`.
+result<void, file_error> create_directory( const ref textual name )
+{
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_create_directory( name.as_text() );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    return result::ok();
+}
+
+/// Deletes the empty directory `name`. One still holding something is `file_error::not_empty`,
+/// and a file is `file_error::not_directory`.
+result<void, file_error> delete_directory( const ref textual name )
+{
+    i32 status = 0;
+    unsafe
+    {
+        status = kl_rt_delete_directory( name.as_text() );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    return result::ok();
+}
+
+/// Every entry in the directory `name` but `.` and `..`, each joined onto `name`, in the system's
+/// order.
+result<list<path>, file_error> list_directory( const ref textual name )
+{
+    u64 handle = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_directory_open( name.as_text(), &handle );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    const path base = path::of( name );
+    list<path> entries = list<path>();
+
+    while( true )
+    {
+        u8[*] bytes = nullptr;
+        u64 size = 0;
+        string entry = string();
+
+        unsafe
+        {
+            status = kl_rt_directory_next( handle, &bytes, &size );
+
+            entry.append( bytes[0..size] );
+        }
+
+        if( status != 0 || size == 0 )
+        {
+            break;
+        }
+
+        entries.push( base / entry );
+    }
+
+    unsafe
+    {
+        kl_rt_directory_close( handle );
+    }
+
+    if( status != 0 )
+    {
+        return result::err( file_error_of( status ) );
+    }
+
+    return result::ok( move entries );
 }
