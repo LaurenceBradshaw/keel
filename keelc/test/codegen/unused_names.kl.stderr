@@ -1,28 +1,28 @@
-warning: unused parameter `unused`
+warning: unused parameter `unused` [-Wunused-parameter]
   --> codegen/unused_names.kl:59:19
    |
 59 | void ignores( u64 unused )
    |                   ^^^^^^ name it `_` if it is unused on purpose
 
-warning: unused variable `from_call`
+warning: unused variable `from_call` [-Wunused-variable]
    --> codegen/unused_names.kl:103:11
     |
 103 |     u64   from_call = noisy( 1 );
     |           ^^^^^^^^^ write `_ = noisy( 1 );` if only the initialiser is wanted
 
-warning: unused variable `constant`
+warning: unused variable `constant` [-Wunused-variable]
    --> codegen/unused_names.kl:104:11
     |
 104 |     u64   constant  = 3;
     |           ^^^^^^^^ write `_ = 3;` if only the initialiser is wanted
 
-warning: unused variable `p`
+warning: unused variable `p` [-Wunused-variable]
    --> codegen/unused_names.kl:105:11
     |
 105 |     Point p         = Point { 1, 2 };
     |           ^ write `_ = Point { 1, 2 };` if only the initialiser is wanted
 
-warning: unused variable `seven`
+warning: unused variable `seven` [-Wunused-variable]
    --> codegen/unused_names.kl:107:11
     |
 107 |     u64   seven     = q.seven();

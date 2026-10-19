@@ -430,6 +430,7 @@ void Literals::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id l
                             : ( op == Token_kind::Greater || op == Token_kind::Greater_equal || op == Token_kind::Bang_equal );
 
         reporter_.warn_at(
+            Warning::Constant_comparison,
             ast_.span( id ),
             fmt::format( "this comparison is always {}", answer ? "true" : "false" ),
             fmt::format(

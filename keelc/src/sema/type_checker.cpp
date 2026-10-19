@@ -215,7 +215,10 @@ void report_unused(
             }
 
             reporter.warn_at(
-                ast.name_span( unused ), fmt::format( "unused parameter `{}`", name ), "name it `_` if it is unused on purpose"
+                Warning::Unused_parameter,
+                ast.name_span( unused ),
+                fmt::format( "unused parameter `{}`", name ),
+                "name it `_` if it is unused on purpose"
             );
             continue;
         }
@@ -229,6 +232,7 @@ void report_unused(
 
         const Node_id init = ast.initialiser( unused );
         reporter.warn_at(
+            Warning::Unused_variable,
             ast.name_span( unused ),
             fmt::format( "unused variable `{}`", name ),
             init.is_valid()

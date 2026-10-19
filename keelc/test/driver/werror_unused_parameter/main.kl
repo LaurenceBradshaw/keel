@@ -1,0 +1,10 @@
+// -Werror=<name> makes that warning an error: Keel refuses the program itself.
+i32 f( i32 a )
+{
+    return 0;
+}
+
+i32 main()
+{
+    return f( 1 );
+}

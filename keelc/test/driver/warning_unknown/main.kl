@@ -1,0 +1,5 @@
+// A -W flag naming no warning is a usage error, refused before anything is loaded.
+i32 main()
+{
+    return 0;
+}

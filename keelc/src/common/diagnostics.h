@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <array>
 #include <map>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 #include "common/source_manager.h"
 #include "common/span.h"
@@ -18,13 +21,26 @@ enum class Severity
     Note
 };
 
+enum class Warning : u8
+{
+    Unused_parameter,
+    Unused_variable,
+    Void_variable,
+    Constant_comparison
+};
+
+std::string_view warning_name( Warning which );
+// Empty for a name no warning has.
+std::optional<Warning> warning_named( std::string_view name );
+
 struct Diagnostic
 {
-    Severity    severity;
-    Span        span;
-    std::string message;
-    std::string help   = {}; // Empty when no help is available.
-    bool        syntax = false;
+    Severity               severity;
+    Span                   span;
+    std::string            message;
+    std::string            help    = {}; // Empty when no help is available.
+    bool                   syntax  = false;
+    std::optional<Warning> warning = {}; // Set on a warning, and on an error that -Werror made of one
 };
 
 // One mistake gets one error. Errors that only follow from another are dropped when rendered or
@@ -43,7 +59,11 @@ public:
     void syntax_error( Span span, std::string message, std::string help = {} );
     // A brace the lexer could not pair: its file keeps this and one other error.
     void unbalanced( Span span, std::string message, std::string help = {} );
-    void warning( Span span, std::string message, std::string help = {} );
+    void warning( Warning which, Span span, std::string message, std::string help = {} );
+
+    // flag is what follows -W, read left to right as the command line gives them; false for a name
+    // no warning has.
+    bool apply_warning_flag( std::string_view flag );
 
     // The file's token spans, in order, so a syntax error can claim them.
     void set_token_bounds( File_id file, std::vector<Span> bounds );
@@ -68,10 +88,19 @@ private:
     void              drop_claimed( std::vector<bool>& keep ) const;
     void              keep_first_after_unbalanced( std::vector<bool>& keep ) const;
 
+    enum class Level : u8
+    {
+        On, // first, so a value-initialised levels_ has every warning on
+        Off,
+        Error
+    };
+
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
     std::vector<Span>                silenced_;
-    std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
+    std::map<u32, u32>               unbalanced_;         // mapping a file to the index of its brace report in items_
+    std::array<Level, 4>             levels_ {};          // indexed by Warning
+    bool                             all_errors_ = false; // a bare -Werror
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner

@@ -357,6 +357,8 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--runtime <path>` | Link this runtime library instead of the installed one |
 | `--package name=<dir>` | Make a package importable as `name`; may be repeated |
+| `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison` |
+| `-Werror` / `-Werror=<name>` | Make every warning, or that one, an error |
 
 `keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS`.
 

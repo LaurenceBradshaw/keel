@@ -1,0 +1,7 @@
+error: unused parameter `a` [-Werror=unused-parameter]
+ --> driver/werror_unused_parameter/main.kl:2:12
+  |
+2 | i32 f( i32 a )
+  |            ^ name it `_` if it is unused on purpose
+
+1 error generated

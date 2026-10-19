@@ -1,4 +1,4 @@
-warning: this comparison is always false
+warning: this comparison is always false [-Wconstant-comparison]
   --> sema/errors_constant_chain.kl:16:12
    |
 16 |     return n < 0 - 1;

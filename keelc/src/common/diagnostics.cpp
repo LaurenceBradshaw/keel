@@ -108,9 +108,84 @@ void Diagnostics::unbalanced( Span span, std::string message, std::string help )
     unbalanced_[span.file.v] = static_cast<u32>( items_.size() - 1 );
 }
 
-void Diagnostics::warning( Span span, std::string message, std::string help )
+std::string_view warning_name( Warning which )
 {
-    items_.push_back( { Severity::Warning, span, std::move( message ), std::move( help ) } );
+    switch( which )
+    {
+    case Warning::Unused_parameter:
+        return "unused-parameter";
+    case Warning::Unused_variable:
+        return "unused-variable";
+    case Warning::Void_variable:
+        return "void-variable";
+    case Warning::Constant_comparison:
+        return "constant-comparison";
+    }
+    return "";
+}
+
+std::optional<Warning> warning_named( std::string_view name )
+{
+    for( u8 i = 0; i <= static_cast<u8>( Warning::Constant_comparison ); ++i )
+    {
+        if( warning_name( static_cast<Warning>( i ) ) == name )
+        {
+            return static_cast<Warning>( i );
+        }
+    }
+    return std::nullopt;
+}
+
+void Diagnostics::warning( Warning which, Span span, std::string message, std::string help )
+{
+    const Level level = levels_[static_cast<u8>( which )];
+
+    if( level == Level::Off )
+    {
+        return;
+    }
+
+    const Severity severity = level == Level::Error || all_errors_ ? Severity::Error : Severity::Warning;
+    items_.push_back( { severity, span, std::move( message ), std::move( help ), false, which } );
+}
+
+bool Diagnostics::apply_warning_flag( std::string_view flag )
+{
+    if( flag == "error" )
+    {
+        all_errors_ = true;
+        return true;
+    }
+
+    Level            set  = Level::On;
+    std::string_view name = flag;
+
+    if( flag.starts_with( "error=" ) )
+    {
+        set  = Level::Error;
+        name = flag.substr( 6 );
+    }
+    else if( flag.starts_with( "no-" ) )
+    {
+        set  = Level::Off;
+        name = flag.substr( 3 );
+    }
+
+    const std::optional<Warning> which = warning_named( name );
+
+    if( !which )
+    {
+        return false;
+    }
+
+    Level& level = levels_[static_cast<u8>( *which )];
+
+    // -W<name> undoes a -Wno-<name>, never an -Werror=<name>.
+    if( set != Level::On || level == Level::Off )
+    {
+        level = set;
+    }
+    return true;
 }
 
 void Diagnostics::set_token_bounds( File_id file, std::vector<Span> bounds )
@@ -349,7 +424,13 @@ void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colo
 
         const Palette p = palette_for( d.severity, colour );
 
-        out << p.severity << severity_label( d.severity ) << ": " << p.reset << p.message << d.message << p.reset << "\n";
+        out << p.severity << severity_label( d.severity ) << ": " << p.reset << p.message << d.message;
+
+        if( d.warning )
+        {
+            out << ( d.severity == Severity::Error ? " [-Werror=" : " [-W" ) << warning_name( *d.warning ) << "]";
+        }
+        out << p.reset << "\n";
 
         if( !d.span.is_valid() )
         {
@@ -500,7 +581,7 @@ TEST_CASE( "diagnostics_counts_errors_only", "[common][diagnostics]" )
     const File_id  f = sm.add_file( "a.kl", "i32 x;" );
 
     Diagnostics diags;
-    diags.warning( Span { f, 0, 3 }, "a warning" );
+    diags.warning( Warning::Unused_variable, Span { f, 0, 3 }, "a warning" );
 
     REQUIRE_FALSE( diags.has_errors() );
     REQUIRE( diags.error_count() == 0 );
@@ -542,10 +623,68 @@ TEST_CASE( "diagnostics_severity_labels", "[common][diagnostics]" )
     REQUIRE( err.find( "error: the error" ) != std::string::npos );
 
     Diagnostics warns;
-    warns.warning( Span { f, 0, 3 }, "the warning" );
+    warns.warning( Warning::Unused_variable, Span { f, 0, 3 }, "the warning" );
     const std::string warn = render_to_string( warns, sm );
     REQUIRE( warn.find( "warning: the warning" ) != std::string::npos );
     REQUIRE( warn.find( "error:" ) == std::string::npos );
+}
+
+TEST_CASE( "diagnostics_warning_flags", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f    = sm.add_file( "a.kl", "i32 x;" );
+    const Span     span = Span { f, 4, 5 };
+
+    SECTION( "a warning is named" )
+    {
+        Diagnostics diags;
+        diags.warning( Warning::Unused_variable, span, "unused" );
+        REQUIRE( render_to_string( diags, sm ).find( "warning: unused [-Wunused-variable]\n" ) != std::string::npos );
+    }
+
+    SECTION( "-Wno-<name> drops it, and -W<name> brings it back" )
+    {
+        Diagnostics diags;
+        REQUIRE( diags.apply_warning_flag( "no-unused-variable" ) );
+        diags.warning( Warning::Unused_variable, span, "unused" );
+        REQUIRE( render_to_string( diags, sm ).empty() );
+
+        REQUIRE( diags.apply_warning_flag( "unused-variable" ) );
+        diags.warning( Warning::Unused_variable, span, "unused" );
+        REQUIRE_FALSE( render_to_string( diags, sm ).empty() );
+    }
+
+    SECTION( "-Werror=<name> makes that one an error, and -W<name> after it does not undo it" )
+    {
+        Diagnostics diags;
+        REQUIRE( diags.apply_warning_flag( "error=unused-variable" ) );
+        REQUIRE( diags.apply_warning_flag( "unused-variable" ) );
+        diags.warning( Warning::Unused_variable, span, "unused" );
+        diags.warning( Warning::Void_variable, span, "void" );
+
+        REQUIRE( diags.error_count() == 1 );
+        const std::string out = render_to_string( diags, sm );
+        REQUIRE( out.find( "error: unused [-Werror=unused-variable]\n" ) != std::string::npos );
+        REQUIRE( out.find( "warning: void [-Wvoid-variable]\n" ) != std::string::npos );
+    }
+
+    SECTION( "-Werror makes every warning an error, and leaves one turned off off" )
+    {
+        Diagnostics diags;
+        REQUIRE( diags.apply_warning_flag( "error" ) );
+        REQUIRE( diags.apply_warning_flag( "no-void-variable" ) );
+        diags.warning( Warning::Constant_comparison, span, "always" );
+        diags.warning( Warning::Void_variable, span, "void" );
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "an unknown name is refused" )
+    {
+        Diagnostics diags;
+        REQUIRE_FALSE( diags.apply_warning_flag( "no-such" ) );
+        REQUIRE_FALSE( diags.apply_warning_flag( "error=such" ) );
+        REQUIRE_FALSE( diags.apply_warning_flag( "" ) );
+    }
 }
 
 TEST_CASE( "diagnostics_caret_matches_span", "[common][diagnostics]" )
@@ -907,7 +1046,7 @@ TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[comm
     {
         diags.syntax_error( Span { f, 8, 9 }, "kept" );
         diags.error( Span { f, 8, 9 }, "dropped" );
-        diags.warning( Span { f, 8, 9 }, "a warning always stands" );
+        diags.warning( Warning::Unused_variable, Span { f, 8, 9 }, "a warning always stands" );
 
         const std::string out = render_to_string( diags, sm );
         REQUIRE( diags.has_errors() );
@@ -972,7 +1111,7 @@ TEST_CASE( "diagnostics_drop_a_semantic_error_in_a_silenced_span", "[common][dia
     SECTION( "a warning stands" )
     {
         diags.silence( Span { f, 0, 14 } );
-        diags.warning( Span { f, 8, 9 }, "a warning always stands" );
+        diags.warning( Warning::Unused_variable, Span { f, 8, 9 }, "a warning always stands" );
 
         REQUIRE( render_to_string( diags, sm ).find( "a warning always stands" ) != std::string::npos );
     }
@@ -1056,7 +1195,7 @@ TEST_CASE( "diagnostics_keep_the_first_error_of_an_unbalanced_file", "[common][d
     {
         diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
         diags.error( Span { f, 8, 9 }, "the first" );
-        diags.warning( Span { f, 12, 13 }, "a warning always stands" );
+        diags.warning( Warning::Unused_variable, Span { f, 12, 13 }, "a warning always stands" );
 
         REQUIRE( render_to_string( diags, sm ).find( "a warning always stands" ) != std::string::npos );
     }

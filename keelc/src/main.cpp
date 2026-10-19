@@ -62,6 +62,7 @@ int main( int argc, char** argv )
         ( "declarations",  "With --diagnostics=json, also list every declaration with its signature and doc" )
         ( "with-prelude",  "With --declarations, list the prelude's declarations too" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
+        ( "W",             "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
         ( "print-prelude", "Print the prelude every program sees, and exit" )
         ( "v,version",     "Print version information and exit" )
@@ -228,6 +229,19 @@ int main( int argc, char** argv )
     std::vector<keel::Name>                    names;
     std::vector<keel::Declaration>             declarations;
     std::unordered_map<keel::u32, std::string> package_docs;
+
+    if( args.count( "W" ) )
+    {
+        for( const std::string& flag : args["W"].as<std::vector<std::string>>() )
+        {
+            if( !diagnostics.apply_warning_flag( flag ) )
+            {
+                const std::size_t prefix = flag.starts_with( "error=" ) ? 6 : flag.starts_with( "no-" ) ? 3 : 0;
+                fmt::print( stderr, "keelc: unknown warning '{}' in -W{}\n", flag.substr( prefix ), flag );
+                return 2;
+            }
+        }
+    }
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int

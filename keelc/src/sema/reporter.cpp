@@ -13,9 +13,9 @@ void Reporter::error_at( Span span, std::string message, std::string help )
     diags_.error( span, std::move( message ), std::move( help ) );
 }
 
-void Reporter::warn_at( Span span, std::string message, std::string help )
+void Reporter::warn_at( Warning which, Span span, std::string message, std::string help )
 {
-    diags_.warning( span, std::move( message ), std::move( help ) );
+    diags_.warning( which, span, std::move( message ), std::move( help ) );
 }
 
 std::string Reporter::previous_declaration_note( Span previous ) const
@@ -60,7 +60,7 @@ TEST_CASE( "reporter_forwards_errors_and_warnings_and_counts_only_errors", "[sem
 
     REQUIRE( reporter.error_count() == 0 );
 
-    reporter.warn_at( Span { file, 0, 3 }, "a warning" );
+    reporter.warn_at( Warning::Unused_variable, Span { file, 0, 3 }, "a warning" );
     REQUIRE( reporter.error_count() == 0 );
 
     reporter.error_at( Span { file, 0, 3 }, "an error", "some help" );

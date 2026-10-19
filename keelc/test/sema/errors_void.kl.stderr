@@ -40,13 +40,13 @@ error: `ok` carries 0 values, but 1 was given
 51 |     return result::ok( effect() );
    |                      ^^^^^^^^^^^^
 
-warning: `x` is `void`, so it holds nothing
+warning: `x` is `void`, so it holds nothing [-Wvoid-variable]
   --> sema/errors_void.kl:56:5
    |
 56 |     void x = effect();
    |     ^^^^ write `effect();` on its own
 
-warning: `y` is `void`, so it holds nothing
+warning: `y` is `void`, so it holds nothing [-Wvoid-variable]
   --> sema/errors_void.kl:57:5
    |
 57 |     void y;

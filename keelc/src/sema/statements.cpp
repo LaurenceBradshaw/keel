@@ -306,6 +306,7 @@ void Statements::visit_var( Node_id id )
         if( table_.is_void( type ) && expressions_.current_function().is_valid() )
         {
             reporter_.warn_at(
+                Warning::Void_variable,
                 ast_.span( annotation ),
                 fmt::format( "`{}` is `void`, so it holds nothing", interner_.text( ast_.name( id ) ) ),
                 init.is_valid() ? fmt::format( "write `{};` on its own", reporter_.text( ast_.span( init ) ) ) : "remove it"

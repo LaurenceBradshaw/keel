@@ -26,7 +26,7 @@ public:
     }
 
     void error_at( Span span, std::string message, std::string help = {} );
-    void warn_at( Span span, std::string message, std::string help = {} );
+    void warn_at( Warning which, Span span, std::string message, std::string help = {} );
 
     std::string previous_declaration_note( Span previous ) const;
     std::string position( Span span ) const;
