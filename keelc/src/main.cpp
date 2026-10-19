@@ -37,6 +37,20 @@
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
+namespace
+{
+// Where the pipeline stops, in pipeline order.
+enum class Stop : keel::u8
+{
+    Tokens,
+    Ast,
+    Check,
+    Kir,
+    C,
+    Executable
+};
+} // namespace
+
 int main( int argc, char** argv )
 {
     cxxopts::Options options( "keelc", "The Keel compiler" );
@@ -124,6 +138,32 @@ int main( int argc, char** argv )
         return 2;
     }
 
+    Stop                                   stop    = Stop::Executable;
+    const char*                            chose   = nullptr;
+    constexpr std::pair<const char*, Stop> modes[] = {
+        { "dump-tokens", Stop::Tokens },
+        { "dump-ast", Stop::Ast },
+        { "check", Stop::Check },
+        { "dump-kir", Stop::Kir },
+        { "emit-c", Stop::C },
+    };
+
+    for( const auto& [flag, mode] : modes )
+    {
+        if( !args.count( flag ) )
+        {
+            continue;
+        }
+
+        if( chose != nullptr )
+        {
+            fmt::print( stderr, "keelc: --{} and --{} cannot both be given\n", chose, flag );
+            return 2;
+        }
+        stop  = mode;
+        chose = flag;
+    }
+
     keel::Interner             interner;
     std::vector<keel::Package> packages;
 
@@ -164,12 +204,9 @@ int main( int argc, char** argv )
     }
 
     // Asked only of a build that links, and before anything is written, so a missing runtime never reaches cc.
-    const bool links = !args.count( "check" ) && !args.count( "emit-c" ) && !args.count( "dump-tokens" ) &&
-                       !args.count( "dump-ast" ) && !args.count( "dump-kir" );
-
     keel::Runtime runtime;
 
-    if( links )
+    if( stop == Stop::Executable )
     {
         const std::optional<std::string> flag =
             args.count( "runtime" ) ? std::optional( args["runtime"].as<std::string>() ) : std::nullopt;
@@ -226,7 +263,7 @@ int main( int argc, char** argv )
         return 1;
     };
 
-    if( args.count( "dump-tokens" ) )
+    if( stop == Stop::Tokens )
     {
         std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
         for( const keel::Token& t : tokens )
@@ -250,7 +287,7 @@ int main( int argc, char** argv )
     const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics, packages );
     const keel::Ast&    ast  = prog.ast;
 
-    if( args.count( "dump-ast" ) )
+    if( stop == Stop::Ast )
     {
         keel::dump_ast( ast, sm, interner, std::cout, prog.imports.prelude_file() );
         return finish();
@@ -326,14 +363,14 @@ int main( int argc, char** argv )
 
     // Everything the front end can say has been said by here. --check is what an editor or a
     // diagnostics-only test wants, and it leaves no artefacts behind.
-    if( args.count( "check" ) )
+    if( stop == Stop::Check )
     {
         return finish();
     }
 
     // Additive: the C path below is untouched, and nothing consumes KIR yet. This is what makes
     // each step of the lowerer visible as it lands.
-    if( args.count( "dump-kir" ) )
+    if( stop == Stop::Kir )
     {
         bool well_formed = true;
 
@@ -373,7 +410,7 @@ int main( int argc, char** argv )
         functions, ast, types, literals, sm, interner, prog.imports, keel::C_part::Program, prelude_name
     );
 
-    if( args.count( "emit-c" ) )
+    if( stop == Stop::C )
     {
         std::cout << generated;
         return finish();
