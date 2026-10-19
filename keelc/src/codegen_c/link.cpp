@@ -60,6 +60,37 @@ std::string link_command(
     return command;
 }
 
+std::string without_warning_flags( std::string_view cflags )
+{
+    std::string result;
+    std::size_t start = 0;
+    while( start < cflags.size() )
+    {
+        const std::size_t      end = cflags.find( ' ', start );
+        const std::string_view word =
+            end == std::string_view::npos ? cflags.substr( start ) : cflags.substr( start, end - start );
+
+        if( !word.empty() && !word.starts_with( "-pedantic" ) &&
+            ( !word.starts_with( "-W" ) || word.starts_with( "-Wl," ) || word.starts_with( "-Wa," ) ||
+              word.starts_with( "-Wp," ) ) )
+        {
+            if( !result.empty() )
+            {
+                result += ' ';
+            }
+            result += word;
+        }
+
+        if( end == std::string_view::npos )
+        {
+            break;
+        }
+        start = end + 1;
+    }
+
+    return result;
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -146,5 +177,15 @@ TEST_CASE( "link_command_links_the_runtime_after_the_source", "[codegen_c][link]
             "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.c\" \"libkeel_rt.a\" -o \"main\""
         );
     }
+}
+
+TEST_CASE( "without_warning_flags_keeps_what_is_not_a_warning", "[codegen_c][link]" )
+{
+    REQUIRE( keel::without_warning_flags( "-O2 -Wall -Werror=conversion -pedantic-errors -I inc" ) == "-O2 -I inc" );
+    REQUIRE(
+        keel::without_warning_flags( "-Wl,-rpath,/x -Wa,--noexecstack -Wp,-DX" ) == "-Wl,-rpath,/x -Wa,--noexecstack -Wp,-DX"
+    );
+    REQUIRE( keel::without_warning_flags( "" ).empty() );
+    REQUIRE( keel::without_warning_flags( "  -O2   -g " ) == "-O2 -g" );
 }
 #endif // ENABLE_UNIT_TESTS

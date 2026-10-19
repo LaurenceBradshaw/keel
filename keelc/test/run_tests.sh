@@ -31,7 +31,8 @@
 #   KEEL_VALGRIND=1   run each fixture under valgrind too, failing on any error it reports.
 #                     M3's acceptance is that a destructor frees exactly once, which a golden
 #                     exit code cannot see - a double free or a leak both still exit 0.
-#   KEEL_CFLAGS flags for it, passed as $CFLAGS   (default: -std=c11 -Wall -Wextra -Werror)
+#   KEEL_CFLAGS flags for it, passed as $CFLAGS   (default: -std=c11; keelc drops any -W words)
+#   KEEL_C_WARNINGS  its warnings, which keelc passes on as given (default: -Wall -Wextra -Werror)
 #   KEEL_RT     the runtime library, as --runtime (default: the one built beside keelc; an ASan
 #               build needs one built without sanitizers)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
@@ -92,8 +93,10 @@ runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 cc="${CC:-cc}"
 # -Werror, because a warning in emitted C is the compiler saying the code means something other
 # than intended - that is the whole reason for building it here. The unused-* family included: a
-# name the program never reads is marked used in the C, and `codegen/unused_names` checks it.
-cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror}"
+# name the program never reads is marked used in the C, and `codegen/unused_names` checks it. Its own
+# variable, since keelc drops the -W words of $CFLAGS.
+cflags="${KEEL_CFLAGS:--std=c11}"
+c_warnings="${KEEL_C_WARNINGS:--Wall -Wextra -Werror}"
 
 # Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
 # bug, and that check is worth more than the convenience of building in place.
@@ -212,7 +215,7 @@ check_run()
         [ "$flag" != "--emit-c" ] && build_flags+=( "$flag" )
     done
 
-    if ! CC="$cc" CFLAGS="$cflags" "$keelc" "${build_flags[@]}" "$src" --runtime "$runtime" -o "$stem" \
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "${build_flags[@]}" "$src" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"

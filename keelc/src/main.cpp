@@ -421,9 +421,17 @@ int main( int argc, char** argv )
     const char* const configured = std::getenv( "CC" );
     const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
 
-    // $CFLAGS after keelc's own, as a build would pass them.
+    // $CFLAGS without its warnings, then $KEEL_C_WARNINGS as given: only keelc's tests ask the C
+    // compiler to judge the C.
     const char* const extra  = std::getenv( "CFLAGS" );
-    const std::string cflags = extra != nullptr ? extra : "";
+    std::string       cflags = extra != nullptr ? keel::without_warning_flags( extra ) : "";
+
+    const char* const c_warnings = std::getenv( "KEEL_C_WARNINGS" );
+    if( c_warnings != nullptr && *c_warnings != '\0' )
+    {
+        cflags += cflags.empty() ? "" : " ";
+        cflags += c_warnings;
+    }
 
     const std::string command = keel::link_command( compiler, cflags, generated_path, runtime.path, executable );
 

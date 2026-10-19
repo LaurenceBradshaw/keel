@@ -29,4 +29,7 @@ std::string link_command(
     const std::filesystem::path& executable
 );
 
+// `cflags` without the words that turn on or promote C warnings; `-Wl,`, `-Wa,` and `-Wp,` are kept.
+std::string without_warning_flags( std::string_view cflags );
+
 } // namespace keel

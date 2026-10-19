@@ -360,7 +360,9 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison` |
 | `-Werror` / `-Werror=<name>` | Make every warning, or that one, an error |
 
-`keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS`.
+`keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS` without its `-W` and
+`-pedantic` words (`-Wl,`, `-Wa,` and `-Wp,` are kept): Keel's warnings are Keel's, and the C is never
+the user's to fix.
 
 [`editors/vscode`](editors/vscode) is a VS Code extension: highlighting, keelc's errors underlined on
 save, names coloured by what they refer to, hovers, and go-to-definition. Its README says how to install it.
