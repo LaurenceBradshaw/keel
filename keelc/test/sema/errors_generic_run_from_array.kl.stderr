@@ -1,0 +1,7 @@
+error: `T` cannot be both `bool` and `i32`
+  --> sema/errors_generic_run_from_array.kl:18:20
+   |
+18 |     if( has( true, numbers ) )
+   |                    ^^^^^^^ an earlier argument already made it `bool`
+
+1 error generated

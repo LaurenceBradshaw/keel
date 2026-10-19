@@ -508,6 +508,12 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 
     const Type& a = get( actual );
 
+    // An array lent where a run is wanted is read as that run, as holds() has it.
+    if( p.kind == Type_kind::Run && a.kind == Type_kind::Array )
+    {
+        return deduce( p.element, a.element, into );
+    }
+
     if( p.kind != a.kind )
     {
         return false;

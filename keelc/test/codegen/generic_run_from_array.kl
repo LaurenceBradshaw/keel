@@ -1,0 +1,46 @@
+// A fixed array passed where a generic `const ref T[]` is wanted deduces `T` from its element, as it
+// converts to that run.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+T total<T>( const ref T[] values ) where T : numeric
+{
+    T sum = 0;
+    for( u64 i : 0..values.size )
+    {
+        sum = sum + values[i];
+    }
+    return sum;
+}
+
+u64 count<T>( const ref T[] values )
+{
+    return values.size;
+}
+
+i32 main()
+{
+    i32[4] numbers = [ 1, 2, 3, 4 ];
+    if( total( numbers ) != 10 )
+    {
+        return 1;
+    }
+
+    f64[2] halves = [ 0.5, 0.25 ];
+    if( total( halves ) != 0.75 )
+    {
+        return 2;
+    }
+
+    str[3] words = [ "a", "b", "c" ];
+    Point[2] points = [ Point { 1, 2 }, Point { 3, 4 } ];
+    if( count( words ) != 3 || count( points ) != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}
