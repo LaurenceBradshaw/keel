@@ -1,8 +1,9 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Files, paths and directories, through the runtime's calls. Each call answers 0 or an `errno`
-// value, which only the runtime turns into a kind, since the numbers differ between systems.
+// Files, paths, directories and processes, through the runtime's calls. Each call answers 0 or
+// an `errno` value, which only the runtime turns into a kind, since the numbers differ between
+// systems.
 
 import list;
 import string;
@@ -22,6 +23,8 @@ private extern i32 kl_rt_delete_file( const ref u8[] path );
 private extern i32 kl_rt_directory_open( const ref u8[] path, u64* handle );
 private extern i32 kl_rt_directory_next( u64 handle, u8[*]* name, u64* size );
 private extern void kl_rt_directory_close( u64 handle );
+private extern i32 kl_rt_process_start( const ref u8[] packed, u64 count, i64* pid );
+private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 
 /// A failure any call to the system can meet.
 enum os_error
@@ -673,4 +676,110 @@ result<list<path>, file_error> list_directory( const ref textual name )
     }
 
     return result::ok( move entries );
+}
+
+/// A running program, waited for when it is dropped, so dropping one that has not ended blocks
+/// until it does.
+class process
+{
+    private process( i64 pid )
+    {
+        pid_ = pid;
+        waited_ = false;
+        status_ = 0;
+    }
+
+    ~process()
+    {
+        if( !waited_ )
+        {
+            i32 code = 0;
+
+            unsafe
+            {
+                kl_rt_process_wait( pid_, &code );
+            }
+        }
+    }
+
+    /// Starts `program`, found through `PATH` unless it holds a `/`, with `arguments`. No shell
+    /// reads them, and the child shares this program's standard streams. Input this program has
+    /// already buffered is not seen by the child.
+    public static result<process, file_error> start<T>(
+        const ref textual program, const ref T[] arguments
+    ) where T : textual
+    {
+        // The program then each argument, each ending in a 0 byte.
+        string packed = string( program );
+        packed.push( '\0' );
+
+        for( u64 i : 0..arguments.size )
+        {
+            packed.append( arguments[i].as_text() );
+            packed.push( '\0' );
+        }
+
+        i64 pid = 0;
+        i32 status = 0;
+
+        unsafe
+        {
+            status = kl_rt_process_start( packed.as_text(), arguments.size + 1, &pid );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok( process( pid ) );
+    }
+
+    /// Waits for the program to end and answers its exit code, or 128 and the signal's number when
+    /// a signal ended it. Asked again, it answers the same.
+    public result<i32, os_error> wait()
+    {
+        if( waited_ )
+        {
+            return result::ok( status_ );
+        }
+
+        i32 code = 0;
+        i32 status = 0;
+
+        unsafe
+        {
+            status = kl_rt_process_wait( pid_, &code );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( os_error_of( status ) );
+        }
+
+        waited_ = true;
+        status_ = code;
+
+        return result::ok( code );
+    }
+
+    private i64 pid_;
+    private bool waited_;
+    private i32 status_; // the exit code, once `waited_`
+};
+
+/// Runs `program` with `arguments` to its end and answers its exit code, as `process::wait` does.
+/// Input this program has already buffered is not seen by the child.
+result<i32, file_error> run<T>( const ref textual program, const ref T[] arguments )
+    where T : textual
+{
+    process p = try process::start( program, arguments );
+
+    switch( p.wait() )
+    {
+        case result::ok( code ):
+            return result::ok( code );
+        case result::err( e ):
+            return result::err( file_error::os( e ) );
+    }
 }

@@ -329,6 +329,43 @@ static void directory_round_trip( void )
     rmdir( dir );
 }
 
+// A process started and waited for, a missing program refused and reaped, each malformed `packed`
+// refused, and the parent's output flushed before the child's.
+static void process_round_trip( void )
+{
+// Its bytes and size, the size leaving out the 0 byte C adds to every literal.
+#define PACKED( text ) (const uint8_t*) text, sizeof text - 1
+
+    int64_t pid    = 0;
+    int32_t status = -1;
+
+    printf( "before|" );
+    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid ) );
+    printf( "%d %d ", kl_rt_process_wait( pid, &status ), status );
+
+    kl_rt_process_start( PACKED( "sh\0-c\0exit 3\0" ), 3, &pid );
+    kl_rt_process_wait( pid, &status );
+    printf( "%d ", status );
+
+    kl_rt_process_start( PACKED( "sh\0-c\0kill -9 $$\0" ), 3, &pid );
+    kl_rt_process_wait( pid, &status );
+    printf( "%d ", status );
+
+    pid = 7;
+    printf( "%d %d ", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid ) == ENOENT, (int) pid );
+
+    // Miscounted, unterminated, an argument holding a 0 byte, and nothing at all.
+    printf( "%d ", kl_rt_process_start( PACKED( "true\0" ), 2, &pid ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "true" ), 1, &pid ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "true\0a\0b\0" ), 2, &pid ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "" ), 0, &pid ) == EINVAL );
+
+    // Every child was reaped, the failed one included.
+    printf( "%d|after", waitpid( -1, NULL, WNOHANG ) == -1 && errno == ECHILD );
+
+#undef PACKED
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -394,12 +431,16 @@ int main( void )
     check( "directory_round_trip", "stdout", r.out, "0 1 0 0 x 0 0 1 1 1 0 1 0 1 1" );
     check_exit( "directory_round_trip", &r, false );
 
+    r = run( process_round_trip );
+    check( "process_round_trip", "stdout", r.out, "before|child0 0 0 3 137 1 7 1 1 1 1 1|after" );
+    check_exit( "process_round_trip", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "14 runtime tests passed\n" );
+    printf( "15 runtime tests passed\n" );
     return 0;
 }

@@ -143,6 +143,12 @@ and a file is <code>file_error::not_directory</code>.</dd>
 <dt><a href="os.html#list_directory"><code>list_directory</code></a> <span class="kind">function</span></dt>
 <dd>Every entry in the directory <code>name</code> but <code>.</code> and <code>..</code>, each joined onto <code>name</code>, in the system's
 order.</dd>
+<dt><a href="os.html#process"><code>process</code></a> <span class="kind">class</span></dt>
+<dd>A running program, waited for when it is dropped, so dropping one that has not ended blocks
+until it does.</dd>
+<dt><a href="os.html#run"><code>run</code></a> <span class="kind">function</span></dt>
+<dd>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code, as <code>process::wait</code> does.
+Input this program has already buffered is not seen by the child.</dd>
 </dl>
 </section>
 <section class="module">

@@ -1,0 +1,154 @@
+// `kl::os` processes: a file copied then compared by `cmp`, exit codes and a signal, a missing
+// program, an argument holding a 0 byte, and the parent's output in order around the child's. The
+// two arguments name the files. Each check returns its own code.
+import kl::console;
+import kl::list;
+import kl::os;
+import kl::string;
+
+// The raw code of an `other`, as a negative number, or -99.
+i32 os_code( kl::os_error e )
+{
+    switch( e )
+    {
+        case kl::os_error::other( c ):
+            return -c;
+        default:
+            return -99;
+    }
+}
+
+// The exit code `run` answered, -1 for `not_found`, -22 for `os( other( 22 ) )`, and -99 for any
+// other failure.
+i32 code( result<i32, kl::file_error> r )
+{
+    switch( r )
+    {
+        case result::ok( c ):
+            return c;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::file_error::not_found:
+                    return -1;
+                case kl::file_error::os( inner ):
+                    return os_code( inner );
+                default:
+                    return -99;
+            }
+    }
+}
+
+bool written( result<void, kl::file_error> r )
+{
+    switch( r )
+    {
+        case result::ok:
+            return true;
+        case result::err( e ):
+            return false;
+    }
+}
+
+i32 main( const ref str[] args )
+{
+    if( !written( kl::write_file( args[0], "some text\n" ) ) )
+    {
+        return 1;
+    }
+
+    // Copied, so the two compare equal; then changed, so they differ.
+    switch( kl::read_file( args[0] ) )
+    {
+        case result::ok( text ):
+            if( !written( kl::write_file( args[1], text ) ) )
+            {
+                return 2;
+            }
+            break;
+        case result::err( e ):
+            return 3;
+    }
+
+    kl::list<kl::string> quiet = kl::list<kl::string>();
+    quiet.push( kl::string( "-s" ) );
+    quiet.push( kl::string( args[0] ) );
+    quiet.push( kl::string( args[1] ) );
+
+    if( code( kl::run( "cmp", quiet.as_run() ) ) != 0 )
+    {
+        return 4;
+    }
+
+    if( !written( kl::write_file( args[1], "other text\n" ) ) )
+    {
+        return 5;
+    }
+
+    if( code( kl::run( "cmp", quiet.as_run() ) ) != 1 )
+    {
+        return 5;
+    }
+
+    kl::list<kl::string> empty = kl::list<kl::string>();
+    const ref kl::string[] none = empty.as_run();
+    if( code( kl::run( "false", none ) ) != 1 )
+    {
+        return 6;
+    }
+
+    if( code( kl::run( "kl-no-such-program", none ) ) != -1 )
+    {
+        return 7;
+    }
+
+    // A fixed array passes as it is.
+    str[1] bad = [ "a\0b" ];
+    if( code( kl::run( "echo", bad ) ) != -22 )
+    {
+        return 8;
+    }
+
+    // A signal is 128 and its number, and a second `wait` answers the same.
+    str[2] kill = [ "-c", "kill -9 $$" ];
+    switch( move kl::process::start( "sh", kill ) )
+    {
+        case result::ok( p ):
+            for( u64 i : 0..2 )
+            {
+                switch( p.wait() )
+                {
+                    case result::ok( c ):
+                        if( c != 137 )
+                        {
+                            return 9;
+                        }
+                        break;
+                    case result::err( e ):
+                        return 10;
+                }
+            }
+            break;
+        case result::err( e ):
+            return 11;
+    }
+
+    // Never waited for: dropping it waits.
+    switch( move kl::process::start( "true", none ) )
+    {
+        case result::ok( p ):
+            break;
+        case result::err( e ):
+            return 12;
+    }
+
+    kl::println( "parent first" );
+    str[1] child = [ "child second" ];
+    if( code( kl::run( "echo", child ) ) != 0 )
+    {
+        return 13;
+    }
+    kl::println( "parent third" );
+
+    return 0;
+}

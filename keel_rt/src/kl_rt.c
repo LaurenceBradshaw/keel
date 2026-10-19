@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
@@ -456,4 +457,124 @@ void kl_rt_directory_close( uint64_t handle )
     DIR* dir = (DIR*) (uintptr_t) handle;
 
     closedir( dir );
+}
+
+int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid )
+{
+    if( count == 0 )
+    {
+        return EINVAL;
+    }
+
+    uint64_t zero_count = 0;
+    for( uint64_t i = 0; i < size; ++i )
+    {
+        if( packed[i] == 0 )
+        {
+            ++zero_count;
+        }
+    }
+
+    if( zero_count != count || packed[size - 1] != 0 )
+    {
+        return EINVAL;
+    }
+
+    char** argv = malloc( ( count + 1 ) * sizeof( char* ) );
+    if( argv == NULL )
+    {
+        return ENOMEM;
+    }
+
+    char* next = (char*) packed;
+    for( uint64_t i = 0; i < count; ++i )
+    {
+        argv[i] = next;
+        next += strlen( next ) + 1;
+    }
+    argv[count] = NULL;
+
+    // Close-on-exec, so it closes unread when the program starts, and carries `errno` back when it
+    // cannot.
+    int report[2];
+    if( pipe( report ) == -1 )
+    {
+        int saved = errno;
+        free( argv );
+        return saved;
+    }
+
+    for( uint64_t i = 0; i < 2; ++i )
+    {
+        if( fcntl( report[i], F_SETFD, FD_CLOEXEC ) == -1 )
+        {
+            int saved = errno;
+            close( report[0] );
+            close( report[1] );
+            free( argv );
+            return saved;
+        }
+    }
+
+    // So what the parent printed comes before what the child prints.
+    fflush( NULL );
+
+    // Both processes return from fork: the child sees 0, the parent the child's pid.
+    pid_t child = fork();
+
+    if( child == 0 )
+    {
+        close( report[0] );
+
+        // Returns only on failure; `_exit` so the child never flushes or runs the parent's handlers.
+        execvp( argv[0], argv );
+
+        int     saved  = errno;
+        ssize_t result = write( report[1], &saved, sizeof saved );
+        (void) result;
+        _exit( 127 );
+    }
+
+    int error = child == -1 ? errno : 0;
+    free( argv );
+
+    // Closed before reading, or the read would wait on this process's own write end.
+    close( report[1] );
+
+    if( child != -1 )
+    {
+        // Retried, since giving up would lose the child.
+        ssize_t got = 0;
+        do
+        {
+            got = read( report[0], &error, sizeof error );
+        } while( got == -1 && errno == EINTR );
+
+        if( got == sizeof error )
+        {
+            // The exec failed and the child has exited: reap it.
+            waitpid( child, NULL, 0 );
+        }
+        else
+        {
+            // The pipe closed unread at the exec, so the program is running.
+            error = 0;
+            *pid  = child;
+        }
+    }
+
+    close( report[0] );
+    return error;
+}
+
+int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
+{
+    int st = 0;
+    if( waitpid( (pid_t) pid, &st, 0 ) == -1 )
+    {
+        return errno;
+    }
+
+    *status = WIFEXITED( st ) ? WEXITSTATUS( st ) : 128 + WTERMSIG( st );
+    return 0;
 }

@@ -45,5 +45,7 @@ int32_t        kl_rt_delete_file( const uint8_t* path, uint64_t size );
 int32_t        kl_rt_directory_open( const uint8_t* path, uint64_t size, uint64_t* handle );
 int32_t        kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* size );
 void           kl_rt_directory_close( uint64_t handle );
+int32_t        kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid );
+int32_t        kl_rt_process_wait( int64_t pid, int32_t* status );
 
 #endif // KL_RT_H

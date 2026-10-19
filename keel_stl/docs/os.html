@@ -28,6 +28,8 @@
 <li><a href="#create_directory"><code>create_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#delete_directory"><code>delete_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#list_directory"><code>list_directory</code></a> <span class="kind">function</span></li>
+<li><a href="#process"><code>process</code></a> <span class="kind">class</span></li>
+<li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">os_error</span></h2>
@@ -390,6 +392,46 @@ and a file is <code>file_error::not_directory</code>.</p>
 <div class="doc">
 <p>Every entry in the directory <code>name</code> but <code>.</code> and <code>..</code>, each joined onto <code>name</code>, in the system's
 order.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">process</span></h2>
+<div class="group" id="process">
+<pre class="signature"><a class="anchor" href="#process" aria-label="Link to process">#</a><code><span class="kw">class</span> <span class="type">process</span></code></pre>
+<div class="doc">
+<p>A running program, waited for when it is dropped, so dropping one that has not ended blocks
+until it does.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="process.~process">
+<pre class="signature"><a class="anchor" href="#process.~process" aria-label="Link to ~process">#</a><code><span class="type">~process</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="process.start">
+<pre class="signature"><a class="anchor" href="#process.start" aria-label="Link to start">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#process">process</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">start</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> program, <span class="kw">const</span> <span class="kw">ref</span> T[] arguments ) <span class="kw">where</span> T : <a class="type" href="prelude.html#textual">textual</a></code></pre>
+<div class="doc">
+<p>Starts <code>program</code>, found through <code>PATH</code> unless it holds a <code>/</code>, with <code>arguments</code>. No shell
+reads them, and the child shares this program's standard streams. Input this program has
+already buffered is not seen by the child.</p>
+</div>
+</div>
+<div class="group" id="process.wait">
+<pre class="signature"><a class="anchor" href="#process.wait" aria-label="Link to wait">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#i32">i32</a>, <a class="type" href="#os_error">os_error</a>&gt; <span class="fn">wait</span>()</code></pre>
+<div class="doc">
+<p>Waits for the program to end and answers its exit code, or 128 and the signal's number when
+a signal ended it. Asked again, it answers the same.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">run</span></h2>
+<div class="group" id="run">
+<pre class="signature"><a class="anchor" href="#run" aria-label="Link to run">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#i32">i32</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">run</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> program, <span class="kw">const</span> <span class="kw">ref</span> T[] arguments ) <span class="kw">where</span> T : <a class="type" href="prelude.html#textual">textual</a></code></pre>
+<div class="doc">
+<p>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code, as <code>process::wait</code> does.
+Input this program has already buffered is not seen by the child.</p>
 </div>
 </div>
 </section>
