@@ -17,9 +17,9 @@ error: `c` already holds a value here
    |             ^^^^^^ a constructor assigns a `const` field once on each path
 
 error: `d` is used before this constructor assigns it
-  --> sema/errors_const_field_once.kl:31:28
+  --> sema/errors_const_field_once.kl:31:13
    |
-31 |         const i32* early = &d;
-   |                            ^^ assign it before reading it
+31 |         _ = &d;
+   |             ^^ assign it before reading it
 
 4 errors generated

@@ -183,10 +183,10 @@ int32_t kl__scale__3i32( int32_t kl_v_1 )
     return kl_t0;
 }
 
-int32_t kl__scale__3i64( int64_t kl_v_1 )
+int32_t kl__scale__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_v_1;
+    ( void ) kl_t1;
 #line 60 "codegen/module_private/helper.kl"
     kl_t0 = 1;
     return kl_t0;

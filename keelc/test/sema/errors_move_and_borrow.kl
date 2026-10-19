@@ -13,7 +13,7 @@ class Buffer
     {
     }
 
-    public void absorb( move Buffer other )
+    public void absorb( move Buffer _ )
     {
     }
 
@@ -23,19 +23,19 @@ class Buffer
     }
 };
 
-void move_then_ref( move Buffer a, ref Buffer b )
+void move_then_ref( move Buffer _, ref Buffer _ )
 {
 }
 
-void ref_then_move( ref Buffer b, move Buffer a )
+void ref_then_move( ref Buffer _, move Buffer _ )
 {
 }
 
-void read_then_move( const ref Buffer b, move Buffer a )
+void read_then_move( const ref Buffer _, move Buffer _ )
 {
 }
 
-void sized( u64 n, move Buffer a )
+void sized( u64 _, move Buffer _ )
 {
 }
 
@@ -54,7 +54,7 @@ i32 main()
     e.absorb( move e );
 
     Buffer f = Buffer();
-    bool same = f == move f;
+    _ = f == move f;
 
     Buffer g = Buffer();
     ref Buffer r = g;

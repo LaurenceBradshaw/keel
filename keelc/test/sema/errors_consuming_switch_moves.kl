@@ -20,17 +20,17 @@ enum Holder
     Empty
 };
 
-u64 peek( Holder h )
+u64 peek( Holder _ )
 {
     return 0;
 }
 
-u64 read( Buf b )
+u64 read( Buf _ )
 {
     return 0;
 }
 
-void sink( move Buf b )
+void sink( move Buf _ )
 {
 }
 

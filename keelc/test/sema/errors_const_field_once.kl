@@ -28,7 +28,7 @@ class Once
             i = i + 1;
         }
 
-        const i32* early = &d;
+        _ = &d;
         d                = 1;
     }
 
@@ -48,7 +48,7 @@ class Once
         c = 1;
         d = 1;
 
-        const i32* late = &d;
+        _ = &d;
     }
 };
 

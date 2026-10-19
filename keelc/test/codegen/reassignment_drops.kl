@@ -51,7 +51,7 @@ void replace( ref Owned o )
     o = Owned();
 }
 
-void consume( move Owned o )
+void consume( move Owned _ )
 {
 }
 

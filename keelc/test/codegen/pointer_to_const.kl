@@ -48,12 +48,12 @@ i32 read( const Point* p )
     return p.x + ( *p ).y;
 }
 
-i32 pick( i32* p )
+i32 pick( i32* _ )
 {
     return 1;
 }
 
-i32 pick( const i32* p )
+i32 pick( const i32* _ )
 {
     return 2;
 }

@@ -69,26 +69,26 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
     return;
 }
 
-void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t_2 )
+void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t2 )
 {
 #line 37 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_taken__69 = ( *kl_this_1 ).kl_taken__69 + 1;
 #line 35 "codegen/bare_temporary.kl"
-    kl__Tracked__dtor( &kl_t_2 );
+    kl__Tracked__dtor( &kl_t2 );
     return;
 }
 
-void kl__own__S6Holder_M7Tracked( struct kl__Tracked kl_t_1 )
+void kl__own__S6Holder_M7Tracked( struct kl__Tracked kl_t1 )
 {
 #line 40 "codegen/bare_temporary.kl"
-    kl__Tracked__dtor( &kl_t_1 );
+    kl__Tracked__dtor( &kl_t1 );
     return;
 }
 
-void kl__consume__M7Tracked( struct kl__Tracked kl_t_1 )
+void kl__consume__M7Tracked( struct kl__Tracked kl_t1 )
 {
 #line 47 "codegen/bare_temporary.kl"
-    kl__Tracked__dtor( &kl_t_1 );
+    kl__Tracked__dtor( &kl_t1 );
     return;
 }
 

@@ -1934,7 +1934,7 @@ TEST_CASE( "type_checker_stays_quiet_in_the_head_of_a_statement_that_failed", "[
 
     SECTION( "a function whose parameter failed is still judged by its name" )
     {
-        const Typed p( "i32 t( i32 a ) { return a; }\ni32 t( i32 ) { return 0; }\ni32 main() { return 0; }" );
+        const Typed p( "i32 t( i32 a ) { return a; }\ni32 t( i32 1 ) { return 0; }\ni32 main() { return 0; }" );
         INFO( p.rendered() );
         CHECK( reported( p.rendered() ) == 2 );
         CHECK( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
@@ -2633,11 +2633,60 @@ TEST_CASE( "statements_warn_about_a_written_void_local", "[sema][void]" )
     {
         const Typed p( "T same<T>( T a ) where T : copyable { T held = a; return held; }\n"
                        "void e() { }\n"
-                       "i32 main() { same( e() ); auto z = e(); return 0; }" );
+                       "i32 main() { same( e() ); auto z = e(); same( z ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.rendered().empty() );
+    }
+}
+
+// A name nothing reads is a warning; one kept for its destructor, `_`, a nameless parameter, `this`,
+// a requirement's parameter and a counter are not, and nothing is said beside an error.
+TEST_CASE( "type_check_warns_about_unused_names", "[sema][unused]" )
+{
+    const auto count = []( const std::string& rendered, std::string_view what )
+    {
+        std::size_t n = 0;
+        for( std::size_t at = rendered.find( what ); at != std::string::npos; at = rendered.find( what, at + 1 ) )
+        {
+            n += 1;
+        }
+        return n;
+    };
+
+    SECTION( "a parameter, a local, and a local only written" )
+    {
+        const Typed p( "i32 f( i32 a ) { i32 b = 1; i32 c = 0; c = 2; return 0; }\ni32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( count( p.rendered(), "unused parameter `a`" ) == 1 );
+        REQUIRE( count( p.rendered(), "unused variable `b`" ) == 1 );
+        REQUIRE( p.rendered().find( "write `_ = 1;` if only the initialiser is wanted" ) != std::string::npos );
+        REQUIRE( count( p.rendered(), "unused variable `c`" ) == 0 );
+    }
+
+    SECTION( "but not what is unused on purpose or cannot be used" )
+    {
+        const Typed p( "interface shape { i32 area( i32 scale ); };\n"
+                       "class sq implements shape { i32 n; public i32 area( i32 _ ) { return n; } };\n"
+                       "class held { i32 n; held( i32 v ) { n = v; } ~held() { } };\n"
+                       "i32 f( i32 _, i32 ) { held h = held( 1 ); for( u64 i : 0..3 ) { } return 0; }\n"
+                       "i32 main() { return f( 1, 2 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().empty() );
+    }
+
+    SECTION( "nor beside an error" )
+    {
+        const Typed p( "i32 main() { i32 x = true; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unused" ) == std::string::npos );
     }
 }
 

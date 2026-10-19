@@ -43,8 +43,8 @@ class Owned
 
 i32 main()
 {
-    Buffer b = Buffer( 4 );
-    Shadowed s = Shadowed( 7 );
+    Buffer b = Buffer( 4 ); _ = b;
+    Shadowed s = Shadowed( 7 ); _ = s;
 
     {
         Owned o = Owned( 1 );

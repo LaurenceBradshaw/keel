@@ -151,9 +151,9 @@ void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
     return;
 }
 
-void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
+void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_t2 )
 {
-    ( void ) kl_value_2;
+    ( void ) kl_t2;
 #line 28 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__36 = ( *kl_this_1 ).kl_count__36 + 1;
     return;

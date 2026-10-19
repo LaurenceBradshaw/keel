@@ -4,7 +4,7 @@
 i32 read_back()
 {
     i32 x = 1;
-    i32 y = 2;
+    i32 y = 2; _ = y;
 
     return x;
 }
@@ -20,12 +20,12 @@ i32 inferred()
 // Declared and never assigned. The local exists; nothing is written to it.
 i32 uninitialised()
 {
-    i32 x;
+    i32 x; _ = x;
 
     return 0;
 }
 
-i32 parameter_read( i32 a, i32 b )
+i32 parameter_read( i32 _, i32 b )
 {
     return b;
 }
@@ -37,7 +37,7 @@ i32 nested()
     i32 x = 1;
 
     {
-        i32 y = 2;
+        i32 y = 2; _ = y;
     }
 
     return x;

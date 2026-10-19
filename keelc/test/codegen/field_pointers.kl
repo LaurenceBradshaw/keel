@@ -24,12 +24,12 @@ U read<C, U>( field( C ) -> U p, const ref C obj ) where U : copyable
     return p( obj );
 }
 
-i32 which( field( Measurement ) -> f64 p )
+i32 which( field( Measurement ) -> f64 _ )
 {
     return 1;
 }
 
-i32 which( field( Measurement ) -> i32 p )
+i32 which( field( Measurement ) -> i32 _ )
 {
     return 2;
 }

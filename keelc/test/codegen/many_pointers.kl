@@ -125,12 +125,12 @@ void bump( ref i32 v )
     v = v + 1;
 }
 
-i32 which( i32* p )
+i32 which( i32* _ )
 {
     return 1;
 }
 
-i32 which( i32[*] p )
+i32 which( i32[*] _ )
 {
     return 2;
 }

@@ -39,55 +39,55 @@ void kl_1t_eprintln__3u64( uint64_t );
 void kl_1t_eprintln__3f64( double );
 void kl_1t_eprintln__4bool( bool );
 
-int32_t kl__width__2i8( int8_t kl_a_1 )
+int32_t kl__width__2i8( int8_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 8 "codegen/overload_literals.kl"
     kl_t0 = 8;
     return kl_t0;
 }
 
-int32_t kl__width__3i16( int16_t kl_a_1 )
+int32_t kl__width__3i16( int16_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 13 "codegen/overload_literals.kl"
     kl_t0 = 16;
     return kl_t0;
 }
 
-int32_t kl__width__3i64( int64_t kl_a_1 )
+int32_t kl__width__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 18 "codegen/overload_literals.kl"
     kl_t0 = 64;
     return kl_t0;
 }
 
-int32_t kl__width__3u64( uint64_t kl_a_1 )
+int32_t kl__width__3u64( uint64_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 23 "codegen/overload_literals.kl"
     kl_t0 = 65;
     return kl_t0;
 }
 
-int32_t kl__nearest__3i32( int32_t kl_a_1 )
+int32_t kl__nearest__3i32( int32_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 28 "codegen/overload_literals.kl"
     kl_t0 = 32;
     return kl_t0;
 }
 
-int32_t kl__nearest__2i8( int8_t kl_a_1 )
+int32_t kl__nearest__2i8( int8_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 33 "codegen/overload_literals.kl"
     kl_t0 = 8;
     return kl_t0;

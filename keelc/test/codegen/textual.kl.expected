@@ -79,13 +79,13 @@ struct kl__run__L2u8__ref kl__as_text__S4Name( struct kl__Name* kl_this_1 )
     return kl_t0;
 }
 
-void kl__show__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
+void kl__show__Q7prelude3str( struct kl_7prelude_str kl_t1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
     struct kl_7prelude_textual__ref kl_t6;
-    ( void ) kl_s_1;
+    ( void ) kl_t1;
 #line 21 "codegen/textual.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "exact ";
@@ -95,13 +95,13 @@ void kl__show__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
     return;
 }
 
-void kl__show__7textual( struct kl_7prelude_textual__ref kl_t_1 )
+void kl__show__7textual( struct kl_7prelude_textual__ref kl_t1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
     struct kl_7prelude_textual__ref kl_t6;
-    ( void ) kl_t_1;
+    ( void ) kl_t1;
 #line 26 "codegen/textual.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "borrowed ";

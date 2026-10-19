@@ -16,7 +16,7 @@ bool is_green( Colour c )
 i32 main()
 {
     Colour a = Colour::Red;
-    Colour b = Colour::Blue;
+    Colour b = Colour::Blue; _ = b;
 
     if( is_green( a ) )
     {

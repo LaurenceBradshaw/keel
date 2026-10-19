@@ -53,8 +53,8 @@ i32 main()
     Counter held = Counter( 2 );
     held.twin(); // 3
 
-    u64 n = make().n;     // 4
-    u64 m = peek( make() ); // 5
+    u64 n = make().n; _ = n;     // 4
+    u64 m = peek( make() ); _ = m; // 5
 
     for( i32 i = 0; i < 3; i = i + 1 )
     {

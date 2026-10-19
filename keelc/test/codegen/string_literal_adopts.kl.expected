@@ -190,37 +190,37 @@ struct kl__label kl__give__( void )
     return kl_t0;
 }
 
-int32_t kl__pick__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
+int32_t kl__pick__Q7prelude3str( struct kl_7prelude_str kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_s_1;
+    ( void ) kl_t1;
 #line 47 "codegen/string_literal_adopts.kl"
     kl_t0 = 1;
     return kl_t0;
 }
 
-int32_t kl__pick__5label( struct kl__label* kl_l_1 )
+int32_t kl__pick__5label( struct kl__label* kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_l_1;
+    ( void ) kl_t1;
 #line 48 "codegen/string_literal_adopts.kl"
     kl_t0 = 2;
     return kl_t0;
 }
 
-int32_t kl__lend__7textual( struct kl_7prelude_textual__ref kl_t_1 )
+int32_t kl__lend__7textual( struct kl_7prelude_textual__ref kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_t_1;
+    ( void ) kl_t1;
 #line 50 "codegen/string_literal_adopts.kl"
     kl_t0 = 1;
     return kl_t0;
 }
 
-int32_t kl__lend__5label( struct kl__label* kl_l_1 )
+int32_t kl__lend__5label( struct kl__label* kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_l_1;
+    ( void ) kl_t1;
 #line 51 "codegen/string_literal_adopts.kl"
     kl_t0 = 2;
     return kl_t0;

@@ -1,7 +1,7 @@
 fn two {
     let _0: i32; // return slot
     let _1: i32; // parameter a
-    let _2: i32; // parameter b
+    let _2: i32; // parameter
 
     bb0:
         _0 = copy _1
@@ -130,7 +130,7 @@ fn nothing {
 }
 fn takes {
     let _0: void; // return slot
-    let _1: i32; // parameter x
+    let _1: i32; // parameter
 
     bb0:
         return

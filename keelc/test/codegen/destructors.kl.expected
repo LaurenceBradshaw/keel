@@ -53,10 +53,10 @@ void kl__Guarded__dtor( struct kl__Guarded* );
 int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 
-void kl__release__P2u8( uint8_t* kl_p_1 )
+void kl__release__P2u8( uint8_t* kl_t1 )
 {
     int32_t kl_t2;
-    ( void ) kl_p_1;
+    ( void ) kl_t1;
 #line 8 "codegen/destructors.kl"
     kl_t2 = kl_released_1 + 1;
     kl_released_1 = kl_t2;

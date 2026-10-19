@@ -51,7 +51,7 @@ never fail( str why )
 }
 
 // One `never` function ending in another.
-never refuse( i32 code )
+never refuse( i32 _ )
 {
     fail( "refused" );
 }

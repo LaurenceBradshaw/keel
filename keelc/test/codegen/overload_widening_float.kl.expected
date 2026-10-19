@@ -20,19 +20,19 @@ double kl__root__3f64( double kl_x_1 )
     return kl_t0;
 }
 
-double kl__root__3f32( float kl_x_1 )
+double kl__root__3f32( float kl_t1 )
 {
     double kl_t0;
-    ( void ) kl_x_1;
+    ( void ) kl_t1;
 #line 12 "codegen/overload_widening_float.kl"
     kl_t0 = 1000.0;
     return kl_t0;
 }
 
-double kl__narrow__3f64( double kl_x_1 )
+double kl__narrow__3f64( double kl_t1 )
 {
     double kl_t0;
-    ( void ) kl_x_1;
+    ( void ) kl_t1;
 #line 17 "codegen/overload_widening_float.kl"
     kl_t0 = 2000.0;
     return kl_t0;
@@ -54,10 +54,10 @@ int64_t kl__kind__3i64( int64_t kl_x_1 )
     return kl_t0;
 }
 
-int64_t kl__kind__3f32( float kl_x_1 )
+int64_t kl__kind__3f32( float kl_t1 )
 {
     int64_t kl_t0;
-    ( void ) kl_x_1;
+    ( void ) kl_t1;
 #line 32 "codegen/overload_widening_float.kl"
     kl_t0 = 3000;
     return kl_t0;

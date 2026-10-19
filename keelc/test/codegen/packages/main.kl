@@ -9,7 +9,7 @@ i32 area( i32 side )
 }
 
 // plane::pick( i32 ) matches an i32 exactly, and never meets this one.
-i32 pick( i64 v )
+i32 pick( i64 _ )
 {
     return 1;
 }

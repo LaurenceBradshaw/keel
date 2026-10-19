@@ -44,11 +44,11 @@ u64 take( label l ) { return l.size(); }
 u64 peek( const ref label l ) { return l.size(); }
 label give() { return "four"; }
 
-i32 pick( str s ) { return 1; }
-i32 pick( label l ) { return 2; }
+i32 pick( str _ ) { return 1; }
+i32 pick( label _ ) { return 2; }
 
-i32 lend( const ref textual t ) { return 1; }
-i32 lend( label l ) { return 2; }
+i32 lend( const ref textual _ ) { return 1; }
+i32 lend( label _ ) { return 2; }
 
 T made<T>() where T : from<str>
 {

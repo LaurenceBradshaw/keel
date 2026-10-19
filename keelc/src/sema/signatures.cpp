@@ -2694,11 +2694,13 @@ TEST_CASE( "signatures_refuse_a_written_void", "[sema][void]" )
 
     SECTION( "but not when a type argument made it `void`" )
     {
-        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
-                       "enum Maybe<T> { some( T v ), none };\n"
-                       "T same<T>( T a ) where T : copyable { return a; }\n"
-                       "void e() { }\n"
-                       "i32 main() { Box<void> b; Maybe<void> m = Maybe<void>::none; same( e() ); return 0; }" );
+        const Typed p(
+            "struct Box<T> where T : copyable { T v; };\n"
+            "enum Maybe<T> { some( T v ), none };\n"
+            "T same<T>( T a ) where T : copyable { return a; }\n"
+            "void e() { }\n"
+            "i32 main() { Box<void> b; Maybe<void> m = Maybe<void>::none; same( b ); same( m ); same( e() ); return 0; }"
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

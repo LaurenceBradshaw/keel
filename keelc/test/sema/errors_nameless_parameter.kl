@@ -1,5 +1,5 @@
-// A parameter with no name is still a parameter: the missing name is reported once, and its type
-// still counts towards the signature, so a call checks and an overload compares as if it had one.
+// A parameter with no name is a parameter: its type counts towards the signature, so a call checks
+// and an overload compares as if it had one. A keyword where the name goes is reported once.
 // No call names an overloaded pair, since a duplicate's calls are a separate cascade.
 
 i32 lone( i32 )

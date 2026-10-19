@@ -52,7 +52,7 @@ implements Measured for Size
         }
     }
 
-    void grow( i64 by ) { this = Size::Large; }
+    void grow( i64 _ ) { this = Size::Large; }
 };
 
 implements Measured for Held
@@ -68,7 +68,7 @@ implements Measured for Held
         }
     }
 
-    void grow( i64 by ) { this = Held::Empty; }
+    void grow( i64 _ ) { this = Held::Empty; }
 };
 
 i64 total<T>( const ref T a, const ref T b ) where T : Measured

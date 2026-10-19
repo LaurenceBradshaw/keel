@@ -3,7 +3,7 @@
 // fixture proves is that the C is valid: it is compiled with -Werror and run.
 i32 released;
 
-void release( u8* p )
+void release( u8* _ )
 {
     released = released + 1;
 }
@@ -90,7 +90,7 @@ i32 early( i32 n )
 i32 main()
 {
     Point p = Point { 3, 4 };
-    Handle h = Handle { 7 };
+    Handle h = Handle { 7 }; _ = h;
 
     // A plain scope: the destructor runs at its end, not at the end of main.
     {

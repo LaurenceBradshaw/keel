@@ -36,7 +36,7 @@ fn uninitialised {
 }
 fn parameter_read {
     let _0: i32; // return slot
-    let _1: i32; // parameter a
+    let _1: i32; // parameter
     let _2: i32; // parameter b
 
     bb0:

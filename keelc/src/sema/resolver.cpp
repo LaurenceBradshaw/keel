@@ -3,7 +3,9 @@
 
 #include "sema/resolver.h"
 #include <fmt/format.h>
+#include <algorithm>
 #include <filesystem>
+#include <iterator>
 #include <unordered_map>
 #include <unordered_set>
 #include "sema/reporter.h"
@@ -69,6 +71,8 @@ private:
     std::string   module_name( File_id file ) const;
     void          refuse_other_package( Node_id use, Node_id decl );
 
+    std::vector<Node_id> unused() const;
+
     const Ast& ast_;
 
     const Source_manager& sm_;
@@ -77,6 +81,8 @@ private:
     const Imports&        imports_;
 
     std::vector<Node_id> bindings_;
+    std::vector<bool>    used_;              // a declaration some use was bound to
+    std::vector<Node_id> unused_candidates_; // parameters of functions with bodies, and locals
     std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
@@ -94,6 +100,8 @@ private:
 Resolution Resolver::run()
 {
     bindings_.assign( ast_.node_count(), Node_id {} );
+    used_.assign( ast_.node_count(), false );
+    unused_candidates_.clear();
     unresolved_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
     fallbacks_.assign( ast_.node_count(), Node_id {} );
@@ -137,7 +145,8 @@ Resolution Resolver::run()
         std::move( next_overload_ ),
         std::move( fallbacks_ ),
         prelude_items(),
-        imports_
+        imports_,
+        unused()
     );
 }
 
@@ -184,6 +193,16 @@ void Resolver::visit( Node_id id )
         visit( ast_.type_param_list( id ) ); // before anything that can name one
         visit( ast_.return_type( id ) );
         visit( ast_.param_list( id ) );
+        if( ast_.body( id ).is_valid() )
+        {
+            for( const Node_id param : ast_.params( id ) )
+            {
+                if( ast_.name( param ).is_valid() && ast_.name( param ) != Interner::keyword( Keyword::This ) )
+                {
+                    unused_candidates_.push_back( param );
+                }
+            }
+        }
         visit( ast_.body( id ) );
         pop_scope();
         return;
@@ -211,6 +230,10 @@ void Resolver::visit( Node_id id )
         visit( ast_.annotation( id ) );
         visit( ast_.initialiser( id ) );
         declare( scopes_.back(), ast_.name( id ), id );
+        if( !ast_.is_counter( id ) )
+        {
+            unused_candidates_.push_back( id );
+        }
         return;
     case Node_kind::Name_expr:
     {
@@ -746,6 +769,7 @@ void Resolver::bind( Node_id use, Node_id decl )
     }
 
     bindings_[use.v] = decl;
+    used_[decl.v]    = true;
 }
 
 bool Resolver::chain_overload( Node_id existing, Node_id added )
@@ -1013,6 +1037,13 @@ void Resolver::refuse_other_package( Node_id use, Node_id decl )
         fmt::format( "`{}` is in the package `{}`", name, interner_.text( package ) ),
         fmt::format( "write `{}`", qualified( interner_, package, name ) )
     );
+}
+
+std::vector<Node_id> Resolver::unused() const
+{
+    std::vector<Node_id> unused;
+    std::ranges::copy_if( unused_candidates_, std::back_inserter( unused ), [&]( Node_id c ) { return !used_[c.v]; } );
+    return unused;
 }
 
 } // namespace

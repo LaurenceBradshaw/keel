@@ -38,10 +38,10 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
     return;
 }
 
-void kl__take__M7Counted( struct kl__Counted kl_c_1 )
+void kl__take__M7Counted( struct kl__Counted kl_t1 )
 {
 #line 21 "codegen/borrow_after_refill.kl"
-    kl__Counted__dtor( &kl_c_1 );
+    kl__Counted__dtor( &kl_t1 );
     return;
 }
 

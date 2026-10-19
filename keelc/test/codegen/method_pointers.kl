@@ -15,12 +15,12 @@ struct Counter
         return n;
     }
 
-    i32 pick( i32 a )
+    i32 pick( i32 _ )
     {
         return 1;
     }
 
-    i32 pick( f64 a )
+    i32 pick( f64 _ )
     {
         return 2;
     }
@@ -35,12 +35,12 @@ struct Box<T> where T : copyable
         return v;
     }
 
-    i32 pick( i32 a ) const
+    i32 pick( i32 _ ) const
     {
         return 1;
     }
 
-    i32 pick( f64 a ) const
+    i32 pick( f64 _ ) const
     {
         return 2;
     }

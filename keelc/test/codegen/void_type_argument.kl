@@ -36,7 +36,7 @@ T same<T>( T a ) where T : copyable
     return held;
 }
 
-void look<T>( const ref T a )
+void look<T>( const ref T _ )
 {
     t::println( "look" );
 }

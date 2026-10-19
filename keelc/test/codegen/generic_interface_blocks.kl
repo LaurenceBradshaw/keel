@@ -15,13 +15,13 @@ enum light
 
 implements sink<i64> for light
 {
-    void put( i64 value ) { }
+    void put( i64 _ ) { }
     u64 count() const { return 7; }
 };
 
 implements sink<bool> for light
 {
-    void put( bool value ) { }
+    void put( bool _ ) { }
     u64 count() const { return 8; }
 };
 

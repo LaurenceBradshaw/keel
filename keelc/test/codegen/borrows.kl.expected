@@ -57,10 +57,10 @@ uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
     return kl_t0;
 }
 
-void kl__own__M1B( struct kl__B kl_b_1 )
+void kl__own__M1B( struct kl__B kl_t1 )
 {
 #line 35 "codegen/borrows.kl"
-    kl__B__dtor( &kl_b_1 );
+    kl__B__dtor( &kl_t1 );
     return;
 }
 

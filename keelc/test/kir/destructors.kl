@@ -33,9 +33,9 @@ class Scoped
 
     ~Scoped()
     {
-        u64 seen = len;
+        u64 seen = len; _ = seen;
         {
-            u64 inner = 1;
+            u64 inner = 1; _ = inner;
         }
     }
 };
@@ -46,7 +46,7 @@ class Handle
     u64 value;
 };
 
-void release( u8* p )
+void release( u8* _ )
 {
 }
 

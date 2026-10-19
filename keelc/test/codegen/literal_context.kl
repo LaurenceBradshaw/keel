@@ -1,12 +1,12 @@
 // A literal has a value, not a type. Every line here depends on something supplying one: the
 // operand beside it, the declared type, a parameter, or - where both operands are literals - the
 // context alone. Four of these were compile errors until a program was written that used them.
-i32 takes_u8( u8 v ) { return 0; }
+i32 takes_u8( u8 _ ) { return 0; }
 
 i32 main()
 {
     f32 a = -1.5;
-    f64 b = -1.5;
+    f64 b = -1.5; _ = b;
     f64 c = 1;
     f32 d = 2;
 
@@ -18,15 +18,15 @@ i32 main()
     u8  i = 'a' + 1;
 
     u64 j = 1;
-    u64 k = j << 40;
+    u64 k = j << 40; _ = k;
 
-    bool l = !true;
+    bool l = !true; _ = l;
     i32  m = -( -5 );
 
     u8  n = 200;
     u8  o = n - 1;
 
-    i32 p = takes_u8( 3 );
+    i32 p = takes_u8( 3 ); _ = p;
     u16 q = 1;
     q += 1;
 

@@ -32,19 +32,19 @@ class Holder
         taken_ = 0;
     }
 
-    public void take( move Tracked t )
+    public void take( move Tracked _ )
     {
         taken_ += 1;
     }
 
-    public static void own( move Tracked t )
+    public static void own( move Tracked _ )
     {
     }
 
     private u64 taken_;
 };
 
-void consume( move Tracked t )
+void consume( move Tracked _ )
 {
 }
 

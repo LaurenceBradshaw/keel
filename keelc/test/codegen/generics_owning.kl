@@ -26,7 +26,7 @@ class Cell
 
 // No `where` clause: taking ownership, holding it and dropping it need no promise at all. The
 // clause would be needed only to *copy* the argument, which none of these do.
-void consume<T>( move T a )
+void consume<T>( move T _ )
 {
 }
 
@@ -37,7 +37,7 @@ T relay<T>( move T a )
 
 // A borrow, which is what a bare parameter of an owning type is. The caller still owns it, so this
 // one must not destroy anything.
-void inspect<T>( T a )
+void inspect<T>( T _ )
 {
 }
 

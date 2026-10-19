@@ -31,7 +31,7 @@ struct Pair<T> implements Shape where T : copyable
     T b;
 
     f64 area() const { return 2.0; }
-    void grow( f64 by ) { }
+    void grow( f64 _ ) { }
 };
 
 f64 measure( const ref Shape s ) { return s.area(); }

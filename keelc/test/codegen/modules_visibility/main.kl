@@ -3,7 +3,7 @@
 import route;
 
 // Declared first, so far.kl's pick follows it in the overload set and has to be skipped.
-i32 pick( i64 v )
+i32 pick( i64 _ )
 {
     return 1;
 }

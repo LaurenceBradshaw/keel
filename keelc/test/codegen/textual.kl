@@ -16,12 +16,12 @@ struct Name implements textual
     }
 };
 
-void show( str s )
+void show( str _ )
 {
     t::print( "exact " );
 }
 
-void show( const ref textual t )
+void show( const ref textual _ )
 {
     t::print( "borrowed " );
 }

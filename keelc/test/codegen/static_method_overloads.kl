@@ -6,27 +6,27 @@ struct Number
 {
     i32 x;
 
-    static i32 from( i64 value )
+    static i32 from( i64 _ )
     {
         return 1;
     }
 
-    static i32 from( u64 value )
+    static i32 from( u64 _ )
     {
         return 2;
     }
 
-    static i32 from( bool value )
+    static i32 from( bool _ )
     {
         return 3;
     }
 
-    static i32 mixed( i64 value )
+    static i32 mixed( i64 _ )
     {
         return 4;
     }
 
-    i32 mixed( u64 value ) const
+    i32 mixed( u64 _ ) const
     {
         return x;
     }
@@ -50,12 +50,12 @@ struct Box<T>
 {
     i32 unused;
 
-    static i32 kind( T value )
+    static i32 kind( T _ )
     {
         return 1;
     }
 
-    static i32 kind( T value, bool flag )
+    static i32 kind( T _, bool _ )
     {
         return 2;
     }

@@ -23,10 +23,10 @@ error: `e` is moved into this call, so the call cannot also borrow it
    |     ^ a call cannot take a value and borrow it at once
 
 error: `f` is moved into this call, so the call cannot also borrow it
-  --> sema/errors_move_and_borrow.kl:57:17
+  --> sema/errors_move_and_borrow.kl:57:9
    |
-57 |     bool same = f == move f;
-   |                 ^^^^^^^^^^^ a call cannot take a value and borrow it at once
+57 |     _ = f == move f;
+   |         ^^^^^^^^^^^ a call cannot take a value and borrow it at once
 
 error: `g` is moved into this call, so the call cannot also borrow it
   --> sema/errors_move_and_borrow.kl:61:20

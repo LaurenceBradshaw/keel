@@ -45,7 +45,7 @@ i32 code( Colour c )
 
 i32 main()
 {
-    Shape s = Shape::Rect( 1.0, 2.0 );
+    Shape s = Shape::Rect( 1.0, 2.0 ); _ = s;
 
     return 0;
 }

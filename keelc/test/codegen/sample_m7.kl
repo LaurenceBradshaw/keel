@@ -87,7 +87,7 @@ f64 scaled( f64 v )
     return v * 2.0;
 }
 
-f64 scaled( i32 v )
+f64 scaled( i32 _ )
 {
     return 0.0;
 }

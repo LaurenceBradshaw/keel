@@ -2,6 +2,11 @@
 {"kind":"file","path":"<prelude>"}
 {"kind":"file","path":"sema/names/shapes.kl"}
 {"kind":"file","path":"sema/names/metric/units.kl"}
+{"kind":"diagnostic","severity":"warning","file":"sema/names/main.kl","line":28,"col":21,"end_line":28,"end_col":22,"message":"unused parameter `b`","help":"name it `_` if it is unused on purpose"}
+{"kind":"diagnostic","severity":"warning","file":"sema/names/main.kl","line":47,"col":11,"end_line":47,"end_col":12,"message":"unused variable `z`","help":"write `_ = meter::zero();` if only the initialiser is wanted"}
+{"kind":"diagnostic","severity":"warning","file":"sema/names/main.kl","line":48,"col":18,"end_line":48,"end_col":22,"message":"unused variable `unit`","help":"write `_ = metric::Unit::Foot;` if only the initialiser is wanted"}
+{"kind":"diagnostic","severity":"warning","file":"sema/names/main.kl","line":49,"col":9,"end_line":49,"end_col":10,"message":"unused variable `r`","help":"write `_ = radius_of( Shape::Dot );` if only the initialiser is wanted"}
+{"kind":"diagnostic","severity":"warning","file":"sema/names/main.kl","line":51,"col":9,"end_line":51,"end_col":10,"message":"unused variable `n`","help":"write `_ = p.count + m.value();` if only the initialiser is wanted"}
 {"kind":"name","refers_to":"package","file":"sema/names/main.kl","line":4,"col":8,"end_col":14}
 {"kind":"name","refers_to":"global","file":"sema/names/main.kl","line":6,"col":5,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":6,"decl_col":5,"decl_end_col":12,"signature":"i32 counter"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":8,"col":7,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}

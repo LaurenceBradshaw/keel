@@ -12,8 +12,8 @@ void nothing()
 
 i32 main()
 {
-    fn( i32 ) -> i32 p = &twice;
-    fn() -> void     q = &nothing;
+    fn( i32 ) -> i32 p = &twice; _ = p;
+    fn() -> void     q = &nothing; _ = q;
 
     return 0;
 }

@@ -187,6 +187,58 @@ Types Checker::run()
 
 namespace keel
 {
+namespace
+{
+
+// A local that owns is kept for its destructor, which runs at the end of its scope.
+void report_unused(
+    const Ast&            ast,
+    const Resolution&     resolution,
+    Types&                types,
+    const Source_manager& sm,
+    const Interner&       interner,
+    Diagnostics&          diags
+)
+{
+    sema::Reporter reporter( sm, diags );
+
+    for( const Node_id unused : resolution.unused() )
+    {
+        const std::string_view name = interner.text( ast.name( unused ) );
+
+        if( ast.kind( unused ) == Node_kind::Param_decl )
+        {
+            // An unassigned `out` parameter is already an error.
+            if( parameter_mode_of( ast, unused ) == Param_mode::Out )
+            {
+                continue;
+            }
+
+            reporter.warn_at(
+                ast.name_span( unused ), fmt::format( "unused parameter `{}`", name ), "name it `_` if it is unused on purpose"
+            );
+            continue;
+        }
+
+        const Type_id type = types.type_of( unused );
+        if( !is_borrowed_binding( ast, types, unused ) && ( !type.is_valid() || types.table().mentions_parameter( type ) ||
+                                                            instance_owns( ast, types.table(), type, types.recorded() ) ) )
+        {
+            continue;
+        }
+
+        const Node_id init = ast.initialiser( unused );
+        reporter.warn_at(
+            ast.name_span( unused ),
+            fmt::format( "unused variable `{}`", name ),
+            init.is_valid()
+                ? fmt::format( "write `_ = {};` if only the initialiser is wanted", reporter.text( ast.span( init ) ) )
+                : "remove it"
+        );
+    }
+}
+
+} // namespace
 
 Types type_check(
     const Ast&            ast,
@@ -197,7 +249,15 @@ Types type_check(
     Diagnostics&          diags
 )
 {
-    return sema::Checker( ast, interner, resolution, sm, literals, diags ).run();
+    Types types = sema::Checker( ast, interner, resolution, sm, literals, diags ).run();
+
+    // No warnings over errors: a use inside an `Error` node is never bound.
+    if( !diags.has_errors() )
+    {
+        report_unused( ast, resolution, types, sm, interner, diags );
+    }
+
+    return types;
 }
 
 Param_mode parameter_mode_of( const Ast& ast, Node_id param )

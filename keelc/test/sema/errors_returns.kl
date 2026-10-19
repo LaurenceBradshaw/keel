@@ -18,7 +18,7 @@ i32 only_one_arm( i32 x )
     switch( x )
     {
         case 1: return 1;
-        default: i32 y = 2;
+        default: i32 y = 2; _ = y;
     }
 }
 

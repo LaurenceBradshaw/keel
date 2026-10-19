@@ -55,7 +55,7 @@ private i32 scale( i32 v )
     return v * 10;
 }
 
-i32 scale( i64 v )
+i32 scale( i64 _ )
 {
     return 1;
 }

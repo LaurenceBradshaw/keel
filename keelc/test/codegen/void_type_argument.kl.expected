@@ -591,13 +591,13 @@ struct kl__Box__I4voidE kl__boxed__I4voidE__4void( void )
     return kl_t0;
 }
 
-void kl__look__I4voidE__4void( void* kl_a_1 )
+void kl__look__I4voidE__4void( void* kl_t1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
     struct kl_7prelude_textual__ref kl_t6;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 41 "codegen/void_type_argument.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "look";
@@ -607,13 +607,13 @@ void kl__look__I4voidE__4void( void* kl_a_1 )
     return;
 }
 
-void kl__look__I3BoxI4voidEE__3BoxI4voidE( struct kl__Box__I4voidE* kl_a_1 )
+void kl__look__I3BoxI4voidEE__3BoxI4voidE( struct kl__Box__I4voidE* kl_t1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
     struct kl_7prelude_textual__ref kl_t6;
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
 #line 41 "codegen/void_type_argument.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "look";

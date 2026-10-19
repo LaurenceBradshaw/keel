@@ -12,10 +12,10 @@ i32 main()
     u64 unsigned_wide = 4;
     f32 small_real = 0.5;
 
-    bool met = narrow < unsigned_narrow;
-    bool signs = wide < unsigned_wide;
-    bool against_a_real = wide >= small_real;
-    bool widened = unsigned_wide != small_real;
+    _ = narrow < unsigned_narrow;
+    _ = wide < unsigned_wide;
+    _ = wide >= small_real;
+    _ = unsigned_wide != small_real;
 
     return 0;
 }

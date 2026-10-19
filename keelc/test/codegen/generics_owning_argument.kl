@@ -52,7 +52,7 @@ i32 look( Holder h )
 }
 
 // Open, so it may own whatever `T` is, and is borrowed at every instance.
-i32 open<T>( Wrap<T> w )
+i32 open<T>( Wrap<T> _ )
 {
     return 1;
 }

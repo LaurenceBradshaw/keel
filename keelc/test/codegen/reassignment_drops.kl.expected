@@ -117,10 +117,10 @@ void kl__replace__R5Owned( struct kl__Owned* kl_o_1 )
     return;
 }
 
-void kl__consume__M5Owned( struct kl__Owned kl_o_1 )
+void kl__consume__M5Owned( struct kl__Owned kl_t1 )
 {
 #line 54 "codegen/reassignment_drops.kl"
-    kl__Owned__dtor( &kl_o_1 );
+    kl__Owned__dtor( &kl_t1 );
     return;
 }
 

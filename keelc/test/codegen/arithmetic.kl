@@ -2,7 +2,7 @@
 // order cannot matter and every §6.4 conversion is written down.
 i32 mix( i32 a, i64 b, u8 c )
 {
-    i64 wide = a + b;
+    i64 wide = a + b; _ = wide;
     u8  byte = c;
     byte += 1;
     return a * 2;

@@ -25,7 +25,7 @@ class tally implements sink<i64>, sink<bool>
         count_ += 1;
     }
 
-    public void put( bool value ) { count_ += 1; }
+    public void put( bool _ ) { count_ += 1; }
     public u64 count() const { return count_; }
     public i64 sum() const { return sum_; }
 };

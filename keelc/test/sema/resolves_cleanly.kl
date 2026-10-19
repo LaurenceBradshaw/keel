@@ -20,8 +20,8 @@ i32 odd( i32 n )
 i32 main()
 {
     i32 count = 0;
-    { i32 inner = count; }
-    { i32 inner = count; }
+    { i32 inner = count; _ = inner; }
+    { i32 inner = count; _ = inner; }
     for( i32 i = 0; i < 10; i = i + 1 ) { count = count + i; }
     return even( count );
 }

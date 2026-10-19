@@ -23,7 +23,7 @@ class Buffer
     }
 };
 
-void take( move Buffer b )
+void take( move Buffer _ )
 {
 }
 

@@ -28,7 +28,7 @@ u64 forward( B b )
 }
 
 // A `move` parameter is owned rather than borrowed, so it stays a value and the callee drops it.
-void own( move B b )
+void own( move B _ )
 {
 }
 

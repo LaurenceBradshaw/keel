@@ -3,32 +3,32 @@
 // never reaches an unsigned one, and arithmetic on literals ranks as a lone literal does.
 import t::console;
 
-i32 width( i8 a )
+i32 width( i8 _ )
 {
     return 8;
 }
 
-i32 width( i16 a )
+i32 width( i16 _ )
 {
     return 16;
 }
 
-i32 width( i64 a )
+i32 width( i64 _ )
 {
     return 64;
 }
 
-i32 width( u64 a )
+i32 width( u64 _ )
 {
     return 65;
 }
 
-i32 nearest( i32 a )
+i32 nearest( i32 _ )
 {
     return 32;
 }
 
-i32 nearest( i8 a )
+i32 nearest( i8 _ )
 {
     return 8;
 }

@@ -65,10 +65,10 @@ static uint64_t kl__light__as_kl__sink__I3i64E__kl_count_22( void* self )
 
 static const struct kl__sink__I3i64E__vtable kl__light__as_kl__sink__I3i64E = { kl__light__as_kl__sink__I3i64E__drop, kl__light__as_kl__sink__I3i64E__kl_put_12, kl__light__as_kl__sink__I3i64E__kl_count_22 };
 
-void kl__put__S5lightC4sinkI3i64E_3i64( int32_t* kl_this_1, int64_t kl_value_2 )
+void kl__put__S5lightC4sinkI3i64E_3i64( int32_t* kl_this_1, int64_t kl_t2 )
 {
     ( void ) kl_this_1;
-    ( void ) kl_value_2;
+    ( void ) kl_t2;
     return;
 }
 
@@ -81,10 +81,10 @@ uint64_t kl__count__S5lightC4sinkI3i64E( int32_t* kl_this_1 )
     return kl_t0;
 }
 
-void kl__put__S5lightC4sinkI4boolE_4bool( int32_t* kl_this_1, bool kl_value_2 )
+void kl__put__S5lightC4sinkI4boolE_4bool( int32_t* kl_this_1, bool kl_t2 )
 {
     ( void ) kl_this_1;
-    ( void ) kl_value_2;
+    ( void ) kl_t2;
     return;
 }
 

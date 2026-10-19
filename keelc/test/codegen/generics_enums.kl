@@ -62,7 +62,7 @@ i32 main()
 {
     // Named before anything names `Box<f64>`, which therefore exists only because the containment
     // walk reached it through this enum's payload. Interning order alone would define it too late.
-    Wrap<f64> late;
+    Wrap<f64> late; _ = late;
 
     // Two instances of one declaration, so the emitter writes two C structs from it.
     Opt<i32> a = Opt::Some( 7 );

@@ -18,7 +18,7 @@ class Counted
     }
 };
 
-void take( move Counted c )
+void take( move Counted _ )
 {
 }
 

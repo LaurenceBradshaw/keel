@@ -3,10 +3,10 @@
 i32 main()
 {
     i32 x = 7;
-    u32 fits = cast<u32>( x );
+    _ = cast<u32>( x );
 
     x = -1;
-    u32 negative = cast<u32>( x );
+    _ = cast<u32>( x );
 
     return 7;
 }

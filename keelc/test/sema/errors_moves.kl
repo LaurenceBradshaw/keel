@@ -1,6 +1,6 @@
 // PLAN §8. Move checking is flow-sensitive over the KIR CFG, so what is reported depends on the
 // paths that reach a use, not on the order the statements are written.
-void sink( i32 x )
+void sink( i32 _ )
 {
 }
 

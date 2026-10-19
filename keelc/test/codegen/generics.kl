@@ -6,7 +6,7 @@ T id<T>( T a ) where T : copyable
     return a;
 }
 
-T pick<T, U>( T a, U b ) where T : copyable, where U : copyable
+T pick<T, U>( T a, U _ ) where T : copyable, where U : copyable
 {
     return a;
 }
@@ -35,7 +35,7 @@ i32 doubled( i32 v )
     return v + v;
 }
 
-i32 relay<T>( T ignored ) where T : copyable
+i32 relay<T>( T _ ) where T : copyable
 {
     return doubled( id<i32>( 2 ) );
 }

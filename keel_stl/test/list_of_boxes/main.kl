@@ -32,7 +32,7 @@ class Labelled implements Shape
     }
 
     public f64 area() const { return cast<f64>( label.size() ); }
-    public void grow( f64 by ) { label.push( 'y' ); }
+    public void grow( f64 _ ) { label.push( 'y' ); }
 };
 
 box<Shape> make( u64 i )

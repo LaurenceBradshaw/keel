@@ -272,10 +272,10 @@ double kl__area__S8Labelled( struct kl__Labelled* kl_this_1 )
     return kl_t0;
 }
 
-void kl__grow__S8Labelled_3f64( struct kl__Labelled* kl_this_1, double kl_by_2 )
+void kl__grow__S8Labelled_3f64( struct kl__Labelled* kl_this_1, double kl_t2 )
 {
     struct kl_2kl_string* kl_t3;
-    ( void ) kl_by_2;
+    ( void ) kl_t2;
 #line 35 "list_of_boxes/main.kl"
     kl_t3 = &( *kl_this_1 ).kl_label_55;
     kl_2kl_push__SQ2kl6string_2u8( kl_t3, 121 );

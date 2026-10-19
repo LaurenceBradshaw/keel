@@ -33,7 +33,7 @@ fn ~Scoped {
 }
 fn release {
     let _0: void; // return slot
-    let _1: u8*; // parameter p
+    let _1: u8*; // parameter
 
     bb0:
         return

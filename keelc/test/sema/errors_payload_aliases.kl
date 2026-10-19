@@ -104,7 +104,7 @@ u64 assign_alias_of_owner()
     }
 }
 
-void take( move Holder h )
+void take( move Holder _ )
 {
 }
 

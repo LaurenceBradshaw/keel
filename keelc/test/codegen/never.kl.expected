@@ -110,12 +110,12 @@ _Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
     kl_rt_panic_message( "codegen/never.kl", 50, kl_why_1.kl_data_730, kl_why_1.kl_size_733 );
 }
 
-_Noreturn void kl__refuse__3i32( int32_t kl_code_1 )
+_Noreturn void kl__refuse__3i32( int32_t kl_t1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
-    ( void ) kl_code_1;
+    ( void ) kl_t1;
 #line 56 "codegen/never.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "refused";

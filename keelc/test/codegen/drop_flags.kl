@@ -27,7 +27,7 @@ class Owned
 
 // D31: the marker is in the signature as well as at the call, and the two must agree. Owning it
 // is what makes the callee responsible for dropping it.
-void consume( move Owned o )
+void consume( move Owned _ )
 {
 }
 

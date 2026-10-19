@@ -42,7 +42,7 @@ f64 floats( f64 a )
     return a;
 }
 
-f64 floats( bool a )
+f64 floats( bool _ )
 {
     return 0.0;
 }
@@ -56,7 +56,7 @@ class Built
         held = v;
     }
 
-    Built( bool v )
+    Built( bool _ )
     {
         held = 0;
     }
@@ -66,7 +66,7 @@ class Built
         return held + n;
     }
 
-    i64 plus( f64 n )
+    i64 plus( f64 _ )
     {
         return 0;
     }

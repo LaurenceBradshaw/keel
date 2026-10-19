@@ -1,6 +1,6 @@
 // Locals 1..parameter_count are the parameters, in declaration order, after the return slot. They
 // keep their source names, which is what makes a dump readable rather than a puzzle.
-i32 take( i32 first, u8 second, f64 third )
+i32 take( i32 _, u8 _, f64 _ )
 {
     return 1;
 }

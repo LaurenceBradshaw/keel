@@ -38,8 +38,8 @@ i32 unchanged( i32 a, i32 b )
 i32 unary_operators( i32 a, bool flag, u32 bits )
 {
     i32  negated = -a;
-    bool flipped = !flag;
-    u32  inverted = ~bits;
+    _ = !flag;
+    _ = ~bits;
 
     return negated;
 }

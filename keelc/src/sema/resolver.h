@@ -34,14 +34,16 @@ public:
         std::vector<Node_id> next_overload,
         std::vector<Node_id> fallbacks,
         const Prelude_items& prelude,
-        const Imports&       imports
+        const Imports&       imports,
+        std::vector<Node_id> unused = {}
     )
         : bindings_( std::move( bindings ) ),
           unresolved_( std::move( unresolved ) ),
           next_overload_( std::move( next_overload ) ),
           fallbacks_( std::move( fallbacks ) ),
           prelude_( prelude ),
-          imports_( imports )
+          imports_( imports ),
+          unused_( std::move( unused ) )
     {
     }
 
@@ -97,6 +99,12 @@ public:
         return use.v < unresolved_.size() ? unresolved_[use.v] : false;
     }
 
+    // Parameters of functions with bodies, and locals, that no use was bound to, in declaration order.
+    const std::vector<Node_id>& unused() const
+    {
+        return unused_;
+    }
+
 private:
     std::vector<Node_id> bindings_;
     std::vector<bool>    unresolved_;
@@ -104,6 +112,7 @@ private:
     std::vector<Node_id> fallbacks_;
     Prelude_items        prelude_;
     Imports              imports_;
+    std::vector<Node_id> unused_;
 };
 
 Resolution

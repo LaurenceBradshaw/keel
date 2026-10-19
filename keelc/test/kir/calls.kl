@@ -1,7 +1,7 @@
 // Three-address form removes nesting: every argument is an operand before the call is recorded, so
 // a call never sits inside another's argument list. The order those operands are produced is the
 // order the arguments were written - §7.1's guarantee, and what C leaves unspecified.
-i32 two( i32 a, i32 b )
+i32 two( i32 a, i32 _ )
 {
     return a;
 }
@@ -73,7 +73,7 @@ void nothing()
 // D2's marker. It reads the same place a bare argument would, with Move instead of Copy - the
 // whole of what it costs in KIR. What it *means* is the dataflow's; until that exists the source
 // is still readable, and the C backend emits identical text either way.
-void takes( i32 x )
+void takes( i32 _ )
 {
     return;
 }

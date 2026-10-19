@@ -19,7 +19,7 @@ class Buffer
     }
 };
 
-void take( move Buffer b )
+void take( move Buffer _ )
 {
 }
 
@@ -28,7 +28,7 @@ u64 look( Buffer b )
     return b.size;
 }
 
-void poke( ref Buffer b )
+void poke( ref Buffer _ )
 {
 }
 
@@ -36,7 +36,7 @@ void bare()
 {
     Buffer b = Buffer();
     take( move b );
-    u64 n = look( b );
+    _ = look( b );
 }
 
 void by_ref()
@@ -50,14 +50,14 @@ void receiver()
 {
     Buffer b = Buffer();
     take( move b );
-    u64 n = b.count();
+    _ = b.count();
 }
 
 void address()
 {
     Buffer b = Buffer();
     take( move b );
-    Buffer* p = &b;
+    _ = &b;
 }
 
 void maybe( bool c )
@@ -69,7 +69,7 @@ void maybe( bool c )
         take( move b );
     }
 
-    u64 n = look( b );
+    _ = look( b );
 }
 
 // Built again, it can be borrowed again.
@@ -78,7 +78,7 @@ void refilled()
     Buffer b = Buffer();
     take( move b );
     b = Buffer();
-    u64 n = look( b );
+    _ = look( b );
 }
 
 i32 main()

@@ -170,9 +170,9 @@ int64_t kl__measure__S4SizeC8Measured( int32_t* kl_this_1 )
     return kl_t0;
 }
 
-void kl__grow__S4SizeC8Measured_3i64( int32_t* kl_this_1, int64_t kl_by_2 )
+void kl__grow__S4SizeC8Measured_3i64( int32_t* kl_this_1, int64_t kl_t2 )
 {
-    ( void ) kl_by_2;
+    ( void ) kl_t2;
 #line 55 "codegen/implements_for.kl"
     ( *kl_this_1 ) = 1;
     return;
@@ -197,10 +197,10 @@ int64_t kl__measure__S4HeldC8Measured( struct kl__Held* kl_this_1 )
     return kl_t0;
 }
 
-void kl__grow__S4HeldC8Measured_3i64( struct kl__Held* kl_this_1, int64_t kl_by_2 )
+void kl__grow__S4HeldC8Measured_3i64( struct kl__Held* kl_this_1, int64_t kl_t2 )
 {
     struct kl__Held kl_t3;
-    ( void ) kl_by_2;
+    ( void ) kl_t2;
 #line 71 "codegen/implements_for.kl"
     kl_t3.tag = 1;
     kl__Held__dtor( &( *kl_this_1 ) );

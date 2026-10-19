@@ -7,10 +7,10 @@
 int32_t kl__takes_u8__2u8( uint8_t );
 int32_t kl__main__( void );
 
-int32_t kl__takes_u8__2u8( uint8_t kl_v_1 )
+int32_t kl__takes_u8__2u8( uint8_t kl_t1 )
 {
     int32_t kl_t0;
-    ( void ) kl_v_1;
+    ( void ) kl_t1;
 #line 4 "codegen/literal_context.kl"
     kl_t0 = 0;
     return kl_t0;

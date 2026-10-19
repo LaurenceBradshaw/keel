@@ -137,10 +137,10 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-void kl__consume__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
+void kl__consume__I4CellE__M4Cell( struct kl__Cell kl_t1 )
 {
 #line 29 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_a_1 );
+    kl__Cell__dtor( &kl_t1 );
     return;
 }
 
@@ -158,9 +158,9 @@ struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
     return kl_t0;
 }
 
-void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_a_1 )
+void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_t1 )
 {
-    ( void ) kl_a_1;
+    ( void ) kl_t1;
     return;
 }
 

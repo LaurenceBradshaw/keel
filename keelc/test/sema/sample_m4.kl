@@ -17,7 +17,7 @@ class Buffer
     }
 };
 
-void consume( move Buffer b )      // called as consume( move b ) - b is dead afterwards
+void consume( move Buffer _ )      // called as consume( move b ) - b is dead afterwards
 {
 }
 

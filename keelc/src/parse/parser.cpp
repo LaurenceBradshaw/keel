@@ -2309,10 +2309,18 @@ Node_id Parser::parse_param()
     // D31: the mode wraps the type, since aux holds the name.
     Node_id type = parse_type_with_mode();
 
-    // The name goes in aux, as Function_decl's does. A nameless parameter stays one: it still counts
-    // towards the signature.
-    const Symbol_id name      = expect_name();
-    const Span      name_span = cursor_.previous().span;
+    // The name goes in aux, as Function_decl's does. A `_` or nameless parameter still counts towards
+    // the signature, and nothing can refer to it.
+    Symbol_id name {};
+    if( cursor_.check_keyword( Keyword::Underscore ) )
+    {
+        cursor_.advance();
+    }
+    else if( !cursor_.check( Token_kind::Comma ) && !cursor_.check( Token_kind::R_paren ) )
+    {
+        name = expect_name();
+    }
+    const Span name_span = cursor_.previous().span;
 
     const Node_id node = ast_.add( Node_kind::Param_decl, Span::merge( start, cursor_.previous().span ), name.v, { type } );
     ast_.set_name_span( node, name_span );
@@ -7660,16 +7668,18 @@ TEST_CASE( "parser_function_type_shape", "[parse]" )
     }
 }
 
-// A signature's parameter with no name is reported, then kept as a function type's is: every walk
-// over a parameter list reads each entry's type, and an Error node has none.
+// A parameter named `_` or nothing is kept as a function type's is, and so is one whose name failed:
+// every walk over a parameter list reads each entry's type, and an Error node has none.
 TEST_CASE( "parser_nameless_parameter_is_still_a_parameter", "[parse]" )
 {
     static const char* const sources[] = {
         "i32 f( i32 ) { return 0; }",
+        "i32 f( i32 _ ) { return 0; }",
         "i32 f( i32 this ) { return 0; }",
         "i32 f( i32 a, ref i32 ) { return a; }",
-        "class C { C( i32 ) { } };",
-        "class C { i32 m( i32 ) { return 0; } };",
+        "i32 f( i32 a, i32 _ ) { return a; }",
+        "class C { i32 x; C( i32 ) { } };",
+        "class C { i32 x; i32 m( i32 _ ) { return 0; } };",
     };
 
     for( const char* source : sources )
@@ -7677,7 +7687,7 @@ TEST_CASE( "parser_nameless_parameter_is_still_a_parameter", "[parse]" )
         const Parsed p( source );
 
         INFO( "source: " << source << "\n" << p.errors() );
-        REQUIRE( p.has_errors() );
+        REQUIRE( p.has_errors() == ( std::string_view( source ).find( "this" ) != std::string_view::npos ) );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Error ).is_valid() );
 
         const Node_id param = find_first( p.ast(), p.root(), Node_kind::Param_list );

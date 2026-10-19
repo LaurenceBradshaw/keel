@@ -32,7 +32,7 @@ u64 forward( B b )
 }
 
 // Owned rather than borrowed, so this is where it is destroyed.
-void own( move B b )
+void own( move B _ )
 {
 }
 

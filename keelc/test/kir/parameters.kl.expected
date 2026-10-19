@@ -1,8 +1,8 @@
 fn take {
     let _0: i32; // return slot
-    let _1: i32; // parameter first
-    let _2: u8; // parameter second
-    let _3: f64; // parameter third
+    let _1: i32; // parameter
+    let _2: u8; // parameter
+    let _3: f64; // parameter
 
     bb0:
         _0 = const 1

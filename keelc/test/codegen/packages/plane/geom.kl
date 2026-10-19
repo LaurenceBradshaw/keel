@@ -21,7 +21,7 @@ i32 cube( i32 s )
     return area( s ) * plane::identity( s );
 }
 
-i32 pick( i32 v )
+i32 pick( i32 _ )
 {
     return 2;
 }

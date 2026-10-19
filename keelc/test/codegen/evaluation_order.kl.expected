@@ -36,11 +36,11 @@ int32_t kl__note__3i32( int32_t kl_digit_1 )
     return kl_t0;
 }
 
-int32_t kl__first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
+int32_t kl__first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 )
 {
     int32_t kl_t0;
-    ( void ) kl_b_2;
-    ( void ) kl_c_3;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
 #line 14 "codegen/evaluation_order.kl"
     kl_t0 = kl_a_1;
     return kl_t0;

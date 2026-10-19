@@ -36,7 +36,7 @@ fn forward {
 }
 fn own {
     let _0: void; // return slot
-    let _1: B; // parameter b
+    let _1: B; // parameter
 
     bb0:
         drop _1
