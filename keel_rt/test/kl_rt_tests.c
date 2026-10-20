@@ -383,6 +383,33 @@ static void clocks( void )
     printf( "%d %d", kl_rt_clock( 3, &ns ) == EINVAL, kl_rt_clock_resolution( -1, &ns ) == EINVAL );
 }
 
+// The child sees pid 0 and its exit code reaches the parent; a panicking child is 134 (SIGABRT), and
+// nothing the parent printed is printed twice.
+static void fork_exit( void )
+{
+    int64_t pid    = 7;
+    int32_t status = -1;
+
+    printf( "before|" );
+    kl_rt_fork( &pid );
+    if( pid == 0 )
+    {
+        printf( "child" );
+        kl_rt_exit( 3 );
+    }
+    kl_rt_process_wait( pid, &status );
+    printf( "%d ", status );
+
+    pid = 7;
+    kl_rt_fork( &pid );
+    if( pid == 0 )
+    {
+        kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
+    }
+    kl_rt_process_wait( pid, &status );
+    printf( "%d|after", status );
+}
+
 // A variable reads back, an empty one is size 0, and an unset name, `=` in one and a 0 byte in one
 // are refused.
 static void environment( void )
@@ -485,6 +512,10 @@ int main( void )
     r = run( environment );
     check( "environment", "stdout", r.out, "0 value 0 0 1 1 1 1" );
     check_exit( "environment", &r, false );
+
+    r = run( fork_exit );
+    check( "fork_exit", "stdout", r.out, "before|child3 134|after" );
+    check_exit( "fork_exit", &r, false );
 
     if( failures != 0 )
     {

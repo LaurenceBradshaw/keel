@@ -27,6 +27,7 @@ _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message
 _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8_t* data, uint64_t size );
 _Noreturn void kl_rt_panic_at( const uint8_t* file, uint64_t file_size, uint32_t line, const uint8_t* data, uint64_t size );
 _Noreturn void kl_rt_unreachable( void );
+_Noreturn void kl_rt_exit( int32_t code );
 void           kl_rt_write( int32_t, const uint8_t*, uint64_t );
 void           kl_rt_write_i64( int32_t, int64_t );
 void           kl_rt_write_u64( int32_t, uint64_t );
@@ -48,6 +49,7 @@ int32_t        kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* 
 void           kl_rt_directory_close( uint64_t handle );
 int32_t        kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid );
 int32_t        kl_rt_process_wait( int64_t pid, int32_t* status );
+int32_t        kl_rt_fork( int64_t* pid );
 int32_t        kl_rt_clock( int32_t which, int64_t* nanoseconds );
 int32_t        kl_rt_clock_resolution( int32_t which, int64_t* nanoseconds );
 int32_t        kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, uint64_t* value_size );

@@ -88,6 +88,12 @@ _Noreturn void kl_rt_unreachable( void )
     abort();
 }
 
+_Noreturn void kl_rt_exit( int32_t code )
+{
+    fflush( NULL );
+    _exit( code );
+}
+
 static FILE* kl_rt_stream( int32_t stream )
 {
     if( stream == 2 )
@@ -587,6 +593,23 @@ int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
     }
 
     *status = WIFEXITED( st ) ? WEXITSTATUS( st ) : 128 + WTERMSIG( st );
+    return 0;
+}
+
+int32_t kl_rt_fork( int64_t* pid )
+{
+    // So what the parent printed comes before what the child prints.
+    fflush( NULL );
+
+    // Both processes return from fork: the child sees 0, the parent the child's pid.
+    pid_t child = fork();
+
+    if( child == -1 )
+    {
+        return errno;
+    }
+
+    *pid = child;
     return 0;
 }
 
