@@ -31,7 +31,6 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_values_1;
-    struct kl_2kl4list_list__I3i32E kl_t2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
     struct kl_2kl4list_list__I3i32E* kl_t5;
     struct kl_2kl4list_list__I3i32E* kl_t7;
@@ -39,15 +38,8 @@ int32_t kl__main__( void )
     bool kl_t9;
     struct kl_2kl4list_list__I3i32E* kl_t10;
     int32_t* kl_t11;
-    bool kl_t12;
 #line 6 "list_bounds_release/main.kl"
-    kl_t12 = false;
-    kl_t2 = kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 2 );
-    kl_t12 = true;
-    kl_values_1 = kl_t2;
-    kl_t12 = false;
-    if ( kl_t12 ) kl_2kl4list_list__I3i32E__dtor( &kl_t2 );
-    kl_t12 = false;
+    kl_values_1 = kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 2 );
 #line 7 "list_bounds_release/main.kl"
     kl_t3 = &kl_values_1;
     kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, 10 );
@@ -76,31 +68,18 @@ int32_t kl__main__( void )
 struct kl_2kl4list_list__I3i32E kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t kl_capacity_1 )
 {
     struct kl_2kl4list_list__I3i32E kl_t0;
-    struct kl_2kl4list_list__I3i32E kl_result_2;
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
-    bool kl_t6;
 #line 23 "../../src/list.kl"
-    kl_t6 = false;
-    kl_t6 = false;
-    kl_t3 = &kl_result_2;
-    kl_t6 = true;
+    kl_t3 = &kl_t0;
     kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t3 );
 #line 24 "../../src/list.kl"
-    kl_result_2.kl_cap__951 = kl_capacity_1;
-    kl_t6 = true;
+    kl_t0.kl_cap__951 = kl_capacity_1;
 #line 25 "../../src/list.kl"
-    kl_result_2.kl_count__949 = 0;
-    kl_t6 = true;
+    kl_t0.kl_count__949 = 0;
 #line 29 "../../src/list.kl"
     kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( int32_t ), "../../src/list.kl", 29, "out of memory: alloc<T>( capacity )" );
-    kl_result_2.kl_data__947 = kl_t5;
-    kl_t6 = true;
-#line 32 "../../src/list.kl"
-    kl_t0 = kl_result_2;
-    kl_t6 = false;
-    if ( kl_t6 ) kl_2kl4list_list__I3i32E__dtor( &kl_result_2 );
-    kl_t6 = false;
+    kl_t0.kl_data__947 = kl_t5;
     return kl_t0;
 }
 
@@ -127,7 +106,6 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int32_t* kl_t8;
-    int32_t* kl_t9;
 #line 201 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count__949;
     if ( kl_t3 ) goto bb1; else goto bb2;
@@ -140,8 +118,7 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
     bb2:
 #line 208 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data__947 + kl_index_2;
-    kl_t9 = &( *kl_t8 );
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
     return kl_t0;
 }
 
@@ -176,7 +153,6 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
     struct kl_2kl4list_list__I3i32E* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
-    uint64_t kl_t6;
 #line 435 "../../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count__949 == ( *kl_this_1 ).kl_cap__951;
     if ( kl_t2 ) goto bb1; else goto bb5;
@@ -186,8 +162,7 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
     kl_t5 = ( *kl_this_1 ).kl_cap__951 > 0;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-    kl_t6 = ( *kl_this_1 ).kl_cap__951 * 2;
-    kl_t4 = kl_t6;
+    kl_t4 = ( *kl_this_1 ).kl_cap__951 * 2;
     goto bb4;
     bb3:
     kl_t4 = 1;
@@ -202,15 +177,13 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
 void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
-    int32_t* kl_t4;
     bool kl_t5;
     uint64_t kl_i_6;
     bool kl_t7;
     int32_t* kl_t8;
     int32_t* kl_t9;
 #line 408 "../../src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../../src/list.kl", 408, "out of memory: alloc<T>( n )" );
-    kl_new_data_3 = kl_t4;
+    kl_new_data_3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../../src/list.kl", 408, "out of memory: alloc<T>( n )" );
 #line 411 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__947 != NULL;
     if ( kl_t5 ) goto bb1; else goto bb6;

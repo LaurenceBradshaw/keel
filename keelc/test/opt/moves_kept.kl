@@ -1,0 +1,141 @@
+// M11 move coalescing, in a release build: the copies that look like the ones it removes and are
+// not. Two values alive at once keep two locals: a reassignment builds the new value before the old
+// one drops, a local returned on one path is alive while another path builds its own return value,
+// a copied value read after its source changes, and a local moved on one path only. Construction
+// and destruction append to `trace`, so a merge that reorders them, or that loses or repeats a
+// destroy, changes it. Each check returns its own code.
+
+i32 live;
+i64 trace;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+        trace = trace * 10 + v;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        trace = trace * 10 + 9;
+    }
+
+    public i32 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// The new value is built before the old one drops: 1 built, 2 built, 1 dropped, 2 dropped.
+i32 reassigned()
+{
+    trace = 0;
+    {
+        Box a = Box( 1 );
+        a = Box( 2 );
+        if( a.value != 2 || live != 1 )
+        {
+            return 1;
+        }
+    }
+
+    return trace == 1299 ? 0 : 2;
+}
+
+// `b` is alive while the early return builds its own value, so `b` is not built in the return slot.
+Box early( bool c )
+{
+    Box b = Box( 3 );
+    if( c )
+    {
+        return Box( 4 );
+    }
+
+    return b;
+}
+
+// A local moved on one path only is still dropped on the other.
+i32 one_path( bool c )
+{
+    Box kept = Box( 5 );
+    Box other = Box( 6 );
+    if( c )
+    {
+        other = move kept;
+    }
+
+    return other.value;
+}
+
+// The copy is read after its source changes, so the two cannot share.
+i32 copied()
+{
+    Point p = Point { 1, 2 };
+    Point q = p;
+    p.x = 5;
+    return q.x == 1 && p.x == 5 ? 0 : 3;
+}
+
+// A loop's reassignment: each round's value is built while the last round's is alive.
+i32 looped()
+{
+    trace = 0;
+    {
+        Box a = Box( 1 );
+        for( i32 i = 2; i <= 3; i++ )
+        {
+            Box b = Box( i );
+            a = move b;
+        }
+        if( a.value != 3 )
+        {
+            return 4;
+        }
+    }
+
+    return trace == 129399 ? 0 : 5;
+}
+
+i32 main()
+{
+    i32 code = reassigned();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    trace = 0;
+    {
+        Box x = early( true );
+        Box y = early( false );
+        if( x.value != 4 || y.value != 3 || live != 2 || trace != 3493 )
+        {
+            return 10;
+        }
+    }
+
+    if( one_path( true ) != 5 || one_path( false ) != 6 || live != 0 )
+    {
+        return 11;
+    }
+
+    code = copied();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = looped();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    return live == 0 ? 0 : 12;
+}

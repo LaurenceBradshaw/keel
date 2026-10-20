@@ -1,5 +1,5 @@
 # Sources are globbed recursively from the subdirectory layout described in docs/PLAN.md §11
-# (common/ lex/ parse/ ast/ sema/ ir/ check/ codegen_c/). CONFIGURE_DEPENDS makes Ninja re-run
+# (common/ lex/ parse/ ast/ sema/ ir/ check/ opt/ codegen_c/). CONFIGURE_DEPENDS makes Ninja re-run
 # CMake when a file appears or disappears, so adding a source needs no edit here.
 #
 # Includes are path-qualified from src/ - `#include "lex/lexer.h"`, not `#include "lexer.h"`.

@@ -1,0 +1,92 @@
+// M11 move coalescing, in a release build: each arm of a conditional builds its value where the
+// conditional's result ends, rather than in an arm's temporary copied to a merge local and then to
+// the declared one. The arm not taken builds nothing and drops nothing. Each check returns its own
+// code.
+
+i32 live;
+i32 destroyed;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        destroyed += 1;
+    }
+
+    public i32 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+Box made( i32 v )
+{
+    return Box( v );
+}
+
+Box chosen( bool c )
+{
+    Box r = c ? Box( 1 ) : Box( 2 );
+    return r;
+}
+
+Box called( bool c )
+{
+    Box r = c ? made( 3 ) : made( 4 );
+    return r;
+}
+
+Box nested( i32 n )
+{
+    return n == 0 ? Box( 5 ) : n == 1 ? made( 6 ) : Box( 7 );
+}
+
+Point point( bool c )
+{
+    Point p = c ? Point { 1, 2 } : Point { 3, 4 };
+    return p;
+}
+
+i32 main()
+{
+    {
+        Box a = chosen( true );
+        Box b = chosen( false );
+        Box c = called( true );
+        Box d = called( false );
+        if( a.value != 1 || b.value != 2 || c.value != 3 || d.value != 4 || live != 4 || destroyed != 0 )
+        {
+            return 1;
+        }
+
+        Box e = nested( 0 );
+        Box f = nested( 1 );
+        Box g = nested( 2 );
+        if( e.value != 5 || f.value != 6 || g.value != 7 || live != 7 || destroyed != 0 )
+        {
+            return 2;
+        }
+    }
+
+    if( live != 0 || destroyed != 7 )
+    {
+        return 3;
+    }
+
+    if( point( true ).y != 2 || point( false ).x != 3 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

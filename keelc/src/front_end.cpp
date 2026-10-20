@@ -6,6 +6,8 @@
 #include "check/report.h"
 #include "ir/lower.h"
 #include "ir/simplify.h"
+#include "ir/verify.h"
+#include "opt/coalesce_moves.h"
 
 namespace keel
 {
@@ -72,11 +74,18 @@ Front_end run_front_end(
     const Literal_id debug = build.asserts ? vocabulary.true_literal : vocabulary.false_literal;
 
     // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
-    // only this build's.
+    // only this build's. A release build's optimisations run before elaboration makes drops explicit.
     for( Function& function : front.functions )
     {
         settle_debug( function, debug );
         simplify( function, literals );
+
+        if( build.optimise )
+        {
+            coalesce_moves( function );
+            assert( verify( function ).empty() );
+        }
+
         elaborate_drops( function, vocabulary );
     }
 

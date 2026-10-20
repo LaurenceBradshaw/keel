@@ -1,0 +1,77 @@
+// M11 move coalescing, in a release build: a value built into a temporary and moved to where it
+// ends - a declared local, or the return slot - is built there instead. Each `Box` counts the live
+// ones and the destructor calls, so a merge that drops twice or not at all changes a count. Each
+// check returns its own code.
+
+i32 live;
+i32 destroyed;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        destroyed += 1;
+    }
+
+    public i32 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// A named local returned: built in the return slot.
+Box made( i32 v )
+{
+    Box b = Box( v );
+    return b;
+}
+
+// A call's result into a declared local, then that local returned.
+Box passed( i32 v )
+{
+    Box b = made( v + 1 );
+    return b;
+}
+
+// An aggregate's temporary into a local, the local into the return slot.
+Point point( i32 v )
+{
+    Point p = Point { v, v * 2 };
+    return p;
+}
+
+i32 main()
+{
+    {
+        Box a = Box( 1 );
+        Box b = made( 2 );
+        Box c = passed( 3 );
+        if( a.value != 1 || b.value != 2 || c.value != 4 || live != 3 || destroyed != 0 )
+        {
+            return 1;
+        }
+    }
+
+    if( live != 0 || destroyed != 3 )
+    {
+        return 2;
+    }
+
+    Point p = point( 5 );
+    if( p.x != 5 || p.y != 10 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

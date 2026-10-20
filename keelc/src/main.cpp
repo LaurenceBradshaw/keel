@@ -307,7 +307,7 @@ int main( int argc, char** argv )
     keel::Front_end front = keel::run_front_end(
         file_id.value(),
         keel::Stage::Elaborated,
-        keel::Build { .asserts = debug, .overflow_checks = debug || args.count( "overflow-checks" ) > 0 },
+        keel::Build { .asserts = debug, .overflow_checks = debug || args.count( "overflow-checks" ) > 0, .optimise = !debug },
         sm,
         interner,
         literals,

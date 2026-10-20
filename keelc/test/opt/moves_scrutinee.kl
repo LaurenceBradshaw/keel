@@ -1,0 +1,111 @@
+// M11 move coalescing, in a release build: `switch( move … )` and `try` read their scrutinee in
+// place rather than through a copy, and a payload moved to a binding is dropped once, by whoever
+// holds it last. Each check returns its own code.
+
+i32 live;
+i32 destroyed;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        destroyed += 1;
+    }
+
+    public i32 value;
+};
+
+enum Shape
+{
+    boxed( Box b ),
+    empty
+};
+
+enum Fault
+{
+    missing
+};
+
+// A parameter moved into the switch: the arm that binds the payload drops it, the other drops
+// the parameter.
+i32 opened( move Shape s )
+{
+    switch( move s )
+    {
+        case Shape::boxed( b ):
+            return b.value;
+        case Shape::empty:
+            return 0;
+    }
+}
+
+// A local moved into the switch.
+i32 local( bool full )
+{
+    Shape s = full ? Shape::boxed( Box( 8 ) ) : Shape::empty;
+    switch( move s )
+    {
+        case Shape::boxed( b ):
+            return b.value;
+        case Shape::empty:
+            return -1;
+    }
+}
+
+result<Box, Fault> found( bool ok )
+{
+    if( ok )
+    {
+        return result::ok( Box( 9 ) );
+    }
+
+    return result::err( Fault::missing );
+}
+
+result<i32, Fault> tried( bool ok )
+{
+    Box b = try found( ok );
+    return result::ok( b.value );
+}
+
+i32 main()
+{
+    if( opened( Shape::boxed( Box( 7 ) ) ) != 7 || opened( Shape::empty ) != 0 || live != 0 || destroyed != 1 )
+    {
+        return 1;
+    }
+
+    if( local( true ) != 8 || local( false ) != -1 || live != 0 || destroyed != 2 )
+    {
+        return 2;
+    }
+
+    switch( tried( true ) )
+    {
+        case result::ok( v ):
+            if( v != 9 )
+            {
+                return 3;
+            }
+            break;
+        case result::err( e ):
+            return 4;
+    }
+
+    switch( tried( false ) )
+    {
+        case result::ok( v ):
+            return 5;
+        case result::err( e ):
+            break;
+    }
+
+    return live == 0 && destroyed == 3 ? 0 : 6;
+}

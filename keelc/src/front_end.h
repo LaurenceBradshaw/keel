@@ -31,6 +31,7 @@ struct Build
 {
     bool asserts         = false;
     bool overflow_checks = false;
+    bool optimise        = false; // M11's optimisations; release only, so a debug build is the program as lowered.
 };
 
 struct Front_end
