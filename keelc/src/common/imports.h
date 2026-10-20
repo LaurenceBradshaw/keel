@@ -15,8 +15,10 @@ namespace keel
 class Imports
 {
 public:
-    void add( File_id from, File_id to )
+    void add( File_id from, File_id to, Span span = {} )
     {
+        import_spans_.try_emplace( edge( from, to ), span );
+
         if( edges_.size() <= from.v )
         {
             edges_.resize( from.v + 1 );
@@ -49,6 +51,28 @@ public:
 
         const std::vector<File_id>& adj = edges_[from.v];
         return std::binary_search( adj.begin(), adj.end(), to );
+    }
+
+    // Where `from` wrote its `import` of `to`.
+    Span import_span( File_id from, File_id to ) const
+    {
+        const auto it = import_spans_.find( edge( from, to ) );
+        return it != import_spans_.end() ? it->second : Span {};
+    }
+
+    // Every file that imports both.
+    std::vector<File_id> common_importers( File_id a, File_id b ) const
+    {
+        std::vector<File_id> importers;
+        for( u32 from = 0; from < edges_.size(); ++from )
+        {
+            const std::vector<File_id>& adj = edges_[from];
+            if( std::binary_search( adj.begin(), adj.end(), a ) && std::binary_search( adj.begin(), adj.end(), b ) )
+            {
+                importers.push_back( File_id { from } );
+            }
+        }
+        return importers;
     }
 
     void add_package( Symbol_id package )
@@ -105,8 +129,14 @@ public:
     }
 
 private:
+    static u64 edge( File_id from, File_id to )
+    {
+        return ( u64( from.v ) << 32 ) | to.v;
+    }
+
     // The graph is sparse, so an adjacency list is better than a matrix.
     std::vector<std::vector<File_id>> edges_;
+    std::unordered_map<u64, Span>     import_spans_;
     std::vector<Symbol_id>            packages_;
     std::vector<Symbol_id>            missing_packages_;
     std::unordered_map<u32, u32>      file_to_package_;

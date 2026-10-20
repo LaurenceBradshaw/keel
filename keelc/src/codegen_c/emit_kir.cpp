@@ -338,7 +338,7 @@ Kir_emitter::Kir_emitter(
       literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
-      spelling_( Spelling { ast, types, interner, imports } ),
+      spelling_( Spelling { ast, types, interner, imports, sm } ),
       halves_( ast, types.table(), imports ),
       part_( part ),
       include_( include ),

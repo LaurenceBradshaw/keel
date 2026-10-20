@@ -242,15 +242,24 @@ std::string construct_arg_string(
     return encoded;
 }
 
-// Length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart. The program's own is empty.
-std::string module_slot( std::string_view module )
+// Each part length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart; an empty part is
+// left out. A name never starts with a digit, so a package with no module reads apart from both.
+std::string module_slot( const Mangled_owner& owner )
 {
-    return module.empty() ? std::string {} : fmt::format( "{}{}", module.size(), module );
+    std::string slot;
+    for( const std::string* part : { &owner.package, &owner.module } )
+    {
+        if( !part->empty() )
+        {
+            slot += fmt::format( "{}{}", part->size(), *part );
+        }
+    }
+    return slot;
 }
 } // namespace
 
 std::string mangle_function(
-    std::string_view                   module,
+    const Mangled_owner&               owner,
     std::string_view                   name,
     std::span<const Mangled_parameter> params,
     const Type_table&                  types,
@@ -266,7 +275,7 @@ std::string mangle_function(
     {
         return fmt::format(
             "kl_{}_{}__I{}E__{}",
-            module_slot( module ),
+            module_slot( owner ),
             c_name( name ),
             construct_arg_string( type_arguments, types ),
             construct_arg_string( params, types, enclosing, conformed )
@@ -274,11 +283,11 @@ std::string mangle_function(
     }
 
     return fmt::format(
-        "kl_{}_{}__{}", module_slot( module ), c_name( name ), construct_arg_string( params, types, enclosing, conformed )
+        "kl_{}_{}__{}", module_slot( owner ), c_name( name ), construct_arg_string( params, types, enclosing, conformed )
     );
 }
 
-std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types )
+std::string mangle_struct( const Mangled_owner& owner, Type_id type, const Type_table& types )
 {
     // `kl__Box__I3i32E` for `Box<i32>`, and the bare `kl__Point` for an aggregate with no type
     // arguments - so nothing a v0 program can write changes name.
@@ -287,10 +296,10 @@ std::string mangle_struct( std::string_view module, Type_id type, const Type_tab
 
     if( arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}", module_slot( module ), base );
+        return fmt::format( "kl_{}_{}", module_slot( owner ), base );
     }
 
-    return fmt::format( "kl_{}_{}__I{}E", module_slot( module ), base, construct_arg_string( arguments, types ) );
+    return fmt::format( "kl_{}_{}__I{}E", module_slot( owner ), base, construct_arg_string( arguments, types ) );
 }
 
 std::string mangle_union( Type_id type, const Type_table& types )
@@ -302,31 +311,31 @@ std::string mangle_union( Type_id type, const Type_table& types )
     return fmt::format( "kl__{}", encoded );
 }
 
-std::string mangle_function_type( std::string_view module, Type_id type, const Type_table& types )
+std::string mangle_function_type( Type_id type, const Type_table& types )
 {
     std::string encoded;
 
     encode_type( encoded, type, types );
 
-    return fmt::format( "kl_{}_fn__{}", module_slot( module ), encoded );
+    return fmt::format( "kl__fn__{}", encoded );
 }
 
 std::string mangle_destructor(
-    std::string_view module, std::string_view type_name, std::span<const Type_id> type_arguments, const Type_table& types
+    const Mangled_owner& owner, std::string_view type_name, std::span<const Type_id> type_arguments, const Type_table& types
 )
 {
     if( type_arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}__dtor", module_slot( module ), type_name );
+        return fmt::format( "kl_{}_{}__dtor", module_slot( owner ), type_name );
     }
 
     return fmt::format(
-        "kl_{}_{}__I{}E__dtor", module_slot( module ), type_name, construct_arg_string( type_arguments, types )
+        "kl_{}_{}__I{}E__dtor", module_slot( owner ), type_name, construct_arg_string( type_arguments, types )
     );
 }
 
 std::string mangle_constructor(
-    std::string_view                   module,
+    const Mangled_owner&               owner,
     std::string_view                   type_name,
     std::span<const Type_id>           type_arguments,
     std::span<const Mangled_parameter> params,
@@ -337,11 +346,11 @@ std::string mangle_constructor(
 
     if( type_arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}__{}__ctor", module_slot( module ), type_name, argtypes );
+        return fmt::format( "kl_{}_{}__{}__ctor", module_slot( owner ), type_name, argtypes );
     }
 
     return fmt::format(
-        "kl_{}_{}__I{}E__{}__ctor", module_slot( module ), type_name, construct_arg_string( type_arguments, types ), argtypes
+        "kl_{}_{}__I{}E__{}__ctor", module_slot( owner ), type_name, construct_arg_string( type_arguments, types ), argtypes
     );
 }
 
@@ -412,15 +421,15 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
     const std::vector<Mangled_parameter> mixed = { unsigned8, by_value( table.floating( 64 ) ) };
 
     // The program's own package has no name, which leaves the doubled underscore in place.
-    REQUIRE( mangle_function( "", "main", none, table ) == "kl__main__" );
-    REQUIRE( mangle_function( "", "add", two, table ) == "kl__add__3i32_3i32" );
-    REQUIRE( mangle_function( "", "f", mixed, table ) == "kl__f__2u8_3f64" );
-    REQUIRE( mangle_function( "math", "abs", { &signed32, 1 }, table ) == "kl_4math_abs__3i32" );
+    REQUIRE( mangle_function( {}, "main", none, table ) == "kl__main__" );
+    REQUIRE( mangle_function( {}, "add", two, table ) == "kl__add__3i32_3i32" );
+    REQUIRE( mangle_function( {}, "f", mixed, table ) == "kl__f__2u8_3f64" );
+    REQUIRE( mangle_function( { "math" }, "abs", { &signed32, 1 }, table ) == "kl_4math_abs__3i32" );
 
     SECTION( "the parameter types are what make two names differ" )
     {
-        REQUIRE( mangle_function( "", "f", { &signed32, 1 }, table ) != mangle_function( "", "f", { &unsigned8, 1 }, table ) );
-        REQUIRE( mangle_function( "", "f", none, table ) != mangle_function( "", "f", { &signed32, 1 }, table ) );
+        REQUIRE( mangle_function( {}, "f", { &signed32, 1 }, table ) != mangle_function( {}, "f", { &unsigned8, 1 }, table ) );
+        REQUIRE( mangle_function( {}, "f", none, table ) != mangle_function( {}, "f", { &signed32, 1 }, table ) );
     }
 
     // §7.5's reason for existing: a user function called `while` or `printf` must not become one.
@@ -429,7 +438,7 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
         for( const std::string_view name : { "main", "while", "printf", "int", "malloc" } )
         {
             INFO( name );
-            REQUIRE( mangle_function( "", name, none, table ).starts_with( "kl_" ) );
+            REQUIRE( mangle_function( {}, name, none, table ).starts_with( "kl_" ) );
         }
     }
 }
@@ -451,9 +460,9 @@ TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]
         const Mangled_parameter borrowed[] = { { .type = i32, .marker = 'R' } };
         const Mangled_parameter pointed[]  = { by_value( pointer ) };
 
-        REQUIRE( mangle_function( "", "f", borrowed, table ) == "kl__f__R3i32" );
-        REQUIRE( mangle_function( "", "f", pointed, table ) == "kl__f__P3i32" );
-        REQUIRE( mangle_function( "", "f", borrowed, table ) != mangle_function( "", "f", pointed, table ) );
+        REQUIRE( mangle_function( {}, "f", borrowed, table ) == "kl__f__R3i32" );
+        REQUIRE( mangle_function( {}, "f", pointed, table ) == "kl__f__P3i32" );
+        REQUIRE( mangle_function( {}, "f", borrowed, table ) != mangle_function( {}, "f", pointed, table ) );
     }
 
     SECTION( "a transfer and a copy" )
@@ -461,8 +470,8 @@ TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]
         const Mangled_parameter moved[]  = { { .type = i32, .marker = 'M' } };
         const Mangled_parameter copied[] = { by_value( i32 ) };
 
-        REQUIRE( mangle_function( "", "f", moved, table ) == "kl__f__M3i32" );
-        REQUIRE( mangle_function( "", "f", moved, table ) != mangle_function( "", "f", copied, table ) );
+        REQUIRE( mangle_function( {}, "f", moved, table ) == "kl__f__M3i32" );
+        REQUIRE( mangle_function( {}, "f", moved, table ) != mangle_function( {}, "f", copied, table ) );
     }
 
     SECTION( "two overloads of one generic at the same type arguments" )
@@ -474,9 +483,9 @@ TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]
         const Mangled_parameter two[] = { by_value( i32 ), by_value( i32 ) };
         const Type_id           at[]  = { i32 };
 
-        REQUIRE( mangle_function( "", "f", one, table, at ) == "kl__f__I3i32E__3i32" );
-        REQUIRE( mangle_function( "", "f", two, table, at ) == "kl__f__I3i32E__3i32_3i32" );
-        REQUIRE( mangle_function( "", "f", one, table, at ) != mangle_function( "", "f", two, table, at ) );
+        REQUIRE( mangle_function( {}, "f", one, table, at ) == "kl__f__I3i32E__3i32" );
+        REQUIRE( mangle_function( {}, "f", two, table, at ) == "kl__f__I3i32E__3i32_3i32" );
+        REQUIRE( mangle_function( {}, "f", one, table, at ) != mangle_function( {}, "f", two, table, at ) );
     }
 
     // The one pair that still shares an encoding, and the reason it is allowed to: a `const ref T`
@@ -486,7 +495,7 @@ TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]
         const Mangled_parameter borrowed[] = { by_value( i32 ) };
         const Mangled_parameter plain[]    = { by_value( i32 ) };
 
-        REQUIRE( mangle_function( "", "f", borrowed, table ) == mangle_function( "", "f", plain, table ) );
+        REQUIRE( mangle_function( {}, "f", borrowed, table ) == mangle_function( {}, "f", plain, table ) );
     }
 }
 
@@ -508,17 +517,17 @@ TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
         // `i32 at( i32 ) const` on `Box`, then `i32 at( Box, i32 )` and `i32 at( ref Box, i32 )`.
         // A const receiver is a `const ref Box` and takes no marker, so it encoded as the first of
         // these; a plain one is a `ref Box`, so it encoded as the second.
-        REQUIRE( mangle_function( "", "at", own, table, {}, box ) == "kl__at__S3Box_3i32" );
-        REQUIRE( mangle_function( "", "at", passed, table ) == "kl__at__3Box_3i32" );
-        REQUIRE( mangle_function( "", "at", borrowed, table ) == "kl__at__R3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", own, table, {}, box ) == "kl__at__S3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", passed, table ) == "kl__at__3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", borrowed, table ) == "kl__at__R3Box_3i32" );
     }
 
     SECTION( "the tag names which type, not merely that there is one" )
     {
         const Type_id cell = table.structure( Node_id { 5 }, {}, "Cell" );
 
-        REQUIRE( mangle_function( "", "at", own, table, {}, cell ) == "kl__at__S4Cell_3i32" );
-        REQUIRE( mangle_function( "", "at", own, table, {}, box ) != mangle_function( "", "at", own, table, {}, cell ) );
+        REQUIRE( mangle_function( {}, "at", own, table, {}, cell ) == "kl__at__S4Cell_3i32" );
+        REQUIRE( mangle_function( {}, "at", own, table, {}, box ) != mangle_function( {}, "at", own, table, {}, cell ) );
     }
 
     SECTION( "two instances of one generic" )
@@ -528,31 +537,31 @@ TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
         const Type_id of_i32 = table.structure( Node_id { 11 }, std::array { i32 }, "Box" );
         const Type_id of_f64 = table.structure( Node_id { 11 }, std::array { table.floating( 64 ) }, "Box" );
 
-        REQUIRE( mangle_function( "", "at", own, table, {}, of_i32 ) == "kl__at__S3BoxI3i32E_3i32" );
-        REQUIRE( mangle_function( "", "at", own, table, {}, of_i32 ) != mangle_function( "", "at", own, table, {}, of_f64 ) );
+        REQUIRE( mangle_function( {}, "at", own, table, {}, of_i32 ) == "kl__at__S3BoxI3i32E_3i32" );
+        REQUIRE( mangle_function( {}, "at", own, table, {}, of_i32 ) != mangle_function( {}, "at", own, table, {}, of_f64 ) );
     }
 
     SECTION( "a member with no parameters of its own" )
     {
         const std::vector<Mangled_parameter> none;
 
-        REQUIRE( mangle_function( "", "area", none, table, {}, box ) == "kl__area__S3Box" );
-        REQUIRE( mangle_function( "", "area", none, table, {}, box ) != mangle_function( "", "area", none, table ) );
+        REQUIRE( mangle_function( {}, "area", none, table, {}, box ) == "kl__area__S3Box" );
+        REQUIRE( mangle_function( {}, "area", none, table, {}, box ) != mangle_function( {}, "area", none, table ) );
     }
 
     // M7's shape: a static method has no receiver for a marker to sit on, which is why the tag is
     // the name's rather than parameter 0's - it survives the receiver not existing.
     SECTION( "a member whose own parameters include its type" )
     {
-        REQUIRE( mangle_function( "", "at", passed, table, {}, box ) == "kl__at__S3Box_3Box_3i32" );
-        REQUIRE( mangle_function( "", "at", passed, table, {}, box ) != mangle_function( "", "at", passed, table ) );
+        REQUIRE( mangle_function( {}, "at", passed, table, {}, box ) == "kl__at__S3Box_3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", passed, table, {}, box ) != mangle_function( {}, "at", passed, table ) );
     }
 
     SECTION( "an instantiated member carries both" )
     {
         const Type_id at[] = { i32 };
 
-        REQUIRE( mangle_function( "", "at", own, table, at, box ) == "kl__at__I3i32E__S3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", own, table, at, box ) == "kl__at__I3i32E__S3Box_3i32" );
     }
 }
 
@@ -567,13 +576,13 @@ TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][oper
     const Type_id           box     = table.structure( Node_id { 3 }, {}, "Box" );
     const Mangled_parameter other[] = { by_value( box ) };
 
-    REQUIRE( mangle_function( "", "operator==", other, table, {}, box ) == "kl__operator_eq__S3Box_3Box" );
+    REQUIRE( mangle_function( {}, "operator==", other, table, {}, box ) == "kl__operator_eq__S3Box_3Box" );
 
     const Mangled_parameter index[] = { by_value( table.integer( 64, false ) ) };
 
-    REQUIRE( mangle_function( "", "operator[]", index, table, {}, box ) == "kl__operator_index__S3Box_3u64" );
-    REQUIRE( mangle_function( "", "operator<=>", other, table, {}, box ) == "kl__operator_compare__S3Box_3Box" );
-    REQUIRE( mangle_function( "", "operator+=", other, table, {}, box ) == "kl__operator_add_assign__S3Box_3Box" );
+    REQUIRE( mangle_function( {}, "operator[]", index, table, {}, box ) == "kl__operator_index__S3Box_3u64" );
+    REQUIRE( mangle_function( {}, "operator<=>", other, table, {}, box ) == "kl__operator_compare__S3Box_3Box" );
+    REQUIRE( mangle_function( {}, "operator+=", other, table, {}, box ) == "kl__operator_add_assign__S3Box_3Box" );
 }
 
 TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
@@ -591,9 +600,9 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter as_pointer[] = { by_value( pointer ) };
         const Mangled_parameter as_struct[]  = { by_value( lookalike ) };
 
-        REQUIRE( mangle_function( "", "f", as_pointer, table ) != mangle_function( "", "f", as_struct, table ) );
-        REQUIRE( mangle_function( "", "f", as_pointer, table ) == "kl__f__P3i32" );
-        REQUIRE( mangle_function( "", "f", as_struct, table ) == "kl__f__4i32p" );
+        REQUIRE( mangle_function( {}, "f", as_pointer, table ) != mangle_function( {}, "f", as_struct, table ) );
+        REQUIRE( mangle_function( {}, "f", as_pointer, table ) == "kl__f__P3i32" );
+        REQUIRE( mangle_function( {}, "f", as_struct, table ) == "kl__f__4i32p" );
     }
 
     // `K` after the pointer letter, which no encoded type starts with: `f( i32* )` and
@@ -604,9 +613,9 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter read_only[] = { by_value( table.pointer_to( i32, true ) ) };
         const Mangled_parameter many[]      = { by_value( table.many_pointer_to( i32, true ) ) };
 
-        REQUIRE( mangle_function( "", "f", read_only, table ) == "kl__f__PK3i32" );
-        REQUIRE( mangle_function( "", "f", many, table ) == "kl__f__NK3i32" );
-        REQUIRE( mangle_function( "", "f", read_only, table ) != mangle_function( "", "f", plain, table ) );
+        REQUIRE( mangle_function( {}, "f", read_only, table ) == "kl__f__PK3i32" );
+        REQUIRE( mangle_function( {}, "f", many, table ) == "kl__f__NK3i32" );
+        REQUIRE( mangle_function( {}, "f", read_only, table ) != mangle_function( {}, "f", plain, table ) );
     }
 
     // `L`, not `S`: `at( const ref Box[], i32 )` would otherwise be `Box`'s method `at( i32 )`.
@@ -617,8 +626,8 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter run[] = { by_value( table.run_of( box ) ), by_value( i32 ) };
         const Mangled_parameter own[] = { by_value( i32 ) };
 
-        REQUIRE( mangle_function( "", "at", run, table ) == "kl__at__L3Box_3i32" );
-        REQUIRE( mangle_function( "", "at", run, table ) != mangle_function( "", "at", own, table, {}, box ) );
+        REQUIRE( mangle_function( {}, "at", run, table ) == "kl__at__L3Box_3i32" );
+        REQUIRE( mangle_function( {}, "at", run, table ) != mangle_function( {}, "at", own, table, {}, box ) );
         REQUIRE( mangle_run( table.run_of( i32 ), table ) == "kl__run__L3i32" );
         REQUIRE( mangle_array( table.array_of( i32, 4 ), table ) == "kl__A4_3i32" );
         REQUIRE( mangle_array( table.array_of( table.array_of( i32, 3 ), 2 ), table ) == "kl__A2_A3_3i32" );
@@ -630,7 +639,7 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         // separator is for the reader rather than for the parse.
         const Mangled_parameter two[] = { by_value( table.integer( 8, false ) ), by_value( table.integer( 8, true ) ) };
 
-        REQUIRE( mangle_function( "", "f", two, table ) == "kl__f__2u8_2i8" );
+        REQUIRE( mangle_function( {}, "f", two, table ) == "kl__f__2u8_2i8" );
     }
 
     // `F` opens the parameters, `E` closes them, and the return follows. A mode letter before each
@@ -645,8 +654,8 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter takes_copies[] = { by_value( copies ) };
         const Mangled_parameter takes_peeks[]  = { by_value( peeks ) };
 
-        REQUIRE( mangle_function( "", "f", takes_copies, table ) == "kl__f__FK3i32E3i32" );
-        REQUIRE( mangle_function( "", "f", takes_peeks, table ) == "kl__f__FK3i32EK3i32" );
+        REQUIRE( mangle_function( {}, "f", takes_copies, table ) == "kl__f__FK3i32E3i32" );
+        REQUIRE( mangle_function( {}, "f", takes_peeks, table ) == "kl__f__FK3i32EK3i32" );
     }
 
     // `D` opens a field type, then the aggregate and the field, each delimiting itself.
@@ -657,8 +666,8 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter reads_i32[] = { by_value( table.field( p, i32 ) ) };
         const Mangled_parameter reads_ptr[] = { by_value( table.field( p, pointer ) ) };
 
-        REQUIRE( mangle_function( "", "f", reads_i32, table ) == "kl__f__D1P3i32" );
-        REQUIRE( mangle_function( "", "f", reads_ptr, table ) == "kl__f__D1PP3i32" );
+        REQUIRE( mangle_function( {}, "f", reads_i32, table ) == "kl__f__D1P3i32" );
+        REQUIRE( mangle_function( {}, "f", reads_ptr, table ) == "kl__f__D1PP3i32" );
     }
 
     SECTION( "a generic aggregate carries its arguments" )
@@ -666,9 +675,9 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Type_id of_i32 = table.structure( Node_id { 11 }, std::array { i32 }, "Box" );
         const Type_id of_f64 = table.structure( Node_id { 11 }, std::array { table.floating( 64 ) }, "Box" );
 
-        REQUIRE( mangle_struct( "", of_i32, table ) == "kl__Box__I3i32E" );
-        REQUIRE( mangle_struct( "", of_f64, table ) == "kl__Box__I3f64E" );
-        REQUIRE( mangle_struct( "", of_i32, table ) != mangle_struct( "", of_f64, table ) );
+        REQUIRE( mangle_struct( {}, of_i32, table ) == "kl__Box__I3i32E" );
+        REQUIRE( mangle_struct( {}, of_f64, table ) == "kl__Box__I3f64E" );
+        REQUIRE( mangle_struct( {}, of_i32, table ) != mangle_struct( {}, of_f64, table ) );
     }
 
     SECTION( "nested, and with several arguments" )
@@ -677,15 +686,15 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Type_id nested  = table.structure( Node_id { 11 }, std::array { of_i32 }, "Box" );
         const Type_id several = table.structure( Node_id { 13 }, std::array { i32, table.floating( 64 ) }, "Pair" );
 
-        REQUIRE( mangle_struct( "", nested, table ) == "kl__Box__I3BoxI3i32EE" );
-        REQUIRE( mangle_struct( "", several, table ) == "kl__Pair__I3i32_3f64E" );
+        REQUIRE( mangle_struct( {}, nested, table ) == "kl__Box__I3BoxI3i32EE" );
+        REQUIRE( mangle_struct( {}, several, table ) == "kl__Pair__I3i32_3f64E" );
     }
 
     SECTION( "a non-generic aggregate is spelled exactly as before" )
     {
         const Type_id point = table.structure( Node_id { 17 }, {}, "Point" );
 
-        REQUIRE( mangle_struct( "", point, table ) == "kl__Point" );
+        REQUIRE( mangle_struct( {}, point, table ) == "kl__Point" );
     }
 
     SECTION( "an instantiation carries its type arguments and its substituted parameters" )
@@ -695,7 +704,7 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter substituted[] = { by_value( i32 ) };
         const Type_id           arguments[]   = { i32 };
 
-        REQUIRE( mangle_function( "", "id", substituted, table, arguments ) == "kl__id__I3i32E__3i32" );
+        REQUIRE( mangle_function( {}, "id", substituted, table, arguments ) == "kl__id__I3i32E__3i32" );
     }
 }
 
@@ -712,17 +721,17 @@ TEST_CASE( "mangle_puts_the_package_in_every_symbol", "[codegen][mangle]" )
     {
         const Type_id point = table.structure( Node_id { 17 }, {}, "Point" );
 
-        REQUIRE( mangle_function( "kl", "area", { &one_i32, 1 }, table ) == "kl_2kl_area__3i32" );
-        REQUIRE( mangle_struct( "kl", point, table ) == "kl_2kl_Point" );
-        REQUIRE( mangle_destructor( "kl", "Point", no_args, table ) == "kl_2kl_Point__dtor" );
-        REQUIRE( mangle_constructor( "kl", "Point", no_args, { &one_i32, 1 }, table ) == "kl_2kl_Point__3i32__ctor" );
+        REQUIRE( mangle_function( { "kl" }, "area", { &one_i32, 1 }, table ) == "kl_2kl_area__3i32" );
+        REQUIRE( mangle_struct( { "kl" }, point, table ) == "kl_2kl_Point" );
+        REQUIRE( mangle_destructor( { "kl" }, "Point", no_args, table ) == "kl_2kl_Point__dtor" );
+        REQUIRE( mangle_constructor( { "kl" }, "Point", no_args, { &one_i32, 1 }, table ) == "kl_2kl_Point__3i32__ctor" );
     }
 
     SECTION( "the program's own package leaves the slot empty" )
     {
-        REQUIRE( mangle_function( "", "area", { &one_i32, 1 }, table ) == "kl__area__3i32" );
+        REQUIRE( mangle_function( {}, "area", { &one_i32, 1 }, table ) == "kl__area__3i32" );
         REQUIRE(
-            mangle_function( "", "area", { &one_i32, 1 }, table ) != mangle_function( "kl", "area", { &one_i32, 1 }, table )
+            mangle_function( {}, "area", { &one_i32, 1 }, table ) != mangle_function( { "kl" }, "area", { &one_i32, 1 }, table )
         );
     }
 
@@ -730,13 +739,26 @@ TEST_CASE( "mangle_puts_the_package_in_every_symbol", "[codegen][mangle]" )
     SECTION( "an underscore cannot move between the package and the name" )
     {
         REQUIRE(
-            mangle_function( "a_b", "c", { &one_i32, 1 }, table ) != mangle_function( "a", "b_c", { &one_i32, 1 }, table )
+            mangle_function( { "a_b" }, "c", { &one_i32, 1 }, table ) !=
+            mangle_function( { "a" }, "b_c", { &one_i32, 1 }, table )
         );
 
         const Type_id c   = table.structure( Node_id { 19 }, {}, "c" );
         const Type_id b_c = table.structure( Node_id { 23 }, {}, "b_c" );
 
-        REQUIRE( mangle_struct( "a_b", c, table ) != mangle_struct( "a", b_c, table ) );
+        REQUIRE( mangle_struct( { "a_b" }, c, table ) != mangle_struct( { "a" }, b_c, table ) );
+    }
+
+    // Two `private` functions of one name in two files are two symbols.
+    SECTION( "the module follows the package" )
+    {
+        REQUIRE( mangle_function( { "kl", "list" }, "push", { &one_i32, 1 }, table ) == "kl_2kl4list_push__3i32" );
+        REQUIRE( mangle_function( { "", "a" }, "push", { &one_i32, 1 }, table ) == "kl_1a_push__3i32" );
+        REQUIRE(
+            mangle_function( { "", "a" }, "push", { &one_i32, 1 }, table ) !=
+            mangle_function( { "", "b" }, "push", { &one_i32, 1 }, table )
+        );
+        REQUIRE( mangle_struct( { "", "a" }, table.structure( Node_id { 29 }, {}, "node" ), table ) == "kl_1a_node" );
     }
 }
 
@@ -755,15 +777,15 @@ TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle
     const Type_id           kl_args[]   = { kl_point };
     const Type_id           own_args[]  = { point };
 
-    REQUIRE( mangle_function( "", "f", takes_kl, table ) == "kl__f__Q2kl5Point" );
-    REQUIRE( mangle_function( "", "f", takes_own, table ) == "kl__f__5Point" );
+    REQUIRE( mangle_function( {}, "f", takes_kl, table ) == "kl__f__Q2kl5Point" );
+    REQUIRE( mangle_function( {}, "f", takes_own, table ) == "kl__f__5Point" );
     REQUIRE(
-        mangle_function( "", "wrap", takes_kl, table, kl_args ) != mangle_function( "", "wrap", takes_own, table, own_args )
+        mangle_function( {}, "wrap", takes_kl, table, kl_args ) != mangle_function( {}, "wrap", takes_own, table, own_args )
     );
 
     SECTION( "the struct itself is named from its bare name" )
     {
-        REQUIRE( mangle_struct( "kl", kl_point, table ) == "kl_2kl_Point" );
+        REQUIRE( mangle_struct( { "kl" }, kl_point, table ) == "kl_2kl_Point" );
     }
 
     // The prelude's `Point` reads as the program's does, and is still a different C type.
@@ -774,9 +796,9 @@ TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle
         const Type_id           prelude_point = table.structure( Node_id { 29 }, {}, "Point" );
         const Mangled_parameter takes[]       = { by_value( prelude_point ) };
 
-        REQUIRE( mangle_function( "", "f", takes, table ) == "kl__f__Q7prelude5Point" );
-        REQUIRE( mangle_struct( "prelude", prelude_point, table ) == "kl_7prelude_Point" );
-        REQUIRE( mangle_struct( "prelude", prelude_point, table ) != mangle_struct( "", point, table ) );
+        REQUIRE( mangle_function( {}, "f", takes, table ) == "kl__f__Q7prelude5Point" );
+        REQUIRE( mangle_struct( { "prelude" }, prelude_point, table ) == "kl_7prelude_Point" );
+        REQUIRE( mangle_struct( { "prelude" }, prelude_point, table ) != mangle_struct( {}, point, table ) );
     }
 
     SECTION( "inside a generic" )
@@ -784,8 +806,8 @@ TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle
         const Type_id box_of_kl  = table.structure( Node_id { 23 }, std::array { kl_point }, "Box" );
         const Type_id box_of_own = table.structure( Node_id { 23 }, std::array { point }, "Box" );
 
-        REQUIRE( mangle_struct( "", box_of_kl, table ) == "kl__Box__IQ2kl5PointE" );
-        REQUIRE( mangle_struct( "", box_of_kl, table ) != mangle_struct( "", box_of_own, table ) );
+        REQUIRE( mangle_struct( {}, box_of_kl, table ) == "kl__Box__IQ2kl5PointE" );
+        REQUIRE( mangle_struct( {}, box_of_kl, table ) != mangle_struct( {}, box_of_own, table ) );
     }
 }
 

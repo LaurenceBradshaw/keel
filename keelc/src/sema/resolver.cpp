@@ -776,7 +776,12 @@ bool Resolver::chain_overload( Node_id existing, Node_id added )
 {
     const Node_kind kind = ast_.kind( existing );
 
-    if( kind != ast_.kind( added ) || ( kind != Node_kind::Function_decl && kind != Node_kind::Method_decl ) )
+    // Two files' declarations of one name meet only where a file sees both, which the checker
+    // judges once it has the imports; lookup takes the first the use's file can name.
+    const bool other_file = ast_.span( existing ).file != ast_.span( added ).file;
+
+    if( !other_file &&
+        ( kind != ast_.kind( added ) || ( kind != Node_kind::Function_decl && kind != Node_kind::Method_decl ) ) )
     {
         return false;
     }
@@ -2444,8 +2449,8 @@ TEST_CASE( "resolver_sees_only_imported_modules", "[sema][resolve][modules]" )
         REQUIRE( p.rendered().find( "`pick` is in `far`, which this file does not import" ) != std::string::npos );
     }
 
-    // One package, one namespace: neither file imports the other, and the second is still refused.
-    SECTION( "a duplicate between two modules is still an error" )
+    // Whether two files' declarations meet depends on who imports both, which the checker judges.
+    SECTION( "a duplicate between two modules is chained, not refused" )
     {
         const Resolved_program p( {
             { "main.kl", "import a;\nimport b;\ni32 main() { return 0; }\n" },
@@ -2454,8 +2459,7 @@ TEST_CASE( "resolver_sees_only_imported_modules", "[sema][resolve][modules]" )
         } );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`n` is already declared in this scope" ) != std::string::npos );
+        REQUIRE( p.errors() == 0 );
     }
 
     // Locals, parameters and main.kl's own declarations never pass through the import check.
@@ -2633,7 +2637,7 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         REQUIRE( p.bound_into( Node_kind::Path_expr, "pick" ) == "kl/geom" );
     }
 
-    SECTION( "a duplicate within a package is still an error" )
+    SECTION( "a duplicate within a package is chained for the checker" )
     {
         const Resolved_program p( {
             { "main.kl", "import kl::a;\nimport kl::b;\ni32 main() { return 0; }\n" },
@@ -2642,8 +2646,7 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         } );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`n` is already declared in this scope" ) != std::string::npos );
+        REQUIRE( p.errors() == 0 );
     }
 
     SECTION( "inside a package the qualifier is optional" )

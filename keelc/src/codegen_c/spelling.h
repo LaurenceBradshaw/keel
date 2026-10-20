@@ -6,8 +6,10 @@
 #include <string>
 #include <string_view>
 #include "ast/ast.h"
+#include "codegen_c/mangle.h"
 #include "common/imports.h"
 #include "common/interner.h"
+#include "common/source_manager.h"
 #include "common/types.h"
 #include "sema/type_checker.h"
 
@@ -15,10 +17,11 @@ namespace keel
 {
 struct Spelling
 {
-    const Ast&      ast;
-    Types&          types; // mutable only for its table: an instance's symbol interns its types
-    const Interner& interner;
-    const Imports&  imports;
+    const Ast&            ast;
+    Types&                types; // mutable only for its table: an instance's symbol interns its types
+    const Interner&       interner;
+    const Imports&        imports;
+    const Source_manager& sm;
 
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"
     std::string structure( Type_id type ) const;
@@ -56,7 +59,7 @@ struct Spelling
     // file scope to put the temporaries three-address form would need.
     std::string global_definition( Node_id declaration, Type_id owner = {} ) const;
 
-    std::string package_name( Node_id decl ) const;
+    Mangled_owner owner( Node_id decl ) const;
 };
 
 // How C is told what kind of number it is looking at. Used by the KIR emitter for a constant

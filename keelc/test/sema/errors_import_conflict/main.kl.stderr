@@ -1,0 +1,13 @@
+error: `push` is declared in `a` and `b`, which this file imports
+ --> sema/errors_import_conflict/main.kl:5:1
+  |
+5 | import b;
+  | ^^^^^^^^^ they are at sema/errors_import_conflict/a.kl:1:5 and sema/errors_import_conflict/b.kl:1:5; make one `private`, or rename it
+
+error: `node` is declared in `a` and `b`, which this file imports
+ --> sema/errors_import_conflict/main.kl:5:1
+  |
+5 | import b;
+  | ^^^^^^^^^ they are at sema/errors_import_conflict/a.kl:6:8 and sema/errors_import_conflict/b.kl:6:8; make one `private`, or rename it
+
+2 errors generated

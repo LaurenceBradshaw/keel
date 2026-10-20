@@ -4,9 +4,9 @@
 
 #include "main.kl.prelude.c"
 
-struct kl_2kl_list__I3i32E;
+struct kl_2kl4list_list__I3i32E;
 
-struct kl_2kl_list__I3i32E
+struct kl_2kl4list_list__I3i32E
 {
     int32_t* kl_data__947;
     uint64_t kl_count__949;
@@ -20,65 +20,65 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 int32_t kl__main__( void );
-struct kl_2kl_list__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t );
-void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E*, int32_t );
-int32_t* kl_2kl_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32E*, uint64_t );
-void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* );
-void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* );
-void kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__I3i32E* );
-void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32E*, uint64_t );
+struct kl_2kl4list_list__I3i32E kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t );
+void kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E*, int32_t );
+int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
+void kl_2kl4list_list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* );
+void kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* );
+void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
+void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
 
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    struct kl_2kl_list__I3i32E kl_values_1;
-    struct kl_2kl_list__I3i32E kl_t2;
-    struct kl_2kl_list__I3i32E* kl_t3;
-    struct kl_2kl_list__I3i32E* kl_t5;
-    struct kl_2kl_list__I3i32E* kl_t7;
+    struct kl_2kl4list_list__I3i32E kl_values_1;
+    struct kl_2kl4list_list__I3i32E kl_t2;
+    struct kl_2kl4list_list__I3i32E* kl_t3;
+    struct kl_2kl4list_list__I3i32E* kl_t5;
+    struct kl_2kl4list_list__I3i32E* kl_t7;
     int32_t* kl_t8;
     bool kl_t9;
-    struct kl_2kl_list__I3i32E* kl_t10;
+    struct kl_2kl4list_list__I3i32E* kl_t10;
     int32_t* kl_t11;
     bool kl_t12;
 #line 6 "list_bounds/main.kl"
     kl_t12 = false;
-    kl_t2 = kl_2kl_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 2 );
+    kl_t2 = kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 2 );
     kl_t12 = true;
     kl_values_1 = kl_t2;
     kl_t12 = false;
-    if ( kl_t12 ) kl_2kl_list__I3i32E__dtor( &kl_t2 );
+    if ( kl_t12 ) kl_2kl4list_list__I3i32E__dtor( &kl_t2 );
     kl_t12 = false;
 #line 7 "list_bounds/main.kl"
     kl_t3 = &kl_values_1;
-    kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, 10 );
+    kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, 10 );
 #line 8 "list_bounds/main.kl"
     kl_t5 = &kl_values_1;
-    kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t5, 20 );
+    kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t5, 20 );
 #line 10 "list_bounds/main.kl"
     kl_t7 = &kl_values_1;
-    kl_t8 = kl_2kl_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t7, 1 );
+    kl_t8 = kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t7, 1 );
     kl_t9 = ( *kl_t8 ) != 20;
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
 #line 12 "list_bounds/main.kl"
     kl_t0 = 1;
-    kl_2kl_list__I3i32E__dtor( &kl_values_1 );
+    kl_2kl4list_list__I3i32E__dtor( &kl_values_1 );
     return kl_t0;
     bb2:
 #line 15 "list_bounds/main.kl"
     kl_t10 = &kl_values_1;
-    kl_t11 = kl_2kl_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t10, 2 );
+    kl_t11 = kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t10, 2 );
     kl_t0 = ( *kl_t11 );
-    kl_2kl_list__I3i32E__dtor( &kl_values_1 );
+    kl_2kl4list_list__I3i32E__dtor( &kl_values_1 );
     return kl_t0;
 }
 
-struct kl_2kl_list__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t kl_capacity_1 )
+struct kl_2kl4list_list__I3i32E kl_2kl4list_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( uint64_t kl_capacity_1 )
 {
-    struct kl_2kl_list__I3i32E kl_t0;
-    struct kl_2kl_list__I3i32E kl_result_2;
-    struct kl_2kl_list__I3i32E* kl_t3;
+    struct kl_2kl4list_list__I3i32E kl_t0;
+    struct kl_2kl4list_list__I3i32E kl_result_2;
+    struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
 #line 23 "../src/list.kl"
@@ -86,7 +86,7 @@ struct kl_2kl_list__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 
     kl_t6 = false;
     kl_t3 = &kl_result_2;
     kl_t6 = true;
-    kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t3 );
+    kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t3 );
 #line 24 "../src/list.kl"
     kl_result_2.kl_cap__951 = kl_capacity_1;
     kl_t6 = true;
@@ -100,19 +100,19 @@ struct kl_2kl_list__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4listI3i32E_3u64( 
 #line 32 "../src/list.kl"
     kl_t0 = kl_result_2;
     kl_t6 = false;
-    if ( kl_t6 ) kl_2kl_list__I3i32E__dtor( &kl_result_2 );
+    if ( kl_t6 ) kl_2kl4list_list__I3i32E__dtor( &kl_result_2 );
     kl_t6 = false;
     return kl_t0;
 }
 
-void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E* kl_this_1, int32_t kl_value_2 )
+void kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
-    struct kl_2kl_list__I3i32E* kl_t3;
+    struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
     bool kl_t6;
 #line 59 "../src/list.kl"
     kl_t3 = &( *kl_this_1 );
-    kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
+    kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
 #line 63 "../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__947 + ( *kl_this_1 ).kl_count__949;
     ( *kl_t5 ) = kl_value_2;
@@ -126,7 +126,7 @@ void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E* kl
     return;
 }
 
-int32_t* kl_2kl_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32E* kl_this_1, uint64_t kl_index_2 )
+int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
     bool kl_t3;
@@ -152,7 +152,7 @@ int32_t* kl_2kl_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_lis
     return kl_t0;
 }
 
-void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* kl_this_1 )
+void kl_2kl4list_list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
 #line 37 "../src/list.kl"
@@ -166,7 +166,7 @@ void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* kl_this_1 )
     return;
 }
 
-void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* kl_this_1 )
+void kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
 #line 15 "../src/list.kl"
     ( *kl_this_1 ).kl_data__947 = NULL;
@@ -177,10 +177,10 @@ void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* kl
     return;
 }
 
-void kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__I3i32E* kl_this_1 )
+void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
-    struct kl_2kl_list__I3i32E* kl_t3;
+    struct kl_2kl4list_list__I3i32E* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
     bool kl_t6;
@@ -200,7 +200,7 @@ void kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__
     kl_t4 = 1;
     goto bb4;
     bb4:
-    kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
+    kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t4 );
     goto bb7;
     bb5:
     kl_rt_panic( "../src/list.kl", 437, "arithmetic overflow: cap_ * 2" );
@@ -212,7 +212,7 @@ void kl_2kl_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__
     return;
 }
 
-void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
     int32_t* kl_t4;

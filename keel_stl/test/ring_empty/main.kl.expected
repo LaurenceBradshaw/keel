@@ -4,9 +4,9 @@
 
 #include "main.kl.prelude.c"
 
-struct kl_2kl_ring__I3i32E;
+struct kl_2kl4ring_ring__I3i32E;
 
-struct kl_2kl_ring__I3i32E
+struct kl_2kl4ring_ring__I3i32E
 {
     int32_t* kl_data__822;
     uint64_t kl_head__824;
@@ -21,67 +21,67 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 int32_t kl__main__( void );
-struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t );
-void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E*, int32_t );
-int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
-int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
-void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* );
-void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32E*, uint64_t );
-uint64_t kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E*, uint64_t );
-void kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
-void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+struct kl_2kl4ring_ring__I3i32E kl_2kl4ring_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t );
+void kl_2kl4ring_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl4ring_ring__I3i32E*, int32_t );
+int32_t kl_2kl4ring_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* );
+int32_t kl_2kl4ring_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* );
+void kl_2kl4ring_ring__I3i32E__dtor( struct kl_2kl4ring_ring__I3i32E* );
+void kl_2kl4ring_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl4ring_ring__I3i32E*, uint64_t );
+uint64_t kl_2kl4ring_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl4ring_ring__I3i32E*, uint64_t );
+void kl_2kl4ring_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* );
+void kl_2kl4ring_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* );
 
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    struct kl_2kl_ring__I3i32E kl_values_1;
-    struct kl_2kl_ring__I3i32E kl_t2;
-    struct kl_2kl_ring__I3i32E* kl_t3;
-    struct kl_2kl_ring__I3i32E* kl_t5;
+    struct kl_2kl4ring_ring__I3i32E kl_values_1;
+    struct kl_2kl4ring_ring__I3i32E kl_t2;
+    struct kl_2kl4ring_ring__I3i32E* kl_t3;
+    struct kl_2kl4ring_ring__I3i32E* kl_t5;
     int32_t kl_t6;
     bool kl_t7;
-    struct kl_2kl_ring__I3i32E* kl_t8;
+    struct kl_2kl4ring_ring__I3i32E* kl_t8;
     int32_t kl_t9;
     bool kl_t10;
 #line 6 "ring_empty/main.kl"
     kl_t10 = false;
-    kl_t2 = kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 2 );
+    kl_t2 = kl_2kl4ring_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 2 );
     kl_t10 = true;
     kl_values_1 = kl_t2;
     kl_t10 = false;
-    if ( kl_t10 ) kl_2kl_ring__I3i32E__dtor( &kl_t2 );
+    if ( kl_t10 ) kl_2kl4ring_ring__I3i32E__dtor( &kl_t2 );
     kl_t10 = false;
 #line 7 "ring_empty/main.kl"
     kl_t3 = &kl_values_1;
-    kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( kl_t3, 10 );
+    kl_2kl4ring_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( kl_t3, 10 );
 #line 9 "ring_empty/main.kl"
     kl_t5 = &kl_values_1;
-    kl_t6 = kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( kl_t5 );
+    kl_t6 = kl_2kl4ring_pop_back__I3i32E__SQ2kl4ringI3i32E( kl_t5 );
     kl_t7 = kl_t6 != 10;
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 11 "ring_empty/main.kl"
     kl_t0 = 1;
-    kl_2kl_ring__I3i32E__dtor( &kl_values_1 );
+    kl_2kl4ring_ring__I3i32E__dtor( &kl_values_1 );
     return kl_t0;
     bb2:
 #line 14 "ring_empty/main.kl"
     kl_t8 = &kl_values_1;
-    kl_t9 = kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( kl_t8 );
+    kl_t9 = kl_2kl4ring_pop_front__I3i32E__SQ2kl4ringI3i32E( kl_t8 );
     kl_t0 = kl_t9;
-    kl_2kl_ring__I3i32E__dtor( &kl_values_1 );
+    kl_2kl4ring_ring__I3i32E__dtor( &kl_values_1 );
     return kl_t0;
 }
 
-struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t kl_capacity_1 )
+struct kl_2kl4ring_ring__I3i32E kl_2kl4ring_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t kl_capacity_1 )
 {
-    struct kl_2kl_ring__I3i32E kl_t0;
+    struct kl_2kl4ring_ring__I3i32E kl_t0;
     bool kl_t2;
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
-    struct kl_2kl_ring__I3i32E kl_t7;
-    struct kl_2kl_ring__I3i32E* kl_t8;
+    struct kl_2kl4ring_ring__I3i32E kl_t7;
+    struct kl_2kl4ring_ring__I3i32E* kl_t8;
     bool kl_t10;
 #line 25 "../src/ring.kl"
     kl_t10 = false;
@@ -99,21 +99,21 @@ struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 
     kl_t10 = false;
     kl_t8 = &kl_t7;
     kl_t10 = true;
-    kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( kl_t8, kl_capacity_1 );
+    kl_2kl4ring_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( kl_t8, kl_capacity_1 );
     kl_t0 = kl_t7;
     kl_t10 = false;
-    if ( kl_t10 ) kl_2kl_ring__I3i32E__dtor( &kl_t7 );
+    if ( kl_t10 ) kl_2kl4ring_ring__I3i32E__dtor( &kl_t7 );
     kl_t10 = false;
     return kl_t0;
 }
 
-void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
+void kl_2kl4ring_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl4ring_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     bool kl_t3;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_2kl_ring__I3i32E* kl_t8;
+    struct kl_2kl4ring_ring__I3i32E* kl_t8;
     uint64_t kl_t9;
     int32_t* kl_t10;
     bool kl_t11;
@@ -129,7 +129,7 @@ void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32
     bb2:
 #line 62 "../src/ring.kl"
     kl_t8 = &( *kl_this_1 );
-    kl_t9 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t8, ( *kl_this_1 ).kl_count__826 );
+    kl_t9 = kl_2kl4ring_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t8, ( *kl_this_1 ).kl_count__826 );
     kl_t10 = ( *kl_this_1 ).kl_data__822 + kl_t9;
     ( *kl_t10 ) = kl_value_2;
 #line 64 "../src/ring.kl"
@@ -142,7 +142,7 @@ void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32
     return;
 }
 
-int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+int32_t kl_2kl4ring_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -151,7 +151,7 @@ int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* k
     uint8_t* kl_t5;
     bool kl_t7;
     int32_t kl_result_8;
-    struct kl_2kl_ring__I3i32E* kl_t9;
+    struct kl_2kl4ring_ring__I3i32E* kl_t9;
     uint64_t kl_t10;
     int32_t* kl_t11;
 #line 175 "../src/ring.kl"
@@ -173,7 +173,7 @@ int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* k
     ( *kl_this_1 ).kl_count__826 = ( *kl_this_1 ).kl_count__826 - 1;
 #line 183 "../src/ring.kl"
     kl_t9 = &( *kl_this_1 );
-    kl_t10 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t9, ( *kl_this_1 ).kl_count__826 );
+    kl_t10 = kl_2kl4ring_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t9, ( *kl_this_1 ).kl_count__826 );
     kl_t11 = ( *kl_this_1 ).kl_data__822 + kl_t10;
     kl_result_8 = ( *kl_t11 );
 #line 184 "../src/ring.kl"
@@ -181,7 +181,7 @@ int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* k
     return kl_t0;
 }
 
-int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+int32_t kl_2kl4ring_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -190,7 +190,7 @@ int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
     uint8_t* kl_t5;
     int32_t kl_result_7;
     int32_t* kl_t8;
-    struct kl_2kl_ring__I3i32E* kl_t9;
+    struct kl_2kl4ring_ring__I3i32E* kl_t9;
     bool kl_t11;
 #line 151 "../src/ring.kl"
     kl_t2 = ( *kl_this_1 ).kl_count__826 == 0;
@@ -207,7 +207,7 @@ int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
     kl_result_7 = ( *kl_t8 );
 #line 162 "../src/ring.kl"
     kl_t9 = &( *kl_this_1 );
-    kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( kl_t9 );
+    kl_2kl4ring_advance_head__I3i32E__SQ2kl4ringI3i32E( kl_t9 );
 #line 164 "../src/ring.kl"
     kl_t11 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count__826, 1, &( uint64_t ) { 0 } );
     if ( kl_t11 ) goto bb3; else goto bb4;
@@ -220,18 +220,18 @@ int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
     return kl_t0;
 }
 
-void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* kl_this_1 )
+void kl_2kl4ring_ring__I3i32E__dtor( struct kl_2kl4ring_ring__I3i32E* kl_this_1 )
 {
-    struct kl_2kl_ring__I3i32E* kl_t2;
+    struct kl_2kl4ring_ring__I3i32E* kl_t2;
 #line 43 "../src/ring.kl"
     kl_t2 = &( *kl_this_1 );
-    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_t2 );
+    kl_2kl4ring_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_t2 );
 #line 44 "../src/ring.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data__822 );
     return;
 }
 
-void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32E* kl_this_1, uint64_t kl_capacity_2 )
+void kl_2kl4ring_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl4ring_ring__I3i32E* kl_this_1, uint64_t kl_capacity_2 )
 {
     int32_t* kl_t3;
 #line 32 "../src/ring.kl"
@@ -246,7 +246,7 @@ void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32
     return;
 }
 
-uint64_t kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E* kl_this_1, uint64_t kl_index_2 )
+uint64_t kl_2kl4ring_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl4ring_ring__I3i32E* kl_this_1, uint64_t kl_index_2 )
 {
     uint64_t kl_t0;
     bool kl_t3;
@@ -289,7 +289,7 @@ uint64_t kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E*
     return kl_t0;
 }
 
-void kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+void kl_2kl4ring_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* kl_this_1 )
 {
     bool kl_t2;
     bool kl_t3;
@@ -311,7 +311,7 @@ void kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
     return;
 }
 
-void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+void kl_2kl4ring_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl4ring_ring__I3i32E* kl_this_1 )
 {
     uint64_t kl_run_2;
     uint64_t kl_t3;

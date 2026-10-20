@@ -4,24 +4,24 @@
 
 #include "main.kl.prelude.c"
 
-struct kl__counter;
-struct kl__pair_of;
+struct kl_6helper_counter;
+struct kl_6helper_pair_of;
 
-struct kl__measured__vtable;
-struct kl__measured__ref { void* self; const struct kl__measured__vtable* vtable; };
+struct kl_6helper_measured__vtable;
+struct kl_6helper_measured__ref { void* self; const struct kl_6helper_measured__vtable* vtable; };
 
-struct kl__counter
+struct kl_6helper_counter
 {
     int32_t kl_n_96;
 };
 
-struct kl__pair_of
+struct kl_6helper_pair_of
 {
     int32_t kl_a_135;
     int32_t kl_b_137;
 };
 
-struct kl__measured__vtable
+struct kl_6helper_measured__vtable
 {
     void ( *drop )( void* );
     int32_t ( *kl_size_130 )( void* );
@@ -34,19 +34,19 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 int32_t abs( int32_t );
 
 int32_t kl__main__( void );
-void kl__counter__R7counter_3i32__ctor( struct kl__counter*, int32_t );
-int32_t kl__next__S7counter( struct kl__counter* );
-int32_t kl__size__S7pair_of( struct kl__pair_of* );
-int32_t kl__add__7pair_of( struct kl__pair_of );
-int32_t kl__scale__3i32( int32_t );
-int32_t kl__scale__3i64( int64_t );
-int32_t kl__scale_here__3i32( int32_t );
-int32_t kl__magnitude__3i32( int32_t );
-int32_t kl__total__( void );
-int32_t kl__count_twice__( void );
-int32_t kl__darkness__( void );
-int32_t kl__measure__( void );
-int32_t kl__keep__I3i32E__3i32( int32_t );
+void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter*, int32_t );
+int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* );
+int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* );
+int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of );
+int32_t kl_6helper_scale__3i32( int32_t );
+int32_t kl_6helper_scale__3i64( int64_t );
+int32_t kl_6helper_scale_here__3i32( int32_t );
+int32_t kl_6helper_magnitude__3i32( int32_t );
+int32_t kl_6helper_total__( void );
+int32_t kl_6helper_count_twice__( void );
+int32_t kl_6helper_darkness__( void );
+int32_t kl_6helper_measure__( void );
+int32_t kl_6helper_keep__I3i32E__3i32( int32_t );
 
 int32_t kl__main__( void )
 {
@@ -69,7 +69,7 @@ int32_t kl__main__( void )
     int32_t kl_t16;
     bool kl_t17;
 #line 8 "codegen/module_private/main.kl"
-    kl_t1 = kl__scale__3i64( 3 );
+    kl_t1 = kl_6helper_scale__3i64( 3 );
     kl_t2 = kl_t1 != 1;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -77,7 +77,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 9 "codegen/module_private/main.kl"
-    kl_t3 = kl__scale_here__3i32( 3 );
+    kl_t3 = kl_6helper_scale_here__3i32( 3 );
     kl_t4 = kl_t3 != 30;
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -86,7 +86,7 @@ int32_t kl__main__( void )
     bb4:
 #line 11 "codegen/module_private/main.kl"
     kl_t5 = -4;
-    kl_t6 = kl__magnitude__3i32( kl_t5 );
+    kl_t6 = kl_6helper_magnitude__3i32( kl_t5 );
     kl_t7 = kl_t6 != 4;
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
@@ -94,7 +94,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 12 "codegen/module_private/main.kl"
-    kl_t8 = kl__total__(  );
+    kl_t8 = kl_6helper_total__(  );
     kl_t9 = kl_t8 != 42;
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
@@ -102,7 +102,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 13 "codegen/module_private/main.kl"
-    kl_t10 = kl__count_twice__(  );
+    kl_t10 = kl_6helper_count_twice__(  );
     kl_t11 = kl_t10 != 7;
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
@@ -110,7 +110,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 14 "codegen/module_private/main.kl"
-    kl_t12 = kl__darkness__(  );
+    kl_t12 = kl_6helper_darkness__(  );
     kl_t13 = kl_t12 != 1;
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
@@ -118,7 +118,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 15 "codegen/module_private/main.kl"
-    kl_t14 = kl__measure__(  );
+    kl_t14 = kl_6helper_measure__(  );
     kl_t15 = kl_t14 != 5;
     if ( kl_t15 ) goto bb13; else goto bb14;
     bb13:
@@ -126,7 +126,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 16 "codegen/module_private/main.kl"
-    kl_t16 = kl__keep__I3i32E__3i32( 9 );
+    kl_t16 = kl_6helper_keep__I3i32E__3i32( 9 );
     kl_t17 = kl_t16 != 9;
     if ( kl_t17 ) goto bb15; else goto bb16;
     bb15:
@@ -138,14 +138,14 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-void kl__counter__R7counter_3i32__ctor( struct kl__counter* kl_this_1, int32_t kl_start_2 )
+void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
 {
 #line 15 "codegen/module_private/helper.kl"
     ( *kl_this_1 ).kl_n_96 = kl_start_2;
     return;
 }
 
-int32_t kl__next__S7counter( struct kl__counter* kl_this_1 )
+int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -161,7 +161,7 @@ int32_t kl__next__S7counter( struct kl__counter* kl_this_1 )
     return kl_t0;
 }
 
-int32_t kl__size__S7pair_of( struct kl__pair_of* kl_this_1 )
+int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -177,7 +177,7 @@ int32_t kl__size__S7pair_of( struct kl__pair_of* kl_this_1 )
     return kl_t0;
 }
 
-int32_t kl__add__7pair_of( struct kl__pair_of kl_p_1 )
+int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -193,7 +193,7 @@ int32_t kl__add__7pair_of( struct kl__pair_of kl_p_1 )
     return kl_t0;
 }
 
-int32_t kl__scale__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_scale__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -209,7 +209,7 @@ int32_t kl__scale__3i32( int32_t kl_v_1 )
     return kl_t0;
 }
 
-int32_t kl__scale__3i64( int64_t kl_t1 )
+int32_t kl_6helper_scale__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -218,17 +218,17 @@ int32_t kl__scale__3i64( int64_t kl_t1 )
     return kl_t0;
 }
 
-int32_t kl__scale_here__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_scale_here__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
 #line 65 "codegen/module_private/helper.kl"
-    kl_t2 = kl__scale__3i32( kl_v_1 );
+    kl_t2 = kl_6helper_scale__3i32( kl_v_1 );
     kl_t0 = kl_t2;
     return kl_t0;
 }
 
-int32_t kl__magnitude__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -238,17 +238,17 @@ int32_t kl__magnitude__3i32( int32_t kl_v_1 )
     return kl_t0;
 }
 
-int32_t kl__total__( void )
+int32_t kl_6helper_total__( void )
 {
     int32_t kl_t0;
-    struct kl__pair_of kl_t1;
+    struct kl_6helper_pair_of kl_t1;
     int32_t kl_t2;
     bool kl_t3;
     int32_t kl_t4;
 #line 78 "codegen/module_private/helper.kl"
     kl_t1.kl_a_135 = 1;
     kl_t1.kl_b_137 = 1;
-    kl_t2 = kl__add__7pair_of( kl_t1 );
+    kl_t2 = kl_6helper_add__7pair_of( kl_t1 );
     kl_t3 = __builtin_add_overflow( kl_BASE_94, kl_t2, &( int32_t ) { 0 } );
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -259,28 +259,28 @@ int32_t kl__total__( void )
     return kl_t0;
 }
 
-int32_t kl__count_twice__( void )
+int32_t kl_6helper_count_twice__( void )
 {
     int32_t kl_t0;
-    struct kl__counter kl_c_1;
-    struct kl__counter* kl_t2;
-    struct kl__counter* kl_t4;
-    struct kl__counter* kl_t6;
+    struct kl_6helper_counter kl_c_1;
+    struct kl_6helper_counter* kl_t2;
+    struct kl_6helper_counter* kl_t4;
+    struct kl_6helper_counter* kl_t6;
     int32_t kl_t7;
 #line 83 "codegen/module_private/helper.kl"
     kl_t2 = &kl_c_1;
-    kl__counter__R7counter_3i32__ctor( kl_t2, 5 );
+    kl_6helper_counter__R7counter_3i32__ctor( kl_t2, 5 );
 #line 84 "codegen/module_private/helper.kl"
     kl_t4 = &kl_c_1;
-    kl__next__S7counter( kl_t4 );
+    kl_6helper_next__S7counter( kl_t4 );
 #line 85 "codegen/module_private/helper.kl"
     kl_t6 = &kl_c_1;
-    kl_t7 = kl__next__S7counter( kl_t6 );
+    kl_t7 = kl_6helper_next__S7counter( kl_t6 );
     kl_t0 = kl_t7;
     return kl_t0;
 }
 
-int32_t kl__darkness__( void )
+int32_t kl_6helper_darkness__( void )
 {
     int32_t kl_t0;
     int32_t kl_s_1;
@@ -293,12 +293,12 @@ int32_t kl__darkness__( void )
     return kl_t0;
 }
 
-int32_t kl__measure__( void )
+int32_t kl_6helper_measure__( void )
 {
     int32_t kl_t0;
-    struct kl__pair_of kl_p_1;
-    struct kl__pair_of kl_t2;
-    struct kl__pair_of* kl_t3;
+    struct kl_6helper_pair_of kl_p_1;
+    struct kl_6helper_pair_of kl_t2;
+    struct kl_6helper_pair_of* kl_t3;
     int32_t kl_t4;
 #line 96 "codegen/module_private/helper.kl"
     kl_t2.kl_a_135 = 2;
@@ -306,12 +306,12 @@ int32_t kl__measure__( void )
     kl_p_1 = kl_t2;
 #line 97 "codegen/module_private/helper.kl"
     kl_t3 = &kl_p_1;
-    kl_t4 = kl__size__S7pair_of( kl_t3 );
+    kl_t4 = kl_6helper_size__S7pair_of( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t kl__keep__I3i32E__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;

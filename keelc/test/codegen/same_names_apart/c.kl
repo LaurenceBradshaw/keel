@@ -1,0 +1,7 @@
+// Sees b.kl's `push` and not a.kl's.
+import b;
+
+i32 from_c()
+{
+    return push( 1 );
+}

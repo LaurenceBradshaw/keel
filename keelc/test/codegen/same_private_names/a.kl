@@ -1,0 +1,17 @@
+// Its `push` and `node` share their names with b.kl's, and each is private, so neither meets the other.
+
+private struct node
+{
+    i32 value;
+};
+
+private i32 push( i32 v )
+{
+    return v + 1;
+}
+
+i32 from_a()
+{
+    node n = node { .value = push( 1 ) };
+    return n.value;
+}

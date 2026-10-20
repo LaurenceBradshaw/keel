@@ -3,6 +3,7 @@
 
 #include "codegen_c/spelling.h"
 #include <cassert>
+#include <filesystem>
 #include <vector>
 
 #include <fmt/format.h>
@@ -106,7 +107,7 @@ std::string Spelling::type( Type_id type ) const
 
     // The typedef's name, written out by the emitter before anything can be declared with it.
     case Type_kind::Function:
-        return mangle_function_type( "", type, types.table() );
+        return mangle_function_type( type, types.table() );
 
     // An offset in bytes; which aggregate and which field is the checker's business, not C's.
     case Type_kind::Field:
@@ -136,15 +137,13 @@ std::string Spelling::structure( Type_id type ) const
         return fmt::format( "struct {}", mangle_array( type, types.table() ) );
     }
 
-    return fmt::format(
-        "struct {}", mangle_struct( package_name( types.table().get( type ).declaration ), type, types.table() )
-    );
+    return fmt::format( "struct {}", mangle_struct( owner( types.table().get( type ).declaration ), type, types.table() ) );
 }
 
 std::string Spelling::interface_reference( Type_id interface ) const
 {
     return fmt::format(
-        "struct {}__ref", mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+        "struct {}__ref", mangle_struct( owner( types.table().get( interface ).declaration ), interface, types.table() )
     );
 }
 
@@ -194,8 +193,7 @@ std::string Spelling::argument( Type_id type, std::string_view name ) const
 std::string Spelling::vtable_type( Type_id interface ) const
 {
     return fmt::format(
-        "struct {}__vtable",
-        mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+        "struct {}__vtable", mangle_struct( owner( types.table().get( interface ).declaration ), interface, types.table() )
     );
 }
 
@@ -203,8 +201,8 @@ std::string Spelling::vtable( Type_id implementer, Type_id interface ) const
 {
     return fmt::format(
         "{}__as_{}",
-        mangle_struct( package_name( types.table().get( implementer ).declaration ), implementer, types.table() ),
-        mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+        mangle_struct( owner( types.table().get( implementer ).declaration ), implementer, types.table() ),
+        mangle_struct( owner( types.table().get( interface ).declaration ), interface, types.table() )
     );
 }
 
@@ -216,7 +214,7 @@ std::string Spelling::thunk( Type_id implementer, Type_id interface, Node_id req
 std::string Spelling::drop_function( Type_id implementer ) const
 {
     return fmt::format(
-        "{}__drop", mangle_struct( package_name( types.table().get( implementer ).declaration ), implementer, types.table() )
+        "{}__drop", mangle_struct( owner( types.table().get( implementer ).declaration ), implementer, types.table() )
     );
 }
 
@@ -248,7 +246,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Destructor_decl || ast.kind( declaration ) == Node_kind::Enum_decl )
     {
         return mangle_destructor(
-            package_name( declaration ), interner.text( ast.name( declaration ) ), type_arguments, types.table()
+            owner( declaration ), interner.text( ast.name( declaration ) ), type_arguments, types.table()
         );
     }
 
@@ -266,7 +264,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Constructor_decl )
     {
         return mangle_constructor(
-            package_name( declaration ), interner.text( ast.name( declaration ) ), type_arguments, params, types.table()
+            owner( declaration ), interner.text( ast.name( declaration ) ), type_arguments, params, types.table()
         );
     }
 
@@ -295,7 +293,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
             ast.kind( block ) == Node_kind::Implements_decl ? types.type_of( ast.implemented( block )[0] ) : Type_id {};
 
         return mangle_function(
-            package_name( declaration ),
+            Spelling::owner( declaration ),
             interner.text( ast.name( declaration ) ),
             std::span( params ).subspan( receiver ? 1 : 0 ),
             types.table(),
@@ -306,7 +304,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     }
 
     return mangle_function(
-        package_name( declaration ), interner.text( ast.name( declaration ) ), params, types.table(), type_arguments
+        owner( declaration ), interner.text( ast.name( declaration ) ), params, types.table(), type_arguments
     );
 }
 
@@ -450,22 +448,27 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner ) co
     return fmt::format( "{} {} = {};", type( variable ), name, text );
 }
 
-std::string Spelling::package_name( Node_id decl ) const
+Mangled_owner Spelling::owner( Node_id decl ) const
 {
     // A built-in type belongs to no package's file.
     if( !decl.is_valid() )
     {
-        return "";
+        return {};
     }
 
-    Symbol_id package_id = imports.package_of( ast.span( decl ).file );
+    const File_id   file    = ast.span( decl ).file;
+    const Symbol_id package = imports.package_of( file );
 
-    if( !package_id.is_valid() )
+    Mangled_owner owner;
+    if( package.is_valid() )
     {
-        return "";
+        owner.package = interner.text( package );
     }
-
-    return std::string( interner.text( package_id ) );
+    if( file != ast.span( ast.root() ).file && file != imports.prelude_file() )
+    {
+        owner.module = std::filesystem::path( sm.file( file ).path ).stem().string();
+    }
+    return owner;
 }
 
 } // namespace keel
@@ -531,11 +534,12 @@ TEST_CASE( "c_string_escapes_every_byte_c_could_misread", "[codegen][spelling]" 
 // A borrowed run crosses a C call as two parameters, so no ABI passes a struct by hidden pointer.
 TEST_CASE( "a_run_parameter_is_spelled_as_two", "[codegen][spelling]" )
 {
-    const Ast      ast;
-    Types          types;
-    const Interner interner;
-    const Imports  imports;
-    const Spelling spelling { ast, types, interner, imports };
+    const Ast            ast;
+    Types                types;
+    const Interner       interner;
+    const Imports        imports;
+    const Source_manager sm;
+    const Spelling       spelling { ast, types, interner, imports, sm };
 
     Type_table&   table = types.table();
     const Type_id i32   = table.integer( 32, true );

@@ -152,7 +152,7 @@ Program load_program(
                     continue;
                 }
 
-                imports.add( current, *module );
+                imports.add( current, *module, ast.span( decl ) );
                 if( loaded.insert( module->v ).second )
                 {
                     imports.place( *module, package_id );

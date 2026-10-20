@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "sema/reporter.h"
+#include <filesystem>
 
 #include <fmt/format.h>
 
@@ -28,6 +29,11 @@ std::string Reporter::position( Span span ) const
     const Line_col         loc  = sm_.line_col( span.file, span.start );
     const std::string_view path = sm_.file( span.file ).path;
     return fmt::format( "{}:{}:{}", path, loc.line, loc.col );
+}
+
+std::string Reporter::module_name( File_id file ) const
+{
+    return std::filesystem::path( sm_.file( file ).path ).stem().string();
 }
 
 std::string_view Reporter::text( Span span ) const

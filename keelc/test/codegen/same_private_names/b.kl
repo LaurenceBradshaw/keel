@@ -1,0 +1,18 @@
+// The same names as a.kl's, with other bodies, so a call bound to the wrong one gives the wrong answer.
+
+private struct node
+{
+    i32 value;
+    i32 extra;
+};
+
+private i32 push( i32 v )
+{
+    return v + 10;
+}
+
+i32 from_b()
+{
+    node n = node { .value = push( 1 ), .extra = 0 };
+    return n.value + n.extra;
+}

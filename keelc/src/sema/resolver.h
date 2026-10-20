@@ -73,6 +73,16 @@ public:
         return can_name( imports_, ast, from, decl );
     }
 
+    Span import_span( File_id from, File_id to ) const
+    {
+        return imports_.import_span( from, to );
+    }
+
+    std::vector<File_id> common_importers( File_id a, File_id b ) const
+    {
+        return imports_.common_importers( a, b );
+    }
+
     Symbol_id package_of( File_id file ) const
     {
         return imports_.package_of( file );

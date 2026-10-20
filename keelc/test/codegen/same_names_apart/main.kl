@@ -1,0 +1,19 @@
+// a.kl and b.kl each declare a public `push( i32 )`. This file imports `a`, and c.kl imports `b`, so
+// no file sees both and each call finds its own.
+import a;
+import c;
+
+i32 main()
+{
+    if( push( 1 ) != 2 )
+    {
+        return 1;
+    }
+
+    if( from_c() != 11 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

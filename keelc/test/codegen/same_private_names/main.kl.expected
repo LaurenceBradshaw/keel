@@ -1,0 +1,133 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl_1b_node;
+struct kl_1a_node;
+
+struct kl_1b_node
+{
+    int32_t kl_value_27;
+    int32_t kl_extra_29;
+};
+
+struct kl_1a_node
+{
+    int32_t kl_value_62;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+int32_t kl_1b_push__3i32( int32_t );
+int32_t kl_1b_from_b__( void );
+int32_t kl_1a_push__3i32( int32_t );
+int32_t kl_1a_from_a__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+#line 8 "codegen/same_private_names/main.kl"
+    kl_t1 = kl_1a_from_a__(  );
+    kl_t2 = kl_t1 != 2;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 10 "codegen/same_private_names/main.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 13 "codegen/same_private_names/main.kl"
+    kl_t3 = kl_1b_from_b__(  );
+    kl_t4 = kl_t3 != 11;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 15 "codegen/same_private_names/main.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 18 "codegen/same_private_names/main.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl_1b_push__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 11 "codegen/same_private_names/b.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/same_private_names/b.kl", 11, "arithmetic overflow: v + 10" );
+    bb2:
+    kl_t3 = kl_v_1 + 10;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl_1b_from_b__( void )
+{
+    int32_t kl_t0;
+    struct kl_1b_node kl_n_1;
+    struct kl_1b_node kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 16 "codegen/same_private_names/b.kl"
+    kl_t3 = kl_1b_push__3i32( 1 );
+    kl_t2.kl_value_27 = kl_t3;
+    kl_t2.kl_extra_29 = 0;
+    kl_n_1 = kl_t2;
+#line 17 "codegen/same_private_names/b.kl"
+    kl_t4 = __builtin_add_overflow( kl_n_1.kl_value_27, kl_n_1.kl_extra_29, &( int32_t ) { 0 } );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/same_private_names/b.kl", 17, "arithmetic overflow: n.value + n.extra" );
+    bb2:
+    kl_t5 = kl_n_1.kl_value_27 + kl_n_1.kl_extra_29;
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+int32_t kl_1a_push__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 10 "codegen/same_private_names/a.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/same_private_names/a.kl", 10, "arithmetic overflow: v + 1" );
+    bb2:
+    kl_t3 = kl_v_1 + 1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl_1a_from_a__( void )
+{
+    int32_t kl_t0;
+    struct kl_1a_node kl_n_1;
+    struct kl_1a_node kl_t2;
+    int32_t kl_t3;
+#line 15 "codegen/same_private_names/a.kl"
+    kl_t3 = kl_1a_push__3i32( 1 );
+    kl_t2.kl_value_62 = kl_t3;
+    kl_n_1 = kl_t2;
+#line 16 "codegen/same_private_names/a.kl"
+    kl_t0 = kl_n_1.kl_value_62;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -8,7 +8,7 @@ int32_t abs( int32_t );
 int32_t abs( int32_t );
 
 int32_t kl__main__( void );
-int32_t kl__magnitude__3i32( int32_t );
+int32_t kl_6helper_magnitude__3i32( int32_t );
 
 int32_t kl__main__( void )
 {
@@ -21,7 +21,7 @@ int32_t kl__main__( void )
     bool kl_t6;
 #line 8 "codegen/shared_extern/main.kl"
     kl_t1 = -4;
-    kl_t2 = kl__magnitude__3i32( kl_t1 );
+    kl_t2 = kl_6helper_magnitude__3i32( kl_t1 );
     kl_t3 = kl_t2 != 4;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -42,7 +42,7 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-int32_t kl__magnitude__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;

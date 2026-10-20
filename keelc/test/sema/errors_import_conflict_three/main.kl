@@ -1,0 +1,10 @@
+// a.kl, b.kl and c.kl each declare a public `push( i32 )`, and none imports another. This file
+// imports all three: one error at the last `import` names them all, and the call finds one.
+import a;
+import b;
+import c;
+
+i32 main()
+{
+    return push( 0 );
+}

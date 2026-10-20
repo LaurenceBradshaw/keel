@@ -60,6 +60,12 @@ struct Argument_work
     bool    with_expectation = false;
 };
 
+struct Conflict
+{
+    std::string message;
+    std::string help;
+};
+
 struct Call_site
 {
     Node_id          call;
@@ -215,7 +221,10 @@ private:
     std::string candidate_list( std::span<const Node_id> candidates, std::span<const Bindings> bindings ); // one each
 
     bool parameters_collide( Node_id first, Node_id second, bool member );
-    void check_overloaded_pair( Node_id first, Node_id second, bool member );
+    // Why `second` cannot be declared beside `first`, or nothing when it can.
+    std::optional<Conflict> conflict( Node_id first, Node_id second, bool member );
+    void                    check_overloaded_pair( Node_id first, Node_id second, bool member );
+    void                    check_top_level_pair( Node_id first, Node_id second );
 
     void check_aggregate_overloads( Node_id decl );
 

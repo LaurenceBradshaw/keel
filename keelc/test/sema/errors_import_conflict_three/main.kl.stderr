@@ -1,0 +1,7 @@
+error: `push` is declared in `a`, `b` and `c`, which this file imports
+ --> sema/errors_import_conflict_three/main.kl:5:1
+  |
+5 | import c;
+  | ^^^^^^^^^ they are at sema/errors_import_conflict_three/a.kl:1:5, sema/errors_import_conflict_three/b.kl:1:5 and sema/errors_import_conflict_three/c.kl:1:5; make all but one `private`, or rename them
+
+1 error generated

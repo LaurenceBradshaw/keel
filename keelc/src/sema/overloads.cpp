@@ -1037,53 +1037,40 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
     return true;
 }
 
-void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool member )
+std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool member )
 {
-    if( refused( first ) || refused( second ) )
-    {
-        return;
-    }
-
     const std::string_view name = interner_.text( ast_.name( second ) );
 
     if( ast_.is_extern( first ) && ast_.is_extern( second ) && ast_.access( first ) == Access::Private &&
         ast_.access( second ) == Access::Private && ast_.span( first ).file != ast_.span( second ).file &&
         parameters_collide( first, second, member ) && types_.type_of( first ) == types_.type_of( second ) )
     {
-        return;
+        return std::nullopt;
     }
 
     // An extern names a symbol someone else defined, and `main` is the program's entry point:
     // both keep their spelling in C, so a second of either has nowhere to differ.
     if( ast_.is_extern( first ) || ast_.is_extern( second ) )
     {
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` is defined in C, so it cannot be overloaded", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )
-        );
-
-        return;
+        };
     }
 
     if( ast_.kind( second ) == Node_kind::Function_decl && name == "main" )
     {
-        refuse( second, "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) ) );
-
-        return;
+        return Conflict { "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) ) };
     }
 
     // Selection would have to bind a method's own type parameters before the arguments chose
     // between the two, and it reads the parameter types to choose.
     if( member && ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
     {
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` has type parameters of its own, so it cannot be overloaded", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )
-        );
-
-        return;
+        };
     }
 
     const bool exact = parameters_collide( first, second, false );
@@ -1092,29 +1079,23 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     {
         if( !member || !parameters_collide( first, second, true ) )
         {
-            return;
+            return std::nullopt;
         }
 
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` is already declared, and a type argument could make the two identical", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )
-        );
-
-        return;
+        };
     }
 
     // Two declarations that differ only in what they return. Worth its own message: the author
     // wrote a difference, and it is not one a call site can act on.
     if( types_.type_of( first ) != types_.type_of( second ) )
     {
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` is already declared with these parameters", name ),
             "two of one name must differ in their parameters, not only in what they return"
-        );
-
-        return;
+        };
     }
 
     // M7: one takes an object and the other does not. The call spellings differ, so nothing at a
@@ -1123,33 +1104,159 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     // `const` clause below, which would otherwise blame a keyword whose removal changes nothing.
     if( member && ast_.has_receiver( first ) != ast_.has_receiver( second ) )
     {
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` is already declared with these parameters", name ),
             "a `static` method and a method of one name must differ in their parameters"
-        );
-
-        return;
+        };
     }
 
     // And the same for a trailing `const`, which is a habit worth naming: it binds the receiver,
     // and a call writes the object rather than how the method holds it.
     if( member && ast_.is_const_method( first ) != ast_.is_const_method( second ) )
     {
-        refuse(
-            second,
+        return Conflict {
             fmt::format( "`{}` is already declared with these parameters", name ),
             "`const` binds the receiver, which a call site does not write, so it cannot tell two apart"
-        );
+        };
+    }
 
+    return Conflict {
+        fmt::format( "`{}` is already declared with these parameters", name ),
+        reporter_.previous_declaration_note( ast_.span( first ) )
+    };
+}
+
+void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool member )
+{
+    if( refused( first ) || refused( second ) )
+    {
         return;
     }
 
-    refuse(
-        second,
-        fmt::format( "`{}` is already declared with these parameters", name ),
-        reporter_.previous_declaration_note( ast_.span( first ) )
-    );
+    if( const std::optional<Conflict> found = conflict( first, second, member ) )
+    {
+        refuse( second, found->message, found->help );
+    }
+}
+
+// Two of one name conflict only where one file sees both; `extern`s and `main` keep one C name
+// wherever they are, so they conflict across the package. `second` is always the one refused, so
+// a file that sees only it still calls it.
+void Overloads::check_top_level_pair( Node_id first, Node_id second )
+{
+    if( refused( first ) || refused( second ) )
+    {
+        return;
+    }
+
+    const File_id          first_file  = ast_.span( first ).file;
+    const File_id          second_file = ast_.span( second ).file;
+    const std::string_view name        = interner_.text( ast_.name( second ) );
+    const bool functions    = ast_.kind( first ) == Node_kind::Function_decl && ast_.kind( second ) == Node_kind::Function_decl;
+    const bool package_wide = functions && ( ( ast_.is_extern( first ) && ast_.is_extern( second ) ) || name == "main" );
+
+    // Where the pair is reported, and the declaration the note points at.
+    Node_id at;
+    Node_id other;
+    if( first_file == second_file || package_wide || resolution_.sees( ast_, second_file, first ) )
+    {
+        at    = second;
+        other = first;
+    }
+    else if( resolution_.sees( ast_, first_file, second ) )
+    {
+        at    = first;
+        other = second;
+    }
+
+    std::optional<Conflict> found;
+    if( functions )
+    {
+        found = conflict( other.is_valid() ? other : first, at.is_valid() ? at : second, false );
+    }
+    else
+    {
+        found = Conflict {
+            fmt::format( "`{}` is already declared{}", name, first_file == second_file ? " in this scope" : "" ),
+            reporter_.previous_declaration_note( ast_.span( other.is_valid() ? other : first ) )
+        };
+    }
+
+    if( !found )
+    {
+        return;
+    }
+
+    if( at.is_valid() )
+    {
+        reporter_.error_at( ast_.name_span( at ), found->message, found->help );
+        refused_.insert( second.v );
+        return;
+    }
+
+    // Neither sees the other: a file that imports both is where they meet. Every declaration of
+    // the name it imports that clashes with `first` is one error, at the last of their `import`s.
+    for( const File_id importer : resolution_.common_importers( first_file, second_file ) )
+    {
+        if( !resolution_.sees( ast_, importer, first ) || !resolution_.sees( ast_, importer, second ) )
+        {
+            continue;
+        }
+
+        std::vector<Node_id> clashing { first };
+        for( Node_id d = second; d.is_valid(); d = resolution_.next_overload( d ) )
+        {
+            const File_id file = ast_.span( d ).file;
+            if( refused( d ) || file == first_file || !resolution_.sees( ast_, importer, d ) ||
+                std::ranges::any_of( clashing, [&]( Node_id c ) { return ast_.span( c ).file == file; } ) )
+            {
+                continue;
+            }
+
+            const bool both_functions =
+                ast_.kind( d ) == Node_kind::Function_decl && ast_.kind( first ) == Node_kind::Function_decl;
+            if( !both_functions || conflict( first, d, false ) )
+            {
+                clashing.push_back( d );
+            }
+        }
+
+        std::ranges::sort(
+            clashing, {}, [&]( Node_id d ) { return resolution_.import_span( importer, ast_.span( d ).file ); }
+        );
+
+        std::string modules;
+        std::string places;
+        for( std::size_t i = 0; i < clashing.size(); ++i )
+        {
+            const std::string_view separator = i == 0 ? "" : i + 1 == clashing.size() ? " and " : ", ";
+            const File_id          file      = ast_.span( clashing[i] ).file;
+            modules += fmt::format(
+                "{}`{}`", separator, qualified( interner_, resolution_.package_of( file ), reporter_.module_name( file ) )
+            );
+            places += fmt::format( "{}{}", separator, reporter_.position( ast_.name_span( clashing[i] ) ) );
+        }
+
+        reporter_.error_at(
+            resolution_.import_span( importer, ast_.span( clashing.back() ).file ),
+            fmt::format( "`{}` is declared in {}, which this file imports", name, modules ),
+            fmt::format(
+                "they are at {}; {}",
+                places,
+                clashing.size() == 2 ? "make one `private`, or rename it" : "make all but one `private`, or rename them"
+            )
+        );
+
+        // `first` is the earliest in the chain, so it stays the one lookup finds.
+        for( const Node_id d : clashing )
+        {
+            if( d != first )
+            {
+                refused_.insert( d.v );
+            }
+        }
+        return;
+    }
 }
 
 // Every ordered pair, once: the walk starts from each member of a chain and visits only what
@@ -1158,15 +1265,9 @@ void Overloads::check_overload_sets()
 {
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
-        if( ast_.kind( decl ) == Node_kind::Function_decl )
+        for( Node_id other = resolution_.next_overload( decl ); other.is_valid(); other = resolution_.next_overload( other ) )
         {
-            for( Node_id other = resolution_.next_overload( decl ); other.is_valid();
-                 other         = resolution_.next_overload( other ) )
-            {
-                check_overloaded_pair( decl, other, false );
-            }
-
-            continue;
+            check_top_level_pair( decl, other );
         }
 
         if( is_aggregate( ast_.kind( decl ) ) )
@@ -1340,10 +1441,11 @@ bool Overloads::refused( Node_id id ) const
     return refused_.contains( id.v );
 }
 
+// A chain may hold another kind of declaration of the name from another file; it is never a candidate.
 Node_id Overloads::next_overload( Node_id id ) const
 {
     Node_id next = resolution_.next_overload( id );
-    while( refused( next ) )
+    while( next.is_valid() && ( refused( next ) || ast_.kind( next ) != ast_.kind( id ) ) )
     {
         next = resolution_.next_overload( next );
     }

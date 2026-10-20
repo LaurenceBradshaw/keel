@@ -1,0 +1,11 @@
+// a.kl and b.kl each declare a public `push( i32 )` and `struct node`, and neither imports the other.
+// This file imports both, so each pair is one error at its second `import`, and the uses below
+// find one declaration each, with no second error.
+import a;
+import b;
+
+i32 main()
+{
+    node n = node { .value = push( 1 ) };
+    return n.value;
+}

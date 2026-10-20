@@ -29,8 +29,17 @@ struct Mangled_parameter
     char    marker = '\0'; // 'R' to borrow, 'M' to transfer, 'O' to assign, none for a plain value
 };
 
-// `kl_<module>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an
-// instantiation. The module is empty until M8, which gives `kl__add__3i32_3i32`. Parameter types
+// Where a declaration lives: its package, empty for the program's own, and its file's stem, empty
+// for the input file and the prelude, which are each alone. Two `private` functions of one name in
+// two modules are two symbols.
+struct Mangled_owner
+{
+    std::string package = {};
+    std::string module  = {};
+};
+
+// `kl_<owner>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an
+// instantiation. The input file's owner is empty, which gives `kl__add__3i32_3i32`. Parameter types
 // are what tell two overloads of one name apart, and the type arguments are what tell two
 // instantiations of one generic apart - an overloaded generic needs both.
 //
@@ -42,7 +51,7 @@ struct Mangled_parameter
 // a block also carries the interface it answers, as `C<interface>` after the `S` tag, so it and the
 // type's own method of that name stay apart.
 std::string mangle_function(
-    std::string_view                   module,
+    const Mangled_owner&               owner,
     std::string_view                   name,
     std::span<const Mangled_parameter> params,
     const Type_table&                  types,
@@ -50,26 +59,26 @@ std::string mangle_function(
     Type_id                            enclosing      = {},
     Type_id                            conformed      = {}
 );
-// `kl_<module>_<Name>`, plus `__I<args>E` when the aggregate is an instantiation. The type rather
+// `kl_<owner>_<Name>`, plus `__I<args>E` when the aggregate is an instantiation. The type rather
 // than a name, because `Box<i32>` and `Box<f64>` are two C structs from one declaration.
-std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types );
+std::string mangle_struct( const Mangled_owner& owner, Type_id type, const Type_table& types );
 // `kl__U<members>E`: no package declares a union, and its members name one each.
 std::string mangle_union( Type_id type, const Type_table& types );
-// `kl_<module>_fn__F<params>E<return>`, the name of the C typedef a function type is spelled
+// `kl__fn__F<params>E<return>`, the name of the C typedef a function type is spelled
 // through. A typedef because a C function-pointer type is a declarator, with the name inside it,
 // and every caller of Spelling::type writes the type and then the name.
-std::string mangle_function_type( std::string_view module, Type_id type, const Type_table& types );
+std::string mangle_function_type( Type_id type, const Type_table& types );
 
-// `kl_<module>_<Type>__dtor`. The suffix sits where argtypes go, so nothing collides with it short
+// `kl_<owner>_<Type>__dtor`. The suffix sits where argtypes go, so nothing collides with it short
 // of a function taking a parameter of a type named `dtor`, which L15's naming rules out. Same
 // non-injectivity the scheme already has, and the same fix when it matters: length prefixes.
 std::string mangle_destructor(
-    std::string_view module, std::string_view type_name, std::span<const Type_id> type_arguments, const Type_table& types
+    const Mangled_owner& owner, std::string_view type_name, std::span<const Type_id> type_arguments, const Type_table& types
 );
 // Similarly for constructors, which carry both for the same reason: the type arguments say which
 // instance, and the parameter types tell that instance's constructors apart.
 std::string mangle_constructor(
-    std::string_view                   module,
+    const Mangled_owner&               owner,
     std::string_view                   type_name,
     std::span<const Type_id>           type_arguments,
     std::span<const Mangled_parameter> params,

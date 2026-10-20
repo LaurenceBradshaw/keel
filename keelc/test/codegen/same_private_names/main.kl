@@ -1,0 +1,19 @@
+// Two modules each with a private `push( i32 )` and `struct node`: no file sees both, so neither is
+// refused, and each C name carries its module.
+import a;
+import b;
+
+i32 main()
+{
+    if( from_a() != 2 )
+    {
+        return 1;
+    }
+
+    if( from_b() != 11 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

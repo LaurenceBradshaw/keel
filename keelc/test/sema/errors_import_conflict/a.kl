@@ -1,0 +1,9 @@
+i32 push( i32 v )
+{
+    return v + 1;
+}
+
+struct node
+{
+    i32 value;
+};

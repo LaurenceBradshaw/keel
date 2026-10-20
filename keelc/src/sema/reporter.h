@@ -30,6 +30,8 @@ public:
 
     std::string previous_declaration_note( Span previous ) const;
     std::string position( Span span ) const;
+    // The file's name without its folder or `.kl`, as `import` writes it.
+    std::string module_name( File_id file ) const;
 
     // For a help line that quotes the author back.
     std::string_view text( Span span ) const;
