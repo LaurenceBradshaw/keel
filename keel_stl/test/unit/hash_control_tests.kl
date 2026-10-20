@@ -1,0 +1,181 @@
+// `kl::hash_control`'s word tricks against byte-at-a-time answers, over control words mixing empty,
+// deleted and full bytes; then its slot sizes and its growth accounting.
+import kl::hash_control;
+import kl::test;
+
+// Byte `i` of `word`.
+private u64 byte_of( u64 word, u64 i )
+{
+    return ( word >> ( i * 8 ) ) & 0xff;
+}
+
+// The top bit of byte `i`.
+private u64 flag( u64 i )
+{
+    return cast<u64>( 0x80 ) << ( i * 8 );
+}
+
+// A control byte from a random number: empty, deleted, or one of the tags.
+private u64 control_byte( u64 r )
+{
+    switch( r % 4 )
+    {
+        case 0:
+            return 0xff;
+        case 1:
+            return 0x80;
+        default:
+            return ( r >> 8 ) % 4; // few tags, so matches are common
+    }
+}
+
+private u64 next_random( ref u64 state )
+{
+    state ^= state << 13;
+    state ^= state >> 7;
+    state ^= state << 17;
+    return state;
+}
+
+private void word_tricks( ref kl::test_context c )
+{
+    u64 state = 0x2545_f491_4f6c_dd1d;
+
+    for( u64 round = 0; round < 10000 && !c.failed(); round++ )
+    {
+        u64 word = 0;
+
+        for( u64 i = 0; i < 8; i++ )
+        {
+            word |= control_byte( next_random( ref state ) ) << ( i * 8 );
+        }
+
+        const u64 tag = next_random( ref state ) % 4;
+        const u64 tags = tag * 0x0101_0101_0101_0101;
+
+        u64 empty = 0;
+        u64 vacant = 0;
+        u64 found = 0;
+
+        for( u64 i = 0; i < 8; i++ )
+        {
+            if( byte_of( word, i ) == 0xff )
+            {
+                empty |= flag( i );
+            }
+
+            if( byte_of( word, i ) >= 0x80 )
+            {
+                vacant |= flag( i );
+            }
+
+            if( byte_of( word, i ) == tag )
+            {
+                found |= flag( i );
+            }
+        }
+
+        c.check_eq( kl::hash_control::match_empty( word ), empty );
+        c.check_eq( kl::hash_control::match_free( word ), vacant );
+
+        // Every true match is flagged; anything else flagged is a full byte, never a vacant one.
+        const u64 matched = kl::hash_control::match_tags( word, tags );
+        c.check_eq( matched & found, found );
+        c.check_eq( matched & vacant, 0 );
+
+        if( vacant != 0 )
+        {
+            u64 first = 0;
+
+            while( ( vacant & flag( first ) ) == 0 )
+            {
+                first++;
+            }
+
+            c.check_eq( kl::hash_control::lowest( vacant ), first );
+        }
+    }
+}
+
+private void slots_for( ref kl::test_context c )
+{
+    c.check_eq( kl::hash_control::slots_for( 0 ), 0 );
+    c.check_eq( kl::hash_control::slots_for( 1 ), 8 );
+    c.check_eq( kl::hash_control::slots_for( 7 ), 8 );
+    c.check_eq( kl::hash_control::slots_for( 8 ), 16 );
+    c.check_eq( kl::hash_control::slots_for( 1000 ), 2048 );
+}
+
+// Slot 3 filled and emptied: its group still has empty slots, so the slot is empty again and the
+// room comes back.
+private void vacate_gives_room_back( ref kl::test_context c )
+{
+    kl::hash_control control = kl::hash_control( 8, 1, 2 );
+
+    control.occupy( 3, 5 );
+    c.check( control.is_full( 3 ) );
+    c.check( !control.is_full( 4 ) );
+    c.check_eq( control.size(), 1 );
+    c.check_eq( control.capacity(), 7 );
+
+    control.vacate( 3 );
+    c.check( !control.is_full( 3 ) );
+    c.check_eq( control.size(), 0 );
+    c.check_eq( control.capacity(), 7 );
+    c.check_eq( control.free_slot( 3 ), 0 );
+}
+
+// A full group leaves a tombstone, which costs room until the table is rebuilt. Sixteen slots, so
+// a full group stays within the 7/8 a table may fill; even hashes all probe group 0.
+private void tombstones_and_rebuilds( ref kl::test_context c )
+{
+    kl::hash_control full = kl::hash_control( 16, 1, 2 );
+
+    for( u64 i : 0..8 )
+    {
+        c.check_eq( full.occupy( i, i * 2 ), i ); // entries are numbered in the order they arrive
+    }
+
+    // Entry 3 leaves; entry 7, in slot 7, moves into its place.
+    c.check_eq( full.vacate( 3 ), 3 );
+    c.check_eq( full.entry( 7 ), 3 );
+    c.check_eq( full.entry( 6 ), 6 );
+    c.check_eq( full.size(), 7 );
+    c.check_eq( full.capacity(), 13 );
+    c.check_eq( full.free_slot( 0 ), 3 );
+
+    c.check_eq( full.occupy( 3, 3 ), 7 );
+    c.check_eq( full.capacity(), 14 );
+    c.check( !full.needs_growth() );
+
+    // The last entry leaving moves nothing.
+    c.check_eq( full.vacate( 3 ), 7 );
+    c.check_eq( full.entry( 7 ), 3 );
+    c.check_eq( full.size(), 7 );
+
+    // A rebuild keeps every entry's index: entry e's hash is e * 2, except entry 3's, which is 14.
+    kl::hash_control grown = full.resized( 32 );
+
+    for( u64 e : 0..7 )
+    {
+        u64 hash = e * 2;
+        if( e == 3 )
+        {
+            hash = 14;
+        }
+
+        kl::hash_probe probe = grown.probe( hash );
+        u64 slot = probe.next();
+        while( slot != grown.slots() && grown.entry( slot ) != e )
+        {
+            slot = probe.next();
+        }
+
+        c.check( slot != grown.slots() );
+    }
+
+    full.clear();
+    c.check_eq( full.size(), 0 );
+    c.check_eq( full.capacity(), 14 );
+    c.check( !full.is_full( 0 ) );
+}

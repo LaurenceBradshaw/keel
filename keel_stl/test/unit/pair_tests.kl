@@ -1,0 +1,56 @@
+// `kl::pair` owns both halves: each is destroyed exactly once, when the pair that holds it last ends
+// or when a write replaces it.
+import kl::optional;
+import kl::pair;
+import kl::test;
+import owned;
+
+// Both halves are read in place, and writing one drops what it held.
+private void holds( ref kl::test_context c )
+{
+    {
+        kl::pair<owned, u64> p = kl::pair<owned, u64>( owned( 1 ), 2 );
+        c.check_eq( live, 1 );
+        c.check_eq( p.first.value(), 1 );
+        c.check_eq( p.second, 2 );
+
+        p.first = owned( 3 );
+        p.second = 4;
+        c.check_eq( live, 1 );
+        c.check_eq( p.first.value(), 3 );
+        c.check_eq( p.second, 4 );
+    }
+    c.check_eq( live, 0 );
+}
+
+private kl::pair<owned, owned> made()
+{
+    owned left = owned( 5 );
+    return kl::pair<owned, owned>( move left, owned( 6 ) );
+}
+
+// The pair moves whole, so its halves end once, with the pair that holds them last.
+private void moves_whole( ref kl::test_context c )
+{
+    {
+        kl::pair<owned, owned> held = made();
+        kl::pair<owned, owned> moved = move held;
+        c.check_eq( live, 2 );
+        c.check_eq( moved.first.value(), 5 );
+        c.check_eq( moved.second.value(), 6 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// A pair inside an optional: unwrapping hands the whole pair out.
+private void nests( ref kl::test_context c )
+{
+    {
+        kl::optional<kl::pair<owned, u64>> found = kl::optional::some( kl::pair<owned, u64>( owned( 7 ), 8 ) );
+        kl::pair<owned, u64> p = kl::unwrap( move found );
+        c.check_eq( live, 1 );
+        c.check_eq( p.first.value(), 7 );
+        c.check_eq( p.second, 8 );
+    }
+    c.check_eq( live, 0 );
+}

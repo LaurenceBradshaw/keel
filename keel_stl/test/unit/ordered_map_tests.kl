@@ -1,0 +1,148 @@
+// `kl::ordered_map` over enough keys for three levels of nodes, inserted out of order so leaves,
+// inner nodes and the root all split, then removed by halves so nodes borrow, merge and the root
+// shrinks; `key_at` and `rank` are checked against the keys' order after each phase. Then owning
+// keys and values through the same reshaping, which valgrind checks.
+import kl::optional;
+import kl::ordered_map;
+import kl::string;
+import kl::test;
+import tag;
+
+// The keys `0..n` that are multiples of `step` are exactly those `m` holds, in order, each mapped
+// to twice itself.
+@located
+private void check_ordered( ref kl::test_context c, const ref kl::ordered_map<u64, u64> m, u64 n, u64 step )
+{
+    u64 i = 0;
+
+    for( u64 k : 0..n )
+    {
+        if( k % step != 0 )
+        {
+            continue;
+        }
+
+        if( *m.key_at( i ) != k || *m.value_at( i ) != k * 2 || m.rank( k ) != i )
+        {
+            c.check_eq( k, *m.key_at( i ) );
+            return;
+        }
+
+        i += 1;
+    }
+
+    c.check_eq( i, m.size() );
+}
+
+// The keys `0..1000`, scrambled, each mapped to twice itself.
+private kl::ordered_map<u64, u64> scrambled()
+{
+    kl::ordered_map<u64, u64> m = kl::ordered_map<u64, u64>();
+    for( u64 i : 0..1000 )
+    {
+        const u64 k = i * 7919 % 1000;
+        m.insert( k, k * 2 );
+    }
+    return m;
+}
+
+private void splits_in_order( ref kl::test_context c )
+{
+    kl::ordered_map<u64, u64> m = scrambled();
+    c.check_eq( m.size(), 1000 );
+    check_ordered( ref c, m, 1000, 1 );
+
+    c.check_eq( kl::unwrap( m.insert( 500, 1000 ) ), 1000 );
+    c.check_eq( m[500], 1000 );
+    c.check_eq( m.size(), 1000 );
+
+    c.check( m.contains( 999 ) );
+    c.check( !m.contains( 1000 ) );
+    c.check( kl::is_none( m.get( 1000 ) ) );
+    c.check_eq( m.rank( 1000 ), 1000 );
+}
+
+private void merges_in_order( ref kl::test_context c )
+{
+    kl::ordered_map<u64, u64> m = scrambled();
+
+    // Every odd key, in a scrambled order.
+    for( u64 i : 0..1000 )
+    {
+        const u64 k = i * 7919 % 1000;
+        if( k % 2 == 1 )
+        {
+            c.require( kl::unwrap( m.remove( k ) ) == k * 2 );
+        }
+    }
+
+    c.check_eq( m.size(), 500 );
+    check_ordered( ref c, m, 1000, 2 );
+    c.check_eq( m.rank( 3 ), 2 );
+    c.check( kl::is_none( m.remove( 3 ) ) );
+
+    // The rest, smallest first, then the map is used again.
+    for( u64 k : 0..500 )
+    {
+        c.require( kl::unwrap( m.remove( k * 2 ) ) == k * 4 );
+    }
+
+    c.check( m.is_empty() );
+    c.check_eq( m.rank( 5 ), 0 );
+
+    for( u64 k : 0..100 )
+    {
+        m.insert( 99 - k, ( 99 - k ) * 2 );
+    }
+
+    check_ordered( ref c, m, 100, 1 );
+
+    m.clear();
+    m.insert( 7, 14 );
+    c.check_eq( m.size(), 1 );
+    c.check_eq( m[7], 14 );
+}
+
+// Enough inserts and removes that nodes split, borrow from both sides, merge, shrink the root and
+// are reused from the free list.
+private void owning_entries( ref kl::test_context c )
+{
+    kl::ordered_map<tag, kl::string> m = kl::ordered_map<tag, kl::string>();
+
+    for( u64 i : 0..300 )
+    {
+        const u64 k = i * 101 % 300;
+        m.insert( tag( k ), kl::string::from( k ) );
+    }
+
+    // An overwrite keeps the map's key, drops the one passed, and hands back the old value.
+    c.check_eq( kl::unwrap( m.insert( tag( 7 ), "seven" ) ), "7" );
+    c.check_eq( m[tag( 7 )], "seven" );
+
+    // From the middle outwards, so keys leave inner nodes as well as leaves.
+    for( u64 i : 0..100 )
+    {
+        c.require( kl::is_some( m.remove( tag( 150 + i ) ) ) && kl::is_some( m.remove( tag( 149 - i ) ) ) );
+    }
+
+    c.check_eq( m.size(), 100 );
+    c.check_eq( m.rank( tag( 250 ) ), 50 );
+    c.check_eq( *m.value_at( 49 ), "49" );
+
+    // Refilled into reused nodes, then dropped by `clear` and again at the end.
+    for( u64 i : 50..250 )
+    {
+        m.insert( tag( i ), kl::string::from( i ) );
+    }
+
+    c.check_eq( m.size(), 300 );
+
+    m.clear();
+
+    for( u64 i : 0..40 )
+    {
+        m.insert( tag( 39 - i ), "x" );
+    }
+
+    c.check_eq( m.size(), 40 );
+}

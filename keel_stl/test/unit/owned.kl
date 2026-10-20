@@ -1,0 +1,35 @@
+// An element that counts how many of it are alive, and holds a heap block, so a missed destroy
+// leaks under valgrind as well as miscounting. Each test runs in a process of its own, so the count
+// starts at 0.
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};

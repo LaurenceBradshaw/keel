@@ -1,0 +1,260 @@
+// `kl::map`: lookups through several growths, replacing, removing and putting back, writing
+// through `operator[]`, `clear` and `with_capacity`; its dense entries, counted over by `key_at`
+// and `value_at` in insertion order; and owning keys and values, each dropped exactly once, which
+// valgrind checks.
+import kl::map;
+import kl::optional;
+import kl::string;
+import kl::test;
+
+// Each `i` in `0..n` mapped to its square.
+private kl::map<i64, i64> squares( i64 n )
+{
+    kl::map<i64, i64> m = kl::map<i64, i64>();
+    for( i64 i = 0; i < n; i++ )
+    {
+        m.insert( i, i * i );
+    }
+    return m;
+}
+
+private void starts_empty( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = kl::map<i64, i64>();
+    c.check( m.is_empty() );
+    c.check_eq( m.capacity(), 0 );
+    c.check( !m.contains( 3 ) );
+    c.check( kl::is_none( m.get( 3 ) ) );
+}
+
+private void finds_through_growth( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = kl::map<i64, i64>();
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        c.require( kl::is_none( m.insert( i, i * i ) ) );
+    }
+
+    c.check_eq( m.size(), 1000 );
+    c.check( m.capacity() >= 1000 );
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        c.require( *kl::unwrap( m.get( i ) ) == i * i && m[ i ] == i * i );
+    }
+
+    c.check( !m.contains( -1 ) );
+    c.check( !m.contains( 1000 ) );
+    c.check( kl::is_none( m.get( 5000 ) ) );
+}
+
+private void insert_replaces( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = squares( 1000 );
+    c.check_eq( kl::unwrap( m.insert( 7, 0 ) ), 49 );
+    c.check_eq( m[ 7 ], 0 );
+    c.check_eq( m.size(), 1000 );
+}
+
+private void removes_and_puts_back( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = squares( 1000 );
+
+    for( i64 i = 1; i < 1000; i += 2 )
+    {
+        c.require( kl::unwrap( m.remove( i ) ) == i * i );
+    }
+
+    c.check_eq( m.size(), 500 );
+    c.check( kl::is_none( m.remove( 1 ) ) );
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        c.require( m.contains( i ) == ( i % 2 == 0 ) );
+    }
+
+    m.insert( 1, 1 );
+    c.check_eq( m[ 1 ], 1 );
+    c.check_eq( m.size(), 501 );
+}
+
+// Churn leaves removed slots behind; clearing them must not grow the table while the count stays
+// where it is.
+private void churn_keeps_capacity( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = squares( 500 );
+    const u64 before = m.capacity();
+
+    for( i64 i = 1000; i < 6000; i++ )
+    {
+        m.insert( i, -i );
+        m.remove( i );
+    }
+
+    c.check( m.capacity() < 2 * before );
+    c.check_eq( m.size(), 500 );
+    c.check( !m.contains( 5999 ) );
+    c.check( m.contains( 499 ) );
+}
+
+private void writes_through_index( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = squares( 10 );
+    m[ 4 ] = 5;
+    c.check_eq( *kl::unwrap( m.get( 4 ) ), 5 );
+}
+
+private void clear_keeps_capacity( ref kl::test_context c )
+{
+    kl::map<i64, i64> m = squares( 1000 );
+    const u64 before = m.capacity();
+
+    m.clear();
+    c.check( m.is_empty() );
+    c.check( !m.contains( 0 ) );
+    c.check_eq( m.capacity(), before );
+
+    m.insert( 0, 1 );
+    c.check_eq( m.size(), 1 );
+    c.check_eq( m[ 0 ], 1 );
+}
+
+private void with_capacity_holds_its_promise( ref kl::test_context c )
+{
+    kl::map<u8, bool> sized = kl::map<u8, bool>::with_capacity( 100 );
+    const u64 room = sized.capacity();
+
+    for( u64 i = 0; i < 100; i++ )
+    {
+        sized.insert( cast<u8>( i ), i % 3 == 0 );
+    }
+
+    c.check( room >= 100 );
+    c.check_eq( sized.capacity(), room );
+    c.check( sized[ 99 ] );
+    c.check( !sized[ 98 ] );
+
+    sized.reserve( 10 );
+    c.check_eq( sized.capacity(), room );
+}
+
+private void entries_in_insertion_order( ref kl::test_context c )
+{
+    kl::map<u64, u64> m = kl::map<u64, u64>();
+
+    for( u64 i : 0..1000 )
+    {
+        m.insert( i * 7, i );
+    }
+
+    for( u64 i : 0..1000 )
+    {
+        c.require( *m.key_at( i ) == i * 7 && *m.value_at( i ) == i && m[ i * 7 ] == i );
+    }
+}
+
+private void remove_moves_the_last_entry( ref kl::test_context c )
+{
+    kl::map<u64, u64> m = kl::map<u64, u64>();
+
+    for( u64 i : 0..5 )
+    {
+        m.insert( i * 10, i );
+    }
+
+    // Removing 10, entry 1, moves 40, the last, into its place.
+    c.require( kl::is_some( m.remove( 10 ) ) );
+    c.check_eq( m.size(), 4 );
+    c.check_eq( *m.key_at( 1 ), 40 );
+    c.check_eq( *m.value_at( 1 ), 4 );
+    c.check_eq( *m.key_at( 3 ), 30 );
+
+    // Removing the last entry moves nothing; the moved key is still found.
+    c.require( kl::is_some( m.remove( 30 ) ) );
+    c.check_eq( m.size(), 3 );
+    c.check_eq( *m.key_at( 2 ), 20 );
+    c.check_eq( m[ 40 ], 4 );
+    c.check( !m.contains( 30 ) );
+
+    for( u64 i : 0..m.size() )
+    {
+        *m.value_at( i ) *= 2;
+    }
+
+    c.check_eq( m[ 0 ], 0 );
+    c.check_eq( m[ 40 ], 8 );
+    c.check_eq( m[ 20 ], 4 );
+}
+
+// Tombstones force same-size rebuilds, and every live key stays findable.
+private void churn_rebuilds_in_place( ref kl::test_context c )
+{
+    kl::map<u64, u64> churn = kl::map<u64, u64>::with_capacity( 14 );
+
+    for( u64 round : 0..200 )
+    {
+        churn.insert( round, round );
+
+        if( round >= 5 )
+        {
+            c.require( kl::is_some( churn.remove( round - 5 ) ) );
+        }
+    }
+
+    c.check_eq( churn.size(), 5 );
+    c.check( churn.capacity() <= 14 );
+
+    for( u64 i : 0..churn.size() )
+    {
+        c.check_eq( churn[ *churn.key_at( i ) ], *churn.key_at( i ) );
+        c.check( *churn.key_at( i ) >= 195 );
+    }
+}
+
+// Every key and value the map drops - on replacing, removing, growing, clearing and going out of
+// scope - is dropped exactly once. A replaced entry keeps its first key and drops the one passed.
+private void owning_entries( ref kl::test_context c )
+{
+    kl::map<kl::string, kl::string> names = kl::map<kl::string, kl::string>();
+
+    for( u64 i = 0; i < 200; i++ )
+    {
+        names.insert( kl::string::from( i ), kl::string::from( i * 2 ) );
+    }
+
+    c.check_eq( names.size(), 200 );
+    c.check_eq( names[ kl::string( "150" ) ], "300" );
+
+    kl::string old = kl::unwrap( names.insert( "10", "ten" ) );
+    c.check_eq( old, "20" );
+    c.check_eq( names[ kl::string( "10" ) ], "ten" );
+
+    for( u64 i = 0; i < 100; i++ )
+    {
+        kl::string gone = kl::unwrap( names.remove( kl::string::from( i ) ) );
+        c.require( i == 10 || gone == kl::string::from( i * 2 ) );
+    }
+
+    c.check_eq( names.size(), 100 );
+    c.check( !names.contains( kl::string( "99" ) ) );
+    c.check( names.contains( kl::string( "100" ) ) );
+
+    for( u64 i : 0..names.size() )
+    {
+        c.require( names[ *names.key_at( i ) ] == *names.value_at( i ) );
+    }
+
+    names.insert( "0", "zero" );
+    c.check_eq( names.size(), 101 );
+    c.check_eq( *names.key_at( 100 ), "0" );
+
+    names.clear();
+    c.check( names.is_empty() );
+
+    names.insert( "again", "1" );
+    kl::unwrap( names.remove( "again" ) ); // the only entry leaving
+    c.check( names.is_empty() );
+
+    names.insert( "kept", "until the end" );
+}

@@ -1,0 +1,13 @@
+error: `map` needs a `K` that implements `hashable`, but `Point` does not
+  --> sema/errors_map_unhashable/main.kl:17:13
+   |
+17 |     kl::map<Point, i32> points = kl::map<Point, i32>();
+   |             ^^^^^ declare `Point` with `implements hashable`
+
+error: `map` needs a `K` that implements `hashable`, but `Point` does not
+  --> sema/errors_map_unhashable/main.kl:17:42
+   |
+17 |     kl::map<Point, i32> points = kl::map<Point, i32>();
+   |                                          ^^^^^ declare `Point` with `implements hashable`
+
+2 errors generated

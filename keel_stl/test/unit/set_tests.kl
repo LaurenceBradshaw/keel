@@ -1,0 +1,117 @@
+// `kl::set`: `insert` says whether the key was new and drops a repeated one, lookups through
+// several growths, removing and putting back, dense keys counted over by `key_at` in insertion
+// order, and owning keys dropped exactly once, which valgrind checks.
+import kl::set;
+import kl::string;
+import kl::test;
+
+private void insert_says_whether_new( ref kl::test_context c )
+{
+    kl::set<u64> seen = kl::set<u64>();
+    c.check( seen.is_empty() );
+    c.check( !seen.contains( 0 ) );
+    c.check( !seen.remove( 0 ) );
+
+    for( u64 i = 0; i < 500; i++ )
+    {
+        c.require( seen.insert( i * 3 ) );
+    }
+
+    c.check( !seen.insert( 9 ) );
+    c.check_eq( seen.size(), 500 );
+    c.check( seen.capacity() >= 500 );
+
+    for( u64 i = 0; i < 1500; i++ )
+    {
+        c.require( seen.contains( i ) == ( i % 3 == 0 ) );
+    }
+}
+
+private void removes_and_puts_back( ref kl::test_context c )
+{
+    kl::set<u64> seen = kl::set<u64>();
+    for( u64 i = 0; i < 500; i++ )
+    {
+        seen.insert( i * 3 );
+    }
+
+    for( u64 i = 0; i < 1500; i += 6 )
+    {
+        c.require( seen.remove( i ) );
+    }
+
+    c.check_eq( seen.size(), 250 );
+    c.check( !seen.contains( 6 ) );
+    c.check( seen.contains( 3 ) );
+    c.check( seen.insert( 6 ) );
+}
+
+private void keys_in_insertion_order( ref kl::test_context c )
+{
+    kl::set<u64> s = kl::set<u64>();
+
+    for( u64 i : 0..5 )
+    {
+        s.insert( i * 10 );
+    }
+
+    for( u64 i : 0..s.size() )
+    {
+        c.check_eq( *s.key_at( i ), i * 10 );
+    }
+
+    // Removing 10, key 1, moves 40, the last, into its place.
+    c.check( s.remove( 10 ) );
+    c.check_eq( s.size(), 4 );
+    c.check_eq( *s.key_at( 1 ), 40 );
+    c.check( s.contains( 40 ) );
+
+    // Growth keeps insertion order.
+    kl::set<u64> big = kl::set<u64>();
+
+    for( u64 i : 0..1000 )
+    {
+        big.insert( i * 3 );
+    }
+
+    for( u64 i : 0..1000 )
+    {
+        c.require( *big.key_at( i ) == i * 3 && big.contains( i * 3 ) );
+    }
+}
+
+private void owning_keys( ref kl::test_context c )
+{
+    kl::set<kl::string> words = kl::set<kl::string>::with_capacity( 4 );
+
+    words.insert( "a" );
+    words.insert( "b" );
+    c.check( !words.insert( "a" ) );
+    c.check( words.contains( kl::string( "b" ) ) );
+    c.check_eq( words.size(), 2 );
+
+    words.remove( kl::string( "a" ) );
+    words.clear();
+    words.insert( "kept" );
+
+    kl::set<kl::string> names = kl::set<kl::string>();
+
+    for( u64 i : 0..40 )
+    {
+        names.insert( kl::string::from( i ) );
+    }
+
+    for( u64 i : 0..20 )
+    {
+        c.require( names.remove( kl::string::from( i * 2 ) ) );
+    }
+
+    for( u64 i : 0..names.size() )
+    {
+        c.require( names.contains( *names.key_at( i ) ) );
+    }
+
+    c.check_eq( names.size(), 20 );
+    c.check( !names.contains( "38" ) );
+    c.check( names.contains( "39" ) );
+}

@@ -1,0 +1,85 @@
+// Assigning onto a library type that holds elements destroys them first, once, whatever the right
+// side is: another value moved in, a fresh temporary, or the same value moved onto itself.
+import kl::list;
+import kl::ring;
+import kl::string;
+import kl::test;
+import owned;
+
+private void list_onto_full( ref kl::test_context c )
+{
+    kl::list<owned> kept = kl::list<owned>();
+    kept.push( owned( 1 ) );
+    kept.push( owned( 2 ) );
+    kl::list<owned> other = kl::list<owned>();
+    other.push( owned( 3 ) );
+
+    kept = move other;
+    c.check_eq( live, 1 );
+    c.check_eq( kept.size(), 1 );
+    c.check_eq( kept[0].value(), 3 );
+
+    kept = kl::list<owned>();
+    c.check_eq( live, 0 );
+    c.check( kept.is_empty() );
+}
+
+private void list_onto_itself( ref kl::test_context c )
+{
+    {
+        kl::list<owned> values = kl::list<owned>();
+        values.push( owned( 7 ) );
+
+        values = move values;
+        c.check_eq( live, 1 );
+        c.check_eq( values.size(), 1 );
+        c.check_eq( values[0].value(), 7 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// A zero capacity is an empty list that still grows.
+private void list_zero_capacity( ref kl::test_context c )
+{
+    {
+        kl::list<owned> values = kl::list<owned>::with_capacity( 0 );
+        c.check_eq( values.capacity(), 0 );
+
+        values.push( owned( 1 ) );
+        values.push( owned( 2 ) );
+        c.check_eq( values.capacity(), 2 );
+        c.check_eq( live, 2 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// The ring's elements wrap past the end of its block, so destroying them takes both runs.
+private void ring_onto_full( ref kl::test_context c )
+{
+    kl::ring<owned> kept = kl::ring<owned>::with_capacity( 3 );
+    kept.push_back( owned( 1 ) );
+    kept.push_back( owned( 2 ) );
+    kept.push_front( owned( 0 ) );
+    kl::ring<owned> other = kl::ring<owned>::with_capacity( 1 );
+    other.push_back( owned( 9 ) );
+
+    kept = move other;
+    c.check_eq( live, 1 );
+    c.check_eq( kept.size(), 1 );
+    c.check_eq( kept[0].value(), 9 );
+
+    kept = kl::ring<owned>::with_capacity( 2 );
+    c.check_eq( live, 0 );
+}
+
+private void strings( ref kl::test_context c )
+{
+    kl::string text = kl::string( "hello" );
+    text = kl::string( "world" );
+    text = move text;
+    c.check_eq( text, "world" );
+
+    text = kl::string::with_capacity( 0 );
+    text.push( 65 );
+    c.check_eq( text.size(), 1 );
+}

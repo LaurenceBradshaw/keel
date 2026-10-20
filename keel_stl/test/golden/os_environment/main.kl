@@ -1,0 +1,31 @@
+// `kl::os` environment: a set variable, and some never set. Each check returns its own code.
+import kl::optional;
+import kl::os;
+import kl::string;
+
+bool set( kl::optional<kl::string> v )
+{
+    switch( v )
+    {
+        case kl::optional::some( s ):
+            return true;
+        case kl::optional::none:
+            return false;
+    }
+}
+
+i32 main()
+{
+    if( !set( kl::environment( "PATH" ) ) )
+    {
+        return 1;
+    }
+
+    if( set( kl::environment( "KL_SURELY_NEVER_SET" ) ) || set( kl::environment( "" ) )
+        || set( kl::environment( "A=B" ) ) )
+    {
+        return 2;
+    }
+
+    return 0;
+}

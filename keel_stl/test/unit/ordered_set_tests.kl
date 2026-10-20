@@ -1,0 +1,33 @@
+// `kl::ordered_set` with owning keys: a duplicate is refused and dropped, `key_at` counts in order
+// and `rank` places keys, and removal down to empty drops each key once, which valgrind checks.
+import kl::ordered_set;
+import kl::test;
+import tag;
+
+private void owning_keys( ref kl::test_context c )
+{
+    kl::ordered_set<tag> s = kl::ordered_set<tag>();
+
+    for( u64 i : 0..200 )
+    {
+        c.require( s.insert( tag( i * 37 % 200 ) ) );
+    }
+
+    c.check( !s.insert( tag( 5 ) ) );
+    c.check_eq( s.size(), 200 );
+    c.check( s.contains( tag( 199 ) ) );
+    c.check( !s.contains( tag( 200 ) ) );
+
+    for( u64 i : 0..200 )
+    {
+        c.require( s.key_at( i ).n() == i && s.rank( tag( i ) ) == i );
+    }
+
+    for( u64 i : 0..200 )
+    {
+        c.require( s.remove( tag( i * 37 % 200 ) ) );
+    }
+
+    c.check( s.is_empty() );
+    c.check( !s.remove( tag( 1 ) ) );
+}

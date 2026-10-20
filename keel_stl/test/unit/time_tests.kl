@@ -1,0 +1,43 @@
+// `kl::time`: both clocks never go backwards, `duration` arithmetic, positive resolutions and a
+// plausible wall time.
+import kl::test;
+import kl::time;
+
+private void clocks_never_go_backwards( ref kl::test_context c )
+{
+    kl::instant a = kl::instant::now();
+    kl::raw_instant r = kl::raw_instant::now();
+    for( u64 i = 0; i < 10000; i++ )
+    {
+        kl::instant b = kl::instant::now();
+        kl::raw_instant s = kl::raw_instant::now();
+        c.require( !( b < a ) && !( s < r ) );
+        a = b;
+        r = s;
+    }
+
+    kl::instant later = kl::instant::now();
+    c.check( ( later - a ).nanoseconds() >= 0 );
+    c.check( a - a == kl::duration::of_nanoseconds( 0 ) );
+}
+
+private void duration_arithmetic( ref kl::test_context c )
+{
+    kl::duration two = kl::duration::of_nanoseconds( 2 );
+    kl::duration five = kl::duration::of_nanoseconds( 5 );
+    c.check( two + five - five == two );
+    c.check( two < five );
+    c.check_eq( ( two - five ).nanoseconds(), -3 );
+}
+
+private void resolutions_are_positive( ref kl::test_context c )
+{
+    c.check( kl::instant::resolution().nanoseconds() > 0 );
+    c.check( kl::raw_instant::resolution().nanoseconds() > 0 );
+}
+
+private void wall_time_is_plausible( ref kl::test_context c )
+{
+    // 2026-01-01 UTC.
+    c.check( kl::wall_time() >= 1767225600000000000 );
+}

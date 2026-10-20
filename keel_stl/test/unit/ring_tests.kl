@@ -1,0 +1,247 @@
+// `kl::ring` owns its elements across the wrap: an element pushed at either end, popped, evicted,
+// refused, moved by `reserve` or cleared is destroyed exactly once, and a ring dropped while it
+// wraps destroys what it holds.
+import kl::optional;
+import kl::ring;
+import kl::test;
+import owned;
+
+// The ring's values from front to back, as decimal digits: [3, 1, 2] is 312.
+private u64 digits( const ref kl::ring<owned> values )
+{
+    u64 result = 0;
+    for( u64 i = 0; i < values.size(); i++ )
+    {
+        result = result * 10 + values[i].value();
+    }
+    return result;
+}
+
+// A ring of three holding 1, 2, 3, with nothing wrapped yet.
+private kl::ring<owned> one_two_three()
+{
+    kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
+    for( u64 i = 1; i <= 3; i++ )
+    {
+        values.push_back( owned( i ) );
+    }
+    return values;
+}
+
+// Pushing at the back after popping the front reuses the freed slot, so the ring wraps.
+private void wraps_at_the_back( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        c.check( values.is_full() );
+        c.check_eq( values.capacity(), 3 );
+        c.check_eq( digits( values ), 123 );
+
+        {
+            owned one = values.pop_front();
+            c.check_eq( one.value(), 1 );
+            c.check_eq( live, 3 );
+            c.check( !values.is_full() );
+        }
+
+        values.push_back( owned( 4 ) );
+        _ = values.pop_front();
+        values.push_back( owned( 5 ) );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 345 );
+        c.check_eq( values.first().value(), 3 );
+        c.check_eq( values.last().value(), 5 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// Pushing at the front of an empty ring wraps backwards from the first slot.
+private void wraps_at_the_front( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
+        values.push_front( owned( 1 ) );
+        values.push_back( owned( 2 ) );
+        values.push_front( owned( 3 ) );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 312 );
+
+        {
+            owned two = values.pop_back();
+            owned three = values.pop_front();
+            c.check_eq( two.value(), 2 );
+            c.check_eq( three.value(), 3 );
+            c.check_eq( live, 3 );
+            c.check_eq( digits( values ), 1 );
+        }
+
+        c.check_eq( live, 1 );
+        c.check_eq( values.first().value(), 1 );
+        c.check_eq( values.last().value(), 1 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `try_push` on a full ring hands the element back in an `err`, and on one with room answers `ok`.
+private void try_pushes( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        _ = values.pop_front();
+
+        result<void, owned> room = values.try_push_front( owned( 7 ) );
+        switch( move room )
+        {
+            case result::ok:
+                break;
+            case result::err( e ):
+                c.check( false );
+        }
+
+        result<void, owned> full = values.try_push_back( owned( 9 ) );
+        switch( move full )
+        {
+            case result::ok:
+                c.check( false );
+                break;
+            case result::err( e ):
+                c.check_eq( e.value(), 9 );
+                c.check_eq( live, 4 );
+        }
+
+        _ = values.try_push_front( owned( 8 ) );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 723 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `_evict` on a full ring removes the element at the other end and hands it out; with room, it
+// evicts nothing.
+private void evicts( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        {
+            owned one = kl::unwrap( values.push_back_evict( owned( 4 ) ) );
+            c.check_eq( one.value(), 1 );
+            c.check_eq( live, 4 );
+            c.check_eq( digits( values ), 234 );
+        }
+
+        {
+            owned four = kl::unwrap( values.push_front_evict( owned( 5 ) ) );
+            c.check_eq( four.value(), 4 );
+            c.check_eq( digits( values ), 523 );
+        }
+
+        _ = values.pop_back();
+        c.check( kl::is_none( values.push_back_evict( owned( 6 ) ) ) );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 526 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `try_pop` hands an end's element out in an optional, and answers none once the ring is empty.
+private void try_pops( ref kl::test_context c )
+{
+    kl::ring<owned> values = one_two_three();
+    {
+        owned three = kl::unwrap( values.try_pop_back() );
+        owned one = kl::unwrap( values.try_pop_front() );
+        c.check_eq( three.value(), 3 );
+        c.check_eq( one.value(), 1 );
+        c.check_eq( digits( values ), 2 );
+    }
+
+    _ = values.try_pop_front();
+    c.check_eq( live, 0 );
+    c.check( values.is_empty() );
+    c.check( kl::is_none( values.try_pop_front() ) );
+    c.check( kl::is_none( values.try_pop_back() ) );
+}
+
+// `reserve` unwraps the elements into the new block in order; one no larger than the capacity does
+// nothing.
+private void reserves( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        _ = values.pop_front();
+        values.push_back( owned( 4 ) );
+
+        values.reserve( 2 );
+        c.check_eq( values.capacity(), 3 );
+
+        values.reserve( 5 );
+        c.check_eq( values.capacity(), 5 );
+        c.check_eq( live, 3 );
+        c.check_eq( digits( values ), 234 );
+        c.check( !values.is_full() );
+
+        values.push_back( owned( 5 ) );
+        values.push_front( owned( 1 ) );
+        c.check( values.is_full() );
+        c.check_eq( live, 5 );
+        c.check_eq( digits( values ), 12345 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// `clear` drops a wrapped ring's elements and keeps its capacity.
+private void clears( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        _ = values.pop_front();
+        values.push_back( owned( 4 ) );
+
+        values.clear();
+        c.check_eq( live, 0 );
+        c.check( values.is_empty() );
+        c.check_eq( values.capacity(), 3 );
+
+        values.push_back( owned( 6 ) );
+        c.check_eq( live, 1 );
+        c.check_eq( digits( values ), 6 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// A ring dropped while it wraps destroys both runs of its elements.
+private void drops_wrapped( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> values = one_two_three();
+        _ = values.pop_front();
+        values.push_back( owned( 4 ) );
+        c.check_eq( live, 3 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// The ring moves whole, so its elements end once, with the ring that holds them last.
+private void moves_whole( ref kl::test_context c )
+{
+    {
+        kl::ring<owned> held = one_two_three();
+        kl::ring<owned> moved = move held;
+        c.check_eq( live, 3 );
+        c.check_eq( digits( moved ), 123 );
+    }
+    c.check_eq( live, 0 );
+}
+
+// A ring of a `struct` needs no marker, and `operator[]` writes through.
+private void copies( ref kl::test_context c )
+{
+    kl::ring<i32> values = kl::ring<i32>::with_capacity( 2 );
+    i32 seven = 7;
+    values.push_back( seven );
+    values.push_front( 8 );
+    values[1] = 9;
+    c.check_eq( values.pop_front(), 8 );
+    c.check_eq( values.pop_back(), 9 );
+    c.check( values.is_empty() );
+}

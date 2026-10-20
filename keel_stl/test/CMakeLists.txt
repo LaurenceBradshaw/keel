@@ -1,7 +1,7 @@
-# The kl package's golden tests: programs using the package, run by keelc's golden runner.
+# The kl package's tests: its kl::test suite, its programs, and its goldens.
 if(KEEL_TESTS)
     add_test(
-        NAME stl_golden
+        NAME stl_tests
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh" $<TARGET_FILE:keelc>
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
