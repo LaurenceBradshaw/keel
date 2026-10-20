@@ -1,0 +1,84 @@
+// `kl::run_tests` with no arguments: every way a test can end, each reported on its own line, and
+// every check naming the test's line, through a helper of its own too.
+import kl::console;
+import kl::test;
+
+private extern i32 raise( i32 signal );
+private extern never exit( i32 code );
+
+void passes( ref kl::test_context c )
+{
+    i32 n = 3;
+    c.check( n == 3 );
+    c.check_eq( n, 3 );
+    c.check_eq( "abc", "abc" );
+    c.require( true );
+}
+
+void checks( ref kl::test_context c )
+{
+    u64 big = 7;
+    c.check( false );
+    c.check_eq( -1, 2 );
+    c.check_eq( big, 8 );
+    c.check_eq( 0.5, 1.5 );
+    c.check_eq( true, false );
+    c.check_eq( "ab", "ab " );
+    c.check( false ); // still reached: a failed check does not end the test
+}
+
+// A helper's checks name the test's line, since it passes its own caller on.
+@located
+void check_even( ref kl::test_context c, i64 n )
+{
+    c.check_eq( n % 2, 0 );
+}
+
+void helper( ref kl::test_context c )
+{
+    check_even( ref c, 4 );
+    check_even( ref c, 5 );
+}
+
+void requires( ref kl::test_context c )
+{
+    kl::println( "before require" );
+    c.require( false );
+    kl::println( "never printed" );
+}
+
+void panics( ref kl::test_context _ )
+{
+    panic( "boom" );
+}
+
+void signalled( ref kl::test_context _ )
+{
+    unsafe
+    {
+        _ = raise( 9 );
+    }
+}
+
+void exits( ref kl::test_context _ )
+{
+    unsafe
+    {
+        exit( 3 );
+    }
+}
+
+i32 main( const ref str[] args )
+{
+    kl::test_case[7] tests = [
+        kl::test_case { "passes", &passes },
+        kl::test_case { "checks", &checks },
+        kl::test_case { "helper", &helper },
+        kl::test_case { "requires", &requires },
+        kl::test_case { "panics", &panics },
+        kl::test_case { "signalled", &signalled },
+        kl::test_case { "exits", &exits }
+    ];
+
+    return kl::run_tests( tests, args );
+}

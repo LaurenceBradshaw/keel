@@ -1,0 +1,28 @@
+// `kl::run_tests --no-fork`: every test in this process, failures counted as when forked.
+import kl::test;
+
+void adds( ref kl::test_context c )
+{
+    c.check_eq( 1 + 2, 3 );
+}
+
+void adds_badly( ref kl::test_context c )
+{
+    c.check_eq( 1 + 2, 4 );
+}
+
+void concatenates( ref kl::test_context c )
+{
+    c.check_eq( "ab", "ab" );
+}
+
+i32 main( const ref str[] args )
+{
+    kl::test_case[3] tests = [
+        kl::test_case { "adds", &adds },
+        kl::test_case { "adds_badly", &adds_badly },
+        kl::test_case { "concatenates", &concatenates }
+    ];
+
+    return kl::run_tests( tests, args );
+}

@@ -185,6 +185,19 @@ empty or holds <code>=</code> never is.</dd>
 </dl>
 </section>
 <section class="module">
+<h3><a href="test.html">test</a></h3>
+<dl class="summaries">
+<dt><a href="test.html#test_case"><code>test_case</code></a> <span class="kind">struct</span></dt>
+<dd>A test and the name <code>run_tests</code> reports it by.</dd>
+<dt><a href="test.html#test_context"><code>test_context</code></a> <span class="kind">class</span></dt>
+<dd>What a test checks through. A failed check is counted and reported, and the test goes on; a
+failed <code>require</code> ends it.</dd>
+<dt><a href="test.html#run_tests"><code>run_tests</code></a> <span class="kind">function</span></dt>
+<dd>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
+code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="time.html">time</a></h3>
 <dl class="summaries">
 <dt><a href="time.html#duration"><code>duration</code></a> <span class="kind">class</span></dt>
