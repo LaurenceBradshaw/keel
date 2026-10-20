@@ -1,0 +1,9 @@
+// The same private extern in two modules must have one signature.
+import helper;
+
+private extern i32 abs( i32 v );
+
+i32 main()
+{
+    return 0;
+}

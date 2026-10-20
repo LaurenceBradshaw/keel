@@ -1046,6 +1046,13 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
 
     const std::string_view name = interner_.text( ast_.name( second ) );
 
+    if( ast_.is_extern( first ) && ast_.is_extern( second ) && ast_.access( first ) == Access::Private &&
+        ast_.access( second ) == Access::Private && ast_.span( first ).file != ast_.span( second ).file &&
+        parameters_collide( first, second, member ) && types_.type_of( first ) == types_.type_of( second ) )
+    {
+        return;
+    }
+
     // An extern names a symbol someone else defined, and `main` is the program's entry point:
     // both keep their spelling in C, so a second of either has nowhere to differ.
     if( ast_.is_extern( first ) || ast_.is_extern( second ) )

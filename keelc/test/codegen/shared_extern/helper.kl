@@ -1,0 +1,10 @@
+// The same private extern as main.kl's: one C function, seen from each module once.
+private extern i32 abs( i32 v );
+
+i32 magnitude( i32 v )
+{
+    unsafe
+    {
+        return abs( v );
+    }
+}

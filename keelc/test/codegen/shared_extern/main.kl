@@ -1,0 +1,16 @@
+// Two modules each declare the same private extern; each calls its own.
+import helper;
+
+private extern i32 abs( i32 v );
+
+i32 main()
+{
+    if( magnitude( -4 ) != 4 ) { return 1; }
+
+    unsafe
+    {
+        if( abs( -5 ) != 5 ) { return 2; }
+    }
+
+    return 0;
+}

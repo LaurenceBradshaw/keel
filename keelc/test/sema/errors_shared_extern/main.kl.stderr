@@ -1,0 +1,7 @@
+error: `abs` is defined in C, so it cannot be overloaded
+ --> sema/errors_shared_extern/helper.kl:2:20
+  |
+2 | private extern i64 abs( i32 v );
+  |                    ^^^ previous declaration is at: sema/errors_shared_extern/main.kl:4:9
+
+1 error generated

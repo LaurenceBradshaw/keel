@@ -1,0 +1,2 @@
+// main.kl's extern with another return type, which C would refuse as a conflicting prototype.
+private extern i64 abs( i32 v );
