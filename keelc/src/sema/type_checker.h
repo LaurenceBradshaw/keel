@@ -64,16 +64,17 @@ class Types
 public:
     Types() = default;
     Types(
-        Type_table                              table,
-        std::vector<Type_id>                    types,
-        std::vector<Node_id>                    struct_order,
-        std::unordered_map<u32, Constant_value> constants,
-        std::unordered_map<u32, Node_id>        callees,
-        std::unordered_map<u32, Type_id>        through,
-        std::vector<Instantiation>              instantiations,
-        std::unordered_map<u32, u32>            instantiation_of,
-        std::vector<Generic_call>               generic_calls,
-        Conformance_model                       conformances
+        Type_table                                    table,
+        std::vector<Type_id>                          types,
+        std::vector<Node_id>                          struct_order,
+        std::unordered_map<u32, Constant_value>       constants,
+        std::unordered_map<u32, Node_id>              callees,
+        std::unordered_map<u32, Type_id>              through,
+        std::vector<Instantiation>                    instantiations,
+        std::unordered_map<u32, u32>                  instantiation_of,
+        std::vector<Generic_call>                     generic_calls,
+        Conformance_model                             conformances,
+        std::unordered_map<u32, std::vector<Node_id>> listed = {}
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
@@ -84,7 +85,8 @@ public:
           instantiations_( std::move( instantiations ) ),
           instantiation_of_( std::move( instantiation_of ) ),
           generic_calls_( std::move( generic_calls ) ),
-          conformances_( std::move( conformances ) )
+          conformances_( std::move( conformances ) ),
+          listed_( std::move( listed ) )
     {
     }
 
@@ -132,6 +134,15 @@ public:
         return found == callees_.end() ? Node_id {} : found->second;
     }
 
+    // The functions an `@functions_of( T )` lists, in load order.
+    const std::vector<Node_id>& listed_of( Node_id use ) const
+    {
+        static const std::vector<Node_id> none;
+        const auto                        found = listed_.find( use.v );
+
+        return found == listed_.end() ? none : found->second;
+    }
+
     // The bound's instance an operator on a type parameter went through, as the generic wrote it.
     Type_id through_of( Node_id use ) const
     {
@@ -174,16 +185,17 @@ public:
     }
 
 private:
-    Type_table                              table_;
-    std::vector<Type_id>                    types_;
-    std::vector<Node_id>                    struct_order_;
-    std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
-    std::unordered_map<u32, Node_id>        callees_;   // Call_expr -> the callable it resolved to
-    std::unordered_map<u32, Type_id>        through_;   // operator on a parameter -> its bound's instance
-    std::vector<Instantiation>              instantiations_;
-    std::unordered_map<u32, u32>            instantiation_of_;
-    std::vector<Generic_call>               generic_calls_;
-    Conformance_model                       conformances_;
+    Type_table                                    table_;
+    std::vector<Type_id>                          types_;
+    std::vector<Node_id>                          struct_order_;
+    std::unordered_map<u32, Constant_value>       constants_; // dependencies first, from the DFS post-order
+    std::unordered_map<u32, Node_id>              callees_;   // Call_expr -> the callable it resolved to
+    std::unordered_map<u32, Type_id>              through_;   // operator on a parameter -> its bound's instance
+    std::vector<Instantiation>                    instantiations_;
+    std::unordered_map<u32, u32>                  instantiation_of_;
+    std::vector<Generic_call>                     generic_calls_;
+    Conformance_model                             conformances_;
+    std::unordered_map<u32, std::vector<Node_id>> listed_;
 };
 
 Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );

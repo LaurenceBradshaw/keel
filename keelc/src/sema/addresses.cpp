@@ -137,6 +137,83 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
     return types_.record( id, signature );
 }
 
+Type_id Addresses::functions_of( Node_id id, std::span<const Node_id> candidates )
+{
+    const Type_id error  = table_.builtin( Type_kind::Error );
+    const Type_id str    = types_.type_of( table_.prelude().str );
+    const Type_id listed = annotations_.resolve( ast_.written_type( id ) );
+
+    if( !str.is_valid() || table_.is_error( listed ) )
+    {
+        return types_.poison( id );
+    }
+
+    const Node_id              declaration = table_.is_struct( listed ) ? table_.get( listed ).declaration : Node_id {};
+    const std::vector<Node_id> fields      = declaration.is_valid() && !ast_.is_generic( declaration )
+                                                 ? ast_.contained_fields( declaration )
+                                                 : std::vector<Node_id> {};
+    const Type_id              function    = fields.size() == 2 ? types_.type_of( fields[1] ) : Type_id {};
+
+    if( fields.size() != 2 || types_.type_of( fields[0] ) != str || !function.is_valid() || !table_.is_function( function ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`@functions_of` fills a struct of a `str` and a function type, which `{}` is not", table_.name( listed )
+            ),
+            "as in `struct test_case { str name; fn( ref test_context ) -> void body; };`"
+        );
+        return types_.record( id, error );
+    }
+
+    std::vector<Node_id> matched;
+    bool                 located = false;
+
+    for( const Node_id candidate : candidates )
+    {
+        Node_id refused {};
+        if( written_signature( candidate, Bindings {}, refused ) != function || refused.is_valid() )
+        {
+            continue;
+        }
+
+        // Refused, not skipped: a test left out would pass silently.
+        if( ast_.is_located( candidate ) )
+        {
+            const std::string_view name = interner_.text( ast_.name( candidate ) );
+            reporter_.error_at(
+                ast_.name_span( candidate ),
+                fmt::format( "`{}` has the type `@functions_of` lists, but it is `@located`, so it has no address", name ),
+                fmt::format( "remove `@located`, or give `{}` another parameter to leave it out", name )
+            );
+            located = true;
+            continue;
+        }
+
+        matched.push_back( candidate );
+    }
+
+    if( located )
+    {
+        return types_.record( id, error );
+    }
+
+    // D60 has no `T[0]`.
+    if( matched.empty() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "no function in this package has the type `{}`", table_.name( function ) ),
+            "`@functions_of` lists the functions of this package's modules that the program imports"
+        );
+        return types_.record( id, error );
+    }
+
+    const u64 count = matched.size();
+    callees_.record_listed( id, std::move( matched ) );
+    return types_.record( id, table_.array_of( listed, count ) );
+}
+
 Type_id Addresses::method_address( Node_id id, Node_id aggregate, Type_id expectation, Node_id current_function )
 {
     const Node_id          path  = ast_.operand( id );

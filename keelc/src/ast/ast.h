@@ -143,7 +143,7 @@ public:
     std::span<const Node_id> initialisers( Node_id id ) const;
     Node_id                  value( Node_id id ) const; // Return_stmt, Assign_stmt, Field_init
     Node_id                  target( Node_id assign ) const;
-    Node_id                  written_type( Node_id id ) const; // Cast_expr, Alloc_expr
+    Node_id                  written_type( Node_id id ) const; // Cast_expr, Alloc_expr, Functions_of_expr
     Node_id                  pointer( Node_id id ) const;      // Free_expr, Destroy_expr
     Node_id                  count( Node_id id ) const;        // Alloc_expr, Destroy_expr; invalid when absent
     Node_id                  lower( Node_id range ) const;

@@ -1,0 +1,9 @@
+// Tests found by `@functions_of`: both test files have a private `adds`, listed under its module's name.
+import kl::test;
+import list_tests;
+import string_tests;
+
+i32 main( const ref str[] args )
+{
+    return kl::run_tests( @functions_of( kl::test_case ), args );
+}

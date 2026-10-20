@@ -1,0 +1,17 @@
+// Each element of `@functions_of`'s array gets its name built as a `str` and its function's address.
+struct step
+{
+    str name;
+    fn( i32 ) -> i32 run;
+};
+
+i32 twice( i32 v )
+{
+    return v * 2;
+}
+
+i32 main()
+{
+    step[1] steps = @functions_of( step );
+    return steps[0].run( 0 );
+}

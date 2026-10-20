@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <span>
 #include <string_view>
 #include "ast/ast.h"
 #include "common/interner.h"
@@ -50,6 +51,8 @@ public:
     Type_id function_address( Node_id id, Node_id declaration, Type_id expectation, Node_id current_function );
     // `&C::f`: an instance method's signature, with its receiver as parameter 0; or `&C::x`.
     Type_id method_address( Node_id id, Node_id aggregate, Type_id expectation, Node_id current_function );
+    // `@functions_of( T )`: a `T[N]` of the candidates whose signature is T's function field.
+    Type_id functions_of( Node_id id, std::span<const Node_id> candidates );
 
 private:
     // `&C::x`: the offset of a field, typed `field( C ) -> T` at the qualifier's instance.

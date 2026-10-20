@@ -130,6 +130,24 @@ Type_id Expressions::infer( Node_id id )
         return types_.record( id, type );
     }
 
+    case Node_kind::Functions_of_expr:
+    {
+        // This package's plain functions, in load order; Addresses keeps those of the struct's type.
+        const Symbol_id      package = resolution_.package_of( ast_.span( id ).file );
+        std::vector<Node_id> candidates;
+
+        for( const Node_id decl : ast_.declarations( ast_.root() ) )
+        {
+            if( ast_.kind( decl ) == Node_kind::Function_decl && !ast_.is_generic( decl ) && !ast_.is_extern( decl ) &&
+                resolution_.package_of( ast_.span( decl ).file ) == package )
+            {
+                candidates.push_back( decl );
+            }
+        }
+
+        return addresses_.functions_of( id, candidates );
+    }
+
     case Node_kind::Try_expr:
         return infer_try( id );
 

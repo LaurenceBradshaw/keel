@@ -1,0 +1,35 @@
+// `@functions_of` refuses a struct of the wrong shape, a type no function has, and an `@located`
+// match, which a list would otherwise leave out silently.
+
+struct wrong
+{
+    i32 name;
+    fn( i32 ) -> i32 run;
+};
+
+struct unmatched
+{
+    str name;
+    fn( u8 ) -> u8 run;
+};
+
+struct traced_step
+{
+    str name;
+    fn( i64 ) -> i64 run;
+};
+
+@located
+i64 traced( i64 v )
+{
+    return v;
+}
+
+i32 main()
+{
+    wrong[1] a = @functions_of( wrong );
+    unmatched[1] b = @functions_of( unmatched );
+    traced_step[1] c = @functions_of( traced_step );
+
+    return 0;
+}

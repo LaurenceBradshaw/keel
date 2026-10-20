@@ -1,0 +1,50 @@
+// `@functions_of` lists this package's functions of `step`'s type, the input file's first and then
+// each module's, private ones included; a generic, an `extern` and a function of another type are left out.
+import helper;
+
+extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
+extern void kl_rt_write_i64( i32 stream, i64 value );
+
+struct step
+{
+    str name;
+    fn( i32 ) -> i32 run;
+};
+
+i32 twice( i32 v )
+{
+    return v * 2;
+}
+
+i32 negates( i32 v )
+{
+    return 0 - v;
+}
+
+i32 same<T>( i32 v )
+{
+    return v;
+}
+
+i64 wider( i32 v )
+{
+    return v;
+}
+
+i32 main()
+{
+    step[3] steps = @functions_of( step );
+
+    for( u64 k : 0..3 )
+    {
+        unsafe
+        {
+            kl_rt_write( 1, steps[k].name.data, steps[k].name.size );
+            kl_rt_write( 1, " ".data, " ".size );
+            kl_rt_write_i64( 1, steps[k].run( 5 ) );
+            kl_rt_write( 1, "\n".data, "\n".size );
+        }
+    }
+
+    return same<i32>( 0 ) + cast<i32>( wider( 0 ) );
+}

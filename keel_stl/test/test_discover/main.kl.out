@@ -1,0 +1,5 @@
+pass string_tests.adds
+pass string_tests.concatenates
+pass list_tests.adds
+pass list_tests.counts
+4 passed, 0 failed

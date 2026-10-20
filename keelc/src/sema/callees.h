@@ -3,6 +3,7 @@
 
 #pragma once
 #include <unordered_map>
+#include <vector>
 #include "ast/node.h"
 #include "sema/type.h"
 
@@ -46,6 +47,12 @@ public:
         return found == through_.end() ? Type_id {} : found->second;
     }
 
+    // `@functions_of( T )`: the functions it lists, in load order.
+    void record_listed( Node_id use, std::vector<Node_id> functions )
+    {
+        listed_.emplace( use.v, std::move( functions ) );
+    }
+
     std::unordered_map<u32, Node_id> take()
     {
         return std::move( callees_ );
@@ -56,9 +63,15 @@ public:
         return std::move( through_ );
     }
 
+    std::unordered_map<u32, std::vector<Node_id>> take_listed()
+    {
+        return std::move( listed_ );
+    }
+
 private:
-    std::unordered_map<u32, Node_id> callees_;
-    std::unordered_map<u32, Type_id> through_;
+    std::unordered_map<u32, Node_id>              callees_;
+    std::unordered_map<u32, Type_id>              through_;
+    std::unordered_map<u32, std::vector<Node_id>> listed_;
 };
 
 } // namespace keel::sema

@@ -1,0 +1,3 @@
+pass string_tests.adds
+pass string_tests.concatenates
+2 passed, 0 failed

@@ -158,6 +158,8 @@ enum class Node_kind : u16
     Panic_expr,
     // `@caller()`, D69; no children.
     Caller_expr,
+    // `@functions_of( T )`; children: the type.
+    Functions_of_expr,
     // `destroy( p, n )`; children: the pointer, then the count.
     Destroy_expr,
     Fallthrough_stmt,

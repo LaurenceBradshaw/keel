@@ -1,0 +1,3 @@
+main.twice 10
+main.negates -5
+helper.adds_one 6

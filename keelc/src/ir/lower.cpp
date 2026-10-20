@@ -4,6 +4,7 @@
 #include "ir/lower.h"
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -77,12 +78,15 @@ private:
     // extracting a two-line literal would cost a name and buy nothing.
     Operand lower_struct_literal( Node_id id );
     Operand lower_array_literal( Node_id id );
+    // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
+    Operand lower_functions_of( Node_id id );
     Operand lower_string_literal( Node_id id );
     // Runs `str`'s constructor on `target`, for `bytes`.
     void construct_str( Place target, Node_id constructor, Literal_id bytes, Span span );
     // D69: the location an `@located` callee receives, passed on from this function's own caller
     // when it is `@located` too.
     Operand caller_location( Span span );
+    Node_id str_constructor() const;
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
@@ -1507,6 +1511,46 @@ Operand Lowering::lower_array_literal( Node_id id )
     return copy( builder_.place( temp ), type );
 }
 
+Operand Lowering::lower_functions_of( Node_id id )
+{
+    const Type_id  type     = type_of( id );
+    const Type_id  element  = types_.table().get( type ).element;
+    const Type_id  u64      = types_.table().integer( 64, false );
+    const Span     span     = ast_.span( id );
+    const Local_id temp     = builder_.add_local( type, span );
+    const Node_id  str_make = str_constructor();
+
+    // `str` then the function, as the checker required.
+    const std::vector<Node_id> fields   = ast_.contained_fields( types_.table().get( element ).declaration );
+    const Type_id              function = binding_type_under( fields[1], {} );
+
+    builder_.storage_live( temp, span );
+
+    const std::vector<Node_id>& listed = types_.listed_of( id );
+
+    for( std::size_t k = 0; k < listed.size(); ++k )
+    {
+        const Node_id  decl  = listed[k];
+        const Local_id at    = builder_.into_temp( use( constant( literal_pool_.add_integer( k ), u64 ) ), u64, span );
+        const Place    entry = builder_.index( builder_.place( temp ), at );
+
+        const std::string name = fmt::format(
+            "{}.{}",
+            std::filesystem::path( sm_.file( ast_.span( decl ).file ).path ).stem().string(),
+            sm_.text( ast_.name_span( decl ) )
+        );
+
+        construct_str( builder_.field( entry, fields[0] ), str_make, literal_pool_.add_string( name ), span );
+        builder_.assign(
+            builder_.field( entry, fields[1] ), use( temporary( function_address( decl, function ), function, span ) ), span
+        );
+    }
+
+    drops_.own_temporary( temp );
+
+    return copy( builder_.place( temp ), type );
+}
+
 Operand Lowering::lower_string_literal( Node_id id )
 {
     const Span    span        = ast_.span( id );
@@ -1556,6 +1600,21 @@ void Lowering::construct_str( Place target, Node_id constructor, Literal_id byte
     builder_.into_temp( call( constructor, first, 3, none ), none, span );
 }
 
+Node_id Lowering::str_constructor() const
+{
+    Node_id constructor {};
+
+    for( const Node_id member : ast_.members( types_.table().prelude().str ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Constructor_decl )
+        {
+            constructor = member;
+        }
+    }
+
+    return constructor;
+}
+
 Operand Lowering::caller_location( Span span )
 {
     const Prelude_items& prelude  = types_.table().prelude();
@@ -1566,17 +1625,8 @@ Operand Lowering::caller_location( Span span )
         return copy( builder_.place( caller_ ), location );
     }
 
-    Node_id constructor {};
-
-    for( const Node_id member : ast_.members( prelude.str ) )
-    {
-        if( ast_.kind( member ) == Node_kind::Constructor_decl )
-        {
-            constructor = member;
-        }
-    }
-
-    const Local_id temp = builder_.add_local( location, span );
+    const Node_id  constructor = str_constructor();
+    const Local_id temp        = builder_.add_local( location, span );
 
     builder_.storage_live( temp, span );
 
@@ -2472,6 +2522,9 @@ Operand Lowering::lower_expression( Node_id id )
         return lower_struct_literal( id );
     case Node_kind::Array_literal:
         return lower_array_literal( id );
+
+    case Node_kind::Functions_of_expr:
+        return lower_functions_of( id );
     case Node_kind::String_literal:
         return lower_string_literal( id );
     case Node_kind::Binary_expr:
@@ -2722,6 +2775,7 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Struct_literal:
     case Node_kind::Array_literal:
     case Node_kind::Caller_expr:
+    case Node_kind::Functions_of_expr:
     {
         return lower_expression( id ).place;
     }

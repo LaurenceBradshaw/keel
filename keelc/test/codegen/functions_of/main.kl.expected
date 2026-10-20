@@ -1,0 +1,250 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl__step;
+struct kl__A3_4step;
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef int64_t ( *kl__fn__F3i32E3i64 )( int32_t );
+typedef int32_t ( *kl__fn__FE3i32 )( void );
+
+struct kl__step
+{
+    struct kl_7prelude_str kl_name_20;
+    kl__fn__F3i32E3i32 kl_run_26;
+};
+
+struct kl__A3_4step
+{
+    struct kl__step e[3];
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl_rt_write( int32_t, uint8_t*, uint64_t );
+void kl_rt_write_i64( int32_t, int64_t );
+
+int32_t kl__twice__3i32( int32_t );
+int32_t kl__negates__3i32( int32_t );
+int64_t kl__wider__3i32( int32_t );
+int32_t kl__main__( void );
+int32_t kl_6helper_adds_one__3i32( int32_t );
+int32_t kl__same__I3i32E__3i32( int32_t );
+
+int32_t kl__twice__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 16 "codegen/functions_of/main.kl"
+    kl_t2 = __builtin_mul_overflow( kl_v_1, 2, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/functions_of/main.kl", 16, "arithmetic overflow: v * 2" );
+    bb2:
+    kl_t3 = kl_v_1 * 2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__negates__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 21 "codegen/functions_of/main.kl"
+    kl_t2 = __builtin_sub_overflow( 0, kl_v_1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/functions_of/main.kl", 21, "arithmetic overflow: 0 - v" );
+    bb2:
+    kl_t3 = 0 - kl_v_1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int64_t kl__wider__3i32( int32_t kl_v_1 )
+{
+    int64_t kl_t0;
+#line 31 "codegen/functions_of/main.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A3_4step kl_steps_1;
+    struct kl__A3_4step kl_t2;
+    uint64_t kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    kl__fn__F3i32E3i32 kl_t7;
+    uint64_t kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    kl__fn__F3i32E3i32 kl_t12;
+    uint64_t kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
+    kl__fn__F3i32E3i32 kl_t17;
+    uint64_t kl_k_18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    uint64_t kl_t23;
+    bool kl_t24;
+    struct kl_7prelude_str kl_t26;
+    struct kl_7prelude_str* kl_t27;
+    uint8_t* kl_t28;
+    struct kl_7prelude_str kl_t30;
+    struct kl_7prelude_str* kl_t31;
+    uint8_t* kl_t32;
+    uint64_t kl_t35;
+    bool kl_t36;
+    int32_t kl_t37;
+    int64_t kl_t38;
+    struct kl_7prelude_str kl_t40;
+    struct kl_7prelude_str* kl_t41;
+    uint8_t* kl_t42;
+    struct kl_7prelude_str kl_t44;
+    struct kl_7prelude_str* kl_t45;
+    uint8_t* kl_t46;
+    int32_t kl_t49;
+    int64_t kl_t50;
+    int32_t kl_t51;
+    int64_t kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    int32_t kl_t55;
+    ( void ) kl_t3;
+    ( void ) kl_t8;
+    ( void ) kl_t13;
+#line 36 "codegen/functions_of/main.kl"
+    kl_t3 = 0;
+    kl_t4 = &kl_t2.e[kl_t3].kl_name_20;
+    kl_t5 = ( uint8_t* ) "main.twice";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 10 );
+    kl_t7 = kl__twice__3i32;
+    kl_t2.e[kl_t3].kl_run_26 = kl_t7;
+    kl_t8 = 1;
+    kl_t9 = &kl_t2.e[kl_t8].kl_name_20;
+    kl_t10 = ( uint8_t* ) "main.negates";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 12 );
+    kl_t12 = kl__negates__3i32;
+    kl_t2.e[kl_t8].kl_run_26 = kl_t12;
+    kl_t13 = 2;
+    kl_t14 = &kl_t2.e[kl_t13].kl_name_20;
+    kl_t15 = ( uint8_t* ) "helper.adds_one";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 15 );
+    kl_t17 = kl_6helper_adds_one__3i32;
+    kl_t2.e[kl_t13].kl_run_26 = kl_t17;
+    kl_steps_1 = kl_t2;
+#line 38 "codegen/functions_of/main.kl"
+    kl_k_18 = 0;
+    kl_t19 = 3;
+    goto bb1;
+    bb1:
+    kl_t20 = kl_k_18 < kl_t19;
+    if ( kl_t20 ) goto bb2; else goto bb3;
+    bb2:
+#line 42 "codegen/functions_of/main.kl"
+    kl_t21 = kl_k_18;
+    kl_t22 = kl_t21 < 3;
+    if ( kl_t22 ) goto bb4; else goto bb5;
+    bb3:
+#line 49 "codegen/functions_of/main.kl"
+    kl_t49 = kl__same__I3i32E__3i32( 0 );
+    kl_t50 = kl__wider__3i32( 0 );
+    kl_t51 = ( int32_t ) kl_t50;
+    kl_t52 = ( int64_t ) kl_t51;
+    kl_t53 = kl_t52 == kl_t50;
+    if ( kl_t53 ) goto bb12; else goto bb11;
+    bb4:
+#line 42 "codegen/functions_of/main.kl"
+    kl_t23 = kl_k_18;
+    kl_t24 = kl_t23 < 3;
+    if ( kl_t24 ) goto bb6; else goto bb7;
+    bb5:
+    kl_rt_panic( "codegen/functions_of/main.kl", 42, "out of bounds: steps[k]" );
+    bb6:
+    kl_rt_write( 1, kl_steps_1.e[kl_t21].kl_name_20.kl_data_178, kl_steps_1.e[kl_t23].kl_name_20.kl_size_181 );
+#line 43 "codegen/functions_of/main.kl"
+    kl_t27 = &kl_t26;
+    kl_t28 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t27, kl_t28, 1 );
+    kl_t31 = &kl_t30;
+    kl_t32 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t31, kl_t32, 1 );
+    kl_rt_write( 1, kl_t26.kl_data_178, kl_t30.kl_size_181 );
+#line 44 "codegen/functions_of/main.kl"
+    kl_t35 = kl_k_18;
+    kl_t36 = kl_t35 < 3;
+    if ( kl_t36 ) goto bb8; else goto bb9;
+    bb7:
+    kl_rt_panic( "codegen/functions_of/main.kl", 42, "out of bounds: steps[k]" );
+    bb8:
+    kl_t37 = kl_steps_1.e[kl_t35].kl_run_26( 5 );
+    kl_t38 = ( int64_t ) kl_t37;
+    kl_rt_write_i64( 1, kl_t38 );
+#line 45 "codegen/functions_of/main.kl"
+    kl_t41 = &kl_t40;
+    kl_t42 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t41, kl_t42, 1 );
+    kl_t45 = &kl_t44;
+    kl_t46 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t45, kl_t46, 1 );
+    kl_rt_write( 1, kl_t40.kl_data_178, kl_t44.kl_size_181 );
+    goto bb10;
+    bb9:
+    kl_rt_panic( "codegen/functions_of/main.kl", 44, "out of bounds: steps[k]" );
+    bb10:
+#line 38 "codegen/functions_of/main.kl"
+    kl_k_18 = kl_k_18 + 1;
+    goto bb1;
+    bb11:
+    kl_rt_panic( "codegen/functions_of/main.kl", 49, "cast out of range: cast<i32>( wider( 0 ) )" );
+    bb12:
+#line 49 "codegen/functions_of/main.kl"
+    kl_t54 = __builtin_add_overflow( kl_t49, kl_t51, &( int32_t ) { 0 } );
+    if ( kl_t54 ) goto bb13; else goto bb14;
+    bb13:
+    kl_rt_panic( "codegen/functions_of/main.kl", 49, "arithmetic overflow: same<i32>( 0 ) + cast<i32>( wider( 0 ) )" );
+    bb14:
+    kl_t55 = kl_t49 + kl_t51;
+    kl_t0 = kl_t55;
+    return kl_t0;
+}
+
+int32_t kl_6helper_adds_one__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 5 "codegen/functions_of/helper.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "codegen/functions_of/helper.kl", 5, "arithmetic overflow: v + 1" );
+    bb2:
+    kl_t3 = kl_v_1 + 1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__same__I3i32E__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+#line 26 "codegen/functions_of/main.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

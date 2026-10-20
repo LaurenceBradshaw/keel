@@ -813,6 +813,14 @@ Parser::Directives Parser::parse_directives()
                 span, "`@caller()` is an expression, not a declaration's directive", "write `@located` to receive the caller"
             );
         }
+        else if( name == "functions_of" )
+        {
+            recovery_.error_at(
+                span,
+                "`@functions_of( T )` is an expression, not a declaration's directive",
+                "the directive a declaration takes is `@located`"
+            );
+        }
         else
         {
             recovery_.error_at(
@@ -3687,7 +3695,7 @@ Node_id Parser::parse_prefix()
             Node_kind::Char_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
         );
 
-    // D69: `@caller()` is the one directive in expression position.
+    // D69: `@caller()` and `@functions_of( T )` are the directives in expression position.
     case Token_kind::At:
     {
         cursor_.advance();
@@ -3703,6 +3711,15 @@ Node_id Parser::parse_prefix()
             return ast_.add( Node_kind::Caller_expr, Span::merge( start, cursor_.previous().span ), 0, {} );
         }
 
+        if( name == "functions_of" )
+        {
+            recovery_.expect( Token_kind::L_paren );
+            const Node_id type = parse_type();
+            recovery_.expect( Token_kind::R_paren );
+
+            return ast_.add( Node_kind::Functions_of_expr, Span::merge( start, cursor_.previous().span ), 0, { type } );
+        }
+
         if( name == "located" )
         {
             recovery_.error_at( span, "`@located` marks a declaration", "write it before the function's signature" );
@@ -3710,13 +3727,17 @@ Node_id Parser::parse_prefix()
         else if( name.empty() )
         {
             recovery_.error_at(
-                span, "expected a directive's name after `@`", "the directive in an expression is `@caller()`"
+                span,
+                "expected a directive's name after `@`",
+                "the directives in an expression are `@caller()` and `@functions_of( T )`"
             );
         }
         else
         {
             recovery_.error_at(
-                span, fmt::format( "there is no directive `@{}`", name ), "the directive in an expression is `@caller()`"
+                span,
+                fmt::format( "there is no directive `@{}`", name ),
+                "the directives in an expression are `@caller()` and `@functions_of( T )`"
             );
         }
 
@@ -6098,6 +6119,7 @@ TEST_CASE( "parser_refuses_a_misplaced_directive", "[parse][directive]" )
     refuses( "@located\nextern void f();\n", "an `extern` function cannot be `@located`" );
     refuses( "@located @located\nvoid f() { }\n", "`@located` is written twice" );
     refuses( "@caller\nvoid f() { }\n", "`@caller()` is an expression" );
+    refuses( "@functions_of\nvoid f() { }\n", "`@functions_of( T )` is an expression" );
     refuses( "@inline\nvoid f() { }\n", "there is no directive `@inline`" );
     refuses( "void f() { i32 a = @located; }\n", "`@located` marks a declaration" );
     refuses( "void f() { i32 a = @inline(); }\n", "there is no directive `@inline`" );
@@ -6119,6 +6141,19 @@ TEST_CASE( "parser_reads_caller_and_a_panic's_location", "[parse][directive]" )
 
     const Parsed bare( "void f() { panic( \"no\" ); }\n" );
     REQUIRE_FALSE( bare.ast().panic_location( find_first( bare.ast(), bare.root(), Node_kind::Panic_expr ) ).is_valid() );
+}
+
+TEST_CASE( "parser_reads_functions_of", "[parse][directive]" )
+{
+    const Parsed p( "void f() { g( @functions_of( kl::test_case ) ); }\n" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id listed = find_first( p.ast(), p.root(), Node_kind::Functions_of_expr );
+    REQUIRE( listed.is_valid() );
+    REQUIRE( p.text( listed ) == "@functions_of( kl::test_case )" );
+    REQUIRE( p.kind( p.ast().written_type( listed ) ) == Node_kind::Named_type );
 }
 
 TEST_CASE( "parser_parses_alloc", "[parse][alloc]" )

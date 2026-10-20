@@ -1,0 +1,11 @@
+import kl::test;
+
+private void adds( ref kl::test_context c )
+{
+    c.check_eq( "a", "a" );
+}
+
+private void concatenates( ref kl::test_context c )
+{
+    c.check_eq( "ab", "ab" );
+}

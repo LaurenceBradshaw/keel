@@ -1,0 +1,19 @@
+error: `traced` has the type `@functions_of` lists, but it is `@located`, so it has no address
+  --> sema/errors_functions_of.kl:23:5
+   |
+23 | i64 traced( i64 v )
+   |     ^^^^^^ remove `@located`, or give `traced` another parameter to leave it out
+
+error: `@functions_of` fills a struct of a `str` and a function type, which `wrong` is not
+  --> sema/errors_functions_of.kl:30:18
+   |
+30 |     wrong[1] a = @functions_of( wrong );
+   |                  ^^^^^^^^^^^^^^^^^^^^^^ as in `struct test_case { str name; fn( ref test_context ) -> void body; };`
+
+error: no function in this package has the type `fn( u8 ) -> u8`
+  --> sema/errors_functions_of.kl:31:22
+   |
+31 |     unmatched[1] b = @functions_of( unmatched );
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ `@functions_of` lists the functions of this package's modules that the program imports
+
+3 errors generated

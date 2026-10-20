@@ -1,0 +1,46 @@
+fn twice {
+    let _0: i32; // return slot
+    let _1: i32; // parameter v
+    let _2: bool;
+    let _3: i32;
+
+    bb0:
+        _2 = overflows copy _1 * const 2
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        overflow
+
+    bb2:
+        _3 = copy _1 * const 2
+        _0 = copy _3
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: step[1]; // steps
+    let _2: step[1];
+    let _3: u64;
+    let _4: str*;
+    let _5: const u8[*];
+    let _6: void;
+    let _7: fn( i32 ) -> i32;
+    let _8: u64;
+    let _9: i32;
+
+    bb0:
+        storage_live _1
+        storage_live _2
+        _3 = const 0
+        _4 = &init _2[_3].name
+        _5 = bytes "functions_of.twice"
+        _6 = call str(copy _4, copy _5, const 18)
+        _7 = &twice
+        _2[_3].run = copy _7
+        _1 = copy _2
+        _8 = const 0
+        _9 = call copy _1[_8].run(const 0)
+        _0 = copy _9
+        storage_dead _1
+        return
+}

@@ -146,6 +146,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Panic_expr";
     case Node_kind::Caller_expr:
         return "Caller_expr";
+    case Node_kind::Functions_of_expr:
+        return "Functions_of_expr";
     case Node_kind::Destroy_expr:
         return "Destroy_expr";
     case Node_kind::Fallthrough_stmt:

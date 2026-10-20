@@ -179,7 +179,8 @@ Types Checker::run()
         generic_recursion_.take_instantiations(),
         overloads_.take_instantiations(),
         generic_recursion_.take_generic_calls(),
-        types_.take_conformances()
+        types_.take_conformances(),
+        callees_.take_listed()
     );
 }
 

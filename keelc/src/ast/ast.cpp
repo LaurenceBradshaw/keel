@@ -570,7 +570,11 @@ Node_id Ast::target( Node_id assign ) const
 
 Node_id Ast::written_type( Node_id id ) const
 {
-    assert( ( kind( id ) == Node_kind::Cast_expr || kind( id ) == Node_kind::Alloc_expr ) && "this kind names no type" );
+    assert(
+        ( kind( id ) == Node_kind::Cast_expr || kind( id ) == Node_kind::Alloc_expr ||
+          kind( id ) == Node_kind::Functions_of_expr ) &&
+        "this kind names no type"
+    );
     return child( id, 0 );
 }
 

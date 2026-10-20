@@ -1,0 +1,6 @@
+// A private function is listed too, under its module's name.
+
+private i32 adds_one( i32 v )
+{
+    return v + 1;
+}

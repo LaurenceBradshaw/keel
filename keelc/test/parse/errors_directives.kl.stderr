@@ -38,6 +38,6 @@ error: there is no directive `@inline`
   --> parse/errors_directives.kl:20:13
    |
 20 |     i32 b = @inline();
-   |             ^^^^^^^ the directive in an expression is `@caller()`
+   |             ^^^^^^^ the directives in an expression are `@caller()` and `@functions_of( T )`
 
 7 errors generated
