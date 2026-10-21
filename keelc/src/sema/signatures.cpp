@@ -407,7 +407,7 @@ void Signatures::declare_block( Node_id block )
     {
         const Symbol_id issuer = resolution_.package_of( ast_.span( table_.get( interface ).declaration ).file );
 
-        // ponytail: an argument counts by its own declaration; `sink<celsius*>` does not make `celsius`'s package an owner.
+        // An argument counts by its own declaration; `sink<celsius*>` does not make `celsius`'s package an owner.
         const auto owns_argument = [&]( Type_id argument )
         {
             const Node_id declared_at = table_.get( argument ).declaration;

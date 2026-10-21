@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <optional>
 #include "ir/initialised.h"
-#include "ir/live.h"
 #include "ir/simplify.h"
 
 namespace keel
@@ -61,18 +60,6 @@ void settle_drops( Function& func )
             }
 
             step( func, statement, state );
-        }
-    }
-
-    // Run on the unflagged drops, so a write only they read is dead now; deleted drops read nothing either.
-    const Liveness live = live_locals( func );
-    for( u32 s = 0; s < func.statements.size(); ++s )
-    {
-        const Statement& statement = func.statements[s];
-        if( statement.kind == Statement_kind::Assign && !statement.place.is_global() && statement.place.num_projections == 0 &&
-            flags[statement.place.local.v] && !live.after[s][statement.place.local.v] )
-        {
-            deleted[s] = true;
         }
     }
 

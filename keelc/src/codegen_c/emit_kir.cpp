@@ -1361,7 +1361,11 @@ std::vector<bool> mentioned_locals( const Function& function )
 
     for( const Statement& statement : function.statements )
     {
-        mark( statement.place );
+        // A storage marker emits nothing, so a local only markers name, its writes removed, is not declared.
+        if( statement.kind != Statement_kind::Storage_dead && statement.kind != Statement_kind::Storage_live )
+        {
+            mark( statement.place );
+        }
 
         if( statement.drop_flag.is_valid() )
         {
@@ -1497,7 +1501,7 @@ void Kir_emitter::emit_function( const Function& function )
         ) );
     }
 
-    // gcc warns on a name nothing reads; the dead store itself is M11's to remove.
+    // gcc warns on a name nothing reads: an unread parameter, or a call's unread result.
     const std::vector<bool> read = read_locals( function );
 
     for( u32 i = 1; i < function.locals.size(); ++i )

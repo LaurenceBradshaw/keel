@@ -76,7 +76,6 @@ double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E, double );
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    struct kl__Wrap__I3f64E kl_late_1;
     struct kl__Opt__I3i32E kl_a_2;
     struct kl__Opt__I3i32E kl_t3;
     struct kl__Opt__I3f64E kl_b_4;
@@ -118,7 +117,6 @@ int32_t kl__main__( void )
     int32_t kl_t40;
     bool kl_t41;
     int32_t kl_t42;
-    ( void ) kl_late_1;
 #line 68 "codegen/generics_enums.kl"
     kl_t3.tag = 1;
     kl_t3.kl_v_16 = 7;

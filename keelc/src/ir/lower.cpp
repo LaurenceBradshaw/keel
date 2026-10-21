@@ -1053,7 +1053,7 @@ Place Lowering::lower_array_index( Node_id id )
 
     const Place    base  = lower_place( object );
     const Operand  index = converted( lower_expression( ast_.index( id ) ), u64, span );
-    const Local_id local = builder_.into_temp( use( index ), u64, span ); // ponytail: one per constant index too
+    const Local_id local = builder_.into_temp( use( index ), u64, span ); // one per constant index too
 
     if( index.kind != Operand_kind::Constant )
     {

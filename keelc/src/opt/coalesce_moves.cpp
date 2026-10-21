@@ -263,24 +263,6 @@ bool indexes( const Function& func, Local_id local )
     return false;
 }
 
-// A pointer can read or write these at any later statement, out of liveness's sight. `&init` keeps no
-// pointer past its constructor.
-Local_set addressed_locals( const Function& func )
-{
-    Local_set addressed( func.locals.size(), false );
-
-    for( const Statement& statement : func.statements )
-    {
-        if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-            statement.value.address_purpose != Address_purpose::Initialise && !statement.value.a.place.is_global() )
-        {
-            addressed[statement.value.a.place.local.v] = true;
-        }
-    }
-
-    return addressed;
-}
-
 // Holds a value something may still see. `written` keeps a dead store: it still lands in the storage.
 bool occupied( const Occupancy& state, const Local_set& alive, const Local_set& addressed, Local_id local, bool written )
 {

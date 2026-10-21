@@ -104,12 +104,10 @@ bool kl__shout__( void )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    struct kl__Noisy kl_t2;
     struct kl_7prelude_str kl_t7;
     struct kl_7prelude_str* kl_t8;
     uint8_t* kl_t9;
     struct kl_7prelude_textual__ref kl_t11;
-    ( void ) kl_t2;
     goto bb1;
     bb1:
 #line 39 "codegen/assert_release/main.kl"

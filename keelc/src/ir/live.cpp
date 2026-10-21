@@ -184,6 +184,22 @@ Liveness live_locals( const Function& func )
     return live;
 }
 
+Local_set addressed_locals( const Function& func )
+{
+    Local_set addressed( func.locals.size(), false );
+
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
+            statement.value.address_purpose != Address_purpose::Initialise && !statement.value.a.place.is_global() )
+        {
+            addressed[statement.value.a.place.local.v] = true;
+        }
+    }
+
+    return addressed;
+}
+
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <algorithm>

@@ -1,0 +1,103 @@
+// M11's dead store elimination, in a release build: a write to a local that no path reads again
+// goes, and so does a write that only fed one. A write a pointer can still see stays, as does one a
+// loop that runs no times returns, a call whose result is unread, and a field of a local whose other
+// field is read. Each check returns its own code.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 side( i32 n )
+{
+    return n;
+}
+
+// The sum is unread; the call stays for what it does.
+i32 discard( i32 a )
+{
+    _ = a + 1;
+    _ = side( a );
+    return a;
+}
+
+// The first value is overwritten before anything reads it.
+i32 overwritten( i32 a )
+{
+    i32 x = a + 1;
+    x = a * 2;
+    return x;
+}
+
+// `x` is read only by `y`'s first value, which is itself overwritten unread.
+i32 chained( i32 a )
+{
+    i32 x = a + 1;
+    i32 y = x * 2;
+    y = a;
+    return y;
+}
+
+// `q.x = 7` is read through `p`.
+i32 aliased( i32 a )
+{
+    Point  q = Point { a, a };
+    Point* p = &q;
+    q.x      = 7;
+    return p.x;
+}
+
+// The `0` is what a loop that runs no times returns.
+i32 looped( i32 n )
+{
+    i32 t = 0;
+    for( i32 i = 0; i < n; i++ )
+    {
+        t = i;
+    }
+    return t;
+}
+
+// `p.y` is read, so `p` is, and both writes to `p.x` stay.
+i32 fielded( i32 a )
+{
+    Point p = Point { a, a };
+    p.x     = 3;
+    return p.y;
+}
+
+i32 main()
+{
+    if( discard( 4 ) != 4 )
+    {
+        return 1;
+    }
+
+    if( overwritten( 4 ) != 8 )
+    {
+        return 2;
+    }
+
+    if( chained( 4 ) != 4 )
+    {
+        return 3;
+    }
+
+    if( aliased( 4 ) != 7 )
+    {
+        return 4;
+    }
+
+    if( looped( 0 ) != 0 || looped( 3 ) != 2 )
+    {
+        return 5;
+    }
+
+    if( fielded( 4 ) != 4 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

@@ -9,6 +9,7 @@
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
 
 namespace keel
@@ -94,6 +95,7 @@ Front_end run_front_end(
         if( build.optimise )
         {
             settle_drops( function );
+            remove_dead_stores( function );
             assert( verify( function ).empty() );
         }
     }

@@ -1188,7 +1188,7 @@ bool Type_table::is_run_pointer( Type_id id ) const
 }
 
 // Whether substitute( pattern, bindings ) would be `actual`, without interning it.
-// ponytail: a function or field type holding a parameter never matches; walk them if one is declared.
+// A function or field type holding a parameter never matches; walk them if one is declared.
 bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type_id actual ) const
 {
     if( pattern == actual )

@@ -6,7 +6,7 @@
 
 namespace keel
 {
-// After elaborate_drops: a flagged drop of a local certainly full loses its flag, one certainly empty
-// goes, and flag writes nothing reads go; release only.
+// After elaborate_drops: a flagged drop of a local certainly full loses its flag, and one certainly
+// empty goes; release only. The flag writes this leaves unread go in remove_dead_stores.
 void settle_drops( Function& func );
 } // namespace keel
