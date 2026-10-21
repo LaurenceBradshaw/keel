@@ -114,12 +114,10 @@ struct kl__Box kl__nested__3i32( int32_t kl_n_1 )
     return kl_t0;
     bb4:
     kl_t0 = kl__made__3i32( 6 );
-    goto bb6;
+    goto bb3;
     bb5:
     kl_t11 = &kl_t0;
     kl__Box__R3Box_3i32__ctor( kl_t11, 7 );
-    goto bb6;
-    bb6:
     goto bb3;
 }
 

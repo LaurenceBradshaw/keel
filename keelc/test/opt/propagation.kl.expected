@@ -1,0 +1,330 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "propagation.kl.prelude.c"
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+void kl__set__O3i32( int32_t* );
+int32_t kl__copied__3i32( int32_t );
+int32_t kl__constant__3i32( int32_t );
+int32_t kl__branched__3i32( int32_t );
+int32_t kl__looped__3i32( int32_t );
+int32_t kl__copied_fields__5Point( struct kl__Point );
+int32_t kl__summed__( void );
+int32_t kl__aliased__3i32( int32_t );
+int32_t kl__initialised__( void );
+int32_t kl__reassigned__3i32( int32_t );
+int32_t kl__joined__4bool( bool );
+int32_t kl__written__5Point( struct kl__Point );
+int32_t kl__main__( void );
+
+void kl__set__O3i32( int32_t* kl_n_1 )
+{
+#line 15 "opt/propagation.kl"
+    ( *kl_n_1 ) = 9;
+    return;
+}
+
+int32_t kl__copied__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+#line 22 "opt/propagation.kl"
+    kl_t0 = kl_a_1 + kl_a_1;
+    return kl_t0;
+}
+
+int32_t kl__constant__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+#line 29 "opt/propagation.kl"
+    kl_t3 = kl_a_1 * 3;
+    kl_t0 = kl_t3 + 3;
+    return kl_t0;
+}
+
+int32_t kl__branched__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_a_1;
+    goto bb1;
+    bb1:
+#line 40 "opt/propagation.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__looped__3i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_i_4;
+    bool kl_t5;
+#line 47 "opt/propagation.kl"
+    kl_t0 = 0;
+#line 48 "opt/propagation.kl"
+    kl_i_4 = 0;
+    goto bb1;
+    bb1:
+    kl_t5 = kl_i_4 < kl_n_1;
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 50 "opt/propagation.kl"
+    kl_t0 = kl_t0 + 2;
+    goto bb4;
+    bb3:
+    return kl_t0;
+    bb4:
+#line 48 "opt/propagation.kl"
+    kl_i_4 = kl_i_4 + 1;
+    goto bb1;
+}
+
+int32_t kl__copied_fields__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+#line 59 "opt/propagation.kl"
+    kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__summed__( void )
+{
+    int32_t kl_t0;
+#line 66 "opt/propagation.kl"
+    kl_t0 = 3 + 4;
+    return kl_t0;
+}
+
+int32_t kl__aliased__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_k_2;
+    int32_t* kl_p_3;
+#line 72 "opt/propagation.kl"
+    kl_k_2 = 3;
+#line 73 "opt/propagation.kl"
+    kl_p_3 = &kl_k_2;
+#line 74 "opt/propagation.kl"
+    ( *kl_p_3 ) = kl_a_1;
+#line 75 "opt/propagation.kl"
+    kl_t0 = kl_k_2;
+    return kl_t0;
+}
+
+int32_t kl__initialised__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_x_1;
+    int32_t* kl_t2;
+#line 81 "opt/propagation.kl"
+    kl_x_1 = 0;
+#line 82 "opt/propagation.kl"
+    kl_t2 = &kl_x_1;
+    kl__set__O3i32( kl_t2 );
+#line 83 "opt/propagation.kl"
+    kl_t0 = kl_x_1 + 1;
+    return kl_t0;
+}
+
+int32_t kl__reassigned__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_b_2;
+#line 89 "opt/propagation.kl"
+    kl_b_2 = kl_a_1;
+#line 91 "opt/propagation.kl"
+    kl_t0 = 5 + kl_b_2;
+    return kl_t0;
+}
+
+int32_t kl__joined__4bool( bool kl_c_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_k_2;
+#line 97 "opt/propagation.kl"
+    kl_k_2 = 1;
+    if ( kl_c_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 100 "opt/propagation.kl"
+    kl_k_2 = 2;
+    goto bb2;
+    bb2:
+#line 102 "opt/propagation.kl"
+    kl_t0 = kl_k_2 + 1;
+    return kl_t0;
+}
+
+int32_t kl__written__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+    struct kl__Point kl_q_2;
+#line 108 "opt/propagation.kl"
+    kl_q_2 = kl_p_1;
+#line 109 "opt/propagation.kl"
+    kl_q_2.kl_x_1 = 3;
+#line 110 "opt/propagation.kl"
+    kl_t0 = kl_p_1.kl_x_1 + kl_q_2.kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t10;
+    struct kl__Point kl_t12;
+    int32_t kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    int32_t kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    int32_t kl_t24;
+    int32_t kl_t26;
+    struct kl__Point kl_t28;
+    int32_t kl_t29;
+    bool kl_t30;
+#line 115 "opt/propagation.kl"
+    kl_t1 = kl__copied__3i32( 4 );
+    kl_t2 = kl_t1 != 8;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 117 "opt/propagation.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 120 "opt/propagation.kl"
+    kl_t3 = kl__constant__3i32( 4 );
+    kl_t4 = kl_t3 != 15;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 122 "opt/propagation.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 125 "opt/propagation.kl"
+    kl_t5 = kl__branched__3i32( 4 );
+    kl_t6 = kl_t5 != 0;
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
+#line 127 "opt/propagation.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 130 "opt/propagation.kl"
+    kl_t8 = kl__looped__3i32( 0 );
+    kl_t7 = kl_t8 != 0;
+    if ( kl_t7 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t10 = kl__looped__3i32( 3 );
+    kl_t7 = kl_t10 != 6;
+    goto bb8;
+    bb8:
+    if ( kl_t7 ) goto bb9; else goto bb10;
+    bb9:
+#line 132 "opt/propagation.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb10:
+#line 135 "opt/propagation.kl"
+    kl_t12.kl_x_1 = 1;
+    kl_t12.kl_y_3 = 2;
+    kl_t13 = kl__copied_fields__5Point( kl_t12 );
+    kl_t14 = kl_t13 != 3;
+    if ( kl_t14 ) goto bb11; else goto bb12;
+    bb11:
+#line 137 "opt/propagation.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb12:
+#line 140 "opt/propagation.kl"
+    kl_t15 = kl__summed__(  );
+    kl_t16 = kl_t15 != 7;
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
+#line 142 "opt/propagation.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb14:
+#line 145 "opt/propagation.kl"
+    kl_t17 = kl__aliased__3i32( 4 );
+    kl_t18 = kl_t17 != 4;
+    if ( kl_t18 ) goto bb15; else goto bb16;
+    bb15:
+#line 147 "opt/propagation.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb16:
+#line 150 "opt/propagation.kl"
+    kl_t19 = kl__initialised__(  );
+    kl_t20 = kl_t19 != 10;
+    if ( kl_t20 ) goto bb17; else goto bb18;
+    bb17:
+#line 152 "opt/propagation.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb18:
+#line 155 "opt/propagation.kl"
+    kl_t21 = kl__reassigned__3i32( 4 );
+    kl_t22 = kl_t21 != 9;
+    if ( kl_t22 ) goto bb19; else goto bb20;
+    bb19:
+#line 157 "opt/propagation.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb20:
+#line 160 "opt/propagation.kl"
+    kl_t24 = kl__joined__4bool( false );
+    kl_t23 = kl_t24 != 2;
+    if ( kl_t23 ) goto bb22; else goto bb21;
+    bb21:
+    kl_t26 = kl__joined__4bool( true );
+    kl_t23 = kl_t26 != 3;
+    goto bb22;
+    bb22:
+    if ( kl_t23 ) goto bb23; else goto bb24;
+    bb23:
+#line 162 "opt/propagation.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb24:
+#line 165 "opt/propagation.kl"
+    kl_t28.kl_x_1 = 1;
+    kl_t28.kl_y_3 = 2;
+    kl_t29 = kl__written__5Point( kl_t28 );
+    kl_t30 = kl_t29 != 4;
+    if ( kl_t30 ) goto bb25; else goto bb26;
+    bb25:
+#line 167 "opt/propagation.kl"
+    kl_t0 = 11;
+    return kl_t0;
+    bb26:
+#line 170 "opt/propagation.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

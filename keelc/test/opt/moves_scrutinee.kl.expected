@@ -263,24 +263,22 @@ int32_t kl__main__( void )
     kl_t0 = 5;
     return kl_t0;
     bb22:
-    goto bb23;
-    bb23:
 #line 110 "opt/moves_scrutinee.kl"
     kl_t35 = kl_live_1 == 0;
-    if ( kl_t35 ) goto bb27; else goto bb28;
-    bb24:
+    if ( kl_t35 ) goto bb26; else goto bb27;
+    bb23:
     kl_t0 = 0;
-    goto bb26;
-    bb25:
+    goto bb25;
+    bb24:
     kl_t0 = 6;
-    goto bb26;
-    bb26:
+    goto bb25;
+    bb25:
     return kl_t0;
-    bb27:
+    bb26:
     kl_t35 = kl_destroyed_3 == 3;
-    goto bb28;
-    bb28:
-    if ( kl_t35 ) goto bb24; else goto bb25;
+    goto bb27;
+    bb27:
+    if ( kl_t35 ) goto bb23; else goto bb24;
 }
 
 void kl__Shape__dtor( struct kl__Shape* kl_t1 )

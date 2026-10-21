@@ -57,12 +57,10 @@ int32_t kl__main__( void )
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
     uint8_t* kl_t5;
     uint64_t kl_t6;
 #line 15 "../test_lib/console.kl"
-    kl_t3 = kl_text_1;
-    kl_r_2 = kl_t3.vtable->kl_as_text_395( kl_t3.self );
+    kl_r_2 = kl_text_1.vtable->kl_as_text_395( kl_text_1.self );
 #line 18 "../test_lib/console.kl"
     kl_t5 = ( kl_r_2 ).data;
     kl_t6 = ( kl_r_2 ).size;
@@ -120,12 +118,10 @@ void kl_1t7console_print__4bool( bool kl_value_1 )
 void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
     uint8_t* kl_t5;
     uint64_t kl_t6;
 #line 62 "../test_lib/console.kl"
-    kl_t3 = kl_text_1;
-    kl_r_2 = kl_t3.vtable->kl_as_text_395( kl_t3.self );
+    kl_r_2 = kl_text_1.vtable->kl_as_text_395( kl_text_1.self );
 #line 65 "../test_lib/console.kl"
     kl_t5 = ( kl_r_2 ).data;
     kl_t6 = ( kl_r_2 ).size;

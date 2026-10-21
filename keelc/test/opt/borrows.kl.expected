@@ -94,10 +94,8 @@ struct kl__Square* kl__keep__6Square( struct kl__Square* kl_s_1 )
 int32_t kl__measure__5shape( struct kl__shape__ref kl_s_1 )
 {
     int32_t kl_t0;
-    struct kl__shape__ref kl_t2;
 #line 50 "opt/borrows.kl"
-    kl_t2 = kl_s_1;
-    kl_t0 = kl_t2.vtable->kl_area_6( kl_t2.self );
+    kl_t0 = kl_s_1.vtable->kl_area_6( kl_s_1.self );
     return kl_t0;
 }
 

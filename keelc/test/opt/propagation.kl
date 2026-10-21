@@ -1,0 +1,171 @@
+// M11's copy and constant propagation, in a release build: a read of a local that holds a constant,
+// or a copy of another local, reads that constant or that local instead, and the write it no longer
+// needs goes. A local a pointer can see keeps its reads, as does one an `out` argument rewrote, one
+// whose source changed, one two paths disagree on, and one a field write changed. Each check returns
+// its own code.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+void set( out i32 n )
+{
+    n = 9;
+}
+
+// `b` reads as `a`, which is still read after.
+i32 copied( i32 a )
+{
+    i32 b = a;
+    return a + b;
+}
+
+// `k` reads as `3` both times.
+i32 constant( i32 a )
+{
+    i32 k = 3;
+    return a * k + k;
+}
+
+// The branch reads `false`, so the arm it skips goes.
+i32 branched( i32 a )
+{
+    bool on = false;
+    if( on )
+    {
+        return a;
+    }
+    return 0;
+}
+
+// `step` is `2` on the way into the loop and round it.
+i32 looped( i32 n )
+{
+    i32 step = 2;
+    i32 t    = 0;
+    for( i32 i = 0; i < n; i++ )
+    {
+        t = t + step;
+    }
+    return t;
+}
+
+// `q.y` reads as `p.y`, so the whole copy goes.
+i32 copied_fields( Point p )
+{
+    Point q = p;
+    return p.x + q.y;
+}
+
+// `3 + 4` is two constants, not one: folding is not this pass.
+i32 summed()
+{
+    i32 k = 3;
+    return k + 4;
+}
+
+// `p` points at `k`, so `k` is read as itself.
+i32 aliased( i32 a )
+{
+    i32  k = 3;
+    i32* p = &k;
+    *p     = a;
+    return k;
+}
+
+// `set` writes `x` through its address.
+i32 initialised()
+{
+    i32 x = 0;
+    set( out x );
+    return x + 1;
+}
+
+// `b` is the old `a`; the new `a` is `5`.
+i32 reassigned( i32 a )
+{
+    i32 b = a;
+    a     = 5;
+    return a + b;
+}
+
+// The paths disagree on `k`.
+i32 joined( bool c )
+{
+    i32 k = 1;
+    if( c )
+    {
+        k = 2;
+    }
+    return k + 1;
+}
+
+// `q.x` is no longer `p.x`.
+i32 written( Point p )
+{
+    Point q = p;
+    q.x     = 3;
+    return p.x + q.x;
+}
+
+i32 main()
+{
+    if( copied( 4 ) != 8 )
+    {
+        return 1;
+    }
+
+    if( constant( 4 ) != 15 )
+    {
+        return 2;
+    }
+
+    if( branched( 4 ) != 0 )
+    {
+        return 3;
+    }
+
+    if( looped( 0 ) != 0 || looped( 3 ) != 6 )
+    {
+        return 4;
+    }
+
+    if( copied_fields( Point { 1, 2 } ) != 3 )
+    {
+        return 5;
+    }
+
+    if( summed() != 7 )
+    {
+        return 6;
+    }
+
+    if( aliased( 4 ) != 4 )
+    {
+        return 7;
+    }
+
+    if( initialised() != 10 )
+    {
+        return 8;
+    }
+
+    if( reassigned( 4 ) != 9 )
+    {
+        return 9;
+    }
+
+    if( joined( false ) != 2 || joined( true ) != 3 )
+    {
+        return 10;
+    }
+
+    if( written( Point { 1, 2 } ) != 4 )
+    {
+        return 11;
+    }
+
+    return 0;
+}
