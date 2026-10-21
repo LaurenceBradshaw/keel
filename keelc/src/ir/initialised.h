@@ -26,6 +26,10 @@ void step( const Function& func, const Statement& statement, Occupancy& state );
 // Carries `state` across a terminator; only a moving condition changes it.
 void step( const Terminator& terminator, Occupancy& state );
 
+// Whether `statement` puts a value, or part of one, in `local`: an assignment to it or a field of it, or its constructor's
+// address.
+bool writes( const Function& func, const Statement& statement, Local_id local );
+
 // The state at the top of each block, indexed by Block_id::v.
 std::vector<Occupancy> occupancy_on_entry( const Function& func );
 

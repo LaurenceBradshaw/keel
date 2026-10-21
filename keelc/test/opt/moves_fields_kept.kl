@@ -1,0 +1,156 @@
+// M11 move coalescing, in a release build: the field copies that look like the ones it removes and
+// are not. A literal that reads the field it replaces, a field reached through a borrow, an owning
+// field dropped before its replacement lands, a field read after its copy changes, and a payload
+// binding moved on one path only. Construction and destruction append to `trace`, so a merge that
+// reorders them, or that loses or repeats a destroy, changes it. Each check returns its own code.
+
+i32 live;
+i64 trace;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+        trace = trace * 10 + v;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        trace = trace * 10 + 9;
+    }
+
+    public i32 value;
+};
+
+class Holder
+{
+    public Holder( i32 v )
+    {
+        b = Box( v );
+    }
+
+    ~Holder()
+    {
+    }
+
+    public Box b;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Line
+{
+    Point a;
+    Point b;
+};
+
+enum Shape
+{
+    boxed( Box b ),
+    empty
+};
+
+void consume( move Box _ )
+{
+}
+
+// The new `a` reads the old one while it is built, so it cannot be built in `l.a`.
+i32 swapped()
+{
+    Line l = Line { Point { 1, 2 }, Point { 3, 4 } };
+    l.a = Point { l.a.y, l.a.x };
+    return l.a.x == 2 && l.a.y == 1 ? 0 : 1;
+}
+
+// `r` reads `l.a` while the new value is built; nothing in the statement names `l`.
+i32 aliased()
+{
+    Line l = Line { Point { 1, 2 }, Point { 3, 4 } };
+    ref Line r = l;
+    l.a = Point { r.a.y, 7 };
+    return l.a.x == 2 && l.a.y == 7 ? 0 : 2;
+}
+
+// The old Box drops after the new one is built: 1 built, 2 built, 1 dropped, 2 dropped.
+i32 replaced()
+{
+    trace = 0;
+    {
+        Holder h = Holder( 1 );
+        h.b = Box( 2 );
+        if( h.b.value != 2 || live != 1 )
+        {
+            return 3;
+        }
+    }
+
+    return trace == 1299 ? 0 : 4;
+}
+
+// `q` changes and `l.a` is read after, so `q` cannot be `l.a`.
+i32 read_after()
+{
+    Line l = Line { Point { 1, 2 }, Point { 3, 4 } };
+    Point q = l.a;
+    q.x = 5;
+    return l.a.x == 1 && q.x == 5 ? 0 : 5;
+}
+
+// `b` is moved on one path only, so its drop keeps a flag the payload's place cannot carry.
+i32 one_path( move Shape s, bool c )
+{
+    switch( move s )
+    {
+        case Shape::boxed( b ):
+            if( c )
+            {
+                consume( move b );
+            }
+            return 1;
+        case Shape::empty:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    i32 code = swapped();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = aliased();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = replaced();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = read_after();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    trace = 0;
+    if( one_path( Shape::boxed( Box( 5 ) ), true ) != 1 || one_path( Shape::boxed( Box( 6 ) ), false ) != 1 ||
+        one_path( Shape::empty, true ) != 0 )
+    {
+        return 10;
+    }
+
+    return live == 0 && trace == 5969 ? 0 : 11;
+}

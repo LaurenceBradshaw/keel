@@ -6,6 +6,7 @@
 
 namespace keel
 {
-// Merges the two locals of `a = move b` where their values are never alive at once; release only.
+// Merges the two sides of `a = move b`, a local into a local or a field, where their values are never
+// alive at once; release only.
 void coalesce_moves( Function& func );
 } // namespace keel

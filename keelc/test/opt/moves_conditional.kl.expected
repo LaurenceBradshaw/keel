@@ -148,32 +148,14 @@ int32_t kl__main__( void )
     struct kl__Box kl_c_5;
     struct kl__Box kl_d_7;
     bool kl_t9;
-    bool kl_t10;
-    bool kl_t11;
-    bool kl_t12;
-    bool kl_t13;
-    bool kl_t15;
-    bool kl_t16;
-    bool kl_t17;
-    bool kl_t18;
-    bool kl_t19;
     struct kl__Box kl_e_20;
     struct kl__Box kl_f_22;
     struct kl__Box kl_g_24;
     bool kl_t26;
-    bool kl_t27;
-    bool kl_t28;
-    bool kl_t29;
-    bool kl_t31;
-    bool kl_t32;
-    bool kl_t33;
-    bool kl_t34;
     bool kl_t35;
-    bool kl_t37;
     bool kl_t38;
     struct kl__Point kl_t39;
     struct kl__Point kl_t41;
-    bool kl_t42;
 #line 63 "opt/moves_conditional.kl"
     kl_a_1 = kl__chosen__4bool( true );
 #line 64 "opt/moves_conditional.kl"
@@ -183,39 +165,30 @@ int32_t kl__main__( void )
 #line 66 "opt/moves_conditional.kl"
     kl_d_7 = kl__called__4bool( false );
 #line 67 "opt/moves_conditional.kl"
-    kl_t13 = kl_a_1.kl_value_31 != 1;
-    if ( kl_t13 ) goto bb2; else goto bb1;
+    kl_t9 = kl_a_1.kl_value_31 != 1;
+    if ( kl_t9 ) goto bb2; else goto bb1;
     bb1:
-    kl_t15 = kl_b_3.kl_value_31 != 2;
-    kl_t13 = kl_t15;
+    kl_t9 = kl_b_3.kl_value_31 != 2;
     goto bb2;
     bb2:
-    kl_t12 = kl_t13;
-    if ( kl_t12 ) goto bb4; else goto bb3;
+    if ( kl_t9 ) goto bb4; else goto bb3;
     bb3:
-    kl_t16 = kl_c_5.kl_value_31 != 3;
-    kl_t12 = kl_t16;
+    kl_t9 = kl_c_5.kl_value_31 != 3;
     goto bb4;
     bb4:
-    kl_t11 = kl_t12;
-    if ( kl_t11 ) goto bb6; else goto bb5;
+    if ( kl_t9 ) goto bb6; else goto bb5;
     bb5:
-    kl_t17 = kl_d_7.kl_value_31 != 4;
-    kl_t11 = kl_t17;
+    kl_t9 = kl_d_7.kl_value_31 != 4;
     goto bb6;
     bb6:
-    kl_t10 = kl_t11;
-    if ( kl_t10 ) goto bb8; else goto bb7;
+    if ( kl_t9 ) goto bb8; else goto bb7;
     bb7:
-    kl_t18 = kl_live_1 != 4;
-    kl_t10 = kl_t18;
+    kl_t9 = kl_live_1 != 4;
     goto bb8;
     bb8:
-    kl_t9 = kl_t10;
     if ( kl_t9 ) goto bb10; else goto bb9;
     bb9:
-    kl_t19 = kl_destroyed_3 != 0;
-    kl_t9 = kl_t19;
+    kl_t9 = kl_destroyed_3 != 0;
     goto bb10;
     bb10:
     if ( kl_t9 ) goto bb11; else goto bb12;
@@ -235,32 +208,25 @@ int32_t kl__main__( void )
 #line 74 "opt/moves_conditional.kl"
     kl_g_24 = kl__nested__3i32( 2 );
 #line 75 "opt/moves_conditional.kl"
-    kl_t29 = kl_e_20.kl_value_31 != 5;
-    if ( kl_t29 ) goto bb14; else goto bb13;
+    kl_t26 = kl_e_20.kl_value_31 != 5;
+    if ( kl_t26 ) goto bb14; else goto bb13;
     bb13:
-    kl_t31 = kl_f_22.kl_value_31 != 6;
-    kl_t29 = kl_t31;
+    kl_t26 = kl_f_22.kl_value_31 != 6;
     goto bb14;
     bb14:
-    kl_t28 = kl_t29;
-    if ( kl_t28 ) goto bb16; else goto bb15;
+    if ( kl_t26 ) goto bb16; else goto bb15;
     bb15:
-    kl_t32 = kl_g_24.kl_value_31 != 7;
-    kl_t28 = kl_t32;
+    kl_t26 = kl_g_24.kl_value_31 != 7;
     goto bb16;
     bb16:
-    kl_t27 = kl_t28;
-    if ( kl_t27 ) goto bb18; else goto bb17;
+    if ( kl_t26 ) goto bb18; else goto bb17;
     bb17:
-    kl_t33 = kl_live_1 != 7;
-    kl_t27 = kl_t33;
+    kl_t26 = kl_live_1 != 7;
     goto bb18;
     bb18:
-    kl_t26 = kl_t27;
     if ( kl_t26 ) goto bb20; else goto bb19;
     bb19:
-    kl_t34 = kl_destroyed_3 != 0;
-    kl_t26 = kl_t34;
+    kl_t26 = kl_destroyed_3 != 0;
     goto bb20;
     bb20:
     if ( kl_t26 ) goto bb21; else goto bb22;
@@ -288,8 +254,7 @@ int32_t kl__main__( void )
     kl_t35 = kl_live_1 != 0;
     if ( kl_t35 ) goto bb24; else goto bb23;
     bb23:
-    kl_t37 = kl_destroyed_3 != 7;
-    kl_t35 = kl_t37;
+    kl_t35 = kl_destroyed_3 != 7;
     goto bb24;
     bb24:
     if ( kl_t35 ) goto bb25; else goto bb26;
@@ -304,8 +269,7 @@ int32_t kl__main__( void )
     if ( kl_t38 ) goto bb28; else goto bb27;
     bb27:
     kl_t41 = kl__point__4bool( false );
-    kl_t42 = kl_t41.kl_x_34 != 3;
-    kl_t38 = kl_t42;
+    kl_t38 = kl_t41.kl_x_34 != 3;
     goto bb28;
     bb28:
     if ( kl_t38 ) goto bb29; else goto bb30;

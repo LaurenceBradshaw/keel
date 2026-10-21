@@ -119,6 +119,27 @@ void step( const Terminator& terminator, Occupancy& state )
     }
 }
 
+bool writes( const Function& func, const Statement& statement, Local_id local )
+{
+    if( statement.kind != Statement_kind::Assign )
+    {
+        return false;
+    }
+
+    if( local_of( func, statement.place ) == local )
+    {
+        return true;
+    }
+
+    if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise &&
+        local_of( func, statement.value.a.place ) == local )
+    {
+        return true;
+    }
+
+    return false;
+}
+
 std::vector<Occupancy> occupancy_on_entry( const Function& func )
 {
     std::vector<Occupancy> entry( func.blocks.size() );

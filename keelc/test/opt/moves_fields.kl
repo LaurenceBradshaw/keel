@@ -1,0 +1,109 @@
+// M11 move coalescing into and out of a field, in a release build: an aggregate literal or a
+// variant's payload is built where it ends up, and a `switch( move … )` binding names the payload
+// where it lies. Each check returns its own code.
+
+i32 live;
+i32 destroyed;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        destroyed += 1;
+    }
+
+    public i32 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Line
+{
+    Point a;
+    Point b;
+};
+
+enum Shape
+{
+    boxed( Box b ),
+    paired( Box first, Box second ),
+    empty
+};
+
+// Each inner literal is built in its field of the return slot.
+Line line( i32 v )
+{
+    return Line { Point { v, v * 2 }, Point { 3, 4 } };
+}
+
+// The same, through a declared local.
+i32 declared( i32 v )
+{
+    Line l = Line { Point { v, 1 }, Point { 2, v } };
+    return l.a.x + l.b.y;
+}
+
+// Borrowed only once built, so the borrow cannot see the literals being built in `l`.
+i32 borrowed( i32 v )
+{
+    Line l = Line { Point { v, 1 }, Point { 2, v } };
+    ref Line r = l;
+    return r.a.x + r.b.y;
+}
+
+// The Box is constructed in the payload of the return slot.
+Shape wrapped( i32 v )
+{
+    return Shape::boxed( Box( v ) );
+}
+
+// Each binding names its payload in the parameter; the arm drops each once.
+i32 opened( move Shape s )
+{
+    switch( move s )
+    {
+        case Shape::boxed( b ):
+            return b.value;
+        case Shape::paired( first, second ):
+            return first.value * 10 + second.value;
+        case Shape::empty:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    const Line made = line( 5 );
+    if( made.a.x != 5 || made.a.y != 10 || made.b.x != 3 || made.b.y != 4 )
+    {
+        return 1;
+    }
+
+    if( declared( 7 ) != 14 || borrowed( 8 ) != 16 )
+    {
+        return 2;
+    }
+
+    if( opened( wrapped( 6 ) ) != 6 || live != 0 || destroyed != 1 )
+    {
+        return 3;
+    }
+
+    if( opened( Shape::paired( Box( 1 ), Box( 2 ) ) ) != 12 || live != 0 || destroyed != 3 )
+    {
+        return 4;
+    }
+
+    return opened( Shape::empty ) == 0 && live == 0 && destroyed == 3 ? 0 : 5;
+}

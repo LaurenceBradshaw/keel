@@ -69,7 +69,6 @@ int32_t kl__reassigned__( void )
     struct kl__Box kl_t4;
     struct kl__Box* kl_t5;
     bool kl_t7;
-    bool kl_t9;
     bool kl_t11;
     bool kl_t12;
     bool kl_t13;
@@ -99,8 +98,7 @@ int32_t kl__reassigned__( void )
     kl_t7 = kl_a_1.kl_value_42 != 2;
     if ( kl_t7 ) goto bb2; else goto bb1;
     bb1:
-    kl_t9 = kl_live_1 != 1;
-    kl_t7 = kl_t9;
+    kl_t7 = kl_live_1 != 1;
     goto bb2;
     bb2:
     if ( kl_t7 ) goto bb3; else goto bb4;
@@ -204,7 +202,6 @@ int32_t kl__copied__( void )
     struct kl__Point kl_p_1;
     struct kl__Point kl_q_3;
     bool kl_t5;
-    bool kl_t7;
 #line 79 "opt/moves_kept.kl"
     kl_p_1.kl_x_45 = 1;
     kl_p_1.kl_y_47 = 2;
@@ -224,8 +221,7 @@ int32_t kl__copied__( void )
     bb3:
     return kl_t0;
     bb4:
-    kl_t7 = kl_p_1.kl_x_45 == 5;
-    kl_t5 = kl_t7;
+    kl_t5 = kl_p_1.kl_x_45 == 5;
     goto bb5;
     bb5:
     if ( kl_t5 ) goto bb1; else goto bb2;
@@ -310,35 +306,22 @@ int32_t kl__looped__( void )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_code_1;
     bool kl_t3;
     struct kl__Box kl_x_4;
     struct kl__Box kl_y_6;
     bool kl_t8;
-    bool kl_t9;
-    bool kl_t10;
-    bool kl_t12;
-    bool kl_t13;
-    bool kl_t14;
     bool kl_t15;
-    bool kl_t16;
     int32_t kl_t17;
     int32_t kl_t19;
-    bool kl_t20;
-    bool kl_t21;
-    int32_t kl_t22;
     bool kl_t23;
-    int32_t kl_t24;
     bool kl_t25;
     bool kl_t27;
 #line 107 "opt/moves_kept.kl"
-    kl_code_1 = kl__reassigned__(  );
+    kl_t0 = kl__reassigned__(  );
 #line 108 "opt/moves_kept.kl"
-    kl_t3 = kl_code_1 != 0;
+    kl_t3 = kl_t0 != 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 110 "opt/moves_kept.kl"
-    kl_t0 = kl_code_1;
     return kl_t0;
     bb2:
 #line 113 "opt/moves_kept.kl"
@@ -348,25 +331,20 @@ int32_t kl__main__( void )
 #line 116 "opt/moves_kept.kl"
     kl_y_6 = kl__early__4bool( false );
 #line 117 "opt/moves_kept.kl"
-    kl_t10 = kl_x_4.kl_value_42 != 4;
-    if ( kl_t10 ) goto bb4; else goto bb3;
+    kl_t8 = kl_x_4.kl_value_42 != 4;
+    if ( kl_t8 ) goto bb4; else goto bb3;
     bb3:
-    kl_t12 = kl_y_6.kl_value_42 != 3;
-    kl_t10 = kl_t12;
+    kl_t8 = kl_y_6.kl_value_42 != 3;
     goto bb4;
     bb4:
-    kl_t9 = kl_t10;
-    if ( kl_t9 ) goto bb6; else goto bb5;
+    if ( kl_t8 ) goto bb6; else goto bb5;
     bb5:
-    kl_t13 = kl_live_1 != 2;
-    kl_t9 = kl_t13;
+    kl_t8 = kl_live_1 != 2;
     goto bb6;
     bb6:
-    kl_t8 = kl_t9;
     if ( kl_t8 ) goto bb8; else goto bb7;
     bb7:
-    kl_t14 = kl_trace_3 != 3493;
-    kl_t8 = kl_t14;
+    kl_t8 = kl_trace_3 != 3493;
     goto bb8;
     bb8:
     if ( kl_t8 ) goto bb9; else goto bb10;
@@ -382,19 +360,16 @@ int32_t kl__main__( void )
     kl__Box__dtor( &kl_x_4 );
 #line 123 "opt/moves_kept.kl"
     kl_t17 = kl__one_path__4bool( true );
-    kl_t16 = kl_t17 != 5;
-    if ( kl_t16 ) goto bb12; else goto bb11;
+    kl_t15 = kl_t17 != 5;
+    if ( kl_t15 ) goto bb12; else goto bb11;
     bb11:
     kl_t19 = kl__one_path__4bool( false );
-    kl_t20 = kl_t19 != 6;
-    kl_t16 = kl_t20;
+    kl_t15 = kl_t19 != 6;
     goto bb12;
     bb12:
-    kl_t15 = kl_t16;
     if ( kl_t15 ) goto bb14; else goto bb13;
     bb13:
-    kl_t21 = kl_live_1 != 0;
-    kl_t15 = kl_t21;
+    kl_t15 = kl_live_1 != 0;
     goto bb14;
     bb14:
     if ( kl_t15 ) goto bb15; else goto bb16;
@@ -404,25 +379,19 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 128 "opt/moves_kept.kl"
-    kl_t22 = kl__copied__(  );
-    kl_code_1 = kl_t22;
+    kl_t0 = kl__copied__(  );
 #line 129 "opt/moves_kept.kl"
-    kl_t23 = kl_code_1 != 0;
+    kl_t23 = kl_t0 != 0;
     if ( kl_t23 ) goto bb17; else goto bb18;
     bb17:
-#line 131 "opt/moves_kept.kl"
-    kl_t0 = kl_code_1;
     return kl_t0;
     bb18:
 #line 134 "opt/moves_kept.kl"
-    kl_t24 = kl__looped__(  );
-    kl_code_1 = kl_t24;
+    kl_t0 = kl__looped__(  );
 #line 135 "opt/moves_kept.kl"
-    kl_t25 = kl_code_1 != 0;
+    kl_t25 = kl_t0 != 0;
     if ( kl_t25 ) goto bb19; else goto bb20;
     bb19:
-#line 137 "opt/moves_kept.kl"
-    kl_t0 = kl_code_1;
     return kl_t0;
     bb20:
 #line 140 "opt/moves_kept.kl"
