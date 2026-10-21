@@ -88,7 +88,7 @@ void kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__
     struct kl_2kl4list_list__I3i32E* kl_t3;
     int32_t* kl_t5;
 #line 59 "../../src/list.kl"
-    kl_t3 = &( *kl_this_1 );
+    kl_t3 = kl_this_1;
     kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( kl_t3 );
 #line 63 "../../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__947 + ( *kl_this_1 ).kl_count__949;
@@ -158,7 +158,7 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
     if ( kl_t2 ) goto bb1; else goto bb5;
     bb1:
 #line 437 "../../src/list.kl"
-    kl_t3 = &( *kl_this_1 );
+    kl_t3 = kl_this_1;
     kl_t5 = ( *kl_this_1 ).kl_cap__951 > 0;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:

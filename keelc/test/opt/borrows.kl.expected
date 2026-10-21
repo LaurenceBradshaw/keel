@@ -1,0 +1,184 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "borrows.kl.prelude.c"
+
+struct kl__Square;
+
+struct kl__shape__vtable;
+struct kl__shape__ref { void* self; const struct kl__shape__vtable* vtable; };
+
+struct kl__Square
+{
+    int32_t kl_side__48;
+};
+
+struct kl__shape__vtable
+{
+    void ( *drop )( void* );
+    int32_t ( *kl_area_6 )( void* );
+};
+
+void kl__Square__R6Square_3i32__ctor( struct kl__Square*, int32_t );
+int32_t kl__area__S6Square( struct kl__Square* );
+int32_t kl__twice__S6Square( struct kl__Square* );
+int32_t kl__side__6Square( struct kl__Square* );
+int32_t kl__forward__6Square( struct kl__Square* );
+struct kl__Square* kl__keep__6Square( struct kl__Square* );
+int32_t kl__measure__5shape( struct kl__shape__ref );
+int32_t kl__widen__6Square( struct kl__Square* );
+int32_t kl__main__( void );
+
+static void kl__Square__as_kl__shape__drop( void* self )
+{
+    ( void ) self;
+}
+
+static int32_t kl__Square__as_kl__shape__kl_area_6( void* self )
+{
+    return kl__area__S6Square( ( struct kl__Square* ) self );
+}
+
+static const struct kl__shape__vtable kl__Square__as_kl__shape = { kl__Square__as_kl__shape__drop, kl__Square__as_kl__shape__kl_area_6 };
+
+void kl__Square__R6Square_3i32__ctor( struct kl__Square* kl_this_1, int32_t kl_side_2 )
+{
+#line 15 "opt/borrows.kl"
+    ( *kl_this_1 ).kl_side__48 = kl_side_2;
+    return;
+}
+
+int32_t kl__area__S6Square( struct kl__Square* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 20 "opt/borrows.kl"
+    kl_t0 = ( *kl_this_1 ).kl_side__48 * ( *kl_this_1 ).kl_side__48;
+    return kl_t0;
+}
+
+int32_t kl__twice__S6Square( struct kl__Square* kl_this_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+#line 26 "opt/borrows.kl"
+    kl_t3 = kl__area__S6Square( kl_this_1 );
+    kl_t0 = kl_t3 * 2;
+    return kl_t0;
+}
+
+int32_t kl__side__6Square( struct kl__Square* kl_s_1 )
+{
+    int32_t kl_t0;
+#line 34 "opt/borrows.kl"
+    kl_t0 = kl__area__S6Square( kl_s_1 );
+    return kl_t0;
+}
+
+int32_t kl__forward__6Square( struct kl__Square* kl_s_1 )
+{
+    int32_t kl_t0;
+#line 40 "opt/borrows.kl"
+    kl_t0 = kl__side__6Square( kl_s_1 );
+    return kl_t0;
+}
+
+struct kl__Square* kl__keep__6Square( struct kl__Square* kl_s_1 )
+{
+    struct kl__Square* kl_t0;
+#line 45 "opt/borrows.kl"
+    kl_t0 = kl_s_1;
+    return kl_t0;
+}
+
+int32_t kl__measure__5shape( struct kl__shape__ref kl_s_1 )
+{
+    int32_t kl_t0;
+    struct kl__shape__ref kl_t2;
+#line 50 "opt/borrows.kl"
+    kl_t2 = kl_s_1;
+    kl_t0 = kl_t2.vtable->kl_area_6( kl_t2.self );
+    return kl_t0;
+}
+
+int32_t kl__widen__6Square( struct kl__Square* kl_s_1 )
+{
+    int32_t kl_t0;
+    struct kl__shape__ref kl_t2;
+#line 56 "opt/borrows.kl"
+    kl_t2 = ( struct kl__shape__ref ) { ( void* ) &( *kl_s_1 ), &kl__Square__as_kl__shape };
+    kl_t0 = kl__measure__5shape( kl_t2 );
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Square kl_a_1;
+    struct kl__Square* kl_t2;
+    struct kl__Square* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    struct kl__Square* kl_t7;
+    struct kl__Square* kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    struct kl__Square* kl_t12;
+    int32_t kl_t13;
+    bool kl_t14;
+    struct kl__Square* kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+#line 61 "opt/borrows.kl"
+    kl_t2 = &kl_a_1;
+    kl__Square__R6Square_3i32__ctor( kl_t2, 3 );
+#line 63 "opt/borrows.kl"
+    kl_t4 = &kl_a_1;
+    kl_t5 = kl__forward__6Square( kl_t4 );
+    kl_t6 = kl_t5 != 9;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "opt/borrows.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 69 "opt/borrows.kl"
+    kl_t7 = &kl_a_1;
+    kl_t9 = kl__keep__6Square( kl_t7 );
+    kl_t10 = kl__side__6Square( kl_t9 );
+    kl_t11 = kl_t10 != 9;
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+#line 71 "opt/borrows.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 74 "opt/borrows.kl"
+    kl_t12 = &kl_a_1;
+    kl_t13 = kl__twice__S6Square( kl_t12 );
+    kl_t14 = kl_t13 != 18;
+    if ( kl_t14 ) goto bb5; else goto bb6;
+    bb5:
+#line 76 "opt/borrows.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 79 "opt/borrows.kl"
+    kl_t15 = &kl_a_1;
+    kl_t16 = kl__widen__6Square( kl_t15 );
+    kl_t17 = kl_t16 != 9;
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
+#line 81 "opt/borrows.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 84 "opt/borrows.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

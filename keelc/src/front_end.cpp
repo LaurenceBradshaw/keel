@@ -8,6 +8,7 @@
 #include "ir/simplify.h"
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
+#include "opt/collapse_borrows.h"
 #include "opt/settle_drops.h"
 
 namespace keel
@@ -83,6 +84,7 @@ Front_end run_front_end(
 
         if( build.optimise )
         {
+            collapse_borrows( function, front.types.table() );
             coalesce_moves( function );
             assert( verify( function ).empty() );
         }

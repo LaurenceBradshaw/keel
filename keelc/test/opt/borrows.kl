@@ -1,0 +1,85 @@
+// M11's `&(*x)` peephole, in a release build: a borrow of what a pointer points at is that pointer,
+// so a borrow passed on, a borrow-returning call's result and a method called on `this` emit no
+// `&( *`. A class borrowed as an interface keeps its `&`, which builds the interface's pointer.
+// Each check returns its own code.
+
+interface shape
+{
+    i32 area() const;
+};
+
+class Square implements shape
+{
+    public Square( i32 side )
+    {
+        side_ = side;
+    }
+
+    public i32 area() const
+    {
+        return side_ * side_;
+    }
+
+    // A method on `this`: the receiver is `this` itself.
+    public i32 twice() const
+    {
+        return area() * 2;
+    }
+
+    i32 side_;
+};
+
+i32 side( const ref Square s )
+{
+    return s.area();
+}
+
+// A borrow passed on is the same pointer.
+i32 forward( const ref Square s )
+{
+    return side( s );
+}
+
+const ref Square keep( const ref Square s )
+{
+    return s;
+}
+
+i32 measure( const ref shape s )
+{
+    return s.area();
+}
+
+// A class pointer to an interface pointer: the `&` stays.
+i32 widen( const ref Square s )
+{
+    return measure( s );
+}
+
+i32 main()
+{
+    Square a = Square( 3 );
+
+    if( forward( a ) != 9 )
+    {
+        return 1;
+    }
+
+    // The call's result is a pointer, borrowed again for `side`.
+    if( side( keep( a ) ) != 9 )
+    {
+        return 2;
+    }
+
+    if( a.twice() != 18 )
+    {
+        return 3;
+    }
+
+    if( widen( a ) != 9 )
+    {
+        return 4;
+    }
+
+    return 0;
+}
