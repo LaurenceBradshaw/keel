@@ -89,17 +89,10 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_v
 {
     struct kl__Box kl_t3;
     struct kl__Box* kl_t4;
-    bool kl_t6;
 #line 32 "opt/moves_fields_kept.kl"
-    kl_t6 = false;
-    kl_t6 = false;
     kl_t4 = &kl_t3;
-    kl_t6 = true;
     kl__Box__R3Box_3i32__ctor( kl_t4, kl_v_2 );
     ( *kl_this_1 ).kl_b_65 = kl_t3;
-    kl_t6 = false;
-    if ( kl_t6 ) kl__Box__dtor( &kl_t3 );
-    kl_t6 = false;
     return;
 }
 
@@ -195,29 +188,17 @@ int32_t kl__replaced__( void )
     bool kl_t7;
     bool kl_t11;
     bool kl_t12;
-    bool kl_t13;
-#line 86 "opt/moves_fields_kept.kl"
-    kl_t12 = false;
-#line 87 "opt/moves_fields_kept.kl"
-    kl_t13 = false;
 #line 84 "opt/moves_fields_kept.kl"
     kl_trace_3 = 0;
 #line 86 "opt/moves_fields_kept.kl"
-    kl_t12 = false;
     kl_t2 = &kl_h_1;
-    kl_t12 = true;
     kl__Holder__R6Holder_3i32__ctor( kl_t2, 1 );
 #line 87 "opt/moves_fields_kept.kl"
-    kl_t13 = false;
     kl_t5 = &kl_t4;
-    kl_t13 = true;
     kl__Box__R3Box_3i32__ctor( kl_t5, 2 );
-    if ( kl_t12 ) kl__Box__dtor( &kl_h_1.kl_b_65 );
+    kl__Box__dtor( &kl_h_1.kl_b_65 );
     kl_h_1.kl_b_65 = kl_t4;
-    kl_t13 = false;
     kl_t12 = true;
-    if ( kl_t13 ) kl__Box__dtor( &kl_t4 );
-    kl_t13 = false;
 #line 88 "opt/moves_fields_kept.kl"
     kl_t7 = kl_h_1.kl_b_65.kl_value_42 != 2;
     if ( kl_t7 ) goto bb2; else goto bb1;
@@ -231,13 +212,11 @@ int32_t kl__replaced__( void )
     kl_t0 = 3;
     if ( kl_t12 ) kl__Holder__dtor( &kl_h_1 );
     if ( kl_t12 ) kl__Box__dtor( &kl_h_1.kl_b_65 );
-    kl_t12 = false;
     return kl_t0;
     bb4:
 #line 85 "opt/moves_fields_kept.kl"
     if ( kl_t12 ) kl__Holder__dtor( &kl_h_1 );
     if ( kl_t12 ) kl__Box__dtor( &kl_h_1.kl_b_65 );
-    kl_t12 = false;
 #line 94 "opt/moves_fields_kept.kl"
     kl_t11 = kl_trace_3 == 1299;
     if ( kl_t11 ) goto bb5; else goto bb6;
@@ -291,11 +270,9 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
     struct kl__Box kl_b_6;
     bool kl_t8;
 #line 111 "opt/moves_fields_kept.kl"
-    kl_t8 = false;
     kl_t4 = kl_s_1.tag == 0;
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
-    kl_t8 = false;
     kl_b_6 = kl_s_1.kl_b_78;
     kl_t8 = true;
     if ( kl_c_2 ) goto bb3; else goto bb4;
@@ -313,7 +290,6 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
 #line 116 "opt/moves_fields_kept.kl"
     kl_t0 = 1;
     if ( kl_t8 ) kl__Box__dtor( &kl_b_6 );
-    kl_t8 = false;
     return kl_t0;
 }
 
@@ -336,15 +312,6 @@ int32_t kl__main__( void )
     struct kl__Shape kl_t24;
     int32_t kl_t25;
     bool kl_t28;
-    bool kl_t31;
-    bool kl_t32;
-    bool kl_t33;
-    bool kl_t34;
-#line 149 "opt/moves_fields_kept.kl"
-    kl_t31 = false;
-    kl_t32 = false;
-    kl_t33 = false;
-    kl_t34 = false;
 #line 124 "opt/moves_fields_kept.kl"
     kl_t0 = kl__swapped__(  );
 #line 125 "opt/moves_fields_kept.kl"
@@ -380,31 +347,19 @@ int32_t kl__main__( void )
 #line 148 "opt/moves_fields_kept.kl"
     kl_trace_3 = 0;
 #line 149 "opt/moves_fields_kept.kl"
-    kl_t32 = false;
     kl_t14 = &kl_t13;
-    kl_t32 = true;
     kl__Box__R3Box_3i32__ctor( kl_t14, 5 );
     kl_t12.tag = 0;
-    kl_t31 = true;
     kl_t12.kl_b_78 = kl_t13;
-    kl_t32 = false;
-    kl_t31 = true;
     kl_t16 = kl__one_path__M5Shape_4bool( kl_t12, true );
-    kl_t31 = false;
     kl_t10 = kl_t16 != 1;
     if ( kl_t10 ) goto bb10; else goto bb9;
     bb9:
-    kl_t34 = false;
     kl_t20 = &kl_t19;
-    kl_t34 = true;
     kl__Box__R3Box_3i32__ctor( kl_t20, 6 );
     kl_t18.tag = 0;
-    kl_t33 = true;
     kl_t18.kl_b_78 = kl_t19;
-    kl_t34 = false;
-    kl_t33 = true;
     kl_t22 = kl__one_path__M5Shape_4bool( kl_t18, false );
-    kl_t33 = false;
     kl_t10 = kl_t22 != 1;
     goto bb10;
     bb10:
@@ -416,15 +371,6 @@ int32_t kl__main__( void )
     kl_t10 = kl_t25 != 0;
     goto bb12;
     bb12:
-#line 149 "opt/moves_fields_kept.kl"
-    if ( kl_t33 ) kl__Shape__dtor( &kl_t18 );
-    if ( kl_t34 ) kl__Box__dtor( &kl_t19 );
-    if ( kl_t31 ) kl__Shape__dtor( &kl_t12 );
-    if ( kl_t32 ) kl__Box__dtor( &kl_t13 );
-    kl_t32 = false;
-    kl_t31 = false;
-    kl_t34 = false;
-    kl_t33 = false;
     if ( kl_t10 ) goto bb13; else goto bb14;
     bb13:
 #line 152 "opt/moves_fields_kept.kl"

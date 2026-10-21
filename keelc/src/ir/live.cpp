@@ -78,6 +78,10 @@ void step_back( const Function& func, const Statement& statement, Local_set& liv
     case Statement_kind::Drop:
         // A drop reads what it destroys, so a class stays live from `drop _1` through `drop _1.inner`.
         read( func, statement.place, live );
+        if( statement.drop_flag.is_valid() )
+        {
+            live[statement.drop_flag.v] = true;
+        }
         break;
     case Statement_kind::Storage_live:
     case Statement_kind::Storage_dead:
@@ -182,6 +186,7 @@ Liveness live_locals( const Function& func )
 
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
 
@@ -200,8 +205,8 @@ constexpr std::string_view k_types = "struct Point { i32 x; i32 y; };\n"
 // The function under test is always the first in the source.
 struct Analysed : Compiled
 {
-    explicit Analysed( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ) ),
+    explicit Analysed( std::string_view source, Stage through = Stage::Simplified )
+        : Compiled( std::string( source ) + std::string( k_types ), through ),
           live( live_locals( functions.front() ) )
     {
     }
@@ -334,6 +339,22 @@ TEST_CASE( "live_holds_an_index", "[ir][live]" )
 
     REQUIRE( p.live.after[p.find( assigns( 4 ) )][4] );
     REQUIRE( p.live.after[p.find( assigns( 8 ) )][7] );
+}
+
+// Only a flagged drop reads its flag, so with no read there a flag would never be live.
+TEST_CASE( "live_holds_a_drop_flag", "[ir][live]" )
+{
+    const Analysed p(
+        "i32 f( bool c ) { Box b = Box( 1 ); if( c ) { consume( move b ); } return 0; }\n"
+        "void consume( move Box b ) { }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const u32 drop = p.find( []( const Statement& s ) { return s.kind == Statement_kind::Drop && s.drop_flag.is_valid(); } );
+    const Local_id flag = p.first().statements[drop].drop_flag;
+
+    REQUIRE( std::ranges::any_of( p.live.after, [&]( const Local_set& live ) { return live[flag.v]; } ) );
 }
 
 TEST_CASE( "writes_sees_a_field_and_a_constructor's_address_not_a_pointee", "[ir][live]" )

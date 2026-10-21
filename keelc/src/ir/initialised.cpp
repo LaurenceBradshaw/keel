@@ -14,10 +14,12 @@ Occupancy entry_occupancy( const Function& func )
     Occupancy state {};
     state.initialised.resize( func.locals.size(), false );
     state.storage_dead.resize( func.locals.size(), false );
+    state.uninitialised.resize( func.locals.size(), true );
 
     for( u32 i = 1; i <= func.parameter_count; ++i )
     {
-        state.initialised[i] = true;
+        state.initialised[i]   = true;
+        state.uninitialised[i] = false;
     }
 
     for( const Statement& statement : func.statements )
@@ -58,7 +60,8 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
             {
                 if( operand.kind == Operand_kind::Move && !operand.place.is_global() && operand.place.num_projections == 0 )
                 {
-                    state.initialised[operand.place.local.v] = false;
+                    state.initialised[operand.place.local.v]   = false;
+                    state.uninitialised[operand.place.local.v] = true;
                 }
             }
         );
@@ -69,7 +72,8 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
             const Local_id local = local_of( func, statement.value.a.place );
             if( local.is_valid() )
             {
-                state.initialised[local.v] = true;
+                state.initialised[local.v]   = true;
+                state.uninitialised[local.v] = false;
             }
         }
 
@@ -77,7 +81,8 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
         const Local_id local = local_of( func, statement.place );
         if( local.is_valid() )
         {
-            state.initialised[local.v] = true;
+            state.initialised[local.v]   = true;
+            state.uninitialised[local.v] = false;
         }
         break;
     }
@@ -92,8 +97,9 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
         const Local_id local = local_of( func, statement.place );
         if( local.is_valid() )
         {
-            state.storage_dead[local.v] = false;
-            state.initialised[local.v]  = false;
+            state.storage_dead[local.v]  = false;
+            state.initialised[local.v]   = false;
+            state.uninitialised[local.v] = true;
         }
         break;
     }
@@ -102,8 +108,9 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
         const Local_id local = local_of( func, statement.place );
         if( local.is_valid() )
         {
-            state.storage_dead[local.v] = true;
-            state.initialised[local.v]  = false;
+            state.storage_dead[local.v]  = true;
+            state.initialised[local.v]   = false;
+            state.uninitialised[local.v] = true;
         }
         break;
     }
@@ -115,7 +122,8 @@ void step( const Terminator& terminator, Occupancy& state )
     if( terminator.condition.kind == Operand_kind::Move && !terminator.condition.place.is_global() &&
         terminator.condition.place.num_projections == 0 )
     {
-        state.initialised[terminator.condition.place.local.v] = false;
+        state.initialised[terminator.condition.place.local.v]   = false;
+        state.uninitialised[terminator.condition.place.local.v] = true;
     }
 }
 
@@ -146,7 +154,11 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func )
     entry[0] = entry_occupancy( func );
     for( u32 i = 1; i < func.blocks.size(); ++i )
     {
-        entry[i] = Occupancy { std::vector<bool>( func.locals.size(), false ), std::vector<bool>( func.locals.size(), false ) };
+        entry[i] = Occupancy {
+            .initialised   = std::vector<bool>( func.locals.size(), false ),
+            .storage_dead  = std::vector<bool>( func.locals.size(), false ),
+            .uninitialised = std::vector<bool>( func.locals.size(), true )
+        };
     }
 
     bool                  changed = true;
@@ -183,6 +195,12 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func )
                     {
                         entry[target.v].storage_dead[l] = true;
                         changed                         = true;
+                    }
+
+                    if( state.uninitialised[l] && !entry[target.v].uninitialised[l] )
+                    {
+                        entry[target.v].uninitialised[l] = true;
+                        changed                          = true;
                     }
                 }
             }
@@ -402,6 +420,72 @@ TEST_CASE( "initialised_starts_a_marked_local_storage_dead", "[ir][initialised]"
             REQUIRE( entry[b].storage_dead[x.v] );
         }
     }
+}
+
+TEST_CASE( "uninitialised_starts_everywhere_but_the_parameters", "[ir][initialised]" )
+{
+    const Analysed p( "i32 f( i32 a ) { return a; }\n" );
+    REQUIRE( p.clean() );
+
+    const Occupancy entry = occupancy_on_entry( p.first() )[0];
+
+    REQUIRE( entry.uninitialised[0] );
+    REQUIRE_FALSE( entry.uninitialised[1] );
+}
+
+TEST_CASE( "uninitialised_is_set_by_a_move_and_cleared_by_a_write", "[ir][initialised]" )
+{
+    SECTION( "a move empties the source and fills the return slot" )
+    {
+        const Analysed p( "Box f( move Box b ) { return b; }\n" );
+        REQUIRE( p.clean() );
+
+        const Occupancy state = p.after( []( const Statement& s )
+                                         { return s.kind == Statement_kind::Assign && s.value.a.kind == Operand_kind::Move; } );
+
+        REQUIRE( state.uninitialised[1] );
+        REQUIRE_FALSE( state.uninitialised[0] );
+    }
+
+    SECTION( "a constructor's address fills the local" )
+    {
+        const Analysed p( "Box f() { Box b = Box( 1 ); return b; }\n" );
+        REQUIRE( p.clean() );
+
+        const Occupancy state = p.after(
+            []( const Statement& s )
+            { return s.value.kind == Rvalue_kind::Address_of && s.value.address_purpose == Address_purpose::Initialise; }
+        );
+
+        REQUIRE_FALSE( state.uninitialised[p.local( "b" ).v] );
+    }
+}
+
+// Moved on one path only: at the join `b` might hold a value and might not, which is where a flag is needed.
+TEST_CASE( "uninitialised_and_initialised_both_hold_after_a_move_on_one_path", "[ir][initialised]" )
+{
+    const Analysed p( "i32 f( bool c, move Box b ) { if( c ) { consume( move b ); } return 0; }\n" );
+    REQUIRE( p.clean() );
+
+    const Function&              func  = p.first();
+    const std::vector<Occupancy> entry = occupancy_on_entry( func );
+
+    bool checked = false;
+    for( u32 b = 0; b < func.blocks.size(); ++b )
+    {
+        for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+        {
+            const Statement& s = func.statements[func.blocks[b].first_statement + i];
+            if( s.kind == Statement_kind::Assign && s.place.local == k_return_slot && s.place.num_projections == 0 )
+            {
+                REQUIRE( entry[b].initialised[2] );
+                REQUIRE( entry[b].uninitialised[2] );
+                checked = true;
+            }
+        }
+    }
+
+    REQUIRE( checked );
 }
 
 } // namespace keel

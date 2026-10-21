@@ -16,8 +16,9 @@ using Local_set = std::vector<bool>;
 
 struct Occupancy
 {
-    Local_set initialised;  // might hold a value here
-    Local_set storage_dead; // might be outside its storage_live ... storage_dead here
+    Local_set initialised;   // might hold a value here
+    Local_set storage_dead;  // might be outside its storage_live ... storage_dead here
+    Local_set uninitialised; // might hold nothing here
 };
 
 // Carries `state` across one statement, so a caller can see every point in a block.

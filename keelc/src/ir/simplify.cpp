@@ -188,6 +188,33 @@ void simplify( Function& func, const Literal_pool& literals )
     prune( func, reachable( func ) );
 }
 
+void remove_statements( Function& func, const std::vector<bool>& deleted )
+{
+    std::vector<Statement> statements;
+    statements.reserve( func.statements.size() );
+
+    for( Block& block : func.blocks )
+    {
+        const u32 old_first   = block.first_statement;
+        const u32 old_count   = block.statement_count;
+        block.first_statement = narrow_cast<u32>( statements.size() );
+
+        u32 kept_count = 0;
+        for( u32 i = 0; i < old_count; ++i )
+        {
+            if( !deleted[old_first + i] )
+            {
+                statements.push_back( func.statements[old_first + i] );
+                ++kept_count;
+            }
+        }
+
+        block.statement_count = kept_count;
+    }
+
+    func.statements = std::move( statements );
+}
+
 void settle_debug( Function& func, Literal_id value )
 {
     for( Block& block : func.blocks )

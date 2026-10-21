@@ -8,6 +8,7 @@
 #include "ir/simplify.h"
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
+#include "opt/settle_drops.h"
 
 namespace keel
 {
@@ -87,6 +88,12 @@ Front_end run_front_end(
         }
 
         elaborate_drops( function, vocabulary );
+
+        if( build.optimise )
+        {
+            settle_drops( function );
+            assert( verify( function ).empty() );
+        }
     }
 
     return front;

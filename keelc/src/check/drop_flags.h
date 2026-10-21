@@ -16,9 +16,9 @@ struct Flag_vocabulary
     Literal_id true_literal {};
 };
 
-// PLAN §7. A local moved, or a temporary built, on only some paths gets a hidden bool tested at its
-// drop: set once assigned, cleared once moved or its storage ends. Exact by construction, since it
-// records what happened, so it needs no dataflow.
+// PLAN §7. A local moved anywhere and dropped, or a temporary built on one path, gets a hidden bool
+// tested at its drop: set once assigned, cleared once moved or its storage ends. Exact by construction,
+// since it records what happened, so it needs no dataflow; a release build narrows it with settle_drops.
 void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary );
 
 } // namespace keel

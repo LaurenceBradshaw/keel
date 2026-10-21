@@ -8,6 +8,7 @@
 #include <optional>
 #include "ir/initialised.h"
 #include "ir/live.h"
+#include "ir/simplify.h"
 
 namespace keel
 {
@@ -734,29 +735,7 @@ bool coalesce_one( Function& func )
         }
     }
 
-    std::vector<Statement> statements;
-    statements.reserve( func.statements.size() );
-
-    for( Block& block : func.blocks )
-    {
-        const u32 old_first   = block.first_statement;
-        const u32 old_count   = block.statement_count;
-        block.first_statement = narrow_cast<u32>( statements.size() );
-
-        u32 kept_count = 0;
-        for( u32 i = 0; i < old_count; ++i )
-        {
-            if( !deleted[old_first + i] )
-            {
-                statements.push_back( func.statements[old_first + i] );
-                ++kept_count;
-            }
-        }
-
-        block.statement_count = kept_count;
-    }
-
-    func.statements = std::move( statements );
+    remove_statements( func, deleted );
 
     // A field merge's locals were refused if either was listed.
     if( chosen->into.num_projections != 0 )

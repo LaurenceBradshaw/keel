@@ -109,13 +109,9 @@ int32_t kl__main__( void )
     struct kl_7prelude_str* kl_t8;
     uint8_t* kl_t9;
     struct kl_7prelude_textual__ref kl_t11;
-    bool kl_t13;
-#line 37 "codegen/assert_release/main.kl"
-    kl_t13 = false;
+    ( void ) kl_t2;
     goto bb1;
     bb1:
-    if ( kl_t13 ) kl__Noisy__dtor( &kl_t2 );
-    kl_t13 = false;
 #line 39 "codegen/assert_release/main.kl"
     kl_t8 = &kl_t7;
     kl_t9 = ( uint8_t* ) "done";

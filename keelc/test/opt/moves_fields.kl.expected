@@ -172,16 +172,6 @@ int32_t kl__main__( void )
     bool kl_t36;
     struct kl__Shape kl_t38;
     int32_t kl_t39;
-    bool kl_t43;
-    bool kl_t44;
-    bool kl_t45;
-    bool kl_t46;
-#line 98 "opt/moves_fields.kl"
-    kl_t43 = false;
-#line 103 "opt/moves_fields.kl"
-    kl_t44 = false;
-    kl_t45 = false;
-    kl_t46 = false;
 #line 87 "opt/moves_fields.kl"
     kl_made_1 = kl__line__3i32( 5 );
 #line 88 "opt/moves_fields.kl"
@@ -224,9 +214,7 @@ int32_t kl__main__( void )
     bb12:
 #line 98 "opt/moves_fields.kl"
     kl_t17 = kl__wrapped__3i32( 6 );
-    kl_t43 = true;
     kl_t18 = kl__opened__M5Shape( kl_t17 );
-    kl_t43 = false;
     kl_t15 = kl_t18 != 6;
     if ( kl_t15 ) goto bb14; else goto bb13;
     bb13:
@@ -238,8 +226,6 @@ int32_t kl__main__( void )
     kl_t15 = kl_destroyed_3 != 1;
     goto bb16;
     bb16:
-    if ( kl_t43 ) kl__Shape__dtor( &kl_t17 );
-    kl_t43 = false;
     if ( kl_t15 ) goto bb17; else goto bb18;
     bb17:
 #line 100 "opt/moves_fields.kl"
@@ -247,24 +233,14 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 103 "opt/moves_fields.kl"
-    kl_t45 = false;
     kl_t26 = &kl_t25;
-    kl_t45 = true;
     kl__Box__R3Box_3i32__ctor( kl_t26, 1 );
-    kl_t46 = false;
     kl_t29 = &kl_t28;
-    kl_t46 = true;
     kl__Box__R3Box_3i32__ctor( kl_t29, 2 );
     kl_t24.tag = 1;
-    kl_t44 = true;
     kl_t24.kl_first_47 = kl_t25;
-    kl_t45 = false;
-    kl_t44 = true;
     kl_t24.kl_second_49 = kl_t28;
-    kl_t46 = false;
-    kl_t44 = true;
     kl_t31 = kl__opened__M5Shape( kl_t24 );
-    kl_t44 = false;
     kl_t22 = kl_t31 != 12;
     if ( kl_t22 ) goto bb20; else goto bb19;
     bb19:
@@ -276,12 +252,6 @@ int32_t kl__main__( void )
     kl_t22 = kl_destroyed_3 != 3;
     goto bb22;
     bb22:
-    if ( kl_t44 ) kl__Shape__dtor( &kl_t24 );
-    if ( kl_t46 ) kl__Box__dtor( &kl_t28 );
-    if ( kl_t45 ) kl__Box__dtor( &kl_t25 );
-    kl_t45 = false;
-    kl_t46 = false;
-    kl_t44 = false;
     if ( kl_t22 ) goto bb23; else goto bb24;
     bb23:
 #line 105 "opt/moves_fields.kl"

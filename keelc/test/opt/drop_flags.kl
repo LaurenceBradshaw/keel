@@ -1,0 +1,127 @@
+// M11 drop elaboration, in a release build: a drop whose local is certainly built runs with no flag,
+// one whose local is certainly gone is not emitted, and only a local that differs by path keeps a
+// flag, written false once where it empties. Construction and destruction append to `trace`, so a
+// drop lost or run twice changes it. Each check returns its own code.
+
+i32 live;
+i64 trace;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+        trace = trace * 10 + v;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+        trace = trace * 10 + 9;
+    }
+
+    public i32 value;
+};
+
+void consume( move Box _ )
+{
+}
+
+// Moved on every path: its drop is never reached holding a value.
+i32 always()
+{
+    trace = 0;
+    {
+        Box b = Box( 1 );
+        consume( move b );
+    }
+
+    return trace == 19 ? 0 : 1;
+}
+
+// Built on every path at each drop, the old value's and the new one's.
+i32 again()
+{
+    trace = 0;
+    {
+        Box b = Box( 1 );
+        b = Box( 2 );
+    }
+
+    return trace == 1299 ? 0 : 2;
+}
+
+// Moved on one path: the flag stays.
+i32 sometimes( bool c )
+{
+    trace = 0;
+    {
+        Box b = Box( 3 );
+        if( c )
+        {
+            consume( move b );
+        }
+    }
+
+    return trace == 39 ? 0 : 3;
+}
+
+// Each round builds and then maybe moves; the flag is cleared at the move and nowhere else.
+i32 looped()
+{
+    trace = 0;
+    for( i32 i = 1; i <= 3; i++ )
+    {
+        Box b = Box( i );
+        if( i == 2 )
+        {
+            consume( move b );
+        }
+    }
+
+    return trace == 192939 ? 0 : 4;
+}
+
+// A temporary built on one arm: the flag's one clear is on entry, for the arm that skips it.
+i32 picked( bool c )
+{
+    trace = 0;
+    i32 v = c ? Box( 5 ).value : 6;
+    return v == ( c ? 5 : 6 ) && trace == ( c ? 59 : 0 ) ? 0 : 5;
+}
+
+i32 main()
+{
+    i32 code = always();
+    if( code == 0 )
+    {
+        code = again();
+    }
+    if( code == 0 )
+    {
+        code = sometimes( true );
+    }
+    if( code == 0 )
+    {
+        code = sometimes( false );
+    }
+    if( code == 0 )
+    {
+        code = looped();
+    }
+    if( code == 0 )
+    {
+        code = picked( true );
+    }
+    if( code == 0 )
+    {
+        code = picked( false );
+    }
+    if( code == 0 && live != 0 )
+    {
+        code = 6;
+    }
+
+    return code;
+}
