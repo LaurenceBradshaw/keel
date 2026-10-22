@@ -72,8 +72,12 @@ constexpr std::string_view k_types = "struct Point { i32 x; i32 y; };\n"
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Stored : Compiled
 {
-    explicit Stored( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true } )
+    explicit Stored( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .inlining = inlining }
+          )
     {
     }
 
@@ -118,9 +122,10 @@ TEST_CASE( "remove_dead_stores_keeps_a_write_a_pointer_reads", "[opt][dead]" )
     REQUIRE( p.field_writes() == 3 );
 }
 
+// Not inlined, so the call is still one.
 TEST_CASE( "remove_dead_stores_keeps_a_call_whose_result_is_unread", "[opt][dead]" )
 {
-    const Stored p( "i32 f( i32 a ) { _ = side( a ); return a; }\n" );
+    const Stored p( "i32 f( i32 a ) { _ = side( a ); return a; }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.assigns( Rvalue_kind::Call ) == 1 );

@@ -45,8 +45,16 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_t1;
     int64_t kl_t2;
+    int32_t kl_b_6;
 #line 12 "codegen/overflow_release/main.kl"
-    kl_t1 = kl__add__3i32_3i32( 2147483647, 1 );
+    kl_b_6 = 1;
+    goto bb1;
+    bb1:
+#line 7 "codegen/overflow_release/main.kl"
+    kl_t1 = 2147483647 + kl_b_6;
+    goto bb2;
+    bb2:
+#line 12 "codegen/overflow_release/main.kl"
     kl_t2 = ( int64_t ) kl_t1;
     kl_1t7console_println__3i64( kl_t2 );
 #line 13 "codegen/overflow_release/main.kl"
@@ -199,8 +207,12 @@ void kl_1t7console_println__3i64( int64_t kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 114 "../test_lib/console.kl"
-    kl_1t7console_print__3i64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 27 "../test_lib/console.kl"
+    kl_rt_write_i64( 1, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 115 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";
@@ -216,8 +228,12 @@ void kl_1t7console_println__3u64( uint64_t kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 121 "../test_lib/console.kl"
-    kl_1t7console_print__3u64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 36 "../test_lib/console.kl"
+    kl_rt_write_u64( 1, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 122 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";
@@ -233,8 +249,12 @@ void kl_1t7console_println__3f64( double kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 128 "../test_lib/console.kl"
-    kl_1t7console_print__3f64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 47 "../test_lib/console.kl"
+    kl_rt_write_f64( 1, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 129 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";
@@ -284,8 +304,12 @@ void kl_1t7console_eprintln__3i64( int64_t kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 149 "../test_lib/console.kl"
-    kl_1t7console_eprint__3i64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 74 "../test_lib/console.kl"
+    kl_rt_write_i64( 2, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 150 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";
@@ -301,8 +325,12 @@ void kl_1t7console_eprintln__3u64( uint64_t kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 156 "../test_lib/console.kl"
-    kl_1t7console_eprint__3u64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 83 "../test_lib/console.kl"
+    kl_rt_write_u64( 2, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 157 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";
@@ -318,8 +346,12 @@ void kl_1t7console_eprintln__3f64( double kl_value_1 )
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
     struct kl_7prelude_textual__ref kl_t7;
-#line 163 "../test_lib/console.kl"
-    kl_1t7console_eprint__3f64( kl_value_1 );
+    goto bb1;
+    bb1:
+#line 94 "../test_lib/console.kl"
+    kl_rt_write_f64( 2, kl_value_1 );
+    goto bb2;
+    bb2:
 #line 164 "../test_lib/console.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "\012";

@@ -9,6 +9,7 @@
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
+#include "opt/inline_calls.h"
 #include "parse/loader.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
@@ -32,6 +33,9 @@ struct Build
     bool asserts         = false;
     bool overflow_checks = false;
     bool optimise        = false; // M11's optimisations; release only, so a debug build is the program as lowered.
+
+    // How an optimised build inlines; none leaves every call a call.
+    std::optional<Inline_weights> inlining = Inline_weights {};
 };
 
 struct Front_end

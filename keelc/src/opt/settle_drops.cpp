@@ -84,8 +84,12 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Settled : Compiled
 {
-    explicit Settled( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true } )
+    explicit Settled( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .inlining = inlining }
+          )
     {
     }
 
@@ -131,9 +135,10 @@ struct Settled : Compiled
 
 } // namespace
 
+// Not inlined, so `consume`'s own drop of `b` stays out of `f`.
 TEST_CASE( "settle_drops_deletes_a_drop_moved_on_every_path", "[opt][settle]" )
 {
-    const Settled p( "i32 f() { { Box b = Box( 1 ); consume( move b ); } return 0; }\n" );
+    const Settled p( "i32 f() { { Box b = Box( 1 ); consume( move b ); } return 0; }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.drops( true ) == 0 );

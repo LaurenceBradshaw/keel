@@ -142,10 +142,8 @@ struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
     struct kl_7prelude_result__I3i32_5FaultE kl_t0;
     struct kl_7prelude_result__I3Box_5FaultE kl_t4;
     bool kl_t5;
-#line 74 "opt/moves_scrutinee.kl"
-    kl_t4 = kl__found__4bool( kl_ok_1 );
-    kl_t5 = kl_t4.tag == 0;
-    if ( kl_t5 ) goto bb1; else goto bb2;
+    struct kl__Box* kl_t12;
+    goto bb3;
     bb1:
 #line 75 "opt/moves_scrutinee.kl"
     kl_t0.tag = 0;
@@ -157,6 +155,23 @@ struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
     kl_t0.tag = 1;
     kl_t0.kl_error_373 = kl_t4.kl_error_373;
     return kl_t0;
+    bb3:
+    if ( kl_ok_1 ) goto bb4; else goto bb5;
+    bb4:
+#line 66 "opt/moves_scrutinee.kl"
+    kl_t12 = &kl_t4.kl_value_370;
+    kl__Box__R3Box_3i32__ctor( kl_t12, 9 );
+    kl_t4.tag = 0;
+    goto bb6;
+    bb5:
+#line 69 "opt/moves_scrutinee.kl"
+    kl_t4.tag = 1;
+    kl_t4.kl_error_373 = 0;
+    goto bb6;
+    bb6:
+#line 74 "opt/moves_scrutinee.kl"
+    kl_t5 = kl_t4.tag == 0;
+    if ( kl_t5 ) goto bb1; else goto bb2;
 }
 
 int32_t kl__main__( void )

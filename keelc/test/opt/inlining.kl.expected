@@ -1,0 +1,617 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "inlining.kl.prelude.c"
+
+struct kl__Box;
+struct kl__Point;
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+
+struct kl__Box
+{
+    int64_t kl_value_26;
+};
+
+struct kl__Point
+{
+    int32_t kl_x_29;
+    int32_t kl_y_31;
+};
+
+int64_t kl_live_1;
+
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+
+void kl__Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
+void kl__Box__dtor( struct kl__Box* );
+int32_t kl__twice__3i32( int32_t );
+int32_t kl__both__3i32( int32_t );
+int64_t kl__take__M3Box( struct kl__Box );
+struct kl__Box kl__pass__M3Box( struct kl__Box );
+int64_t kl__looped__3i64( int64_t );
+int32_t kl__sum__5Point( struct kl__Point* );
+int32_t kl__halve__3i32( int32_t );
+int64_t kl__factorial__3i64( int64_t );
+int64_t kl__forward__3i64( int64_t );
+bool kl__is_even__3u32( uint32_t );
+bool kl__is_odd__3u32( uint32_t );
+int32_t kl__mixed__3i32_3i32( int32_t, int32_t );
+void kl__set__O3i32( int32_t* );
+int32_t kl__through__3i32( int32_t );
+int32_t kl__main__( void );
+
+void kl__Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
+{
+#line 12 "opt/inlining.kl"
+    ( *kl_this_1 ).kl_value_26 = kl_v_2;
+#line 13 "opt/inlining.kl"
+    kl_live_1 = kl_live_1 + 1;
+    return;
+}
+
+void kl__Box__dtor( struct kl__Box* kl_this_1 )
+{
+    ( void ) kl_this_1;
+#line 18 "opt/inlining.kl"
+    kl_live_1 = kl_live_1 - 1;
+    return;
+}
+
+int32_t kl__twice__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 32 "opt/inlining.kl"
+    kl_t0 = kl_x_1 * 2;
+    return kl_t0;
+}
+
+int32_t kl__both__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    goto bb1;
+    bb1:
+#line 32 "opt/inlining.kl"
+    kl_t2 = kl_a_1 * 2;
+    goto bb2;
+    bb2:
+#line 38 "opt/inlining.kl"
+    kl_t3 = kl_a_1 + 1;
+    goto bb3;
+    bb3:
+#line 32 "opt/inlining.kl"
+    kl_t4 = kl_t3 * 2;
+    goto bb4;
+    bb4:
+#line 38 "opt/inlining.kl"
+    kl_t0 = kl_t2 + kl_t4;
+    return kl_t0;
+}
+
+int64_t kl__take__M3Box( struct kl__Box kl_b_1 )
+{
+    int64_t kl_t0;
+#line 44 "opt/inlining.kl"
+    kl_t0 = kl_b_1.kl_value_26;
+    kl__Box__dtor( &kl_b_1 );
+    return kl_t0;
+}
+
+struct kl__Box kl__pass__M3Box( struct kl__Box kl_b_1 )
+{
+    struct kl__Box kl_t0;
+#line 50 "opt/inlining.kl"
+    kl_t0 = kl_b_1;
+    return kl_t0;
+}
+
+int64_t kl__looped__3i64( int64_t kl_n_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_i_3;
+    bool kl_t4;
+    struct kl__Box kl_t5;
+    struct kl__Box* kl_t6;
+    struct kl__Box kl_t8;
+    int64_t kl_t9;
+    struct kl__Box kl_t10;
+    struct kl__Box kl_b_13;
+#line 56 "opt/inlining.kl"
+    kl_t0 = 0;
+#line 57 "opt/inlining.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+    kl_t4 = kl_i_3 < kl_n_1;
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+#line 59 "opt/inlining.kl"
+    kl_t6 = &kl_t5;
+    kl__Box__R3Box_3i64__ctor( kl_t6, kl_i_3 );
+    kl_t10 = kl_t5;
+    goto bb5;
+    bb3:
+    return kl_t0;
+    bb4:
+#line 57 "opt/inlining.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+    bb5:
+#line 59 "opt/inlining.kl"
+    kl_t8 = kl_t10;
+    kl_b_13 = kl_t8;
+    goto bb6;
+    bb6:
+#line 44 "opt/inlining.kl"
+    kl_t9 = kl_b_13.kl_value_26;
+    kl__Box__dtor( &kl_b_13 );
+    goto bb7;
+    bb7:
+#line 59 "opt/inlining.kl"
+    kl_t0 = kl_t0 + kl_t9;
+    goto bb4;
+}
+
+int32_t kl__sum__5Point( struct kl__Point* kl_p_1 )
+{
+    int32_t kl_t0;
+#line 67 "opt/inlining.kl"
+    kl_t0 = ( *kl_p_1 ).kl_x_29 + ( *kl_p_1 ).kl_y_31;
+    return kl_t0;
+}
+
+int32_t kl__halve__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+#line 73 "opt/inlining.kl"
+    kl_t2 = kl_a_1 < 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 75 "opt/inlining.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( uint8_t* ) "negative";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 8 );
+    kl_rt_panic_message( "opt/inlining.kl", 75, kl_t3.kl_data_470, kl_t3.kl_size_473 );
+    bb2:
+#line 77 "opt/inlining.kl"
+    kl_t0 = kl_a_1 / 2;
+    return kl_t0;
+}
+
+int64_t kl__factorial__3i64( int64_t kl_n_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+    int64_t kl_t3;
+    int64_t kl_t4;
+#line 83 "opt/inlining.kl"
+    kl_t2 = kl_n_1 <= 1;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 85 "opt/inlining.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 87 "opt/inlining.kl"
+    kl_t3 = kl_n_1 - 1;
+    kl_t4 = kl__factorial__3i64( kl_t3 );
+    kl_t0 = kl_n_1 * kl_t4;
+    return kl_t0;
+}
+
+int64_t kl__forward__3i64( int64_t kl_n_1 )
+{
+    int64_t kl_t0;
+    bool kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+    goto bb1;
+    bb1:
+#line 83 "opt/inlining.kl"
+    kl_t5 = kl_n_1 <= 1;
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 85 "opt/inlining.kl"
+    kl_t0 = 1;
+    goto bb4;
+    bb3:
+#line 87 "opt/inlining.kl"
+    kl_t6 = kl_n_1 - 1;
+    kl_t7 = kl__factorial__3i64( kl_t6 );
+    kl_t0 = kl_n_1 * kl_t7;
+    goto bb4;
+    bb4:
+    return kl_t0;
+}
+
+bool kl__is_even__3u32( uint32_t kl_n_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+    uint32_t kl_t3;
+#line 98 "opt/inlining.kl"
+    kl_t2 = kl_n_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 100 "opt/inlining.kl"
+    kl_t0 = true;
+    return kl_t0;
+    bb2:
+#line 102 "opt/inlining.kl"
+    kl_t3 = kl_n_1 - 1;
+    kl_t0 = kl__is_odd__3u32( kl_t3 );
+    return kl_t0;
+}
+
+bool kl__is_odd__3u32( uint32_t kl_n_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+    uint32_t kl_t3;
+#line 107 "opt/inlining.kl"
+    kl_t2 = kl_n_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 109 "opt/inlining.kl"
+    kl_t0 = false;
+    return kl_t0;
+    bb2:
+#line 111 "opt/inlining.kl"
+    kl_t3 = kl_n_1 - 1;
+    kl_t0 = kl__is_even__3u32( kl_t3 );
+    return kl_t0;
+}
+
+int32_t kl__mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_c_3;
+    int32_t kl_t4;
+    int32_t kl_d_6;
+    int32_t kl_t7;
+    int32_t kl_e_9;
+    int32_t kl_t10;
+    int32_t kl_f_12;
+    int32_t kl_t13;
+    int32_t kl_g_15;
+    int32_t kl_t16;
+    int32_t kl_h_18;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    int32_t kl_t22;
+    int32_t kl_t23;
+#line 117 "opt/inlining.kl"
+    kl_t4 = kl_a_1 * kl_b_2;
+    kl_c_3 = kl_t4 + kl_a_1;
+#line 118 "opt/inlining.kl"
+    kl_t7 = kl_b_2 * 3;
+    kl_d_6 = kl_c_3 - kl_t7;
+#line 119 "opt/inlining.kl"
+    kl_t10 = kl_d_6 * kl_d_6;
+    kl_e_9 = kl_t10 + kl_c_3;
+#line 120 "opt/inlining.kl"
+    kl_t13 = kl_e_9 / 7;
+    kl_f_12 = kl_t13 + kl_d_6;
+#line 121 "opt/inlining.kl"
+    kl_t16 = kl_f_12 * kl_a_1;
+    kl_g_15 = kl_t16 - kl_e_9;
+#line 122 "opt/inlining.kl"
+    kl_t19 = kl_g_15 * kl_b_2;
+    kl_t20 = kl_f_12 * kl_c_3;
+    kl_h_18 = kl_t19 + kl_t20;
+#line 123 "opt/inlining.kl"
+    kl_t22 = kl_c_3 * kl_d_6;
+    kl_t23 = kl_h_18 + kl_t22;
+    kl_t0 = kl_t23 - kl_f_12;
+    return kl_t0;
+}
+
+void kl__set__O3i32( int32_t* kl_n_1 )
+{
+#line 128 "opt/inlining.kl"
+    ( *kl_n_1 ) = 9;
+    return;
+}
+
+int32_t kl__through__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    kl__fn__F3i32E3i32 kl_f_2;
+#line 133 "opt/inlining.kl"
+    kl_f_2 = kl__twice__3i32;
+#line 134 "opt/inlining.kl"
+    kl_t0 = kl_f_2( kl_a_1 );
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    bool kl_t3;
+    int64_t kl_t4;
+    struct kl__Point kl_t7;
+    struct kl__Point* kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    int64_t kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    bool kl_t21;
+    int32_t kl_n_22;
+    int32_t* kl_t23;
+    bool kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+    struct kl__Box kl_b_28;
+    struct kl__Box* kl_t29;
+    bool kl_t31;
+    int64_t kl_t32;
+    struct kl__Box kl_b_36;
+    kl__fn__F3i32E3i32 kl_f_39;
+    uint32_t kl_n_43;
+    bool kl_t44;
+    uint32_t kl_t45;
+    uint32_t kl_n_48;
+    bool kl_t49;
+    uint32_t kl_t50;
+    int64_t kl_n_53;
+    bool kl_t57;
+    int64_t kl_t58;
+    int64_t kl_t59;
+    int32_t kl_a_62;
+    bool kl_t63;
+    struct kl_7prelude_str kl_t64;
+    struct kl_7prelude_str* kl_t65;
+    uint8_t* kl_t66;
+    int32_t kl_a_73;
+    int32_t kl_t74;
+    int32_t kl_t75;
+    int32_t kl_t76;
+    int32_t kl_x_79;
+#line 139 "opt/inlining.kl"
+    kl_a_73 = 3;
+    goto bb48;
+    bb1:
+#line 141 "opt/inlining.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 144 "opt/inlining.kl"
+    kl_t4 = kl__looped__3i64( 4 );
+    kl_t3 = kl_t4 != 6;
+    if ( kl_t3 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t3 = kl_live_1 != 0;
+    goto bb4;
+    bb4:
+    if ( kl_t3 ) goto bb5; else goto bb6;
+    bb5:
+#line 146 "opt/inlining.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 149 "opt/inlining.kl"
+    kl_t7.kl_x_29 = 2;
+    kl_t7.kl_y_31 = 3;
+    kl_t8 = &kl_t7;
+    goto bb46;
+    bb7:
+#line 151 "opt/inlining.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+#line 154 "opt/inlining.kl"
+    kl_a_62 = 9;
+    goto bb42;
+    bb9:
+#line 156 "opt/inlining.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb10:
+#line 159 "opt/inlining.kl"
+    kl_n_53 = 5;
+    goto bb38;
+    bb11:
+#line 161 "opt/inlining.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb12:
+#line 164 "opt/inlining.kl"
+    kl_n_48 = 10;
+    goto bb34;
+    bb13:
+    kl_n_43 = 10;
+    goto bb31;
+    bb14:
+    if ( kl_t15 ) goto bb15; else goto bb16;
+    bb15:
+#line 166 "opt/inlining.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb16:
+#line 169 "opt/inlining.kl"
+    kl_t19 = kl__mixed__3i32_3i32( 2, 3 );
+    kl_t20 = -35;
+    kl_t21 = kl_t19 != kl_t20;
+    if ( kl_t21 ) goto bb17; else goto bb18;
+    bb17:
+#line 171 "opt/inlining.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb18:
+#line 174 "opt/inlining.kl"
+    kl_n_22 = 0;
+#line 175 "opt/inlining.kl"
+    kl_t23 = &kl_n_22;
+    kl__set__O3i32( kl_t23 );
+#line 176 "opt/inlining.kl"
+    kl_t25 = kl_n_22 != 9;
+    if ( kl_t25 ) goto bb19; else goto bb20;
+    bb19:
+#line 178 "opt/inlining.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb20:
+    goto bb29;
+    bb21:
+#line 183 "opt/inlining.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb22:
+#line 186 "opt/inlining.kl"
+    kl_t29 = &kl_b_28;
+    kl__Box__R3Box_3i64__ctor( kl_t29, 7 );
+#line 187 "opt/inlining.kl"
+    kl_b_36 = kl_b_28;
+    goto bb27;
+    bb23:
+    kl_t31 = kl_live_1 != 0;
+    goto bb24;
+    bb24:
+    if ( kl_t31 ) goto bb25; else goto bb26;
+    bb25:
+#line 189 "opt/inlining.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb26:
+#line 192 "opt/inlining.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb27:
+#line 44 "opt/inlining.kl"
+    kl_t32 = kl_b_36.kl_value_26;
+    kl__Box__dtor( &kl_b_36 );
+    goto bb28;
+    bb28:
+#line 187 "opt/inlining.kl"
+    kl_t31 = kl_t32 != 7;
+    if ( kl_t31 ) goto bb24; else goto bb23;
+    bb29:
+#line 133 "opt/inlining.kl"
+    kl_f_39 = kl__twice__3i32;
+#line 134 "opt/inlining.kl"
+    kl_t26 = kl_f_39( 4 );
+    goto bb30;
+    bb30:
+#line 181 "opt/inlining.kl"
+    kl_t27 = kl_t26 != 8;
+    if ( kl_t27 ) goto bb21; else goto bb22;
+    bb31:
+#line 107 "opt/inlining.kl"
+    kl_t44 = kl_n_43 == 0;
+    if ( kl_t44 ) goto bb32; else goto bb33;
+    bb32:
+#line 109 "opt/inlining.kl"
+    kl_t15 = false;
+    goto bb14;
+    bb33:
+#line 111 "opt/inlining.kl"
+    kl_t45 = kl_n_43 - 1;
+    kl_t15 = kl__is_even__3u32( kl_t45 );
+    goto bb14;
+    bb34:
+#line 98 "opt/inlining.kl"
+    kl_t49 = kl_n_48 == 0;
+    if ( kl_t49 ) goto bb35; else goto bb36;
+    bb35:
+#line 100 "opt/inlining.kl"
+    kl_t16 = true;
+    goto bb37;
+    bb36:
+#line 102 "opt/inlining.kl"
+    kl_t50 = kl_n_48 - 1;
+    kl_t16 = kl__is_odd__3u32( kl_t50 );
+    goto bb37;
+    bb37:
+#line 164 "opt/inlining.kl"
+    kl_t15 = !kl_t16;
+    if ( kl_t15 ) goto bb14; else goto bb13;
+    bb38:
+#line 83 "opt/inlining.kl"
+    kl_t57 = kl_n_53 <= 1;
+    if ( kl_t57 ) goto bb39; else goto bb40;
+    bb39:
+#line 85 "opt/inlining.kl"
+    kl_t13 = 1;
+    goto bb41;
+    bb40:
+#line 87 "opt/inlining.kl"
+    kl_t58 = kl_n_53 - 1;
+    kl_t59 = kl__factorial__3i64( kl_t58 );
+    kl_t13 = 5 * kl_t59;
+    goto bb41;
+    bb41:
+#line 159 "opt/inlining.kl"
+    kl_t14 = kl_t13 != 120;
+    if ( kl_t14 ) goto bb11; else goto bb12;
+    bb42:
+#line 73 "opt/inlining.kl"
+    kl_t63 = kl_a_62 < 0;
+    if ( kl_t63 ) goto bb43; else goto bb44;
+    bb43:
+#line 75 "opt/inlining.kl"
+    kl_t65 = &kl_t64;
+    kl_t66 = ( uint8_t* ) "negative";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t65, kl_t66, 8 );
+    kl_rt_panic_message( "opt/inlining.kl", 75, kl_t64.kl_data_470, kl_t64.kl_size_473 );
+    bb44:
+#line 77 "opt/inlining.kl"
+    kl_t11 = kl_a_62 / 2;
+    goto bb45;
+    bb45:
+#line 154 "opt/inlining.kl"
+    kl_t12 = kl_t11 != 4;
+    if ( kl_t12 ) goto bb9; else goto bb10;
+    bb46:
+#line 67 "opt/inlining.kl"
+    kl_t9 = ( *kl_t8 ).kl_x_29 + ( *kl_t8 ).kl_y_31;
+    goto bb47;
+    bb47:
+#line 149 "opt/inlining.kl"
+    kl_t10 = kl_t9 != 5;
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb48:
+#line 38 "opt/inlining.kl"
+    kl_x_79 = 3;
+    goto bb49;
+    bb49:
+#line 32 "opt/inlining.kl"
+    kl_t74 = kl_x_79 * 2;
+    goto bb50;
+    bb50:
+#line 38 "opt/inlining.kl"
+    kl_t75 = kl_a_73 + 1;
+    goto bb51;
+    bb51:
+#line 32 "opt/inlining.kl"
+    kl_t76 = kl_t75 * 2;
+    goto bb52;
+    bb52:
+#line 38 "opt/inlining.kl"
+    kl_t1 = kl_t74 + kl_t76;
+    goto bb53;
+    bb53:
+#line 139 "opt/inlining.kl"
+    kl_t2 = kl_t1 != 14;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -274,6 +274,9 @@ int32_t kl__main__( void )
     bool kl_t23;
     bool kl_t25;
     bool kl_t27;
+    struct kl__Point kl_p_29;
+    struct kl__Point kl_q_31;
+    bool kl_t33;
 #line 107 "opt/moves_kept.kl"
     kl_t0 = kl__reassigned__(  );
 #line 108 "opt/moves_kept.kl"
@@ -330,39 +333,61 @@ int32_t kl__main__( void )
     kl_t15 = kl_live_1 != 0;
     goto bb14;
     bb14:
-    if ( kl_t15 ) goto bb15; else goto bb16;
+    if ( kl_t15 ) goto bb15; else goto bb23;
     bb15:
 #line 125 "opt/moves_kept.kl"
     kl_t0 = 11;
     return kl_t0;
     bb16:
-#line 128 "opt/moves_kept.kl"
-    kl_t0 = kl__copied__(  );
-#line 129 "opt/moves_kept.kl"
-    kl_t23 = kl_t0 != 0;
-    if ( kl_t23 ) goto bb17; else goto bb18;
-    bb17:
     return kl_t0;
-    bb18:
+    bb17:
 #line 134 "opt/moves_kept.kl"
     kl_t0 = kl__looped__(  );
 #line 135 "opt/moves_kept.kl"
     kl_t25 = kl_t0 != 0;
-    if ( kl_t25 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t25 ) goto bb18; else goto bb19;
+    bb18:
     return kl_t0;
-    bb20:
+    bb19:
 #line 140 "opt/moves_kept.kl"
     kl_t27 = kl_live_1 == 0;
-    if ( kl_t27 ) goto bb21; else goto bb22;
-    bb21:
+    if ( kl_t27 ) goto bb20; else goto bb21;
+    bb20:
     kl_t0 = 0;
-    goto bb23;
-    bb22:
+    goto bb22;
+    bb21:
     kl_t0 = 12;
-    goto bb23;
-    bb23:
+    goto bb22;
+    bb22:
     return kl_t0;
+    bb23:
+#line 79 "opt/moves_kept.kl"
+    kl_p_29.kl_x_45 = 1;
+    kl_p_29.kl_y_47 = 2;
+#line 80 "opt/moves_kept.kl"
+    kl_q_31 = kl_p_29;
+#line 81 "opt/moves_kept.kl"
+    kl_p_29.kl_x_45 = 5;
+#line 82 "opt/moves_kept.kl"
+    kl_t33 = kl_q_31.kl_x_45 == 1;
+    if ( kl_t33 ) goto bb27; else goto bb28;
+    bb24:
+    kl_t0 = 0;
+    goto bb26;
+    bb25:
+    kl_t0 = 3;
+    goto bb26;
+    bb26:
+    goto bb29;
+    bb27:
+    kl_t33 = kl_p_29.kl_x_45 == 5;
+    goto bb28;
+    bb28:
+    if ( kl_t33 ) goto bb24; else goto bb25;
+    bb29:
+#line 129 "opt/moves_kept.kl"
+    kl_t23 = kl_t0 != 0;
+    if ( kl_t23 ) goto bb16; else goto bb17;
 }
 
 int main( void )

@@ -4,11 +4,13 @@
 #include "front_end.h"
 #include "check/drop_flags.h"
 #include "check/report.h"
+#include "ir/call_graph.h"
 #include "ir/lower.h"
 #include "ir/simplify.h"
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/inline_calls.h"
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
@@ -79,26 +81,53 @@ Front_end run_front_end(
 
     // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
     // only this build's. A release build's optimisations run before elaboration makes drops explicit.
-    for( Function& function : front.functions )
-    {
-        settle_debug( function, debug );
-        simplify( function, literals );
+    // Callees first, so a callee's body is ready when its callers inline it.
+    std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
 
-        if( build.optimise )
+    for( const std::vector<u32>& group : callees_first( front.functions ) )
+    {
+        for( const u32 f : group )
         {
-            collapse_borrows( function, front.types.table() );
-            coalesce_moves( function );
-            assert( verify( function ).empty() );
+            Function& function = front.functions[f];
+
+            settle_debug( function, debug );
+            simplify( function, literals );
+
+            if( build.optimise )
+            {
+                if( build.inlining )
+                {
+                    inline_calls( function, saved, literals, *build.inlining );
+                }
+                collapse_borrows( function, front.types.table() );
+                coalesce_moves( function );
+                assert( verify( function ).empty() );
+            }
         }
 
-        elaborate_drops( function, vocabulary );
-
-        if( build.optimise )
+        // Saved only once the whole group has inlined, so no member inlines another: that is what
+        // stops recursion.
+        if( build.optimise && build.inlining )
         {
-            settle_drops( function );
-            propagate_values( function, literals );
-            remove_dead_stores( function );
-            assert( verify( function ).empty() );
+            for( const u32 f : group )
+            {
+                saved[f] = front.functions[f];
+            }
+        }
+
+        for( const u32 f : group )
+        {
+            Function& function = front.functions[f];
+
+            elaborate_drops( function, vocabulary );
+
+            if( build.optimise )
+            {
+                settle_drops( function );
+                propagate_values( function, literals );
+                remove_dead_stores( function );
+                assert( verify( function ).empty() );
+            }
         }
     }
 

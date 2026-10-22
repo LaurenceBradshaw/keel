@@ -145,8 +145,9 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
     return values;
 }
 
-// A copy keeps its projections and takes the source's local; a constant replaces only a whole-local read.
-void rewrite( Operand& operand, const Values& values )
+// A copy keeps its projections and takes the source's local; a constant replaces only a whole-local
+// read, and only when `to_constant`.
+void rewrite( Operand& operand, const Values& values, bool to_constant )
 {
     if( operand.kind != Operand_kind::Copy || operand.place.is_global() || !values[operand.place.local.v] )
     {
@@ -154,7 +155,7 @@ void rewrite( Operand& operand, const Values& values )
     }
 
     const Operand& known = *values[operand.place.local.v];
-    if( known.kind == Operand_kind::Constant && operand.place.num_projections == 0 )
+    if( to_constant && known.kind == Operand_kind::Constant && operand.place.num_projections == 0 )
     {
         operand = constant( known.constant, operand.type );
     }
@@ -185,24 +186,33 @@ void propagate_values( Function& func, const Literal_pool& literals )
             Statement& statement = func.statements[block.first_statement + s];
 
             // Reads first, so `_1 = copy _1 + const 1` reads the old `_1`. `&_2`'s operand is a
-            // Constant by default, so an address never moves.
+            // Constant by default, so an address never moves. A binary never gets two constants: gcc
+            // warns on a constant signed overflow even under -fwrapv, until folding takes the pair.
             if( statement.kind == Statement_kind::Assign )
             {
-                rewrite( statement.value.a, values );
-                rewrite( statement.value.b, values );
+                rewrite(
+                    statement.value.a,
+                    values,
+                    statement.value.kind != Rvalue_kind::Binary || statement.value.b.kind != Operand_kind::Constant
+                );
+                rewrite(
+                    statement.value.b,
+                    values,
+                    statement.value.kind != Rvalue_kind::Binary || statement.value.a.kind != Operand_kind::Constant
+                );
 
                 for( u32 i = 0; i < statement.value.argument_count; ++i )
                 {
-                    rewrite( func.operands[statement.value.first_argument + i], values );
+                    rewrite( func.operands[statement.value.first_argument + i], values, true );
                 }
             }
 
             step( func, addressed, statement, values );
         }
 
-        rewrite( block.terminator.condition, values );
-        rewrite( block.terminator.message, values );
-        rewrite( block.terminator.at, values );
+        rewrite( block.terminator.condition, values, true );
+        rewrite( block.terminator.message, values, true );
+        rewrite( block.terminator.at, values, true );
     }
 
     // A branch that now reads a constant folds. Facts are locals × blocks; a sparse map per block if it shows.

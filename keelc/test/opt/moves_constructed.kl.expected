@@ -61,9 +61,16 @@ struct kl__Box kl__passed__3i32( int32_t kl_v_1 )
 {
     struct kl__Box kl_t0;
     int32_t kl_t3;
+    struct kl__Box* kl_t8;
 #line 42 "opt/moves_constructed.kl"
     kl_t3 = kl_v_1 + 1;
-    kl_t0 = kl__made__3i32( kl_t3 );
+    goto bb1;
+    bb1:
+#line 35 "opt/moves_constructed.kl"
+    kl_t8 = &kl_t0;
+    kl__Box__R3Box_3i32__ctor( kl_t8, kl_t3 );
+    goto bb2;
+    bb2:
     return kl_t0;
 }
 
@@ -87,17 +94,16 @@ int32_t kl__main__( void )
     bool kl_t17;
     struct kl__Point kl_p_20;
     bool kl_t22;
+    struct kl__Box* kl_t33;
+    int32_t kl_v_36;
+    int32_t kl_t38;
+    struct kl__Box* kl_t43;
 #line 56 "opt/moves_constructed.kl"
     kl_t2 = &kl_a_1;
     kl__Box__R3Box_3i32__ctor( kl_t2, 1 );
-#line 57 "opt/moves_constructed.kl"
-    kl_b_4 = kl__made__3i32( 2 );
-#line 58 "opt/moves_constructed.kl"
-    kl_c_6 = kl__passed__3i32( 3 );
-#line 59 "opt/moves_constructed.kl"
-    kl_t8 = kl_a_1.kl_value_31 != 1;
-    if ( kl_t8 ) goto bb2; else goto bb1;
+    goto bb21;
     bb1:
+#line 59 "opt/moves_constructed.kl"
     kl_t8 = kl_b_4.kl_value_31 != 2;
     goto bb2;
     bb2:
@@ -143,11 +149,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 70 "opt/moves_constructed.kl"
-    kl_p_20 = kl__point__3i32( 5 );
-#line 71 "opt/moves_constructed.kl"
-    kl_t22 = kl_p_20.kl_x_34 != 5;
-    if ( kl_t22 ) goto bb16; else goto bb15;
+    kl_p_20.kl_x_34 = 5;
+    goto bb19;
     bb15:
+#line 71 "opt/moves_constructed.kl"
     kl_t22 = kl_p_20.kl_y_36 != 10;
     goto bb16;
     bb16:
@@ -160,6 +165,36 @@ int32_t kl__main__( void )
 #line 76 "opt/moves_constructed.kl"
     kl_t0 = 0;
     return kl_t0;
+    bb19:
+#line 49 "opt/moves_constructed.kl"
+    kl_p_20.kl_y_36 = kl_p_20.kl_x_34 * 2;
+    goto bb20;
+    bb20:
+#line 71 "opt/moves_constructed.kl"
+    kl_t22 = kl_p_20.kl_x_34 != 5;
+    if ( kl_t22 ) goto bb16; else goto bb15;
+    bb21:
+#line 35 "opt/moves_constructed.kl"
+    kl_t33 = &kl_b_4;
+    kl__Box__R3Box_3i32__ctor( kl_t33, 2 );
+    goto bb22;
+    bb22:
+#line 58 "opt/moves_constructed.kl"
+    kl_v_36 = 3;
+    goto bb23;
+    bb23:
+#line 42 "opt/moves_constructed.kl"
+    kl_t38 = kl_v_36 + 1;
+    goto bb24;
+    bb24:
+#line 35 "opt/moves_constructed.kl"
+    kl_t43 = &kl_c_6;
+    kl__Box__R3Box_3i32__ctor( kl_t43, kl_t38 );
+    goto bb25;
+    bb25:
+#line 59 "opt/moves_constructed.kl"
+    kl_t8 = kl_a_1.kl_value_31 != 1;
+    if ( kl_t8 ) goto bb2; else goto bb1;
 }
 
 int main( void )

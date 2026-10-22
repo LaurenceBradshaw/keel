@@ -1,0 +1,193 @@
+// M11's inlining, in a release build: a call to a small function becomes that function's body, so
+// the call is gone. A function that calls itself, two that call each other, one over the size limit,
+// one with an `out` parameter, a constructor and a call through a pointer stay calls. Each check
+// returns its own code.
+
+i64 live;
+
+class Box
+{
+    public Box( i64 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+    }
+
+    public i64 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 twice( i32 x )
+{
+    return x * 2;
+}
+
+// Both calls go, and then `both` is small enough to go too.
+i32 both( i32 a )
+{
+    return twice( a ) + twice( a + 1 );
+}
+
+// The `Box` it is handed drops in the body that replaces the call.
+i64 take( move Box b )
+{
+    return b.value;
+}
+
+// What it returns becomes the caller's.
+Box pass( move Box b )
+{
+    return move b;
+}
+
+// Each time round, the inlined `take` drops that round's `Box`.
+i64 looped( i64 n )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i++ )
+    {
+        t += take( pass( Box( i ) ) );
+    }
+    return t;
+}
+
+// The borrow becomes a pointer local.
+i32 sum( const ref Point p )
+{
+    return p.x + p.y;
+}
+
+// The panic keeps this line.
+i32 halve( i32 a )
+{
+    if( a < 0 )
+    {
+        panic( "negative" );
+    }
+    return a / 2;
+}
+
+// Calls itself.
+i64 factorial( i64 n )
+{
+    if( n <= 1 )
+    {
+        return 1;
+    }
+    return n * factorial( n - 1 );
+}
+
+// One call and nothing else: it goes, though what it calls stays.
+i64 forward( i64 n )
+{
+    return factorial( n );
+}
+
+bool is_even( u32 n )
+{
+    if( n == 0 )
+    {
+        return true;
+    }
+    return is_odd( n - 1 );
+}
+
+bool is_odd( u32 n )
+{
+    if( n == 0 )
+    {
+        return false;
+    }
+    return is_even( n - 1 );
+}
+
+// Over the size limit.
+i32 mixed( i32 a, i32 b )
+{
+    i32 c = a * b + a;
+    i32 d = c - b * 3;
+    i32 e = d * d + c;
+    i32 f = e / 7 + d;
+    i32 g = f * a - e;
+    i32 h = g * b + f * c;
+    return h + c * d - f;
+}
+
+void set( out i32 n )
+{
+    n = 9;
+}
+
+i32 through( i32 a )
+{
+    fn( i32 ) -> i32 f = &twice;
+    return f( a );
+}
+
+i32 main()
+{
+    if( both( 3 ) != 14 )
+    {
+        return 1;
+    }
+
+    if( looped( 4 ) != 6 || live != 0 )
+    {
+        return 2;
+    }
+
+    if( sum( Point { 2, 3 } ) != 5 )
+    {
+        return 3;
+    }
+
+    if( halve( 9 ) != 4 )
+    {
+        return 4;
+    }
+
+    if( forward( 5 ) != 120 )
+    {
+        return 5;
+    }
+
+    if( !is_even( 10 ) || is_odd( 10 ) )
+    {
+        return 6;
+    }
+
+    if( mixed( 2, 3 ) != -35 )
+    {
+        return 7;
+    }
+
+    i32 n = 0;
+    set( out n );
+    if( n != 9 )
+    {
+        return 8;
+    }
+
+    if( through( 4 ) != 8 )
+    {
+        return 9;
+    }
+
+    Box b = Box( 7 );
+    if( take( move b ) != 7 || live != 0 )
+    {
+        return 10;
+    }
+
+    return 0;
+}

@@ -32,8 +32,8 @@ int32_t kl__side__3i32( int32_t kl_n_1 )
 int32_t kl__discard__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-#line 21 "opt/dead_stores.kl"
-    kl__side__3i32( kl_a_1 );
+    goto bb1;
+    bb1:
 #line 22 "opt/dead_stores.kl"
     kl_t0 = kl_a_1;
     return kl_t0;
@@ -127,50 +127,45 @@ int32_t kl__main__( void )
     int32_t kl_t12;
     int32_t kl_t14;
     bool kl_t15;
+    struct kl__Point kl_p_18;
+    int32_t kl_i_23;
+    bool kl_t24;
+    int32_t kl_i_28;
+    bool kl_t29;
+    struct kl__Point kl_q_32;
+    struct kl__Point* kl_p_34;
+    int32_t kl_a_43;
 #line 72 "opt/dead_stores.kl"
-    kl_t1 = kl__discard__3i32( 4 );
-    kl_t2 = kl_t1 != 4;
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    kl_t1 = 4;
+    goto bb35;
     bb1:
 #line 74 "opt/dead_stores.kl"
     kl_t0 = 1;
     return kl_t0;
     bb2:
 #line 77 "opt/dead_stores.kl"
-    kl_t3 = kl__overwritten__3i32( 4 );
-    kl_t4 = kl_t3 != 8;
-    if ( kl_t4 ) goto bb3; else goto bb4;
+    kl_a_43 = 4;
+    goto bb33;
     bb3:
 #line 79 "opt/dead_stores.kl"
     kl_t0 = 2;
     return kl_t0;
     bb4:
-#line 82 "opt/dead_stores.kl"
-    kl_t5 = kl__chained__3i32( 4 );
-    kl_t6 = kl_t5 != 4;
-    if ( kl_t6 ) goto bb5; else goto bb6;
+    goto bb31;
     bb5:
 #line 84 "opt/dead_stores.kl"
     kl_t0 = 3;
     return kl_t0;
     bb6:
-#line 87 "opt/dead_stores.kl"
-    kl_t7 = kl__aliased__3i32( 4 );
-    kl_t8 = kl_t7 != 7;
-    if ( kl_t8 ) goto bb7; else goto bb8;
+    goto bb29;
     bb7:
 #line 89 "opt/dead_stores.kl"
     kl_t0 = 4;
     return kl_t0;
     bb8:
-#line 92 "opt/dead_stores.kl"
-    kl_t10 = kl__looped__3i32( 0 );
-    kl_t9 = kl_t10 != 0;
-    if ( kl_t9 ) goto bb10; else goto bb9;
+    goto bb23;
     bb9:
-    kl_t12 = kl__looped__3i32( 3 );
-    kl_t9 = kl_t12 != 2;
-    goto bb10;
+    goto bb17;
     bb10:
     if ( kl_t9 ) goto bb11; else goto bb12;
     bb11:
@@ -178,10 +173,7 @@ int32_t kl__main__( void )
     kl_t0 = 5;
     return kl_t0;
     bb12:
-#line 97 "opt/dead_stores.kl"
-    kl_t14 = kl__fielded__3i32( 4 );
-    kl_t15 = kl_t14 != 4;
-    if ( kl_t15 ) goto bb13; else goto bb14;
+    goto bb15;
     bb13:
 #line 99 "opt/dead_stores.kl"
     kl_t0 = 6;
@@ -190,6 +182,104 @@ int32_t kl__main__( void )
 #line 102 "opt/dead_stores.kl"
     kl_t0 = 0;
     return kl_t0;
+    bb15:
+#line 65 "opt/dead_stores.kl"
+    kl_p_18.kl_x_1 = 4;
+    kl_p_18.kl_y_3 = 4;
+#line 66 "opt/dead_stores.kl"
+    kl_p_18.kl_x_1 = 3;
+#line 67 "opt/dead_stores.kl"
+    kl_t14 = kl_p_18.kl_y_3;
+    goto bb16;
+    bb16:
+#line 97 "opt/dead_stores.kl"
+    kl_t15 = kl_t14 != 4;
+    if ( kl_t15 ) goto bb13; else goto bb14;
+    bb17:
+#line 54 "opt/dead_stores.kl"
+    kl_t12 = 0;
+#line 55 "opt/dead_stores.kl"
+    kl_i_23 = 0;
+    goto bb18;
+    bb18:
+    kl_t24 = kl_i_23 < 3;
+    if ( kl_t24 ) goto bb19; else goto bb20;
+    bb19:
+#line 57 "opt/dead_stores.kl"
+    kl_t12 = kl_i_23;
+    goto bb21;
+    bb20:
+    goto bb22;
+    bb21:
+#line 55 "opt/dead_stores.kl"
+    kl_i_23 = kl_i_23 + 1;
+    goto bb18;
+    bb22:
+#line 92 "opt/dead_stores.kl"
+    kl_t9 = kl_t12 != 2;
+    goto bb10;
+    bb23:
+#line 54 "opt/dead_stores.kl"
+    kl_t10 = 0;
+#line 55 "opt/dead_stores.kl"
+    kl_i_28 = 0;
+    goto bb24;
+    bb24:
+    kl_t29 = kl_i_28 < 0;
+    if ( kl_t29 ) goto bb25; else goto bb26;
+    bb25:
+#line 57 "opt/dead_stores.kl"
+    kl_t10 = kl_i_28;
+    goto bb27;
+    bb26:
+    goto bb28;
+    bb27:
+#line 55 "opt/dead_stores.kl"
+    kl_i_28 = kl_i_28 + 1;
+    goto bb24;
+    bb28:
+#line 92 "opt/dead_stores.kl"
+    kl_t9 = kl_t10 != 0;
+    if ( kl_t9 ) goto bb10; else goto bb9;
+    bb29:
+#line 45 "opt/dead_stores.kl"
+    kl_q_32.kl_x_1 = 4;
+    kl_q_32.kl_y_3 = 4;
+#line 46 "opt/dead_stores.kl"
+    kl_p_34 = &kl_q_32;
+#line 47 "opt/dead_stores.kl"
+    kl_q_32.kl_x_1 = 7;
+#line 48 "opt/dead_stores.kl"
+    kl_t7 = ( *kl_p_34 ).kl_x_1;
+    goto bb30;
+    bb30:
+#line 87 "opt/dead_stores.kl"
+    kl_t8 = kl_t7 != 7;
+    if ( kl_t8 ) goto bb7; else goto bb8;
+    bb31:
+#line 38 "opt/dead_stores.kl"
+    kl_t5 = 4;
+    goto bb32;
+    bb32:
+#line 82 "opt/dead_stores.kl"
+    kl_t6 = kl_t5 != 4;
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb33:
+#line 29 "opt/dead_stores.kl"
+    kl_t3 = kl_a_43 * 2;
+    goto bb34;
+    bb34:
+#line 77 "opt/dead_stores.kl"
+    kl_t4 = kl_t3 != 8;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb35:
+    goto bb36;
+    bb36:
+    goto bb37;
+    bb37:
+#line 72 "opt/dead_stores.kl"
+    kl_t2 = kl_t1 != 4;
+    if ( kl_t2 ) goto bb1; else goto bb2;
 }
 
 int main( void )
