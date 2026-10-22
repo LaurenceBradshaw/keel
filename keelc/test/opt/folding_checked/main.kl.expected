@@ -1,0 +1,45 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__add__3i32_3i32( int32_t, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+#line 5 "opt/folding_checked/main.kl"
+    kl_t3 = __builtin_add_overflow( kl_a_1, kl_b_2, &( int32_t ) { 0 } );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_rt_panic( "opt/folding_checked/main.kl", 5, "arithmetic overflow: a + b" );
+    bb2:
+    kl_t0 = kl_a_1 + kl_b_2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    goto bb2;
+    bb1:
+#line 15 "opt/folding_checked/main.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+    goto bb4;
+    bb4:
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

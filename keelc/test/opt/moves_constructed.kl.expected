@@ -95,8 +95,6 @@ int32_t kl__main__( void )
     struct kl__Point kl_p_20;
     bool kl_t22;
     struct kl__Box* kl_t33;
-    int32_t kl_v_36;
-    int32_t kl_t38;
     struct kl__Box* kl_t43;
 #line 56 "opt/moves_constructed.kl"
     kl_t2 = &kl_a_1;
@@ -179,17 +177,12 @@ int32_t kl__main__( void )
     kl__Box__R3Box_3i32__ctor( kl_t33, 2 );
     goto bb22;
     bb22:
-#line 58 "opt/moves_constructed.kl"
-    kl_v_36 = 3;
     goto bb23;
     bb23:
-#line 42 "opt/moves_constructed.kl"
-    kl_t38 = kl_v_36 + 1;
     goto bb24;
     bb24:
-#line 35 "opt/moves_constructed.kl"
     kl_t43 = &kl_c_6;
-    kl__Box__R3Box_3i32__ctor( kl_t43, kl_t38 );
+    kl__Box__R3Box_3i32__ctor( kl_t43, 4 );
     goto bb25;
     bb25:
 #line 59 "opt/moves_constructed.kl"

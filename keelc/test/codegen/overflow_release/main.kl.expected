@@ -45,13 +45,10 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_t1;
     int64_t kl_t2;
-    int32_t kl_b_6;
-#line 12 "codegen/overflow_release/main.kl"
-    kl_b_6 = 1;
     goto bb1;
     bb1:
 #line 7 "codegen/overflow_release/main.kl"
-    kl_t1 = 2147483647 + kl_b_6;
+    kl_t1 = -2147483648;
     goto bb2;
     bb2:
 #line 12 "codegen/overflow_release/main.kl"

@@ -10,6 +10,7 @@
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/fold_constants.h"
 #include "opt/inline_calls.h"
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
@@ -124,7 +125,11 @@ Front_end run_front_end(
             if( build.optimise )
             {
                 settle_drops( function );
-                propagate_values( function, literals );
+                // Each fold can make a constant pair for the next round.
+                do
+                {
+                    propagate_values( function, literals );
+                } while( fold_constants( function, front.types.table(), literals ) );
                 remove_dead_stores( function );
                 assert( verify( function ).empty() );
             }

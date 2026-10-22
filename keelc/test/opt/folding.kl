@@ -1,0 +1,121 @@
+// M11's constant folding, in a release build: an operation whose operands propagation made
+// constants becomes its value, wrapped at its type's width, and propagation then spreads that value.
+// A zero divisor, a float pair and a negative result stay as they are. Each check returns its own
+// code.
+
+// `b` is `7` in both arms, so each return is a constant.
+i32 chained( i32 n )
+{
+    i32 a = 3;
+    i32 b = a + 4;
+    if( n > 0 )
+    {
+        return b * 2;
+    }
+    return b - 1;
+}
+
+// One past `i32`'s maximum wraps to its minimum.
+i32 wrapped()
+{
+    i32 m = 2147483647;
+    return m + 1;
+}
+
+// `~1` on a `u32` is its maximum less 1.
+u32 inverted()
+{
+    u32 a = 1;
+    return ~a;
+}
+
+// 33 is masked to 1.
+i32 shifted()
+{
+    i32 a = 1;
+    i32 n = 33;
+    return a << n;
+}
+
+// `3 < 4` is `true`, so the arm it skips goes.
+i32 compared()
+{
+    i32 a = 3;
+    if( a < 4 )
+    {
+        return 1;
+    }
+    return 2;
+}
+
+// The zero check branches to the panic; the division is not folded.
+i32 zero( bool c )
+{
+    i32 a = 7;
+    i32 d = 0;
+    if( c )
+    {
+        return a / d;
+    }
+    return 1;
+}
+
+// A float pair is left to the C compiler.
+f64 floated()
+{
+    f64 a = 0.5;
+    return a + 0.25;
+}
+
+// `b` is `-2`, which is not a constant to propagation, so `b * 2` stays.
+i32 negative()
+{
+    i32 a = 3;
+    i32 b = a - 5;
+    return b * 2;
+}
+
+i32 main()
+{
+    if( chained( 1 ) != 14 || chained( 0 ) != 6 )
+    {
+        return 1;
+    }
+
+    if( wrapped() != -2147483647 - 1 )
+    {
+        return 2;
+    }
+
+    if( inverted() != 4294967294 )
+    {
+        return 3;
+    }
+
+    if( shifted() != 2 )
+    {
+        return 4;
+    }
+
+    if( compared() != 1 )
+    {
+        return 5;
+    }
+
+    if( zero( false ) != 1 )
+    {
+        return 6;
+    }
+
+    if( floated() != 0.75 )
+    {
+        return 7;
+    }
+
+    if( negative() != -4 )
+    {
+        return 8;
+    }
+
+    return 0;
+}
