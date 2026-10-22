@@ -26,17 +26,9 @@ int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    goto bb2;
-    bb1:
 #line 15 "opt/folding_checked/main.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb2:
-    goto bb3;
-    bb3:
-    goto bb4;
-    bb4:
-    goto bb1;
 }
 
 int main( void )

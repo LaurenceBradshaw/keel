@@ -12,6 +12,7 @@
 #include "opt/collapse_borrows.h"
 #include "opt/fold_constants.h"
 #include "opt/inline_calls.h"
+#include "opt/merge_blocks.h"
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
@@ -131,6 +132,9 @@ Front_end run_front_end(
                     propagate_values( function, literals );
                 } while( fold_constants( function, front.types.table(), literals ) );
                 remove_dead_stores( function );
+                // Dead store removal can empty a block, so threading goes first.
+                simplify( function, literals );
+                merge_blocks( function );
                 assert( verify( function ).empty() );
             }
         }

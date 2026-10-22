@@ -185,7 +185,7 @@ void simplify( Function& func, const Literal_pool& literals )
 {
     fold_constant_branches( func, literals );
     thread_gotos( func );
-    prune( func, reachable( func ) );
+    remove_unreachable_blocks( func );
 }
 
 void remove_statements( Function& func, const std::vector<bool>& deleted )
@@ -213,6 +213,11 @@ void remove_statements( Function& func, const std::vector<bool>& deleted )
     }
 
     func.statements = std::move( statements );
+}
+
+void remove_unreachable_blocks( Function& func )
+{
+    prune( func, reachable( func ) );
 }
 
 void settle_debug( Function& func, Literal_id value )

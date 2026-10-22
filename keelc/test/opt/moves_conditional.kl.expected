@@ -85,20 +85,16 @@ struct kl__Box kl__called__4bool( bool kl_c_1 )
     struct kl__Box* kl_t14;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-    goto bb5;
-    bb2:
-    goto bb4;
-    bb3:
-    return kl_t0;
-    bb4:
 #line 34 "opt/moves_conditional.kl"
-    kl_t9 = &kl_t0;
-    kl__Box__R3Box_3i32__ctor( kl_t9, 4 );
-    goto bb3;
-    bb5:
     kl_t14 = &kl_t0;
     kl__Box__R3Box_3i32__ctor( kl_t14, 3 );
     goto bb3;
+    bb2:
+    kl_t9 = &kl_t0;
+    kl__Box__R3Box_3i32__ctor( kl_t9, 4 );
+    goto bb3;
+    bb3:
+    return kl_t0;
 }
 
 struct kl__Box kl__nested__3i32( int32_t kl_n_1 )
@@ -122,15 +118,14 @@ struct kl__Box kl__nested__3i32( int32_t kl_n_1 )
     bb3:
     return kl_t0;
     bb4:
-    goto bb6;
-    bb5:
-    kl_t11 = &kl_t0;
-    kl__Box__R3Box_3i32__ctor( kl_t11, 7 );
-    goto bb3;
-    bb6:
 #line 34 "opt/moves_conditional.kl"
     kl_t16 = &kl_t0;
     kl__Box__R3Box_3i32__ctor( kl_t16, 6 );
+    goto bb3;
+    bb5:
+#line 51 "opt/moves_conditional.kl"
+    kl_t11 = &kl_t0;
+    kl__Box__R3Box_3i32__ctor( kl_t11, 7 );
     goto bb3;
 }
 
@@ -274,9 +269,19 @@ int32_t kl__main__( void )
     kl_t0 = 3;
     return kl_t0;
     bb26:
-    goto bb33;
+#line 56 "opt/moves_conditional.kl"
+    kl_t39.kl_x_34 = 1;
+    kl_t39.kl_y_36 = 2;
+#line 86 "opt/moves_conditional.kl"
+    kl_t38 = kl_t39.kl_y_36 != 2;
+    if ( kl_t38 ) goto bb28; else goto bb27;
     bb27:
-    goto bb31;
+#line 56 "opt/moves_conditional.kl"
+    kl_t41.kl_x_34 = 3;
+    kl_t41.kl_y_36 = 4;
+#line 86 "opt/moves_conditional.kl"
+    kl_t38 = kl_t41.kl_x_34 != 3;
+    goto bb28;
     bb28:
     if ( kl_t38 ) goto bb29; else goto bb30;
     bb29:
@@ -287,24 +292,6 @@ int32_t kl__main__( void )
 #line 91 "opt/moves_conditional.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb31:
-#line 56 "opt/moves_conditional.kl"
-    kl_t41.kl_x_34 = 3;
-    kl_t41.kl_y_36 = 4;
-    goto bb32;
-    bb32:
-#line 86 "opt/moves_conditional.kl"
-    kl_t38 = kl_t41.kl_x_34 != 3;
-    goto bb28;
-    bb33:
-#line 56 "opt/moves_conditional.kl"
-    kl_t39.kl_x_34 = 1;
-    kl_t39.kl_y_36 = 2;
-    goto bb34;
-    bb34:
-#line 86 "opt/moves_conditional.kl"
-    kl_t38 = kl_t39.kl_y_36 != 2;
-    if ( kl_t38 ) goto bb28; else goto bb27;
 }
 
 int main( void )

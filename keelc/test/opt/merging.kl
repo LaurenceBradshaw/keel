@@ -1,0 +1,88 @@
+// M11's block merging, in a release build: a block reached only by a `goto` joins the block that
+// jumps to it, so the C has no `goto bbN; bbN:` pair. A join, a loop header and a branch arm keep
+// their labels. Each check returns its own code.
+
+// Folding leaves `3 < 4` as a chain of jumps; it becomes one block.
+i32 chained()
+{
+    i32 a = 3;
+    if( a < 4 )
+    {
+        return 1;
+    }
+    return 2;
+}
+
+// A release `assert` checks nothing, and its jump goes too.
+i32 asserted( i32 a )
+{
+    assert( a > 0 );
+    return a + 1;
+}
+
+i32 twice( i32 x )
+{
+    return x * 2;
+}
+
+// The inlined body and the jump back from it join the caller.
+i32 inlined( i32 a )
+{
+    return twice( a ) + 1;
+}
+
+// Both arms reach the join, and each arm is reached by a branch: four blocks stay.
+i32 joined( bool c, i32 a )
+{
+    i32 x = 0;
+    if( c )
+    {
+        x = a * 3;
+    }
+    else
+    {
+        x = a * 5;
+    }
+    return x + 1;
+}
+
+// The header has the entry's jump and the back edge.
+i32 looped( i32 n )
+{
+    i32 t = 0;
+    for( i32 i = 0; i < n; i++ )
+    {
+        t += i;
+    }
+    return t;
+}
+
+i32 main()
+{
+    if( chained() != 1 )
+    {
+        return 1;
+    }
+
+    if( asserted( 4 ) != 5 )
+    {
+        return 2;
+    }
+
+    if( inlined( 5 ) != 11 )
+    {
+        return 3;
+    }
+
+    if( joined( true, 2 ) != 7 || joined( false, 2 ) != 11 )
+    {
+        return 4;
+    }
+
+    if( looped( 5 ) != 10 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

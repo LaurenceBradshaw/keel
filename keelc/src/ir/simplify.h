@@ -14,4 +14,6 @@ void settle_debug( Function& func, Literal_id value );
 
 // Drops each statement `deleted` marks, indexed like `func.statements`, and closes the gaps.
 void remove_statements( Function& func, const std::vector<bool>& deleted );
+// Drops every block that block 0 cannot reach, and renumbers the rest.
+void remove_unreachable_blocks( Function& func );
 } // namespace keel

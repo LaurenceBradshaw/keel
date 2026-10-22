@@ -286,16 +286,14 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
 #line 114 "opt/moves_fields_kept.kl"
     kl_t9 = kl_b_6;
     kl_t10 = false;
-    goto bb5;
+#line 60 "opt/moves_fields_kept.kl"
+    kl__Box__dtor( &kl_t9 );
+    goto bb4;
     bb4:
 #line 116 "opt/moves_fields_kept.kl"
     kl_t0 = 1;
     if ( kl_t10 ) kl__Box__dtor( &kl_b_6 );
     return kl_t0;
-    bb5:
-#line 60 "opt/moves_fields_kept.kl"
-    kl__Box__dtor( &kl_t9 );
-    goto bb4;
 }
 
 int32_t kl__main__( void )

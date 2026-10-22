@@ -60,8 +60,6 @@ int32_t kl__shifted__( void )
 int32_t kl__compared__( void )
 {
     int32_t kl_t0;
-    goto bb1;
-    bb1:
 #line 46 "opt/folding.kl"
     kl_t0 = 1;
     return kl_t0;
@@ -70,12 +68,10 @@ int32_t kl__compared__( void )
 int32_t kl__zero__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
-    if ( kl_c_1 ) goto bb1; else goto bb3;
+    if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-    goto bb2;
-    bb2:
     kl_rt_panic( "opt/folding.kl", 58, "division by zero: a / d" );
-    bb3:
+    bb2:
 #line 60 "opt/folding.kl"
     kl_t0 = 1;
     return kl_t0;
@@ -116,97 +112,61 @@ int32_t kl__main__( void )
     int32_t kl_t21;
     bool kl_t22;
     int32_t kl_b_25;
-    goto bb26;
+#line 80 "opt/folding.kl"
+    kl_t1 = false;
+    if ( kl_t1 ) goto bb1; else goto bb10;
     bb1:
-    goto bb23;
-    bb2:
-    if ( kl_t1 ) goto bb3; else goto bb21;
-    bb3:
 #line 82 "opt/folding.kl"
     kl_t0 = 1;
     return kl_t0;
-    bb4:
+    bb2:
 #line 87 "opt/folding.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-#line 105 "opt/folding.kl"
-    kl_t16 = kl__zero__4bool( false );
-    kl_t17 = kl_t16 != 1;
-    if ( kl_t17 ) goto bb6; else goto bb12;
-    bb6:
+    bb3:
 #line 107 "opt/folding.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb7:
+    bb4:
 #line 112 "opt/folding.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb8:
+    bb5:
 #line 117 "opt/folding.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb9:
+    bb6:
 #line 120 "opt/folding.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb10:
+    bb7:
 #line 74 "opt/folding.kl"
     kl_b_25 = -2;
 #line 75 "opt/folding.kl"
     kl_t20 = kl_b_25 * 2;
-    goto bb11;
-    bb11:
 #line 115 "opt/folding.kl"
     kl_t21 = -4;
     kl_t22 = kl_t20 != kl_t21;
-    if ( kl_t22 ) goto bb8; else goto bb9;
-    bb12:
+    if ( kl_t22 ) goto bb5; else goto bb6;
+    bb8:
 #line 67 "opt/folding.kl"
     kl_t18 = 0.5 + 0.25;
-    goto bb13;
-    bb13:
 #line 110 "opt/folding.kl"
     kl_t19 = kl_t18 != 0.75;
-    if ( kl_t19 ) goto bb7; else goto bb10;
-    bb14:
-    goto bb15;
-    bb15:
-    goto bb16;
-    bb16:
-    goto bb5;
-    bb17:
-    goto bb18;
-    bb18:
-    goto bb14;
-    bb19:
-    goto bb20;
-    bb20:
-    goto bb17;
-    bb21:
+    if ( kl_t19 ) goto bb4; else goto bb7;
+    bb9:
+#line 105 "opt/folding.kl"
+    kl_t16 = kl__zero__4bool( false );
+    kl_t17 = kl_t16 != 1;
+    if ( kl_t17 ) goto bb3; else goto bb8;
+    bb10:
 #line 22 "opt/folding.kl"
     kl_t6 = -2147483648;
-    goto bb22;
-    bb22:
 #line 85 "opt/folding.kl"
     kl_t7 = -2147483647;
     kl_t8 = kl_t7 - 1;
     kl_t9 = kl_t6 != kl_t8;
-    if ( kl_t9 ) goto bb4; else goto bb19;
-    bb23:
-    goto bb24;
-    bb24:
-    goto bb25;
-    bb25:
-#line 80 "opt/folding.kl"
-    kl_t1 = false;
-    goto bb2;
-    bb26:
-    goto bb27;
-    bb27:
-    goto bb28;
-    bb28:
-    goto bb1;
+    if ( kl_t9 ) goto bb2; else goto bb9;
 }
 
 int main( void )

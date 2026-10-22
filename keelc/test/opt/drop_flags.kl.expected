@@ -76,9 +76,12 @@ int32_t kl__always__( void )
     kl__Box__R3Box_3i32__ctor( kl_t2, 1 );
 #line 37 "opt/drop_flags.kl"
     kl_t8 = kl_b_1;
-    goto bb4;
-    bb1:
+#line 27 "opt/drop_flags.kl"
+    kl__Box__dtor( &kl_t8 );
 #line 40 "opt/drop_flags.kl"
+    kl_t6 = kl_trace_3 == 19;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
     kl_t0 = 0;
     goto bb3;
     bb2:
@@ -86,14 +89,6 @@ int32_t kl__always__( void )
     goto bb3;
     bb3:
     return kl_t0;
-    bb4:
-#line 27 "opt/drop_flags.kl"
-    kl__Box__dtor( &kl_t8 );
-    goto bb5;
-    bb5:
-#line 40 "opt/drop_flags.kl"
-    kl_t6 = kl_trace_3 == 19;
-    if ( kl_t6 ) goto bb1; else goto bb2;
 }
 
 int32_t kl__again__( void )
@@ -148,7 +143,9 @@ int32_t kl__sometimes__4bool( bool kl_c_1 )
 #line 63 "opt/drop_flags.kl"
     kl_t9 = kl_b_2;
     kl_t10 = false;
-    goto bb6;
+#line 27 "opt/drop_flags.kl"
+    kl__Box__dtor( &kl_t9 );
+    goto bb2;
     bb2:
 #line 59 "opt/drop_flags.kl"
     if ( kl_t10 ) kl__Box__dtor( &kl_b_2 );
@@ -163,10 +160,6 @@ int32_t kl__sometimes__4bool( bool kl_c_1 )
     goto bb5;
     bb5:
     return kl_t0;
-    bb6:
-#line 27 "opt/drop_flags.kl"
-    kl__Box__dtor( &kl_t9 );
-    goto bb2;
 }
 
 int32_t kl__looped__( void )
@@ -199,33 +192,29 @@ int32_t kl__looped__( void )
     bb3:
 #line 83 "opt/drop_flags.kl"
     kl_t9 = kl_trace_3 == 192939;
-    if ( kl_t9 ) goto bb7; else goto bb8;
+    if ( kl_t9 ) goto bb6; else goto bb7;
     bb4:
 #line 79 "opt/drop_flags.kl"
     kl_t11 = kl_b_3;
     kl_t12 = false;
-    goto bb10;
-    bb5:
-#line 75 "opt/drop_flags.kl"
-    if ( kl_t12 ) kl__Box__dtor( &kl_b_3 );
-    goto bb6;
-    bb6:
-#line 74 "opt/drop_flags.kl"
-    kl_i_1 = kl_i_1 + 1;
-    goto bb1;
-    bb7:
-#line 83 "opt/drop_flags.kl"
-    kl_t0 = 0;
-    goto bb9;
-    bb8:
-    kl_t0 = 4;
-    goto bb9;
-    bb9:
-    return kl_t0;
-    bb10:
 #line 27 "opt/drop_flags.kl"
     kl__Box__dtor( &kl_t11 );
     goto bb5;
+    bb5:
+#line 75 "opt/drop_flags.kl"
+    if ( kl_t12 ) kl__Box__dtor( &kl_b_3 );
+#line 74 "opt/drop_flags.kl"
+    kl_i_1 = kl_i_1 + 1;
+    goto bb1;
+    bb6:
+#line 83 "opt/drop_flags.kl"
+    kl_t0 = 0;
+    goto bb8;
+    bb7:
+    kl_t0 = 4;
+    goto bb8;
+    bb8:
+    return kl_t0;
 }
 
 int32_t kl__picked__4bool( bool kl_c_1 )
