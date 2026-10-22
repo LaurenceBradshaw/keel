@@ -113,15 +113,12 @@ int32_t kl__main__( void )
     int32_t kl_t7;
     bool kl_t8;
     bool kl_t9;
-    int32_t kl_t10;
     int32_t kl_t12;
     int32_t kl_t14;
     bool kl_t15;
     struct kl__Point kl_p_18;
     int32_t kl_i_23;
     bool kl_t24;
-    int32_t kl_i_28;
-    bool kl_t29;
     struct kl__Point kl_q_32;
     struct kl__Point* kl_p_34;
 #line 45 "opt/dead_stores.kl"
@@ -142,23 +139,15 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 54 "opt/dead_stores.kl"
-    kl_t10 = 0;
-#line 55 "opt/dead_stores.kl"
-    kl_i_28 = 0;
-    goto bb12;
-    bb3:
-#line 54 "opt/dead_stores.kl"
     kl_t12 = 0;
 #line 55 "opt/dead_stores.kl"
     kl_i_23 = 0;
-    goto bb9;
-    bb4:
-    if ( kl_t9 ) goto bb5; else goto bb6;
-    bb5:
+    goto bb7;
+    bb3:
 #line 94 "opt/dead_stores.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb6:
+    bb4:
 #line 65 "opt/dead_stores.kl"
     kl_p_18.kl_x_1 = 4;
     kl_p_18.kl_y_3 = 4;
@@ -168,43 +157,29 @@ int32_t kl__main__( void )
     kl_t14 = kl_p_18.kl_y_3;
 #line 97 "opt/dead_stores.kl"
     kl_t15 = kl_t14 != 4;
-    if ( kl_t15 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t15 ) goto bb5; else goto bb6;
+    bb5:
 #line 99 "opt/dead_stores.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb8:
+    bb6:
 #line 102 "opt/dead_stores.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb9:
+    bb7:
 #line 55 "opt/dead_stores.kl"
     kl_t24 = kl_i_23 < 3;
-    if ( kl_t24 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t24 ) goto bb8; else goto bb9;
+    bb8:
 #line 57 "opt/dead_stores.kl"
     kl_t12 = kl_i_23;
 #line 55 "opt/dead_stores.kl"
     kl_i_23 = kl_i_23 + 1;
-    goto bb9;
-    bb11:
+    goto bb7;
+    bb9:
 #line 92 "opt/dead_stores.kl"
     kl_t9 = kl_t12 != 2;
-    goto bb4;
-    bb12:
-#line 55 "opt/dead_stores.kl"
-    kl_t29 = kl_i_28 < 0;
-    if ( kl_t29 ) goto bb13; else goto bb14;
-    bb13:
-#line 57 "opt/dead_stores.kl"
-    kl_t10 = kl_i_28;
-#line 55 "opt/dead_stores.kl"
-    kl_i_28 = kl_i_28 + 1;
-    goto bb12;
-    bb14:
-#line 92 "opt/dead_stores.kl"
-    kl_t9 = kl_t10 != 0;
-    if ( kl_t9 ) goto bb4; else goto bb3;
+    if ( kl_t9 ) goto bb3; else goto bb4;
 }
 
 int main( void )

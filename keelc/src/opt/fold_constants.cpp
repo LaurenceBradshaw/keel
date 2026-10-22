@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/fold_constants.h"
-#include <optional>
 
 namespace keel
 {
@@ -180,7 +179,7 @@ std::optional<bool> comparison( Token_kind op, u64 a, u64 b, Integer type )
     }
 }
 
-std::optional<bool> against_zero( const Rvalue& value, const Type_table& types, const Literal_pool& literals )
+std::optional<bool> against_zero( const Rvalue& value, std::optional<u64> a, std::optional<u64> b, const Type_table& types )
 {
     const std::optional<Integer> integer = integer_type( types, value.a.type );
     if( value.kind != Rvalue_kind::Binary || !integer || integer->is_signed )
@@ -188,15 +187,14 @@ std::optional<bool> against_zero( const Rvalue& value, const Type_table& types, 
         return std::nullopt;
     }
 
-    const auto is_zero = [&]( const Operand& operand )
-    { return operand.kind == Operand_kind::Constant && literals.integer( operand.constant ) == 0; };
+    const auto is_zero = [&]( const std::optional<u64>& x ) { return x && *x == 0; };
 
-    if( is_zero( value.b ) && ( value.op == Token_kind::Greater_equal || value.op == Token_kind::Less ) )
+    if( is_zero( b ) && ( value.op == Token_kind::Greater_equal || value.op == Token_kind::Less ) )
     {
         return value.op == Token_kind::Greater_equal;
     }
 
-    if( is_zero( value.a ) && ( value.op == Token_kind::Less_equal || value.op == Token_kind::Greater ) )
+    if( is_zero( a ) && ( value.op == Token_kind::Less_equal || value.op == Token_kind::Greater ) )
     {
         return value.op == Token_kind::Less_equal;
     }
@@ -243,8 +241,115 @@ bool overflows( Token_kind op, u64 a, u64 b, Integer type )
     }
 }
 
-Rvalue value_of( u64 bits, Integer integer, Type_id type, Literal_pool& literals )
+} // namespace
+
+std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::optional<u64> b, const Type_table& types )
 {
+    // Other kinds may leave `a` a default operand, with no type.
+    if( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Binary && value.kind != Rvalue_kind::Overflows &&
+        value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast )
+    {
+        return std::nullopt;
+    }
+
+    if( const std::optional<bool> decided = against_zero( value, a, b, types ) )
+    {
+        return *decided ? 1 : 0;
+    }
+
+    const std::optional<Integer> integer = integer_type( types, value.a.type );
+    if( !a || !integer )
+    {
+        return std::nullopt;
+    }
+
+    switch( value.kind )
+    {
+    case Rvalue_kind::Use:
+        return *a;
+
+    // A shift's count may be another integer type; only its bits matter.
+    case Rvalue_kind::Binary:
+    case Rvalue_kind::Overflows:
+    {
+        if( !b )
+        {
+            return std::nullopt;
+        }
+
+        if( value.kind == Rvalue_kind::Overflows )
+        {
+            return overflows( value.op, *a, *b, *integer ) ? 1 : 0;
+        }
+
+        if( const std::optional<bool> result = comparison( value.op, *a, *b, *integer ) )
+        {
+            return *result ? 1 : 0;
+        }
+
+        return arithmetic( value.op, *a, *b, *integer );
+    }
+
+    case Rvalue_kind::Unary:
+        switch( value.op )
+        {
+        case Token_kind::Bang:
+            return *a == 0 ? 1 : 0;
+
+        case Token_kind::Tilde:
+            return truncate( ~*a, integer->width );
+
+        case Token_kind::Minus:
+            return truncate( 0 - *a, integer->width );
+
+        default:
+            return std::nullopt;
+        }
+
+    // Not to `bool`, which would test against zero.
+    case Rvalue_kind::Cast:
+    {
+        const std::optional<Integer> to = integer_type( types, value.type );
+        if( !to || types.get( value.type ).kind != Type_kind::Int )
+        {
+            return std::nullopt;
+        }
+
+        return convert( *a, value.a.type, value.type, types );
+    }
+
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table& types )
+{
+    if( ( types.get( from ).kind != Type_kind::Int && types.get( from ).kind != Type_kind::Bool ) ||
+        ( types.get( to ).kind != Type_kind::Int && types.get( to ).kind != Type_kind::Bool ) )
+    {
+        return std::nullopt;
+    }
+
+    const std::optional<Integer> integer_to   = integer_type( types, to );
+    const std::optional<Integer> integer_from = integer_type( types, from );
+
+    if( !integer_to || !integer_from )
+    {
+        return std::nullopt;
+    }
+
+    if( integer_from->is_signed )
+    {
+        return truncate( static_cast<u64>( as_signed( bits, integer_from->width ) ), integer_to->width );
+    }
+
+    return truncate( bits, integer_to->width );
+}
+
+Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& literals )
+{
+    const Integer integer = *integer_type( types, type );
     if( integer.is_signed && ( bits & ( 1ull << ( integer.width - 1 ) ) ) )
     {
         const u64 magnitude = truncate( ~bits + 1, integer.width );
@@ -254,133 +359,10 @@ Rvalue value_of( u64 bits, Integer integer, Type_id type, Literal_pool& literals
     return use( constant( literals.add_integer( bits ), type ) );
 }
 
-Rvalue truth( bool b, Type_id type, Literal_pool& literals )
-{
-    return use( constant( literals.add_integer( b ? 1 : 0 ), type ) );
-}
-
-std::optional<Rvalue> fold( const Rvalue& value, const Type_table& types, Literal_pool& literals )
-{
-    // Other kinds may leave `a` a default operand, with no type.
-    if( value.kind != Rvalue_kind::Binary && value.kind != Rvalue_kind::Overflows && value.kind != Rvalue_kind::Unary &&
-        value.kind != Rvalue_kind::Cast )
-    {
-        return std::nullopt;
-    }
-
-    if( const std::optional<bool> decided = against_zero( value, types, literals ) )
-    {
-        return truth( *decided, value.type, literals );
-    }
-
-    // Checked before the read: a float literal's id indexes another array of the pool.
-    const std::optional<Integer> integer = integer_type( types, value.a.type );
-    if( value.a.kind != Operand_kind::Constant || !integer )
-    {
-        return std::nullopt;
-    }
-
-    const u64 a = literals.integer( value.a.constant );
-
-    switch( value.kind )
-    {
-    // A shift's count may be another integer type; only its bits matter.
-    case Rvalue_kind::Binary:
-    case Rvalue_kind::Overflows:
-    {
-        if( value.b.kind != Operand_kind::Constant )
-        {
-            return std::nullopt;
-        }
-
-        const u64 b = literals.integer( value.b.constant );
-
-        if( value.kind == Rvalue_kind::Overflows )
-        {
-            return truth( overflows( value.op, a, b, *integer ), value.type, literals );
-        }
-
-        if( const std::optional<bool> result = comparison( value.op, a, b, *integer ) )
-        {
-            return truth( *result, value.type, literals );
-        }
-
-        if( const std::optional<u64> result = arithmetic( value.op, a, b, *integer ) )
-        {
-            return value_of( *result, *integer, value.type, literals );
-        }
-
-        return std::nullopt;
-    }
-
-    case Rvalue_kind::Unary:
-        switch( value.op )
-        {
-        case Token_kind::Bang:
-            return truth( a == 0, value.type, literals );
-
-        case Token_kind::Tilde:
-            return value_of( truncate( ~a, integer->width ), *integer, value.type, literals );
-
-        // A signed `-const m` is the folded form itself; folding it again would never end.
-        case Token_kind::Minus:
-            if( integer->is_signed )
-            {
-                return std::nullopt;
-            }
-
-            return value_of( truncate( 0 - a, integer->width ), *integer, value.type, literals );
-
-        default:
-            return std::nullopt;
-        }
-
-    // A constant is never negative, so truncating is the whole conversion. Not to `bool`, which
-    // would test against zero.
-    case Rvalue_kind::Cast:
-    {
-        const std::optional<Integer> to = integer_type( types, value.type );
-        if( !to || types.get( value.type ).kind != Type_kind::Int )
-        {
-            return std::nullopt;
-        }
-
-        return value_of( truncate( a, to->width ), *to, value.type, literals );
-    }
-
-    default:
-        return std::nullopt;
-    }
-}
-
-} // namespace
-
-bool fold_constants( Function& func, const Type_table& types, Literal_pool& literals )
-{
-    bool changed = false;
-    for( Statement& statement : func.statements )
-    {
-        if( statement.kind != Statement_kind::Assign )
-        {
-            continue;
-        }
-
-        if( const std::optional<Rvalue> folded = fold( statement.value, types, literals ) )
-        {
-            statement.value = *folded;
-            changed         = true;
-        }
-    }
-
-    return changed;
-}
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
-
-#include "check/pipeline_test_support.h"
-#include "ir/verify.h"
 
 namespace keel
 {
@@ -389,20 +371,6 @@ namespace
 
 constexpr Integer k_i32 { .width = 32, .is_signed = true };
 constexpr Integer k_i64 { .width = 64, .is_signed = true };
-
-// Optimised as a release build emits it; the function under test is first.
-struct Folded : Compiled
-{
-    explicit Folded( std::string_view source )
-        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .optimise = true } )
-    {
-    }
-
-    const Function& first() const
-    {
-        return functions.front();
-    }
-};
 
 } // namespace
 
@@ -413,37 +381,26 @@ TEST_CASE( "fold_constants_wraps_a_signed_sum", "[opt][fold]" )
     Literal_pool     literals;
     const Type_id    i32 = types.integer( 32, true );
 
-    const std::optional<Rvalue> folded = fold(
-        binary(
-            Token_kind::Plus,
-            constant( literals.add_integer( 2147483647 ), i32 ),
-            constant( literals.add_integer( 1 ), i32 ),
-            i32
-        ),
-        types,
-        literals
-    );
+    const Rvalue sum = binary( Token_kind::Plus, constant( Literal_id {}, i32 ), constant( Literal_id {}, i32 ), i32 );
+    const std::optional<u64> bits = evaluate( sum, 2147483647, 1, types );
+    REQUIRE( bits == 0x8000'0000u );
 
-    REQUIRE( folded );
-    REQUIRE( folded->kind == Rvalue_kind::Unary );
-    REQUIRE( folded->op == Token_kind::Minus );
-    REQUIRE( literals.integer( folded->a.constant ) == 2147483648u );
+    const Rvalue folded = value_of( *bits, i32, types, literals );
+    REQUIRE( folded.kind == Rvalue_kind::Unary );
+    REQUIRE( folded.op == Token_kind::Minus );
+    REQUIRE( literals.integer( folded.a.constant ) == 2147483648u );
 }
 
-// `-const 2` is the folded form; folding it again would never end.
-TEST_CASE( "fold_constants_keeps_a_negative_constant", "[opt][fold]" )
+// `-4` as an `i32` is `-4` as an `i64`, not `4294967292`; an unsigned source zero-extends.
+TEST_CASE( "fold_constants_sign_extends_a_cast", "[opt][fold]" )
 {
-    Folded p( "i32 f() { i32 a = 3; return a - 5; }\n" );
-    REQUIRE( p.clean() );
+    const Type_table types;
+    const Type_id    i32 = types.integer( 32, true );
+    const Type_id    u32 = types.integer( 32, false );
+    const Type_id    i64 = types.integer( 64, true );
 
-    const auto negative = std::ranges::find_if(
-        p.first().statements,
-        []( const Statement& s )
-        { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Unary && s.value.op == Token_kind::Minus; }
-    );
-    REQUIRE( negative != p.first().statements.end() );
-    REQUIRE( p.literals.integer( negative->value.a.constant ) == 2 );
-    REQUIRE( !fold( negative->value, p.types.table(), p.literals ) );
+    REQUIRE( evaluate( cast_to( constant( Literal_id {}, i32 ), i64 ), 0xFFFF'FFFCu, std::nullopt, types ) == ~0ull - 3 );
+    REQUIRE( evaluate( cast_to( constant( Literal_id {}, u32 ), i64 ), 0xFFFF'FFFCu, std::nullopt, types ) == 0xFFFF'FFFCu );
 }
 
 // The check before a zero divisor panics, so the division stays.
@@ -460,32 +417,6 @@ TEST_CASE( "fold_constants_divides_min_by_minus_one", "[opt][fold]" )
     REQUIRE( arithmetic( Token_kind::Percent, 0x8000'0000u, 0xFFFF'FFFFu, k_i32 ) == 0u );
     REQUIRE( arithmetic( Token_kind::Slash, 1ull << 63, ~0ull, k_i64 ) == 1ull << 63 );
     REQUIRE( arithmetic( Token_kind::Slash, 0xFFFF'FFF9u, 2, k_i32 ) == 0xFFFF'FFFDu );
-}
-
-// Each fold makes the next pair: `c - 1` is `13` only after `b` and `c` fold in turn.
-TEST_CASE( "fold_constants_reaches_a_fixpoint_with_propagation", "[opt][fold]" )
-{
-    Folded p( "i32 f() { i32 a = 3; i32 b = a + 4; i32 c = b * 2; return c - 1; }\n" );
-    REQUIRE( p.clean() );
-    REQUIRE( verify( p.first() ).empty() );
-
-    for( const Statement& s : p.first().statements )
-    {
-        REQUIRE( ( s.kind != Statement_kind::Assign || s.value.kind != Rvalue_kind::Binary ) );
-    }
-
-    const bool thirteen = std::ranges::any_of(
-        p.first().statements,
-        [&]( const Statement& s )
-        {
-            return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use &&
-                   s.value.a.kind == Operand_kind::Constant && p.literals.integer( s.value.a.constant ) == 13;
-        }
-    );
-    REQUIRE( thirteen );
-
-    Function again = p.first();
-    REQUIRE( !fold_constants( again, p.types.table(), p.literals ) );
 }
 
 } // namespace keel

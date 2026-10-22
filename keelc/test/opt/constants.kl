@@ -1,0 +1,134 @@
+// M11's conditional constant propagation, in a release build: a local that holds one constant on
+// every path that runs reads as that constant, a negative one too, and a branch on a constant never
+// makes its other arm reachable. A loop counter, a local two running paths disagree on, and a
+// negative passed to a call stay. Each check returns its own code.
+
+bool big( i32 x )
+{
+    return x > 10;
+}
+
+// `big( 20 )` is `true`, so the `||` never tests `n`, and its flag is `true` at the join.
+i32 either( i32 n )
+{
+    if( big( 20 ) || n > 0 )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+i64 clamp( i64 x )
+{
+    return x < 0 ? 0 - x : x;
+}
+
+// `a - b` is `-4`, which reaches `clamp`'s comparison: the branch goes, and `t - 4` is left.
+i64 clamped( i64 t )
+{
+    const i64 a = 3;
+    const i64 b = a + 4;
+    return t - clamp( a - b );
+}
+
+// The only arm that changes `k` tests `k != 1`, which never holds, so `k` is `1` round the loop.
+i32 steady( i32 n )
+{
+    i32 k = 1;
+    i32 t = 0;
+    for( i32 i = 0; i < n; i++ )
+    {
+        if( k != 1 )
+        {
+            k = 2;
+        }
+        t = t + k;
+    }
+    return t;
+}
+
+// `-4` widens to `-4`, not `4294967292`.
+i64 widened()
+{
+    i32 a = 3;
+    i32 n = a - 7;
+    i64 w = n;
+    return w;
+}
+
+// `i` is `0` on the way in and `1` round the back edge, so it stays.
+i32 counted( i32 n )
+{
+    i32 t = 0;
+    for( i32 i = 0; i < n; i++ )
+    {
+        t = t + i;
+    }
+    return t;
+}
+
+// `k` is `1` on one path and `2` on the other, and both run.
+i32 disagreed( bool c )
+{
+    i32 k = 1;
+    if( c )
+    {
+        k = 2;
+    }
+    return k + 1;
+}
+
+void store( i32 v, out i32 into )
+{
+    into = v;
+}
+
+// `n` is `-4`, which has no operand form, so the call reads `n`.
+i32 passed()
+{
+    i32 a = 3;
+    i32 n = a - 7;
+    i32 r = 0;
+    store( n, out r );
+    return r;
+}
+
+i32 main()
+{
+    if( either( 0 ) != 1 )
+    {
+        return 1;
+    }
+
+    if( clamped( 10 ) != 6 )
+    {
+        return 2;
+    }
+
+    if( steady( 3 ) != 3 )
+    {
+        return 3;
+    }
+
+    if( widened() != -4 )
+    {
+        return 4;
+    }
+
+    if( counted( 4 ) != 6 )
+    {
+        return 5;
+    }
+
+    if( disagreed( true ) != 3 || disagreed( false ) != 2 )
+    {
+        return 6;
+    }
+
+    if( passed() != -4 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

@@ -175,7 +175,6 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     bool kl_t7;
-    int32_t kl_t8;
     int32_t kl_t10;
     struct kl__Point kl_t12;
     int32_t kl_t13;
@@ -184,7 +183,6 @@ int32_t kl__main__( void )
     bool kl_t18;
     int32_t kl_t19;
     bool kl_t20;
-    bool kl_t23;
     struct kl__Point kl_t28;
     int32_t kl_t29;
     bool kl_t30;
@@ -195,26 +193,16 @@ int32_t kl__main__( void )
     int32_t* kl_p_55;
     int32_t kl_i_68;
     bool kl_t69;
-    int32_t kl_i_75;
-    bool kl_t76;
-#line 47 "opt/propagation.kl"
-    kl_t8 = 0;
-#line 48 "opt/propagation.kl"
-    kl_i_75 = 0;
-    goto bb18;
-    bb1:
 #line 47 "opt/propagation.kl"
     kl_t10 = 0;
 #line 48 "opt/propagation.kl"
     kl_i_68 = 0;
-    goto bb15;
-    bb2:
-    if ( kl_t7 ) goto bb3; else goto bb4;
-    bb3:
+    goto bb11;
+    bb1:
 #line 132 "opt/propagation.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb4:
+    bb2:
 #line 135 "opt/propagation.kl"
     kl_t12.kl_x_1 = 1;
     kl_t12.kl_y_3 = 2;
@@ -222,28 +210,20 @@ int32_t kl__main__( void )
     kl_t13 = kl_t12.kl_x_1 + kl_t12.kl_y_3;
 #line 135 "opt/propagation.kl"
     kl_t14 = kl_t13 != 3;
-    if ( kl_t14 ) goto bb5; else goto bb14;
-    bb5:
+    if ( kl_t14 ) goto bb3; else goto bb10;
+    bb3:
 #line 137 "opt/propagation.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb6:
+    bb4:
 #line 147 "opt/propagation.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb7:
+    bb5:
 #line 152 "opt/propagation.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb8:
-#line 160 "opt/propagation.kl"
-    kl_t23 = false;
-    if ( kl_t23 ) goto bb9; else goto bb10;
-    bb9:
-#line 162 "opt/propagation.kl"
-    kl_t0 = 10;
-    return kl_t0;
-    bb10:
+    bb6:
 #line 165 "opt/propagation.kl"
     kl_t28.kl_x_1 = 1;
     kl_t28.kl_y_3 = 2;
@@ -255,16 +235,16 @@ int32_t kl__main__( void )
     kl_t29 = kl_t28.kl_x_1 + kl_q_33.kl_x_1;
 #line 165 "opt/propagation.kl"
     kl_t30 = kl_t29 != 4;
-    if ( kl_t30 ) goto bb11; else goto bb12;
-    bb11:
+    if ( kl_t30 ) goto bb7; else goto bb8;
+    bb7:
 #line 167 "opt/propagation.kl"
     kl_t0 = 11;
     return kl_t0;
-    bb12:
+    bb8:
 #line 170 "opt/propagation.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb13:
+    bb9:
 #line 81 "opt/propagation.kl"
     kl_x_48 = 0;
 #line 82 "opt/propagation.kl"
@@ -274,8 +254,8 @@ int32_t kl__main__( void )
     kl_t19 = kl_x_48 + 1;
 #line 150 "opt/propagation.kl"
     kl_t20 = kl_t19 != 10;
-    if ( kl_t20 ) goto bb7; else goto bb8;
-    bb14:
+    if ( kl_t20 ) goto bb5; else goto bb6;
+    bb10:
 #line 72 "opt/propagation.kl"
     kl_k_54 = 3;
 #line 73 "opt/propagation.kl"
@@ -286,35 +266,21 @@ int32_t kl__main__( void )
     kl_t17 = kl_k_54;
 #line 145 "opt/propagation.kl"
     kl_t18 = kl_t17 != 4;
-    if ( kl_t18 ) goto bb6; else goto bb13;
-    bb15:
+    if ( kl_t18 ) goto bb4; else goto bb9;
+    bb11:
 #line 48 "opt/propagation.kl"
     kl_t69 = kl_i_68 < 3;
-    if ( kl_t69 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t69 ) goto bb12; else goto bb13;
+    bb12:
 #line 50 "opt/propagation.kl"
     kl_t10 = kl_t10 + 2;
 #line 48 "opt/propagation.kl"
     kl_i_68 = kl_i_68 + 1;
-    goto bb15;
-    bb17:
+    goto bb11;
+    bb13:
 #line 130 "opt/propagation.kl"
     kl_t7 = kl_t10 != 6;
-    goto bb2;
-    bb18:
-#line 48 "opt/propagation.kl"
-    kl_t76 = kl_i_75 < 0;
-    if ( kl_t76 ) goto bb19; else goto bb20;
-    bb19:
-#line 50 "opt/propagation.kl"
-    kl_t8 = kl_t8 + 2;
-#line 48 "opt/propagation.kl"
-    kl_i_75 = kl_i_75 + 1;
-    goto bb18;
-    bb20:
-#line 130 "opt/propagation.kl"
-    kl_t7 = kl_t8 != 0;
-    if ( kl_t7 ) goto bb2; else goto bb1;
+    if ( kl_t7 ) goto bb1; else goto bb2;
 }
 
 int main( void )

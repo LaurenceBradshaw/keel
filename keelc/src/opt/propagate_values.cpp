@@ -4,7 +4,6 @@
 #include "opt/propagate_values.h"
 #include <optional>
 #include "ir/live.h"
-#include "ir/simplify.h"
 
 namespace keel
 {
@@ -12,6 +11,7 @@ namespace keel
 namespace
 {
 // What each local is known to hold, by Local_id::v: a constant, a copy of a whole local, or nothing known.
+// propagate_constants has already read every integer one; a float or an `enum` is left to this.
 using Values = std::vector<std::optional<Operand>>;
 
 bool whole_local( const Place& place )
@@ -74,7 +74,7 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
         return;
     }
 
-    // A chain resolves in one pass: `_3 = copy _2` after `_2 = const 5` records `const 5`.
+    // A chain resolves in one pass: `_3 = copy _2` after `_2 = const 0.5` records `const 0.5`.
     const Local_id into = statement.place.local;
     const Operand& from = statement.value.a;
 
@@ -166,7 +166,8 @@ void rewrite( Operand& operand, const Values& values )
 }
 } // namespace
 
-void propagate_values( Function& func, const Literal_pool& literals )
+// Facts are locals × blocks; a sparse map per block if it shows.
+void propagate_values( Function& func )
 {
     const Local_set                          addressed = addressed_locals( func );
     const std::vector<std::optional<Values>> entry     = values_on_entry( func, addressed );
@@ -205,9 +206,6 @@ void propagate_values( Function& func, const Literal_pool& literals )
         rewrite( block.terminator.message, values );
         rewrite( block.terminator.at, values );
     }
-
-    // A branch that now reads a constant folds. Facts are locals × blocks; a sparse map per block if it shows.
-    simplify( func, literals );
 }
 
 } // namespace keel
@@ -269,16 +267,6 @@ struct Propagated : Compiled
 
 } // namespace
 
-// `step` is `_2`, and is `2` both from the entry and round the back edge.
-TEST_CASE( "propagate_values_reads_a_constant_round_a_loop", "[opt][propagate]" )
-{
-    const Propagated p( "i32 f( i32 n ) { i32 step = 2; i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + step; } return t; }\n"
-    );
-    REQUIRE( p.clean() );
-    REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 0 );
-}
-
 // Nothing assigns `x` (`_1`) between `0` and the read, but `set` writes it through `&init`.
 TEST_CASE( "propagate_values_keeps_a_local_an_out_argument_rewrites", "[opt][propagate]" )
 {
@@ -296,15 +284,6 @@ TEST_CASE( "propagate_values_keeps_a_copy_whose_source_changed", "[opt][propagat
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( 2 ) == 1 );
     REQUIRE( p.reads( 1 ) == 1 );
-}
-
-// `k` (`_2`) is `1` on one path and `2` on the other.
-TEST_CASE( "propagate_values_keeps_a_local_the_paths_disagree_on", "[opt][propagate]" )
-{
-    const Propagated p( "i32 f( bool c ) { i32 k = 1; if( c ) { k = 2; } return k + 1; }\n" );
-    REQUIRE( p.clean() );
-    REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 1 );
 }
 
 } // namespace keel

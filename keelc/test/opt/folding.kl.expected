@@ -20,15 +20,15 @@ int32_t kl__chained__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t5;
-#line 11 "opt/folding.kl"
+#line 10 "opt/folding.kl"
     kl_t5 = kl_n_1 > 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 13 "opt/folding.kl"
+#line 12 "opt/folding.kl"
     kl_t0 = 14;
     return kl_t0;
     bb2:
-#line 15 "opt/folding.kl"
+#line 14 "opt/folding.kl"
     kl_t0 = 6;
     return kl_t0;
 }
@@ -36,7 +36,7 @@ int32_t kl__chained__3i32( int32_t kl_n_1 )
 int32_t kl__wrapped__( void )
 {
     int32_t kl_t0;
-#line 22 "opt/folding.kl"
+#line 21 "opt/folding.kl"
     kl_t0 = -2147483648;
     return kl_t0;
 }
@@ -44,7 +44,7 @@ int32_t kl__wrapped__( void )
 uint32_t kl__inverted__( void )
 {
     uint32_t kl_t0;
-#line 29 "opt/folding.kl"
+#line 28 "opt/folding.kl"
     kl_t0 = 4294967294;
     return kl_t0;
 }
@@ -52,7 +52,7 @@ uint32_t kl__inverted__( void )
 int32_t kl__shifted__( void )
 {
     int32_t kl_t0;
-#line 37 "opt/folding.kl"
+#line 36 "opt/folding.kl"
     kl_t0 = 2;
     return kl_t0;
 }
@@ -60,7 +60,7 @@ int32_t kl__shifted__( void )
 int32_t kl__compared__( void )
 {
     int32_t kl_t0;
-#line 46 "opt/folding.kl"
+#line 45 "opt/folding.kl"
     kl_t0 = 1;
     return kl_t0;
 }
@@ -70,9 +70,9 @@ int32_t kl__zero__4bool( bool kl_c_1 )
     int32_t kl_t0;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-    kl_rt_panic( "opt/folding.kl", 58, "division by zero: a / d" );
+    kl_rt_panic( "opt/folding.kl", 57, "division by zero: a / d" );
     bb2:
-#line 60 "opt/folding.kl"
+#line 59 "opt/folding.kl"
     kl_t0 = 1;
     return kl_t0;
 }
@@ -80,7 +80,7 @@ int32_t kl__zero__4bool( bool kl_c_1 )
 double kl__floated__( void )
 {
     double kl_t0;
-#line 67 "opt/folding.kl"
+#line 66 "opt/folding.kl"
     kl_t0 = 0.5 + 0.25;
     return kl_t0;
 }
@@ -88,85 +88,40 @@ double kl__floated__( void )
 int32_t kl__negative__( void )
 {
     int32_t kl_t0;
-    int32_t kl_b_2;
 #line 74 "opt/folding.kl"
-    kl_b_2 = -2;
-#line 75 "opt/folding.kl"
-    kl_t0 = kl_b_2 * 2;
+    kl_t0 = -4;
     return kl_t0;
 }
 
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    bool kl_t1;
-    int32_t kl_t6;
-    int32_t kl_t7;
-    int32_t kl_t8;
-    bool kl_t9;
     int32_t kl_t16;
     bool kl_t17;
     double kl_t18;
     bool kl_t19;
-    int32_t kl_t20;
-    int32_t kl_t21;
-    bool kl_t22;
-    int32_t kl_b_25;
-#line 80 "opt/folding.kl"
-    kl_t1 = false;
-    if ( kl_t1 ) goto bb1; else goto bb10;
-    bb1:
-#line 82 "opt/folding.kl"
-    kl_t0 = 1;
-    return kl_t0;
-    bb2:
-#line 87 "opt/folding.kl"
-    kl_t0 = 2;
-    return kl_t0;
-    bb3:
-#line 107 "opt/folding.kl"
-    kl_t0 = 6;
-    return kl_t0;
-    bb4:
-#line 112 "opt/folding.kl"
-    kl_t0 = 7;
-    return kl_t0;
-    bb5:
-#line 117 "opt/folding.kl"
-    kl_t0 = 8;
-    return kl_t0;
-    bb6:
-#line 120 "opt/folding.kl"
-    kl_t0 = 0;
-    return kl_t0;
-    bb7:
-#line 74 "opt/folding.kl"
-    kl_b_25 = -2;
-#line 75 "opt/folding.kl"
-    kl_t20 = kl_b_25 * 2;
-#line 115 "opt/folding.kl"
-    kl_t21 = -4;
-    kl_t22 = kl_t20 != kl_t21;
-    if ( kl_t22 ) goto bb5; else goto bb6;
-    bb8:
-#line 67 "opt/folding.kl"
-    kl_t18 = 0.5 + 0.25;
-#line 110 "opt/folding.kl"
-    kl_t19 = kl_t18 != 0.75;
-    if ( kl_t19 ) goto bb4; else goto bb7;
-    bb9:
-#line 105 "opt/folding.kl"
+#line 104 "opt/folding.kl"
     kl_t16 = kl__zero__4bool( false );
     kl_t17 = kl_t16 != 1;
-    if ( kl_t17 ) goto bb3; else goto bb8;
-    bb10:
-#line 22 "opt/folding.kl"
-    kl_t6 = -2147483648;
-#line 85 "opt/folding.kl"
-    kl_t7 = -2147483647;
-    kl_t8 = kl_t7 - 1;
-    kl_t9 = kl_t6 != kl_t8;
-    if ( kl_t9 ) goto bb2; else goto bb9;
+    if ( kl_t17 ) goto bb1; else goto bb4;
+    bb1:
+#line 106 "opt/folding.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb2:
+#line 111 "opt/folding.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb3:
+#line 119 "opt/folding.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb4:
+#line 66 "opt/folding.kl"
+    kl_t18 = 0.5 + 0.25;
+#line 109 "opt/folding.kl"
+    kl_t19 = kl_t18 != 0.75;
+    if ( kl_t19 ) goto bb2; else goto bb3;
 }
 
 int main( void )

@@ -1,7 +1,6 @@
 // M11's constant folding, in a release build: an operation whose operands propagation made
 // constants becomes its value, wrapped at its type's width, and propagation then spreads that value.
-// A zero divisor, a float pair and a negative result stay as they are. Each check returns its own
-// code.
+// A zero divisor and a float pair stay as they are. Each check returns its own code.
 
 // `b` is `7` in both arms, so each return is a constant.
 i32 chained( i32 n )
@@ -67,7 +66,7 @@ f64 floated()
     return a + 0.25;
 }
 
-// `b` is `-2`, which is not a constant to propagation, so `b * 2` stays.
+// `b` is `-2`, a constant like any other, so `b * 2` is `-4`.
 i32 negative()
 {
     i32 a = 3;

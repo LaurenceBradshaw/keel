@@ -43,12 +43,9 @@ int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t1;
     int64_t kl_t2;
-#line 7 "codegen/overflow_release/main.kl"
-    kl_t1 = -2147483648;
 #line 12 "codegen/overflow_release/main.kl"
-    kl_t2 = ( int64_t ) kl_t1;
+    kl_t2 = -2147483648;
     kl_1t7console_println__3i64( kl_t2 );
 #line 13 "codegen/overflow_release/main.kl"
     kl_t0 = 0;
