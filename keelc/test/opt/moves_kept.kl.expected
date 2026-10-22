@@ -87,27 +87,25 @@ int32_t kl__reassigned__( void )
     if ( kl_t7 ) goto bb2; else goto bb1;
     bb1:
     kl_t7 = kl_live_1 != 1;
-    goto bb2;
+    if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
-    if ( kl_t7 ) goto bb3; else goto bb4;
-    bb3:
 #line 44 "opt/moves_kept.kl"
     kl_t0 = 1;
     if ( kl_t12 ) kl__Box__dtor( &kl_a_1 );
     return kl_t0;
-    bb4:
+    bb3:
 #line 39 "opt/moves_kept.kl"
     if ( kl_t12 ) kl__Box__dtor( &kl_a_1 );
 #line 48 "opt/moves_kept.kl"
     kl_t11 = kl_trace_3 == 1299;
-    if ( kl_t11 ) goto bb5; else goto bb6;
-    bb5:
+    if ( kl_t11 ) goto bb4; else goto bb5;
+    bb4:
     kl_t0 = 0;
-    goto bb7;
-    bb6:
+    goto bb6;
+    bb5:
     kl_t0 = 2;
-    goto bb7;
-    bb7:
+    goto bb6;
+    bb6:
     return kl_t0;
 }
 
@@ -183,7 +181,7 @@ int32_t kl__copied__( void )
     kl_p_1.kl_x_45 = 5;
 #line 82 "opt/moves_kept.kl"
     kl_t5 = kl_q_3.kl_x_45 == 1;
-    if ( kl_t5 ) goto bb4; else goto bb5;
+    if ( kl_t5 ) goto bb4; else goto bb2;
     bb1:
     kl_t0 = 0;
     goto bb3;
@@ -194,8 +192,6 @@ int32_t kl__copied__( void )
     return kl_t0;
     bb4:
     kl_t5 = kl_p_1.kl_x_45 == 5;
-    goto bb5;
-    bb5:
     if ( kl_t5 ) goto bb1; else goto bb2;
 }
 
@@ -291,74 +287,64 @@ int32_t kl__main__( void )
     kl_y_6 = kl__early__4bool( false );
 #line 117 "opt/moves_kept.kl"
     kl_t8 = kl_x_4.kl_value_42 != 4;
-    if ( kl_t8 ) goto bb4; else goto bb3;
+    if ( kl_t8 ) goto bb6; else goto bb3;
     bb3:
     kl_t8 = kl_y_6.kl_value_42 != 3;
-    goto bb4;
+    if ( kl_t8 ) goto bb6; else goto bb4;
     bb4:
+    kl_t8 = kl_live_1 != 2;
     if ( kl_t8 ) goto bb6; else goto bb5;
     bb5:
-    kl_t8 = kl_live_1 != 2;
-    goto bb6;
-    bb6:
-    if ( kl_t8 ) goto bb8; else goto bb7;
-    bb7:
     kl_t8 = kl_trace_3 != 3493;
-    goto bb8;
-    bb8:
-    if ( kl_t8 ) goto bb9; else goto bb10;
-    bb9:
+    if ( kl_t8 ) goto bb6; else goto bb7;
+    bb6:
 #line 119 "opt/moves_kept.kl"
     kl_t0 = 10;
     kl__Box__dtor( &kl_y_6 );
     kl__Box__dtor( &kl_x_4 );
     return kl_t0;
-    bb10:
+    bb7:
 #line 114 "opt/moves_kept.kl"
     kl__Box__dtor( &kl_y_6 );
     kl__Box__dtor( &kl_x_4 );
 #line 123 "opt/moves_kept.kl"
     kl_t17 = kl__one_path__4bool( true );
     kl_t15 = kl_t17 != 5;
-    if ( kl_t15 ) goto bb12; else goto bb11;
-    bb11:
+    if ( kl_t15 ) goto bb10; else goto bb8;
+    bb8:
     kl_t19 = kl__one_path__4bool( false );
     kl_t15 = kl_t19 != 6;
-    goto bb12;
-    bb12:
-    if ( kl_t15 ) goto bb14; else goto bb13;
-    bb13:
+    if ( kl_t15 ) goto bb10; else goto bb9;
+    bb9:
     kl_t15 = kl_live_1 != 0;
-    goto bb14;
-    bb14:
-    if ( kl_t15 ) goto bb15; else goto bb23;
-    bb15:
+    if ( kl_t15 ) goto bb10; else goto bb18;
+    bb10:
 #line 125 "opt/moves_kept.kl"
     kl_t0 = 11;
     return kl_t0;
-    bb16:
+    bb11:
     return kl_t0;
-    bb17:
+    bb12:
 #line 134 "opt/moves_kept.kl"
     kl_t0 = kl__looped__(  );
 #line 135 "opt/moves_kept.kl"
     kl_t25 = kl_t0 != 0;
-    if ( kl_t25 ) goto bb18; else goto bb19;
-    bb18:
+    if ( kl_t25 ) goto bb13; else goto bb14;
+    bb13:
     return kl_t0;
-    bb19:
+    bb14:
 #line 140 "opt/moves_kept.kl"
     kl_t27 = kl_live_1 == 0;
-    if ( kl_t27 ) goto bb20; else goto bb21;
-    bb20:
+    if ( kl_t27 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 0;
-    goto bb22;
-    bb21:
+    goto bb17;
+    bb16:
     kl_t0 = 12;
-    goto bb22;
-    bb22:
+    goto bb17;
+    bb17:
     return kl_t0;
-    bb23:
+    bb18:
 #line 79 "opt/moves_kept.kl"
     kl_p_29.kl_x_45 = 1;
     kl_p_29.kl_y_47 = 2;
@@ -368,23 +354,21 @@ int32_t kl__main__( void )
     kl_p_29.kl_x_45 = 5;
 #line 82 "opt/moves_kept.kl"
     kl_t33 = kl_q_31.kl_x_45 == 1;
-    if ( kl_t33 ) goto bb27; else goto bb28;
-    bb24:
+    if ( kl_t33 ) goto bb22; else goto bb20;
+    bb19:
     kl_t0 = 0;
-    goto bb26;
-    bb25:
+    goto bb21;
+    bb20:
     kl_t0 = 3;
-    goto bb26;
-    bb26:
+    goto bb21;
+    bb21:
 #line 129 "opt/moves_kept.kl"
     kl_t23 = kl_t0 != 0;
-    if ( kl_t23 ) goto bb16; else goto bb17;
-    bb27:
+    if ( kl_t23 ) goto bb11; else goto bb12;
+    bb22:
 #line 82 "opt/moves_kept.kl"
     kl_t33 = kl_p_29.kl_x_45 == 5;
-    goto bb28;
-    bb28:
-    if ( kl_t33 ) goto bb24; else goto bb25;
+    if ( kl_t33 ) goto bb19; else goto bb20;
 }
 
 int main( void )

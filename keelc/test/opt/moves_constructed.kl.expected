@@ -102,69 +102,57 @@ int32_t kl__main__( void )
     kl__Box__R3Box_3i32__ctor( kl_t43, 4 );
 #line 59 "opt/moves_constructed.kl"
     kl_t8 = kl_a_1.kl_value_31 != 1;
-    if ( kl_t8 ) goto bb2; else goto bb1;
+    if ( kl_t8 ) goto bb5; else goto bb1;
     bb1:
     kl_t8 = kl_b_4.kl_value_31 != 2;
-    goto bb2;
+    if ( kl_t8 ) goto bb5; else goto bb2;
     bb2:
-    if ( kl_t8 ) goto bb4; else goto bb3;
-    bb3:
     kl_t8 = kl_c_6.kl_value_31 != 4;
-    goto bb4;
-    bb4:
-    if ( kl_t8 ) goto bb6; else goto bb5;
-    bb5:
+    if ( kl_t8 ) goto bb5; else goto bb3;
+    bb3:
     kl_t8 = kl_live_1 != 3;
-    goto bb6;
-    bb6:
-    if ( kl_t8 ) goto bb8; else goto bb7;
-    bb7:
+    if ( kl_t8 ) goto bb5; else goto bb4;
+    bb4:
     kl_t8 = kl_destroyed_3 != 0;
-    goto bb8;
-    bb8:
-    if ( kl_t8 ) goto bb9; else goto bb10;
-    bb9:
+    if ( kl_t8 ) goto bb5; else goto bb6;
+    bb5:
 #line 61 "opt/moves_constructed.kl"
     kl_t0 = 1;
     kl__Box__dtor( &kl_c_6 );
     kl__Box__dtor( &kl_b_4 );
     kl__Box__dtor( &kl_a_1 );
     return kl_t0;
-    bb10:
+    bb6:
 #line 55 "opt/moves_constructed.kl"
     kl__Box__dtor( &kl_c_6 );
     kl__Box__dtor( &kl_b_4 );
     kl__Box__dtor( &kl_a_1 );
 #line 65 "opt/moves_constructed.kl"
     kl_t17 = kl_live_1 != 0;
-    if ( kl_t17 ) goto bb12; else goto bb11;
-    bb11:
+    if ( kl_t17 ) goto bb8; else goto bb7;
+    bb7:
     kl_t17 = kl_destroyed_3 != 3;
-    goto bb12;
-    bb12:
-    if ( kl_t17 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t17 ) goto bb8; else goto bb9;
+    bb8:
 #line 67 "opt/moves_constructed.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb14:
+    bb9:
 #line 70 "opt/moves_constructed.kl"
     kl_p_20.kl_x_34 = 5;
 #line 49 "opt/moves_constructed.kl"
     kl_p_20.kl_y_36 = kl_p_20.kl_x_34 * 2;
 #line 71 "opt/moves_constructed.kl"
     kl_t22 = kl_p_20.kl_x_34 != 5;
-    if ( kl_t22 ) goto bb16; else goto bb15;
-    bb15:
+    if ( kl_t22 ) goto bb11; else goto bb10;
+    bb10:
     kl_t22 = kl_p_20.kl_y_36 != 10;
-    goto bb16;
-    bb16:
-    if ( kl_t22 ) goto bb17; else goto bb18;
-    bb17:
+    if ( kl_t22 ) goto bb11; else goto bb12;
+    bb11:
 #line 73 "opt/moves_constructed.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb18:
+    bb12:
 #line 76 "opt/moves_constructed.kl"
     kl_t0 = 0;
     return kl_t0;

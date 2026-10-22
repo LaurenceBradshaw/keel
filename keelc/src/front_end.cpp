@@ -16,6 +16,7 @@
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
+#include "opt/thread_jumps.h"
 
 namespace keel
 {
@@ -127,6 +128,7 @@ Front_end run_front_end(
             {
                 settle_drops( function );
                 propagate_constants( function, front.types.table(), literals );
+                thread_jumps( function, front.types.table(), literals );
                 propagate_values( function );
                 remove_dead_stores( function );
                 // Dead store removal can empty a block, so threading goes first.

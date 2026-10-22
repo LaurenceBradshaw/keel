@@ -1,0 +1,88 @@
+// M11's jump threading, in a release build: an edge into a block that only branches on a flag goes
+// straight to the arm the flag takes on that edge, so an `&&` or `||` tests each operand once on each
+// path. A join that computes before it branches keeps its test. Each check returns its own code.
+
+bool big( i32 x )
+{
+    return x > 10;
+}
+
+// `a > 0` failing goes straight to `return 0`; the join is left to `b > 0`'s arm alone.
+i32 both( i32 a, i32 b )
+{
+    if( a > 0 && b > 0 )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+// `a > 0` holding goes straight to `return 1`.
+i32 either( i32 a, i32 b )
+{
+    if( a > 0 || b > 0 )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+// `big( 20 )` is `true`, so its arm goes straight to `return 1` too: one test is left.
+i32 decided( i32 a )
+{
+    if( a > 0 && big( 20 ) )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+// The chain shares one flag, so the first operand that holds goes past every later test.
+i32 any( i32 a, i32 b, i32 c )
+{
+    if( a > 0 || b > 0 || c > 0 )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+// The join compares the flag before it branches, so both edges still reach it.
+i32 compared( i32 a, i32 b, bool c )
+{
+    if( ( a > 0 && b > 0 ) == c )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+i32 main()
+{
+    if( both( 1, 1 ) != 1 || both( 1, 0 ) != 0 || both( 0, 1 ) != 0 )
+    {
+        return 1;
+    }
+
+    if( either( 1, 0 ) != 1 || either( 0, 1 ) != 1 || either( 0, 0 ) != 0 )
+    {
+        return 2;
+    }
+
+    if( decided( 1 ) != 1 || decided( 0 ) != 0 )
+    {
+        return 3;
+    }
+
+    if( any( 0, 0, 1 ) != 1 || any( 1, 0, 0 ) != 1 || any( 0, 0, 0 ) != 0 )
+    {
+        return 4;
+    }
+
+    if( compared( 1, 1, true ) != 1 || compared( 0, 1, true ) != 0 || compared( 0, 1, false ) != 1 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

@@ -184,27 +184,21 @@ int32_t kl__main__( void )
     kl_made_1.kl_b_41.kl_y_36 = 4;
 #line 88 "opt/moves_fields.kl"
     kl_t3 = kl_made_1.kl_a_39.kl_x_34 != 5;
-    if ( kl_t3 ) goto bb2; else goto bb1;
+    if ( kl_t3 ) goto bb4; else goto bb1;
     bb1:
     kl_t3 = kl_made_1.kl_a_39.kl_y_36 != 10;
-    goto bb2;
+    if ( kl_t3 ) goto bb4; else goto bb2;
     bb2:
+    kl_t3 = kl_made_1.kl_b_41.kl_x_34 != 3;
     if ( kl_t3 ) goto bb4; else goto bb3;
     bb3:
-    kl_t3 = kl_made_1.kl_b_41.kl_x_34 != 3;
-    goto bb4;
-    bb4:
-    if ( kl_t3 ) goto bb6; else goto bb5;
-    bb5:
     kl_t3 = kl_made_1.kl_b_41.kl_y_36 != 4;
-    goto bb6;
-    bb6:
-    if ( kl_t3 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t3 ) goto bb4; else goto bb5;
+    bb4:
 #line 90 "opt/moves_fields.kl"
     kl_t0 = 1;
     return kl_t0;
-    bb8:
+    bb5:
 #line 53 "opt/moves_fields.kl"
     kl_l_59.kl_a_39.kl_x_34 = 7;
     kl_l_59.kl_a_39.kl_y_36 = 1;
@@ -214,8 +208,8 @@ int32_t kl__main__( void )
     kl_t11 = kl_l_59.kl_a_39.kl_x_34 + kl_l_59.kl_b_41.kl_y_36;
 #line 93 "opt/moves_fields.kl"
     kl_t10 = kl_t11 != 14;
-    if ( kl_t10 ) goto bb10; else goto bb9;
-    bb9:
+    if ( kl_t10 ) goto bb7; else goto bb6;
+    bb6:
 #line 60 "opt/moves_fields.kl"
     kl_l_51.kl_a_39.kl_x_34 = 8;
     kl_l_51.kl_a_39.kl_y_36 = 1;
@@ -227,14 +221,12 @@ int32_t kl__main__( void )
     kl_t13 = ( *kl_r_55 ).kl_a_39.kl_x_34 + ( *kl_r_55 ).kl_b_41.kl_y_36;
 #line 93 "opt/moves_fields.kl"
     kl_t10 = kl_t13 != 16;
-    goto bb10;
-    bb10:
-    if ( kl_t10 ) goto bb11; else goto bb12;
-    bb11:
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
 #line 95 "opt/moves_fields.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb12:
+    bb8:
 #line 68 "opt/moves_fields.kl"
     kl_t47 = &kl_t17.kl_b_44;
     kl__Box__R3Box_3i32__ctor( kl_t47, 6 );
@@ -242,22 +234,20 @@ int32_t kl__main__( void )
 #line 98 "opt/moves_fields.kl"
     kl_t18 = kl__opened__M5Shape( kl_t17 );
     kl_t15 = kl_t18 != 6;
-    if ( kl_t15 ) goto bb14; else goto bb13;
-    bb13:
+    if ( kl_t15 ) goto bb11; else goto bb9;
+    bb9:
     kl_t15 = kl_live_1 != 0;
-    goto bb14;
-    bb14:
-    if ( kl_t15 ) goto bb16; else goto bb15;
-    bb15:
+    if ( kl_t15 ) goto bb11; else goto bb10;
+    bb10:
     kl_t15 = kl_destroyed_3 != 1;
-    goto bb16;
-    bb16:
-    if ( kl_t15 ) goto bb17; else goto bb18;
-    bb17:
+    goto bb11;
+    bb11:
+    if ( kl_t15 ) goto bb12; else goto bb13;
+    bb12:
 #line 100 "opt/moves_fields.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb18:
+    bb13:
 #line 103 "opt/moves_fields.kl"
     kl_t26 = &kl_t25;
     kl__Box__R3Box_3i32__ctor( kl_t26, 1 );
@@ -268,45 +258,39 @@ int32_t kl__main__( void )
     kl_t24.kl_second_49 = kl_t28;
     kl_t31 = kl__opened__M5Shape( kl_t24 );
     kl_t22 = kl_t31 != 12;
-    if ( kl_t22 ) goto bb20; else goto bb19;
-    bb19:
+    if ( kl_t22 ) goto bb16; else goto bb14;
+    bb14:
     kl_t22 = kl_live_1 != 0;
-    goto bb20;
-    bb20:
-    if ( kl_t22 ) goto bb22; else goto bb21;
-    bb21:
+    if ( kl_t22 ) goto bb16; else goto bb15;
+    bb15:
     kl_t22 = kl_destroyed_3 != 3;
-    goto bb22;
-    bb22:
-    if ( kl_t22 ) goto bb23; else goto bb24;
-    bb23:
+    goto bb16;
+    bb16:
+    if ( kl_t22 ) goto bb17; else goto bb18;
+    bb17:
 #line 105 "opt/moves_fields.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb24:
+    bb18:
 #line 108 "opt/moves_fields.kl"
     kl_t38.tag = 2;
     kl_t39 = kl__opened__M5Shape( kl_t38 );
     kl_t36 = kl_t39 == 0;
-    if ( kl_t36 ) goto bb28; else goto bb29;
-    bb25:
+    if ( kl_t36 ) goto bb22; else goto bb20;
+    bb19:
     kl_t0 = 0;
-    goto bb27;
-    bb26:
+    goto bb21;
+    bb20:
     kl_t0 = 5;
-    goto bb27;
-    bb27:
+    goto bb21;
+    bb21:
     return kl_t0;
-    bb28:
+    bb22:
     kl_t36 = kl_live_1 == 0;
-    goto bb29;
-    bb29:
-    if ( kl_t36 ) goto bb30; else goto bb31;
-    bb30:
+    if ( kl_t36 ) goto bb23; else goto bb20;
+    bb23:
     kl_t36 = kl_destroyed_3 == 3;
-    goto bb31;
-    bb31:
-    if ( kl_t36 ) goto bb25; else goto bb26;
+    if ( kl_t36 ) goto bb19; else goto bb20;
 }
 
 void kl__Shape__dtor( struct kl__Shape* kl_t1 )

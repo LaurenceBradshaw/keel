@@ -1,0 +1,138 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "threading.kl.prelude.c"
+
+bool kl__big__3i32( int32_t );
+int32_t kl__both__3i32_3i32( int32_t, int32_t );
+int32_t kl__either__3i32_3i32( int32_t, int32_t );
+int32_t kl__decided__3i32( int32_t );
+int32_t kl__any__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl__compared__3i32_3i32_4bool( int32_t, int32_t, bool );
+int32_t kl__main__( void );
+
+bool kl__big__3i32( int32_t kl_x_1 )
+{
+    bool kl_t0;
+#line 7 "opt/threading.kl"
+    kl_t0 = kl_x_1 > 10;
+    return kl_t0;
+}
+
+int32_t kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+#line 13 "opt/threading.kl"
+    kl_t3 = kl_a_1 > 0;
+    if ( kl_t3 ) goto bb1; else goto bb3;
+    bb1:
+    kl_t3 = kl_b_2 > 0;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 15 "opt/threading.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb3:
+#line 17 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+#line 23 "opt/threading.kl"
+    kl_t3 = kl_a_1 > 0;
+    if ( kl_t3 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t3 = kl_b_2 > 0;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 25 "opt/threading.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb3:
+#line 27 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__decided__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+#line 33 "opt/threading.kl"
+    kl_t2 = kl_a_1 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 35 "opt/threading.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 37 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__any__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
+{
+    int32_t kl_t0;
+    bool kl_t4;
+#line 43 "opt/threading.kl"
+    kl_t4 = kl_a_1 > 0;
+    if ( kl_t4 ) goto bb3; else goto bb1;
+    bb1:
+    kl_t4 = kl_b_2 > 0;
+    if ( kl_t4 ) goto bb3; else goto bb2;
+    bb2:
+    kl_t4 = kl_c_3 > 0;
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 45 "opt/threading.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb4:
+#line 47 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__compared__3i32_3i32_4bool( int32_t kl_a_1, int32_t kl_b_2, bool kl_c_3 )
+{
+    int32_t kl_t0;
+    bool kl_t4;
+    bool kl_t7;
+#line 53 "opt/threading.kl"
+    kl_t4 = kl_a_1 > 0;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = kl_b_2 > 0;
+    goto bb2;
+    bb2:
+    kl_t7 = kl_t4 == kl_c_3;
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 55 "opt/threading.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb4:
+#line 57 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+#line 87 "opt/threading.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

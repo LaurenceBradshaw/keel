@@ -263,21 +263,19 @@ int32_t kl__picked__4bool( bool kl_c_1 )
     goto bb9;
     bb9:
     kl_t8 = kl_v_2 == kl_t9;
-    if ( kl_t8 ) goto bb10; else goto bb11;
+    if ( kl_t8 ) goto bb10; else goto bb5;
     bb10:
-    if ( kl_c_1 ) goto bb12; else goto bb13;
+    if ( kl_c_1 ) goto bb11; else goto bb12;
     bb11:
-    if ( kl_t8 ) goto bb4; else goto bb5;
-    bb12:
     kl_t11 = 59;
-    goto bb14;
-    bb13:
+    goto bb13;
+    bb12:
     kl_t11 = 0;
-    goto bb14;
-    bb14:
+    goto bb13;
+    bb13:
     kl_t12 = ( int64_t ) kl_t11;
     kl_t8 = kl_trace_3 == kl_t12;
-    goto bb11;
+    if ( kl_t8 ) goto bb4; else goto bb5;
 }
 
 int32_t kl__main__( void )
@@ -342,17 +340,15 @@ int32_t kl__main__( void )
     bb12:
 #line 121 "opt/drop_flags.kl"
     kl_t15 = kl_t0 == 0;
-    if ( kl_t15 ) goto bb13; else goto bb14;
+    if ( kl_t15 ) goto bb13; else goto bb15;
     bb13:
     kl_t15 = kl_live_1 != 0;
-    goto bb14;
+    if ( kl_t15 ) goto bb14; else goto bb15;
     bb14:
-    if ( kl_t15 ) goto bb15; else goto bb16;
-    bb15:
 #line 123 "opt/drop_flags.kl"
     kl_t0 = 6;
-    goto bb16;
-    bb16:
+    goto bb15;
+    bb15:
     return kl_t0;
 }
 
