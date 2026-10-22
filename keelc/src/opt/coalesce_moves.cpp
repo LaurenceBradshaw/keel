@@ -768,8 +768,12 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Optimised : Compiled
 {
-    explicit Optimised( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true } )
+    explicit Optimised( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .inlining = inlining }
+          )
     {
     }
 
@@ -923,10 +927,11 @@ TEST_CASE( "coalesce_moves_merges_a_scrutinee_in_every_arm", "[opt][coalesce]" )
     REQUIRE( p.local_copies() == 0 );
 }
 
-// `drop _1` runs `~Outer`'s body and `drop _1.inner` the field after it; neither may go.
+// `drop _1` runs `~Outer`'s body and `drop _1.inner` the field after it; neither may go. Not
+// inlined, as both bodies are empty.
 TEST_CASE( "coalesce_moves_keeps_the_field_drops_after_a_destructor", "[opt][coalesce]" )
 {
-    const Optimised p( "i32 f() { Outer o = outer(); return 0; }\n" );
+    const Optimised p( "i32 f() { Outer o = outer(); return 0; }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );
     REQUIRE( p.local_copies() == 0 );
@@ -961,9 +966,10 @@ TEST_CASE( "coalesce_moves_builds_a_literal_in_its_field", "[opt][coalesce][fiel
     }
 }
 
+// Not inlined, so the constructor's call keeps its `&init`.
 TEST_CASE( "coalesce_moves_constructs_a_payload_in_place", "[opt][coalesce][field]" )
 {
-    const Optimised p( "Shape f( i32 v ) { return Shape::boxed( Box( v ) ); }\n" + std::string( k_shapes ) );
+    const Optimised p( "Shape f( i32 v ) { return Shape::boxed( Box( v ) ); }\n" + std::string( k_shapes ), std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );
     REQUIRE( std::ranges::any_of(
@@ -976,13 +982,15 @@ TEST_CASE( "coalesce_moves_constructs_a_payload_in_place", "[opt][coalesce][fiel
     ) );
 }
 
-// Each binding names its payload where it lies, and each payload drops once.
+// Each binding names its payload where it lies, and each payload drops once. Not inlined, so the
+// drops stay to count.
 TEST_CASE( "coalesce_moves_binds_a_payload_where_it_lies", "[opt][coalesce][field]" )
 {
     const Optimised p(
         "i32 f( move Shape s ) { switch( move s ) { case Shape::boxed( b ): return b.v; "
         "case Shape::paired( first, second ): return first.v + second.v; case Shape::empty: return 0; } }\n" +
-        std::string( k_shapes )
+            std::string( k_shapes ),
+        std::nullopt
     );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );
@@ -1079,12 +1087,14 @@ TEST_CASE( "coalesce_moves_judges_a_borrow_by_where_it_reaches", "[opt][coalesce
 }
 
 // The `err` arm falls through to the scrutinee's drop, so the binding's arm keeps its own local.
+// Not inlined: `~Box`'s empty body would leave the binding dead.
 TEST_CASE( "coalesce_moves_keeps_a_scrutinee_dropped_after_an_arm_falls_through", "[opt][coalesce]" )
 {
     const Optimised p(
         "i32 f( move Shape s ) { switch( move s ) { case Shape::boxed( b ): break; "
         "case Shape::paired( x, y ): break; case Shape::empty: break; } return 0; }\n" +
-        std::string( k_shapes )
+            std::string( k_shapes ),
+        std::nullopt
     );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );

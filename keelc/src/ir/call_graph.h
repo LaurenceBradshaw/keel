@@ -7,15 +7,15 @@
 
 namespace keel
 {
-// Whether `value` calls `callee`: a generic declaration lowers to one Function per instantiation.
-inline bool calls( const Rvalue& value, const Function& callee )
+// Whether `statement` calls `callee`: a generic declaration lowers to one Function per instantiation.
+// A drop calls its destructor.
+inline bool calls( const Statement& statement, const Function& callee )
 {
-    if( value.kind == Rvalue_kind::Call && value.callee == callee.declaration && value.type_arguments == callee.type_arguments )
-    {
-        return true;
-    }
+    const bool call = statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Call;
+    const bool drop = statement.kind == Statement_kind::Drop && statement.value.callee.is_valid();
 
-    return false;
+    return ( call || drop ) && statement.value.callee == callee.declaration &&
+           statement.value.type_arguments == callee.type_arguments;
 }
 
 // Indices into `functions`, grouped into the sets that call each other (Tarjan), each group after

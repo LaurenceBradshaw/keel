@@ -76,7 +76,10 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     bb1:
 #line 43 "opt/moves_scrutinee.kl"
     kl_t0 = kl_s_1.kl_b_34.kl_value_31;
-    kl__Box__dtor( &kl_s_1.kl_b_34 );
+#line 18 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     return kl_t0;
     bb2:
 #line 45 "opt/moves_scrutinee.kl"
@@ -89,14 +92,15 @@ int32_t kl__local__4bool( bool kl_full_1 )
 {
     int32_t kl_t0;
     struct kl__Box kl_t5;
-    struct kl__Box* kl_t6;
     bool kl_t10;
     struct kl__Shape kl_t11;
     if ( kl_full_1 ) goto bb1; else goto bb2;
     bb1:
+#line 12 "opt/moves_scrutinee.kl"
+    kl_t5.kl_value_31 = 8;
+#line 13 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 + 1;
 #line 52 "opt/moves_scrutinee.kl"
-    kl_t6 = &kl_t5;
-    kl__Box__R3Box_3i32__ctor( kl_t6, 8 );
     kl_t11.tag = 0;
     kl_t11.kl_b_34 = kl_t5;
     goto bb3;
@@ -110,7 +114,10 @@ int32_t kl__local__4bool( bool kl_full_1 )
     bb4:
 #line 56 "opt/moves_scrutinee.kl"
     kl_t0 = kl_t11.kl_b_34.kl_value_31;
-    kl__Box__dtor( &kl_t11.kl_b_34 );
+#line 18 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     return kl_t0;
     bb5:
 #line 58 "opt/moves_scrutinee.kl"
@@ -122,12 +129,13 @@ int32_t kl__local__4bool( bool kl_full_1 )
 struct kl_7prelude_result__I3Box_5FaultE kl__found__4bool( bool kl_ok_1 )
 {
     struct kl_7prelude_result__I3Box_5FaultE kl_t0;
-    struct kl__Box* kl_t4;
     if ( kl_ok_1 ) goto bb1; else goto bb2;
     bb1:
 #line 66 "opt/moves_scrutinee.kl"
-    kl_t4 = &kl_t0.kl_value_370;
-    kl__Box__R3Box_3i32__ctor( kl_t4, 9 );
+    kl_t0.kl_value_370.kl_value_31 = 9;
+#line 13 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 + 1;
+#line 66 "opt/moves_scrutinee.kl"
     kl_t0.tag = 0;
     return kl_t0;
     bb2:
@@ -142,13 +150,15 @@ struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
     struct kl_7prelude_result__I3i32_5FaultE kl_t0;
     struct kl_7prelude_result__I3Box_5FaultE kl_t4;
     bool kl_t5;
-    struct kl__Box* kl_t12;
     if ( kl_ok_1 ) goto bb3; else goto bb4;
     bb1:
 #line 75 "opt/moves_scrutinee.kl"
     kl_t0.tag = 0;
     kl_t0.kl_value_370 = kl_t4.kl_value_370.kl_value_31;
-    kl__Box__dtor( &kl_t4.kl_value_370 );
+#line 18 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     return kl_t0;
     bb2:
 #line 74 "opt/moves_scrutinee.kl"
@@ -157,8 +167,10 @@ struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
     return kl_t0;
     bb3:
 #line 66 "opt/moves_scrutinee.kl"
-    kl_t12 = &kl_t4.kl_value_370;
-    kl__Box__R3Box_3i32__ctor( kl_t12, 9 );
+    kl_t4.kl_value_370.kl_value_31 = 9;
+#line 13 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 + 1;
+#line 66 "opt/moves_scrutinee.kl"
     kl_t4.tag = 0;
     goto bb5;
     bb4:
@@ -178,7 +190,6 @@ int32_t kl__main__( void )
     bool kl_t1;
     struct kl__Shape kl_t4;
     struct kl__Box kl_t5;
-    struct kl__Box* kl_t6;
     int32_t kl_t8;
     struct kl__Shape kl_t10;
     int32_t kl_t11;
@@ -192,9 +203,11 @@ int32_t kl__main__( void )
     struct kl_7prelude_result__I3i32_5FaultE kl_t30;
     bool kl_t31;
     bool kl_t35;
+#line 12 "opt/moves_scrutinee.kl"
+    kl_t5.kl_value_31 = 7;
+#line 13 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 + 1;
 #line 80 "opt/moves_scrutinee.kl"
-    kl_t6 = &kl_t5;
-    kl__Box__R3Box_3i32__ctor( kl_t6, 7 );
     kl_t4.tag = 0;
     kl_t4.kl_b_34 = kl_t5;
     kl_t8 = kl__opened__M5Shape( kl_t4 );
@@ -291,7 +304,10 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
     bb1:
     return;
     bb2:
-    kl__Box__dtor( &( *kl_t1 ).kl_b_34 );
+#line 18 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     goto bb1;
 }
 
@@ -304,7 +320,10 @@ void kl_7prelude_result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5
     bb1:
     return;
     bb2:
-    kl__Box__dtor( &( *kl_t1 ).kl_value_370 );
+#line 18 "opt/moves_scrutinee.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 19 "opt/moves_scrutinee.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     goto bb1;
 }
 

@@ -807,20 +807,25 @@ bool Ast::is_const_method( Node_id method ) const
 
 bool Ast::has_destructor( Node_id declaration ) const
 {
+    return destructor( declaration ).is_valid();
+}
+
+Node_id Ast::destructor( Node_id declaration ) const
+{
     if( !declaration.is_valid() || !is_aggregate( kind( declaration ) ) )
     {
-        return false;
+        return Node_id {};
     }
 
     for( const Node_id member : members( declaration ) )
     {
         if( kind( member ) == Node_kind::Destructor_decl )
         {
-            return true;
+            return member;
         }
     }
 
-    return false;
+    return Node_id {};
 }
 
 Node_id Ast::unwrap_const( Node_id annotation ) const

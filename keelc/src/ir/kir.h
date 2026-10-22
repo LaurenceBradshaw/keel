@@ -188,7 +188,7 @@ struct Statement
     bool           replacing = false; // Drop only: its place is assigned again.
     Span           span {};
     Place          place {};     // assigned to by Assign, dropped by Drop
-    Rvalue         value {};     // Assign only
+    Rvalue         value {};     // Assign; a class's Drop names its destructor in callee and type_arguments
     Local_id       drop_flag {}; // Drop only: invalid means drop unconditionally
 };
 

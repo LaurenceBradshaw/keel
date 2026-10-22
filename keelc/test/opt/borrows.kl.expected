@@ -115,7 +115,6 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     struct kl__Square kl_a_1;
-    struct kl__Square* kl_t2;
     struct kl__Square* kl_t4;
     int32_t kl_t5;
     bool kl_t6;
@@ -132,8 +131,7 @@ int32_t kl__main__( void )
     struct kl__shape__ref kl_t20;
     int32_t kl_t29;
 #line 61 "opt/borrows.kl"
-    kl_t2 = &kl_a_1;
-    kl__Square__R6Square_3i32__ctor( kl_t2, 3 );
+    kl_a_1.kl_side__48 = 3;
 #line 63 "opt/borrows.kl"
     kl_t4 = &kl_a_1;
 #line 20 "opt/borrows.kl"

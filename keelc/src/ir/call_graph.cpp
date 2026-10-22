@@ -19,16 +19,11 @@ std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions
     {
         for( const Statement& statement : functions[f].statements )
         {
-            if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Call )
-            {
-                continue;
-            }
-
             for( u32 c = 0; c < functions.size(); c++ )
             {
                 const Function& callee = functions[c];
 
-                if( calls( statement.value, callee ) )
+                if( calls( statement, callee ) )
                 {
                     edges[f].push_back( c );
                     break;
@@ -161,6 +156,23 @@ struct Graphed : Compiled
         FAIL( "no function " << name );
         return 0;
     }
+
+    std::size_t group_of_destructor() const
+    {
+        for( std::size_t g = 0; g < groups.size(); ++g )
+        {
+            for( const u32 f : groups[g] )
+            {
+                if( ast.kind( all[f].declaration ) == Node_kind::Destructor_decl )
+                {
+                    return g;
+                }
+            }
+        }
+
+        FAIL( "no destructor" );
+        return 0;
+    }
 };
 
 } // namespace
@@ -183,6 +195,15 @@ TEST_CASE( "callees_first_groups_two_functions_that_call_each_other", "[ir][call
     REQUIRE( p.group_of( "even" ) == p.group_of( "odd" ) );
     REQUIRE( p.groups[p.group_of( "even" )].size() == 2 );
     REQUIRE( p.group_of( "even" ) < p.group_of( "caller" ) );
+}
+
+// `b`'s drop at the end of `user` is a call to `~Box`.
+TEST_CASE( "callees_first_puts_a_destructor_before_its_dropper", "[ir][call_graph]" )
+{
+    const Graphed p( "class Box { public i32 v; public Box() { v = 0; } ~Box() { } };\n"
+                     "i32 user() { Box b = Box(); return b.v; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( p.group_of_destructor() < p.group_of( "user" ) );
 }
 
 } // namespace keel

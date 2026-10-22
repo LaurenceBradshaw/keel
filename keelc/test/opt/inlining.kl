@@ -1,6 +1,6 @@
 // M11's inlining, in a release build: a call to a small function becomes that function's body, so
 // the call is gone. A function that calls itself, two that call each other, one over the size limit,
-// one with an `out` parameter, a constructor and a call through a pointer stay calls. Each check
+// one with an `out` parameter and a call through a pointer stay calls. Each check
 // returns its own code.
 
 i64 live;

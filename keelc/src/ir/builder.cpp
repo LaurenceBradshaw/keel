@@ -131,9 +131,15 @@ void Builder::assign( Place target, Rvalue value, Span span )
     push_statement( Statement { .kind = Statement_kind::Assign, .span = span, .place = target, .value = value } );
 }
 
-void Builder::drop( Place place, Span span, bool replacing )
+void Builder::drop( Place place, Span span, bool replacing, Node_id destructor, std::vector<Type_id> type_arguments )
 {
-    push_statement( Statement { .kind = Statement_kind::Drop, .replacing = replacing, .span = span, .place = place } );
+    push_statement( Statement {
+        .kind      = Statement_kind::Drop,
+        .replacing = replacing,
+        .span      = span,
+        .place     = place,
+        .value { .callee = destructor, .type_arguments = std::move( type_arguments ) }
+    } );
 }
 
 void Builder::storage_live( Local_id local, Span span )

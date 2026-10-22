@@ -31,4 +31,14 @@ void inline_calls(
     const Inline_weights&                       weights = {}
 );
 
+// Release only: an unflagged drop whose destructor is small and `finished` becomes that destructor's
+// body, run on the dropped place.
+void inline_drops(
+    Function&                    caller,
+    const std::vector<Function>& functions,
+    const std::vector<bool>&     finished,
+    const Literal_pool&          literals,
+    const Inline_weights&        weights = {}
+);
+
 } // namespace keel

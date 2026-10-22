@@ -86,6 +86,7 @@ Front_end run_front_end(
     // only this build's. A release build's optimisations run before elaboration makes drops explicit.
     // Callees first, so a callee's body is ready when its callers inline it.
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
+    std::vector<bool> finished( front.functions.size(), false ); // each function once optimised, as its droppers inline it
 
     for( const std::vector<u32>& group : callees_first( front.functions ) )
     {
@@ -127,6 +128,10 @@ Front_end run_front_end(
             if( build.optimise )
             {
                 settle_drops( function );
+                if( build.inlining )
+                {
+                    inline_drops( function, front.functions, finished, literals, *build.inlining );
+                }
                 propagate_constants( function, front.types.table(), literals );
                 thread_jumps( function, front.types.table(), literals );
                 propagate_values( function );
@@ -135,6 +140,14 @@ Front_end run_front_end(
                 simplify( function, literals );
                 merge_blocks( function );
                 assert( verify( function ).empty() );
+            }
+        }
+
+        if( build.optimise && build.inlining )
+        {
+            for( const u32 f : group )
+            {
+                finished[f] = true;
             }
         }
     }

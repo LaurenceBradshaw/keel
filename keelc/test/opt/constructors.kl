@@ -1,0 +1,161 @@
+// M11's constructor and destructor inlining, in a release build: a small constructor's body writes
+// the local or field it builds, and a small destructor's body runs where its unflagged drop was. A
+// constructor that hands `this` on, one called a block after its `&init`, and a flagged drop stay
+// calls. The counter's `+= 1` and `-= 1` both stay, as nothing yet follows a global across a body.
+// Each check returns its own code.
+
+i32 live;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        live -= 1;
+    }
+
+    public i32 value;
+};
+
+// `Box( v )` is built in `(*this).box`, which becomes `h.box` where `Held` is inlined in turn.
+class Held
+{
+    public Held( i32 v )
+    {
+        box = Box( v );
+        n   = v + 1;
+    }
+
+    public Box box;
+    public i32 n;
+};
+
+// `fill` is over the size limit and is handed `this` itself, so `Logged( v )` stays a call.
+class Logged
+{
+    public Logged( i32 v )
+    {
+        value = v;
+        fill();
+    }
+
+    void fill()
+    {
+        value = mixed( value, 1 ) + mixed( value, 2 ) + mixed( value, 3 );
+    }
+
+    public i32 value;
+};
+
+i32 mixed( i32 a, i32 b )
+{
+    i32 c = a * b + a;
+    i32 d = c - b * 3;
+    i32 e = d * d + c;
+    i32 f = e / 7 + d;
+    i32 g = f * a - e;
+    i32 h = g * b + f * c;
+    return h + c * d - f;
+}
+
+void consume( move Box _ )
+{
+}
+
+// Built into `b`, then dropped at the end of the scope: no call left.
+i32 local()
+{
+    {
+        Box b = Box( 4 );
+        if( b.value != 4 || live != 1 )
+        {
+            return 1;
+        }
+    }
+
+    return live == 0 ? 0 : 1;
+}
+
+// Built straight into `h.box`.
+i32 in_place()
+{
+    {
+        Held h = Held( 5 );
+        if( h.box.value + h.n != 11 || live != 1 )
+        {
+            return 2;
+        }
+    }
+
+    return live == 0 ? 0 : 2;
+}
+
+// The argument is chosen by a branch, so the call is in a later block than `b`'s `&init`.
+i32 branched( bool c )
+{
+    {
+        Box b = Box( c ? 7 : 8 );
+        if( b.value != ( c ? 7 : 8 ) )
+        {
+            return 3;
+        }
+    }
+
+    return live == 0 ? 0 : 3;
+}
+
+i32 handed()
+{
+    Logged l = Logged( 2 );
+    return l.value == mixed( 2, 1 ) + mixed( 2, 2 ) + mixed( 2, 3 ) ? 0 : 4;
+}
+
+// Moved on one path: the drop keeps its flag and its call.
+i32 sometimes( bool c )
+{
+    {
+        Box b = Box( 9 );
+        if( c )
+        {
+            consume( move b );
+        }
+    }
+
+    return live == 0 ? 0 : 5;
+}
+
+i32 main()
+{
+    i32 code = local();
+    if( code == 0 )
+    {
+        code = in_place();
+    }
+    if( code == 0 )
+    {
+        code = branched( true );
+    }
+    if( code == 0 )
+    {
+        code = branched( false );
+    }
+    if( code == 0 )
+    {
+        code = handed();
+    }
+    if( code == 0 )
+    {
+        code = sometimes( true );
+    }
+    if( code == 0 )
+    {
+        code = sometimes( false );
+    }
+
+    return code;
+}

@@ -157,7 +157,7 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func )
         entry[i] = Occupancy {
             .initialised   = std::vector<bool>( func.locals.size(), false ),
             .storage_dead  = std::vector<bool>( func.locals.size(), false ),
-            .uninitialised = std::vector<bool>( func.locals.size(), true )
+            .uninitialised = std::vector<bool>( func.locals.size(), false )
         };
     }
 

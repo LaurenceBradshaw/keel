@@ -146,9 +146,10 @@ TEST_CASE( "settle_drops_deletes_a_drop_moved_on_every_path", "[opt][settle]" )
 }
 
 // The old value drops before the reassignment and the new one at scope end, both certainly full.
+// Not inlined, so `~Box`'s empty body does not take the drops with it.
 TEST_CASE( "settle_drops_unflags_a_drop_built_on_every_path", "[opt][settle]" )
 {
-    const Settled p( "i32 f() { Box b = Box( 1 ); b = Box( 2 ); return b.v; }\n" );
+    const Settled p( "i32 f() { Box b = Box( 1 ); b = Box( 2 ); return b.v; }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.drops( true ) == 0 );

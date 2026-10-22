@@ -29,7 +29,9 @@ void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Ty
 
     if( ast.has_destructor( decl ) )
     {
-        builder.drop( place, span, replacing );
+        // The arguments `Spelling::destructor_of` mangles with, so a pass finds the function it calls.
+        const std::span<const Type_id> arguments = types.table().get( type ).arguments;
+        builder.drop( place, span, replacing, ast.destructor( decl ), { arguments.begin(), arguments.end() } );
     }
 
     // Reverse declaration order.

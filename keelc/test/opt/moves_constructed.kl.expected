@@ -50,23 +50,20 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
 struct kl__Box kl__made__3i32( int32_t kl_v_1 )
 {
     struct kl__Box kl_t0;
-    struct kl__Box* kl_t3;
-#line 35 "opt/moves_constructed.kl"
-    kl_t3 = &kl_t0;
-    kl__Box__R3Box_3i32__ctor( kl_t3, kl_v_1 );
+#line 13 "opt/moves_constructed.kl"
+    kl_t0.kl_value_31 = kl_v_1;
+#line 14 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 + 1;
     return kl_t0;
 }
 
 struct kl__Box kl__passed__3i32( int32_t kl_v_1 )
 {
     struct kl__Box kl_t0;
-    int32_t kl_t3;
-    struct kl__Box* kl_t8;
 #line 42 "opt/moves_constructed.kl"
-    kl_t3 = kl_v_1 + 1;
-#line 35 "opt/moves_constructed.kl"
-    kl_t8 = &kl_t0;
-    kl__Box__R3Box_3i32__ctor( kl_t8, kl_t3 );
+    kl_t0.kl_value_31 = kl_v_1 + 1;
+#line 14 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 + 1;
     return kl_t0;
 }
 
@@ -83,23 +80,24 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     struct kl__Box kl_a_1;
-    struct kl__Box* kl_t2;
     struct kl__Box kl_b_4;
     struct kl__Box kl_c_6;
     bool kl_t8;
     bool kl_t17;
     struct kl__Point kl_p_20;
     bool kl_t22;
-    struct kl__Box* kl_t33;
-    struct kl__Box* kl_t43;
 #line 56 "opt/moves_constructed.kl"
-    kl_t2 = &kl_a_1;
-    kl__Box__R3Box_3i32__ctor( kl_t2, 1 );
-#line 35 "opt/moves_constructed.kl"
-    kl_t33 = &kl_b_4;
-    kl__Box__R3Box_3i32__ctor( kl_t33, 2 );
-    kl_t43 = &kl_c_6;
-    kl__Box__R3Box_3i32__ctor( kl_t43, 4 );
+    kl_a_1.kl_value_31 = 1;
+#line 14 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 + 1;
+#line 57 "opt/moves_constructed.kl"
+    kl_b_4.kl_value_31 = 2;
+#line 14 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 + 1;
+#line 42 "opt/moves_constructed.kl"
+    kl_c_6.kl_value_31 = 3 + 1;
+#line 14 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 + 1;
 #line 59 "opt/moves_constructed.kl"
     kl_t8 = kl_a_1.kl_value_31 != 1;
     if ( kl_t8 ) goto bb5; else goto bb1;
@@ -114,48 +112,66 @@ int32_t kl__main__( void )
     if ( kl_t8 ) goto bb5; else goto bb4;
     bb4:
     kl_t8 = kl_destroyed_3 != 0;
-    if ( kl_t8 ) goto bb5; else goto bb6;
+    if ( kl_t8 ) goto bb5; else goto bb12;
     bb5:
 #line 61 "opt/moves_constructed.kl"
     kl_t0 = 1;
-    kl__Box__dtor( &kl_c_6 );
-    kl__Box__dtor( &kl_b_4 );
-    kl__Box__dtor( &kl_a_1 );
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
     return kl_t0;
     bb6:
-#line 55 "opt/moves_constructed.kl"
-    kl__Box__dtor( &kl_c_6 );
-    kl__Box__dtor( &kl_b_4 );
-    kl__Box__dtor( &kl_a_1 );
 #line 65 "opt/moves_constructed.kl"
-    kl_t17 = kl_live_1 != 0;
-    if ( kl_t17 ) goto bb8; else goto bb7;
-    bb7:
     kl_t17 = kl_destroyed_3 != 3;
-    if ( kl_t17 ) goto bb8; else goto bb9;
-    bb8:
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
 #line 67 "opt/moves_constructed.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb9:
+    bb8:
 #line 70 "opt/moves_constructed.kl"
     kl_p_20.kl_x_34 = 5;
 #line 49 "opt/moves_constructed.kl"
     kl_p_20.kl_y_36 = kl_p_20.kl_x_34 * 2;
 #line 71 "opt/moves_constructed.kl"
     kl_t22 = kl_p_20.kl_x_34 != 5;
-    if ( kl_t22 ) goto bb11; else goto bb10;
-    bb10:
+    if ( kl_t22 ) goto bb10; else goto bb9;
+    bb9:
     kl_t22 = kl_p_20.kl_y_36 != 10;
-    if ( kl_t22 ) goto bb11; else goto bb12;
-    bb11:
+    if ( kl_t22 ) goto bb10; else goto bb11;
+    bb10:
 #line 73 "opt/moves_constructed.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb12:
+    bb11:
 #line 76 "opt/moves_constructed.kl"
     kl_t0 = 0;
     return kl_t0;
+    bb12:
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
+#line 19 "opt/moves_constructed.kl"
+    kl_live_1 = kl_live_1 - 1;
+#line 20 "opt/moves_constructed.kl"
+    kl_destroyed_3 = kl_destroyed_3 + 1;
+#line 65 "opt/moves_constructed.kl"
+    kl_t17 = kl_live_1 != 0;
+    if ( kl_t17 ) goto bb7; else goto bb6;
 }
 
 int main( void )

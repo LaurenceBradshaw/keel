@@ -54,7 +54,8 @@ private:
 
 public:
     void assign( Place target, Rvalue value, Span span );
-    void drop( Place place, Span span, bool replacing = false );
+    void
+    drop( Place place, Span span, bool replacing = false, Node_id destructor = {}, std::vector<Type_id> type_arguments = {} );
     void storage_live( Local_id local, Span span );
     void storage_dead( Local_id local, Span span );
 

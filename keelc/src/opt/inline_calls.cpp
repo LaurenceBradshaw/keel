@@ -10,6 +10,13 @@ namespace keel
 namespace
 {
 
+// What a pick chose: no callee leaves the statement; a receiver stands in for the callee's `this`.
+struct Site
+{
+    const Function*      callee = nullptr;
+    std::optional<Place> receiver;
+};
+
 // Calls and drops dominate; storage markers, gotos and returns are free.
 u32 inline_cost( const Function& callee, const Inline_weights& weights )
 {
@@ -79,10 +86,10 @@ u32 threshold( const u32 statements_at_start, const Function& callee, const Inli
     return weights.threshold;
 }
 
-// Each of these is reached through `&init`, whose pointer `addressed_locals` trusts to die with its call.
+// An `out` parameter is reached through `&init`, whose pointer `addressed_locals` trusts to die with its call.
 bool inlinable( const Function& callee )
 {
-    if( callee.constructed.is_valid() || callee.out_parameters.size() > 0 || callee.owed_fields.size() > 0 )
+    if( callee.out_parameters.size() > 0 )
     {
         return false;
     }
@@ -90,15 +97,49 @@ bool inlinable( const Function& callee )
     return true;
 }
 
+// The offset in `block`, before `index`, of the `&init` that last wrote `pointer`'s local; none if
+// another write comes between, or the `&init` is in an earlier block.
+std::optional<u32> initialised( const Function& caller, const Block& block, u32 index, const Operand& pointer )
+{
+    if( pointer.kind != Operand_kind::Copy || pointer.place.is_global() || pointer.place.num_projections != 0 )
+    {
+        return std::nullopt;
+    }
+
+    for( u32 s = index; s-- > 0; )
+    {
+        const Statement& statement = caller.statements[block.first_statement + s];
+
+        if( statement.kind != Statement_kind::Assign || statement.place.is_global() || statement.place.num_projections != 0 ||
+            statement.place.local != pointer.place.local )
+        {
+            continue;
+        }
+
+        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
+        {
+            return s;
+        }
+
+        return std::nullopt;
+    }
+
+    return std::nullopt;
+}
+
 // The call at statement `index` of block `at` becomes: `at` up to the call, then the parameters
 // assigned from the arguments; the callee's blocks, each `return` a goto; and a continuation that
 // moves the result into the call's place, then runs the rest of `at`. `at`'s old range is left
-// unreferenced, for the caller to sweep.
-void splice( Function& caller, Block_id at, u32 index, const Function& callee )
+// unreferenced, for the caller to sweep. With a `receiver`, `(*this)` is that place and `this` gets
+// no local; a constructor's `&init` moves to the continuation, so the body writes no borrowed local.
+void splice( Function& caller, Block_id at, u32 index, const Function& callee, std::optional<Place> receiver )
 {
     // Copies: `blocks` and `statements` grow below.
-    const Block     block = caller.blocks[at.v];
-    const Statement call  = caller.statements[block.first_statement + index];
+    const Block              block = caller.blocks[at.v];
+    const Statement          call  = caller.statements[block.first_statement + index];
+    const std::optional<u32> built = receiver && call.kind == Statement_kind::Assign
+                                         ? initialised( caller, block, index, caller.operands[call.value.first_argument] )
+                                         : std::nullopt;
 
     const u32      local_base = narrow_cast<u32>( caller.locals.size() );
     const u32      block_base = narrow_cast<u32>( caller.blocks.size() );
@@ -125,6 +166,28 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee )
     // A global's local is invalid but its projections still move.
     const auto renumber_place = [&]( Place& place )
     {
+        if( receiver && !place.is_global() && place.local == Local_id { 1 } )
+        {
+            assert( place.num_projections > 0 );
+            const u32 rest  = place.num_projections - 1;
+            const u32 first = narrow_cast<u32>( caller.projections.size() );
+            for( u32 k = 0; k < receiver->num_projections; k++ )
+            {
+                const Projection projection = caller.projections[receiver->first_projection + k];
+                caller.projections.push_back( projection );
+            }
+            for( u32 k = 0; k < rest; k++ )
+            {
+                const Projection projection = caller.projections[proj_base + place.first_projection + 1 + k];
+                caller.projections.push_back( projection );
+            }
+
+            place                  = *receiver;
+            place.first_projection = first;
+            place.num_projections  = receiver->num_projections + rest;
+            return;
+        }
+
         if( place.local.is_valid() )
         {
             place.local.v += local_base;
@@ -154,6 +217,10 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee )
         {
             Statement statement = callee.statements[from.first_statement + s];
             renumber_place( statement.place );
+            if( statement.drop_flag.is_valid() )
+            {
+                statement.drop_flag.v += local_base;
+            }
             renumber( statement.value.a );
             renumber( statement.value.b );
             if( statement.value.argument_count > 0 )
@@ -189,6 +256,12 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee )
     // The continuation: the result into the call's place, then the rest of `at`.
     Block after { .first_statement = narrow_cast<u32>( caller.statements.size() ), .terminator = block.terminator };
 
+    if( built )
+    {
+        const Statement statement = caller.statements[block.first_statement + *built];
+        caller.statements.push_back( statement );
+    }
+
     if( callee.returns_a_value )
     {
         const Place from { .local = result };
@@ -215,20 +288,35 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee )
 
     for( u32 s = 0; s < index; ++s )
     {
+        if( built && s == *built )
+        {
+            continue;
+        }
+
         const Statement statement = caller.statements[block.first_statement + s];
         caller.statements.push_back( statement );
     }
 
     for( u32 p = callee.returns_a_value ? 0 : 1; p <= callee.parameter_count; ++p )
     {
+        if( p == 1 && receiver )
+        {
+            continue;
+        }
+
         caller.statements.push_back( Statement {
             .kind = Statement_kind::Storage_live, .span = call.span, .place = Place { .local = Local_id { local_base + p } }
         } );
     }
 
-    assert( call.value.argument_count == callee.parameter_count );
+    assert( call.kind == Statement_kind::Drop || call.value.argument_count == callee.parameter_count );
     for( u32 i = 0; i < call.value.argument_count; ++i )
     {
+        if( i == 0 && receiver )
+        {
+            continue;
+        }
+
         const Operand argument = caller.operands[call.value.first_argument + i];
         caller.statements.push_back( Statement {
             .kind  = Statement_kind::Assign,
@@ -249,16 +337,61 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee )
     }
 }
 
-} // namespace
-
-void inline_calls(
-    Function&                                   caller,
-    const std::vector<std::optional<Function>>& saved,
-    const Literal_pool&                         literals,
-    const Inline_weights&                       weights
-)
+// Whether the receiver is only ever dereferenced, so the place it points at can stand in for it.
+bool replaceable_receiver( const Function& callee )
 {
-    const u32             statement_count = narrow_cast<u32>( caller.statements.size() );
+    const auto ok = [&]( const Place& place )
+    {
+        if( !place.local.is_valid() || place.local != Local_id { 1 } ||
+            ( place.num_projections > 0 && callee.projections[place.first_projection].kind == Projection_kind::Deref ) )
+        {
+            return true;
+        }
+        return false;
+    };
+
+    for( const Statement& statement : callee.statements )
+    {
+        if( !ok( statement.place ) )
+        {
+            return false;
+        }
+
+        bool all_ok = true;
+        for_each_operand(
+            callee,
+            statement.value,
+            [&]( const Operand& operand )
+            {
+                if( !ok( operand.place ) )
+                {
+                    all_ok = false;
+                }
+            }
+        );
+
+        if( !all_ok )
+        {
+            return false;
+        }
+    }
+
+    for( const Block& block : callee.blocks )
+    {
+        if( !ok( block.terminator.condition.place ) || !ok( block.terminator.message.place ) ||
+            !ok( block.terminator.at.place ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Splices whatever `pick` chooses, then rescans the continuation for more.
+template <typename Pick>
+void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
+{
     std::vector<Block_id> worklist( caller.blocks.size() );
 
     for( u32 i = 0; i < caller.blocks.size(); ++i )
@@ -275,36 +408,11 @@ void inline_calls(
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
-            Statement& statement = caller.statements[block.first_statement + s];
-
-            if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Call )
+            const Site site = pick( block, s );
+            if( site.callee )
             {
-                continue;
-            }
-
-            bool inlined = false;
-            for( u32 j = 0; j < saved.size(); ++j )
-            {
-                if( !saved[j] )
-                {
-                    continue;
-                }
-
-                if( calls( statement.value, *saved[j] ) )
-                {
-                    if( inlinable( *saved[j] ) &&
-                        inline_cost( *saved[j], weights ) <= threshold( statement_count, *saved[j], weights ) )
-                    {
-                        splice( caller, at, s, *saved[j] );
-                        worklist.push_back( Block_id { narrow_cast<u32>( caller.blocks.size() ) - 1 } );
-                        inlined = true;
-                    }
-                    break;
-                }
-            }
-
-            if( inlined )
-            {
+                splice( caller, at, s, *site.callee, site.receiver );
+                worklist.push_back( Block_id { narrow_cast<u32>( caller.blocks.size() ) - 1 } );
                 break;
             }
         }
@@ -312,6 +420,113 @@ void inline_calls(
 
     remove_statements( caller, std::vector<bool>( caller.statements.size(), false ) );
     simplify( caller, literals );
+}
+
+} // namespace
+
+void inline_calls(
+    Function&                                   caller,
+    const std::vector<std::optional<Function>>& saved,
+    const Literal_pool&                         literals,
+    const Inline_weights&                       weights
+)
+{
+    const u32 statement_count = narrow_cast<u32>( caller.statements.size() );
+    inline_each(
+        caller,
+        literals,
+        [&]( const Block& block, u32 s ) -> Site
+        {
+            const Statement& statement = caller.statements[block.first_statement + s];
+            if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Call )
+            {
+                return {};
+            }
+
+            for( u32 j = 0; j < saved.size(); ++j )
+            {
+                if( !saved[j] )
+                {
+                    continue;
+                }
+
+                if( calls( statement, *saved[j] ) )
+                {
+                    const Function&      callee = *saved[j];
+                    std::optional<Place> receiver;
+                    bool                 fits =
+                        inlinable( callee ) && inline_cost( callee, weights ) <= threshold( statement_count, callee, weights );
+                    if( fits && callee.constructed.is_valid() )
+                    {
+                        assert( callee.constructed == Local_id { 1 } );
+                        const std::optional<u32> built =
+                            initialised( caller, block, s, caller.operands[statement.value.first_argument] );
+                        if( built )
+                        {
+                            receiver = caller.statements[block.first_statement + *built].value.a.place;
+                        }
+                        fits = receiver.has_value() && replaceable_receiver( callee );
+                    }
+                    if( fits )
+                    {
+                        return Site { .callee = &callee, .receiver = receiver };
+                    }
+                    else
+                    {
+                        return {};
+                    }
+                }
+            }
+
+            return {};
+        }
+    );
+}
+
+void inline_drops(
+    Function&                    caller,
+    const std::vector<Function>& functions,
+    const std::vector<bool>&     finished,
+    const Literal_pool&          literals,
+    const Inline_weights&        weights
+)
+{
+    const u32 statement_count = narrow_cast<u32>( caller.statements.size() );
+    inline_each(
+        caller,
+        literals,
+        [&]( const Block& block, u32 s ) -> Site
+        {
+            const Statement& statement = caller.statements[block.first_statement + s];
+            if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() || !statement.value.callee.is_valid() )
+            {
+                return {};
+            }
+
+            for( u32 j = 0; j < functions.size(); ++j )
+            {
+                if( !finished[j] )
+                {
+                    continue;
+                }
+
+                if( calls( statement, functions[j] ) )
+                {
+                    if( replaceable_receiver( functions[j] ) &&
+                        inline_cost( functions[j], weights ) <= threshold( statement_count, functions[j], weights ) )
+                    {
+                        return Site { .callee = &functions[j], .receiver = statement.place };
+                    }
+                    else
+                    {
+                        return {};
+                    }
+                }
+            }
+
+            return {};
+        }
+    );
 }
 
 } // namespace keel
@@ -354,6 +569,14 @@ struct Inlined : Compiled
         return static_cast<std::size_t>( std::ranges::count_if(
             first().statements,
             []( const Statement& s ) { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Call; }
+        ) );
+    }
+
+    std::size_t drops( bool flagged ) const
+    {
+        return static_cast<std::size_t>( std::ranges::count_if(
+            first().statements,
+            [&]( const Statement& s ) { return s.kind == Statement_kind::Drop && s.drop_flag.is_valid() == flagged; }
         ) );
     }
 };
@@ -401,12 +624,42 @@ TEST_CASE( "inline_calls_keeps_a_call_that_initialises_through_out", "[opt][inli
     REQUIRE( p.calls() == 1 );
 }
 
-TEST_CASE( "inline_calls_keeps_a_constructor", "[opt][inline]" )
+// `(*this).value` becomes `b.value`, so `b` is built where it lies.
+TEST_CASE( "inline_calls_inlines_a_constructor", "[opt][inline]" )
 {
     const Inlined p( "i64 f() { Box b = Box( 4 ); return b.value; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.calls() == 0 );
+}
+
+// `fill` is over the threshold and takes `this` itself, which no place can stand in for.
+TEST_CASE( "inline_calls_keeps_a_constructor_that_passes_this_on", "[opt][inline]" )
+{
+    const Inlined p( "i32 f() { Reg r = Reg( 4 ); return r.value; }\n"
+                     "class Reg { public i32 value; public Reg( i32 v ) { value = v; fill(); }"
+                     " void fill() { value = mixed( 1, 2 ) + mixed( 3, 4 ) + mixed( 5, 6 ); } };\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.calls() == 1 );
+}
+
+TEST_CASE( "inline_drops_inlines_an_unconditional_drop", "[opt][inline]" )
+{
+    const Inlined p( "i64 f() { Box b = Box( 4 ); return b.value; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.drops( false ) == 0 );
+}
+
+// Whether `~Box` runs is only known at run time, so the drop stays.
+TEST_CASE( "inline_drops_keeps_a_flagged_drop", "[opt][inline]" )
+{
+    const Inlined p( "i64 f( bool c ) { Box b = Box( 3 ); if( c ) { consume( move b ); } return 0; }\n"
+                     "void consume( move Box b ) { }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.drops( true ) == 1 );
 }
 
 } // namespace keel
