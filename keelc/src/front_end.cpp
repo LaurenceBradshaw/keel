@@ -138,8 +138,11 @@ Front_end run_front_end(
                 {
                     split_aggregates( function, ast, front.types );
                 }
+                // Folds a local compared with itself, so SCCP branches on the constant.
+                propagate_values( function, front.types.table(), literals );
                 propagate_constants( function, front.types.table(), literals );
                 thread_jumps( function, front.types.table(), literals );
+                // Again, as a join SCCP left fewer paths into may now agree.
                 propagate_values( function, front.types.table(), literals );
                 remove_dead_stores( function );
                 // Dead store removal can empty a block, so threading goes first.

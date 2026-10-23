@@ -78,18 +78,9 @@ struct kl__Held kl__hold__M4Held( struct kl__Held kl_h_1 )
 int32_t kl__numbers__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    bool kl_t9;
     ( void ) kl_a_1;
 #line 47 "opt/scalars_moved.kl"
-    kl_t9 = true;
-    if ( kl_t9 ) goto bb1; else goto bb2;
-    bb1:
     kl_t0 = 0;
-    goto bb3;
-    bb2:
-    kl_t0 = 1;
-    goto bb3;
-    bb3:
     return kl_t0;
 }
 

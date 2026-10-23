@@ -56,7 +56,9 @@ void kill( Values& values, Local_id local )
     }
 }
 
-void step( const Function& func, const Local_set& addressed, const Statement& statement, Values& values )
+void step(
+    const Function& func, const Type_table& types, const Local_set& addressed, const Statement& statement, Values& values
+)
 {
     switch( statement.kind )
     {
@@ -87,6 +89,14 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
         return;
     }
 
+    // A converting assignment, `i64 w = n`, records nothing: a read of `w` must stay an `i64`.
+    const Type_id   to   = func.locals[statement.place.local.v].type;
+    const Type_kind kind = types.get( to ).kind;
+    if( statement.value.a.type != to && ( kind == Type_kind::Int || kind == Type_kind::Float ) )
+    {
+        return;
+    }
+
     // A fact names its direct source, so a later sweep never finds it changed; `rewrite` follows the chain.
     const Local_id into = statement.place.local;
     const Operand& from = statement.value.a;
@@ -102,7 +112,7 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
     }
 }
 
-std::vector<std::optional<Values>> values_on_entry( const Function& func, const Local_set& addressed )
+std::vector<std::optional<Values>> values_on_entry( const Function& func, const Type_table& types, const Local_set& addressed )
 {
     std::vector<std::optional<Values>> values( func.blocks.size(), std::nullopt );
     values[0].emplace( func.locals.size(), std::nullopt );
@@ -126,7 +136,7 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
 
             for( u32 s = 0; s < block.statement_count; ++s )
             {
-                step( func, addressed, func.statements[block.first_statement + s], state );
+                step( func, types, addressed, func.statements[block.first_statement + s], state );
             }
 
             targets.clear();
@@ -200,7 +210,7 @@ void rewrite( Operand& operand, const Values& values )
 void propagate_values( Function& func, const Type_table& types, Literal_pool& literals )
 {
     const Local_set                          addressed = addressed_locals( func );
-    const std::vector<std::optional<Values>> entry     = values_on_entry( func, addressed );
+    const std::vector<std::optional<Values>> entry     = values_on_entry( func, types, addressed );
 
     for( u32 b = 0; b < func.blocks.size(); ++b )
     {
@@ -235,7 +245,7 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
                 }
             }
 
-            step( func, addressed, statement, values );
+            step( func, types, addressed, statement, values );
         }
 
         rewrite( block.terminator.condition, values );
@@ -370,6 +380,26 @@ TEST_CASE( "propagate_values_keeps_two_fields_apart_at_a_join", "[opt][propagate
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( 3 ) == 2 );
+}
+
+// `w` (`_2`) widens `n`, so `w * w` stays an `i64` multiply of `w`.
+TEST_CASE( "propagate_values_keeps_a_widening_copy", "[opt][propagate]" )
+{
+    const Propagated p( "i64 f( i32 n ) { i64 w = n; return w * w; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( 2 ) == 2 );
+}
+
+// `y == x` reads `x` twice once propagated, so SCCP folds the `!` and the branch on it.
+TEST_CASE( "propagate_values_folds_a_self_comparison_before_its_branch", "[opt][propagate]" )
+{
+    const Propagated p( "i32 f( i32 x ) { i32 y = x; return !( y == x ) ? 1 : 0; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( std::ranges::none_of(
+        p.first().blocks, []( const Block& block ) { return block.terminator.kind == Terminator_kind::Branch; }
+    ) );
 }
 
 } // namespace keel
