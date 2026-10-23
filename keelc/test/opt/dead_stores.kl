@@ -1,7 +1,7 @@
 // M11's dead store elimination, in a release build: a write to a local that no path reads again
 // goes, and so does a write that only fed one. A write a pointer can still see stays, as does one a
-// loop that runs no times returns, a call whose result is unread, and a field of a local whose other
-// field is read. Each check returns its own code.
+// loop that runs no times returns, and a call whose result is unread. A struct local is split into
+// its fields first, so a dead write to one field goes. Each check returns its own code.
 
 struct Point
 {
@@ -59,7 +59,7 @@ i32 looped( i32 n )
     return t;
 }
 
-// `p.y` is read, so `p` is, and both writes to `p.x` stay.
+// `p` splits into `p.x` and `p.y`, so both writes to `p.x` go.
 i32 fielded( i32 a )
 {
     Point p = Point { a, a };

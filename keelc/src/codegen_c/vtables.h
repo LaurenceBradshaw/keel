@@ -19,9 +19,6 @@ struct Vtable
     std::vector<Node_id> methods;      // the implementer's answer to each
 };
 
-// The type a place names, walked as the emitter walks its text.
-Type_id place_type( const Ast& ast, Types& types, const Function& function, const Place& place );
-
 // Every implementer the functions convert to an interface pointer, each pair once, in the order first met.
 std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, const std::vector<Function>& functions );
 

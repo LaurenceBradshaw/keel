@@ -96,14 +96,8 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
 int32_t kl__fielded__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_2;
-#line 65 "opt/dead_stores.kl"
-    kl_p_2.kl_x_1 = kl_a_1;
-    kl_p_2.kl_y_3 = kl_a_1;
-#line 66 "opt/dead_stores.kl"
-    kl_p_2.kl_x_1 = 3;
 #line 67 "opt/dead_stores.kl"
-    kl_t0 = kl_p_2.kl_y_3;
+    kl_t0 = kl_a_1;
     return kl_t0;
 }
 
@@ -114,9 +108,6 @@ int32_t kl__main__( void )
     bool kl_t8;
     bool kl_t9;
     int32_t kl_t12;
-    int32_t kl_t14;
-    bool kl_t15;
-    struct kl__Point kl_p_18;
     int32_t kl_i_23;
     bool kl_t24;
     struct kl__Point kl_q_32;
@@ -142,41 +133,26 @@ int32_t kl__main__( void )
     kl_t12 = 0;
 #line 55 "opt/dead_stores.kl"
     kl_i_23 = 0;
-    goto bb7;
+    goto bb5;
     bb3:
 #line 94 "opt/dead_stores.kl"
     kl_t0 = 5;
     return kl_t0;
     bb4:
-#line 65 "opt/dead_stores.kl"
-    kl_p_18.kl_x_1 = 4;
-    kl_p_18.kl_y_3 = 4;
-#line 66 "opt/dead_stores.kl"
-    kl_p_18.kl_x_1 = 3;
-#line 67 "opt/dead_stores.kl"
-    kl_t14 = kl_p_18.kl_y_3;
-#line 97 "opt/dead_stores.kl"
-    kl_t15 = kl_t14 != 4;
-    if ( kl_t15 ) goto bb5; else goto bb6;
-    bb5:
-#line 99 "opt/dead_stores.kl"
-    kl_t0 = 6;
-    return kl_t0;
-    bb6:
 #line 102 "opt/dead_stores.kl"
     kl_t0 = 0;
     return kl_t0;
-    bb7:
+    bb5:
 #line 55 "opt/dead_stores.kl"
     kl_t24 = kl_i_23 < 3;
-    if ( kl_t24 ) goto bb8; else goto bb9;
-    bb8:
+    if ( kl_t24 ) goto bb6; else goto bb7;
+    bb6:
 #line 57 "opt/dead_stores.kl"
     kl_t12 = kl_i_23;
 #line 55 "opt/dead_stores.kl"
     kl_i_23 = kl_i_23 + 1;
-    goto bb7;
-    bb9:
+    goto bb5;
+    bb7:
 #line 92 "opt/dead_stores.kl"
     kl_t9 = kl_t12 != 2;
     if ( kl_t9 ) goto bb3; else goto bb4;

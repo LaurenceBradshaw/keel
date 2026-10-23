@@ -768,11 +768,13 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Optimised : Compiled
 {
-    explicit Optimised( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
+    explicit Optimised(
+        std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {}, bool splitting = true
+    )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining }
+              Build { .optimise = true, .inlining = inlining, .splitting = splitting }
           )
     {
     }
@@ -998,6 +1000,7 @@ TEST_CASE( "coalesce_moves_binds_a_payload_where_it_lies", "[opt][coalesce][fiel
     REQUIRE( p.drops_of( 1, true ) == 3 );
 }
 
+// Where scalar replacement would split the local, it is off, so the kept copy is still a field's.
 TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][field]" )
 {
     SECTION( "the new value reads the field it replaces" )
@@ -1005,7 +1008,9 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
         const Optimised p(
             "i32 f() { Line l = Line { Point { 1, 2 }, Point { 3, 4 } }; l.a = Point { l.a.y, l.a.x }; "
             "return l.a.x; }\n" +
-            std::string( k_shapes )
+                std::string( k_shapes ),
+            Inline_weights {},
+            false
         );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
@@ -1026,8 +1031,12 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
 
     SECTION( "the old value drops after the new one is built" )
     {
-        const Optimised p( "i32 f() { Holder h = Holder( 1 ); h.b = Box( 2 ); return h.b.v; }\n"
-                           "class Holder { public Box b; public Holder( i32 n ) { b = Box( n ); } ~Holder() { } };\n" );
+        const Optimised p(
+            "i32 f() { Holder h = Holder( 1 ); h.b = Box( 2 ); return h.b.v; }\n"
+            "class Holder { public Box b; public Holder( i32 n ) { b = Box( n ); } ~Holder() { } };\n",
+            Inline_weights {},
+            false
+        );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
         REQUIRE( p.field_copies( true ) == 1 );
@@ -1038,7 +1047,9 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
         const Optimised p(
             "i32 f() { Line l = Line { Point { 1, 2 }, Point { 3, 4 } }; Point q = l.a; q.x = 5; "
             "return l.a.x + q.x; }\n" +
-            std::string( k_shapes )
+                std::string( k_shapes ),
+            Inline_weights {},
+            false
         );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );

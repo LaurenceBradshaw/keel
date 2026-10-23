@@ -1,0 +1,208 @@
+// M11's scalar replacement, in a release build: a struct or class local named only through its
+// fields becomes one local per field, nested fields included, so each check on a field folds. A
+// local passed whole, borrowed whole or copied whole stays a struct, an inlined callee's parameter
+// included, as do an enum, a parameter and a class whose drop stays a call. Each returns its own code.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+enum Shape
+{
+    dot( Point at ),
+    none
+};
+
+class Box
+{
+    public Box( i32 v )
+    {
+        value = v;
+    }
+
+    public i32 value;
+};
+
+// `Box( v )` is built in `(*this).box`, which becomes `h.box` once `Held` is inlined.
+class Held
+{
+    public Held( i32 v )
+    {
+        box = Box( v );
+        n   = v + 1;
+    }
+
+    public Box box;
+    public i32 n;
+};
+
+i32 closed;
+
+// Over the size limit, so its drop stays a call.
+class Logged
+{
+    public Logged( i32 v )
+    {
+        value = v;
+    }
+
+    ~Logged()
+    {
+        closed = mixed( value, 1 ) + mixed( value, 2 ) + mixed( value, 3 );
+    }
+
+    public i32 value;
+};
+
+i32 mixed( i32 a, i32 b )
+{
+    i32 c = a * b + a;
+    i32 d = c - b * 3;
+    i32 e = d * d + c;
+    i32 f = e / 7 + d;
+    i32 g = f * a - e;
+    i32 h = g * b + f * c;
+    return h + c * d - f;
+}
+
+i32 sum( Point p )
+{
+    return p.x + p.y;
+}
+
+// Over the size limit, so it stays a call.
+i32 spread( Point p )
+{
+    return mixed( p.x, 1 ) + mixed( p.y, 2 ) + mixed( p.x, 3 );
+}
+
+i32 first( const ref Point p )
+{
+    return p.x;
+}
+
+// Built by an inlined constructor, whose `&init` goes: the check folds.
+i32 constructed()
+{
+    Box b = Box( 4 );
+    return b.value == 4 ? 0 : 1;
+}
+
+// Built by a literal; the write to `y` is dead once `y` is its own local.
+i32 literal( i32 a )
+{
+    Point p = Point { a, a * 2 };
+    p.y     = 3;
+    return p.x + p.y == a + 3 ? 0 : 2;
+}
+
+// `h` splits into `box` and `n`, then `box` into `value`.
+i32 nested()
+{
+    Held h = Held( 5 );
+    return h.box.value + h.n == 11 ? 0 : 3;
+}
+
+i32 passed( i32 a )
+{
+    Point p = Point { a, 1 };
+    return spread( p ) == mixed( a, 1 ) + mixed( 1, 2 ) + mixed( a, 3 ) ? 0 : 4;
+}
+
+// `sum` is inlined, and its parameter is a whole copy of `p`, so `p` stays whole.
+i32 argument( i32 a )
+{
+    Point p = Point { a, 1 };
+    return sum( p ) == a + 1 ? 0 : 10;
+}
+
+i32 borrowed( i32 a )
+{
+    Point p = Point { a, 1 };
+    return first( p ) == a ? 0 : 5;
+}
+
+// `q` is a changed copy and `p` is read after, so the copy stays and both stay whole.
+i32 copied( i32 a )
+{
+    Point p = Point { a, 1 };
+    Point q = p;
+    q.x     = 7;
+    return p.x + q.x == a + 7 ? 0 : 6;
+}
+
+i32 opened( i32 a )
+{
+    Shape s = Shape::dot( Point { a, 2 } );
+    switch( s )
+    {
+        case Shape::dot( at ):
+            return at.x + at.y == a + 2 ? 0 : 7;
+        case Shape::none:
+            return 7;
+    }
+}
+
+i32 parameter( Point p )
+{
+    p.x = p.x + 1;
+    return p.x + p.y == 4 ? 0 : 8;
+}
+
+i32 dropped()
+{
+    {
+        Logged l = Logged( 2 );
+        if( l.value != 2 )
+        {
+            return 9;
+        }
+    }
+
+    return closed == mixed( 2, 1 ) + mixed( 2, 2 ) + mixed( 2, 3 ) ? 0 : 9;
+}
+
+i32 main()
+{
+    i32 code = constructed();
+    if( code == 0 )
+    {
+        code = literal( 5 );
+    }
+    if( code == 0 )
+    {
+        code = nested();
+    }
+    if( code == 0 )
+    {
+        code = passed( 5 );
+    }
+    if( code == 0 )
+    {
+        code = argument( 5 );
+    }
+    if( code == 0 )
+    {
+        code = borrowed( 5 );
+    }
+    if( code == 0 )
+    {
+        code = copied( 5 );
+    }
+    if( code == 0 )
+    {
+        code = opened( 5 );
+    }
+    if( code == 0 )
+    {
+        code = parameter( Point { 1, 2 } );
+    }
+    if( code == 0 )
+    {
+        code = dropped();
+    }
+
+    return code;
+}

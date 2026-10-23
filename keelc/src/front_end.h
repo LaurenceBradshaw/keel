@@ -36,6 +36,9 @@ struct Build
 
     // How an optimised build inlines; none leaves every call a call.
     std::optional<Inline_weights> inlining = Inline_weights {};
+
+    // Scalar replacement; a test of an earlier pass turns it off to see that pass's fields.
+    bool splitting = true;
 };
 
 struct Front_end

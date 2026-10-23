@@ -16,6 +16,7 @@
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
+#include "opt/split_aggregates.h"
 #include "opt/thread_jumps.h"
 
 namespace keel
@@ -83,7 +84,8 @@ Front_end run_front_end(
     const Literal_id debug = build.asserts ? vocabulary.true_literal : vocabulary.false_literal;
 
     // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
-    // only this build's. A release build's optimisations run before elaboration makes drops explicit.
+    // only this build's. A release build optimises before elaboration makes drops explicit and again
+    // after, splitting aggregates first.
     // Callees first, so a callee's body is ready when its callers inline it.
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
     std::vector<bool> finished( front.functions.size(), false ); // each function once optimised, as its droppers inline it
@@ -131,6 +133,10 @@ Front_end run_front_end(
                 if( build.inlining )
                 {
                     inline_drops( function, front.functions, finished, literals, *build.inlining );
+                }
+                if( build.splitting )
+                {
+                    split_aggregates( function, ast, front.types );
                 }
                 propagate_constants( function, front.types.table(), literals );
                 thread_jumps( function, front.types.table(), literals );
