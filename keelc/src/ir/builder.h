@@ -47,12 +47,6 @@ public:
 
     Type_id type_of( Local_id id ) const;
 
-private:
-    // The shared half of field() and deref(): copy the base's projections to the end of the table,
-    // append one, and return a place over the copy.
-    Place projected( Place base, Projection projection );
-
-public:
     void assign( Place target, Rvalue value, Span span );
     void
     drop( Place place, Span span, bool replacing = false, Node_id destructor = {}, std::vector<Type_id> type_arguments = {} );

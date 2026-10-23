@@ -91,18 +91,15 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 int32_t kl__local__4bool( bool kl_full_1 )
 {
     int32_t kl_t0;
-    struct kl__Box kl_t5;
     bool kl_t10;
     struct kl__Shape kl_t11;
     if ( kl_full_1 ) goto bb1; else goto bb2;
     bb1:
-#line 12 "opt/moves_scrutinee.kl"
-    kl_t5.kl_value_31 = 8;
 #line 13 "opt/moves_scrutinee.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 52 "opt/moves_scrutinee.kl"
     kl_t11.tag = 0;
-    kl_t11.kl_b_34 = kl_t5;
+    kl_t11.kl_b_34.kl_value_31 = 8;
     goto bb3;
     bb2:
     kl_t11.tag = 1;
@@ -189,7 +186,6 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     bool kl_t1;
     struct kl__Shape kl_t4;
-    struct kl__Box kl_t5;
     int32_t kl_t8;
     struct kl__Shape kl_t10;
     int32_t kl_t11;
@@ -203,13 +199,11 @@ int32_t kl__main__( void )
     struct kl_7prelude_result__I3i32_5FaultE kl_t30;
     bool kl_t31;
     bool kl_t35;
-#line 12 "opt/moves_scrutinee.kl"
-    kl_t5.kl_value_31 = 7;
 #line 13 "opt/moves_scrutinee.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 80 "opt/moves_scrutinee.kl"
     kl_t4.tag = 0;
-    kl_t4.kl_b_34 = kl_t5;
+    kl_t4.kl_b_34.kl_value_31 = 7;
     kl_t8 = kl__opened__M5Shape( kl_t4 );
     kl_t1 = kl_t8 != 7;
     if ( kl_t1 ) goto bb4; else goto bb1;

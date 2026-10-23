@@ -1,7 +1,7 @@
 // M11's scalar replacement, in a release build: a struct or class local named only through its
-// fields becomes one local per field, nested fields included, so each check on a field folds. A
-// local passed whole, borrowed whole or copied whole stays a struct, an inlined callee's parameter
-// included, as do an enum, a parameter and a class whose drop stays a call. Each returns its own code.
+// fields and whole copies becomes one local per field, nested fields included, so each check on a
+// field folds; so does a parameter with a field written. A local passed whole to a call or borrowed
+// whole stays a struct, as do an enum and a class whose drop stays a call. Each returns its own code.
 
 struct Point
 {
@@ -111,7 +111,7 @@ i32 passed( i32 a )
     return spread( p ) == mixed( a, 1 ) + mixed( 1, 2 ) + mixed( a, 3 ) ? 0 : 4;
 }
 
-// `sum` is inlined, and its parameter is a whole copy of `p`, so `p` stays whole.
+// `sum` is inlined, and its parameter, a whole copy of `p`, splits with it.
 i32 argument( i32 a )
 {
     Point p = Point { a, 1 };
@@ -124,7 +124,7 @@ i32 borrowed( i32 a )
     return first( p ) == a ? 0 : 5;
 }
 
-// `q` is a changed copy and `p` is read after, so the copy stays and both stay whole.
+// `q` is a changed copy and `p` is read after; the copy becomes one per field, and both split.
 i32 copied( i32 a )
 {
     Point p = Point { a, 1 };

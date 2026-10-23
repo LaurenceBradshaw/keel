@@ -4,6 +4,7 @@
 #include "opt/propagate_values.h"
 #include <optional>
 #include "ir/live.h"
+#include "opt/fold_constants.h"
 
 namespace keel
 {
@@ -167,7 +168,7 @@ void rewrite( Operand& operand, const Values& values )
 } // namespace
 
 // Facts are locals × blocks; a sparse map per block if it shows.
-void propagate_values( Function& func )
+void propagate_values( Function& func, const Type_table& types, Literal_pool& literals )
 {
     const Local_set                          addressed = addressed_locals( func );
     const std::vector<std::optional<Values>> entry     = values_on_entry( func, addressed );
@@ -196,6 +197,12 @@ void propagate_values( Function& func )
                 for( u32 i = 0; i < statement.value.argument_count; ++i )
                 {
                     rewrite( func.operands[statement.value.first_argument + i], values );
+                }
+
+                // Before the step, so `_3 = copy _45 + const 0` records a copy.
+                if( std::optional<Rvalue> folded = identity( statement.value, types, literals ) )
+                {
+                    statement.value = std::move( *folded );
                 }
             }
 

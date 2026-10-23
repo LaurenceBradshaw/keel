@@ -1,0 +1,67 @@
+// M11's scalar replacement of a class moved whole, in a release build: a number's or `bool`'s field
+// of a split move is a copy, so propagation forwards it and the chain of locals goes. A pointer's
+// field keeps its move. Each returns its own code.
+
+class Pair
+{
+    public Pair( i32 v, bool b )
+    {
+        n  = v;
+        on = b;
+    }
+
+    ~Pair() { }
+
+    public i32  n;
+    public bool on;
+};
+
+class Held
+{
+    public Held( i32* p, i32 v )
+    {
+        at = p;
+        n  = v;
+    }
+
+    ~Held() { }
+
+    public i32* at;
+    public i32  n;
+};
+
+Pair pass( move Pair p )
+{
+    return p;
+}
+
+Held hold( move Held h )
+{
+    return h;
+}
+
+// Moved through `pass` twice: each field is read where it was written.
+i32 numbers( i32 a )
+{
+    Pair p = pass( pass( Pair( a, true ) ) );
+    return p.on && p.n == a ? 0 : 1;
+}
+
+// `at` is a pointer, so its field's copy stays a move.
+i32 pointers( i32 a )
+{
+    i32  v = a;
+    Held h = hold( hold( Held( &v, 2 ) ) );
+    return *h.at == a && h.n == 2 ? 0 : 2;
+}
+
+i32 main()
+{
+    i32 code = numbers( 5 );
+    if( code == 0 )
+    {
+        code = pointers( 5 );
+    }
+
+    return code;
+}

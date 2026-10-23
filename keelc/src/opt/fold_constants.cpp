@@ -359,6 +359,86 @@ Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& 
     return use( constant( literals.add_integer( bits ), type ) );
 }
 
+std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Literal_pool& literals )
+{
+    if( value.kind != Rvalue_kind::Binary )
+    {
+        return std::nullopt;
+    }
+
+    const Type_kind kind = types.get( value.a.type ).kind;
+
+    const auto whole = []( const Operand& x )
+    { return x.kind == Operand_kind::Copy && !x.place.is_global() && x.place.num_projections == 0; };
+
+    // Never a float, which NaN makes unequal to itself.
+    if( whole( value.a ) && whole( value.b ) && value.a.place.local == value.b.place.local &&
+        ( kind == Type_kind::Int || kind == Type_kind::Bool || kind == Type_kind::Pointer ) )
+    {
+        switch( value.op )
+        {
+        case Token_kind::Equal_equal:
+        case Token_kind::Less_equal:
+        case Token_kind::Greater_equal:
+            return value_of( 1, value.type, types, literals );
+
+        case Token_kind::Bang_equal:
+        case Token_kind::Less:
+        case Token_kind::Greater:
+            return value_of( 0, value.type, types, literals );
+
+        default:
+            break;
+        }
+    }
+
+    // Not a float's: `-0.0 + 0` is `0.0`.
+    if( kind != Type_kind::Int )
+    {
+        return std::nullopt;
+    }
+
+    const auto is = [&]( const Operand& x, u64 n )
+    { return x.kind == Operand_kind::Constant && x.constant.is_valid() && literals.integer( x.constant ) == n; };
+
+    switch( value.op )
+    {
+    case Token_kind::Plus:
+        if( is( value.b, 0 ) )
+        {
+            return use( value.a );
+        }
+        if( is( value.a, 0 ) )
+        {
+            return use( value.b );
+        }
+        break;
+
+    case Token_kind::Minus:
+        if( is( value.b, 0 ) )
+        {
+            return use( value.a );
+        }
+        break;
+
+    case Token_kind::Star:
+        if( is( value.b, 1 ) )
+        {
+            return use( value.a );
+        }
+        if( is( value.a, 1 ) )
+        {
+            return use( value.b );
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return std::nullopt;
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -417,6 +497,61 @@ TEST_CASE( "fold_constants_divides_min_by_minus_one", "[opt][fold]" )
     REQUIRE( arithmetic( Token_kind::Percent, 0x8000'0000u, 0xFFFF'FFFFu, k_i32 ) == 0u );
     REQUIRE( arithmetic( Token_kind::Slash, 1ull << 63, ~0ull, k_i64 ) == 1ull << 63 );
     REQUIRE( arithmetic( Token_kind::Slash, 0xFFFF'FFF9u, 2, k_i32 ) == 0xFFFF'FFFDu );
+}
+
+TEST_CASE( "fold_constants_folds_a_local_compared_with_itself", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32     = types.integer( 32, true );
+    const Type_id    boolean = types.builtin( Type_kind::Bool );
+    const Operand    x       = copy( Place { .local = Local_id { 1 } }, i32 );
+
+    const std::optional<Rvalue> equal = identity( binary( Token_kind::Equal_equal, x, x, boolean ), types, literals );
+    REQUIRE( equal );
+    REQUIRE( literals.integer( equal->a.constant ) == 1 );
+
+    const std::optional<Rvalue> below = identity( binary( Token_kind::Less, x, x, boolean ), types, literals );
+    REQUIRE( below );
+    REQUIRE( literals.integer( below->a.constant ) == 0 );
+}
+
+// A NaN is unequal to itself.
+TEST_CASE( "fold_constants_keeps_a_float_compared_with_itself", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    f64 = types.floating( 64 );
+    const Operand    x   = copy( Place { .local = Local_id { 1 } }, f64 );
+
+    REQUIRE( !identity( binary( Token_kind::Equal_equal, x, x, types.builtin( Type_kind::Bool ) ), types, literals ) );
+}
+
+// `_1.a == _1.a` would fold too, but only a whole local is judged.
+TEST_CASE( "fold_constants_keeps_a_projected_place_compared_with_itself", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32 = types.integer( 32, true );
+    const Operand    x   = copy( Place { .local = Local_id { 1 }, .num_projections = 1 }, i32 );
+
+    REQUIRE( !identity( binary( Token_kind::Equal_equal, x, x, types.builtin( Type_kind::Bool ) ), types, literals ) );
+}
+
+TEST_CASE( "fold_constants_folds_an_added_zero", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32  = types.integer( 32, true );
+    const Operand    x    = copy( Place { .local = Local_id { 1 } }, i32 );
+    const Operand    zero = constant( literals.add_integer( 0 ), i32 );
+
+    const std::optional<Rvalue> sum = identity( binary( Token_kind::Plus, zero, x, i32 ), types, literals );
+    REQUIRE( sum );
+    REQUIRE( sum->kind == Rvalue_kind::Use );
+    REQUIRE( sum->a.place.local == x.place.local );
+
+    REQUIRE( !identity( binary( Token_kind::Minus, zero, x, i32 ), types, literals ) );
 }
 
 } // namespace keel

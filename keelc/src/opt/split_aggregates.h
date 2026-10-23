@@ -8,7 +8,8 @@
 
 namespace keel
 {
-// After inline_drops: a struct or class local, past the parameters, that every place names through a
-// field becomes one local per field named, repeated for nested fields; release only.
+// After inline_drops: a struct or class local, a parameter with a field written, or the return slot
+// with a field read, that every place names through a field becomes one local per field named,
+// repeated for nested fields; release only.
 void split_aggregates( Function& func, const Ast& ast, Types& types );
 } // namespace keel

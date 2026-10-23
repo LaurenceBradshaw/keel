@@ -71,59 +71,33 @@ Place Builder::global( Node_id declaration, Type_id owner ) const
 
 Place Builder::field( Place base, Node_id field_decl )
 {
-    return projected( base, Projection { Projection_kind::Field, field_decl } );
+    return projected( function_, base, Projection { Projection_kind::Field, field_decl } );
 }
 
 Place Builder::deref( Place base )
 {
-    return projected( base, Projection { Projection_kind::Deref, Node_id {} } );
+    return projected( function_, base, Projection { Projection_kind::Deref, Node_id {} } );
 }
 
 Place Builder::tag( Place base )
 {
-    return projected( base, Projection { Projection_kind::Tag, Node_id {} } );
+    return projected( function_, base, Projection { Projection_kind::Tag, Node_id {} } );
 }
 
 Place Builder::member( Place base, Type_id member )
 {
-    return projected( base, Projection { .kind = Projection_kind::Member, .member = member } );
+    return projected( function_, base, Projection { .kind = Projection_kind::Member, .member = member } );
 }
 
 Place Builder::index( Place base, Local_id index )
 {
-    return projected( base, Projection { .kind = Projection_kind::Index, .index = index } );
+    return projected( function_, base, Projection { .kind = Projection_kind::Index, .index = index } );
 }
 
 Type_id Builder::type_of( Local_id id ) const
 {
     assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );
     return function_.locals[id.v].type;
-}
-
-// Projections live in one table addressed by (first, count), so a place's own must be contiguous -
-// and base's may sit anywhere. Copy base's to the end, append the new one, and return a place over
-// the copy. The root comes across with it, which is what keeps `counter.x` rooted in the global.
-Place Builder::projected( Place base, Projection projection )
-{
-    const u32 first = narrow_cast<u32>( function_.projections.size() );
-
-    for( u32 i = 0; i < base.num_projections; ++i )
-    {
-        // Read out before appending: push_back from a reference into the same vector is legal but
-        // needlessly subtle.
-        const Projection copied = function_.projections[base.first_projection + i];
-
-        function_.projections.push_back( copied );
-    }
-
-    function_.projections.push_back( projection );
-
-    Place result = base;
-
-    result.first_projection = first;
-    result.num_projections  = base.num_projections + 1;
-
-    return result;
 }
 
 void Builder::assign( Place target, Rvalue value, Span span )

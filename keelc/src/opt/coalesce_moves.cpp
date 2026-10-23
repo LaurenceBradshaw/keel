@@ -881,7 +881,7 @@ TEST_CASE( "coalesce_moves_keeps_two_values_alive_at_once", "[opt][coalesce]" )
 {
     SECTION( "a reassignment builds the new value before the old one drops" )
     {
-        const Optimised p( "i32 f() { Box a = Box( 1 ); a = Box( 2 ); return a.v; }\n" );
+        const Optimised p( "i32 f() { Box a = Box( 1 ); a = Box( 2 ); return a.v; }\n", Inline_weights {}, false );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
         REQUIRE( p.local_copies() == 1 );
@@ -889,7 +889,9 @@ TEST_CASE( "coalesce_moves_keeps_two_values_alive_at_once", "[opt][coalesce]" )
 
     SECTION( "a local alive while an early return builds its own value" )
     {
-        const Optimised p( "Box f( bool c ) { Box b = Box( 3 ); if( c ) { return Box( 4 ); } return b; }\n" );
+        const Optimised p(
+            "Box f( bool c ) { Box b = Box( 3 ); if( c ) { return Box( 4 ); } return b; }\n", Inline_weights {}, false
+        );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
         REQUIRE( p.local_copies() == 1 );
@@ -897,7 +899,9 @@ TEST_CASE( "coalesce_moves_keeps_two_values_alive_at_once", "[opt][coalesce]" )
 
     SECTION( "a copy read again" )
     {
-        const Optimised p( "i32 f() { Point p = Point { 1, 2 }; Point q = p; p.x = 5; return q.x; }\n" );
+        const Optimised p(
+            "i32 f() { Point p = Point { 1, 2 }; Point q = p; p.x = 5; return q.x; }\n", Inline_weights {}, false
+        );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
         REQUIRE( p.local_copies() == 1 );
@@ -1022,7 +1026,9 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
         const Optimised p(
             "i32 f() { Line l = Line { Point { 1, 2 }, Point { 3, 4 } }; ref Line r = l; "
             "l.a = Point { r.a.y, 7 }; return l.a.x; }\n" +
-            std::string( k_shapes )
+                std::string( k_shapes ),
+            Inline_weights {},
+            false
         );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );
@@ -1089,7 +1095,9 @@ TEST_CASE( "coalesce_moves_judges_a_borrow_by_where_it_reaches", "[opt][coalesce
         const Optimised p(
             "i32 f( i32 n ) { Line l = Line { Point { 0, 0 }, Point { 0, 0 } }; ref Line r = l; i32 t = 0; "
             "for( i32 i = 0; i < n; i++ ) { l.a = Point { i, 1 }; t = t + r.a.x; } return t; }\n" +
-            std::string( k_shapes )
+                std::string( k_shapes ),
+            Inline_weights {},
+            false
         );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );

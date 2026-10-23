@@ -140,7 +140,7 @@ Front_end run_front_end(
                 }
                 propagate_constants( function, front.types.table(), literals );
                 thread_jumps( function, front.types.table(), literals );
-                propagate_values( function );
+                propagate_values( function, front.types.table(), literals );
                 remove_dead_stores( function );
                 // Dead store removal can empty a block, so threading goes first.
                 simplify( function, literals );

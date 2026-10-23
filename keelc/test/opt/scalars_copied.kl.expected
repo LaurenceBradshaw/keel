@@ -1,0 +1,326 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "scalars_copied.kl.prelude.c"
+
+struct kl__Point;
+struct kl__Box;
+struct kl__Shape;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+struct kl__Box
+{
+    int32_t kl_value_22;
+};
+
+struct kl__Shape
+{
+    int32_t tag;
+    struct kl__Point kl_at_6;
+};
+
+void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
+int32_t kl__mixed__3i32_3i32( int32_t, int32_t );
+int32_t kl__sum__5Point( struct kl__Point );
+int32_t kl__spread__5Point( struct kl__Point );
+struct kl__Box kl__made__3i32( int32_t );
+struct kl__Box kl__pass__3Box( struct kl__Box );
+int32_t kl__argument__3i32( int32_t );
+int32_t kl__chain__( void );
+int32_t kl__opened__3i32( int32_t );
+struct kl__Point kl__built__3i32( int32_t );
+int32_t kl__returned__3i32( int32_t );
+int32_t kl__copied__3i32( int32_t );
+int32_t kl__passed__3i32( int32_t );
+int32_t kl__main__( void );
+
+void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+{
+#line 22 "opt/scalars_copied.kl"
+    ( *kl_this_1 ).kl_value_22 = kl_v_2;
+    return;
+}
+
+int32_t kl__mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_c_3;
+    int32_t kl_t4;
+    int32_t kl_d_6;
+    int32_t kl_t7;
+    int32_t kl_e_9;
+    int32_t kl_t10;
+    int32_t kl_f_12;
+    int32_t kl_t13;
+    int32_t kl_g_15;
+    int32_t kl_t16;
+    int32_t kl_h_18;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    int32_t kl_t22;
+    int32_t kl_t23;
+#line 30 "opt/scalars_copied.kl"
+    kl_t4 = kl_a_1 * kl_b_2;
+    kl_c_3 = kl_t4 + kl_a_1;
+#line 31 "opt/scalars_copied.kl"
+    kl_t7 = kl_b_2 * 3;
+    kl_d_6 = kl_c_3 - kl_t7;
+#line 32 "opt/scalars_copied.kl"
+    kl_t10 = kl_d_6 * kl_d_6;
+    kl_e_9 = kl_t10 + kl_c_3;
+#line 33 "opt/scalars_copied.kl"
+    kl_t13 = kl_e_9 / 7;
+    kl_f_12 = kl_t13 + kl_d_6;
+#line 34 "opt/scalars_copied.kl"
+    kl_t16 = kl_f_12 * kl_a_1;
+    kl_g_15 = kl_t16 - kl_e_9;
+#line 35 "opt/scalars_copied.kl"
+    kl_t19 = kl_g_15 * kl_b_2;
+    kl_t20 = kl_f_12 * kl_c_3;
+    kl_h_18 = kl_t19 + kl_t20;
+#line 36 "opt/scalars_copied.kl"
+    kl_t22 = kl_c_3 * kl_d_6;
+    kl_t23 = kl_h_18 + kl_t22;
+    kl_t0 = kl_t23 - kl_f_12;
+    return kl_t0;
+}
+
+int32_t kl__sum__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+#line 41 "opt/scalars_copied.kl"
+    kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__spread__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+#line 47 "opt/scalars_copied.kl"
+    kl_t2 = kl__mixed__3i32_3i32( kl_p_1.kl_x_1, 1 );
+    kl_t3 = kl__mixed__3i32_3i32( kl_p_1.kl_y_3, 2 );
+    kl_t4 = kl_t2 + kl_t3;
+    kl_t5 = kl__mixed__3i32_3i32( kl_p_1.kl_x_1, 3 );
+    kl_t0 = kl_t4 + kl_t5;
+    return kl_t0;
+}
+
+struct kl__Box kl__made__3i32( int32_t kl_v_1 )
+{
+    struct kl__Box kl_t0;
+#line 22 "opt/scalars_copied.kl"
+    kl_t0.kl_value_22 = kl_v_1;
+    return kl_t0;
+}
+
+struct kl__Box kl__pass__3Box( struct kl__Box kl_b_1 )
+{
+    struct kl__Box kl_t0;
+#line 58 "opt/scalars_copied.kl"
+    kl_t0 = kl_b_1;
+    return kl_t0;
+}
+
+int32_t kl__argument__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+#line 41 "opt/scalars_copied.kl"
+    kl_t5 = kl_a_1 + 1;
+#line 65 "opt/scalars_copied.kl"
+    kl_t6 = kl_a_1 + 1;
+    kl_t7 = kl_t5 == kl_t6;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 1;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__chain__( void )
+{
+    int32_t kl_t0;
+#line 73 "opt/scalars_copied.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__opened__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    struct kl__Shape kl_s_2;
+    bool kl_t5;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+#line 79 "opt/scalars_copied.kl"
+    kl_s_2.kl_at_6.kl_x_1 = kl_a_1;
+    kl_s_2.kl_at_6.kl_y_3 = 2;
+    kl_s_2.tag = 0;
+#line 82 "opt/scalars_copied.kl"
+    kl_t5 = kl_s_2.tag == 0;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 83 "opt/scalars_copied.kl"
+    kl_t8 = kl_s_2.kl_at_6.kl_x_1 + kl_s_2.kl_at_6.kl_y_3;
+    kl_t9 = kl_a_1 + 2;
+    kl_t10 = kl_t8 == kl_t9;
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb2:
+#line 85 "opt/scalars_copied.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb3:
+#line 83 "opt/scalars_copied.kl"
+    kl_t0 = 0;
+    goto bb5;
+    bb4:
+    kl_t0 = 3;
+    goto bb5;
+    bb5:
+    return kl_t0;
+}
+
+struct kl__Point kl__built__3i32( int32_t kl_a_1 )
+{
+    struct kl__Point kl_t0;
+    int32_t kl_t7;
+#line 92 "opt/scalars_copied.kl"
+    kl_t7 = kl_a_1 + 1;
+#line 93 "opt/scalars_copied.kl"
+    kl_t0.kl_x_1 = kl_a_1;
+    kl_t0.kl_y_3 = kl_t7;
+    return kl_t0;
+}
+
+int32_t kl__returned__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_p_13;
+#line 92 "opt/scalars_copied.kl"
+    kl_p_13 = kl_a_1 + 1;
+#line 99 "opt/scalars_copied.kl"
+    kl_t5 = kl_a_1 + 1;
+    kl_t6 = kl_p_13 == kl_t5;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 4;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__copied__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+#line 108 "opt/scalars_copied.kl"
+    kl_t6 = kl_a_1 + 7;
+    kl_t7 = kl_a_1 + 7;
+    kl_t8 = kl_t6 == kl_t7;
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 5;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__passed__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    struct kl__Point kl_p_2;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+#line 113 "opt/scalars_copied.kl"
+    kl_p_2.kl_x_1 = kl_a_1;
+    kl_p_2.kl_y_3 = 1;
+#line 114 "opt/scalars_copied.kl"
+    kl_t5 = kl__spread__5Point( kl_p_2 );
+    kl_t6 = kl__mixed__3i32_3i32( kl_a_1, 1 );
+    kl_t7 = kl__mixed__3i32_3i32( 1, 2 );
+    kl_t8 = kl_t6 + kl_t7;
+    kl_t9 = kl__mixed__3i32_3i32( kl_a_1, 3 );
+    kl_t10 = kl_t8 + kl_t9;
+    kl_t11 = kl_t5 == kl_t10;
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 6;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t7;
+    bool kl_t9;
+    bool kl_t11;
+#line 126 "opt/scalars_copied.kl"
+    kl_t0 = kl__opened__3i32( 5 );
+#line 128 "opt/scalars_copied.kl"
+    kl_t7 = kl_t0 == 0;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 99 "opt/scalars_copied.kl"
+    kl_t0 = 0;
+    goto bb2;
+    bb2:
+#line 132 "opt/scalars_copied.kl"
+    kl_t9 = kl_t0 == 0;
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+#line 108 "opt/scalars_copied.kl"
+    kl_t0 = 0;
+    goto bb4;
+    bb4:
+#line 136 "opt/scalars_copied.kl"
+    kl_t11 = kl_t0 == 0;
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+#line 138 "opt/scalars_copied.kl"
+    kl_t0 = kl__passed__3i32( 5 );
+    goto bb6;
+    bb6:
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

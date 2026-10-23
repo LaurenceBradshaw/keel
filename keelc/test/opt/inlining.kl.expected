@@ -107,12 +107,11 @@ int64_t kl__looped__3i64( int64_t kl_n_1 )
     int64_t kl_t0;
     int64_t kl_i_3;
     bool kl_t4;
-    struct kl__Box kl_t5;
-    struct kl__Box kl_t8;
     int64_t kl_t9;
     int64_t kl_v_12;
-    struct kl__Box kl_t13;
-    struct kl__Box kl_b_16;
+    int64_t kl_t21;
+    int64_t kl_b_22;
+    int64_t kl_t23;
 #line 56 "opt/inlining.kl"
     kl_t0 = 0;
 #line 57 "opt/inlining.kl"
@@ -125,15 +124,14 @@ int64_t kl__looped__3i64( int64_t kl_n_1 )
 #line 59 "opt/inlining.kl"
     kl_v_12 = kl_i_3;
 #line 12 "opt/inlining.kl"
-    kl_t5.kl_value_26 = kl_v_12;
+    kl_t21 = kl_v_12;
 #line 13 "opt/inlining.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 59 "opt/inlining.kl"
-    kl_t13 = kl_t5;
-    kl_t8 = kl_t13;
-    kl_b_16 = kl_t8;
+    kl_t23 = kl_t21;
+    kl_b_22 = kl_t23;
 #line 44 "opt/inlining.kl"
-    kl_t9 = kl_b_16.kl_value_26;
+    kl_t9 = kl_b_22;
 #line 18 "opt/inlining.kl"
     kl_live_1 = kl_live_1 - 1;
 #line 59 "opt/inlining.kl"
@@ -337,10 +335,7 @@ int32_t kl__main__( void )
     bool kl_t25;
     int32_t kl_t26;
     bool kl_t27;
-    struct kl__Box kl_b_28;
     bool kl_t31;
-    int64_t kl_t32;
-    struct kl__Box kl_b_39;
     kl__fn__F3i32E3i32 kl_f_42;
     int64_t kl_t62;
 #line 144 "opt/inlining.kl"
@@ -429,27 +424,18 @@ int32_t kl__main__( void )
     kl_t0 = 9;
     return kl_t0;
     bb16:
-#line 12 "opt/inlining.kl"
-    kl_b_28.kl_value_26 = 7;
 #line 13 "opt/inlining.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 187 "opt/inlining.kl"
-    kl_b_39 = kl_b_28;
-#line 44 "opt/inlining.kl"
-    kl_t32 = kl_b_39.kl_value_26;
 #line 18 "opt/inlining.kl"
     kl_live_1 = kl_live_1 - 1;
 #line 187 "opt/inlining.kl"
-    kl_t31 = kl_t32 != 7;
-    if ( kl_t31 ) goto bb18; else goto bb17;
-    bb17:
     kl_t31 = kl_live_1 != 0;
-    if ( kl_t31 ) goto bb18; else goto bb19;
-    bb18:
+    if ( kl_t31 ) goto bb17; else goto bb18;
+    bb17:
 #line 189 "opt/inlining.kl"
     kl_t0 = 10;
     return kl_t0;
-    bb19:
+    bb18:
 #line 192 "opt/inlining.kl"
     kl_t0 = 0;
     return kl_t0;

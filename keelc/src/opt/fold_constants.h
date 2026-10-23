@@ -18,4 +18,8 @@ std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table
 
 // `bits` of `type` written as lowering writes a literal: a negative is `-const m`.
 Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& literals );
+
+// What `value` reduces to without knowing its operands: a whole local compared with itself, or
+// `x + 0`, `x - 0` or `x * 1`; nullopt otherwise.
+std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Literal_pool& literals );
 } // namespace keel

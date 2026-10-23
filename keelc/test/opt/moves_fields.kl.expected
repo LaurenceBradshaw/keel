@@ -165,8 +165,6 @@ int32_t kl__main__( void )
     int32_t kl_t18;
     bool kl_t22;
     struct kl__Shape kl_t24;
-    struct kl__Box kl_t25;
-    struct kl__Box kl_t28;
     int32_t kl_t31;
     bool kl_t36;
     struct kl__Shape kl_t38;
@@ -213,18 +211,13 @@ int32_t kl__main__( void )
     kl_t0 = 3;
     return kl_t0;
     bb7:
-#line 12 "opt/moves_fields.kl"
-    kl_t25.kl_value_31 = 1;
 #line 13 "opt/moves_fields.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 12 "opt/moves_fields.kl"
-    kl_t28.kl_value_31 = 2;
-#line 13 "opt/moves_fields.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 103 "opt/moves_fields.kl"
     kl_t24.tag = 1;
-    kl_t24.kl_first_47 = kl_t25;
-    kl_t24.kl_second_49 = kl_t28;
+    kl_t24.kl_first_47.kl_value_31 = 1;
+    kl_t24.kl_second_49.kl_value_31 = 2;
     kl_t31 = kl__opened__M5Shape( kl_t24 );
     kl_t22 = kl_t31 != 12;
     if ( kl_t22 ) goto bb10; else goto bb8;

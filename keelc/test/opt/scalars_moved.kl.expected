@@ -1,0 +1,145 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "scalars_moved.kl.prelude.c"
+
+struct kl__Pair;
+struct kl__Held;
+
+struct kl__Pair
+{
+    int32_t kl_n_23;
+    bool kl_on_25;
+};
+
+struct kl__Held
+{
+    int32_t* kl_at_52;
+    int32_t kl_n_54;
+};
+
+void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair*, int32_t, bool );
+void kl__Pair__dtor( struct kl__Pair* );
+void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held*, int32_t*, int32_t );
+void kl__Held__dtor( struct kl__Held* );
+struct kl__Pair kl__pass__M4Pair( struct kl__Pair );
+struct kl__Held kl__hold__M4Held( struct kl__Held );
+int32_t kl__numbers__3i32( int32_t );
+int32_t kl__pointers__3i32( int32_t );
+int32_t kl__main__( void );
+
+void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair* kl_this_1, int32_t kl_v_2, bool kl_b_3 )
+{
+#line 9 "opt/scalars_moved.kl"
+    ( *kl_this_1 ).kl_n_23 = kl_v_2;
+#line 10 "opt/scalars_moved.kl"
+    ( *kl_this_1 ).kl_on_25 = kl_b_3;
+    return;
+}
+
+void kl__Pair__dtor( struct kl__Pair* kl_this_1 )
+{
+    ( void ) kl_this_1;
+    return;
+}
+
+void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held* kl_this_1, int32_t* kl_p_2, int32_t kl_v_3 )
+{
+#line 23 "opt/scalars_moved.kl"
+    ( *kl_this_1 ).kl_at_52 = kl_p_2;
+#line 24 "opt/scalars_moved.kl"
+    ( *kl_this_1 ).kl_n_54 = kl_v_3;
+    return;
+}
+
+void kl__Held__dtor( struct kl__Held* kl_this_1 )
+{
+    ( void ) kl_this_1;
+    return;
+}
+
+struct kl__Pair kl__pass__M4Pair( struct kl__Pair kl_p_1 )
+{
+    struct kl__Pair kl_t0;
+#line 35 "opt/scalars_moved.kl"
+    kl_t0 = kl_p_1;
+    return kl_t0;
+}
+
+struct kl__Held kl__hold__M4Held( struct kl__Held kl_h_1 )
+{
+    struct kl__Held kl_t0;
+#line 40 "opt/scalars_moved.kl"
+    kl_t0 = kl_h_1;
+    return kl_t0;
+}
+
+int32_t kl__numbers__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    bool kl_t9;
+    ( void ) kl_a_1;
+#line 47 "opt/scalars_moved.kl"
+    kl_t9 = true;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 1;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__pointers__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_v_2;
+    bool kl_t11;
+    int32_t* kl_h_24;
+#line 53 "opt/scalars_moved.kl"
+    kl_v_2 = kl_a_1;
+#line 54 "opt/scalars_moved.kl"
+    kl_h_24 = &kl_v_2;
+#line 55 "opt/scalars_moved.kl"
+    kl_t11 = ( *kl_h_24 ) == kl_a_1;
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 2;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_v_7;
+    bool kl_t16;
+    int32_t* kl_h_50;
+#line 53 "opt/scalars_moved.kl"
+    kl_v_7 = 5;
+#line 54 "opt/scalars_moved.kl"
+    kl_h_50 = &kl_v_7;
+#line 55 "opt/scalars_moved.kl"
+    kl_t16 = ( *kl_h_50 ) == 5;
+    if ( kl_t16 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 2;
+    goto bb3;
+    bb3:
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

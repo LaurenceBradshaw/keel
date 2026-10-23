@@ -69,11 +69,9 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 
 void kl__Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
 {
-    struct kl__Box kl_t3;
     int32_t kl_t6;
 #line 33 "opt/scalars.kl"
-    kl_t3.kl_value_22 = kl_v_2;
-    ( *kl_this_1 ).kl_box_44 = kl_t3;
+    ( *kl_this_1 ).kl_box_44.kl_value_22 = kl_v_2;
 #line 34 "opt/scalars.kl"
     kl_t6 = kl_v_2 + 1;
     ( *kl_this_1 ).kl_n_46 = kl_t6;
@@ -253,15 +251,11 @@ int32_t kl__passed__3i32( int32_t kl_a_1 )
 int32_t kl__argument__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_2;
     int32_t kl_t5;
     int32_t kl_t6;
     bool kl_t7;
-#line 117 "opt/scalars.kl"
-    kl_p_2.kl_x_1 = kl_a_1;
-    kl_p_2.kl_y_3 = 1;
 #line 72 "opt/scalars.kl"
-    kl_t5 = kl_p_2.kl_x_1 + kl_p_2.kl_y_3;
+    kl_t5 = kl_a_1 + 1;
 #line 118 "opt/scalars.kl"
     kl_t6 = kl_a_1 + 1;
     kl_t7 = kl_t5 == kl_t6;
@@ -306,20 +300,11 @@ int32_t kl__borrowed__3i32( int32_t kl_a_1 )
 int32_t kl__copied__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_2;
-    struct kl__Point kl_q_4;
     int32_t kl_t6;
     int32_t kl_t7;
     bool kl_t8;
-#line 130 "opt/scalars.kl"
-    kl_p_2.kl_x_1 = kl_a_1;
-    kl_p_2.kl_y_3 = 1;
-#line 131 "opt/scalars.kl"
-    kl_q_4 = kl_p_2;
-#line 132 "opt/scalars.kl"
-    kl_q_4.kl_x_1 = 7;
 #line 133 "opt/scalars.kl"
-    kl_t6 = kl_p_2.kl_x_1 + kl_q_4.kl_x_1;
+    kl_t6 = kl_a_1 + 7;
     kl_t7 = kl_a_1 + 7;
     kl_t8 = kl_t6 == kl_t7;
     if ( kl_t8 ) goto bb1; else goto bb2;
@@ -375,11 +360,15 @@ int32_t kl__parameter__5Point( struct kl__Point kl_p_1 )
     int32_t kl_t2;
     int32_t kl_t4;
     bool kl_t5;
+    int32_t kl_p_7;
+    int32_t kl_p_8;
+#line 148 "opt/scalars.kl"
+    kl_p_7 = kl_p_1.kl_x_1;
+    kl_p_8 = kl_p_1.kl_y_3;
 #line 150 "opt/scalars.kl"
-    kl_t2 = kl_p_1.kl_x_1 + 1;
-    kl_p_1.kl_x_1 = kl_t2;
+    kl_t2 = kl_p_7 + 1;
 #line 151 "opt/scalars.kl"
-    kl_t4 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+    kl_t4 = kl_t2 + kl_p_8;
     kl_t5 = kl_t4 == 4;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -443,23 +432,11 @@ int32_t kl__main__( void )
     bool kl_t13;
     bool kl_t15;
     bool kl_t17;
-    struct kl__Point kl_t18;
     bool kl_t20;
-    struct kl__Point kl_p_23;
-    int32_t kl_t24;
-    int32_t kl_t26;
-    bool kl_t27;
-    struct kl__Point kl_p_30;
-    struct kl__Point kl_q_32;
-    int32_t kl_t34;
-    bool kl_t36;
     struct kl__Point kl_p_39;
     struct kl__Point* kl_t42;
     int32_t kl_t43;
     bool kl_t44;
-    struct kl__Point kl_p_49;
-    int32_t kl_t52;
-    bool kl_t54;
 #line 176 "opt/scalars.kl"
     kl_t0 = kl__nested__(  );
 #line 178 "opt/scalars.kl"
@@ -474,14 +451,9 @@ int32_t kl__main__( void )
     kl_t9 = kl_t0 == 0;
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
-#line 117 "opt/scalars.kl"
-    kl_p_49.kl_x_1 = 5;
-    kl_p_49.kl_y_3 = 1;
-#line 72 "opt/scalars.kl"
-    kl_t52 = kl_p_49.kl_x_1 + kl_p_49.kl_y_3;
 #line 118 "opt/scalars.kl"
-    kl_t54 = kl_t52 == 6;
-    if ( kl_t54 ) goto bb23; else goto bb24;
+    kl_t0 = 0;
+    goto bb4;
     bb4:
 #line 186 "opt/scalars.kl"
     kl_t11 = kl_t0 == 0;
@@ -496,23 +468,15 @@ int32_t kl__main__( void )
     kl_t43 = ( *kl_t42 ).kl_x_1;
 #line 124 "opt/scalars.kl"
     kl_t44 = kl_t43 == 5;
-    if ( kl_t44 ) goto bb20; else goto bb21;
+    if ( kl_t44 ) goto bb15; else goto bb16;
     bb6:
 #line 190 "opt/scalars.kl"
     kl_t13 = kl_t0 == 0;
     if ( kl_t13 ) goto bb7; else goto bb8;
     bb7:
-#line 130 "opt/scalars.kl"
-    kl_p_30.kl_x_1 = 5;
-    kl_p_30.kl_y_3 = 1;
-#line 131 "opt/scalars.kl"
-    kl_q_32 = kl_p_30;
-#line 132 "opt/scalars.kl"
-    kl_q_32.kl_x_1 = 7;
 #line 133 "opt/scalars.kl"
-    kl_t34 = kl_p_30.kl_x_1 + kl_q_32.kl_x_1;
-    kl_t36 = kl_t34 == 12;
-    if ( kl_t36 ) goto bb17; else goto bb18;
+    kl_t0 = 0;
+    goto bb8;
     bb8:
 #line 194 "opt/scalars.kl"
     kl_t15 = kl_t0 == 0;
@@ -524,63 +488,30 @@ int32_t kl__main__( void )
     bb10:
 #line 198 "opt/scalars.kl"
     kl_t17 = kl_t0 == 0;
-    if ( kl_t17 ) goto bb11; else goto bb12;
+    if ( kl_t17 ) goto bb14; else goto bb11;
     bb11:
-#line 200 "opt/scalars.kl"
-    kl_t18.kl_x_1 = 1;
-    kl_t18.kl_y_3 = 2;
-    kl_p_23 = kl_t18;
-#line 150 "opt/scalars.kl"
-    kl_t24 = kl_t18.kl_x_1 + 1;
-    kl_p_23.kl_x_1 = kl_t24;
-#line 151 "opt/scalars.kl"
-    kl_t26 = kl_p_23.kl_x_1 + kl_p_23.kl_y_3;
-    kl_t27 = kl_t26 == 4;
-    if ( kl_t27 ) goto bb15; else goto bb16;
-    bb12:
 #line 202 "opt/scalars.kl"
     kl_t20 = kl_t0 == 0;
-    if ( kl_t20 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t20 ) goto bb12; else goto bb13;
+    bb12:
 #line 204 "opt/scalars.kl"
     kl_t0 = kl__dropped__(  );
-    goto bb14;
-    bb14:
+    goto bb13;
+    bb13:
     return kl_t0;
-    bb15:
+    bb14:
 #line 151 "opt/scalars.kl"
     kl_t0 = 0;
-    goto bb12;
-    bb16:
-    kl_t0 = 8;
-    goto bb12;
-    bb17:
-#line 133 "opt/scalars.kl"
-    kl_t0 = 0;
-    goto bb19;
-    bb18:
-    kl_t0 = 6;
-    goto bb19;
-    bb19:
-    goto bb8;
-    bb20:
+    goto bb11;
+    bb15:
 #line 124 "opt/scalars.kl"
     kl_t0 = 0;
-    goto bb22;
-    bb21:
+    goto bb17;
+    bb16:
     kl_t0 = 5;
-    goto bb22;
-    bb22:
+    goto bb17;
+    bb17:
     goto bb6;
-    bb23:
-#line 118 "opt/scalars.kl"
-    kl_t0 = 0;
-    goto bb25;
-    bb24:
-    kl_t0 = 10;
-    goto bb25;
-    bb25:
-    goto bb4;
 }
 
 int main( void )

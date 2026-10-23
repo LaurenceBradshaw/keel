@@ -1,0 +1,58 @@
+// M11's scalar replacement of the return slot, in a release build: a result with a field read back
+// is built in a fresh local, which splits, and moved into the result before each return. One only
+// written stays as it is. Each returns its own code.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// `y` is built from `x`, read back from the result.
+Point built( i32 a )
+{
+    Point p = Point { a, 1 };
+    p.y     = p.x + 1;
+    return p;
+}
+
+// Two returns, each with its own move into the result.
+Point either( i32 a, bool c )
+{
+    Point p = Point { a, 1 };
+    p.y     = p.x + 1;
+    if( c )
+    {
+        return p;
+    }
+    p.x = p.y;
+    return p;
+}
+
+Point written( i32 a )
+{
+    return Point { a, a + 1 };
+}
+
+i32 main()
+{
+    const Point b = built( 5 );
+    i32 code = b.x == 5 && b.y == 6 ? 0 : 1;
+    if( code == 0 )
+    {
+        const Point e = either( 5, true );
+        code = e.x == 5 && e.y == 6 ? 0 : 2;
+    }
+    if( code == 0 )
+    {
+        const Point e = either( 5, false );
+        code = e.x == 6 && e.y == 6 ? 0 : 3;
+    }
+    if( code == 0 )
+    {
+        const Point w = written( 5 );
+        code = w.x == 5 && w.y == 6 ? 0 : 4;
+    }
+
+    return code;
+}

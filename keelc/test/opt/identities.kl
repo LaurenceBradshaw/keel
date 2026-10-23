@@ -1,0 +1,93 @@
+// M11's identities, in a release build: a local compared with itself, which inlining leaves when one
+// value is passed to both parameters, folds for an integer, a `bool` or a pointer, and `x + 0`,
+// `0 + x`, `x - 0`, `x * 1` and `1 * x` read `x`. A float compared with itself stays, as a NaN is
+// unequal to itself, and so does `x + 0.0`, as `-0.0 + 0.0` is `0.0`. Each returns its own code.
+
+bool equal( i32 a, i32 b )
+{
+    return a == b;
+}
+
+bool below( i32 a, i32 b )
+{
+    return a < b;
+}
+
+bool both( bool a, bool b )
+{
+    return a != b;
+}
+
+bool at( i32* a, i32* b )
+{
+    return a == b;
+}
+
+bool equal_f( f64 a, f64 b )
+{
+    return a == b;
+}
+
+i32 compared( i32 x )
+{
+    bool on = x > 0;
+    return !equal( x, x ) || below( x, x ) || both( on, on ) ? 1 : 0;
+}
+
+// Apart from `compared`, whose `x` the borrow would leave addressed.
+i32 pointed( i32 x )
+{
+    i32* p = &x;
+    return at( p, p ) ? 0 : 2;
+}
+
+// `zero` and `one` are read as constants first; the identity then reads `x`.
+i32 identities( i32 x )
+{
+    i32 zero = 0;
+    i32 one  = 1;
+    i32 a    = x + zero;
+    i32 b    = zero + a;
+    i32 c    = b - zero;
+    i32 d    = c * one;
+    i32 e    = one * d;
+    return e == x ? 0 : 3;
+}
+
+// A NaN is unequal to itself, so the comparison stays.
+i32 not_a_number( f64 nought )
+{
+    f64 nan = nought / nought;
+    return equal_f( nan, nan ) ? 4 : 0;
+}
+
+// `-0.0 + 0.0` is `0.0`, whose reciprocal is positive.
+i32 negative_zero( f64 x )
+{
+    f64 zero = 0.0;
+    f64 sum  = x + zero;
+    return 1.0 / sum > 0.0 ? 0 : 5;
+}
+
+i32 main()
+{
+    i32 code = compared( 5 );
+    if( code == 0 )
+    {
+        code = pointed( 5 );
+    }
+    if( code == 0 )
+    {
+        code = identities( 5 );
+    }
+    if( code == 0 )
+    {
+        code = not_a_number( 0.0 );
+    }
+    if( code == 0 )
+    {
+        code = negative_zero( -0.0 );
+    }
+
+    return code;
+}

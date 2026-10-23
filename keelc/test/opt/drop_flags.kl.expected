@@ -107,10 +107,8 @@ int32_t kl__always__( void )
 int32_t kl__again__( void )
 {
     int32_t kl_t0;
-    struct kl__Box kl_b_1;
     bool kl_t8;
     int64_t kl_t12;
-    int64_t kl_t13;
     int64_t kl_t14;
     int64_t kl_t18;
     int64_t kl_t20;
@@ -120,14 +118,11 @@ int32_t kl__again__( void )
     int64_t kl_t30;
 #line 46 "opt/drop_flags.kl"
     kl_trace_3 = 0;
-#line 48 "opt/drop_flags.kl"
-    kl_b_1.kl_value_42 = 1;
 #line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 15 "opt/drop_flags.kl"
     kl_t12 = kl_trace_3 * 10;
-    kl_t13 = ( int64_t ) kl_b_1.kl_value_42;
-    kl_t14 = kl_t12 + kl_t13;
+    kl_t14 = kl_t12 + 1;
     kl_trace_3 = kl_t14;
 #line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 + 1;

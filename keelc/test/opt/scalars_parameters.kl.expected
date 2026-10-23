@@ -1,0 +1,113 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "scalars_parameters.kl.prelude.c"
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+int32_t kl__written__5Point( struct kl__Point );
+int32_t kl__dead__5Point( struct kl__Point );
+int32_t kl__read__5Point( struct kl__Point );
+int32_t kl__counted__5Point( struct kl__Point );
+int32_t kl__main__( void );
+
+int32_t kl__written__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_p_6;
+#line 12 "opt/scalars_parameters.kl"
+    kl_p_6 = kl_p_1.kl_y_3;
+#line 15 "opt/scalars_parameters.kl"
+    kl_t0 = kl_p_6;
+    return kl_t0;
+}
+
+int32_t kl__dead__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_p_4;
+#line 19 "opt/scalars_parameters.kl"
+    kl_p_4 = kl_p_1.kl_y_3;
+#line 22 "opt/scalars_parameters.kl"
+    kl_t0 = kl_p_4;
+    return kl_t0;
+}
+
+int32_t kl__read__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+#line 27 "opt/scalars_parameters.kl"
+    kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__counted__5Point( struct kl__Point kl_p_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+    int32_t kl_p_5;
+    int32_t kl_p_6;
+#line 31 "opt/scalars_parameters.kl"
+    kl_p_5 = kl_p_1.kl_x_1;
+    kl_p_6 = kl_p_1.kl_y_3;
+    goto bb1;
+    bb1:
+#line 33 "opt/scalars_parameters.kl"
+    kl_t2 = kl_p_5 < 10;
+    if ( kl_t2 ) goto bb2; else goto bb3;
+    bb2:
+#line 35 "opt/scalars_parameters.kl"
+    kl_t3 = kl_p_5 + kl_p_6;
+    kl_p_5 = kl_t3;
+    goto bb1;
+    bb3:
+#line 37 "opt/scalars_parameters.kl"
+    kl_t0 = kl_p_5;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t20;
+    bool kl_t23;
+    int32_t kl_t24;
+    int32_t kl_p_48;
+#line 53 "opt/scalars_parameters.kl"
+    kl_p_48 = 1;
+    goto bb4;
+    bb1:
+    kl_t0 = 0;
+    goto bb3;
+    bb2:
+    kl_t0 = 4;
+    goto bb3;
+    bb3:
+    return kl_t0;
+    bb4:
+#line 33 "opt/scalars_parameters.kl"
+    kl_t23 = kl_p_48 < 10;
+    if ( kl_t23 ) goto bb5; else goto bb6;
+    bb5:
+#line 35 "opt/scalars_parameters.kl"
+    kl_t24 = kl_p_48 + 4;
+    kl_p_48 = kl_t24;
+    goto bb4;
+    bb6:
+#line 53 "opt/scalars_parameters.kl"
+    kl_t20 = kl_p_48 == 13;
+    if ( kl_t20 ) goto bb1; else goto bb2;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

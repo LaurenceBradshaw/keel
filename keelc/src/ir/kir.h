@@ -290,6 +290,32 @@ inline bool has_deref_projection( const Function& func, const Place& place )
     return false;
 }
 
+// Projections live in one table addressed by (first, count), so a place's own must be contiguous -
+// and base's may sit anywhere. Copy base's to the end, append the new one, and return a place over
+// the copy. The root comes across with it, which is what keeps `counter.x` rooted in the global.
+inline Place projected( Function& func, Place base, Projection projection )
+{
+    const u32 first = narrow_cast<u32>( func.projections.size() );
+
+    for( u32 i = 0; i < base.num_projections; ++i )
+    {
+        // Read out before appending: push_back from a reference into the same vector is legal but
+        // needlessly subtle.
+        const Projection copied = func.projections[base.first_projection + i];
+
+        func.projections.push_back( copied );
+    }
+
+    func.projections.push_back( projection );
+
+    Place result = base;
+
+    result.first_projection = first;
+    result.num_projections  = base.num_projections + 1;
+
+    return result;
+}
+
 // Constructors for the vocabulary above. Designated initialisers throughout, for three reasons:
 // they leave every field a kind does not mean at its declared default, they name what is being set
 // so a helper that forgets its own argument is visible, and -Wmissing-field-initializers does not
