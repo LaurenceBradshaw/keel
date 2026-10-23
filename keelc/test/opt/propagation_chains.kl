@@ -1,0 +1,122 @@
+// M11's copy propagation through chains and fields, in a release build: a chain of copies inside a
+// loop reads the counter, and a copy of a field of a whole local is read as that field. A field
+// written after its copy, two fields meeting at a join, and a field read of a copied field keep what
+// they must. Each returns its own code.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Line
+{
+    Point a;
+    Point b;
+};
+
+class Box
+{
+    public Box( i64 v )
+    {
+        value = v;
+    }
+
+    ~Box() { }
+
+    public i64 value;
+};
+
+i64 take( move Box b )
+{
+    return b.value;
+}
+
+Box pass( move Box b )
+{
+    return move b;
+}
+
+// Takes `p` whole, so `p` is never split.
+void touch( Point p, out i32 r )
+{
+    r = p.y;
+}
+
+i32 looped( i64 n )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i++ )
+    {
+        t += take( pass( Box( i ) ) );
+    }
+    return t == 6 ? 0 : 1;
+}
+
+// `a` is read as `p.x`.
+i32 forwarded( Point p )
+{
+    i32 a = p.x;
+    i32 r = 0;
+    touch( p, out r );
+    return a * a + r == 3 ? 0 : 2;
+}
+
+// `a` is the old `p.x`, not the `5`.
+i32 written( Point p )
+{
+    i32 a = p.x;
+    p.x   = 5;
+    i32 r = 0;
+    touch( p, out r );
+    return a * a + r == 3 ? 0 : 3;
+}
+
+// `a` is `p.x` on one path and `p.y` on the other.
+i32 joined( Point p, bool c )
+{
+    i32 a = 0;
+    if( c )
+    {
+        a = p.x;
+    }
+    else
+    {
+        a = p.y;
+    }
+    i32 r = 0;
+    touch( p, out r );
+    return a * a + r == 3 ? 0 : 4;
+}
+
+// `q.x` is `l.b.x`, never `l.x`.
+i32 nested( Line l )
+{
+    Point q = l.b;
+    i32   r = 0;
+    touch( q, out r );
+    return q.x + r == 7 ? 0 : 5;
+}
+
+i32 main()
+{
+    i32 code = looped( 4 );
+    if( code == 0 )
+    {
+        code = forwarded( Point { 1, 2 } );
+    }
+    if( code == 0 )
+    {
+        code = written( Point { 1, 2 } );
+    }
+    if( code == 0 )
+    {
+        code = joined( Point { 1, 2 }, true );
+    }
+    if( code == 0 )
+    {
+        code = nested( Line { Point { 1, 2 }, Point { 3, 4 } } );
+    }
+
+    return code;
+}

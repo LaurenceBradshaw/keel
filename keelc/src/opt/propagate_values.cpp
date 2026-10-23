@@ -20,6 +20,12 @@ bool whole_local( const Place& place )
     return !place.is_global() && place.num_projections == 0;
 }
 
+// A place a fact may name: a whole local or a field of one, never through a pointer.
+bool copyable( const Function& func, const Place& place )
+{
+    return place.local.is_valid() && !place.is_global() && !has_deref_projection( func, place );
+}
+
 // Two literal ids for one number compare unequal, which only loses a fact.
 bool same( const Operand& a, const Operand& b )
 {
@@ -28,10 +34,16 @@ bool same( const Operand& a, const Operand& b )
         return false;
     }
 
+    if( a.kind == Operand_kind::Copy )
+    {
+        return a.place.local == b.place.local && a.place.num_projections == b.place.num_projections &&
+               ( a.place.num_projections == 0 || a.place.first_projection == b.place.first_projection );
+    }
+
     return a.kind == Operand_kind::Constant ? a.constant == b.constant : a.place.local == b.place.local;
 }
 
-// `local` changed: its own fact goes, and so does every copy of it.
+// `local` changed: its own fact goes, and so does every fact naming it, a field of it included.
 void kill( Values& values, Local_id local )
 {
     values[local.v] = std::nullopt;
@@ -75,7 +87,7 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
         return;
     }
 
-    // A chain resolves in one pass: `_3 = copy _2` after `_2 = const 0.5` records `const 0.5`.
+    // A fact names its direct source, so a later sweep never finds it changed; `rewrite` follows the chain.
     const Local_id into = statement.place.local;
     const Operand& from = statement.value.a;
 
@@ -83,10 +95,10 @@ void step( const Function& func, const Local_set& addressed, const Statement& st
     {
         values[into.v] = from;
     }
-    else if( from.kind == Operand_kind::Copy && whole_local( from.place ) && from.place.local != into &&
+    else if( from.kind == Operand_kind::Copy && copyable( func, from.place ) && from.place.local != into &&
              !addressed[from.place.local.v] )
     {
-        values[into.v] = values[from.place.local.v].value_or( from );
+        values[into.v] = from;
     }
 }
 
@@ -146,7 +158,8 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
     return values;
 }
 
-// A copy keeps its projections and takes the source's local; a constant replaces only a whole-local
+// Follows whole-local copies while the operand can take the next fact. A whole-local copy keeps the
+// operand's projections and takes its local; a field copy or a constant replaces only a whole-local
 // read.
 void rewrite( Operand& operand, const Values& values )
 {
@@ -155,14 +168,30 @@ void rewrite( Operand& operand, const Values& values )
         return;
     }
 
-    const Operand& known = *values[operand.place.local.v];
+    const auto takes = [&]( const Operand& fact )
+    { return operand.place.num_projections == 0 || ( fact.kind == Operand_kind::Copy && fact.place.num_projections == 0 ); };
+
+    Operand known = *values[operand.place.local.v];
+    while( known.kind == Operand_kind::Copy && known.place.num_projections == 0 && values[known.place.local.v] &&
+           takes( *values[known.place.local.v] ) )
+    {
+        known = *values[known.place.local.v];
+    }
+
     if( known.kind == Operand_kind::Constant && operand.place.num_projections == 0 )
     {
         operand = constant( known.constant, operand.type );
     }
     else if( known.kind == Operand_kind::Copy )
     {
-        operand.place.local = known.place.local;
+        if( known.place.num_projections > 0 && operand.place.num_projections == 0 )
+        {
+            operand.place = known.place;
+        }
+        else if( known.place.num_projections == 0 )
+        {
+            operand.place.local = known.place.local;
+        }
     }
 }
 } // namespace
@@ -228,6 +257,8 @@ namespace
 {
 
 constexpr std::string_view k_types = "void set( out i32 n ) { n = 9; }\n"
+                                     "struct Point { i32 x; i32 y; };\n"
+                                     "void touch( Point p, out i32 r ) { r = p.y; }\n"
                                      "i32 main() { return 0; }\n";
 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
@@ -291,6 +322,54 @@ TEST_CASE( "propagate_values_keeps_a_copy_whose_source_changed", "[opt][propagat
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( 2 ) == 1 );
     REQUIRE( p.reads( 1 ) == 1 );
+}
+
+// The split `Box`'s field reaches the add through four copies, inside a loop whose counter the first
+// sweep sees as `0`; the add reads the counter.
+TEST_CASE( "propagate_values_follows_a_chain_round_a_loop", "[opt][propagate]" )
+{
+    const Propagated p(
+        "i64 f( i64 n ) { i64 t = 0; for( i64 i = 0; i < n; i++ ) { t += take( pass( Box( i ) ) ); } return t; }\n"
+        "class Box { public i64 value; public Box( i64 v ) { value = v; } ~Box() { } };\n"
+        "i64 take( move Box b ) { return b.value; }\n"
+        "Box pass( move Box b ) { return move b; }\n"
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( std::ranges::none_of(
+        p.first().statements,
+        []( const Statement& s )
+        { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.kind == Operand_kind::Copy; }
+    ) );
+}
+
+// `p` goes whole to a call, so stays whole; `a` (`_2`) is read as `p.x`.
+TEST_CASE( "propagate_values_forwards_a_copy_of_a_field", "[opt][propagate]" )
+{
+    const Propagated p( "i32 f( Point p ) { i32 a = p.x; i32 r = 0; touch( p, out r ); return a * a + r; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( 2 ) == 0 );
+}
+
+TEST_CASE( "propagate_values_keeps_a_field_copy_written_after", "[opt][propagate]" )
+{
+    const Propagated p( "i32 f( Point p ) { i32 a = p.x; p.x = 5; i32 r = 0; touch( p, out r ); return a * a + r; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( 2 ) == 2 );
+}
+
+// `a` (`_3`) is `p.x` on one path and `p.y` on the other, so the join keeps neither.
+TEST_CASE( "propagate_values_keeps_two_fields_apart_at_a_join", "[opt][propagate]" )
+{
+    const Propagated p(
+        "i32 f( Point p, bool c ) { i32 a = 0; if( c ) { a = p.x; } else { a = p.y; } i32 r = 0; touch( p, out r ); "
+        "return a * a + r; }\n"
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( 3 ) == 2 );
 }
 
 } // namespace keel

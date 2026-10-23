@@ -86,11 +86,8 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
 int32_t kl__copied_fields__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_q_5;
-#line 58 "opt/propagation.kl"
-    kl_q_5 = kl_p_1.kl_y_3;
 #line 59 "opt/propagation.kl"
-    kl_t0 = kl_p_1.kl_x_1 + kl_q_5;
+    kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
     return kl_t0;
 }
 

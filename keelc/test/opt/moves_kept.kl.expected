@@ -241,7 +241,6 @@ int32_t kl__looped__( void )
     bool kl_t5;
     bool kl_t9;
     bool kl_t11;
-    int32_t kl_v_14;
     int64_t kl_t15;
     int64_t kl_t16;
     int64_t kl_t17;
@@ -254,7 +253,6 @@ int32_t kl__looped__( void )
     int64_t kl_t36;
     int64_t kl_t37;
     int32_t kl_a_38;
-    int32_t kl_b_39;
 #line 88 "opt/moves_kept.kl"
     kl_trace_3 = 0;
 #line 90 "opt/moves_kept.kl"
@@ -272,15 +270,11 @@ int32_t kl__looped__( void )
     kl_t5 = kl_i_4 <= 3;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 93 "opt/moves_kept.kl"
-    kl_v_14 = kl_i_4;
-#line 15 "opt/moves_kept.kl"
-    kl_b_39 = kl_v_14;
 #line 16 "opt/moves_kept.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 17 "opt/moves_kept.kl"
     kl_t15 = kl_trace_3 * 10;
-    kl_t16 = ( int64_t ) kl_v_14;
+    kl_t16 = ( int64_t ) kl_i_4;
     kl_t17 = kl_t15 + kl_t16;
     kl_trace_3 = kl_t17;
 #line 22 "opt/moves_kept.kl"
@@ -290,7 +284,7 @@ int32_t kl__looped__( void )
     kl_t29 = kl_t28 + 9;
     kl_trace_3 = kl_t29;
 #line 94 "opt/moves_kept.kl"
-    kl_a_38 = kl_b_39;
+    kl_a_38 = kl_i_4;
 #line 91 "opt/moves_kept.kl"
     kl_i_4 = kl_i_4 + 1;
     goto bb1;

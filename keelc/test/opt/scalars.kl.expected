@@ -360,15 +360,10 @@ int32_t kl__parameter__5Point( struct kl__Point kl_p_1 )
     int32_t kl_t2;
     int32_t kl_t4;
     bool kl_t5;
-    int32_t kl_p_7;
-    int32_t kl_p_8;
-#line 148 "opt/scalars.kl"
-    kl_p_7 = kl_p_1.kl_x_1;
-    kl_p_8 = kl_p_1.kl_y_3;
 #line 150 "opt/scalars.kl"
-    kl_t2 = kl_p_7 + 1;
+    kl_t2 = kl_p_1.kl_x_1 + 1;
 #line 151 "opt/scalars.kl"
-    kl_t4 = kl_t2 + kl_p_8;
+    kl_t4 = kl_t2 + kl_p_1.kl_y_3;
     kl_t5 = kl_t4 == 4;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:

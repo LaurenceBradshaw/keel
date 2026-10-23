@@ -107,11 +107,6 @@ int64_t kl__looped__3i64( int64_t kl_n_1 )
     int64_t kl_t0;
     int64_t kl_i_3;
     bool kl_t4;
-    int64_t kl_t9;
-    int64_t kl_v_12;
-    int64_t kl_t21;
-    int64_t kl_b_22;
-    int64_t kl_t23;
 #line 56 "opt/inlining.kl"
     kl_t0 = 0;
 #line 57 "opt/inlining.kl"
@@ -121,21 +116,12 @@ int64_t kl__looped__3i64( int64_t kl_n_1 )
     kl_t4 = kl_i_3 < kl_n_1;
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 59 "opt/inlining.kl"
-    kl_v_12 = kl_i_3;
-#line 12 "opt/inlining.kl"
-    kl_t21 = kl_v_12;
 #line 13 "opt/inlining.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 59 "opt/inlining.kl"
-    kl_t23 = kl_t21;
-    kl_b_22 = kl_t23;
-#line 44 "opt/inlining.kl"
-    kl_t9 = kl_b_22;
 #line 18 "opt/inlining.kl"
     kl_live_1 = kl_live_1 - 1;
 #line 59 "opt/inlining.kl"
-    kl_t0 = kl_t0 + kl_t9;
+    kl_t0 = kl_t0 + kl_i_3;
 #line 57 "opt/inlining.kl"
     kl_i_3 = kl_i_3 + 1;
     goto bb1;

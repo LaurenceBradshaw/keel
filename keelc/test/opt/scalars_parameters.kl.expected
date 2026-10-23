@@ -21,22 +21,16 @@ int32_t kl__main__( void );
 int32_t kl__written__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_p_6;
-#line 12 "opt/scalars_parameters.kl"
-    kl_p_6 = kl_p_1.kl_y_3;
 #line 15 "opt/scalars_parameters.kl"
-    kl_t0 = kl_p_6;
+    kl_t0 = kl_p_1.kl_y_3;
     return kl_t0;
 }
 
 int32_t kl__dead__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-    int32_t kl_p_4;
-#line 19 "opt/scalars_parameters.kl"
-    kl_p_4 = kl_p_1.kl_y_3;
 #line 22 "opt/scalars_parameters.kl"
-    kl_t0 = kl_p_4;
+    kl_t0 = kl_p_1.kl_y_3;
     return kl_t0;
 }
 
@@ -54,10 +48,8 @@ int32_t kl__counted__5Point( struct kl__Point kl_p_1 )
     bool kl_t2;
     int32_t kl_t3;
     int32_t kl_p_5;
-    int32_t kl_p_6;
 #line 31 "opt/scalars_parameters.kl"
     kl_p_5 = kl_p_1.kl_x_1;
-    kl_p_6 = kl_p_1.kl_y_3;
     goto bb1;
     bb1:
 #line 33 "opt/scalars_parameters.kl"
@@ -65,7 +57,7 @@ int32_t kl__counted__5Point( struct kl__Point kl_p_1 )
     if ( kl_t2 ) goto bb2; else goto bb3;
     bb2:
 #line 35 "opt/scalars_parameters.kl"
-    kl_t3 = kl_p_5 + kl_p_6;
+    kl_t3 = kl_p_5 + kl_p_1.kl_y_3;
     kl_p_5 = kl_t3;
     goto bb1;
     bb3:
