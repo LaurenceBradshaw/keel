@@ -16,6 +16,7 @@ int32_t* kl__peek__I3i32E__3i32( int32_t* );
 void kl__first_write__I3i32E__O3i32_3i32( int32_t*, int32_t );
 int32_t kl__relay__I4boolE__4bool( bool );
 
+#line 33 "codegen/generics.kl"
 int32_t kl__doubled__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -23,15 +24,21 @@ int32_t kl__doubled__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 35 "codegen/generics.kl"
     kl_t2 = __builtin_add_overflow( kl_v_1, kl_v_1, &( int32_t ) { 0 } );
+#line 35 "codegen/generics.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 35 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 35, "arithmetic overflow: v + v" );
     bb2:
+#line 35 "codegen/generics.kl"
     kl_t3 = kl_v_1 + kl_v_1;
+#line 35 "codegen/generics.kl"
     kl_t0 = kl_t3;
+#line 35 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 43 "codegen/generics.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -64,125 +71,167 @@ int32_t kl__main__( void )
     int32_t kl_t29;
 #line 45 "codegen/generics.kl"
     kl_t2 = kl__id__I3i32E__3i32( 7 );
+#line 45 "codegen/generics.kl"
     kl_a_1 = kl_t2;
-#line 46 "codegen/generics.kl"
     kl_t4 = kl__id__I4boolE__4bool( true );
+#line 46 "codegen/generics.kl"
     kl_b_3 = kl_t4;
 #line 49 "codegen/generics.kl"
     kl_t6 = kl__id__I3i32E__3i32( 30 );
+#line 49 "codegen/generics.kl"
     kl_c_5 = kl_t6;
 #line 51 "codegen/generics.kl"
     kl_t8 = kl__pick__I3i32_4boolE__3i32_4bool( 4, false );
+#line 51 "codegen/generics.kl"
     kl_d_7 = kl_t8;
 #line 53 "codegen/generics.kl"
     kl_t9 = !kl_b_3;
+#line 53 "codegen/generics.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 55 "codegen/generics.kl"
     kl_t0 = 1;
+#line 55 "codegen/generics.kl"
     return kl_t0;
     bb2:
 #line 58 "codegen/generics.kl"
     kl_e_10 = 0;
 #line 60 "codegen/generics.kl"
     kl_t11 = &kl_e_10;
+#line 60 "codegen/generics.kl"
     kl__set_to__I3i32E__R3i32_3i32( kl_t11, 4 );
 #line 62 "codegen/generics.kl"
     kl_t13 = &kl_e_10;
+#line 62 "codegen/generics.kl"
     kl_t14 = kl__peek__I3i32E__3i32( kl_t13 );
+#line 62 "codegen/generics.kl"
     kl_t15 = ( *kl_t14 ) != 4;
+#line 62 "codegen/generics.kl"
     if ( kl_t15 ) goto bb3; else goto bb4;
     bb3:
-#line 64 "codegen/generics.kl"
     kl_t0 = 2;
+#line 64 "codegen/generics.kl"
     return kl_t0;
     bb4:
 #line 69 "codegen/generics.kl"
     kl_t17 = &kl_f_16;
+#line 69 "codegen/generics.kl"
     kl__first_write__I3i32E__O3i32_3i32( kl_t17, 1 );
 #line 72 "codegen/generics.kl"
     kl_t19 = __builtin_add_overflow( kl_a_1, kl_c_5, &( int32_t ) { 0 } );
+#line 72 "codegen/generics.kl"
     if ( kl_t19 ) goto bb5; else goto bb6;
     bb5:
+#line 72 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c" );
     bb6:
+#line 72 "codegen/generics.kl"
     kl_t20 = kl_a_1 + kl_c_5;
+#line 72 "codegen/generics.kl"
     kl_t21 = __builtin_add_overflow( kl_t20, kl_d_7, &( int32_t ) { 0 } );
+#line 72 "codegen/generics.kl"
     if ( kl_t21 ) goto bb7; else goto bb8;
     bb7:
+#line 72 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d" );
     bb8:
+#line 72 "codegen/generics.kl"
     kl_t22 = kl_t20 + kl_d_7;
+#line 72 "codegen/generics.kl"
     kl_t23 = __builtin_add_overflow( kl_t22, kl_e_10, &( int32_t ) { 0 } );
+#line 72 "codegen/generics.kl"
     if ( kl_t23 ) goto bb9; else goto bb10;
     bb9:
+#line 72 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e" );
     bb10:
+#line 72 "codegen/generics.kl"
     kl_t24 = kl_t22 + kl_e_10;
+#line 72 "codegen/generics.kl"
     kl_t25 = __builtin_add_overflow( kl_t24, kl_f_16, &( int32_t ) { 0 } );
+#line 72 "codegen/generics.kl"
     if ( kl_t25 ) goto bb11; else goto bb12;
     bb11:
+#line 72 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e + f" );
     bb12:
+#line 72 "codegen/generics.kl"
     kl_t26 = kl_t24 + kl_f_16;
+#line 72 "codegen/generics.kl"
     kl_t27 = kl__relay__I4boolE__4bool( true );
+#line 72 "codegen/generics.kl"
     kl_t28 = __builtin_sub_overflow( kl_t26, kl_t27, &( int32_t ) { 0 } );
+#line 72 "codegen/generics.kl"
     if ( kl_t28 ) goto bb13; else goto bb14;
     bb13:
+#line 72 "codegen/generics.kl"
     kl_rt_panic( "codegen/generics.kl", 72, "arithmetic overflow: a + c + d + e + f - relay<bool>( true )" );
     bb14:
+#line 72 "codegen/generics.kl"
     kl_t29 = kl_t26 - kl_t27;
+#line 72 "codegen/generics.kl"
     kl_t0 = kl_t29;
+#line 72 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 4 "codegen/generics.kl"
 int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 6 "codegen/generics.kl"
     kl_t0 = kl_a_1;
+#line 6 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 4 "codegen/generics.kl"
 bool kl__id__I4boolE__4bool( bool kl_a_1 )
 {
     bool kl_t0;
 #line 6 "codegen/generics.kl"
     kl_t0 = kl_a_1;
+#line 6 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 9 "codegen/generics.kl"
 int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_t2;
 #line 11 "codegen/generics.kl"
     kl_t0 = kl_a_1;
+#line 11 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 17 "codegen/generics.kl"
 void kl__set_to__I3i32E__R3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
-#line 19 "codegen/generics.kl"
     ( *kl_target_1 ) = kl_value_2;
+#line 17 "codegen/generics.kl"
     return;
 }
 
+#line 22 "codegen/generics.kl"
 int32_t* kl__peek__I3i32E__3i32( int32_t* kl_a_1 )
 {
     int32_t* kl_t0;
 #line 24 "codegen/generics.kl"
     kl_t0 = &( *kl_a_1 );
+#line 24 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 27 "codegen/generics.kl"
 void kl__first_write__I3i32E__O3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
-#line 29 "codegen/generics.kl"
     ( *kl_target_1 ) = kl_value_2;
+#line 27 "codegen/generics.kl"
     return;
 }
 
+#line 38 "codegen/generics.kl"
 int32_t kl__relay__I4boolE__4bool( bool kl_t1 )
 {
     int32_t kl_t0;
@@ -191,12 +240,17 @@ int32_t kl__relay__I4boolE__4bool( bool kl_t1 )
     ( void ) kl_t1;
 #line 40 "codegen/generics.kl"
     kl_t2 = kl__id__I3i32E__3i32( 2 );
+#line 40 "codegen/generics.kl"
     kl_t3 = kl__doubled__3i32( kl_t2 );
+#line 40 "codegen/generics.kl"
     kl_t0 = kl_t3;
+#line 40 "codegen/generics.kl"
     return kl_t0;
 }
 
+#line 43 "codegen/generics.kl"
 int main( void )
 {
+#line 43 "codegen/generics.kl"
     return (int) kl__main__();
 }

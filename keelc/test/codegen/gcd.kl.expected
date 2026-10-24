@@ -9,6 +9,7 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 int32_t kl__gcd__3i32_3i32( int32_t, int32_t );
 int32_t kl__main__( void );
 
+#line 3 "codegen/gcd.kl"
 int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
@@ -19,53 +20,69 @@ int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     int32_t kl_t7;
     bool kl_t8;
     int32_t kl_t9;
+#line 5 "codegen/gcd.kl"
     goto bb1;
     bb1:
 #line 5 "codegen/gcd.kl"
     kl_t3 = kl_b_2 != 0;
+#line 5 "codegen/gcd.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
-#line 7 "codegen/gcd.kl"
     kl_t5 = kl_b_2 != 0;
+#line 7 "codegen/gcd.kl"
     if ( kl_t5 ) goto bb5; else goto bb4;
     bb3:
 #line 12 "codegen/gcd.kl"
     kl_t0 = kl_a_1;
+#line 12 "codegen/gcd.kl"
     return kl_t0;
     bb4:
+#line 7 "codegen/gcd.kl"
     kl_rt_panic( "codegen/gcd.kl", 7, "remainder by zero: a % b" );
     bb5:
 #line 7 "codegen/gcd.kl"
     kl_t6 = -1;
+#line 7 "codegen/gcd.kl"
     kl_t8 = kl_b_2 == kl_t6;
+#line 7 "codegen/gcd.kl"
     if ( kl_t8 ) goto bb6; else goto bb7;
     bb6:
+#line 7 "codegen/gcd.kl"
     kl_t7 = 0;
+#line 7 "codegen/gcd.kl"
     goto bb8;
     bb7:
+#line 7 "codegen/gcd.kl"
     kl_t7 = kl_a_1 % kl_b_2;
+#line 7 "codegen/gcd.kl"
     goto bb8;
     bb8:
+#line 7 "codegen/gcd.kl"
     kl_t9 = kl_t7;
+#line 7 "codegen/gcd.kl"
     kl_remainder_4 = kl_t9;
-#line 8 "codegen/gcd.kl"
     kl_a_1 = kl_b_2;
-#line 9 "codegen/gcd.kl"
     kl_b_2 = kl_remainder_4;
+#line 5 "codegen/gcd.kl"
     goto bb1;
 }
 
+#line 15 "codegen/gcd.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
 #line 17 "codegen/gcd.kl"
     kl_t1 = kl__gcd__3i32_3i32( 1071, 462 );
+#line 17 "codegen/gcd.kl"
     kl_t0 = kl_t1;
+#line 17 "codegen/gcd.kl"
     return kl_t0;
 }
 
+#line 15 "codegen/gcd.kl"
 int main( void )
 {
+#line 15 "codegen/gcd.kl"
     return (int) kl__main__();
 }

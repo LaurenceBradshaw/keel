@@ -9,16 +9,19 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 int32_t kl__never_leaves_the_loop__( void );
 int32_t kl__main__( void );
 
+#line 14 "codegen/loops.kl"
 int32_t kl__never_leaves_the_loop__( void )
 {
     int32_t kl_t0;
+#line 16 "codegen/loops.kl"
     goto bb1;
     bb1:
-#line 18 "codegen/loops.kl"
     kl_t0 = 7;
+#line 18 "codegen/loops.kl"
     return kl_t0;
 }
 
+#line 22 "codegen/loops.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -96,402 +99,521 @@ int32_t kl__main__( void )
     bool kl_t72;
 #line 25 "codegen/loops.kl"
     kl_sum_1 = 0;
-#line 26 "codegen/loops.kl"
     kl_step_2 = 0;
+#line 28 "codegen/loops.kl"
     goto bb1;
     bb1:
-#line 30 "codegen/loops.kl"
     kl_t3 = kl_step_2 == 5;
+#line 30 "codegen/loops.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
 #line 39 "codegen/loops.kl"
     kl_t6 = kl_sum_1 != 10;
+#line 39 "codegen/loops.kl"
     if ( kl_t6 ) goto bb8; else goto bb9;
     bb3:
 #line 35 "codegen/loops.kl"
     kl_t4 = __builtin_add_overflow( kl_sum_1, kl_step_2, &( int32_t ) { 0 } );
+#line 35 "codegen/loops.kl"
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
+#line 35 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 35, "arithmetic overflow: sum += step;" );
     bb5:
+#line 35 "codegen/loops.kl"
     kl_sum_1 = kl_sum_1 + kl_step_2;
-#line 36 "codegen/loops.kl"
     kl_t5 = __builtin_add_overflow( kl_step_2, 1, &( int32_t ) { 0 } );
+#line 36 "codegen/loops.kl"
     if ( kl_t5 ) goto bb6; else goto bb7;
     bb6:
+#line 36 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 36, "arithmetic overflow: step++;" );
     bb7:
+#line 36 "codegen/loops.kl"
     kl_step_2 = kl_step_2 + 1;
+#line 28 "codegen/loops.kl"
     goto bb1;
     bb8:
 #line 39 "codegen/loops.kl"
     kl_t0 = 1;
+#line 39 "codegen/loops.kl"
     return kl_t0;
     bb9:
 #line 40 "codegen/loops.kl"
     kl_t7 = kl_step_2 != 5;
+#line 40 "codegen/loops.kl"
     if ( kl_t7 ) goto bb10; else goto bb11;
     bb10:
+#line 40 "codegen/loops.kl"
     kl_t0 = 2;
+#line 40 "codegen/loops.kl"
     return kl_t0;
     bb11:
 #line 43 "codegen/loops.kl"
     kl_counted_8 = 0;
-#line 44 "codegen/loops.kl"
     kl_value_9 = 0;
+#line 46 "codegen/loops.kl"
     goto bb12;
     bb12:
 #line 46 "codegen/loops.kl"
     kl_t10 = kl_value_9 < 10;
+#line 46 "codegen/loops.kl"
     if ( kl_t10 ) goto bb13; else goto bb14;
     bb13:
-#line 48 "codegen/loops.kl"
     kl_t11 = __builtin_add_overflow( kl_value_9, 1, &( int32_t ) { 0 } );
+#line 48 "codegen/loops.kl"
     if ( kl_t11 ) goto bb15; else goto bb16;
     bb14:
 #line 58 "codegen/loops.kl"
     kl_t15 = kl_counted_8 != 5;
+#line 58 "codegen/loops.kl"
     if ( kl_t15 ) goto bb20; else goto bb21;
     bb15:
+#line 48 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 48, "arithmetic overflow: value++;" );
     bb16:
 #line 48 "codegen/loops.kl"
     kl_value_9 = kl_value_9 + 1;
 #line 50 "codegen/loops.kl"
     kl_t12 = kl_value_9 % 2;
+#line 50 "codegen/loops.kl"
     kl_t13 = kl_t12 == 0;
+#line 50 "codegen/loops.kl"
     if ( kl_t13 ) goto bb12; else goto bb17;
     bb17:
 #line 55 "codegen/loops.kl"
     kl_t14 = __builtin_add_overflow( kl_counted_8, 1, &( int32_t ) { 0 } );
+#line 55 "codegen/loops.kl"
     if ( kl_t14 ) goto bb18; else goto bb19;
     bb18:
+#line 55 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 55, "arithmetic overflow: counted++;" );
     bb19:
+#line 55 "codegen/loops.kl"
     kl_counted_8 = kl_counted_8 + 1;
+#line 46 "codegen/loops.kl"
     goto bb12;
     bb20:
 #line 58 "codegen/loops.kl"
     kl_t0 = 3;
+#line 58 "codegen/loops.kl"
     return kl_t0;
     bb21:
 #line 59 "codegen/loops.kl"
     kl_t16 = kl_value_9 != 10;
+#line 59 "codegen/loops.kl"
     if ( kl_t16 ) goto bb22; else goto bb23;
     bb22:
+#line 59 "codegen/loops.kl"
     kl_t0 = 4;
+#line 59 "codegen/loops.kl"
     return kl_t0;
     bb23:
 #line 62 "codegen/loops.kl"
     kl_visited_17 = 0;
 #line 64 "codegen/loops.kl"
     kl_i_18 = 0;
+#line 64 "codegen/loops.kl"
     goto bb24;
     bb24:
+#line 64 "codegen/loops.kl"
     kl_t19 = kl_i_18 < 100;
+#line 64 "codegen/loops.kl"
     if ( kl_t19 ) goto bb25; else goto bb26;
     bb25:
-#line 66 "codegen/loops.kl"
     kl_t20 = __builtin_add_overflow( kl_visited_17, 1, &( int32_t ) { 0 } );
+#line 66 "codegen/loops.kl"
     if ( kl_t20 ) goto bb27; else goto bb28;
     bb26:
 #line 74 "codegen/loops.kl"
     kl_t23 = kl_visited_17 != 4;
+#line 74 "codegen/loops.kl"
     if ( kl_t23 ) goto bb32; else goto bb33;
     bb27:
+#line 66 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 66, "arithmetic overflow: visited++;" );
     bb28:
 #line 66 "codegen/loops.kl"
     kl_visited_17 = kl_visited_17 + 1;
 #line 68 "codegen/loops.kl"
     kl_t21 = kl_i_18 == 3;
+#line 68 "codegen/loops.kl"
     if ( kl_t21 ) goto bb26; else goto bb29;
     bb29:
 #line 64 "codegen/loops.kl"
     kl_t22 = __builtin_add_overflow( kl_i_18, 1, &( int32_t ) { 0 } );
+#line 64 "codegen/loops.kl"
     if ( kl_t22 ) goto bb30; else goto bb31;
     bb30:
+#line 64 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 64, "arithmetic overflow: i++" );
     bb31:
+#line 64 "codegen/loops.kl"
     kl_i_18 = kl_i_18 + 1;
+#line 64 "codegen/loops.kl"
     goto bb24;
     bb32:
 #line 74 "codegen/loops.kl"
     kl_t0 = 5;
+#line 74 "codegen/loops.kl"
     return kl_t0;
     bb33:
 #line 77 "codegen/loops.kl"
     kl_odds_24 = 0;
-#line 78 "codegen/loops.kl"
     kl_guard_25 = 0;
 #line 80 "codegen/loops.kl"
     kl_i_26 = 0;
+#line 80 "codegen/loops.kl"
     goto bb34;
     bb34:
+#line 80 "codegen/loops.kl"
     kl_t27 = kl_i_26 < 10;
+#line 80 "codegen/loops.kl"
     if ( kl_t27 ) goto bb35; else goto bb36;
     bb35:
-#line 82 "codegen/loops.kl"
     kl_t28 = __builtin_add_overflow( kl_guard_25, 1, &( int32_t ) { 0 } );
+#line 82 "codegen/loops.kl"
     if ( kl_t28 ) goto bb37; else goto bb38;
     bb36:
 #line 97 "codegen/loops.kl"
     kl_t34 = kl_guard_25 > 100;
+#line 97 "codegen/loops.kl"
     if ( kl_t34 ) goto bb46; else goto bb47;
     bb37:
+#line 82 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 82, "arithmetic overflow: guard++;" );
     bb38:
 #line 82 "codegen/loops.kl"
     kl_guard_25 = kl_guard_25 + 1;
 #line 84 "codegen/loops.kl"
     kl_t29 = kl_guard_25 > 100;
+#line 84 "codegen/loops.kl"
     if ( kl_t29 ) goto bb36; else goto bb39;
     bb39:
 #line 89 "codegen/loops.kl"
     kl_t30 = kl_i_26 % 2;
+#line 89 "codegen/loops.kl"
     kl_t31 = kl_t30 == 0;
+#line 89 "codegen/loops.kl"
     if ( kl_t31 ) goto bb40; else goto bb41;
     bb40:
 #line 80 "codegen/loops.kl"
     kl_t33 = __builtin_add_overflow( kl_i_26, 1, &( int32_t ) { 0 } );
+#line 80 "codegen/loops.kl"
     if ( kl_t33 ) goto bb44; else goto bb45;
     bb41:
 #line 94 "codegen/loops.kl"
     kl_t32 = __builtin_add_overflow( kl_odds_24, kl_i_26, &( int32_t ) { 0 } );
+#line 94 "codegen/loops.kl"
     if ( kl_t32 ) goto bb42; else goto bb43;
     bb42:
+#line 94 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 94, "arithmetic overflow: odds += i;" );
     bb43:
+#line 94 "codegen/loops.kl"
     kl_odds_24 = kl_odds_24 + kl_i_26;
+#line 80 "codegen/loops.kl"
     goto bb40;
     bb44:
+#line 80 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 80, "arithmetic overflow: i++" );
     bb45:
 #line 80 "codegen/loops.kl"
     kl_i_26 = kl_i_26 + 1;
+#line 80 "codegen/loops.kl"
     goto bb34;
     bb46:
 #line 97 "codegen/loops.kl"
     kl_t0 = 6;
+#line 97 "codegen/loops.kl"
     return kl_t0;
     bb47:
 #line 98 "codegen/loops.kl"
     kl_t35 = kl_guard_25 != 10;
+#line 98 "codegen/loops.kl"
     if ( kl_t35 ) goto bb48; else goto bb49;
     bb48:
+#line 98 "codegen/loops.kl"
     kl_t0 = 7;
+#line 98 "codegen/loops.kl"
     return kl_t0;
     bb49:
 #line 99 "codegen/loops.kl"
     kl_t36 = kl_odds_24 != 25;
+#line 99 "codegen/loops.kl"
     if ( kl_t36 ) goto bb50; else goto bb51;
     bb50:
+#line 99 "codegen/loops.kl"
     kl_t0 = 8;
+#line 99 "codegen/loops.kl"
     return kl_t0;
     bb51:
 #line 102 "codegen/loops.kl"
     kl_total_37 = 0;
-#line 103 "codegen/loops.kl"
     kl_spins_38 = 0;
 #line 105 "codegen/loops.kl"
     kl_i_39 = 0;
+#line 105 "codegen/loops.kl"
     goto bb52;
     bb52:
+#line 105 "codegen/loops.kl"
     kl_t40 = kl_i_39 < 4;
+#line 105 "codegen/loops.kl"
     if ( kl_t40 ) goto bb53; else goto bb54;
     bb53:
-#line 107 "codegen/loops.kl"
     kl_j_41 = 0;
+#line 107 "codegen/loops.kl"
     goto bb55;
     bb54:
 #line 130 "codegen/loops.kl"
     kl_t50 = kl_spins_38 > 200;
+#line 130 "codegen/loops.kl"
     if ( kl_t50 ) goto bb71; else goto bb72;
     bb55:
 #line 107 "codegen/loops.kl"
     kl_t42 = kl_j_41 < 4;
+#line 107 "codegen/loops.kl"
     if ( kl_t42 ) goto bb56; else goto bb57;
     bb56:
-#line 109 "codegen/loops.kl"
     kl_t43 = __builtin_add_overflow( kl_spins_38, 1, &( int32_t ) { 0 } );
+#line 109 "codegen/loops.kl"
     if ( kl_t43 ) goto bb58; else goto bb59;
     bb57:
+#line 105 "codegen/loops.kl"
     goto bb68;
     bb58:
+#line 109 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 109, "arithmetic overflow: spins++;" );
     bb59:
+#line 109 "codegen/loops.kl"
     kl_spins_38 = kl_spins_38 + 1;
 #line 111 "codegen/loops.kl"
     kl_t44 = kl_spins_38 > 200;
+#line 111 "codegen/loops.kl"
     if ( kl_t44 ) goto bb57; else goto bb60;
     bb60:
 #line 116 "codegen/loops.kl"
     kl_t45 = kl_j_41 == 2;
+#line 116 "codegen/loops.kl"
     if ( kl_t45 ) goto bb61; else goto bb62;
     bb61:
 #line 107 "codegen/loops.kl"
     kl_t48 = __builtin_add_overflow( kl_j_41, 1, &( int32_t ) { 0 } );
+#line 107 "codegen/loops.kl"
     if ( kl_t48 ) goto bb66; else goto bb67;
     bb62:
 #line 121 "codegen/loops.kl"
     kl_t46 = kl_j_41 == 3;
+#line 121 "codegen/loops.kl"
     if ( kl_t46 ) goto bb57; else goto bb63;
     bb63:
 #line 126 "codegen/loops.kl"
     kl_t47 = __builtin_add_overflow( kl_total_37, 1, &( int32_t ) { 0 } );
+#line 126 "codegen/loops.kl"
     if ( kl_t47 ) goto bb64; else goto bb65;
     bb64:
+#line 126 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 126, "arithmetic overflow: total += 1;" );
     bb65:
+#line 126 "codegen/loops.kl"
     kl_total_37 = kl_total_37 + 1;
+#line 107 "codegen/loops.kl"
     goto bb61;
     bb66:
+#line 107 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 107, "arithmetic overflow: j++" );
     bb67:
 #line 107 "codegen/loops.kl"
     kl_j_41 = kl_j_41 + 1;
+#line 107 "codegen/loops.kl"
     goto bb55;
     bb68:
 #line 105 "codegen/loops.kl"
     kl_t49 = __builtin_add_overflow( kl_i_39, 1, &( int32_t ) { 0 } );
+#line 105 "codegen/loops.kl"
     if ( kl_t49 ) goto bb69; else goto bb70;
     bb69:
+#line 105 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 105, "arithmetic overflow: i++" );
     bb70:
+#line 105 "codegen/loops.kl"
     kl_i_39 = kl_i_39 + 1;
+#line 105 "codegen/loops.kl"
     goto bb52;
     bb71:
 #line 130 "codegen/loops.kl"
     kl_t0 = 9;
+#line 130 "codegen/loops.kl"
     return kl_t0;
     bb72:
 #line 131 "codegen/loops.kl"
     kl_t51 = kl_spins_38 != 16;
+#line 131 "codegen/loops.kl"
     if ( kl_t51 ) goto bb73; else goto bb74;
     bb73:
+#line 131 "codegen/loops.kl"
     kl_t0 = 10;
+#line 131 "codegen/loops.kl"
     return kl_t0;
     bb74:
 #line 132 "codegen/loops.kl"
     kl_t52 = kl_total_37 != 8;
+#line 132 "codegen/loops.kl"
     if ( kl_t52 ) goto bb75; else goto bb76;
     bb75:
+#line 132 "codegen/loops.kl"
     kl_t0 = 11;
+#line 132 "codegen/loops.kl"
     return kl_t0;
     bb76:
 #line 135 "codegen/loops.kl"
     kl_outer_53 = 0;
 #line 137 "codegen/loops.kl"
     kl_i_54 = 0;
+#line 137 "codegen/loops.kl"
     goto bb77;
     bb77:
+#line 137 "codegen/loops.kl"
     kl_t55 = kl_i_54 < 5;
+#line 137 "codegen/loops.kl"
     if ( kl_t55 ) goto bb78; else goto bb79;
     bb78:
-#line 139 "codegen/loops.kl"
     kl_t56 = __builtin_add_overflow( kl_outer_53, 1, &( int32_t ) { 0 } );
+#line 139 "codegen/loops.kl"
     if ( kl_t56 ) goto bb80; else goto bb81;
     bb79:
 #line 147 "codegen/loops.kl"
     kl_t60 = kl_outer_53 != 5;
+#line 147 "codegen/loops.kl"
     if ( kl_t60 ) goto bb87; else goto bb88;
     bb80:
+#line 139 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 139, "arithmetic overflow: outer++;" );
     bb81:
 #line 139 "codegen/loops.kl"
     kl_outer_53 = kl_outer_53 + 1;
 #line 141 "codegen/loops.kl"
     kl_j_57 = 0;
+#line 141 "codegen/loops.kl"
     goto bb82;
     bb82:
+#line 141 "codegen/loops.kl"
     kl_t58 = kl_j_57 < 5;
+#line 141 "codegen/loops.kl"
     if ( kl_t58 ) goto bb83; else goto bb83;
     bb83:
+#line 137 "codegen/loops.kl"
     goto bb84;
     bb84:
 #line 137 "codegen/loops.kl"
     kl_t59 = __builtin_add_overflow( kl_i_54, 1, &( int32_t ) { 0 } );
+#line 137 "codegen/loops.kl"
     if ( kl_t59 ) goto bb85; else goto bb86;
     bb85:
+#line 137 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 137, "arithmetic overflow: i++" );
     bb86:
+#line 137 "codegen/loops.kl"
     kl_i_54 = kl_i_54 + 1;
+#line 137 "codegen/loops.kl"
     goto bb77;
     bb87:
 #line 147 "codegen/loops.kl"
     kl_t0 = 12;
+#line 147 "codegen/loops.kl"
     return kl_t0;
     bb88:
 #line 150 "codegen/loops.kl"
     kl_trailing_61 = 0;
-#line 151 "codegen/loops.kl"
     kl_rounds_62 = 0;
 #line 153 "codegen/loops.kl"
     kl_i_63 = 0;
+#line 153 "codegen/loops.kl"
     goto bb89;
     bb89:
+#line 153 "codegen/loops.kl"
     kl_t64 = kl_i_63 < 6;
+#line 153 "codegen/loops.kl"
     if ( kl_t64 ) goto bb90; else goto bb91;
     bb90:
-#line 155 "codegen/loops.kl"
     kl_t65 = __builtin_add_overflow( kl_rounds_62, 1, &( int32_t ) { 0 } );
+#line 155 "codegen/loops.kl"
     if ( kl_t65 ) goto bb92; else goto bb93;
     bb91:
 #line 166 "codegen/loops.kl"
     kl_t69 = kl_rounds_62 != 6;
+#line 166 "codegen/loops.kl"
     if ( kl_t69 ) goto bb100; else goto bb101;
     bb92:
+#line 155 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 155, "arithmetic overflow: rounds++;" );
     bb93:
 #line 155 "codegen/loops.kl"
     kl_rounds_62 = kl_rounds_62 + 1;
 #line 157 "codegen/loops.kl"
     kl_t66 = kl_rounds_62 > 60;
+#line 157 "codegen/loops.kl"
     if ( kl_t66 ) goto bb91; else goto bb94;
     bb94:
 #line 162 "codegen/loops.kl"
     kl_t67 = __builtin_add_overflow( kl_trailing_61, kl_i_63, &( int32_t ) { 0 } );
+#line 162 "codegen/loops.kl"
     if ( kl_t67 ) goto bb95; else goto bb96;
     bb95:
+#line 162 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 162, "arithmetic overflow: trailing += i;" );
     bb96:
+#line 162 "codegen/loops.kl"
     kl_trailing_61 = kl_trailing_61 + kl_i_63;
     goto bb97;
     bb97:
 #line 153 "codegen/loops.kl"
     kl_t68 = __builtin_add_overflow( kl_i_63, 1, &( int32_t ) { 0 } );
+#line 153 "codegen/loops.kl"
     if ( kl_t68 ) goto bb98; else goto bb99;
     bb98:
+#line 153 "codegen/loops.kl"
     kl_rt_panic( "codegen/loops.kl", 153, "arithmetic overflow: i++" );
     bb99:
+#line 153 "codegen/loops.kl"
     kl_i_63 = kl_i_63 + 1;
+#line 153 "codegen/loops.kl"
     goto bb89;
     bb100:
 #line 166 "codegen/loops.kl"
     kl_t0 = 13;
+#line 166 "codegen/loops.kl"
     return kl_t0;
     bb101:
 #line 167 "codegen/loops.kl"
     kl_t70 = kl_trailing_61 != 15;
+#line 167 "codegen/loops.kl"
     if ( kl_t70 ) goto bb102; else goto bb103;
     bb102:
+#line 167 "codegen/loops.kl"
     kl_t0 = 14;
+#line 167 "codegen/loops.kl"
     return kl_t0;
     bb103:
-#line 169 "codegen/loops.kl"
     kl_t71 = kl__never_leaves_the_loop__(  );
+#line 169 "codegen/loops.kl"
     kl_t72 = kl_t71 != 7;
+#line 169 "codegen/loops.kl"
     if ( kl_t72 ) goto bb104; else goto bb105;
     bb104:
+#line 169 "codegen/loops.kl"
     kl_t0 = 15;
+#line 169 "codegen/loops.kl"
     return kl_t0;
     bb105:
-#line 171 "codegen/loops.kl"
     kl_t0 = 0;
+#line 171 "codegen/loops.kl"
     return kl_t0;
 }
 
+#line 22 "codegen/loops.kl"
 int main( void )
 {
+#line 22 "codegen/loops.kl"
     return (int) kl__main__();
 }

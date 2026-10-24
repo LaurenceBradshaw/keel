@@ -12,6 +12,7 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
 int32_t kl__main__( void );
 
+#line 5 "codegen/alloc_size_overflow.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -20,13 +21,17 @@ int32_t kl__main__( void )
     ( void ) kl_words_1;
 #line 10 "codegen/alloc_size_overflow.kl"
     kl_t2 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ), "codegen/alloc_size_overflow.kl", 10, "out of memory: alloc<u64>( n )" );
+#line 10 "codegen/alloc_size_overflow.kl"
     kl_words_1 = kl_t2;
 #line 13 "codegen/alloc_size_overflow.kl"
     kl_t0 = 0;
+#line 13 "codegen/alloc_size_overflow.kl"
     return kl_t0;
 }
 
+#line 5 "codegen/alloc_size_overflow.kl"
 int main( void )
 {
+#line 5 "codegen/alloc_size_overflow.kl"
     return (int) kl__main__();
 }

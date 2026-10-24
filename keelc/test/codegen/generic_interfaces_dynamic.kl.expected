@@ -134,88 +134,109 @@ static uint64_t kl__held__as_kl__sink__I3i64E__kl_count_22( void* self )
 
 static const struct kl__sink__I3i64E__vtable kl__held__as_kl__sink__I3i64E = { kl__held__as_kl__sink__I3i64E__drop, kl__held__as_kl__sink__I3i64E__kl_put_12, kl__held__as_kl__sink__I3i64E__kl_count_22 };
 
+#line 16 "codegen/generic_interfaces_dynamic.kl"
 void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 {
-#line 18 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_sum__34 = 0;
-#line 19 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__36 = 0;
+#line 16 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 22 "codegen/generic_interfaces_dynamic.kl"
 void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
 {
     bool kl_t3;
     bool kl_t4;
 #line 24 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_sum__34, kl_value_2, &( int64_t ) { 0 } );
+#line 24 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 24 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 24, "arithmetic overflow: sum_ += value;" );
     bb2:
+#line 24 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_sum__34 = ( *kl_this_1 ).kl_sum__34 + kl_value_2;
-#line 25 "codegen/generic_interfaces_dynamic.kl"
     kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__36, 1, &( uint64_t ) { 0 } );
+#line 25 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 25 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 25, "arithmetic overflow: count_ += 1;" );
     bb4:
+#line 25 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__36 = ( *kl_this_1 ).kl_count__36 + 1;
+#line 22 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 28 "codegen/generic_interfaces_dynamic.kl"
 void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_t2 )
 {
     bool kl_t3;
     ( void ) kl_t2;
 #line 28 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__36, 1, &( uint64_t ) { 0 } );
+#line 28 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 28 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 28, "arithmetic overflow: count_ += 1;" );
     bb2:
+#line 28 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__36 = ( *kl_this_1 ).kl_count__36 + 1;
+#line 28 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 29 "codegen/generic_interfaces_dynamic.kl"
 uint64_t kl__count__S5tally( struct kl__tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 29 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = ( *kl_this_1 ).kl_count__36;
+#line 29 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 30 "codegen/generic_interfaces_dynamic.kl"
 int64_t kl__sum__S5tally( struct kl__tally* kl_this_1 )
 {
     int64_t kl_t0;
 #line 30 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = ( *kl_this_1 ).kl_sum__34;
+#line 30 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 39 "codegen/generic_interfaces_dynamic.kl"
 void kl__held__R4held__ctor( struct kl__held* kl_this_1 )
 {
     int64_t* kl_t2;
     int64_t* kl_t3;
-#line 43 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "codegen/generic_interfaces_dynamic.kl", 43, "out of memory: alloc<i64>( 1 )" );
+#line 43 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_slot__104 = kl_t2;
-#line 44 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = ( *kl_this_1 ).kl_slot__104 + 0;
+#line 44 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_t3 ) = 0;
 #line 46 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__106 = 0;
+#line 39 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 49 "codegen/generic_interfaces_dynamic.kl"
 void kl__held__dtor( struct kl__held* kl_this_1 )
 {
 #line 53 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_free( ( *kl_this_1 ).kl_slot__104 );
+#line 49 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 57 "codegen/generic_interfaces_dynamic.kl"
 void kl__put__S4held_3i64( struct kl__held* kl_this_1, int64_t kl_value_2 )
 {
     int64_t* kl_t3;
@@ -223,52 +244,71 @@ void kl__put__S4held_3i64( struct kl__held* kl_this_1, int64_t kl_value_2 )
     bool kl_t5;
 #line 61 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = ( *kl_this_1 ).kl_slot__104 + 0;
+#line 61 "codegen/generic_interfaces_dynamic.kl"
     kl_t4 = __builtin_add_overflow( ( *kl_t3 ), kl_value_2, &( int64_t ) { 0 } );
+#line 61 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 61 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 61, "arithmetic overflow: slot_[0] += value;" );
     bb2:
+#line 61 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_t3 ) = ( *kl_t3 ) + kl_value_2;
 #line 63 "codegen/generic_interfaces_dynamic.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__106, 1, &( uint64_t ) { 0 } );
+#line 63 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 63 "codegen/generic_interfaces_dynamic.kl"
     kl_rt_panic( "codegen/generic_interfaces_dynamic.kl", 63, "arithmetic overflow: count_ += 1;" );
     bb4:
+#line 63 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_count__106 = ( *kl_this_1 ).kl_count__106 + 1;
+#line 57 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 66 "codegen/generic_interfaces_dynamic.kl"
 uint64_t kl__count__S4held( struct kl__held* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 66 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = ( *kl_this_1 ).kl_count__106;
+#line 66 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 69 "codegen/generic_interfaces_dynamic.kl"
 void kl__feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref kl_s_1, int64_t kl_v_2 )
 {
     struct kl__sink__I3i64E__ref kl_t3;
     int64_t* kl_t4;
 #line 69 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = kl_s_1;
+#line 69 "codegen/generic_interfaces_dynamic.kl"
     kl_t4 = &kl_v_2;
+#line 69 "codegen/generic_interfaces_dynamic.kl"
     kl_t3.vtable->kl_put_12( kl_t3.self, kl_t4 );
+#line 69 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 71 "codegen/generic_interfaces_dynamic.kl"
 void kl__flag__P4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
 {
     bool kl_t2;
     bool* kl_t3;
 #line 71 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = true;
+#line 71 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = &kl_t2;
+#line 71 "codegen/generic_interfaces_dynamic.kl"
     kl_s_1.vtable->kl_put_12( kl_s_1.self, kl_t3 );
+#line 71 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 73 "codegen/generic_interfaces_dynamic.kl"
 uint64_t kl__counted__4sinkI3i64E( struct kl__sink__I3i64E__ref kl_s_1 )
 {
     uint64_t kl_t0;
@@ -276,11 +316,15 @@ uint64_t kl__counted__4sinkI3i64E( struct kl__sink__I3i64E__ref kl_s_1 )
     uint64_t kl_t3;
 #line 73 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = kl_s_1;
+#line 73 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = kl_t2.vtable->kl_count_22( kl_t2.self );
+#line 73 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = kl_t3;
+#line 73 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 75 "codegen/generic_interfaces_dynamic.kl"
 uint64_t kl__counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
 {
     uint64_t kl_t0;
@@ -288,11 +332,15 @@ uint64_t kl__counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
     uint64_t kl_t3;
 #line 75 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = kl_s_1;
+#line 75 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = kl_t2.vtable->kl_count_22( kl_t2.self );
+#line 75 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = kl_t3;
+#line 75 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 77 "codegen/generic_interfaces_dynamic.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -359,154 +407,239 @@ int32_t kl__main__( void )
     bool kl_t72;
 #line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t70 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t71 = false;
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t72 = false;
 #line 79 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = &kl_t_1;
+#line 79 "codegen/generic_interfaces_dynamic.kl"
     kl__tally__R5tally__ctor( kl_t2 );
-#line 80 "codegen/generic_interfaces_dynamic.kl"
     kl_t4 = ( struct kl__sink__I3i64E__ref ) { ( void* ) &kl_t_1, &kl__tally__as_kl__sink__I3i64E };
+#line 80 "codegen/generic_interfaces_dynamic.kl"
     kl__feed__R4sinkI3i64E_3i64( kl_t4, 4 );
-#line 81 "codegen/generic_interfaces_dynamic.kl"
     kl_t6 = &kl_t_1;
+#line 81 "codegen/generic_interfaces_dynamic.kl"
     kl_t7 = ( struct kl__sink__I4boolE__ref ) { ( void* ) kl_t6, &kl__tally__as_kl__sink__I4boolE };
+#line 81 "codegen/generic_interfaces_dynamic.kl"
     kl__flag__P4sinkI4boolE( kl_t7 );
-#line 82 "codegen/generic_interfaces_dynamic.kl"
     kl_t9 = &kl_t_1;
+#line 82 "codegen/generic_interfaces_dynamic.kl"
     kl_t10 = kl__sum__S5tally( kl_t9 );
+#line 82 "codegen/generic_interfaces_dynamic.kl"
     kl_t11 = kl_t10 != 4;
+#line 82 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t11 ) goto bb1; else goto bb2;
     bb1:
+#line 82 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 1;
+#line 82 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
     bb2:
 #line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t13 = ( struct kl__sink__I3i64E__ref ) { ( void* ) &kl_t_1, &kl__tally__as_kl__sink__I3i64E };
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t14 = kl__counted__4sinkI3i64E( kl_t13 );
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t15 = kl_t14 != 2;
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t12 = kl_t15;
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t12 ) goto bb4; else goto bb3;
     bb3:
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t16 = ( struct kl__sink__I4boolE__ref ) { ( void* ) &kl_t_1, &kl__tally__as_kl__sink__I4boolE };
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t17 = kl__counted_flags__4sinkI4boolE( kl_t16 );
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t18 = kl_t17 != 2;
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t12 = kl_t18;
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     goto bb4;
     bb4:
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t12 ) goto bb5; else goto bb6;
     bb5:
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 2;
+#line 83 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
     bb6:
-#line 85 "codegen/generic_interfaces_dynamic.kl"
     kl_t20 = &kl_t_1;
+#line 85 "codegen/generic_interfaces_dynamic.kl"
     kl_t21 = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t20, &kl__tally__as_kl__sink__I3i64E };
+#line 85 "codegen/generic_interfaces_dynamic.kl"
     kl_as_int_19 = kl_t21;
-#line 86 "codegen/generic_interfaces_dynamic.kl"
     kl_t22 = 6;
+#line 86 "codegen/generic_interfaces_dynamic.kl"
     kl_t23 = &kl_t22;
+#line 86 "codegen/generic_interfaces_dynamic.kl"
     kl_as_int_19.vtable->kl_put_12( kl_as_int_19.self, kl_t23 );
-#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t26 = &kl_t_1;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t27 = kl__sum__S5tally( kl_t26 );
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t28 = kl_t27 != 10;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t25 = kl_t28;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t25 ) goto bb8; else goto bb7;
     bb7:
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t29 = &kl_t_1;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t30 = kl__count__S5tally( kl_t29 );
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t31 = kl_t30 != 3;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t25 = kl_t31;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     goto bb8;
     bb8:
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t25 ) goto bb9; else goto bb10;
     bb9:
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 3;
+#line 87 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
     bb10:
-#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t70 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t34 = &kl_t33;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t70 = true;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t71 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t36 = &kl_t35;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t71 = true;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl__held__R4held__ctor( kl_t36 );
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( kl_t34, kl_t35 );
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t71 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t39 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t33.kl_p__545, &kl__held__as_kl__sink__I3i64E } };
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t70 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_b_32 = kl_t39;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = true;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t70 ) kl_7prelude_box__I4heldE__dtor( &kl_t33 );
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t71 ) kl__held__dtor( &kl_t35 );
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t71 = false;
+#line 89 "codegen/generic_interfaces_dynamic.kl"
     kl_t70 = false;
-#line 90 "codegen/generic_interfaces_dynamic.kl"
     kl_t40 = &kl_b_32;
+#line 90 "codegen/generic_interfaces_dynamic.kl"
     kl_t41 = kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t40 );
+#line 90 "codegen/generic_interfaces_dynamic.kl"
     kl_t42 = kl_t41;
+#line 90 "codegen/generic_interfaces_dynamic.kl"
     kl__feed__R4sinkI3i64E_3i64( kl_t42, 5 );
-#line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t44 = &kl_b_32;
+#line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t45 = kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t44 );
+#line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t46 = 2;
+#line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t47 = &kl_t46;
+#line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t45.vtable->kl_put_12( kl_t45.self, kl_t47 );
-#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t49 = &kl_b_32;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t50 = kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t49 );
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t51 = kl_t50.vtable->kl_count_22( kl_t50.self );
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t52 = kl_t51 != 2;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t52 ) goto bb11; else goto bb12;
     bb11:
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 4;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t69 ) kl_7prelude_box__I4sinkI3i64EE__dtor( &kl_b_32 );
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = false;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
     bb12:
+    kl_t72 = false;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_t54 = &kl_t53;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_t72 = true;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_t56 = &kl_t55;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl__tally__R5tally__ctor( kl_t56 );
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( kl_t54, kl_t55 );
+#line 94 "codegen/generic_interfaces_dynamic.kl"
+    kl_t59 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t53.kl_p__545, &kl__tally__as_kl__sink__I3i64E } };
 #line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t72 = false;
-    kl_t54 = &kl_t53;
-    kl_t72 = true;
-    kl_t56 = &kl_t55;
-    kl__tally__R5tally__ctor( kl_t56 );
-    kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( kl_t54, kl_t55 );
-    kl_t59 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t53.kl_p__545, &kl__tally__as_kl__sink__I3i64E } };
-    kl_t72 = false;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t69 ) kl_7prelude_box__I4sinkI3i64EE__dtor( &kl_b_32 );
+#line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_b_32 = kl_t59;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = true;
+#line 94 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t72 ) kl_7prelude_box__I5tallyE__dtor( &kl_t53 );
+#line 94 "codegen/generic_interfaces_dynamic.kl"
     kl_t72 = false;
-#line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t60 = &kl_b_32;
+#line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t61 = kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t60 );
+#line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t62 = 1;
+#line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t63 = &kl_t62;
+#line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t61.vtable->kl_put_12( kl_t61.self, kl_t63 );
-#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t65 = &kl_b_32;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t66 = kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t65 );
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t67 = kl_t66.vtable->kl_count_22( kl_t66.self );
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t68 = kl_t67 != 1;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t68 ) goto bb13; else goto bb14;
     bb13:
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 5;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t69 ) kl_7prelude_box__I4sinkI3i64EE__dtor( &kl_b_32 );
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = false;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
     bb14:
-#line 98 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = 0;
+#line 98 "codegen/generic_interfaces_dynamic.kl"
     if ( kl_t69 ) kl_7prelude_box__I4sinkI3i64EE__dtor( &kl_b_32 );
+#line 98 "codegen/generic_interfaces_dynamic.kl"
     kl_t69 = false;
+#line 98 "codegen/generic_interfaces_dynamic.kl"
     return kl_t0;
 }
 
+#line 80 "<prelude>"
 void kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7prelude_box__I4heldE* kl_this_1, struct kl__held kl_value_2 )
 {
     struct kl__held* kl_slot_3;
@@ -519,29 +652,37 @@ void kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7pr
     kl_t8 = true;
 #line 85 "<prelude>"
     kl_t4 = ( struct kl__held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__held ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
+#line 85 "<prelude>"
     kl_slot_3 = kl_t4;
-#line 86 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
+#line 86 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
+#line 86 "<prelude>"
     kl_t8 = false;
-#line 87 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
+#line 87 "<prelude>"
     kl_t7 = &( *kl_t6 );
+#line 87 "<prelude>"
     ( *kl_this_1 ).kl_p__545 = kl_t7;
 #line 80 "<prelude>"
     if ( kl_t8 ) kl__held__dtor( &kl_value_2 );
+#line 80 "<prelude>"
     kl_t8 = false;
+#line 80 "<prelude>"
     return;
 }
 
+#line 101 "<prelude>"
 struct kl__sink__I3i64E__ref kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     struct kl__sink__I3i64E__ref kl_t0;
 #line 103 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p__545;
+#line 103 "<prelude>"
     return kl_t0;
 }
 
+#line 80 "<prelude>"
 void kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl_7prelude_box__I5tallyE* kl_this_1, struct kl__tally kl_value_2 )
 {
     struct kl__tally* kl_slot_3;
@@ -551,43 +692,52 @@ void kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl_
     struct kl__tally* kl_t7;
 #line 85 "<prelude>"
     kl_t4 = ( struct kl__tally* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__tally ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
+#line 85 "<prelude>"
     kl_slot_3 = kl_t4;
-#line 86 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
+#line 86 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
-#line 87 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
+#line 87 "<prelude>"
     kl_t7 = &( *kl_t6 );
+#line 87 "<prelude>"
     ( *kl_this_1 ).kl_p__545 = kl_t7;
+#line 80 "<prelude>"
     return;
 }
 
+#line 91 "<prelude>"
 void kl_7prelude_box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     struct kl__sink__I3i64E__ref kl_t2;
 #line 95 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p__545;
+#line 95 "<prelude>"
     kl_t2.vtable->drop( kl_t2.self );
-#line 96 "<prelude>"
     kl_rt_free( ( ( *kl_this_1 ).kl_p__545 ).self );
+#line 91 "<prelude>"
     return;
 }
 
+#line 91 "<prelude>"
 void kl_7prelude_box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1 )
 {
     struct kl__held* kl_t2;
 #line 95 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p__545;
+#line 95 "<prelude>"
     kl__held__dtor( &( *kl_t2 ) );
-#line 96 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p__545 );
+#line 91 "<prelude>"
     return;
 }
 
+#line 91 "<prelude>"
 void kl_7prelude_box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* kl_this_1 )
 {
 #line 96 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p__545 );
+#line 91 "<prelude>"
     return;
 }
 
@@ -595,10 +745,13 @@ void kl__held__drop( struct kl__held* kl_t1 )
 {
 #line 34 "codegen/generic_interfaces_dynamic.kl"
     kl__held__dtor( &( *kl_t1 ) );
+#line 34 "codegen/generic_interfaces_dynamic.kl"
     return;
 }
 
+#line 77 "codegen/generic_interfaces_dynamic.kl"
 int main( void )
 {
+#line 77 "codegen/generic_interfaces_dynamic.kl"
     return (int) kl__main__();
 }

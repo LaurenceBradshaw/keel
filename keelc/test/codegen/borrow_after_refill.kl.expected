@@ -23,50 +23,64 @@ uint64_t kl__refill__( void );
 uint64_t kl__one_path__4bool( bool );
 int32_t kl__main__( void );
 
+#line 9 "codegen/borrow_after_refill.kl"
 void kl__Counted__R7Counted_3u64__ctor( struct kl__Counted* kl_this_1, uint64_t kl_v_2 )
 {
     bool kl_t3;
 #line 11 "codegen/borrow_after_refill.kl"
     ( *kl_this_1 ).kl_n_4 = kl_v_2;
-#line 12 "codegen/borrow_after_refill.kl"
     kl_t3 = __builtin_add_overflow( kl_alive_2, 1, &( int32_t ) { 0 } );
+#line 12 "codegen/borrow_after_refill.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 12 "codegen/borrow_after_refill.kl"
     kl_rt_panic( "codegen/borrow_after_refill.kl", 12, "arithmetic overflow: alive++;" );
     bb2:
+#line 12 "codegen/borrow_after_refill.kl"
     kl_alive_2 = kl_alive_2 + 1;
+#line 9 "codegen/borrow_after_refill.kl"
     return;
 }
 
+#line 15 "codegen/borrow_after_refill.kl"
 void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 {
     bool kl_t2;
     ( void ) kl_this_1;
 #line 17 "codegen/borrow_after_refill.kl"
     kl_t2 = __builtin_sub_overflow( kl_alive_2, 1, &( int32_t ) { 0 } );
+#line 17 "codegen/borrow_after_refill.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 17 "codegen/borrow_after_refill.kl"
     kl_rt_panic( "codegen/borrow_after_refill.kl", 17, "arithmetic overflow: alive--;" );
     bb2:
+#line 17 "codegen/borrow_after_refill.kl"
     kl_alive_2 = kl_alive_2 - 1;
+#line 15 "codegen/borrow_after_refill.kl"
     return;
 }
 
+#line 21 "codegen/borrow_after_refill.kl"
 void kl__take__M7Counted( struct kl__Counted kl_t1 )
 {
 #line 21 "codegen/borrow_after_refill.kl"
     kl__Counted__dtor( &kl_t1 );
+#line 21 "codegen/borrow_after_refill.kl"
     return;
 }
 
+#line 25 "codegen/borrow_after_refill.kl"
 uint64_t kl__look__7Counted( struct kl__Counted* kl_c_1 )
 {
     uint64_t kl_t0;
 #line 27 "codegen/borrow_after_refill.kl"
     kl_t0 = ( *kl_c_1 ).kl_n_4;
+#line 27 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }
 
+#line 30 "codegen/borrow_after_refill.kl"
 uint64_t kl__refill__( void )
 {
     uint64_t kl_t0;
@@ -84,32 +98,48 @@ uint64_t kl__refill__( void )
     kl_t11 = false;
 #line 32 "codegen/borrow_after_refill.kl"
     kl_t10 = false;
+#line 32 "codegen/borrow_after_refill.kl"
     kl_t2 = &kl_c_1;
+#line 32 "codegen/borrow_after_refill.kl"
     kl_t10 = true;
+#line 32 "codegen/borrow_after_refill.kl"
     kl__Counted__R7Counted_3u64__ctor( kl_t2, 1 );
-#line 33 "codegen/borrow_after_refill.kl"
     kl__take__M7Counted( kl_c_1 );
+#line 33 "codegen/borrow_after_refill.kl"
     kl_t10 = false;
+    kl_t11 = false;
+#line 34 "codegen/borrow_after_refill.kl"
+    kl_t6 = &kl_t5;
+#line 34 "codegen/borrow_after_refill.kl"
+    kl_t11 = true;
+#line 34 "codegen/borrow_after_refill.kl"
+    kl__Counted__R7Counted_3u64__ctor( kl_t6, 2 );
+#line 34 "codegen/borrow_after_refill.kl"
+    if ( kl_t10 ) kl__Counted__dtor( &kl_c_1 );
+#line 34 "codegen/borrow_after_refill.kl"
+    kl_c_1 = kl_t5;
 #line 34 "codegen/borrow_after_refill.kl"
     kl_t11 = false;
-    kl_t6 = &kl_t5;
-    kl_t11 = true;
-    kl__Counted__R7Counted_3u64__ctor( kl_t6, 2 );
-    if ( kl_t10 ) kl__Counted__dtor( &kl_c_1 );
-    kl_c_1 = kl_t5;
-    kl_t11 = false;
+#line 34 "codegen/borrow_after_refill.kl"
     kl_t10 = true;
+#line 34 "codegen/borrow_after_refill.kl"
     if ( kl_t11 ) kl__Counted__dtor( &kl_t5 );
+#line 34 "codegen/borrow_after_refill.kl"
     kl_t11 = false;
-#line 35 "codegen/borrow_after_refill.kl"
     kl_t8 = &kl_c_1;
+#line 35 "codegen/borrow_after_refill.kl"
     kl_t9 = kl__look__7Counted( kl_t8 );
+#line 35 "codegen/borrow_after_refill.kl"
     kl_t0 = kl_t9;
+#line 35 "codegen/borrow_after_refill.kl"
     if ( kl_t10 ) kl__Counted__dtor( &kl_c_1 );
+#line 35 "codegen/borrow_after_refill.kl"
     kl_t10 = false;
+#line 35 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }
 
+#line 38 "codegen/borrow_after_refill.kl"
 uint64_t kl__one_path__4bool( bool kl_moved_1 )
 {
     uint64_t kl_t0;
@@ -121,32 +151,44 @@ uint64_t kl__one_path__4bool( bool kl_moved_1 )
     bool kl_t9;
 #line 40 "codegen/borrow_after_refill.kl"
     kl_t9 = false;
+#line 40 "codegen/borrow_after_refill.kl"
     kl_t9 = false;
+#line 40 "codegen/borrow_after_refill.kl"
     kl_t3 = &kl_c_2;
+#line 40 "codegen/borrow_after_refill.kl"
     kl_t9 = true;
+#line 40 "codegen/borrow_after_refill.kl"
     kl__Counted__R7Counted_3u64__ctor( kl_t3, 3 );
-#line 41 "codegen/borrow_after_refill.kl"
     kl_n_5 = 0;
+#line 43 "codegen/borrow_after_refill.kl"
     if ( kl_moved_1 ) goto bb1; else goto bb2;
     bb1:
-#line 45 "codegen/borrow_after_refill.kl"
     kl__take__M7Counted( kl_c_2 );
+#line 45 "codegen/borrow_after_refill.kl"
     kl_t9 = false;
+#line 43 "codegen/borrow_after_refill.kl"
     goto bb3;
     bb2:
 #line 49 "codegen/borrow_after_refill.kl"
     kl_t7 = &kl_c_2;
+#line 49 "codegen/borrow_after_refill.kl"
     kl_t8 = kl__look__7Counted( kl_t7 );
+#line 49 "codegen/borrow_after_refill.kl"
     kl_n_5 = kl_t8;
+#line 43 "codegen/borrow_after_refill.kl"
     goto bb3;
     bb3:
 #line 52 "codegen/borrow_after_refill.kl"
     kl_t0 = kl_n_5;
+#line 52 "codegen/borrow_after_refill.kl"
     if ( kl_t9 ) kl__Counted__dtor( &kl_c_2 );
+#line 52 "codegen/borrow_after_refill.kl"
     kl_t9 = false;
+#line 52 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }
 
+#line 55 "codegen/borrow_after_refill.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -160,35 +202,52 @@ int32_t kl__main__( void )
     bool kl_t8;
 #line 57 "codegen/borrow_after_refill.kl"
     kl_t3 = kl__refill__(  );
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t4 = kl_t3 != 2;
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t2 = kl_t4;
+#line 57 "codegen/borrow_after_refill.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t5 = kl__one_path__4bool( true );
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t6 = kl_t5 != 0;
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t2 = kl_t6;
+#line 57 "codegen/borrow_after_refill.kl"
     goto bb2;
     bb2:
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t1 = kl_t2;
+#line 57 "codegen/borrow_after_refill.kl"
     if ( kl_t1 ) goto bb4; else goto bb3;
     bb3:
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t7 = kl__one_path__4bool( false );
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t8 = kl_t7 != 3;
+#line 57 "codegen/borrow_after_refill.kl"
     kl_t1 = kl_t8;
+#line 57 "codegen/borrow_after_refill.kl"
     goto bb4;
     bb4:
+#line 57 "codegen/borrow_after_refill.kl"
     if ( kl_t1 ) goto bb5; else goto bb6;
     bb5:
-#line 59 "codegen/borrow_after_refill.kl"
     kl_t0 = 1;
+#line 59 "codegen/borrow_after_refill.kl"
     return kl_t0;
     bb6:
 #line 62 "codegen/borrow_after_refill.kl"
     kl_t0 = kl_alive_2;
+#line 62 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }
 
+#line 55 "codegen/borrow_after_refill.kl"
 int main( void )
 {
+#line 55 "codegen/borrow_after_refill.kl"
     return (int) kl__main__();
 }

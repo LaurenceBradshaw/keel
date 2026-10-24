@@ -15,6 +15,7 @@ int32_t kl__joined__4bool( bool );
 int32_t kl__through_a_pointer__P3i32( int32_t* );
 int32_t kl__main__( void );
 
+#line 8 "opt/globals_overwritten.kl"
 int32_t kl__twice__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -22,43 +23,50 @@ int32_t kl__twice__3i32( int32_t kl_n_1 )
     int32_t kl_t3;
 #line 10 "opt/globals_overwritten.kl"
     kl_t2 = kl_n_1 > 0;
+#line 10 "opt/globals_overwritten.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 12 "opt/globals_overwritten.kl"
     kl_t3 = kl_n_1 - 1;
+#line 12 "opt/globals_overwritten.kl"
     kl_t0 = kl__twice__3i32( kl_t3 );
+#line 12 "opt/globals_overwritten.kl"
     return kl_t0;
     bb2:
-#line 14 "opt/globals_overwritten.kl"
     kl_t0 = kl_seen_1 * 2;
+#line 14 "opt/globals_overwritten.kl"
     return kl_t0;
 }
 
+#line 17 "opt/globals_overwritten.kl"
 int32_t* kl__address__( void )
 {
     int32_t* kl_t0;
 #line 19 "opt/globals_overwritten.kl"
     kl_t0 = &kl_seen_1;
+#line 19 "opt/globals_overwritten.kl"
     return kl_t0;
 }
 
+#line 23 "opt/globals_overwritten.kl"
 int32_t kl__rewritten__( void )
 {
     int32_t kl_t0;
 #line 27 "opt/globals_overwritten.kl"
     kl_seen_1 = 3;
-#line 28 "opt/globals_overwritten.kl"
     kl_t0 = 0;
+#line 28 "opt/globals_overwritten.kl"
     return kl_t0;
 }
 
+#line 32 "opt/globals_overwritten.kl"
 void kl__returned__( void )
 {
-#line 34 "opt/globals_overwritten.kl"
     kl_seen_1 = 4;
+#line 32 "opt/globals_overwritten.kl"
     return;
 }
 
+#line 38 "opt/globals_overwritten.kl"
 int32_t kl__called__( void )
 {
     int32_t kl_t0;
@@ -71,6 +79,7 @@ int32_t kl__called__( void )
     return kl_t0;
 }
 
+#line 47 "opt/globals_overwritten.kl"
 int32_t kl__joined__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
@@ -78,27 +87,28 @@ int32_t kl__joined__4bool( bool kl_c_1 )
     kl_seen_1 = 6;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-#line 52 "opt/globals_overwritten.kl"
     kl_seen_1 = 7;
+#line 50 "opt/globals_overwritten.kl"
     goto bb2;
     bb2:
 #line 54 "opt/globals_overwritten.kl"
     kl_t0 = 0;
+#line 54 "opt/globals_overwritten.kl"
     return kl_t0;
 }
 
+#line 58 "opt/globals_overwritten.kl"
 int32_t kl__through_a_pointer__P3i32( int32_t* kl_p_1 )
 {
     int32_t kl_t0;
 #line 60 "opt/globals_overwritten.kl"
     kl_seen_1 = 8;
-#line 61 "opt/globals_overwritten.kl"
     kl_t0 = ( *kl_p_1 );
-#line 62 "opt/globals_overwritten.kl"
     kl_seen_1 = 0;
     return kl_t0;
 }
 
+#line 66 "opt/globals_overwritten.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -115,10 +125,11 @@ int32_t kl__main__( void )
     kl_seen_1 = 0;
 #line 78 "opt/globals_overwritten.kl"
     kl_t6 = kl_t5 != 10;
+#line 78 "opt/globals_overwritten.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 80 "opt/globals_overwritten.kl"
     kl_t0 = 3;
+#line 80 "opt/globals_overwritten.kl"
     return kl_t0;
     bb2:
 #line 49 "opt/globals_overwritten.kl"
@@ -127,24 +138,26 @@ int32_t kl__main__( void )
     kl_t9 = &kl_seen_1;
 #line 60 "opt/globals_overwritten.kl"
     kl_seen_1 = 8;
-#line 61 "opt/globals_overwritten.kl"
     kl_t10 = ( *kl_t9 );
-#line 62 "opt/globals_overwritten.kl"
     kl_seen_1 = 0;
 #line 87 "opt/globals_overwritten.kl"
     kl_t11 = kl_t10 != 8;
+#line 87 "opt/globals_overwritten.kl"
     if ( kl_t11 ) goto bb3; else goto bb4;
     bb3:
-#line 89 "opt/globals_overwritten.kl"
     kl_t0 = 5;
+#line 89 "opt/globals_overwritten.kl"
     return kl_t0;
     bb4:
 #line 92 "opt/globals_overwritten.kl"
     kl_t0 = 0;
+#line 92 "opt/globals_overwritten.kl"
     return kl_t0;
 }
 
+#line 66 "opt/globals_overwritten.kl"
 int main( void )
 {
+#line 66 "opt/globals_overwritten.kl"
     return (int) kl__main__();
 }

@@ -54,6 +54,7 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape, bool );
 int32_t kl__main__( void );
 void kl__Shape__dtor( struct kl__Shape* );
 
+#line 12 "opt/moves_fields_kept.kl"
 void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     int64_t kl_t3;
@@ -61,16 +62,19 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
     int64_t kl_t5;
 #line 14 "opt/moves_fields_kept.kl"
     ( *kl_this_1 ).kl_value_42 = kl_v_2;
-#line 15 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 16 "opt/moves_fields_kept.kl"
     kl_t3 = kl_trace_3 * 10;
+#line 16 "opt/moves_fields_kept.kl"
     kl_t4 = ( int64_t ) kl_v_2;
+#line 16 "opt/moves_fields_kept.kl"
     kl_t5 = kl_t3 + kl_t4;
+#line 16 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t5;
+#line 12 "opt/moves_fields_kept.kl"
     return;
 }
 
+#line 19 "opt/moves_fields_kept.kl"
 void kl__Box__dtor( struct kl__Box* kl_this_1 )
 {
     int64_t kl_t2;
@@ -78,13 +82,16 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
     ( void ) kl_this_1;
 #line 21 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 22 "opt/moves_fields_kept.kl"
     kl_t2 = kl_trace_3 * 10;
+#line 22 "opt/moves_fields_kept.kl"
     kl_t3 = kl_t2 + 9;
+#line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t3;
+#line 19 "opt/moves_fields_kept.kl"
     return;
 }
 
+#line 30 "opt/moves_fields_kept.kl"
 void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_v_2 )
 {
     int64_t kl_t9;
@@ -92,22 +99,28 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_v
     int64_t kl_t11;
 #line 15 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 16 "opt/moves_fields_kept.kl"
     kl_t9 = kl_trace_3 * 10;
+#line 16 "opt/moves_fields_kept.kl"
     kl_t10 = ( int64_t ) kl_v_2;
+#line 16 "opt/moves_fields_kept.kl"
     kl_t11 = kl_t9 + kl_t10;
+#line 16 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t11;
 #line 32 "opt/moves_fields_kept.kl"
     ( *kl_this_1 ).kl_b_65.kl_value_42 = kl_v_2;
+#line 30 "opt/moves_fields_kept.kl"
     return;
 }
 
+#line 35 "opt/moves_fields_kept.kl"
 void kl__Holder__dtor( struct kl__Holder* kl_this_1 )
 {
     ( void ) kl_this_1;
+#line 35 "opt/moves_fields_kept.kl"
     return;
 }
 
+#line 60 "opt/moves_fields_kept.kl"
 void kl__consume__M3Box( struct kl__Box kl_t1 )
 {
     int64_t kl_t4;
@@ -115,21 +128,26 @@ void kl__consume__M3Box( struct kl__Box kl_t1 )
     ( void ) kl_t1;
 #line 21 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 22 "opt/moves_fields_kept.kl"
     kl_t4 = kl_trace_3 * 10;
+#line 22 "opt/moves_fields_kept.kl"
     kl_t5 = kl_t4 + 9;
+#line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t5;
+#line 60 "opt/moves_fields_kept.kl"
     return;
 }
 
+#line 65 "opt/moves_fields_kept.kl"
 int32_t kl__swapped__( void )
 {
     int32_t kl_t0;
 #line 69 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 69 "opt/moves_fields_kept.kl"
     return kl_t0;
 }
 
+#line 73 "opt/moves_fields_kept.kl"
 int32_t kl__aliased__( void )
 {
     int32_t kl_t0;
@@ -139,31 +157,42 @@ int32_t kl__aliased__( void )
     int32_t kl_t11;
 #line 75 "opt/moves_fields_kept.kl"
     kl_l_1.kl_a_73.kl_x_68 = 1;
+#line 75 "opt/moves_fields_kept.kl"
     kl_l_1.kl_a_73.kl_y_70 = 2;
+#line 75 "opt/moves_fields_kept.kl"
     kl_l_1.kl_b_75.kl_x_68 = 3;
+#line 75 "opt/moves_fields_kept.kl"
     kl_l_1.kl_b_75.kl_y_70 = 4;
-#line 76 "opt/moves_fields_kept.kl"
     kl_r_5 = &kl_l_1;
-#line 77 "opt/moves_fields_kept.kl"
     kl_t11 = ( *kl_r_5 ).kl_a_73.kl_y_70;
+#line 77 "opt/moves_fields_kept.kl"
     kl_l_1.kl_a_73.kl_x_68 = kl_t11;
+#line 77 "opt/moves_fields_kept.kl"
     kl_l_1.kl_a_73.kl_y_70 = 7;
-#line 78 "opt/moves_fields_kept.kl"
     kl_t8 = kl_l_1.kl_a_73.kl_x_68 == 2;
+#line 78 "opt/moves_fields_kept.kl"
     if ( kl_t8 ) goto bb4; else goto bb2;
     bb1:
+#line 78 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 78 "opt/moves_fields_kept.kl"
     goto bb3;
     bb2:
+#line 78 "opt/moves_fields_kept.kl"
     kl_t0 = 2;
+#line 78 "opt/moves_fields_kept.kl"
     goto bb3;
     bb3:
+#line 78 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb4:
+#line 78 "opt/moves_fields_kept.kl"
     kl_t8 = kl_l_1.kl_a_73.kl_y_70 == 7;
+#line 78 "opt/moves_fields_kept.kl"
     if ( kl_t8 ) goto bb1; else goto bb2;
 }
 
+#line 82 "opt/moves_fields_kept.kl"
 int32_t kl__replaced__( void )
 {
     int32_t kl_t0;
@@ -173,28 +202,34 @@ int32_t kl__replaced__( void )
     kl_t51 = kl_live_1 + 1;
 #line 88 "opt/moves_fields_kept.kl"
     kl_t7 = kl_t51 != 1;
+#line 88 "opt/moves_fields_kept.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
-#line 90 "opt/moves_fields_kept.kl"
     kl_t0 = 3;
 #line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = 1299;
+#line 90 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb2:
+#line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = 1299;
 #line 94 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 94 "opt/moves_fields_kept.kl"
     return kl_t0;
 }
 
+#line 98 "opt/moves_fields_kept.kl"
 int32_t kl__read_after__( void )
 {
     int32_t kl_t0;
 #line 103 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 103 "opt/moves_fields_kept.kl"
     return kl_t0;
 }
 
+#line 107 "opt/moves_fields_kept.kl"
 int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
 {
     int32_t kl_t0;
@@ -205,33 +240,43 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
     int64_t kl_t14;
 #line 111 "opt/moves_fields_kept.kl"
     kl_t4 = kl_s_1.tag == 0;
+#line 111 "opt/moves_fields_kept.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 111 "opt/moves_fields_kept.kl"
     kl_b_6 = kl_s_1.kl_b_78;
+#line 111 "opt/moves_fields_kept.kl"
     kl_t10 = true;
     if ( kl_c_2 ) goto bb3; else goto bb4;
     bb2:
 #line 118 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 118 "opt/moves_fields_kept.kl"
     kl__Shape__dtor( &kl_s_1 );
+#line 118 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb3:
 #line 114 "opt/moves_fields_kept.kl"
     kl_t10 = false;
 #line 21 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 22 "opt/moves_fields_kept.kl"
     kl_t13 = kl_trace_3 * 10;
+#line 22 "opt/moves_fields_kept.kl"
     kl_t14 = kl_t13 + 9;
+#line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t14;
+#line 60 "opt/moves_fields_kept.kl"
     goto bb4;
     bb4:
 #line 116 "opt/moves_fields_kept.kl"
     kl_t0 = 1;
+#line 116 "opt/moves_fields_kept.kl"
     if ( kl_t10 ) kl__Box__dtor( &kl_b_6 );
+#line 116 "opt/moves_fields_kept.kl"
     return kl_t0;
 }
 
+#line 122 "opt/moves_fields_kept.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -251,88 +296,110 @@ int32_t kl__main__( void )
     int64_t kl_t36;
 #line 124 "opt/moves_fields_kept.kl"
     kl_t0 = kl__swapped__(  );
-#line 125 "opt/moves_fields_kept.kl"
     kl_t3 = kl_t0 != 0;
+#line 125 "opt/moves_fields_kept.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     return kl_t0;
     bb2:
 #line 130 "opt/moves_fields_kept.kl"
     kl_t0 = kl__aliased__(  );
-#line 131 "opt/moves_fields_kept.kl"
     kl_t5 = kl_t0 != 0;
+#line 131 "opt/moves_fields_kept.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
     return kl_t0;
     bb4:
 #line 136 "opt/moves_fields_kept.kl"
     kl_t0 = kl__replaced__(  );
-#line 137 "opt/moves_fields_kept.kl"
     kl_t7 = kl_t0 != 0;
+#line 137 "opt/moves_fields_kept.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
     return kl_t0;
     bb6:
 #line 142 "opt/moves_fields_kept.kl"
     kl_t0 = kl__read_after__(  );
-#line 143 "opt/moves_fields_kept.kl"
     kl_t9 = kl_t0 != 0;
+#line 143 "opt/moves_fields_kept.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
     return kl_t0;
     bb8:
 #line 15 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 16 "opt/moves_fields_kept.kl"
     kl_trace_3 = 5;
 #line 149 "opt/moves_fields_kept.kl"
     kl_t12.tag = 0;
+#line 149 "opt/moves_fields_kept.kl"
     kl_t12.kl_b_78.kl_value_42 = 5;
+#line 149 "opt/moves_fields_kept.kl"
     kl_t16 = kl__one_path__M5Shape_4bool( kl_t12, true );
+#line 149 "opt/moves_fields_kept.kl"
     kl_t10 = kl_t16 != 1;
+#line 149 "opt/moves_fields_kept.kl"
     if ( kl_t10 ) goto bb11; else goto bb9;
     bb9:
 #line 15 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 16 "opt/moves_fields_kept.kl"
     kl_t34 = kl_trace_3 * 10;
+#line 16 "opt/moves_fields_kept.kl"
     kl_t36 = kl_t34 + 6;
+#line 16 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t36;
 #line 149 "opt/moves_fields_kept.kl"
     kl_t18.tag = 0;
+#line 149 "opt/moves_fields_kept.kl"
     kl_t18.kl_b_78.kl_value_42 = 6;
+#line 149 "opt/moves_fields_kept.kl"
     kl_t22 = kl__one_path__M5Shape_4bool( kl_t18, false );
+#line 149 "opt/moves_fields_kept.kl"
     kl_t10 = kl_t22 != 1;
+#line 149 "opt/moves_fields_kept.kl"
     if ( kl_t10 ) goto bb11; else goto bb10;
     bb10:
 #line 150 "opt/moves_fields_kept.kl"
     kl_t24.tag = 1;
+#line 150 "opt/moves_fields_kept.kl"
     kl_t25 = kl__one_path__M5Shape_4bool( kl_t24, true );
+#line 150 "opt/moves_fields_kept.kl"
     kl_t10 = kl_t25 != 0;
+#line 149 "opt/moves_fields_kept.kl"
     goto bb11;
     bb11:
+#line 149 "opt/moves_fields_kept.kl"
     if ( kl_t10 ) goto bb12; else goto bb13;
     bb12:
 #line 152 "opt/moves_fields_kept.kl"
     kl_t0 = 10;
+#line 152 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb13:
 #line 155 "opt/moves_fields_kept.kl"
     kl_t28 = kl_live_1 == 0;
+#line 155 "opt/moves_fields_kept.kl"
     if ( kl_t28 ) goto bb17; else goto bb15;
     bb14:
+#line 155 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
+#line 155 "opt/moves_fields_kept.kl"
     goto bb16;
     bb15:
+#line 155 "opt/moves_fields_kept.kl"
     kl_t0 = 11;
+#line 155 "opt/moves_fields_kept.kl"
     goto bb16;
     bb16:
+#line 155 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb17:
+#line 155 "opt/moves_fields_kept.kl"
     kl_t28 = kl_trace_3 == 5969;
+#line 155 "opt/moves_fields_kept.kl"
     if ( kl_t28 ) goto bb14; else goto bb15;
 }
 
+#line 54 "opt/moves_fields_kept.kl"
 void kl__Shape__dtor( struct kl__Shape* kl_t1 )
 {
     bool kl_t2;
@@ -340,20 +407,26 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
     int64_t kl_t6;
 #line 54 "opt/moves_fields_kept.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
+#line 54 "opt/moves_fields_kept.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
+#line 54 "opt/moves_fields_kept.kl"
     return;
     bb2:
 #line 21 "opt/moves_fields_kept.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 22 "opt/moves_fields_kept.kl"
     kl_t5 = kl_trace_3 * 10;
+#line 22 "opt/moves_fields_kept.kl"
     kl_t6 = kl_t5 + 9;
+#line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t6;
+#line 19 "opt/moves_fields_kept.kl"
     goto bb1;
 }
 
+#line 122 "opt/moves_fields_kept.kl"
 int main( void )
 {
+#line 122 "opt/moves_fields_kept.kl"
     return (int) kl__main__();
 }

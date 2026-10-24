@@ -18,31 +18,37 @@ int32_t* kl__picks__3i32_3i32( int32_t*, int32_t* );
 int32_t* kl__gets__5Point( struct kl__Point* );
 int32_t kl__main__( void );
 
+#line 12 "codegen/const_ref_return.kl"
 int32_t* kl__picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     int32_t* kl_t0;
     bool kl_t3;
 #line 14 "codegen/const_ref_return.kl"
     kl_t3 = ( *kl_a_1 ) > ( *kl_b_2 );
+#line 14 "codegen/const_ref_return.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 16 "codegen/const_ref_return.kl"
     kl_t0 = &( *kl_a_1 );
+#line 16 "codegen/const_ref_return.kl"
     return kl_t0;
     bb2:
 #line 19 "codegen/const_ref_return.kl"
     kl_t0 = &( *kl_b_2 );
+#line 19 "codegen/const_ref_return.kl"
     return kl_t0;
 }
 
+#line 22 "codegen/const_ref_return.kl"
 int32_t* kl__gets__5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t0;
 #line 24 "codegen/const_ref_return.kl"
     kl_t0 = &( *kl_p_1 ).kl_y_3;
+#line 24 "codegen/const_ref_return.kl"
     return kl_t0;
 }
 
+#line 27 "codegen/const_ref_return.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -61,37 +67,49 @@ int32_t kl__main__( void )
     int32_t kl_t13;
 #line 29 "codegen/const_ref_return.kl"
     kl_x_1 = 10;
-#line 30 "codegen/const_ref_return.kl"
     kl_y_2 = 20;
 #line 33 "codegen/const_ref_return.kl"
     kl_t4 = &kl_x_1;
+#line 33 "codegen/const_ref_return.kl"
     kl_t5 = &kl_y_2;
+#line 33 "codegen/const_ref_return.kl"
     kl_t6 = kl__picks__3i32_3i32( kl_t4, kl_t5 );
+#line 33 "codegen/const_ref_return.kl"
     kl_bound_3 = &( *kl_t6 );
 #line 35 "codegen/const_ref_return.kl"
     kl_t8.kl_x_1 = 3;
+#line 35 "codegen/const_ref_return.kl"
     kl_t8.kl_y_3 = 7;
+#line 35 "codegen/const_ref_return.kl"
     kl_v_7 = kl_t8;
 #line 39 "codegen/const_ref_return.kl"
     kl_t10 = &kl_v_7;
+#line 39 "codegen/const_ref_return.kl"
     kl_t11 = kl__gets__5Point( kl_t10 );
+#line 39 "codegen/const_ref_return.kl"
     kl_copied_9 = ( *kl_t11 );
 #line 44 "codegen/const_ref_return.kl"
     kl_y_2 = 50;
-#line 45 "codegen/const_ref_return.kl"
     kl_v_7.kl_y_3 = 99;
 #line 47 "codegen/const_ref_return.kl"
     kl_t12 = __builtin_add_overflow( ( *kl_bound_3 ), kl_copied_9, &( int32_t ) { 0 } );
+#line 47 "codegen/const_ref_return.kl"
     if ( kl_t12 ) goto bb1; else goto bb2;
     bb1:
+#line 47 "codegen/const_ref_return.kl"
     kl_rt_panic( "codegen/const_ref_return.kl", 47, "arithmetic overflow: bound + copied" );
     bb2:
+#line 47 "codegen/const_ref_return.kl"
     kl_t13 = ( *kl_bound_3 ) + kl_copied_9;
+#line 47 "codegen/const_ref_return.kl"
     kl_t0 = kl_t13;
+#line 47 "codegen/const_ref_return.kl"
     return kl_t0;
 }
 
+#line 27 "codegen/const_ref_return.kl"
 int main( void )
 {
+#line 27 "codegen/const_ref_return.kl"
     return (int) kl__main__();
 }

@@ -26,40 +26,48 @@ int32_t kl__joined__4bool( bool );
 int32_t kl__written__5Point( struct kl__Point );
 int32_t kl__main__( void );
 
+#line 13 "opt/propagation.kl"
 void kl__set__O3i32( int32_t* kl_n_1 )
 {
-#line 15 "opt/propagation.kl"
     ( *kl_n_1 ) = 9;
+#line 13 "opt/propagation.kl"
     return;
 }
 
+#line 19 "opt/propagation.kl"
 int32_t kl__copied__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-#line 22 "opt/propagation.kl"
     kl_t0 = kl_a_1 + kl_a_1;
+#line 22 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 26 "opt/propagation.kl"
 int32_t kl__constant__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
 #line 29 "opt/propagation.kl"
     kl_t3 = kl_a_1 * 3;
+#line 29 "opt/propagation.kl"
     kl_t0 = kl_t3 + 3;
+#line 29 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 33 "opt/propagation.kl"
 int32_t kl__branched__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     ( void ) kl_a_1;
 #line 40 "opt/propagation.kl"
     kl_t0 = 0;
+#line 40 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 44 "opt/propagation.kl"
 int32_t kl__looped__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -67,38 +75,44 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
     bool kl_t5;
 #line 47 "opt/propagation.kl"
     kl_t0 = 0;
-#line 48 "opt/propagation.kl"
     kl_i_4 = 0;
+#line 48 "opt/propagation.kl"
     goto bb1;
     bb1:
+#line 48 "opt/propagation.kl"
     kl_t5 = kl_i_4 < kl_n_1;
+#line 48 "opt/propagation.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 50 "opt/propagation.kl"
     kl_t0 = kl_t0 + 2;
 #line 48 "opt/propagation.kl"
     kl_i_4 = kl_i_4 + 1;
+#line 48 "opt/propagation.kl"
     goto bb1;
     bb3:
+#line 52 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 56 "opt/propagation.kl"
 int32_t kl__copied_fields__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-#line 59 "opt/propagation.kl"
     kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+#line 59 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 63 "opt/propagation.kl"
 int32_t kl__summed__( void )
 {
     int32_t kl_t0;
-#line 66 "opt/propagation.kl"
     kl_t0 = 7;
+#line 66 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 70 "opt/propagation.kl"
 int32_t kl__aliased__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -106,15 +120,14 @@ int32_t kl__aliased__3i32( int32_t kl_a_1 )
     int32_t* kl_p_3;
 #line 72 "opt/propagation.kl"
     kl_k_2 = 3;
-#line 73 "opt/propagation.kl"
     kl_p_3 = &kl_k_2;
-#line 74 "opt/propagation.kl"
     ( *kl_p_3 ) = kl_a_1;
-#line 75 "opt/propagation.kl"
     kl_t0 = kl_k_2;
+#line 75 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 79 "opt/propagation.kl"
 int32_t kl__initialised__( void )
 {
     int32_t kl_t0;
@@ -122,22 +135,25 @@ int32_t kl__initialised__( void )
     int32_t* kl_t2;
 #line 81 "opt/propagation.kl"
     kl_x_1 = 0;
-#line 82 "opt/propagation.kl"
     kl_t2 = &kl_x_1;
+#line 82 "opt/propagation.kl"
     kl__set__O3i32( kl_t2 );
-#line 83 "opt/propagation.kl"
     kl_t0 = kl_x_1 + 1;
+#line 83 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 87 "opt/propagation.kl"
 int32_t kl__reassigned__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 91 "opt/propagation.kl"
     kl_t0 = 5 + kl_a_1;
+#line 91 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 95 "opt/propagation.kl"
 int32_t kl__joined__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
@@ -146,23 +162,27 @@ int32_t kl__joined__4bool( bool kl_c_1 )
     kl_k_2 = 1;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-#line 100 "opt/propagation.kl"
     kl_k_2 = 2;
+#line 98 "opt/propagation.kl"
     goto bb2;
     bb2:
 #line 102 "opt/propagation.kl"
     kl_t0 = kl_k_2 + 1;
+#line 102 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 106 "opt/propagation.kl"
 int32_t kl__written__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
 #line 110 "opt/propagation.kl"
     kl_t0 = kl_p_1.kl_x_1 + 3;
+#line 110 "opt/propagation.kl"
     return kl_t0;
 }
 
+#line 113 "opt/propagation.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -180,65 +200,71 @@ int32_t kl__main__( void )
     bool kl_t69;
 #line 47 "opt/propagation.kl"
     kl_t10 = 0;
-#line 48 "opt/propagation.kl"
     kl_i_68 = 0;
+#line 48 "opt/propagation.kl"
     goto bb7;
     bb1:
 #line 132 "opt/propagation.kl"
     kl_t0 = 4;
+#line 132 "opt/propagation.kl"
     return kl_t0;
     bb2:
 #line 147 "opt/propagation.kl"
     kl_t0 = 7;
+#line 147 "opt/propagation.kl"
     return kl_t0;
     bb3:
 #line 152 "opt/propagation.kl"
     kl_t0 = 8;
+#line 152 "opt/propagation.kl"
     return kl_t0;
     bb4:
 #line 170 "opt/propagation.kl"
     kl_t0 = 0;
+#line 170 "opt/propagation.kl"
     return kl_t0;
     bb5:
 #line 81 "opt/propagation.kl"
     kl_x_48 = 0;
-#line 82 "opt/propagation.kl"
     kl_t49 = &kl_x_48;
+#line 82 "opt/propagation.kl"
     kl__set__O3i32( kl_t49 );
-#line 83 "opt/propagation.kl"
     kl_t19 = kl_x_48 + 1;
 #line 150 "opt/propagation.kl"
     kl_t20 = kl_t19 != 10;
+#line 150 "opt/propagation.kl"
     if ( kl_t20 ) goto bb3; else goto bb4;
     bb6:
 #line 72 "opt/propagation.kl"
     kl_k_54 = 3;
-#line 73 "opt/propagation.kl"
     kl_p_55 = &kl_k_54;
-#line 74 "opt/propagation.kl"
     ( *kl_p_55 ) = 4;
-#line 75 "opt/propagation.kl"
     kl_t17 = kl_k_54;
 #line 145 "opt/propagation.kl"
     kl_t18 = kl_t17 != 4;
+#line 145 "opt/propagation.kl"
     if ( kl_t18 ) goto bb2; else goto bb5;
     bb7:
 #line 48 "opt/propagation.kl"
     kl_t69 = kl_i_68 < 3;
+#line 48 "opt/propagation.kl"
     if ( kl_t69 ) goto bb8; else goto bb9;
     bb8:
-#line 50 "opt/propagation.kl"
     kl_t10 = kl_t10 + 2;
 #line 48 "opt/propagation.kl"
     kl_i_68 = kl_i_68 + 1;
+#line 48 "opt/propagation.kl"
     goto bb7;
     bb9:
 #line 130 "opt/propagation.kl"
     kl_t7 = kl_t10 != 6;
+#line 130 "opt/propagation.kl"
     if ( kl_t7 ) goto bb1; else goto bb6;
 }
 
+#line 113 "opt/propagation.kl"
 int main( void )
 {
+#line 113 "opt/propagation.kl"
     return (int) kl__main__();
 }

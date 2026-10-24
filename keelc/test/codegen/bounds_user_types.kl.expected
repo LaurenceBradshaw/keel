@@ -40,6 +40,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
 bool kl__same__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
 bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
 
+#line 11 "codegen/bounds_user_types.kl"
 bool kl__operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
 {
     bool kl_t0;
@@ -48,17 +49,25 @@ bool kl__operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct 
     bool kl_t5;
 #line 13 "codegen/bounds_user_types.kl"
     kl_t4 = ( *kl_this_1 ).kl_major_4 == ( *kl_other_2 ).kl_major_4;
+#line 13 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
+#line 13 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 13 "codegen/bounds_user_types.kl"
     kl_t5 = ( *kl_this_1 ).kl_minor_6 == ( *kl_other_2 ).kl_minor_6;
+#line 13 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t5;
+#line 13 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 13 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 13 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 16 "codegen/bounds_user_types.kl"
 int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
 {
     int32_t kl_t0;
@@ -71,47 +80,70 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
     bool kl_t9;
 #line 18 "codegen/bounds_user_types.kl"
     kl_t3 = ( *kl_this_1 ).kl_major_4 != ( *kl_other_2 ).kl_major_4;
+#line 18 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb7;
     bb1:
-#line 20 "codegen/bounds_user_types.kl"
     kl_t5 = ( *kl_this_1 ).kl_major_4 < ( *kl_other_2 ).kl_major_4;
+#line 20 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
+#line 20 "codegen/bounds_user_types.kl"
     kl_t4 = 0;
+#line 20 "codegen/bounds_user_types.kl"
     goto bb6;
     bb3:
+#line 20 "codegen/bounds_user_types.kl"
     kl_t6 = ( *kl_this_1 ).kl_major_4 == ( *kl_other_2 ).kl_major_4;
+#line 20 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
+#line 20 "codegen/bounds_user_types.kl"
     kl_t4 = 1;
+#line 20 "codegen/bounds_user_types.kl"
     goto bb6;
     bb5:
+#line 20 "codegen/bounds_user_types.kl"
     kl_t4 = 2;
+#line 20 "codegen/bounds_user_types.kl"
     goto bb6;
     bb6:
+#line 20 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t4;
+#line 20 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb7:
 #line 23 "codegen/bounds_user_types.kl"
     kl_t8 = ( *kl_this_1 ).kl_minor_6 < ( *kl_other_2 ).kl_minor_6;
+#line 23 "codegen/bounds_user_types.kl"
     if ( kl_t8 ) goto bb8; else goto bb9;
     bb8:
+#line 23 "codegen/bounds_user_types.kl"
     kl_t7 = 0;
+#line 23 "codegen/bounds_user_types.kl"
     goto bb12;
     bb9:
+#line 23 "codegen/bounds_user_types.kl"
     kl_t9 = ( *kl_this_1 ).kl_minor_6 == ( *kl_other_2 ).kl_minor_6;
+#line 23 "codegen/bounds_user_types.kl"
     if ( kl_t9 ) goto bb10; else goto bb11;
     bb10:
+#line 23 "codegen/bounds_user_types.kl"
     kl_t7 = 1;
+#line 23 "codegen/bounds_user_types.kl"
     goto bb12;
     bb11:
+#line 23 "codegen/bounds_user_types.kl"
     kl_t7 = 2;
+#line 23 "codegen/bounds_user_types.kl"
     goto bb12;
     bb12:
+#line 23 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t7;
+#line 23 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 48 "codegen/bounds_user_types.kl"
 bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_other_2 )
 {
     bool kl_t0;
@@ -126,27 +158,43 @@ bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_o
     bool kl_t11;
 #line 50 "codegen/bounds_user_types.kl"
     kl_t4 = ( uint8_t ) ( *kl_this_1 );
+#line 50 "codegen/bounds_user_types.kl"
     kl_t5 = ( uint8_t ) ( *kl_other_2 );
+#line 50 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t4 == kl_t5;
+#line 50 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t6;
+#line 50 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
+#line 50 "codegen/bounds_user_types.kl"
     kl_t7 = ( uint8_t ) ( *kl_this_1 );
+#line 50 "codegen/bounds_user_types.kl"
     kl_t8 = ( uint8_t ) ( *kl_other_2 );
+#line 50 "codegen/bounds_user_types.kl"
     kl_t9 = __builtin_add_overflow( kl_t7, kl_t8, &( uint8_t ) { 0 } );
+#line 50 "codegen/bounds_user_types.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb2:
+#line 50 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 50 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb3:
+#line 50 "codegen/bounds_user_types.kl"
     kl_rt_panic( "codegen/bounds_user_types.kl", 50, "arithmetic overflow: cast<u8>( this ) + cast<u8>( other )" );
     bb4:
+#line 50 "codegen/bounds_user_types.kl"
     kl_t10 = kl_t7 + kl_t8;
+#line 50 "codegen/bounds_user_types.kl"
     kl_t11 = kl_t10 == 1;
+#line 50 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t11;
+#line 50 "codegen/bounds_user_types.kl"
     goto bb2;
 }
 
+#line 62 "codegen/bounds_user_types.kl"
 int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int32_t* kl_other_2 )
 {
     int32_t kl_t0;
@@ -157,26 +205,40 @@ int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int
     bool kl_t7;
 #line 64 "codegen/bounds_user_types.kl"
     kl_t3 = ( uint8_t ) ( *kl_this_1 );
+#line 64 "codegen/bounds_user_types.kl"
     kl_t4 = ( uint8_t ) ( *kl_other_2 );
+#line 64 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t3 < kl_t4;
+#line 64 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 64 "codegen/bounds_user_types.kl"
     kl_t5 = 0;
+#line 64 "codegen/bounds_user_types.kl"
     goto bb5;
     bb2:
+#line 64 "codegen/bounds_user_types.kl"
     kl_t7 = kl_t3 == kl_t4;
+#line 64 "codegen/bounds_user_types.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
+#line 64 "codegen/bounds_user_types.kl"
     kl_t5 = 1;
+#line 64 "codegen/bounds_user_types.kl"
     goto bb5;
     bb4:
+#line 64 "codegen/bounds_user_types.kl"
     kl_t5 = 2;
+#line 64 "codegen/bounds_user_types.kl"
     goto bb5;
     bb5:
+#line 64 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
+#line 64 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 83 "codegen/bounds_user_types.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -318,315 +380,501 @@ int32_t kl__main__( void )
     bool kl_t136;
 #line 85 "codegen/bounds_user_types.kl"
     kl_t2.kl_major_4 = 1;
+#line 85 "codegen/bounds_user_types.kl"
     kl_t2.kl_minor_6 = 2;
+#line 85 "codegen/bounds_user_types.kl"
     kl_a_1 = kl_t2;
-#line 86 "codegen/bounds_user_types.kl"
     kl_t4.kl_major_4 = 1;
+#line 86 "codegen/bounds_user_types.kl"
     kl_t4.kl_minor_6 = 3;
+#line 86 "codegen/bounds_user_types.kl"
     kl_b_3 = kl_t4;
 #line 88 "codegen/bounds_user_types.kl"
     kl_t9 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t10 = &kl_b_3;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t11 = kl__before__I7VersionE__7Version_7Version( kl_t9, kl_t10 );
+#line 88 "codegen/bounds_user_types.kl"
     kl_t12 = !kl_t11;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t8 = kl_t12;
+#line 88 "codegen/bounds_user_types.kl"
     if ( kl_t8 ) goto bb2; else goto bb1;
     bb1:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t13 = &kl_b_3;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t14 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t15 = kl__before__I7VersionE__7Version_7Version( kl_t13, kl_t14 );
+#line 88 "codegen/bounds_user_types.kl"
     kl_t8 = kl_t15;
+#line 88 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t7 = kl_t8;
+#line 88 "codegen/bounds_user_types.kl"
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t16 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t17 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t18 = kl__same__I7VersionE__7Version_7Version( kl_t16, kl_t17 );
+#line 88 "codegen/bounds_user_types.kl"
     kl_t19 = !kl_t18;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t7 = kl_t19;
+#line 88 "codegen/bounds_user_types.kl"
     goto bb4;
     bb4:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t7;
+#line 88 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb6; else goto bb5;
     bb5:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t20 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t21 = &kl_b_3;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t22 = kl__same__I7VersionE__7Version_7Version( kl_t20, kl_t21 );
+#line 88 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t22;
+#line 88 "codegen/bounds_user_types.kl"
     goto bb6;
     bb6:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t6;
+#line 88 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb8; else goto bb7;
     bb7:
+#line 88 "codegen/bounds_user_types.kl"
     kl_t23 = &kl_a_1;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t24 = &kl_b_3;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t25 = kl__differ__I7VersionE__7Version_7Version( kl_t23, kl_t24 );
+#line 88 "codegen/bounds_user_types.kl"
     kl_t26 = !kl_t25;
+#line 88 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t26;
+#line 88 "codegen/bounds_user_types.kl"
     goto bb8;
     bb8:
+#line 88 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb9; else goto bb10;
     bb9:
-#line 90 "codegen/bounds_user_types.kl"
     kl_t0 = 1;
+#line 90 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb10:
 #line 93 "codegen/bounds_user_types.kl"
     kl_x_27 = 1;
-#line 94 "codegen/bounds_user_types.kl"
     kl_y_28 = 2;
 #line 96 "codegen/bounds_user_types.kl"
     kl_t32 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t33 = &kl_y_28;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t34 = kl__before__I3i32E__3i32_3i32( kl_t32, kl_t33 );
+#line 96 "codegen/bounds_user_types.kl"
     kl_t35 = !kl_t34;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t31 = kl_t35;
+#line 96 "codegen/bounds_user_types.kl"
     if ( kl_t31 ) goto bb12; else goto bb11;
     bb11:
+#line 96 "codegen/bounds_user_types.kl"
     kl_t36 = &kl_y_28;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t37 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t38 = kl__before__I3i32E__3i32_3i32( kl_t36, kl_t37 );
+#line 96 "codegen/bounds_user_types.kl"
     kl_t31 = kl_t38;
+#line 96 "codegen/bounds_user_types.kl"
     goto bb12;
     bb12:
+#line 96 "codegen/bounds_user_types.kl"
     kl_t30 = kl_t31;
+#line 96 "codegen/bounds_user_types.kl"
     if ( kl_t30 ) goto bb14; else goto bb13;
     bb13:
+#line 96 "codegen/bounds_user_types.kl"
     kl_t39 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t40 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t41 = kl__same__I3i32E__3i32_3i32( kl_t39, kl_t40 );
+#line 96 "codegen/bounds_user_types.kl"
     kl_t42 = !kl_t41;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t30 = kl_t42;
+#line 96 "codegen/bounds_user_types.kl"
     goto bb14;
     bb14:
+#line 96 "codegen/bounds_user_types.kl"
     kl_t29 = kl_t30;
+#line 96 "codegen/bounds_user_types.kl"
     if ( kl_t29 ) goto bb16; else goto bb15;
     bb15:
+#line 96 "codegen/bounds_user_types.kl"
     kl_t43 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t44 = &kl_x_27;
+#line 96 "codegen/bounds_user_types.kl"
     kl_t45 = kl__differ__I3i32E__3i32_3i32( kl_t43, kl_t44 );
+#line 96 "codegen/bounds_user_types.kl"
     kl_t29 = kl_t45;
+#line 96 "codegen/bounds_user_types.kl"
     goto bb16;
     bb16:
+#line 96 "codegen/bounds_user_types.kl"
     if ( kl_t29 ) goto bb17; else goto bb18;
     bb17:
-#line 98 "codegen/bounds_user_types.kl"
     kl_t0 = 2;
+#line 98 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb18:
 #line 101 "codegen/bounds_user_types.kl"
     kl_t47.kl_left_66 = 1;
+#line 101 "codegen/bounds_user_types.kl"
     kl_t47.kl_right_68 = 2;
+#line 101 "codegen/bounds_user_types.kl"
     kl_p_46 = kl_t47;
-#line 102 "codegen/bounds_user_types.kl"
     kl_t49.kl_left_66 = 1;
+#line 102 "codegen/bounds_user_types.kl"
     kl_t49.kl_right_68 = 3;
+#line 102 "codegen/bounds_user_types.kl"
     kl_q_48 = kl_t49;
 #line 104 "codegen/bounds_user_types.kl"
     kl_t52 = &kl_p_46;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t53 = &kl_p_46;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t54 = kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t52, kl_t53 );
+#line 104 "codegen/bounds_user_types.kl"
     kl_t55 = !kl_t54;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t51 = kl_t55;
+#line 104 "codegen/bounds_user_types.kl"
     if ( kl_t51 ) goto bb20; else goto bb19;
     bb19:
+#line 104 "codegen/bounds_user_types.kl"
     kl_t56 = &kl_p_46;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t57 = &kl_q_48;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t58 = kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t56, kl_t57 );
+#line 104 "codegen/bounds_user_types.kl"
     kl_t51 = kl_t58;
+#line 104 "codegen/bounds_user_types.kl"
     goto bb20;
     bb20:
+#line 104 "codegen/bounds_user_types.kl"
     kl_t50 = kl_t51;
+#line 104 "codegen/bounds_user_types.kl"
     if ( kl_t50 ) goto bb22; else goto bb21;
     bb21:
+#line 104 "codegen/bounds_user_types.kl"
     kl_t59 = &kl_p_46;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t60 = &kl_q_48;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t61 = kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t59, kl_t60 );
+#line 104 "codegen/bounds_user_types.kl"
     kl_t62 = !kl_t61;
+#line 104 "codegen/bounds_user_types.kl"
     kl_t50 = kl_t62;
+#line 104 "codegen/bounds_user_types.kl"
     goto bb22;
     bb22:
+#line 104 "codegen/bounds_user_types.kl"
     if ( kl_t50 ) goto bb23; else goto bb24;
     bb23:
-#line 106 "codegen/bounds_user_types.kl"
     kl_t0 = 3;
+#line 106 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb24:
 #line 109 "codegen/bounds_user_types.kl"
     kl_h_63 = 0;
-#line 110 "codegen/bounds_user_types.kl"
     kl_d_64 = 1;
-#line 111 "codegen/bounds_user_types.kl"
     kl_s_65 = 2;
 #line 113 "codegen/bounds_user_types.kl"
     kl_t69 = &kl_h_63;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t70 = &kl_d_64;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t71 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t69, kl_t70 );
+#line 113 "codegen/bounds_user_types.kl"
     kl_t72 = !kl_t71;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t68 = kl_t72;
+#line 113 "codegen/bounds_user_types.kl"
     if ( kl_t68 ) goto bb26; else goto bb25;
     bb25:
+#line 113 "codegen/bounds_user_types.kl"
     kl_t73 = &kl_h_63;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t74 = &kl_d_64;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t75 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t73, kl_t74 );
+#line 113 "codegen/bounds_user_types.kl"
     kl_t76 = !kl_t75;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t68 = kl_t76;
+#line 113 "codegen/bounds_user_types.kl"
     goto bb26;
     bb26:
+#line 113 "codegen/bounds_user_types.kl"
     kl_t67 = kl_t68;
+#line 113 "codegen/bounds_user_types.kl"
     if ( kl_t67 ) goto bb28; else goto bb27;
     bb27:
+#line 113 "codegen/bounds_user_types.kl"
     kl_t77 = &kl_h_63;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t78 = &kl_s_65;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t79 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t77, kl_t78 );
+#line 113 "codegen/bounds_user_types.kl"
     kl_t67 = kl_t79;
+#line 113 "codegen/bounds_user_types.kl"
     goto bb28;
     bb28:
+#line 113 "codegen/bounds_user_types.kl"
     kl_t66 = kl_t67;
+#line 113 "codegen/bounds_user_types.kl"
     if ( kl_t66 ) goto bb30; else goto bb29;
     bb29:
+#line 113 "codegen/bounds_user_types.kl"
     kl_t80 = &kl_h_63;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t81 = &kl_s_65;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t82 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t80, kl_t81 );
+#line 113 "codegen/bounds_user_types.kl"
     kl_t83 = !kl_t82;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t84 = !kl_t83;
+#line 113 "codegen/bounds_user_types.kl"
     kl_t66 = kl_t84;
+#line 113 "codegen/bounds_user_types.kl"
     goto bb30;
     bb30:
+#line 113 "codegen/bounds_user_types.kl"
     if ( kl_t66 ) goto bb31; else goto bb32;
     bb31:
-#line 115 "codegen/bounds_user_types.kl"
     kl_t0 = 4;
+#line 115 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb32:
 #line 118 "codegen/bounds_user_types.kl"
     kl_t88 = &kl_h_63;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t89 = &kl_d_64;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t90 = kl__same__I4SuitE__4Suit_4Suit( kl_t88, kl_t89 );
+#line 118 "codegen/bounds_user_types.kl"
     kl_t91 = !kl_t90;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t87 = kl_t91;
+#line 118 "codegen/bounds_user_types.kl"
     if ( kl_t87 ) goto bb34; else goto bb33;
     bb33:
+#line 118 "codegen/bounds_user_types.kl"
     kl_t92 = &kl_h_63;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t93 = &kl_s_65;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t94 = kl__same__I4SuitE__4Suit_4Suit( kl_t92, kl_t93 );
+#line 118 "codegen/bounds_user_types.kl"
     kl_t87 = kl_t94;
+#line 118 "codegen/bounds_user_types.kl"
     goto bb34;
     bb34:
+#line 118 "codegen/bounds_user_types.kl"
     kl_t86 = kl_t87;
+#line 118 "codegen/bounds_user_types.kl"
     if ( kl_t86 ) goto bb36; else goto bb35;
     bb35:
+#line 118 "codegen/bounds_user_types.kl"
     kl_t95 = &kl_h_63;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t96 = &kl_d_64;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t97 = kl__differ__I4SuitE__4Suit_4Suit( kl_t95, kl_t96 );
+#line 118 "codegen/bounds_user_types.kl"
     kl_t86 = kl_t97;
+#line 118 "codegen/bounds_user_types.kl"
     goto bb36;
     bb36:
+#line 118 "codegen/bounds_user_types.kl"
     kl_t85 = kl_t86;
+#line 118 "codegen/bounds_user_types.kl"
     if ( kl_t85 ) goto bb38; else goto bb37;
     bb37:
+#line 118 "codegen/bounds_user_types.kl"
     kl_t98 = &kl_d_64;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t99 = &kl_s_65;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t100 = kl__differ__I4SuitE__4Suit_4Suit( kl_t98, kl_t99 );
+#line 118 "codegen/bounds_user_types.kl"
     kl_t101 = !kl_t100;
+#line 118 "codegen/bounds_user_types.kl"
     kl_t85 = kl_t101;
+#line 118 "codegen/bounds_user_types.kl"
     goto bb38;
     bb38:
+#line 118 "codegen/bounds_user_types.kl"
     if ( kl_t85 ) goto bb39; else goto bb40;
     bb39:
-#line 120 "codegen/bounds_user_types.kl"
     kl_t0 = 5;
+#line 120 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb40:
 #line 123 "codegen/bounds_user_types.kl"
     kl_low_102 = 0;
-#line 124 "codegen/bounds_user_types.kl"
     kl_also_103 = 0;
-#line 125 "codegen/bounds_user_types.kl"
     kl_high_104 = 1;
 #line 127 "codegen/bounds_user_types.kl"
     kl_t108 = &kl_low_102;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t109 = &kl_high_104;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t110 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t108, kl_t109 );
+#line 127 "codegen/bounds_user_types.kl"
     kl_t111 = kl_t110 == 0;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t112 = !kl_t111;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t107 = kl_t112;
+#line 127 "codegen/bounds_user_types.kl"
     if ( kl_t107 ) goto bb42; else goto bb41;
     bb41:
+#line 127 "codegen/bounds_user_types.kl"
     kl_t113 = &kl_high_104;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t114 = &kl_low_102;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t115 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t113, kl_t114 );
+#line 127 "codegen/bounds_user_types.kl"
     kl_t116 = kl_t115 != 2;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t107 = kl_t116;
+#line 127 "codegen/bounds_user_types.kl"
     goto bb42;
     bb42:
+#line 127 "codegen/bounds_user_types.kl"
     kl_t106 = kl_t107;
+#line 127 "codegen/bounds_user_types.kl"
     if ( kl_t106 ) goto bb44; else goto bb43;
     bb43:
+#line 127 "codegen/bounds_user_types.kl"
     kl_t117 = &kl_low_102;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t118 = &kl_high_104;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t119 = kl__before__I4RankE__4Rank_4Rank( kl_t117, kl_t118 );
+#line 127 "codegen/bounds_user_types.kl"
     kl_t120 = !kl_t119;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t106 = kl_t120;
+#line 127 "codegen/bounds_user_types.kl"
     goto bb44;
     bb44:
+#line 127 "codegen/bounds_user_types.kl"
     kl_t105 = kl_t106;
+#line 127 "codegen/bounds_user_types.kl"
     if ( kl_t105 ) goto bb46; else goto bb45;
     bb45:
+#line 127 "codegen/bounds_user_types.kl"
     kl_t121 = &kl_high_104;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t122 = &kl_low_102;
+#line 127 "codegen/bounds_user_types.kl"
     kl_t123 = kl__before__I4RankE__4Rank_4Rank( kl_t121, kl_t122 );
+#line 127 "codegen/bounds_user_types.kl"
     kl_t105 = kl_t123;
+#line 127 "codegen/bounds_user_types.kl"
     goto bb46;
     bb46:
+#line 127 "codegen/bounds_user_types.kl"
     if ( kl_t105 ) goto bb47; else goto bb48;
     bb47:
-#line 129 "codegen/bounds_user_types.kl"
     kl_t0 = 6;
+#line 129 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb48:
 #line 132 "codegen/bounds_user_types.kl"
     kl_t127 = kl_low_102 == kl_also_103;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t128 = !kl_t127;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t126 = kl_t128;
+#line 132 "codegen/bounds_user_types.kl"
     if ( kl_t126 ) goto bb50; else goto bb49;
     bb49:
+#line 132 "codegen/bounds_user_types.kl"
     kl_t129 = kl_low_102 == kl_high_104;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t126 = kl_t129;
+#line 132 "codegen/bounds_user_types.kl"
     goto bb50;
     bb50:
+#line 132 "codegen/bounds_user_types.kl"
     kl_t125 = kl_t126;
+#line 132 "codegen/bounds_user_types.kl"
     if ( kl_t125 ) goto bb52; else goto bb51;
     bb51:
+#line 132 "codegen/bounds_user_types.kl"
     kl_t130 = &kl_high_104;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t131 = &kl_high_104;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t132 = kl__same__I4RankE__4Rank_4Rank( kl_t130, kl_t131 );
+#line 132 "codegen/bounds_user_types.kl"
     kl_t133 = !kl_t132;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t125 = kl_t133;
+#line 132 "codegen/bounds_user_types.kl"
     goto bb52;
     bb52:
+#line 132 "codegen/bounds_user_types.kl"
     kl_t124 = kl_t125;
+#line 132 "codegen/bounds_user_types.kl"
     if ( kl_t124 ) goto bb54; else goto bb53;
     bb53:
+#line 132 "codegen/bounds_user_types.kl"
     kl_t134 = &kl_low_102;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t135 = &kl_high_104;
+#line 132 "codegen/bounds_user_types.kl"
     kl_t136 = kl__same__I4RankE__4Rank_4Rank( kl_t134, kl_t135 );
+#line 132 "codegen/bounds_user_types.kl"
     kl_t124 = kl_t136;
+#line 132 "codegen/bounds_user_types.kl"
     goto bb54;
     bb54:
+#line 132 "codegen/bounds_user_types.kl"
     if ( kl_t124 ) goto bb55; else goto bb56;
     bb55:
-#line 134 "codegen/bounds_user_types.kl"
     kl_t0 = 7;
+#line 134 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb56:
 #line 137 "codegen/bounds_user_types.kl"
     kl_t0 = 0;
+#line 137 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 78 "codegen/bounds_user_types.kl"
 bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
@@ -658,55 +906,95 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
     bool kl_t28;
 #line 80 "codegen/bounds_user_types.kl"
     kl_t7 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t8 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t9 = kl__operator_compare__S7Version_7Version( kl_t7, kl_t8 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t10 = kl_t9 == 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t10;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t11 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t12 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t13 = kl__operator_compare__S7Version_7Version( kl_t11, kl_t12 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t14 = kl_t13 != 2;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t14;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t6;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t15 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t16 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t17 = kl__operator_compare__S7Version_7Version( kl_t15, kl_t16 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t18 = kl_t17 == 2;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t19 = !kl_t18;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t19;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb4;
     bb4:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t5;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb5:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t20 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t21 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t22 = kl__operator_compare__S7Version_7Version( kl_t20, kl_t21 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t23 = kl_t22 != 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t24 = !kl_t23;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t24;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb6;
     bb6:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb7; else goto bb8;
     bb7:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t25 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t26 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t27 = kl__operator_compare__S7Version_7Version( kl_t25, kl_t26 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t28 = kl_t27 == 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t28;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb8;
     bb8:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 80 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 68 "codegen/bounds_user_types.kl"
 bool kl__same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
@@ -715,12 +1003,17 @@ bool kl__same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct
     bool kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__S7Version_7Version( kl_t3, kl_t4 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
+#line 70 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 73 "codegen/bounds_user_types.kl"
 bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
@@ -730,13 +1023,19 @@ bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
     bool kl_t6;
 #line 75 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__S7Version_7Version( kl_t3, kl_t4 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
+#line 75 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t6;
+#line 75 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 78 "codegen/bounds_user_types.kl"
 bool kl__before__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
@@ -756,75 +1055,116 @@ bool kl__before__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t16;
 #line 80 "codegen/bounds_user_types.kl"
     kl_t7 = ( *kl_a_1 ) < ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t7;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t8 = ( *kl_a_1 ) <= ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t8;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t6;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t9 = ( *kl_a_1 ) > ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t10 = !kl_t9;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t10;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb4;
     bb4:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t5;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb5:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t11 = ( *kl_a_1 ) >= ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t12 = !kl_t11;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t12;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb6;
     bb6:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb7; else goto bb8;
     bb7:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t14 = ( *kl_a_1 ) < ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t14 ) goto bb9; else goto bb10;
     bb8:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 80 "codegen/bounds_user_types.kl"
     return kl_t0;
     bb9:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t13 = 0;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb13;
     bb10:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t15 = ( *kl_a_1 ) == ( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t15 ) goto bb11; else goto bb12;
     bb11:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t13 = 1;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb13;
     bb12:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t13 = 2;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb13;
     bb13:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t16 = kl_t13 == 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t16;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb8;
 }
 
+#line 68 "codegen/bounds_user_types.kl"
 bool kl__same__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
 #line 70 "codegen/bounds_user_types.kl"
     kl_t3 = ( *kl_a_1 ) == ( *kl_b_2 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 70 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 73 "codegen/bounds_user_types.kl"
 bool kl__differ__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
 #line 75 "codegen/bounds_user_types.kl"
     kl_t3 = ( *kl_a_1 ) != ( *kl_b_2 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 75 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 68 "codegen/bounds_user_types.kl"
 bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
 {
     bool kl_t0;
@@ -833,12 +1173,17 @@ bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* 
     bool kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
+#line 70 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 73 "codegen/bounds_user_types.kl"
 bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
 {
     bool kl_t0;
@@ -848,13 +1193,19 @@ bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E
     bool kl_t6;
 #line 75 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
+#line 75 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t6;
+#line 75 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 68 "codegen/bounds_user_types.kl"
 bool kl__same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
@@ -863,12 +1214,17 @@ bool kl__same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
+#line 70 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 73 "codegen/bounds_user_types.kl"
 bool kl__differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
@@ -878,13 +1234,19 @@ bool kl__differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t6;
 #line 75 "codegen/bounds_user_types.kl"
     kl_t3 = &( *kl_a_1 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t5 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
+#line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
+#line 75 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t6;
+#line 75 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 78 "codegen/bounds_user_types.kl"
 bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
@@ -916,65 +1278,108 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t28;
 #line 80 "codegen/bounds_user_types.kl"
     kl_t7 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t8 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t9 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t7, kl_t8 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t10 = kl_t9 == 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t10;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t11 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t12 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t13 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t11, kl_t12 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t14 = kl_t13 != 2;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t14;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t6;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t15 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t16 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t17 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t15, kl_t16 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t18 = kl_t17 == 2;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t19 = !kl_t18;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t5 = kl_t19;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb4;
     bb4:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t5;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb5:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t20 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t21 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t22 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t20, kl_t21 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t23 = kl_t22 != 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t24 = !kl_t23;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t4 = kl_t24;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb6;
     bb6:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
+#line 80 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb7; else goto bb8;
     bb7:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t25 = &( *kl_a_1 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t26 = &( *kl_b_2 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t27 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t25, kl_t26 );
+#line 80 "codegen/bounds_user_types.kl"
     kl_t28 = kl_t27 == 0;
+#line 80 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t28;
+#line 80 "codegen/bounds_user_types.kl"
     goto bb8;
     bb8:
+#line 80 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 80 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 68 "codegen/bounds_user_types.kl"
 bool kl__same__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
 #line 70 "codegen/bounds_user_types.kl"
     kl_t3 = ( *kl_a_1 ) == ( *kl_b_2 );
+#line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 70 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 32 "codegen/bounds_user_types.kl"
 bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_this_1, struct kl__Pair__I3i32E* kl_other_2 )
 {
     bool kl_t0;
@@ -983,18 +1388,27 @@ bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*
     bool kl_t5;
 #line 34 "codegen/bounds_user_types.kl"
     kl_t4 = ( *kl_this_1 ).kl_left_66 == ( *kl_other_2 ).kl_left_66;
+#line 34 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
+#line 34 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 34 "codegen/bounds_user_types.kl"
     kl_t5 = ( *kl_this_1 ).kl_right_68 == ( *kl_other_2 ).kl_right_68;
+#line 34 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t5;
+#line 34 "codegen/bounds_user_types.kl"
     goto bb2;
     bb2:
+#line 34 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t3;
+#line 34 "codegen/bounds_user_types.kl"
     return kl_t0;
 }
 
+#line 83 "codegen/bounds_user_types.kl"
 int main( void )
 {
+#line 83 "codegen/bounds_user_types.kl"
     return (int) kl__main__();
 }

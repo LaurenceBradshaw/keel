@@ -24,29 +24,38 @@ int32_t kl__read__P3i32( int32_t* );
 void kl__bump__P3i32( int32_t* );
 int32_t kl__main__( void );
 
+#line 6 "codegen/pointers.kl"
 int32_t kl__read__P3i32( int32_t* kl_q_1 )
 {
     int32_t kl_t0;
 #line 6 "codegen/pointers.kl"
     kl_t0 = ( *kl_q_1 );
+#line 6 "codegen/pointers.kl"
     return kl_t0;
 }
 
+#line 8 "codegen/pointers.kl"
 void kl__bump__P3i32( int32_t* kl_q_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
 #line 8 "codegen/pointers.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_q_1 ), 1, &( int32_t ) { 0 } );
+#line 8 "codegen/pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 8 "codegen/pointers.kl"
     kl_rt_panic( "codegen/pointers.kl", 8, "arithmetic overflow: *q + 1" );
     bb2:
+#line 8 "codegen/pointers.kl"
     kl_t3 = ( *kl_q_1 ) + 1;
+#line 8 "codegen/pointers.kl"
     ( *kl_q_1 ) = kl_t3;
+#line 8 "codegen/pointers.kl"
     return;
 }
 
+#line 10 "codegen/pointers.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -83,139 +92,169 @@ int32_t kl__main__( void )
     bool kl_t32;
 #line 12 "codegen/pointers.kl"
     kl_v_1 = 41;
-#line 13 "codegen/pointers.kl"
     kl_t3 = &kl_v_1;
+#line 13 "codegen/pointers.kl"
     kl_q_2 = kl_t3;
 #line 15 "codegen/pointers.kl"
     kl_t4 = ( *kl_q_2 ) != 41;
+#line 15 "codegen/pointers.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 15 "codegen/pointers.kl"
     kl_t0 = 1;
+#line 15 "codegen/pointers.kl"
     return kl_t0;
     bb2:
 #line 16 "codegen/pointers.kl"
     kl_t5 = kl__read__P3i32( kl_q_2 );
+#line 16 "codegen/pointers.kl"
     kl_t6 = kl_t5 != 41;
+#line 16 "codegen/pointers.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
+#line 16 "codegen/pointers.kl"
     kl_t0 = 2;
+#line 16 "codegen/pointers.kl"
     return kl_t0;
     bb4:
-#line 18 "codegen/pointers.kl"
     kl__bump__P3i32( kl_q_2 );
-#line 19 "codegen/pointers.kl"
     kl_t8 = kl_v_1 != 42;
+#line 19 "codegen/pointers.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
+#line 19 "codegen/pointers.kl"
     kl_t0 = 3;
+#line 19 "codegen/pointers.kl"
     return kl_t0;
     bb6:
-#line 21 "codegen/pointers.kl"
     ( *kl_q_2 ) = 7;
-#line 22 "codegen/pointers.kl"
     kl_t9 = kl_v_1 != 7;
+#line 22 "codegen/pointers.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
+#line 22 "codegen/pointers.kl"
     kl_t0 = 4;
+#line 22 "codegen/pointers.kl"
     return kl_t0;
     bb8:
-#line 24 "codegen/pointers.kl"
     kl_t11 = &kl_q_2;
+#line 24 "codegen/pointers.kl"
     kl_r_10 = kl_t11;
-#line 25 "codegen/pointers.kl"
     kl_t12 = ( *( *kl_r_10 ) ) != 7;
+#line 25 "codegen/pointers.kl"
     if ( kl_t12 ) goto bb9; else goto bb10;
     bb9:
+#line 25 "codegen/pointers.kl"
     kl_t0 = 5;
+#line 25 "codegen/pointers.kl"
     return kl_t0;
     bb10:
-#line 27 "codegen/pointers.kl"
     kl_t14.kl_x_1 = 1.0;
+#line 27 "codegen/pointers.kl"
     kl_t14.kl_y_3 = 2.0;
+#line 27 "codegen/pointers.kl"
     kl_s_13 = kl_t14;
-#line 28 "codegen/pointers.kl"
     kl_t16 = &kl_s_13.kl_y_3;
+#line 28 "codegen/pointers.kl"
     kl_f_15 = kl_t16;
-#line 29 "codegen/pointers.kl"
     ( *kl_f_15 ) = 9.0;
-#line 30 "codegen/pointers.kl"
     kl_t17 = kl_s_13.kl_y_3 != 9.0;
+#line 30 "codegen/pointers.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
+#line 30 "codegen/pointers.kl"
     kl_t0 = 6;
+#line 30 "codegen/pointers.kl"
     return kl_t0;
     bb12:
-#line 32 "codegen/pointers.kl"
     kl_n_18 = NULL;
-#line 33 "codegen/pointers.kl"
     kl_t19 = kl_n_18 != NULL;
+#line 33 "codegen/pointers.kl"
     if ( kl_t19 ) goto bb13; else goto bb14;
     bb13:
+#line 33 "codegen/pointers.kl"
     kl_t0 = 7;
+#line 33 "codegen/pointers.kl"
     return kl_t0;
     bb14:
 #line 37 "codegen/pointers.kl"
     kl_t21 = &kl_s_13;
+#line 37 "codegen/pointers.kl"
     kl_p_20 = kl_t21;
-#line 38 "codegen/pointers.kl"
     ( *kl_p_20 ).kl_x_1 = 3.0;
-#line 39 "codegen/pointers.kl"
     kl_t22 = kl_s_13.kl_x_1 != 3.0;
+#line 39 "codegen/pointers.kl"
     if ( kl_t22 ) goto bb15; else goto bb16;
     bb15:
+#line 39 "codegen/pointers.kl"
     kl_t0 = 8;
+#line 39 "codegen/pointers.kl"
     return kl_t0;
     bb16:
 #line 42 "codegen/pointers.kl"
     kl_t23 = ( *kl_p_20 ).kl_x_1 + 1.0;
+#line 42 "codegen/pointers.kl"
     ( *kl_p_20 ).kl_x_1 = kl_t23;
-#line 43 "codegen/pointers.kl"
     kl_t24 = kl_s_13.kl_x_1 != 4.0;
+#line 43 "codegen/pointers.kl"
     if ( kl_t24 ) goto bb17; else goto bb18;
     bb17:
+#line 43 "codegen/pointers.kl"
     kl_t0 = 9;
+#line 43 "codegen/pointers.kl"
     return kl_t0;
     bb18:
 #line 46 "codegen/pointers.kl"
     kl_t26.kl_n_6 = 10;
+#line 46 "codegen/pointers.kl"
     kl_c_25 = kl_t26;
-#line 47 "codegen/pointers.kl"
     kl_t28 = &kl_c_25;
+#line 47 "codegen/pointers.kl"
     kl_d_27 = kl_t28;
-#line 48 "codegen/pointers.kl"
     kl_t29 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 5, &( int32_t ) { 0 } );
+#line 48 "codegen/pointers.kl"
     if ( kl_t29 ) goto bb19; else goto bb20;
     bb19:
+#line 48 "codegen/pointers.kl"
     kl_rt_panic( "codegen/pointers.kl", 48, "arithmetic overflow: (*d).n += 5;" );
     bb20:
+#line 48 "codegen/pointers.kl"
     ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 5;
-#line 49 "codegen/pointers.kl"
     kl_t30 = kl_c_25.kl_n_6 != 15;
+#line 49 "codegen/pointers.kl"
     if ( kl_t30 ) goto bb21; else goto bb22;
     bb21:
+#line 49 "codegen/pointers.kl"
     kl_t0 = 10;
+#line 49 "codegen/pointers.kl"
     return kl_t0;
     bb22:
-#line 51 "codegen/pointers.kl"
     kl_t31 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 1, &( int32_t ) { 0 } );
+#line 51 "codegen/pointers.kl"
     if ( kl_t31 ) goto bb23; else goto bb24;
     bb23:
+#line 51 "codegen/pointers.kl"
     kl_rt_panic( "codegen/pointers.kl", 51, "arithmetic overflow: (*d).n++;" );
     bb24:
+#line 51 "codegen/pointers.kl"
     ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 1;
-#line 52 "codegen/pointers.kl"
     kl_t32 = kl_c_25.kl_n_6 != 16;
+#line 52 "codegen/pointers.kl"
     if ( kl_t32 ) goto bb25; else goto bb26;
     bb25:
+#line 52 "codegen/pointers.kl"
     kl_t0 = 11;
+#line 52 "codegen/pointers.kl"
     return kl_t0;
     bb26:
-#line 54 "codegen/pointers.kl"
     kl_t0 = 0;
+#line 54 "codegen/pointers.kl"
     return kl_t0;
 }
 
+#line 10 "codegen/pointers.kl"
 int main( void )
 {
+#line 10 "codegen/pointers.kl"
     return (int) kl__main__();
 }

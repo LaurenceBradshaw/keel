@@ -28,6 +28,7 @@ double kl__total__I3f64E__L3f64( double*, uint64_t );
 uint64_t kl__count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 uint64_t kl__count__I5PointE__L5Point( struct kl__Point*, uint64_t );
 
+#line 24 "codegen/generic_run_from_array.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -99,102 +100,160 @@ int32_t kl__main__( void )
     ( void ) kl_t50;
 #line 26 "codegen/generic_run_from_array.kl"
     kl_t3 = 0;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t2.e[kl_t3] = 1;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t4 = 1;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t2.e[kl_t4] = 2;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t5 = 2;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t2.e[kl_t5] = 3;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t6 = 3;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_t2.e[kl_t6] = 4;
+#line 26 "codegen/generic_run_from_array.kl"
     kl_numbers_1 = kl_t2;
-#line 27 "codegen/generic_run_from_array.kl"
     kl_t7 = 0;
+#line 27 "codegen/generic_run_from_array.kl"
     kl_t8 = &kl_numbers_1.e[kl_t7];
+#line 27 "codegen/generic_run_from_array.kl"
     kl_t9 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t8, 4 };
+#line 27 "codegen/generic_run_from_array.kl"
     kl_t10 = kl__total__I3i32E__L3i32( ( kl_t9 ).data, ( kl_t9 ).size );
+#line 27 "codegen/generic_run_from_array.kl"
     kl_t11 = kl_t10 != 10;
+#line 27 "codegen/generic_run_from_array.kl"
     if ( kl_t11 ) goto bb1; else goto bb2;
     bb1:
-#line 29 "codegen/generic_run_from_array.kl"
     kl_t0 = 1;
+#line 29 "codegen/generic_run_from_array.kl"
     return kl_t0;
     bb2:
 #line 32 "codegen/generic_run_from_array.kl"
     kl_t14 = 0;
+#line 32 "codegen/generic_run_from_array.kl"
     kl_t13.e[kl_t14] = 0.5;
+#line 32 "codegen/generic_run_from_array.kl"
     kl_t15 = 1;
+#line 32 "codegen/generic_run_from_array.kl"
     kl_t13.e[kl_t15] = 0.25;
+#line 32 "codegen/generic_run_from_array.kl"
     kl_halves_12 = kl_t13;
-#line 33 "codegen/generic_run_from_array.kl"
     kl_t16 = 0;
+#line 33 "codegen/generic_run_from_array.kl"
     kl_t17 = &kl_halves_12.e[kl_t16];
+#line 33 "codegen/generic_run_from_array.kl"
     kl_t18 = ( struct kl__run__L3f64__ref ) { ( double* ) kl_t17, 2 };
+#line 33 "codegen/generic_run_from_array.kl"
     kl_t19 = kl__total__I3f64E__L3f64( ( kl_t18 ).data, ( kl_t18 ).size );
+#line 33 "codegen/generic_run_from_array.kl"
     kl_t20 = kl_t19 != 0.75;
+#line 33 "codegen/generic_run_from_array.kl"
     if ( kl_t20 ) goto bb3; else goto bb4;
     bb3:
-#line 35 "codegen/generic_run_from_array.kl"
     kl_t0 = 2;
+#line 35 "codegen/generic_run_from_array.kl"
     return kl_t0;
     bb4:
 #line 38 "codegen/generic_run_from_array.kl"
     kl_t24 = &kl_t23;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t25 = ( uint8_t* ) "a";
+#line 38 "codegen/generic_run_from_array.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t24, kl_t25, 1 );
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t28 = &kl_t27;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t29 = ( uint8_t* ) "b";
+#line 38 "codegen/generic_run_from_array.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t28, kl_t29, 1 );
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t32 = &kl_t31;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t33 = ( uint8_t* ) "c";
+#line 38 "codegen/generic_run_from_array.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t32, kl_t33, 1 );
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t35 = 0;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t22.e[kl_t35] = kl_t23;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t36 = 1;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t22.e[kl_t36] = kl_t27;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t37 = 2;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_t22.e[kl_t37] = kl_t31;
+#line 38 "codegen/generic_run_from_array.kl"
     kl_words_21 = kl_t22;
-#line 39 "codegen/generic_run_from_array.kl"
     kl_t40.kl_x_1 = 1;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t40.kl_y_3 = 2;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t41.kl_x_1 = 3;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t41.kl_y_3 = 4;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t42 = 0;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t39.e[kl_t42] = kl_t40;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t43 = 1;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_t39.e[kl_t43] = kl_t41;
+#line 39 "codegen/generic_run_from_array.kl"
     kl_points_38 = kl_t39;
-#line 40 "codegen/generic_run_from_array.kl"
     kl_t45 = 0;
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t46 = &kl_words_21.e[kl_t45];
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t47 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t46, 3 };
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t48 = kl__count__IQ7prelude3strE__LQ7prelude3str( ( kl_t47 ).data, ( kl_t47 ).size );
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t49 = kl_t48 != 3;
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t44 = kl_t49;
+#line 40 "codegen/generic_run_from_array.kl"
     if ( kl_t44 ) goto bb6; else goto bb5;
     bb5:
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t50 = 0;
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t51 = &kl_points_38.e[kl_t50];
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t52 = ( struct kl__run__L5Point__ref ) { ( struct kl__Point* ) kl_t51, 2 };
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t53 = kl__count__I5PointE__L5Point( ( kl_t52 ).data, ( kl_t52 ).size );
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t54 = kl_t53 != 2;
+#line 40 "codegen/generic_run_from_array.kl"
     kl_t44 = kl_t54;
+#line 40 "codegen/generic_run_from_array.kl"
     goto bb6;
     bb6:
+#line 40 "codegen/generic_run_from_array.kl"
     if ( kl_t44 ) goto bb7; else goto bb8;
     bb7:
-#line 42 "codegen/generic_run_from_array.kl"
     kl_t0 = 3;
+#line 42 "codegen/generic_run_from_array.kl"
     return kl_t0;
     bb8:
 #line 45 "codegen/generic_run_from_array.kl"
     kl_t0 = 0;
+#line 45 "codegen/generic_run_from_array.kl"
     return kl_t0;
 }
 
+#line 9 "codegen/generic_run_from_array.kl"
 int32_t kl__total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
+#line 9 "codegen/generic_run_from_array.kl"
     struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     int32_t kl_sum_2;
     uint64_t kl_i_3;
@@ -209,46 +268,62 @@ int32_t kl__total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_
     int32_t kl_t12;
 #line 11 "codegen/generic_run_from_array.kl"
     kl_sum_2 = 0;
-#line 12 "codegen/generic_run_from_array.kl"
     kl_i_3 = 0;
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t5 = ( kl_values_1 ).size;
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t4 = kl_t5;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
     bb1:
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t6 = kl_i_3 < kl_t4;
+#line 12 "codegen/generic_run_from_array.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 14 "codegen/generic_run_from_array.kl"
     kl_t7 = ( kl_values_1 ).size;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t8 = ( kl_values_1 ).data;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t9 = kl_i_3 < kl_t7;
+#line 14 "codegen/generic_run_from_array.kl"
     if ( kl_t9 ) goto bb5; else goto bb4;
     bb3:
-#line 16 "codegen/generic_run_from_array.kl"
     kl_t0 = kl_sum_2;
+#line 16 "codegen/generic_run_from_array.kl"
     return kl_t0;
     bb4:
+#line 14 "codegen/generic_run_from_array.kl"
     kl_rt_panic( "codegen/generic_run_from_array.kl", 14, "out of bounds: values[i]" );
     bb5:
 #line 14 "codegen/generic_run_from_array.kl"
     kl_t10 = kl_t8 + kl_i_3;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t11 = __builtin_add_overflow( kl_sum_2, ( *kl_t10 ), &( int32_t ) { 0 } );
+#line 14 "codegen/generic_run_from_array.kl"
     if ( kl_t11 ) goto bb6; else goto bb7;
     bb6:
+#line 14 "codegen/generic_run_from_array.kl"
     kl_rt_panic( "codegen/generic_run_from_array.kl", 14, "arithmetic overflow: sum + values[i]" );
     bb7:
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t12 = kl_sum_2 + ( *kl_t10 );
+#line 14 "codegen/generic_run_from_array.kl"
     kl_sum_2 = kl_t12;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb8;
     bb8:
 #line 12 "codegen/generic_run_from_array.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
 }
 
+#line 9 "codegen/generic_run_from_array.kl"
 double kl__total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1_size )
 {
     double kl_t0;
+#line 9 "codegen/generic_run_from_array.kl"
     struct kl__run__L3f64__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     double kl_sum_2;
     uint64_t kl_i_3;
@@ -262,61 +337,80 @@ double kl__total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1_
     double kl_t11;
 #line 11 "codegen/generic_run_from_array.kl"
     kl_sum_2 = 0.0;
-#line 12 "codegen/generic_run_from_array.kl"
     kl_i_3 = 0;
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t5 = ( kl_values_1 ).size;
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t4 = kl_t5;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
     bb1:
+#line 12 "codegen/generic_run_from_array.kl"
     kl_t6 = kl_i_3 < kl_t4;
+#line 12 "codegen/generic_run_from_array.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 14 "codegen/generic_run_from_array.kl"
     kl_t7 = ( kl_values_1 ).size;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t8 = ( kl_values_1 ).data;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t9 = kl_i_3 < kl_t7;
+#line 14 "codegen/generic_run_from_array.kl"
     if ( kl_t9 ) goto bb5; else goto bb4;
     bb3:
-#line 16 "codegen/generic_run_from_array.kl"
     kl_t0 = kl_sum_2;
+#line 16 "codegen/generic_run_from_array.kl"
     return kl_t0;
     bb4:
+#line 14 "codegen/generic_run_from_array.kl"
     kl_rt_panic( "codegen/generic_run_from_array.kl", 14, "out of bounds: values[i]" );
     bb5:
 #line 14 "codegen/generic_run_from_array.kl"
     kl_t10 = kl_t8 + kl_i_3;
+#line 14 "codegen/generic_run_from_array.kl"
     kl_t11 = kl_sum_2 + ( *kl_t10 );
+#line 14 "codegen/generic_run_from_array.kl"
     kl_sum_2 = kl_t11;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb6;
     bb6:
 #line 12 "codegen/generic_run_from_array.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
 }
 
+#line 19 "codegen/generic_run_from_array.kl"
 uint64_t kl__count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str* kl_values_1_data, uint64_t kl_values_1_size )
 {
     uint64_t kl_t0;
+#line 19 "codegen/generic_run_from_array.kl"
     struct kl__run__LQ7prelude3str__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     uint64_t kl_t2;
-#line 21 "codegen/generic_run_from_array.kl"
     kl_t2 = ( kl_values_1 ).size;
+#line 21 "codegen/generic_run_from_array.kl"
     kl_t0 = kl_t2;
+#line 21 "codegen/generic_run_from_array.kl"
     return kl_t0;
 }
 
+#line 19 "codegen/generic_run_from_array.kl"
 uint64_t kl__count__I5PointE__L5Point( struct kl__Point* kl_values_1_data, uint64_t kl_values_1_size )
 {
     uint64_t kl_t0;
+#line 19 "codegen/generic_run_from_array.kl"
     struct kl__run__L5Point__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     uint64_t kl_t2;
-#line 21 "codegen/generic_run_from_array.kl"
     kl_t2 = ( kl_values_1 ).size;
+#line 21 "codegen/generic_run_from_array.kl"
     kl_t0 = kl_t2;
+#line 21 "codegen/generic_run_from_array.kl"
     return kl_t0;
 }
 
+#line 24 "codegen/generic_run_from_array.kl"
 int main( void )
 {
+#line 24 "codegen/generic_run_from_array.kl"
     return (int) kl__main__();
 }

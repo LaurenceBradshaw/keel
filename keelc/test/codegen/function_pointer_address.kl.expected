@@ -13,6 +13,7 @@ int32_t kl__twice__3i32( int32_t );
 void kl__nothing__( void );
 int32_t kl__main__( void );
 
+#line 4 "codegen/function_pointer_address.kl"
 int32_t kl__twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -20,20 +21,28 @@ int32_t kl__twice__3i32( int32_t kl_a_1 )
     int32_t kl_t3;
 #line 6 "codegen/function_pointer_address.kl"
     kl_t2 = __builtin_mul_overflow( kl_a_1, 2, &( int32_t ) { 0 } );
+#line 6 "codegen/function_pointer_address.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 6 "codegen/function_pointer_address.kl"
     kl_rt_panic( "codegen/function_pointer_address.kl", 6, "arithmetic overflow: a * 2" );
     bb2:
+#line 6 "codegen/function_pointer_address.kl"
     kl_t3 = kl_a_1 * 2;
+#line 6 "codegen/function_pointer_address.kl"
     kl_t0 = kl_t3;
+#line 6 "codegen/function_pointer_address.kl"
     return kl_t0;
 }
 
+#line 9 "codegen/function_pointer_address.kl"
 void kl__nothing__( void )
 {
+#line 9 "codegen/function_pointer_address.kl"
     return;
 }
 
+#line 13 "codegen/function_pointer_address.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -45,16 +54,20 @@ int32_t kl__main__( void )
     ( void ) kl_q_3;
 #line 15 "codegen/function_pointer_address.kl"
     kl_t2 = kl__twice__3i32;
+#line 15 "codegen/function_pointer_address.kl"
     kl_p_1 = kl_t2;
-#line 16 "codegen/function_pointer_address.kl"
     kl_t4 = kl__nothing__;
+#line 16 "codegen/function_pointer_address.kl"
     kl_q_3 = kl_t4;
 #line 18 "codegen/function_pointer_address.kl"
     kl_t0 = 0;
+#line 18 "codegen/function_pointer_address.kl"
     return kl_t0;
 }
 
+#line 13 "codegen/function_pointer_address.kl"
 int main( void )
 {
+#line 13 "codegen/function_pointer_address.kl"
     return (int) kl__main__();
 }

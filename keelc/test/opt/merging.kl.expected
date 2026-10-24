@@ -12,30 +12,36 @@ int32_t kl__joined__4bool_3i32( bool, int32_t );
 int32_t kl__looped__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 6 "opt/merging.kl"
 int32_t kl__chained__( void )
 {
     int32_t kl_t0;
 #line 11 "opt/merging.kl"
     kl_t0 = 1;
+#line 11 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 17 "opt/merging.kl"
 int32_t kl__asserted__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-#line 20 "opt/merging.kl"
     kl_t0 = kl_a_1 + 1;
+#line 20 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 23 "opt/merging.kl"
 int32_t kl__twice__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 25 "opt/merging.kl"
     kl_t0 = kl_x_1 * 2;
+#line 25 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 29 "opt/merging.kl"
 int32_t kl__inlined__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -44,28 +50,34 @@ int32_t kl__inlined__3i32( int32_t kl_a_1 )
     kl_t2 = kl_a_1 * 2;
 #line 31 "opt/merging.kl"
     kl_t0 = kl_t2 + 1;
+#line 31 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 35 "opt/merging.kl"
 int32_t kl__joined__4bool_3i32( bool kl_c_1, int32_t kl_a_2 )
 {
     int32_t kl_t0;
     int32_t kl_x_3;
+#line 38 "opt/merging.kl"
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-#line 40 "opt/merging.kl"
     kl_x_3 = kl_a_2 * 3;
+#line 38 "opt/merging.kl"
     goto bb3;
     bb2:
 #line 44 "opt/merging.kl"
     kl_x_3 = kl_a_2 * 5;
+#line 38 "opt/merging.kl"
     goto bb3;
     bb3:
 #line 46 "opt/merging.kl"
     kl_t0 = kl_x_3 + 1;
+#line 46 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 50 "opt/merging.kl"
 int32_t kl__looped__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -73,22 +85,26 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
     bool kl_t4;
 #line 52 "opt/merging.kl"
     kl_t0 = 0;
-#line 53 "opt/merging.kl"
     kl_i_3 = 0;
+#line 53 "opt/merging.kl"
     goto bb1;
     bb1:
+#line 53 "opt/merging.kl"
     kl_t4 = kl_i_3 < kl_n_1;
+#line 53 "opt/merging.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 55 "opt/merging.kl"
     kl_t0 = kl_t0 + kl_i_3;
 #line 53 "opt/merging.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 53 "opt/merging.kl"
     goto bb1;
     bb3:
+#line 57 "opt/merging.kl"
     return kl_t0;
 }
 
+#line 60 "opt/merging.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -98,34 +114,40 @@ int32_t kl__main__( void )
     bool kl_t18;
 #line 52 "opt/merging.kl"
     kl_t12 = 0;
-#line 53 "opt/merging.kl"
     kl_i_17 = 0;
+#line 53 "opt/merging.kl"
     goto bb3;
     bb1:
 #line 84 "opt/merging.kl"
     kl_t0 = 5;
+#line 84 "opt/merging.kl"
     return kl_t0;
     bb2:
 #line 87 "opt/merging.kl"
     kl_t0 = 0;
+#line 87 "opt/merging.kl"
     return kl_t0;
     bb3:
 #line 53 "opt/merging.kl"
     kl_t18 = kl_i_17 < 5;
+#line 53 "opt/merging.kl"
     if ( kl_t18 ) goto bb4; else goto bb5;
     bb4:
-#line 55 "opt/merging.kl"
     kl_t12 = kl_t12 + kl_i_17;
 #line 53 "opt/merging.kl"
     kl_i_17 = kl_i_17 + 1;
+#line 53 "opt/merging.kl"
     goto bb3;
     bb5:
 #line 82 "opt/merging.kl"
     kl_t13 = kl_t12 != 10;
+#line 82 "opt/merging.kl"
     if ( kl_t13 ) goto bb1; else goto bb2;
 }
 
+#line 60 "opt/merging.kl"
 int main( void )
 {
+#line 60 "opt/merging.kl"
     return (int) kl__main__();
 }

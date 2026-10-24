@@ -8,6 +8,7 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__main__( void );
 
+#line 3 "codegen/cast_out_of_range.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -23,37 +24,49 @@ int32_t kl__main__( void )
     bool kl_t10;
 #line 5 "codegen/cast_out_of_range.kl"
     kl_x_1 = 7;
-#line 6 "codegen/cast_out_of_range.kl"
     kl_t2 = ( uint32_t ) kl_x_1;
+#line 6 "codegen/cast_out_of_range.kl"
     kl_t3 = ( int32_t ) kl_t2;
+#line 6 "codegen/cast_out_of_range.kl"
     kl_t4 = kl_t3 == kl_x_1;
+#line 6 "codegen/cast_out_of_range.kl"
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
+#line 6 "codegen/cast_out_of_range.kl"
     kl_rt_panic( "codegen/cast_out_of_range.kl", 6, "cast out of range: cast<u32>( x )" );
     bb2:
+#line 6 "codegen/cast_out_of_range.kl"
     kl_t5 = kl_x_1 >= 0;
+#line 6 "codegen/cast_out_of_range.kl"
     if ( kl_t5 ) goto bb3; else goto bb1;
     bb3:
-#line 8 "codegen/cast_out_of_range.kl"
     kl_t6 = -1;
+#line 8 "codegen/cast_out_of_range.kl"
     kl_x_1 = kl_t6;
-#line 9 "codegen/cast_out_of_range.kl"
     kl_t7 = ( uint32_t ) kl_x_1;
+#line 9 "codegen/cast_out_of_range.kl"
     kl_t8 = ( int32_t ) kl_t7;
+#line 9 "codegen/cast_out_of_range.kl"
     kl_t9 = kl_t8 == kl_x_1;
+#line 9 "codegen/cast_out_of_range.kl"
     if ( kl_t9 ) goto bb5; else goto bb4;
     bb4:
+#line 9 "codegen/cast_out_of_range.kl"
     kl_rt_panic( "codegen/cast_out_of_range.kl", 9, "cast out of range: cast<u32>( x )" );
     bb5:
+#line 9 "codegen/cast_out_of_range.kl"
     kl_t10 = kl_x_1 >= 0;
+#line 9 "codegen/cast_out_of_range.kl"
     if ( kl_t10 ) goto bb6; else goto bb4;
     bb6:
-#line 11 "codegen/cast_out_of_range.kl"
     kl_t0 = 7;
+#line 11 "codegen/cast_out_of_range.kl"
     return kl_t0;
 }
 
+#line 3 "codegen/cast_out_of_range.kl"
 int main( void )
 {
+#line 3 "codegen/cast_out_of_range.kl"
     return (int) kl__main__();
 }

@@ -17,6 +17,7 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 void kl__bump_twice__R3i32( int32_t* );
 int32_t kl__main__( void );
 
+#line 12 "codegen/ref_bindings.kl"
 void kl__bump_twice__R3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_inner_2;
@@ -28,23 +29,32 @@ void kl__bump_twice__R3i32( int32_t* kl_n_1 )
     kl_inner_2 = &( *kl_n_1 );
 #line 16 "codegen/ref_bindings.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_inner_2 ), 1, &( int32_t ) { 0 } );
+#line 16 "codegen/ref_bindings.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 16 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 16, "arithmetic overflow: inner + 1" );
     bb2:
+#line 16 "codegen/ref_bindings.kl"
     kl_t4 = ( *kl_inner_2 ) + 1;
+#line 16 "codegen/ref_bindings.kl"
     ( *kl_inner_2 ) = kl_t4;
-#line 17 "codegen/ref_bindings.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_inner_2 ), 1, &( int32_t ) { 0 } );
+#line 17 "codegen/ref_bindings.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 17 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 17, "arithmetic overflow: inner + 1" );
     bb4:
+#line 17 "codegen/ref_bindings.kl"
     kl_t6 = ( *kl_inner_2 ) + 1;
+#line 17 "codegen/ref_bindings.kl"
     ( *kl_inner_2 ) = kl_t6;
+#line 12 "codegen/ref_bindings.kl"
     return;
 }
 
+#line 20 "codegen/ref_bindings.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -71,54 +81,77 @@ int32_t kl__main__( void )
     kl_r_2 = &kl_a_1;
 #line 26 "codegen/ref_bindings.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_r_2 ), 10, &( int32_t ) { 0 } );
+#line 26 "codegen/ref_bindings.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 26 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 26, "arithmetic overflow: r + 10" );
     bb2:
+#line 26 "codegen/ref_bindings.kl"
     kl_t4 = ( *kl_r_2 ) + 10;
+#line 26 "codegen/ref_bindings.kl"
     ( *kl_r_2 ) = kl_t4;
 #line 28 "codegen/ref_bindings.kl"
     kl_t5 = &kl_a_1;
+#line 28 "codegen/ref_bindings.kl"
     kl__bump_twice__R3i32( kl_t5 );
 #line 30 "codegen/ref_bindings.kl"
     kl_t8.kl_x_1 = 2;
+#line 30 "codegen/ref_bindings.kl"
     kl_t8.kl_y_3 = 3;
+#line 30 "codegen/ref_bindings.kl"
     kl_p_7 = kl_t8;
 #line 32 "codegen/ref_bindings.kl"
     kl_q_9 = &kl_p_7.kl_y_3;
 #line 34 "codegen/ref_bindings.kl"
     kl_t10 = __builtin_add_overflow( ( *kl_q_9 ), 20, &( int32_t ) { 0 } );
+#line 34 "codegen/ref_bindings.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
+#line 34 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 34, "arithmetic overflow: q + 20" );
     bb4:
+#line 34 "codegen/ref_bindings.kl"
     kl_t11 = ( *kl_q_9 ) + 20;
+#line 34 "codegen/ref_bindings.kl"
     ( *kl_q_9 ) = kl_t11;
 #line 36 "codegen/ref_bindings.kl"
     kl_t13 = &kl_a_1;
+#line 36 "codegen/ref_bindings.kl"
     kl_addr_12 = kl_t13;
 #line 38 "codegen/ref_bindings.kl"
     kl_through_14 = &( *kl_addr_12 );
 #line 40 "codegen/ref_bindings.kl"
     kl_t15 = __builtin_add_overflow( ( *kl_through_14 ), 100, &( int32_t ) { 0 } );
+#line 40 "codegen/ref_bindings.kl"
     if ( kl_t15 ) goto bb5; else goto bb6;
     bb5:
+#line 40 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 40, "arithmetic overflow: through + 100" );
     bb6:
+#line 40 "codegen/ref_bindings.kl"
     kl_t16 = ( *kl_through_14 ) + 100;
+#line 40 "codegen/ref_bindings.kl"
     ( *kl_through_14 ) = kl_t16;
 #line 42 "codegen/ref_bindings.kl"
     kl_t17 = __builtin_add_overflow( kl_a_1, kl_p_7.kl_y_3, &( int32_t ) { 0 } );
+#line 42 "codegen/ref_bindings.kl"
     if ( kl_t17 ) goto bb7; else goto bb8;
     bb7:
+#line 42 "codegen/ref_bindings.kl"
     kl_rt_panic( "codegen/ref_bindings.kl", 42, "arithmetic overflow: a + p.y" );
     bb8:
+#line 42 "codegen/ref_bindings.kl"
     kl_t18 = kl_a_1 + kl_p_7.kl_y_3;
+#line 42 "codegen/ref_bindings.kl"
     kl_t0 = kl_t18;
+#line 42 "codegen/ref_bindings.kl"
     return kl_t0;
 }
 
+#line 20 "codegen/ref_bindings.kl"
 int main( void )
 {
+#line 20 "codegen/ref_bindings.kl"
     return (int) kl__main__();
 }

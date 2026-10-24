@@ -32,53 +32,68 @@ int32_t* kl__address_of_counter__( void );
 int32_t kl__shadowed__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 40 "codegen/globals.kl"
 int32_t kl__read_counter__( void )
 {
     int32_t kl_t0;
 #line 42 "codegen/globals.kl"
     kl_t0 = kl_counter_2;
+#line 42 "codegen/globals.kl"
     return kl_t0;
 }
 
+#line 46 "codegen/globals.kl"
 void kl__bump__( void )
 {
     bool kl_t1;
 #line 48 "codegen/globals.kl"
     kl_t1 = __builtin_add_overflow( kl_counter_2, 1, &( int32_t ) { 0 } );
+#line 48 "codegen/globals.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
+#line 48 "codegen/globals.kl"
     kl_rt_panic( "codegen/globals.kl", 48, "arithmetic overflow: counter += 1;" );
     bb2:
+#line 48 "codegen/globals.kl"
     kl_counter_2 = kl_counter_2 + 1;
+#line 46 "codegen/globals.kl"
     return;
 }
 
+#line 51 "codegen/globals.kl"
 int32_t kl__read_later__( void )
 {
     int32_t kl_t0;
 #line 53 "codegen/globals.kl"
     kl_t0 = kl_later_20;
+#line 53 "codegen/globals.kl"
     return kl_t0;
 }
 
+#line 58 "codegen/globals.kl"
 int32_t* kl__address_of_counter__( void )
 {
     int32_t* kl_t0;
     int32_t* kl_t1;
 #line 60 "codegen/globals.kl"
     kl_t1 = &kl_counter_2;
+#line 60 "codegen/globals.kl"
     kl_t0 = kl_t1;
+#line 60 "codegen/globals.kl"
     return kl_t0;
 }
 
+#line 64 "codegen/globals.kl"
 int32_t kl__shadowed__3i32( int32_t kl_counter_1 )
 {
     int32_t kl_t0;
 #line 66 "codegen/globals.kl"
     kl_t0 = kl_counter_1;
+#line 66 "codegen/globals.kl"
     return kl_t0;
 }
 
+#line 69 "codegen/globals.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -131,292 +146,392 @@ int32_t kl__main__( void )
     bool kl_t50;
 #line 71 "codegen/globals.kl"
     kl_t1 = kl_counter_2 != 1;
+#line 71 "codegen/globals.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
+#line 71 "codegen/globals.kl"
     kl_t0 = 1;
+#line 71 "codegen/globals.kl"
     return kl_t0;
     bb2:
 #line 72 "codegen/globals.kl"
     kl_t2 = kl_small_5 != 200;
+#line 72 "codegen/globals.kl"
     if ( kl_t2 ) goto bb3; else goto bb4;
     bb3:
+#line 72 "codegen/globals.kl"
     kl_t0 = 2;
+#line 72 "codegen/globals.kl"
     return kl_t0;
     bb4:
 #line 73 "codegen/globals.kl"
     kl_t3 = kl_ratio_8 != 1.5;
+#line 73 "codegen/globals.kl"
     if ( kl_t3 ) goto bb5; else goto bb6;
     bb5:
+#line 73 "codegen/globals.kl"
     kl_t0 = 3;
+#line 73 "codegen/globals.kl"
     return kl_t0;
     bb6:
 #line 74 "codegen/globals.kl"
     kl_t4 = !kl_ready_11;
+#line 74 "codegen/globals.kl"
     if ( kl_t4 ) goto bb7; else goto bb8;
     bb7:
+#line 74 "codegen/globals.kl"
     kl_t0 = 4;
+#line 74 "codegen/globals.kl"
     return kl_t0;
     bb8:
 #line 75 "codegen/globals.kl"
     kl_t5 = -1;
+#line 75 "codegen/globals.kl"
     kl_t6 = kl_below_15 != kl_t5;
+#line 75 "codegen/globals.kl"
     if ( kl_t6 ) goto bb9; else goto bb10;
     bb9:
+#line 75 "codegen/globals.kl"
     kl_t0 = 5;
+#line 75 "codegen/globals.kl"
     return kl_t0;
     bb10:
 #line 76 "codegen/globals.kl"
     kl_t7 = kl_blank_17 != 0;
+#line 76 "codegen/globals.kl"
     if ( kl_t7 ) goto bb11; else goto bb12;
     bb11:
+#line 76 "codegen/globals.kl"
     kl_t0 = 6;
+#line 76 "codegen/globals.kl"
     return kl_t0;
     bb12:
 #line 77 "codegen/globals.kl"
     kl_t8 = kl_later_20 != 7;
+#line 77 "codegen/globals.kl"
     if ( kl_t8 ) goto bb13; else goto bb14;
     bb13:
+#line 77 "codegen/globals.kl"
     kl_t0 = 7;
+#line 77 "codegen/globals.kl"
     return kl_t0;
     bb14:
-#line 79 "codegen/globals.kl"
     kl_t9 = kl__read_counter__(  );
+#line 79 "codegen/globals.kl"
     kl_t10 = kl_t9 != 1;
+#line 79 "codegen/globals.kl"
     if ( kl_t10 ) goto bb15; else goto bb16;
     bb15:
+#line 79 "codegen/globals.kl"
     kl_t0 = 8;
+#line 79 "codegen/globals.kl"
     return kl_t0;
     bb16:
 #line 80 "codegen/globals.kl"
     kl_t11 = kl__read_later__(  );
+#line 80 "codegen/globals.kl"
     kl_t12 = kl_t11 != 7;
+#line 80 "codegen/globals.kl"
     if ( kl_t12 ) goto bb17; else goto bb18;
     bb17:
+#line 80 "codegen/globals.kl"
     kl_t0 = 9;
+#line 80 "codegen/globals.kl"
     return kl_t0;
     bb18:
 #line 83 "codegen/globals.kl"
     kl__bump__(  );
-#line 84 "codegen/globals.kl"
     kl_t14 = kl_counter_2 != 2;
+#line 84 "codegen/globals.kl"
     if ( kl_t14 ) goto bb19; else goto bb20;
     bb19:
+#line 84 "codegen/globals.kl"
     kl_t0 = 10;
+#line 84 "codegen/globals.kl"
     return kl_t0;
     bb20:
 #line 85 "codegen/globals.kl"
     kl_t15 = kl__read_counter__(  );
+#line 85 "codegen/globals.kl"
     kl_t16 = kl_t15 != 2;
+#line 85 "codegen/globals.kl"
     if ( kl_t16 ) goto bb21; else goto bb22;
     bb21:
+#line 85 "codegen/globals.kl"
     kl_t0 = 11;
+#line 85 "codegen/globals.kl"
     return kl_t0;
     bb22:
-#line 87 "codegen/globals.kl"
     kl__bump__(  );
-#line 88 "codegen/globals.kl"
     kl__bump__(  );
-#line 89 "codegen/globals.kl"
     kl_t19 = kl_counter_2 != 4;
+#line 89 "codegen/globals.kl"
     if ( kl_t19 ) goto bb23; else goto bb24;
     bb23:
+#line 89 "codegen/globals.kl"
     kl_t0 = 12;
+#line 89 "codegen/globals.kl"
     return kl_t0;
     bb24:
 #line 92 "codegen/globals.kl"
     kl_counter_2 = 10;
-#line 93 "codegen/globals.kl"
     kl_t20 = kl__read_counter__(  );
+#line 93 "codegen/globals.kl"
     kl_t21 = kl_t20 != 10;
+#line 93 "codegen/globals.kl"
     if ( kl_t21 ) goto bb25; else goto bb26;
     bb25:
+#line 93 "codegen/globals.kl"
     kl_t0 = 13;
+#line 93 "codegen/globals.kl"
     return kl_t0;
     bb26:
 #line 97 "codegen/globals.kl"
     kl_t22 = kl__address_of_counter__(  );
+#line 97 "codegen/globals.kl"
     ( *kl_t22 ) = 20;
-#line 98 "codegen/globals.kl"
     kl_t23 = kl_counter_2 != 20;
+#line 98 "codegen/globals.kl"
     if ( kl_t23 ) goto bb27; else goto bb28;
     bb27:
+#line 98 "codegen/globals.kl"
     kl_t0 = 14;
+#line 98 "codegen/globals.kl"
     return kl_t0;
     bb28:
-#line 100 "codegen/globals.kl"
     kl_t25 = kl__address_of_counter__(  );
+#line 100 "codegen/globals.kl"
     kl_held_24 = kl_t25;
 #line 102 "codegen/globals.kl"
     ( *kl_held_24 ) = 30;
-#line 103 "codegen/globals.kl"
     kl_t26 = kl_counter_2 != 30;
+#line 103 "codegen/globals.kl"
     if ( kl_t26 ) goto bb29; else goto bb30;
     bb29:
+#line 103 "codegen/globals.kl"
     kl_t0 = 15;
+#line 103 "codegen/globals.kl"
     return kl_t0;
     bb30:
 #line 104 "codegen/globals.kl"
     kl_t27 = ( *kl_held_24 ) != 30;
+#line 104 "codegen/globals.kl"
     if ( kl_t27 ) goto bb31; else goto bb32;
     bb31:
+#line 104 "codegen/globals.kl"
     kl_t0 = 16;
+#line 104 "codegen/globals.kl"
     return kl_t0;
     bb32:
 #line 107 "codegen/globals.kl"
     kl_shadow_check_28 = 0;
 #line 110 "codegen/globals.kl"
     kl_counter_29 = 99;
-#line 111 "codegen/globals.kl"
     kl_shadow_check_28 = kl_counter_29;
 #line 114 "codegen/globals.kl"
     kl_t30 = kl_shadow_check_28 != 99;
+#line 114 "codegen/globals.kl"
     if ( kl_t30 ) goto bb33; else goto bb34;
     bb33:
+#line 114 "codegen/globals.kl"
     kl_t0 = 17;
+#line 114 "codegen/globals.kl"
     return kl_t0;
     bb34:
 #line 115 "codegen/globals.kl"
     kl_t31 = kl_counter_2 != 30;
+#line 115 "codegen/globals.kl"
     if ( kl_t31 ) goto bb35; else goto bb36;
     bb35:
+#line 115 "codegen/globals.kl"
     kl_t0 = 18;
+#line 115 "codegen/globals.kl"
     return kl_t0;
     bb36:
 #line 118 "codegen/globals.kl"
     kl_t32 = kl__shadowed__3i32( 5 );
+#line 118 "codegen/globals.kl"
     kl_t33 = kl_t32 != 5;
+#line 118 "codegen/globals.kl"
     if ( kl_t33 ) goto bb37; else goto bb38;
     bb37:
+#line 118 "codegen/globals.kl"
     kl_t0 = 19;
+#line 118 "codegen/globals.kl"
     return kl_t0;
     bb38:
 #line 119 "codegen/globals.kl"
     kl_t34 = kl_counter_2 != 30;
+#line 119 "codegen/globals.kl"
     if ( kl_t34 ) goto bb39; else goto bb40;
     bb39:
+#line 119 "codegen/globals.kl"
     kl_t0 = 20;
+#line 119 "codegen/globals.kl"
     return kl_t0;
     bb40:
 #line 122 "codegen/globals.kl"
     kl_small_5 = 255;
-#line 123 "codegen/globals.kl"
     kl_t35 = kl_small_5 != 255;
+#line 123 "codegen/globals.kl"
     if ( kl_t35 ) goto bb41; else goto bb42;
     bb41:
+#line 123 "codegen/globals.kl"
     kl_t0 = 21;
+#line 123 "codegen/globals.kl"
     return kl_t0;
     bb42:
-#line 125 "codegen/globals.kl"
     kl_ready_11 = false;
     if ( kl_ready_11 ) goto bb43; else goto bb44;
     bb43:
 #line 126 "codegen/globals.kl"
     kl_t0 = 22;
+#line 126 "codegen/globals.kl"
     return kl_t0;
     bb44:
-#line 128 "codegen/globals.kl"
     kl_ratio_8 = 2.5;
-#line 129 "codegen/globals.kl"
     kl_t36 = kl_ratio_8 != 2.5;
+#line 129 "codegen/globals.kl"
     if ( kl_t36 ) goto bb45; else goto bb46;
     bb45:
+#line 129 "codegen/globals.kl"
     kl_t0 = 23;
+#line 129 "codegen/globals.kl"
     return kl_t0;
     bb46:
 #line 132 "codegen/globals.kl"
     kl_t37 = kl_seconds_per_hour_25 != 3600;
+#line 132 "codegen/globals.kl"
     if ( kl_t37 ) goto bb47; else goto bb48;
     bb47:
+#line 132 "codegen/globals.kl"
     kl_t0 = 24;
+#line 132 "codegen/globals.kl"
     return kl_t0;
     bb48:
 #line 133 "codegen/globals.kl"
     kl_t38 = kl_precedence_32 != 7;
+#line 133 "codegen/globals.kl"
     if ( kl_t38 ) goto bb49; else goto bb50;
     bb49:
+#line 133 "codegen/globals.kl"
     kl_t0 = 25;
+#line 133 "codegen/globals.kl"
     return kl_t0;
     bb50:
 #line 134 "codegen/globals.kl"
     kl_t39 = kl_grouped_39 != 9;
+#line 134 "codegen/globals.kl"
     if ( kl_t39 ) goto bb51; else goto bb52;
     bb51:
+#line 134 "codegen/globals.kl"
     kl_t0 = 26;
+#line 134 "codegen/globals.kl"
     return kl_t0;
     bb52:
 #line 135 "codegen/globals.kl"
     kl_t40 = kl_masked_44 != 15;
+#line 135 "codegen/globals.kl"
     if ( kl_t40 ) goto bb53; else goto bb54;
     bb53:
+#line 135 "codegen/globals.kl"
     kl_t0 = 27;
+#line 135 "codegen/globals.kl"
     return kl_t0;
     bb54:
 #line 136 "codegen/globals.kl"
     kl_t41 = kl_shifted_49 != 16;
+#line 136 "codegen/globals.kl"
     if ( kl_t41 ) goto bb55; else goto bb56;
     bb55:
+#line 136 "codegen/globals.kl"
     kl_t0 = 28;
+#line 136 "codegen/globals.kl"
     return kl_t0;
     bb56:
 #line 137 "codegen/globals.kl"
     kl_t42 = -1;
+#line 137 "codegen/globals.kl"
     kl_t43 = kl_flipped_53 != kl_t42;
+#line 137 "codegen/globals.kl"
     if ( kl_t43 ) goto bb57; else goto bb58;
     bb57:
+#line 137 "codegen/globals.kl"
     kl_t0 = 29;
+#line 137 "codegen/globals.kl"
     return kl_t0;
     bb58:
 #line 138 "codegen/globals.kl"
     kl_t44 = -9;
+#line 138 "codegen/globals.kl"
     kl_t45 = kl_negated_59 != kl_t44;
+#line 138 "codegen/globals.kl"
     if ( kl_t45 ) goto bb59; else goto bb60;
     bb59:
+#line 138 "codegen/globals.kl"
     kl_t0 = 30;
+#line 138 "codegen/globals.kl"
     return kl_t0;
     bb60:
 #line 139 "codegen/globals.kl"
     kl_t46 = kl_remainder_64 != 1;
+#line 139 "codegen/globals.kl"
     if ( kl_t46 ) goto bb61; else goto bb62;
     bb61:
+#line 139 "codegen/globals.kl"
     kl_t0 = 31;
+#line 139 "codegen/globals.kl"
     return kl_t0;
     bb62:
 #line 140 "codegen/globals.kl"
     kl_t47 = kl_scaled_69 != 3.0;
+#line 140 "codegen/globals.kl"
     if ( kl_t47 ) goto bb63; else goto bb64;
     bb63:
+#line 140 "codegen/globals.kl"
     kl_t0 = 32;
+#line 140 "codegen/globals.kl"
     return kl_t0;
     bb64:
 #line 141 "codegen/globals.kl"
     kl_t48 = !kl_compared_74;
+#line 141 "codegen/globals.kl"
     if ( kl_t48 ) goto bb65; else goto bb66;
     bb65:
+#line 141 "codegen/globals.kl"
     kl_t0 = 33;
+#line 141 "codegen/globals.kl"
     return kl_t0;
     bb66:
 #line 142 "codegen/globals.kl"
     kl_t49 = kl_all_ones_81 != 4294967295;
+#line 142 "codegen/globals.kl"
     if ( kl_t49 ) goto bb67; else goto bb68;
     bb67:
+#line 142 "codegen/globals.kl"
     kl_t0 = 34;
+#line 142 "codegen/globals.kl"
     return kl_t0;
     bb68:
 #line 145 "codegen/globals.kl"
     kl_seconds_per_hour_25 = 1;
-#line 146 "codegen/globals.kl"
     kl_t50 = kl_seconds_per_hour_25 != 1;
+#line 146 "codegen/globals.kl"
     if ( kl_t50 ) goto bb69; else goto bb70;
     bb69:
+#line 146 "codegen/globals.kl"
     kl_t0 = 35;
+#line 146 "codegen/globals.kl"
     return kl_t0;
     bb70:
-#line 148 "codegen/globals.kl"
     kl_t0 = 0;
+#line 148 "codegen/globals.kl"
     return kl_t0;
 }
 
+#line 69 "codegen/globals.kl"
 int main( void )
 {
+#line 69 "codegen/globals.kl"
     return (int) kl__main__();
 }

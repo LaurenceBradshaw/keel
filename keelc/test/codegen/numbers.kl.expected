@@ -19,6 +19,7 @@ bool kl__is_palindrome__3i32( int32_t );
 uint64_t kl__factorial__3u32( uint32_t );
 int32_t kl__main__( void );
 
+#line 13 "codegen/numbers.kl"
 bool kl__is_even__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
@@ -28,24 +29,32 @@ bool kl__is_even__3i32( int32_t kl_n_1 )
     bool kl_t5;
 #line 15 "codegen/numbers.kl"
     kl_t2 = kl_n_1 == 0;
+#line 15 "codegen/numbers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 17 "codegen/numbers.kl"
     kl_t0 = true;
+#line 17 "codegen/numbers.kl"
     return kl_t0;
     bb2:
 #line 20 "codegen/numbers.kl"
     kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+#line 20 "codegen/numbers.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 20 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 20, "arithmetic overflow: n - 1" );
     bb4:
+#line 20 "codegen/numbers.kl"
     kl_t4 = kl_n_1 - 1;
+#line 20 "codegen/numbers.kl"
     kl_t5 = kl__is_odd__3i32( kl_t4 );
+#line 20 "codegen/numbers.kl"
     kl_t0 = kl_t5;
+#line 20 "codegen/numbers.kl"
     return kl_t0;
 }
 
+#line 23 "codegen/numbers.kl"
 bool kl__is_odd__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
@@ -55,24 +64,32 @@ bool kl__is_odd__3i32( int32_t kl_n_1 )
     bool kl_t5;
 #line 25 "codegen/numbers.kl"
     kl_t2 = kl_n_1 == 0;
+#line 25 "codegen/numbers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 27 "codegen/numbers.kl"
     kl_t0 = false;
+#line 27 "codegen/numbers.kl"
     return kl_t0;
     bb2:
 #line 30 "codegen/numbers.kl"
     kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+#line 30 "codegen/numbers.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 30 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 30, "arithmetic overflow: n - 1" );
     bb4:
+#line 30 "codegen/numbers.kl"
     kl_t4 = kl_n_1 - 1;
+#line 30 "codegen/numbers.kl"
     kl_t5 = kl__is_even__3i32( kl_t4 );
+#line 30 "codegen/numbers.kl"
     kl_t0 = kl_t5;
+#line 30 "codegen/numbers.kl"
     return kl_t0;
 }
 
+#line 35 "codegen/numbers.kl"
 int32_t kl__isqrt__3i32( int32_t kl_value_1 )
 {
     int32_t kl_t0;
@@ -100,90 +117,130 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
     int32_t kl_t23;
 #line 37 "codegen/numbers.kl"
     kl_t2 = kl_value_1 < 2;
+#line 37 "codegen/numbers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 39 "codegen/numbers.kl"
     kl_t0 = kl_value_1;
+#line 39 "codegen/numbers.kl"
     return kl_t0;
     bb2:
 #line 42 "codegen/numbers.kl"
     kl_estimate_3 = kl_value_1;
-#line 43 "codegen/numbers.kl"
     kl_t5 = kl_estimate_3 != 0;
+#line 43 "codegen/numbers.kl"
     if ( kl_t5 ) goto bb4; else goto bb3;
     bb3:
+#line 43 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 43, "division by zero: value / estimate" );
     bb4:
+#line 43 "codegen/numbers.kl"
     kl_t6 = -1;
+#line 43 "codegen/numbers.kl"
     kl_t8 = kl_estimate_3 == kl_t6;
+#line 43 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
+#line 43 "codegen/numbers.kl"
     kl_t9 = __builtin_sub_overflow( 0, kl_value_1, &( int32_t ) { 0 } );
+#line 43 "codegen/numbers.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb6:
+#line 43 "codegen/numbers.kl"
     kl_t7 = kl_value_1 / kl_estimate_3;
+#line 43 "codegen/numbers.kl"
     goto bb7;
     bb7:
+#line 43 "codegen/numbers.kl"
     kl_t10 = kl_t7;
+#line 43 "codegen/numbers.kl"
     kl_t11 = __builtin_add_overflow( kl_estimate_3, kl_t10, &( int32_t ) { 0 } );
+#line 43 "codegen/numbers.kl"
     if ( kl_t11 ) goto bb10; else goto bb11;
     bb8:
+#line 43 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 43, "arithmetic overflow: value / estimate" );
     bb9:
+#line 43 "codegen/numbers.kl"
     kl_t7 = -kl_value_1;
+#line 43 "codegen/numbers.kl"
     goto bb7;
     bb10:
+#line 43 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 43, "arithmetic overflow: estimate + value / estimate" );
     bb11:
+#line 43 "codegen/numbers.kl"
     kl_t12 = kl_estimate_3 + kl_t10;
+#line 43 "codegen/numbers.kl"
     kl_t13 = kl_t12 / 2;
+#line 43 "codegen/numbers.kl"
     kl_next_4 = kl_t13;
+#line 45 "codegen/numbers.kl"
     goto bb12;
     bb12:
 #line 45 "codegen/numbers.kl"
     kl_t14 = kl_next_4 < kl_estimate_3;
+#line 45 "codegen/numbers.kl"
     if ( kl_t14 ) goto bb13; else goto bb14;
     bb13:
-#line 47 "codegen/numbers.kl"
     kl_estimate_3 = kl_next_4;
-#line 48 "codegen/numbers.kl"
     kl_t15 = kl_estimate_3 != 0;
+#line 48 "codegen/numbers.kl"
     if ( kl_t15 ) goto bb16; else goto bb15;
     bb14:
 #line 51 "codegen/numbers.kl"
     kl_t0 = kl_estimate_3;
+#line 51 "codegen/numbers.kl"
     return kl_t0;
     bb15:
+#line 48 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 48, "division by zero: value / estimate" );
     bb16:
 #line 48 "codegen/numbers.kl"
     kl_t16 = -1;
+#line 48 "codegen/numbers.kl"
     kl_t18 = kl_estimate_3 == kl_t16;
+#line 48 "codegen/numbers.kl"
     if ( kl_t18 ) goto bb17; else goto bb18;
     bb17:
+#line 48 "codegen/numbers.kl"
     kl_t19 = __builtin_sub_overflow( 0, kl_value_1, &( int32_t ) { 0 } );
+#line 48 "codegen/numbers.kl"
     if ( kl_t19 ) goto bb20; else goto bb21;
     bb18:
+#line 48 "codegen/numbers.kl"
     kl_t17 = kl_value_1 / kl_estimate_3;
+#line 48 "codegen/numbers.kl"
     goto bb19;
     bb19:
+#line 48 "codegen/numbers.kl"
     kl_t20 = kl_t17;
+#line 48 "codegen/numbers.kl"
     kl_t21 = __builtin_add_overflow( kl_estimate_3, kl_t20, &( int32_t ) { 0 } );
+#line 48 "codegen/numbers.kl"
     if ( kl_t21 ) goto bb22; else goto bb23;
     bb20:
+#line 48 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 48, "arithmetic overflow: value / estimate" );
     bb21:
+#line 48 "codegen/numbers.kl"
     kl_t17 = -kl_value_1;
+#line 48 "codegen/numbers.kl"
     goto bb19;
     bb22:
+#line 48 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 48, "arithmetic overflow: estimate + value / estimate" );
     bb23:
+#line 48 "codegen/numbers.kl"
     kl_t22 = kl_estimate_3 + kl_t20;
+#line 48 "codegen/numbers.kl"
     kl_t23 = kl_t22 / 2;
+#line 48 "codegen/numbers.kl"
     kl_next_4 = kl_t23;
+#line 45 "codegen/numbers.kl"
     goto bb12;
 }
 
+#line 56 "codegen/numbers.kl"
 bool kl__is_prime__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
@@ -204,72 +261,94 @@ bool kl__is_prime__3i32( int32_t kl_n_1 )
     bool kl_t16;
 #line 58 "codegen/numbers.kl"
     kl_t2 = kl_n_1 < 2;
+#line 58 "codegen/numbers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 60 "codegen/numbers.kl"
     kl_t0 = false;
+#line 60 "codegen/numbers.kl"
     return kl_t0;
     bb2:
 #line 63 "codegen/numbers.kl"
     kl_t3 = kl_n_1 % 2;
+#line 63 "codegen/numbers.kl"
     kl_t4 = kl_t3 == 0;
+#line 63 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 65 "codegen/numbers.kl"
     kl_t5 = kl_n_1 == 2;
+#line 65 "codegen/numbers.kl"
     kl_t0 = kl_t5;
+#line 65 "codegen/numbers.kl"
     return kl_t0;
     bb4:
 #line 68 "codegen/numbers.kl"
     kl_t7 = kl__isqrt__3i32( kl_n_1 );
+#line 68 "codegen/numbers.kl"
     kl_bound_6 = kl_t7;
-#line 69 "codegen/numbers.kl"
     kl_divisor_8 = 3;
+#line 71 "codegen/numbers.kl"
     goto bb5;
     bb5:
 #line 71 "codegen/numbers.kl"
     kl_t9 = kl_divisor_8 <= kl_bound_6;
+#line 71 "codegen/numbers.kl"
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb6:
-#line 73 "codegen/numbers.kl"
     kl_t10 = kl_divisor_8 != 0;
+#line 73 "codegen/numbers.kl"
     if ( kl_t10 ) goto bb9; else goto bb8;
     bb7:
 #line 81 "codegen/numbers.kl"
     kl_t0 = true;
+#line 81 "codegen/numbers.kl"
     return kl_t0;
     bb8:
+#line 73 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 73, "remainder by zero: n % divisor" );
     bb9:
 #line 73 "codegen/numbers.kl"
     kl_t11 = -1;
+#line 73 "codegen/numbers.kl"
     kl_t13 = kl_divisor_8 == kl_t11;
+#line 73 "codegen/numbers.kl"
     if ( kl_t13 ) goto bb10; else goto bb11;
     bb10:
+#line 73 "codegen/numbers.kl"
     kl_t12 = 0;
+#line 73 "codegen/numbers.kl"
     goto bb12;
     bb11:
+#line 73 "codegen/numbers.kl"
     kl_t12 = kl_n_1 % kl_divisor_8;
+#line 73 "codegen/numbers.kl"
     goto bb12;
     bb12:
+#line 73 "codegen/numbers.kl"
     kl_t14 = kl_t12;
+#line 73 "codegen/numbers.kl"
     kl_t15 = kl_t14 == 0;
+#line 73 "codegen/numbers.kl"
     if ( kl_t15 ) goto bb13; else goto bb14;
     bb13:
-#line 75 "codegen/numbers.kl"
     kl_t0 = false;
+#line 75 "codegen/numbers.kl"
     return kl_t0;
     bb14:
 #line 78 "codegen/numbers.kl"
     kl_t16 = __builtin_add_overflow( kl_divisor_8, 2, &( int32_t ) { 0 } );
+#line 78 "codegen/numbers.kl"
     if ( kl_t16 ) goto bb15; else goto bb16;
     bb15:
+#line 78 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 78, "arithmetic overflow: divisor += 2;" );
     bb16:
+#line 78 "codegen/numbers.kl"
     kl_divisor_8 = kl_divisor_8 + 2;
+#line 71 "codegen/numbers.kl"
     goto bb5;
 }
 
+#line 84 "codegen/numbers.kl"
 int32_t kl__count_primes__3i32( int32_t kl_limit_1 )
 {
     int32_t kl_t0;
@@ -283,38 +362,51 @@ int32_t kl__count_primes__3i32( int32_t kl_limit_1 )
     kl_found_2 = 0;
 #line 88 "codegen/numbers.kl"
     kl_n_3 = 2;
+#line 88 "codegen/numbers.kl"
     goto bb1;
     bb1:
+#line 88 "codegen/numbers.kl"
     kl_t4 = kl_n_3 < kl_limit_1;
+#line 88 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 90 "codegen/numbers.kl"
     kl_t5 = kl__is_prime__3i32( kl_n_3 );
+#line 90 "codegen/numbers.kl"
     if ( kl_t5 ) goto bb4; else goto bb7;
     bb3:
 #line 96 "codegen/numbers.kl"
     kl_t0 = kl_found_2;
+#line 96 "codegen/numbers.kl"
     return kl_t0;
     bb4:
 #line 92 "codegen/numbers.kl"
     kl_t6 = __builtin_add_overflow( kl_found_2, 1, &( int32_t ) { 0 } );
+#line 92 "codegen/numbers.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
+#line 92 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 92, "arithmetic overflow: found++;" );
     bb6:
+#line 92 "codegen/numbers.kl"
     kl_found_2 = kl_found_2 + 1;
+#line 90 "codegen/numbers.kl"
     goto bb7;
     bb7:
 #line 88 "codegen/numbers.kl"
     kl_t7 = __builtin_add_overflow( kl_n_3, 1, &( int32_t ) { 0 } );
+#line 88 "codegen/numbers.kl"
     if ( kl_t7 ) goto bb8; else goto bb9;
     bb8:
+#line 88 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 88, "arithmetic overflow: n++" );
     bb9:
+#line 88 "codegen/numbers.kl"
     kl_n_3 = kl_n_3 + 1;
+#line 88 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 101 "codegen/numbers.kl"
 int32_t kl__collatz_steps__3u64( uint64_t kl_start_1 )
 {
     int32_t kl_t0;
@@ -331,56 +423,73 @@ int32_t kl__collatz_steps__3u64( uint64_t kl_start_1 )
     bool kl_t12;
 #line 103 "codegen/numbers.kl"
     kl_value_2 = kl_start_1;
-#line 104 "codegen/numbers.kl"
     kl_steps_3 = 0;
+#line 106 "codegen/numbers.kl"
     goto bb1;
     bb1:
 #line 106 "codegen/numbers.kl"
     kl_t4 = kl_value_2 != 1;
+#line 106 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 108 "codegen/numbers.kl"
     kl_t5 = kl_value_2 % 2;
+#line 108 "codegen/numbers.kl"
     kl_t6 = kl_t5 == 0;
+#line 108 "codegen/numbers.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 120 "codegen/numbers.kl"
     kl_t0 = kl_steps_3;
+#line 120 "codegen/numbers.kl"
     return kl_t0;
     bb4:
 #line 110 "codegen/numbers.kl"
     kl_t7 = kl_value_2 / 2;
+#line 110 "codegen/numbers.kl"
     kl_value_2 = kl_t7;
+#line 108 "codegen/numbers.kl"
     goto bb6;
     bb5:
 #line 114 "codegen/numbers.kl"
     kl_t8 = __builtin_mul_overflow( 3, kl_value_2, &( uint64_t ) { 0 } );
+#line 114 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb7; else goto bb8;
     bb6:
 #line 117 "codegen/numbers.kl"
     kl_t12 = __builtin_add_overflow( kl_steps_3, 1, &( int32_t ) { 0 } );
+#line 117 "codegen/numbers.kl"
     if ( kl_t12 ) goto bb11; else goto bb12;
     bb7:
+#line 114 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 114, "arithmetic overflow: 3 * value" );
     bb8:
 #line 114 "codegen/numbers.kl"
     kl_t9 = 3 * kl_value_2;
+#line 114 "codegen/numbers.kl"
     kl_t10 = __builtin_add_overflow( kl_t9, 1, &( uint64_t ) { 0 } );
+#line 114 "codegen/numbers.kl"
     if ( kl_t10 ) goto bb9; else goto bb10;
     bb9:
+#line 114 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 114, "arithmetic overflow: 3 * value + 1" );
     bb10:
+#line 114 "codegen/numbers.kl"
     kl_t11 = kl_t9 + 1;
+#line 114 "codegen/numbers.kl"
     kl_value_2 = kl_t11;
+#line 108 "codegen/numbers.kl"
     goto bb6;
     bb11:
+#line 117 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 117, "arithmetic overflow: steps++;" );
     bb12:
 #line 117 "codegen/numbers.kl"
     kl_steps_3 = kl_steps_3 + 1;
+#line 106 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 125 "codegen/numbers.kl"
 uint64_t kl__collatz_peak__3u64( uint64_t kl_start_1 )
 {
     uint64_t kl_t0;
@@ -397,54 +506,70 @@ uint64_t kl__collatz_peak__3u64( uint64_t kl_start_1 )
     bool kl_t12;
 #line 127 "codegen/numbers.kl"
     kl_value_2 = kl_start_1;
-#line 128 "codegen/numbers.kl"
     kl_peak_3 = kl_start_1;
+#line 130 "codegen/numbers.kl"
     goto bb1;
     bb1:
 #line 130 "codegen/numbers.kl"
     kl_t4 = kl_value_2 != 1;
+#line 130 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 132 "codegen/numbers.kl"
     kl_t5 = kl_value_2 % 2;
+#line 132 "codegen/numbers.kl"
     kl_t6 = kl_t5 == 0;
+#line 132 "codegen/numbers.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 147 "codegen/numbers.kl"
     kl_t0 = kl_peak_3;
+#line 147 "codegen/numbers.kl"
     return kl_t0;
     bb4:
 #line 134 "codegen/numbers.kl"
     kl_t7 = kl_value_2 / 2;
+#line 134 "codegen/numbers.kl"
     kl_value_2 = kl_t7;
+#line 132 "codegen/numbers.kl"
     goto bb6;
     bb5:
 #line 138 "codegen/numbers.kl"
     kl_t8 = __builtin_mul_overflow( 3, kl_value_2, &( uint64_t ) { 0 } );
+#line 138 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb7; else goto bb8;
     bb6:
 #line 141 "codegen/numbers.kl"
     kl_t12 = kl_value_2 > kl_peak_3;
+#line 141 "codegen/numbers.kl"
     if ( kl_t12 ) goto bb11; else goto bb1;
     bb7:
+#line 138 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 138, "arithmetic overflow: 3 * value" );
     bb8:
 #line 138 "codegen/numbers.kl"
     kl_t9 = 3 * kl_value_2;
+#line 138 "codegen/numbers.kl"
     kl_t10 = __builtin_add_overflow( kl_t9, 1, &( uint64_t ) { 0 } );
+#line 138 "codegen/numbers.kl"
     if ( kl_t10 ) goto bb9; else goto bb10;
     bb9:
+#line 138 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 138, "arithmetic overflow: 3 * value + 1" );
     bb10:
+#line 138 "codegen/numbers.kl"
     kl_t11 = kl_t9 + 1;
+#line 138 "codegen/numbers.kl"
     kl_value_2 = kl_t11;
+#line 132 "codegen/numbers.kl"
     goto bb6;
     bb11:
 #line 143 "codegen/numbers.kl"
     kl_peak_3 = kl_value_2;
+#line 141 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 150 "codegen/numbers.kl"
 int32_t kl__digit_sum__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -456,33 +581,39 @@ int32_t kl__digit_sum__3i32( int32_t kl_n_1 )
     int32_t kl_t7;
 #line 152 "codegen/numbers.kl"
     kl_rest_2 = kl_n_1;
-#line 153 "codegen/numbers.kl"
     kl_total_3 = 0;
+#line 155 "codegen/numbers.kl"
     goto bb1;
     bb1:
 #line 155 "codegen/numbers.kl"
     kl_t4 = kl_rest_2 > 0;
+#line 155 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 157 "codegen/numbers.kl"
     kl_t5 = kl_rest_2 % 10;
+#line 157 "codegen/numbers.kl"
     kl_t6 = __builtin_add_overflow( kl_total_3, kl_t5, &( int32_t ) { 0 } );
+#line 157 "codegen/numbers.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 161 "codegen/numbers.kl"
     kl_t0 = kl_total_3;
+#line 161 "codegen/numbers.kl"
     return kl_t0;
     bb4:
+#line 157 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 157, "arithmetic overflow: total += rest % 10;" );
     bb5:
 #line 157 "codegen/numbers.kl"
     kl_total_3 = kl_total_3 + kl_t5;
-#line 158 "codegen/numbers.kl"
     kl_t7 = kl_rest_2 / 10;
+#line 158 "codegen/numbers.kl"
     kl_rest_2 = kl_t7;
+#line 155 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 164 "codegen/numbers.kl"
 int32_t kl__reverse_digits__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -497,40 +628,51 @@ int32_t kl__reverse_digits__3i32( int32_t kl_n_1 )
     int32_t kl_t10;
 #line 166 "codegen/numbers.kl"
     kl_rest_2 = kl_n_1;
-#line 167 "codegen/numbers.kl"
     kl_reversed_3 = 0;
+#line 169 "codegen/numbers.kl"
     goto bb1;
     bb1:
 #line 169 "codegen/numbers.kl"
     kl_t4 = kl_rest_2 > 0;
+#line 169 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 171 "codegen/numbers.kl"
     kl_t5 = __builtin_mul_overflow( kl_reversed_3, 10, &( int32_t ) { 0 } );
+#line 171 "codegen/numbers.kl"
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 175 "codegen/numbers.kl"
     kl_t0 = kl_reversed_3;
+#line 175 "codegen/numbers.kl"
     return kl_t0;
     bb4:
+#line 171 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 171, "arithmetic overflow: reversed * 10" );
     bb5:
 #line 171 "codegen/numbers.kl"
     kl_t6 = kl_reversed_3 * 10;
+#line 171 "codegen/numbers.kl"
     kl_t7 = kl_rest_2 % 10;
+#line 171 "codegen/numbers.kl"
     kl_t8 = __builtin_add_overflow( kl_t6, kl_t7, &( int32_t ) { 0 } );
+#line 171 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb6; else goto bb7;
     bb6:
+#line 171 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 171, "arithmetic overflow: reversed * 10 + rest % 10" );
     bb7:
+#line 171 "codegen/numbers.kl"
     kl_t9 = kl_t6 + kl_t7;
+#line 171 "codegen/numbers.kl"
     kl_reversed_3 = kl_t9;
-#line 172 "codegen/numbers.kl"
     kl_t10 = kl_rest_2 / 10;
+#line 172 "codegen/numbers.kl"
     kl_rest_2 = kl_t10;
+#line 169 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 178 "codegen/numbers.kl"
 bool kl__is_palindrome__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
@@ -538,11 +680,15 @@ bool kl__is_palindrome__3i32( int32_t kl_n_1 )
     bool kl_t3;
 #line 180 "codegen/numbers.kl"
     kl_t2 = kl__reverse_digits__3i32( kl_n_1 );
+#line 180 "codegen/numbers.kl"
     kl_t3 = kl_t2 == kl_n_1;
+#line 180 "codegen/numbers.kl"
     kl_t0 = kl_t3;
+#line 180 "codegen/numbers.kl"
     return kl_t0;
 }
 
+#line 185 "codegen/numbers.kl"
 uint64_t kl__factorial__3u32( uint32_t kl_n_1 )
 {
     uint64_t kl_t0;
@@ -557,37 +703,50 @@ uint64_t kl__factorial__3u32( uint32_t kl_n_1 )
     kl_total_2 = 1;
 #line 189 "codegen/numbers.kl"
     kl_i_3 = 2;
+#line 189 "codegen/numbers.kl"
     goto bb1;
     bb1:
+#line 189 "codegen/numbers.kl"
     kl_t4 = kl_i_3 <= kl_n_1;
+#line 189 "codegen/numbers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 191 "codegen/numbers.kl"
     kl_t5 = ( uint64_t ) kl_i_3;
+#line 191 "codegen/numbers.kl"
     kl_t6 = __builtin_mul_overflow( kl_total_2, kl_t5, &( uint64_t ) { 0 } );
+#line 191 "codegen/numbers.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 194 "codegen/numbers.kl"
     kl_t0 = kl_total_2;
+#line 194 "codegen/numbers.kl"
     return kl_t0;
     bb4:
+#line 191 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 191, "arithmetic overflow: total * cast<u64>( i )" );
     bb5:
 #line 191 "codegen/numbers.kl"
     kl_t7 = kl_total_2 * kl_t5;
+#line 191 "codegen/numbers.kl"
     kl_total_2 = kl_t7;
+#line 189 "codegen/numbers.kl"
     goto bb6;
     bb6:
 #line 189 "codegen/numbers.kl"
     kl_t8 = __builtin_add_overflow( kl_i_3, 1, &( uint32_t ) { 0 } );
+#line 189 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb7; else goto bb8;
     bb7:
+#line 189 "codegen/numbers.kl"
     kl_rt_panic( "codegen/numbers.kl", 189, "arithmetic overflow: i++" );
     bb8:
+#line 189 "codegen/numbers.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 189 "codegen/numbers.kl"
     goto bb1;
 }
 
+#line 197 "codegen/numbers.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -646,237 +805,346 @@ int32_t kl__main__( void )
     bool kl_t53;
 #line 200 "codegen/numbers.kl"
     kl_t1 = kl__is_even__3i32( 0 );
+#line 200 "codegen/numbers.kl"
     kl_t2 = !kl_t1;
+#line 200 "codegen/numbers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 200 "codegen/numbers.kl"
     kl_t0 = 1;
+#line 200 "codegen/numbers.kl"
     return kl_t0;
     bb2:
 #line 201 "codegen/numbers.kl"
     kl_t3 = kl__is_odd__3i32( 0 );
+#line 201 "codegen/numbers.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 201 "codegen/numbers.kl"
     kl_t0 = 2;
+#line 201 "codegen/numbers.kl"
     return kl_t0;
     bb4:
 #line 202 "codegen/numbers.kl"
     kl_t4 = kl__is_even__3i32( 10 );
+#line 202 "codegen/numbers.kl"
     kl_t5 = !kl_t4;
+#line 202 "codegen/numbers.kl"
     if ( kl_t5 ) goto bb5; else goto bb6;
     bb5:
+#line 202 "codegen/numbers.kl"
     kl_t0 = 3;
+#line 202 "codegen/numbers.kl"
     return kl_t0;
     bb6:
 #line 203 "codegen/numbers.kl"
     kl_t6 = kl__is_odd__3i32( 7 );
+#line 203 "codegen/numbers.kl"
     kl_t7 = !kl_t6;
+#line 203 "codegen/numbers.kl"
     if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
+#line 203 "codegen/numbers.kl"
     kl_t0 = 4;
+#line 203 "codegen/numbers.kl"
     return kl_t0;
     bb8:
 #line 204 "codegen/numbers.kl"
     kl_t8 = kl__is_even__3i32( 7 );
+#line 204 "codegen/numbers.kl"
     if ( kl_t8 ) goto bb9; else goto bb10;
     bb9:
+#line 204 "codegen/numbers.kl"
     kl_t0 = 5;
+#line 204 "codegen/numbers.kl"
     return kl_t0;
     bb10:
 #line 207 "codegen/numbers.kl"
     kl_t9 = kl__isqrt__3i32( 0 );
+#line 207 "codegen/numbers.kl"
     kl_t10 = kl_t9 != 0;
+#line 207 "codegen/numbers.kl"
     if ( kl_t10 ) goto bb11; else goto bb12;
     bb11:
+#line 207 "codegen/numbers.kl"
     kl_t0 = 6;
+#line 207 "codegen/numbers.kl"
     return kl_t0;
     bb12:
 #line 208 "codegen/numbers.kl"
     kl_t11 = kl__isqrt__3i32( 1 );
+#line 208 "codegen/numbers.kl"
     kl_t12 = kl_t11 != 1;
+#line 208 "codegen/numbers.kl"
     if ( kl_t12 ) goto bb13; else goto bb14;
     bb13:
+#line 208 "codegen/numbers.kl"
     kl_t0 = 7;
+#line 208 "codegen/numbers.kl"
     return kl_t0;
     bb14:
 #line 209 "codegen/numbers.kl"
     kl_t13 = kl__isqrt__3i32( 3 );
+#line 209 "codegen/numbers.kl"
     kl_t14 = kl_t13 != 1;
+#line 209 "codegen/numbers.kl"
     if ( kl_t14 ) goto bb15; else goto bb16;
     bb15:
+#line 209 "codegen/numbers.kl"
     kl_t0 = 8;
+#line 209 "codegen/numbers.kl"
     return kl_t0;
     bb16:
 #line 210 "codegen/numbers.kl"
     kl_t15 = kl__isqrt__3i32( 4 );
+#line 210 "codegen/numbers.kl"
     kl_t16 = kl_t15 != 2;
+#line 210 "codegen/numbers.kl"
     if ( kl_t16 ) goto bb17; else goto bb18;
     bb17:
+#line 210 "codegen/numbers.kl"
     kl_t0 = 9;
+#line 210 "codegen/numbers.kl"
     return kl_t0;
     bb18:
 #line 211 "codegen/numbers.kl"
     kl_t17 = kl__isqrt__3i32( 999999 );
+#line 211 "codegen/numbers.kl"
     kl_t18 = kl_t17 != 999;
+#line 211 "codegen/numbers.kl"
     if ( kl_t18 ) goto bb19; else goto bb20;
     bb19:
+#line 211 "codegen/numbers.kl"
     kl_t0 = 10;
+#line 211 "codegen/numbers.kl"
     return kl_t0;
     bb20:
 #line 212 "codegen/numbers.kl"
     kl_t19 = kl__isqrt__3i32( 1000000 );
+#line 212 "codegen/numbers.kl"
     kl_t20 = kl_t19 != 1000;
+#line 212 "codegen/numbers.kl"
     if ( kl_t20 ) goto bb21; else goto bb22;
     bb21:
+#line 212 "codegen/numbers.kl"
     kl_t0 = 11;
+#line 212 "codegen/numbers.kl"
     return kl_t0;
     bb22:
-#line 214 "codegen/numbers.kl"
     kl_t21 = kl__is_prime__3i32( 1 );
+#line 214 "codegen/numbers.kl"
     if ( kl_t21 ) goto bb23; else goto bb24;
     bb23:
+#line 214 "codegen/numbers.kl"
     kl_t0 = 12;
+#line 214 "codegen/numbers.kl"
     return kl_t0;
     bb24:
 #line 215 "codegen/numbers.kl"
     kl_t22 = kl__is_prime__3i32( 2 );
+#line 215 "codegen/numbers.kl"
     kl_t23 = !kl_t22;
+#line 215 "codegen/numbers.kl"
     if ( kl_t23 ) goto bb25; else goto bb26;
     bb25:
+#line 215 "codegen/numbers.kl"
     kl_t0 = 13;
+#line 215 "codegen/numbers.kl"
     return kl_t0;
     bb26:
 #line 216 "codegen/numbers.kl"
     kl_t24 = kl__is_prime__3i32( 97 );
+#line 216 "codegen/numbers.kl"
     kl_t25 = !kl_t24;
+#line 216 "codegen/numbers.kl"
     if ( kl_t25 ) goto bb27; else goto bb28;
     bb27:
+#line 216 "codegen/numbers.kl"
     kl_t0 = 14;
+#line 216 "codegen/numbers.kl"
     return kl_t0;
     bb28:
 #line 217 "codegen/numbers.kl"
     kl_t26 = kl__is_prime__3i32( 91 );
+#line 217 "codegen/numbers.kl"
     if ( kl_t26 ) goto bb29; else goto bb30;
     bb29:
+#line 217 "codegen/numbers.kl"
     kl_t0 = 15;
+#line 217 "codegen/numbers.kl"
     return kl_t0;
     bb30:
 #line 218 "codegen/numbers.kl"
     kl_t27 = kl__count_primes__3i32( 100 );
+#line 218 "codegen/numbers.kl"
     kl_t28 = kl_t27 != 25;
+#line 218 "codegen/numbers.kl"
     if ( kl_t28 ) goto bb31; else goto bb32;
     bb31:
+#line 218 "codegen/numbers.kl"
     kl_t0 = 16;
+#line 218 "codegen/numbers.kl"
     return kl_t0;
     bb32:
 #line 219 "codegen/numbers.kl"
     kl_t29 = kl__count_primes__3i32( 1000 );
+#line 219 "codegen/numbers.kl"
     kl_t30 = kl_t29 != 168;
+#line 219 "codegen/numbers.kl"
     if ( kl_t30 ) goto bb33; else goto bb34;
     bb33:
+#line 219 "codegen/numbers.kl"
     kl_t0 = 17;
+#line 219 "codegen/numbers.kl"
     return kl_t0;
     bb34:
-#line 221 "codegen/numbers.kl"
     kl_t31 = kl__collatz_steps__3u64( 1 );
+#line 221 "codegen/numbers.kl"
     kl_t32 = kl_t31 != 0;
+#line 221 "codegen/numbers.kl"
     if ( kl_t32 ) goto bb35; else goto bb36;
     bb35:
+#line 221 "codegen/numbers.kl"
     kl_t0 = 18;
+#line 221 "codegen/numbers.kl"
     return kl_t0;
     bb36:
 #line 222 "codegen/numbers.kl"
     kl_t33 = kl__collatz_steps__3u64( 27 );
+#line 222 "codegen/numbers.kl"
     kl_t34 = kl_t33 != 111;
+#line 222 "codegen/numbers.kl"
     if ( kl_t34 ) goto bb37; else goto bb38;
     bb37:
+#line 222 "codegen/numbers.kl"
     kl_t0 = 19;
+#line 222 "codegen/numbers.kl"
     return kl_t0;
     bb38:
 #line 223 "codegen/numbers.kl"
     kl_t35 = kl__collatz_steps__3u64( 97 );
+#line 223 "codegen/numbers.kl"
     kl_t36 = kl_t35 != 118;
+#line 223 "codegen/numbers.kl"
     if ( kl_t36 ) goto bb39; else goto bb40;
     bb39:
+#line 223 "codegen/numbers.kl"
     kl_t0 = 20;
+#line 223 "codegen/numbers.kl"
     return kl_t0;
     bb40:
 #line 224 "codegen/numbers.kl"
     kl_t37 = kl__collatz_peak__3u64( 27 );
+#line 224 "codegen/numbers.kl"
     kl_t38 = kl_t37 != 9232;
+#line 224 "codegen/numbers.kl"
     if ( kl_t38 ) goto bb41; else goto bb42;
     bb41:
+#line 224 "codegen/numbers.kl"
     kl_t0 = 21;
+#line 224 "codegen/numbers.kl"
     return kl_t0;
     bb42:
-#line 226 "codegen/numbers.kl"
     kl_t39 = kl__digit_sum__3i32( 98765 );
+#line 226 "codegen/numbers.kl"
     kl_t40 = kl_t39 != 35;
+#line 226 "codegen/numbers.kl"
     if ( kl_t40 ) goto bb43; else goto bb44;
     bb43:
+#line 226 "codegen/numbers.kl"
     kl_t0 = 22;
+#line 226 "codegen/numbers.kl"
     return kl_t0;
     bb44:
 #line 227 "codegen/numbers.kl"
     kl_t41 = kl__digit_sum__3i32( 0 );
+#line 227 "codegen/numbers.kl"
     kl_t42 = kl_t41 != 0;
+#line 227 "codegen/numbers.kl"
     if ( kl_t42 ) goto bb45; else goto bb46;
     bb45:
+#line 227 "codegen/numbers.kl"
     kl_t0 = 23;
+#line 227 "codegen/numbers.kl"
     return kl_t0;
     bb46:
 #line 228 "codegen/numbers.kl"
     kl_t43 = kl__reverse_digits__3i32( 12345 );
+#line 228 "codegen/numbers.kl"
     kl_t44 = kl_t43 != 54321;
+#line 228 "codegen/numbers.kl"
     if ( kl_t44 ) goto bb47; else goto bb48;
     bb47:
+#line 228 "codegen/numbers.kl"
     kl_t0 = 24;
+#line 228 "codegen/numbers.kl"
     return kl_t0;
     bb48:
 #line 229 "codegen/numbers.kl"
     kl_t45 = kl__is_palindrome__3i32( 12321 );
+#line 229 "codegen/numbers.kl"
     kl_t46 = !kl_t45;
+#line 229 "codegen/numbers.kl"
     if ( kl_t46 ) goto bb49; else goto bb50;
     bb49:
+#line 229 "codegen/numbers.kl"
     kl_t0 = 25;
+#line 229 "codegen/numbers.kl"
     return kl_t0;
     bb50:
 #line 230 "codegen/numbers.kl"
     kl_t47 = kl__is_palindrome__3i32( 12345 );
+#line 230 "codegen/numbers.kl"
     if ( kl_t47 ) goto bb51; else goto bb52;
     bb51:
+#line 230 "codegen/numbers.kl"
     kl_t0 = 26;
+#line 230 "codegen/numbers.kl"
     return kl_t0;
     bb52:
-#line 232 "codegen/numbers.kl"
     kl_t48 = kl__factorial__3u32( 0 );
+#line 232 "codegen/numbers.kl"
     kl_t49 = kl_t48 != 1;
+#line 232 "codegen/numbers.kl"
     if ( kl_t49 ) goto bb53; else goto bb54;
     bb53:
+#line 232 "codegen/numbers.kl"
     kl_t0 = 27;
+#line 232 "codegen/numbers.kl"
     return kl_t0;
     bb54:
 #line 233 "codegen/numbers.kl"
     kl_t50 = kl__factorial__3u32( 10 );
+#line 233 "codegen/numbers.kl"
     kl_t51 = kl_t50 != 3628800;
+#line 233 "codegen/numbers.kl"
     if ( kl_t51 ) goto bb55; else goto bb56;
     bb55:
+#line 233 "codegen/numbers.kl"
     kl_t0 = 28;
+#line 233 "codegen/numbers.kl"
     return kl_t0;
     bb56:
 #line 234 "codegen/numbers.kl"
     kl_t52 = kl__factorial__3u32( 20 );
+#line 234 "codegen/numbers.kl"
     kl_t53 = kl_t52 != 2432902008176640000;
+#line 234 "codegen/numbers.kl"
     if ( kl_t53 ) goto bb57; else goto bb58;
     bb57:
+#line 234 "codegen/numbers.kl"
     kl_t0 = 29;
+#line 234 "codegen/numbers.kl"
     return kl_t0;
     bb58:
-#line 236 "codegen/numbers.kl"
     kl_t0 = 0;
+#line 236 "codegen/numbers.kl"
     return kl_t0;
 }
 
+#line 197 "codegen/numbers.kl"
 int main( void )
 {
+#line 197 "codegen/numbers.kl"
     return (int) kl__main__();
 }

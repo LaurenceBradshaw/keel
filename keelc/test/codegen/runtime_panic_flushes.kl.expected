@@ -10,6 +10,7 @@ void kl_rt_write( int32_t, uint8_t*, uint64_t );
 
 int32_t kl__main__( void );
 
+#line 4 "codegen/runtime_panic_flushes.kl"
 int32_t kl__main__( void )
 {
     struct kl_7prelude_str kl_t1;
@@ -20,18 +21,28 @@ int32_t kl__main__( void )
     uint8_t* kl_t7;
 #line 8 "codegen/runtime_panic_flushes.kl"
     kl_t2 = &kl_t1;
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_t3 = ( uint8_t* ) "before\012";
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 7 );
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_t6 = &kl_t5;
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_t7 = ( uint8_t* ) "before\012";
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 7 );
+#line 8 "codegen/runtime_panic_flushes.kl"
     kl_rt_write( 1, kl_t1.kl_data_55, kl_t5.kl_size_58 );
+#line 11 "codegen/runtime_panic_flushes.kl"
     goto bb1;
     bb1:
+#line 11 "codegen/runtime_panic_flushes.kl"
     kl_rt_panic( "codegen/runtime_panic_flushes.kl", 11, "assertion failed: false" );
 }
 
+#line 4 "codegen/runtime_panic_flushes.kl"
 int main( void )
 {
+#line 4 "codegen/runtime_panic_flushes.kl"
     return (int) kl__main__();
 }

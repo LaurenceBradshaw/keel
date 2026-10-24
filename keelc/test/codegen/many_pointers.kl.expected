@@ -49,6 +49,7 @@ int32_t kl__which__N3i32( int32_t* );
 int32_t kl__main__( void );
 void kl__fill__I3f64E__N3f64_3u64_3f64( double*, uint64_t, double );
 
+#line 12 "codegen/many_pointers.kl"
 int32_t kl__sum__S5Point( struct kl__Point* kl_this_1 )
 {
     int32_t kl_t0;
@@ -56,32 +57,43 @@ int32_t kl__sum__S5Point( struct kl__Point* kl_this_1 )
     int32_t kl_t3;
 #line 14 "codegen/many_pointers.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_x_4, ( *kl_this_1 ).kl_y_6, &( int32_t ) { 0 } );
+#line 14 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 14 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 14, "arithmetic overflow: x + y" );
     bb2:
+#line 14 "codegen/many_pointers.kl"
     kl_t3 = ( *kl_this_1 ).kl_x_4 + ( *kl_this_1 ).kl_y_6;
+#line 14 "codegen/many_pointers.kl"
     kl_t0 = kl_t3;
+#line 14 "codegen/many_pointers.kl"
     return kl_t0;
 }
 
+#line 22 "codegen/many_pointers.kl"
 void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t kl_m_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
 #line 24 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_n_21 = kl_m_2;
-#line 25 "codegen/many_pointers.kl"
     kl_t3 = __builtin_add_overflow( kl_live_2, 1, &( int32_t ) { 0 } );
+#line 25 "codegen/many_pointers.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 25 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 25, "arithmetic overflow: live + 1" );
     bb2:
+#line 25 "codegen/many_pointers.kl"
     kl_t4 = kl_live_2 + 1;
+#line 25 "codegen/many_pointers.kl"
     kl_live_2 = kl_t4;
+#line 22 "codegen/many_pointers.kl"
     return;
 }
 
+#line 28 "codegen/many_pointers.kl"
 void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
     bool kl_t2;
@@ -89,42 +101,56 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     ( void ) kl_this_1;
 #line 30 "codegen/many_pointers.kl"
     kl_t2 = __builtin_sub_overflow( kl_live_2, 1, &( int32_t ) { 0 } );
+#line 30 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 30 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 30, "arithmetic overflow: live - 1" );
     bb2:
+#line 30 "codegen/many_pointers.kl"
     kl_t3 = kl_live_2 - 1;
+#line 30 "codegen/many_pointers.kl"
     kl_live_2 = kl_t3;
+#line 28 "codegen/many_pointers.kl"
     return;
 }
 
+#line 40 "codegen/many_pointers.kl"
 void kl__Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_t3;
 #line 44 "codegen/many_pointers.kl"
     kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/many_pointers.kl", 44, "out of memory: alloc<i32>( n )" );
+#line 44 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_data_52 = kl_t3;
 #line 46 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_size_54 = kl_n_2;
+#line 40 "codegen/many_pointers.kl"
     return;
 }
 
+#line 49 "codegen/many_pointers.kl"
 void kl__Ints__dtor( struct kl__Ints* kl_this_1 )
 {
 #line 53 "codegen/many_pointers.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_52 );
+#line 49 "codegen/many_pointers.kl"
     return;
 }
 
+#line 57 "codegen/many_pointers.kl"
 void kl__set__S4Ints_3u64_3i32( struct kl__Ints* kl_this_1, uint64_t kl_i_2, int32_t kl_v_3 )
 {
     int32_t* kl_t4;
 #line 61 "codegen/many_pointers.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_52 + kl_i_2;
+#line 61 "codegen/many_pointers.kl"
     ( *kl_t4 ) = kl_v_3;
+#line 57 "codegen/many_pointers.kl"
     return;
 }
 
+#line 65 "codegen/many_pointers.kl"
 int32_t kl__get__S4Ints_3u64( struct kl__Ints* kl_this_1, uint64_t kl_i_2 )
 {
     int32_t kl_t0;
@@ -134,12 +160,15 @@ int32_t kl__get__S4Ints_3u64( struct kl__Ints* kl_this_1, uint64_t kl_i_2 )
     kl_r_3 = 0;
 #line 70 "codegen/many_pointers.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_52 + kl_i_2;
+#line 70 "codegen/many_pointers.kl"
     kl_r_3 = ( *kl_t4 );
 #line 72 "codegen/many_pointers.kl"
     kl_t0 = kl_r_3;
+#line 72 "codegen/many_pointers.kl"
     return kl_t0;
 }
 
+#line 76 "codegen/many_pointers.kl"
 int32_t kl__sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 {
     int32_t kl_t0;
@@ -154,37 +183,50 @@ int32_t kl__sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
     kl_total_3 = 0;
 #line 82 "codegen/many_pointers.kl"
     kl_i_4 = 0;
+#line 82 "codegen/many_pointers.kl"
     goto bb1;
     bb1:
+#line 82 "codegen/many_pointers.kl"
     kl_t5 = kl_i_4 < kl_n_2;
+#line 82 "codegen/many_pointers.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 84 "codegen/many_pointers.kl"
     kl_t6 = kl_p_1 + kl_i_4;
+#line 84 "codegen/many_pointers.kl"
     kl_t7 = __builtin_add_overflow( kl_total_3, ( *kl_t6 ), &( int32_t ) { 0 } );
+#line 84 "codegen/many_pointers.kl"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
 #line 88 "codegen/many_pointers.kl"
     kl_t0 = kl_total_3;
+#line 88 "codegen/many_pointers.kl"
     return kl_t0;
     bb4:
+#line 84 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 84, "arithmetic overflow: total + p[ i ]" );
     bb5:
 #line 84 "codegen/many_pointers.kl"
     kl_t8 = kl_total_3 + ( *kl_t6 );
+#line 84 "codegen/many_pointers.kl"
     kl_total_3 = kl_t8;
+#line 82 "codegen/many_pointers.kl"
     goto bb6;
     bb6:
 #line 82 "codegen/many_pointers.kl"
     kl_t9 = __builtin_add_overflow( kl_i_4, 1, &( uint64_t ) { 0 } );
+#line 82 "codegen/many_pointers.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
+#line 82 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 82, "arithmetic overflow: i++" );
     bb8:
+#line 82 "codegen/many_pointers.kl"
     kl_i_4 = kl_i_4 + 1;
+#line 82 "codegen/many_pointers.kl"
     goto bb1;
 }
 
+#line 92 "codegen/many_pointers.kl"
 int32_t kl__sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
 {
     int32_t kl_t0;
@@ -198,71 +240,87 @@ int32_t kl__sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
     int32_t kl_t10;
 #line 94 "codegen/many_pointers.kl"
     kl_total_3 = 0;
-#line 95 "codegen/many_pointers.kl"
     kl_at_4 = kl_p_1;
-#line 96 "codegen/many_pointers.kl"
     kl_end_5 = NULL;
 #line 100 "codegen/many_pointers.kl"
     kl_t6 = kl_p_1 + kl_n_2;
+#line 100 "codegen/many_pointers.kl"
     kl_end_5 = kl_t6;
+#line 102 "codegen/many_pointers.kl"
     goto bb1;
     bb1:
 #line 102 "codegen/many_pointers.kl"
     kl_t7 = kl_at_4 != kl_end_5;
+#line 102 "codegen/many_pointers.kl"
     if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
-#line 104 "codegen/many_pointers.kl"
     kl_t8 = kl_at_4 + 0;
+#line 104 "codegen/many_pointers.kl"
     kl_t9 = __builtin_add_overflow( kl_total_3, ( *kl_t8 ), &( int32_t ) { 0 } );
+#line 104 "codegen/many_pointers.kl"
     if ( kl_t9 ) goto bb4; else goto bb5;
     bb3:
 #line 109 "codegen/many_pointers.kl"
     kl_t0 = kl_total_3;
+#line 109 "codegen/many_pointers.kl"
     return kl_t0;
     bb4:
+#line 104 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 104, "arithmetic overflow: total + at[ 0 ]" );
     bb5:
 #line 104 "codegen/many_pointers.kl"
     kl_t10 = kl_total_3 + ( *kl_t8 );
+#line 104 "codegen/many_pointers.kl"
     kl_total_3 = kl_t10;
-#line 105 "codegen/many_pointers.kl"
     kl_at_4 = kl_at_4 + 1;
+#line 102 "codegen/many_pointers.kl"
     goto bb1;
 }
 
+#line 123 "codegen/many_pointers.kl"
 void kl__bump__R3i32( int32_t* kl_v_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
 #line 125 "codegen/many_pointers.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_v_1 ), 1, &( int32_t ) { 0 } );
+#line 125 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 125 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 125, "arithmetic overflow: v + 1" );
     bb2:
+#line 125 "codegen/many_pointers.kl"
     kl_t3 = ( *kl_v_1 ) + 1;
+#line 125 "codegen/many_pointers.kl"
     ( *kl_v_1 ) = kl_t3;
+#line 123 "codegen/many_pointers.kl"
     return;
 }
 
+#line 128 "codegen/many_pointers.kl"
 int32_t kl__which__P3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
 #line 130 "codegen/many_pointers.kl"
     kl_t0 = 1;
+#line 130 "codegen/many_pointers.kl"
     return kl_t0;
 }
 
+#line 133 "codegen/many_pointers.kl"
 int32_t kl__which__N3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
 #line 135 "codegen/many_pointers.kl"
     kl_t0 = 2;
+#line 135 "codegen/many_pointers.kl"
     return kl_t0;
 }
 
+#line 138 "codegen/many_pointers.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -415,451 +473,582 @@ int32_t kl__main__( void )
     kl_a_1 = NULL;
 #line 144 "codegen/many_pointers.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 5, sizeof( int32_t ), "codegen/many_pointers.kl", 144, "out of memory: alloc<i32>( 5 )" );
+#line 144 "codegen/many_pointers.kl"
     kl_a_1 = kl_t2;
 #line 146 "codegen/many_pointers.kl"
     kl_i_3 = 0;
+#line 146 "codegen/many_pointers.kl"
     goto bb1;
     bb1:
+#line 146 "codegen/many_pointers.kl"
     kl_t4 = kl_i_3 < 5;
+#line 146 "codegen/many_pointers.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 148 "codegen/many_pointers.kl"
     kl_t5 = kl_a_1 + kl_i_3;
+#line 148 "codegen/many_pointers.kl"
     kl_t6 = ( int32_t ) kl_i_3;
+#line 148 "codegen/many_pointers.kl"
     kl_t7 = __builtin_mul_overflow( kl_t6, 10, &( int32_t ) { 0 } );
+#line 148 "codegen/many_pointers.kl"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
 #line 152 "codegen/many_pointers.kl"
     kl_t10 = kl__sum__N3i32_3u64( kl_a_1, 5 );
+#line 152 "codegen/many_pointers.kl"
     kl_t11 = kl_t10 != 100;
+#line 152 "codegen/many_pointers.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb4:
+#line 148 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 148, "arithmetic overflow: wrap<i32>( i ) * 10" );
     bb5:
 #line 148 "codegen/many_pointers.kl"
     kl_t8 = kl_t6 * 10;
+#line 148 "codegen/many_pointers.kl"
     ( *kl_t5 ) = kl_t8;
+#line 146 "codegen/many_pointers.kl"
     goto bb6;
     bb6:
 #line 146 "codegen/many_pointers.kl"
     kl_t9 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
+#line 146 "codegen/many_pointers.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
+#line 146 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 146, "arithmetic overflow: i++" );
     bb8:
+#line 146 "codegen/many_pointers.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 146 "codegen/many_pointers.kl"
     goto bb1;
     bb9:
 #line 152 "codegen/many_pointers.kl"
     kl_t0 = 1;
+#line 152 "codegen/many_pointers.kl"
     return kl_t0;
     bb10:
 #line 153 "codegen/many_pointers.kl"
     kl_t12 = kl__sum_by_walking__N3i32_3u64( kl_a_1, 5 );
+#line 153 "codegen/many_pointers.kl"
     kl_t13 = kl_t12 != 100;
+#line 153 "codegen/many_pointers.kl"
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
+#line 153 "codegen/many_pointers.kl"
     kl_t0 = 2;
+#line 153 "codegen/many_pointers.kl"
     return kl_t0;
     bb12:
 #line 156 "codegen/many_pointers.kl"
     kl_rest_14 = NULL;
-#line 157 "codegen/many_pointers.kl"
     kl_t15 = kl_a_1 + 2;
+#line 157 "codegen/many_pointers.kl"
     kl_rest_14 = kl_t15;
-#line 158 "codegen/many_pointers.kl"
     kl_t16 = kl__sum__N3i32_3u64( kl_rest_14, 3 );
+#line 158 "codegen/many_pointers.kl"
     kl_t17 = kl_t16 != 90;
+#line 158 "codegen/many_pointers.kl"
     if ( kl_t17 ) goto bb13; else goto bb14;
     bb13:
+#line 158 "codegen/many_pointers.kl"
     kl_t0 = 3;
+#line 158 "codegen/many_pointers.kl"
     return kl_t0;
     bb14:
-#line 160 "codegen/many_pointers.kl"
     kl_third_18 = 0;
-#line 161 "codegen/many_pointers.kl"
     kl_t19 = kl_rest_14 + 0;
+#line 161 "codegen/many_pointers.kl"
     kl_third_18 = ( *kl_t19 );
-#line 162 "codegen/many_pointers.kl"
     kl_t20 = kl_third_18 != 20;
+#line 162 "codegen/many_pointers.kl"
     if ( kl_t20 ) goto bb15; else goto bb16;
     bb15:
+#line 162 "codegen/many_pointers.kl"
     kl_t0 = 4;
+#line 162 "codegen/many_pointers.kl"
     return kl_t0;
     bb16:
 #line 165 "codegen/many_pointers.kl"
     kl_second_21 = 0;
-#line 166 "codegen/many_pointers.kl"
     kl_t22 = -1;
+#line 166 "codegen/many_pointers.kl"
     kl_t23 = kl_rest_14 + kl_t22;
+#line 166 "codegen/many_pointers.kl"
     kl_t24 = kl_t23 + 0;
+#line 166 "codegen/many_pointers.kl"
     kl_second_21 = ( *kl_t24 );
-#line 167 "codegen/many_pointers.kl"
     kl_t25 = kl_second_21 != 10;
+#line 167 "codegen/many_pointers.kl"
     if ( kl_t25 ) goto bb17; else goto bb18;
     bb17:
+#line 167 "codegen/many_pointers.kl"
     kl_t0 = 5;
+#line 167 "codegen/many_pointers.kl"
     return kl_t0;
     bb18:
 #line 170 "codegen/many_pointers.kl"
     kl_one_26 = NULL;
-#line 171 "codegen/many_pointers.kl"
     kl_t27 = kl_a_1 + 4;
+#line 171 "codegen/many_pointers.kl"
     kl_t28 = &( *kl_t27 );
+#line 171 "codegen/many_pointers.kl"
     kl_one_26 = kl_t28;
-#line 172 "codegen/many_pointers.kl"
     ( *kl_one_26 ) = 7;
-#line 173 "codegen/many_pointers.kl"
     kl_last_29 = 0;
-#line 174 "codegen/many_pointers.kl"
     kl_t30 = kl_a_1 + 4;
+#line 174 "codegen/many_pointers.kl"
     kl_last_29 = ( *kl_t30 );
-#line 175 "codegen/many_pointers.kl"
     kl_t31 = kl_last_29 != 7;
+#line 175 "codegen/many_pointers.kl"
     if ( kl_t31 ) goto bb19; else goto bb20;
     bb19:
+#line 175 "codegen/many_pointers.kl"
     kl_t0 = 6;
+#line 175 "codegen/many_pointers.kl"
     return kl_t0;
     bb20:
 #line 180 "codegen/many_pointers.kl"
     kl_t32 = kl_a_1 + 0;
+#line 180 "codegen/many_pointers.kl"
     ( *kl_t32 ) = 1;
-#line 181 "codegen/many_pointers.kl"
     kl_t33 = kl_a_1 + 0;
+#line 181 "codegen/many_pointers.kl"
     kl_t34 = __builtin_add_overflow( ( *kl_t33 ), 2, &( int32_t ) { 0 } );
+#line 181 "codegen/many_pointers.kl"
     if ( kl_t34 ) goto bb21; else goto bb22;
     bb21:
+#line 181 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 181, "arithmetic overflow: a[ 0 ] += 2;" );
     bb22:
+#line 181 "codegen/many_pointers.kl"
     ( *kl_t33 ) = ( *kl_t33 ) + 2;
-#line 182 "codegen/many_pointers.kl"
     kl_t35 = kl_a_1 + 0;
+#line 182 "codegen/many_pointers.kl"
     kl_t36 = __builtin_add_overflow( ( *kl_t35 ), 1, &( int32_t ) { 0 } );
+#line 182 "codegen/many_pointers.kl"
     if ( kl_t36 ) goto bb23; else goto bb24;
     bb23:
+#line 182 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 182, "arithmetic overflow: a[ 0 ]++;" );
     bb24:
+#line 182 "codegen/many_pointers.kl"
     ( *kl_t35 ) = ( *kl_t35 ) + 1;
-#line 183 "codegen/many_pointers.kl"
     kl_t37 = kl_a_1 + 1;
+#line 183 "codegen/many_pointers.kl"
     kl_t38 = __builtin_mul_overflow( ( *kl_t37 ), 3, &( int32_t ) { 0 } );
+#line 183 "codegen/many_pointers.kl"
     if ( kl_t38 ) goto bb25; else goto bb26;
     bb25:
+#line 183 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 183, "arithmetic overflow: a[ 1 ] *= 3;" );
     bb26:
+#line 183 "codegen/many_pointers.kl"
     ( *kl_t37 ) = ( *kl_t37 ) * 3;
-#line 184 "codegen/many_pointers.kl"
     kl_t39 = kl_a_1 + 0;
+#line 184 "codegen/many_pointers.kl"
     kl_t40 = &( *kl_t39 );
+#line 184 "codegen/many_pointers.kl"
     kl__bump__R3i32( kl_t40 );
 #line 186 "codegen/many_pointers.kl"
     kl_first_42 = 0;
-#line 187 "codegen/many_pointers.kl"
     kl_t43 = kl_a_1 + 0;
+#line 187 "codegen/many_pointers.kl"
     kl_t44 = kl_a_1 + 1;
+#line 187 "codegen/many_pointers.kl"
     kl_t45 = __builtin_add_overflow( ( *kl_t43 ), ( *kl_t44 ), &( int32_t ) { 0 } );
+#line 187 "codegen/many_pointers.kl"
     if ( kl_t45 ) goto bb27; else goto bb28;
     bb27:
+#line 187 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 187, "arithmetic overflow: a[ 0 ] + a[ 1 ]" );
     bb28:
+#line 187 "codegen/many_pointers.kl"
     kl_t46 = ( *kl_t43 ) + ( *kl_t44 );
+#line 187 "codegen/many_pointers.kl"
     kl_first_42 = kl_t46;
-#line 188 "codegen/many_pointers.kl"
     kl_t47 = 5 + 30;
+#line 188 "codegen/many_pointers.kl"
     kl_t48 = kl_first_42 != kl_t47;
+#line 188 "codegen/many_pointers.kl"
     if ( kl_t48 ) goto bb29; else goto bb30;
     bb29:
+#line 188 "codegen/many_pointers.kl"
     kl_t0 = 7;
+#line 188 "codegen/many_pointers.kl"
     return kl_t0;
     bb30:
 #line 191 "codegen/many_pointers.kl"
     kl_again_49 = kl_a_1;
-#line 192 "codegen/many_pointers.kl"
     kl_t50 = kl_again_49 != kl_a_1;
+#line 192 "codegen/many_pointers.kl"
     if ( kl_t50 ) goto bb31; else goto bb32;
     bb31:
+#line 192 "codegen/many_pointers.kl"
     kl_t0 = 8;
+#line 192 "codegen/many_pointers.kl"
     return kl_t0;
     bb32:
 #line 193 "codegen/many_pointers.kl"
     kl_t51 = kl_a_1 == NULL;
+#line 193 "codegen/many_pointers.kl"
     if ( kl_t51 ) goto bb33; else goto bb34;
     bb33:
+#line 193 "codegen/many_pointers.kl"
     kl_t0 = 9;
+#line 193 "codegen/many_pointers.kl"
     return kl_t0;
     bb34:
 #line 194 "codegen/many_pointers.kl"
     kl_t53 = kl__which__P3i32( kl_one_26 );
+#line 194 "codegen/many_pointers.kl"
     kl_t54 = kl_t53 != 1;
+#line 194 "codegen/many_pointers.kl"
     kl_t52 = kl_t54;
+#line 194 "codegen/many_pointers.kl"
     if ( kl_t52 ) goto bb36; else goto bb35;
     bb35:
+#line 194 "codegen/many_pointers.kl"
     kl_t55 = kl__which__N3i32( kl_a_1 );
+#line 194 "codegen/many_pointers.kl"
     kl_t56 = kl_t55 != 2;
+#line 194 "codegen/many_pointers.kl"
     kl_t52 = kl_t56;
+#line 194 "codegen/many_pointers.kl"
     goto bb36;
     bb36:
+#line 194 "codegen/many_pointers.kl"
     if ( kl_t52 ) goto bb37; else goto bb38;
     bb37:
+#line 194 "codegen/many_pointers.kl"
     kl_t0 = 10;
+#line 194 "codegen/many_pointers.kl"
     return kl_t0;
     bb38:
 #line 197 "codegen/many_pointers.kl"
     kl_widened_57 = NULL;
-#line 198 "codegen/many_pointers.kl"
     kl_t58 = ( int32_t* ) kl_one_26;
+#line 198 "codegen/many_pointers.kl"
     kl_widened_57 = kl_t58;
-#line 199 "codegen/many_pointers.kl"
     kl_through_59 = 0;
-#line 200 "codegen/many_pointers.kl"
     kl_t60 = kl_widened_57 + 0;
+#line 200 "codegen/many_pointers.kl"
     kl_through_59 = ( *kl_t60 );
-#line 201 "codegen/many_pointers.kl"
     kl_t61 = kl_through_59 != 7;
+#line 201 "codegen/many_pointers.kl"
     if ( kl_t61 ) goto bb39; else goto bb40;
     bb39:
+#line 201 "codegen/many_pointers.kl"
     kl_t0 = 11;
+#line 201 "codegen/many_pointers.kl"
     return kl_t0;
     bb40:
-#line 203 "codegen/many_pointers.kl"
     kl_rt_free( kl_a_1 );
 #line 206 "codegen/many_pointers.kl"
     kl_points_63 = NULL;
-#line 207 "codegen/many_pointers.kl"
     kl_points_sum_64 = 0;
 #line 210 "codegen/many_pointers.kl"
     kl_t65 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Point ), "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
+#line 210 "codegen/many_pointers.kl"
     kl_points_63 = kl_t65;
-#line 211 "codegen/many_pointers.kl"
     kl_t66 = kl_points_63 + 0;
+#line 211 "codegen/many_pointers.kl"
     kl_t67.kl_x_4 = 1;
+#line 211 "codegen/many_pointers.kl"
     kl_t67.kl_y_6 = 2;
+#line 211 "codegen/many_pointers.kl"
     ( *kl_t66 ) = kl_t67;
-#line 212 "codegen/many_pointers.kl"
     kl_t68 = kl_points_63 + 1;
+#line 212 "codegen/many_pointers.kl"
     ( *kl_t68 ).kl_x_4 = 3;
-#line 213 "codegen/many_pointers.kl"
     kl_t69 = kl_points_63 + 1;
+#line 213 "codegen/many_pointers.kl"
     ( *kl_t69 ).kl_y_6 = 4;
-#line 214 "codegen/many_pointers.kl"
     kl_t70 = kl_points_63 + 0;
+#line 214 "codegen/many_pointers.kl"
     kl_t71 = &( *kl_t70 );
+#line 214 "codegen/many_pointers.kl"
     kl_t72 = kl__sum__S5Point( kl_t71 );
+#line 214 "codegen/many_pointers.kl"
     kl_t73 = kl_points_63 + 1;
+#line 214 "codegen/many_pointers.kl"
     kl_t74 = &( *kl_t73 );
+#line 214 "codegen/many_pointers.kl"
     kl_t75 = kl__sum__S5Point( kl_t74 );
+#line 214 "codegen/many_pointers.kl"
     kl_t76 = __builtin_add_overflow( kl_t72, kl_t75, &( int32_t ) { 0 } );
+#line 214 "codegen/many_pointers.kl"
     if ( kl_t76 ) goto bb41; else goto bb42;
     bb41:
+#line 214 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 214, "arithmetic overflow: points[ 0 ].sum() + points[ 1 ].sum()" );
     bb42:
+#line 214 "codegen/many_pointers.kl"
     kl_t77 = kl_t72 + kl_t75;
+#line 214 "codegen/many_pointers.kl"
     kl_points_sum_64 = kl_t77;
-#line 215 "codegen/many_pointers.kl"
     kl_rt_free( kl_points_63 );
 #line 217 "codegen/many_pointers.kl"
     kl_t79 = kl_points_sum_64 != 10;
+#line 217 "codegen/many_pointers.kl"
     if ( kl_t79 ) goto bb43; else goto bb44;
     bb43:
+#line 217 "codegen/many_pointers.kl"
     kl_t0 = 12;
+#line 217 "codegen/many_pointers.kl"
     return kl_t0;
     bb44:
 #line 220 "codegen/many_pointers.kl"
     kl_rows_80 = NULL;
-#line 221 "codegen/many_pointers.kl"
     kl_corner_81 = 0;
 #line 224 "codegen/many_pointers.kl"
     kl_t82 = ( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ), "codegen/many_pointers.kl", 224, "out of memory: alloc<u8[*]>( 2 )" );
+#line 224 "codegen/many_pointers.kl"
     kl_rows_80 = kl_t82;
-#line 225 "codegen/many_pointers.kl"
     kl_t83 = kl_rows_80 + 0;
+#line 225 "codegen/many_pointers.kl"
     kl_t84 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 225, "out of memory: alloc<u8>( 3 )" );
+#line 225 "codegen/many_pointers.kl"
     ( *kl_t83 ) = kl_t84;
-#line 226 "codegen/many_pointers.kl"
     kl_t85 = kl_rows_80 + 1;
+#line 226 "codegen/many_pointers.kl"
     kl_t86 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 226, "out of memory: alloc<u8>( 3 )" );
+#line 226 "codegen/many_pointers.kl"
     ( *kl_t85 ) = kl_t86;
-#line 227 "codegen/many_pointers.kl"
     kl_t87 = kl_rows_80 + 1;
+#line 227 "codegen/many_pointers.kl"
     kl_t88 = ( *kl_t87 ) + 2;
+#line 227 "codegen/many_pointers.kl"
     ( *kl_t88 ) = 42;
-#line 228 "codegen/many_pointers.kl"
     kl_t89 = kl_rows_80 + 1;
+#line 228 "codegen/many_pointers.kl"
     kl_t90 = ( *kl_t89 ) + 2;
+#line 228 "codegen/many_pointers.kl"
     kl_corner_81 = ( *kl_t90 );
-#line 229 "codegen/many_pointers.kl"
     kl_t91 = kl_rows_80 + 0;
+#line 229 "codegen/many_pointers.kl"
     kl_rt_free( ( *kl_t91 ) );
-#line 230 "codegen/many_pointers.kl"
     kl_t93 = kl_rows_80 + 1;
+#line 230 "codegen/many_pointers.kl"
     kl_rt_free( ( *kl_t93 ) );
-#line 231 "codegen/many_pointers.kl"
     kl_rt_free( kl_rows_80 );
 #line 233 "codegen/many_pointers.kl"
     kl_t96 = kl_corner_81 != 42;
+#line 233 "codegen/many_pointers.kl"
     if ( kl_t96 ) goto bb45; else goto bb46;
     bb45:
+#line 233 "codegen/many_pointers.kl"
     kl_t0 = 13;
+#line 233 "codegen/many_pointers.kl"
     return kl_t0;
     bb46:
 #line 236 "codegen/many_pointers.kl"
     kl_halves_97 = NULL;
-#line 237 "codegen/many_pointers.kl"
     kl_total_98 = 0.0;
-#line 238 "codegen/many_pointers.kl"
     kl_t99 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( double ), "codegen/many_pointers.kl", 238, "out of memory: alloc<f64>( 4 )" );
+#line 238 "codegen/many_pointers.kl"
     kl_halves_97 = kl_t99;
-#line 239 "codegen/many_pointers.kl"
     kl__fill__I3f64E__N3f64_3u64_3f64( kl_halves_97, 4, 0.5 );
 #line 242 "codegen/many_pointers.kl"
     kl_t101 = kl_halves_97 + 0;
+#line 242 "codegen/many_pointers.kl"
     kl_t102 = kl_halves_97 + 1;
+#line 242 "codegen/many_pointers.kl"
     kl_t103 = ( *kl_t101 ) + ( *kl_t102 );
+#line 242 "codegen/many_pointers.kl"
     kl_t104 = kl_halves_97 + 2;
+#line 242 "codegen/many_pointers.kl"
     kl_t105 = kl_t103 + ( *kl_t104 );
+#line 242 "codegen/many_pointers.kl"
     kl_t106 = kl_halves_97 + 3;
+#line 242 "codegen/many_pointers.kl"
     kl_t107 = kl_t105 + ( *kl_t106 );
+#line 242 "codegen/many_pointers.kl"
     kl_total_98 = kl_t107;
-#line 243 "codegen/many_pointers.kl"
     kl_rt_free( kl_halves_97 );
 #line 245 "codegen/many_pointers.kl"
     kl_t109 = kl_total_98 != 2.0;
+#line 245 "codegen/many_pointers.kl"
     if ( kl_t109 ) goto bb47; else goto bb48;
     bb47:
+#line 245 "codegen/many_pointers.kl"
     kl_t0 = 14;
+#line 245 "codegen/many_pointers.kl"
     return kl_t0;
     bb48:
 #line 248 "codegen/many_pointers.kl"
     kl_t111 = kl__sum__N3i32_3u64;
+#line 248 "codegen/many_pointers.kl"
     kl_adder_110 = kl_t111;
-#line 249 "codegen/many_pointers.kl"
     kl_two_112 = NULL;
-#line 250 "codegen/many_pointers.kl"
     kl_through_pointer_113 = 0;
 #line 253 "codegen/many_pointers.kl"
     kl_t114 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ), "codegen/many_pointers.kl", 253, "out of memory: alloc<i32>( 2 )" );
+#line 253 "codegen/many_pointers.kl"
     kl_two_112 = kl_t114;
-#line 254 "codegen/many_pointers.kl"
     kl_t115 = kl_two_112 + 0;
+#line 254 "codegen/many_pointers.kl"
     ( *kl_t115 ) = 20;
-#line 255 "codegen/many_pointers.kl"
     kl_t116 = kl_two_112 + 1;
+#line 255 "codegen/many_pointers.kl"
     ( *kl_t116 ) = 22;
 #line 257 "codegen/many_pointers.kl"
     kl_t117 = kl_adder_110( kl_two_112, 2 );
+#line 257 "codegen/many_pointers.kl"
     kl_through_pointer_113 = kl_t117;
-#line 258 "codegen/many_pointers.kl"
     kl_rt_free( kl_two_112 );
-#line 259 "codegen/many_pointers.kl"
     kl_t119 = kl_through_pointer_113 != 42;
+#line 259 "codegen/many_pointers.kl"
     if ( kl_t119 ) goto bb49; else goto bb50;
     bb49:
+#line 259 "codegen/many_pointers.kl"
     kl_t0 = 15;
+#line 259 "codegen/many_pointers.kl"
     return kl_t0;
     bb50:
 #line 263 "codegen/many_pointers.kl"
     kl_t121 = &kl_ints_120;
+#line 263 "codegen/many_pointers.kl"
     kl__Ints__R4Ints_3u64__ctor( kl_t121, 3 );
-#line 264 "codegen/many_pointers.kl"
     kl_t123 = &kl_ints_120;
+#line 264 "codegen/many_pointers.kl"
     kl__set__S4Ints_3u64_3i32( kl_t123, 0, 4 );
-#line 265 "codegen/many_pointers.kl"
     kl_t125 = &kl_ints_120;
+#line 265 "codegen/many_pointers.kl"
     kl__set__S4Ints_3u64_3i32( kl_t125, 2, 5 );
-#line 266 "codegen/many_pointers.kl"
     kl_t127 = &kl_ints_120;
+#line 266 "codegen/many_pointers.kl"
     kl_t128 = kl__get__S4Ints_3u64( kl_t127, 0 );
+#line 266 "codegen/many_pointers.kl"
     kl_t129 = &kl_ints_120;
+#line 266 "codegen/many_pointers.kl"
     kl_t130 = kl__get__S4Ints_3u64( kl_t129, 2 );
+#line 266 "codegen/many_pointers.kl"
     kl_t131 = __builtin_add_overflow( kl_t128, kl_t130, &( int32_t ) { 0 } );
+#line 266 "codegen/many_pointers.kl"
     if ( kl_t131 ) goto bb51; else goto bb52;
     bb51:
+#line 266 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 266, "arithmetic overflow: ints.get( 0 ) + ints.get( 2 )" );
     bb52:
+#line 266 "codegen/many_pointers.kl"
     kl_t132 = kl_t128 + kl_t130;
+#line 266 "codegen/many_pointers.kl"
     kl_t133 = kl_t132 != 9;
+#line 266 "codegen/many_pointers.kl"
     if ( kl_t133 ) goto bb53; else goto bb54;
     bb53:
+#line 266 "codegen/many_pointers.kl"
     kl_t0 = 16;
+#line 266 "codegen/many_pointers.kl"
     kl__Ints__dtor( &kl_ints_120 );
+#line 266 "codegen/many_pointers.kl"
     return kl_t0;
     bb54:
 #line 262 "codegen/many_pointers.kl"
     kl__Ints__dtor( &kl_ints_120 );
 #line 272 "codegen/many_pointers.kl"
     kl_cs_134 = NULL;
-#line 273 "codegen/many_pointers.kl"
     kl_t135 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Tracked ), "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
+#line 273 "codegen/many_pointers.kl"
     kl_cs_134 = kl_t135;
 #line 275 "codegen/many_pointers.kl"
     kl_t156 = false;
+#line 275 "codegen/many_pointers.kl"
     kl_t137 = &kl_t_136;
+#line 275 "codegen/many_pointers.kl"
     kl_t156 = true;
+#line 275 "codegen/many_pointers.kl"
     kl__Tracked__R7Tracked_3i32__ctor( kl_t137, 2 );
 #line 278 "codegen/many_pointers.kl"
     kl_t139 = kl_cs_134 + 0;
+#line 278 "codegen/many_pointers.kl"
     kl_t157 = false;
+#line 278 "codegen/many_pointers.kl"
     kl_t141 = &kl_t140;
+#line 278 "codegen/many_pointers.kl"
     kl_t157 = true;
+#line 278 "codegen/many_pointers.kl"
     kl__Tracked__R7Tracked_3i32__ctor( kl_t141, 1 );
+#line 278 "codegen/many_pointers.kl"
     ( *kl_t139 ) = kl_t140;
+#line 278 "codegen/many_pointers.kl"
     kl_t157 = false;
+#line 278 "codegen/many_pointers.kl"
     if ( kl_t157 ) kl__Tracked__dtor( &kl_t140 );
+#line 278 "codegen/many_pointers.kl"
     kl_t157 = false;
-#line 279 "codegen/many_pointers.kl"
     kl_t143 = kl_cs_134 + 1;
+#line 279 "codegen/many_pointers.kl"
     ( *kl_t143 ) = kl_t_136;
+#line 279 "codegen/many_pointers.kl"
     kl_t156 = false;
 #line 274 "codegen/many_pointers.kl"
     if ( kl_t156 ) kl__Tracked__dtor( &kl_t_136 );
+#line 274 "codegen/many_pointers.kl"
     kl_t156 = false;
 #line 282 "codegen/many_pointers.kl"
     kl_held_144 = 0;
 #line 285 "codegen/many_pointers.kl"
     kl_t145 = kl_cs_134 + 0;
+#line 285 "codegen/many_pointers.kl"
     kl_t146 = kl_cs_134 + 1;
+#line 285 "codegen/many_pointers.kl"
     kl_t147 = __builtin_add_overflow( ( *kl_t145 ).kl_n_21, ( *kl_t146 ).kl_n_21, &( int32_t ) { 0 } );
+#line 285 "codegen/many_pointers.kl"
     if ( kl_t147 ) goto bb55; else goto bb56;
     bb55:
+#line 285 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 285, "arithmetic overflow: cs[ 0 ].n + cs[ 1 ].n" );
     bb56:
+#line 285 "codegen/many_pointers.kl"
     kl_t148 = ( *kl_t145 ).kl_n_21 + ( *kl_t146 ).kl_n_21;
+#line 285 "codegen/many_pointers.kl"
     kl_held_144 = kl_t148;
-#line 286 "codegen/many_pointers.kl"
     kl_rt_free( kl_cs_134 );
 #line 288 "codegen/many_pointers.kl"
     kl_t150 = kl_held_144 != 3;
+#line 288 "codegen/many_pointers.kl"
     if ( kl_t150 ) goto bb57; else goto bb58;
     bb57:
+#line 288 "codegen/many_pointers.kl"
     kl_t0 = 17;
+#line 288 "codegen/many_pointers.kl"
     return kl_t0;
     bb58:
 #line 289 "codegen/many_pointers.kl"
     kl_t151 = kl_live_2 != 2;
+#line 289 "codegen/many_pointers.kl"
     if ( kl_t151 ) goto bb59; else goto bb60;
     bb59:
+#line 289 "codegen/many_pointers.kl"
     kl_t0 = 18;
+#line 289 "codegen/many_pointers.kl"
     return kl_t0;
     bb60:
 #line 292 "codegen/many_pointers.kl"
     kl_none_152 = NULL;
-#line 293 "codegen/many_pointers.kl"
     kl_t153 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 0, sizeof( uint8_t ), "codegen/many_pointers.kl", 293, "out of memory: alloc<u8>( 0 )" );
+#line 293 "codegen/many_pointers.kl"
     kl_none_152 = kl_t153;
-#line 294 "codegen/many_pointers.kl"
     kl_t154 = kl_none_152 == NULL;
+#line 294 "codegen/many_pointers.kl"
     if ( kl_t154 ) goto bb61; else goto bb62;
     bb61:
+#line 294 "codegen/many_pointers.kl"
     kl_t0 = 19;
+#line 294 "codegen/many_pointers.kl"
     return kl_t0;
     bb62:
 #line 295 "codegen/many_pointers.kl"
     kl_rt_free( kl_none_152 );
 #line 297 "codegen/many_pointers.kl"
     kl_t0 = 0;
+#line 297 "codegen/many_pointers.kl"
     return kl_t0;
 }
 
+#line 112 "codegen/many_pointers.kl"
 void kl__fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double kl_v_3 )
 {
     uint64_t kl_i_4;
@@ -868,29 +1057,40 @@ void kl__fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double 
     bool kl_t7;
 #line 116 "codegen/many_pointers.kl"
     kl_i_4 = 0;
+#line 116 "codegen/many_pointers.kl"
     goto bb1;
     bb1:
+#line 116 "codegen/many_pointers.kl"
     kl_t5 = kl_i_4 < kl_n_2;
+#line 116 "codegen/many_pointers.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
-#line 118 "codegen/many_pointers.kl"
     kl_t6 = kl_p_1 + kl_i_4;
+#line 118 "codegen/many_pointers.kl"
     ( *kl_t6 ) = kl_v_3;
+#line 116 "codegen/many_pointers.kl"
     goto bb4;
     bb3:
+#line 112 "codegen/many_pointers.kl"
     return;
     bb4:
 #line 116 "codegen/many_pointers.kl"
     kl_t7 = __builtin_add_overflow( kl_i_4, 1, &( uint64_t ) { 0 } );
+#line 116 "codegen/many_pointers.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
+#line 116 "codegen/many_pointers.kl"
     kl_rt_panic( "codegen/many_pointers.kl", 116, "arithmetic overflow: i++" );
     bb6:
+#line 116 "codegen/many_pointers.kl"
     kl_i_4 = kl_i_4 + 1;
+#line 116 "codegen/many_pointers.kl"
     goto bb1;
 }
 
+#line 138 "codegen/many_pointers.kl"
 int main( void )
 {
+#line 138 "codegen/many_pointers.kl"
     return (int) kl__main__();
 }

@@ -42,6 +42,7 @@ int32_t kl__main__( void );
 void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE*, struct kl__Tracked );
 void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* );
 
+#line 6 "codegen/bare_temporary.kl"
 void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t* kl_drops_2 )
 {
     uint8_t* kl_t3;
@@ -49,61 +50,79 @@ void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t
     ( *kl_this_1 ).kl_drops__34 = kl_drops_2;
 #line 11 "codegen/bare_temporary.kl"
     kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 16, sizeof( uint8_t ), "codegen/bare_temporary.kl", 11, "out of memory: alloc<u8>( 16 )" );
+#line 11 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_block__37 = kl_t3;
+#line 6 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 15 "codegen/bare_temporary.kl"
 void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
     bool kl_t2;
 #line 17 "codegen/bare_temporary.kl"
     kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_drops__34 ), 1, &( uint64_t ) { 0 } );
+#line 17 "codegen/bare_temporary.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 17 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 17, "arithmetic overflow: *drops_ += 1;" );
     bb2:
+#line 17 "codegen/bare_temporary.kl"
     ( *( *kl_this_1 ).kl_drops__34 ) = ( *( *kl_this_1 ).kl_drops__34 ) + 1;
 #line 20 "codegen/bare_temporary.kl"
     kl_rt_free( ( *kl_this_1 ).kl_block__37 );
+#line 15 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 30 "codegen/bare_temporary.kl"
 void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 {
-#line 32 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_taken__69 = 0;
+#line 30 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 35 "codegen/bare_temporary.kl"
 void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t2 )
 {
     bool kl_t3;
 #line 37 "codegen/bare_temporary.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_taken__69, 1, &( uint64_t ) { 0 } );
+#line 37 "codegen/bare_temporary.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 37 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 37, "arithmetic overflow: taken_ += 1;" );
     bb2:
+#line 37 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_taken__69 = ( *kl_this_1 ).kl_taken__69 + 1;
 #line 35 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t2 );
+#line 35 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 40 "codegen/bare_temporary.kl"
 void kl__own__S6Holder_M7Tracked( struct kl__Tracked kl_t1 )
 {
 #line 40 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t1 );
+#line 40 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 47 "codegen/bare_temporary.kl"
 void kl__consume__M7Tracked( struct kl__Tracked kl_t1 )
 {
 #line 47 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t1 );
+#line 47 "codegen/bare_temporary.kl"
     return;
 }
 
+#line 51 "codegen/bare_temporary.kl"
 struct kl__Tracked kl__make__P3u64( uint64_t* kl_drops_1 )
 {
     struct kl__Tracked kl_t0;
@@ -112,17 +131,27 @@ struct kl__Tracked kl__make__P3u64( uint64_t* kl_drops_1 )
     bool kl_t5;
 #line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
+#line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
+#line 53 "codegen/bare_temporary.kl"
     kl_t3 = &kl_t2;
+#line 53 "codegen/bare_temporary.kl"
     kl_t5 = true;
+#line 53 "codegen/bare_temporary.kl"
     kl__Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_drops_1 );
+#line 53 "codegen/bare_temporary.kl"
     kl_t0 = kl_t2;
+#line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
+#line 53 "codegen/bare_temporary.kl"
     if ( kl_t5 ) kl__Tracked__dtor( &kl_t2 );
+#line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
+#line 53 "codegen/bare_temporary.kl"
     return kl_t0;
 }
 
+#line 56 "codegen/bare_temporary.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -174,7 +203,6 @@ int32_t kl__main__( void )
     kl_t51 = false;
 #line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
-#line 68 "codegen/bare_temporary.kl"
     kl_t53 = false;
 #line 72 "codegen/bare_temporary.kl"
     kl_t54 = false;
@@ -186,143 +214,210 @@ int32_t kl__main__( void )
     kl_drops_1 = 0;
 #line 60 "codegen/bare_temporary.kl"
     kl_t50 = false;
+#line 60 "codegen/bare_temporary.kl"
     kl_t3 = &kl_t2;
+#line 60 "codegen/bare_temporary.kl"
     kl_t50 = true;
+#line 60 "codegen/bare_temporary.kl"
     kl_t4 = &kl_drops_1;
+#line 60 "codegen/bare_temporary.kl"
     kl__Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_t4 );
+#line 60 "codegen/bare_temporary.kl"
     kl__consume__M7Tracked( kl_t2 );
+#line 60 "codegen/bare_temporary.kl"
     kl_t50 = false;
+#line 60 "codegen/bare_temporary.kl"
     if ( kl_t50 ) kl__Tracked__dtor( &kl_t2 );
+#line 60 "codegen/bare_temporary.kl"
     kl_t50 = false;
     goto bb1;
     bb1:
 #line 61 "codegen/bare_temporary.kl"
     kl_t7 = kl_drops_1 == 1;
+#line 61 "codegen/bare_temporary.kl"
     if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
-#line 63 "codegen/bare_temporary.kl"
     kl_t8 = &kl_drops_1;
+#line 63 "codegen/bare_temporary.kl"
     kl_t9 = kl__make__P3u64( kl_t8 );
+#line 63 "codegen/bare_temporary.kl"
     kl_t51 = true;
+#line 63 "codegen/bare_temporary.kl"
     kl__consume__M7Tracked( kl_t9 );
+#line 63 "codegen/bare_temporary.kl"
     kl_t51 = false;
+#line 63 "codegen/bare_temporary.kl"
     if ( kl_t51 ) kl__Tracked__dtor( &kl_t9 );
+#line 63 "codegen/bare_temporary.kl"
     kl_t51 = false;
     goto bb4;
     bb3:
+#line 61 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 61, "assertion failed: drops == 1" );
     bb4:
 #line 64 "codegen/bare_temporary.kl"
     kl_t11 = kl_drops_1 == 2;
+#line 64 "codegen/bare_temporary.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
-#line 66 "codegen/bare_temporary.kl"
     kl_t13 = &kl_h_12;
+#line 66 "codegen/bare_temporary.kl"
     kl__Holder__R6Holder__ctor( kl_t13 );
-#line 67 "codegen/bare_temporary.kl"
     kl_t15 = &kl_h_12;
+#line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
+#line 67 "codegen/bare_temporary.kl"
     kl_t17 = &kl_t16;
+#line 67 "codegen/bare_temporary.kl"
     kl_t52 = true;
+#line 67 "codegen/bare_temporary.kl"
     kl_t18 = &kl_drops_1;
+#line 67 "codegen/bare_temporary.kl"
     kl__Tracked__R7Tracked_P3u64__ctor( kl_t17, kl_t18 );
+#line 67 "codegen/bare_temporary.kl"
     kl__take__S6Holder_M7Tracked( kl_t15, kl_t16 );
+#line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
+#line 67 "codegen/bare_temporary.kl"
     if ( kl_t52 ) kl__Tracked__dtor( &kl_t16 );
+#line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
+    kl_t53 = false;
+#line 68 "codegen/bare_temporary.kl"
+    kl_t22 = &kl_t21;
+#line 68 "codegen/bare_temporary.kl"
+    kl_t53 = true;
+#line 68 "codegen/bare_temporary.kl"
+    kl_t23 = &kl_drops_1;
+#line 68 "codegen/bare_temporary.kl"
+    kl__Tracked__R7Tracked_P3u64__ctor( kl_t22, kl_t23 );
+#line 68 "codegen/bare_temporary.kl"
+    kl__own__S6Holder_M7Tracked( kl_t21 );
 #line 68 "codegen/bare_temporary.kl"
     kl_t53 = false;
-    kl_t22 = &kl_t21;
-    kl_t53 = true;
-    kl_t23 = &kl_drops_1;
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t22, kl_t23 );
-    kl__own__S6Holder_M7Tracked( kl_t21 );
-    kl_t53 = false;
+#line 68 "codegen/bare_temporary.kl"
     if ( kl_t53 ) kl__Tracked__dtor( &kl_t21 );
+#line 68 "codegen/bare_temporary.kl"
     kl_t53 = false;
     goto bb7;
     bb6:
+#line 64 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 64, "assertion failed: drops == 2" );
     bb7:
 #line 69 "codegen/bare_temporary.kl"
     kl_t26 = kl_drops_1 == 4;
+#line 69 "codegen/bare_temporary.kl"
     if ( kl_t26 ) goto bb8; else goto bb9;
     bb8:
-#line 71 "codegen/bare_temporary.kl"
     kl_t28 = kl__consume__M7Tracked;
+#line 71 "codegen/bare_temporary.kl"
     kl_through_27 = kl_t28;
+    kl_t54 = false;
+#line 72 "codegen/bare_temporary.kl"
+    kl_t30 = &kl_t29;
+#line 72 "codegen/bare_temporary.kl"
+    kl_t54 = true;
+#line 72 "codegen/bare_temporary.kl"
+    kl_t31 = &kl_drops_1;
+#line 72 "codegen/bare_temporary.kl"
+    kl__Tracked__R7Tracked_P3u64__ctor( kl_t30, kl_t31 );
+#line 72 "codegen/bare_temporary.kl"
+    kl_through_27( kl_t29 );
 #line 72 "codegen/bare_temporary.kl"
     kl_t54 = false;
-    kl_t30 = &kl_t29;
-    kl_t54 = true;
-    kl_t31 = &kl_drops_1;
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t30, kl_t31 );
-    kl_through_27( kl_t29 );
-    kl_t54 = false;
+#line 72 "codegen/bare_temporary.kl"
     if ( kl_t54 ) kl__Tracked__dtor( &kl_t29 );
+#line 72 "codegen/bare_temporary.kl"
     kl_t54 = false;
     goto bb10;
     bb9:
+#line 69 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 69, "assertion failed: drops == 4" );
     bb10:
 #line 73 "codegen/bare_temporary.kl"
     kl_t34 = kl_drops_1 == 5;
+#line 73 "codegen/bare_temporary.kl"
     if ( kl_t34 ) goto bb11; else goto bb12;
     bb11:
 #line 77 "codegen/bare_temporary.kl"
     kl_t36 = &kl_b_35;
+#line 77 "codegen/bare_temporary.kl"
     kl_t55 = false;
+#line 77 "codegen/bare_temporary.kl"
     kl_t38 = &kl_t37;
+#line 77 "codegen/bare_temporary.kl"
     kl_t55 = true;
+#line 77 "codegen/bare_temporary.kl"
     kl_t39 = &kl_drops_1;
+#line 77 "codegen/bare_temporary.kl"
     kl__Tracked__R7Tracked_P3u64__ctor( kl_t38, kl_t39 );
+#line 77 "codegen/bare_temporary.kl"
     kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( kl_t36, kl_t37 );
+#line 77 "codegen/bare_temporary.kl"
     kl_t55 = false;
+#line 77 "codegen/bare_temporary.kl"
     if ( kl_t55 ) kl__Tracked__dtor( &kl_t37 );
+#line 77 "codegen/bare_temporary.kl"
     kl_t55 = false;
     goto bb13;
     bb12:
+#line 73 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 73, "assertion failed: drops == 5" );
     bb13:
 #line 78 "codegen/bare_temporary.kl"
     kl_t42 = kl_drops_1 == 5;
+#line 78 "codegen/bare_temporary.kl"
     if ( kl_t42 ) goto bb14; else goto bb15;
     bb14:
 #line 76 "codegen/bare_temporary.kl"
     kl_7prelude_box__I7TrackedE__dtor( &kl_b_35 );
+#line 80 "codegen/bare_temporary.kl"
     goto bb16;
     bb15:
+#line 78 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 78, "assertion failed: drops == 5" );
     bb16:
-#line 80 "codegen/bare_temporary.kl"
     kl_t43 = kl_drops_1 == 6;
+#line 80 "codegen/bare_temporary.kl"
     if ( kl_t43 ) goto bb17; else goto bb18;
     bb17:
 #line 83 "codegen/bare_temporary.kl"
     kl_t56 = false;
+#line 83 "codegen/bare_temporary.kl"
     kl_t45 = &kl_t44;
+#line 83 "codegen/bare_temporary.kl"
     kl_t56 = true;
+#line 83 "codegen/bare_temporary.kl"
     kl_t46 = &kl_drops_1;
+#line 83 "codegen/bare_temporary.kl"
     kl__Tracked__R7Tracked_P3u64__ctor( kl_t45, kl_t46 );
+#line 83 "codegen/bare_temporary.kl"
     kl__consume__M7Tracked( kl_t44 );
+#line 83 "codegen/bare_temporary.kl"
     kl_t56 = false;
+#line 83 "codegen/bare_temporary.kl"
     if ( kl_t56 ) kl__Tracked__dtor( &kl_t44 );
+#line 83 "codegen/bare_temporary.kl"
     kl_t56 = false;
     goto bb19;
     bb18:
+#line 80 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 80, "assertion failed: drops == 6" );
     bb19:
 #line 84 "codegen/bare_temporary.kl"
     kl_t49 = kl_drops_1 == 7;
+#line 84 "codegen/bare_temporary.kl"
     if ( kl_t49 ) goto bb20; else goto bb21;
     bb20:
-#line 86 "codegen/bare_temporary.kl"
     kl_t0 = 0;
+#line 86 "codegen/bare_temporary.kl"
     return kl_t0;
     bb21:
+#line 84 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 84, "assertion failed: drops == 7" );
 }
 
+#line 80 "<prelude>"
 void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE* kl_this_1, struct kl__Tracked kl_value_2 )
 {
     struct kl__Tracked* kl_slot_3;
@@ -335,33 +430,42 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
     kl_t8 = true;
 #line 85 "<prelude>"
     kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Tracked ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
+#line 85 "<prelude>"
     kl_slot_3 = kl_t4;
-#line 86 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
+#line 86 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
+#line 86 "<prelude>"
     kl_t8 = false;
-#line 87 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
+#line 87 "<prelude>"
     kl_t7 = &( *kl_t6 );
+#line 87 "<prelude>"
     ( *kl_this_1 ).kl_p__370 = kl_t7;
 #line 80 "<prelude>"
     if ( kl_t8 ) kl__Tracked__dtor( &kl_value_2 );
+#line 80 "<prelude>"
     kl_t8 = false;
+#line 80 "<prelude>"
     return;
 }
 
+#line 91 "<prelude>"
 void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_this_1 )
 {
     struct kl__Tracked* kl_t2;
 #line 95 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p__370;
+#line 95 "<prelude>"
     kl__Tracked__dtor( &( *kl_t2 ) );
-#line 96 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p__370 );
+#line 91 "<prelude>"
     return;
 }
 
+#line 56 "codegen/bare_temporary.kl"
 int main( void )
 {
+#line 56 "codegen/bare_temporary.kl"
     return (int) kl__main__();
 }

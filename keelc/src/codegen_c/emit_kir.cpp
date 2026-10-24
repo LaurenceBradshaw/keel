@@ -238,6 +238,7 @@ public:
 private:
     void write_line( std::string_view text );
     void line_directive( Span span );
+    void sync_line();
 
     void emit_prologue();
     void emit_composite_forwards();
@@ -297,9 +298,10 @@ private:
     std::string as_written( Span span ) const;
 
     std::string     out_;
-    u32             indent_    = 0;
-    u32             last_line_ = 0;       // so #line is emitted only when it changes
-    const Function* current_   = nullptr; // The function currently being emitted.
+    u32             indent_       = 0;
+    u32             counted_line_ = 0;  // the line the C compiler gives the next C line; 0 is uncounted
+    Span            keel_span_ {};      // the Keel line the code being written belongs to
+    const Function* current_ = nullptr; // The function currently being emitted.
 
     const std::vector<Function>& functions_;
     const Ast&                   ast_;
@@ -377,21 +379,37 @@ void Kir_emitter::write_line( std::string_view text )
     }
 
     out_ += '\n';
+
+    if( counted_line_ != 0 )
+    {
+        counted_line_ += 1 + std::count( text.begin(), text.end(), '\n' );
+    }
 }
 
+// A statement's or terminator's span becomes the current Keel line.
 void Kir_emitter::line_directive( Span span )
 {
-    const Line_col loc = sm_.line_col( span.file, span.start );
+    keel_span_ = span;
+    sync_line();
+}
 
-    if( loc.line == last_line_ )
+// Before a C line that makes code, so the C compiler's count names the Keel line it belongs to.
+void Kir_emitter::sync_line()
+{
+    if( !keel_span_.is_valid() )
     {
-        return; // only when it moves, or the directives outnumber the code
+        return;
     }
 
-    last_line_ = loc.line;
+    const Line_col loc = sm_.line_col( keel_span_.file, keel_span_.start );
+    if( loc.line == counted_line_ )
+    {
+        return;
+    }
 
     // Column-zero syntax: never indented, whatever the surrounding block depth.
-    out_ += fmt::format( "#line {} \"{}\"\n", loc.line, sm_.file( span.file ).path );
+    out_ += fmt::format( "#line {} \"{}\"\n", loc.line, sm_.file( keel_span_.file ).path );
+    counted_line_ = loc.line;
 }
 
 void Kir_emitter::emit_prologue()
@@ -1082,6 +1100,9 @@ void Kir_emitter::emit_main_shim()
         return;
     }
 
+    counted_line_ = 0;
+    line_directive( ast_.span( keel_main ) );
+
     // The symbol is derived from the node rather than hardcoded, so that a main with a different
     // signature calls the function that actually exists.
     const std::string symbol = spelling_.function( keel_main );
@@ -1096,6 +1117,7 @@ void Kir_emitter::emit_main_shim()
     write_line( "int main( void )" );
     write_line( "{" );
     indent_ += 4;
+    sync_line();
     write_line( fmt::format( "return (int) {}();", symbol ) );
     indent_ -= 4;
     write_line( "}" );
@@ -1143,6 +1165,7 @@ void Kir_emitter::emit_main_shim_with_arguments( const std::string& symbol, Type
     write_line( fmt::format( "args[i].{} = strlen( argv[i + 1] );", size_field ) );
     indent_ -= 4;
     write_line( "}" );
+    sync_line(); // the backtrace's `main` frame shows the Keel `main`'s line
     write_line( fmt::format( "int result = (int) {}( args, count );", symbol ) );
     write_line( "kl_rt_free( args );" );
     write_line( "return result;" );
@@ -1187,7 +1210,6 @@ bool Kir_emitter::assigns_to_void( const Place& target ) const
 
 void Kir_emitter::emit_statement( const Statement& statement )
 {
-
     switch( statement.kind )
     {
     case Statement_kind::Assign:
@@ -1253,6 +1275,15 @@ void Kir_emitter::emit_statement( const Statement& statement )
 
 void Kir_emitter::emit_terminator( const Terminator& terminator, const Function& function )
 {
+    if( terminator.span.is_valid() )
+    {
+        line_directive( terminator.span );
+    }
+    else
+    {
+        sync_line();
+    }
+
     switch( terminator.kind )
     {
     case Terminator_kind::Goto:
@@ -1438,8 +1469,13 @@ std::vector<bool> read_locals( const Function& function )
 
 void Kir_emitter::emit_function( const Function& function )
 {
-    current_   = &function;
-    last_line_ = 0;
+    current_      = &function;
+    counted_line_ = 0;
+    keel_span_    = {};
+    if( function.declaration.is_valid() )
+    {
+        line_directive( ast_.span( function.declaration ) );
+    }
 
     // Parameters named from KIR locals 1..parameter_count, NOT from Param_decl nodes: the body
     // names them by Local_id, and prototype() deliberately emits no names, so the two can never
@@ -1480,6 +1516,7 @@ void Kir_emitter::emit_function( const Function& function )
             // A run arrives as its two halves; the body names the struct.
             if( types_.table().is_run_pointer( function.locals[i].type ) )
             {
+                sync_line();
                 write_line( fmt::format(
                     "{0} {1} = {{ {1}_data, {1}_size }};", spelling_.type( function.locals[i].type ), local_name( i )
                 ) );
@@ -1493,6 +1530,10 @@ void Kir_emitter::emit_function( const Function& function )
         }
 
         // Nothing ever writes the placeholder byte, and copying it unwritten is what C warns about.
+        if( holds_nothing( function.locals[i].type ) )
+        {
+            sync_line();
+        }
         write_line( fmt::format(
             "{} {}{};",
             spelling_.type( function.locals[i].type ),
@@ -2164,6 +2205,8 @@ std::string emit_c_from_kir(
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
+#include <ranges>
+#include <string>
 
 #include "check/pipeline_test_support.h"
 
@@ -4043,6 +4086,63 @@ TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen]
     REQUIRE( g.has( ".vtable->drop( " ) );
     REQUIRE( g.has( ".self )" ) );
     REQUIRE_FALSE( g.has( "void kl__Sq__drop(" ) );
+}
+
+TEST_CASE( "emit_kir_counts_every_line_of_code_at_a_line_of_keel", "[codegen][kir]" )
+{
+    const std::string_view source = "i32 main()\n"
+                                    "{\n"
+                                    "    i32 s = 0;\n"
+                                    "\n"
+                                    "    for( i32 i : 0..3 )\n"
+                                    "    {\n"
+                                    "        s += i;\n"
+                                    "    }\n"
+                                    "\n"
+                                    "    assert( s == 3 );\n"
+                                    "    return s;\n"
+                                    "}\n";
+    Generated              g( source );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    std::vector<std::string_view> keel;
+    for( const auto line : std::views::split( source, '\n' ) )
+    {
+        keel.emplace_back( line.begin(), line.end() );
+    }
+
+    // Counted as the C compiler counts after `#line N`: a line that makes code lands on Keel code,
+    // never on a blank line or a brace.
+    u32  counted = 0;
+    auto lines   = std::views::split( std::string_view( g.c ), '\n' );
+    for( const auto range : lines )
+    {
+        const std::string_view line( range.begin(), range.end() );
+        if( line.starts_with( "#line " ) )
+        {
+            counted = static_cast<u32>( std::stoul( std::string( line.substr( 6 ) ) ) );
+            continue;
+        }
+
+        if( counted == 0 )
+        {
+            continue;
+        }
+
+        const std::string_view code = line.substr( std::min( line.find_first_not_of( ' ' ), line.size() ) );
+        const bool makes = code.starts_with( "goto" ) || code.starts_with( "if (" ) || code.starts_with( "return" ) ||
+                           code.find( " = " ) != std::string_view::npos || code.ends_with( ");" );
+        if( makes && counted <= keel.size() )
+        {
+            const std::string_view at = keel[counted - 1];
+            INFO( "C `" << code << "` counted at line " << counted );
+            REQUIRE( at.find_first_not_of( " {}" ) != std::string_view::npos );
+        }
+
+        counted += 1;
+    }
 }
 
 } // namespace keel

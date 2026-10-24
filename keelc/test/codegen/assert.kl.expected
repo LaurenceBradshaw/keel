@@ -20,22 +20,28 @@ void kl__Owner__dtor( struct kl__Owner* );
 int32_t kl__positive__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 5 "codegen/assert.kl"
 void kl__Owner__R5Owner__ctor( struct kl__Owner* kl_this_1 )
 {
     int32_t* kl_t2;
 #line 9 "codegen/assert.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/assert.kl", 9, "out of memory: alloc<i32>()" );
+#line 9 "codegen/assert.kl"
     ( *kl_this_1 ).kl_p_23 = kl_t2;
+#line 5 "codegen/assert.kl"
     return;
 }
 
+#line 13 "codegen/assert.kl"
 void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
 {
 #line 17 "codegen/assert.kl"
     kl_rt_free( ( *kl_this_1 ).kl_p_23 );
+#line 13 "codegen/assert.kl"
     return;
 }
 
+#line 24 "codegen/assert.kl"
 int32_t kl__positive__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
@@ -44,21 +50,27 @@ int32_t kl__positive__3i32( int32_t kl_x_1 )
     bool kl_t5;
 #line 26 "codegen/assert.kl"
     kl_t3 = &kl_o_2;
+#line 26 "codegen/assert.kl"
     kl__Owner__R5Owner__ctor( kl_t3 );
     goto bb1;
     bb1:
 #line 27 "codegen/assert.kl"
     kl_t5 = kl_x_1 > 0;
+#line 27 "codegen/assert.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
 #line 28 "codegen/assert.kl"
     kl_t0 = kl_x_1;
+#line 28 "codegen/assert.kl"
     kl__Owner__dtor( &kl_o_2 );
+#line 28 "codegen/assert.kl"
     return kl_t0;
     bb3:
+#line 27 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 27, "assertion failed: x > 0" );
 }
 
+#line 31 "codegen/assert.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -73,20 +85,25 @@ int32_t kl__main__( void )
     int32_t kl_t9;
     bool kl_t10;
     bool kl_t11;
+#line 33 "codegen/assert.kl"
     goto bb1;
     bb1:
 #line 33 "codegen/assert.kl"
     kl_t1 = kl__positive__3i32( 3 );
+#line 33 "codegen/assert.kl"
     kl_t2 = kl_t1 == 3;
+#line 33 "codegen/assert.kl"
     if ( kl_t2 ) goto bb2; else goto bb3;
     bb2:
-#line 35 "codegen/assert.kl"
     kl_i_3 = 0;
+#line 35 "codegen/assert.kl"
     goto bb4;
     bb3:
+#line 33 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 33, "assertion failed: positive( 3 ) == 3" );
     bb4:
     kl_t4 = kl_i_3 < 4;
+#line 35 "codegen/assert.kl"
     if ( kl_t4 ) goto bb6; else goto bb5;
     bb5:
 #line 40 "codegen/assert.kl"
@@ -95,41 +112,56 @@ int32_t kl__main__( void )
     bb6:
 #line 37 "codegen/assert.kl"
     kl_t5 = kl_i_3 < 4;
+#line 37 "codegen/assert.kl"
     if ( kl_t5 ) goto bb8; else goto bb7;
     bb7:
+#line 37 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 37, "assertion failed: i < 4" );
     bb8:
 #line 35 "codegen/assert.kl"
     kl_t6 = __builtin_add_overflow( kl_i_3, 1, &( int32_t ) { 0 } );
+#line 35 "codegen/assert.kl"
     if ( kl_t6 ) goto bb9; else goto bb10;
     bb9:
+#line 35 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 35, "arithmetic overflow: i++" );
     bb10:
+#line 35 "codegen/assert.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 35 "codegen/assert.kl"
     goto bb4;
     bb11:
 #line 41 "codegen/assert.kl"
     kl_t9 = kl_n_7 % 2;
+#line 41 "codegen/assert.kl"
     kl_t10 = kl_t9 == 1;
+#line 41 "codegen/assert.kl"
     kl_t8 = kl_t10;
+#line 41 "codegen/assert.kl"
     if ( kl_t8 ) goto bb14; else goto bb15;
     bb12:
 #line 44 "codegen/assert.kl"
     kl_t0 = 0;
+#line 44 "codegen/assert.kl"
     return kl_t0;
     bb13:
+#line 41 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 41, "assertion failed: n % 2 == 1 && n > 5" );
     bb14:
 #line 42 "codegen/assert.kl"
     kl_t11 = kl_n_7 > 5;
 #line 41 "codegen/assert.kl"
     kl_t8 = kl_t11;
+#line 41 "codegen/assert.kl"
     goto bb15;
     bb15:
+#line 41 "codegen/assert.kl"
     if ( kl_t8 ) goto bb12; else goto bb13;
 }
 
+#line 31 "codegen/assert.kl"
 int main( void )
 {
+#line 31 "codegen/assert.kl"
     return (int) kl__main__();
 }

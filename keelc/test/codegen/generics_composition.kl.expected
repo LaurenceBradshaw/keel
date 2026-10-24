@@ -17,6 +17,7 @@ int32_t* kl__through__IP3i32E__P3i32( int32_t* );
 int32_t kl__identity__I3i32E__3i32( int32_t );
 double kl__identity__I3f64E__3f64( double );
 
+#line 58 "codegen/generics_composition.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -32,55 +33,66 @@ int32_t kl__main__( void )
     bool kl_t10;
 #line 60 "codegen/generics_composition.kl"
     kl_t1 = kl__quadrupled__I3i32E__3i32( 3 );
+#line 60 "codegen/generics_composition.kl"
     kl_t2 = kl_t1 != 12;
+#line 60 "codegen/generics_composition.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 62 "codegen/generics_composition.kl"
     kl_t0 = 1;
+#line 62 "codegen/generics_composition.kl"
     return kl_t0;
     bb2:
 #line 66 "codegen/generics_composition.kl"
     kl_t4 = kl__quadrupled__I3f64E__3f64( 0.5 );
+#line 66 "codegen/generics_composition.kl"
     kl_scaled_3 = kl_t4;
 #line 68 "codegen/generics_composition.kl"
     kl_t5 = kl_scaled_3 < 1.9;
+#line 68 "codegen/generics_composition.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 70 "codegen/generics_composition.kl"
     kl_t0 = 2;
+#line 70 "codegen/generics_composition.kl"
     return kl_t0;
     bb4:
 #line 73 "codegen/generics_composition.kl"
     kl_t6 = kl_scaled_3 > 2.1;
+#line 73 "codegen/generics_composition.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
-#line 75 "codegen/generics_composition.kl"
     kl_t0 = 3;
+#line 75 "codegen/generics_composition.kl"
     return kl_t0;
     bb6:
 #line 78 "codegen/generics_composition.kl"
     kl_t7 = kl__countdown__I3i32E__3i32( 5 );
+#line 78 "codegen/generics_composition.kl"
     kl_t8 = kl_t7 != 0;
+#line 78 "codegen/generics_composition.kl"
     if ( kl_t8 ) goto bb7; else goto bb8;
     bb7:
-#line 80 "codegen/generics_composition.kl"
     kl_t0 = 4;
+#line 80 "codegen/generics_composition.kl"
     return kl_t0;
     bb8:
 #line 83 "codegen/generics_composition.kl"
     kl_t9 = kl__borrowing__I3i32E__3i32( 7 );
+#line 83 "codegen/generics_composition.kl"
     kl_t10 = kl_t9 != 1;
+#line 83 "codegen/generics_composition.kl"
     if ( kl_t10 ) goto bb9; else goto bb10;
     bb9:
-#line 85 "codegen/generics_composition.kl"
     kl_t0 = 5;
+#line 85 "codegen/generics_composition.kl"
     return kl_t0;
     bb10:
 #line 88 "codegen/generics_composition.kl"
     kl_t0 = 42;
+#line 88 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 21 "codegen/generics_composition.kl"
 int32_t kl__quadrupled__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -88,11 +100,15 @@ int32_t kl__quadrupled__I3i32E__3i32( int32_t kl_a_1 )
     int32_t kl_t3;
 #line 23 "codegen/generics_composition.kl"
     kl_t2 = kl__doubled__I3i32E__3i32( kl_a_1 );
+#line 23 "codegen/generics_composition.kl"
     kl_t3 = kl__doubled__I3i32E__3i32( kl_t2 );
+#line 23 "codegen/generics_composition.kl"
     kl_t0 = kl_t3;
+#line 23 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 21 "codegen/generics_composition.kl"
 double kl__quadrupled__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
@@ -100,11 +116,15 @@ double kl__quadrupled__I3f64E__3f64( double kl_a_1 )
     double kl_t3;
 #line 23 "codegen/generics_composition.kl"
     kl_t2 = kl__doubled__I3f64E__3f64( kl_a_1 );
+#line 23 "codegen/generics_composition.kl"
     kl_t3 = kl__doubled__I3f64E__3f64( kl_t2 );
+#line 23 "codegen/generics_composition.kl"
     kl_t0 = kl_t3;
+#line 23 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 28 "codegen/generics_composition.kl"
 int32_t kl__countdown__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -114,24 +134,32 @@ int32_t kl__countdown__I3i32E__3i32( int32_t kl_a_1 )
     int32_t kl_t5;
 #line 30 "codegen/generics_composition.kl"
     kl_t2 = kl_a_1 < 1;
+#line 30 "codegen/generics_composition.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 32 "codegen/generics_composition.kl"
     kl_t0 = kl_a_1;
+#line 32 "codegen/generics_composition.kl"
     return kl_t0;
     bb2:
 #line 35 "codegen/generics_composition.kl"
     kl_t3 = __builtin_sub_overflow( kl_a_1, 1, &( int32_t ) { 0 } );
+#line 35 "codegen/generics_composition.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 35 "codegen/generics_composition.kl"
     kl_rt_panic( "codegen/generics_composition.kl", 35, "arithmetic overflow: a - 1" );
     bb4:
+#line 35 "codegen/generics_composition.kl"
     kl_t4 = kl_a_1 - 1;
+#line 35 "codegen/generics_composition.kl"
     kl_t5 = kl__countdown__I3i32E__3i32( kl_t4 );
+#line 35 "codegen/generics_composition.kl"
     kl_t0 = kl_t5;
+#line 35 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 45 "codegen/generics_composition.kl"
 int32_t kl__borrowing__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -142,23 +170,27 @@ int32_t kl__borrowing__I3i32E__3i32( int32_t kl_a_1 )
     bool kl_t6;
 #line 47 "codegen/generics_composition.kl"
     kl_t3 = &kl_a_1;
+#line 47 "codegen/generics_composition.kl"
     kl_p_2 = kl_t3;
-#line 48 "codegen/generics_composition.kl"
     kl_t5 = kl__through__IP3i32E__P3i32( kl_p_2 );
+#line 48 "codegen/generics_composition.kl"
     kl_q_4 = kl_t5;
 #line 50 "codegen/generics_composition.kl"
     kl_t6 = kl_q_4 == kl_p_2;
+#line 50 "codegen/generics_composition.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 52 "codegen/generics_composition.kl"
     kl_t0 = 1;
+#line 52 "codegen/generics_composition.kl"
     return kl_t0;
     bb2:
 #line 55 "codegen/generics_composition.kl"
     kl_t0 = 0;
+#line 55 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 15 "codegen/generics_composition.kl"
 int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -168,17 +200,25 @@ int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
     int32_t kl_t5;
 #line 17 "codegen/generics_composition.kl"
     kl_t2 = kl__identity__I3i32E__3i32( kl_a_1 );
+#line 17 "codegen/generics_composition.kl"
     kl_t3 = kl__identity__I3i32E__3i32( kl_a_1 );
+#line 17 "codegen/generics_composition.kl"
     kl_t4 = __builtin_add_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
+#line 17 "codegen/generics_composition.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 17 "codegen/generics_composition.kl"
     kl_rt_panic( "codegen/generics_composition.kl", 17, "arithmetic overflow: identity<T>( a ) + identity<T>( a )" );
     bb2:
+#line 17 "codegen/generics_composition.kl"
     kl_t5 = kl_t2 + kl_t3;
+#line 17 "codegen/generics_composition.kl"
     kl_t0 = kl_t5;
+#line 17 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 15 "codegen/generics_composition.kl"
 double kl__doubled__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
@@ -187,37 +227,49 @@ double kl__doubled__I3f64E__3f64( double kl_a_1 )
     double kl_t4;
 #line 17 "codegen/generics_composition.kl"
     kl_t2 = kl__identity__I3f64E__3f64( kl_a_1 );
+#line 17 "codegen/generics_composition.kl"
     kl_t3 = kl__identity__I3f64E__3f64( kl_a_1 );
+#line 17 "codegen/generics_composition.kl"
     kl_t4 = kl_t2 + kl_t3;
+#line 17 "codegen/generics_composition.kl"
     kl_t0 = kl_t4;
+#line 17 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 40 "codegen/generics_composition.kl"
 int32_t* kl__through__IP3i32E__P3i32( int32_t* kl_a_1 )
 {
     int32_t* kl_t0;
 #line 42 "codegen/generics_composition.kl"
     kl_t0 = kl_a_1;
+#line 42 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 10 "codegen/generics_composition.kl"
 int32_t kl__identity__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 12 "codegen/generics_composition.kl"
     kl_t0 = kl_a_1;
+#line 12 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 10 "codegen/generics_composition.kl"
 double kl__identity__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
 #line 12 "codegen/generics_composition.kl"
     kl_t0 = kl_a_1;
+#line 12 "codegen/generics_composition.kl"
     return kl_t0;
 }
 
+#line 58 "codegen/generics_composition.kl"
 int main( void )
 {
+#line 58 "codegen/generics_composition.kl"
     return (int) kl__main__();
 }

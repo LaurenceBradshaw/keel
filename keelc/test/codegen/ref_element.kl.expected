@@ -21,22 +21,28 @@ void kl__buffer__dtor( struct kl__buffer* );
 int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer*, uint64_t );
 int32_t kl__main__( void );
 
+#line 5 "codegen/ref_element.kl"
 void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 {
     int32_t* kl_t2;
 #line 5 "codegen/ref_element.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/ref_element.kl", 5, "out of memory: alloc<i32>( 4 )" );
+#line 5 "codegen/ref_element.kl"
     ( *kl_this_1 ).kl_data_41 = kl_t2;
+#line 5 "codegen/ref_element.kl"
     return;
 }
 
+#line 6 "codegen/ref_element.kl"
 void kl__buffer__dtor( struct kl__buffer* kl_this_1 )
 {
 #line 6 "codegen/ref_element.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_41 );
+#line 6 "codegen/ref_element.kl"
     return;
 }
 
+#line 7 "codegen/ref_element.kl"
 int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64_t kl_index_2 )
 {
     int32_t* kl_t0;
@@ -44,11 +50,15 @@ int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64
     int32_t* kl_t4;
 #line 7 "codegen/ref_element.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_41 + kl_index_2;
+#line 7 "codegen/ref_element.kl"
     kl_t4 = &( *kl_t3 );
+#line 7 "codegen/ref_element.kl"
     kl_t0 = kl_t4;
+#line 7 "codegen/ref_element.kl"
     return kl_t0;
 }
 
+#line 11 "codegen/ref_element.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -66,34 +76,44 @@ int32_t kl__main__( void )
     int32_t* kl_t13;
 #line 13 "codegen/ref_element.kl"
     kl_t2 = &kl_values_1;
+#line 13 "codegen/ref_element.kl"
     kl__buffer__R6buffer__ctor( kl_t2 );
-#line 14 "codegen/ref_element.kl"
     kl_t4 = &kl_values_1;
+#line 14 "codegen/ref_element.kl"
     kl_t5 = kl__operator_index__S6buffer_3u64( kl_t4, 1 );
+#line 14 "codegen/ref_element.kl"
     ( *kl_t5 ) = 5;
-#line 15 "codegen/ref_element.kl"
     kl_t7 = &kl_values_1;
+#line 15 "codegen/ref_element.kl"
     kl_t8 = kl__operator_index__S6buffer_3u64( kl_t7, 1 );
+#line 15 "codegen/ref_element.kl"
     kl_bound_6 = &( *kl_t8 );
-#line 16 "codegen/ref_element.kl"
     kl_t9 = __builtin_add_overflow( ( *kl_bound_6 ), 2, &( int32_t ) { 0 } );
+#line 16 "codegen/ref_element.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
+#line 16 "codegen/ref_element.kl"
     kl_rt_panic( "codegen/ref_element.kl", 16, "arithmetic overflow: bound + 2" );
     bb2:
+#line 16 "codegen/ref_element.kl"
     kl_t10 = ( *kl_bound_6 ) + 2;
+#line 16 "codegen/ref_element.kl"
     ( *kl_bound_6 ) = kl_t10;
-#line 17 "codegen/ref_element.kl"
     kl_t12 = &kl_values_1;
+#line 17 "codegen/ref_element.kl"
     kl_t13 = kl__operator_index__S6buffer_3u64( kl_t12, 1 );
+#line 17 "codegen/ref_element.kl"
     kl_seen_11 = &( *kl_t13 );
-#line 18 "codegen/ref_element.kl"
     kl_t0 = ( *kl_seen_11 );
+#line 18 "codegen/ref_element.kl"
     kl__buffer__dtor( &kl_values_1 );
+#line 18 "codegen/ref_element.kl"
     return kl_t0;
 }
 
+#line 11 "codegen/ref_element.kl"
 int main( void )
 {
+#line 11 "codegen/ref_element.kl"
     return (int) kl__main__();
 }

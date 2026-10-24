@@ -39,13 +39,15 @@ int32_t kl__main__( void );
 void kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( struct kl__Wrap__I7TrackedE*, struct kl__Tracked );
 int32_t kl__open__I7TrackedE__4WrapI7TrackedE( struct kl__Wrap__I7TrackedE* );
 
+#line 11 "codegen/generics_owning_argument.kl"
 void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t kl_m_2 )
 {
-#line 13 "codegen/generics_owning_argument.kl"
     ( *kl_this_1 ).kl_n_4 = kl_m_2;
+#line 11 "codegen/generics_owning_argument.kl"
     return;
 }
 
+#line 16 "codegen/generics_owning_argument.kl"
 void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
     bool kl_t2;
@@ -53,15 +55,21 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     ( void ) kl_this_1;
 #line 18 "codegen/generics_owning_argument.kl"
     kl_t2 = __builtin_add_overflow( kl_destroyed_2, 1, &( int32_t ) { 0 } );
+#line 18 "codegen/generics_owning_argument.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 18 "codegen/generics_owning_argument.kl"
     kl_rt_panic( "codegen/generics_owning_argument.kl", 18, "arithmetic overflow: destroyed + 1" );
     bb2:
+#line 18 "codegen/generics_owning_argument.kl"
     kl_t3 = kl_destroyed_2 + 1;
+#line 18 "codegen/generics_owning_argument.kl"
     kl_destroyed_2 = kl_t3;
+#line 16 "codegen/generics_owning_argument.kl"
     return;
 }
 
+#line 38 "codegen/generics_owning_argument.kl"
 void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m_2 )
 {
     struct kl__Wrap__I7TrackedE kl_t3;
@@ -72,41 +80,63 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m
     bool kl_t10;
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t4 = &kl_t3;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = true;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t6 = &kl_t5;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = true;
+#line 40 "codegen/generics_owning_argument.kl"
     kl__Tracked__R7Tracked_3i32__ctor( kl_t6, kl_m_2 );
+#line 40 "codegen/generics_owning_argument.kl"
     kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( kl_t4, kl_t5 );
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     ( *kl_this_1 ).kl_w_53 = kl_t3;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     if ( kl_t9 ) kl__Tracked__dtor( &kl_t3.kl_v_31 );
+#line 40 "codegen/generics_owning_argument.kl"
     if ( kl_t10 ) kl__Tracked__dtor( &kl_t5 );
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t10 = false;
+#line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
+#line 38 "codegen/generics_owning_argument.kl"
     return;
 }
 
+#line 44 "codegen/generics_owning_argument.kl"
 int32_t kl__peek__4WrapI7TrackedE( struct kl__Wrap__I7TrackedE* kl_w_1 )
 {
     int32_t kl_t0;
 #line 46 "codegen/generics_owning_argument.kl"
     kl_t0 = ( *kl_w_1 ).kl_v_31.kl_n_4;
+#line 46 "codegen/generics_owning_argument.kl"
     return kl_t0;
 }
 
+#line 49 "codegen/generics_owning_argument.kl"
 int32_t kl__look__6Holder( struct kl__Holder* kl_h_1 )
 {
     int32_t kl_t0;
 #line 51 "codegen/generics_owning_argument.kl"
     kl_t0 = ( *kl_h_1 ).kl_w_53.kl_v_31.kl_n_4;
+#line 51 "codegen/generics_owning_argument.kl"
     return kl_t0;
 }
 
+#line 61 "codegen/generics_owning_argument.kl"
 int32_t kl__borrow__( void )
 {
     int32_t kl_t0;
@@ -134,81 +164,127 @@ int32_t kl__borrow__( void )
     bool kl_t25;
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t2 = &kl_w_1;
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t4 = &kl_t3;
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = true;
+#line 63 "codegen/generics_owning_argument.kl"
     kl__Tracked__R7Tracked_3i32__ctor( kl_t4, 7 );
+#line 63 "codegen/generics_owning_argument.kl"
     kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( kl_t2, kl_t3 );
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
+#line 63 "codegen/generics_owning_argument.kl"
     if ( kl_t25 ) kl__Tracked__dtor( &kl_t3 );
+#line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
-#line 64 "codegen/generics_owning_argument.kl"
     kl_t8 = &kl_h_7;
+#line 64 "codegen/generics_owning_argument.kl"
     kl__Holder__R6Holder_3i32__ctor( kl_t8, 5 );
 #line 66 "codegen/generics_owning_argument.kl"
     kl_t11 = kl__peek__4WrapI7TrackedE;
+#line 66 "codegen/generics_owning_argument.kl"
     kl_p_10 = kl_t11;
 #line 68 "codegen/generics_owning_argument.kl"
     kl_t12 = &kl_w_1;
+#line 68 "codegen/generics_owning_argument.kl"
     kl_t13 = kl__peek__4WrapI7TrackedE( kl_t12 );
+#line 68 "codegen/generics_owning_argument.kl"
     kl_t14 = kl_t13 != 7;
+#line 68 "codegen/generics_owning_argument.kl"
     if ( kl_t14 ) goto bb1; else goto bb2;
     bb1:
+#line 68 "codegen/generics_owning_argument.kl"
     kl_t0 = 1;
+#line 68 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 68 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 68 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb2:
 #line 69 "codegen/generics_owning_argument.kl"
     kl_t15 = &kl_w_1;
+#line 69 "codegen/generics_owning_argument.kl"
     kl_t16 = kl_p_10( kl_t15 );
+#line 69 "codegen/generics_owning_argument.kl"
     kl_t17 = kl_t16 != 7;
+#line 69 "codegen/generics_owning_argument.kl"
     if ( kl_t17 ) goto bb3; else goto bb4;
     bb3:
+#line 69 "codegen/generics_owning_argument.kl"
     kl_t0 = 2;
+#line 69 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 69 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 69 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb4:
 #line 70 "codegen/generics_owning_argument.kl"
     kl_t18 = &kl_h_7;
+#line 70 "codegen/generics_owning_argument.kl"
     kl_t19 = kl__look__6Holder( kl_t18 );
+#line 70 "codegen/generics_owning_argument.kl"
     kl_t20 = kl_t19 != 5;
+#line 70 "codegen/generics_owning_argument.kl"
     if ( kl_t20 ) goto bb5; else goto bb6;
     bb5:
+#line 70 "codegen/generics_owning_argument.kl"
     kl_t0 = 3;
+#line 70 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 70 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 70 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb6:
 #line 71 "codegen/generics_owning_argument.kl"
     kl_t21 = &kl_w_1;
+#line 71 "codegen/generics_owning_argument.kl"
     kl_t22 = kl__open__I7TrackedE__4WrapI7TrackedE( kl_t21 );
+#line 71 "codegen/generics_owning_argument.kl"
     kl_t23 = kl_t22 != 1;
+#line 71 "codegen/generics_owning_argument.kl"
     if ( kl_t23 ) goto bb7; else goto bb8;
     bb7:
+#line 71 "codegen/generics_owning_argument.kl"
     kl_t0 = 4;
+#line 71 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 71 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 71 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb8:
 #line 74 "codegen/generics_owning_argument.kl"
     kl_t24 = kl_destroyed_2 != 0;
+#line 74 "codegen/generics_owning_argument.kl"
     if ( kl_t24 ) goto bb9; else goto bb10;
     bb9:
+#line 74 "codegen/generics_owning_argument.kl"
     kl_t0 = 5;
+#line 74 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 74 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 74 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb10:
-#line 76 "codegen/generics_owning_argument.kl"
     kl_t0 = 0;
+#line 76 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_h_7.kl_w_53.kl_v_31 );
+#line 76 "codegen/generics_owning_argument.kl"
     kl__Tracked__dtor( &kl_w_1.kl_v_31 );
+#line 76 "codegen/generics_owning_argument.kl"
     return kl_t0;
 }
 
+#line 79 "codegen/generics_owning_argument.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -218,26 +294,34 @@ int32_t kl__main__( void )
     bool kl_t4;
 #line 81 "codegen/generics_owning_argument.kl"
     kl_t2 = kl__borrow__(  );
+#line 81 "codegen/generics_owning_argument.kl"
     kl_result_1 = kl_t2;
 #line 83 "codegen/generics_owning_argument.kl"
     kl_t3 = kl_result_1 != 0;
+#line 83 "codegen/generics_owning_argument.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 83 "codegen/generics_owning_argument.kl"
     kl_t0 = kl_result_1;
+#line 83 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb2:
 #line 86 "codegen/generics_owning_argument.kl"
     kl_t4 = kl_destroyed_2 != 2;
+#line 86 "codegen/generics_owning_argument.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 86 "codegen/generics_owning_argument.kl"
     kl_t0 = 6;
+#line 86 "codegen/generics_owning_argument.kl"
     return kl_t0;
     bb4:
-#line 88 "codegen/generics_owning_argument.kl"
     kl_t0 = 0;
+#line 88 "codegen/generics_owning_argument.kl"
     return kl_t0;
 }
 
+#line 27 "codegen/generics_owning_argument.kl"
 void kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( struct kl__Wrap__I7TrackedE* kl_this_1, struct kl__Tracked kl_x_2 )
 {
     bool kl_t3;
@@ -245,23 +329,30 @@ void kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( struct kl__Wrap__I7
     kl_t3 = true;
 #line 29 "codegen/generics_owning_argument.kl"
     ( *kl_this_1 ).kl_v_31 = kl_x_2;
+#line 29 "codegen/generics_owning_argument.kl"
     kl_t3 = false;
 #line 27 "codegen/generics_owning_argument.kl"
     if ( kl_t3 ) kl__Tracked__dtor( &kl_x_2 );
+#line 27 "codegen/generics_owning_argument.kl"
     kl_t3 = false;
+#line 27 "codegen/generics_owning_argument.kl"
     return;
 }
 
+#line 55 "codegen/generics_owning_argument.kl"
 int32_t kl__open__I7TrackedE__4WrapI7TrackedE( struct kl__Wrap__I7TrackedE* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
 #line 57 "codegen/generics_owning_argument.kl"
     kl_t0 = 1;
+#line 57 "codegen/generics_owning_argument.kl"
     return kl_t0;
 }
 
+#line 79 "codegen/generics_owning_argument.kl"
 int main( void )
 {
+#line 79 "codegen/generics_owning_argument.kl"
     return (int) kl__main__();
 }

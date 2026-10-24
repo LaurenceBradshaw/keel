@@ -42,20 +42,25 @@ void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
 
+#line 8 "codegen/assert_release/main.kl"
 void kl__Noisy__R5Noisy__ctor( struct kl__Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_textual__ref kl_t6;
 #line 10 "codegen/assert_release/main.kl"
     ( *kl_this_1 ).kl_ok__40 = false;
-#line 11 "codegen/assert_release/main.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "built";
+#line 11 "codegen/assert_release/main.kl"
     kl_t2.kl_size_466 = 5;
+#line 11 "codegen/assert_release/main.kl"
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 11 "codegen/assert_release/main.kl"
     kl_1t7console_println__7textual( kl_t6 );
+#line 8 "codegen/assert_release/main.kl"
     return;
 }
 
+#line 14 "codegen/assert_release/main.kl"
 void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
 {
     struct kl_7prelude_str kl_t2;
@@ -63,20 +68,27 @@ void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
     ( void ) kl_this_1;
 #line 16 "codegen/assert_release/main.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "dropped";
+#line 16 "codegen/assert_release/main.kl"
     kl_t2.kl_size_466 = 7;
+#line 16 "codegen/assert_release/main.kl"
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 16 "codegen/assert_release/main.kl"
     kl_1t7console_println__7textual( kl_t6 );
+#line 14 "codegen/assert_release/main.kl"
     return;
 }
 
+#line 19 "codegen/assert_release/main.kl"
 bool kl__ok__S5Noisy( struct kl__Noisy* kl_this_1 )
 {
     bool kl_t0;
 #line 21 "codegen/assert_release/main.kl"
     kl_t0 = ( *kl_this_1 ).kl_ok__40;
+#line 21 "codegen/assert_release/main.kl"
     return kl_t0;
 }
 
+#line 27 "codegen/assert_release/main.kl"
 bool kl__shout__( void )
 {
     bool kl_t0;
@@ -84,14 +96,18 @@ bool kl__shout__( void )
     struct kl_7prelude_textual__ref kl_t5;
 #line 29 "codegen/assert_release/main.kl"
     kl_t1.kl_data_463 = ( uint8_t* ) "ran";
+#line 29 "codegen/assert_release/main.kl"
     kl_t1.kl_size_466 = 3;
+#line 29 "codegen/assert_release/main.kl"
     kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 29 "codegen/assert_release/main.kl"
     kl_1t7console_println__7textual( kl_t5 );
-#line 30 "codegen/assert_release/main.kl"
     kl_t0 = false;
+#line 30 "codegen/assert_release/main.kl"
     return kl_t0;
 }
 
+#line 33 "codegen/assert_release/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -99,14 +115,18 @@ int32_t kl__main__( void )
     struct kl_7prelude_textual__ref kl_t11;
 #line 39 "codegen/assert_release/main.kl"
     kl_t7.kl_data_463 = ( uint8_t* ) "done";
+#line 39 "codegen/assert_release/main.kl"
     kl_t7.kl_size_466 = 4;
+#line 39 "codegen/assert_release/main.kl"
     kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 39 "codegen/assert_release/main.kl"
     kl_1t7console_println__7textual( kl_t11 );
-#line 40 "codegen/assert_release/main.kl"
     kl_t0 = 0;
+#line 40 "codegen/assert_release/main.kl"
     return kl_t0;
 }
 
+#line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl__run__L2u8__ref kl_r_2;
@@ -116,52 +136,72 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
     kl_r_2 = kl_text_1.vtable->kl_as_text_447( kl_text_1.self );
 #line 18 "../test_lib/console.kl"
     kl_t5 = ( kl_r_2 ).data;
+#line 18 "../test_lib/console.kl"
     kl_t6 = ( kl_r_2 ).size;
+#line 18 "../test_lib/console.kl"
     kl_rt_write( 1, kl_t5, kl_t6 );
+#line 13 "../test_lib/console.kl"
     return;
 }
 
+#line 23 "../test_lib/console.kl"
 void kl_1t7console_print__3i64( int64_t kl_value_1 )
 {
 #line 27 "../test_lib/console.kl"
     kl_rt_write_i64( 1, kl_value_1 );
+#line 23 "../test_lib/console.kl"
     return;
 }
 
+#line 32 "../test_lib/console.kl"
 void kl_1t7console_print__3u64( uint64_t kl_value_1 )
 {
 #line 36 "../test_lib/console.kl"
     kl_rt_write_u64( 1, kl_value_1 );
+#line 32 "../test_lib/console.kl"
     return;
 }
 
+#line 43 "../test_lib/console.kl"
 void kl_1t7console_print__3f64( double kl_value_1 )
 {
 #line 47 "../test_lib/console.kl"
     kl_rt_write_f64( 1, kl_value_1 );
+#line 43 "../test_lib/console.kl"
     return;
 }
 
+#line 52 "../test_lib/console.kl"
 void kl_1t7console_print__4bool( bool kl_value_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_textual__ref kl_t11;
+#line 54 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "../test_lib/console.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "true";
+#line 54 "../test_lib/console.kl"
     kl_t2.kl_size_466 = 4;
+#line 54 "../test_lib/console.kl"
     goto bb3;
     bb2:
+#line 54 "../test_lib/console.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "false";
+#line 54 "../test_lib/console.kl"
     kl_t2.kl_size_466 = 5;
+#line 54 "../test_lib/console.kl"
     goto bb3;
     bb3:
+#line 54 "../test_lib/console.kl"
     kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 54 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t11 );
+#line 52 "../test_lib/console.kl"
     return;
 }
 
+#line 60 "../test_lib/console.kl"
 void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl__run__L2u8__ref kl_r_2;
@@ -171,66 +211,90 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
     kl_r_2 = kl_text_1.vtable->kl_as_text_447( kl_text_1.self );
 #line 65 "../test_lib/console.kl"
     kl_t5 = ( kl_r_2 ).data;
+#line 65 "../test_lib/console.kl"
     kl_t6 = ( kl_r_2 ).size;
+#line 65 "../test_lib/console.kl"
     kl_rt_write( 2, kl_t5, kl_t6 );
+#line 60 "../test_lib/console.kl"
     return;
 }
 
+#line 70 "../test_lib/console.kl"
 void kl_1t7console_eprint__3i64( int64_t kl_value_1 )
 {
 #line 74 "../test_lib/console.kl"
     kl_rt_write_i64( 2, kl_value_1 );
+#line 70 "../test_lib/console.kl"
     return;
 }
 
+#line 79 "../test_lib/console.kl"
 void kl_1t7console_eprint__3u64( uint64_t kl_value_1 )
 {
 #line 83 "../test_lib/console.kl"
     kl_rt_write_u64( 2, kl_value_1 );
+#line 79 "../test_lib/console.kl"
     return;
 }
 
+#line 90 "../test_lib/console.kl"
 void kl_1t7console_eprint__3f64( double kl_value_1 )
 {
 #line 94 "../test_lib/console.kl"
     kl_rt_write_f64( 2, kl_value_1 );
+#line 90 "../test_lib/console.kl"
     return;
 }
 
+#line 99 "../test_lib/console.kl"
 void kl_1t7console_eprint__4bool( bool kl_value_1 )
 {
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_textual__ref kl_t11;
+#line 101 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
 #line 101 "../test_lib/console.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "true";
+#line 101 "../test_lib/console.kl"
     kl_t2.kl_size_466 = 4;
+#line 101 "../test_lib/console.kl"
     goto bb3;
     bb2:
+#line 101 "../test_lib/console.kl"
     kl_t2.kl_data_463 = ( uint8_t* ) "false";
+#line 101 "../test_lib/console.kl"
     kl_t2.kl_size_466 = 5;
+#line 101 "../test_lib/console.kl"
     goto bb3;
     bb3:
+#line 101 "../test_lib/console.kl"
     kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 101 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t11 );
+#line 99 "../test_lib/console.kl"
     return;
 }
 
+#line 105 "../test_lib/console.kl"
 void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_textual__ref kl_t8;
 #line 107 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_text_1 );
-#line 108 "../test_lib/console.kl"
     kl_t4.kl_data_463 = ( uint8_t* ) "\012";
+#line 108 "../test_lib/console.kl"
     kl_t4.kl_size_466 = 1;
+#line 108 "../test_lib/console.kl"
     kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 108 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t8 );
+#line 105 "../test_lib/console.kl"
     return;
 }
 
+#line 112 "../test_lib/console.kl"
 void kl_1t7console_println__3i64( int64_t kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -239,12 +303,17 @@ void kl_1t7console_println__3i64( int64_t kl_value_1 )
     kl_rt_write_i64( 1, kl_value_1 );
 #line 115 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 115 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 115 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 115 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t7 );
+#line 112 "../test_lib/console.kl"
     return;
 }
 
+#line 119 "../test_lib/console.kl"
 void kl_1t7console_println__3u64( uint64_t kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -253,12 +322,17 @@ void kl_1t7console_println__3u64( uint64_t kl_value_1 )
     kl_rt_write_u64( 1, kl_value_1 );
 #line 122 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 122 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 122 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 122 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t7 );
+#line 119 "../test_lib/console.kl"
     return;
 }
 
+#line 126 "../test_lib/console.kl"
 void kl_1t7console_println__3f64( double kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -267,53 +341,75 @@ void kl_1t7console_println__3f64( double kl_value_1 )
     kl_rt_write_f64( 1, kl_value_1 );
 #line 129 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 129 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 129 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 129 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t7 );
+#line 126 "../test_lib/console.kl"
     return;
 }
 
+#line 133 "../test_lib/console.kl"
 void kl_1t7console_println__4bool( bool kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_textual__ref kl_t7;
     struct kl_7prelude_str kl_t11;
     struct kl_7prelude_textual__ref kl_t20;
+#line 54 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "../test_lib/console.kl"
     kl_t11.kl_data_463 = ( uint8_t* ) "true";
+#line 54 "../test_lib/console.kl"
     kl_t11.kl_size_466 = 4;
+#line 54 "../test_lib/console.kl"
     goto bb3;
     bb2:
+#line 54 "../test_lib/console.kl"
     kl_t11.kl_data_463 = ( uint8_t* ) "false";
+#line 54 "../test_lib/console.kl"
     kl_t11.kl_size_466 = 5;
+#line 54 "../test_lib/console.kl"
     goto bb3;
     bb3:
+#line 54 "../test_lib/console.kl"
     kl_t20 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t11, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 54 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t20 );
 #line 136 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 136 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 136 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 136 "../test_lib/console.kl"
     kl_1t7console_print__7textual( kl_t7 );
+#line 133 "../test_lib/console.kl"
     return;
 }
 
+#line 140 "../test_lib/console.kl"
 void kl_1t7console_eprintln__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 {
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_textual__ref kl_t8;
 #line 142 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_text_1 );
-#line 143 "../test_lib/console.kl"
     kl_t4.kl_data_463 = ( uint8_t* ) "\012";
+#line 143 "../test_lib/console.kl"
     kl_t4.kl_size_466 = 1;
+#line 143 "../test_lib/console.kl"
     kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 143 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t8 );
+#line 140 "../test_lib/console.kl"
     return;
 }
 
+#line 147 "../test_lib/console.kl"
 void kl_1t7console_eprintln__3i64( int64_t kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -322,12 +418,17 @@ void kl_1t7console_eprintln__3i64( int64_t kl_value_1 )
     kl_rt_write_i64( 2, kl_value_1 );
 #line 150 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 150 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 150 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 150 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t7 );
+#line 147 "../test_lib/console.kl"
     return;
 }
 
+#line 154 "../test_lib/console.kl"
 void kl_1t7console_eprintln__3u64( uint64_t kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -336,12 +437,17 @@ void kl_1t7console_eprintln__3u64( uint64_t kl_value_1 )
     kl_rt_write_u64( 2, kl_value_1 );
 #line 157 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 157 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 157 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 157 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t7 );
+#line 154 "../test_lib/console.kl"
     return;
 }
 
+#line 161 "../test_lib/console.kl"
 void kl_1t7console_eprintln__3f64( double kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
@@ -350,40 +456,59 @@ void kl_1t7console_eprintln__3f64( double kl_value_1 )
     kl_rt_write_f64( 2, kl_value_1 );
 #line 164 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 164 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 164 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 164 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t7 );
+#line 161 "../test_lib/console.kl"
     return;
 }
 
+#line 168 "../test_lib/console.kl"
 void kl_1t7console_eprintln__4bool( bool kl_value_1 )
 {
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_textual__ref kl_t7;
     struct kl_7prelude_str kl_t11;
     struct kl_7prelude_textual__ref kl_t20;
+#line 101 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
 #line 101 "../test_lib/console.kl"
     kl_t11.kl_data_463 = ( uint8_t* ) "true";
+#line 101 "../test_lib/console.kl"
     kl_t11.kl_size_466 = 4;
+#line 101 "../test_lib/console.kl"
     goto bb3;
     bb2:
+#line 101 "../test_lib/console.kl"
     kl_t11.kl_data_463 = ( uint8_t* ) "false";
+#line 101 "../test_lib/console.kl"
     kl_t11.kl_size_466 = 5;
+#line 101 "../test_lib/console.kl"
     goto bb3;
     bb3:
+#line 101 "../test_lib/console.kl"
     kl_t20 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t11, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 101 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t20 );
 #line 171 "../test_lib/console.kl"
     kl_t3.kl_data_463 = ( uint8_t* ) "\012";
+#line 171 "../test_lib/console.kl"
     kl_t3.kl_size_466 = 1;
+#line 171 "../test_lib/console.kl"
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 171 "../test_lib/console.kl"
     kl_1t7console_eprint__7textual( kl_t7 );
+#line 168 "../test_lib/console.kl"
     return;
 }
 
+#line 33 "codegen/assert_release/main.kl"
 int main( void )
 {
+#line 33 "codegen/assert_release/main.kl"
     return (int) kl__main__();
 }

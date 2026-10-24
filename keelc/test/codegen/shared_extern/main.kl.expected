@@ -10,6 +10,7 @@ int32_t abs( int32_t );
 int32_t kl__main__( void );
 int32_t kl_6helper_magnitude__3i32( int32_t );
 
+#line 6 "codegen/shared_extern/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -21,38 +22,53 @@ int32_t kl__main__( void )
     bool kl_t6;
 #line 8 "codegen/shared_extern/main.kl"
     kl_t1 = -4;
+#line 8 "codegen/shared_extern/main.kl"
     kl_t2 = kl_6helper_magnitude__3i32( kl_t1 );
+#line 8 "codegen/shared_extern/main.kl"
     kl_t3 = kl_t2 != 4;
+#line 8 "codegen/shared_extern/main.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 8 "codegen/shared_extern/main.kl"
     kl_t0 = 1;
+#line 8 "codegen/shared_extern/main.kl"
     return kl_t0;
     bb2:
 #line 12 "codegen/shared_extern/main.kl"
     kl_t4 = -5;
+#line 12 "codegen/shared_extern/main.kl"
     kl_t5 = abs( kl_t4 );
+#line 12 "codegen/shared_extern/main.kl"
     kl_t6 = kl_t5 != 5;
+#line 12 "codegen/shared_extern/main.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
+#line 12 "codegen/shared_extern/main.kl"
     kl_t0 = 2;
+#line 12 "codegen/shared_extern/main.kl"
     return kl_t0;
     bb4:
 #line 15 "codegen/shared_extern/main.kl"
     kl_t0 = 0;
+#line 15 "codegen/shared_extern/main.kl"
     return kl_t0;
 }
 
+#line 4 "codegen/shared_extern/helper.kl"
 int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-#line 8 "codegen/shared_extern/helper.kl"
     kl_t2 = abs( kl_v_1 );
+#line 8 "codegen/shared_extern/helper.kl"
     kl_t0 = kl_t2;
+#line 8 "codegen/shared_extern/helper.kl"
     return kl_t0;
 }
 
+#line 6 "codegen/shared_extern/main.kl"
 int main( void )
 {
+#line 6 "codegen/shared_extern/main.kl"
     return (int) kl__main__();
 }

@@ -19,6 +19,11 @@
         "workspace"
     ],
     "contributes": {
+        "breakpoints": [
+            {
+                "language": "keel"
+            }
+        ],
         "languages": [
             {
                 "id": "keel",

@@ -27,6 +27,7 @@ double kl__area__5Shape( struct kl__Shape );
 int32_t kl__unwrap__4Slot_3i32( struct kl__Slot, int32_t );
 int32_t kl__main__( void );
 
+#line 19 "codegen/payloads.kl"
 double kl__area__5Shape( struct kl__Shape kl_s_1 )
 {
     double kl_t0;
@@ -40,32 +41,40 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     double kl_t9;
 #line 23 "codegen/payloads.kl"
     kl_t2 = kl_s_1.tag == 0;
+#line 23 "codegen/payloads.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
+#line 23 "codegen/payloads.kl"
     kl_r_3 = kl_s_1.kl_radius_1;
-#line 24 "codegen/payloads.kl"
     kl_t4 = 3.0 * kl_r_3;
+#line 24 "codegen/payloads.kl"
     kl_t5 = kl_t4 * kl_r_3;
+#line 24 "codegen/payloads.kl"
     kl_t0 = kl_t5;
+#line 24 "codegen/payloads.kl"
     return kl_t0;
     bb2:
 #line 25 "codegen/payloads.kl"
     kl_w_7 = kl_s_1.kl_width_4;
+#line 25 "codegen/payloads.kl"
     kl_h_8 = kl_s_1.kl_height_6;
-#line 26 "codegen/payloads.kl"
     kl_t9 = kl_w_7 * kl_h_8;
+#line 26 "codegen/payloads.kl"
     kl_t0 = kl_t9;
+#line 26 "codegen/payloads.kl"
     return kl_t0;
     bb3:
-#line 28 "codegen/payloads.kl"
     kl_t0 = 0.0;
+#line 28 "codegen/payloads.kl"
     return kl_t0;
     bb4:
 #line 25 "codegen/payloads.kl"
     kl_t6 = kl_s_1.tag == 1;
+#line 25 "codegen/payloads.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
 }
 
+#line 32 "codegen/payloads.kl"
 int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
 {
     int32_t kl_t0;
@@ -73,18 +82,21 @@ int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
     int32_t kl_v_4;
 #line 36 "codegen/payloads.kl"
     kl_t3 = kl_s_1.tag == 1;
+#line 36 "codegen/payloads.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 36 "codegen/payloads.kl"
     kl_v_4 = kl_s_1.kl_value_12;
-#line 37 "codegen/payloads.kl"
     kl_t0 = kl_v_4;
+#line 37 "codegen/payloads.kl"
     return kl_t0;
     bb2:
-#line 39 "codegen/payloads.kl"
     kl_t0 = kl_fallback_2;
+#line 39 "codegen/payloads.kl"
     return kl_t0;
 }
 
+#line 43 "codegen/payloads.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -116,78 +128,122 @@ int32_t kl__main__( void )
     kl_total_1 = 0;
 #line 49 "codegen/payloads.kl"
     kl_t2.tag = 1;
+#line 49 "codegen/payloads.kl"
     kl_t2.kl_width_4 = 2.0;
+#line 49 "codegen/payloads.kl"
     kl_t2.kl_height_6 = 5.0;
+#line 49 "codegen/payloads.kl"
     kl_t3 = kl__area__5Shape( kl_t2 );
+#line 49 "codegen/payloads.kl"
     kl_t4 = kl_t3 != 10.0;
+#line 49 "codegen/payloads.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 49 "codegen/payloads.kl"
     kl_t0 = 10;
+#line 49 "codegen/payloads.kl"
     return kl_t0;
     bb2:
 #line 50 "codegen/payloads.kl"
     kl_t5.tag = 0;
+#line 50 "codegen/payloads.kl"
     kl_t5.kl_radius_1 = 2.0;
+#line 50 "codegen/payloads.kl"
     kl_t6 = kl__area__5Shape( kl_t5 );
+#line 50 "codegen/payloads.kl"
     kl_t7 = kl_t6 != 12.0;
+#line 50 "codegen/payloads.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
+#line 50 "codegen/payloads.kl"
     kl_t0 = 11;
+#line 50 "codegen/payloads.kl"
     return kl_t0;
     bb4:
 #line 51 "codegen/payloads.kl"
     kl_t8.tag = 2;
+#line 51 "codegen/payloads.kl"
     kl_t9 = kl__area__5Shape( kl_t8 );
+#line 51 "codegen/payloads.kl"
     kl_t10 = kl_t9 != 0.0;
+#line 51 "codegen/payloads.kl"
     if ( kl_t10 ) goto bb5; else goto bb6;
     bb5:
+#line 51 "codegen/payloads.kl"
     kl_t0 = 12;
+#line 51 "codegen/payloads.kl"
     return kl_t0;
     bb6:
 #line 55 "codegen/payloads.kl"
     kl_t11.tag = 1;
+#line 55 "codegen/payloads.kl"
     kl_t11.kl_value_12 = 7;
+#line 55 "codegen/payloads.kl"
     kl_t12 = kl__unwrap__4Slot_3i32( kl_t11, 99 );
+#line 55 "codegen/payloads.kl"
     kl_t13 = kl_t12 != 7;
+#line 55 "codegen/payloads.kl"
     if ( kl_t13 ) goto bb7; else goto bb8;
     bb7:
+#line 55 "codegen/payloads.kl"
     kl_t0 = 20;
+#line 55 "codegen/payloads.kl"
     return kl_t0;
     bb8:
 #line 56 "codegen/payloads.kl"
     kl_t14.tag = 0;
+#line 56 "codegen/payloads.kl"
     kl_t15 = kl__unwrap__4Slot_3i32( kl_t14, 99 );
+#line 56 "codegen/payloads.kl"
     kl_t16 = kl_t15 != 99;
+#line 56 "codegen/payloads.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
+#line 56 "codegen/payloads.kl"
     kl_t0 = 21;
+#line 56 "codegen/payloads.kl"
     return kl_t0;
     bb10:
-#line 58 "codegen/payloads.kl"
     kl_t17.tag = 1;
+#line 58 "codegen/payloads.kl"
     kl_t17.kl_value_12 = 5;
+#line 58 "codegen/payloads.kl"
     kl_t18 = kl__unwrap__4Slot_3i32( kl_t17, 0 );
+#line 58 "codegen/payloads.kl"
     kl_t19 = __builtin_mul_overflow( kl_t18, 10, &( int32_t ) { 0 } );
+#line 58 "codegen/payloads.kl"
     if ( kl_t19 ) goto bb11; else goto bb12;
     bb11:
+#line 58 "codegen/payloads.kl"
     kl_rt_panic( "codegen/payloads.kl", 58, "arithmetic overflow: unwrap( Slot::Taken( 5 ), 0 ) * 10" );
     bb12:
+#line 58 "codegen/payloads.kl"
     kl_t20 = kl_t18 * 10;
+#line 58 "codegen/payloads.kl"
     kl_t21.tag = 0;
+#line 58 "codegen/payloads.kl"
     kl_t22 = kl__unwrap__4Slot_3i32( kl_t21, 3 );
+#line 58 "codegen/payloads.kl"
     kl_t23 = __builtin_add_overflow( kl_t20, kl_t22, &( int32_t ) { 0 } );
+#line 58 "codegen/payloads.kl"
     if ( kl_t23 ) goto bb13; else goto bb14;
     bb13:
+#line 58 "codegen/payloads.kl"
     kl_rt_panic( "codegen/payloads.kl", 58, "arithmetic overflow: unwrap( Slot::Taken( 5 ), 0 ) * 10 + unwrap( Slot::Empty, 3 )" );
     bb14:
+#line 58 "codegen/payloads.kl"
     kl_t24 = kl_t20 + kl_t22;
+#line 58 "codegen/payloads.kl"
     kl_total_1 = kl_t24;
 #line 60 "codegen/payloads.kl"
     kl_t0 = kl_total_1;
+#line 60 "codegen/payloads.kl"
     return kl_t0;
 }
 
+#line 43 "codegen/payloads.kl"
 int main( void )
 {
+#line 43 "codegen/payloads.kl"
     return (int) kl__main__();
 }

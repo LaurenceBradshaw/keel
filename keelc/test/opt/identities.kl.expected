@@ -16,73 +16,90 @@ int32_t kl__not_a_number__3f64( double );
 int32_t kl__negative_zero__3f64( double );
 int32_t kl__main__( void );
 
+#line 6 "opt/identities.kl"
 bool kl__equal__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
 #line 8 "opt/identities.kl"
     kl_t0 = kl_a_1 == kl_b_2;
+#line 8 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 11 "opt/identities.kl"
 bool kl__below__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
 #line 13 "opt/identities.kl"
     kl_t0 = kl_a_1 < kl_b_2;
+#line 13 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 16 "opt/identities.kl"
 bool kl__both__4bool_4bool( bool kl_a_1, bool kl_b_2 )
 {
     bool kl_t0;
 #line 18 "opt/identities.kl"
     kl_t0 = kl_a_1 != kl_b_2;
+#line 18 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 21 "opt/identities.kl"
 bool kl__at__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
 #line 23 "opt/identities.kl"
     kl_t0 = kl_a_1 == kl_b_2;
+#line 23 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 26 "opt/identities.kl"
 bool kl__equal_f__3f64_3f64( double kl_a_1, double kl_b_2 )
 {
     bool kl_t0;
 #line 28 "opt/identities.kl"
     kl_t0 = kl_a_1 == kl_b_2;
+#line 28 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 31 "opt/identities.kl"
 int32_t kl__compared__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
 #line 34 "opt/identities.kl"
     kl_t0 = 0;
+#line 34 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 38 "opt/identities.kl"
 int32_t kl__pointed__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
 #line 41 "opt/identities.kl"
     kl_t0 = 0;
+#line 41 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 45 "opt/identities.kl"
 int32_t kl__identities__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
 #line 54 "opt/identities.kl"
     kl_t0 = 0;
+#line 54 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 58 "opt/identities.kl"
 int32_t kl__not_a_number__3f64( double kl_nought_1 )
 {
     int32_t kl_t0;
@@ -92,18 +109,24 @@ int32_t kl__not_a_number__3f64( double kl_nought_1 )
     kl_nan_2 = kl_nought_1 / kl_nought_1;
 #line 28 "opt/identities.kl"
     kl_t5 = kl_nan_2 == kl_nan_2;
+#line 61 "opt/identities.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 61 "opt/identities.kl"
     kl_t0 = 4;
+#line 61 "opt/identities.kl"
     goto bb3;
     bb2:
+#line 61 "opt/identities.kl"
     kl_t0 = 0;
+#line 61 "opt/identities.kl"
     goto bb3;
     bb3:
+#line 61 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 65 "opt/identities.kl"
 int32_t kl__negative_zero__3f64( double kl_x_1 )
 {
     int32_t kl_t0;
@@ -112,20 +135,27 @@ int32_t kl__negative_zero__3f64( double kl_x_1 )
     bool kl_t7;
 #line 68 "opt/identities.kl"
     kl_sum_3 = kl_x_1 + 0.0;
-#line 69 "opt/identities.kl"
     kl_t6 = 1.0 / kl_sum_3;
+#line 69 "opt/identities.kl"
     kl_t7 = kl_t6 > 0.0;
+#line 69 "opt/identities.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
+#line 69 "opt/identities.kl"
     kl_t0 = 0;
+#line 69 "opt/identities.kl"
     goto bb3;
     bb2:
+#line 69 "opt/identities.kl"
     kl_t0 = 5;
+#line 69 "opt/identities.kl"
     goto bb3;
     bb3:
+#line 69 "opt/identities.kl"
     return kl_t0;
 }
 
+#line 72 "opt/identities.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -141,66 +171,83 @@ int32_t kl__main__( void )
     bool kl_t25;
 #line 74 "opt/identities.kl"
     kl_t0 = kl__compared__3i32( 5 );
-#line 75 "opt/identities.kl"
     kl_t3 = kl_t0 == 0;
+#line 75 "opt/identities.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 41 "opt/identities.kl"
     kl_t0 = 0;
+#line 41 "opt/identities.kl"
     goto bb2;
     bb2:
 #line 79 "opt/identities.kl"
     kl_t5 = kl_t0 == 0;
+#line 79 "opt/identities.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 81 "opt/identities.kl"
     kl_t0 = kl__identities__3i32( 5 );
+#line 79 "opt/identities.kl"
     goto bb4;
     bb4:
 #line 83 "opt/identities.kl"
     kl_t7 = kl_t0 == 0;
+#line 83 "opt/identities.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
 #line 60 "opt/identities.kl"
     kl_nan_22 = 0.0 / 0.0;
 #line 28 "opt/identities.kl"
     kl_t25 = kl_nan_22 == kl_nan_22;
+#line 61 "opt/identities.kl"
     if ( kl_t25 ) goto bb12; else goto bb13;
     bb6:
 #line 87 "opt/identities.kl"
     kl_t9 = kl_t0 == 0;
+#line 87 "opt/identities.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
-#line 89 "opt/identities.kl"
     kl_t10 = -0.0;
 #line 68 "opt/identities.kl"
     kl_sum_15 = kl_t10 + 0.0;
-#line 69 "opt/identities.kl"
     kl_t18 = 1.0 / kl_sum_15;
+#line 69 "opt/identities.kl"
     kl_t19 = kl_t18 > 0.0;
+#line 69 "opt/identities.kl"
     if ( kl_t19 ) goto bb9; else goto bb10;
     bb8:
+#line 92 "opt/identities.kl"
     return kl_t0;
     bb9:
+#line 69 "opt/identities.kl"
     kl_t0 = 0;
+#line 69 "opt/identities.kl"
     goto bb11;
     bb10:
+#line 69 "opt/identities.kl"
     kl_t0 = 5;
+#line 69 "opt/identities.kl"
     goto bb11;
     bb11:
+#line 69 "opt/identities.kl"
     goto bb8;
     bb12:
 #line 61 "opt/identities.kl"
     kl_t0 = 4;
+#line 61 "opt/identities.kl"
     goto bb14;
     bb13:
+#line 61 "opt/identities.kl"
     kl_t0 = 0;
+#line 61 "opt/identities.kl"
     goto bb14;
     bb14:
+#line 61 "opt/identities.kl"
     goto bb6;
 }
 
+#line 72 "opt/identities.kl"
 int main( void )
 {
+#line 72 "opt/identities.kl"
     return (int) kl__main__();
 }

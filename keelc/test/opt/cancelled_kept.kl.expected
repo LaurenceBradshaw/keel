@@ -7,6 +7,7 @@
 int32_t kl__written_between__3i32_3i32( int32_t, int32_t );
 int32_t kl__main__( void );
 
+#line 5 "opt/cancelled_kept.kl"
 int32_t kl__written_between__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
 {
     int32_t kl_t0;
@@ -14,23 +15,27 @@ int32_t kl__written_between__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
     int32_t kl_t6;
 #line 7 "opt/cancelled_kept.kl"
     kl_t_3 = kl_x_1 + 3;
-#line 8 "opt/cancelled_kept.kl"
     kl_x_1 = kl_x_1 * kl_y_2;
-#line 9 "opt/cancelled_kept.kl"
     kl_t6 = kl_t_3 - 3;
+#line 9 "opt/cancelled_kept.kl"
     kl_t0 = kl_t6 + kl_x_1;
+#line 9 "opt/cancelled_kept.kl"
     return kl_t0;
 }
 
+#line 12 "opt/cancelled_kept.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
 #line 19 "opt/cancelled_kept.kl"
     kl_t0 = 0;
+#line 19 "opt/cancelled_kept.kl"
     return kl_t0;
 }
 
+#line 12 "opt/cancelled_kept.kl"
 int main( void )
 {
+#line 12 "opt/cancelled_kept.kl"
     return (int) kl__main__();
 }

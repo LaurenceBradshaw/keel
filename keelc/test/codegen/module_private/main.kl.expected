@@ -48,6 +48,7 @@ int32_t kl_6helper_darkness__( void );
 int32_t kl_6helper_measure__( void );
 int32_t kl_6helper_keep__I3i32E__3i32( int32_t );
 
+#line 5 "codegen/module_private/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -70,97 +71,135 @@ int32_t kl__main__( void )
     bool kl_t17;
 #line 8 "codegen/module_private/main.kl"
     kl_t1 = kl_6helper_scale__3i64( 3 );
+#line 8 "codegen/module_private/main.kl"
     kl_t2 = kl_t1 != 1;
+#line 8 "codegen/module_private/main.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 8 "codegen/module_private/main.kl"
     kl_t0 = 1;
+#line 8 "codegen/module_private/main.kl"
     return kl_t0;
     bb2:
 #line 9 "codegen/module_private/main.kl"
     kl_t3 = kl_6helper_scale_here__3i32( 3 );
+#line 9 "codegen/module_private/main.kl"
     kl_t4 = kl_t3 != 30;
+#line 9 "codegen/module_private/main.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 9 "codegen/module_private/main.kl"
     kl_t0 = 2;
+#line 9 "codegen/module_private/main.kl"
     return kl_t0;
     bb4:
-#line 11 "codegen/module_private/main.kl"
     kl_t5 = -4;
+#line 11 "codegen/module_private/main.kl"
     kl_t6 = kl_6helper_magnitude__3i32( kl_t5 );
+#line 11 "codegen/module_private/main.kl"
     kl_t7 = kl_t6 != 4;
+#line 11 "codegen/module_private/main.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
+#line 11 "codegen/module_private/main.kl"
     kl_t0 = 3;
+#line 11 "codegen/module_private/main.kl"
     return kl_t0;
     bb6:
 #line 12 "codegen/module_private/main.kl"
     kl_t8 = kl_6helper_total__(  );
+#line 12 "codegen/module_private/main.kl"
     kl_t9 = kl_t8 != 42;
+#line 12 "codegen/module_private/main.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
+#line 12 "codegen/module_private/main.kl"
     kl_t0 = 4;
+#line 12 "codegen/module_private/main.kl"
     return kl_t0;
     bb8:
 #line 13 "codegen/module_private/main.kl"
     kl_t10 = kl_6helper_count_twice__(  );
+#line 13 "codegen/module_private/main.kl"
     kl_t11 = kl_t10 != 7;
+#line 13 "codegen/module_private/main.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
+#line 13 "codegen/module_private/main.kl"
     kl_t0 = 5;
+#line 13 "codegen/module_private/main.kl"
     return kl_t0;
     bb10:
 #line 14 "codegen/module_private/main.kl"
     kl_t12 = kl_6helper_darkness__(  );
+#line 14 "codegen/module_private/main.kl"
     kl_t13 = kl_t12 != 1;
+#line 14 "codegen/module_private/main.kl"
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
+#line 14 "codegen/module_private/main.kl"
     kl_t0 = 6;
+#line 14 "codegen/module_private/main.kl"
     return kl_t0;
     bb12:
 #line 15 "codegen/module_private/main.kl"
     kl_t14 = kl_6helper_measure__(  );
+#line 15 "codegen/module_private/main.kl"
     kl_t15 = kl_t14 != 5;
+#line 15 "codegen/module_private/main.kl"
     if ( kl_t15 ) goto bb13; else goto bb14;
     bb13:
+#line 15 "codegen/module_private/main.kl"
     kl_t0 = 7;
+#line 15 "codegen/module_private/main.kl"
     return kl_t0;
     bb14:
 #line 16 "codegen/module_private/main.kl"
     kl_t16 = kl_6helper_keep__I3i32E__3i32( 9 );
+#line 16 "codegen/module_private/main.kl"
     kl_t17 = kl_t16 != 9;
+#line 16 "codegen/module_private/main.kl"
     if ( kl_t17 ) goto bb15; else goto bb16;
     bb15:
+#line 16 "codegen/module_private/main.kl"
     kl_t0 = 8;
+#line 16 "codegen/module_private/main.kl"
     return kl_t0;
     bb16:
-#line 18 "codegen/module_private/main.kl"
     kl_t0 = 0;
+#line 18 "codegen/module_private/main.kl"
     return kl_t0;
 }
 
+#line 13 "codegen/module_private/helper.kl"
 void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
 {
-#line 15 "codegen/module_private/helper.kl"
     ( *kl_this_1 ).kl_n_96 = kl_start_2;
+#line 13 "codegen/module_private/helper.kl"
     return;
 }
 
+#line 18 "codegen/module_private/helper.kl"
 int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
 #line 20 "codegen/module_private/helper.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_96, 1, &( int32_t ) { 0 } );
+#line 20 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 20 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 20, "arithmetic overflow: n += 1;" );
     bb2:
+#line 20 "codegen/module_private/helper.kl"
     ( *kl_this_1 ).kl_n_96 = ( *kl_this_1 ).kl_n_96 + 1;
-#line 21 "codegen/module_private/helper.kl"
     kl_t0 = ( *kl_this_1 ).kl_n_96;
+#line 21 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 41 "codegen/module_private/helper.kl"
 int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
 {
     int32_t kl_t0;
@@ -168,15 +207,21 @@ int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
     int32_t kl_t3;
 #line 43 "codegen/module_private/helper.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a_135, ( *kl_this_1 ).kl_b_137, &( int32_t ) { 0 } );
+#line 43 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 43 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 43, "arithmetic overflow: a + b" );
     bb2:
+#line 43 "codegen/module_private/helper.kl"
     kl_t3 = ( *kl_this_1 ).kl_a_135 + ( *kl_this_1 ).kl_b_137;
+#line 43 "codegen/module_private/helper.kl"
     kl_t0 = kl_t3;
+#line 43 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 47 "codegen/module_private/helper.kl"
 int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
 {
     int32_t kl_t0;
@@ -184,15 +229,21 @@ int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
     int32_t kl_t3;
 #line 49 "codegen/module_private/helper.kl"
     kl_t2 = __builtin_add_overflow( kl_p_1.kl_a_135, kl_p_1.kl_b_137, &( int32_t ) { 0 } );
+#line 49 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 49 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 49, "arithmetic overflow: p.a + p.b" );
     bb2:
+#line 49 "codegen/module_private/helper.kl"
     kl_t3 = kl_p_1.kl_a_135 + kl_p_1.kl_b_137;
+#line 49 "codegen/module_private/helper.kl"
     kl_t0 = kl_t3;
+#line 49 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 53 "codegen/module_private/helper.kl"
 int32_t kl_6helper_scale__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -200,44 +251,57 @@ int32_t kl_6helper_scale__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 55 "codegen/module_private/helper.kl"
     kl_t2 = __builtin_mul_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+#line 55 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 55 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 55, "arithmetic overflow: v * 10" );
     bb2:
+#line 55 "codegen/module_private/helper.kl"
     kl_t3 = kl_v_1 * 10;
+#line 55 "codegen/module_private/helper.kl"
     kl_t0 = kl_t3;
+#line 55 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 58 "codegen/module_private/helper.kl"
 int32_t kl_6helper_scale__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
 #line 60 "codegen/module_private/helper.kl"
     kl_t0 = 1;
+#line 60 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 63 "codegen/module_private/helper.kl"
 int32_t kl_6helper_scale_here__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
 #line 65 "codegen/module_private/helper.kl"
     kl_t2 = kl_6helper_scale__3i32( kl_v_1 );
+#line 65 "codegen/module_private/helper.kl"
     kl_t0 = kl_t2;
+#line 65 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 68 "codegen/module_private/helper.kl"
 int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-#line 72 "codegen/module_private/helper.kl"
     kl_t2 = abs( kl_v_1 );
+#line 72 "codegen/module_private/helper.kl"
     kl_t0 = kl_t2;
+#line 72 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 76 "codegen/module_private/helper.kl"
 int32_t kl_6helper_total__( void )
 {
     int32_t kl_t0;
@@ -247,18 +311,27 @@ int32_t kl_6helper_total__( void )
     int32_t kl_t4;
 #line 78 "codegen/module_private/helper.kl"
     kl_t1.kl_a_135 = 1;
+#line 78 "codegen/module_private/helper.kl"
     kl_t1.kl_b_137 = 1;
+#line 78 "codegen/module_private/helper.kl"
     kl_t2 = kl_6helper_add__7pair_of( kl_t1 );
+#line 78 "codegen/module_private/helper.kl"
     kl_t3 = __builtin_add_overflow( kl_BASE_94, kl_t2, &( int32_t ) { 0 } );
+#line 78 "codegen/module_private/helper.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 78 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 78, "arithmetic overflow: BASE + add( pair_of { 1, 1 } )" );
     bb2:
+#line 78 "codegen/module_private/helper.kl"
     kl_t4 = kl_BASE_94 + kl_t2;
+#line 78 "codegen/module_private/helper.kl"
     kl_t0 = kl_t4;
+#line 78 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 81 "codegen/module_private/helper.kl"
 int32_t kl_6helper_count_twice__( void )
 {
     int32_t kl_t0;
@@ -269,17 +342,21 @@ int32_t kl_6helper_count_twice__( void )
     int32_t kl_t7;
 #line 83 "codegen/module_private/helper.kl"
     kl_t2 = &kl_c_1;
+#line 83 "codegen/module_private/helper.kl"
     kl_6helper_counter__R7counter_3i32__ctor( kl_t2, 5 );
-#line 84 "codegen/module_private/helper.kl"
     kl_t4 = &kl_c_1;
+#line 84 "codegen/module_private/helper.kl"
     kl_6helper_next__S7counter( kl_t4 );
-#line 85 "codegen/module_private/helper.kl"
     kl_t6 = &kl_c_1;
+#line 85 "codegen/module_private/helper.kl"
     kl_t7 = kl_6helper_next__S7counter( kl_t6 );
+#line 85 "codegen/module_private/helper.kl"
     kl_t0 = kl_t7;
+#line 85 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 88 "codegen/module_private/helper.kl"
 int32_t kl_6helper_darkness__( void )
 {
     int32_t kl_t0;
@@ -287,12 +364,14 @@ int32_t kl_6helper_darkness__( void )
     int32_t kl_t2;
 #line 90 "codegen/module_private/helper.kl"
     kl_s_1 = 1;
-#line 91 "codegen/module_private/helper.kl"
     kl_t2 = ( int32_t ) kl_s_1;
+#line 91 "codegen/module_private/helper.kl"
     kl_t0 = kl_t2;
+#line 91 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 94 "codegen/module_private/helper.kl"
 int32_t kl_6helper_measure__( void )
 {
     int32_t kl_t0;
@@ -302,15 +381,20 @@ int32_t kl_6helper_measure__( void )
     int32_t kl_t4;
 #line 96 "codegen/module_private/helper.kl"
     kl_t2.kl_a_135 = 2;
+#line 96 "codegen/module_private/helper.kl"
     kl_t2.kl_b_137 = 3;
+#line 96 "codegen/module_private/helper.kl"
     kl_p_1 = kl_t2;
-#line 97 "codegen/module_private/helper.kl"
     kl_t3 = &kl_p_1;
+#line 97 "codegen/module_private/helper.kl"
     kl_t4 = kl_6helper_size__S7pair_of( kl_t3 );
+#line 97 "codegen/module_private/helper.kl"
     kl_t0 = kl_t4;
+#line 97 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 101 "codegen/module_private/helper.kl"
 int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -320,22 +404,33 @@ int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
     int32_t kl_t5;
 #line 103 "codegen/module_private/helper.kl"
     kl_t2 = __builtin_sub_overflow( kl_BASE_94, kl_BASE_94, &( int32_t ) { 0 } );
+#line 103 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 103 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: BASE - BASE" );
     bb2:
+#line 103 "codegen/module_private/helper.kl"
     kl_t3 = kl_BASE_94 - kl_BASE_94;
+#line 103 "codegen/module_private/helper.kl"
     kl_t4 = __builtin_add_overflow( kl_v_1, kl_t3, &( int32_t ) { 0 } );
+#line 103 "codegen/module_private/helper.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 103 "codegen/module_private/helper.kl"
     kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: v + cast<T>( BASE - BASE )" );
     bb4:
+#line 103 "codegen/module_private/helper.kl"
     kl_t5 = kl_v_1 + kl_t3;
+#line 103 "codegen/module_private/helper.kl"
     kl_t0 = kl_t5;
+#line 103 "codegen/module_private/helper.kl"
     return kl_t0;
 }
 
+#line 5 "codegen/module_private/main.kl"
 int main( void )
 {
+#line 5 "codegen/module_private/main.kl"
     return (int) kl__main__();
 }

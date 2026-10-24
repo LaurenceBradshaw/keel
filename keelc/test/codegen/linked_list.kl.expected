@@ -22,6 +22,7 @@ struct kl__Node* kl__tail__P4Node( struct kl__Node* );
 struct kl__Node* kl__reverse__P4Node( struct kl__Node* );
 int32_t kl__main__( void );
 
+#line 15 "codegen/linked_list.kl"
 int32_t kl__length__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
@@ -31,31 +32,35 @@ int32_t kl__length__P4Node( struct kl__Node* kl_head_1 )
     bool kl_t5;
 #line 17 "codegen/linked_list.kl"
     kl_count_2 = 0;
-#line 18 "codegen/linked_list.kl"
     kl_step_3 = kl_head_1;
+#line 20 "codegen/linked_list.kl"
     goto bb1;
     bb1:
 #line 20 "codegen/linked_list.kl"
     kl_t4 = kl_step_3 != NULL;
+#line 20 "codegen/linked_list.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 22 "codegen/linked_list.kl"
     kl_t5 = __builtin_add_overflow( kl_count_2, 1, &( int32_t ) { 0 } );
+#line 22 "codegen/linked_list.kl"
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 26 "codegen/linked_list.kl"
     kl_t0 = kl_count_2;
+#line 26 "codegen/linked_list.kl"
     return kl_t0;
     bb4:
+#line 22 "codegen/linked_list.kl"
     kl_rt_panic( "codegen/linked_list.kl", 22, "arithmetic overflow: count++;" );
     bb5:
 #line 22 "codegen/linked_list.kl"
     kl_count_2 = kl_count_2 + 1;
-#line 23 "codegen/linked_list.kl"
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
+#line 20 "codegen/linked_list.kl"
     goto bb1;
 }
 
+#line 29 "codegen/linked_list.kl"
 int32_t kl__sum__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
@@ -65,31 +70,35 @@ int32_t kl__sum__P4Node( struct kl__Node* kl_head_1 )
     bool kl_t5;
 #line 31 "codegen/linked_list.kl"
     kl_total_2 = 0;
-#line 32 "codegen/linked_list.kl"
     kl_step_3 = kl_head_1;
+#line 34 "codegen/linked_list.kl"
     goto bb1;
     bb1:
 #line 34 "codegen/linked_list.kl"
     kl_t4 = kl_step_3 != NULL;
+#line 34 "codegen/linked_list.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 36 "codegen/linked_list.kl"
     kl_t5 = __builtin_add_overflow( kl_total_2, ( *kl_step_3 ).kl_value_1, &( int32_t ) { 0 } );
+#line 36 "codegen/linked_list.kl"
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 40 "codegen/linked_list.kl"
     kl_t0 = kl_total_2;
+#line 40 "codegen/linked_list.kl"
     return kl_t0;
     bb4:
+#line 36 "codegen/linked_list.kl"
     kl_rt_panic( "codegen/linked_list.kl", 36, "arithmetic overflow: total += (*step).value;" );
     bb5:
 #line 36 "codegen/linked_list.kl"
     kl_total_2 = kl_total_2 + ( *kl_step_3 ).kl_value_1;
-#line 37 "codegen/linked_list.kl"
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
+#line 34 "codegen/linked_list.kl"
     goto bb1;
 }
 
+#line 45 "codegen/linked_list.kl"
 int32_t kl__largest__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
@@ -99,31 +108,36 @@ int32_t kl__largest__P4Node( struct kl__Node* kl_head_1 )
     bool kl_t5;
 #line 47 "codegen/linked_list.kl"
     kl_best_2 = ( *kl_head_1 ).kl_value_1;
-#line 48 "codegen/linked_list.kl"
     kl_step_3 = ( *kl_head_1 ).kl_next_4;
+#line 50 "codegen/linked_list.kl"
     goto bb1;
     bb1:
 #line 50 "codegen/linked_list.kl"
     kl_t4 = kl_step_3 != NULL;
+#line 50 "codegen/linked_list.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 52 "codegen/linked_list.kl"
     kl_t5 = ( *kl_step_3 ).kl_value_1 > kl_best_2;
+#line 52 "codegen/linked_list.kl"
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 60 "codegen/linked_list.kl"
     kl_t0 = kl_best_2;
+#line 60 "codegen/linked_list.kl"
     return kl_t0;
     bb4:
 #line 54 "codegen/linked_list.kl"
     kl_best_2 = ( *kl_step_3 ).kl_value_1;
+#line 52 "codegen/linked_list.kl"
     goto bb5;
     bb5:
 #line 57 "codegen/linked_list.kl"
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
+#line 50 "codegen/linked_list.kl"
     goto bb1;
 }
 
+#line 64 "codegen/linked_list.kl"
 int32_t kl__at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2, int32_t kl_fallback_3 )
 {
     int32_t kl_t0;
@@ -134,38 +148,45 @@ int32_t kl__at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2
     bool kl_t8;
 #line 66 "codegen/linked_list.kl"
     kl_step_4 = kl_head_1;
-#line 67 "codegen/linked_list.kl"
     kl_passed_5 = 0;
+#line 69 "codegen/linked_list.kl"
     goto bb1;
     bb1:
 #line 69 "codegen/linked_list.kl"
     kl_t6 = kl_step_4 != NULL;
+#line 69 "codegen/linked_list.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 71 "codegen/linked_list.kl"
     kl_t7 = kl_passed_5 == kl_index_2;
+#line 71 "codegen/linked_list.kl"
     if ( kl_t7 ) goto bb4; else goto bb5;
     bb3:
 #line 80 "codegen/linked_list.kl"
     kl_t0 = kl_fallback_3;
+#line 80 "codegen/linked_list.kl"
     return kl_t0;
     bb4:
 #line 73 "codegen/linked_list.kl"
     kl_t0 = ( *kl_step_4 ).kl_value_1;
+#line 73 "codegen/linked_list.kl"
     return kl_t0;
     bb5:
 #line 76 "codegen/linked_list.kl"
     kl_t8 = __builtin_add_overflow( kl_passed_5, 1, &( int32_t ) { 0 } );
+#line 76 "codegen/linked_list.kl"
     if ( kl_t8 ) goto bb6; else goto bb7;
     bb6:
+#line 76 "codegen/linked_list.kl"
     kl_rt_panic( "codegen/linked_list.kl", 76, "arithmetic overflow: passed++;" );
     bb7:
+#line 76 "codegen/linked_list.kl"
     kl_passed_5 = kl_passed_5 + 1;
-#line 77 "codegen/linked_list.kl"
     kl_step_4 = ( *kl_step_4 ).kl_next_4;
+#line 69 "codegen/linked_list.kl"
     goto bb1;
 }
 
+#line 85 "codegen/linked_list.kl"
 struct kl__Node* kl__tail__P4Node( struct kl__Node* kl_head_1 )
 {
     struct kl__Node* kl_t0;
@@ -176,25 +197,29 @@ struct kl__Node* kl__tail__P4Node( struct kl__Node* kl_head_1 )
     kl_step_2 = kl_head_1;
 #line 89 "codegen/linked_list.kl"
     kl_t3 = kl_step_2 == NULL;
+#line 89 "codegen/linked_list.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 91 "codegen/linked_list.kl"
     kl_t0 = NULL;
+#line 91 "codegen/linked_list.kl"
     return kl_t0;
     bb2:
 #line 94 "codegen/linked_list.kl"
     kl_t4 = ( *kl_step_2 ).kl_next_4 != NULL;
+#line 94 "codegen/linked_list.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 96 "codegen/linked_list.kl"
     kl_step_2 = ( *kl_step_2 ).kl_next_4;
+#line 94 "codegen/linked_list.kl"
     goto bb2;
     bb4:
 #line 99 "codegen/linked_list.kl"
     kl_t0 = kl_step_2;
+#line 99 "codegen/linked_list.kl"
     return kl_t0;
 }
 
+#line 104 "codegen/linked_list.kl"
 struct kl__Node* kl__reverse__P4Node( struct kl__Node* kl_head_1 )
 {
     struct kl__Node* kl_t0;
@@ -204,29 +229,30 @@ struct kl__Node* kl__reverse__P4Node( struct kl__Node* kl_head_1 )
     struct kl__Node* kl_following_5;
 #line 106 "codegen/linked_list.kl"
     kl_earlier_2 = NULL;
-#line 107 "codegen/linked_list.kl"
     kl_current_3 = kl_head_1;
+#line 109 "codegen/linked_list.kl"
     goto bb1;
     bb1:
 #line 109 "codegen/linked_list.kl"
     kl_t4 = kl_current_3 != NULL;
+#line 109 "codegen/linked_list.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 111 "codegen/linked_list.kl"
     kl_following_5 = ( *kl_current_3 ).kl_next_4;
 #line 113 "codegen/linked_list.kl"
     ( *kl_current_3 ).kl_next_4 = kl_earlier_2;
-#line 114 "codegen/linked_list.kl"
     kl_earlier_2 = kl_current_3;
-#line 115 "codegen/linked_list.kl"
     kl_current_3 = kl_following_5;
+#line 109 "codegen/linked_list.kl"
     goto bb1;
     bb3:
 #line 118 "codegen/linked_list.kl"
     kl_t0 = kl_earlier_2;
+#line 118 "codegen/linked_list.kl"
     return kl_t0;
 }
 
+#line 121 "codegen/linked_list.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -286,187 +312,273 @@ int32_t kl__main__( void )
     bool kl_t54;
 #line 124 "codegen/linked_list.kl"
     kl_t2.kl_value_1 = 5;
+#line 124 "codegen/linked_list.kl"
     kl_t2.kl_next_4 = NULL;
+#line 124 "codegen/linked_list.kl"
     kl_fifth_1 = kl_t2;
-#line 125 "codegen/linked_list.kl"
     kl_t5 = &kl_fifth_1;
+#line 125 "codegen/linked_list.kl"
     kl_t4.kl_value_1 = 4;
+#line 125 "codegen/linked_list.kl"
     kl_t4.kl_next_4 = kl_t5;
+#line 125 "codegen/linked_list.kl"
     kl_fourth_3 = kl_t4;
-#line 126 "codegen/linked_list.kl"
     kl_t8 = &kl_fourth_3;
+#line 126 "codegen/linked_list.kl"
     kl_t7.kl_value_1 = 3;
+#line 126 "codegen/linked_list.kl"
     kl_t7.kl_next_4 = kl_t8;
+#line 126 "codegen/linked_list.kl"
     kl_third_6 = kl_t7;
-#line 127 "codegen/linked_list.kl"
     kl_t11 = &kl_third_6;
+#line 127 "codegen/linked_list.kl"
     kl_t10.kl_value_1 = 2;
+#line 127 "codegen/linked_list.kl"
     kl_t10.kl_next_4 = kl_t11;
+#line 127 "codegen/linked_list.kl"
     kl_second_9 = kl_t10;
-#line 128 "codegen/linked_list.kl"
     kl_t14 = &kl_second_9;
+#line 128 "codegen/linked_list.kl"
     kl_t13.kl_value_1 = 1;
+#line 128 "codegen/linked_list.kl"
     kl_t13.kl_next_4 = kl_t14;
+#line 128 "codegen/linked_list.kl"
     kl_first_12 = kl_t13;
 #line 130 "codegen/linked_list.kl"
     kl_t16 = &kl_first_12;
+#line 130 "codegen/linked_list.kl"
     kl_head_15 = kl_t16;
 #line 132 "codegen/linked_list.kl"
     kl_t17 = kl__length__P4Node( kl_head_15 );
+#line 132 "codegen/linked_list.kl"
     kl_t18 = kl_t17 != 5;
+#line 132 "codegen/linked_list.kl"
     if ( kl_t18 ) goto bb1; else goto bb2;
     bb1:
+#line 132 "codegen/linked_list.kl"
     kl_t0 = 1;
+#line 132 "codegen/linked_list.kl"
     return kl_t0;
     bb2:
 #line 133 "codegen/linked_list.kl"
     kl_t19 = kl__sum__P4Node( kl_head_15 );
+#line 133 "codegen/linked_list.kl"
     kl_t20 = kl_t19 != 15;
+#line 133 "codegen/linked_list.kl"
     if ( kl_t20 ) goto bb3; else goto bb4;
     bb3:
+#line 133 "codegen/linked_list.kl"
     kl_t0 = 2;
+#line 133 "codegen/linked_list.kl"
     return kl_t0;
     bb4:
 #line 134 "codegen/linked_list.kl"
     kl_t21 = kl__largest__P4Node( kl_head_15 );
+#line 134 "codegen/linked_list.kl"
     kl_t22 = kl_t21 != 5;
+#line 134 "codegen/linked_list.kl"
     if ( kl_t22 ) goto bb5; else goto bb6;
     bb5:
+#line 134 "codegen/linked_list.kl"
     kl_t0 = 3;
+#line 134 "codegen/linked_list.kl"
     return kl_t0;
     bb6:
 #line 135 "codegen/linked_list.kl"
     kl_t23 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+#line 135 "codegen/linked_list.kl"
     kl_t24 = kl_t23 != 1;
+#line 135 "codegen/linked_list.kl"
     if ( kl_t24 ) goto bb7; else goto bb8;
     bb7:
+#line 135 "codegen/linked_list.kl"
     kl_t0 = 4;
+#line 135 "codegen/linked_list.kl"
     return kl_t0;
     bb8:
 #line 136 "codegen/linked_list.kl"
     kl_t25 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+#line 136 "codegen/linked_list.kl"
     kl_t26 = kl_t25 != 5;
+#line 136 "codegen/linked_list.kl"
     if ( kl_t26 ) goto bb9; else goto bb10;
     bb9:
+#line 136 "codegen/linked_list.kl"
     kl_t0 = 5;
+#line 136 "codegen/linked_list.kl"
     return kl_t0;
     bb10:
 #line 137 "codegen/linked_list.kl"
     kl_t27 = kl__at__P4Node_3i32_3i32( kl_head_15, 9, 99 );
+#line 137 "codegen/linked_list.kl"
     kl_t28 = kl_t27 != 99;
+#line 137 "codegen/linked_list.kl"
     if ( kl_t28 ) goto bb11; else goto bb12;
     bb11:
+#line 137 "codegen/linked_list.kl"
     kl_t0 = 6;
+#line 137 "codegen/linked_list.kl"
     return kl_t0;
     bb12:
 #line 140 "codegen/linked_list.kl"
     kl_t29 = kl__length__P4Node( NULL );
+#line 140 "codegen/linked_list.kl"
     kl_t30 = kl_t29 != 0;
+#line 140 "codegen/linked_list.kl"
     if ( kl_t30 ) goto bb13; else goto bb14;
     bb13:
+#line 140 "codegen/linked_list.kl"
     kl_t0 = 7;
+#line 140 "codegen/linked_list.kl"
     return kl_t0;
     bb14:
 #line 141 "codegen/linked_list.kl"
     kl_t31 = kl__sum__P4Node( NULL );
+#line 141 "codegen/linked_list.kl"
     kl_t32 = kl_t31 != 0;
+#line 141 "codegen/linked_list.kl"
     if ( kl_t32 ) goto bb15; else goto bb16;
     bb15:
+#line 141 "codegen/linked_list.kl"
     kl_t0 = 8;
+#line 141 "codegen/linked_list.kl"
     return kl_t0;
     bb16:
-#line 143 "codegen/linked_list.kl"
     kl_t33 = kl__reverse__P4Node( kl_head_15 );
+#line 143 "codegen/linked_list.kl"
     kl_head_15 = kl_t33;
 #line 145 "codegen/linked_list.kl"
     kl_t34 = kl__length__P4Node( kl_head_15 );
+#line 145 "codegen/linked_list.kl"
     kl_t35 = kl_t34 != 5;
+#line 145 "codegen/linked_list.kl"
     if ( kl_t35 ) goto bb17; else goto bb18;
     bb17:
+#line 145 "codegen/linked_list.kl"
     kl_t0 = 9;
+#line 145 "codegen/linked_list.kl"
     return kl_t0;
     bb18:
 #line 146 "codegen/linked_list.kl"
     kl_t36 = kl__sum__P4Node( kl_head_15 );
+#line 146 "codegen/linked_list.kl"
     kl_t37 = kl_t36 != 15;
+#line 146 "codegen/linked_list.kl"
     if ( kl_t37 ) goto bb19; else goto bb20;
     bb19:
+#line 146 "codegen/linked_list.kl"
     kl_t0 = 10;
+#line 146 "codegen/linked_list.kl"
     return kl_t0;
     bb20:
 #line 147 "codegen/linked_list.kl"
     kl_t38 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+#line 147 "codegen/linked_list.kl"
     kl_t39 = kl_t38 != 5;
+#line 147 "codegen/linked_list.kl"
     if ( kl_t39 ) goto bb21; else goto bb22;
     bb21:
+#line 147 "codegen/linked_list.kl"
     kl_t0 = 11;
+#line 147 "codegen/linked_list.kl"
     return kl_t0;
     bb22:
 #line 148 "codegen/linked_list.kl"
     kl_t40 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+#line 148 "codegen/linked_list.kl"
     kl_t41 = kl_t40 != 1;
+#line 148 "codegen/linked_list.kl"
     if ( kl_t41 ) goto bb23; else goto bb24;
     bb23:
+#line 148 "codegen/linked_list.kl"
     kl_t0 = 12;
+#line 148 "codegen/linked_list.kl"
     return kl_t0;
     bb24:
 #line 151 "codegen/linked_list.kl"
     kl_t42 = kl__reverse__P4Node( kl_head_15 );
+#line 151 "codegen/linked_list.kl"
     kl_head_15 = kl_t42;
 #line 153 "codegen/linked_list.kl"
     kl_t43 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+#line 153 "codegen/linked_list.kl"
     kl_t44 = kl_t43 != 1;
+#line 153 "codegen/linked_list.kl"
     if ( kl_t44 ) goto bb25; else goto bb26;
     bb25:
+#line 153 "codegen/linked_list.kl"
     kl_t0 = 13;
+#line 153 "codegen/linked_list.kl"
     return kl_t0;
     bb26:
 #line 154 "codegen/linked_list.kl"
     kl_t45 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+#line 154 "codegen/linked_list.kl"
     kl_t46 = kl_t45 != 5;
+#line 154 "codegen/linked_list.kl"
     if ( kl_t46 ) goto bb27; else goto bb28;
     bb27:
+#line 154 "codegen/linked_list.kl"
     kl_t0 = 14;
+#line 154 "codegen/linked_list.kl"
     return kl_t0;
     bb28:
 #line 155 "codegen/linked_list.kl"
     kl_t47 = kl__length__P4Node( kl_head_15 );
+#line 155 "codegen/linked_list.kl"
     kl_t48 = kl_t47 != 5;
+#line 155 "codegen/linked_list.kl"
     if ( kl_t48 ) goto bb29; else goto bb30;
     bb29:
+#line 155 "codegen/linked_list.kl"
     kl_t0 = 15;
+#line 155 "codegen/linked_list.kl"
     return kl_t0;
     bb30:
 #line 158 "codegen/linked_list.kl"
     kl_t49 = kl__tail__P4Node( kl_head_15 );
+#line 158 "codegen/linked_list.kl"
     kl_t50 = ( *kl_t49 ).kl_value_1 != 5;
+#line 158 "codegen/linked_list.kl"
     if ( kl_t50 ) goto bb31; else goto bb32;
     bb31:
+#line 158 "codegen/linked_list.kl"
     kl_t0 = 16;
+#line 158 "codegen/linked_list.kl"
     return kl_t0;
     bb32:
 #line 159 "codegen/linked_list.kl"
     kl_t51 = kl__tail__P4Node( kl_head_15 );
+#line 159 "codegen/linked_list.kl"
     kl_t52 = ( *kl_t51 ).kl_next_4 != NULL;
+#line 159 "codegen/linked_list.kl"
     if ( kl_t52 ) goto bb33; else goto bb34;
     bb33:
+#line 159 "codegen/linked_list.kl"
     kl_t0 = 17;
+#line 159 "codegen/linked_list.kl"
     return kl_t0;
     bb34:
 #line 160 "codegen/linked_list.kl"
     kl_t53 = kl__tail__P4Node( NULL );
+#line 160 "codegen/linked_list.kl"
     kl_t54 = kl_t53 != NULL;
+#line 160 "codegen/linked_list.kl"
     if ( kl_t54 ) goto bb35; else goto bb36;
     bb35:
+#line 160 "codegen/linked_list.kl"
     kl_t0 = 18;
+#line 160 "codegen/linked_list.kl"
     return kl_t0;
     bb36:
-#line 162 "codegen/linked_list.kl"
     kl_t0 = 0;
+#line 162 "codegen/linked_list.kl"
     return kl_t0;
 }
 
+#line 121 "codegen/linked_list.kl"
 int main( void )
 {
+#line 121 "codegen/linked_list.kl"
     return (int) kl__main__();
 }

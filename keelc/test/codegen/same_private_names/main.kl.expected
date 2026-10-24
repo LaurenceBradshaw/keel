@@ -26,6 +26,7 @@ int32_t kl_1b_from_b__( void );
 int32_t kl_1a_push__3i32( int32_t );
 int32_t kl_1a_from_a__( void );
 
+#line 6 "codegen/same_private_names/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -35,27 +36,33 @@ int32_t kl__main__( void )
     bool kl_t4;
 #line 8 "codegen/same_private_names/main.kl"
     kl_t1 = kl_1a_from_a__(  );
+#line 8 "codegen/same_private_names/main.kl"
     kl_t2 = kl_t1 != 2;
+#line 8 "codegen/same_private_names/main.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 10 "codegen/same_private_names/main.kl"
     kl_t0 = 1;
+#line 10 "codegen/same_private_names/main.kl"
     return kl_t0;
     bb2:
 #line 13 "codegen/same_private_names/main.kl"
     kl_t3 = kl_1b_from_b__(  );
+#line 13 "codegen/same_private_names/main.kl"
     kl_t4 = kl_t3 != 11;
+#line 13 "codegen/same_private_names/main.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 15 "codegen/same_private_names/main.kl"
     kl_t0 = 2;
+#line 15 "codegen/same_private_names/main.kl"
     return kl_t0;
     bb4:
 #line 18 "codegen/same_private_names/main.kl"
     kl_t0 = 0;
+#line 18 "codegen/same_private_names/main.kl"
     return kl_t0;
 }
 
+#line 9 "codegen/same_private_names/b.kl"
 int32_t kl_1b_push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -63,15 +70,21 @@ int32_t kl_1b_push__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 11 "codegen/same_private_names/b.kl"
     kl_t2 = __builtin_add_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+#line 11 "codegen/same_private_names/b.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 11 "codegen/same_private_names/b.kl"
     kl_rt_panic( "codegen/same_private_names/b.kl", 11, "arithmetic overflow: v + 10" );
     bb2:
+#line 11 "codegen/same_private_names/b.kl"
     kl_t3 = kl_v_1 + 10;
+#line 11 "codegen/same_private_names/b.kl"
     kl_t0 = kl_t3;
+#line 11 "codegen/same_private_names/b.kl"
     return kl_t0;
 }
 
+#line 14 "codegen/same_private_names/b.kl"
 int32_t kl_1b_from_b__( void )
 {
     int32_t kl_t0;
@@ -82,20 +95,28 @@ int32_t kl_1b_from_b__( void )
     int32_t kl_t5;
 #line 16 "codegen/same_private_names/b.kl"
     kl_t3 = kl_1b_push__3i32( 1 );
+#line 16 "codegen/same_private_names/b.kl"
     kl_t2.kl_value_27 = kl_t3;
+#line 16 "codegen/same_private_names/b.kl"
     kl_t2.kl_extra_29 = 0;
+#line 16 "codegen/same_private_names/b.kl"
     kl_n_1 = kl_t2;
-#line 17 "codegen/same_private_names/b.kl"
     kl_t4 = __builtin_add_overflow( kl_n_1.kl_value_27, kl_n_1.kl_extra_29, &( int32_t ) { 0 } );
+#line 17 "codegen/same_private_names/b.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 17 "codegen/same_private_names/b.kl"
     kl_rt_panic( "codegen/same_private_names/b.kl", 17, "arithmetic overflow: n.value + n.extra" );
     bb2:
+#line 17 "codegen/same_private_names/b.kl"
     kl_t5 = kl_n_1.kl_value_27 + kl_n_1.kl_extra_29;
+#line 17 "codegen/same_private_names/b.kl"
     kl_t0 = kl_t5;
+#line 17 "codegen/same_private_names/b.kl"
     return kl_t0;
 }
 
+#line 8 "codegen/same_private_names/a.kl"
 int32_t kl_1a_push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -103,15 +124,21 @@ int32_t kl_1a_push__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 10 "codegen/same_private_names/a.kl"
     kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+#line 10 "codegen/same_private_names/a.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 10 "codegen/same_private_names/a.kl"
     kl_rt_panic( "codegen/same_private_names/a.kl", 10, "arithmetic overflow: v + 1" );
     bb2:
+#line 10 "codegen/same_private_names/a.kl"
     kl_t3 = kl_v_1 + 1;
+#line 10 "codegen/same_private_names/a.kl"
     kl_t0 = kl_t3;
+#line 10 "codegen/same_private_names/a.kl"
     return kl_t0;
 }
 
+#line 13 "codegen/same_private_names/a.kl"
 int32_t kl_1a_from_a__( void )
 {
     int32_t kl_t0;
@@ -120,14 +147,18 @@ int32_t kl_1a_from_a__( void )
     int32_t kl_t3;
 #line 15 "codegen/same_private_names/a.kl"
     kl_t3 = kl_1a_push__3i32( 1 );
+#line 15 "codegen/same_private_names/a.kl"
     kl_t2.kl_value_62 = kl_t3;
+#line 15 "codegen/same_private_names/a.kl"
     kl_n_1 = kl_t2;
-#line 16 "codegen/same_private_names/a.kl"
     kl_t0 = kl_n_1.kl_value_62;
+#line 16 "codegen/same_private_names/a.kl"
     return kl_t0;
 }
 
+#line 6 "codegen/same_private_names/main.kl"
 int main( void )
 {
+#line 6 "codegen/same_private_names/main.kl"
     return (int) kl__main__();
 }

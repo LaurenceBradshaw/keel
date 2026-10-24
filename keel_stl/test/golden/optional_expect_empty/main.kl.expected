@@ -17,6 +17,7 @@ _Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t
 int32_t kl__main__( void );
 int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl8optional_optional__I3i32E, struct kl_7prelude_str, struct kl_7prelude_location );
 
+#line 4 "optional_expect_empty/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -31,20 +32,30 @@ int32_t kl__main__( void )
     int32_t kl_t11;
 #line 6 "optional_expect_empty/main.kl"
     kl_t2.tag = 1;
+#line 6 "optional_expect_empty/main.kl"
     kl_missing_1 = kl_t2;
-#line 7 "optional_expect_empty/main.kl"
     kl_t4 = &kl_t3;
+#line 7 "optional_expect_empty/main.kl"
     kl_t5 = ( uint8_t* ) "the config names a port";
+#line 7 "optional_expect_empty/main.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 23 );
+#line 7 "optional_expect_empty/main.kl"
     kl_t8 = &kl_t7.kl_file_768;
+#line 7 "optional_expect_empty/main.kl"
     kl_t9 = ( uint8_t* ) "optional_expect_empty/main.kl";
+#line 7 "optional_expect_empty/main.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 29 );
+#line 7 "optional_expect_empty/main.kl"
     kl_t7.kl_line_770 = 7;
+#line 7 "optional_expect_empty/main.kl"
     kl_t11 = kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( kl_missing_1, kl_t3, kl_t7 );
+#line 7 "optional_expect_empty/main.kl"
     kl_t0 = kl_t11;
+#line 7 "optional_expect_empty/main.kl"
     return kl_t0;
 }
 
+#line 36 "../../src/optional.kl"
 int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl8optional_optional__I3i32E kl_o_1, struct kl_7prelude_str kl_message_2, struct kl_7prelude_location kl_t3 )
 {
     int32_t kl_t0;
@@ -52,17 +63,21 @@ int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( stru
     int32_t kl_v_5;
 #line 40 "../../src/optional.kl"
     kl_t4 = kl_o_1.tag == 0;
+#line 40 "../../src/optional.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 40 "../../src/optional.kl"
     kl_v_5 = kl_o_1.kl_value_25;
-#line 41 "../../src/optional.kl"
     kl_t0 = kl_v_5;
+#line 41 "../../src/optional.kl"
     return kl_t0;
     bb2:
     kl_rt_panic_at( kl_t3.kl_file_768.kl_data_223, kl_t3.kl_file_768.kl_size_226, kl_t3.kl_line_770, kl_message_2.kl_data_223, kl_message_2.kl_size_226 );
 }
 
+#line 4 "optional_expect_empty/main.kl"
 int main( void )
 {
+#line 4 "optional_expect_empty/main.kl"
     return (int) kl__main__();
 }

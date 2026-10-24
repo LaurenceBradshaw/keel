@@ -14,13 +14,15 @@ struct kl__str
 void kl__str__R3str__ctor( struct kl__str* );
 int32_t kl__main__( void );
 
+#line 6 "codegen/str_shadowed.kl"
 void kl__str__R3str__ctor( struct kl__str* kl_this_1 )
 {
-#line 8 "codegen/str_shadowed.kl"
     ( *kl_this_1 ).kl_n_1 = 7;
+#line 6 "codegen/str_shadowed.kl"
     return;
 }
 
+#line 12 "codegen/str_shadowed.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -34,34 +36,42 @@ int32_t kl__main__( void )
     bool kl_t10;
 #line 14 "codegen/str_shadowed.kl"
     kl_t2 = &kl_mine_1;
+#line 14 "codegen/str_shadowed.kl"
     kl__str__R3str__ctor( kl_t2 );
-#line 15 "codegen/str_shadowed.kl"
     kl_t6 = &kl_t5;
+#line 15 "codegen/str_shadowed.kl"
     kl_t7 = ( uint8_t* ) "abc";
+#line 15 "codegen/str_shadowed.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 3 );
+#line 15 "codegen/str_shadowed.kl"
     kl_literal_4 = kl_t5;
 #line 17 "codegen/str_shadowed.kl"
     kl_t9 = kl_mine_1.kl_n_1 != 7;
+#line 17 "codegen/str_shadowed.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 19 "codegen/str_shadowed.kl"
     kl_t0 = 1;
+#line 19 "codegen/str_shadowed.kl"
     return kl_t0;
     bb2:
 #line 22 "codegen/str_shadowed.kl"
     kl_t10 = kl_literal_4.kl_size_69 != 3;
+#line 22 "codegen/str_shadowed.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
-#line 24 "codegen/str_shadowed.kl"
     kl_t0 = 2;
+#line 24 "codegen/str_shadowed.kl"
     return kl_t0;
     bb4:
 #line 27 "codegen/str_shadowed.kl"
     kl_t0 = 0;
+#line 27 "codegen/str_shadowed.kl"
     return kl_t0;
 }
 
+#line 12 "codegen/str_shadowed.kl"
 int main( void )
 {
+#line 12 "codegen/str_shadowed.kl"
     return (int) kl__main__();
 }

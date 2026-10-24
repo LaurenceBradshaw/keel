@@ -11,14 +11,17 @@ int32_t kl__even__3i32( int32_t );
 int32_t kl__odd__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 3 "codegen/calls.kl"
 int32_t kl__g__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 3 "codegen/calls.kl"
     kl_t0 = kl_x_1;
+#line 3 "codegen/calls.kl"
     return kl_t0;
 }
 
+#line 5 "codegen/calls.kl"
 int32_t kl__even__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -28,22 +31,33 @@ int32_t kl__even__3i32( int32_t kl_n_1 )
     int32_t kl_t5;
 #line 5 "codegen/calls.kl"
     kl_t2 = kl_n_1 == 0;
+#line 5 "codegen/calls.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 5 "codegen/calls.kl"
     kl_t0 = 1;
+#line 5 "codegen/calls.kl"
     return kl_t0;
     bb2:
+#line 5 "codegen/calls.kl"
     kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+#line 5 "codegen/calls.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 5 "codegen/calls.kl"
     kl_rt_panic( "codegen/calls.kl", 5, "arithmetic overflow: n - 1" );
     bb4:
+#line 5 "codegen/calls.kl"
     kl_t4 = kl_n_1 - 1;
+#line 5 "codegen/calls.kl"
     kl_t5 = kl__odd__3i32( kl_t4 );
+#line 5 "codegen/calls.kl"
     kl_t0 = kl_t5;
+#line 5 "codegen/calls.kl"
     return kl_t0;
 }
 
+#line 6 "codegen/calls.kl"
 int32_t kl__odd__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -53,22 +67,33 @@ int32_t kl__odd__3i32( int32_t kl_n_1 )
     int32_t kl_t5;
 #line 6 "codegen/calls.kl"
     kl_t2 = kl_n_1 == 0;
+#line 6 "codegen/calls.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 6 "codegen/calls.kl"
     kl_t0 = 0;
+#line 6 "codegen/calls.kl"
     return kl_t0;
     bb2:
+#line 6 "codegen/calls.kl"
     kl_t3 = __builtin_sub_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+#line 6 "codegen/calls.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
+#line 6 "codegen/calls.kl"
     kl_rt_panic( "codegen/calls.kl", 6, "arithmetic overflow: n - 1" );
     bb4:
+#line 6 "codegen/calls.kl"
     kl_t4 = kl_n_1 - 1;
+#line 6 "codegen/calls.kl"
     kl_t5 = kl__even__3i32( kl_t4 );
+#line 6 "codegen/calls.kl"
     kl_t0 = kl_t5;
+#line 6 "codegen/calls.kl"
     return kl_t0;
 }
 
+#line 8 "codegen/calls.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -82,26 +107,41 @@ int32_t kl__main__( void )
     int32_t kl_t8;
 #line 10 "codegen/calls.kl"
     kl_t1 = kl__g__3i32( 1 );
+#line 10 "codegen/calls.kl"
     kl_t2 = kl__g__3i32( 2 );
+#line 10 "codegen/calls.kl"
     kl_t3 = __builtin_add_overflow( kl_t1, kl_t2, &( int32_t ) { 0 } );
+#line 10 "codegen/calls.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 10 "codegen/calls.kl"
     kl_rt_panic( "codegen/calls.kl", 10, "arithmetic overflow: g( 1 ) + g( 2 )" );
     bb2:
+#line 10 "codegen/calls.kl"
     kl_t4 = kl_t1 + kl_t2;
+#line 10 "codegen/calls.kl"
     kl_t5 = kl__g__3i32( kl_t4 );
+#line 10 "codegen/calls.kl"
     kl_t6 = kl__even__3i32( 4 );
+#line 10 "codegen/calls.kl"
     kl_t7 = __builtin_add_overflow( kl_t5, kl_t6, &( int32_t ) { 0 } );
+#line 10 "codegen/calls.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
+#line 10 "codegen/calls.kl"
     kl_rt_panic( "codegen/calls.kl", 10, "arithmetic overflow: g( g( 1 ) + g( 2 ) ) + even( 4 )" );
     bb4:
+#line 10 "codegen/calls.kl"
     kl_t8 = kl_t5 + kl_t6;
+#line 10 "codegen/calls.kl"
     kl_t0 = kl_t8;
+#line 10 "codegen/calls.kl"
     return kl_t0;
 }
 
+#line 8 "codegen/calls.kl"
 int main( void )
 {
+#line 8 "codegen/calls.kl"
     return (int) kl__main__();
 }

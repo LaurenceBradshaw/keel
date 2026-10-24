@@ -33,9 +33,11 @@ struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 );
 void kl__bump__RA4_3i32( struct kl__A4_3i32* );
 int32_t kl__main__( void );
 
+#line 17 "codegen/fixed_arrays.kl"
 int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
+#line 17 "codegen/fixed_arrays.kl"
     struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     int32_t kl_total_2;
     uint64_t kl_i_3;
@@ -51,40 +53,56 @@ int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
     kl_total_2 = 0;
 #line 21 "codegen/fixed_arrays.kl"
     kl_i_3 = 0;
+#line 21 "codegen/fixed_arrays.kl"
     kl_t5 = ( kl_values_1 ).size;
+#line 21 "codegen/fixed_arrays.kl"
     kl_t4 = kl_t5;
+#line 21 "codegen/fixed_arrays.kl"
     goto bb1;
     bb1:
+#line 21 "codegen/fixed_arrays.kl"
     kl_t6 = kl_i_3 < kl_t4;
+#line 21 "codegen/fixed_arrays.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 23 "codegen/fixed_arrays.kl"
     kl_t7 = ( kl_values_1 ).size;
+#line 23 "codegen/fixed_arrays.kl"
     kl_t8 = ( kl_values_1 ).data;
+#line 23 "codegen/fixed_arrays.kl"
     kl_t9 = kl_i_3 < kl_t7;
+#line 23 "codegen/fixed_arrays.kl"
     if ( kl_t9 ) goto bb5; else goto bb4;
     bb3:
 #line 26 "codegen/fixed_arrays.kl"
     kl_t0 = kl_total_2;
+#line 26 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb4:
+#line 23 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 23, "out of bounds: values[ i ]" );
     bb5:
 #line 23 "codegen/fixed_arrays.kl"
     kl_t10 = kl_t8 + kl_i_3;
+#line 23 "codegen/fixed_arrays.kl"
     kl_t11 = __builtin_add_overflow( kl_total_2, ( *kl_t10 ), &( int32_t ) { 0 } );
+#line 23 "codegen/fixed_arrays.kl"
     if ( kl_t11 ) goto bb6; else goto bb7;
     bb6:
+#line 23 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 23, "arithmetic overflow: total += values[ i ];" );
     bb7:
+#line 23 "codegen/fixed_arrays.kl"
     kl_total_2 = kl_total_2 + ( *kl_t10 );
+#line 21 "codegen/fixed_arrays.kl"
     goto bb8;
     bb8:
 #line 21 "codegen/fixed_arrays.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 21 "codegen/fixed_arrays.kl"
     goto bb1;
 }
 
+#line 29 "codegen/fixed_arrays.kl"
 struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
 {
     struct kl__A4_3i32 kl_t0;
@@ -99,44 +117,62 @@ struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
     int32_t kl_t10;
 #line 31 "codegen/fixed_arrays.kl"
     kl_i_2 = 0;
+#line 31 "codegen/fixed_arrays.kl"
     kl_t3 = 4;
+#line 31 "codegen/fixed_arrays.kl"
     goto bb1;
     bb1:
+#line 31 "codegen/fixed_arrays.kl"
     kl_t4 = kl_i_2 < kl_t3;
+#line 31 "codegen/fixed_arrays.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 33 "codegen/fixed_arrays.kl"
     kl_t5 = kl_i_2;
+#line 33 "codegen/fixed_arrays.kl"
     kl_t6 = kl_t5 < 4;
+#line 33 "codegen/fixed_arrays.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 36 "codegen/fixed_arrays.kl"
     kl_t0 = kl_values_1;
+#line 36 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb4:
 #line 33 "codegen/fixed_arrays.kl"
     kl_t7 = kl_i_2;
+#line 33 "codegen/fixed_arrays.kl"
     kl_t8 = kl_t7 < 4;
+#line 33 "codegen/fixed_arrays.kl"
     if ( kl_t8 ) goto bb6; else goto bb7;
     bb5:
+#line 33 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 33, "out of bounds: values[ i ]" );
     bb6:
+#line 33 "codegen/fixed_arrays.kl"
     kl_t9 = __builtin_mul_overflow( kl_values_1.e[kl_t7], 2, &( int32_t ) { 0 } );
+#line 33 "codegen/fixed_arrays.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb7:
+#line 33 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 33, "out of bounds: values[ i ]" );
     bb8:
+#line 33 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 33, "arithmetic overflow: values[ i ] * 2" );
     bb9:
+#line 33 "codegen/fixed_arrays.kl"
     kl_t10 = kl_values_1.e[kl_t7] * 2;
+#line 33 "codegen/fixed_arrays.kl"
     kl_values_1.e[kl_t5] = kl_t10;
+#line 31 "codegen/fixed_arrays.kl"
     goto bb10;
     bb10:
 #line 31 "codegen/fixed_arrays.kl"
     kl_i_2 = kl_i_2 + 1;
+#line 31 "codegen/fixed_arrays.kl"
     goto bb1;
 }
 
+#line 39 "codegen/fixed_arrays.kl"
 void kl__bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
 {
     uint64_t kl_t2;
@@ -144,15 +180,21 @@ void kl__bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
     ( void ) kl_t2;
 #line 41 "codegen/fixed_arrays.kl"
     kl_t2 = 0;
+#line 41 "codegen/fixed_arrays.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_values_1 ).e[kl_t2], 1, &( int32_t ) { 0 } );
+#line 41 "codegen/fixed_arrays.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 41 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 41, "arithmetic overflow: values[ 0 ] += 1;" );
     bb2:
+#line 41 "codegen/fixed_arrays.kl"
     ( *kl_values_1 ).e[kl_t2] = ( *kl_values_1 ).e[kl_t2] + 1;
+#line 39 "codegen/fixed_arrays.kl"
     return;
 }
 
+#line 44 "codegen/fixed_arrays.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -266,193 +308,288 @@ int32_t kl__main__( void )
     ( void ) kl_t72;
 #line 46 "codegen/fixed_arrays.kl"
     kl_t3 = 0;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t2.e[kl_t3] = 1;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t4 = 1;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t2.e[kl_t4] = 2;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t5 = 2;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t2.e[kl_t5] = 3;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t6 = 3;
+#line 46 "codegen/fixed_arrays.kl"
     kl_t2.e[kl_t6] = 4;
+#line 46 "codegen/fixed_arrays.kl"
     kl_a_1 = kl_t2;
 #line 49 "codegen/fixed_arrays.kl"
     kl_b_7 = kl_a_1;
-#line 50 "codegen/fixed_arrays.kl"
     kl_t8 = 0;
+#line 50 "codegen/fixed_arrays.kl"
     kl_b_7.e[kl_t8] = 10;
 #line 52 "codegen/fixed_arrays.kl"
     kl_t10 = 0;
+#line 52 "codegen/fixed_arrays.kl"
     kl_t11 = kl_a_1.e[kl_t10] != 1;
+#line 52 "codegen/fixed_arrays.kl"
     kl_t9 = kl_t11;
+#line 52 "codegen/fixed_arrays.kl"
     if ( kl_t9 ) goto bb2; else goto bb1;
     bb1:
+#line 52 "codegen/fixed_arrays.kl"
     kl_t12 = 0;
+#line 52 "codegen/fixed_arrays.kl"
     kl_t13 = kl_b_7.e[kl_t12] != 10;
+#line 52 "codegen/fixed_arrays.kl"
     kl_t9 = kl_t13;
+#line 52 "codegen/fixed_arrays.kl"
     goto bb2;
     bb2:
+#line 52 "codegen/fixed_arrays.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
-#line 54 "codegen/fixed_arrays.kl"
     kl_t0 = 1;
+#line 54 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb4:
 #line 57 "codegen/fixed_arrays.kl"
     kl_t15 = kl__doubled__A4_3i32( kl_a_1 );
+#line 57 "codegen/fixed_arrays.kl"
     kl_d_14 = kl_t15;
 #line 59 "codegen/fixed_arrays.kl"
     kl_t17 = 3;
+#line 59 "codegen/fixed_arrays.kl"
     kl_t18 = kl_d_14.e[kl_t17] != 8;
+#line 59 "codegen/fixed_arrays.kl"
     kl_t16 = kl_t18;
+#line 59 "codegen/fixed_arrays.kl"
     if ( kl_t16 ) goto bb6; else goto bb5;
     bb5:
+#line 59 "codegen/fixed_arrays.kl"
     kl_t19 = 3;
+#line 59 "codegen/fixed_arrays.kl"
     kl_t20 = kl_a_1.e[kl_t19] != 4;
+#line 59 "codegen/fixed_arrays.kl"
     kl_t16 = kl_t20;
+#line 59 "codegen/fixed_arrays.kl"
     goto bb6;
     bb6:
+#line 59 "codegen/fixed_arrays.kl"
     if ( kl_t16 ) goto bb7; else goto bb8;
     bb7:
-#line 61 "codegen/fixed_arrays.kl"
     kl_t0 = 2;
+#line 61 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb8:
 #line 64 "codegen/fixed_arrays.kl"
     kl_t21 = 0;
+#line 64 "codegen/fixed_arrays.kl"
     kl_t22 = &kl_a_1.e[kl_t21];
+#line 64 "codegen/fixed_arrays.kl"
     kl_t23 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t22, 4 };
+#line 64 "codegen/fixed_arrays.kl"
     kl_t24 = kl__sum__L3i32( ( kl_t23 ).data, ( kl_t23 ).size );
+#line 64 "codegen/fixed_arrays.kl"
     kl_t25 = kl_t24 != 10;
+#line 64 "codegen/fixed_arrays.kl"
     if ( kl_t25 ) goto bb9; else goto bb10;
     bb9:
-#line 66 "codegen/fixed_arrays.kl"
     kl_t0 = 3;
+#line 66 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb10:
 #line 69 "codegen/fixed_arrays.kl"
     kl_t28.kl_x_1 = 1;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t28.kl_y_3 = 2;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t29.kl_x_1 = 3;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t29.kl_y_3 = 4;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t30 = 0;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t27.e[kl_t30] = kl_t28;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t31 = 1;
+#line 69 "codegen/fixed_arrays.kl"
     kl_t27.e[kl_t31] = kl_t29;
+#line 69 "codegen/fixed_arrays.kl"
     kl_points_26 = kl_t27;
-#line 70 "codegen/fixed_arrays.kl"
     kl_t32 = 1;
+#line 70 "codegen/fixed_arrays.kl"
     kl_points_26.e[kl_t32].kl_y_3 = 7;
 #line 72 "codegen/fixed_arrays.kl"
     kl_t33 = 0;
+#line 72 "codegen/fixed_arrays.kl"
     kl_t34 = 1;
+#line 72 "codegen/fixed_arrays.kl"
     kl_t35 = __builtin_add_overflow( kl_points_26.e[kl_t33].kl_x_1, kl_points_26.e[kl_t34].kl_y_3, &( int32_t ) { 0 } );
+#line 72 "codegen/fixed_arrays.kl"
     if ( kl_t35 ) goto bb11; else goto bb12;
     bb11:
+#line 72 "codegen/fixed_arrays.kl"
     kl_rt_panic( "codegen/fixed_arrays.kl", 72, "arithmetic overflow: points[ 0 ].x + points[ 1 ].y" );
     bb12:
+#line 72 "codegen/fixed_arrays.kl"
     kl_t36 = kl_points_26.e[kl_t33].kl_x_1 + kl_points_26.e[kl_t34].kl_y_3;
+#line 72 "codegen/fixed_arrays.kl"
     kl_t37 = kl_t36 != 8;
+#line 72 "codegen/fixed_arrays.kl"
     if ( kl_t37 ) goto bb13; else goto bb14;
     bb13:
-#line 74 "codegen/fixed_arrays.kl"
     kl_t0 = 4;
+#line 74 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb14:
 #line 78 "codegen/fixed_arrays.kl"
     kl_t41 = 0;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t40.e[kl_t41] = 1;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t42 = 1;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t40.e[kl_t42] = 2;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t43 = 2;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t40.e[kl_t43] = 3;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t45 = 0;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t44.e[kl_t45] = 4;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t46 = 1;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t44.e[kl_t46] = 5;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t47 = 2;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t44.e[kl_t47] = 6;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t48 = 0;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t39.e[kl_t48] = kl_t40;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t49 = 1;
+#line 78 "codegen/fixed_arrays.kl"
     kl_t39.e[kl_t49] = kl_t44;
+#line 78 "codegen/fixed_arrays.kl"
     kl_grid_38 = kl_t39;
 #line 80 "codegen/fixed_arrays.kl"
     kl_t52 = 1;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t53 = 2;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t54 = kl_grid_38.e[kl_t52].e[kl_t53] != 6;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t51 = kl_t54;
+#line 80 "codegen/fixed_arrays.kl"
     if ( kl_t51 ) goto bb16; else goto bb15;
     bb15:
+#line 80 "codegen/fixed_arrays.kl"
     kl_t55 = 2 != 2;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t51 = kl_t55;
+#line 80 "codegen/fixed_arrays.kl"
     goto bb16;
     bb16:
+#line 80 "codegen/fixed_arrays.kl"
     kl_t50 = kl_t51;
+#line 80 "codegen/fixed_arrays.kl"
     if ( kl_t50 ) goto bb18; else goto bb17;
     bb17:
+#line 80 "codegen/fixed_arrays.kl"
     kl_t56 = 0;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t57 = 3 != 3;
+#line 80 "codegen/fixed_arrays.kl"
     kl_t50 = kl_t57;
+#line 80 "codegen/fixed_arrays.kl"
     goto bb18;
     bb18:
+#line 80 "codegen/fixed_arrays.kl"
     if ( kl_t50 ) goto bb19; else goto bb20;
     bb19:
-#line 82 "codegen/fixed_arrays.kl"
     kl_t0 = 5;
+#line 82 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb20:
 #line 85 "codegen/fixed_arrays.kl"
     kl_t58 = &kl_a_1;
+#line 85 "codegen/fixed_arrays.kl"
     kl__bump__RA4_3i32( kl_t58 );
 #line 87 "codegen/fixed_arrays.kl"
     kl_t60 = 0;
+#line 87 "codegen/fixed_arrays.kl"
     kl_t61 = kl_a_1.e[kl_t60] != 2;
+#line 87 "codegen/fixed_arrays.kl"
     if ( kl_t61 ) goto bb21; else goto bb22;
     bb21:
-#line 89 "codegen/fixed_arrays.kl"
     kl_t0 = 6;
+#line 89 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb22:
 #line 93 "codegen/fixed_arrays.kl"
     kl_t63 = 3;
+#line 93 "codegen/fixed_arrays.kl"
     kl_last_62 = &kl_a_1.e[kl_t63];
-#line 94 "codegen/fixed_arrays.kl"
     ( *kl_last_62 ) = 9;
 #line 97 "codegen/fixed_arrays.kl"
     kl_t64 = 3;
+#line 97 "codegen/fixed_arrays.kl"
     kl_t65 = kl_a_1.e[kl_t64] != 9;
+#line 97 "codegen/fixed_arrays.kl"
     if ( kl_t65 ) goto bb23; else goto bb24;
     bb23:
-#line 99 "codegen/fixed_arrays.kl"
     kl_t0 = 7;
+#line 99 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb24:
 #line 102 "codegen/fixed_arrays.kl"
     kl_t69 = 0;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t68.e[kl_t69] = 7;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t70 = 1;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t68.e[kl_t70] = 8;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t71 = 2;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t68.e[kl_t71] = 9;
+#line 102 "codegen/fixed_arrays.kl"
     kl_t67.kl_cells_8 = kl_t68;
+#line 102 "codegen/fixed_arrays.kl"
     kl_row_66 = kl_t67;
 #line 104 "codegen/fixed_arrays.kl"
     kl_t72 = 0;
+#line 104 "codegen/fixed_arrays.kl"
     kl_t73 = &kl_row_66.kl_cells_8.e[kl_t72];
+#line 104 "codegen/fixed_arrays.kl"
     kl_t74 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t73, 3 };
+#line 104 "codegen/fixed_arrays.kl"
     kl_t75 = kl__sum__L3i32( ( kl_t74 ).data, ( kl_t74 ).size );
+#line 104 "codegen/fixed_arrays.kl"
     kl_t76 = kl_t75 != 24;
+#line 104 "codegen/fixed_arrays.kl"
     if ( kl_t76 ) goto bb25; else goto bb26;
     bb25:
-#line 106 "codegen/fixed_arrays.kl"
     kl_t0 = 8;
+#line 106 "codegen/fixed_arrays.kl"
     return kl_t0;
     bb26:
 #line 109 "codegen/fixed_arrays.kl"
     kl_t0 = 0;
+#line 109 "codegen/fixed_arrays.kl"
     return kl_t0;
 }
 
+#line 44 "codegen/fixed_arrays.kl"
 int main( void )
 {
+#line 44 "codegen/fixed_arrays.kl"
     return (int) kl__main__();
 }

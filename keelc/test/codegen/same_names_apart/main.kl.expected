@@ -11,6 +11,7 @@ int32_t kl_1c_from_c__( void );
 int32_t kl_1b_push__3i32( int32_t );
 int32_t kl_1a_push__3i32( int32_t );
 
+#line 6 "codegen/same_names_apart/main.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -20,37 +21,46 @@ int32_t kl__main__( void )
     bool kl_t4;
 #line 8 "codegen/same_names_apart/main.kl"
     kl_t1 = kl_1a_push__3i32( 1 );
+#line 8 "codegen/same_names_apart/main.kl"
     kl_t2 = kl_t1 != 2;
+#line 8 "codegen/same_names_apart/main.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 10 "codegen/same_names_apart/main.kl"
     kl_t0 = 1;
+#line 10 "codegen/same_names_apart/main.kl"
     return kl_t0;
     bb2:
 #line 13 "codegen/same_names_apart/main.kl"
     kl_t3 = kl_1c_from_c__(  );
+#line 13 "codegen/same_names_apart/main.kl"
     kl_t4 = kl_t3 != 11;
+#line 13 "codegen/same_names_apart/main.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 15 "codegen/same_names_apart/main.kl"
     kl_t0 = 2;
+#line 15 "codegen/same_names_apart/main.kl"
     return kl_t0;
     bb4:
 #line 18 "codegen/same_names_apart/main.kl"
     kl_t0 = 0;
+#line 18 "codegen/same_names_apart/main.kl"
     return kl_t0;
 }
 
+#line 4 "codegen/same_names_apart/c.kl"
 int32_t kl_1c_from_c__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
 #line 6 "codegen/same_names_apart/c.kl"
     kl_t1 = kl_1b_push__3i32( 1 );
+#line 6 "codegen/same_names_apart/c.kl"
     kl_t0 = kl_t1;
+#line 6 "codegen/same_names_apart/c.kl"
     return kl_t0;
 }
 
+#line 1 "codegen/same_names_apart/b.kl"
 int32_t kl_1b_push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -58,15 +68,21 @@ int32_t kl_1b_push__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 3 "codegen/same_names_apart/b.kl"
     kl_t2 = __builtin_add_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+#line 3 "codegen/same_names_apart/b.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 3 "codegen/same_names_apart/b.kl"
     kl_rt_panic( "codegen/same_names_apart/b.kl", 3, "arithmetic overflow: v + 10" );
     bb2:
+#line 3 "codegen/same_names_apart/b.kl"
     kl_t3 = kl_v_1 + 10;
+#line 3 "codegen/same_names_apart/b.kl"
     kl_t0 = kl_t3;
+#line 3 "codegen/same_names_apart/b.kl"
     return kl_t0;
 }
 
+#line 1 "codegen/same_names_apart/a.kl"
 int32_t kl_1a_push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
@@ -74,16 +90,23 @@ int32_t kl_1a_push__3i32( int32_t kl_v_1 )
     int32_t kl_t3;
 #line 3 "codegen/same_names_apart/a.kl"
     kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+#line 3 "codegen/same_names_apart/a.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 3 "codegen/same_names_apart/a.kl"
     kl_rt_panic( "codegen/same_names_apart/a.kl", 3, "arithmetic overflow: v + 1" );
     bb2:
+#line 3 "codegen/same_names_apart/a.kl"
     kl_t3 = kl_v_1 + 1;
+#line 3 "codegen/same_names_apart/a.kl"
     kl_t0 = kl_t3;
+#line 3 "codegen/same_names_apart/a.kl"
     return kl_t0;
 }
 
+#line 6 "codegen/same_names_apart/main.kl"
 int main( void )
 {
+#line 6 "codegen/same_names_apart/main.kl"
     return (int) kl__main__();
 }

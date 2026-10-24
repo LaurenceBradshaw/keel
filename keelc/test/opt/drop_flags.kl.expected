@@ -24,6 +24,7 @@ int32_t kl__looped__( void );
 int32_t kl__picked__4bool( bool );
 int32_t kl__main__( void );
 
+#line 11 "opt/drop_flags.kl"
 void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     int64_t kl_t3;
@@ -31,16 +32,19 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
     int64_t kl_t5;
 #line 13 "opt/drop_flags.kl"
     ( *kl_this_1 ).kl_value_42 = kl_v_2;
-#line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 15 "opt/drop_flags.kl"
     kl_t3 = kl_trace_3 * 10;
+#line 15 "opt/drop_flags.kl"
     kl_t4 = ( int64_t ) kl_v_2;
+#line 15 "opt/drop_flags.kl"
     kl_t5 = kl_t3 + kl_t4;
+#line 15 "opt/drop_flags.kl"
     kl_trace_3 = kl_t5;
+#line 11 "opt/drop_flags.kl"
     return;
 }
 
+#line 18 "opt/drop_flags.kl"
 void kl__Box__dtor( struct kl__Box* kl_this_1 )
 {
     int64_t kl_t2;
@@ -48,13 +52,16 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
     ( void ) kl_this_1;
 #line 20 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 21 "opt/drop_flags.kl"
     kl_t2 = kl_trace_3 * 10;
+#line 21 "opt/drop_flags.kl"
     kl_t3 = kl_t2 + 9;
+#line 21 "opt/drop_flags.kl"
     kl_trace_3 = kl_t3;
+#line 18 "opt/drop_flags.kl"
     return;
 }
 
+#line 27 "opt/drop_flags.kl"
 void kl__consume__M3Box( struct kl__Box kl_t1 )
 {
     int64_t kl_t4;
@@ -62,13 +69,16 @@ void kl__consume__M3Box( struct kl__Box kl_t1 )
     ( void ) kl_t1;
 #line 20 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 21 "opt/drop_flags.kl"
     kl_t4 = kl_trace_3 * 10;
+#line 21 "opt/drop_flags.kl"
     kl_t5 = kl_t4 + 9;
+#line 21 "opt/drop_flags.kl"
     kl_trace_3 = kl_t5;
+#line 27 "opt/drop_flags.kl"
     return;
 }
 
+#line 32 "opt/drop_flags.kl"
 int32_t kl__always__( void )
 {
     int32_t kl_t0;
@@ -76,9 +86,11 @@ int32_t kl__always__( void )
     kl_trace_3 = 19;
 #line 40 "opt/drop_flags.kl"
     kl_t0 = 0;
+#line 40 "opt/drop_flags.kl"
     return kl_t0;
 }
 
+#line 44 "opt/drop_flags.kl"
 int32_t kl__again__( void )
 {
     int32_t kl_t0;
@@ -86,9 +98,11 @@ int32_t kl__again__( void )
     kl_trace_3 = 1299;
 #line 52 "opt/drop_flags.kl"
     kl_t0 = 0;
+#line 52 "opt/drop_flags.kl"
     return kl_t0;
 }
 
+#line 56 "opt/drop_flags.kl"
 int32_t kl__sometimes__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
@@ -98,38 +112,43 @@ int32_t kl__sometimes__4bool( bool kl_c_1 )
     int32_t kl_t21;
 #line 13 "opt/drop_flags.kl"
     kl_b_2.kl_value_42 = 3;
-#line 14 "opt/drop_flags.kl"
     kl_t21 = kl_live_1 + 1;
+#line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_t21;
-#line 15 "opt/drop_flags.kl"
     kl_trace_3 = 3;
 #line 60 "opt/drop_flags.kl"
     kl_t16 = true;
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
-#line 63 "opt/drop_flags.kl"
     kl_t16 = false;
 #line 20 "opt/drop_flags.kl"
     kl_live_1 = kl_t21 - 1;
-#line 21 "opt/drop_flags.kl"
     kl_trace_3 = 39;
+#line 27 "opt/drop_flags.kl"
     goto bb2;
     bb2:
 #line 59 "opt/drop_flags.kl"
     if ( kl_t16 ) kl__Box__dtor( &kl_b_2 );
 #line 67 "opt/drop_flags.kl"
     kl_t7 = kl_trace_3 == 39;
+#line 67 "opt/drop_flags.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
+#line 67 "opt/drop_flags.kl"
     kl_t0 = 0;
+#line 67 "opt/drop_flags.kl"
     goto bb5;
     bb4:
+#line 67 "opt/drop_flags.kl"
     kl_t0 = 3;
+#line 67 "opt/drop_flags.kl"
     goto bb5;
     bb5:
+#line 67 "opt/drop_flags.kl"
     return kl_t0;
 }
 
+#line 71 "opt/drop_flags.kl"
 int32_t kl__looped__( void )
 {
     int32_t kl_t0;
@@ -147,59 +166,72 @@ int32_t kl__looped__( void )
     int32_t kl_t23;
 #line 73 "opt/drop_flags.kl"
     kl_trace_3 = 0;
-#line 74 "opt/drop_flags.kl"
     kl_i_1 = 1;
+#line 74 "opt/drop_flags.kl"
     goto bb1;
     bb1:
+#line 74 "opt/drop_flags.kl"
     kl_t2 = kl_i_1 <= 3;
+#line 74 "opt/drop_flags.kl"
     if ( kl_t2 ) goto bb2; else goto bb3;
     bb2:
 #line 13 "opt/drop_flags.kl"
     kl_b_3.kl_value_42 = kl_i_1;
-#line 14 "opt/drop_flags.kl"
     kl_t23 = kl_live_1 + 1;
+#line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_t23;
-#line 15 "opt/drop_flags.kl"
     kl_t15 = kl_trace_3 * 10;
+#line 15 "opt/drop_flags.kl"
     kl_t16 = ( int64_t ) kl_i_1;
+#line 15 "opt/drop_flags.kl"
     kl_t17 = kl_t15 + kl_t16;
+#line 15 "opt/drop_flags.kl"
     kl_trace_3 = kl_t17;
 #line 76 "opt/drop_flags.kl"
     kl_t18 = true;
-#line 77 "opt/drop_flags.kl"
     kl_t6 = kl_i_1 == 2;
+#line 77 "opt/drop_flags.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
 #line 83 "opt/drop_flags.kl"
     kl_t9 = kl_trace_3 == 192939;
+#line 83 "opt/drop_flags.kl"
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb4:
 #line 79 "opt/drop_flags.kl"
     kl_t18 = false;
 #line 20 "opt/drop_flags.kl"
     kl_live_1 = kl_t23 - 1;
-#line 21 "opt/drop_flags.kl"
     kl_t21 = kl_t17 * 10;
+#line 21 "opt/drop_flags.kl"
     kl_t22 = kl_t21 + 9;
+#line 21 "opt/drop_flags.kl"
     kl_trace_3 = kl_t22;
+#line 27 "opt/drop_flags.kl"
     goto bb5;
     bb5:
 #line 75 "opt/drop_flags.kl"
     if ( kl_t18 ) kl__Box__dtor( &kl_b_3 );
 #line 74 "opt/drop_flags.kl"
     kl_i_1 = kl_i_1 + 1;
+#line 74 "opt/drop_flags.kl"
     goto bb1;
     bb6:
 #line 83 "opt/drop_flags.kl"
     kl_t0 = 0;
+#line 83 "opt/drop_flags.kl"
     goto bb8;
     bb7:
+#line 83 "opt/drop_flags.kl"
     kl_t0 = 4;
+#line 83 "opt/drop_flags.kl"
     goto bb8;
     bb8:
+#line 83 "opt/drop_flags.kl"
     return kl_t0;
 }
 
+#line 87 "opt/drop_flags.kl"
 int32_t kl__picked__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
@@ -218,52 +250,74 @@ int32_t kl__picked__4bool( bool kl_c_1 )
     bb1:
 #line 13 "opt/drop_flags.kl"
     kl_t4.kl_value_42 = 5;
-#line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 15 "opt/drop_flags.kl"
     kl_trace_3 = 5;
 #line 90 "opt/drop_flags.kl"
     kl_t20 = true;
+#line 90 "opt/drop_flags.kl"
     kl_v_2 = kl_t4.kl_value_42;
+#line 90 "opt/drop_flags.kl"
     goto bb3;
     bb2:
+#line 90 "opt/drop_flags.kl"
     kl_v_2 = 6;
+#line 90 "opt/drop_flags.kl"
     goto bb3;
     bb3:
+#line 90 "opt/drop_flags.kl"
     if ( kl_t20 ) kl__Box__dtor( &kl_t4 );
     if ( kl_c_1 ) goto bb7; else goto bb8;
     bb4:
 #line 91 "opt/drop_flags.kl"
     kl_t0 = 0;
+#line 91 "opt/drop_flags.kl"
     goto bb6;
     bb5:
+#line 91 "opt/drop_flags.kl"
     kl_t0 = 5;
+#line 91 "opt/drop_flags.kl"
     goto bb6;
     bb6:
+#line 91 "opt/drop_flags.kl"
     return kl_t0;
     bb7:
+#line 91 "opt/drop_flags.kl"
     kl_t9 = 5;
+#line 91 "opt/drop_flags.kl"
     goto bb9;
     bb8:
+#line 91 "opt/drop_flags.kl"
     kl_t9 = 6;
+#line 91 "opt/drop_flags.kl"
     goto bb9;
     bb9:
+#line 91 "opt/drop_flags.kl"
     kl_t8 = kl_v_2 == kl_t9;
+#line 91 "opt/drop_flags.kl"
     if ( kl_t8 ) goto bb10; else goto bb5;
     bb10:
+#line 91 "opt/drop_flags.kl"
     if ( kl_c_1 ) goto bb11; else goto bb12;
     bb11:
+#line 91 "opt/drop_flags.kl"
     kl_t11 = 59;
+#line 91 "opt/drop_flags.kl"
     goto bb13;
     bb12:
+#line 91 "opt/drop_flags.kl"
     kl_t11 = 0;
+#line 91 "opt/drop_flags.kl"
     goto bb13;
     bb13:
+#line 91 "opt/drop_flags.kl"
     kl_t12 = ( int64_t ) kl_t11;
+#line 91 "opt/drop_flags.kl"
     kl_t8 = kl_trace_3 == kl_t12;
+#line 91 "opt/drop_flags.kl"
     if ( kl_t8 ) goto bb4; else goto bb5;
 }
 
+#line 94 "opt/drop_flags.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -276,69 +330,80 @@ int32_t kl__main__( void )
     bool kl_t15;
 #line 96 "opt/drop_flags.kl"
     kl_t0 = kl__always__(  );
-#line 97 "opt/drop_flags.kl"
     kl_t3 = kl_t0 == 0;
+#line 97 "opt/drop_flags.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 99 "opt/drop_flags.kl"
     kl_t0 = kl__again__(  );
+#line 97 "opt/drop_flags.kl"
     goto bb2;
     bb2:
 #line 101 "opt/drop_flags.kl"
     kl_t5 = kl_t0 == 0;
+#line 101 "opt/drop_flags.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-#line 103 "opt/drop_flags.kl"
     kl_t0 = kl__sometimes__4bool( true );
+#line 101 "opt/drop_flags.kl"
     goto bb4;
     bb4:
 #line 105 "opt/drop_flags.kl"
     kl_t7 = kl_t0 == 0;
+#line 105 "opt/drop_flags.kl"
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
-#line 107 "opt/drop_flags.kl"
     kl_t0 = kl__sometimes__4bool( false );
+#line 105 "opt/drop_flags.kl"
     goto bb6;
     bb6:
 #line 109 "opt/drop_flags.kl"
     kl_t9 = kl_t0 == 0;
+#line 109 "opt/drop_flags.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
-#line 111 "opt/drop_flags.kl"
     kl_t0 = kl__looped__(  );
+#line 109 "opt/drop_flags.kl"
     goto bb8;
     bb8:
 #line 113 "opt/drop_flags.kl"
     kl_t11 = kl_t0 == 0;
+#line 113 "opt/drop_flags.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
-#line 115 "opt/drop_flags.kl"
     kl_t0 = kl__picked__4bool( true );
+#line 113 "opt/drop_flags.kl"
     goto bb10;
     bb10:
 #line 117 "opt/drop_flags.kl"
     kl_t13 = kl_t0 == 0;
+#line 117 "opt/drop_flags.kl"
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
-#line 119 "opt/drop_flags.kl"
     kl_t0 = kl__picked__4bool( false );
+#line 117 "opt/drop_flags.kl"
     goto bb12;
     bb12:
 #line 121 "opt/drop_flags.kl"
     kl_t15 = kl_t0 == 0;
+#line 121 "opt/drop_flags.kl"
     if ( kl_t15 ) goto bb13; else goto bb15;
     bb13:
+#line 121 "opt/drop_flags.kl"
     kl_t15 = kl_live_1 != 0;
+#line 121 "opt/drop_flags.kl"
     if ( kl_t15 ) goto bb14; else goto bb15;
     bb14:
-#line 123 "opt/drop_flags.kl"
     kl_t0 = 6;
+#line 121 "opt/drop_flags.kl"
     goto bb15;
     bb15:
+#line 126 "opt/drop_flags.kl"
     return kl_t0;
 }
 
+#line 94 "opt/drop_flags.kl"
 int main( void )
 {
+#line 94 "opt/drop_flags.kl"
     return (int) kl__main__();
 }

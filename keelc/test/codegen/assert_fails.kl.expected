@@ -8,6 +8,7 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__main__( void );
 
+#line 3 "codegen/assert_fails.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -16,26 +17,34 @@ int32_t kl__main__( void )
     bool kl_t3;
 #line 5 "codegen/assert_fails.kl"
     kl_x_1 = 0;
+#line 7 "codegen/assert_fails.kl"
     goto bb1;
     bb1:
 #line 7 "codegen/assert_fails.kl"
     kl_t2 = kl_x_1 == 0;
+#line 7 "codegen/assert_fails.kl"
     if ( kl_t2 ) goto bb3; else goto bb2;
     bb2:
+#line 7 "codegen/assert_fails.kl"
     kl_rt_panic( "codegen/assert_fails.kl", 7, "assertion failed: x == 0" );
     bb3:
 #line 8 "codegen/assert_fails.kl"
     kl_t3 = kl_x_1 > 1;
+#line 8 "codegen/assert_fails.kl"
     if ( kl_t3 ) goto bb4; else goto bb5;
     bb4:
 #line 11 "codegen/assert_fails.kl"
     kl_t0 = 7;
+#line 11 "codegen/assert_fails.kl"
     return kl_t0;
     bb5:
+#line 8 "codegen/assert_fails.kl"
     kl_rt_panic( "codegen/assert_fails.kl", 8, "assertion failed: x > 1" );
 }
 
+#line 3 "codegen/assert_fails.kl"
 int main( void )
 {
+#line 3 "codegen/assert_fails.kl"
     return (int) kl__main__();
 }

@@ -53,6 +53,7 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
 int32_t kl__compare__I3i32E__3i32_3i32( int32_t*, int32_t* );
 int32_t kl__compare__I3f64E__3f64_3f64( double*, double* );
 
+#line 9 "codegen/operator_compare.kl"
 int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1, struct kl__version* kl_other_2 )
 {
     int32_t kl_t0;
@@ -66,56 +67,80 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
     bool kl_t10;
 #line 11 "codegen/operator_compare.kl"
     kl_t5 = ( *kl_this_1 ).kl_major_1 < ( *kl_other_2 ).kl_major_1;
+#line 11 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
+#line 11 "codegen/operator_compare.kl"
     kl_t4 = 0;
+#line 11 "codegen/operator_compare.kl"
     goto bb5;
     bb2:
+#line 11 "codegen/operator_compare.kl"
     kl_t6 = ( *kl_this_1 ).kl_major_1 == ( *kl_other_2 ).kl_major_1;
+#line 11 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
+#line 11 "codegen/operator_compare.kl"
     kl_t4 = 1;
+#line 11 "codegen/operator_compare.kl"
     goto bb5;
     bb4:
+#line 11 "codegen/operator_compare.kl"
     kl_t4 = 2;
+#line 11 "codegen/operator_compare.kl"
     goto bb5;
     bb5:
+#line 11 "codegen/operator_compare.kl"
     kl_first_3 = kl_t4;
 #line 13 "codegen/operator_compare.kl"
     kl_t7 = kl_first_3 != 1;
+#line 13 "codegen/operator_compare.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb6:
-#line 15 "codegen/operator_compare.kl"
     kl_t0 = kl_first_3;
+#line 15 "codegen/operator_compare.kl"
     return kl_t0;
     bb7:
 #line 18 "codegen/operator_compare.kl"
     kl_t9 = ( *kl_this_1 ).kl_minor_3 < ( *kl_other_2 ).kl_minor_3;
+#line 18 "codegen/operator_compare.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
+#line 18 "codegen/operator_compare.kl"
     kl_t8 = 0;
+#line 18 "codegen/operator_compare.kl"
     goto bb12;
     bb9:
+#line 18 "codegen/operator_compare.kl"
     kl_t10 = ( *kl_this_1 ).kl_minor_3 == ( *kl_other_2 ).kl_minor_3;
+#line 18 "codegen/operator_compare.kl"
     if ( kl_t10 ) goto bb10; else goto bb11;
     bb10:
+#line 18 "codegen/operator_compare.kl"
     kl_t8 = 1;
+#line 18 "codegen/operator_compare.kl"
     goto bb12;
     bb11:
+#line 18 "codegen/operator_compare.kl"
     kl_t8 = 2;
+#line 18 "codegen/operator_compare.kl"
     goto bb12;
     bb12:
+#line 18 "codegen/operator_compare.kl"
     kl_t0 = kl_t8;
+#line 18 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 24 "codegen/operator_compare.kl"
 void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 {
-#line 26 "codegen/operator_compare.kl"
     ( *kl_this_1 ).kl_first_65 = kl_c_2;
+#line 24 "codegen/operator_compare.kl"
     return;
 }
 
+#line 29 "codegen/operator_compare.kl"
 int32_t kl__operator_compare__S4name_4name( struct kl__name* kl_this_1, struct kl__name* kl_other_2 )
 {
     int32_t kl_t0;
@@ -124,24 +149,36 @@ int32_t kl__operator_compare__S4name_4name( struct kl__name* kl_this_1, struct k
     bool kl_t5;
 #line 31 "codegen/operator_compare.kl"
     kl_t4 = ( *kl_this_1 ).kl_first_65 < ( *kl_other_2 ).kl_first_65;
+#line 31 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 31 "codegen/operator_compare.kl"
     kl_t3 = 0;
+#line 31 "codegen/operator_compare.kl"
     goto bb5;
     bb2:
+#line 31 "codegen/operator_compare.kl"
     kl_t5 = ( *kl_this_1 ).kl_first_65 == ( *kl_other_2 ).kl_first_65;
+#line 31 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 31 "codegen/operator_compare.kl"
     kl_t3 = 1;
+#line 31 "codegen/operator_compare.kl"
     goto bb5;
     bb4:
+#line 31 "codegen/operator_compare.kl"
     kl_t3 = 2;
+#line 31 "codegen/operator_compare.kl"
     goto bb5;
     bb5:
+#line 31 "codegen/operator_compare.kl"
     kl_t0 = kl_t3;
+#line 31 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 66 "codegen/operator_compare.kl"
 int32_t kl__rank__Q7prelude8ordering( int32_t kl_o_1 )
 {
     int32_t kl_t0;
@@ -150,26 +187,31 @@ int32_t kl__rank__Q7prelude8ordering( int32_t kl_o_1 )
     bool kl_t4;
 #line 70 "codegen/operator_compare.kl"
     kl_t2 = kl_o_1 == 0;
+#line 70 "codegen/operator_compare.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 71 "codegen/operator_compare.kl"
     kl_t3 = 0 - 1;
+#line 71 "codegen/operator_compare.kl"
     kl_t0 = kl_t3;
+#line 71 "codegen/operator_compare.kl"
     return kl_t0;
     bb2:
-#line 73 "codegen/operator_compare.kl"
     kl_t0 = 0;
+#line 73 "codegen/operator_compare.kl"
     return kl_t0;
     bb3:
-#line 75 "codegen/operator_compare.kl"
     kl_t0 = 1;
+#line 75 "codegen/operator_compare.kl"
     return kl_t0;
     bb4:
 #line 72 "codegen/operator_compare.kl"
     kl_t4 = kl_o_1 == 1;
+#line 72 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
 }
 
+#line 79 "codegen/operator_compare.kl"
 bool kl__before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 )
 {
     bool kl_t0;
@@ -179,13 +221,19 @@ bool kl__before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 )
     bool kl_t6;
 #line 81 "codegen/operator_compare.kl"
     kl_t3 = &( *kl_a_1 );
+#line 81 "codegen/operator_compare.kl"
     kl_t4 = &( *kl_b_2 );
+#line 81 "codegen/operator_compare.kl"
     kl_t5 = kl__operator_compare__S4name_4name( kl_t3, kl_t4 );
+#line 81 "codegen/operator_compare.kl"
     kl_t6 = kl_t5 == 0;
+#line 81 "codegen/operator_compare.kl"
     kl_t0 = kl_t6;
+#line 81 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 84 "codegen/operator_compare.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -350,422 +398,678 @@ int32_t kl__main__( void )
     bool kl_t167;
 #line 86 "codegen/operator_compare.kl"
     kl_t2 = 0 - 1;
+#line 86 "codegen/operator_compare.kl"
     kl_small_1 = kl_t2;
-#line 87 "codegen/operator_compare.kl"
     kl_big_3 = 1;
-#line 88 "codegen/operator_compare.kl"
     kl_byte_4 = 200;
-#line 89 "codegen/operator_compare.kl"
     kl_half_5 = 0.5;
 #line 91 "codegen/operator_compare.kl"
     kl_t9 = kl_small_1 < 3;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
+#line 91 "codegen/operator_compare.kl"
     kl_t8 = 0;
+#line 91 "codegen/operator_compare.kl"
     goto bb5;
     bb2:
+#line 91 "codegen/operator_compare.kl"
     kl_t10 = kl_small_1 == 3;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
+#line 91 "codegen/operator_compare.kl"
     kl_t8 = 1;
+#line 91 "codegen/operator_compare.kl"
     goto bb5;
     bb4:
+#line 91 "codegen/operator_compare.kl"
     kl_t8 = 2;
+#line 91 "codegen/operator_compare.kl"
     goto bb5;
     bb5:
+#line 91 "codegen/operator_compare.kl"
     kl_t11 = kl__rank__Q7prelude8ordering( kl_t8 );
+#line 91 "codegen/operator_compare.kl"
     kl_t12 = 0 - 1;
+#line 91 "codegen/operator_compare.kl"
     kl_t13 = kl_t11 != kl_t12;
+#line 91 "codegen/operator_compare.kl"
     kl_t7 = kl_t13;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t7 ) goto bb7; else goto bb6;
     bb6:
+#line 91 "codegen/operator_compare.kl"
     kl_t15 = 3 < 3;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t15 ) goto bb8; else goto bb9;
     bb7:
+#line 91 "codegen/operator_compare.kl"
     kl_t6 = kl_t7;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb14; else goto bb13;
     bb8:
+#line 91 "codegen/operator_compare.kl"
     kl_t14 = 0;
+#line 91 "codegen/operator_compare.kl"
     goto bb12;
     bb9:
+#line 91 "codegen/operator_compare.kl"
     kl_t16 = 3 == 3;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t16 ) goto bb10; else goto bb11;
     bb10:
+#line 91 "codegen/operator_compare.kl"
     kl_t14 = 1;
+#line 91 "codegen/operator_compare.kl"
     goto bb12;
     bb11:
+#line 91 "codegen/operator_compare.kl"
     kl_t14 = 2;
+#line 91 "codegen/operator_compare.kl"
     goto bb12;
     bb12:
+#line 91 "codegen/operator_compare.kl"
     kl_t17 = kl__rank__Q7prelude8ordering( kl_t14 );
+#line 91 "codegen/operator_compare.kl"
     kl_t18 = kl_t17 != 0;
+#line 91 "codegen/operator_compare.kl"
     kl_t7 = kl_t18;
+#line 91 "codegen/operator_compare.kl"
     goto bb7;
     bb13:
+#line 91 "codegen/operator_compare.kl"
     kl_t20 = kl_byte_4 < 100;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t20 ) goto bb15; else goto bb16;
     bb14:
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb20; else goto bb21;
     bb15:
+#line 91 "codegen/operator_compare.kl"
     kl_t19 = 0;
+#line 91 "codegen/operator_compare.kl"
     goto bb19;
     bb16:
+#line 91 "codegen/operator_compare.kl"
     kl_t21 = kl_byte_4 == 100;
+#line 91 "codegen/operator_compare.kl"
     if ( kl_t21 ) goto bb17; else goto bb18;
     bb17:
+#line 91 "codegen/operator_compare.kl"
     kl_t19 = 1;
+#line 91 "codegen/operator_compare.kl"
     goto bb19;
     bb18:
+#line 91 "codegen/operator_compare.kl"
     kl_t19 = 2;
+#line 91 "codegen/operator_compare.kl"
     goto bb19;
     bb19:
+#line 91 "codegen/operator_compare.kl"
     kl_t22 = kl__rank__Q7prelude8ordering( kl_t19 );
+#line 91 "codegen/operator_compare.kl"
     kl_t23 = kl_t22 != 1;
+#line 91 "codegen/operator_compare.kl"
     kl_t6 = kl_t23;
+#line 91 "codegen/operator_compare.kl"
     goto bb14;
     bb20:
-#line 93 "codegen/operator_compare.kl"
     kl_t0 = 1;
+#line 93 "codegen/operator_compare.kl"
     return kl_t0;
     bb21:
 #line 96 "codegen/operator_compare.kl"
     kl_t25 = ( int64_t ) kl_small_1;
+#line 96 "codegen/operator_compare.kl"
     kl_t27 = kl_cmp_lt_i64_u64( kl_t25, kl_big_3 );
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t27 ) goto bb22; else goto bb23;
     bb22:
+#line 96 "codegen/operator_compare.kl"
     kl_t26 = 0;
+#line 96 "codegen/operator_compare.kl"
     goto bb26;
     bb23:
+#line 96 "codegen/operator_compare.kl"
     kl_t28 = kl_cmp_eq_i64_u64( kl_t25, kl_big_3 );
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t28 ) goto bb24; else goto bb25;
     bb24:
+#line 96 "codegen/operator_compare.kl"
     kl_t26 = 1;
+#line 96 "codegen/operator_compare.kl"
     goto bb26;
     bb25:
+#line 96 "codegen/operator_compare.kl"
     kl_t26 = 2;
+#line 96 "codegen/operator_compare.kl"
     goto bb26;
     bb26:
+#line 96 "codegen/operator_compare.kl"
     kl_t29 = kl_t26 != 0;
+#line 96 "codegen/operator_compare.kl"
     kl_t24 = kl_t29;
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t24 ) goto bb28; else goto bb27;
     bb27:
+#line 96 "codegen/operator_compare.kl"
     kl_t30 = ( int64_t ) kl_small_1;
+#line 96 "codegen/operator_compare.kl"
     kl_t32 = kl_cmp_gt_i64_u64( kl_t30, kl_big_3 );
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t32 ) goto bb29; else goto bb30;
     bb28:
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t24 ) goto bb34; else goto bb35;
     bb29:
+#line 96 "codegen/operator_compare.kl"
     kl_t31 = 0;
+#line 96 "codegen/operator_compare.kl"
     goto bb33;
     bb30:
+#line 96 "codegen/operator_compare.kl"
     kl_t33 = kl_cmp_eq_i64_u64( kl_t30, kl_big_3 );
+#line 96 "codegen/operator_compare.kl"
     if ( kl_t33 ) goto bb31; else goto bb32;
     bb31:
+#line 96 "codegen/operator_compare.kl"
     kl_t31 = 1;
+#line 96 "codegen/operator_compare.kl"
     goto bb33;
     bb32:
+#line 96 "codegen/operator_compare.kl"
     kl_t31 = 2;
+#line 96 "codegen/operator_compare.kl"
     goto bb33;
     bb33:
+#line 96 "codegen/operator_compare.kl"
     kl_t34 = kl_t31 != 2;
+#line 96 "codegen/operator_compare.kl"
     kl_t24 = kl_t34;
+#line 96 "codegen/operator_compare.kl"
     goto bb28;
     bb34:
-#line 98 "codegen/operator_compare.kl"
     kl_t0 = 2;
+#line 98 "codegen/operator_compare.kl"
     return kl_t0;
     bb35:
 #line 101 "codegen/operator_compare.kl"
     kl_t36 = kl_half_5 == kl_half_5;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t36 ) goto bb37; else goto bb36;
     bb36:
+#line 101 "codegen/operator_compare.kl"
     kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> 0.25" );
     bb37:
+#line 101 "codegen/operator_compare.kl"
     kl_t38 = kl_half_5 < 0.25;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t38 ) goto bb38; else goto bb39;
     bb38:
+#line 101 "codegen/operator_compare.kl"
     kl_t37 = 0;
+#line 101 "codegen/operator_compare.kl"
     goto bb42;
     bb39:
+#line 101 "codegen/operator_compare.kl"
     kl_t39 = kl_half_5 == 0.25;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t39 ) goto bb40; else goto bb41;
     bb40:
+#line 101 "codegen/operator_compare.kl"
     kl_t37 = 1;
+#line 101 "codegen/operator_compare.kl"
     goto bb42;
     bb41:
+#line 101 "codegen/operator_compare.kl"
     kl_t37 = 2;
+#line 101 "codegen/operator_compare.kl"
     goto bb42;
     bb42:
+#line 101 "codegen/operator_compare.kl"
     kl_t40 = kl_t37 != 2;
+#line 101 "codegen/operator_compare.kl"
     kl_t35 = kl_t40;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t35 ) goto bb44; else goto bb43;
     bb43:
+#line 101 "codegen/operator_compare.kl"
     kl_t41 = kl_half_5 == kl_half_5;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t41 ) goto bb46; else goto bb45;
     bb44:
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t35 ) goto bb53; else goto bb54;
     bb45:
+#line 101 "codegen/operator_compare.kl"
     kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> half" );
     bb46:
+#line 101 "codegen/operator_compare.kl"
     kl_t42 = kl_half_5 == kl_half_5;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t42 ) goto bb47; else goto bb45;
     bb47:
+#line 101 "codegen/operator_compare.kl"
     kl_t44 = kl_half_5 < kl_half_5;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t44 ) goto bb48; else goto bb49;
     bb48:
+#line 101 "codegen/operator_compare.kl"
     kl_t43 = 0;
+#line 101 "codegen/operator_compare.kl"
     goto bb52;
     bb49:
+#line 101 "codegen/operator_compare.kl"
     kl_t45 = kl_half_5 == kl_half_5;
+#line 101 "codegen/operator_compare.kl"
     if ( kl_t45 ) goto bb50; else goto bb51;
     bb50:
+#line 101 "codegen/operator_compare.kl"
     kl_t43 = 1;
+#line 101 "codegen/operator_compare.kl"
     goto bb52;
     bb51:
+#line 101 "codegen/operator_compare.kl"
     kl_t43 = 2;
+#line 101 "codegen/operator_compare.kl"
     goto bb52;
     bb52:
+#line 101 "codegen/operator_compare.kl"
     kl_t46 = kl_t43 != 1;
+#line 101 "codegen/operator_compare.kl"
     kl_t35 = kl_t46;
+#line 101 "codegen/operator_compare.kl"
     goto bb44;
     bb53:
-#line 103 "codegen/operator_compare.kl"
     kl_t0 = 3;
+#line 103 "codegen/operator_compare.kl"
     return kl_t0;
     bb54:
 #line 106 "codegen/operator_compare.kl"
     kl_t48.kl_major_1 = 1;
+#line 106 "codegen/operator_compare.kl"
     kl_t48.kl_minor_3 = 2;
+#line 106 "codegen/operator_compare.kl"
     kl_a_47 = kl_t48;
-#line 107 "codegen/operator_compare.kl"
     kl_t50.kl_major_1 = 1;
+#line 107 "codegen/operator_compare.kl"
     kl_t50.kl_minor_3 = 3;
+#line 107 "codegen/operator_compare.kl"
     kl_b_49 = kl_t50;
 #line 109 "codegen/operator_compare.kl"
     kl_t53 = &kl_a_47;
+#line 109 "codegen/operator_compare.kl"
     kl_t54 = &kl_b_49;
+#line 109 "codegen/operator_compare.kl"
     kl_t55 = kl__operator_compare__S7version_7version( kl_t53, kl_t54 );
+#line 109 "codegen/operator_compare.kl"
     kl_t56 = kl_t55 != 0;
+#line 109 "codegen/operator_compare.kl"
     kl_t52 = kl_t56;
+#line 109 "codegen/operator_compare.kl"
     if ( kl_t52 ) goto bb56; else goto bb55;
     bb55:
+#line 109 "codegen/operator_compare.kl"
     kl_t57 = &kl_b_49;
+#line 109 "codegen/operator_compare.kl"
     kl_t58 = &kl_a_47;
+#line 109 "codegen/operator_compare.kl"
     kl_t59 = kl__operator_compare__S7version_7version( kl_t57, kl_t58 );
+#line 109 "codegen/operator_compare.kl"
     kl_t60 = kl_t59 != 2;
+#line 109 "codegen/operator_compare.kl"
     kl_t52 = kl_t60;
+#line 109 "codegen/operator_compare.kl"
     goto bb56;
     bb56:
+#line 109 "codegen/operator_compare.kl"
     kl_t51 = kl_t52;
+#line 109 "codegen/operator_compare.kl"
     if ( kl_t51 ) goto bb58; else goto bb57;
     bb57:
+#line 109 "codegen/operator_compare.kl"
     kl_t61 = &kl_a_47;
+#line 109 "codegen/operator_compare.kl"
     kl_t62 = &kl_a_47;
+#line 109 "codegen/operator_compare.kl"
     kl_t63 = kl__operator_compare__S7version_7version( kl_t61, kl_t62 );
+#line 109 "codegen/operator_compare.kl"
     kl_t64 = kl_t63 != 1;
+#line 109 "codegen/operator_compare.kl"
     kl_t51 = kl_t64;
+#line 109 "codegen/operator_compare.kl"
     goto bb58;
     bb58:
+#line 109 "codegen/operator_compare.kl"
     if ( kl_t51 ) goto bb59; else goto bb60;
     bb59:
-#line 111 "codegen/operator_compare.kl"
     kl_t0 = 4;
+#line 111 "codegen/operator_compare.kl"
     return kl_t0;
     bb60:
 #line 114 "codegen/operator_compare.kl"
     kl_t71 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t72 = &kl_b_49;
+#line 114 "codegen/operator_compare.kl"
     kl_t73 = kl__operator_compare__S7version_7version( kl_t71, kl_t72 );
+#line 114 "codegen/operator_compare.kl"
     kl_t74 = kl_t73 == 0;
+#line 114 "codegen/operator_compare.kl"
     kl_t75 = !kl_t74;
+#line 114 "codegen/operator_compare.kl"
     kl_t70 = kl_t75;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t70 ) goto bb62; else goto bb61;
     bb61:
+#line 114 "codegen/operator_compare.kl"
     kl_t76 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t77 = &kl_b_49;
+#line 114 "codegen/operator_compare.kl"
     kl_t78 = kl__operator_compare__S7version_7version( kl_t76, kl_t77 );
+#line 114 "codegen/operator_compare.kl"
     kl_t79 = kl_t78 != 2;
+#line 114 "codegen/operator_compare.kl"
     kl_t80 = !kl_t79;
+#line 114 "codegen/operator_compare.kl"
     kl_t70 = kl_t80;
+#line 114 "codegen/operator_compare.kl"
     goto bb62;
     bb62:
+#line 114 "codegen/operator_compare.kl"
     kl_t69 = kl_t70;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t69 ) goto bb64; else goto bb63;
     bb63:
+#line 114 "codegen/operator_compare.kl"
     kl_t81 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t82 = &kl_b_49;
+#line 114 "codegen/operator_compare.kl"
     kl_t83 = kl__operator_compare__S7version_7version( kl_t81, kl_t82 );
+#line 114 "codegen/operator_compare.kl"
     kl_t84 = kl_t83 == 2;
+#line 114 "codegen/operator_compare.kl"
     kl_t69 = kl_t84;
+#line 114 "codegen/operator_compare.kl"
     goto bb64;
     bb64:
+#line 114 "codegen/operator_compare.kl"
     kl_t68 = kl_t69;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t68 ) goto bb66; else goto bb65;
     bb65:
+#line 114 "codegen/operator_compare.kl"
     kl_t85 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t86 = &kl_b_49;
+#line 114 "codegen/operator_compare.kl"
     kl_t87 = kl__operator_compare__S7version_7version( kl_t85, kl_t86 );
+#line 114 "codegen/operator_compare.kl"
     kl_t88 = kl_t87 != 0;
+#line 114 "codegen/operator_compare.kl"
     kl_t68 = kl_t88;
+#line 114 "codegen/operator_compare.kl"
     goto bb66;
     bb66:
+#line 114 "codegen/operator_compare.kl"
     kl_t67 = kl_t68;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t67 ) goto bb68; else goto bb67;
     bb67:
+#line 114 "codegen/operator_compare.kl"
     kl_t89 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t90 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t91 = kl__operator_compare__S7version_7version( kl_t89, kl_t90 );
+#line 114 "codegen/operator_compare.kl"
     kl_t92 = kl_t91 != 2;
+#line 114 "codegen/operator_compare.kl"
     kl_t93 = !kl_t92;
+#line 114 "codegen/operator_compare.kl"
     kl_t67 = kl_t93;
+#line 114 "codegen/operator_compare.kl"
     goto bb68;
     bb68:
+#line 114 "codegen/operator_compare.kl"
     kl_t66 = kl_t67;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t66 ) goto bb70; else goto bb69;
     bb69:
+#line 114 "codegen/operator_compare.kl"
     kl_t94 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t95 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t96 = kl__operator_compare__S7version_7version( kl_t94, kl_t95 );
+#line 114 "codegen/operator_compare.kl"
     kl_t97 = kl_t96 != 0;
+#line 114 "codegen/operator_compare.kl"
     kl_t98 = !kl_t97;
+#line 114 "codegen/operator_compare.kl"
     kl_t66 = kl_t98;
+#line 114 "codegen/operator_compare.kl"
     goto bb70;
     bb70:
+#line 114 "codegen/operator_compare.kl"
     kl_t65 = kl_t66;
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t65 ) goto bb72; else goto bb71;
     bb71:
+#line 114 "codegen/operator_compare.kl"
     kl_t99 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t100 = &kl_a_47;
+#line 114 "codegen/operator_compare.kl"
     kl_t101 = kl__operator_compare__S7version_7version( kl_t99, kl_t100 );
+#line 114 "codegen/operator_compare.kl"
     kl_t102 = kl_t101 == 0;
+#line 114 "codegen/operator_compare.kl"
     kl_t65 = kl_t102;
+#line 114 "codegen/operator_compare.kl"
     goto bb72;
     bb72:
+#line 114 "codegen/operator_compare.kl"
     if ( kl_t65 ) goto bb73; else goto bb74;
     bb73:
-#line 116 "codegen/operator_compare.kl"
     kl_t0 = 5;
+#line 116 "codegen/operator_compare.kl"
     return kl_t0;
     bb74:
 #line 119 "codegen/operator_compare.kl"
     kl_t104 = &kl_n_103;
+#line 119 "codegen/operator_compare.kl"
     kl__name__R4name_2u8__ctor( kl_t104, 65 );
 #line 121 "codegen/operator_compare.kl"
     kl_t108 = &kl_n_103;
+#line 121 "codegen/operator_compare.kl"
     kl_t110 = &kl_t109;
+#line 121 "codegen/operator_compare.kl"
     kl__name__R4name_2u8__ctor( kl_t110, 66 );
+#line 121 "codegen/operator_compare.kl"
     kl_t112 = &kl_t109;
+#line 121 "codegen/operator_compare.kl"
     kl_t113 = kl__before__4name_4name( kl_t108, kl_t112 );
+#line 121 "codegen/operator_compare.kl"
     kl_t114 = !kl_t113;
+#line 121 "codegen/operator_compare.kl"
     kl_t107 = kl_t114;
+#line 121 "codegen/operator_compare.kl"
     if ( kl_t107 ) goto bb76; else goto bb75;
     bb75:
+#line 121 "codegen/operator_compare.kl"
     kl_t115 = &kl_n_103;
+#line 121 "codegen/operator_compare.kl"
     kl_t117 = &kl_t116;
+#line 121 "codegen/operator_compare.kl"
     kl__name__R4name_2u8__ctor( kl_t117, 65 );
+#line 121 "codegen/operator_compare.kl"
     kl_t119 = &kl_t116;
+#line 121 "codegen/operator_compare.kl"
     kl_t120 = kl__before__4name_4name( kl_t115, kl_t119 );
+#line 121 "codegen/operator_compare.kl"
     kl_t107 = kl_t120;
+#line 121 "codegen/operator_compare.kl"
     goto bb76;
     bb76:
+#line 121 "codegen/operator_compare.kl"
     kl_t106 = kl_t107;
+#line 121 "codegen/operator_compare.kl"
     if ( kl_t106 ) goto bb78; else goto bb77;
     bb77:
+#line 121 "codegen/operator_compare.kl"
     kl_t121 = &kl_n_103;
+#line 121 "codegen/operator_compare.kl"
     kl_t123 = &kl_t122;
+#line 121 "codegen/operator_compare.kl"
     kl__name__R4name_2u8__ctor( kl_t123, 64 );
+#line 121 "codegen/operator_compare.kl"
     kl_t125 = &kl_t122;
+#line 121 "codegen/operator_compare.kl"
     kl_t126 = kl__operator_compare__S4name_4name( kl_t121, kl_t125 );
+#line 121 "codegen/operator_compare.kl"
     kl_t127 = kl_t126 == 2;
+#line 121 "codegen/operator_compare.kl"
     kl_t128 = !kl_t127;
+#line 121 "codegen/operator_compare.kl"
     kl_t106 = kl_t128;
+#line 121 "codegen/operator_compare.kl"
     goto bb78;
     bb78:
+#line 121 "codegen/operator_compare.kl"
     if ( kl_t106 ) goto bb79; else goto bb80;
     bb79:
-#line 123 "codegen/operator_compare.kl"
     kl_t0 = 6;
+#line 123 "codegen/operator_compare.kl"
     return kl_t0;
     bb80:
 #line 126 "codegen/operator_compare.kl"
     kl_t130 = &kl_p_129;
+#line 126 "codegen/operator_compare.kl"
     kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t130, 1, 2 );
 #line 128 "codegen/operator_compare.kl"
     kl_t134 = &kl_p_129;
+#line 128 "codegen/operator_compare.kl"
     kl_t136 = &kl_t135;
+#line 128 "codegen/operator_compare.kl"
     kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t136, 1, 3 );
+#line 128 "codegen/operator_compare.kl"
     kl_t138 = &kl_t135;
+#line 128 "codegen/operator_compare.kl"
     kl_t139 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t134, kl_t138 );
+#line 128 "codegen/operator_compare.kl"
     kl_t140 = kl_t139 != 0;
+#line 128 "codegen/operator_compare.kl"
     kl_t133 = kl_t140;
+#line 128 "codegen/operator_compare.kl"
     if ( kl_t133 ) goto bb82; else goto bb81;
     bb81:
+#line 128 "codegen/operator_compare.kl"
     kl_t141 = &kl_p_129;
+#line 128 "codegen/operator_compare.kl"
     kl_t143 = &kl_t142;
+#line 128 "codegen/operator_compare.kl"
     kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t143, 0, 9 );
+#line 128 "codegen/operator_compare.kl"
     kl_t145 = &kl_t142;
+#line 128 "codegen/operator_compare.kl"
     kl_t146 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t141, kl_t145 );
+#line 128 "codegen/operator_compare.kl"
     kl_t147 = kl_t146 == 0;
+#line 128 "codegen/operator_compare.kl"
     kl_t133 = kl_t147;
+#line 128 "codegen/operator_compare.kl"
     goto bb82;
     bb82:
+#line 128 "codegen/operator_compare.kl"
     kl_t132 = kl_t133;
+#line 128 "codegen/operator_compare.kl"
     if ( kl_t132 ) goto bb84; else goto bb83;
     bb83:
+#line 128 "codegen/operator_compare.kl"
     kl_t148 = &kl_p_129;
+#line 128 "codegen/operator_compare.kl"
     kl_t150 = &kl_t149;
+#line 128 "codegen/operator_compare.kl"
     kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t150, 1, 2 );
+#line 128 "codegen/operator_compare.kl"
     kl_t152 = &kl_t149;
+#line 128 "codegen/operator_compare.kl"
     kl_t153 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t148, kl_t152 );
+#line 128 "codegen/operator_compare.kl"
     kl_t154 = kl_t153 != 1;
+#line 128 "codegen/operator_compare.kl"
     kl_t132 = kl_t154;
+#line 128 "codegen/operator_compare.kl"
     goto bb84;
     bb84:
+#line 128 "codegen/operator_compare.kl"
     if ( kl_t132 ) goto bb85; else goto bb86;
     bb85:
-#line 130 "codegen/operator_compare.kl"
     kl_t0 = 7;
+#line 130 "codegen/operator_compare.kl"
     return kl_t0;
     bb86:
 #line 133 "codegen/operator_compare.kl"
     kl_t156 = 2;
+#line 133 "codegen/operator_compare.kl"
     kl_t157 = &kl_t156;
+#line 133 "codegen/operator_compare.kl"
     kl_t158 = 1;
+#line 133 "codegen/operator_compare.kl"
     kl_t159 = &kl_t158;
+#line 133 "codegen/operator_compare.kl"
     kl_t160 = kl__compare__I3i32E__3i32_3i32( kl_t157, kl_t159 );
+#line 133 "codegen/operator_compare.kl"
     kl_t161 = kl_t160 != 2;
+#line 133 "codegen/operator_compare.kl"
     kl_t155 = kl_t161;
+#line 133 "codegen/operator_compare.kl"
     if ( kl_t155 ) goto bb88; else goto bb87;
     bb87:
+#line 133 "codegen/operator_compare.kl"
     kl_t162 = 0.5;
+#line 133 "codegen/operator_compare.kl"
     kl_t163 = &kl_t162;
+#line 133 "codegen/operator_compare.kl"
     kl_t164 = 1.5;
+#line 133 "codegen/operator_compare.kl"
     kl_t165 = &kl_t164;
+#line 133 "codegen/operator_compare.kl"
     kl_t166 = kl__compare__I3f64E__3f64_3f64( kl_t163, kl_t165 );
+#line 133 "codegen/operator_compare.kl"
     kl_t167 = kl_t166 != 0;
+#line 133 "codegen/operator_compare.kl"
     kl_t155 = kl_t167;
+#line 133 "codegen/operator_compare.kl"
     goto bb88;
     bb88:
+#line 133 "codegen/operator_compare.kl"
     if ( kl_t155 ) goto bb89; else goto bb90;
     bb89:
-#line 135 "codegen/operator_compare.kl"
     kl_t0 = 8;
+#line 135 "codegen/operator_compare.kl"
     return kl_t0;
     bb90:
 #line 138 "codegen/operator_compare.kl"
     kl_t0 = 0;
+#line 138 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 39 "codegen/operator_compare.kl"
 void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
 {
-#line 41 "codegen/operator_compare.kl"
     ( *kl_this_1 ).kl_left_129 = kl_a_2;
-#line 42 "codegen/operator_compare.kl"
     ( *kl_this_1 ).kl_right_131 = kl_b_3;
+#line 39 "codegen/operator_compare.kl"
     return;
 }
 
+#line 45 "codegen/operator_compare.kl"
 int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E* kl_this_1, struct kl__pair__I3i32E* kl_other_2 )
 {
     int32_t kl_t0;
@@ -779,49 +1083,72 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
     bool kl_t10;
 #line 47 "codegen/operator_compare.kl"
     kl_t5 = ( *kl_this_1 ).kl_left_129 < ( *kl_other_2 ).kl_left_129;
+#line 47 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
+#line 47 "codegen/operator_compare.kl"
     kl_t4 = 0;
+#line 47 "codegen/operator_compare.kl"
     goto bb5;
     bb2:
+#line 47 "codegen/operator_compare.kl"
     kl_t6 = ( *kl_this_1 ).kl_left_129 == ( *kl_other_2 ).kl_left_129;
+#line 47 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
+#line 47 "codegen/operator_compare.kl"
     kl_t4 = 1;
+#line 47 "codegen/operator_compare.kl"
     goto bb5;
     bb4:
+#line 47 "codegen/operator_compare.kl"
     kl_t4 = 2;
+#line 47 "codegen/operator_compare.kl"
     goto bb5;
     bb5:
+#line 47 "codegen/operator_compare.kl"
     kl_first_3 = kl_t4;
 #line 49 "codegen/operator_compare.kl"
     kl_t7 = kl_first_3 != 1;
+#line 49 "codegen/operator_compare.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb6:
-#line 51 "codegen/operator_compare.kl"
     kl_t0 = kl_first_3;
+#line 51 "codegen/operator_compare.kl"
     return kl_t0;
     bb7:
 #line 54 "codegen/operator_compare.kl"
     kl_t9 = ( *kl_this_1 ).kl_right_131 < ( *kl_other_2 ).kl_right_131;
+#line 54 "codegen/operator_compare.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
+#line 54 "codegen/operator_compare.kl"
     kl_t8 = 0;
+#line 54 "codegen/operator_compare.kl"
     goto bb12;
     bb9:
+#line 54 "codegen/operator_compare.kl"
     kl_t10 = ( *kl_this_1 ).kl_right_131 == ( *kl_other_2 ).kl_right_131;
+#line 54 "codegen/operator_compare.kl"
     if ( kl_t10 ) goto bb10; else goto bb11;
     bb10:
+#line 54 "codegen/operator_compare.kl"
     kl_t8 = 1;
+#line 54 "codegen/operator_compare.kl"
     goto bb12;
     bb11:
+#line 54 "codegen/operator_compare.kl"
     kl_t8 = 2;
+#line 54 "codegen/operator_compare.kl"
     goto bb12;
     bb12:
+#line 54 "codegen/operator_compare.kl"
     kl_t0 = kl_t8;
+#line 54 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 61 "codegen/operator_compare.kl"
 int32_t kl__compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     int32_t kl_t0;
@@ -830,24 +1157,36 @@ int32_t kl__compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t5;
 #line 63 "codegen/operator_compare.kl"
     kl_t4 = ( *kl_a_1 ) < ( *kl_b_2 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 63 "codegen/operator_compare.kl"
     kl_t3 = 0;
+#line 63 "codegen/operator_compare.kl"
     goto bb5;
     bb2:
+#line 63 "codegen/operator_compare.kl"
     kl_t5 = ( *kl_a_1 ) == ( *kl_b_2 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 63 "codegen/operator_compare.kl"
     kl_t3 = 1;
+#line 63 "codegen/operator_compare.kl"
     goto bb5;
     bb4:
+#line 63 "codegen/operator_compare.kl"
     kl_t3 = 2;
+#line 63 "codegen/operator_compare.kl"
     goto bb5;
     bb5:
+#line 63 "codegen/operator_compare.kl"
     kl_t0 = kl_t3;
+#line 63 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 61 "codegen/operator_compare.kl"
 int32_t kl__compare__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
 {
     int32_t kl_t0;
@@ -858,33 +1197,51 @@ int32_t kl__compare__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
     bool kl_t7;
 #line 63 "codegen/operator_compare.kl"
     kl_t3 = ( *kl_a_1 ) == ( *kl_a_1 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
+#line 63 "codegen/operator_compare.kl"
     kl_rt_panic( "codegen/operator_compare.kl", 63, "NaN has no order: a <=> b" );
     bb2:
+#line 63 "codegen/operator_compare.kl"
     kl_t4 = ( *kl_b_2 ) == ( *kl_b_2 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb3; else goto bb1;
     bb3:
+#line 63 "codegen/operator_compare.kl"
     kl_t6 = ( *kl_a_1 ) < ( *kl_b_2 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
+#line 63 "codegen/operator_compare.kl"
     kl_t5 = 0;
+#line 63 "codegen/operator_compare.kl"
     goto bb8;
     bb5:
+#line 63 "codegen/operator_compare.kl"
     kl_t7 = ( *kl_a_1 ) == ( *kl_b_2 );
+#line 63 "codegen/operator_compare.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb6:
+#line 63 "codegen/operator_compare.kl"
     kl_t5 = 1;
+#line 63 "codegen/operator_compare.kl"
     goto bb8;
     bb7:
+#line 63 "codegen/operator_compare.kl"
     kl_t5 = 2;
+#line 63 "codegen/operator_compare.kl"
     goto bb8;
     bb8:
+#line 63 "codegen/operator_compare.kl"
     kl_t0 = kl_t5;
+#line 63 "codegen/operator_compare.kl"
     return kl_t0;
 }
 
+#line 84 "codegen/operator_compare.kl"
 int main( void )
 {
+#line 84 "codegen/operator_compare.kl"
     return (int) kl__main__();
 }

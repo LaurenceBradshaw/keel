@@ -33,13 +33,15 @@ void kl__take__S7counter_5moves( struct kl__counter*, struct kl__moves );
 uint64_t kl__total__S7counter( struct kl__counter* );
 int32_t kl__main__( void );
 
+#line 18 "codegen/plain_result.kl"
 void kl__counter__R7counter__ctor( struct kl__counter* kl_this_1 )
 {
-#line 20 "codegen/plain_result.kl"
     ( *kl_this_1 ).kl_total__74 = 0;
+#line 18 "codegen/plain_result.kl"
     return;
 }
 
+#line 23 "codegen/plain_result.kl"
 struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl__moves kl_t0;
@@ -51,21 +53,33 @@ struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64
     ( void ) kl_this_1;
 #line 25 "codegen/plain_result.kl"
     kl_t4.kl_from_1 = 0;
+#line 25 "codegen/plain_result.kl"
     kl_t4.kl_count_3 = kl_n_2;
+#line 25 "codegen/plain_result.kl"
     kl_t6 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
+#line 25 "codegen/plain_result.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 25 "codegen/plain_result.kl"
     kl_rt_panic( "codegen/plain_result.kl", 25, "arithmetic overflow: n + 1" );
     bb2:
+#line 25 "codegen/plain_result.kl"
     kl_t7 = kl_n_2 + 1;
+#line 25 "codegen/plain_result.kl"
     kl_t5.kl_from_1 = kl_n_2;
+#line 25 "codegen/plain_result.kl"
     kl_t5.kl_count_3 = kl_t7;
+#line 25 "codegen/plain_result.kl"
     kl_t3.kl_first_6 = kl_t4;
+#line 25 "codegen/plain_result.kl"
     kl_t3.kl_second_8 = kl_t5;
+#line 25 "codegen/plain_result.kl"
     kl_t0 = kl_t3;
+#line 25 "codegen/plain_result.kl"
     return kl_t0;
 }
 
+#line 28 "codegen/plain_result.kl"
 void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves kl_m_2 )
 {
     bool kl_t3;
@@ -73,28 +87,39 @@ void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves
     bool kl_t5;
 #line 30 "codegen/plain_result.kl"
     kl_t3 = __builtin_add_overflow( kl_m_2.kl_first_6.kl_count_3, kl_m_2.kl_second_8.kl_count_3, &( uint64_t ) { 0 } );
+#line 30 "codegen/plain_result.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 30 "codegen/plain_result.kl"
     kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: m.first.count + m.second.count" );
     bb2:
+#line 30 "codegen/plain_result.kl"
     kl_t4 = kl_m_2.kl_first_6.kl_count_3 + kl_m_2.kl_second_8.kl_count_3;
+#line 30 "codegen/plain_result.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_total__74, kl_t4, &( uint64_t ) { 0 } );
+#line 30 "codegen/plain_result.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 30 "codegen/plain_result.kl"
     kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: total_ += m.first.count + m.second.count;" );
     bb4:
+#line 30 "codegen/plain_result.kl"
     ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t4;
+#line 28 "codegen/plain_result.kl"
     return;
 }
 
+#line 33 "codegen/plain_result.kl"
 uint64_t kl__total__S7counter( struct kl__counter* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 35 "codegen/plain_result.kl"
     kl_t0 = ( *kl_this_1 ).kl_total__74;
+#line 35 "codegen/plain_result.kl"
     return kl_t0;
 }
 
+#line 41 "codegen/plain_result.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -113,36 +138,52 @@ int32_t kl__main__( void )
     bool kl_t16;
 #line 43 "codegen/plain_result.kl"
     kl_t2 = &kl_c_1;
+#line 43 "codegen/plain_result.kl"
     kl__counter__R7counter__ctor( kl_t2 );
-#line 44 "codegen/plain_result.kl"
     kl_t4 = &kl_c_1;
+#line 44 "codegen/plain_result.kl"
     kl_t5 = &kl_c_1;
+#line 44 "codegen/plain_result.kl"
     kl_t6 = kl__plan__S7counter_3u64( kl_t5, 2 );
+#line 44 "codegen/plain_result.kl"
     kl__take__S7counter_5moves( kl_t4, kl_t6 );
 #line 46 "codegen/plain_result.kl"
     kl_t9 = &kl_c_1;
+#line 46 "codegen/plain_result.kl"
     kl_t10 = kl__plan__S7counter_3u64( kl_t9, 3 );
+#line 46 "codegen/plain_result.kl"
     kl_later_8 = kl_t10;
-#line 47 "codegen/plain_result.kl"
     kl_t11 = &kl_c_1;
+#line 47 "codegen/plain_result.kl"
     kl__take__S7counter_5moves( kl_t11, kl_later_8 );
 #line 49 "codegen/plain_result.kl"
     kl_t14 = &kl_c_1;
+#line 49 "codegen/plain_result.kl"
     kl_t15 = kl__total__S7counter( kl_t14 );
+#line 49 "codegen/plain_result.kl"
     kl_t16 = kl_t15 == 12;
+#line 49 "codegen/plain_result.kl"
     if ( kl_t16 ) goto bb1; else goto bb2;
     bb1:
+#line 49 "codegen/plain_result.kl"
     kl_t13 = 0;
+#line 49 "codegen/plain_result.kl"
     goto bb3;
     bb2:
+#line 49 "codegen/plain_result.kl"
     kl_t13 = 1;
+#line 49 "codegen/plain_result.kl"
     goto bb3;
     bb3:
+#line 49 "codegen/plain_result.kl"
     kl_t0 = kl_t13;
+#line 49 "codegen/plain_result.kl"
     return kl_t0;
 }
 
+#line 41 "codegen/plain_result.kl"
 int main( void )
 {
+#line 41 "codegen/plain_result.kl"
     return (int) kl__main__();
 }

@@ -27,6 +27,7 @@ int32_t kl__twice__3i32( int32_t );
 int32_t kl__taken__M3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 7 "codegen/function_pointer_modes.kl"
 int32_t kl__bump__R3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
@@ -34,27 +35,33 @@ int32_t kl__bump__R3i32( int32_t* kl_a_1 )
     int32_t kl_t3;
 #line 9 "codegen/function_pointer_modes.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_a_1 ), 1, &( int32_t ) { 0 } );
+#line 9 "codegen/function_pointer_modes.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 9 "codegen/function_pointer_modes.kl"
     kl_rt_panic( "codegen/function_pointer_modes.kl", 9, "arithmetic overflow: a + 1" );
     bb2:
+#line 9 "codegen/function_pointer_modes.kl"
     kl_t3 = ( *kl_a_1 ) + 1;
+#line 9 "codegen/function_pointer_modes.kl"
     ( *kl_a_1 ) = kl_t3;
-#line 10 "codegen/function_pointer_modes.kl"
     kl_t0 = ( *kl_a_1 );
+#line 10 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 13 "codegen/function_pointer_modes.kl"
 int32_t kl__fill__O3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
 #line 15 "codegen/function_pointer_modes.kl"
     ( *kl_a_1 ) = 7;
-#line 16 "codegen/function_pointer_modes.kl"
     kl_t0 = ( *kl_a_1 );
+#line 16 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 19 "codegen/function_pointer_modes.kl"
 int32_t kl__total__1P( struct kl__P* kl_p_1 )
 {
     int32_t kl_t0;
@@ -62,15 +69,21 @@ int32_t kl__total__1P( struct kl__P* kl_p_1 )
     int32_t kl_t3;
 #line 21 "codegen/function_pointer_modes.kl"
     kl_t2 = __builtin_add_overflow( ( *kl_p_1 ).kl_x_1, ( *kl_p_1 ).kl_y_3, &( int32_t ) { 0 } );
+#line 21 "codegen/function_pointer_modes.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 21 "codegen/function_pointer_modes.kl"
     kl_rt_panic( "codegen/function_pointer_modes.kl", 21, "arithmetic overflow: p.x + p.y" );
     bb2:
+#line 21 "codegen/function_pointer_modes.kl"
     kl_t3 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
+#line 21 "codegen/function_pointer_modes.kl"
     kl_t0 = kl_t3;
+#line 21 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 24 "codegen/function_pointer_modes.kl"
 int32_t kl__twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -78,23 +91,31 @@ int32_t kl__twice__3i32( int32_t kl_a_1 )
     int32_t kl_t3;
 #line 26 "codegen/function_pointer_modes.kl"
     kl_t2 = __builtin_add_overflow( kl_a_1, kl_a_1, &( int32_t ) { 0 } );
+#line 26 "codegen/function_pointer_modes.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 26 "codegen/function_pointer_modes.kl"
     kl_rt_panic( "codegen/function_pointer_modes.kl", 26, "arithmetic overflow: a + a" );
     bb2:
+#line 26 "codegen/function_pointer_modes.kl"
     kl_t3 = kl_a_1 + kl_a_1;
+#line 26 "codegen/function_pointer_modes.kl"
     kl_t0 = kl_t3;
+#line 26 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 29 "codegen/function_pointer_modes.kl"
 int32_t kl__taken__M3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 31 "codegen/function_pointer_modes.kl"
     kl_t0 = kl_a_1;
+#line 31 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 34 "codegen/function_pointer_modes.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -129,89 +150,109 @@ int32_t kl__main__( void )
     bool kl_t29;
 #line 36 "codegen/function_pointer_modes.kl"
     kl_t2 = kl__bump__R3i32;
+#line 36 "codegen/function_pointer_modes.kl"
     kl_b_1 = kl_t2;
-#line 37 "codegen/function_pointer_modes.kl"
     kl_t4 = kl__fill__O3i32;
+#line 37 "codegen/function_pointer_modes.kl"
     kl_f_3 = kl_t4;
-#line 38 "codegen/function_pointer_modes.kl"
     kl_t6 = kl__total__1P;
+#line 38 "codegen/function_pointer_modes.kl"
     kl_t_5 = kl_t6;
-#line 39 "codegen/function_pointer_modes.kl"
     kl_t8 = kl__twice__3i32;
+#line 39 "codegen/function_pointer_modes.kl"
     kl_d_7 = kl_t8;
-#line 40 "codegen/function_pointer_modes.kl"
     kl_t10 = kl__taken__M3i32;
+#line 40 "codegen/function_pointer_modes.kl"
     kl_v_9 = kl_t10;
 #line 42 "codegen/function_pointer_modes.kl"
     kl_n_11 = 1;
 #line 44 "codegen/function_pointer_modes.kl"
     kl_t12 = &kl_n_11;
+#line 44 "codegen/function_pointer_modes.kl"
     kl_t13 = kl_b_1( kl_t12 );
+#line 44 "codegen/function_pointer_modes.kl"
     kl_t14 = kl_t13 != 2;
+#line 44 "codegen/function_pointer_modes.kl"
     if ( kl_t14 ) goto bb1; else goto bb2;
     bb1:
-#line 46 "codegen/function_pointer_modes.kl"
     kl_t0 = 1;
+#line 46 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb2:
 #line 49 "codegen/function_pointer_modes.kl"
     kl_t15 = kl_n_11 != 2;
+#line 49 "codegen/function_pointer_modes.kl"
     if ( kl_t15 ) goto bb3; else goto bb4;
     bb3:
-#line 51 "codegen/function_pointer_modes.kl"
     kl_t0 = 2;
+#line 51 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb4:
 #line 56 "codegen/function_pointer_modes.kl"
     kl_t17 = &kl_m_16;
+#line 56 "codegen/function_pointer_modes.kl"
     kl_t18 = kl_f_3( kl_t17 );
+#line 56 "codegen/function_pointer_modes.kl"
     kl_t19 = kl_t18 != 7;
+#line 56 "codegen/function_pointer_modes.kl"
     if ( kl_t19 ) goto bb5; else goto bb6;
     bb5:
-#line 58 "codegen/function_pointer_modes.kl"
     kl_t0 = 3;
+#line 58 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb6:
 #line 61 "codegen/function_pointer_modes.kl"
     kl_t21.kl_x_1 = 2;
+#line 61 "codegen/function_pointer_modes.kl"
     kl_t21.kl_y_3 = 3;
+#line 61 "codegen/function_pointer_modes.kl"
     kl_p_20 = kl_t21;
 #line 63 "codegen/function_pointer_modes.kl"
     kl_t22 = &kl_p_20;
+#line 63 "codegen/function_pointer_modes.kl"
     kl_t23 = kl_t_5( kl_t22 );
+#line 63 "codegen/function_pointer_modes.kl"
     kl_t24 = kl_t23 != 5;
+#line 63 "codegen/function_pointer_modes.kl"
     if ( kl_t24 ) goto bb7; else goto bb8;
     bb7:
-#line 65 "codegen/function_pointer_modes.kl"
     kl_t0 = 4;
+#line 65 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb8:
 #line 68 "codegen/function_pointer_modes.kl"
     kl_t25 = kl_d_7( 4 );
+#line 68 "codegen/function_pointer_modes.kl"
     kl_t26 = kl_t25 != 8;
+#line 68 "codegen/function_pointer_modes.kl"
     if ( kl_t26 ) goto bb9; else goto bb10;
     bb9:
-#line 70 "codegen/function_pointer_modes.kl"
     kl_t0 = 5;
+#line 70 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb10:
 #line 75 "codegen/function_pointer_modes.kl"
     kl_taken_from_27 = 6;
 #line 77 "codegen/function_pointer_modes.kl"
     kl_t28 = kl_v_9( kl_taken_from_27 );
+#line 77 "codegen/function_pointer_modes.kl"
     kl_t29 = kl_t28 != 6;
+#line 77 "codegen/function_pointer_modes.kl"
     if ( kl_t29 ) goto bb11; else goto bb12;
     bb11:
-#line 79 "codegen/function_pointer_modes.kl"
     kl_t0 = 6;
+#line 79 "codegen/function_pointer_modes.kl"
     return kl_t0;
     bb12:
 #line 82 "codegen/function_pointer_modes.kl"
     kl_t0 = 0;
+#line 82 "codegen/function_pointer_modes.kl"
     return kl_t0;
 }
 
+#line 34 "codegen/function_pointer_modes.kl"
 int main( void )
 {
+#line 34 "codegen/function_pointer_modes.kl"
     return (int) kl__main__();
 }

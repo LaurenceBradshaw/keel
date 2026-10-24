@@ -84,6 +84,7 @@ static double kl__length__as_kl__scaled__kl_operator_mul_42( void* self, double 
 
 static const struct kl__scaled__vtable kl__length__as_kl__scaled = { kl__length__as_kl__scaled__drop, kl__length__as_kl__scaled__kl_operator_mul_42 };
 
+#line 31 "codegen/operator_bounds.kl"
 struct kl__vec kl__operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_other_2 )
 {
     struct kl__vec kl_t0;
@@ -94,23 +95,35 @@ struct kl__vec kl__operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct k
     int32_t kl_t7;
 #line 31 "codegen/operator_bounds.kl"
     kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_x_48, ( *kl_other_2 ).kl_x_48, &( int32_t ) { 0 } );
+#line 31 "codegen/operator_bounds.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 31 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 31, "arithmetic overflow: x + other.x" );
     bb2:
+#line 31 "codegen/operator_bounds.kl"
     kl_t5 = ( *kl_this_1 ).kl_x_48 + ( *kl_other_2 ).kl_x_48;
+#line 31 "codegen/operator_bounds.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_y_50, ( *kl_other_2 ).kl_y_50, &( int32_t ) { 0 } );
+#line 31 "codegen/operator_bounds.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
+#line 31 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 31, "arithmetic overflow: y + other.y" );
     bb4:
+#line 31 "codegen/operator_bounds.kl"
     kl_t7 = ( *kl_this_1 ).kl_y_50 + ( *kl_other_2 ).kl_y_50;
+#line 31 "codegen/operator_bounds.kl"
     kl_t3.kl_x_48 = kl_t5;
+#line 31 "codegen/operator_bounds.kl"
     kl_t3.kl_y_50 = kl_t7;
+#line 31 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
+#line 31 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 32 "codegen/operator_bounds.kl"
 struct kl__vec kl__operator_sub__S3vec( struct kl__vec* kl_this_1 )
 {
     struct kl__vec kl_t0;
@@ -121,80 +134,109 @@ struct kl__vec kl__operator_sub__S3vec( struct kl__vec* kl_this_1 )
     int32_t kl_t6;
 #line 32 "codegen/operator_bounds.kl"
     kl_t3 = __builtin_sub_overflow( 0, ( *kl_this_1 ).kl_x_48, &( int32_t ) { 0 } );
+#line 32 "codegen/operator_bounds.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 32 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 32, "arithmetic overflow: 0 - x" );
     bb2:
+#line 32 "codegen/operator_bounds.kl"
     kl_t4 = 0 - ( *kl_this_1 ).kl_x_48;
+#line 32 "codegen/operator_bounds.kl"
     kl_t5 = __builtin_sub_overflow( 0, ( *kl_this_1 ).kl_y_50, &( int32_t ) { 0 } );
+#line 32 "codegen/operator_bounds.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
+#line 32 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 32, "arithmetic overflow: 0 - y" );
     bb4:
+#line 32 "codegen/operator_bounds.kl"
     kl_t6 = 0 - ( *kl_this_1 ).kl_y_50;
+#line 32 "codegen/operator_bounds.kl"
     kl_t2.kl_x_48 = kl_t4;
+#line 32 "codegen/operator_bounds.kl"
     kl_t2.kl_y_50 = kl_t6;
+#line 32 "codegen/operator_bounds.kl"
     kl_t0 = kl_t2;
+#line 32 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 39 "codegen/operator_bounds.kl"
 void kl__operator_add_assign__S3bag_3i32( struct kl__bag* kl_this_1, int32_t kl_value_2 )
 {
     bool kl_t3;
 #line 39 "codegen/operator_bounds.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_total_100, kl_value_2, &( int32_t ) { 0 } );
+#line 39 "codegen/operator_bounds.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
+#line 39 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 39, "arithmetic overflow: total += value;" );
     bb2:
+#line 39 "codegen/operator_bounds.kl"
     ( *kl_this_1 ).kl_total_100 = ( *kl_this_1 ).kl_total_100 + kl_value_2;
+#line 39 "codegen/operator_bounds.kl"
     return;
 }
 
+#line 46 "codegen/operator_bounds.kl"
 void kl__operator_add_assign__S5votes_4bool( struct kl__votes* kl_this_1, bool kl_value_2 )
 {
     bool kl_t3;
+#line 48 "codegen/operator_bounds.kl"
     if ( kl_value_2 ) goto bb1; else goto bb4;
     bb1:
-#line 50 "codegen/operator_bounds.kl"
     kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_yes_120, 1, &( int32_t ) { 0 } );
+#line 50 "codegen/operator_bounds.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
+#line 50 "codegen/operator_bounds.kl"
     kl_rt_panic( "codegen/operator_bounds.kl", 50, "arithmetic overflow: yes += 1;" );
     bb3:
+#line 50 "codegen/operator_bounds.kl"
     ( *kl_this_1 ).kl_yes_120 = ( *kl_this_1 ).kl_yes_120 + 1;
+#line 48 "codegen/operator_bounds.kl"
     goto bb4;
     bb4:
+#line 46 "codegen/operator_bounds.kl"
     return;
 }
 
+#line 59 "codegen/operator_bounds.kl"
 double kl__operator_mul__S6length_3f64( struct kl__length* kl_this_1, double kl_by_2 )
 {
     double kl_t0;
     double kl_t3;
 #line 59 "codegen/operator_bounds.kl"
     kl_t3 = ( *kl_this_1 ).kl_m_140 * kl_by_2;
+#line 59 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
+#line 59 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 70 "codegen/operator_bounds.kl"
 int32_t kl__operator_sub__S4signC9negatable( int32_t* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
 #line 72 "codegen/operator_bounds.kl"
     kl_t2 = ( *kl_this_1 ) == 0;
+#line 72 "codegen/operator_bounds.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 74 "codegen/operator_bounds.kl"
     kl_t0 = 1;
+#line 74 "codegen/operator_bounds.kl"
     return kl_t0;
     bb2:
 #line 77 "codegen/operator_bounds.kl"
     kl_t0 = 0;
+#line 77 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 103 "codegen/operator_bounds.kl"
 double kl__doubled__6scaled( struct kl__scaled__ref kl_s_1 )
 {
     double kl_t0;
@@ -202,11 +244,15 @@ double kl__doubled__6scaled( struct kl__scaled__ref kl_s_1 )
     double kl_t3;
 #line 105 "codegen/operator_bounds.kl"
     kl_t2 = kl_s_1;
+#line 105 "codegen/operator_bounds.kl"
     kl_t3 = kl_t2.vtable->kl_operator_mul_42( kl_t2.self, 2.0 );
+#line 105 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
+#line 105 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 108 "codegen/operator_bounds.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -261,139 +307,190 @@ int32_t kl__main__( void )
     bool kl_t51;
 #line 110 "codegen/operator_bounds.kl"
     kl_t2.kl_x_48 = 1;
+#line 110 "codegen/operator_bounds.kl"
     kl_t2.kl_y_50 = 2;
+#line 110 "codegen/operator_bounds.kl"
     kl_a_1 = kl_t2;
-#line 111 "codegen/operator_bounds.kl"
     kl_t4.kl_x_48 = 10;
+#line 111 "codegen/operator_bounds.kl"
     kl_t4.kl_y_50 = 20;
+#line 111 "codegen/operator_bounds.kl"
     kl_b_3 = kl_t4;
 #line 113 "codegen/operator_bounds.kl"
     kl_t6 = kl__sum3__I3vecE__3vec_3vec_3vec( kl_a_1, kl_b_3, kl_a_1 );
+#line 113 "codegen/operator_bounds.kl"
     kl_s_5 = kl_t6;
-#line 114 "codegen/operator_bounds.kl"
     kl_t8 = kl_s_5.kl_x_48 != 12;
+#line 114 "codegen/operator_bounds.kl"
     kl_t7 = kl_t8;
+#line 114 "codegen/operator_bounds.kl"
     if ( kl_t7 ) goto bb2; else goto bb1;
     bb1:
+#line 114 "codegen/operator_bounds.kl"
     kl_t9 = kl_s_5.kl_y_50 != 24;
+#line 114 "codegen/operator_bounds.kl"
     kl_t7 = kl_t9;
+#line 114 "codegen/operator_bounds.kl"
     goto bb2;
     bb2:
+#line 114 "codegen/operator_bounds.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 116 "codegen/operator_bounds.kl"
     kl_t0 = 1;
+#line 116 "codegen/operator_bounds.kl"
     return kl_t0;
     bb4:
 #line 119 "codegen/operator_bounds.kl"
     kl_t11 = kl__grow__I3vecE__3vec_3vec( kl_a_1, kl_b_3 );
+#line 119 "codegen/operator_bounds.kl"
     kl_g_10 = kl_t11;
-#line 120 "codegen/operator_bounds.kl"
     kl_t13 = kl_g_10.kl_x_48 != 11;
+#line 120 "codegen/operator_bounds.kl"
     kl_t12 = kl_t13;
+#line 120 "codegen/operator_bounds.kl"
     if ( kl_t12 ) goto bb6; else goto bb5;
     bb5:
+#line 120 "codegen/operator_bounds.kl"
     kl_t14 = kl_g_10.kl_y_50 != 22;
+#line 120 "codegen/operator_bounds.kl"
     kl_t12 = kl_t14;
+#line 120 "codegen/operator_bounds.kl"
     goto bb6;
     bb6:
+#line 120 "codegen/operator_bounds.kl"
     if ( kl_t12 ) goto bb7; else goto bb8;
     bb7:
-#line 122 "codegen/operator_bounds.kl"
     kl_t0 = 2;
+#line 122 "codegen/operator_bounds.kl"
     return kl_t0;
     bb8:
 #line 125 "codegen/operator_bounds.kl"
     kl_t16 = &kl_a_1;
+#line 125 "codegen/operator_bounds.kl"
     kl_t17 = kl__negate__I3vecE__3vec( kl_t16 );
+#line 125 "codegen/operator_bounds.kl"
     kl_n_15 = kl_t17;
-#line 126 "codegen/operator_bounds.kl"
     kl_t19 = -1;
+#line 126 "codegen/operator_bounds.kl"
     kl_t20 = kl_n_15.kl_x_48 != kl_t19;
+#line 126 "codegen/operator_bounds.kl"
     kl_t18 = kl_t20;
+#line 126 "codegen/operator_bounds.kl"
     if ( kl_t18 ) goto bb10; else goto bb9;
     bb9:
+#line 126 "codegen/operator_bounds.kl"
     kl_t21 = -2;
+#line 126 "codegen/operator_bounds.kl"
     kl_t22 = kl_n_15.kl_y_50 != kl_t21;
+#line 126 "codegen/operator_bounds.kl"
     kl_t18 = kl_t22;
+#line 126 "codegen/operator_bounds.kl"
     goto bb10;
     bb10:
+#line 126 "codegen/operator_bounds.kl"
     if ( kl_t18 ) goto bb11; else goto bb12;
     bb11:
-#line 128 "codegen/operator_bounds.kl"
     kl_t0 = 3;
+#line 128 "codegen/operator_bounds.kl"
     return kl_t0;
     bb12:
 #line 131 "codegen/operator_bounds.kl"
     kl_t24 = 0;
+#line 131 "codegen/operator_bounds.kl"
     kl_t25 = &kl_t24;
+#line 131 "codegen/operator_bounds.kl"
     kl_t26 = kl__negate__I4signE__4sign( kl_t25 );
+#line 131 "codegen/operator_bounds.kl"
     kl_t27 = kl_t26 != 1;
+#line 131 "codegen/operator_bounds.kl"
     kl_t23 = kl_t27;
+#line 131 "codegen/operator_bounds.kl"
     if ( kl_t23 ) goto bb14; else goto bb13;
     bb13:
+#line 131 "codegen/operator_bounds.kl"
     kl_t28 = 1;
+#line 131 "codegen/operator_bounds.kl"
     kl_t29 = &kl_t28;
+#line 131 "codegen/operator_bounds.kl"
     kl_t30 = kl__operator_sub__S4signC9negatable( kl_t29 );
+#line 131 "codegen/operator_bounds.kl"
     kl_t31 = kl_t30 != 0;
+#line 131 "codegen/operator_bounds.kl"
     kl_t23 = kl_t31;
+#line 131 "codegen/operator_bounds.kl"
     goto bb14;
     bb14:
+#line 131 "codegen/operator_bounds.kl"
     if ( kl_t23 ) goto bb15; else goto bb16;
     bb15:
-#line 133 "codegen/operator_bounds.kl"
     kl_t0 = 4;
+#line 133 "codegen/operator_bounds.kl"
     return kl_t0;
     bb16:
 #line 136 "codegen/operator_bounds.kl"
     kl_t33.kl_total_100 = 0;
+#line 136 "codegen/operator_bounds.kl"
     kl_held_32 = kl_t33;
-#line 137 "codegen/operator_bounds.kl"
     kl_t35.kl_yes_120 = 0;
+#line 137 "codegen/operator_bounds.kl"
     kl_v_34 = kl_t35;
-#line 138 "codegen/operator_bounds.kl"
     kl_t36 = &kl_held_32;
+#line 138 "codegen/operator_bounds.kl"
     kl_t37 = 4;
+#line 138 "codegen/operator_bounds.kl"
     kl_t38 = &kl_t37;
+#line 138 "codegen/operator_bounds.kl"
     kl__fill__I3bag_3i32E__R3bag_3i32( kl_t36, kl_t38 );
-#line 139 "codegen/operator_bounds.kl"
     kl_t40 = &kl_v_34;
+#line 139 "codegen/operator_bounds.kl"
     kl_t41 = true;
+#line 139 "codegen/operator_bounds.kl"
     kl_t42 = &kl_t41;
+#line 139 "codegen/operator_bounds.kl"
     kl__fill__I5votes_4boolE__R5votes_4bool( kl_t40, kl_t42 );
-#line 140 "codegen/operator_bounds.kl"
     kl_t45 = kl_held_32.kl_total_100 != 8;
+#line 140 "codegen/operator_bounds.kl"
     kl_t44 = kl_t45;
+#line 140 "codegen/operator_bounds.kl"
     if ( kl_t44 ) goto bb18; else goto bb17;
     bb17:
+#line 140 "codegen/operator_bounds.kl"
     kl_t46 = kl_v_34.kl_yes_120 != 2;
+#line 140 "codegen/operator_bounds.kl"
     kl_t44 = kl_t46;
+#line 140 "codegen/operator_bounds.kl"
     goto bb18;
     bb18:
+#line 140 "codegen/operator_bounds.kl"
     if ( kl_t44 ) goto bb19; else goto bb20;
     bb19:
-#line 142 "codegen/operator_bounds.kl"
     kl_t0 = 5;
+#line 142 "codegen/operator_bounds.kl"
     return kl_t0;
     bb20:
 #line 145 "codegen/operator_bounds.kl"
     kl_t48.kl_m_140 = 1.5;
+#line 145 "codegen/operator_bounds.kl"
     kl_l_47 = kl_t48;
-#line 146 "codegen/operator_bounds.kl"
     kl_t49 = ( struct kl__scaled__ref ) { ( void* ) &kl_l_47, &kl__length__as_kl__scaled };
+#line 146 "codegen/operator_bounds.kl"
     kl_t50 = kl__doubled__6scaled( kl_t49 );
+#line 146 "codegen/operator_bounds.kl"
     kl_t51 = kl_t50 != 3.0;
+#line 146 "codegen/operator_bounds.kl"
     if ( kl_t51 ) goto bb21; else goto bb22;
     bb21:
-#line 148 "codegen/operator_bounds.kl"
     kl_t0 = 6;
+#line 148 "codegen/operator_bounds.kl"
     return kl_t0;
     bb22:
 #line 151 "codegen/operator_bounds.kl"
     kl_t0 = 0;
+#line 151 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 81 "codegen/operator_bounds.kl"
 struct kl__vec kl__sum3__I3vecE__3vec_3vec_3vec( struct kl__vec kl_a_1, struct kl__vec kl_b_2, struct kl__vec kl_c_3 )
 {
     struct kl__vec kl_t0;
@@ -405,15 +502,23 @@ struct kl__vec kl__sum3__I3vecE__3vec_3vec_3vec( struct kl__vec kl_a_1, struct k
     struct kl__vec kl_t9;
 #line 83 "codegen/operator_bounds.kl"
     kl_t4 = &kl_a_1;
+#line 83 "codegen/operator_bounds.kl"
     kl_t5 = &kl_b_2;
+#line 83 "codegen/operator_bounds.kl"
     kl_t6 = kl__operator_add__S3vec_3vec( kl_t4, kl_t5 );
+#line 83 "codegen/operator_bounds.kl"
     kl_t7 = &kl_t6;
+#line 83 "codegen/operator_bounds.kl"
     kl_t8 = &kl_c_3;
+#line 83 "codegen/operator_bounds.kl"
     kl_t9 = kl__operator_add__S3vec_3vec( kl_t7, kl_t8 );
+#line 83 "codegen/operator_bounds.kl"
     kl_t0 = kl_t9;
+#line 83 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 86 "codegen/operator_bounds.kl"
 struct kl__vec kl__grow__I3vecE__3vec_3vec( struct kl__vec kl_a_1, struct kl__vec kl_b_2 )
 {
     struct kl__vec kl_t0;
@@ -422,14 +527,18 @@ struct kl__vec kl__grow__I3vecE__3vec_3vec( struct kl__vec kl_a_1, struct kl__ve
     struct kl__vec kl_t5;
 #line 88 "codegen/operator_bounds.kl"
     kl_t3 = &kl_a_1;
+#line 88 "codegen/operator_bounds.kl"
     kl_t4 = &kl_b_2;
+#line 88 "codegen/operator_bounds.kl"
     kl_t5 = kl__operator_add__S3vec_3vec( kl_t3, kl_t4 );
+#line 88 "codegen/operator_bounds.kl"
     kl_a_1 = kl_t5;
-#line 89 "codegen/operator_bounds.kl"
     kl_t0 = kl_a_1;
+#line 89 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 92 "codegen/operator_bounds.kl"
 struct kl__vec kl__negate__I3vecE__3vec( struct kl__vec* kl_a_1 )
 {
     struct kl__vec kl_t0;
@@ -437,11 +546,15 @@ struct kl__vec kl__negate__I3vecE__3vec( struct kl__vec* kl_a_1 )
     struct kl__vec kl_t3;
 #line 94 "codegen/operator_bounds.kl"
     kl_t2 = &( *kl_a_1 );
+#line 94 "codegen/operator_bounds.kl"
     kl_t3 = kl__operator_sub__S3vec( kl_t2 );
+#line 94 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
+#line 94 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 92 "codegen/operator_bounds.kl"
 int32_t kl__negate__I4signE__4sign( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
@@ -449,38 +562,49 @@ int32_t kl__negate__I4signE__4sign( int32_t* kl_a_1 )
     int32_t kl_t3;
 #line 94 "codegen/operator_bounds.kl"
     kl_t2 = &( *kl_a_1 );
+#line 94 "codegen/operator_bounds.kl"
     kl_t3 = kl__operator_sub__S4signC9negatable( kl_t2 );
+#line 94 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
+#line 94 "codegen/operator_bounds.kl"
     return kl_t0;
 }
 
+#line 97 "codegen/operator_bounds.kl"
 void kl__fill__I3bag_3i32E__R3bag_3i32( struct kl__bag* kl_acc_1, int32_t* kl_value_2 )
 {
     struct kl__bag* kl_t3;
     struct kl__bag* kl_t5;
 #line 99 "codegen/operator_bounds.kl"
     kl_t3 = &( *kl_acc_1 );
+#line 99 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S3bag_3i32( kl_t3, ( *kl_value_2 ) );
-#line 100 "codegen/operator_bounds.kl"
     kl_t5 = &( *kl_acc_1 );
+#line 100 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S3bag_3i32( kl_t5, ( *kl_value_2 ) );
+#line 97 "codegen/operator_bounds.kl"
     return;
 }
 
+#line 97 "codegen/operator_bounds.kl"
 void kl__fill__I5votes_4boolE__R5votes_4bool( struct kl__votes* kl_acc_1, bool* kl_value_2 )
 {
     struct kl__votes* kl_t3;
     struct kl__votes* kl_t5;
 #line 99 "codegen/operator_bounds.kl"
     kl_t3 = &( *kl_acc_1 );
+#line 99 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S5votes_4bool( kl_t3, ( *kl_value_2 ) );
-#line 100 "codegen/operator_bounds.kl"
     kl_t5 = &( *kl_acc_1 );
+#line 100 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S5votes_4bool( kl_t5, ( *kl_value_2 ) );
+#line 97 "codegen/operator_bounds.kl"
     return;
 }
 
+#line 108 "codegen/operator_bounds.kl"
 int main( void )
 {
+#line 108 "codegen/operator_bounds.kl"
     return (int) kl__main__();
 }

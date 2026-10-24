@@ -41,6 +41,7 @@ bool kl__overlaps__4Rect_4Rect( struct kl__Rect, struct kl__Rect );
 struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect, struct kl__Rect );
 int32_t kl__main__( void );
 
+#line 28 "codegen/geometry.kl"
 struct kl__Vec2 kl__add__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
 {
     struct kl__Vec2 kl_t0;
@@ -49,13 +50,19 @@ struct kl__Vec2 kl__add__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl
     double kl_t5;
 #line 30 "codegen/geometry.kl"
     kl_t4 = kl_a_1.kl_x_1 + kl_b_2.kl_x_1;
+#line 30 "codegen/geometry.kl"
     kl_t5 = kl_a_1.kl_y_3 + kl_b_2.kl_y_3;
+#line 30 "codegen/geometry.kl"
     kl_t3.kl_x_1 = kl_t4;
+#line 30 "codegen/geometry.kl"
     kl_t3.kl_y_3 = kl_t5;
+#line 30 "codegen/geometry.kl"
     kl_t0 = kl_t3;
+#line 30 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 33 "codegen/geometry.kl"
 struct kl__Vec2 kl__scale__4Vec2_3f64( struct kl__Vec2 kl_v_1, double kl_factor_2 )
 {
     struct kl__Vec2 kl_t0;
@@ -64,13 +71,19 @@ struct kl__Vec2 kl__scale__4Vec2_3f64( struct kl__Vec2 kl_v_1, double kl_factor_
     double kl_t5;
 #line 35 "codegen/geometry.kl"
     kl_t4 = kl_v_1.kl_x_1 * kl_factor_2;
+#line 35 "codegen/geometry.kl"
     kl_t5 = kl_v_1.kl_y_3 * kl_factor_2;
+#line 35 "codegen/geometry.kl"
     kl_t3.kl_x_1 = kl_t4;
+#line 35 "codegen/geometry.kl"
     kl_t3.kl_y_3 = kl_t5;
+#line 35 "codegen/geometry.kl"
     kl_t0 = kl_t3;
+#line 35 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 38 "codegen/geometry.kl"
 double kl__dot__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
 {
     double kl_t0;
@@ -79,56 +92,70 @@ double kl__dot__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
     double kl_t5;
 #line 40 "codegen/geometry.kl"
     kl_t3 = kl_a_1.kl_x_1 * kl_b_2.kl_x_1;
+#line 40 "codegen/geometry.kl"
     kl_t4 = kl_a_1.kl_y_3 * kl_b_2.kl_y_3;
+#line 40 "codegen/geometry.kl"
     kl_t5 = kl_t3 + kl_t4;
+#line 40 "codegen/geometry.kl"
     kl_t0 = kl_t5;
+#line 40 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 44 "codegen/geometry.kl"
 double kl__length_squared__4Vec2( struct kl__Vec2 kl_v_1 )
 {
     double kl_t0;
     double kl_t2;
 #line 46 "codegen/geometry.kl"
     kl_t2 = kl__dot__4Vec2_4Vec2( kl_v_1, kl_v_1 );
+#line 46 "codegen/geometry.kl"
     kl_t0 = kl_t2;
+#line 46 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 49 "codegen/geometry.kl"
 int32_t kl__smaller__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
 #line 51 "codegen/geometry.kl"
     kl_t3 = kl_a_1 < kl_b_2;
+#line 51 "codegen/geometry.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 53 "codegen/geometry.kl"
     kl_t0 = kl_a_1;
+#line 53 "codegen/geometry.kl"
     return kl_t0;
     bb2:
 #line 56 "codegen/geometry.kl"
     kl_t0 = kl_b_2;
+#line 56 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 59 "codegen/geometry.kl"
 int32_t kl__larger__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
 #line 61 "codegen/geometry.kl"
     kl_t3 = kl_a_1 > kl_b_2;
+#line 61 "codegen/geometry.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 63 "codegen/geometry.kl"
     kl_t0 = kl_a_1;
+#line 63 "codegen/geometry.kl"
     return kl_t0;
     bb2:
 #line 66 "codegen/geometry.kl"
     kl_t0 = kl_b_2;
+#line 66 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 71 "codegen/geometry.kl"
 bool kl__is_empty__4Rect( struct kl__Rect kl_r_1 )
 {
     bool kl_t0;
@@ -137,17 +164,25 @@ bool kl__is_empty__4Rect( struct kl__Rect kl_r_1 )
     bool kl_t4;
 #line 73 "codegen/geometry.kl"
     kl_t3 = kl_r_1.kl_high_13.kl_x_6 <= kl_r_1.kl_low_11.kl_x_6;
+#line 73 "codegen/geometry.kl"
     kl_t2 = kl_t3;
+#line 73 "codegen/geometry.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
+#line 73 "codegen/geometry.kl"
     kl_t4 = kl_r_1.kl_high_13.kl_y_8 <= kl_r_1.kl_low_11.kl_y_8;
+#line 73 "codegen/geometry.kl"
     kl_t2 = kl_t4;
+#line 73 "codegen/geometry.kl"
     goto bb2;
     bb2:
+#line 73 "codegen/geometry.kl"
     kl_t0 = kl_t2;
+#line 73 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 79 "codegen/geometry.kl"
 int64_t kl__area__4Rect( struct kl__Rect kl_r_1 )
 {
     int64_t kl_t0;
@@ -164,41 +199,57 @@ int64_t kl__area__4Rect( struct kl__Rect kl_r_1 )
     int64_t kl_t12;
 #line 81 "codegen/geometry.kl"
     kl_t2 = kl__is_empty__4Rect( kl_r_1 );
+#line 81 "codegen/geometry.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 83 "codegen/geometry.kl"
     kl_t0 = 0;
+#line 83 "codegen/geometry.kl"
     return kl_t0;
     bb2:
 #line 86 "codegen/geometry.kl"
     kl_t4 = __builtin_sub_overflow( kl_r_1.kl_high_13.kl_x_6, kl_r_1.kl_low_11.kl_x_6, &( int32_t ) { 0 } );
+#line 86 "codegen/geometry.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 86 "codegen/geometry.kl"
     kl_rt_panic( "codegen/geometry.kl", 86, "arithmetic overflow: r.high.x - r.low.x" );
     bb4:
+#line 86 "codegen/geometry.kl"
     kl_t5 = kl_r_1.kl_high_13.kl_x_6 - kl_r_1.kl_low_11.kl_x_6;
+#line 86 "codegen/geometry.kl"
     kl_t6 = ( int64_t ) kl_t5;
+#line 86 "codegen/geometry.kl"
     kl_width_3 = kl_t6;
-#line 87 "codegen/geometry.kl"
     kl_t8 = __builtin_sub_overflow( kl_r_1.kl_high_13.kl_y_8, kl_r_1.kl_low_11.kl_y_8, &( int32_t ) { 0 } );
+#line 87 "codegen/geometry.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
+#line 87 "codegen/geometry.kl"
     kl_rt_panic( "codegen/geometry.kl", 87, "arithmetic overflow: r.high.y - r.low.y" );
     bb6:
+#line 87 "codegen/geometry.kl"
     kl_t9 = kl_r_1.kl_high_13.kl_y_8 - kl_r_1.kl_low_11.kl_y_8;
+#line 87 "codegen/geometry.kl"
     kl_t10 = ( int64_t ) kl_t9;
+#line 87 "codegen/geometry.kl"
     kl_height_7 = kl_t10;
 #line 89 "codegen/geometry.kl"
     kl_t11 = __builtin_mul_overflow( kl_width_3, kl_height_7, &( int64_t ) { 0 } );
+#line 89 "codegen/geometry.kl"
     if ( kl_t11 ) goto bb7; else goto bb8;
     bb7:
+#line 89 "codegen/geometry.kl"
     kl_rt_panic( "codegen/geometry.kl", 89, "arithmetic overflow: width * height" );
     bb8:
+#line 89 "codegen/geometry.kl"
     kl_t12 = kl_width_3 * kl_height_7;
+#line 89 "codegen/geometry.kl"
     kl_t0 = kl_t12;
+#line 89 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 92 "codegen/geometry.kl"
 bool kl__contains__4Rect_5Point( struct kl__Rect kl_r_1, struct kl__Point kl_p_2 )
 {
     bool kl_t0;
@@ -211,31 +262,49 @@ bool kl__contains__4Rect_5Point( struct kl__Rect kl_r_1, struct kl__Point kl_p_2
     bool kl_t9;
 #line 94 "codegen/geometry.kl"
     kl_t6 = kl_p_2.kl_x_6 >= kl_r_1.kl_low_11.kl_x_6;
+#line 94 "codegen/geometry.kl"
     kl_t5 = kl_t6;
+#line 94 "codegen/geometry.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
+#line 94 "codegen/geometry.kl"
     kl_t7 = kl_p_2.kl_x_6 < kl_r_1.kl_high_13.kl_x_6;
+#line 94 "codegen/geometry.kl"
     kl_t5 = kl_t7;
+#line 94 "codegen/geometry.kl"
     goto bb2;
     bb2:
+#line 94 "codegen/geometry.kl"
     kl_t4 = kl_t5;
+#line 94 "codegen/geometry.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 94 "codegen/geometry.kl"
     kl_t8 = kl_p_2.kl_y_8 >= kl_r_1.kl_low_11.kl_y_8;
+#line 94 "codegen/geometry.kl"
     kl_t4 = kl_t8;
+#line 94 "codegen/geometry.kl"
     goto bb4;
     bb4:
+#line 94 "codegen/geometry.kl"
     kl_t3 = kl_t4;
+#line 94 "codegen/geometry.kl"
     if ( kl_t3 ) goto bb5; else goto bb6;
     bb5:
+#line 94 "codegen/geometry.kl"
     kl_t9 = kl_p_2.kl_y_8 < kl_r_1.kl_high_13.kl_y_8;
+#line 94 "codegen/geometry.kl"
     kl_t3 = kl_t9;
+#line 94 "codegen/geometry.kl"
     goto bb6;
     bb6:
+#line 94 "codegen/geometry.kl"
     kl_t0 = kl_t3;
+#line 94 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 98 "codegen/geometry.kl"
 bool kl__overlaps__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
 {
     bool kl_t0;
@@ -248,31 +317,49 @@ bool kl__overlaps__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
     bool kl_t9;
 #line 100 "codegen/geometry.kl"
     kl_t6 = kl_a_1.kl_low_11.kl_x_6 < kl_b_2.kl_high_13.kl_x_6;
+#line 100 "codegen/geometry.kl"
     kl_t5 = kl_t6;
+#line 100 "codegen/geometry.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
+#line 100 "codegen/geometry.kl"
     kl_t7 = kl_b_2.kl_low_11.kl_x_6 < kl_a_1.kl_high_13.kl_x_6;
+#line 100 "codegen/geometry.kl"
     kl_t5 = kl_t7;
+#line 100 "codegen/geometry.kl"
     goto bb2;
     bb2:
+#line 100 "codegen/geometry.kl"
     kl_t4 = kl_t5;
+#line 100 "codegen/geometry.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
+#line 100 "codegen/geometry.kl"
     kl_t8 = kl_a_1.kl_low_11.kl_y_8 < kl_b_2.kl_high_13.kl_y_8;
+#line 100 "codegen/geometry.kl"
     kl_t4 = kl_t8;
+#line 100 "codegen/geometry.kl"
     goto bb4;
     bb4:
+#line 100 "codegen/geometry.kl"
     kl_t3 = kl_t4;
+#line 100 "codegen/geometry.kl"
     if ( kl_t3 ) goto bb5; else goto bb6;
     bb5:
+#line 100 "codegen/geometry.kl"
     kl_t9 = kl_b_2.kl_low_11.kl_y_8 < kl_a_1.kl_high_13.kl_y_8;
+#line 100 "codegen/geometry.kl"
     kl_t3 = kl_t9;
+#line 100 "codegen/geometry.kl"
     goto bb6;
     bb6:
+#line 100 "codegen/geometry.kl"
     kl_t0 = kl_t3;
+#line 100 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 105 "codegen/geometry.kl"
 struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
 {
     struct kl__Rect kl_t0;
@@ -287,23 +374,34 @@ struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl
     struct kl__Rect kl_t11;
 #line 107 "codegen/geometry.kl"
     kl_t5 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_x_6, kl_b_2.kl_low_11.kl_x_6 );
+#line 107 "codegen/geometry.kl"
     kl_t6 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_y_8, kl_b_2.kl_low_11.kl_y_8 );
+#line 107 "codegen/geometry.kl"
     kl_t4.kl_x_6 = kl_t5;
+#line 107 "codegen/geometry.kl"
     kl_t4.kl_y_8 = kl_t6;
+#line 107 "codegen/geometry.kl"
     kl_low_3 = kl_t4;
-#line 108 "codegen/geometry.kl"
     kl_t9 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_x_6, kl_b_2.kl_high_13.kl_x_6 );
+#line 108 "codegen/geometry.kl"
     kl_t10 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_y_8, kl_b_2.kl_high_13.kl_y_8 );
+#line 108 "codegen/geometry.kl"
     kl_t8.kl_x_6 = kl_t9;
+#line 108 "codegen/geometry.kl"
     kl_t8.kl_y_8 = kl_t10;
+#line 108 "codegen/geometry.kl"
     kl_high_7 = kl_t8;
 #line 110 "codegen/geometry.kl"
     kl_t11.kl_low_11 = kl_low_3;
+#line 110 "codegen/geometry.kl"
     kl_t11.kl_high_13 = kl_high_7;
+#line 110 "codegen/geometry.kl"
     kl_t0 = kl_t11;
+#line 110 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 113 "codegen/geometry.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -386,268 +484,399 @@ int32_t kl__main__( void )
     bool kl_t77;
 #line 115 "codegen/geometry.kl"
     kl_t2.kl_x_1 = 1.5;
+#line 115 "codegen/geometry.kl"
     kl_t2.kl_y_3 = 2.0;
+#line 115 "codegen/geometry.kl"
     kl_a_1 = kl_t2;
-#line 116 "codegen/geometry.kl"
     kl_t4.kl_x_1 = 3.0;
+#line 116 "codegen/geometry.kl"
     kl_t4.kl_y_3 = 4.0;
+#line 116 "codegen/geometry.kl"
     kl_b_3 = kl_t4;
 #line 118 "codegen/geometry.kl"
     kl_t5 = kl__dot__4Vec2_4Vec2( kl_a_1, kl_b_3 );
+#line 118 "codegen/geometry.kl"
     kl_t6 = kl_t5 != 12.5;
+#line 118 "codegen/geometry.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
+#line 118 "codegen/geometry.kl"
     kl_t0 = 1;
+#line 118 "codegen/geometry.kl"
     return kl_t0;
     bb2:
 #line 119 "codegen/geometry.kl"
     kl_t7.kl_x_1 = 3.0;
+#line 119 "codegen/geometry.kl"
     kl_t7.kl_y_3 = 4.0;
+#line 119 "codegen/geometry.kl"
     kl_t8 = kl__length_squared__4Vec2( kl_t7 );
+#line 119 "codegen/geometry.kl"
     kl_t9 = kl_t8 != 25.0;
+#line 119 "codegen/geometry.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
+#line 119 "codegen/geometry.kl"
     kl_t0 = 2;
+#line 119 "codegen/geometry.kl"
     return kl_t0;
     bb4:
-#line 121 "codegen/geometry.kl"
     kl_t11 = kl__add__4Vec2_4Vec2( kl_a_1, kl_b_3 );
+#line 121 "codegen/geometry.kl"
     kl_sum_10 = kl_t11;
 #line 123 "codegen/geometry.kl"
     kl_t12 = kl_sum_10.kl_x_1 != 4.5;
+#line 123 "codegen/geometry.kl"
     if ( kl_t12 ) goto bb5; else goto bb6;
     bb5:
+#line 123 "codegen/geometry.kl"
     kl_t0 = 3;
+#line 123 "codegen/geometry.kl"
     return kl_t0;
     bb6:
 #line 124 "codegen/geometry.kl"
     kl_t13 = kl_sum_10.kl_y_3 != 6.0;
+#line 124 "codegen/geometry.kl"
     if ( kl_t13 ) goto bb7; else goto bb8;
     bb7:
+#line 124 "codegen/geometry.kl"
     kl_t0 = 4;
+#line 124 "codegen/geometry.kl"
     return kl_t0;
     bb8:
-#line 126 "codegen/geometry.kl"
     kl_t15 = kl__scale__4Vec2_3f64( kl_a_1, 2.0 );
+#line 126 "codegen/geometry.kl"
     kl_doubled_14 = kl_t15;
 #line 128 "codegen/geometry.kl"
     kl_t16 = kl_doubled_14.kl_x_1 != 3.0;
+#line 128 "codegen/geometry.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
+#line 128 "codegen/geometry.kl"
     kl_t0 = 5;
+#line 128 "codegen/geometry.kl"
     return kl_t0;
     bb10:
 #line 129 "codegen/geometry.kl"
     kl_t17 = kl_doubled_14.kl_y_3 != 4.0;
+#line 129 "codegen/geometry.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
+#line 129 "codegen/geometry.kl"
     kl_t0 = 6;
+#line 129 "codegen/geometry.kl"
     return kl_t0;
     bb12:
 #line 132 "codegen/geometry.kl"
     kl_t18 = kl__scale__4Vec2_3f64( kl_a_1, 2.0 );
+#line 132 "codegen/geometry.kl"
     kl_t19.kl_x_1 = 1.0;
+#line 132 "codegen/geometry.kl"
     kl_t19.kl_y_3 = 0.5;
+#line 132 "codegen/geometry.kl"
     kl_t20 = kl__dot__4Vec2_4Vec2( kl_t18, kl_t19 );
+#line 132 "codegen/geometry.kl"
     kl_t21 = kl_t20 != 5.0;
+#line 132 "codegen/geometry.kl"
     if ( kl_t21 ) goto bb13; else goto bb14;
     bb13:
+#line 132 "codegen/geometry.kl"
     kl_t0 = 7;
+#line 132 "codegen/geometry.kl"
     return kl_t0;
     bb14:
-#line 134 "codegen/geometry.kl"
     kl_t24.kl_x_6 = 0;
+#line 134 "codegen/geometry.kl"
     kl_t24.kl_y_8 = 0;
+#line 134 "codegen/geometry.kl"
     kl_t25.kl_x_6 = 4;
+#line 134 "codegen/geometry.kl"
     kl_t25.kl_y_8 = 3;
+#line 134 "codegen/geometry.kl"
     kl_t23.kl_low_11 = kl_t24;
+#line 134 "codegen/geometry.kl"
     kl_t23.kl_high_13 = kl_t25;
+#line 134 "codegen/geometry.kl"
     kl_unit_22 = kl_t23;
 #line 136 "codegen/geometry.kl"
     kl_t26 = kl__area__4Rect( kl_unit_22 );
+#line 136 "codegen/geometry.kl"
     kl_t27 = kl_t26 != 12;
+#line 136 "codegen/geometry.kl"
     if ( kl_t27 ) goto bb15; else goto bb16;
     bb15:
+#line 136 "codegen/geometry.kl"
     kl_t0 = 8;
+#line 136 "codegen/geometry.kl"
     return kl_t0;
     bb16:
 #line 137 "codegen/geometry.kl"
     kl_t28 = kl__is_empty__4Rect( kl_unit_22 );
+#line 137 "codegen/geometry.kl"
     if ( kl_t28 ) goto bb17; else goto bb18;
     bb17:
+#line 137 "codegen/geometry.kl"
     kl_t0 = 9;
+#line 137 "codegen/geometry.kl"
     return kl_t0;
     bb18:
 #line 140 "codegen/geometry.kl"
     kl_t29.kl_x_6 = 0;
+#line 140 "codegen/geometry.kl"
     kl_t29.kl_y_8 = 0;
+#line 140 "codegen/geometry.kl"
     kl_t30 = kl__contains__4Rect_5Point( kl_unit_22, kl_t29 );
+#line 140 "codegen/geometry.kl"
     kl_t31 = !kl_t30;
+#line 140 "codegen/geometry.kl"
     if ( kl_t31 ) goto bb19; else goto bb20;
     bb19:
+#line 140 "codegen/geometry.kl"
     kl_t0 = 10;
+#line 140 "codegen/geometry.kl"
     return kl_t0;
     bb20:
 #line 141 "codegen/geometry.kl"
     kl_t32.kl_x_6 = 4;
+#line 141 "codegen/geometry.kl"
     kl_t32.kl_y_8 = 3;
+#line 141 "codegen/geometry.kl"
     kl_t33 = kl__contains__4Rect_5Point( kl_unit_22, kl_t32 );
+#line 141 "codegen/geometry.kl"
     if ( kl_t33 ) goto bb21; else goto bb22;
     bb21:
+#line 141 "codegen/geometry.kl"
     kl_t0 = 11;
+#line 141 "codegen/geometry.kl"
     return kl_t0;
     bb22:
 #line 142 "codegen/geometry.kl"
     kl_t34.kl_x_6 = 3;
+#line 142 "codegen/geometry.kl"
     kl_t34.kl_y_8 = 2;
+#line 142 "codegen/geometry.kl"
     kl_t35 = kl__contains__4Rect_5Point( kl_unit_22, kl_t34 );
+#line 142 "codegen/geometry.kl"
     kl_t36 = !kl_t35;
+#line 142 "codegen/geometry.kl"
     if ( kl_t36 ) goto bb23; else goto bb24;
     bb23:
+#line 142 "codegen/geometry.kl"
     kl_t0 = 12;
+#line 142 "codegen/geometry.kl"
     return kl_t0;
     bb24:
 #line 143 "codegen/geometry.kl"
     kl_t38 = -1;
+#line 143 "codegen/geometry.kl"
     kl_t37.kl_x_6 = kl_t38;
+#line 143 "codegen/geometry.kl"
     kl_t37.kl_y_8 = 1;
+#line 143 "codegen/geometry.kl"
     kl_t39 = kl__contains__4Rect_5Point( kl_unit_22, kl_t37 );
+#line 143 "codegen/geometry.kl"
     if ( kl_t39 ) goto bb25; else goto bb26;
     bb25:
+#line 143 "codegen/geometry.kl"
     kl_t0 = 13;
+#line 143 "codegen/geometry.kl"
     return kl_t0;
     bb26:
 #line 146 "codegen/geometry.kl"
     kl_t42.kl_x_6 = 6;
+#line 146 "codegen/geometry.kl"
     kl_t42.kl_y_8 = 5;
+#line 146 "codegen/geometry.kl"
     kl_t43.kl_x_6 = 2;
+#line 146 "codegen/geometry.kl"
     kl_t43.kl_y_8 = 1;
+#line 146 "codegen/geometry.kl"
     kl_t41.kl_high_13 = kl_t42;
+#line 146 "codegen/geometry.kl"
     kl_t41.kl_low_11 = kl_t43;
+#line 146 "codegen/geometry.kl"
     kl_offset_40 = kl_t41;
 #line 148 "codegen/geometry.kl"
     kl_t44 = kl__area__4Rect( kl_offset_40 );
+#line 148 "codegen/geometry.kl"
     kl_t45 = kl_t44 != 16;
+#line 148 "codegen/geometry.kl"
     if ( kl_t45 ) goto bb27; else goto bb28;
     bb27:
+#line 148 "codegen/geometry.kl"
     kl_t0 = 14;
+#line 148 "codegen/geometry.kl"
     return kl_t0;
     bb28:
-#line 150 "codegen/geometry.kl"
     kl_t46 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_offset_40 );
+#line 150 "codegen/geometry.kl"
     kl_t47 = !kl_t46;
+#line 150 "codegen/geometry.kl"
     if ( kl_t47 ) goto bb29; else goto bb30;
     bb29:
+#line 150 "codegen/geometry.kl"
     kl_t0 = 15;
+#line 150 "codegen/geometry.kl"
     return kl_t0;
     bb30:
-#line 152 "codegen/geometry.kl"
     kl_t49 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_offset_40 );
+#line 152 "codegen/geometry.kl"
     kl_shared_48 = kl_t49;
 #line 154 "codegen/geometry.kl"
     kl_t50 = kl_shared_48.kl_low_11.kl_x_6 != 2;
+#line 154 "codegen/geometry.kl"
     if ( kl_t50 ) goto bb31; else goto bb32;
     bb31:
+#line 154 "codegen/geometry.kl"
     kl_t0 = 16;
+#line 154 "codegen/geometry.kl"
     return kl_t0;
     bb32:
 #line 155 "codegen/geometry.kl"
     kl_t51 = kl_shared_48.kl_low_11.kl_y_8 != 1;
+#line 155 "codegen/geometry.kl"
     if ( kl_t51 ) goto bb33; else goto bb34;
     bb33:
+#line 155 "codegen/geometry.kl"
     kl_t0 = 17;
+#line 155 "codegen/geometry.kl"
     return kl_t0;
     bb34:
 #line 156 "codegen/geometry.kl"
     kl_t52 = kl_shared_48.kl_high_13.kl_x_6 != 4;
+#line 156 "codegen/geometry.kl"
     if ( kl_t52 ) goto bb35; else goto bb36;
     bb35:
+#line 156 "codegen/geometry.kl"
     kl_t0 = 18;
+#line 156 "codegen/geometry.kl"
     return kl_t0;
     bb36:
 #line 157 "codegen/geometry.kl"
     kl_t53 = kl_shared_48.kl_high_13.kl_y_8 != 3;
+#line 157 "codegen/geometry.kl"
     if ( kl_t53 ) goto bb37; else goto bb38;
     bb37:
+#line 157 "codegen/geometry.kl"
     kl_t0 = 19;
+#line 157 "codegen/geometry.kl"
     return kl_t0;
     bb38:
 #line 158 "codegen/geometry.kl"
     kl_t54 = kl__area__4Rect( kl_shared_48 );
+#line 158 "codegen/geometry.kl"
     kl_t55 = kl_t54 != 4;
+#line 158 "codegen/geometry.kl"
     if ( kl_t55 ) goto bb39; else goto bb40;
     bb39:
+#line 158 "codegen/geometry.kl"
     kl_t0 = 20;
+#line 158 "codegen/geometry.kl"
     return kl_t0;
     bb40:
 #line 161 "codegen/geometry.kl"
     kl_t58.kl_x_6 = 100;
+#line 161 "codegen/geometry.kl"
     kl_t58.kl_y_8 = 100;
+#line 161 "codegen/geometry.kl"
     kl_t59.kl_x_6 = 110;
+#line 161 "codegen/geometry.kl"
     kl_t59.kl_y_8 = 110;
+#line 161 "codegen/geometry.kl"
     kl_t57.kl_low_11 = kl_t58;
+#line 161 "codegen/geometry.kl"
     kl_t57.kl_high_13 = kl_t59;
+#line 161 "codegen/geometry.kl"
     kl_far_56 = kl_t57;
-#line 162 "codegen/geometry.kl"
     kl_t61 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_far_56 );
+#line 162 "codegen/geometry.kl"
     kl_none_60 = kl_t61;
 #line 164 "codegen/geometry.kl"
     kl_t62 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_far_56 );
+#line 164 "codegen/geometry.kl"
     if ( kl_t62 ) goto bb41; else goto bb42;
     bb41:
+#line 164 "codegen/geometry.kl"
     kl_t0 = 21;
+#line 164 "codegen/geometry.kl"
     return kl_t0;
     bb42:
 #line 165 "codegen/geometry.kl"
     kl_t63 = kl__is_empty__4Rect( kl_none_60 );
+#line 165 "codegen/geometry.kl"
     kl_t64 = !kl_t63;
+#line 165 "codegen/geometry.kl"
     if ( kl_t64 ) goto bb43; else goto bb44;
     bb43:
+#line 165 "codegen/geometry.kl"
     kl_t0 = 22;
+#line 165 "codegen/geometry.kl"
     return kl_t0;
     bb44:
 #line 166 "codegen/geometry.kl"
     kl_t65 = kl__area__4Rect( kl_none_60 );
+#line 166 "codegen/geometry.kl"
     kl_t66 = kl_t65 != 0;
+#line 166 "codegen/geometry.kl"
     if ( kl_t66 ) goto bb45; else goto bb46;
     bb45:
+#line 166 "codegen/geometry.kl"
     kl_t0 = 23;
+#line 166 "codegen/geometry.kl"
     return kl_t0;
     bb46:
 #line 169 "codegen/geometry.kl"
     kl_t69.kl_x_6 = 0;
+#line 169 "codegen/geometry.kl"
     kl_t69.kl_y_8 = 0;
+#line 169 "codegen/geometry.kl"
     kl_t70.kl_x_6 = 100000;
+#line 169 "codegen/geometry.kl"
     kl_t70.kl_y_8 = 100000;
+#line 169 "codegen/geometry.kl"
     kl_t68.kl_low_11 = kl_t69;
+#line 169 "codegen/geometry.kl"
     kl_t68.kl_high_13 = kl_t70;
+#line 169 "codegen/geometry.kl"
     kl_huge_67 = kl_t68;
 #line 171 "codegen/geometry.kl"
     kl_t71 = kl__area__4Rect( kl_huge_67 );
+#line 171 "codegen/geometry.kl"
     kl_t72 = kl_t71 != 10000000000;
+#line 171 "codegen/geometry.kl"
     if ( kl_t72 ) goto bb47; else goto bb48;
     bb47:
+#line 171 "codegen/geometry.kl"
     kl_t0 = 24;
+#line 171 "codegen/geometry.kl"
     return kl_t0;
     bb48:
 #line 174 "codegen/geometry.kl"
     kl_t74 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_unit_22 );
+#line 174 "codegen/geometry.kl"
     kl_itself_73 = kl_t74;
 #line 176 "codegen/geometry.kl"
     kl_t75 = kl__area__4Rect( kl_itself_73 );
+#line 176 "codegen/geometry.kl"
     kl_t76 = kl__area__4Rect( kl_unit_22 );
+#line 176 "codegen/geometry.kl"
     kl_t77 = kl_t75 != kl_t76;
+#line 176 "codegen/geometry.kl"
     if ( kl_t77 ) goto bb49; else goto bb50;
     bb49:
+#line 176 "codegen/geometry.kl"
     kl_t0 = 25;
+#line 176 "codegen/geometry.kl"
     return kl_t0;
     bb50:
-#line 178 "codegen/geometry.kl"
     kl_t0 = 0;
+#line 178 "codegen/geometry.kl"
     return kl_t0;
 }
 
+#line 113 "codegen/geometry.kl"
 int main( void )
 {
+#line 113 "codegen/geometry.kl"
     return (int) kl__main__();
 }

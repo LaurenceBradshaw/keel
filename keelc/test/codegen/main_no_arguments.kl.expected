@@ -6,28 +6,39 @@
 
 int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 
+#line 2 "codegen/main_no_arguments.kl"
 int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
 {
     int32_t kl_t0;
+#line 2 "codegen/main_no_arguments.kl"
     struct kl__run__LQ7prelude3str__ref kl_args_1 = { kl_args_1_data, kl_args_1_size };
     int32_t kl_t2;
     uint64_t kl_t3;
     bool kl_t4;
 #line 4 "codegen/main_no_arguments.kl"
     kl_t3 = ( kl_args_1 ).size;
+#line 4 "codegen/main_no_arguments.kl"
     kl_t4 = kl_t3 == 0;
+#line 4 "codegen/main_no_arguments.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
+#line 4 "codegen/main_no_arguments.kl"
     kl_t2 = 0;
+#line 4 "codegen/main_no_arguments.kl"
     goto bb3;
     bb2:
+#line 4 "codegen/main_no_arguments.kl"
     kl_t2 = 1;
+#line 4 "codegen/main_no_arguments.kl"
     goto bb3;
     bb3:
+#line 4 "codegen/main_no_arguments.kl"
     kl_t0 = kl_t2;
+#line 4 "codegen/main_no_arguments.kl"
     return kl_t0;
 }
 
+#line 2 "codegen/main_no_arguments.kl"
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 size_t strlen( const char* );
@@ -41,6 +52,7 @@ int main( int argc, char** argv )
         args[i].kl_data_42 = ( uint8_t* ) argv[i + 1];
         args[i].kl_size_45 = strlen( argv[i + 1] );
     }
+#line 2 "codegen/main_no_arguments.kl"
     int result = (int) kl__main__LQ7prelude3str( args, count );
     kl_rt_free( args );
     return result;

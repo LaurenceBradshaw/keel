@@ -38,13 +38,15 @@ void kl__Buf__dtor( struct kl__Buf* );
 int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 13 "codegen/generics_owning_field.kl"
 void kl__Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
 {
-#line 15 "codegen/generics_owning_field.kl"
     ( *kl_this_1 ).kl_v_4 = kl_n_2;
+#line 13 "codegen/generics_owning_field.kl"
     return;
 }
 
+#line 18 "codegen/generics_owning_field.kl"
 void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
 {
     bool kl_t2;
@@ -52,15 +54,21 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
     ( void ) kl_this_1;
 #line 20 "codegen/generics_owning_field.kl"
     kl_t2 = __builtin_add_overflow( kl_destroyed_2, 1, &( int32_t ) { 0 } );
+#line 20 "codegen/generics_owning_field.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+#line 20 "codegen/generics_owning_field.kl"
     kl_rt_panic( "codegen/generics_owning_field.kl", 20, "arithmetic overflow: destroyed + 1" );
     bb2:
+#line 20 "codegen/generics_owning_field.kl"
     kl_t3 = kl_destroyed_2 + 1;
+#line 20 "codegen/generics_owning_field.kl"
     kl_destroyed_2 = kl_t3;
+#line 18 "codegen/generics_owning_field.kl"
     return;
 }
 
+#line 32 "codegen/generics_owning_field.kl"
 int32_t kl__early__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -72,38 +80,52 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     bool kl_t8;
 #line 34 "codegen/generics_owning_field.kl"
     kl_t7 = false;
-#line 35 "codegen/generics_owning_field.kl"
     kl_t8 = false;
 #line 34 "codegen/generics_owning_field.kl"
     kl_t7 = false;
+    kl_t8 = false;
+#line 35 "codegen/generics_owning_field.kl"
+    kl_t4 = &kl_t3;
+#line 35 "codegen/generics_owning_field.kl"
+    kl_t8 = true;
+#line 35 "codegen/generics_owning_field.kl"
+    kl__Buf__R3Buf_3i32__ctor( kl_t4, kl_n_1 );
+#line 35 "codegen/generics_owning_field.kl"
+    if ( kl_t7 ) kl__Buf__dtor( &kl_b_2.kl_v_31 );
+#line 35 "codegen/generics_owning_field.kl"
+    kl_b_2.kl_v_31 = kl_t3;
 #line 35 "codegen/generics_owning_field.kl"
     kl_t8 = false;
-    kl_t4 = &kl_t3;
-    kl_t8 = true;
-    kl__Buf__R3Buf_3i32__ctor( kl_t4, kl_n_1 );
-    if ( kl_t7 ) kl__Buf__dtor( &kl_b_2.kl_v_31 );
-    kl_b_2.kl_v_31 = kl_t3;
-    kl_t8 = false;
+#line 35 "codegen/generics_owning_field.kl"
     kl_t7 = true;
+#line 35 "codegen/generics_owning_field.kl"
     if ( kl_t8 ) kl__Buf__dtor( &kl_t3 );
+#line 35 "codegen/generics_owning_field.kl"
     kl_t8 = false;
 #line 37 "codegen/generics_owning_field.kl"
     kl_t6 = kl_n_1 > 2;
+#line 37 "codegen/generics_owning_field.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 39 "codegen/generics_owning_field.kl"
     kl_t0 = 1;
+#line 39 "codegen/generics_owning_field.kl"
     if ( kl_t7 ) kl__Buf__dtor( &kl_b_2.kl_v_31 );
+#line 39 "codegen/generics_owning_field.kl"
     kl_t7 = false;
+#line 39 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb2:
 #line 42 "codegen/generics_owning_field.kl"
     kl_t0 = 0;
+#line 42 "codegen/generics_owning_field.kl"
     if ( kl_t7 ) kl__Buf__dtor( &kl_b_2.kl_v_31 );
+#line 42 "codegen/generics_owning_field.kl"
     kl_t7 = false;
+#line 42 "codegen/generics_owning_field.kl"
     return kl_t0;
 }
 
+#line 45 "codegen/generics_owning_field.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -132,129 +154,160 @@ int32_t kl__main__( void )
     bool kl_t25;
 #line 49 "codegen/generics_owning_field.kl"
     kl_t21 = false;
-#line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
 #line 78 "codegen/generics_owning_field.kl"
     kl_t23 = false;
-#line 79 "codegen/generics_owning_field.kl"
     kl_t24 = false;
-#line 80 "codegen/generics_owning_field.kl"
     kl_t25 = false;
 #line 49 "codegen/generics_owning_field.kl"
     kl_t21 = false;
+    kl_t22 = false;
+#line 50 "codegen/generics_owning_field.kl"
+    kl_t3 = &kl_t2;
+#line 50 "codegen/generics_owning_field.kl"
+    kl_t22 = true;
+#line 50 "codegen/generics_owning_field.kl"
+    kl__Buf__R3Buf_3i32__ctor( kl_t3, 7 );
+#line 50 "codegen/generics_owning_field.kl"
+    if ( kl_t21 ) kl__Buf__dtor( &kl_a_1.kl_v_31 );
+#line 50 "codegen/generics_owning_field.kl"
+    kl_a_1.kl_v_31 = kl_t2;
 #line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
-    kl_t3 = &kl_t2;
-    kl_t22 = true;
-    kl__Buf__R3Buf_3i32__ctor( kl_t3, 7 );
-    if ( kl_t21 ) kl__Buf__dtor( &kl_a_1.kl_v_31 );
-    kl_a_1.kl_v_31 = kl_t2;
-    kl_t22 = false;
+#line 50 "codegen/generics_owning_field.kl"
     kl_t21 = true;
+#line 50 "codegen/generics_owning_field.kl"
     if ( kl_t22 ) kl__Buf__dtor( &kl_t2 );
+#line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
 #line 48 "codegen/generics_owning_field.kl"
     if ( kl_t21 ) kl__Buf__dtor( &kl_a_1.kl_v_31 );
+#line 48 "codegen/generics_owning_field.kl"
     kl_t21 = false;
 #line 53 "codegen/generics_owning_field.kl"
     kl_t5 = kl_destroyed_2 != 1;
+#line 53 "codegen/generics_owning_field.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 55 "codegen/generics_owning_field.kl"
     kl_t0 = 1;
+#line 55 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb2:
 #line 62 "codegen/generics_owning_field.kl"
     kl_n_6.kl_v_31 = 9;
 #line 64 "codegen/generics_owning_field.kl"
     kl_t7 = kl_n_6.kl_v_31 != 9;
+#line 64 "codegen/generics_owning_field.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 66 "codegen/generics_owning_field.kl"
     kl_t0 = 2;
+#line 66 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb4:
 #line 70 "codegen/generics_owning_field.kl"
     kl_t8 = kl_destroyed_2 != 1;
+#line 70 "codegen/generics_owning_field.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
     bb5:
-#line 72 "codegen/generics_owning_field.kl"
     kl_t0 = 3;
+#line 72 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb6:
 #line 78 "codegen/generics_owning_field.kl"
     kl_t23 = false;
-#line 79 "codegen/generics_owning_field.kl"
     kl_t24 = false;
+    kl_t25 = false;
+#line 80 "codegen/generics_owning_field.kl"
+    kl_t12 = &kl_t11;
+#line 80 "codegen/generics_owning_field.kl"
+    kl_t25 = true;
+#line 80 "codegen/generics_owning_field.kl"
+    kl__Buf__R3Buf_3i32__ctor( kl_t12, 11 );
+#line 80 "codegen/generics_owning_field.kl"
+    if ( kl_t24 ) kl__Buf__dtor( &kl_inner_10.kl_v_31 );
+#line 80 "codegen/generics_owning_field.kl"
+    kl_inner_10.kl_v_31 = kl_t11;
 #line 80 "codegen/generics_owning_field.kl"
     kl_t25 = false;
-    kl_t12 = &kl_t11;
-    kl_t25 = true;
-    kl__Buf__R3Buf_3i32__ctor( kl_t12, 11 );
-    if ( kl_t24 ) kl__Buf__dtor( &kl_inner_10.kl_v_31 );
-    kl_inner_10.kl_v_31 = kl_t11;
-    kl_t25 = false;
+#line 80 "codegen/generics_owning_field.kl"
     kl_t24 = true;
+#line 80 "codegen/generics_owning_field.kl"
     if ( kl_t25 ) kl__Buf__dtor( &kl_t11 );
+#line 80 "codegen/generics_owning_field.kl"
     kl_t25 = false;
-#line 81 "codegen/generics_owning_field.kl"
     if ( kl_t23 ) kl__Buf__dtor( &kl_outer_9.kl_v_31.kl_v_31 );
+#line 81 "codegen/generics_owning_field.kl"
     kl_outer_9.kl_v_31 = kl_inner_10;
+#line 81 "codegen/generics_owning_field.kl"
     kl_t24 = false;
+#line 81 "codegen/generics_owning_field.kl"
     kl_t23 = true;
 #line 77 "codegen/generics_owning_field.kl"
     if ( kl_t24 ) kl__Buf__dtor( &kl_inner_10.kl_v_31 );
+#line 77 "codegen/generics_owning_field.kl"
     kl_t24 = false;
+#line 77 "codegen/generics_owning_field.kl"
     if ( kl_t23 ) kl__Buf__dtor( &kl_outer_9.kl_v_31.kl_v_31 );
+#line 77 "codegen/generics_owning_field.kl"
     kl_t23 = false;
 #line 84 "codegen/generics_owning_field.kl"
     kl_t14 = kl_destroyed_2 != 2;
+#line 84 "codegen/generics_owning_field.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
-#line 86 "codegen/generics_owning_field.kl"
     kl_t0 = 4;
+#line 86 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb8:
 #line 89 "codegen/generics_owning_field.kl"
     kl_t15 = kl__early__3i32( 5 );
+#line 89 "codegen/generics_owning_field.kl"
     kl_t16 = kl_t15 != 1;
+#line 89 "codegen/generics_owning_field.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
-#line 91 "codegen/generics_owning_field.kl"
     kl_t0 = 5;
+#line 91 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb10:
 #line 94 "codegen/generics_owning_field.kl"
     kl_t17 = kl_destroyed_2 != 3;
+#line 94 "codegen/generics_owning_field.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
-#line 96 "codegen/generics_owning_field.kl"
     kl_t0 = 6;
+#line 96 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb12:
 #line 99 "codegen/generics_owning_field.kl"
     kl_t18 = kl__early__3i32( 1 );
+#line 99 "codegen/generics_owning_field.kl"
     kl_t19 = kl_t18 != 0;
+#line 99 "codegen/generics_owning_field.kl"
     if ( kl_t19 ) goto bb13; else goto bb14;
     bb13:
-#line 101 "codegen/generics_owning_field.kl"
     kl_t0 = 7;
+#line 101 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb14:
 #line 104 "codegen/generics_owning_field.kl"
     kl_t20 = kl_destroyed_2 != 4;
+#line 104 "codegen/generics_owning_field.kl"
     if ( kl_t20 ) goto bb15; else goto bb16;
     bb15:
-#line 106 "codegen/generics_owning_field.kl"
     kl_t0 = 8;
+#line 106 "codegen/generics_owning_field.kl"
     return kl_t0;
     bb16:
 #line 109 "codegen/generics_owning_field.kl"
     kl_t0 = 42;
+#line 109 "codegen/generics_owning_field.kl"
     return kl_t0;
 }
 
+#line 45 "codegen/generics_owning_field.kl"
 int main( void )
 {
+#line 45 "codegen/generics_owning_field.kl"
     return (int) kl__main__();
 }

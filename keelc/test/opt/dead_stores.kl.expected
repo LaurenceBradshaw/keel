@@ -21,30 +21,35 @@ int32_t kl__looped__3i32( int32_t );
 int32_t kl__fielded__3i32( int32_t );
 int32_t kl__main__( void );
 
+#line 12 "opt/dead_stores.kl"
 int32_t kl__side__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
 #line 14 "opt/dead_stores.kl"
     kl_t0 = kl_n_1;
+#line 14 "opt/dead_stores.kl"
     return kl_t0;
 }
 
+#line 18 "opt/dead_stores.kl"
 int32_t kl__discard__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 22 "opt/dead_stores.kl"
     kl_t0 = kl_a_1;
+#line 22 "opt/dead_stores.kl"
     return kl_t0;
 }
 
+#line 26 "opt/dead_stores.kl"
 int32_t kl__overwritten__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-#line 29 "opt/dead_stores.kl"
     kl_t0 = kl_a_1 * 2;
     return kl_t0;
 }
 
+#line 34 "opt/dead_stores.kl"
 int32_t kl__chained__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -53,6 +58,7 @@ int32_t kl__chained__3i32( int32_t kl_a_1 )
     return kl_t0;
 }
 
+#line 43 "opt/dead_stores.kl"
 int32_t kl__aliased__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
@@ -60,16 +66,16 @@ int32_t kl__aliased__3i32( int32_t kl_a_1 )
     struct kl__Point* kl_p_4;
 #line 45 "opt/dead_stores.kl"
     kl_q_2.kl_x_1 = kl_a_1;
+#line 45 "opt/dead_stores.kl"
     kl_q_2.kl_y_3 = kl_a_1;
-#line 46 "opt/dead_stores.kl"
     kl_p_4 = &kl_q_2;
-#line 47 "opt/dead_stores.kl"
     kl_q_2.kl_x_1 = 7;
-#line 48 "opt/dead_stores.kl"
     kl_t0 = ( *kl_p_4 ).kl_x_1;
+#line 48 "opt/dead_stores.kl"
     return kl_t0;
 }
 
+#line 52 "opt/dead_stores.kl"
 int32_t kl__looped__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
@@ -77,30 +83,36 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
     bool kl_t4;
 #line 54 "opt/dead_stores.kl"
     kl_t0 = 0;
-#line 55 "opt/dead_stores.kl"
     kl_i_3 = 0;
+#line 55 "opt/dead_stores.kl"
     goto bb1;
     bb1:
+#line 55 "opt/dead_stores.kl"
     kl_t4 = kl_i_3 < kl_n_1;
+#line 55 "opt/dead_stores.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
-#line 57 "opt/dead_stores.kl"
     kl_t0 = kl_i_3;
 #line 55 "opt/dead_stores.kl"
     kl_i_3 = kl_i_3 + 1;
+#line 55 "opt/dead_stores.kl"
     goto bb1;
     bb3:
+#line 59 "opt/dead_stores.kl"
     return kl_t0;
 }
 
+#line 63 "opt/dead_stores.kl"
 int32_t kl__fielded__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 67 "opt/dead_stores.kl"
     kl_t0 = kl_a_1;
+#line 67 "opt/dead_stores.kl"
     return kl_t0;
 }
 
+#line 70 "opt/dead_stores.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -114,51 +126,56 @@ int32_t kl__main__( void )
     struct kl__Point* kl_p_34;
 #line 45 "opt/dead_stores.kl"
     kl_q_32.kl_x_1 = 4;
+#line 45 "opt/dead_stores.kl"
     kl_q_32.kl_y_3 = 4;
-#line 46 "opt/dead_stores.kl"
     kl_p_34 = &kl_q_32;
-#line 47 "opt/dead_stores.kl"
     kl_q_32.kl_x_1 = 7;
-#line 48 "opt/dead_stores.kl"
     kl_t7 = ( *kl_p_34 ).kl_x_1;
 #line 87 "opt/dead_stores.kl"
     kl_t8 = kl_t7 != 7;
+#line 87 "opt/dead_stores.kl"
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
-#line 89 "opt/dead_stores.kl"
     kl_t0 = 4;
+#line 89 "opt/dead_stores.kl"
     return kl_t0;
     bb2:
 #line 54 "opt/dead_stores.kl"
     kl_t12 = 0;
-#line 55 "opt/dead_stores.kl"
     kl_i_23 = 0;
+#line 55 "opt/dead_stores.kl"
     goto bb5;
     bb3:
 #line 94 "opt/dead_stores.kl"
     kl_t0 = 5;
+#line 94 "opt/dead_stores.kl"
     return kl_t0;
     bb4:
 #line 102 "opt/dead_stores.kl"
     kl_t0 = 0;
+#line 102 "opt/dead_stores.kl"
     return kl_t0;
     bb5:
 #line 55 "opt/dead_stores.kl"
     kl_t24 = kl_i_23 < 3;
+#line 55 "opt/dead_stores.kl"
     if ( kl_t24 ) goto bb6; else goto bb7;
     bb6:
-#line 57 "opt/dead_stores.kl"
     kl_t12 = kl_i_23;
 #line 55 "opt/dead_stores.kl"
     kl_i_23 = kl_i_23 + 1;
+#line 55 "opt/dead_stores.kl"
     goto bb5;
     bb7:
 #line 92 "opt/dead_stores.kl"
     kl_t9 = kl_t12 != 2;
+#line 92 "opt/dead_stores.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
 }
 
+#line 70 "opt/dead_stores.kl"
 int main( void )
 {
+#line 70 "opt/dead_stores.kl"
     return (int) kl__main__();
 }
