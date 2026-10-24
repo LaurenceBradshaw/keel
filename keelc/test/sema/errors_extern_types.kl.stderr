@@ -1,0 +1,67 @@
+error: `handle` cannot be passed to C by value
+ --> sema/errors_extern_types.kl:8:25
+  |
+8 | extern void close( move handle h );
+  |                         ^^^^^^ `handle` is a class, and C cannot run its destructor: pass a pointer to it, or a struct of what C needs
+
+error: `handle` cannot be returned from C by value
+ --> sema/errors_extern_types.kl:9:8
+  |
+9 | extern handle open();
+  |        ^^^^^^ `handle` is a class, and C cannot run its destructor: pass a pointer to it, or a struct of what C needs
+
+error: `str` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:10:19
+   |
+10 | extern void name( str s );
+   |                   ^^^ `str` is Keel's text, which Keel lays out: pass a `const u8[*]` and a `u64`
+
+error: `shape` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:11:19
+   |
+11 | extern void draw( shape s );
+   |                   ^^^^^ `shape` is an enum with a payload, which Keel lays out: pass a pointer to it, or a C-like enum and the payload's fields apart
+
+error: `pair<i32>` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:12:19
+   |
+12 | extern void both( pair<i32> p );
+   |                   ^^^^^^^^^ `pair<i32>` is a generic instance, which C cannot name: declare a struct with its fields
+
+error: `label` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:13:18
+   |
+13 | extern void tag( label l );
+   |                  ^^^^^ `label.text` is `str`, Keel's text, which Keel lays out: pass a `const u8[*]` and a `u64`
+
+error: `measured*` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:14:20
+   |
+14 | extern void weigh( measured* m );
+   |                    ^^^^^^^^^ `measured*` is reached through two pointers in C, the object and its table: pass the implementing type's own pointer
+
+error: `measured` cannot be passed to C
+  --> sema/errors_extern_types.kl:15:24
+   |
+15 | extern void count( ref measured m );
+   |                        ^^^^^^^^ `measured` is reached through two pointers in C, the object and its table: pass the implementing type's own pointer
+
+error: `i32[4]` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:16:19
+   |
+16 | extern void fill( i32[4] a );
+   |                   ^^^^^^ C takes an array as a pointer: take `ref i32[4]`, or point at its elements with `i32[*]`
+
+error: a run cannot be returned from C
+  --> sema/errors_extern_types.kl:17:8
+   |
+17 | extern const ref u8[] read_all();
+   |        ^^^^^^^^^^^^^^ return a `u8[*]` and take the count through a `u64*`
+
+error: `fn( str ) -> i32` cannot be passed to C by value
+  --> sema/errors_extern_types.kl:18:19
+   |
+18 | extern void call( fn( str ) -> i32 cb );
+   |                   ^^^^^^^^^^^^^^^^ `str` is Keel's text, which Keel lays out: pass a `const u8[*]` and a `u64`
+
+11 errors generated

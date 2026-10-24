@@ -545,6 +545,11 @@ void Signatures::declare_functions()
             types_.record( param, param_type );
         }
 
+        if( ast_.is_extern( child ) )
+        {
+            extern_types_.check( child );
+        }
+
         if( interner_.text( ast_.name( child ) ) == "main" )
         {
             // Main may not be marked `extern`

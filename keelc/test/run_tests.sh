@@ -20,7 +20,8 @@
 # correct - and the codegen fixtures are written to check their own answers, which is worth
 # nothing if nothing runs them. Where <name>.kl.out exists, the program's stdout and stderr together
 # must match it too. <name>.kl.args holds the program's arguments, one per line, and <name>.kl.stdin
-# its standard input (/dev/null if absent). It runs in its own build directory, emptied before each
+# its standard input (/dev/null if absent). <name>.kl.link names C to link, one per line: a file beside
+# the fixture, or a `-l`/`-L` word as given. It runs in its own build directory, emptied before each
 # build, so a file it writes by a relative name is left in neither the suite nor the next run. A
 # fixture expected to exit 134 is one that aborts, and is never run under
 # valgrind: an abort leaves memory reachable on purpose, and valgrind reports the signal.
@@ -215,7 +216,17 @@ check_run()
         [ "$flag" != "--emit-c" ] && build_flags+=( "$flag" )
     done
 
-    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "${build_flags[@]}" "$src" --runtime "$runtime" -o "$stem" \
+    local linked=()
+    if [ -f "${src}.link" ]; then
+        while IFS= read -r word; do
+            case "$word" in
+                -*) linked+=( "$word" ) ;;
+                *) linked+=( "$( dirname "$src" )/${word}" ) ;;
+            esac
+        done < "${src}.link"
+    fi
+
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "${build_flags[@]}" "$src" "${linked[@]}" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
@@ -384,7 +395,8 @@ fi
 # and every stream comparison still passes because neither appears on stdout or stderr.
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
-    ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' \
+    ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' ! -name '*.kl.link' \
+    \( ! -name '*.c' -o -name '*.kl.c' -o -name '*.prelude.c' \) \
     ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 
 if [ -n "$stray" ]; then

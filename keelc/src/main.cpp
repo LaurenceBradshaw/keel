@@ -66,14 +66,17 @@ int main( int argc, char** argv )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
         ( "runtime",         "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
+        ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
+        ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "print-prelude",   "Print the prelude every program sees, and exit" )
         ( "v,version",       "Print version information and exit" )
         ( "h,help",          "Print usage and exit" )
-        ( "input",           "Source file",                        cxxopts::value<std::string>() );
+        ( "input",           "Source file",                        cxxopts::value<std::string>() )
+        ( "link",            "C to link: .c, .o or .a",            cxxopts::value<std::vector<std::string>>() );
     // clang-format on
 
-    options.parse_positional( { "input" } );
-    options.positional_help( "<file.kl>" );
+    options.parse_positional( { "input", "link" } );
+    options.positional_help( "<file.kl> [file.c|file.o|file.a ...]" );
 
     cxxopts::ParseResult args;
     try
@@ -110,6 +113,39 @@ int main( int argc, char** argv )
         fmt::print( stderr, "keelc: no input file\n" );
         fmt::print( stderr, "{}", options.help() );
         return 2;
+    }
+
+    // In command-line order, then the libraries, which follow everything that uses them.
+    std::vector<std::string> linked;
+    if( args.count( "link" ) )
+    {
+        for( const std::string& file : args["link"].as<std::vector<std::string>>() )
+        {
+            const std::string extension = std::filesystem::path( file ).extension().string();
+            if( extension == ".kl" )
+            {
+                fmt::print(
+                    stderr, "keelc: '{}' is a second .kl - name only the program's main file; its imports find the rest\n", file
+                );
+                return 2;
+            }
+            if( extension != ".c" && extension != ".o" && extension != ".a" )
+            {
+                fmt::print( stderr, "keelc: cannot link '{}' - name a .c, .o or .a\n", file );
+                return 2;
+            }
+            linked.push_back( file );
+        }
+    }
+    for( const auto& [option, flag] : { std::pair { "library-path", "-L" }, std::pair { "library", "-l" } } )
+    {
+        if( args.count( option ) )
+        {
+            for( const std::string& word : args[option].as<std::vector<std::string>>() )
+            {
+                linked.push_back( flag + word );
+            }
+        }
     }
 
     const std::string diagnostics_format = args["diagnostics"].as<std::string>();
@@ -445,13 +481,21 @@ int main( int argc, char** argv )
         cflags += c_warnings;
     }
 
-    const std::string command = keel::link_command( compiler, cflags, generated_path, runtime.path, executable );
+    const std::string command = keel::link_command( compiler, cflags, generated_path, runtime.path, executable, linked );
 
     if( const int status = std::system( command.c_str() ); status != 0 )
     {
-        // A failure here is a compiler bug, not a user error: the program type-checked, so the C
-        // it produced should always compile. The path is named so the output can be inspected.
-        fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", generated_path.string() );
+        // Without the user's own C, a failure here is a compiler bug: the program type-checked, so
+        // the C it produced should always compile. The path is named so the output can be inspected.
+        // With it, the user's C or a missing symbol is the likelier cause.
+        if( linked.empty() )
+        {
+            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", generated_path.string() );
+        }
+        else
+        {
+            fmt::print( stderr, "keelc: compiling or linking the C failed - the generated C is {}\n", generated_path.string() );
+        }
         return 1;
     }
 

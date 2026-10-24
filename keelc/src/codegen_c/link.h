@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -20,13 +21,15 @@ struct Runtime
 
 Runtime find_runtime( const std::optional<std::string>& flag, const std::filesystem::path& installed );
 
-// The C compiler's command line, compiling `source` and linking `runtime` into `executable`.
+// The C compiler's command line, compiling `source` and linking `runtime` into `executable`;
+// `linked`, the user's own C and libraries, follows the runtime.
 std::string link_command(
     std::string_view             compiler,
     std::string_view             cflags,
     const std::filesystem::path& source,
     const std::filesystem::path& runtime,
-    const std::filesystem::path& executable
+    const std::filesystem::path& executable,
+    std::span<const std::string> linked = {}
 );
 
 // `cflags` without the words that turn on or promote C warnings; `-Wl,`, `-Wa,` and `-Wp,` are kept.

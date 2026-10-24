@@ -45,16 +45,24 @@ std::string link_command(
     std::string_view             cflags,
     const std::filesystem::path& source,
     const std::filesystem::path& runtime,
-    const std::filesystem::path& executable
+    const std::filesystem::path& executable,
+    std::span<const std::string> linked
 )
 {
+    std::string after_runtime;
+    for( const std::string& word : linked )
+    {
+        after_runtime += fmt::format( " \"{}\"", word );
+    }
+
     // §7.7: C's UB becomes Keel's UB without these.
     const std::string command = fmt::format(
-        "{} -fwrapv -fno-strict-aliasing -std=c11{} \"{}\" \"{}\" -o \"{}\"",
+        "{} -fwrapv -fno-strict-aliasing -std=c11{} \"{}\" \"{}\"{} -o \"{}\"",
         compiler,
         cflags.empty() ? std::string() : fmt::format( " {}", cflags ),
         source.string(),
         runtime.string(),
+        after_runtime,
         executable.string()
     );
     return command;
@@ -177,6 +185,16 @@ TEST_CASE( "link_command_links_the_runtime_after_the_source", "[codegen_c][link]
             "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.c\" \"libkeel_rt.a\" -o \"main\""
         );
     }
+}
+
+TEST_CASE( "link_command_links_the_users_c_after_the_runtime", "[codegen_c][link]" )
+{
+    const std::vector<std::string> linked = { "glue.c", "lib/libz.a", "-Llib", "-lm" };
+    REQUIRE(
+        keel::link_command( "cc", "", "main.kl.c", "libkeel_rt.a", "main", linked ) ==
+        "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.c\" \"libkeel_rt.a\" \"glue.c\" \"lib/libz.a\" \"-Llib\" "
+        "\"-lm\" -o \"main\""
+    );
 }
 
 TEST_CASE( "without_warning_flags_keeps_what_is_not_a_warning", "[codegen_c][link]" )

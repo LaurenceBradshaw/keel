@@ -1,0 +1,18 @@
+// A struct crosses to the user's own C by value, in and out, and `-lm` links after it: `root` is
+// libm's `sqrt`. The C side is links_user_c.c, named in links_user_c.kl.link.
+struct point { i32 x; i32 y; };
+
+extern point midpoint( point a, point b );
+extern f64 root( f64 v );
+
+i32 main()
+{
+    point m = point { 0, 0 };
+    f64   r = 0.0;
+    unsafe
+    {
+        m = midpoint( point { 2, 4 }, point { 6, 8 } );
+        r = root( 16.0 );
+    }
+    return m.x == 4 && m.y == 6 && r == 4.0 ? 0 : 1;
+}

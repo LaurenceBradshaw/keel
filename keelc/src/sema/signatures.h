@@ -10,6 +10,7 @@
 #include "sema/aggregates.h"
 #include "sema/annotations.h"
 #include "sema/bounds.h"
+#include "sema/extern_types.h"
 #include "sema/generic_recursion.h"
 #include "sema/overloads.h"
 #include "sema/places.h"
@@ -67,7 +68,8 @@ public:
           places_( places ),
           generic_recursion_( generic_recursion ),
           overloads_( overloads ),
-          reporter_( reporter )
+          reporter_( reporter ),
+          extern_types_( ast, interner, types, aggregates, reporter )
     {
     }
 
@@ -127,6 +129,7 @@ private:
     Generic_recursion& generic_recursion_;
     Overloads&         overloads_;
     Reporter&          reporter_;
+    Extern_types       extern_types_;
 };
 
 } // namespace keel::sema

@@ -7098,14 +7098,14 @@ TEST_CASE( "type_checker_accepts_binding_modes_on_an_extern", "[sema][types][ext
         REQUIRE( p.clean() );
     }
 
-    SECTION( "a move parameter is accepted, and the caller's value dies" )
+    SECTION( "a class moved to C is refused, since C cannot run its destructor" )
     {
         const Typed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\n"
                        "extern void take( move C c );\n"
                        "i32 main() { C c = C( 1 ); unsafe { take( move c ); } return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.clean() );
+        REQUIRE( p.errors() == 1 );
     }
 
     SECTION( "a struct parameter" )

@@ -1,0 +1,109 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "links_user_c.kl.prelude.c"
+
+struct kl__point;
+
+struct kl__point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+struct kl__point midpoint( struct kl__point, struct kl__point );
+double root( double );
+
+int32_t kl__main__( void );
+
+#line 8 "codegen/links_user_c.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__point kl_m_1;
+    struct kl__point kl_t2;
+    double kl_r_3;
+    struct kl__point kl_t4;
+    struct kl__point kl_t5;
+    struct kl__point kl_t6;
+    double kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+#line 10 "codegen/links_user_c.kl"
+    kl_t2.kl_x_1 = 0;
+#line 10 "codegen/links_user_c.kl"
+    kl_t2.kl_y_3 = 0;
+#line 10 "codegen/links_user_c.kl"
+    kl_m_1 = kl_t2;
+    kl_r_3 = 0.0;
+#line 14 "codegen/links_user_c.kl"
+    kl_t4.kl_x_1 = 2;
+#line 14 "codegen/links_user_c.kl"
+    kl_t4.kl_y_3 = 4;
+#line 14 "codegen/links_user_c.kl"
+    kl_t5.kl_x_1 = 6;
+#line 14 "codegen/links_user_c.kl"
+    kl_t5.kl_y_3 = 8;
+#line 14 "codegen/links_user_c.kl"
+    kl_t6 = midpoint( kl_t4, kl_t5 );
+#line 14 "codegen/links_user_c.kl"
+    kl_m_1 = kl_t6;
+    kl_t7 = root( 16.0 );
+#line 15 "codegen/links_user_c.kl"
+    kl_r_3 = kl_t7;
+#line 17 "codegen/links_user_c.kl"
+    kl_t11 = kl_m_1.kl_x_1 == 4;
+#line 17 "codegen/links_user_c.kl"
+    kl_t10 = kl_t11;
+#line 17 "codegen/links_user_c.kl"
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb1:
+#line 17 "codegen/links_user_c.kl"
+    kl_t8 = 0;
+#line 17 "codegen/links_user_c.kl"
+    goto bb3;
+    bb2:
+#line 17 "codegen/links_user_c.kl"
+    kl_t8 = 1;
+#line 17 "codegen/links_user_c.kl"
+    goto bb3;
+    bb3:
+#line 17 "codegen/links_user_c.kl"
+    kl_t0 = kl_t8;
+#line 17 "codegen/links_user_c.kl"
+    return kl_t0;
+    bb4:
+#line 17 "codegen/links_user_c.kl"
+    kl_t12 = kl_m_1.kl_y_3 == 6;
+#line 17 "codegen/links_user_c.kl"
+    kl_t10 = kl_t12;
+#line 17 "codegen/links_user_c.kl"
+    goto bb5;
+    bb5:
+#line 17 "codegen/links_user_c.kl"
+    kl_t9 = kl_t10;
+#line 17 "codegen/links_user_c.kl"
+    if ( kl_t9 ) goto bb6; else goto bb7;
+    bb6:
+#line 17 "codegen/links_user_c.kl"
+    kl_t13 = kl_r_3 == 4.0;
+#line 17 "codegen/links_user_c.kl"
+    kl_t9 = kl_t13;
+#line 17 "codegen/links_user_c.kl"
+    goto bb7;
+    bb7:
+#line 17 "codegen/links_user_c.kl"
+    if ( kl_t9 ) goto bb1; else goto bb2;
+}
+
+#line 8 "codegen/links_user_c.kl"
+int main( void )
+{
+#line 8 "codegen/links_user_c.kl"
+    return (int) kl__main__();
+}
