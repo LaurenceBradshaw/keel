@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 # Builds examples/debugging.kl, stops it at line 39 under gdb with keel.py loaded, and checks what
-# the script shows, including a full path in each frame, which VS Code needs to open the file.
+# the script shows, including a full path in each frame, which VS Code needs to open the file. Then
+# steps into two constructors and checks every line it stops on.
 # Needs the debug preset's keelc and a gdb with Python. Not in pre-commit, which should not need gdb.
 
 set -euo pipefail
@@ -31,6 +32,18 @@ done
 # Temporaries are hidden.
 if grep -q 'kl_t[0-9]* = ' <<< "$out"; then
     echo "a temporary is listed"
+    status=1
+fi
+
+# Into `str( … )` and out at its `}`, then into `kl::string( "keel" )`: no stop on a signature, and
+# the loop ends on the constructor's `}` before returning to line 26.
+steps="$( gdb -batch -nx -ex "source editors/gdb/keel.py" -ex "break debugging.kl:25" -ex "break string.kl:34" -ex run \
+    -ex step -ex step -ex step -ex step -ex step -ex continue $( for _ in $( seq 11 ); do echo -ex next; done ) \
+    build/examples/debugging 2>&1 | grep -oE '^[0-9]+'$'\t' | tr -d '\t' | tr '\n' ' ' )"
+expected_steps="25 32 33 34 25 32 34 35 37 35 37 35 37 35 37 35 39 26 "
+if [ "$steps" != "$expected_steps" ]; then
+    echo "stepped: $steps"
+    echo "wanted:  $expected_steps"
     status=1
 fi
 

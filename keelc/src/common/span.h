@@ -90,6 +90,14 @@ struct Span
         return Span { file, offset, offset };
     }
 
+    // Its last character, such as a block's or declaration's closing brace.
+    Span last() const
+    {
+        return is_empty() ? *this : Span { file, end - 1, end };
+    }
+
+    bool operator==( const Span& other ) const = default;
+
     // Rarely correct. A generated node should inherit the span of whatever caused it - an inserted
     // destructor call gets the closing brace that triggered it. Every none() is a diagnostic that
     // cannot point anywhere.

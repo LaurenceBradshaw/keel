@@ -70,6 +70,7 @@ int32_t kl__compared__( void )
     kl_t0 = 1;
 #line 45 "opt/folding.kl"
     return kl_t0;
+#line 48 "opt/folding.kl"
 }
 
 #line 51 "opt/folding.kl"
@@ -140,6 +141,7 @@ int32_t kl__main__( void )
     kl_t19 = kl_t18 != 0.75;
 #line 109 "opt/folding.kl"
     if ( kl_t19 ) goto bb2; else goto bb3;
+#line 120 "opt/folding.kl"
 }
 
 #line 77 "opt/folding.kl"

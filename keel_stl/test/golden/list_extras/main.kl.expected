@@ -134,8 +134,8 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
     bb2:
 #line 19 "list_extras/main.kl"
     kl_live_5 = kl_live_5 + 1;
-#line 12 "list_extras/main.kl"
     return;
+#line 20 "list_extras/main.kl"
 }
 
 #line 22 "list_extras/main.kl"
@@ -154,8 +154,8 @@ void kl__owned__dtor( struct kl__owned* kl_this_1 )
     bb2:
 #line 28 "list_extras/main.kl"
     kl_live_5 = kl_live_5 - 1;
-#line 22 "list_extras/main.kl"
     return;
+#line 29 "list_extras/main.kl"
 }
 
 #line 31 "list_extras/main.kl"
@@ -249,6 +249,7 @@ uint64_t kl__digits__Q2kl4listI5ownedE( struct kl_2kl4list_list__I5ownedE* kl_va
     kl_i_3 = kl_i_3 + 1;
 #line 44 "list_extras/main.kl"
     goto bb1;
+#line 49 "list_extras/main.kl"
 }
 
 #line 51 "list_extras/main.kl"
@@ -267,7 +268,7 @@ struct kl_2kl4list_list__I5ownedE kl__counting__3u64( uint64_t kl_n_1 )
     bool kl_t14;
 #line 53 "list_extras/main.kl"
     kl_t13 = false;
-#line 56 "list_extras/main.kl"
+#line 53 "list_extras/main.kl"
     kl_t14 = false;
 #line 53 "list_extras/main.kl"
     kl_t13 = false;
@@ -329,6 +330,7 @@ struct kl_2kl4list_list__I5ownedE kl__counting__3u64( uint64_t kl_n_1 )
     kl_i_5 = kl_i_5 + 1;
 #line 54 "list_extras/main.kl"
     goto bb1;
+#line 59 "list_extras/main.kl"
 }
 
 #line 62 "list_extras/main.kl"
@@ -370,11 +372,15 @@ int32_t kl__inserts__( void )
     bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-#line 65 "list_extras/main.kl"
+#line 64 "list_extras/main.kl"
     kl_t42 = false;
+#line 64 "list_extras/main.kl"
     kl_t43 = false;
+#line 64 "list_extras/main.kl"
     kl_t44 = false;
+#line 64 "list_extras/main.kl"
     kl_t45 = false;
+#line 64 "list_extras/main.kl"
     kl_t46 = false;
 #line 64 "list_extras/main.kl"
     kl_t2 = &kl_values_1;
@@ -728,10 +734,11 @@ int32_t kl__ends__( void )
     bool kl_t37;
 #line 106 "list_extras/main.kl"
     kl_t34 = false;
-#line 112 "list_extras/main.kl"
+#line 106 "list_extras/main.kl"
     kl_t35 = false;
+#line 106 "list_extras/main.kl"
     kl_t36 = false;
-#line 119 "list_extras/main.kl"
+#line 106 "list_extras/main.kl"
     kl_t37 = false;
 #line 106 "list_extras/main.kl"
     kl_t2 = kl__counting__3u64( 3 );
@@ -937,13 +944,13 @@ int32_t kl__try_pops__( void )
     bool kl_t42;
 #line 131 "list_extras/main.kl"
     kl_t38 = false;
-#line 133 "list_extras/main.kl"
+#line 131 "list_extras/main.kl"
     kl_t39 = false;
-#line 133 "list_extras/main.kl"
+#line 131 "list_extras/main.kl"
     kl_t40 = false;
-#line 141 "list_extras/main.kl"
+#line 131 "list_extras/main.kl"
     kl_t41 = false;
-#line 153 "list_extras/main.kl"
+#line 131 "list_extras/main.kl"
     kl_t42 = false;
 #line 131 "list_extras/main.kl"
     kl_t2 = kl__counting__3u64( 3 );
@@ -1033,7 +1040,6 @@ int32_t kl__try_pops__( void )
 #line 136 "list_extras/main.kl"
     return kl_t0;
     bb6:
-#line 132 "list_extras/main.kl"
     kl__owned__dtor( &kl_three_3 );
 #line 141 "list_extras/main.kl"
     kl_t21 = &kl_values_1;
@@ -1077,9 +1083,7 @@ int32_t kl__try_pops__( void )
 #line 144 "list_extras/main.kl"
     return kl_t0;
     bb10:
-#line 140 "list_extras/main.kl"
     kl_2kl8optional_optional__I5ownedE__dtor( &kl_held_20 );
-#line 147 "list_extras/main.kl"
     kl_t28 = kl_live_5 != 1;
 #line 147 "list_extras/main.kl"
     if ( kl_t28 ) goto bb11; else goto bb12;
@@ -1172,11 +1176,11 @@ int32_t kl__reverses__( void )
     bool kl_t33;
     bool kl_t34;
     bool kl_t35;
-#line 167 "list_extras/main.kl"
+#line 164 "list_extras/main.kl"
     kl_t33 = false;
-#line 174 "list_extras/main.kl"
+#line 164 "list_extras/main.kl"
     kl_t34 = false;
-#line 176 "list_extras/main.kl"
+#line 164 "list_extras/main.kl"
     kl_t35 = false;
 #line 164 "list_extras/main.kl"
     kl_t2 = &kl_values_1;
@@ -1366,10 +1370,13 @@ int32_t kl__shrinks__( void )
     bool kl_t65;
 #line 190 "list_extras/main.kl"
     kl_t61 = false;
+#line 190 "list_extras/main.kl"
     kl_t62 = false;
+#line 190 "list_extras/main.kl"
     kl_t63 = false;
+#line 190 "list_extras/main.kl"
     kl_t64 = false;
-#line 213 "list_extras/main.kl"
+#line 190 "list_extras/main.kl"
     kl_t65 = false;
 #line 190 "list_extras/main.kl"
     kl_t2 = kl_2kl4list_with_capacity__I5ownedE__SQ2kl4listI5ownedE_3u64( 8 );
@@ -1662,13 +1669,17 @@ int32_t kl__appends__( void )
     bool kl_t54;
 #line 226 "list_extras/main.kl"
     kl_t48 = false;
+#line 226 "list_extras/main.kl"
     kl_t49 = false;
+#line 226 "list_extras/main.kl"
     kl_t50 = false;
+#line 226 "list_extras/main.kl"
     kl_t51 = false;
+#line 226 "list_extras/main.kl"
     kl_t52 = false;
-#line 237 "list_extras/main.kl"
+#line 226 "list_extras/main.kl"
     kl_t53 = false;
-#line 239 "list_extras/main.kl"
+#line 226 "list_extras/main.kl"
     kl_t54 = false;
 #line 226 "list_extras/main.kl"
     kl_t2 = kl__counting__3u64( 2 );
@@ -1916,7 +1927,7 @@ int32_t kl__copies__( void )
     int32_t kl_t50;
     bool kl_t51;
     bool kl_t52;
-#line 261 "list_extras/main.kl"
+#line 251 "list_extras/main.kl"
     kl_t52 = false;
 #line 251 "list_extras/main.kl"
     kl_t2 = &kl_values_1;
@@ -2306,6 +2317,7 @@ struct kl__owned* kl_2kl4list_operator_index__I5ownedE__SQ2kl4listI5ownedE_3u64(
     kl_t0 = kl_t9;
 #line 208 "../../src/list.kl"
     return kl_t0;
+#line 210 "../../src/list.kl"
 }
 
 #line 13 "../../src/list.kl"
@@ -2314,8 +2326,8 @@ void kl_2kl4list_list__I5ownedE__RQ2kl4listI5ownedE__ctor( struct kl_2kl4list_li
     ( *kl_this_1 ).kl_data__2263 = NULL;
     ( *kl_this_1 ).kl_count__2265 = 0;
     ( *kl_this_1 ).kl_cap__2267 = 0;
-#line 13 "../../src/list.kl"
     return;
+#line 18 "../../src/list.kl"
 }
 
 #line 57 "../../src/list.kl"
@@ -2325,7 +2337,7 @@ void kl_2kl4list_push__I5ownedE__SQ2kl4listI5ownedE_M5owned( struct kl_2kl4list_
     struct kl__owned* kl_t5;
     bool kl_t6;
     bool kl_t7;
-#line 57 "../../src/list.kl"
+#line 59 "../../src/list.kl"
     kl_t7 = true;
 #line 59 "../../src/list.kl"
     kl_t3 = &( *kl_this_1 );
@@ -2347,12 +2359,12 @@ void kl_2kl4list_push__I5ownedE__SQ2kl4listI5ownedE_M5owned( struct kl_2kl4list_
     bb2:
 #line 65 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + 1;
-#line 57 "../../src/list.kl"
     if ( kl_t7 ) kl__owned__dtor( &kl_value_2 );
-#line 57 "../../src/list.kl"
+#line 66 "../../src/list.kl"
     kl_t7 = false;
-#line 57 "../../src/list.kl"
+#line 66 "../../src/list.kl"
     return;
+#line 66 "../../src/list.kl"
 }
 
 #line 102 "../../src/list.kl"
@@ -2373,7 +2385,7 @@ void kl_2kl4list_insert__I5ownedE__SQ2kl4listI5ownedE_3u64_M5owned( struct kl_2k
     struct kl__owned* kl_t18;
     bool kl_t19;
     bool kl_t20;
-#line 102 "../../src/list.kl"
+#line 104 "../../src/list.kl"
     kl_t20 = true;
 #line 104 "../../src/list.kl"
     kl_t4 = kl_index_2 > ( *kl_this_1 ).kl_count__2265;
@@ -2449,12 +2461,12 @@ void kl_2kl4list_insert__I5ownedE__SQ2kl4listI5ownedE_3u64_M5owned( struct kl_2k
     bb12:
 #line 121 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + 1;
-#line 102 "../../src/list.kl"
     if ( kl_t20 ) kl__owned__dtor( &kl_value_3 );
-#line 102 "../../src/list.kl"
+#line 122 "../../src/list.kl"
     kl_t20 = false;
-#line 102 "../../src/list.kl"
+#line 122 "../../src/list.kl"
     return;
+#line 122 "../../src/list.kl"
 }
 
 #line 349 "../../src/list.kl"
@@ -2523,8 +2535,8 @@ void kl_2kl4list_truncate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4list
     bb7:
 #line 155 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = kl_n_2;
-#line 143 "../../src/list.kl"
     return;
+#line 156 "../../src/list.kl"
 }
 
 #line 355 "../../src/list.kl"
@@ -2571,6 +2583,7 @@ struct kl__owned* kl_2kl4list_first__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl
     kl_t0 = kl_t8;
 #line 172 "../../src/list.kl"
     return kl_t0;
+#line 174 "../../src/list.kl"
 }
 
 #line 181 "../../src/list.kl"
@@ -2616,6 +2629,7 @@ struct kl__owned* kl_2kl4list_last__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4
     kl_t0 = kl_t10;
 #line 190 "../../src/list.kl"
     return kl_t0;
+#line 192 "../../src/list.kl"
 }
 
 #line 87 "../../src/list.kl"
@@ -2629,9 +2643,9 @@ struct kl_2kl8optional_optional__I5ownedE kl_2kl4list_try_pop__I5ownedE__SQ2kl4l
     struct kl__owned kl_t6;
     bool kl_t7;
     bool kl_t8;
-#line 94 "../../src/list.kl"
+#line 89 "../../src/list.kl"
     kl_t7 = false;
-#line 94 "../../src/list.kl"
+#line 89 "../../src/list.kl"
     kl_t8 = false;
 #line 89 "../../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count__2265 == 0;
@@ -2690,11 +2704,11 @@ struct kl__owned kl_2kl8optional_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struc
     bool kl_t11;
     bool kl_t12;
     bool kl_t13;
-#line 19 "../../src/optional.kl"
+#line 21 "../../src/optional.kl"
     kl_t11 = true;
 #line 21 "../../src/optional.kl"
     kl_t12 = false;
-#line 23 "../../src/optional.kl"
+#line 21 "../../src/optional.kl"
     kl_t13 = false;
 #line 21 "../../src/optional.kl"
     kl_t12 = false;
@@ -2744,6 +2758,7 @@ struct kl__owned kl_2kl8optional_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struc
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 27 );
 #line 26 "../../src/optional.kl"
     kl_rt_panic_at( kl_t2.kl_file_2839.kl_data_2294, kl_t2.kl_file_2839.kl_size_2297, kl_t2.kl_line_2841, kl_t7.kl_data_2294, kl_t7.kl_size_2297 );
+#line 28 "../../src/optional.kl"
 }
 
 #line 62 "../../src/optional.kl"
@@ -2767,6 +2782,7 @@ bool kl_2kl8optional_is_some__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl8opt
     kl_t0 = false;
 #line 69 "../../src/optional.kl"
     return kl_t0;
+#line 71 "../../src/optional.kl"
 }
 
 #line 74 "../../src/optional.kl"
@@ -2790,6 +2806,7 @@ bool kl_2kl8optional_is_none__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl8opt
     kl_t0 = true;
 #line 81 "../../src/optional.kl"
     return kl_t0;
+#line 83 "../../src/optional.kl"
 }
 
 #line 312 "../../src/list.kl"
@@ -2830,7 +2847,6 @@ void kl_2kl4list_reverse__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4list_list_
 #line 321 "../../src/list.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb5:
-#line 312 "../../src/list.kl"
     return;
     bb6:
 #line 321 "../../src/list.kl"
@@ -2865,6 +2881,7 @@ void kl_2kl4list_reverse__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4list_list_
     kl_i_3 = kl_i_3 + 1;
 #line 319 "../../src/list.kl"
     goto bb3;
+#line 323 "../../src/list.kl"
 }
 
 #line 21 "../../src/list.kl"
@@ -2938,8 +2955,8 @@ void kl_2kl4list_shrink_to_fit__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4list
     kl_t5 = &( *kl_this_1 );
 #line 389 "../../src/list.kl"
     kl_2kl4list_reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( kl_t5, ( *kl_this_1 ).kl_count__2265 );
-#line 371 "../../src/list.kl"
     return;
+#line 390 "../../src/list.kl"
 }
 
 #line 393 "../../src/list.kl"
@@ -2974,8 +2991,8 @@ void kl_2kl4list_clear__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4list_list__I
     goto bb1;
     bb3:
     ( *kl_this_1 ).kl_count__2265 = 0;
-#line 393 "../../src/list.kl"
     return;
+#line 400 "../../src/list.kl"
 }
 
 #line 125 "../../src/list.kl"
@@ -3058,10 +3075,10 @@ void kl_2kl4list_append__I5ownedE__SQ2kl4listI5ownedE_MQ2kl4listI5ownedE( struct
 #line 137 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + kl_other_2.kl_count__2265;
     kl_other_2.kl_count__2265 = 0;
-#line 125 "../../src/list.kl"
     kl_2kl4list_list__I5ownedE__dtor( &kl_other_2 );
-#line 125 "../../src/list.kl"
+#line 139 "../../src/list.kl"
     return;
+#line 139 "../../src/list.kl"
 }
 
 #line 13 "../../src/list.kl"
@@ -3070,8 +3087,8 @@ void kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__
     ( *kl_this_1 ).kl_data__2263 = NULL;
     ( *kl_this_1 ).kl_count__2265 = 0;
     ( *kl_this_1 ).kl_cap__2267 = 0;
-#line 13 "../../src/list.kl"
     return;
+#line 18 "../../src/list.kl"
 }
 
 #line 57 "../../src/list.kl"
@@ -3098,8 +3115,8 @@ void kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__
     bb2:
 #line 65 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + 1;
-#line 57 "../../src/list.kl"
     return;
+#line 66 "../../src/list.kl"
 }
 
 #line 102 "../../src/list.kl"
@@ -3191,8 +3208,8 @@ void kl_2kl4list_insert__I3i32E__SQ2kl4listI3i32E_3u64_M3i32( struct kl_2kl4list
     bb12:
 #line 121 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + 1;
-#line 102 "../../src/list.kl"
     return;
+#line 122 "../../src/list.kl"
 }
 
 #line 312 "../../src/list.kl"
@@ -3233,7 +3250,6 @@ void kl_2kl4list_reverse__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i
 #line 321 "../../src/list.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb5:
-#line 312 "../../src/list.kl"
     return;
     bb6:
 #line 321 "../../src/list.kl"
@@ -3268,6 +3284,7 @@ void kl_2kl4list_reverse__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i
     kl_i_3 = kl_i_3 + 1;
 #line 319 "../../src/list.kl"
     goto bb3;
+#line 323 "../../src/list.kl"
 }
 
 #line 163 "../../src/list.kl"
@@ -3301,6 +3318,7 @@ int32_t* kl_2kl4list_first__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I
     kl_t0 = kl_t8;
 #line 172 "../../src/list.kl"
     return kl_t0;
+#line 174 "../../src/list.kl"
 }
 
 #line 181 "../../src/list.kl"
@@ -3346,6 +3364,7 @@ int32_t* kl_2kl4list_last__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3
     kl_t0 = kl_t10;
 #line 190 "../../src/list.kl"
     return kl_t0;
+#line 192 "../../src/list.kl"
 }
 
 #line 199 "../../src/list.kl"
@@ -3379,6 +3398,7 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
     kl_t0 = kl_t9;
 #line 208 "../../src/list.kl"
     return kl_t0;
+#line 210 "../../src/list.kl"
 }
 
 #line 125 "../../src/list.kl"
@@ -3461,10 +3481,10 @@ void kl_2kl4list_append__I3i32E__SQ2kl4listI3i32E_MQ2kl4listI3i32E( struct kl_2k
 #line 137 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = ( *kl_this_1 ).kl_count__2265 + kl_other_2.kl_count__2265;
     kl_other_2.kl_count__2265 = 0;
-#line 125 "../../src/list.kl"
     kl_2kl4list_list__I3i32E__dtor( &kl_other_2 );
-#line 125 "../../src/list.kl"
+#line 139 "../../src/list.kl"
     return;
+#line 139 "../../src/list.kl"
 }
 
 #line 143 "../../src/list.kl"
@@ -3497,8 +3517,8 @@ void kl_2kl4list_truncate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_lis
     kl_t6 = ( *kl_this_1 ).kl_count__2265 - kl_n_2;
 #line 155 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = kl_n_2;
-#line 143 "../../src/list.kl"
     return;
+#line 156 "../../src/list.kl"
 }
 
 #line 371 "../../src/list.kl"
@@ -3530,8 +3550,8 @@ void kl_2kl4list_shrink_to_fit__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_lis
     kl_t5 = &( *kl_this_1 );
 #line 389 "../../src/list.kl"
     kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t5, ( *kl_this_1 ).kl_count__2265 );
-#line 371 "../../src/list.kl"
     return;
+#line 390 "../../src/list.kl"
 }
 
 #line 343 "../../src/list.kl"
@@ -3608,6 +3628,7 @@ int32_t kl_2kl8optional_value_or__I3i32E__MQ2kl8optionalI3i32E_M3i32( struct kl_
     kl_t0 = kl_fallback_2;
 #line 57 "../../src/optional.kl"
     return kl_t0;
+#line 59 "../../src/optional.kl"
 }
 
 #line 393 "../../src/list.kl"
@@ -3615,8 +3636,8 @@ void kl_2kl4list_clear__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32
 {
 #line 399 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__2265 = 0;
-#line 393 "../../src/list.kl"
     return;
+#line 400 "../../src/list.kl"
 }
 
 #line 35 "../../src/list.kl"
@@ -3661,8 +3682,9 @@ void kl_2kl4list_list__I5ownedE__dtor( struct kl_2kl4list_list__I5ownedE* kl_thi
 #line 37 "../../src/list.kl"
     goto bb5;
     bb5:
-#line 35 "../../src/list.kl"
+#line 45 "../../src/list.kl"
     return;
+#line 45 "../../src/list.kl"
 }
 
 #line 35 "../../src/list.kl"
@@ -3679,8 +3701,9 @@ void kl_2kl4list_list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 
 #line 37 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 35 "../../src/list.kl"
+#line 45 "../../src/list.kl"
     return;
+#line 45 "../../src/list.kl"
 }
 
 #line 433 "../../src/list.kl"
@@ -3727,8 +3750,8 @@ void kl_2kl4list_reallocate_if_needed__I5ownedE__SQ2kl4listI5ownedE( struct kl_2
 #line 437 "../../src/list.kl"
     goto bb4;
     bb7:
-#line 433 "../../src/list.kl"
     return;
+#line 439 "../../src/list.kl"
 }
 
 #line 73 "../../src/list.kl"
@@ -3769,6 +3792,7 @@ struct kl__owned kl_2kl4list_pop__I5ownedE__SQ2kl4listI5ownedE( struct kl_2kl4li
     kl_t0 = ( *kl_t8 );
 #line 82 "../../src/list.kl"
     return kl_t0;
+#line 84 "../../src/list.kl"
 }
 
 #line 291 "../../src/list.kl"
@@ -3787,7 +3811,7 @@ void kl_2kl4list_swap__I5ownedE__SQ2kl4listI5ownedE_3u64_3u64( struct kl_2kl4lis
     struct kl__owned* kl_t15;
     struct kl__owned* kl_t16;
     bool kl_t17;
-#line 305 "../../src/list.kl"
+#line 293 "../../src/list.kl"
     kl_t17 = false;
 #line 293 "../../src/list.kl"
     kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count__2265;
@@ -3839,12 +3863,11 @@ void kl_2kl4list_swap__I5ownedE__SQ2kl4listI5ownedE_3u64_3u64( struct kl_2kl4lis
     ( *kl_t16 ) = kl_temp_12;
 #line 307 "../../src/list.kl"
     kl_t17 = false;
-#line 303 "../../src/list.kl"
     if ( kl_t17 ) kl__owned__dtor( &kl_temp_12 );
-#line 303 "../../src/list.kl"
+#line 308 "../../src/list.kl"
     kl_t17 = false;
-#line 291 "../../src/list.kl"
     return;
+#line 309 "../../src/list.kl"
 }
 
 #line 403 "../../src/list.kl"
@@ -3905,8 +3928,8 @@ void kl_2kl4list_reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4li
 #line 428 "../../src/list.kl"
     ( *kl_this_1 ).kl_data__2263 = kl_new_data_3;
     ( *kl_this_1 ).kl_cap__2267 = kl_n_2;
-#line 403 "../../src/list.kl"
     return;
+#line 430 "../../src/list.kl"
 }
 
 #line 362 "../../src/list.kl"
@@ -3925,8 +3948,9 @@ void kl_2kl4list_reserve__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4list_
 #line 364 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 362 "../../src/list.kl"
+#line 368 "../../src/list.kl"
     return;
+#line 368 "../../src/list.kl"
 }
 
 #line 433 "../../src/list.kl"
@@ -3973,8 +3997,8 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
 #line 437 "../../src/list.kl"
     goto bb4;
     bb7:
-#line 433 "../../src/list.kl"
     return;
+#line 439 "../../src/list.kl"
 }
 
 #line 291 "../../src/list.kl"
@@ -4036,8 +4060,9 @@ void kl_2kl4list_swap__I3i32E__SQ2kl4listI3i32E_3u64_3u64( struct kl_2kl4list_li
     kl_t16 = ( *kl_this_1 ).kl_data__2263 + kl_b_3;
 #line 307 "../../src/list.kl"
     ( *kl_t16 ) = kl_temp_12;
-#line 291 "../../src/list.kl"
+#line 309 "../../src/list.kl"
     return;
+#line 309 "../../src/list.kl"
 }
 
 #line 362 "../../src/list.kl"
@@ -4056,8 +4081,9 @@ void kl_2kl4list_reserve__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list
 #line 364 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 362 "../../src/list.kl"
+#line 368 "../../src/list.kl"
     return;
+#line 368 "../../src/list.kl"
 }
 
 #line 403 "../../src/list.kl"
@@ -4118,8 +4144,8 @@ void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_l
 #line 428 "../../src/list.kl"
     ( *kl_this_1 ).kl_data__2263 = kl_new_data_3;
     ( *kl_this_1 ).kl_cap__2267 = kl_n_2;
-#line 403 "../../src/list.kl"
     return;
+#line 430 "../../src/list.kl"
 }
 
 #line 73 "../../src/list.kl"
@@ -4160,6 +4186,7 @@ int32_t kl_2kl4list_pop__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i3
     kl_t0 = ( *kl_t8 );
 #line 82 "../../src/list.kl"
     return kl_t0;
+#line 84 "../../src/list.kl"
 }
 
 #line 5 "../../src/optional.kl"
@@ -4178,6 +4205,7 @@ void kl_2kl8optional_optional__I5ownedE__dtor( struct kl_2kl8optional_optional__
     kl__owned__dtor( &( *kl_t1 ).kl_value_1188 );
 #line 5 "../../src/optional.kl"
     goto bb1;
+#line 11 "../../src/optional.kl"
 }
 
 #line 280 "list_extras/main.kl"

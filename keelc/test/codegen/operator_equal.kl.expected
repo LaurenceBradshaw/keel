@@ -64,8 +64,8 @@ bool kl__operator_eq__S5point_5point( struct kl__point* kl_this_1, struct kl__po
 void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 {
     ( *kl_this_1 ).kl_first_56 = kl_c_2;
-#line 16 "codegen/operator_equal.kl"
     return;
+#line 19 "codegen/operator_equal.kl"
 }
 
 #line 21 "codegen/operator_equal.kl"
@@ -361,8 +361,8 @@ void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl
 {
     ( *kl_this_1 ).kl_left_111 = kl_a_2;
     ( *kl_this_1 ).kl_right_113 = kl_b_3;
-#line 31 "codegen/operator_equal.kl"
     return;
+#line 35 "codegen/operator_equal.kl"
 }
 
 #line 37 "codegen/operator_equal.kl"

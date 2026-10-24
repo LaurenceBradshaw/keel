@@ -243,6 +243,7 @@ int32_t kl__main__( void )
     bb14:
 #line 61 "opt/identities.kl"
     goto bb6;
+#line 93 "opt/identities.kl"
 }
 
 #line 72 "opt/identities.kl"

@@ -36,8 +36,8 @@ int32_t kl__main__( void );
 void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n_38 = 4;
-#line 13 "codegen/pointer_to_const.kl"
     return;
+#line 16 "codegen/pointer_to_const.kl"
 }
 
 #line 18 "codegen/pointer_to_const.kl"
@@ -117,6 +117,7 @@ int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
     kl_i_4 = kl_i_4 + 1;
 #line 35 "codegen/pointer_to_const.kl"
     goto bb1;
+#line 44 "codegen/pointer_to_const.kl"
 }
 
 #line 46 "codegen/pointer_to_const.kl"

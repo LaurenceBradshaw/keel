@@ -50,8 +50,8 @@ void kl__bump_twice__R3i32( int32_t* kl_n_1 )
     kl_t6 = ( *kl_inner_2 ) + 1;
 #line 17 "codegen/ref_bindings.kl"
     ( *kl_inner_2 ) = kl_t6;
-#line 12 "codegen/ref_bindings.kl"
     return;
+#line 18 "codegen/ref_bindings.kl"
 }
 
 #line 20 "codegen/ref_bindings.kl"

@@ -65,6 +65,7 @@ int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_b_2 = kl_remainder_4;
 #line 5 "codegen/gcd.kl"
     goto bb1;
+#line 13 "codegen/gcd.kl"
 }
 
 #line 15 "codegen/gcd.kl"

@@ -379,6 +379,7 @@ int32_t kl__main__( void )
     bb61:
 #line 68 "codegen/counting.kl"
     kl_rt_panic( "codegen/counting.kl", 68, "assertion failed: neg == -6" );
+#line 70 "codegen/counting.kl"
 }
 
 #line 10 "codegen/counting.kl"

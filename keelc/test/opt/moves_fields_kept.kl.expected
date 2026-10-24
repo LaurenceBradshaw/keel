@@ -70,8 +70,8 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
     kl_t5 = kl_t3 + kl_t4;
 #line 16 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t5;
-#line 12 "opt/moves_fields_kept.kl"
     return;
+#line 17 "opt/moves_fields_kept.kl"
 }
 
 #line 19 "opt/moves_fields_kept.kl"
@@ -87,8 +87,8 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
     kl_t3 = kl_t2 + 9;
 #line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t3;
-#line 19 "opt/moves_fields_kept.kl"
     return;
+#line 23 "opt/moves_fields_kept.kl"
 }
 
 #line 30 "opt/moves_fields_kept.kl"
@@ -108,16 +108,17 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_v
     kl_trace_3 = kl_t11;
 #line 32 "opt/moves_fields_kept.kl"
     ( *kl_this_1 ).kl_b_65.kl_value_42 = kl_v_2;
-#line 30 "opt/moves_fields_kept.kl"
     return;
+#line 33 "opt/moves_fields_kept.kl"
 }
 
 #line 35 "opt/moves_fields_kept.kl"
 void kl__Holder__dtor( struct kl__Holder* kl_this_1 )
 {
     ( void ) kl_this_1;
-#line 35 "opt/moves_fields_kept.kl"
+#line 37 "opt/moves_fields_kept.kl"
     return;
+#line 37 "opt/moves_fields_kept.kl"
 }
 
 #line 60 "opt/moves_fields_kept.kl"
@@ -133,8 +134,9 @@ void kl__consume__M3Box( struct kl__Box kl_t1 )
     kl_t5 = kl_t4 + 9;
 #line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t5;
-#line 60 "opt/moves_fields_kept.kl"
+#line 62 "opt/moves_fields_kept.kl"
     return;
+#line 62 "opt/moves_fields_kept.kl"
 }
 
 #line 65 "opt/moves_fields_kept.kl"
@@ -265,7 +267,7 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
     kl_t14 = kl_t13 + 9;
 #line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t14;
-#line 60 "opt/moves_fields_kept.kl"
+#line 62 "opt/moves_fields_kept.kl"
     goto bb4;
     bb4:
 #line 116 "opt/moves_fields_kept.kl"
@@ -274,6 +276,7 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
     if ( kl_t10 ) kl__Box__dtor( &kl_b_6 );
 #line 116 "opt/moves_fields_kept.kl"
     return kl_t0;
+#line 120 "opt/moves_fields_kept.kl"
 }
 
 #line 122 "opt/moves_fields_kept.kl"
@@ -420,8 +423,8 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
     kl_t6 = kl_t5 + 9;
 #line 22 "opt/moves_fields_kept.kl"
     kl_trace_3 = kl_t6;
-#line 19 "opt/moves_fields_kept.kl"
     goto bb1;
+#line 58 "opt/moves_fields_kept.kl"
 }
 
 #line 122 "opt/moves_fields_kept.kl"

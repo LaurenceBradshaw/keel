@@ -1574,6 +1574,15 @@ void Kir_emitter::emit_function( const Function& function )
         emit_terminator( block.terminator, function );
     }
     indent_ -= 4;
+    // The epilogue is the closing brace's.
+    if( function.declaration.is_valid() )
+    {
+        line_directive( ast_.span( function.declaration ).last() );
+    }
+    else
+    {
+        sync_line();
+    }
     write_line( "}" );
 }
 
@@ -4086,6 +4095,17 @@ TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen]
     REQUIRE( g.has( ".vtable->drop( " ) );
     REQUIRE( g.has( ".self )" ) );
     REQUIRE_FALSE( g.has( "void kl__Sq__drop(" ) );
+}
+
+// The epilogue is the closing brace's, so stepping out of a function stops there last.
+TEST_CASE( "emit_kir_counts_a_function_s_closing_brace_at_the_keel_one", "[codegen][kir]" )
+{
+    Generated g( "void set( ref i32 x )\n{\n    x = 1;\n}\ni32 main() { i32 y = 0; set( ref y ); return y; }\n" );
+
+    INFO( g.rendered() );
+    INFO( g.c );
+    REQUIRE( g.clean() );
+    REQUIRE( g.has( "#line 4 \"t.kl\"\n}\n" ) );
 }
 
 TEST_CASE( "emit_kir_counts_every_line_of_code_at_a_line_of_keel", "[codegen][kir]" )

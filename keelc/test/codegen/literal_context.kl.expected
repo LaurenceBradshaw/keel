@@ -18,6 +18,7 @@ int32_t kl__takes_u8__2u8( uint8_t kl_t1 )
     kl_t0 = 0;
 #line 4 "codegen/literal_context.kl"
     return kl_t0;
+#line 4 "codegen/literal_context.kl"
 }
 
 #line 6 "codegen/literal_context.kl"

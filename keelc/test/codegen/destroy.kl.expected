@@ -46,8 +46,8 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
     bb2:
 #line 15 "codegen/destroy.kl"
     kl_live_1 = kl_live_1 + 1;
-#line 8 "codegen/destroy.kl"
     return;
+#line 16 "codegen/destroy.kl"
 }
 
 #line 18 "codegen/destroy.kl"
@@ -66,8 +66,8 @@ void kl__owned__dtor( struct kl__owned* kl_this_1 )
     bb2:
 #line 24 "codegen/destroy.kl"
     kl_live_1 = kl_live_1 - 1;
-#line 18 "codegen/destroy.kl"
     return;
+#line 25 "codegen/destroy.kl"
 }
 
 #line 40 "codegen/destroy.kl"
@@ -104,9 +104,11 @@ int32_t kl__main__( void )
     bool kl_t35;
     bool kl_t36;
     bool kl_t37;
-#line 47 "codegen/destroy.kl"
+#line 46 "codegen/destroy.kl"
     kl_t35 = false;
+#line 46 "codegen/destroy.kl"
     kl_t36 = false;
+#line 46 "codegen/destroy.kl"
     kl_t37 = false;
 #line 46 "codegen/destroy.kl"
     kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( struct kl__owned ), "codegen/destroy.kl", 46, "out of memory: alloc<owned>( 4 )" );
@@ -287,8 +289,8 @@ void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t
 #line 36 "codegen/destroy.kl"
     goto bb1;
     bb3:
-#line 32 "codegen/destroy.kl"
     return;
+#line 38 "codegen/destroy.kl"
 }
 
 #line 32 "codegen/destroy.kl"
@@ -296,8 +298,9 @@ void kl__end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
 {
     ( void ) kl_slots_1;
     ( void ) kl_count_2;
-#line 32 "codegen/destroy.kl"
+#line 38 "codegen/destroy.kl"
     return;
+#line 38 "codegen/destroy.kl"
 }
 
 #line 40 "codegen/destroy.kl"

@@ -46,6 +46,7 @@ bool kl__same__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl
     kl_t0 = kl_t3;
 #line 15 "codegen/self.kl"
     return kl_t0;
+#line 15 "codegen/self.kl"
 }
 
 #line 17 "codegen/self.kl"
@@ -410,6 +411,7 @@ bool kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_thi
     kl_t0 = kl_t3;
 #line 32 "codegen/self.kl"
     return kl_t0;
+#line 32 "codegen/self.kl"
 }
 
 #line 34 "codegen/self.kl"

@@ -28,8 +28,9 @@ void kl__Owner__R5Owner__ctor( struct kl__Owner* kl_this_1 )
     kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/assert.kl", 9, "out of memory: alloc<i32>()" );
 #line 9 "codegen/assert.kl"
     ( *kl_this_1 ).kl_p_23 = kl_t2;
-#line 5 "codegen/assert.kl"
+#line 11 "codegen/assert.kl"
     return;
+#line 11 "codegen/assert.kl"
 }
 
 #line 13 "codegen/assert.kl"
@@ -37,8 +38,9 @@ void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
 {
 #line 17 "codegen/assert.kl"
     kl_rt_free( ( *kl_this_1 ).kl_p_23 );
-#line 13 "codegen/assert.kl"
+#line 19 "codegen/assert.kl"
     return;
+#line 19 "codegen/assert.kl"
 }
 
 #line 24 "codegen/assert.kl"
@@ -68,6 +70,7 @@ int32_t kl__positive__3i32( int32_t kl_x_1 )
     bb3:
 #line 27 "codegen/assert.kl"
     kl_rt_panic( "codegen/assert.kl", 27, "assertion failed: x > 0" );
+#line 29 "codegen/assert.kl"
 }
 
 #line 31 "codegen/assert.kl"
@@ -157,6 +160,7 @@ int32_t kl__main__( void )
     bb15:
 #line 41 "codegen/assert.kl"
     if ( kl_t8 ) goto bb12; else goto bb13;
+#line 45 "codegen/assert.kl"
 }
 
 #line 31 "codegen/assert.kl"

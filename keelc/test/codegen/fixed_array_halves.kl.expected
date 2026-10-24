@@ -209,6 +209,7 @@ int32_t kl__main__( void )
     kl_t0 = kl_t28;
 #line 22 "codegen/fixed_array_halves.kl"
     return kl_t0;
+#line 25 "codegen/fixed_array_halves.kl"
 }
 
 #line 17 "codegen/fixed_array_halves.kl"

@@ -18,8 +18,8 @@ int32_t kl__main__( void );
 void kl__str__R3str__ctor( struct kl__str* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n_1 = 7;
-#line 6 "codegen/str_shadowed.kl"
     return;
+#line 9 "codegen/str_shadowed.kl"
 }
 
 #line 12 "codegen/str_shadowed.kl"

@@ -342,7 +342,7 @@ Lowering::Lowering(
 
 Function Lowering::run()
 {
-    const Span span = ast_.span( declaration_ );
+    const Span span = ast_.span( declaration_ ).last();
 
     // Owned parameters sit in a scope enclosing the body, so `return`'s unwind_to( 0 ) drops them.
     drops_.push_scope();
@@ -2811,7 +2811,7 @@ void Lowering::lower_block( Node_id id )
 
         lower_statement( child );
     }
-    drops_.pop_scope( ast_.span( id ) );
+    drops_.pop_scope( ast_.span( id ).last() );
     return;
 }
 
@@ -4111,6 +4111,59 @@ TEST_CASE( "lower_terminates_a_body_that_falls_off_the_end", "[ir][lower]" )
     REQUIRE( p.clean() );
     REQUIRE( verify( p.functions[0] ).empty() );
     REQUIRE( p.text( 0 ).find( "return" ) != std::string::npos );
+}
+
+// On the closing brace, so a debugger's last stop in the body is there and not on the signature.
+TEST_CASE( "lower_returns_from_a_body_that_falls_off_the_end_at_its_closing_brace", "[ir][lower]" )
+{
+    Lowered p( "void nothing()\n{\n    i32 x = 1;\n}\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    u32 returns = 0;
+    for( const Block& block : p.functions[0].blocks )
+    {
+        if( block.terminator.kind == Terminator_kind::Return )
+        {
+            ++returns;
+            REQUIRE( p.sm.text( block.terminator.span ) == "}" );
+            REQUIRE( p.sm.line_col( p.file, block.terminator.span.start ).line == 4 );
+        }
+    }
+
+    REQUIRE( returns == 1 );
+}
+
+TEST_CASE( "lower_drops_a_block_s_locals_at_its_closing_brace", "[ir][lower]" )
+{
+    Lowered p( "class Owned { u64 id; Owned( u64 n ) { id = n; } ~Owned() { } };\n"
+               "i32 main()\n"
+               "{\n"
+               "    {\n"
+               "        Owned o = Owned( 1 );\n"
+               "    }\n"
+               "    return 0;\n"
+               "}\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    u32 drops = 0;
+    for( const Function& function : p.functions )
+    {
+        for( const Statement& statement : function.statements )
+        {
+            if( statement.kind == Statement_kind::Drop )
+            {
+                ++drops;
+                REQUIRE( p.sm.text( statement.span ) == "}" );
+                REQUIRE( p.sm.line_col( p.file, statement.span.start ).line == 6 );
+            }
+        }
+    }
+
+    REQUIRE( drops == 1 );
 }
 
 TEST_CASE( "lower_returns_nothing_from_a_bare_return", "[ir][lower]" )

@@ -42,8 +42,8 @@ int32_t kl__main__( void );
 void kl__Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
 {
     ( *kl_this_1 ).kl_v_4 = kl_n_2;
-#line 13 "codegen/generics_owning_field.kl"
     return;
+#line 16 "codegen/generics_owning_field.kl"
 }
 
 #line 18 "codegen/generics_owning_field.kl"
@@ -64,8 +64,8 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
     kl_t3 = kl_destroyed_2 + 1;
 #line 20 "codegen/generics_owning_field.kl"
     kl_destroyed_2 = kl_t3;
-#line 18 "codegen/generics_owning_field.kl"
     return;
+#line 21 "codegen/generics_owning_field.kl"
 }
 
 #line 32 "codegen/generics_owning_field.kl"
@@ -78,8 +78,9 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     bool kl_t6;
     bool kl_t7;
     bool kl_t8;
-#line 34 "codegen/generics_owning_field.kl"
+#line 35 "codegen/generics_owning_field.kl"
     kl_t7 = false;
+#line 35 "codegen/generics_owning_field.kl"
     kl_t8 = false;
 #line 34 "codegen/generics_owning_field.kl"
     kl_t7 = false;
@@ -152,12 +153,15 @@ int32_t kl__main__( void )
     bool kl_t23;
     bool kl_t24;
     bool kl_t25;
-#line 49 "codegen/generics_owning_field.kl"
+#line 50 "codegen/generics_owning_field.kl"
     kl_t21 = false;
+#line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
-#line 78 "codegen/generics_owning_field.kl"
+#line 50 "codegen/generics_owning_field.kl"
     kl_t23 = false;
+#line 50 "codegen/generics_owning_field.kl"
     kl_t24 = false;
+#line 50 "codegen/generics_owning_field.kl"
     kl_t25 = false;
 #line 49 "codegen/generics_owning_field.kl"
     kl_t21 = false;
@@ -180,9 +184,8 @@ int32_t kl__main__( void )
     if ( kl_t22 ) kl__Buf__dtor( &kl_t2 );
 #line 50 "codegen/generics_owning_field.kl"
     kl_t22 = false;
-#line 48 "codegen/generics_owning_field.kl"
     if ( kl_t21 ) kl__Buf__dtor( &kl_a_1.kl_v_31 );
-#line 48 "codegen/generics_owning_field.kl"
+#line 51 "codegen/generics_owning_field.kl"
     kl_t21 = false;
 #line 53 "codegen/generics_owning_field.kl"
     kl_t5 = kl_destroyed_2 != 1;
@@ -242,13 +245,12 @@ int32_t kl__main__( void )
     kl_t24 = false;
 #line 81 "codegen/generics_owning_field.kl"
     kl_t23 = true;
-#line 77 "codegen/generics_owning_field.kl"
     if ( kl_t24 ) kl__Buf__dtor( &kl_inner_10.kl_v_31 );
-#line 77 "codegen/generics_owning_field.kl"
+#line 82 "codegen/generics_owning_field.kl"
     kl_t24 = false;
-#line 77 "codegen/generics_owning_field.kl"
+#line 82 "codegen/generics_owning_field.kl"
     if ( kl_t23 ) kl__Buf__dtor( &kl_outer_9.kl_v_31.kl_v_31 );
-#line 77 "codegen/generics_owning_field.kl"
+#line 82 "codegen/generics_owning_field.kl"
     kl_t23 = false;
 #line 84 "codegen/generics_owning_field.kl"
     kl_t14 = kl_destroyed_2 != 2;

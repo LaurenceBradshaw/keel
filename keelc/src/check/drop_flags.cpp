@@ -178,10 +178,27 @@ void append_flag_writes(
     }
 }
 
+// The first line of code the body runs: storage statements make none.
+Span entry_span( const Function& func )
+{
+    const Block& entry = func.blocks.front();
+    for( u32 i = 0; i < entry.statement_count; ++i )
+    {
+        const Statement& statement = func.statements[entry.first_statement + i];
+        if( statement.kind != Statement_kind::Storage_live && statement.kind != Statement_kind::Storage_dead )
+        {
+            return statement.span;
+        }
+    }
+
+    return entry.terminator.span;
+}
+
 // The rebuild: copies every block's statements, interleaves flag writes, sets drop_flag on drops,
 // and fixes each block's range as it goes.
 void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocabulary& vocabulary )
 {
+    const Span             entry = entry_span( func );
     std::vector<Statement> rebuilt;
     rebuilt.reserve( func.statements.size() * 2 ); // a guess
     for( Block& block : func.blocks )
@@ -192,7 +209,8 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
         // Set every flag on entry: a parameter arrives holding its value, and anything else starts empty,
-        // since an arm's temporary has no storage_live to clear it on the path that skips it.
+        // since an arm's temporary has no storage_live to clear it on the path that skips it. The writes
+        // take the first statement's line, so a debugger's first stop is on it.
         if( &block == &func.blocks.front() )
         {
             for( u32 local = 0; local < flags.size(); ++local )
@@ -203,9 +221,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
                     continue;
                 }
 
-                rebuilt.push_back(
-                    set_flag( flag, local >= 1 && local <= func.parameter_count, func.locals[local].span, vocabulary )
-                );
+                rebuilt.push_back( set_flag( flag, local >= 1 && local <= func.parameter_count, entry, vocabulary ) );
             }
         }
 
@@ -332,6 +348,30 @@ TEST_CASE( "drop_flags_leaves_a_function_that_moves_nothing_alone", "[check][dro
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
     REQUIRE( text.find( " if _" ) == std::string::npos ); // unconditional
     REQUIRE( text.find( "bool" ) == std::string::npos );  // and no flag was added
+}
+
+// On the first statement's line, not the flagged local's or the signature's: a debugger stops at
+// the first line of code after the prologue.
+TEST_CASE( "drop_flags_sets_flags_on_entry_at_the_first_statement_s_line", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "i32 run( i32 c ) {\n"
+                                  "  i32 k = c;\n"
+                                  "  Owned o = Owned( 1 );\n"
+                                  "  if ( k == 0 ) { consume( move o ); }\n"
+                                  "  return 0; }\n"
+                                  "i32 main() { return run( 0 ); }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const Function& run   = p.functions[p.functions.size() - 2];
+    const Block&    entry = run.blocks.front();
+
+    INFO( p.text( p.functions.size() - 2 ) );
+    REQUIRE( entry.statement_count > 0 );
+    REQUIRE( p.sm.line_col( p.file, run.statements[entry.first_statement].span.start ).line == 4 );
 }
 
 TEST_CASE( "drop_flags_guards_a_conditionally_moved_local", "[check][drop]" )

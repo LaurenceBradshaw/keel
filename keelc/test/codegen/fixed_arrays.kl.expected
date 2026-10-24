@@ -100,6 +100,7 @@ int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
     kl_i_3 = kl_i_3 + 1;
 #line 21 "codegen/fixed_arrays.kl"
     goto bb1;
+#line 27 "codegen/fixed_arrays.kl"
 }
 
 #line 29 "codegen/fixed_arrays.kl"
@@ -170,6 +171,7 @@ struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
     kl_i_2 = kl_i_2 + 1;
 #line 31 "codegen/fixed_arrays.kl"
     goto bb1;
+#line 37 "codegen/fixed_arrays.kl"
 }
 
 #line 39 "codegen/fixed_arrays.kl"
@@ -190,8 +192,8 @@ void kl__bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
     bb2:
 #line 41 "codegen/fixed_arrays.kl"
     ( *kl_values_1 ).e[kl_t2] = ( *kl_values_1 ).e[kl_t2] + 1;
-#line 39 "codegen/fixed_arrays.kl"
     return;
+#line 42 "codegen/fixed_arrays.kl"
 }
 
 #line 44 "codegen/fixed_arrays.kl"

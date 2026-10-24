@@ -30,8 +30,8 @@ int32_t kl__main__( void );
 void kl__set__O3i32( int32_t* kl_n_1 )
 {
     ( *kl_n_1 ) = 9;
-#line 13 "opt/propagation.kl"
     return;
+#line 16 "opt/propagation.kl"
 }
 
 #line 19 "opt/propagation.kl"
@@ -260,6 +260,7 @@ int32_t kl__main__( void )
     kl_t7 = kl_t10 != 6;
 #line 130 "opt/propagation.kl"
     if ( kl_t7 ) goto bb1; else goto bb6;
+#line 171 "opt/propagation.kl"
 }
 
 #line 113 "opt/propagation.kl"

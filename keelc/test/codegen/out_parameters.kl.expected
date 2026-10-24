@@ -92,8 +92,8 @@ void kl__divide__3i32_3i32_O3i32_O3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t*
     kl_t14 = kl_a_1 - kl_t12;
 #line 13 "codegen/out_parameters.kl"
     ( *kl_remainder_4 ) = kl_t14;
-#line 10 "codegen/out_parameters.kl"
     return;
+#line 14 "codegen/out_parameters.kl"
 }
 
 #line 18 "codegen/out_parameters.kl"
@@ -114,8 +114,9 @@ void kl__classify__3i32_O3i32( int32_t kl_n_1, int32_t* kl_sign_2 )
 #line 20 "codegen/out_parameters.kl"
     goto bb3;
     bb3:
-#line 18 "codegen/out_parameters.kl"
+#line 28 "codegen/out_parameters.kl"
     return;
+#line 28 "codegen/out_parameters.kl"
 }
 
 #line 30 "codegen/out_parameters.kl"
@@ -136,8 +137,8 @@ void kl__build__3i32_O5Point( int32_t kl_seed_1, struct kl__Point* kl_p_2 )
     kl_t4 = kl_seed_1 + 1;
 #line 33 "codegen/out_parameters.kl"
     ( *kl_p_2 ).kl_y_3 = kl_t4;
-#line 30 "codegen/out_parameters.kl"
     return;
+#line 34 "codegen/out_parameters.kl"
 }
 
 #line 38 "codegen/out_parameters.kl"
@@ -148,16 +149,16 @@ void kl__forward__O3i32( int32_t* kl_n_1 )
     kl_t2 = &( *kl_n_1 );
 #line 40 "codegen/out_parameters.kl"
     kl__init__O3i32( kl_t2 );
-#line 38 "codegen/out_parameters.kl"
     return;
+#line 41 "codegen/out_parameters.kl"
 }
 
 #line 43 "codegen/out_parameters.kl"
 void kl__init__O3i32( int32_t* kl_n_1 )
 {
     ( *kl_n_1 ) = 3;
-#line 43 "codegen/out_parameters.kl"
     return;
+#line 46 "codegen/out_parameters.kl"
 }
 
 #line 48 "codegen/out_parameters.kl"

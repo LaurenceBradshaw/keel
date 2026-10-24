@@ -52,8 +52,9 @@ void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t
     kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 16, sizeof( uint8_t ), "codegen/bare_temporary.kl", 11, "out of memory: alloc<u8>( 16 )" );
 #line 11 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_block__37 = kl_t3;
-#line 6 "codegen/bare_temporary.kl"
+#line 13 "codegen/bare_temporary.kl"
     return;
+#line 13 "codegen/bare_temporary.kl"
 }
 
 #line 15 "codegen/bare_temporary.kl"
@@ -72,16 +73,17 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     ( *( *kl_this_1 ).kl_drops__34 ) = ( *( *kl_this_1 ).kl_drops__34 ) + 1;
 #line 20 "codegen/bare_temporary.kl"
     kl_rt_free( ( *kl_this_1 ).kl_block__37 );
-#line 15 "codegen/bare_temporary.kl"
+#line 22 "codegen/bare_temporary.kl"
     return;
+#line 22 "codegen/bare_temporary.kl"
 }
 
 #line 30 "codegen/bare_temporary.kl"
 void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 {
     ( *kl_this_1 ).kl_taken__69 = 0;
-#line 30 "codegen/bare_temporary.kl"
     return;
+#line 33 "codegen/bare_temporary.kl"
 }
 
 #line 35 "codegen/bare_temporary.kl"
@@ -98,28 +100,28 @@ void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Trac
     bb2:
 #line 37 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_taken__69 = ( *kl_this_1 ).kl_taken__69 + 1;
-#line 35 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t2 );
-#line 35 "codegen/bare_temporary.kl"
+#line 38 "codegen/bare_temporary.kl"
     return;
+#line 38 "codegen/bare_temporary.kl"
 }
 
 #line 40 "codegen/bare_temporary.kl"
 void kl__own__S6Holder_M7Tracked( struct kl__Tracked kl_t1 )
 {
-#line 40 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t1 );
-#line 40 "codegen/bare_temporary.kl"
+#line 42 "codegen/bare_temporary.kl"
     return;
+#line 42 "codegen/bare_temporary.kl"
 }
 
 #line 47 "codegen/bare_temporary.kl"
 void kl__consume__M7Tracked( struct kl__Tracked kl_t1 )
 {
-#line 47 "codegen/bare_temporary.kl"
     kl__Tracked__dtor( &kl_t1 );
-#line 47 "codegen/bare_temporary.kl"
+#line 49 "codegen/bare_temporary.kl"
     return;
+#line 49 "codegen/bare_temporary.kl"
 }
 
 #line 51 "codegen/bare_temporary.kl"
@@ -197,18 +199,19 @@ int32_t kl__main__( void )
     bool kl_t54;
     bool kl_t55;
     bool kl_t56;
-#line 60 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t50 = false;
-#line 63 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t51 = false;
-#line 67 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t52 = false;
+#line 58 "codegen/bare_temporary.kl"
     kl_t53 = false;
-#line 72 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t54 = false;
-#line 77 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t55 = false;
-#line 83 "codegen/bare_temporary.kl"
+#line 58 "codegen/bare_temporary.kl"
     kl_t56 = false;
 #line 58 "codegen/bare_temporary.kl"
     kl_drops_1 = 0;
@@ -369,9 +372,8 @@ int32_t kl__main__( void )
 #line 78 "codegen/bare_temporary.kl"
     if ( kl_t42 ) goto bb14; else goto bb15;
     bb14:
-#line 76 "codegen/bare_temporary.kl"
+#line 79 "codegen/bare_temporary.kl"
     kl_7prelude_box__I7TrackedE__dtor( &kl_b_35 );
-#line 80 "codegen/bare_temporary.kl"
     goto bb16;
     bb15:
 #line 78 "codegen/bare_temporary.kl"
@@ -415,6 +417,7 @@ int32_t kl__main__( void )
     bb21:
 #line 84 "codegen/bare_temporary.kl"
     kl_rt_panic( "codegen/bare_temporary.kl", 84, "assertion failed: drops == 7" );
+#line 87 "codegen/bare_temporary.kl"
 }
 
 #line 80 "<prelude>"
@@ -426,7 +429,7 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
     struct kl__Tracked* kl_t6;
     struct kl__Tracked* kl_t7;
     bool kl_t8;
-#line 80 "<prelude>"
+#line 85 "<prelude>"
     kl_t8 = true;
 #line 85 "<prelude>"
     kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Tracked ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
@@ -442,12 +445,13 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
     kl_t7 = &( *kl_t6 );
 #line 87 "<prelude>"
     ( *kl_this_1 ).kl_p__370 = kl_t7;
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     if ( kl_t8 ) kl__Tracked__dtor( &kl_value_2 );
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     kl_t8 = false;
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     return;
+#line 89 "<prelude>"
 }
 
 #line 91 "<prelude>"
@@ -459,8 +463,9 @@ void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_t
 #line 95 "<prelude>"
     kl__Tracked__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p__370 );
-#line 91 "<prelude>"
+#line 98 "<prelude>"
     return;
+#line 98 "<prelude>"
 }
 
 #line 56 "codegen/bare_temporary.kl"

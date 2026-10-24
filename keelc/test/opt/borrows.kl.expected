@@ -46,8 +46,8 @@ static const struct kl__shape__vtable kl__Square__as_kl__shape = { kl__Square__a
 void kl__Square__R6Square_3i32__ctor( struct kl__Square* kl_this_1, int32_t kl_side_2 )
 {
     ( *kl_this_1 ).kl_side__48 = kl_side_2;
-#line 13 "opt/borrows.kl"
     return;
+#line 16 "opt/borrows.kl"
 }
 
 #line 18 "opt/borrows.kl"

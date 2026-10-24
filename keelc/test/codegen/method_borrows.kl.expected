@@ -66,8 +66,8 @@ bool kl__equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this_1
 void kl__give__S7Counter_R3i32( struct kl__Counter* kl_this_1, int32_t* kl_into_2 )
 {
     ( *kl_into_2 ) = ( *kl_this_1 ).kl_n_1;
-#line 22 "codegen/method_borrows.kl"
     return;
+#line 25 "codegen/method_borrows.kl"
 }
 
 #line 28 "codegen/method_borrows.kl"

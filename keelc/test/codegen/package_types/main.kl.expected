@@ -116,6 +116,7 @@ int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
     kl_t0 = kl_t10;
 #line 24 "codegen/package_types/main.kl"
     return kl_t0;
+#line 26 "codegen/package_types/main.kl"
 }
 
 #line 28 "codegen/package_types/main.kl"
@@ -378,8 +379,8 @@ int32_t kl__main__( void )
 void kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter* kl_this_1, int32_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n_287 = kl_start_2;
-#line 34 "codegen/package_types/kinds/shapes.kl"
     return;
+#line 37 "codegen/package_types/kinds/shapes.kl"
 }
 
 #line 39 "codegen/package_types/kinds/shapes.kl"

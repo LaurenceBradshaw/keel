@@ -68,6 +68,7 @@ struct kl__meter kl__zero__S5meter( void )
     kl_t0 = kl_t1;
 #line 24 "codegen/static_requirements.kl"
     return kl_t0;
+#line 24 "codegen/static_requirements.kl"
 }
 
 #line 25 "codegen/static_requirements.kl"
@@ -81,6 +82,7 @@ struct kl__meter kl__named__S5meter_3i32( int32_t kl_value_1 )
     kl_t0 = kl_t2;
 #line 25 "codegen/static_requirements.kl"
     return kl_t0;
+#line 25 "codegen/static_requirements.kl"
 }
 
 #line 26 "codegen/static_requirements.kl"
@@ -108,6 +110,7 @@ struct kl__meter kl__named__S5meter_4bool( bool kl_value_1 )
     kl_t0 = kl_t2;
 #line 26 "codegen/static_requirements.kl"
     return kl_t0;
+#line 26 "codegen/static_requirements.kl"
 }
 
 #line 38 "codegen/static_requirements.kl"
@@ -118,6 +121,7 @@ int32_t kl__zero__S3i32C4zero( void )
     kl_t0 = 11;
 #line 38 "codegen/static_requirements.kl"
     return kl_t0;
+#line 38 "codegen/static_requirements.kl"
 }
 
 #line 43 "codegen/static_requirements.kl"
@@ -128,6 +132,7 @@ int64_t kl__zero__S3i64C4zero( void )
     kl_t0 = 12;
 #line 43 "codegen/static_requirements.kl"
     return kl_t0;
+#line 43 "codegen/static_requirements.kl"
 }
 
 #line 51 "codegen/static_requirements.kl"
@@ -139,8 +144,8 @@ void kl__Owner__R5Owner_3u64__ctor( struct kl__Owner* kl_this_1, uint64_t kl_siz
 #line 53 "codegen/static_requirements.kl"
     ( *kl_this_1 ).kl_bytes_111 = kl_t3;
     ( *kl_this_1 ).kl_n_113 = kl_size_2;
-#line 51 "codegen/static_requirements.kl"
     return;
+#line 55 "codegen/static_requirements.kl"
 }
 
 #line 57 "codegen/static_requirements.kl"
@@ -150,6 +155,7 @@ void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
     kl_rt_free( ( *kl_this_1 ).kl_bytes_111 );
 #line 57 "codegen/static_requirements.kl"
     return;
+#line 57 "codegen/static_requirements.kl"
 }
 
 #line 59 "codegen/static_requirements.kl"
@@ -179,6 +185,7 @@ struct kl__Owner kl__zero__S5Owner( void )
     kl_t4 = false;
 #line 59 "codegen/static_requirements.kl"
     return kl_t0;
+#line 59 "codegen/static_requirements.kl"
 }
 
 #line 60 "codegen/static_requirements.kl"
@@ -189,6 +196,7 @@ uint64_t kl__count__S5Owner( struct kl__Owner* kl_this_1 )
     kl_t0 = ( *kl_this_1 ).kl_n_113;
 #line 60 "codegen/static_requirements.kl"
     return kl_t0;
+#line 60 "codegen/static_requirements.kl"
 }
 
 #line 80 "codegen/static_requirements.kl"
@@ -528,6 +536,7 @@ struct kl__cell__I2u8E kl__zero__I2u8E__S4cellI2u8E( void )
     kl_t0 = kl_t1;
 #line 33 "codegen/static_requirements.kl"
     return kl_t0;
+#line 33 "codegen/static_requirements.kl"
 }
 
 #line 33 "codegen/static_requirements.kl"
@@ -541,6 +550,7 @@ struct kl__cell__I3f64E kl__zero__I3f64E__S4cellI3f64E( void )
     kl_t0 = kl_t1;
 #line 33 "codegen/static_requirements.kl"
     return kl_t0;
+#line 33 "codegen/static_requirements.kl"
 }
 
 void kl__Owner__drop( struct kl__Owner* kl_t1 )
@@ -549,6 +559,7 @@ void kl__Owner__drop( struct kl__Owner* kl_t1 )
     kl__Owner__dtor( &( *kl_t1 ) );
 #line 46 "codegen/static_requirements.kl"
     return;
+#line 46 "codegen/static_requirements.kl"
 }
 
 #line 80 "codegen/static_requirements.kl"

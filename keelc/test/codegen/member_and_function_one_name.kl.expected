@@ -58,8 +58,8 @@ void kl__bump__S3Box_3i32( struct kl__Box* kl_this_1, int32_t kl_by_2 )
     kl_t4 = ( *kl_this_1 ).kl_v_1 + kl_by_2;
 #line 16 "codegen/member_and_function_one_name.kl"
     ( *kl_this_1 ).kl_v_1 = kl_t4;
-#line 14 "codegen/member_and_function_one_name.kl"
     return;
+#line 17 "codegen/member_and_function_one_name.kl"
 }
 
 #line 22 "codegen/member_and_function_one_name.kl"
@@ -101,8 +101,8 @@ void kl__bump__R3Box_3i32( struct kl__Box* kl_b_1, int32_t kl_by_2 )
     kl_t4 = ( *kl_b_1 ).kl_v_1 - kl_by_2;
 #line 30 "codegen/member_and_function_one_name.kl"
     ( *kl_b_1 ).kl_v_1 = kl_t4;
-#line 28 "codegen/member_and_function_one_name.kl"
     return;
+#line 31 "codegen/member_and_function_one_name.kl"
 }
 
 #line 33 "codegen/member_and_function_one_name.kl"

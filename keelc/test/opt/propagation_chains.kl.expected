@@ -41,8 +41,8 @@ int32_t kl__main__( void );
 void kl__Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value_28 = kl_v_2;
-#line 20 "opt/propagation_chains.kl"
     return;
+#line 23 "opt/propagation_chains.kl"
 }
 
 #line 25 "opt/propagation_chains.kl"
@@ -51,6 +51,7 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
     ( void ) kl_this_1;
 #line 25 "opt/propagation_chains.kl"
     return;
+#line 25 "opt/propagation_chains.kl"
 }
 
 #line 30 "opt/propagation_chains.kl"
@@ -77,8 +78,8 @@ struct kl__Box kl__pass__M3Box( struct kl__Box kl_b_1 )
 void kl__touch__5Point_O3i32( struct kl__Point kl_p_1, int32_t* kl_r_2 )
 {
     ( *kl_r_2 ) = kl_p_1.kl_y_3;
-#line 41 "opt/propagation_chains.kl"
     return;
+#line 44 "opt/propagation_chains.kl"
 }
 
 #line 46 "opt/propagation_chains.kl"
@@ -427,6 +428,7 @@ int32_t kl__main__( void )
     bb17:
 #line 62 "opt/propagation_chains.kl"
     goto bb2;
+#line 122 "opt/propagation_chains.kl"
 }
 
 #line 101 "opt/propagation_chains.kl"

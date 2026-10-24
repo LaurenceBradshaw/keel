@@ -295,6 +295,13 @@ Flow entry_flow( const Function& func )
     return flow;
 }
 
+// The fall-off return reports at the signature, not its `}`.
+Span exit_span( const Function& func, const Terminator& terminator )
+{
+    const Span declaration = func.locals[k_return_slot.v].span;
+    return terminator.span == declaration.last() ? declaration : terminator.span;
+}
+
 } // namespace
 
 Assignment_report check_assignment( const Function& func )
@@ -348,9 +355,10 @@ Assignment_report check_assignment( const Function& func )
             continue;
         }
 
+        const Span at = exit_span( func, b.terminator );
         if( func.diverges )
         {
-            report.diverging_returns.push_back( b.terminator.span );
+            report.diverging_returns.push_back( at );
             continue;
         }
 
@@ -362,9 +370,7 @@ Assignment_report check_assignment( const Function& func )
                 return;
             }
 
-            report.unassigned.push_back(
-                Unassigned_error { .local = local, .at = b.terminator.span, .maybe = flow.ever[local.v] != 0 }
-            );
+            report.unassigned.push_back( Unassigned_error { .local = local, .at = at, .maybe = flow.ever[local.v] != 0 } );
         };
 
         for( const Local_id local : func.out_parameters )
@@ -390,7 +396,7 @@ Assignment_report check_assignment( const Function& func )
             report.unassigned.push_back( Unassigned_error {
                 .local = func.constructed,
                 .field = func.owed_fields[i].field,
-                .at    = b.terminator.span,
+                .at    = at,
                 .maybe = flow.ever[slot] != 0,
             } );
         }

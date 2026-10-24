@@ -56,6 +56,7 @@ int32_t kl__bucket__3i32( int32_t kl_n_1 )
     kl_t6 = kl_n_1 == 20;
 #line 14 "codegen/switch_ranges.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
+#line 19 "codegen/switch_ranges.kl"
 }
 
 #line 23 "codegen/switch_ranges.kl"
@@ -97,6 +98,7 @@ int32_t kl__grade__3f64( double kl_x_1 )
     kl_t5 = kl_x_1 < 10.0;
 #line 29 "codegen/switch_ranges.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
+#line 34 "codegen/switch_ranges.kl"
 }
 
 #line 36 "codegen/switch_ranges.kl"

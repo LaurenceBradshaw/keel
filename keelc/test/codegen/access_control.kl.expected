@@ -61,8 +61,8 @@ int32_t kl__base__S7Counter( void )
 void kl__Counter__R7Counter_3i32__ctor( struct kl__Counter* kl_this_1, int32_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n_1 = kl_start_2;
-#line 24 "codegen/access_control.kl"
     return;
+#line 27 "codegen/access_control.kl"
 }
 
 #line 29 "codegen/access_control.kl"
@@ -88,8 +88,8 @@ void kl__bump__S7Counter( struct kl__Counter* kl_this_1 )
     kl_t5 = ( *kl_this_1 ).kl_n_1 + kl_t3;
 #line 31 "codegen/access_control.kl"
     ( *kl_this_1 ).kl_n_1 = kl_t5;
-#line 29 "codegen/access_control.kl"
     return;
+#line 32 "codegen/access_control.kl"
 }
 
 #line 34 "codegen/access_control.kl"
@@ -121,8 +121,8 @@ int32_t kl__total__S7Counter( struct kl__Counter* kl_this_1 )
 void kl__Sealed__R6Sealed_3i32__ctor( struct kl__Sealed* kl_this_1, int32_t kl_n_2 )
 {
     ( *kl_this_1 ).kl_v_59 = kl_n_2;
-#line 46 "codegen/access_control.kl"
     return;
+#line 49 "codegen/access_control.kl"
 }
 
 #line 51 "codegen/access_control.kl"

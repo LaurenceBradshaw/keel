@@ -44,8 +44,8 @@ int32_t kl__main__( void );
 void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value_22 = kl_v_2;
-#line 20 "opt/scalars_copied.kl"
     return;
+#line 23 "opt/scalars_copied.kl"
 }
 
 #line 28 "opt/scalars_copied.kl"
@@ -233,6 +233,7 @@ int32_t kl__opened__3i32( int32_t kl_a_1 )
     bb5:
 #line 83 "opt/scalars_copied.kl"
     return kl_t0;
+#line 87 "opt/scalars_copied.kl"
 }
 
 #line 89 "opt/scalars_copied.kl"

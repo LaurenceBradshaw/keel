@@ -136,8 +136,8 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
 void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 {
     ( *kl_this_1 ).kl_first_65 = kl_c_2;
-#line 24 "codegen/operator_compare.kl"
     return;
+#line 27 "codegen/operator_compare.kl"
 }
 
 #line 29 "codegen/operator_compare.kl"
@@ -209,6 +209,7 @@ int32_t kl__rank__Q7prelude8ordering( int32_t kl_o_1 )
     kl_t4 = kl_o_1 == 1;
 #line 72 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb2; else goto bb3;
+#line 77 "codegen/operator_compare.kl"
 }
 
 #line 79 "codegen/operator_compare.kl"
@@ -1065,8 +1066,8 @@ void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl
 {
     ( *kl_this_1 ).kl_left_129 = kl_a_2;
     ( *kl_this_1 ).kl_right_131 = kl_b_3;
-#line 39 "codegen/operator_compare.kl"
     return;
+#line 43 "codegen/operator_compare.kl"
 }
 
 #line 45 "codegen/operator_compare.kl"

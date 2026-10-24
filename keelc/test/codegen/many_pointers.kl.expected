@@ -89,8 +89,8 @@ void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t k
     kl_t4 = kl_live_2 + 1;
 #line 25 "codegen/many_pointers.kl"
     kl_live_2 = kl_t4;
-#line 22 "codegen/many_pointers.kl"
     return;
+#line 26 "codegen/many_pointers.kl"
 }
 
 #line 28 "codegen/many_pointers.kl"
@@ -111,8 +111,8 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_t3 = kl_live_2 - 1;
 #line 30 "codegen/many_pointers.kl"
     kl_live_2 = kl_t3;
-#line 28 "codegen/many_pointers.kl"
     return;
+#line 31 "codegen/many_pointers.kl"
 }
 
 #line 40 "codegen/many_pointers.kl"
@@ -125,8 +125,8 @@ void kl__Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
     ( *kl_this_1 ).kl_data_52 = kl_t3;
 #line 46 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_size_54 = kl_n_2;
-#line 40 "codegen/many_pointers.kl"
     return;
+#line 47 "codegen/many_pointers.kl"
 }
 
 #line 49 "codegen/many_pointers.kl"
@@ -134,8 +134,9 @@ void kl__Ints__dtor( struct kl__Ints* kl_this_1 )
 {
 #line 53 "codegen/many_pointers.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_52 );
-#line 49 "codegen/many_pointers.kl"
+#line 55 "codegen/many_pointers.kl"
     return;
+#line 55 "codegen/many_pointers.kl"
 }
 
 #line 57 "codegen/many_pointers.kl"
@@ -146,8 +147,9 @@ void kl__set__S4Ints_3u64_3i32( struct kl__Ints* kl_this_1, uint64_t kl_i_2, int
     kl_t4 = ( *kl_this_1 ).kl_data_52 + kl_i_2;
 #line 61 "codegen/many_pointers.kl"
     ( *kl_t4 ) = kl_v_3;
-#line 57 "codegen/many_pointers.kl"
+#line 63 "codegen/many_pointers.kl"
     return;
+#line 63 "codegen/many_pointers.kl"
 }
 
 #line 65 "codegen/many_pointers.kl"
@@ -224,6 +226,7 @@ int32_t kl__sum__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
     kl_i_4 = kl_i_4 + 1;
 #line 82 "codegen/many_pointers.kl"
     goto bb1;
+#line 89 "codegen/many_pointers.kl"
 }
 
 #line 92 "codegen/many_pointers.kl"
@@ -275,6 +278,7 @@ int32_t kl__sum_by_walking__N3i32_3u64( int32_t* kl_p_1, uint64_t kl_n_2 )
     kl_at_4 = kl_at_4 + 1;
 #line 102 "codegen/many_pointers.kl"
     goto bb1;
+#line 110 "codegen/many_pointers.kl"
 }
 
 #line 123 "codegen/many_pointers.kl"
@@ -294,8 +298,8 @@ void kl__bump__R3i32( int32_t* kl_v_1 )
     kl_t3 = ( *kl_v_1 ) + 1;
 #line 125 "codegen/many_pointers.kl"
     ( *kl_v_1 ) = kl_t3;
-#line 123 "codegen/many_pointers.kl"
     return;
+#line 126 "codegen/many_pointers.kl"
 }
 
 #line 128 "codegen/many_pointers.kl"
@@ -465,9 +469,9 @@ int32_t kl__main__( void )
     bool kl_t154;
     bool kl_t156;
     bool kl_t157;
-#line 275 "codegen/many_pointers.kl"
+#line 140 "codegen/many_pointers.kl"
     kl_t156 = false;
-#line 278 "codegen/many_pointers.kl"
+#line 140 "codegen/many_pointers.kl"
     kl_t157 = false;
 #line 140 "codegen/many_pointers.kl"
     kl_a_1 = NULL;
@@ -945,7 +949,7 @@ int32_t kl__main__( void )
 #line 266 "codegen/many_pointers.kl"
     return kl_t0;
     bb54:
-#line 262 "codegen/many_pointers.kl"
+#line 267 "codegen/many_pointers.kl"
     kl__Ints__dtor( &kl_ints_120 );
 #line 272 "codegen/many_pointers.kl"
     kl_cs_134 = NULL;
@@ -983,11 +987,10 @@ int32_t kl__main__( void )
     ( *kl_t143 ) = kl_t_136;
 #line 279 "codegen/many_pointers.kl"
     kl_t156 = false;
-#line 274 "codegen/many_pointers.kl"
+#line 281 "codegen/many_pointers.kl"
     if ( kl_t156 ) kl__Tracked__dtor( &kl_t_136 );
-#line 274 "codegen/many_pointers.kl"
+#line 281 "codegen/many_pointers.kl"
     kl_t156 = false;
-#line 282 "codegen/many_pointers.kl"
     kl_held_144 = 0;
 #line 285 "codegen/many_pointers.kl"
     kl_t145 = kl_cs_134 + 0;
@@ -1071,7 +1074,7 @@ void kl__fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double 
 #line 116 "codegen/many_pointers.kl"
     goto bb4;
     bb3:
-#line 112 "codegen/many_pointers.kl"
+#line 121 "codegen/many_pointers.kl"
     return;
     bb4:
 #line 116 "codegen/many_pointers.kl"
@@ -1086,6 +1089,7 @@ void kl__fill__I3f64E__N3f64_3u64_3f64( double* kl_p_1, uint64_t kl_n_2, double 
     kl_i_4 = kl_i_4 + 1;
 #line 116 "codegen/many_pointers.kl"
     goto bb1;
+#line 121 "codegen/many_pointers.kl"
 }
 
 #line 138 "codegen/many_pointers.kl"

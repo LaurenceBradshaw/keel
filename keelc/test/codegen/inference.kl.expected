@@ -452,8 +452,8 @@ void kl__bumped__I3i32E__R3i32( int32_t* kl_a_1 )
     kl_t3 = ( *kl_a_1 ) + 1;
 #line 53 "codegen/inference.kl"
     ( *kl_a_1 ) = kl_t3;
-#line 51 "codegen/inference.kl"
     return;
+#line 54 "codegen/inference.kl"
 }
 
 #line 57 "codegen/inference.kl"
@@ -551,8 +551,8 @@ bool kl__forwards__I4boolE__4bool( bool kl_a_1 )
 void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     ( *kl_this_1 ).kl_v_197 = kl_value_2;
-#line 99 "codegen/inference.kl"
     return;
+#line 102 "codegen/inference.kl"
 }
 
 #line 104 "codegen/inference.kl"

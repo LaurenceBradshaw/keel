@@ -64,6 +64,7 @@ int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
     kl_t0 = kl_t2;
 #line 8 "codegen/shared_extern/helper.kl"
     return kl_t0;
+#line 10 "codegen/shared_extern/helper.kl"
 }
 
 #line 6 "codegen/shared_extern/main.kl"

@@ -58,6 +58,7 @@ int32_t kl__length__P4Node( struct kl__Node* kl_head_1 )
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
 #line 20 "codegen/linked_list.kl"
     goto bb1;
+#line 27 "codegen/linked_list.kl"
 }
 
 #line 29 "codegen/linked_list.kl"
@@ -96,6 +97,7 @@ int32_t kl__sum__P4Node( struct kl__Node* kl_head_1 )
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
 #line 34 "codegen/linked_list.kl"
     goto bb1;
+#line 41 "codegen/linked_list.kl"
 }
 
 #line 45 "codegen/linked_list.kl"
@@ -135,6 +137,7 @@ int32_t kl__largest__P4Node( struct kl__Node* kl_head_1 )
     kl_step_3 = ( *kl_step_3 ).kl_next_4;
 #line 50 "codegen/linked_list.kl"
     goto bb1;
+#line 61 "codegen/linked_list.kl"
 }
 
 #line 64 "codegen/linked_list.kl"
@@ -184,6 +187,7 @@ int32_t kl__at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2
     kl_step_4 = ( *kl_step_4 ).kl_next_4;
 #line 69 "codegen/linked_list.kl"
     goto bb1;
+#line 81 "codegen/linked_list.kl"
 }
 
 #line 85 "codegen/linked_list.kl"

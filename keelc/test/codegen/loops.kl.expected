@@ -19,6 +19,7 @@ int32_t kl__never_leaves_the_loop__( void )
     kl_t0 = 7;
 #line 18 "codegen/loops.kl"
     return kl_t0;
+#line 20 "codegen/loops.kl"
 }
 
 #line 22 "codegen/loops.kl"

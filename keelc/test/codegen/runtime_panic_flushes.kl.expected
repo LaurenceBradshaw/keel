@@ -38,6 +38,7 @@ int32_t kl__main__( void )
     bb1:
 #line 11 "codegen/runtime_panic_flushes.kl"
     kl_rt_panic( "codegen/runtime_panic_flushes.kl", 11, "assertion failed: false" );
+#line 14 "codegen/runtime_panic_flushes.kl"
 }
 
 #line 4 "codegen/runtime_panic_flushes.kl"

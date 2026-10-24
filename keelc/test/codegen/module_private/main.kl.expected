@@ -175,8 +175,8 @@ int32_t kl__main__( void )
 void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n_96 = kl_start_2;
-#line 13 "codegen/module_private/helper.kl"
     return;
+#line 16 "codegen/module_private/helper.kl"
 }
 
 #line 18 "codegen/module_private/helper.kl"
@@ -299,6 +299,7 @@ int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
     kl_t0 = kl_t2;
 #line 72 "codegen/module_private/helper.kl"
     return kl_t0;
+#line 74 "codegen/module_private/helper.kl"
 }
 
 #line 76 "codegen/module_private/helper.kl"

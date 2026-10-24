@@ -127,6 +127,7 @@ void kl__Tracked__R7Tracked_3i64__ctor( struct kl__Tracked* kl_this_1, int64_t k
     ( *kl_this_1 ).kl_n_23 = kl_v_2;
 #line 25 "codegen/implements_for.kl"
     return;
+#line 25 "codegen/implements_for.kl"
 }
 
 #line 27 "codegen/implements_for.kl"
@@ -149,6 +150,7 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_drops_21 = kl_t3;
 #line 27 "codegen/implements_for.kl"
     return;
+#line 27 "codegen/implements_for.kl"
 }
 
 #line 38 "codegen/implements_for.kl"
@@ -159,6 +161,7 @@ int64_t kl__measure__S3i64C8Measured( int64_t* kl_this_1 )
     kl_t0 = ( *kl_this_1 );
 #line 38 "codegen/implements_for.kl"
     return kl_t0;
+#line 38 "codegen/implements_for.kl"
 }
 
 #line 39 "codegen/implements_for.kl"
@@ -180,6 +183,7 @@ void kl__grow__S3i64C8Measured_3i64( int64_t* kl_this_1, int64_t kl_by_2 )
     ( *kl_this_1 ) = kl_t4;
 #line 39 "codegen/implements_for.kl"
     return;
+#line 39 "codegen/implements_for.kl"
 }
 
 #line 44 "codegen/implements_for.kl"
@@ -199,6 +203,7 @@ int64_t kl__measure__S4SizeC8Measured( int32_t* kl_this_1 )
     kl_t0 = 100;
 #line 51 "codegen/implements_for.kl"
     return kl_t0;
+#line 53 "codegen/implements_for.kl"
 }
 
 #line 55 "codegen/implements_for.kl"
@@ -209,6 +214,7 @@ void kl__grow__S4SizeC8Measured_3i64( int32_t* kl_this_1, int64_t kl_t2 )
     ( *kl_this_1 ) = 1;
 #line 55 "codegen/implements_for.kl"
     return;
+#line 55 "codegen/implements_for.kl"
 }
 
 #line 60 "codegen/implements_for.kl"
@@ -231,6 +237,7 @@ int64_t kl__measure__S4HeldC8Measured( struct kl__Held* kl_this_1 )
     kl_t0 = 0;
 #line 67 "codegen/implements_for.kl"
     return kl_t0;
+#line 69 "codegen/implements_for.kl"
 }
 
 #line 71 "codegen/implements_for.kl"
@@ -246,6 +253,7 @@ void kl__grow__S4HeldC8Measured_3i64( struct kl__Held* kl_this_1, int64_t kl_t2 
     ( *kl_this_1 ) = kl_t3;
 #line 71 "codegen/implements_for.kl"
     return;
+#line 71 "codegen/implements_for.kl"
 }
 
 #line 85 "codegen/implements_for.kl"
@@ -262,6 +270,7 @@ int64_t kl__through__8Measured( struct kl__Measured__ref kl_m_1 )
     kl_t0 = kl_t3;
 #line 85 "codegen/implements_for.kl"
     return kl_t0;
+#line 85 "codegen/implements_for.kl"
 }
 
 #line 87 "codegen/implements_for.kl"
@@ -274,6 +283,7 @@ void kl__enlarge__R8Measured( struct kl__Measured__ref kl_m_1 )
     kl_t2.vtable->kl_grow_14( kl_t2.self, 2 );
 #line 87 "codegen/implements_for.kl"
     return;
+#line 87 "codegen/implements_for.kl"
 }
 
 #line 89 "codegen/implements_for.kl"
@@ -346,17 +356,17 @@ int32_t kl__main__( void )
     bool kl_t73;
     bool kl_t74;
     bool kl_t75;
-#line 107 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t70 = false;
-#line 107 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t71 = false;
-#line 112 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t72 = false;
-#line 117 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t73 = false;
-#line 117 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t74 = false;
-#line 117 "codegen/implements_for.kl"
+#line 91 "codegen/implements_for.kl"
     kl_t75 = false;
 #line 91 "codegen/implements_for.kl"
     kl_n_1 = 3;
@@ -645,9 +655,8 @@ int32_t kl__main__( void )
 #line 118 "codegen/implements_for.kl"
     return kl_t0;
     bb24:
-#line 116 "codegen/implements_for.kl"
+#line 119 "codegen/implements_for.kl"
     kl_7prelude_box__I8MeasuredE__dtor( &kl_t_56 );
-#line 120 "codegen/implements_for.kl"
     kl_t69 = kl_drops_21 != 2;
 #line 120 "codegen/implements_for.kl"
     if ( kl_t69 ) goto bb25; else goto bb26;
@@ -750,8 +759,8 @@ void kl__grow_twice__I3i64E__R3i64( int64_t* kl_v_1 )
     kl_t4 = &( *kl_v_1 );
 #line 82 "codegen/implements_for.kl"
     kl__grow__S3i64C8Measured_3i64( kl_t4, 1 );
-#line 79 "codegen/implements_for.kl"
     return;
+#line 83 "codegen/implements_for.kl"
 }
 
 #line 79 "codegen/implements_for.kl"
@@ -766,8 +775,8 @@ void kl__grow_twice__I4SizeE__R4Size( int32_t* kl_v_1 )
     kl_t4 = &( *kl_v_1 );
 #line 82 "codegen/implements_for.kl"
     kl__grow__S4SizeC8Measured_3i64( kl_t4, 1 );
-#line 79 "codegen/implements_for.kl"
     return;
+#line 83 "codegen/implements_for.kl"
 }
 
 #line 101 "<prelude>"
@@ -789,7 +798,7 @@ void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7pr
     struct kl__Held* kl_t6;
     struct kl__Held* kl_t7;
     bool kl_t8;
-#line 80 "<prelude>"
+#line 85 "<prelude>"
     kl_t8 = true;
 #line 85 "<prelude>"
     kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
@@ -805,12 +814,13 @@ void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7pr
     kl_t7 = &( *kl_t6 );
 #line 87 "<prelude>"
     ( *kl_this_1 ).kl_p__595 = kl_t7;
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     if ( kl_t8 ) kl__Held__dtor( &kl_value_2 );
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     kl_t8 = false;
-#line 80 "<prelude>"
+#line 89 "<prelude>"
     return;
+#line 89 "<prelude>"
 }
 
 #line 91 "<prelude>"
@@ -822,8 +832,9 @@ void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl
 #line 95 "<prelude>"
     kl_t2.vtable->drop( kl_t2.self );
     kl_rt_free( ( ( *kl_this_1 ).kl_p__595 ).self );
-#line 91 "<prelude>"
+#line 98 "<prelude>"
     return;
+#line 98 "<prelude>"
 }
 
 #line 91 "<prelude>"
@@ -835,8 +846,9 @@ void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* kl_this_1 
 #line 95 "<prelude>"
     kl__Held__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p__595 );
-#line 91 "<prelude>"
+#line 98 "<prelude>"
     return;
+#line 98 "<prelude>"
 }
 
 #line 30 "codegen/implements_for.kl"
@@ -855,6 +867,7 @@ void kl__Held__dtor( struct kl__Held* kl_t1 )
     kl__Tracked__dtor( &( *kl_t1 ).kl_t_48 );
 #line 30 "codegen/implements_for.kl"
     goto bb1;
+#line 34 "codegen/implements_for.kl"
 }
 
 void kl__Held__drop( struct kl__Held* kl_t1 )
@@ -863,6 +876,7 @@ void kl__Held__drop( struct kl__Held* kl_t1 )
     kl__Held__dtor( &( *kl_t1 ) );
 #line 30 "codegen/implements_for.kl"
     return;
+#line 30 "codegen/implements_for.kl"
 }
 
 #line 89 "codegen/implements_for.kl"

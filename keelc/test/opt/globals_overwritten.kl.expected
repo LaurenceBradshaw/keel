@@ -62,8 +62,8 @@ int32_t kl__rewritten__( void )
 void kl__returned__( void )
 {
     kl_seen_1 = 4;
-#line 32 "opt/globals_overwritten.kl"
     return;
+#line 35 "opt/globals_overwritten.kl"
 }
 
 #line 38 "opt/globals_overwritten.kl"

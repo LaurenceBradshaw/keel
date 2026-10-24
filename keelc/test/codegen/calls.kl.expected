@@ -19,6 +19,7 @@ int32_t kl__g__3i32( int32_t kl_x_1 )
     kl_t0 = kl_x_1;
 #line 3 "codegen/calls.kl"
     return kl_t0;
+#line 3 "codegen/calls.kl"
 }
 
 #line 5 "codegen/calls.kl"
@@ -55,6 +56,7 @@ int32_t kl__even__3i32( int32_t kl_n_1 )
     kl_t0 = kl_t5;
 #line 5 "codegen/calls.kl"
     return kl_t0;
+#line 5 "codegen/calls.kl"
 }
 
 #line 6 "codegen/calls.kl"
@@ -91,6 +93,7 @@ int32_t kl__odd__3i32( int32_t kl_n_1 )
     kl_t0 = kl_t5;
 #line 6 "codegen/calls.kl"
     return kl_t0;
+#line 6 "codegen/calls.kl"
 }
 
 #line 8 "codegen/calls.kl"

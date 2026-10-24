@@ -45,8 +45,8 @@ void kl__A3_5Token__dtor( struct kl__A3_5Token* );
 void kl__Token__R5Token_3i32__ctor( struct kl__Token* kl_this_1, int32_t kl_id_2 )
 {
     ( *kl_this_1 ).kl_id_3 = kl_id_2;
-#line 9 "codegen/fixed_array_drops.kl"
     return;
+#line 12 "codegen/fixed_array_drops.kl"
 }
 
 #line 14 "codegen/fixed_array_drops.kl"
@@ -67,8 +67,8 @@ void kl__Token__dtor( struct kl__Token* kl_this_1 )
     kl_t3 = kl_dropped_1 + 1;
 #line 16 "codegen/fixed_array_drops.kl"
     kl_dropped_1 = kl_t3;
-#line 14 "codegen/fixed_array_drops.kl"
     return;
+#line 17 "codegen/fixed_array_drops.kl"
 }
 
 #line 20 "codegen/fixed_array_drops.kl"
@@ -245,8 +245,8 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
     kl_t13 = false;
 #line 31 "codegen/fixed_array_drops.kl"
     kl_t11 = false;
-#line 29 "codegen/fixed_array_drops.kl"
     return;
+#line 32 "codegen/fixed_array_drops.kl"
 }
 
 #line 35 "codegen/fixed_array_drops.kl"
@@ -274,7 +274,7 @@ int32_t kl__main__( void )
     kl_t16 = false;
 #line 38 "codegen/fixed_array_drops.kl"
     kl_t17 = false;
-#line 45 "codegen/fixed_array_drops.kl"
+#line 38 "codegen/fixed_array_drops.kl"
     kl_t18 = false;
 #line 38 "codegen/fixed_array_drops.kl"
     kl_t16 = false;
@@ -359,11 +359,10 @@ int32_t kl__main__( void )
 #line 56 "codegen/fixed_array_drops.kl"
     return kl_t0;
     bb6:
-#line 37 "codegen/fixed_array_drops.kl"
     kl__A3_5Token__dtor( &kl_b_9 );
-#line 37 "codegen/fixed_array_drops.kl"
+#line 58 "codegen/fixed_array_drops.kl"
     if ( kl_t16 ) kl__A3_5Token__dtor( &kl_a_1 );
-#line 37 "codegen/fixed_array_drops.kl"
+#line 58 "codegen/fixed_array_drops.kl"
     kl_t16 = false;
 #line 60 "codegen/fixed_array_drops.kl"
     kl_t11 = kl_dropped_1 != 4;
@@ -378,7 +377,6 @@ int32_t kl__main__( void )
     kl_t13 = &kl_h_12;
 #line 66 "codegen/fixed_array_drops.kl"
     kl__Holder__R6Holder__ctor( kl_t13 );
-#line 65 "codegen/fixed_array_drops.kl"
     kl__A2_5Token__dtor( &kl_h_12.kl_tokens_51 );
 #line 69 "codegen/fixed_array_drops.kl"
     kl_t15 = kl_dropped_1 != 6;
@@ -418,6 +416,7 @@ void kl__A2_5Token__dtor( struct kl__A2_5Token* kl_t1 )
     bb3:
 #line 5 "codegen/fixed_array_drops.kl"
     return;
+#line 5 "codegen/fixed_array_drops.kl"
 }
 
 void kl__A3_5Token__dtor( struct kl__A3_5Token* kl_t1 )
@@ -443,6 +442,7 @@ void kl__A3_5Token__dtor( struct kl__A3_5Token* kl_t1 )
     bb3:
 #line 5 "codegen/fixed_array_drops.kl"
     return;
+#line 5 "codegen/fixed_array_drops.kl"
 }
 
 #line 35 "codegen/fixed_array_drops.kl"

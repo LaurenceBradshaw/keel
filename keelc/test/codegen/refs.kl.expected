@@ -36,8 +36,8 @@ void kl__bump__R3i32( int32_t* kl_n_1 )
     kl_t3 = ( *kl_n_1 ) + 1;
 #line 11 "codegen/refs.kl"
     ( *kl_n_1 ) = kl_t3;
-#line 9 "codegen/refs.kl"
     return;
+#line 12 "codegen/refs.kl"
 }
 
 #line 15 "codegen/refs.kl"
@@ -52,8 +52,8 @@ void kl__twice__R3i32( int32_t* kl_n_1 )
     kl_t4 = &( *kl_n_1 );
 #line 18 "codegen/refs.kl"
     kl__bump__R3i32( kl_t4 );
-#line 15 "codegen/refs.kl"
     return;
+#line 19 "codegen/refs.kl"
 }
 
 #line 21 "codegen/refs.kl"
@@ -64,8 +64,8 @@ void kl__slide__R5Point( struct kl__Point* kl_p_1 )
     kl_t2 = &( *kl_p_1 ).kl_x_1;
 #line 23 "codegen/refs.kl"
     kl__bump__R3i32( kl_t2 );
-#line 21 "codegen/refs.kl"
     return;
+#line 24 "codegen/refs.kl"
 }
 
 #line 27 "codegen/refs.kl"
@@ -76,8 +76,8 @@ void kl__through__P3i32( int32_t* kl_q_1 )
     kl_t2 = &( *kl_q_1 );
 #line 29 "codegen/refs.kl"
     kl__bump__R3i32( kl_t2 );
-#line 27 "codegen/refs.kl"
     return;
+#line 30 "codegen/refs.kl"
 }
 
 #line 32 "codegen/refs.kl"

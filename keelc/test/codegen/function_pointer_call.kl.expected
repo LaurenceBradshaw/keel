@@ -78,6 +78,7 @@ void kl__nothing__( void )
 {
 #line 19 "codegen/function_pointer_call.kl"
     return;
+#line 19 "codegen/function_pointer_call.kl"
 }
 
 #line 21 "codegen/function_pointer_call.kl"

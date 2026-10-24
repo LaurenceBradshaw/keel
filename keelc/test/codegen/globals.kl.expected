@@ -56,8 +56,8 @@ void kl__bump__( void )
     bb2:
 #line 48 "codegen/globals.kl"
     kl_counter_2 = kl_counter_2 + 1;
-#line 46 "codegen/globals.kl"
     return;
+#line 49 "codegen/globals.kl"
 }
 
 #line 51 "codegen/globals.kl"

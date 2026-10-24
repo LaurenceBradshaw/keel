@@ -158,6 +158,7 @@ int32_t kl__breaks_the_switch__( void )
     kl_count_1 = kl_t10;
 #line 32 "codegen/switch_control.kl"
     goto bb1;
+#line 49 "codegen/switch_control.kl"
 }
 
 #line 52 "codegen/switch_control.kl"
@@ -275,6 +276,7 @@ int32_t kl__continues_the_loop__( void )
     kl_count_1 = kl_t10;
 #line 79 "codegen/switch_control.kl"
     goto bb1;
+#line 96 "codegen/switch_control.kl"
 }
 
 #line 102 "codegen/switch_control.kl"
@@ -284,6 +286,7 @@ void kl__Counter__R7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t*
     ( *kl_this_1 ).kl_slot_173 = kl_s_2;
 #line 102 "codegen/switch_control.kl"
     return;
+#line 102 "codegen/switch_control.kl"
 }
 
 #line 103 "codegen/switch_control.kl"
@@ -305,6 +308,7 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     ( *( *kl_this_1 ).kl_slot_173 ) = kl_t3;
 #line 103 "codegen/switch_control.kl"
     return;
+#line 103 "codegen/switch_control.kl"
 }
 
 #line 109 "codegen/switch_control.kl"
@@ -380,10 +384,11 @@ int32_t kl__drops_on_continue__( void )
 #line 120 "codegen/switch_control.kl"
     goto bb10;
     bb10:
-#line 115 "codegen/switch_control.kl"
+#line 128 "codegen/switch_control.kl"
     kl__Counter__dtor( &kl_outer_6 );
 #line 114 "codegen/switch_control.kl"
     goto bb1;
+#line 131 "codegen/switch_control.kl"
 }
 
 #line 134 "codegen/switch_control.kl"
@@ -432,6 +437,7 @@ int32_t kl__drops_on_break__( void )
     kl_drops_1 = kl_t8;
 #line 138 "codegen/switch_control.kl"
     goto bb3;
+#line 151 "codegen/switch_control.kl"
 }
 
 #line 153 "codegen/switch_control.kl"

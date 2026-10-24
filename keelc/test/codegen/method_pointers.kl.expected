@@ -53,8 +53,8 @@ void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
     kl_t4 = ( *kl_this_1 ).kl_n_1 + kl_by_2;
 #line 10 "codegen/method_pointers.kl"
     ( *kl_this_1 ).kl_n_1 = kl_t4;
-#line 8 "codegen/method_pointers.kl"
     return;
+#line 11 "codegen/method_pointers.kl"
 }
 
 #line 13 "codegen/method_pointers.kl"

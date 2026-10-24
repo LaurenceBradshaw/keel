@@ -330,6 +330,7 @@ int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int3
     kl_t0 = kl_fallback_2;
 #line 57 "codegen/generics_enums.kl"
     return kl_t0;
+#line 59 "codegen/generics_enums.kl"
 }
 
 #line 50 "codegen/generics_enums.kl"
@@ -352,6 +353,7 @@ double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, doubl
     kl_t0 = kl_fallback_2;
 #line 57 "codegen/generics_enums.kl"
     return kl_t0;
+#line 59 "codegen/generics_enums.kl"
 }
 
 #line 61 "codegen/generics_enums.kl"

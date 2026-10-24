@@ -171,6 +171,7 @@ int32_t kl__main__( void )
     kl_t9 = kl_t12 != 2;
 #line 92 "opt/dead_stores.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
+#line 103 "opt/dead_stores.kl"
 }
 
 #line 70 "opt/dead_stores.kl"

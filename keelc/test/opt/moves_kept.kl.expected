@@ -46,8 +46,8 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
     kl_t5 = kl_t3 + kl_t4;
 #line 17 "opt/moves_kept.kl"
     kl_trace_3 = kl_t5;
-#line 13 "opt/moves_kept.kl"
     return;
+#line 18 "opt/moves_kept.kl"
 }
 
 #line 20 "opt/moves_kept.kl"
@@ -63,8 +63,8 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
     kl_t3 = kl_t2 + 9;
 #line 23 "opt/moves_kept.kl"
     kl_trace_3 = kl_t3;
-#line 20 "opt/moves_kept.kl"
     return;
+#line 24 "opt/moves_kept.kl"
 }
 
 #line 36 "opt/moves_kept.kl"
@@ -136,6 +136,7 @@ struct kl__Box kl__early__4bool( bool kl_c_1 )
     kl_t0.kl_value_42 = 4;
 #line 57 "opt/moves_kept.kl"
     return kl_t0;
+#line 61 "opt/moves_kept.kl"
 }
 
 #line 64 "opt/moves_kept.kl"
@@ -203,6 +204,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
     kl_t20 = false;
 #line 68 "opt/moves_kept.kl"
     goto bb1;
+#line 74 "opt/moves_kept.kl"
 }
 
 #line 77 "opt/moves_kept.kl"
@@ -436,6 +438,7 @@ int32_t kl__main__( void )
     kl_t15 = kl_t17 != 5;
 #line 123 "opt/moves_kept.kl"
     if ( kl_t15 ) goto bb9; else goto bb7;
+#line 141 "opt/moves_kept.kl"
 }
 
 #line 105 "opt/moves_kept.kl"

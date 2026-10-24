@@ -20,6 +20,7 @@ bool kl__positive__3i32( int32_t kl_n_1 )
     kl_t0 = kl_t2;
 #line 2 "codegen/short_circuit.kl"
     return kl_t0;
+#line 2 "codegen/short_circuit.kl"
 }
 
 #line 4 "codegen/short_circuit.kl"
@@ -47,6 +48,7 @@ bool kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_t0 = kl_t3;
 #line 4 "codegen/short_circuit.kl"
     return kl_t0;
+#line 4 "codegen/short_circuit.kl"
 }
 
 #line 5 "codegen/short_circuit.kl"
@@ -74,6 +76,7 @@ bool kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_t0 = kl_t3;
 #line 5 "codegen/short_circuit.kl"
     return kl_t0;
+#line 5 "codegen/short_circuit.kl"
 }
 
 #line 7 "codegen/short_circuit.kl"
@@ -84,6 +87,7 @@ int32_t kl__main__( void )
     kl_t0 = 0;
 #line 7 "codegen/short_circuit.kl"
     return kl_t0;
+#line 7 "codegen/short_circuit.kl"
 }
 
 #line 7 "codegen/short_circuit.kl"

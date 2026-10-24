@@ -155,8 +155,8 @@ void kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl4list_list__
     bb2:
 #line 65 "../../src/list.kl"
     ( *kl_this_1 ).kl_count__949 = ( *kl_this_1 ).kl_count__949 + 1;
-#line 57 "../../src/list.kl"
     return;
+#line 66 "../../src/list.kl"
 }
 
 #line 199 "../../src/list.kl"
@@ -190,6 +190,7 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
     kl_t0 = kl_t9;
 #line 208 "../../src/list.kl"
     return kl_t0;
+#line 210 "../../src/list.kl"
 }
 
 #line 35 "../../src/list.kl"
@@ -206,8 +207,9 @@ void kl_2kl4list_list__I3i32E__dtor( struct kl_2kl4list_list__I3i32E* kl_this_1 
 #line 37 "../../src/list.kl"
     goto bb2;
     bb2:
-#line 35 "../../src/list.kl"
+#line 45 "../../src/list.kl"
     return;
+#line 45 "../../src/list.kl"
 }
 
 #line 13 "../../src/list.kl"
@@ -216,8 +218,8 @@ void kl_2kl4list_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl4list_list__
     ( *kl_this_1 ).kl_data__947 = NULL;
     ( *kl_this_1 ).kl_count__949 = 0;
     ( *kl_this_1 ).kl_cap__951 = 0;
-#line 13 "../../src/list.kl"
     return;
+#line 18 "../../src/list.kl"
 }
 
 #line 433 "../../src/list.kl"
@@ -264,8 +266,8 @@ void kl_2kl4list_reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4l
 #line 437 "../../src/list.kl"
     goto bb4;
     bb7:
-#line 433 "../../src/list.kl"
     return;
+#line 439 "../../src/list.kl"
 }
 
 #line 403 "../../src/list.kl"
@@ -326,8 +328,8 @@ void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_l
 #line 428 "../../src/list.kl"
     ( *kl_this_1 ).kl_data__947 = kl_new_data_3;
     ( *kl_this_1 ).kl_cap__951 = kl_n_2;
-#line 403 "../../src/list.kl"
     return;
+#line 430 "../../src/list.kl"
 }
 
 #line 4 "list_bounds/main.kl"

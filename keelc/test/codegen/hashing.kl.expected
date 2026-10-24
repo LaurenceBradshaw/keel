@@ -194,6 +194,7 @@ uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
     kl_i_3 = kl_i_3 + 1;
 #line 62 "codegen/hashing.kl"
     goto bb1;
+#line 68 "codegen/hashing.kl"
 }
 
 #line 70 "codegen/hashing.kl"

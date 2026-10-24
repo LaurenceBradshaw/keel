@@ -73,6 +73,7 @@ int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( stru
     return kl_t0;
     bb2:
     kl_rt_panic_at( kl_t3.kl_file_768.kl_data_223, kl_t3.kl_file_768.kl_size_226, kl_t3.kl_line_770, kl_message_2.kl_data_223, kl_message_2.kl_size_226 );
+#line 45 "../../src/optional.kl"
 }
 
 #line 4 "optional_expect_empty/main.kl"

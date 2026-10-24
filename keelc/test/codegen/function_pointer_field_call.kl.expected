@@ -121,8 +121,8 @@ void kl__bump__R3i32( int32_t* kl_v_1 )
     kl_t3 = ( *kl_v_1 ) + 1;
 #line 20 "codegen/function_pointer_field_call.kl"
     ( *kl_v_1 ) = kl_t3;
-#line 18 "codegen/function_pointer_field_call.kl"
     return;
+#line 21 "codegen/function_pointer_field_call.kl"
 }
 
 #line 27 "codegen/function_pointer_field_call.kl"

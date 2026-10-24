@@ -58,8 +58,8 @@ int32_t kl__counted__3i32( int32_t kl_v_1 )
 void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner* kl_this_1, int32_t kl_t_2 )
 {
     ( *kl_this_1 ).kl_tag_23 = kl_t_2;
-#line 23 "codegen/conditional.kl"
     return;
+#line 26 "codegen/conditional.kl"
 }
 
 #line 28 "codegen/conditional.kl"
@@ -80,8 +80,8 @@ void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
     kl_t3 = kl_drops_21 + 1;
 #line 30 "codegen/conditional.kl"
     kl_drops_21 = kl_t3;
-#line 28 "codegen/conditional.kl"
     return;
+#line 31 "codegen/conditional.kl"
 }
 
 #line 35 "codegen/conditional.kl"
@@ -99,7 +99,9 @@ int32_t kl__owning__4bool( bool kl_which_1 )
     bool kl_t12;
 #line 37 "codegen/conditional.kl"
     kl_t10 = false;
+#line 37 "codegen/conditional.kl"
     kl_t11 = false;
+#line 37 "codegen/conditional.kl"
     kl_t12 = false;
 #line 37 "codegen/conditional.kl"
     kl_t10 = false;
@@ -253,6 +255,7 @@ int32_t kl__owning_temporary__4bool( bool kl_which_1 )
     bool kl_t10;
 #line 56 "codegen/conditional.kl"
     kl_t9 = false;
+#line 56 "codegen/conditional.kl"
     kl_t10 = false;
 #line 56 "codegen/conditional.kl"
     kl_t9 = false;

@@ -31,8 +31,9 @@ void kl__bump__3i32( int32_t kl_n_1 )
 #line 12 "opt/globals.kl"
     goto bb2;
     bb2:
-#line 10 "opt/globals.kl"
+#line 17 "opt/globals.kl"
     return;
+#line 17 "opt/globals.kl"
 }
 
 #line 20 "opt/globals.kl"
@@ -163,6 +164,7 @@ int32_t kl__main__( void )
     kl_t6 = kl_t5 != 57;
 #line 65 "opt/globals.kl"
     if ( kl_t6 ) goto bb3; else goto bb6;
+#line 79 "opt/globals.kl"
 }
 
 #line 59 "opt/globals.kl"

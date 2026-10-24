@@ -78,16 +78,16 @@ void kl__shift__S5point_3i32( struct kl__point* kl_this_1, int32_t kl_by_2 )
     bb4:
 #line 12 "codegen/operator_index.kl"
     ( *kl_this_1 ).kl_y_3 = ( *kl_this_1 ).kl_y_3 + kl_by_2;
-#line 9 "codegen/operator_index.kl"
     return;
+#line 13 "codegen/operator_index.kl"
 }
 
 #line 57 "codegen/operator_index.kl"
 void kl__view__R4view_PK3i32__ctor( struct kl__view* kl_this_1, int32_t* kl_source_2 )
 {
     ( *kl_this_1 ).kl_first_136 = kl_source_2;
-#line 57 "codegen/operator_index.kl"
     return;
+#line 60 "codegen/operator_index.kl"
 }
 
 #line 62 "codegen/operator_index.kl"
@@ -110,6 +110,7 @@ int32_t* kl__operator_index__S4view_3u64( struct kl__view* kl_this_1, uint64_t k
     bb3:
 #line 64 "codegen/operator_index.kl"
     kl_rt_panic( "codegen/operator_index.kl", 64, "assertion failed: index == 0" );
+#line 66 "codegen/operator_index.kl"
 }
 
 #line 71 "codegen/operator_index.kl"
@@ -126,8 +127,8 @@ void kl__bump__R3i32( int32_t* kl_n_1 )
     bb2:
 #line 73 "codegen/operator_index.kl"
     ( *kl_n_1 ) = ( *kl_n_1 ) + 1;
-#line 71 "codegen/operator_index.kl"
     return;
+#line 74 "codegen/operator_index.kl"
 }
 
 #line 76 "codegen/operator_index.kl"
@@ -200,6 +201,7 @@ int32_t kl__total__6bufferI3i32E( struct kl__buffer__I3i32E* kl_values_1 )
     kl_i_3 = kl_i_3 + 1;
 #line 84 "codegen/operator_index.kl"
     goto bb1;
+#line 89 "codegen/operator_index.kl"
 }
 
 #line 96 "codegen/operator_index.kl"
@@ -338,7 +340,7 @@ int32_t kl__main__( void )
     bool kl_t93;
     bool kl_t94;
     ( void ) kl_copied_73;
-#line 152 "codegen/operator_index.kl"
+#line 106 "codegen/operator_index.kl"
     kl_t94 = false;
 #line 106 "codegen/operator_index.kl"
     kl_t2 = &kl_numbers_1;
@@ -701,6 +703,7 @@ int32_t* kl__operator_index__I3i32E__S6bufferI3i32E_3u64( struct kl__buffer__I3i
     bb3:
 #line 37 "codegen/operator_index.kl"
     kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
+#line 43 "codegen/operator_index.kl"
 }
 
 #line 18 "codegen/operator_index.kl"
@@ -713,8 +716,9 @@ void kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( struct kl__buffer__I3i32E* k
     kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/operator_index.kl", 23, "out of memory: alloc<T>( n )" );
 #line 23 "codegen/operator_index.kl"
     ( *kl_this_1 ).kl_data_97 = kl_t3;
-#line 18 "codegen/operator_index.kl"
+#line 25 "codegen/operator_index.kl"
     return;
+#line 25 "codegen/operator_index.kl"
 }
 
 #line 91 "codegen/operator_index.kl"
@@ -761,8 +765,9 @@ void kl__buffer__I5pointE__R6bufferI5pointE_3u64__ctor( struct kl__buffer__I5poi
     kl_t3 = ( struct kl__point* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__point ), "codegen/operator_index.kl", 23, "out of memory: alloc<T>( n )" );
 #line 23 "codegen/operator_index.kl"
     ( *kl_this_1 ).kl_data_97 = kl_t3;
-#line 18 "codegen/operator_index.kl"
+#line 25 "codegen/operator_index.kl"
     return;
+#line 25 "codegen/operator_index.kl"
 }
 
 #line 35 "codegen/operator_index.kl"
@@ -791,6 +796,7 @@ struct kl__point* kl__operator_index__I5pointE__S6bufferI5pointE_3u64( struct kl
     bb3:
 #line 37 "codegen/operator_index.kl"
     kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
+#line 43 "codegen/operator_index.kl"
 }
 
 #line 27 "codegen/operator_index.kl"
@@ -798,8 +804,9 @@ void kl__buffer__I3i32E__dtor( struct kl__buffer__I3i32E* kl_this_1 )
 {
 #line 31 "codegen/operator_index.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_97 );
-#line 27 "codegen/operator_index.kl"
+#line 33 "codegen/operator_index.kl"
     return;
+#line 33 "codegen/operator_index.kl"
 }
 
 #line 27 "codegen/operator_index.kl"
@@ -807,8 +814,9 @@ void kl__buffer__I5pointE__dtor( struct kl__buffer__I5pointE* kl_this_1 )
 {
 #line 31 "codegen/operator_index.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_97 );
-#line 27 "codegen/operator_index.kl"
+#line 33 "codegen/operator_index.kl"
     return;
+#line 33 "codegen/operator_index.kl"
 }
 
 #line 104 "codegen/operator_index.kl"

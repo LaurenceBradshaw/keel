@@ -40,6 +40,7 @@ int32_t kl__main__( void )
     bb5:
 #line 8 "codegen/assert_fails.kl"
     kl_rt_panic( "codegen/assert_fails.kl", 8, "assertion failed: x > 1" );
+#line 12 "codegen/assert_fails.kl"
 }
 
 #line 3 "codegen/assert_fails.kl"

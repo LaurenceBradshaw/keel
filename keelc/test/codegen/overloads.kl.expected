@@ -311,8 +311,8 @@ int32_t kl__by_marker__P3i32( int32_t* kl_a_1 )
 void kl__Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_t_2 )
 {
     ( *kl_this_1 ).kl_tag_114 = kl_t_2;
-#line 70 "codegen/overloads.kl"
     return;
+#line 73 "codegen/overloads.kl"
 }
 
 #line 75 "codegen/overloads.kl"
@@ -344,8 +344,8 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_t5 = kl_destroyed_112 + kl_t3;
 #line 77 "codegen/overloads.kl"
     kl_destroyed_112 = kl_t5;
-#line 75 "codegen/overloads.kl"
     return;
+#line 78 "codegen/overloads.kl"
 }
 
 #line 83 "codegen/overloads.kl"
@@ -422,8 +422,8 @@ int32_t kl__by_transfer__M5Owned( struct kl__Owned kl_a_1 )
 void kl__Two__R3Two_3i32__ctor( struct kl__Two* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_x_170 = kl_v_2;
-#line 97 "codegen/overloads.kl"
     return;
+#line 100 "codegen/overloads.kl"
 }
 
 #line 102 "codegen/overloads.kl"
@@ -444,8 +444,9 @@ void kl__Two__R3Two_3f64__ctor( struct kl__Two* kl_this_1, double kl_v_2 )
 #line 104 "codegen/overloads.kl"
     goto bb3;
     bb3:
-#line 102 "codegen/overloads.kl"
+#line 112 "codegen/overloads.kl"
     return;
+#line 112 "codegen/overloads.kl"
 }
 
 #line 114 "codegen/overloads.kl"
@@ -669,7 +670,7 @@ int32_t kl__main__( void )
     int32_t kl_t71;
     bool kl_t72;
     bool kl_t73;
-#line 228 "codegen/overloads.kl"
+#line 201 "codegen/overloads.kl"
     kl_t73 = false;
 #line 201 "codegen/overloads.kl"
     kl_whole_1 = 7;
@@ -1081,8 +1082,8 @@ int32_t kl__main__( void )
 void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_held_259 = kl_v_2;
-#line 143 "codegen/overloads.kl"
     return;
+#line 146 "codegen/overloads.kl"
 }
 
 #line 148 "codegen/overloads.kl"

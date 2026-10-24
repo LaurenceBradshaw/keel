@@ -116,6 +116,7 @@ int32_t kl__main__( void )
     kl_t20 = kl_p_48 == 13;
 #line 53 "opt/scalars_parameters.kl"
     if ( kl_t20 ) goto bb1; else goto bb2;
+#line 57 "opt/scalars_parameters.kl"
 }
 
 #line 40 "opt/scalars_parameters.kl"

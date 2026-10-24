@@ -60,8 +60,8 @@ void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
     kl_t4 = ( *kl_this_1 ).kl_value_1 + kl_by_2;
 #line 16 "codegen/methods.kl"
     ( *kl_this_1 ).kl_value_1 = kl_t4;
-#line 14 "codegen/methods.kl"
     return;
+#line 17 "codegen/methods.kl"
 }
 
 #line 21 "codegen/methods.kl"
@@ -76,8 +76,8 @@ void kl__twice__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
     kl_t5 = &( *kl_this_1 );
 #line 24 "codegen/methods.kl"
     kl__add__S7Counter_3i32( kl_t5, kl_by_2 );
-#line 21 "codegen/methods.kl"
     return;
+#line 25 "codegen/methods.kl"
 }
 
 #line 28 "codegen/methods.kl"
@@ -133,8 +133,8 @@ int32_t kl__through_a_pointer__P7Counter( struct kl__Counter* kl_c_1 )
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n_84 = kl_start_2;
-#line 52 "codegen/methods.kl"
     return;
+#line 55 "codegen/methods.kl"
 }
 
 #line 57 "codegen/methods.kl"
@@ -155,8 +155,8 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_t3 = kl_freed_82 + 1;
 #line 59 "codegen/methods.kl"
     kl_freed_82 = kl_t3;
-#line 57 "codegen/methods.kl"
     return;
+#line 60 "codegen/methods.kl"
 }
 
 #line 62 "codegen/methods.kl"
@@ -186,8 +186,8 @@ void kl__add__S5Owned_3u64( struct kl__Owned* kl_this_1, uint64_t kl_by_2 )
     kl_t4 = ( *kl_this_1 ).kl_n_84 + kl_by_2;
 #line 69 "codegen/methods.kl"
     ( *kl_this_1 ).kl_n_84 = kl_t4;
-#line 67 "codegen/methods.kl"
     return;
+#line 70 "codegen/methods.kl"
 }
 
 #line 72 "codegen/methods.kl"
@@ -202,8 +202,8 @@ void kl__twice__S5Owned_3u64( struct kl__Owned* kl_this_1, uint64_t kl_by_2 )
     kl_t5 = &( *kl_this_1 );
 #line 75 "codegen/methods.kl"
     kl__add__S5Owned_3u64( kl_t5, kl_by_2 );
-#line 72 "codegen/methods.kl"
     return;
+#line 76 "codegen/methods.kl"
 }
 
 #line 79 "codegen/methods.kl"
@@ -305,7 +305,6 @@ int32_t kl__main__( void )
 #line 110 "codegen/methods.kl"
     return kl_t0;
     bb8:
-#line 103 "codegen/methods.kl"
     kl__Owned__dtor( &kl_o_16 );
 #line 114 "codegen/methods.kl"
     kl_t24 = kl_freed_82 != 1;

@@ -47,8 +47,8 @@ void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 #line 13 "codegen/static_fields.kl"
     kl_made_2 = kl_t3;
     ( *kl_this_1 ).kl_id_7 = kl_made_2;
-#line 11 "codegen/static_fields.kl"
     return;
+#line 15 "codegen/static_fields.kl"
 }
 
 #line 17 "codegen/static_fields.kl"
@@ -78,8 +78,8 @@ void kl__reset__S7Counter( struct kl__Counter* kl_this_1 )
     ( void ) kl_this_1;
 #line 29 "codegen/static_fields.kl"
     kl_made_2 = 0;
-#line 27 "codegen/static_fields.kl"
     return;
+#line 30 "codegen/static_fields.kl"
 }
 
 #line 41 "codegen/static_fields.kl"

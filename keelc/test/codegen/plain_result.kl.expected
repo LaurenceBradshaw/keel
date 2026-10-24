@@ -37,8 +37,8 @@ int32_t kl__main__( void );
 void kl__counter__R7counter__ctor( struct kl__counter* kl_this_1 )
 {
     ( *kl_this_1 ).kl_total__74 = 0;
-#line 18 "codegen/plain_result.kl"
     return;
+#line 21 "codegen/plain_result.kl"
 }
 
 #line 23 "codegen/plain_result.kl"
@@ -105,8 +105,8 @@ void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves
     bb4:
 #line 30 "codegen/plain_result.kl"
     ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t4;
-#line 28 "codegen/plain_result.kl"
     return;
+#line 31 "codegen/plain_result.kl"
 }
 
 #line 33 "codegen/plain_result.kl"

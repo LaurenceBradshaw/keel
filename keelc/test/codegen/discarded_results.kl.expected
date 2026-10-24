@@ -30,8 +30,8 @@ int32_t kl__main__( void );
 void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_n_4 = kl_v_2;
-#line 10 "codegen/discarded_results.kl"
     return;
+#line 13 "codegen/discarded_results.kl"
 }
 
 #line 15 "codegen/discarded_results.kl"
@@ -52,8 +52,8 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     kl_t3 = kl_drops_2 + 1;
 #line 17 "codegen/discarded_results.kl"
     kl_drops_2 = kl_t3;
-#line 15 "codegen/discarded_results.kl"
     return;
+#line 18 "codegen/discarded_results.kl"
 }
 
 #line 20 "codegen/discarded_results.kl"
@@ -173,7 +173,7 @@ int32_t kl__main__( void )
     bool kl_t26;
     ( void ) kl_n_10;
     ( void ) kl_m_12;
-#line 66 "codegen/discarded_results.kl"
+#line 48 "codegen/discarded_results.kl"
     kl_t26 = false;
 #line 48 "codegen/discarded_results.kl"
     kl_t1 = kl__make__(  );
@@ -238,7 +238,6 @@ int32_t kl__main__( void )
     if ( kl_t26 ) kl__Counter__dtor( &kl_t22 );
 #line 66 "codegen/discarded_results.kl"
     kl_t26 = false;
-#line 65 "codegen/discarded_results.kl"
     kl__Counter__dtor( &kl_kept_21 );
 #line 70 "codegen/discarded_results.kl"
     kl_t23 = &kl_held_5;
@@ -267,6 +266,7 @@ int32_t kl__main__( void )
     kl_i_16 = kl_t20;
 #line 59 "codegen/discarded_results.kl"
     goto bb1;
+#line 76 "codegen/discarded_results.kl"
 }
 
 #line 46 "codegen/discarded_results.kl"

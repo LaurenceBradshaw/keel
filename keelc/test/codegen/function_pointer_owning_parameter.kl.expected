@@ -24,16 +24,16 @@ int32_t kl__main__( void );
 void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
     ( *kl_this_1 ).kl_n_1 = kl_x_2;
-#line 10 "codegen/function_pointer_owning_parameter.kl"
     return;
+#line 13 "codegen/function_pointer_owning_parameter.kl"
 }
 
 #line 14 "codegen/function_pointer_owning_parameter.kl"
 void kl__B__dtor( struct kl__B* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n_1 = 0;
-#line 14 "codegen/function_pointer_owning_parameter.kl"
     return;
+#line 17 "codegen/function_pointer_owning_parameter.kl"
 }
 
 #line 20 "codegen/function_pointer_owning_parameter.kl"

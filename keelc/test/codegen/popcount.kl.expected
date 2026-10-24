@@ -49,6 +49,7 @@ uint32_t kl__popcount__3u32( uint32_t kl_bits_1 )
     kl_bits_1 = kl_t6;
 #line 8 "codegen/popcount.kl"
     goto bb1;
+#line 15 "codegen/popcount.kl"
 }
 
 #line 18 "codegen/popcount.kl"

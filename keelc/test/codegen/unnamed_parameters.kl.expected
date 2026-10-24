@@ -44,8 +44,8 @@ static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__a
 void kl__square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_side_2 )
 {
     ( *kl_this_1 ).kl_side_12 = kl_side_2;
-#line 12 "codegen/unnamed_parameters.kl"
     return;
+#line 15 "codegen/unnamed_parameters.kl"
 }
 
 #line 17 "codegen/unnamed_parameters.kl"

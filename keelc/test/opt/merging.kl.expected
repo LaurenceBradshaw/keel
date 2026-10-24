@@ -20,6 +20,7 @@ int32_t kl__chained__( void )
     kl_t0 = 1;
 #line 11 "opt/merging.kl"
     return kl_t0;
+#line 14 "opt/merging.kl"
 }
 
 #line 17 "opt/merging.kl"
@@ -143,6 +144,7 @@ int32_t kl__main__( void )
     kl_t13 = kl_t12 != 10;
 #line 82 "opt/merging.kl"
     if ( kl_t13 ) goto bb1; else goto bb2;
+#line 88 "opt/merging.kl"
 }
 
 #line 60 "opt/merging.kl"

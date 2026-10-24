@@ -199,8 +199,8 @@ void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1,
     kl_t4 = kl_made_6__I3i32E + 1;
 #line 14 "codegen/static_fields_generic.kl"
     kl_made_6__I3i32E = kl_t4;
-#line 11 "codegen/static_fields_generic.kl"
     return;
+#line 15 "codegen/static_fields_generic.kl"
 }
 
 #line 11 "codegen/static_fields_generic.kl"
@@ -221,8 +221,8 @@ void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1,
     kl_t4 = kl_made_6__I3f64E + 1;
 #line 14 "codegen/static_fields_generic.kl"
     kl_made_6__I3f64E = kl_t4;
-#line 11 "codegen/static_fields_generic.kl"
     return;
+#line 15 "codegen/static_fields_generic.kl"
 }
 
 #line 17 "codegen/static_fields_generic.kl"
@@ -251,8 +251,8 @@ void kl__reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
     ( void ) kl_this_1;
 #line 25 "codegen/static_fields_generic.kl"
     kl_made_6__I3i32E = 0;
-#line 23 "codegen/static_fields_generic.kl"
     return;
+#line 26 "codegen/static_fields_generic.kl"
 }
 
 #line 29 "codegen/static_fields_generic.kl"

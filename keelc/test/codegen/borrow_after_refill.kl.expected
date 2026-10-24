@@ -38,8 +38,8 @@ void kl__Counted__R7Counted_3u64__ctor( struct kl__Counted* kl_this_1, uint64_t 
     bb2:
 #line 12 "codegen/borrow_after_refill.kl"
     kl_alive_2 = kl_alive_2 + 1;
-#line 9 "codegen/borrow_after_refill.kl"
     return;
+#line 13 "codegen/borrow_after_refill.kl"
 }
 
 #line 15 "codegen/borrow_after_refill.kl"
@@ -57,17 +57,17 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
     bb2:
 #line 17 "codegen/borrow_after_refill.kl"
     kl_alive_2 = kl_alive_2 - 1;
-#line 15 "codegen/borrow_after_refill.kl"
     return;
+#line 18 "codegen/borrow_after_refill.kl"
 }
 
 #line 21 "codegen/borrow_after_refill.kl"
 void kl__take__M7Counted( struct kl__Counted kl_t1 )
 {
-#line 21 "codegen/borrow_after_refill.kl"
     kl__Counted__dtor( &kl_t1 );
-#line 21 "codegen/borrow_after_refill.kl"
+#line 23 "codegen/borrow_after_refill.kl"
     return;
+#line 23 "codegen/borrow_after_refill.kl"
 }
 
 #line 25 "codegen/borrow_after_refill.kl"
@@ -94,7 +94,7 @@ uint64_t kl__refill__( void )
     bool kl_t11;
 #line 32 "codegen/borrow_after_refill.kl"
     kl_t10 = false;
-#line 34 "codegen/borrow_after_refill.kl"
+#line 32 "codegen/borrow_after_refill.kl"
     kl_t11 = false;
 #line 32 "codegen/borrow_after_refill.kl"
     kl_t10 = false;

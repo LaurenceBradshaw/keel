@@ -82,8 +82,8 @@ void kl__hash__S5Point_RQ7prelude6hasher( struct kl__Point* kl_this_1, struct kl
     kl_t7 = ( uint64_t ) ( *kl_this_1 ).kl_y_6;
 #line 19 "codegen/hash.kl"
     kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t7 );
-#line 16 "codegen/hash.kl"
     return;
+#line 20 "codegen/hash.kl"
 }
 
 #line 40 "codegen/hash.kl"
@@ -160,8 +160,8 @@ void kl__hash__S6ColourC8hashable_RQ7prelude6hasher( int32_t* kl_this_1, struct 
     kl_t7 = &( *kl_h_2 );
 #line 56 "codegen/hash.kl"
     kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t7, 3 );
-#line 48 "codegen/hash.kl"
     return;
+#line 57 "codegen/hash.kl"
 }
 
 #line 70 "codegen/hash.kl"
@@ -983,6 +983,7 @@ uint64_t kl__digest__I3f64E__3f64( double* kl_v_1 )
     bb2:
 #line 64 "codegen/hash.kl"
     kl_rt_panic( "codegen/hash.kl", 64, "NaN has no hash: v.hash( ref h )" );
+#line 67 "codegen/hash.kl"
 }
 
 #line 60 "codegen/hash.kl"
@@ -1028,6 +1029,7 @@ uint64_t kl__digest__I3f32E__3f32( float* kl_v_1 )
     bb2:
 #line 64 "codegen/hash.kl"
     kl_rt_panic( "codegen/hash.kl", 64, "NaN has no hash: v.hash( ref h )" );
+#line 67 "codegen/hash.kl"
 }
 
 #line 89 "codegen/hash.kl"

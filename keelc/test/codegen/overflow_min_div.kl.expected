@@ -105,6 +105,7 @@ int32_t kl__main__( void )
     kl_t10 = -kl_min_1;
 #line 15 "codegen/overflow_min_div.kl"
     goto bb7;
+#line 17 "codegen/overflow_min_div.kl"
 }
 
 #line 12 "codegen/overflow_min_div.kl"

@@ -86,10 +86,10 @@ void kl__drops_at_scope_exit__( void )
     struct kl__Counted__I3i32E kl_c_1;
 #line 56 "codegen/generics_forward_reference.kl"
     kl_c_1.kl_v_181 = 1;
-#line 53 "codegen/generics_forward_reference.kl"
     kl__Counted__I3i32E__dtor( &kl_c_1 );
-#line 52 "codegen/generics_forward_reference.kl"
+#line 57 "codegen/generics_forward_reference.kl"
     return;
+#line 57 "codegen/generics_forward_reference.kl"
 }
 
 #line 59 "codegen/generics_forward_reference.kl"
@@ -200,8 +200,8 @@ void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
     kl_t3 = kl_destroyed_2 + 1;
 #line 120 "codegen/generics_forward_reference.kl"
     kl_destroyed_2 = kl_t3;
-#line 118 "codegen/generics_forward_reference.kl"
     return;
+#line 121 "codegen/generics_forward_reference.kl"
 }
 
 #line 59 "codegen/generics_forward_reference.kl"

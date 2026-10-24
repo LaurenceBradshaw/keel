@@ -47,8 +47,8 @@ void kl__Window__R6Window_3f64_3f64__ctor( struct kl__Window* kl_this_1, double 
 {
     ( *kl_this_1 ).kl_lo_8 = kl_a_2;
     ( *kl_this_1 ).kl_hi_10 = kl_b_3;
-#line 19 "codegen/sample_m7.kl"
     return;
+#line 23 "codegen/sample_m7.kl"
 }
 
 #line 25 "codegen/sample_m7.kl"
@@ -112,8 +112,8 @@ void kl__widen__S6Window_3f64( struct kl__Window* kl_this_1, double kl_by_2 )
     kl_t4 = ( *kl_this_1 ).kl_hi_10 + kl_by_2;
 #line 38 "codegen/sample_m7.kl"
     ( *kl_this_1 ).kl_hi_10 = kl_t4;
-#line 35 "codegen/sample_m7.kl"
     return;
+#line 39 "codegen/sample_m7.kl"
 }
 
 #line 41 "codegen/sample_m7.kl"

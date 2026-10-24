@@ -64,8 +64,8 @@ int32_t kl__main__( void );
 void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value_22 = kl_v_2;
-#line 20 "opt/scalars.kl"
     return;
+#line 23 "opt/scalars.kl"
 }
 
 #line 31 "opt/scalars.kl"
@@ -77,16 +77,16 @@ void kl__Held__R4Held_3i32__ctor( struct kl__Held* kl_this_1, int32_t kl_v_2 )
     kl_t6 = kl_v_2 + 1;
 #line 34 "opt/scalars.kl"
     ( *kl_this_1 ).kl_n_46 = kl_t6;
-#line 31 "opt/scalars.kl"
     return;
+#line 35 "opt/scalars.kl"
 }
 
 #line 46 "opt/scalars.kl"
 void kl__Logged__R6Logged_3i32__ctor( struct kl__Logged* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value_87 = kl_v_2;
-#line 46 "opt/scalars.kl"
     return;
+#line 49 "opt/scalars.kl"
 }
 
 #line 51 "opt/scalars.kl"
@@ -109,8 +109,8 @@ void kl__Logged__dtor( struct kl__Logged* kl_this_1 )
     kl_t6 = kl_t4 + kl_t5;
 #line 53 "opt/scalars.kl"
     kl_closed_49 = kl_t6;
-#line 51 "opt/scalars.kl"
     return;
+#line 54 "opt/scalars.kl"
 }
 
 #line 59 "opt/scalars.kl"
@@ -437,6 +437,7 @@ int32_t kl__opened__3i32( int32_t kl_a_1 )
     bb5:
 #line 142 "opt/scalars.kl"
     return kl_t0;
+#line 146 "opt/scalars.kl"
 }
 
 #line 148 "opt/scalars.kl"
@@ -492,7 +493,6 @@ int32_t kl__dropped__( void )
 #line 160 "opt/scalars.kl"
     return kl_t0;
     bb2:
-#line 156 "opt/scalars.kl"
     kl__Logged__dtor( &kl_l_1 );
 #line 164 "opt/scalars.kl"
     kl_t6 = kl__mixed__3i32_3i32( 2, 1 );
@@ -629,6 +629,7 @@ int32_t kl__main__( void )
     bb17:
 #line 124 "opt/scalars.kl"
     goto bb6;
+#line 208 "opt/scalars.kl"
 }
 
 #line 167 "opt/scalars.kl"

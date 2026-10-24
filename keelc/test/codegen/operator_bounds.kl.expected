@@ -121,6 +121,7 @@ struct kl__vec kl__operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct k
     kl_t0 = kl_t3;
 #line 31 "codegen/operator_bounds.kl"
     return kl_t0;
+#line 31 "codegen/operator_bounds.kl"
 }
 
 #line 32 "codegen/operator_bounds.kl"
@@ -160,6 +161,7 @@ struct kl__vec kl__operator_sub__S3vec( struct kl__vec* kl_this_1 )
     kl_t0 = kl_t2;
 #line 32 "codegen/operator_bounds.kl"
     return kl_t0;
+#line 32 "codegen/operator_bounds.kl"
 }
 
 #line 39 "codegen/operator_bounds.kl"
@@ -178,6 +180,7 @@ void kl__operator_add_assign__S3bag_3i32( struct kl__bag* kl_this_1, int32_t kl_
     ( *kl_this_1 ).kl_total_100 = ( *kl_this_1 ).kl_total_100 + kl_value_2;
 #line 39 "codegen/operator_bounds.kl"
     return;
+#line 39 "codegen/operator_bounds.kl"
 }
 
 #line 46 "codegen/operator_bounds.kl"
@@ -199,8 +202,9 @@ void kl__operator_add_assign__S5votes_4bool( struct kl__votes* kl_this_1, bool k
 #line 48 "codegen/operator_bounds.kl"
     goto bb4;
     bb4:
-#line 46 "codegen/operator_bounds.kl"
+#line 52 "codegen/operator_bounds.kl"
     return;
+#line 52 "codegen/operator_bounds.kl"
 }
 
 #line 59 "codegen/operator_bounds.kl"
@@ -214,6 +218,7 @@ double kl__operator_mul__S6length_3f64( struct kl__length* kl_this_1, double kl_
     kl_t0 = kl_t3;
 #line 59 "codegen/operator_bounds.kl"
     return kl_t0;
+#line 59 "codegen/operator_bounds.kl"
 }
 
 #line 70 "codegen/operator_bounds.kl"
@@ -582,8 +587,8 @@ void kl__fill__I3bag_3i32E__R3bag_3i32( struct kl__bag* kl_acc_1, int32_t* kl_va
     kl_t5 = &( *kl_acc_1 );
 #line 100 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S3bag_3i32( kl_t5, ( *kl_value_2 ) );
-#line 97 "codegen/operator_bounds.kl"
     return;
+#line 101 "codegen/operator_bounds.kl"
 }
 
 #line 97 "codegen/operator_bounds.kl"
@@ -598,8 +603,8 @@ void kl__fill__I5votes_4boolE__R5votes_4bool( struct kl__votes* kl_acc_1, bool* 
     kl_t5 = &( *kl_acc_1 );
 #line 100 "codegen/operator_bounds.kl"
     kl__operator_add_assign__S5votes_4bool( kl_t5, ( *kl_value_2 ) );
-#line 97 "codegen/operator_bounds.kl"
     return;
+#line 101 "codegen/operator_bounds.kl"
 }
 
 #line 108 "codegen/operator_bounds.kl"

@@ -84,6 +84,7 @@ int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
     kl_head_1 = kl_next_4;
 #line 33 "codegen/alloc_free.kl"
     goto bb1;
+#line 48 "codegen/alloc_free.kl"
 }
 
 #line 50 "codegen/alloc_free.kl"

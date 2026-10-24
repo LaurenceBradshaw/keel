@@ -195,8 +195,8 @@ struct kl__Vec kl__of__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n_120 = kl_start_2;
-#line 76 "codegen/static_methods.kl"
     return;
+#line 79 "codegen/static_methods.kl"
 }
 
 #line 81 "codegen/static_methods.kl"
@@ -217,8 +217,8 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_t3 = kl_freed_118 + 1;
 #line 83 "codegen/static_methods.kl"
     kl_freed_118 = kl_t3;
-#line 81 "codegen/static_methods.kl"
     return;
+#line 84 "codegen/static_methods.kl"
 }
 
 #line 86 "codegen/static_methods.kl"
@@ -429,7 +429,6 @@ int32_t kl__main__( void )
 #line 164 "codegen/static_methods.kl"
     return kl_t0;
     bb20:
-#line 154 "codegen/static_methods.kl"
     kl__Owned__dtor( &kl_o_29 );
 #line 169 "codegen/static_methods.kl"
     kl_t37 = kl_freed_118 != 1;

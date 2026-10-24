@@ -209,8 +209,8 @@ int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_t2 )
 void kl__set_to__I3i32E__R3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
     ( *kl_target_1 ) = kl_value_2;
-#line 17 "codegen/generics.kl"
     return;
+#line 20 "codegen/generics.kl"
 }
 
 #line 22 "codegen/generics.kl"
@@ -227,8 +227,8 @@ int32_t* kl__peek__I3i32E__3i32( int32_t* kl_a_1 )
 void kl__first_write__I3i32E__O3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
     ( *kl_target_1 ) = kl_value_2;
-#line 27 "codegen/generics.kl"
     return;
+#line 30 "codegen/generics.kl"
 }
 
 #line 38 "codegen/generics.kl"

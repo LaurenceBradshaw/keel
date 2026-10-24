@@ -31,6 +31,7 @@ void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
     ( *kl_this_1 ).kl_data_41 = kl_t2;
 #line 5 "codegen/ref_element.kl"
     return;
+#line 5 "codegen/ref_element.kl"
 }
 
 #line 6 "codegen/ref_element.kl"
@@ -40,6 +41,7 @@ void kl__buffer__dtor( struct kl__buffer* kl_this_1 )
     kl_rt_free( ( *kl_this_1 ).kl_data_41 );
 #line 6 "codegen/ref_element.kl"
     return;
+#line 6 "codegen/ref_element.kl"
 }
 
 #line 7 "codegen/ref_element.kl"
@@ -56,6 +58,7 @@ int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64
     kl_t0 = kl_t4;
 #line 7 "codegen/ref_element.kl"
     return kl_t0;
+#line 7 "codegen/ref_element.kl"
 }
 
 #line 11 "codegen/ref_element.kl"

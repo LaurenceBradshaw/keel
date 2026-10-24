@@ -72,6 +72,7 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     kl_t6 = kl_s_1.tag == 1;
 #line 25 "codegen/payloads.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
+#line 30 "codegen/payloads.kl"
 }
 
 #line 32 "codegen/payloads.kl"
@@ -94,6 +95,7 @@ int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
     kl_t0 = kl_fallback_2;
 #line 39 "codegen/payloads.kl"
     return kl_t0;
+#line 41 "codegen/payloads.kl"
 }
 
 #line 43 "codegen/payloads.kl"

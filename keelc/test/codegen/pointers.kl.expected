@@ -32,6 +32,7 @@ int32_t kl__read__P3i32( int32_t* kl_q_1 )
     kl_t0 = ( *kl_q_1 );
 #line 6 "codegen/pointers.kl"
     return kl_t0;
+#line 6 "codegen/pointers.kl"
 }
 
 #line 8 "codegen/pointers.kl"
@@ -53,6 +54,7 @@ void kl__bump__P3i32( int32_t* kl_q_1 )
     ( *kl_q_1 ) = kl_t3;
 #line 8 "codegen/pointers.kl"
     return;
+#line 8 "codegen/pointers.kl"
 }
 
 #line 10 "codegen/pointers.kl"

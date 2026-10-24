@@ -37,8 +37,9 @@ void kl__line__3i32( int32_t kl_stream_1 )
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 1 );
 #line 12 "codegen/runtime_write.kl"
     kl_rt_write( kl_stream_1, kl_t2.kl_data_343, kl_t6.kl_size_346 );
-#line 8 "codegen/runtime_write.kl"
+#line 14 "codegen/runtime_write.kl"
     return;
+#line 14 "codegen/runtime_write.kl"
 }
 
 #line 16 "codegen/runtime_write.kl"

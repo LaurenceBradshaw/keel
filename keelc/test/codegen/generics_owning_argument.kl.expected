@@ -43,8 +43,8 @@ int32_t kl__open__I7TrackedE__4WrapI7TrackedE( struct kl__Wrap__I7TrackedE* );
 void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t kl_m_2 )
 {
     ( *kl_this_1 ).kl_n_4 = kl_m_2;
-#line 11 "codegen/generics_owning_argument.kl"
     return;
+#line 14 "codegen/generics_owning_argument.kl"
 }
 
 #line 16 "codegen/generics_owning_argument.kl"
@@ -65,8 +65,8 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_t3 = kl_destroyed_2 + 1;
 #line 18 "codegen/generics_owning_argument.kl"
     kl_destroyed_2 = kl_t3;
-#line 16 "codegen/generics_owning_argument.kl"
     return;
+#line 19 "codegen/generics_owning_argument.kl"
 }
 
 #line 38 "codegen/generics_owning_argument.kl"
@@ -112,8 +112,8 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m
     kl_t10 = false;
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
-#line 38 "codegen/generics_owning_argument.kl"
     return;
+#line 41 "codegen/generics_owning_argument.kl"
 }
 
 #line 44 "codegen/generics_owning_argument.kl"
@@ -325,18 +325,18 @@ int32_t kl__main__( void )
 void kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( struct kl__Wrap__I7TrackedE* kl_this_1, struct kl__Tracked kl_x_2 )
 {
     bool kl_t3;
-#line 27 "codegen/generics_owning_argument.kl"
+#line 29 "codegen/generics_owning_argument.kl"
     kl_t3 = true;
 #line 29 "codegen/generics_owning_argument.kl"
     ( *kl_this_1 ).kl_v_31 = kl_x_2;
 #line 29 "codegen/generics_owning_argument.kl"
     kl_t3 = false;
-#line 27 "codegen/generics_owning_argument.kl"
     if ( kl_t3 ) kl__Tracked__dtor( &kl_x_2 );
-#line 27 "codegen/generics_owning_argument.kl"
+#line 30 "codegen/generics_owning_argument.kl"
     kl_t3 = false;
-#line 27 "codegen/generics_owning_argument.kl"
+#line 30 "codegen/generics_owning_argument.kl"
     return;
+#line 30 "codegen/generics_owning_argument.kl"
 }
 
 #line 55 "codegen/generics_owning_argument.kl"

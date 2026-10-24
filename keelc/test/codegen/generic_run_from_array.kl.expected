@@ -317,6 +317,7 @@ int32_t kl__total__I3i32E__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_
     kl_i_3 = kl_i_3 + 1;
 #line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
+#line 17 "codegen/generic_run_from_array.kl"
 }
 
 #line 9 "codegen/generic_run_from_array.kl"
@@ -378,6 +379,7 @@ double kl__total__I3f64E__L3f64( double* kl_values_1_data, uint64_t kl_values_1_
     kl_i_3 = kl_i_3 + 1;
 #line 12 "codegen/generic_run_from_array.kl"
     goto bb1;
+#line 17 "codegen/generic_run_from_array.kl"
 }
 
 #line 19 "codegen/generic_run_from_array.kl"

@@ -238,6 +238,7 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
     kl_next_4 = kl_t23;
 #line 45 "codegen/numbers.kl"
     goto bb12;
+#line 52 "codegen/numbers.kl"
 }
 
 #line 56 "codegen/numbers.kl"
@@ -346,6 +347,7 @@ bool kl__is_prime__3i32( int32_t kl_n_1 )
     kl_divisor_8 = kl_divisor_8 + 2;
 #line 71 "codegen/numbers.kl"
     goto bb5;
+#line 82 "codegen/numbers.kl"
 }
 
 #line 84 "codegen/numbers.kl"
@@ -404,6 +406,7 @@ int32_t kl__count_primes__3i32( int32_t kl_limit_1 )
     kl_n_3 = kl_n_3 + 1;
 #line 88 "codegen/numbers.kl"
     goto bb1;
+#line 97 "codegen/numbers.kl"
 }
 
 #line 101 "codegen/numbers.kl"
@@ -487,6 +490,7 @@ int32_t kl__collatz_steps__3u64( uint64_t kl_start_1 )
     kl_steps_3 = kl_steps_3 + 1;
 #line 106 "codegen/numbers.kl"
     goto bb1;
+#line 121 "codegen/numbers.kl"
 }
 
 #line 125 "codegen/numbers.kl"
@@ -567,6 +571,7 @@ uint64_t kl__collatz_peak__3u64( uint64_t kl_start_1 )
     kl_peak_3 = kl_value_2;
 #line 141 "codegen/numbers.kl"
     goto bb1;
+#line 148 "codegen/numbers.kl"
 }
 
 #line 150 "codegen/numbers.kl"
@@ -611,6 +616,7 @@ int32_t kl__digit_sum__3i32( int32_t kl_n_1 )
     kl_rest_2 = kl_t7;
 #line 155 "codegen/numbers.kl"
     goto bb1;
+#line 162 "codegen/numbers.kl"
 }
 
 #line 164 "codegen/numbers.kl"
@@ -670,6 +676,7 @@ int32_t kl__reverse_digits__3i32( int32_t kl_n_1 )
     kl_rest_2 = kl_t10;
 #line 169 "codegen/numbers.kl"
     goto bb1;
+#line 176 "codegen/numbers.kl"
 }
 
 #line 178 "codegen/numbers.kl"
@@ -744,6 +751,7 @@ uint64_t kl__factorial__3u32( uint32_t kl_n_1 )
     kl_i_3 = kl_i_3 + 1;
 #line 189 "codegen/numbers.kl"
     goto bb1;
+#line 195 "codegen/numbers.kl"
 }
 
 #line 197 "codegen/numbers.kl"
