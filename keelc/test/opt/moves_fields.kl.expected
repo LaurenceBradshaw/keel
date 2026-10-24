@@ -120,8 +120,6 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     bool kl_t3;
     bool kl_t6;
     int32_t kl_t10;
-    int32_t kl_t18;
-    int32_t kl_t19;
 #line 76 "opt/moves_fields.kl"
     kl_t3 = kl_s_1.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb4;
@@ -138,13 +136,9 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     kl_t10 = kl_s_1.kl_first_47.kl_value_31 * 10;
     kl_t0 = kl_t10 + kl_s_1.kl_second_49.kl_value_31;
 #line 18 "opt/moves_fields.kl"
-    kl_t18 = kl_live_1 - 1;
+    kl_live_1 = kl_live_1 - 2;
 #line 19 "opt/moves_fields.kl"
-    kl_t19 = kl_destroyed_3 + 1;
-#line 18 "opt/moves_fields.kl"
-    kl_live_1 = kl_t18 - 1;
-#line 19 "opt/moves_fields.kl"
-    kl_destroyed_3 = kl_t19 + 1;
+    kl_destroyed_3 = kl_destroyed_3 + 2;
     return kl_t0;
     bb3:
 #line 81 "opt/moves_fields.kl"
@@ -173,7 +167,6 @@ int32_t kl__main__( void )
     int32_t kl_t39;
     struct kl__Line kl_l_60;
     struct kl__Line* kl_r_64;
-    int32_t kl_t96;
 #line 60 "opt/moves_fields.kl"
     kl_l_60.kl_a_39.kl_x_34 = 8;
     kl_l_60.kl_a_39.kl_y_36 = 1;
@@ -215,8 +208,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb7:
 #line 13 "opt/moves_fields.kl"
-    kl_t96 = kl_live_1 + 1;
-    kl_live_1 = kl_t96 + 1;
+    kl_live_1 = kl_live_1 + 2;
 #line 103 "opt/moves_fields.kl"
     kl_t24.tag = 1;
     kl_t24.kl_first_47.kl_value_31 = 1;
@@ -262,8 +254,6 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
 {
     bool kl_t2;
     bool kl_t3;
-    int32_t kl_t10;
-    int32_t kl_t11;
 #line 37 "opt/moves_fields.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
     if ( kl_t2 ) goto bb4; else goto bb2;
@@ -274,13 +264,9 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
     if ( kl_t3 ) goto bb3; else goto bb1;
     bb3:
 #line 18 "opt/moves_fields.kl"
-    kl_t10 = kl_live_1 - 1;
+    kl_live_1 = kl_live_1 - 2;
 #line 19 "opt/moves_fields.kl"
-    kl_t11 = kl_destroyed_3 + 1;
-#line 18 "opt/moves_fields.kl"
-    kl_live_1 = kl_t10 - 1;
-#line 19 "opt/moves_fields.kl"
-    kl_destroyed_3 = kl_t11 + 1;
+    kl_destroyed_3 = kl_destroyed_3 + 2;
     goto bb1;
     bb4:
 #line 18 "opt/moves_fields.kl"

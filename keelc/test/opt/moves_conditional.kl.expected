@@ -157,47 +157,11 @@ int32_t kl__main__( void )
     struct kl__Box kl_g_24;
     bool kl_t26;
     bool kl_t35;
-    int32_t kl_t175;
-    int32_t kl_t176;
-    int32_t kl_t177;
     int32_t kl_t178;
-    int32_t kl_t179;
-    int32_t kl_t180;
-    int32_t kl_t181;
-    int32_t kl_t182;
-    int32_t kl_t183;
-    int32_t kl_t184;
-    int32_t kl_t185;
-    int32_t kl_t186;
-    int32_t kl_t187;
-    int32_t kl_t188;
-    int32_t kl_t189;
-    int32_t kl_t190;
     int32_t kl_t191;
     int32_t kl_t192;
-    int32_t kl_t193;
-    int32_t kl_t194;
-    int32_t kl_t195;
-    int32_t kl_t196;
-    int32_t kl_t197;
-    int32_t kl_t198;
-    int32_t kl_t199;
-    int32_t kl_t200;
-    int32_t kl_t201;
-    int32_t kl_t202;
-    int32_t kl_t203;
-    int32_t kl_t204;
-    int32_t kl_t205;
-    int32_t kl_t206;
-    int32_t kl_t207;
-    int32_t kl_t208;
-    int32_t kl_t209;
-    int32_t kl_t210;
 #line 14 "opt/moves_conditional.kl"
-    kl_t175 = kl_live_1 + 1;
-    kl_t176 = kl_t175 + 1;
-    kl_t177 = kl_t176 + 1;
-    kl_t178 = kl_t177 + 1;
+    kl_t178 = kl_live_1 + 4;
     kl_live_1 = kl_t178;
 #line 67 "opt/moves_conditional.kl"
     kl_t9 = kl_t178 != 4;
@@ -209,21 +173,9 @@ int32_t kl__main__( void )
 #line 69 "opt/moves_conditional.kl"
     kl_t0 = 1;
 #line 19 "opt/moves_conditional.kl"
-    kl_t193 = kl_live_1 - 1;
+    kl_live_1 = kl_live_1 - 4;
 #line 20 "opt/moves_conditional.kl"
-    kl_t194 = kl_destroyed_3 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t195 = kl_t193 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t196 = kl_t194 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t197 = kl_t195 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t198 = kl_t196 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_live_1 = kl_t197 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_destroyed_3 = kl_t198 + 1;
+    kl_destroyed_3 = kl_destroyed_3 + 4;
     return kl_t0;
     bb3:
 #line 72 "opt/moves_conditional.kl"
@@ -251,33 +203,9 @@ int32_t kl__main__( void )
 #line 77 "opt/moves_conditional.kl"
     kl_t0 = 2;
 #line 19 "opt/moves_conditional.kl"
-    kl_t199 = kl_live_1 - 1;
+    kl_live_1 = kl_live_1 - 7;
 #line 20 "opt/moves_conditional.kl"
-    kl_t200 = kl_destroyed_3 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t201 = kl_t199 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t202 = kl_t200 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t203 = kl_t201 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t204 = kl_t202 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t205 = kl_t203 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t206 = kl_t204 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t207 = kl_t205 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t208 = kl_t206 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t209 = kl_t207 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t210 = kl_t208 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_live_1 = kl_t209 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_destroyed_3 = kl_t210 + 1;
+    kl_destroyed_3 = kl_destroyed_3 + 7;
     return kl_t0;
     bb9:
 #line 81 "opt/moves_conditional.kl"
@@ -293,34 +221,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 19 "opt/moves_conditional.kl"
-    kl_t179 = kl_live_1 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t180 = kl_destroyed_3 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t181 = kl_t179 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t182 = kl_t180 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t183 = kl_t181 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t184 = kl_t182 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t185 = kl_t183 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t186 = kl_t184 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t187 = kl_t185 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t188 = kl_t186 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t189 = kl_t187 - 1;
-#line 20 "opt/moves_conditional.kl"
-    kl_t190 = kl_t188 + 1;
-#line 19 "opt/moves_conditional.kl"
-    kl_t191 = kl_t189 - 1;
+    kl_t191 = kl_live_1 - 7;
     kl_live_1 = kl_t191;
 #line 20 "opt/moves_conditional.kl"
-    kl_t192 = kl_t190 + 1;
+    kl_t192 = kl_destroyed_3 + 7;
     kl_destroyed_3 = kl_t192;
 #line 81 "opt/moves_conditional.kl"
     kl_t35 = kl_t191 != 0;

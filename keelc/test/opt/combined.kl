@@ -1,0 +1,71 @@
+// M11's combining fold, in a release build: `(x + c1) + c2` is `x + (c1 + c2)` and `(x + c1) - c2` is
+// `x + (c1 - c2)`, for a local and for a global, while `x` is unchanged. Each check returns its own
+// code.
+
+i32 count;
+
+// Four sums become `count + 4`.
+i32 four()
+{
+    count += 1;
+    count += 1;
+    count += 1;
+    count += 1;
+    return count;
+}
+
+// `x + 7`.
+i32 up( i32 x )
+{
+    i32 t = x + 3;
+    return t + 4;
+}
+
+// `x - 2`, not `x + -2`.
+i32 down( i32 x )
+{
+    i32 t = x + 3;
+    return t - 5;
+}
+
+// `x - 2` too, not `x + 4294967294`.
+u32 down_unsigned( u32 x )
+{
+    u32 t = x + 3;
+    return t - 5;
+}
+
+// `x * y` changes `x`, and the sum reads it, so `t + 4` stays.
+i32 written_between( i32 x, i32 y )
+{
+    i32 t = x + 3;
+    x     = x * y;
+    return t + 4 + x;
+}
+
+i32 main()
+{
+    count = 1;
+    if( four() != 5 || count != 5 )
+    {
+        return 1;
+    }
+    if( up( 1 ) != 8 )
+    {
+        return 2;
+    }
+    if( down( 1 ) != -1 )
+    {
+        return 3;
+    }
+    if( down_unsigned( 10 ) != 8 )
+    {
+        return 4;
+    }
+    if( written_between( 2, 5 ) != 19 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

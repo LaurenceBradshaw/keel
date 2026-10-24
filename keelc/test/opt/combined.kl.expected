@@ -1,0 +1,80 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "combined.kl.prelude.c"
+
+int32_t kl_count_1;
+
+int32_t kl__four__( void );
+int32_t kl__up__3i32( int32_t );
+int32_t kl__down__3i32( int32_t );
+uint32_t kl__down_unsigned__3u32( uint32_t );
+int32_t kl__written_between__3i32_3i32( int32_t, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__four__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t4;
+#line 13 "opt/combined.kl"
+    kl_t4 = kl_count_1 + 4;
+    kl_count_1 = kl_t4;
+#line 14 "opt/combined.kl"
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__up__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 21 "opt/combined.kl"
+    kl_t0 = kl_x_1 + 7;
+    return kl_t0;
+}
+
+int32_t kl__down__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 28 "opt/combined.kl"
+    kl_t0 = kl_x_1 - 2;
+    return kl_t0;
+}
+
+uint32_t kl__down_unsigned__3u32( uint32_t kl_x_1 )
+{
+    uint32_t kl_t0;
+#line 35 "opt/combined.kl"
+    kl_t0 = kl_x_1 - 2;
+    return kl_t0;
+}
+
+int32_t kl__written_between__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t_3;
+    int32_t kl_t6;
+#line 41 "opt/combined.kl"
+    kl_t_3 = kl_x_1 + 3;
+#line 42 "opt/combined.kl"
+    kl_x_1 = kl_x_1 * kl_y_2;
+#line 43 "opt/combined.kl"
+    kl_t6 = kl_t_3 + 4;
+    kl_t0 = kl_t6 + kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+#line 13 "opt/combined.kl"
+    kl_count_1 = 5;
+#line 70 "opt/combined.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

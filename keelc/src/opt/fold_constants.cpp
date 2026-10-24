@@ -439,9 +439,8 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
     return std::nullopt;
 }
 
-// Either build: the sum wraps without overflow checks, and with them it never overflows.
-std::optional<Rvalue>
-cancelled( const Rvalue& outer, const Rvalue& inner, const Type_table& types, const Literal_pool& literals )
+// Combined wrapped at the type's width: exact without overflow checks, and with them past every check.
+std::optional<Rvalue> combined( const Rvalue& outer, const Rvalue& inner, const Type_table& types, Literal_pool& literals )
 {
     if( outer.kind != Rvalue_kind::Binary || inner.kind != Rvalue_kind::Binary || outer.type != inner.type ||
         inner.a.type != inner.type || types.get( outer.type ).kind != Type_kind::Int || outer.a.kind != Operand_kind::Copy )
@@ -449,18 +448,44 @@ cancelled( const Rvalue& outer, const Rvalue& inner, const Type_table& types, co
         return std::nullopt;
     }
 
-    const bool inverse = ( outer.op == Token_kind::Plus && inner.op == Token_kind::Minus ) ||
-                         ( outer.op == Token_kind::Minus && inner.op == Token_kind::Plus );
+    const auto additive = []( Token_kind op ) { return op == Token_kind::Plus || op == Token_kind::Minus; };
 
     const auto known = []( const Operand& x ) { return x.kind == Operand_kind::Constant && x.constant.is_valid(); };
 
-    if( !inverse || !known( outer.b ) || !known( inner.b ) ||
-        literals.integer( outer.b.constant ) != literals.integer( inner.b.constant ) )
+    if( !additive( outer.op ) || !additive( inner.op ) || !known( outer.b ) || !known( inner.b ) )
     {
         return std::nullopt;
     }
 
-    return use( inner.a );
+    const Integer integer = *integer_type( types, outer.type );
+    const u64     c1      = literals.integer( inner.b.constant );
+    const u64     c2      = literals.integer( outer.b.constant );
+
+    // What `x` is shifted by.
+    u64 net = inner.op == Token_kind::Plus ? c1 : truncate( ~c1 + 1, integer.width );
+
+    net = *arithmetic( outer.op, net, c2, integer );
+
+    if( net == 0 )
+    {
+        return use( inner.a );
+    }
+
+    // A negative is a subtraction, as an operand has no negative form.
+    const u64 top = 1ull << ( integer.width - 1 );
+    if( net & top )
+    {
+        // A signed minimum has no positive magnitude.
+        const u64 magnitude = truncate( ~net + 1, integer.width );
+        if( magnitude == net && integer.is_signed )
+        {
+            return std::nullopt;
+        }
+
+        return binary( Token_kind::Minus, inner.a, constant( literals.add_integer( magnitude ), outer.type ), outer.type );
+    }
+
+    return binary( Token_kind::Plus, inner.a, constant( literals.add_integer( net ), outer.type ), outer.type );
 }
 
 } // namespace keel
@@ -576,6 +601,63 @@ TEST_CASE( "fold_constants_folds_an_added_zero", "[opt][fold]" )
     REQUIRE( sum->a.place.local == x.place.local );
 
     REQUIRE( !identity( binary( Token_kind::Minus, zero, x, i32 ), types, literals ) );
+}
+
+// `(x + 3) + 4` is `x + 7`, `(x + 3) - 5` is `x - 2`, and `(x - 3) + 3` is `x`.
+TEST_CASE( "fold_constants_combines_two_sums", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32 = types.integer( 32, true );
+    const Operand    x   = copy( Place { .local = Local_id { 1 } }, i32 );
+    const Operand    t   = copy( Place { .local = Local_id { 2 } }, i32 );
+    const auto       c   = [&]( u64 n ) { return constant( literals.add_integer( n ), i32 ); };
+
+    const std::optional<Rvalue> up =
+        combined( binary( Token_kind::Plus, t, c( 4 ), i32 ), binary( Token_kind::Plus, x, c( 3 ), i32 ), types, literals );
+    REQUIRE( up );
+    REQUIRE( up->op == Token_kind::Plus );
+    REQUIRE( up->a.place.local == x.place.local );
+    REQUIRE( literals.integer( up->b.constant ) == 7 );
+
+    const std::optional<Rvalue> down =
+        combined( binary( Token_kind::Minus, t, c( 5 ), i32 ), binary( Token_kind::Plus, x, c( 3 ), i32 ), types, literals );
+    REQUIRE( down );
+    REQUIRE( down->op == Token_kind::Minus );
+    REQUIRE( literals.integer( down->b.constant ) == 2 );
+
+    const std::optional<Rvalue> none =
+        combined( binary( Token_kind::Plus, t, c( 3 ), i32 ), binary( Token_kind::Minus, x, c( 3 ), i32 ), types, literals );
+    REQUIRE( none );
+    REQUIRE( none->kind == Rvalue_kind::Use );
+    REQUIRE( none->a.place.local == x.place.local );
+}
+
+// A signed minimum has no positive constant to subtract, and `*` is not a sum; an unsigned minimum is.
+TEST_CASE( "fold_constants_keeps_a_combined_minimum", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32        = types.integer( 32, true );
+    const Type_id    unsigned32 = types.integer( 32, false );
+    const auto       c          = [&]( u64 n, Type_id type ) { return constant( literals.add_integer( n ), type ); };
+    const auto       sum        = [&]( Token_kind op, u32 local, u64 n, Type_id type )
+    { return binary( op, copy( Place { .local = Local_id { local } }, type ), c( n, type ), type ); };
+
+    REQUIRE( !combined( sum( Token_kind::Plus, 2, 1, i32 ), sum( Token_kind::Plus, 1, 2147483647, i32 ), types, literals ) );
+    REQUIRE( !combined(
+        binary( Token_kind::Star, copy( Place { .local = Local_id { 2 } }, i32 ), c( 2, i32 ), i32 ),
+        sum( Token_kind::Plus, 1, 3, i32 ),
+        types,
+        literals
+    ) );
+
+    const std::optional<Rvalue> wrapped = combined(
+        sum( Token_kind::Plus, 2, 1, unsigned32 ), sum( Token_kind::Plus, 1, 2147483647, unsigned32 ), types, literals
+    );
+    REQUIRE( wrapped );
+    REQUIRE( wrapped->op == Token_kind::Minus );
+    REQUIRE( literals.integer( wrapped->b.constant ) == 2147483648u );
 }
 
 } // namespace keel

@@ -147,7 +147,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
 #line 67 "opt/moves_kept.kl"
     kl_other_30 = 6;
 #line 16 "opt/moves_kept.kl"
-    kl_t32 = kl_t31 + 1;
+    kl_t32 = kl_live_1 + 2;
     kl_live_1 = kl_t32;
 #line 17 "opt/moves_kept.kl"
     kl_t17 = kl_t13 * 10;
@@ -285,8 +285,6 @@ int32_t kl__main__( void )
     int64_t kl_t47;
     int64_t kl_t50;
     int64_t kl_t51;
-    int32_t kl_t56;
-    int32_t kl_t57;
 #line 107 "opt/moves_kept.kl"
     kl_t0 = kl__reassigned__(  );
 #line 108 "opt/moves_kept.kl"
@@ -316,13 +314,11 @@ int32_t kl__main__( void )
     bb6:
 #line 119 "opt/moves_kept.kl"
     kl_t0 = 10;
-#line 22 "opt/moves_kept.kl"
-    kl_t57 = kl_live_1 - 1;
 #line 23 "opt/moves_kept.kl"
     kl_t46 = kl_trace_3 * 10;
     kl_t47 = kl_t46 + 9;
 #line 22 "opt/moves_kept.kl"
-    kl_live_1 = kl_t57 - 1;
+    kl_live_1 = kl_live_1 - 2;
 #line 23 "opt/moves_kept.kl"
     kl_t50 = kl_t47 * 10;
     kl_t51 = kl_t50 + 9;
@@ -361,13 +357,11 @@ int32_t kl__main__( void )
     bb15:
     return kl_t0;
     bb16:
-#line 22 "opt/moves_kept.kl"
-    kl_t56 = kl_live_1 - 1;
 #line 23 "opt/moves_kept.kl"
     kl_t38 = kl_trace_3 * 10;
     kl_t39 = kl_t38 + 9;
 #line 22 "opt/moves_kept.kl"
-    kl_live_1 = kl_t56 - 1;
+    kl_live_1 = kl_live_1 - 2;
 #line 23 "opt/moves_kept.kl"
     kl_t42 = kl_t39 * 10;
     kl_t43 = kl_t42 + 9;

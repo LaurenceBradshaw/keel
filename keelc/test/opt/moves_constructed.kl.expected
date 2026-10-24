@@ -82,20 +82,12 @@ int32_t kl__main__( void )
     bool kl_t8;
     bool kl_t17;
     int32_t kl_t71;
-    int32_t kl_t72;
     int32_t kl_t73;
-    int32_t kl_t74;
-    int32_t kl_t75;
-    int32_t kl_t76;
     int32_t kl_t77;
     int32_t kl_t78;
-    int32_t kl_t79;
-    int32_t kl_t80;
-    int32_t kl_t81;
 #line 14 "opt/moves_constructed.kl"
     kl_t71 = kl_live_1 + 1;
-    kl_t72 = kl_t71 + 1;
-    kl_t73 = kl_t72 + 1;
+    kl_t73 = kl_live_1 + 3;
     kl_live_1 = kl_t73;
 #line 59 "opt/moves_constructed.kl"
     kl_t8 = kl_t73 != 3;
@@ -107,21 +99,13 @@ int32_t kl__main__( void )
 #line 61 "opt/moves_constructed.kl"
     kl_t0 = 1;
 #line 19 "opt/moves_constructed.kl"
-    kl_t78 = kl_live_1 - 1;
+    kl_live_1 = kl_live_1 - 3;
 #line 20 "opt/moves_constructed.kl"
-    kl_t79 = kl_destroyed_3 + 1;
-#line 19 "opt/moves_constructed.kl"
-    kl_t80 = kl_t78 - 1;
-#line 20 "opt/moves_constructed.kl"
-    kl_t81 = kl_t79 + 1;
-#line 19 "opt/moves_constructed.kl"
-    kl_live_1 = kl_t80 - 1;
-#line 20 "opt/moves_constructed.kl"
-    kl_destroyed_3 = kl_t81 + 1;
+    kl_destroyed_3 = kl_destroyed_3 + 3;
     return kl_t0;
     bb3:
 #line 65 "opt/moves_constructed.kl"
-    kl_t17 = kl_t77 != 3;
+    kl_t17 = kl_t78 != 3;
     if ( kl_t17 ) goto bb4; else goto bb5;
     bb4:
 #line 67 "opt/moves_constructed.kl"
@@ -132,17 +116,14 @@ int32_t kl__main__( void )
     kl_t0 = 0;
     return kl_t0;
     bb6:
-#line 20 "opt/moves_constructed.kl"
-    kl_t74 = kl_destroyed_3 + 1;
-    kl_t75 = kl_t74 + 1;
 #line 19 "opt/moves_constructed.kl"
-    kl_t76 = kl_t71 - 1;
-    kl_live_1 = kl_t76;
+    kl_t77 = kl_t71 - 1;
+    kl_live_1 = kl_t77;
 #line 20 "opt/moves_constructed.kl"
-    kl_t77 = kl_t75 + 1;
-    kl_destroyed_3 = kl_t77;
+    kl_t78 = kl_destroyed_3 + 3;
+    kl_destroyed_3 = kl_t78;
 #line 65 "opt/moves_constructed.kl"
-    kl_t17 = kl_t76 != 0;
+    kl_t17 = kl_t77 != 0;
     if ( kl_t17 ) goto bb4; else goto bb3;
 }
 

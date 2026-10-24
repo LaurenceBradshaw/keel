@@ -50,7 +50,7 @@ int32_t kl__not_undone__3i32( int32_t kl_x_1 )
     bb3:
     kl_rt_panic( "opt/globals_checked/main.kl", 19, "arithmetic overflow: t - 2" );
     bb4:
-    kl_t0 = kl_t_2 - 2;
+    kl_t0 = kl_x_1 - 1;
     return kl_t0;
 }
 

@@ -1,0 +1,28 @@
+// M11's combining fold under --overflow-checks: each sum's check stays and reads its own sum, so only
+// the value is combined. The last call's third sum overflows, so the program aborts. Each check
+// returns its own code.
+
+i32 count;
+
+// `count + 4`, after four checks.
+i32 four()
+{
+    count += 1;
+    count += 1;
+    count += 1;
+    count += 1;
+    return count;
+}
+
+i32 main()
+{
+    count = 1;
+    if( four() != 5 || count != 5 )
+    {
+        return 1;
+    }
+
+    count = 2147483645;
+    _     = four();
+    return 2;
+}

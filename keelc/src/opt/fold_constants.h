@@ -23,8 +23,7 @@ Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& 
 // `x + 0`, `x - 0` or `x * 1`; nullopt otherwise.
 std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Literal_pool& literals );
 
-// `inner.a` for `outer`, `(copy _t) op const c` with `_t = inner.a op' const c` and `op'` its inverse;
-// nullopt otherwise. The caller knows `outer.a` reads what `inner` wrote, and `inner.a` is unchanged.
-std::optional<Rvalue>
-cancelled( const Rvalue& outer, const Rvalue& inner, const Type_table& types, const Literal_pool& literals );
+// `x + c`, `x - c` or `x` for `outer`, `(copy _t) op2 const c2` with `_t = x op1 const c1`, each `op`
+// `+` or `-`; nullopt otherwise. The caller knows `outer.a` reads what `inner` wrote, and `x` is unchanged.
+std::optional<Rvalue> combined( const Rvalue& outer, const Rvalue& inner, const Type_table& types, Literal_pool& literals );
 } // namespace keel

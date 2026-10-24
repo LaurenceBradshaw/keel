@@ -292,14 +292,14 @@ bool rewrite( Operand& operand, const Known& known )
     return true;
 }
 
-// What `value` reduces to by what the walk knows: a sum undone, or a check another proves.
+// What `value` reduces to by what the walk knows: a chain of sums combined, or a check another proves.
 std::optional<Rvalue> fold( const Rvalue& value, const Known& known, const Type_table& types, Literal_pool& literals )
 {
     const Def* inner = def_of( known, value.a );
 
     if( value.kind == Rvalue_kind::Binary )
     {
-        return inner && inner->current ? cancelled( value, inner->value, types, literals ) : std::nullopt;
+        return inner && inner->current ? combined( value, inner->value, types, literals ) : std::nullopt;
     }
 
     if( value.kind != Rvalue_kind::Overflows )
@@ -735,7 +735,8 @@ TEST_CASE( "forward_globals_keeps_a_write_a_join_reads", "[opt][globals]" )
     REQUIRE( p.writes_of_globals() == 2 );
 }
 
-// `t - 3` is the `x` before `x = 7`, which nothing holds. One round, as the next finds `x = 7` gone.
+// `t - 3` is the `x` before `x = 7`, which nothing holds, so `(t - 3) + 7` is `t + 4` and `t` stays. One
+// round, as the next finds `x = 7` gone.
 TEST_CASE( "forward_globals_keeps_a_sum_whose_source_changed", "[opt][globals]" )
 {
     const Forwarded p(
@@ -743,7 +744,7 @@ TEST_CASE( "forward_globals_keeps_a_sum_whose_source_changed", "[opt][globals]" 
     );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.count( Rvalue_kind::Binary, Token_kind::Minus ) == 1 );
+    REQUIRE( p.count( Rvalue_kind::Binary, Token_kind::Plus ) == 2 );
 }
 
 // bb1 is the check's true arm and bb2 its false arm, each `_3 = _2 + 1` then `_4 = overflows _3 - 1`:
