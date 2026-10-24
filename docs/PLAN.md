@@ -1413,6 +1413,10 @@ major), which waits for the lambda decision (§12).
   rule.
 - **No warning for a method that could be `const`**: a non-`const` method that mutates nothing
   through `this` and calls only `const` methods on it.
+- **A `for` over a run suggests `r.size()`**: `for( i32 x : r )` on a `const ref i32[] r` helps
+  with `for( u64 i : 0..r.size() )`, but a run has no methods; it wants `r.size`.
+- **The refused `for` cascades**: the same loop also reports *`x` is not declared* in its body. The
+  loop variable should still be declared, as its written type says.
 
 ### Tooling
 

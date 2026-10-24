@@ -15,7 +15,14 @@ class Buffer
     Buffer( u64 n )
     {
         count = n;
-        unsafe { data = alloc<i32>( n ); }   // raw memory is a block you can see
+        unsafe
+        {
+            data = alloc<i32>( n );                  // raw memory is a block you can see
+            for( u64 i : 0..n )
+            {
+                data[ i ] = 0;                       // writing a raw slot starts its value
+            }
+        }
     }
 
     ~Buffer()
@@ -23,21 +30,19 @@ class Buffer
         unsafe { free( data ); }
     }
 
+    // A run is a pointer and a count; indexing one is checked in every build.
+    public const ref i32[] items() const
+    {
+        unsafe { return data[ 0..count ]; }
+    }
+
     public void set( u64 i, i32 value )
     {
-        if( i >= count ) { panic( "index out of range" ); }   // on in every build
-        unsafe { data[ i ] = value; }
-    }
-
-    public i32 get( u64 i ) const
-    {
-        if( i >= count ) { panic( "index out of range" ); }   // on in every build
-        unsafe { return data[ i ]; }
-    }
-
-    public u64 size() const
-    {
-        return count;
+        unsafe
+        {
+            ref i32[] slots = data[ 0..count ];
+            slots[ i ] = value;
+        }
     }
 };
 
@@ -66,23 +71,24 @@ T larger<T>( T a, T b ) where T : copyable & comparable
 // The call site names everything a call does to the caller's variable.
 void fill( ref Buffer b )                    // called fill( ref b ): may change b
 {
-    for( u64 i = 0; i < b.size(); i++ )
+    for( u64 i : 0..b.items().size )
     {
         b.set( i, wrap<i32>( i ) );          // narrowing is spelled out
     }
 }
 
-i32 total( Buffer b )                        // called total( b ): a read-only borrow, never a copy; because Buffer owns
-{                                            // if it were non-owning, it would be a copy
+i32 total( Buffer b )                        // called total( b ): a class is borrowed read-only, a struct copied
+{
+    const ref i32[] xs = b.items();
     i32 sum = 0;
-    for( u64 i = 0; i < b.size(); i++ )
+    for( u64 i : 0..xs.size )
     {
-        sum += b.get( i );
+        sum += xs[ i ];
     }
     return sum;
 }
 
-void consume( move Buffer b )                // called consume( move b ): b is freed in here
+void consume( move Buffer _ )                // called consume( move b ): freed when this returns
 {
 }
 
@@ -145,21 +151,33 @@ the ownership and lifetime model is that member here.
 
 ## Status
 
-This is an in-progress compiler, not a released language. The front end, the IR, the move and borrow
-checks and the C backend all work, and the standard library has begun: `kl::list<T>`, `kl::string`,
-`kl::optional<T>`, `kl::pair<A, B>` and `kl::ring<T>`, written in Keel.
+This is an in-progress compiler, not a released language. The front end, the IR and its optimiser,
+the move and borrow checks and the C backend all work, and the standard library, the `kl` package,
+is written in Keel: `list`, `string`, `optional`, `pair`, `ring`, `map`, `set`, `ordered_map`,
+`ordered_set`, files, paths and processes, time, and a unit test runner.
 
-**Working today:** functions, control flow, fixed-width primitives, `struct` and `class`, methods,
-constructors, destructors, access control, `const` fields, static methods and static fields,
-payload-carrying `enum`s with exhaustive `switch`, generics by monomorphisation with definition-time
-bound checking, generic methods, function and constructor overloading, `operator==` and `operator[]`,
-function pointers, method pointers and field types, single-item and many-item pointers, pointer to
-`const`, string literals, `print` and its kin, `assert`, `panic` and `never`, `result<T, E>` with `try`
-and anonymous error unions, modules and packages, move checking and a borrow check on the IR's CFG,
-`unsafe`, `extern`, native executables via `cc`, doc comments with generated pages, and a VS Code
-extension.
+**Working today:**
+
+- **Types:** fixed-width primitives, `struct` and `class` with constructors, destructors, access
+  control, `const` fields and static members, payload-carrying `enum`s with exhaustive `switch`,
+  `T[N]` arrays, runs (`T[]`, a checked pointer and count), single-item and many-item pointers, and
+  pointer to `const`.
+- **Abstraction:** generics by monomorphisation, checked at the definition against their bounds,
+  generic methods, interfaces with dynamic dispatch through `ref`, a pointer or `box<T>`, overloading,
+  operators as methods (arithmetic, bitwise, `==`, `<=>` and `[]`), and function, method and field
+  pointers.
+- **Errors:** `result<T, E>` with `try` and anonymous error unions, `panic` and `never`, `assert`, and
+  overflow checks under `--debug`.
+- **Ownership:** move checking and a borrow check on the IR's CFG, `unsafe`, and `alloc`, `free` and
+  `destroy`.
+- **Programs:** modules, packages and module-private declarations, string literals that become any
+  type implementing `from<str>`, counting `for` loops, named warnings, `extern` functions checked
+  against what C can read, and linking the program's own C.
+- **Tools:** native executables via `cc`, optimised in KIR in a release build, doc comments with
+  generated pages, a VS Code extension, and a gdb script that shows values and frames in Keel.
 
 ```cpp
+import kl::console;
 import kl::list;
 import kl::string;
 
@@ -183,18 +201,18 @@ i32 main()
     switch( sum( numbers ) )
     {
         case result::ok( total ):
-            println( total );                // 42
+            kl::println( total );            // 42
             return 0;
         case result::err:
-            eprintln( "not a number" );
+            kl::eprintln( "not a number" );
             return 1;
     }
 }
 ```
 
-**Designed and not yet built:** the remaining operators, and most of the library: `map`, `set`,
-and printing a `kl::string`. Anything in that list appearing below is
-marked *(planned)*.
+**Not yet built:** a build tool, which is next; lambdas, and with them a `for` over a container;
+default parameter and field values; and a printing interface, so a generic body can print a `T`.
+`docs/PLAN.md` §12 has the open questions.
 
 ---
 
@@ -266,7 +284,7 @@ noted in its row.
 | A struct literal must initialise every field. | Missing fields are value-initialised. | Adding a field otherwise changes what every existing construction site silently builds. |
 | `.` is the only member-access operator and reaches through a pointer; `->` is an error. | Both, because `.` on a pointer means nothing. | Generics: `thing.x` works whether `T` is a value, a borrow or a pointer. |
 | A `const` field is assigned once by each constructor, and never written again, but the whole object may still be replaced. | A `const` member deletes assignment for the whole class. | Otherwise a type holding one, `str` included, could never be reassigned. |
-| An operator is a method, never a free function. `==` and `[]` exist so far; `!=` is derived from `==`. | Either, and `!=` is declared separately. | One place to look, and two operators that cannot disagree. |
+| An operator is a method, never a free function: arithmetic, bitwise, their compound assignments, unary `-` and `~`, `==`, `<=>` and `[]`. `!=` is derived from `==`, and `<` and its kin from `<=>`. `!`, the shifts, `++` and `--` cannot be declared. | Either, and each comparison is declared separately. | One place to look, and comparisons that cannot disagree. |
 | `operator[]` returns a `T*`, and `v[i]` is the element it points at. | Returns `T&`. | An element of a growable buffer can dangle while its container lives. A `ref` is the spelling that cannot dangle, and a pointer the one that can. |
 | One `enum` keyword with `enum class`'s semantics: always scoped, never an integer. `enum class E` is an error saying to drop the `class`. | Two kinds, one of which leaks into the integers. | Nobody wants the unscoped one. |
 | `enum` variants carry payloads — `Shape::Circle( 1.0 )` — destructured in a `case`, and destroyed by reading the tag. | No sum types; `union` maintains its tag by hand. | A union is safe only when the tag is right every time, and this is the one legitimate use of one. |
@@ -288,7 +306,7 @@ noted in its row.
 | `T*` points at exactly one live `T` and has no arithmetic. `T[*]` points at many slots of raw storage; indexing it and `+` need `unsafe`. | Any pointer is an iterator. | `p + 1` on a single-item pointer is not dangerous, it is nonsense. |
 | Writing through a `T*` destroys the old value first; writing a `T[*]` slot initialises it. | `*p = x` assigns, and raw memory needs placement `new`. | The pointer's type already says whether a live value is there. |
 | An owning value leaves a place only by `move`, and only a local, a parameter or a raw slot may be moved out. `return field;` is an error. | Copies, or moves anything `std::move` names. | A field or an element outlives the return, so copying it would destroy it twice, and moving it would leave a hole its owner still counts. |
-| `extern` declares a C function, is not mangled, and calling one needs `unsafe`. | `extern "C"`, and calls are unchecked but unmarked. | The FFI boundary is where the compiler's guarantees stop, so the marker goes there. |
+| `extern` declares a C function, is not mangled, and calling one needs `unsafe`. Its parameters and return must be something C can read: numbers, pointers, C-like enums and plain structs by value, anything else behind a borrow. | `extern "C"`, and calls are unchecked but unmarked. | The FFI boundary is where the compiler's guarantees stop, so the marker goes there, and a type whose layout is Keel's never reaches C by value. |
 | No exceptions and no unwinding. Errors are `result<T, E>`, propagated with a `try` prefix, and `E` may be an anonymous union of error enums, `Io_error \| Parse_error`, matched leaf by leaf. | Exceptions and exception safety as a discipline. | An invisible second path through every call is the feature most C++ code bases turn off. |
 | A statement may not discard a `result`; `_ = f();` discards one on purpose. | `[[nodiscard]]`, a warning, opted into per function. | A dropped error loses exactly what the type promised to bring to the caller's attention. |
 
@@ -355,7 +373,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--with-prelude` | With `--declarations`, list the prelude's declarations too |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
-| `--debug` | Run each `assert`, and check overflow as `--overflow-checks` does; without it an assert's condition is checked but never run |
+| `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--runtime <path>` | Link this runtime library instead of the installed one |
@@ -371,6 +389,10 @@ the user's to fix.
 
 [`editors/vscode`](editors/vscode) is a VS Code extension: highlighting, keelc's errors underlined on
 save, names coloured by what they refer to, hovers, and go-to-definition. Its README says how to install it.
+
+[`editors/gdb/keel.py`](editors/gdb/keel.py) shows a program's values and call stack in Keel under
+gdb: build with `--debug` and `CFLAGS=-g`, then `source editors/gdb/keel.py`. `examples/debugging.kl`
+is a program to step through.
 
 `keeldoc` writes a package's documentation as HTML pages from its `///` and `//!` comments. The
 library's are in [`keel_stl/docs`](keel_stl/docs); after changing a doc comment, regenerate them:
@@ -412,6 +434,7 @@ keelc/src/parse      recursive descent, Pratt for expressions, the module loader
 keelc/src/ast        flat vectors, u32 handles, a span on every node
 keelc/src/sema       name resolution, bidirectional type checking, overloads, generics
 keelc/src/ir         lowering to KIR and simplification
+keelc/src/opt        KIR optimisation passes, release builds only
 keelc/src/check      move checking and definite assignment over the KIR CFG
 keelc/src/codegen_c  KIR to C11
 keelc/src/prelude    the prelude, Keel source built into the compiler
@@ -419,6 +442,7 @@ keel_rt              the runtime floor (allocation, writing, panics), and its te
 keel_stl             the standard library, the `kl` package, and its pages in docs/
 keeldoc              the doc tool: keelc's --declarations to HTML pages
 editors/vscode       the VS Code extension
+editors/gdb          the gdb script
 ```
 
 The C backend is not the portability boundary — KIR is. It is kept clean enough that another backend
