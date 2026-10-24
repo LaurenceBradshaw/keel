@@ -35,10 +35,11 @@ if grep -q 'kl_t[0-9]* = ' <<< "$out"; then
     status=1
 fi
 
-# Into `str( … )` and out at its `}`, then into `kl::string( "keel" )`: no stop on a signature, and
-# the loop ends on the constructor's `}` before returning to line 26.
-steps="$( gdb -batch -nx -ex "source editors/gdb/keel.py" -ex "break debugging.kl:25" -ex "break string.kl:34" -ex run \
-    -ex step -ex step -ex step -ex step -ex step -ex continue $( for _ in $( seq 11 ); do echo -ex next; done ) \
+# Into `str( … )` and out at its `}`, then into `kl::string( "keel" )`: no stop on a signature, none
+# in the generated C behind `text.as_text()`, and the loop ends on the constructor's `}` before
+# returning to line 26.
+steps="$( gdb -batch -nx -ex "source editors/gdb/keel.py" -ex "break debugging.kl:25" -ex run \
+    -ex step -ex step -ex step -ex step -ex step -ex step $( for _ in $( seq 11 ); do echo -ex next; done ) \
     build/examples/debugging 2>&1 | grep -oE '^[0-9]+'$'\t' | tr -d '\t' | tr '\n' ' ' )"
 expected_steps="25 32 33 34 25 32 34 35 37 35 37 35 37 35 37 35 39 26 "
 if [ "$steps" != "$expected_steps" ]; then

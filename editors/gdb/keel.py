@@ -328,3 +328,7 @@ class _KeelFrames:
 
 gdb.pretty_printers.append(_lookup)
 _KeelFrames()
+
+# A function with no Keel source, such as an interface's forwarding function, has only its C file's
+# lines: step over it. This also steps over the Keel method it forwards to.
+gdb.execute("skip -gfile *.c", to_string=True)
