@@ -322,12 +322,51 @@ class _KeelFrames:
         self.enabled = True
         gdb.frame_filters[self.name] = self
 
+    # The C `main` only calls the Keel one; it shows when stopped in it, and nowhere else.
     def filter(self, frames):
-        return map(_KeelFrame, frames)
+        return (_KeelFrame(frame) for frame in frames if not _shim(frame))
+
+
+def _shim(frame):
+    return frame.function() == "main" and frame.inferior_frame().newer() is not None
+
+
+def _functions():
+    listed = gdb.execute("info functions -q -n ^kl_", to_string=True)
+    return set(re.findall(r"\b(kl_\w+)\(", listed))
+
+
+class _KeelBreak(gdb.Command):
+    """kbreak NAME: break on every Keel function named NAME, such as `manhattan`, `kl::println` or
+    `kl::list<i32>::push`, one breakpoint per overload."""
+
+    def __init__(self):
+        super().__init__("kbreak", gdb.COMMAND_BREAKPOINTS)
+
+    def invoke(self, argument, from_tty):
+        name = argument.strip()
+        found = sorted(symbol for symbol in _functions() if demangle_function(symbol, signature=False) == name)
+        if not found:
+            raise gdb.GdbError("no Keel function {}".format(name))
+        for symbol in found:
+            gdb.Breakpoint(symbol)
+
+
+# A line the C `main` shares with Keel code, such as the Keel `main`'s, stops only in the Keel code.
+def _skip_shim(breakpoint):
+    locations = getattr(breakpoint, "locations", [])
+    if len(locations) < 2:
+        return
+    for location in locations:
+        if location.function == "main" and location.enabled:
+            location.enabled = False
 
 
 gdb.pretty_printers.append(_lookup)
 _KeelFrames()
+_KeelBreak()
+gdb.events.breakpoint_created.connect(_skip_shim)
+gdb.events.breakpoint_modified.connect(_skip_shim)
 
 # A function with no Keel source, such as an interface's forwarding function, has only its C file's
 # lines: step over it. This also steps over the Keel method it forwards to.

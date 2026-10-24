@@ -35,6 +35,22 @@ if grep -q 'kl_t[0-9]* = ' <<< "$out"; then
     status=1
 fi
 
+# The C `main` behind the Keel one is hidden.
+if grep -q '^#2 ' <<< "$out"; then
+    echo "the C main is listed"
+    status=1
+fi
+
+# `kbreak` takes a Keel name, one breakpoint per overload.
+named="$( gdb -batch -nx -ex "source editors/gdb/keel.py" -ex "kbreak manhattan" -ex "kbreak kl::println" -ex run \
+    -ex "info breakpoints" build/examples/debugging 2>&1 )"
+for expected in \
+    'Breakpoint 1, .* at examples/debugging.kl:16' \
+    'in kl_2kl7console_println__3i64 at' \
+    'in kl_2kl7console_println__7textual at'; do
+    grep -q -- "$expected" <<< "$named" || { echo "kbreak missing: $expected"; status=1; }
+done
+
 # Into `str( … )` and out at its `}`, then into `kl::string( "keel" )`: no stop on a signature, none
 # in the generated C behind `text.as_text()`, and the loop ends on the constructor's `}` before
 # returning to line 26.
