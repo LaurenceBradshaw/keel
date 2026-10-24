@@ -133,11 +133,8 @@ int32_t kl__initialised__( void )
 int32_t kl__reassigned__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_b_2;
-#line 89 "opt/propagation.kl"
-    kl_b_2 = kl_a_1;
 #line 91 "opt/propagation.kl"
-    kl_t0 = 5 + kl_b_2;
+    kl_t0 = 5 + kl_a_1;
     return kl_t0;
 }
 

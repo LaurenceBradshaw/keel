@@ -1,0 +1,20 @@
+// M11's cancelling fold, in a release build: a sum whose `x` is written between, by a write that
+// stays, keeps both operations. Each check returns its own code.
+
+// `t - 3` is the `x` before `x = x * y`, which nothing holds.
+i32 written_between( i32 x, i32 y )
+{
+    i32 t = x + 3;
+    x     = x * y;
+    return t - 3 + x;
+}
+
+i32 main()
+{
+    if( written_between( 4, 5 ) != 24 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

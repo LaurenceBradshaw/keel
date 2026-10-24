@@ -769,12 +769,15 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
 struct Optimised : Compiled
 {
     explicit Optimised(
-        std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {}, bool splitting = true
+        std::string_view              source,
+        std::optional<Inline_weights> inlining  = Inline_weights {},
+        bool                          splitting = true,
+        u32                           rounds    = 2
     )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining, .splitting = splitting }
+              Build { .optimise = true, .inlining = inlining, .splitting = splitting, .rounds = rounds }
           )
     {
     }
@@ -897,10 +900,11 @@ TEST_CASE( "coalesce_moves_keeps_two_values_alive_at_once", "[opt][coalesce]" )
         REQUIRE( p.local_copies() == 1 );
     }
 
+    // One round, as the next folds `q.x` to `1`.
     SECTION( "a copy read again" )
     {
         const Optimised p(
-            "i32 f() { Point p = Point { 1, 2 }; Point q = p; p.x = 5; return q.x; }\n", Inline_weights {}, false
+            "i32 f() { Point p = Point { 1, 2 }; Point q = p; p.x = 5; return q.x; }\n", Inline_weights {}, false, 1
         );
         REQUIRE( p.clean() );
         REQUIRE( p.well_formed() );

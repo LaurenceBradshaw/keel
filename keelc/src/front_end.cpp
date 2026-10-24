@@ -135,25 +135,30 @@ Front_end run_front_end(
                 {
                     inline_drops( function, front.functions, finished, literals, *build.inlining );
                 }
-                if( build.splitting )
+                // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.
+                for( u32 round = 0; round < build.rounds; ++round )
                 {
-                    split_aggregates( function, ast, front.types );
-                }
-                // Folds a local compared with itself, so SCCP branches on the constant.
-                propagate_values( function, front.types.table(), literals );
-                propagate_constants( function, front.types.table(), literals );
-                thread_jumps( function, front.types.table(), literals );
-                // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
-                if( forward_globals( function, front.types.table(), literals ) )
-                {
+                    if( build.splitting )
+                    {
+                        split_aggregates( function, ast, front.types );
+                    }
+                    // Folds a local compared with itself, so SCCP branches on the constant; without it, SCCP writes
+                    // a negative constant into a copy of one, which nothing then forwards.
+                    propagate_values( function, front.types.table(), literals );
                     propagate_constants( function, front.types.table(), literals );
+                    thread_jumps( function, front.types.table(), literals );
+                    // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
+                    if( forward_globals( function, front.types.table(), literals ) )
+                    {
+                        propagate_constants( function, front.types.table(), literals );
+                    }
+                    // Again, as a join SCCP left fewer paths into may now agree.
+                    propagate_values( function, front.types.table(), literals );
+                    remove_dead_stores( function );
+                    // Dead store removal can empty a block, so threading goes first.
+                    simplify( function, literals );
+                    merge_blocks( function );
                 }
-                // Again, as a join SCCP left fewer paths into may now agree.
-                propagate_values( function, front.types.table(), literals );
-                remove_dead_stores( function );
-                // Dead store removal can empty a block, so threading goes first.
-                simplify( function, literals );
-                merge_blocks( function );
                 assert( verify( function ).empty() );
             }
         }

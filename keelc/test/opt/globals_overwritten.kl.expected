@@ -107,10 +107,6 @@ int32_t kl__main__( void )
     int32_t* kl_t9;
     int32_t kl_t10;
     bool kl_t11;
-#line 27 "opt/globals_overwritten.kl"
-    kl_seen_1 = 3;
-#line 34 "opt/globals_overwritten.kl"
-    kl_seen_1 = 4;
 #line 40 "opt/globals_overwritten.kl"
     kl_seen_1 = 5;
 #line 12 "opt/globals_overwritten.kl"

@@ -735,10 +735,12 @@ TEST_CASE( "forward_globals_keeps_a_write_a_join_reads", "[opt][globals]" )
     REQUIRE( p.writes_of_globals() == 2 );
 }
 
-// `t - 3` is the `x` before `x = 7`, which nothing holds.
+// `t - 3` is the `x` before `x = 7`, which nothing holds. One round, as the next finds `x = 7` gone.
 TEST_CASE( "forward_globals_keeps_a_sum_whose_source_changed", "[opt][globals]" )
 {
-    const Forwarded p( "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n" );
+    const Forwarded p(
+        "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n", Build { .optimise = true, .rounds = 1 }
+    );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.count( Rvalue_kind::Binary, Token_kind::Minus ) == 1 );

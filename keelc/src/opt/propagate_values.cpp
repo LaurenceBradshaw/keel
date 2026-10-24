@@ -274,8 +274,10 @@ constexpr std::string_view k_types = "void set( out i32 n ) { n = 9; }\n"
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Propagated : Compiled
 {
-    explicit Propagated( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true } )
+    explicit Propagated( std::string_view source, u32 rounds = 2 )
+        : Compiled(
+              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true, .rounds = rounds }
+          )
     {
     }
 
@@ -324,10 +326,11 @@ TEST_CASE( "propagate_values_keeps_a_local_an_out_argument_rewrites", "[opt][pro
     REQUIRE( p.reads( 1 ) == 1 );
 }
 
-// `b` (`_2`) is the old `a`, not the `5`; the only read of `a` left is `b = a`.
+// `b` (`_2`) is the old `a`, not the `5`; the only read of `a` left is `b = a`. One round, as the next
+// finds `a = 5` gone and forwards `b`.
 TEST_CASE( "propagate_values_keeps_a_copy_whose_source_changed", "[opt][propagate]" )
 {
-    const Propagated p( "i32 f( i32 a ) { i32 b = a; a = 5; return a + b; }\n" );
+    const Propagated p( "i32 f( i32 a ) { i32 b = a; a = 5; return a + b; }\n", 1 );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( 2 ) == 1 );

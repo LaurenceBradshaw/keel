@@ -121,8 +121,6 @@ int32_t kl__main__( void )
     kl_t0 = 3;
     return kl_t0;
     bb5:
-#line 50 "opt/globals.kl"
-    kl_seen_3 = 1;
 #line 54 "opt/globals.kl"
     kl_seen_3 = 2;
 #line 78 "opt/globals.kl"

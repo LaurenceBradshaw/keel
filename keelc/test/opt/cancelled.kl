@@ -1,6 +1,5 @@
 // M11's cancelling fold, in a release build: `(x + c) - c` is `x`, for a local and for a global,
-// while `x` is unchanged. One whose `x` is written between keeps both. Each check returns its own
-// code.
+// while `x` is unchanged. Each check returns its own code.
 
 i32 count;
 
@@ -19,7 +18,7 @@ i32 counter()
     return count;
 }
 
-// `t - 3` is the old `x`, which nothing holds.
+// `+ x` reads `7`, so `x = 7` goes, and the second round finds `x` unchanged: `t - 3` is `x`.
 i32 written_between( i32 x )
 {
     i32 t = x + 3;
