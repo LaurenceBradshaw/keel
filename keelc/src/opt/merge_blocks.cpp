@@ -9,24 +9,6 @@ namespace keel
 {
 namespace
 {
-std::vector<u32> predecessor_counts( const Function& func )
-{
-    std::vector<u32> counts( func.blocks.size(), 0 );
-    counts[0] = 1; // the call that enters it, so the entry is never absorbed
-
-    for( const Block& block : func.blocks )
-    {
-        std::vector<Block_id> targets;
-        successors( block.terminator, targets );
-        for( const Block_id target : targets )
-        {
-            counts[target.v]++;
-        }
-    }
-
-    return counts;
-}
-
 std::vector<Block_id> next_blocks( const Function& func, const std::vector<u32>& counts )
 {
     std::vector<Block_id> next( func.blocks.size(), Block_id {} );

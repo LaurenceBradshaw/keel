@@ -439,6 +439,30 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
     return std::nullopt;
 }
 
+// Either build: the sum wraps without overflow checks, and with them it never overflows.
+std::optional<Rvalue>
+cancelled( const Rvalue& outer, const Rvalue& inner, const Type_table& types, const Literal_pool& literals )
+{
+    if( outer.kind != Rvalue_kind::Binary || inner.kind != Rvalue_kind::Binary || outer.type != inner.type ||
+        inner.a.type != inner.type || types.get( outer.type ).kind != Type_kind::Int || outer.a.kind != Operand_kind::Copy )
+    {
+        return std::nullopt;
+    }
+
+    const bool inverse = ( outer.op == Token_kind::Plus && inner.op == Token_kind::Minus ) ||
+                         ( outer.op == Token_kind::Minus && inner.op == Token_kind::Plus );
+
+    const auto known = []( const Operand& x ) { return x.kind == Operand_kind::Constant && x.constant.is_valid(); };
+
+    if( !inverse || !known( outer.b ) || !known( inner.b ) ||
+        literals.integer( outer.b.constant ) != literals.integer( inner.b.constant ) )
+    {
+        return std::nullopt;
+    }
+
+    return use( inner.a );
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS

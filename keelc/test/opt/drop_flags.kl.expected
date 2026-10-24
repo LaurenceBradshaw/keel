@@ -72,86 +72,20 @@ void kl__consume__M3Box( struct kl__Box kl_t1 )
 int32_t kl__always__( void )
 {
     int32_t kl_t0;
-    bool kl_t6;
-    int64_t kl_t10;
-    int64_t kl_t12;
-    int64_t kl_t18;
-    int64_t kl_t19;
-#line 34 "opt/drop_flags.kl"
-    kl_trace_3 = 0;
-#line 14 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 + 1;
-#line 15 "opt/drop_flags.kl"
-    kl_t10 = kl_trace_3 * 10;
-    kl_t12 = kl_t10 + 1;
-    kl_trace_3 = kl_t12;
-#line 20 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 - 1;
 #line 21 "opt/drop_flags.kl"
-    kl_t18 = kl_trace_3 * 10;
-    kl_t19 = kl_t18 + 9;
-    kl_trace_3 = kl_t19;
+    kl_trace_3 = 19;
 #line 40 "opt/drop_flags.kl"
-    kl_t6 = kl_trace_3 == 19;
-    if ( kl_t6 ) goto bb1; else goto bb2;
-    bb1:
     kl_t0 = 0;
-    goto bb3;
-    bb2:
-    kl_t0 = 1;
-    goto bb3;
-    bb3:
     return kl_t0;
 }
 
 int32_t kl__again__( void )
 {
     int32_t kl_t0;
-    bool kl_t8;
-    int64_t kl_t12;
-    int64_t kl_t14;
-    int64_t kl_t18;
-    int64_t kl_t20;
-    int64_t kl_t25;
-    int64_t kl_t26;
-    int64_t kl_t29;
-    int64_t kl_t30;
-#line 46 "opt/drop_flags.kl"
-    kl_trace_3 = 0;
-#line 14 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 + 1;
-#line 15 "opt/drop_flags.kl"
-    kl_t12 = kl_trace_3 * 10;
-    kl_t14 = kl_t12 + 1;
-    kl_trace_3 = kl_t14;
-#line 14 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 + 1;
-#line 15 "opt/drop_flags.kl"
-    kl_t18 = kl_trace_3 * 10;
-    kl_t20 = kl_t18 + 2;
-    kl_trace_3 = kl_t20;
-#line 20 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 - 1;
 #line 21 "opt/drop_flags.kl"
-    kl_t25 = kl_trace_3 * 10;
-    kl_t26 = kl_t25 + 9;
-    kl_trace_3 = kl_t26;
-#line 20 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 - 1;
-#line 21 "opt/drop_flags.kl"
-    kl_t29 = kl_trace_3 * 10;
-    kl_t30 = kl_t29 + 9;
-    kl_trace_3 = kl_t30;
+    kl_trace_3 = 1299;
 #line 52 "opt/drop_flags.kl"
-    kl_t8 = kl_trace_3 == 1299;
-    if ( kl_t8 ) goto bb1; else goto bb2;
-    bb1:
     kl_t0 = 0;
-    goto bb3;
-    bb2:
-    kl_t0 = 2;
-    goto bb3;
-    bb3:
     return kl_t0;
 }
 
@@ -160,21 +94,15 @@ int32_t kl__sometimes__4bool( bool kl_c_1 )
     int32_t kl_t0;
     struct kl__Box kl_b_2;
     bool kl_t7;
-    int64_t kl_t13;
-    int64_t kl_t15;
     bool kl_t16;
-    int64_t kl_t19;
-    int64_t kl_t20;
-#line 58 "opt/drop_flags.kl"
-    kl_trace_3 = 0;
+    int32_t kl_t21;
 #line 13 "opt/drop_flags.kl"
     kl_b_2.kl_value_42 = 3;
 #line 14 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 + 1;
+    kl_t21 = kl_live_1 + 1;
+    kl_live_1 = kl_t21;
 #line 15 "opt/drop_flags.kl"
-    kl_t13 = kl_trace_3 * 10;
-    kl_t15 = kl_t13 + 3;
-    kl_trace_3 = kl_t15;
+    kl_trace_3 = 3;
 #line 60 "opt/drop_flags.kl"
     kl_t16 = true;
     if ( kl_c_1 ) goto bb1; else goto bb2;
@@ -182,11 +110,9 @@ int32_t kl__sometimes__4bool( bool kl_c_1 )
 #line 63 "opt/drop_flags.kl"
     kl_t16 = false;
 #line 20 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 - 1;
+    kl_live_1 = kl_t21 - 1;
 #line 21 "opt/drop_flags.kl"
-    kl_t19 = kl_trace_3 * 10;
-    kl_t20 = kl_t19 + 9;
-    kl_trace_3 = kl_t20;
+    kl_trace_3 = 39;
     goto bb2;
     bb2:
 #line 59 "opt/drop_flags.kl"
@@ -218,6 +144,7 @@ int32_t kl__looped__( void )
     bool kl_t18;
     int64_t kl_t21;
     int64_t kl_t22;
+    int32_t kl_t23;
 #line 73 "opt/drop_flags.kl"
     kl_trace_3 = 0;
 #line 74 "opt/drop_flags.kl"
@@ -230,7 +157,8 @@ int32_t kl__looped__( void )
 #line 13 "opt/drop_flags.kl"
     kl_b_3.kl_value_42 = kl_i_1;
 #line 14 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 + 1;
+    kl_t23 = kl_live_1 + 1;
+    kl_live_1 = kl_t23;
 #line 15 "opt/drop_flags.kl"
     kl_t15 = kl_trace_3 * 10;
     kl_t16 = ( int64_t ) kl_i_1;
@@ -249,9 +177,9 @@ int32_t kl__looped__( void )
 #line 79 "opt/drop_flags.kl"
     kl_t18 = false;
 #line 20 "opt/drop_flags.kl"
-    kl_live_1 = kl_live_1 - 1;
+    kl_live_1 = kl_t23 - 1;
 #line 21 "opt/drop_flags.kl"
-    kl_t21 = kl_trace_3 * 10;
+    kl_t21 = kl_t17 * 10;
     kl_t22 = kl_t21 + 9;
     kl_trace_3 = kl_t22;
     goto bb5;
@@ -281,8 +209,6 @@ int32_t kl__picked__4bool( bool kl_c_1 )
     int32_t kl_t9;
     int32_t kl_t11;
     int64_t kl_t12;
-    int64_t kl_t17;
-    int64_t kl_t19;
     bool kl_t20;
 #line 90 "opt/drop_flags.kl"
     kl_t20 = false;
@@ -295,9 +221,7 @@ int32_t kl__picked__4bool( bool kl_c_1 )
 #line 14 "opt/drop_flags.kl"
     kl_live_1 = kl_live_1 + 1;
 #line 15 "opt/drop_flags.kl"
-    kl_t17 = kl_trace_3 * 10;
-    kl_t19 = kl_t17 + 5;
-    kl_trace_3 = kl_t19;
+    kl_trace_3 = 5;
 #line 90 "opt/drop_flags.kl"
     kl_t20 = true;
     kl_v_2 = kl_t4.kl_value_42;

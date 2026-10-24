@@ -1,0 +1,47 @@
+// M11's cancelling fold, in a release build: `(x + c) - c` is `x`, for a local and for a global,
+// while `x` is unchanged. One whose `x` is written between keeps both. Each check returns its own
+// code.
+
+i32 count;
+
+// `t - 3` is `x`.
+i32 local( i32 x )
+{
+    i32 t = x + 3;
+    return t - 3;
+}
+
+// The `-= 2` undoes the `+= 2`, so `count` is never written.
+i32 counter()
+{
+    count += 2;
+    count -= 2;
+    return count;
+}
+
+// `t - 3` is the old `x`, which nothing holds.
+i32 written_between( i32 x )
+{
+    i32 t = x + 3;
+    x     = 7;
+    return t - 3 + x;
+}
+
+i32 main()
+{
+    if( local( 4 ) != 4 )
+    {
+        return 1;
+    }
+    count = 5;
+    if( counter() != 5 || count != 5 )
+    {
+        return 2;
+    }
+    if( written_between( 4 ) != 11 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

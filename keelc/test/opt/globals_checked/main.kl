@@ -1,0 +1,47 @@
+// M11's global forwarding under --overflow-checks: past a check's no-overflow arm, its sum is known
+// to fit, so undoing it cannot overflow, and the same check again is false. The first check of each
+// stays, as does a `- 2` after a `+ 1`. Each check returns its own code.
+
+i32 live;
+
+// The `-= 1`'s check goes, and `live` is never written.
+i32 counter()
+{
+    live += 1;
+    live -= 1;
+    return live;
+}
+
+// `x - 2` may overflow where `x + 1` did not.
+i32 not_undone( i32 x )
+{
+    i32 t = x + 1;
+    return t - 2;
+}
+
+// The second `x + 1` has the first's check.
+i32 twice( i32 x )
+{
+    i32 a = x + 1;
+    i32 b = x + 1;
+    return a * 2 + b;
+}
+
+i32 main()
+{
+    live = 3;
+    if( counter() != 3 || live != 3 )
+    {
+        return 1;
+    }
+    if( not_undone( 5 ) != 4 )
+    {
+        return 2;
+    }
+    if( twice( 2 ) != 9 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

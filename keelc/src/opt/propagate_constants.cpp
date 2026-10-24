@@ -322,8 +322,8 @@ void propagate_constants( Function& func, const Type_table& types, Literal_pool&
 
             // Before the step, so `_1 = copy _1 + const 1` reads the old `_1`.
             const Value result = evaluated( analysis, statement.value, values );
-            if( whole_tracked( analysis, statement.place ) && result.state == Value::State::Constant &&
-                !is_constant( statement.value ) )
+            // Wherever it is written: a global's or a field's sum folds as a local's does.
+            if( result.state == Value::State::Constant && !is_constant( statement.value ) )
             {
                 statement.value = value_of( result.bits, statement.value.type, types, literals );
             }

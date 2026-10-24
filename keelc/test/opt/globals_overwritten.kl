@@ -1,0 +1,93 @@
+// M11's global forwarding, in a release build: a write to a global that every path writes again
+// before reading goes. One a return, a call, a join or a read through a pointer may read stays. Each
+// check returns its own code.
+
+i32 seen;
+
+// Recursive, so never inlined: it reads `seen`.
+i32 twice( i32 n )
+{
+    if( n > 0 )
+    {
+        return twice( n - 1 );
+    }
+    return seen * 2;
+}
+
+i32* address()
+{
+    return &seen;
+}
+
+// The `1` and the `2` go; only the `3` is written.
+i32 rewritten()
+{
+    seen = 1;
+    seen = 2;
+    seen = 3;
+    return 0;
+}
+
+// The caller reads `seen` after the return.
+void returned()
+{
+    seen = 4;
+}
+
+// `twice` reads the `5`.
+i32 called()
+{
+    seen    = 5;
+    i32 got = twice( 1 );
+    seen    = 0;
+    return got;
+}
+
+// The join may come from the arm that does not write again.
+i32 joined( bool c )
+{
+    seen = 6;
+    if( c )
+    {
+        seen = 7;
+    }
+    return 0;
+}
+
+// `*p` may be `seen`.
+i32 through_a_pointer( i32* p )
+{
+    seen    = 8;
+    i32 got = *p;
+    seen    = 0;
+    return got;
+}
+
+i32 main()
+{
+    rewritten();
+    if( seen != 3 )
+    {
+        return 1;
+    }
+    returned();
+    if( seen != 4 )
+    {
+        return 2;
+    }
+    if( called() != 10 )
+    {
+        return 3;
+    }
+    joined( false );
+    if( seen != 6 )
+    {
+        return 4;
+    }
+    if( through_a_pointer( address() ) != 8 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

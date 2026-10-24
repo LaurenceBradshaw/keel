@@ -1,0 +1,79 @@
+// M11's global forwarding, in a release build: a read of a whole global takes the local or constant
+// last written to it, along a run of blocks each entered only from the one before. A global read
+// again after a call, after a write through a pointer, or at a join keeps its read. Each check returns
+// its own code.
+
+i32 count;
+i32 seen;
+
+// Recursive, so never inlined: what it does to `seen` is out of sight.
+void bump( i32 n )
+{
+    if( n > 0 )
+    {
+        seen += 1;
+        bump( n - 1 );
+    }
+}
+
+// The read is `_t`, the sum written to `count`.
+i32 counted()
+{
+    count += 1;
+    return count;
+}
+
+// `before` reads `const 5`, and `bump`'s inlined first level writes `6`; the read after the call it
+// still makes reads `seen`.
+i32 across_a_call()
+{
+    seen = 5;
+    i32 before = seen;
+    bump( 2 );
+    return before * 10 + seen;
+}
+
+// The write through `p` reaches `seen`.
+i32 through_a_pointer()
+{
+    seen   = 5;
+    i32* p = &seen;
+    *p     = 6;
+    return seen;
+}
+
+// Each arm writes its own value, so the join reads `seen`.
+i32 at_a_join( bool c )
+{
+    if( c )
+    {
+        seen = 1;
+    }
+    else
+    {
+        seen = 2;
+    }
+    return seen;
+}
+
+i32 main()
+{
+    if( counted() != 1 || count != 1 )
+    {
+        return 1;
+    }
+    if( across_a_call() != 57 )
+    {
+        return 2;
+    }
+    if( through_a_pointer() != 6 )
+    {
+        return 3;
+    }
+    if( at_a_join( true ) != 1 || at_a_join( false ) != 2 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

@@ -1,8 +1,8 @@
 // M11's constructor and destructor inlining, in a release build: a small constructor's body writes
 // the local or field it builds, and a small destructor's body runs where its unflagged drop was. A
 // constructor that hands `this` on, one called a block after its `&init`, and a flagged drop stay
-// calls. The counter's `+= 1` and `-= 1` both stay, as nothing yet follows a global across a body.
-// Each check returns its own code.
+// calls. The counter's `-= 1` undoes its `+= 1` where no join comes between, so `local` never writes
+// `live`. Each check returns its own code.
 
 i32 live;
 

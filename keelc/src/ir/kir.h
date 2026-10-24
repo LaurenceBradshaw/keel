@@ -359,6 +359,26 @@ inline void successors( const Terminator& terminator, std::vector<Block_id>& out
     }
 }
 
+// How many edges enter each block; the entry counts one more, for the call that enters it.
+inline std::vector<u32> predecessor_counts( const Function& func )
+{
+    std::vector<u32> counts( func.blocks.size(), 0 );
+    counts[0] = 1;
+
+    std::vector<Block_id> targets;
+    for( const Block& block : func.blocks )
+    {
+        targets.clear();
+        successors( block.terminator, targets );
+        for( const Block_id target : targets )
+        {
+            counts[target.v]++;
+        }
+    }
+
+    return counts;
+}
+
 inline Operand copy( Place place, Type_id type )
 {
     return Operand { .kind = Operand_kind::Copy, .place = place, .type = type };

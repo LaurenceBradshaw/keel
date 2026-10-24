@@ -10,6 +10,7 @@
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/forward_globals.h"
 #include "opt/inline_calls.h"
 #include "opt/merge_blocks.h"
 #include "opt/propagate_constants.h"
@@ -142,6 +143,11 @@ Front_end run_front_end(
                 propagate_values( function, front.types.table(), literals );
                 propagate_constants( function, front.types.table(), literals );
                 thread_jumps( function, front.types.table(), literals );
+                // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
+                if( forward_globals( function, front.types.table(), literals ) )
+                {
+                    propagate_constants( function, front.types.table(), literals );
+                }
                 // Again, as a join SCCP left fewer paths into may now agree.
                 propagate_values( function, front.types.table(), literals );
                 remove_dead_stores( function );
