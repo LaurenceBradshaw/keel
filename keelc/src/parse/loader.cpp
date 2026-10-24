@@ -5,9 +5,9 @@
 #include <fmt/format.h>
 #include <unordered_set>
 #include <vector>
-#include "common/imports.h"
 #include "common/types.h"
 #include "lex/lexer.h"
+#include "parse/module_graph.h"
 #include "parse/parser.h"
 
 namespace keel
@@ -65,9 +65,9 @@ Program load_program(
 
     const std::filesystem::path program_folder = std::filesystem::path( sm.file( input ).path ).parent_path();
 
-    Ast     ast;
-    Imports imports;
-    imports.set_prelude( prelude_file, interner.intern( "prelude" ) );
+    Ast          ast;
+    Module_graph modules;
+    modules.set_prelude( prelude_file, interner.intern( "prelude" ) );
 
     std::unordered_map<u32, std::string> package_docs;
     package_docs[Symbol_id {}.v] = read_package_info( program_folder, sm, interner, literals, diags );
@@ -76,7 +76,7 @@ Program load_program(
     for( const Package& package : packages )
     {
         const Symbol_id package_id = interner.intern( package.name );
-        imports.add_package( package_id );
+        modules.add_package( package_id );
 
         package_roots[package_id.v] = package.root;
         package_docs[package_id.v]  = read_package_info( package.root, sm, interner, literals, diags );
@@ -97,7 +97,7 @@ Program load_program(
             if( ast.kind( decl ) == Node_kind::Import_decl )
             {
                 Symbol_id package_id =
-                    ast.package( decl ).is_valid() ? ast.name( ast.package( decl ) ) : imports.package_of( current );
+                    ast.package( decl ).is_valid() ? ast.name( ast.package( decl ) ) : modules.package_of( current );
 
                 std::filesystem::path module_folder = program_folder;
                 if( package_id.is_valid() )
@@ -108,7 +108,7 @@ Program load_program(
                     }
                     else
                     {
-                        if( !imports.is_missing( package_id ) )
+                        if( !modules.is_missing( package_id ) )
                         {
                             diags.error(
                                 ast.span( decl ),
@@ -116,7 +116,7 @@ Program load_program(
                                 fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
                             );
                         }
-                        imports.add_missing_package( package_id );
+                        modules.add_missing_package( package_id );
                         continue;
                     }
                 }
@@ -152,10 +152,10 @@ Program load_program(
                     continue;
                 }
 
-                imports.add( current, *module, ast.span( decl ) );
+                modules.add( current, *module, ast.span( decl ) );
                 if( loaded.insert( module->v ).second )
                 {
-                    imports.place( *module, package_id );
+                    modules.place( *module, package_id );
                     pending.push_back( *module );
                 }
             }
@@ -172,9 +172,29 @@ Program load_program(
 
     Program prog;
     prog.ast          = std::move( ast );
-    prog.imports      = std::move( imports );
+    prog.modules      = std::move( modules );
     prog.package_docs = std::move( package_docs );
     return prog;
+}
+
+std::optional<std::string> package_name_error( std::string_view name, const Interner& interner )
+{
+    if( name == "prelude" )
+    {
+        return "cannot name a package 'prelude', which is the prelude's own";
+    }
+
+    if( interner.is_keyword( interner.find( name ) ) )
+    {
+        return fmt::format( "name '{}' is a keyword", name );
+    }
+
+    if( !is_identifier( name ) )
+    {
+        return fmt::format( "name '{}' is not an identifier", name );
+    }
+
+    return std::nullopt;
 }
 } // namespace keel
 
@@ -239,19 +259,19 @@ public:
     // Whether the file `from` may name what `to` declares.
     bool sees( std::string_view from, std::string_view to ) const
     {
-        return program_.imports.sees( files_.at( std::string( from ) ), files_.at( std::string( to ) ) );
+        return program_.modules.sees( files_.at( std::string( from ) ), files_.at( std::string( to ) ) );
     }
 
     // The package `file` was loaded from; empty for the program's own.
     std::string_view package_of( std::string_view file ) const
     {
-        const Symbol_id package = program_.imports.package_of( files_.at( std::string( file ) ) );
+        const Symbol_id package = program_.modules.package_of( files_.at( std::string( file ) ) );
         return package.is_valid() ? interner_.text( package ) : std::string_view {};
     }
 
     bool is_package( std::string_view name )
     {
-        return program_.imports.is_package( interner_.intern( name ) );
+        return program_.modules.is_package( interner_.intern( name ) );
     }
 
     // The package's `//!` documentation; empty names the program's own package.
@@ -646,6 +666,16 @@ TEST_CASE( "loader_reads_a_package's_packageinfo", "[parse][loader][packages][do
         REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
         REQUIRE( p.rendered().find( "main.kl:2:1" ) != std::string::npos );
     }
+}
+
+TEST_CASE( "loader_refuses_a_package_name_that_cannot_be_written", "[parse][loader][packages]" )
+{
+    const Interner interner;
+
+    REQUIRE_FALSE( package_name_error( "kl", interner ).has_value() );
+    REQUIRE( package_name_error( "prelude", interner ).value().find( "prelude's own" ) != std::string::npos );
+    REQUIRE( package_name_error( "struct", interner ).value() == "name 'struct' is a keyword" );
+    REQUIRE( package_name_error( "my-lib", interner ).value() == "name 'my-lib' is not an identifier" );
 }
 
 } // namespace keel

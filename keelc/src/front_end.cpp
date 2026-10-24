@@ -38,7 +38,7 @@ Front_end run_front_end(
     front.program  = load_program( input, sm, interner, literals, diags, packages );
     const Ast& ast = front.program.ast;
 
-    front.resolution = resolve( ast, sm, interner, diags, front.program.imports );
+    front.resolution = resolve( ast, sm, interner, diags, front.program.modules );
     front.types      = type_check( ast, front.resolution, literals, sm, interner, diags );
 
     // The emitter takes no Diagnostics: past here there is nothing left for it to object to.

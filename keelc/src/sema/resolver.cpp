@@ -19,12 +19,14 @@ namespace
 class Resolver
 {
 public:
-    Resolver( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports )
+    Resolver(
+        const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules
+    )
         : ast_( ast ),
           sm_( sm ),
           interner_( interner ),
           reporter_( sm, diags ),
-          imports_( imports ),
+          modules_( modules ),
           self_( interner.find( "self" ) )
     {
     }
@@ -78,7 +80,7 @@ private:
     const Source_manager& sm_;
     const Interner&       interner_;
     sema::Reporter        reporter_;
-    const Imports&        imports_;
+    const Module_graph&   modules_;
 
     std::vector<Node_id> bindings_;
     std::vector<bool>    used_;              // a declaration some use was bound to
@@ -122,7 +124,7 @@ Resolution Resolver::run()
 
             // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
             if( ( ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ) &&
-                imports_.is_package( name ) )
+                modules_.is_package( name ) )
             {
                 reporter_.error_at(
                     ast_.name_span( decl ),
@@ -131,7 +133,7 @@ Resolution Resolver::run()
                 );
             }
 
-            Scope& scope = packages_[imports_.package_of( ast_.span( decl ).file )];
+            Scope& scope = packages_[modules_.package_of( ast_.span( decl ).file )];
             scope.kind   = Scope_kind::Barrier;
             declare( scope, name, decl );
         }
@@ -145,7 +147,7 @@ Resolution Resolver::run()
         std::move( next_overload_ ),
         std::move( fallbacks_ ),
         prelude_items(),
-        imports_,
+        modules_,
         unused()
     );
 }
@@ -364,7 +366,7 @@ void Resolver::visit_path( Node_id id )
     const Node_id qualifier = ast_.qualifier( id );
     const bool    bare      = ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid();
 
-    if( bare && imports_.is_package( ast_.name( qualifier ) ) )
+    if( bare && modules_.is_package( ast_.name( qualifier ) ) )
     {
         bindings_[id.v] = lookup_qualified( qualifier, id );
 
@@ -814,14 +816,14 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         }
     }
 
-    const Symbol_id own = imports_.package_of( ast_.span( use ).file );
+    const Symbol_id own = modules_.package_of( ast_.span( use ).file );
 
     if( const Node_id decl = lookup_in( own, name, use ); decl.is_valid() )
     {
         // A function's set shadows nothing in the prelude's: it falls back to it (D45).
-        if( ast_.kind( decl ) == Node_kind::Function_decl && own != imports_.prelude_package() )
+        if( ast_.kind( decl ) == Node_kind::Function_decl && own != modules_.prelude_package() )
         {
-            const Node_id prelude_decl = lookup_in( imports_.prelude_package(), name, use );
+            const Node_id prelude_decl = lookup_in( modules_.prelude_package(), name, use );
             if( prelude_decl.is_valid() && ast_.kind( prelude_decl ) == Node_kind::Function_decl )
             {
                 fallbacks_[decl.v] = prelude_decl;
@@ -831,7 +833,7 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         return decl;
     }
 
-    if( const Node_id decl = lookup_in( imports_.prelude_package(), name, use ); decl.is_valid() )
+    if( const Node_id decl = lookup_in( modules_.prelude_package(), name, use ); decl.is_valid() )
     {
         return decl;
     }
@@ -874,7 +876,7 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
     {
         unresolved_[use.v] = true;
 
-        if( !imports_.is_missing( package_name ) )
+        if( !modules_.is_missing( package_name ) )
         {
             reporter_.error_at(
                 ast_.span( use ),
@@ -905,12 +907,12 @@ Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
 
 Node_id Resolver::prelude_declaration( std::string_view name ) const
 {
-    if( !imports_.prelude_package().is_valid() )
+    if( !modules_.prelude_package().is_valid() )
     {
         return Node_id {};
     }
 
-    const auto scope = packages_.find( imports_.prelude_package() );
+    const auto scope = packages_.find( modules_.prelude_package() );
 
     if( scope == packages_.end() )
     {
@@ -966,7 +968,7 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
 
     for( Node_id d = head; d.is_valid(); d = next_overload_[d.v] )
     {
-        if( can_name( imports_, ast_, uses_file, d ) )
+        if( can_name( modules_, ast_, uses_file, d ) )
         {
             return d;
         }
@@ -1009,7 +1011,7 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
 
 std::string Resolver::module_name( File_id file ) const
 {
-    return qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
+    return qualified( interner_, modules_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
 }
 
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
@@ -1035,7 +1037,7 @@ void Resolver::refuse_private( Node_id use, Node_id decl )
 
 void Resolver::refuse_other_package( Node_id use, Node_id decl )
 {
-    const Symbol_id  package = imports_.package_of( ast_.span( decl ).file );
+    const Symbol_id  package = modules_.package_of( ast_.span( decl ).file );
     std::string_view name    = interner_.text( ast_.name( decl ) );
 
     reporter_.error_at(
@@ -1055,9 +1057,9 @@ std::vector<Node_id> Resolver::unused() const
 } // namespace
 
 Resolution
-resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports )
+resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules )
 {
-    return Resolver( ast, sm, interner, diags, imports ).run();
+    return Resolver( ast, sm, interner, diags, modules ).run();
 }
 
 } // namespace keel
@@ -2240,7 +2242,7 @@ public:
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
         program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), prelude );
         earlier_    = diags_.error_count();
-        resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.imports );
+        resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.modules );
     }
 
     // Errors from resolution only.

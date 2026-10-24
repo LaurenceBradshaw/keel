@@ -4,8 +4,8 @@
 #pragma once
 #include "ast/ast.h"
 #include "codegen_c/vtables.h"
-#include "common/imports.h"
 #include "ir/kir.h"
+#include "parse/module_graph.h"
 #include "sema/type.h"
 
 namespace keel
@@ -34,7 +34,7 @@ enum class C_part : u8
 class Halves
 {
 public:
-    Halves( const Ast& ast, const Type_table& table, const Imports& imports );
+    Halves( const Ast& ast, const Type_table& table, const Module_graph& modules );
 
     C_part of( Node_id declaration ) const;
     C_part of( Type_id type ) const;
@@ -45,9 +45,9 @@ public:
     bool writes_in( Type_id signature, C_part part ) const;
 
 private:
-    const Ast&        ast_;
-    const Type_table& table_;
-    const Imports&    imports_;
+    const Ast&          ast_;
+    const Type_table&   table_;
+    const Module_graph& modules_;
 };
 
 } // namespace keel

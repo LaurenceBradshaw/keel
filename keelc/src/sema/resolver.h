@@ -6,19 +6,19 @@
 #include "ast/ast.h"
 #include "ast/node.h"
 #include "common/diagnostics.h"
-#include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
+#include "parse/module_graph.h"
 #include "sema/prelude_items.h"
 
 namespace keel
 {
 
 // A use in `from` may name `decl` when it imports the module, and the declaration is its own or not private.
-inline bool can_name( const Imports& imports, const Ast& ast, File_id from, Node_id decl )
+inline bool can_name( const Module_graph& modules, const Ast& ast, File_id from, Node_id decl )
 {
     const File_id file = ast.span( decl ).file;
-    return imports.sees( from, file ) && ( from == file || ast.access( decl ) != Access::Private );
+    return modules.sees( from, file ) && ( from == file || ast.access( decl ) != Access::Private );
 }
 
 // Which declaration each use refers to, indexed by the use's Node_id. A side table rather than a
@@ -34,7 +34,7 @@ public:
         std::vector<Node_id> next_overload,
         std::vector<Node_id> fallbacks,
         const Prelude_items& prelude,
-        const Imports&       imports,
+        const Module_graph&  modules,
         std::vector<Node_id> unused = {}
     )
         : bindings_( std::move( bindings ) ),
@@ -42,7 +42,7 @@ public:
           next_overload_( std::move( next_overload ) ),
           fallbacks_( std::move( fallbacks ) ),
           prelude_( prelude ),
-          imports_( imports ),
+          modules_( modules ),
           unused_( std::move( unused ) )
     {
     }
@@ -70,32 +70,32 @@ public:
 
     bool sees( const Ast& ast, File_id from, Node_id decl ) const
     {
-        return can_name( imports_, ast, from, decl );
+        return can_name( modules_, ast, from, decl );
     }
 
     Span import_span( File_id from, File_id to ) const
     {
-        return imports_.import_span( from, to );
+        return modules_.import_span( from, to );
     }
 
     std::vector<File_id> common_importers( File_id a, File_id b ) const
     {
-        return imports_.common_importers( a, b );
+        return modules_.common_importers( a, b );
     }
 
     Symbol_id package_of( File_id file ) const
     {
-        return imports_.package_of( file );
+        return modules_.package_of( file );
     }
 
     bool is_package( Symbol_id package ) const
     {
-        return imports_.is_package( package );
+        return modules_.is_package( package );
     }
 
     Symbol_id prelude_package() const
     {
-        return imports_.prelude_package();
+        return modules_.prelude_package();
     }
 
     const Prelude_items& prelude() const
@@ -121,11 +121,12 @@ private:
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
     Prelude_items        prelude_;
-    Imports              imports_;
+    Module_graph         modules_;
     std::vector<Node_id> unused_;
 };
 
-Resolution
-resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports = {} );
+Resolution resolve(
+    const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules = {}
+);
 
 } // namespace keel

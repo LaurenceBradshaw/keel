@@ -457,14 +457,14 @@ Mangled_owner Spelling::owner( Node_id decl ) const
     }
 
     const File_id   file    = ast.span( decl ).file;
-    const Symbol_id package = imports.package_of( file );
+    const Symbol_id package = modules.package_of( file );
 
     Mangled_owner owner;
     if( package.is_valid() )
     {
         owner.package = interner.text( package );
     }
-    if( file != ast.span( ast.root() ).file && file != imports.prelude_file() )
+    if( file != ast.span( ast.root() ).file && file != modules.prelude_file() )
     {
         owner.module = std::filesystem::path( sm.file( file ).path ).stem().string();
     }
@@ -537,9 +537,9 @@ TEST_CASE( "a_run_parameter_is_spelled_as_two", "[codegen][spelling]" )
     const Ast            ast;
     Types                types;
     const Interner       interner;
-    const Imports        imports;
+    const Module_graph   modules;
     const Source_manager sm;
-    const Spelling       spelling { ast, types, interner, imports, sm };
+    const Spelling       spelling { ast, types, interner, modules, sm };
 
     Type_table&   table = types.table();
     const Type_id i32   = table.integer( 32, true );

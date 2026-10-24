@@ -18,7 +18,6 @@
 #include "codegen_c/link.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
-#include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
@@ -214,21 +213,9 @@ int main( int argc, char** argv )
 
             const std::string name = spec.substr( 0, equals );
 
-            if( name == "prelude" )
+            if( const std::optional<std::string> error = keel::package_name_error( name, interner ) )
             {
-                fmt::print( stderr, "keelc: --package cannot name a package 'prelude', which is the prelude's own\n" );
-                return 2;
-            }
-
-            if( interner.is_keyword( interner.find( name ) ) )
-            {
-                fmt::print( stderr, "keelc: --package name '{}' is a keyword\n", name );
-                return 2;
-            }
-
-            if( !keel::is_identifier( name ) )
-            {
-                fmt::print( stderr, "keelc: --package name '{}' is not an identifier\n", name );
+                fmt::print( stderr, "keelc: --package {}\n", *error );
                 return 2;
             }
 
@@ -333,7 +320,7 @@ int main( int argc, char** argv )
     if( stop == Stop::Ast )
     {
         const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics, packages );
-        keel::dump_ast( prog.ast, sm, interner, std::cout, prog.imports.prelude_file() );
+        keel::dump_ast( prog.ast, sm, interner, std::cout, prog.modules.prelude_file() );
         return finish();
     }
 
@@ -360,7 +347,7 @@ int main( int argc, char** argv )
         names = keel::collect_names( ast, front.resolution, types, sm, interner );
 
         // The prelude is not on disk for an editor to open; a use of it still names it.
-        std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.imports.prelude_file(); } );
+        std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.modules.prelude_file(); } );
     }
 
     if( args.count( "declarations" ) )
@@ -371,7 +358,7 @@ int main( int argc, char** argv )
         if( !args.count( "with-prelude" ) )
         {
             std::erase_if(
-                declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.imports.prelude_file(); }
+                declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.modules.prelude_file(); }
             );
         }
         package_docs = prog.package_docs;
@@ -387,7 +374,7 @@ int main( int argc, char** argv )
     if( stop == Stop::Kir )
     {
         bool               well_formed = true;
-        const keel::Halves halves( ast, types.table(), prog.imports );
+        const keel::Halves halves( ast, types.table(), prog.modules );
 
         // The program's half: what its own C file holds.
         for( const keel::Function& function : functions )
@@ -423,7 +410,7 @@ int main( int argc, char** argv )
         std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".prelude.c";
 
     const std::string generated = keel::emit_c_from_kir(
-        functions, ast, types, literals, sm, interner, prog.imports, keel::C_part::Program, prelude_name
+        functions, ast, types, literals, sm, interner, prog.modules, keel::C_part::Program, prelude_name
     );
 
     if( stop == Stop::C )
@@ -449,7 +436,7 @@ int main( int argc, char** argv )
     const std::pair<std::filesystem::path, std::string> outputs[] = {
         { generated_path, generated },
         { prelude_c_path,
-          keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.imports, keel::C_part::Prelude ) },
+          keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, keel::C_part::Prelude ) },
     };
 
     for( const auto& [path, text] : outputs )

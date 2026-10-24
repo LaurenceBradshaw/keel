@@ -43,7 +43,7 @@ struct Compiled
 
         Front_end front = run_front_end( file, through, build, sm, interner, literals, diags );
 
-        const Halves halves( front.program.ast, front.types.table(), front.program.imports );
+        const Halves halves( front.program.ast, front.types.table(), front.program.modules );
         std::ranges::copy_if(
             front.functions,
             std::back_inserter( functions ),

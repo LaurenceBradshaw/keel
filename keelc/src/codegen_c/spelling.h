@@ -7,10 +7,10 @@
 #include <string_view>
 #include "ast/ast.h"
 #include "codegen_c/mangle.h"
-#include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/types.h"
+#include "parse/module_graph.h"
 #include "sema/type_checker.h"
 
 namespace keel
@@ -20,7 +20,7 @@ struct Spelling
     const Ast&            ast;
     Types&                types; // mutable only for its table: an instance's symbol interns its types
     const Interner&       interner;
-    const Imports&        imports;
+    const Module_graph&   modules;
     const Source_manager& sm;
 
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"

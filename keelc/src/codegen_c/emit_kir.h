@@ -7,11 +7,11 @@
 #include <vector>
 #include "ast/ast.h"
 #include "codegen_c/halves.h"
-#include "common/imports.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
+#include "parse/module_graph.h"
 #include "sema/type_checker.h"
 
 namespace keel
@@ -26,7 +26,7 @@ std::string emit_c_from_kir(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Imports&               imports = {},
+    const Module_graph&          modules = {},
     C_part                       part    = C_part::Program,
     std::string_view             include = {}
 );

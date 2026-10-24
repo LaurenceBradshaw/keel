@@ -12,9 +12,12 @@
 
 namespace keel
 {
-class Imports
+// Which file sees which, which names are packages, which package each file is in, and which file is
+// the prelude. The loader builds it.
+class Module_graph
 {
 public:
+    // The import graph.
     void add( File_id from, File_id to, Span span = {} )
     {
         import_spans_.try_emplace( edge( from, to ), span );
@@ -75,6 +78,7 @@ public:
         return importers;
     }
 
+    // Packages.
     void add_package( Symbol_id package )
     {
         packages_.push_back( package );
@@ -97,6 +101,7 @@ public:
         return std::find( missing_packages_.begin(), missing_packages_.end(), package ) != missing_packages_.end();
     }
 
+    // Each file's package.
     void place( File_id file, Symbol_id package )
     {
         file_to_package_[file.v] = package.v;
@@ -111,6 +116,7 @@ public:
         return Symbol_id {};
     }
 
+    // The prelude.
     void set_prelude( File_id file, Symbol_id package )
     {
         prelude_         = file;

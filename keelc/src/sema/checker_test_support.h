@@ -46,7 +46,7 @@ public:
         file_          = sm_.add_file( "t.kl", std::string( source ) );
         Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, {}, prelude );
         ast_           = std::move( loaded.ast );
-        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.imports );
+        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.modules );
         earlier_       = diags_.error_count();
         types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }
@@ -79,7 +79,7 @@ public:
 
         Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, packages, prelude );
         ast_           = std::move( loaded.ast );
-        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.imports );
+        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.modules );
         earlier_       = diags_.error_count();
         types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }

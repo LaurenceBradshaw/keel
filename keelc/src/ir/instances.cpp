@@ -217,7 +217,7 @@ struct Reached
 
         Program program = load_program( file, sm, interner, literals, diags, {}, {} );
         ast             = std::move( program.ast );
-        resolution      = resolve( ast, sm, interner, diags, program.imports );
+        resolution      = resolve( ast, sm, interner, diags, program.modules );
         types           = type_check( ast, resolution, literals, sm, interner, diags );
 
         if( diags.has_errors() )

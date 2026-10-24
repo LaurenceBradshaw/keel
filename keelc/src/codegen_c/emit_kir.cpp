@@ -228,7 +228,7 @@ public:
         const Source_manager&        sm,
         const Interner&              interner,
         std::span<const Type_id>     struct_order,
-        const Imports&               imports,
+        const Module_graph&          modules,
         C_part                       part,
         std::string_view             include
     );
@@ -329,7 +329,7 @@ Kir_emitter::Kir_emitter(
     const Source_manager&        sm,
     const Interner&              interner,
     std::span<const Type_id>     struct_order,
-    const Imports&               imports,
+    const Module_graph&          modules,
     C_part                       part,
     std::string_view             include
 )
@@ -340,8 +340,8 @@ Kir_emitter::Kir_emitter(
       literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
-      spelling_( Spelling { ast, types, interner, imports, sm } ),
-      halves_( ast, types.table(), imports ),
+      spelling_( Spelling { ast, types, interner, modules, sm } ),
+      halves_( ast, types.table(), modules ),
       part_( part ),
       include_( include ),
       vtables_( std::move( vtables ) )
@@ -2093,9 +2093,9 @@ std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
 // Terminating and acyclic by the checker's own walk: contains_itself rejected every by-value cycle
 // before this runs, and a pointer field is skipped here exactly as it is there.
 // Each half writes its own: the program's stops at a prelude type, which its include has defined.
-std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Imports& imports, C_part part )
+std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Module_graph& modules, C_part part )
 {
-    const Halves         halves( ast, types.table(), imports );
+    const Halves         halves( ast, types.table(), modules );
     std::vector<Type_id> order;
     std::vector<Type_id> visiting;
 
@@ -2189,16 +2189,16 @@ std::string emit_c_from_kir(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Imports&               imports,
+    const Module_graph&          modules,
     C_part                       part,
     std::string_view             include
 )
 {
-    const std::vector<Type_id> order = emitted_struct_order( ast, types, imports, part );
+    const std::vector<Type_id> order = emitted_struct_order( ast, types, modules, part );
 
     std::vector<Vtable> vtables = vtables_needed( ast, types, functions );
 
-    const Halves          halves( ast, types.table(), imports );
+    const Halves          halves( ast, types.table(), modules );
     std::vector<Function> half;
     for( const Function& function : functions )
     {
@@ -2208,7 +2208,7 @@ std::string emit_c_from_kir(
         }
     }
 
-    return Kir_emitter( half, std::move( vtables ), ast, types, literals, sm, interner, order, imports, part, include ).run();
+    return Kir_emitter( half, std::move( vtables ), ast, types, literals, sm, interner, order, modules, part, include ).run();
 }
 
 } // namespace keel

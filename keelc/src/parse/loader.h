@@ -3,16 +3,17 @@
 
 #pragma once
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include "ast/ast.h"
 #include "common/diagnostics.h"
-#include "common/imports.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
+#include "parse/module_graph.h"
 #include "prelude/prelude.h"
 
 namespace keel
@@ -20,8 +21,8 @@ namespace keel
 
 struct Program
 {
-    Ast     ast;
-    Imports imports;
+    Ast          ast;
+    Module_graph modules;
 
     std::unordered_map<u32, std::string> package_docs; // by package symbol, the program's own under Symbol_id {}
 };
@@ -43,5 +44,8 @@ Program load_program(
     std::span<const Package> packages = {},
     std::string_view         prelude  = prelude_source()
 );
+
+// Why `name` cannot be given to `--package`, or nothing when it can.
+std::optional<std::string> package_name_error( std::string_view name, const Interner& interner );
 
 } // namespace keel

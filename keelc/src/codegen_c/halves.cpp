@@ -7,16 +7,16 @@
 namespace keel
 {
 
-Halves::Halves( const Ast& ast, const Type_table& table, const Imports& imports )
+Halves::Halves( const Ast& ast, const Type_table& table, const Module_graph& modules )
     : ast_( ast ),
       table_( table ),
-      imports_( imports )
+      modules_( modules )
 {
 }
 
 C_part Halves::of( Node_id declaration ) const
 {
-    return ast_.span( declaration ).file == imports_.prelude_file() ? C_part::Prelude : C_part::Program;
+    return ast_.span( declaration ).file == modules_.prelude_file() ? C_part::Prelude : C_part::Program;
 }
 
 C_part Halves::of( Type_id type ) const
