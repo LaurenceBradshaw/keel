@@ -1,0 +1,42 @@
+// A program to step through in a debugger: "Debug a Keel program (examples/debugging.kl)" in
+// .vscode/launch.json builds it with --debug and -g, then runs it under gdb. Locals show as
+// kl_<name>_<n>; editors/gdb/keel.py shows their values and the call stack in Keel.
+import kl::console;
+import kl::list;
+import kl::string;
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 manhattan( Point p )
+{
+    i32 dx = p.x < 0 ? -p.x : p.x;
+    i32 dy = p.y < 0 ? -p.y : p.y;
+    return dx + dy;
+}
+
+i32 main()
+{
+    Point          p    = Point { 3, -4 };
+    i32            d    = manhattan( p );
+    kl::string     name = kl::string( "keel" );
+    kl::list<i32> xs   = kl::list<i32>();
+
+    for( i32 v : 1..5 )
+    {
+        xs.push( v * d );
+    }
+
+    i64 sum = 0;
+    for( u64 i : 0..xs.size() )
+    {
+        sum += xs[i];
+    }
+
+    kl::println( name );
+    kl::println( sum );
+    return sum == 70 ? 0 : 1;
+}

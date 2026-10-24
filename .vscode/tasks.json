@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // A debug build of the program with -g, so gdb steps it by .kl line. Uses the debug
+            // preset's keelc; build that first.
+            "label": "keelc: build examples/debugging.kl",
+            "type": "process",
+            "command": "${workspaceFolder}/build/debug/bin/keelc",
+            "args": [
+                "--debug",
+                "--package",
+                "kl=keel_stl/src",
+                "examples/debugging.kl",
+                "-o",
+                "build/examples/debugging"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "CFLAGS": "-g"
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

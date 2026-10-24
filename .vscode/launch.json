@@ -2,6 +2,40 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // Builds examples/debugging.kl with --debug and -g, then runs it under gdb: set
+            // breakpoints in the .kl file. Locals show as kl_<name>_<n>; editors/gdb/keel.py shows
+            // Keel values and function names.
+            "name": "Debug a Keel program (examples/debugging.kl)",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "keelc: build examples/debugging.kl",
+            "program": "${workspaceFolder}/build/examples/debugging",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Show Keel values and names",
+                    "text": "source ${workspaceFolder}/editors/gdb/keel.py",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Apply its frame filter to the call stack and variables",
+                    "text": "-enable-frame-filters",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             // Uses the CMake Tools launch target, so it follows whichever preset is selected
             // rather than hard-coding build/debug/bin/keelc.
             "name": "Debug keelc (examples/hello.kl)",
