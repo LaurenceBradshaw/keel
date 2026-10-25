@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <string>
 #include <string_view>
 
 namespace keel
@@ -12,8 +13,10 @@ namespace keel
 // would break editor IntelliSense on a clean checkout, before the first configure has run.
 inline constexpr std::string_view k_version = "0.1.0";
 
-// "keelc 0.1.0 (<milestone>)" - the milestone tag is the honest signal of what the compiler can
-// actually do, and is more useful than the version number during early development.
-std::string_view version_string();
+// "keelc 0.1.0 (<first 12 digits of the build id>)".
+std::string version_string();
+
+// SHA-256 of keelc's sources and the prelude, as 64 hex digits.
+std::string_view build_id();
 
 } // namespace keel

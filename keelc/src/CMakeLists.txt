@@ -13,6 +13,18 @@ file(READ prelude/prelude.kl KEEL_PRELUDE)
 configure_file(prelude/prelude.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp @ONLY)
 list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp)
 
+# The build id names which keelc wrote an object: SHA-256 over keelc's sources and the prelude.
+# Editing any of them re-runs the script, which rewrites build_id.cpp only when the id changes.
+file(GLOB_RECURSE keel_inputs CONFIGURE_DEPENDS "*.h" "*.cpp" "*.kl" "*.in")
+set(keel_build_id_script ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build_id.cmake)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp
+    COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp -P ${keel_build_id_script}
+    DEPENDS ${keel_inputs} ${keel_build_id_script}
+    COMMENT "Hashing keelc's sources for the build id")
+list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp)
+
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
 

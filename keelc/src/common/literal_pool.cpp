@@ -10,46 +10,50 @@ namespace keel
 
 Literal_pool::Literal_pool()
 {
-    // Dummy values in slot 0
-    integers_.push_back( {} );
-    floats_.push_back( {} );
-    strings_.push_back( {} );
+    entries_.push_back( std::monostate() ); // slot 0 is reserved
 }
 
 Literal_id Literal_pool::add_integer( u64 magnitude )
 {
-    integers_.push_back( magnitude );
-    return Literal_id { narrow_cast<u32>( integers_.size() - 1 ) };
+    entries_.push_back( magnitude );
+    return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
 Literal_id Literal_pool::add_float( f64 value )
 {
-    floats_.push_back( value );
-    return Literal_id { narrow_cast<u32>( floats_.size() - 1 ) };
+    entries_.push_back( value );
+    return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
 Literal_id Literal_pool::add_string( std::string bytes )
 {
-    strings_.push_back( std::move( bytes ) );
-    return Literal_id { narrow_cast<u32>( strings_.size() - 1 ) };
+    entries_.push_back( std::move( bytes ) );
+    return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
 u64 Literal_pool::integer( Literal_id id ) const
 {
-    assert( id.is_valid() && id.v < integers_.size() && "invalid Literal_id" );
-    return integers_[id.v];
+    assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::Integer && "invalid Literal_id" );
+    return std::get<u64>( entries_[id.v] );
 }
 
 f64 Literal_pool::floating( Literal_id id ) const
 {
-    assert( id.is_valid() && id.v < floats_.size() && "invalid Literal_id" );
-    return floats_[id.v];
+    assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::Float && "invalid Literal_id" );
+    return std::get<f64>( entries_[id.v] );
 }
 
 std::string_view Literal_pool::string( Literal_id id ) const
 {
-    assert( id.is_valid() && id.v < strings_.size() && "invalid Literal_id" );
-    return std::string_view( strings_[id.v] );
+    assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::String && "invalid Literal_id" );
+    return std::string_view( std::get<std::string>( entries_[id.v] ) );
+}
+
+Literal_kind Literal_pool::kind( Literal_id id ) const
+{
+    assert( id.is_valid() && id.v < entries_.size() && "invalid Literal_id" );
+
+    return Literal_kind( entries_[id.v].index() - 1 );
 }
 
 } // namespace keel
@@ -81,7 +85,7 @@ TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
         REQUIRE( pool.add_integer( 42 ) != small );
     }
 
-    SECTION( "integers and floats have independent id spaces" )
+    SECTION( "a float leaves the integers alone" )
     {
         const Literal_id f = pool.add_float( 1.5 );
 
@@ -110,6 +114,24 @@ TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
         REQUIRE( pool.integer( small ) == 42 );
         REQUIRE( pool.integer( big ) == 18446744073709551615ull );
     }
+}
+
+TEST_CASE( "literal_pool_ids_name_their_kind", "[common][literals]" )
+{
+    Literal_pool pool;
+
+    const Literal_id i = pool.add_integer( 1 );
+    const Literal_id f = pool.add_float( 1.0 );
+    const Literal_id s = pool.add_string( "1" );
+
+    REQUIRE( pool.kind( i ) == Literal_kind::Integer );
+    REQUIRE( pool.kind( f ) == Literal_kind::Float );
+    REQUIRE( pool.kind( s ) == Literal_kind::String );
+
+    // Each kind used to count from 1, so the first of each shared an id.
+    REQUIRE( i != f );
+    REQUIRE( f != s );
+    REQUIRE( i != s );
 }
 
 } // namespace keel

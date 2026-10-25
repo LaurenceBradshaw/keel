@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "common/archive.h"
+#include <charconv>
 #include <string_view>
 #include "common/types.h"
 
@@ -53,6 +54,25 @@ void member( std::string& out, std::string_view name, std::string_view data )
     {
         out += '\n';
     }
+}
+
+std::string_view trimmed( std::string_view text )
+{
+    return text.substr( 0, text.find_last_not_of( ' ' ) + 1 );
+}
+
+// `text` as a whole decimal number, or nothing.
+std::optional<size_t> number( std::string_view text )
+{
+    size_t value            = 0;
+    const auto [end, error] = std::from_chars( text.data(), text.data() + text.size(), value );
+
+    if( text.empty() || error != std::errc {} || end != text.data() + text.size() )
+    {
+        return std::nullopt;
+    }
+
+    return value;
 }
 
 } // namespace
@@ -130,6 +150,85 @@ std::string write_archive( std::span<const Archive_member> members )
     }
 
     return out;
+}
+
+std::optional<std::vector<Archive_member>> read_archive( std::string_view bytes )
+{
+    if( !bytes.starts_with( "!<arch>\n" ) )
+    {
+        return std::nullopt;
+    }
+
+    std::vector<Archive_member> members;
+    std::string_view            long_names;
+    size_t                      at = 8;
+
+    while( at < bytes.size() )
+    {
+        if( bytes.size() - at < k_header_size )
+        {
+            return std::nullopt;
+        }
+
+        const std::string_view head = bytes.substr( at, k_header_size );
+        if( head.substr( 58 ) != "`\n" )
+        {
+            return std::nullopt;
+        }
+
+        const std::optional<size_t> size = number( trimmed( head.substr( 48, 10 ) ) );
+        if( !size || *size > bytes.size() - at - k_header_size )
+        {
+            return std::nullopt;
+        }
+
+        const std::string_view name = trimmed( head.substr( 0, 16 ) );
+        const std::string_view data = bytes.substr( at + k_header_size, *size );
+        at += k_header_size + padded( *size );
+
+        if( name == "/" )
+        {
+            continue;
+        }
+
+        if( name == "//" )
+        {
+            long_names = data;
+            continue;
+        }
+
+        std::string_view member_name;
+
+        if( name.starts_with( '/' ) )
+        {
+            const std::optional<size_t> offset = number( name.substr( 1 ) );
+            if( !offset || *offset >= long_names.size() )
+            {
+                return std::nullopt;
+            }
+
+            const size_t end = long_names.find( "/\n", *offset );
+            if( end == std::string_view::npos )
+            {
+                return std::nullopt;
+            }
+
+            member_name = long_names.substr( *offset, end - *offset );
+        }
+        else
+        {
+            if( !name.ends_with( '/' ) )
+            {
+                return std::nullopt;
+            }
+
+            member_name = name.substr( 0, name.size() - 1 );
+        }
+
+        members.push_back( { std::string( member_name ), std::string( data ), {} } );
+    }
+
+    return members;
 }
 
 } // namespace keel
@@ -222,6 +321,61 @@ TEST_CASE( "write_archive_writes_the_same_bytes_twice", "[common][archive]" )
     };
 
     REQUIRE( write_archive( members ) == write_archive( members ) );
+}
+
+TEST_CASE( "read_archive_gives_back_what_write_archive_wrote", "[common][archive]" )
+{
+    const std::vector<Archive_member> members = {
+        { "a.o", "even", { "kl_a" } },
+        { "sixteen_bytes.o_", std::string( "x\0y", 3 ), { "kl_x" } },
+        { "c.o", "odd", {} },
+    };
+
+    const std::optional<std::vector<Archive_member>> read = read_archive( write_archive( members ) );
+
+    REQUIRE( read );
+    REQUIRE( read->size() == 3 );
+
+    for( size_t i = 0; i < 3; ++i )
+    {
+        REQUIRE( ( *read )[i].name == members[i].name );
+        REQUIRE( ( *read )[i].data == members[i].data );
+        REQUIRE( ( *read )[i].symbols.empty() );
+    }
+}
+
+TEST_CASE( "read_archive_refuses_a_broken_archive", "[common][archive]" )
+{
+    const std::vector<Archive_member> members = { { "sixteen_bytes.o_", "data", { "kl_x" } } };
+
+    std::string bytes = write_archive( members );
+    REQUIRE( read_archive( bytes ) );
+
+    SECTION( "a wrong magic" )
+    {
+        bytes[1] = '?';
+        REQUIRE_FALSE( read_archive( bytes ) );
+    }
+
+    SECTION( "a header without its closing bytes" )
+    {
+        bytes[8 + 58] = ' ';
+        REQUIRE_FALSE( read_archive( bytes ) );
+    }
+
+    SECTION( "a size past the end" )
+    {
+        bytes.pop_back();
+        REQUIRE_FALSE( read_archive( bytes ) );
+    }
+
+    SECTION( "a long name past the table" )
+    {
+        const size_t name = bytes.rfind( "/0 " );
+        bytes[name + 1]   = '9'; // `/99`, past the 18-byte table
+        bytes[name + 2]   = '9';
+        REQUIRE_FALSE( read_archive( bytes ) );
+    }
 }
 
 } // namespace keel

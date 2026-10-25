@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace keel
@@ -20,5 +22,9 @@ struct Archive_member
 // table `//` when a name passes 15 bytes, then each member. Every mtime, uid and gid is zero, so
 // the bytes depend only on the members.
 std::string write_archive( std::span<const Archive_member> members );
+
+// The members of an archive `write_archive` wrote, or nothing if the bytes are not one. The index is
+// skipped, so each member's `symbols` is empty.
+std::optional<std::vector<Archive_member>> read_archive( std::string_view bytes );
 
 } // namespace keel

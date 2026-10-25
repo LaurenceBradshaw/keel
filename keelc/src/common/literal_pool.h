@@ -3,6 +3,7 @@
 
 #pragma once
 #include <string>
+#include <variant>
 #include <vector>
 #include "common/types.h"
 
@@ -23,6 +24,13 @@ struct Literal_id
     friend bool operator==( Literal_id lhs, Literal_id rhs ) = default;
 };
 
+enum class Literal_kind : u8
+{
+    Integer,
+    Float,
+    String
+};
+
 // The values the lexer scanned, kept beside the token stream rather than inside Token so that a
 // token stays small. Threaded like Interner: made once in the driver, filled by lex(), read by
 // sema and codegen.
@@ -38,15 +46,16 @@ public:
     Literal_id add_float( f64 value );
     Literal_id add_string( std::string bytes );
 
-    // The node kind chooses: Int_literal reads integer(), Float_literal reads floating().
+    // The node kind chooses: Int_literal reads integer(), Float_literal reads floating(). A read
+    // through the wrong kind asserts.
     u64              integer( Literal_id id ) const;
     f64              floating( Literal_id id ) const;
     std::string_view string( Literal_id id ) const;
+    Literal_kind     kind( Literal_id id ) const;
 
 private:
-    std::vector<u64>         integers_; // [0] reserved so Literal_id {} is invalid
-    std::vector<f64>         floats_;   // likewise
-    std::vector<std::string> strings_;
+    // Each alternative's index is its Literal_kind plus one, which kind() relies on.
+    std::vector<std::variant<std::monostate, u64, f64, std::string>> entries_;
 };
 
 } // namespace keel
