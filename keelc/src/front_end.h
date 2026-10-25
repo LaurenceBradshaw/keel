@@ -53,6 +53,7 @@ struct Front_end
     Resolution            resolution;
     Types                 types;
     std::vector<Function> functions; // every function lowered, the prelude's included
+    std::vector<File_id>  provided;  // the module each of the first functions was loaded from
     std::vector<Function> checked;   // under keep_checked: the same, before elaboration
 };
 

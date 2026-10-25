@@ -9,7 +9,14 @@
 namespace keel
 {
 
-Parts::Parts( const Ast& ast, Types& types, const Module_graph& modules, File_id input, const std::vector<Function>& functions )
+Parts::Parts(
+    const Ast&                   ast,
+    Types&                       types,
+    const Module_graph&          modules,
+    File_id                      input,
+    const std::vector<Function>& functions,
+    std::span<const File_id>     provided
+)
     : ast_( ast ),
       functions_( functions ),
       order_( modules.dependencies_first( input ) ),
@@ -74,6 +81,9 @@ Parts::Parts( const Ast& ast, Types& types, const Module_graph& modules, File_id
     }
 
     const auto declared = [&]( u32 f ) { return !placed_by_reach( functions[f] ); };
+
+    // Claimed already, so no module takes them again.
+    std::ranges::copy( provided, owners_.begin() );
 
     for( u32 f = 0; f < functions.size(); ++f )
     {

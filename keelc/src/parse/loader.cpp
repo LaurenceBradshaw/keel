@@ -243,8 +243,8 @@ Program load_program(
 
     for( const Object* object : order )
     {
-        const File_id                     file  = object_files.at( object->manifest.module );
-        const std::optional<Loaded_state> state = read_state( object->state, file, prog, interner, literals, prog.types, sm );
+        const File_id               file  = object_files.at( object->manifest.module );
+        std::optional<Loaded_state> state = read_state( object->state, file, prog, interner, literals, prog.types, sm );
 
         // The build id matched, so this keelc wrote it.
         if( !state )
@@ -265,6 +265,7 @@ Program load_program(
             }
         }
 
+        state->object = object->path;
         decls.insert( decls.end(), state->declarations.begin(), state->declarations.end() );
         prog.states.push_back( std::move( *state ) );
     }

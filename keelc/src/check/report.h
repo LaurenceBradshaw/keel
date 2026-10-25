@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
-#include <vector>
+#include <span>
 #include "ast/ast.h"
 #include "common/diagnostics.h"
 #include "common/interner.h"
@@ -17,12 +17,12 @@ namespace keel
 // and D31's unassigned reads, `out` parameters and return slot. The passes return spans and locals;
 // this names them.
 void report_dataflow_errors(
-    const std::vector<Function>& functions,
-    const Ast&                   ast,
-    const Source_manager&        sm,
-    const Interner&              interner,
-    Types&                       types,
-    Diagnostics&                 diagnostics
+    std::span<const Function> functions,
+    const Ast&                ast,
+    const Source_manager&     sm,
+    const Interner&           interner,
+    Types&                    types,
+    Diagnostics&              diagnostics
 );
 
 } // namespace keel

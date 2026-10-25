@@ -24,13 +24,21 @@ inline bool placed_by_reach( const Function& function )
 //   a function declared at no type arguments   its declaration's module
 //   an instance or a synthesised function      the first module, dependencies first, whose own
 //                                              functions reach it; the input's when none does
+//   one of the first `provided`, loaded        the module whose object held it
 //
 // Types belong to no part: each writes every type it names. The emitter, --dump-kir and the test
 // fixture all ask here.
 class Parts
 {
 public:
-    Parts( const Ast& ast, Types& types, const Module_graph& modules, File_id input, const std::vector<Function>& functions );
+    Parts(
+        const Ast&                   ast,
+        Types&                       types,
+        const Module_graph&          modules,
+        File_id                      input,
+        const std::vector<Function>& functions,
+        std::span<const File_id>     provided = {}
+    );
 
     File_id of( const Function& function ) const;
     File_id of( Node_id declaration ) const;

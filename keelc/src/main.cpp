@@ -121,7 +121,8 @@ int main( int argc, char** argv )
     }
 
     // In command-line order, then the libraries, which follow everything that uses them.
-    std::vector<std::string> linked;
+    std::vector<std::string>           linked;
+    std::vector<std::filesystem::path> klos;
     if( args.count( "link" ) )
     {
         for( const std::string& file : args["link"].as<std::vector<std::string>>() )
@@ -134,9 +135,14 @@ int main( int argc, char** argv )
                 );
                 return 2;
             }
+            if( extension == ".klo" )
+            {
+                klos.push_back( file );
+                continue;
+            }
             if( extension != ".c" && extension != ".o" && extension != ".a" )
             {
-                fmt::print( stderr, "keelc: cannot link '{}' - name a .c, .o or .a\n", file );
+                fmt::print( stderr, "keelc: cannot link '{}' - name a .c, .o, .a or .klo\n", file );
                 return 2;
             }
             linked.push_back( file );
@@ -334,6 +340,25 @@ int main( int argc, char** argv )
     const bool debug           = args.count( "debug" ) > 0;
     const bool overflow_checks = debug || args.count( "overflow-checks" ) > 0;
 
+    // Read and judged before anything is parsed, so a refused object costs nothing.
+    std::vector<keel::Object> given;
+    for( const std::filesystem::path& path : klos )
+    {
+        std::string                       error;
+        const std::optional<keel::Object> object = keel::read_object( path, error );
+        if( !object )
+        {
+            fmt::print( stderr, "keelc: {}\n", error );
+            return 2;
+        }
+        given.push_back( *object );
+    }
+    if( const std::optional<std::string> refusal = keel::refused( given, debug, overflow_checks ) )
+    {
+        fmt::print( stderr, "keelc: {}\n", *refusal );
+        return 2;
+    }
+
     // A release object stops where its state is taken: the program that links it optimises it.
     const bool        as_module = stop == Stop::Object;
     const keel::Stage through   = as_module && !debug ? keel::Stage::Reported : keel::Stage::Elaborated;
@@ -350,7 +375,8 @@ int main( int argc, char** argv )
         literals,
         diagnostics,
         packages,
-        as_module
+        as_module,
+        given
     );
     const keel::Program&               prog      = front.program;
     const keel::Ast&                   ast       = prog.ast;
@@ -384,7 +410,7 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const keel::Parts parts( ast, types, prog.modules, file_id.value(), functions );
+    const keel::Parts parts( ast, types, prog.modules, file_id.value(), functions, front.provided );
 
     // Additive: the C path below is untouched, and nothing consumes KIR yet. This is what makes
     // each step of the lowerer visible as it lands.
@@ -392,10 +418,10 @@ int main( int argc, char** argv )
     {
         bool well_formed = true;
 
-        // Every part but the prelude's.
+        // Every part but the prelude's and the loaded modules'.
         for( const keel::Function& function : functions )
         {
-            if( parts.of( function ) == prog.modules.prelude_file() )
+            if( parts.of( function ) == prog.modules.prelude_file() || prog.modules.is_loaded( parts.of( function ) ) )
             {
                 continue;
             }
@@ -428,7 +454,7 @@ int main( int argc, char** argv )
     {
         for( const keel::File_id part : parts.order() )
         {
-            if( part != prog.modules.prelude_file() )
+            if( part != prog.modules.prelude_file() && !prog.modules.is_loaded( part ) )
             {
                 std::cout << fmt::format( "// {}\n", sm.file( part ).path ) << part_c( part );
             }
@@ -477,6 +503,7 @@ int main( int argc, char** argv )
             .overflow = overflow_checks,
             .compiler = compiler,
             .cflags   = cflags,
+            .objects  = given,
         };
 
         if( const int status = keel::write_object( front, parts, literals, sm, interner, object_options ); status != 0 )
@@ -503,6 +530,12 @@ int main( int argc, char** argv )
 
     for( const keel::File_id part : parts.order() )
     {
+        // A debug object holds its part compiled; a release one is optimised with the program.
+        if( debug && prog.modules.is_loaded( part ) )
+        {
+            continue;
+        }
+
         const std::filesystem::path path = executable.parent_path() / c_name( part );
         std::ofstream               out( path );
 
@@ -545,7 +578,16 @@ int main( int argc, char** argv )
     }
 
     const std::filesystem::path generated_path = sources.back();
-    const std::string           command = keel::link_command( compiler, cflags, objects, runtime.path, executable, linked );
+
+    // After the parts, dependents first, so one pass of the linker resolves each into the next.
+    if( debug )
+    {
+        for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
+        {
+            objects.push_back( state->object );
+        }
+    }
+    const std::string command = keel::link_command( compiler, cflags, objects, runtime.path, executable, linked );
 
     if( const int status = std::system( command.c_str() ); status != 0 )
     {

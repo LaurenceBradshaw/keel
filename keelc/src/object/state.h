@@ -34,6 +34,7 @@ struct Source_header
 struct Loaded_state
 {
     File_id              file;
+    std::string          object;       // the .klo it was read from
     std::vector<Node_id> declarations; // top-level, for the root
 
     // The resolver's: each use's declaration, and the overload chains of member scopes. Top-level

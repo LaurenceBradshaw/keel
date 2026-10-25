@@ -270,6 +270,7 @@ std::optional<std::string> refused( std::span<const Object> objects, bool debug,
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
+#include "ir/verify.h"
 
 namespace keel
 {
@@ -489,7 +490,7 @@ std::filesystem::path compile_object( const Temp_dir& dir, const std::string& re
     INFO( rendered.str() );
     REQUIRE( !diags.has_errors() );
 
-    const Parts                 parts( front.program.ast, front.types, front.program.modules, input, front.functions );
+    const Parts parts( front.program.ast, front.types, front.program.modules, input, front.functions, front.provided );
     const std::filesystem::path out = dir.path / ( std::filesystem::path( relative ).stem().string() + ".klo" );
     REQUIRE( write_object( front, parts, literals, sm, interner, { .out = out, .objects = objects } ) == 0 );
     return out;
@@ -611,6 +612,103 @@ TEST_CASE( "a_module_given_as_an_object_checks_as_its_source_does", "[object]" )
 
     REQUIRE( from_object.instantiations() == from_source.instantiations() );
     REQUIRE( from_object.instantiations().size() == 4 ); // pack and open_box, at bool and i32
+}
+
+TEST_CASE( "a_module_given_as_an_object_is_not_lowered_again", "[object]" )
+{
+    const Temp_dir dir;
+    dir.write( "kl/counter.kl", k_counter );
+    const std::filesystem::path main = dir.write( "main.kl", k_counter_main );
+
+    std::string                 error;
+    const std::optional<Object> counter = read_object( compile_object( dir, "kl/counter.kl", {} ), error );
+    REQUIRE( counter );
+
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+    const File_id  input = *sm.load_file( main );
+    Front_end      front = run_front_end(
+        input, Stage::Elaborated, { .optimise = true }, sm, interner, literals, diags, {}, false, std::span( &*counter, 1 )
+    );
+    std::ostringstream rendered;
+    diags.render( sm, rendered );
+    INFO( rendered.str() );
+    REQUIRE( !diags.has_errors() );
+
+    const Module_graph& modules = front.program.modules;
+    REQUIRE( front.provided.size() == 3 ); // bump, and pack and open_box at i32
+    REQUIRE( std::ranges::all_of( front.provided, [&]( File_id file ) { return modules.is_loaded( file ); } ) );
+
+    // Each function once: the loaded ones as given, and only the new instances lowered.
+    std::vector<std::string> named;
+    for( const Function& function : front.functions )
+    {
+        if( function.declaration.is_valid() && modules.is_loaded( front.program.ast.span( function.declaration ).file ) )
+        {
+            std::string text( interner.text( front.program.ast.name( function.declaration ) ) );
+            for( const Type_id argument : function.type_arguments )
+            {
+                text += "<" + std::string( front.types.table().name( argument ) ) + ">";
+            }
+            named.push_back( text );
+        }
+        REQUIRE( verify( function ).empty() );
+    }
+    std::ranges::sort( named );
+    REQUIRE( named == std::vector<std::string> { "bump", "open_box<bool>", "open_box<i32>", "pack<bool>", "pack<i32>" } );
+
+    const Parts parts( front.program.ast, front.types, modules, input, front.functions, front.provided );
+    for( std::size_t f = 0; f < front.provided.size(); ++f )
+    {
+        REQUIRE( parts.of( front.functions[f] ) == front.provided[f] );
+    }
+}
+
+// A state that names only `from<str>` must not leave it the table's first `from`, which reads as the open form.
+TEST_CASE( "a_prelude_generic_s_instance_in_an_object_keeps_its_open_form_first", "[object]" )
+{
+    const Temp_dir dir;
+    dir.write( "kl/name.kl", R"(struct name implements from<str>
+{
+    str text;
+
+    static name from( str text )
+    {
+        return name { text };
+    }
+};
+)" );
+    const std::filesystem::path main = dir.write( "main.kl", R"(import kl::name;
+
+struct tag implements from<str>
+{
+    str text;
+
+    static tag from( str text )
+    {
+        return tag { text };
+    }
+};
+
+i32 main()
+{
+    kl::name n = "a";
+    tag      t = "b";
+    _          = n.text;
+    _          = t.text;
+    return 0;
+}
+)" );
+
+    std::string                 error;
+    const std::optional<Object> name = read_object( compile_object( dir, "kl/name.kl", {} ), error );
+    REQUIRE( name );
+
+    const Checked from_object( main, {}, std::span( &*name, 1 ) );
+    INFO( from_object.rendered() );
+    REQUIRE( from_object.rendered().empty() );
 }
 
 TEST_CASE( "an_import_under_c_is_given_as_an_object", "[object]" )

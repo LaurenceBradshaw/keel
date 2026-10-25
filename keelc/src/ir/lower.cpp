@@ -3875,8 +3875,14 @@ bool implements_anything( const Types& types, Type_id type )
 
 // Every closed owning enum, owning union and owning implementer's drop function. Repeated until
 // nothing new appears, since one destructor can intern another: `Option<Option<Buf>>`.
-void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
+void append_synthesised_drops(
+    const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions, std::size_t given
+)
 {
+    // Asked afresh each time: the pushes below move `functions`.
+    const auto loaded = [&]( Node_id declaration, std::span<const Type_id> arguments )
+    { return provided( std::span( functions ).first( given ), declaration, arguments ); };
+
     std::vector<Type_id> done;
 
     for( bool grew = true; grew; )
@@ -3893,6 +3899,10 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
             }
 
             done.push_back( type );
+            if( loaded( types.table().get( type ).declaration, types.table().get( type ).arguments ) )
+            {
+                continue;
+            }
             functions.push_back( enum_destructor( ast, types, literals, type ) );
             grew = true;
         }
@@ -3900,7 +3910,7 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
 
     for( const Type_id type : types.table().union_types() )
     {
-        if( instance_owns( ast, types.table(), type, types.recorded() ) )
+        if( instance_owns( ast, types.table(), type, types.recorded() ) && !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( union_destructor( ast, types, literals, type ) );
         }
@@ -3909,7 +3919,8 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
     // Last, since an enum's destructor may intern an array but not the reverse.
     for( const Type_id type : types.table().array_types() )
     {
-        if( !types.table().mentions_parameter( type ) && instance_owns( ast, types.table(), type, types.recorded() ) )
+        if( !types.table().mentions_parameter( type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
+            !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( array_destructor( ast, types, literals, type ) );
         }
@@ -3918,7 +3929,8 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
     for( const Type_id type : types.table().composite_types() )
     {
         if( ( types.table().is_struct( type ) || types.table().is_enum( type ) ) && !types.table().mentions_parameter( type ) &&
-            implements_anything( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) )
+            implements_anything( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
+            !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( drop_function( ast, types, type ) );
         }
@@ -3927,22 +3939,34 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
 
 } // namespace
 
+bool provided( std::span<const Function> functions, Node_id declaration, std::span<const Type_id> type_arguments )
+{
+    return std::ranges::any_of(
+        functions,
+        [&]( const Function& function )
+        { return function.declaration == declaration && std::ranges::equal( function.type_arguments, type_arguments ); }
+    );
+}
+
 std::vector<Function> lower(
     const Ast&            ast,
     const Resolution&     resolution,
     Types&                types,
     Literal_pool&         literals,
     const Source_manager& sm,
-    bool                  overflow_checks
+    bool                  overflow_checks,
+    std::vector<Function> loaded
 )
 {
-    std::vector<Function> functions;
+    std::vector<Function> functions = std::move( loaded );
+    const std::size_t     given     = functions.size();
 
     for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
-        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) )
+        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) &&
+            !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
             Lowering lowering( id, ast, resolution, types, literals, sm, overflow_checks );
             functions.push_back( lowering.run() );
@@ -3951,8 +3975,14 @@ std::vector<Function> lower(
 
     Instance_queue instances( ast, types );
 
+    // next() has queued what a provided instance reaches, so skipping it still finds those.
     while( const std::optional<Instantiation> instance = instances.next() )
     {
+        if( provided( std::span( functions ).first( given ), instance->declaration, instance->arguments ) )
+        {
+            continue;
+        }
+
         Lowering lowering(
             instance->declaration, ast, resolution, types, literals, sm, overflow_checks, bindings_for( ast, types, *instance )
         );
@@ -3964,7 +3994,7 @@ std::vector<Function> lower(
         functions.push_back( std::move( emitted ) );
     }
 
-    append_synthesised_drops( ast, types, literals, functions );
+    append_synthesised_drops( ast, types, literals, functions, given );
 
     return functions;
 }

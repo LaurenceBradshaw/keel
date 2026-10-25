@@ -183,6 +183,11 @@ u32 Ref_writer::type_index( Type_id id )
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
+        // The open form first: the table takes a generic's first instance for it.
+        if( const Type_id open = table_.declared( described.declaration ); open != id )
+        {
+            type_index( open );
+        }
         node( entry, described.declaration );
         entry.put_u32( narrow_cast<u32>( described.arguments.size() ) );
         for( const Type_id argument : described.arguments )

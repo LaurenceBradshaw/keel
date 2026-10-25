@@ -20,12 +20,12 @@ namespace
 // The passes report spans and a Local_id; this names the local. A second site goes in the help as
 // line:col, since a diagnostic carries one span.
 void report_move_errors(
-    const std::vector<Function>& functions,
-    const Ast&                   ast,
-    const Source_manager&        sm,
-    const Interner&              interner,
-    Types&                       types,
-    Diagnostics&                 diagnostics
+    std::span<const Function> functions,
+    const Ast&                ast,
+    const Source_manager&     sm,
+    const Interner&           interner,
+    Types&                    types,
+    Diagnostics&              diagnostics
 )
 {
     for( const Function& function : functions )
@@ -112,12 +112,12 @@ void report_move_errors(
 
 // D54: a loan broken while its holder is still used, named with where the holder was bound.
 void report_loan_errors(
-    const std::vector<Function>& functions,
-    const Ast&                   ast,
-    const Source_manager&        sm,
-    const Interner&              interner,
-    Types&                       types,
-    Diagnostics&                 diagnostics
+    std::span<const Function> functions,
+    const Ast&                ast,
+    const Source_manager&     sm,
+    const Interner&           interner,
+    Types&                    types,
+    Diagnostics&              diagnostics
 )
 {
     for( const Function& function : functions )
@@ -157,11 +157,7 @@ void report_loan_errors(
 // D31: a path out without writing an `out` parameter or the return slot. D9: a value read before
 // anything put one there.
 void report_unassigned_errors(
-    const std::vector<Function>& functions,
-    const Ast&                   ast,
-    const Interner&              interner,
-    Diagnostics&                 diagnostics,
-    const Types&                 types
+    std::span<const Function> functions, const Ast& ast, const Interner& interner, Diagnostics& diagnostics, const Types& types
 )
 {
     for( const Function& function : functions )
@@ -298,12 +294,12 @@ void report_unassigned_errors(
 } // namespace
 
 void report_dataflow_errors(
-    const std::vector<Function>& functions,
-    const Ast&                   ast,
-    const Source_manager&        sm,
-    const Interner&              interner,
-    Types&                       types,
-    Diagnostics&                 diagnostics
+    std::span<const Function> functions,
+    const Ast&                ast,
+    const Source_manager&     sm,
+    const Interner&           interner,
+    Types&                    types,
+    Diagnostics&              diagnostics
 )
 {
     report_move_errors( functions, ast, sm, interner, types, diagnostics );

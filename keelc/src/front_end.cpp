@@ -50,16 +50,32 @@ Front_end run_front_end(
         return front;
     }
 
+    // The loaded modules' functions come first, as their objects hold them: checked already, and in a
+    // debug build compiled already. One instance two objects hold is kept once, from the first.
+    std::vector<Function> loaded;
+    for( const Loaded_state& state : states )
+    {
+        for( const Function& function : state.functions )
+        {
+            if( !provided( loaded, function.declaration, function.type_arguments ) )
+            {
+                loaded.push_back( function );
+                front.provided.push_back( state.file );
+            }
+        }
+    }
+    const std::size_t given = loaded.size();
+
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
-    front.functions = lower( ast, front.resolution, front.types, literals, sm, build.overflow_checks );
+    front.functions = lower( ast, front.resolution, front.types, literals, sm, build.overflow_checks, std::move( loaded ) );
 
     if( through == Stage::Lowered )
     {
         return front;
     }
 
-    for( Function& function : front.functions )
+    for( Function& function : std::span( front.functions ).subspan( given ) )
     {
         simplify( function, literals );
     }
@@ -71,7 +87,7 @@ Front_end run_front_end(
 
     // Part of the front end, not of emission: --check is what an editor wants, and an editor wants
     // use-after-move underlined.
-    report_dataflow_errors( front.functions, ast, sm, interner, front.types, diags );
+    report_dataflow_errors( std::span( front.functions ).subspan( given ), ast, sm, interner, front.types, diags );
 
     if( build.keep_checked && !diags.has_errors() )
     {
@@ -103,6 +119,13 @@ Front_end run_front_end(
     {
         for( const u32 f : group )
         {
+            // A debug build links the loaded ones from their objects; a release build optimises
+            // them with the rest.
+            if( f < given && !build.optimise )
+            {
+                continue;
+            }
+
             Function& function = front.functions[f];
 
             settle_debug( function, debug );
@@ -132,6 +155,11 @@ Front_end run_front_end(
 
         for( const u32 f : group )
         {
+            if( f < given && !build.optimise )
+            {
+                continue;
+            }
+
             Function& function = front.functions[f];
 
             elaborate_drops( function, vocabulary );
