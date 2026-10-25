@@ -30,13 +30,18 @@
 <li><a href="#delete_file"><code>delete_file</code></a> <span class="kind">function</span></li>
 <li class="divider">Directories</li>
 <li><a href="#create_directory"><code>create_directory</code></a> <span class="kind">function</span></li>
+<li><a href="#create_directories"><code>create_directories</code></a> <span class="kind">function</span></li>
 <li><a href="#delete_directory"><code>delete_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#list_directory"><code>list_directory</code></a> <span class="kind">function</span></li>
 <li class="divider">Processes</li>
 <li><a href="#process"><code>process</code></a> <span class="kind">class</span></li>
+<li><a href="#captured"><code>captured</code></a> <span class="kind">class</span></li>
 <li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
+<li><a href="#capture"><code>capture</code></a> <span class="kind">function</span></li>
 <li class="divider">Environment</li>
 <li><a href="#environment"><code>environment</code></a> <span class="kind">function</span></li>
+<li><a href="#program_path"><code>program_path</code></a> <span class="kind">function</span></li>
+<li><a href="#current_directory"><code>current_directory</code></a> <span class="kind">function</span></li>
 </ul>
 <h2 class="divider">Errors</h2>
 <section class="entry">
@@ -388,6 +393,16 @@ only when the input ends before any byte, so a last line without <code>\n</code>
 </div>
 </section>
 <section class="entry">
+<h2><span class="kind">function</span> <span class="fn">create_directories</span></h2>
+<div class="group" id="create_directories">
+<pre class="signature"><a class="anchor" href="#create_directories" aria-label="Link to create_directories">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">create_directories</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name )</code></pre>
+<div class="doc">
+<p>Creates the directory <code>name</code> and each missing parent. Levels already there are left as they
+are, so a directory that exists is success.</p>
+</div>
+</div>
+</section>
+<section class="entry">
 <h2><span class="kind">function</span> <span class="fn">delete_directory</span></h2>
 <div class="group" id="delete_directory">
 <pre class="signature"><a class="anchor" href="#delete_directory" aria-label="Link to delete_directory">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">delete_directory</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name )</code></pre>
@@ -430,12 +445,51 @@ reads them, and the child shares this program's standard streams. Input this pro
 already buffered is not seen by the child.</p>
 </div>
 </div>
+<div class="group" id="process.start_captured">
+<pre class="signature"><a class="anchor" href="#process.start_captured" aria-label="Link to start_captured">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#process">process</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">start_captured</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> program, <span class="kw">const</span> <span class="kw">ref</span> T[] arguments ) <span class="kw">where</span> T : <a class="type" href="prelude.html#textual">textual</a></code></pre>
+<div class="doc">
+<p>Starts <code>program</code> as <code>start</code> does, but its standard output is kept for <code>read_output</code>.</p>
+</div>
+</div>
 <div class="group" id="process.wait">
 <pre class="signature"><a class="anchor" href="#process.wait" aria-label="Link to wait">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#i32">i32</a>, <a class="type" href="#os_error">os_error</a>&gt; <span class="fn">wait</span>()</code></pre>
 <div class="doc">
 <p>Waits for the program to end and answers its exit code, or 128 and the signal's number when
 a signal ended it. Asked again, it answers the same.</p>
 </div>
+</div>
+<div class="group" id="process.read_output">
+<pre class="signature"><a class="anchor" href="#process.read_output" aria-label="Link to read_output">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="string.html#string">string</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read_output</span>()</code></pre>
+<div class="doc">
+<p>Reads the program's standard output to its end, then closes it. Empty for a process made by
+<code>start</code>, or asked a second time.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">captured</span></h2>
+<div class="group" id="captured">
+<pre class="signature"><a class="anchor" href="#captured" aria-label="Link to captured">#</a><code><span class="kw">class</span> <span class="type">captured</span></code></pre>
+<div class="doc">
+<p>A finished program's exit code and what it wrote to its standard output, as <code>capture</code> answers.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="captured.code">
+<pre class="signature"><a class="anchor" href="#captured.code" aria-label="Link to code">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#i32">i32</a> code</code></pre>
+<div class="doc">
+<p>The exit code, as <code>process::wait</code> answers it.</p>
+</div>
+</div>
+<div class="group" id="captured.output">
+<pre class="signature"><a class="anchor" href="#captured.output" aria-label="Link to output">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> output</code></pre>
+<div class="doc">
+<p>Everything the program wrote to its standard output.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="captured.captured">
+<pre class="signature"><a class="anchor" href="#captured.captured" aria-label="Link to captured">#</a><code><span class="kw">public</span> <span class="type">captured</span>( <a class="prim" href="prelude.html#i32">i32</a> code, <span class="kw">move</span> <a class="type" href="string.html#string">string</a> output )</code></pre>
 </div>
 </section>
 <section class="entry">
@@ -448,6 +502,16 @@ Input this program has already buffered is not seen by the child.</p>
 </div>
 </div>
 </section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">capture</span></h2>
+<div class="group" id="capture">
+<pre class="signature"><a class="anchor" href="#capture" aria-label="Link to capture">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#captured">captured</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">capture</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> program, <span class="kw">const</span> <span class="kw">ref</span> T[] arguments ) <span class="kw">where</span> T : <a class="type" href="prelude.html#textual">textual</a></code></pre>
+<div class="doc">
+<p>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code and its standard output.
+Its standard error is still this program's.</p>
+</div>
+</div>
+</section>
 <h2 class="divider">Environment</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">environment</span></h2>
@@ -456,6 +520,24 @@ Input this program has already buffered is not seen by the child.</p>
 <div class="doc">
 <p>The value of the environment variable <code>name</code>, or <code>none</code> when it is not set; a name that is
 empty or holds <code>=</code> never is.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">program_path</span></h2>
+<div class="group" id="program_path">
+<pre class="signature"><a class="anchor" href="#program_path" aria-label="Link to program_path">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#path">path</a>, <a class="type" href="#os_error">os_error</a>&gt; <span class="fn">program_path</span>()</code></pre>
+<div class="doc">
+<p>The path of this program's executable, with every symbolic link resolved.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">current_directory</span></h2>
+<div class="group" id="current_directory">
+<pre class="signature"><a class="anchor" href="#current_directory" aria-label="Link to current_directory">#</a><code><a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#path">path</a>, <a class="type" href="#os_error">os_error</a>&gt; <span class="fn">current_directory</span>()</code></pre>
+<div class="doc">
+<p>The current working directory, as an absolute path.</p>
 </div>
 </div>
 </section>

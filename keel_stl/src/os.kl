@@ -24,9 +24,11 @@ private extern i32 kl_rt_delete_file( const ref u8[] path );
 private extern i32 kl_rt_directory_open( const ref u8[] path, u64* handle );
 private extern i32 kl_rt_directory_next( u64 handle, u8[*]* name, u64* size );
 private extern void kl_rt_directory_close( u64 handle );
-private extern i32 kl_rt_process_start( const ref u8[] packed, u64 count, i64* pid );
+private extern i32 kl_rt_process_start( const ref u8[] packed, u64 count, i64* pid, i32* output );
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 private extern i32 kl_rt_environment( const ref u8[] name, u8[*]* value, u64* size );
+private extern i32 kl_rt_program_path( ref u8[] buffer, u64* length );
+private extern i32 kl_rt_current_directory( ref u8[] buffer, u64* length );
 
 /// --- Errors ---
 
@@ -323,6 +325,7 @@ enum file_mode
 
 // The bytes a file reads at a time.
 private const u64 FILE_BUFFER = 65536;
+private const u64 PATH_BUFFER = 4096;
 
 /// An open file, closed when it is dropped.
 ///
@@ -624,6 +627,27 @@ result<void, file_error> create_directory( const ref textual name )
     return result::ok();
 }
 
+/// Creates the directory `name` and each missing parent. Levels already there are left as they
+/// are, so a directory that exists is success.
+result<void, file_error> create_directories( const ref textual name )
+{
+    path p = path::of( name );
+    list<path> parents = list<path>();
+
+    while( p.as_text().size > 0 && !exists( p ) )
+    {
+        parents.push( move p );
+        p = parents.last().parent();
+    }
+
+    for( u64 i = parents.size(); i > 0; i-- )
+    {
+        try create_directory( parents[i - 1] );
+    }
+
+    return result::ok();
+}
+
 /// Deletes the empty directory `name`. One still holding something is `file_error::not_empty`,
 /// and a file is `file_error::not_directory`.
 result<void, file_error> delete_directory( const ref textual name )
@@ -702,15 +726,24 @@ result<list<path>, file_error> list_directory( const ref textual name )
 /// until it does.
 class process
 {
-    private process( i64 pid )
+    private process( i64 pid, i32 output )
     {
         pid_ = pid;
         waited_ = false;
         status_ = 0;
+        output_ = output;
     }
 
     ~process()
     {
+        if( output_ != -1 )
+        {
+            unsafe
+            {
+                kl_rt_file_close( output_ );
+            }
+        }
+
         if( !waited_ )
         {
             i32 code = 0;
@@ -729,30 +762,15 @@ class process
         const ref textual program, const ref T[] arguments
     ) where T : textual
     {
-        // The program then each argument, each ending in a 0 byte.
-        string packed = string( program );
-        packed.push( '\0' );
+        return launch( program, arguments, false );
+    }
 
-        for( u64 i : 0..arguments.size )
-        {
-            packed.append( arguments[i].as_text() );
-            packed.push( '\0' );
-        }
-
-        i64 pid = 0;
-        i32 status = 0;
-
-        unsafe
-        {
-            status = kl_rt_process_start( packed.as_text(), arguments.size + 1, &pid );
-        }
-
-        if( status != 0 )
-        {
-            return result::err( file_error_of( status ) );
-        }
-
-        return result::ok( process( pid ) );
+    /// Starts `program` as `start` does, but its standard output is kept for `read_output`.
+    public static result<process, file_error> start_captured<T>( 
+        const ref textual program, const ref T[] arguments 
+    ) where T : textual
+    {
+        return launch( program, arguments, true );
     }
 
     /// Waits for the program to end and answers its exit code, or 128 and the signal's number when
@@ -783,9 +801,97 @@ class process
         return result::ok( code );
     }
 
+    /// Reads the program's standard output to its end, then closes it. Empty for a process made by
+    /// `start`, or asked a second time.
+    public result<string, file_error> read_output()
+    {
+        if( output_ == -1 )
+        {
+            return result::ok( string() );
+        }
+
+        u8[*] buffer;
+        string text = string();
+        unsafe
+        {
+            buffer = alloc<u8>( FILE_BUFFER );
+            while( true )
+            {
+                u64 count = 0;
+                i32 status = kl_rt_file_read( output_, ref buffer[0..FILE_BUFFER], &count );
+
+                if( status != 0 )
+                {
+                    kl_rt_file_close( output_ );
+                    output_ = -1;
+                    free( buffer );
+                    return result::err( file_error_of( status ) );
+                }
+
+                if( count == 0 )
+                {
+                    break;
+                }
+
+                text.append( buffer[0..count] );
+            }
+
+            kl_rt_file_close( output_ );
+            free( buffer );
+        }
+        output_ = -1;
+        return result::ok( move text );
+    }
+
+    private static result<process, file_error> launch<T>( const ref textual program, const ref T[] arguments, bool capture ) 
+        where T : textual
+    {
+        // The program then each argument, each ending in a 0 byte.
+        string packed = string( program );
+        packed.push( '\0' );
+
+        for( u64 i : 0..arguments.size )
+        {
+            packed.append( arguments[i].as_text() );
+            packed.push( '\0' );
+        }
+
+        i64 pid = 0;
+        i32 status = 0;
+        i32 output = -1;
+
+        unsafe
+        {
+            status = kl_rt_process_start( packed.as_text(), arguments.size + 1, &pid, capture ? &output : nullptr );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok( process( pid, output ) );
+    }
+
     private i64 pid_;
     private bool waited_;
     private i32 status_; // the exit code, once `waited_`
+    private i32 output_; // the read end of the child's stdout, -1 when shared or read
+};
+
+/// A finished program's exit code and what it wrote to its standard output, as `capture` answers.
+class captured
+{
+    public captured( i32 code, move string output )
+    {
+        this.code = code;
+        this.output = move output;
+    }
+
+    /// The exit code, as `process::wait` answers it.
+    public i32 code;
+    /// Everything the program wrote to its standard output.
+    public string output;
 };
 
 /// Runs `program` with `arguments` to its end and answers its exit code, as `process::wait` does.
@@ -799,6 +905,24 @@ result<i32, file_error> run<T>( const ref textual program, const ref T[] argumen
     {
         case result::ok( code ):
             return result::ok( code );
+        case result::err( e ):
+            return result::err( file_error::os( e ) );
+    }
+}
+
+/// Runs `program` with `arguments` to its end and answers its exit code and its standard output.
+/// Its standard error is still this program's.
+result<captured, file_error> capture<T>( const ref textual program, const ref T[] arguments ) 
+    where T : textual
+{
+    process p = try process::start_captured( program, arguments );
+
+    string output = try p.read_output();
+    
+    switch( p.wait() )
+    {
+        case result::ok( code ):
+            return result::ok( captured( code, move output ) );
         case result::err( e ):
             return result::err( file_error::os( e ) );
     }
@@ -831,4 +955,80 @@ optional<string> environment( const ref textual name )
     }
 
     return optional::some( move value );
+}
+
+/// The path of this program's executable, with every symbolic link resolved.
+result<path, os_error> program_path()
+{
+    u64 size = PATH_BUFFER;
+    u8[*] bytes = nullptr;
+    i32 status = 0;
+    unsafe
+    {
+        bytes = alloc<u8>( size );
+        status = kl_rt_program_path( ref bytes[0..size], &size );
+
+        while( status == 34 ) // ERANGE
+        {
+            free( bytes );
+            size *= 2;
+            bytes = alloc<u8>( size );
+            status = kl_rt_program_path( ref bytes[0..size], &size );
+        }
+    }
+
+    if( status != 0 )
+    {
+        unsafe
+        {
+            free( bytes );
+        }
+        return result::err( os_error_of( status ) );
+    }
+
+    string text = string::with_capacity( size );
+    unsafe
+    {
+        text.append( bytes[0..size] );
+        free( bytes );
+    }
+    return result::ok( path::of( text ) );
+}
+
+/// The current working directory, as an absolute path.
+result<path, os_error> current_directory()
+{
+    u64 size = PATH_BUFFER;
+    u8[*] bytes = nullptr;
+    i32 status = 0;
+    unsafe
+    {
+        bytes = alloc<u8>( size );
+        status = kl_rt_current_directory( ref bytes[0..size], &size );
+
+        while( status == 34 ) // ERANGE
+        {
+            free( bytes );
+            size *= 2;
+            bytes = alloc<u8>( size );
+            status = kl_rt_current_directory( ref bytes[0..size], &size );
+        }
+    }
+
+    if( status != 0 )
+    {
+        unsafe
+        {
+            free( bytes );
+        }
+        return result::err( os_error_of( status ) );
+    }
+
+    string text = string::with_capacity( size );
+    unsafe
+    {
+        text.append( bytes[0..size] );
+        free( bytes );
+    }
+    return result::ok( path::of( text ) );
 }

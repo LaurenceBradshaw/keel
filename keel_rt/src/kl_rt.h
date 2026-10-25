@@ -47,11 +47,13 @@ int32_t        kl_rt_delete_file( const uint8_t* path, uint64_t size );
 int32_t        kl_rt_directory_open( const uint8_t* path, uint64_t size, uint64_t* handle );
 int32_t        kl_rt_directory_next( uint64_t handle, uint8_t** name, uint64_t* size );
 void           kl_rt_directory_close( uint64_t handle );
-int32_t        kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid );
+int32_t        kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output );
 int32_t        kl_rt_process_wait( int64_t pid, int32_t* status );
 int32_t        kl_rt_fork( int64_t* pid );
 int32_t        kl_rt_clock( int32_t which, int64_t* nanoseconds );
 int32_t        kl_rt_clock_resolution( int32_t which, int64_t* nanoseconds );
 int32_t        kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, uint64_t* value_size );
+int32_t        kl_rt_program_path( uint8_t* buffer, uint64_t size, uint64_t* length );
+int32_t        kl_rt_current_directory( uint8_t* buffer, uint64_t size, uint64_t* length );
 
 #endif // KL_RT_H

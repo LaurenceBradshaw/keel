@@ -2,6 +2,7 @@
 import kl::test;
 import hash_control_tests;
 import map_tests;
+import os_tests;
 import ordered_map_tests;
 import ordered_set_tests;
 import pair_tests;

@@ -476,7 +476,29 @@ void kl_rt_directory_close( uint64_t handle )
     closedir( dir );
 }
 
-int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid )
+// Both ends close-on-exec, so no other child inherits them; on failure nothing is left open.
+static int pipe_cloexec( int ends[2] )
+{
+    if( pipe( ends ) == -1 )
+    {
+        return errno;
+    }
+
+    for( int i = 0; i < 2; ++i )
+    {
+        if( fcntl( ends[i], F_SETFD, FD_CLOEXEC ) == -1 )
+        {
+            int saved = errno;
+            close( ends[0] );
+            close( ends[1] );
+            return saved;
+        }
+    }
+    return 0;
+}
+
+// When `output` is not null, the child's stdout is a pipe and `*output` its read end.
+int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output )
 {
     if( count == 0 )
     {
@@ -511,26 +533,22 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
     }
     argv[count] = NULL;
 
-    // Close-on-exec, so it closes unread when the program starts, and carries `errno` back when it
-    // cannot.
+    // Closes unread when the program starts, and carries `errno` back when it cannot.
     int report[2];
-    if( pipe( report ) == -1 )
+    int error = pipe_cloexec( report );
+    if( error != 0 )
     {
-        int saved = errno;
         free( argv );
-        return saved;
+        return error;
     }
 
-    for( uint64_t i = 0; i < 2; ++i )
+    int out[2] = { -1, -1 };
+    if( output != NULL && ( error = pipe_cloexec( out ) ) != 0 )
     {
-        if( fcntl( report[i], F_SETFD, FD_CLOEXEC ) == -1 )
-        {
-            int saved = errno;
-            close( report[0] );
-            close( report[1] );
-            free( argv );
-            return saved;
-        }
+        close( report[0] );
+        close( report[1] );
+        free( argv );
+        return error;
     }
 
     // So what the parent printed comes before what the child prints.
@@ -543,8 +561,12 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
     {
         close( report[0] );
 
-        // Returns only on failure; `_exit` so the child never flushes or runs the parent's handlers.
-        execvp( argv[0], argv );
+        // dup2's copy is not close-on-exec, so the program keeps it. execvp returns only on failure;
+        // `_exit` so the child never flushes or runs the parent's handlers.
+        if( output == NULL || dup2( out[1], STDOUT_FILENO ) != -1 )
+        {
+            execvp( argv[0], argv );
+        }
 
         int     saved  = errno;
         ssize_t result = write( report[1], &saved, sizeof saved );
@@ -552,11 +574,15 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
         _exit( 127 );
     }
 
-    int error = child == -1 ? errno : 0;
+    error = child == -1 ? errno : 0;
     free( argv );
 
     // Closed before reading, or the read would wait on this process's own write end.
     close( report[1] );
+    if( out[1] != -1 )
+    {
+        close( out[1] );
+    }
 
     if( child != -1 )
     {
@@ -577,10 +603,19 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
             // The pipe closed unread at the exec, so the program is running.
             error = 0;
             *pid  = child;
+            if( output != NULL )
+            {
+                *output = out[0];
+                out[0]  = -1;
+            }
         }
     }
 
     close( report[0] );
+    if( out[0] != -1 )
+    {
+        close( out[0] );
+    }
     return error;
 }
 
@@ -646,6 +681,35 @@ int32_t kl_rt_clock_resolution( int32_t which, int64_t* nanoseconds )
     }
 
     *nanoseconds = (int64_t) ts.tv_sec * 1000000000 + ts.tv_nsec;
+    return 0;
+}
+
+// readlink does not say how long the path is, so a full buffer is ERANGE.
+int32_t kl_rt_program_path( uint8_t* buffer, uint64_t size, uint64_t* length )
+{
+    ssize_t got = readlink( "/proc/self/exe", (char*) buffer, size );
+    if( got == -1 )
+    {
+        return errno;
+    }
+    if( (uint64_t) got == size )
+    {
+        return ERANGE;
+    }
+
+    *length = (uint64_t) got;
+    return 0;
+}
+
+// getcwd reports ERANGE itself, and needs room for its 0 byte.
+int32_t kl_rt_current_directory( uint8_t* buffer, uint64_t size, uint64_t* length )
+{
+    if( getcwd( (char*) buffer, size ) == NULL )
+    {
+        return errno;
+    }
+
+    *length = strlen( (const char*) buffer );
     return 0;
 }
 

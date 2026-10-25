@@ -345,30 +345,76 @@ static void process_round_trip( void )
     int32_t status = -1;
 
     printf( "before|" );
-    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid ) );
+    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid, NULL ) );
     printf( "%d %d ", kl_rt_process_wait( pid, &status ), status );
 
-    kl_rt_process_start( PACKED( "sh\0-c\0exit 3\0" ), 3, &pid );
+    kl_rt_process_start( PACKED( "sh\0-c\0exit 3\0" ), 3, &pid, NULL );
     kl_rt_process_wait( pid, &status );
     printf( "%d ", status );
 
-    kl_rt_process_start( PACKED( "sh\0-c\0kill -9 $$\0" ), 3, &pid );
+    kl_rt_process_start( PACKED( "sh\0-c\0kill -9 $$\0" ), 3, &pid, NULL );
     kl_rt_process_wait( pid, &status );
     printf( "%d ", status );
 
     pid = 7;
-    printf( "%d %d ", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid ) == ENOENT, (int) pid );
+    printf( "%d %d ", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, NULL ) == ENOENT, (int) pid );
 
     // Miscounted, unterminated, an argument holding a 0 byte, and nothing at all.
-    printf( "%d ", kl_rt_process_start( PACKED( "true\0" ), 2, &pid ) == EINVAL );
-    printf( "%d ", kl_rt_process_start( PACKED( "true" ), 1, &pid ) == EINVAL );
-    printf( "%d ", kl_rt_process_start( PACKED( "true\0a\0b\0" ), 2, &pid ) == EINVAL );
-    printf( "%d ", kl_rt_process_start( PACKED( "" ), 0, &pid ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "true\0" ), 2, &pid, NULL ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "true" ), 1, &pid, NULL ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "true\0a\0b\0" ), 2, &pid, NULL ) == EINVAL );
+    printf( "%d ", kl_rt_process_start( PACKED( "" ), 0, &pid, NULL ) == EINVAL );
 
     // Every child was reaped, the failed one included.
     printf( "%d|after", waitpid( -1, NULL, WNOHANG ) == -1 && errno == ECHILD );
 
 #undef PACKED
+}
+
+// A child's stdout read back through the fd it answers, and the read end left open for the caller
+// alone.
+static void process_output( void )
+{
+#define PACKED( text ) (const uint8_t*) text, sizeof text - 1
+
+    int64_t pid    = 0;
+    int32_t status = -1;
+    int32_t fd     = -1;
+    char    got[16];
+
+    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid, &fd ) );
+    read_all( fd, got, sizeof got );
+    printf( "%s %d %d ", got, kl_rt_process_wait( pid, &status ), status );
+    printf( "%d ", close( fd ) );
+
+    // A failed start leaves no fd behind.
+    fd = -1;
+    printf( "%d %d", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, &fd ) == ENOENT, fd );
+
+#undef PACKED
+}
+
+// The path ends in this binary's name, and a buffer it fills is refused.
+static void program_path( void )
+{
+    uint8_t  buffer[4096];
+    uint64_t length = 0;
+    printf( "%d ", kl_rt_program_path( buffer, sizeof buffer, &length ) );
+
+    const char name[] = "/keel_rt_tests";
+    printf( "%d ", length >= sizeof name - 1 && memcmp( buffer + length - ( sizeof name - 1 ), name, sizeof name - 1 ) == 0 );
+    printf( "%d", kl_rt_program_path( buffer, 4, &length ) == ERANGE );
+}
+
+// The directory matches getcwd's, and a buffer too small is refused.
+static void current_directory( void )
+{
+    uint8_t  buffer[4096];
+    uint64_t length = 0;
+    char     want[4096];
+    printf( "%d ", kl_rt_current_directory( buffer, sizeof buffer, &length ) );
+    printf( "%d ", getcwd( want, sizeof want ) != NULL && length == strlen( want ) && memcmp( buffer, want, length ) == 0 );
+    printf( "%d", kl_rt_current_directory( buffer, 1, &length ) == ERANGE );
 }
 
 // Each clock reads and has a resolution, and a clock past the table is refused.
@@ -505,6 +551,18 @@ int main( void )
     check( "process_round_trip", "stdout", r.out, "before|child0 0 0 3 137 1 7 1 1 1 1 1|after" );
     check_exit( "process_round_trip", &r, false );
 
+    r = run( process_output );
+    check( "process_output", "stdout", r.out, "0 child 0 0 0 1 -1" );
+    check_exit( "process_output", &r, false );
+
+    r = run( program_path );
+    check( "program_path", "stdout", r.out, "0 1 1" );
+    check_exit( "program_path", &r, false );
+
+    r = run( current_directory );
+    check( "current_directory", "stdout", r.out, "0 1 1" );
+    check_exit( "current_directory", &r, false );
+
     r = run( clocks );
     check( "clocks", "stdout", r.out, "11 11 11 1 1" );
     check_exit( "clocks", &r, false );
@@ -523,6 +581,6 @@ int main( void )
         return 1;
     }
 
-    printf( "17 runtime tests passed\n" );
+    printf( "20 runtime tests passed\n" );
     return 0;
 }

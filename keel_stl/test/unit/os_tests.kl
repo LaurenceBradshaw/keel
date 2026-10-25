@@ -1,0 +1,148 @@
+// `kl::os` capturing a child's output, the program's path, the current directory and creating
+// several directory levels. The runner runs this program as `./program` in a scratch directory,
+// with stdin from /dev/null.
+import kl::os;
+import kl::string;
+import kl::test;
+
+// Whether `r` succeeded.
+private bool succeeded( result<void, kl::file_error> r )
+{
+    switch( r )
+    {
+        case result::ok():
+            return true;
+        case result::err( e ):
+            return false;
+    }
+}
+
+private void capture_answers_code_and_output( ref kl::test_context c )
+{
+    str[2] arguments = [ "-c", "printf child; exit 3" ];
+    switch( kl::capture( "sh", arguments ) )
+    {
+        case result::ok( r ):
+            c.check( r.code == 3 );
+            c.check_eq( r.output, "child" );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// More than a pipe holds, so a wait before the read would never return.
+private void capture_reads_before_waiting( ref kl::test_context c )
+{
+    str[2] arguments = [ "-c", "head -c 100000 /dev/zero" ];
+    switch( kl::capture( "sh", arguments ) )
+    {
+        case result::ok( r ):
+            c.check( r.code == 0 );
+            c.check( r.output.size() == 100000 );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// Dropped unread, the pipe closes before the wait, so the child ends on SIGPIPE.
+private void captured_process_dropped_unread( ref kl::test_context c )
+{
+    str[2] arguments = [ "-c", "head -c 100000 /dev/zero" ];
+    switch( move kl::process::start_captured( "sh", arguments ) )
+    {
+        case result::ok( p ):
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// A process sharing stdout has no output to read, and dropping it leaves this program's stdin open.
+private void started_process_shares_streams( ref kl::test_context c )
+{
+    str[2] quiet = [ "-c", "true" ];
+    switch( move kl::process::start( "sh", quiet ) )
+    {
+        case result::ok( p ):
+            switch( p.read_output() )
+            {
+                case result::ok( text ):
+                    c.check_eq( text, "" );
+                    break;
+                case result::err( e ):
+                    c.check( false );
+                    break;
+            }
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+
+    c.check( kl::exists( "/proc/self/fd/0" ) );
+}
+
+private void program_path_names_this_program( ref kl::test_context c )
+{
+    switch( kl::program_path() )
+    {
+        case result::ok( p ):
+            c.check_eq( p.file_name(), "program" );
+            c.check( kl::is_file( p ) );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+private void current_directory_holds_this_program( ref kl::test_context c )
+{
+    switch( kl::current_directory() )
+    {
+        case result::ok( d ):
+            c.check( d.as_text()[0] == '/' );
+            c.check( kl::is_file( d / "program" ) );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// Three levels, the same call again, one level that exists, and a file in the way.
+private void create_directories_makes_each_level( ref kl::test_context c )
+{
+    c.require( succeeded( kl::create_directories( "made/a/b" ) ) );
+    c.check( kl::is_directory( "made/a/b" ) );
+    c.check( succeeded( kl::create_directories( "made/a/b" ) ) );
+    c.check( succeeded( kl::create_directories( "made" ) ) );
+
+    c.require( succeeded( kl::write_file( "made/f", "x" ) ) );
+    switch( kl::create_directories( "made/f/g" ) )
+    {
+        case result::ok():
+            c.check( false );
+            break;
+        case result::err( e ):
+            switch( e )
+            {
+                case kl::file_error::not_directory:
+                    break;
+                default:
+                    c.check( false );
+                    break;
+            }
+            break;
+    }
+
+    c.check( succeeded( kl::delete_file( "made/f" ) ) );
+    c.check( succeeded( kl::delete_directory( "made/a/b" ) ) );
+    c.check( succeeded( kl::delete_directory( "made/a" ) ) );
+    c.check( succeeded( kl::delete_directory( "made" ) ) );
+}

@@ -1347,6 +1347,8 @@ major), which waits for the lambda decision (§12).
 
 ### Soundness and ownership
 
+- **`==` on an enum with payloads passes the checker and fails in C**: `e == kl::file_error::not_directory`
+  emits `==` between two structs. Either refuse it (the enum is not `equatable`) or lower it.
 - **`out` cannot take an owning type.** Assigning one destroys nothing, so it would leak what the
   caller held; the fix is a conditional drop of the argument's place before the call, which drop
   flags already know how to emit. Until then the diagnostic says so. When it lands, D54's one-call
@@ -1457,6 +1459,8 @@ major), which waits for the lambda decision (§12).
   decide whether `hashable`'s doc states the rule. The table's own API is sound today, since no
   method hands out a key, and **an iteration API must keep it so**: keys as `const`, only values
   mutable.
+- **`kl::list::first` and `last` return `T*` from a `const` method**, so a `const` list hands out
+  a pointer that writes into it. They should return a `const` pointer.
 - **A `ctz` intrinsic.** `hash_control::lowest` finds a group's first match in five word
   operations; one instruction would do.
 - **`kl_rt_hash_key` is not thread-safe**: its key is drawn once, unguarded, and counted up. It
