@@ -4,6 +4,7 @@
 import shapes::kinds;
 import left::marks;
 import right::marks;
+import right::blocks;
 
 struct celsius
 {

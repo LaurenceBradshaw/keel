@@ -43,6 +43,14 @@ std::string read_package_info(
     return doc_comment( sm.file( *file ).text, "//!" );
 }
 
+std::string module_name( const Interner& interner, File_id file, const Module_graph& modules, const Source_manager& sm )
+{
+    const Symbol_id   package = modules.package_of( file );
+    const std::string name    = std::filesystem::path( sm.file( file ).path ).stem().string();
+
+    return qualified( interner, package, name );
+}
+
 } // namespace
 
 Program load_program(
@@ -164,6 +172,35 @@ Program load_program(
                 decls.push_back( decl );
             }
         }
+    }
+
+    std::vector<std::pair<File_id, File_id>> closing_imports = modules.closing_imports( input );
+    for( const auto& [from, to] : closing_imports )
+    {
+        const auto name = [&]( File_id file ) { return module_name( interner, file, modules, sm ); };
+
+        if( from == to )
+        {
+            diags.error(
+                modules.import_span( from, to ), fmt::format( "`{}` imports itself", name( from ) ), "remove this import"
+            );
+            continue;
+        }
+
+        // `to` imports ... imports `from`, whose import of `to` closes the loop.
+        const std::vector<File_id> chain = modules.cycle( from, to );
+
+        std::string loop = fmt::format( "`{}` imports `{}`", name( chain[0] ), name( chain[1] ) );
+        for( std::size_t i = 2; i < chain.size(); ++i )
+        {
+            loop += fmt::format( ", which imports `{}`", name( chain[i] ) );
+        }
+
+        diags.error(
+            modules.import_span( from, to ),
+            fmt::format( "importing `{}` closes a cycle: {}", name( to ), loop ),
+            "move what both modules need into a third, which each of them imports"
+        );
     }
 
     const Node_id root =
@@ -367,7 +404,7 @@ TEST_CASE( "loader_loads_a_program_from_its_imports", "[parse][loader]" )
     {
         const Loaded p( {
             { "main.kl", "import a;\ni32 main() { return fa(); }\n" },
-            { "a.kl", "import b;\nimport main;\ni32 fa() { return fb(); }\n" },
+            { "a.kl", "import b;\ni32 fa() { return fb(); }\n" },
             { "b.kl", "i32 fb() { return 1; }\n" },
         } );
 
@@ -379,14 +416,28 @@ TEST_CASE( "loader_loads_a_program_from_its_imports", "[parse][loader]" )
         REQUIRE_FALSE( p.sees( "main.kl", "b.kl" ) );
 
         REQUIRE( p.sees( "a.kl", "b.kl" ) );
-        REQUIRE( p.sees( "a.kl", "main.kl" ) );
+        REQUIRE_FALSE( p.sees( "a.kl", "main.kl" ) );
 
         REQUIRE( p.sees( "b.kl", "b.kl" ) );
         REQUIRE_FALSE( p.sees( "b.kl", "a.kl" ) );
     }
 
-    // A diamond reaches `c` twice, and `c` importing `main` closes a cycle. Each file is read once.
+    // A diamond reaches `c` twice. Each file is read once.
     SECTION( "a module is loaded once" )
+    {
+        const Loaded p( {
+            { "main.kl", "import a;\nimport b;\ni32 main() { return fa() + fb(); }\n" },
+            { "a.kl", "import c;\ni32 fa() { return fc(); }\n" },
+            { "b.kl", "import c;\ni32 fb() { return fc(); }\n" },
+            { "c.kl", "i32 fc() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "fa", "fb", "fc", "main" } );
+    }
+
+    SECTION( "an import that closes a cycle is refused" )
     {
         const Loaded p( {
             { "main.kl", "import a;\nimport b;\ni32 main() { return fa() + fb(); }\n" },
@@ -396,8 +447,24 @@ TEST_CASE( "loader_loads_a_program_from_its_imports", "[parse][loader]" )
         } );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 0 );
-        REQUIRE( p.functions() == std::vector<std::string_view> { "fa", "fb", "fc", "main" } );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "importing `main` closes a cycle: `main` imports `a`, which imports `c`" ) != std::string::npos
+        );
+        REQUIRE( p.rendered().find( "c.kl:1:1" ) != std::string::npos );
+    }
+
+    SECTION( "a module that imports itself is refused" )
+    {
+        const Loaded p( {
+            { "main.kl", "import a;\ni32 main() { return fa(); }\n" },
+            { "a.kl", "import a;\ni32 fa() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`a` imports itself" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a.kl:1:1" ) != std::string::npos );
     }
 
     SECTION( "a missing module is reported at its import" )
@@ -705,6 +772,37 @@ TEST_CASE( "module_graph_orders_each_file_after_its_imports", "[parse][modules]"
         graph.add( b, main );
         REQUIRE( graph.dependencies_first( main ) == std::vector<File_id> { prelude, b, a, main } );
         REQUIRE( graph.dependencies_first( a ) == std::vector<File_id> { prelude, main, b, a } );
+    }
+}
+
+TEST_CASE( "module_graph_finds_the_imports_that_close_a_cycle", "[parse][modules]" )
+{
+    const File_id main { 0 }, a { 1 }, b { 2 }, prelude { 3 };
+
+    Module_graph graph;
+    graph.set_prelude( prelude, Symbol_id {} );
+    graph.add( main, a );
+    graph.add( main, b );
+    graph.add( a, b );
+
+    using Edges = std::vector<std::pair<File_id, File_id>>;
+
+    SECTION( "a diamond closes none" )
+    {
+        REQUIRE( graph.closing_imports( main ).empty() );
+    }
+
+    SECTION( "an import back to a file the walk is inside closes one" )
+    {
+        graph.add( b, main );
+        REQUIRE( graph.closing_imports( main ) == Edges { { b, main } } );
+        REQUIRE( graph.cycle( b, main ) == std::vector<File_id> { main, a, b } );
+    }
+
+    SECTION( "an import of itself closes one" )
+    {
+        graph.add( a, a );
+        REQUIRE( graph.closing_imports( main ) == Edges { { a, a } } );
     }
 }
 

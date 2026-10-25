@@ -3,12 +3,6 @@
 import shape;
 import tally;
 
-// Called from tally.kl, which imports this file back.
-i32 twice( i32 v )
-{
-    return v * 2;
-}
-
 i32 main()
 {
     Point p = Point { 3, 4 };

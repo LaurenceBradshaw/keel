@@ -1,0 +1,9 @@
+import left::marks;
+import marks;
+import shapes::kinds;
+
+// `mark` is this package's, so the block may be written here.
+implements shapes::both<left::mark, mark> for i32
+{
+    void put( left::mark a, mark b ) { }
+};

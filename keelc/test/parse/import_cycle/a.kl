@@ -1,0 +1,6 @@
+import main;
+
+i32 fa()
+{
+    return 1;
+}

@@ -79,7 +79,7 @@ public:
     }
 
     // Every file `input` reaches, each after the files it imports, the prelude first since every file
-    // sees it. A cycle is cut where the walk meets a file it is still inside.
+    // sees it. A cycle, already refused, is cut where the walk meets a file it is still inside.
     std::vector<File_id> dependencies_first( File_id input ) const
     {
         std::vector<File_id> order;
@@ -112,6 +112,76 @@ public:
 
         visit( visit, input );
         return order;
+    }
+
+    // Each import that closes a cycle, as (importer, imported): an edge back to a file the walk from
+    // `input` is still inside.
+    std::vector<std::pair<File_id, File_id>> closing_imports( File_id input ) const
+    {
+        std::vector<std::pair<File_id, File_id>> closing;
+        std::vector<File_id>                     inside;
+        std::vector<File_id>                     done;
+
+        const auto visit = [&]( auto&& self, File_id file ) -> void
+        {
+            inside.push_back( file );
+
+            if( file.v < edges_.size() )
+            {
+                for( const File_id next : edges_[file.v] )
+                {
+                    if( std::find( inside.begin(), inside.end(), next ) != inside.end() )
+                    {
+                        closing.emplace_back( file, next );
+                    }
+                    else if( std::find( done.begin(), done.end(), next ) == done.end() )
+                    {
+                        self( self, next );
+                    }
+                }
+            }
+
+            inside.pop_back();
+            done.push_back( file );
+        };
+
+        visit( visit, input );
+        return closing;
+    }
+
+    // The imports from `to` that lead back to `from`: `to` first, `from` last.
+    std::vector<File_id> cycle( File_id from, File_id to ) const
+    {
+        std::vector<File_id> path;
+        std::vector<File_id> seen;
+
+        const auto visit = [&]( auto&& self, File_id file ) -> bool
+        {
+            seen.push_back( file );
+            path.push_back( file );
+
+            if( file == from )
+            {
+                return true;
+            }
+
+            if( file.v < edges_.size() )
+            {
+                for( const File_id next : edges_[file.v] )
+                {
+                    if( std::find( seen.begin(), seen.end(), next ) == seen.end() && self( self, next ) )
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            path.pop_back();
+            return false;
+        };
+
+        visit( visit, to );
+        return path;
     }
 
     // Packages.

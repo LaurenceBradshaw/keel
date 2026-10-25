@@ -1,7 +1,10 @@
-// A global, and an import of main.kl back: a cycle, which still loads each file once.
-import main;
-
+// A global, and a function over it that main.kl calls.
 i32 count = 0;
+
+i32 twice( i32 v )
+{
+    return v * 2;
+}
 
 i32 bump( i32 by )
 {

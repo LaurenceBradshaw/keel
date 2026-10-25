@@ -1,13 +1,13 @@
 error: a block for `shapes::square` must be in the package that declares `shapes::square`, `sink<i32>` or one of its type arguments
-  --> sema/generic_interface_packages/main.kl:20:34
+  --> sema/generic_interface_packages/main.kl:21:34
    |
-20 | implements shapes::sink<i32> for shapes::square
+21 | implements shapes::sink<i32> for shapes::square
    |                                  ^^^^^^^^^^^^^^ two packages could otherwise each make `shapes::square` a `sink<i32>`
 
 error: `i32` already implements `both<left::mark, right::mark>`
   --> sema/generic_interface_packages/left/marks.kl:10:12
    |
 10 | implements shapes::both<mark, right::mark> for i32
-   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the block at sema/generic_interface_packages/right/marks.kl:10:1 implements it first
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the block at sema/generic_interface_packages/right/blocks.kl:6:1 implements it first
 
 2 errors generated

@@ -1,0 +1,7 @@
+// `b` imports `a`, which imports `main`: the import of `main` closes the cycle.
+import b;
+
+i32 main()
+{
+    return fb();
+}

@@ -1,0 +1,7 @@
+error: importing `main` closes a cycle: `main` imports `b`, which imports `a`
+ --> parse/import_cycle/a.kl:1:1
+  |
+1 | import main;
+  | ^^^^^^^^^^^^ move what both modules need into a third, which each of them imports
+
+1 error generated
