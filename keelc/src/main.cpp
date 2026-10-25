@@ -73,7 +73,7 @@ int main( int argc, char** argv )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
-        ( "runtime",         "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
+        ( "runtime",         "Link this runtime library instead of the one keelc carries", cxxopts::value<std::string>() )
         ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "print-prelude",   "Print the prelude every program sees, and exit" )
@@ -240,15 +240,13 @@ int main( int argc, char** argv )
         }
     }
 
-    // Asked only of a build that links, and before anything is written, so a missing runtime never reaches cc.
+    // --runtime is checked before anything is written, so a missing one never reaches cc; without
+    // it, the carried runtime is written beside the objects later.
     keel::Runtime runtime;
 
-    if( stop == Stop::Executable )
+    if( stop == Stop::Executable && args.count( "runtime" ) )
     {
-        const std::optional<std::string> flag =
-            args.count( "runtime" ) ? std::optional( args["runtime"].as<std::string>() ) : std::nullopt;
-
-        runtime = keel::find_runtime( flag, KEEL_INSTALLED_RUNTIME );
+        runtime = keel::find_runtime( args["runtime"].as<std::string>(), {} );
 
         if( !runtime.error.empty() )
         {
@@ -563,6 +561,17 @@ int main( int argc, char** argv )
     const keel::Temp_dir               object_dir;
     std::vector<std::filesystem::path> sources;
     std::vector<std::filesystem::path> objects;
+
+    if( runtime.path.empty() )
+    {
+        runtime = keel::find_runtime( std::nullopt, object_dir.path );
+
+        if( !runtime.error.empty() )
+        {
+            fmt::print( stderr, "keelc: {}\n", runtime.error );
+            return 1;
+        }
+    }
 
     for( const keel::File_id part : parts.order() )
     {

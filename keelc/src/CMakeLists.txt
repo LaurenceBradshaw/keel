@@ -13,17 +13,31 @@ file(READ prelude/prelude.kl KEEL_PRELUDE)
 configure_file(prelude/prelude.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp @ONLY)
 list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp)
 
-# The build id names which keelc wrote an object: SHA-256 over keelc's sources and the prelude.
-# Editing any of them re-runs the script, which rewrites build_id.cpp only when the id changes.
+# The build id names which keelc wrote an object: SHA-256 over keelc's sources, the prelude and the
+# runtime, since an object's C calls kl_rt. Editing any of them re-runs the script, which rewrites
+# build_id.cpp only when the id changes.
+set(keel_runtime_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../keel_rt/src)
 file(GLOB_RECURSE keel_inputs CONFIGURE_DEPENDS "*.h" "*.cpp" "*.kl" "*.in")
+file(GLOB keel_runtime_inputs CONFIGURE_DEPENDS "${keel_runtime_dir}/*.c" "${keel_runtime_dir}/*.h")
+list(APPEND keel_inputs ${keel_runtime_inputs})
 set(keel_build_id_script ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build_id.cmake)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp
-    COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -DRUNTIME_DIR=${keel_runtime_dir}
             -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp -P ${keel_build_id_script}
     DEPENDS ${keel_inputs} ${keel_build_id_script}
     COMMENT "Hashing keelc's sources for the build id")
 list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp)
+
+# keelc carries the runtime it was built with, so it links without --runtime.
+set(keel_embed_script ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/embed.cmake)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=$<TARGET_FILE:keel_rt> -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
+            -DNAME=k_runtime -P ${keel_embed_script}
+    DEPENDS keel_rt ${keel_embed_script}
+    COMMENT "Embedding the runtime")
+list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp)
 
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
@@ -31,9 +45,6 @@ find_package(cxxopts CONFIG REQUIRED)
 add_executable(keelc ${keel_sources})
 target_include_directories(keelc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(keelc PRIVATE keel_options fmt::fmt cxxopts::cxxopts)
-
-# Where an install puts the runtime; --runtime overrides it. keel_tests passes its own path instead.
-target_compile_definitions(keelc PRIVATE KEEL_INSTALLED_RUNTIME="${CMAKE_INSTALL_PREFIX}/lib/keel/libkeel_rt.a")
 
 # Unit tests live at the bottom of the .cpp file they exercise, inside `#ifdef ENABLE_UNIT_TESTS`.
 # The test binary is therefore the same source set compiled a second time with that define, rather

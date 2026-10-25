@@ -3,41 +3,32 @@
 
 #include "codegen_c/link.h"
 #include <fmt/format.h>
+#include <fstream>
 
 namespace keel
 {
 
-Runtime find_runtime( const std::optional<std::string>& flag, const std::filesystem::path& installed )
+Runtime find_runtime( const std::optional<std::string>& flag, const std::filesystem::path& folder )
 {
-    std::filesystem::path runtime_location = installed;
-    if( flag.has_value() )
+    if( !flag.has_value() )
     {
-        runtime_location = *flag;
+        const std::filesystem::path path = folder / "libkeel_rt.a";
+        std::ofstream               out( path, std::ios::binary );
+        out.write( reinterpret_cast<const char*>( k_runtime ), static_cast<std::streamsize>( k_runtime_size ) );
+        if( !out.flush() )
+        {
+            return Runtime { path, fmt::format( "could not write the runtime to '{}'", path.string() ) };
+        }
+        return Runtime { path, "" };
     }
 
-    // Verify that the runtime library exists at the specified location.
-    std::error_code ec;
-    if( !std::filesystem::exists( runtime_location, ec ) || !std::filesystem::is_regular_file( runtime_location, ec ) )
+    const std::filesystem::path path = *flag;
+    std::error_code             ec;
+    if( !std::filesystem::is_regular_file( path, ec ) )
     {
-        if( flag.has_value() )
-        {
-            return Runtime {
-                runtime_location, fmt::format( "--runtime names '{}', which is not a file", runtime_location.string() )
-            };
-        }
-        else
-        {
-            return Runtime {
-                runtime_location,
-                fmt::format(
-                    "no runtime library at '{}' - install one there, or name one with --runtime <path>",
-                    runtime_location.string()
-                )
-            };
-        }
+        return Runtime { path, fmt::format( "--runtime names '{}', which is not a file", path.string() ) };
     }
-
-    return Runtime { runtime_location, "" };
+    return Runtime { path, "" };
 }
 
 namespace
@@ -123,34 +114,27 @@ std::string without_warning_flags( std::string_view cflags )
 TEST_CASE( "find_runtime_prefers_the_flag", "[codegen_c][link]" )
 {
     const keel::Temp_dir        dir;
-    const std::filesystem::path named = dir.write( "named.a", "" );
-
-    SECTION( "over an installed runtime" )
-    {
-        const std::filesystem::path installed = dir.write( "installed.a", "" );
-        const keel::Runtime         runtime   = keel::find_runtime( named.string(), installed );
-
-        REQUIRE( runtime.error.empty() );
-        REQUIRE( runtime.path == named );
-    }
-
-    SECTION( "without consulting a missing installed one" )
-    {
-        const keel::Runtime runtime = keel::find_runtime( named.string(), dir.path / "absent.a" );
-
-        REQUIRE( runtime.error.empty() );
-        REQUIRE( runtime.path == named );
-    }
-}
-
-TEST_CASE( "find_runtime_falls_back_to_the_installed_one", "[codegen_c][link]" )
-{
-    const keel::Temp_dir        dir;
-    const std::filesystem::path installed = dir.write( "installed.a", "" );
-    const keel::Runtime         runtime   = keel::find_runtime( std::nullopt, installed );
+    const std::filesystem::path named   = dir.write( "named.a", "" );
+    const keel::Runtime         runtime = keel::find_runtime( named.string(), dir.path );
 
     REQUIRE( runtime.error.empty() );
-    REQUIRE( runtime.path == installed );
+    REQUIRE( runtime.path == named );
+    REQUIRE( !std::filesystem::exists( dir.path / "libkeel_rt.a" ) );
+}
+
+TEST_CASE( "find_runtime_writes_the_runtime_it_carries", "[codegen_c][link]" )
+{
+    const keel::Temp_dir dir;
+    const keel::Runtime  runtime = keel::find_runtime( std::nullopt, dir.path );
+
+    REQUIRE( runtime.error.empty() );
+    REQUIRE( runtime.path == dir.path / "libkeel_rt.a" );
+    REQUIRE( std::filesystem::file_size( runtime.path ) == keel::k_runtime_size );
+
+    std::ifstream in( runtime.path, std::ios::binary );
+    std::string   magic( 8, '\0' );
+    in.read( magic.data(), 8 );
+    REQUIRE( magic == "!<arch>\n" );
 }
 
 TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )
@@ -160,26 +144,23 @@ TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )
 
     SECTION( "a missing --runtime is named as the flag's" )
     {
-        const keel::Runtime runtime = keel::find_runtime( absent.string(), dir.path / "installed.a" );
+        const keel::Runtime runtime = keel::find_runtime( absent.string(), dir.path );
 
         REQUIRE( runtime.error == "--runtime names '" + absent.string() + "', which is not a file" );
     }
 
-    SECTION( "a missing installed runtime says where it looked and what to do" )
+    SECTION( "a directory is not a library" )
+    {
+        const keel::Runtime runtime = keel::find_runtime( dir.path.string(), dir.path );
+
+        REQUIRE( runtime.error == "--runtime names '" + dir.path.string() + "', which is not a file" );
+    }
+
+    SECTION( "the carried runtime needs a folder to land in" )
     {
         const keel::Runtime runtime = keel::find_runtime( std::nullopt, absent );
 
-        REQUIRE(
-            runtime.error ==
-            "no runtime library at '" + absent.string() + "' - install one there, or name one with --runtime <path>"
-        );
-    }
-
-    SECTION( "a directory is not a library" )
-    {
-        const keel::Runtime runtime = keel::find_runtime( dir.path.string(), absent );
-
-        REQUIRE( runtime.error == "--runtime names '" + dir.path.string() + "', which is not a file" );
+        REQUIRE( runtime.error == "could not write the runtime to '" + ( absent / "libkeel_rt.a" ).string() + "'" );
     }
 }
 

@@ -1,5 +1,6 @@
-# Writes build_id.cpp: SHA-256 over every source under SOURCE_DIR, by relative path and content, so
-# two checkouts of one commit agree. Run with cmake -DSOURCE_DIR=... -DOUTPUT=... -P build_id.cmake.
+# Writes build_id.cpp: SHA-256 over every source under SOURCE_DIR, then the runtime's under
+# RUNTIME_DIR, by relative path and content, so two checkouts of one commit agree. Run with
+# cmake -DSOURCE_DIR=... -DRUNTIME_DIR=... -DOUTPUT=... -P build_id.cmake.
 file(GLOB_RECURSE files RELATIVE "${SOURCE_DIR}"
      "${SOURCE_DIR}/*.h" "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.kl" "${SOURCE_DIR}/*.in")
 list(SORT files)
@@ -8,6 +9,13 @@ set(all "")
 foreach(f IN LISTS files)
     file(SHA256 "${SOURCE_DIR}/${f}" h)
     string(APPEND all "${f} ${h}\n")
+endforeach()
+
+file(GLOB runtime RELATIVE "${RUNTIME_DIR}" "${RUNTIME_DIR}/*.c" "${RUNTIME_DIR}/*.h")
+list(SORT runtime)
+foreach(f IN LISTS runtime)
+    file(SHA256 "${RUNTIME_DIR}/${f}" h)
+    string(APPEND all "keel_rt/${f} ${h}\n")
 endforeach()
 
 string(SHA256 id "${all}")

@@ -376,7 +376,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `--print-prelude` | Print the prelude every program sees, and exit |
-| `--runtime <path>` | Link this runtime library instead of the installed one |
+| `--runtime <path>` | Link this runtime library instead of the one keelc carries |
 | `file.c` / `file.o` / `file.a` after the `.kl` | Compile or link the program's own C with it |
 | `-l <name>` / `-L <dir>` | Link a C library, or search a directory for one; may be repeated |
 | `--package name=<dir>` | Make a package importable as `name`; may be repeated |
