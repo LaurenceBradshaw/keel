@@ -493,7 +493,7 @@ Mangled_owner Spelling::owner( File_id file ) const
     {
         owner.package = interner.text( package );
     }
-    if( file != ast.span( ast.root() ).file && file != modules.prelude_file() )
+    if( !modules.is_program( file ) && file != modules.prelude_file() )
     {
         owner.module = std::filesystem::path( sm.file( file ).path ).stem().string();
     }

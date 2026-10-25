@@ -28,6 +28,7 @@
 #include "ir/print.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
+#include "object/object.h"
 #include "sema/declarations.h"
 #include "sema/names.h"
 
@@ -43,6 +44,7 @@ enum class Stop : keel::u8
     Check,
     Kir,
     C,
+    Object,
     Executable
 };
 } // namespace
@@ -58,6 +60,7 @@ int main( int argc, char** argv )
         ( "dump-ast",        "Print the parsed AST and stop" )
         ( "dump-kir",        "Print the lowered KIR and stop" )
         ( "emit-c",          "Print the generated C and stop" )
+        ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
         ( "diagnostics",     "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "names",           "With --diagnostics=json, also say what each name refers to" )
@@ -181,6 +184,7 @@ int main( int argc, char** argv )
         { "check", Stop::Check },
         { "dump-kir", Stop::Kir },
         { "emit-c", Stop::C },
+        { "object", Stop::Object },
     };
 
     for( const auto& [flag, mode] : modes )
@@ -327,18 +331,26 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const bool debug = args.count( "debug" ) > 0;
+    const bool debug           = args.count( "debug" ) > 0;
+    const bool overflow_checks = debug || args.count( "overflow-checks" ) > 0;
+
+    // A release object stops where its state is taken: the program that links it optimises it.
+    const bool        as_module = stop == Stop::Object;
+    const keel::Stage through   = as_module && !debug ? keel::Stage::Reported : keel::Stage::Elaborated;
 
     // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
     keel::Front_end front = keel::run_front_end(
         file_id.value(),
-        keel::Stage::Elaborated,
-        keel::Build { .asserts = debug, .overflow_checks = debug || args.count( "overflow-checks" ) > 0, .optimise = !debug },
+        through,
+        keel::Build {
+            .asserts = debug, .overflow_checks = overflow_checks, .optimise = !debug, .keep_checked = as_module && debug
+        },
         sm,
         interner,
         literals,
         diagnostics,
-        packages
+        packages,
+        as_module
     );
     const keel::Program&               prog      = front.program;
     const keel::Ast&                   ast       = prog.ast;
@@ -409,7 +421,7 @@ int main( int argc, char** argv )
     }
 
     const auto part_c = [&]( keel::File_id part )
-    { return keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, &parts, part ); };
+    { return keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, &parts, part ).c; };
 
     // What each module's object will compile, dependencies first.
     if( stop == Stop::C )
@@ -425,15 +437,57 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const std::filesystem::path executable = args.count( "output" )
-                                                 ? std::filesystem::path( args["output"].as<std::string>() )
-                                                 : std::filesystem::path( args["input"].as<std::string>() ).stem();
+    // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.
+    const char* const configured = std::getenv( "CC" );
+    const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
 
-    // Each part's .c is written beside the executable and kept: its #line directives point back at
-    // the .kl, so it is the thing to read when the output is wrong. Named after the input, so two
+    // $CFLAGS without its warnings, then $KEEL_C_WARNINGS as given: only keelc's tests ask the C
+    // compiler to judge the C.
+    const char* const extra  = std::getenv( "CFLAGS" );
+    std::string       cflags = extra != nullptr ? keel::without_warning_flags( extra ) : "";
+
+    const char* const c_warnings = std::getenv( "KEEL_C_WARNINGS" );
+    if( c_warnings != nullptr && *c_warnings != '\0' )
+    {
+        cflags += cflags.empty() ? "" : " ";
+        cflags += c_warnings;
+    }
+
+    std::filesystem::path output = std::filesystem::path( args["input"].as<std::string>() ).stem();
+    if( args.count( "output" ) )
+    {
+        output = args["output"].as<std::string>();
+    }
+    else if( stop == Stop::Object )
+    {
+        output += ".klo";
+    }
+
+    // Each part's .c is written beside the output and kept: its #line directives point back at the
+    // .kl, so it is the thing to read when the output is wrong. Named after the input, so two
     // programs built side by side do not share one.
-    const std::string    input_name = std::filesystem::path( args["input"].as<std::string>() ).filename().string();
-    const keel::Spelling spelling { ast, types, interner, prog.modules, sm };
+    const std::string input_name = std::filesystem::path( args["input"].as<std::string>() ).filename().string();
+
+    if( stop == Stop::Object )
+    {
+        const keel::Object_options object_options {
+            .out      = output,
+            .c        = output.parent_path() / ( input_name + ".c" ),
+            .debug    = debug,
+            .overflow = overflow_checks,
+            .compiler = compiler,
+            .cflags   = cflags,
+        };
+
+        if( const int status = keel::write_object( front, parts, literals, sm, interner, object_options ); status != 0 )
+        {
+            return status;
+        }
+        return finish();
+    }
+
+    const std::filesystem::path& executable = output;
+    const keel::Spelling         spelling { ast, types, interner, prog.modules, sm };
 
     const auto c_name = [&]( keel::File_id part )
     {
@@ -461,22 +515,6 @@ int main( int argc, char** argv )
         out << part_c( part );
         sources.push_back( path );
         objects.push_back( object_dir.path / std::filesystem::path( c_name( part ) ).replace_extension( ".o" ) );
-    }
-
-    // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.
-    const char* const configured = std::getenv( "CC" );
-    const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
-
-    // $CFLAGS without its warnings, then $KEEL_C_WARNINGS as given: only keelc's tests ask the C
-    // compiler to judge the C.
-    const char* const extra  = std::getenv( "CFLAGS" );
-    std::string       cflags = extra != nullptr ? keel::without_warning_flags( extra ) : "";
-
-    const char* const c_warnings = std::getenv( "KEEL_C_WARNINGS" );
-    if( c_warnings != nullptr && *c_warnings != '\0' )
-    {
-        cflags += cflags.empty() ? "" : " ";
-        cflags += c_warnings;
     }
 
     // Concurrently, so the wall time is about the largest part's.

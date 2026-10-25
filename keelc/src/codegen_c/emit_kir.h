@@ -16,9 +16,15 @@
 namespace keel
 {
 
+struct Emitted
+{
+    std::string              c;
+    std::vector<std::string> defined; // every symbol the C defines with external linkage, for an object's index
+};
+
 // `part`'s C, complete without any other part's; a null `parts` writes the whole compile as one.
 // Types is mutable only for its table, which a struct reached only through a field grows.
-std::string emit_c_from_kir(
+Emitted emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
     Types&                       types,

@@ -31,6 +31,7 @@ struct Compiled
     Diagnostics    diags;
     File_id        file;
     Ast            ast;
+    Module_graph   modules;
     Resolution     resolution;
     Types          types;
 
@@ -51,6 +52,7 @@ struct Compiled
         );
 
         ast        = std::move( front.program.ast );
+        modules    = std::move( front.program.modules );
         resolution = std::move( front.resolution );
         types      = std::move( front.types );
         all        = std::move( front.functions );

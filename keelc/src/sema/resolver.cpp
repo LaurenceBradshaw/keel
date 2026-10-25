@@ -2240,7 +2240,7 @@ public:
         input_ = *input;
 
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), prelude );
+        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, prelude );
         earlier_    = diags_.error_count();
         resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.modules );
     }

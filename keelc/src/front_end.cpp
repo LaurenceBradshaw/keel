@@ -31,11 +31,12 @@ Front_end run_front_end(
     Interner&                interner,
     Literal_pool&            literals,
     Diagnostics&             diags,
-    std::span<const Package> packages
+    std::span<const Package> packages,
+    bool                     as_module
 )
 {
     Front_end front;
-    front.program  = load_program( input, sm, interner, literals, diags, packages );
+    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module );
     const Ast& ast = front.program.ast;
 
     front.resolution = resolve( ast, sm, interner, diags, front.program.modules );

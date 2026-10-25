@@ -15,7 +15,7 @@ struct Archive_member
 {
     std::string              name;
     std::string              data;
-    std::vector<std::string> symbols; // what the member defines, for the index
+    std::vector<std::string> symbols {}; // what the member defines, for the index
 };
 
 // A System V `ar` archive, as GNU ld, gold and lld read it: the symbol index `/`, the long-name

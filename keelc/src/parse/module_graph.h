@@ -242,6 +242,17 @@ public:
         return prelude_;
     }
 
+    // The program's file, whose names take no module; none when the input is compiled as a module.
+    void set_program( File_id file )
+    {
+        program_ = file;
+    }
+
+    bool is_program( File_id file ) const
+    {
+        return program_.is_valid() && file == program_;
+    }
+
 private:
     static u64 edge( File_id from, File_id to )
     {
@@ -256,6 +267,7 @@ private:
     std::unordered_map<u32, u32>      file_to_package_;
     File_id                           prelude_;
     Symbol_id                         prelude_package_;
+    File_id                           program_;
 };
 
 // `name`, or `package::name` when there is a package. The program's own package has no name.

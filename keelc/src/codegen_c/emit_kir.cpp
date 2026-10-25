@@ -245,7 +245,7 @@ public:
         bool                         object
     );
 
-    std::string run();
+    Emitted run();
 
 private:
     void write_line( std::string_view text );
@@ -315,11 +315,12 @@ private:
     std::string location( Span span ) const;
     std::string as_written( Span span ) const;
 
-    std::string     out_;
-    u32             indent_       = 0;
-    u32             counted_line_ = 0;  // the line the C compiler gives the next C line; 0 is uncounted
-    Span            keel_span_ {};      // the Keel line the code being written belongs to
-    const Function* current_ = nullptr; // The function currently being emitted.
+    std::string              out_;
+    std::vector<std::string> defined_; // the symbols this part defines
+    u32                      indent_       = 0;
+    u32                      counted_line_ = 0;  // the line the C compiler gives the next C line; 0 is uncounted
+    Span                     keel_span_ {};      // the Keel line the code being written belongs to
+    const Function*          current_ = nullptr; // The function currently being emitted.
 
     const std::vector<Function>& functions_;
     const Ast&                   ast_;
@@ -370,7 +371,7 @@ Kir_emitter::Kir_emitter(
 {
 }
 
-std::string Kir_emitter::run()
+Emitted Kir_emitter::run()
 {
     emit_prologue();
     emit_composite_forwards();
@@ -388,7 +389,7 @@ std::string Kir_emitter::run()
     emit_functions();
     emit_main_shim();
 
-    return out_;
+    return Emitted { std::move( out_ ), std::move( defined_ ) };
 }
 
 void Kir_emitter::write_line( std::string_view text )
@@ -839,11 +840,13 @@ void Kir_emitter::emit_globals()
     for( const auto& [global, owner] : defined )
     {
         write_line( spelling_.global_definition( global, owner ) );
+        defined_.push_back( spelling_.global( global, owner ) );
     }
 
     for( const auto& [global, owner] : shared )
     {
         write_line( spelling_.global_definition( global, owner, true ) );
+        defined_.push_back( spelling_.global( global, owner ) );
     }
 
     for( const auto& [global, owner] : used )
@@ -1041,7 +1044,8 @@ void Kir_emitter::emit_functions()
 
 void Kir_emitter::emit_main_shim()
 {
-    if( parts_ != nullptr && part_ != parts_->input() )
+    // A module has none, even if it declares `main`.
+    if( parts_ != nullptr && !spelling_.modules.is_program( part_ ) )
     {
         return;
     }
@@ -1466,6 +1470,7 @@ void Kir_emitter::emit_function( const Function& function )
         }
     }
 
+    defined_.push_back( spelling_.function( function.declaration, function.type_arguments ) );
     write_line( fmt::format(
         "{}{}{} {}( {} )",
         object_ && placed_by_reach( function ) ? "__attribute__((weak)) " : "",
@@ -2375,7 +2380,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const N
     return order;
 }
 
-std::string emit_c_from_kir(
+Emitted emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
     Types&                       types,
@@ -2443,7 +2448,7 @@ struct Generated : Compiled
     {
         if( clean() )
         {
-            c = emit_c_from_kir( all, ast, types, literals, sm, interner, {}, nullptr, {}, object );
+            c = emit_c_from_kir( all, ast, types, literals, sm, interner, modules, nullptr, {}, object ).c;
         }
     }
 

@@ -52,6 +52,7 @@ Program load_program(
     Literal_pool&            literals,
     Diagnostics&             diags,
     std::span<const Package> packages,
+    bool                     as_module,
     std::string_view         prelude
 )
 {
@@ -80,6 +81,17 @@ Program load_program(
 
         package_roots[package_id.v] = package.root;
         package_docs[package_id.v]  = read_package_info( package.root, sm, interner, literals, diags );
+
+        std::error_code same;
+        if( as_module && std::filesystem::equivalent( program_folder, package.root, same ) )
+        {
+            modules.place( input, package_id );
+        }
+    }
+
+    if( !as_module )
+    {
+        modules.set_program( input );
     }
 
     std::vector<Node_id>         decls;
@@ -267,7 +279,7 @@ public:
 
         REQUIRE( input.has_value() );
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), prelude );
+        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, prelude );
 
         for( const auto& [name, text] : files )
         {
