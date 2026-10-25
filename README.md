@@ -357,11 +357,8 @@ sudo ln -s "$PWD/build/release/keel_rt/src/libkeel_rt.a" /usr/local/lib/keel/lib
 build/debug/bin/keelc examples/hello.kl -o hello && ./hello
 ```
 
-A program using the library names its package:
-
-```sh
-build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
-```
+keelc finds the library, `kl`, at `../lib/keel/<version>/kl` from its own folder, which the build
+links to `keel_stl/src`; `--package kl=<dir>` names another.
 
 | Flag | Effect |
 | --- | --- |
@@ -376,6 +373,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `--print-prelude` | Print the prelude every program sees, and exit |
+| `--print-config` | Print this keelc's build id and package folders, and exit |
 | `--runtime <path>` | Link this runtime library instead of the one keelc carries |
 | `file.c` / `file.o` / `file.a` after the `.kl` | Compile or link the program's own C with it |
 | `-l <name>` / `-L <dir>` | Link a C library, or search a directory for one; may be repeated |

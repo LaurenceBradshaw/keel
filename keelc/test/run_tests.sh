@@ -380,6 +380,8 @@ run_one()
 
     # An object is named by its path, which is in the build directory wherever that is.
     [ ${#klos[@]} -gt 0 ] && sed -i "s|${build_dir}/||g" "$out" "$err"
+    # The build id changes with every edit to keelc.
+    sed -i -E 's/^build [0-9a-f]{64}$/build <id>/' "$out"
 
     local messages
     messages="$(

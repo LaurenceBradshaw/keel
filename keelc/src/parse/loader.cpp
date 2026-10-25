@@ -83,12 +83,12 @@ Program load_program(
         modules.add_package( package_id );
 
         package_roots[package_id.v] = package.root;
-        package_docs[package_id.v]  = read_package_info( package.root, sm, interner, literals, diags );
 
         std::error_code same;
         if( as_module && std::filesystem::equivalent( program_folder, package.root, same ) )
         {
             modules.place( input, package_id );
+            package_docs[package_id.v] = read_package_info( package.root, sm, interner, literals, diags );
         }
     }
 
@@ -160,6 +160,11 @@ Program load_program(
                     if( const auto it = package_roots.find( package_id.v ); it != package_roots.end() )
                     {
                         module_folder = it->second;
+                        // Only a package something imports is documented, so an unused kl costs nothing.
+                        if( !package_docs.contains( package_id.v ) )
+                        {
+                            package_docs[package_id.v] = read_package_info( module_folder, sm, interner, literals, diags );
+                        }
                     }
                     else
                     {
@@ -794,6 +799,17 @@ TEST_CASE( "loader_reads_a_package's_packageinfo", "[parse][loader][packages][do
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.package_doc( "kl" ).empty() );
+    }
+
+    SECTION( "a package nothing imports is never read" )
+    {
+        const Loaded p( {
+            { "main.kl", "i32 main() { return 0; }\n" },
+            { "kl/packageinfo.kl", "i32 stray() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 
     // One error for the file, however much is in it.

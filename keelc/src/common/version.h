@@ -9,9 +9,8 @@
 namespace keel
 {
 
-// Bumped by hand. Kept out of CMake's configure_file machinery deliberately: a generated header
-// would break editor IntelliSense on a clean checkout, before the first configure has run.
-inline constexpr std::string_view k_version = "0.1.0";
+// project()'s VERSION in the root CMakeLists.txt, passed as a define.
+inline constexpr std::string_view k_version = KEEL_VERSION;
 
 // "keelc 0.1.0 (<first 12 digits of the build id>)".
 std::string version_string();

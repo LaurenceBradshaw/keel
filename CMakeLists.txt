@@ -58,3 +58,7 @@ add_subdirectory(keelc)
 add_subdirectory(keel_rt)
 add_subdirectory(keel_stl)
 add_subdirectory(keeldoc)
+
+# Where keelc looks for kl, as an install lays it out: <bin>/../lib/keel/<version>/kl.
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib/keel/${PROJECT_VERSION})
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/keel_stl/src ${CMAKE_BINARY_DIR}/lib/keel/${PROJECT_VERSION}/kl SYMBOLIC)

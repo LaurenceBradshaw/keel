@@ -44,6 +44,7 @@ find_package(cxxopts CONFIG REQUIRED)
 
 add_executable(keelc ${keel_sources})
 target_include_directories(keelc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(keelc PRIVATE KEEL_VERSION="${PROJECT_VERSION}")
 target_link_libraries(keelc PRIVATE keel_options fmt::fmt cxxopts::cxxopts)
 
 # Unit tests live at the bottom of the .cpp file they exercise, inside `#ifdef ENABLE_UNIT_TESTS`.
@@ -60,7 +61,7 @@ if(KEEL_TESTS)
     find_package(Catch2 CONFIG REQUIRED)
 
     add_executable(keel_tests ${keel_sources})
-    target_compile_definitions(keel_tests PRIVATE ENABLE_UNIT_TESTS)
+    target_compile_definitions(keel_tests PRIVATE ENABLE_UNIT_TESTS KEEL_VERSION="${PROJECT_VERSION}")
     target_include_directories(keel_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(keel_tests PRIVATE keel_options fmt::fmt cxxopts::cxxopts Catch2::Catch2WithMain)
 

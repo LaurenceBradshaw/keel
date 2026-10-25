@@ -1,0 +1,5 @@
+// --print-config names the kl --package gives; the build id is cut by the runner. The input is never read.
+i32 main()
+{
+    return 0;
+}

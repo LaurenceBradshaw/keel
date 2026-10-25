@@ -4,6 +4,7 @@
 #include "codegen_c/link.h"
 #include <fmt/format.h>
 #include <fstream>
+#include "common/version.h"
 
 namespace keel
 {
@@ -29,6 +30,13 @@ Runtime find_runtime( const std::optional<std::string>& flag, const std::filesys
         return Runtime { path, fmt::format( "--runtime names '{}', which is not a file", path.string() ) };
     }
     return Runtime { path, "" };
+}
+
+std::filesystem::path library_folder()
+{
+    std::error_code             ec;
+    const std::filesystem::path exe = std::filesystem::read_symlink( "/proc/self/exe", ec );
+    return ( exe.parent_path() / ".." / "lib" / "keel" / k_version ).lexically_normal();
 }
 
 namespace
@@ -135,6 +143,15 @@ TEST_CASE( "find_runtime_writes_the_runtime_it_carries", "[codegen_c][link]" )
     std::string   magic( 8, '\0' );
     in.read( magic.data(), 8 );
     REQUIRE( magic == "!<arch>\n" );
+}
+
+TEST_CASE( "library_folder_is_beside_keelc", "[codegen_c][link]" )
+{
+    const std::filesystem::path folder = keel::library_folder();
+
+    REQUIRE( folder.filename() == keel::k_version );
+    REQUIRE( folder.parent_path().filename() == "keel" );
+    REQUIRE( folder.parent_path().parent_path().filename() == "lib" );
 }
 
 TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )

@@ -27,6 +27,9 @@ struct Runtime
 
 Runtime find_runtime( const std::optional<std::string>& flag, const std::filesystem::path& folder );
 
+// keelc's own <bin>/../lib/keel/<version>, where it looks for kl. Linux-only: it reads /proc/self/exe.
+std::filesystem::path library_folder();
+
 // The C compiler's command line compiling one part's `source` into `object`.
 std::string compile_command(
     std::string_view compiler, std::string_view cflags, const std::filesystem::path& source, const std::filesystem::path& object

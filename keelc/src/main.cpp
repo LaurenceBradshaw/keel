@@ -3,6 +3,7 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <algorithm>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
@@ -77,6 +78,7 @@ int main( int argc, char** argv )
         ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "print-prelude",   "Print the prelude every program sees, and exit" )
+        ( "print-config",    "Print this keelc's build id and package folders, and exit" )
         ( "v,version",       "Print version information and exit" )
         ( "h,help",          "Print usage and exit" )
         ( "input",           "Source file",                        cxxopts::value<std::string>() )
@@ -116,7 +118,7 @@ int main( int argc, char** argv )
         return 0;
     }
 
-    if( !args.count( "input" ) )
+    if( !args.count( "input" ) && !args.count( "print-config" ) )
     {
         fmt::print( stderr, "keelc: no input file\n" );
         fmt::print( stderr, "{}", options.help() );
@@ -238,6 +240,25 @@ int main( int argc, char** argv )
 
             packages.push_back( keel::Package { .name = name, .root = spec.substr( equals + 1 ) } );
         }
+    }
+
+    // kl beside keelc unless --package names another.
+    auto kl = std::ranges::find( packages, std::string( "kl" ), &keel::Package::name );
+    if( kl == packages.end() && std::filesystem::is_directory( keel::library_folder() / "kl" ) )
+    {
+        packages.push_back( keel::Package { .name = "kl", .root = keel::library_folder() / "kl" } );
+        kl = packages.end() - 1;
+    }
+
+    // After --package, so the kl line shows the folder keelc would use.
+    if( args.count( "print-config" ) )
+    {
+        fmt::print( "build {}\n", keel::build_id() );
+        if( kl != packages.end() )
+        {
+            fmt::print( "package kl {}\n", kl->root.string() );
+        }
+        return 0;
     }
 
     // --runtime is checked before anything is written, so a missing one never reaches cc; without
