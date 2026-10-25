@@ -8,8 +8,8 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 int32_t kl__side__3i32( int32_t );
@@ -65,12 +65,12 @@ int32_t kl__aliased__3i32( int32_t kl_a_1 )
     struct kl__Point kl_q_2;
     struct kl__Point* kl_p_4;
 #line 45 "opt/dead_stores.kl"
-    kl_q_2.kl_x_1 = kl_a_1;
+    kl_q_2.kl_x = kl_a_1;
 #line 45 "opt/dead_stores.kl"
-    kl_q_2.kl_y_3 = kl_a_1;
+    kl_q_2.kl_y = kl_a_1;
     kl_p_4 = &kl_q_2;
-    kl_q_2.kl_x_1 = 7;
-    kl_t0 = ( *kl_p_4 ).kl_x_1;
+    kl_q_2.kl_x = 7;
+    kl_t0 = ( *kl_p_4 ).kl_x;
 #line 48 "opt/dead_stores.kl"
     return kl_t0;
 }
@@ -125,12 +125,12 @@ int32_t kl__main__( void )
     struct kl__Point kl_q_32;
     struct kl__Point* kl_p_34;
 #line 45 "opt/dead_stores.kl"
-    kl_q_32.kl_x_1 = 4;
+    kl_q_32.kl_x = 4;
 #line 45 "opt/dead_stores.kl"
-    kl_q_32.kl_y_3 = 4;
+    kl_q_32.kl_y = 4;
     kl_p_34 = &kl_q_32;
-    kl_q_32.kl_x_1 = 7;
-    kl_t7 = ( *kl_p_34 ).kl_x_1;
+    kl_q_32.kl_x = 7;
+    kl_t7 = ( *kl_p_34 ).kl_x;
 #line 87 "opt/dead_stores.kl"
     kl_t8 = kl_t7 != 7;
 #line 87 "opt/dead_stores.kl"

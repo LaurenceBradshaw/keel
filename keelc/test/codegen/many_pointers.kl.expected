@@ -12,22 +12,22 @@ typedef int32_t ( *kl__fn__FN3i323u64E3i32 )( int32_t*, uint64_t );
 
 struct kl__Point
 {
-    int32_t kl_x_4;
-    int32_t kl_y_6;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__Tracked
 {
-    int32_t kl_n_21;
+    int32_t kl_n;
 };
 
 struct kl__Ints
 {
-    int32_t* kl_data_52;
-    uint64_t kl_size_54;
+    int32_t* kl_data;
+    uint64_t kl_size;
 };
 
-int32_t kl_live_2 = 0;
+int32_t kl__live__G = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -56,7 +56,7 @@ int32_t kl__sum__S5Point( struct kl__Point* kl_this_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 14 "codegen/many_pointers.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_x_4, ( *kl_this_1 ).kl_y_6, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_x, ( *kl_this_1 ).kl_y, &( int32_t ) { 0 } );
 #line 14 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -64,7 +64,7 @@ int32_t kl__sum__S5Point( struct kl__Point* kl_this_1 )
     kl_rt_panic( "codegen/many_pointers.kl", 14, "arithmetic overflow: x + y" );
     bb2:
 #line 14 "codegen/many_pointers.kl"
-    kl_t3 = ( *kl_this_1 ).kl_x_4 + ( *kl_this_1 ).kl_y_6;
+    kl_t3 = ( *kl_this_1 ).kl_x + ( *kl_this_1 ).kl_y;
 #line 14 "codegen/many_pointers.kl"
     kl_t0 = kl_t3;
 #line 14 "codegen/many_pointers.kl"
@@ -77,8 +77,8 @@ void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t k
     bool kl_t3;
     int32_t kl_t4;
 #line 24 "codegen/many_pointers.kl"
-    ( *kl_this_1 ).kl_n_21 = kl_m_2;
-    kl_t3 = __builtin_add_overflow( kl_live_2, 1, &( int32_t ) { 0 } );
+    ( *kl_this_1 ).kl_n = kl_m_2;
+    kl_t3 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
 #line 25 "codegen/many_pointers.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -86,9 +86,9 @@ void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked* kl_this_1, int32_t k
     kl_rt_panic( "codegen/many_pointers.kl", 25, "arithmetic overflow: live + 1" );
     bb2:
 #line 25 "codegen/many_pointers.kl"
-    kl_t4 = kl_live_2 + 1;
+    kl_t4 = kl__live__G + 1;
 #line 25 "codegen/many_pointers.kl"
-    kl_live_2 = kl_t4;
+    kl__live__G = kl_t4;
     return;
 #line 26 "codegen/many_pointers.kl"
 }
@@ -100,7 +100,7 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 30 "codegen/many_pointers.kl"
-    kl_t2 = __builtin_sub_overflow( kl_live_2, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_sub_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
 #line 30 "codegen/many_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -108,9 +108,9 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_rt_panic( "codegen/many_pointers.kl", 30, "arithmetic overflow: live - 1" );
     bb2:
 #line 30 "codegen/many_pointers.kl"
-    kl_t3 = kl_live_2 - 1;
+    kl_t3 = kl__live__G - 1;
 #line 30 "codegen/many_pointers.kl"
-    kl_live_2 = kl_t3;
+    kl__live__G = kl_t3;
     return;
 #line 31 "codegen/many_pointers.kl"
 }
@@ -122,9 +122,9 @@ void kl__Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 #line 44 "codegen/many_pointers.kl"
     kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/many_pointers.kl", 44, "out of memory: alloc<i32>( n )" );
 #line 44 "codegen/many_pointers.kl"
-    ( *kl_this_1 ).kl_data_52 = kl_t3;
+    ( *kl_this_1 ).kl_data = kl_t3;
 #line 46 "codegen/many_pointers.kl"
-    ( *kl_this_1 ).kl_size_54 = kl_n_2;
+    ( *kl_this_1 ).kl_size = kl_n_2;
     return;
 #line 47 "codegen/many_pointers.kl"
 }
@@ -133,7 +133,7 @@ void kl__Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 void kl__Ints__dtor( struct kl__Ints* kl_this_1 )
 {
 #line 53 "codegen/many_pointers.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_52 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 55 "codegen/many_pointers.kl"
     return;
 #line 55 "codegen/many_pointers.kl"
@@ -144,7 +144,7 @@ void kl__set__S4Ints_3u64_3i32( struct kl__Ints* kl_this_1, uint64_t kl_i_2, int
 {
     int32_t* kl_t4;
 #line 61 "codegen/many_pointers.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_52 + kl_i_2;
+    kl_t4 = ( *kl_this_1 ).kl_data + kl_i_2;
 #line 61 "codegen/many_pointers.kl"
     ( *kl_t4 ) = kl_v_3;
 #line 63 "codegen/many_pointers.kl"
@@ -161,7 +161,7 @@ int32_t kl__get__S4Ints_3u64( struct kl__Ints* kl_this_1, uint64_t kl_i_2 )
 #line 67 "codegen/many_pointers.kl"
     kl_r_3 = 0;
 #line 70 "codegen/many_pointers.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_52 + kl_i_2;
+    kl_t4 = ( *kl_this_1 ).kl_data + kl_i_2;
 #line 70 "codegen/many_pointers.kl"
     kl_r_3 = ( *kl_t4 );
 #line 72 "codegen/many_pointers.kl"
@@ -757,17 +757,17 @@ int32_t kl__main__( void )
     kl_points_63 = kl_t65;
     kl_t66 = kl_points_63 + 0;
 #line 211 "codegen/many_pointers.kl"
-    kl_t67.kl_x_4 = 1;
+    kl_t67.kl_x = 1;
 #line 211 "codegen/many_pointers.kl"
-    kl_t67.kl_y_6 = 2;
+    kl_t67.kl_y = 2;
 #line 211 "codegen/many_pointers.kl"
     ( *kl_t66 ) = kl_t67;
     kl_t68 = kl_points_63 + 1;
 #line 212 "codegen/many_pointers.kl"
-    ( *kl_t68 ).kl_x_4 = 3;
+    ( *kl_t68 ).kl_x = 3;
     kl_t69 = kl_points_63 + 1;
 #line 213 "codegen/many_pointers.kl"
-    ( *kl_t69 ).kl_y_6 = 4;
+    ( *kl_t69 ).kl_y = 4;
     kl_t70 = kl_points_63 + 0;
 #line 214 "codegen/many_pointers.kl"
     kl_t71 = &( *kl_t70 );
@@ -997,7 +997,7 @@ int32_t kl__main__( void )
 #line 285 "codegen/many_pointers.kl"
     kl_t146 = kl_cs_134 + 1;
 #line 285 "codegen/many_pointers.kl"
-    kl_t147 = __builtin_add_overflow( ( *kl_t145 ).kl_n_21, ( *kl_t146 ).kl_n_21, &( int32_t ) { 0 } );
+    kl_t147 = __builtin_add_overflow( ( *kl_t145 ).kl_n, ( *kl_t146 ).kl_n, &( int32_t ) { 0 } );
 #line 285 "codegen/many_pointers.kl"
     if ( kl_t147 ) goto bb55; else goto bb56;
     bb55:
@@ -1005,7 +1005,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/many_pointers.kl", 285, "arithmetic overflow: cs[ 0 ].n + cs[ 1 ].n" );
     bb56:
 #line 285 "codegen/many_pointers.kl"
-    kl_t148 = ( *kl_t145 ).kl_n_21 + ( *kl_t146 ).kl_n_21;
+    kl_t148 = ( *kl_t145 ).kl_n + ( *kl_t146 ).kl_n;
 #line 285 "codegen/many_pointers.kl"
     kl_held_144 = kl_t148;
     kl_rt_free( kl_cs_134 );
@@ -1020,7 +1020,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb58:
 #line 289 "codegen/many_pointers.kl"
-    kl_t151 = kl_live_2 != 2;
+    kl_t151 = kl__live__G != 2;
 #line 289 "codegen/many_pointers.kl"
     if ( kl_t151 ) goto bb59; else goto bb60;
     bb59:

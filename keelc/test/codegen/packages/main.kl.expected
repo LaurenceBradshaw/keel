@@ -11,12 +11,12 @@ typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 
 struct kl__Point
 {
-    int32_t kl_x_20;
+    int32_t kl_x;
 };
 
 struct kl_5plane4geom_Point
 {
-    int32_t kl_x_131;
+    int32_t kl_x;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -137,10 +137,10 @@ int32_t kl__main__( void )
     kl_t13 = kl_5plane4geom_origin__(  );
 #line 36 "codegen/packages/main.kl"
     kl_p_12 = kl_t13;
-    kl_t15.kl_x_20 = 5;
+    kl_t15.kl_x = 5;
 #line 37 "codegen/packages/main.kl"
     kl_q_14 = kl_t15;
-    kl_t16 = __builtin_add_overflow( kl_p_12.kl_x_131, kl_q_14.kl_x_20, &( int32_t ) { 0 } );
+    kl_t16 = __builtin_add_overflow( kl_p_12.kl_x, kl_q_14.kl_x, &( int32_t ) { 0 } );
 #line 38 "codegen/packages/main.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
@@ -148,7 +148,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/packages/main.kl", 38, "arithmetic overflow: p.x + q.x" );
     bb10:
 #line 38 "codegen/packages/main.kl"
-    kl_t17 = kl_p_12.kl_x_131 + kl_q_14.kl_x_20;
+    kl_t17 = kl_p_12.kl_x + kl_q_14.kl_x;
 #line 38 "codegen/packages/main.kl"
     kl_t18 = kl_t17 != 12;
 #line 38 "codegen/packages/main.kl"
@@ -207,7 +207,7 @@ struct kl_5plane4geom_Point kl_5plane4geom_origin__( void )
     struct kl_5plane4geom_Point kl_t0;
     struct kl_5plane4geom_Point kl_t1;
 #line 11 "codegen/packages/plane/geom.kl"
-    kl_t1.kl_x_131 = 7;
+    kl_t1.kl_x = 7;
 #line 11 "codegen/packages/plane/geom.kl"
     kl_t0 = kl_t1;
 #line 11 "codegen/packages/plane/geom.kl"

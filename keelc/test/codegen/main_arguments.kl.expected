@@ -107,7 +107,7 @@ int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64
 #line 11 "codegen/main_arguments.kl"
     kl_t17 = kl_t15 + kl_i_4;
 #line 11 "codegen/main_arguments.kl"
-    kl_1t7console_println__3u64( ( *kl_t17 ).kl_size_429 );
+    kl_1t7console_println__3u64( ( *kl_t17 ).kl_size );
 #line 8 "codegen/main_arguments.kl"
     goto bb8;
     bb8:
@@ -129,7 +129,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_410( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -228,7 +228,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_410( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"
@@ -553,8 +553,8 @@ int main( int argc, char** argv )
     struct kl_7prelude_str* args = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) count, sizeof( struct kl_7prelude_str ), "<main>", 0, "out of memory building `main`'s arguments" );
     for( uint64_t i = 0; i < count; ++i )
     {
-        args[i].kl_data_426 = ( uint8_t* ) argv[i + 1];
-        args[i].kl_size_429 = strlen( argv[i + 1] );
+        args[i].kl_data = ( uint8_t* ) argv[i + 1];
+        args[i].kl_size = strlen( argv[i + 1] );
     }
 #line 4 "codegen/main_arguments.kl"
     int result = (int) kl__main__LQ7prelude3str( args, count );

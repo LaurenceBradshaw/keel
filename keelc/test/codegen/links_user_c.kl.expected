@@ -8,8 +8,8 @@ struct kl__point;
 
 struct kl__point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__point midpoint( struct kl__point, struct kl__point );
@@ -35,20 +35,20 @@ int32_t kl__main__( void )
     bool kl_t12;
     bool kl_t13;
 #line 10 "codegen/links_user_c.kl"
-    kl_t2.kl_x_1 = 0;
+    kl_t2.kl_x = 0;
 #line 10 "codegen/links_user_c.kl"
-    kl_t2.kl_y_3 = 0;
+    kl_t2.kl_y = 0;
 #line 10 "codegen/links_user_c.kl"
     kl_m_1 = kl_t2;
     kl_r_3 = 0.0;
 #line 14 "codegen/links_user_c.kl"
-    kl_t4.kl_x_1 = 2;
+    kl_t4.kl_x = 2;
 #line 14 "codegen/links_user_c.kl"
-    kl_t4.kl_y_3 = 4;
+    kl_t4.kl_y = 4;
 #line 14 "codegen/links_user_c.kl"
-    kl_t5.kl_x_1 = 6;
+    kl_t5.kl_x = 6;
 #line 14 "codegen/links_user_c.kl"
-    kl_t5.kl_y_3 = 8;
+    kl_t5.kl_y = 8;
 #line 14 "codegen/links_user_c.kl"
     kl_t6 = midpoint( kl_t4, kl_t5 );
 #line 14 "codegen/links_user_c.kl"
@@ -57,7 +57,7 @@ int32_t kl__main__( void )
 #line 15 "codegen/links_user_c.kl"
     kl_r_3 = kl_t7;
 #line 17 "codegen/links_user_c.kl"
-    kl_t11 = kl_m_1.kl_x_1 == 4;
+    kl_t11 = kl_m_1.kl_x == 4;
 #line 17 "codegen/links_user_c.kl"
     kl_t10 = kl_t11;
 #line 17 "codegen/links_user_c.kl"
@@ -79,7 +79,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 17 "codegen/links_user_c.kl"
-    kl_t12 = kl_m_1.kl_y_3 == 6;
+    kl_t12 = kl_m_1.kl_y == 6;
 #line 17 "codegen/links_user_c.kl"
     kl_t10 = kl_t12;
 #line 17 "codegen/links_user_c.kl"

@@ -9,13 +9,13 @@ struct kl__Holder;
 
 struct kl__Buf
 {
-    uint64_t* kl_data_4;
+    uint64_t* kl_data;
 };
 
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_b_58;
+    struct kl__Buf kl_b;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -63,9 +63,9 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 #line 14 "codegen/owning_conditional.kl"
     kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/owning_conditional.kl", 14, "out of memory: alloc<u64>()" );
 #line 14 "codegen/owning_conditional.kl"
-    ( *kl_this_1 ).kl_data_4 = kl_t3;
+    ( *kl_this_1 ).kl_data = kl_t3;
 #line 17 "codegen/owning_conditional.kl"
-    ( *( *kl_this_1 ).kl_data_4 ) = kl_n_2;
+    ( *( *kl_this_1 ).kl_data ) = kl_n_2;
     return;
 #line 18 "codegen/owning_conditional.kl"
 }
@@ -87,9 +87,9 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 22 "codegen/owning_conditional.kl"
     kl_1t7console_print__7textual( kl_t6 );
-    kl_1t7console_println__3u64( ( *( *kl_this_1 ).kl_data_4 ) );
+    kl_1t7console_println__3u64( ( *( *kl_this_1 ).kl_data ) );
 #line 27 "codegen/owning_conditional.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_4 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 29 "codegen/owning_conditional.kl"
     return;
 #line 29 "codegen/owning_conditional.kl"
@@ -100,7 +100,7 @@ uint64_t kl__get__S3Buf( struct kl__Buf* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 33 "codegen/owning_conditional.kl"
-    kl_t0 = ( *( *kl_this_1 ).kl_data_4 );
+    kl_t0 = ( *( *kl_this_1 ).kl_data );
 #line 33 "codegen/owning_conditional.kl"
     return kl_t0;
 }
@@ -165,7 +165,7 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 58 "codegen/owning_conditional.kl"
-    kl_b_3 = &( *kl_h_1 ).kl_b_58;
+    kl_b_3 = &( *kl_h_1 ).kl_b;
     kl_t4 = &( *kl_b_3 );
 #line 59 "codegen/owning_conditional.kl"
     kl_t5 = kl__get__S3Buf( kl_t4 );
@@ -606,7 +606,7 @@ int32_t kl__main__( void )
 #line 97 "codegen/owning_conditional.kl"
     kl_t91 = true;
 #line 97 "codegen/owning_conditional.kl"
-    kl_t60.kl_b_58 = kl_t61;
+    kl_t60.kl_b = kl_t61;
 #line 97 "codegen/owning_conditional.kl"
     kl_t92 = false;
 #line 97 "codegen/owning_conditional.kl"
@@ -725,7 +725,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_679( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -824,7 +824,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_679( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"
@@ -1151,7 +1151,7 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     return;
     bb2:
 #line 37 "codegen/owning_conditional.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_b_58 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_b );
 #line 37 "codegen/owning_conditional.kl"
     goto bb1;
 #line 41 "codegen/owning_conditional.kl"

@@ -4,7 +4,7 @@
 
 #include "main.kl.prelude.c"
 
-int32_t kl_live_1;
+int32_t kl__live__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -20,7 +20,7 @@ int32_t kl__counter__( void )
     bool kl_t1;
     int32_t kl_t4;
 #line 10 "opt/globals_checked/main.kl"
-    kl_t1 = __builtin_add_overflow( kl_live_1, 1, &( int32_t ) { 0 } );
+    kl_t1 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
 #line 10 "opt/globals_checked/main.kl"
     if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
@@ -28,7 +28,7 @@ int32_t kl__counter__( void )
     kl_rt_panic( "opt/globals_checked/main.kl", 10, "arithmetic overflow: live += 1;" );
     bb2:
 #line 11 "opt/globals_checked/main.kl"
-    kl_t4 = kl_live_1;
+    kl_t4 = kl__live__G;
     kl_t0 = kl_t4;
 #line 12 "opt/globals_checked/main.kl"
     return kl_t0;
@@ -115,7 +115,7 @@ int32_t kl__main__( void )
     int32_t kl_t7;
     bool kl_t8;
 #line 11 "opt/globals_checked/main.kl"
-    kl_live_1 = 3;
+    kl__live__G = 3;
 #line 41 "opt/globals_checked/main.kl"
     kl_t7 = kl__twice__3i32( 2 );
 #line 41 "opt/globals_checked/main.kl"

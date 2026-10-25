@@ -9,14 +9,14 @@ struct kl__Pair__I3i32E;
 
 struct kl__Version
 {
-    int32_t kl_major_4;
-    int32_t kl_minor_6;
+    int32_t kl_major;
+    int32_t kl_minor;
 };
 
 struct kl__Pair__I3i32E
 {
-    int32_t kl_left_66;
-    int32_t kl_right_68;
+    int32_t kl_left;
+    int32_t kl_right;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -48,14 +48,14 @@ bool kl__operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct 
     bool kl_t4;
     bool kl_t5;
 #line 13 "codegen/bounds_user_types.kl"
-    kl_t4 = ( *kl_this_1 ).kl_major_4 == ( *kl_other_2 ).kl_major_4;
+    kl_t4 = ( *kl_this_1 ).kl_major == ( *kl_other_2 ).kl_major;
 #line 13 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
 #line 13 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 13 "codegen/bounds_user_types.kl"
-    kl_t5 = ( *kl_this_1 ).kl_minor_6 == ( *kl_other_2 ).kl_minor_6;
+    kl_t5 = ( *kl_this_1 ).kl_minor == ( *kl_other_2 ).kl_minor;
 #line 13 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t5;
 #line 13 "codegen/bounds_user_types.kl"
@@ -79,11 +79,11 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
     bool kl_t8;
     bool kl_t9;
 #line 18 "codegen/bounds_user_types.kl"
-    kl_t3 = ( *kl_this_1 ).kl_major_4 != ( *kl_other_2 ).kl_major_4;
+    kl_t3 = ( *kl_this_1 ).kl_major != ( *kl_other_2 ).kl_major;
 #line 18 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb7;
     bb1:
-    kl_t5 = ( *kl_this_1 ).kl_major_4 < ( *kl_other_2 ).kl_major_4;
+    kl_t5 = ( *kl_this_1 ).kl_major < ( *kl_other_2 ).kl_major;
 #line 20 "codegen/bounds_user_types.kl"
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
@@ -93,7 +93,7 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
     goto bb6;
     bb3:
 #line 20 "codegen/bounds_user_types.kl"
-    kl_t6 = ( *kl_this_1 ).kl_major_4 == ( *kl_other_2 ).kl_major_4;
+    kl_t6 = ( *kl_this_1 ).kl_major == ( *kl_other_2 ).kl_major;
 #line 20 "codegen/bounds_user_types.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
@@ -113,7 +113,7 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
     return kl_t0;
     bb7:
 #line 23 "codegen/bounds_user_types.kl"
-    kl_t8 = ( *kl_this_1 ).kl_minor_6 < ( *kl_other_2 ).kl_minor_6;
+    kl_t8 = ( *kl_this_1 ).kl_minor < ( *kl_other_2 ).kl_minor;
 #line 23 "codegen/bounds_user_types.kl"
     if ( kl_t8 ) goto bb8; else goto bb9;
     bb8:
@@ -123,7 +123,7 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
     goto bb12;
     bb9:
 #line 23 "codegen/bounds_user_types.kl"
-    kl_t9 = ( *kl_this_1 ).kl_minor_6 == ( *kl_other_2 ).kl_minor_6;
+    kl_t9 = ( *kl_this_1 ).kl_minor == ( *kl_other_2 ).kl_minor;
 #line 23 "codegen/bounds_user_types.kl"
     if ( kl_t9 ) goto bb10; else goto bb11;
     bb10:
@@ -379,14 +379,14 @@ int32_t kl__main__( void )
     int32_t* kl_t135;
     bool kl_t136;
 #line 85 "codegen/bounds_user_types.kl"
-    kl_t2.kl_major_4 = 1;
+    kl_t2.kl_major = 1;
 #line 85 "codegen/bounds_user_types.kl"
-    kl_t2.kl_minor_6 = 2;
+    kl_t2.kl_minor = 2;
 #line 85 "codegen/bounds_user_types.kl"
     kl_a_1 = kl_t2;
-    kl_t4.kl_major_4 = 1;
+    kl_t4.kl_major = 1;
 #line 86 "codegen/bounds_user_types.kl"
-    kl_t4.kl_minor_6 = 3;
+    kl_t4.kl_minor = 3;
 #line 86 "codegen/bounds_user_types.kl"
     kl_b_3 = kl_t4;
 #line 88 "codegen/bounds_user_types.kl"
@@ -541,14 +541,14 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 101 "codegen/bounds_user_types.kl"
-    kl_t47.kl_left_66 = 1;
+    kl_t47.kl_left = 1;
 #line 101 "codegen/bounds_user_types.kl"
-    kl_t47.kl_right_68 = 2;
+    kl_t47.kl_right = 2;
 #line 101 "codegen/bounds_user_types.kl"
     kl_p_46 = kl_t47;
-    kl_t49.kl_left_66 = 1;
+    kl_t49.kl_left = 1;
 #line 102 "codegen/bounds_user_types.kl"
-    kl_t49.kl_right_68 = 3;
+    kl_t49.kl_right = 3;
 #line 102 "codegen/bounds_user_types.kl"
     kl_q_48 = kl_t49;
 #line 104 "codegen/bounds_user_types.kl"
@@ -1387,14 +1387,14 @@ bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*
     bool kl_t4;
     bool kl_t5;
 #line 34 "codegen/bounds_user_types.kl"
-    kl_t4 = ( *kl_this_1 ).kl_left_66 == ( *kl_other_2 ).kl_left_66;
+    kl_t4 = ( *kl_this_1 ).kl_left == ( *kl_other_2 ).kl_left;
 #line 34 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t4;
 #line 34 "codegen/bounds_user_types.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 34 "codegen/bounds_user_types.kl"
-    kl_t5 = ( *kl_this_1 ).kl_right_68 == ( *kl_other_2 ).kl_right_68;
+    kl_t5 = ( *kl_this_1 ).kl_right == ( *kl_other_2 ).kl_right;
 #line 34 "codegen/bounds_user_types.kl"
     kl_t3 = kl_t5;
 #line 34 "codegen/bounds_user_types.kl"

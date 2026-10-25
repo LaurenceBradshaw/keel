@@ -11,23 +11,23 @@ struct kl__holder;
 
 struct kl__label
 {
-    uint8_t* kl_bytes_7;
-    uint64_t kl_length_9;
+    uint8_t* kl_bytes;
+    uint64_t kl_length;
 };
 
 struct kl__width
 {
-    uint64_t kl_n_85;
+    uint64_t kl_n;
 };
 
 struct kl__framed
 {
-    struct kl__width kl_w_99;
+    struct kl__width kl_w;
 };
 
 struct kl__holder
 {
-    struct kl__label kl_held_102;
+    struct kl__label kl_held;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -73,8 +73,8 @@ void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2
 #line 12 "codegen/string_literal_adopts.kl"
     kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
 #line 12 "codegen/string_literal_adopts.kl"
-    ( *kl_this_1 ).kl_bytes_7 = kl_t5;
-    ( *kl_this_1 ).kl_length_9 = kl_n_2;
+    ( *kl_this_1 ).kl_bytes = kl_t5;
+    ( *kl_this_1 ).kl_length = kl_n_2;
     return;
 #line 14 "codegen/string_literal_adopts.kl"
 }
@@ -83,7 +83,7 @@ void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2
 void kl__label__dtor( struct kl__label* kl_this_1 )
 {
 #line 16 "codegen/string_literal_adopts.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_bytes_7 );
+    kl_rt_free( ( *kl_this_1 ).kl_bytes );
 #line 16 "codegen/string_literal_adopts.kl"
     return;
 #line 16 "codegen/string_literal_adopts.kl"
@@ -105,7 +105,7 @@ struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str kl_text
 #line 18 "codegen/string_literal_adopts.kl"
     kl_t5 = true;
 #line 18 "codegen/string_literal_adopts.kl"
-    kl__label__R5label_3u64__ctor( kl_t3, kl_text_1.kl_size_374 );
+    kl__label__R5label_3u64__ctor( kl_t3, kl_text_1.kl_size );
 #line 18 "codegen/string_literal_adopts.kl"
     kl_t0 = kl_t2;
 #line 18 "codegen/string_literal_adopts.kl"
@@ -124,7 +124,7 @@ uint64_t kl__size__S5label( struct kl__label* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 19 "codegen/string_literal_adopts.kl"
-    kl_t0 = ( *kl_this_1 ).kl_length_9;
+    kl_t0 = ( *kl_this_1 ).kl_length;
 #line 19 "codegen/string_literal_adopts.kl"
     return kl_t0;
 #line 19 "codegen/string_literal_adopts.kl"
@@ -136,7 +136,7 @@ bool kl__operator_eq__S5label_5label( struct kl__label* kl_this_1, struct kl__la
     bool kl_t0;
     bool kl_t3;
 #line 20 "codegen/string_literal_adopts.kl"
-    kl_t3 = ( *kl_this_1 ).kl_length_9 == ( *kl_other_2 ).kl_length_9;
+    kl_t3 = ( *kl_this_1 ).kl_length == ( *kl_other_2 ).kl_length;
 #line 20 "codegen/string_literal_adopts.kl"
     kl_t0 = kl_t3;
 #line 20 "codegen/string_literal_adopts.kl"
@@ -150,7 +150,7 @@ struct kl__width kl__from__S5width_Q7prelude3str( struct kl_7prelude_str kl_text
     struct kl__width kl_t0;
     struct kl__width kl_t2;
 #line 27 "codegen/string_literal_adopts.kl"
-    kl_t2.kl_n_85 = kl_text_1.kl_size_374;
+    kl_t2.kl_n = kl_text_1.kl_size;
 #line 27 "codegen/string_literal_adopts.kl"
     kl_t0 = kl_t2;
 #line 27 "codegen/string_literal_adopts.kl"
@@ -165,7 +165,7 @@ void kl__holder__R6holder_M5label__ctor( struct kl__holder* kl_this_1, struct kl
 #line 39 "codegen/string_literal_adopts.kl"
     kl_t3 = true;
 #line 39 "codegen/string_literal_adopts.kl"
-    ( *kl_this_1 ).kl_held_102 = kl_l_2;
+    ( *kl_this_1 ).kl_held = kl_l_2;
 #line 39 "codegen/string_literal_adopts.kl"
     kl_t3 = false;
 #line 39 "codegen/string_literal_adopts.kl"
@@ -184,7 +184,7 @@ uint64_t kl__size__S6holder( struct kl__holder* kl_this_1 )
     struct kl__label* kl_t2;
     uint64_t kl_t3;
 #line 40 "codegen/string_literal_adopts.kl"
-    kl_t2 = &( *kl_this_1 ).kl_held_102;
+    kl_t2 = &( *kl_this_1 ).kl_held;
 #line 40 "codegen/string_literal_adopts.kl"
     kl_t3 = kl__size__S5label( kl_t2 );
 #line 40 "codegen/string_literal_adopts.kl"
@@ -687,11 +687,11 @@ int32_t kl__main__( void )
 #line 76 "codegen/string_literal_adopts.kl"
     kl_t72 = kl__from__S5width_Q7prelude3str( kl_t68 );
 #line 76 "codegen/string_literal_adopts.kl"
-    kl_t67.kl_w_99 = kl_t72;
+    kl_t67.kl_w = kl_t72;
 #line 76 "codegen/string_literal_adopts.kl"
     kl_f_66 = kl_t67;
 #line 78 "codegen/string_literal_adopts.kl"
-    kl_t73 = kl_f_66.kl_w_99.kl_n_85 != 7;
+    kl_t73 = kl_f_66.kl_w.kl_n != 7;
 #line 78 "codegen/string_literal_adopts.kl"
     if ( kl_t73 ) goto bb15; else goto bb16;
     bb15:
@@ -734,7 +734,7 @@ int32_t kl__main__( void )
     bb17:
     kl_t0 = 4;
 #line 87 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &kl_h_74.kl_held_102 );
+    kl__label__dtor( &kl_h_74.kl_held );
 #line 87 "codegen/string_literal_adopts.kl"
     if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
 #line 87 "codegen/string_literal_adopts.kl"
@@ -779,7 +779,7 @@ int32_t kl__main__( void )
     bb21:
     kl_t0 = 5;
 #line 92 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &kl_h_74.kl_held_102 );
+    kl__label__dtor( &kl_h_74.kl_held );
 #line 92 "codegen/string_literal_adopts.kl"
     if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
 #line 92 "codegen/string_literal_adopts.kl"
@@ -802,7 +802,7 @@ int32_t kl__main__( void )
     bb23:
     kl_t0 = 6;
 #line 97 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &kl_h_74.kl_held_102 );
+    kl__label__dtor( &kl_h_74.kl_held );
 #line 97 "codegen/string_literal_adopts.kl"
     if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
 #line 97 "codegen/string_literal_adopts.kl"
@@ -841,7 +841,7 @@ int32_t kl__main__( void )
 #line 105 "codegen/string_literal_adopts.kl"
     kl__label__dtor( &kl_escaped_103 );
 #line 105 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &kl_h_74.kl_held_102 );
+    kl__label__dtor( &kl_h_74.kl_held );
 #line 105 "codegen/string_literal_adopts.kl"
     if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
 #line 105 "codegen/string_literal_adopts.kl"
@@ -854,7 +854,7 @@ int32_t kl__main__( void )
 #line 108 "codegen/string_literal_adopts.kl"
     kl__label__dtor( &kl_escaped_103 );
 #line 108 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &kl_h_74.kl_held_102 );
+    kl__label__dtor( &kl_h_74.kl_held );
 #line 108 "codegen/string_literal_adopts.kl"
     if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
 #line 108 "codegen/string_literal_adopts.kl"

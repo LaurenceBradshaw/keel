@@ -34,7 +34,7 @@ struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool kl_ok_1 )
 #line 7 "codegen/fixed_array_halves.kl"
     kl_t2.tag = 0;
 #line 7 "codegen/fixed_array_halves.kl"
-    kl_t2.kl_value_178 = kl_t3;
+    kl_t2.kl_value = kl_t3;
 #line 7 "codegen/fixed_array_halves.kl"
     kl_t0 = kl_t2;
 #line 7 "codegen/fixed_array_halves.kl"
@@ -42,7 +42,7 @@ struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool kl_ok_1 )
     bb2:
     kl_t6.tag = 1;
 #line 9 "codegen/fixed_array_halves.kl"
-    kl_t6.kl_error_181 = 3;
+    kl_t6.kl_error = 3;
 #line 9 "codegen/fixed_array_halves.kl"
     kl_t0 = kl_t6;
 #line 9 "codegen/fixed_array_halves.kl"
@@ -152,7 +152,7 @@ int32_t kl__main__( void )
     if ( kl_t16 ) goto bb1; else goto bb2;
     bb1:
 #line 22 "codegen/fixed_array_halves.kl"
-    kl_v_17 = kl_t15.kl_value_178;
+    kl_v_17 = kl_t15.kl_value;
 #line 22 "codegen/fixed_array_halves.kl"
     kl_t18 = 1;
 #line 22 "codegen/fixed_array_halves.kl"
@@ -161,7 +161,7 @@ int32_t kl__main__( void )
     if ( kl_t19 ) goto bb3; else goto bb4;
     bb2:
 #line 23 "codegen/fixed_array_halves.kl"
-    kl_e_29 = kl_t15.kl_error_181;
+    kl_e_29 = kl_t15.kl_error;
 #line 23 "codegen/fixed_array_halves.kl"
     kl_t0 = kl_e_29;
 #line 23 "codegen/fixed_array_halves.kl"

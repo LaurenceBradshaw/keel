@@ -15,22 +15,22 @@ typedef int32_t ( *kl__fn__FE3i32 )( void );
 
 struct kl__Counter
 {
-    int32_t kl_unused_4;
+    int32_t kl_unused;
 };
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_46;
+    int32_t kl_v;
 };
 
 struct kl__Box__I3f64E
 {
-    double kl_v_46;
+    double kl_v;
 };
 
-int32_t kl_total_2 = 0;
-int32_t kl_made_49__I3i32E = 0;
-int32_t kl_made_49__I3f64E = 0;
+int32_t kl__total__GS7Counter = 0;
+int32_t kl__made__GS3BoxI3i32E = 0;
+int32_t kl__made__GS3BoxI3f64E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -51,7 +51,7 @@ int32_t kl__bump__S7Counter_3i32( int32_t kl_by_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 11 "codegen/static_method_pointers.kl"
-    kl_t2 = __builtin_add_overflow( kl_total_2, kl_by_1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__total__GS7Counter, kl_by_1, &( int32_t ) { 0 } );
 #line 11 "codegen/static_method_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -59,10 +59,10 @@ int32_t kl__bump__S7Counter_3i32( int32_t kl_by_1 )
     kl_rt_panic( "codegen/static_method_pointers.kl", 11, "arithmetic overflow: total + by" );
     bb2:
 #line 11 "codegen/static_method_pointers.kl"
-    kl_t3 = kl_total_2 + kl_by_1;
+    kl_t3 = kl__total__GS7Counter + kl_by_1;
 #line 11 "codegen/static_method_pointers.kl"
-    kl_total_2 = kl_t3;
-    kl_t0 = kl_total_2;
+    kl__total__GS7Counter = kl_t3;
+    kl_t0 = kl__total__GS7Counter;
 #line 12 "codegen/static_method_pointers.kl"
     return kl_t0;
 }
@@ -242,7 +242,7 @@ int32_t kl__main__( void )
     if ( kl_t26 ) goto bb8; else goto bb7;
     bb7:
 #line 70 "codegen/static_method_pointers.kl"
-    kl_t32 = __builtin_add_overflow( kl_a_19.kl_v_46, kl_b_21.kl_v_46, &( int32_t ) { 0 } );
+    kl_t32 = __builtin_add_overflow( kl_a_19.kl_v, kl_b_21.kl_v, &( int32_t ) { 0 } );
 #line 70 "codegen/static_method_pointers.kl"
     if ( kl_t32 ) goto bb9; else goto bb10;
     bb8:
@@ -255,7 +255,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/static_method_pointers.kl", 70, "arithmetic overflow: a.v + b.v" );
     bb10:
 #line 70 "codegen/static_method_pointers.kl"
-    kl_t33 = kl_a_19.kl_v_46 + kl_b_21.kl_v_46;
+    kl_t33 = kl_a_19.kl_v + kl_b_21.kl_v;
 #line 70 "codegen/static_method_pointers.kl"
     kl_t34 = kl_t33 != 3;
 #line 70 "codegen/static_method_pointers.kl"
@@ -264,7 +264,7 @@ int32_t kl__main__( void )
     goto bb8;
     bb11:
 #line 70 "codegen/static_method_pointers.kl"
-    kl_t35 = kl_c_23.kl_v_46 != 3.0;
+    kl_t35 = kl_c_23.kl_v != 3.0;
 #line 70 "codegen/static_method_pointers.kl"
     kl_t25 = kl_t35;
 #line 70 "codegen/static_method_pointers.kl"
@@ -327,7 +327,7 @@ struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
     int32_t kl_t3;
     struct kl__Box__I3i32E kl_t4;
 #line 34 "codegen/static_method_pointers.kl"
-    kl_t2 = __builtin_add_overflow( kl_made_49__I3i32E, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__made__GS3BoxI3i32E, 1, &( int32_t ) { 0 } );
 #line 34 "codegen/static_method_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -335,10 +335,10 @@ struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
     kl_rt_panic( "codegen/static_method_pointers.kl", 34, "arithmetic overflow: made + 1" );
     bb2:
 #line 34 "codegen/static_method_pointers.kl"
-    kl_t3 = kl_made_49__I3i32E + 1;
+    kl_t3 = kl__made__GS3BoxI3i32E + 1;
 #line 34 "codegen/static_method_pointers.kl"
-    kl_made_49__I3i32E = kl_t3;
-    kl_t4.kl_v_46 = kl_x_1;
+    kl__made__GS3BoxI3i32E = kl_t3;
+    kl_t4.kl_v = kl_x_1;
 #line 35 "codegen/static_method_pointers.kl"
     kl_t0 = kl_t4;
 #line 35 "codegen/static_method_pointers.kl"
@@ -353,7 +353,7 @@ struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
     int32_t kl_t3;
     struct kl__Box__I3f64E kl_t4;
 #line 34 "codegen/static_method_pointers.kl"
-    kl_t2 = __builtin_add_overflow( kl_made_49__I3f64E, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__made__GS3BoxI3f64E, 1, &( int32_t ) { 0 } );
 #line 34 "codegen/static_method_pointers.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -361,10 +361,10 @@ struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
     kl_rt_panic( "codegen/static_method_pointers.kl", 34, "arithmetic overflow: made + 1" );
     bb2:
 #line 34 "codegen/static_method_pointers.kl"
-    kl_t3 = kl_made_49__I3f64E + 1;
+    kl_t3 = kl__made__GS3BoxI3f64E + 1;
 #line 34 "codegen/static_method_pointers.kl"
-    kl_made_49__I3f64E = kl_t3;
-    kl_t4.kl_v_46 = kl_x_1;
+    kl__made__GS3BoxI3f64E = kl_t3;
+    kl_t4.kl_v = kl_x_1;
 #line 35 "codegen/static_method_pointers.kl"
     kl_t0 = kl_t4;
 #line 35 "codegen/static_method_pointers.kl"
@@ -376,7 +376,7 @@ int32_t kl__count__I3i32E__S3BoxI3i32E( void )
 {
     int32_t kl_t0;
 #line 40 "codegen/static_method_pointers.kl"
-    kl_t0 = kl_made_49__I3i32E;
+    kl_t0 = kl__made__GS3BoxI3i32E;
 #line 40 "codegen/static_method_pointers.kl"
     return kl_t0;
 }
@@ -386,7 +386,7 @@ int32_t kl__count__I3f64E__S3BoxI3f64E( void )
 {
     int32_t kl_t0;
 #line 40 "codegen/static_method_pointers.kl"
-    kl_t0 = kl_made_49__I3f64E;
+    kl_t0 = kl__made__GS3BoxI3f64E;
 #line 40 "codegen/static_method_pointers.kl"
     return kl_t0;
 }

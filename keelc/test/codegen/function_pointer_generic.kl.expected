@@ -13,7 +13,7 @@ typedef int64_t ( *kl__fn__FR3i64E3i64 )( int64_t* );
 
 struct kl__Holder
 {
-    kl__fn__F3i32E3i32 kl_cb_122;
+    kl__fn__F3i32E3i32 kl_cb;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -152,11 +152,11 @@ int32_t kl__main__( void )
 #line 65 "codegen/function_pointer_generic.kl"
     kl_t14 = kl__id__I3i32E__3i32;
 #line 65 "codegen/function_pointer_generic.kl"
-    kl_t13.kl_cb_122 = kl_t14;
+    kl_t13.kl_cb = kl_t14;
 #line 65 "codegen/function_pointer_generic.kl"
     kl_h_12 = kl_t13;
 #line 67 "codegen/function_pointer_generic.kl"
-    kl_r_15 = kl_h_12.kl_cb_122;
+    kl_r_15 = kl_h_12.kl_cb;
 #line 69 "codegen/function_pointer_generic.kl"
     kl_t16 = kl_r_15( 3 );
 #line 69 "codegen/function_pointer_generic.kl"

@@ -13,19 +13,19 @@ struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
 
 struct kl__Square
 {
-    double kl_side_22;
+    double kl_side;
 };
 
 struct kl__Named__vtable
 {
     void ( *drop )( void* );
-    int32_t ( *kl_id_6 )( void* );
+    int32_t ( *kl__id__ )( void* );
 };
 
 struct kl__Shape__vtable
 {
     void ( *drop )( void* );
-    double ( *kl_area_16 )( void* );
+    double ( *kl__area__ )( void* );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -58,7 +58,7 @@ double kl__area__S6Square( struct kl__Square* kl_this_1 )
     double kl_t0;
     double kl_t2;
 #line 19 "codegen/refinement.kl"
-    kl_t2 = ( *kl_this_1 ).kl_side_22 * ( *kl_this_1 ).kl_side_22;
+    kl_t2 = ( *kl_this_1 ).kl_side * ( *kl_this_1 ).kl_side;
 #line 19 "codegen/refinement.kl"
     kl_t0 = kl_t2;
 #line 19 "codegen/refinement.kl"
@@ -119,7 +119,7 @@ int32_t kl__main__( void )
     int32_t kl_t15;
     bool kl_t16;
 #line 59 "codegen/refinement.kl"
-    kl_t2.kl_side_22 = 2.0;
+    kl_t2.kl_side = 2.0;
 #line 59 "codegen/refinement.kl"
     kl_s_1 = kl_t2;
     kl_w_3 = 1;

@@ -10,20 +10,20 @@ struct kl__Holder__I3i32E;
 
 struct kl__Owned
 {
-    int32_t kl_tag_114;
+    int32_t kl_tag;
 };
 
 struct kl__Two
 {
-    int32_t kl_x_170;
+    int32_t kl_x;
 };
 
 struct kl__Holder__I3i32E
 {
-    int32_t kl_held_259;
+    int32_t kl_held;
 };
 
-int32_t kl_destroyed_112 = 0;
+int32_t kl__destroyed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -310,7 +310,7 @@ int32_t kl__by_marker__P3i32( int32_t* kl_a_1 )
 #line 70 "codegen/overloads.kl"
 void kl__Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_t_2 )
 {
-    ( *kl_this_1 ).kl_tag_114 = kl_t_2;
+    ( *kl_this_1 ).kl_tag = kl_t_2;
     return;
 #line 73 "codegen/overloads.kl"
 }
@@ -323,7 +323,7 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     bool kl_t4;
     int32_t kl_t5;
 #line 77 "codegen/overloads.kl"
-    kl_t2 = __builtin_mul_overflow( ( *kl_this_1 ).kl_tag_114, 0, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_mul_overflow( ( *kl_this_1 ).kl_tag, 0, &( int32_t ) { 0 } );
 #line 77 "codegen/overloads.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -331,9 +331,9 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_rt_panic( "codegen/overloads.kl", 77, "arithmetic overflow: tag * 0" );
     bb2:
 #line 77 "codegen/overloads.kl"
-    kl_t3 = ( *kl_this_1 ).kl_tag_114 * 0;
+    kl_t3 = ( *kl_this_1 ).kl_tag * 0;
 #line 77 "codegen/overloads.kl"
-    kl_t4 = __builtin_add_overflow( kl_destroyed_112, kl_t3, &( int32_t ) { 0 } );
+    kl_t4 = __builtin_add_overflow( kl__destroyed__G, kl_t3, &( int32_t ) { 0 } );
 #line 77 "codegen/overloads.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -341,9 +341,9 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_rt_panic( "codegen/overloads.kl", 77, "arithmetic overflow: destroyed + tag * 0" );
     bb4:
 #line 77 "codegen/overloads.kl"
-    kl_t5 = kl_destroyed_112 + kl_t3;
+    kl_t5 = kl__destroyed__G + kl_t3;
 #line 77 "codegen/overloads.kl"
-    kl_destroyed_112 = kl_t5;
+    kl__destroyed__G = kl_t5;
     return;
 #line 78 "codegen/overloads.kl"
 }
@@ -357,7 +357,7 @@ int32_t kl__by_transfer__5Owned( struct kl__Owned* kl_a_1 )
     bool kl_t4;
     int32_t kl_t5;
 #line 85 "codegen/overloads.kl"
-    kl_t2 = __builtin_mul_overflow( ( *kl_a_1 ).kl_tag_114, 0, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_mul_overflow( ( *kl_a_1 ).kl_tag, 0, &( int32_t ) { 0 } );
 #line 85 "codegen/overloads.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -365,7 +365,7 @@ int32_t kl__by_transfer__5Owned( struct kl__Owned* kl_a_1 )
     kl_rt_panic( "codegen/overloads.kl", 85, "arithmetic overflow: a.tag * 0" );
     bb2:
 #line 85 "codegen/overloads.kl"
-    kl_t3 = ( *kl_a_1 ).kl_tag_114 * 0;
+    kl_t3 = ( *kl_a_1 ).kl_tag * 0;
 #line 85 "codegen/overloads.kl"
     kl_t4 = __builtin_add_overflow( 60, kl_t3, &( int32_t ) { 0 } );
 #line 85 "codegen/overloads.kl"
@@ -391,7 +391,7 @@ int32_t kl__by_transfer__M5Owned( struct kl__Owned kl_a_1 )
     bool kl_t4;
     int32_t kl_t5;
 #line 90 "codegen/overloads.kl"
-    kl_t2 = __builtin_mul_overflow( kl_a_1.kl_tag_114, 0, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_mul_overflow( kl_a_1.kl_tag, 0, &( int32_t ) { 0 } );
 #line 90 "codegen/overloads.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -399,7 +399,7 @@ int32_t kl__by_transfer__M5Owned( struct kl__Owned kl_a_1 )
     kl_rt_panic( "codegen/overloads.kl", 90, "arithmetic overflow: a.tag * 0" );
     bb2:
 #line 90 "codegen/overloads.kl"
-    kl_t3 = kl_a_1.kl_tag_114 * 0;
+    kl_t3 = kl_a_1.kl_tag * 0;
 #line 90 "codegen/overloads.kl"
     kl_t4 = __builtin_add_overflow( 70, kl_t3, &( int32_t ) { 0 } );
 #line 90 "codegen/overloads.kl"
@@ -421,7 +421,7 @@ int32_t kl__by_transfer__M5Owned( struct kl__Owned kl_a_1 )
 #line 97 "codegen/overloads.kl"
 void kl__Two__R3Two_3i32__ctor( struct kl__Two* kl_this_1, int32_t kl_v_2 )
 {
-    ( *kl_this_1 ).kl_x_170 = kl_v_2;
+    ( *kl_this_1 ).kl_x = kl_v_2;
     return;
 #line 100 "codegen/overloads.kl"
 }
@@ -435,12 +435,12 @@ void kl__Two__R3Two_3f64__ctor( struct kl__Two* kl_this_1, double kl_v_2 )
 #line 104 "codegen/overloads.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    ( *kl_this_1 ).kl_x_170 = 100;
+    ( *kl_this_1 ).kl_x = 100;
 #line 104 "codegen/overloads.kl"
     goto bb3;
     bb2:
 #line 110 "codegen/overloads.kl"
-    ( *kl_this_1 ).kl_x_170 = 100;
+    ( *kl_this_1 ).kl_x = 100;
 #line 104 "codegen/overloads.kl"
     goto bb3;
     bb3:
@@ -456,7 +456,7 @@ int32_t kl__at__S3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
     bool kl_t3;
     int32_t kl_t4;
 #line 116 "codegen/overloads.kl"
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_x_170, kl_n_2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_x, kl_n_2, &( int32_t ) { 0 } );
 #line 116 "codegen/overloads.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -464,7 +464,7 @@ int32_t kl__at__S3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
     kl_rt_panic( "codegen/overloads.kl", 116, "arithmetic overflow: x + n" );
     bb2:
 #line 116 "codegen/overloads.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_170 + kl_n_2;
+    kl_t4 = ( *kl_this_1 ).kl_x + kl_n_2;
 #line 116 "codegen/overloads.kl"
     kl_t0 = kl_t4;
 #line 116 "codegen/overloads.kl"
@@ -480,7 +480,7 @@ int32_t kl__at__S3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
 #line 121 "codegen/overloads.kl"
     if ( kl_n_2 ) goto bb1; else goto bb4;
     bb1:
-    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_x_170, 2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_x, 2, &( int32_t ) { 0 } );
 #line 123 "codegen/overloads.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
@@ -488,14 +488,14 @@ int32_t kl__at__S3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
     kl_rt_panic( "codegen/overloads.kl", 123, "arithmetic overflow: x * 2" );
     bb3:
 #line 123 "codegen/overloads.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_170 * 2;
+    kl_t4 = ( *kl_this_1 ).kl_x * 2;
 #line 123 "codegen/overloads.kl"
     kl_t0 = kl_t4;
 #line 123 "codegen/overloads.kl"
     return kl_t0;
     bb4:
 #line 126 "codegen/overloads.kl"
-    kl_t0 = ( *kl_this_1 ).kl_x_170;
+    kl_t0 = ( *kl_this_1 ).kl_x;
 #line 126 "codegen/overloads.kl"
     return kl_t0;
 }
@@ -859,7 +859,7 @@ int32_t kl__main__( void )
     kl_t39 = &kl_from_whole_38;
 #line 232 "codegen/overloads.kl"
     kl__Two__R3Two_3i32__ctor( kl_t39, 5 );
-    kl_t41 = kl_from_whole_38.kl_x_170 != 5;
+    kl_t41 = kl_from_whole_38.kl_x != 5;
 #line 233 "codegen/overloads.kl"
     if ( kl_t41 ) goto bb27; else goto bb28;
     bb27:
@@ -877,7 +877,7 @@ int32_t kl__main__( void )
     kl_t43 = &kl_from_fraction_42;
 #line 235 "codegen/overloads.kl"
     kl__Two__R3Two_3f64__ctor( kl_t43, 2.5 );
-    kl_t45 = kl_from_fraction_42.kl_x_170 != 100;
+    kl_t45 = kl_from_fraction_42.kl_x != 100;
 #line 236 "codegen/overloads.kl"
     if ( kl_t45 ) goto bb29; else goto bb30;
     bb29:
@@ -1081,7 +1081,7 @@ int32_t kl__main__( void )
 #line 143 "codegen/overloads.kl"
 void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
-    ( *kl_this_1 ).kl_held_259 = kl_v_2;
+    ( *kl_this_1 ).kl_held = kl_v_2;
     return;
 #line 146 "codegen/overloads.kl"
 }
@@ -1092,7 +1092,7 @@ int32_t kl__count__I3i32E__S6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E* 
     int32_t kl_t0;
     bool kl_t4;
 #line 150 "codegen/overloads.kl"
-    kl_t4 = ( *kl_this_1 ).kl_held_259 == kl_a_2;
+    kl_t4 = ( *kl_this_1 ).kl_held == kl_a_2;
 #line 150 "codegen/overloads.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
@@ -1117,7 +1117,7 @@ int32_t kl__count__I3i32E__S6HolderI3i32E_4bool( struct kl__Holder__I3i32E* kl_t
 #line 160 "codegen/overloads.kl"
     if ( kl_a_2 ) goto bb1; else goto bb6;
     bb1:
-    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_held_259, 0, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_held, 0, &( int32_t ) { 0 } );
 #line 162 "codegen/overloads.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
@@ -1125,7 +1125,7 @@ int32_t kl__count__I3i32E__S6HolderI3i32E_4bool( struct kl__Holder__I3i32E* kl_t
     kl_rt_panic( "codegen/overloads.kl", 162, "arithmetic overflow: wrap<i32>( held ) * 0" );
     bb3:
 #line 162 "codegen/overloads.kl"
-    kl_t4 = ( *kl_this_1 ).kl_held_259 * 0;
+    kl_t4 = ( *kl_this_1 ).kl_held * 0;
 #line 162 "codegen/overloads.kl"
     kl_t5 = __builtin_add_overflow( 200, kl_t4, &( int32_t ) { 0 } );
 #line 162 "codegen/overloads.kl"

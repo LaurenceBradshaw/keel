@@ -9,12 +9,12 @@ struct kl__Box__I3i32E;
 
 struct kl__Number
 {
-    int32_t kl_x_1;
+    int32_t kl_x;
 };
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_unused_88;
+    int32_t kl_unused;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -80,7 +80,7 @@ int32_t kl__mixed__S6Number_3u64( struct kl__Number* kl_this_1, uint64_t kl_t2 )
     int32_t kl_t0;
     ( void ) kl_t2;
 #line 31 "codegen/static_method_overloads.kl"
-    kl_t0 = ( *kl_this_1 ).kl_x_1;
+    kl_t0 = ( *kl_this_1 ).kl_x;
 #line 31 "codegen/static_method_overloads.kl"
     return kl_t0;
 }
@@ -244,7 +244,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 80 "codegen/static_method_overloads.kl"
-    kl_t16.kl_x_1 = 7;
+    kl_t16.kl_x = 7;
 #line 80 "codegen/static_method_overloads.kl"
     kl_n_15 = kl_t16;
     kl_t18 = kl__mixed__S6Number_3i64( kl_a_1 );

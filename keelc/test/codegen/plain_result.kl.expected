@@ -10,19 +10,19 @@ struct kl__counter;
 
 struct kl__span
 {
-    uint64_t kl_from_1;
-    uint64_t kl_count_3;
+    uint64_t kl_from;
+    uint64_t kl_count;
 };
 
 struct kl__moves
 {
-    struct kl__span kl_first_6;
-    struct kl__span kl_second_8;
+    struct kl__span kl_first;
+    struct kl__span kl_second;
 };
 
 struct kl__counter
 {
-    uint64_t kl_total__74;
+    uint64_t kl_total_;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -36,7 +36,7 @@ int32_t kl__main__( void );
 #line 18 "codegen/plain_result.kl"
 void kl__counter__R7counter__ctor( struct kl__counter* kl_this_1 )
 {
-    ( *kl_this_1 ).kl_total__74 = 0;
+    ( *kl_this_1 ).kl_total_ = 0;
     return;
 #line 21 "codegen/plain_result.kl"
 }
@@ -52,9 +52,9 @@ struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64
     uint64_t kl_t7;
     ( void ) kl_this_1;
 #line 25 "codegen/plain_result.kl"
-    kl_t4.kl_from_1 = 0;
+    kl_t4.kl_from = 0;
 #line 25 "codegen/plain_result.kl"
-    kl_t4.kl_count_3 = kl_n_2;
+    kl_t4.kl_count = kl_n_2;
 #line 25 "codegen/plain_result.kl"
     kl_t6 = __builtin_add_overflow( kl_n_2, 1, &( uint64_t ) { 0 } );
 #line 25 "codegen/plain_result.kl"
@@ -66,13 +66,13 @@ struct kl__moves kl__plan__S7counter_3u64( struct kl__counter* kl_this_1, uint64
 #line 25 "codegen/plain_result.kl"
     kl_t7 = kl_n_2 + 1;
 #line 25 "codegen/plain_result.kl"
-    kl_t5.kl_from_1 = kl_n_2;
+    kl_t5.kl_from = kl_n_2;
 #line 25 "codegen/plain_result.kl"
-    kl_t5.kl_count_3 = kl_t7;
+    kl_t5.kl_count = kl_t7;
 #line 25 "codegen/plain_result.kl"
-    kl_t3.kl_first_6 = kl_t4;
+    kl_t3.kl_first = kl_t4;
 #line 25 "codegen/plain_result.kl"
-    kl_t3.kl_second_8 = kl_t5;
+    kl_t3.kl_second = kl_t5;
 #line 25 "codegen/plain_result.kl"
     kl_t0 = kl_t3;
 #line 25 "codegen/plain_result.kl"
@@ -86,7 +86,7 @@ void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves
     uint64_t kl_t4;
     bool kl_t5;
 #line 30 "codegen/plain_result.kl"
-    kl_t3 = __builtin_add_overflow( kl_m_2.kl_first_6.kl_count_3, kl_m_2.kl_second_8.kl_count_3, &( uint64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_m_2.kl_first.kl_count, kl_m_2.kl_second.kl_count, &( uint64_t ) { 0 } );
 #line 30 "codegen/plain_result.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -94,9 +94,9 @@ void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves
     kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: m.first.count + m.second.count" );
     bb2:
 #line 30 "codegen/plain_result.kl"
-    kl_t4 = kl_m_2.kl_first_6.kl_count_3 + kl_m_2.kl_second_8.kl_count_3;
+    kl_t4 = kl_m_2.kl_first.kl_count + kl_m_2.kl_second.kl_count;
 #line 30 "codegen/plain_result.kl"
-    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_total__74, kl_t4, &( uint64_t ) { 0 } );
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_total_, kl_t4, &( uint64_t ) { 0 } );
 #line 30 "codegen/plain_result.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
@@ -104,7 +104,7 @@ void kl__take__S7counter_5moves( struct kl__counter* kl_this_1, struct kl__moves
     kl_rt_panic( "codegen/plain_result.kl", 30, "arithmetic overflow: total_ += m.first.count + m.second.count;" );
     bb4:
 #line 30 "codegen/plain_result.kl"
-    ( *kl_this_1 ).kl_total__74 = ( *kl_this_1 ).kl_total__74 + kl_t4;
+    ( *kl_this_1 ).kl_total_ = ( *kl_this_1 ).kl_total_ + kl_t4;
     return;
 #line 31 "codegen/plain_result.kl"
 }
@@ -114,7 +114,7 @@ uint64_t kl__total__S7counter( struct kl__counter* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 35 "codegen/plain_result.kl"
-    kl_t0 = ( *kl_this_1 ).kl_total__74;
+    kl_t0 = ( *kl_this_1 ).kl_total_;
 #line 35 "codegen/plain_result.kl"
     return kl_t0;
 }

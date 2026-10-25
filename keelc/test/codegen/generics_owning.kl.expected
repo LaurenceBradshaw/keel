@@ -8,11 +8,11 @@ struct kl__Cell;
 
 struct kl__Cell
 {
-    int32_t* kl_slot_8;
+    int32_t* kl_slot;
 };
 
-int32_t kl_built_2 = 0;
-int32_t kl_destroyed_5 = 0;
+int32_t kl__built__G = 0;
+int32_t kl__destroyed__G = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -34,8 +34,8 @@ void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
 #line 16 "codegen/generics_owning.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/generics_owning.kl", 16, "out of memory: alloc<i32>()" );
 #line 16 "codegen/generics_owning.kl"
-    ( *kl_this_1 ).kl_slot_8 = kl_t2;
-    kl_t3 = __builtin_add_overflow( kl_built_2, 1, &( int32_t ) { 0 } );
+    ( *kl_this_1 ).kl_slot = kl_t2;
+    kl_t3 = __builtin_add_overflow( kl__built__G, 1, &( int32_t ) { 0 } );
 #line 17 "codegen/generics_owning.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -43,9 +43,9 @@ void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
     kl_rt_panic( "codegen/generics_owning.kl", 17, "arithmetic overflow: built + 1" );
     bb2:
 #line 17 "codegen/generics_owning.kl"
-    kl_t4 = kl_built_2 + 1;
+    kl_t4 = kl__built__G + 1;
 #line 17 "codegen/generics_owning.kl"
-    kl_built_2 = kl_t4;
+    kl__built__G = kl_t4;
     return;
 #line 18 "codegen/generics_owning.kl"
 }
@@ -56,8 +56,8 @@ void kl__Cell__dtor( struct kl__Cell* kl_this_1 )
     bool kl_t3;
     int32_t kl_t4;
 #line 22 "codegen/generics_owning.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_slot_8 );
-    kl_t3 = __builtin_add_overflow( kl_destroyed_5, 1, &( int32_t ) { 0 } );
+    kl_rt_free( ( *kl_this_1 ).kl_slot );
+    kl_t3 = __builtin_add_overflow( kl__destroyed__G, 1, &( int32_t ) { 0 } );
 #line 23 "codegen/generics_owning.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -65,9 +65,9 @@ void kl__Cell__dtor( struct kl__Cell* kl_this_1 )
     kl_rt_panic( "codegen/generics_owning.kl", 23, "arithmetic overflow: destroyed + 1" );
     bb2:
 #line 23 "codegen/generics_owning.kl"
-    kl_t4 = kl_destroyed_5 + 1;
+    kl_t4 = kl__destroyed__G + 1;
 #line 23 "codegen/generics_owning.kl"
-    kl_destroyed_5 = kl_t4;
+    kl__destroyed__G = kl_t4;
     return;
 #line 24 "codegen/generics_owning.kl"
 }
@@ -136,7 +136,7 @@ int32_t kl__main__( void )
 #line 56 "codegen/generics_owning.kl"
     kl__inspect__I4CellE__4Cell( kl_t13 );
 #line 59 "codegen/generics_owning.kl"
-    kl_t15 = kl_built_2 != 3;
+    kl_t15 = kl__built__G != 3;
 #line 59 "codegen/generics_owning.kl"
     if ( kl_t15 ) goto bb1; else goto bb2;
     bb1:
@@ -157,7 +157,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 64 "codegen/generics_owning.kl"
-    kl_t16 = kl_destroyed_5 != 1;
+    kl_t16 = kl__destroyed__G != 1;
 #line 64 "codegen/generics_owning.kl"
     if ( kl_t16 ) goto bb3; else goto bb4;
     bb3:

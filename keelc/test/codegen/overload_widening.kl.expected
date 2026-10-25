@@ -8,7 +8,7 @@ struct kl__Built;
 
 struct kl__Built
 {
-    int64_t kl_held_86;
+    int64_t kl_held;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -187,7 +187,7 @@ double kl__floats__4bool( bool kl_t1 )
 #line 54 "codegen/overload_widening.kl"
 void kl__Built__R5Built_3i64__ctor( struct kl__Built* kl_this_1, int64_t kl_v_2 )
 {
-    ( *kl_this_1 ).kl_held_86 = kl_v_2;
+    ( *kl_this_1 ).kl_held = kl_v_2;
     return;
 #line 57 "codegen/overload_widening.kl"
 }
@@ -197,7 +197,7 @@ void kl__Built__R5Built_4bool__ctor( struct kl__Built* kl_this_1, bool kl_t2 )
 {
     ( void ) kl_t2;
 #line 61 "codegen/overload_widening.kl"
-    ( *kl_this_1 ).kl_held_86 = 0;
+    ( *kl_this_1 ).kl_held = 0;
     return;
 #line 62 "codegen/overload_widening.kl"
 }
@@ -209,7 +209,7 @@ int64_t kl__plus__S5Built_3i64( struct kl__Built* kl_this_1, int64_t kl_n_2 )
     bool kl_t3;
     int64_t kl_t4;
 #line 66 "codegen/overload_widening.kl"
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_held_86, kl_n_2, &( int64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_held, kl_n_2, &( int64_t ) { 0 } );
 #line 66 "codegen/overload_widening.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -217,7 +217,7 @@ int64_t kl__plus__S5Built_3i64( struct kl__Built* kl_this_1, int64_t kl_n_2 )
     kl_rt_panic( "codegen/overload_widening.kl", 66, "arithmetic overflow: held + n" );
     bb2:
 #line 66 "codegen/overload_widening.kl"
-    kl_t4 = ( *kl_this_1 ).kl_held_86 + kl_n_2;
+    kl_t4 = ( *kl_this_1 ).kl_held + kl_n_2;
 #line 66 "codegen/overload_widening.kl"
     kl_t0 = kl_t4;
 #line 66 "codegen/overload_widening.kl"
@@ -354,7 +354,7 @@ int32_t kl__main__( void )
     kl_t24 = ( int64_t ) kl_small_3;
 #line 96 "codegen/overload_widening.kl"
     kl__Built__R5Built_3i64__ctor( kl_t23, kl_t24 );
-    kl_t26 = kl_built_22.kl_held_86 != 7;
+    kl_t26 = kl_built_22.kl_held != 7;
 #line 97 "codegen/overload_widening.kl"
     if ( kl_t26 ) goto bb11; else goto bb12;
     bb11:

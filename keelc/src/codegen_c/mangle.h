@@ -89,8 +89,11 @@ std::string mangle_constructor(
 // contain both `x` and `kl_x`, which would otherwise become the same C identifier.
 std::string mangle_local( std::string_view name, u32 declaration );
 
-std::string
-mangle_static_field( std::string_view name, u32 declaration, std::span<const Type_id> type_arguments, const Type_table& types );
+// `kl_<name>`: a struct's fields have distinct names, and the prefix keeps one off a C keyword.
+std::string mangle_field( std::string_view name );
+// `kl_<owner>_<name>__G` at file scope, `kl_<owner>_<name>__GS<enclosing>` for a static field. `G`
+// starts no encoded parameter, so no function's argtypes can spell it.
+std::string mangle_global( const Mangled_owner& owner, std::string_view name, Type_id enclosing, const Type_table& types );
 
 std::string mangle_run( Type_id run, const Type_table& types );
 std::string mangle_array( Type_id array, const Type_table& types );

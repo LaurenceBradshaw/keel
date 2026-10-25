@@ -8,8 +8,8 @@ struct kl__Name;
 
 struct kl__Name
 {
-    uint8_t* kl_data_7;
-    uint64_t kl_size_9;
+    uint8_t* kl_data;
+    uint64_t kl_size;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -50,12 +50,12 @@ static void kl__Name__as_kl_7prelude_textual__drop( void* self )
     ( void ) self;
 }
 
-static struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl_as_text_517( void* self )
+static struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
     return kl__as_text__S4Name( ( struct kl__Name* ) self );
 }
 
-static const struct kl_7prelude_textual__vtable kl__Name__as_kl_7prelude_textual = { kl__Name__as_kl_7prelude_textual__drop, kl__Name__as_kl_7prelude_textual__kl_as_text_517 };
+static const struct kl_7prelude_textual__vtable kl__Name__as_kl_7prelude_textual = { kl__Name__as_kl_7prelude_textual__drop, kl__Name__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 10 "codegen/textual.kl"
 struct kl__run__L2u8__ref kl__as_text__S4Name( struct kl__Name* kl_this_1 )
@@ -69,7 +69,7 @@ struct kl__run__L2u8__ref kl__as_text__S4Name( struct kl__Name* kl_this_1 )
 #line 14 "codegen/textual.kl"
     kl_t2 = ( uint64_t ) 0;
 #line 14 "codegen/textual.kl"
-    kl_t3 = kl_t2 <= ( *kl_this_1 ).kl_size_9;
+    kl_t3 = kl_t2 <= ( *kl_this_1 ).kl_size;
 #line 14 "codegen/textual.kl"
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
@@ -77,9 +77,9 @@ struct kl__run__L2u8__ref kl__as_text__S4Name( struct kl__Name* kl_this_1 )
     kl_rt_panic( "codegen/textual.kl", 14, "out of bounds: data[ 0..size ]" );
     bb2:
 #line 14 "codegen/textual.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_7 + kl_t2;
+    kl_t4 = ( *kl_this_1 ).kl_data + kl_t2;
 #line 14 "codegen/textual.kl"
-    kl_t5 = ( *kl_this_1 ).kl_size_9 - kl_t2;
+    kl_t5 = ( *kl_this_1 ).kl_size - kl_t2;
 #line 14 "codegen/textual.kl"
     kl_t6 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t4, kl_t5 };
 #line 14 "codegen/textual.kl"
@@ -191,9 +191,9 @@ int32_t kl__main__( void )
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
 #line 37 "codegen/textual.kl"
     kl_hello_1 = kl_t2;
-    kl_t7.kl_data_7 = kl_hello_1.kl_data_533;
+    kl_t7.kl_data = kl_hello_1.kl_data;
 #line 38 "codegen/textual.kl"
-    kl_t7.kl_size_9 = 3;
+    kl_t7.kl_size = 3;
 #line 38 "codegen/textual.kl"
     kl_name_6 = kl_t7;
     kl_yes_8 = true;
@@ -300,7 +300,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_517( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -399,7 +399,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_517( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"

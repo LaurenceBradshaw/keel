@@ -11,23 +11,23 @@ struct kl__cell__I3f64E;
 
 struct kl__meter
 {
-    int32_t kl_v_33;
+    int32_t kl_v;
 };
 
 struct kl__Owner
 {
-    uint8_t* kl_bytes_111;
-    uint64_t kl_n_113;
+    uint8_t* kl_bytes;
+    uint64_t kl_n;
 };
 
 struct kl__cell__I2u8E
 {
-    uint8_t kl_v_73;
+    uint8_t kl_v;
 };
 
 struct kl__cell__I3f64E
 {
-    double kl_v_73;
+    double kl_v;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -63,7 +63,7 @@ struct kl__meter kl__zero__S5meter( void )
     struct kl__meter kl_t0;
     struct kl__meter kl_t1;
 #line 24 "codegen/static_requirements.kl"
-    kl_t1.kl_v_33 = 0;
+    kl_t1.kl_v = 0;
 #line 24 "codegen/static_requirements.kl"
     kl_t0 = kl_t1;
 #line 24 "codegen/static_requirements.kl"
@@ -77,7 +77,7 @@ struct kl__meter kl__named__S5meter_3i32( int32_t kl_value_1 )
     struct kl__meter kl_t0;
     struct kl__meter kl_t2;
 #line 25 "codegen/static_requirements.kl"
-    kl_t2.kl_v_33 = kl_value_1;
+    kl_t2.kl_v = kl_value_1;
 #line 25 "codegen/static_requirements.kl"
     kl_t0 = kl_t2;
 #line 25 "codegen/static_requirements.kl"
@@ -105,7 +105,7 @@ struct kl__meter kl__named__S5meter_4bool( bool kl_value_1 )
     goto bb3;
     bb3:
 #line 26 "codegen/static_requirements.kl"
-    kl_t2.kl_v_33 = kl_t3;
+    kl_t2.kl_v = kl_t3;
 #line 26 "codegen/static_requirements.kl"
     kl_t0 = kl_t2;
 #line 26 "codegen/static_requirements.kl"
@@ -142,8 +142,8 @@ void kl__Owner__R5Owner_3u64__ctor( struct kl__Owner* kl_this_1, uint64_t kl_siz
 #line 53 "codegen/static_requirements.kl"
     kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_2, sizeof( uint8_t ), "codegen/static_requirements.kl", 53, "out of memory: alloc<u8>( size )" );
 #line 53 "codegen/static_requirements.kl"
-    ( *kl_this_1 ).kl_bytes_111 = kl_t3;
-    ( *kl_this_1 ).kl_n_113 = kl_size_2;
+    ( *kl_this_1 ).kl_bytes = kl_t3;
+    ( *kl_this_1 ).kl_n = kl_size_2;
     return;
 #line 55 "codegen/static_requirements.kl"
 }
@@ -152,7 +152,7 @@ void kl__Owner__R5Owner_3u64__ctor( struct kl__Owner* kl_this_1, uint64_t kl_siz
 void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
 {
 #line 57 "codegen/static_requirements.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_bytes_111 );
+    kl_rt_free( ( *kl_this_1 ).kl_bytes );
 #line 57 "codegen/static_requirements.kl"
     return;
 #line 57 "codegen/static_requirements.kl"
@@ -193,7 +193,7 @@ uint64_t kl__count__S5Owner( struct kl__Owner* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 60 "codegen/static_requirements.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n_113;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 60 "codegen/static_requirements.kl"
     return kl_t0;
 #line 60 "codegen/static_requirements.kl"
@@ -236,7 +236,7 @@ int32_t kl__main__( void )
 #line 82 "codegen/static_requirements.kl"
     kl_t1 = kl__make_zero__I5meterE__(  );
 #line 82 "codegen/static_requirements.kl"
-    kl_t2 = kl_t1.kl_v_33 != 0;
+    kl_t2 = kl_t1.kl_v != 0;
 #line 82 "codegen/static_requirements.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -251,7 +251,7 @@ int32_t kl__main__( void )
 #line 87 "codegen/static_requirements.kl"
     kl_t6 = kl__make_named__I5meter_3i32E__3i32( kl_t5 );
 #line 87 "codegen/static_requirements.kl"
-    kl_t7 = kl_t6.kl_v_33 != 5;
+    kl_t7 = kl_t6.kl_v != 5;
 #line 87 "codegen/static_requirements.kl"
     kl_t3 = kl_t7;
 #line 87 "codegen/static_requirements.kl"
@@ -264,7 +264,7 @@ int32_t kl__main__( void )
 #line 87 "codegen/static_requirements.kl"
     kl_t10 = kl__make_named__I5meter_4boolE__4bool( kl_t9 );
 #line 87 "codegen/static_requirements.kl"
-    kl_t11 = kl_t10.kl_v_33 != 2;
+    kl_t11 = kl_t10.kl_v != 2;
 #line 87 "codegen/static_requirements.kl"
     kl_t3 = kl_t11;
 #line 87 "codegen/static_requirements.kl"
@@ -280,7 +280,7 @@ int32_t kl__main__( void )
 #line 92 "codegen/static_requirements.kl"
     kl_t13 = kl__make_zero__I4cellI2u8EE__(  );
 #line 92 "codegen/static_requirements.kl"
-    kl_t14 = kl_t13.kl_v_73 != 7;
+    kl_t14 = kl_t13.kl_v != 7;
 #line 92 "codegen/static_requirements.kl"
     kl_t12 = kl_t14;
 #line 92 "codegen/static_requirements.kl"
@@ -289,7 +289,7 @@ int32_t kl__main__( void )
 #line 92 "codegen/static_requirements.kl"
     kl_t15 = kl__make_zero__I4cellI3f64EE__(  );
 #line 92 "codegen/static_requirements.kl"
-    kl_t16 = kl_t15.kl_v_73 != 7.0;
+    kl_t16 = kl_t15.kl_v != 7.0;
 #line 92 "codegen/static_requirements.kl"
     kl_t12 = kl_t16;
 #line 92 "codegen/static_requirements.kl"
@@ -361,7 +361,7 @@ int32_t kl__main__( void )
 #line 108 "codegen/static_requirements.kl"
     kl_t29 = kl__zero__S5meter(  );
 #line 108 "codegen/static_requirements.kl"
-    kl_t30 = kl_t29.kl_v_33 != 0;
+    kl_t30 = kl_t29.kl_v != 0;
 #line 108 "codegen/static_requirements.kl"
     if ( kl_t30 ) goto bb19; else goto bb20;
     bb19:
@@ -531,7 +531,7 @@ struct kl__cell__I2u8E kl__zero__I2u8E__S4cellI2u8E( void )
     struct kl__cell__I2u8E kl_t0;
     struct kl__cell__I2u8E kl_t1;
 #line 33 "codegen/static_requirements.kl"
-    kl_t1.kl_v_73 = 7;
+    kl_t1.kl_v = 7;
 #line 33 "codegen/static_requirements.kl"
     kl_t0 = kl_t1;
 #line 33 "codegen/static_requirements.kl"
@@ -545,7 +545,7 @@ struct kl__cell__I3f64E kl__zero__I3f64E__S4cellI3f64E( void )
     struct kl__cell__I3f64E kl_t0;
     struct kl__cell__I3f64E kl_t1;
 #line 33 "codegen/static_requirements.kl"
-    kl_t1.kl_v_73 = 7.0;
+    kl_t1.kl_v = 7.0;
 #line 33 "codegen/static_requirements.kl"
     kl_t0 = kl_t1;
 #line 33 "codegen/static_requirements.kl"

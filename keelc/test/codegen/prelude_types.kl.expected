@@ -10,8 +10,8 @@ typedef uint64_t ( *kl__fn__FPQ7prelude3strE3u64 )( struct kl_7prelude_str* );
 
 struct kl__Named
 {
-    struct kl_7prelude_str kl_name_1;
-    uint64_t kl_id_3;
+    struct kl_7prelude_str kl_name;
+    uint64_t kl_id;
 };
 
 uint64_t kl__size_of__PQ7prelude3str( struct kl_7prelude_str* );
@@ -23,7 +23,7 @@ uint64_t kl__size_of__PQ7prelude3str( struct kl_7prelude_str* kl_s_1 )
 {
     uint64_t kl_t0;
 #line 12 "codegen/prelude_types.kl"
-    kl_t0 = ( *kl_s_1 ).kl_size_70;
+    kl_t0 = ( *kl_s_1 ).kl_size;
 #line 12 "codegen/prelude_types.kl"
     return kl_t0;
 }
@@ -35,7 +35,7 @@ uint64_t kl__through__P5Named_FPQ7prelude3strE3u64( struct kl__Named* kl_n_1, kl
     struct kl_7prelude_str* kl_t3;
     uint64_t kl_t4;
 #line 17 "codegen/prelude_types.kl"
-    kl_t3 = &( *kl_n_1 ).kl_name_1;
+    kl_t3 = &( *kl_n_1 ).kl_name;
 #line 17 "codegen/prelude_types.kl"
     kl_t4 = kl_f_2( kl_t3 );
 #line 17 "codegen/prelude_types.kl"

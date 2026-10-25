@@ -9,16 +9,16 @@ struct kl__Box__I3i32E;
 
 struct kl__Measurement
 {
-    double kl_px_1;
-    double kl_py_3;
-    double kl_pz_5;
-    int32_t kl_id_7;
+    double kl_px;
+    double kl_py;
+    double kl_pz;
+    int32_t kl_id;
 };
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_tag_14;
-    int32_t kl_v_16;
+    int32_t kl_tag;
+    int32_t kl_v;
 };
 
 double kl__sum__D11Measurement3f64_D11Measurement3f64_D11Measurement3f64_11Measurement( size_t, size_t, size_t, struct kl__Measurement* );
@@ -92,13 +92,13 @@ struct kl__Measurement kl__make__( void )
     struct kl__Measurement kl_t0;
     struct kl__Measurement kl_t1;
 #line 39 "codegen/field_pointers.kl"
-    kl_t1.kl_px_1 = 1.0;
+    kl_t1.kl_px = 1.0;
 #line 39 "codegen/field_pointers.kl"
-    kl_t1.kl_py_3 = 2.0;
+    kl_t1.kl_py = 2.0;
 #line 39 "codegen/field_pointers.kl"
-    kl_t1.kl_pz_5 = 4.0;
+    kl_t1.kl_pz = 4.0;
 #line 39 "codegen/field_pointers.kl"
-    kl_t1.kl_id_7 = 9;
+    kl_t1.kl_id = 9;
 #line 39 "codegen/field_pointers.kl"
     kl_t0 = kl_t1;
 #line 39 "codegen/field_pointers.kl"
@@ -169,13 +169,13 @@ int32_t kl__main__( void )
 #line 44 "codegen/field_pointers.kl"
     kl_m_1 = kl_t2;
 #line 46 "codegen/field_pointers.kl"
-    kl_t4 = offsetof( struct kl__Measurement, kl_px_1 );
+    kl_t4 = offsetof( struct kl__Measurement, kl_px );
 #line 46 "codegen/field_pointers.kl"
     kl_x_3 = kl_t4;
-    kl_t6 = offsetof( struct kl__Measurement, kl_pz_5 );
+    kl_t6 = offsetof( struct kl__Measurement, kl_pz );
 #line 47 "codegen/field_pointers.kl"
     kl_z_5 = kl_t6;
-    kl_t8 = offsetof( struct kl__Measurement, kl_id_7 );
+    kl_t8 = offsetof( struct kl__Measurement, kl_id );
 #line 48 "codegen/field_pointers.kl"
     kl_id_7 = kl_t8;
 #line 50 "codegen/field_pointers.kl"
@@ -224,9 +224,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 55 "codegen/field_pointers.kl"
-    kl_t20 = offsetof( struct kl__Measurement, kl_px_1 );
+    kl_t20 = offsetof( struct kl__Measurement, kl_px );
 #line 55 "codegen/field_pointers.kl"
-    kl_t21 = offsetof( struct kl__Measurement, kl_py_3 );
+    kl_t21 = offsetof( struct kl__Measurement, kl_py );
 #line 55 "codegen/field_pointers.kl"
     kl_t22 = &kl_m_1;
 #line 55 "codegen/field_pointers.kl"
@@ -252,7 +252,7 @@ int32_t kl__main__( void )
     if ( kl_t25 ) goto bb10; else goto bb9;
     bb9:
 #line 60 "codegen/field_pointers.kl"
-    kl_t29 = offsetof( struct kl__Measurement, kl_py_3 );
+    kl_t29 = offsetof( struct kl__Measurement, kl_py );
 #line 60 "codegen/field_pointers.kl"
     kl_t30 = &kl_m_1;
 #line 60 "codegen/field_pointers.kl"
@@ -312,10 +312,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 76 "codegen/field_pointers.kl"
-    kl_b_42.kl_tag_14 = 3;
-    kl_b_42.kl_v_16 = 8;
+    kl_b_42.kl_tag = 3;
+    kl_b_42.kl_v = 8;
 #line 79 "codegen/field_pointers.kl"
-    kl_t44 = offsetof( struct kl__Box__I3i32E, kl_v_16 );
+    kl_t44 = offsetof( struct kl__Box__I3i32E, kl_v );
 #line 79 "codegen/field_pointers.kl"
     kl_value_43 = kl_t44;
 #line 81 "codegen/field_pointers.kl"
@@ -348,7 +348,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb22:
 #line 86 "codegen/field_pointers.kl"
-    kl_t52 = offsetof( struct kl__Measurement, kl_py_3 );
+    kl_t52 = offsetof( struct kl__Measurement, kl_py );
 #line 86 "codegen/field_pointers.kl"
     kl_x_3 = kl_t52;
 #line 88 "codegen/field_pointers.kl"

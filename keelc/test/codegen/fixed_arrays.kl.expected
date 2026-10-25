@@ -10,13 +10,13 @@ struct kl__A2_5Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__Row
 {
-    struct kl__A3_3i32 kl_cells_8;
+    struct kl__A3_3i32 kl_cells;
 };
 
 struct kl__A2_5Point
@@ -24,7 +24,7 @@ struct kl__A2_5Point
     struct kl__Point e[2];
 };
 
-uint64_t kl_SIDE_13 = 3;
+uint64_t kl__SIDE__G = 3;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -403,13 +403,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 69 "codegen/fixed_arrays.kl"
-    kl_t28.kl_x_1 = 1;
+    kl_t28.kl_x = 1;
 #line 69 "codegen/fixed_arrays.kl"
-    kl_t28.kl_y_3 = 2;
+    kl_t28.kl_y = 2;
 #line 69 "codegen/fixed_arrays.kl"
-    kl_t29.kl_x_1 = 3;
+    kl_t29.kl_x = 3;
 #line 69 "codegen/fixed_arrays.kl"
-    kl_t29.kl_y_3 = 4;
+    kl_t29.kl_y = 4;
 #line 69 "codegen/fixed_arrays.kl"
     kl_t30 = 0;
 #line 69 "codegen/fixed_arrays.kl"
@@ -422,13 +422,13 @@ int32_t kl__main__( void )
     kl_points_26 = kl_t27;
     kl_t32 = 1;
 #line 70 "codegen/fixed_arrays.kl"
-    kl_points_26.e[kl_t32].kl_y_3 = 7;
+    kl_points_26.e[kl_t32].kl_y = 7;
 #line 72 "codegen/fixed_arrays.kl"
     kl_t33 = 0;
 #line 72 "codegen/fixed_arrays.kl"
     kl_t34 = 1;
 #line 72 "codegen/fixed_arrays.kl"
-    kl_t35 = __builtin_add_overflow( kl_points_26.e[kl_t33].kl_x_1, kl_points_26.e[kl_t34].kl_y_3, &( int32_t ) { 0 } );
+    kl_t35 = __builtin_add_overflow( kl_points_26.e[kl_t33].kl_x, kl_points_26.e[kl_t34].kl_y, &( int32_t ) { 0 } );
 #line 72 "codegen/fixed_arrays.kl"
     if ( kl_t35 ) goto bb11; else goto bb12;
     bb11:
@@ -436,7 +436,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/fixed_arrays.kl", 72, "arithmetic overflow: points[ 0 ].x + points[ 1 ].y" );
     bb12:
 #line 72 "codegen/fixed_arrays.kl"
-    kl_t36 = kl_points_26.e[kl_t33].kl_x_1 + kl_points_26.e[kl_t34].kl_y_3;
+    kl_t36 = kl_points_26.e[kl_t33].kl_x + kl_points_26.e[kl_t34].kl_y;
 #line 72 "codegen/fixed_arrays.kl"
     kl_t37 = kl_t36 != 8;
 #line 72 "codegen/fixed_arrays.kl"
@@ -563,13 +563,13 @@ int32_t kl__main__( void )
 #line 102 "codegen/fixed_arrays.kl"
     kl_t68.e[kl_t71] = 9;
 #line 102 "codegen/fixed_arrays.kl"
-    kl_t67.kl_cells_8 = kl_t68;
+    kl_t67.kl_cells = kl_t68;
 #line 102 "codegen/fixed_arrays.kl"
     kl_row_66 = kl_t67;
 #line 104 "codegen/fixed_arrays.kl"
     kl_t72 = 0;
 #line 104 "codegen/fixed_arrays.kl"
-    kl_t73 = &kl_row_66.kl_cells_8.e[kl_t72];
+    kl_t73 = &kl_row_66.kl_cells.e[kl_t72];
 #line 104 "codegen/fixed_arrays.kl"
     kl_t74 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t73, 3 };
 #line 104 "codegen/fixed_arrays.kl"

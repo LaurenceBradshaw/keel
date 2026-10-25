@@ -7,8 +7,8 @@
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef int32_t ( *kl__fn__FF3i32E3i323i32E3i32 )( kl__fn__F3i32E3i32, int32_t );
 
-kl__fn__F3i32E3i32 kl_handler_32;
-kl__fn__FF3i32E3i323i32E3i32 kl_applier_44;
+kl__fn__F3i32E3i32 kl__handler__G;
+kl__fn__FF3i32E3i323i32E3i32 kl__applier__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -64,12 +64,12 @@ int32_t kl__main__( void )
 #line 18 "codegen/function_pointer_global.kl"
     kl_t1 = kl__twice__3i32;
 #line 18 "codegen/function_pointer_global.kl"
-    kl_handler_32 = kl_t1;
+    kl__handler__G = kl_t1;
     kl_t2 = kl__apply__F3i32E3i32_3i32;
 #line 19 "codegen/function_pointer_global.kl"
-    kl_applier_44 = kl_t2;
+    kl__applier__G = kl_t2;
 #line 21 "codegen/function_pointer_global.kl"
-    kl_t3 = kl_handler_32( 21 );
+    kl_t3 = kl__handler__G( 21 );
 #line 21 "codegen/function_pointer_global.kl"
     kl_t4 = kl_t3 != 42;
 #line 21 "codegen/function_pointer_global.kl"
@@ -80,7 +80,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 26 "codegen/function_pointer_global.kl"
-    kl_t5 = kl_applier_44( kl_handler_32, 4 );
+    kl_t5 = kl__applier__G( kl__handler__G, 4 );
 #line 26 "codegen/function_pointer_global.kl"
     kl_t6 = kl_t5 != 8;
 #line 26 "codegen/function_pointer_global.kl"

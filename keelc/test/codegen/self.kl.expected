@@ -10,19 +10,19 @@ struct kl__Node__I3i32E;
 
 struct kl__Plain
 {
-    int32_t kl_v_26;
+    int32_t kl_v;
 };
 
 struct kl__Pair__I3i64E
 {
-    int64_t kl_first_80;
-    int64_t kl_second_82;
+    int64_t kl_first;
+    int64_t kl_second;
 };
 
 struct kl__Node__I3i32E
 {
-    int32_t kl_v_158;
-    struct kl__Node__I3i32E* kl_next_164;
+    int32_t kl_v;
+    struct kl__Node__I3i32E* kl_next;
 };
 
 bool kl__same__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
@@ -41,7 +41,7 @@ bool kl__same__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl
     bool kl_t0;
     bool kl_t3;
 #line 15 "codegen/self.kl"
-    kl_t3 = ( *kl_this_1 ).kl_v_26 == ( *kl_other_2 ).kl_v_26;
+    kl_t3 = ( *kl_this_1 ).kl_v == ( *kl_other_2 ).kl_v;
 #line 15 "codegen/self.kl"
     kl_t0 = kl_t3;
 #line 15 "codegen/self.kl"
@@ -57,17 +57,17 @@ struct kl__Plain kl__larger__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct
     struct kl__Plain kl_t4;
     struct kl__Plain kl_t5;
 #line 19 "codegen/self.kl"
-    kl_t3 = ( *kl_this_1 ).kl_v_26 > ( *kl_other_2 ).kl_v_26;
+    kl_t3 = ( *kl_this_1 ).kl_v > ( *kl_other_2 ).kl_v;
 #line 19 "codegen/self.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_t4.kl_v_26 = ( *kl_this_1 ).kl_v_26;
+    kl_t4.kl_v = ( *kl_this_1 ).kl_v;
 #line 21 "codegen/self.kl"
     kl_t0 = kl_t4;
 #line 21 "codegen/self.kl"
     return kl_t0;
     bb2:
-    kl_t5.kl_v_26 = ( *kl_other_2 ).kl_v_26;
+    kl_t5.kl_v = ( *kl_other_2 ).kl_v;
 #line 23 "codegen/self.kl"
     kl_t0 = kl_t5;
 #line 23 "codegen/self.kl"
@@ -118,22 +118,22 @@ int32_t kl__main__( void )
     struct kl__Node__I3i32E* kl_t38;
     bool kl_t39;
 #line 62 "codegen/self.kl"
-    kl_t2.kl_v_26 = 3;
+    kl_t2.kl_v = 3;
 #line 62 "codegen/self.kl"
     kl_t3 = &kl_t2;
 #line 62 "codegen/self.kl"
-    kl_t4.kl_v_26 = 9;
+    kl_t4.kl_v = 9;
 #line 62 "codegen/self.kl"
     kl_t5 = &kl_t4;
 #line 62 "codegen/self.kl"
-    kl_t6.kl_v_26 = 4;
+    kl_t6.kl_v = 4;
 #line 62 "codegen/self.kl"
     kl_t7 = &kl_t6;
 #line 62 "codegen/self.kl"
     kl_t8 = kl__biggest__I5PlainE__5Plain_5Plain_5Plain( kl_t3, kl_t5, kl_t7 );
 #line 62 "codegen/self.kl"
     kl_p_1 = kl_t8;
-    kl_t9 = kl_p_1.kl_v_26 != 9;
+    kl_t9 = kl_p_1.kl_v != 9;
 #line 63 "codegen/self.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
@@ -142,35 +142,35 @@ int32_t kl__main__( void )
 #line 63 "codegen/self.kl"
     return kl_t0;
     bb2:
-    kl_t11.kl_first_80 = 1;
+    kl_t11.kl_first = 1;
 #line 65 "codegen/self.kl"
-    kl_t11.kl_second_82 = 10;
+    kl_t11.kl_second = 10;
 #line 65 "codegen/self.kl"
     kl_t12 = &kl_t11;
 #line 65 "codegen/self.kl"
-    kl_t13.kl_first_80 = 5;
+    kl_t13.kl_first = 5;
 #line 65 "codegen/self.kl"
-    kl_t13.kl_second_82 = 50;
+    kl_t13.kl_second = 50;
 #line 65 "codegen/self.kl"
     kl_t14 = &kl_t13;
 #line 65 "codegen/self.kl"
-    kl_t15.kl_first_80 = 2;
+    kl_t15.kl_first = 2;
 #line 65 "codegen/self.kl"
-    kl_t15.kl_second_82 = 20;
+    kl_t15.kl_second = 20;
 #line 65 "codegen/self.kl"
     kl_t16 = &kl_t15;
 #line 65 "codegen/self.kl"
     kl_t17 = kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( kl_t12, kl_t14, kl_t16 );
 #line 65 "codegen/self.kl"
     kl_q_10 = kl_t17;
-    kl_t19 = kl_q_10.kl_first_80 != 5;
+    kl_t19 = kl_q_10.kl_first != 5;
 #line 66 "codegen/self.kl"
     kl_t18 = kl_t19;
 #line 66 "codegen/self.kl"
     if ( kl_t18 ) goto bb4; else goto bb3;
     bb3:
 #line 66 "codegen/self.kl"
-    kl_t20 = kl_q_10.kl_second_82 != 50;
+    kl_t20 = kl_q_10.kl_second != 50;
 #line 66 "codegen/self.kl"
     kl_t18 = kl_t20;
 #line 66 "codegen/self.kl"
@@ -184,17 +184,17 @@ int32_t kl__main__( void )
 #line 66 "codegen/self.kl"
     return kl_t0;
     bb6:
-    kl_t22.kl_v_26 = 7;
+    kl_t22.kl_v = 7;
 #line 68 "codegen/self.kl"
     kl_seven_21 = kl_t22;
-    kl_t24.kl_first_80 = 1;
+    kl_t24.kl_first = 1;
 #line 69 "codegen/self.kl"
-    kl_t24.kl_second_82 = 2;
+    kl_t24.kl_second = 2;
 #line 69 "codegen/self.kl"
     kl_one_23 = kl_t24;
-    kl_t26.kl_first_80 = 1;
+    kl_t26.kl_first = 1;
 #line 70 "codegen/self.kl"
-    kl_t26.kl_second_82 = 3;
+    kl_t26.kl_second = 3;
 #line 70 "codegen/self.kl"
     kl_other_25 = kl_t26;
     kl_t27 = &kl_seven_21;
@@ -226,19 +226,19 @@ int32_t kl__main__( void )
 #line 72 "codegen/self.kl"
     return kl_t0;
     bb10:
-    kl_t35.kl_v_158 = 2;
+    kl_t35.kl_v = 2;
 #line 74 "codegen/self.kl"
-    kl_t35.kl_next_164 = NULL;
+    kl_t35.kl_next = NULL;
 #line 74 "codegen/self.kl"
     kl_tail_34 = kl_t35;
     kl_t38 = &kl_tail_34;
 #line 75 "codegen/self.kl"
-    kl_t37.kl_v_158 = 1;
+    kl_t37.kl_v = 1;
 #line 75 "codegen/self.kl"
-    kl_t37.kl_next_164 = kl_t38;
+    kl_t37.kl_next = kl_t38;
 #line 75 "codegen/self.kl"
     kl_head_36 = kl_t37;
-    kl_t39 = ( *kl_head_36.kl_next_164 ).kl_v_158 != 2;
+    kl_t39 = ( *kl_head_36.kl_next ).kl_v != 2;
 #line 76 "codegen/self.kl"
     if ( kl_t39 ) goto bb11; else goto bb12;
     bb11:
@@ -394,14 +394,14 @@ bool kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_thi
     bool kl_t4;
     bool kl_t5;
 #line 32 "codegen/self.kl"
-    kl_t4 = ( *kl_this_1 ).kl_first_80 == ( *kl_other_2 ).kl_first_80;
+    kl_t4 = ( *kl_this_1 ).kl_first == ( *kl_other_2 ).kl_first;
 #line 32 "codegen/self.kl"
     kl_t3 = kl_t4;
 #line 32 "codegen/self.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 32 "codegen/self.kl"
-    kl_t5 = ( *kl_this_1 ).kl_second_82 == ( *kl_other_2 ).kl_second_82;
+    kl_t5 = ( *kl_this_1 ).kl_second == ( *kl_other_2 ).kl_second;
 #line 32 "codegen/self.kl"
     kl_t3 = kl_t5;
 #line 32 "codegen/self.kl"
@@ -422,21 +422,21 @@ struct kl__Pair__I3i64E kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl_
     struct kl__Pair__I3i64E kl_t4;
     struct kl__Pair__I3i64E kl_t5;
 #line 36 "codegen/self.kl"
-    kl_t3 = ( *kl_this_1 ).kl_first_80 < ( *kl_other_2 ).kl_first_80;
+    kl_t3 = ( *kl_this_1 ).kl_first < ( *kl_other_2 ).kl_first;
 #line 36 "codegen/self.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_t4.kl_first_80 = ( *kl_other_2 ).kl_first_80;
+    kl_t4.kl_first = ( *kl_other_2 ).kl_first;
 #line 38 "codegen/self.kl"
-    kl_t4.kl_second_82 = ( *kl_other_2 ).kl_second_82;
+    kl_t4.kl_second = ( *kl_other_2 ).kl_second;
 #line 38 "codegen/self.kl"
     kl_t0 = kl_t4;
 #line 38 "codegen/self.kl"
     return kl_t0;
     bb2:
-    kl_t5.kl_first_80 = ( *kl_this_1 ).kl_first_80;
+    kl_t5.kl_first = ( *kl_this_1 ).kl_first;
 #line 40 "codegen/self.kl"
-    kl_t5.kl_second_82 = ( *kl_this_1 ).kl_second_82;
+    kl_t5.kl_second = ( *kl_this_1 ).kl_second;
 #line 40 "codegen/self.kl"
     kl_t0 = kl_t5;
 #line 40 "codegen/self.kl"

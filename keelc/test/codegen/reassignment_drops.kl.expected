@@ -9,15 +9,15 @@ struct kl__Holder;
 
 struct kl__Owned
 {
-    uint8_t* kl_p_5;
+    uint8_t* kl_p;
 };
 
 struct kl__Holder
 {
-    struct kl__Owned kl_b_41;
+    struct kl__Owned kl_b;
 };
 
-int32_t kl_dropped_2 = 0;
+int32_t kl__dropped__GS5Owned = 0;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -41,7 +41,7 @@ void kl__Owned__R5Owned__ctor( struct kl__Owned* kl_this_1 )
 #line 13 "codegen/reassignment_drops.kl"
     kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "codegen/reassignment_drops.kl", 13, "out of memory: alloc<u8>( 4 )" );
 #line 13 "codegen/reassignment_drops.kl"
-    ( *kl_this_1 ).kl_p_5 = kl_t2;
+    ( *kl_this_1 ).kl_p = kl_t2;
 #line 15 "codegen/reassignment_drops.kl"
     return;
 #line 15 "codegen/reassignment_drops.kl"
@@ -53,7 +53,7 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 19 "codegen/reassignment_drops.kl"
-    kl_t2 = __builtin_add_overflow( kl_dropped_2, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__dropped__GS5Owned, 1, &( int32_t ) { 0 } );
 #line 19 "codegen/reassignment_drops.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -61,11 +61,11 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_rt_panic( "codegen/reassignment_drops.kl", 19, "arithmetic overflow: dropped + 1" );
     bb2:
 #line 19 "codegen/reassignment_drops.kl"
-    kl_t3 = kl_dropped_2 + 1;
+    kl_t3 = kl__dropped__GS5Owned + 1;
 #line 19 "codegen/reassignment_drops.kl"
-    kl_dropped_2 = kl_t3;
+    kl__dropped__GS5Owned = kl_t3;
 #line 23 "codegen/reassignment_drops.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_p_5 );
+    kl_rt_free( ( *kl_this_1 ).kl_p );
 #line 25 "codegen/reassignment_drops.kl"
     return;
 #line 25 "codegen/reassignment_drops.kl"
@@ -76,7 +76,7 @@ int32_t kl__count__S5Owned( void )
 {
     int32_t kl_t0;
 #line 29 "codegen/reassignment_drops.kl"
-    kl_t0 = kl_dropped_2;
+    kl_t0 = kl__dropped__GS5Owned;
 #line 29 "codegen/reassignment_drops.kl"
     return kl_t0;
 }
@@ -98,7 +98,7 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 #line 40 "codegen/reassignment_drops.kl"
     kl__Owned__R5Owned__ctor( kl_t3 );
 #line 40 "codegen/reassignment_drops.kl"
-    ( *kl_this_1 ).kl_b_41 = kl_t2;
+    ( *kl_this_1 ).kl_b = kl_t2;
 #line 40 "codegen/reassignment_drops.kl"
     kl_t5 = false;
 #line 40 "codegen/reassignment_drops.kl"
@@ -126,9 +126,9 @@ void kl__reset__S6Holder( struct kl__Holder* kl_this_1 )
 #line 45 "codegen/reassignment_drops.kl"
     kl__Owned__R5Owned__ctor( kl_t3 );
 #line 45 "codegen/reassignment_drops.kl"
-    kl__Owned__dtor( &( *kl_this_1 ).kl_b_41 );
+    kl__Owned__dtor( &( *kl_this_1 ).kl_b );
 #line 45 "codegen/reassignment_drops.kl"
-    ( *kl_this_1 ).kl_b_41 = kl_t2;
+    ( *kl_this_1 ).kl_b = kl_t2;
 #line 45 "codegen/reassignment_drops.kl"
     kl_t5 = false;
 #line 45 "codegen/reassignment_drops.kl"
@@ -431,7 +431,7 @@ int32_t kl__main__( void )
     bb9:
     kl_t0 = 5;
 #line 109 "codegen/reassignment_drops.kl"
-    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+    kl__Owned__dtor( &kl_h_19.kl_b );
 #line 109 "codegen/reassignment_drops.kl"
     return kl_t0;
     bb10:
@@ -448,11 +448,11 @@ int32_t kl__main__( void )
     bb11:
     kl_t0 = 6;
 #line 116 "codegen/reassignment_drops.kl"
-    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+    kl__Owned__dtor( &kl_h_19.kl_b );
 #line 116 "codegen/reassignment_drops.kl"
     return kl_t0;
     bb12:
-    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+    kl__Owned__dtor( &kl_h_19.kl_b );
 #line 120 "codegen/reassignment_drops.kl"
     kl_t28 = kl__count__S5Owned(  );
 #line 120 "codegen/reassignment_drops.kl"

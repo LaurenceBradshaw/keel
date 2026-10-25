@@ -11,15 +11,15 @@ typedef uint64_t ( *kl__fn__F3BoxI3u64EE3u64 )( struct kl__Box__I3u64E* );
 
 struct kl__Box__I3u64E
 {
-    uint64_t kl_n_6;
+    uint64_t kl_n;
 };
 
 struct kl__Holder__I3u64E
 {
-    struct kl__Box__I3u64E kl_inner_42;
+    struct kl__Box__I3u64E kl_inner;
 };
 
-int32_t kl_destroyed_2 = 0;
+int32_t kl__destroyed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -36,7 +36,7 @@ uint64_t kl__peek__3BoxI3u64E( struct kl__Box__I3u64E* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 36 "codegen/generics_owning_parameter.kl"
-    kl_t0 = ( *kl_b_1 ).kl_n_6;
+    kl_t0 = ( *kl_b_1 ).kl_n;
 #line 36 "codegen/generics_owning_parameter.kl"
     return kl_t0;
 }
@@ -46,7 +46,7 @@ uint64_t kl__look__6HolderI3u64E( struct kl__Holder__I3u64E* kl_h_1 )
 {
     uint64_t kl_t0;
 #line 41 "codegen/generics_owning_parameter.kl"
-    kl_t0 = ( *kl_h_1 ).kl_inner_42.kl_n_6;
+    kl_t0 = ( *kl_h_1 ).kl_inner.kl_n;
 #line 41 "codegen/generics_owning_parameter.kl"
     return kl_t0;
 }
@@ -94,7 +94,7 @@ int32_t kl__borrow__( void )
 #line 52 "codegen/generics_owning_parameter.kl"
     kl_t0 = 1;
 #line 52 "codegen/generics_owning_parameter.kl"
-    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner_42 );
+    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner );
 #line 52 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__dtor( &kl_b_1 );
 #line 52 "codegen/generics_owning_parameter.kl"
@@ -112,7 +112,7 @@ int32_t kl__borrow__( void )
 #line 53 "codegen/generics_owning_parameter.kl"
     kl_t0 = 2;
 #line 53 "codegen/generics_owning_parameter.kl"
-    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner_42 );
+    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner );
 #line 53 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__dtor( &kl_b_1 );
 #line 53 "codegen/generics_owning_parameter.kl"
@@ -130,21 +130,21 @@ int32_t kl__borrow__( void )
 #line 54 "codegen/generics_owning_parameter.kl"
     kl_t0 = 3;
 #line 54 "codegen/generics_owning_parameter.kl"
-    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner_42 );
+    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner );
 #line 54 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__dtor( &kl_b_1 );
 #line 54 "codegen/generics_owning_parameter.kl"
     return kl_t0;
     bb6:
 #line 57 "codegen/generics_owning_parameter.kl"
-    kl_t18 = kl_destroyed_2 != 0;
+    kl_t18 = kl__destroyed__G != 0;
 #line 57 "codegen/generics_owning_parameter.kl"
     if ( kl_t18 ) goto bb7; else goto bb8;
     bb7:
 #line 57 "codegen/generics_owning_parameter.kl"
     kl_t0 = 4;
 #line 57 "codegen/generics_owning_parameter.kl"
-    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner_42 );
+    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner );
 #line 57 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__dtor( &kl_b_1 );
 #line 57 "codegen/generics_owning_parameter.kl"
@@ -152,7 +152,7 @@ int32_t kl__borrow__( void )
     bb8:
     kl_t0 = 0;
 #line 59 "codegen/generics_owning_parameter.kl"
-    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner_42 );
+    kl__Box__I3u64E__dtor( &kl_h_4.kl_inner );
 #line 59 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__dtor( &kl_b_1 );
 #line 59 "codegen/generics_owning_parameter.kl"
@@ -182,7 +182,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 69 "codegen/generics_owning_parameter.kl"
-    kl_t4 = kl_destroyed_2 != 2;
+    kl_t4 = kl__destroyed__G != 2;
 #line 69 "codegen/generics_owning_parameter.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -199,7 +199,7 @@ int32_t kl__main__( void )
 #line 12 "codegen/generics_owning_parameter.kl"
 void kl__Box__I3u64E__R3BoxI3u64E_3u64__ctor( struct kl__Box__I3u64E* kl_this_1, uint64_t kl_m_2 )
 {
-    ( *kl_this_1 ).kl_n_6 = kl_m_2;
+    ( *kl_this_1 ).kl_n = kl_m_2;
     return;
 #line 15 "codegen/generics_owning_parameter.kl"
 }
@@ -221,7 +221,7 @@ void kl__Holder__I3u64E__R6HolderI3u64E_3u64__ctor( struct kl__Holder__I3u64E* k
 #line 30 "codegen/generics_owning_parameter.kl"
     kl__Box__I3u64E__R3BoxI3u64E_3u64__ctor( kl_t4, kl_m_2 );
 #line 30 "codegen/generics_owning_parameter.kl"
-    ( *kl_this_1 ).kl_inner_42 = kl_t3;
+    ( *kl_this_1 ).kl_inner = kl_t3;
 #line 30 "codegen/generics_owning_parameter.kl"
     kl_t6 = false;
 #line 30 "codegen/generics_owning_parameter.kl"
@@ -239,7 +239,7 @@ void kl__Box__I3u64E__dtor( struct kl__Box__I3u64E* kl_this_1 )
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 19 "codegen/generics_owning_parameter.kl"
-    kl_t2 = __builtin_add_overflow( kl_destroyed_2, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__destroyed__G, 1, &( int32_t ) { 0 } );
 #line 19 "codegen/generics_owning_parameter.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -247,9 +247,9 @@ void kl__Box__I3u64E__dtor( struct kl__Box__I3u64E* kl_this_1 )
     kl_rt_panic( "codegen/generics_owning_parameter.kl", 19, "arithmetic overflow: destroyed + 1" );
     bb2:
 #line 19 "codegen/generics_owning_parameter.kl"
-    kl_t3 = kl_destroyed_2 + 1;
+    kl_t3 = kl__destroyed__G + 1;
 #line 19 "codegen/generics_owning_parameter.kl"
-    kl_destroyed_2 = kl_t3;
+    kl__destroyed__G = kl_t3;
     return;
 #line 20 "codegen/generics_owning_parameter.kl"
 }

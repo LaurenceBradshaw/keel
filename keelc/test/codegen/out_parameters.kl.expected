@@ -8,8 +8,8 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -125,7 +125,7 @@ void kl__build__3i32_O5Point( int32_t kl_seed_1, struct kl__Point* kl_p_2 )
     bool kl_t3;
     int32_t kl_t4;
 #line 32 "codegen/out_parameters.kl"
-    ( *kl_p_2 ).kl_x_1 = kl_seed_1;
+    ( *kl_p_2 ).kl_x = kl_seed_1;
     kl_t3 = __builtin_add_overflow( kl_seed_1, 1, &( int32_t ) { 0 } );
 #line 33 "codegen/out_parameters.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
@@ -136,7 +136,7 @@ void kl__build__3i32_O5Point( int32_t kl_seed_1, struct kl__Point* kl_p_2 )
 #line 33 "codegen/out_parameters.kl"
     kl_t4 = kl_seed_1 + 1;
 #line 33 "codegen/out_parameters.kl"
-    ( *kl_p_2 ).kl_y_3 = kl_t4;
+    ( *kl_p_2 ).kl_y = kl_t4;
     return;
 #line 34 "codegen/out_parameters.kl"
 }
@@ -202,9 +202,9 @@ int32_t kl__main__( void )
 #line 57 "codegen/out_parameters.kl"
     kl__classify__3i32_O3i32( 1, kl_t7 );
 #line 59 "codegen/out_parameters.kl"
-    kl_t10.kl_x_1 = 0;
+    kl_t10.kl_x = 0;
 #line 59 "codegen/out_parameters.kl"
-    kl_t10.kl_y_3 = 0;
+    kl_t10.kl_y = 0;
 #line 59 "codegen/out_parameters.kl"
     kl_v_9 = kl_t10;
 #line 61 "codegen/out_parameters.kl"
@@ -238,7 +238,7 @@ int32_t kl__main__( void )
 #line 67 "codegen/out_parameters.kl"
     kl_t19 = kl_t17 + kl_sign_6;
 #line 67 "codegen/out_parameters.kl"
-    kl_t20 = __builtin_add_overflow( kl_t19, kl_v_9.kl_x_1, &( int32_t ) { 0 } );
+    kl_t20 = __builtin_add_overflow( kl_t19, kl_v_9.kl_x, &( int32_t ) { 0 } );
 #line 67 "codegen/out_parameters.kl"
     if ( kl_t20 ) goto bb5; else goto bb6;
     bb5:
@@ -246,9 +246,9 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/out_parameters.kl", 67, "arithmetic overflow: q + r + sign + v.x" );
     bb6:
 #line 67 "codegen/out_parameters.kl"
-    kl_t21 = kl_t19 + kl_v_9.kl_x_1;
+    kl_t21 = kl_t19 + kl_v_9.kl_x;
 #line 67 "codegen/out_parameters.kl"
-    kl_t22 = __builtin_add_overflow( kl_t21, kl_v_9.kl_y_3, &( int32_t ) { 0 } );
+    kl_t22 = __builtin_add_overflow( kl_t21, kl_v_9.kl_y, &( int32_t ) { 0 } );
 #line 67 "codegen/out_parameters.kl"
     if ( kl_t22 ) goto bb7; else goto bb8;
     bb7:
@@ -256,7 +256,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/out_parameters.kl", 67, "arithmetic overflow: q + r + sign + v.x + v.y" );
     bb8:
 #line 67 "codegen/out_parameters.kl"
-    kl_t23 = kl_t21 + kl_v_9.kl_y_3;
+    kl_t23 = kl_t21 + kl_v_9.kl_y;
 #line 67 "codegen/out_parameters.kl"
     kl_t24 = __builtin_add_overflow( kl_t23, kl_f_13, &( int32_t ) { 0 } );
 #line 67 "codegen/out_parameters.kl"

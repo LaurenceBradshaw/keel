@@ -8,7 +8,7 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
+    int32_t kl_x;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -61,7 +61,7 @@ void kl__slide__R5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t2;
 #line 23 "codegen/refs.kl"
-    kl_t2 = &( *kl_p_1 ).kl_x_1;
+    kl_t2 = &( *kl_p_1 ).kl_x;
 #line 23 "codegen/refs.kl"
     kl__bump__R3i32( kl_t2 );
     return;
@@ -106,7 +106,7 @@ int32_t kl__main__( void )
 #line 38 "codegen/refs.kl"
     kl__through__P3i32( kl_t6 );
 #line 40 "codegen/refs.kl"
-    kl_t9.kl_x_1 = 10;
+    kl_t9.kl_x = 10;
 #line 40 "codegen/refs.kl"
     kl_p_8 = kl_t9;
 #line 42 "codegen/refs.kl"
@@ -114,7 +114,7 @@ int32_t kl__main__( void )
 #line 42 "codegen/refs.kl"
     kl__slide__R5Point( kl_t10 );
 #line 44 "codegen/refs.kl"
-    kl_t12 = __builtin_add_overflow( kl_x_1, kl_p_8.kl_x_1, &( int32_t ) { 0 } );
+    kl_t12 = __builtin_add_overflow( kl_x_1, kl_p_8.kl_x, &( int32_t ) { 0 } );
 #line 44 "codegen/refs.kl"
     if ( kl_t12 ) goto bb1; else goto bb2;
     bb1:
@@ -122,7 +122,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/refs.kl", 44, "arithmetic overflow: x + p.x" );
     bb2:
 #line 44 "codegen/refs.kl"
-    kl_t13 = kl_x_1 + kl_p_8.kl_x_1;
+    kl_t13 = kl_x_1 + kl_p_8.kl_x;
 #line 44 "codegen/refs.kl"
     kl_t0 = kl_t13;
 #line 44 "codegen/refs.kl"

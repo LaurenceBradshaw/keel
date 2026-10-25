@@ -12,33 +12,33 @@ struct kl__Option__I3BufE;
 
 struct kl__Buf
 {
-    uint64_t* kl_data_4;
+    uint64_t* kl_data;
 };
 
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_b_58;
-    uint64_t kl_extra_62;
-    struct kl__Buf kl_left_64;
-    struct kl__Buf kl_right_66;
+    struct kl__Buf kl_b;
+    uint64_t kl_extra;
+    struct kl__Buf kl_left;
+    struct kl__Buf kl_right;
 };
 
 struct kl__Keeper
 {
-    struct kl__Holder kl_held_77;
+    struct kl__Holder kl_held;
 };
 
 struct kl__Option__I6HolderE
 {
     int32_t tag;
-    struct kl__Holder kl_value_72;
+    struct kl__Holder kl_value;
 };
 
 struct kl__Option__I3BufE
 {
     int32_t tag;
-    struct kl__Buf kl_value_72;
+    struct kl__Buf kl_value;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -91,9 +91,9 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 #line 14 "codegen/owning_payloads.kl"
     kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/owning_payloads.kl", 14, "out of memory: alloc<u64>()" );
 #line 14 "codegen/owning_payloads.kl"
-    ( *kl_this_1 ).kl_data_4 = kl_t3;
+    ( *kl_this_1 ).kl_data = kl_t3;
 #line 17 "codegen/owning_payloads.kl"
-    ( *( *kl_this_1 ).kl_data_4 ) = kl_n_2;
+    ( *( *kl_this_1 ).kl_data ) = kl_n_2;
     return;
 #line 18 "codegen/owning_payloads.kl"
 }
@@ -115,9 +115,9 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 22 "codegen/owning_payloads.kl"
     kl_1t7console_print__7textual( kl_t6 );
-    kl_1t7console_println__3u64( ( *( *kl_this_1 ).kl_data_4 ) );
+    kl_1t7console_println__3u64( ( *( *kl_this_1 ).kl_data ) );
 #line 27 "codegen/owning_payloads.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_4 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 29 "codegen/owning_payloads.kl"
     return;
 #line 29 "codegen/owning_payloads.kl"
@@ -128,7 +128,7 @@ uint64_t kl__get__S3Buf( struct kl__Buf* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 33 "codegen/owning_payloads.kl"
-    kl_t0 = ( *( *kl_this_1 ).kl_data_4 );
+    kl_t0 = ( *( *kl_this_1 ).kl_data );
 #line 33 "codegen/owning_payloads.kl"
     return kl_t0;
 }
@@ -140,7 +140,7 @@ void kl__Keeper__R6Keeper_M6Holder__ctor( struct kl__Keeper* kl_this_1, struct k
 #line 57 "codegen/owning_payloads.kl"
     kl_t3 = true;
 #line 57 "codegen/owning_payloads.kl"
-    ( *kl_this_1 ).kl_held_77 = kl_h_2;
+    ( *kl_this_1 ).kl_held = kl_h_2;
 #line 57 "codegen/owning_payloads.kl"
     kl_t3 = false;
     if ( kl_t3 ) kl__Holder__dtor( &kl_h_2 );
@@ -193,7 +193,7 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 71 "codegen/owning_payloads.kl"
-    kl_b_3 = &( *kl_h_1 ).kl_b_58;
+    kl_b_3 = &( *kl_h_1 ).kl_b;
     kl_t4 = &( *kl_b_3 );
 #line 72 "codegen/owning_payloads.kl"
     kl_t5 = kl__read__3Buf( kl_t4 );
@@ -203,11 +203,11 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     return kl_t0;
     bb2:
 #line 73 "codegen/owning_payloads.kl"
-    kl_extra_7 = ( *kl_h_1 ).kl_extra_62;
+    kl_extra_7 = ( *kl_h_1 ).kl_extra;
 #line 73 "codegen/owning_payloads.kl"
-    kl_left_8 = &( *kl_h_1 ).kl_left_64;
+    kl_left_8 = &( *kl_h_1 ).kl_left;
 #line 73 "codegen/owning_payloads.kl"
-    kl_right_9 = &( *kl_h_1 ).kl_right_66;
+    kl_right_9 = &( *kl_h_1 ).kl_right;
     kl_t10 = &( *kl_left_8 );
 #line 74 "codegen/owning_payloads.kl"
     kl_t11 = kl__get__S3Buf( kl_t10 );
@@ -277,7 +277,7 @@ struct kl__Holder kl__make__3u64( uint64_t kl_n_1 )
 #line 82 "codegen/owning_payloads.kl"
     kl_t6 = true;
 #line 82 "codegen/owning_payloads.kl"
-    kl_t2.kl_b_58 = kl_t3;
+    kl_t2.kl_b = kl_t3;
 #line 82 "codegen/owning_payloads.kl"
     kl_t7 = false;
 #line 82 "codegen/owning_payloads.kl"
@@ -342,7 +342,7 @@ uint64_t kl__nested__6OptionI6HolderE( struct kl__Option__I6HolderE* kl_o_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 95 "codegen/owning_payloads.kl"
-    kl_h_3 = &( *kl_o_1 ).kl_value_72;
+    kl_h_3 = &( *kl_o_1 ).kl_value;
     kl_t4 = &( *kl_h_3 );
 #line 96 "codegen/owning_payloads.kl"
     kl_t5 = kl__size__6Holder( kl_t4 );
@@ -484,7 +484,7 @@ int32_t kl__main__( void )
 #line 105 "codegen/owning_payloads.kl"
     kl_t75 = true;
 #line 105 "codegen/owning_payloads.kl"
-    kl_t5.kl_b_58 = kl_x_1;
+    kl_t5.kl_b = kl_x_1;
 #line 105 "codegen/owning_payloads.kl"
     kl_t73 = false;
 #line 105 "codegen/owning_payloads.kl"
@@ -525,17 +525,17 @@ int32_t kl__main__( void )
 #line 109 "codegen/owning_payloads.kl"
     kl_t76 = true;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t10.kl_extra_62 = 10;
+    kl_t10.kl_extra = 10;
 #line 109 "codegen/owning_payloads.kl"
     kl_t76 = true;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t10.kl_left_64 = kl_t11;
+    kl_t10.kl_left = kl_t11;
 #line 109 "codegen/owning_payloads.kl"
     kl_t77 = false;
 #line 109 "codegen/owning_payloads.kl"
     kl_t76 = true;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t10.kl_right_66 = kl_t14;
+    kl_t10.kl_right = kl_t14;
 #line 109 "codegen/owning_payloads.kl"
     kl_t78 = false;
 #line 109 "codegen/owning_payloads.kl"
@@ -595,7 +595,7 @@ int32_t kl__main__( void )
 #line 119 "codegen/owning_payloads.kl"
     kl_t80 = true;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t27.kl_b_58 = kl_t28;
+    kl_t27.kl_b = kl_t28;
 #line 119 "codegen/owning_payloads.kl"
     kl_t81 = false;
 #line 119 "codegen/owning_payloads.kl"
@@ -628,7 +628,7 @@ int32_t kl__main__( void )
 #line 120 "codegen/owning_payloads.kl"
     kl_t82 = true;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t31.kl_b_58 = kl_t32;
+    kl_t31.kl_b = kl_t32;
 #line 120 "codegen/owning_payloads.kl"
     kl_t83 = false;
 #line 120 "codegen/owning_payloads.kl"
@@ -662,7 +662,7 @@ int32_t kl__main__( void )
 #line 122 "codegen/owning_payloads.kl"
     kl_t84 = true;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t36.kl_value_72 = kl_t37;
+    kl_t36.kl_value = kl_t37;
 #line 122 "codegen/owning_payloads.kl"
     kl_t85 = false;
 #line 122 "codegen/owning_payloads.kl"
@@ -690,7 +690,7 @@ int32_t kl__main__( void )
     if ( kl_t43 ) goto bb1; else goto bb4;
     bb1:
 #line 128 "codegen/owning_payloads.kl"
-    kl_b_44 = &kl_t42.kl_b_58;
+    kl_b_44 = &kl_t42.kl_b;
     kl_t45 = &( *kl_b_44 );
 #line 129 "codegen/owning_payloads.kl"
     kl_t46 = kl__get__S3Buf( kl_t45 );
@@ -699,11 +699,11 @@ int32_t kl__main__( void )
     goto bb5;
     bb2:
 #line 131 "codegen/owning_payloads.kl"
-    kl_extra_49 = kl_t42.kl_extra_62;
+    kl_extra_49 = kl_t42.kl_extra;
 #line 131 "codegen/owning_payloads.kl"
-    kl_left_50 = &kl_t42.kl_left_64;
+    kl_left_50 = &kl_t42.kl_left;
 #line 131 "codegen/owning_payloads.kl"
-    kl_right_51 = &kl_t42.kl_right_66;
+    kl_right_51 = &kl_t42.kl_right;
     kl_t0 = 1;
 #line 132 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_t42 );
@@ -772,7 +772,7 @@ int32_t kl__main__( void )
 #line 137 "codegen/owning_payloads.kl"
     kl_t86 = true;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t53.kl_b_58 = kl_t54;
+    kl_t53.kl_b = kl_t54;
 #line 137 "codegen/owning_payloads.kl"
     kl_t87 = false;
 #line 137 "codegen/owning_payloads.kl"
@@ -780,7 +780,7 @@ int32_t kl__main__( void )
 #line 137 "codegen/owning_payloads.kl"
     kl_t52.tag = 0;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t52.kl_value_72 = kl_t53;
+    kl_t52.kl_value = kl_t53;
 #line 137 "codegen/owning_payloads.kl"
     kl_t86 = false;
 #line 137 "codegen/owning_payloads.kl"
@@ -814,7 +814,7 @@ int32_t kl__main__( void )
 #line 139 "codegen/owning_payloads.kl"
     kl_t88 = true;
 #line 139 "codegen/owning_payloads.kl"
-    kl_t62.kl_b_58 = kl_t63;
+    kl_t62.kl_b = kl_t63;
 #line 139 "codegen/owning_payloads.kl"
     kl_t89 = false;
 #line 139 "codegen/owning_payloads.kl"
@@ -843,7 +843,7 @@ int32_t kl__main__( void )
     kl_1t7console_println__7textual( kl_t71 );
     kl_t0 = 0;
 #line 142 "codegen/owning_payloads.kl"
-    kl__Holder__dtor( &kl_k_60.kl_held_77 );
+    kl__Holder__dtor( &kl_k_60.kl_held );
 #line 142 "codegen/owning_payloads.kl"
     kl__Option__I3BufE__dtor( &kl_none_40 );
 #line 142 "codegen/owning_payloads.kl"
@@ -877,7 +877,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_789( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -976,7 +976,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_789( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"
@@ -1304,7 +1304,7 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     return;
     bb2:
 #line 37 "codegen/owning_payloads.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_b_58 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_b );
 #line 37 "codegen/owning_payloads.kl"
     goto bb1;
     bb3:
@@ -1314,9 +1314,9 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     if ( kl_t3 ) goto bb4; else goto bb1;
     bb4:
 #line 37 "codegen/owning_payloads.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_right_66 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_right );
 #line 37 "codegen/owning_payloads.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_left_64 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_left );
 #line 37 "codegen/owning_payloads.kl"
     goto bb1;
 #line 42 "codegen/owning_payloads.kl"
@@ -1335,7 +1335,7 @@ void kl__Option__I6HolderE__dtor( struct kl__Option__I6HolderE* kl_t1 )
     return;
     bb2:
 #line 44 "codegen/owning_payloads.kl"
-    kl__Holder__dtor( &( *kl_t1 ).kl_value_72 );
+    kl__Holder__dtor( &( *kl_t1 ).kl_value );
 #line 44 "codegen/owning_payloads.kl"
     goto bb1;
 #line 48 "codegen/owning_payloads.kl"
@@ -1354,7 +1354,7 @@ void kl__Option__I3BufE__dtor( struct kl__Option__I3BufE* kl_t1 )
     return;
     bb2:
 #line 44 "codegen/owning_payloads.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_value_72 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_value );
 #line 44 "codegen/owning_payloads.kl"
     goto bb1;
 #line 48 "codegen/owning_payloads.kl"

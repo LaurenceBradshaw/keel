@@ -14,17 +14,17 @@ typedef int32_t ( *kl__fn__FM3i32E3i32 )( int32_t );
 
 struct kl__Holder
 {
-    kl__fn__F3i32E3i32 kl_cb_47;
+    kl__fn__F3i32E3i32 kl_cb;
 };
 
 struct kl__Counter
 {
-    kl__fn__FR3i32E4void kl_step_116;
+    kl__fn__FR3i32E4void kl_step;
 };
 
 struct kl__Box__I3i32E
 {
-    kl__fn__FM3i32E3i32 kl_f_88;
+    kl__fn__FM3i32E3i32 kl_f;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -131,7 +131,7 @@ int32_t kl__through_this__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t k
     int32_t kl_t0;
     int32_t kl_t3;
 #line 29 "codegen/function_pointer_field_call.kl"
-    kl_t3 = ( *kl_this_1 ).kl_cb_47( kl_v_2 );
+    kl_t3 = ( *kl_this_1 ).kl_cb( kl_v_2 );
 #line 29 "codegen/function_pointer_field_call.kl"
     kl_t0 = kl_t3;
 #line 29 "codegen/function_pointer_field_call.kl"
@@ -144,7 +144,7 @@ int32_t kl__bare__S6Holder_3i32( struct kl__Holder* kl_this_1, int32_t kl_v_2 )
     int32_t kl_t0;
     int32_t kl_t3;
 #line 34 "codegen/function_pointer_field_call.kl"
-    kl_t3 = ( *kl_this_1 ).kl_cb_47( kl_v_2 );
+    kl_t3 = ( *kl_this_1 ).kl_cb( kl_v_2 );
 #line 34 "codegen/function_pointer_field_call.kl"
     kl_t0 = kl_t3;
 #line 34 "codegen/function_pointer_field_call.kl"
@@ -194,11 +194,11 @@ int32_t kl__main__( void )
 #line 55 "codegen/function_pointer_field_call.kl"
     kl_t3 = kl__twice__3i32;
 #line 55 "codegen/function_pointer_field_call.kl"
-    kl_t2.kl_cb_47 = kl_t3;
+    kl_t2.kl_cb = kl_t3;
 #line 55 "codegen/function_pointer_field_call.kl"
     kl_h_1 = kl_t2;
 #line 57 "codegen/function_pointer_field_call.kl"
-    kl_t4 = kl_h_1.kl_cb_47( 21 );
+    kl_t4 = kl_h_1.kl_cb( 21 );
 #line 57 "codegen/function_pointer_field_call.kl"
     kl_t5 = kl_t4 != 42;
 #line 57 "codegen/function_pointer_field_call.kl"
@@ -240,8 +240,8 @@ int32_t kl__main__( void )
 #line 62 "codegen/function_pointer_field_call.kl"
     kl_t12 = kl__negate__3i32;
 #line 62 "codegen/function_pointer_field_call.kl"
-    kl_h_1.kl_cb_47 = kl_t12;
-    kl_t13 = kl_h_1.kl_cb_47( 3 );
+    kl_h_1.kl_cb = kl_t12;
+    kl_t13 = kl_h_1.kl_cb( 3 );
 #line 63 "codegen/function_pointer_field_call.kl"
     kl_t14 = -3;
 #line 63 "codegen/function_pointer_field_call.kl"
@@ -258,7 +258,7 @@ int32_t kl__main__( void )
     kl_t17 = &kl_h_1;
 #line 66 "codegen/function_pointer_field_call.kl"
     kl_p_16 = kl_t17;
-    kl_t18 = ( *kl_p_16 ).kl_cb_47( 6 );
+    kl_t18 = ( *kl_p_16 ).kl_cb( 6 );
 #line 67 "codegen/function_pointer_field_call.kl"
     kl_t19 = -6;
 #line 67 "codegen/function_pointer_field_call.kl"
@@ -273,12 +273,12 @@ int32_t kl__main__( void )
     bb10:
     kl_t23 = kl__twice_moved__M3i32;
 #line 69 "codegen/function_pointer_field_call.kl"
-    kl_t22.kl_f_88 = kl_t23;
+    kl_t22.kl_f = kl_t23;
 #line 69 "codegen/function_pointer_field_call.kl"
     kl_b_21 = kl_t22;
     kl_two_24 = 2;
     kl_seven_25 = 7;
-    kl_t26 = kl_b_21.kl_f_88( kl_two_24 );
+    kl_t26 = kl_b_21.kl_f( kl_two_24 );
 #line 72 "codegen/function_pointer_field_call.kl"
     kl_t27 = kl_t26 != 4;
 #line 72 "codegen/function_pointer_field_call.kl"
@@ -306,13 +306,13 @@ int32_t kl__main__( void )
 #line 76 "codegen/function_pointer_field_call.kl"
     kl_t33 = kl__bump__R3i32;
 #line 76 "codegen/function_pointer_field_call.kl"
-    kl_t32.kl_step_116 = kl_t33;
+    kl_t32.kl_step = kl_t33;
 #line 76 "codegen/function_pointer_field_call.kl"
     kl_c_31 = kl_t32;
     kl_n_34 = 1;
     kl_t35 = &kl_n_34;
 #line 78 "codegen/function_pointer_field_call.kl"
-    kl_c_31.kl_step_116( kl_t35 );
+    kl_c_31.kl_step( kl_t35 );
     kl_t37 = kl_n_34 != 2;
 #line 79 "codegen/function_pointer_field_call.kl"
     if ( kl_t37 ) goto bb15; else goto bb16;
@@ -333,7 +333,7 @@ int32_t kl__apply__I3i32E__S3BoxI3i32E_M3i32( struct kl__Box__I3i32E* kl_this_1,
     int32_t kl_t0;
     int32_t kl_t3;
 #line 44 "codegen/function_pointer_field_call.kl"
-    kl_t3 = ( *kl_this_1 ).kl_f_88( kl_v_2 );
+    kl_t3 = ( *kl_this_1 ).kl_f( kl_v_2 );
 #line 44 "codegen/function_pointer_field_call.kl"
     kl_t0 = kl_t3;
 #line 44 "codegen/function_pointer_field_call.kl"

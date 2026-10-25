@@ -9,13 +9,13 @@ struct kl__Cell;
 
 struct kl__Point
 {
-    double kl_x_1;
-    double kl_y_3;
+    double kl_x;
+    double kl_y;
 };
 
 struct kl__Cell
 {
-    int32_t kl_n_6;
+    int32_t kl_n;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -151,16 +151,16 @@ int32_t kl__main__( void )
 #line 25 "codegen/pointers.kl"
     return kl_t0;
     bb10:
-    kl_t14.kl_x_1 = 1.0;
+    kl_t14.kl_x = 1.0;
 #line 27 "codegen/pointers.kl"
-    kl_t14.kl_y_3 = 2.0;
+    kl_t14.kl_y = 2.0;
 #line 27 "codegen/pointers.kl"
     kl_s_13 = kl_t14;
-    kl_t16 = &kl_s_13.kl_y_3;
+    kl_t16 = &kl_s_13.kl_y;
 #line 28 "codegen/pointers.kl"
     kl_f_15 = kl_t16;
     ( *kl_f_15 ) = 9.0;
-    kl_t17 = kl_s_13.kl_y_3 != 9.0;
+    kl_t17 = kl_s_13.kl_y != 9.0;
 #line 30 "codegen/pointers.kl"
     if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
@@ -183,8 +183,8 @@ int32_t kl__main__( void )
     kl_t21 = &kl_s_13;
 #line 37 "codegen/pointers.kl"
     kl_p_20 = kl_t21;
-    ( *kl_p_20 ).kl_x_1 = 3.0;
-    kl_t22 = kl_s_13.kl_x_1 != 3.0;
+    ( *kl_p_20 ).kl_x = 3.0;
+    kl_t22 = kl_s_13.kl_x != 3.0;
 #line 39 "codegen/pointers.kl"
     if ( kl_t22 ) goto bb15; else goto bb16;
     bb15:
@@ -194,10 +194,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 42 "codegen/pointers.kl"
-    kl_t23 = ( *kl_p_20 ).kl_x_1 + 1.0;
+    kl_t23 = ( *kl_p_20 ).kl_x + 1.0;
 #line 42 "codegen/pointers.kl"
-    ( *kl_p_20 ).kl_x_1 = kl_t23;
-    kl_t24 = kl_s_13.kl_x_1 != 4.0;
+    ( *kl_p_20 ).kl_x = kl_t23;
+    kl_t24 = kl_s_13.kl_x != 4.0;
 #line 43 "codegen/pointers.kl"
     if ( kl_t24 ) goto bb17; else goto bb18;
     bb17:
@@ -207,13 +207,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 46 "codegen/pointers.kl"
-    kl_t26.kl_n_6 = 10;
+    kl_t26.kl_n = 10;
 #line 46 "codegen/pointers.kl"
     kl_c_25 = kl_t26;
     kl_t28 = &kl_c_25;
 #line 47 "codegen/pointers.kl"
     kl_d_27 = kl_t28;
-    kl_t29 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 5, &( int32_t ) { 0 } );
+    kl_t29 = __builtin_add_overflow( ( *kl_d_27 ).kl_n, 5, &( int32_t ) { 0 } );
 #line 48 "codegen/pointers.kl"
     if ( kl_t29 ) goto bb19; else goto bb20;
     bb19:
@@ -221,8 +221,8 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/pointers.kl", 48, "arithmetic overflow: (*d).n += 5;" );
     bb20:
 #line 48 "codegen/pointers.kl"
-    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 5;
-    kl_t30 = kl_c_25.kl_n_6 != 15;
+    ( *kl_d_27 ).kl_n = ( *kl_d_27 ).kl_n + 5;
+    kl_t30 = kl_c_25.kl_n != 15;
 #line 49 "codegen/pointers.kl"
     if ( kl_t30 ) goto bb21; else goto bb22;
     bb21:
@@ -231,7 +231,7 @@ int32_t kl__main__( void )
 #line 49 "codegen/pointers.kl"
     return kl_t0;
     bb22:
-    kl_t31 = __builtin_add_overflow( ( *kl_d_27 ).kl_n_6, 1, &( int32_t ) { 0 } );
+    kl_t31 = __builtin_add_overflow( ( *kl_d_27 ).kl_n, 1, &( int32_t ) { 0 } );
 #line 51 "codegen/pointers.kl"
     if ( kl_t31 ) goto bb23; else goto bb24;
     bb23:
@@ -239,8 +239,8 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/pointers.kl", 51, "arithmetic overflow: (*d).n++;" );
     bb24:
 #line 51 "codegen/pointers.kl"
-    ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 1;
-    kl_t32 = kl_c_25.kl_n_6 != 16;
+    ( *kl_d_27 ).kl_n = ( *kl_d_27 ).kl_n + 1;
+    kl_t32 = kl_c_25.kl_n != 16;
 #line 52 "codegen/pointers.kl"
     if ( kl_t32 ) goto bb25; else goto bb26;
     bb25:

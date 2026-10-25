@@ -24,65 +24,65 @@ struct kl__sink__I3i32E__ref { void* self; const struct kl__sink__I3i32E__vtable
 
 struct kl__tally
 {
-    int64_t kl_sum__68;
-    uint64_t kl_trues__70;
-    uint64_t kl_count__72;
+    int64_t kl_sum_;
+    uint64_t kl_trues_;
+    uint64_t kl_count_;
 };
 
 struct kl__exactly
 {
-    int64_t kl_v_224;
+    int64_t kl_v;
 };
 
 struct kl__last__I3i32E
 {
-    int32_t kl_value_166;
-    uint64_t kl_n_168;
+    int32_t kl_value;
+    uint64_t kl_n;
 };
 
 struct kl__last__I3i64E
 {
-    int64_t kl_value_166;
-    uint64_t kl_n_168;
+    int64_t kl_value;
+    uint64_t kl_n;
 };
 
 struct kl__sink__I3i64E__vtable
 {
     void ( *drop )( void* );
-    void ( *kl_put_12 )( void*, int64_t* );
-    uint64_t ( *kl_count_22 )( void* );
+    void ( *kl__put__1T )( void*, int64_t* );
+    uint64_t ( *kl__count__ )( void* );
 };
 
 struct kl__sink__I4boolE__vtable
 {
     void ( *drop )( void* );
-    void ( *kl_put_12 )( void*, bool* );
-    uint64_t ( *kl_count_22 )( void* );
+    void ( *kl__put__1T )( void*, bool* );
+    uint64_t ( *kl__count__ )( void* );
 };
 
 struct kl__matches__I3i32E__vtable
 {
     void ( *drop )( void* );
-    bool ( *kl_same_as_56 )( void*, int32_t* );
+    bool ( *kl__same_as__1K )( void*, int32_t* );
 };
 
 struct kl__matches__I3i64E__vtable
 {
     void ( *drop )( void* );
-    bool ( *kl_same_as_56 )( void*, int64_t* );
+    bool ( *kl__same_as__1K )( void*, int64_t* );
 };
 
 struct kl__counted_sink__I3i32E__vtable
 {
     void ( *drop )( void* );
-    void ( *kl_reset_39 )( void* );
+    void ( *kl__reset__ )( void* );
 };
 
 struct kl__sink__I3i32E__vtable
 {
     void ( *drop )( void* );
-    void ( *kl_put_12 )( void*, int32_t* );
-    uint64_t ( *kl_count_22 )( void* );
+    void ( *kl__put__1T )( void*, int32_t* );
+    uint64_t ( *kl__count__ )( void* );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -113,9 +113,9 @@ void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E*, int64_t );
 #line 27 "codegen/generic_interfaces.kl"
 void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 {
-    ( *kl_this_1 ).kl_sum__68 = 0;
-    ( *kl_this_1 ).kl_trues__70 = 0;
-    ( *kl_this_1 ).kl_count__72 = 0;
+    ( *kl_this_1 ).kl_sum_ = 0;
+    ( *kl_this_1 ).kl_trues_ = 0;
+    ( *kl_this_1 ).kl_count_ = 0;
     return;
 #line 32 "codegen/generic_interfaces.kl"
 }
@@ -126,7 +126,7 @@ void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
     bool kl_t3;
     bool kl_t4;
 #line 36 "codegen/generic_interfaces.kl"
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_sum__68, kl_value_2, &( int64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_sum_, kl_value_2, &( int64_t ) { 0 } );
 #line 36 "codegen/generic_interfaces.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -134,8 +134,8 @@ void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
     kl_rt_panic( "codegen/generic_interfaces.kl", 36, "arithmetic overflow: sum_ += value;" );
     bb2:
 #line 36 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_sum__68 = ( *kl_this_1 ).kl_sum__68 + kl_value_2;
-    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__72, 1, &( uint64_t ) { 0 } );
+    ( *kl_this_1 ).kl_sum_ = ( *kl_this_1 ).kl_sum_ + kl_value_2;
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
 #line 37 "codegen/generic_interfaces.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -143,7 +143,7 @@ void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
     kl_rt_panic( "codegen/generic_interfaces.kl", 37, "arithmetic overflow: count_ += 1;" );
     bb4:
 #line 37 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_count__72 = ( *kl_this_1 ).kl_count__72 + 1;
+    ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     return;
 #line 38 "codegen/generic_interfaces.kl"
 }
@@ -156,7 +156,7 @@ void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
 #line 42 "codegen/generic_interfaces.kl"
     if ( kl_value_2 ) goto bb1; else goto bb4;
     bb1:
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_trues__70, 1, &( uint64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_trues_, 1, &( uint64_t ) { 0 } );
 #line 44 "codegen/generic_interfaces.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
@@ -164,12 +164,12 @@ void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
     kl_rt_panic( "codegen/generic_interfaces.kl", 44, "arithmetic overflow: trues_ += 1;" );
     bb3:
 #line 44 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_trues__70 = ( *kl_this_1 ).kl_trues__70 + 1;
+    ( *kl_this_1 ).kl_trues_ = ( *kl_this_1 ).kl_trues_ + 1;
 #line 42 "codegen/generic_interfaces.kl"
     goto bb4;
     bb4:
 #line 46 "codegen/generic_interfaces.kl"
-    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count__72, 1, &( uint64_t ) { 0 } );
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
 #line 46 "codegen/generic_interfaces.kl"
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb5:
@@ -177,7 +177,7 @@ void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
     kl_rt_panic( "codegen/generic_interfaces.kl", 46, "arithmetic overflow: count_ += 1;" );
     bb6:
 #line 46 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_count__72 = ( *kl_this_1 ).kl_count__72 + 1;
+    ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
     return;
 #line 47 "codegen/generic_interfaces.kl"
 }
@@ -187,7 +187,7 @@ uint64_t kl__count__S5tally( struct kl__tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 49 "codegen/generic_interfaces.kl"
-    kl_t0 = ( *kl_this_1 ).kl_count__72;
+    kl_t0 = ( *kl_this_1 ).kl_count_;
 #line 49 "codegen/generic_interfaces.kl"
     return kl_t0;
 #line 49 "codegen/generic_interfaces.kl"
@@ -198,7 +198,7 @@ int64_t kl__sum__S5tally( struct kl__tally* kl_this_1 )
 {
     int64_t kl_t0;
 #line 50 "codegen/generic_interfaces.kl"
-    kl_t0 = ( *kl_this_1 ).kl_sum__68;
+    kl_t0 = ( *kl_this_1 ).kl_sum_;
 #line 50 "codegen/generic_interfaces.kl"
     return kl_t0;
 #line 50 "codegen/generic_interfaces.kl"
@@ -209,7 +209,7 @@ uint64_t kl__trues__S5tally( struct kl__tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 51 "codegen/generic_interfaces.kl"
-    kl_t0 = ( *kl_this_1 ).kl_trues__70;
+    kl_t0 = ( *kl_this_1 ).kl_trues_;
 #line 51 "codegen/generic_interfaces.kl"
     return kl_t0;
 #line 51 "codegen/generic_interfaces.kl"
@@ -224,7 +224,7 @@ bool kl__same_as__S7exactly_3i32( struct kl__exactly* kl_this_1, int32_t* kl_key
 #line 73 "codegen/generic_interfaces.kl"
     kl_t3 = ( int64_t ) ( *kl_key_2 );
 #line 73 "codegen/generic_interfaces.kl"
-    kl_t4 = kl_t3 == ( *kl_this_1 ).kl_v_224;
+    kl_t4 = kl_t3 == ( *kl_this_1 ).kl_v;
 #line 73 "codegen/generic_interfaces.kl"
     kl_t0 = kl_t4;
 #line 73 "codegen/generic_interfaces.kl"
@@ -238,7 +238,7 @@ bool kl__same_as__S7exactly_3i64( struct kl__exactly* kl_this_1, int64_t* kl_key
     bool kl_t0;
     bool kl_t3;
 #line 74 "codegen/generic_interfaces.kl"
-    kl_t3 = ( *kl_key_2 ) == ( *kl_this_1 ).kl_v_224;
+    kl_t3 = ( *kl_key_2 ) == ( *kl_this_1 ).kl_v;
 #line 74 "codegen/generic_interfaces.kl"
     kl_t0 = kl_t3;
 #line 74 "codegen/generic_interfaces.kl"
@@ -415,9 +415,9 @@ int32_t kl__main__( void )
 #line 117 "codegen/generic_interfaces.kl"
     return kl_t0;
     bb12:
-    kl_t33.kl_value_166 = 0;
+    kl_t33.kl_value = 0;
 #line 119 "codegen/generic_interfaces.kl"
-    kl_t33.kl_n_168 = 0;
+    kl_t33.kl_n = 0;
 #line 119 "codegen/generic_interfaces.kl"
     kl_l_32 = kl_t33;
     kl_t34 = &kl_l_32;
@@ -426,7 +426,7 @@ int32_t kl__main__( void )
     kl_t36 = &kl_l_32;
 #line 121 "codegen/generic_interfaces.kl"
     kl__put__I3i32E__S4lastI3i32E_3i32( kl_t36, 9 );
-    kl_t38 = kl_l_32.kl_value_166 != 9;
+    kl_t38 = kl_l_32.kl_value != 9;
 #line 122 "codegen/generic_interfaces.kl"
     if ( kl_t38 ) goto bb13; else goto bb14;
     bb13:
@@ -465,15 +465,15 @@ int32_t kl__main__( void )
 #line 123 "codegen/generic_interfaces.kl"
     return kl_t0;
     bb18:
-    kl_t47.kl_value_166 = 0;
+    kl_t47.kl_value = 0;
 #line 125 "codegen/generic_interfaces.kl"
-    kl_t47.kl_n_168 = 0;
+    kl_t47.kl_n = 0;
 #line 125 "codegen/generic_interfaces.kl"
     kl_wide_46 = kl_t47;
     kl_t48 = &kl_wide_46;
 #line 126 "codegen/generic_interfaces.kl"
     kl__feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( kl_t48, 1, 2 );
-    kl_t51 = kl_wide_46.kl_value_166 != 2;
+    kl_t51 = kl_wide_46.kl_value != 2;
 #line 127 "codegen/generic_interfaces.kl"
     kl_t50 = kl_t51;
 #line 127 "codegen/generic_interfaces.kl"
@@ -498,7 +498,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/generic_interfaces.kl"
     return kl_t0;
     bb22:
-    kl_t56.kl_v_224 = 6;
+    kl_t56.kl_v = 6;
 #line 129 "codegen/generic_interfaces.kl"
     kl_e_55 = kl_t56;
     kl_small_a_57 = 1;
@@ -592,8 +592,8 @@ void kl__put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E* kl_this_1, int
 {
     bool kl_t3;
 #line 61 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_value_166 = kl_v_2;
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_168, 1, &( uint64_t ) { 0 } );
+    ( *kl_this_1 ).kl_value = kl_v_2;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n, 1, &( uint64_t ) { 0 } );
 #line 62 "codegen/generic_interfaces.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -601,7 +601,7 @@ void kl__put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E* kl_this_1, int
     kl_rt_panic( "codegen/generic_interfaces.kl", 62, "arithmetic overflow: n += 1;" );
     bb2:
 #line 62 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_n_168 = ( *kl_this_1 ).kl_n_168 + 1;
+    ( *kl_this_1 ).kl_n = ( *kl_this_1 ).kl_n + 1;
     return;
 #line 63 "codegen/generic_interfaces.kl"
 }
@@ -633,7 +633,7 @@ uint64_t kl__count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n_168;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 65 "codegen/generic_interfaces.kl"
     return kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
@@ -660,7 +660,7 @@ uint64_t kl__count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n_168;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 65 "codegen/generic_interfaces.kl"
     return kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
@@ -748,7 +748,7 @@ bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_
 void kl__reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 {
 #line 66 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_n_168 = 0;
+    ( *kl_this_1 ).kl_n = 0;
 #line 66 "codegen/generic_interfaces.kl"
     return;
 #line 66 "codegen/generic_interfaces.kl"
@@ -758,7 +758,7 @@ void kl__reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 void kl__reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 {
 #line 66 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_n_168 = 0;
+    ( *kl_this_1 ).kl_n = 0;
 #line 66 "codegen/generic_interfaces.kl"
     return;
 #line 66 "codegen/generic_interfaces.kl"
@@ -769,8 +769,8 @@ void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E* kl_this_1, int
 {
     bool kl_t3;
 #line 61 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_value_166 = kl_v_2;
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_168, 1, &( uint64_t ) { 0 } );
+    ( *kl_this_1 ).kl_value = kl_v_2;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n, 1, &( uint64_t ) { 0 } );
 #line 62 "codegen/generic_interfaces.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -778,7 +778,7 @@ void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E* kl_this_1, int
     kl_rt_panic( "codegen/generic_interfaces.kl", 62, "arithmetic overflow: n += 1;" );
     bb2:
 #line 62 "codegen/generic_interfaces.kl"
-    ( *kl_this_1 ).kl_n_168 = ( *kl_this_1 ).kl_n_168 + 1;
+    ( *kl_this_1 ).kl_n = ( *kl_this_1 ).kl_n + 1;
     return;
 #line 63 "codegen/generic_interfaces.kl"
 }

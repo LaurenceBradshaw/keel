@@ -8,7 +8,7 @@ struct kl__Counter;
 
 struct kl__Counter
 {
-    int32_t* kl_slot_173;
+    int32_t* kl_slot;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -283,7 +283,7 @@ int32_t kl__continues_the_loop__( void )
 void kl__Counter__R7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
 {
 #line 102 "codegen/switch_control.kl"
-    ( *kl_this_1 ).kl_slot_173 = kl_s_2;
+    ( *kl_this_1 ).kl_slot = kl_s_2;
 #line 102 "codegen/switch_control.kl"
     return;
 #line 102 "codegen/switch_control.kl"
@@ -295,7 +295,7 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 103 "codegen/switch_control.kl"
-    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_slot_173 ), 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_slot ), 1, &( int32_t ) { 0 } );
 #line 103 "codegen/switch_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -303,9 +303,9 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     kl_rt_panic( "codegen/switch_control.kl", 103, "arithmetic overflow: *slot + 1" );
     bb2:
 #line 103 "codegen/switch_control.kl"
-    kl_t3 = ( *( *kl_this_1 ).kl_slot_173 ) + 1;
+    kl_t3 = ( *( *kl_this_1 ).kl_slot ) + 1;
 #line 103 "codegen/switch_control.kl"
-    ( *( *kl_this_1 ).kl_slot_173 ) = kl_t3;
+    ( *( *kl_this_1 ).kl_slot ) = kl_t3;
 #line 103 "codegen/switch_control.kl"
     return;
 #line 103 "codegen/switch_control.kl"

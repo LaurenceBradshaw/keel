@@ -41,6 +41,10 @@ struct Spelling
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.
     std::string function( Node_id declaration, std::span<const Type_id> type_arguments = {} ) const;
+    // A vtable slot: the requirement's name and parameters, so an overloaded requirement has two.
+    std::string slot( Node_id requirement ) const;
+    // A global or static field. `owner` is the instance whose static this is, invalid otherwise.
+    std::string global( Node_id declaration, Type_id owner = {} ) const;
 
     // The symbol a Drop calls. A Drop always names a type with a destructor of its own, or an enum
     // with its synthesised one - the lowerer expands any other compound into per-field drops.

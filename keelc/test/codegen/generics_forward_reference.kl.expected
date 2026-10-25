@@ -12,30 +12,30 @@ struct kl__Counted__I3i32E;
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_174;
+    int32_t kl_v;
 };
 
 struct kl__Holder
 {
-    struct kl__Box__I3i32E kl_b_7;
+    struct kl__Box__I3i32E kl_b;
 };
 
 struct kl__Box__I3BoxI3i32EE
 {
-    struct kl__Box__I3i32E kl_v_174;
+    struct kl__Box__I3i32E kl_v;
 };
 
 struct kl__Nested
 {
-    struct kl__Box__I3BoxI3i32EE kl_b_16;
+    struct kl__Box__I3BoxI3i32EE kl_b;
 };
 
 struct kl__Counted__I3i32E
 {
-    int32_t kl_v_181;
+    int32_t kl_v;
 };
 
-int32_t kl_destroyed_2 = 0;
+int32_t kl__destroyed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -51,9 +51,9 @@ int32_t kl__in_a_local__( void )
 {
     int32_t kl_t0;
     struct kl__Box__I3i32E kl_b_1;
-    kl_b_1.kl_v_174 = 3;
+    kl_b_1.kl_v = 3;
 #line 33 "codegen/generics_forward_reference.kl"
-    kl_t0 = kl_b_1.kl_v_174;
+    kl_t0 = kl_b_1.kl_v;
 #line 33 "codegen/generics_forward_reference.kl"
     return kl_t0;
 }
@@ -63,7 +63,7 @@ int32_t kl__through_a_parameter__3BoxI3i32E( struct kl__Box__I3i32E kl_b_1 )
 {
     int32_t kl_t0;
 #line 38 "codegen/generics_forward_reference.kl"
-    kl_t0 = kl_b_1.kl_v_174;
+    kl_t0 = kl_b_1.kl_v;
 #line 38 "codegen/generics_forward_reference.kl"
     return kl_t0;
 }
@@ -73,7 +73,7 @@ struct kl__Box__I3i32E kl__as_a_return__3i32( int32_t kl_n_1 )
 {
     struct kl__Box__I3i32E kl_t0;
     struct kl__Box__I3i32E kl_b_2;
-    kl_b_2.kl_v_174 = kl_n_1;
+    kl_b_2.kl_v = kl_n_1;
 #line 47 "codegen/generics_forward_reference.kl"
     kl_t0 = kl_b_2;
 #line 47 "codegen/generics_forward_reference.kl"
@@ -85,7 +85,7 @@ void kl__drops_at_scope_exit__( void )
 {
     struct kl__Counted__I3i32E kl_c_1;
 #line 56 "codegen/generics_forward_reference.kl"
-    kl_c_1.kl_v_181 = 1;
+    kl_c_1.kl_v = 1;
     kl__Counted__I3i32E__dtor( &kl_c_1 );
 #line 57 "codegen/generics_forward_reference.kl"
     return;
@@ -109,9 +109,9 @@ int32_t kl__main__( void )
     bool kl_t11;
     bool kl_t13;
 #line 63 "codegen/generics_forward_reference.kl"
-    kl_h_1.kl_b_7.kl_v_174 = 7;
+    kl_h_1.kl_b.kl_v = 7;
 #line 65 "codegen/generics_forward_reference.kl"
-    kl_t2 = kl_h_1.kl_b_7.kl_v_174 != 7;
+    kl_t2 = kl_h_1.kl_b.kl_v != 7;
 #line 65 "codegen/generics_forward_reference.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -120,9 +120,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 72 "codegen/generics_forward_reference.kl"
-    kl_n_3.kl_b_16.kl_v_174.kl_v_174 = 9;
+    kl_n_3.kl_b.kl_v.kl_v = 9;
 #line 74 "codegen/generics_forward_reference.kl"
-    kl_t4 = kl_n_3.kl_b_16.kl_v_174.kl_v_174 != 9;
+    kl_t4 = kl_n_3.kl_b.kl_v.kl_v != 9;
 #line 74 "codegen/generics_forward_reference.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -142,7 +142,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 86 "codegen/generics_forward_reference.kl"
-    kl_passed_7.kl_v_174 = 5;
+    kl_passed_7.kl_v = 5;
 #line 88 "codegen/generics_forward_reference.kl"
     kl_t8 = kl__through_a_parameter__3BoxI3i32E( kl_passed_7 );
 #line 88 "codegen/generics_forward_reference.kl"
@@ -157,7 +157,7 @@ int32_t kl__main__( void )
 #line 93 "codegen/generics_forward_reference.kl"
     kl_t10 = kl__as_a_return__3i32( 11 );
 #line 93 "codegen/generics_forward_reference.kl"
-    kl_t11 = kl_t10.kl_v_174 != 11;
+    kl_t11 = kl_t10.kl_v != 11;
 #line 93 "codegen/generics_forward_reference.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
@@ -168,7 +168,7 @@ int32_t kl__main__( void )
 #line 98 "codegen/generics_forward_reference.kl"
     kl__drops_at_scope_exit__(  );
 #line 100 "codegen/generics_forward_reference.kl"
-    kl_t13 = kl_destroyed_2 != 1;
+    kl_t13 = kl__destroyed__G != 1;
 #line 100 "codegen/generics_forward_reference.kl"
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
@@ -189,7 +189,7 @@ void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 120 "codegen/generics_forward_reference.kl"
-    kl_t2 = __builtin_add_overflow( kl_destroyed_2, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__destroyed__G, 1, &( int32_t ) { 0 } );
 #line 120 "codegen/generics_forward_reference.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -197,9 +197,9 @@ void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
     kl_rt_panic( "codegen/generics_forward_reference.kl", 120, "arithmetic overflow: destroyed + 1" );
     bb2:
 #line 120 "codegen/generics_forward_reference.kl"
-    kl_t3 = kl_destroyed_2 + 1;
+    kl_t3 = kl__destroyed__G + 1;
 #line 120 "codegen/generics_forward_reference.kl"
-    kl_destroyed_2 = kl_t3;
+    kl__destroyed__G = kl_t3;
     return;
 #line 121 "codegen/generics_forward_reference.kl"
 }

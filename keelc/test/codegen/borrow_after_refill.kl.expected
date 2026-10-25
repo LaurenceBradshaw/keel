@@ -8,10 +8,10 @@ struct kl__Counted;
 
 struct kl__Counted
 {
-    uint64_t kl_n_4;
+    uint64_t kl_n;
 };
 
-int32_t kl_alive_2 = 0;
+int32_t kl__alive__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -28,8 +28,8 @@ void kl__Counted__R7Counted_3u64__ctor( struct kl__Counted* kl_this_1, uint64_t 
 {
     bool kl_t3;
 #line 11 "codegen/borrow_after_refill.kl"
-    ( *kl_this_1 ).kl_n_4 = kl_v_2;
-    kl_t3 = __builtin_add_overflow( kl_alive_2, 1, &( int32_t ) { 0 } );
+    ( *kl_this_1 ).kl_n = kl_v_2;
+    kl_t3 = __builtin_add_overflow( kl__alive__G, 1, &( int32_t ) { 0 } );
 #line 12 "codegen/borrow_after_refill.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -37,7 +37,7 @@ void kl__Counted__R7Counted_3u64__ctor( struct kl__Counted* kl_this_1, uint64_t 
     kl_rt_panic( "codegen/borrow_after_refill.kl", 12, "arithmetic overflow: alive++;" );
     bb2:
 #line 12 "codegen/borrow_after_refill.kl"
-    kl_alive_2 = kl_alive_2 + 1;
+    kl__alive__G = kl__alive__G + 1;
     return;
 #line 13 "codegen/borrow_after_refill.kl"
 }
@@ -48,7 +48,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
     bool kl_t2;
     ( void ) kl_this_1;
 #line 17 "codegen/borrow_after_refill.kl"
-    kl_t2 = __builtin_sub_overflow( kl_alive_2, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_sub_overflow( kl__alive__G, 1, &( int32_t ) { 0 } );
 #line 17 "codegen/borrow_after_refill.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -56,7 +56,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
     kl_rt_panic( "codegen/borrow_after_refill.kl", 17, "arithmetic overflow: alive--;" );
     bb2:
 #line 17 "codegen/borrow_after_refill.kl"
-    kl_alive_2 = kl_alive_2 - 1;
+    kl__alive__G = kl__alive__G - 1;
     return;
 #line 18 "codegen/borrow_after_refill.kl"
 }
@@ -75,7 +75,7 @@ uint64_t kl__look__7Counted( struct kl__Counted* kl_c_1 )
 {
     uint64_t kl_t0;
 #line 27 "codegen/borrow_after_refill.kl"
-    kl_t0 = ( *kl_c_1 ).kl_n_4;
+    kl_t0 = ( *kl_c_1 ).kl_n;
 #line 27 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }
@@ -240,7 +240,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 62 "codegen/borrow_after_refill.kl"
-    kl_t0 = kl_alive_2;
+    kl_t0 = kl__alive__G;
 #line 62 "codegen/borrow_after_refill.kl"
     return kl_t0;
 }

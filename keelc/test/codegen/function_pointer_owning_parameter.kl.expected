@@ -11,7 +11,7 @@ typedef uint64_t ( *kl__fn__FM1BE3u64 )( struct kl__B );
 
 struct kl__B
 {
-    uint64_t kl_n_1;
+    uint64_t kl_n;
 };
 
 void kl__B__R1B_3u64__ctor( struct kl__B*, uint64_t );
@@ -23,7 +23,7 @@ int32_t kl__main__( void );
 #line 10 "codegen/function_pointer_owning_parameter.kl"
 void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
-    ( *kl_this_1 ).kl_n_1 = kl_x_2;
+    ( *kl_this_1 ).kl_n = kl_x_2;
     return;
 #line 13 "codegen/function_pointer_owning_parameter.kl"
 }
@@ -31,7 +31,7 @@ void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 #line 14 "codegen/function_pointer_owning_parameter.kl"
 void kl__B__dtor( struct kl__B* kl_this_1 )
 {
-    ( *kl_this_1 ).kl_n_1 = 0;
+    ( *kl_this_1 ).kl_n = 0;
     return;
 #line 17 "codegen/function_pointer_owning_parameter.kl"
 }
@@ -41,7 +41,7 @@ uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 22 "codegen/function_pointer_owning_parameter.kl"
-    kl_t0 = ( *kl_b_1 ).kl_n_1;
+    kl_t0 = ( *kl_b_1 ).kl_n;
 #line 22 "codegen/function_pointer_owning_parameter.kl"
     return kl_t0;
 }
@@ -51,7 +51,7 @@ uint64_t kl__takes__M1B( struct kl__B kl_b_1 )
 {
     uint64_t kl_t0;
 #line 27 "codegen/function_pointer_owning_parameter.kl"
-    kl_t0 = kl_b_1.kl_n_1;
+    kl_t0 = kl_b_1.kl_n;
 #line 27 "codegen/function_pointer_owning_parameter.kl"
     kl__B__dtor( &kl_b_1 );
 #line 27 "codegen/function_pointer_owning_parameter.kl"

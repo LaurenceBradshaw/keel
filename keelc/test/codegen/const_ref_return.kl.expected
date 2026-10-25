@@ -8,8 +8,8 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -43,7 +43,7 @@ int32_t* kl__gets__5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t0;
 #line 24 "codegen/const_ref_return.kl"
-    kl_t0 = &( *kl_p_1 ).kl_y_3;
+    kl_t0 = &( *kl_p_1 ).kl_y;
 #line 24 "codegen/const_ref_return.kl"
     return kl_t0;
 }
@@ -77,9 +77,9 @@ int32_t kl__main__( void )
 #line 33 "codegen/const_ref_return.kl"
     kl_bound_3 = &( *kl_t6 );
 #line 35 "codegen/const_ref_return.kl"
-    kl_t8.kl_x_1 = 3;
+    kl_t8.kl_x = 3;
 #line 35 "codegen/const_ref_return.kl"
-    kl_t8.kl_y_3 = 7;
+    kl_t8.kl_y = 7;
 #line 35 "codegen/const_ref_return.kl"
     kl_v_7 = kl_t8;
 #line 39 "codegen/const_ref_return.kl"
@@ -90,7 +90,7 @@ int32_t kl__main__( void )
     kl_copied_9 = ( *kl_t11 );
 #line 44 "codegen/const_ref_return.kl"
     kl_y_2 = 50;
-    kl_v_7.kl_y_3 = 99;
+    kl_v_7.kl_y = 99;
 #line 47 "codegen/const_ref_return.kl"
     kl_t12 = __builtin_add_overflow( ( *kl_bound_3 ), kl_copied_9, &( int32_t ) { 0 } );
 #line 47 "codegen/const_ref_return.kl"

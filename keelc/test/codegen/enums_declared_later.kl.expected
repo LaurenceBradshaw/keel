@@ -10,14 +10,14 @@ struct kl__Shape;
 struct kl__Wrap__I6ColourE
 {
     int32_t tag;
-    int32_t kl_v_16;
+    int32_t kl_v;
 };
 
 struct kl__Shape
 {
     int32_t tag;
-    int32_t kl_c_2;
-    struct kl__Wrap__I6ColourE kl_w_8;
+    int32_t kl_c;
+    struct kl__Wrap__I6ColourE kl_w;
 };
 
 int32_t kl__main__( void );
@@ -41,16 +41,16 @@ int32_t kl__main__( void )
 #line 23 "codegen/enums_declared_later.kl"
     kl_t2.tag = 1;
 #line 23 "codegen/enums_declared_later.kl"
-    kl_t2.kl_c_2 = 1;
+    kl_t2.kl_c = 1;
 #line 23 "codegen/enums_declared_later.kl"
     kl_a_1 = kl_t2;
     kl_t5.tag = 0;
 #line 24 "codegen/enums_declared_later.kl"
-    kl_t5.kl_v_16 = 0;
+    kl_t5.kl_v = 0;
 #line 24 "codegen/enums_declared_later.kl"
     kl_t4.tag = 2;
 #line 24 "codegen/enums_declared_later.kl"
-    kl_t4.kl_w_8 = kl_t5;
+    kl_t4.kl_w = kl_t5;
 #line 24 "codegen/enums_declared_later.kl"
     kl_b_3 = kl_t4;
 #line 28 "codegen/enums_declared_later.kl"
@@ -59,7 +59,7 @@ int32_t kl__main__( void )
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 28 "codegen/enums_declared_later.kl"
-    kl_c_7 = kl_a_1.kl_c_2;
+    kl_c_7 = kl_a_1.kl_c;
     kl_t8 = kl_c_7 != 1;
 #line 29 "codegen/enums_declared_later.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
@@ -80,7 +80,7 @@ int32_t kl__main__( void )
     if ( kl_t9 ) goto bb5; else goto bb6;
     bb5:
 #line 37 "codegen/enums_declared_later.kl"
-    kl_w_10 = kl_b_3.kl_w_8;
+    kl_w_10 = kl_b_3.kl_w;
     goto bb7;
     bb6:
 #line 46 "codegen/enums_declared_later.kl"
@@ -89,7 +89,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb7:
 #line 40 "codegen/enums_declared_later.kl"
-    kl_v_11 = kl_w_10.kl_v_16;
+    kl_v_11 = kl_w_10.kl_v;
     kl_t12 = kl_v_11 != 0;
 #line 41 "codegen/enums_declared_later.kl"
     if ( kl_t12 ) goto bb8; else goto bb9;

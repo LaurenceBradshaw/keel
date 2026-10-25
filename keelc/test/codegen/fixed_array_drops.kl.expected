@@ -11,7 +11,7 @@ struct kl__A3_5Token;
 
 struct kl__Token
 {
-    int32_t kl_id_3;
+    int32_t kl_id;
 };
 
 struct kl__A2_5Token
@@ -21,7 +21,7 @@ struct kl__A2_5Token
 
 struct kl__Holder
 {
-    struct kl__A2_5Token kl_tokens_51;
+    struct kl__A2_5Token kl_tokens;
 };
 
 struct kl__A3_5Token
@@ -29,7 +29,7 @@ struct kl__A3_5Token
     struct kl__Token e[3];
 };
 
-int32_t kl_dropped_1;
+int32_t kl__dropped__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -44,7 +44,7 @@ void kl__A3_5Token__dtor( struct kl__A3_5Token* );
 #line 9 "codegen/fixed_array_drops.kl"
 void kl__Token__R5Token_3i32__ctor( struct kl__Token* kl_this_1, int32_t kl_id_2 )
 {
-    ( *kl_this_1 ).kl_id_3 = kl_id_2;
+    ( *kl_this_1 ).kl_id = kl_id_2;
     return;
 #line 12 "codegen/fixed_array_drops.kl"
 }
@@ -56,7 +56,7 @@ void kl__Token__dtor( struct kl__Token* kl_this_1 )
     int32_t kl_t3;
     ( void ) kl_this_1;
 #line 16 "codegen/fixed_array_drops.kl"
-    kl_t2 = __builtin_add_overflow( kl_dropped_1, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__dropped__G, 1, &( int32_t ) { 0 } );
 #line 16 "codegen/fixed_array_drops.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -64,9 +64,9 @@ void kl__Token__dtor( struct kl__Token* kl_this_1 )
     kl_rt_panic( "codegen/fixed_array_drops.kl", 16, "arithmetic overflow: dropped + 1" );
     bb2:
 #line 16 "codegen/fixed_array_drops.kl"
-    kl_t3 = kl_dropped_1 + 1;
+    kl_t3 = kl__dropped__G + 1;
 #line 16 "codegen/fixed_array_drops.kl"
-    kl_dropped_1 = kl_t3;
+    kl__dropped__G = kl_t3;
     return;
 #line 17 "codegen/fixed_array_drops.kl"
 }
@@ -230,7 +230,7 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 #line 31 "codegen/fixed_array_drops.kl"
     kl_t11 = true;
 #line 31 "codegen/fixed_array_drops.kl"
-    ( *kl_this_1 ).kl_tokens_51 = kl_t2;
+    ( *kl_this_1 ).kl_tokens = kl_t2;
 #line 31 "codegen/fixed_array_drops.kl"
     kl_t11 = false;
 #line 31 "codegen/fixed_array_drops.kl"
@@ -293,7 +293,7 @@ int32_t kl__main__( void )
 #line 38 "codegen/fixed_array_drops.kl"
     kl_t17 = false;
 #line 40 "codegen/fixed_array_drops.kl"
-    kl_t3 = kl_dropped_1 != 0;
+    kl_t3 = kl__dropped__G != 0;
 #line 40 "codegen/fixed_array_drops.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -328,7 +328,7 @@ int32_t kl__main__( void )
 #line 45 "codegen/fixed_array_drops.kl"
     kl_t18 = false;
 #line 47 "codegen/fixed_array_drops.kl"
-    kl_t8 = kl_dropped_1 != 1;
+    kl_t8 = kl__dropped__G != 1;
 #line 47 "codegen/fixed_array_drops.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
@@ -345,7 +345,7 @@ int32_t kl__main__( void )
 #line 52 "codegen/fixed_array_drops.kl"
     kl_t16 = false;
 #line 54 "codegen/fixed_array_drops.kl"
-    kl_t10 = kl_dropped_1 != 1;
+    kl_t10 = kl__dropped__G != 1;
 #line 54 "codegen/fixed_array_drops.kl"
     if ( kl_t10 ) goto bb5; else goto bb6;
     bb5:
@@ -365,7 +365,7 @@ int32_t kl__main__( void )
 #line 58 "codegen/fixed_array_drops.kl"
     kl_t16 = false;
 #line 60 "codegen/fixed_array_drops.kl"
-    kl_t11 = kl_dropped_1 != 4;
+    kl_t11 = kl__dropped__G != 4;
 #line 60 "codegen/fixed_array_drops.kl"
     if ( kl_t11 ) goto bb7; else goto bb8;
     bb7:
@@ -377,9 +377,9 @@ int32_t kl__main__( void )
     kl_t13 = &kl_h_12;
 #line 66 "codegen/fixed_array_drops.kl"
     kl__Holder__R6Holder__ctor( kl_t13 );
-    kl__A2_5Token__dtor( &kl_h_12.kl_tokens_51 );
+    kl__A2_5Token__dtor( &kl_h_12.kl_tokens );
 #line 69 "codegen/fixed_array_drops.kl"
-    kl_t15 = kl_dropped_1 != 6;
+    kl_t15 = kl__dropped__G != 6;
 #line 69 "codegen/fixed_array_drops.kl"
     if ( kl_t15 ) goto bb9; else goto bb10;
     bb9:

@@ -10,8 +10,8 @@ typedef int32_t ( *kl__fn__F3i64E3i32 )( int64_t );
 
 struct kl_4geom_Point
 {
-    int32_t kl_x_87;
-    int32_t kl_y_89;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 int32_t kl__pick__3i64( int64_t );
@@ -98,7 +98,7 @@ int32_t kl__main__( void )
     kl_t13 = kl_5route_origin__(  );
 #line 26 "codegen/modules_visibility/main.kl"
     kl_p_12 = kl_t13;
-    kl_t14 = kl_p_12.kl_x_87 != 7;
+    kl_t14 = kl_p_12.kl_x != 7;
 #line 27 "codegen/modules_visibility/main.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
@@ -131,9 +131,9 @@ struct kl_4geom_Point kl_5route_origin__( void )
     struct kl_4geom_Point kl_t0;
     struct kl_4geom_Point kl_t1;
 #line 12 "codegen/modules_visibility/route.kl"
-    kl_t1.kl_x_87 = 7;
+    kl_t1.kl_x = 7;
 #line 12 "codegen/modules_visibility/route.kl"
-    kl_t1.kl_y_89 = 0;
+    kl_t1.kl_y = 0;
 #line 12 "codegen/modules_visibility/route.kl"
     kl_t0 = kl_t1;
 #line 12 "codegen/modules_visibility/route.kl"

@@ -13,38 +13,38 @@ struct kl__Wrapper;
 
 struct kl__Buffer
 {
-    uint8_t* kl_ptr_16;
-    uint64_t kl_len_18;
+    uint8_t* kl_ptr;
+    uint64_t kl_len;
 };
 
 struct kl__Counter
 {
-    uint64_t kl_count_32;
+    uint64_t kl_count;
 };
 
 struct kl__Guarded
 {
-    uint64_t kl_len_53;
-    uint8_t* kl_ptr_56;
+    uint64_t kl_len;
+    uint8_t* kl_ptr;
 };
 
 struct kl__Handle
 {
-    uint64_t kl_value_89;
+    uint64_t kl_value;
 };
 
 struct kl__Point
 {
-    int32_t kl_x_92;
-    int32_t kl_y_94;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__Wrapper
 {
-    struct kl__Buffer kl_inner_97;
+    struct kl__Buffer kl_inner;
 };
 
-int32_t kl_released_1;
+int32_t kl__released__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -62,7 +62,7 @@ void kl__release__P2u8( uint8_t* kl_t1 )
     int32_t kl_t3;
     ( void ) kl_t1;
 #line 8 "codegen/destructors.kl"
-    kl_t2 = __builtin_add_overflow( kl_released_1, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__released__G, 1, &( int32_t ) { 0 } );
 #line 8 "codegen/destructors.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -70,9 +70,9 @@ void kl__release__P2u8( uint8_t* kl_t1 )
     kl_rt_panic( "codegen/destructors.kl", 8, "arithmetic overflow: released + 1" );
     bb2:
 #line 8 "codegen/destructors.kl"
-    kl_t3 = kl_released_1 + 1;
+    kl_t3 = kl__released__G + 1;
 #line 8 "codegen/destructors.kl"
-    kl_released_1 = kl_t3;
+    kl__released__G = kl_t3;
     return;
 #line 9 "codegen/destructors.kl"
 }
@@ -80,7 +80,7 @@ void kl__release__P2u8( uint8_t* kl_t1 )
 #line 17 "codegen/destructors.kl"
 void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
 {
-    kl__release__P2u8( ( *kl_this_1 ).kl_ptr_16 );
+    kl__release__P2u8( ( *kl_this_1 ).kl_ptr );
     return;
 #line 20 "codegen/destructors.kl"
 }
@@ -93,7 +93,7 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     bool kl_t4;
     uint64_t kl_t5;
 #line 30 "codegen/destructors.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_32, 1, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_count, 1, &( uint64_t ) { 0 } );
 #line 30 "codegen/destructors.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -101,10 +101,10 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     kl_rt_panic( "codegen/destructors.kl", 30, "arithmetic overflow: count + 1" );
     bb2:
 #line 30 "codegen/destructors.kl"
-    kl_t3 = ( *kl_this_1 ).kl_count_32 + 1;
+    kl_t3 = ( *kl_this_1 ).kl_count + 1;
 #line 30 "codegen/destructors.kl"
-    ( *kl_this_1 ).kl_count_32 = kl_t3;
-    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_32, 1, &( uint64_t ) { 0 } );
+    ( *kl_this_1 ).kl_count = kl_t3;
+    kl_t4 = __builtin_add_overflow( ( *kl_this_1 ).kl_count, 1, &( uint64_t ) { 0 } );
 #line 31 "codegen/destructors.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
@@ -112,9 +112,9 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
     kl_rt_panic( "codegen/destructors.kl", 31, "arithmetic overflow: this.count + 1" );
     bb4:
 #line 31 "codegen/destructors.kl"
-    kl_t5 = ( *kl_this_1 ).kl_count_32 + 1;
+    kl_t5 = ( *kl_this_1 ).kl_count + 1;
 #line 31 "codegen/destructors.kl"
-    ( *kl_this_1 ).kl_count_32 = kl_t5;
+    ( *kl_this_1 ).kl_count = kl_t5;
     return;
 #line 32 "codegen/destructors.kl"
 }
@@ -128,7 +128,7 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
     bool kl_t6;
     uint64_t kl_t7;
 #line 44 "codegen/destructors.kl"
-    kl_t2 = ( *kl_this_1 ).kl_len_53 == 0;
+    kl_t2 = ( *kl_this_1 ).kl_len == 0;
 #line 44 "codegen/destructors.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -139,11 +139,11 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
     goto bb3;
     bb3:
 #line 50 "codegen/destructors.kl"
-    kl_t4 = kl_i_3 < ( *kl_this_1 ).kl_len_53;
+    kl_t4 = kl_i_3 < ( *kl_this_1 ).kl_len;
 #line 50 "codegen/destructors.kl"
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
-    kl__release__P2u8( ( *kl_this_1 ).kl_ptr_56 );
+    kl__release__P2u8( ( *kl_this_1 ).kl_ptr );
     kl_t6 = __builtin_add_overflow( kl_i_3, 1, &( uint64_t ) { 0 } );
 #line 53 "codegen/destructors.kl"
     if ( kl_t6 ) goto bb6; else goto bb7;
@@ -175,11 +175,11 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
 #line 80 "codegen/destructors.kl"
     kl_t5 = false;
 #line 80 "codegen/destructors.kl"
-    kl_t3.kl_ptr_16 = NULL;
+    kl_t3.kl_ptr = NULL;
 #line 80 "codegen/destructors.kl"
     kl_t5 = true;
 #line 80 "codegen/destructors.kl"
-    kl_t3.kl_len_18 = 0;
+    kl_t3.kl_len = 0;
 #line 80 "codegen/destructors.kl"
     kl_t5 = true;
 #line 80 "codegen/destructors.kl"
@@ -246,22 +246,22 @@ int32_t kl__main__( void )
 #line 92 "codegen/destructors.kl"
     kl_t25 = false;
 #line 92 "codegen/destructors.kl"
-    kl_t2.kl_x_92 = 3;
+    kl_t2.kl_x = 3;
 #line 92 "codegen/destructors.kl"
-    kl_t2.kl_y_94 = 4;
+    kl_t2.kl_y = 4;
 #line 92 "codegen/destructors.kl"
     kl_p_1 = kl_t2;
-    kl_t4.kl_value_89 = 7;
+    kl_t4.kl_value = 7;
 #line 93 "codegen/destructors.kl"
     kl_h_3 = kl_t4;
 #line 97 "codegen/destructors.kl"
     kl_t22 = false;
 #line 97 "codegen/destructors.kl"
-    kl_t6.kl_ptr_16 = NULL;
+    kl_t6.kl_ptr = NULL;
 #line 97 "codegen/destructors.kl"
     kl_t22 = true;
 #line 97 "codegen/destructors.kl"
-    kl_t6.kl_len_18 = 0;
+    kl_t6.kl_len = 0;
 #line 97 "codegen/destructors.kl"
     kl_t22 = true;
 #line 97 "codegen/destructors.kl"
@@ -278,15 +278,15 @@ int32_t kl__main__( void )
 #line 102 "codegen/destructors.kl"
     kl_t24 = false;
 #line 102 "codegen/destructors.kl"
-    kl_t9.kl_ptr_16 = NULL;
+    kl_t9.kl_ptr = NULL;
 #line 102 "codegen/destructors.kl"
     kl_t24 = true;
 #line 102 "codegen/destructors.kl"
-    kl_t9.kl_len_18 = 0;
+    kl_t9.kl_len = 0;
 #line 102 "codegen/destructors.kl"
     kl_t24 = true;
 #line 102 "codegen/destructors.kl"
-    kl_t8.kl_inner_97 = kl_t9;
+    kl_t8.kl_inner = kl_t9;
 #line 102 "codegen/destructors.kl"
     kl_t24 = false;
 #line 102 "codegen/destructors.kl"
@@ -296,14 +296,14 @@ int32_t kl__main__( void )
 #line 102 "codegen/destructors.kl"
     kl_t23 = false;
 #line 102 "codegen/destructors.kl"
-    if ( kl_t23 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
+    if ( kl_t23 ) kl__Buffer__dtor( &kl_t8.kl_inner );
 #line 102 "codegen/destructors.kl"
     if ( kl_t24 ) kl__Buffer__dtor( &kl_t9 );
 #line 102 "codegen/destructors.kl"
     kl_t24 = false;
 #line 102 "codegen/destructors.kl"
     kl_t23 = false;
-    kl__Buffer__dtor( &kl_w_7.kl_inner_97 );
+    kl__Buffer__dtor( &kl_w_7.kl_inner );
 #line 106 "codegen/destructors.kl"
     kl_i_10 = 0;
     goto bb1;
@@ -315,11 +315,11 @@ int32_t kl__main__( void )
     bb2:
     kl_t25 = false;
 #line 109 "codegen/destructors.kl"
-    kl_t13.kl_ptr_16 = NULL;
+    kl_t13.kl_ptr = NULL;
 #line 109 "codegen/destructors.kl"
     kl_t25 = true;
 #line 109 "codegen/destructors.kl"
-    kl_t13.kl_len_18 = 0;
+    kl_t13.kl_len = 0;
 #line 109 "codegen/destructors.kl"
     kl_t25 = true;
 #line 109 "codegen/destructors.kl"
@@ -338,7 +338,7 @@ int32_t kl__main__( void )
     kl__early__3i32( 0 );
     kl__early__3i32( 1 );
 #line 117 "codegen/destructors.kl"
-    kl_t18 = __builtin_add_overflow( kl_p_1.kl_x_92, kl_p_1.kl_y_94, &( int32_t ) { 0 } );
+    kl_t18 = __builtin_add_overflow( kl_p_1.kl_x, kl_p_1.kl_y, &( int32_t ) { 0 } );
 #line 117 "codegen/destructors.kl"
     if ( kl_t18 ) goto bb6; else goto bb7;
     bb4:
@@ -357,9 +357,9 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/destructors.kl", 117, "arithmetic overflow: p.x + p.y" );
     bb7:
 #line 117 "codegen/destructors.kl"
-    kl_t19 = kl_p_1.kl_x_92 + kl_p_1.kl_y_94;
+    kl_t19 = kl_p_1.kl_x + kl_p_1.kl_y;
 #line 117 "codegen/destructors.kl"
-    kl_t20 = __builtin_add_overflow( kl_t19, kl_released_1, &( int32_t ) { 0 } );
+    kl_t20 = __builtin_add_overflow( kl_t19, kl__released__G, &( int32_t ) { 0 } );
 #line 117 "codegen/destructors.kl"
     if ( kl_t20 ) goto bb8; else goto bb9;
     bb8:
@@ -367,7 +367,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/destructors.kl", 117, "arithmetic overflow: p.x + p.y + released" );
     bb9:
 #line 117 "codegen/destructors.kl"
-    kl_t21 = kl_t19 + kl_released_1;
+    kl_t21 = kl_t19 + kl__released__G;
 #line 117 "codegen/destructors.kl"
     kl_t0 = kl_t21;
 #line 117 "codegen/destructors.kl"

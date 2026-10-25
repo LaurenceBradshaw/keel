@@ -11,8 +11,8 @@ typedef int32_t* ( *kl__fn__FK5PointEK3i32 )( struct kl__Point* );
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -46,7 +46,7 @@ int32_t* kl__gets__5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t0;
 #line 23 "codegen/function_pointer_const_ref_return.kl"
-    kl_t0 = &( *kl_p_1 ).kl_y_3;
+    kl_t0 = &( *kl_p_1 ).kl_y;
 #line 23 "codegen/function_pointer_const_ref_return.kl"
     return kl_t0;
 }
@@ -93,9 +93,9 @@ int32_t kl__main__( void )
 #line 36 "codegen/function_pointer_const_ref_return.kl"
     kl_bound_7 = &( *kl_t10 );
 #line 38 "codegen/function_pointer_const_ref_return.kl"
-    kl_t12.kl_x_1 = 3;
+    kl_t12.kl_x = 3;
 #line 38 "codegen/function_pointer_const_ref_return.kl"
-    kl_t12.kl_y_3 = 7;
+    kl_t12.kl_y = 7;
 #line 38 "codegen/function_pointer_const_ref_return.kl"
     kl_v_11 = kl_t12;
 #line 41 "codegen/function_pointer_const_ref_return.kl"
@@ -106,7 +106,7 @@ int32_t kl__main__( void )
     kl_copied_13 = ( *kl_t15 );
 #line 43 "codegen/function_pointer_const_ref_return.kl"
     kl_y_6 = 50;
-    kl_v_11.kl_y_3 = 99;
+    kl_v_11.kl_y = 99;
 #line 46 "codegen/function_pointer_const_ref_return.kl"
     kl_t16 = __builtin_add_overflow( ( *kl_bound_7 ), kl_copied_13, &( int32_t ) { 0 } );
 #line 46 "codegen/function_pointer_const_ref_return.kl"

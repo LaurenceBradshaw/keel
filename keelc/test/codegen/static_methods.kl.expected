@@ -11,26 +11,26 @@ struct kl__Box__I3f64E;
 
 struct kl__Vec
 {
-    int32_t kl_a_1;
-    int32_t kl_b_3;
+    int32_t kl_a;
+    int32_t kl_b;
 };
 
 struct kl__Owned
 {
-    uint64_t kl_n_120;
+    uint64_t kl_n;
 };
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_101;
+    int32_t kl_v;
 };
 
 struct kl__Box__I3f64E
 {
-    double kl_v_101;
+    double kl_v;
 };
 
-uint64_t kl_freed_118 = 0;
+uint64_t kl__freed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -55,9 +55,9 @@ struct kl__Vec kl__zero__S3Vec( void )
     struct kl__Vec kl_t0;
     struct kl__Vec kl_t1;
 #line 18 "codegen/static_methods.kl"
-    kl_t1.kl_a_1 = 0;
+    kl_t1.kl_a = 0;
 #line 18 "codegen/static_methods.kl"
-    kl_t1.kl_b_3 = 0;
+    kl_t1.kl_b = 0;
 #line 18 "codegen/static_methods.kl"
     kl_t0 = kl_t1;
 #line 18 "codegen/static_methods.kl"
@@ -70,9 +70,9 @@ struct kl__Vec kl__of__S3Vec_3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
     struct kl__Vec kl_t0;
     struct kl__Vec kl_t3;
 #line 23 "codegen/static_methods.kl"
-    kl_t3.kl_a_1 = kl_x_1;
+    kl_t3.kl_a = kl_x_1;
 #line 23 "codegen/static_methods.kl"
-    kl_t3.kl_b_3 = kl_y_2;
+    kl_t3.kl_b = kl_y_2;
 #line 23 "codegen/static_methods.kl"
     kl_t0 = kl_t3;
 #line 23 "codegen/static_methods.kl"
@@ -108,7 +108,7 @@ int32_t kl__sum__S3Vec( struct kl__Vec* kl_this_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 33 "codegen/static_methods.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a_1, ( *kl_this_1 ).kl_b_3, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a, ( *kl_this_1 ).kl_b, &( int32_t ) { 0 } );
 #line 33 "codegen/static_methods.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -116,7 +116,7 @@ int32_t kl__sum__S3Vec( struct kl__Vec* kl_this_1 )
     kl_rt_panic( "codegen/static_methods.kl", 33, "arithmetic overflow: a + b" );
     bb2:
 #line 33 "codegen/static_methods.kl"
-    kl_t3 = ( *kl_this_1 ).kl_a_1 + ( *kl_this_1 ).kl_b_3;
+    kl_t3 = ( *kl_this_1 ).kl_a + ( *kl_this_1 ).kl_b;
 #line 33 "codegen/static_methods.kl"
     kl_t0 = kl_t3;
 #line 33 "codegen/static_methods.kl"
@@ -129,7 +129,7 @@ int32_t kl__doubled_first__S3Vec( struct kl__Vec* kl_this_1 )
     int32_t kl_t0;
     int32_t kl_t2;
 #line 40 "codegen/static_methods.kl"
-    kl_t2 = kl__twice__S3Vec_3i32( ( *kl_this_1 ).kl_a_1 );
+    kl_t2 = kl__twice__S3Vec_3i32( ( *kl_this_1 ).kl_a );
 #line 40 "codegen/static_methods.kl"
     kl_t0 = kl_t2;
 #line 40 "codegen/static_methods.kl"
@@ -182,9 +182,9 @@ struct kl__Vec kl__of__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
 #line 54 "codegen/static_methods.kl"
     kl_t7 = kl_y_2 + 100;
 #line 54 "codegen/static_methods.kl"
-    kl_t3.kl_a_1 = kl_t5;
+    kl_t3.kl_a = kl_t5;
 #line 54 "codegen/static_methods.kl"
-    kl_t3.kl_b_3 = kl_t7;
+    kl_t3.kl_b = kl_t7;
 #line 54 "codegen/static_methods.kl"
     kl_t0 = kl_t3;
 #line 54 "codegen/static_methods.kl"
@@ -194,7 +194,7 @@ struct kl__Vec kl__of__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
 #line 76 "codegen/static_methods.kl"
 void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_start_2 )
 {
-    ( *kl_this_1 ).kl_n_120 = kl_start_2;
+    ( *kl_this_1 ).kl_n = kl_start_2;
     return;
 #line 79 "codegen/static_methods.kl"
 }
@@ -206,7 +206,7 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     uint64_t kl_t3;
     ( void ) kl_this_1;
 #line 83 "codegen/static_methods.kl"
-    kl_t2 = __builtin_add_overflow( kl_freed_118, 1, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__freed__G, 1, &( uint64_t ) { 0 } );
 #line 83 "codegen/static_methods.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -214,9 +214,9 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     kl_rt_panic( "codegen/static_methods.kl", 83, "arithmetic overflow: freed + 1" );
     bb2:
 #line 83 "codegen/static_methods.kl"
-    kl_t3 = kl_freed_118 + 1;
+    kl_t3 = kl__freed__G + 1;
 #line 83 "codegen/static_methods.kl"
-    kl_freed_118 = kl_t3;
+    kl__freed__G = kl_t3;
     return;
 #line 84 "codegen/static_methods.kl"
 }
@@ -236,7 +236,7 @@ uint64_t kl__read__S5Owned( struct kl__Owned* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 93 "codegen/static_methods.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n_120;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 93 "codegen/static_methods.kl"
     return kl_t0;
 }
@@ -376,7 +376,7 @@ int32_t kl__main__( void )
 #line 140 "codegen/static_methods.kl"
     kl_b_23 = kl_t24;
 #line 142 "codegen/static_methods.kl"
-    kl_t25 = kl_b_23.kl_v_101 != 9;
+    kl_t25 = kl_b_23.kl_v != 9;
 #line 142 "codegen/static_methods.kl"
     if ( kl_t25 ) goto bb13; else goto bb14;
     bb13:
@@ -389,7 +389,7 @@ int32_t kl__main__( void )
 #line 147 "codegen/static_methods.kl"
     kl_d_26 = kl_t27;
 #line 149 "codegen/static_methods.kl"
-    kl_t28 = kl_d_26.kl_v_101 != 2.5;
+    kl_t28 = kl_d_26.kl_v != 2.5;
 #line 149 "codegen/static_methods.kl"
     if ( kl_t28 ) goto bb15; else goto bb16;
     bb15:
@@ -431,7 +431,7 @@ int32_t kl__main__( void )
     bb20:
     kl__Owned__dtor( &kl_o_29 );
 #line 169 "codegen/static_methods.kl"
-    kl_t37 = kl_freed_118 != 1;
+    kl_t37 = kl__freed__G != 1;
 #line 169 "codegen/static_methods.kl"
     if ( kl_t37 ) goto bb21; else goto bb22;
     bb21:
@@ -444,7 +444,7 @@ int32_t kl__main__( void )
 #line 174 "codegen/static_methods.kl"
     kl_t39 = kl__sum__S3Vec( kl_t38 );
 #line 174 "codegen/static_methods.kl"
-    kl_t40 = __builtin_add_overflow( kl_t39, kl_b_23.kl_v_101, &( int32_t ) { 0 } );
+    kl_t40 = __builtin_add_overflow( kl_t39, kl_b_23.kl_v, &( int32_t ) { 0 } );
 #line 174 "codegen/static_methods.kl"
     if ( kl_t40 ) goto bb23; else goto bb24;
     bb23:
@@ -452,7 +452,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/static_methods.kl", 174, "arithmetic overflow: v.sum() + b.v" );
     bb24:
 #line 174 "codegen/static_methods.kl"
-    kl_t41 = kl_t39 + kl_b_23.kl_v_101;
+    kl_t41 = kl_t39 + kl_b_23.kl_v;
 #line 174 "codegen/static_methods.kl"
     kl_t0 = kl_t41;
 #line 174 "codegen/static_methods.kl"
@@ -465,7 +465,7 @@ struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
     struct kl__Box__I3i32E kl_t0;
     struct kl__Box__I3i32E kl_t2;
 #line 63 "codegen/static_methods.kl"
-    kl_t2.kl_v_101 = kl_x_1;
+    kl_t2.kl_v = kl_x_1;
 #line 63 "codegen/static_methods.kl"
     kl_t0 = kl_t2;
 #line 63 "codegen/static_methods.kl"
@@ -478,7 +478,7 @@ struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
     struct kl__Box__I3f64E kl_t0;
     struct kl__Box__I3f64E kl_t2;
 #line 63 "codegen/static_methods.kl"
-    kl_t2.kl_v_101 = kl_x_1;
+    kl_t2.kl_v = kl_x_1;
 #line 63 "codegen/static_methods.kl"
     kl_t0 = kl_t2;
 #line 63 "codegen/static_methods.kl"

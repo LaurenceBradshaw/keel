@@ -12,18 +12,18 @@ typedef void ( *kl__fn__FM7TrackedE4void )( struct kl__Tracked );
 
 struct kl__Tracked
 {
-    uint64_t* kl_drops__34;
-    uint8_t* kl_block__37;
+    uint64_t* kl_drops_;
+    uint8_t* kl_block_;
 };
 
 struct kl__Holder
 {
-    uint64_t kl_taken__69;
+    uint64_t kl_taken_;
 };
 
 struct kl_7prelude_box__I7TrackedE
 {
-    struct kl__Tracked* kl_p__370;
+    struct kl__Tracked* kl_p_;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -47,11 +47,11 @@ void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t
 {
     uint8_t* kl_t3;
 #line 8 "codegen/bare_temporary.kl"
-    ( *kl_this_1 ).kl_drops__34 = kl_drops_2;
+    ( *kl_this_1 ).kl_drops_ = kl_drops_2;
 #line 11 "codegen/bare_temporary.kl"
     kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 16, sizeof( uint8_t ), "codegen/bare_temporary.kl", 11, "out of memory: alloc<u8>( 16 )" );
 #line 11 "codegen/bare_temporary.kl"
-    ( *kl_this_1 ).kl_block__37 = kl_t3;
+    ( *kl_this_1 ).kl_block_ = kl_t3;
 #line 13 "codegen/bare_temporary.kl"
     return;
 #line 13 "codegen/bare_temporary.kl"
@@ -62,7 +62,7 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
     bool kl_t2;
 #line 17 "codegen/bare_temporary.kl"
-    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_drops__34 ), 1, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_drops_ ), 1, &( uint64_t ) { 0 } );
 #line 17 "codegen/bare_temporary.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -70,9 +70,9 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
     kl_rt_panic( "codegen/bare_temporary.kl", 17, "arithmetic overflow: *drops_ += 1;" );
     bb2:
 #line 17 "codegen/bare_temporary.kl"
-    ( *( *kl_this_1 ).kl_drops__34 ) = ( *( *kl_this_1 ).kl_drops__34 ) + 1;
+    ( *( *kl_this_1 ).kl_drops_ ) = ( *( *kl_this_1 ).kl_drops_ ) + 1;
 #line 20 "codegen/bare_temporary.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_block__37 );
+    kl_rt_free( ( *kl_this_1 ).kl_block_ );
 #line 22 "codegen/bare_temporary.kl"
     return;
 #line 22 "codegen/bare_temporary.kl"
@@ -81,7 +81,7 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 #line 30 "codegen/bare_temporary.kl"
 void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 {
-    ( *kl_this_1 ).kl_taken__69 = 0;
+    ( *kl_this_1 ).kl_taken_ = 0;
     return;
 #line 33 "codegen/bare_temporary.kl"
 }
@@ -91,7 +91,7 @@ void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Trac
 {
     bool kl_t3;
 #line 37 "codegen/bare_temporary.kl"
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_taken__69, 1, &( uint64_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_taken_, 1, &( uint64_t ) { 0 } );
 #line 37 "codegen/bare_temporary.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -99,7 +99,7 @@ void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Trac
     kl_rt_panic( "codegen/bare_temporary.kl", 37, "arithmetic overflow: taken_ += 1;" );
     bb2:
 #line 37 "codegen/bare_temporary.kl"
-    ( *kl_this_1 ).kl_taken__69 = ( *kl_this_1 ).kl_taken__69 + 1;
+    ( *kl_this_1 ).kl_taken_ = ( *kl_this_1 ).kl_taken_ + 1;
     kl__Tracked__dtor( &kl_t2 );
 #line 38 "codegen/bare_temporary.kl"
     return;
@@ -444,7 +444,7 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
 #line 87 "<prelude>"
     kl_t7 = &( *kl_t6 );
 #line 87 "<prelude>"
-    ( *kl_this_1 ).kl_p__370 = kl_t7;
+    ( *kl_this_1 ).kl_p_ = kl_t7;
 #line 89 "<prelude>"
     if ( kl_t8 ) kl__Tracked__dtor( &kl_value_2 );
 #line 89 "<prelude>"
@@ -459,10 +459,10 @@ void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_t
 {
     struct kl__Tracked* kl_t2;
 #line 95 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__370;
+    kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 95 "<prelude>"
     kl__Tracked__dtor( &( *kl_t2 ) );
-    kl_rt_free( ( *kl_this_1 ).kl_p__370 );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
 #line 98 "<prelude>"
     return;
 #line 98 "<prelude>"

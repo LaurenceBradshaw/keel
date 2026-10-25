@@ -9,18 +9,18 @@ struct kl__Box__I3f64E;
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_11;
+    int32_t kl_v;
 };
 
 struct kl__Box__I3f64E
 {
-    double kl_v_11;
+    double kl_v;
 };
 
-int32_t kl_made_6__I3i32E = 0;
-int32_t kl_start_9__I3i32E = 7;
-int32_t kl_made_6__I3f64E = 0;
-int32_t kl_start_9__I3f64E = 7;
+int32_t kl__made__GS3BoxI3i32E = 0;
+int32_t kl__start__GS3BoxI3i32E = 7;
+int32_t kl__made__GS3BoxI3f64E = 0;
+int32_t kl__start__GS3BoxI3f64E = 7;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -96,7 +96,7 @@ int32_t kl__main__( void )
     if ( kl_t10 ) goto bb4; else goto bb3;
     bb3:
 #line 35 "codegen/static_fields_generic.kl"
-    kl_t16 = kl_c_7.kl_v_11 != 3.0;
+    kl_t16 = kl_c_7.kl_v != 3.0;
 #line 35 "codegen/static_fields_generic.kl"
     kl_t10 = kl_t16;
 #line 35 "codegen/static_fields_generic.kl"
@@ -139,11 +139,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 47 "codegen/static_fields_generic.kl"
-    kl_t25 = &kl_start_9__I3f64E;
+    kl_t25 = &kl__start__GS3BoxI3f64E;
 #line 47 "codegen/static_fields_generic.kl"
     kl_at_24 = kl_t25;
 #line 49 "codegen/static_fields_generic.kl"
-    kl_t26 = __builtin_add_overflow( ( *kl_at_24 ), kl_b_4.kl_v_11, &( int32_t ) { 0 } );
+    kl_t26 = __builtin_add_overflow( ( *kl_at_24 ), kl_b_4.kl_v, &( int32_t ) { 0 } );
 #line 49 "codegen/static_fields_generic.kl"
     if ( kl_t26 ) goto bb11; else goto bb12;
     bb11:
@@ -151,11 +151,11 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/static_fields_generic.kl", 49, "arithmetic overflow: *at + b.v" );
     bb12:
 #line 49 "codegen/static_fields_generic.kl"
-    kl_t27 = ( *kl_at_24 ) + kl_b_4.kl_v_11;
+    kl_t27 = ( *kl_at_24 ) + kl_b_4.kl_v;
 #line 49 "codegen/static_fields_generic.kl"
     ( *kl_at_24 ) = kl_t27;
 #line 51 "codegen/static_fields_generic.kl"
-    kl_t28 = kl_start_9__I3i32E != 7;
+    kl_t28 = kl__start__GS3BoxI3i32E != 7;
 #line 51 "codegen/static_fields_generic.kl"
     if ( kl_t28 ) goto bb13; else goto bb14;
     bb13:
@@ -166,7 +166,7 @@ int32_t kl__main__( void )
 #line 56 "codegen/static_fields_generic.kl"
     kl_t29 = kl__count__I3f64E__S3BoxI3f64E(  );
 #line 56 "codegen/static_fields_generic.kl"
-    kl_t30 = __builtin_add_overflow( kl_start_9__I3f64E, kl_t29, &( int32_t ) { 0 } );
+    kl_t30 = __builtin_add_overflow( kl__start__GS3BoxI3f64E, kl_t29, &( int32_t ) { 0 } );
 #line 56 "codegen/static_fields_generic.kl"
     if ( kl_t30 ) goto bb15; else goto bb16;
     bb15:
@@ -174,7 +174,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/static_fields_generic.kl", 56, "arithmetic overflow: Box<f64>::start + Box<f64>::count()" );
     bb16:
 #line 56 "codegen/static_fields_generic.kl"
-    kl_t31 = kl_start_9__I3f64E + kl_t29;
+    kl_t31 = kl__start__GS3BoxI3f64E + kl_t29;
 #line 56 "codegen/static_fields_generic.kl"
     kl_t0 = kl_t31;
 #line 56 "codegen/static_fields_generic.kl"
@@ -187,8 +187,8 @@ void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1,
     bool kl_t3;
     int32_t kl_t4;
 #line 13 "codegen/static_fields_generic.kl"
-    ( *kl_this_1 ).kl_v_11 = kl_value_2;
-    kl_t3 = __builtin_add_overflow( kl_made_6__I3i32E, 1, &( int32_t ) { 0 } );
+    ( *kl_this_1 ).kl_v = kl_value_2;
+    kl_t3 = __builtin_add_overflow( kl__made__GS3BoxI3i32E, 1, &( int32_t ) { 0 } );
 #line 14 "codegen/static_fields_generic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -196,9 +196,9 @@ void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1,
     kl_rt_panic( "codegen/static_fields_generic.kl", 14, "arithmetic overflow: made + 1" );
     bb2:
 #line 14 "codegen/static_fields_generic.kl"
-    kl_t4 = kl_made_6__I3i32E + 1;
+    kl_t4 = kl__made__GS3BoxI3i32E + 1;
 #line 14 "codegen/static_fields_generic.kl"
-    kl_made_6__I3i32E = kl_t4;
+    kl__made__GS3BoxI3i32E = kl_t4;
     return;
 #line 15 "codegen/static_fields_generic.kl"
 }
@@ -209,8 +209,8 @@ void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1,
     bool kl_t3;
     int32_t kl_t4;
 #line 13 "codegen/static_fields_generic.kl"
-    ( *kl_this_1 ).kl_v_11 = kl_value_2;
-    kl_t3 = __builtin_add_overflow( kl_made_6__I3f64E, 1, &( int32_t ) { 0 } );
+    ( *kl_this_1 ).kl_v = kl_value_2;
+    kl_t3 = __builtin_add_overflow( kl__made__GS3BoxI3f64E, 1, &( int32_t ) { 0 } );
 #line 14 "codegen/static_fields_generic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -218,9 +218,9 @@ void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1,
     kl_rt_panic( "codegen/static_fields_generic.kl", 14, "arithmetic overflow: made + 1" );
     bb2:
 #line 14 "codegen/static_fields_generic.kl"
-    kl_t4 = kl_made_6__I3f64E + 1;
+    kl_t4 = kl__made__GS3BoxI3f64E + 1;
 #line 14 "codegen/static_fields_generic.kl"
-    kl_made_6__I3f64E = kl_t4;
+    kl__made__GS3BoxI3f64E = kl_t4;
     return;
 #line 15 "codegen/static_fields_generic.kl"
 }
@@ -230,7 +230,7 @@ int32_t kl__count__I3i32E__S3BoxI3i32E( void )
 {
     int32_t kl_t0;
 #line 19 "codegen/static_fields_generic.kl"
-    kl_t0 = kl_made_6__I3i32E;
+    kl_t0 = kl__made__GS3BoxI3i32E;
 #line 19 "codegen/static_fields_generic.kl"
     return kl_t0;
 }
@@ -240,7 +240,7 @@ int32_t kl__count__I3f64E__S3BoxI3f64E( void )
 {
     int32_t kl_t0;
 #line 19 "codegen/static_fields_generic.kl"
-    kl_t0 = kl_made_6__I3f64E;
+    kl_t0 = kl__made__GS3BoxI3f64E;
 #line 19 "codegen/static_fields_generic.kl"
     return kl_t0;
 }
@@ -250,7 +250,7 @@ void kl__reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 25 "codegen/static_fields_generic.kl"
-    kl_made_6__I3i32E = 0;
+    kl__made__GS3BoxI3i32E = 0;
     return;
 #line 26 "codegen/static_fields_generic.kl"
 }

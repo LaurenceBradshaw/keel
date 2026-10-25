@@ -12,12 +12,12 @@ typedef struct kl__P ( *kl__fn__F1PE1P )( struct kl__P );
 
 struct kl__P
 {
-    int32_t kl_t_1;
+    int32_t kl_t;
 };
 
 struct kl__Holder
 {
-    kl__fn__F3i32E3i32 kl_cb_31;
+    kl__fn__F3i32E3i32 kl_cb;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -56,7 +56,7 @@ struct kl__P kl__bump__1P( struct kl__P kl_v_1 )
     bool kl_t3;
     int32_t kl_t4;
 #line 18 "codegen/function_pointer_in_struct.kl"
-    kl_t3 = __builtin_add_overflow( kl_v_1.kl_t_1, 1, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_v_1.kl_t, 1, &( int32_t ) { 0 } );
 #line 18 "codegen/function_pointer_in_struct.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -64,9 +64,9 @@ struct kl__P kl__bump__1P( struct kl__P kl_v_1 )
     kl_rt_panic( "codegen/function_pointer_in_struct.kl", 18, "arithmetic overflow: v.t + 1" );
     bb2:
 #line 18 "codegen/function_pointer_in_struct.kl"
-    kl_t4 = kl_v_1.kl_t_1 + 1;
+    kl_t4 = kl_v_1.kl_t + 1;
 #line 18 "codegen/function_pointer_in_struct.kl"
-    kl_t2.kl_t_1 = kl_t4;
+    kl_t2.kl_t = kl_t4;
 #line 18 "codegen/function_pointer_in_struct.kl"
     kl_t0 = kl_t2;
 #line 18 "codegen/function_pointer_in_struct.kl"
@@ -92,16 +92,16 @@ int32_t kl__main__( void )
 #line 28 "codegen/function_pointer_in_struct.kl"
     kl_t3 = kl__twice__3i32;
 #line 28 "codegen/function_pointer_in_struct.kl"
-    kl_t2.kl_cb_31 = kl_t3;
+    kl_t2.kl_cb = kl_t3;
 #line 28 "codegen/function_pointer_in_struct.kl"
     kl_h_1 = kl_t2;
 #line 31 "codegen/function_pointer_in_struct.kl"
-    kl_p_4 = kl_h_1.kl_cb_31;
+    kl_p_4 = kl_h_1.kl_cb;
     kl_t6 = kl__bump__1P;
 #line 32 "codegen/function_pointer_in_struct.kl"
     kl_q_5 = kl_t6;
 #line 34 "codegen/function_pointer_in_struct.kl"
-    kl_t8.kl_t_1 = 1;
+    kl_t8.kl_t = 1;
 #line 34 "codegen/function_pointer_in_struct.kl"
     kl_one_7 = kl_t8;
 #line 36 "codegen/function_pointer_in_struct.kl"
@@ -119,7 +119,7 @@ int32_t kl__main__( void )
 #line 37 "codegen/function_pointer_in_struct.kl"
     kl_t11 = kl_q_5( kl_one_7 );
 #line 37 "codegen/function_pointer_in_struct.kl"
-    kl_t12 = kl_t11.kl_t_1 != 2;
+    kl_t12 = kl_t11.kl_t != 2;
 #line 37 "codegen/function_pointer_in_struct.kl"
     if ( kl_t12 ) goto bb3; else goto bb4;
     bb3:

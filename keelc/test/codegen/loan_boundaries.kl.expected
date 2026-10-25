@@ -11,23 +11,23 @@ struct kl__Holder;
 
 struct kl__Buf
 {
-    uint64_t* kl_data_2;
+    uint64_t* kl_data;
 };
 
 struct kl__buffer
 {
-    int32_t* kl_data_114;
+    int32_t* kl_data;
 };
 
 struct kl__W
 {
-    struct kl__Buf kl_one_117;
+    struct kl__Buf kl_one;
 };
 
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_b_43;
+    struct kl__Buf kl_b;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -56,8 +56,8 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 #line 8 "codegen/loan_boundaries.kl"
     kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/loan_boundaries.kl", 8, "out of memory: alloc<u64>()" );
 #line 8 "codegen/loan_boundaries.kl"
-    ( *kl_this_1 ).kl_data_2 = kl_t3;
-    ( *( *kl_this_1 ).kl_data_2 ) = kl_n_2;
+    ( *kl_this_1 ).kl_data = kl_t3;
+    ( *( *kl_this_1 ).kl_data ) = kl_n_2;
     return;
 #line 10 "codegen/loan_boundaries.kl"
 }
@@ -65,7 +65,7 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 #line 12 "codegen/loan_boundaries.kl"
 void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
 {
-    kl_rt_free( ( *kl_this_1 ).kl_data_2 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
     return;
 #line 15 "codegen/loan_boundaries.kl"
 }
@@ -75,7 +75,7 @@ uint64_t kl__get__S3Buf( struct kl__Buf* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 19 "codegen/loan_boundaries.kl"
-    kl_t0 = ( *( *kl_this_1 ).kl_data_2 );
+    kl_t0 = ( *( *kl_this_1 ).kl_data );
 #line 19 "codegen/loan_boundaries.kl"
     return kl_t0;
 }
@@ -88,9 +88,9 @@ void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 #line 33 "codegen/loan_boundaries.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/loan_boundaries.kl", 33, "out of memory: alloc<i32>( 4 )" );
 #line 33 "codegen/loan_boundaries.kl"
-    ( *kl_this_1 ).kl_data_114 = kl_t2;
+    ( *kl_this_1 ).kl_data = kl_t2;
 #line 33 "codegen/loan_boundaries.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data_114 + 0;
+    kl_t3 = ( *kl_this_1 ).kl_data + 0;
 #line 33 "codegen/loan_boundaries.kl"
     ( *kl_t3 ) = 1;
     return;
@@ -100,7 +100,7 @@ void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 #line 36 "codegen/loan_boundaries.kl"
 void kl__buffer__dtor( struct kl__buffer* kl_this_1 )
 {
-    kl_rt_free( ( *kl_this_1 ).kl_data_114 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
     return;
 #line 39 "codegen/loan_boundaries.kl"
 }
@@ -112,7 +112,7 @@ int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64
     int32_t* kl_t3;
     int32_t* kl_t4;
 #line 43 "codegen/loan_boundaries.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data_114 + kl_index_2;
+    kl_t3 = ( *kl_this_1 ).kl_data + kl_index_2;
 #line 43 "codegen/loan_boundaries.kl"
     kl_t4 = &( *kl_t3 );
 #line 43 "codegen/loan_boundaries.kl"
@@ -127,13 +127,13 @@ void kl__grow__S6buffer( struct kl__buffer* kl_this_1 )
     int32_t* kl_t3;
     int32_t* kl_t4;
 #line 48 "codegen/loan_boundaries.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_114 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 48 "codegen/loan_boundaries.kl"
     kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/loan_boundaries.kl", 48, "out of memory: alloc<i32>( 4 )" );
 #line 48 "codegen/loan_boundaries.kl"
-    ( *kl_this_1 ).kl_data_114 = kl_t3;
+    ( *kl_this_1 ).kl_data = kl_t3;
 #line 48 "codegen/loan_boundaries.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_114 + 0;
+    kl_t4 = ( *kl_this_1 ).kl_data + 0;
 #line 48 "codegen/loan_boundaries.kl"
     ( *kl_t4 ) = 2;
     return;
@@ -157,7 +157,7 @@ void kl__W__R1W_3u64__ctor( struct kl__W* kl_this_1, uint64_t kl_n_2 )
 #line 60 "codegen/loan_boundaries.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t4, kl_n_2 );
 #line 60 "codegen/loan_boundaries.kl"
-    ( *kl_this_1 ).kl_one_117 = kl_t3;
+    ( *kl_this_1 ).kl_one = kl_t3;
 #line 60 "codegen/loan_boundaries.kl"
     kl_t6 = false;
 #line 60 "codegen/loan_boundaries.kl"
@@ -193,7 +193,7 @@ uint64_t kl__field_across_owner__( void )
     kl_t10 = true;
 #line 67 "codegen/loan_boundaries.kl"
     kl__W__R1W_3u64__ctor( kl_t2, 4 );
-    kl_b_4 = &kl_w_1.kl_one_117;
+    kl_b_4 = &kl_w_1.kl_one;
     kl_t11 = false;
 #line 69 "codegen/loan_boundaries.kl"
     kl_t6 = &kl_t5;
@@ -202,7 +202,7 @@ uint64_t kl__field_across_owner__( void )
 #line 69 "codegen/loan_boundaries.kl"
     kl__W__R1W_3u64__ctor( kl_t6, 6 );
 #line 69 "codegen/loan_boundaries.kl"
-    if ( kl_t10 ) kl__Buf__dtor( &kl_w_1.kl_one_117 );
+    if ( kl_t10 ) kl__Buf__dtor( &kl_w_1.kl_one );
 #line 69 "codegen/loan_boundaries.kl"
     kl_w_1 = kl_t5;
 #line 69 "codegen/loan_boundaries.kl"
@@ -210,7 +210,7 @@ uint64_t kl__field_across_owner__( void )
 #line 69 "codegen/loan_boundaries.kl"
     kl_t10 = true;
 #line 69 "codegen/loan_boundaries.kl"
-    if ( kl_t11 ) kl__Buf__dtor( &kl_t5.kl_one_117 );
+    if ( kl_t11 ) kl__Buf__dtor( &kl_t5.kl_one );
 #line 69 "codegen/loan_boundaries.kl"
     kl_t11 = false;
     kl_t8 = &( *kl_b_4 );
@@ -219,7 +219,7 @@ uint64_t kl__field_across_owner__( void )
 #line 70 "codegen/loan_boundaries.kl"
     kl_t0 = kl_t9;
 #line 70 "codegen/loan_boundaries.kl"
-    if ( kl_t10 ) kl__Buf__dtor( &kl_w_1.kl_one_117 );
+    if ( kl_t10 ) kl__Buf__dtor( &kl_w_1.kl_one );
 #line 70 "codegen/loan_boundaries.kl"
     kl_t10 = false;
 #line 70 "codegen/loan_boundaries.kl"
@@ -343,7 +343,7 @@ uint64_t kl__payload_before_assign__( void )
 #line 92 "codegen/loan_boundaries.kl"
     kl_t14 = true;
 #line 92 "codegen/loan_boundaries.kl"
-    kl_t2.kl_b_43 = kl_t3;
+    kl_t2.kl_b = kl_t3;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t15 = false;
 #line 92 "codegen/loan_boundaries.kl"
@@ -369,7 +369,7 @@ uint64_t kl__payload_before_assign__( void )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 97 "codegen/loan_boundaries.kl"
-    kl_b_8 = &kl_h_1.kl_b_43;
+    kl_b_8 = &kl_h_1.kl_b;
     kl_k_9 = &( *kl_b_8 );
     kl_t10 = &( *kl_k_9 );
 #line 99 "codegen/loan_boundaries.kl"
@@ -493,7 +493,7 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     return;
     bb2:
 #line 23 "codegen/loan_boundaries.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_b_43 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_b );
 #line 23 "codegen/loan_boundaries.kl"
     goto bb1;
 #line 27 "codegen/loan_boundaries.kl"

@@ -360,19 +360,20 @@ std::string mangle_local( std::string_view name, u32 declaration )
     return fmt::format( "kl_{}_{}", c_name( name ), declaration );
 }
 
-std::string
-mangle_static_field( std::string_view name, u32 declaration, std::span<const Type_id> type_arguments, const Type_table& types )
+std::string mangle_field( std::string_view name )
 {
-    std::string local = mangle_local( name, declaration );
-    if( type_arguments.empty() )
+    return fmt::format( "kl_{}", c_name( name ) );
+}
+
+std::string mangle_global( const Mangled_owner& owner, std::string_view name, Type_id enclosing, const Type_table& types )
+{
+    std::string text = fmt::format( "kl_{}_{}__G", module_slot( owner ), c_name( name ) );
+    if( enclosing.is_valid() )
     {
-        return local;
+        text += 'S';
+        encode_type( text, enclosing, types );
     }
-    else
-    {
-        local += "__I" + construct_arg_string( type_arguments, types ) + "E";
-        return local;
-    }
+    return text;
 }
 
 std::string mangle_array( Type_id array, const Type_table& types )
@@ -828,28 +829,40 @@ TEST_CASE( "mangle_local_cannot_collide", "[codegen][mangle]" )
     }
 }
 
-// One declaration is one variable per instantiation, so the type arguments are part of its name.
-TEST_CASE( "mangle_static_field_names_each_instantiation", "[codegen][mangle][static]" )
+// Built from where the declaration lives, never from a node id, so an edit elsewhere moves nothing.
+TEST_CASE( "mangle_global_names_each_instantiation", "[codegen][mangle][static]" )
 {
     Type_table table;
 
-    const Type_id i32      = table.integer( 32, true );
-    const Type_id f64      = table.floating( 64 );
-    const Type_id of_i32[] = { i32 };
-    const Type_id of_f64[] = { f64 };
-    const Type_id of_box[] = { table.structure( Node_id { 11 }, std::array { i32 }, "Box" ) };
+    const Type_id i32    = table.integer( 32, true );
+    const Type_id f64    = table.floating( 64 );
+    const Type_id holder = table.structure( Node_id { 10 }, {}, "holder" );
+    const Type_id of_i32 = table.structure( Node_id { 11 }, std::array { i32 }, "Box" );
+    const Type_id of_f64 = table.structure( Node_id { 11 }, std::array { f64 }, "Box" );
 
-    SECTION( "a non-generic type's is spelled as a global" )
+    SECTION( "a file-scope global carries its module" )
     {
-        REQUIRE( mangle_static_field( "made", 53, {}, table ) == mangle_local( "made", 53 ) );
+        REQUIRE( mangle_global( {}, "count", {}, table ) == "kl__count__G" );
+        REQUIRE( mangle_global( { "kl", "os" }, "count", {}, table ) == "kl_2kl2os_count__G" );
     }
 
-    SECTION( "an instantiation's carries its arguments" )
+    SECTION( "a static field carries its aggregate at its instance" )
     {
-        REQUIRE( mangle_static_field( "made", 53, of_i32, table ) == "kl_made_53__I3i32E" );
-        REQUIRE( mangle_static_field( "made", 53, of_box, table ) == "kl_made_53__I3BoxI3i32EE" );
-        REQUIRE( mangle_static_field( "made", 53, of_i32, table ) != mangle_static_field( "made", 53, of_f64, table ) );
+        REQUIRE( mangle_global( {}, "total", holder, table ) == "kl__total__GS6holder" );
+        REQUIRE( mangle_global( {}, "count", of_i32, table ) == "kl__count__GS3BoxI3i32E" );
+        REQUIRE( mangle_global( {}, "count", of_i32, table ) != mangle_global( {}, "count", of_f64, table ) );
     }
+
+    SECTION( "no function spells a global" )
+    {
+        REQUIRE( mangle_global( {}, "f", {}, table ) != mangle_function( {}, "f", {}, table ) );
+    }
+}
+
+TEST_CASE( "mangle_field_is_its_name", "[codegen][mangle]" )
+{
+    REQUIRE( mangle_field( "x" ) == "kl_x" );
+    REQUIRE( mangle_field( "x" ) != mangle_field( "kl_x" ) );
 }
 
 } // namespace keel

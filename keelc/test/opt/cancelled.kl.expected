@@ -4,7 +4,7 @@
 
 #include "cancelled.kl.prelude.c"
 
-int32_t kl_count_1;
+int32_t kl__count__G;
 
 int32_t kl__local__3i32( int32_t );
 int32_t kl__counter__( void );
@@ -26,7 +26,7 @@ int32_t kl__counter__( void )
     int32_t kl_t0;
     int32_t kl_t2;
 #line 17 "opt/cancelled.kl"
-    kl_t2 = kl_count_1;
+    kl_t2 = kl__count__G;
     kl_t0 = kl_t2;
 #line 18 "opt/cancelled.kl"
     return kl_t0;
@@ -47,7 +47,7 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
 #line 17 "opt/cancelled.kl"
-    kl_count_1 = 5;
+    kl__count__G = 5;
 #line 45 "opt/cancelled.kl"
     kl_t0 = 0;
 #line 45 "opt/cancelled.kl"

@@ -12,7 +12,7 @@ struct kl__Two__I4voidE;
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error_757;
+    int32_t kl_error;
 };
 
 struct kl__Box__I4voidE
@@ -22,13 +22,13 @@ struct kl__Box__I4voidE
 
 struct kl__Pair__I4voidE
 {
-    int32_t kl_second_16;
+    int32_t kl_second;
 };
 
 struct kl__Two__I4voidE
 {
     int32_t tag;
-    int32_t kl_y_23;
+    int32_t kl_y;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -104,7 +104,7 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     bb1:
     kl_t2.tag = 1;
 #line 53 "codegen/void_type_argument.kl"
-    kl_t2.kl_error_757 = 0;
+    kl_t2.kl_error = 0;
 #line 53 "codegen/void_type_argument.kl"
     kl_t0 = kl_t2;
 #line 53 "codegen/void_type_argument.kl"
@@ -164,10 +164,10 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fail_1 )
     return kl_t0;
     bb2:
 #line 67 "codegen/void_type_argument.kl"
-    kl_e_11 = kl_t2.kl_error_757;
+    kl_e_11 = kl_t2.kl_error;
     kl_t12.tag = 1;
 #line 68 "codegen/void_type_argument.kl"
-    kl_t12.kl_error_757 = kl_e_11;
+    kl_t12.kl_error = kl_e_11;
 #line 68 "codegen/void_type_argument.kl"
     kl_t0 = kl_t12;
 #line 68 "codegen/void_type_argument.kl"
@@ -210,7 +210,7 @@ int32_t kl__report__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     return kl_t0;
     bb2:
 #line 79 "codegen/void_type_argument.kl"
-    kl_e_9 = kl_r_1.kl_error_757;
+    kl_e_9 = kl_r_1.kl_error;
     kl_t11 = &kl_t10;
 #line 80 "codegen/void_type_argument.kl"
     kl_t12 = ( uint8_t* ) "err";
@@ -274,16 +274,16 @@ int32_t kl__main__( void )
     kl__look__I3BoxI4voidEE__3BoxI4voidE( kl_t9 );
     kl__note__(  );
 #line 92 "codegen/void_type_argument.kl"
-    kl_t12.kl_second_16 = 7;
+    kl_t12.kl_second = 7;
 #line 92 "codegen/void_type_argument.kl"
     kl_p_11 = kl_t12;
-    kl_t14 = ( int64_t ) kl_p_11.kl_second_16;
+    kl_t14 = ( int64_t ) kl_p_11.kl_second;
 #line 93 "codegen/void_type_argument.kl"
     kl_1t7console_println__3i64( kl_t14 );
 #line 95 "codegen/void_type_argument.kl"
     kl_t17.tag = 0;
 #line 95 "codegen/void_type_argument.kl"
-    kl_t17.kl_y_23 = 9;
+    kl_t17.kl_y = 9;
 #line 95 "codegen/void_type_argument.kl"
     kl_t_16 = kl_t17;
 #line 98 "codegen/void_type_argument.kl"
@@ -292,7 +292,7 @@ int32_t kl__main__( void )
     if ( kl_t18 ) goto bb1; else goto bb2;
     bb1:
 #line 98 "codegen/void_type_argument.kl"
-    kl_y_19 = kl_t_16.kl_y_23;
+    kl_y_19 = kl_t_16.kl_y;
     kl_t20 = ( int64_t ) kl_y_19;
 #line 99 "codegen/void_type_argument.kl"
     kl_1t7console_println__3i64( kl_t20 );
@@ -347,7 +347,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_689( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -446,7 +446,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_689( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"

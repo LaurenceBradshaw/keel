@@ -8,7 +8,7 @@ struct kl__Counter;
 
 struct kl__Counter
 {
-    int32_t kl_n_1;
+    int32_t kl_n;
 };
 
 bool kl__same__S7Counter_7Counter( struct kl__Counter*, struct kl__Counter* );
@@ -23,7 +23,7 @@ bool kl__same__S7Counter_7Counter( struct kl__Counter* kl_this_1, struct kl__Cou
     bool kl_t0;
     bool kl_t3;
 #line 9 "codegen/method_borrows.kl"
-    kl_t3 = ( *kl_this_1 ).kl_n_1 == ( *kl_other_2 ).kl_n_1;
+    kl_t3 = ( *kl_this_1 ).kl_n == ( *kl_other_2 ).kl_n;
 #line 9 "codegen/method_borrows.kl"
     kl_t0 = kl_t3;
 #line 9 "codegen/method_borrows.kl"
@@ -36,7 +36,7 @@ bool kl__equals__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_valu
     bool kl_t0;
     bool kl_t3;
 #line 14 "codegen/method_borrows.kl"
-    kl_t3 = ( *kl_this_1 ).kl_n_1 == ( *kl_value_2 );
+    kl_t3 = ( *kl_this_1 ).kl_n == ( *kl_value_2 );
 #line 14 "codegen/method_borrows.kl"
     kl_t0 = kl_t3;
 #line 14 "codegen/method_borrows.kl"
@@ -65,7 +65,7 @@ bool kl__equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this_1
 #line 22 "codegen/method_borrows.kl"
 void kl__give__S7Counter_R3i32( struct kl__Counter* kl_this_1, int32_t* kl_into_2 )
 {
-    ( *kl_into_2 ) = ( *kl_this_1 ).kl_n_1;
+    ( *kl_into_2 ) = ( *kl_this_1 ).kl_n;
     return;
 #line 25 "codegen/method_borrows.kl"
 }
@@ -96,10 +96,10 @@ int32_t kl__main__( void )
     int32_t* kl_t20;
     bool kl_t22;
 #line 30 "codegen/method_borrows.kl"
-    kl_t2.kl_n_1 = 3;
+    kl_t2.kl_n = 3;
 #line 30 "codegen/method_borrows.kl"
     kl_a_1 = kl_t2;
-    kl_t4.kl_n_1 = 3;
+    kl_t4.kl_n = 3;
 #line 31 "codegen/method_borrows.kl"
     kl_b_3 = kl_t4;
     kl_three_5 = 3;

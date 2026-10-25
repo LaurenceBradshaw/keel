@@ -8,7 +8,7 @@ struct kl__buffer;
 
 struct kl__buffer
 {
-    int32_t* kl_data_41;
+    int32_t* kl_data;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -28,7 +28,7 @@ void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 #line 5 "codegen/ref_element.kl"
     kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/ref_element.kl", 5, "out of memory: alloc<i32>( 4 )" );
 #line 5 "codegen/ref_element.kl"
-    ( *kl_this_1 ).kl_data_41 = kl_t2;
+    ( *kl_this_1 ).kl_data = kl_t2;
 #line 5 "codegen/ref_element.kl"
     return;
 #line 5 "codegen/ref_element.kl"
@@ -38,7 +38,7 @@ void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
 void kl__buffer__dtor( struct kl__buffer* kl_this_1 )
 {
 #line 6 "codegen/ref_element.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_41 );
+    kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 6 "codegen/ref_element.kl"
     return;
 #line 6 "codegen/ref_element.kl"
@@ -51,7 +51,7 @@ int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64
     int32_t* kl_t3;
     int32_t* kl_t4;
 #line 7 "codegen/ref_element.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data_41 + kl_index_2;
+    kl_t3 = ( *kl_this_1 ).kl_data + kl_index_2;
 #line 7 "codegen/ref_element.kl"
     kl_t4 = &( *kl_t3 );
 #line 7 "codegen/ref_element.kl"

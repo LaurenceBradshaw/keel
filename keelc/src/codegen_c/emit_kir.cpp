@@ -702,7 +702,7 @@ void Kir_emitter::emit_vtable_types()
             }
 
             write_line( fmt::format(
-                "{} ( *{} )( {} );", spelling_.type( slot( requirement ) ), spelling_.field( requirement ), parameters
+                "{} ( *{} )( {} );", spelling_.type( slot( requirement ) ), spelling_.slot( requirement ), parameters
             ) );
         }
 
@@ -1744,13 +1744,7 @@ Type_id Kir_emitter::type_of( const Place& place ) const
 
 std::string Kir_emitter::place( const Place& place ) const
 {
-    std::span<const Type_id> arguments =
-        place.owner.is_valid() ? types_.table().get( place.owner ).arguments : std::span<const Type_id>();
-
-    std::string text =
-        !place.is_global()
-            ? local_name( place.local.v )
-            : mangle_static_field( interner_.text( ast_.name( place.global ) ), place.global.v, arguments, types_.table() );
+    std::string text = !place.is_global() ? local_name( place.local.v ) : spelling_.global( place.global, place.owner );
 
     for( u32 i = 0; i < place.num_projections; ++i )
     {
@@ -2076,7 +2070,7 @@ std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
         }
     }
 
-    return fmt::format( "{}.vtable->{}( {} )", receiver, spelling_.field( rvalue.callee ), args );
+    return fmt::format( "{}.vtable->{}( {} )", receiver, spelling_.slot( rvalue.callee ), args );
 }
 
 } // namespace
@@ -2859,10 +2853,8 @@ TEST_CASE( "emit_kir_writes_places", "[codegen][kir]" )
         INFO( g.c );
         REQUIRE( g.clean() );
 
-        const std::string name = "kl_counter_";
-
-        REQUIRE( g.has( name + "2 = 1;" ) );    // the definition
-        REQUIRE( g.has( "= " + name + "2;" ) ); // the read, same symbol
+        REQUIRE( g.has( "kl__counter__G = 1;" ) ); // the definition
+        REQUIRE( g.has( "= kl__counter__G;" ) );   // the read, same symbol
     }
 }
 
@@ -3306,8 +3298,8 @@ TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generi
         Generated g( std::string( box ) + "i32 main() { Box<i32> a; Box<f64> b; a.v = 1; b.v = 1.5; return 0; }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "int32_t kl_v_" ) );
-        REQUIRE( g.has( "double kl_v_" ) );
+        REQUIRE( g.has( "int32_t kl_v;" ) );
+        REQUIRE( g.has( "double kl_v;" ) );
 
         // And never the declared type, which has no C spelling at all.
         REQUIRE_FALSE( g.has( " T kl_v_" ) );
@@ -3387,7 +3379,7 @@ TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generi
         INFO( g.c );
         REQUIRE( g.clean() );
         REQUIRE( g.has( "struct kl__Node__I3i32E;" ) ); // the forward declaration
-        REQUIRE( g.has( "struct kl__Node__I3i32E* kl_next_" ) );
+        REQUIRE( g.has( "struct kl__Node__I3i32E* kl_next;" ) );
     }
 
     SECTION( "a non-generic aggregate is spelled exactly as it was" )
@@ -3845,8 +3837,8 @@ TEST_CASE( "emit_kir_writes_a_static_method_address", "[codegen][kir][static]" )
         REQUIRE( g.has( "= kl__count__I3f64E__S3BoxI3f64E_3f64;" ) );
         REQUIRE( g.has( "int32_t kl__count__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_" ) );
         REQUIRE( g.has( "int32_t kl__count__I3f64E__S3BoxI3f64E_3f64( double kl_x_" ) );
-        REQUIRE( g.has( "__I3i32E = 0;" ) );
-        REQUIRE( g.has( "__I3f64E = 0;" ) );
+        REQUIRE( g.has( "kl__made__GS3BoxI3i32E = 0;" ) );
+        REQUIRE( g.has( "kl__made__GS3BoxI3f64E = 0;" ) );
     }
 }
 
@@ -4001,7 +3993,7 @@ TEST_CASE( "emit_kir_indexes_and_offsets", "[codegen][kir][many]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( " ).kl_x_" ) );
+        REQUIRE( g.has( " ).kl_x " ) );
     }
 
     // The step is an integer 1, never a constant of the pointer's type, which C spells `NULL`.
@@ -4033,10 +4025,9 @@ TEST_CASE( "emit_kir_emits_a_static_field_as_a_global", "[codegen][kir][static]"
     REQUIRE( open != std::string::npos );
     REQUIRE( g.c.substr( open, close - open ).find( "count" ) == std::string::npos );
 
-    // Two variables, each with its initialiser: the node id in the name keeps them apart.
-    REQUIRE( g.has( "int32_t kl_count_" ) );
-    REQUIRE( g.has( " = 5;" ) );
-    REQUIRE( g.has( " = 6;" ) );
+    // Two variables, each with its initialiser: the aggregate in the name keeps them apart.
+    REQUIRE( g.has( "int32_t kl__count__GS1S = 5;" ) );
+    REQUIRE( g.has( "int32_t kl__count__GS1T = 6;" ) );
 }
 
 // One variable per instantiation, named for it, and none for the open `Box<T>`: a bare `made` in an
@@ -4054,19 +4045,15 @@ TEST_CASE( "emit_kir_emits_a_generic_static_field_per_instantiation", "[codegen]
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    const std::size_t i32_storage = g.c.find( "int32_t kl_made_" );
+    const std::string name = "kl__made__GS3BoxI";
 
-    REQUIRE( i32_storage != std::string::npos );
-
-    const std::string name = g.c.substr( i32_storage + 8, g.c.find( "__I", i32_storage ) - i32_storage - 8 );
-
-    REQUIRE( g.has( "int32_t " + name + "__I3i32E = 4;" ) );
-    REQUIRE( g.has( "int32_t " + name + "__I3f64E = 4;" ) );
-    REQUIRE_FALSE( g.has( "int32_t " + name + " " ) );
+    REQUIRE( g.has( "int32_t " + name + "3i32E = 4;" ) );
+    REQUIRE( g.has( "int32_t " + name + "3f64E = 4;" ) );
+    REQUIRE_FALSE( g.has( "int32_t kl__made__G " ) );
 
     // `count` on `Box<i32>` reads the variable `Box<i32>::made` wrote; nothing reads `Box<f64>`'s.
-    REQUIRE( g.has( " = " + name + "__I3i32E;" ) );
-    REQUIRE_FALSE( g.has( " = " + name + "__I3f64E;" ) );
+    REQUIRE( g.has( " = " + name + "3i32E;" ) );
+    REQUIRE_FALSE( g.has( " = " + name + "3f64E;" ) );
 }
 
 // §6.7: a `box<Shape>` is dropped through the vtable's first slot and freed through `.self`. The

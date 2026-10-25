@@ -10,19 +10,19 @@ struct kl__pair__I3i32E;
 
 struct kl__point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__name
 {
-    uint8_t kl_first_56;
+    uint8_t kl_first;
 };
 
 struct kl__pair__I3i32E
 {
-    int32_t kl_left_111;
-    int32_t kl_right_113;
+    int32_t kl_left;
+    int32_t kl_right;
 };
 
 bool kl__operator_eq__S5point_5point( struct kl__point*, struct kl__point* );
@@ -41,14 +41,14 @@ bool kl__operator_eq__S5point_5point( struct kl__point* kl_this_1, struct kl__po
     bool kl_t4;
     bool kl_t5;
 #line 10 "codegen/operator_equal.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 == ( *kl_other_2 ).kl_x_1;
+    kl_t4 = ( *kl_this_1 ).kl_x == ( *kl_other_2 ).kl_x;
 #line 10 "codegen/operator_equal.kl"
     kl_t3 = kl_t4;
 #line 10 "codegen/operator_equal.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 10 "codegen/operator_equal.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 == ( *kl_other_2 ).kl_y_3;
+    kl_t5 = ( *kl_this_1 ).kl_y == ( *kl_other_2 ).kl_y;
 #line 10 "codegen/operator_equal.kl"
     kl_t3 = kl_t5;
 #line 10 "codegen/operator_equal.kl"
@@ -63,7 +63,7 @@ bool kl__operator_eq__S5point_5point( struct kl__point* kl_this_1, struct kl__po
 #line 16 "codegen/operator_equal.kl"
 void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 {
-    ( *kl_this_1 ).kl_first_56 = kl_c_2;
+    ( *kl_this_1 ).kl_first = kl_c_2;
     return;
 #line 19 "codegen/operator_equal.kl"
 }
@@ -74,7 +74,7 @@ bool kl__operator_eq__S4name_4name( struct kl__name* kl_this_1, struct kl__name*
     bool kl_t0;
     bool kl_t3;
 #line 23 "codegen/operator_equal.kl"
-    kl_t3 = ( *kl_this_1 ).kl_first_56 == ( *kl_other_2 ).kl_first_56;
+    kl_t3 = ( *kl_this_1 ).kl_first == ( *kl_other_2 ).kl_first;
 #line 23 "codegen/operator_equal.kl"
     kl_t0 = kl_t3;
 #line 23 "codegen/operator_equal.kl"
@@ -163,19 +163,19 @@ int32_t kl__main__( void )
     struct kl__pair__I3i32E* kl_t63;
     bool kl_t64;
 #line 53 "codegen/operator_equal.kl"
-    kl_t2.kl_x_1 = 1;
+    kl_t2.kl_x = 1;
 #line 53 "codegen/operator_equal.kl"
-    kl_t2.kl_y_3 = 2;
+    kl_t2.kl_y = 2;
 #line 53 "codegen/operator_equal.kl"
     kl_a_1 = kl_t2;
-    kl_t4.kl_x_1 = 1;
+    kl_t4.kl_x = 1;
 #line 54 "codegen/operator_equal.kl"
-    kl_t4.kl_y_3 = 2;
+    kl_t4.kl_y = 2;
 #line 54 "codegen/operator_equal.kl"
     kl_b_3 = kl_t4;
-    kl_t6.kl_x_1 = 1;
+    kl_t6.kl_x = 1;
 #line 55 "codegen/operator_equal.kl"
-    kl_t6.kl_y_3 = 3;
+    kl_t6.kl_y = 3;
 #line 55 "codegen/operator_equal.kl"
     kl_c_5 = kl_t6;
 #line 57 "codegen/operator_equal.kl"
@@ -359,8 +359,8 @@ int32_t kl__main__( void )
 #line 31 "codegen/operator_equal.kl"
 void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
 {
-    ( *kl_this_1 ).kl_left_111 = kl_a_2;
-    ( *kl_this_1 ).kl_right_113 = kl_b_3;
+    ( *kl_this_1 ).kl_left = kl_a_2;
+    ( *kl_this_1 ).kl_right = kl_b_3;
     return;
 #line 35 "codegen/operator_equal.kl"
 }
@@ -373,14 +373,14 @@ bool kl__operator_eq__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E*
     bool kl_t4;
     bool kl_t5;
 #line 39 "codegen/operator_equal.kl"
-    kl_t4 = ( *kl_this_1 ).kl_left_111 == ( *kl_other_2 ).kl_left_111;
+    kl_t4 = ( *kl_this_1 ).kl_left == ( *kl_other_2 ).kl_left;
 #line 39 "codegen/operator_equal.kl"
     kl_t3 = kl_t4;
 #line 39 "codegen/operator_equal.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 39 "codegen/operator_equal.kl"
-    kl_t5 = ( *kl_this_1 ).kl_right_113 == ( *kl_other_2 ).kl_right_113;
+    kl_t5 = ( *kl_this_1 ).kl_right == ( *kl_other_2 ).kl_right;
 #line 39 "codegen/operator_equal.kl"
     kl_t3 = kl_t5;
 #line 39 "codegen/operator_equal.kl"

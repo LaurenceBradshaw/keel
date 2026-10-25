@@ -8,8 +8,8 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_4;
-    int32_t kl_y_6;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -45,14 +45,14 @@ bool kl__operator_eq__S5Point_5Point( struct kl__Point* kl_this_1, struct kl__Po
     bool kl_t4;
     bool kl_t5;
 #line 13 "codegen/hash.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_4 == ( *kl_other_2 ).kl_x_4;
+    kl_t4 = ( *kl_this_1 ).kl_x == ( *kl_other_2 ).kl_x;
 #line 13 "codegen/hash.kl"
     kl_t3 = kl_t4;
 #line 13 "codegen/hash.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 13 "codegen/hash.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_6 == ( *kl_other_2 ).kl_y_6;
+    kl_t5 = ( *kl_this_1 ).kl_y == ( *kl_other_2 ).kl_y;
 #line 13 "codegen/hash.kl"
     kl_t3 = kl_t5;
 #line 13 "codegen/hash.kl"
@@ -74,12 +74,12 @@ void kl__hash__S5Point_RQ7prelude6hasher( struct kl__Point* kl_this_1, struct kl
 #line 18 "codegen/hash.kl"
     kl_t3 = &( *kl_h_2 );
 #line 18 "codegen/hash.kl"
-    kl_t4 = ( uint64_t ) ( *kl_this_1 ).kl_x_4;
+    kl_t4 = ( uint64_t ) ( *kl_this_1 ).kl_x;
 #line 18 "codegen/hash.kl"
     kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t3, kl_t4 );
     kl_t6 = &( *kl_h_2 );
 #line 19 "codegen/hash.kl"
-    kl_t7 = ( uint64_t ) ( *kl_this_1 ).kl_y_6;
+    kl_t7 = ( uint64_t ) ( *kl_this_1 ).kl_y;
 #line 19 "codegen/hash.kl"
     kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t7 );
     return;
@@ -611,9 +611,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb26:
 #line 139 "codegen/hash.kl"
-    kl_t86.kl_x_4 = 1;
+    kl_t86.kl_x = 1;
 #line 139 "codegen/hash.kl"
-    kl_t86.kl_y_6 = 2;
+    kl_t86.kl_y = 2;
 #line 139 "codegen/hash.kl"
     kl_a_85 = kl_t86;
 #line 141 "codegen/hash.kl"
@@ -632,9 +632,9 @@ int32_t kl__main__( void )
 #line 141 "codegen/hash.kl"
     kl_t92 = &kl_a_85;
 #line 141 "codegen/hash.kl"
-    kl_t93.kl_x_4 = 1;
+    kl_t93.kl_x = 1;
 #line 141 "codegen/hash.kl"
-    kl_t93.kl_y_6 = 2;
+    kl_t93.kl_y = 2;
 #line 141 "codegen/hash.kl"
     kl_t94 = &kl_t93;
 #line 141 "codegen/hash.kl"

@@ -8,10 +8,10 @@ struct kl__B;
 
 struct kl__B
 {
-    uint64_t kl_n_4;
+    uint64_t kl_n;
 };
 
-uint64_t kl_freed_2 = 0;
+uint64_t kl__freed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -25,7 +25,7 @@ int32_t kl__main__( void );
 #line 12 "codegen/borrows.kl"
 void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
-    ( *kl_this_1 ).kl_n_4 = kl_x_2;
+    ( *kl_this_1 ).kl_n = kl_x_2;
     return;
 #line 15 "codegen/borrows.kl"
 }
@@ -37,7 +37,7 @@ void kl__B__dtor( struct kl__B* kl_this_1 )
     uint64_t kl_t3;
     ( void ) kl_this_1;
 #line 19 "codegen/borrows.kl"
-    kl_t2 = __builtin_add_overflow( kl_freed_2, 1, &( uint64_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl__freed__G, 1, &( uint64_t ) { 0 } );
 #line 19 "codegen/borrows.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -45,9 +45,9 @@ void kl__B__dtor( struct kl__B* kl_this_1 )
     kl_rt_panic( "codegen/borrows.kl", 19, "arithmetic overflow: freed + 1" );
     bb2:
 #line 19 "codegen/borrows.kl"
-    kl_t3 = kl_freed_2 + 1;
+    kl_t3 = kl__freed__G + 1;
 #line 19 "codegen/borrows.kl"
-    kl_freed_2 = kl_t3;
+    kl__freed__G = kl_t3;
     return;
 #line 20 "codegen/borrows.kl"
 }
@@ -57,7 +57,7 @@ uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 25 "codegen/borrows.kl"
-    kl_t0 = ( *kl_b_1 ).kl_n_4;
+    kl_t0 = ( *kl_b_1 ).kl_n;
 #line 25 "codegen/borrows.kl"
     return kl_t0;
 }
@@ -191,7 +191,7 @@ int32_t kl__main__( void )
 #line 57 "codegen/borrows.kl"
     kl_t24 = kl_total_1 * 10;
 #line 57 "codegen/borrows.kl"
-    kl_t25 = kl_t24 + kl_freed_2;
+    kl_t25 = kl_t24 + kl__freed__G;
 #line 57 "codegen/borrows.kl"
     kl_t26 = ( int32_t ) kl_t25;
 #line 57 "codegen/borrows.kl"

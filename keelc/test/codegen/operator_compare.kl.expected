@@ -10,19 +10,19 @@ struct kl__pair__I3i32E;
 
 struct kl__version
 {
-    int32_t kl_major_1;
-    int32_t kl_minor_3;
+    int32_t kl_major;
+    int32_t kl_minor;
 };
 
 struct kl__name
 {
-    uint8_t kl_first_65;
+    uint8_t kl_first;
 };
 
 struct kl__pair__I3i32E
 {
-    int32_t kl_left_129;
-    int32_t kl_right_131;
+    int32_t kl_left;
+    int32_t kl_right;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -66,7 +66,7 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
     bool kl_t9;
     bool kl_t10;
 #line 11 "codegen/operator_compare.kl"
-    kl_t5 = ( *kl_this_1 ).kl_major_1 < ( *kl_other_2 ).kl_major_1;
+    kl_t5 = ( *kl_this_1 ).kl_major < ( *kl_other_2 ).kl_major;
 #line 11 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -76,7 +76,7 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
     goto bb5;
     bb2:
 #line 11 "codegen/operator_compare.kl"
-    kl_t6 = ( *kl_this_1 ).kl_major_1 == ( *kl_other_2 ).kl_major_1;
+    kl_t6 = ( *kl_this_1 ).kl_major == ( *kl_other_2 ).kl_major;
 #line 11 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
@@ -102,7 +102,7 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
     return kl_t0;
     bb7:
 #line 18 "codegen/operator_compare.kl"
-    kl_t9 = ( *kl_this_1 ).kl_minor_3 < ( *kl_other_2 ).kl_minor_3;
+    kl_t9 = ( *kl_this_1 ).kl_minor < ( *kl_other_2 ).kl_minor;
 #line 18 "codegen/operator_compare.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
@@ -112,7 +112,7 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
     goto bb12;
     bb9:
 #line 18 "codegen/operator_compare.kl"
-    kl_t10 = ( *kl_this_1 ).kl_minor_3 == ( *kl_other_2 ).kl_minor_3;
+    kl_t10 = ( *kl_this_1 ).kl_minor == ( *kl_other_2 ).kl_minor;
 #line 18 "codegen/operator_compare.kl"
     if ( kl_t10 ) goto bb10; else goto bb11;
     bb10:
@@ -135,7 +135,7 @@ int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1,
 #line 24 "codegen/operator_compare.kl"
 void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
 {
-    ( *kl_this_1 ).kl_first_65 = kl_c_2;
+    ( *kl_this_1 ).kl_first = kl_c_2;
     return;
 #line 27 "codegen/operator_compare.kl"
 }
@@ -148,7 +148,7 @@ int32_t kl__operator_compare__S4name_4name( struct kl__name* kl_this_1, struct k
     bool kl_t4;
     bool kl_t5;
 #line 31 "codegen/operator_compare.kl"
-    kl_t4 = ( *kl_this_1 ).kl_first_65 < ( *kl_other_2 ).kl_first_65;
+    kl_t4 = ( *kl_this_1 ).kl_first < ( *kl_other_2 ).kl_first;
 #line 31 "codegen/operator_compare.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
@@ -158,7 +158,7 @@ int32_t kl__operator_compare__S4name_4name( struct kl__name* kl_this_1, struct k
     goto bb5;
     bb2:
 #line 31 "codegen/operator_compare.kl"
-    kl_t5 = ( *kl_this_1 ).kl_first_65 == ( *kl_other_2 ).kl_first_65;
+    kl_t5 = ( *kl_this_1 ).kl_first == ( *kl_other_2 ).kl_first;
 #line 31 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
@@ -688,14 +688,14 @@ int32_t kl__main__( void )
     return kl_t0;
     bb54:
 #line 106 "codegen/operator_compare.kl"
-    kl_t48.kl_major_1 = 1;
+    kl_t48.kl_major = 1;
 #line 106 "codegen/operator_compare.kl"
-    kl_t48.kl_minor_3 = 2;
+    kl_t48.kl_minor = 2;
 #line 106 "codegen/operator_compare.kl"
     kl_a_47 = kl_t48;
-    kl_t50.kl_major_1 = 1;
+    kl_t50.kl_major = 1;
 #line 107 "codegen/operator_compare.kl"
-    kl_t50.kl_minor_3 = 3;
+    kl_t50.kl_minor = 3;
 #line 107 "codegen/operator_compare.kl"
     kl_b_49 = kl_t50;
 #line 109 "codegen/operator_compare.kl"
@@ -1064,8 +1064,8 @@ int32_t kl__main__( void )
 #line 39 "codegen/operator_compare.kl"
 void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
 {
-    ( *kl_this_1 ).kl_left_129 = kl_a_2;
-    ( *kl_this_1 ).kl_right_131 = kl_b_3;
+    ( *kl_this_1 ).kl_left = kl_a_2;
+    ( *kl_this_1 ).kl_right = kl_b_3;
     return;
 #line 43 "codegen/operator_compare.kl"
 }
@@ -1083,7 +1083,7 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
     bool kl_t9;
     bool kl_t10;
 #line 47 "codegen/operator_compare.kl"
-    kl_t5 = ( *kl_this_1 ).kl_left_129 < ( *kl_other_2 ).kl_left_129;
+    kl_t5 = ( *kl_this_1 ).kl_left < ( *kl_other_2 ).kl_left;
 #line 47 "codegen/operator_compare.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -1093,7 +1093,7 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
     goto bb5;
     bb2:
 #line 47 "codegen/operator_compare.kl"
-    kl_t6 = ( *kl_this_1 ).kl_left_129 == ( *kl_other_2 ).kl_left_129;
+    kl_t6 = ( *kl_this_1 ).kl_left == ( *kl_other_2 ).kl_left;
 #line 47 "codegen/operator_compare.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
@@ -1119,7 +1119,7 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
     return kl_t0;
     bb7:
 #line 54 "codegen/operator_compare.kl"
-    kl_t9 = ( *kl_this_1 ).kl_right_131 < ( *kl_other_2 ).kl_right_131;
+    kl_t9 = ( *kl_this_1 ).kl_right < ( *kl_other_2 ).kl_right;
 #line 54 "codegen/operator_compare.kl"
     if ( kl_t9 ) goto bb8; else goto bb9;
     bb8:
@@ -1129,7 +1129,7 @@ int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair_
     goto bb12;
     bb9:
 #line 54 "codegen/operator_compare.kl"
-    kl_t10 = ( *kl_this_1 ).kl_right_131 == ( *kl_other_2 ).kl_right_131;
+    kl_t10 = ( *kl_this_1 ).kl_right == ( *kl_other_2 ).kl_right;
 #line 54 "codegen/operator_compare.kl"
     if ( kl_t10 ) goto bb10; else goto bb11;
     bb10:

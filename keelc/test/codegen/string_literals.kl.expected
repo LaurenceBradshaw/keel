@@ -8,8 +8,8 @@ struct kl__Named;
 
 struct kl__Named
 {
-    struct kl_7prelude_str kl_name_1;
-    int32_t kl_id_3;
+    struct kl_7prelude_str kl_name;
+    int32_t kl_id;
 };
 
 uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str );
@@ -21,7 +21,7 @@ uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
 {
     uint64_t kl_t0;
 #line 11 "codegen/string_literals.kl"
-    kl_t0 = kl_s_1.kl_size_170;
+    kl_t0 = kl_s_1.kl_size;
 #line 11 "codegen/string_literals.kl"
     return kl_t0;
 }
@@ -126,7 +126,7 @@ int32_t kl__main__( void )
 #line 21 "codegen/string_literals.kl"
     kl_s_1 = kl_t2;
 #line 23 "codegen/string_literals.kl"
-    kl_t6 = kl_s_1.kl_size_170 != 6;
+    kl_t6 = kl_s_1.kl_size != 6;
 #line 23 "codegen/string_literals.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
@@ -135,7 +135,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 30 "codegen/string_literals.kl"
-    kl_t10 = kl_s_1.kl_data_167 + 0;
+    kl_t10 = kl_s_1.kl_data + 0;
 #line 30 "codegen/string_literals.kl"
     kl_t11 = ( *kl_t10 ) != 97;
 #line 30 "codegen/string_literals.kl"
@@ -144,7 +144,7 @@ int32_t kl__main__( void )
     if ( kl_t9 ) goto bb4; else goto bb3;
     bb3:
 #line 30 "codegen/string_literals.kl"
-    kl_t12 = kl_s_1.kl_data_167 + 1;
+    kl_t12 = kl_s_1.kl_data + 1;
 #line 30 "codegen/string_literals.kl"
     kl_t13 = ( *kl_t12 ) != 0;
 #line 30 "codegen/string_literals.kl"
@@ -158,7 +158,7 @@ int32_t kl__main__( void )
     if ( kl_t8 ) goto bb6; else goto bb5;
     bb5:
 #line 30 "codegen/string_literals.kl"
-    kl_t14 = kl_s_1.kl_data_167 + 3;
+    kl_t14 = kl_s_1.kl_data + 3;
 #line 30 "codegen/string_literals.kl"
     kl_t15 = ( *kl_t14 ) != 34;
 #line 30 "codegen/string_literals.kl"
@@ -172,7 +172,7 @@ int32_t kl__main__( void )
     if ( kl_t7 ) goto bb8; else goto bb7;
     bb7:
 #line 30 "codegen/string_literals.kl"
-    kl_t16 = kl_s_1.kl_data_167 + 5;
+    kl_t16 = kl_s_1.kl_data + 5;
 #line 30 "codegen/string_literals.kl"
     kl_t17 = ( *kl_t16 ) != 65;
 #line 30 "codegen/string_literals.kl"
@@ -188,7 +188,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 36 "codegen/string_literals.kl"
-    kl_t18 = kl_s_1.kl_data_167 + 6;
+    kl_t18 = kl_s_1.kl_data + 6;
 #line 36 "codegen/string_literals.kl"
     kl_t19 = ( *kl_t18 ) != 0;
 #line 36 "codegen/string_literals.kl"
@@ -205,7 +205,7 @@ int32_t kl__main__( void )
 #line 42 "codegen/string_literals.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t22, kl_t23, 0 );
 #line 42 "codegen/string_literals.kl"
-    kl_t25 = kl_t21.kl_size_170 != 0;
+    kl_t25 = kl_t21.kl_size != 0;
 #line 42 "codegen/string_literals.kl"
     kl_t20 = kl_t25;
 #line 42 "codegen/string_literals.kl"
@@ -218,7 +218,7 @@ int32_t kl__main__( void )
 #line 42 "codegen/string_literals.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t27, kl_t28, 5 );
 #line 42 "codegen/string_literals.kl"
-    kl_t30 = kl_t26.kl_size_170 != 5;
+    kl_t30 = kl_t26.kl_size != 5;
 #line 42 "codegen/string_literals.kl"
     kl_t20 = kl_t30;
 #line 42 "codegen/string_literals.kl"
@@ -249,7 +249,7 @@ int32_t kl__main__( void )
 #line 47 "codegen/string_literals.kl"
     kl_t38 = kl__pick__4bool( false );
 #line 47 "codegen/string_literals.kl"
-    kl_t39 = kl_t38.kl_size_170 != 5;
+    kl_t39 = kl_t38.kl_size != 5;
 #line 47 "codegen/string_literals.kl"
     kl_t31 = kl_t39;
 #line 47 "codegen/string_literals.kl"
@@ -269,13 +269,13 @@ int32_t kl__main__( void )
 #line 52 "codegen/string_literals.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t43, kl_t44, 3 );
 #line 52 "codegen/string_literals.kl"
-    kl_t41.kl_name_1 = kl_t42;
+    kl_t41.kl_name = kl_t42;
 #line 52 "codegen/string_literals.kl"
-    kl_t41.kl_id_3 = 1;
+    kl_t41.kl_id = 1;
 #line 52 "codegen/string_literals.kl"
     kl_n_40 = kl_t41;
 #line 54 "codegen/string_literals.kl"
-    kl_t46 = kl_n_40.kl_name_1.kl_size_170 != 3;
+    kl_t46 = kl_n_40.kl_name.kl_size != 3;
 #line 54 "codegen/string_literals.kl"
     if ( kl_t46 ) goto bb21; else goto bb22;
     bb21:
@@ -292,7 +292,7 @@ int32_t kl__main__( void )
 #line 60 "codegen/string_literals.kl"
     kl_s_1 = kl_t47;
 #line 62 "codegen/string_literals.kl"
-    kl_t51 = kl_s_1.kl_size_170 != 2;
+    kl_t51 = kl_s_1.kl_size != 2;
 #line 62 "codegen/string_literals.kl"
     if ( kl_t51 ) goto bb23; else goto bb24;
     bb23:

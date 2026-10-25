@@ -17,12 +17,12 @@ typedef int32_t ( *kl__fn__FK3BoxI3i32E3i32E3i32 )( struct kl__Box__I3i32E*, int
 
 struct kl__Counter
 {
-    int32_t kl_n_1;
+    int32_t kl_n;
 };
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_54;
+    int32_t kl_v;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -42,7 +42,7 @@ void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
     bool kl_t3;
     int32_t kl_t4;
 #line 10 "codegen/method_pointers.kl"
-    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_1, kl_by_2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n, kl_by_2, &( int32_t ) { 0 } );
 #line 10 "codegen/method_pointers.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -50,9 +50,9 @@ void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
     kl_rt_panic( "codegen/method_pointers.kl", 10, "arithmetic overflow: n + by" );
     bb2:
 #line 10 "codegen/method_pointers.kl"
-    kl_t4 = ( *kl_this_1 ).kl_n_1 + kl_by_2;
+    kl_t4 = ( *kl_this_1 ).kl_n + kl_by_2;
 #line 10 "codegen/method_pointers.kl"
-    ( *kl_this_1 ).kl_n_1 = kl_t4;
+    ( *kl_this_1 ).kl_n = kl_t4;
     return;
 #line 11 "codegen/method_pointers.kl"
 }
@@ -62,7 +62,7 @@ int32_t kl__get__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t0;
 #line 15 "codegen/method_pointers.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n_1;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 15 "codegen/method_pointers.kl"
     return kl_t0;
 }
@@ -140,7 +140,7 @@ int32_t kl__main__( void )
     int32_t kl_t28;
     bool kl_t29;
 #line 57 "codegen/method_pointers.kl"
-    kl_c_1.kl_n_1 = 1;
+    kl_c_1.kl_n = 1;
 #line 59 "codegen/method_pointers.kl"
     kl_t3 = kl__add__S7Counter_3i32;
 #line 59 "codegen/method_pointers.kl"
@@ -196,7 +196,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 82 "codegen/method_pointers.kl"
-    kl_b_19.kl_v_54 = 7;
+    kl_b_19.kl_v = 7;
 #line 84 "codegen/method_pointers.kl"
     kl_t21 = kl__value__I3i32E__S3BoxI3i32E;
 #line 84 "codegen/method_pointers.kl"
@@ -241,7 +241,7 @@ int32_t kl__value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 35 "codegen/method_pointers.kl"
-    kl_t0 = ( *kl_this_1 ).kl_v_54;
+    kl_t0 = ( *kl_this_1 ).kl_v;
 #line 35 "codegen/method_pointers.kl"
     return kl_t0;
 }

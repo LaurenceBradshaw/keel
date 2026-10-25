@@ -8,8 +8,8 @@ struct kl__Point;
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 void kl__set__O3i32( int32_t* );
@@ -98,7 +98,7 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
 int32_t kl__copied_fields__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
-    kl_t0 = kl_p_1.kl_x_1 + kl_p_1.kl_y_3;
+    kl_t0 = kl_p_1.kl_x + kl_p_1.kl_y;
 #line 59 "opt/propagation.kl"
     return kl_t0;
 }
@@ -177,7 +177,7 @@ int32_t kl__written__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
 #line 110 "opt/propagation.kl"
-    kl_t0 = kl_p_1.kl_x_1 + 3;
+    kl_t0 = kl_p_1.kl_x + 3;
 #line 110 "opt/propagation.kl"
     return kl_t0;
 }

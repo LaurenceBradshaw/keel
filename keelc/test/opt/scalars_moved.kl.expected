@@ -9,14 +9,14 @@ struct kl__Held;
 
 struct kl__Pair
 {
-    int32_t kl_n_23;
-    bool kl_on_25;
+    int32_t kl_n;
+    bool kl_on;
 };
 
 struct kl__Held
 {
-    int32_t* kl_at_52;
-    int32_t kl_n_54;
+    int32_t* kl_at;
+    int32_t kl_n;
 };
 
 void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair*, int32_t, bool );
@@ -32,8 +32,8 @@ int32_t kl__main__( void );
 #line 7 "opt/scalars_moved.kl"
 void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair* kl_this_1, int32_t kl_v_2, bool kl_b_3 )
 {
-    ( *kl_this_1 ).kl_n_23 = kl_v_2;
-    ( *kl_this_1 ).kl_on_25 = kl_b_3;
+    ( *kl_this_1 ).kl_n = kl_v_2;
+    ( *kl_this_1 ).kl_on = kl_b_3;
     return;
 #line 11 "opt/scalars_moved.kl"
 }
@@ -50,8 +50,8 @@ void kl__Pair__dtor( struct kl__Pair* kl_this_1 )
 #line 21 "opt/scalars_moved.kl"
 void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held* kl_this_1, int32_t* kl_p_2, int32_t kl_v_3 )
 {
-    ( *kl_this_1 ).kl_at_52 = kl_p_2;
-    ( *kl_this_1 ).kl_n_54 = kl_v_3;
+    ( *kl_this_1 ).kl_at = kl_p_2;
+    ( *kl_this_1 ).kl_n = kl_v_3;
     return;
 #line 25 "opt/scalars_moved.kl"
 }

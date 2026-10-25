@@ -16,51 +16,51 @@ struct kl__pair__I3f64E;
 
 struct kl__vec
 {
-    double kl_x_1;
-    double kl_y_3;
+    double kl_x;
+    double kl_y;
 };
 
 struct kl__bits
 {
-    uint8_t kl_v_134;
+    uint8_t kl_v;
 };
 
 struct kl__hours
 {
-    int64_t kl_h_201;
+    int64_t kl_h;
 };
 
 struct kl__seconds
 {
-    double kl_s_220;
+    double kl_s;
 };
 
 struct kl__speed
 {
-    double kl_per_second_223;
+    double kl_per_second;
 };
 
 struct kl__meters
 {
-    double kl_m_226;
+    double kl_m;
 };
 
 struct kl__label
 {
-    uint8_t* kl_bytes_317;
-    uint64_t kl_length_319;
+    uint8_t* kl_bytes;
+    uint64_t kl_length;
 };
 
 struct kl__pair__I3i32E
 {
-    int32_t kl_left_306;
-    int32_t kl_right_308;
+    int32_t kl_left;
+    int32_t kl_right;
 };
 
 struct kl__pair__I3f64E
 {
-    double kl_left_306;
-    double kl_right_308;
+    double kl_left;
+    double kl_right;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -101,13 +101,13 @@ struct kl__vec kl__operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct k
     double kl_t4;
     double kl_t5;
 #line 11 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 + ( *kl_other_2 ).kl_x_1;
+    kl_t4 = ( *kl_this_1 ).kl_x + ( *kl_other_2 ).kl_x;
 #line 11 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 + ( *kl_other_2 ).kl_y_3;
+    kl_t5 = ( *kl_this_1 ).kl_y + ( *kl_other_2 ).kl_y;
 #line 11 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_x_1 = kl_t4;
+    kl_t3.kl_x = kl_t4;
 #line 11 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_y_3 = kl_t5;
+    kl_t3.kl_y = kl_t5;
 #line 11 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 11 "codegen/operator_arithmetic.kl"
@@ -123,13 +123,13 @@ struct kl__vec kl__operator_sub__S3vec_3vec( struct kl__vec* kl_this_1, struct k
     double kl_t4;
     double kl_t5;
 #line 12 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 - ( *kl_other_2 ).kl_x_1;
+    kl_t4 = ( *kl_this_1 ).kl_x - ( *kl_other_2 ).kl_x;
 #line 12 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 - ( *kl_other_2 ).kl_y_3;
+    kl_t5 = ( *kl_this_1 ).kl_y - ( *kl_other_2 ).kl_y;
 #line 12 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_x_1 = kl_t4;
+    kl_t3.kl_x = kl_t4;
 #line 12 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_y_3 = kl_t5;
+    kl_t3.kl_y = kl_t5;
 #line 12 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 12 "codegen/operator_arithmetic.kl"
@@ -145,13 +145,13 @@ struct kl__vec kl__operator_mul__S3vec_3f64( struct kl__vec* kl_this_1, double k
     double kl_t4;
     double kl_t5;
 #line 13 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 * kl_by_2;
+    kl_t4 = ( *kl_this_1 ).kl_x * kl_by_2;
 #line 13 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 * kl_by_2;
+    kl_t5 = ( *kl_this_1 ).kl_y * kl_by_2;
 #line 13 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_x_1 = kl_t4;
+    kl_t3.kl_x = kl_t4;
 #line 13 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_y_3 = kl_t5;
+    kl_t3.kl_y = kl_t5;
 #line 13 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 13 "codegen/operator_arithmetic.kl"
@@ -167,13 +167,13 @@ struct kl__vec kl__operator_div__S3vec_3f64( struct kl__vec* kl_this_1, double k
     double kl_t4;
     double kl_t5;
 #line 14 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 / kl_by_2;
+    kl_t4 = ( *kl_this_1 ).kl_x / kl_by_2;
 #line 14 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 / kl_by_2;
+    kl_t5 = ( *kl_this_1 ).kl_y / kl_by_2;
 #line 14 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_x_1 = kl_t4;
+    kl_t3.kl_x = kl_t4;
 #line 14 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_y_3 = kl_t5;
+    kl_t3.kl_y = kl_t5;
 #line 14 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 14 "codegen/operator_arithmetic.kl"
@@ -189,13 +189,13 @@ struct kl__vec kl__operator_sub__S3vec( struct kl__vec* kl_this_1 )
     double kl_t3;
     double kl_t4;
 #line 15 "codegen/operator_arithmetic.kl"
-    kl_t3 = 0.0 - ( *kl_this_1 ).kl_x_1;
+    kl_t3 = 0.0 - ( *kl_this_1 ).kl_x;
 #line 15 "codegen/operator_arithmetic.kl"
-    kl_t4 = 0.0 - ( *kl_this_1 ).kl_y_3;
+    kl_t4 = 0.0 - ( *kl_this_1 ).kl_y;
 #line 15 "codegen/operator_arithmetic.kl"
-    kl_t2.kl_x_1 = kl_t3;
+    kl_t2.kl_x = kl_t3;
 #line 15 "codegen/operator_arithmetic.kl"
-    kl_t2.kl_y_3 = kl_t4;
+    kl_t2.kl_y = kl_t4;
 #line 15 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t2;
 #line 15 "codegen/operator_arithmetic.kl"
@@ -211,14 +211,14 @@ bool kl__operator_eq__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_
     bool kl_t4;
     bool kl_t5;
 #line 16 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_x_1 == ( *kl_other_2 ).kl_x_1;
+    kl_t4 = ( *kl_this_1 ).kl_x == ( *kl_other_2 ).kl_x;
 #line 16 "codegen/operator_arithmetic.kl"
     kl_t3 = kl_t4;
 #line 16 "codegen/operator_arithmetic.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 16 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_y_3 == ( *kl_other_2 ).kl_y_3;
+    kl_t5 = ( *kl_this_1 ).kl_y == ( *kl_other_2 ).kl_y;
 #line 16 "codegen/operator_arithmetic.kl"
     kl_t3 = kl_t5;
 #line 16 "codegen/operator_arithmetic.kl"
@@ -238,9 +238,9 @@ struct kl__bits kl__operator_and__S4bits_4bits( struct kl__bits* kl_this_1, stru
     struct kl__bits kl_t3;
     uint8_t kl_t4;
 #line 23 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_v_134 & kl_other_2.kl_v_134;
+    kl_t4 = ( *kl_this_1 ).kl_v & kl_other_2.kl_v;
 #line 23 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_v_134 = kl_t4;
+    kl_t3.kl_v = kl_t4;
 #line 23 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 23 "codegen/operator_arithmetic.kl"
@@ -255,9 +255,9 @@ struct kl__bits kl__operator_or__S4bits_4bits( struct kl__bits* kl_this_1, struc
     struct kl__bits kl_t3;
     uint8_t kl_t4;
 #line 24 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_v_134 | kl_other_2.kl_v_134;
+    kl_t4 = ( *kl_this_1 ).kl_v | kl_other_2.kl_v;
 #line 24 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_v_134 = kl_t4;
+    kl_t3.kl_v = kl_t4;
 #line 24 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 24 "codegen/operator_arithmetic.kl"
@@ -272,9 +272,9 @@ struct kl__bits kl__operator_xor__S4bits_4bits( struct kl__bits* kl_this_1, stru
     struct kl__bits kl_t3;
     uint8_t kl_t4;
 #line 25 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_v_134 ^ kl_other_2.kl_v_134;
+    kl_t4 = ( *kl_this_1 ).kl_v ^ kl_other_2.kl_v;
 #line 25 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_v_134 = kl_t4;
+    kl_t3.kl_v = kl_t4;
 #line 25 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 25 "codegen/operator_arithmetic.kl"
@@ -289,9 +289,9 @@ struct kl__bits kl__operator_not__S4bits( struct kl__bits* kl_this_1 )
     struct kl__bits kl_t2;
     uint8_t kl_t3;
 #line 26 "codegen/operator_arithmetic.kl"
-    kl_t3 = ~( *kl_this_1 ).kl_v_134;
+    kl_t3 = ~( *kl_this_1 ).kl_v;
 #line 26 "codegen/operator_arithmetic.kl"
-    kl_t2.kl_v_134 = kl_t3;
+    kl_t2.kl_v = kl_t3;
 #line 26 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t2;
 #line 26 "codegen/operator_arithmetic.kl"
@@ -330,14 +330,14 @@ struct kl__hours kl__operator_rem__S5hours_3i64( struct kl__hours* kl_this_1, in
     goto bb5;
     bb4:
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t6 = ( *kl_this_1 ).kl_h_201 % kl_day_2;
+    kl_t6 = ( *kl_this_1 ).kl_h % kl_day_2;
 #line 33 "codegen/operator_arithmetic.kl"
     goto bb5;
     bb5:
 #line 33 "codegen/operator_arithmetic.kl"
     kl_t8 = kl_t6;
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_h_201 = kl_t8;
+    kl_t3.kl_h = kl_t8;
 #line 33 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 33 "codegen/operator_arithmetic.kl"
@@ -352,9 +352,9 @@ struct kl__speed kl__operator_div__S6meters_7seconds( struct kl__meters* kl_this
     struct kl__speed kl_t3;
     double kl_t4;
 #line 50 "codegen/operator_arithmetic.kl"
-    kl_t4 = ( *kl_this_1 ).kl_m_226 / ( *kl_t_2 ).kl_s_220;
+    kl_t4 = ( *kl_this_1 ).kl_m / ( *kl_t_2 ).kl_s;
 #line 50 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_per_second_223 = kl_t4;
+    kl_t3.kl_per_second = kl_t4;
 #line 50 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 50 "codegen/operator_arithmetic.kl"
@@ -381,8 +381,8 @@ void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2
 #line 74 "codegen/operator_arithmetic.kl"
     kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/operator_arithmetic.kl", 74, "out of memory: alloc<u8>( n + 1 )" );
 #line 74 "codegen/operator_arithmetic.kl"
-    ( *kl_this_1 ).kl_bytes_317 = kl_t5;
-    ( *kl_this_1 ).kl_length_319 = kl_n_2;
+    ( *kl_this_1 ).kl_bytes = kl_t5;
+    ( *kl_this_1 ).kl_length = kl_n_2;
     return;
 #line 76 "codegen/operator_arithmetic.kl"
 }
@@ -391,7 +391,7 @@ void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2
 void kl__label__dtor( struct kl__label* kl_this_1 )
 {
 #line 78 "codegen/operator_arithmetic.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_bytes_317 );
+    kl_rt_free( ( *kl_this_1 ).kl_bytes );
 #line 78 "codegen/operator_arithmetic.kl"
     return;
 #line 78 "codegen/operator_arithmetic.kl"
@@ -413,7 +413,7 @@ struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str kl_text
 #line 80 "codegen/operator_arithmetic.kl"
     kl_t5 = true;
 #line 80 "codegen/operator_arithmetic.kl"
-    kl__label__R5label_3u64__ctor( kl_t3, kl_text_1.kl_size_794 );
+    kl__label__R5label_3u64__ctor( kl_t3, kl_text_1.kl_size );
 #line 80 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t2;
 #line 80 "codegen/operator_arithmetic.kl"
@@ -432,7 +432,7 @@ uint64_t kl__size__S5label( struct kl__label* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 81 "codegen/operator_arithmetic.kl"
-    kl_t0 = ( *kl_this_1 ).kl_length_319;
+    kl_t0 = ( *kl_this_1 ).kl_length;
 #line 81 "codegen/operator_arithmetic.kl"
     return kl_t0;
 #line 81 "codegen/operator_arithmetic.kl"
@@ -456,7 +456,7 @@ struct kl__label kl__operator_add__S5label_5label( struct kl__label* kl_this_1, 
 #line 82 "codegen/operator_arithmetic.kl"
     kl_t8 = true;
 #line 82 "codegen/operator_arithmetic.kl"
-    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_length_319, ( *kl_other_2 ).kl_length_319, &( uint64_t ) { 0 } );
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_length, ( *kl_other_2 ).kl_length, &( uint64_t ) { 0 } );
 #line 82 "codegen/operator_arithmetic.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -464,7 +464,7 @@ struct kl__label kl__operator_add__S5label_5label( struct kl__label* kl_this_1, 
     kl_rt_panic( "codegen/operator_arithmetic.kl", 82, "arithmetic overflow: length + other.length" );
     bb2:
 #line 82 "codegen/operator_arithmetic.kl"
-    kl_t6 = ( *kl_this_1 ).kl_length_319 + ( *kl_other_2 ).kl_length_319;
+    kl_t6 = ( *kl_this_1 ).kl_length + ( *kl_other_2 ).kl_length;
 #line 82 "codegen/operator_arithmetic.kl"
     kl__label__R5label_3u64__ctor( kl_t4, kl_t6 );
 #line 82 "codegen/operator_arithmetic.kl"
@@ -718,14 +718,14 @@ int32_t kl__main__( void )
 #line 92 "codegen/operator_arithmetic.kl"
     kl_t210 = false;
 #line 92 "codegen/operator_arithmetic.kl"
-    kl_t2.kl_x_1 = 1.0;
+    kl_t2.kl_x = 1.0;
 #line 92 "codegen/operator_arithmetic.kl"
-    kl_t2.kl_y_3 = 2.0;
+    kl_t2.kl_y = 2.0;
 #line 92 "codegen/operator_arithmetic.kl"
     kl_a_1 = kl_t2;
-    kl_t4.kl_x_1 = 3.0;
+    kl_t4.kl_x = 3.0;
 #line 93 "codegen/operator_arithmetic.kl"
-    kl_t4.kl_y_3 = 4.0;
+    kl_t4.kl_y = 4.0;
 #line 93 "codegen/operator_arithmetic.kl"
     kl_b_3 = kl_t4;
 #line 95 "codegen/operator_arithmetic.kl"
@@ -737,9 +737,9 @@ int32_t kl__main__( void )
 #line 95 "codegen/operator_arithmetic.kl"
     kl_t9 = &kl_t8;
 #line 95 "codegen/operator_arithmetic.kl"
-    kl_t10.kl_x_1 = 4.0;
+    kl_t10.kl_x = 4.0;
 #line 95 "codegen/operator_arithmetic.kl"
-    kl_t10.kl_y_3 = 6.0;
+    kl_t10.kl_y = 6.0;
 #line 95 "codegen/operator_arithmetic.kl"
     kl_t11 = &kl_t10;
 #line 95 "codegen/operator_arithmetic.kl"
@@ -760,9 +760,9 @@ int32_t kl__main__( void )
 #line 95 "codegen/operator_arithmetic.kl"
     kl_t17 = &kl_t16;
 #line 95 "codegen/operator_arithmetic.kl"
-    kl_t18.kl_x_1 = 2.0;
+    kl_t18.kl_x = 2.0;
 #line 95 "codegen/operator_arithmetic.kl"
-    kl_t18.kl_y_3 = 2.0;
+    kl_t18.kl_y = 2.0;
 #line 95 "codegen/operator_arithmetic.kl"
     kl_t19 = &kl_t18;
 #line 95 "codegen/operator_arithmetic.kl"
@@ -788,9 +788,9 @@ int32_t kl__main__( void )
 #line 100 "codegen/operator_arithmetic.kl"
     kl_t25 = &kl_t24;
 #line 100 "codegen/operator_arithmetic.kl"
-    kl_t26.kl_x_1 = 2.0;
+    kl_t26.kl_x = 2.0;
 #line 100 "codegen/operator_arithmetic.kl"
-    kl_t26.kl_y_3 = 4.0;
+    kl_t26.kl_y = 4.0;
 #line 100 "codegen/operator_arithmetic.kl"
     kl_t27 = &kl_t26;
 #line 100 "codegen/operator_arithmetic.kl"
@@ -809,9 +809,9 @@ int32_t kl__main__( void )
 #line 100 "codegen/operator_arithmetic.kl"
     kl_t32 = &kl_t31;
 #line 100 "codegen/operator_arithmetic.kl"
-    kl_t33.kl_x_1 = 1.5;
+    kl_t33.kl_x = 1.5;
 #line 100 "codegen/operator_arithmetic.kl"
-    kl_t33.kl_y_3 = 2.0;
+    kl_t33.kl_y = 2.0;
 #line 100 "codegen/operator_arithmetic.kl"
     kl_t34 = &kl_t33;
 #line 100 "codegen/operator_arithmetic.kl"
@@ -841,9 +841,9 @@ int32_t kl__main__( void )
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t43 = -2.0;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t41.kl_x_1 = kl_t42;
+    kl_t41.kl_x = kl_t42;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t41.kl_y_3 = kl_t43;
+    kl_t41.kl_y = kl_t43;
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t44 = &kl_t41;
 #line 105 "codegen/operator_arithmetic.kl"
@@ -868,9 +868,9 @@ int32_t kl__main__( void )
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t52 = &kl_t51;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t53.kl_x_1 = 4.0;
+    kl_t53.kl_x = 4.0;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t53.kl_y_3 = 6.0;
+    kl_t53.kl_y = 6.0;
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t54 = &kl_t53;
 #line 105 "codegen/operator_arithmetic.kl"
@@ -902,9 +902,9 @@ int32_t kl__main__( void )
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t64 = &kl_t63;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t65.kl_x_1 = 7.0;
+    kl_t65.kl_x = 7.0;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t65.kl_y_3 = 10.0;
+    kl_t65.kl_y = 10.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t66 = &kl_t65;
 #line 111 "codegen/operator_arithmetic.kl"
@@ -929,9 +929,9 @@ int32_t kl__main__( void )
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t74 = &kl_t73;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t75.kl_x_1 = 8.0;
+    kl_t75.kl_x = 8.0;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t75.kl_y_3 = 12.0;
+    kl_t75.kl_y = 12.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t76 = &kl_t75;
 #line 111 "codegen/operator_arithmetic.kl"
@@ -963,9 +963,9 @@ int32_t kl__main__( void )
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t85 = &kl_t84;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t86.kl_x_1 = 5.0;
+    kl_t86.kl_x = 5.0;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t86.kl_y_3 = 8.0;
+    kl_t86.kl_y = 8.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t87 = &kl_t86;
 #line 111 "codegen/operator_arithmetic.kl"
@@ -993,9 +993,9 @@ int32_t kl__main__( void )
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t94 = &kl_t93;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t95.kl_x_1 = 2.0;
+    kl_t95.kl_x = 2.0;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t95.kl_y_3 = 3.0;
+    kl_t95.kl_y = 3.0;
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t96 = &kl_t95;
 #line 116 "codegen/operator_arithmetic.kl"
@@ -1008,9 +1008,9 @@ int32_t kl__main__( void )
     if ( kl_t90 ) goto bb20; else goto bb19;
     bb19:
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t99.kl_x_1 = 1.0;
+    kl_t99.kl_x = 1.0;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t99.kl_y_3 = 1.0;
+    kl_t99.kl_y = 1.0;
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t100 = &kl_t99;
 #line 116 "codegen/operator_arithmetic.kl"
@@ -1020,9 +1020,9 @@ int32_t kl__main__( void )
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t103 = &kl_t102;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t104.kl_x_1 = 2.0;
+    kl_t104.kl_x = 2.0;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t104.kl_y_3 = 3.0;
+    kl_t104.kl_y = 3.0;
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t105 = &kl_t104;
 #line 116 "codegen/operator_arithmetic.kl"
@@ -1042,10 +1042,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb22:
 #line 121 "codegen/operator_arithmetic.kl"
-    kl_t109.kl_v_134 = 12;
+    kl_t109.kl_v = 12;
 #line 121 "codegen/operator_arithmetic.kl"
     kl_m_108 = kl_t109;
-    kl_t111.kl_v_134 = 10;
+    kl_t111.kl_v = 10;
 #line 122 "codegen/operator_arithmetic.kl"
     kl_n_110 = kl_t111;
 #line 124 "codegen/operator_arithmetic.kl"
@@ -1053,7 +1053,7 @@ int32_t kl__main__( void )
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t116 = kl__operator_and__S4bits_4bits( kl_t115, kl_n_110 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t117 = kl_t116.kl_v_134 != 8;
+    kl_t117 = kl_t116.kl_v != 8;
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t114 = kl_t117;
 #line 124 "codegen/operator_arithmetic.kl"
@@ -1064,7 +1064,7 @@ int32_t kl__main__( void )
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t119 = kl__operator_or__S4bits_4bits( kl_t118, kl_n_110 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t120 = kl_t119.kl_v_134 != 14;
+    kl_t120 = kl_t119.kl_v != 14;
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t114 = kl_t120;
 #line 124 "codegen/operator_arithmetic.kl"
@@ -1080,7 +1080,7 @@ int32_t kl__main__( void )
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t122 = kl__operator_xor__S4bits_4bits( kl_t121, kl_n_110 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t123 = kl_t122.kl_v_134 != 6;
+    kl_t123 = kl_t122.kl_v != 6;
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t113 = kl_t123;
 #line 124 "codegen/operator_arithmetic.kl"
@@ -1096,7 +1096,7 @@ int32_t kl__main__( void )
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t125 = kl__operator_not__S4bits( kl_t124 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t126 = kl_t125.kl_v_134 != 243;
+    kl_t126 = kl_t125.kl_v != 243;
 #line 124 "codegen/operator_arithmetic.kl"
     kl_t112 = kl_t126;
 #line 124 "codegen/operator_arithmetic.kl"
@@ -1110,13 +1110,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb30:
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t127.kl_h_201 = 50;
+    kl_t127.kl_h = 50;
 #line 129 "codegen/operator_arithmetic.kl"
     kl_t128 = &kl_t127;
 #line 129 "codegen/operator_arithmetic.kl"
     kl_t129 = kl__operator_rem__S5hours_3i64( kl_t128, 24 );
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t130 = kl_t129.kl_h_201 != 2;
+    kl_t130 = kl_t129.kl_h != 2;
 #line 129 "codegen/operator_arithmetic.kl"
     if ( kl_t130 ) goto bb31; else goto bb32;
     bb31:
@@ -1125,11 +1125,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb32:
 #line 134 "codegen/operator_arithmetic.kl"
-    kl_t132.kl_m_226 = 100.0;
+    kl_t132.kl_m = 100.0;
 #line 134 "codegen/operator_arithmetic.kl"
     kl_t133 = &kl_t132;
 #line 134 "codegen/operator_arithmetic.kl"
-    kl_t134.kl_s_220 = 8.0;
+    kl_t134.kl_s = 8.0;
 #line 134 "codegen/operator_arithmetic.kl"
     kl_t135 = &kl_t134;
 #line 134 "codegen/operator_arithmetic.kl"
@@ -1137,7 +1137,7 @@ int32_t kl__main__( void )
 #line 134 "codegen/operator_arithmetic.kl"
     kl_s_131 = kl_t136;
 #line 136 "codegen/operator_arithmetic.kl"
-    kl_t137 = kl_s_131.kl_per_second_223 != 12.5;
+    kl_t137 = kl_s_131.kl_per_second != 12.5;
 #line 136 "codegen/operator_arithmetic.kl"
     if ( kl_t137 ) goto bb33; else goto bb34;
     bb33:
@@ -1177,14 +1177,14 @@ int32_t kl__main__( void )
 #line 142 "codegen/operator_arithmetic.kl"
     kl_q_148 = kl_t157;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t161 = kl_p_138.kl_left_306 != 11;
+    kl_t161 = kl_p_138.kl_left != 11;
 #line 144 "codegen/operator_arithmetic.kl"
     kl_t160 = kl_t161;
 #line 144 "codegen/operator_arithmetic.kl"
     if ( kl_t160 ) goto bb36; else goto bb35;
     bb35:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t162 = kl_p_138.kl_right_308 != 22;
+    kl_t162 = kl_p_138.kl_right != 22;
 #line 144 "codegen/operator_arithmetic.kl"
     kl_t160 = kl_t162;
 #line 144 "codegen/operator_arithmetic.kl"
@@ -1196,7 +1196,7 @@ int32_t kl__main__( void )
     if ( kl_t159 ) goto bb38; else goto bb37;
     bb37:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t163 = kl_q_148.kl_left_306 != 1.0;
+    kl_t163 = kl_q_148.kl_left != 1.0;
 #line 144 "codegen/operator_arithmetic.kl"
     kl_t159 = kl_t163;
 #line 144 "codegen/operator_arithmetic.kl"
@@ -1208,7 +1208,7 @@ int32_t kl__main__( void )
     if ( kl_t158 ) goto bb40; else goto bb39;
     bb39:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t164 = kl_q_148.kl_right_308 != 2.0;
+    kl_t164 = kl_q_148.kl_right != 2.0;
 #line 144 "codegen/operator_arithmetic.kl"
     kl_t158 = kl_t164;
 #line 144 "codegen/operator_arithmetic.kl"
@@ -1377,8 +1377,8 @@ int32_t kl__main__( void )
 #line 55 "codegen/operator_arithmetic.kl"
 void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_l_2, int32_t kl_r_3 )
 {
-    ( *kl_this_1 ).kl_left_306 = kl_l_2;
-    ( *kl_this_1 ).kl_right_308 = kl_r_3;
+    ( *kl_this_1 ).kl_left = kl_l_2;
+    ( *kl_this_1 ).kl_right = kl_r_3;
     return;
 #line 59 "codegen/operator_arithmetic.kl"
 }
@@ -1396,7 +1396,7 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
 #line 61 "codegen/operator_arithmetic.kl"
     kl_t4 = &kl_t3;
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_left_306, ( *kl_other_2 ).kl_left_306, &( int32_t ) { 0 } );
+    kl_t5 = __builtin_add_overflow( ( *kl_this_1 ).kl_left, ( *kl_other_2 ).kl_left, &( int32_t ) { 0 } );
 #line 61 "codegen/operator_arithmetic.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
@@ -1404,9 +1404,9 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
     kl_rt_panic( "codegen/operator_arithmetic.kl", 61, "arithmetic overflow: left + other.left" );
     bb2:
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t6 = ( *kl_this_1 ).kl_left_306 + ( *kl_other_2 ).kl_left_306;
+    kl_t6 = ( *kl_this_1 ).kl_left + ( *kl_other_2 ).kl_left;
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t7 = __builtin_add_overflow( ( *kl_this_1 ).kl_right_308, ( *kl_other_2 ).kl_right_308, &( int32_t ) { 0 } );
+    kl_t7 = __builtin_add_overflow( ( *kl_this_1 ).kl_right, ( *kl_other_2 ).kl_right, &( int32_t ) { 0 } );
 #line 61 "codegen/operator_arithmetic.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
@@ -1414,7 +1414,7 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
     kl_rt_panic( "codegen/operator_arithmetic.kl", 61, "arithmetic overflow: right + other.right" );
     bb4:
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t8 = ( *kl_this_1 ).kl_right_308 + ( *kl_other_2 ).kl_right_308;
+    kl_t8 = ( *kl_this_1 ).kl_right + ( *kl_other_2 ).kl_right;
 #line 61 "codegen/operator_arithmetic.kl"
     kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t4, kl_t6, kl_t8 );
 #line 61 "codegen/operator_arithmetic.kl"
@@ -1427,8 +1427,8 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
 #line 55 "codegen/operator_arithmetic.kl"
 void kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( struct kl__pair__I3f64E* kl_this_1, double kl_l_2, double kl_r_3 )
 {
-    ( *kl_this_1 ).kl_left_306 = kl_l_2;
-    ( *kl_this_1 ).kl_right_308 = kl_r_3;
+    ( *kl_this_1 ).kl_left = kl_l_2;
+    ( *kl_this_1 ).kl_right = kl_r_3;
     return;
 #line 59 "codegen/operator_arithmetic.kl"
 }
@@ -1444,9 +1444,9 @@ struct kl__pair__I3f64E kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( stru
 #line 61 "codegen/operator_arithmetic.kl"
     kl_t4 = &kl_t3;
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( *kl_this_1 ).kl_left_306 + ( *kl_other_2 ).kl_left_306;
+    kl_t5 = ( *kl_this_1 ).kl_left + ( *kl_other_2 ).kl_left;
 #line 61 "codegen/operator_arithmetic.kl"
-    kl_t6 = ( *kl_this_1 ).kl_right_308 + ( *kl_other_2 ).kl_right_308;
+    kl_t6 = ( *kl_this_1 ).kl_right + ( *kl_other_2 ).kl_right;
 #line 61 "codegen/operator_arithmetic.kl"
     kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( kl_t4, kl_t5, kl_t6 );
 #line 61 "codegen/operator_arithmetic.kl"

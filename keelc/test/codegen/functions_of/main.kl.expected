@@ -13,8 +13,8 @@ typedef int32_t ( *kl__fn__FE3i32 )( void );
 
 struct kl__step
 {
-    struct kl_7prelude_str kl_name_20;
-    kl__fn__F3i32E3i32 kl_run_26;
+    struct kl_7prelude_str kl_name;
+    kl__fn__F3i32E3i32 kl_run;
 };
 
 struct kl__A3_4step
@@ -142,7 +142,7 @@ int32_t kl__main__( void )
 #line 36 "codegen/functions_of/main.kl"
     kl_t3 = 0;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t4 = &kl_t2.e[kl_t3].kl_name_20;
+    kl_t4 = &kl_t2.e[kl_t3].kl_name;
 #line 36 "codegen/functions_of/main.kl"
     kl_t5 = ( uint8_t* ) "main.twice";
 #line 36 "codegen/functions_of/main.kl"
@@ -150,11 +150,11 @@ int32_t kl__main__( void )
 #line 36 "codegen/functions_of/main.kl"
     kl_t7 = kl__twice__3i32;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t2.e[kl_t3].kl_run_26 = kl_t7;
+    kl_t2.e[kl_t3].kl_run = kl_t7;
 #line 36 "codegen/functions_of/main.kl"
     kl_t8 = 1;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t9 = &kl_t2.e[kl_t8].kl_name_20;
+    kl_t9 = &kl_t2.e[kl_t8].kl_name;
 #line 36 "codegen/functions_of/main.kl"
     kl_t10 = ( uint8_t* ) "main.negates";
 #line 36 "codegen/functions_of/main.kl"
@@ -162,11 +162,11 @@ int32_t kl__main__( void )
 #line 36 "codegen/functions_of/main.kl"
     kl_t12 = kl__negates__3i32;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t2.e[kl_t8].kl_run_26 = kl_t12;
+    kl_t2.e[kl_t8].kl_run = kl_t12;
 #line 36 "codegen/functions_of/main.kl"
     kl_t13 = 2;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t14 = &kl_t2.e[kl_t13].kl_name_20;
+    kl_t14 = &kl_t2.e[kl_t13].kl_name;
 #line 36 "codegen/functions_of/main.kl"
     kl_t15 = ( uint8_t* ) "helper.adds_one";
 #line 36 "codegen/functions_of/main.kl"
@@ -174,7 +174,7 @@ int32_t kl__main__( void )
 #line 36 "codegen/functions_of/main.kl"
     kl_t17 = kl_6helper_adds_one__3i32;
 #line 36 "codegen/functions_of/main.kl"
-    kl_t2.e[kl_t13].kl_run_26 = kl_t17;
+    kl_t2.e[kl_t13].kl_run = kl_t17;
 #line 36 "codegen/functions_of/main.kl"
     kl_steps_1 = kl_t2;
 #line 38 "codegen/functions_of/main.kl"
@@ -220,7 +220,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/functions_of/main.kl", 42, "out of bounds: steps[k]" );
     bb6:
 #line 42 "codegen/functions_of/main.kl"
-    kl_rt_write( 1, kl_steps_1.e[kl_t21].kl_name_20.kl_data_178, kl_steps_1.e[kl_t23].kl_name_20.kl_size_181 );
+    kl_rt_write( 1, kl_steps_1.e[kl_t21].kl_name.kl_data, kl_steps_1.e[kl_t23].kl_name.kl_size );
     kl_t27 = &kl_t26;
 #line 43 "codegen/functions_of/main.kl"
     kl_t28 = ( uint8_t* ) " ";
@@ -233,7 +233,7 @@ int32_t kl__main__( void )
 #line 43 "codegen/functions_of/main.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t31, kl_t32, 1 );
 #line 43 "codegen/functions_of/main.kl"
-    kl_rt_write( 1, kl_t26.kl_data_178, kl_t30.kl_size_181 );
+    kl_rt_write( 1, kl_t26.kl_data, kl_t30.kl_size );
     kl_t35 = kl_k_18;
 #line 44 "codegen/functions_of/main.kl"
     kl_t36 = kl_t35 < 3;
@@ -243,7 +243,7 @@ int32_t kl__main__( void )
 #line 42 "codegen/functions_of/main.kl"
     kl_rt_panic( "codegen/functions_of/main.kl", 42, "out of bounds: steps[k]" );
     bb8:
-    kl_t37 = kl_steps_1.e[kl_t35].kl_run_26( 5 );
+    kl_t37 = kl_steps_1.e[kl_t35].kl_run( 5 );
 #line 44 "codegen/functions_of/main.kl"
     kl_t38 = ( int64_t ) kl_t37;
 #line 44 "codegen/functions_of/main.kl"
@@ -260,7 +260,7 @@ int32_t kl__main__( void )
 #line 45 "codegen/functions_of/main.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t45, kl_t46, 1 );
 #line 45 "codegen/functions_of/main.kl"
-    kl_rt_write( 1, kl_t40.kl_data_178, kl_t44.kl_size_181 );
+    kl_rt_write( 1, kl_t40.kl_data, kl_t44.kl_size );
 #line 38 "codegen/functions_of/main.kl"
     goto bb10;
     bb9:

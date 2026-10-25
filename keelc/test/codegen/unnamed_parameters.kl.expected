@@ -11,13 +11,13 @@ struct kl__shape__ref { void* self; const struct kl__shape__vtable* vtable; };
 
 struct kl__square
 {
-    int32_t kl_side_12;
+    int32_t kl_side;
 };
 
 struct kl__shape__vtable
 {
     void ( *drop )( void* );
-    int32_t ( *kl_area_7 )( void*, int32_t );
+    int32_t ( *kl__area__3i32 )( void*, int32_t );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -33,17 +33,17 @@ static void kl__square__as_kl__shape__drop( void* self )
     ( void ) self;
 }
 
-static int32_t kl__square__as_kl__shape__kl_area_7( void* self, int32_t p0 )
+static int32_t kl__square__as_kl__shape__kl__area__3i32( void* self, int32_t p0 )
 {
     return kl__area__S6square_3i32( ( struct kl__square* ) self, p0 );
 }
 
-static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__as_kl__shape__drop, kl__square__as_kl__shape__kl_area_7 };
+static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__as_kl__shape__drop, kl__square__as_kl__shape__kl__area__3i32 };
 
 #line 12 "codegen/unnamed_parameters.kl"
 void kl__square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_side_2 )
 {
-    ( *kl_this_1 ).kl_side_12 = kl_side_2;
+    ( *kl_this_1 ).kl_side = kl_side_2;
     return;
 #line 15 "codegen/unnamed_parameters.kl"
 }
@@ -56,7 +56,7 @@ int32_t kl__area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
     int32_t kl_t4;
     ( void ) kl_t2;
 #line 19 "codegen/unnamed_parameters.kl"
-    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_side_12, ( *kl_this_1 ).kl_side_12, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_side, ( *kl_this_1 ).kl_side, &( int32_t ) { 0 } );
 #line 19 "codegen/unnamed_parameters.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -64,7 +64,7 @@ int32_t kl__area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
     kl_rt_panic( "codegen/unnamed_parameters.kl", 19, "arithmetic overflow: side * side" );
     bb2:
 #line 19 "codegen/unnamed_parameters.kl"
-    kl_t4 = ( *kl_this_1 ).kl_side_12 * ( *kl_this_1 ).kl_side_12;
+    kl_t4 = ( *kl_this_1 ).kl_side * ( *kl_this_1 ).kl_side;
 #line 19 "codegen/unnamed_parameters.kl"
     kl_t0 = kl_t4;
 #line 19 "codegen/unnamed_parameters.kl"
@@ -144,7 +144,7 @@ int32_t kl__main__( void )
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
 #line 38 "codegen/unnamed_parameters.kl"
-    kl_t13 = kl_as_shape_4.vtable->kl_area_7( kl_as_shape_4.self, 10 );
+    kl_t13 = kl_as_shape_4.vtable->kl__area__3i32( kl_as_shape_4.self, 10 );
 #line 38 "codegen/unnamed_parameters.kl"
     kl_t14 = kl_t13 != 9;
 #line 38 "codegen/unnamed_parameters.kl"

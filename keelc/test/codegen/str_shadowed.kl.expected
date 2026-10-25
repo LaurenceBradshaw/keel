@@ -8,7 +8,7 @@ struct kl__str;
 
 struct kl__str
 {
-    int32_t kl_n_1;
+    int32_t kl_n;
 };
 
 void kl__str__R3str__ctor( struct kl__str* );
@@ -17,7 +17,7 @@ int32_t kl__main__( void );
 #line 6 "codegen/str_shadowed.kl"
 void kl__str__R3str__ctor( struct kl__str* kl_this_1 )
 {
-    ( *kl_this_1 ).kl_n_1 = 7;
+    ( *kl_this_1 ).kl_n = 7;
     return;
 #line 9 "codegen/str_shadowed.kl"
 }
@@ -46,7 +46,7 @@ int32_t kl__main__( void )
 #line 15 "codegen/str_shadowed.kl"
     kl_literal_4 = kl_t5;
 #line 17 "codegen/str_shadowed.kl"
-    kl_t9 = kl_mine_1.kl_n_1 != 7;
+    kl_t9 = kl_mine_1.kl_n != 7;
 #line 17 "codegen/str_shadowed.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
@@ -55,7 +55,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 22 "codegen/str_shadowed.kl"
-    kl_t10 = kl_literal_4.kl_size_69 != 3;
+    kl_t10 = kl_literal_4.kl_size != 3;
 #line 22 "codegen/str_shadowed.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:

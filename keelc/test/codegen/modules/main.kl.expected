@@ -8,11 +8,11 @@ struct kl_5shape_Point;
 
 struct kl_5shape_Point
 {
-    int32_t kl_x_83;
-    int32_t kl_y_85;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
-int32_t kl_count_65 = 0;
+int32_t kl_5tally_count__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -57,9 +57,9 @@ int32_t kl__main__( void )
     bool kl_t8;
     bool kl_t9;
 #line 14 "codegen/modules/main.kl"
-    kl_t2.kl_x_83 = 3;
+    kl_t2.kl_x = 3;
 #line 14 "codegen/modules/main.kl"
-    kl_t2.kl_y_85 = 4;
+    kl_t2.kl_y = 4;
 #line 14 "codegen/modules/main.kl"
     kl_p_1 = kl_t2;
     kl_t3 = kl_5shape_area__5Point( kl_p_1 );
@@ -97,7 +97,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 19 "codegen/modules/main.kl"
-    kl_t9 = kl_count_65 != 6;
+    kl_t9 = kl_5tally_count__G != 6;
 #line 19 "codegen/modules/main.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
@@ -121,7 +121,7 @@ int32_t kl_5tally_bump__3i32( int32_t kl_by_1 )
 #line 8 "codegen/modules/tally.kl"
     kl_t2 = kl__twice__3i32( kl_by_1 );
 #line 8 "codegen/modules/tally.kl"
-    kl_t3 = __builtin_add_overflow( kl_count_65, kl_t2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_5tally_count__G, kl_t2, &( int32_t ) { 0 } );
 #line 8 "codegen/modules/tally.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -129,10 +129,10 @@ int32_t kl_5tally_bump__3i32( int32_t kl_by_1 )
     kl_rt_panic( "codegen/modules/tally.kl", 8, "arithmetic overflow: count + twice( by )" );
     bb2:
 #line 8 "codegen/modules/tally.kl"
-    kl_t4 = kl_count_65 + kl_t2;
+    kl_t4 = kl_5tally_count__G + kl_t2;
 #line 8 "codegen/modules/tally.kl"
-    kl_count_65 = kl_t4;
-    kl_t0 = kl_count_65;
+    kl_5tally_count__G = kl_t4;
+    kl_t0 = kl_5tally_count__G;
 #line 9 "codegen/modules/tally.kl"
     return kl_t0;
 }
@@ -144,7 +144,7 @@ int32_t kl_5shape_area__5Point( struct kl_5shape_Point kl_p_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 10 "codegen/modules/shape.kl"
-    kl_t2 = __builtin_mul_overflow( kl_p_1.kl_x_83, kl_p_1.kl_y_85, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_mul_overflow( kl_p_1.kl_x, kl_p_1.kl_y, &( int32_t ) { 0 } );
 #line 10 "codegen/modules/shape.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -152,7 +152,7 @@ int32_t kl_5shape_area__5Point( struct kl_5shape_Point kl_p_1 )
     kl_rt_panic( "codegen/modules/shape.kl", 10, "arithmetic overflow: p.x * p.y" );
     bb2:
 #line 10 "codegen/modules/shape.kl"
-    kl_t3 = kl_p_1.kl_x_83 * kl_p_1.kl_y_85;
+    kl_t3 = kl_p_1.kl_x * kl_p_1.kl_y;
 #line 10 "codegen/modules/shape.kl"
     kl_t0 = kl_t3;
 #line 10 "codegen/modules/shape.kl"

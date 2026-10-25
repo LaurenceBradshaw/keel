@@ -12,18 +12,18 @@ typedef void ( *kl__fn__FQ7prelude3strE5never )( struct kl_7prelude_str );
 
 struct kl__Noisy
 {
-    int32_t kl_id_3;
+    int32_t kl_id;
 };
 
 struct kl__Gauge
 {
-    int32_t kl_level_42;
+    int32_t kl_level;
 };
 
 struct kl__opt__I5NoisyE
 {
     int32_t tag;
-    struct kl__Noisy kl_value_33;
+    struct kl__Noisy kl_value;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -73,7 +73,7 @@ void kl__opt__I5NoisyE__dtor( struct kl__opt__I5NoisyE* );
 #line 11 "codegen/never.kl"
 void kl__Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_id_2 )
 {
-    ( *kl_this_1 ).kl_id_3 = kl_id_2;
+    ( *kl_this_1 ).kl_id = kl_id_2;
     return;
 #line 14 "codegen/never.kl"
 }
@@ -114,13 +114,13 @@ _Noreturn void kl__overflow__S5Gauge( struct kl__Gauge* kl_this_1 )
 #line 42 "codegen/never.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 8 );
 #line 42 "codegen/never.kl"
-    kl_rt_panic_message( "codegen/never.kl", 42, kl_t2.kl_data_730, kl_t2.kl_size_733 );
+    kl_rt_panic_message( "codegen/never.kl", 42, kl_t2.kl_data, kl_t2.kl_size );
 }
 
 #line 48 "codegen/never.kl"
 _Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
 {
-    kl_rt_panic_message( "codegen/never.kl", 50, kl_why_1.kl_data_730, kl_why_1.kl_size_733 );
+    kl_rt_panic_message( "codegen/never.kl", 50, kl_why_1.kl_data, kl_why_1.kl_size );
 }
 
 #line 54 "codegen/never.kl"
@@ -244,7 +244,7 @@ int32_t kl__checked__3i32( int32_t kl_v_1 )
     goto bb8;
     bb8:
 #line 96 "codegen/never.kl"
-    kl_rt_panic_message( "codegen/never.kl", 96, kl_t6.kl_data_730, kl_t6.kl_size_733 );
+    kl_rt_panic_message( "codegen/never.kl", 96, kl_t6.kl_data, kl_t6.kl_size );
 #line 100 "codegen/never.kl"
 }
 
@@ -307,7 +307,7 @@ int32_t kl__wait__5Light( int32_t kl_l_1 )
 #line 124 "codegen/never.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 20 );
 #line 124 "codegen/never.kl"
-    kl_rt_panic_message( "codegen/never.kl", 124, kl_t4.kl_data_730, kl_t4.kl_size_733 );
+    kl_rt_panic_message( "codegen/never.kl", 124, kl_t4.kl_data, kl_t4.kl_size );
     bb3:
     kl_t10 = &kl_t9;
 #line 126 "codegen/never.kl"
@@ -426,7 +426,7 @@ int32_t kl__main__( void )
 #line 138 "codegen/never.kl"
     kl_t33 = true;
 #line 138 "codegen/never.kl"
-    kl_t8.kl_value_33 = kl_t9;
+    kl_t8.kl_value = kl_t9;
 #line 138 "codegen/never.kl"
     kl_t34 = false;
 #line 138 "codegen/never.kl"
@@ -459,7 +459,7 @@ int32_t kl__main__( void )
 #line 139 "codegen/never.kl"
     kl_t35 = false;
 #line 141 "codegen/never.kl"
-    kl_t14 = kl_got_12.kl_id_3 != 7;
+    kl_t14 = kl_got_12.kl_id != 7;
 #line 141 "codegen/never.kl"
     if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
@@ -474,11 +474,11 @@ int32_t kl__main__( void )
 #line 141 "codegen/never.kl"
     return kl_t0;
     bb8:
-    kl_t16.kl_level_42 = 3;
+    kl_t16.kl_level = 3;
 #line 143 "codegen/never.kl"
     kl_g_15 = kl_t16;
 #line 145 "codegen/never.kl"
-    kl_t17 = kl_g_15.kl_level_42 > 10;
+    kl_t17 = kl_g_15.kl_level > 10;
 #line 145 "codegen/never.kl"
     if ( kl_t17 ) goto bb9; else goto bb10;
     bb9:
@@ -493,7 +493,7 @@ int32_t kl__main__( void )
 #line 147 "codegen/never.kl"
     kl_stop_20 = kl_t21;
 #line 149 "codegen/never.kl"
-    kl_t22 = kl_g_15.kl_level_42 > 100;
+    kl_t22 = kl_g_15.kl_level > 100;
 #line 149 "codegen/never.kl"
     if ( kl_t22 ) goto bb11; else goto bb12;
     bb11:
@@ -509,7 +509,7 @@ int32_t kl__main__( void )
     kl_rt_unreachable();
     bb12:
 #line 150 "codegen/never.kl"
-    kl_t28 = kl_g_15.kl_level_42 > 200;
+    kl_t28 = kl_g_15.kl_level > 200;
 #line 150 "codegen/never.kl"
     if ( kl_t28 ) goto bb13; else goto bb14;
     bb13:
@@ -526,7 +526,7 @@ int32_t kl__main__( void )
 #line 150 "codegen/never.kl"
     return kl_t0;
     bb14:
-    kl_t30 = kl_g_15.kl_level_42 > 1000;
+    kl_t30 = kl_g_15.kl_level > 1000;
 #line 152 "codegen/never.kl"
     if ( kl_t30 ) goto bb15; else goto bb16;
     bb15:
@@ -558,7 +558,7 @@ void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 15 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_714( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 15 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 18 "../test_lib/console.kl"
@@ -657,7 +657,7 @@ void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
 #line 62 "../test_lib/console.kl"
     kl_t3 = kl_text_1;
 #line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl_as_text_714( kl_t3.self );
+    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
 #line 62 "../test_lib/console.kl"
     kl_r_2 = kl_t4;
 #line 65 "../test_lib/console.kl"
@@ -1011,7 +1011,7 @@ struct kl__Noisy kl__unwrap__I5NoisyE__M3optI5NoisyE( struct kl__opt__I5NoisyE k
 #line 72 "codegen/never.kl"
     kl_t12 = false;
 #line 72 "codegen/never.kl"
-    kl_v_5 = kl_t4.kl_value_33;
+    kl_v_5 = kl_t4.kl_value;
 #line 72 "codegen/never.kl"
     kl_t12 = true;
     kl_t0 = kl_v_5;
@@ -1038,7 +1038,7 @@ struct kl__Noisy kl__unwrap__I5NoisyE__M3optI5NoisyE( struct kl__opt__I5NoisyE k
 #line 75 "codegen/never.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 14 );
 #line 75 "codegen/never.kl"
-    kl_rt_panic_message( "codegen/never.kl", 75, kl_t6.kl_data_730, kl_t6.kl_size_733 );
+    kl_rt_panic_message( "codegen/never.kl", 75, kl_t6.kl_data, kl_t6.kl_size );
 #line 77 "codegen/never.kl"
 }
 
@@ -1055,7 +1055,7 @@ void kl__opt__I5NoisyE__dtor( struct kl__opt__I5NoisyE* kl_t1 )
     return;
     bb2:
 #line 22 "codegen/never.kl"
-    kl__Noisy__dtor( &( *kl_t1 ).kl_value_33 );
+    kl__Noisy__dtor( &( *kl_t1 ).kl_value );
 #line 22 "codegen/never.kl"
     goto bb1;
 #line 26 "codegen/never.kl"

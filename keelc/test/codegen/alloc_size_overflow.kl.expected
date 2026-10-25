@@ -4,7 +4,7 @@
 
 #include "alloc_size_overflow.kl.prelude.c"
 
-uint64_t kl_n_2 = 2305843009213693953;
+uint64_t kl__n__G = 2305843009213693953;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -20,7 +20,7 @@ int32_t kl__main__( void )
     uint64_t* kl_t2;
     ( void ) kl_words_1;
 #line 10 "codegen/alloc_size_overflow.kl"
-    kl_t2 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ), "codegen/alloc_size_overflow.kl", 10, "out of memory: alloc<u64>( n )" );
+    kl_t2 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl__n__G, sizeof( uint64_t ), "codegen/alloc_size_overflow.kl", 10, "out of memory: alloc<u64>( n )" );
 #line 10 "codegen/alloc_size_overflow.kl"
     kl_words_1 = kl_t2;
 #line 13 "codegen/alloc_size_overflow.kl"

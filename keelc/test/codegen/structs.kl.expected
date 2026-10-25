@@ -9,14 +9,14 @@ struct kl__Line;
 
 struct kl__Point
 {
-    double kl_x_6;
-    double kl_y_8;
+    double kl_x;
+    double kl_y;
 };
 
 struct kl__Line
 {
-    struct kl__Point kl_a_1;
-    struct kl__Point kl_b_3;
+    struct kl__Point kl_a;
+    struct kl__Point kl_b;
 };
 
 double kl__abs__3f64( double );
@@ -57,11 +57,11 @@ double kl__distance__4Line( struct kl__Line kl_l_1 )
     double kl_t5;
     double kl_t6;
 #line 25 "codegen/structs.kl"
-    kl_t2 = kl_l_1.kl_b_3.kl_x_6 - kl_l_1.kl_a_1.kl_x_6;
+    kl_t2 = kl_l_1.kl_b.kl_x - kl_l_1.kl_a.kl_x;
 #line 25 "codegen/structs.kl"
     kl_t3 = kl__abs__3f64( kl_t2 );
 #line 25 "codegen/structs.kl"
-    kl_t4 = kl_l_1.kl_b_3.kl_y_8 - kl_l_1.kl_a_1.kl_y_8;
+    kl_t4 = kl_l_1.kl_b.kl_y - kl_l_1.kl_a.kl_y;
 #line 25 "codegen/structs.kl"
     kl_t5 = kl__abs__3f64( kl_t4 );
 #line 25 "codegen/structs.kl"
@@ -94,17 +94,17 @@ int32_t kl__main__( void )
     bool kl_t16;
     bool kl_t17;
 #line 31 "codegen/structs.kl"
-    kl_t3.kl_x_6 = 1.0;
+    kl_t3.kl_x = 1.0;
 #line 31 "codegen/structs.kl"
-    kl_t3.kl_y_8 = 2.0;
+    kl_t3.kl_y = 2.0;
 #line 31 "codegen/structs.kl"
-    kl_t4.kl_x_6 = 4.0;
+    kl_t4.kl_x = 4.0;
 #line 31 "codegen/structs.kl"
-    kl_t4.kl_y_8 = 6.0;
+    kl_t4.kl_y = 6.0;
 #line 31 "codegen/structs.kl"
-    kl_t2.kl_a_1 = kl_t3;
+    kl_t2.kl_a = kl_t3;
 #line 31 "codegen/structs.kl"
-    kl_t2.kl_b_3 = kl_t4;
+    kl_t2.kl_b = kl_t4;
 #line 31 "codegen/structs.kl"
     kl_l_1 = kl_t2;
 #line 33 "codegen/structs.kl"
@@ -120,17 +120,17 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 37 "codegen/structs.kl"
-    kl_t9.kl_y_8 = 2.0;
+    kl_t9.kl_y = 2.0;
 #line 37 "codegen/structs.kl"
-    kl_t9.kl_x_6 = 1.0;
+    kl_t9.kl_x = 1.0;
 #line 37 "codegen/structs.kl"
-    kl_t10.kl_x_6 = 4.0;
+    kl_t10.kl_x = 4.0;
 #line 37 "codegen/structs.kl"
-    kl_t10.kl_y_8 = 6.0;
+    kl_t10.kl_y = 6.0;
 #line 37 "codegen/structs.kl"
-    kl_t8.kl_b_3 = kl_t9;
+    kl_t8.kl_b = kl_t9;
 #line 37 "codegen/structs.kl"
-    kl_t8.kl_a_1 = kl_t10;
+    kl_t8.kl_a = kl_t10;
 #line 37 "codegen/structs.kl"
     kl_flipped_7 = kl_t8;
 #line 39 "codegen/structs.kl"
@@ -145,14 +145,14 @@ int32_t kl__main__( void )
 #line 39 "codegen/structs.kl"
     return kl_t0;
     bb4:
-    kl_t14.kl_x_6 = 0.0;
+    kl_t14.kl_x = 0.0;
 #line 41 "codegen/structs.kl"
-    kl_t14.kl_y_8 = 0.0;
+    kl_t14.kl_y = 0.0;
 #line 41 "codegen/structs.kl"
     kl_p_13 = kl_t14;
-    kl_p_13.kl_x_6 = 3.0;
+    kl_p_13.kl_x = 3.0;
 #line 44 "codegen/structs.kl"
-    kl_t15 = kl_p_13.kl_x_6 != 3.0;
+    kl_t15 = kl_p_13.kl_x != 3.0;
 #line 44 "codegen/structs.kl"
     if ( kl_t15 ) goto bb5; else goto bb6;
     bb5:
@@ -162,7 +162,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 45 "codegen/structs.kl"
-    kl_t16 = kl_p_13.kl_y_8 != 0.0;
+    kl_t16 = kl_p_13.kl_y != 0.0;
 #line 45 "codegen/structs.kl"
     if ( kl_t16 ) goto bb7; else goto bb8;
     bb7:
@@ -172,10 +172,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 48 "codegen/structs.kl"
-    kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 1.0;
-    kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 2.0;
+    kl_p_13.kl_y = kl_p_13.kl_y + 1.0;
+    kl_p_13.kl_y = kl_p_13.kl_y + 2.0;
 #line 51 "codegen/structs.kl"
-    kl_t17 = kl_p_13.kl_y_8 != 3.0;
+    kl_t17 = kl_p_13.kl_y != 3.0;
 #line 51 "codegen/structs.kl"
     if ( kl_t17 ) goto bb9; else goto bb10;
     bb9:

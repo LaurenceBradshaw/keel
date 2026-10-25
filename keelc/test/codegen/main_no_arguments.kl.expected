@@ -49,8 +49,8 @@ int main( int argc, char** argv )
     struct kl_7prelude_str* args = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) count, sizeof( struct kl_7prelude_str ), "<main>", 0, "out of memory building `main`'s arguments" );
     for( uint64_t i = 0; i < count; ++i )
     {
-        args[i].kl_data_42 = ( uint8_t* ) argv[i + 1];
-        args[i].kl_size_45 = strlen( argv[i + 1] );
+        args[i].kl_data = ( uint8_t* ) argv[i + 1];
+        args[i].kl_size = strlen( argv[i + 1] );
     }
 #line 2 "codegen/main_no_arguments.kl"
     int result = (int) kl__main__LQ7prelude3str( args, count );

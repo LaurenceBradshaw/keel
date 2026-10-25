@@ -10,17 +10,17 @@ struct kl__Held__I3i32E;
 
 struct kl__Box__I3i32E
 {
-    int32_t kl_v_5;
+    int32_t kl_v;
 };
 
 struct kl__Box__I3BoxI3i32EE
 {
-    struct kl__Box__I3i32E kl_v_5;
+    struct kl__Box__I3i32E kl_v;
 };
 
 struct kl__Held__I3i32E
 {
-    int32_t kl_v_197;
+    int32_t kl_v;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -186,7 +186,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 126 "codegen/inference.kl"
-    kl_t13.kl_v_5 = 5;
+    kl_t13.kl_v = 5;
 #line 126 "codegen/inference.kl"
     kl_boxed_12 = kl_t13;
     kl_t14 = kl__unbox__I3i32E__3BoxI3i32E( kl_boxed_12 );
@@ -200,7 +200,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/inference.kl"
     return kl_t0;
     bb10:
-    kl_t17.kl_v_5 = kl_boxed_12;
+    kl_t17.kl_v = kl_boxed_12;
 #line 129 "codegen/inference.kl"
     kl_nested_16 = kl_t17;
     kl_t18 = kl__unbox_twice__I3i32E__3BoxI3BoxI3i32EE( kl_nested_16 );
@@ -410,7 +410,7 @@ int32_t kl__unbox__I3i32E__3BoxI3i32E( struct kl__Box__I3i32E kl_b_1 )
 {
     int32_t kl_t0;
 #line 34 "codegen/inference.kl"
-    kl_t0 = kl_b_1.kl_v_5;
+    kl_t0 = kl_b_1.kl_v;
 #line 34 "codegen/inference.kl"
     return kl_t0;
 }
@@ -420,7 +420,7 @@ int32_t kl__unbox_twice__I3i32E__3BoxI3BoxI3i32EE( struct kl__Box__I3BoxI3i32EE 
 {
     int32_t kl_t0;
 #line 40 "codegen/inference.kl"
-    kl_t0 = kl_b_1.kl_v_5.kl_v_5;
+    kl_t0 = kl_b_1.kl_v.kl_v;
 #line 40 "codegen/inference.kl"
     return kl_t0;
 }
@@ -550,7 +550,7 @@ bool kl__forwards__I4boolE__4bool( bool kl_a_1 )
 #line 99 "codegen/inference.kl"
 void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
-    ( *kl_this_1 ).kl_v_197 = kl_value_2;
+    ( *kl_this_1 ).kl_v = kl_value_2;
     return;
 #line 102 "codegen/inference.kl"
 }
@@ -560,7 +560,7 @@ int32_t kl__get__I3i32E__S4HeldI3i32E( struct kl__Held__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 106 "codegen/inference.kl"
-    kl_t0 = ( *kl_this_1 ).kl_v_197;
+    kl_t0 = ( *kl_this_1 ).kl_v;
 #line 106 "codegen/inference.kl"
     return kl_t0;
 }

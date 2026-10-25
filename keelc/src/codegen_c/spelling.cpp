@@ -208,7 +208,7 @@ std::string Spelling::vtable( Type_id implementer, Type_id interface ) const
 
 std::string Spelling::thunk( Type_id implementer, Type_id interface, Node_id requirement ) const
 {
-    return fmt::format( "{}__{}", vtable( implementer, interface ), field( requirement ) );
+    return fmt::format( "{}__{}", vtable( implementer, interface ), slot( requirement ) );
 }
 
 std::string Spelling::drop_function( Type_id implementer ) const
@@ -220,7 +220,7 @@ std::string Spelling::drop_function( Type_id implementer ) const
 
 std::string Spelling::field( Node_id declaration ) const
 {
-    return mangle_local( interner.text( ast.name( declaration ) ), declaration.v );
+    return mangle_field( interner.text( ast.name( declaration ) ) );
 }
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
@@ -306,6 +306,27 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     return mangle_function(
         owner( declaration ), interner.text( ast.name( declaration ) ), params, types.table(), type_arguments
     );
+}
+
+std::string Spelling::slot( Node_id requirement ) const
+{
+    // In the interface's own `T` and `self`, so a slot has one name across every instance.
+    const bool                     receiver = ast.has_receiver( requirement );
+    std::vector<Mangled_parameter> params   = mangled_parameters( ast, types, requirement );
+    return mangle_function(
+        {}, interner.text( ast.name( requirement ) ), std::span( params ).subspan( receiver ? 1 : 0 ), types.table()
+    );
+}
+
+std::string Spelling::global( Node_id declaration, Type_id owner ) const
+{
+    // A generic's static is named by its instance, a non-generic's by its aggregate.
+    const Node_id aggregate = ast.enclosing_aggregate( declaration );
+    const Type_id enclosing = owner.is_valid() || !aggregate.is_valid()
+                                  ? owner
+                                  : types.table().structure( aggregate, {}, interner.text( ast.name( aggregate ) ) );
+
+    return mangle_global( Spelling::owner( declaration ), interner.text( ast.name( declaration ) ), enclosing, types.table() );
 }
 
 std::string Spelling::destructor_of( Type_id type ) const
@@ -407,10 +428,8 @@ std::string c_string( std::string_view str )
 
 std::string Spelling::global_definition( Node_id declaration, Type_id owner ) const
 {
-    const Type_id            variable  = types.type_of( declaration );
-    std::string_view         name_text = interner.text( ast.name( declaration ) );
-    std::span<const Type_id> arguments = owner.is_valid() ? types.table().get( owner ).arguments : std::span<const Type_id>();
-    const std::string        name      = mangle_static_field( name_text, declaration.v, arguments, types.table() );
+    const Type_id     variable = types.type_of( declaration );
+    const std::string name     = global( declaration, owner );
 
     // The checker evaluated the initialiser; this prints the value. It used to print the expression
     // instead, which meant a backend re-deriving §6.4's conversions in its own spelling of the tree

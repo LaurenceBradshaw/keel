@@ -12,22 +12,22 @@ struct kl_6helper_measured__ref { void* self; const struct kl_6helper_measured__
 
 struct kl_6helper_counter
 {
-    int32_t kl_n_96;
+    int32_t kl_n;
 };
 
 struct kl_6helper_pair_of
 {
-    int32_t kl_a_135;
-    int32_t kl_b_137;
+    int32_t kl_a;
+    int32_t kl_b;
 };
 
 struct kl_6helper_measured__vtable
 {
     void ( *drop )( void* );
-    int32_t ( *kl_size_130 )( void* );
+    int32_t ( *kl__size__ )( void* );
 };
 
-int32_t kl_BASE_94 = 40;
+int32_t kl_6helper_BASE__G = 40;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -174,7 +174,7 @@ int32_t kl__main__( void )
 #line 13 "codegen/module_private/helper.kl"
 void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
 {
-    ( *kl_this_1 ).kl_n_96 = kl_start_2;
+    ( *kl_this_1 ).kl_n = kl_start_2;
     return;
 #line 16 "codegen/module_private/helper.kl"
 }
@@ -185,7 +185,7 @@ int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
     int32_t kl_t0;
     bool kl_t2;
 #line 20 "codegen/module_private/helper.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n_96, 1, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_n, 1, &( int32_t ) { 0 } );
 #line 20 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -193,8 +193,8 @@ int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
     kl_rt_panic( "codegen/module_private/helper.kl", 20, "arithmetic overflow: n += 1;" );
     bb2:
 #line 20 "codegen/module_private/helper.kl"
-    ( *kl_this_1 ).kl_n_96 = ( *kl_this_1 ).kl_n_96 + 1;
-    kl_t0 = ( *kl_this_1 ).kl_n_96;
+    ( *kl_this_1 ).kl_n = ( *kl_this_1 ).kl_n + 1;
+    kl_t0 = ( *kl_this_1 ).kl_n;
 #line 21 "codegen/module_private/helper.kl"
     return kl_t0;
 }
@@ -206,7 +206,7 @@ int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 43 "codegen/module_private/helper.kl"
-    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a_135, ( *kl_this_1 ).kl_b_137, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( ( *kl_this_1 ).kl_a, ( *kl_this_1 ).kl_b, &( int32_t ) { 0 } );
 #line 43 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -214,7 +214,7 @@ int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
     kl_rt_panic( "codegen/module_private/helper.kl", 43, "arithmetic overflow: a + b" );
     bb2:
 #line 43 "codegen/module_private/helper.kl"
-    kl_t3 = ( *kl_this_1 ).kl_a_135 + ( *kl_this_1 ).kl_b_137;
+    kl_t3 = ( *kl_this_1 ).kl_a + ( *kl_this_1 ).kl_b;
 #line 43 "codegen/module_private/helper.kl"
     kl_t0 = kl_t3;
 #line 43 "codegen/module_private/helper.kl"
@@ -228,7 +228,7 @@ int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
     bool kl_t2;
     int32_t kl_t3;
 #line 49 "codegen/module_private/helper.kl"
-    kl_t2 = __builtin_add_overflow( kl_p_1.kl_a_135, kl_p_1.kl_b_137, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_add_overflow( kl_p_1.kl_a, kl_p_1.kl_b, &( int32_t ) { 0 } );
 #line 49 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -236,7 +236,7 @@ int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
     kl_rt_panic( "codegen/module_private/helper.kl", 49, "arithmetic overflow: p.a + p.b" );
     bb2:
 #line 49 "codegen/module_private/helper.kl"
-    kl_t3 = kl_p_1.kl_a_135 + kl_p_1.kl_b_137;
+    kl_t3 = kl_p_1.kl_a + kl_p_1.kl_b;
 #line 49 "codegen/module_private/helper.kl"
     kl_t0 = kl_t3;
 #line 49 "codegen/module_private/helper.kl"
@@ -311,13 +311,13 @@ int32_t kl_6helper_total__( void )
     bool kl_t3;
     int32_t kl_t4;
 #line 78 "codegen/module_private/helper.kl"
-    kl_t1.kl_a_135 = 1;
+    kl_t1.kl_a = 1;
 #line 78 "codegen/module_private/helper.kl"
-    kl_t1.kl_b_137 = 1;
+    kl_t1.kl_b = 1;
 #line 78 "codegen/module_private/helper.kl"
     kl_t2 = kl_6helper_add__7pair_of( kl_t1 );
 #line 78 "codegen/module_private/helper.kl"
-    kl_t3 = __builtin_add_overflow( kl_BASE_94, kl_t2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( kl_6helper_BASE__G, kl_t2, &( int32_t ) { 0 } );
 #line 78 "codegen/module_private/helper.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -325,7 +325,7 @@ int32_t kl_6helper_total__( void )
     kl_rt_panic( "codegen/module_private/helper.kl", 78, "arithmetic overflow: BASE + add( pair_of { 1, 1 } )" );
     bb2:
 #line 78 "codegen/module_private/helper.kl"
-    kl_t4 = kl_BASE_94 + kl_t2;
+    kl_t4 = kl_6helper_BASE__G + kl_t2;
 #line 78 "codegen/module_private/helper.kl"
     kl_t0 = kl_t4;
 #line 78 "codegen/module_private/helper.kl"
@@ -381,9 +381,9 @@ int32_t kl_6helper_measure__( void )
     struct kl_6helper_pair_of* kl_t3;
     int32_t kl_t4;
 #line 96 "codegen/module_private/helper.kl"
-    kl_t2.kl_a_135 = 2;
+    kl_t2.kl_a = 2;
 #line 96 "codegen/module_private/helper.kl"
-    kl_t2.kl_b_137 = 3;
+    kl_t2.kl_b = 3;
 #line 96 "codegen/module_private/helper.kl"
     kl_p_1 = kl_t2;
     kl_t3 = &kl_p_1;
@@ -404,7 +404,7 @@ int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
     bool kl_t4;
     int32_t kl_t5;
 #line 103 "codegen/module_private/helper.kl"
-    kl_t2 = __builtin_sub_overflow( kl_BASE_94, kl_BASE_94, &( int32_t ) { 0 } );
+    kl_t2 = __builtin_sub_overflow( kl_6helper_BASE__G, kl_6helper_BASE__G, &( int32_t ) { 0 } );
 #line 103 "codegen/module_private/helper.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -412,7 +412,7 @@ int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
     kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: BASE - BASE" );
     bb2:
 #line 103 "codegen/module_private/helper.kl"
-    kl_t3 = kl_BASE_94 - kl_BASE_94;
+    kl_t3 = kl_6helper_BASE__G - kl_6helper_BASE__G;
 #line 103 "codegen/module_private/helper.kl"
     kl_t4 = __builtin_add_overflow( kl_v_1, kl_t3, &( int32_t ) { 0 } );
 #line 103 "codegen/module_private/helper.kl"

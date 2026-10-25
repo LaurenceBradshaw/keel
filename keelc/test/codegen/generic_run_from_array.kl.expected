@@ -11,8 +11,8 @@ struct kl__run__L5Point__ref { struct kl__Point* data; uint64_t size; };
 
 struct kl__Point
 {
-    int32_t kl_x_1;
-    int32_t kl_y_3;
+    int32_t kl_x;
+    int32_t kl_y;
 };
 
 struct kl__A2_5Point
@@ -190,13 +190,13 @@ int32_t kl__main__( void )
     kl_t22.e[kl_t37] = kl_t31;
 #line 38 "codegen/generic_run_from_array.kl"
     kl_words_21 = kl_t22;
-    kl_t40.kl_x_1 = 1;
+    kl_t40.kl_x = 1;
 #line 39 "codegen/generic_run_from_array.kl"
-    kl_t40.kl_y_3 = 2;
+    kl_t40.kl_y = 2;
 #line 39 "codegen/generic_run_from_array.kl"
-    kl_t41.kl_x_1 = 3;
+    kl_t41.kl_x = 3;
 #line 39 "codegen/generic_run_from_array.kl"
-    kl_t41.kl_y_3 = 4;
+    kl_t41.kl_y = 4;
 #line 39 "codegen/generic_run_from_array.kl"
     kl_t42 = 0;
 #line 39 "codegen/generic_run_from_array.kl"

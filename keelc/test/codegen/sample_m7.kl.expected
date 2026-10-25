@@ -15,15 +15,15 @@ typedef double* ( *kl__fn__FK3FixEK3f64 )( struct kl__Fix* );
 
 struct kl__Fix
 {
-    double kl_x_1;
-    double kl_y_3;
-    int32_t kl_sats_5;
+    double kl_x;
+    double kl_y;
+    int32_t kl_sats;
 };
 
 struct kl__Window
 {
-    double kl_lo_8;
-    double kl_hi_10;
+    double kl_lo;
+    double kl_hi;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -45,8 +45,8 @@ int32_t kl__pick__I3Fix_3i32E__D3Fix3i32_3Fix( size_t, struct kl__Fix* );
 #line 19 "codegen/sample_m7.kl"
 void kl__Window__R6Window_3f64_3f64__ctor( struct kl__Window* kl_this_1, double kl_a_2, double kl_b_3 )
 {
-    ( *kl_this_1 ).kl_lo_8 = kl_a_2;
-    ( *kl_this_1 ).kl_hi_10 = kl_b_3;
+    ( *kl_this_1 ).kl_lo = kl_a_2;
+    ( *kl_this_1 ).kl_hi = kl_b_3;
     return;
 #line 23 "codegen/sample_m7.kl"
 }
@@ -81,14 +81,14 @@ bool kl__holds__S6Window_3f64( struct kl__Window* kl_this_1, double kl_v_2 )
     bool kl_t4;
     bool kl_t5;
 #line 32 "codegen/sample_m7.kl"
-    kl_t4 = kl_v_2 >= ( *kl_this_1 ).kl_lo_8;
+    kl_t4 = kl_v_2 >= ( *kl_this_1 ).kl_lo;
 #line 32 "codegen/sample_m7.kl"
     kl_t3 = kl_t4;
 #line 32 "codegen/sample_m7.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 32 "codegen/sample_m7.kl"
-    kl_t5 = kl_v_2 <= ( *kl_this_1 ).kl_hi_10;
+    kl_t5 = kl_v_2 <= ( *kl_this_1 ).kl_hi;
 #line 32 "codegen/sample_m7.kl"
     kl_t3 = kl_t5;
 #line 32 "codegen/sample_m7.kl"
@@ -106,12 +106,12 @@ void kl__widen__S6Window_3f64( struct kl__Window* kl_this_1, double kl_by_2 )
     double kl_t3;
     double kl_t4;
 #line 37 "codegen/sample_m7.kl"
-    kl_t3 = ( *kl_this_1 ).kl_lo_8 - kl_by_2;
+    kl_t3 = ( *kl_this_1 ).kl_lo - kl_by_2;
 #line 37 "codegen/sample_m7.kl"
-    ( *kl_this_1 ).kl_lo_8 = kl_t3;
-    kl_t4 = ( *kl_this_1 ).kl_hi_10 + kl_by_2;
+    ( *kl_this_1 ).kl_lo = kl_t3;
+    kl_t4 = ( *kl_this_1 ).kl_hi + kl_by_2;
 #line 38 "codegen/sample_m7.kl"
-    ( *kl_this_1 ).kl_hi_10 = kl_t4;
+    ( *kl_this_1 ).kl_hi = kl_t4;
     return;
 #line 39 "codegen/sample_m7.kl"
 }
@@ -122,7 +122,7 @@ double kl__width__S6Window( struct kl__Window* kl_this_1 )
     double kl_t0;
     double kl_t2;
 #line 43 "codegen/sample_m7.kl"
-    kl_t2 = ( *kl_this_1 ).kl_hi_10 - ( *kl_this_1 ).kl_lo_8;
+    kl_t2 = ( *kl_this_1 ).kl_hi - ( *kl_this_1 ).kl_lo;
 #line 43 "codegen/sample_m7.kl"
     kl_t0 = kl_t2;
 #line 43 "codegen/sample_m7.kl"
@@ -311,7 +311,7 @@ double* kl__x_of__3Fix( struct kl__Fix* kl_f_1 )
 {
     double* kl_t0;
 #line 102 "codegen/sample_m7.kl"
-    kl_t0 = &( *kl_f_1 ).kl_x_1;
+    kl_t0 = &( *kl_f_1 ).kl_x;
 #line 102 "codegen/sample_m7.kl"
     return kl_t0;
 }
@@ -387,29 +387,29 @@ int32_t kl__main__( void )
     double* kl_t66;
     bool kl_t67;
 #line 107 "codegen/sample_m7.kl"
-    kl_t2.kl_x_1 = 1.0;
+    kl_t2.kl_x = 1.0;
 #line 107 "codegen/sample_m7.kl"
-    kl_t2.kl_y_3 = 2.0;
+    kl_t2.kl_y = 2.0;
 #line 107 "codegen/sample_m7.kl"
-    kl_t2.kl_sats_5 = 5;
+    kl_t2.kl_sats = 5;
 #line 107 "codegen/sample_m7.kl"
     kl_a_1 = kl_t2;
-    kl_t4.kl_x_1 = 3.0;
+    kl_t4.kl_x = 3.0;
 #line 108 "codegen/sample_m7.kl"
-    kl_t4.kl_y_3 = 4.0;
+    kl_t4.kl_y = 4.0;
 #line 108 "codegen/sample_m7.kl"
-    kl_t4.kl_sats_5 = 7;
+    kl_t4.kl_sats = 7;
 #line 108 "codegen/sample_m7.kl"
     kl_b_3 = kl_t4;
-    kl_t6.kl_x_1 = 5.0;
+    kl_t6.kl_x = 5.0;
 #line 109 "codegen/sample_m7.kl"
-    kl_t6.kl_y_3 = 6.0;
+    kl_t6.kl_y = 6.0;
 #line 109 "codegen/sample_m7.kl"
-    kl_t6.kl_sats_5 = 9;
+    kl_t6.kl_sats = 9;
 #line 109 "codegen/sample_m7.kl"
     kl_c_5 = kl_t6;
 #line 111 "codegen/sample_m7.kl"
-    kl_t7 = offsetof( struct kl__Fix, kl_x_1 );
+    kl_t7 = offsetof( struct kl__Fix, kl_x );
 #line 111 "codegen/sample_m7.kl"
     kl_t8 = &kl_a_1;
 #line 111 "codegen/sample_m7.kl"
@@ -428,7 +428,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 116 "codegen/sample_m7.kl"
-    kl_t14 = offsetof( struct kl__Fix, kl_y_3 );
+    kl_t14 = offsetof( struct kl__Fix, kl_y );
 #line 116 "codegen/sample_m7.kl"
     kl_axis_13 = kl_t14;
 #line 118 "codegen/sample_m7.kl"
@@ -449,7 +449,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 123 "codegen/sample_m7.kl"
-    kl_t20 = offsetof( struct kl__Fix, kl_sats_5 );
+    kl_t20 = offsetof( struct kl__Fix, kl_sats );
 #line 123 "codegen/sample_m7.kl"
     kl_t21 = &kl_b_3;
 #line 123 "codegen/sample_m7.kl"
@@ -474,7 +474,7 @@ int32_t kl__main__( void )
 #line 133 "codegen/sample_m7.kl"
     kl_t29 = &kl_w_24;
 #line 133 "codegen/sample_m7.kl"
-    kl_t30 = offsetof( struct kl__Fix, kl_x_1 );
+    kl_t30 = offsetof( struct kl__Fix, kl_x );
 #line 133 "codegen/sample_m7.kl"
     kl_t31 = &kl_a_1;
 #line 133 "codegen/sample_m7.kl"
@@ -539,7 +539,7 @@ int32_t kl__main__( void )
 #line 144 "codegen/sample_m7.kl"
     kl_t52 = &kl_w_24;
 #line 144 "codegen/sample_m7.kl"
-    kl_t53 = offsetof( struct kl__Fix, kl_x_1 );
+    kl_t53 = offsetof( struct kl__Fix, kl_x );
 #line 144 "codegen/sample_m7.kl"
     kl_t54 = &kl_a_1;
 #line 144 "codegen/sample_m7.kl"

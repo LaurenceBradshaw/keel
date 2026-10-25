@@ -8,8 +8,8 @@ struct kl__Node;
 
 struct kl__Node
 {
-    int32_t kl_value_1;
-    struct kl__Node* kl_next_4;
+    int32_t kl_value;
+    struct kl__Node* kl_next;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -33,8 +33,8 @@ struct kl__Node* kl__push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_v
 #line 18 "codegen/alloc_free.kl"
     kl_node_3 = kl_t4;
 #line 23 "codegen/alloc_free.kl"
-    ( *kl_node_3 ).kl_value_1 = kl_value_2;
-    ( *kl_node_3 ).kl_next_4 = kl_head_1;
+    ( *kl_node_3 ).kl_value = kl_value_2;
+    ( *kl_node_3 ).kl_next = kl_head_1;
 #line 26 "codegen/alloc_free.kl"
     kl_t0 = kl_node_3;
 #line 26 "codegen/alloc_free.kl"
@@ -60,9 +60,9 @@ int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
 #line 33 "codegen/alloc_free.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
-    kl_next_4 = ( *kl_head_1 ).kl_next_4;
+    kl_next_4 = ( *kl_head_1 ).kl_next;
 #line 37 "codegen/alloc_free.kl"
-    kl_t5 = __builtin_add_overflow( kl_total_2, ( *kl_head_1 ).kl_value_1, &( int32_t ) { 0 } );
+    kl_t5 = __builtin_add_overflow( kl_total_2, ( *kl_head_1 ).kl_value, &( int32_t ) { 0 } );
 #line 37 "codegen/alloc_free.kl"
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
@@ -75,7 +75,7 @@ int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
     kl_rt_panic( "codegen/alloc_free.kl", 37, "arithmetic overflow: total + head.value" );
     bb5:
 #line 37 "codegen/alloc_free.kl"
-    kl_t6 = kl_total_2 + ( *kl_head_1 ).kl_value_1;
+    kl_t6 = kl_total_2 + ( *kl_head_1 ).kl_value;
 #line 37 "codegen/alloc_free.kl"
     kl_total_2 = kl_t6;
 #line 41 "codegen/alloc_free.kl"
