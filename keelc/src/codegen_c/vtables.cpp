@@ -50,7 +50,7 @@ std::pair<Type_id, Type_id> converted_from( const Ast& ast, Types& types, const 
 
 } // namespace
 
-std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, const std::vector<Function>& functions )
+std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, std::span<const Function> functions )
 {
     std::vector<Vtable> needed;
 

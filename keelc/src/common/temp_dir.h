@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
-#ifdef ENABLE_UNIT_TESTS
+#include <unistd.h>
 #include <atomic>
 #include <filesystem>
 #include <fstream>
@@ -12,7 +12,8 @@
 namespace keel
 {
 
-// A directory of real files for tests that read from disk. Removes itself on scope exit.
+// A directory of its own, named for the process so two keelcs never share one. Removes itself on
+// scope exit. Tests write real files in one; the driver compiles its objects in one.
 struct Temp_dir
 {
     std::filesystem::path path;
@@ -20,7 +21,8 @@ struct Temp_dir
     Temp_dir()
     {
         static std::atomic<int> counter { 0 };
-        path = std::filesystem::temp_directory_path() / ( "keel_test_" + std::to_string( counter++ ) );
+        path = std::filesystem::temp_directory_path() /
+               ( "keel_" + std::to_string( ::getpid() ) + "_" + std::to_string( counter++ ) );
         std::filesystem::remove_all( path );
         std::filesystem::create_directories( path );
     }
@@ -42,4 +44,3 @@ struct Temp_dir
 };
 
 } // namespace keel
-#endif

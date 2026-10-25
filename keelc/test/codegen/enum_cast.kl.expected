@@ -1,8 +1,7 @@
+// codegen/enum_cast.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "enum_cast.kl.prelude.c"
 
 uint8_t kl__tag__4Suit( uint16_t );
 int32_t kl__main__( void );

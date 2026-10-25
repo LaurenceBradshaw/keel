@@ -1,14 +1,93 @@
+// codegen/same_names_apart/a.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_1a_push__3i32( int32_t );
+
+#line 1 "codegen/same_names_apart/a.kl"
+int32_t kl_1a_push__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 3 "codegen/same_names_apart/a.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+#line 3 "codegen/same_names_apart/a.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 3 "codegen/same_names_apart/a.kl"
+    kl_rt_panic( "codegen/same_names_apart/a.kl", 3, "arithmetic overflow: v + 1" );
+    bb2:
+#line 3 "codegen/same_names_apart/a.kl"
+    kl_t3 = kl_v_1 + 1;
+#line 3 "codegen/same_names_apart/a.kl"
+    kl_t0 = kl_t3;
+#line 3 "codegen/same_names_apart/a.kl"
+    return kl_t0;
+}
+
+// codegen/same_names_apart/b.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__main__( void );
+int32_t kl_1b_push__3i32( int32_t );
+
+#line 1 "codegen/same_names_apart/b.kl"
+int32_t kl_1b_push__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 3 "codegen/same_names_apart/b.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
+#line 3 "codegen/same_names_apart/b.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 3 "codegen/same_names_apart/b.kl"
+    kl_rt_panic( "codegen/same_names_apart/b.kl", 3, "arithmetic overflow: v + 10" );
+    bb2:
+#line 3 "codegen/same_names_apart/b.kl"
+    kl_t3 = kl_v_1 + 10;
+#line 3 "codegen/same_names_apart/b.kl"
+    kl_t0 = kl_t3;
+#line 3 "codegen/same_names_apart/b.kl"
+    return kl_t0;
+}
+
+// codegen/same_names_apart/c.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 int32_t kl_1c_from_c__( void );
 int32_t kl_1b_push__3i32( int32_t );
+
+#line 4 "codegen/same_names_apart/c.kl"
+int32_t kl_1c_from_c__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+#line 6 "codegen/same_names_apart/c.kl"
+    kl_t1 = kl_1b_push__3i32( 1 );
+#line 6 "codegen/same_names_apart/c.kl"
+    kl_t0 = kl_t1;
+#line 6 "codegen/same_names_apart/c.kl"
+    return kl_t0;
+}
+
+// codegen/same_names_apart/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+int32_t kl_1c_from_c__( void );
 int32_t kl_1a_push__3i32( int32_t );
 
 #line 6 "codegen/same_names_apart/main.kl"
@@ -44,63 +123,6 @@ int32_t kl__main__( void )
 #line 18 "codegen/same_names_apart/main.kl"
     kl_t0 = 0;
 #line 18 "codegen/same_names_apart/main.kl"
-    return kl_t0;
-}
-
-#line 4 "codegen/same_names_apart/c.kl"
-int32_t kl_1c_from_c__( void )
-{
-    int32_t kl_t0;
-    int32_t kl_t1;
-#line 6 "codegen/same_names_apart/c.kl"
-    kl_t1 = kl_1b_push__3i32( 1 );
-#line 6 "codegen/same_names_apart/c.kl"
-    kl_t0 = kl_t1;
-#line 6 "codegen/same_names_apart/c.kl"
-    return kl_t0;
-}
-
-#line 1 "codegen/same_names_apart/b.kl"
-int32_t kl_1b_push__3i32( int32_t kl_v_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 3 "codegen/same_names_apart/b.kl"
-    kl_t2 = __builtin_add_overflow( kl_v_1, 10, &( int32_t ) { 0 } );
-#line 3 "codegen/same_names_apart/b.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 3 "codegen/same_names_apart/b.kl"
-    kl_rt_panic( "codegen/same_names_apart/b.kl", 3, "arithmetic overflow: v + 10" );
-    bb2:
-#line 3 "codegen/same_names_apart/b.kl"
-    kl_t3 = kl_v_1 + 10;
-#line 3 "codegen/same_names_apart/b.kl"
-    kl_t0 = kl_t3;
-#line 3 "codegen/same_names_apart/b.kl"
-    return kl_t0;
-}
-
-#line 1 "codegen/same_names_apart/a.kl"
-int32_t kl_1a_push__3i32( int32_t kl_v_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 3 "codegen/same_names_apart/a.kl"
-    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
-#line 3 "codegen/same_names_apart/a.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 3 "codegen/same_names_apart/a.kl"
-    kl_rt_panic( "codegen/same_names_apart/a.kl", 3, "arithmetic overflow: v + 1" );
-    bb2:
-#line 3 "codegen/same_names_apart/a.kl"
-    kl_t3 = kl_v_1 + 1;
-#line 3 "codegen/same_names_apart/a.kl"
-    kl_t0 = kl_t3;
-#line 3 "codegen/same_names_apart/a.kl"
     return kl_t0;
 }
 

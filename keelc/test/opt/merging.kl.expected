@@ -1,8 +1,7 @@
+// opt/merging.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "merging.kl.prelude.c"
 
 int32_t kl__chained__( void );
 int32_t kl__asserted__3i32( int32_t );

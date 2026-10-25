@@ -1,8 +1,7 @@
+// opt/propagation_chains.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "propagation_chains.kl.prelude.c"
 
 struct kl__Point;
 struct kl__Line;

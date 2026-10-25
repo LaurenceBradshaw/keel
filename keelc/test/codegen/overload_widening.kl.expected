@@ -1,8 +1,7 @@
+// codegen/overload_widening.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "overload_widening.kl.prelude.c"
 
 struct kl__Built;
 

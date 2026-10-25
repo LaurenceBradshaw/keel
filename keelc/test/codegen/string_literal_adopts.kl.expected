@@ -1,13 +1,18 @@
+// codegen/string_literal_adopts.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "string_literal_adopts.kl.prelude.c"
 
 struct kl__label;
 struct kl__width;
 struct kl__framed;
 struct kl__holder;
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
 struct kl__label
 {
@@ -28,6 +33,18 @@ struct kl__framed
 struct kl__holder
 {
     struct kl__label kl_held;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -53,6 +70,20 @@ int32_t kl__lend__5label( struct kl__label* );
 int32_t kl__main__( void );
 struct kl__label kl__made__I5labelE__( void );
 void kl__label__drop( struct kl__label* );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 10 "codegen/string_literal_adopts.kl"
 void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )

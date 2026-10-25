@@ -1,8 +1,7 @@
+// opt/scalars.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "scalars.kl.prelude.c"
 
 struct kl__Point;
 struct kl__Box;

@@ -1,8 +1,7 @@
+// codegen/modules/shape.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "main.kl.prelude.c"
 
 struct kl_5shape_Point;
 
@@ -12,7 +11,84 @@ struct kl_5shape_Point
     int32_t kl_y;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_5shape_area__5Point( struct kl_5shape_Point );
+
+#line 8 "codegen/modules/shape.kl"
+int32_t kl_5shape_area__5Point( struct kl_5shape_Point kl_p_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 10 "codegen/modules/shape.kl"
+    kl_t2 = __builtin_mul_overflow( kl_p_1.kl_x, kl_p_1.kl_y, &( int32_t ) { 0 } );
+#line 10 "codegen/modules/shape.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 10 "codegen/modules/shape.kl"
+    kl_rt_panic( "codegen/modules/shape.kl", 10, "arithmetic overflow: p.x * p.y" );
+    bb2:
+#line 10 "codegen/modules/shape.kl"
+    kl_t3 = kl_p_1.kl_x * kl_p_1.kl_y;
+#line 10 "codegen/modules/shape.kl"
+    kl_t0 = kl_t3;
+#line 10 "codegen/modules/shape.kl"
+    return kl_t0;
+}
+
+// codegen/modules/tally.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 int32_t kl_5tally_count__G = 0;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_5tally_bump__3i32( int32_t );
+int32_t kl__twice__3i32( int32_t );
+
+#line 6 "codegen/modules/tally.kl"
+int32_t kl_5tally_bump__3i32( int32_t kl_by_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+#line 8 "codegen/modules/tally.kl"
+    kl_t2 = kl__twice__3i32( kl_by_1 );
+#line 8 "codegen/modules/tally.kl"
+    kl_t3 = __builtin_add_overflow( kl_5tally_count__G, kl_t2, &( int32_t ) { 0 } );
+#line 8 "codegen/modules/tally.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 8 "codegen/modules/tally.kl"
+    kl_rt_panic( "codegen/modules/tally.kl", 8, "arithmetic overflow: count + twice( by )" );
+    bb2:
+#line 8 "codegen/modules/tally.kl"
+    kl_t4 = kl_5tally_count__G + kl_t2;
+#line 8 "codegen/modules/tally.kl"
+    kl_5tally_count__G = kl_t4;
+    kl_t0 = kl_5tally_count__G;
+#line 9 "codegen/modules/tally.kl"
+    return kl_t0;
+}
+
+// codegen/modules/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_5shape_Point;
+
+struct kl_5shape_Point
+{
+    int32_t kl_x;
+    int32_t kl_y;
+};
+
+extern int32_t kl_5tally_count__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -108,54 +184,6 @@ int32_t kl__main__( void )
     bb8:
     kl_t0 = 0;
 #line 21 "codegen/modules/main.kl"
-    return kl_t0;
-}
-
-#line 6 "codegen/modules/tally.kl"
-int32_t kl_5tally_bump__3i32( int32_t kl_by_1 )
-{
-    int32_t kl_t0;
-    int32_t kl_t2;
-    bool kl_t3;
-    int32_t kl_t4;
-#line 8 "codegen/modules/tally.kl"
-    kl_t2 = kl__twice__3i32( kl_by_1 );
-#line 8 "codegen/modules/tally.kl"
-    kl_t3 = __builtin_add_overflow( kl_5tally_count__G, kl_t2, &( int32_t ) { 0 } );
-#line 8 "codegen/modules/tally.kl"
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
-#line 8 "codegen/modules/tally.kl"
-    kl_rt_panic( "codegen/modules/tally.kl", 8, "arithmetic overflow: count + twice( by )" );
-    bb2:
-#line 8 "codegen/modules/tally.kl"
-    kl_t4 = kl_5tally_count__G + kl_t2;
-#line 8 "codegen/modules/tally.kl"
-    kl_5tally_count__G = kl_t4;
-    kl_t0 = kl_5tally_count__G;
-#line 9 "codegen/modules/tally.kl"
-    return kl_t0;
-}
-
-#line 8 "codegen/modules/shape.kl"
-int32_t kl_5shape_area__5Point( struct kl_5shape_Point kl_p_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 10 "codegen/modules/shape.kl"
-    kl_t2 = __builtin_mul_overflow( kl_p_1.kl_x, kl_p_1.kl_y, &( int32_t ) { 0 } );
-#line 10 "codegen/modules/shape.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 10 "codegen/modules/shape.kl"
-    kl_rt_panic( "codegen/modules/shape.kl", 10, "arithmetic overflow: p.x * p.y" );
-    bb2:
-#line 10 "codegen/modules/shape.kl"
-    kl_t3 = kl_p_1.kl_x * kl_p_1.kl_y;
-#line 10 "codegen/modules/shape.kl"
-    kl_t0 = kl_t3;
-#line 10 "codegen/modules/shape.kl"
     return kl_t0;
 }
 

@@ -40,32 +40,47 @@ Runtime find_runtime( const std::optional<std::string>& flag, const std::filesys
     return Runtime { runtime_location, "" };
 }
 
-std::string link_command(
-    std::string_view             compiler,
-    std::string_view             cflags,
-    const std::filesystem::path& source,
-    const std::filesystem::path& runtime,
-    const std::filesystem::path& executable,
-    std::span<const std::string> linked
+namespace
+{
+// §7.7: C's UB becomes Keel's UB without these.
+std::string compiler_and_flags( std::string_view compiler, std::string_view cflags )
+{
+    return fmt::format(
+        "{} -fwrapv -fno-strict-aliasing -std=c11{}", compiler, cflags.empty() ? std::string() : fmt::format( " {}", cflags )
+    );
+}
+} // namespace
+
+std::string compile_command(
+    std::string_view compiler, std::string_view cflags, const std::filesystem::path& source, const std::filesystem::path& object
 )
 {
-    std::string after_runtime;
-    for( const std::string& word : linked )
+    return fmt::format( "{} -c \"{}\" -o \"{}\"", compiler_and_flags( compiler, cflags ), source.string(), object.string() );
+}
+
+std::string link_command(
+    std::string_view                       compiler,
+    std::string_view                       cflags,
+    std::span<const std::filesystem::path> objects,
+    const std::filesystem::path&           runtime,
+    const std::filesystem::path&           executable,
+    std::span<const std::string>           linked
+)
+{
+    std::string inputs;
+    for( const std::filesystem::path& object : objects )
     {
-        after_runtime += fmt::format( " \"{}\"", word );
+        inputs += fmt::format( " \"{}\"", object.string() );
     }
 
-    // §7.7: C's UB becomes Keel's UB without these.
-    const std::string command = fmt::format(
-        "{} -fwrapv -fno-strict-aliasing -std=c11{} \"{}\" \"{}\"{} -o \"{}\"",
-        compiler,
-        cflags.empty() ? std::string() : fmt::format( " {}", cflags ),
-        source.string(),
-        runtime.string(),
-        after_runtime,
-        executable.string()
-    );
-    return command;
+    inputs += fmt::format( " \"{}\"", runtime.string() );
+
+    for( const std::string& word : linked )
+    {
+        inputs += fmt::format( " \"{}\"", word );
+    }
+
+    return fmt::format( "{}{} -o \"{}\"", compiler_and_flags( compiler, cflags ), inputs, executable.string() );
 }
 
 std::string without_warning_flags( std::string_view cflags )
@@ -168,31 +183,35 @@ TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )
     }
 }
 
-TEST_CASE( "link_command_links_the_runtime_after_the_source", "[codegen_c][link]" )
+TEST_CASE( "link_command_links_the_runtime_after_the_objects", "[codegen_c][link]" )
 {
+    const std::vector<std::filesystem::path> objects = { "tmp/main.kl.o", "tmp/main.kl.prelude.o" };
+
     SECTION( "with flags" )
     {
         REQUIRE(
-            keel::link_command( "clang", "-Wall -Werror", "out/main.kl.c", "/rt/libkeel_rt.a", "out/main" ) ==
-            "clang -fwrapv -fno-strict-aliasing -std=c11 -Wall -Werror \"out/main.kl.c\" \"/rt/libkeel_rt.a\" -o \"out/main\""
+            keel::link_command( "clang", "-Wall -Werror", objects, "/rt/libkeel_rt.a", "out/main" ) ==
+            "clang -fwrapv -fno-strict-aliasing -std=c11 -Wall -Werror \"tmp/main.kl.o\" \"tmp/main.kl.prelude.o\" "
+            "\"/rt/libkeel_rt.a\" -o \"out/main\""
         );
     }
 
     SECTION( "without, leaving no gap" )
     {
         REQUIRE(
-            keel::link_command( "cc", "", "main.kl.c", "libkeel_rt.a", "main" ) ==
-            "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.c\" \"libkeel_rt.a\" -o \"main\""
+            keel::link_command( "cc", "", std::span( objects ).first( 1 ), "libkeel_rt.a", "main" ) ==
+            "cc -fwrapv -fno-strict-aliasing -std=c11 \"tmp/main.kl.o\" \"libkeel_rt.a\" -o \"main\""
         );
     }
 }
 
 TEST_CASE( "link_command_links_the_users_c_after_the_runtime", "[codegen_c][link]" )
 {
-    const std::vector<std::string> linked = { "glue.c", "lib/libz.a", "-Llib", "-lm" };
+    const std::vector<std::filesystem::path> objects = { "main.kl.o" };
+    const std::vector<std::string>           linked  = { "glue.c", "lib/libz.a", "-Llib", "-lm" };
     REQUIRE(
-        keel::link_command( "cc", "", "main.kl.c", "libkeel_rt.a", "main", linked ) ==
-        "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.c\" \"libkeel_rt.a\" \"glue.c\" \"lib/libz.a\" \"-Llib\" "
+        keel::link_command( "cc", "", objects, "libkeel_rt.a", "main", linked ) ==
+        "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.o\" \"libkeel_rt.a\" \"glue.c\" \"lib/libz.a\" \"-Llib\" "
         "\"-lm\" -o \"main\""
     );
 }

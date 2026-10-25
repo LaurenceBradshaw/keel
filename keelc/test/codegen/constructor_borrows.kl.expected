@@ -1,8 +1,7 @@
+// codegen/constructor_borrows.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "constructor_borrows.kl.prelude.c"
 
 struct kl__Owned;
 struct kl__big;

@@ -1,8 +1,59 @@
+// codegen/implements_for_packages/shapes/kinds.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+struct kl_6shapes5kinds_Tracked;
+
+struct kl_6shapes5kinds_Tracked
+{
+    int64_t kl_n;
+};
+
+int32_t kl_6shapes5kinds_drops__G = 0;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes5kinds_Tracked*, int64_t );
+void kl_6shapes5kinds_Tracked__dtor( struct kl_6shapes5kinds_Tracked* );
+
+#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
+void kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes5kinds_Tracked* kl_this_1, int64_t kl_v_2 )
+{
+#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
+    ( *kl_this_1 ).kl_n = kl_v_2;
+#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
+    return;
+#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
+}
+
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+void kl_6shapes5kinds_Tracked__dtor( struct kl_6shapes5kinds_Tracked* kl_this_1 )
+{
+    bool kl_t2;
+    int32_t kl_t3;
+    ( void ) kl_this_1;
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    kl_t2 = __builtin_add_overflow( kl_6shapes5kinds_drops__G, 1, &( int32_t ) { 0 } );
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    kl_rt_panic( "codegen/implements_for_packages/shapes/kinds.kl", 14, "arithmetic overflow: drops + 1" );
+    bb2:
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    kl_t3 = kl_6shapes5kinds_drops__G + 1;
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    kl_6shapes5kinds_drops__G = kl_t3;
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+    return;
+#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
+}
+
+// codegen/implements_for_packages/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl_6shapes5kinds_Rod;
 struct kl_6shapes5kinds_Tracked;
@@ -39,7 +90,7 @@ struct kl__Measured__vtable
     void ( *kl__grow__3i64 )( void*, int64_t );
 };
 
-int32_t kl_6shapes5kinds_drops__G = 0;
+extern int32_t kl_6shapes5kinds_drops__G;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -53,8 +104,6 @@ void kl__grow__SQ6shapes7TrackedC8Measured_3i64( struct kl_6shapes5kinds_Tracked
 int64_t kl__through__8Measured( struct kl__Measured__ref );
 void kl__enlarge__R8Measured( struct kl__Measured__ref );
 int32_t kl__main__( void );
-void kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes5kinds_Tracked*, int64_t );
-void kl_6shapes5kinds_Tracked__dtor( struct kl_6shapes5kinds_Tracked* );
 int64_t kl__total__IQ6shapes3RodE__Q6shapes3Rod_Q6shapes3Rod( struct kl_6shapes5kinds_Rod*, struct kl_6shapes5kinds_Rod* );
 void kl__grow_twice__IQ6shapes3RodE__RQ6shapes3Rod( struct kl_6shapes5kinds_Rod* );
 void kl_7prelude_box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6shapes7Tracked__ctor( struct kl_7prelude_box__IQ6shapes7TrackedE*, struct kl_6shapes5kinds_Tracked );
@@ -62,6 +111,8 @@ struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE
 void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* );
 void kl_7prelude_box__IQ6shapes7TrackedE__dtor( struct kl_7prelude_box__IQ6shapes7TrackedE* );
 void kl_6shapes5kinds_Tracked__drop( struct kl_6shapes5kinds_Tracked* );
+void kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes5kinds_Tracked*, int64_t );
+void kl_6shapes5kinds_Tracked__dtor( struct kl_6shapes5kinds_Tracked* );
 
 static void kl_6shapes5kinds_Rod__as_kl__Measured__drop( void* self )
 {
@@ -392,39 +443,6 @@ int32_t kl__main__( void )
     kl_t0 = 0;
 #line 63 "codegen/implements_for_packages/main.kl"
     return kl_t0;
-}
-
-#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
-void kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( struct kl_6shapes5kinds_Tracked* kl_this_1, int64_t kl_v_2 )
-{
-#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
-    ( *kl_this_1 ).kl_n = kl_v_2;
-#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
-    return;
-#line 12 "codegen/implements_for_packages/shapes/kinds.kl"
-}
-
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-void kl_6shapes5kinds_Tracked__dtor( struct kl_6shapes5kinds_Tracked* kl_this_1 )
-{
-    bool kl_t2;
-    int32_t kl_t3;
-    ( void ) kl_this_1;
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    kl_t2 = __builtin_add_overflow( kl_6shapes5kinds_drops__G, 1, &( int32_t ) { 0 } );
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    kl_rt_panic( "codegen/implements_for_packages/shapes/kinds.kl", 14, "arithmetic overflow: drops + 1" );
-    bb2:
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    kl_t3 = kl_6shapes5kinds_drops__G + 1;
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    kl_6shapes5kinds_drops__G = kl_t3;
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
-    return;
-#line 14 "codegen/implements_for_packages/shapes/kinds.kl"
 }
 
 #line 24 "codegen/implements_for_packages/main.kl"

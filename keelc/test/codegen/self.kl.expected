@@ -1,8 +1,7 @@
+// codegen/self.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "self.kl.prelude.c"
 
 struct kl__Plain;
 struct kl__Pair__I3i64E;

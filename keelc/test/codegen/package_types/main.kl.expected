@@ -1,8 +1,97 @@
+// codegen/package_types/kinds/shapes.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+struct kl_5kinds6shapes_Point;
+struct kl_5kinds6shapes_Counter;
+
+struct kl_5kinds6shapes_Point
+{
+    int32_t kl_x;
+    int32_t kl_y;
+};
+
+struct kl_5kinds6shapes_Counter
+{
+    int32_t kl_n;
+};
+
+int32_t kl_5kinds6shapes_made__G = 0;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter*, int32_t );
+struct kl_5kinds6shapes_Counter kl_5kinds6shapes_zero__SQ5kinds7Counter( void );
+int32_t kl_5kinds6shapes_get__SQ5kinds7Counter( struct kl_5kinds6shapes_Counter* );
+struct kl_5kinds6shapes_Point kl_5kinds6shapes_origin__( void );
+
+#line 34 "codegen/package_types/kinds/shapes.kl"
+void kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter* kl_this_1, int32_t kl_start_2 )
+{
+    ( *kl_this_1 ).kl_n = kl_start_2;
+    return;
+#line 37 "codegen/package_types/kinds/shapes.kl"
+}
+
+#line 39 "codegen/package_types/kinds/shapes.kl"
+struct kl_5kinds6shapes_Counter kl_5kinds6shapes_zero__SQ5kinds7Counter( void )
+{
+    struct kl_5kinds6shapes_Counter kl_t0;
+    struct kl_5kinds6shapes_Counter kl_t1;
+    struct kl_5kinds6shapes_Counter* kl_t2;
+#line 41 "codegen/package_types/kinds/shapes.kl"
+    kl_t2 = &kl_t1;
+#line 41 "codegen/package_types/kinds/shapes.kl"
+    kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( kl_t2, 0 );
+#line 41 "codegen/package_types/kinds/shapes.kl"
+    kl_t0 = kl_t1;
+#line 41 "codegen/package_types/kinds/shapes.kl"
+    return kl_t0;
+}
+
+#line 44 "codegen/package_types/kinds/shapes.kl"
+int32_t kl_5kinds6shapes_get__SQ5kinds7Counter( struct kl_5kinds6shapes_Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 46 "codegen/package_types/kinds/shapes.kl"
+    kl_t0 = ( *kl_this_1 ).kl_n;
+#line 46 "codegen/package_types/kinds/shapes.kl"
+    return kl_t0;
+}
+
+#line 52 "codegen/package_types/kinds/shapes.kl"
+struct kl_5kinds6shapes_Point kl_5kinds6shapes_origin__( void )
+{
+    struct kl_5kinds6shapes_Point kl_t0;
+    bool kl_t1;
+    int32_t kl_t2;
+    struct kl_5kinds6shapes_Point kl_t3;
+#line 54 "codegen/package_types/kinds/shapes.kl"
+    kl_t1 = __builtin_add_overflow( kl_5kinds6shapes_made__G, 1, &( int32_t ) { 0 } );
+#line 54 "codegen/package_types/kinds/shapes.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+#line 54 "codegen/package_types/kinds/shapes.kl"
+    kl_rt_panic( "codegen/package_types/kinds/shapes.kl", 54, "arithmetic overflow: made + 1" );
+    bb2:
+#line 54 "codegen/package_types/kinds/shapes.kl"
+    kl_t2 = kl_5kinds6shapes_made__G + 1;
+#line 54 "codegen/package_types/kinds/shapes.kl"
+    kl_5kinds6shapes_made__G = kl_t2;
+    kl_t3.kl_x = 7;
+#line 55 "codegen/package_types/kinds/shapes.kl"
+    kl_t3.kl_y = 8;
+#line 55 "codegen/package_types/kinds/shapes.kl"
+    kl_t0 = kl_t3;
+#line 55 "codegen/package_types/kinds/shapes.kl"
+    return kl_t0;
+}
+
+// codegen/package_types/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl__Point;
 struct kl_5kinds6shapes_Point;
@@ -44,19 +133,19 @@ struct kl_5kinds6shapes_Box__IQ5kinds5PointE
     struct kl_5kinds6shapes_Point kl_v;
 };
 
-int32_t kl_5kinds6shapes_made__G = 0;
+extern int32_t kl_5kinds6shapes_made__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape );
 int32_t kl__main__( void );
+struct kl_5kinds6shapes_Point kl__same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point );
+struct kl__Point kl__same__I5PointE__5Point( struct kl__Point );
+struct kl_5kinds6shapes_Box__I3i32E kl_5kinds6shapes_of__I3i32E__SQ5kinds3BoxI3i32E_3i32( int32_t );
 void kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter*, int32_t );
 struct kl_5kinds6shapes_Counter kl_5kinds6shapes_zero__SQ5kinds7Counter( void );
 int32_t kl_5kinds6shapes_get__SQ5kinds7Counter( struct kl_5kinds6shapes_Counter* );
 struct kl_5kinds6shapes_Point kl_5kinds6shapes_origin__( void );
-struct kl_5kinds6shapes_Point kl__same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds6shapes_Point );
-struct kl__Point kl__same__I5PointE__5Point( struct kl__Point );
-struct kl_5kinds6shapes_Box__I3i32E kl_5kinds6shapes_of__I3i32E__SQ5kinds3BoxI3i32E_3i32( int32_t );
 
 #line 17 "codegen/package_types/main.kl"
 int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
@@ -372,68 +461,6 @@ int32_t kl__main__( void )
     bb30:
     kl_t0 = 0;
 #line 54 "codegen/package_types/main.kl"
-    return kl_t0;
-}
-
-#line 34 "codegen/package_types/kinds/shapes.kl"
-void kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds6shapes_Counter* kl_this_1, int32_t kl_start_2 )
-{
-    ( *kl_this_1 ).kl_n = kl_start_2;
-    return;
-#line 37 "codegen/package_types/kinds/shapes.kl"
-}
-
-#line 39 "codegen/package_types/kinds/shapes.kl"
-struct kl_5kinds6shapes_Counter kl_5kinds6shapes_zero__SQ5kinds7Counter( void )
-{
-    struct kl_5kinds6shapes_Counter kl_t0;
-    struct kl_5kinds6shapes_Counter kl_t1;
-    struct kl_5kinds6shapes_Counter* kl_t2;
-#line 41 "codegen/package_types/kinds/shapes.kl"
-    kl_t2 = &kl_t1;
-#line 41 "codegen/package_types/kinds/shapes.kl"
-    kl_5kinds6shapes_Counter__RQ5kinds7Counter_3i32__ctor( kl_t2, 0 );
-#line 41 "codegen/package_types/kinds/shapes.kl"
-    kl_t0 = kl_t1;
-#line 41 "codegen/package_types/kinds/shapes.kl"
-    return kl_t0;
-}
-
-#line 44 "codegen/package_types/kinds/shapes.kl"
-int32_t kl_5kinds6shapes_get__SQ5kinds7Counter( struct kl_5kinds6shapes_Counter* kl_this_1 )
-{
-    int32_t kl_t0;
-#line 46 "codegen/package_types/kinds/shapes.kl"
-    kl_t0 = ( *kl_this_1 ).kl_n;
-#line 46 "codegen/package_types/kinds/shapes.kl"
-    return kl_t0;
-}
-
-#line 52 "codegen/package_types/kinds/shapes.kl"
-struct kl_5kinds6shapes_Point kl_5kinds6shapes_origin__( void )
-{
-    struct kl_5kinds6shapes_Point kl_t0;
-    bool kl_t1;
-    int32_t kl_t2;
-    struct kl_5kinds6shapes_Point kl_t3;
-#line 54 "codegen/package_types/kinds/shapes.kl"
-    kl_t1 = __builtin_add_overflow( kl_5kinds6shapes_made__G, 1, &( int32_t ) { 0 } );
-#line 54 "codegen/package_types/kinds/shapes.kl"
-    if ( kl_t1 ) goto bb1; else goto bb2;
-    bb1:
-#line 54 "codegen/package_types/kinds/shapes.kl"
-    kl_rt_panic( "codegen/package_types/kinds/shapes.kl", 54, "arithmetic overflow: made + 1" );
-    bb2:
-#line 54 "codegen/package_types/kinds/shapes.kl"
-    kl_t2 = kl_5kinds6shapes_made__G + 1;
-#line 54 "codegen/package_types/kinds/shapes.kl"
-    kl_5kinds6shapes_made__G = kl_t2;
-    kl_t3.kl_x = 7;
-#line 55 "codegen/package_types/kinds/shapes.kl"
-    kl_t3.kl_y = 8;
-#line 55 "codegen/package_types/kinds/shapes.kl"
-    kl_t0 = kl_t3;
-#line 55 "codegen/package_types/kinds/shapes.kl"
     return kl_t0;
 }
 

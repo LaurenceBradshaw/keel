@@ -1,16 +1,32 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-int32_t kl__add__3i32_3i32( int32_t, int32_t );
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -31,30 +47,19 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 5 "codegen/overflow_release/main.kl"
-int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    int32_t kl_t0;
-#line 7 "codegen/overflow_release/main.kl"
-    kl_t0 = kl_a_1 + kl_b_2;
-#line 7 "codegen/overflow_release/main.kl"
-    return kl_t0;
+    ( void ) self;
 }
 
-#line 10 "codegen/overflow_release/main.kl"
-int32_t kl__main__( void )
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
-    int32_t kl_t0;
-    int64_t kl_t2;
-#line 12 "codegen/overflow_release/main.kl"
-    kl_t2 = -2147483648;
-#line 12 "codegen/overflow_release/main.kl"
-    kl_1t7console_println__3i64( kl_t2 );
-    kl_t0 = 0;
-#line 13 "codegen/overflow_release/main.kl"
-    return kl_t0;
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
 }
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -442,6 +447,39 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/overflow_release/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__add__3i32_3i32( int32_t, int32_t );
+int32_t kl__main__( void );
+void kl_1t7console_println__3i64( int64_t );
+
+#line 5 "codegen/overflow_release/main.kl"
+int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+#line 7 "codegen/overflow_release/main.kl"
+    kl_t0 = kl_a_1 + kl_b_2;
+#line 7 "codegen/overflow_release/main.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/overflow_release/main.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_t2;
+#line 12 "codegen/overflow_release/main.kl"
+    kl_t2 = -2147483648;
+#line 12 "codegen/overflow_release/main.kl"
+    kl_1t7console_println__3i64( kl_t2 );
+    kl_t0 = 0;
+#line 13 "codegen/overflow_release/main.kl"
+    return kl_t0;
 }
 
 #line 10 "codegen/overflow_release/main.kl"

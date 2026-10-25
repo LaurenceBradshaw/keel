@@ -1,8 +1,7 @@
+// codegen/field_pointers.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "field_pointers.kl.prelude.c"
 
 struct kl__Measurement;
 struct kl__Box__I3i32E;

@@ -1,12 +1,12 @@
+// codegen/implements_for.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "implements_for.kl.prelude.c"
-
 struct kl__Tracked;
 struct kl__Held;
 struct kl_7prelude_box__I8MeasuredE;
+struct kl_7prelude_box__I3i64E;
 struct kl_7prelude_box__I4HeldE;
 
 struct kl__Measured__vtable;
@@ -26,6 +26,11 @@ struct kl__Held
 struct kl_7prelude_box__I8MeasuredE
 {
     struct kl__Measured__ref kl_p_;
+};
+
+struct kl_7prelude_box__I3i64E
+{
+    int64_t* kl_p_;
 };
 
 struct kl_7prelude_box__I4HeldE
@@ -62,9 +67,11 @@ int64_t kl__total__I3i64E__3i64_3i64( int64_t*, int64_t* );
 int64_t kl__total__I4SizeE__4Size_4Size( int32_t*, int32_t* );
 void kl__grow_twice__I3i64E__R3i64( int64_t* );
 void kl__grow_twice__I4SizeE__R4Size( int32_t* );
+void kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( struct kl_7prelude_box__I3i64E*, int64_t );
 struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* );
 void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7prelude_box__I4HeldE*, struct kl__Held );
 void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* );
+void kl_7prelude_box__I3i64E__dtor( struct kl_7prelude_box__I3i64E* );
 void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* );
 void kl__Held__dtor( struct kl__Held* );
 void kl__Held__drop( struct kl__Held* );
@@ -779,6 +786,31 @@ void kl__grow_twice__I4SizeE__R4Size( int32_t* kl_v_1 )
 #line 83 "codegen/implements_for.kl"
 }
 
+#line 80 "<prelude>"
+void kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( struct kl_7prelude_box__I3i64E* kl_this_1, int64_t kl_value_2 )
+{
+    int64_t* kl_slot_3;
+    int64_t* kl_t4;
+    int64_t* kl_t5;
+    int64_t* kl_t6;
+    int64_t* kl_t7;
+#line 85 "<prelude>"
+    kl_t4 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "<prelude>", 85, "out of memory: alloc<T>( 1 )" );
+#line 85 "<prelude>"
+    kl_slot_3 = kl_t4;
+    kl_t5 = kl_slot_3 + 0;
+#line 86 "<prelude>"
+    ( *kl_t5 ) = kl_value_2;
+    kl_t6 = kl_slot_3 + 0;
+#line 87 "<prelude>"
+    kl_t7 = &( *kl_t6 );
+#line 87 "<prelude>"
+    ( *kl_this_1 ).kl_p_ = kl_t7;
+#line 89 "<prelude>"
+    return;
+#line 89 "<prelude>"
+}
+
 #line 101 "<prelude>"
 struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
@@ -832,6 +864,16 @@ void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl
 #line 95 "<prelude>"
     kl_t2.vtable->drop( kl_t2.self );
     kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
+#line 98 "<prelude>"
+    return;
+#line 98 "<prelude>"
+}
+
+#line 91 "<prelude>"
+void kl_7prelude_box__I3i64E__dtor( struct kl_7prelude_box__I3i64E* kl_this_1 )
+{
+#line 96 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
 #line 98 "<prelude>"
     return;
 #line 98 "<prelude>"

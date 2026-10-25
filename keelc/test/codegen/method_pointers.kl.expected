@@ -1,8 +1,7 @@
+// codegen/method_pointers.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "method_pointers.kl.prelude.c"
 
 struct kl__Counter;
 struct kl__Box__I3i32E;
@@ -10,10 +9,8 @@ struct kl__Box__I3i32E;
 typedef int32_t ( *kl__fn__FK7CounterE3i32 )( struct kl__Counter* );
 typedef void ( *kl__fn__FR7Counter3i32E4void )( struct kl__Counter*, int32_t );
 typedef int32_t ( *kl__fn__FR7Counter3f64E3i32 )( struct kl__Counter*, double );
-typedef int32_t ( *kl__fn__FR7Counter3i32E3i32 )( struct kl__Counter*, int32_t );
 typedef int32_t ( *kl__fn__FK3BoxI3i32EE3i32 )( struct kl__Box__I3i32E* );
 typedef int32_t ( *kl__fn__FK3BoxI3i32E3f64E3i32 )( struct kl__Box__I3i32E*, double );
-typedef int32_t ( *kl__fn__FK3BoxI3i32E3i32E3i32 )( struct kl__Box__I3i32E*, int32_t );
 
 struct kl__Counter
 {

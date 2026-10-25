@@ -1,8 +1,7 @@
+// codegen/many_pointers.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "many_pointers.kl.prelude.c"
 
 struct kl__Point;
 struct kl__Tracked;

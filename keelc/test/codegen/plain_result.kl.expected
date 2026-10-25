@@ -1,8 +1,7 @@
+// codegen/plain_result.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "plain_result.kl.prelude.c"
 
 struct kl__span;
 struct kl__moves;

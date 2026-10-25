@@ -1,8 +1,7 @@
+// codegen/constructors.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "constructors.kl.prelude.c"
 
 struct kl__Owned;
 struct kl__Shadowed;

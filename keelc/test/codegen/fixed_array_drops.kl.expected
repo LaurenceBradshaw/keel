@@ -1,8 +1,7 @@
+// codegen/fixed_array_drops.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "fixed_array_drops.kl.prelude.c"
 
 struct kl__Token;
 struct kl__A2_5Token;

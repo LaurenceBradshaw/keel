@@ -1,31 +1,13 @@
+// codegen/refinement.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "refinement.kl.prelude.c"
-
 struct kl__Square;
-
-struct kl__Named__vtable;
-struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
-struct kl__Shape__vtable;
-struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
 
 struct kl__Square
 {
     double kl_side;
-};
-
-struct kl__Named__vtable
-{
-    void ( *drop )( void* );
-    int32_t ( *kl__id__ )( void* );
-};
-
-struct kl__Shape__vtable
-{
-    void ( *drop )( void* );
-    double ( *kl__area__ )( void* );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );

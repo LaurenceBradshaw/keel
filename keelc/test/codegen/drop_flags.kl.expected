@@ -1,8 +1,7 @@
+// codegen/drop_flags.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "drop_flags.kl.prelude.c"
 
 struct kl__Owned;
 

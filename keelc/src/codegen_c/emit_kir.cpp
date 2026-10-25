@@ -4,7 +4,9 @@
 #include "codegen_c/emit_kir.h"
 #include <fmt/format.h>
 #include <algorithm>
+#include <optional>
 #include <span>
+#include <unordered_set>
 #include "codegen_c/mangle.h"
 #include "codegen_c/spelling.h"
 #include "codegen_c/vtables.h"
@@ -13,8 +15,18 @@
 namespace keel
 {
 
+// The types one part's C names; nullopt is every type, for the whole compile.
+using Needed = std::optional<std::unordered_set<u32>>;
+
+std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Needed& needed );
+
 namespace
 {
+
+bool needs( const Needed& needed, Type_id type )
+{
+    return !needed || needed->contains( type.v );
+}
 
 // D41: a comparison whose operands meet in no type at all reaches the backend with each side at
 // its own widest, and every such pair is one of three shapes. Named in the canonical operand
@@ -221,16 +233,15 @@ class Kir_emitter
 public:
     Kir_emitter(
         const std::vector<Function>& functions,
-        std::vector<Vtable>          vtables,
+        std::vector<const Function*> callees,
         const Ast&                   ast,
         Types&                       types,
         const Literal_pool&          literals,
         const Source_manager&        sm,
         const Interner&              interner,
-        std::span<const Type_id>     struct_order,
         const Module_graph&          modules,
-        C_part                       part,
-        std::string_view             include
+        const Parts*                 parts,
+        File_id                      part
     );
 
     std::string run();
@@ -262,6 +273,12 @@ private:
     void emit_function( const Function& function );
 
     std::string local_name( u32 index ) const;
+
+    bool                                     defines( Node_id declaration ) const;
+    std::vector<std::pair<Node_id, Type_id>> defined_globals() const;
+    std::vector<std::pair<Node_id, Type_id>> used_globals() const;
+    std::vector<Node_id>                     externs() const;
+    Needed                                   needed_types() const;
 
     bool uses_runtime() const;
     // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
@@ -308,45 +325,45 @@ private:
     // Mutable because emit_structs substitutes a field's declared type through its instance, and
     // substituting interns. Everything it names was interned while the order was built, so nothing
     // new appears - but the table has no const way to say so.
-    Types&                   types_;
-    std::span<const Type_id> struct_order_;
-    const Literal_pool&      literal_pool_;
-    const Source_manager&    sm_;
-    const Interner&          interner_;
-    const Spelling           spelling_;
-    const Halves             halves_;
-    C_part                   part_; // this emitter writes only this half
-    std::string_view         include_;
-    std::vector<Vtable>      vtables_; // this half's: the prelude's when it owns both the implementer and the interface
+    Types&                       types_;
+    const Literal_pool&          literal_pool_;
+    const Source_manager&        sm_;
+    const Interner&              interner_;
+    const Spelling               spelling_;
+    const Parts*                 parts_; // null writes the whole compile
+    File_id                      part_;
+    std::vector<const Function*> callees_; // other parts' functions this one calls
+    std::vector<Vtable>          vtables_; // static, so each part writes its own
+    Needed                       needed_;
+    std::vector<Type_id>         struct_order_;
 };
 
 Kir_emitter::Kir_emitter(
     const std::vector<Function>& functions,
-    std::vector<Vtable>          vtables,
+    std::vector<const Function*> callees,
     const Ast&                   ast,
     Types&                       types,
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    std::span<const Type_id>     struct_order,
     const Module_graph&          modules,
-    C_part                       part,
-    std::string_view             include
+    const Parts*                 parts,
+    File_id                      part
 )
     : functions_( functions ),
       ast_( ast ),
       types_( types ),
-      struct_order_( struct_order ),
       literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
       spelling_( Spelling { ast, types, interner, modules, sm } ),
-      halves_( ast, types.table(), modules ),
+      parts_( parts ),
       part_( part ),
-      include_( include ),
-      vtables_( std::move( vtables ) )
+      callees_( std::move( callees ) ),
+      vtables_( vtables_needed( ast, types, functions ) ),
+      needed_( needed_types() ),
+      struct_order_( emitted_struct_order( ast, types, needed_ ) )
 {
-    std::erase_if( vtables_, [&]( const Vtable& vtable ) { return halves_.of( vtable ) != part; } );
 }
 
 std::string Kir_emitter::run()
@@ -418,12 +435,6 @@ void Kir_emitter::emit_prologue()
     write_line( "#include <stdbool.h>" );
     write_line( "#include <stddef.h>" ); // NULL
     write_line( "" );
-
-    if( !include_.empty() )
-    {
-        write_line( fmt::format( "#include \"{}\"", include_ ) );
-        write_line( "" );
-    }
 }
 
 // A C function-pointer type puts the name inside the declarator, and every caller of
@@ -438,7 +449,7 @@ void Kir_emitter::emit_function_types()
     // An open signature has no C spelling at all; the instance's own is interned beside it.
     for( const Type_id signature : types_.table().function_types() )
     {
-        if( !types_.table().mentions_parameter( signature ) && halves_.writes_in( signature, part_ ) )
+        if( !types_.table().mentions_parameter( signature ) && needs( needed_, signature ) )
         {
             signatures.push_back( signature );
         }
@@ -531,7 +542,7 @@ void Kir_emitter::emit_run_references()
 
     for( const Type_id run : types_.table().run_types() )
     {
-        if( types_.table().mentions_parameter( run ) || halves_.of( run ) != part_ )
+        if( types_.table().mentions_parameter( run ) || !needs( needed_, run ) )
         {
             continue;
         }
@@ -643,8 +654,7 @@ void Kir_emitter::emit_interface_references()
     for( const Type_id interface : types_.table().interface_types() )
     {
         // A bound-only interface is never a type, so it has neither a reference nor a vtable.
-        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() ||
-            halves_.of( interface ) != part_ )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !needs( needed_, interface ) )
         {
             continue;
         }
@@ -670,8 +680,7 @@ void Kir_emitter::emit_vtable_types()
 {
     for( const Type_id interface : types_.table().interface_types() )
     {
-        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() ||
-            halves_.of( interface ) != part_ )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !needs( needed_, interface ) )
         {
             continue;
         }
@@ -812,71 +821,23 @@ void Kir_emitter::emit_vtables()
     }
 }
 
+// This part's globals defined, and another's it names declared.
 void Kir_emitter::emit_globals()
 {
-    bool any = false;
+    const std::vector<std::pair<Node_id, Type_id>> defined = defined_globals();
+    const std::vector<std::pair<Node_id, Type_id>> used    = used_globals();
 
-    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    for( const auto& [global, owner] : defined )
     {
-        if( halves_.of( child ) != part_ )
-        {
-            continue;
-        }
-
-        if( is_aggregate( ast_.kind( child ) ) )
-        {
-            if( ast_.is_generic( child ) )
-            {
-                for( const Type_id instance : types_.table().composite_types() )
-                {
-                    const Type& described = types_.table().get( instance );
-
-                    if( described.declaration != child || types_.table().mentions_parameter( instance ) )
-                    {
-                        continue;
-                    }
-
-                    for( const Node_id member : ast_.members( child ) )
-                    {
-                        if( ast_.kind( member ) != Node_kind::Var_decl )
-                        {
-                            continue;
-                        }
-
-                        write_line( spelling_.global_definition( member, instance ) );
-
-                        any = true;
-                    }
-                }
-            }
-            else
-            {
-                for( const Node_id member : ast_.members( child ) )
-                {
-                    if( ast_.kind( member ) != Node_kind::Var_decl )
-                    {
-                        continue;
-                    }
-
-                    write_line( spelling_.global_definition( member ) );
-
-                    any = true;
-                }
-            }
-            continue;
-        }
-
-        if( ast_.kind( child ) != Node_kind::Var_decl )
-        {
-            continue;
-        }
-
-        write_line( spelling_.global_definition( child ) );
-
-        any = true;
+        write_line( spelling_.global_definition( global, owner ) );
     }
 
-    if( any )
+    for( const auto& [global, owner] : used )
+    {
+        write_line( spelling_.global_declaration( global, owner ) );
+    }
+
+    if( !defined.empty() || !used.empty() )
     {
         write_line( "" );
     }
@@ -888,8 +849,12 @@ void Kir_emitter::emit_prototypes()
     // `even` call `odd` from above it.
     for( const Function& function : functions_ )
     {
-
         write_line( prototype( function ) + ";" );
+    }
+
+    for( const Function* callee : callees_ )
+    {
+        write_line( prototype( *callee ) + ";" );
     }
 
     write_line( "" );
@@ -1038,25 +1003,14 @@ void Kir_emitter::emit_comparison_guards()
 
 void Kir_emitter::emit_externs()
 {
-    bool any = false;
+    const std::vector<Node_id> called = externs();
 
-    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    for( const Node_id decl : called )
     {
-        if( halves_.of( decl ) != part_ )
-        {
-            continue;
-        }
-
-        if( !ast_.is_extern( decl ) )
-        {
-            continue;
-        }
-
         write_line( prototype( decl ) + ";" );
-        any = true;
     }
 
-    if( any )
+    if( !called.empty() )
     {
         write_line( "" );
     }
@@ -1073,11 +1027,16 @@ void Kir_emitter::emit_functions()
 
 void Kir_emitter::emit_main_shim()
 {
+    if( parts_ != nullptr && part_ != parts_->input() )
+    {
+        return;
+    }
+
     Node_id keel_main;
 
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( halves_.of( child ) != part_ )
+        if( !defines( child ) )
         {
             continue;
         }
@@ -1657,6 +1616,241 @@ std::string Kir_emitter::local_name( u32 index ) const
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
 }
 
+bool Kir_emitter::defines( Node_id declaration ) const
+{
+    return parts_ == nullptr || parts_->of( declaration ) == part_;
+}
+
+// The globals and static fields this part defines, a generic's statics once per instance.
+std::vector<std::pair<Node_id, Type_id>> Kir_emitter::defined_globals() const
+{
+    std::vector<std::pair<Node_id, Type_id>> defined;
+
+    const auto statics = [&]( Node_id aggregate, Type_id instance )
+    {
+        for( const Node_id member : ast_.members( aggregate ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Var_decl )
+            {
+                defined.emplace_back( member, instance );
+            }
+        }
+    };
+
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( !defines( child ) )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) == Node_kind::Var_decl )
+        {
+            defined.emplace_back( child, Type_id {} );
+        }
+        else if( is_aggregate( ast_.kind( child ) ) && !ast_.is_generic( child ) )
+        {
+            statics( child, {} );
+        }
+        else if( is_aggregate( ast_.kind( child ) ) )
+        {
+            for( const Type_id instance : types_.table().composite_types() )
+            {
+                if( types_.table().get( instance ).declaration == child && !types_.table().mentions_parameter( instance ) )
+                {
+                    statics( child, instance );
+                }
+            }
+        }
+    }
+
+    return defined;
+}
+
+// Another part's globals this part's functions name, each once.
+std::vector<std::pair<Node_id, Type_id>> Kir_emitter::used_globals() const
+{
+    std::vector<std::pair<Node_id, Type_id>> used;
+
+    const auto use = [&]( const Place& place )
+    {
+        const std::pair<Node_id, Type_id> global { place.global, place.owner };
+
+        if( place.is_global() && !defines( place.global ) && std::ranges::find( used, global ) == used.end() )
+        {
+            used.push_back( global );
+        }
+    };
+
+    for( const Function& function : functions_ )
+    {
+        for( const Statement& statement : function.statements )
+        {
+            use( statement.place );
+            for_each_operand( function, statement.value, [&]( const Operand& operand ) { use( operand.place ); } );
+        }
+
+        for( const Block& block : function.blocks )
+        {
+            use( block.terminator.condition.place );
+            use( block.terminator.message.place );
+            use( block.terminator.at.place );
+        }
+    }
+
+    return used;
+}
+
+// The externs this part's file declares, and those its functions call or take the address of, in
+// declaration order.
+std::vector<Node_id> Kir_emitter::externs() const
+{
+    std::vector<Node_id> called;
+
+    const auto calls_extern = [&]( Node_id decl )
+    {
+        return std::ranges::any_of(
+            functions_,
+            [&]( const Function& function )
+            {
+                return std::ranges::any_of(
+                    function.statements,
+                    [&]( const Statement& statement )
+                    {
+                        return statement.kind == Statement_kind::Assign && statement.value.callee == decl &&
+                               ( statement.value.kind == Rvalue_kind::Call ||
+                                 statement.value.kind == Rvalue_kind::Function_address );
+                    }
+                );
+            }
+        );
+    };
+
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.is_extern( decl ) && ( defines( decl ) || calls_extern( decl ) ) )
+        {
+            called.push_back( decl );
+        }
+    }
+
+    return called;
+}
+
+// Every type this part's C names, closed under what spelling one needs: an element, an argument, a
+// field at its instance, and an interface's slots. Through pointers too, so a struct behind one is
+// defined rather than only declared.
+Needed Kir_emitter::needed_types() const
+{
+    if( parts_ == nullptr )
+    {
+        return std::nullopt;
+    }
+
+    std::vector<Type_id> stack;
+
+    for( const Function& function : functions_ )
+    {
+        for( const Local& local : function.locals )
+        {
+            stack.push_back( local.type );
+        }
+
+        for( const Operand& operand : function.operands )
+        {
+            stack.push_back( operand.type );
+        }
+
+        for( const Statement& statement : function.statements )
+        {
+            const Rvalue& value = statement.value;
+            stack.insert( stack.end(), { value.type, value.a.type, value.b.type } );
+            stack.insert( stack.end(), value.type_arguments.begin(), value.type_arguments.end() );
+        }
+
+        for( const Block& block : function.blocks )
+        {
+            const Terminator& terminator = block.terminator;
+            stack.insert( stack.end(), { terminator.condition.type, terminator.message.type, terminator.at.type } );
+        }
+    }
+
+    for( const Function* callee : callees_ )
+    {
+        for( u32 i = 0; i <= callee->parameter_count; ++i )
+        {
+            stack.push_back( callee->locals[i].type );
+        }
+    }
+
+    for( const Node_id decl : externs() )
+    {
+        stack.push_back( binding_type( ast_, types_, decl ) );
+
+        for( const Node_id param : ast_.params( decl ) )
+        {
+            stack.push_back( binding_type( ast_, types_, param ) );
+        }
+    }
+
+    for( const auto& globals : { defined_globals(), used_globals() } )
+    {
+        for( const auto& [global, owner] : globals )
+        {
+            stack.push_back( types_.type_of( global ) );
+        }
+    }
+
+    for( const Vtable& vtable : vtables_ )
+    {
+        stack.insert( stack.end(), { vtable.implementer, vtable.interface } );
+    }
+
+    std::unordered_set<u32> needed;
+    Type_table&             table = types_.table();
+
+    while( !stack.empty() )
+    {
+        const Type_id type = stack.back();
+        stack.pop_back();
+
+        if( !type.is_valid() || table.mentions_parameter( type ) || !needed.insert( type.v ).second )
+        {
+            continue;
+        }
+
+        // A copy: substituting a field's type interns, which can move the table's storage.
+        const Type described = table.get( type );
+
+        stack.push_back( described.element );
+        stack.insert( stack.end(), described.arguments.begin(), described.arguments.end() );
+
+        if( table.is_struct( type ) || ( table.is_enum( type ) && ast_.enum_has_payload( described.declaration ) ) )
+        {
+            for( const Node_id field : ast_.contained_fields( described.declaration ) )
+            {
+                stack.push_back( field_type( ast_, table, type, field, types_.recorded() ) );
+            }
+        }
+        else if( table.is_interface( type ) )
+        {
+            const Bindings bindings = table.instance_bindings( type );
+
+            for( const Node_id requirement : ast_.members( described.declaration ) )
+            {
+                stack.push_back( table.substitute( binding_type( ast_, types_, requirement ), bindings ) );
+
+                for( const Node_id param : ast_.explicit_params( requirement ) )
+                {
+                    stack.push_back( table.substitute( binding_type( ast_, types_, param ), bindings ) );
+                }
+            }
+        }
+    }
+
+    return needed;
+}
+
 // Asked of KIR rather than the tree: the question is whether the C about to be written calls the
 // runtime, and KIR is what it is written from. The tree would answer it twice over wrongly - an
 // alloc is buried in a function body rather than being a top-level declaration, and the day
@@ -2086,10 +2280,9 @@ std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
 //
 // Terminating and acyclic by the checker's own walk: contains_itself rejected every by-value cycle
 // before this runs, and a pointer field is skipped here exactly as it is there.
-// Each half writes its own: the program's stops at a prelude type, which its include has defined.
-std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Module_graph& modules, C_part part )
+// Only the types `needed` holds, which is closed under what this walks.
+std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Needed& needed )
 {
-    const Halves         halves( ast, types.table(), modules );
     std::vector<Type_id> order;
     std::vector<Type_id> visiting;
 
@@ -2114,7 +2307,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const M
             return;
         }
 
-        if( part == C_part::Program && halves.of( type ) == C_part::Prelude )
+        if( !needs( needed, type ) )
         {
             return;
         }
@@ -2154,22 +2347,14 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const M
     // is the point: a `Box<i32>` reached only through a field is discovered exactly here.
     for( std::size_t at = 0; at < types.table().composite_types().size(); ++at )
     {
-        const Type_id type = types.table().composite_types()[at];
-
-        if( halves.of( type ) == part )
-        {
-            visit( visit, type );
-        }
+        visit( visit, types.table().composite_types()[at] );
     }
 
     for( const auto& types_of_kind : { types.table().union_types(), types.table().array_types() } )
     {
         for( const Type_id type : types_of_kind )
         {
-            if( halves.of( type ) == part )
-            {
-                visit( visit, type );
-            }
+            visit( visit, type );
         }
     }
 
@@ -2184,25 +2369,39 @@ std::string emit_c_from_kir(
     const Source_manager&        sm,
     const Interner&              interner,
     const Module_graph&          modules,
-    C_part                       part,
-    std::string_view             include
+    const Parts*                 parts,
+    File_id                      part
 )
 {
-    const std::vector<Type_id> order = emitted_struct_order( ast, types, modules, part );
+    std::vector<Function> own;
+    std::vector<bool>     mine( functions.size() );
+    std::vector<bool>     called( functions.size() );
 
-    std::vector<Vtable> vtables = vtables_needed( ast, types, functions );
-
-    const Halves          halves( ast, types.table(), modules );
-    std::vector<Function> half;
-    for( const Function& function : functions )
+    for( u32 f = 0; f < functions.size(); ++f )
     {
-        if( halves.of( function ) == part )
+        mine[f] = parts == nullptr || parts->of( functions[f] ) == part;
+
+        if( mine[f] )
         {
-            half.push_back( function );
+            own.push_back( functions[f] );
+
+            for( const u32 callee : parts != nullptr ? parts->reaches( f ) : std::span<const u32> {} )
+            {
+                called[callee] = true;
+            }
         }
     }
 
-    return Kir_emitter( half, std::move( vtables ), ast, types, literals, sm, interner, order, modules, part, include ).run();
+    std::vector<const Function*> callees;
+    for( u32 f = 0; f < functions.size(); ++f )
+    {
+        if( called[f] && !mine[f] )
+        {
+            callees.push_back( &functions[f] );
+        }
+    }
+
+    return Kir_emitter( own, std::move( callees ), ast, types, literals, sm, interner, modules, parts, part ).run();
 }
 
 } // namespace keel

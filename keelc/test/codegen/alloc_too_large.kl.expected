@@ -1,19 +1,32 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "alloc_too_large.kl.prelude.c"
+struct kl_7prelude_str;
 
-void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
-void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -34,40 +47,20 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 4 "codegen/alloc_too_large.kl"
-int32_t kl__main__( void )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    int32_t kl_t0;
-    struct kl_7prelude_str kl_t1;
-    struct kl_7prelude_str* kl_t2;
-    uint8_t* kl_t3;
-    struct kl_7prelude_textual__ref kl_t5;
-    uint64_t kl_n_7;
-    uint8_t* kl_bytes_8;
-    uint8_t* kl_t9;
-    ( void ) kl_bytes_8;
-#line 6 "codegen/alloc_too_large.kl"
-    kl_t2 = &kl_t1;
-#line 6 "codegen/alloc_too_large.kl"
-    kl_t3 = ( uint8_t* ) "before";
-#line 6 "codegen/alloc_too_large.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 6 );
-#line 6 "codegen/alloc_too_large.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 6 "codegen/alloc_too_large.kl"
-    kl_1t7console_println__7textual( kl_t5 );
-#line 8 "codegen/alloc_too_large.kl"
-    kl_n_7 = 4611686018427387904;
-#line 12 "codegen/alloc_too_large.kl"
-    kl_t9 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_7, sizeof( uint8_t ), "codegen/alloc_too_large.kl", 12, "out of memory: alloc<u8>( n )" );
-#line 12 "codegen/alloc_too_large.kl"
-    kl_bytes_8 = kl_t9;
-#line 15 "codegen/alloc_too_large.kl"
-    kl_t0 = 0;
-#line 15 "codegen/alloc_too_large.kl"
-    return kl_t0;
+    ( void ) self;
 }
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -491,6 +484,85 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/alloc_too_large.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
+
+#line 4 "codegen/alloc_too_large.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_str* kl_t2;
+    uint8_t* kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+    uint64_t kl_n_7;
+    uint8_t* kl_bytes_8;
+    uint8_t* kl_t9;
+    ( void ) kl_bytes_8;
+#line 6 "codegen/alloc_too_large.kl"
+    kl_t2 = &kl_t1;
+#line 6 "codegen/alloc_too_large.kl"
+    kl_t3 = ( uint8_t* ) "before";
+#line 6 "codegen/alloc_too_large.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 6 );
+#line 6 "codegen/alloc_too_large.kl"
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 6 "codegen/alloc_too_large.kl"
+    kl_1t7console_println__7textual( kl_t5 );
+#line 8 "codegen/alloc_too_large.kl"
+    kl_n_7 = 4611686018427387904;
+#line 12 "codegen/alloc_too_large.kl"
+    kl_t9 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_7, sizeof( uint8_t ), "codegen/alloc_too_large.kl", 12, "out of memory: alloc<u8>( n )" );
+#line 12 "codegen/alloc_too_large.kl"
+    kl_bytes_8 = kl_t9;
+#line 15 "codegen/alloc_too_large.kl"
+    kl_t0 = 0;
+#line 15 "codegen/alloc_too_large.kl"
+    return kl_t0;
 }
 
 #line 4 "codegen/alloc_too_large.kl"

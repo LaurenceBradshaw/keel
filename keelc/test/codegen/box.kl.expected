@@ -1,8 +1,7 @@
+// codegen/box.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "box.kl.prelude.c"
 
 struct kl__Square;
 struct kl__Buffer;

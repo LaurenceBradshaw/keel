@@ -1,11 +1,11 @@
+// opt/inlining.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "inlining.kl.prelude.c"
-
 struct kl__Box;
 struct kl__Point;
+struct kl_7prelude_str;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 
@@ -18,6 +18,12 @@ struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
 };
 
 int64_t kl__live__G;

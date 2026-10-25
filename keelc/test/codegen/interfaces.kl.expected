@@ -1,8 +1,7 @@
+// codegen/interfaces.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "interfaces.kl.prelude.c"
 
 struct kl__Circle;
 struct kl__Square;

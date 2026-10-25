@@ -1,8 +1,17 @@
+// codegen/main_no_arguments.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main_no_arguments.kl.prelude.c"
+struct kl_7prelude_str;
+
+struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
 
 int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 

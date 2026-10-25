@@ -1,18 +1,32 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "fixed_array_bounds.kl.prelude.c"
+struct kl_7prelude_str;
 
-_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-int32_t kl__at__A4_3i32_3u64( struct kl__A4_3i32*, uint64_t );
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -33,99 +47,20 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 5 "codegen/fixed_array_bounds.kl"
-int32_t kl__at__A4_3i32_3u64( struct kl__A4_3i32* kl_values_1, uint64_t kl_i_2 )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    int32_t kl_t0;
-    uint64_t kl_t3;
-    bool kl_t4;
-#line 7 "codegen/fixed_array_bounds.kl"
-    kl_t3 = kl_i_2;
-#line 7 "codegen/fixed_array_bounds.kl"
-    kl_t4 = kl_t3 < 4;
-#line 7 "codegen/fixed_array_bounds.kl"
-    if ( kl_t4 ) goto bb1; else goto bb2;
-    bb1:
-#line 7 "codegen/fixed_array_bounds.kl"
-    kl_t0 = ( *kl_values_1 ).e[kl_t3];
-#line 7 "codegen/fixed_array_bounds.kl"
-    return kl_t0;
-    bb2:
-#line 7 "codegen/fixed_array_bounds.kl"
-    kl_rt_panic( "codegen/fixed_array_bounds.kl", 7, "out of bounds: values[ i ]" );
+    ( void ) self;
 }
 
-#line 10 "codegen/fixed_array_bounds.kl"
-int32_t kl__main__( void )
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
-    int32_t kl_t0;
-    struct kl__A4_3i32 kl_a_1;
-    struct kl__A4_3i32 kl_t2;
-    uint64_t kl_t3;
-    uint64_t kl_t4;
-    uint64_t kl_t5;
-    uint64_t kl_t6;
-    struct kl__A4_3i32* kl_t7;
-    int32_t kl_t8;
-    int64_t kl_t9;
-    struct kl__A4_3i32* kl_t11;
-    int32_t kl_t12;
-    int64_t kl_t13;
-    struct kl_7prelude_str kl_t15;
-    struct kl_7prelude_str* kl_t16;
-    uint8_t* kl_t17;
-    struct kl_7prelude_textual__ref kl_t19;
-    ( void ) kl_t3;
-    ( void ) kl_t4;
-    ( void ) kl_t5;
-    ( void ) kl_t6;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t3 = 0;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t2.e[kl_t3] = 1;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t4 = 1;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t2.e[kl_t4] = 2;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t5 = 2;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t2.e[kl_t5] = 3;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t6 = 3;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_t2.e[kl_t6] = 4;
-#line 12 "codegen/fixed_array_bounds.kl"
-    kl_a_1 = kl_t2;
-#line 14 "codegen/fixed_array_bounds.kl"
-    kl_t7 = &kl_a_1;
-#line 14 "codegen/fixed_array_bounds.kl"
-    kl_t8 = kl__at__A4_3i32_3u64( kl_t7, 3 );
-#line 14 "codegen/fixed_array_bounds.kl"
-    kl_t9 = ( int64_t ) kl_t8;
-#line 14 "codegen/fixed_array_bounds.kl"
-    kl_1t7console_println__3i64( kl_t9 );
-    kl_t11 = &kl_a_1;
-#line 15 "codegen/fixed_array_bounds.kl"
-    kl_t12 = kl__at__A4_3i32_3u64( kl_t11, 4 );
-#line 15 "codegen/fixed_array_bounds.kl"
-    kl_t13 = ( int64_t ) kl_t12;
-#line 15 "codegen/fixed_array_bounds.kl"
-    kl_1t7console_println__3i64( kl_t13 );
-    kl_t16 = &kl_t15;
-#line 16 "codegen/fixed_array_bounds.kl"
-    kl_t17 = ( uint8_t* ) "unreached";
-#line 16 "codegen/fixed_array_bounds.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t16, kl_t17, 9 );
-#line 16 "codegen/fixed_array_bounds.kl"
-    kl_t19 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 16 "codegen/fixed_array_bounds.kl"
-    kl_1t7console_println__7textual( kl_t19 );
-    kl_t0 = 0;
-#line 17 "codegen/fixed_array_bounds.kl"
-    return kl_t0;
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
 }
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -549,6 +484,150 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/fixed_array_bounds.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl__A4_3i32;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl__A4_3i32
+{
+    int32_t e[4];
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__at__A4_3i32_3u64( struct kl__A4_3i32*, uint64_t );
+int32_t kl__main__( void );
+void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
+void kl_1t7console_println__3i64( int64_t );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
+
+#line 5 "codegen/fixed_array_bounds.kl"
+int32_t kl__at__A4_3i32_3u64( struct kl__A4_3i32* kl_values_1, uint64_t kl_i_2 )
+{
+    int32_t kl_t0;
+    uint64_t kl_t3;
+    bool kl_t4;
+#line 7 "codegen/fixed_array_bounds.kl"
+    kl_t3 = kl_i_2;
+#line 7 "codegen/fixed_array_bounds.kl"
+    kl_t4 = kl_t3 < 4;
+#line 7 "codegen/fixed_array_bounds.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 7 "codegen/fixed_array_bounds.kl"
+    kl_t0 = ( *kl_values_1 ).e[kl_t3];
+#line 7 "codegen/fixed_array_bounds.kl"
+    return kl_t0;
+    bb2:
+#line 7 "codegen/fixed_array_bounds.kl"
+    kl_rt_panic( "codegen/fixed_array_bounds.kl", 7, "out of bounds: values[ i ]" );
+}
+
+#line 10 "codegen/fixed_array_bounds.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A4_3i32 kl_a_1;
+    struct kl__A4_3i32 kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    struct kl__A4_3i32* kl_t7;
+    int32_t kl_t8;
+    int64_t kl_t9;
+    struct kl__A4_3i32* kl_t11;
+    int32_t kl_t12;
+    int64_t kl_t13;
+    struct kl_7prelude_str kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    uint8_t* kl_t17;
+    struct kl_7prelude_textual__ref kl_t19;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t3 = 0;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t2.e[kl_t3] = 1;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t4 = 1;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t2.e[kl_t4] = 2;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t5 = 2;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t2.e[kl_t5] = 3;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t6 = 3;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_t2.e[kl_t6] = 4;
+#line 12 "codegen/fixed_array_bounds.kl"
+    kl_a_1 = kl_t2;
+#line 14 "codegen/fixed_array_bounds.kl"
+    kl_t7 = &kl_a_1;
+#line 14 "codegen/fixed_array_bounds.kl"
+    kl_t8 = kl__at__A4_3i32_3u64( kl_t7, 3 );
+#line 14 "codegen/fixed_array_bounds.kl"
+    kl_t9 = ( int64_t ) kl_t8;
+#line 14 "codegen/fixed_array_bounds.kl"
+    kl_1t7console_println__3i64( kl_t9 );
+    kl_t11 = &kl_a_1;
+#line 15 "codegen/fixed_array_bounds.kl"
+    kl_t12 = kl__at__A4_3i32_3u64( kl_t11, 4 );
+#line 15 "codegen/fixed_array_bounds.kl"
+    kl_t13 = ( int64_t ) kl_t12;
+#line 15 "codegen/fixed_array_bounds.kl"
+    kl_1t7console_println__3i64( kl_t13 );
+    kl_t16 = &kl_t15;
+#line 16 "codegen/fixed_array_bounds.kl"
+    kl_t17 = ( uint8_t* ) "unreached";
+#line 16 "codegen/fixed_array_bounds.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t16, kl_t17, 9 );
+#line 16 "codegen/fixed_array_bounds.kl"
+    kl_t19 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 16 "codegen/fixed_array_bounds.kl"
+    kl_1t7console_println__7textual( kl_t19 );
+    kl_t0 = 0;
+#line 17 "codegen/fixed_array_bounds.kl"
+    return kl_t0;
 }
 
 #line 10 "codegen/fixed_array_bounds.kl"

@@ -1,8 +1,7 @@
+// opt/globals.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "globals.kl.prelude.c"
 
 int32_t kl__count__G;
 int32_t kl__seen__G;

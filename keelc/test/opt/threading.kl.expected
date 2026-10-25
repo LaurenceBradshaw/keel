@@ -1,8 +1,7 @@
+// opt/threading.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "threading.kl.prelude.c"
 
 bool kl__big__3i32( int32_t );
 int32_t kl__both__3i32_3i32( int32_t, int32_t );

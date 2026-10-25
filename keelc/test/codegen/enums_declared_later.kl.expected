@@ -1,8 +1,7 @@
+// codegen/enums_declared_later.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "enums_declared_later.kl.prelude.c"
 
 struct kl__Wrap__I6ColourE;
 struct kl__Shape;

@@ -1,46 +1,32 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "discards.kl.prelude.c"
+struct kl_7prelude_str;
 
-struct kl__Counter;
-struct kl_7prelude_result__I7Counter_3BadE;
-struct kl_7prelude_result__I4void_3BadE;
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
-struct kl__Counter
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
 {
-    uint64_t kl_n;
+    uint8_t* kl_data;
+    uint64_t kl_size;
 };
 
-struct kl_7prelude_result__I7Counter_3BadE
+struct kl_7prelude_textual__vtable
 {
-    int32_t tag;
-    struct kl__Counter kl_value;
-    int32_t kl_error;
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
 };
-
-struct kl_7prelude_result__I4void_3BadE
-{
-    int32_t tag;
-    int32_t kl_error;
-};
-
-int32_t kl__drops__G = 0;
-
-_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter*, uint64_t );
-void kl__Counter__dtor( struct kl__Counter* );
-struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool );
-struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool );
-struct kl__Counter kl__plain__( void );
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -61,228 +47,20 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
-void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 11 "codegen/discards.kl"
-void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t kl_v_2 )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    ( *kl_this_1 ).kl_n = kl_v_2;
-    return;
-#line 14 "codegen/discards.kl"
+    ( void ) self;
 }
 
-#line 16 "codegen/discards.kl"
-void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
-    bool kl_t2;
-    int32_t kl_t3;
-    ( void ) kl_this_1;
-#line 18 "codegen/discards.kl"
-    kl_t2 = __builtin_add_overflow( kl__drops__G, 1, &( int32_t ) { 0 } );
-#line 18 "codegen/discards.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 18 "codegen/discards.kl"
-    kl_rt_panic( "codegen/discards.kl", 18, "arithmetic overflow: drops + 1" );
-    bb2:
-#line 18 "codegen/discards.kl"
-    kl_t3 = kl__drops__G + 1;
-#line 18 "codegen/discards.kl"
-    kl__drops__G = kl_t3;
-    return;
-#line 19 "codegen/discards.kl"
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
 }
 
-#line 27 "codegen/discards.kl"
-struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
-{
-    struct kl_7prelude_result__I7Counter_3BadE kl_t0;
-    struct kl_7prelude_result__I7Counter_3BadE kl_t2;
-    struct kl_7prelude_result__I7Counter_3BadE kl_t3;
-    struct kl__Counter kl_t4;
-    struct kl__Counter* kl_t5;
-    bool kl_t7;
-    bool kl_t8;
-    bool kl_t9;
-#line 29 "codegen/discards.kl"
-    kl_t7 = false;
-#line 29 "codegen/discards.kl"
-    kl_t8 = false;
-#line 29 "codegen/discards.kl"
-    kl_t9 = false;
-#line 29 "codegen/discards.kl"
-    if ( kl_fail_1 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t2.tag = 1;
-#line 31 "codegen/discards.kl"
-    kl_t7 = true;
-#line 31 "codegen/discards.kl"
-    kl_t2.kl_error = 0;
-#line 31 "codegen/discards.kl"
-    kl_t7 = true;
-#line 31 "codegen/discards.kl"
-    kl_t0 = kl_t2;
-#line 31 "codegen/discards.kl"
-    kl_t7 = false;
-#line 31 "codegen/discards.kl"
-    if ( kl_t7 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t2 );
-#line 31 "codegen/discards.kl"
-    kl_t7 = false;
-#line 31 "codegen/discards.kl"
-    return kl_t0;
-    bb2:
-#line 34 "codegen/discards.kl"
-    kl_t9 = false;
-#line 34 "codegen/discards.kl"
-    kl_t5 = &kl_t4;
-#line 34 "codegen/discards.kl"
-    kl_t9 = true;
-#line 34 "codegen/discards.kl"
-    kl__Counter__R7Counter_3u64__ctor( kl_t5, 1 );
-#line 34 "codegen/discards.kl"
-    kl_t3.tag = 0;
-#line 34 "codegen/discards.kl"
-    kl_t8 = true;
-#line 34 "codegen/discards.kl"
-    kl_t3.kl_value = kl_t4;
-#line 34 "codegen/discards.kl"
-    kl_t9 = false;
-#line 34 "codegen/discards.kl"
-    kl_t8 = true;
-#line 34 "codegen/discards.kl"
-    kl_t0 = kl_t3;
-#line 34 "codegen/discards.kl"
-    kl_t8 = false;
-#line 34 "codegen/discards.kl"
-    if ( kl_t8 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t3 );
-#line 34 "codegen/discards.kl"
-    if ( kl_t9 ) kl__Counter__dtor( &kl_t4 );
-#line 34 "codegen/discards.kl"
-    kl_t9 = false;
-#line 34 "codegen/discards.kl"
-    kl_t8 = false;
-#line 34 "codegen/discards.kl"
-    return kl_t0;
-}
-
-#line 37 "codegen/discards.kl"
-struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
-{
-    struct kl_7prelude_result__I4void_3BadE kl_t0;
-    struct kl_7prelude_result__I4void_3BadE kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-    struct kl_7prelude_result__I4void_3BadE kl_t9;
-#line 39 "codegen/discards.kl"
-    if ( kl_fail_1 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t2.tag = 1;
-#line 41 "codegen/discards.kl"
-    kl_t2.kl_error = 0;
-#line 41 "codegen/discards.kl"
-    kl_t0 = kl_t2;
-#line 41 "codegen/discards.kl"
-    return kl_t0;
-    bb2:
-#line 44 "codegen/discards.kl"
-    kl_t4 = &kl_t3;
-#line 44 "codegen/discards.kl"
-    kl_t5 = ( uint8_t* ) "step";
-#line 44 "codegen/discards.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-#line 44 "codegen/discards.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 44 "codegen/discards.kl"
-    kl_1t7console_println__7textual( kl_t7 );
-    kl_t9.tag = 0;
-#line 45 "codegen/discards.kl"
-    kl_t0 = kl_t9;
-#line 45 "codegen/discards.kl"
-    return kl_t0;
-}
-
-#line 48 "codegen/discards.kl"
-struct kl__Counter kl__plain__( void )
-{
-    struct kl__Counter kl_t0;
-    struct kl__Counter kl_t1;
-    struct kl__Counter* kl_t2;
-    bool kl_t4;
-#line 50 "codegen/discards.kl"
-    kl_t4 = false;
-#line 50 "codegen/discards.kl"
-    kl_t4 = false;
-#line 50 "codegen/discards.kl"
-    kl_t2 = &kl_t1;
-#line 50 "codegen/discards.kl"
-    kl_t4 = true;
-#line 50 "codegen/discards.kl"
-    kl__Counter__R7Counter_3u64__ctor( kl_t2, 2 );
-#line 50 "codegen/discards.kl"
-    kl_t0 = kl_t1;
-#line 50 "codegen/discards.kl"
-    kl_t4 = false;
-#line 50 "codegen/discards.kl"
-    if ( kl_t4 ) kl__Counter__dtor( &kl_t1 );
-#line 50 "codegen/discards.kl"
-    kl_t4 = false;
-#line 50 "codegen/discards.kl"
-    return kl_t0;
-}
-
-#line 53 "codegen/discards.kl"
-int32_t kl__main__( void )
-{
-    int32_t kl_t0;
-    struct kl_7prelude_result__I7Counter_3BadE kl_t3;
-    struct kl_7prelude_result__I7Counter_3BadE kl_t4;
-    struct kl__Counter kl_t5;
-    struct kl__Counter kl_held_6;
-    struct kl__Counter* kl_t7;
-    struct kl__Counter kl_t9;
-    int64_t kl_t10;
-    bool kl_t12;
-#line 55 "codegen/discards.kl"
-    kl_t12 = false;
-#line 55 "codegen/discards.kl"
-    kl__step__4bool( false );
-    kl__step__4bool( true );
-    kl_t3 = kl__make__4bool( false );
-#line 57 "codegen/discards.kl"
-    kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t3 );
-    kl_t4 = kl__make__4bool( true );
-#line 58 "codegen/discards.kl"
-    kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t4 );
-    kl_t5 = kl__plain__(  );
-#line 59 "codegen/discards.kl"
-    kl__Counter__dtor( &kl_t5 );
-#line 61 "codegen/discards.kl"
-    kl_t12 = false;
-#line 61 "codegen/discards.kl"
-    kl_t7 = &kl_held_6;
-#line 61 "codegen/discards.kl"
-    kl_t12 = true;
-#line 61 "codegen/discards.kl"
-    kl__Counter__R7Counter_3u64__ctor( kl_t7, 3 );
-    kl_t9 = kl_held_6;
-#line 62 "codegen/discards.kl"
-    kl_t12 = false;
-#line 62 "codegen/discards.kl"
-    kl__Counter__dtor( &kl_t9 );
-#line 65 "codegen/discards.kl"
-    kl_t10 = ( int64_t ) kl__drops__G;
-#line 65 "codegen/discards.kl"
-    kl_1t7console_println__3i64( kl_t10 );
-    kl_t0 = kl__drops__G;
-#line 66 "codegen/discards.kl"
-    if ( kl_t12 ) kl__Counter__dtor( &kl_held_6 );
-#line 66 "codegen/discards.kl"
-    kl_t12 = false;
-#line 66 "codegen/discards.kl"
-    return kl_t0;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -706,6 +484,300 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/discards.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counter;
+struct kl_7prelude_str;
+struct kl_7prelude_result__I7Counter_3BadE;
+struct kl_7prelude_result__I4void_3BadE;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl__Counter
+{
+    uint64_t kl_n;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_result__I7Counter_3BadE
+{
+    int32_t tag;
+    struct kl__Counter kl_value;
+    int32_t kl_error;
+};
+
+struct kl_7prelude_result__I4void_3BadE
+{
+    int32_t tag;
+    int32_t kl_error;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
+
+int32_t kl__drops__G = 0;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter*, uint64_t );
+void kl__Counter__dtor( struct kl__Counter* );
+struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool );
+struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool );
+struct kl__Counter kl__plain__( void );
+int32_t kl__main__( void );
+void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* );
+void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
+void kl_1t7console_println__3i64( int64_t );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
+
+#line 11 "codegen/discards.kl"
+void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t kl_v_2 )
+{
+    ( *kl_this_1 ).kl_n = kl_v_2;
+    return;
+#line 14 "codegen/discards.kl"
+}
+
+#line 16 "codegen/discards.kl"
+void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
+{
+    bool kl_t2;
+    int32_t kl_t3;
+    ( void ) kl_this_1;
+#line 18 "codegen/discards.kl"
+    kl_t2 = __builtin_add_overflow( kl__drops__G, 1, &( int32_t ) { 0 } );
+#line 18 "codegen/discards.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 18 "codegen/discards.kl"
+    kl_rt_panic( "codegen/discards.kl", 18, "arithmetic overflow: drops + 1" );
+    bb2:
+#line 18 "codegen/discards.kl"
+    kl_t3 = kl__drops__G + 1;
+#line 18 "codegen/discards.kl"
+    kl__drops__G = kl_t3;
+    return;
+#line 19 "codegen/discards.kl"
+}
+
+#line 27 "codegen/discards.kl"
+struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
+{
+    struct kl_7prelude_result__I7Counter_3BadE kl_t0;
+    struct kl_7prelude_result__I7Counter_3BadE kl_t2;
+    struct kl_7prelude_result__I7Counter_3BadE kl_t3;
+    struct kl__Counter kl_t4;
+    struct kl__Counter* kl_t5;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+#line 29 "codegen/discards.kl"
+    kl_t7 = false;
+#line 29 "codegen/discards.kl"
+    kl_t8 = false;
+#line 29 "codegen/discards.kl"
+    kl_t9 = false;
+#line 29 "codegen/discards.kl"
+    if ( kl_fail_1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t2.tag = 1;
+#line 31 "codegen/discards.kl"
+    kl_t7 = true;
+#line 31 "codegen/discards.kl"
+    kl_t2.kl_error = 0;
+#line 31 "codegen/discards.kl"
+    kl_t7 = true;
+#line 31 "codegen/discards.kl"
+    kl_t0 = kl_t2;
+#line 31 "codegen/discards.kl"
+    kl_t7 = false;
+#line 31 "codegen/discards.kl"
+    if ( kl_t7 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t2 );
+#line 31 "codegen/discards.kl"
+    kl_t7 = false;
+#line 31 "codegen/discards.kl"
+    return kl_t0;
+    bb2:
+#line 34 "codegen/discards.kl"
+    kl_t9 = false;
+#line 34 "codegen/discards.kl"
+    kl_t5 = &kl_t4;
+#line 34 "codegen/discards.kl"
+    kl_t9 = true;
+#line 34 "codegen/discards.kl"
+    kl__Counter__R7Counter_3u64__ctor( kl_t5, 1 );
+#line 34 "codegen/discards.kl"
+    kl_t3.tag = 0;
+#line 34 "codegen/discards.kl"
+    kl_t8 = true;
+#line 34 "codegen/discards.kl"
+    kl_t3.kl_value = kl_t4;
+#line 34 "codegen/discards.kl"
+    kl_t9 = false;
+#line 34 "codegen/discards.kl"
+    kl_t8 = true;
+#line 34 "codegen/discards.kl"
+    kl_t0 = kl_t3;
+#line 34 "codegen/discards.kl"
+    kl_t8 = false;
+#line 34 "codegen/discards.kl"
+    if ( kl_t8 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t3 );
+#line 34 "codegen/discards.kl"
+    if ( kl_t9 ) kl__Counter__dtor( &kl_t4 );
+#line 34 "codegen/discards.kl"
+    kl_t9 = false;
+#line 34 "codegen/discards.kl"
+    kl_t8 = false;
+#line 34 "codegen/discards.kl"
+    return kl_t0;
+}
+
+#line 37 "codegen/discards.kl"
+struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
+{
+    struct kl_7prelude_result__I4void_3BadE kl_t0;
+    struct kl_7prelude_result__I4void_3BadE kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    struct kl_7prelude_textual__ref kl_t7;
+    struct kl_7prelude_result__I4void_3BadE kl_t9;
+#line 39 "codegen/discards.kl"
+    if ( kl_fail_1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t2.tag = 1;
+#line 41 "codegen/discards.kl"
+    kl_t2.kl_error = 0;
+#line 41 "codegen/discards.kl"
+    kl_t0 = kl_t2;
+#line 41 "codegen/discards.kl"
+    return kl_t0;
+    bb2:
+#line 44 "codegen/discards.kl"
+    kl_t4 = &kl_t3;
+#line 44 "codegen/discards.kl"
+    kl_t5 = ( uint8_t* ) "step";
+#line 44 "codegen/discards.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
+#line 44 "codegen/discards.kl"
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 44 "codegen/discards.kl"
+    kl_1t7console_println__7textual( kl_t7 );
+    kl_t9.tag = 0;
+#line 45 "codegen/discards.kl"
+    kl_t0 = kl_t9;
+#line 45 "codegen/discards.kl"
+    return kl_t0;
+}
+
+#line 48 "codegen/discards.kl"
+struct kl__Counter kl__plain__( void )
+{
+    struct kl__Counter kl_t0;
+    struct kl__Counter kl_t1;
+    struct kl__Counter* kl_t2;
+    bool kl_t4;
+#line 50 "codegen/discards.kl"
+    kl_t4 = false;
+#line 50 "codegen/discards.kl"
+    kl_t4 = false;
+#line 50 "codegen/discards.kl"
+    kl_t2 = &kl_t1;
+#line 50 "codegen/discards.kl"
+    kl_t4 = true;
+#line 50 "codegen/discards.kl"
+    kl__Counter__R7Counter_3u64__ctor( kl_t2, 2 );
+#line 50 "codegen/discards.kl"
+    kl_t0 = kl_t1;
+#line 50 "codegen/discards.kl"
+    kl_t4 = false;
+#line 50 "codegen/discards.kl"
+    if ( kl_t4 ) kl__Counter__dtor( &kl_t1 );
+#line 50 "codegen/discards.kl"
+    kl_t4 = false;
+#line 50 "codegen/discards.kl"
+    return kl_t0;
+}
+
+#line 53 "codegen/discards.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_result__I7Counter_3BadE kl_t3;
+    struct kl_7prelude_result__I7Counter_3BadE kl_t4;
+    struct kl__Counter kl_t5;
+    struct kl__Counter kl_held_6;
+    struct kl__Counter* kl_t7;
+    struct kl__Counter kl_t9;
+    int64_t kl_t10;
+    bool kl_t12;
+#line 55 "codegen/discards.kl"
+    kl_t12 = false;
+#line 55 "codegen/discards.kl"
+    kl__step__4bool( false );
+    kl__step__4bool( true );
+    kl_t3 = kl__make__4bool( false );
+#line 57 "codegen/discards.kl"
+    kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t3 );
+    kl_t4 = kl__make__4bool( true );
+#line 58 "codegen/discards.kl"
+    kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t4 );
+    kl_t5 = kl__plain__(  );
+#line 59 "codegen/discards.kl"
+    kl__Counter__dtor( &kl_t5 );
+#line 61 "codegen/discards.kl"
+    kl_t12 = false;
+#line 61 "codegen/discards.kl"
+    kl_t7 = &kl_held_6;
+#line 61 "codegen/discards.kl"
+    kl_t12 = true;
+#line 61 "codegen/discards.kl"
+    kl__Counter__R7Counter_3u64__ctor( kl_t7, 3 );
+    kl_t9 = kl_held_6;
+#line 62 "codegen/discards.kl"
+    kl_t12 = false;
+#line 62 "codegen/discards.kl"
+    kl__Counter__dtor( &kl_t9 );
+#line 65 "codegen/discards.kl"
+    kl_t10 = ( int64_t ) kl__drops__G;
+#line 65 "codegen/discards.kl"
+    kl_1t7console_println__3i64( kl_t10 );
+    kl_t0 = kl__drops__G;
+#line 66 "codegen/discards.kl"
+    if ( kl_t12 ) kl__Counter__dtor( &kl_held_6 );
+#line 66 "codegen/discards.kl"
+    kl_t12 = false;
+#line 66 "codegen/discards.kl"
+    return kl_t0;
 }
 
 #line 50 "<prelude>"

@@ -1,8 +1,7 @@
+// codegen/operator_arithmetic.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_arithmetic.kl.prelude.c"
 
 struct kl__vec;
 struct kl__bits;
@@ -11,6 +10,7 @@ struct kl__seconds;
 struct kl__speed;
 struct kl__meters;
 struct kl__label;
+struct kl_7prelude_str;
 struct kl__pair__I3i32E;
 struct kl__pair__I3f64E;
 
@@ -49,6 +49,12 @@ struct kl__label
 {
     uint8_t* kl_bytes;
     uint64_t kl_length;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
 };
 
 struct kl__pair__I3i32E
@@ -92,6 +98,7 @@ struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( stru
 void kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( struct kl__pair__I3f64E*, double, double );
 struct kl__pair__I3f64E kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( struct kl__pair__I3f64E*, struct kl__pair__I3f64E* );
 void kl__label__drop( struct kl__label* );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 11 "codegen/operator_arithmetic.kl"
 struct kl__vec kl__operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_other_2 )

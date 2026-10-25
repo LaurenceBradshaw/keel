@@ -7,6 +7,7 @@
 #include <cxxopts.hpp>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -16,10 +17,12 @@
 #include "ast/dump.h"
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
+#include "codegen_c/spelling.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
+#include "common/temp_dir.h"
 #include "common/version.h"
 #include "front_end.h"
 #include "ir/print.h"
@@ -369,17 +372,18 @@ int main( int argc, char** argv )
         return finish();
     }
 
+    const keel::Parts parts( ast, types, prog.modules, file_id.value(), functions );
+
     // Additive: the C path below is untouched, and nothing consumes KIR yet. This is what makes
     // each step of the lowerer visible as it lands.
     if( stop == Stop::Kir )
     {
-        bool               well_formed = true;
-        const keel::Halves halves( ast, types.table(), prog.modules );
+        bool well_formed = true;
 
-        // The program's half: what its own C file holds.
+        // Every part but the prelude's.
         for( const keel::Function& function : functions )
         {
-            if( halves.of( function ) == keel::C_part::Prelude )
+            if( parts.of( function ) == prog.modules.prelude_file() )
             {
                 continue;
             }
@@ -404,44 +408,49 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    // Named after the input, like the .c that includes it, so two programs built side by side do not
-    // share one: its node ids are numbered after the program's.
-    const std::string prelude_name =
-        std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".prelude.c";
+    const auto part_c = [&]( keel::File_id part )
+    { return keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, &parts, part ); };
 
-    const std::string generated = keel::emit_c_from_kir(
-        functions, ast, types, literals, sm, interner, prog.modules, keel::C_part::Program, prelude_name
-    );
-
+    // What each module's object will compile, dependencies first.
     if( stop == Stop::C )
     {
-        std::cout << generated;
+        for( const keel::File_id part : parts.order() )
+        {
+            if( part != prog.modules.prelude_file() )
+            {
+                std::cout << fmt::format( "// {}\n", sm.file( part ).path ) << part_c( part );
+            }
+        }
+
         return finish();
     }
 
-    // The .c is written beside the executable and kept, not deleted. Its #line directives point
-    // back at the .kl, so it is the thing to read when the output is wrong - and it is what
-    // --emit-c prints for the golden tests.
     const std::filesystem::path executable = args.count( "output" )
                                                  ? std::filesystem::path( args["output"].as<std::string>() )
                                                  : std::filesystem::path( args["input"].as<std::string>() ).stem();
 
-    // Named after the input but written beside the executable - `foo.kl.c` says what it came from,
-    // and both artifacts land wherever `-o` points rather than in the source tree.
-    const std::filesystem::path generated_path =
-        executable.parent_path() / ( std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".c" );
+    // Each part's .c is written beside the executable and kept: its #line directives point back at
+    // the .kl, so it is the thing to read when the output is wrong. Named after the input, so two
+    // programs built side by side do not share one.
+    const std::string    input_name = std::filesystem::path( args["input"].as<std::string>() ).filename().string();
+    const keel::Spelling spelling { ast, types, interner, prog.modules, sm };
 
-    const std::filesystem::path prelude_c_path = executable.parent_path() / prelude_name;
-
-    const std::pair<std::filesystem::path, std::string> outputs[] = {
-        { generated_path, generated },
-        { prelude_c_path,
-          keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, keel::C_part::Prelude ) },
+    const auto c_name = [&]( keel::File_id part )
+    {
+        return part == parts.input() ? input_name + ".c"
+               : part == prog.modules.prelude_file()
+                   ? input_name + ".prelude.c"
+                   : fmt::format( "{}.{}.c", input_name, keel::module_slot( spelling.owner( part ) ) );
     };
 
-    for( const auto& [path, text] : outputs )
+    const keel::Temp_dir               object_dir;
+    std::vector<std::filesystem::path> sources;
+    std::vector<std::filesystem::path> objects;
+
+    for( const keel::File_id part : parts.order() )
     {
-        std::ofstream out( path );
+        const std::filesystem::path path = executable.parent_path() / c_name( part );
+        std::ofstream               out( path );
 
         if( !out )
         {
@@ -449,7 +458,9 @@ int main( int argc, char** argv )
             return 1;
         }
 
-        out << text;
+        out << part_c( part );
+        sources.push_back( path );
+        objects.push_back( object_dir.path / std::filesystem::path( c_name( part ) ).replace_extension( ".o" ) );
     }
 
     // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.
@@ -468,13 +479,41 @@ int main( int argc, char** argv )
         cflags += c_warnings;
     }
 
-    const std::string command = keel::link_command( compiler, cflags, generated_path, runtime.path, executable, linked );
+    // Concurrently, so the wall time is about the largest part's.
+    std::vector<std::future<int>> compiles;
+    for( std::size_t i = 0; i < sources.size(); ++i )
+    {
+        compiles.push_back( std::async(
+            std::launch::async,
+            [command = keel::compile_command( compiler, cflags, sources[i], objects[i] )]
+            { return std::system( command.c_str() ); }
+        ) );
+    }
+
+    bool compiled = true;
+    for( std::size_t i = 0; i < compiles.size(); ++i )
+    {
+        // The program type-checked, so the C it produced should always compile: this is a compiler bug.
+        if( compiles[i].get() != 0 )
+        {
+            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", sources[i].string() );
+            compiled = false;
+        }
+    }
+
+    if( !compiled )
+    {
+        return 1;
+    }
+
+    const std::filesystem::path generated_path = sources.back();
+    const std::string           command = keel::link_command( compiler, cflags, objects, runtime.path, executable, linked );
 
     if( const int status = std::system( command.c_str() ); status != 0 )
     {
         // Without the user's own C, a failure here is a compiler bug: the program type-checked, so
-        // the C it produced should always compile. The path is named so the output can be inspected.
-        // With it, the user's C or a missing symbol is the likelier cause.
+        // the C it produced should always link. The input's path is named so the output can be
+        // inspected. With it, the user's C or a missing symbol is the likelier cause.
         if( linked.empty() )
         {
             fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", generated_path.string() );

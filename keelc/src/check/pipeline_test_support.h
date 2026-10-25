@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "codegen_c/halves.h"
+#include "codegen_c/parts.h"
 #include "front_end.h"
 
 namespace keel
@@ -35,7 +35,7 @@ struct Compiled
     Types          types;
 
     std::vector<Function> all;       // every function lowered, the prelude's included
-    std::vector<Function> functions; // the program's C half, in the order lowered
+    std::vector<Function> functions; // every part's but the prelude's, in the order lowered
 
     explicit Compiled( std::string_view source, Stage through = Stage::Simplified, Build build = { .asserts = true } )
     {
@@ -43,11 +43,11 @@ struct Compiled
 
         Front_end front = run_front_end( file, through, build, sm, interner, literals, diags );
 
-        const Halves halves( front.program.ast, front.types.table(), front.program.modules );
+        const Parts parts( front.program.ast, front.types, front.program.modules, file, front.functions );
         std::ranges::copy_if(
             front.functions,
             std::back_inserter( functions ),
-            [&]( const Function& f ) { return halves.of( f ) == C_part::Program; }
+            [&]( const Function& f ) { return parts.of( f ) != front.program.modules.prelude_file(); }
         );
 
         ast        = std::move( front.program.ast );

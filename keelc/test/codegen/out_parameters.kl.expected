@@ -1,8 +1,7 @@
+// codegen/out_parameters.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "out_parameters.kl.prelude.c"
 
 struct kl__Point;
 

@@ -1,8 +1,7 @@
+// codegen/comparisons_mixed.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "comparisons_mixed.kl.prelude.c"
 
 static inline bool kl_cmp_lt_i64_u64( int64_t a, uint64_t b )
 {

@@ -1,10 +1,29 @@
+// ../../src/optional.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
 
+// optional_expect_empty/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl_7prelude_location;
 struct kl_2kl8optional_optional__I3i32E;
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_location
+{
+    struct kl_7prelude_str kl_file;
+    uint32_t kl_line;
+};
 
 struct kl_2kl8optional_optional__I3i32E
 {
@@ -16,6 +35,7 @@ _Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t
 
 int32_t kl__main__( void );
 int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl8optional_optional__I3i32E, struct kl_7prelude_str, struct kl_7prelude_location );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 4 "optional_expect_empty/main.kl"
 int32_t kl__main__( void )

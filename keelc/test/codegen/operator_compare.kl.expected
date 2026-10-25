@@ -1,8 +1,7 @@
+// codegen/operator_compare.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_compare.kl.prelude.c"
 
 struct kl__version;
 struct kl__name;

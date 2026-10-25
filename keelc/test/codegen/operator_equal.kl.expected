@@ -1,8 +1,7 @@
+// codegen/operator_equal.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_equal.kl.prelude.c"
 
 struct kl__point;
 struct kl__name;

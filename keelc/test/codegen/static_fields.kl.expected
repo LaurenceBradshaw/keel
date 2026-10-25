@@ -1,20 +1,13 @@
+// codegen/static_fields.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "static_fields.kl.prelude.c"
-
 struct kl__Counter;
-struct kl__Tally;
 
 struct kl__Counter
 {
     int32_t kl_id;
-};
-
-struct kl__Tally
-{
-    int32_t kl_n;
 };
 
 int32_t kl__made__GS7Counter = 0;

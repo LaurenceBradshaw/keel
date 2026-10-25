@@ -1,8 +1,30 @@
+// codegen/fixed_array_halves.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "fixed_array_halves.kl.prelude.c"
+struct kl__A2_3i32;
+struct kl_7prelude_result__IA2_3i32_3i32E;
+struct kl__A3_A2_3i32;
+
+struct kl__run__LA2_3i32__ref { struct kl__A2_3i32* data; uint64_t size; };
+
+struct kl__A2_3i32
+{
+    int32_t e[2];
+};
+
+struct kl_7prelude_result__IA2_3i32_3i32E
+{
+    int32_t tag;
+    struct kl__A2_3i32 kl_value;
+    int32_t kl_error;
+};
+
+struct kl__A3_A2_3i32
+{
+    struct kl__A2_3i32 e[3];
+};
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

@@ -1,8 +1,7 @@
+// codegen/operator_index.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_index.kl.prelude.c"
 
 struct kl__point;
 struct kl__view;

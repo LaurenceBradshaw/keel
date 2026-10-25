@@ -1,8 +1,7 @@
+// codegen/globals.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "globals.kl.prelude.c"
 
 int32_t kl__counter__G = 1;
 uint8_t kl__small__G = 200;

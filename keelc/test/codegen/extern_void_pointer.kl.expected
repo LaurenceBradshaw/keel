@@ -1,8 +1,7 @@
+// codegen/extern_void_pointer.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "extern_void_pointer.kl.prelude.c"
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );

@@ -78,6 +78,42 @@ public:
         return importers;
     }
 
+    // Every file `input` reaches, each after the files it imports, the prelude first since every file
+    // sees it. A cycle is cut where the walk meets a file it is still inside.
+    std::vector<File_id> dependencies_first( File_id input ) const
+    {
+        std::vector<File_id> order;
+        std::vector<File_id> seen;
+
+        const auto visit = [&]( auto&& self, File_id file ) -> void
+        {
+            if( std::find( seen.begin(), seen.end(), file ) != seen.end() )
+            {
+                return;
+            }
+
+            seen.push_back( file );
+
+            if( file.v < edges_.size() )
+            {
+                for( const File_id to : edges_[file.v] )
+                {
+                    self( self, to );
+                }
+            }
+
+            order.push_back( file );
+        };
+
+        if( prelude_.is_valid() )
+        {
+            visit( visit, prelude_ );
+        }
+
+        visit( visit, input );
+        return order;
+    }
+
     // Packages.
     void add_package( Symbol_id package )
     {

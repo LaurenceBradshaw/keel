@@ -1,8 +1,7 @@
+// codegen/generics_forward_reference.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generics_forward_reference.kl.prelude.c"
 
 struct kl__Box__I3i32E;
 struct kl__Holder;

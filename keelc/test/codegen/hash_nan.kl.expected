@@ -1,18 +1,32 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "hash_nan.kl.prelude.c"
+struct kl_7prelude_str;
 
-_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
 void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-double kl__quotient__3f64_3f64( double, double );
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -33,66 +47,20 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
-uint64_t kl__digest__I3f64E__3f64( double* );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 5 "codegen/hash_nan.kl"
-double kl__quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    double kl_t0;
-    double kl_t3;
-#line 7 "codegen/hash_nan.kl"
-    kl_t3 = kl_a_1 / kl_b_2;
-#line 7 "codegen/hash_nan.kl"
-    kl_t0 = kl_t3;
-#line 7 "codegen/hash_nan.kl"
-    return kl_t0;
+    ( void ) self;
 }
 
-#line 17 "codegen/hash_nan.kl"
-int32_t kl__main__( void )
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
-    int32_t kl_t0;
-    double kl_nan_1;
-    double kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-    double* kl_t9;
-    uint64_t kl_t10;
-    bool kl_t11;
-#line 19 "codegen/hash_nan.kl"
-    kl_t2 = kl__quotient__3f64_3f64( 0.0, 0.0 );
-#line 19 "codegen/hash_nan.kl"
-    kl_nan_1 = kl_t2;
-#line 21 "codegen/hash_nan.kl"
-    kl_t4 = &kl_t3;
-#line 21 "codegen/hash_nan.kl"
-    kl_t5 = ( uint8_t* ) "before";
-#line 21 "codegen/hash_nan.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 6 );
-#line 21 "codegen/hash_nan.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 21 "codegen/hash_nan.kl"
-    kl_1t7console_println__7textual( kl_t7 );
-#line 23 "codegen/hash_nan.kl"
-    kl_t9 = &kl_nan_1;
-#line 23 "codegen/hash_nan.kl"
-    kl_t10 = kl__digest__I3f64E__3f64( kl_t9 );
-#line 23 "codegen/hash_nan.kl"
-    kl_t11 = kl_t10 == 0;
-#line 23 "codegen/hash_nan.kl"
-    if ( kl_t11 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t0 = 1;
-#line 25 "codegen/hash_nan.kl"
-    return kl_t0;
-    bb2:
-#line 28 "codegen/hash_nan.kl"
-    kl_t0 = 0;
-#line 28 "codegen/hash_nan.kl"
-    return kl_t0;
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
 }
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -516,6 +484,123 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/hash_nan.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
+struct kl_7prelude_hasher;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_hasher
+{
+    uint64_t kl_v0_;
+    uint64_t kl_v1_;
+    uint64_t kl_v2_;
+    uint64_t kl_v3_;
+    uint64_t kl_bytes_;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+double kl__quotient__3f64_3f64( double, double );
+int32_t kl__main__( void );
+uint64_t kl__digest__I3f64E__3f64( double* );
+void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+void kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
+void kl_7prelude_write__SQ7prelude6hasher_3u64( struct kl_7prelude_hasher*, uint64_t );
+uint64_t kl_7prelude_finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
+
+#line 5 "codegen/hash_nan.kl"
+double kl__quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
+{
+    double kl_t0;
+    double kl_t3;
+#line 7 "codegen/hash_nan.kl"
+    kl_t3 = kl_a_1 / kl_b_2;
+#line 7 "codegen/hash_nan.kl"
+    kl_t0 = kl_t3;
+#line 7 "codegen/hash_nan.kl"
+    return kl_t0;
+}
+
+#line 17 "codegen/hash_nan.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    double kl_nan_1;
+    double kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    struct kl_7prelude_textual__ref kl_t7;
+    double* kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+#line 19 "codegen/hash_nan.kl"
+    kl_t2 = kl__quotient__3f64_3f64( 0.0, 0.0 );
+#line 19 "codegen/hash_nan.kl"
+    kl_nan_1 = kl_t2;
+#line 21 "codegen/hash_nan.kl"
+    kl_t4 = &kl_t3;
+#line 21 "codegen/hash_nan.kl"
+    kl_t5 = ( uint8_t* ) "before";
+#line 21 "codegen/hash_nan.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 6 );
+#line 21 "codegen/hash_nan.kl"
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 21 "codegen/hash_nan.kl"
+    kl_1t7console_println__7textual( kl_t7 );
+#line 23 "codegen/hash_nan.kl"
+    kl_t9 = &kl_nan_1;
+#line 23 "codegen/hash_nan.kl"
+    kl_t10 = kl__digest__I3f64E__3f64( kl_t9 );
+#line 23 "codegen/hash_nan.kl"
+    kl_t11 = kl_t10 == 0;
+#line 23 "codegen/hash_nan.kl"
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 25 "codegen/hash_nan.kl"
+    return kl_t0;
+    bb2:
+#line 28 "codegen/hash_nan.kl"
+    kl_t0 = 0;
+#line 28 "codegen/hash_nan.kl"
+    return kl_t0;
 }
 
 #line 10 "codegen/hash_nan.kl"

@@ -1,8 +1,7 @@
+// opt/constants.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "constants.kl.prelude.c"
 
 bool kl__big__3i32( int32_t );
 int32_t kl__either__3i32( int32_t );

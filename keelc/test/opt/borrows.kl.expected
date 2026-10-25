@@ -1,8 +1,7 @@
+// opt/borrows.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "borrows.kl.prelude.c"
 
 struct kl__Square;
 

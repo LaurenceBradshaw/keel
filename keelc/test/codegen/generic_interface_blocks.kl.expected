@@ -1,8 +1,7 @@
+// codegen/generic_interface_blocks.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generic_interface_blocks.kl.prelude.c"
 
 struct kl__sink__I3i64E__vtable;
 struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable* vtable; };

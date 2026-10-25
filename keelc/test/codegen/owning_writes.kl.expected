@@ -1,8 +1,7 @@
+// codegen/owning_writes.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "owning_writes.kl.prelude.c"
 
 struct kl__owned;
 struct kl__slots;

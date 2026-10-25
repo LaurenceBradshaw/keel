@@ -1,8 +1,7 @@
+// opt/globals_overwritten.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "globals_overwritten.kl.prelude.c"
 
 int32_t kl__seen__G;
 

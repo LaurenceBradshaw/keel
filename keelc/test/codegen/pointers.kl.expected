@@ -1,8 +1,7 @@
+// codegen/pointers.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "pointers.kl.prelude.c"
 
 struct kl__Point;
 struct kl__Cell;

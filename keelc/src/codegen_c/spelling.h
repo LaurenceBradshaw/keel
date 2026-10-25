@@ -62,8 +62,11 @@ struct Spelling
     // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
     // file scope to put the temporaries three-address form would need.
     std::string global_definition( Node_id declaration, Type_id owner = {} ) const;
+    // Another part's global, which this one reads or writes.
+    std::string global_declaration( Node_id declaration, Type_id owner = {} ) const;
 
     Mangled_owner owner( Node_id decl ) const;
+    Mangled_owner owner( File_id file ) const;
 };
 
 // How C is told what kind of number it is looking at. Used by the KIR emitter for a constant

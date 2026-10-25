@@ -1,8 +1,7 @@
+// codegen/operator_compound.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_compound.kl.prelude.c"
 
 struct kl__tally;
 struct kl__only_compound;

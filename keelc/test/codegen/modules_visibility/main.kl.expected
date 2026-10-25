@@ -1,8 +1,76 @@
+// codegen/modules_visibility/far.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+int32_t kl_3far_pick__3i32( int32_t );
+
+#line 2 "codegen/modules_visibility/far.kl"
+int32_t kl_3far_pick__3i32( int32_t kl_t1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_t1;
+#line 4 "codegen/modules_visibility/far.kl"
+    kl_t0 = 2;
+#line 4 "codegen/modules_visibility/far.kl"
+    return kl_t0;
+}
+
+// codegen/modules_visibility/geom.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+// codegen/modules_visibility/route.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_4geom_Point;
+
+struct kl_4geom_Point
+{
+    int32_t kl_x;
+    int32_t kl_y;
+};
+
+int32_t kl_5route_via__3i32( int32_t );
+struct kl_4geom_Point kl_5route_origin__( void );
+int32_t kl_3far_pick__3i32( int32_t );
+
+#line 5 "codegen/modules_visibility/route.kl"
+int32_t kl_5route_via__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 7 "codegen/modules_visibility/route.kl"
+    kl_t2 = kl_3far_pick__3i32( kl_v_1 );
+#line 7 "codegen/modules_visibility/route.kl"
+    kl_t0 = kl_t2;
+#line 7 "codegen/modules_visibility/route.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/modules_visibility/route.kl"
+struct kl_4geom_Point kl_5route_origin__( void )
+{
+    struct kl_4geom_Point kl_t0;
+    struct kl_4geom_Point kl_t1;
+#line 12 "codegen/modules_visibility/route.kl"
+    kl_t1.kl_x = 7;
+#line 12 "codegen/modules_visibility/route.kl"
+    kl_t1.kl_y = 0;
+#line 12 "codegen/modules_visibility/route.kl"
+    kl_t0 = kl_t1;
+#line 12 "codegen/modules_visibility/route.kl"
+    return kl_t0;
+}
+
+// codegen/modules_visibility/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl_4geom_Point;
 
@@ -18,7 +86,6 @@ int32_t kl__pick__3i64( int64_t );
 int32_t kl__main__( void );
 int32_t kl_5route_via__3i32( int32_t );
 struct kl_4geom_Point kl_5route_origin__( void );
-int32_t kl_3far_pick__3i32( int32_t );
 
 #line 6 "codegen/modules_visibility/main.kl"
 int32_t kl__pick__3i64( int64_t kl_t1 )
@@ -109,45 +176,6 @@ int32_t kl__main__( void )
     bb8:
     kl_t0 = 0;
 #line 29 "codegen/modules_visibility/main.kl"
-    return kl_t0;
-}
-
-#line 5 "codegen/modules_visibility/route.kl"
-int32_t kl_5route_via__3i32( int32_t kl_v_1 )
-{
-    int32_t kl_t0;
-    int32_t kl_t2;
-#line 7 "codegen/modules_visibility/route.kl"
-    kl_t2 = kl_3far_pick__3i32( kl_v_1 );
-#line 7 "codegen/modules_visibility/route.kl"
-    kl_t0 = kl_t2;
-#line 7 "codegen/modules_visibility/route.kl"
-    return kl_t0;
-}
-
-#line 10 "codegen/modules_visibility/route.kl"
-struct kl_4geom_Point kl_5route_origin__( void )
-{
-    struct kl_4geom_Point kl_t0;
-    struct kl_4geom_Point kl_t1;
-#line 12 "codegen/modules_visibility/route.kl"
-    kl_t1.kl_x = 7;
-#line 12 "codegen/modules_visibility/route.kl"
-    kl_t1.kl_y = 0;
-#line 12 "codegen/modules_visibility/route.kl"
-    kl_t0 = kl_t1;
-#line 12 "codegen/modules_visibility/route.kl"
-    return kl_t0;
-}
-
-#line 2 "codegen/modules_visibility/far.kl"
-int32_t kl_3far_pick__3i32( int32_t kl_t1 )
-{
-    int32_t kl_t0;
-    ( void ) kl_t1;
-#line 4 "codegen/modules_visibility/far.kl"
-    kl_t0 = 2;
-#line 4 "codegen/modules_visibility/far.kl"
     return kl_t0;
 }
 

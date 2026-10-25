@@ -1,8 +1,7 @@
+// codegen/bounds.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "bounds.kl.prelude.c"
 
 int32_t kl__main__( void );
 bool kl__same__I3i32E__3i32_3i32( int32_t*, int32_t* );

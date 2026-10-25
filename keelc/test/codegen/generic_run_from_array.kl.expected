@@ -1,18 +1,45 @@
+// codegen/generic_run_from_array.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "generic_run_from_array.kl.prelude.c"
-
 struct kl__Point;
+struct kl_7prelude_str;
+struct kl__A4_3i32;
+struct kl__A2_3f64;
+struct kl__A3_Q7prelude3str;
 struct kl__A2_5Point;
 
+struct kl__run__L3i32__ref { int32_t* data; uint64_t size; };
+struct kl__run__L3f64__ref { double* data; uint64_t size; };
+struct kl__run__LQ7prelude3str__ref { struct kl_7prelude_str* data; uint64_t size; };
 struct kl__run__L5Point__ref { struct kl__Point* data; uint64_t size; };
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl__A4_3i32
+{
+    int32_t e[4];
+};
+
+struct kl__A2_3f64
+{
+    double e[2];
+};
+
+struct kl__A3_Q7prelude3str
+{
+    struct kl_7prelude_str e[3];
 };
 
 struct kl__A2_5Point
@@ -27,6 +54,7 @@ int32_t kl__total__I3i32E__L3i32( int32_t*, uint64_t );
 double kl__total__I3f64E__L3f64( double*, uint64_t );
 uint64_t kl__count__IQ7prelude3strE__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 uint64_t kl__count__I5PointE__L5Point( struct kl__Point*, uint64_t );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 24 "codegen/generic_run_from_array.kl"
 int32_t kl__main__( void )

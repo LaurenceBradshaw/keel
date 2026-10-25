@@ -1,8 +1,7 @@
+// codegen/borrow_after_refill.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "borrow_after_refill.kl.prelude.c"
 
 struct kl__Counted;
 

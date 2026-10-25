@@ -1,8 +1,7 @@
+// codegen/access_control.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "access_control.kl.prelude.c"
 
 struct kl__Counter;
 struct kl__Sealed;

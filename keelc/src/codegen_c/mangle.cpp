@@ -241,9 +241,8 @@ std::string construct_arg_string(
 
     return encoded;
 }
+} // namespace
 
-// Each part length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart; an empty part is
-// left out. A name never starts with a digit, so a package with no module reads apart from both.
 std::string module_slot( const Mangled_owner& owner )
 {
     std::string slot;
@@ -256,7 +255,6 @@ std::string module_slot( const Mangled_owner& owner )
     }
     return slot;
 }
-} // namespace
 
 std::string mangle_function(
     const Mangled_owner&               owner,

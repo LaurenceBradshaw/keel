@@ -1,8 +1,7 @@
+// codegen/static_fields_generic.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "static_fields_generic.kl.prelude.c"
 
 struct kl__Box__I3i32E;
 struct kl__Box__I3f64E;

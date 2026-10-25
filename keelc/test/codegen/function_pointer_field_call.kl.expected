@@ -1,8 +1,7 @@
+// codegen/function_pointer_field_call.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "function_pointer_field_call.kl.prelude.c"
 
 struct kl__Holder;
 struct kl__Counter;

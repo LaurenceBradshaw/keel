@@ -1,8 +1,7 @@
+// codegen/generic_methods.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generic_methods.kl.prelude.c"
 
 struct kl__Plain;
 struct kl__Buffer;

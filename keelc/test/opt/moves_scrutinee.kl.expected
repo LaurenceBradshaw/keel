@@ -1,8 +1,7 @@
+// opt/moves_scrutinee.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "moves_scrutinee.kl.prelude.c"
 
 struct kl__Box;
 struct kl__Shape;

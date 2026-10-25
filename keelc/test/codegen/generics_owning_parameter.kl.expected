@@ -1,8 +1,7 @@
+// codegen/generics_owning_parameter.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generics_owning_parameter.kl.prelude.c"
 
 struct kl__Box__I3u64E;
 struct kl__Holder__I3u64E;

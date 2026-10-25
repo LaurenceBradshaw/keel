@@ -1,10 +1,16 @@
+// codegen/string_literals.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "string_literals.kl.prelude.c"
-
+struct kl_7prelude_str;
 struct kl__Named;
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
 
 struct kl__Named
 {
@@ -15,6 +21,7 @@ struct kl__Named
 uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str );
 struct kl_7prelude_str kl__pick__4bool( bool );
 int32_t kl__main__( void );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 9 "codegen/string_literals.kl"
 uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str kl_s_1 )

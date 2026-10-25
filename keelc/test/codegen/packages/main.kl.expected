@@ -1,8 +1,149 @@
+// codegen/packages/geom.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_4geom_perimeter__3i32( int32_t );
+
+#line 2 "codegen/packages/geom.kl"
+int32_t kl_4geom_perimeter__3i32( int32_t kl_side_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 4 "codegen/packages/geom.kl"
+    kl_t2 = __builtin_mul_overflow( kl_side_1, 4, &( int32_t ) { 0 } );
+#line 4 "codegen/packages/geom.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 4 "codegen/packages/geom.kl"
+    kl_rt_panic( "codegen/packages/geom.kl", 4, "arithmetic overflow: side * 4" );
+    bb2:
+#line 4 "codegen/packages/geom.kl"
+    kl_t3 = kl_side_1 * 4;
+#line 4 "codegen/packages/geom.kl"
+    kl_t0 = kl_t3;
+#line 4 "codegen/packages/geom.kl"
+    return kl_t0;
+}
+
+// codegen/packages/plane/shape.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_5plane5shape_identity__3i32( int32_t );
+
+#line 1 "codegen/packages/plane/shape.kl"
+int32_t kl_5plane5shape_identity__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+#line 3 "codegen/packages/plane/shape.kl"
+    kl_t0 = kl_v_1;
+#line 3 "codegen/packages/plane/shape.kl"
+    return kl_t0;
+}
+
+// codegen/packages/plane/geom.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_5plane4geom_Point;
+
+struct kl_5plane4geom_Point
+{
+    int32_t kl_x;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+struct kl_5plane4geom_Point kl_5plane4geom_origin__( void );
+int32_t kl_5plane4geom_area__3i32( int32_t );
+int32_t kl_5plane4geom_cube__3i32( int32_t );
+int32_t kl_5plane4geom_pick__3i32( int32_t );
+int32_t kl_5plane5shape_identity__3i32( int32_t );
+
+#line 9 "codegen/packages/plane/geom.kl"
+struct kl_5plane4geom_Point kl_5plane4geom_origin__( void )
+{
+    struct kl_5plane4geom_Point kl_t0;
+    struct kl_5plane4geom_Point kl_t1;
+#line 11 "codegen/packages/plane/geom.kl"
+    kl_t1.kl_x = 7;
+#line 11 "codegen/packages/plane/geom.kl"
+    kl_t0 = kl_t1;
+#line 11 "codegen/packages/plane/geom.kl"
+    return kl_t0;
+}
+
+#line 14 "codegen/packages/plane/geom.kl"
+int32_t kl_5plane4geom_area__3i32( int32_t kl_side_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 16 "codegen/packages/plane/geom.kl"
+    kl_t2 = __builtin_mul_overflow( kl_side_1, kl_side_1, &( int32_t ) { 0 } );
+#line 16 "codegen/packages/plane/geom.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 16 "codegen/packages/plane/geom.kl"
+    kl_rt_panic( "codegen/packages/plane/geom.kl", 16, "arithmetic overflow: side * side" );
+    bb2:
+#line 16 "codegen/packages/plane/geom.kl"
+    kl_t3 = kl_side_1 * kl_side_1;
+#line 16 "codegen/packages/plane/geom.kl"
+    kl_t0 = kl_t3;
+#line 16 "codegen/packages/plane/geom.kl"
+    return kl_t0;
+}
+
+#line 19 "codegen/packages/plane/geom.kl"
+int32_t kl_5plane4geom_cube__3i32( int32_t kl_s_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t2 = kl_5plane4geom_area__3i32( kl_s_1 );
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t3 = kl_5plane5shape_identity__3i32( kl_s_1 );
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t4 = __builtin_mul_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
+#line 21 "codegen/packages/plane/geom.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_rt_panic( "codegen/packages/plane/geom.kl", 21, "arithmetic overflow: area( s ) * plane::identity( s )" );
+    bb2:
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t5 = kl_t2 * kl_t3;
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t0 = kl_t5;
+#line 21 "codegen/packages/plane/geom.kl"
+    return kl_t0;
+}
+
+#line 24 "codegen/packages/plane/geom.kl"
+int32_t kl_5plane4geom_pick__3i32( int32_t kl_t1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_t1;
+#line 26 "codegen/packages/plane/geom.kl"
+    kl_t0 = 2;
+#line 26 "codegen/packages/plane/geom.kl"
+    return kl_t0;
+}
+
+// codegen/packages/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl__Point;
 struct kl_5plane4geom_Point;
@@ -28,7 +169,6 @@ struct kl_5plane4geom_Point kl_5plane4geom_origin__( void );
 int32_t kl_5plane4geom_area__3i32( int32_t );
 int32_t kl_5plane4geom_cube__3i32( int32_t );
 int32_t kl_5plane4geom_pick__3i32( int32_t );
-int32_t kl_5plane5shape_identity__3i32( int32_t );
 int32_t kl_4geom_perimeter__3i32( int32_t );
 
 #line 6 "codegen/packages/main.kl"
@@ -198,112 +338,6 @@ int32_t kl__main__( void )
     bb18:
     kl_t0 = 0;
 #line 46 "codegen/packages/main.kl"
-    return kl_t0;
-}
-
-#line 9 "codegen/packages/plane/geom.kl"
-struct kl_5plane4geom_Point kl_5plane4geom_origin__( void )
-{
-    struct kl_5plane4geom_Point kl_t0;
-    struct kl_5plane4geom_Point kl_t1;
-#line 11 "codegen/packages/plane/geom.kl"
-    kl_t1.kl_x = 7;
-#line 11 "codegen/packages/plane/geom.kl"
-    kl_t0 = kl_t1;
-#line 11 "codegen/packages/plane/geom.kl"
-    return kl_t0;
-}
-
-#line 14 "codegen/packages/plane/geom.kl"
-int32_t kl_5plane4geom_area__3i32( int32_t kl_side_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 16 "codegen/packages/plane/geom.kl"
-    kl_t2 = __builtin_mul_overflow( kl_side_1, kl_side_1, &( int32_t ) { 0 } );
-#line 16 "codegen/packages/plane/geom.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 16 "codegen/packages/plane/geom.kl"
-    kl_rt_panic( "codegen/packages/plane/geom.kl", 16, "arithmetic overflow: side * side" );
-    bb2:
-#line 16 "codegen/packages/plane/geom.kl"
-    kl_t3 = kl_side_1 * kl_side_1;
-#line 16 "codegen/packages/plane/geom.kl"
-    kl_t0 = kl_t3;
-#line 16 "codegen/packages/plane/geom.kl"
-    return kl_t0;
-}
-
-#line 19 "codegen/packages/plane/geom.kl"
-int32_t kl_5plane4geom_cube__3i32( int32_t kl_s_1 )
-{
-    int32_t kl_t0;
-    int32_t kl_t2;
-    int32_t kl_t3;
-    bool kl_t4;
-    int32_t kl_t5;
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_t2 = kl_5plane4geom_area__3i32( kl_s_1 );
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_t3 = kl_5plane5shape_identity__3i32( kl_s_1 );
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_t4 = __builtin_mul_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
-#line 21 "codegen/packages/plane/geom.kl"
-    if ( kl_t4 ) goto bb1; else goto bb2;
-    bb1:
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_rt_panic( "codegen/packages/plane/geom.kl", 21, "arithmetic overflow: area( s ) * plane::identity( s )" );
-    bb2:
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_t5 = kl_t2 * kl_t3;
-#line 21 "codegen/packages/plane/geom.kl"
-    kl_t0 = kl_t5;
-#line 21 "codegen/packages/plane/geom.kl"
-    return kl_t0;
-}
-
-#line 24 "codegen/packages/plane/geom.kl"
-int32_t kl_5plane4geom_pick__3i32( int32_t kl_t1 )
-{
-    int32_t kl_t0;
-    ( void ) kl_t1;
-#line 26 "codegen/packages/plane/geom.kl"
-    kl_t0 = 2;
-#line 26 "codegen/packages/plane/geom.kl"
-    return kl_t0;
-}
-
-#line 1 "codegen/packages/plane/shape.kl"
-int32_t kl_5plane5shape_identity__3i32( int32_t kl_v_1 )
-{
-    int32_t kl_t0;
-#line 3 "codegen/packages/plane/shape.kl"
-    kl_t0 = kl_v_1;
-#line 3 "codegen/packages/plane/shape.kl"
-    return kl_t0;
-}
-
-#line 2 "codegen/packages/geom.kl"
-int32_t kl_4geom_perimeter__3i32( int32_t kl_side_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 4 "codegen/packages/geom.kl"
-    kl_t2 = __builtin_mul_overflow( kl_side_1, 4, &( int32_t ) { 0 } );
-#line 4 "codegen/packages/geom.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 4 "codegen/packages/geom.kl"
-    kl_rt_panic( "codegen/packages/geom.kl", 4, "arithmetic overflow: side * 4" );
-    bb2:
-#line 4 "codegen/packages/geom.kl"
-    kl_t3 = kl_side_1 * 4;
-#line 4 "codegen/packages/geom.kl"
-    kl_t0 = kl_t3;
-#line 4 "codegen/packages/geom.kl"
     return kl_t0;
 }
 

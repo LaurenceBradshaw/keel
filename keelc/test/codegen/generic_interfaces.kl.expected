@@ -1,26 +1,12 @@
+// codegen/generic_interfaces.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generic_interfaces.kl.prelude.c"
 
 struct kl__tally;
 struct kl__exactly;
 struct kl__last__I3i32E;
 struct kl__last__I3i64E;
-
-struct kl__sink__I3i64E__vtable;
-struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable* vtable; };
-struct kl__sink__I4boolE__vtable;
-struct kl__sink__I4boolE__ref { void* self; const struct kl__sink__I4boolE__vtable* vtable; };
-struct kl__matches__I3i32E__vtable;
-struct kl__matches__I3i32E__ref { void* self; const struct kl__matches__I3i32E__vtable* vtable; };
-struct kl__matches__I3i64E__vtable;
-struct kl__matches__I3i64E__ref { void* self; const struct kl__matches__I3i64E__vtable* vtable; };
-struct kl__counted_sink__I3i32E__vtable;
-struct kl__counted_sink__I3i32E__ref { void* self; const struct kl__counted_sink__I3i32E__vtable* vtable; };
-struct kl__sink__I3i32E__vtable;
-struct kl__sink__I3i32E__ref { void* self; const struct kl__sink__I3i32E__vtable* vtable; };
 
 struct kl__tally
 {
@@ -44,45 +30,6 @@ struct kl__last__I3i64E
 {
     int64_t kl_value;
     uint64_t kl_n;
-};
-
-struct kl__sink__I3i64E__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__put__1T )( void*, int64_t* );
-    uint64_t ( *kl__count__ )( void* );
-};
-
-struct kl__sink__I4boolE__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__put__1T )( void*, bool* );
-    uint64_t ( *kl__count__ )( void* );
-};
-
-struct kl__matches__I3i32E__vtable
-{
-    void ( *drop )( void* );
-    bool ( *kl__same_as__1K )( void*, int32_t* );
-};
-
-struct kl__matches__I3i64E__vtable
-{
-    void ( *drop )( void* );
-    bool ( *kl__same_as__1K )( void*, int64_t* );
-};
-
-struct kl__counted_sink__I3i32E__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__reset__ )( void* );
-};
-
-struct kl__sink__I3i32E__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__put__1T )( void*, int32_t* );
-    uint64_t ( *kl__count__ )( void* );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );

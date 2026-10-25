@@ -1,8 +1,7 @@
+// codegen/overflow_unsigned_sub.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "overflow_unsigned_sub.kl.prelude.c"
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

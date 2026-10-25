@@ -1,10 +1,17 @@
+// ../../src/optional.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+
+// optional/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl__owned;
+struct kl_7prelude_str;
+struct kl_7prelude_location;
 struct kl_2kl8optional_optional__I5ownedE;
 struct kl_2kl8optional_optional__I3i32E;
 
@@ -12,6 +19,18 @@ struct kl__owned
 {
     uint64_t kl_id;
     uint64_t* kl_block;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_location
+{
+    struct kl_7prelude_str kl_file;
+    uint32_t kl_line;
 };
 
 struct kl_2kl8optional_optional__I5ownedE
@@ -55,6 +74,7 @@ int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( stru
 int32_t kl_2kl8optional_value_or__I3i32E__MQ2kl8optionalI3i32E_M3i32( struct kl_2kl8optional_optional__I3i32E, int32_t );
 bool kl_2kl8optional_is_none__I3i32E__Q2kl8optionalI3i32E( struct kl_2kl8optional_optional__I3i32E* );
 void kl_2kl8optional_optional__I5ownedE__dtor( struct kl_2kl8optional_optional__I5ownedE* );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 10 "optional/main.kl"
 void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )

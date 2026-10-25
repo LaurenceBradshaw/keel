@@ -1,18 +1,25 @@
+// codegen/str_shadowed.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "str_shadowed.kl.prelude.c"
-
 struct kl__str;
+struct kl_7prelude_str;
 
 struct kl__str
 {
     int32_t kl_n;
 };
 
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
 void kl__str__R3str__ctor( struct kl__str* );
 int32_t kl__main__( void );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 6 "codegen/str_shadowed.kl"
 void kl__str__R3str__ctor( struct kl__str* kl_this_1 )

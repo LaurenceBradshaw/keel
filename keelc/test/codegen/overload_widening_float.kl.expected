@@ -1,8 +1,7 @@
+// codegen/overload_widening_float.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "overload_widening_float.kl.prelude.c"
 
 double kl__root__3f64( double );
 double kl__root__3f32( float );

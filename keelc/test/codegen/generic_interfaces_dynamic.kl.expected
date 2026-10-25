@@ -1,8 +1,7 @@
+// codegen/generic_interfaces_dynamic.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generic_interfaces_dynamic.kl.prelude.c"
 
 struct kl__tally;
 struct kl__held;

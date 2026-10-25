@@ -1,8 +1,7 @@
+// codegen/remainder_by_zero.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "remainder_by_zero.kl.prelude.c"
 
 uint64_t kl__zero__G;
 

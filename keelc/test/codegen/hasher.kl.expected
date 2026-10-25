@@ -1,13 +1,38 @@
+// codegen/hasher.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "hasher.kl.prelude.c"
+struct kl_7prelude_str;
+struct kl_7prelude_hasher;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_hasher
+{
+    uint64_t kl_v0_;
+    uint64_t kl_v1_;
+    uint64_t kl_v2_;
+    uint64_t kl_v3_;
+    uint64_t kl_bytes_;
+};
 
 uint64_t kl__key_low__( void );
 uint64_t kl__key_high__( void );
 uint64_t kl__text__Q7prelude3str_Q7prelude3str( struct kl_7prelude_str, struct kl_7prelude_str );
 int32_t kl__main__( void );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+void kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
+void kl_7prelude_write__SQ7prelude6hasher_3u64( struct kl_7prelude_hasher*, uint64_t );
+void kl_7prelude_write_bytes__SQ7prelude6hasher_L2u8( struct kl_7prelude_hasher*, uint8_t*, uint64_t );
+uint64_t kl_7prelude_finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
 
 #line 6 "codegen/hasher.kl"
 uint64_t kl__key_low__( void )

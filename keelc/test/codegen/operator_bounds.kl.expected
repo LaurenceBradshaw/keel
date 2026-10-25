@@ -1,8 +1,7 @@
+// codegen/operator_bounds.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "operator_bounds.kl.prelude.c"
 
 struct kl__vec;
 struct kl__bag;
@@ -11,10 +10,6 @@ struct kl__length;
 
 struct kl__scaled__vtable;
 struct kl__scaled__ref { void* self; const struct kl__scaled__vtable* vtable; };
-struct kl__accumulates__I3i32E__vtable;
-struct kl__accumulates__I3i32E__ref { void* self; const struct kl__accumulates__I3i32E__vtable* vtable; };
-struct kl__accumulates__I4boolE__vtable;
-struct kl__accumulates__I4boolE__ref { void* self; const struct kl__accumulates__I4boolE__vtable* vtable; };
 
 struct kl__vec
 {
@@ -41,18 +36,6 @@ struct kl__scaled__vtable
 {
     void ( *drop )( void* );
     double ( *kl__operator_mul__3f64 )( void*, double );
-};
-
-struct kl__accumulates__I3i32E__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__operator_add_assign__1T )( void*, int32_t* );
-};
-
-struct kl__accumulates__I4boolE__vtable
-{
-    void ( *drop )( void* );
-    void ( *kl__operator_add_assign__1T )( void*, bool* );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );

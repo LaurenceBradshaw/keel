@@ -1,8 +1,7 @@
+// opt/moves_conditional.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "moves_conditional.kl.prelude.c"
 
 struct kl__Box;
 struct kl__Point;

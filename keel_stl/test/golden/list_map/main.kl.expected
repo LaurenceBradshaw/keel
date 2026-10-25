@@ -1,10 +1,22 @@
+// ../../src/optional.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+
+// ../../src/list.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+// list_map/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 struct kl__owned;
+struct kl_7prelude_str;
 struct kl_2kl4list_list__I3i32E;
 struct kl_2kl4list_list__I3i64E;
 struct kl_2kl4list_list__I4boolE;
@@ -20,6 +32,12 @@ struct kl__owned
 {
     uint64_t kl_id;
     uint64_t* kl_block;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
 };
 
 struct kl_2kl4list_list__I3i32E
@@ -113,6 +131,7 @@ void kl_2kl4list_reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list_l
 void kl_2kl4list_reallocate__I4boolE__SQ2kl4listI4boolE_3u64( struct kl_2kl4list_list__I4boolE*, uint64_t );
 void kl_2kl4list_reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4list_list__I5ownedE*, uint64_t );
 void kl_2kl4list_reallocate__I3u64E__SQ2kl4listI3u64E_3u64( struct kl_2kl4list_list__I3u64E*, uint64_t );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 11 "list_map/main.kl"
 void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )

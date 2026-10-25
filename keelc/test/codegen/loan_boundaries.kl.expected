@@ -1,8 +1,7 @@
+// codegen/loan_boundaries.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "loan_boundaries.kl.prelude.c"
 
 struct kl__Buf;
 struct kl__buffer;

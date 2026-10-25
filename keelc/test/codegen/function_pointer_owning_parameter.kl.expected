@@ -1,8 +1,7 @@
+// codegen/function_pointer_owning_parameter.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "function_pointer_owning_parameter.kl.prelude.c"
 
 struct kl__B;
 

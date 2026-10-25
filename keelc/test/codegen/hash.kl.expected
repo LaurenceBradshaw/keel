@@ -1,15 +1,24 @@
+// codegen/hash.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "hash.kl.prelude.c"
-
 struct kl__Point;
+struct kl_7prelude_hasher;
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
+};
+
+struct kl_7prelude_hasher
+{
+    uint64_t kl_v0_;
+    uint64_t kl_v1_;
+    uint64_t kl_v2_;
+    uint64_t kl_v3_;
+    uint64_t kl_bytes_;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -36,6 +45,9 @@ uint64_t kl__digest__I6ColourE__6Colour( int32_t* );
 bool kl__agree__I6ColourE__6Colour_6Colour( int32_t*, int32_t* );
 bool kl__agree__I3i32E__3i32_3i32( int32_t*, int32_t* );
 bool kl__agree__I2u8E__2u8_2u8( uint8_t*, uint8_t* );
+void kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
+void kl_7prelude_write__SQ7prelude6hasher_3u64( struct kl_7prelude_hasher*, uint64_t );
+uint64_t kl_7prelude_finish__SQ7prelude6hasher( struct kl_7prelude_hasher* );
 
 #line 11 "codegen/hash.kl"
 bool kl__operator_eq__S5Point_5Point( struct kl__Point* kl_this_1, struct kl__Point* kl_other_2 )

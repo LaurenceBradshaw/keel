@@ -467,6 +467,11 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner ) co
     return fmt::format( "{} {} = {};", type( variable ), name, text );
 }
 
+std::string Spelling::global_declaration( Node_id declaration, Type_id owner ) const
+{
+    return fmt::format( "extern {} {};", type( types.type_of( declaration ) ), global( declaration, owner ) );
+}
+
 Mangled_owner Spelling::owner( Node_id decl ) const
 {
     // A built-in type belongs to no package's file.
@@ -475,7 +480,11 @@ Mangled_owner Spelling::owner( Node_id decl ) const
         return {};
     }
 
-    const File_id   file    = ast.span( decl ).file;
+    return owner( ast.span( decl ).file );
+}
+
+Mangled_owner Spelling::owner( File_id file ) const
+{
     const Symbol_id package = modules.package_of( file );
 
     Mangled_owner owner;

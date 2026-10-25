@@ -21,15 +21,20 @@ struct Runtime
 
 Runtime find_runtime( const std::optional<std::string>& flag, const std::filesystem::path& installed );
 
-// The C compiler's command line, compiling `source` and linking `runtime` into `executable`;
+// The C compiler's command line compiling one part's `source` into `object`.
+std::string compile_command(
+    std::string_view compiler, std::string_view cflags, const std::filesystem::path& source, const std::filesystem::path& object
+);
+
+// The C compiler's command line linking the parts' `objects` and `runtime` into `executable`;
 // `linked`, the user's own C and libraries, follows the runtime.
 std::string link_command(
-    std::string_view             compiler,
-    std::string_view             cflags,
-    const std::filesystem::path& source,
-    const std::filesystem::path& runtime,
-    const std::filesystem::path& executable,
-    std::span<const std::string> linked = {}
+    std::string_view                       compiler,
+    std::string_view                       cflags,
+    std::span<const std::filesystem::path> objects,
+    const std::filesystem::path&           runtime,
+    const std::filesystem::path&           executable,
+    std::span<const std::string>           linked = {}
 );
 
 // `cflags` without the words that turn on or promote C warnings; `-Wl,`, `-Wa,` and `-Wp,` are kept.

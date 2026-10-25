@@ -1,8 +1,7 @@
+// codegen/destroy.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "destroy.kl.prelude.c"
 
 struct kl__owned;
 

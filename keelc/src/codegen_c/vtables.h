@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <span>
 #include <vector>
 #include "ast/ast.h"
 #include "ir/kir.h"
@@ -20,6 +21,6 @@ struct Vtable
 };
 
 // Every implementer the functions convert to an interface pointer, each pair once, in the order first met.
-std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, const std::vector<Function>& functions );
+std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, std::span<const Function> functions );
 
 } // namespace keel

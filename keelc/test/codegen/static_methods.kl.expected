@@ -1,8 +1,7 @@
+// codegen/static_methods.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "static_methods.kl.prelude.c"
 
 struct kl__Vec;
 struct kl__Owned;

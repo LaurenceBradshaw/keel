@@ -1,8 +1,7 @@
+// codegen/pointer_to_const.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "pointer_to_const.kl.prelude.c"
 
 struct kl__Point;
 struct kl__Counter;

@@ -1,10 +1,8 @@
+// codegen/static_method_pointers.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "static_method_pointers.kl.prelude.c"
-
-struct kl__Counter;
 struct kl__Box__I3i32E;
 struct kl__Box__I3f64E;
 
@@ -12,11 +10,6 @@ typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef struct kl__Box__I3i32E ( *kl__fn__F3i32E3BoxI3i32E )( int32_t );
 typedef struct kl__Box__I3f64E ( *kl__fn__F3f64E3BoxI3f64E )( double );
 typedef int32_t ( *kl__fn__FE3i32 )( void );
-
-struct kl__Counter
-{
-    int32_t kl_unused;
-};
 
 struct kl__Box__I3i32E
 {

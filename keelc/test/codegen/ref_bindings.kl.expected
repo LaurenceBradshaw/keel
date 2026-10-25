@@ -1,8 +1,7 @@
+// codegen/ref_bindings.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "ref_bindings.kl.prelude.c"
 
 struct kl__Point;
 

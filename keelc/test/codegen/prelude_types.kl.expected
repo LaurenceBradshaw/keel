@@ -1,12 +1,18 @@
+// codegen/prelude_types.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "prelude_types.kl.prelude.c"
-
+struct kl_7prelude_str;
 struct kl__Named;
 
 typedef uint64_t ( *kl__fn__FPQ7prelude3strE3u64 )( struct kl_7prelude_str* );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
 
 struct kl__Named
 {

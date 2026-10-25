@@ -1,14 +1,25 @@
+// ../test_lib/console.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+struct kl_7prelude_str;
 
-struct kl__Noisy;
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 
-struct kl__Noisy
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl_7prelude_str
 {
-    bool kl_ok_;
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
 };
 
 void kl_rt_write( int32_t, uint8_t*, uint64_t );
@@ -16,11 +27,6 @@ void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-void kl__Noisy__R5Noisy__ctor( struct kl__Noisy* );
-void kl__Noisy__dtor( struct kl__Noisy* );
-bool kl__ok__S5Noisy( struct kl__Noisy* );
-bool kl__shout__( void );
-int32_t kl__main__( void );
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
 void kl_1t7console_print__3i64( int64_t );
 void kl_1t7console_print__3u64( uint64_t );
@@ -41,90 +47,19 @@ void kl_1t7console_eprintln__3i64( int64_t );
 void kl_1t7console_eprintln__3u64( uint64_t );
 void kl_1t7console_eprintln__3f64( double );
 void kl_1t7console_eprintln__4bool( bool );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
-#line 8 "codegen/assert_release/main.kl"
-void kl__Noisy__R5Noisy__ctor( struct kl__Noisy* kl_this_1 )
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
 {
-    struct kl_7prelude_str kl_t2;
-    struct kl_7prelude_textual__ref kl_t6;
-#line 10 "codegen/assert_release/main.kl"
-    ( *kl_this_1 ).kl_ok_ = false;
-    kl_t2.kl_data = ( uint8_t* ) "built";
-#line 11 "codegen/assert_release/main.kl"
-    kl_t2.kl_size = 5;
-#line 11 "codegen/assert_release/main.kl"
-    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 11 "codegen/assert_release/main.kl"
-    kl_1t7console_println__7textual( kl_t6 );
-    return;
-#line 12 "codegen/assert_release/main.kl"
+    ( void ) self;
 }
 
-#line 14 "codegen/assert_release/main.kl"
-void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
 {
-    struct kl_7prelude_str kl_t2;
-    struct kl_7prelude_textual__ref kl_t6;
-    ( void ) kl_this_1;
-#line 16 "codegen/assert_release/main.kl"
-    kl_t2.kl_data = ( uint8_t* ) "dropped";
-#line 16 "codegen/assert_release/main.kl"
-    kl_t2.kl_size = 7;
-#line 16 "codegen/assert_release/main.kl"
-    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 16 "codegen/assert_release/main.kl"
-    kl_1t7console_println__7textual( kl_t6 );
-    return;
-#line 17 "codegen/assert_release/main.kl"
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
 }
 
-#line 19 "codegen/assert_release/main.kl"
-bool kl__ok__S5Noisy( struct kl__Noisy* kl_this_1 )
-{
-    bool kl_t0;
-#line 21 "codegen/assert_release/main.kl"
-    kl_t0 = ( *kl_this_1 ).kl_ok_;
-#line 21 "codegen/assert_release/main.kl"
-    return kl_t0;
-}
-
-#line 27 "codegen/assert_release/main.kl"
-bool kl__shout__( void )
-{
-    bool kl_t0;
-    struct kl_7prelude_str kl_t1;
-    struct kl_7prelude_textual__ref kl_t5;
-#line 29 "codegen/assert_release/main.kl"
-    kl_t1.kl_data = ( uint8_t* ) "ran";
-#line 29 "codegen/assert_release/main.kl"
-    kl_t1.kl_size = 3;
-#line 29 "codegen/assert_release/main.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 29 "codegen/assert_release/main.kl"
-    kl_1t7console_println__7textual( kl_t5 );
-    kl_t0 = false;
-#line 30 "codegen/assert_release/main.kl"
-    return kl_t0;
-}
-
-#line 33 "codegen/assert_release/main.kl"
-int32_t kl__main__( void )
-{
-    int32_t kl_t0;
-    struct kl_7prelude_str kl_t7;
-    struct kl_7prelude_textual__ref kl_t11;
-#line 39 "codegen/assert_release/main.kl"
-    kl_t7.kl_data = ( uint8_t* ) "done";
-#line 39 "codegen/assert_release/main.kl"
-    kl_t7.kl_size = 4;
-#line 39 "codegen/assert_release/main.kl"
-    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 39 "codegen/assert_release/main.kl"
-    kl_1t7console_println__7textual( kl_t11 );
-    kl_t0 = 0;
-#line 40 "codegen/assert_release/main.kl"
-    return kl_t0;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
 #line 13 "../test_lib/console.kl"
 void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
@@ -512,6 +447,140 @@ void kl_1t7console_eprintln__4bool( bool kl_value_1 )
     kl_1t7console_eprint__7textual( kl_t7 );
     return;
 #line 172 "../test_lib/console.kl"
+}
+
+// codegen/assert_release/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Noisy;
+struct kl_7prelude_str;
+
+struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
+
+struct kl_7prelude_textual__vtable;
+struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
+
+struct kl__Noisy
+{
+    bool kl_ok_;
+};
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+
+struct kl_7prelude_textual__vtable
+{
+    void ( *drop )( void* );
+    struct kl__run__L2u8__ref ( *kl__as_text__ )( void* );
+};
+
+void kl__Noisy__R5Noisy__ctor( struct kl__Noisy* );
+void kl__Noisy__dtor( struct kl__Noisy* );
+bool kl__ok__S5Noisy( struct kl__Noisy* );
+bool kl__shout__( void );
+int32_t kl__main__( void );
+void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
+struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
+
+static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
+{
+    ( void ) self;
+}
+
+static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__( void* self )
+{
+    return kl_7prelude_as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
+}
+
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
+
+#line 8 "codegen/assert_release/main.kl"
+void kl__Noisy__R5Noisy__ctor( struct kl__Noisy* kl_this_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_textual__ref kl_t6;
+#line 10 "codegen/assert_release/main.kl"
+    ( *kl_this_1 ).kl_ok_ = false;
+    kl_t2.kl_data = ( uint8_t* ) "built";
+#line 11 "codegen/assert_release/main.kl"
+    kl_t2.kl_size = 5;
+#line 11 "codegen/assert_release/main.kl"
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 11 "codegen/assert_release/main.kl"
+    kl_1t7console_println__7textual( kl_t6 );
+    return;
+#line 12 "codegen/assert_release/main.kl"
+}
+
+#line 14 "codegen/assert_release/main.kl"
+void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_textual__ref kl_t6;
+    ( void ) kl_this_1;
+#line 16 "codegen/assert_release/main.kl"
+    kl_t2.kl_data = ( uint8_t* ) "dropped";
+#line 16 "codegen/assert_release/main.kl"
+    kl_t2.kl_size = 7;
+#line 16 "codegen/assert_release/main.kl"
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 16 "codegen/assert_release/main.kl"
+    kl_1t7console_println__7textual( kl_t6 );
+    return;
+#line 17 "codegen/assert_release/main.kl"
+}
+
+#line 19 "codegen/assert_release/main.kl"
+bool kl__ok__S5Noisy( struct kl__Noisy* kl_this_1 )
+{
+    bool kl_t0;
+#line 21 "codegen/assert_release/main.kl"
+    kl_t0 = ( *kl_this_1 ).kl_ok_;
+#line 21 "codegen/assert_release/main.kl"
+    return kl_t0;
+}
+
+#line 27 "codegen/assert_release/main.kl"
+bool kl__shout__( void )
+{
+    bool kl_t0;
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 29 "codegen/assert_release/main.kl"
+    kl_t1.kl_data = ( uint8_t* ) "ran";
+#line 29 "codegen/assert_release/main.kl"
+    kl_t1.kl_size = 3;
+#line 29 "codegen/assert_release/main.kl"
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 29 "codegen/assert_release/main.kl"
+    kl_1t7console_println__7textual( kl_t5 );
+    kl_t0 = false;
+#line 30 "codegen/assert_release/main.kl"
+    return kl_t0;
+}
+
+#line 33 "codegen/assert_release/main.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_textual__ref kl_t11;
+#line 39 "codegen/assert_release/main.kl"
+    kl_t7.kl_data = ( uint8_t* ) "done";
+#line 39 "codegen/assert_release/main.kl"
+    kl_t7.kl_size = 4;
+#line 39 "codegen/assert_release/main.kl"
+    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 39 "codegen/assert_release/main.kl"
+    kl_1t7console_println__7textual( kl_t11 );
+    kl_t0 = 0;
+#line 40 "codegen/assert_release/main.kl"
+    return kl_t0;
 }
 
 #line 33 "codegen/assert_release/main.kl"

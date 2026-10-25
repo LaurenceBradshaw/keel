@@ -1,8 +1,7 @@
+// codegen/discarded_results.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "discarded_results.kl.prelude.c"
 
 struct kl__Counter;
 

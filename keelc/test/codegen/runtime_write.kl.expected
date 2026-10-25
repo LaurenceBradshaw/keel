@@ -1,8 +1,15 @@
+// codegen/runtime_write.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "runtime_write.kl.prelude.c"
+struct kl_7prelude_str;
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -13,6 +20,7 @@ void kl_rt_write_f64( int32_t, double );
 
 void kl__line__3i32( int32_t );
 int32_t kl__main__( void );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 8 "codegen/runtime_write.kl"
 void kl__line__3i32( int32_t kl_stream_1 )

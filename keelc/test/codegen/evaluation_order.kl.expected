@@ -1,8 +1,7 @@
+// codegen/evaluation_order.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "evaluation_order.kl.prelude.c"
 
 struct kl__P;
 

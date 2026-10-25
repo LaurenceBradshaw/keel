@@ -1,8 +1,7 @@
+// opt/combined_checked/main.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "main.kl.prelude.c"
 
 int32_t kl__count__G;
 

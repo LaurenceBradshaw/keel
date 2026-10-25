@@ -1,8 +1,7 @@
+// opt/moves_fields_kept.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "moves_fields_kept.kl.prelude.c"
 
 struct kl__Box;
 struct kl__Holder;

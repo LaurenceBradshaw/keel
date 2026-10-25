@@ -1,20 +1,13 @@
+// codegen/static_method_overloads.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "static_method_overloads.kl.prelude.c"
-
 struct kl__Number;
-struct kl__Box__I3i32E;
 
 struct kl__Number
 {
     int32_t kl_x;
-};
-
-struct kl__Box__I3i32E
-{
-    int32_t kl_unused;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );

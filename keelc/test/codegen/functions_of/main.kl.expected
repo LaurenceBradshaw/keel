@@ -1,15 +1,50 @@
+// codegen/functions_of/helper.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "main.kl.prelude.c"
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
+int32_t kl_6helper_adds_one__3i32( int32_t );
+
+#line 3 "codegen/functions_of/helper.kl"
+int32_t kl_6helper_adds_one__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 5 "codegen/functions_of/helper.kl"
+    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
+#line 5 "codegen/functions_of/helper.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 5 "codegen/functions_of/helper.kl"
+    kl_rt_panic( "codegen/functions_of/helper.kl", 5, "arithmetic overflow: v + 1" );
+    bb2:
+#line 5 "codegen/functions_of/helper.kl"
+    kl_t3 = kl_v_1 + 1;
+#line 5 "codegen/functions_of/helper.kl"
+    kl_t0 = kl_t3;
+#line 5 "codegen/functions_of/helper.kl"
+    return kl_t0;
+}
+
+// codegen/functions_of/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_7prelude_str;
 struct kl__step;
 struct kl__A3_4step;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
-typedef int64_t ( *kl__fn__F3i32E3i64 )( int32_t );
-typedef int32_t ( *kl__fn__FE3i32 )( void );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
 
 struct kl__step
 {
@@ -31,8 +66,9 @@ int32_t kl__twice__3i32( int32_t );
 int32_t kl__negates__3i32( int32_t );
 int64_t kl__wider__3i32( int32_t );
 int32_t kl__main__( void );
-int32_t kl_6helper_adds_one__3i32( int32_t );
 int32_t kl__same__I3i32E__3i32( int32_t );
+int32_t kl_6helper_adds_one__3i32( int32_t );
+void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 14 "codegen/functions_of/main.kl"
 int32_t kl__twice__3i32( int32_t kl_v_1 )
@@ -288,28 +324,6 @@ int32_t kl__main__( void )
 #line 49 "codegen/functions_of/main.kl"
     kl_t0 = kl_t55;
 #line 49 "codegen/functions_of/main.kl"
-    return kl_t0;
-}
-
-#line 3 "codegen/functions_of/helper.kl"
-int32_t kl_6helper_adds_one__3i32( int32_t kl_v_1 )
-{
-    int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-#line 5 "codegen/functions_of/helper.kl"
-    kl_t2 = __builtin_add_overflow( kl_v_1, 1, &( int32_t ) { 0 } );
-#line 5 "codegen/functions_of/helper.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-#line 5 "codegen/functions_of/helper.kl"
-    kl_rt_panic( "codegen/functions_of/helper.kl", 5, "arithmetic overflow: v + 1" );
-    bb2:
-#line 5 "codegen/functions_of/helper.kl"
-    kl_t3 = kl_v_1 + 1;
-#line 5 "codegen/functions_of/helper.kl"
-    kl_t0 = kl_t3;
-#line 5 "codegen/functions_of/helper.kl"
     return kl_t0;
 }
 

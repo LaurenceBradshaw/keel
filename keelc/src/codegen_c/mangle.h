@@ -38,6 +38,10 @@ struct Mangled_owner
     std::string module  = {};
 };
 
+// Each part length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart; an empty part is
+// left out. A name never starts with a digit, so a package with no module reads apart from both.
+std::string module_slot( const Mangled_owner& owner );
+
 // `kl_<owner>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an
 // instantiation. The input file's owner is empty, which gives `kl__add__3i32_3i32`. Parameter types
 // are what tell two overloads of one name apart, and the type arguments are what tell two

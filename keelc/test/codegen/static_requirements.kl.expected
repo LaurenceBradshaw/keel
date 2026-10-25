@@ -1,8 +1,7 @@
+// codegen/static_requirements.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "static_requirements.kl.prelude.c"
 
 struct kl__meter;
 struct kl__Owner;

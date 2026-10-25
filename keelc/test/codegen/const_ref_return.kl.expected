@@ -1,8 +1,7 @@
+// codegen/const_ref_return.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "const_ref_return.kl.prelude.c"
 
 struct kl__Point;
 

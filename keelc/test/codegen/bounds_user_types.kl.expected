@@ -1,8 +1,7 @@
+// codegen/bounds_user_types.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "bounds_user_types.kl.prelude.c"
 
 struct kl__Version;
 struct kl__Pair__I3i32E;

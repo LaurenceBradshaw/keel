@@ -1,8 +1,7 @@
+// codegen/method_borrows.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "method_borrows.kl.prelude.c"
 
 struct kl__Counter;
 

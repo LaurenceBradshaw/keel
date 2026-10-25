@@ -3,10 +3,9 @@
 
 #pragma once
 #include <string>
-#include <string_view>
 #include <vector>
 #include "ast/ast.h"
-#include "codegen_c/halves.h"
+#include "codegen_c/parts.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
@@ -17,7 +16,7 @@
 namespace keel
 {
 
-// `include` names the prelude's file, written after the standard headers; empty writes none.
+// `part`'s C, complete without any other part's; a null `parts` writes the whole compile as one.
 // Types is mutable only for its table, which a struct reached only through a field grows.
 std::string emit_c_from_kir(
     const std::vector<Function>& functions,
@@ -27,8 +26,8 @@ std::string emit_c_from_kir(
     const Source_manager&        sm,
     const Interner&              interner,
     const Module_graph&          modules = {},
-    C_part                       part    = C_part::Program,
-    std::string_view             include = {}
+    const Parts*                 parts   = nullptr,
+    File_id                      part    = {}
 );
 
 } // namespace keel

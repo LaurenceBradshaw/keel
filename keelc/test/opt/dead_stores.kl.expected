@@ -1,8 +1,7 @@
+// opt/dead_stores.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "dead_stores.kl.prelude.c"
 
 struct kl__Point;
 

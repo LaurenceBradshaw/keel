@@ -1,8 +1,7 @@
+// codegen/alloc_size_overflow.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "alloc_size_overflow.kl.prelude.c"
 
 uint64_t kl__n__G = 2305843009213693953;
 

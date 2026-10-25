@@ -1,8 +1,7 @@
+// codegen/generics_enums.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "generics_enums.kl.prelude.c"
 
 struct kl__Box__I3f64E;
 struct kl__Wrap__I3f64E;

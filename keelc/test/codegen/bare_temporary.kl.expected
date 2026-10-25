@@ -1,8 +1,7 @@
+// codegen/bare_temporary.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "bare_temporary.kl.prelude.c"
 
 struct kl__Tracked;
 struct kl__Holder;

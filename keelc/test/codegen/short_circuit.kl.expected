@@ -1,8 +1,7 @@
+// codegen/short_circuit.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "short_circuit.kl.prelude.c"
 
 bool kl__positive__3i32( int32_t );
 bool kl__both__3i32_3i32( int32_t, int32_t );

@@ -1,8 +1,7 @@
+// codegen/overflow_negate.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "overflow_negate.kl.prelude.c"
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

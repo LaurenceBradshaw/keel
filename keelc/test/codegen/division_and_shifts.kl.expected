@@ -1,8 +1,7 @@
+// codegen/division_and_shifts.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "division_and_shifts.kl.prelude.c"
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
