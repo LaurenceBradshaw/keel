@@ -68,6 +68,18 @@
                     }
                 },
                 {
+                    "name": "comment.line.banner.keel",
+                    "match": "(///)\\s*(-{3,}\\s*[^-\\s].*?\\s*-{3,})\\s*$",
+                    "captures": {
+                        "1": {
+                            "name": "punctuation.definition.comment.keel"
+                        },
+                        "2": {
+                            "name": "markup.heading.banner.keel"
+                        }
+                    }
+                },
+                {
                     "name": "comment.line.double-slash.keel",
                     "begin": "//",
                     "end": "$",

@@ -1,0 +1,54 @@
+/// A path through points, one leg at a time.
+class route
+{
+    i32 legs;
+
+    /// --- Building ---
+
+    /// A route of no legs.
+    public route()
+    {
+        legs = 0;
+    }
+
+    /// Adds one leg.
+    public void extend()
+    {
+        legs = legs + 1;
+    }
+
+    /// --- Reading ---
+
+    /// How many legs it has.
+    public i32 count() const
+    {
+        return legs;
+    }
+
+    /// Whether it has none.
+    public bool is_empty() const
+    {
+        return legs == 0;
+    }
+};
+
+/// --- Planning ---
+
+/// A route of `n` legs.
+route planned( i32 n )
+{
+    route r = route();
+    for( i32 i = 0; i < n; i = i + 1 )
+    {
+        r.extend();
+    }
+    return r;
+}
+
+/// --- Checking ---
+
+/// Whether `r` goes anywhere.
+bool moves( const ref route r )
+{
+    return !r.is_empty();
+}

@@ -30,6 +30,8 @@ private const u64 EMPTY_SLOTS_MASK = 0xffff_ffff_ffff_ffff;
 /// live. Use `kl::map` or `kl::set` rather than this directly.
 class hash_control
 {
+    /// --- Construction ---
+
     /// A table of `slots` empty slots, 0 or a power of two of at least 8, keyed by the two halves.
     public hash_control( u64 slots, u64 key_low, u64 key_high )
     {
@@ -117,11 +119,7 @@ class hash_control
         return result;
     }
 
-    /// A hasher under this table's key, for hashing one key.
-    public hasher start_hash() const
-    {
-        return hasher( key_low_, key_high_ );
-    }
+    /// --- Sizing ---
 
     /// The number of slots, full or not.
     public u64 slots() const
@@ -186,78 +184,19 @@ class hash_control
         return slots_for( count_ + 1 );
     }
 
-    /// Flags each byte of `word` equal to the tag that fills every byte of `tags`.
-    ///
-    /// Bytes above a match may be flagged too, but only full ones, so comparing their keys rejects
-    /// them.
-    public static u64 match_tags( u64 word, u64 tags )
+    /// How many keys a table of `slots` slots holds: 7/8 of them, so lookups meet an empty slot
+    /// soon. `kl::map` and `kl::set` size their arrays by it.
+    public static u64 usable( u64 slots )
     {
-        // `x` is zero exactly in the matching bytes. Subtracting 1 from a zero byte borrows and sets
-        // its top bit, and `~x` keeps only the bytes whose top bit was clear, so a byte that was
-        // already 0x80 or more cannot be flagged. A borrow out of a zero byte can carry into the
-        // byte above, flagging it if that byte is 0x01: a tag differing from ours in its lowest
-        // bit, so a full slot.
-        const u64 x = word ^ tags;
-        return wrap<u64>( x - BYTE_ONES ) & ~x & BYTE_MSB_MASK;
+        return ( slots / 8 ) * 7;
     }
 
-    /// Flags each empty byte of `word`.
-    public static u64 match_empty( u64 word )
-    {
-        // Only 0xff has both bit 7 and bit 6 set; shifting left by one lines each byte's bit 6 up
-        // with its bit 7.
-        return word & ( word << 1 ) & BYTE_MSB_MASK;
-    }
+    /// --- Hashing and probing ---
 
-    /// Flags each empty or deleted byte of `word`: those with the top bit set.
-    public static u64 match_free( u64 word )
+    /// A hasher under this table's key, for hashing one key.
+    public hasher start_hash() const
     {
-        return word & BYTE_MSB_MASK;
-    }
-
-    /// The index, 0 to 7, of the lowest flagged byte of `matches`, which must not be 0.
-    public static u64 lowest( u64 matches )
-    {
-        // `matches & ( 0 - matches )` keeps only the lowest flag, bit `8k + 7`. Shifting it down by
-        // 7 and subtracting 1 gives 0xff in each of the `k` bytes below it. Keeping one bit of each
-        // and multiplying by 0x0101... adds every byte into the top one, which is then `k`.
-        const u64 below = ( ( matches & wrap<u64>( 0 - matches ) ) >> 7 ) - 1;
-        return wrap<u64>( ( below & BYTE_ONES ) * BYTE_ONES ) >> 56;
-    }
-
-    // The control byte of `slot`: its group is `slot / 8` and its byte `slot % 8`.
-    private u64 byte( u64 slot ) const
-    {
-        unsafe
-        {
-            return ( groups_[slot >> 3] >> ( ( slot & 7 ) * 8 ) ) & 0xff;
-        }
-    }
-
-    // Clears the byte of `slot` in its group, then ors `value` into it.
-    private void set_byte( u64 slot, u64 value )
-    {
-        const u64 shift = ( slot & 7 ) * 8;
-
-        unsafe
-        {
-            groups_[slot >> 3] = ( groups_[slot >> 3] & ~( 0xff << shift ) ) | ( value << shift );
-        }
-    }
-
-    /// Whether `slot` holds a key.
-    public bool is_full( u64 slot ) const
-    {
-        return byte( slot ) < 0x80;
-    }
-
-    /// The entry that the full `slot` holds.
-    public u64 entry( u64 slot ) const
-    {
-        unsafe
-        {
-            return entries_[slot];
-        }
+        return hasher( key_low_, key_high_ );
     }
 
     /// The slots that may hold a key of this hash, in the order it would have been placed.
@@ -296,6 +235,23 @@ class hash_control
             group = ( group + stride ) & mask;
         }
     }
+
+    /// Whether `slot` holds a key.
+    public bool is_full( u64 slot ) const
+    {
+        return byte( slot ) < 0x80;
+    }
+
+    /// The entry that the full `slot` holds.
+    public u64 entry( u64 slot ) const
+    {
+        unsafe
+        {
+            return entries_[slot];
+        }
+    }
+
+    /// --- Changing ---
 
     /// Marks `slot`, which `free_slot` gave, full with the tag of `hash`, and answers its entry, the
     /// next past the last.
@@ -383,11 +339,67 @@ class hash_control
         growth_left_ = usable( slots_ );
     }
 
-    /// How many keys a table of `slots` slots holds: 7/8 of them, so lookups meet an empty slot
-    /// soon. `kl::map` and `kl::set` size their arrays by it.
-    public static u64 usable( u64 slots )
+    /// --- Matching groups ---
+
+    /// Flags each byte of `word` equal to the tag that fills every byte of `tags`.
+    ///
+    /// Bytes above a match may be flagged too, but only full ones, so comparing their keys rejects
+    /// them.
+    public static u64 match_tags( u64 word, u64 tags )
     {
-        return ( slots / 8 ) * 7;
+        // `x` is zero exactly in the matching bytes. Subtracting 1 from a zero byte borrows and sets
+        // its top bit, and `~x` keeps only the bytes whose top bit was clear, so a byte that was
+        // already 0x80 or more cannot be flagged. A borrow out of a zero byte can carry into the
+        // byte above, flagging it if that byte is 0x01: a tag differing from ours in its lowest
+        // bit, so a full slot.
+        const u64 x = word ^ tags;
+        return wrap<u64>( x - BYTE_ONES ) & ~x & BYTE_MSB_MASK;
+    }
+
+    /// Flags each empty byte of `word`.
+    public static u64 match_empty( u64 word )
+    {
+        // Only 0xff has both bit 7 and bit 6 set; shifting left by one lines each byte's bit 6 up
+        // with its bit 7.
+        return word & ( word << 1 ) & BYTE_MSB_MASK;
+    }
+
+    /// Flags each empty or deleted byte of `word`: those with the top bit set.
+    public static u64 match_free( u64 word )
+    {
+        return word & BYTE_MSB_MASK;
+    }
+
+    /// The index, 0 to 7, of the lowest flagged byte of `matches`, which must not be 0.
+    public static u64 lowest( u64 matches )
+    {
+        // `matches & ( 0 - matches )` keeps only the lowest flag, bit `8k + 7`. Shifting it down by
+        // 7 and subtracting 1 gives 0xff in each of the `k` bytes below it. Keeping one bit of each
+        // and multiplying by 0x0101... adds every byte into the top one, which is then `k`.
+        const u64 below = ( ( matches & wrap<u64>( 0 - matches ) ) >> 7 ) - 1;
+        return wrap<u64>( ( below & BYTE_ONES ) * BYTE_ONES ) >> 56;
+    }
+
+    /// --- Internals ---
+
+    // The control byte of `slot`: its group is `slot / 8` and its byte `slot % 8`.
+    private u64 byte( u64 slot ) const
+    {
+        unsafe
+        {
+            return ( groups_[slot >> 3] >> ( ( slot & 7 ) * 8 ) ) & 0xff;
+        }
+    }
+
+    // Clears the byte of `slot` in its group, then ors `value` into it.
+    private void set_byte( u64 slot, u64 value )
+    {
+        const u64 shift = ( slot & 7 ) * 8;
+
+        unsafe
+        {
+            groups_[slot >> 3] = ( groups_[slot >> 3] & ~( 0xff << shift ) ) | ( value << shift );
+        }
     }
 
     private u64[*] groups_;     // one per 8 slots; `nullptr` when there are none

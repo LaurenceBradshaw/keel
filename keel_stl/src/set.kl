@@ -10,11 +10,21 @@ import hash_control;
 /// random key, and `insert` takes amortised constant time. Dropping the set drops every key.
 class set<K> where K : hashable
 {
+    /// --- Construction ---
+
     /// An empty set. Allocates nothing until the first key arrives.
     public set()
     {
         control_ = hash_control::fresh();
         keys_ = nullptr;
+    }
+
+    /// An empty set with room for `capacity` keys before it grows.
+    public static set<K> with_capacity( u64 capacity )
+    {
+        set<K> result = set<K>();
+        result.reserve( capacity );
+        return result;
     }
 
     ~set()
@@ -29,12 +39,24 @@ class set<K> where K : hashable
         }
     }
 
-    /// An empty set with room for `capacity` keys before it grows.
-    public static set<K> with_capacity( u64 capacity )
+    /// --- Size and capacity ---
+
+    /// The number of keys.
+    public u64 size() const
     {
-        set<K> result = set<K>();
-        result.reserve( capacity );
-        return result;
+        return control_.size();
+    }
+
+    /// Whether the set holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// How many keys fit before the set grows. Removing a key may lower it until the set is rebuilt.
+    public u64 capacity() const
+    {
+        return control_.capacity();
     }
 
     /// Makes room for at least `n` keys in all, not `n` more.
@@ -46,6 +68,37 @@ class set<K> where K : hashable
             resize( hash_control::slots_for( n ) );
         }
     }
+
+    /// --- Lookup ---
+
+    /// Whether the set holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != control_.slots();
+    }
+
+    /// --- By position ---
+
+    /// A pointer to key `i`, counting from 0 in insertion order until a removal. `const`, since a
+    /// changed key would sit in the wrong slot.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `size()`.
+    public const K* key_at( u64 i ) const
+    {
+        if( i >= control_.size() )
+        {
+            panic( "index out of range" );
+        }
+
+        unsafe
+        {
+            return &keys_[i];
+        }
+    }
+
+    /// --- Changing ---
 
     /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is
     /// dropped.
@@ -71,31 +124,6 @@ class set<K> where K : hashable
         }
 
         return true;
-    }
-
-    /// A pointer to key `i`, counting from 0 in insertion order until a removal. `const`, since a
-    /// changed key would sit in the wrong slot.
-    ///
-    /// ### Panics
-    ///
-    /// If `i` is not less than `size()`.
-    public const K* key_at( u64 i ) const
-    {
-        if( i >= control_.size() )
-        {
-            panic( "index out of range" );
-        }
-
-        unsafe
-        {
-            return &keys_[i];
-        }
-    }
-
-    /// Whether the set holds `key`.
-    public bool contains( const ref K key ) const
-    {
-        return slot_of( key ) != control_.slots();
     }
 
     /// Removes `key`, and returns whether the set held it. The last key takes its place.
@@ -124,30 +152,14 @@ class set<K> where K : hashable
         return true;
     }
 
-    /// The number of keys.
-    public u64 size() const
-    {
-        return control_.size();
-    }
-
-    /// Whether the set holds no keys.
-    public bool is_empty() const
-    {
-        return control_.size() == 0;
-    }
-
-    /// How many keys fit before the set grows. Removing a key may lower it until the set is rebuilt.
-    public u64 capacity() const
-    {
-        return control_.capacity();
-    }
-
     /// Drops every key; the capacity is kept.
     public void clear()
     {
         drop_all();
         control_.clear();
     }
+
+    /// --- Internals ---
 
     private u64 hash_of( const ref K key ) const
     {

@@ -1,7 +1,7 @@
 {
     "name": "keel",
     "displayName": "Keel",
-    "description": "Keel language support: highlighting, editing rules, and keelc's errors, name colours and hovers on save.",
+    "description": "Keel language support: highlighting, editing rules, keelc's errors, name colours and hovers on save, and a header view.",
     "version": "0.0.1",
     "publisher": "keel",
     "license": "Apache-2.0 WITH LLVM-exception",
@@ -13,12 +13,53 @@
     ],
     "main": "./extension.js",
     "activationEvents": [
-        "onLanguage:keel"
+        "onLanguage:keel",
+        "onCommand:keel.showHeader",
+        "onCommand:keel.switchHeaderSource"
     ],
     "extensionKind": [
         "workspace"
     ],
     "contributes": {
+        "commands": [
+            {
+                "command": "keel.switchHeaderSource",
+                "title": "Switch Header/Source",
+                "category": "Keel"
+            },
+            {
+                "command": "keel.showHeader",
+                "title": "Show Header",
+                "category": "Keel",
+                "icon": "$(list-flat)"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "keel.switchHeaderSource",
+                "key": "alt+o",
+                "when": "editorTextFocus && editorLangId == keel"
+            }
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "keel.showHeader",
+                    "when": "editorLangId == keel && resourceScheme == file",
+                    "group": "navigation"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "keel.switchHeaderSource",
+                    "when": "editorLangId == keel"
+                },
+                {
+                    "command": "keel.showHeader",
+                    "when": "editorLangId == keel && resourceScheme == file"
+                }
+            ]
+        },
         "breakpoints": [
             {
                 "language": "keel"
@@ -107,6 +148,12 @@
                         "scope": "storage.modifier.mode.keel",
                         "settings": {
                             "fontStyle": "italic"
+                        }
+                    },
+                    {
+                        "scope": "markup.heading.banner.keel",
+                        "settings": {
+                            "fontStyle": "bold"
                         }
                     }
                 ]

@@ -1,1 +1,1 @@
-../src/ring.kl:23: panic: a ring needs a capacity
+../src/ring.kl:25: panic: a ring needs a capacity

@@ -780,23 +780,23 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-#line 50 "<prelude>"
+#line 56 "<prelude>"
 void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* kl_t1 )
 {
     bool kl_t2;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     return;
     bb2:
-#line 50 "<prelude>"
-    kl__Counter__dtor( &( *kl_t1 ).kl_value );
-#line 50 "<prelude>"
-    goto bb1;
 #line 56 "<prelude>"
+    kl__Counter__dtor( &( *kl_t1 ).kl_value );
+#line 56 "<prelude>"
+    goto bb1;
+#line 62 "<prelude>"
 }
 
 #line 53 "codegen/discards.kl"

@@ -19,6 +19,7 @@ struct Declaration
     std::string name;
     std::string signature;
     std::string doc;
+    std::string section {};
 };
 
 // A name's overloads, in source order: most hold one.
@@ -33,7 +34,8 @@ struct Group
     }
 };
 
-// A type's members of one kind: "Variants", "Fields", "Constructors" or "Methods".
+// A type's members of one kind, "Variants", "Fields", "Constructors" or "Methods", or under one
+// banner, after the kinds.
 struct Section
 {
     std::string        title;

@@ -28,4 +28,7 @@ std::string print_signature(
 // A declaration's `///` lines without their markers, or empty when it has none.
 std::string documentation( const Ast& ast, const Source_manager& sm, Node_id decl );
 
+// The section a `/// --- Name ---` banner before the declaration opens, or empty when none does.
+std::string opened_section( const Ast& ast, const Source_manager& sm, Node_id decl );
+
 } // namespace keel

@@ -1,7 +1,8 @@
 # Keel for VS Code
 
 Highlighting and editing rules for `.kl` files, keelc's errors underlined in the editor, names
-coloured by what they refer to, hovers, and go-to-definition.
+coloured by what they refer to, hovers, go-to-definition, and a header view of a file's
+declarations.
 
 Install by linking this folder into VS Code's extensions directory, then reloading the window:
 
@@ -62,3 +63,19 @@ to the overload the compiler chose.
 A name declared in the prelude, such as `str`, opens `prelude.kl` read-only. It is not a file on
 disk: its text comes from `keelc --print-prelude`, run with `keel.compilerPath`, and is asked again
 when that compiler is rebuilt.
+
+## Header view
+
+*Keel: Show Header*, or the list button in a `.kl` file's title bar, opens `name (header).kl`
+beside the file: every declaration the file holds, as hover writes it, without bodies or docs.
+Each type's members sit inside its braces, private ones too, and each banner stays where it is.
+Ctrl+click or F12 on a name goes to its definition. The view comes from
+`keelc --check --diagnostics=json --declarations` and is listed again each time the file is saved.
+
+Alt+O (*Keel: Switch Header/Source*) swaps a file and its header in the same group instead, as
+C++'s header and source swap.
+
+A banner is a `///` line of dashes around a name. It opens a section that runs to the next banner
+or to the end of the body it is in, and keeldoc's pages divide at it too:
+
+    /// --- Look-ups ---

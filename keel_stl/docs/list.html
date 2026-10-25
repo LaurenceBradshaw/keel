@@ -21,68 +21,59 @@
 amortised constant time. Dropping the list drops every element.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="list.list">
 <pre class="signature"><a class="anchor" href="#list.list" aria-label="Link to list">#</a><code><span class="kw">public</span> <span class="type">list</span>()</code></pre>
 <div class="doc">
 <p>An empty list. Allocates nothing until the first element arrives.</p>
 </div>
 </div>
-<div class="group" id="list.~list">
-<pre class="signature"><a class="anchor" href="#list.~list" aria-label="Link to ~list">#</a><code><span class="type">~list</span>()</code></pre>
-</div>
-<h3>Methods</h3>
 <div class="group" id="list.with_capacity">
 <pre class="signature"><a class="anchor" href="#list.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
 <div class="doc">
 <p>An empty list with room for <code>capacity</code> elements before it reallocates.</p>
 </div>
 </div>
+<div class="group" id="list.~list">
+<pre class="signature"><a class="anchor" href="#list.~list" aria-label="Link to ~list">#</a><code><span class="type">~list</span>()</code></pre>
+</div>
+<h3>Size and capacity</h3>
+<div class="group" id="list.size">
+<pre class="signature"><a class="anchor" href="#list.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of elements.</p>
+</div>
+</div>
+<div class="group" id="list.is_empty">
+<pre class="signature"><a class="anchor" href="#list.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the list holds no elements.</p>
+</div>
+</div>
+<div class="group" id="list.capacity">
+<pre class="signature"><a class="anchor" href="#list.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many elements fit before the list reallocates.</p>
+</div>
+</div>
+<div class="group" id="list.reserve">
+<pre class="signature"><a class="anchor" href="#list.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Makes room for at least <code>n</code> elements in all, not <code>n</code> more.
+Does nothing if the capacity is already that large.</p>
+</div>
+</div>
+<div class="group" id="list.shrink_to_fit">
+<pre class="signature"><a class="anchor" href="#list.shrink_to_fit" aria-label="Link to shrink_to_fit">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">shrink_to_fit</span>()</code></pre>
+<div class="doc">
+<p>Reduces the capacity to the number of elements, freeing the block if there are none.</p>
+</div>
+</div>
+<h3>Reading</h3>
 <div class="group" id="list.as_run">
 <pre class="signature"><a class="anchor" href="#list.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The elements borrowed as a read-only run. The list cannot change while the run is held.</p>
-</div>
-</div>
-<div class="group" id="list.push">
-<pre class="signature"><a class="anchor" href="#list.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <span class="kw">move</span> T value )</code></pre>
-<div class="doc">
-<p>Adds <code>value</code> at the end, growing the storage if it is full.</p>
-</div>
-</div>
-<div class="group" id="list.pop">
-<pre class="signature"><a class="anchor" href="#list.pop" aria-label="Link to pop">#</a><code><span class="kw">public</span> T <span class="fn">pop</span>()</code></pre>
-<div class="doc">
-<p>Removes the last element and returns it.</p>
-<h4>Panics</h4>
-<p>If the list is empty; <code>try_pop</code> answers <code>none</code> instead.</p>
-</div>
-</div>
-<div class="group" id="list.try_pop">
-<pre class="signature"><a class="anchor" href="#list.try_pop" aria-label="Link to try_pop">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">try_pop</span>()</code></pre>
-<div class="doc">
-<p>Removes the last element and returns it, or <code>none</code> if the list is empty.</p>
-</div>
-</div>
-<div class="group" id="list.insert">
-<pre class="signature"><a class="anchor" href="#list.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">insert</span>( <a class="prim" href="prelude.html#u64">u64</a> index, <span class="kw">move</span> T value )</code></pre>
-<div class="doc">
-<p>Puts <code>value</code> at <code>index</code>, moving every element from there one place later.</p>
-<h4>Panics</h4>
-<p>If <code>index</code> is greater than <code>size()</code>. An index equal to it adds at the end.</p>
-</div>
-</div>
-<div class="group" id="list.append">
-<pre class="signature"><a class="anchor" href="#list.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">append</span>( <span class="kw">move</span> <a class="type" href="#list">list</a>&lt;T&gt; other )</code></pre>
-<div class="doc">
-<p>Moves every element of <code>other</code> onto the end, in order.</p>
-</div>
-</div>
-<div class="group" id="list.truncate">
-<pre class="signature"><a class="anchor" href="#list.truncate" aria-label="Link to truncate">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">truncate</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
-<div class="doc">
-<p>Drops every element from index <code>n</code> on, keeping the first <code>n</code>; the capacity is unchanged.
-Does nothing if <code>n</code> is at least <code>size()</code>.</p>
 </div>
 </div>
 <div class="group" id="list.first">
@@ -109,6 +100,48 @@ Does nothing if <code>n</code> is at least <code>size()</code>.</p>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
+<div class="group" id="list.map">
+<pre class="signature"><a class="anchor" href="#list.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#list">list</a>&lt;U&gt; <span class="fn">map</span>&lt;U&gt;( <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; U f ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new list holding <code>f</code> applied to each element, in order. This list is unchanged.</p>
+</div>
+</div>
+<h3>Adding</h3>
+<div class="group" id="list.push">
+<pre class="signature"><a class="anchor" href="#list.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <span class="kw">move</span> T value )</code></pre>
+<div class="doc">
+<p>Adds <code>value</code> at the end, growing the storage if it is full.</p>
+</div>
+</div>
+<div class="group" id="list.insert">
+<pre class="signature"><a class="anchor" href="#list.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">insert</span>( <a class="prim" href="prelude.html#u64">u64</a> index, <span class="kw">move</span> T value )</code></pre>
+<div class="doc">
+<p>Puts <code>value</code> at <code>index</code>, moving every element from there one place later.</p>
+<h4>Panics</h4>
+<p>If <code>index</code> is greater than <code>size()</code>. An index equal to it adds at the end.</p>
+</div>
+</div>
+<div class="group" id="list.append">
+<pre class="signature"><a class="anchor" href="#list.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">append</span>( <span class="kw">move</span> <a class="type" href="#list">list</a>&lt;T&gt; other )</code></pre>
+<div class="doc">
+<p>Moves every element of <code>other</code> onto the end, in order.</p>
+</div>
+</div>
+<h3>Removing</h3>
+<div class="group" id="list.pop">
+<pre class="signature"><a class="anchor" href="#list.pop" aria-label="Link to pop">#</a><code><span class="kw">public</span> T <span class="fn">pop</span>()</code></pre>
+<div class="doc">
+<p>Removes the last element and returns it.</p>
+<h4>Panics</h4>
+<p>If the list is empty; <code>try_pop</code> answers <code>none</code> instead.</p>
+</div>
+</div>
+<div class="group" id="list.try_pop">
+<pre class="signature"><a class="anchor" href="#list.try_pop" aria-label="Link to try_pop">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">try_pop</span>()</code></pre>
+<div class="doc">
+<p>Removes the last element and returns it, or <code>none</code> if the list is empty.</p>
+</div>
+</div>
 <div class="group" id="list.remove">
 <pre class="signature"><a class="anchor" href="#list.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> T <span class="fn">remove</span>( <a class="prim" href="prelude.html#u64">u64</a> index )</code></pre>
 <div class="doc">
@@ -127,6 +160,20 @@ Takes constant time and does not keep the order.</p>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
+<div class="group" id="list.truncate">
+<pre class="signature"><a class="anchor" href="#list.truncate" aria-label="Link to truncate">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">truncate</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Drops every element from index <code>n</code> on, keeping the first <code>n</code>; the capacity is unchanged.
+Does nothing if <code>n</code> is at least <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="list.clear">
+<pre class="signature"><a class="anchor" href="#list.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Drops every element; the capacity is kept.</p>
+</div>
+</div>
+<h3>Rearranging</h3>
 <div class="group" id="list.replace">
 <pre class="signature"><a class="anchor" href="#list.replace" aria-label="Link to replace">#</a><code><span class="kw">public</span> T <span class="fn">replace</span>( <a class="prim" href="prelude.html#u64">u64</a> index, <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
@@ -147,49 +194,6 @@ Takes constant time and does not keep the order.</p>
 <pre class="signature"><a class="anchor" href="#list.reverse" aria-label="Link to reverse">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reverse</span>()</code></pre>
 <div class="doc">
 <p>Reverses the order of the elements in place.</p>
-</div>
-</div>
-<div class="group" id="list.map">
-<pre class="signature"><a class="anchor" href="#list.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#list">list</a>&lt;U&gt; <span class="fn">map</span>&lt;U&gt;( <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; U f ) <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>A new list holding <code>f</code> applied to each element, in order. This list is unchanged.</p>
-</div>
-</div>
-<div class="group" id="list.size">
-<pre class="signature"><a class="anchor" href="#list.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>The number of elements.</p>
-</div>
-</div>
-<div class="group" id="list.capacity">
-<pre class="signature"><a class="anchor" href="#list.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>How many elements fit before the list reallocates.</p>
-</div>
-</div>
-<div class="group" id="list.is_empty">
-<pre class="signature"><a class="anchor" href="#list.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether the list holds no elements.</p>
-</div>
-</div>
-<div class="group" id="list.reserve">
-<pre class="signature"><a class="anchor" href="#list.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
-<div class="doc">
-<p>Makes room for at least <code>n</code> elements in all, not <code>n</code> more.
-Does nothing if the capacity is already that large.</p>
-</div>
-</div>
-<div class="group" id="list.shrink_to_fit">
-<pre class="signature"><a class="anchor" href="#list.shrink_to_fit" aria-label="Link to shrink_to_fit">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">shrink_to_fit</span>()</code></pre>
-<div class="doc">
-<p>Reduces the capacity to the number of elements, freeing the block if there are none.</p>
-</div>
-</div>
-<div class="group" id="list.clear">
-<pre class="signature"><a class="anchor" href="#list.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
-<div class="doc">
-<p>Drops every element; the capacity is kept.</p>
 </div>
 </div>
 </section>

@@ -128,6 +128,7 @@ Package build_package(
     std::map<std::string, std::vector<Group>>                                                     top_level;
     std::map<std::pair<std::string, std::string>, std::map<std::string_view, std::vector<Group>>> members;
     std::set<std::pair<std::string, std::string>>                                                 hidden;
+    std::map<std::pair<std::string, std::string>, std::vector<std::string_view>>                  banners;
 
     for( const Record& record : records )
     {
@@ -165,6 +166,7 @@ Package build_package(
             std::string( record.get( "name" ) ),
             std::string( record.get( "signature" ) ),
             std::string( record.get( "doc" ) ),
+            std::string( record.get( "section" ) ),
         };
 
         // An undocumented extern is C the reader should not call or is documented elsewhere.
@@ -189,7 +191,14 @@ Package build_package(
         }
         else
         {
-            const std::string_view section = section_of( decl.declares );
+            const std::string_view         banner = record.get( "section" );
+            std::vector<std::string_view>& seen   = banners[{ *module, parent }];
+            if( !banner.empty() && std::ranges::find( seen, banner ) == seen.end() )
+            {
+                seen.push_back( banner );
+            }
+
+            const std::string_view section = banner.empty() ? section_of( decl.declares ) : banner;
             add_overload( members[{ *module, parent }][section], std::move( decl ) );
         }
     }
@@ -204,9 +213,12 @@ Package build_package(
 
             if( const auto it = members.find( { module_name, entry.group.name } ); it != members.end() )
             {
-                for( const std::string_view title : k_section_order )
+                std::vector<std::string_view> titles( std::begin( k_section_order ), std::end( k_section_order ) );
+                std::ranges::copy( banners[it->first], std::back_inserter( titles ) );
+
+                for( const std::string_view title : titles )
                 {
-                    if( const auto section = it->second.find( title ); section != it->second.end() )
+                    if( const auto section = it->second.find( title ); section != it->second.end() && !section->second.empty() )
                     {
                         entry.sections.push_back( { std::string( title ), std::move( section->second ) } );
                     }
@@ -300,6 +312,35 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private_and_bare_ext
     REQUIRE( prelude.front().group.declares() == "primitive" );
     REQUIRE( prelude.back().group.name == "str" );
     REQUIRE( prelude.back().sections.empty() );
+}
+
+TEST_CASE( "package_lists_a_type_s_banners_after_its_kinds", "[package]" )
+{
+    // clang-format off
+    const std::vector<Record> records = parse_all( {
+        R"json({"kind":"declaration","declares":"class","name":"Box","file":"geo/box.kl","access":"public","signature":"class Box","section":"Shapes"})json",
+        R"json({"kind":"declaration","declares":"constructor","name":"Box","file":"geo/box.kl","access":"public","signature":"public Box()","parent":"Box"})json",
+        R"json({"kind":"declaration","declares":"method","name":"put","file":"geo/box.kl","access":"public","signature":"public void put()","parent":"Box","section":"Writing"})json",
+        R"json({"kind":"declaration","declares":"method","name":"get","file":"geo/box.kl","access":"public","signature":"public i32 get()","parent":"Box","section":"Reading"})json",
+        R"json({"kind":"declaration","declares":"field","name":"n","file":"geo/box.kl","access":"public","signature":"public i32 n","parent":"Box","section":"Writing"})json",
+    } );
+    // clang-format on
+
+    std::vector<std::string> errors;
+    const Package            package = build_package( "geo", "geo", records, "", errors );
+
+    REQUIRE( package.modules.size() == 1 );
+
+    const Entry& box = package.modules[0].entries[0];
+    REQUIRE( box.group.overloads[0].section == "Shapes" );
+
+    std::vector<std::string> titles;
+    for( const Section& section : box.sections )
+    {
+        titles.push_back( section.title + " " + std::to_string( section.groups.size() ) );
+    }
+
+    REQUIRE( titles == std::vector<std::string> { "Constructors 1", "Writing 2", "Reading 1" } );
 }
 
 TEST_CASE( "package_reads_its_notice_and_the_prelude's", "[package]" )

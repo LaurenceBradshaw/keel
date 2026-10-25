@@ -1,2 +1,2 @@
 looking
-../../src/list.kl:167: panic: the list is empty
+../../src/list.kl:121: panic: the list is empty

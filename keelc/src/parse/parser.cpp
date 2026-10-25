@@ -586,9 +586,8 @@ void Parser::attach_doc( Node_id decl, u32 first_token )
     const Span gap_span { cursor_.tokens()[first_token].span.file, gap_start, gap_end };
 
     const std::string_view gap_text = sm_.text( gap_span );
-    const std::string      doc      = doc_comment( gap_text, "///" );
 
-    if( doc.empty() )
+    if( doc_comment( gap_text, "///" ).empty() && section_banner( gap_text ).empty() )
     {
         return;
     }

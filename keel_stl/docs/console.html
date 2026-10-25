@@ -12,12 +12,16 @@
 <main>
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::console</h1>
 <ul class="contents">
+<li class="divider">Standard output</li>
 <li><a href="#print"><code>print</code></a> <span class="kind">function</span></li>
-<li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
 <li><a href="#println"><code>println</code></a> <span class="kind">function</span></li>
+<li class="divider">Standard error</li>
+<li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
 <li><a href="#eprintln"><code>eprintln</code></a> <span class="kind">function</span></li>
+<li class="divider">Standard input</li>
 <li><a href="#input"><code>input</code></a> <span class="kind">function</span></li>
 </ul>
+<h2 class="divider">Standard output</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">print</span></h2>
 <div class="group" id="print">
@@ -39,33 +43,6 @@
 <p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
 </div>
 <pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">print</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
-<div class="doc">
-<p>Writes <code>true</code> or <code>false</code>.</p>
-</div>
-</div>
-</section>
-<section class="entry">
-<h2><span class="kind">function</span> <span class="fn">eprint</span></h2>
-<div class="group" id="eprint">
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
-<div class="doc">
-<p>Writes text to standard error, ending no line.</p>
-<p>Standard output is flushed first, so what both show stays in order.</p>
-</div>
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
-<div class="doc">
-<p>Writes an integer in decimal.</p>
-</div>
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
-<div class="doc">
-<p>Writes an integer in decimal.</p>
-</div>
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
-<div class="doc">
-<p>Writes a float in the fewest digits that read back as the same value.</p>
-<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
-</div>
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
 <div class="doc">
 <p>Writes <code>true</code> or <code>false</code>.</p>
 </div>
@@ -96,6 +73,34 @@
 </div>
 </div>
 </section>
+<h2 class="divider">Standard error</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">eprint</span></h2>
+<div class="group" id="eprint">
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> text )</code></pre>
+<div class="doc">
+<p>Writes text to standard error, ending no line.</p>
+<p>Standard output is flushed first, so what both show stays in order.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a float in the fewest digits that read back as the same value.</p>
+<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">eprint</span>( <a class="prim" href="prelude.html#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes <code>true</code> or <code>false</code>.</p>
+</div>
+</div>
+</section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">eprintln</span></h2>
 <div class="group" id="eprintln">
@@ -121,6 +126,7 @@
 </div>
 </div>
 </section>
+<h2 class="divider">Standard input</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">input</span></h2>
 <div class="group" id="input">

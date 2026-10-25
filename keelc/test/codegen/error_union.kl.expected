@@ -2423,42 +2423,42 @@ void kl__Lost__dtor( struct kl__Lost* kl_t1 )
 #line 53 "codegen/error_union.kl"
 }
 
-#line 50 "<prelude>"
+#line 56 "<prelude>"
 void kl_7prelude_result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4LostE* kl_t1 )
 {
     bool kl_t2;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 1;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     return;
     bb2:
-#line 50 "<prelude>"
-    kl__Lost__dtor( &( *kl_t1 ).kl_error );
-#line 50 "<prelude>"
-    goto bb1;
 #line 56 "<prelude>"
+    kl__Lost__dtor( &( *kl_t1 ).kl_error );
+#line 56 "<prelude>"
+    goto bb1;
+#line 62 "<prelude>"
 }
 
-#line 50 "<prelude>"
+#line 56 "<prelude>"
 void kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE__dtor( struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE* kl_t1 )
 {
     bool kl_t2;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 1;
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 50 "<prelude>"
+#line 56 "<prelude>"
     return;
     bb2:
-#line 50 "<prelude>"
-    kl__U8Io_error11Parse_error4LostE__dtor( &( *kl_t1 ).kl_error );
-#line 50 "<prelude>"
-    goto bb1;
 #line 56 "<prelude>"
+    kl__U8Io_error11Parse_error4LostE__dtor( &( *kl_t1 ).kl_error );
+#line 56 "<prelude>"
+    goto bb1;
+#line 62 "<prelude>"
 }
 
 #line 55 "codegen/error_union.kl"

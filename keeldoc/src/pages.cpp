@@ -50,6 +50,19 @@ bool is_type( std::string_view declares )
     return declares == "struct" || declares == "class" || declares == "interface" || declares == "enum";
 }
 
+// Whether `entry` opens a section after `section`, which becomes its own.
+bool opens_section( const Entry& entry, std::string_view& section )
+{
+    const std::string_view own = entry.group.overloads.front().section;
+    if( own.empty() || own == section )
+    {
+        return false;
+    }
+
+    section = own;
+    return true;
+}
+
 // The class marking a declaration's name: a constructor or destructor spells its type.
 std::string_view name_class( std::string_view declares )
 {
@@ -311,8 +324,15 @@ std::string Page_writer::index() const
             html_escape( module.name )
         );
 
+        std::string_view divider;
         for( const Entry& entry : module.entries )
         {
+            if( opens_section( entry, divider ) )
+            {
+                out +=
+                    fmt::format( "</dl>\n<h4 class=\"divider\">{}</h4>\n<dl class=\"summaries\">\n", html_escape( divider ) );
+            }
+
             const Group& group = entry.group;
             out += fmt::format(
                 "<dt><a href=\"{}#{}\"><code>{}</code></a> <span class=\"kind\">{}</span></dt>\n<dd>{}</dd>\n",
@@ -379,8 +399,15 @@ void Page_writer::entries( std::string& out, const std::vector<Entry>& entries, 
     if( entries.size() > 1 )
     {
         out += "<ul class=\"contents\">\n";
+
+        std::string_view divider;
         for( const Entry& entry : entries )
         {
+            if( opens_section( entry, divider ) )
+            {
+                out += fmt::format( "<li class=\"divider\">{}</li>\n", html_escape( divider ) );
+            }
+
             out += fmt::format(
                 "<li><a href=\"#{}\"><code>{}</code></a> <span class=\"kind\">{}</span></li>\n",
                 anchor_of( entry.group.name ),
@@ -391,8 +418,14 @@ void Page_writer::entries( std::string& out, const std::vector<Entry>& entries, 
         out += "</ul>\n";
     }
 
+    std::string_view divider;
     for( const Entry& entry : entries )
     {
+        if( opens_section( entry, divider ) )
+        {
+            out += fmt::format( "<h2 class=\"divider\">{}</h2>\n", html_escape( divider ) );
+        }
+
         const std::string&     name  = entry.group.name;
         const bool             named = is_type( entry.group.declares() ) || entry.group.declares() == "primitive";
         const std::string_view self  = named ? std::string_view( name ) : std::string_view {};
@@ -655,6 +688,36 @@ TEST_CASE( "pages_give_a_block_an_entry_of_its_own", "[pages]" )
     );
     REQUIRE( shapes.find( "<li><a href=\"#Shape-for-i64\">" ) != std::string::npos );
     REQUIRE( shapes.find( "<div class=\"group\" id=\"Shape-for-i64.area\">" ) != std::string::npos );
+}
+
+TEST_CASE( "pages_divide_a_module_at_each_new_section", "[pages]" )
+{
+    const auto entry = []( std::string name, std::string section )
+    { return Entry { Group { name, { { "function", name, "void " + name + "()", "", std::move( section ) } } }, {} }; };
+
+    Package package { "geo", "", {}, {}, {} };
+    package.modules.push_back(
+        { "path", { entry( "a", "" ), entry( "b", "Plan" ), entry( "c", "Plan" ), entry( "d", "Check" ) } }
+    );
+
+    const std::string page  = render_pages( package ).at( "path.html" );
+    const std::string index = render_pages( package ).at( "index.html" );
+
+    const auto count = []( const std::string& text, std::string_view what )
+    {
+        size_t n = 0;
+        for( size_t at = text.find( what ); at != std::string::npos; at = text.find( what, at + 1 ) )
+        {
+            ++n;
+        }
+        return n;
+    };
+
+    REQUIRE( count( page, "<li class=\"divider\">" ) == 2 );
+    REQUIRE( count( page, "<h2 class=\"divider\">" ) == 2 );
+    REQUIRE( page.find( "<h2 class=\"divider\">Plan</h2>" ) < page.find( "id=\"b\"" ) );
+    REQUIRE( page.find( "<h2 class=\"divider\">Check</h2>" ) > page.find( "id=\"c\"" ) );
+    REQUIRE( count( index, "<h4 class=\"divider\">" ) == 2 );
 }
 
 TEST_CASE( "pages_keep_overloads_under_one_anchor", "[pages]" )

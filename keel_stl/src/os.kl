@@ -28,6 +28,8 @@ private extern i32 kl_rt_process_start( const ref u8[] packed, u64 count, i64* p
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 private extern i32 kl_rt_environment( const ref u8[] name, u8[*]* value, u64* size );
 
+/// --- Errors ---
+
 /// A failure any call to the system can meet.
 enum os_error
 {
@@ -106,6 +108,8 @@ private file_error file_error_of( i32 code )
             return file_error::os( os_error_of( code ) );
     }
 }
+
+/// --- Paths ---
 
 // The index of the last `/` in `text`, or `text.size` when there is none.
 private u64 last_slash( const ref u8[] text )
@@ -302,6 +306,8 @@ bool is_directory( const ref textual name )
     }
 }
 
+/// --- Files ---
+
 /// How `file::open` opens a file. Every mode but `read` creates a file that does not exist.
 enum file_mode
 {
@@ -325,6 +331,8 @@ private const u64 FILE_BUFFER = 65536;
 /// the system.
 class file
 {
+    /// --- Construction ---
+
     // `owns` is false only for a descriptor the program must never close.
     private file( i32 fd, bool owns )
     {
@@ -392,6 +400,8 @@ class file
         return file( 2, false );
     }
 
+    /// --- Reading ---
+
     /// Reads into `into`, answering how many bytes it put there: at most `into.size`, and 0 only
     /// at the end of the file. Fewer than asked for is not the end; ask again.
     public result<u64, file_error> read( ref u8[] into )
@@ -409,23 +419,6 @@ class file
 
         take( count );
         return result::ok( count );
-    }
-
-    /// Writes all of `data`.
-    public result<void, file_error> write( const ref textual data )
-    {
-        i32 status = 0;
-        unsafe
-        {
-            status = kl_rt_file_write( fd_, data.as_text() );
-        }
-
-        if( status != 0 )
-        {
-            return result::err( file_error_of( status ) );
-        }
-
-        return result::ok();
     }
 
     /// Reads the rest of the file.
@@ -490,6 +483,27 @@ class file
             take( end_ - start_ );
         }
     }
+
+    /// --- Writing ---
+
+    /// Writes all of `data`.
+    public result<void, file_error> write( const ref textual data )
+    {
+        i32 status = 0;
+        unsafe
+        {
+            status = kl_rt_file_write( fd_, data.as_text() );
+        }
+
+        if( status != 0 )
+        {
+            return result::err( file_error_of( status ) );
+        }
+
+        return result::ok();
+    }
+
+    /// --- Internals ---
 
     // Makes `buffer_[start_..end_]` hold something, unless the input has ended.
     private result<void, file_error> fill()
@@ -589,6 +603,8 @@ result<void, file_error> delete_file( const ref textual name )
     return result::ok();
 }
 
+/// --- Directories ---
+
 /// Creates the directory `name`, whose parent must exist. Anything already there is
 /// `file_error::exists`.
 result<void, file_error> create_directory( const ref textual name )
@@ -679,6 +695,8 @@ result<list<path>, file_error> list_directory( const ref textual name )
 
     return result::ok( move entries );
 }
+
+/// --- Processes ---
 
 /// A running program, waited for when it is dropped, so dropping one that has not ended blocks
 /// until it does.
@@ -785,6 +803,8 @@ result<i32, file_error> run<T>( const ref textual program, const ref T[] argumen
             return result::err( file_error::os( e ) );
     }
 }
+
+/// --- Environment ---
 
 /// The value of the environment variable `name`, or `none` when it is not set; a name that is
 /// empty or holds `=` never is.

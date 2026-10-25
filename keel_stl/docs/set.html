@@ -22,58 +22,23 @@ key into the removed one's place, <code>key_at</code> counts over them, each set
 random key, and <code>insert</code> takes amortised constant time. Dropping the set drops every key.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="set.set">
 <pre class="signature"><a class="anchor" href="#set.set" aria-label="Link to set">#</a><code><span class="kw">public</span> <span class="type">set</span>()</code></pre>
 <div class="doc">
 <p>An empty set. Allocates nothing until the first key arrives.</p>
 </div>
 </div>
-<div class="group" id="set.~set">
-<pre class="signature"><a class="anchor" href="#set.~set" aria-label="Link to ~set">#</a><code><span class="type">~set</span>()</code></pre>
-</div>
-<h3>Methods</h3>
 <div class="group" id="set.with_capacity">
 <pre class="signature"><a class="anchor" href="#set.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#set">set</a>&lt;K&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
 <div class="doc">
 <p>An empty set with room for <code>capacity</code> keys before it grows.</p>
 </div>
 </div>
-<div class="group" id="set.reserve">
-<pre class="signature"><a class="anchor" href="#set.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
-<div class="doc">
-<p>Makes room for at least <code>n</code> keys in all, not <code>n</code> more.
-Does nothing if the capacity is already that large.</p>
+<div class="group" id="set.~set">
+<pre class="signature"><a class="anchor" href="#set.~set" aria-label="Link to ~set">#</a><code><span class="type">~set</span>()</code></pre>
 </div>
-</div>
-<div class="group" id="set.insert">
-<pre class="signature"><a class="anchor" href="#set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>
-<div class="doc">
-<p>Adds <code>key</code>, and returns whether it was new. A key already present is kept, and <code>key</code> is
-dropped.</p>
-</div>
-</div>
-<div class="group" id="set.key_at">
-<pre class="signature"><a class="anchor" href="#set.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>A pointer to key <code>i</code>, counting from 0 in insertion order until a removal. <code>const</code>, since a
-changed key would sit in the wrong slot.</p>
-<h4>Panics</h4>
-<p>If <code>i</code> is not less than <code>size()</code>.</p>
-</div>
-</div>
-<div class="group" id="set.contains">
-<pre class="signature"><a class="anchor" href="#set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether the set holds <code>key</code>.</p>
-</div>
-</div>
-<div class="group" id="set.remove">
-<pre class="signature"><a class="anchor" href="#set.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
-<div class="doc">
-<p>Removes <code>key</code>, and returns whether the set held it. The last key takes its place.</p>
-</div>
-</div>
+<h3>Size and capacity</h3>
 <div class="group" id="set.size">
 <pre class="signature"><a class="anchor" href="#set.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -90,6 +55,44 @@ changed key would sit in the wrong slot.</p>
 <pre class="signature"><a class="anchor" href="#set.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>How many keys fit before the set grows. Removing a key may lower it until the set is rebuilt.</p>
+</div>
+</div>
+<div class="group" id="set.reserve">
+<pre class="signature"><a class="anchor" href="#set.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Makes room for at least <code>n</code> keys in all, not <code>n</code> more.
+Does nothing if the capacity is already that large.</p>
+</div>
+</div>
+<h3>Lookup</h3>
+<div class="group" id="set.contains">
+<pre class="signature"><a class="anchor" href="#set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the set holds <code>key</code>.</p>
+</div>
+</div>
+<h3>By position</h3>
+<div class="group" id="set.key_at">
+<pre class="signature"><a class="anchor" href="#set.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to key <code>i</code>, counting from 0 in insertion order until a removal. <code>const</code>, since a
+changed key would sit in the wrong slot.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
+<h3>Changing</h3>
+<div class="group" id="set.insert">
+<pre class="signature"><a class="anchor" href="#set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>
+<div class="doc">
+<p>Adds <code>key</code>, and returns whether it was new. A key already present is kept, and <code>key</code> is
+dropped.</p>
+</div>
+</div>
+<div class="group" id="set.remove">
+<pre class="signature"><a class="anchor" href="#set.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
+<div class="doc">
+<p>Removes <code>key</code>, and returns whether the set held it. The last key takes its place.</p>
 </div>
 </div>
 <div class="group" id="set.clear">

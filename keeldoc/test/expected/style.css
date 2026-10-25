@@ -145,6 +145,28 @@ pre {
   margin-top: 2.5rem;
 }
 
+.divider {
+  margin: 3.5rem 0 0;
+  padding-bottom: 0.3rem;
+  border-bottom: 3px solid var(--hull);
+  color: var(--heading);
+  font: 600 1.1rem/1.25 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.divider + .entry { border-top: 0; margin-top: 0; }
+
+.contents .divider, .module .divider {
+  margin: 0.9rem 0 0.3rem;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.contents .divider { column-span: all; }
+
 .group { margin-bottom: 1.5rem; scroll-margin-top: 1rem; }
 
 .signature {

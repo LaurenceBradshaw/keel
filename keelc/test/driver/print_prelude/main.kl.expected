@@ -3,17 +3,12 @@
 
 // Declared in every program, which sees them without an import.
 
+/// --- Text ---
+
 /// Text that can be read: the type lends its bytes without copying them.
 interface textual
 {
     const ref u8[] as_text() const;
-};
-
-/// A type that can be made from a `T`, called as `T::from( value )`. A string literal becomes any
-/// type that implements `from<str>`.
-interface from<T>
-{
-    static self from( T value );
 };
 
 /// Text: a run of bytes and their count.
@@ -43,6 +38,17 @@ class str implements textual
     }
 };
 
+/// --- Conversion ---
+
+/// A type that can be made from a `T`, called as `T::from( value )`. A string literal becomes any
+/// type that implements `from<str>`.
+interface from<T>
+{
+    static self from( T value );
+};
+
+/// --- Results ---
+
 /// The outcome of something that can fail: a `T`, or an `E` saying why not.
 ///
 /// `try` takes the value out of an `ok`, or returns an `err` from the function it is in. A
@@ -53,6 +59,18 @@ enum result<T, E>
     ok( T value ),
     /// Failed, with why.
     err( E error )
+};
+
+/// --- Comparison ---
+
+/// A type whose values can be tested for equality.
+///
+/// `a != b` comes from `a == b`. Numbers, `bool`, pointers and enums without payloads are
+/// equatable without writing anything.
+interface equatable
+{
+    /// Whether this value equals `other`.
+    bool operator==( const ref self other ) const;
 };
 
 /// How one value compares with another, as `operator<=>` answers.
@@ -69,53 +87,6 @@ enum ordering
     greater
 };
 
-/// One `T` on the heap, owned: dropping the box drops the value and frees its memory.
-///
-/// A `box<Circle>` goes wherever a `box<Shape>` is wanted when `Circle` implements `Shape`, and the
-/// value is then called and dropped through `Shape`'s vtable. `box` is the one type that takes an
-/// interface as its type argument.
-class box<T>
-{
-    /// Moves `value` onto the heap.
-    public box( move T value )
-    {
-        unsafe
-        {
-            // A raw slot, so the write drops nothing: there is nothing there yet.
-            T[*] slot = alloc<T>( 1 );
-            slot[0] = move value;
-            p_ = &slot[0];
-        }
-    }
-
-    ~box()
-    {
-        unsafe
-        {
-            destroy( p_ );
-            free( p_ );
-        }
-    }
-
-    /// The value, where it lives.
-    public T* get() const
-    {
-        return p_;
-    }
-
-    private T* p_;
-};
-
-/// A type whose values can be tested for equality.
-///
-/// `a != b` comes from `a == b`. Numbers, `bool`, pointers and enums without payloads are
-/// equatable without writing anything.
-interface equatable
-{
-    /// Whether this value equals `other`.
-    bool operator==( const ref self other ) const;
-};
-
 /// A type whose values have an order.
 ///
 /// `a < b`, `a <= b`, `a > b` and `a >= b` come from `a <=> b`. Numbers are comparable without
@@ -125,6 +96,8 @@ interface comparable implements equatable
     /// How this value compares with `other`.
     ordering operator<=>( const ref self other ) const;
 };
+
+/// --- Hashing ---
 
 /// Mixes what a value feeds it into a `u64`: SipHash-1-3, keyed so that values chosen to collide
 /// under one key do not collide under another.
@@ -256,6 +229,47 @@ interface hashable implements equatable
     /// Feeds this value to `h`.
     void hash( ref hasher h ) const;
 };
+
+/// --- Ownership ---
+
+/// One `T` on the heap, owned: dropping the box drops the value and frees its memory.
+///
+/// A `box<Circle>` goes wherever a `box<Shape>` is wanted when `Circle` implements `Shape`, and the
+/// value is then called and dropped through `Shape`'s vtable. `box` is the one type that takes an
+/// interface as its type argument.
+class box<T>
+{
+    /// Moves `value` onto the heap.
+    public box( move T value )
+    {
+        unsafe
+        {
+            // A raw slot, so the write drops nothing: there is nothing there yet.
+            T[*] slot = alloc<T>( 1 );
+            slot[0] = move value;
+            p_ = &slot[0];
+        }
+    }
+
+    ~box()
+    {
+        unsafe
+        {
+            destroy( p_ );
+            free( p_ );
+        }
+    }
+
+    /// The value, where it lives.
+    public T* get() const
+    {
+        return p_;
+    }
+
+    private T* p_;
+};
+
+/// --- Call sites ---
 
 /// Where a call was written, as `@caller()` gives it inside an `@located` function.
 struct location

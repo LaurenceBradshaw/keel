@@ -20,14 +20,23 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 <section class="module">
 <h3><a href="console.html">console</a></h3>
 <dl class="summaries">
+</dl>
+<h4 class="divider">Standard output</h4>
+<dl class="summaries">
 <dt><a href="console.html#print"><code>print</code></a> <span class="kind">function</span></dt>
 <dd>Writes text to standard output, ending no line.</dd>
-<dt><a href="console.html#eprint"><code>eprint</code></a> <span class="kind">function</span></dt>
-<dd>Writes text to standard error, ending no line.</dd>
 <dt><a href="console.html#println"><code>println</code></a> <span class="kind">function</span></dt>
 <dd>Writes text and then a newline, as <code>print</code> does.</dd>
+</dl>
+<h4 class="divider">Standard error</h4>
+<dl class="summaries">
+<dt><a href="console.html#eprint"><code>eprint</code></a> <span class="kind">function</span></dt>
+<dd>Writes text to standard error, ending no line.</dd>
 <dt><a href="console.html#eprintln"><code>eprintln</code></a> <span class="kind">function</span></dt>
 <dd>Writes text and then a newline, as <code>eprint</code> does.</dd>
+</dl>
+<h4 class="divider">Standard input</h4>
+<dl class="summaries">
 <dt><a href="console.html#input"><code>input</code></a> <span class="kind">function</span></dt>
 <dd>Reads the next line of standard input into <code>line</code>, without its <code>\n</code>, answering <code>false</code> at the
 end of input. A read error is also <code>false</code>; the careful path is <code>file::standard_input()</code>.</dd>
@@ -108,10 +117,16 @@ order.</dd>
 <section class="module">
 <h3><a href="os.html">os</a></h3>
 <dl class="summaries">
+</dl>
+<h4 class="divider">Errors</h4>
+<dl class="summaries">
 <dt><a href="os.html#os_error"><code>os_error</code></a> <span class="kind">enum</span></dt>
 <dd>A failure any call to the system can meet.</dd>
 <dt><a href="os.html#file_error"><code>file_error</code></a> <span class="kind">enum</span></dt>
 <dd>Why a call on a file, a path or a directory failed.</dd>
+</dl>
+<h4 class="divider">Paths</h4>
+<dl class="summaries">
 <dt><a href="os.html#path"><code>path</code></a> <span class="kind">class</span></dt>
 <dd>A file-system path, held as written and never normalised: <code>a/../b</code> stays as it is.</dd>
 <dt><a href="os.html#path_kind"><code>path_kind</code></a> <span class="kind">enum</span></dt>
@@ -124,6 +139,9 @@ order.</dd>
 <dd>Whether <code>name</code> is a regular file; <code>false</code> too when the system cannot say.</dd>
 <dt><a href="os.html#is_directory"><code>is_directory</code></a> <span class="kind">function</span></dt>
 <dd>Whether <code>name</code> is a directory; <code>false</code> too when the system cannot say.</dd>
+</dl>
+<h4 class="divider">Files</h4>
+<dl class="summaries">
 <dt><a href="os.html#file_mode"><code>file_mode</code></a> <span class="kind">enum</span></dt>
 <dd>How <code>file::open</code> opens a file. Every mode but <code>read</code> creates a file that does not exist.</dd>
 <dt><a href="os.html#file"><code>file</code></a> <span class="kind">class</span></dt>
@@ -134,6 +152,9 @@ order.</dd>
 <dd>Writes <code>data</code> to the file at <code>name</code>, replacing what it held, or creating it.</dd>
 <dt><a href="os.html#delete_file"><code>delete_file</code></a> <span class="kind">function</span></dt>
 <dd>Deletes the file at <code>name</code>. A directory is <code>file_error::is_directory</code>.</dd>
+</dl>
+<h4 class="divider">Directories</h4>
+<dl class="summaries">
 <dt><a href="os.html#create_directory"><code>create_directory</code></a> <span class="kind">function</span></dt>
 <dd>Creates the directory <code>name</code>, whose parent must exist. Anything already there is
 <code>file_error::exists</code>.</dd>
@@ -143,12 +164,18 @@ and a file is <code>file_error::not_directory</code>.</dd>
 <dt><a href="os.html#list_directory"><code>list_directory</code></a> <span class="kind">function</span></dt>
 <dd>Every entry in the directory <code>name</code> but <code>.</code> and <code>..</code>, each joined onto <code>name</code>, in the system's
 order.</dd>
+</dl>
+<h4 class="divider">Processes</h4>
+<dl class="summaries">
 <dt><a href="os.html#process"><code>process</code></a> <span class="kind">class</span></dt>
 <dd>A running program, waited for when it is dropped, so dropping one that has not ended blocks
 until it does.</dd>
 <dt><a href="os.html#run"><code>run</code></a> <span class="kind">function</span></dt>
 <dd>Runs <code>program</code> with <code>arguments</code> to its end and answers its exit code, as <code>process::wait</code> does.
 Input this program has already buffered is not seen by the child.</dd>
+</dl>
+<h4 class="divider">Environment</h4>
+<dl class="summaries">
 <dt><a href="os.html#environment"><code>environment</code></a> <span class="kind">function</span></dt>
 <dd>The value of the environment variable <code>name</code>, or <code>none</code> when it is not set; a name that is
 empty or holds <code>=</code> never is.</dd>
@@ -187,11 +214,17 @@ empty or holds <code>=</code> never is.</dd>
 <section class="module">
 <h3><a href="test.html">test</a></h3>
 <dl class="summaries">
+</dl>
+<h4 class="divider">Writing tests</h4>
+<dl class="summaries">
 <dt><a href="test.html#test_case"><code>test_case</code></a> <span class="kind">struct</span></dt>
 <dd>A test and the name <code>run_tests</code> reports it by.</dd>
 <dt><a href="test.html#test_context"><code>test_context</code></a> <span class="kind">class</span></dt>
 <dd>What a test checks through. A failed check is counted and reported, and the test goes on; a
 failed <code>require</code> ends it.</dd>
+</dl>
+<h4 class="divider">Running tests</h4>
+<dl class="summaries">
 <dt><a href="test.html#run_tests"><code>run_tests</code></a> <span class="kind">function</span></dt>
 <dd>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
 code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</dd>
@@ -200,9 +233,15 @@ code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</dd>
 <section class="module">
 <h3><a href="time.html">time</a></h3>
 <dl class="summaries">
+</dl>
+<h4 class="divider">Durations</h4>
+<dl class="summaries">
 <dt><a href="time.html#duration"><code>duration</code></a> <span class="kind">class</span></dt>
 <dd>A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
 way.</dd>
+</dl>
+<h4 class="divider">Clocks</h4>
+<dl class="summaries">
 <dt><a href="time.html#instant"><code>instant</code></a> <span class="kind">class</span></dt>
 <dd>A reading of the monotonic clock, which never goes backwards and is never stepped, but is
 rate-corrected towards true seconds. Only meaningful against another <code>instant</code>.</dd>

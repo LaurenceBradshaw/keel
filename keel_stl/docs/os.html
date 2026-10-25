@@ -12,26 +12,33 @@
 <main>
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::os</h1>
 <ul class="contents">
+<li class="divider">Errors</li>
 <li><a href="#os_error"><code>os_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#file_error"><code>file_error</code></a> <span class="kind">enum</span></li>
+<li class="divider">Paths</li>
 <li><a href="#path"><code>path</code></a> <span class="kind">class</span></li>
 <li><a href="#path_kind"><code>path_kind</code></a> <span class="kind">enum</span></li>
 <li><a href="#path_kind_of"><code>path_kind_of</code></a> <span class="kind">function</span></li>
 <li><a href="#exists"><code>exists</code></a> <span class="kind">function</span></li>
 <li><a href="#is_file"><code>is_file</code></a> <span class="kind">function</span></li>
 <li><a href="#is_directory"><code>is_directory</code></a> <span class="kind">function</span></li>
+<li class="divider">Files</li>
 <li><a href="#file_mode"><code>file_mode</code></a> <span class="kind">enum</span></li>
 <li><a href="#file"><code>file</code></a> <span class="kind">class</span></li>
 <li><a href="#read_file"><code>read_file</code></a> <span class="kind">function</span></li>
 <li><a href="#write_file"><code>write_file</code></a> <span class="kind">function</span></li>
 <li><a href="#delete_file"><code>delete_file</code></a> <span class="kind">function</span></li>
+<li class="divider">Directories</li>
 <li><a href="#create_directory"><code>create_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#delete_directory"><code>delete_directory</code></a> <span class="kind">function</span></li>
 <li><a href="#list_directory"><code>list_directory</code></a> <span class="kind">function</span></li>
+<li class="divider">Processes</li>
 <li><a href="#process"><code>process</code></a> <span class="kind">class</span></li>
 <li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
+<li class="divider">Environment</li>
 <li><a href="#environment"><code>environment</code></a> <span class="kind">function</span></li>
 </ul>
+<h2 class="divider">Errors</h2>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">os_error</span></h2>
 <div class="group" id="os_error">
@@ -113,6 +120,7 @@ asked for.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Paths</h2>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">path</span></h2>
 <div class="group" id="path">
@@ -238,6 +246,7 @@ dot, and a leading dot does not count, so <code>.bashrc</code>, <code>.</code> a
 </div>
 </div>
 </section>
+<h2 class="divider">Files</h2>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">file_mode</span></h2>
 <div class="group" id="file_mode">
@@ -283,11 +292,10 @@ and <code>standard_error</code>, which never close them. Reads go through a buff
 the system.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="file.~file">
 <pre class="signature"><a class="anchor" href="#file.~file" aria-label="Link to ~file">#</a><code><span class="type">~file</span>()</code></pre>
 </div>
-<h3>Methods</h3>
 <div class="group" id="file.open">
 <pre class="signature"><a class="anchor" href="#file.open" aria-label="Link to open">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#file">file</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">open</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> name, <a class="type" href="#file_mode">file_mode</a> mode )</code></pre>
 <div class="doc">
@@ -312,17 +320,12 @@ the system.</p>
 <p>The program's standard error. Standard output is flushed first, so the two keep their order.</p>
 </div>
 </div>
+<h3>Reading</h3>
 <div class="group" id="file.read">
 <pre class="signature"><a class="anchor" href="#file.read" aria-label="Link to read">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">read</span>( <span class="kw">ref</span> <a class="prim" href="prelude.html#u8">u8</a>[] into )</code></pre>
 <div class="doc">
 <p>Reads into <code>into</code>, answering how many bytes it put there: at most <code>into.size</code>, and 0 only
 at the end of the file. Fewer than asked for is not the end; ask again.</p>
-</div>
-</div>
-<div class="group" id="file.write">
-<pre class="signature"><a class="anchor" href="#file.write" aria-label="Link to write">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">write</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> data )</code></pre>
-<div class="doc">
-<p>Writes all of <code>data</code>.</p>
 </div>
 </div>
 <div class="group" id="file.read_all">
@@ -336,6 +339,13 @@ at the end of the file. Fewer than asked for is not the end; ask again.</p>
 <div class="doc">
 <p>Reads up to the next <code>\n</code>, which is dropped, into <code>line</code>, replacing what it held. <code>false</code>
 only when the input ends before any byte, so a last line without <code>\n</code> is still a line.</p>
+</div>
+</div>
+<h3>Writing</h3>
+<div class="group" id="file.write">
+<pre class="signature"><a class="anchor" href="#file.write" aria-label="Link to write">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, <a class="type" href="#file_error">file_error</a>&gt; <span class="fn">write</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> data )</code></pre>
+<div class="doc">
+<p>Writes all of <code>data</code>.</p>
 </div>
 </div>
 </section>
@@ -366,6 +376,7 @@ only when the input ends before any byte, so a last line without <code>\n</code>
 </div>
 </div>
 </section>
+<h2 class="divider">Directories</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">create_directory</span></h2>
 <div class="group" id="create_directory">
@@ -396,6 +407,7 @@ order.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Processes</h2>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">process</span></h2>
 <div class="group" id="process">
@@ -436,6 +448,7 @@ Input this program has already buffered is not seen by the child.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Environment</h2>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">environment</span></h2>
 <div class="group" id="environment">

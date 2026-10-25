@@ -31,6 +31,7 @@ public:
 private:
     void        add( Node_id decl, std::string_view kind, Node_id parent );
     void        add_block( Node_id block );
+    void        open_top_level( Node_id decl );
     std::string block_name( Node_id block ) const;
 
     const Ast&            ast_;
@@ -40,6 +41,11 @@ private:
     const Interner&       interner_;
 
     std::vector<Declaration> declarations_;
+
+    // The last banner's section at the top level of `section_file_` and in the body being walked.
+    File_id     section_file_;
+    std::string top_section_;
+    std::string member_section_;
 };
 
 std::vector<Declaration> Declaration_collector::run()
@@ -127,6 +133,16 @@ std::vector<Declaration> Declaration_collector::run()
 
 void Declaration_collector::add( Node_id decl, std::string_view kind, Node_id parent )
 {
+    if( !parent.is_valid() )
+    {
+        open_top_level( decl );
+    }
+
+    if( std::string opened = opened_section( ast_, sm_, decl ); !opened.empty() )
+    {
+        ( parent.is_valid() ? member_section_ : top_section_ ) = std::move( opened );
+    }
+
     // A declaration the parser gave up on has no name to show.
     if( ast_.broken( decl ) || !ast_.name( decl ).is_valid() )
     {
@@ -144,12 +160,21 @@ void Declaration_collector::add( Node_id decl, std::string_view kind, Node_id pa
           !parent.is_valid()                                  ? std::string {}
           : ast_.kind( parent ) == Node_kind::Implements_decl ? block_name( parent )
                                                               : std::string( interner_.text( ast_.name( parent ) ) ),
-          documentation( ast_, sm_, decl ) }
+          documentation( ast_, sm_, decl ),
+          {},
+          parent.is_valid() ? member_section_ : top_section_ }
     );
 }
 
 void Declaration_collector::add_block( Node_id block )
 {
+    open_top_level( block );
+
+    if( std::string opened = opened_section( ast_, sm_, block ); !opened.empty() )
+    {
+        top_section_ = std::move( opened );
+    }
+
     if( ast_.broken( block ) )
     {
         return;
@@ -162,8 +187,21 @@ void Declaration_collector::add_block( Node_id block )
           print_signature( ast_, resolution_, types_, interner_, block ),
           std::string {},
           documentation( ast_, sm_, block ),
-          block_name( block ) }
+          block_name( block ),
+          top_section_ }
     );
+}
+
+// A top-level declaration ends the body before it, and a new file the sections before it.
+void Declaration_collector::open_top_level( Node_id decl )
+{
+    member_section_.clear();
+
+    if( ast_.span( decl ).file != section_file_ )
+    {
+        section_file_ = ast_.span( decl ).file;
+        top_section_.clear();
+    }
 }
 
 // What a block is known by, since it declares no name: `Measured for i64`.
@@ -225,6 +263,11 @@ void render_declarations_json(
         if( !decl.doc.empty() )
         {
             out << R"(,"doc":")" << json_escape( decl.doc ) << '"';
+        }
+
+        if( !decl.section.empty() )
+        {
+            out << R"(,"section":")" << json_escape( decl.section ) << '"';
         }
 
         out << "}\n";
@@ -295,6 +338,59 @@ TEST_CASE( "declarations_list_members_and_variants_with_their_parent", "[sema][d
     );
 }
 
+TEST_CASE( "declarations_carry_the_section_their_banner_opens", "[sema][declarations][docs]" )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const File_id file = sm.add_file(
+        "t.kl",
+        "i32 before = 0;\n"
+        "/// --- Shapes ---\n"
+        "class Box\n"
+        "{\n"
+        "    i32 n;\n"
+        "    /// --- Making ---\n"
+        "    /// Makes one.\n"
+        "    public Box( i32 v ) { n = v; }\n"
+        "    public i32 get() const { return n; }\n"
+        "    /// --- Reading ---\n"
+        "};\n"
+        "enum Colour { Red, Green };\n"
+        "/// --- Free ---\n"
+        "void f() {}\n"
+    );
+    const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+    const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+    REQUIRE_FALSE( diags.has_errors() );
+
+    std::vector<std::string> listed;
+    for( const Declaration& decl : collect_declarations( ast, resolution, types, sm, interner ) )
+    {
+        listed.push_back( fmt::format( "{} [{}] {}", decl.signature, decl.section, decl.doc ) );
+    }
+
+    // A body's sections end with it, and a banner before `}` opens nothing.
+    REQUIRE(
+        listed ==
+        std::vector<std::string> {
+            "i32 before [] ",
+            "class Box [Shapes] ",
+            "private i32 n [] ",
+            "public Box( i32 v ) [Making] Makes one.",
+            "public i32 get() const [Making] ",
+            "enum Colour [Shapes] ",
+            "Red [] ",
+            "Green [] ",
+            "void f() [Free] ",
+        }
+    );
+}
+
 TEST_CASE( "declarations_list_an_interface_and_its_methods", "[sema][declarations][interface]" )
 {
     Source_manager sm;
@@ -358,6 +454,21 @@ TEST_CASE( "declarations_render_as_json_lines_after_their_packages", "[sema][dec
                      "\"access\":\"private\",\"signature\":\"private void get()\",\"parent\":\"Box\","
                      "\"doc\":\"Gets \\\"it\\\".\"}\n"
     );
+}
+
+TEST_CASE( "declarations_render_a_section_last", "[sema][declarations][docs]" )
+{
+    Source_manager     sm;
+    Interner           interner;
+    const File_id      file = sm.add_file( "a.kl", "void get() {}" );
+    std::ostringstream out;
+
+    render_declarations_json(
+        sm, interner, {}, { { Span { file, 5, 8 }, "function", Access::Public, "void get()", "", "", "", "Look-ups" } }, out
+    );
+
+    REQUIRE( out.str().ends_with( R"json(,"signature":"void get()","section":"Look-ups"})json"
+                                  "\n" ) );
 }
 
 } // namespace

@@ -22,7 +22,7 @@
 key.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="ordered_set.ordered_set">
 <pre class="signature"><a class="anchor" href="#ordered_set.ordered_set" aria-label="Link to ordered_set">#</a><code><span class="kw">public</span> <span class="type">ordered_set</span>()</code></pre>
 <div class="doc">
@@ -32,14 +32,27 @@ key.</p>
 <div class="group" id="ordered_set.~ordered_set">
 <pre class="signature"><a class="anchor" href="#ordered_set.~ordered_set" aria-label="Link to ~ordered_set">#</a><code><span class="type">~ordered_set</span>()</code></pre>
 </div>
-<h3>Methods</h3>
-<div class="group" id="ordered_set.insert">
-<pre class="signature"><a class="anchor" href="#ordered_set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>
+<h3>Size</h3>
+<div class="group" id="ordered_set.size">
+<pre class="signature"><a class="anchor" href="#ordered_set.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>Adds <code>key</code>, and returns whether it was new. A key already present is kept, and <code>key</code> is
-dropped.</p>
+<p>The number of keys.</p>
 </div>
 </div>
+<div class="group" id="ordered_set.is_empty">
+<pre class="signature"><a class="anchor" href="#ordered_set.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the set holds no keys.</p>
+</div>
+</div>
+<h3>Lookup</h3>
+<div class="group" id="ordered_set.contains">
+<pre class="signature"><a class="anchor" href="#ordered_set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the set holds <code>key</code>.</p>
+</div>
+</div>
+<h3>By position</h3>
 <div class="group" id="ordered_set.key_at">
 <pre class="signature"><a class="anchor" href="#ordered_set.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -55,28 +68,18 @@ out of order.</p>
 <p>The number of keys less than <code>key</code>, which is where <code>key</code> sits or would sit.</p>
 </div>
 </div>
-<div class="group" id="ordered_set.contains">
-<pre class="signature"><a class="anchor" href="#ordered_set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<h3>Changing</h3>
+<div class="group" id="ordered_set.insert">
+<pre class="signature"><a class="anchor" href="#ordered_set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>
 <div class="doc">
-<p>Whether the set holds <code>key</code>.</p>
+<p>Adds <code>key</code>, and returns whether it was new. A key already present is kept, and <code>key</code> is
+dropped.</p>
 </div>
 </div>
 <div class="group" id="ordered_set.remove">
 <pre class="signature"><a class="anchor" href="#ordered_set.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
 <div class="doc">
 <p>Removes <code>key</code>, and returns whether the set held it.</p>
-</div>
-</div>
-<div class="group" id="ordered_set.size">
-<pre class="signature"><a class="anchor" href="#ordered_set.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>The number of keys.</p>
-</div>
-</div>
-<div class="group" id="ordered_set.is_empty">
-<pre class="signature"><a class="anchor" href="#ordered_set.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether the set holds no keys.</p>
 </div>
 </div>
 <div class="group" id="ordered_set.clear">

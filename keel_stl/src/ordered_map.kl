@@ -12,6 +12,8 @@ import optional;
 /// from `lo` up to but not including `hi`. Dropping the map drops every key and value.
 class ordered_map<K, V> where K : comparable
 {
+    /// --- Construction ---
+
     /// An empty map. Allocates nothing until the first key arrives.
     public ordered_map()
     {
@@ -40,65 +42,21 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
-    /// Puts `value` under `key`, and returns the value that was there, or `none` if there was none.
-    ///
-    /// When the key is already present, the map keeps its own key and `key` is dropped.
-    public optional<V> insert( move K key, move V value )
+    /// --- Size ---
+
+    /// The number of keys.
+    public u64 size() const
     {
-        const u64 found = slot_of( key );
-
-        if( found != ORDERED_NO_NODE )
-        {
-            unsafe
-            {
-                V old = move values_[found];
-                values_[found] = move value;
-                return optional::some( move old );
-            }
-        }
-
-        if( control_.needs_growth() )
-        {
-            grow();
-        }
-
-        apply( control_.prepare_insert() );
-        u64 n = control_.root();
-
-        while( true )
-        {
-            u64 j = position( n, key );
-
-            if( control_.is_leaf( n ) )
-            {
-                move_run( control_.insert_in_leaf( n, j ) );
-                const u64 slot = ordered_control::key_slot( n, j );
-
-                unsafe
-                {
-                    keys_[slot] = move key;
-                    values_[slot] = move value;
-                }
-
-                return optional::none;
-            }
-
-            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
-            {
-                apply( control_.split_child( n, j ) );
-
-                unsafe
-                {
-                    if( keys_[ordered_control::key_slot( n, j )] < key )
-                    {
-                        j++; // `key` belongs in the new right half
-                    }
-                }
-            }
-
-            n = control_.descend_insert( n, j );
-        }
+        return control_.size();
     }
+
+    /// Whether the map holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// --- Lookup ---
 
     /// A pointer to the value under `key`, or `none` if the map does not hold it.
     public optional<V*> get( const ref K key ) const
@@ -135,6 +93,14 @@ class ordered_map<K, V> where K : comparable
             return &values_[slot];
         }
     }
+
+    /// Whether the map holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != ORDERED_NO_NODE;
+    }
+
+    /// --- By position ---
 
     /// A pointer to the `i`th smallest key, counting from 0. `const`, since a changed key would be
     /// out of order.
@@ -207,10 +173,66 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
-    /// Whether the map holds `key`.
-    public bool contains( const ref K key ) const
+    /// --- Changing ---
+
+    /// Puts `value` under `key`, and returns the value that was there, or `none` if there was none.
+    ///
+    /// When the key is already present, the map keeps its own key and `key` is dropped.
+    public optional<V> insert( move K key, move V value )
     {
-        return slot_of( key ) != ORDERED_NO_NODE;
+        const u64 found = slot_of( key );
+
+        if( found != ORDERED_NO_NODE )
+        {
+            unsafe
+            {
+                V old = move values_[found];
+                values_[found] = move value;
+                return optional::some( move old );
+            }
+        }
+
+        if( control_.needs_growth() )
+        {
+            grow();
+        }
+
+        apply( control_.prepare_insert() );
+        u64 n = control_.root();
+
+        while( true )
+        {
+            u64 j = position( n, key );
+
+            if( control_.is_leaf( n ) )
+            {
+                move_run( control_.insert_in_leaf( n, j ) );
+                const u64 slot = ordered_control::key_slot( n, j );
+
+                unsafe
+                {
+                    keys_[slot] = move key;
+                    values_[slot] = move value;
+                }
+
+                return optional::none;
+            }
+
+            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
+            {
+                apply( control_.split_child( n, j ) );
+
+                unsafe
+                {
+                    if( keys_[ordered_control::key_slot( n, j )] < key )
+                    {
+                        j++; // `key` belongs in the new right half
+                    }
+                }
+            }
+
+            n = control_.descend_insert( n, j );
+        }
     }
 
     /// Removes `key` and returns its value, or `none` if the map does not hold it.
@@ -263,24 +285,14 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
-    /// The number of keys.
-    public u64 size() const
-    {
-        return control_.size();
-    }
-
-    /// Whether the map holds no keys.
-    public bool is_empty() const
-    {
-        return control_.size() == 0;
-    }
-
     /// Drops every key and value; the capacity is kept.
     public void clear()
     {
         drop_all();
         control_.clear();
     }
+
+    /// --- Internals ---
 
     // The first key of `node` not less than `key`, or its count.
     private u64 position( u64 node, const ref K key ) const

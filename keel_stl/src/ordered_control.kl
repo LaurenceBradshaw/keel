@@ -49,6 +49,8 @@ struct key_moves
 /// than this directly.
 class ordered_control
 {
+    /// --- Construction ---
+
     /// An empty tree. Allocates nothing until the first `grow`.
     public ordered_control()
     {
@@ -90,66 +92,7 @@ class ordered_control
         }
     }
 
-    /// Forgets every node, keeping the capacity. The owner has already dropped its keys.
-    public void clear()
-    {
-        root_ = ORDERED_NO_NODE;
-        height_ = 0;
-        used_ = 0;
-        free_ = ORDERED_NO_NODE;
-        free_count_ = 0;
-    }
-
-    /// The owner's slot for key `j` of `node`.
-    public static u64 key_slot( u64 node, u64 j )
-    {
-        return node * ORDERED_KEYS + j;
-    }
-
-    /// Child `c` of `node`.
-    public u64 child( u64 node, u64 c ) const
-    {
-        unsafe
-        {
-            return children_[node * ( ORDERED_KEYS + 1 ) + c];
-        }
-    }
-
-    /// Whether `node` has no children.
-    public bool is_leaf( u64 node ) const
-    {
-        return child( node, 0 ) == ORDERED_NO_NODE;
-    }
-
-    /// The number of keys in `node`, which are its first slots.
-    public u64 count( u64 node ) const
-    {
-        unsafe
-        {
-            return counts_[node];
-        }
-    }
-
-    /// The number of keys under child `c` of `node`.
-    public u64 subtree( u64 node, u64 c ) const
-    {
-        unsafe
-        {
-            return totals_[child( node, c )];
-        }
-    }
-
-    /// The root, or `ORDERED_NO_NODE` when the tree is empty.
-    public u64 root() const
-    {
-        return root_;
-    }
-
-    /// Nodes `0..used()` are every node that may hold keys.
-    public u64 used() const
-    {
-        return used_;
-    }
+    /// --- Size and growth ---
 
     /// The number of keys.
     public u64 size() const
@@ -163,6 +106,12 @@ class ordered_control
         {
             return totals_[root_];
         }
+    }
+
+    /// Nodes `0..used()` are every node that may hold keys.
+    public u64 used() const
+    {
+        return used_;
     }
 
     /// Whether an insertion could need more nodes than are spare: one per level and a new root.
@@ -253,6 +202,375 @@ class ordered_control
         totals_ = totals;
         capacity_ = nodes;
     }
+
+    /// Forgets every node, keeping the capacity. The owner has already dropped its keys.
+    public void clear()
+    {
+        root_ = ORDERED_NO_NODE;
+        height_ = 0;
+        used_ = 0;
+        free_ = ORDERED_NO_NODE;
+        free_count_ = 0;
+    }
+
+    /// --- Navigating ---
+
+    /// The root, or `ORDERED_NO_NODE` when the tree is empty.
+    public u64 root() const
+    {
+        return root_;
+    }
+
+    /// Child `c` of `node`.
+    public u64 child( u64 node, u64 c ) const
+    {
+        unsafe
+        {
+            return children_[node * ( ORDERED_KEYS + 1 ) + c];
+        }
+    }
+
+    /// Whether `node` has no children.
+    public bool is_leaf( u64 node ) const
+    {
+        return child( node, 0 ) == ORDERED_NO_NODE;
+    }
+
+    /// The number of keys in `node`, which are its first slots.
+    public u64 count( u64 node ) const
+    {
+        unsafe
+        {
+            return counts_[node];
+        }
+    }
+
+    /// The number of keys under child `c` of `node`.
+    public u64 subtree( u64 node, u64 c ) const
+    {
+        unsafe
+        {
+            return totals_[child( node, c )];
+        }
+    }
+
+    /// The owner's slot for key `j` of `node`.
+    public static u64 key_slot( u64 node, u64 j )
+    {
+        return node * ORDERED_KEYS + j;
+    }
+
+    /// The owner's slot for the `i`th smallest key.
+    public u64 slot_at( u64 i ) const
+    {
+        if( i >= size() )
+        {
+            panic( "index out of range" );
+        }
+        u64 n = root_;
+        u64 left = i;
+
+        unsafe
+        {
+            while( !is_leaf( n ) )
+            {
+                u64 next = child( n, counts_[n] );
+
+                for( u64 j : 0..counts_[n] )
+                {
+                    const u64 below = subtree( n, j );
+
+                    if( left < below )
+                    {
+                        next = child( n, j );
+                        break;
+                    }
+
+                    if( left == below )
+                    {
+                        return key_slot( n, j );
+                    }
+
+                    left -= below + 1;
+                }
+
+                n = next;
+            }
+        }
+
+        return key_slot( n, left );
+    }
+
+    /// --- Inserting ---
+
+    /// Makes room at the root for a key not yet present: a first leaf, or a new root above a full
+    /// one.
+    public key_moves prepare_insert()
+    {
+        if( root_ == ORDERED_NO_NODE )
+        {
+            root_ = new_node();
+            height_ = 1;
+            return key_moves::none();
+        }
+
+        unsafe
+        {
+            if( counts_[root_] == ORDERED_KEYS )
+            {
+                const u64 above = new_node();
+                set_child( above, 0, root_ );
+                totals_[above] = totals_[root_];
+                root_ = above;
+                height_++;
+                return split_child( above, 0 );
+            }
+        }
+
+        return key_moves::none();
+    }
+
+    /// Splits the full child `c` of `parent` in two, its middle key rising into `parent`.
+    public key_moves split_child( u64 parent, u64 c )
+    {
+        const u64 left = child( parent, c );
+
+        unsafe
+        {
+            assert( counts_[left] == ORDERED_KEYS );
+        }
+
+        const u64 right = new_node();
+
+        if( !is_leaf( left ) )
+        {
+            for( u64 k : 0..ORDERED_MIN + 1 )
+            {
+                set_child( right, k, child( left, ORDERED_MIN + 1 + k ) );
+            }
+        }
+
+        unsafe
+        {
+            counts_[right] = ORDERED_MIN;
+            counts_[left] = ORDERED_MIN;
+        }
+
+        const key_run gap = open_gap( parent, c );
+        set_child( parent, c + 1, right );
+        unsafe
+        {
+            counts_[parent]++;
+        }
+
+        recount( left );
+        recount( right );
+
+        return key_moves {
+            gap,
+            key_run { 
+                .from = key_slot( left, ORDERED_MIN ),
+                .to = key_slot( parent, c ),
+                .count = 1
+            },
+            key_run { 
+                .from = key_slot( left, ORDERED_MIN + 1 ),
+                .to = key_slot( right, 0 ),
+                .count = ORDERED_MIN
+            }
+        };
+    }
+
+    /// Counts a key about to be inserted under `node`, and answers its child `j`.
+    public u64 descend_insert( u64 node, u64 j )
+    {
+        unsafe
+        {
+            totals_[node]++;
+        }
+
+        return child( node, j );
+    }
+
+    /// Opens slot `j` of `leaf` for a new key, which the owner writes after applying the run.
+    public key_run insert_in_leaf( u64 leaf, u64 j )
+    {
+        unsafe
+        {
+            totals_[leaf]++;
+            const key_run gap = open_gap( leaf, j );
+            counts_[leaf]++;
+            return gap;
+        }
+    }
+
+    /// --- Removing ---
+
+    /// Counts a key about to leave from under `node`, and answers its child `c`. A root a merge
+    /// has emptied is freed instead, and the child becomes the root.
+    public u64 descend_remove( u64 node, u64 c )
+    {
+        const u64 next = child( node, c );
+
+        if( count( node ) == 0 )
+        {
+            free_node( node );
+            root_ = next;
+            height_--;
+            return next;
+        }
+
+        unsafe
+        {
+            totals_[node]--;
+        }
+
+        return next;
+    }
+
+    /// Joins children `c` and `c + 1` of `parent`, each holding `ORDERED_MIN` keys, around the
+    /// parent's key `c` into child `c`.
+    public key_moves merge( u64 parent, u64 c )
+    {
+        const u64 left = child( parent, c );
+        const u64 right = child( parent, c + 1 );
+
+        if( !is_leaf( left ) )
+        {
+            for( u64 k : 0..ORDERED_MIN + 1 )
+            {
+                set_child( left, ORDERED_MIN + 1 + k, child( right, k ) );
+            }
+        }
+
+        unsafe
+        {
+            counts_[left] = ORDERED_KEYS;
+        }
+
+        const key_run down = key_run { .from = key_slot( parent, c ), .to = key_slot( left, ORDERED_MIN ), .count = 1 };
+        const key_run across = key_run {
+            .from = key_slot( right, 0 ),
+            .to = key_slot( left, ORDERED_MIN + 1 ),
+            .count = ORDERED_MIN
+        };
+        const key_run gap = close_gap( parent, c );
+
+        free_node( right );
+        recount( left );
+        return key_moves { down, across, gap };
+    }
+
+    /// Before entering child `c` of `parent`, gives it more than `ORDERED_MIN` keys by borrowing
+    /// from a sibling or merging with one. `entered` is the child now holding what child `c` held.
+    public key_moves thicken( u64 parent, u64 c, out u64 entered )
+    {
+        entered = c;
+
+        if( count( child( parent, c ) ) > ORDERED_MIN )
+        {
+            return key_moves::none();
+        }
+
+        if( c > 0 && count( child( parent, c - 1 ) ) > ORDERED_MIN )
+        {
+            return borrow_from_left( parent, c );
+        }
+
+        if( c < count( parent ) && count( child( parent, c + 1 ) ) > ORDERED_MIN )
+        {
+            return borrow_from_right( parent, c );
+        }
+
+        if( c < count( parent ) )
+        {
+            return merge( parent, c );
+        }
+
+        entered = c - 1;
+        return merge( parent, c - 1 );
+    }
+
+    /// Closes slot `j` of `leaf`, whose key the owner has already taken. Empties the tree when it
+    /// was the last key.
+    public key_run remove_from_leaf( u64 leaf, u64 j )
+    {
+        unsafe
+        {
+            totals_[leaf]--;
+        }
+
+        const key_run gap = close_gap( leaf, j );
+
+        if( count( leaf ) == 0 )
+        {
+            free_node( leaf );
+            root_ = ORDERED_NO_NODE;
+            height_ = 0;
+        }
+
+        return gap;
+    }
+
+    // Child `c` takes the parent's key `c - 1` at its front; the left sibling's last key replaces it.
+    private key_moves borrow_from_left( u64 parent, u64 c )
+    {
+        const u64 node = child( parent, c );
+        const u64 left = child( parent, c - 1 );
+        const u64 last = count( left ) - 1;
+
+        const key_run gap = open_gap( node, 0 );
+
+        if( !is_leaf( node ) )
+        {
+            set_child( node, 1, child( node, 0 ) );
+            set_child( node, 0, child( left, count( left ) ) );
+        }
+
+        unsafe
+        {
+            counts_[node]++;
+            counts_[left]--;
+        }
+
+        recount( node );
+        recount( left );
+
+        return key_moves {
+            gap,
+            key_run { .from = key_slot( parent, c - 1 ), .to = key_slot( node, 0 ), .count = 1 },
+            key_run { .from = key_slot( left, last ), .to = key_slot( parent, c - 1 ), .count = 1 }
+        };
+    }
+
+    // Child `c` takes the parent's key `c` at its end; the right sibling's first key replaces it.
+    private key_moves borrow_from_right( u64 parent, u64 c )
+    {
+        const u64 node = child( parent, c );
+        const u64 right = child( parent, c + 1 );
+        const u64 end = count( node );
+
+        if( !is_leaf( node ) )
+        {
+            set_child( node, end + 1, child( right, 0 ) );
+            set_child( right, 0, child( right, 1 ) ); // `close_gap` shifts the rest
+        }
+
+        unsafe
+        {
+            counts_[node]++;
+        }
+
+        const key_run down = key_run { .from = key_slot( parent, c ), .to = key_slot( node, end ), .count = 1 };
+        const key_run up = key_run { .from = key_slot( right, 0 ), .to = key_slot( parent, c ), .count = 1 };
+        const key_run gap = close_gap( right, 0 );
+
+        recount( node );
+        recount( right );
+        return key_moves { down, up, gap };
+    }
+
+    /// --- Internals ---
 
     private void set_child( u64 node, u64 c, u64 to )
     {
@@ -370,312 +688,6 @@ class ordered_control
                 .count = num - j - 1
             };
         }
-    }
-
-    /// Splits the full child `c` of `parent` in two, its middle key rising into `parent`.
-    public key_moves split_child( u64 parent, u64 c )
-    {
-        const u64 left = child( parent, c );
-
-        unsafe
-        {
-            assert( counts_[left] == ORDERED_KEYS );
-        }
-
-        const u64 right = new_node();
-
-        if( !is_leaf( left ) )
-        {
-            for( u64 k : 0..ORDERED_MIN + 1 )
-            {
-                set_child( right, k, child( left, ORDERED_MIN + 1 + k ) );
-            }
-        }
-
-        unsafe
-        {
-            counts_[right] = ORDERED_MIN;
-            counts_[left] = ORDERED_MIN;
-        }
-
-        const key_run gap = open_gap( parent, c );
-        set_child( parent, c + 1, right );
-        unsafe
-        {
-            counts_[parent]++;
-        }
-
-        recount( left );
-        recount( right );
-
-        return key_moves {
-            gap,
-            key_run { 
-                .from = key_slot( left, ORDERED_MIN ),
-                .to = key_slot( parent, c ),
-                .count = 1
-            },
-            key_run { 
-                .from = key_slot( left, ORDERED_MIN + 1 ),
-                .to = key_slot( right, 0 ),
-                .count = ORDERED_MIN
-            }
-        };
-    }
-
-    /// Makes room at the root for a key not yet present: a first leaf, or a new root above a full
-    /// one.
-    public key_moves prepare_insert()
-    {
-        if( root_ == ORDERED_NO_NODE )
-        {
-            root_ = new_node();
-            height_ = 1;
-            return key_moves::none();
-        }
-
-        unsafe
-        {
-            if( counts_[root_] == ORDERED_KEYS )
-            {
-                const u64 above = new_node();
-                set_child( above, 0, root_ );
-                totals_[above] = totals_[root_];
-                root_ = above;
-                height_++;
-                return split_child( above, 0 );
-            }
-        }
-
-        return key_moves::none();
-    }
-
-    /// Counts a key about to be inserted under `node`, and answers its child `j`.
-    public u64 descend_insert( u64 node, u64 j )
-    {
-        unsafe
-        {
-            totals_[node]++;
-        }
-
-        return child( node, j );
-    }
-
-    /// Opens slot `j` of `leaf` for a new key, which the owner writes after applying the run.
-    public key_run insert_in_leaf( u64 leaf, u64 j )
-    {
-        unsafe
-        {
-            totals_[leaf]++;
-            const key_run gap = open_gap( leaf, j );
-            counts_[leaf]++;
-            return gap;
-        }
-    }
-
-    /// The owner's slot for the `i`th smallest key.
-    public u64 slot_at( u64 i ) const
-    {
-        if( i >= size() )
-        {
-            panic( "index out of range" );
-        }
-        u64 n = root_;
-        u64 left = i;
-
-        unsafe
-        {
-            while( !is_leaf( n ) )
-            {
-                u64 next = child( n, counts_[n] );
-
-                for( u64 j : 0..counts_[n] )
-                {
-                    const u64 below = subtree( n, j );
-
-                    if( left < below )
-                    {
-                        next = child( n, j );
-                        break;
-                    }
-
-                    if( left == below )
-                    {
-                        return key_slot( n, j );
-                    }
-
-                    left -= below + 1;
-                }
-
-                n = next;
-            }
-        }
-
-        return key_slot( n, left );
-    }
-
-    /// Joins children `c` and `c + 1` of `parent`, each holding `ORDERED_MIN` keys, around the
-    /// parent's key `c` into child `c`.
-    public key_moves merge( u64 parent, u64 c )
-    {
-        const u64 left = child( parent, c );
-        const u64 right = child( parent, c + 1 );
-
-        if( !is_leaf( left ) )
-        {
-            for( u64 k : 0..ORDERED_MIN + 1 )
-            {
-                set_child( left, ORDERED_MIN + 1 + k, child( right, k ) );
-            }
-        }
-
-        unsafe
-        {
-            counts_[left] = ORDERED_KEYS;
-        }
-
-        const key_run down = key_run { .from = key_slot( parent, c ), .to = key_slot( left, ORDERED_MIN ), .count = 1 };
-        const key_run across = key_run {
-            .from = key_slot( right, 0 ),
-            .to = key_slot( left, ORDERED_MIN + 1 ),
-            .count = ORDERED_MIN
-        };
-        const key_run gap = close_gap( parent, c );
-
-        free_node( right );
-        recount( left );
-        return key_moves { down, across, gap };
-    }
-
-    /// Before entering child `c` of `parent`, gives it more than `ORDERED_MIN` keys by borrowing
-    /// from a sibling or merging with one. `entered` is the child now holding what child `c` held.
-    public key_moves thicken( u64 parent, u64 c, out u64 entered )
-    {
-        entered = c;
-
-        if( count( child( parent, c ) ) > ORDERED_MIN )
-        {
-            return key_moves::none();
-        }
-
-        if( c > 0 && count( child( parent, c - 1 ) ) > ORDERED_MIN )
-        {
-            return borrow_from_left( parent, c );
-        }
-
-        if( c < count( parent ) && count( child( parent, c + 1 ) ) > ORDERED_MIN )
-        {
-            return borrow_from_right( parent, c );
-        }
-
-        if( c < count( parent ) )
-        {
-            return merge( parent, c );
-        }
-
-        entered = c - 1;
-        return merge( parent, c - 1 );
-    }
-
-    /// Counts a key about to leave from under `node`, and answers its child `c`. A root a merge
-    /// has emptied is freed instead, and the child becomes the root.
-    public u64 descend_remove( u64 node, u64 c )
-    {
-        const u64 next = child( node, c );
-
-        if( count( node ) == 0 )
-        {
-            free_node( node );
-            root_ = next;
-            height_--;
-            return next;
-        }
-
-        unsafe
-        {
-            totals_[node]--;
-        }
-
-        return next;
-    }
-
-    /// Closes slot `j` of `leaf`, whose key the owner has already taken. Empties the tree when it
-    /// was the last key.
-    public key_run remove_from_leaf( u64 leaf, u64 j )
-    {
-        unsafe
-        {
-            totals_[leaf]--;
-        }
-
-        const key_run gap = close_gap( leaf, j );
-
-        if( count( leaf ) == 0 )
-        {
-            free_node( leaf );
-            root_ = ORDERED_NO_NODE;
-            height_ = 0;
-        }
-
-        return gap;
-    }
-
-    // Child `c` takes the parent's key `c - 1` at its front; the left sibling's last key replaces it.
-    private key_moves borrow_from_left( u64 parent, u64 c )
-    {
-        const u64 node = child( parent, c );
-        const u64 left = child( parent, c - 1 );
-        const u64 last = count( left ) - 1;
-
-        const key_run gap = open_gap( node, 0 );
-
-        if( !is_leaf( node ) )
-        {
-            set_child( node, 1, child( node, 0 ) );
-            set_child( node, 0, child( left, count( left ) ) );
-        }
-
-        unsafe
-        {
-            counts_[node]++;
-            counts_[left]--;
-        }
-
-        recount( node );
-        recount( left );
-
-        return key_moves {
-            gap,
-            key_run { .from = key_slot( parent, c - 1 ), .to = key_slot( node, 0 ), .count = 1 },
-            key_run { .from = key_slot( left, last ), .to = key_slot( parent, c - 1 ), .count = 1 }
-        };
-    }
-
-    // Child `c` takes the parent's key `c` at its end; the right sibling's first key replaces it.
-    private key_moves borrow_from_right( u64 parent, u64 c )
-    {
-        const u64 node = child( parent, c );
-        const u64 right = child( parent, c + 1 );
-        const u64 end = count( node );
-
-        if( !is_leaf( node ) )
-        {
-            set_child( node, end + 1, child( right, 0 ) );
-            set_child( right, 0, child( right, 1 ) ); // `close_gap` shifts the rest
-        }
-
-        unsafe
-        {
-            counts_[node]++;
-        }
-
-        const key_run down = key_run { .from = key_slot( parent, c ), .to = key_slot( node, end ), .count = 1 };
-        const key_run up = key_run { .from = key_slot( right, 0 ), .to = key_slot( parent, c ), .count = 1 };
-        const key_run gap = close_gap( right, 0 );
-
-        recount( node );
-        recount( right );
-        return key_moves { down, up, gap };
     }
 
     private u64[*] children_;   // per node: `ORDERED_KEYS + 1` child slots

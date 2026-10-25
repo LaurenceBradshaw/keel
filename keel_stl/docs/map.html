@@ -25,21 +25,39 @@ doubles, so <code>insert</code> takes amortised constant time; <code>with_capaci
 advance. Dropping the map drops every key and value.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="map.map">
 <pre class="signature"><a class="anchor" href="#map.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <span class="type">map</span>()</code></pre>
 <div class="doc">
 <p>An empty map. Allocates nothing until the first key arrives.</p>
 </div>
 </div>
-<div class="group" id="map.~map">
-<pre class="signature"><a class="anchor" href="#map.~map" aria-label="Link to ~map">#</a><code><span class="type">~map</span>()</code></pre>
-</div>
-<h3>Methods</h3>
 <div class="group" id="map.with_capacity">
 <pre class="signature"><a class="anchor" href="#map.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#map">map</a>&lt;K, V&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
 <div class="doc">
 <p>An empty map with room for <code>capacity</code> keys before it grows.</p>
+</div>
+</div>
+<div class="group" id="map.~map">
+<pre class="signature"><a class="anchor" href="#map.~map" aria-label="Link to ~map">#</a><code><span class="type">~map</span>()</code></pre>
+</div>
+<h3>Size and capacity</h3>
+<div class="group" id="map.size">
+<pre class="signature"><a class="anchor" href="#map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys.</p>
+</div>
+</div>
+<div class="group" id="map.is_empty">
+<pre class="signature"><a class="anchor" href="#map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds no keys.</p>
+</div>
+</div>
+<div class="group" id="map.capacity">
+<pre class="signature"><a class="anchor" href="#map.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many keys fit before the map grows. Removing a key may lower it until the map is rebuilt.</p>
 </div>
 </div>
 <div class="group" id="map.reserve">
@@ -49,13 +67,7 @@ advance. Dropping the map drops every key and value.</p>
 Does nothing if the capacity is already that large.</p>
 </div>
 </div>
-<div class="group" id="map.insert">
-<pre class="signature"><a class="anchor" href="#map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
-<div class="doc">
-<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
-<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
-</div>
-</div>
+<h3>Lookup</h3>
 <div class="group" id="map.get">
 <pre class="signature"><a class="anchor" href="#map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -70,6 +82,13 @@ Does nothing if the capacity is already that large.</p>
 <p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
 </div>
 </div>
+<div class="group" id="map.contains">
+<pre class="signature"><a class="anchor" href="#map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds <code>key</code>.</p>
+</div>
+</div>
+<h3>By position</h3>
 <div class="group" id="map.key_at">
 <pre class="signature"><a class="anchor" href="#map.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -87,10 +106,12 @@ Does nothing if the capacity is already that large.</p>
 <p>If <code>i</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
-<div class="group" id="map.contains">
-<pre class="signature"><a class="anchor" href="#map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<h3>Changing</h3>
+<div class="group" id="map.insert">
+<pre class="signature"><a class="anchor" href="#map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
 <div class="doc">
-<p>Whether the map holds <code>key</code>.</p>
+<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
+<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
 </div>
 </div>
 <div class="group" id="map.remove">
@@ -98,24 +119,6 @@ Does nothing if the capacity is already that large.</p>
 <div class="doc">
 <p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it. The last entry
 takes its place.</p>
-</div>
-</div>
-<div class="group" id="map.size">
-<pre class="signature"><a class="anchor" href="#map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>The number of keys.</p>
-</div>
-</div>
-<div class="group" id="map.is_empty">
-<pre class="signature"><a class="anchor" href="#map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether the map holds no keys.</p>
-</div>
-</div>
-<div class="group" id="map.capacity">
-<pre class="signature"><a class="anchor" href="#map.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>How many keys fit before the map grows. Removing a key may lower it until the map is rebuilt.</p>
 </div>
 </div>
 <div class="group" id="map.clear">

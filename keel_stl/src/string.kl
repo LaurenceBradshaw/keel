@@ -20,6 +20,8 @@ enum parse_error
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
 class string implements textual, equatable, hashable, from<str>, from<u64>, from<i64>
 {
+    /// --- Construction ---
+
     /// An empty string.
     string()
     {
@@ -88,6 +90,190 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return result;
     }
 
+    /// --- Size ---
+
+    /// The number of bytes.
+    public u64 size() const
+    {
+        return bytes_.size();
+    }
+
+    /// Whether the string holds no bytes.
+    public bool is_empty() const
+    {
+        return bytes_.is_empty();
+    }
+
+    /// --- Reading ---
+
+    /// The bytes, borrowed. The string cannot change while they are held.
+    public const ref u8[] as_text() const
+    {
+        return bytes_.as_run();
+    }
+
+    /// A pointer to the byte at `index`.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public const u8* operator[]( u64 index ) const
+    {
+        return &bytes_[index];
+    }
+
+    /// A new string holding the `count` bytes from index `start` on.
+    ///
+    /// ### Panics
+    ///
+    /// If those bytes do not all lie within the string.
+    public string substring( u64 start, u64 count ) const
+    {
+        if( start > size() || count > size() - start )
+        {
+            panic( "substring out of range" );
+        }
+
+        string result = string::with_capacity( count );
+        for( u64 i = 0; i < count; i++ )
+        {
+            result.push( bytes_[start + i] );
+        }
+
+        return result;
+    }
+
+    /// --- Searching ---
+
+    /// Whether the string begins with the bytes of `prefix`; every string begins with `""`.
+    public bool starts_with( const ref textual prefix ) const
+    {
+        const ref u8[] text = prefix.as_text();
+        return matches_at( 0, text );
+    }
+
+    /// Whether the string ends with the bytes of `suffix`; every string ends with `""`.
+    public bool ends_with( const ref textual suffix ) const
+    {
+        const ref u8[] text = suffix.as_text();
+        if( text.size > size() )
+        {
+            return false;
+        }
+
+        return matches_at( size() - text.size, text );
+    }
+
+    /// The index of the first place `needle` occurs, or `none`. `""` is found at 0.
+    public optional<u64> find( const ref textual needle ) const
+    {
+        const ref u8[] text = needle.as_text();
+
+        if( text.size > size() )
+        {
+            return optional::none;
+        }
+
+        for( u64 i = 0; i <= size() - text.size; i++ )
+        {
+            if( matches_at( i, text ) )
+            {
+                return optional::some( i );
+            }
+        }
+
+        return optional::none;
+    }
+
+    /// --- Changing ---
+
+    /// Adds the byte `value` at the end.
+    public void push( u8 value )
+    {
+        bytes_.push( value );
+    }
+
+    /// Removes the last byte and returns it.
+    ///
+    /// ### Panics
+    ///
+    /// If the string is empty.
+    public u8 pop()
+    {
+        return bytes_.pop();
+    }
+
+    /// Adds a copy of every byte of `bytes` at the end.
+    public void append( const ref u8[] bytes )
+    {
+        for( u64 i = 0; i < bytes.size; i++ )
+        {
+            bytes_.push( bytes[i] );
+        }
+    }
+
+    /// Adds a copy of every byte of `other` at the end.
+    public void operator+=( const ref textual other )
+    {
+        const ref u8[] text = other.as_text();
+        append( text );
+    }
+
+    /// A new string holding these bytes and then `other`'s bytes.
+    public string operator+( const ref textual other ) const
+    {
+        const ref u8[] text = other.as_text();
+        string result = string::with_capacity( size() + text.size );
+
+        for( u64 i = 0; i < size(); i++ )
+        {
+            result.push( bytes_[i] );
+        }
+
+        for( u64 i = 0; i < text.size; i++ )
+        {
+            result.push( text[i] );
+        }
+
+        return result;
+    }
+
+    /// Removes every byte and releases the storage.
+    public void clear()
+    {
+        bytes_ = list<u8>();
+    }
+
+    /// --- Comparing and hashing ---
+
+    /// Whether both strings hold the same bytes in the same order.
+    public bool operator==( const ref string other ) const
+    {
+        if( size() != other.size() )
+        {
+            return false;
+        }
+
+        for( u64 i = 0; i < size(); i++ )
+        {
+            if( bytes_[i] != other[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// Feeds the bytes and their count, as `write_bytes` does, so a string hashes as a literal of
+    /// the same text would.
+    public void hash( ref hasher h ) const
+    {
+        h.write_bytes( as_text() );
+    }
+
+    /// --- Parsing ---
+
     /// The `i64` the string writes in decimal.
     ///
     /// The text is an optional `-` and then one or more digits `0` to `9`, which may have leading
@@ -130,177 +316,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return result::ok( is_negative ? wrap<i64>( 0 - magnitude ) : cast<i64>( magnitude ) );
     }
 
-    /// The bytes, borrowed. The string cannot change while they are held.
-    public const ref u8[] as_text() const
-    {
-        return bytes_.as_run();
-    }
-
-    /// Adds the byte `value` at the end.
-    public void push( u8 value )
-    {
-        bytes_.push( value );
-    }
-
-    /// Removes the last byte and returns it.
-    ///
-    /// ### Panics
-    ///
-    /// If the string is empty.
-    public u8 pop()
-    {
-        return bytes_.pop();
-    }
-
-    /// A new string holding these bytes and then `other`'s bytes.
-    public string operator+( const ref textual other ) const
-    {
-        const ref u8[] text = other.as_text();
-        string result = string::with_capacity( size() + text.size );
-
-        for( u64 i = 0; i < size(); i++ )
-        {
-            result.push( bytes_[i] );
-        }
-
-        for( u64 i = 0; i < text.size; i++ )
-        {
-            result.push( text[i] );
-        }
-
-        return result;
-    }
-
-    /// Adds a copy of every byte of `bytes` at the end.
-    public void append( const ref u8[] bytes )
-    {
-        for( u64 i = 0; i < bytes.size; i++ )
-        {
-            bytes_.push( bytes[i] );
-        }
-    }
-
-    /// Adds a copy of every byte of `other` at the end.
-    public void operator+=( const ref textual other )
-    {
-        const ref u8[] text = other.as_text();
-        append( text );
-    }
-
-    /// Removes every byte and releases the storage.
-    public void clear()
-    {
-        bytes_ = list<u8>();
-    }
-
-    /// A pointer to the byte at `index`.
-    ///
-    /// ### Panics
-    ///
-    /// If `index` is not less than `size()`.
-    public const u8* operator[]( u64 index ) const
-    {
-        return &bytes_[index];
-    }
-
-    /// The number of bytes.
-    public u64 size() const
-    {
-        return bytes_.size();
-    }
-
-    /// Whether the string holds no bytes.
-    public bool is_empty() const
-    {
-        return bytes_.is_empty();
-    }
-
-    /// Whether both strings hold the same bytes in the same order.
-    public bool operator==( const ref string other ) const
-    {
-        if( size() != other.size() )
-        {
-            return false;
-        }
-
-        for( u64 i = 0; i < size(); i++ )
-        {
-            if( bytes_[i] != other[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// Feeds the bytes and their count, as `write_bytes` does, so a string hashes as a literal of
-    /// the same text would.
-    public void hash( ref hasher h ) const
-    {
-        h.write_bytes( as_text() );
-    }
-
-    /// Whether the string begins with the bytes of `prefix`; every string begins with `""`.
-    public bool starts_with( const ref textual prefix ) const
-    {
-        const ref u8[] text = prefix.as_text();
-        return matches_at( 0, text );
-    }
-
-    /// Whether the string ends with the bytes of `suffix`; every string ends with `""`.
-    public bool ends_with( const ref textual suffix ) const
-    {
-        const ref u8[] text = suffix.as_text();
-        if( text.size > size() )
-        {
-            return false;
-        }
-
-        return matches_at( size() - text.size, text );
-    }
-
-    /// The index of the first place `needle` occurs, or `none`. `""` is found at 0.
-    public optional<u64> find( const ref textual needle ) const
-    {
-        const ref u8[] text = needle.as_text();
-
-        if( text.size > size() )
-        {
-            return optional::none;
-        }
-
-        for( u64 i = 0; i <= size() - text.size; i++ )
-        {
-            if( matches_at( i, text ) )
-            {
-                return optional::some( i );
-            }
-        }
-
-        return optional::none;
-    }
-
-    /// A new string holding the `count` bytes from index `start` on.
-    ///
-    /// ### Panics
-    ///
-    /// If those bytes do not all lie within the string.
-    public string substring( u64 start, u64 count ) const
-    {
-        if( start > size() || count > size() - start )
-        {
-            panic( "substring out of range" );
-        }
-
-        string result = string::with_capacity( count );
-        for( u64 i = 0; i < count; i++ )
-        {
-            result.push( bytes_[start + i] );
-        }
-
-        return result;
-    }
+    /// --- Internals ---
 
     /// Whether the bytes of `text` occur at index `at`.
     private bool matches_at( u64 at, const ref u8[] text ) const

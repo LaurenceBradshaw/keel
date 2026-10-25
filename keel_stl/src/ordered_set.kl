@@ -10,6 +10,8 @@ import ordered_control;
 /// key.
 class ordered_set<K> where K : comparable
 {
+    /// --- Construction ---
+
     /// An empty set. Allocates nothing until the first key arrives.
     public ordered_set()
     {
@@ -29,56 +31,29 @@ class ordered_set<K> where K : comparable
         }
     }
 
-    /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is
-    /// dropped.
-    public bool insert( move K key )
+    /// --- Size ---
+
+    /// The number of keys.
+    public u64 size() const
     {
-        if( slot_of( key ) != ORDERED_NO_NODE )
-        {
-            return false;
-        }
-
-        if( control_.needs_growth() )
-        {
-            grow();
-        }
-
-        apply( control_.prepare_insert() );
-        u64 n = control_.root();
-
-        while( true )
-        {
-            u64 j = position( n, key );
-
-            if( control_.is_leaf( n ) )
-            {
-                move_run( control_.insert_in_leaf( n, j ) );
-                const u64 slot = ordered_control::key_slot( n, j );
-
-                unsafe
-                {
-                    keys_[slot] = move key;
-                }
-
-                return true;
-            }
-
-            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
-            {
-                apply( control_.split_child( n, j ) );
-
-                unsafe
-                {
-                    if( keys_[ordered_control::key_slot( n, j )] < key )
-                    {
-                        j++; // `key` belongs in the new right half
-                    }
-                }
-            }
-
-            n = control_.descend_insert( n, j );
-        }
+        return control_.size();
     }
+
+    /// Whether the set holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// --- Lookup ---
+
+    /// Whether the set holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != ORDERED_NO_NODE;
+    }
+
+    /// --- By position ---
 
     /// A pointer to the `i`th smallest key, counting from 0. `const`, since a changed key would be
     /// out of order.
@@ -138,10 +113,57 @@ class ordered_set<K> where K : comparable
         }
     }
 
-    /// Whether the set holds `key`.
-    public bool contains( const ref K key ) const
+    /// --- Changing ---
+
+    /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is
+    /// dropped.
+    public bool insert( move K key )
     {
-        return slot_of( key ) != ORDERED_NO_NODE;
+        if( slot_of( key ) != ORDERED_NO_NODE )
+        {
+            return false;
+        }
+
+        if( control_.needs_growth() )
+        {
+            grow();
+        }
+
+        apply( control_.prepare_insert() );
+        u64 n = control_.root();
+
+        while( true )
+        {
+            u64 j = position( n, key );
+
+            if( control_.is_leaf( n ) )
+            {
+                move_run( control_.insert_in_leaf( n, j ) );
+                const u64 slot = ordered_control::key_slot( n, j );
+
+                unsafe
+                {
+                    keys_[slot] = move key;
+                }
+
+                return true;
+            }
+
+            if( control_.count( control_.child( n, j ) ) == ORDERED_KEYS )
+            {
+                apply( control_.split_child( n, j ) );
+
+                unsafe
+                {
+                    if( keys_[ordered_control::key_slot( n, j )] < key )
+                    {
+                        j++; // `key` belongs in the new right half
+                    }
+                }
+            }
+
+            n = control_.descend_insert( n, j );
+        }
     }
 
     /// Removes `key`, and returns whether the set held it.
@@ -194,24 +216,14 @@ class ordered_set<K> where K : comparable
         }
     }
 
-    /// The number of keys.
-    public u64 size() const
-    {
-        return control_.size();
-    }
-
-    /// Whether the set holds no keys.
-    public bool is_empty() const
-    {
-        return control_.size() == 0;
-    }
-
     /// Drops every key; the capacity is kept.
     public void clear()
     {
         drop_all();
         control_.clear();
     }
+
+    /// --- Internals ---
 
     // The first key of `node` not less than `key`, or its count.
     private u64 position( u64 node, const ref K key ) const

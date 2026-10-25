@@ -6,36 +6,7 @@
 private extern i32 kl_rt_clock( i32 which, i64* nanoseconds );
 private extern i32 kl_rt_clock_resolution( i32 which, i64* nanoseconds );
 
-// Clock `which`'s reading in nanoseconds: 0 the wall clock, 1 monotonic, 2 raw, as the runtime
-// numbers them. Every supported system has all three, so a failure is a bug, not a `result`.
-private i64 clock_reading( i32 which )
-{
-    i64 nanoseconds = 0;
-    i32 status = 0;
-
-    unsafe
-    {
-        status = kl_rt_clock( which, &nanoseconds );
-    }
-
-    assert( status == 0 );
-    return nanoseconds;
-}
-
-// Clock `which`'s resolution in nanoseconds, numbered as for `clock_reading`.
-private i64 clock_resolution( i32 which )
-{
-    i64 nanoseconds = 0;
-    i32 status = 0;
-
-    unsafe
-    {
-        status = kl_rt_clock_resolution( which, &nanoseconds );
-    }
-
-    assert( status == 0 );
-    return nanoseconds;
-}
+/// --- Durations ---
 
 /// A span of time in whole nanoseconds, which may be negative; one holds about 292 years either
 /// way.
@@ -90,6 +61,39 @@ class duration implements equatable, comparable
 
     private i64 nanoseconds_;
 };
+
+/// --- Clocks ---
+
+// Clock `which`'s reading in nanoseconds: 0 the wall clock, 1 monotonic, 2 raw, as the runtime
+// numbers them. Every supported system has all three, so a failure is a bug, not a `result`.
+private i64 clock_reading( i32 which )
+{
+    i64 nanoseconds = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_clock( which, &nanoseconds );
+    }
+
+    assert( status == 0 );
+    return nanoseconds;
+}
+
+// Clock `which`'s resolution in nanoseconds, numbered as for `clock_reading`.
+private i64 clock_resolution( i32 which )
+{
+    i64 nanoseconds = 0;
+    i32 status = 0;
+
+    unsafe
+    {
+        status = kl_rt_clock_resolution( which, &nanoseconds );
+    }
+
+    assert( status == 0 );
+    return nanoseconds;
+}
 
 /// A reading of the monotonic clock, which never goes backwards and is never stepped, but is
 /// rate-corrected towards true seconds. Only meaningful against another `instant`.

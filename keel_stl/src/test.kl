@@ -14,6 +14,8 @@ private extern i32 kl_rt_fork( i64* pid );
 private extern never kl_rt_exit( i32 code );
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 
+/// --- Writing tests ---
+
 /// A test and the name `run_tests` reports it by.
 struct test_case
 {
@@ -177,6 +179,8 @@ class test_context
 
     private u64 failures_;
 };
+
+/// --- Running tests ---
 
 // Whether `name` contains any filter; with none, every test is selected.
 private bool selected( str name, const ref list<string> filters )

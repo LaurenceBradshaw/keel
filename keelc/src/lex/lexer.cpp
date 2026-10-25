@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace keel
 {
@@ -936,10 +937,33 @@ std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& intern
     return tokens;
 }
 
-std::string doc_comment( std::string_view trivia, std::string_view marker )
+namespace
 {
-    std::string out;
-    std::size_t pos = 0;
+
+// `--- Name ---`'s name, or empty when `line` is no banner.
+std::string_view banner_name( std::string_view line )
+{
+    while( !line.empty() && is_space( line.back() ) )
+    {
+        line.remove_suffix( 1 );
+    }
+
+    if( line.size() < 6 || !line.starts_with( "---" ) || !line.ends_with( "---" ) )
+    {
+        return {};
+    }
+
+    const std::size_t first = line.find_first_not_of( "- \t" );
+    return first == std::string_view::npos ? std::string_view {}
+                                           : line.substr( first, line.find_last_not_of( "- \t" ) + 1 - first );
+}
+
+// The lines after the last banner, and that banner's name.
+std::pair<std::string, std::string_view> doc_block( std::string_view trivia, std::string_view marker )
+{
+    std::string      out;
+    std::string_view banner;
+    std::size_t      pos = 0;
     while( pos < trivia.size() )
     {
         // Skip whitespace.
@@ -988,12 +1012,22 @@ std::string doc_comment( std::string_view trivia, std::string_view marker )
                 ++pos;
             }
 
+            const std::string_view line = trivia.substr( line_start, pos - line_start );
+
+            // A banner divides; the lines above it document nothing.
+            if( const std::string_view name = banner_name( line ); !name.empty() )
+            {
+                banner = name;
+                out.clear();
+                continue;
+            }
+
             if( !out.empty() )
             {
                 out.push_back( '\n' );
             }
 
-            out.append( trivia.substr( line_start, pos - line_start ) );
+            out.append( line );
         }
         else
         {
@@ -1005,7 +1039,19 @@ std::string doc_comment( std::string_view trivia, std::string_view marker )
         }
     }
 
-    return out;
+    return { std::move( out ), banner };
+}
+
+} // namespace
+
+std::string doc_comment( std::string_view trivia, std::string_view marker )
+{
+    return doc_block( trivia, marker ).first;
+}
+
+std::string section_banner( std::string_view trivia )
+{
+    return std::string( doc_block( trivia, "///" ).second );
 }
 
 bool is_identifier( std::string_view text )
@@ -1434,6 +1480,24 @@ TEST_CASE( "lexer_doc_comments", "[lex][docs]" )
         REQUIRE( doc_comment( "// see ///\n", "///" ).empty() );
         REQUIRE( doc_comment( "/* /// inside */\n", "///" ).empty() );
         REQUIRE( doc_comment( "/*\n/// inside\n*/\n", "///" ).empty() );
+    }
+
+    SECTION( "a banner opens a section and ends the doc above it" )
+    {
+        REQUIRE( section_banner( "/// --- Construction ---\n" ) == "Construction" );
+        REQUIRE( section_banner( "/// ---- Look-ups ----  \n/// Finds.\n" ) == "Look-ups" );
+        REQUIRE( doc_comment( "/// Lost.\n/// --- Look-ups ---\n/// Finds.\n", "///" ) == "Finds." );
+        REQUIRE( doc_comment( "/// --- Look-ups ---\n", "///" ).empty() );
+        REQUIRE( section_banner( "/// --- A ---\n/// --- B ---\n" ) == "B" );
+    }
+
+    SECTION( "a rule, a dash or a plain comment is no banner" )
+    {
+        REQUIRE( section_banner( "/// ---\n" ).empty() );
+        REQUIRE( section_banner( "/// ------\n" ).empty() );
+        REQUIRE( section_banner( "/// --- no close\n" ).empty() );
+        REQUIRE( section_banner( "// --- Plain ---\n" ).empty() );
+        REQUIRE( doc_comment( "/// ---\n/// text\n", "///" ) == "---\ntext" );
     }
 
     SECTION( "the package marker is its own" )

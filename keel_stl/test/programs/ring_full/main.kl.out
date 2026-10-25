@@ -1,1 +1,1 @@
-../src/ring.kl:57: panic: the ring is full
+../src/ring.kl:166: panic: the ring is full

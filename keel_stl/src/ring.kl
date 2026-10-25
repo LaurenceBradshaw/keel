@@ -11,6 +11,8 @@ import optional;
 /// `reserve` changes the capacity. Dropping the ring drops every element.
 class ring<T>
 {
+    /// --- Construction ---
+
     /// An empty ring with room for exactly `capacity` elements.
     ///
     /// ### Panics
@@ -44,6 +46,113 @@ class ring<T>
             free( data_ );
         }
     }
+
+    /// --- Size and capacity ---
+
+    /// The number of elements.
+    public u64 size() const
+    {
+        return count_;
+    }
+
+    /// How many elements the ring holds when full.
+    public u64 capacity() const
+    {
+        return cap_;
+    }
+
+    /// Whether the ring holds no elements.
+    public bool is_empty() const
+    {
+        return count_ == 0;
+    }
+
+    /// Whether the ring holds as many elements as its capacity, so a push would panic.
+    public bool is_full() const
+    {
+        return count_ == cap_;
+    }
+
+    /// Makes room for at least `n` elements in all, not `n` more, moving the elements into a new
+    /// block in order. Does nothing if the capacity is already that large.
+    public void reserve( u64 n )
+    {
+        if( n <= cap_ )
+        {
+            return;
+        }
+
+        T[*] new_data;
+        unsafe
+        {
+            new_data = alloc<T>( n );
+
+            for( u64 i = 0; i < count_; i++ )
+            {
+                new_data[i] = move data_[slot( i )];
+            }
+
+            free( data_ );
+        }
+        head_ = 0;
+        cap_ = n;
+        data_ = new_data;
+    }
+
+    /// --- Reading ---
+
+    /// A pointer to the element `index` places from the front.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T* operator[]( u64 index ) const
+    {
+        if( index >= count_ )
+        {
+            panic( "index out of range" );
+        }
+        unsafe
+        {
+            return &data_[slot( index )];
+        }
+    }
+
+    /// A pointer to the front element.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty.
+    public T* first() const
+    {
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
+        unsafe
+        {
+            return &data_[head_];
+        }
+    }
+
+    /// A pointer to the back element.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty.
+    public T* last() const
+    {
+        if( count_ == 0 )
+        {
+            panic( "the ring is empty" );
+        }
+        unsafe
+        {
+            return &data_[slot( count_ - 1 )];
+        }
+    }
+
+    /// --- Adding ---
 
     /// Adds `value` at the back.
     ///
@@ -141,6 +250,8 @@ class ring<T>
         return optional::some( move old );
     }
 
+    /// --- Removing ---
+
     /// Removes the front element and returns it.
     ///
     /// ### Panics
@@ -207,107 +318,6 @@ class ring<T>
         return optional::some( pop_back() );
     }
 
-    /// A pointer to the element `index` places from the front.
-    ///
-    /// ### Panics
-    ///
-    /// If `index` is not less than `size()`.
-    public T* operator[]( u64 index ) const
-    {
-        if( index >= count_ )
-        {
-            panic( "index out of range" );
-        }
-        unsafe
-        {
-            return &data_[slot( index )];
-        }
-    }
-
-    /// A pointer to the front element.
-    ///
-    /// ### Panics
-    ///
-    /// If the ring is empty.
-    public T* first() const
-    {
-        if( count_ == 0 )
-        {
-            panic( "the ring is empty" );
-        }
-        unsafe
-        {
-            return &data_[head_];
-        }
-    }
-
-    /// A pointer to the back element.
-    ///
-    /// ### Panics
-    ///
-    /// If the ring is empty.
-    public T* last() const
-    {
-        if( count_ == 0 )
-        {
-            panic( "the ring is empty" );
-        }
-        unsafe
-        {
-            return &data_[slot( count_ - 1 )];
-        }
-    }
-
-    /// Whether the ring holds as many elements as its capacity, so a push would panic.
-    public bool is_full() const
-    {
-        return count_ == cap_;
-    }
-
-    /// Whether the ring holds no elements.
-    public bool is_empty() const
-    {
-        return count_ == 0;
-    }
-
-    /// The number of elements.
-    public u64 size() const
-    {
-        return count_;
-    }
-
-    /// How many elements the ring holds when full.
-    public u64 capacity() const
-    {
-        return cap_;
-    }
-
-    /// Makes room for at least `n` elements in all, not `n` more, moving the elements into a new
-    /// block in order. Does nothing if the capacity is already that large.
-    public void reserve( u64 n )
-    {
-        if( n <= cap_ )
-        {
-            return;
-        }
-
-        T[*] new_data;
-        unsafe
-        {
-            new_data = alloc<T>( n );
-
-            for( u64 i = 0; i < count_; i++ )
-            {
-                new_data[i] = move data_[slot( i )];
-            }
-
-            free( data_ );
-        }
-        head_ = 0;
-        cap_ = n;
-        data_ = new_data;
-    }
-
     /// Drops every element; the capacity is kept.
     public void clear()
     {
@@ -315,6 +325,8 @@ class ring<T>
         head_ = 0;
         count_ = 0;
     }
+
+    /// --- Internals ---
 
     // The slot holding the element `index` places from the front, for `index` up to `cap_`.
     private u64 slot( u64 index ) const

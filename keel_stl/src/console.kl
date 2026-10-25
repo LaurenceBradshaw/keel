@@ -12,6 +12,8 @@ private extern void kl_rt_write_i64( i32 stream, i64 value );
 private extern void kl_rt_write_u64( i32 stream, u64 value );
 private extern void kl_rt_write_f64( i32 stream, f64 value );
 
+/// --- Standard output ---
+
 /// Writes text to standard output, ending no line.
 void print( const ref textual text )
 {
@@ -56,6 +58,43 @@ void print( bool value )
 {
     print( value ? "true" : "false" );
 }
+
+/// Writes text and then a newline, as `print` does.
+void println( const ref textual text )
+{
+    print( text );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( i64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( u64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( f64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// Writes a value and then a newline, as `print` does.
+void println( bool value )
+{
+    print( value );
+    print( "\n" );
+}
+
+/// --- Standard error ---
 
 /// Writes text to standard error, ending no line.
 ///
@@ -104,41 +143,6 @@ void eprint( bool value )
     eprint( value ? "true" : "false" );
 }
 
-/// Writes text and then a newline, as `print` does.
-void println( const ref textual text )
-{
-    print( text );
-    print( "\n" );
-}
-
-/// Writes a value and then a newline, as `print` does.
-void println( i64 value )
-{
-    print( value );
-    print( "\n" );
-}
-
-/// Writes a value and then a newline, as `print` does.
-void println( u64 value )
-{
-    print( value );
-    print( "\n" );
-}
-
-/// Writes a value and then a newline, as `print` does.
-void println( f64 value )
-{
-    print( value );
-    print( "\n" );
-}
-
-/// Writes a value and then a newline, as `print` does.
-void println( bool value )
-{
-    print( value );
-    print( "\n" );
-}
-
 /// Writes text and then a newline, as `eprint` does.
 void eprintln( const ref textual text )
 {
@@ -173,6 +177,8 @@ void eprintln( bool value )
     eprint( value );
     eprint( "\n" );
 }
+
+/// --- Standard input ---
 
 /// Reads the next line of standard input into `line`, without its `\n`, answering `false` at the
 /// end of input. A read error is also `false`; the careful path is `file::standard_input()`.

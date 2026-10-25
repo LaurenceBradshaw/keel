@@ -3,7 +3,8 @@
 
 // Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports,
 // colours each name by what it refers to, shows its declaration and doc on hover, and goes from a name
-// to its declaration - in the prelude too, which keelc prints for it.
+// to its declaration - in the prelude too, which keelc prints for it. Its header view lists a file's
+// declarations without their bodies, each name going to its definition.
 
 'use strict';
 
@@ -251,6 +252,146 @@ function parse( stdout, cwd, saved, compiler )
     return { by_file, names };
 }
 
+// The header view of a file: its own declarations as `--declarations` prints them, under their
+// banners, each type's members inside its braces. A read-only document whose `.kl` name keeps
+// Keel's highlighting.
+const header_scheme = 'keel-header';
+const bodied = new Set( [ 'struct', 'class', 'interface', 'enum', 'implements' ] );
+
+function header_uri( source )
+{
+    const parsed = path.parse( source );
+    return vscode.Uri.from( { scheme: header_scheme, path: path.join( parsed.dir, `${parsed.name} (header)${parsed.ext}` ), query: source } );
+}
+
+// The header's text, and per line the name's range in it and where that name is declared.
+function render_header( stdout, cwd, source )
+{
+    const out = [];
+    const links = [];
+    const source_lines = lines_of( source );
+    let open = false;
+    let top_section = '';
+    let member_section = '';
+    let last_variant = -1;
+
+    const blank = () =>
+    {
+        if( out.length > 0 && out[out.length - 1] !== '' )
+        {
+            out.push( '' );
+        }
+    };
+
+    const close = () =>
+    {
+        if( open )
+        {
+            if( last_variant >= 0 )
+            {
+                out[last_variant] = out[last_variant].replace( /,$/, '' );
+            }
+            out.push( '};', '' );
+            open = false;
+        }
+    };
+
+    const add = ( indent, record, text ) =>
+    {
+        const line = indent + text;
+        const name = record.name.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+        const found = new RegExp( `(?<![\\w~])${name}(?!\\w)` ).exec( line );
+        const start = found ? found.index : indent.length;
+        const target_line = record.line - 1;
+
+        links.push( {
+            line: out.length,
+            start,
+            end: found ? start + found[0].length : line.length,
+            target: new vscode.Location(
+                vscode.Uri.file( source ),
+                new vscode.Range(
+                    target_line, utf16_col( source_lines, record.line, record.col ),
+                    target_line, utf16_col( source_lines, record.line, record.end_col ) ) ),
+        } );
+        out.push( line );
+    };
+
+    for( const text of stdout.split( '\n' ) )
+    {
+        let record;
+        try
+        {
+            record = JSON.parse( text );
+        }
+        catch
+        {
+            continue;
+        }
+
+        if( record.kind !== 'declaration' || path.resolve( cwd, record.file ) !== source )
+        {
+            continue;
+        }
+
+        if( record.parent === undefined )
+        {
+            close();
+
+            if( record.section && record.section !== top_section )
+            {
+                blank();
+                out.push( `/// --- ${record.section} ---`, '' );
+                top_section = record.section;
+            }
+
+            if( bodied.has( record.declares ) )
+            {
+                blank();
+                add( '', record, record.signature );
+                out.push( '{' );
+                open = true;
+                member_section = '';
+                last_variant = -1;
+            }
+            else
+            {
+                add( '', record, record.signature + ';' );
+            }
+            continue;
+        }
+
+        if( record.section && record.section !== member_section )
+        {
+            if( out[out.length - 1] !== '{' )
+            {
+                out.push( '' );
+            }
+            out.push( `    /// --- ${record.section} ---` );
+            member_section = record.section;
+        }
+
+        if( record.declares === 'variant' )
+        {
+            last_variant = out.length;
+            add( '    ', record, record.signature + ',' );
+        }
+        else
+        {
+            add( '    ', record, record.signature + ';' );
+        }
+    }
+
+    close();
+
+    while( out.length > 0 && out[out.length - 1] === '' )
+    {
+        out.pop();
+    }
+
+    return { text: out.join( '\n' ) + '\n', links };
+}
+
 function semantic_tokens( names )
 {
     const builder = new vscode.SemanticTokensBuilder( legend );
@@ -462,6 +603,111 @@ function activate( context )
         },
     };
     context.subscriptions.push( vscode.workspace.registerTextDocumentContentProvider( prelude_scheme, prelude ) );
+
+    // Each open header by its URI string, rendered again when its file is saved.
+    const headers = new Map();
+    const header_changed = new vscode.EventEmitter();
+    context.subscriptions.push( header_changed );
+
+    function render( uri )
+    {
+        const source = uri.query;
+        const folder = vscode.workspace.getWorkspaceFolder( vscode.Uri.file( source ) );
+        const cwd = folder ? folder.uri.fsPath : path.dirname( source );
+
+        const config = vscode.workspace.getConfiguration( 'keel', vscode.Uri.file( source ) );
+        const compiler = path.resolve( cwd, config.get( 'compilerPath' ) );
+
+        const args = [ '--check', '--diagnostics=json', '--declarations' ];
+        for( const spec of config.get( 'packages' ) )
+        {
+            args.push( '--package', spec );
+        }
+        args.push( path.relative( cwd, source ) );
+
+        return new Promise( ( resolve ) =>
+        {
+            child_process.execFile( compiler, args, { cwd }, ( error, stdout, stderr ) =>
+            {
+                const header = error && error.code !== 1
+                    ? { text: `// keelc could not list ${path.basename( source )}'s declarations:\n// ${( stderr.trim() || String( error ) ).replace( /\n/g, '\n// ' )}\n`, links: [] }
+                    : render_header( stdout, cwd, source );
+                headers.set( uri.toString(), header );
+                resolve( header.text );
+            } );
+        } );
+    }
+
+    context.subscriptions.push( vscode.workspace.registerTextDocumentContentProvider( header_scheme, {
+        onDidChange: header_changed.event,
+        provideTextDocumentContent: render,
+    } ) );
+
+    context.subscriptions.push( vscode.commands.registerCommand( 'keel.showHeader', async () =>
+    {
+        const editor = vscode.window.activeTextEditor;
+        if( !editor || editor.document.languageId !== 'keel' || editor.document.uri.scheme !== 'file' )
+        {
+            return;
+        }
+
+        const document = await vscode.workspace.openTextDocument( header_uri( editor.document.uri.fsPath ) );
+        await vscode.window.showTextDocument( document, { viewColumn: vscode.ViewColumn.Beside, preview: false } );
+    } ) );
+
+    // Alt+O: the file and its header take each other's place, as C++'s header and source do.
+    context.subscriptions.push( vscode.commands.registerCommand( 'keel.switchHeaderSource', async () =>
+    {
+        const editor = vscode.window.activeTextEditor;
+        if( !editor || editor.document.languageId !== 'keel' )
+        {
+            return;
+        }
+
+        const uri = editor.document.uri;
+        if( uri.scheme === header_scheme )
+        {
+            await vscode.window.showTextDocument( vscode.Uri.file( uri.query ), { viewColumn: editor.viewColumn } );
+        }
+        else if( uri.scheme === 'file' )
+        {
+            const document = await vscode.workspace.openTextDocument( header_uri( uri.fsPath ) );
+            await vscode.window.showTextDocument( document, { viewColumn: editor.viewColumn } );
+        }
+    } ) );
+
+    context.subscriptions.push( vscode.workspace.onDidSaveTextDocument( ( document ) =>
+    {
+        const uri = header_uri( document.uri.fsPath );
+        if( headers.has( uri.toString() ) )
+        {
+            header_changed.fire( uri );
+        }
+    } ) );
+
+    context.subscriptions.push( vscode.workspace.onDidCloseTextDocument( ( document ) =>
+    {
+        headers.delete( document.uri.toString() );
+    } ) );
+
+    context.subscriptions.push( vscode.languages.registerDefinitionProvider( { scheme: header_scheme }, {
+        provideDefinition( document, position )
+        {
+            const link = ( headers.get( document.uri.toString() )?.links ?? [] ).find( ( l ) =>
+                l.line === position.line && l.start <= position.character && position.character <= l.end );
+            if( !link )
+            {
+                return null;
+            }
+
+            return [ {
+                originSelectionRange: new vscode.Range( link.line, link.start, link.line, link.end ),
+                targetUri: link.target.uri,
+                targetRange: link.target.range,
+                targetSelectionRange: link.target.range,
+            } ];
+        },
+    } ) );
 
     context.subscriptions.push( vscode.workspace.onDidSaveTextDocument( check ) );
     context.subscriptions.push( vscode.workspace.onDidOpenTextDocument( check ) );

@@ -360,6 +360,12 @@ std::string documentation( const Ast& ast, const Source_manager& sm, Node_id dec
     return doc.is_valid() ? doc_comment( sm.text( doc ), "///" ) : std::string {};
 }
 
+std::string opened_section( const Ast& ast, const Source_manager& sm, Node_id decl )
+{
+    const Span doc = ast.doc_span( decl );
+    return doc.is_valid() ? section_banner( sm.text( doc ) ) : std::string {};
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS

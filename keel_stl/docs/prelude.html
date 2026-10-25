@@ -29,16 +29,23 @@ functions.</p>
 <li><a href="#f64"><code>f64</code></a> <span class="kind">primitive</span></li>
 <li><a href="#void"><code>void</code></a> <span class="kind">primitive</span></li>
 <li><a href="#never"><code>never</code></a> <span class="kind">primitive</span></li>
+<li class="divider">Text</li>
 <li><a href="#textual"><code>textual</code></a> <span class="kind">interface</span></li>
-<li><a href="#from"><code>from</code></a> <span class="kind">interface</span></li>
 <li><a href="#str"><code>str</code></a> <span class="kind">class</span></li>
+<li class="divider">Conversion</li>
+<li><a href="#from"><code>from</code></a> <span class="kind">interface</span></li>
+<li class="divider">Results</li>
 <li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
-<li><a href="#ordering"><code>ordering</code></a> <span class="kind">enum</span></li>
-<li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
+<li class="divider">Comparison</li>
 <li><a href="#equatable"><code>equatable</code></a> <span class="kind">interface</span></li>
+<li><a href="#ordering"><code>ordering</code></a> <span class="kind">enum</span></li>
 <li><a href="#comparable"><code>comparable</code></a> <span class="kind">interface</span></li>
+<li class="divider">Hashing</li>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
+<li class="divider">Ownership</li>
+<li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
+<li class="divider">Call sites</li>
 <li><a href="#location"><code>location</code></a> <span class="kind">struct</span></li>
 </ul>
 <section class="entry">
@@ -183,6 +190,7 @@ and nothing else: a function's, an <code>extern</code>'s or a function pointer's
 </div>
 </div>
 </section>
+<h2 class="divider">Text</h2>
 <section class="entry">
 <h2><span class="kind">interface</span> <span class="type">textual</span></h2>
 <div class="group" id="textual">
@@ -194,20 +202,6 @@ and nothing else: a function's, an <code>extern</code>'s or a function pointer's
 <h3>Methods</h3>
 <div class="group" id="textual.as_text">
 <pre class="signature"><a class="anchor" href="#textual.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
-</div>
-</section>
-<section class="entry">
-<h2><span class="kind">interface</span> <span class="type">from</span></h2>
-<div class="group" id="from">
-<pre class="signature"><a class="anchor" href="#from" aria-label="Link to from">#</a><code><span class="kw">interface</span> <span class="type">from</span>&lt;T&gt;</code></pre>
-<div class="doc">
-<p>A type that can be made from a <code>T</code>, called as <code>T::from( value )</code>. A string literal becomes any
-type that implements <code>from&lt;str&gt;</code>.</p>
-</div>
-</div>
-<h3>Methods</h3>
-<div class="group" id="from.from">
-<pre class="signature"><a class="anchor" href="#from.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> self <span class="fn">from</span>( T value )</code></pre>
 </div>
 </section>
 <section class="entry">
@@ -241,6 +235,22 @@ escapes are decoded, a <code>\0</code> included.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Conversion</h2>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">from</span></h2>
+<div class="group" id="from">
+<pre class="signature"><a class="anchor" href="#from" aria-label="Link to from">#</a><code><span class="kw">interface</span> <span class="type">from</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A type that can be made from a <code>T</code>, called as <code>T::from( value )</code>. A string literal becomes any
+type that implements <code>from&lt;str&gt;</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="from.from">
+<pre class="signature"><a class="anchor" href="#from.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> self <span class="fn">from</span>( T value )</code></pre>
+</div>
+</section>
+<h2 class="divider">Results</h2>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">result</span></h2>
 <div class="group" id="result">
@@ -262,6 +272,25 @@ escapes are decoded, a <code>\0</code> included.</p>
 <pre class="signature"><a class="anchor" href="#result.err" aria-label="Link to err">#</a><code>err( E error )</code></pre>
 <div class="doc">
 <p>Failed, with why.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Comparison</h2>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">equatable</span></h2>
+<div class="group" id="equatable">
+<pre class="signature"><a class="anchor" href="#equatable" aria-label="Link to equatable">#</a><code><span class="kw">interface</span> <span class="type">equatable</span></code></pre>
+<div class="doc">
+<p>A type whose values can be tested for equality.</p>
+<p><code>a != b</code> comes from <code>a == b</code>. Numbers, <code>bool</code>, pointers and enums without payloads are
+equatable without writing anything.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="equatable.operator==">
+<pre class="signature"><a class="anchor" href="#equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> self other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether this value equals <code>other</code>.</p>
 </div>
 </div>
 </section>
@@ -296,53 +325,6 @@ either operand is a NaN, which has no order, while <code>&lt;</code> and its kin
 </div>
 </section>
 <section class="entry">
-<h2><span class="kind">class</span> <span class="type">box</span></h2>
-<div class="group" id="box">
-<pre class="signature"><a class="anchor" href="#box" aria-label="Link to box">#</a><code><span class="kw">class</span> <span class="type">box</span>&lt;T&gt;</code></pre>
-<div class="doc">
-<p>One <code>T</code> on the heap, owned: dropping the box drops the value and frees its memory.</p>
-<p>A <code>box&lt;Circle&gt;</code> goes wherever a <code>box&lt;Shape&gt;</code> is wanted when <code>Circle</code> implements <code>Shape</code>, and the
-value is then called and dropped through <code>Shape</code>'s vtable. <code>box</code> is the one type that takes an
-interface as its type argument.</p>
-</div>
-</div>
-<h3>Constructors</h3>
-<div class="group" id="box.box">
-<pre class="signature"><a class="anchor" href="#box.box" aria-label="Link to box">#</a><code><span class="kw">public</span> <span class="type">box</span>( <span class="kw">move</span> T value )</code></pre>
-<div class="doc">
-<p>Moves <code>value</code> onto the heap.</p>
-</div>
-</div>
-<div class="group" id="box.~box">
-<pre class="signature"><a class="anchor" href="#box.~box" aria-label="Link to ~box">#</a><code><span class="type">~box</span>()</code></pre>
-</div>
-<h3>Methods</h3>
-<div class="group" id="box.get">
-<pre class="signature"><a class="anchor" href="#box.get" aria-label="Link to get">#</a><code><span class="kw">public</span> T* <span class="fn">get</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>The value, where it lives.</p>
-</div>
-</div>
-</section>
-<section class="entry">
-<h2><span class="kind">interface</span> <span class="type">equatable</span></h2>
-<div class="group" id="equatable">
-<pre class="signature"><a class="anchor" href="#equatable" aria-label="Link to equatable">#</a><code><span class="kw">interface</span> <span class="type">equatable</span></code></pre>
-<div class="doc">
-<p>A type whose values can be tested for equality.</p>
-<p><code>a != b</code> comes from <code>a == b</code>. Numbers, <code>bool</code>, pointers and enums without payloads are
-equatable without writing anything.</p>
-</div>
-</div>
-<h3>Methods</h3>
-<div class="group" id="equatable.operator==">
-<pre class="signature"><a class="anchor" href="#equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> self other ) <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether this value equals <code>other</code>.</p>
-</div>
-</div>
-</section>
-<section class="entry">
 <h2><span class="kind">interface</span> <span class="type">comparable</span></h2>
 <div class="group" id="comparable">
 <pre class="signature"><a class="anchor" href="#comparable" aria-label="Link to comparable">#</a><code><span class="kw">interface</span> <span class="type">comparable</span> <span class="kw">implements</span> <a class="type" href="#equatable">equatable</a></code></pre>
@@ -360,6 +342,7 @@ writing anything.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Hashing</h2>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">hasher</span></h2>
 <div class="group" id="hasher">
@@ -418,6 +401,37 @@ panics on a NaN.</p>
 </div>
 </div>
 </section>
+<h2 class="divider">Ownership</h2>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">box</span></h2>
+<div class="group" id="box">
+<pre class="signature"><a class="anchor" href="#box" aria-label="Link to box">#</a><code><span class="kw">class</span> <span class="type">box</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>One <code>T</code> on the heap, owned: dropping the box drops the value and frees its memory.</p>
+<p>A <code>box&lt;Circle&gt;</code> goes wherever a <code>box&lt;Shape&gt;</code> is wanted when <code>Circle</code> implements <code>Shape</code>, and the
+value is then called and dropped through <code>Shape</code>'s vtable. <code>box</code> is the one type that takes an
+interface as its type argument.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="box.box">
+<pre class="signature"><a class="anchor" href="#box.box" aria-label="Link to box">#</a><code><span class="kw">public</span> <span class="type">box</span>( <span class="kw">move</span> T value )</code></pre>
+<div class="doc">
+<p>Moves <code>value</code> onto the heap.</p>
+</div>
+</div>
+<div class="group" id="box.~box">
+<pre class="signature"><a class="anchor" href="#box.~box" aria-label="Link to ~box">#</a><code><span class="type">~box</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="box.get">
+<pre class="signature"><a class="anchor" href="#box.get" aria-label="Link to get">#</a><code><span class="kw">public</span> T* <span class="fn">get</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The value, where it lives.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Call sites</h2>
 <section class="entry">
 <h2><span class="kind">struct</span> <span class="type">location</span></h2>
 <div class="group" id="location">

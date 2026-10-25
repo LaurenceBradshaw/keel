@@ -23,7 +23,7 @@ among them, all in logarithmic time: <code>for( u64 i : m.rank( lo )..m.rank( hi
 from <code>lo</code> up to but not including <code>hi</code>. Dropping the map drops every key and value.</p>
 </div>
 </div>
-<h3>Constructors</h3>
+<h3>Construction</h3>
 <div class="group" id="ordered_map.ordered_map">
 <pre class="signature"><a class="anchor" href="#ordered_map.ordered_map" aria-label="Link to ordered_map">#</a><code><span class="kw">public</span> <span class="type">ordered_map</span>()</code></pre>
 <div class="doc">
@@ -33,14 +33,20 @@ from <code>lo</code> up to but not including <code>hi</code>. Dropping the map d
 <div class="group" id="ordered_map.~ordered_map">
 <pre class="signature"><a class="anchor" href="#ordered_map.~ordered_map" aria-label="Link to ~ordered_map">#</a><code><span class="type">~ordered_map</span>()</code></pre>
 </div>
-<h3>Methods</h3>
-<div class="group" id="ordered_map.insert">
-<pre class="signature"><a class="anchor" href="#ordered_map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
+<h3>Size</h3>
+<div class="group" id="ordered_map.size">
+<pre class="signature"><a class="anchor" href="#ordered_map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
-<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
+<p>The number of keys.</p>
 </div>
 </div>
+<div class="group" id="ordered_map.is_empty">
+<pre class="signature"><a class="anchor" href="#ordered_map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds no keys.</p>
+</div>
+</div>
+<h3>Lookup</h3>
 <div class="group" id="ordered_map.get">
 <pre class="signature"><a class="anchor" href="#ordered_map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -55,6 +61,13 @@ from <code>lo</code> up to but not including <code>hi</code>. Dropping the map d
 <p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
 </div>
 </div>
+<div class="group" id="ordered_map.contains">
+<pre class="signature"><a class="anchor" href="#ordered_map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds <code>key</code>.</p>
+</div>
+</div>
+<h3>By position</h3>
 <div class="group" id="ordered_map.key_at">
 <pre class="signature"><a class="anchor" href="#ordered_map.key_at" aria-label="Link to key_at">#</a><code><span class="kw">public</span> <span class="kw">const</span> K* <span class="fn">key_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -78,28 +91,18 @@ out of order.</p>
 <p>The number of keys less than <code>key</code>, which is where <code>key</code> sits or would sit.</p>
 </div>
 </div>
-<div class="group" id="ordered_map.contains">
-<pre class="signature"><a class="anchor" href="#ordered_map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<h3>Changing</h3>
+<div class="group" id="ordered_map.insert">
+<pre class="signature"><a class="anchor" href="#ordered_map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
 <div class="doc">
-<p>Whether the map holds <code>key</code>.</p>
+<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
+<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
 </div>
 </div>
 <div class="group" id="ordered_map.remove">
 <pre class="signature"><a class="anchor" href="#ordered_map.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
 <div class="doc">
 <p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it.</p>
-</div>
-</div>
-<div class="group" id="ordered_map.size">
-<pre class="signature"><a class="anchor" href="#ordered_map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>The number of keys.</p>
-</div>
-</div>
-<div class="group" id="ordered_map.is_empty">
-<pre class="signature"><a class="anchor" href="#ordered_map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Whether the map holds no keys.</p>
 </div>
 </div>
 <div class="group" id="ordered_map.clear">
