@@ -16,6 +16,7 @@ public:
     void put_u32( u32 value );
     void put_f64( f64 value );
     void put_string( std::string_view value );
+    void put_bytes( std::string_view bytes ); // as they are, with no size before them
 
     std::string take();
 

@@ -176,4 +176,44 @@ std::string_view node_kind_name( Node_kind kind )
     return "Unknown";
 }
 
+Aux_meaning aux_meaning( Node_kind kind )
+{
+    switch( kind )
+    {
+    case Node_kind::Error:
+    case Node_kind::Import_decl:
+    case Node_kind::Function_decl:
+    case Node_kind::Destructor_decl:
+    case Node_kind::Constructor_decl:
+    case Node_kind::Method_decl:
+    case Node_kind::Param_decl:
+    case Node_kind::Named_type:
+    case Node_kind::Name_expr:
+    case Node_kind::Var_decl:
+    case Node_kind::Struct_decl:
+    case Node_kind::Class_decl:
+    case Node_kind::Enum_decl:
+    case Node_kind::Variant_decl:
+    case Node_kind::Path_expr:
+    case Node_kind::Field_decl:
+    case Node_kind::Field_expr:
+    case Node_kind::Struct_literal:
+    case Node_kind::Field_init:
+    case Node_kind::Binding_decl:
+    case Node_kind::Type_param_decl:
+    case Node_kind::Where_clause:
+    case Node_kind::Bound_name:
+    case Node_kind::Interface_decl:
+    case Node_kind::Implements_decl:
+        return Aux_meaning::Symbol;
+    case Node_kind::Int_literal:
+    case Node_kind::Float_literal:
+    case Node_kind::String_literal:
+    case Node_kind::Char_literal:
+        return Aux_meaning::Literal;
+    default:
+        return Aux_meaning::Other;
+    }
+}
+
 } // namespace keel

@@ -25,6 +25,7 @@ struct Program
     Module_graph modules;
 
     std::unordered_map<u32, std::string> package_docs; // by package symbol, the program's own under Symbol_id {}
+    std::unordered_map<u32, u32>         first_node;   // by file: its nodes run from here, unbroken
 };
 
 struct Package

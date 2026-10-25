@@ -203,6 +203,17 @@ struct Node_id
 // forgotten kind into a release build failure.
 std::string_view node_kind_name( Node_kind kind );
 
+// What a node's aux holds, for code that copies a tree between compiles: a name and a literal are
+// ids into tables that differ between them, and everything else is a plain value.
+enum class Aux_meaning : u8
+{
+    Symbol,
+    Literal,
+    Other
+};
+
+Aux_meaning aux_meaning( Node_kind kind );
+
 // D29: a struct and a class differ in rules, not shape. Field layout, containment ordering and C
 // emission treat them identically; only the rule checks read the kind directly.
 constexpr bool is_aggregate( Node_kind kind )

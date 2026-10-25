@@ -148,21 +148,7 @@ Types Checker::run()
     types_.size_to( ast_.node_count() );
     types_.table().set_prelude( resolution_.prelude() );
 
-    for( const Node_id decl : ast_.declarations( ast_.root() ) )
-    {
-        const Node_kind kind    = ast_.kind( decl );
-        const Symbol_id package = resolution_.package_of( ast_.span( decl ).file );
-
-        if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
-        {
-            types_.table().set_package( decl, interner_.text( package ), package != resolution_.prelude_package() );
-        }
-
-        if( is_aggregate( kind ) || kind == Node_kind::Enum_decl || kind == Node_kind::Interface_decl )
-        {
-            types_.table().set_module( decl, module_name( resolution_.modules(), sm_, interner_, ast_.span( decl ).file ) );
-        }
-    }
+    name_declarations( table_, ast_, ast_.declarations( ast_.root() ), resolution_.modules(), sm_, interner_ );
 
     signatures_.declare();
 
@@ -195,6 +181,33 @@ Types Checker::run()
 
 namespace keel
 {
+
+void name_declarations(
+    Type_table&              table,
+    const Ast&               ast,
+    std::span<const Node_id> declarations,
+    const Module_graph&      modules,
+    const Source_manager&    sm,
+    const Interner&          interner
+)
+{
+    for( const Node_id decl : declarations )
+    {
+        const Node_kind kind    = ast.kind( decl );
+        const Symbol_id package = modules.package_of( ast.span( decl ).file );
+
+        if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
+        {
+            table.set_package( decl, interner.text( package ), package != modules.prelude_package() );
+        }
+
+        if( is_aggregate( kind ) || kind == Node_kind::Enum_decl || kind == Node_kind::Interface_decl )
+        {
+            table.set_module( decl, module_name( modules, sm, interner, ast.span( decl ).file ) );
+        }
+    }
+}
+
 namespace
 {
 

@@ -42,6 +42,9 @@ struct Build
 
     // How often the passes after drop elaboration run; a test of what one round keeps sets 1.
     u32 rounds = 2;
+
+    // Keep each function as the dataflow checks left it, which a module's object holds.
+    bool keep_checked = false;
 };
 
 struct Front_end
@@ -50,6 +53,7 @@ struct Front_end
     Resolution            resolution;
     Types                 types;
     std::vector<Function> functions; // every function lowered, the prelude's included
+    std::vector<Function> checked;   // under keep_checked: the same, before elaboration
 };
 
 // The driver and the test fixture both run this, so the tests run the compiler's own pipeline.

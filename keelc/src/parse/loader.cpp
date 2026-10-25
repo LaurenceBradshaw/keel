@@ -82,14 +82,16 @@ Program load_program(
         package_docs[package_id.v]  = read_package_info( package.root, sm, interner, literals, diags );
     }
 
-    std::vector<Node_id> decls;
+    std::vector<Node_id>         decls;
+    std::unordered_map<u32, u32> first_node;
 
     while( !pending.empty() )
     {
         const File_id current = pending.back();
         pending.pop_back();
 
-        const std::vector<Token>   tokens     = lex( current, sm, interner, literals, diags );
+        const std::vector<Token> tokens       = lex( current, sm, interner, literals, diags );
+        first_node[current.v]                 = narrow_cast<u32>( ast.node_count() );
         const std::vector<Node_id> file_decls = parse_into( ast, tokens, sm, diags );
 
         for( const Node_id decl : file_decls )
@@ -203,6 +205,7 @@ Program load_program(
     prog.ast          = std::move( ast );
     prog.modules      = std::move( modules );
     prog.package_docs = std::move( package_docs );
+    prog.first_node   = std::move( first_node );
     return prog;
 }
 

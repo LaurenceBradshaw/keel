@@ -148,38 +148,8 @@ bool Ast::failed_within( Span span ) const
 
 Symbol_id Ast::name( Node_id id ) const
 {
-    switch( kind( id ) )
-    {
-    case Node_kind::Error:
-    case Node_kind::Import_decl:
-    case Node_kind::Function_decl:
-    case Node_kind::Destructor_decl:
-    case Node_kind::Constructor_decl:
-    case Node_kind::Method_decl:
-    case Node_kind::Param_decl:
-    case Node_kind::Named_type:
-    case Node_kind::Name_expr:
-    case Node_kind::Var_decl:
-    case Node_kind::Struct_decl:
-    case Node_kind::Class_decl:
-    case Node_kind::Enum_decl:
-    case Node_kind::Variant_decl:
-    case Node_kind::Path_expr:
-    case Node_kind::Field_decl:
-    case Node_kind::Field_expr:
-    case Node_kind::Struct_literal:
-    case Node_kind::Field_init:
-    case Node_kind::Binding_decl:
-    case Node_kind::Type_param_decl:
-    case Node_kind::Where_clause:
-    case Node_kind::Bound_name:
-    case Node_kind::Interface_decl:
-    case Node_kind::Implements_decl:
-        return Symbol_id { aux( id ) };
-    default:
-        assert( false && "this kind's aux is not a name" );
-        return Symbol_id {};
-    }
+    assert( aux_meaning( kind( id ) ) == Aux_meaning::Symbol && "this kind's aux is not a name" );
+    return Symbol_id { aux( id ) };
 }
 
 Token_kind Ast::op( Node_id id ) const
@@ -203,11 +173,7 @@ Keyword Ast::keyword( Node_id id ) const
 
 Literal_id Ast::literal( Node_id id ) const
 {
-    assert(
-        ( kind( id ) == Node_kind::Int_literal || kind( id ) == Node_kind::Float_literal ||
-          kind( id ) == Node_kind::String_literal || kind( id ) == Node_kind::Char_literal ) &&
-        "this kind's aux is not a literal"
-    );
+    assert( aux_meaning( kind( id ) ) == Aux_meaning::Literal && "this kind's aux is not a literal" );
     return Literal_id { aux( id ) };
 }
 

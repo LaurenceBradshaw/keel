@@ -178,6 +178,32 @@ public:
         return found == instantiation_of_.end() ? std::nullopt : std::optional<std::size_t>( found->second );
     }
 
+    // The maps whole, keyed by Node_id::v, for writing a module's state.
+    const std::unordered_map<u32, Constant_value>& constants() const
+    {
+        return constants_;
+    }
+
+    const std::unordered_map<u32, Node_id>& callees() const
+    {
+        return callees_;
+    }
+
+    const std::unordered_map<u32, Type_id>& through() const
+    {
+        return through_;
+    }
+
+    const std::unordered_map<u32, std::vector<Node_id>>& listed() const
+    {
+        return listed_;
+    }
+
+    const std::unordered_map<u32, u32>& instantiation_map() const
+    {
+        return instantiation_of_;
+    }
+
     // Everything `implements` means, completed.
     const Conformance_model& conformances() const
     {
@@ -199,6 +225,16 @@ private:
 };
 
 Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );
+
+// Each declared type's package and module, which a type's name is composed from when it is interned.
+void name_declarations(
+    Type_table&              table,
+    const Ast&               ast,
+    std::span<const Node_id> declarations,
+    const Module_graph&      modules,
+    const Source_manager&    sm,
+    const Interner&          interner
+);
 
 // A mode's two spellings: a `Param_mode` in a type, and the `Keyword` a call site writes. Bare and `const ref` share the
 // empty marker, since after either the caller's variable is unchanged (D31), but stay two modes, so neither maps back.

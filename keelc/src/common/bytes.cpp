@@ -43,6 +43,11 @@ void Byte_writer::put_string( std::string_view value )
     out_ += value;
 }
 
+void Byte_writer::put_bytes( std::string_view bytes )
+{
+    out_ += bytes;
+}
+
 std::string Byte_writer::take()
 {
     return std::move( out_ );

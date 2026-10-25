@@ -70,6 +70,11 @@ Front_end run_front_end(
     // use-after-move underlined.
     report_dataflow_errors( front.functions, ast, sm, interner, front.types, diags );
 
+    if( build.keep_checked && !diags.has_errors() )
+    {
+        front.checked = front.functions;
+    }
+
     if( through == Stage::Reported || diags.has_errors() )
     {
         return front;
