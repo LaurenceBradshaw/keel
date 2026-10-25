@@ -1,0 +1,25 @@
+// A struct, a generic function, a global, and a private helper, built as an object.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 made = 0;
+
+private i32 scale( i32 v )
+{
+    return v * 2;
+}
+
+Point point( i32 x, i32 y )
+{
+    made = made + 1;
+    return Point { scale( x ), scale( y ) };
+}
+
+T larger<T>( T a, T b ) where T : comparable & copyable
+{
+    if( a > b ) { return a; }
+    return b;
+}

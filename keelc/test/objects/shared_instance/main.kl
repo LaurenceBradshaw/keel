@@ -1,0 +1,15 @@
+// a.klo and b.klo each hold kl::list<i32>, and so does the program; the linker keeps one copy.
+import kl::list;
+import a;
+import b;
+
+i32 main()
+{
+    kl::list<i32> v = kl::list<i32>();
+    v.push( sum_a( 3 ) );
+    v.push( sum_b( 4 ) );
+
+    if( v[0] != 6 || v[1] != 10 ) { return 1; }
+
+    return 0;
+}

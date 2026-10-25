@@ -26,6 +26,11 @@
 # fixture expected to exit 134 is one that aborts, and is never run under
 # valgrind: an abort leaves memory reachable on purpose, and valgrind reports the signal.
 #
+# <name>.kl.objects lists `keelc -c` builds, one per line, run in order in the build directory before
+# keelc sees the fixture. In a line, a .kl word is beside the fixture and names the object, a .klo word
+# is one an earlier line wrote, and any other word is a flag. keelc is given every object written, or
+# only those of a line holding nothing but .klo words, and the build directory is cut from its output.
+#
 #   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
@@ -191,30 +196,62 @@ check_stream()
     return 0
 }
 
+# Runs <name>.kl.objects, each line a `keelc -c`, and sets the caller's `klos` to the objects the
+# program is given: every one written, or the line of only .klo words if there is one.
+# $1 the fixture  $2 its build directory  $3.. the build flags  -> echoes any failure
+build_objects()
+{
+    local src="$1" build_dir="$2"
+    shift 2
+
+    local words word object chosen=()
+    while read -ra words; do
+        [ ${#words[@]} -eq 0 ] && continue
+
+        local built=()
+        object=""
+        for word in "${words[@]}"; do
+            case "$word" in
+                *.klo) built+=( "${build_dir}/${word}" ) ;;
+                *.kl) built+=( "$( dirname "$src" )/${word}" )
+                      [ -z "$object" ] && object="${build_dir}/$( basename "${word%.kl}" ).klo" ;;
+                *) built+=( "$word" ) ;;
+            esac
+        done
+
+        if [ -z "$object" ]; then
+            chosen=( "${built[@]}" )
+            continue
+        fi
+
+        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "$@" -c "${built[@]}" -o "$object" \
+            > "${build_dir}/objects.log" 2>&1; then
+            echo "    keelc did not build ${object##*/}:"
+            sed 's/^/      /' < "${build_dir}/objects.log"
+            return 1
+        fi
+
+        # A line may build over an earlier object, which is given once.
+        [[ " ${klos[*]} " != *" ${object} "* ]] && klos+=( "$object" )
+    done < "${src}.objects"
+
+    [ ${#chosen[@]} -gt 0 ] && klos=( "${chosen[@]}" )
+    return 0
+}
+
 # Has keelc build the program and runs it. Only suites with a RUN marker reach this: for the others
-# stdout is a token or AST dump, and there is no program.
-# $1 the fixture path  $2.. the suite's flags  -> echoes any problem, and leaves the .c behind
+# stdout is a token or AST dump, and there is no program. `klos` is run_one's.
+# $1 the fixture path  $2 its build directory  $3.. the build flags  -> echoes any problem, and leaves
+# the .c behind
 check_run()
 {
-    local src="$1"
-    shift
+    local src="$1" build_dir="$2"
+    shift 2
 
-    # A directory each, since keelc names the .c after the input and every program is a main.kl.
-    local build_dir="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
     local stem="${build_dir}/program"
     local source_c="${build_dir}/$( basename "$src" ).c"
     local build_log="${build_dir}/build.log"
     local run_log="${build_dir}/run.log"
-
-    # Emptied first, so a failed build cannot leave last run's program behind to be run.
-    rm -rf "$build_dir"
-    mkdir -p "$build_dir"
-
-    # The suite's flags without --emit-c, which would stop keelc before it builds anything.
-    local build_flags=()
-    for flag in "$@"; do
-        [ "$flag" != "--emit-c" ] && build_flags+=( "$flag" )
-    done
 
     local linked=()
     if [ -f "${src}.link" ]; then
@@ -226,7 +263,7 @@ check_run()
         done < "${src}.link"
     fi
 
-    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "${build_flags[@]}" "$src" "${linked[@]}" --runtime "$runtime" -o "$stem" \
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
@@ -317,8 +354,32 @@ run_one()
     local suite_flags
     read -ra suite_flags < "$( dirname "$src" )/FLAGS"
 
-    "$keelc" "${suite_flags[@]}" "$src" > "$out" 2> "$err"
+    # A directory each, since keelc names the .c after the input and every program is a main.kl.
+    local build_dir="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
+
+    # The suite's flags without --emit-c or --check, which would stop keelc before it builds anything.
+    local build_flags=()
+    for flag in "${suite_flags[@]}"; do
+        [ "$flag" != "--emit-c" ] && [ "$flag" != "--check" ] && build_flags+=( "$flag" )
+    done
+
+    # Emptied first, so a failed build cannot leave last run's program or objects behind.
+    if [ -f "$( dirname "$src" )/RUN" ] || [ -f "${src}.objects" ]; then
+        rm -rf "$build_dir"
+        mkdir -p "$build_dir"
+    fi
+
+    local klos=()
+    if [ -f "${src}.objects" ] && ! build_objects "$src" "$build_dir" "${build_flags[@]}" > "$out"; then
+        { echo FAIL; cat "$out"; } > "${results}/${index}"
+        return
+    fi
+
+    "$keelc" "${suite_flags[@]}" "$src" "${klos[@]}" > "$out" 2> "$err"
     local code=$?
+
+    # An object is named by its path, which is in the build directory wherever that is.
+    [ ${#klos[@]} -gt 0 ] && sed -i "s|${build_dir}/||g" "$out" "$err"
 
     local messages
     messages="$(
@@ -341,7 +402,7 @@ run_one()
         # Only when keelc succeeded: there is no C to build otherwise, and the failure above
         # already says so.
         if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
-            check_run "$src" "${suite_flags[@]}"
+            check_run "$src" "$build_dir" "${build_flags[@]}"
         fi
     )"
 
@@ -396,6 +457,7 @@ fi
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' ! -name '*.kl.link' \
+    ! -name '*.kl.objects' \
     \( ! -name '*.c' -o -name '*.kl.c' -o -name '*.prelude.c' \) \
     ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 

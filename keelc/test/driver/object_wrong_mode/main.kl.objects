@@ -1,0 +1,2 @@
+inner.kl --debug
+outer.kl inner.klo --debug

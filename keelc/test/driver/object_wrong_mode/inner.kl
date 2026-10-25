@@ -1,0 +1,5 @@
+// What inner.klo holds; outer.kl is built against it.
+i32 base()
+{
+    return 2;
+}

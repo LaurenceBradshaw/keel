@@ -1,0 +1,7 @@
+// outer.klo is given without the inner.klo it was built against: refused before parsing.
+import outer;
+
+i32 main()
+{
+    return twice();
+}

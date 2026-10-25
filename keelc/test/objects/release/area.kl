@@ -1,0 +1,12 @@
+// Imports shape, so its object is built against shape.klo.
+import shape;
+
+i32 area( Point p )
+{
+    return p.x * p.y;
+}
+
+i32 widest( Point a, Point b )
+{
+    return larger( area( a ), area( b ) );
+}

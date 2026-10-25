@@ -1,0 +1,7 @@
+// The objects are debug, and this build is release: refused before parsing.
+import outer;
+
+i32 main()
+{
+    return twice();
+}

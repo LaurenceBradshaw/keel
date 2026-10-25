@@ -1,0 +1,18 @@
+// Stage 2's program from objects: counter.klo, a.klo and b.klo each define `Counter<i32>::total`
+// weakly; the linker keeps one, so both bumps land in the same variable.
+import a;
+import b;
+import counter;
+
+i32 main()
+{
+    bump_a();
+    bump_b();
+
+    if( Counter<i32>::total != 2 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

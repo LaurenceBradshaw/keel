@@ -1,0 +1,5 @@
+../../../../keel_stl/src/optional.kl
+../../../../keel_stl/src/list.kl optional.klo
+../../../../keel_stl/src/string.kl list.klo optional.klo
+../../../../keel_stl/src/os.kl list.klo optional.klo string.klo
+../../../../keel_stl/src/console.kl list.klo optional.klo string.klo os.klo

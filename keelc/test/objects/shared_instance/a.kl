@@ -1,0 +1,18 @@
+// Uses kl::list<i32>, as b.kl and main.kl do; each object holds the instance weakly.
+import kl::list;
+
+i32 sum_a( i32 n )
+{
+    kl::list<i32> v = kl::list<i32>();
+    for( i32 i = 1; i <= n; i++ )
+    {
+        v.push( i );
+    }
+
+    i32 total = 0;
+    for( u64 i = 0; i < v.size(); i++ )
+    {
+        total = total + v[i];
+    }
+    return total;
+}

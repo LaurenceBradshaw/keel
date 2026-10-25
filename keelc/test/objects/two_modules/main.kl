@@ -1,0 +1,15 @@
+// shape and area given as objects; the program builds against them, as from source.
+import shape;
+import area;
+
+i32 main()
+{
+    Point p = point( 1, 2 );
+    if( area( p ) != 8 ) { return 1; }
+
+    if( widest( p, point( 3, 1 ) ) != 12 ) { return 2; }
+    if( larger<i64>( 5, 9 ) != 9 ) { return 3; }
+    if( made != 2 ) { return 4; }
+
+    return 0;
+}

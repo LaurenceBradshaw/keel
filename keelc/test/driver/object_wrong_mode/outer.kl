@@ -1,0 +1,7 @@
+// Built against inner.klo.
+import inner;
+
+i32 twice()
+{
+    return base() * 2;
+}

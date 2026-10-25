@@ -1,0 +1,7 @@
+// inner.klo is built again after outer.klo was built against it: outer.klo is refused.
+import outer;
+
+i32 main()
+{
+    return twice();
+}

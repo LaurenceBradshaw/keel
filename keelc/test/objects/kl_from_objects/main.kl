@@ -1,0 +1,31 @@
+// kl's optional, list, string, os and console given as objects, dependencies first.
+import kl::console;
+import kl::list;
+import kl::optional;
+import kl::string;
+
+i32 main()
+{
+    kl::list<i32> v = kl::list<i32>();
+    for( i32 i = 1; i <= 4; i++ )
+    {
+        v.push( i * i );
+    }
+
+    kl::string s = kl::string( "squares" );
+    s.push( 58 );
+    kl::println( s );
+
+    i64 total = 0;
+    for( u64 i = 0; i < 4; i++ )
+    {
+        total = total + v[i];
+    }
+    kl::print( total );
+    kl::println( "" );
+
+    kl::optional<i32> last = v.try_pop();
+    if( kl::unwrap( move last ) != 16 ) { return 1; }
+
+    return 0;
+}
