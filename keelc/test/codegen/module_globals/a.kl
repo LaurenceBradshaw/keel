@@ -1,0 +1,15 @@
+i32 count = 3;
+
+class Holder
+{
+    public i32 n;
+
+    public static i32 total = 1;
+};
+
+i32 bump_a()
+{
+    count = count + 1;
+    Holder::total = Holder::total + 1;
+    return count;
+}

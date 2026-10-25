@@ -1,0 +1,25 @@
+// a.kl and b.kl each declare a global `count` and a class `Holder` with a static field `total`. No
+// file sees both, so each name means its own module's, and the C keeps all four variables apart.
+import a;
+import c;
+
+i32 main()
+{
+    if( bump_a() != 4 )
+    {
+        return 1;
+    }
+
+    if( from_b() != 23 )
+    {
+        return 2;
+    }
+
+    // a's variables, untouched by b's.
+    if( count != 4 || Holder::total != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

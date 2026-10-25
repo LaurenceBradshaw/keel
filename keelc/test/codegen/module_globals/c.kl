@@ -1,0 +1,7 @@
+// Sees b.kl's `count` and `Holder`, and not a.kl's.
+import b;
+
+i32 from_b()
+{
+    return bump_b();
+}

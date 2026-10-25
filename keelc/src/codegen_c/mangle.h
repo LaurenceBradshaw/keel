@@ -89,9 +89,9 @@ std::string mangle_constructor(
     const Type_table&                  types
 );
 
-// A local or parameter. The declaration's node id disambiguates: a Keel program may legitimately
-// contain both `x` and `kl_x`, which would otherwise become the same C identifier.
-std::string mangle_local( std::string_view name, u32 declaration );
+// A local or parameter. Its Local_id disambiguates: a Keel program may legitimately contain both
+// `x` and `kl_x`, which would otherwise become the same C identifier.
+std::string mangle_local( std::string_view name, u32 local );
 
 // `kl_<name>`: a struct's fields have distinct names, and the prefix keeps one off a C keyword.
 std::string mangle_field( std::string_view name );

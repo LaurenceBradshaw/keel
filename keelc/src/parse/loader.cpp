@@ -678,5 +678,35 @@ TEST_CASE( "loader_refuses_a_package_name_that_cannot_be_written", "[parse][load
     REQUIRE( package_name_error( "my-lib", interner ).value() == "name 'my-lib' is not an identifier" );
 }
 
+TEST_CASE( "module_graph_orders_each_file_after_its_imports", "[parse][modules]" )
+{
+    const File_id main { 0 }, a { 1 }, b { 2 }, unreached { 3 }, prelude { 4 };
+
+    Module_graph graph;
+    graph.set_prelude( prelude, Symbol_id {} );
+    graph.add( main, a );
+    graph.add( main, b );
+    graph.add( a, b );
+    graph.add( unreached, main );
+
+    SECTION( "the prelude first, the input last, and nothing the input does not reach" )
+    {
+        REQUIRE( graph.dependencies_first( main ) == std::vector<File_id> { prelude, b, a, main } );
+    }
+
+    SECTION( "an explicit import of the prelude lists it once" )
+    {
+        graph.add( b, prelude );
+        REQUIRE( graph.dependencies_first( main ) == std::vector<File_id> { prelude, b, a, main } );
+    }
+
+    SECTION( "a cycle is cut where the walk meets a file it is still inside" )
+    {
+        graph.add( b, main );
+        REQUIRE( graph.dependencies_first( main ) == std::vector<File_id> { prelude, b, a, main } );
+        REQUIRE( graph.dependencies_first( a ) == std::vector<File_id> { prelude, main, b, a } );
+    }
+}
+
 } // namespace keel
 #endif // ENABLE_UNIT_TESTS

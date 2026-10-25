@@ -352,10 +352,10 @@ std::string mangle_constructor(
     );
 }
 
-std::string mangle_local( std::string_view name, u32 declaration )
+std::string mangle_local( std::string_view name, u32 local )
 {
-    // kl_<name>_<node id>; a vtable slot may be an operator's.
-    return fmt::format( "kl_{}_{}", c_name( name ), declaration );
+    // kl_<name>_<Local_id>
+    return fmt::format( "kl_{}_{}", c_name( name ), local );
 }
 
 std::string mangle_field( std::string_view name )

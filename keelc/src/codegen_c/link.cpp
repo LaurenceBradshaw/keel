@@ -183,6 +183,25 @@ TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )
     }
 }
 
+TEST_CASE( "compile_command_compiles_one_part_to_its_object", "[codegen_c][link]" )
+{
+    SECTION( "with flags" )
+    {
+        REQUIRE(
+            keel::compile_command( "clang", "-O2 -g", "out/main.kl.c", "tmp/main.kl.o" ) ==
+            "clang -fwrapv -fno-strict-aliasing -std=c11 -O2 -g -c \"out/main.kl.c\" -o \"tmp/main.kl.o\""
+        );
+    }
+
+    SECTION( "without, leaving no gap" )
+    {
+        REQUIRE(
+            keel::compile_command( "cc", "", "a b/main.kl.prelude.c", "main.kl.prelude.o" ) ==
+            "cc -fwrapv -fno-strict-aliasing -std=c11 -c \"a b/main.kl.prelude.c\" -o \"main.kl.prelude.o\""
+        );
+    }
+}
+
 TEST_CASE( "link_command_links_the_runtime_after_the_objects", "[codegen_c][link]" )
 {
     const std::vector<std::filesystem::path> objects = { "tmp/main.kl.o", "tmp/main.kl.prelude.o" };

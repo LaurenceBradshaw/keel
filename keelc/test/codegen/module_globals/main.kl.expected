@@ -1,0 +1,207 @@
+// codegen/module_globals/a.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_1a_count__G = 3;
+int32_t kl_1a_total__GS6Holder = 1;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_1a_bump_a__( void );
+
+#line 10 "codegen/module_globals/a.kl"
+int32_t kl_1a_bump_a__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+#line 12 "codegen/module_globals/a.kl"
+    kl_t1 = __builtin_add_overflow( kl_1a_count__G, 1, &( int32_t ) { 0 } );
+#line 12 "codegen/module_globals/a.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/module_globals/a.kl"
+    kl_rt_panic( "codegen/module_globals/a.kl", 12, "arithmetic overflow: count + 1" );
+    bb2:
+#line 12 "codegen/module_globals/a.kl"
+    kl_t2 = kl_1a_count__G + 1;
+#line 12 "codegen/module_globals/a.kl"
+    kl_1a_count__G = kl_t2;
+    kl_t3 = __builtin_add_overflow( kl_1a_total__GS6Holder, 1, &( int32_t ) { 0 } );
+#line 13 "codegen/module_globals/a.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+#line 13 "codegen/module_globals/a.kl"
+    kl_rt_panic( "codegen/module_globals/a.kl", 13, "arithmetic overflow: Holder::total + 1" );
+    bb4:
+#line 13 "codegen/module_globals/a.kl"
+    kl_t4 = kl_1a_total__GS6Holder + 1;
+#line 13 "codegen/module_globals/a.kl"
+    kl_1a_total__GS6Holder = kl_t4;
+    kl_t0 = kl_1a_count__G;
+#line 14 "codegen/module_globals/a.kl"
+    return kl_t0;
+}
+
+// codegen/module_globals/b.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_1b_count__G = 10;
+int32_t kl_1b_total__GS6Holder = 11;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_1b_bump_b__( void );
+
+#line 10 "codegen/module_globals/b.kl"
+int32_t kl_1b_bump_b__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+#line 12 "codegen/module_globals/b.kl"
+    kl_t1 = __builtin_add_overflow( kl_1b_count__G, 1, &( int32_t ) { 0 } );
+#line 12 "codegen/module_globals/b.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/module_globals/b.kl"
+    kl_rt_panic( "codegen/module_globals/b.kl", 12, "arithmetic overflow: count + 1" );
+    bb2:
+#line 12 "codegen/module_globals/b.kl"
+    kl_t2 = kl_1b_count__G + 1;
+#line 12 "codegen/module_globals/b.kl"
+    kl_1b_count__G = kl_t2;
+    kl_t3 = __builtin_add_overflow( kl_1b_total__GS6Holder, 1, &( int32_t ) { 0 } );
+#line 13 "codegen/module_globals/b.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+#line 13 "codegen/module_globals/b.kl"
+    kl_rt_panic( "codegen/module_globals/b.kl", 13, "arithmetic overflow: Holder::total + 1" );
+    bb4:
+#line 13 "codegen/module_globals/b.kl"
+    kl_t4 = kl_1b_total__GS6Holder + 1;
+#line 13 "codegen/module_globals/b.kl"
+    kl_1b_total__GS6Holder = kl_t4;
+    kl_t5 = __builtin_add_overflow( kl_1b_count__G, kl_1b_total__GS6Holder, &( int32_t ) { 0 } );
+#line 14 "codegen/module_globals/b.kl"
+    if ( kl_t5 ) goto bb5; else goto bb6;
+    bb5:
+#line 14 "codegen/module_globals/b.kl"
+    kl_rt_panic( "codegen/module_globals/b.kl", 14, "arithmetic overflow: count + Holder::total" );
+    bb6:
+#line 14 "codegen/module_globals/b.kl"
+    kl_t6 = kl_1b_count__G + kl_1b_total__GS6Holder;
+#line 14 "codegen/module_globals/b.kl"
+    kl_t0 = kl_t6;
+#line 14 "codegen/module_globals/b.kl"
+    return kl_t0;
+}
+
+// codegen/module_globals/c.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_1c_from_b__( void );
+int32_t kl_1b_bump_b__( void );
+
+#line 4 "codegen/module_globals/c.kl"
+int32_t kl_1c_from_b__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+#line 6 "codegen/module_globals/c.kl"
+    kl_t1 = kl_1b_bump_b__(  );
+#line 6 "codegen/module_globals/c.kl"
+    kl_t0 = kl_t1;
+#line 6 "codegen/module_globals/c.kl"
+    return kl_t0;
+}
+
+// codegen/module_globals/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+extern int32_t kl_1a_count__G;
+extern int32_t kl_1a_total__GS6Holder;
+
+int32_t kl__main__( void );
+int32_t kl_1c_from_b__( void );
+int32_t kl_1a_bump_a__( void );
+
+#line 6 "codegen/module_globals/main.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 8 "codegen/module_globals/main.kl"
+    kl_t1 = kl_1a_bump_a__(  );
+#line 8 "codegen/module_globals/main.kl"
+    kl_t2 = kl_t1 != 4;
+#line 8 "codegen/module_globals/main.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 10 "codegen/module_globals/main.kl"
+    return kl_t0;
+    bb2:
+#line 13 "codegen/module_globals/main.kl"
+    kl_t3 = kl_1c_from_b__(  );
+#line 13 "codegen/module_globals/main.kl"
+    kl_t4 = kl_t3 != 23;
+#line 13 "codegen/module_globals/main.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 15 "codegen/module_globals/main.kl"
+    return kl_t0;
+    bb4:
+#line 19 "codegen/module_globals/main.kl"
+    kl_t6 = kl_1a_count__G != 4;
+#line 19 "codegen/module_globals/main.kl"
+    kl_t5 = kl_t6;
+#line 19 "codegen/module_globals/main.kl"
+    if ( kl_t5 ) goto bb6; else goto bb5;
+    bb5:
+#line 19 "codegen/module_globals/main.kl"
+    kl_t7 = kl_1a_total__GS6Holder != 2;
+#line 19 "codegen/module_globals/main.kl"
+    kl_t5 = kl_t7;
+#line 19 "codegen/module_globals/main.kl"
+    goto bb6;
+    bb6:
+#line 19 "codegen/module_globals/main.kl"
+    if ( kl_t5 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+#line 21 "codegen/module_globals/main.kl"
+    return kl_t0;
+    bb8:
+#line 24 "codegen/module_globals/main.kl"
+    kl_t0 = 0;
+#line 24 "codegen/module_globals/main.kl"
+    return kl_t0;
+}
+
+#line 6 "codegen/module_globals/main.kl"
+int main( void )
+{
+#line 6 "codegen/module_globals/main.kl"
+    return (int) kl__main__();
+}

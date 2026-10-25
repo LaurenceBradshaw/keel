@@ -4283,6 +4283,26 @@ TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen]
     REQUIRE_FALSE( g.has( "void kl__Sq__drop(" ) );
 }
 
+// A slot is named by its requirement's parameters, so two overloads get two slots and no node id.
+TEST_CASE( "emit_kir_names_each_overloaded_requirement_s_slot", "[codegen][kir][interfaces]" )
+{
+    Generated g( "interface Shape { f64 area() const; f64 area( i32 scale ) const; };\n"
+                 "struct Sq implements Shape { f64 side; f64 area() const { return side; } "
+                 "f64 area( i32 scale ) const { return side * 2.0; } };\n"
+                 "f64 both( ref Shape s ) { return s.area() + s.area( 2 ); }\n"
+                 "i32 main() { Sq q = Sq { 1.0 }; if( both( ref q ) == 3.0 ) { return 0; } return 1; }\n" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    REQUIRE( g.has( "double ( *kl__area__ )( void* );" ) );
+    REQUIRE( g.has( "double ( *kl__area__3i32 )( void*, int32_t );" ) );
+    REQUIRE( g.has( "{ kl__Sq__as_kl__Shape__drop, kl__Sq__as_kl__Shape__kl__area__, kl__Sq__as_kl__Shape__kl__area__3i32 };" )
+    );
+    REQUIRE( g.has( ".vtable->kl__area__( " ) );
+    REQUIRE( g.has( ".vtable->kl__area__3i32( " ) );
+}
+
 // The epilogue is the closing brace's, so stepping out of a function stops there last.
 TEST_CASE( "emit_kir_counts_a_function_s_closing_brace_at_the_keel_one", "[codegen][kir]" )
 {
