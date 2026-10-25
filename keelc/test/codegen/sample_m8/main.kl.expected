@@ -2524,8 +2524,8 @@ struct kl_7prelude_textual__vtable
 
 int32_t kl__alive__G = 0;
 int32_t kl__readings__GS5Gauge = 0;
-int32_t kl__made__GS5TallyI3i32E = 0;
-int32_t kl__made__GS5TallyI3f64E = 0;
+__attribute__((weak)) int32_t kl__made__GS5TallyI3i32E = 0;
+__attribute__((weak)) int32_t kl__made__GS5TallyI3f64E = 0;
 extern int32_t kl_3geo6shapes_unit__G;
 extern int32_t kl_6ledger_posted__G;
 

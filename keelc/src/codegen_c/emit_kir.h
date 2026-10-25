@@ -27,7 +27,8 @@ std::string emit_c_from_kir(
     const Interner&              interner,
     const Module_graph&          modules = {},
     const Parts*                 parts   = nullptr,
-    File_id                      part    = {}
+    File_id                      part    = {},
+    bool                         object  = false
 );
 
 } // namespace keel

@@ -1,0 +1,6 @@
+import counter;
+
+void bump_a()
+{
+    Counter<i32>::total = Counter<i32>::total + 1;
+}

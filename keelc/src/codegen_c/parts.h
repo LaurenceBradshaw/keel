@@ -13,6 +13,12 @@
 namespace keel
 {
 
+// An instance or a synthesised function: placed by which module reaches it, so several may define it.
+inline bool placed_by_reach( const Function& function )
+{
+    return !function.type_arguments.empty() || !function.declaration.is_valid();
+}
+
 // Which module's C file each function goes in (D71). Every part compiles alone.
 //
 //   a function declared at no type arguments   its declaration's module

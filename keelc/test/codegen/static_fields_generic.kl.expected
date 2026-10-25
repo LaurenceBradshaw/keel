@@ -16,10 +16,10 @@ struct kl__Box__I3f64E
     double kl_v;
 };
 
-int32_t kl__made__GS3BoxI3i32E = 0;
-int32_t kl__start__GS3BoxI3i32E = 7;
-int32_t kl__made__GS3BoxI3f64E = 0;
-int32_t kl__start__GS3BoxI3f64E = 7;
+__attribute__((weak)) int32_t kl__start__GS3BoxI3f64E = 7;
+__attribute__((weak)) int32_t kl__start__GS3BoxI3i32E = 7;
+__attribute__((weak)) int32_t kl__made__GS3BoxI3i32E = 0;
+__attribute__((weak)) int32_t kl__made__GS3BoxI3f64E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

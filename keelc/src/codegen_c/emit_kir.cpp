@@ -241,7 +241,8 @@ public:
         const Interner&              interner,
         const Module_graph&          modules,
         const Parts*                 parts,
-        File_id                      part
+        File_id                      part,
+        bool                         object
     );
 
     std::string run();
@@ -276,7 +277,7 @@ private:
 
     bool                                     defines( Node_id declaration ) const;
     std::vector<std::pair<Node_id, Type_id>> defined_globals() const;
-    std::vector<std::pair<Node_id, Type_id>> used_globals() const;
+    std::vector<std::pair<Node_id, Type_id>> used_globals( std::vector<std::pair<Node_id, Type_id>>& shared ) const;
     std::vector<Node_id>                     externs() const;
     Needed                                   needed_types() const;
 
@@ -332,6 +333,7 @@ private:
     const Spelling               spelling_;
     const Parts*                 parts_; // null writes the whole compile
     File_id                      part_;
+    const bool                   object_;
     std::vector<const Function*> callees_; // other parts' functions this one calls
     std::vector<Vtable>          vtables_; // static, so each part writes its own
     Needed                       needed_;
@@ -348,7 +350,8 @@ Kir_emitter::Kir_emitter(
     const Interner&              interner,
     const Module_graph&          modules,
     const Parts*                 parts,
-    File_id                      part
+    File_id                      part,
+    bool                         object
 )
     : functions_( functions ),
       ast_( ast ),
@@ -359,6 +362,7 @@ Kir_emitter::Kir_emitter(
       spelling_( Spelling { ast, types, interner, modules, sm } ),
       parts_( parts ),
       part_( part ),
+      object_( object ),
       callees_( std::move( callees ) ),
       vtables_( vtables_needed( ast, types, functions ) ),
       needed_( needed_types() ),
@@ -825,11 +829,17 @@ void Kir_emitter::emit_vtables()
 void Kir_emitter::emit_globals()
 {
     const std::vector<std::pair<Node_id, Type_id>> defined = defined_globals();
-    const std::vector<std::pair<Node_id, Type_id>> used    = used_globals();
+    std::vector<std::pair<Node_id, Type_id>>       shared;
+    const std::vector<std::pair<Node_id, Type_id>> used = used_globals( shared );
 
     for( const auto& [global, owner] : defined )
     {
         write_line( spelling_.global_definition( global, owner ) );
+    }
+
+    for( const auto& [global, owner] : shared )
+    {
+        write_line( spelling_.global_definition( global, owner, true ) );
     }
 
     for( const auto& [global, owner] : used )
@@ -837,7 +847,7 @@ void Kir_emitter::emit_globals()
         write_line( spelling_.global_declaration( global, owner ) );
     }
 
-    if( !defined.empty() || !used.empty() )
+    if( !defined.empty() || !shared.empty() || !used.empty() )
     {
         write_line( "" );
     }
@@ -1453,7 +1463,8 @@ void Kir_emitter::emit_function( const Function& function )
     }
 
     write_line( fmt::format(
-        "{}{} {}( {} )",
+        "{}{}{} {}( {} )",
+        object_ && placed_by_reach( function ) ? "__attribute__((weak)) " : "",
         function.diverges ? "_Noreturn " : "",
         spelling_.type( function.locals[k_return_slot.v].type ),
         spelling_.function( function.declaration, function.type_arguments ), // matches the prototype
@@ -1652,23 +1663,13 @@ std::vector<std::pair<Node_id, Type_id>> Kir_emitter::defined_globals() const
         {
             statics( child, {} );
         }
-        else if( is_aggregate( ast_.kind( child ) ) )
-        {
-            for( const Type_id instance : types_.table().composite_types() )
-            {
-                if( types_.table().get( instance ).declaration == child && !types_.table().mentions_parameter( instance ) )
-                {
-                    statics( child, instance );
-                }
-            }
-        }
     }
 
     return defined;
 }
 
 // Another part's globals this part's functions name, each once.
-std::vector<std::pair<Node_id, Type_id>> Kir_emitter::used_globals() const
+std::vector<std::pair<Node_id, Type_id>> Kir_emitter::used_globals( std::vector<std::pair<Node_id, Type_id>>& shared ) const
 {
     std::vector<std::pair<Node_id, Type_id>> used;
 
@@ -1676,7 +1677,14 @@ std::vector<std::pair<Node_id, Type_id>> Kir_emitter::used_globals() const
     {
         const std::pair<Node_id, Type_id> global { place.global, place.owner };
 
-        if( place.is_global() && !defines( place.global ) && std::ranges::find( used, global ) == used.end() )
+        if( place.is_global() && place.owner.is_valid() )
+        {
+            if( std::ranges::find( shared, global ) == shared.end() )
+            {
+                shared.push_back( global );
+            }
+        }
+        else if( place.is_global() && !defines( place.global ) && std::ranges::find( used, global ) == used.end() )
         {
             used.push_back( global );
         }
@@ -1793,7 +1801,9 @@ Needed Kir_emitter::needed_types() const
         }
     }
 
-    for( const auto& globals : { defined_globals(), used_globals() } )
+    std::vector<std::pair<Node_id, Type_id>>       shared;
+    const std::vector<std::pair<Node_id, Type_id>> used = used_globals( shared );
+    for( const auto& globals : { defined_globals(), shared, used } )
     {
         for( const auto& [global, owner] : globals )
         {
@@ -2370,7 +2380,8 @@ std::string emit_c_from_kir(
     const Interner&              interner,
     const Module_graph&          modules,
     const Parts*                 parts,
-    File_id                      part
+    File_id                      part,
+    bool                         object
 )
 {
     std::vector<Function> own;
@@ -2401,7 +2412,7 @@ std::string emit_c_from_kir(
         }
     }
 
-    return Kir_emitter( own, std::move( callees ), ast, types, literals, sm, interner, modules, parts, part ).run();
+    return Kir_emitter( own, std::move( callees ), ast, types, literals, sm, interner, modules, parts, part, object ).run();
 }
 
 } // namespace keel
@@ -2423,12 +2434,12 @@ struct Generated : Compiled
 {
     std::string c;
 
-    explicit Generated( std::string_view source )
+    explicit Generated( std::string_view source, bool object = false )
         : Compiled( source, Stage::Elaborated )
     {
         if( clean() )
         {
-            c = emit_c_from_kir( all, ast, types, literals, sm, interner );
+            c = emit_c_from_kir( all, ast, types, literals, sm, interner, {}, nullptr, {}, object );
         }
     }
 
@@ -4368,6 +4379,30 @@ TEST_CASE( "emit_kir_counts_every_line_of_code_at_a_line_of_keel", "[codegen][ki
         }
 
         counted += 1;
+    }
+}
+
+TEST_CASE( "emit_kir_marks_an_instance_weak_in_an_object", "[codegen][kir][generic]" )
+{
+    Generated g(
+        "T id<T>( T a ) where T : copyable { return a; }\n"
+        "i32 plain() { return 1; }\n"
+        "i32 main() { return id<i32>( 0 ) + plain() - 1; }\n",
+        true
+    );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+    REQUIRE( g.has( "\n__attribute__((weak)) int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )\n" ) );
+    REQUIRE( g.has( "\nint32_t kl__plain__( void )\n" ) );
+
+    SECTION( "but not outside one" )
+    {
+        Generated whole( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 0 ); }\n" );
+
+        INFO( whole.c );
+        REQUIRE( whole.clean() );
+        REQUIRE_FALSE( whole.has( "__attribute__((weak))" ) );
     }
 }
 

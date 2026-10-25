@@ -426,10 +426,11 @@ std::string c_string( std::string_view str )
     return text;
 }
 
-std::string Spelling::global_definition( Node_id declaration, Type_id owner ) const
+std::string Spelling::global_definition( Node_id declaration, Type_id owner, bool weak ) const
 {
-    const Type_id     variable = types.type_of( declaration );
-    const std::string name     = global( declaration, owner );
+    const Type_id     variable  = types.type_of( declaration );
+    const std::string name      = global( declaration, owner );
+    const std::string weak_text = weak ? "__attribute__((weak)) " : "";
 
     // The checker evaluated the initialiser; this prints the value. It used to print the expression
     // instead, which meant a backend re-deriving §6.4's conversions in its own spelling of the tree
@@ -440,7 +441,7 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner ) co
     // rather than a zero invented here.
     if( !value )
     {
-        return fmt::format( "{} {};", type( variable ), name );
+        return fmt::format( "{}{} {};", weak_text, type( variable ), name );
     }
 
     const Type_table& table = types.table();
@@ -464,7 +465,7 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner ) co
         text = fmt::format( "{}{}", value->negative ? "-" : "", c_integer( value->magnitude ) );
     }
 
-    return fmt::format( "{} {} = {};", type( variable ), name, text );
+    return fmt::format( "{}{} {} = {};", weak_text, type( variable ), name, text );
 }
 
 std::string Spelling::global_declaration( Node_id declaration, Type_id owner ) const

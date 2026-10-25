@@ -22,8 +22,8 @@ struct kl__Box__I3f64E
 };
 
 int32_t kl__total__GS7Counter = 0;
-int32_t kl__made__GS3BoxI3i32E = 0;
-int32_t kl__made__GS3BoxI3f64E = 0;
+__attribute__((weak)) int32_t kl__made__GS3BoxI3i32E = 0;
+__attribute__((weak)) int32_t kl__made__GS3BoxI3f64E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

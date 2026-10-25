@@ -73,7 +73,7 @@ Parts::Parts( const Ast& ast, Types& types, const Module_graph& modules, File_id
         }
     }
 
-    const auto declared = [&]( u32 f ) { return functions[f].declaration.is_valid() && functions[f].type_arguments.empty(); };
+    const auto declared = [&]( u32 f ) { return !placed_by_reach( functions[f] ); };
 
     for( u32 f = 0; f < functions.size(); ++f )
     {

@@ -1,0 +1,7 @@
+// One generic type with a static; a.kl and b.kl each bump its `i32` instance.
+class Counter<T> where T : copyable
+{
+    public static i32 total = 0;
+
+    public T v;
+};
