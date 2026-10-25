@@ -32,6 +32,12 @@ void Statements::visit( Node_id id )
     {
         for( const Node_id child : ast_.declarations( id ) )
         {
+            // Checked when its object was built; Checker::absorb took the results.
+            if( resolution_.modules().is_loaded( ast_.span( child ).file ) )
+            {
+                continue;
+            }
+
             // A file-scope variable is checked differently from a local: its type came from the
             // signature pass, and its initialiser must be a literal. Everything else - functions
             // above all - takes the ordinary path, which is what this case replaced when it took

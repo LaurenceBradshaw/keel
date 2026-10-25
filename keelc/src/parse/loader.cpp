@@ -3,6 +3,7 @@
 
 #include "parse/loader.h"
 #include <fmt/format.h>
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 #include "common/types.h"
@@ -53,6 +54,7 @@ Program load_program(
     Diagnostics&             diags,
     std::span<const Package> packages,
     bool                     as_module,
+    std::span<const Object>  objects,
     std::string_view         prelude
 )
 {
@@ -66,11 +68,12 @@ Program load_program(
 
     const std::filesystem::path program_folder = std::filesystem::path( sm.file( input ).path ).parent_path();
 
-    Ast          ast;
-    Module_graph modules;
+    Program                               prog;
+    Ast&                                  ast          = prog.ast;
+    Module_graph&                         modules      = prog.modules;
+    std::unordered_map<u32, std::string>& package_docs = prog.package_docs;
     modules.set_prelude( prelude_file, interner.intern( "prelude" ) );
 
-    std::unordered_map<u32, std::string> package_docs;
     package_docs[Symbol_id {}.v] = read_package_info( program_folder, sm, interner, literals, diags );
 
     std::unordered_map<u32, std::filesystem::path> package_roots;
@@ -94,8 +97,28 @@ Program load_program(
         modules.set_program( input );
     }
 
-    std::vector<Node_id>         decls;
-    std::unordered_map<u32, u32> first_node;
+    // Each object's file holds its source text, for spans, and is never read from disk.
+    std::unordered_map<std::string, File_id> object_files;
+    for( const Object& object : objects )
+    {
+        const std::optional<Source_header> source = read_source( object.state );
+        const File_id file = sm.add_file( source ? source->path : object.path, source ? source->text : std::string() );
+
+        const std::string_view module    = object.manifest.module;
+        const std::size_t      separator = module.rfind( "::" );
+        const Symbol_id        package =
+            separator == std::string_view::npos ? Symbol_id {} : interner.intern( module.substr( 0, separator ) );
+
+        if( package.is_valid() && !modules.is_package( package ) )
+        {
+            modules.add_package( package );
+        }
+        modules.place( file, package );
+        modules.set_loaded( file );
+        object_files.emplace( module, file );
+    }
+
+    std::vector<Node_id> decls;
 
     while( !pending.empty() )
     {
@@ -103,7 +126,7 @@ Program load_program(
         pending.pop_back();
 
         const std::vector<Token> tokens       = lex( current, sm, interner, literals, diags );
-        first_node[current.v]                 = narrow_cast<u32>( ast.node_count() );
+        prog.first_node[current.v]            = narrow_cast<u32>( ast.node_count() );
         const std::vector<Node_id> file_decls = parse_into( ast, tokens, sm, diags );
 
         for( const Node_id decl : file_decls )
@@ -112,6 +135,24 @@ Program load_program(
             {
                 Symbol_id package_id =
                     ast.package( decl ).is_valid() ? ast.name( ast.package( decl ) ) : modules.package_of( current );
+                const std::string_view module_name    = interner.text( ast.name( decl ) );
+                const std::string      qualified_name = qualified( interner, package_id, module_name );
+
+                if( const auto it = object_files.find( qualified_name ); it != object_files.end() )
+                {
+                    modules.add( current, it->second, ast.span( decl ) );
+                    continue;
+                }
+
+                if( as_module )
+                {
+                    diags.error(
+                        ast.span( decl ),
+                        fmt::format( "`{}` is imported, but no object for it was given", qualified_name ),
+                        "build it with `-c` first, and give the `.klo`"
+                    );
+                    continue;
+                }
 
                 std::filesystem::path module_folder = program_folder;
                 if( package_id.is_valid() )
@@ -135,8 +176,6 @@ Program load_program(
                     }
                 }
 
-                const std::string_view module_name = interner.text( ast.name( decl ) );
-
                 if( module_name == "packageinfo" )
                 {
                     diags.error(
@@ -156,7 +195,7 @@ Program load_program(
                 {
                     diags.error(
                         ast.span( decl ),
-                        fmt::format( "there is no module `{}`", qualified( interner, package_id, module_name ) ),
+                        fmt::format( "there is no module `{}`", qualified_name ),
                         package_id.is_valid()
                             ? fmt::format( "it would be `{}.kl` in the package `{}`", module_name, interner.text( package_id ) )
                             : fmt::format(
@@ -178,6 +217,56 @@ Program load_program(
                 decls.push_back( decl );
             }
         }
+    }
+
+    // After the prelude, which every state names, and each object after the objects it was built against.
+    std::vector<const Object*> order;
+    const auto                 visit = [&]( auto&& self, const Object& object ) -> void
+    {
+        if( std::ranges::find( order, &object ) != order.end() )
+        {
+            return;
+        }
+        for( const auto& [dependency, hash] : object.manifest.depends )
+        {
+            if( const auto it = std::ranges::find( objects, dependency, &Object::module ); it != objects.end() )
+            {
+                self( self, *it );
+            }
+        }
+        order.push_back( &object );
+    };
+    for( const Object& object : objects )
+    {
+        visit( visit, object );
+    }
+
+    for( const Object* object : order )
+    {
+        const File_id                     file  = object_files.at( object->manifest.module );
+        const std::optional<Loaded_state> state = read_state( object->state, file, prog, interner, literals, prog.types, sm );
+
+        // The build id matched, so this keelc wrote it.
+        if( !state )
+        {
+            diags.error(
+                Span { file, 0, 0 },
+                fmt::format( "keelc cannot read its own object '{}'", object->path ),
+                "this is a bug in keelc"
+            );
+            continue;
+        }
+
+        for( const auto& [dependency, hash] : object->manifest.depends )
+        {
+            if( const auto it = object_files.find( dependency ); it != object_files.end() )
+            {
+                modules.add( file, it->second );
+            }
+        }
+
+        decls.insert( decls.end(), state->declarations.begin(), state->declarations.end() );
+        prog.states.push_back( std::move( *state ) );
     }
 
     std::vector<std::pair<File_id, File_id>> closing_imports = modules.closing_imports( input );
@@ -213,11 +302,6 @@ Program load_program(
         ast.add( Node_kind::Source_file, Span { input, 0, narrow_cast<u32>( sm.file( input ).text.size() ) }, 0, decls );
     ast.set_root( root );
 
-    Program prog;
-    prog.ast          = std::move( ast );
-    prog.modules      = std::move( modules );
-    prog.package_docs = std::move( package_docs );
-    prog.first_node   = std::move( first_node );
     return prog;
 }
 
@@ -279,7 +363,7 @@ public:
 
         REQUIRE( input.has_value() );
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, prelude );
+        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, {}, prelude );
 
         for( const auto& [name, text] : files )
         {

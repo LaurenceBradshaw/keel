@@ -1399,6 +1399,14 @@ void Overloads::record_instance( Node_id from, Node_id call, Node_id callable, s
     );
 }
 
+void Overloads::absorb_instantiation( Node_id call, Instantiation instance )
+{
+    instantiation_of_.emplace(
+        call.v,
+        narrow_cast<u32>( generic_recursion_.record_instantiation( instance.declaration, std::move( instance.arguments ) ) )
+    );
+}
+
 // The receiver's type arguments, then the method's own. A call on a receiver writes the first
 // nowhere, so the path that records a written call's instantiation never runs for one; without
 // this a method of a generic is checked and then emitted by nobody.

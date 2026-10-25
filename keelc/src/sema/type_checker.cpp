@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <algorithm>
 #include "common/source_manager.h"
+#include "object/state.h"
 #include "sema/addresses.h"
 #include "sema/aggregates.h"
 #include "sema/annotations.h"
@@ -39,18 +40,22 @@ class Checker
 {
 public:
     Checker(
-        const Ast&            ast,
-        const Interner&       interner,
-        const Resolution&     resolution,
-        const Source_manager& source_manager,
-        const Literal_pool&   literals,
-        Diagnostics&          diags
+        const Ast&                    ast,
+        const Interner&               interner,
+        const Resolution&             resolution,
+        const Source_manager&         source_manager,
+        const Literal_pool&           literals,
+        Diagnostics&                  diags,
+        Type_table                    table,
+        std::span<const Loaded_state> states
     )
         : ast_( ast ),
           interner_( interner ),
           resolution_( resolution ),
           sm_( source_manager ),
+          states_( states ),
           reporter_( source_manager, diags ),
+          types_( std::move( table ) ),
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
           bounds_( ast, interner, literals, types_, aggregates_, reporter_ ),
@@ -114,10 +119,13 @@ public:
     Types run();
 
 private:
-    const Ast&            ast_;
-    const Interner&       interner_;
-    const Resolution&     resolution_;
-    const Source_manager& sm_;
+    void absorb( const Loaded_state& state );
+
+    const Ast&                    ast_;
+    const Interner&               interner_;
+    const Resolution&             resolution_;
+    const Source_manager&         sm_;
+    std::span<const Loaded_state> states_;
 
     Reporter      reporter_;
     Types_builder types_;
@@ -156,6 +164,11 @@ Types Checker::run()
     types_.conformances().complete( ast_, table_, types_.recorded() );
     report_conformance_errors( ast_, interner_, table_, types_.recorded(), types_.conformances(), reporter_ );
 
+    for( const Loaded_state& state : states_ )
+    {
+        absorb( state );
+    }
+
     statements_.visit( ast_.root() );
 
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
@@ -175,6 +188,43 @@ Types Checker::run()
         types_.take_conformances(),
         callees_.take_listed()
     );
+}
+
+// A loaded module's body results, which checking its bodies would record. Its signatures were typed
+// by the declaration pass, with every other module's.
+void Checker::absorb( const Loaded_state& state )
+{
+    for( const auto& [node, type] : state.types )
+    {
+        if( !types_.type_of( node ).is_valid() )
+        {
+            types_.record( node, type );
+        }
+    }
+    for( const auto& [node, value] : state.constants )
+    {
+        constant_folder_.record_value( node, value );
+    }
+    for( const auto& [call, callee] : state.callees )
+    {
+        callees_.record( call, callee );
+    }
+    for( const auto& [use, interface] : state.through )
+    {
+        callees_.record_through( use, interface );
+    }
+    for( const auto& [use, functions] : state.listed )
+    {
+        callees_.record_listed( use, functions );
+    }
+    for( const auto& [call, instance] : state.instantiations )
+    {
+        overloads_.absorb_instantiation( call, instance );
+    }
+    for( const Generic_call& call : state.generic_calls )
+    {
+        generic_recursion_.absorb_call( call );
+    }
 }
 
 } // namespace keel::sema
@@ -266,15 +316,17 @@ void report_unused(
 } // namespace
 
 Types type_check(
-    const Ast&            ast,
-    const Resolution&     resolution,
-    const Literal_pool&   literals,
-    const Source_manager& sm,
-    const Interner&       interner,
-    Diagnostics&          diags
+    const Ast&                    ast,
+    const Resolution&             resolution,
+    const Literal_pool&           literals,
+    const Source_manager&         sm,
+    const Interner&               interner,
+    Diagnostics&                  diags,
+    Type_table                    table,
+    std::span<const Loaded_state> states
 )
 {
-    Types types = sema::Checker( ast, interner, resolution, sm, literals, diags ).run();
+    Types types = sema::Checker( ast, interner, resolution, sm, literals, diags, std::move( table ), states ).run();
 
     // No warnings over errors: a use inside an `Error` node is never bound.
     if( !diags.has_errors() )

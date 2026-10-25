@@ -12,7 +12,6 @@
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
-#include "parse/loader.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
 
@@ -22,6 +21,8 @@
 
 namespace keel
 {
+
+struct Program;
 
 struct Source_header
 {

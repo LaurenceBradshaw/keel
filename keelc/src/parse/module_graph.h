@@ -253,6 +253,17 @@ public:
         return program_.is_valid() && file == program_;
     }
 
+    // A module read from an object: checked when it was built, so nothing checks it again.
+    void set_loaded( File_id file )
+    {
+        loaded_.push_back( file );
+    }
+
+    bool is_loaded( File_id file ) const
+    {
+        return std::find( loaded_.begin(), loaded_.end(), file ) != loaded_.end();
+    }
+
 private:
     static u64 edge( File_id from, File_id to )
     {
@@ -268,6 +279,7 @@ private:
     File_id                           prelude_;
     Symbol_id                         prelude_package_;
     File_id                           program_;
+    std::vector<File_id>              loaded_;
 };
 
 // `name`, or `package::name` when there is a package. The program's own package has no name.

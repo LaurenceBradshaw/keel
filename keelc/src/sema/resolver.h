@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <span>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -13,6 +14,8 @@
 
 namespace keel
 {
+
+struct Loaded_state;
 
 // A use in `from` may name `decl` when it imports the module, and the declaration is its own or not private.
 inline bool can_name( const Module_graph& modules, const Ast& ast, File_id from, Node_id decl )
@@ -130,8 +133,14 @@ private:
     std::vector<Node_id> unused_;
 };
 
+// A loaded module's bindings are taken from its state rather than resolved again.
 Resolution resolve(
-    const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules = {}
+    const Ast&                    ast,
+    const Source_manager&         sm,
+    const Interner&               interner,
+    Diagnostics&                  diags,
+    const Module_graph&           modules = {},
+    std::span<const Loaded_state> states  = {}
 );
 
 } // namespace keel

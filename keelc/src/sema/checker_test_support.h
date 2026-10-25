@@ -44,7 +44,7 @@ public:
     Typed( std::string_view source, std::string_view prelude )
     {
         file_          = sm_.add_file( "t.kl", std::string( source ) );
-        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, {}, false, prelude );
+        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, {}, false, {}, prelude );
         ast_           = std::move( loaded.ast );
         const auto res = resolve( ast_, sm_, interner_, diags_, loaded.modules );
         earlier_       = diags_.error_count();
@@ -77,7 +77,7 @@ public:
         REQUIRE( input.has_value() );
         file_ = *input;
 
-        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, packages, false, prelude );
+        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, packages, false, {}, prelude );
         ast_           = std::move( loaded.ast );
         const auto res = resolve( ast_, sm_, interner_, diags_, loaded.modules );
         earlier_       = diags_.error_count();

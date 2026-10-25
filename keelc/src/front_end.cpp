@@ -32,15 +32,17 @@ Front_end run_front_end(
     Literal_pool&            literals,
     Diagnostics&             diags,
     std::span<const Package> packages,
-    bool                     as_module
+    bool                     as_module,
+    std::span<const Object>  objects
 )
 {
     Front_end front;
-    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module );
+    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module, objects );
     const Ast& ast = front.program.ast;
 
-    front.resolution = resolve( ast, sm, interner, diags, front.program.modules );
-    front.types      = type_check( ast, front.resolution, literals, sm, interner, diags );
+    const std::span<const Loaded_state> states = front.program.states;
+    front.resolution                           = resolve( ast, sm, interner, diags, front.program.modules, states );
+    front.types = type_check( ast, front.resolution, literals, sm, interner, diags, std::move( front.program.types ), states );
 
     // The emitter takes no Diagnostics: past here there is nothing left for it to object to.
     if( diags.has_errors() )

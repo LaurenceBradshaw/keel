@@ -8,6 +8,7 @@
 #include <iterator>
 #include <unordered_map>
 #include <unordered_set>
+#include "object/state.h"
 #include "sema/reporter.h"
 #include "sema/type.h"
 
@@ -20,13 +21,19 @@ class Resolver
 {
 public:
     Resolver(
-        const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules
+        const Ast&                    ast,
+        const Source_manager&         sm,
+        const Interner&               interner,
+        Diagnostics&                  diags,
+        const Module_graph&           modules,
+        std::span<const Loaded_state> states
     )
         : ast_( ast ),
           sm_( sm ),
           interner_( interner ),
           reporter_( sm, diags ),
           modules_( modules ),
+          states_( states ),
           self_( interner.find( "self" ) )
     {
     }
@@ -81,6 +88,8 @@ private:
     const Interner&       interner_;
     sema::Reporter        reporter_;
     const Module_graph&   modules_;
+
+    std::span<const Loaded_state> states_;
 
     std::vector<Node_id> bindings_;
     std::vector<bool>    used_;              // a declaration some use was bound to
@@ -141,6 +150,20 @@ Resolution Resolver::run()
 
     visit( ast_.root() );
 
+    // A loaded module's bodies were resolved when its object was built; its top-level names were
+    // declared above with every other module's.
+    for( const Loaded_state& state : states_ )
+    {
+        for( const auto& [use, decl] : state.bindings )
+        {
+            bindings_[use.v] = decl;
+        }
+        for( const auto& [decl, next] : state.overloads )
+        {
+            next_overload_[decl.v] = next;
+        }
+    }
+
     return Resolution(
         std::move( bindings_ ),
         std::move( unresolved_ ),
@@ -166,6 +189,11 @@ void Resolver::visit( Node_id id )
     case Node_kind::Source_file:
         for( const Node_id decl : ast_.declarations( id ) )
         {
+            if( modules_.is_loaded( ast_.span( decl ).file ) )
+            {
+                continue;
+            }
+
             // Declared already by the pre-pass. Going through the Var_decl case would declare it a
             // second time and report it against itself. Functions and structs do not hit this
             // because their cases do not declare - only Var_decl does.
@@ -1056,10 +1084,16 @@ std::vector<Node_id> Resolver::unused() const
 
 } // namespace
 
-Resolution
-resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Module_graph& modules )
+Resolution resolve(
+    const Ast&                    ast,
+    const Source_manager&         sm,
+    const Interner&               interner,
+    Diagnostics&                  diags,
+    const Module_graph&           modules,
+    std::span<const Loaded_state> states
+)
 {
-    return Resolver( ast, sm, interner, diags, modules ).run();
+    return Resolver( ast, sm, interner, diags, modules, states ).run();
 }
 
 } // namespace keel
@@ -2240,7 +2274,7 @@ public:
         input_ = *input;
 
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, prelude );
+        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), false, {}, prelude );
         earlier_    = diags_.error_count();
         resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.modules );
     }

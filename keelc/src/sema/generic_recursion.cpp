@@ -24,6 +24,17 @@ void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_
 //
 // `Bad<Box<T>>` is two facts, so the arguments are walked as well as the type. No visited-set - an
 // interned type is a finite tree.
+void Generic_recursion::absorb_call( Generic_call call )
+{
+    const auto same = [&]( const Generic_call& seen )
+    { return seen.from == call.from && seen.to == call.to && seen.arguments == call.arguments && seen.at == call.at; };
+
+    if( std::ranges::none_of( generic_calls_, same ) )
+    {
+        generic_calls_.push_back( std::move( call ) );
+    }
+}
+
 void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at )
 {
     if( !type.is_valid() )

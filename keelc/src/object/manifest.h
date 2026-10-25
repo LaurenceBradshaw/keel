@@ -29,6 +29,20 @@ struct Manifest
     std::vector<std::pair<std::string, u64>> depends {};
 };
 
+// A `.klo` as read: its manifest and its state, which the loader reads in place of the module's source.
+struct Object
+{
+    std::string path {};
+    u64         hash = 0; // fnv1a of the whole file
+    Manifest    manifest {};
+    std::string state {};
+
+    const std::string& module() const
+    {
+        return manifest.module;
+    }
+};
+
 std::string             write_manifest( const Manifest& manifest );
 std::optional<Manifest> read_manifest( std::string_view text );
 

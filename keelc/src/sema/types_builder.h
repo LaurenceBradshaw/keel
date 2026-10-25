@@ -22,6 +22,12 @@ namespace keel::sema
 class Types_builder
 {
 public:
+    Types_builder() = default;
+    explicit Types_builder( Type_table table )
+        : table_( std::move( table ) )
+    {
+    }
+
     // Sized once, at the start of the run, like bindings_ in Resolver.
     void size_to( std::size_t node_count );
 

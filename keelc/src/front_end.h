@@ -66,7 +66,8 @@ Front_end run_front_end(
     Literal_pool&            literals,
     Diagnostics&             diags,
     std::span<const Package> packages  = {},
-    bool                     as_module = false
+    bool                     as_module = false,
+    std::span<const Object>  objects   = {}
 );
 
 } // namespace keel

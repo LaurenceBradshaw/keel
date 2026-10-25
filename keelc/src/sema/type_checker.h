@@ -20,6 +20,8 @@
 namespace keel
 {
 
+struct Loaded_state;
+
 // A file-scope initialiser, evaluated. Two kinds cover everything Keel allows there: a bool is the
 // integer 0 or 1, and `nullptr` is the integer 0. Integers keep the sign-magnitude form fits()
 // already takes, so the range checks and the folder agree without converting between them.
@@ -224,7 +226,18 @@ private:
     std::unordered_map<u32, std::vector<Node_id>> listed_;
 };
 
-Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );
+// Interns into `table`, which loading named the objects' types in, and takes each loaded module's
+// body results from its state rather than checking its bodies again.
+Types type_check(
+    const Ast&,
+    const Resolution&,
+    const Literal_pool&,
+    const Source_manager&,
+    const Interner&,
+    Diagnostics&,
+    Type_table                    table  = {},
+    std::span<const Loaded_state> states = {}
+);
 
 // Each declared type's package and module, which a type's name is composed from when it is interned.
 void name_declarations(

@@ -166,6 +166,8 @@ public:
     void record_method_instantiation(
         Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {}
     );
+    // A loaded module's call, which record_instance recorded when its object was built.
+    void                         absorb_instantiation( Node_id call, Instantiation instance );
     std::unordered_map<u32, u32> take_instantiations();
 
     bool    refused( Node_id id ) const;

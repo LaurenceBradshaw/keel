@@ -215,7 +215,7 @@ struct Reached
     {
         const File_id file = sm.add_file( "t.kl", std::string( source ) );
 
-        Program program = load_program( file, sm, interner, literals, diags, {}, false, {} );
+        Program program = load_program( file, sm, interner, literals, diags, {}, false, {}, {} );
         ast             = std::move( program.ast );
         resolution      = resolve( ast, sm, interner, diags, program.modules );
         types           = type_check( ast, resolution, literals, sm, interner, diags );

@@ -13,6 +13,8 @@
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
+#include "object/manifest.h"
+#include "object/state.h"
 #include "parse/module_graph.h"
 #include "prelude/prelude.h"
 
@@ -26,6 +28,11 @@ struct Program
 
     std::unordered_map<u32, std::string> package_docs; // by package symbol, the program's own under Symbol_id {}
     std::unordered_map<u32, u32>         first_node;   // by file: its nodes run from here, unbroken
+
+    // The modules given as objects, dependencies first, and the types their states named, which
+    // checking goes on interning into.
+    std::vector<Loaded_state> states;
+    Type_table                types;
 };
 
 struct Package
@@ -37,7 +44,8 @@ struct Package
 // Lexes and parses `input` and every module it imports, transitively, into one tree whose root holds
 // every file's declarations. A module is `name.kl` beside the input file, and each is loaded once.
 // `as_module` compiles the input as a module rather than a program: in the package whose folder
-// holds it, if any, and with its names given a module slot.
+// holds it, if any, and with its names given a module slot. A module given as an object is read from
+// its state, never parsed, and under `as_module` every import must be one.
 Program load_program(
     File_id                  input,
     Source_manager&          sm,
@@ -46,6 +54,7 @@ Program load_program(
     Diagnostics&             diags,
     std::span<const Package> packages  = {},
     bool                     as_module = false,
+    std::span<const Object>  objects   = {},
     std::string_view         prelude   = prelude_source()
 );
 

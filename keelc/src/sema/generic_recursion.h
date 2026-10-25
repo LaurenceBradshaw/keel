@@ -28,6 +28,7 @@ public:
     }
 
     void        record_call( Node_id from, Node_id to, std::vector<Type_id> arguments, Span at );
+    void        absorb_call( Generic_call call ); // a loaded module's, unless the declaration pass recorded it again
     void        record_generic_uses( Node_id from, Type_id type, Span at );
     std::size_t record_instantiation( Node_id declaration, std::vector<Type_id> arguments );
     void        mark_reported( Node_id declaration );
