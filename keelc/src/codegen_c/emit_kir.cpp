@@ -590,10 +590,14 @@ void Kir_emitter::emit_composites()
             write_line( "{" );
             indent_ += 4;
 
+            std::vector<u32> tags;
             for( const Type_id member : types_.table().get( type ).arguments )
             {
-                write_line( fmt::format( "{} e{};", spelling_.type( member ), types_.table().error_tag( member ) ) );
+                tags.push_back( types_.table().error_tag( member ) );
+                write_line( fmt::format( "{} e{};", spelling_.type( member ), tags.back() ) );
             }
+            std::ranges::sort( tags );
+            assert( std::ranges::adjacent_find( tags ) == tags.end() && "two members of one union hash to one tag" );
 
             indent_ -= 4;
             write_line( "};" );

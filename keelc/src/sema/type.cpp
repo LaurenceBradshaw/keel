@@ -3,11 +3,13 @@
 
 #include "sema/type.h"
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include "common/bytes.h"
 
 namespace keel
 {
@@ -472,12 +474,6 @@ Type_id Type_table::error_union( std::span<const Type_id> members )
             spelling += " | ";
         }
         spelling += name( flattened[i] );
-    }
-
-    // A tag is kept once given.
-    for( Type_id member : flattened )
-    {
-        error_tags_.try_emplace( member.v, narrow_cast<u32>( error_tags_.size() ) );
     }
 
     const std::vector<Type_id>& stored = arguments_.emplace_back( std::move( flattened ) );
@@ -1120,6 +1116,76 @@ std::string_view Type_table::package( Type_id id ) const
     return it == packages_.end() ? std::string_view {} : it->second;
 }
 
+void Type_table::set_module( Node_id declaration, std::string module )
+{
+    modules_[declaration.v] = std::move( module );
+}
+
+std::string Type_table::stable_name( Type_id id ) const
+{
+    const Type& described = get( id );
+
+    const auto list = [&]( std::span<const Type_id> types, std::string_view separator )
+    {
+        std::string text;
+        for( std::size_t i = 0; i < types.size(); ++i )
+        {
+            text += i == 0 ? "" : separator;
+            text += stable_name( types[i] );
+        }
+        return text;
+    };
+
+    switch( described.kind )
+    {
+    case Type_kind::Struct:
+    case Type_kind::Enum:
+    case Type_kind::Interface:
+    {
+        const auto  module = modules_.find( described.declaration.v );
+        std::string text   = module == modules_.end() ? "" : module->second + "::";
+        text += base_name( id );
+        return described.arguments.empty() ? text : fmt::format( "{}<{}>", text, list( described.arguments, ", " ) );
+    }
+    case Type_kind::Pointer:
+        return fmt::format( "{}{}*", described.const_element ? "const " : "", stable_name( described.element ) );
+    case Type_kind::Many_pointer:
+        return fmt::format( "{}{}[*]", described.const_element ? "const " : "", stable_name( described.element ) );
+    case Type_kind::Run:
+        return fmt::format( "{}[]", stable_name( described.element ) );
+    case Type_kind::Array:
+        return fmt::format( "{}[{}]", stable_name( described.element ), described.count );
+    case Type_kind::Field:
+        return fmt::format( "field( {} ) -> {}", stable_name( described.arguments[0] ), stable_name( described.element ) );
+    // Sorted by name, as the members' own order is by id, which differs between compiles.
+    case Type_kind::Union:
+    {
+        std::vector<std::string> members;
+        for( const Type_id member : described.arguments )
+        {
+            members.push_back( stable_name( member ) );
+        }
+        std::ranges::sort( members );
+        return fmt::format( "{}", fmt::join( members, " | " ) );
+    }
+    case Type_kind::Function:
+    {
+        std::string parameters;
+        for( std::size_t i = 0; i < described.arguments.size(); ++i )
+        {
+            parameters += fmt::format(
+                "{}{}{}", i == 0 ? "" : ", ", param_spelling( described.modes[i] ), stable_name( described.arguments[i] )
+            );
+        }
+        return fmt::format(
+            "fn( {} ) -> {}{}", parameters, param_spelling( described.return_mode ), stable_name( described.element )
+        );
+    }
+    default:
+        return std::string( name( id ) );
+    }
+}
+
 std::vector<Type_id> Type_table::union_types() const
 {
     return unions_;
@@ -1127,9 +1193,7 @@ std::vector<Type_id> Type_table::union_types() const
 
 u32 Type_table::error_tag( Type_id member ) const
 {
-    const auto it = error_tags_.find( member.v );
-    assert( it != error_tags_.end() && "a tag is given to every member of a union" );
-    return it->second;
+    return static_cast<u32>( fnv1a( stable_name( member ) ) );
 }
 
 bool Type_table::has_member( Type_id union_type, Type_id member ) const
@@ -3149,6 +3213,39 @@ TEST_CASE( "type_table_walks_into_a_run", "[sema][type][run][generic]" )
 
         REQUIRE( table.deduce( t, table.run_of( u8 ), bindings ) );
         REQUIRE( bindings.at( t.v ) == table.run_of( u8 ) );
+    }
+}
+
+TEST_CASE( "type_table_tags_a_member_the_same_in_every_compile", "[sema][type][unions]" )
+{
+    // Two compiles meet the same types in opposite orders, so their ids differ.
+    Type_table first;
+    Type_table second;
+
+    const Type_id first_a  = first.structure( Node_id { 5 }, {}, "Full" );
+    const Type_id first_b  = first.structure( Node_id { 7 }, {}, "Empty" );
+    const Type_id second_b = second.structure( Node_id { 3 }, {}, "Empty" );
+    const Type_id second_a = second.structure( Node_id { 9 }, {}, "Full" );
+
+    first.set_module( Node_id { 5 }, "kl::ring" );
+    first.set_module( Node_id { 7 }, "kl::ring" );
+    second.set_module( Node_id { 9 }, "kl::ring" );
+    second.set_module( Node_id { 3 }, "kl::ring" );
+
+    const Type_id first_union = first.error_union( std::array { first_a, first_b } );
+    second.error_union( std::array { second_b, second_a } );
+
+    REQUIRE( first.error_tag( first_a ) == second.error_tag( second_a ) );
+    REQUIRE( first.error_tag( first_b ) == second.error_tag( second_b ) );
+    REQUIRE( first.error_tag( first_a ) != first.error_tag( first_b ) );
+    REQUIRE( first.stable_name( first_union ) == "kl::ring::Empty | kl::ring::Full" );
+
+    SECTION( "a type of the same name in another module is another tag" )
+    {
+        const Type_id other = first.structure( Node_id { 11 }, {}, "Full" );
+        first.set_module( Node_id { 11 }, "kl::list" );
+
+        REQUIRE( first.error_tag( other ) != first.error_tag( first_a ) );
     }
 }
 

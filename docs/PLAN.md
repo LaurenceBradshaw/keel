@@ -848,8 +848,9 @@ combining enum is declared, and `switch` matches leaf members directly. `A | B` 
 one is written. **Each member is an `enum`, written once**, and none is a type parameter, so a union
 is closed where it is written. A union is canonical: nested unions flatten, members sort by
 `Type_id` and deduplicate, so `A | B` and `B | A` are one type, interned on the member set. Every
-member gets a global tag when a union first holds it, available because Keel has no separate
-compilation, so widening keeps the tag and exhaustiveness is a subset test. **A member converts
+member's tag is the low 32 bits of the FNV-1a hash of its name qualified by its module (`kl::ring::Full`),
+the same in every union and every compile, so widening keeps the tag, separately built objects
+agree, and exhaustiveness is a subset test. **A member converts
 into a union holding it** wherever a value meets a known type (an initialiser, an argument, a
 `return`, a payload, an arm of `?:`), as `i32` converts to `i64`; a copyable member needs no `move`
 even where the union owns, since the caller gives nothing up. **Widening one union into another is

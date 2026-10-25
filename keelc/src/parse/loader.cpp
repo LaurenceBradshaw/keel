@@ -43,14 +43,6 @@ std::string read_package_info(
     return doc_comment( sm.file( *file ).text, "//!" );
 }
 
-std::string module_name( const Interner& interner, File_id file, const Module_graph& modules, const Source_manager& sm )
-{
-    const Symbol_id   package = modules.package_of( file );
-    const std::string name    = std::filesystem::path( sm.file( file ).path ).stem().string();
-
-    return qualified( interner, package, name );
-}
-
 } // namespace
 
 Program load_program(
@@ -177,7 +169,7 @@ Program load_program(
     std::vector<std::pair<File_id, File_id>> closing_imports = modules.closing_imports( input );
     for( const auto& [from, to] : closing_imports )
     {
-        const auto name = [&]( File_id file ) { return module_name( interner, file, modules, sm ); };
+        const auto name = [&]( File_id file ) { return module_name( modules, sm, interner, file ); };
 
         if( from == to )
         {

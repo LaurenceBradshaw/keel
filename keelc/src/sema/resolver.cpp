@@ -1011,7 +1011,7 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
 
 std::string Resolver::module_name( File_id file ) const
 {
-    return qualified( interner_, modules_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
+    return keel::module_name( modules_, sm_, interner_, file );
 }
 
 void Resolver::refuse_unimported( Node_id use, Node_id decl )

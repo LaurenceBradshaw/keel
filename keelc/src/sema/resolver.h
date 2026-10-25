@@ -103,6 +103,11 @@ public:
         return prelude_;
     }
 
+    const Module_graph& modules() const
+    {
+        return modules_;
+    }
+
     // A qualified name the resolver could not bind, and has already answered for.
     bool is_unresolved( Node_id use ) const
     {

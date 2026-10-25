@@ -530,8 +530,8 @@ struct kl__U8Io_error4LostE
     uint32_t tag;
     union
     {
-        int32_t e0;
-        struct kl__Lost e1;
+        int32_t e2534101856;
+        struct kl__Lost e853259815;
     };
 };
 
@@ -578,8 +578,8 @@ struct kl__U8Io_error11Parse_errorE
     uint32_t tag;
     union
     {
-        int32_t e0;
-        struct kl__Parse_error e2;
+        int32_t e2534101856;
+        struct kl__Parse_error e1652578185;
     };
 };
 
@@ -595,9 +595,9 @@ struct kl__U8Io_error11Parse_error4LostE
     uint32_t tag;
     union
     {
-        int32_t e0;
-        struct kl__Parse_error e2;
-        struct kl__Lost e1;
+        int32_t e2534101856;
+        struct kl__Parse_error e1652578185;
+        struct kl__Lost e853259815;
     };
 };
 
@@ -619,8 +619,8 @@ struct kl__U8Io_error3OptI3u64EE
     uint32_t tag;
     union
     {
-        int32_t e0;
-        struct kl__Opt__I3u64E e3;
+        int32_t e2534101856;
+        struct kl__Opt__I3u64E e2237398775;
     };
 };
 
@@ -933,9 +933,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load__3u64( uint6
     bb1:
     kl_t4.tag = 1;
 #line 96 "codegen/error_union.kl"
-    kl_t5.tag = 2;
+    kl_t5.tag = 1652578185;
 #line 96 "codegen/error_union.kl"
-    kl_t5.e2 = kl_t4;
+    kl_t5.e1652578185 = kl_t4;
 #line 96 "codegen/error_union.kl"
     kl_t3.tag = 1;
 #line 96 "codegen/error_union.kl"
@@ -969,9 +969,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load__3u64( uint6
 #line 99 "codegen/error_union.kl"
     kl_t0.tag = 1;
 #line 99 "codegen/error_union.kl"
-    kl_t0.kl_error.tag = 0;
+    kl_t0.kl_error.tag = 2534101856;
 #line 99 "codegen/error_union.kl"
-    kl_t0.kl_error.e0 = kl_t8.kl_error;
+    kl_t0.kl_error.e2534101856 = kl_t8.kl_error;
 #line 99 "codegen/error_union.kl"
     return kl_t0;
     bb5:
@@ -989,9 +989,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load__3u64( uint6
 #line 100 "codegen/error_union.kl"
     kl_t0.tag = 1;
 #line 100 "codegen/error_union.kl"
-    kl_t0.kl_error.tag = 2;
+    kl_t0.kl_error.tag = 1652578185;
 #line 100 "codegen/error_union.kl"
-    kl_t0.kl_error.e2 = kl_t13.kl_error;
+    kl_t0.kl_error.e1652578185 = kl_t13.kl_error;
 #line 100 "codegen/error_union.kl"
     return kl_t0;
 }
@@ -1051,9 +1051,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
 #line 106 "codegen/error_union.kl"
     kl_t0.tag = 1;
 #line 106 "codegen/error_union.kl"
-    kl_t0.kl_error.tag = 1;
+    kl_t0.kl_error.tag = 853259815;
 #line 106 "codegen/error_union.kl"
-    kl_t0.kl_error.e1 = kl_t4.kl_error;
+    kl_t0.kl_error.e853259815 = kl_t4.kl_error;
 #line 106 "codegen/error_union.kl"
     if ( kl_t15 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
 #line 106 "codegen/error_union.kl"
@@ -1071,7 +1071,7 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
 #line 107 "codegen/error_union.kl"
     kl_t0.kl_error.tag = kl_t9.kl_error.tag;
 #line 107 "codegen/error_union.kl"
-    kl_t11 = kl_t9.kl_error.tag == 0;
+    kl_t11 = kl_t9.kl_error.tag == 2534101856;
 #line 107 "codegen/error_union.kl"
     if ( kl_t11 ) goto bb6; else goto bb7;
     bb5:
@@ -1079,12 +1079,12 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_error4LostEE kl__wider__3u64(
     return kl_t0;
     bb6:
 #line 107 "codegen/error_union.kl"
-    kl_t0.kl_error.e0 = kl_t9.kl_error.e0;
+    kl_t0.kl_error.e2534101856 = kl_t9.kl_error.e2534101856;
 #line 107 "codegen/error_union.kl"
     goto bb5;
     bb7:
 #line 107 "codegen/error_union.kl"
-    kl_t0.kl_error.e2 = kl_t9.kl_error.e2;
+    kl_t0.kl_error.e1652578185 = kl_t9.kl_error.e1652578185;
 #line 107 "codegen/error_union.kl"
     goto bb5;
     bb8:
@@ -1229,7 +1229,7 @@ void kl__report__MU8Io_error11Parse_error4LostE( struct kl__U8Io_error11Parse_er
 #line 119 "codegen/error_union.kl"
     kl_t50 = true;
 #line 121 "codegen/error_union.kl"
-    kl_t3 = kl_t2.tag == 0;
+    kl_t3 = kl_t2.tag == 2534101856;
 #line 121 "codegen/error_union.kl"
     if ( kl_t3 ) goto bb6; else goto bb7;
     bb1:
@@ -1261,7 +1261,7 @@ void kl__report__MU8Io_error11Parse_error4LostE( struct kl__U8Io_error11Parse_er
 #line 127 "codegen/error_union.kl"
     kl_t50 = false;
 #line 127 "codegen/error_union.kl"
-    kl_line_22 = kl_t21.e2.kl_line;
+    kl_line_22 = kl_t21.e1652578185.kl_line;
     kl_t24 = &kl_t23;
 #line 128 "codegen/error_union.kl"
     kl_t25 = ( uint8_t* ) "bad line ";
@@ -1290,7 +1290,7 @@ void kl__report__MU8Io_error11Parse_error4LostE( struct kl__U8Io_error11Parse_er
 #line 134 "codegen/error_union.kl"
     kl_t50 = false;
 #line 134 "codegen/error_union.kl"
-    kl_b_39 = kl_t38.e1.kl_why;
+    kl_b_39 = kl_t38.e853259815.kl_why;
     kl_t41 = &kl_t40;
 #line 135 "codegen/error_union.kl"
     kl_t42 = ( uint8_t* ) "gone ";
@@ -1310,12 +1310,12 @@ void kl__report__MU8Io_error11Parse_error4LostE( struct kl__U8Io_error11Parse_er
     goto bb8;
     bb6:
 #line 121 "codegen/error_union.kl"
-    kl_t4 = kl_t2.e0 == 0;
+    kl_t4 = kl_t2.e2534101856 == 0;
 #line 121 "codegen/error_union.kl"
     if ( kl_t4 ) goto bb1; else goto bb7;
     bb7:
 #line 124 "codegen/error_union.kl"
-    kl_t11 = kl_t2.tag == 0;
+    kl_t11 = kl_t2.tag == 2534101856;
 #line 124 "codegen/error_union.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb8:
@@ -1331,27 +1331,27 @@ void kl__report__MU8Io_error11Parse_error4LostE( struct kl__U8Io_error11Parse_er
     return;
     bb9:
 #line 124 "codegen/error_union.kl"
-    kl_t12 = kl_t2.e0 == 1;
+    kl_t12 = kl_t2.e2534101856 == 1;
 #line 124 "codegen/error_union.kl"
     if ( kl_t12 ) goto bb2; else goto bb10;
     bb10:
 #line 127 "codegen/error_union.kl"
-    kl_t19 = kl_t2.tag == 2;
+    kl_t19 = kl_t2.tag == 1652578185;
 #line 127 "codegen/error_union.kl"
     if ( kl_t19 ) goto bb11; else goto bb12;
     bb11:
 #line 127 "codegen/error_union.kl"
-    kl_t20 = kl_t2.e2.tag == 0;
+    kl_t20 = kl_t2.e1652578185.tag == 0;
 #line 127 "codegen/error_union.kl"
     if ( kl_t20 ) goto bb3; else goto bb12;
     bb12:
 #line 131 "codegen/error_union.kl"
-    kl_t30 = kl_t2.tag == 2;
+    kl_t30 = kl_t2.tag == 1652578185;
 #line 131 "codegen/error_union.kl"
     if ( kl_t30 ) goto bb13; else goto bb5;
     bb13:
 #line 131 "codegen/error_union.kl"
-    kl_t31 = kl_t2.e2.tag == 1;
+    kl_t31 = kl_t2.e1652578185.tag == 1;
 #line 131 "codegen/error_union.kl"
     if ( kl_t31 ) goto bb4; else goto bb5;
 #line 139 "codegen/error_union.kl"
@@ -1487,7 +1487,7 @@ void kl__peek__Q7prelude6resultI3u64_U8Io_error11Parse_error4LostEE( struct kl_7
 #line 164 "codegen/error_union.kl"
     kl_e_11 = &( *kl_r_1 ).kl_error;
 #line 167 "codegen/error_union.kl"
-    kl_t12 = ( *kl_e_11 ).tag == 1;
+    kl_t12 = ( *kl_e_11 ).tag == 853259815;
 #line 167 "codegen/error_union.kl"
     if ( kl_t12 ) goto bb6; else goto bb5;
     bb3:
@@ -1495,7 +1495,7 @@ void kl__peek__Q7prelude6resultI3u64_U8Io_error11Parse_error4LostEE( struct kl_7
     return;
     bb4:
 #line 167 "codegen/error_union.kl"
-    kl_b_14 = &( *kl_e_11 ).e1.kl_why;
+    kl_b_14 = &( *kl_e_11 ).e853259815.kl_why;
     kl_t16 = &kl_t15;
 #line 168 "codegen/error_union.kl"
     kl_t17 = ( uint8_t* ) "peek gone ";
@@ -1524,7 +1524,7 @@ void kl__peek__Q7prelude6resultI3u64_U8Io_error11Parse_error4LostEE( struct kl_7
     goto bb3;
     bb6:
 #line 167 "codegen/error_union.kl"
-    kl_t13 = ( *kl_e_11 ).e1.tag == 0;
+    kl_t13 = ( *kl_e_11 ).e853259815.tag == 0;
 #line 167 "codegen/error_union.kl"
     if ( kl_t13 ) goto bb4; else goto bb5;
 #line 177 "codegen/error_union.kl"
@@ -1554,7 +1554,7 @@ void kl__bare__MU8Io_error4LostE( struct kl__U8Io_error4LostE kl_e_1 )
 #line 182 "codegen/error_union.kl"
     kl_t19 = false;
 #line 184 "codegen/error_union.kl"
-    kl_t3 = kl_t2.tag == 0;
+    kl_t3 = kl_t2.tag == 2534101856;
 #line 184 "codegen/error_union.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb1:
@@ -1581,17 +1581,17 @@ void kl__bare__MU8Io_error4LostE( struct kl__U8Io_error4LostE kl_e_1 )
     goto bb6;
     bb3:
 #line 184 "codegen/error_union.kl"
-    kl_t4 = kl_t2.e0 == 0;
+    kl_t4 = kl_t2.e2534101856 == 0;
 #line 184 "codegen/error_union.kl"
     if ( kl_t4 ) goto bb1; else goto bb4;
     bb4:
 #line 185 "codegen/error_union.kl"
-    kl_t5 = kl_t2.tag == 0;
+    kl_t5 = kl_t2.tag == 2534101856;
 #line 185 "codegen/error_union.kl"
     if ( kl_t5 ) goto bb5; else goto bb2;
     bb5:
 #line 185 "codegen/error_union.kl"
-    kl_t6 = kl_t2.e0 == 1;
+    kl_t6 = kl_t2.e2534101856 == 1;
 #line 185 "codegen/error_union.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb6:
@@ -1666,11 +1666,11 @@ void kl__locals__4bool( bool kl_c_1 )
 #line 197 "codegen/error_union.kl"
     kl_t21 = false;
 #line 197 "codegen/error_union.kl"
-    kl_t3.tag = 0;
+    kl_t3.tag = 2534101856;
 #line 197 "codegen/error_union.kl"
     kl_t22 = true;
 #line 197 "codegen/error_union.kl"
-    kl_t3.e0 = 1;
+    kl_t3.e2534101856 = 1;
 #line 197 "codegen/error_union.kl"
     kl_t22 = true;
 #line 197 "codegen/error_union.kl"
@@ -1701,11 +1701,11 @@ void kl__locals__4bool( bool kl_c_1 )
 #line 198 "codegen/error_union.kl"
     kl_t23 = true;
 #line 198 "codegen/error_union.kl"
-    kl_t8.tag = 1;
+    kl_t8.tag = 853259815;
 #line 198 "codegen/error_union.kl"
     kl_t25 = true;
 #line 198 "codegen/error_union.kl"
-    kl_t8.e1 = kl_t4;
+    kl_t8.e853259815 = kl_t4;
 #line 198 "codegen/error_union.kl"
     kl_t23 = false;
 #line 198 "codegen/error_union.kl"
@@ -1730,11 +1730,11 @@ void kl__locals__4bool( bool kl_c_1 )
     kl_t23 = false;
 #line 198 "codegen/error_union.kl"
     kl_t25 = false;
-    kl_t9.tag = 0;
+    kl_t9.tag = 2534101856;
 #line 199 "codegen/error_union.kl"
     kl_t26 = true;
 #line 199 "codegen/error_union.kl"
-    kl_t9.e0 = 0;
+    kl_t9.e2534101856 = 0;
 #line 199 "codegen/error_union.kl"
     kl_t26 = true;
 #line 199 "codegen/error_union.kl"
@@ -1773,11 +1773,11 @@ void kl__locals__4bool( bool kl_c_1 )
 #line 201 "codegen/error_union.kl"
     kl_t29 = true;
 #line 201 "codegen/error_union.kl"
-    kl_t16.tag = 1;
+    kl_t16.tag = 853259815;
 #line 201 "codegen/error_union.kl"
     kl_t31 = true;
 #line 201 "codegen/error_union.kl"
-    kl_t16.e1 = kl_t12;
+    kl_t16.e853259815 = kl_t12;
 #line 201 "codegen/error_union.kl"
     kl_t29 = false;
 #line 201 "codegen/error_union.kl"
@@ -1792,11 +1792,11 @@ void kl__locals__4bool( bool kl_c_1 )
     goto bb3;
     bb2:
 #line 201 "codegen/error_union.kl"
-    kl_t17.tag = 0;
+    kl_t17.tag = 2534101856;
 #line 201 "codegen/error_union.kl"
     kl_t32 = true;
 #line 201 "codegen/error_union.kl"
-    kl_t17.e0 = 1;
+    kl_t17.e2534101856 = 1;
 #line 201 "codegen/error_union.kl"
     kl_t32 = true;
 #line 201 "codegen/error_union.kl"
@@ -1837,11 +1837,11 @@ void kl__locals__4bool( bool kl_c_1 )
     kl__bare__MU8Io_error4LostE( kl_chosen_10 );
 #line 202 "codegen/error_union.kl"
     kl_t27 = false;
-    kl_t19.tag = 0;
+    kl_t19.tag = 2534101856;
 #line 203 "codegen/error_union.kl"
     kl_t33 = true;
 #line 203 "codegen/error_union.kl"
-    kl_t19.e0 = 0;
+    kl_t19.e2534101856 = 0;
 #line 203 "codegen/error_union.kl"
     kl_t33 = true;
 #line 203 "codegen/error_union.kl"
@@ -1937,11 +1937,11 @@ void kl__held__( void )
 #line 214 "codegen/error_union.kl"
     kl_t24 = true;
 #line 214 "codegen/error_union.kl"
-    kl_t7.tag = 1;
+    kl_t7.tag = 853259815;
 #line 214 "codegen/error_union.kl"
     kl_t26 = true;
 #line 214 "codegen/error_union.kl"
-    kl_t7.e1 = kl_t3;
+    kl_t7.e853259815 = kl_t3;
 #line 214 "codegen/error_union.kl"
     kl_t24 = false;
 #line 214 "codegen/error_union.kl"
@@ -1974,11 +1974,11 @@ void kl__held__( void )
     kl_t26 = false;
 #line 214 "codegen/error_union.kl"
     kl_t23 = false;
-    kl_t8.tag = 0;
+    kl_t8.tag = 2534101856;
 #line 215 "codegen/error_union.kl"
     kl_t27 = true;
 #line 215 "codegen/error_union.kl"
-    kl_t8.e0 = 1;
+    kl_t8.e2534101856 = 1;
 #line 215 "codegen/error_union.kl"
     kl_t27 = true;
 #line 215 "codegen/error_union.kl"
@@ -2012,11 +2012,11 @@ void kl__held__( void )
 #line 217 "codegen/error_union.kl"
     kl_t29 = true;
 #line 217 "codegen/error_union.kl"
-    kl_t15.tag = 1;
+    kl_t15.tag = 853259815;
 #line 217 "codegen/error_union.kl"
     kl_t31 = true;
 #line 217 "codegen/error_union.kl"
-    kl_t15.e1 = kl_t11;
+    kl_t15.e853259815 = kl_t11;
 #line 217 "codegen/error_union.kl"
     kl_t29 = false;
 #line 217 "codegen/error_union.kl"
@@ -2087,9 +2087,9 @@ struct kl_7prelude_result__I3u64_U8Io_error3OptI3u64EEE kl__optional__4bool( boo
 #line 226 "codegen/error_union.kl"
     kl_t3.kl_v = 70;
 #line 226 "codegen/error_union.kl"
-    kl_t4.tag = 3;
+    kl_t4.tag = 2237398775;
 #line 226 "codegen/error_union.kl"
-    kl_t4.e3 = kl_t3;
+    kl_t4.e2237398775 = kl_t3;
 #line 226 "codegen/error_union.kl"
     kl_t2.tag = 1;
 #line 226 "codegen/error_union.kl"
@@ -2102,9 +2102,9 @@ struct kl_7prelude_result__I3u64_U8Io_error3OptI3u64EEE kl__optional__4bool( boo
 #line 229 "codegen/error_union.kl"
     kl_t6.tag = 1;
 #line 229 "codegen/error_union.kl"
-    kl_t7.tag = 3;
+    kl_t7.tag = 2237398775;
 #line 229 "codegen/error_union.kl"
-    kl_t7.e3 = kl_t6;
+    kl_t7.e2237398775 = kl_t6;
 #line 229 "codegen/error_union.kl"
     kl_t5.tag = 1;
 #line 229 "codegen/error_union.kl"
@@ -2151,7 +2151,7 @@ void kl__show_optional__Q7prelude6resultI3u64_U8Io_error3OptI3u64EEE( struct kl_
 #line 239 "codegen/error_union.kl"
     kl_e_5 = kl_r_1.kl_error;
 #line 242 "codegen/error_union.kl"
-    kl_t6 = kl_e_5.tag == 3;
+    kl_t6 = kl_e_5.tag == 2237398775;
 #line 242 "codegen/error_union.kl"
     if ( kl_t6 ) goto bb7; else goto bb8;
     bb3:
@@ -2159,7 +2159,7 @@ void kl__show_optional__Q7prelude6resultI3u64_U8Io_error3OptI3u64EEE( struct kl_
     return;
     bb4:
 #line 242 "codegen/error_union.kl"
-    kl_v_8 = kl_e_5.e3.kl_v;
+    kl_v_8 = kl_e_5.e2237398775.kl_v;
     kl_t10 = &kl_t9;
 #line 243 "codegen/error_union.kl"
     kl_t11 = ( uint8_t* ) "some ";
@@ -2196,17 +2196,17 @@ void kl__show_optional__Q7prelude6resultI3u64_U8Io_error3OptI3u64EEE( struct kl_
     goto bb3;
     bb7:
 #line 242 "codegen/error_union.kl"
-    kl_t7 = kl_e_5.e3.tag == 0;
+    kl_t7 = kl_e_5.e2237398775.tag == 0;
 #line 242 "codegen/error_union.kl"
     if ( kl_t7 ) goto bb4; else goto bb8;
     bb8:
 #line 246 "codegen/error_union.kl"
-    kl_t16 = kl_e_5.tag == 3;
+    kl_t16 = kl_e_5.tag == 2237398775;
 #line 246 "codegen/error_union.kl"
     if ( kl_t16 ) goto bb9; else goto bb6;
     bb9:
 #line 246 "codegen/error_union.kl"
-    kl_t17 = kl_e_5.e3.tag == 1;
+    kl_t17 = kl_e_5.e2237398775.tag == 1;
 #line 246 "codegen/error_union.kl"
     if ( kl_t17 ) goto bb5; else goto bb6;
 #line 256 "codegen/error_union.kl"
@@ -2484,7 +2484,7 @@ void kl__U8Io_error4LostE__dtor( struct kl__U8Io_error4LostE* kl_t1 )
 {
     bool kl_t2;
 #line 38 "codegen/error_union.kl"
-    kl_t2 = ( *kl_t1 ).tag == 1;
+    kl_t2 = ( *kl_t1 ).tag == 853259815;
 #line 38 "codegen/error_union.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
@@ -2492,7 +2492,7 @@ void kl__U8Io_error4LostE__dtor( struct kl__U8Io_error4LostE* kl_t1 )
     return;
     bb2:
 #line 38 "codegen/error_union.kl"
-    kl__Lost__dtor( &( *kl_t1 ).e1 );
+    kl__Lost__dtor( &( *kl_t1 ).e853259815 );
 #line 38 "codegen/error_union.kl"
     goto bb1;
 #line 38 "codegen/error_union.kl"
@@ -2502,7 +2502,7 @@ void kl__U8Io_error11Parse_error4LostE__dtor( struct kl__U8Io_error11Parse_error
 {
     bool kl_t2;
 #line 38 "codegen/error_union.kl"
-    kl_t2 = ( *kl_t1 ).tag == 1;
+    kl_t2 = ( *kl_t1 ).tag == 853259815;
 #line 38 "codegen/error_union.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
@@ -2510,7 +2510,7 @@ void kl__U8Io_error11Parse_error4LostE__dtor( struct kl__U8Io_error11Parse_error
     return;
     bb2:
 #line 38 "codegen/error_union.kl"
-    kl__Lost__dtor( &( *kl_t1 ).e1 );
+    kl__Lost__dtor( &( *kl_t1 ).e853259815 );
 #line 38 "codegen/error_union.kl"
     goto bb1;
 #line 38 "codegen/error_union.kl"

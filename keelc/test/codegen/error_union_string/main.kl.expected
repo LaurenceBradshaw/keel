@@ -2852,8 +2852,8 @@ struct kl__U8Io_error11Parse_errorE
     uint32_t tag;
     union
     {
-        int32_t e0;
-        int32_t e1;
+        int32_t e1016381985;
+        int32_t e3320057666;
     };
 };
 
@@ -3111,9 +3111,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load_config__4boo
 #line 39 "codegen/error_union_string/main.kl"
     kl_t0.tag = 1;
 #line 39 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.tag = 0;
+    kl_t0.kl_error.tag = 1016381985;
 #line 39 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.e0 = kl_t5.kl_error;
+    kl_t0.kl_error.e1016381985 = kl_t5.kl_error;
 #line 39 "codegen/error_union_string/main.kl"
     if ( kl_t15 ) kl_7prelude_result__IQ2kl6string_8Io_errorE__dtor( &kl_t4 );
 #line 39 "codegen/error_union_string/main.kl"
@@ -3136,9 +3136,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load_config__4boo
 #line 40 "codegen/error_union_string/main.kl"
     kl_t0.tag = 1;
 #line 40 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.tag = 1;
+    kl_t0.kl_error.tag = 3320057666;
 #line 40 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.e1 = kl_t11.kl_error;
+    kl_t0.kl_error.e3320057666 = kl_t11.kl_error;
 #line 40 "codegen/error_union_string/main.kl"
     kl_2kl4list_list__I2u8E__dtor( &kl_text_3.kl_bytes_ );
 #line 40 "codegen/error_union_string/main.kl"
@@ -3188,7 +3188,7 @@ void kl__show__Q7prelude6resultI3u64_U8Io_error11Parse_errorEE( struct kl_7prelu
 #line 52 "codegen/error_union_string/main.kl"
     kl_e_11 = kl_r_1.kl_error;
 #line 55 "codegen/error_union_string/main.kl"
-    kl_t12 = kl_e_11.tag == 0;
+    kl_t12 = kl_e_11.tag == 1016381985;
 #line 55 "codegen/error_union_string/main.kl"
     if ( kl_t12 ) goto bb6; else goto bb5;
     bb3:
@@ -3219,7 +3219,7 @@ void kl__show__Q7prelude6resultI3u64_U8Io_error11Parse_errorEE( struct kl_7prelu
     goto bb3;
     bb6:
 #line 55 "codegen/error_union_string/main.kl"
-    kl_t13 = kl_e_11.e0 == 0;
+    kl_t13 = kl_e_11.e1016381985 == 0;
 #line 55 "codegen/error_union_string/main.kl"
     if ( kl_t13 ) goto bb4; else goto bb5;
 #line 64 "codegen/error_union_string/main.kl"

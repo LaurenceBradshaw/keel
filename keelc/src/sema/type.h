@@ -215,9 +215,14 @@ public:
 
     void             set_package( Node_id declaration, std::string_view package, bool shown = true );
     std::string_view package( Type_id id ) const;
+    void             set_module( Node_id declaration, std::string module ); // `kl::ring`, for stable_name
+
+    // The name a type has in every compile: name() with each declared type's module before it.
+    std::string stable_name( Type_id id ) const;
 
     std::vector<Type_id> union_types() const; // in interning order
-    // A member's tag, the same in every union holding it, so widening keeps it.
+    // A member's tag, the same in every union holding it, so widening keeps it, and in every
+    // compile, so objects agree: a hash of its stable name.
     u32  error_tag( Type_id member ) const;
     bool has_member( Type_id union_type, Type_id member ) const;
     // The member declared by `declaration`, or invalid: how a variant's path finds its instance.
@@ -287,13 +292,13 @@ private:
     std::unordered_map<std::string_view, Type_id>
         by_spelling_; // views into composed_ // "u8*" etc; name() returns views into these
 
-    std::vector<Type_id>         functions_;
-    std::vector<Type_id>         fields_;
-    std::vector<Type_id>         unions_;     // every union type the table has interned, in interning order
-    std::unordered_map<u32, u32> error_tags_; // member -> its tag
+    std::vector<Type_id> functions_;
+    std::vector<Type_id> fields_;
+    std::vector<Type_id> unions_; // every union type the table has interned, in interning order
 
     std::unordered_map<u32, std::string> packages_; // Node_id of a declaration -> the package it was declared in
     std::unordered_set<u32>              unshown_packages_;
+    std::unordered_map<u32, std::string> modules_; // Node_id of a declaration -> its module
 };
 
 // The help under "expected `X`, but got `Y`", or empty. Only a few mismatches get one: everywhere

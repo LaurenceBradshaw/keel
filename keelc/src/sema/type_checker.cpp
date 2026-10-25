@@ -49,6 +49,7 @@ public:
         : ast_( ast ),
           interner_( interner ),
           resolution_( resolution ),
+          sm_( source_manager ),
           reporter_( source_manager, diags ),
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
@@ -113,9 +114,10 @@ public:
     Types run();
 
 private:
-    const Ast&        ast_;
-    const Interner&   interner_;
-    const Resolution& resolution_;
+    const Ast&            ast_;
+    const Interner&       interner_;
+    const Resolution&     resolution_;
+    const Source_manager& sm_;
 
     Reporter      reporter_;
     Types_builder types_;
@@ -154,6 +156,11 @@ Types Checker::run()
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
         {
             types_.table().set_package( decl, interner_.text( package ), package != resolution_.prelude_package() );
+        }
+
+        if( is_aggregate( kind ) || kind == Node_kind::Enum_decl || kind == Node_kind::Interface_decl )
+        {
+            types_.table().set_module( decl, module_name( resolution_.modules(), sm_, interner_, ast_.span( decl ).file ) );
         }
     }
 

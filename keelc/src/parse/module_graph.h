@@ -3,11 +3,13 @@
 
 #pragma once
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 #include "common/interner.h"
+#include "common/source_manager.h"
 #include "common/span.h"
 
 namespace keel
@@ -265,5 +267,11 @@ inline std::string qualified( const Interner& interner, Symbol_id package, std::
     }
 
     return std::string( interner.text( package ) ) + "::" + std::string( name );
+}
+
+// A file's module, as `kl::ring`: its package and its stem.
+inline std::string module_name( const Module_graph& modules, const Source_manager& sm, const Interner& interner, File_id file )
+{
+    return qualified( interner, modules.package_of( file ), std::filesystem::path( sm.file( file ).path ).stem().string() );
 }
 } // namespace keel
