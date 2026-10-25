@@ -29,6 +29,7 @@
 #include "ir/verify.h"
 #include "lex/lexer.h"
 #include "object/object.h"
+#include "parse/parser.h"
 #include "sema/declarations.h"
 #include "sema/names.h"
 
@@ -45,7 +46,8 @@ enum class Stop : keel::u8
     Kir,
     C,
     Object,
-    Executable
+    Executable,
+    Imports
 };
 } // namespace
 
@@ -62,6 +64,7 @@ int main( int argc, char** argv )
         ( "emit-c",          "Print the generated C and stop" )
         ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
+        ( "imports",         "Print the input's imports as written, one per line, and stop" )
         ( "diagnostics",     "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "names",           "With --diagnostics=json, also say what each name refers to" )
         ( "declarations",    "With --diagnostics=json, also list every declaration with its signature and doc" )
@@ -191,6 +194,7 @@ int main( int argc, char** argv )
         { "dump-kir", Stop::Kir },
         { "emit-c", Stop::C },
         { "object", Stop::Object },
+        { "imports", Stop::Imports },
     };
 
     for( const auto& [flag, mode] : modes )
@@ -324,6 +328,38 @@ int main( int argc, char** argv )
                 fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col ),
                 keel::escape_for_dump( text )
             );
+        }
+
+        return finish();
+    }
+
+    if( stop == Stop::Imports )
+    {
+        const std::vector<keel::Token>   tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
+        keel::Ast                        ast;
+        const std::vector<keel::Node_id> decls = keel::parse_into( ast, tokens, sm, diagnostics );
+
+        if( diagnostics.has_errors() )
+        {
+            return finish();
+        }
+
+        for( const keel::Node_id decl : decls )
+        {
+            if( ast.kind( decl ) != keel::Node_kind::Import_decl )
+            {
+                continue;
+            }
+
+            const bool has_package = ast.package( decl ).is_valid();
+            if( has_package )
+            {
+                fmt::print( "{}::{}\n", interner.text( ast.name( ast.package( decl ) ) ), interner.text( ast.name( decl ) ) );
+            }
+            else
+            {
+                fmt::print( "{}\n", interner.text( ast.name( decl ) ) );
+            }
         }
 
         return finish();

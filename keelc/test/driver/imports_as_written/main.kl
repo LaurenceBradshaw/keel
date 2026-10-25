@@ -1,0 +1,10 @@
+// --imports prints each import as written and resolves nothing: an unqualified module, a package
+// module, and a module that exists nowhere all come out the same way.
+import shape;
+import kl::list;
+import nowhere::thing;
+
+i32 main()
+{
+    return 0;
+}

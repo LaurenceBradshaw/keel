@@ -1,0 +1,8 @@
+// A file that does not parse reports its errors and prints no imports.
+import shape
+import kl::list;
+
+i32 main()
+{
+    return 0;
+}
