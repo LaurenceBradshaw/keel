@@ -1,0 +1,4 @@
+# `test/` sees `src/`'s modules; a failing test is the run's exit code.
+keelb test; echo "exit $?"
+cp .edits/calc_tests.kl test/calc_tests.kl
+keelb test; echo "exit $?"

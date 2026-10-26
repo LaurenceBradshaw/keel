@@ -53,7 +53,7 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
     Project project = try Project::open( move current_dir );
     if( testing && !project.has_tests() )
     {
-        return result::err( "no tests/main.kl in the project root" );
+        return result::err( "no test/main.kl in the project root" );
     }
     
     Keelc keelc = try Keelc::ask( find_keelc(), verbose );
@@ -74,7 +74,7 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
     kl::path output = cache / project.name();
     if( testing )
     {
-        main_file = project.root() / "tests/main.kl";
+        main_file = project.root() / "test/main.kl";
         output = cache / ( project.name() + "_tests" );
     }
 

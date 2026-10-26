@@ -13,7 +13,7 @@ exit 0
 compiling calc_tests
 linking
 pass calc_tests.adds
-tests/calc_tests.kl:11: check_eq failed: 4 != 5
+test/calc_tests.kl:11: check_eq failed: 4 != 5
 FAIL calc_tests.adds_wrongly
 1 passed, 1 failed
 exit 1

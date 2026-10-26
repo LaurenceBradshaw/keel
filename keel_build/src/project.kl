@@ -25,7 +25,7 @@ class Project
             return result::err( "no src/main.kl in the project root" );
         }
 
-        const bool tests = kl::is_file( root / "tests/main.kl" );
+        const bool tests = kl::is_file( root / "test/main.kl" );
 
         kl::list<kl::pair<kl::string, kl::path>> found = kl::list<kl::pair<kl::string, kl::path>>();
         switch( move kl::list_directory( root ) )
@@ -35,7 +35,7 @@ class Project
                 {
                     kl::path entry = entries.pop();
                     if( !kl::is_directory( entry ) || entry.file_name() == "src" || 
-                        entry.file_name() == "tests" || entry.file_name() == "build" ||
+                        entry.file_name() == "test" || entry.file_name() == "build" ||
                         entry.file_name().starts_with( "." ) || !holds_keel( entry ) )
                     {
                         continue;
@@ -64,7 +64,7 @@ class Project
         return root_;
     }
 
-    // Whether `tests/main.kl` exists.
+    // Whether `test/main.kl` exists.
     public bool has_tests() const
     {
         return has_tests_;

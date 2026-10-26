@@ -17,7 +17,7 @@ import project;
 // answered as the exit code to stop with, once their message is printed.
 class Builder
 {
-    // `cache` is the folder for this mode's objects. Under `tests`, `tests/` is looked in before `src/`.
+    // `cache` is the folder for this mode's objects. Under `tests`, `test/` is looked in before `src/`.
     public Builder(
         move Keelc keelc, move Project project, move kl::path kl_folder, move kl::path cache, bool debug, bool tests,
         bool verbose
@@ -76,7 +76,7 @@ class Builder
 
         if( in_tests( module ) && kl::is_file( project_.root() / "src" / ( module + ".kl" ) ) )
         {
-            kl::eprintln( kl::string( "keelb: `" ) + module + "` is in both src/ and tests/" );
+            kl::eprintln( kl::string( "keelb: `" ) + module + "` is in both src/ and test/" );
             return result::err( 1 );
         }
 
@@ -260,7 +260,7 @@ class Builder
     }
 
     // `kl::a::b` is `<kl folder>/a/b.kl`, `p::x` is `<root>/p/x.kl`, and `x` is `<root>/src/x.kl`, or
-    // `<root>/tests/x.kl` when `in_tests`.
+    // `<root>/test/x.kl` when `in_tests`.
     private kl::path source_of( const ref kl::string module ) const
     {
         if( module.starts_with( "kl::" ) )
@@ -287,17 +287,17 @@ class Builder
         return cache_ / folder( module ) / ( module + ".klo" );
     }
 
-    // Whether the unqualified `module` is one of `tests/`'s, which only a test build looks for.
+    // Whether the unqualified `module` is one of `test/`'s, which only a test build looks for.
     private bool in_tests( const ref kl::string module ) const
     {
         return tests_ && last_separator( module ) == module.size() &&
-               kl::is_file( project_.root() / "tests" / ( module + ".kl" ) );
+               kl::is_file( project_.root() / "test" / ( module + ".kl" ) );
     }
 
     // The folder an unqualified module is in.
     private str folder( const ref kl::string module ) const
     {
-        return in_tests( module ) ? "tests" : "src";
+        return in_tests( module ) ? "test" : "src";
     }
 
     private str mode() const
