@@ -63,6 +63,19 @@ std::string param_mode_prefix( Param_mode mode )
     }
 }
 
+// Each `::` piece of a package length-prefixed after `tag`: `kl::test` is `2kl4test`, or `Q2klQ4test`.
+void spell_package( std::string& out, std::string_view package, std::string_view tag )
+{
+    while( !package.empty() )
+    {
+        const std::size_t      end   = package.find( "::" );
+        const std::string_view piece = package.substr( 0, end );
+
+        out += fmt::format( "{}{}{}", tag, piece.size(), piece );
+        package = end == std::string_view::npos ? std::string_view {} : package.substr( end + 2 );
+    }
+}
+
 // One type, encoded so that no two distinct types encode alike.
 //
 // Every name is preceded by its length, which is what makes it injective: a struct genuinely called
@@ -150,11 +163,7 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
-    std::string_view package = types.package( id );
-    if( !package.empty() )
-    {
-        out += fmt::format( "Q{}{}", package.size(), package );
-    }
+    spell_package( out, types.package( id ), "Q" );
 
     // `Box<i32>` is `3BoxI3i32E`: the base, then its arguments between brackets that cannot appear
     // in a name. Nested and multi-argument forms fall out - `Box<Box<i32>>` is `3BoxI3BoxI3i32EE`.
@@ -246,12 +255,10 @@ std::string construct_arg_string(
 std::string module_slot( const Mangled_owner& owner )
 {
     std::string slot;
-    for( const std::string* part : { &owner.package, &owner.module } )
+    spell_package( slot, owner.package, "" );
+    if( !owner.module.empty() )
     {
-        if( !part->empty() )
-        {
-            slot += fmt::format( "{}{}", part->size(), *part );
-        }
+        slot += fmt::format( "{}{}", owner.module.size(), owner.module );
     }
     return slot;
 }
@@ -759,6 +766,17 @@ TEST_CASE( "mangle_puts_the_package_in_every_symbol", "[codegen][mangle]" )
         );
         REQUIRE( mangle_struct( { "", "a" }, table.structure( Node_id { 29 }, {}, "node" ), table ) == "kl_1a_node" );
     }
+
+    // `kl::test`'s `context` is not `kl`'s module `test`: a slot is followed by `_`, never a length.
+    SECTION( "a nested package spells each piece" )
+    {
+        REQUIRE( module_slot( { "kl::test", "context" } ) == "2kl4test7context" );
+        REQUIRE( mangle_function( { "kl::test", "run" }, "run", { &one_i32, 1 }, table ) == "kl_2kl4test3run_run__3i32" );
+        REQUIRE(
+            mangle_function( { "kl::test", "run" }, "run", { &one_i32, 1 }, table ) !=
+            mangle_function( { "kl", "test" }, "run", { &one_i32, 1 }, table )
+        );
+    }
 }
 
 // A type argument is where the program's `Point` and `kl`'s would otherwise meet.
@@ -807,6 +825,17 @@ TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle
 
         REQUIRE( mangle_struct( {}, box_of_kl, table ) == "kl__Box__IQ2kl5PointE" );
         REQUIRE( mangle_struct( {}, box_of_kl, table ) != mangle_struct( {}, box_of_own, table ) );
+    }
+
+    SECTION( "a nested package spells each piece" )
+    {
+        table.set_package( Node_id { 31 }, "kl::test" );
+
+        const Type_id           context = table.structure( Node_id { 31 }, {}, "context" );
+        const Mangled_parameter takes[] = { by_value( context ) };
+
+        REQUIRE( mangle_function( {}, "f", takes, table ) == "kl__f__Q2klQ4test7context" );
+        REQUIRE( mangle_struct( { "kl::test" }, context, table ) == "kl_2kl4test_context" );
     }
 }
 

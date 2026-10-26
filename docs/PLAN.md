@@ -1386,6 +1386,10 @@ major), which waits for the lambda decision (§12).
   lives on the heap behind its one mutable reference, so `move` copies and drops a pointer rather
   than the object. The price is that no other mutable reference to an owning value may be made;
   non-owning values keep theirs. Weigh it against the allocation per value and the lost locality.
+- **A struct literal argument does not pick its overload.** With `volume( i32 )` and
+  `volume( cube )`, where `cube` has one `i32` field, `volume( cube { 3 } )` is reported as
+  ambiguous between the two, though the literal names its type. Binding it to a local first works,
+  as `codegen/nested_packages` does. Walkthrough wanted.
 
 ### Diagnostics
 
@@ -1446,6 +1450,9 @@ major), which waits for the lambda decision (§12).
 
 ### Language rules not yet stated
 
+- **The program's own folder has no nested packages (D72).** A subfolder of `src/` is neither a
+  package nor reachable, since the program's package has no name to put one under. A large
+  program's only way to divide itself today is sibling packages.
 - **Package-internal visibility.** `private` is per type, so `kl::hash_control` and its file's
   constants are public to any `kl` module that imports them, and any program can import them.
   Something like `internal` would keep a package's building blocks inside it. Folders inside a

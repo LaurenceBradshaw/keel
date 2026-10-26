@@ -1,0 +1,8 @@
+// A type may not take the name of a nested package of its own package.
+import shapes::form;
+import shapes::solid::cube;
+
+i32 main()
+{
+    return shapes::solid::volume( shapes::solid::cube { 1 } );
+}

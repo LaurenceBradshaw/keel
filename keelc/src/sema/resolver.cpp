@@ -73,6 +73,7 @@ private:
     Node_id       prelude_declaration( std::string_view name ) const;
     Prelude_items prelude_items() const;
     Node_id       lookup_qualified( Node_id package, Node_id use );
+    Symbol_id     package_named( Node_id qualifier ) const;
     Node_id       visible_from( Node_id use, Node_id head );
     bool          refuse_builtin_name( Symbol_id name, Node_id decl );
     void          refuse_unimported( Node_id use, Node_id decl );
@@ -131,18 +132,28 @@ Resolution Resolver::run()
         {
             const Symbol_id name = ast_.name( decl );
 
+            const Symbol_id package = modules_.package_of( ast_.span( decl ).file );
+
             // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
-            if( ( ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ) &&
-                modules_.is_package( name ) )
+            if( ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) )
             {
-                reporter_.error_at(
-                    ast_.name_span( decl ),
-                    fmt::format( "`{}` is the name of a package", interner_.text( name ) ),
-                    "a type may not take one"
-                );
+                const Symbol_id nested = package.is_valid()
+                                             ? interner_.find( qualified( interner_, package, interner_.text( name ) ) )
+                                             : Symbol_id {};
+
+                if( modules_.is_package( name ) || ( nested.is_valid() && modules_.is_package( nested ) ) )
+                {
+                    reporter_.error_at(
+                        ast_.name_span( decl ),
+                        fmt::format(
+                            "`{}` is the name of a package", interner_.text( modules_.is_package( name ) ? name : nested )
+                        ),
+                        "a type may not take one"
+                    );
+                }
             }
 
-            Scope& scope = packages_[modules_.package_of( ast_.span( decl ).file )];
+            Scope& scope = packages_[package];
             scope.kind   = Scope_kind::Barrier;
             declare( scope, name, decl );
         }
@@ -394,7 +405,7 @@ void Resolver::visit_path( Node_id id )
     const Node_id qualifier = ast_.qualifier( id );
     const bool    bare      = ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid();
 
-    if( bare && modules_.is_package( ast_.name( qualifier ) ) )
+    if( package_named( qualifier ).is_valid() )
     {
         bindings_[id.v] = lookup_qualified( qualifier, id );
 
@@ -891,14 +902,15 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
     return Node_id {};
 }
 
-// `use` names its declaration through the package `package`, a Name_expr. Invalid when no module of it
+// `use` names its declaration through the package `package`, a Name_expr or a Path_expr chain. Invalid when no module of it
 // that the use's file imports declares the name: recorded as unresolved, and reported unless the
 // package is missing, whose import was reported instead.
 Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 {
-    const Symbol_id package_name = ast_.name( package );
-    const Symbol_id name         = ast_.name( use );
-    const Node_id   decl         = lookup_in( package_name, name, use );
+    const std::string package_spelt = package_text( ast_, interner_, package );
+    const Symbol_id   package_name  = interner_.find( package_spelt );
+    const Symbol_id   name          = ast_.name( use );
+    const Node_id     decl          = lookup_in( package_name, name, use );
 
     if( !decl.is_valid() )
     {
@@ -908,16 +920,32 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
         {
             reporter_.error_at(
                 ast_.span( use ),
-                fmt::format(
-                    "no module of `{}` that this file imports declares `{}`",
-                    interner_.text( package_name ),
-                    interner_.text( name )
-                )
+                fmt::format( "no module of `{}` that this file imports declares `{}`", package_spelt, interner_.text( name ) )
             );
         }
     }
 
     return decl;
+}
+
+// The package `qualifier` spells, when it is a chain of names with no type arguments; invalid otherwise.
+Symbol_id Resolver::package_named( Node_id qualifier ) const
+{
+    for( Node_id link = qualifier;; link = ast_.qualifier( link ) )
+    {
+        const Node_kind kind = ast_.kind( link );
+        if( ( kind != Node_kind::Name_expr && kind != Node_kind::Path_expr ) || ast_.type_arg_list( link ).is_valid() )
+        {
+            return Symbol_id {};
+        }
+        if( kind == Node_kind::Name_expr )
+        {
+            break;
+        }
+    }
+
+    const Symbol_id package = interner_.find( package_text( ast_, interner_, qualifier ) );
+    return package.is_valid() && modules_.is_package( package ) ? package : Symbol_id {};
 }
 
 Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )

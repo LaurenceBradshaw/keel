@@ -373,7 +373,9 @@ int main( int argc, char** argv )
             const bool has_package = ast.package( decl ).is_valid();
             if( has_package )
             {
-                fmt::print( "{}::{}\n", interner.text( ast.name( ast.package( decl ) ) ), interner.text( ast.name( decl ) ) );
+                fmt::print(
+                    "{}::{}\n", keel::package_text( ast, interner, ast.package( decl ) ), interner.text( ast.name( decl ) )
+                );
             }
             else
             {

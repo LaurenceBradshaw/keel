@@ -1,0 +1,1 @@
+--debug --check --package shapes=objects/nested_package/shapes

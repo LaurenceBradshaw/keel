@@ -39,7 +39,8 @@ struct Mangled_owner
 };
 
 // Each part length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart; an empty part is
-// left out. A name never starts with a digit, so a package with no module reads apart from both.
+// left out. A nested package's pieces are each prefixed: `kl::test` is `2kl4test`. A name never
+// starts with a digit, so a package with no module reads apart from both.
 std::string module_slot( const Mangled_owner& owner );
 
 // `kl_<owner>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an

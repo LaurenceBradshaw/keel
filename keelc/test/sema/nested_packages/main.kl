@@ -1,0 +1,16 @@
+// A nested package's names, written through the whole package. What is refused is in
+// nested_package_type_name and nested_package_sees_its_parent_by_name.
+import shapes::kind;
+import shapes::solid::cube;
+
+i32 main()
+{
+    shapes::solid::cube c = shapes::solid::cube { 2 }; // a type and a struct literal
+    shapes::solid::fill f = shapes::solid::fill::full; // an enum variant, through its type
+    shapes::kind k        = shapes::kind::round;       // a type of the parent, then its variant
+    if( f == shapes::solid::fill::hollow || k == shapes::kind::square )
+    {
+        return 0;
+    }
+    return shapes::solid::volume( c ); // a function
+}

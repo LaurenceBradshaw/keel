@@ -1,0 +1,7 @@
+error: `unit` is in the package `shapes`
+  --> sema/nested_package_sees_its_parent_by_name/shapes/solid/cube.kl:10:12
+   |
+10 |     return unit(); // shapes is another package
+   |            ^^^^ write `shapes::unit`
+
+1 error generated

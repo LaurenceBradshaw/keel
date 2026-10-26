@@ -790,7 +790,7 @@ bool Lookahead::scan_type_term()
         return fail( Wanted::Type );
     }
 
-    if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
+    while( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
     {
         cursor_.advance(); // `::`
         cursor_.advance(); // identifier
@@ -930,7 +930,7 @@ bool Lookahead::scan_type_and_name()
         }
 
         // `kl::Point p`: no expression is a path followed by a name.
-        if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
+        while( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
         {
             cursor_.advance();
             cursor_.advance();

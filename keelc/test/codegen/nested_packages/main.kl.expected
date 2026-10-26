@@ -1,0 +1,175 @@
+// codegen/nested_packages/shapes/cube.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_6shapes4cube_volume__3i32( int32_t );
+
+#line 2 "codegen/nested_packages/shapes/cube.kl"
+int32_t kl_6shapes4cube_volume__3i32( int32_t kl_side_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    kl_t2 = __builtin_mul_overflow( kl_side_1, kl_side_1, &( int32_t ) { 0 } );
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    kl_rt_panic( "codegen/nested_packages/shapes/cube.kl", 4, "arithmetic overflow: side * side" );
+    bb2:
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    kl_t3 = kl_side_1 * kl_side_1;
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    kl_t0 = kl_t3;
+#line 4 "codegen/nested_packages/shapes/cube.kl"
+    return kl_t0;
+}
+
+// codegen/nested_packages/shapes/solid/cube.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_6shapes5solid4cube_cube;
+
+struct kl_6shapes5solid4cube_cube
+{
+    int32_t kl_side;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl_6shapes5solid4cube_volume__3i32( int32_t );
+int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
+
+#line 6 "codegen/nested_packages/shapes/solid/cube.kl"
+int32_t kl_6shapes5solid4cube_volume__3i32( int32_t kl_side_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t2 = __builtin_mul_overflow( kl_side_1, kl_side_1, &( int32_t ) { 0 } );
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_rt_panic( "codegen/nested_packages/shapes/solid/cube.kl", 8, "arithmetic overflow: side * side" );
+    bb2:
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t3 = kl_side_1 * kl_side_1;
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t4 = __builtin_mul_overflow( kl_t3, kl_side_1, &( int32_t ) { 0 } );
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_rt_panic( "codegen/nested_packages/shapes/solid/cube.kl", 8, "arithmetic overflow: side * side * side" );
+    bb4:
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t5 = kl_t3 * kl_side_1;
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t0 = kl_t5;
+#line 8 "codegen/nested_packages/shapes/solid/cube.kl"
+    return kl_t0;
+}
+
+#line 11 "codegen/nested_packages/shapes/solid/cube.kl"
+int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube kl_c_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 13 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t2 = kl_6shapes5solid4cube_volume__3i32( kl_c_1.kl_side );
+#line 13 "codegen/nested_packages/shapes/solid/cube.kl"
+    kl_t0 = kl_t2;
+#line 13 "codegen/nested_packages/shapes/solid/cube.kl"
+    return kl_t0;
+}
+
+// codegen/nested_packages/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_6shapes5solid4cube_cube;
+
+struct kl_6shapes5solid4cube_cube
+{
+    int32_t kl_side;
+};
+
+int32_t kl__main__( void );
+int32_t kl_6shapes5solid4cube_volume__3i32( int32_t );
+int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
+int32_t kl_6shapes4cube_volume__3i32( int32_t );
+
+#line 6 "codegen/nested_packages/main.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    struct kl_6shapes5solid4cube_cube kl_c_5;
+    struct kl_6shapes5solid4cube_cube kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+#line 8 "codegen/nested_packages/main.kl"
+    kl_t1 = kl_6shapes4cube_volume__3i32( 2 );
+#line 8 "codegen/nested_packages/main.kl"
+    kl_t2 = kl_t1 != 4;
+#line 8 "codegen/nested_packages/main.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 8 "codegen/nested_packages/main.kl"
+    kl_t0 = 1;
+#line 8 "codegen/nested_packages/main.kl"
+    return kl_t0;
+    bb2:
+#line 9 "codegen/nested_packages/main.kl"
+    kl_t3 = kl_6shapes5solid4cube_volume__3i32( 2 );
+#line 9 "codegen/nested_packages/main.kl"
+    kl_t4 = kl_t3 != 8;
+#line 9 "codegen/nested_packages/main.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 9 "codegen/nested_packages/main.kl"
+    kl_t0 = 2;
+#line 9 "codegen/nested_packages/main.kl"
+    return kl_t0;
+    bb4:
+#line 10 "codegen/nested_packages/main.kl"
+    kl_t6.kl_side = 3;
+#line 10 "codegen/nested_packages/main.kl"
+    kl_c_5 = kl_t6;
+    kl_t7 = kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( kl_c_5 );
+#line 11 "codegen/nested_packages/main.kl"
+    kl_t8 = kl_t7 != 27;
+#line 11 "codegen/nested_packages/main.kl"
+    if ( kl_t8 ) goto bb5; else goto bb6;
+    bb5:
+#line 11 "codegen/nested_packages/main.kl"
+    kl_t0 = 3;
+#line 11 "codegen/nested_packages/main.kl"
+    return kl_t0;
+    bb6:
+#line 12 "codegen/nested_packages/main.kl"
+    kl_t0 = 0;
+#line 12 "codegen/nested_packages/main.kl"
+    return kl_t0;
+}
+
+#line 6 "codegen/nested_packages/main.kl"
+int main( void )
+{
+#line 6 "codegen/nested_packages/main.kl"
+    return (int) kl__main__();
+}

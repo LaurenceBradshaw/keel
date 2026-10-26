@@ -1,0 +1,5 @@
+enum kind
+{
+    round,
+    square,
+};

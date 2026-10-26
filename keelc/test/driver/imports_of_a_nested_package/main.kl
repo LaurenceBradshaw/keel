@@ -1,0 +1,7 @@
+// A nested package's import prints its whole package before the module.
+import kl::test::context;
+
+i32 main()
+{
+    return 0;
+}

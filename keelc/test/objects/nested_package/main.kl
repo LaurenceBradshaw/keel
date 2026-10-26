@@ -1,0 +1,10 @@
+// shapes::base and shapes::solid::cube given as objects. -c places shapes/solid/cube.kl in the
+// package shapes::solid, so its names are the ones this program asks for.
+import shapes::solid::cube;
+
+i32 main()
+{
+    shapes::solid::cube c = shapes::solid::cube { 3 };
+    if( shapes::solid::volume( c ) != 27 ) { return 1; }
+    return 0;
+}

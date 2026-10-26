@@ -1,0 +1,14 @@
+struct cube
+{
+    i32 side;
+};
+
+i32 volume( i32 side )
+{
+    return side * side * side;
+}
+
+i32 volume( cube c )
+{
+    return volume( c.side );
+}

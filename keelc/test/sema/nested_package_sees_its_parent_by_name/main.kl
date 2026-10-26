@@ -1,0 +1,7 @@
+// A nested package reaches its parent's names only through the parent's name.
+import shapes::solid::cube;
+
+i32 main()
+{
+    return shapes::solid::named() + shapes::solid::bare();
+}

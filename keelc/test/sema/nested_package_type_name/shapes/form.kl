@@ -1,0 +1,5 @@
+// Otherwise `shapes::solid::x` could name a member of this type as well as a declaration of the package.
+struct solid
+{
+    i32 x;
+};

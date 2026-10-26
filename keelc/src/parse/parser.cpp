@@ -173,6 +173,9 @@ private:
     Node_id parse_type_argument_suffix( Node_id left );
     Node_id member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments = {} );
 
+    // The package chain `package::name`, or the Name_expr `name` when there is no package yet.
+    Node_id extend_package( Node_id package, Symbol_id name, Span span );
+
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
     Node_id parse_prefix();
@@ -672,36 +675,21 @@ Node_id Parser::parse_import()
     const Span start = cursor_.peek().span;
     cursor_.advance(); // consume `import`
 
-    const Span package_span = cursor_.peek().span;
-    Symbol_id  package      = expect_name();
-    bool       well_formed  = package.is_valid();
-    Symbol_id  module {};
-    if( cursor_.match( Token_kind::Colon_colon ) )
+    // `a::b::c`: the last name is the module, and the ones before it are the package chain.
+    std::vector<std::pair<Symbol_id, Span>> names;
+    do
     {
-        module = expect_name();
-    }
-    else
+        const Span span = cursor_.peek().span;
+        names.emplace_back( expect_name(), span );
+    } while( cursor_.match( Token_kind::Colon_colon ) );
+
+    bool            well_formed = std::ranges::all_of( names, []( const auto& name ) { return name.first.is_valid(); } );
+    const Symbol_id module      = names.back().first;
+
+    Node_id package_node {};
+    for( std::size_t i = 0; well_formed && i + 1 < names.size(); ++i )
     {
-        module  = package;
-        package = Symbol_id {};
-    }
-
-    const Node_id package_node =
-        package.is_valid() ? ast_.add( Node_kind::Name_expr, package_span, package.v, {} ) : Node_id {};
-
-    if( cursor_.check( Token_kind::Colon_colon ) )
-    {
-        recovery_.error_at(
-            Span::merge( start, cursor_.peek().span ), "an import names a module, or a package and one of its modules"
-        );
-        well_formed = false;
-
-        // Consume the rest of the qualification so the next rule sees a semicolon rather than
-        // thinking it is a declaration.
-        while( cursor_.match( Token_kind::Colon_colon ) )
-        {
-            expect_name();
-        }
+        package_node = extend_package( package_node, names[i].first, names[i].second );
     }
 
     well_formed &= recovery_.expect( Token_kind::Semicolon );
@@ -2124,14 +2112,16 @@ Node_id Parser::parse_named_type( Span start )
     Symbol_id  name       = cursor_.previous().symbol;
     const Span name_start = cursor_.previous().span;
 
-    // `kl::Point`: the first name was the package, kept as a Name_expr child as an import keeps it.
+    // `kl::test::Point`: the names before the last are the package chain, a child as an import keeps it.
     Node_id package_node {};
+    Span    name_span = name_start;
 
-    if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
+    while( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
     {
-        package_node = ast_.add( Node_kind::Name_expr, name_start, name.v, {} );
+        package_node = extend_package( package_node, name, name_span );
         cursor_.advance(); // the `::`
-        name = expect_name();
+        name      = expect_name();
+        name_span = cursor_.previous().span;
     }
 
     // The Named_type covers only the name, qualified or not: a leading const belongs to the
@@ -3480,6 +3470,12 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
 }
 
 // A member access with no name is not one: every later pass reads the name.
+Node_id Parser::extend_package( Node_id package, Symbol_id name, Span span )
+{
+    return package.is_valid() ? ast_.add( Node_kind::Path_expr, Span::merge( ast_.span( package ), span ), name.v, { package } )
+                              : ast_.add( Node_kind::Name_expr, span, name.v, {} );
+}
+
 Node_id Parser::member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments )
 {
     const Span span = Span::merge( ast_.span( left ), cursor_.previous().span );
@@ -3749,10 +3745,23 @@ Node_id Parser::parse_prefix()
 
         const Symbol_id name = cursor_.previous().symbol;
 
-        if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier &&
-            cursor_.peek( 2 ).kind == Token_kind::L_brace )
+        // `kl::test::entry {`: every name but the last is the package chain.
+        u32 past = 0;
+        while( cursor_.peek( past ).kind == Token_kind::Colon_colon && cursor_.peek( past + 1 ).kind == Token_kind::Identifier )
         {
-            const Node_id package_node = ast_.add( Node_kind::Name_expr, cursor_.previous().span, name.v, {} );
+            past += 2;
+        }
+
+        if( past > 0 && cursor_.peek( past ).kind == Token_kind::L_brace )
+        {
+            Node_id package_node = extend_package( {}, name, cursor_.previous().span );
+
+            for( ; past > 2; past -= 2 )
+            {
+                cursor_.advance(); // the `::`
+                cursor_.advance();
+                package_node = extend_package( package_node, cursor_.previous().symbol, cursor_.previous().span );
+            }
 
             cursor_.advance(); // the `::`
             cursor_.advance(); // the type's name
@@ -12706,13 +12715,19 @@ TEST_CASE( "parser_reads_an_import_from_a_package", "[parse][import]" )
         REQUIRE( p.text( p.child( decl, 0 ) ) == "kl" );
     }
 
-    SECTION( "a package holds modules, not packages" )
+    SECTION( "a nested package is a chain" )
     {
-        const Parsed p( "import kl::core::list;\ni32 main() { return 0; }" );
+        const Parsed p( "import kl::test::context;\ni32 main() { return 0; }" );
 
-        REQUIRE( p.has_errors() );
-        REQUIRE( p.errors().find( "an import names a module, or a package and one of its modules" ) != std::string::npos );
-        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.name( decl ) == "context" );
+        REQUIRE( p.children( decl ).size() == 1 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.text( p.child( decl, 0 ) ) == "kl::test" );
     }
 }
 
@@ -12808,6 +12823,40 @@ TEST_CASE( "parser_reads_a_type_from_a_package", "[parse][packages]" )
         REQUIRE( p.children( literal ).size() == 3 );
         REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Name_expr );
         REQUIRE( p.name( p.child( literal, 0 ) ) == "kl" );
+        REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Field_init );
+    }
+
+    SECTION( "from a nested package" )
+    {
+        const Parsed p( "i32 main() { kl::test::context c = kl::test::make(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+
+        REQUIRE( p.kind( type ) == Node_kind::Named_type );
+        REQUIRE( p.name( type ) == "context" );
+        REQUIRE( p.text( type ) == "kl::test::context" );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.text( p.child( type, 0 ) ) == "kl::test" );
+    }
+
+    SECTION( "a struct literal from a nested package" )
+    {
+        const Parsed p( "i32 main() { auto e = kl::test::entry { 1 }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( literal.is_valid() );
+        REQUIRE( p.name( literal ) == "entry" );
+        REQUIRE( p.text( literal ) == "kl::test::entry { 1 }" );
+        REQUIRE( p.children( literal ).size() == 2 );
+        REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.text( p.child( literal, 0 ) ) == "kl::test" );
         REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Field_init );
     }
 

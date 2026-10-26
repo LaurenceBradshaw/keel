@@ -178,8 +178,9 @@ std::string Signature_printer::type( Node_id annotation ) const
         }
 
         const Node_id package = ast_.package( annotation );
-        return package.is_valid() ? fmt::format( "{}::{}", text( ast_.name( package ) ), text( ast_.name( annotation ) ) )
-                                  : std::string( text( ast_.name( annotation ) ) );
+        return package.is_valid()
+                   ? fmt::format( "{}::{}", package_text( ast_, interner_, package ), text( ast_.name( annotation ) ) )
+                   : std::string( text( ast_.name( annotation ) ) );
     }
     case Node_kind::Generic_type:
     {

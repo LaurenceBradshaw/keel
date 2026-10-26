@@ -1,0 +1,5 @@
+// The same module name and function as shapes::solid's, which C must keep apart.
+i32 volume( i32 side )
+{
+    return side * side;
+}

@@ -44,6 +44,63 @@ std::string read_package_info(
     return doc_comment( sm.file( *file ).text, "//!" );
 }
 
+// Each subfolder of `root` that directly holds a `.kl` is the package `parent::name`, and so on below it.
+void add_nested_packages(
+    Symbol_id                                       parent,
+    const std::filesystem::path&                    root,
+    Module_graph&                                   modules,
+    std::unordered_map<u32, std::filesystem::path>& roots,
+    Source_manager&                                 sm,
+    Interner&                                       interner,
+    Diagnostics&                                    diags
+)
+{
+    const auto holds_keel = []( const std::filesystem::path& folder )
+    {
+        std::error_code ignored;
+        for( const auto& entry : std::filesystem::directory_iterator( folder, ignored ) )
+        {
+            if( entry.is_regular_file( ignored ) && entry.path().extension() == ".kl" )
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    std::vector<std::filesystem::path> folders;
+    std::error_code                    ignored;
+    for( const auto& entry : std::filesystem::directory_iterator( root, ignored ) )
+    {
+        const std::string name = entry.path().filename().string();
+        if( entry.is_directory( ignored ) && !package_name_error( name, interner ) && holds_keel( entry.path() ) )
+        {
+            folders.push_back( entry.path() );
+        }
+    }
+    std::ranges::sort( folders );
+
+    for( const std::filesystem::path& folder : folders )
+    {
+        const std::string name    = folder.filename().string();
+        const Symbol_id   package = interner.intern( qualified( interner, parent, name ) );
+
+        if( const std::optional<File_id> module = sm.load_file( root / ( name + ".kl" ) ) )
+        {
+            diags.error(
+                Span { *module, 0, 0 },
+                fmt::format( "the module `{0}` and the package `{0}` share a name", interner.text( package ) ),
+                "rename one of them"
+            );
+            continue;
+        }
+
+        modules.add_package( package );
+        roots[package.v] = folder;
+        add_nested_packages( package, folder, modules, roots, sm, interner, diags );
+    }
+}
+
 } // namespace
 
 Program load_program(
@@ -83,12 +140,16 @@ Program load_program(
         modules.add_package( package_id );
 
         package_roots[package_id.v] = package.root;
+        add_nested_packages( package_id, package.root, modules, package_roots, sm, interner, diags );
+    }
 
+    for( const auto& [package_id, root] : package_roots )
+    {
         std::error_code same;
-        if( as_module && std::filesystem::equivalent( program_folder, package.root, same ) )
+        if( as_module && std::filesystem::equivalent( program_folder, root, same ) )
         {
-            modules.place( input, package_id );
-            package_docs[package_id.v] = read_package_info( package.root, sm, interner, literals, diags );
+            modules.place( input, Symbol_id { package_id } );
+            package_docs[package_id] = read_package_info( root, sm, interner, literals, diags );
         }
     }
 
@@ -133,8 +194,9 @@ Program load_program(
         {
             if( ast.kind( decl ) == Node_kind::Import_decl )
             {
-                Symbol_id package_id =
-                    ast.package( decl ).is_valid() ? ast.name( ast.package( decl ) ) : modules.package_of( current );
+                Symbol_id              package_id     = ast.package( decl ).is_valid()
+                                                            ? interner.intern( package_text( ast, interner, ast.package( decl ) ) )
+                                                            : modules.package_of( current );
                 const std::string_view module_name    = interner.text( ast.name( decl ) );
                 const std::string      qualified_name = qualified( interner, package_id, module_name );
 
@@ -173,7 +235,9 @@ Program load_program(
                             diags.error(
                                 ast.span( decl ),
                                 fmt::format( "there is no package `{}`", interner.text( package_id ) ),
-                                fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
+                                interner.text( package_id ).find( "::" ) != std::string_view::npos
+                                    ? std::string( "a nested package is a subfolder of its parent that holds `.kl` files" )
+                                    : fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
                             );
                         }
                         modules.add_missing_package( package_id );
@@ -674,6 +738,106 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "there is no package `foo`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown nested package is reported whole" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::geom::shapes;\ni32 main() { return 0; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "there is no package `kl::geom`" ) != std::string::npos );
+    }
+
+    SECTION( "a subfolder of a package is a package of its own" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::test::context;\ni32 main() { return 0; }\n" },
+            { "kl/test/context.kl", "i32 run() { return 0; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "main", "run" } );
+        REQUIRE( p.package_of( "kl/test/context.kl" ) == "kl::test" );
+    }
+
+    SECTION( "a bare import in a nested package looks in it" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::test::a;\ni32 main() { return 0; }\n" },
+            { "kl/b.kl", "i32 decoy() { return 1; }\n" },
+            { "kl/test/a.kl", "import b;\ni32 f() { return g(); }\n" },
+            { "kl/test/b.kl", "i32 g() { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "f", "g", "main" } );
+        REQUIRE( p.package_of( "kl/test/b.kl" ) == "kl::test" );
+    }
+
+    SECTION( "a nested package reaches its parent only by name" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::test::a;\ni32 main() { return 0; }\n" },
+            { "kl/b.kl", "i32 g() { return 2; }\n" },
+            { "kl/test/a.kl", "import kl::b;\ni32 f() { return g(); }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "f", "g", "main" } );
+        REQUIRE( p.package_of( "kl/b.kl" ) == "kl" );
+    }
+
+    SECTION( "a folder holding no `.kl` is not a package" )
+    {
+        Loaded p( {
+            { "main.kl", "i32 main() { return 0; }\n" },
+            { "kl/assets/x.txt", "not keel\n" },
+        } );
+
+        REQUIRE( p.errors() == 0 );
+        REQUIRE_FALSE( p.is_package( "kl::assets" ) );
+    }
+
+    SECTION( "a module and a folder of one name are refused" )
+    {
+        Loaded p( {
+            { "main.kl", "i32 main() { return 0; }\n" },
+            { "kl/test.kl", "i32 f() { return 0; }\n" },
+            { "kl/test/a.kl", "i32 g() { return 0; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "the module `kl::test` and the package `kl::test` share a name" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "kl/test.kl:1:1" ) != std::string::npos );
+        REQUIRE_FALSE( p.is_package( "kl::test" ) );
+    }
+
+    SECTION( "a nested package two deep" )
+    {
+        const Loaded found( {
+            { "main.kl", "import kl::a::b::c;\ni32 main() { return 0; }\n" },
+            { "kl/a/x.kl", "i32 x() { return 0; }\n" },
+            { "kl/a/b/c.kl", "i32 c() { return 0; }\n" },
+        } );
+
+        INFO( found.rendered() );
+        REQUIRE( found.errors() == 0 );
+        REQUIRE( found.package_of( "kl/a/b/c.kl" ) == "kl::a::b" );
+
+        const Loaded skipped( {
+            { "main.kl", "import kl::a::b::c;\ni32 main() { return 0; }\n" },
+            { "kl/a/b/c.kl", "i32 c() { return 0; }\n" },
+        } );
+
+        REQUIRE( skipped.errors() == 1 );
+        REQUIRE( skipped.rendered().find( "there is no package `kl::a::b`" ) != std::string::npos );
     }
 
     SECTION( "a missing package is reported once, however many imports name it" )

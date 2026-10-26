@@ -1,0 +1,11 @@
+import shapes::base;
+
+i32 named()
+{
+    return shapes::unit(); // through its parent's name
+}
+
+i32 bare()
+{
+    return unit(); // shapes is another package
+}

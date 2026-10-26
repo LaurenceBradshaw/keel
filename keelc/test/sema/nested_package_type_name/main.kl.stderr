@@ -1,0 +1,7 @@
+error: `shapes::solid` is the name of a package
+ --> sema/nested_package_type_name/shapes/form.kl:2:8
+  |
+2 | struct solid
+  |        ^^^^^ a type may not take one
+
+1 error generated

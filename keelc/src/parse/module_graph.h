@@ -8,6 +8,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include "ast/ast.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/span.h"
@@ -291,6 +292,18 @@ inline std::string qualified( const Interner& interner, Symbol_id package, std::
     }
 
     return std::string( interner.text( package ) ) + "::" + std::string( name );
+}
+
+// A package node's name, as `kl::test`: a Name_expr, or a Path_expr chain of them.
+inline std::string package_text( const Ast& ast, const Interner& interner, Node_id package )
+{
+    if( ast.kind( package ) == Node_kind::Path_expr )
+    {
+        return package_text( ast, interner, ast.qualifier( package ) ) +
+               "::" + std::string( interner.text( ast.name( package ) ) );
+    }
+
+    return std::string( interner.text( ast.name( package ) ) );
 }
 
 // A file's module, as `kl::ring`: its package and its stem.

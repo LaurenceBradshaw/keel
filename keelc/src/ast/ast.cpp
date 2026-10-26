@@ -211,7 +211,9 @@ Node_id Ast::package( Node_id id ) const
     case Node_kind::Named_type:
         return all.empty() ? Node_id {} : all[0];
     case Node_kind::Struct_literal:
-        return !all.empty() && kind( all[0] ) == Node_kind::Name_expr ? all[0] : Node_id {};
+        return !all.empty() && ( kind( all[0] ) == Node_kind::Name_expr || kind( all[0] ) == Node_kind::Path_expr )
+                   ? all[0]
+                   : Node_id {};
     default:
         assert( false && "this kind has no package" );
         return Node_id {};

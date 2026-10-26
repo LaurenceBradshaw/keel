@@ -1,0 +1,13 @@
+// A nested package's C names spell each piece: `shapes::solid` is `6shapes5solid`, and its type is
+// `Q6shapesQ5solid4cube`.
+import shapes::cube;
+import shapes::solid::cube;
+
+i32 main()
+{
+    if( shapes::volume( 2 ) != 4 ) { return 1; }
+    if( shapes::solid::volume( 2 ) != 8 ) { return 2; }
+    shapes::solid::cube c = shapes::solid::cube { 3 };
+    if( shapes::solid::volume( c ) != 27 ) { return 3; }
+    return 0;
+}
