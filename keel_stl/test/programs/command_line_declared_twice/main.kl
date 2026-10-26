@@ -1,0 +1,10 @@
+// Declaring `--debug` twice panics at the program's second `add_flag`, not inside the library.
+import kl::command_line;
+
+i32 main()
+{
+    kl::command_line cl = kl::command_line( "t" );
+    _ = cl.add_flag( "debug", "checks" );
+    _ = cl.add_flag( "debug", "again" );
+    return 0;
+}

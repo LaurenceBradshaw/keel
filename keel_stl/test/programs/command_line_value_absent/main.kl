@@ -1,0 +1,15 @@
+// `value` on an option that was not given panics, naming the check in the library.
+import kl::command_line;
+
+i32 main( const ref str[] args )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    kl::option cache = cl.add_option( "cache", "dir", "where" );
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            return p.value( cache ).size() == 0 ? 1 : 2;
+        case result::err( e ):
+            return 3;
+    }
+}

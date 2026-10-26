@@ -1,0 +1,148 @@
+// `kl::command_line`: flags, options in both forms, positionals, `--`, each refusal and the usage.
+// `value` on an absent option panics, so `programs/command_line_value_absent` covers it.
+import kl::command_line;
+import kl::string;
+import kl::test;
+
+private void flags_options_and_positionals( ref kl::test_context c )
+{
+    kl::command_line cl = kl::command_line( "t [options]" );
+    kl::flag debug = cl.add_flag( "debug", "checks" );
+    kl::flag verbose = cl.add_flag( "verbose", "talks" );
+    kl::option cache = cl.add_option( "cache", "dir", "where" );
+    kl::option output = cl.add_option( "out", "file", "what" );
+
+    str[7] args = [ "a", "--debug", "b", "--cache", "x", "--out=y", "c" ];
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( p.has( debug ) );
+            c.check( !p.has( verbose ) );
+            c.check_eq( p.value( cache ), "x" );
+            c.check_eq( p.value( output ), "y" );
+            c.require( p.positionals().size() == 3 );
+            c.check_eq( p.positionals().as_run()[0], "a" );
+            c.check_eq( p.positionals().as_run()[1], "b" );
+            c.check_eq( p.positionals().as_run()[2], "c" );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+private void absent_options_are_not_given( ref kl::test_context c )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    kl::flag debug = cl.add_flag( "debug", "checks" );
+    kl::option cache = cl.add_option( "cache", "dir", "where" );
+
+    str[1] args = [ "build" ];
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( !p.has( debug ) );
+            c.check( !p.has( cache ) );
+            c.check( p.positionals().size() == 1 );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// `-` is a positional anywhere, and after `--` so is everything.
+private void dashes_end_the_options( ref kl::test_context c )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    kl::flag debug = cl.add_flag( "debug", "checks" );
+
+    str[4] args = [ "-", "--", "--debug", "-v" ];
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( !p.has( debug ) );
+            c.require( p.positionals().size() == 3 );
+            c.check_eq( p.positionals().as_run()[0], "-" );
+            c.check_eq( p.positionals().as_run()[1], "--debug" );
+            c.check_eq( p.positionals().as_run()[2], "-v" );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// The next argument is the value even when it starts with `-`, and `=` splits at the first one.
+private void values_taken_whole( ref kl::test_context c )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    kl::option offset = cl.add_option( "offset", "n", "how far" );
+    kl::option define = cl.add_option( "define", "pair", "a name and value" );
+
+    str[3] args = [ "--offset", "-5", "--define=a=b" ];
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check_eq( p.value( offset ), "-5" );
+            c.check_eq( p.value( define ), "a=b" );
+            c.check( p.positionals().size() == 0 );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// Parses `args` against a `--debug` flag and a `--cache <dir>` option, expecting `message`.
+private void check_refused( ref kl::test_context c, const ref str[] args, str message )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    _ = cl.add_flag( "debug", "checks" );
+    _ = cl.add_option( "cache", "dir", "where" );
+
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( false );
+            break;
+        case result::err( e ):
+            c.check_eq( e, message );
+            break;
+    }
+}
+
+private void unknown_options_are_refused( ref kl::test_context c )
+{
+    str[1] long_name = [ "--frob=1" ];
+    check_refused( ref c, long_name, "unknown option `--frob=1`" );
+    str[1] short_name = [ "-v" ];
+    check_refused( ref c, short_name, "unknown option `-v`" );
+}
+
+private void missing_and_extra_values_are_refused( ref kl::test_context c )
+{
+    str[2] missing = [ "x", "--cache" ];
+    check_refused( ref c, missing, "`--cache` needs a value" );
+    str[1] extra = [ "--debug=1" ];
+    check_refused( ref c, extra, "`--debug` takes no value" );
+}
+
+private void repeats_are_refused( ref kl::test_context c )
+{
+    str[2] flag = [ "--debug", "--debug" ];
+    check_refused( ref c, flag, "`--debug` is given twice" );
+    str[3] option = [ "--cache", "a", "--cache=b" ];
+    check_refused( ref c, option, "`--cache` is given twice" );
+}
+
+private void usage_aligns_the_help( ref kl::test_context c )
+{
+    kl::command_line cl = kl::command_line( "t [options]" );
+    _ = cl.add_flag( "debug", "checks" );
+    _ = cl.add_option( "cache", "dir", "where" );
+    c.check_eq( cl.usage(), "usage: t [options]\n\noptions:\n  --debug        checks\n  --cache <dir>  where\n" );
+
+    kl::command_line bare = kl::command_line( "t" );
+    c.check_eq( bare.usage(), "usage: t\n" );
+}

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::command_line</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::command_line</h1>
+<ul class="contents">
+<li><a href="#flag"><code>flag</code></a> <span class="kind">struct</span></li>
+<li><a href="#option"><code>option</code></a> <span class="kind">struct</span></li>
+<li><a href="#command_line"><code>command_line</code></a> <span class="kind">class</span></li>
+<li><a href="#parsed_arguments"><code>parsed_arguments</code></a> <span class="kind">class</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">flag</span></h2>
+<div class="group" id="flag">
+<pre class="signature"><a class="anchor" href="#flag" aria-label="Link to flag">#</a><code><span class="kw">struct</span> <span class="type">flag</span></code></pre>
+<div class="doc">
+<p>A flag that <code>command_line::add_flag</code> declared: present or absent, with no value.</p>
+<p>Ask only the <code>parsed_arguments</code> that the same <code>command_line</code> made.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="flag.index">
+<pre class="signature"><a class="anchor" href="#flag.index" aria-label="Link to index">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> index</code></pre>
+<div class="doc">
+<p>Which declaration, in the order they were added.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">option</span></h2>
+<div class="group" id="option">
+<pre class="signature"><a class="anchor" href="#option" aria-label="Link to option">#</a><code><span class="kw">struct</span> <span class="type">option</span></code></pre>
+<div class="doc">
+<p>An option that <code>command_line::add_option</code> declared: absent, or given with a value.</p>
+<p>Ask only the <code>parsed_arguments</code> that the same <code>command_line</code> made.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="option.index">
+<pre class="signature"><a class="anchor" href="#option.index" aria-label="Link to index">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> index</code></pre>
+<div class="doc">
+<p>Which declaration, in the order they were added.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">command_line</span></h2>
+<div class="group" id="command_line">
+<pre class="signature"><a class="anchor" href="#command_line" aria-label="Link to command_line">#</a><code><span class="kw">class</span> <span class="type">command_line</span></code></pre>
+<div class="doc">
+<p>The options a program accepts, which parse its arguments and describe them in a usage text.</p>
+<p><code>--name</code> sets a flag. <code>--name value</code> and <code>--name=value</code> set an option. <code>--</code> ends the options, and
+every other argument is a positional.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="command_line.command_line">
+<pre class="signature"><a class="anchor" href="#command_line.command_line" aria-label="Link to command_line">#</a><code><span class="kw">public</span> <span class="type">command_line</span>( <a class="type" href="prelude.html#str">str</a> synopsis )</code></pre>
+<div class="doc">
+<p>No options yet. <code>synopsis</code> follows <code>usage: </code>, as <code>keelb &lt;build|test&gt; [options]</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="command_line.add_flag">
+<pre class="signature"><a class="anchor" href="#command_line.add_flag" aria-label="Link to add_flag">#</a><code>@located <span class="kw">public</span> <a class="type" href="#flag">flag</a> <span class="fn">add_flag</span>( <a class="type" href="prelude.html#str">str</a> name, <a class="type" href="prelude.html#str">str</a> help )</code></pre>
+<div class="doc">
+<p>Declares <code>--name</code>, which <code>help</code> describes. <code>name</code> is written without the dashes.</p>
+<p>Panics when <code>name</code> is empty, starts with <code>-</code>, or is already declared.</p>
+</div>
+</div>
+<div class="group" id="command_line.add_option">
+<pre class="signature"><a class="anchor" href="#command_line.add_option" aria-label="Link to add_option">#</a><code>@located <span class="kw">public</span> <a class="type" href="#option">option</a> <span class="fn">add_option</span>( <a class="type" href="prelude.html#str">str</a> name, <a class="type" href="prelude.html#str">str</a> placeholder, <a class="type" href="prelude.html#str">str</a> help )</code></pre>
+<div class="doc">
+<p>Declares <code>--name &lt;placeholder&gt;</code>, which <code>help</code> describes. <code>name</code> is written without the dashes.</p>
+<p>Panics when <code>name</code> is empty, starts with <code>-</code>, or is already declared.</p>
+</div>
+</div>
+<div class="group" id="command_line.usage">
+<pre class="signature"><a class="anchor" href="#command_line.usage" aria-label="Link to usage">#</a><code><span class="kw">public</span> <a class="type" href="string.html#string">string</a> <span class="fn">usage</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The usage line, then each declaration with its help, in the order they were added.</p>
+</div>
+</div>
+<div class="group" id="command_line.parse">
+<pre class="signature"><a class="anchor" href="#command_line.parse" aria-label="Link to parse">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="type" href="#parsed_arguments">parsed_arguments</a>, <a class="type" href="string.html#string">string</a>&gt; <span class="fn">parse</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#str">str</a>[] args ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Reads <code>main</code>'s arguments, or answers why they cannot be read, as a sentence to print after
+the program's name.</p>
+<p>Refuses an unknown or short option, an option without its value, a flag with one, and
+anything given twice. An option's value is the next argument even when it starts with <code>-</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">parsed_arguments</span></h2>
+<div class="group" id="parsed_arguments">
+<pre class="signature"><a class="anchor" href="#parsed_arguments" aria-label="Link to parsed_arguments">#</a><code><span class="kw">class</span> <span class="type">parsed_arguments</span></code></pre>
+<div class="doc">
+<p>What <code>command_line::parse</code> read: which flags and options were given, their values, and the
+positionals.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="parsed_arguments.parsed_arguments">
+<pre class="signature"><a class="anchor" href="#parsed_arguments.parsed_arguments" aria-label="Link to parsed_arguments">#</a><code><span class="kw">public</span> <span class="type">parsed_arguments</span>( <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="prim" href="prelude.html#bool">bool</a>&gt; given, <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; values, <span class="kw">move</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; positionals )</code></pre>
+<div class="doc">
+<p>Only <code>command_line::parse</code> makes one; each list but <code>positionals</code> holds one per declaration.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="parsed_arguments.has">
+<pre class="signature"><a class="anchor" href="#parsed_arguments.has" aria-label="Link to has">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">has</span>( <a class="type" href="#flag">flag</a> f ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the flag was given.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#parsed_arguments.has" aria-label="Link to has">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">has</span>( <a class="type" href="#option">option</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the option was given.</p>
+</div>
+</div>
+<div class="group" id="parsed_arguments.value">
+<pre class="signature"><a class="anchor" href="#parsed_arguments.value" aria-label="Link to value">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="string.html#string">string</a> <span class="fn">value</span>( <a class="type" href="#option">option</a> o ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The option's value. Panics when it was not given, so ask <code>has</code> first.</p>
+</div>
+</div>
+<div class="group" id="parsed_arguments.positionals">
+<pre class="signature"><a class="anchor" href="#parsed_arguments.positionals" aria-label="Link to positionals">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="string.html#string">string</a>&gt; <span class="fn">positionals</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Every argument that is not an option or its value, in order.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

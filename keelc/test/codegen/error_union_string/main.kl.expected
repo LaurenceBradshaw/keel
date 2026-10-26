@@ -110,6 +110,7 @@ bool kl_2kl6string_operator_eq__SQ2kl6string_Q2kl6string( struct kl_2kl6string_s
 void kl_2kl6string_hash__SQ2kl6string_RQ7prelude6hasher( struct kl_2kl6string_string*, struct kl_7prelude_hasher* );
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2kl6string( struct kl_2kl6string_string* );
 bool kl_2kl6string_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl6string_string*, uint64_t, uint8_t*, uint64_t );
+bool kl_2kl6string_same_text__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_2kl4list_list__I2u8E__RQ2kl4listI2u8E__ctor( struct kl_2kl4list_list__I2u8E* );
 struct kl_2kl4list_list__I2u8E kl_2kl4list_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( uint64_t );
 void kl_2kl4list_push__I2u8E__SQ2kl4listI2u8E_M2u8( struct kl_2kl4list_list__I2u8E*, uint8_t );
@@ -1820,6 +1821,118 @@ bool kl_2kl6string_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl6string_stri
 #line 329 "../../keel_stl/src/string.kl"
     goto bb5;
 #line 338 "../../keel_stl/src/string.kl"
+}
+
+#line 344 "../../keel_stl/src/string.kl"
+bool kl_2kl6string_same_text__7textual_7textual( struct kl_7prelude_textual__ref kl_a_1, struct kl_7prelude_textual__ref kl_b_2 )
+{
+    bool kl_t0;
+    struct kl__run__L2u8__ref kl_a_bytes_3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    struct kl__run__L2u8__ref kl_b_bytes_6;
+    struct kl_7prelude_textual__ref kl_t7;
+    struct kl__run__L2u8__ref kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    uint64_t kl_i_12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
+    uint8_t* kl_t17;
+    bool kl_t18;
+    uint8_t* kl_t19;
+    uint64_t kl_t20;
+    uint8_t* kl_t21;
+    bool kl_t22;
+    uint8_t* kl_t23;
+    bool kl_t24;
+#line 346 "../../keel_stl/src/string.kl"
+    kl_t4 = kl_a_1;
+#line 346 "../../keel_stl/src/string.kl"
+    kl_t5 = kl_t4.vtable->kl__as_text__( kl_t4.self );
+#line 346 "../../keel_stl/src/string.kl"
+    kl_a_bytes_3 = kl_t5;
+    kl_t7 = kl_b_2;
+#line 347 "../../keel_stl/src/string.kl"
+    kl_t8 = kl_t7.vtable->kl__as_text__( kl_t7.self );
+#line 347 "../../keel_stl/src/string.kl"
+    kl_b_bytes_6 = kl_t8;
+#line 349 "../../keel_stl/src/string.kl"
+    kl_t9 = ( kl_a_bytes_3 ).size;
+#line 349 "../../keel_stl/src/string.kl"
+    kl_t10 = ( kl_b_bytes_6 ).size;
+#line 349 "../../keel_stl/src/string.kl"
+    kl_t11 = kl_t9 != kl_t10;
+#line 349 "../../keel_stl/src/string.kl"
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = false;
+#line 351 "../../keel_stl/src/string.kl"
+    return kl_t0;
+    bb2:
+#line 354 "../../keel_stl/src/string.kl"
+    kl_i_12 = 0;
+#line 354 "../../keel_stl/src/string.kl"
+    kl_t14 = ( kl_a_bytes_3 ).size;
+#line 354 "../../keel_stl/src/string.kl"
+    kl_t13 = kl_t14;
+#line 354 "../../keel_stl/src/string.kl"
+    goto bb3;
+    bb3:
+#line 354 "../../keel_stl/src/string.kl"
+    kl_t15 = kl_i_12 < kl_t13;
+#line 354 "../../keel_stl/src/string.kl"
+    if ( kl_t15 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t16 = ( kl_a_bytes_3 ).size;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t17 = ( kl_a_bytes_3 ).data;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t18 = kl_i_12 < kl_t16;
+#line 356 "../../keel_stl/src/string.kl"
+    if ( kl_t18 ) goto bb7; else goto bb6;
+    bb5:
+#line 362 "../../keel_stl/src/string.kl"
+    kl_t0 = true;
+#line 362 "../../keel_stl/src/string.kl"
+    return kl_t0;
+    bb6:
+#line 356 "../../keel_stl/src/string.kl"
+    kl_rt_panic( "../../keel_stl/src/string.kl", 356, "out of bounds: a_bytes[i]" );
+    bb7:
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t19 = kl_t17 + kl_i_12;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t20 = ( kl_b_bytes_6 ).size;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t21 = ( kl_b_bytes_6 ).data;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t22 = kl_i_12 < kl_t20;
+#line 356 "../../keel_stl/src/string.kl"
+    if ( kl_t22 ) goto bb9; else goto bb8;
+    bb8:
+#line 356 "../../keel_stl/src/string.kl"
+    kl_rt_panic( "../../keel_stl/src/string.kl", 356, "out of bounds: b_bytes[i]" );
+    bb9:
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t23 = kl_t21 + kl_i_12;
+#line 356 "../../keel_stl/src/string.kl"
+    kl_t24 = ( *kl_t19 ) != ( *kl_t23 );
+#line 356 "../../keel_stl/src/string.kl"
+    if ( kl_t24 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = false;
+#line 358 "../../keel_stl/src/string.kl"
+    return kl_t0;
+    bb11:
+#line 354 "../../keel_stl/src/string.kl"
+    kl_i_12 = kl_i_12 + 1;
+#line 354 "../../keel_stl/src/string.kl"
+    goto bb3;
+#line 363 "../../keel_stl/src/string.kl"
 }
 
 #line 15 "../../keel_stl/src/list.kl"

@@ -1,0 +1,298 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import list;
+import string;
+import optional;
+
+/// A flag that `command_line::add_flag` declared: present or absent, with no value.
+///
+/// Ask only the `parsed_arguments` that the same `command_line` made.
+struct flag
+{
+    /// Which declaration, in the order they were added.
+    u64 index;
+};
+
+/// An option that `command_line::add_option` declared: absent, or given with a value.
+///
+/// Ask only the `parsed_arguments` that the same `command_line` made.
+struct option
+{
+    /// Which declaration, in the order they were added.
+    u64 index;
+};
+
+// One declared flag or option. A flag has an empty placeholder.
+private struct entry
+{
+    str name;
+    str placeholder;
+    str help;
+};
+
+/// The options a program accepts, which parse its arguments and describe them in a usage text.
+///
+/// `--name` sets a flag. `--name value` and `--name=value` set an option. `--` ends the options, and
+/// every other argument is a positional.
+class command_line
+{
+    /// No options yet. `synopsis` follows `usage: `, as `keelb <build|test> [options]`.
+    public command_line( str synopsis )
+    {
+        synopsis_ = synopsis;
+        entries_ = list<entry>();
+    }
+
+    /// Declares `--name`, which `help` describes. `name` is written without the dashes.
+    ///
+    /// Panics when `name` is empty, starts with `-`, or is already declared.
+    @located
+    public flag add_flag( str name, str help )
+    {
+        if( name.size == 0 )
+        {
+            panic( "flag name cannot be empty", @caller() );
+        }
+
+        if( name.size > 0 && name.as_text()[0] == '-' )
+        {
+            panic( "flag name cannot start with a dash", @caller() );
+        }
+
+        if( is_some( find( name ) ) )
+        {
+            panic( "flag is already declared", @caller() );
+        }
+
+        entries_.push( entry{ name, "", help } );
+        return flag{ entries_.size() - 1 };
+    }
+
+    /// Declares `--name <placeholder>`, which `help` describes. `name` is written without the dashes.
+    ///
+    /// Panics when `name` is empty, starts with `-`, or is already declared.
+    @located
+    public option add_option( str name, str placeholder, str help )
+    {
+        if( name.size == 0 )
+        {
+            panic( "option name cannot be empty", @caller() );
+        }
+
+        if( name.size > 0 && name.as_text()[0] == '-' )
+        {
+            panic( "option name cannot start with a dash", @caller() );
+        }
+
+        if( is_some( find( name ) ) )
+        {
+            panic( "option is already declared", @caller() );
+        }
+
+        entries_.push( entry{ name, placeholder, help } );
+        return option{ entries_.size() - 1 };
+    }
+
+    /// The usage line, then each declaration with its help, in the order they were added.
+    public string usage() const
+    {
+        string s = "usage: ";
+        s += synopsis_;
+        s += "\n";
+        if( entries_.size() > 0 )
+        {
+            s += "\noptions:\n";
+
+            // Each help text starts two spaces past the widest `--name <placeholder>`.
+            u64 width = 0;
+            for( u64 i : 0..entries_.size() )
+            {
+                u64 left = left_width( entries_[ i ] );
+                width = left > width ? left : width;
+            }
+
+            for( u64 i : 0..entries_.size() )
+            {
+                const ref entry e = entries_[ i ];
+                s += "  --";
+                s += e.name;
+                if( e.placeholder.size > 0 )
+                {
+                    s += " <";
+                    s += e.placeholder;
+                    s += ">";
+                }
+                for( u64 pad : left_width( e )..width + 2 )
+                {
+                    s.push( ' ' );
+                }
+                s += e.help;
+                s += "\n";
+            }
+        }
+
+        return s;
+    }
+
+    /// Reads `main`'s arguments, or answers why they cannot be read, as a sentence to print after
+    /// the program's name.
+    ///
+    /// Refuses an unknown or short option, an option without its value, a flag with one, and
+    /// anything given twice. An option's value is the next argument even when it starts with `-`.
+    public result<parsed_arguments, string> parse( const ref str[] args ) const
+    {
+        list<bool> given = list<bool>::with_capacity( entries_.size() );
+        list<string> values = list<string>::with_capacity( entries_.size() );
+        for( u64 i : 0..entries_.size() )
+        {
+            given.push( false );
+            values.push( "" );
+        }
+        list<string> positionals = list<string>();
+
+        bool options_ended = false;
+        for( u64 i = 0; i < args.size; i++ )
+        {
+            string arg = string::from( args[i] );
+            if( options_ended || arg == "-" || !arg.starts_with( "-" ) )
+            {
+                positionals.push( move arg );
+                continue;
+            }
+
+            if( arg == "--" )
+            {
+                options_ended = true;
+                continue;
+            }
+
+            if( !arg.starts_with( "--" ) )
+            {
+                return result::err( "unknown option `" + arg + "`" );
+            }
+
+            // `--name=value` splits at the first `=`.
+            string name = arg.substring( 2, arg.size() - 2 );
+            string value = "";
+            bool has_value = false;
+            switch( arg.find( "=" ) )
+            {
+                case optional::some( at ):
+                    name = arg.substring( 2, at - 2 );
+                    value = arg.substring( at + 1, arg.size() - at - 1 );
+                    has_value = true;
+                    break;
+                case optional::none:
+                    break;
+            }
+
+            u64 index = 0;
+            switch( find( name ) )
+            {
+                case optional::some( found ):
+                    index = found;
+                    break;
+                case optional::none:
+                    return result::err( "unknown option `" + arg + "`" );
+            }
+
+            if( given[index] )
+            {
+                return result::err( "`--" + name + "` is given twice" );
+            }
+
+            if( entries_[index].placeholder.size == 0 )
+            {
+                if( has_value )
+                {
+                    return result::err( "`--" + name + "` takes no value" );
+                }
+            }
+            else if( !has_value )
+            {
+                if( i + 1 == args.size )
+                {
+                    return result::err( "`--" + name + "` needs a value" );
+                }
+                i++;
+                value = string::from( args[i] );
+            }
+
+            given[index] = true;
+            values[index] = move value;
+        }
+
+        return result::ok( parsed_arguments( move given, move values, move positionals ) );
+    }
+
+    // The size of `--name <placeholder>`, or of `--name` for a flag.
+    private static u64 left_width( const ref entry e )
+    {
+        return e.placeholder.size == 0 ? 2 + e.name.size : 5 + e.name.size + e.placeholder.size;
+    }
+
+    // The declaration named `name`, without its dashes.
+    private optional<u64> find( const ref textual name ) const
+    {
+        for( u64 i : 0..entries_.size() )
+        {
+            const ref entry e = entries_[ i ];
+            if( same_text( name, e.name ) )
+            {
+                return optional::some( i );
+            }
+        }
+
+        return optional::none;
+    }
+
+    private list<entry> entries_;
+    private str synopsis_;
+};
+
+/// What `command_line::parse` read: which flags and options were given, their values, and the
+/// positionals.
+class parsed_arguments
+{
+    /// Only `command_line::parse` makes one; each list but `positionals` holds one per declaration.
+    public parsed_arguments( move list<bool> given, move list<string> values, move list<string> positionals )
+    {
+        given_ = move given;
+        values_ = move values;
+        positionals_ = move positionals;
+    }
+
+    /// Whether the flag was given.
+    public bool has( flag f ) const
+    {
+        return given_[ f.index ];
+    }
+
+    /// Whether the option was given.
+    public bool has( option o ) const
+    {
+        return given_[ o.index ];
+    }
+
+    /// The option's value. Panics when it was not given, so ask `has` first.
+    public const ref string value( option o ) const
+    {
+        if( !has( o ) )
+        {
+            panic( "option was not given" );
+        }
+
+        return values_.as_run()[ o.index ];
+    }
+
+    /// Every argument that is not an option or its value, in order.
+    public const ref list<string> positionals() const
+    {
+        return positionals_;
+    }
+
+    private list<bool> given_;
+    private list<string> values_;
+    private list<string> positionals_;
+};

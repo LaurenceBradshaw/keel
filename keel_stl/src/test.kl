@@ -25,28 +25,6 @@ struct test_case
     fn( ref test_context ) -> void body;
 };
 
-// Whether both hold the same bytes in the same order.
-private bool same_text( const ref textual a, const ref textual b )
-{
-    const ref u8[] a_bytes = a.as_text();
-    const ref u8[] b_bytes = b.as_text();
-
-    if( a_bytes.size != b_bytes.size )
-    {
-        return false;
-    }
-
-    for( u64 i : 0..a_bytes.size )
-    {
-        if( a_bytes[i] != b_bytes[i] )
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 /// What a test checks through. A failed check is counted and reported, and the test goes on; a
 /// failed `require` ends it.
 class test_context

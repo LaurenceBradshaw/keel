@@ -1,5 +1,6 @@
 // The kl package's unit tests: every test in this program's modules, run by `kl::run_tests`.
 import kl::test;
+import command_line_tests;
 import hash_control_tests;
 import map_tests;
 import os_tests;

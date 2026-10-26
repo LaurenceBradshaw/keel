@@ -14,6 +14,7 @@
 <ul class="contents">
 <li><a href="#parse_error"><code>parse_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#string"><code>string</code></a> <span class="kind">class</span></li>
+<li><a href="#same_text"><code>same_text</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">parse_error</span></h2>
@@ -201,6 +202,15 @@ zeros. Nothing else is read: not a <code>+</code>, whitespace or a separator.</p
 <h4>Errors</h4>
 <p><code>no_digits</code> if there are no digits, <code>invalid_digit</code> naming the first byte that cannot continue
 the number, and <code>overflow</code> as soon as the number leaves the range of <code>i64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">same_text</span></h2>
+<div class="group" id="same_text">
+<pre class="signature"><a class="anchor" href="#same_text" aria-label="Link to same_text">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">same_text</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> b )</code></pre>
+<div class="doc">
+<p>Whether <code>a</code> and <code>b</code> hold the same bytes in the same order.</p>
 </div>
 </div>
 </section>

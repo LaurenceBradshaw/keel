@@ -18,6 +18,20 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 </div>
 <h2>Modules</h2>
 <section class="module">
+<h3><a href="command_line.html">command_line</a></h3>
+<dl class="summaries">
+<dt><a href="command_line.html#flag"><code>flag</code></a> <span class="kind">struct</span></dt>
+<dd>A flag that <code>command_line::add_flag</code> declared: present or absent, with no value.</dd>
+<dt><a href="command_line.html#option"><code>option</code></a> <span class="kind">struct</span></dt>
+<dd>An option that <code>command_line::add_option</code> declared: absent, or given with a value.</dd>
+<dt><a href="command_line.html#command_line"><code>command_line</code></a> <span class="kind">class</span></dt>
+<dd>The options a program accepts, which parse its arguments and describe them in a usage text.</dd>
+<dt><a href="command_line.html#parsed_arguments"><code>parsed_arguments</code></a> <span class="kind">class</span></dt>
+<dd>What <code>command_line::parse</code> read: which flags and options were given, their values, and the
+positionals.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="console.html">console</a></h3>
 <dl class="summaries">
 </dl>
@@ -221,6 +235,8 @@ empty or holds <code>=</code> never is.</dd>
 <dd>Why <code>string::parse_i64</code> refused its text.</dd>
 <dt><a href="string.html#string"><code>string</code></a> <span class="kind">class</span></dt>
 <dd>A growable sequence of bytes that owns its storage.</dd>
+<dt><a href="string.html#same_text"><code>same_text</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>a</code> and <code>b</code> hold the same bytes in the same order.</dd>
 </dl>
 </section>
 <section class="module">
