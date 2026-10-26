@@ -640,37 +640,13 @@ void rename( Function& func, Local_id gone, const Place& into )
     }
 }
 
-bool coalesce_one( Function& func )
+// Marks the move, `gone`'s storage markers and each drop of an uninitialised `gone` or `kept`; answers
+// whether a drop of `gone` stays.
+bool mark_deletions(
+    const Function& func, const Candidate& chosen, const std::vector<Occupancy>& entry, std::vector<bool>& deleted
+)
 {
-    std::vector<Occupancy>   entry = occupancy_on_entry( func );
-    std::optional<Candidate> chosen;
-    const Liveness           live      = live_locals( func );
-    const Local_set          addressed = addressed_locals( func );
-    for( u32 index = 0; index < func.statements.size(); ++index )
-    {
-        const std::optional<Candidate> candidate = candidate_at( func, index );
-        if( !candidate.has_value() )
-        {
-            continue;
-        }
-
-        const bool clash = candidate->into.num_projections == 0
-                               ? interferes( func, candidate->kept, candidate->gone, entry, live, addressed )
-                               : field_interferes( func, *candidate, entry, live, addressed );
-        if( !clash )
-        {
-            chosen = candidate;
-            break;
-        }
-    }
-
-    if( !chosen )
-    {
-        return false;
-    }
-
-    std::vector<bool> deleted( func.statements.size(), false );
-    bool              gone_drop_kept = false;
+    bool gone_drop_kept = false;
     for( u32 b = 0; b < func.blocks.size(); ++b )
     {
         const Block& block = func.blocks[b];
@@ -681,23 +657,23 @@ bool coalesce_one( Function& func )
             const u32        at        = block.first_statement + i;
             const Statement& statement = func.statements[at];
 
-            if( at == chosen->statement )
+            if( at == chosen.statement )
             {
                 deleted[at] = true;
             }
             else if( ( statement.kind == Statement_kind::Storage_dead || statement.kind == Statement_kind::Storage_live ) &&
-                     names( statement.place, chosen->gone ) )
+                     names( statement.place, chosen.gone ) )
             {
                 deleted[at] = true;
             }
             else if( statement.kind == Statement_kind::Drop )
             {
-                if( ( names( statement.place, chosen->gone ) && !state.initialised[chosen->gone.v] ) ||
-                    ( names( statement.place, chosen->kept ) && !state.initialised[chosen->kept.v] ) )
+                if( ( names( statement.place, chosen.gone ) && !state.initialised[chosen.gone.v] ) ||
+                    ( names( statement.place, chosen.kept ) && !state.initialised[chosen.kept.v] ) )
                 {
                     deleted[at] = true;
                 }
-                else if( names( statement.place, chosen->gone ) )
+                else if( names( statement.place, chosen.gone ) )
                 {
                     gone_drop_kept = true;
                 }
@@ -707,7 +683,60 @@ bool coalesce_one( Function& func )
         }
     }
 
-    rename( func, chosen->gone, chosen->into );
+    return gone_drop_kept;
+}
+
+// Merges every candidate that does not clash and shares no local with one already taken; a merge
+// changes facts only about its own locals, so one analysis judges them all. Answers whether any merged.
+bool coalesce_round( Function& func )
+{
+    std::vector<Occupancy> entry = occupancy_on_entry( func );
+    std::vector<Candidate> chosen;
+    Local_set              taken( func.locals.size(), false );
+    const Liveness         live      = live_locals( func );
+    const Local_set        addressed = addressed_locals( func );
+    for( u32 index = 0; index < func.statements.size(); ++index )
+    {
+        const std::optional<Candidate> candidate = candidate_at( func, index );
+        if( !candidate.has_value() )
+        {
+            continue;
+        }
+
+        if( taken[candidate->kept.v] || taken[candidate->gone.v] || taken[candidate->into.local.v] )
+        {
+            continue;
+        }
+
+        const bool clash = candidate->into.num_projections == 0
+                               ? interferes( func, candidate->kept, candidate->gone, entry, live, addressed )
+                               : field_interferes( func, *candidate, entry, live, addressed );
+        if( !clash )
+        {
+            taken[candidate->kept.v]       = true;
+            taken[candidate->gone.v]       = true;
+            taken[candidate->into.local.v] = true;
+            chosen.push_back( *candidate );
+        }
+    }
+
+    if( chosen.empty() )
+    {
+        return false;
+    }
+
+    // Every mark reads `entry` against the statements as analysed, so all come before any rename.
+    std::vector<bool> deleted( func.statements.size(), false );
+    std::vector<bool> gone_drop_kept( chosen.size(), false );
+    for( u32 c = 0; c < chosen.size(); ++c )
+    {
+        gone_drop_kept[c] = mark_deletions( func, chosen[c], entry, deleted );
+    }
+
+    for( const Candidate& c : chosen )
+    {
+        rename( func, c.gone, c.into );
+    }
 
     for( u32 s = 0; s < func.statements.size(); ++s )
     {
@@ -719,17 +748,20 @@ bool coalesce_one( Function& func )
 
     remove_statements( func, deleted );
 
-    // A field merge's locals were refused if either was listed.
-    if( chosen->into.num_projections != 0 )
+    for( u32 c = 0; c < chosen.size(); ++c )
     {
-        return true;
-    }
+        // A field merge's locals were refused if either was listed.
+        if( chosen[c].into.num_projections != 0 )
+        {
+            continue;
+        }
 
-    // A flag from a move and a drop follows the rename on its own; only a listed `gone` passes its entry on.
-    if( std::erase( func.one_path_temporaries, chosen->gone ) != 0 && gone_drop_kept &&
-        std::ranges::find( func.one_path_temporaries, chosen->kept ) == func.one_path_temporaries.end() )
-    {
-        func.one_path_temporaries.push_back( chosen->kept );
+        // A flag from a move and a drop follows the rename on its own; only a listed `gone` passes its entry on.
+        if( std::erase( func.one_path_temporaries, chosen[c].gone ) != 0 && gone_drop_kept[c] &&
+            std::ranges::find( func.one_path_temporaries, chosen[c].kept ) == func.one_path_temporaries.end() )
+        {
+            func.one_path_temporaries.push_back( chosen[c].kept );
+        }
     }
 
     return true;
@@ -739,9 +771,9 @@ bool coalesce_one( Function& func )
 
 void coalesce_moves( Function& func )
 {
-    while( coalesce_one( func ) )
+    while( coalesce_round( func ) )
     {
-        // Keep going until no more candidates.
+        // A round leaves for the next any candidate sharing a local with a merge.
     }
 }
 
@@ -838,6 +870,25 @@ struct Optimised : Compiled
         ) );
     }
 };
+
+// Rounds `coalesce_moves` takes over `source`'s first function, prepared as a release build
+// prepares it, with nothing inlined.
+u32 rounds_of( std::string_view source )
+{
+    Compiled p( std::string( source ) + std::string( k_types ), Stage::Reported );
+    REQUIRE( p.clean() );
+    Function& func = p.functions.front();
+    settle_debug( func, p.literals.add_integer( 0 ) );
+    simplify( func, p.literals );
+    u32 rounds = 0;
+    while( coalesce_round( func ) )
+    {
+        ++rounds;
+    }
+
+    REQUIRE( verify( func ).empty() );
+    return rounds;
+}
 
 } // namespace
 
@@ -1136,6 +1187,18 @@ TEST_CASE( "coalesce_moves_leaves_no_self_copy", "[opt][coalesce]" )
     REQUIRE( p.well_formed() );
     REQUIRE( std::ranges::none_of( p.first().statements, [&]( const Statement& s ) { return copies_itself( p.first(), s ); } )
     );
+}
+
+TEST_CASE( "coalesce_moves_merges_independent_moves_in_one_round", "[opt][coalesce]" )
+{
+    const u32 one   = rounds_of( "i32 f( move Box x ) { Box b = move x; return b.v; }\n" );
+    const u32 two   = rounds_of( "i32 f( move Box x, move Box y ) { Box b = move x; Box c = move y; return b.v + c.v; }\n" );
+    const u32 chain = rounds_of( "i32 f( move Box x ) { Box b = move x; Box c = move b; return c.v; }\n" );
+
+    // Independent pairs share a round; each link of a chain waits for the one before.
+    REQUIRE( one == 1 );
+    REQUIRE( two == 1 );
+    REQUIRE( chain == 2 );
 }
 
 } // namespace keel
