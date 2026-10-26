@@ -1,0 +1,6 @@
+# Only the changed package and the one importing it compile again.
+keelb build; echo "exit $?"
+keelb build; echo "exit $?"
+cp .edits/numbers.kl util/numbers.kl
+keelb build; echo "exit $?"
+build/release/two_packages; echo "exit $?"

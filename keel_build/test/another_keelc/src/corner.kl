@@ -1,0 +1,4 @@
+i64 corners()
+{
+    return 4;
+}

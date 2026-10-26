@@ -115,7 +115,7 @@ check_headers()
             echo "$f: changed this year, so its copyright year should be $year, not ${BASH_REMATCH[1]}"
             bad=1
         fi
-    done < <( find keelc keel_rt keel_stl keeldoc -path '*/test/*' -prune -o -type f \
+    done < <( find keelc keel_rt keel_stl keeldoc keel_build -path '*/test/*' -prune -o -type f \
                   \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.kl' \) -print 2>/dev/null )
 
     if [ "$seen" -eq 0 ]; then
@@ -165,6 +165,13 @@ check_docs()
     rm -rf "$out"
 }
 
+# keelb's own unit tests, built by keelb, then its goldens. Both use the release keelb.
+check_keel_build()
+{
+    ( cd keel_build && ../build/release/bin/keelb test --cache ../build/keel_build ) || return 1
+    keel_build/test/run_tests.sh ./build/release/bin/keelb
+}
+
 echo "pre-commit:"
 
 # Cheapest first, and build before the things that need a binary.
@@ -177,5 +184,6 @@ step "runtime tests"       ./build/debug/bin/keel_rt_tests           || exit 1
 step "golden tests"        check_goldens                             || exit 1
 step "docs up to date"     check_docs                                || exit 1
 step "build (release -Werror)" cmake --build --preset release        || exit 1
+step "keel_build tests"    check_keel_build                          || exit 1
 
 echo "  ${green}all checks passed${reset}"

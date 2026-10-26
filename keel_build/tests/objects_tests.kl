@@ -1,0 +1,61 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// `fnv1a`, `hex` and `manifest_of` against what keelc writes.
+import kl::optional;
+import kl::string;
+import kl::test;
+import objects;
+
+private void fnv1a_matches_keelc( ref kl::test_context c )
+{
+    c.check_eq( hex( fnv1a( kl::string::from( "" ).as_text() ) ), "cbf29ce484222325" );
+    c.check_eq( hex( fnv1a( kl::string::from( "a" ).as_text() ) ), "af63dc4c8601ec8c" );
+    c.check_eq( hex( fnv1a( kl::string::from( "foobar" ).as_text() ) ), "85944171f73967e8" );
+}
+
+private void hex_pads_to_16_digits( ref kl::test_context c )
+{
+    c.check_eq( hex( 0 ), "0000000000000000" );
+    c.check_eq( hex( 0x1f ), "000000000000001f" );
+}
+
+private void manifest_of_finds_the_keel_member( ref kl::test_context c )
+{
+    // A symbol index, `__.KEEL.STATE` (which must not match), then `__.KEEL` with an odd size.
+    kl::string archive = kl::string::from( "!<arch>\n" );
+    archive += "/               0           0     0     0       2         `\nab";
+    archive += "__.KEEL.STATE/  0           0     0     644     1         `\nx\n";
+    archive += "__.KEEL/        0           0     0     644     3         `\nm 1\n";
+
+    switch( move manifest_of( archive.as_text() ) )
+    {
+        case kl::optional::some( manifest ):
+            c.check_eq( manifest, "m 1" );
+            break;
+        case kl::optional::none:
+            c.check( false );
+            break;
+    }
+}
+
+private void manifest_of_refuses_other_files( ref kl::test_context c )
+{
+    c.check( !has_manifest( "" ) );
+    c.check( !has_manifest( "not an archive" ) );
+    c.check( !has_manifest( "!<arch>\n" ) );
+    // A size larger than the archive.
+    c.check( !has_manifest( "!<arch>\n__.KEEL/        0           0     0     644     99        `\nm" ) );
+}
+
+private bool has_manifest( str text )
+{
+    kl::string bytes = kl::string::from( text );
+    switch( move manifest_of( bytes.as_text() ) )
+    {
+        case kl::optional::some( manifest ):
+            return true;
+        case kl::optional::none:
+            return false;
+    }
+}

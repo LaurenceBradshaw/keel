@@ -1,0 +1,82 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::optional;
+import kl::string;
+
+// The 64-bit FNV-1a hash, as keelc's `fnv1a` computes it.
+u64 fnv1a( const ref u8[] bytes )
+{
+    const u64 start = 0xcbf29ce484222325;
+    const u64 prime = 0x100000001b3;
+    u64 hash = start;
+    for( u64 i = 0; i < bytes.size; i++ )
+    {
+        hash ^= bytes[i];
+        hash = wrap<u64>( hash * prime );
+    }
+    return hash;
+}
+
+// `value` as 16 lowercase hex digits, zero-padded, as keelc writes hashes.
+kl::string hex( u64 value )
+{
+    kl::string result = kl::string::with_capacity( 16 );
+    for( u64 i = 0; i < 16; i++ )
+    {
+        const u8 nibble = cast<u8>( ( value >> ( 60 - 4 * i ) ) & 0xf );
+        const u8 digit = nibble < 10 ? '0' + nibble : 'a' + ( nibble - 10 );
+        result.push( digit );
+    }
+    return result;
+}
+
+// The data of the `__.KEEL` member of an `ar` archive, or none when it is not an archive or has none.
+kl::optional<kl::string> manifest_of( const ref u8[] archive )
+{
+    if( archive.size < 8 )
+    {
+        return kl::optional::none;
+    }
+
+    kl::string magic = kl::string();
+    magic.append( archive[0..8] );
+    if( !kl::same_text( magic, "!<arch>\n" ) )
+    {
+        return kl::optional::none;
+    }
+
+    u64 at = 8;
+    while( at + 60 <= archive.size )
+    {
+        kl::string name = kl::string();
+        name.append( archive[at..at + 16] );
+
+        u64 size = 0;
+        for( u64 i = at + 48; i < at + 58 && archive[i] != ' '; i++ )
+        {
+            if( archive[i] < '0' || archive[i] > '9' )
+            {
+                return kl::optional::none;
+            }
+            size = size * 10 + ( archive[i] - '0' );
+        }
+
+        const u64 data = at + 60;
+        if( size > archive.size - data )
+        {
+            return kl::optional::none;
+        }
+
+        if( name.starts_with( "__.KEEL/ " ) )
+        {
+            kl::string manifest = kl::string::with_capacity( size );
+            manifest.append( archive[data..data + size] );
+            return kl::optional::some( move manifest );
+        }
+
+        at = data + size + size % 2;
+    }
+
+    return kl::optional::none;
+}

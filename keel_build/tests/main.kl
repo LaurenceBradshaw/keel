@@ -1,0 +1,11 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// keel_build's unit tests: every test in this program's modules, run by `kl::run_tests`.
+import kl::test;
+import objects_tests;
+
+i32 main( const ref str[] args )
+{
+    return kl::run_tests( @functions_of( kl::test_case ), args );
+}

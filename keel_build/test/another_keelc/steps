@@ -1,0 +1,5 @@
+# An object whose manifest names another keelc is stale. Its build id is zeroed in place, so the
+# archive keeps its layout.
+keelb build; echo "exit $?"
+perl -pi -e 's/^(build )([0-9a-f]+)$/$1 . "0" x length $2/e' build/release/src/corner.klo
+keelb build; echo "exit $?"

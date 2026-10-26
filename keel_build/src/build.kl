@@ -1,0 +1,384 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::console;
+import kl::list;
+import kl::map;
+import kl::optional;
+import kl::os;
+import kl::pair;
+import kl::set;
+import kl::string;
+import config;
+import objects;
+import project;
+
+// Builds a program from objects, compiling only the modules whose objects are stale. Failures are
+// answered as the exit code to stop with, once their message is printed.
+class Builder
+{
+    // `cache` is the folder for this mode's objects. Under `tests`, `tests/` is looked in before `src/`.
+    public Builder(
+        move Keelc keelc, move Project project, move kl::path kl_folder, move kl::path cache, bool debug, bool tests,
+        bool verbose
+    )
+    {
+        keelc_ = move keelc;
+        project_ = move project;
+        kl_folder_ = move kl_folder;
+        cache_ = move cache;
+        debug_ = debug;
+        tests_ = tests;
+        verbose_ = verbose;
+        modules_ = kl::map<kl::string, kl::string>();
+        in_progress_ = kl::set<kl::string>();
+        build_order_ = kl::list<kl::string>();
+    }
+
+    // Builds `main`'s imports, then links `main` with every object into `output`.
+    public result<void, i32> link( const ref kl::path main, const ref kl::path output )
+    {
+        kl::list<kl::string> imports = try imports_of( main, kl::string() );
+        for( u64 i : 0..imports.size() )
+        {
+            try visit( imports.as_run()[i] );
+        }
+
+        kl::println( "linking" );
+        try create_folder( output.parent() );
+
+        // Every object, not only the direct imports: keelc refuses an object whose dependency it was not given.
+        kl::list<kl::string> args = kl::list<kl::string>();
+        args.push( kl::string( main ) );
+        for( u64 i : 0..build_order_.size() )
+        {
+            args.push( kl::string( build_order_.as_run()[i] ) );
+        }
+        args.push( "-o" );
+        args.push( kl::string( output ) );
+        
+        return call_keelc( move args );
+    }
+
+    // Brings `module`'s object up to date, after its imports', and answers the object's hash.
+    private result<kl::string, i32> visit( const ref kl::string module )
+    {
+        if( modules_.contains( module ) )
+        {
+            return result::ok( kl::string( modules_[module] ) );
+        }
+
+        if( !in_progress_.insert( kl::string( module ) ) )
+        {
+            kl::eprintln( kl::string( "keelb: importing `" ) + module + "` closes a cycle" );
+            return result::err( 1 );
+        }
+
+        if( in_tests( module ) && kl::is_file( project_.root() / "src" / ( module + ".kl" ) ) )
+        {
+            kl::eprintln( kl::string( "keelb: `" ) + module + "` is in both src/ and tests/" );
+            return result::err( 1 );
+        }
+
+        const kl::path source = source_of( module );
+        const kl::path object = object_of( module );
+        const kl::string text = try read( source );
+        const kl::string source_hash = hex( fnv1a( text.as_text() ) );
+
+        kl::string bytes = kl::string();
+        if( kl::is_file( object ) )
+        {
+            bytes = try read( object );
+        }
+
+        // The manifest's imports and their hashes, when it was written from this source by this keelc.
+        kl::list<kl::string> imports = kl::list<kl::string>();
+        kl::list<kl::string> hashes = kl::list<kl::string>();
+        bool fresh = read_manifest( bytes, source_hash, ref imports, ref hashes );
+        if( !fresh )
+        {
+            imports = try imports_of( source, module );
+        }
+
+        for( u64 i : 0..imports.size() )
+        {
+            const kl::string hash = try visit( imports.as_run()[i] );
+            fresh = fresh && hash == hashes.as_run()[i];
+        }
+
+        if( !fresh )
+        {
+            kl::println( kl::string( "compiling " ) + module );
+            try create_folder( object.parent() );
+
+            // Every object so far, which holds all of this module's imports, direct or not.
+            kl::list<kl::string> args = kl::list<kl::string>();
+            args.push( "-c" );
+            args.push( kl::string( source ) );
+            for( u64 i : 0..build_order_.size() )
+            {
+                args.push( kl::string( build_order_.as_run()[i] ) );
+            }
+            args.push( "-o" );
+            args.push( kl::string( object ) );
+            try call_keelc( move args );
+
+            bytes = try read( object );
+        }
+
+        kl::string hash = hex( fnv1a( bytes.as_text() ) );
+        modules_.insert( kl::string( module ), kl::string( hash ) );
+        in_progress_.remove( module );
+        build_order_.push( kl::string( object ) );
+
+        return result::ok( move hash );
+    }
+
+    // Whether `object` holds a manifest written by this keelc in this mode from a source hashing to
+    // `source_hash`; if so, its `depends` lines are added to `imports` and `hashes`.
+    private bool read_manifest(
+        const ref kl::string object, const ref kl::string source_hash, ref kl::list<kl::string> imports,
+        ref kl::list<kl::string> hashes
+    ) const
+    {
+        kl::string manifest = kl::string();
+        switch( move manifest_of( object.as_text() ) )
+        {
+            case kl::optional::some( text ):
+                manifest = move text;
+                break;
+            case kl::optional::none:
+                return false;
+        }
+
+        kl::string source_line = kl::string( " " ) + source_hash;
+        bool same_build = false;
+        bool same_mode = false;
+        bool same_source = false;
+
+        kl::list<kl::string> lines = manifest.split( "\n" );
+        for( u64 i : 0..lines.size() )
+        {
+            const ref kl::string line = lines.as_run()[i];
+            if( line.starts_with( "build " ) )
+            {
+                same_build = line.substring( 6, line.size() - 6 ) == keelc_.build();
+            }
+            else if( line.starts_with( "mode " ) )
+            {
+                same_mode = kl::same_text( line.substring( 5, line.size() - 5 ), mode() );
+            }
+            else if( line.starts_with( "source " ) )
+            {
+                same_source = line.ends_with( source_line );
+            }
+            else if( line.starts_with( "depends " ) && line.size() > 8 + 17 )
+            {
+                // `depends <module> <16 hex digits>`
+                imports.push( line.substring( 8, line.size() - 8 - 17 ) );
+                hashes.push( line.substring( line.size() - 16, 16 ) );
+            }
+        }
+
+        return same_build && same_mode && same_source;
+    }
+
+    // `source`'s imports, each with its package.
+    private result<kl::list<kl::string>, i32> imports_of( const ref kl::path source, const ref kl::string importer ) const
+    {
+        kl::list<kl::string> args = kl::list<kl::string>();
+        args.push( "--imports" );
+        args.push( kl::string( source ) );
+
+        switch( move kl::capture( keelc_.path(), args.as_run() ) )
+        {
+            case result::ok( c ):
+                if( c.code != 0 )
+                {
+                    return result::err( c.code );
+                }
+
+                kl::list<kl::string> imports = kl::list<kl::string>();
+                kl::list<kl::string> lines = c.output.split( "\n" );
+                for( u64 i : 0..lines.size() )
+                {
+                    const ref kl::string line = lines.as_run()[i];
+                    if( !line.is_empty() )
+                    {
+                        imports.push( qualify( line, importer ) );
+                    }
+                }
+                return result::ok( move imports );
+            case result::err( error ):
+                kl::eprintln( kl::string( "keelb: cannot run " ) + keelc_.path() );
+                return result::err( 2 );
+        }
+    }
+
+    // Runs keelc with `args`, the mode and the project's packages.
+    private result<void, i32> call_keelc( move kl::list<kl::string> args ) const
+    {
+        if( debug_ )
+        {
+            args.push( "--debug" );
+        }
+
+        const ref kl::list<kl::pair<kl::string, kl::path>> packages = project_.packages();
+        for( u64 i : 0..packages.size() )
+        {
+            const ref kl::pair<kl::string, kl::path> package = packages.as_run()[i];
+            kl::string spec = kl::string( package.first );
+            spec += "=";
+            spec += package.second;
+            args.push( "--package" );
+            args.push( move spec );
+        }
+
+        if( verbose_ )
+        {
+            kl::string command = kl::string( keelc_.path() );
+            for( u64 i : 0..args.size() )
+            {
+                command += " ";
+                command += args.as_run()[i];
+            }
+            kl::println( command );
+        }
+
+        switch( kl::run( keelc_.path(), args.as_run() ) )
+        {
+            case result::ok( code ):
+                if( code != 0 )
+                {
+                    return result::err( code );
+                }
+                return result::ok();
+            case result::err( error ):
+                kl::eprintln( kl::string( "keelb: cannot run " ) + keelc_.path() );
+                return result::err( 2 );
+        }
+    }
+
+    // `kl::a::b` is `<kl folder>/a/b.kl`, `p::x` is `<root>/p/x.kl`, and `x` is `<root>/src/x.kl`, or
+    // `<root>/tests/x.kl` when `in_tests`.
+    private kl::path source_of( const ref kl::string module ) const
+    {
+        if( module.starts_with( "kl::" ) )
+        {
+            return kl_folder_ / ( folders( module.substring( 4, module.size() - 4 ) ) + ".kl" );
+        }
+
+        if( last_separator( module ) < module.size() )
+        {
+            return project_.root() / ( folders( module ) + ".kl" );
+        }
+
+        return project_.root() / folder( module ) / ( module + ".kl" );
+    }
+
+    // `source_of`'s path, under the cache.
+    private kl::path object_of( const ref kl::string module ) const
+    {
+        if( last_separator( module ) < module.size() )
+        {
+            return cache_ / ( folders( module ) + ".klo" );
+        }
+
+        return cache_ / folder( module ) / ( module + ".klo" );
+    }
+
+    // Whether the unqualified `module` is one of `tests/`'s, which only a test build looks for.
+    private bool in_tests( const ref kl::string module ) const
+    {
+        return tests_ && last_separator( module ) == module.size() &&
+               kl::is_file( project_.root() / "tests" / ( module + ".kl" ) );
+    }
+
+    // The folder an unqualified module is in.
+    private str folder( const ref kl::string module ) const
+    {
+        return in_tests( module ) ? "tests" : "src";
+    }
+
+    private str mode() const
+    {
+        return debug_ ? "debug" : "release";
+    }
+
+    // `name` with `importer`'s package, unless it names one: `list` in `kl::string` is `kl::list`.
+    private static kl::string qualify( const ref kl::string name, const ref kl::string importer )
+    {
+        const u64 separator = last_separator( importer );
+        if( last_separator( name ) < name.size() || separator == importer.size() )
+        {
+            return kl::string( name );
+        }
+
+        return importer.substring( 0, separator + 2 ) + name;
+    }
+
+    // The index of the last `::` in `name`, or its size when it has none.
+    private static u64 last_separator( const ref kl::string name )
+    {
+        const ref u8[] bytes = name.as_text();
+        for( u64 i = bytes.size; i >= 2; i-- )
+        {
+            if( bytes[i - 2] == ':' && bytes[i - 1] == ':' )
+            {
+                return i - 2;
+            }
+        }
+        return bytes.size;
+    }
+
+    // `a::b::c` as `a/b/c`.
+    private static kl::string folders( const ref kl::string module )
+    {
+        kl::list<kl::string> pieces = module.split( "::" );
+        kl::string joined = kl::string();
+        for( u64 i : 0..pieces.size() )
+        {
+            if( i > 0 )
+            {
+                joined += "/";
+            }
+            joined += pieces.as_run()[i];
+        }
+        return joined;
+    }
+
+    private static result<kl::string, i32> read( const ref kl::path file )
+    {
+        switch( move kl::read_file( file ) )
+        {
+            case result::ok( text ):
+                return result::ok( move text );
+            case result::err( error ):
+                kl::eprintln( kl::string( "keelb: cannot read " ) + file );
+                return result::err( 1 );
+        }
+    }
+
+    private static result<void, i32> create_folder( const ref kl::path folder )
+    {
+        switch( kl::create_directories( folder ) )
+        {
+            case result::ok():
+                return result::ok();
+            case result::err( error ):
+                kl::eprintln( kl::string( "keelb: cannot create " ) + folder );
+                return result::err( 1 );
+        }
+    }
+
+    private Keelc keelc_;
+    private Project project_;
+    private kl::path kl_folder_;
+    private kl::path cache_;
+    private bool debug_;
+    private bool tests_;
+    private bool verbose_;
+    private kl::map<kl::string, kl::string> modules_;    // each finished module's object hash
+    private kl::set<kl::string> in_progress_;            // modules being visited, which catches cycles
+    private kl::list<kl::string> build_order_;           // finished objects, dependencies first
+};

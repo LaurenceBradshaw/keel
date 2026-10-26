@@ -1,0 +1,6 @@
+keelb: a folder named kl cannot be a package: kl is the standard library
+exit 2
+keelb: `calc` is in both src/ and tests/
+exit 1
+keelb: importing `a` closes a cycle
+exit 1

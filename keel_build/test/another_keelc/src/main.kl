@@ -1,0 +1,6 @@
+import shape;
+
+i32 main()
+{
+    return cast<i32>( sides() ) - 4;
+}

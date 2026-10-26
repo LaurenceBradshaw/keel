@@ -1,0 +1,19 @@
+compiling kl::optional
+compiling kl::list
+compiling kl::string
+compiling kl::os
+compiling kl::console
+compiling kl::test
+compiling calc
+compiling calc_tests
+linking
+pass calc_tests.adds
+1 passed, 0 failed
+exit 0
+compiling calc_tests
+linking
+pass calc_tests.adds
+tests/calc_tests.kl:11: check_eq failed: 4 != 5
+FAIL calc_tests.adds_wrongly
+1 passed, 1 failed
+exit 1

@@ -1,0 +1,9 @@
+import geo::path;
+import kl::console;
+import kl::string;
+
+i32 main()
+{
+    kl::println( kl::string::from( geo::length() ) );
+    return 0;
+}

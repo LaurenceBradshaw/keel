@@ -1,0 +1,17 @@
+compiling util::numbers
+compiling kl::optional
+compiling kl::list
+compiling geo::path
+compiling kl::string
+compiling kl::os
+compiling kl::console
+linking
+exit 0
+linking
+exit 0
+compiling util::numbers
+compiling geo::path
+linking
+exit 0
+70
+exit 0

@@ -1,0 +1,107 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::string;
+import kl::os;
+import kl::pair;
+import kl::list;
+
+class Project
+{
+    private Project( 
+        move kl::string name, move kl::path root, bool has_tests, move kl::list<kl::pair<kl::string, kl::path>> packages 
+    )
+    {
+        name_ = move name;
+        root_ = move root;
+        has_tests_ = has_tests;
+        packages_ = move packages;
+    }
+
+    public static result<Project, kl::string> open( move kl::path root )
+    {
+        if( !kl::is_file( root / "src/main.kl" ) )
+        {
+            return result::err( "no src/main.kl in the project root" );
+        }
+
+        const bool tests = kl::is_file( root / "tests/main.kl" );
+
+        kl::list<kl::pair<kl::string, kl::path>> found = kl::list<kl::pair<kl::string, kl::path>>();
+        switch( move kl::list_directory( root ) )
+        {
+            case result::ok( entries ):
+                for( u64 i : 0..entries.size() )
+                {
+                    kl::path entry = entries.pop();
+                    if( !kl::is_directory( entry ) || entry.file_name() == "src" || 
+                        entry.file_name() == "tests" || entry.file_name() == "build" ||
+                        entry.file_name().starts_with( "." ) || !holds_keel( entry ) )
+                    {
+                        continue;
+                    }
+
+                    if( entry.file_name() == "kl" )
+                    {
+                        return result::err( "a folder named kl cannot be a package: kl is the standard library" );
+                    }
+
+                    found.push( kl::pair<kl::string, kl::path>( entry.file_name(), move entry ) );
+                }
+                return result::ok( Project( root.file_name(), move root, tests, move found ) );
+            case result::err( error ):
+                return result::err( kl::string( "cannot list " ) + root );
+        }
+    }
+
+    public const ref kl::string name() const
+    {
+        return name_;
+    }
+
+    public const ref kl::path root() const
+    {
+        return root_;
+    }
+
+    // Whether `tests/main.kl` exists.
+    public bool has_tests() const
+    {
+        return has_tests_;
+    }
+
+    // Each package's name and folder.
+    public const ref kl::list<kl::pair<kl::string, kl::path>> packages() const
+    {
+        return packages_;
+    }
+
+    private static bool holds_keel( const ref kl::path folder )
+    {
+        if( !kl::is_directory( folder ) )
+        {
+            return false;
+        }
+
+        switch( kl::list_directory( folder ) )
+        {
+            case result::ok( entries ):
+                for( u64 i : 0..entries.size() )
+                {
+                    const ref kl::path entry = entries[i];
+                    if( kl::is_file( entry ) && entry.extension() == ".kl" )
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            case result::err( error ):
+                return false;
+        }
+    }
+
+    private kl::string name_;
+    private kl::path root_;
+    private bool has_tests_;
+    private kl::list<kl::pair<kl::string, kl::path>> packages_;
+};

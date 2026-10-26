@@ -1,0 +1,6 @@
+import corner;
+
+i64 sides()
+{
+    return corners();
+}

@@ -1,0 +1,181 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::command_line;
+import kl::string;
+import kl::list;
+import kl::console;
+import kl::os;
+import project;
+import config;
+import build;
+import kl::optional;
+
+enum Command
+{
+    Build,
+    Test,
+    Error( kl::string message )
+};
+
+kl::path find_keelc()
+{
+    switch( move kl::program_path() )
+    {
+        case result::ok( path ):
+            kl::path keelc = path.parent() / "keelc";
+            if( kl::is_file( keelc ) )
+            {
+                return keelc;
+            }
+            else
+            {
+                return kl::path::from( "keelc" );
+            }
+        case result::err( error ):
+            return kl::path::from( "keelc" );
+    }
+}
+
+// Builds the program, or under `testing` builds and runs the tests, and answers the exit code.
+result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool debug, bool verbose )
+{
+    kl::path current_dir;
+    switch( move kl::current_directory() )
+    {
+        case result::ok( cwd ):
+            current_dir = move cwd;
+            break;
+        case result::err( error ):
+            return result::err( "cannot read the current directory" );
+    }
+
+    Project project = try Project::open( move current_dir );
+    if( testing && !project.has_tests() )
+    {
+        return result::err( "no tests/main.kl in the project root" );
+    }
+    
+    Keelc keelc = try Keelc::ask( find_keelc(), verbose );
+
+    kl::path kl_folder;
+    switch( keelc.kl_folder() )
+    {
+        case kl::optional::some( folder ):
+            kl_folder = kl::path::of( folder );
+            break;
+        case kl::optional::none:
+            return result::err( "keelc has no kl folder beside it" );
+    }
+
+    // Relative to the project root, unless --cache gives an absolute path.
+    kl::path cache = project.root() / cache_dir / ( debug ? "debug" : "release" );
+    kl::path main_file = project.root() / "src/main.kl";
+    kl::path output = cache / project.name();
+    if( testing )
+    {
+        main_file = project.root() / "tests/main.kl";
+        output = cache / ( project.name() + "_tests" );
+    }
+
+    Builder builder = Builder( move keelc, move project, move kl_folder, move cache, debug, testing, verbose );
+    switch( builder.link( main_file, output ) )
+    {
+        case result::ok():
+            break;
+        case result::err( failed ):
+            return result::ok( failed );
+    }
+
+    if( !testing )
+    {
+        return result::ok( 0 );
+    }
+
+    kl::list<kl::string> no_arguments = kl::list<kl::string>();
+    switch( kl::run( output, no_arguments.as_run() ) )
+    {
+        case result::ok( code ):
+            return result::ok( code );
+        case result::err( error ):
+            return result::err( kl::string( "cannot run " ) + output );
+    }
+}
+
+i32 main( const ref str[] args )
+{
+    kl::command_line cl = kl::command_line( "keelb <build|test> [options]" );
+    kl::flag debug_flag = cl.add_flag( "debug", "build with debug information" );
+    kl::flag verbose_flag = cl.add_flag( "verbose", "print the commands that are run" );
+    kl::option cache_option = cl.add_option( "cache", "dir", "where to store the build cache" );
+
+    Command mode = Command::Error( "no command given" );
+    kl::path cache_dir = kl::path::from( "build" );
+    bool debug = false;
+    bool verbose = false;
+
+    switch( cl.parse( args ) )
+    {
+        case result::ok( parsed ):
+            const ref kl::list<kl::string> positional = parsed.positionals();
+            if( positional.size() > 0 )
+            {
+                if( positional[0] == "build" )
+                {
+                    mode = Command::Build;
+                }
+                else if( positional[0] == "test" )
+                {
+                    mode = Command::Test;
+                }
+                else
+                {
+                    mode = Command::Error( "unknown command: " + positional[0] );
+                }
+            }
+            if( positional.size() > 1 )
+            {
+                mode = Command::Error( "unexpected argument: " + positional[1] );
+            }
+            if( parsed.has( cache_option ) )
+            {
+                cache_dir = kl::path::of( parsed.value( cache_option ) );
+            }
+            if( parsed.has( debug_flag ) )
+            {
+                debug = true;
+            }
+            if( parsed.has( verbose_flag ) )
+            {
+                verbose = true;
+            }
+            break;
+        case result::err( error ):
+            kl::eprintln( "keelb: " + error );
+            kl::eprint( cl.usage() );
+            return 2;
+    }
+
+    bool testing = false;
+    switch( mode )
+    {
+        case Command::Build:
+            break;
+        case Command::Test:
+            testing = true;
+            break;
+        case Command::Error( message ):
+            kl::eprintln( "keelb: " + message );
+            kl::eprint( cl.usage() );
+            return 2;
+    }
+
+    switch( run( testing, cache_dir, debug, verbose ) )
+    {
+        case result::ok( code ):
+            return code;
+        case result::err( error ):
+            kl::eprintln( "keelb: " + error );
+            return 2;
+    }
+}

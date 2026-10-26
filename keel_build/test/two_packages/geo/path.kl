@@ -1,0 +1,15 @@
+import util::numbers;
+import kl::list;
+
+i64 length()
+{
+    kl::list<i64> steps = kl::list<i64>();
+    steps.push( 3 );
+    steps.push( 4 );
+    i64 total = 0;
+    for( u64 i : 0..steps.size() )
+    {
+        total += util::scaled( steps[i] );
+    }
+    return total;
+}

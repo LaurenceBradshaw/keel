@@ -1,0 +1,85 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import kl::os;
+import kl::optional;
+import kl::string;
+import kl::console;
+import kl::list;
+
+class Keelc
+{
+    private Keelc( move kl::path path, move kl::string build, move kl::optional<kl::path> kl_folder )
+    {
+        path_      = move path;
+        build_     = move build;
+        kl_folder_ = move kl_folder;
+    }
+
+    public static result<Keelc, kl::string> ask( move kl::path keelc, bool verbose )
+    {
+        str[1] args = [ "--print-config" ];
+
+        kl::string command = kl::string();
+        command += keelc;
+        command += " --print-config";
+
+        if( verbose )
+        {
+            kl::println( command );
+        }
+
+        switch( move kl::capture( keelc, args ) )
+        {
+            case result::ok( c ):
+                if( c.code != 0 )
+                {
+                    return result::err( kl::string( "`" ) + command + "` failed" );
+                }
+
+                kl::string id = kl::string();
+                kl::optional<kl::path> kl_root = kl::optional::none;
+                kl::list<kl::string> lines = c.output.split( "\n" );
+                for( u64 i : 0..lines.size() )
+                {
+                    kl::string line = lines.pop();
+                    if( line.starts_with( "build " ) )
+                    {
+                        id = line.substring( 6, line.size() - 6 );
+                    }
+                    if( line.starts_with( "package kl " ) )
+                    {
+                        kl_root = kl::optional::some( kl::path::of( line.substring( 11, line.size() - 11 ) ) );
+                    }
+                }
+                if( id.is_empty() )
+                {
+                    return result::err( kl::string( "`" ) + command + "` printed no build id" );
+                }
+                return result::ok( Keelc( move keelc, move id, move kl_root ) );
+            case result::err( error ):
+                return result::err( kl::string( "cannot run " ) + keelc );
+        }
+    }
+
+    public const ref kl::path path() const
+    {
+        return path_;
+    }
+
+    // keelc's build id, as each manifest's `build` line holds it.
+    public const ref kl::string build() const
+    {
+        return build_;
+    }
+
+    // Where keelc finds `kl`, or none when it has no `kl` beside it.
+    public const ref kl::optional<kl::path> kl_folder() const
+    {
+        return kl_folder_;
+    }
+
+    private kl::path path_;
+    private kl::string build_;
+    private kl::optional<kl::path> kl_folder_;
+};

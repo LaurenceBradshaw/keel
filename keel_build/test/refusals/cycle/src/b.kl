@@ -1,0 +1,6 @@
+import a;
+
+i64 two()
+{
+    return 2;
+}

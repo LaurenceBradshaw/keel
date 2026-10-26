@@ -1,0 +1,4 @@
+# Each refusal, with its message and exit code.
+( cd kl_package && keelb build; echo "exit $?" )
+( cd both_folders && keelb test; echo "exit $?" )
+( cd cycle && keelb build; echo "exit $?" )
