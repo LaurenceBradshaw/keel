@@ -1,0 +1,46 @@
+// `kl::string::split`: pieces between separators, empty ones kept. An empty separator panics, so
+// `programs/string_split_empty_separator` covers it.
+import kl::list;
+import kl::string;
+import kl::test;
+
+private void check_split( ref kl::test_context c, str text, str separator, const ref str[] expected )
+{
+    kl::string s = kl::string::from( text );
+    kl::list<kl::string> pieces = s.split( separator );
+    c.require( pieces.size() == expected.size );
+    for( u64 i : 0..expected.size )
+    {
+        c.check_eq( pieces.as_run()[i], expected[i] );
+    }
+}
+
+private void split_gives_the_pieces_between( ref kl::test_context c )
+{
+    str[3] plain = [ "a", "bc", "d" ];
+    check_split( ref c, "a,bc,d", ",", plain );
+    str[1] whole = [ "abc" ];
+    check_split( ref c, "abc", ",", whole );
+}
+
+private void split_keeps_empty_pieces( ref kl::test_context c )
+{
+    str[3] middle = [ "a", "", "b" ];
+    check_split( ref c, "a,,b", ",", middle );
+    str[3] trailing = [ "a", "b", "" ];
+    check_split( ref c, "a\nb\n", "\n", trailing );
+    str[2] leading = [ "", "a" ];
+    check_split( ref c, ",a", ",", leading );
+    str[1] empty = [ "" ];
+    check_split( ref c, "", ",", empty );
+}
+
+private void split_on_a_longer_separator( ref kl::test_context c )
+{
+    str[3] words = [ "a", "b", "c" ];
+    check_split( ref c, "a::b::c", "::", words );
+    str[2] overlap = [ "", "a" ];
+    check_split( ref c, "aaa", "aa", overlap );
+    str[1] longer = [ "ab" ];
+    check_split( ref c, "ab", "abc", longer );
+}

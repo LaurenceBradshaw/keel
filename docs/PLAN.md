@@ -1433,6 +1433,10 @@ major), which waits for the lambda decision (§12).
   `/// [Adding elements]` tag on each member's doc. A doc's `#` heading already means a section
   of that doc, so neither may be a heading. Members outside any group stay under today's
   Constructors and Methods.
+- **The extension's hover does not qualify a package's types when seen from outside it.** Hovering
+  `kl::current_directory()` in `keel_build` shows `result<path, os_error>` where it should show
+  `result<kl::path, kl::os_error>`. A type should print with its package unless the hover is inside
+  that package.
 
 ### Language rules not yet stated
 
@@ -1446,7 +1450,23 @@ major), which waits for the lambda decision (§12).
   each calling the `kl_rt` extern that overload selection picks for its `T`? That removes the
   per-width overloads. It depends on selection inside an instance seeing `T`'s concrete type.
 
+- **`"text " + x` is refused, because `str` has no `operator+`.** A message has to start as
+  `kl::string( "cannot run " ) + keelc`, which reads badly and is written constantly
+  (`keel_build`'s errors). D57's adoption does not help, because a literal adopts only where a type
+  is expected, and a receiver has none. One rule that would fix it: a string literal that is the
+  left operand of `+` adopts the expected type of the whole expression when that type has an
+  `operator+`, and otherwise the right operand's type when that type does. `kl::string`'s
+  `operator+` already takes any `textual`, so `result::err( "cannot run " + keelc )` with `keelc` a
+  `kl::path` would build a `kl::string`.
+
 ### Library
+
+- **Building a command's text by hand is clumsy.** `Keelc::ask` appends the program and each
+  argument with `+=` to print the command under `--verbose`, and stage 6 does the same for every
+  keelc command. Either `kl::join( const ref T[] parts, str separator ) where T : textual`, or a
+  `kl::os` function answering the text a `run` or `capture` of the same program and arguments
+  would execute, quoted so that it can be pasted. The second keeps the printed command and the
+  executed one from drifting apart.
 
 - **`s += s` on a `kl::string` is refused**, since it borrows `s` both as `ref` and `const ref`.
   Allowing it needs a borrow rule for a receiver read before it is written.

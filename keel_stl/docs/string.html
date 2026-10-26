@@ -139,6 +139,15 @@
 <p>The index of the first place <code>needle</code> occurs, or <code>none</code>. <code>&quot;&quot;</code> is found at 0.</p>
 </div>
 </div>
+<div class="group" id="string.split">
+<pre class="signature"><a class="anchor" href="#string.split" aria-label="Link to split">#</a><code><span class="kw">public</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="#string">string</a>&gt; <span class="fn">split</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> separator ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The pieces between each occurrence of <code>separator</code>, in order, empty ones kept: <code>&quot;a\nb\n&quot;</code>
+split on <code>&quot;\n&quot;</code> gives <code>a</code>, <code>b</code> and an empty piece.</p>
+<h4>Panics</h4>
+<p>If <code>separator</code> is empty.</p>
+</div>
+</div>
 <h3>Changing</h3>
 <div class="group" id="string.push">
 <pre class="signature"><a class="anchor" href="#string.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <a class="prim" href="prelude.html#u8">u8</a> value )</code></pre>

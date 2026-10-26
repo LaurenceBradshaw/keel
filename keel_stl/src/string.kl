@@ -185,6 +185,37 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return optional::none;
     }
 
+    /// The pieces between each occurrence of `separator`, in order, empty ones kept: `"a\nb\n"`
+    /// split on `"\n"` gives `a`, `b` and an empty piece.
+    ///
+    /// ### Panics
+    ///
+    /// If `separator` is empty.
+    public list<string> split( const ref textual separator ) const
+    {
+        const ref u8[] text = separator.as_text();
+        
+        if( text.size == 0 )
+        {
+            panic( "split on an empty separator" );
+        }
+
+        u64 start = 0;
+        list<string> pieces = list<string>();
+        for( u64 i = 0; i + text.size <= size(); i++ )
+        {
+            if( matches_at( i, text ) )
+            {
+                pieces.push( substring( start, i - start ) );
+                start = i + text.size;
+                i += text.size - 1;
+            }
+        }
+        
+        pieces.push( substring( start, size() - start ) );
+        return pieces;
+    }
+
     /// --- Changing ---
 
     /// Adds the byte `value` at the end.

@@ -1,0 +1,9 @@
+// Splitting on an empty separator panics.
+import kl::string;
+
+i32 main()
+{
+    kl::string s = "abc";
+    _ = s.split( "" );
+    return 0;
+}
