@@ -1,7 +1,0 @@
-error: expected `i32*`, but got `const i32*`
- --> codegen/ref_element.kl:7:65
-  |
-7 |     public i32* operator[]( u64 index ) const { unsafe { return &data[index]; } }
-  |                                                                 ^^^^^^^^^^^^ a pointer to `const` never converts back to one that writes
-
-1 error generated

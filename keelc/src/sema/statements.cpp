@@ -258,14 +258,6 @@ void Statements::visit_return( Node_id id )
                 "return a copy"
             );
         }
-        else if( places_.operator_projection( part ).is_valid() )
-        {
-            reporter_.error_at(
-                ast_.span( part ),
-                "`[]` reaches an element for one expression, so it cannot be returned by reference",
-                fmt::format( "return a copy, or its address with `&{}`", reporter_.text( ast_.span( part ) ) )
-            );
-        }
         else
         {
             reporter_.error_at(
@@ -2520,7 +2512,7 @@ TEST_CASE( "type_checker_refuses_a_kept_address_of_a_temporary", "[sema][escape]
     constexpr std::string_view types =
         "class A { public i32 n; A( i32 x ) { n = x; } ~A() { } const ref i32 get() const { return n; } };\n"
         "struct P { i32 x; };\n"
-        "struct V { i32 x; const i32* operator[]( u64 i ) const { return nullptr; } };\n"
+        "struct V { i32 x; const ref i32 operator[]( u64 i ) const { return x; } };\n"
         "const ref i32 id( const ref i32 a ) { return a; }\n"
         "A make() { return A( 1 ); }\n"
         "V view() { return V { 1 }; }\n";

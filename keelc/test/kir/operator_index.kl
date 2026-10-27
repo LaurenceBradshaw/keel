@@ -4,11 +4,11 @@ struct span
 {
     i32[*] items;
 
-    i32* operator[]( u64 index ) const
+    ref i32 operator[]( u64 index ) const
     {
         unsafe
         {
-            return &items[index];
+            return items[index];
         }
     }
 };

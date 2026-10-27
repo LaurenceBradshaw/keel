@@ -225,7 +225,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
                 "`{}`'s `operator[]` only reads, so this cannot be modified",
                 table_.name( types_.type_of( ast_.object( pointer ) ) )
             ),
-            returns_a_binding( callees_.callee_of( pointer ) ) ? "it returns `const ref`" : "it returns a pointer to `const`"
+            "it returns `const ref`"
         );
 
         return false;
@@ -391,8 +391,7 @@ Node_id Places::through_const_pointer( Node_id place ) const
 
             if( method.is_valid() )
             {
-                if( table_.points_to_const( types_.type_of( method ) ) ||
-                    ( returns_a_binding( method ) && ast_.is_const_binding( method ) ) )
+                if( ast_.is_const_binding( method ) )
                 {
                     return place;
                 }
@@ -600,17 +599,6 @@ bool Places::is_run_typed( Node_id id ) const
     return type.is_valid() && table_.is_run( type );
 }
 
-// The `v[i]` a place is reached through, which lasts only as long as its expression.
-Node_id Places::operator_projection( Node_id place ) const
-{
-    while( ast_.kind( place ) == Node_kind::Field_expr && !table_.is_pointer( types_.type_of( ast_.object( place ) ) ) )
-    {
-        place = ast_.object( place );
-    }
-
-    return is_operator_index( place ) ? place : Node_id {};
-}
-
 Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
 {
     Node_id root = place_root( place, current_function );
@@ -686,10 +674,8 @@ Node_id Places::borrowed_temporary( Node_id place ) const
 
 Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
 {
-    // A run's `size` and `data` are the callee's own copy of its description. A `[]` returning a
-    // pointer lasts only as long as its expression; one returning a reference is rooted in its object.
-    const Node_id projection = operator_projection( value );
-    if( ( projection.is_valid() && !returns_a_binding( callees_.callee_of( projection ) ) ) || describes_run( value ) )
+    // A run's `size` and `data` are the callee's own copy of its description.
+    if( describes_run( value ) )
     {
         return value;
     }
@@ -1924,8 +1910,8 @@ TEST_CASE( "type_checker_refuses_a_ref_binding_through_a_call_to_a_temporary", "
 TEST_CASE( "type_checker_binds_a_ref_local_to_an_element", "[sema][binding][m9]" )
 {
     constexpr std::string_view v =
-        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } };\n"
-        "class R { public i32 x; R() { x = 0; } public const i32* operator[]( u64 i ) const { return &x; } };\n"
+        "class V { public i32 x; V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } };\n"
+        "class R { public i32 x; R() { x = 0; } public const ref i32 operator[]( u64 i ) const { return x; } };\n"
         "V make() { return V(); }\n";
 
     SECTION( "accepted" )

@@ -1,4 +1,4 @@
-// `v[i]` on an aggregate is the element its `operator[]` points at: read, written, compounded,
+// `v[i]` on an aggregate is the element its `operator[]` refers to: read, written, compounded,
 // reached into and called on, passed by `ref`, kept by address, read through a `const` receiver,
 // indexed in a generic, and indexed on a temporary. Each check returns its own code.
 struct point
@@ -32,13 +32,13 @@ class buffer<T> where T : copyable
         }
     }
 
-    public T* operator[]( u64 index ) const
+    public ref T operator[]( u64 index ) const
     {
         assert( index < size );
 
         unsafe
         {
-            return &data[index];
+            return data[index];
         }
     }
 
@@ -59,10 +59,10 @@ class view
         first = source;
     }
 
-    public const i32* operator[]( u64 index ) const
+    public const ref i32 operator[]( u64 index ) const
     {
         assert( index == 0 );
-        return first;
+        return *first;
     }
 
     private const i32* first;

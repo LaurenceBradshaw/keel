@@ -4,7 +4,7 @@ class buffer
 {
     buffer() { unsafe { data = alloc<i32>( 4 ); } }
     ~buffer() { unsafe { free( data ); } }
-    public i32* operator[]( u64 index ) const { unsafe { return &data[index]; } }
+    public ref i32 operator[]( u64 index ) const { unsafe { return data[index]; } }
     private i32[*] data;
 };
 

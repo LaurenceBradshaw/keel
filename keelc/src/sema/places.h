@@ -60,7 +60,6 @@ public:
     Node_id place_root( Node_id id, Node_id current_function ) const;
     Node_id place_source( Node_id id ) const;
     bool    is_operator_index( Node_id id ) const;
-    Node_id operator_projection( Node_id place ) const;
     bool    is_run_index( Node_id id ) const;     // `r[i]` or `r[a..b]` on a run
     bool    is_array_index( Node_id id ) const;   // `a[i]` on a `T[N]`: part of `a`
     bool    describes_run( Node_id place ) const; // `r.size` or `r.data`: the run itself, not its elements

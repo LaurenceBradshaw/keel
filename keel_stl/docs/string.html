@@ -105,9 +105,9 @@
 </div>
 </div>
 <div class="group" id="string.operator[]">
-<pre class="signature"><a class="anchor" href="#string.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <a class="prim" href="prelude.html#u8">u8</a>* <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="prelude.html#u8">u8</a> <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the byte at <code>index</code>.</p>
+<p>The byte at <code>index</code>.</p>
 <h4>Panics</h4>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>

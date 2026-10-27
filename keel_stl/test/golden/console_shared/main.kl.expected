@@ -636,15 +636,12 @@ uint8_t* kl_2kl6string_operator_index__SQ2kl6string_3u64( struct kl_2kl6string_s
     uint8_t* kl_t0;
     struct kl_2kl4list_list__I2u8E* kl_t3;
     uint8_t* kl_t4;
-    uint8_t* kl_t5;
 #line 122 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 ).kl_bytes_;
 #line 122 "../../src/string.kl"
     kl_t4 = kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( kl_t3, kl_index_2 );
 #line 122 "../../src/string.kl"
-    kl_t5 = &( *kl_t4 );
-#line 122 "../../src/string.kl"
-    kl_t0 = kl_t5;
+    kl_t0 = &( *kl_t4 );
 #line 122 "../../src/string.kl"
     return kl_t0;
 }

@@ -52,11 +52,11 @@ class shelf
 
     ~shelf() { unsafe { free( cells ); } }
 
-    public only_binary* operator[]( u64 i ) const
+    public ref only_binary operator[]( u64 i ) const
     {
         unsafe
         {
-            return &cells[i];
+            return cells[i];
         }
     }
 

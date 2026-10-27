@@ -112,14 +112,14 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return bytes_.as_run();
     }
 
-    /// A pointer to the byte at `index`.
+    /// The byte at `index`.
     ///
     /// ### Panics
     ///
     /// If `index` is not less than `size()`.
-    public const u8* operator[]( u64 index ) const
+    public const ref u8 operator[]( u64 index ) const
     {
-        return &bytes_[index];
+        return bytes_[index];
     }
 
     /// A new string holding the `count` bytes from index `start` on.

@@ -1,14 +1,20 @@
-error: `operator[]` must return a pointer to the element
+error: `operator[]` returns `ref` or `const ref`
  --> sema/errors_operator_index.kl:7:5
   |
 7 |     i32 operator[]( u64 index ) const
-  |     ^^^ return `i32*`, and `v[i]` is the element it points at
+  |     ^^^ `v[i]` is the element it refers to
 
-error: `operator[]` must return a pointer to the element
+error: `operator[]` returns `ref` or `const ref`
   --> sema/errors_operator_index.kl:27:5
    |
 27 |     void* operator[]( u64 index ) const
-   |     ^^^^^ a `void*` points at no element
+   |     ^^^^^ `v[i]` is the element it refers to
+
+error: `operator[]` returns `ref` or `const ref`
+  --> sema/errors_operator_index.kl:37:5
+   |
+37 |     i32* operator[]( u64 index )
+   |     ^^^^ write `ref i32`, so a borrow of the element is checked
 
 error: `operator[]` must be `const`
   --> sema/errors_operator_index.kl:37:10
@@ -16,17 +22,35 @@ error: `operator[]` must be `const`
 37 |     i32* operator[]( u64 index )
    |          ^^^^^^^^^^ write `const` after its parameter list; a `const` object is indexed too
 
+error: `operator[]` returns `ref` or `const ref`
+  --> sema/errors_operator_index.kl:47:5
+   |
+47 |     i32* operator[]( ref u64 index ) const
+   |     ^^^^ write `ref i32`, so a borrow of the element is checked
+
 error: `operator[]` takes its index by value or `const ref`
   --> sema/errors_operator_index.kl:47:22
    |
 47 |     i32* operator[]( ref u64 index ) const
    |                      ^^^^^^^^^^^^^ `v[i]` has nowhere to write a `ref`, `out` or `move`
 
+error: `operator[]` returns `ref` or `const ref`
+  --> sema/errors_operator_index.kl:57:5
+   |
+57 |     i32* operator[]( u64 row, u64 column ) const
+   |     ^^^^ write `ref i32`, so a borrow of the element is checked
+
 error: `operator[]` takes one parameter, the index
   --> sema/errors_operator_index.kl:57:20
    |
 57 |     i32* operator[]( u64 row, u64 column ) const
    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: `operator[]` returns `ref` or `const ref`
+  --> sema/errors_operator_index.kl:67:5
+   |
+67 |     i32* operator[]( u64 index ) const
+   |     ^^^^ write `ref i32`, so a borrow of the element is checked
 
 error: `declared_twice` already has an `operator[]`
   --> sema/errors_operator_index.kl:72:16
@@ -40,4 +64,4 @@ error: an operator cannot be `static`
 82 |     static i32* operator[]( u64 index )
    |                 ^^^^^^^^^^ it is called on its left operand
 
-7 errors generated
+11 errors generated

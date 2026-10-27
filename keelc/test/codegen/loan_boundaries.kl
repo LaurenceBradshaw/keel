@@ -38,9 +38,9 @@ class buffer
         unsafe { free( data ); }
     }
 
-    public i32* operator[]( u64 index ) const
+    public ref i32 operator[]( u64 index ) const
     {
-        unsafe { return &data[index]; }
+        unsafe { return data[index]; }
     }
 
     public void grow()

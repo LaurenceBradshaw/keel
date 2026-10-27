@@ -1798,7 +1798,7 @@ Type_id Expressions::refuse_reversed_operator( Node_id id, Type_id left, Type_id
     return types_.poison( id );
 }
 
-// `v[i]` on an aggregate: the element its `operator[]` points at.
+// `v[i]` on an aggregate: the element its `operator[]` refers to.
 Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 {
     const Node_id index  = ast_.index( id );
@@ -1817,10 +1817,8 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 
     check( index, table_.substitute( types_.type_of( params[1] ), bindings ) );
 
-    const bool binding = places_.returns_a_binding( method );
-
     // A malformed return was reported where it was written.
-    if( !binding && !table_.is_pointer( returned ) )
+    if( !places_.returns_a_binding( method ) )
     {
         return types_.poison( id );
     }
@@ -1828,7 +1826,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     callees_.record( id, method );
     overloads_.record_method_instantiation( current_function_, id, method, object_type );
 
-    return types_.record( id, binding ? returned : table_.get( returned ).element );
+    return types_.record( id, returned );
 }
 
 // The operator method a use calls with `operands` right-hand operands, or nothing once reported. The

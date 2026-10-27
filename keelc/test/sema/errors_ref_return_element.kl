@@ -1,0 +1,27 @@
+// A `ref` result reached through `operator[]` is rooted in its object, so a local's element dies
+// with the function and a parameter's lives on.
+struct cell
+{
+    i32 x;
+
+    const ref i32 operator[]( u64 index ) const
+    {
+        return x;
+    }
+};
+
+const ref i32 from_local()
+{
+    cell c = cell { 1 };
+    return c[0];
+}
+
+const ref i32 from_parameter( const ref cell c )
+{
+    return c[0];
+}
+
+i32 main()
+{
+    return 0;
+}

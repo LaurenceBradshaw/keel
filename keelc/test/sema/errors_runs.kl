@@ -5,9 +5,9 @@ struct Grid
 {
     i32 cell;
 
-    const i32* operator[]( u64 at ) const
+    const ref i32 operator[]( u64 at ) const
     {
-        return &cell;
+        return cell;
     }
 };
 

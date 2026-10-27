@@ -336,7 +336,7 @@ TEST_CASE( "report_names_the_moved_local", "[check][report]" )
 TEST_CASE( "report_names_both_aliased_arguments", "[check][report][m9]" )
 {
     const Compiled element(
-        "class V { i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } };\n"
+        "class V { i32 x; V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } };\n"
         "void pair( ref V v, ref i32 e ) { }\n"
         "i32 main() { V v = V(); pair( ref v, ref v[0] ); return 0; }\n",
         Stage::Reported
@@ -373,7 +373,7 @@ TEST_CASE( "report_names_a_broken_loan", "[check][report][m9]" )
     REQUIRE( moved.rendered().find( "`r` is used after this; it was bound at 3:25" ) != std::string::npos );
 
     constexpr std::string_view k_vector =
-        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
+        "class V { public i32 x; V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } "
         "public void push( i32 e ) { } };\n";
 
     const Compiled changed(

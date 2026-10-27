@@ -1293,27 +1293,23 @@ void Signatures::check_index_operator( Node_id decl )
     const Node_id annotation  = ast_.return_type( decl );
     const Type_id return_type = types_.type_of( decl );
 
-    if( ast_.kind( ast_.unwrap_const( annotation ) ) == Node_kind::Mode_type )
+    const bool by_reference =
+        ast_.kind( ast_.unwrap_const( annotation ) ) == Node_kind::Mode_type && ast_.parameter_mode( decl ) == Keyword::Ref;
+
+    if( !by_reference && !table_.is_error( return_type ) )
     {
-        if( ast_.parameter_mode( decl ) != Keyword::Ref )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ), "`operator[]` returns `ref` or `const ref`", "`v[i]` is the element it refers to"
-            );
-        }
-    }
-    else if( !table_.is_error( return_type ) && !table_.is_pointer( return_type ) )
-    {
+        // A pointer's element is outside the borrow check, so `ref x = v[i]` could outlive it.
+        const bool to_element =
+            table_.is_pointer( return_type ) && table_.get( return_type ).element != table_.builtin( Type_kind::Void );
+
         reporter_.error_at(
             ast_.span( annotation ),
-            "`operator[]` must return a pointer to the element",
-            fmt::format( "return `{}*`, and `v[i]` is the element it points at", table_.name( return_type ) )
-        );
-    }
-    else if( !table_.is_error( return_type ) && table_.get( return_type ).element == table_.builtin( Type_kind::Void ) )
-    {
-        reporter_.error_at(
-            ast_.span( annotation ), "`operator[]` must return a pointer to the element", "a `void*` points at no element"
+            "`operator[]` returns `ref` or `const ref`",
+            to_element
+                ? fmt::format(
+                      "write `ref {}`, so a borrow of the element is checked", table_.name( table_.get( return_type ).element )
+                  )
+                : std::string( "`v[i]` is the element it refers to" )
         );
     }
 
