@@ -1376,9 +1376,6 @@ major), which waits for the lambda decision (§12).
   `alloc<T>()` answering a one-slot `T[*]`, or an initialising write for a `T*` (Rust's
   `ptr::write`) added to D35's list. The second keeps `T*` meaning one value and says
   "initialise" at the site. Settle it when a second case appears.
-- **`kl::list<void>` fails to build under `-Wall -Werror`.** A store of a `void` value through a
-  pointer, `*p = move v`, emits nothing, but the emitter's `read_locals` still counts it as a read
-  of `p`, so the temp holding the slot's address is set and never used, and gcc refuses it.
 - **A payload enum is a struct of every variant's fields, not a union**, so it is as large as all
   its payloads together. Invisible while nothing guarantees an enum's layout; the fix is confined to
   the emitter.

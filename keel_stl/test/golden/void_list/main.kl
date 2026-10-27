@@ -1,0 +1,21 @@
+// D51: `kl::list<void>` stores nothing, but counts. Five pushes reallocate three times, and a pop
+// stores through a pointer to a `void` element, which C never sees.
+import kl::list;
+
+void nothing()
+{
+}
+
+i32 main()
+{
+    kl::list<void> xs = kl::list<void>();
+    for( u64 i = 0; i < 5; i++ )
+    {
+        xs.push( nothing() );
+    }
+    xs.pop();
+    xs.insert( 1, nothing() );
+    xs.remove( 0 );
+    assert( xs.size() == 4 && xs.capacity() == 8 );
+    return 0;
+}

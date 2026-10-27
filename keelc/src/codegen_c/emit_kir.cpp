@@ -273,6 +273,8 @@ private:
     void emit_terminator( const Terminator& terminator, const Function& function );
     void emit_function( const Function& function );
 
+    std::vector<bool> read_locals( const Function& function ) const;
+
     std::string local_name( u32 index ) const;
 
     bool                                     defines( Node_id declaration ) const;
@@ -297,6 +299,7 @@ private:
     bool is_void( const Operand& operand ) const; // D51: a `void` value is spelled nowhere
     bool holds_nothing( Type_id type ) const;     // a struct whose every field is `void`, as `Box<void>`
     bool assigns_to_void( const Place& place ) const;
+    bool writes_nothing( const Statement& statement ) const;
     // A place's type, walked the same way place() walks its text. Drop needs it to name the
     // destructor to call.
     Type_id     type_of( const Place& place ) const;
@@ -1185,6 +1188,11 @@ bool Kir_emitter::assigns_to_void( const Place& target ) const
     return is_void( type_of( target ) );
 }
 
+bool Kir_emitter::writes_nothing( const Statement& statement ) const
+{
+    return statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Use && is_void( statement.value.a );
+}
+
 void Kir_emitter::emit_statement( const Statement& statement )
 {
     switch( statement.kind )
@@ -1192,7 +1200,7 @@ void Kir_emitter::emit_statement( const Statement& statement )
     case Statement_kind::Assign:
     {
         // Copying nothing: neither side has storage.
-        if( statement.value.kind == Rvalue_kind::Use && is_void( statement.value.a ) )
+        if( writes_nothing( statement ) )
         {
             return;
         }
@@ -1397,7 +1405,7 @@ std::vector<bool> mentioned_locals( const Function& function )
 }
 
 // Every local something reads; a store into one, or into its field, is not a read.
-std::vector<bool> read_locals( const Function& function )
+std::vector<bool> Kir_emitter::read_locals( const Function& function ) const
 {
     std::vector<bool> read( function.locals.size(), false );
 
@@ -1411,6 +1419,11 @@ std::vector<bool> read_locals( const Function& function )
 
     for( const Statement& statement : function.statements )
     {
+        if( writes_nothing( statement ) )
+        {
+            continue;
+        }
+
         for_each_operand( function, statement.value, [&]( const Operand& operand ) { mark( operand.place ); } );
 
         if( has_deref_projection( function, statement.place ) )
