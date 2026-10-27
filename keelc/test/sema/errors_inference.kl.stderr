@@ -52,12 +52,6 @@ error: nothing here says what `T` is in `unbox`
 118 |     unbox( Box { 1 } );
     |     ^^^^^ write the type arguments, as in `unbox<i32>( ... )`
 
-error: nothing here says which `Box` this is
-   --> sema/errors_inference.kl:118:12
-    |
-118 |     unbox( Box { 1 } );
-    |            ^^^ write the type where the value lands, as in `Box<i32> x = ...`
-
 error: `T` cannot be both `i32` and `bool`
    --> sema/errors_inference.kl:136:17
     |
@@ -76,4 +70,4 @@ error: expected `bool`, but got `i32`
 164 |     return id( a );
     |            ^^^^^^^
 
-13 errors generated
+12 errors generated

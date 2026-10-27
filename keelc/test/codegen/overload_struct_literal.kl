@@ -1,0 +1,35 @@
+// A struct literal argument picks its overload by the type it names; a generic one narrows the set
+// to its declaration's instances, and the chosen parameter gives it its instance.
+import t::console;
+
+struct cube
+{
+    i32 side;
+};
+
+struct box<T> where T : copyable
+{
+    T value;
+};
+
+i32 volume( i32 n )
+{
+    return n;
+}
+
+i32 volume( cube c )
+{
+    return c.side * c.side * c.side;
+}
+
+i32 volume( box<i32> b )
+{
+    return b.value;
+}
+
+i32 main()
+{
+    t::println( volume( cube { 3 } ) );
+    t::println( volume( box { 5 } ) );
+    return 0;
+}

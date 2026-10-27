@@ -25,7 +25,8 @@ enum class Argument_kind : u8
     Typed,
     Integer,
     Floating,
-    Text, // a string literal: `str`, or a type it adopts
+    Text,     // a string literal: `str`, or a type it adopts
+    Instance, // a generic struct literal: some instance of `declaration`
     Anything
 };
 
@@ -39,15 +40,17 @@ enum class Tier : u8
 
 // A kind other than `Typed` carries no type, deliberately: deduction reads nothing from a literal
 // (D26). Selection ranks one from its default type, and checks an integer's value where it folds.
+// An `Instance` carries its declaration instead, and ranks nothing.
 struct Argument_shape
 {
-    Argument_kind kind      = Argument_kind::Anything;
-    Type_id       type      = {};
-    bool          valued    = false; // whether an integer literal folded to the value below
-    u64           magnitude = 0;
-    bool          negative  = false;
-    Keyword       marker    = Keyword::Count;
-    bool          recorded  = false; // whether infer() has already run over it
+    Argument_kind kind        = Argument_kind::Anything;
+    Type_id       type        = {};
+    Node_id       declaration = {};
+    bool          valued      = false; // whether an integer literal folded to the value below
+    u64           magnitude   = 0;
+    bool          negative    = false;
+    Keyword       marker      = Keyword::Count;
+    bool          recorded    = false; // whether infer() has already run over it
 };
 
 // One argument the caller still has to walk. Returned rather than walked here, which is the whole

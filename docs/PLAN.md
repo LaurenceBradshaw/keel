@@ -764,7 +764,10 @@ holds it, signed before unsigned. So `f( 1 )` against `f( i32 )` and `f( i64 )` 
 `print( 42 )` takes `print( i64 )`, and a literal never moves a candidate out of the exact tier.
 Arithmetic on literals of one family, `2000000000 + 2000000000` or `1 << 40`, narrows and ranks the
 same way and is then typed at the chosen parameter, as one candidate's argument is; a mix, or a
-`true` among them, is typed on its own. Among exact matches still tied after ranking, a non-generic
+`true` among them, is typed on its own. A struct literal ranks as the type it names, as a
+variable of it would; a generic one, `box { 3 }`, keeps only the candidates taking some instance of
+`box`, ranks nothing, and is typed at the chosen parameter. Among exact matches still tied after
+ranking, a non-generic
 candidate beats a generic one, and two generics are ambiguous. **With no exact match**, a candidate is viable when each numeric argument to a by-value
 parameter widens by §6.4's assignment table and every other argument matches exactly; a borrow never
 widens (D31). The closest target for one argument is the one that keeps its kind (integer or float),
@@ -1386,10 +1389,6 @@ major), which waits for the lambda decision (§12).
   lives on the heap behind its one mutable reference, so `move` copies and drops a pointer rather
   than the object. The price is that no other mutable reference to an owning value may be made;
   non-owning values keep theirs. Weigh it against the allocation per value and the lost locality.
-- **A struct literal argument does not pick its overload.** With `volume( i32 )` and
-  `volume( cube )`, where `cube` has one `i32` field, `volume( cube { 3 } )` is reported as
-  ambiguous between the two, though the literal names its type. Binding it to a local first works,
-  as `codegen/nested_packages` does. Walkthrough wanted.
 
 ### Diagnostics
 

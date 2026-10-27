@@ -247,8 +247,9 @@ Type_id Expressions::infer_name( Node_id id )
 
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
 // context is the thing being chosen, a literal or arithmetic on literals of one family narrows the
-// set to that family, and an integer one to the types that hold its value. A struct literal takes its instance from the
-// expectation in the same way, so it says nothing at all.
+// set to that family, and an integer one to the types that hold its value. A struct literal names
+// its type, unless it is generic: then it names only its declaration, and takes its instance from
+// the parameter chosen.
 Argument_shape Expressions::argument_shape( Node_id argument )
 {
     Argument_shape shape;
@@ -298,10 +299,35 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     }
 
     // `nullptr`, which every pointer accepts
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Struct_literal ||
-        ast_.kind( value ) == Node_kind::Array_literal )
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_literal )
     {
         return shape;
+    }
+
+    // Unrecorded, like `true`: its fields are checked once, against the parameter chosen. A name
+    // that did not resolve is already reported, so it rules out nothing.
+    if( ast_.kind( value ) == Node_kind::Struct_literal )
+    {
+        const Node_id decl = resolution_.declaration_of( value );
+        if( decl.is_valid() && is_aggregate( ast_.kind( decl ) ) )
+        {
+            if( !ast_.is_generic( decl ) )
+            {
+                shape.kind = Argument_kind::Typed;
+                shape.type = types_.type_of( decl );
+                return shape;
+            }
+            else
+            {
+                shape.kind        = Argument_kind::Instance;
+                shape.declaration = decl;
+                return shape;
+            }
+        }
+        else
+        {
+            return shape;
+        }
     }
 
     shape.type     = infer( argument );
@@ -1188,6 +1214,13 @@ Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> sh
         if( i < shapes.size() &&
             ( shapes[i].recorded || shapes[i].kind == Argument_kind::Integer || shapes[i].kind == Argument_kind::Floating ) )
         {
+            continue;
+        }
+
+        // A generic struct literal has no instance without the parameter; its fields are still typed.
+        if( i < shapes.size() && shapes[i].kind == Argument_kind::Instance )
+        {
+            check( arguments[i], table_.builtin( Type_kind::Error ) );
             continue;
         }
 

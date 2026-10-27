@@ -281,6 +281,13 @@ bool Overloads::candidate_accepts(
             }
             break;
 
+        case Argument_kind::Instance:
+            if( table_.get( expected ).declaration != shapes[i].declaration )
+            {
+                return false;
+            }
+            break;
+
         case Argument_kind::Integer:
             if( !table_.is_integer( expected ) ||
                 ( shapes[i].valued && !table_.fits( shapes[i].magnitude, shapes[i].negative, expected ) ) )
@@ -379,6 +386,7 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
             from = table_.default_float();
             break;
         case Argument_kind::Anything:
+        case Argument_kind::Instance:
             break;
         }
 
@@ -2530,6 +2538,83 @@ TEST_CASE( "overloads_rank_a_literal_by_distance", "[sema][overload][literal]" )
         REQUIRE( p.rendered().find( "does not fit in `i64`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "no `f` matches" ) == std::string::npos );
         REQUIRE( p.rendered().find( "ambiguous" ) == std::string::npos );
+    }
+}
+
+// A struct literal names its type, so it ranks as a variable of it; a generic one names only its
+// declaration, and narrows the set to that declaration's instances.
+TEST_CASE( "overloads_read_a_struct_literal_by_its_type", "[sema][overload][literal]" )
+{
+    SECTION( "against a number" )
+    {
+        const Typed p( "struct cube { i32 side; };\ni32 volume( i32 n ) { return n; }\n"
+                       "i32 volume( cube c ) { return c.side; }\ni32 main() { return volume( cube { 3 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:3" );
+    }
+
+    SECTION( "against another struct" )
+    {
+        const Typed p( "struct cube { i32 side; };\nstruct ball { i32 radius; };\ni32 volume( ball b ) { return 1; }\n"
+                       "i32 volume( cube c ) { return 2; }\ni32 main() { return volume( cube { 3 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:4" );
+    }
+
+    SECTION( "deducing a type argument" )
+    {
+        const Typed p( "struct cube { i32 side; };\ni32 side<T>( T x ) { return 3; }\n"
+                       "i32 main() { return side( cube { 3 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a wrong literal is refused once" )
+    {
+        const Typed p( "struct cube { i32 side; };\ni32 volume( i32 n ) { return n; }\n"
+                       "i32 volume( cube c ) { return c.side; }\ni32 main() { return volume( cube { 1, 2 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`cube` has 1 field, but 2 were given" ) != std::string::npos );
+    }
+
+    SECTION( "a generic one, by its declaration" )
+    {
+        const Typed p( "struct box<T> where T : copyable { T value; };\ni32 volume( i32 n ) { return n; }\n"
+                       "i32 volume( box<i32> b ) { return b.value; }\ni32 main() { return volume( box { 3 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:3" );
+    }
+
+    // The literal's declaration settles nothing about the arguments after it.
+    SECTION( "a generic one before another argument" )
+    {
+        const Typed p( "struct box<T> where T : copyable { T value; };\nstruct cube { i32 side; };\n"
+                       "i32 f( box<i32> b, i32 n ) { return 1; }\ni32 f( box<i32> b, cube c ) { return 2; }\n"
+                       "i32 main() { return f( box { 3 }, 4 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:3" );
+    }
+
+    // One mistake, one error: the literal is not refused again for having no instance.
+    SECTION( "two instances of it are ambiguous, once" )
+    {
+        const Typed p( "struct box<T> where T : copyable { T value; };\ni32 volume( box<i32> b ) { return 1; }\n"
+                       "i32 volume( box<i64> b ) { return 2; }\ni32 main() { return volume( box { 3 } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "ambiguous" ) != std::string::npos );
     }
 }
 
