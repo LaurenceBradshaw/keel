@@ -1,0 +1,17 @@
+compiling geo::area
+compiling geo::solid::volume
+compiling kl::optional
+compiling kl::list
+compiling kl::string
+compiling kl::os
+compiling kl::console
+linking
+exit 0
+linking
+exit 0
+compiling geo::area
+compiling geo::solid::volume
+linking
+exit 0
+54
+exit 0

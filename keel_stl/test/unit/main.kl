@@ -1,5 +1,5 @@
-// The kl package's unit tests: every test in this program's modules, run by `kl::run_tests`.
-import kl::test;
+// The kl package's unit tests: every test in this program's modules, run by `kl::test::run`.
+import kl::test::run;
 import command_line_tests;
 import hash_control_tests;
 import map_tests;
@@ -15,5 +15,5 @@ import time_tests;
 
 i32 main( const ref str[] args )
 {
-    return kl::run_tests( @functions_of( kl::test_case ), args );
+    return kl::test::run( @functions_of( kl::test::entry ), args );
 }

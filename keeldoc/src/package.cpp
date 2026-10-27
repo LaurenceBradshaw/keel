@@ -148,6 +148,12 @@ Package build_package(
             continue;
         }
 
+        if( kind == "package" && record.get( "name" ).starts_with( name + "::" ) )
+        {
+            package.nested_docs.emplace( record.get( "name" ).substr( name.size() + 2 ), record.get( "doc" ) );
+            continue;
+        }
+
         if( kind != "declaration" )
         {
             continue;
@@ -237,6 +243,9 @@ Package build_package(
         package.modules.push_back( std::move( module ) );
     }
 
+    std::ranges::sort(
+        package.modules, {}, []( const Module& module ) { return std::pair( nested_package_of( module ), module.name ); }
+    );
     return package;
 }
 
@@ -312,6 +321,26 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private_and_bare_ext
     REQUIRE( prelude.front().group.declares() == "primitive" );
     REQUIRE( prelude.back().group.name == "str" );
     REQUIRE( prelude.back().sections.empty() );
+}
+
+TEST_CASE( "package_lists_its_own_modules_before_its_nested_packages", "[package]" )
+{
+    // clang-format off
+    const std::vector<Record> records = parse_all( {
+        R"json({"kind":"package","name":"geo::a","doc":"Nested."})json",
+        R"json({"kind":"declaration","declares":"function","name":"f","file":"geo/a/b.kl","access":"public","signature":"void f()"})json",
+        R"json({"kind":"declaration","declares":"function","name":"g","file":"geo/measure.kl","access":"public","signature":"void g()"})json",
+    } );
+    // clang-format on
+
+    std::vector<std::string> errors;
+    const Package            package = build_package( "geo", "geo", records, "", errors );
+
+    REQUIRE( package.modules.size() == 2 );
+    REQUIRE( package.modules[0].name == "measure" );
+    REQUIRE( package.modules[1].name == "a::b" );
+    REQUIRE( nested_package_of( package.modules[1] ) == "a" );
+    REQUIRE( package.nested_docs.at( "a" ) == "Nested." );
 }
 
 TEST_CASE( "package_lists_a_type_s_banners_after_its_kinds", "[package]" )

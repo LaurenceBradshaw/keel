@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "common/json.h"
+#include "parse/module_graph.h"
 #include "sema/signature_printer.h"
 
 namespace keel
@@ -160,10 +161,24 @@ std::vector<Name> Name_collector::run()
     return names;
 }
 
+// `kl`, or each link of a chain such as `kl::test` that names a package.
 bool Name_collector::is_package( Node_id id ) const
 {
-    return ast_.kind( id ) == Node_kind::Name_expr && !resolution_.declaration_of( id ).is_valid() &&
-           !ast_.type_arg_list( id ).is_valid() && resolution_.is_package( ast_.name( id ) );
+    const Node_kind kind = ast_.kind( id );
+
+    if( ( kind != Node_kind::Name_expr && kind != Node_kind::Path_expr ) || resolution_.declaration_of( id ).is_valid() ||
+        ast_.type_arg_list( id ).is_valid() )
+    {
+        return false;
+    }
+
+    if( kind == Node_kind::Path_expr && !is_package( ast_.qualifier( id ) ) )
+    {
+        return false;
+    }
+
+    const Symbol_id package = interner_.find( package_text( ast_, interner_, id ) );
+    return package.is_valid() && resolution_.is_package( package );
 }
 
 // A declaration whose own name is written here; a type parameter and a pattern binding are named

@@ -11,7 +11,8 @@
 namespace keeldoc
 {
 
-// Each module of the package in `dir`: its .kl files but packageinfo.kl, as `name::module`, sorted.
+// Each module of the package in `dir` and of its nested packages: their .kl files but packageinfo.kl,
+// as `name::module` or `name::nested::module`, sorted.
 std::vector<std::string> package_modules( const std::string& name, const std::filesystem::path& dir );
 
 // keelc's records for a program importing every module of the package `name` in `dir`, and the

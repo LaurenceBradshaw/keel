@@ -4,23 +4,23 @@
 // `fnv1a`, `hex` and `manifest_of` against what keelc writes.
 import kl::optional;
 import kl::string;
-import kl::test;
+import kl::test::context;
 import objects;
 
-private void fnv1a_matches_keelc( ref kl::test_context c )
+private void fnv1a_matches_keelc( ref kl::test::context c )
 {
     c.check_eq( hex( fnv1a( kl::string::from( "" ).as_text() ) ), "cbf29ce484222325" );
     c.check_eq( hex( fnv1a( kl::string::from( "a" ).as_text() ) ), "af63dc4c8601ec8c" );
     c.check_eq( hex( fnv1a( kl::string::from( "foobar" ).as_text() ) ), "85944171f73967e8" );
 }
 
-private void hex_pads_to_16_digits( ref kl::test_context c )
+private void hex_pads_to_16_digits( ref kl::test::context c )
 {
     c.check_eq( hex( 0 ), "0000000000000000" );
     c.check_eq( hex( 0x1f ), "000000000000001f" );
 }
 
-private void manifest_of_finds_the_keel_member( ref kl::test_context c )
+private void manifest_of_finds_the_keel_member( ref kl::test::context c )
 {
     // A symbol index, `__.KEEL.STATE` (which must not match), then `__.KEEL` with an odd size.
     kl::string archive = kl::string::from( "!<arch>\n" );
@@ -39,7 +39,7 @@ private void manifest_of_finds_the_keel_member( ref kl::test_context c )
     }
 }
 
-private void manifest_of_refuses_other_files( ref kl::test_context c )
+private void manifest_of_refuses_other_files( ref kl::test::context c )
 {
     c.check( !has_manifest( "" ) );
     c.check( !has_manifest( "not an archive" ) );

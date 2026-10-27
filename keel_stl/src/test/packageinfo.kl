@@ -1,0 +1,7 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+//! Unit tests: named test functions, checks that report their caller's line, and a runner that
+//! gives each test a process of its own.
+//!
+//! A test module imports `kl::test::context`; the suite's `main` imports `kl::test::run`.

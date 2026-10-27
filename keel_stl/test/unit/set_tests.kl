@@ -3,9 +3,9 @@
 // order, and owning keys dropped exactly once, which valgrind checks.
 import kl::set;
 import kl::string;
-import kl::test;
+import kl::test::context;
 
-private void insert_says_whether_new( ref kl::test_context c )
+private void insert_says_whether_new( ref kl::test::context c )
 {
     kl::set<u64> seen = kl::set<u64>();
     c.check( seen.is_empty() );
@@ -27,7 +27,7 @@ private void insert_says_whether_new( ref kl::test_context c )
     }
 }
 
-private void removes_and_puts_back( ref kl::test_context c )
+private void removes_and_puts_back( ref kl::test::context c )
 {
     kl::set<u64> seen = kl::set<u64>();
     for( u64 i = 0; i < 500; i++ )
@@ -46,7 +46,7 @@ private void removes_and_puts_back( ref kl::test_context c )
     c.check( seen.insert( 6 ) );
 }
 
-private void keys_in_insertion_order( ref kl::test_context c )
+private void keys_in_insertion_order( ref kl::test::context c )
 {
     kl::set<u64> s = kl::set<u64>();
 
@@ -80,7 +80,7 @@ private void keys_in_insertion_order( ref kl::test_context c )
     }
 }
 
-private void owning_keys( ref kl::test_context c )
+private void owning_keys( ref kl::test::context c )
 {
     kl::set<kl::string> words = kl::set<kl::string>::with_capacity( 4 );
 

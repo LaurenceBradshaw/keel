@@ -1,7 +1,7 @@
-import kl::test;
+import kl::test::run;
 import calc_tests;
 
 i32 main( const ref str[] args )
 {
-    return kl::run_tests( @functions_of( kl::test_case ), args );
+    return kl::test::run( @functions_of( kl::test::entry ), args );
 }

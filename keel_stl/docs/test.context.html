@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::test::context</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::test::context</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">context</span></h2>
+<div class="group" id="context">
+<pre class="signature"><a class="anchor" href="#context" aria-label="Link to context">#</a><code><span class="kw">class</span> <span class="type">context</span></code></pre>
+<div class="doc">
+<p>What a test checks through. A failed check is counted and reported, and the test goes on; a
+failed <code>require</code> ends it.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="context.context">
+<pre class="signature"><a class="anchor" href="#context.context" aria-label="Link to context">#</a><code><span class="kw">public</span> <span class="type">context</span>()</code></pre>
+<div class="doc">
+<p>A context with no failures.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="context.failed">
+<pre class="signature"><a class="anchor" href="#context.failed" aria-label="Link to failed">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">failed</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether any check has failed.</p>
+</div>
+</div>
+<div class="group" id="context.check">
+<pre class="signature"><a class="anchor" href="#context.check" aria-label="Link to check">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check</span>( <a class="prim" href="prelude.html#bool">bool</a> condition )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>condition</code> is false, reporting the line that called it.</p>
+</div>
+</div>
+<div class="group" id="context.check_eq">
+<pre class="signature"><a class="anchor" href="#context.check_eq" aria-label="Link to check_eq">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check_eq</span>( <a class="prim" href="prelude.html#i64">i64</a> a, <a class="prim" href="prelude.html#i64">i64</a> b )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>a</code> and <code>b</code> differ, reporting both and the line that called it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#context.check_eq" aria-label="Link to check_eq">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check_eq</span>( <a class="prim" href="prelude.html#u64">u64</a> a, <a class="prim" href="prelude.html#u64">u64</a> b )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>a</code> and <code>b</code> differ, reporting both and the line that called it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#context.check_eq" aria-label="Link to check_eq">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check_eq</span>( <a class="prim" href="prelude.html#f64">f64</a> a, <a class="prim" href="prelude.html#f64">f64</a> b )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>a</code> and <code>b</code> differ, reporting both and the line that called it. A NaN
+equals nothing, itself included.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#context.check_eq" aria-label="Link to check_eq">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check_eq</span>( <a class="prim" href="prelude.html#bool">bool</a> a, <a class="prim" href="prelude.html#bool">bool</a> b )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>a</code> and <code>b</code> differ, reporting both and the line that called it.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#context.check_eq" aria-label="Link to check_eq">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">check_eq</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> b )</code></pre>
+<div class="doc">
+<p>Counts a failure if <code>a</code> and <code>b</code> hold different bytes, reporting both, quoted, and the line
+that called it.</p>
+</div>
+</div>
+<div class="group" id="context.require">
+<pre class="signature"><a class="anchor" href="#context.require" aria-label="Link to require">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">require</span>( <a class="prim" href="prelude.html#bool">bool</a> condition )</code></pre>
+<div class="doc">
+<p>Ends the test if <code>condition</code> is false, as a <code>panic</code> at the line that called it.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

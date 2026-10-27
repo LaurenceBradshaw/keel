@@ -1,0 +1,6 @@
+# A nested package is found under its parent, and rebuilds when the parent changes.
+keelb build; echo "exit $?"
+keelb build; echo "exit $?"
+cp .edits/area.kl geo/area.kl
+keelb build; echo "exit $?"
+build/release/nested_package; echo "exit $?"

@@ -1,0 +1,1 @@
+--check --diagnostics=json --names --package shapes=sema/names_of_a_nested_package/shapes

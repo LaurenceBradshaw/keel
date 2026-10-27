@@ -2,9 +2,9 @@
 // `programs/string_split_empty_separator` covers it.
 import kl::list;
 import kl::string;
-import kl::test;
+import kl::test::context;
 
-private void check_split( ref kl::test_context c, str text, str separator, const ref str[] expected )
+private void check_split( ref kl::test::context c, str text, str separator, const ref str[] expected )
 {
     kl::string s = kl::string::from( text );
     kl::list<kl::string> pieces = s.split( separator );
@@ -15,7 +15,7 @@ private void check_split( ref kl::test_context c, str text, str separator, const
     }
 }
 
-private void split_gives_the_pieces_between( ref kl::test_context c )
+private void split_gives_the_pieces_between( ref kl::test::context c )
 {
     str[3] plain = [ "a", "bc", "d" ];
     check_split( ref c, "a,bc,d", ",", plain );
@@ -23,7 +23,7 @@ private void split_gives_the_pieces_between( ref kl::test_context c )
     check_split( ref c, "abc", ",", whole );
 }
 
-private void split_keeps_empty_pieces( ref kl::test_context c )
+private void split_keeps_empty_pieces( ref kl::test::context c )
 {
     str[3] middle = [ "a", "", "b" ];
     check_split( ref c, "a,,b", ",", middle );
@@ -35,7 +35,7 @@ private void split_keeps_empty_pieces( ref kl::test_context c )
     check_split( ref c, "", ",", empty );
 }
 
-private void split_on_a_longer_separator( ref kl::test_context c )
+private void split_on_a_longer_separator( ref kl::test::context c )
 {
     str[3] words = [ "a", "b", "c" ];
     check_split( ref c, "a::b::c", "::", words );

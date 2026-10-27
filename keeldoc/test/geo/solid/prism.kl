@@ -1,0 +1,7 @@
+import geo::measure;
+
+/// The volume of a prism of base `area` and height `h`.
+f64 volume( f64 area, geo::metres h )
+{
+    return area * h.value;
+}

@@ -1,4 +1,4 @@
-programs/test_filter/main.kl:11: check_eq failed: 3 != 4
+programs/test_filter/main.kl:12: check_eq failed: 3 != 4
 FAIL adds_badly
 pass concatenates
 1 passed, 1 failed

@@ -1,18 +1,18 @@
 pass passes
-programs/test_run/main.kl:21: check failed
-programs/test_run/main.kl:22: check_eq failed: -1 != 2
-programs/test_run/main.kl:23: check_eq failed: 7 != 8
-programs/test_run/main.kl:24: check_eq failed: 0.5 != 1.5
-programs/test_run/main.kl:25: check_eq failed: true != false
-programs/test_run/main.kl:26: check_eq failed: "ab" != "ab "
-programs/test_run/main.kl:27: check failed
+programs/test_run/main.kl:22: check failed
+programs/test_run/main.kl:23: check_eq failed: -1 != 2
+programs/test_run/main.kl:24: check_eq failed: 7 != 8
+programs/test_run/main.kl:25: check_eq failed: 0.5 != 1.5
+programs/test_run/main.kl:26: check_eq failed: true != false
+programs/test_run/main.kl:27: check_eq failed: "ab" != "ab "
+programs/test_run/main.kl:28: check failed
 FAIL checks
-programs/test_run/main.kl:40: check_eq failed: 1 != 0
+programs/test_run/main.kl:41: check_eq failed: 1 != 0
 FAIL helper
 before require
-programs/test_run/main.kl:46: panic: require failed
+programs/test_run/main.kl:47: panic: require failed
 FAIL requires (panic)
-programs/test_run/main.kl:52: panic: boom
+programs/test_run/main.kl:53: panic: boom
 FAIL panics (panic)
 FAIL signalled (signal 9)
 FAIL exits (exit 3)

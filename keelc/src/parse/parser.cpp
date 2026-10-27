@@ -6153,14 +6153,14 @@ TEST_CASE( "parser_reads_caller_and_a_panic's_location", "[parse][directive]" )
 
 TEST_CASE( "parser_reads_functions_of", "[parse][directive]" )
 {
-    const Parsed p( "void f() { g( @functions_of( kl::test_case ) ); }\n" );
+    const Parsed p( "void f() { g( @functions_of( kl::test::entry ) ); }\n" );
 
     INFO( p.errors() );
     REQUIRE_FALSE( p.has_errors() );
 
     const Node_id listed = find_first( p.ast(), p.root(), Node_kind::Functions_of_expr );
     REQUIRE( listed.is_valid() );
-    REQUIRE( p.text( listed ) == "@functions_of( kl::test_case )" );
+    REQUIRE( p.text( listed ) == "@functions_of( kl::test::entry )" );
     REQUIRE( p.kind( p.ast().written_type( listed ) ) == Node_kind::Named_type );
 }
 

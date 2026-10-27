@@ -4,6 +4,7 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -56,6 +57,13 @@ struct Module
     std::vector<Entry> entries;
 };
 
+// The nested package `module` is in, `a` for a::b; empty for the package's own.
+inline std::string_view nested_package_of( const Module& module )
+{
+    const std::size_t last = module.name.rfind( "::" );
+    return last == std::string::npos ? std::string_view {} : std::string_view( module.name ).substr( 0, last );
+}
+
 // From the `// Copyright ...` and `// SPDX-License-Identifier: ...` lines opening a source; empty
 // when it has none.
 struct Notice
@@ -74,11 +82,12 @@ struct Prelude
 
 struct Package
 {
-    std::string         name;
-    std::string         doc;
-    std::vector<Module> modules;
-    Notice              notice; // packageinfo.kl's
-    Prelude             prelude;
+    std::string                        name;
+    std::string                        doc;
+    std::vector<Module>                modules; // the package's own, then each nested package's
+    Notice                             notice;  // packageinfo.kl's
+    Prelude                            prelude;
+    std::map<std::string, std::string> nested_docs {}; // by the nested package's name in this one, `a` for geo::a
 };
 
 // The public declarations of the package `name` in `dir` and of the prelude, from keelc's records,

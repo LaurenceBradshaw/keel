@@ -6,9 +6,11 @@
 #include <sys/wait.h>
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
 
 namespace keeldoc
 {
@@ -27,11 +29,30 @@ std::string shell_quote( std::string_view text )
     return quoted + "'";
 }
 
+// A folder name keelc could take as a package.
+bool is_identifier( std::string_view text )
+{
+    return !text.empty() && ( std::isalpha( static_cast<unsigned char>( text[0] ) ) || text[0] == '_' ) &&
+           std::ranges::all_of( text, []( char c ) { return std::isalnum( static_cast<unsigned char>( c ) ) || c == '_'; } );
+}
+
+// A folder directly holding a .kl is a nested package, as keelc finds them.
+bool holds_keel( const std::filesystem::path& folder )
+{
+    std::error_code ec;
+    return std::ranges::any_of(
+        std::filesystem::directory_iterator( folder, ec ),
+        []( const std::filesystem::directory_entry& entry )
+        { return entry.is_regular_file() && entry.path().extension() == ".kl"; }
+    );
+}
+
 } // namespace
 
 std::vector<std::string> package_modules( const std::string& name, const std::filesystem::path& dir )
 {
-    std::vector<std::string> modules;
+    std::vector<std::string>           modules;
+    std::vector<std::filesystem::path> folders;
 
     std::error_code ec;
     for( const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator( dir, ec ) )
@@ -41,6 +62,15 @@ std::vector<std::string> package_modules( const std::string& name, const std::fi
         {
             modules.push_back( name + "::" + path.stem().string() );
         }
+        else if( entry.is_directory() && is_identifier( path.filename().string() ) && holds_keel( path ) )
+        {
+            folders.push_back( path );
+        }
+    }
+
+    for( const std::filesystem::path& folder : folders )
+    {
+        std::ranges::copy( package_modules( name + "::" + folder.filename().string(), folder ), std::back_inserter( modules ) );
     }
 
     std::ranges::sort( modules );
@@ -169,12 +199,25 @@ TEST_CASE( "keelc_imports_every_module_but_packageinfo", "[keelc]" )
     const std::filesystem::path dir = std::filesystem::temp_directory_path() / "keeldoc_test_modules";
     std::filesystem::remove_all( dir );
     std::filesystem::create_directories( dir / "nested" );
-    for( const char* file : { "b.kl", "a.kl", "packageinfo.kl", "notes.txt" } )
+    std::filesystem::create_directories( dir / "solid" / "deep" );
+    std::filesystem::create_directories( dir / "assets" / "below" );
+    for( const char* file :
+         { "b.kl",
+           "a.kl",
+           "packageinfo.kl",
+           "notes.txt",
+           "solid/c.kl",
+           "solid/packageinfo.kl",
+           "solid/deep/d.kl",
+           "assets/x.txt",
+           "assets/below/e.kl" } )
     {
         std::ofstream( dir / file ) << "\n";
     }
 
-    REQUIRE( package_modules( "geo", dir ) == std::vector<std::string> { "geo::a", "geo::b" } );
+    REQUIRE(
+        package_modules( "geo", dir ) == std::vector<std::string> { "geo::a", "geo::b", "geo::solid::c", "geo::solid::deep::d" }
+    );
 
     std::filesystem::remove_all( dir );
 }

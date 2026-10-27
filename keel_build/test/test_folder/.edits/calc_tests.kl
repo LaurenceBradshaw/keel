@@ -1,12 +1,12 @@
-import kl::test;
+import kl::test::context;
 import calc;
 
-private void adds( ref kl::test_context c )
+private void adds( ref kl::test::context c )
 {
     c.check_eq( add( 2, 3 ), 5 );
 }
 
-private void adds_wrongly( ref kl::test_context c )
+private void adds_wrongly( ref kl::test::context c )
 {
     c.check_eq( add( 2, 2 ), 5 );
 }

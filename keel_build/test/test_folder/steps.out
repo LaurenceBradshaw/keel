@@ -3,7 +3,8 @@ compiling kl::list
 compiling kl::string
 compiling kl::os
 compiling kl::console
-compiling kl::test
+compiling kl::test::context
+compiling kl::test::run
 compiling calc
 compiling calc_tests
 linking

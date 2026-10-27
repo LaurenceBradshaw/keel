@@ -1,28 +1,29 @@
-// `kl::run_tests` refuses an option it does not know, running nothing.
-import kl::test;
+// `kl::test::run` refuses an option it does not know, running nothing.
+import kl::test::context;
+import kl::test::run;
 
-void adds( ref kl::test_context c )
+void adds( ref kl::test::context c )
 {
     c.check_eq( 1 + 2, 3 );
 }
 
-void adds_badly( ref kl::test_context c )
+void adds_badly( ref kl::test::context c )
 {
     c.check_eq( 1 + 2, 4 );
 }
 
-void concatenates( ref kl::test_context c )
+void concatenates( ref kl::test::context c )
 {
     c.check_eq( "ab", "ab" );
 }
 
 i32 main( const ref str[] args )
 {
-    kl::test_case[3] tests = [
-        kl::test_case { "adds", &adds },
-        kl::test_case { "adds_badly", &adds_badly },
-        kl::test_case { "concatenates", &concatenates }
+    kl::test::entry[3] tests = [
+        kl::test::entry { "adds", &adds },
+        kl::test::entry { "adds_badly", &adds_badly },
+        kl::test::entry { "concatenates", &concatenates }
     ];
 
-    return kl::run_tests( tests, args );
+    return kl::test::run( tests, args );
 }

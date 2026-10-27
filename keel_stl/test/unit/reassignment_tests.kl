@@ -3,10 +3,10 @@
 import kl::list;
 import kl::ring;
 import kl::string;
-import kl::test;
+import kl::test::context;
 import owned;
 
-private void list_onto_full( ref kl::test_context c )
+private void list_onto_full( ref kl::test::context c )
 {
     kl::list<owned> kept = kl::list<owned>();
     kept.push( owned( 1 ) );
@@ -24,7 +24,7 @@ private void list_onto_full( ref kl::test_context c )
     c.check( kept.is_empty() );
 }
 
-private void list_onto_itself( ref kl::test_context c )
+private void list_onto_itself( ref kl::test::context c )
 {
     {
         kl::list<owned> values = kl::list<owned>();
@@ -39,7 +39,7 @@ private void list_onto_itself( ref kl::test_context c )
 }
 
 // A zero capacity is an empty list that still grows.
-private void list_zero_capacity( ref kl::test_context c )
+private void list_zero_capacity( ref kl::test::context c )
 {
     {
         kl::list<owned> values = kl::list<owned>::with_capacity( 0 );
@@ -54,7 +54,7 @@ private void list_zero_capacity( ref kl::test_context c )
 }
 
 // The ring's elements wrap past the end of its block, so destroying them takes both runs.
-private void ring_onto_full( ref kl::test_context c )
+private void ring_onto_full( ref kl::test::context c )
 {
     kl::ring<owned> kept = kl::ring<owned>::with_capacity( 3 );
     kept.push_back( owned( 1 ) );
@@ -72,7 +72,7 @@ private void ring_onto_full( ref kl::test_context c )
     c.check_eq( live, 0 );
 }
 
-private void strings( ref kl::test_context c )
+private void strings( ref kl::test::context c )
 {
     kl::string text = kl::string( "hello" );
     text = kl::string( "world" );

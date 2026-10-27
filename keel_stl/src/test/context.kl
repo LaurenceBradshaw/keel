@@ -1,0 +1,140 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// What a test checks through, and how each failed check is reported.
+
+import kl::console;
+import kl::string;
+
+/// What a test checks through. A failed check is counted and reported, and the test goes on; a
+/// failed `require` ends it.
+class context
+{
+    /// A context with no failures.
+    public context()
+    {
+        failures_ = 0;
+    }
+
+    /// Whether any check has failed.
+    public bool failed() const
+    {
+        return failures_ != 0;
+    }
+
+    /// Counts a failure if `condition` is false, reporting the line that called it.
+    @located
+    public void check( bool condition )
+    {
+        if( !condition )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprintln( "check failed" );
+        }
+    }
+
+    /// Counts a failure if `a` and `b` differ, reporting both and the line that called it.
+    @located
+    public void check_eq( i64 a, i64 b )
+    {
+        if( a != b )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprint( "check_eq failed: " );
+            kl::eprint( a );
+            kl::eprint( " != " );
+            kl::eprint( b );
+            kl::eprint( "\n" );
+        }
+    }
+
+    /// Counts a failure if `a` and `b` differ, reporting both and the line that called it.
+    @located
+    public void check_eq( u64 a, u64 b )
+    {
+        if( a != b )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprint( "check_eq failed: " );
+            kl::eprint( a );
+            kl::eprint( " != " );
+            kl::eprint( b );
+            kl::eprint( "\n" );
+        }
+    }
+
+    /// Counts a failure if `a` and `b` differ, reporting both and the line that called it. A NaN
+    /// equals nothing, itself included.
+    @located
+    public void check_eq( f64 a, f64 b )
+    {
+        if( a != b )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprint( "check_eq failed: " );
+            kl::eprint( a );
+            kl::eprint( " != " );
+            kl::eprint( b );
+            kl::eprint( "\n" );
+        }
+    }
+
+    /// Counts a failure if `a` and `b` differ, reporting both and the line that called it.
+    @located
+    public void check_eq( bool a, bool b )
+    {
+        if( a != b )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprint( "check_eq failed: " );
+            kl::eprint( a );
+            kl::eprint( " != " );
+            kl::eprint( b );
+            kl::eprint( "\n" );
+        }
+    }
+
+    /// Counts a failure if `a` and `b` hold different bytes, reporting both, quoted, and the line
+    /// that called it.
+    @located
+    public void check_eq( const ref textual a, const ref textual b )
+    {
+        if( !kl::same_text( a, b ) )
+        {
+            failures_ += 1;
+            eprint_location();
+            kl::eprint( "check_eq failed: \"" );
+            kl::eprint( a );
+            kl::eprint( "\" != \"" );
+            kl::eprint( b );
+            kl::eprint( "\"\n" );
+        }
+    }
+
+    /// Ends the test if `condition` is false, as a `panic` at the line that called it.
+    @located
+    public void require( bool condition )
+    {
+        if( !condition )
+        {
+            panic( "require failed", @caller() );
+        }
+    }
+
+    // `file:line: ` of the check's caller, to stderr.
+    @located
+    private void eprint_location()
+    {
+        kl::eprint( @caller().file );
+        kl::eprint( ":" );
+        kl::eprint( @caller().line );
+        kl::eprint( ": " );
+    }
+
+    private u64 failures_;
+};

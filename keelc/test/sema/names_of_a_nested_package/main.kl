@@ -1,0 +1,9 @@
+// Every link of a nested package's name is a package.
+
+import shapes::solid::cube;
+
+i32 main()
+{
+    shapes::solid::cube c = shapes::solid::cube { 3 };
+    return shapes::solid::volume( c );
+}

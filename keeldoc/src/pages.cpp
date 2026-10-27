@@ -314,9 +314,23 @@ std::string Page_writer::index() const
 
     out += "<h2>Modules</h2>\n";
 
+    std::string_view nested;
     for( const Module& module : package_.modules )
     {
         const std::string page = page_of( module );
+
+        if( nested_package_of( module ) != nested )
+        {
+            nested = nested_package_of( module );
+            out += fmt::format(
+                "<h2><span class=\"kind\">package</span> {}::{}</h2>\n", html_escape( package_.name ), html_escape( nested )
+            );
+
+            if( const auto doc = package_.nested_docs.find( std::string( nested ) ); doc != package_.nested_docs.end() )
+            {
+                out += "<div class=\"doc\">\n" + render_markdown( doc->second ) + "</div>\n";
+            }
+        }
 
         out += fmt::format(
             "<section class=\"module\">\n<h3><a href=\"{}\">{}</a></h3>\n<dl class=\"summaries\">\n",

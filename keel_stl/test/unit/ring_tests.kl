@@ -3,7 +3,7 @@
 // wraps destroys what it holds.
 import kl::optional;
 import kl::ring;
-import kl::test;
+import kl::test::context;
 import owned;
 
 // The ring's values from front to back, as decimal digits: [3, 1, 2] is 312.
@@ -29,7 +29,7 @@ private kl::ring<owned> one_two_three()
 }
 
 // Pushing at the back after popping the front reuses the freed slot, so the ring wraps.
-private void wraps_at_the_back( ref kl::test_context c )
+private void wraps_at_the_back( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -56,7 +56,7 @@ private void wraps_at_the_back( ref kl::test_context c )
 }
 
 // Pushing at the front of an empty ring wraps backwards from the first slot.
-private void wraps_at_the_front( ref kl::test_context c )
+private void wraps_at_the_front( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
@@ -83,7 +83,7 @@ private void wraps_at_the_front( ref kl::test_context c )
 }
 
 // `try_push` on a full ring hands the element back in an `err`, and on one with room answers `ok`.
-private void try_pushes( ref kl::test_context c )
+private void try_pushes( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -118,7 +118,7 @@ private void try_pushes( ref kl::test_context c )
 
 // `_evict` on a full ring removes the element at the other end and hands it out; with room, it
 // evicts nothing.
-private void evicts( ref kl::test_context c )
+private void evicts( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -144,7 +144,7 @@ private void evicts( ref kl::test_context c )
 }
 
 // `try_pop` hands an end's element out in an optional, and answers none once the ring is empty.
-private void try_pops( ref kl::test_context c )
+private void try_pops( ref kl::test::context c )
 {
     kl::ring<owned> values = one_two_three();
     {
@@ -164,7 +164,7 @@ private void try_pops( ref kl::test_context c )
 
 // `reserve` unwraps the elements into the new block in order; one no larger than the capacity does
 // nothing.
-private void reserves( ref kl::test_context c )
+private void reserves( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -190,7 +190,7 @@ private void reserves( ref kl::test_context c )
 }
 
 // `clear` drops a wrapped ring's elements and keeps its capacity.
-private void clears( ref kl::test_context c )
+private void clears( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -210,7 +210,7 @@ private void clears( ref kl::test_context c )
 }
 
 // A ring dropped while it wraps destroys both runs of its elements.
-private void drops_wrapped( ref kl::test_context c )
+private void drops_wrapped( ref kl::test::context c )
 {
     {
         kl::ring<owned> values = one_two_three();
@@ -222,7 +222,7 @@ private void drops_wrapped( ref kl::test_context c )
 }
 
 // The ring moves whole, so its elements end once, with the ring that holds them last.
-private void moves_whole( ref kl::test_context c )
+private void moves_whole( ref kl::test::context c )
 {
     {
         kl::ring<owned> held = one_two_three();
@@ -234,7 +234,7 @@ private void moves_whole( ref kl::test_context c )
 }
 
 // A ring of a `struct` needs no marker, and `operator[]` writes through.
-private void copies( ref kl::test_context c )
+private void copies( ref kl::test::context c )
 {
     kl::ring<i32> values = kl::ring<i32>::with_capacity( 2 );
     i32 seven = 7;

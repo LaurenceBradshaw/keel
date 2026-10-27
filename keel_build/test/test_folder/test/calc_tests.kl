@@ -1,7 +1,7 @@
-import kl::test;
+import kl::test::context;
 import calc;
 
-private void adds( ref kl::test_context c )
+private void adds( ref kl::test::context c )
 {
     c.check_eq( add( 2, 3 ), 5 );
 }

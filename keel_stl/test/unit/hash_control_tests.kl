@@ -1,7 +1,7 @@
 // `kl::hash_control`'s word tricks against byte-at-a-time answers, over control words mixing empty,
 // deleted and full bytes; then its slot sizes and its growth accounting.
 import kl::hash_control;
-import kl::test;
+import kl::test::context;
 
 // Byte `i` of `word`.
 private u64 byte_of( u64 word, u64 i )
@@ -37,7 +37,7 @@ private u64 next_random( ref u64 state )
     return state;
 }
 
-private void word_tricks( ref kl::test_context c )
+private void word_tricks( ref kl::test::context c )
 {
     u64 state = 0x2545_f491_4f6c_dd1d;
 
@@ -97,7 +97,7 @@ private void word_tricks( ref kl::test_context c )
     }
 }
 
-private void slots_for( ref kl::test_context c )
+private void slots_for( ref kl::test::context c )
 {
     c.check_eq( kl::hash_control::slots_for( 0 ), 0 );
     c.check_eq( kl::hash_control::slots_for( 1 ), 8 );
@@ -108,7 +108,7 @@ private void slots_for( ref kl::test_context c )
 
 // Slot 3 filled and emptied: its group still has empty slots, so the slot is empty again and the
 // room comes back.
-private void vacate_gives_room_back( ref kl::test_context c )
+private void vacate_gives_room_back( ref kl::test::context c )
 {
     kl::hash_control control = kl::hash_control( 8, 1, 2 );
 
@@ -127,7 +127,7 @@ private void vacate_gives_room_back( ref kl::test_context c )
 
 // A full group leaves a tombstone, which costs room until the table is rebuilt. Sixteen slots, so
 // a full group stays within the 7/8 a table may fill; even hashes all probe group 0.
-private void tombstones_and_rebuilds( ref kl::test_context c )
+private void tombstones_and_rebuilds( ref kl::test::context c )
 {
     kl::hash_control full = kl::hash_control( 16, 1, 2 );
 

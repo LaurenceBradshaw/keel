@@ -1,10 +1,10 @@
 // `kl::ordered_set` with owning keys: a duplicate is refused and dropped, `key_at` counts in order
 // and `rank` places keys, and removal down to empty drops each key once, which valgrind checks.
 import kl::ordered_set;
-import kl::test;
+import kl::test::context;
 import tag;
 
-private void owning_keys( ref kl::test_context c )
+private void owning_keys( ref kl::test::context c )
 {
     kl::ordered_set<tag> s = kl::ordered_set<tag>();
 

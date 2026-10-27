@@ -161,7 +161,7 @@ Type_id Addresses::functions_of( Node_id id, std::span<const Node_id> candidates
             fmt::format(
                 "`@functions_of` fills a struct of a `str` and a function type, which `{}` is not", table_.name( listed )
             ),
-            "as in `struct test_case { str name; fn( ref test_context ) -> void body; };`"
+            "as in `struct entry { str name; fn( ref context ) -> void body; };`"
         );
         return types_.record( id, error );
     }

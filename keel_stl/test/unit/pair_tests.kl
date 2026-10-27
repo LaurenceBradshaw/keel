@@ -2,11 +2,11 @@
 // or when a write replaces it.
 import kl::optional;
 import kl::pair;
-import kl::test;
+import kl::test::context;
 import owned;
 
 // Both halves are read in place, and writing one drops what it held.
-private void holds( ref kl::test_context c )
+private void holds( ref kl::test::context c )
 {
     {
         kl::pair<owned, u64> p = kl::pair<owned, u64>( owned( 1 ), 2 );
@@ -30,7 +30,7 @@ private kl::pair<owned, owned> made()
 }
 
 // The pair moves whole, so its halves end once, with the pair that holds them last.
-private void moves_whole( ref kl::test_context c )
+private void moves_whole( ref kl::test::context c )
 {
     {
         kl::pair<owned, owned> held = made();
@@ -43,7 +43,7 @@ private void moves_whole( ref kl::test_context c )
 }
 
 // A pair inside an optional: unwrapping hands the whole pair out.
-private void nests( ref kl::test_context c )
+private void nests( ref kl::test::context c )
 {
     {
         kl::optional<kl::pair<owned, u64>> found = kl::optional::some( kl::pair<owned, u64>( owned( 7 ), 8 ) );

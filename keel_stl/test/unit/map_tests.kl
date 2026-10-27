@@ -5,7 +5,7 @@
 import kl::map;
 import kl::optional;
 import kl::string;
-import kl::test;
+import kl::test::context;
 
 // Each `i` in `0..n` mapped to its square.
 private kl::map<i64, i64> squares( i64 n )
@@ -18,7 +18,7 @@ private kl::map<i64, i64> squares( i64 n )
     return m;
 }
 
-private void starts_empty( ref kl::test_context c )
+private void starts_empty( ref kl::test::context c )
 {
     kl::map<i64, i64> m = kl::map<i64, i64>();
     c.check( m.is_empty() );
@@ -27,7 +27,7 @@ private void starts_empty( ref kl::test_context c )
     c.check( kl::is_none( m.get( 3 ) ) );
 }
 
-private void finds_through_growth( ref kl::test_context c )
+private void finds_through_growth( ref kl::test::context c )
 {
     kl::map<i64, i64> m = kl::map<i64, i64>();
 
@@ -49,7 +49,7 @@ private void finds_through_growth( ref kl::test_context c )
     c.check( kl::is_none( m.get( 5000 ) ) );
 }
 
-private void insert_replaces( ref kl::test_context c )
+private void insert_replaces( ref kl::test::context c )
 {
     kl::map<i64, i64> m = squares( 1000 );
     c.check_eq( kl::unwrap( m.insert( 7, 0 ) ), 49 );
@@ -57,7 +57,7 @@ private void insert_replaces( ref kl::test_context c )
     c.check_eq( m.size(), 1000 );
 }
 
-private void removes_and_puts_back( ref kl::test_context c )
+private void removes_and_puts_back( ref kl::test::context c )
 {
     kl::map<i64, i64> m = squares( 1000 );
 
@@ -81,7 +81,7 @@ private void removes_and_puts_back( ref kl::test_context c )
 
 // Churn leaves removed slots behind; clearing them must not grow the table while the count stays
 // where it is.
-private void churn_keeps_capacity( ref kl::test_context c )
+private void churn_keeps_capacity( ref kl::test::context c )
 {
     kl::map<i64, i64> m = squares( 500 );
     const u64 before = m.capacity();
@@ -98,14 +98,14 @@ private void churn_keeps_capacity( ref kl::test_context c )
     c.check( m.contains( 499 ) );
 }
 
-private void writes_through_index( ref kl::test_context c )
+private void writes_through_index( ref kl::test::context c )
 {
     kl::map<i64, i64> m = squares( 10 );
     m[ 4 ] = 5;
     c.check_eq( *kl::unwrap( m.get( 4 ) ), 5 );
 }
 
-private void clear_keeps_capacity( ref kl::test_context c )
+private void clear_keeps_capacity( ref kl::test::context c )
 {
     kl::map<i64, i64> m = squares( 1000 );
     const u64 before = m.capacity();
@@ -120,7 +120,7 @@ private void clear_keeps_capacity( ref kl::test_context c )
     c.check_eq( m[ 0 ], 1 );
 }
 
-private void with_capacity_holds_its_promise( ref kl::test_context c )
+private void with_capacity_holds_its_promise( ref kl::test::context c )
 {
     kl::map<u8, bool> sized = kl::map<u8, bool>::with_capacity( 100 );
     const u64 room = sized.capacity();
@@ -139,7 +139,7 @@ private void with_capacity_holds_its_promise( ref kl::test_context c )
     c.check_eq( sized.capacity(), room );
 }
 
-private void entries_in_insertion_order( ref kl::test_context c )
+private void entries_in_insertion_order( ref kl::test::context c )
 {
     kl::map<u64, u64> m = kl::map<u64, u64>();
 
@@ -154,7 +154,7 @@ private void entries_in_insertion_order( ref kl::test_context c )
     }
 }
 
-private void remove_moves_the_last_entry( ref kl::test_context c )
+private void remove_moves_the_last_entry( ref kl::test::context c )
 {
     kl::map<u64, u64> m = kl::map<u64, u64>();
 
@@ -188,7 +188,7 @@ private void remove_moves_the_last_entry( ref kl::test_context c )
 }
 
 // Tombstones force same-size rebuilds, and every live key stays findable.
-private void churn_rebuilds_in_place( ref kl::test_context c )
+private void churn_rebuilds_in_place( ref kl::test::context c )
 {
     kl::map<u64, u64> churn = kl::map<u64, u64>::with_capacity( 14 );
 
@@ -214,7 +214,7 @@ private void churn_rebuilds_in_place( ref kl::test_context c )
 
 // Every key and value the map drops - on replacing, removing, growing, clearing and going out of
 // scope - is dropped exactly once. A replaced entry keeps its first key and drops the one passed.
-private void owning_entries( ref kl::test_context c )
+private void owning_entries( ref kl::test::context c )
 {
     kl::map<kl::string, kl::string> names = kl::map<kl::string, kl::string>();
 

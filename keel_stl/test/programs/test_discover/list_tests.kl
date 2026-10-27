@@ -1,11 +1,11 @@
-import kl::test;
+import kl::test::context;
 
-private void adds( ref kl::test_context c )
+private void adds( ref kl::test::context c )
 {
     c.check_eq( 1 + 1, 2 );
 }
 
-private void counts( ref kl::test_context c )
+private void counts( ref kl::test::context c )
 {
     c.check( 3 > 2 );
 }

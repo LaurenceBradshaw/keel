@@ -1,0 +1,6 @@
+import geo::area;
+
+i64 cube( i64 side )
+{
+    return geo::square( side ) * side;
+}

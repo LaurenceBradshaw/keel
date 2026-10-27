@@ -5,13 +5,13 @@
 import kl::optional;
 import kl::ordered_map;
 import kl::string;
-import kl::test;
+import kl::test::context;
 import tag;
 
 // The keys `0..n` that are multiples of `step` are exactly those `m` holds, in order, each mapped
 // to twice itself.
 @located
-private void check_ordered( ref kl::test_context c, const ref kl::ordered_map<u64, u64> m, u64 n, u64 step )
+private void check_ordered( ref kl::test::context c, const ref kl::ordered_map<u64, u64> m, u64 n, u64 step )
 {
     u64 i = 0;
 
@@ -46,7 +46,7 @@ private kl::ordered_map<u64, u64> scrambled()
     return m;
 }
 
-private void splits_in_order( ref kl::test_context c )
+private void splits_in_order( ref kl::test::context c )
 {
     kl::ordered_map<u64, u64> m = scrambled();
     c.check_eq( m.size(), 1000 );
@@ -62,7 +62,7 @@ private void splits_in_order( ref kl::test_context c )
     c.check_eq( m.rank( 1000 ), 1000 );
 }
 
-private void merges_in_order( ref kl::test_context c )
+private void merges_in_order( ref kl::test::context c )
 {
     kl::ordered_map<u64, u64> m = scrambled();
 
@@ -105,7 +105,7 @@ private void merges_in_order( ref kl::test_context c )
 
 // Enough inserts and removes that nodes split, borrow from both sides, merge, shrink the root and
 // are reused from the free list.
-private void owning_entries( ref kl::test_context c )
+private void owning_entries( ref kl::test::context c )
 {
     kl::ordered_map<tag, kl::string> m = kl::ordered_map<tag, kl::string>();
 

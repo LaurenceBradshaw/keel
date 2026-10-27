@@ -1,0 +1,4 @@
+i64 square( i64 side )
+{
+    return side * side * 2;
+}

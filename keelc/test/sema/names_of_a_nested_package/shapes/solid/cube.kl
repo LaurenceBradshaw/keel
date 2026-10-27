@@ -1,0 +1,11 @@
+import shapes::base;
+
+struct cube
+{
+    i32 side;
+};
+
+i32 volume( cube c )
+{
+    return c.side * c.side * shapes::side();
+}

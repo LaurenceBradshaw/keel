@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::test::run</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::test::run</h1>
+<ul class="contents">
+<li><a href="#entry"><code>entry</code></a> <span class="kind">struct</span></li>
+<li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">entry</span></h2>
+<div class="group" id="entry">
+<pre class="signature"><a class="anchor" href="#entry" aria-label="Link to entry">#</a><code><span class="kw">struct</span> <span class="type">entry</span></code></pre>
+<div class="doc">
+<p>A test and the name <code>run</code> reports it by.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="entry.name">
+<pre class="signature"><a class="anchor" href="#entry.name" aria-label="Link to name">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#str">str</a> name</code></pre>
+<div class="doc">
+<p>Matched by the runner's filters and printed in its report.</p>
+</div>
+</div>
+<div class="group" id="entry.body">
+<pre class="signature"><a class="anchor" href="#entry.body" aria-label="Link to body">#</a><code><span class="kw">public</span> <span class="kw">fn</span>( <span class="kw">ref</span> <a class="type" href="test.context.html#context">context</a> ) -&gt; <a class="prim" href="prelude.html#void">void</a> body</code></pre>
+<div class="doc">
+<p>The test itself.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">run</span></h2>
+<div class="group" id="run">
+<pre class="signature"><a class="anchor" href="#run" aria-label="Link to run">#</a><code><a class="prim" href="prelude.html#i32">i32</a> <span class="fn">run</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#entry">entry</a>[] tests, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#str">str</a>[] args )</code></pre>
+<div class="doc">
+<p>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
+code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</p>
+<p>Each argument is an option or a filter. A test runs when its name contains any filter, or when
+there is none.</p>
+<ul>
+<li><code>--list</code> prints the selected names and runs nothing.</li>
+<li><code>--no-fork</code> runs every test in this process, so a <code>panic</code> ends the run; for a debugger.</li>
+</ul>
+<p>Each test's result is a line on stdout, <code>pass &lt;name&gt;</code> or <code>FAIL &lt;name&gt;</code>, then the counts.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

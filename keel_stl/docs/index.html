@@ -240,25 +240,6 @@ empty or holds <code>=</code> never is.</dd>
 </dl>
 </section>
 <section class="module">
-<h3><a href="test.html">test</a></h3>
-<dl class="summaries">
-</dl>
-<h4 class="divider">Writing tests</h4>
-<dl class="summaries">
-<dt><a href="test.html#test_case"><code>test_case</code></a> <span class="kind">struct</span></dt>
-<dd>A test and the name <code>run_tests</code> reports it by.</dd>
-<dt><a href="test.html#test_context"><code>test_context</code></a> <span class="kind">class</span></dt>
-<dd>What a test checks through. A failed check is counted and reported, and the test goes on; a
-failed <code>require</code> ends it.</dd>
-</dl>
-<h4 class="divider">Running tests</h4>
-<dl class="summaries">
-<dt><a href="test.html#run_tests"><code>run_tests</code></a> <span class="kind">function</span></dt>
-<dd>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
-code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</dd>
-</dl>
-</section>
-<section class="module">
 <h3><a href="time.html">time</a></h3>
 <dl class="summaries">
 </dl>
@@ -279,6 +260,30 @@ against another's. Use <code>instant</code> for measuring.</dd>
 <dt><a href="time.html#wall_time"><code>wall_time</code></a> <span class="kind">function</span></dt>
 <dd>Nanoseconds since 1970-01-01 UTC, which can step when the system clock is set; measure with
 <code>instant</code>.</dd>
+</dl>
+</section>
+<h2><span class="kind">package</span> kl::test</h2>
+<div class="doc">
+<p>Unit tests: named test functions, checks that report their caller's line, and a runner that
+gives each test a process of its own.</p>
+<p>A test module imports <code>kl::test::context</code>; the suite's <code>main</code> imports <code>kl::test::run</code>.</p>
+</div>
+<section class="module">
+<h3><a href="test.context.html">test::context</a></h3>
+<dl class="summaries">
+<dt><a href="test.context.html#context"><code>context</code></a> <span class="kind">class</span></dt>
+<dd>What a test checks through. A failed check is counted and reported, and the test goes on; a
+failed <code>require</code> ends it.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="test.run.html">test::run</a></h3>
+<dl class="summaries">
+<dt><a href="test.run.html#entry"><code>entry</code></a> <span class="kind">struct</span></dt>
+<dd>A test and the name <code>run</code> reports it by.</dd>
+<dt><a href="test.run.html#run"><code>run</code></a> <span class="kind">function</span></dt>
+<dd>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
+code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</dd>
 </dl>
 </section>
 <h2>Prelude</h2>
