@@ -2402,7 +2402,6 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     uint8_t* kl_t8;
-    uint8_t* kl_t9;
 #line 155 "../../keel_stl/src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../keel_stl/src/list.kl"
@@ -2419,9 +2418,7 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
 #line 162 "../../keel_stl/src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../keel_stl/src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../keel_stl/src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../keel_stl/src/list.kl"
     return kl_t0;
 #line 164 "../../keel_stl/src/list.kl"

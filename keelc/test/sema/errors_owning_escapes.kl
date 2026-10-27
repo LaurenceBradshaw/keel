@@ -27,13 +27,13 @@ class box
         kept = owned( 2 );
     }
 
-    public owned* operator[]( u64 index ) const
+    public ref owned operator[]( u64 index ) const
     {
         assert( index == 0 );
 
         unsafe
         {
-            return &data[index];
+            return data[index];
         }
     }
 

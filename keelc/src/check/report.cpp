@@ -143,6 +143,9 @@ void report_loan_errors(
             case Loan_conflict::Changed:
                 message = fmt::format( "this could change {} while `{}` still borrows from it", object, holder );
                 break;
+            case Loan_conflict::Replaced:
+                message = fmt::format( "an element of {} is replaced while `{}` still borrows from it", object, holder );
+                break;
             }
 
             diagnostics.error(

@@ -85,7 +85,7 @@ class map<K, V> where K : hashable
     /// --- Lookup ---
 
     /// A pointer to the value under `key`, or `none` if the map does not hold it.
-    public optional<V*> get( const ref K key ) const
+    public optional<const V*> get( const ref K key ) const
     {
         const u64 slot = slot_of( key );
         
@@ -100,12 +100,12 @@ class map<K, V> where K : hashable
         }
     }
 
-    /// A pointer to the value under `key`.
+    /// The value under `key`.
     ///
     /// ### Panics
     ///
     /// If the map does not hold `key`; `get` answers `none` instead.
-    public V* operator[]( const ref K key ) const
+    public ref V operator[]( const ref K key ) const
     {
         const u64 slot = slot_of( key );
         
@@ -116,7 +116,7 @@ class map<K, V> where K : hashable
 
         unsafe
         {
-            return &values_[control_.entry( slot )];
+            return values_[control_.entry( slot )];
         }
     }
 
@@ -147,12 +147,12 @@ class map<K, V> where K : hashable
         }
     }
 
-    /// A pointer to the value of entry `i`, the value under `key_at( i )`.
+    /// The value of entry `i`, the value under `key_at( i )`.
     ///
     /// ### Panics
     ///
     /// If `i` is not less than `size()`.
-    public V* value_at( u64 i ) const
+    public ref V value_at( u64 i ) const
     {
         if( i >= control_.size() )
         {
@@ -161,7 +161,7 @@ class map<K, V> where K : hashable
 
         unsafe
         {
-            return &values_[i];
+            return values_[i];
         }
     }
 

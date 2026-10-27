@@ -46,4 +46,10 @@ error: cannot return a borrowed value
 98 |     return b;
    |            ^ the caller still owns it
 
-8 errors generated
+error: this is reached through a `const P*`, so it cannot be modified
+   --> sema/errors_borrows.kl:134:5
+    |
+134 |     h.q.x = 5;
+    |     ^^^^^ a pointer to `const` only reads what it points at
+
+9 errors generated

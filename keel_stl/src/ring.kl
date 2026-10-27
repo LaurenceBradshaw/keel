@@ -101,12 +101,12 @@ class ring<T>
 
     /// --- Reading ---
 
-    /// A pointer to the element `index` places from the front.
+    /// The element `index` places from the front.
     ///
     /// ### Panics
     ///
     /// If `index` is not less than `size()`.
-    public T* operator[]( u64 index ) const
+    public ref T operator[]( u64 index ) const
     {
         if( index >= count_ )
         {
@@ -114,16 +114,16 @@ class ring<T>
         }
         unsafe
         {
-            return &data_[slot( index )];
+            return data_[slot( index )];
         }
     }
 
-    /// A pointer to the front element.
+    /// The front element.
     ///
     /// ### Panics
     ///
     /// If the ring is empty.
-    public T* first() const
+    public ref T first() const
     {
         if( count_ == 0 )
         {
@@ -131,16 +131,16 @@ class ring<T>
         }
         unsafe
         {
-            return &data_[head_];
+            return data_[head_];
         }
     }
 
-    /// A pointer to the back element.
+    /// The back element.
     ///
     /// ### Panics
     ///
     /// If the ring is empty.
-    public T* last() const
+    public ref T last() const
     {
         if( count_ == 0 )
         {
@@ -148,7 +148,7 @@ class ring<T>
         }
         unsafe
         {
-            return &data_[slot( count_ - 1 )];
+            return data_[slot( count_ - 1 )];
         }
     }
 

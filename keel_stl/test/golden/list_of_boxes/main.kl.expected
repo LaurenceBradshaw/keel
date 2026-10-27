@@ -2402,7 +2402,6 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     uint8_t* kl_t8;
-    uint8_t* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -2419,9 +2418,7 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -3251,36 +3248,39 @@ int32_t kl__main__( void )
     struct kl_7prelude_box__I5ShapeE* kl_t16;
     struct kl_7prelude_box__I5ShapeE* kl_t17;
     struct kl__Shape__ref kl_t18;
-    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t20;
-    struct kl_7prelude_box__I5ShapeE* kl_t21;
+    struct kl__Shape__ref kl_t19;
+    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t21;
     struct kl_7prelude_box__I5ShapeE* kl_t22;
-    struct kl__Shape__ref kl_t23;
-    double kl_t24;
-    double kl_t25;
-    bool kl_t26;
+    struct kl_7prelude_box__I5ShapeE* kl_t23;
+    struct kl__Shape__ref kl_t24;
+    struct kl__Shape__ref kl_t25;
+    double kl_t26;
     double kl_t27;
-    double kl_t28;
+    bool kl_t28;
     double kl_t29;
     double kl_t30;
     double kl_t31;
-    bool kl_t32;
-    struct kl_7prelude_box__I5ShapeE kl_last_33;
-    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t34;
-    struct kl_7prelude_box__I5ShapeE kl_t35;
-    struct kl_7prelude_box__I5ShapeE* kl_t36;
-    struct kl__Shape__ref kl_t37;
-    double kl_t38;
-    bool kl_t39;
-    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t40;
-    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t42;
-    uint64_t kl_t43;
-    bool kl_t44;
-    bool kl_t45;
-    bool kl_t46;
+    double kl_t32;
+    double kl_t33;
+    bool kl_t34;
+    struct kl_7prelude_box__I5ShapeE kl_last_35;
+    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t36;
+    struct kl_7prelude_box__I5ShapeE kl_t37;
+    struct kl_7prelude_box__I5ShapeE* kl_t38;
+    struct kl__Shape__ref kl_t39;
+    struct kl__Shape__ref kl_t40;
+    double kl_t41;
+    bool kl_t42;
+    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t43;
+    struct kl_2kl4list_list__IQ7prelude3boxI5ShapeEE* kl_t45;
+    uint64_t kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    bool kl_t49;
 #line 51 "list_of_boxes/main.kl"
-    kl_t45 = false;
+    kl_t48 = false;
 #line 51 "list_of_boxes/main.kl"
-    kl_t46 = false;
+    kl_t49 = false;
 #line 51 "list_of_boxes/main.kl"
     kl_t2 = &kl_shapes_1;
 #line 51 "list_of_boxes/main.kl"
@@ -3299,15 +3299,15 @@ int32_t kl__main__( void )
 #line 55 "list_of_boxes/main.kl"
     kl_t7 = kl__make__3u64( kl_i_4 );
 #line 55 "list_of_boxes/main.kl"
-    kl_t45 = true;
+    kl_t48 = true;
 #line 55 "list_of_boxes/main.kl"
     kl_2kl4list_push__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_MQ7prelude3boxI5ShapeE( kl_t6, kl_t7 );
 #line 55 "list_of_boxes/main.kl"
-    kl_t45 = false;
+    kl_t48 = false;
 #line 55 "list_of_boxes/main.kl"
-    if ( kl_t45 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t7 );
+    if ( kl_t48 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t7 );
 #line 55 "list_of_boxes/main.kl"
-    kl_t45 = false;
+    kl_t48 = false;
 #line 53 "list_of_boxes/main.kl"
     goto bb4;
     bb3:
@@ -3348,42 +3348,46 @@ int32_t kl__main__( void )
 #line 62 "list_of_boxes/main.kl"
     kl_t18 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t17 );
 #line 62 "list_of_boxes/main.kl"
-    kl_t18.vtable->kl__grow__3f64( kl_t18.self, 1.0 );
-    kl_t20 = &kl_shapes_1;
+    kl_t19 = kl_t18;
+#line 62 "list_of_boxes/main.kl"
+    kl_t19.vtable->kl__grow__3f64( kl_t19.self, 1.0 );
+    kl_t21 = &kl_shapes_1;
 #line 63 "list_of_boxes/main.kl"
-    kl_t21 = kl_2kl4list_operator_index__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( kl_t20, kl_i_11 );
+    kl_t22 = kl_2kl4list_operator_index__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( kl_t21, kl_i_11 );
 #line 63 "list_of_boxes/main.kl"
-    kl_t22 = &( *kl_t21 );
+    kl_t23 = &( *kl_t22 );
 #line 63 "list_of_boxes/main.kl"
-    kl_t23 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t22 );
+    kl_t24 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t23 );
 #line 63 "list_of_boxes/main.kl"
-    kl_t24 = kl_t23.vtable->kl__area__( kl_t23.self );
+    kl_t25 = kl_t24;
 #line 63 "list_of_boxes/main.kl"
-    kl_t25 = kl_total_10 + kl_t24;
+    kl_t26 = kl_t25.vtable->kl__area__( kl_t25.self );
 #line 63 "list_of_boxes/main.kl"
-    kl_total_10 = kl_t25;
+    kl_t27 = kl_total_10 + kl_t26;
+#line 63 "list_of_boxes/main.kl"
+    kl_total_10 = kl_t27;
 #line 60 "list_of_boxes/main.kl"
     goto bb10;
     bb9:
 #line 67 "list_of_boxes/main.kl"
-    kl_t27 = 1.0 + 9.0;
+    kl_t29 = 1.0 + 9.0;
 #line 67 "list_of_boxes/main.kl"
-    kl_t28 = kl_t27 + 25.0;
+    kl_t30 = kl_t29 + 25.0;
 #line 67 "list_of_boxes/main.kl"
-    kl_t29 = kl_t28 + 2.0;
+    kl_t31 = kl_t30 + 2.0;
 #line 67 "list_of_boxes/main.kl"
-    kl_t30 = kl_t29 + 4.0;
+    kl_t32 = kl_t31 + 4.0;
 #line 67 "list_of_boxes/main.kl"
-    kl_t31 = kl_t30 + 6.0;
+    kl_t33 = kl_t32 + 6.0;
 #line 67 "list_of_boxes/main.kl"
-    kl_t32 = kl_total_10 != kl_t31;
+    kl_t34 = kl_total_10 != kl_t33;
 #line 67 "list_of_boxes/main.kl"
-    if ( kl_t32 ) goto bb13; else goto bb14;
+    if ( kl_t34 ) goto bb13; else goto bb14;
     bb10:
 #line 60 "list_of_boxes/main.kl"
-    kl_t26 = __builtin_add_overflow( kl_i_11, 1, &( uint64_t ) { 0 } );
+    kl_t28 = __builtin_add_overflow( kl_i_11, 1, &( uint64_t ) { 0 } );
 #line 60 "list_of_boxes/main.kl"
-    if ( kl_t26 ) goto bb11; else goto bb12;
+    if ( kl_t28 ) goto bb11; else goto bb12;
     bb11:
 #line 60 "list_of_boxes/main.kl"
     kl_rt_panic( "list_of_boxes/main.kl", 60, "arithmetic overflow: i++" );
@@ -3400,53 +3404,55 @@ int32_t kl__main__( void )
 #line 67 "list_of_boxes/main.kl"
     return kl_t0;
     bb14:
-    kl_t34 = &kl_shapes_1;
+    kl_t36 = &kl_shapes_1;
 #line 69 "list_of_boxes/main.kl"
-    kl_t35 = kl_2kl4list_pop__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( kl_t34 );
+    kl_t37 = kl_2kl4list_pop__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( kl_t36 );
 #line 69 "list_of_boxes/main.kl"
-    kl_t46 = true;
+    kl_t49 = true;
 #line 69 "list_of_boxes/main.kl"
-    kl_last_33 = kl_t35;
+    kl_last_35 = kl_t37;
 #line 69 "list_of_boxes/main.kl"
-    kl_t46 = false;
+    kl_t49 = false;
 #line 69 "list_of_boxes/main.kl"
-    if ( kl_t46 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t35 );
+    if ( kl_t49 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t37 );
 #line 69 "list_of_boxes/main.kl"
-    kl_t46 = false;
-    kl_t36 = &kl_last_33;
+    kl_t49 = false;
+    kl_t38 = &kl_last_35;
 #line 70 "list_of_boxes/main.kl"
-    kl_t37 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t36 );
+    kl_t39 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t38 );
 #line 70 "list_of_boxes/main.kl"
-    kl_t38 = kl_t37.vtable->kl__area__( kl_t37.self );
+    kl_t40 = kl_t39;
 #line 70 "list_of_boxes/main.kl"
-    kl_t39 = kl_t38 != 6.0;
+    kl_t41 = kl_t40.vtable->kl__area__( kl_t40.self );
 #line 70 "list_of_boxes/main.kl"
-    if ( kl_t39 ) goto bb15; else goto bb16;
+    kl_t42 = kl_t41 != 6.0;
+#line 70 "list_of_boxes/main.kl"
+    if ( kl_t42 ) goto bb15; else goto bb16;
     bb15:
 #line 70 "list_of_boxes/main.kl"
     kl_t0 = 2;
 #line 70 "list_of_boxes/main.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_last_33 );
+    kl_7prelude_box__I5ShapeE__dtor( &kl_last_35 );
 #line 70 "list_of_boxes/main.kl"
     kl_2kl4list_list__IQ7prelude3boxI5ShapeEE__dtor( &kl_shapes_1 );
 #line 70 "list_of_boxes/main.kl"
     return kl_t0;
     bb16:
-    kl_t40 = &kl_shapes_1;
+    kl_t43 = &kl_shapes_1;
 #line 72 "list_of_boxes/main.kl"
-    kl_2kl4list_truncate__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( kl_t40, 2 );
-    kl_t42 = &kl_shapes_1;
+    kl_2kl4list_truncate__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE_3u64( kl_t43, 2 );
+    kl_t45 = &kl_shapes_1;
 #line 73 "list_of_boxes/main.kl"
-    kl_t43 = kl_2kl4list_size__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( kl_t42 );
+    kl_t46 = kl_2kl4list_size__IQ7prelude3boxI5ShapeEE__SQ2kl4listIQ7prelude3boxI5ShapeEE( kl_t45 );
 #line 73 "list_of_boxes/main.kl"
-    kl_t44 = kl_t43 != 2;
+    kl_t47 = kl_t46 != 2;
 #line 73 "list_of_boxes/main.kl"
-    if ( kl_t44 ) goto bb17; else goto bb18;
+    if ( kl_t47 ) goto bb17; else goto bb18;
     bb17:
 #line 73 "list_of_boxes/main.kl"
     kl_t0 = 3;
 #line 73 "list_of_boxes/main.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_last_33 );
+    kl_7prelude_box__I5ShapeE__dtor( &kl_last_35 );
 #line 73 "list_of_boxes/main.kl"
     kl_2kl4list_list__IQ7prelude3boxI5ShapeEE__dtor( &kl_shapes_1 );
 #line 73 "list_of_boxes/main.kl"
@@ -3454,7 +3460,7 @@ int32_t kl__main__( void )
     bb18:
     kl_t0 = 0;
 #line 75 "list_of_boxes/main.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_last_33 );
+    kl_7prelude_box__I5ShapeE__dtor( &kl_last_35 );
 #line 75 "list_of_boxes/main.kl"
     kl_2kl4list_list__IQ7prelude3boxI5ShapeEE__dtor( &kl_shapes_1 );
 #line 75 "list_of_boxes/main.kl"
@@ -3586,7 +3592,6 @@ struct kl_7prelude_box__I5ShapeE* kl_2kl4list_operator_index__IQ7prelude3boxI5Sh
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_7prelude_box__I5ShapeE* kl_t8;
-    struct kl_7prelude_box__I5ShapeE* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -3603,9 +3608,7 @@ struct kl_7prelude_box__I5ShapeE* kl_2kl4list_operator_index__IQ7prelude3boxI5Sh
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"

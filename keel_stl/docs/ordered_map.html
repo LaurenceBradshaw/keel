@@ -48,15 +48,15 @@ from <code>lo</code> up to but not including <code>hi</code>. Dropping the map d
 </div>
 <h3>Lookup</h3>
 <div class="group" id="ordered_map.get">
-<pre class="signature"><a class="anchor" href="#ordered_map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ordered_map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<span class="kw">const</span> V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A pointer to the value under <code>key</code>, or <code>none</code> if the map does not hold it.</p>
 </div>
 </div>
 <div class="group" id="ordered_map.operator[]">
-<pre class="signature"><a class="anchor" href="#ordered_map.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> V* <span class="fn">operator[]</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ordered_map.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> V <span class="fn">operator[]</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the value under <code>key</code>.</p>
+<p>The value under <code>key</code>.</p>
 <h4>Panics</h4>
 <p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
 </div>
@@ -78,9 +78,9 @@ out of order.</p>
 </div>
 </div>
 <div class="group" id="ordered_map.value_at">
-<pre class="signature"><a class="anchor" href="#ordered_map.value_at" aria-label="Link to value_at">#</a><code><span class="kw">public</span> V* <span class="fn">value_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ordered_map.value_at" aria-label="Link to value_at">#</a><code><span class="kw">public</span> <span class="kw">ref</span> V <span class="fn">value_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the value under <code>key_at( i )</code>.</p>
+<p>The value under <code>key_at( i )</code>.</p>
 <h4>Panics</h4>
 <p>If <code>i</code> is not less than <code>size()</code>.</p>
 </div>

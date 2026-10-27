@@ -1,0 +1,13 @@
+// A write through `l[0]` replaces the string `t` still reads, so it is refused, as on an array.
+import kl::list;
+import kl::string;
+
+i32 main()
+{
+    kl::list<kl::string> l = kl::list<kl::string>();
+    l.push( kl::string( "first" ) );
+    ref kl::string x = l[0];
+    const ref u8[] t = l[0].as_text();
+    x = kl::string( "abcdefghijklmnopqrstuvwxyz0123456789" );
+    return cast<i32>( t[3] );
+}

@@ -242,6 +242,12 @@ Type_id Expressions::infer_name( Node_id id )
         }
     }
 
+    if( decl_kind == Node_kind::Field_decl )
+    {
+        // The object is the receiver; the field's own `const` fixes the pointer, not what it points at.
+        return types_.record( id, read_only_field( ast_.is_const_method( current_function_ ), types_.type_of( decl ) ) );
+    }
+
     return types_.record( id, types_.type_of( decl ) );
 }
 
@@ -1797,7 +1803,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 {
     const Node_id index  = ast_.index( id );
     const Node_id method = find_operator(
-        id, object_type, index, Interner::operator_name( Operator_name::Index ), "T* operator[]( u64 index ) const", 1
+        id, object_type, index, Interner::operator_name( Operator_name::Index ), "ref T operator[]( u64 index ) const", 1
     );
 
     if( !method.is_valid() )
@@ -1811,8 +1817,10 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 
     check( index, table_.substitute( types_.type_of( params[1] ), bindings ) );
 
+    const bool binding = places_.returns_a_binding( method );
+
     // A malformed return was reported where it was written.
-    if( !table_.is_pointer( returned ) )
+    if( !binding && !table_.is_pointer( returned ) )
     {
         return types_.poison( id );
     }
@@ -1820,7 +1828,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     callees_.record( id, method );
     overloads_.record_method_instantiation( current_function_, id, method, object_type );
 
-    return types_.record( id, table_.get( returned ).element );
+    return types_.record( id, binding ? returned : table_.get( returned ).element );
 }
 
 // The operator method a use calls with `operands` right-hand operands, or nothing once reported. The
@@ -2615,7 +2623,11 @@ Type_id Expressions::infer_field( Node_id id )
         if( name == "data" )
         {
             return types_.record(
-                id, table_.many_pointer_to( table_.get( base_type ).element, places_.is_read_only( base, current_function_ ) )
+                id,
+                read_only_field(
+                    places_.is_read_only( base, current_function_ ),
+                    table_.many_pointer_to( table_.get( base_type ).element, false )
+                )
             );
         }
 
@@ -2681,7 +2693,11 @@ Type_id Expressions::infer_field( Node_id id )
         return types_.poison( id );
     }
 
-    return types_.record( id, aggregates_.field_type( object_type, field_decl ) );
+    const Type_id field_type = aggregates_.field_type( object_type, field_decl );
+    const bool    read_only  = places_.is_read_only( base, current_function_ ) ||
+                           ( table_.is_pointer( base_type ) && table_.points_to_const( base_type ) );
+
+    return types_.record( id, read_only_field( read_only, field_type ) );
 }
 
 Type_id Expressions::infer_string_literal( Node_id id )
@@ -3756,6 +3772,16 @@ void Expressions::step_pointer( Node_id statement, Token_kind op, Type_id pointe
     reporter_.error_at(
         ast_.span( statement ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( pointer ) )
     );
+}
+
+Type_id Expressions::read_only_field( bool read_only, Type_id field_type ) const
+{
+    if( read_only && ( table_.is_pointer( field_type ) || table_.is_many_pointer( field_type ) ) )
+    {
+        return table_.is_pointer( field_type ) ? table_.pointer_to( table_.get( field_type ).element, true )
+                                               : table_.many_pointer_to( table_.get( field_type ).element, true );
+    }
+    return field_type;
 }
 
 } // namespace keel::sema
@@ -6453,7 +6479,7 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
     {
         const Typed p( "class B { u64 n; B() { n = 0; } ~B() { } };\n"
                        "class box { B[*] data; box() { unsafe { data = alloc<B>( 1 ); } }\n"
-                       "    public B* operator[]( u64 i ) const { unsafe { return &data[i]; } } };\n"
+                       "    public ref B operator[]( u64 i ) const { unsafe { return data[i]; } } };\n"
                        "i32 main() { box b = box(); B x = move b[0]; return 0; }" );
 
         INFO( p.rendered() );
@@ -7720,7 +7746,7 @@ TEST_CASE( "type_checker_enforces_a_const_method", "[sema][method]" )
     SECTION( "a mutating method may be called through a pointer, wherever the pointer came from" )
     {
         const Typed p(
-            std::string( owning ) + "struct H { B* b; B* get() const { return b; } };\n"
+            std::string( owning ) + "struct H { B* b; B* get() { return b; } };\n"
                                     "i32 main() { B b = B( 1 ); H h = H { &b }; h.get().bump();"
                                     " B* const q = &b; q.bump(); return 0; }"
         );
@@ -7837,12 +7863,12 @@ TEST_CASE( "type_checker_returns_a_reference_into_the_object", "[sema][method]" 
         REQUIRE( p.clean() );
     }
 
-    SECTION( "and a mutable one is refused, as for a free function" )
+    SECTION( "and a mutable one, as for a free function" )
     {
         const Typed p( "struct P { i32 x; ref i32 get() { return x; } };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+        REQUIRE( p.clean() );
     }
 }
 

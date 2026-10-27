@@ -416,7 +416,7 @@ Type_id Annotations::resolve_function_type( Node_id annotation )
     {
         reporter_.error_at(
             ast_.span( spelled_return ),
-            "only a `const ref` may be returned",
+            "a function type returns only `const ref`",
             fmt::format( "write `const ref {}`", table_.name( return_type ) )
         );
         poisoned = true;
@@ -1468,9 +1468,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         REQUIRE( value != borrow );
     }
 
-    // The one reference return the language has is the read-only one, and a type gets the rule and
-    // the message a declaration gets: a mutable one would let a caller write through a borrow it
-    // never asked for.
+    // A declaration may return `ref`, but nothing yet needs a function type that does.
     SECTION( "but a mutable borrow may not be returned" )
     {
         Written p( "void g( fn( i32 ) -> ref i32 a ) { }" );
@@ -1480,7 +1478,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.table().is_error( type ) );
-        REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a function type returns only `const ref`" ) != std::string::npos );
     }
 
     // `out` and `move` say how an *argument* travels, and a return is not one.

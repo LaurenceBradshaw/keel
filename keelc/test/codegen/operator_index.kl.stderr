@@ -1,0 +1,7 @@
+error: expected `T*`, but got `const T*`
+  --> codegen/operator_index.kl:41:20
+   |
+41 |             return &data[index];
+   |                    ^^^^^^^^^^^^ a pointer to `const` never converts back to one that writes
+
+1 error generated

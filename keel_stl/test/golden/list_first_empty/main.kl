@@ -7,5 +7,5 @@ i32 main()
 {
     kl::list<i32> values = kl::list<i32>();
     kl::println( "looking" );
-    return *values.first();
+    return values.first();
 }

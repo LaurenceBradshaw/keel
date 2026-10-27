@@ -234,6 +234,8 @@ private:
     Type_id infer_index( Node_id id );
     Type_id infer_array_index( Node_id id, Type_id array );
 
+    Type_id read_only_field( bool read_only, Type_id field_type ) const;
+
     // D35: an operation on the enumerated list is permitted inside an unsafe block and reported
     // outside one. The `why` is the operation's own reason - what the author is asserting by writing
     // the block - so each caller supplies it.

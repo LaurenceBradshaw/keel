@@ -135,14 +135,14 @@ Moves checked at compile time, sum types, `result` and a borrow check can read a
 spelling. Keel is not that, and the difference is in the reference. In Rust a reference is a type:
 it can sit in a struct, be returned freely and be passed as a type argument, so the compiler has to
 know how long each one lives, and lifetimes become part of every signature that touches one. In Keel
-`ref` is only a way to bind a parameter or a local. It is never stored, and it is returned only as a
-`const ref` into an argument. That small rule leaves the borrow check almost nothing to prove: it
-refuses a borrow only when its object could be destroyed or moved out from under it, and it never
-asks the programmer to describe a lifetime. Two mutable references to one value are allowed, as in
-C++. A raw pointer stays an ordinary C++ pointer, whose type already warns that it can dangle. The
-model underneath is still C++'s: classes with constructors and destructors, RAII, value semantics
-and generics checked at the definition. Keel removes C++'s accidents and adds no new discipline to
-learn in their place.
+`ref` is only a way to bind a parameter or a local. It is never stored, and it is returned only into
+an argument, as a mutable `ref` only from one the function could change anyway. That small rule
+leaves the borrow check almost nothing to prove: it refuses a borrow only when its object could be
+destroyed or moved out from under it, and it never asks the programmer to describe a lifetime.
+Two mutable references to one value are allowed, as in C++. A raw pointer stays an ordinary C++
+pointer, whose type already warns that it can dangle. The model underneath is still C++'s: classes
+with constructors and destructors, RAII, value semantics and generics checked at the definition.
+Keel removes C++'s accidents and adds no new discipline to learn in their place.
 
 The name is the shipbuilding one. The keel is the first member laid down and the hull is built off it;
 the ownership and lifetime model is that member here.
@@ -299,7 +299,7 @@ noted in its row.
 | Five argument forms, and the call site names every one that affects the caller's variable: `f( x )`, `f( move x )`, `f( ref x )`, `f( out x )`, and `const ref` called bare, because like `f( x )` it leaves your variable unchanged. | The signature decides, invisibly at the call. | You can see what a call does to your variables without opening the callee. |
 | A borrow takes exactly its type: an `i32` cannot be passed as a `const ref i64` or an `out i64`, though a bare `i64` parameter widens it. | `const T&` binds a converted temporary; a non-`const` reference refuses. | A borrow is your variable itself, so there is nowhere for a widened copy to live, and an `out` would write eight bytes into four. |
 | `ref` is a binding mode, not a type. `ref T x` replaces `T&`, which is an error in type position, leaving `&` to mean address-of only. | `T&` is a type, and `&` means two things. | Treating a reference as a type is what makes `T&&`, reference collapsing and `std::forward` necessary. |
-| A `ref` is never reseated, may not be stored or captured, and may be returned only as a `const ref` derived from a reference parameter. | References may dangle, silently. | A reference cannot outlive its object by construction, so nothing needs a lifetime annotation. |
+| A `ref` is never reseated, may not be stored or captured, and may be returned only when derived from a reference parameter, a mutable one only from a parameter the function could change. | References may dangle, silently. | A reference cannot outlive its object by construction, so nothing needs a lifetime annotation. |
 | A borrow is refused while its object could be destroyed or relocated under it: `ref i32 x = v[0]; v.push( 9 );` is an error while `x` is still used. Two mutable borrows of one value are fine. | Compiles, and `x` dangles once `v` grows. | Only storage ending or moving makes a borrow dangle, and the syntax marks every way into storage that can move (`[]`, or a call returning a reference), so the check needs no lifetimes. |
 | No `new`/`delete` in safe code. `alloc<T>( n )`, `free( p )` and `destroy( p, n )` are keywords needing `unsafe`: memory, its release, and ending the values in it are three separate steps. A failed `alloc` panics rather than answering null. | `new`/`delete`, and owning raw pointers as an idiom. | An address says nothing about who frees it. Manual allocation is the exception, spelled as one. |
 | `unsafe` is a block, and it permits operations rather than disabling checks. | Unmarked, and available everywhere. | The permission is always a pair of braces you can see, and everything checked outside one is checked inside. |

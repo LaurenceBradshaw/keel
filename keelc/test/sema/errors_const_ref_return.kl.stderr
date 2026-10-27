@@ -28,12 +28,6 @@ error: a returned reference must borrow from a parameter
 50 |     return r;
    |            ^ anything else here dies when this function returns
 
-error: only a `const ref` may be returned
-  --> sema/errors_const_ref_return.kl:54:1
-   |
-54 | ref i32 returns_a_mutable_ref( ref i32 a )
-   | ^^^ write `const ref i32`
-
 error: `out` is not a return mode
   --> sema/errors_const_ref_return.kl:62:1
    |
@@ -46,4 +40,4 @@ error: `move` is not a return mode
 67 | move i32 returns_a_move()
    | ^^^^ `move` says how an argument travels, and a return is not an argument
 
-8 errors generated
+7 errors generated

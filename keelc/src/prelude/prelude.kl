@@ -261,9 +261,9 @@ class box<T>
     }
 
     /// The value, where it lives.
-    public T* get() const
+    public ref T get() const
     {
-        return p_;
+        return *p_;
     }
 
     private T* p_;

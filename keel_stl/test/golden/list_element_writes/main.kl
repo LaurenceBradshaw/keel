@@ -1,0 +1,29 @@
+// Two `ref`s into one list are both written, and a `const ref` read between them; a `const` method's
+// `ref` result writes a local list.
+import kl::list;
+import kl::string;
+
+i32 main()
+{
+    kl::list<kl::string> l = kl::list<kl::string>();
+    l.push( kl::string( "a" ) );
+    l.push( kl::string( "b" ) );
+
+    ref kl::string x = l[0];
+    ref kl::string y = l[1];
+    x = kl::string( "first" );
+    const ref kl::string seen = l[0];
+    if( seen.size() != 5 )
+    {
+        return 1;
+    }
+    y = kl::string( "second" );
+
+    l.last().push( 33 );
+    l[0] = kl::string( "third" );
+    if( l[0].size() != 5 || l[1].size() != 7 )
+    {
+        return 2;
+    }
+    return 0;
+}

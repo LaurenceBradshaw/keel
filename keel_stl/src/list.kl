@@ -109,12 +109,12 @@ class list<T>
         }
     }
 
-    /// A pointer to the first element.
+    /// The first element.
     ///
     /// ### Panics
     ///
     /// If the list is empty.
-    public T* first() const
+    public ref T first() const
     {
         if( count_ == 0 )
         {
@@ -123,16 +123,16 @@ class list<T>
 
         unsafe
         {
-            return &data_[0];
+            return data_[0];
         }
     }
 
-    /// A pointer to the last element.
+    /// The last element.
     ///
     /// ### Panics
     ///
     /// If the list is empty.
-    public T* last() const
+    public ref T last() const
     {
         if( count_ == 0 )
         {
@@ -141,16 +141,16 @@ class list<T>
 
         unsafe
         {
-            return &data_[count_ - 1];
+            return data_[count_ - 1];
         }
     }
 
-    /// A pointer to the element at `index`.
+    /// The element at `index`.
     ///
     /// ### Panics
     ///
     /// If `index` is not less than `size()`.
-    public T* operator[]( u64 index ) const
+    public ref T operator[]( u64 index ) const
     {
         if( index >= count_ )
         {
@@ -159,7 +159,7 @@ class list<T>
 
         unsafe
         {
-            return &data_[index];
+            return data_[index];
         }
     }
 

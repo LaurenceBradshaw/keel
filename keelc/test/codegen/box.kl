@@ -88,12 +88,12 @@ i32 main()
     if( plain.get().area() != 1.0 ) { return 1; }
 
     box<Shape> one = move plain;
-    Shape*     s   = one.get();
+    ref Shape  s   = one.get();
     s.grow( 1.0 );
     if( one.get().area() != 4.0 ) { return 2; }
 
     box<Shape> framed = make( false );
-    Shape*     f      = framed.get();
+    ref Shape  f      = framed.get();
     f.grow( 2.0 );
     if( framed.get().area() != 6.0 ) { return 3; }
 

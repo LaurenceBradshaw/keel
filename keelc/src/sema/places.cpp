@@ -107,6 +107,27 @@ bool Places::call_returns_a_binding( Node_id call ) const
            table_.get( signature ).return_mode == Param_mode::Const_ref;
 }
 
+// The callable the checker chose, or the declaration the callee names.
+Node_id Places::callee_declaration( Node_id call ) const
+{
+    const Node_id method = callees_.callee_of( call );
+    return method.is_valid() ? method : resolution_.declaration_of( ast_.callee( call ) );
+}
+
+// A function type returns only `const ref`, so only a declaration answers yes.
+bool Places::returns_writable( Node_id call ) const
+{
+    const Node_id callee = callee_declaration( call );
+    return call_returns_a_binding( call ) && callee.is_valid() &&
+           ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) &&
+           !ast_.is_const_binding( callee );
+}
+
+bool Places::follows_its_receiver( Node_id call ) const
+{
+    return returns_writable( call ) && ast_.is_const_method( callee_declaration( call ) );
+}
+
 // D31/D32: what may be written. A `const` declaration says so itself; a borrow is read-only because
 // someone else owns it - different reasons, so different messages and different fixes.
 // `temporary_ok` accepts a temporary, for a method call whose answer is used.
@@ -127,10 +148,28 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 
         if( ast_.kind( source ) == Node_kind::Call_expr )
         {
-            const Node_id method = callees_.callee_of( source );
-            const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( source ) );
+            const Node_id callee = callee_declaration( source );
 
-            if( call_returns_a_binding( source ) )
+            // D73: a `const` method's `ref` result is as writable as its receiver, so the receiver
+            // answers, in its own words. A bare method name's receiver is `this`.
+            if( follows_its_receiver( source ) && ast_.kind( ast_.callee( source ) ) == Node_kind::Field_expr )
+            {
+                if( !check_writable( ast_.object( ast_.callee( source ) ), current_function, false, temporary_ok ) )
+                {
+                    return false;
+                }
+            }
+            else if( follows_its_receiver( source ) && ast_.is_const_method( current_function ) )
+            {
+                reporter_.error_at(
+                    ast_.span( target ),
+                    "a `const` method cannot modify its object",
+                    fmt::format( "remove `const` from `{}` to let it", interner_.text( ast_.name( current_function ) ) )
+                );
+
+                return false;
+            }
+            else if( call_returns_a_binding( source ) && !returns_writable( source ) )
             {
                 reporter_.error_at(
                     ast_.span( target ),
@@ -138,15 +177,17 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
                         "`{}` returns a const ref, so it cannot be modified",
                         interner_.text( ast_.name( ast_.callee( source ) ) )
                     ),
-                    "a returned reference is always read-only"
+                    "a `const ref` result is read-only"
                 );
 
                 return false;
             }
-
-            // A constructor lands here too, since its callee is the aggregate rather than a
-            // function. An unresolved one stays quiet: the name was already reported.
-            temporary = callee.is_valid();
+            else if( !call_returns_a_binding( source ) )
+            {
+                // A constructor lands here too, since its callee is the aggregate rather than a
+                // function. An unresolved one stays quiet: the name was already reported.
+                temporary = callee.is_valid();
+            }
         }
 
         if( temporary && !temporary_ok )
@@ -184,7 +225,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
                 "`{}`'s `operator[]` only reads, so this cannot be modified",
                 table_.name( types_.type_of( ast_.object( pointer ) ) )
             ),
-            "it returns a pointer to `const`"
+            returns_a_binding( callees_.callee_of( pointer ) ) ? "it returns `const ref`" : "it returns a pointer to `const`"
         );
 
         return false;
@@ -288,7 +329,8 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
     return true;
 }
 
-// Whether a place may be read and not written: through a pointer to `const` or a `const` field, from a `const ref` return, or
+// Whether a place may be read and not written: through a pointer to `const` or a `const` field, from a `const ref` return or
+// a `const` method's `ref` one on a read-only receiver, or
 // rooted in a `const` binding, a pattern binding, a counter or a read-only borrow. A temporary is check_writable's alone.
 bool Places::is_read_only( Node_id target, Node_id current_function ) const
 {
@@ -300,7 +342,14 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
     const Node_id source = place_source( target );
     if( source.is_valid() && ast_.kind( source ) == Node_kind::Call_expr && call_returns_a_binding( source ) )
     {
-        return true;
+        if( !follows_its_receiver( source ) )
+        {
+            return !returns_writable( source );
+        }
+
+        return ast_.kind( ast_.callee( source ) ) == Node_kind::Field_expr
+                   ? is_read_only( ast_.object( ast_.callee( source ) ), current_function )
+                   : ast_.is_const_method( current_function );
     }
 
     const Node_id root = place_root( target, current_function );
@@ -342,7 +391,8 @@ Node_id Places::through_const_pointer( Node_id place ) const
 
             if( method.is_valid() )
             {
-                if( table_.points_to_const( types_.type_of( method ) ) )
+                if( table_.points_to_const( types_.type_of( method ) ) ||
+                    ( returns_a_binding( method ) && ast_.is_const_binding( method ) ) )
                 {
                     return place;
                 }
@@ -636,8 +686,10 @@ Node_id Places::borrowed_temporary( Node_id place ) const
 
 Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
 {
-    // A run's `size` and `data` are the callee's own copy of its description.
-    if( operator_projection( value ).is_valid() || describes_run( value ) )
+    // A run's `size` and `data` are the callee's own copy of its description. A `[]` returning a
+    // pointer lasts only as long as its expression; one returning a reference is rooted in its object.
+    const Node_id projection = operator_projection( value );
+    if( ( projection.is_valid() && !returns_a_binding( callees_.callee_of( projection ) ) ) || describes_run( value ) )
     {
         return value;
     }
@@ -653,10 +705,16 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
         }
     }
 
-    // A returned reference borrows what the call's arguments borrow, so each of them must not escape.
+    // And what a `T*` points at, through `*p` or D22's `p.x`.
     const Node_id source = place_source( value );
 
-    if( source.is_valid() && ast_.kind( source ) == Node_kind::Call_expr && call_returns_a_binding( source ) )
+    if( !source.is_valid() || ( ast_.kind( source ) == Node_kind::Unary_expr && ast_.op( source ) == Token_kind::Star ) )
+    {
+        return Node_id {};
+    }
+
+    // A returned reference borrows what the call's arguments borrow, so each of them must not escape.
+    if( ast_.kind( source ) == Node_kind::Call_expr && call_returns_a_binding( source ) )
     {
         for( const Node_id argument : borrowed_arguments( source ) )
         {
@@ -677,6 +735,91 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
     }
 
     return value;
+}
+
+// The field a place reads, bare or through an object, or invalid.
+Node_id Places::field_declaration( Node_id place ) const
+{
+    if( ast_.kind( place ) == Node_kind::Name_expr )
+    {
+        const Node_id decl = resolution_.declaration_of( place );
+        return decl.is_valid() && ast_.kind( decl ) == Node_kind::Field_decl ? decl : Node_id {};
+    }
+
+    if( ast_.kind( place ) != Node_kind::Field_expr )
+    {
+        return Node_id {};
+    }
+
+    const Type_id object_type = types_.type_of( ast_.object( place ) );
+    if( !object_type.is_valid() || table_.is_error( object_type ) )
+    {
+        return Node_id {};
+    }
+
+    const Type_id aggregate = table_.is_pointer( object_type ) ? table_.get( object_type ).element : object_type;
+    if( !table_.is_struct( aggregate ) )
+    {
+        return Node_id {};
+    }
+
+    for( const Node_id member : ast_.members( table_.get( aggregate ).declaration ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Field_decl && ast_.name( member ) == ast_.name( place ) )
+        {
+            return member;
+        }
+    }
+
+    return Node_id {};
+}
+
+// Rooted in the receiver, reached only through pointer fields declared to write and through `ref`
+// results that follow their own receivers. Anything declared `const` on the way is read-only
+// whatever the caller holds.
+bool Places::follows_receiver( Node_id value, Node_id current_function ) const
+{
+    Node_id place = value;
+
+    while( !const_field( place ).is_valid() )
+    {
+        const Node_id source = place_source( place );
+
+        if( source.is_valid() && ast_.kind( source ) == Node_kind::Call_expr )
+        {
+            if( !follows_its_receiver( source ) )
+            {
+                return false;
+            }
+
+            if( ast_.kind( ast_.callee( source ) ) != Node_kind::Field_expr )
+            {
+                return true; // a bare method name's receiver is `this`
+            }
+
+            place = ast_.object( ast_.callee( source ) );
+            continue;
+        }
+
+        const Node_id pointer = through_const_pointer( place );
+
+        if( !pointer.is_valid() )
+        {
+            return place_root( place, current_function ) == receiver_of( current_function );
+        }
+
+        // Only a field read through a read-only object was made `const`; any other pointer was declared so.
+        const Node_id field = field_declaration( pointer );
+
+        if( !field.is_valid() || table_.points_to_const( types_.type_of( field ) ) )
+        {
+            return false;
+        }
+
+        place = pointer;
+    }
+
+    return false;
 }
 
 std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
@@ -708,7 +851,8 @@ std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
 
         if( borrows( mode, types_.type_of( args[i] ) ) )
         {
-            borrowed.push_back( args[i] );
+            // `ref x` borrows `x`.
+            borrowed.push_back( ast_.kind( args[i] ) == Node_kind::Marker_expr ? ast_.operand( args[i] ) : args[i] );
         }
     }
 
@@ -1080,15 +1224,14 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
         REQUIRE( p.rendered().find( "`w` is borrowed" ) != std::string::npos );
     }
 
-    // Shallow, the way `const` is in C++, and for the same reason: what a pointer points at was
-    // never part of the object that was lent. The borrow covers the pointer, not the pointee.
-    SECTION( "but writing through a pointer it holds is allowed" )
+    // D73: read-only reaches through a pointer it holds.
+    SECTION( "nor written through a pointer it holds" )
     {
         const Typed p( "class B { public i32* q; ~B() { } };\n"
                        "i32 f( B b ) { *b.q = 5; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.clean() );
+        REQUIRE( p.errors() == 1 );
     }
 
     SECTION( "including through D22's implicit reach" )
@@ -1097,7 +1240,7 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
                        "i32 f( B b ) { b.q.x = 5; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.clean() );
+        REQUIRE( p.errors() == 1 );
     }
 
     // A local owns what it holds, so none of this touches it. Without this case the rule could be
@@ -1253,9 +1396,8 @@ TEST_CASE( "type_checker_enforces_const_on_a_binding", "[sema][const]" )
     }
 }
 
-// The same walk the borrow rule uses: a field path of any depth roots in the declaration, and the
-// walk stops at a pointer because what a pointer points at was never named by this declaration.
-// That is C++'s shallow const, reached from bindings rather than inherited.
+// The same walk the borrow rule uses: a field path of any depth roots in the declaration, and D73
+// carries it on through a pointer field.
 TEST_CASE( "type_checker_reaches_const_through_fields", "[sema][const]" )
 {
     SECTION( "a field of a const struct cannot be written" )
@@ -1277,18 +1419,88 @@ TEST_CASE( "type_checker_reaches_const_through_fields", "[sema][const]" )
         REQUIRE( p.rendered().find( "`o` is `const`" ) != std::string::npos );
     }
 
-    SECTION( "but the walk stops at a pointer it holds" )
+    SECTION( "nor through a pointer it holds" )
     {
         const Typed p( "struct P { i32 x; };\nstruct H { P* q; };\n"
                        "i32 main() { P v = P { 1 }; const H h = H { &v }; h.q.x = 5; return v.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// D73: a pointer field read through a read-only place is a pointer to `const`.
+TEST_CASE( "type_checker_reads_a_pointer_field_of_a_read_only_place_as_const", "[sema][const]" )
+{
+    SECTION( "in a `const` method" )
+    {
+        for( const char* body : {
+                 "public void a() const { *p = 1; }",
+                 "public void a( i32 x ) const { unsafe { data[0] = x; } }",
+                 "public i32* a() const { unsafe { return &data[0]; } }",
+             } )
+        {
+            const Typed p(
+                std::string( "class C { i32* p; i32[*] data; C() { p = nullptr; data = nullptr; } " ) + body +
+                " };\ni32 main() { return 0; }"
+            );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    SECTION( "at any depth of fields" )
+    {
+        const Typed p( "struct I { i32* p; };\n"
+                       "class C { I inner; C() { inner = I { nullptr }; } public void a() const { *inner.p = 1; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "through a pointer to `const`, by D22's reach too" )
+    {
+        const Typed p( "struct Q { i32* q; };\nvoid f( const Q* p ) { *p.q = 1; }\nvoid g( const Q* p ) { *( *p ).q = 1; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "through a `const ref` or bare owning parameter, or a `const` local" )
+    {
+        for( const char* function : {
+                 "void f( const ref O o ) { *o.p = 1; }",
+                 "void f( const ref O o ) { i32* q = o.p; }",
+                 "void f( B o ) { *o.p = 1; }",
+                 "void f( B o ) { i32* q = o.p; }",
+                 "void f() { const O o = O { nullptr }; *o.p = 1; }",
+                 "void f() { const O o = O { nullptr }; i32* q = o.p; }",
+             } )
+        {
+            const Typed p(
+                std::string( "struct O { i32* p; };\nclass B { public i32* p; ~B() { } };\n" ) + function +
+                "\ni32 main() { return 0; }"
+            );
+
+            INFO( function << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    SECTION( "but not through a `ref` parameter" )
+    {
+        const Typed p( "struct O { i32* p; };\nvoid f( ref O o ) { *o.p = 1; i32* q = o.p; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
 }
 
-// PLAN §8. A reference may be returned only as a `const ref` derived from one of the function's own
-// reference parameters. That makes dangling representable but rejected rather than impossible, and
+// PLAN §8. A reference may be returned only when derived from one of the function's own reference
+// parameters. That makes dangling representable but rejected rather than impossible, and
 // the check is syntactic with no dataflow: trace the returned expression to its root and require a
 // parameter that travels by address.
 //
@@ -1358,6 +1570,33 @@ TEST_CASE( "type_checker_accepts_a_const_ref_return_from_a_parameter", "[sema][e
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+
+    // D73: a `ref` result from what the function could change.
+    SECTION( "a `ref` from a field of a `ref` parameter" )
+    {
+        const Typed p( "struct P { i32 x; };\nref i32 get( ref P p ) { return p.x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a `ref` passed on through a call, its argument marked `ref`" )
+    {
+        const Typed p( "struct P { i32 x; };\nref i32 pick( ref i32 a ) { return a; }\n"
+                       "ref i32 deep( ref P p ) { return pick( ref p.x ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a `const` method's `ref` from its receiver" )
+    {
+        const Typed p( "class V { i32[*] d; V() { unsafe { d = alloc<i32>( 1 ); } } "
+                       "public ref i32 at() const { unsafe { return d[0]; } } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
@@ -1420,16 +1659,34 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
     }
 }
 
-// Only `const ref` may be returned. A mutable one would let a caller write through a reference it
-// never asked for, and §8 gives up reseating in exchange for needing no lifetimes - not mutability
-// through a returned binding.
+// D73: a `ref` result comes only from a place the function could change.
 TEST_CASE( "type_checker_refuses_a_mutable_ref_return", "[sema][escape]" )
 {
-    const Typed p( "ref i32 bad( ref i32 a ) { return a; }\ni32 main() { return 0; }" );
+    SECTION( "from a `const ref` parameter" )
+    {
+        const Typed p( "ref i32 bad( const ref i32 a ) { return a; }\ni32 main() { return 0; }" );
 
-    INFO( p.rendered() );
-    REQUIRE_FALSE( p.clean() );
-    REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `ref` result must be a place this function could change" ) != std::string::npos );
+    }
+
+    SECTION( "from a `const` method's parameter other than `this`" )
+    {
+        const Typed p( "struct P { i32 x; ref i32 get( const ref i32 a ) const { return a; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `ref` result must be a place this function could change" ) != std::string::npos );
+    }
+
+    SECTION( "but from a `ref` parameter it is accepted" )
+    {
+        const Typed p( "ref i32 good( ref i32 a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 // The result names something that was alive at the call site, so it outlives any binding declared
@@ -1452,6 +1709,34 @@ TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return", "[sema][escape
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+
+    // D73: a `ref` result writes what its argument names.
+    SECTION( "a `ref` one may be bound by `ref` and written" )
+    {
+        const Typed p( "ref i32 pick( ref i32 a ) { return a; }\n"
+                       "i32 main() { i32 x = 1; pick( ref x ) = 5; ref i32 r = pick( ref x ); r = 6; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A `const` method's `ref` result is as writable as its receiver.
+    SECTION( "a `const` method's `ref` one is written through a local, not a `const` one" )
+    {
+        constexpr std::string_view v = "class V { i32[*] d; V() { unsafe { d = alloc<i32>( 1 ); } } "
+                                       "public ref i32 at() const { unsafe { return d[0]; } } };\n";
+
+        const Typed local( std::string( v ) + "i32 main() { V v = V(); v.at() = 1; ref i32 r = v.at(); r = 2; return 0; }" );
+
+        INFO( local.rendered() );
+        REQUIRE( local.clean() );
+
+        const Typed fixed( std::string( v ) + "void f( const ref V c ) { c.at() = 1; }\ni32 main() { return 0; }" );
+
+        INFO( fixed.rendered() );
+        REQUIRE( fixed.errors() == 1 );
+        REQUIRE( fixed.rendered().find( "`c` is `const`" ) != std::string::npos );
     }
 
     // It is a `const ref`, so the binding it makes is read-only like any other.
@@ -2124,7 +2409,7 @@ TEST_CASE( "type_checker_gives_a_const_many_item_pointer_its_c_meaning", "[sema]
         REQUIRE_FALSE( p.clean() );
     }
 
-    SECTION( "a const struct's field of this type is the same" )
+    SECTION( "a const struct's field of this type is read-only all the way down" )
     {
         const Typed p( "struct B { i32[*] data; };\n"
                        "void set( const ref B b ) { unsafe { b.data[ 0 ] = 1; } }\n"
@@ -2132,7 +2417,7 @@ TEST_CASE( "type_checker_gives_a_const_many_item_pointer_its_c_meaning", "[sema]
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 ); // the reseat, not the element write
+        REQUIRE( p.errors() == 2 ); // D73: the element write through a field too
     }
 }
 

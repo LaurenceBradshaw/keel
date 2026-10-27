@@ -1,5 +1,5 @@
-// PLAN §8. A reference may be returned only as a `const ref` derived from one of the function's own
-// reference parameters. The check is syntactic with no dataflow: trace the returned expression to
+// PLAN §8. A reference may be returned only when derived from one of the function's own reference
+// parameters. The check is syntactic with no dataflow: trace the returned expression to
 // its root and require a parameter that travels by address.
 //
 // Why no lifetimes are needed: a `ref` binding is initialised at its declaration and never
@@ -50,7 +50,7 @@ const ref i32 returns_a_local_binding( const ref i32 a )
     return r;
 }
 
-// A mutable one would let a caller write through a reference it never asked for.
+// A `ref` from a `ref` parameter is accepted.
 ref i32 returns_a_mutable_ref( ref i32 a )
 {
     return a;

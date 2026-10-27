@@ -15,7 +15,8 @@ enum class Loan_conflict : u8
 {
     Moved,    // the object is moved
     Assigned, // the object is assigned or dropped
-    Changed   // the object is passed `ref` or `out`, or to a non-`const` method
+    Changed,  // the object is passed `ref` or `out`, or to a non-`const` method
+    Replaced  // what an element of the object owns is freed or relocated, through a call's result
 };
 
 // A loan broken while its holder is still used. Spans only; check/report does the wording.

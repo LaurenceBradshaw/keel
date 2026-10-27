@@ -119,11 +119,13 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
     return true;
 }
 
-bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
+u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
 {
     const std::span<const Operand> arguments(
         func.operands.data() + element.through->first_argument, element.through->argument_count
     );
+
+    u32 depth = 0;
 
     for( const Operand& operand : arguments )
     {
@@ -136,18 +138,25 @@ bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Bo
 
         if( inner.through != nullptr )
         {
-            if( reaches( func, borrows, inner, whole ) )
+            const u32 inner_depth = reaches_depth( func, borrows, inner, whole );
+
+            if( inner_depth != 0 )
             {
-                return true;
+                depth = std::max( depth, inner_depth + 1 );
             }
         }
         else if( inner.of.is_valid() && overlaps( func, inner.place, whole ) )
         {
-            return true;
+            depth = std::max( depth, 1u );
         }
     }
 
-    return false;
+    return depth;
+}
+
+bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
+{
+    return reaches_depth( func, borrows, element, whole ) != 0;
 }
 
 } // namespace keel

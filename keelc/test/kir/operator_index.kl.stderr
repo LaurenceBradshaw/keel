@@ -1,0 +1,7 @@
+error: expected `i32*`, but got `const i32*`
+  --> kir/operator_index.kl:11:20
+   |
+11 |             return &items[index];
+   |                    ^^^^^^^^^^^^^ a pointer to `const` never converts back to one that writes
+
+1 error generated

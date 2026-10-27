@@ -235,7 +235,18 @@ void Statements::visit_return( Node_id id )
     {
         const Node_id part = places_.escaping_part( value, expressions_.current_function() );
 
-        if( !part.is_valid() )
+        const Node_id function = expressions_.current_function();
+
+        // D73: a `ref` result writes, so it must come from somewhere this function could write. A
+        // `const` method's may be read-only through its receiver alone: the caller's receiver decides.
+        if( !part.is_valid() && !ast_.is_const_binding( function ) && places_.is_read_only( value, function ) &&
+            !( ast_.is_const_method( function ) && places_.follows_receiver( value, function ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( value ), "a `ref` result must be a place this function could change", "return `const ref`"
+            );
+        }
+        else if( !part.is_valid() )
         {
             // Every part borrows from a parameter.
         }
@@ -413,6 +424,10 @@ void Statements::visit_assign( Node_id id )
     const Node_id    target = ast_.target( id );
     const Node_id    value  = ast_.value( id );
 
+    // A call says whether it returns a reference only once typing has chosen its callee.
+    const bool    call      = ast_.kind( target ) == Node_kind::Call_expr;
+    const Type_id call_type = call ? expressions_.infer( target ) : Type_id {};
+
     // Asked before infer(), which would otherwise absorb it: a literal target types as an error
     // today, so `1 = 2;` passed in silence. Parameters are assignable too - L12 is
     // mutable-by-default, and a parameter is a local.
@@ -421,17 +436,21 @@ void Statements::visit_assign( Node_id id )
         // A name that does not resolve, or resolves to a type or function, is already reported by
         // infer_name, and a qualified one the resolver could not bind by the resolver. Anything
         // else - a literal, a call, an arithmetic expression - has nothing else to report it.
-        if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) )
+        if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) &&
+            !( call && table_.is_error( call_type ) ) )
         {
             reporter_.error_at( ast_.span( target ), "cannot assign to this expression" );
         }
 
-        expressions_.absorb( target );
+        if( !call )
+        {
+            expressions_.absorb( target );
+        }
         expressions_.absorb( value );
         return;
     }
 
-    const Type_id target_type = expressions_.infer( target );
+    const Type_id target_type = call ? call_type : expressions_.infer( target );
 
     if( table_.is_error( target_type ) )
     {
@@ -666,19 +685,26 @@ void Statements::visit_increment( Node_id id )
     const Token_kind op      = ast_.op( id ); // `++` or `--`
     const Node_id    operand = ast_.operand( id );
 
+    // As visit_assign: a call is typed first, to choose its callee.
+    const bool    call      = ast_.kind( operand ) == Node_kind::Call_expr;
+    const Type_id call_type = call ? expressions_.infer( operand ) : Type_id {};
+
     if( !places_.is_assignable( operand ) && !places_.names_this( operand ) )
     {
         // Same split as visit_assign: infer_name already covers an unresolved name and a function.
-        if( ast_.kind( operand ) != Node_kind::Name_expr )
+        if( ast_.kind( operand ) != Node_kind::Name_expr && !( call && table_.is_error( call_type ) ) )
         {
             reporter_.error_at( ast_.span( operand ), fmt::format( "`{}` needs a variable", token_kind_spelling( op ) ) );
         }
 
-        expressions_.infer( operand );
+        if( !call )
+        {
+            expressions_.infer( operand );
+        }
         return;
     }
 
-    const Type_id operand_type = expressions_.infer( operand );
+    const Type_id operand_type = call ? call_type : expressions_.infer( operand );
 
     if( table_.is_error( operand_type ) )
     {

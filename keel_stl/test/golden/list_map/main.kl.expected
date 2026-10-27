@@ -906,7 +906,6 @@ int64_t* kl_2kl4list_operator_index__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2k
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int64_t* kl_t8;
-    int64_t* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -923,9 +922,7 @@ int64_t* kl_2kl4list_operator_index__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2k
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -1035,7 +1032,6 @@ bool* kl_2kl4list_operator_index__I4boolE__SQ2kl4listI4boolE_3u64( struct kl_2kl
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     bool* kl_t8;
-    bool* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -1052,9 +1048,7 @@ bool* kl_2kl4list_operator_index__I4boolE__SQ2kl4listI4boolE_3u64( struct kl_2kl
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -1079,7 +1073,6 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     int32_t* kl_t8;
-    int32_t* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -1096,9 +1089,7 @@ int32_t* kl_2kl4list_operator_index__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2k
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -1306,7 +1297,6 @@ uint64_t* kl_2kl4list_operator_index__I3u64E__SQ2kl4listI3u64E_3u64( struct kl_2
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     uint64_t* kl_t8;
-    uint64_t* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -1323,9 +1313,7 @@ uint64_t* kl_2kl4list_operator_index__I3u64E__SQ2kl4listI3u64E_3u64( struct kl_2
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"

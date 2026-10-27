@@ -109,15 +109,15 @@ i32 ends()
         return 5;
     }
 
-    *values.first() = owned( 7 );
-    *values.last() = owned( 9 );
+    values.first() = owned( 7 );
+    values.last() = owned( 9 );
     if( live != 3 || digits( values ) != 729 )
     {
         return 6;
     }
 
     kl::list<owned> one = counting( 1 );
-    if( one.first() != one.last() )
+    if( &one.first() != &one.last() )
     {
         return 7;
     }
@@ -253,7 +253,7 @@ i32 copies()
     values.insert( 0, 1 );
     values.insert( 1, 2 );
     values.reverse();
-    if( *values.first() != 3 || *values.last() != 1 || values[1] != 2 )
+    if( values.first() != 3 || values.last() != 1 || values[1] != 2 )
     {
         return 30;
     }

@@ -287,17 +287,19 @@ int32_t kl__main__( void )
     struct kl_7prelude_box__I8MeasuredE kl_t30;
     struct kl_7prelude_box__I8MeasuredE* kl_t31;
     struct kl__Measured__ref kl_t32;
-    struct kl_7prelude_box__I8MeasuredE* kl_t34;
-    struct kl__Measured__ref kl_t35;
-    int64_t kl_t36;
-    bool kl_t37;
-    bool kl_t38;
+    struct kl__Measured__ref kl_t33;
+    struct kl_7prelude_box__I8MeasuredE* kl_t35;
+    struct kl__Measured__ref kl_t36;
+    struct kl__Measured__ref kl_t37;
+    int64_t kl_t38;
     bool kl_t39;
     bool kl_t40;
+    bool kl_t41;
+    bool kl_t42;
 #line 41 "codegen/implements_for_packages/main.kl"
-    kl_t39 = false;
+    kl_t41 = false;
 #line 41 "codegen/implements_for_packages/main.kl"
-    kl_t40 = false;
+    kl_t42 = false;
 #line 41 "codegen/implements_for_packages/main.kl"
     kl_t2.kl_length = 2;
 #line 41 "codegen/implements_for_packages/main.kl"
@@ -376,51 +378,55 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t39 = false;
+    kl_t41 = false;
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_t25 = &kl_t24;
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t39 = true;
+    kl_t41 = true;
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t40 = false;
+    kl_t42 = false;
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_t27 = &kl_t26;
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t40 = true;
+    kl_t42 = true;
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_6shapes5kinds_Tracked__RQ6shapes7Tracked_3i64__ctor( kl_t27, 3 );
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_7prelude_box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6shapes7Tracked__ctor( kl_t25, kl_t26 );
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t40 = false;
+    kl_t42 = false;
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_t30 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t24.kl_p_, &kl_6shapes5kinds_Tracked__as_kl__Measured } };
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t39 = false;
+    kl_t41 = false;
 #line 57 "codegen/implements_for_packages/main.kl"
     kl_t_23 = kl_t30;
 #line 57 "codegen/implements_for_packages/main.kl"
-    if ( kl_t39 ) kl_7prelude_box__IQ6shapes7TrackedE__dtor( &kl_t24 );
+    if ( kl_t41 ) kl_7prelude_box__IQ6shapes7TrackedE__dtor( &kl_t24 );
 #line 57 "codegen/implements_for_packages/main.kl"
-    if ( kl_t40 ) kl_6shapes5kinds_Tracked__dtor( &kl_t26 );
+    if ( kl_t42 ) kl_6shapes5kinds_Tracked__dtor( &kl_t26 );
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t40 = false;
+    kl_t42 = false;
 #line 57 "codegen/implements_for_packages/main.kl"
-    kl_t39 = false;
+    kl_t41 = false;
     kl_t31 = &kl_t_23;
 #line 58 "codegen/implements_for_packages/main.kl"
     kl_t32 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t31 );
 #line 58 "codegen/implements_for_packages/main.kl"
-    kl_t32.vtable->kl__grow__3i64( kl_t32.self, 1 );
-    kl_t34 = &kl_t_23;
+    kl_t33 = kl_t32;
+#line 58 "codegen/implements_for_packages/main.kl"
+    kl_t33.vtable->kl__grow__3i64( kl_t33.self, 1 );
+    kl_t35 = &kl_t_23;
 #line 59 "codegen/implements_for_packages/main.kl"
-    kl_t35 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t34 );
+    kl_t36 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t35 );
 #line 59 "codegen/implements_for_packages/main.kl"
-    kl_t36 = kl_t35.vtable->kl__measure__( kl_t35.self );
+    kl_t37 = kl_t36;
 #line 59 "codegen/implements_for_packages/main.kl"
-    kl_t37 = kl_t36 != 4;
+    kl_t38 = kl_t37.vtable->kl__measure__( kl_t37.self );
 #line 59 "codegen/implements_for_packages/main.kl"
-    if ( kl_t37 ) goto bb11; else goto bb12;
+    kl_t39 = kl_t38 != 4;
+#line 59 "codegen/implements_for_packages/main.kl"
+    if ( kl_t39 ) goto bb11; else goto bb12;
     bb11:
 #line 59 "codegen/implements_for_packages/main.kl"
     kl_t0 = 6;
@@ -431,9 +437,9 @@ int32_t kl__main__( void )
     bb12:
 #line 60 "codegen/implements_for_packages/main.kl"
     kl_7prelude_box__I8MeasuredE__dtor( &kl_t_23 );
-    kl_t38 = kl_6shapes5kinds_drops__G != 1;
+    kl_t40 = kl_6shapes5kinds_drops__G != 1;
 #line 61 "codegen/implements_for_packages/main.kl"
-    if ( kl_t38 ) goto bb13; else goto bb14;
+    if ( kl_t40 ) goto bb13; else goto bb14;
     bb13:
 #line 61 "codegen/implements_for_packages/main.kl"
     kl_t0 = 7;

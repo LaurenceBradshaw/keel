@@ -36,4 +36,7 @@ bool overlaps( const Function& func, const Place& a, const Place& b );
 // Ends because `through` names an earlier statement, assigned once.
 bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole );
 
+// The most calls between a returned address and `whole`, or 0 when it does not reach it.
+u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole );
+
 } // namespace keel

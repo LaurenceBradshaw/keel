@@ -77,25 +77,25 @@ Does nothing if the capacity is already that large.</p>
 </div>
 </div>
 <div class="group" id="list.first">
-<pre class="signature"><a class="anchor" href="#list.first" aria-label="Link to first">#</a><code><span class="kw">public</span> T* <span class="fn">first</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#list.first" aria-label="Link to first">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">first</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the first element.</p>
+<p>The first element.</p>
 <h4>Panics</h4>
 <p>If the list is empty.</p>
 </div>
 </div>
 <div class="group" id="list.last">
-<pre class="signature"><a class="anchor" href="#list.last" aria-label="Link to last">#</a><code><span class="kw">public</span> T* <span class="fn">last</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#list.last" aria-label="Link to last">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">last</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the last element.</p>
+<p>The last element.</p>
 <h4>Panics</h4>
 <p>If the list is empty.</p>
 </div>
 </div>
 <div class="group" id="list.operator[]">
-<pre class="signature"><a class="anchor" href="#list.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> T* <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#list.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the element at <code>index</code>.</p>
+<p>The element at <code>index</code>.</p>
 <h4>Panics</h4>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>

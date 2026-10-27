@@ -64,4 +64,10 @@ error: `k` is `const`
 126 |     grow( ref k );
     |               ^ remove `const` to modify it
 
-11 errors generated
+error: this is reached through a `const P*`, so it cannot be modified
+   --> sema/errors_const.kl:150:5
+    |
+150 |     h.q.x = 5;
+    |     ^^^^^ a pointer to `const` only reads what it points at
+
+12 errors generated

@@ -1,0 +1,7 @@
+error: expected `owned*`, but got `const owned*`
+  --> codegen/owning_writes.kl:89:20
+   |
+89 |             return &data[index];
+   |                    ^^^^^^^^^^^^ a pointer to `const` never converts back to one that writes
+
+1 error generated

@@ -24,11 +24,11 @@ class Bag
         slots = nullptr;
     }
 
-    public Item* operator[]( u64 index ) const
+    public ref Item operator[]( u64 index ) const
     {
         unsafe
         {
-            return &slots[index];
+            return slots[index];
         }
     }
 };

@@ -150,7 +150,7 @@ private void entries_in_insertion_order( ref kl::test::context c )
 
     for( u64 i : 0..1000 )
     {
-        c.require( *m.key_at( i ) == i * 7 && *m.value_at( i ) == i && m[ i * 7 ] == i );
+        c.require( *m.key_at( i ) == i * 7 && m.value_at( i ) == i && m[ i * 7 ] == i );
     }
 }
 
@@ -167,7 +167,7 @@ private void remove_moves_the_last_entry( ref kl::test::context c )
     c.require( kl::is_some( m.remove( 10 ) ) );
     c.check_eq( m.size(), 4 );
     c.check_eq( *m.key_at( 1 ), 40 );
-    c.check_eq( *m.value_at( 1 ), 4 );
+    c.check_eq( m.value_at( 1 ), 4 );
     c.check_eq( *m.key_at( 3 ), 30 );
 
     // Removing the last entry moves nothing; the moved key is still found.
@@ -179,7 +179,7 @@ private void remove_moves_the_last_entry( ref kl::test::context c )
 
     for( u64 i : 0..m.size() )
     {
-        *m.value_at( i ) *= 2;
+        m.value_at( i ) *= 2;
     }
 
     c.check_eq( m[ 0 ], 0 );
@@ -242,7 +242,7 @@ private void owning_entries( ref kl::test::context c )
 
     for( u64 i : 0..names.size() )
     {
-        c.require( names[ *names.key_at( i ) ] == *names.value_at( i ) );
+        c.require( names[ *names.key_at( i ) ] == names.value_at( i ) );
     }
 
     names.insert( "0", "zero" );

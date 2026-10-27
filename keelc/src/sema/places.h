@@ -75,6 +75,9 @@ public:
     // returning a reference, or invalid.
     Node_id escaping_part( Node_id value, Node_id current_function ) const;
 
+    // D73: whether a `const` method's result is read-only only because its receiver is.
+    bool follows_receiver( Node_id value, Node_id current_function ) const;
+
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
@@ -94,6 +97,10 @@ private:
     bool                 borrows( Param_mode mode, Type_id type ) const; // travels by address
     std::vector<Node_id> borrowed_arguments( Node_id call ) const;       // the receiver's object first
     bool                 is_run_typed( Node_id id ) const;
+    Node_id              callee_declaration( Node_id call ) const;
+    Node_id              field_declaration( Node_id place ) const;
+    bool                 returns_writable( Node_id call ) const;     // a `ref` result, not `const ref`
+    bool                 follows_its_receiver( Node_id call ) const; // a `const` method's `ref` result
 
     const Ast&        ast_;
     const Interner&   interner_;

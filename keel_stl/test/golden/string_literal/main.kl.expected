@@ -2449,7 +2449,6 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     uint8_t* kl_t8;
-    uint8_t* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -2466,9 +2465,7 @@ uint8_t* kl_2kl4list_operator_index__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl4
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -2960,7 +2957,7 @@ uint64_t kl_2kl12hash_control_match_free__SQ2kl12hash_control_3u64( uint64_t );
 uint64_t kl_2kl12hash_control_lowest__SQ2kl12hash_control_3u64( uint64_t );
 uint64_t kl_2kl12hash_control_byte__SQ2kl12hash_control_3u64( struct kl_2kl12hash_control_hash_control*, uint64_t );
 void kl_2kl12hash_control_set_byte__SQ2kl12hash_control_3u64_3u64( struct kl_2kl12hash_control_hash_control*, uint64_t, uint64_t );
-void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( struct kl_2kl12hash_control_hash_probe*, uint64_t*, uint64_t, uint64_t );
+void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( struct kl_2kl12hash_control_hash_probe*, uint64_t*, uint64_t, uint64_t );
 uint64_t kl_2kl12hash_control_next__SQ2kl10hash_probe( struct kl_2kl12hash_control_hash_probe* );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 void kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( struct kl_7prelude_hasher*, uint64_t, uint64_t );
@@ -3452,7 +3449,7 @@ struct kl_2kl12hash_control_hash_probe kl_2kl12hash_control_probe__SQ2kl12hash_c
 #line 207 "../../src/hash_control.kl"
     kl_t5 = &kl_t4;
 #line 207 "../../src/hash_control.kl"
-    kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( kl_t5, ( *kl_this_1 ).kl_groups_, ( *kl_this_1 ).kl_slots_, kl_hash_2 );
+    kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( kl_t5, ( *kl_this_1 ).kl_groups_, ( *kl_this_1 ).kl_slots_, kl_hash_2 );
 #line 207 "../../src/hash_control.kl"
     kl_t0 = kl_t4;
 #line 207 "../../src/hash_control.kl"
@@ -4086,7 +4083,7 @@ void kl_2kl12hash_control_set_byte__SQ2kl12hash_control_3u64_3u64( struct kl_2kl
 }
 
 #line 421 "../../src/hash_control.kl"
-void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_N3u64_3u64_3u64__ctor( struct kl_2kl12hash_control_hash_probe* kl_this_1, uint64_t* kl_groups_2, uint64_t kl_slots_3, uint64_t kl_hash_4 )
+void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( struct kl_2kl12hash_control_hash_probe* kl_this_1, uint64_t* kl_groups_2, uint64_t kl_slots_3, uint64_t kl_hash_4 )
 {
     uint64_t kl_t5;
     bool kl_t6;
@@ -5151,7 +5148,6 @@ struct kl_2kl6string_string* kl_2kl4list_operator_index__IQ2kl6stringE__SQ2kl4li
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_2kl6string_string* kl_t8;
-    struct kl_2kl6string_string* kl_t9;
 #line 155 "../../src/list.kl"
     kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
 #line 155 "../../src/list.kl"
@@ -5168,9 +5164,7 @@ struct kl_2kl6string_string* kl_2kl4list_operator_index__IQ2kl6stringE__SQ2kl4li
 #line 162 "../../src/list.kl"
     kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
 #line 162 "../../src/list.kl"
-    kl_t9 = &( *kl_t8 );
-#line 162 "../../src/list.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = &( *kl_t8 );
 #line 162 "../../src/list.kl"
     return kl_t0;
 #line 164 "../../src/list.kl"
@@ -5380,7 +5374,6 @@ int32_t* kl_2kl3map_operator_index__IQ2kl6string_3i32E__SQ2kl3mapIQ2kl6string_3i
     struct kl_2kl12hash_control_hash_control* kl_t14;
     uint64_t kl_t15;
     int32_t* kl_t16;
-    int32_t* kl_t17;
 #line 110 "../../src/map.kl"
     kl_t4 = &( *kl_this_1 );
 #line 110 "../../src/map.kl"
@@ -5413,9 +5406,7 @@ int32_t* kl_2kl3map_operator_index__IQ2kl6string_3i32E__SQ2kl3mapIQ2kl6string_3i
 #line 119 "../../src/map.kl"
     kl_t16 = ( *kl_this_1 ).kl_values_ + kl_t15;
 #line 119 "../../src/map.kl"
-    kl_t17 = &( *kl_t16 );
-#line 119 "../../src/map.kl"
-    kl_t0 = kl_t17;
+    kl_t0 = &( *kl_t16 );
 #line 119 "../../src/map.kl"
     return kl_t0;
 #line 121 "../../src/map.kl"

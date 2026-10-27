@@ -69,25 +69,25 @@ block in order. Does nothing if the capacity is already that large.</p>
 </div>
 <h3>Reading</h3>
 <div class="group" id="ring.operator[]">
-<pre class="signature"><a class="anchor" href="#ring.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> T* <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the element <code>index</code> places from the front.</p>
+<p>The element <code>index</code> places from the front.</p>
 <h4>Panics</h4>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
 <div class="group" id="ring.first">
-<pre class="signature"><a class="anchor" href="#ring.first" aria-label="Link to first">#</a><code><span class="kw">public</span> T* <span class="fn">first</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.first" aria-label="Link to first">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">first</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the front element.</p>
+<p>The front element.</p>
 <h4>Panics</h4>
 <p>If the ring is empty.</p>
 </div>
 </div>
 <div class="group" id="ring.last">
-<pre class="signature"><a class="anchor" href="#ring.last" aria-label="Link to last">#</a><code><span class="kw">public</span> T* <span class="fn">last</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.last" aria-label="Link to last">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">last</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>A pointer to the back element.</p>
+<p>The back element.</p>
 <h4>Panics</h4>
 <p>If the ring is empty.</p>
 </div>

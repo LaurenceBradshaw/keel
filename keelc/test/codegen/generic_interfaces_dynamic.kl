@@ -87,7 +87,7 @@ i32 main()
     if( t.sum() != 10 || t.count() != 3 ) { return 3; }
 
     box<sink<i64>> b = box<held>( move held() );
-    feed( ref *b.get(), 5 );
+    feed( ref b.get(), 5 );
     b.get().put( 2 );
     if( b.get().count() != 2 ) { return 4; }
 

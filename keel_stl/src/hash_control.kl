@@ -418,7 +418,7 @@ class hash_control
 class hash_probe
 {
     /// A probe of `groups`, a table of `slots` slots, for `hash`.
-    public hash_probe( u64[*] groups, u64 slots, u64 hash )
+    public hash_probe( const u64[*] groups, u64 slots, u64 hash )
     {
         groups_ = groups;
         mask_ = ( slots >> 3 ) - 1;
@@ -465,7 +465,7 @@ class hash_probe
         }
     }
 
-    private u64[*] groups_;
+    private const u64[*] groups_;
     private u64 mask_;      // the group count less one
     private u64 group_;
     private u64 stride_;

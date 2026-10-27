@@ -4,12 +4,6 @@ error: `operator[]` must return a pointer to the element
 7 |     i32 operator[]( u64 index ) const
   |     ^^^ return `i32*`, and `v[i]` is the element it points at
 
-error: `operator[]` returns a pointer, not a reference
-  --> sema/errors_operator_index.kl:17:5
-   |
-17 |     const ref i32 operator[]( u64 index ) const
-   |     ^^^^^^^^^^^^^ `v[i]` is the element it points at; a reference would outlive the expression
-
 error: `operator[]` must return a pointer to the element
   --> sema/errors_operator_index.kl:27:5
    |
@@ -46,4 +40,4 @@ error: an operator cannot be `static`
 82 |     static i32* operator[]( u64 index )
    |                 ^^^^^^^^^^ it is called on its left operand
 
-8 errors generated
+7 errors generated

@@ -1,0 +1,7 @@
+error: expected `only_binary*`, but got `const only_binary*`
+  --> codegen/operator_compound.kl:59:20
+   |
+59 |             return &cells[i];
+   |                    ^^^^^^^^^ a pointer to `const` never converts back to one that writes
+
+1 error generated

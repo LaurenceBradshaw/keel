@@ -10305,9 +10305,8 @@ TEST_CASE( "parser_parses_a_const_ref_return", "[parse]" )
         REQUIRE( p.aux( p.child( annotation, 0 ) ) == static_cast<u32>( Keyword::Ref ) );
     }
 
-    // A plain `ref` return parses, so sema can say only a `const ref` may be returned rather than
-    // the parser producing a cascade about an unexpected keyword.
-    SECTION( "and a plain ref return parses, to be rejected later" )
+    // A plain `ref` return parses, as D73 allows one.
+    SECTION( "and a plain ref return parses" )
     {
         const Parsed p( "ref i32 pick( ref i32 a ) { return a; }" );
 

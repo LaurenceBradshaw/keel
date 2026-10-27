@@ -1,5 +1,4 @@
-// `v[i]` is a place for the expression it is written in: writable exactly when `v` is and its
-// `operator[]` does not return a pointer to `const`, never returned by `ref`.
+// `v[i]` is a place, writable exactly when `v` is and its `operator[]` does not return `const ref`.
 class buffer
 {
     buffer()
@@ -18,11 +17,11 @@ class buffer
         }
     }
 
-    public i32* operator[]( u64 index ) const
+    public ref i32 operator[]( u64 index ) const
     {
         unsafe
         {
-            return &data[index];
+            return data[index];
         }
     }
 
@@ -41,9 +40,9 @@ class read_only
         x = 0;
     }
 
-    public const i32* operator[]( u64 index ) const
+    public const ref i32 operator[]( u64 index ) const
     {
-        return &x;
+        return x;
     }
 
     private i32 x;
@@ -56,9 +55,9 @@ class hidden
         x = 0;
     }
 
-    private i32* operator[]( u64 index ) const
+    private ref i32 operator[]( u64 index ) const
     {
-        return nullptr;
+        return x;
     }
 
     private i32 x;

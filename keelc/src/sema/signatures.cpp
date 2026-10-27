@@ -501,22 +501,13 @@ void Signatures::declare_functions()
 
         const Keyword return_mode = ast_.parameter_mode( child );
 
-        // §8 allows exactly one reference return, and only the read-only one: a mutable one would
-        // let a caller write through a reference it never asked for. Any other mode says how an
-        // argument travels, and a return is not one.
+        // §8: `ref` and `const ref` are the reference returns. Any other mode says how an argument
+        // travels, and a return is not one.
         if( return_mode != Keyword::Count && !table_.is_error( return_type ) )
         {
-            if( return_mode == Keyword::Ref && ast_.is_const_binding( child ) )
+            if( return_mode == Keyword::Ref )
             {
                 places_.record_binding_address( return_type_node, return_type );
-            }
-            else if( return_mode == Keyword::Ref )
-            {
-                reporter_.error_at(
-                    ast_.span( return_type_node ),
-                    "only a `const ref` may be returned",
-                    fmt::format( "write `const ref {}`", table_.name( return_type ) )
-                );
             }
             else
             {
@@ -633,24 +624,12 @@ void Signatures::declare_member_functions()
                 generic_recursion_.record_generic_uses( child, return_type, ast_.span( return_type_node ) );
             }
 
-            // §8 allows exactly one reference return, and only the read-only one - the same rule
-            // declare_functions applies to a free function. Without this a method
-            // could write `const ref T` and have it silently mean `T`: the recorded address is what
-            // every consumer reads to know a binding travels by address, and nothing else sets it.
+            // §8's reference returns, as declare_functions records them. Without this a method could
+            // write `ref T` and have it silently mean `T`: the recorded address is what every
+            // consumer reads to know a binding travels by address, and nothing else sets it.
             if( ast_.is_ref_parameter( member ) && !table_.is_error( return_type ) )
             {
-                if( !ast_.is_const_binding( member ) )
-                {
-                    reporter_.error_at(
-                        ast_.span( return_type_node ),
-                        "only a `const ref` may be returned",
-                        fmt::format( "write `const ref {}`", table_.name( return_type ) )
-                    );
-                }
-                else
-                {
-                    places_.record_binding_address( return_type_node, return_type );
-                }
+                places_.record_binding_address( return_type_node, return_type );
             }
 
             for( Node_id param : ast_.params( member ) )
@@ -1316,11 +1295,12 @@ void Signatures::check_index_operator( Node_id decl )
 
     if( ast_.kind( ast_.unwrap_const( annotation ) ) == Node_kind::Mode_type )
     {
-        reporter_.error_at(
-            ast_.span( annotation ),
-            "`operator[]` returns a pointer, not a reference",
-            "`v[i]` is the element it points at; a reference would outlive the expression"
-        );
+        if( ast_.parameter_mode( decl ) != Keyword::Ref )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ), "`operator[]` returns `ref` or `const ref`", "`v[i]` is the element it refers to"
+            );
+        }
     }
     else if( !table_.is_error( return_type ) && !table_.is_pointer( return_type ) )
     {

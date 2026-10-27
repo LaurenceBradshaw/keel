@@ -131,23 +131,74 @@ struct Effect
     Place         place;
     Loan_conflict conflict;
     Span          at;
+    u32           depth = 0; // `Replaced`: the calls between the element and `place`
 };
 
-// `(*r)` through a binding of a local is that local's place; anything else is itself.
-Place resolve( const Function& func, const std::vector<Borrow>& borrows, const Place& place )
+// Each place `call` borrowed, through any calls returning a reference, as `Replaced`.
+void replaced_through(
+    const Function& func, const std::vector<Borrow>& borrows, const Rvalue& call, u32 depth, Span at, std::vector<Effect>& out
+)
+{
+    const std::span<const Operand> arguments( func.operands.data() + call.first_argument, call.argument_count );
+
+    for( const Operand& operand : arguments )
+    {
+        if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
+        {
+            continue;
+        }
+
+        const Borrow& inner = borrows[operand.place.local.v];
+
+        if( inner.through != nullptr )
+        {
+            replaced_through( func, borrows, *inner.through, depth + 1, at, out );
+        }
+        else if( inner.of.is_valid() )
+        {
+            out.push_back( Effect { .place = inner.place, .conflict = Loan_conflict::Replaced, .at = at, .depth = depth } );
+        }
+    }
+}
+
+// A whole write of `place`. `(*r)` through a binding of a local is that local's place. Through a
+// call's result it also replaces an element of what the call borrowed, if that element owns anything.
+void written(
+    const Function&            func,
+    const std::vector<Borrow>& borrows,
+    const std::vector<bool>&   owning,
+    const Place&               place,
+    Span                       at,
+    std::vector<Effect>&       out
+)
 {
     if( !place.is_global() && place.num_projections != 0 &&
-        func.projections[place.first_projection].kind == Projection_kind::Deref && borrows[place.local.v].of.is_valid() )
+        func.projections[place.first_projection].kind == Projection_kind::Deref )
     {
-        return borrows[place.local.v].place;
+        const Borrow& pointer = borrows[place.local.v];
+
+        if( pointer.of.is_valid() )
+        {
+            out.push_back( Effect { .place = pointer.place, .conflict = Loan_conflict::Assigned, .at = at } );
+            return;
+        }
+
+        if( pointer.through != nullptr && owning[place.local.v] )
+        {
+            replaced_through( func, borrows, *pointer.through, 1, at, out );
+        }
     }
 
-    return place;
+    out.push_back( Effect { .place = place, .conflict = Loan_conflict::Assigned, .at = at } );
 }
 
 // Every move, assignment, drop and changing argument in one statement.
 void effects_of(
-    const Function& func, const std::vector<Borrow>& borrows, const Statement& statement, std::vector<Effect>& out
+    const Function&            func,
+    const std::vector<Borrow>& borrows,
+    const std::vector<bool>&   owning,
+    const Statement&           statement,
+    std::vector<Effect>&       out
 )
 {
     out.clear();
@@ -177,9 +228,7 @@ void effects_of(
 
         if( !statement.place.is_global() )
         {
-            out.push_back( Effect {
-                .place = resolve( func, borrows, statement.place ), .conflict = Loan_conflict::Assigned, .at = statement.span
-            } );
+            written( func, borrows, owning, statement.place, statement.span, out );
         }
 
         if( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call )
@@ -203,13 +252,17 @@ void effects_of(
             {
                 out.push_back( Effect { .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at } );
             }
+            // `&(*r)` with `r` a call's result: an element changed through that call.
+            else if( borrow.bound && borrow.through != nullptr && borrow.purpose != Address_purpose::Read &&
+                     owning[argument.place.local.v] )
+            {
+                replaced_through( func, borrows, *borrow.through, 1, borrow.at, out );
+            }
         }
     }
     else if( statement.kind == Statement_kind::Drop )
     {
-        out.push_back( Effect {
-            .place = resolve( func, borrows, statement.place ), .conflict = Loan_conflict::Assigned, .at = statement.span
-        } );
+        written( func, borrows, owning, statement.place, statement.span, out );
     }
 }
 
@@ -223,7 +276,8 @@ bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 
 // D54: a payload's loan is broken by anything reaching it, since another variant destroys it; a
 // direct loan only by a move; an indirect one by anything reaching its object, if that object owns
-// something, since otherwise it has nothing to free or relocate.
+// something, since otherwise it has nothing to free or relocate. A replaced element breaks only an
+// indirect loan reaching through more calls than the element, into what the element owns.
 bool conflicts(
     const Function&            func,
     const std::vector<Borrow>& borrows,
@@ -240,6 +294,11 @@ bool conflicts(
     if( loan.of.is_valid() )
     {
         return effect.conflict == Loan_conflict::Moved && overlaps( func, loan.place, effect.place );
+    }
+
+    if( effect.conflict == Loan_conflict::Replaced )
+    {
+        return loan.through != nullptr && reaches_depth( func, borrows, loan, effect.place ) > effect.depth;
     }
 
     return loan.through != nullptr && ( effect.conflict == Loan_conflict::Moved || owning[effect.place.local.v] ) &&
@@ -312,7 +371,7 @@ check_loans( const Function& func, const std::vector<bool>& owning, const std::v
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            effects_of( func, borrows, func.statements[block.first_statement + i], effects );
+            effects_of( func, borrows, owning, func.statements[block.first_statement + i], effects );
 
             for( const Effect& effect : effects )
             {
@@ -430,7 +489,7 @@ constexpr std::string_view k_owned = "class B { public u64 n; B() { n = 0; } ~B(
 constexpr std::string_view k_owned_locals = "B b = B(); u64 c = 0; ";
 
 constexpr std::string_view k_vector =
-    "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
+    "class V { public i32 x; V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } "
     "public const ref i32 get() const { return x; } public i32 size() const { return 0; } public void push( i32 e ) { } };\n"
     "class W { public V a; public V b; W() { a = V(); b = V(); } };\n"
     "void take( move V v ) { }\n"
@@ -461,6 +520,14 @@ constexpr std::string_view k_run = "class R { u8[*] d; u64 n; R() { unsafe { d =
                                    "void take( move R r ) { }\n";
 
 constexpr std::string_view k_run_locals = "R r = R(); ";
+
+constexpr std::string_view k_elements =
+    "class S { u8[*] d; S() { unsafe { d = alloc<u8>( 1 ); } } ~S() { unsafe { free( d ); } } "
+    "public const ref u8[] text() const { unsafe { return d[ 0..1 ]; } } public void grow() { } };\n"
+    "class L { S[*] data; L() { unsafe { data = alloc<S>( 2 ); } } "
+    "public ref S operator[]( u64 i ) const { unsafe { return data[i]; } } };\n";
+
+constexpr std::string_view k_elements_locals = "L l = L(); ";
 
 } // namespace
 
@@ -714,6 +781,41 @@ TEST_CASE( "borrow_check_carries_a_loan_into_a_sub_run", "[check][borrow][textua
          } )
     {
         require_accepted( k_run, k_run_locals, body );
+    }
+}
+
+// D73: a write through an element replaces what it owns, breaking a loan reached through it by a
+// further call, and not one holding the element or the container itself.
+TEST_CASE( "borrow_check_refuses_replacing_what_an_element_owns", "[check][borrow][ref_return]" )
+{
+    SECTION( "refused" )
+    {
+        for( const Refused& refused : {
+                 Refused {
+                     "ref S x = l[0]; const ref u8[] t = l[0].text(); x = S(); u8 y = t[0];",
+                     Loan_conflict::Replaced,
+                     "x = S()",
+                     "t",
+                     "l"
+                 },
+                 Refused {
+                     "const ref u8[] t = l[0].text(); l[0].grow(); u8 y = t[0];", Loan_conflict::Replaced, "l[0]", "t", "l"
+                 },
+             } )
+        {
+            require_refused( k_elements, k_elements_locals, refused );
+        }
+    }
+
+    SECTION( "accepted" )
+    {
+        for( const char* body : {
+                 "ref S x = l[0]; const ref S y = l[1]; x = S(); const ref u8[] t = y.text();",
+                 "ref L r = l; ref S x = l[0]; x = S(); ref S y = r[1];",
+             } )
+        {
+            require_accepted( k_elements, k_elements_locals, body );
+        }
     }
 }
 

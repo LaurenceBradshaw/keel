@@ -727,13 +727,13 @@ TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]"
 TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9]" )
 {
     constexpr std::string_view k_aliased =
-        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
+        "class V { public i32 x; V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } "
         "public const ref i32 get() const { return x; } public void grow( const ref i32 e ) { } "
         "public void absorb( ref V o ) { } public i32 size() const { return x; } public void resize( i32 n ) { } "
         "public P span() const { return P { 1, 2 }; } public void place( P q ) { } "
         "public S view() const { return S { nullptr }; } public void put( S s ) { } };\n"
         "struct P { i32 a; i32 b; };\n"
-        "struct S { i32* q; i32* operator[]( u64 i ) const { return q; } };\n"
+        "struct S { i32* q; ref i32 operator[]( u64 i ) const { return *q; } };\n"
         "class W { public V a; public V b; W() { a = V(); b = V(); } };\n"
         "void pair( ref V v, ref i32 e ) { }\n"
         "void see( ref V v, const ref i32 e ) { }\n"

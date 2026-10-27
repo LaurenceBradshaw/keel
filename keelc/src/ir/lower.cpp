@@ -1816,7 +1816,7 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
     return temporary( binary( test, result, variant, boolean ), boolean, span );
 }
 
-// `v[i]` calls `v.operator[]( i )`, and the place is what the returned pointer points at.
+// `v[i]` calls `v.operator[]( i )`, and the place is what the returned reference or pointer names.
 Operand Lowering::lower_operator_index( Node_id id, Node_id method )
 {
     const Span     span     = ast_.span( id );
@@ -2742,9 +2742,11 @@ Place Lowering::lower_place( Node_id id )
     }
     case Node_kind::Index_expr:
     {
+        // A `ref` result is already the element's place; a pointer is one deref short of it.
         if( const Node_id method = types_.callee_of( id ); method.is_valid() )
         {
-            return builder_.deref( lower_operator_index( id, method ).place );
+            const Place result = lower_operator_index( id, method ).place;
+            return is_borrowed_binding( ast_, types_, method ) ? result : builder_.deref( result );
         }
 
         if( types_.table().is_array( type_of( ast_.object( id ) ) ) )

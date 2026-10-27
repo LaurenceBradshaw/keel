@@ -59,7 +59,7 @@ class ordered_map<K, V> where K : comparable
     /// --- Lookup ---
 
     /// A pointer to the value under `key`, or `none` if the map does not hold it.
-    public optional<V*> get( const ref K key ) const
+    public optional<const V*> get( const ref K key ) const
     {
         const u64 slot = slot_of( key );
 
@@ -74,12 +74,12 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
-    /// A pointer to the value under `key`.
+    /// The value under `key`.
     ///
     /// ### Panics
     ///
     /// If the map does not hold `key`; `get` answers `none` instead.
-    public V* operator[]( const ref K key ) const
+    public ref V operator[]( const ref K key ) const
     {
         const u64 slot = slot_of( key );
 
@@ -90,7 +90,7 @@ class ordered_map<K, V> where K : comparable
 
         unsafe
         {
-            return &values_[slot];
+            return values_[slot];
         }
     }
 
@@ -116,16 +116,16 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
-    /// A pointer to the value under `key_at( i )`.
+    /// The value under `key_at( i )`.
     ///
     /// ### Panics
     ///
     /// If `i` is not less than `size()`.
-    public V* value_at( u64 i ) const
+    public ref V value_at( u64 i ) const
     {
         unsafe
         {
-            return &values_[control_.slot_at( i )];
+            return values_[control_.slot_at( i )];
         }
     }
 

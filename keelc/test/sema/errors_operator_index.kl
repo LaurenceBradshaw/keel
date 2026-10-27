@@ -1,5 +1,5 @@
 // What `operator[]` must be - a `const` method taking one index by value or `const ref` and
-// returning a pointer to the element, declared once.
+// returning the element by `ref` or `const ref`, declared once.
 struct returns_value
 {
     i32 x;
