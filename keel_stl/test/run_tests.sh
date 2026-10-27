@@ -31,7 +31,7 @@ update=0
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
-export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Werror}"
+export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
 
 # Paths appear in panics and reports, so they are relative to here.
 cd "$here" || exit 2

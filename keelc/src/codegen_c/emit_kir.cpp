@@ -2069,6 +2069,14 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             return fmt::format( "( {} ) {} << {}", spelling_.type( rvalue.a.type ), operand( rvalue.a ), operand( rvalue.b ) );
         }
 
+        // Every element of a `void[*]` sits at its start, so an offset into one is the run itself;
+        // the offset is still named, or C calls it set but unused.
+        if( rvalue.op == Token_kind::Plus && types_.table().is_many_pointer( rvalue.a.type ) &&
+            is_void( types_.table().get( rvalue.a.type ).element ) )
+        {
+            return fmt::format( "( ( void ) {}, {} )", operand( rvalue.b ), operand( rvalue.a ) );
+        }
+
         return fmt::format( "{} {} {}", operand( rvalue.a ), token_kind_spelling( rvalue.op ), operand( rvalue.b ) );
     }
 
@@ -2200,15 +2208,18 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         return fmt::format( "{}( {} )", callee_name, args );
     }
     case Rvalue_kind::Allocate:
+    {
         // The element type gives the size, which is the whole reason `alloc` is a keyword rather
         // than a function: no `sizeof` is written and none can be got wrong.
+        const Type_id     element = types_.table().get( rvalue.type ).element;
+        const std::string size    = is_void( element ) ? "0" : fmt::format( "sizeof( {} )", spelling_.type( element ) );
         if( rvalue.a.type.is_valid() )
         {
             return fmt::format(
-                "( {} ) kl_rt_alloc_many( ( size_t ) {}, sizeof( {} ), {}, {} )",
+                "( {} ) kl_rt_alloc_many( ( size_t ) {}, {}, {}, {} )",
                 spelling_.type( rvalue.type ),
                 operand( rvalue.a ),
-                spelling_.type( types_.table().get( rvalue.type ).element ),
+                size,
                 location( span ),
                 c_string( "out of memory: " + as_written( span ) )
             );
@@ -2216,13 +2227,14 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         else
         {
             return fmt::format(
-                "( {} ) kl_rt_alloc( sizeof( {} ), {}, {} )",
+                "( {} ) kl_rt_alloc( {}, {}, {} )",
                 spelling_.type( rvalue.type ),
-                spelling_.type( types_.table().get( rvalue.type ).element ),
+                size,
                 location( span ),
                 c_string( "out of memory: " + as_written( span ) )
             );
         }
+    }
     case Rvalue_kind::Release:
         // A `Shape*` frees the object it carries, not the reference.
         if( types_.table().is_interface_pointer( rvalue.a.type ) )
@@ -3307,6 +3319,16 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
         REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( sizeof( int32_t* ), \"t.kl\", 1, \"out of memory: alloc<i32*>()\" )" ) );
     }
 
+    SECTION( "a `void` element is allocated at size 0" )
+    {
+        Generated g( "void one<U>() { unsafe { U* p = alloc<U>(); free( p ); } }\ni32 main() { one<void>(); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( void* ) kl_rt_alloc( 0, \"t.kl\", 1," ) );
+        REQUIRE_FALSE( g.has( "sizeof( void )" ) );
+    }
+
     SECTION( "free is a statement of its own, with no destination" )
     {
         // void is not a type C can declare a local of, so the release has nowhere to be assigned -
@@ -4101,6 +4123,18 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
         INFO( g.c );
         REQUIRE( g.clean() );
         REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* )," ) );
+    }
+
+    SECTION( "a `void` element is allocated at size 0, and an offset into the run is the run" )
+    {
+        Generated g( "bool run<U>( u64 n ) { unsafe { U[*] p = alloc<U>( n ); bool at = p + 1 == p; free( p ); return at; } }\n"
+                     "i32 main() { run<void>( 2 ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( void* ) kl_rt_alloc_many( ( size_t ) kl_n_1, 0," ) );
+        REQUIRE( g.has( "( ( void ) 1, kl_p_" ) );
+        REQUIRE_FALSE( g.has( "sizeof( void )" ) );
     }
 
     SECTION( "the entry is declared only when a counted allocation is made" )

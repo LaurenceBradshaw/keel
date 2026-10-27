@@ -102,7 +102,7 @@ cc="${CC:-cc}"
 # name the program never reads is marked used in the C, and `codegen/unused_names` checks it. Its own
 # variable, since keelc drops the -W words of $CFLAGS.
 cflags="${KEEL_CFLAGS:--std=c11}"
-c_warnings="${KEEL_C_WARNINGS:--Wall -Wextra -Werror}"
+c_warnings="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
 
 # Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
 # bug, and that check is worth more than the convenience of building in place.

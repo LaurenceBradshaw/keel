@@ -1,0 +1,27 @@
+// D51: `alloc` at `void` through a type argument asks for 0 bytes, and every element of a `void[*]`
+// sits at its start. Neither `sizeof( void )` nor `void*` arithmetic is emitted.
+import t::console;
+
+void nothing()
+{
+}
+
+bool same_start<U>( u64 n )
+{
+    unsafe
+    {
+        U* one   = alloc<U>();
+        U[*] run = alloc<U>( n );
+        bool at  = run + ( n - 1 ) == run;
+        free( run );
+        free( one );
+        return at;
+    }
+}
+
+i32 main()
+{
+    t::println( same_start<void>( 3 ) );
+    t::println( same_start<i32>( 3 ) );
+    return 0;
+}
