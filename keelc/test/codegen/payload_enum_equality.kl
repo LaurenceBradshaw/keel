@@ -1,0 +1,40 @@
+// PLAN D40. An enum with payloads has no `==` of its own, so this one writes a block, and `==` and
+// `!=` both reach it. Circles of one radius are equal; a dot equals only a dot.
+import t::console;
+
+enum Shape
+{
+    Dot,
+    Circle( i32 r )
+};
+
+// A dot has no radius, so -1 stands for it.
+i32 radius( const ref Shape s )
+{
+    switch( s )
+    {
+        case Shape::Dot:
+            return -1;
+        case Shape::Circle( r ):
+            return r;
+    }
+}
+
+implements equatable for Shape
+{
+    bool operator==( const ref Shape other ) const
+    {
+        return radius( this ) == radius( other );
+    }
+};
+
+i32 main()
+{
+    Shape one = Shape::Circle( 1 );
+
+    t::println( one == Shape::Circle( 1 ) );
+    t::println( one == Shape::Circle( 2 ) );
+    t::println( one != Shape::Dot );
+    t::println( Shape::Dot == Shape::Dot );
+    return 0;
+}

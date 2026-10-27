@@ -285,11 +285,12 @@ Binary_result Operators::result_of_binary(
     }
 
     // Pointer and enum equality, which the rule table cannot express - its operand classes are all
-    // numeric or bool. For a pointer this is how a null check is written; for an enum it is the
-    // only operation there is, since D30 leaves a variant with no conversion to reach arithmetic
-    // through. Ordering is deliberately absent from both: comparing pointers into different
-    // allocations is meaningless, and an enum's variants are names rather than magnitudes - the
-    // declaration order they happen to have is not an ordering anyone wrote down.
+    // numeric or bool. For a pointer this is how a null check is written; for a payload-free enum it
+    // is the only operation there is, since D30 leaves a variant with no conversion to reach
+    // arithmetic through. An enum with payloads has no `==` unless a block gives it one. Ordering is
+    // deliberately absent from both: comparing pointers into different allocations is meaningless,
+    // and an enum's variants are names rather than magnitudes - the declaration order they happen
+    // to have is not an ordering anyone wrote down.
     const bool compares_by_identity = table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) ||
                                       table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ||
                                       table_.is_many_pointer( lhs_type ) || table_.is_many_pointer( rhs_type );
@@ -308,6 +309,15 @@ Binary_result Operators::result_of_binary(
                 table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ? "only values of the same `enum` can be compared"
                                                                          : "only pointers of the same type can be compared"
             );
+        }
+
+        if( table_.is_enum( lhs_type ) && ast_.enum_has_payload( table_.get( lhs_type ).declaration ) )
+        {
+            const std::string help = fmt::format(
+                "`{0}` carries payloads; test its variant with `switch`, or write `implements equatable for {0} {{ ... }}`",
+                table_.name( lhs_type )
+            );
+            return reject( help );
         }
 
         return { bool_type };
@@ -986,6 +996,31 @@ TEST_CASE( "type_checker_compares_enums_by_identity", "[sema][enum]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "an enum with payloads does not" )
+    {
+        const std::string shape = "enum Shape { Dot, Circle( i32 r ) };\n";
+        const Typed       values( shape + "i32 main() { Shape a = Shape::Dot; bool b = a == Shape::Circle( 1 ); return 0; }" );
+        const Typed       variant( shape + "i32 main() { Shape a = Shape::Dot; bool b = a == Shape::Dot; return 0; }" );
+        const Typed       unequal( shape + "i32 main() { Shape a = Shape::Dot; bool b = a != Shape::Dot; return 0; }" );
+
+        INFO( values.rendered() << variant.rendered() << unequal.rendered() );
+        REQUIRE( values.errors() == 1 );
+        REQUIRE( variant.errors() == 1 );
+        REQUIRE( unequal.errors() == 1 );
+        REQUIRE( values.rendered().find( "test its variant with `switch`" ) != std::string::npos );
+    }
+
+    SECTION( "unless it implements `equatable`" )
+    {
+        const Typed p( "enum Shape { Dot, Circle( i32 r ) };\n"
+                       "implements equatable for Shape\n"
+                       "{ bool operator==( const ref Shape other ) const { return true; } };\n"
+                       "i32 main() { Shape a = Shape::Dot; bool b = a == Shape::Dot; bool c = a != a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 
