@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "check/drop_flags.h"
+#include <algorithm>
 #include <vector>
 
 namespace keel
@@ -22,6 +23,11 @@ Local_id flag_of( const Flag_map& flags, const Place& place )
     }
 
     return flags[place.local.v];
+}
+
+bool is_out_parameter( const Function& func, Local_id local )
+{
+    return std::find( func.out_parameters.begin(), func.out_parameters.end(), local ) != func.out_parameters.end();
 }
 
 // Locals both moved and dropped somewhere, and temporaries built on one path of an expression. A
@@ -63,7 +69,9 @@ std::vector<bool> locals_needing_flags( const Function& func )
         {
             dropped[statement.place.local.v] = true;
 
-            if( statement.replacing && !has_deref_projection( func, statement.place ) )
+            // Through a pointer the place always holds a value, except an `out` parameter's.
+            if( statement.replacing &&
+                ( !has_deref_projection( func, statement.place ) || is_out_parameter( func, statement.place.local ) ) )
             {
                 replaced[statement.place.local.v] = true;
             }
@@ -208,9 +216,10 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         const u32 count     = block.statement_count;
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
-        // Set every flag on entry: a parameter arrives holding its value, and anything else starts empty,
-        // since an arm's temporary has no storage_live to clear it on the path that skips it. The writes
-        // take the first statement's line, so a debugger's first stop is on it.
+        // Set every flag on entry: a parameter arrives holding its value, except an `out` one, and
+        // anything else starts empty, since an arm's temporary has no storage_live to clear it on the
+        // path that skips it. The writes take the first statement's line, so a debugger's first stop
+        // is on it.
         if( &block == &func.blocks.front() )
         {
             for( u32 local = 0; local < flags.size(); ++local )
@@ -221,7 +230,12 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
                     continue;
                 }
 
-                rebuilt.push_back( set_flag( flag, local >= 1 && local <= func.parameter_count, entry, vocabulary ) );
+                rebuilt.push_back( set_flag(
+                    flag,
+                    local >= 1 && local <= func.parameter_count && !is_out_parameter( func, Local_id { local } ),
+                    entry,
+                    vocabulary
+                ) );
             }
         }
 
@@ -516,6 +530,29 @@ TEST_CASE( "drop_flags_drops_a_projection_before_reassigning_it", "[check][drop]
     INFO( put );
     REQUIRE( reset.find( "drop (*_1).b" ) < reset.find( "(*_1).b = move" ) );
     REQUIRE( put.find( "drop (*_1)" ) < put.find( "(*_1) = move" ) );
+}
+
+// An `out` parameter arrives empty: its first write fills it, and only a later one drops.
+TEST_CASE( "drop_flags_starts_an_out_parameter_empty", "[check][drop][out]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "void fill( out Owned o ) { o = Owned( 1 ); o = Owned( 2 ); }\n"
+                                  "i32 main() { Owned o; fill( out o ); return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "fill" );
+
+    INFO( text );
+    REQUIRE( count( text, "drop (*_1) if _" ) == 2 );
+
+    // The flag's first write is the entry's, and it is false.
+    const std::size_t guard = text.find( "drop (*_1) if " ) + std::string_view( "drop (*_1) if " ).size();
+    const std::string flag  = text.substr( guard, text.find( '\n', guard ) - guard );
+
+    REQUIRE( text.find( flag + " = const 0" ) < text.find( flag + " = const 1" ) );
 }
 
 // A constructor's first write to a field is what gives it a value, so there is nothing to destroy.

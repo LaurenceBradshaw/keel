@@ -180,23 +180,7 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
             borrowed_  = ast_.inner_type( annotation );
         }
 
-        const Type_id inner = resolve( ast_.inner_type( annotation ), false );
-
-        // An `out` parameter is assigned without its old value being destroyed, so an owning one
-        // would leak whatever the caller was already holding. Refused until the caller emits a
-        // drop before the call - which drop flags could do, but is its own piece of work.
-        if( mode == Keyword::Out && !bounds_.satisfies( inner, Bound::Copyable ) )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ),
-                "`out` is not supported for a type that owns a resource yet",
-                "the value already there would be overwritten without being destroyed"
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-
-        return inner;
+        return resolve( ast_.inner_type( annotation ), false );
     }
 
     case Node_kind::Generic_type:
@@ -1512,9 +1496,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         REQUIRE( p.rendered().find( "a pointer to `const`" ) == std::string::npos );
     }
 
-    // Unchanged by the slice: the value already there would be overwritten without being destroyed,
-    // which is a rule about `out` rather than about where `out` was written.
-    SECTION( "and out still refuses a type that owns" )
+    SECTION( "and out accepts a type that owns" )
     {
         Written p( "class B { i32 n; ~B() { } };\nvoid g( fn( out B ) -> i32 a ) { }" );
 
@@ -1522,8 +1504,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`out` is not supported for a type that owns a resource yet" ) != std::string::npos );
+        REQUIRE( p.errors() == 0 );
     }
 }
 
@@ -1586,7 +1567,7 @@ TEST_CASE( "type_checker_refuses_const_on_a_type_argument", "[sema][const][gener
     }
 }
 
-TEST_CASE( "annotations_unwrap_a_mode_and_refuse_out_for_an_owning_type", "[sema][annotation][owning]" )
+TEST_CASE( "annotations_unwrap_a_mode", "[sema][annotation][owning]" )
 {
     SECTION( "a copyable one is unwrapped to the type underneath" )
     {
@@ -1596,15 +1577,15 @@ TEST_CASE( "annotations_unwrap_a_mode_and_refuse_out_for_an_owning_type", "[sema
         REQUIRE( p.errors() == 0 );
     }
 
-    SECTION( "an owning one would leak what the caller was already holding" )
+    SECTION( "an owning one is unwrapped too" )
     {
         Written p( "class R { i32 x; ~R() { } };\nvoid g( out R r ) { }" );
 
         const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
         INFO( p.rendered() );
-        REQUIRE( p.table().is_error( type ) );
-        REQUIRE( p.rendered().find( "`out` is not supported for a type that owns a resource yet" ) != std::string::npos );
+        REQUIRE_FALSE( p.table().is_error( type ) );
+        REQUIRE( p.errors() == 0 );
     }
 }
 

@@ -1,0 +1,49 @@
+// D54. An `out` argument of an owning type destroys what its place held before the call, so no
+// other argument may reach that object: the callee would see it destroyed under the other name.
+class Buf
+{
+    public u64 n;
+
+    Buf( u64 x )
+    {
+        n = x;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+void changes( out Buf a, ref Buf _ )
+{
+    a = Buf( 1 );
+}
+
+void reads( out Buf a, const ref Buf b )
+{
+    a = Buf( b.n );
+}
+
+void ints( out i32 a, ref i32 _ )
+{
+    a = 1;
+}
+
+i32 main()
+{
+    Buf v = Buf( 1 );
+
+    changes( out v, ref v );
+    reads( out v, v );
+
+    ref Buf r = v;
+
+    changes( out v, ref r );
+
+    // Owns nothing, so nothing is destroyed: accepted.
+    i32 x = 0;
+
+    ints( out x, ref x );
+
+    return x;
+}

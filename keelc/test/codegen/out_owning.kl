@@ -1,0 +1,115 @@
+// D31. An `out` argument of an owning type: the caller drops what the place held just before the
+// call, after every other argument is read, and the callee's first write fills the place while a
+// later one replaces it. Each Buf holds heap memory and says when it goes, so the output is the
+// drop order and KEEL_VALGRIND=1 sees a drop missed or run twice.
+import t::console;
+
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        t::print( "drop " );
+        t::println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+void fill( out Buf b, u64 n )
+{
+    b = Buf( n );
+}
+
+// The first write fills, the second replaces.
+void refill( out Buf b )
+{
+    b = Buf( 10 );
+    b = Buf( 11 );
+}
+
+void forward( out Buf b )
+{
+    fill( out b, 20 );
+}
+
+// Filled on one path only, so passing it on drops 30 only when `early`.
+void maybe( out Buf b, bool early )
+{
+    if( early )
+    {
+        b = Buf( 30 );
+    }
+
+    fill( out b, 31 );
+}
+
+// Through a `ref`, the place always holds a value.
+void through( ref Buf b )
+{
+    fill( out b, 50 );
+}
+
+// A constructor's field starts empty, so filling it drops nothing.
+class Pair
+{
+    public Buf a;
+
+    Pair( u64 n )
+    {
+        fill( out a, n );
+    }
+};
+
+i32 main()
+{
+    Buf v;
+
+    fill( out v, 1 );
+    t::println( v.get() );
+
+    // Read before the drop.
+    fill( out v, v.get() + 1 );
+    t::println( v.get() );
+
+    refill( out v );
+    t::println( v.get() );
+
+    forward( out v );
+    t::println( v.get() );
+
+    through( ref v );
+    t::println( v.get() );
+
+    Buf w;
+
+    maybe( out w, false );
+    t::println( w.get() );
+
+    maybe( out w, true );
+    t::println( w.get() );
+
+    Pair p = Pair( 40 );
+    t::println( p.a.get() );
+
+    return 0;
+}

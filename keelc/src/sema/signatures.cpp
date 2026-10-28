@@ -1701,18 +1701,6 @@ TEST_CASE( "type_checker_accepts_a_const_field", "[sema][const][field]" )
     REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "const u8[*]" );
 }
 
-// Assigning an `out` parameter destroys nothing, so an owning one would leak whatever the caller
-// was already holding. Refused until the caller emits a drop before the call.
-TEST_CASE( "type_checker_refuses_an_owning_out_parameter", "[sema][out]" )
-{
-    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
-                   "void init( out B b ) { }\ni32 main() { return 0; }" );
-
-    INFO( p.rendered() );
-    REQUIRE_FALSE( p.clean() );
-    REQUIRE( p.rendered().find( "owns a resource" ) != std::string::npos );
-}
-
 // PLAN D30. An enum is a type of its own, and a variant has that type - never the underlying
 // integer. That one recording is what makes every rejection below fall out of rules that already
 // existed rather than needing new ones.

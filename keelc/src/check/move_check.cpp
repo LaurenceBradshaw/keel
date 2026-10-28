@@ -264,7 +264,7 @@ void find_moves_into_borrowing_calls(
 
 // D54: each borrowed argument is a loan for the whole call, so an element may not travel beside a
 // borrow of its whole that could change it, one place may not be `out` twice, and one object may
-// not travel under two names when the call could change it.
+// not travel under two names when the call could change or, through `out`, destroy it.
 void find_aliased_arguments(
     const Function& func, const std::vector<Borrow>& borrows, const std::vector<bool>& owning, std::vector<Move_error>& errors
 )
@@ -309,7 +309,7 @@ void find_aliased_arguments(
                 if( i < j && a->of.is_valid() && b->of.is_valid() && overlaps( func, a->place, b->place ) &&
                     owning[arguments[i].place.local.v] && owning[arguments[j].place.local.v] &&
                     ( a->purpose != Address_purpose::Read || b->purpose != Address_purpose::Read ) &&
-                    a->purpose != Address_purpose::Initialise && b->purpose != Address_purpose::Initialise )
+                    !( a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise ) )
                 {
                     errors.push_back(
                         Move_error { .local = b->of, .use = b->at, .conflict = Call_conflict::Aliased, .other = a->at }

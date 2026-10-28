@@ -11,8 +11,8 @@ void init( out i32 n )
     n = 1;
 }
 
-// Assigning destroys nothing, so an owning `out` parameter would leak whatever the caller already
-// held. Refused until the caller emits a drop before the call.
+// An owning `out` parameter is accepted: the caller drops what the place held just before the
+// call. Kept so the line numbers below stay put.
 class B
 {
     u64 n;

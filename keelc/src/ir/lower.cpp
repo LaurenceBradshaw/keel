@@ -217,6 +217,12 @@ private:
 
     bool initialises_field( const Place& target ) const;
     bool writes_a_slot( Node_id target ) const;
+    // Whether writing `type` to `target` destroys what it held first.
+    bool replaces( const Place& target, Type_id type, Node_id target_node );
+
+    bool is_owning_out( Node_id argument );
+    void
+    lower_owning_outs( std::span<const Node_id> arguments, std::span<const Type_id> addresses, std::vector<Operand>& operands );
 
     void lower_destroy( Node_id id );
 
@@ -1117,6 +1123,54 @@ bool Lowering::writes_a_slot( Node_id target ) const
     return false;
 }
 
+bool Lowering::replaces( const Place& target, Type_id type, Node_id target_node )
+{
+    return owns( type ) && !initialises_field( target ) && !writes_a_slot( target_node );
+}
+
+bool Lowering::is_owning_out( Node_id argument )
+{
+    return ast_.kind( argument ) == Node_kind::Marker_expr && ast_.keyword( argument ) == Keyword::Out &&
+           owns( type_of( ast_.operand( argument ) ) );
+}
+
+// Lowered after the other arguments, so they read the old value before it is dropped. Every place
+// comes before any drop, and each drop before its address, which is where `out` counts as filled.
+void Lowering::lower_owning_outs(
+    std::span<const Node_id> arguments, std::span<const Type_id> addresses, std::vector<Operand>& operands
+)
+{
+    std::vector<Place> places( arguments.size() );
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        if( is_owning_out( arguments[i] ) )
+        {
+            places[i] = lower_place( ast_.operand( arguments[i] ) );
+        }
+    }
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        if( !is_owning_out( arguments[i] ) )
+        {
+            continue;
+        }
+
+        const Node_id operand = ast_.operand( arguments[i] );
+        const Type_id type    = type_of( operand );
+        const Span    span    = ast_.span( arguments[i] );
+
+        if( replaces( places[i], type, operand ) )
+        {
+            drop_place( places[i], type, span, true );
+        }
+
+        operands[i] =
+            temporary( borrow_of( places[i], type, addresses[i], Address_purpose::Initialise, span ), addresses[i], span );
+    }
+}
+
 // A loop dropping `p[0]` to `p[n - 1]`, or only the operands for a `T` that owns nothing.
 void Lowering::lower_destroy( Node_id id )
 {
@@ -1226,22 +1280,9 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
         receiver_type
     ) );
 
-    // Two loops, as a plain call has, and for the same reason: every argument is lowered before any
-    // is converted, so the statements come out in the order they were written (§7.1).
-    for( std::size_t i = 0; i < arguments.size(); ++i )
+    for( const Operand& argument : lower_call_arguments( arguments, parameters.subspan( 1 ), callee_bound ) )
     {
-        operands.push_back( lower_argument( arguments[i], parameters[i + 1], callee_bound ) );
-    }
-
-    for( std::size_t i = 0; i < arguments.size(); ++i )
-    {
-        operands[i + 1] =
-            converted( operands[i + 1], binding_type_under( parameters[i + 1], callee_bound ), ast_.span( arguments[i] ) );
-
-        if( is_move_parameter( parameters[i + 1] ) )
-        {
-            operands[i + 1] = moved_if_owning( operands[i + 1] );
-        }
+        operands.push_back( argument );
     }
 
     const u32     first = builder_.add_operands( operands );
@@ -2353,16 +2394,28 @@ std::vector<Operand> Lowering::lower_call_arguments(
     std::span<const Node_id> arguments, std::span<const Node_id> parameters, const Bindings& callee_bound
 )
 {
-    // All lowered before any is converted, so statements come out in written order (§7.1).
+    // All lowered before any is converted, so statements come out in written order (§7.1), except
+    // that an owning `out` comes last.
     std::vector<Operand> operands;
+    std::vector<Type_id> addresses( arguments.size() );
 
     operands.reserve( arguments.size() );
 
     // The callee's bindings, not this function's: its signature is written in its own parameters.
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        operands.push_back( lower_argument( arguments[i], parameters[i], callee_bound ) );
+        if( is_owning_out( arguments[i] ) )
+        {
+            addresses[i] = binding_type_under( parameters[i], callee_bound );
+            operands.push_back( Operand {} );
+        }
+        else
+        {
+            operands.push_back( lower_argument( arguments[i], parameters[i], callee_bound ) );
+        }
     }
+
+    lower_owning_outs( arguments, addresses, operands );
 
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
@@ -2428,9 +2481,17 @@ Operand Lowering::lower_indirect_call( Node_id id )
     const std::span<const Node_id>    written = ast_.arguments( id );
 
     std::vector<Operand> operands;
+    std::vector<Type_id> addresses( written.size() );
 
     for( std::size_t i = 0; i < written.size(); ++i )
     {
+        if( is_owning_out( written[i] ) )
+        {
+            addresses[i] = types_.table().pointer_to( arguments[i] );
+            operands.push_back( Operand {} );
+            continue;
+        }
+
         // `move` travels by value as a bare argument does, so only the three borrows take an address.
         const bool by_address = i < modes.size() && ( ( modes[i] != Param_mode::Value && modes[i] != Param_mode::Move ) ||
                                                       ( modes[i] == Param_mode::Value && owns( arguments[i] ) ) );
@@ -2440,6 +2501,8 @@ Operand Lowering::lower_indirect_call( Node_id id )
                        : lower_expression( written[i] )
         );
     }
+
+    lower_owning_outs( written, addresses, operands );
 
     // Only a by-value argument converts: a borrow is the caller's variable itself, so there is
     // nothing for a conversion to happen to.
@@ -2959,7 +3022,7 @@ void Lowering::store( Place target, Operand value, Type_id type, Node_id target_
 
     // The old value is destroyed first, after the new one is read: `o = move o` goes through a
     // temporary so the drop cannot reach it.
-    if( owns( type ) && !initialises_field( target ) && !writes_a_slot( target_node ) )
+    if( replaces( target, type, target_node ) )
     {
         if( source.kind != Operand_kind::Constant && !source.place.is_global() && source.place.local == target.local )
         {
@@ -6794,6 +6857,26 @@ TEST_CASE( "lower_passes_an_out_parameter_by_address", "[ir][lower][out]" )
 
     INFO( caller );
     REQUIRE( caller.find( "= &init _1" ) != std::string::npos );
+}
+
+// The other arguments read the old value, then it is dropped, then the address taken.
+TEST_CASE( "lower_takes_an_owning_out_address_after_the_other_arguments", "[ir][lower][out]" )
+{
+    Lowered p( "class C { i32 n; C( i32 v ) { n = v; } ~C() { } i32 get() const { return n; } };\n"
+               "void fill( out C c, i32 v ) { c = C( v ); }\n"
+               "i32 main() { C c = C( 1 ); fill( out c, c.get() ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    const std::size_t read = text.find( "call get" );
+
+    REQUIRE( read < text.find( "drop _1" ) );
+    REQUIRE( text.find( "drop _1" ) < text.find( "&init _1", read ) );
+    REQUIRE( every_function_verifies( p ) );
 }
 
 TEST_CASE( "lower_records_which_parameters_are_out", "[ir][lower][out]" )

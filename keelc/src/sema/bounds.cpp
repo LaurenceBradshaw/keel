@@ -1442,23 +1442,6 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
         REQUIRE( p.rendered().find( "`f64` is not `integral`, and `f` requires it of `U`" ) != std::string::npos );
     }
 
-    SECTION( "a bound is in hand before the declaration's own annotations are typed" )
-    {
-        // `out T` asks Copyable of `T`, and the only thing that can answer is the `where`
-        // clause on the same declaration - which is read ten lines earlier, in the same loop body.
-        // Nothing else marks that order as load-bearing, so this pair is what holds it: move the
-        // recording after the annotations and the first of these starts reporting.
-        const Typed copyable( "void f<T>( out T a ) where T : copyable { }\ni32 main() { return 0; }" );
-        const Typed unbounded( "void f<T>( out T a ) { }\ni32 main() { return 0; }" );
-
-        INFO( copyable.rendered() << unbounded.rendered() );
-        REQUIRE( copyable.clean() );
-        REQUIRE( unbounded.errors() == 1 );
-        REQUIRE(
-            unbounded.rendered().find( "`out` is not supported for a type that owns a resource yet" ) != std::string::npos
-        );
-    }
-
     SECTION( "the value arguments are still checked after a bound fails" )
     {
         // The binding happens anyway: one unmet bound should not hide a wrong argument.

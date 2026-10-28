@@ -16,7 +16,7 @@ enum class Call_conflict : u8
     Moved_and_borrowed, // moved into the call at `moved` that also borrows it at `use`
     Out_twice,          // `use` and `other` overlap, and both are `out`
     Element_and_whole,  // `use` reaches inside what `other` lets the call change
-    Aliased             // `use` and `other` are one object, and the call could change it through either
+    Aliased             // `use` and `other` are one object, and the call could change it through either, or `out` destroys it
 };
 
 // A read after a move, or a call's conflicting arguments. Spans only; check/report does the wording.
