@@ -17,6 +17,39 @@ namespace keel
 namespace
 {
 
+// A field by its path from the root of its local, `inner.x`.
+std::string field_path( const Function& function, const Ast& ast, const Interner& interner, u32 field )
+{
+    std::vector<std::string_view> names;
+    for( u32 at = field; at != k_no_field; at = function.fields[at].parent )
+    {
+        names.push_back( interner.text( ast.name( function.fields[at].field ) ) );
+    }
+
+    std::string path;
+    for( auto name = names.rbegin(); name != names.rend(); ++name )
+    {
+        path += path.empty() ? std::string( *name ) : fmt::format( ".{}", *name );
+    }
+    return path;
+}
+
+// A local, or a field of one as `p.inner.x`; `unnamed` for a temporary.
+std::string subject_of(
+    const Function& function, const Ast& ast, const Interner& interner, Local_id local, u32 field, std::string_view unnamed
+)
+{
+    const Symbol_id name = function.locals[local.v].name;
+
+    if( !name.is_valid() )
+    {
+        return std::string( unnamed );
+    }
+
+    return field == k_no_field ? fmt::format( "`{}`", interner.text( name ) )
+                               : fmt::format( "`{}.{}`", interner.text( name ), field_path( function, ast, interner, field ) );
+}
+
 // The passes report spans and a Local_id; this names the local. A second site goes in the help as
 // line:col, since a diagnostic carries one span.
 void report_move_errors(
@@ -33,11 +66,8 @@ void report_move_errors(
         for( const Move_error& error :
              check_moves( function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ) ) )
         {
-            const Symbol_id name = function.locals[error.local.v].name;
-
             // The lowerer moves temporaries too, so the moved value may have no name the author wrote.
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+            const std::string subject = subject_of( function, ast, interner, error.local, error.field, "this value" );
 
             switch( error.conflict )
             {
@@ -167,36 +197,9 @@ void report_unassigned_errors(
     {
         const Assignment_report report = check_assignment( function );
 
-        // A field by its path from the root of its local, `inner.x`.
-        const auto field_name = [&]( u32 field )
-        {
-            std::vector<std::string_view> names;
-            for( u32 at = field; at != k_no_field; at = function.fields[at].parent )
-            {
-                names.push_back( interner.text( ast.name( function.fields[at].field ) ) );
-            }
-
-            std::string path;
-            for( auto name = names.rbegin(); name != names.rend(); ++name )
-            {
-                path += path.empty() ? std::string( *name ) : fmt::format( ".{}", *name );
-            }
-            return path;
-        };
-
-        // A local, or a field of one as `p.inner.x`; `unnamed` for a temporary.
-        const auto subject = [&]( Local_id local, u32 field, std::string_view unnamed )
-        {
-            const Symbol_id name = function.locals[local.v].name;
-
-            if( !name.is_valid() )
-            {
-                return std::string( unnamed );
-            }
-
-            return field == k_no_field ? fmt::format( "`{}`", interner.text( name ) )
-                                       : fmt::format( "`{}.{}`", interner.text( name ), field_name( field ) );
-        };
+        const auto field_name = [&]( u32 field ) { return field_path( function, ast, interner, field ); };
+        const auto subject    = [&]( Local_id local, u32 field, std::string_view unnamed )
+        { return subject_of( function, ast, interner, local, field, unnamed ); };
 
         const auto is_constructor_field = [&]( Local_id local, u32 field )
         { return field != k_no_field && function.constructed.is_valid() && local == function.constructed; };

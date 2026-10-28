@@ -5,6 +5,7 @@
 
 #include <span>
 #include "check/borrows.h"
+#include "ir/slots.h"
 
 namespace keel
 {
@@ -21,7 +22,7 @@ enum class State : u8
     Maybe_moved
 };
 
-// Per-local state, plus where the move happened, so a diagnostic can point at both ends.
+// Per-slot state, plus where the move happened, so a diagnostic can point at both ends.
 struct Flow
 {
     std::vector<State> state;
@@ -71,9 +72,63 @@ bool merge_into( Flow& into, const Flow& from )
     return changed;
 }
 
-// Reports a read of a moved local, then applies a move. `errors` is null during the fixpoint, so
+// Reports a read of `range` if a leaf of it is moved; whether one was. The error names the place
+// read when every leaf is moved, and the first moved leaf otherwise.
+bool check_leaves(
+    const Slot_map& slots, Local_id local, const Slots& range, Span span, const Flow& flow, std::vector<Move_error>* errors
+)
+{
+    u32  first = k_no_field;
+    bool all   = true;
+    bool maybe = false;
+
+    for( u32 leaf = range.first; leaf < range.last; ++leaf )
+    {
+        if( !slots.is_leaf( leaf ) )
+        {
+            continue;
+        }
+
+        const State state = flow.state[leaf];
+        if( state == State::Moved || state == State::Maybe_moved )
+        {
+            first = first == k_no_field ? leaf : first;
+            maybe = maybe || state == State::Maybe_moved;
+        }
+        else
+        {
+            all = false;
+        }
+    }
+
+    if( first != k_no_field && errors != nullptr )
+    {
+        errors->push_back( Move_error {
+            .local = local,
+            .field = slots.field( all ? range.node : first ),
+            .use   = span,
+            .moved = flow.moved_at[first],
+            .maybe = all ? maybe : flow.state[first] == State::Maybe_moved
+        } );
+    }
+
+    return first != k_no_field;
+}
+
+void set_leaves( const Slots& range, Flow& flow, State state, Span span )
+{
+    for( u32 leaf = range.first; leaf < range.last; ++leaf )
+    {
+        flow.state[leaf]    = state;
+        flow.moved_at[leaf] = span;
+    }
+}
+
+// Reports a read of a moved leaf, then applies a move. `errors` is null during the fixpoint, so
 // both walks share one traversal.
-void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Move_error>* errors )
+void read_operand(
+    const Function& func, const Slot_map& slots, const Operand& operand, Span span, Flow& flow, std::vector<Move_error>* errors
+)
 {
     // Only a copy or move names a local, and a global has no scope to be moved out of.
     if( !operand.has_place() || operand.place.is_global() )
@@ -81,81 +136,51 @@ void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Mo
         return;
     }
 
-    // Nothing can be moved but a whole named local, so a projection here is only ever a read.
-    const u32   local = operand.place.local.v;
-    const State state = flow.state[local];
-
-    if( errors != nullptr && ( state == State::Moved || state == State::Maybe_moved ) )
-    {
-        errors->push_back( Move_error {
-            .local = operand.place.local, .use = span, .moved = flow.moved_at[local], .maybe = state == State::Maybe_moved
-        } );
-    }
+    const Slots range = slots.of( operand.place );
+    check_leaves( slots, operand.place.local, range, span, flow, errors );
 
     // Moving twice is a use after move, so this runs after the check.
-    if( operand.kind == Operand_kind::Move && operand.place.num_projections == 0 )
+    if( operand.kind == Operand_kind::Move && is_field_path( func, operand.place ) && range.exact )
     {
-        flow.state[local]    = State::Moved;
-        flow.moved_at[local] = span;
+        set_leaves( range, flow, State::Moved, span );
     }
 }
 
 // value.a, value.b, and operands[first_argument .. + argument_count].
-void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& flow, std::vector<Move_error>* errors )
+void read_rvalue(
+    const Function& func, const Slot_map& slots, const Rvalue& value, Span span, Flow& flow, std::vector<Move_error>* errors
+)
 {
     if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() )
     {
-        const u32   local = value.a.place.local.v;
-        const State state = flow.state[local];
-        if( value.address_purpose != Address_purpose::Initialise && ( state == State::Moved || state == State::Maybe_moved ) &&
-            errors != nullptr )
-        {
-            errors->push_back( Move_error {
-                .local = value.a.place.local, .use = span, .moved = flow.moved_at[local], .maybe = state == State::Maybe_moved
-            } );
-        }
+        const Slots range = slots.of( value.a.place );
 
-        // Only a whole local is refilled; `out b.n` into a moved `b` is a use, as `b.n = ...` is.
-        if( value.address_purpose == Address_purpose::Initialise )
+        // Only a tracked node is refilled; `out b.n` into a moved `b` is a use, as `b.n = ...` is.
+        if( value.address_purpose == Address_purpose::Initialise && range.exact )
         {
-            if( value.a.place.num_projections != 0 )
-            {
-                if( state == State::Moved || state == State::Maybe_moved )
-                {
-                    if( errors != nullptr )
-                    {
-                        errors->push_back( Move_error {
-                            .local = value.a.place.local,
-                            .use   = span,
-                            .moved = flow.moved_at[local],
-                            .maybe = state == State::Maybe_moved
-                        } );
-                    }
-                }
-            }
-            else
-            {
-                flow.state[local]    = State::Live;
-                flow.moved_at[local] = Span {};
-            }
+            set_leaves( range, flow, State::Live, Span {} );
+        }
+        else
+        {
+            check_leaves( slots, value.a.place.local, range, span, flow, errors );
         }
     }
 
     // a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
     // Constant, so reading all of them needs no switch.
-    read_operand( value.a, span, flow, errors );
-    read_operand( value.b, span, flow, errors );
+    read_operand( func, slots, value.a, span, flow, errors );
+    read_operand( func, slots, value.b, span, flow, errors );
 
     for( u32 i = 0; i < value.argument_count; ++i )
     {
-        read_operand( func.operands[value.first_argument + i], span, flow, errors );
+        read_operand( func, slots, func.operands[value.first_argument + i], span, flow, errors );
     }
 
     // Taking a moved local's address is not a use of its value, so Address_of reads nothing here.
 }
 
 // Every statement of a block, then its terminator's condition. Mutates `flow` in place.
-void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Move_error>* errors )
+void transfer_block( const Function& func, const Slot_map& slots, u32 block, Flow& flow, std::vector<Move_error>* errors )
 {
     const Block& b = func.blocks[block];
 
@@ -166,40 +191,30 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
         switch( statement.kind )
         {
         case Statement_kind::Assign:
+        {
             // Reads before the write: `_1 = move _1 + 1` is legal.
-            read_rvalue( func, statement.value, statement.span, flow, errors );
+            read_rvalue( func, slots, statement.value, statement.span, flow, errors );
 
-            // `_1.x = ...` fills a fresh or live _1, as a struct literal does, but is a use of a moved
-            // one: it would fill a field and leave the rest gone.
-            if( !statement.place.is_global() )
+            if( statement.place.is_global() )
             {
-                if( statement.place.num_projections != 0 )
-                {
-                    const State state = flow.state[statement.place.local.v];
-                    if( state == State::Moved || state == State::Maybe_moved )
-                    {
-                        if( errors != nullptr )
-                        {
-                            errors->push_back( Move_error {
-                                .local = statement.place.local,
-                                .use   = statement.span,
-                                .moved = flow.moved_at[statement.place.local.v],
-                                .maybe = state == State::Maybe_moved
-                            } );
-                        }
-                        break;
-                    }
-                }
-
-                flow.state[statement.place.local.v]    = State::Live;
-                flow.moved_at[statement.place.local.v] = Span {};
+                break;
             }
+
+            // `p.a = ...` revives `p.a`. `b.n = ...` into a moved `b` tracked whole is a use: it would
+            // fill a field and leave the rest gone.
+            const Slots range = slots.of( statement.place );
+            if( !range.exact && check_leaves( slots, statement.place.local, range, statement.span, flow, errors ) )
+            {
+                break;
+            }
+
+            set_leaves( range, flow, State::Live, Span {} );
             break;
+        }
         case Statement_kind::Storage_live:
         case Statement_kind::Storage_dead:
             // Both name a whole local (verify's check_place), and storage begins and ends empty.
-            flow.state[statement.place.local.v]    = State::Uninitialised;
-            flow.moved_at[statement.place.local.v] = Span {};
+            set_leaves( slots.under( statement.place.local.v ), flow, State::Uninitialised, Span {} );
             break;
         case Statement_kind::Drop:
             // Silent: eliding a drop of a moved value is drop elaboration's job, not the author's mistake.
@@ -208,15 +223,15 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
     }
 
     // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
-    read_operand( b.terminator.condition, b.terminator.span, flow, errors );
-    read_operand( b.terminator.message, b.terminator.span, flow, errors );
-    read_operand( b.terminator.at, b.terminator.span, flow, errors );
+    read_operand( func, slots, b.terminator.condition, b.terminator.span, flow, errors );
+    read_operand( func, slots, b.terminator.message, b.terminator.span, flow, errors );
+    read_operand( func, slots, b.terminator.at, b.terminator.span, flow, errors );
 }
 
 // A call handed a local both by `move` and by address: the callee would own it and borrow it at once.
 // Every borrowed argument is lowered to an address taken before the call, so the flow never sees it.
 void find_moves_into_borrowing_calls(
-    const Function& func, const std::vector<Borrow>& borrows, std::vector<Move_error>& errors
+    const Function& func, const Slot_map& slots, const std::vector<Borrow>& borrows, std::vector<Move_error>& errors
 )
 {
     for( const Statement& statement : func.statements )
@@ -233,7 +248,7 @@ void find_moves_into_borrowing_calls(
 
         for( const Operand& moved : arguments )
         {
-            if( moved.kind != Operand_kind::Move || moved.place.is_global() || moved.place.num_projections != 0 )
+            if( moved.kind != Operand_kind::Move || !is_field_path( func, moved.place ) )
             {
                 continue;
             }
@@ -247,11 +262,12 @@ void find_moves_into_borrowing_calls(
 
                 const Borrow& borrow = borrows[borrowed.place.local.v];
 
-                if( borrow.of == moved.place.local ||
-                    ( borrow.through != nullptr && reaches( func, borrows, borrow, Place { .local = moved.place.local } ) ) )
+                if( ( borrow.of == moved.place.local && overlaps( func, borrow.place, moved.place ) ) ||
+                    ( borrow.through != nullptr && reaches( func, borrows, borrow, moved.place ) ) )
                 {
                     errors.push_back( Move_error {
                         .local    = moved.place.local,
+                        .field    = slots.field( slots.of( moved.place ).node ),
                         .use      = borrow.at,
                         .moved    = statement.span,
                         .conflict = Call_conflict::Moved_and_borrowed
@@ -338,17 +354,20 @@ void find_aliased_arguments(
     }
 }
 
+Flow bottom( const Slot_map& slots )
+{
+    return Flow { std::vector<State>( slots.count(), State::Uninitialised ), std::vector<Span>( slots.count(), Span {} ) };
+}
+
 // Parameters Live, everything else Uninitialised. Locals 1..parameter_count are the parameters,
 // in declaration order.
-Flow entry_flow( const Function& func )
+Flow entry_flow( const Function& func, const Slot_map& slots )
 {
-    Flow flow {
-        std::vector<State>( func.locals.size(), State::Uninitialised ), std::vector<Span>( func.locals.size(), Span {} )
-    };
+    Flow flow = bottom( slots );
 
     for( u32 i = 1; i <= func.parameter_count; ++i )
     {
-        flow.state[i] = State::Live;
+        set_leaves( slots.under( i ), flow, State::Live, Span {} );
     }
 
     return flow;
@@ -359,12 +378,9 @@ Flow entry_flow( const Function& func )
 std::vector<Move_error>
 check_moves( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing )
 {
-    const Flow bottom = {
-        std::vector<State>( func.locals.size(), State::Uninitialised ), std::vector<Span>( func.locals.size(), Span {} )
-    };
-
-    std::vector<Flow> in( func.blocks.size(), bottom );
-    in[0] = entry_flow( func );
+    const Slot_map    slots( func );
+    std::vector<Flow> in( func.blocks.size(), bottom( slots ) );
+    in[0] = entry_flow( func, slots );
 
     std::vector<Block_id> work { Block_id { 0 } };
     std::vector<Block_id> next;
@@ -376,7 +392,7 @@ check_moves( const Function& func, const std::vector<bool>& owning, const std::v
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, block.v, out, nullptr );
+        transfer_block( func, slots, block.v, out, nullptr );
 
         next.clear();
         successors( func.blocks[block.v].terminator, next );
@@ -398,10 +414,10 @@ check_moves( const Function& func, const std::vector<bool>& owning, const std::v
     for( u32 block = 0; block < func.blocks.size(); ++block )
     {
         Flow flow = in[block];
-        transfer_block( func, block, in[block], &errors );
+        transfer_block( func, slots, block, in[block], &errors );
     }
 
-    find_moves_into_borrowing_calls( func, borrows, errors );
+    find_moves_into_borrowing_calls( func, slots, borrows, errors );
     find_aliased_arguments( func, borrows, owning, errors );
 
     return errors;
@@ -675,6 +691,41 @@ TEST_CASE( "move_check_finds_a_write_into_a_moved_local", "[check][move]" )
         INFO( live.rendered() );
         REQUIRE( live.errors().empty() );
     }
+}
+
+// A struct without a destructor is tracked per field, so writing one field of a moved value revives
+// that field alone, and a whole read then names the field still moved.
+TEST_CASE( "move_check_tracks_each_field_of_a_struct", "[check][move]" )
+{
+    constexpr std::string_view k_pair = "struct P { i32 a; i32 b; };\n"
+                                        "void take( move P p ) { }\n"
+                                        "void look( P p ) { }\n";
+
+    const Checked half(
+        std::string( k_pair ) + "i32 main() { P p = P { 1, 2 }; take( move p ); p.a = 3; look( p ); return 0; }"
+    );
+
+    INFO( half.rendered() );
+    REQUIRE( half.clean() );
+
+    const std::vector<Move_error> errors = half.errors();
+
+    REQUIRE( errors.size() == 1 );
+    REQUIRE( errors[0].field != k_no_field );
+    REQUIRE( half.ast.name( half.functions.back().fields[errors[0].field].field ) == half.interner.find( "b" ) );
+
+    const Checked whole( std::string( k_pair ) + "i32 main() { P p = P { 1, 2 }; take( move p ); look( p ); return 0; }" );
+
+    INFO( whole.rendered() );
+    REQUIRE( whole.errors().size() == 1 );
+    REQUIRE( whole.errors()[0].field == k_no_field );
+
+    const Checked refilled(
+        std::string( k_pair ) + "i32 main() { P p = P { 1, 2 }; take( move p ); p.a = 3; p.b = 4; look( p ); return 0; }"
+    );
+
+    INFO( refilled.rendered() );
+    REQUIRE( refilled.errors().empty() );
 }
 
 // Every borrowed argument's address is taken before the call, so the move inside it is checked
