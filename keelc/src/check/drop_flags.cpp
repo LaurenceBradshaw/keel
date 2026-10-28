@@ -3,7 +3,9 @@
 
 #include "check/drop_flags.h"
 #include <algorithm>
+#include <cassert>
 #include <vector>
+#include "ir/slots.h"
 
 namespace keel
 {
@@ -11,18 +13,41 @@ namespace keel
 namespace
 {
 
-// Indexed by local; each entry is that local's flag, or invalid when it needs none.
+// Indexed by slot (ir/slots): each leaf's flag, or invalid when it needs none.
 using Flag_map = std::vector<Local_id>;
 
-// The flag for a place, or invalid: only a whole local can be moved.
-Local_id flag_of( const Flag_map& flags, const Place& place )
+// The flag of the one leaf a place lies in. A drop is always inside one: drop_place never drops a
+// tracked compound whole, and a destructor's own field drops lie inside its leaf.
+Local_id flag_of( const Flag_map& flags, const Slot_map& slots, const Place& place )
 {
     if( place.is_global() )
     {
         return Local_id {};
     }
 
-    return flags[place.local.v];
+    const Slots range = slots.of( place );
+    assert( slots.is_leaf( range.node ) && "a place across several leaves has no one flag" );
+    return flags[range.first];
+}
+
+// Calls `visit( flag )` for each flagged leaf a place covers: a whole split local covers every field.
+template <typename Visit>
+void for_each_flag( const Flag_map& flags, const Slot_map& slots, const Place& place, Visit&& visit )
+{
+    if( place.is_global() )
+    {
+        return;
+    }
+
+    const Slots range = slots.of( place );
+
+    for( u32 slot = range.first; slot < range.last; ++slot )
+    {
+        if( flags[slot].is_valid() )
+        {
+            visit( flags[slot] );
+        }
+    }
 }
 
 bool is_out_parameter( const Function& func, Local_id local )
@@ -30,18 +55,34 @@ bool is_out_parameter( const Function& func, Local_id local )
     return std::find( func.out_parameters.begin(), func.out_parameters.end(), local ) != func.out_parameters.end();
 }
 
-// Locals both moved and dropped somewhere, and temporaries built on one path of an expression. A
-// flag guards a drop, so a moved local never dropped needs none, and one never moved is always live
+// Leaves both moved and dropped somewhere, and temporaries built on one path of an expression. A
+// flag guards a drop, so a moved leaf never dropped needs none, and one never moved is always live
 // at its drop.
-std::vector<bool> locals_needing_flags( const Function& func )
+std::vector<bool> slots_needing_flags( const Function& func, const Slot_map& slots )
 {
-    std::vector<bool> moved( func.locals.size(), false );
+    std::vector<bool> moved( slots.count(), false );
 
+    const auto mark = [&]( std::vector<bool>& set, const Slots& range )
+    {
+        for( u32 slot = range.first; slot < range.last; ++slot )
+        {
+            if( slots.is_leaf( slot ) )
+            {
+                set[slot] = true;
+            }
+        }
+    };
+
+    // A whole local or a path of fields to a tracked node; a move from inside an enum or through a
+    // pointer is no move of a leaf.
     const auto note = [&]( const Operand& operand )
     {
-        if( operand.kind == Operand_kind::Move && !operand.place.is_global() && operand.place.num_projections == 0 )
+        if( operand.kind == Operand_kind::Move && is_field_path( func, operand.place ) )
         {
-            moved[operand.place.local.v] = true;
+            if( const Slots range = slots.of( operand.place ); range.exact )
+            {
+                mark( moved, range );
+            }
         }
     };
 
@@ -59,28 +100,30 @@ std::vector<bool> locals_needing_flags( const Function& func )
     }
 
     // Intersected with the drops, which is what turns "was moved" into "needs a flag".
-    std::vector<bool> dropped( func.locals.size(), false );
-    std::vector<bool> replaced( func.locals.size(), false );
+    std::vector<bool> dropped( slots.count(), false );
+    std::vector<bool> replaced( slots.count(), false );
 
     for( const Statement& statement : func.statements )
     {
-        // Projections count: a compound without a destructor drops field by field, as `drop _8.inner`.
         if( statement.kind == Statement_kind::Drop && !statement.place.is_global() )
         {
-            dropped[statement.place.local.v] = true;
+            const u32 leaf = slots.of( statement.place ).first;
+            dropped[leaf]  = true;
 
-            // Through a pointer the place always holds a value, except an `out` parameter's.
+            // Through a pointer the place always holds a value, except an `out` parameter's and a
+            // constructor's object's.
             if( statement.replacing &&
-                ( !has_deref_projection( func, statement.place ) || is_out_parameter( func, statement.place.local ) ) )
+                ( !has_deref_projection( func, statement.place ) || is_out_parameter( func, statement.place.local ) ||
+                  statement.place.local == func.constructed ) )
             {
-                replaced[statement.place.local.v] = true;
+                replaced[leaf] = true;
             }
         }
     }
 
     for( const Local_id local : func.one_path_temporaries )
     {
-        moved[local.v] = true;
+        mark( moved, slots.under( local.v ) );
     }
 
     for( std::size_t i = 0; i < moved.size(); ++i )
@@ -91,27 +134,32 @@ std::vector<bool> locals_needing_flags( const Function& func )
     return moved;
 }
 
-// Appends an unnamed bool local per flagged local, so a dump reads `drop _1 if _7`.
-Flag_map allocate_flags( Function& func, const std::vector<bool>& moved, const Flag_vocabulary& vocabulary )
+// Appends an unnamed bool local per flagged leaf, so a dump reads `drop _1.b if _7`.
+Flag_map
+allocate_flags( Function& func, const Slot_map& slots, const std::vector<bool>& moved, const Flag_vocabulary& vocabulary )
 {
-    Flag_map flags( func.locals.size(), Local_id {} );
+    Flag_map  flags( slots.count(), Local_id {} );
+    const u32 locals = narrow_cast<u32>( func.locals.size() );
 
-    for( u32 local = 0; local < moved.size(); ++local )
+    // In local order, a local's leaves together, so a dump numbers flags as its locals.
+    for( u32 local = 0; local < locals; ++local )
     {
-        if( !moved[local] )
+        const Slots whole = slots.under( local );
+
+        for( u32 slot = whole.first; slot < whole.last; ++slot )
         {
-            continue;
+            if( !moved[slot] )
+            {
+                continue;
+            }
+
+            // Read before the push_back, which may reallocate. The flag borrows its local's span.
+            const Span span = func.locals[local].span;
+
+            flags[slot] = Local_id { narrow_cast<u32>( func.locals.size() ) };
+            func.locals.push_back( Local { .type = vocabulary.bool_type, .span = span } );
         }
-
-        // Read before the push_back, which may reallocate. The flag borrows the local's span.
-        const Span span = func.locals[local].span;
-
-        flags[local] = Local_id { narrow_cast<u32>( func.locals.size() ) };
-        func.locals.push_back( Local { .type = vocabulary.bool_type, .span = span } );
     }
-
-    // Grown to the final local count, so flag_of answers any place, a flag included.
-    flags.resize( func.locals.size(), Local_id {} );
 
     return flags;
 }
@@ -130,6 +178,7 @@ Statement set_flag( Local_id flag, bool value, Span span, const Flag_vocabulary&
 // The flag writes a statement implies, appended after it.
 void append_flag_writes(
     const Function&         func,
+    const Slot_map&         slots,
     const Statement&        statement,
     const Flag_map&         flags,
     const Flag_vocabulary&  vocabulary,
@@ -141,10 +190,12 @@ void append_flag_writes(
     case Statement_kind::Storage_live:
     case Statement_kind::Storage_dead:
         // Storage begins and ends holding nothing, so there is nothing to drop on either side of it.
-        if( const Local_id flag = flag_of( flags, statement.place ); flag.is_valid() )
-        {
-            out.push_back( set_flag( flag, false, statement.span, vocabulary ) );
-        }
+        for_each_flag(
+            flags,
+            slots,
+            Place { .local = statement.place.local },
+            [&]( Local_id flag ) { out.push_back( set_flag( flag, false, statement.span, vocabulary ) ); }
+        );
         return;
     case Statement_kind::Assign:
         // The move first, then the assignment, so `_1 = move _1` ends with the flag set. Driven off the
@@ -154,30 +205,35 @@ void append_flag_writes(
             statement.value,
             [&]( const Operand& operand )
             {
-                if( operand.kind != Operand_kind::Move )
+                // A move out of part of a leaf, a payload, ends the whole leaf: nothing drops it after.
+                if( operand.kind == Operand_kind::Move )
                 {
-                    return;
-                }
-
-                if( const Local_id flag = flag_of( flags, operand.place ); flag.is_valid() )
-                {
-                    out.push_back( set_flag( flag, false, statement.span, vocabulary ) );
+                    for_each_flag(
+                        flags,
+                        slots,
+                        operand.place,
+                        [&]( Local_id flag ) { out.push_back( set_flag( flag, false, statement.span, vocabulary ) ); }
+                    );
                 }
             }
         );
-        if( const Local_id flag = flag_of( flags, statement.place ); flag.is_valid() )
-        {
-            out.push_back( set_flag( flag, true, statement.span, vocabulary ) );
-        }
+        for_each_flag(
+            flags,
+            slots,
+            statement.place,
+            [&]( Local_id flag ) { out.push_back( set_flag( flag, true, statement.span, vocabulary ) ); }
+        );
 
         // A constructed local is written through its Initialise address (`_3 = &_2`), never assigned, so
         // that address sets its flag. A borrow does not, or one after a move would revive it.
         if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
         {
-            if( const Local_id flag = flag_of( flags, statement.value.a.place ); flag.is_valid() )
-            {
-                out.push_back( set_flag( flag, true, statement.span, vocabulary ) );
-            }
+            for_each_flag(
+                flags,
+                slots,
+                statement.value.a.place,
+                [&]( Local_id flag ) { out.push_back( set_flag( flag, true, statement.span, vocabulary ) ); }
+            );
         }
 
         return;
@@ -204,7 +260,7 @@ Span entry_span( const Function& func )
 
 // The rebuild: copies every block's statements, interleaves flag writes, sets drop_flag on drops,
 // and fixes each block's range as it goes.
-void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocabulary& vocabulary )
+void rewrite_statements( Function& func, const Slot_map& slots, const Flag_map& flags, const Flag_vocabulary& vocabulary )
 {
     const Span             entry = entry_span( func );
     std::vector<Statement> rebuilt;
@@ -216,23 +272,31 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         const u32 count     = block.statement_count;
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
-        // Set every flag on entry: a parameter arrives holding its value, except an `out` one, and
-        // anything else starts empty, since an arm's temporary has no storage_live to clear it on the
+        // Set every flag on entry: a parameter arrives holding its value, except an `out` one and a
+        // constructor's object, and anything else starts empty, since an arm's temporary has no storage_live to clear it on the
         // path that skips it. The writes take the first statement's line, so a debugger's first stop
         // is on it.
         if( &block == &func.blocks.front() )
         {
-            for( u32 local = 0; local < flags.size(); ++local )
+            // In the order allocate_flags numbered them.
+            std::vector<u32> flagged;
+            for( u32 slot = 0; slot < flags.size(); ++slot )
             {
-                const Local_id flag = flags[local];
-                if( !flag.is_valid() )
+                if( flags[slot].is_valid() )
                 {
-                    continue;
+                    flagged.push_back( slot );
                 }
+            }
+            std::ranges::sort( flagged, [&]( u32 a, u32 b ) { return flags[a].v < flags[b].v; } );
 
+            for( const u32 slot : flagged )
+            {
+                const Local_id flag  = flags[slot];
+                const Local_id local = slots.local( slot );
                 rebuilt.push_back( set_flag(
                     flag,
-                    local >= 1 && local <= func.parameter_count && !is_out_parameter( func, Local_id { local } ),
+                    local.v >= 1 && local.v <= func.parameter_count && !is_out_parameter( func, local ) &&
+                        local != func.constructed,
                     entry,
                     vocabulary
                 ) );
@@ -246,17 +310,17 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
             // A drop reads its flag rather than being followed by a write.
             if( statement.kind == Statement_kind::Drop )
             {
-                statement.drop_flag = flag_of( flags, statement.place );
+                statement.drop_flag = flag_of( flags, slots, statement.place );
             }
 
             rebuilt.push_back( statement );
-            append_flag_writes( func, statement, flags, vocabulary, rebuilt );
+            append_flag_writes( func, slots, statement, flags, vocabulary, rebuilt );
         }
 
         // A moving condition clears its flag before the terminator reads it.
         if( block.terminator.condition.kind == Operand_kind::Move )
         {
-            if( const Local_id flag = flag_of( flags, block.terminator.condition.place ); flag.is_valid() )
+            if( const Local_id flag = flag_of( flags, slots, block.terminator.condition.place ); flag.is_valid() )
             {
                 rebuilt.push_back( set_flag( flag, false, block.terminator.span, vocabulary ) );
             }
@@ -273,7 +337,9 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
 
 void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
 {
-    const std::vector<bool> moved = locals_needing_flags( func );
+    // Built before any flag is appended, so slot numbers stay fixed while flags are added.
+    const Slot_map          slots( func );
+    const std::vector<bool> moved = slots_needing_flags( func, slots );
 
     // Nothing flagged: the function is left untouched.
     if( std::find( moved.begin(), moved.end(), true ) == moved.end() )
@@ -281,9 +347,9 @@ void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
         return;
     }
 
-    const Flag_map flags = allocate_flags( func, moved, vocabulary );
+    const Flag_map flags = allocate_flags( func, slots, moved, vocabulary );
 
-    rewrite_statements( func, flags, vocabulary );
+    rewrite_statements( func, slots, flags, vocabulary );
 }
 
 } // namespace keel
@@ -362,6 +428,29 @@ TEST_CASE( "drop_flags_leaves_a_function_that_moves_nothing_alone", "[check][dro
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
     REQUIRE( text.find( " if _" ) == std::string::npos ); // unconditional
     REQUIRE( text.find( "bool" ) == std::string::npos );  // and no flag was added
+}
+
+// Each field of an `out` class without a destructor fills under its own flag, so writing `p.b`
+// replaces nothing `p.a`'s write left.
+TEST_CASE( "drop_flags_gives_each_field_of_an_out_parameter_its_own_flag", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "class P { public Owned a; public Owned b; };\n"
+                                  "void fill( out P p ) { p.a = Owned( 1 ); p.b = Owned( 2 ); }\n"
+                                  "i32 main() { P q; fill( out q ); return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "fill" );
+
+    INFO( text );
+    const std::size_t a = text.find( "drop (*_1).a if _" );
+    const std::size_t b = text.find( "drop (*_1).b if _" );
+    REQUIRE( a != std::string::npos );
+    REQUIRE( b != std::string::npos );
+    REQUIRE( text.substr( a + 17, 2 ) != text.substr( b + 17, 2 ) );
 }
 
 // On the first statement's line, not the flagged local's or the signature's: a debugger stops at

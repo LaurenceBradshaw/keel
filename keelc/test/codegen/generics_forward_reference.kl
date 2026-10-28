@@ -51,9 +51,7 @@ Box<i32> as_a_return( i32 n )
 // a destructor of its own, so this scope has a drop to elaborate.
 void drops_at_scope_exit()
 {
-    Counted<i32> c;
-
-    c.v = 1;
+    Counted<i32> c = Counted { 1 };
 }
 
 i32 main()

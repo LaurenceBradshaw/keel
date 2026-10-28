@@ -6,7 +6,7 @@
 namespace keel
 {
 
-static_assert( sizeof( Local ) == 20, "Local changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Local ) == 24, "Local changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Projection ) == 16, "Projection changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Place ) == 20, "Place changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Operand ) == 32, "Operand changed: update kir_state.cpp's walk" );
@@ -14,7 +14,7 @@ static_assert( sizeof( Rvalue ) == 120, "Rvalue changed: update kir_state.cpp's 
 static_assert( sizeof( Statement ) == 168, "Statement changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Terminator ) == 120, "Terminator changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Block ) == 128, "Block changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Owed_field ) == 8, "Owed_field changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Function ) == 248, "Function changed: update kir_state.cpp's walk" );
 
 namespace
@@ -181,12 +181,16 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     put_locals( out, function.one_path_temporaries );
     out.put_u32( function.constructed.v );
 
-    out.put_u32( narrow_cast<u32>( function.owed_fields.size() ) );
-    for( const Owed_field& owed : function.owed_fields )
+    out.put_u32( narrow_cast<u32>( function.fields.size() ) );
+    for( const Field_slot& slot : function.fields )
     {
-        refs.node( out, owed.field );
-        out.put_u8( owed.is_owning );
-        out.put_u8( owed.is_const );
+        out.put_u32( slot.local.v );
+        out.put_u32( slot.parent );
+        out.put_u32( slot.end );
+        refs.node( out, slot.field );
+        out.put_u8( slot.is_owning );
+        out.put_u8( slot.is_const );
+        out.put_u8( slot.built_whole );
     }
 
     out.put_u32( narrow_cast<u32>( function.locals.size() ) );
@@ -195,6 +199,7 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
         refs.type( out, local.type );
         refs.span( out, local.span );
         refs.symbol( out, local.name );
+        out.put_u8( local.built_whole );
     }
 
     out.put_u32( narrow_cast<u32>( function.blocks.size() ) );
@@ -245,16 +250,20 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.one_path_temporaries = get_locals( in, refs );
     function.constructed          = Local_id { in.get_u32() };
 
-    function.owed_fields = get_all<Owed_field>(
+    function.fields = get_all<Field_slot>(
         in,
         refs,
         [&]
         {
-            Owed_field owed;
-            owed.field     = refs.node();
-            owed.is_owning = in.get_u8() != 0;
-            owed.is_const  = in.get_u8() != 0;
-            return owed;
+            Field_slot slot;
+            slot.local       = Local_id { in.get_u32() };
+            slot.parent      = in.get_u32();
+            slot.end         = in.get_u32();
+            slot.field       = refs.node();
+            slot.is_owning   = in.get_u8() != 0;
+            slot.is_const    = in.get_u8() != 0;
+            slot.built_whole = in.get_u8() != 0;
+            return slot;
         }
     );
 
@@ -264,9 +273,10 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
         [&]
         {
             Local local;
-            local.type = refs.type();
-            local.span = refs.span();
-            local.name = refs.symbol();
+            local.type        = refs.type();
+            local.span        = refs.span();
+            local.name        = refs.symbol();
+            local.built_whole = in.get_u8() != 0;
             return local;
         }
     );

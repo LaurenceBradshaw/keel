@@ -1170,6 +1170,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
     bool kl_t19;
     bool kl_t20;
     bool kl_t21;
+    bool kl_t22;
 #line 115 "codegen/try.kl"
     kl_t18 = false;
 #line 115 "codegen/try.kl"
@@ -1179,23 +1180,27 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
 #line 115 "codegen/try.kl"
     kl_t21 = false;
 #line 115 "codegen/try.kl"
+    kl_t22 = false;
+#line 115 "codegen/try.kl"
     kl_t18 = false;
 #line 115 "codegen/try.kl"
     kl_t19 = false;
 #line 115 "codegen/try.kl"
+    kl_t20 = false;
+#line 115 "codegen/try.kl"
     kl_t5 = &kl_t4;
 #line 115 "codegen/try.kl"
-    kl_t19 = true;
+    kl_t20 = true;
 #line 115 "codegen/try.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t5, 1 );
 #line 115 "codegen/try.kl"
     kl_t7 = kl__make__3u64( kl_n_1 );
 #line 115 "codegen/try.kl"
-    kl_t20 = true;
+    kl_t21 = true;
 #line 115 "codegen/try.kl"
     kl_t8 = kl_t7;
 #line 115 "codegen/try.kl"
-    kl_t20 = false;
+    kl_t21 = false;
 #line 115 "codegen/try.kl"
     kl_t9 = kl_t8.tag == 0;
 #line 115 "codegen/try.kl"
@@ -1204,41 +1209,45 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
 #line 115 "codegen/try.kl"
     kl_t10 = kl_t8.kl_value;
 #line 115 "codegen/try.kl"
-    kl_t21 = true;
+    kl_t22 = true;
 #line 115 "codegen/try.kl"
     kl_t3.kl_left = kl_t4;
 #line 115 "codegen/try.kl"
-    kl_t19 = false;
+    kl_t20 = false;
 #line 115 "codegen/try.kl"
     kl_t18 = true;
 #line 115 "codegen/try.kl"
     kl_t3.kl_right = kl_t10;
 #line 115 "codegen/try.kl"
-    kl_t21 = false;
+    kl_t22 = false;
 #line 115 "codegen/try.kl"
-    kl_t18 = true;
+    kl_t19 = true;
 #line 115 "codegen/try.kl"
     kl_p_2 = kl_t3;
 #line 115 "codegen/try.kl"
     kl_t18 = false;
 #line 115 "codegen/try.kl"
-    if ( kl_t18 ) kl__Buf__dtor( &kl_t3.kl_right );
+    kl_t19 = false;
+#line 115 "codegen/try.kl"
+    if ( kl_t19 ) kl__Buf__dtor( &kl_t3.kl_right );
 #line 115 "codegen/try.kl"
     if ( kl_t18 ) kl__Buf__dtor( &kl_t3.kl_left );
 #line 115 "codegen/try.kl"
-    if ( kl_t21 ) kl__Buf__dtor( &kl_t10 );
+    if ( kl_t22 ) kl__Buf__dtor( &kl_t10 );
 #line 115 "codegen/try.kl"
-    if ( kl_t20 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t7 );
+    if ( kl_t21 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t7 );
 #line 115 "codegen/try.kl"
-    if ( kl_t19 ) kl__Buf__dtor( &kl_t4 );
-#line 115 "codegen/try.kl"
-    kl_t19 = false;
+    if ( kl_t20 ) kl__Buf__dtor( &kl_t4 );
 #line 115 "codegen/try.kl"
     kl_t20 = false;
 #line 115 "codegen/try.kl"
     kl_t21 = false;
 #line 115 "codegen/try.kl"
+    kl_t22 = false;
+#line 115 "codegen/try.kl"
     kl_t18 = false;
+#line 115 "codegen/try.kl"
+    kl_t19 = false;
     kl_t12 = &kl_p_2.kl_left;
 #line 116 "codegen/try.kl"
     kl_t13 = kl__get__S3Buf( kl_t12 );
@@ -1256,9 +1265,9 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
 #line 115 "codegen/try.kl"
     kl_t0.kl_error = kl_t8.kl_error;
 #line 115 "codegen/try.kl"
-    if ( kl_t20 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t7 );
+    if ( kl_t21 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t7 );
 #line 115 "codegen/try.kl"
-    if ( kl_t19 ) kl__Buf__dtor( &kl_t4 );
+    if ( kl_t20 ) kl__Buf__dtor( &kl_t4 );
 #line 115 "codegen/try.kl"
     return kl_t0;
     bb3:

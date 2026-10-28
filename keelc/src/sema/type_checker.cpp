@@ -610,6 +610,22 @@ static bool holds_address(
     return false;
 }
 
+bool splits_into_fields( const Ast& ast, const Type_table& table, Type_id type )
+{
+    return type.is_valid() && table.is_struct( type ) && !ast.has_destructor( table.get( type ).declaration );
+}
+
+bool built_whole( const Ast& ast, const Type_table& table, Type_id type )
+{
+    if( !type.is_valid() || !table.is_struct( type ) )
+    {
+        return false;
+    }
+
+    const Node_id declaration = table.get( type ).declaration;
+    return ast.has_destructor( declaration ) || ast.has_constructor( declaration );
+}
+
 bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded )
 {
     std::vector<Type_id> visiting;

@@ -14,29 +14,39 @@ namespace keel
 struct Unassigned_error
 {
     Local_id local {};
-    Node_id  field {};      // a constructor's field, when that is what is owed
-    Span     at {};         // the `return` it can reach unassigned
-    bool     maybe = false; // unassigned on some paths into here, not all
+    u32      field = k_no_field; // into Function::fields, when a field is what is owed
+    Span     at {};              // the `return` it can reach unassigned
+    bool     maybe = false;      // unassigned on some paths into here, not all
 };
 
-// D9: a read of a local that may hold no value yet.
+// D9: a read of a local, or of a field of one, that may hold no value yet.
 struct Uninitialised_read
 {
     Local_id local {};
-    Node_id  field {};      // a constructor's field, when that is what was read
-    Span     at {};         // the read
-    bool     maybe = false; // assigned on some paths into here, not all
-    bool     whole = false; // `this` used whole, so every field is read
+    u32      field = k_no_field; // into Function::fields, when a field is what was read
+    Span     at {};              // the read
+    bool     maybe = false;      // assigned on some paths into here, not all
+    bool     whole = false;      // `this` used whole, so every field is read
 };
 
 // A constructor writing an owning field or `const` field that may already hold a value: the old one would
 // need a drop decided per path, so it is refused instead.
 struct Reassigned_field
 {
-    Node_id field {};
-    Span    at {};
-    bool    maybe    = false; // holds a value on some paths into here, not all
-    bool    is_const = false; // refused for being const rather than for owning
+    u32  field = k_no_field; // into Function::fields
+    Span at {};
+    bool maybe    = false; // holds a value on some paths into here, not all
+    bool is_const = false; // refused for being const rather than for owning
+};
+
+// D9: a field written while the class around it, which has a constructor or a destructor, holds
+// nothing yet. It is assigned whole first.
+struct Piecewise_write
+{
+    Local_id local {};
+    u32      field = k_no_field; // the class's own field, or k_no_field when it is the local
+    Span     at {};
+    bool     maybe = false; // holds a value on some paths into here, not all
 };
 
 struct Assignment_report
@@ -44,6 +54,7 @@ struct Assignment_report
     std::vector<Unassigned_error>   unassigned;
     std::vector<Uninitialised_read> reads;
     std::vector<Reassigned_field>   reassigned;
+    std::vector<Piecewise_write>    piecewise;
     std::vector<Span>               diverging_returns; // a reachable Return in a `never` function
 };
 

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "check/assign_check.h"
-#include <optional>
+#include <algorithm>
+#include <ranges>
+#include "ir/slots.h"
 
 namespace keel
 {
@@ -50,78 +52,60 @@ bool merge_into( Flow& into, const Flow& from )
     return changed;
 }
 
-// A constructor's fields get a slot each after the locals, so the lattice and the worklist need not
-// know they exist.
-std::size_t slots( const Function& func )
+// Calls `visit( slot, maybe )` for what `range` lacks: its node once when no leaf under it holds a
+// value, else each leaf that does not. So `P p; return p;` names `p`, and `p.x = 1; return p;` names `p.y`.
+template <typename Visit>
+void for_each_missing( const Slot_map& slots, const Slots& range, const Flow& flow, Visit&& visit )
 {
-    return func.locals.size() + func.owed_fields.size();
-}
+    bool all  = true;
+    bool any  = false;
+    bool ever = false;
 
-// The slot of the constructor field `place` reaches, `(*this).f` and anything further into it.
-std::optional<u32> field_slot( const Function& func, const Place& place )
-{
-    if( !func.constructed.is_valid() || place.is_global() || place.local != func.constructed || place.num_projections < 2 )
+    for( u32 slot = range.first; slot < range.last; ++slot )
     {
-        return std::nullopt;
-    }
-
-    const Projection& deref = func.projections[place.first_projection];
-    const Projection& field = func.projections[place.first_projection + 1];
-
-    if( deref.kind != Projection_kind::Deref || field.kind != Projection_kind::Field )
-    {
-        return std::nullopt;
-    }
-
-    for( std::size_t i = 0; i < func.owed_fields.size(); ++i )
-    {
-        if( func.owed_fields[i].field == field.field )
+        if( slots.is_leaf( slot ) )
         {
-            return static_cast<u32>( func.locals.size() + i );
+            all  = all && flow.always[slot] == 0;
+            any  = any || flow.always[slot] == 0;
+            ever = ever || flow.ever[slot] != 0;
         }
     }
 
-    return std::nullopt;
-}
-
-void read_slot(
-    const Function& func, u32 slot, Span span, bool whole, const Flow& flow, std::vector<Uninitialised_read>* reads
-)
-{
-    if( flow.always[slot] != 0 )
+    if( all )
     {
+        visit( range.node, ever );
         return;
     }
 
-    reads->push_back( Uninitialised_read {
-        .local = func.constructed,
-        .field = func.owed_fields[slot - func.locals.size()].field,
-        .at    = span,
-        .maybe = flow.ever[slot] != 0,
-        .whole = whole,
-    } );
+    for( u32 slot = range.first; any && slot < range.last; ++slot )
+    {
+        if( slots.is_leaf( slot ) && flow.always[slot] == 0 )
+        {
+            visit( slot, flow.ever[slot] != 0 );
+        }
+    }
 }
 
-// A constructor's receiver: one field through it, or `this` whole, which reads every field.
-void read_receiver(
-    const Function& func, const Place& place, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
-)
+void set_leaves( const Slot_map& slots, const Slots& range, Flow& flow, u8 value )
 {
-    if( const std::optional<u32> slot = field_slot( func, place ) )
+    for( u32 slot = range.first; slot < range.last; ++slot )
     {
-        read_slot( func, *slot, span, false, flow, reads );
-        return;
-    }
-
-    for( std::size_t slot = func.locals.size(); slot < slots( func ); ++slot )
-    {
-        read_slot( func, static_cast<u32>( slot ), span, true, flow, reads );
+        if( slots.is_leaf( slot ) )
+        {
+            flow.always[slot] = value;
+            flow.ever[slot]   = value;
+        }
     }
 }
 
-// D9's half. A constant or a global cannot be unassigned; a projection reads its local.
+// D9's half. A constant or a global cannot be unassigned; a projection reads the leaves it reaches.
 void read_operand(
-    const Function& func, const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
+    const Function&                  func,
+    const Slot_map&                  slots,
+    const Operand&                   operand,
+    Span                             span,
+    const Flow&                      flow,
+    std::vector<Uninitialised_read>* reads
 )
 {
     if( reads == nullptr || !operand.has_place() || operand.place.is_global() )
@@ -129,56 +113,187 @@ void read_operand(
         return;
     }
 
-    if( func.constructed.is_valid() && operand.place.local == func.constructed )
+    const Local_id local = operand.place.local;
+    const Slots    range = slots.of( operand.place );
+
+    const auto push = [&]( bool whole )
     {
-        read_receiver( func, operand.place, span, flow, reads );
+        return [&, whole]( u32 slot, bool maybe )
+        {
+            reads->push_back(
+                Uninitialised_read { .local = local, .field = slots.field( slot ), .at = span, .maybe = maybe, .whole = whole }
+            );
+        };
+    };
+
+    // `this` used whole names each field still missing, so the fix reads one line per field.
+    if( local == func.constructed && range.node == local.v )
+    {
+        for( u32 slot = range.first; !slots.is_leaf( local.v ) && slot < range.last; slot = slots.next( slot ) )
+        {
+            for_each_missing( slots, slots.under( slot ), flow, push( true ) );
+        }
+
         return;
     }
 
-    const u32 local = operand.place.local.v;
+    // A local nothing has been written into is named whole, which is the one fix: give it a value. A
+    // constructor names each field, as its exit does.
+    const Slots whole = slots.under( local.v );
+    const bool  empty = std::ranges::none_of(
+        std::views::iota( whole.first, whole.last ), [&]( u32 slot ) { return slots.is_leaf( slot ) && flow.always[slot] != 0; }
+    );
 
-    if( flow.always[local] != 0 )
-    {
-        return;
-    }
-
-    reads->push_back( Uninitialised_read { .local = operand.place.local, .at = span, .maybe = flow.ever[local] != 0 } );
+    for_each_missing( slots, empty && local != func.constructed ? whole : range, flow, push( false ) );
 }
 
 // a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
 // Constant. A borrow reads its place; an Initialise address is the rule below's.
 void read_rvalue(
-    const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
+    const Function&                  func,
+    const Slot_map&                  slots,
+    const Rvalue&                    value,
+    Span                             span,
+    const Flow&                      flow,
+    std::vector<Uninitialised_read>* reads
 )
 {
     if( value.kind == Rvalue_kind::Address_of && value.address_purpose != Address_purpose::Initialise )
     {
         Operand borrowed = value.a;
         borrowed.kind    = Operand_kind::Copy;
-        read_operand( func, borrowed, span, flow, reads );
+        read_operand( func, slots, borrowed, span, flow, reads );
     }
 
-    read_operand( func, value.a, span, flow, reads );
-    read_operand( func, value.b, span, flow, reads );
+    read_operand( func, slots, value.a, span, flow, reads );
+    read_operand( func, slots, value.b, span, flow, reads );
 
     for( u32 i = 0; i < value.argument_count; ++i )
     {
-        read_operand( func, func.operands[value.first_argument + i], span, flow, reads );
+        read_operand( func, slots, func.operands[value.first_argument + i], span, flow, reads );
     }
 }
 
-// Only an Assign writes, a projected target included: an `out` struct is built through `(*_1).x`.
-// Storage_live and Storage_dead clear, so a loop carries no answer round. `reads` is null during
-// the fixpoint and set for the one reporting walk.
-void transfer_block(
-    const Function&                  func,
-    u32                              block,
-    Flow&                            flow,
-    std::vector<Uninitialised_read>* reads,
-    std::vector<Reassigned_field>*   reassigned
+// A write into a class with a constructor or destructor that holds nothing yet: reported, then the
+// class counts as assigned, so a later read or the exit does not report it again. Lowering's
+// temporaries are exempt, since a literal builds one field by field, and so is a constructor's
+// own object.
+bool written_piecewise(
+    const Function& func, const Slot_map& slots, const Place& place, Span span, Flow& flow, Assignment_report* report
 )
 {
-    const Block& b = func.blocks[block];
+    if( !func.locals[place.local.v].name.is_valid() )
+    {
+        return false;
+    }
+
+    const Slots range = slots.of( place );
+
+    for( u32 slot = range.exact ? slots.parent( range.node ) : range.node; slot != k_no_field; slot = slots.parent( slot ) )
+    {
+        if( !slots.built_whole( slot ) || ( func.constructed.is_valid() && slot == func.constructed.v ) )
+        {
+            continue;
+        }
+
+        const Slots whole = slots.under( slot );
+        bool        held  = true;
+        bool        ever  = false;
+
+        for( u32 leaf = whole.first; leaf < whole.last; ++leaf )
+        {
+            if( slots.is_leaf( leaf ) )
+            {
+                held = held && flow.always[leaf] != 0;
+                ever = ever || flow.ever[leaf] != 0;
+            }
+        }
+
+        if( held )
+        {
+            continue;
+        }
+
+        if( report != nullptr )
+        {
+            report->piecewise.push_back(
+                Piecewise_write { .local = place.local, .field = slots.field( slot ), .at = span, .maybe = ever }
+            );
+        }
+
+        set_leaves( slots, whole, flow, 1 );
+        return true;
+    }
+
+    return false;
+}
+
+// An Assign's target. Every leaf it reaches is assigned, a write past a tracked node included: an
+// enum or an array is built in place, `_2.tag` then its payload.
+void assign( const Function& func, const Slot_map& slots, const Statement& statement, Flow& flow, Assignment_report* report )
+{
+    const Place& place = statement.place;
+    const Slots  range = slots.of( place );
+
+    if( written_piecewise( func, slots, place, statement.span, flow, report ) )
+    {
+        return;
+    }
+
+    if( func.constructed.is_valid() && place.local == func.constructed && range.node != func.constructed.v )
+    {
+        // Written in part, a field tracked whole is read, since the part changes what is already there.
+        if( !range.exact )
+        {
+            read_operand(
+                func,
+                slots,
+                Operand { .kind = Operand_kind::Copy, .place = place },
+                statement.span,
+                flow,
+                report != nullptr ? &report->reads : nullptr
+            );
+            return;
+        }
+
+        // A top-level owning or `const` field must not already hold a value.
+        if( slots.parent( range.node ) == func.constructed.v )
+        {
+            const Field_slot& owed = func.fields[slots.field( range.node )];
+            bool              held = true;
+            bool              ever = false;
+
+            for( u32 leaf = range.first; leaf < range.last; ++leaf )
+            {
+                if( slots.is_leaf( leaf ) )
+                {
+                    held = held && flow.always[leaf] != 0;
+                    ever = ever || flow.ever[leaf] != 0;
+                }
+            }
+
+            if( report != nullptr && ever && ( owed.is_owning || owed.is_const ) )
+            {
+                report->reassigned.push_back( Reassigned_field {
+                    .field    = slots.field( range.node ),
+                    .at       = statement.span,
+                    .maybe    = !held,
+                    .is_const = owed.is_const,
+                } );
+            }
+        }
+    }
+
+    set_leaves( slots, range, flow, 1 );
+}
+
+// Only an Assign writes, a projected target included: an `out` struct is built through `(*_1).x`.
+// Storage_live and Storage_dead clear, so a loop carries no answer round. `report` is null during
+// the fixpoint and set for the one reporting walk.
+void transfer_block( const Function& func, const Slot_map& slots, u32 block, Flow& flow, Assignment_report* report )
+{
+    const Block&                     b     = func.blocks[block];
+    std::vector<Uninitialised_read>* reads = report != nullptr ? &report->reads : nullptr;
 
     for( u32 i = 0; i < b.statement_count; ++i )
     {
@@ -188,7 +303,7 @@ void transfer_block(
         // rvalue still reads locals.
         if( statement.kind == Statement_kind::Assign )
         {
-            read_rvalue( func, statement.value, statement.span, flow, reads );
+            read_rvalue( func, slots, statement.value, statement.span, flow, reads );
         }
 
         if( statement.place.is_global() )
@@ -196,63 +311,28 @@ void transfer_block(
             continue;
         }
 
-        // A constructor's field. Written whole it is assigned, and an owning or `const` one must not already
-        // hold a value; written in part it is read, since the part changes what is already there.
-        if( const std::optional<u32> slot =
-                statement.kind == Statement_kind::Assign ? field_slot( func, statement.place ) : std::nullopt )
-        {
-            if( statement.place.num_projections > 2 )
-            {
-                if( reads != nullptr )
-                {
-                    read_slot( func, *slot, statement.span, false, flow, reads );
-                }
-
-                continue;
-            }
-
-            const Owed_field& owed = func.owed_fields[*slot - func.locals.size()];
-
-            if( reassigned != nullptr && flow.ever[*slot] != 0 && ( owed.is_owning || owed.is_const ) )
-            {
-                reassigned->push_back( Reassigned_field {
-                    .field    = owed.field,
-                    .at       = statement.span,
-                    .maybe    = flow.always[*slot] == 0,
-                    .is_const = owed.is_const,
-                } );
-            }
-
-            flow.always[*slot] = 1;
-            flow.ever[*slot]   = 1;
-            continue;
-        }
-
-        const u32 local = statement.place.local.v;
-
         switch( statement.kind )
         {
         case Statement_kind::Assign:
-            flow.always[local] = 1;
-            flow.ever[local]   = 1;
+            assign( func, slots, statement, flow, report );
 
             // Only an `out` argument and a constructor's target assign through an address, so
             // `void forward( out i32 n ) { init( out n ); }` works.
             if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() &&
                 statement.value.address_purpose == Address_purpose::Initialise )
             {
-                const std::optional<u32> slot  = field_slot( func, statement.value.a.place );
-                const u32                taken = slot ? *slot : statement.value.a.place.local.v;
+                const Place& taken = statement.value.a.place;
 
-                flow.always[taken] = 1;
-                flow.ever[taken]   = 1;
+                if( !written_piecewise( func, slots, taken, statement.span, flow, report ) )
+                {
+                    set_leaves( slots, slots.of( taken ), flow, 1 );
+                }
             }
 
             break;
         case Statement_kind::Storage_dead:
         case Statement_kind::Storage_live:
-            flow.always[local] = 0;
-            flow.ever[local]   = 0;
+            set_leaves( slots, slots.under( statement.place.local.v ), flow, 0 );
             break;
         case Statement_kind::Drop:
             // Silent: whether a drop of something unassigned is reachable is drop elaboration's question.
@@ -261,35 +341,37 @@ void transfer_block(
     }
 
     // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
-    read_operand( func, b.terminator.condition, b.terminator.span, flow, reads );
-    read_operand( func, b.terminator.message, b.terminator.span, flow, reads );
-    read_operand( func, b.terminator.at, b.terminator.span, flow, reads );
+    read_operand( func, slots, b.terminator.condition, b.terminator.span, flow, reads );
+    read_operand( func, slots, b.terminator.message, b.terminator.span, flow, reads );
+    read_operand( func, slots, b.terminator.at, b.terminator.span, flow, reads );
 }
 
-Flow entry_flow( const Function& func )
+Flow entry_flow( const Function& func, const Slot_map& slots )
 {
-    // A constructor's field slots start empty, like the locals.
-    Flow flow { std::vector<u8>( slots( func ), 0 ), std::vector<u8>( slots( func ), 0 ), true };
+    Flow flow { std::vector<u8>( slots.count(), 0 ), std::vector<u8>( slots.count(), 0 ), true };
 
     // Parameters arrive holding a value.
     for( u32 i = 1; i <= func.parameter_count; ++i )
     {
-        flow.always[i] = 1;
-        flow.ever[i]   = 1;
+        set_leaves( slots, slots.under( i ), flow, 1 );
     }
 
-    // An `out` parameter's referent is empty until the body writes it.
+    // An `out` parameter's referent is empty until the body writes it, and so are a constructor's
+    // fields; a class with none owes nothing.
     for( const Local_id local : func.out_parameters )
     {
-        flow.always[local.v] = 0;
-        flow.ever[local.v]   = 0;
+        set_leaves( slots, slots.under( local.v ), flow, 0 );
+    }
+
+    if( func.constructed.is_valid() && !slots.is_leaf( func.constructed.v ) )
+    {
+        set_leaves( slots, slots.under( func.constructed.v ), flow, 0 );
     }
 
     // The return slot is the function's own `out` parameter, owed at every way out.
     if( func.returns_a_value )
     {
-        flow.always[k_return_slot.v] = 0;
-        flow.ever[k_return_slot.v]   = 0;
+        set_leaves( slots, slots.under( k_return_slot.v ), flow, 0 );
     }
 
     return flow;
@@ -309,8 +391,9 @@ Assignment_report check_assignment( const Function& func )
     Assignment_report report;
 
     // D9 applies to every function, so every function pays for the fixpoint.
-    std::vector<Flow> in( func.blocks.size(), bottom( slots( func ) ) );
-    in[0] = entry_flow( func );
+    const Slot_map    slots( func );
+    std::vector<Flow> in( func.blocks.size(), bottom( slots.count() ) );
+    in[0] = entry_flow( func, slots );
 
     std::vector<Block_id> work { Block_id { 0 } };
     std::vector<Block_id> next;
@@ -322,7 +405,7 @@ Assignment_report check_assignment( const Function& func )
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, block.v, out, nullptr, nullptr );
+        transfer_block( func, slots, block.v, out, nullptr );
 
         next.clear();
         successors( func.blocks[block.v].terminator, next );
@@ -348,7 +431,7 @@ Assignment_report check_assignment( const Function& func )
         }
 
         Flow flow = in[block];
-        transfer_block( func, block, flow, &report.reads, &report.reassigned );
+        transfer_block( func, slots, block, flow, &report );
 
         if( b.terminator.kind != Terminator_kind::Return )
         {
@@ -362,15 +445,19 @@ Assignment_report check_assignment( const Function& func )
             continue;
         }
 
-        // What this exit owes. One lambda for both, so the set cannot drift from what entry_flow seeds.
+        // What this exit owes: each `out` parameter, per field, as entry_flow seeds it.
         const auto owed = [&]( Local_id local )
         {
-            if( flow.always[local.v] != 0 )
-            {
-                return;
-            }
-
-            report.unassigned.push_back( Unassigned_error { .local = local, .at = at, .maybe = flow.ever[local.v] != 0 } );
+            for_each_missing(
+                slots,
+                slots.under( local.v ),
+                flow,
+                [&]( u32 slot, bool maybe ) {
+                    report.unassigned.push_back(
+                        Unassigned_error { .local = local, .field = slots.field( slot ), .at = at, .maybe = maybe }
+                    );
+                }
+            );
         };
 
         for( const Local_id local : func.out_parameters )
@@ -378,27 +465,48 @@ Assignment_report check_assignment( const Function& func )
             owed( local );
         }
 
+        // The return slot once, however many of its fields are missing.
         if( func.returns_a_value )
         {
-            owed( k_return_slot );
+            bool missing = false;
+            bool maybe   = false;
+
+            for_each_missing(
+                slots,
+                slots.under( k_return_slot.v ),
+                flow,
+                [&]( u32, bool some )
+                {
+                    missing = true;
+                    maybe   = maybe || some;
+                }
+            );
+
+            if( missing )
+            {
+                report.unassigned.push_back( Unassigned_error { .local = k_return_slot, .at = at, .maybe = maybe } );
+            }
         }
 
         // And every field, when this is a constructor: the instance it returns is whole.
-        for( std::size_t i = 0; i < func.owed_fields.size(); ++i )
+        if( func.constructed.is_valid() && !slots.is_leaf( func.constructed.v ) )
         {
-            const std::size_t slot = func.locals.size() + i;
+            const Slots whole = slots.under( func.constructed.v );
 
-            if( flow.always[slot] != 0 )
+            for( u32 field = whole.first; field < whole.last; field = slots.next( field ) )
             {
-                continue;
+                for_each_missing(
+                    slots,
+                    slots.under( field ),
+                    flow,
+                    [&]( u32 slot, bool maybe )
+                    {
+                        report.unassigned.push_back( Unassigned_error {
+                            .local = func.constructed, .field = slots.field( slot ), .at = at, .maybe = maybe
+                        } );
+                    }
+                );
             }
-
-            report.unassigned.push_back( Unassigned_error {
-                .local = func.constructed,
-                .field = func.owed_fields[i].field,
-                .at    = at,
-                .maybe = flow.ever[slot] != 0,
-            } );
         }
     }
 
@@ -501,9 +609,64 @@ struct Checked : Compiled
         return all;
     }
 
-    std::string_view field_name( Node_id field ) const
+    std::vector<Piecewise_write> piecewise() const
     {
-        return field.is_valid() ? interner.text( Symbol_id { ast.aux( field ) } ) : std::string_view {};
+        std::vector<Piecewise_write> all;
+
+        for( const Function& function : functions )
+        {
+            for( const Piecewise_write& write : check_assignment( function ).piecewise )
+            {
+                all.push_back( write );
+            }
+        }
+
+        return all;
+    }
+
+    // The field path an error names, `b` or `p.x`, read in the function that reported it.
+    template <typename Error>
+    std::string field_name( const Error& error ) const
+    {
+        for( const Function& function : functions )
+        {
+            const Assignment_report report = check_assignment( function );
+            const auto              same   = [&]( const auto& all )
+            { return std::ranges::any_of( all, [&]( const auto& e ) { return e.at == error.at && e.field == error.field; } ); };
+
+            bool found = false;
+            if constexpr( std::is_same_v<Error, Unassigned_error> )
+            {
+                found = same( report.unassigned );
+            }
+            else if constexpr( std::is_same_v<Error, Uninitialised_read> )
+            {
+                found = same( report.reads );
+            }
+            else if constexpr( std::is_same_v<Error, Reassigned_field> )
+            {
+                found = same( report.reassigned );
+            }
+            else
+            {
+                found = same( report.piecewise );
+            }
+
+            if( !found || error.field == k_no_field )
+            {
+                continue;
+            }
+
+            std::string path;
+            for( u32 at = error.field; at != k_no_field; at = function.fields[at].parent )
+            {
+                const std::string_view name = interner.text( ast.name( function.fields[at].field ) );
+                path                        = path.empty() ? std::string( name ) : std::string( name ) + "." + path;
+            }
+            return path;
+        }
+
+        return {};
     }
 };
 
@@ -690,14 +853,16 @@ TEST_CASE( "assign_check_reads_a_borrowed_place", "[check][assign][d9]" )
 }
 
 // Recorded rather than fixed (§12): it can miss a mistake, never invent one.
-TEST_CASE( "assign_check_is_shallow_in_one_known_way", "[check][assign][d9]" )
+TEST_CASE( "assign_check_tracks_each_field_of_a_struct", "[check][assign][d9]" )
 {
-    SECTION( "writing one field counts as initialising the whole struct" )
+    SECTION( "writing one field leaves the other unassigned" )
     {
         const Checked c( "struct P { i32 x; i32 y; };\ni32 main() { P p; p.x = 1; return p.y; }" );
 
         INFO( c.rendered() );
-        REQUIRE( c.reads().empty() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "p" );
+        REQUIRE( c.field_name( c.reads()[0] ) == "y" );
     }
 }
 
@@ -1009,14 +1174,103 @@ TEST_CASE( "assign_check_asks_only_whether_a_place_was_written", "[check][assign
 
 // Known limitation (§12): the analysis is per local, so writing one field of a struct `out`
 // parameter satisfies it.
-TEST_CASE( "assign_check_accepts_a_partly_initialised_struct_for_now", "[check][assign]" )
+// Every field missing names the struct once; some missing names each.
+TEST_CASE( "assign_check_names_a_struct_whole_when_no_field_holds_a_value", "[check][assign][d9]" )
+{
+    SECTION( "none written" )
+    {
+        const Checked c( "struct P { i32 x; i32 y; };\nP f() { P p; return p; }\ni32 main() { f(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.reads()[0].field == k_no_field );
+    }
+
+    SECTION( "a nested struct half written" )
+    {
+        const Checked c( "struct In { i32 x; i32 y; };\nstruct P { In inner; i32 z; };\n"
+                         "void init( out P p ) { p.inner.x = 1; p.z = 2; }\ni32 main() { P v; init( out v ); return v.z; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.field_name( c.errors()[0] ) == "inner.y" );
+    }
+}
+
+// A class with a constructor or destructor is assigned whole while it holds nothing.
+TEST_CASE( "assign_check_refuses_a_field_write_into_an_empty_class_built_whole", "[check][assign][d9]" )
+{
+    constexpr std::string_view k_classes = "class C { public i32 n; public i32 m; C( i32 v ) { n = v; m = v; } };\n"
+                                           "class E { public i32 n; ~E() { } };\n"
+                                           "i32 main() { return 0; }\n";
+    const auto checked = [&]( std::string_view body ) { return Checked( std::string( body ) + std::string( k_classes ) ); };
+
+    SECTION( "a local of a class with a constructor" )
+    {
+        const Checked c = checked( "void f() { C c; c.n = 1; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.piecewise()[0].field == k_no_field );
+        REQUIRE_FALSE( c.piecewise()[0].maybe );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "a local of a class with only a destructor" )
+    {
+        const Checked c = checked( "void f() { E e; e.n = 1; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+    }
+
+    SECTION( "an `out` parameter, reported once" )
+    {
+        const Checked c = checked( "void f( out C c ) { c.n = 1; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.errors().empty() );
+    }
+
+    SECTION( "assigned on one path" )
+    {
+        const Checked c = checked( "void f( bool k ) { C c; if( k ) { c = C( 1 ); } c.n = 1; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.piecewise()[0].maybe );
+    }
+
+    SECTION( "a constructor's field, reported once" )
+    {
+        const Checked c = checked( "class D { public C c; D() { c.n = 1; } };\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.field_name( c.piecewise()[0] ) == "c" );
+        REQUIRE( c.errors().empty() );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "assigned whole first" )
+    {
+        const Checked c = checked( "void f() { C c = C( 3 ); c.n = 1; }\nvoid g( out C c ) { c = C( 1 ); c.n = 2; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.clean() );
+    }
+}
+
+TEST_CASE( "assign_check_refuses_a_partly_written_out_struct", "[check][assign]" )
 {
     Checked p( "struct P { i32 x; i32 y; };\n"
                "void init( out P p ) { p.x = 1; }\n"
                "i32 main() { P v = P { 0, 0 }; init( out v ); return v.x; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.errors().empty() );
+    REQUIRE( p.errors().size() == 1 );
+    REQUIRE( p.field_name( p.errors()[0] ) == "y" );
 }
 
 // D9 for a constructor's fields: each is owed at every way out, as an `out` referent is.
@@ -1028,7 +1282,7 @@ TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check]
 
         INFO( c.rendered() );
         REQUIRE( c.errors().size() == 1 );
-        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.errors()[0] ) == "b" );
         REQUIRE_FALSE( c.errors()[0].maybe );
     }
 
@@ -1039,7 +1293,7 @@ TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check]
 
         INFO( c.rendered() );
         REQUIRE( c.errors().size() == 1 );
-        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.errors()[0] ) == "b" );
         REQUIRE( c.errors()[0].maybe );
     }
 
@@ -1050,7 +1304,7 @@ TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check]
 
         INFO( c.rendered() );
         REQUIRE( c.errors().size() == 1 );
-        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.errors()[0] ) == "b" );
     }
 
     SECTION( "each field reported on its own" )
@@ -1059,8 +1313,8 @@ TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check]
 
         INFO( c.rendered() );
         REQUIRE( c.errors().size() == 2 );
-        REQUIRE( c.field_name( c.errors()[0].field ) == "a" );
-        REQUIRE( c.field_name( c.errors()[1].field ) == "b" );
+        REQUIRE( c.field_name( c.errors()[0] ) == "a" );
+        REQUIRE( c.field_name( c.errors()[1] ) == "b" );
     }
 }
 
@@ -1072,7 +1326,7 @@ TEST_CASE( "assign_check_reports_a_field_read_before_its_constructor_assigns_it"
 
         INFO( c.rendered() );
         REQUIRE( c.reads().size() == 1 );
-        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.reads()[0] ) == "b" );
         REQUIRE_FALSE( c.reads()[0].whole );
     }
 
@@ -1082,7 +1336,7 @@ TEST_CASE( "assign_check_reports_a_field_read_before_its_constructor_assigns_it"
 
         INFO( c.rendered() );
         REQUIRE( c.reads().size() == 1 );
-        REQUIRE( c.field_name( c.reads()[0].field ) == "a" );
+        REQUIRE( c.field_name( c.reads()[0] ) == "a" );
     }
 
     SECTION( "the explicit spelling is the same read" )
@@ -1091,19 +1345,18 @@ TEST_CASE( "assign_check_reports_a_field_read_before_its_constructor_assigns_it"
 
         INFO( c.rendered() );
         REQUIRE( c.reads().size() == 1 );
-        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.reads()[0] ) == "b" );
     }
 
-    SECTION( "writing into a field reads it" )
+    SECTION( "writing each field of a struct field assigns it" )
     {
-        // `p.x = 1` changes part of what `p` holds, and there is nothing there yet. Stricter than a
-        // local, deliberately: the lowerer drops an owning part before replacing it.
+        // `p.x` and `p.y` are tracked on their own, so the two writes fill `p`.
         const Checked c( "struct P { i32 x; i32 y; };\n"
                          "class C { P p; C() { p.x = 1; p.y = 2; } };\ni32 main() { C c = C(); return 0; }" );
 
         INFO( c.rendered() );
-        REQUIRE_FALSE( c.reads().empty() );
-        REQUIRE( c.field_name( c.reads()[0].field ) == "p" );
+        REQUIRE( c.reads().empty() );
+        REQUIRE( c.errors().empty() );
     }
 
     SECTION( "`this` used whole names every field still missing" )
@@ -1114,8 +1367,8 @@ TEST_CASE( "assign_check_reports_a_field_read_before_its_constructor_assigns_it"
         INFO( c.rendered() );
         REQUIRE( c.reads().size() == 2 );
         REQUIRE( c.reads()[0].whole );
-        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
-        REQUIRE( c.field_name( c.reads()[1].field ) == "d" );
+        REQUIRE( c.field_name( c.reads()[0] ) == "b" );
+        REQUIRE( c.field_name( c.reads()[1] ) == "d" );
     }
 
     SECTION( "assigned on one path, then read" )
@@ -1145,7 +1398,7 @@ TEST_CASE( "assign_check_refuses_an_owning_field_a_constructor_may_already_have_
 
         INFO( c.rendered() );
         REQUIRE( c.reassigned().size() == 1 );
-        REQUIRE( c.field_name( c.reassigned()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.reassigned()[0] ) == "b" );
     }
 
     SECTION( "assigned on one path, then on all" )
@@ -1211,7 +1464,7 @@ TEST_CASE( "assign_check_refuses_a_const_field_a_constructor_may_already_have_as
         INFO( source << "\n" << c.rendered() );
         REQUIRE( c.reassigned().size() == 1 );
         REQUIRE( c.reassigned()[0].is_const );
-        REQUIRE( c.field_name( c.reassigned()[0].field ) == "n" );
+        REQUIRE( c.field_name( c.reassigned()[0] ) == "n" );
     }
 
     const Checked c( "class C { const i32 n; C( bool x ) { if( x ) { n = 1; } else { n = 2; } } };\ni32 main() { return 0; }" );
@@ -1228,7 +1481,7 @@ TEST_CASE( "assign_check_reads_a_const_field_whose_address_is_taken", "[check][a
 
     INFO( early.rendered() );
     REQUIRE( early.reads().size() == 1 );
-    REQUIRE( early.field_name( early.reads()[0].field ) == "n" );
+    REQUIRE( early.field_name( early.reads()[0] ) == "n" );
     REQUIRE( early.reassigned().empty() );
 
     const Checked late( "class C { const i32 n; C() { n = 1; const i32* p = &n; } };\ni32 main() { return 0; }" );

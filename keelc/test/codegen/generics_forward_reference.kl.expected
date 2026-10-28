@@ -83,15 +83,31 @@ struct kl__Box__I3i32E kl__as_a_return__3i32( int32_t kl_n_1 )
 void kl__drops_at_scope_exit__( void )
 {
     struct kl__Counted__I3i32E kl_c_1;
-#line 56 "codegen/generics_forward_reference.kl"
-    kl_c_1.kl_v = 1;
+    struct kl__Counted__I3i32E kl_t2;
+    bool kl_t3;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t3 = false;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t3 = false;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t2.kl_v = 1;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t3 = true;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_c_1 = kl_t2;
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t3 = false;
+#line 54 "codegen/generics_forward_reference.kl"
+    if ( kl_t3 ) kl__Counted__I3i32E__dtor( &kl_t2 );
+#line 54 "codegen/generics_forward_reference.kl"
+    kl_t3 = false;
     kl__Counted__I3i32E__dtor( &kl_c_1 );
-#line 57 "codegen/generics_forward_reference.kl"
+#line 55 "codegen/generics_forward_reference.kl"
     return;
-#line 57 "codegen/generics_forward_reference.kl"
+#line 55 "codegen/generics_forward_reference.kl"
 }
 
-#line 59 "codegen/generics_forward_reference.kl"
+#line 57 "codegen/generics_forward_reference.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -107,105 +123,105 @@ int32_t kl__main__( void )
     struct kl__Box__I3i32E kl_t10;
     bool kl_t11;
     bool kl_t13;
-#line 63 "codegen/generics_forward_reference.kl"
+#line 61 "codegen/generics_forward_reference.kl"
     kl_h_1.kl_b.kl_v = 7;
-#line 65 "codegen/generics_forward_reference.kl"
+#line 63 "codegen/generics_forward_reference.kl"
     kl_t2 = kl_h_1.kl_b.kl_v != 7;
-#line 65 "codegen/generics_forward_reference.kl"
+#line 63 "codegen/generics_forward_reference.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 1;
-#line 67 "codegen/generics_forward_reference.kl"
+#line 65 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb2:
-#line 72 "codegen/generics_forward_reference.kl"
+#line 70 "codegen/generics_forward_reference.kl"
     kl_n_3.kl_b.kl_v.kl_v = 9;
-#line 74 "codegen/generics_forward_reference.kl"
+#line 72 "codegen/generics_forward_reference.kl"
     kl_t4 = kl_n_3.kl_b.kl_v.kl_v != 9;
-#line 74 "codegen/generics_forward_reference.kl"
+#line 72 "codegen/generics_forward_reference.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
     kl_t0 = 2;
-#line 76 "codegen/generics_forward_reference.kl"
+#line 74 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb4:
-#line 79 "codegen/generics_forward_reference.kl"
+#line 77 "codegen/generics_forward_reference.kl"
     kl_t5 = kl__in_a_local__(  );
-#line 79 "codegen/generics_forward_reference.kl"
+#line 77 "codegen/generics_forward_reference.kl"
     kl_t6 = kl_t5 != 3;
-#line 79 "codegen/generics_forward_reference.kl"
+#line 77 "codegen/generics_forward_reference.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
     kl_t0 = 3;
-#line 81 "codegen/generics_forward_reference.kl"
+#line 79 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb6:
-#line 86 "codegen/generics_forward_reference.kl"
+#line 84 "codegen/generics_forward_reference.kl"
     kl_passed_7.kl_v = 5;
-#line 88 "codegen/generics_forward_reference.kl"
+#line 86 "codegen/generics_forward_reference.kl"
     kl_t8 = kl__through_a_parameter__3BoxI3i32E( kl_passed_7 );
-#line 88 "codegen/generics_forward_reference.kl"
+#line 86 "codegen/generics_forward_reference.kl"
     kl_t9 = kl_t8 != 5;
-#line 88 "codegen/generics_forward_reference.kl"
+#line 86 "codegen/generics_forward_reference.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
     bb7:
     kl_t0 = 4;
-#line 90 "codegen/generics_forward_reference.kl"
+#line 88 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb8:
-#line 93 "codegen/generics_forward_reference.kl"
+#line 91 "codegen/generics_forward_reference.kl"
     kl_t10 = kl__as_a_return__3i32( 11 );
-#line 93 "codegen/generics_forward_reference.kl"
+#line 91 "codegen/generics_forward_reference.kl"
     kl_t11 = kl_t10.kl_v != 11;
-#line 93 "codegen/generics_forward_reference.kl"
+#line 91 "codegen/generics_forward_reference.kl"
     if ( kl_t11 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 5;
-#line 95 "codegen/generics_forward_reference.kl"
+#line 93 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb10:
-#line 98 "codegen/generics_forward_reference.kl"
+#line 96 "codegen/generics_forward_reference.kl"
     kl__drops_at_scope_exit__(  );
-#line 100 "codegen/generics_forward_reference.kl"
+#line 98 "codegen/generics_forward_reference.kl"
     kl_t13 = kl__destroyed__G != 1;
-#line 100 "codegen/generics_forward_reference.kl"
+#line 98 "codegen/generics_forward_reference.kl"
     if ( kl_t13 ) goto bb11; else goto bb12;
     bb11:
     kl_t0 = 6;
-#line 102 "codegen/generics_forward_reference.kl"
+#line 100 "codegen/generics_forward_reference.kl"
     return kl_t0;
     bb12:
-#line 105 "codegen/generics_forward_reference.kl"
+#line 103 "codegen/generics_forward_reference.kl"
     kl_t0 = 42;
-#line 105 "codegen/generics_forward_reference.kl"
+#line 103 "codegen/generics_forward_reference.kl"
     return kl_t0;
 }
 
-#line 118 "codegen/generics_forward_reference.kl"
+#line 116 "codegen/generics_forward_reference.kl"
 void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
     ( void ) kl_this_1;
-#line 120 "codegen/generics_forward_reference.kl"
+#line 118 "codegen/generics_forward_reference.kl"
     kl_t2 = __builtin_add_overflow( kl__destroyed__G, 1, &( int32_t ) { 0 } );
-#line 120 "codegen/generics_forward_reference.kl"
+#line 118 "codegen/generics_forward_reference.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 120 "codegen/generics_forward_reference.kl"
-    kl_rt_panic( "codegen/generics_forward_reference.kl", 120, "arithmetic overflow: destroyed + 1" );
+#line 118 "codegen/generics_forward_reference.kl"
+    kl_rt_panic( "codegen/generics_forward_reference.kl", 118, "arithmetic overflow: destroyed + 1" );
     bb2:
-#line 120 "codegen/generics_forward_reference.kl"
+#line 118 "codegen/generics_forward_reference.kl"
     kl_t3 = kl__destroyed__G + 1;
-#line 120 "codegen/generics_forward_reference.kl"
+#line 118 "codegen/generics_forward_reference.kl"
     kl__destroyed__G = kl_t3;
     return;
-#line 121 "codegen/generics_forward_reference.kl"
+#line 119 "codegen/generics_forward_reference.kl"
 }
 
-#line 59 "codegen/generics_forward_reference.kl"
+#line 57 "codegen/generics_forward_reference.kl"
 int main( void )
 {
-#line 59 "codegen/generics_forward_reference.kl"
+#line 57 "codegen/generics_forward_reference.kl"
     return (int) kl__main__();
 }

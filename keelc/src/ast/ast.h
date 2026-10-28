@@ -173,6 +173,7 @@ public:
     bool    is_static_method( Node_id method ) const; // a method with no receiver (PLAN §6.7)
     bool    is_const_method( Node_id method ) const;  // written with a trailing `const`: a `const ref` receiver
     bool    has_destructor( Node_id declaration ) const;
+    bool    has_constructor( Node_id declaration ) const;
     Node_id destructor( Node_id declaration ) const;     // the Destructor_decl member; invalid if there is none
     bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
     Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members

@@ -335,6 +335,27 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
     {
         caller.one_path_temporaries.push_back( Local_id { temporary.v + local_base } );
     }
+
+    // A local's run moves as one, so `parent` and `end` keep their distance from the slot. The
+    // receiver's run describes a referent, which the caller's place now is.
+    for( u32 i = 0; i < callee.fields.size(); ++i )
+    {
+        Field_slot slot = callee.fields[i];
+
+        if( slot.local == callee.constructed )
+        {
+            continue;
+        }
+
+        const u32 placed = narrow_cast<u32>( caller.fields.size() );
+        slot.local.v += local_base;
+        slot.end = placed + ( slot.end - i );
+        if( slot.parent != k_no_field )
+        {
+            slot.parent = placed - ( i - slot.parent );
+        }
+        caller.fields.push_back( slot );
+    }
 }
 
 // Whether the receiver is only ever dereferenced, so the place it points at can stand in for it.
@@ -631,6 +652,42 @@ TEST_CASE( "inline_calls_inlines_a_constructor", "[opt][inline]" )
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.calls() == 0 );
+}
+
+// The callee's `p` arrives with its fields; the inlined constructor's receiver, a pointer, brings none.
+TEST_CASE( "inline_calls_carries_the_callees_field_table", "[opt][inline]" )
+{
+    const Inlined p( "i32 f() { Box b = Box( 4 ); return sum(); }\n"
+                     "struct Pr { i32 x; i32 y; };\n"
+                     "i32 sum() { Pr q = Pr { 1, 2 }; return q.x + q.y; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( p.calls() == 0 );
+
+    const Function& func = p.first();
+    std::size_t     xs   = 0;
+
+    for( u32 i = 0; i < func.fields.size(); ++i )
+    {
+        const Field_slot& slot = func.fields[i];
+        REQUIRE( slot.local.v < func.locals.size() );
+        REQUIRE( slot.end > i );
+        REQUIRE( slot.end <= func.fields.size() );
+
+        if( slot.parent == k_no_field )
+        {
+            const Type_id type = func.locals[slot.local.v].type;
+            REQUIRE( p.types.table().is_struct( type ) );
+            REQUIRE( p.ast.enclosing_aggregate( slot.field ) == p.types.table().get( type ).declaration );
+        }
+        else
+        {
+            REQUIRE( slot.parent < i );
+        }
+
+        xs += p.ast.name( slot.field ) == p.interner.find( "x" ) ? 1 : 0;
+    }
+
+    REQUIRE( xs > 0 ); // `q`'s, and the literal's temporary's
 }
 
 // `fill` is over the threshold and takes `this` itself, which no place can stand in for.

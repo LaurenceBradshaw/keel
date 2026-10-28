@@ -57,7 +57,8 @@ struct Local
 {
     Type_id   type {};
     Span      span {};
-    Symbol_id name {}; // invalid for a temporary
+    Symbol_id name {};             // invalid for a temporary
+    bool      built_whole = false; // a class with a constructor or destructor: assigned only whole
 };
 
 enum class Projection_kind : u8
@@ -236,11 +237,19 @@ struct Block
     Terminator terminator {};
 };
 
-struct Owed_field
+constexpr u32 k_no_field = ~u32 { 0 };
+
+// One field tracked on its own: of a local, or of an `out` parameter's or constructor's referent.
+// A local's fields are one contiguous preorder run; `parent` and `end` index Function::fields.
+struct Field_slot
 {
-    Node_id field {};
-    bool    is_owning = false;
-    bool    is_const  = false;
+    Local_id local {};
+    u32      parent = k_no_field; // k_no_field for a top-level field
+    u32      end    = 0;          // one past this field's subtree
+    Node_id  field {};
+    bool     is_owning   = false;
+    bool     is_const    = false;
+    bool     built_whole = false;
 };
 
 // Block 0 is the entry. Local 0 is the return slot, and locals 1..parameter_count are the
@@ -261,7 +270,7 @@ struct Function
     std::vector<Local_id>   out_parameters;
     std::vector<Local_id>   one_path_temporaries; // built on one path, so dropped under a flag
     Local_id                constructed {};       // a constructor's receiver, invalid in every other function.
-    std::vector<Owed_field> owed_fields;          // in declaration order
+    std::vector<Field_slot> fields;               // ir/slots reads them
     std::vector<Local>      locals;
     std::vector<Block>      blocks;
     std::vector<Statement>  statements;
@@ -288,6 +297,25 @@ inline bool has_deref_projection( const Function& func, const Place& place )
     }
 
     return false;
+}
+
+// A local followed only by fields, `p` or `p.a.b`: what a field move may name.
+inline bool is_field_path( const Function& func, const Place& place )
+{
+    if( place.is_global() )
+    {
+        return false;
+    }
+
+    for( u32 i = 0; i < place.num_projections; ++i )
+    {
+        if( func.projections[place.first_projection + i].kind != Projection_kind::Field )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // Projections live in one table addressed by (first, count), so a place's own must be contiguous -

@@ -267,6 +267,10 @@ bool may_own(
 // D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
 // a drop is elaborated against this one.
 bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
+// A struct or class with no destructor: definite assignment and drops track each field on its own.
+bool splits_into_fields( const Ast& ast, const Type_table& table, Type_id type );
+// A struct or class with a constructor or destructor: while it holds nothing, it is assigned only whole.
+bool built_whole( const Ast& ast, const Type_table& table, Type_id type );
 // Whether a value of this type can hold an address: a pointer, T[*], a run, or an aggregate containing one.
 bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
 // An aggregate's type-parameter bindings, and a field's type seen through them. Free because the

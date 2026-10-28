@@ -243,6 +243,8 @@ private:
         return instance_owns( ast_, types_.table(), type, types_.recorded() );
     }
 
+    void add_fields( Function& function, Local_id local, Type_id aggregate, u32 parent );
+
     std::vector<Node_id> paired_payload( Type_id instance, Node_id variant, std::size_t count );
 
     const Ast& ast_;
@@ -375,25 +377,58 @@ Function Lowering::run()
 
     if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
     {
-        function.constructed   = receiver_;
-        const Type_id instance = types_.table().get( function.locals[receiver_.v].type ).element;
+        function.constructed = receiver_;
+    }
 
-        for( const Node_id member : ast_.members( ast_.enclosing_aggregate( declaration_ ) ) )
+    // An `out` parameter's tree and the constructor's describe the referent. A constructor's own
+    // object splits even when its class has a destructor.
+    for( u32 i = 0; i < function.locals.size(); ++i )
+    {
+        const Local_id local { i };
+        const bool     through =
+            local == function.constructed ||
+            std::find( function.out_parameters.begin(), function.out_parameters.end(), local ) != function.out_parameters.end();
+        const Type_id type = through ? types_.table().get( function.locals[i].type ).element : function.locals[i].type;
+
+        function.locals[i].built_whole = built_whole( ast_, types_.table(), type );
+
+        if( local == function.constructed || splits_into_fields( ast_, types_.table(), type ) )
         {
-            if( ast_.kind( member ) != Node_kind::Field_decl )
-            {
-                continue;
-            }
-
-            function.owed_fields.push_back( Owed_field {
-                member,
-                owns( field_type( ast_, types_.table(), instance, member, types_.recorded() ) ),
-                ast_.is_const_field( member )
-            } );
+            add_fields( function, local, type, k_no_field );
         }
     }
 
     return function;
+}
+
+void Lowering::add_fields( Function& function, Local_id local, Type_id aggregate, u32 parent )
+{
+    for( const Node_id member : ast_.members( types_.table().get( aggregate ).declaration ) )
+    {
+        if( ast_.kind( member ) != Node_kind::Field_decl )
+        {
+            continue;
+        }
+
+        const Type_id type  = field_type( ast_, types_.table(), aggregate, member, types_.recorded() );
+        const u32     index = narrow_cast<u32>( function.fields.size() );
+
+        function.fields.push_back( Field_slot {
+            .local       = local,
+            .parent      = parent,
+            .field       = member,
+            .is_owning   = owns( type ),
+            .is_const    = ast_.is_const_field( member ),
+            .built_whole = built_whole( ast_, types_.table(), type ),
+        } );
+
+        if( splits_into_fields( ast_, types_.table(), type ) )
+        {
+            add_fields( function, local, type, index );
+        }
+
+        function.fields[index].end = narrow_cast<u32>( function.fields.size() );
+    }
 }
 
 Type_id Lowering::type_of( Node_id id )

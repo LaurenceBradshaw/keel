@@ -167,12 +167,44 @@ void report_unassigned_errors(
     {
         const Assignment_report report = check_assignment( function );
 
-        const auto field_name = [&]( Node_id field ) { return interner.text( ast.name( field ) ); };
+        // A field by its path from the root of its local, `inner.x`.
+        const auto field_name = [&]( u32 field )
+        {
+            std::vector<std::string_view> names;
+            for( u32 at = field; at != k_no_field; at = function.fields[at].parent )
+            {
+                names.push_back( interner.text( ast.name( function.fields[at].field ) ) );
+            }
+
+            std::string path;
+            for( auto name = names.rbegin(); name != names.rend(); ++name )
+            {
+                path += path.empty() ? std::string( *name ) : fmt::format( ".{}", *name );
+            }
+            return path;
+        };
+
+        // A local, or a field of one as `p.inner.x`; `unnamed` for a temporary.
+        const auto subject = [&]( Local_id local, u32 field, std::string_view unnamed )
+        {
+            const Symbol_id name = function.locals[local.v].name;
+
+            if( !name.is_valid() )
+            {
+                return std::string( unnamed );
+            }
+
+            return field == k_no_field ? fmt::format( "`{}`", interner.text( name ) )
+                                       : fmt::format( "`{}.{}`", interner.text( name ), field_name( field ) );
+        };
+
+        const auto is_constructor_field = [&]( Local_id local, u32 field )
+        { return field != k_no_field && function.constructed.is_valid() && local == function.constructed; };
 
         // D9 first: when a function has both, the read is the mistake and the exit its consequence.
         for( const Uninitialised_read& read : report.reads )
         {
-            if( read.field.is_valid() && read.whole )
+            if( is_constructor_field( read.local, read.field ) && read.whole )
             {
                 diagnostics.error(
                     read.at,
@@ -182,7 +214,7 @@ void report_unassigned_errors(
                 continue;
             }
 
-            if( read.field.is_valid() )
+            if( is_constructor_field( read.local, read.field ) )
             {
                 diagnostics.error(
                     read.at,
@@ -193,11 +225,8 @@ void report_unassigned_errors(
                 continue;
             }
 
-            const Symbol_id name = function.locals[read.local.v].name;
-
             // A temporary is always written before it is read, so this is a lowering bug; say something.
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+            const std::string named = subject( read.local, read.field, "this value" );
 
             const bool is_out = std::find( function.out_parameters.begin(), function.out_parameters.end(), read.local ) !=
                                 function.out_parameters.end();
@@ -207,7 +236,7 @@ void report_unassigned_errors(
             {
                 diagnostics.error(
                     read.at,
-                    fmt::format( "{} is read before this function assigns it", subject ),
+                    fmt::format( "{} is read before this function assigns it", named ),
                     "an `out` parameter holds no value on entry - the caller supplies the storage, not the value"
                 );
                 continue;
@@ -215,15 +244,34 @@ void report_unassigned_errors(
 
             diagnostics.error(
                 read.at,
-                read.maybe ? fmt::format( "{} may be used before it is initialised", subject )
-                           : fmt::format( "{} is used before it is initialised", subject ),
-                read.maybe ? "it is assigned on some paths to here, but not all" : "give it a value at its declaration"
+                read.maybe ? fmt::format( "{} may be used before it is initialised", named )
+                           : fmt::format( "{} is used before it is initialised", named ),
+                read.maybe                 ? "it is assigned on some paths to here, but not all"
+                : read.field != k_no_field ? "assign it before reading it"
+                                           : "give it a value at its declaration"
+            );
+        }
+
+        // The class is assigned once reported, so nothing after names it again.
+        for( const Piecewise_write& write : report.piecewise )
+        {
+            const std::string named = is_constructor_field( write.local, write.field )
+                                          ? fmt::format( "`{}`", field_name( write.field ) )
+                                          : subject( write.local, write.field, "this value" );
+
+            diagnostics.error(
+                write.at,
+                write.maybe ? fmt::format( "{} is written one field at a time, but may not hold a value yet", named )
+                            : fmt::format( "{} is written one field at a time before it holds a value", named ),
+                write.maybe
+                    ? fmt::format( "it is assigned on some paths to here, but not all - assign the whole of {} first", named )
+                    : fmt::format( "assign the whole of {} first", named )
             );
         }
 
         for( const Unassigned_error& error : report.unassigned )
         {
-            if( error.field.is_valid() )
+            if( is_constructor_field( error.local, error.field ) )
             {
                 diagnostics.error(
                     error.at,
@@ -258,16 +306,13 @@ void report_unassigned_errors(
                 continue;
             }
 
-            const Symbol_id name = function.locals[error.local.v].name;
-
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this parameter" );
+            const std::string named = subject( error.local, error.field, "this parameter" );
 
             // Neither names a `return`: the caret is the function when the missing path falls off its end.
             diagnostics.error(
                 error.at,
-                error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )
-                            : fmt::format( "{} is never assigned", subject ),
+                error.maybe ? fmt::format( "{} is not assigned on every path out of this function", named )
+                            : fmt::format( "{} is never assigned", named ),
                 "an `out` parameter is the callee's promise to assign it"
             );
         }

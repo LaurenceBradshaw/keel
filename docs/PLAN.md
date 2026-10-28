@@ -1360,6 +1360,10 @@ major), which waits for the lambda decision (§12).
   parameter may be left half-written. Per-field state fixes this and lets a field be moved on its
   own; neither is worth it alone, and together they are one change. Pinned as accepted in the tests.
   Until then `kl::pair`'s halves are read and replaced in place, and leave only with the whole pair.
+- **An array is assigned once any element is written.** `Buf[2] a; a[0] = Buf( 1 );` compiles, and
+  the scope's end drops `a[1]`, which never held a value. Refusing an element write before the
+  array holds a value would close it, at the cost of `i32[4] a; a[0] = 1;`. Per-element state
+  could only follow a constant index.
 - **`alloc<T>()` of an owning `T` cannot receive its first value.** It answers a `T*`, which D49
   reads as a live `T`, so `*p = move v` drops the garbage there first. The only route is
   `alloc<T>( 1 )`, writing the raw slot, then `&slot[0]`, as the prelude's `box` does. Two fixes:
