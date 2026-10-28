@@ -27,7 +27,8 @@ void settle_drops( Function& func )
     }
 
     // Judged before any drop goes, which changes nothing occupancy sees: a drop neither fills nor empties.
-    const std::vector<Occupancy> entry = occupancy_on_entry( func );
+    const Slot_map               slots( func );
+    const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
     std::vector<bool>            deleted( func.statements.size(), false );
 
     for( u32 b = 0; b < func.blocks.size(); ++b )
@@ -44,22 +45,24 @@ void settle_drops( Function& func )
             if( statement.kind != Statement_kind::Drop || !statement.drop_flag.is_valid() || statement.place.is_global() ||
                 has_deref_projection( func, statement.place ) )
             {
-                step( func, statement, state );
+                step( func, slots, statement, state );
                 continue;
             }
 
-            const Local_id local = statement.place.local;
-            if( !state.initialised[local.v] )
+            // Each drop lies inside one leaf, as drop_flags gave it its flag.
+            const Slots range = slots.of( statement.place );
+            assert( range.last == range.first + 1 || !range.exact );
+            if( !state.initialised[range.first] )
             {
                 deleted[at]         = true;
                 statement.drop_flag = Local_id {};
             }
-            else if( !state.uninitialised[local.v] )
+            else if( !state.uninitialised[range.first] )
             {
                 statement.drop_flag = Local_id {};
             }
 
-            step( func, statement, state );
+            step( func, slots, statement, state );
         }
     }
 
@@ -164,6 +167,20 @@ TEST_CASE( "settle_drops_keeps_a_flag_where_paths_differ", "[opt][settle]" )
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.drops( true ) == 1 );
     REQUIRE( p.writes_to( p.flag() ) == 2 );
+}
+
+// `p.a` is filled on every path and `p.b` on one: only `p.b`'s drop keeps its flag.
+TEST_CASE( "settle_drops_judges_each_field_on_its_own", "[opt][settle]" )
+{
+    const Settled p(
+        "class Pair { public Box a; public Box b; };\n"
+        "i32 f( bool c ) { Pair p; p.a = Box( 1 ); if( c ) { p.b = Box( 2 ); } return 0; }\n",
+        std::nullopt
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.drops( true ) == 1 );
+    REQUIRE( p.drops( false ) == 1 );
 }
 
 // The temporary is built on one arm only. Its flag's write on entry looks dead, being false like the

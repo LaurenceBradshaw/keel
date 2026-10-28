@@ -347,6 +347,7 @@ bool interferes(
     const Function&               func,
     Local_id                      kept,
     Local_id                      gone,
+    const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
     const Liveness&               live,
     const Local_set&              addressed
@@ -383,7 +384,7 @@ bool interferes(
                 return true;
             }
 
-            step( func, statement, state );
+            step( func, slots, statement, state );
 
             if( clash( state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ) ) )
             {
@@ -480,6 +481,7 @@ bool reaches( const Function& func, u32 from, Local_id stop, const std::function
 bool field_interferes(
     const Function&               func,
     const Candidate&              c,
+    const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
     const Liveness&               live,
     const Local_set&              addressed
@@ -498,7 +500,7 @@ bool field_interferes(
         {
             const u32        at        = block.first_statement + i;
             const Statement& statement = func.statements[at];
-            step( func, statement, state );
+            step( func, slots, statement, state );
 
             const bool now = occupied( state, live.after[at], addressed, c.gone, writes( func, statement, c.gone ) );
             // `was` catches the statement that reads `gone` for the last time.
@@ -643,7 +645,11 @@ void rename( Function& func, Local_id gone, const Place& into )
 // Marks the move, `gone`'s storage markers and each drop of an uninitialised `gone` or `kept`; answers
 // whether a drop of `gone` stays.
 bool mark_deletions(
-    const Function& func, const Candidate& chosen, const std::vector<Occupancy>& entry, std::vector<bool>& deleted
+    const Function&               func,
+    const Candidate&              chosen,
+    const Slot_map&               slots,
+    const std::vector<Occupancy>& entry,
+    std::vector<bool>&            deleted
 )
 {
     bool gone_drop_kept = false;
@@ -679,7 +685,7 @@ bool mark_deletions(
                 }
             }
 
-            step( func, statement, state );
+            step( func, slots, statement, state );
         }
     }
 
@@ -690,7 +696,8 @@ bool mark_deletions(
 // changes facts only about its own locals, so one analysis judges them all. Answers whether any merged.
 bool coalesce_round( Function& func )
 {
-    std::vector<Occupancy> entry = occupancy_on_entry( func );
+    const Slot_map         slots( func );
+    std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
     std::vector<Candidate> chosen;
     Local_set              taken( func.locals.size(), false );
     const Liveness         live      = live_locals( func );
@@ -709,8 +716,8 @@ bool coalesce_round( Function& func )
         }
 
         const bool clash = candidate->into.num_projections == 0
-                               ? interferes( func, candidate->kept, candidate->gone, entry, live, addressed )
-                               : field_interferes( func, *candidate, entry, live, addressed );
+                               ? interferes( func, candidate->kept, candidate->gone, slots, entry, live, addressed )
+                               : field_interferes( func, *candidate, slots, entry, live, addressed );
         if( !clash )
         {
             taken[candidate->kept.v]       = true;
@@ -730,7 +737,7 @@ bool coalesce_round( Function& func )
     std::vector<bool> gone_drop_kept( chosen.size(), false );
     for( u32 c = 0; c < chosen.size(); ++c )
     {
-        gone_drop_kept[c] = mark_deletions( func, chosen[c], entry, deleted );
+        gone_drop_kept[c] = mark_deletions( func, chosen[c], slots, entry, deleted );
     }
 
     for( const Candidate& c : chosen )

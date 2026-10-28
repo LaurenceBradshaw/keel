@@ -4,6 +4,7 @@
 #pragma once
 #include <vector>
 #include "ir/kir.h"
+#include "ir/slots.h"
 
 namespace keel
 {
@@ -14,6 +15,7 @@ namespace keel
 // Indexed by Local_id::v.
 using Local_set = std::vector<bool>;
 
+// Indexed by slot: a local's own entry covers the whole local, a field's entry that field alone.
 struct Occupancy
 {
     Local_set initialised;   // might hold a value here
@@ -22,7 +24,7 @@ struct Occupancy
 };
 
 // Carries `state` across one statement, so a caller can see every point in a block.
-void step( const Function& func, const Statement& statement, Occupancy& state );
+void step( const Function& func, const Slot_map& slots, const Statement& statement, Occupancy& state );
 
 // Carries `state` across a terminator; only a moving condition changes it.
 void step( const Terminator& terminator, Occupancy& state );
@@ -32,6 +34,6 @@ void step( const Terminator& terminator, Occupancy& state );
 bool writes( const Function& func, const Statement& statement, Local_id local );
 
 // The state at the top of each block, indexed by Block_id::v.
-std::vector<Occupancy> occupancy_on_entry( const Function& func );
+std::vector<Occupancy> occupancy_on_entry( const Function& func, const Slot_map& slots );
 
 } // namespace keel

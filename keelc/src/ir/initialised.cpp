@@ -8,25 +8,49 @@ namespace keel
 
 namespace
 {
+// Sets `local`'s own entry and every leaf in `range` to holding a value, or to holding none.
+void fill( Occupancy& state, Local_id local, const Slots& range, bool filled )
+{
+    state.initialised[local.v]   = filled;
+    state.uninitialised[local.v] = !filled;
+
+    for( u32 slot = range.first; slot < range.last; ++slot )
+    {
+        state.initialised[slot]   = filled;
+        state.uninitialised[slot] = !filled;
+    }
+}
+
+void mark_storage( Occupancy& state, const Slot_map& slots, Local_id local, bool dead )
+{
+    const Slots all = slots.under( local.v );
+    fill( state, local, all, false );
+    state.storage_dead[local.v] = dead;
+
+    for( u32 slot = all.first; slot < all.last; ++slot )
+    {
+        state.storage_dead[slot] = dead;
+    }
+}
+
 // Every parameter arrives holding a value; a local with a storage marker starts outside it.
-Occupancy entry_occupancy( const Function& func )
+Occupancy entry_occupancy( const Function& func, const Slot_map& slots )
 {
     Occupancy state {};
-    state.initialised.resize( func.locals.size(), false );
-    state.storage_dead.resize( func.locals.size(), false );
-    state.uninitialised.resize( func.locals.size(), true );
+    state.initialised.resize( slots.count(), false );
+    state.storage_dead.resize( slots.count(), false );
+    state.uninitialised.resize( slots.count(), true );
 
     for( u32 i = 1; i <= func.parameter_count; ++i )
     {
-        state.initialised[i]   = true;
-        state.uninitialised[i] = false;
+        fill( state, Local_id { i }, slots.under( i ), true );
     }
 
     for( const Statement& statement : func.statements )
     {
         if( statement.kind == Statement_kind::Storage_live && !statement.place.is_global() )
         {
-            state.storage_dead[statement.place.local.v] = true;
+            mark_storage( state, slots, statement.place.local, true );
         }
     }
 
@@ -46,7 +70,7 @@ Local_id local_of( const Function& func, const Place& place )
 
 } // namespace
 
-void step( const Function& func, const Statement& statement, Occupancy& state )
+void step( const Function& func, const Slot_map& slots, const Statement& statement, Occupancy& state )
 {
     switch( statement.kind )
     {
@@ -58,10 +82,23 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
             statement.value,
             [&]( const Operand& operand )
             {
-                if( operand.kind == Operand_kind::Move && !operand.place.is_global() && operand.place.num_projections == 0 )
+                if( operand.kind != Operand_kind::Move || !is_field_path( func, operand.place ) )
                 {
-                    state.initialised[operand.place.local.v]   = false;
-                    state.uninitialised[operand.place.local.v] = true;
+                    return;
+                }
+
+                const Slots moved = slots.of( operand.place );
+                if( operand.place.num_projections == 0 )
+                {
+                    fill( state, operand.place.local, moved, false );
+                }
+                else if( moved.exact )
+                {
+                    for( u32 slot = moved.first; slot < moved.last; ++slot )
+                    {
+                        state.initialised[slot]   = false;
+                        state.uninitialised[slot] = true;
+                    }
                 }
             }
         );
@@ -72,8 +109,7 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
             const Local_id local = local_of( func, statement.value.a.place );
             if( local.is_valid() )
             {
-                state.initialised[local.v]   = true;
-                state.uninitialised[local.v] = false;
+                fill( state, local, slots.of( statement.value.a.place ), true );
             }
         }
 
@@ -81,8 +117,7 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
         const Local_id local = local_of( func, statement.place );
         if( local.is_valid() )
         {
-            state.initialised[local.v]   = true;
-            state.uninitialised[local.v] = false;
+            fill( state, local, slots.of( statement.place ), true );
         }
         break;
     }
@@ -93,24 +128,12 @@ void step( const Function& func, const Statement& statement, Occupancy& state )
         break;
     }
     case Statement_kind::Storage_live:
-    {
-        const Local_id local = local_of( func, statement.place );
-        if( local.is_valid() )
-        {
-            state.storage_dead[local.v]  = false;
-            state.initialised[local.v]   = false;
-            state.uninitialised[local.v] = true;
-        }
-        break;
-    }
     case Statement_kind::Storage_dead:
     {
         const Local_id local = local_of( func, statement.place );
         if( local.is_valid() )
         {
-            state.storage_dead[local.v]  = true;
-            state.initialised[local.v]   = false;
-            state.uninitialised[local.v] = true;
+            mark_storage( state, slots, local, statement.kind == Statement_kind::Storage_dead );
         }
         break;
     }
@@ -148,16 +171,16 @@ bool writes( const Function& func, const Statement& statement, Local_id local )
     return false;
 }
 
-std::vector<Occupancy> occupancy_on_entry( const Function& func )
+std::vector<Occupancy> occupancy_on_entry( const Function& func, const Slot_map& slots )
 {
     std::vector<Occupancy> entry( func.blocks.size() );
-    entry[0] = entry_occupancy( func );
+    entry[0] = entry_occupancy( func, slots );
     for( u32 i = 1; i < func.blocks.size(); ++i )
     {
         entry[i] = Occupancy {
-            .initialised   = std::vector<bool>( func.locals.size(), false ),
-            .storage_dead  = std::vector<bool>( func.locals.size(), false ),
-            .uninitialised = std::vector<bool>( func.locals.size(), false )
+            .initialised   = std::vector<bool>( slots.count(), false ),
+            .storage_dead  = std::vector<bool>( slots.count(), false ),
+            .uninitialised = std::vector<bool>( slots.count(), false )
         };
     }
 
@@ -174,7 +197,7 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func )
 
             for( u32 s = 0; s < block.statement_count; ++s )
             {
-                step( func, func.statements[block.first_statement + s], state );
+                step( func, slots, func.statements[block.first_statement + s], state );
             }
 
             step( block.terminator, state );
@@ -183,7 +206,7 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func )
             successors( block.terminator, targets );
             for( const Block_id target : targets )
             {
-                for( u32 l = 0; l < func.locals.size(); ++l )
+                for( u32 l = 0; l < slots.count(); ++l )
                 {
                     if( state.initialised[l] && !entry[target.v].initialised[l] )
                     {
@@ -258,8 +281,9 @@ struct Analysed : Compiled
     // The state just after the first statement `where` accepts, walking blocks in order.
     Occupancy after( const std::function<bool( const Statement& )>& where ) const
     {
-        const Function&              func  = first();
-        const std::vector<Occupancy> entry = occupancy_on_entry( func );
+        const Function&              func = first();
+        const Slot_map               slots( func );
+        const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
 
         for( u32 b = 0; b < func.blocks.size(); ++b )
         {
@@ -268,7 +292,7 @@ struct Analysed : Compiled
             for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
             {
                 const Statement& statement = func.statements[func.blocks[b].first_statement + i];
-                step( func, statement, state );
+                step( func, slots, statement, state );
 
                 if( where( statement ) )
                 {
@@ -289,7 +313,7 @@ TEST_CASE( "initialised_starts_with_the_parameters", "[ir][initialised]" )
     const Analysed p( "i32 f( i32 a ) { return a; }\n" );
     REQUIRE( p.clean() );
 
-    const Occupancy entry = occupancy_on_entry( p.first() )[0];
+    const Occupancy entry = occupancy_on_entry( p.first(), Slot_map( p.first() ) )[0];
 
     REQUIRE( entry.initialised[1] );
     REQUIRE_FALSE( entry.initialised[0] );
@@ -355,7 +379,7 @@ TEST_CASE( "initialised_survives_a_join_after_a_move_on_one_path", "[ir][initial
     REQUIRE( p.clean() );
 
     const Function&              func  = p.first();
-    const std::vector<Occupancy> entry = occupancy_on_entry( func );
+    const std::vector<Occupancy> entry = occupancy_on_entry( func, Slot_map( func ) );
 
     // The join is the block that assigns the return slot.
     bool checked = false;
@@ -408,7 +432,7 @@ TEST_CASE( "initialised_starts_a_marked_local_storage_dead", "[ir][initialised]"
     REQUIRE( p.clean() );
 
     const Function&              func  = p.first();
-    const std::vector<Occupancy> entry = occupancy_on_entry( func );
+    const std::vector<Occupancy> entry = occupancy_on_entry( func, Slot_map( func ) );
     const Local_id               x     = p.local( "x" );
 
     REQUIRE( entry[0].storage_dead[x.v] );
@@ -427,7 +451,7 @@ TEST_CASE( "uninitialised_starts_everywhere_but_the_parameters", "[ir][initialis
     const Analysed p( "i32 f( i32 a ) { return a; }\n" );
     REQUIRE( p.clean() );
 
-    const Occupancy entry = occupancy_on_entry( p.first() )[0];
+    const Occupancy entry = occupancy_on_entry( p.first(), Slot_map( p.first() ) )[0];
 
     REQUIRE( entry.uninitialised[0] );
     REQUIRE_FALSE( entry.uninitialised[1] );
@@ -468,7 +492,7 @@ TEST_CASE( "uninitialised_and_initialised_both_hold_after_a_move_on_one_path", "
     REQUIRE( p.clean() );
 
     const Function&              func  = p.first();
-    const std::vector<Occupancy> entry = occupancy_on_entry( func );
+    const std::vector<Occupancy> entry = occupancy_on_entry( func, Slot_map( func ) );
 
     bool checked = false;
     for( u32 b = 0; b < func.blocks.size(); ++b )
