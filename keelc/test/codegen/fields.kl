@@ -1,0 +1,197 @@
+// PLAN D9 and §8 per field. A struct or class with no destructor has each field tracked on its own:
+// filled one at a time, moved out one at a time, and dropped under its own flag. Each Buf says when
+// it goes, so the output is the drop order and KEEL_VALGRIND=1 sees a drop missed or run twice.
+import t::console;
+
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        t::print( "drop " );
+        t::println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+// No constructor or destructor, so its fields are its own.
+class P
+{
+    public Buf a;
+    public Buf b;
+};
+
+class Inner
+{
+    public Buf buf;
+    public u64 n;
+};
+
+class Outer
+{
+    public Inner inner;
+    public Buf   c;
+};
+
+// A constructor, so a C is assigned whole before a field of it is written.
+class C
+{
+    public Buf b;
+    public u64 n;
+
+    C( u64 v )
+    {
+        b = Buf( v );
+        n = v;
+    }
+};
+
+// A constructor filling the fields of a field.
+class Holder
+{
+    public P pair;
+
+    Holder( u64 n )
+    {
+        pair.a = Buf( n );
+        pair.b = Buf( n + 1 );
+    }
+};
+
+void sink( move Buf b )
+{
+    t::println( b.get() );
+}
+
+void fill( out P p )
+{
+    p.a = Buf( 1 );
+    p.b = Buf( 2 );
+}
+
+// Only `p.b` is left to drop.
+void take( move P p )
+{
+    sink( move p.a );
+}
+
+void build( out C c )
+{
+    c = C( 70 );
+    c.n = 71;
+}
+
+void filled_through_out()
+{
+    P q;
+    fill( out q );
+    t::println( q.b.get() );
+}
+
+void filled_in_place()
+{
+    P r;
+    r.a = Buf( 3 );
+    r.b = Buf( 4 );
+}
+
+void moved()
+{
+    P p;
+    p.a = Buf( 5 );
+    p.b = Buf( 6 );
+    sink( move p.a );
+}
+
+void moved_on_one_path( bool early, u64 n )
+{
+    P p;
+    p.a = Buf( n );
+    p.b = Buf( n + 1 );
+
+    if( early )
+    {
+        sink( move p.a );
+    }
+}
+
+void moved_and_refilled()
+{
+    P p;
+    p.a = Buf( 9 );
+    p.b = Buf( 10 );
+    sink( move p.a );
+    p.a = Buf( 11 );
+}
+
+void moved_out_of_a_parameter()
+{
+    P p;
+    p.a = Buf( 12 );
+    p.b = Buf( 13 );
+    take( move p );
+}
+
+void nested()
+{
+    Outer o;
+    o.inner.buf = Buf( 14 );
+    o.inner.n   = 1;
+    o.c         = Buf( 15 );
+    sink( move o.inner.buf );
+}
+
+void constructed()
+{
+    Holder h = Holder( 16 );
+}
+
+void replaced_after_construction()
+{
+    C c = C( 18 );
+    c.n = 1;
+    t::println( c.n );
+}
+
+void built_through_out()
+{
+    C d = C( 0 );
+    build( out d );
+    t::println( d.n );
+}
+
+i32 main()
+{
+    filled_through_out();
+    filled_in_place();
+    moved();
+    moved_on_one_path( true, 7 );
+    moved_on_one_path( false, 7 );
+    moved_and_refilled();
+    moved_out_of_a_parameter();
+    nested();
+    constructed();
+    replaced_after_construction();
+    built_through_out();
+    return 0;
+}

@@ -2714,8 +2714,9 @@ Operand Lowering::lower_expression( Node_id id )
         const Node_id operand = ast_.operand( id );
         const Type_id type    = type_of( id );
 
-        // A named variable is a place, and moving empties it. A temporary is built into a statement
-        // temporary first, so the caller still drops it unless the move clears its flag.
+        // A named variable is a place, and moving empties it. A field reads as a copy of its place, so
+        // moving that place empties the field alone. A temporary is built into a statement temporary
+        // first, so the caller still drops it unless the move clears its flag.
         if( ast_.kind( operand ) == Node_kind::Name_expr )
         {
             return move( lower_place( operand ), type );

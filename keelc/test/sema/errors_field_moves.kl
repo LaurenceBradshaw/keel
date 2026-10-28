@@ -1,0 +1,85 @@
+// PLAN §8 per field. Where a field cannot be moved out on its own. A line ending `// error`
+// reports exactly one error; every other line reports none.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+struct S
+{
+    i32 x;
+    i32 y;
+};
+
+class P
+{
+    public Buf a;
+    public Buf b;
+};
+
+// A destructor, so its fields leave only with it.
+class D
+{
+    public Buf v;
+
+    ~D()
+    {
+    }
+};
+
+class M
+{
+    public Buf a;
+
+    void give()
+    {
+        sink( move a ); // error
+    }
+};
+
+void sink( move Buf b )
+{
+}
+
+void out_of_a_destructor( move D d )
+{
+    sink( move d.v ); // error
+}
+
+void through_a_ref( ref P q )
+{
+    sink( move q.a ); // error
+}
+
+void through_a_pointer( P* q )
+{
+    sink( move q.a ); // error
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -20,13 +20,13 @@ error: a field cannot be moved on its own
   --> sema/errors_move_unowned.kl:52:20
    |
 52 |         take( move kept );
-   |                    ^^^^ moving it would leave the object partly moved - move the whole object instead
+   |                    ^^^^ it belongs to `this`, which a method only borrows
 
 error: a field cannot be moved on its own
   --> sema/errors_move_unowned.kl:57:21
    |
 57 |         return move kept;
-   |                     ^^^^ moving it would leave the object partly moved - move the whole object instead
+   |                     ^^^^ it belongs to `this`, which a method only borrows
 
 error: cannot move out of a borrow
   --> sema/errors_move_unowned.kl:62:27

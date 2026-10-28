@@ -20,7 +20,7 @@ error: a field cannot be moved on its own
   --> sema/errors_consuming_switch.kl:80:22
    |
 80 |         switch( move held )
-   |                      ^^^^ moving it would leave the object partly moved - move the whole object instead
+   |                      ^^^^ it belongs to `this`, which a method only borrows
 
 error: a binding cannot be moved
   --> sema/errors_consuming_switch.kl:96:26

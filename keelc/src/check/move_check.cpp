@@ -728,6 +728,34 @@ TEST_CASE( "move_check_tracks_each_field_of_a_struct", "[check][move]" )
     REQUIRE( refilled.errors().empty() );
 }
 
+TEST_CASE( "move_check_tracks_a_field_moved_on_its_own", "[check][move]" )
+{
+    constexpr std::string_view k_pair = "class Owned { u64 id; Owned( u64 n ) { id = n; } ~Owned() { } };\n"
+                                        "class P { public Owned a; public Owned b; };\n"
+                                        "void take( move Owned o ) { }\n"
+                                        "void keep( move P p ) { }\n";
+
+    const Checked other(
+        std::string( k_pair ) +
+        "i32 main() { P p; p.a = Owned( 1 ); p.b = Owned( 2 ); take( move p.a ); take( move p.b ); return 0; }"
+    );
+
+    INFO( other.rendered() );
+    REQUIRE( other.clean() );
+    REQUIRE( other.errors().empty() );
+
+    const Checked whole(
+        std::string( k_pair ) +
+        "i32 main() { P p; p.a = Owned( 1 ); p.b = Owned( 2 ); take( move p.a ); keep( move p ); return 0; }"
+    );
+
+    INFO( whole.rendered() );
+    REQUIRE( whole.clean() );
+    REQUIRE( whole.errors().size() == 1 );
+    REQUIRE( whole.errors()[0].field != k_no_field );
+    REQUIRE( whole.ast.name( whole.functions.back().fields[whole.errors()[0].field].field ) == whole.interner.find( "a" ) );
+}
+
 // Every borrowed argument's address is taken before the call, so the move inside it is checked
 // against the call's own arguments rather than the flow.
 TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]" )

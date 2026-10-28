@@ -3193,25 +3193,37 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    // A field on its own is refused rather than lumped in with the rest, because the reason is
-    // different and so is the fix: moving one would leave the object partly moved, and its own
-    // scope exit would then drop a field that has already gone. Tracking that needs per-field drop
-    // flags, so this is a restriction to lift when they exist rather than a rule to keep.
-    if( ast_.kind( operand ) == Node_kind::Field_expr )
+    // A field moves out on its own when every object on the path splits into fields; the rules
+    // below then ask about the object at the root of the path.
+    Node_id root = operand;
+
+    while( ast_.kind( root ) == Node_kind::Field_expr )
     {
-        reporter_.error_at(
-            ast_.span( operand ),
-            "a field cannot be moved on its own",
-            "moving it would leave the object partly moved - move the whole object instead"
-        );
-        return types_.poison( id );
+        root                = ast_.object( root );
+        const Type_id owner = types_.type_of( root );
+
+        if( table_.is_pointer( owner ) )
+        {
+            reporter_.error_at( ast_.span( operand ), "a pointee cannot be moved", "move the variable it points into instead" );
+            return types_.poison( id );
+        }
+
+        if( !splits_into_fields( ast_, table_, owner ) )
+        {
+            reporter_.error_at(
+                ast_.span( operand ),
+                fmt::format( "a field cannot be moved out of `{}`", table_.name( owner ) ),
+                "its destructor needs every field; move the whole object instead"
+            );
+            return types_.poison( id );
+        }
     }
 
     // Everything else must be a plain named local or parameter. Deliberately stricter than
     // is_assignable, which also accepts `*p`: that names something this function does not own, so
     // moving out of it leaves a hole nothing tracks. The rule and the analysis then agree by
-    // construction - the dataflow tracks whole locals, and nothing else can be moved.
-    const Node_id decl = ast_.kind( operand ) == Node_kind::Name_expr ? resolution_.declaration_of( operand ) : Node_id {};
+    // construction - the dataflow tracks locals and their fields, and nothing else can be moved.
+    const Node_id decl = ast_.kind( root ) == Node_kind::Name_expr ? resolution_.declaration_of( root ) : Node_id {};
     const bool    named =
         decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
 
@@ -3266,19 +3278,16 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    if( ast_.kind( operand ) == Node_kind::Name_expr &&
-        ast_.kind( resolution_.declaration_of( operand ) ) == Node_kind::Field_decl )
+    if( ast_.kind( root ) == Node_kind::Name_expr && ast_.kind( resolution_.declaration_of( root ) ) == Node_kind::Field_decl )
     {
         reporter_.error_at(
-            ast_.span( operand ),
-            "a field cannot be moved on its own",
-            "moving it would leave the object partly moved - move the whole object instead"
+            ast_.span( operand ), "a field cannot be moved on its own", "it belongs to `this`, which a method only borrows"
         );
 
         return types_.poison( id );
     }
 
-    if( places_.is_array_index( operand ) )
+    if( places_.is_array_index( root ) )
     {
         reporter_.error_at(
             ast_.span( operand ), "an element of an array cannot be moved out", "the array moves only as a whole"
@@ -3286,7 +3295,7 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    if( places_.is_operator_index( operand ) )
+    if( places_.is_operator_index( root ) )
     {
         reporter_.error_at(
             ast_.span( operand ),
@@ -3296,9 +3305,9 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    // Same reason as the field above: `*p` names something this function does not own, so moving
-    // out of it leaves a hole nothing tracks.
-    if( ast_.kind( operand ) == Node_kind::Unary_expr && ast_.op( operand ) == Token_kind::Star )
+    // `*p` names something this function does not own, so moving out of it leaves a hole nothing
+    // tracks.
+    if( ast_.kind( root ) == Node_kind::Unary_expr && ast_.op( root ) == Token_kind::Star )
     {
         reporter_.error_at( ast_.span( operand ), "a pointee cannot be moved", "move the variable it points into instead" );
         return types_.poison( id );
@@ -6404,17 +6413,14 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
         REQUIRE( p.clean() );
     }
 
-    // A field on its own is refused: moving it would leave the object partly moved, and the
-    // object's own scope exit would then drop a field that has already gone. A restriction to lift
-    // when per-field drop flags exist, not a rule to keep.
-    SECTION( "a field cannot be moved on its own" )
+    // A struct with no destructor is tracked per field, so one field moves out on its own.
+    SECTION( "a field moves on its own" )
     {
         const Typed p( "struct Point { i32 x; i32 y; };\n"
                        "i32 main() { Point q = Point { 1, 2 }; i32 a = move q.x; return a; }" );
 
         INFO( p.rendered() );
-        REQUIRE_FALSE( p.clean() );
-        REQUIRE( p.rendered().find( "a field cannot be moved on its own" ) != std::string::npos );
+        REQUIRE( p.clean() );
     }
 
     // Spelled bare inside a method it is the same field, and the method only borrows its object.

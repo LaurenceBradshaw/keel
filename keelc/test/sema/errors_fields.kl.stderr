@@ -1,0 +1,103 @@
+error: `c` is written one field at a time before it holds a value
+  --> sema/errors_fields.kl:74:9
+   |
+74 |         c.n = 1; // error
+   |         ^^^^^^^^ assign the whole of `c` first
+
+warning: unused parameter `b` [-Wunused-parameter]
+  --> sema/errors_fields.kl:78:21
+   |
+78 | void sink( move Buf b )
+   |                     ^ name it `_` if it is unused on purpose
+
+warning: unused parameter `p` [-Wunused-parameter]
+  --> sema/errors_fields.kl:82:19
+   |
+82 | void keep( move P p )
+   |                   ^ name it `_` if it is unused on purpose
+
+warning: unused parameter `b` [-Wunused-parameter]
+  --> sema/errors_fields.kl:86:21
+   |
+86 | void both( move Buf b, ref P p )
+   |                     ^ name it `_` if it is unused on purpose
+
+warning: unused parameter `p` [-Wunused-parameter]
+  --> sema/errors_fields.kl:86:30
+   |
+86 | void both( move Buf b, ref P p )
+   |                              ^ name it `_` if it is unused on purpose
+
+warning: unused parameter `b` [-Wunused-parameter]
+  --> sema/errors_fields.kl:90:23
+   |
+90 | void beside( move Buf b, ref Buf other )
+   |                       ^ name it `_` if it is unused on purpose
+
+warning: unused parameter `other` [-Wunused-parameter]
+  --> sema/errors_fields.kl:90:34
+   |
+90 | void beside( move Buf b, ref Buf other )
+   |                                  ^^^^^ name it `_` if it is unused on purpose
+
+error: `s.y` is used before it is initialised
+  --> sema/errors_fields.kl:98:5
+   |
+98 |     return s.y; // error
+   |     ^^^^^^^^^^^ assign it before reading it
+
+error: `s.y` is never assigned
+   --> sema/errors_fields.kl:101:1
+    |
+101 | void half_written( out S s ) // error
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+error: `p.a` is used after it was moved
+   --> sema/errors_fields.kl:109:5
+    |
+109 |     keep( move p ); // error
+    |     ^^^^^^^^^^^^^^ moved at 108:5
+
+error: `p.a` may already have been moved
+   --> sema/errors_fields.kl:119:5
+    |
+119 |     sink( move p.a ); // error
+    |     ^^^^^^^^^^^^^^^^ moved at 116:9 on some path to here
+
+error: `p.a` is moved into this call, so the call cannot also borrow it
+   --> sema/errors_fields.kl:124:21
+    |
+124 |     both( move p.a, ref p ); // error
+    |                     ^^^^^ a call cannot take a value and borrow it at once
+
+error: `p` is moved while `r` still borrows it
+   --> sema/errors_fields.kl:135:5
+    |
+135 |     sink( move p.a ); // error
+    |     ^^^^^^^^^^^^^^^^ `r` is used after this; it was bound at 134:5
+
+error: `c` is written one field at a time before it holds a value
+   --> sema/errors_fields.kl:142:5
+    |
+142 |     c.n = 1; // error
+    |     ^^^^^^^^ assign the whole of `c` first
+
+error: `e` is written one field at a time before it holds a value
+   --> sema/errors_fields.kl:148:5
+    |
+148 |     e.n = 1; // error
+    |     ^^^^^^^^ assign the whole of `e` first
+
+error: `c` is written one field at a time before it holds a value
+   --> sema/errors_fields.kl:153:5
+    |
+153 |     c.n = 1; // error
+    |     ^^^^^^^^ assign the whole of `c` first
+
+error: `c` is written one field at a time, but may not hold a value yet
+   --> sema/errors_fields.kl:165:5
+    |
+165 |     c.n = 1; // error
+    |     ^^^^^^^^ it is assigned on some paths to here, but not all - assign the whole of `c` first
+
+11 errors generated
