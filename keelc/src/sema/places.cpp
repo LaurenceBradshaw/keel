@@ -835,7 +835,8 @@ std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
     {
         const Param_mode mode = declared ? parameter_mode_of( ast_, params[i] ) : modes[i];
 
-        if( borrows( mode, types_.type_of( args[i] ) ) )
+        // A refused argument was reported where it stands.
+        if( borrows( mode, types_.type_of( args[i] ) ) && !table_.is_error( types_.type_of( args[i] ) ) )
         {
             // `ref x` borrows `x`.
             borrowed.push_back( ast_.kind( args[i] ) == Node_kind::Marker_expr ? ast_.operand( args[i] ) : args[i] );
@@ -1902,6 +1903,17 @@ TEST_CASE( "type_checker_refuses_a_ref_binding_through_a_call_to_a_temporary", "
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    // The argument's own refusal is the one error.
+    SECTION( "but not a `ref` argument already refused" )
+    {
+        const Typed p( "ref i32 pick( ref i32 x ) { return x; }\ni32 make() { return 1; }\n"
+                       "i32 main() { ref i32 r = pick( ref make() ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`ref` needs a variable to borrow" ) != std::string::npos );
     }
 }
 
