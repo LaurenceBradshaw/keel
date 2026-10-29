@@ -1,0 +1,13 @@
+error: expected `while` after a `do` body
+ --> parse/errors_do_while.kl:9:5
+  |
+9 |     }
+  |     ^ write `do { ... } while( condition );`
+
+error: expected `;`, found `return`
+  --> parse/errors_do_while.kl:14:21
+   |
+14 |     } while( n < 3 )
+   |                     ^
+
+2 errors generated

@@ -350,7 +350,7 @@ exists specifically to prevent indefinite bikeshedding.
 
 **Keel's surface syntax is C++'s.** A C or C++ developer should be able to read
 Keel without a tutorial and write it after skimming one page. Declarations,
-`struct`, destructors, `if`/`while`/`for`/`switch`, `auto`, and comments are all
+`struct`, destructors, `if`/`while`/`do`/`for`/`switch`, `auto`, and comments are all
 spelled exactly as in C++.
 
 ### This contradicts the manifesto, deliberately
@@ -521,7 +521,7 @@ is listed because the audit surface is about *differences*, not severity.
 | --- | --- | --- |
 | D1 | Fixed-width primitives only: `i32`, `u64`, `f64`. No `int`, `long`, `char`, `unsigned`. | The C++ spellings are **rejected outright**, with a diagnostic naming the replacement. They are *not* reserved words — the lexer treats them as ordinary identifiers, and the suggestion comes from sema's unknown-type path, which knows it is in type position. No type name is a keyword: `i32`, `Point` and `list<T>` all resolve through one path. |
 | D2 | **Ownership leaves a variable only where the call site says `move`**: `consume( move b )`. A bare variable never transfers — for a `class` it is a read-only borrow, for a `struct` a copy (D31). A temporary, which no variable holds, transfers bare: `consume( Buffer( 16 ) )`. A type is **owning** exactly when it has a destructor, directly or through a member, and a raw pointer owns nothing. `struct` is legal exactly when the type is not owning (D29). The rule's real content is **"is it copyable"**; "has a destructor" is a proxy that holds only while copy constructors are outside v0 (§6.6), and needs restating if they arrive. | `consume( Buffer b )` as a move would be C++'s syntax for a copy carrying different semantics, which §5.1 forbids. A marker at the call site fixes that, and D31 closes the hole it left. The cost is a marker on every transfer. |
-| D3 | Braces mandatory on every `if`/`while`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
+| D3 | Braces mandatory on every `if`/`while`/`do`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
 | D4 | `switch` requires exhaustiveness, matches sum-type payloads, and has no implicit fallthrough out of an arm with a body (D38). | Payload patterns (`case Shape::Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning except that an arm must say how it ends; a missing case is an error, never a silent skip. |
 | D5 | No *lossy* implicit conversions. A binary operator widens both operands to the smallest type that losslessly holds both, and is a hard error whenever C++'s own result type would not hold them. Assignment is implicit only where the target holds the source type. int↔bool and pointer↔bool are never implicit. §6.4 has the table. | Where C++ is lossless Keel agrees with it, and where C++ silently loses information Keel refuses. Requiring a cast for lossless widening trains authors to write casts reflexively, which is how the dangerous ones get waved through. **Provisional**: to be re-judged against real code. |
 | D6 | **Error propagation is the prefix keyword `try`** (M9): `try read_file( path )`, not `read_file( path )?`. | `try expr` is a syntax error in C++, so it is new notation. A single `?` is easy to miss, and returning from the enclosing function is the loudest thing an expression can do; every other early exit is a keyword. L14 makes `try` free permanently: with no exceptions there is never a `catch` to expect (Zig's precedent). The counter-evidence is Rust's, which replaced `try!` with `?` because nested `try`s bury the happy path; whether Keel also refuses nesting is settled with M9. |
@@ -1400,10 +1400,6 @@ major), which waits for the lambda decision (§12).
 - **Operator helps are thin**: `a + b` on an unbounded `T` suggests only `where T : numeric`, not
   an interface declaring `+`; `a += b` under a bound declaring neither `+=` nor `+` has no help; and
   `!v` on a struct says both operands must be `bool`.
-- **`do { n++; } while( n < 3 );` gives three errors**: *`do` is not declared*, `n++` as a value,
-  and *expected a declaration* at the `while`. It wants one, from the C++-habit table. Whether
-  `do`-while joins the language is undecided: it is C++ syntax with no Keel twist and one lowering
-  rule.
 - **No warning for a method that could be `const`**: a non-`const` method that mutates nothing
   through `this` and calls only `const` methods on it.
 - **A `for` over a run suggests `r.size()`**: `for( i32 x : r )` on a `const ref i32[] r` helps

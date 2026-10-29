@@ -3539,7 +3539,8 @@ void Lowering::lower_while( Node_id id )
     const Block_id header     = builder_.add_block();
     const Block_id body_block = builder_.add_block();
 
-    builder_.terminate_goto( header, span );
+    // A `do` body runs once before the first test.
+    builder_.terminate_goto( ast_.kind( id ) == Node_kind::Do_stmt ? body_block : header, span );
 
     // A while has no update, so continue re-tests immediately.
     loops_.push_back( Loop_targets { Block_id {}, header, drops_.depth() } );
@@ -3730,6 +3731,7 @@ void Lowering::lower_statement( Node_id id )
         return lower_if( id );
 
     case Node_kind::While_stmt:
+    case Node_kind::Do_stmt:
         return lower_while( id );
 
     case Node_kind::For_stmt:

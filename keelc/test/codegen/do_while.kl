@@ -1,0 +1,103 @@
+// `do { } while( c );` runs its body before the first test. `continue` jumps to the test, not to
+// the body's top, so a wrong target re-runs the body without ever testing; each such loop has an
+// independent bound that exits with a distinct code instead of spinning. `break` leaves only the
+// innermost loop, a `do` nested in a `while` included. A value declared in the body drops each
+// time round. Every check returns a distinct code, so exit 0 means all of them agreed.
+i32 drops = 0;
+
+class Counted
+{
+    public i32 value;
+
+    public Counted( i32 v )
+    {
+        value = v;
+    }
+
+    ~Counted()
+    {
+        drops += 1;
+    }
+};
+
+// Assigned on every path: the body runs at least once.
+void assigned_in_body( out i32 n, i32 c )
+{
+    do
+    {
+        n = c;
+        c = c - 1;
+    } while( c > 0 );
+}
+
+i32 main()
+{
+    // The test is false at once, and the body still runs.
+    i32 runs = 0;
+    do
+    {
+        runs++;
+    } while( false );
+
+    if( runs != 1 ) { return 1; }
+
+    // A counted loop, tested after each pass.
+    i32 n = 0;
+    do
+    {
+        n++;
+    } while( n < 3 );
+
+    if( n != 3 ) { return 2; }
+
+    // `continue` tests the condition: the odd passes skip the sum, and the loop still ends.
+    i32 i     = 0;
+    i32 sum   = 0;
+    i32 guard = 0;
+    do
+    {
+        guard++;
+        if( guard > 100 ) { return 3; }
+
+        i++;
+        if( i % 2 == 1 )
+        {
+            continue;
+        }
+        sum += i;
+    } while( i < 6 );
+
+    if( sum != 12 ) { return 4; }
+
+    // `break` leaves the `do`, and the `while` around it goes on.
+    i32 outer = 0;
+    i32 inner = 0;
+    while( outer < 3 )
+    {
+        do
+        {
+            inner++;
+            break;
+        } while( true );
+
+        outer++;
+    }
+
+    if( inner != 3 ) { return 5; }
+
+    // A value declared in the body drops once per pass.
+    i32 k = 0;
+    do
+    {
+        Counted c = Counted( k );
+        k += c.value + 1;
+    } while( k < 4 );
+
+    if( drops != 3 ) { return 6; }
+
+    i32 assigned = 0;
+    assigned_in_body( out assigned, 2 );
+    if( assigned != 1 ) { return 7; }
+
+    return 0;
+}

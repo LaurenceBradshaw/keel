@@ -600,6 +600,7 @@ bool Coverage::completes_normally( Node_id id ) const
     case Node_kind::Fallthrough_stmt:
         return false;
     case Node_kind::While_stmt:
+    case Node_kind::Do_stmt:
     case Node_kind::For_stmt:
     case Node_kind::Switch_stmt:
         return true;

@@ -100,7 +100,7 @@ public:
     Node_id                  param_list( Node_id id ) const;
     std::span<const Node_id> params( Node_id id ) const;          // the Param_decls, receiver included
     std::span<const Node_id> explicit_params( Node_id fn ) const; // past the receiver, when there is one
-    Node_id                  body( Node_id id ) const;            // also While_stmt, For_stmt, Case_arm; invalid for `extern`
+    Node_id                  body( Node_id id ) const;            // also the loops and Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
     Node_id                  type_param_list( Node_id id ) const;     // aggregate, Enum_decl, function-like
@@ -150,7 +150,7 @@ public:
     Node_id                  upper( Node_id range ) const;
 
     // Statements, and Conditional_expr for the first three.
-    Node_id condition( Node_id id ) const; // also While_stmt, For_stmt, Assert_expr; invalid in an empty `for`
+    Node_id condition( Node_id id ) const; // also While_stmt, Do_stmt, For_stmt, Assert_expr; invalid in an empty `for`
     Node_id then_branch( Node_id id ) const;
     Node_id else_branch( Node_id id ) const; // invalid when absent
     Node_id expression( Node_id expr_stmt ) const;

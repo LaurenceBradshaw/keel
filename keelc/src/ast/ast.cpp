@@ -251,6 +251,8 @@ Node_id Ast::body( Node_id id ) const
     {
     case Node_kind::While_stmt:
         return child( id, 1 );
+    case Node_kind::Do_stmt:
+        return child( id, 0 );
     case Node_kind::For_stmt:
         return child( id, 3 );
     case Node_kind::Case_arm:
@@ -576,6 +578,7 @@ Node_id Ast::condition( Node_id id ) const
     switch( kind( id ) )
     {
     case Node_kind::For_stmt:
+    case Node_kind::Do_stmt:
         return child( id, 1 );
     default:
         assert(

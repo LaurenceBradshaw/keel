@@ -1,0 +1,17 @@
+// A `do` body with no `while` after it is one error at the body's `}`, and a missing `;` after the
+// condition is one error too. The statements after each still parse.
+i32 main()
+{
+    i32 n = 0;
+    do
+    {
+        n++;
+    }
+
+    do
+    {
+        n++;
+    } while( n < 3 )
+
+    return n;
+}

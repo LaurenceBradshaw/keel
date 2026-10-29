@@ -1,0 +1,13 @@
+error: expected `bool`, but got `i32`
+ --> sema/errors_do_while.kl:9:14
+  |
+9 |     } while( n ); // error
+  |              ^ there is no conversion to `bool`: compare explicitly, as in `x != 0`
+
+error: `inner` is not declared
+  --> sema/errors_do_while.kl:15:14
+   |
+15 |     } while( inner < 3 ); // error
+   |              ^^^^^
+
+2 errors generated

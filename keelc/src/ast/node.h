@@ -97,6 +97,8 @@ enum class Node_kind : u16
     If_stmt,
     // children: condition, then body.
     While_stmt,
+    // `do { } while( c );`. children: body, then condition.
+    Do_stmt,
     // children: init (a Var_decl or a statement), condition, update, body; the first three invalid
     // when absent. Counting, `for( u64 i : a..b )`: init is a Var_decl whose initialiser is the
     // Range_expr, and condition and update are invalid.

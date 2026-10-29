@@ -128,6 +128,7 @@ void Statements::visit( Node_id id )
         return visit_switch( id );
 
     case Node_kind::While_stmt:
+    case Node_kind::Do_stmt:
         return visit_while( id );
 
     case Node_kind::For_stmt:
@@ -142,7 +143,7 @@ void Statements::visit( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 "`break` outside a loop or switch body",
-                "`break` can only appear inside a `while`, `for` or `switch`"
+                "`break` can only appear inside a `while`, `do`, `for` or `switch`"
             );
         }
         return;
@@ -163,7 +164,7 @@ void Statements::visit( Node_id id )
         if( loop_depth_ == 0 )
         {
             reporter_.error_at(
-                ast_.span( id ), "`continue` outside a loop body", "`continue` can only appear inside a `while` or `for`"
+                ast_.span( id ), "`continue` outside a loop body", "`continue` can only appear inside a `while`, `do` or `for`"
             );
         }
         return;

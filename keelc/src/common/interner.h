@@ -84,6 +84,7 @@ enum class Keyword : u32
     Panic,
     Interface,
     Implements,
+    Do,
 
     Count
 };

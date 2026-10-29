@@ -1,0 +1,11 @@
+// `do { } while( c );` is one statement: its body, then its condition, then the `;`.
+i32 main()
+{
+    i32 n = 0;
+    do
+    {
+        n++;
+    } while( n < 3 );
+
+    return n;
+}

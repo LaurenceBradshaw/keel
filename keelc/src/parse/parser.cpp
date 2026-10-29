@@ -149,6 +149,7 @@ private:
 
     Node_id parse_if_stmt();
     Node_id parse_while_stmt();
+    Node_id parse_do_stmt();
     Node_id parse_for_stmt();
     Node_id parse_switch_stmt();
 
@@ -2620,6 +2621,11 @@ Node_id Parser::dispatch_statement()
         return parse_while_stmt();
     }
 
+    if( cursor_.check_keyword( Keyword::Do ) )
+    {
+        return parse_do_stmt();
+    }
+
     if( cursor_.check_keyword( Keyword::For ) )
     {
         return parse_for_stmt();
@@ -2974,6 +2980,32 @@ Node_id Parser::parse_while_stmt()
 
     const Node_id body = parse_block();
     return ast_.add( Node_kind::While_stmt, Span::merge( start, cursor_.previous().span ), 0, { condition, body } );
+}
+
+Node_id Parser::parse_do_stmt()
+{
+    assert( cursor_.check_keyword( Keyword::Do ) );
+
+    const Span start = cursor_.peek().span;
+    cursor_.advance();
+
+    const Node_id body = parse_block();
+
+    if( !cursor_.match_keyword( Keyword::While ) )
+    {
+        recovery_.fail_at(
+            cursor_.previous().span, "expected `while` after a `do` body", "write `do { ... } while( condition );`"
+        );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    recovery_.expect( Token_kind::L_paren );
+    const u32     condition_start = cursor_.position();
+    const Node_id condition       = parse_expression( 0 );
+    recovery_.close_header( condition_start );
+    recovery_.expect( Token_kind::Semicolon );
+
+    return ast_.add( Node_kind::Do_stmt, Span::merge( start, cursor_.previous().span ), 0, { body, condition } );
 }
 
 Node_id Parser::parse_for_stmt()
@@ -4037,6 +4069,7 @@ void silence_failed_heads( const Ast& ast, Node_id id, Diagnostics& diags )
         Node_kind::Expr_stmt,
         Node_kind::If_stmt,
         Node_kind::While_stmt,
+        Node_kind::Do_stmt,
         Node_kind::For_stmt,
         Node_kind::Switch_stmt,
         Node_kind::Break_stmt,
@@ -8187,6 +8220,29 @@ TEST_CASE( "parser_if_statement", "[parse]" )
             INFO( "source: " << source << "\n" << p.errors() );
             REQUIRE( p.has_errors() );
         }
+    }
+}
+
+TEST_CASE( "parser_do_statement", "[parse]" )
+{
+    SECTION( "body, then condition" )
+    {
+        const Parsed p( "i32 main() { do { y++; } while( y < x ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::Do_stmt );
+        REQUIRE( p.children( stmt ).size() == 2 );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Block );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Binary_expr );
+    }
+
+    SECTION( "a missing `while` is one error" )
+    {
+        const Parsed p( "i32 main() { do { y++; } return 0; }" );
+        REQUIRE( p.error_count() == 1 );
     }
 }
 

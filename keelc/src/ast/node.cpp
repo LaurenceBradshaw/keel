@@ -90,6 +90,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "If_stmt";
     case Node_kind::While_stmt:
         return "While_stmt";
+    case Node_kind::Do_stmt:
+        return "Do_stmt";
     case Node_kind::For_stmt:
         return "For_stmt";
     case Node_kind::Struct_decl:
