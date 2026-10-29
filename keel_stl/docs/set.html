@@ -81,6 +81,14 @@ changed key would sit in the wrong slot.</p>
 <p>If <code>i</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
+<h3>Iteration</h3>
+<div class="group" id="set.operator:">
+<pre class="signature"><a class="anchor" href="#set.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each key once, in <code>key_at</code>'s order: <code>for( const ref K k : s )</code>. The body may not change the
+set.</p>
+</div>
+</div>
 <h3>Changing</h3>
 <div class="group" id="set.insert">
 <pre class="signature"><a class="anchor" href="#set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>

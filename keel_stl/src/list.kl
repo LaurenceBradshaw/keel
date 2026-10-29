@@ -163,6 +163,32 @@ class list<T>
         }
     }
 
+    /// Each element in order, read-only: `for( const ref T x : xs )`. The body may not change the
+    /// list.
+    public void operator:( const ref T item ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i] );
+            }
+        }
+    }
+
+    /// Each element in order, writable in place: `for( ref T x : xs )`. The body may not change the
+    /// list itself.
+    public void operator:( ref T item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( ref data_[i] );
+            }
+        }
+    }
+
     /// A new list holding `f` applied to each element, in order. This list is unchanged.
     public list<U> map<U>( fn( const ref T ) -> U f ) const
     {

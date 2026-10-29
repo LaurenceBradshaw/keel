@@ -1,0 +1,37 @@
+// D74: a set's walk visits each key once, in insertion order until a removal moves the last key
+// into the hole. Each check asserts; under valgrind each key drops once.
+import kl::set;
+import kl::string;
+
+i32 main()
+{
+    kl::set<kl::string> keys = kl::set<kl::string>();
+    keys.insert( "one" );
+    keys.insert( "two" );
+    keys.insert( "three" );
+    keys.insert( "two" );
+
+    u64 count = 0;
+    u64 bytes = 0;
+    for( const ref kl::string k : keys )
+    {
+        count += 1;
+        bytes += k.size();
+    }
+    assert( count == 3 );
+    assert( bytes == 11 );
+
+    _ = keys.remove( "one" );
+
+    count = 0;
+    bytes = 0;
+    for( const ref kl::string k : keys )
+    {
+        count += 1;
+        bytes += k.size();
+    }
+    assert( count == 2 );
+    assert( bytes == 8 );
+
+    return 0;
+}

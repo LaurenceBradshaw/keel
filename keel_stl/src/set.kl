@@ -98,6 +98,18 @@ class set<K> where K : hashable
         }
     }
 
+    /// --- Iteration ---
+
+    /// Each key once, in `key_at`'s order: `for( const ref K k : s )`. The body may not change the
+    /// set.
+    public void operator:( const ref K key ) const
+    {
+        for( u64 i : 0..size() )
+        {
+            yield( *key_at( i ) );
+        }
+    }
+
     /// --- Changing ---
 
     /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is

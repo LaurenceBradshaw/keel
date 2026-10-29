@@ -1,0 +1,15 @@
+// D74: the body may not change the list it walks, since the walk goes on reading it.
+import kl::list;
+
+i32 main()
+{
+    kl::list<i32> xs = kl::list<i32>();
+    xs.push( 1 );
+
+    for( const ref i32 x : xs )
+    {
+        xs.push( x );
+    }
+
+    return 0;
+}

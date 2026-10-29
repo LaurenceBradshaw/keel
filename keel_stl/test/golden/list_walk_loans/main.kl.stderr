@@ -1,0 +1,7 @@
+error: this could change `xs` while a loop walks it
+  --> list_walk_loans/main.kl:11:9
+   |
+11 |         xs.push( x );
+   |         ^^ the walk goes on reading it; the loop is at 9:5
+
+1 error generated

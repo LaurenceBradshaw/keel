@@ -1,0 +1,64 @@
+// D74: a list's walks, reading and writing, over numbers and over owning strings. Each check
+// asserts, so the run's exit code says every one was right; under valgrind each string drops once.
+import kl::list;
+import kl::string;
+
+i32 main()
+{
+    kl::list<i32> xs = kl::list<i32>();
+    for( i32 v : 1..5 )
+    {
+        xs.push( v );
+    }
+
+    for( ref i32 x : xs )
+    {
+        x *= 2;
+    }
+
+    i64 sum = 0;
+    for( const ref i32 x : xs )
+    {
+        sum += x;
+    }
+    assert( sum == 20 );
+
+    // `break` leaves after the first two.
+    sum = 0;
+    for( auto x : xs )
+    {
+        if( x > 4 )
+        {
+            break;
+        }
+        sum += x;
+    }
+    assert( sum == 6 );
+
+    kl::list<kl::string> names = kl::list<kl::string>();
+    names.push( "ab" );
+    names.push( "cde" );
+    names.push( "f" );
+
+    u64 bytes = 0;
+    for( const ref kl::string s : names )
+    {
+        bytes += s.size();
+    }
+    assert( bytes == 6 );
+
+    // Each element replaced in place through a `ref` binding drops the old string.
+    for( ref kl::string s : names )
+    {
+        s = kl::string( "longer than any of them" );
+    }
+
+    bytes = 0;
+    for( const ref kl::string s : names )
+    {
+        bytes += s.size();
+    }
+    assert( bytes == 69 );
+
+    return 0;
+}

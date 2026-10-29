@@ -100,6 +100,18 @@ Does nothing if the capacity is already that large.</p>
 <p>If <code>index</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
+<div class="group" id="list.operator:">
+<pre class="signature"><a class="anchor" href="#list.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each element in order, read-only: <code>for( const ref T x : xs )</code>. The body may not change the
+list.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#list.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">ref</span> T item )</code></pre>
+<div class="doc">
+<p>Each element in order, writable in place: <code>for( ref T x : xs )</code>. The body may not change the
+list itself.</p>
+</div>
+</div>
 <div class="group" id="list.map">
 <pre class="signature"><a class="anchor" href="#list.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#list">list</a>&lt;U&gt; <span class="fn">map</span>&lt;U&gt;( <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; U f ) <span class="kw">const</span></code></pre>
 <div class="doc">
