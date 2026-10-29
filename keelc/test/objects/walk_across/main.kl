@@ -1,0 +1,18 @@
+// D74: walks from bag.klo, one plain and one generic, looped over here.
+import bag;
+
+i32 main()
+{
+    i32 sum = 0;
+    for( const ref i32 x : Bag( 4 ) )
+    {
+        sum += x;
+    }
+
+    for( const ref i32 x : Box<i32>( 5 ) )
+    {
+        sum += x;
+    }
+
+    return sum == 15 ? 0 : 1;
+}

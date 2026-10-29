@@ -24,6 +24,7 @@ struct Borrow
     Address_purpose purpose = Address_purpose::Borrow; // what the borrow is for
     const Rvalue*   through = nullptr;                 // the call that returned this address
     bool            bound   = false;                   // assigned an address itself, as a `ref` binding is and a pointer never
+    Local_id        via {};                            // the pointer `&(*r).f` was taken through, `r`
 };
 
 // One per local, indexed by Local_id.

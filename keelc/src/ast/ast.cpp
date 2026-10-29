@@ -255,6 +255,8 @@ Node_id Ast::body( Node_id id ) const
         return child( id, 0 );
     case Node_kind::For_stmt:
         return child( id, 3 );
+    case Node_kind::Walk_stmt:
+        return child( id, 2 );
     case Node_kind::Case_arm:
         return children( id ).back();
     default:
@@ -487,6 +489,11 @@ Node_id Ast::callee( Node_id call ) const
 
 Node_id Ast::arg_list( Node_id call ) const
 {
+    if( kind( call ) == Node_kind::Yield_stmt )
+    {
+        return child( call, 0 );
+    }
+
     assert( kind( call ) == Node_kind::Call_expr );
     return child( call, 1 );
 }
@@ -618,6 +625,18 @@ Node_id Ast::update( Node_id for_stmt ) const
 {
     assert( kind( for_stmt ) == Node_kind::For_stmt );
     return child( for_stmt, 2 );
+}
+
+Node_id Ast::container( Node_id walk_stmt ) const
+{
+    assert( kind( walk_stmt ) == Node_kind::Walk_stmt );
+    return child( walk_stmt, 0 );
+}
+
+Node_id Ast::binding( Node_id walk_stmt ) const
+{
+    assert( kind( walk_stmt ) == Node_kind::Walk_stmt );
+    return child( walk_stmt, 1 );
 }
 
 Node_id Ast::scrutinee( Node_id switch_stmt ) const
@@ -846,6 +865,12 @@ Node_id Ast::enclosing_aggregate( Node_id member ) const
     }
 
     return Node_id {};
+}
+
+bool Ast::is_walk( Node_id decl ) const
+{
+    return decl.is_valid() && kind( decl ) == Node_kind::Method_decl &&
+           name( decl ) == Interner::operator_name( Operator_name::Walk );
 }
 
 bool Ast::is_requirement( Node_id method ) const

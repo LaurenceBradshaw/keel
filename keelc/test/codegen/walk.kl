@@ -1,0 +1,196 @@
+// D74: `for( x : c )` runs the container's walk, with one copy of the loop's body at each `yield`.
+// `break` leaves the walk, dropping its locals; `continue` resumes after the `yield`; `return` in the
+// body leaves the function, and the walk's own `return;` ends the loop. Every check returns a
+// distinct code, so exit 0 means all of them agreed.
+i32 drops = 0;
+
+class Counted
+{
+    public i32 value;
+
+    public Counted( i32 v )
+    {
+        value = v;
+    }
+
+    ~Counted()
+    {
+        drops += 1;
+    }
+};
+
+class Bag
+{
+    i32[*] data_;
+    u64    count_;
+
+    public Bag( u64 n )
+    {
+        unsafe
+        {
+            data_ = alloc<i32>( n );
+            for( u64 i : 0..n )
+            {
+                data_[i] = cast<i32>( i ) + 1;
+            }
+        }
+        count_ = n;
+    }
+
+    ~Bag()
+    {
+        unsafe
+        {
+            free( data_ );
+        }
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        // A local of the walk's own, dropped however the loop is left.
+        Counted marker = Counted( 0 );
+
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i] );
+            }
+        }
+    }
+
+    void operator:( ref i32 item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( ref data_[i] );
+            }
+        }
+    }
+};
+
+// Two yields run the body twice, and `return;` ends the loop before the third.
+class Pair
+{
+    i32 a_;
+
+    public Pair( i32 a )
+    {
+        a_ = a;
+    }
+
+    void operator:( i32 item ) const
+    {
+        yield( a_ );
+        yield( a_ + 1 );
+        return;
+        yield( a_ + 2 );
+    }
+};
+
+class Box<T>
+{
+    T value_;
+
+    public Box( move T value )
+    {
+        value_ = move value;
+    }
+
+    void operator:( const ref T item ) const
+    {
+        yield( value_ );
+    }
+};
+
+i32 first_even( const ref Bag b )
+{
+    for( const ref i32 x : b )
+    {
+        if( x % 2 == 0 )
+        {
+            return x;
+        }
+    }
+
+    return -1;
+}
+
+i32 main()
+{
+    Bag b = Bag( 4 );
+
+    i32 sum = 0;
+    for( const ref i32 x : b )
+    {
+        sum += x;
+    }
+    if( sum != 10 ) { return 1; }
+    if( drops != 1 ) { return 2; }
+
+    for( ref i32 x : b )
+    {
+        x *= 2;
+    }
+
+    // 2 4 6 8: 4 is skipped and 8 ends it.
+    sum = 0;
+    for( auto x : b )
+    {
+        if( x == 4 ) { continue; }
+        if( x == 8 ) { break; }
+        sum += x;
+    }
+    if( sum != 8 ) { return 3; }
+    if( drops != 2 ) { return 4; }
+
+    // `return` from inside the body still drops the walk's marker.
+    if( first_even( b ) != 2 ) { return 5; }
+    if( drops != 3 ) { return 6; }
+
+    sum = 0;
+    for( i32 x : Pair( 10 ) )
+    {
+        sum += x;
+    }
+    if( sum != 21 ) { return 7; }
+
+    // A temporary container lives for the loop.
+    sum = 0;
+    for( const ref i32 x : Bag( 3 ) )
+    {
+        sum += x;
+    }
+    if( sum != 6 ) { return 8; }
+
+    // A generic walk at two instances.
+    i32 got = 0;
+    for( const ref i32 x : Box<i32>( 5 ) )
+    {
+        got = x;
+    }
+    bool flag = false;
+    for( const ref bool x : Box<bool>( true ) )
+    {
+        flag = x;
+    }
+    if( got != 5 || !flag ) { return 9; }
+
+    // A walk inside a walk's body, and a value declared in the body dropped once per element.
+    i32 pairs = 0;
+    drops     = 0;
+    for( const ref i32 x : b )
+    {
+        Counted c = Counted( x );
+        for( i32 y : Pair( c.value ) )
+        {
+            pairs += y - c.value + 1 > 0 ? 1 : 0;
+        }
+    }
+    if( pairs != 8 ) { return 10; }
+    if( drops != 5 ) { return 11; }
+
+    return 0;
+}

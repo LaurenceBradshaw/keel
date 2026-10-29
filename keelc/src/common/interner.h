@@ -85,6 +85,7 @@ enum class Keyword : u32
     Interface,
     Implements,
     Do,
+    Yield,
 
     Count
 };
@@ -111,6 +112,7 @@ enum class Operator_name : u32
     Amp_equal,
     Pipe_equal,
     Caret_equal,
+    Walk,
     Count
 };
 

@@ -163,6 +163,8 @@ private:
     void lower_arm_body( Node_id arm, Place matched, Type_id matched_type, Block_id fallthrough_to, bool consumes );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
+    void lower_walk( Node_id id );
+    void lower_yield( Node_id id );
 
     Operand temporary( Rvalue value, Type_id type, Span span );
 
@@ -177,7 +179,33 @@ private:
         Block_id continue_target; // a while re-tests at the header; a for runs its update first
         u32      depth;
         bool     is_switch = false; // `continue` looks past these; `break` stops at the first
+        // A walk's body (D74) continues after its `yield`, inside the walk's scopes: only the
+        // body's own are left.
+        std::optional<u32> continue_depth {};
     };
+
+    // D74: a walk being inlined. Its code and the loop's body each read their own bindings and
+    // receiver, so the two sets swap at every `yield` and back after it.
+    struct Walk_context
+    {
+        Bindings bindings;
+        Local_id receiver;
+        Node_id  receiver_declaration;
+    };
+    struct Walk_frame
+    {
+        Node_id      walk;
+        Node_id      loop;
+        Walk_context inside;
+        Walk_context caller;
+        Block_id     exit; // allocated on demand: a walk that only returns from the function has none
+        u32          depth;
+        bool         in_body = false;
+    };
+    Walk_context current_context() const;
+    void         enter( Walk_context context );
+    // The walk whose own code is being lowered: the innermost not running its loop's body.
+    Walk_frame* running_walk();
 
     // Allocated on demand, because a block nothing jumps to is unreachable and verify rejects one.
     // `for( ; ; )` with no break needs no exit, and a body that always returns needs no latch.
@@ -284,6 +312,7 @@ private:
     Node_id     discarded_ {};
 
     std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
+    std::vector<Walk_frame>   walks_; // innermost last
 };
 
 Lowering::Lowering(
@@ -2091,7 +2120,7 @@ void Lowering::bind_variant_pattern( Place matched, Type_id matched_type, Node_i
         const Type_id  local_type = borrowed ? types_.table().pointer_to( field_type ) : field_type;
         const Local_id local      = builder_.add_local( local_type, span, ast_.name( bindings[i] ) );
 
-        locals_.emplace( bindings[i].v, local );
+        locals_.insert_or_assign( bindings[i].v, local );
 
         builder_.storage_live( local, span );
 
@@ -3003,6 +3032,22 @@ void Lowering::lower_return( Node_id id )
 {
     const Node_id value = ast_.value( id ); // invalid for a bare `return;`
     const Span    span  = ast_.span( id );
+
+    // D74: a walk's own `return;` ends its loop.
+    if( Walk_frame* walk = running_walk() )
+    {
+        drops_.end_statement( span );
+        drops_.unwind_to( walk->depth, span );
+
+        if( !walk->exit.is_valid() )
+        {
+            walk->exit = builder_.add_block();
+        }
+
+        builder_.terminate_goto( walk->exit, span );
+        return;
+    }
+
     if( value.is_valid() )
     {
         // Returning moves the value out, or the callee's scope exit drops what the caller now holds.
@@ -3042,7 +3087,8 @@ void Lowering::lower_var( Node_id id )
     const Type_id   type     = borrowed ? binding_type_of( id ) : type_of( id );
     const Local_id  local    = builder_.add_local( type, span, name );
 
-    locals_.emplace( id.v, local );
+    // Assigned, not emplaced: a walk's body is lowered once per `yield` (D74), each copy its own local.
+    locals_.insert_or_assign( id.v, local );
     builder_.storage_live( local, span );
     if( borrowed )
     {
@@ -3593,7 +3639,7 @@ void Lowering::lower_for( Node_id id )
         const Node_id range = ast_.initialiser( init );
         count               = builder_.add_local( count_type, span, ast_.name( init ) );
         end                 = builder_.add_local( count_type, span );
-        locals_.emplace( init.v, count );
+        locals_.insert_or_assign( init.v, count );
 
         drops_.begin_statement();
         for( const auto& [local, bound] : { std::pair { count, ast_.lower( range ) }, std::pair { end, ast_.upper( range ) } } )
@@ -3697,6 +3743,169 @@ void Lowering::lower_for( Node_id id )
     return;
 }
 
+Lowering::Walk_context Lowering::current_context() const
+{
+    return { bindings_, receiver_, receiver_declaration_ };
+}
+
+void Lowering::enter( Walk_context context )
+{
+    bindings_             = std::move( context.bindings );
+    receiver_             = context.receiver;
+    receiver_declaration_ = context.receiver_declaration;
+}
+
+Lowering::Walk_frame* Lowering::running_walk()
+{
+    for( std::size_t i = walks_.size(); i > 0; --i )
+    {
+        if( !walks_[i - 1].in_body )
+        {
+            return &walks_[i - 1];
+        }
+    }
+
+    return nullptr;
+}
+
+// D74: the walk's body where the loop is written, under its own instance and receiver.
+void Lowering::lower_walk( Node_id id )
+{
+    const Node_id walk      = types_.callee_of( id );
+    const Node_id container = ast_.container( id );
+    const Span    span      = ast_.span( id );
+    const Type_id held      = type_of( container );
+
+    drops_.push_scope();
+
+    // The container, a temporary kept for the loop as a switch keeps its scrutinee.
+    const Place place = lower_place( container );
+
+    if( !place.is_global() && place.num_projections == 0 )
+    {
+        drops_.adopt_into_scope( place.local );
+    }
+
+    const Node_id  receiver_param = ast_.params( walk )[0];
+    const Bindings bound          = at_instance( held ).bound;
+    const Type_id  address        = binding_type_under( receiver_param, bound );
+    const Local_id receiver       = builder_.add_local( address, span );
+    const auto     purpose        = ast_.is_const_method( walk ) ? Address_purpose::Read : Address_purpose::Borrow;
+
+    builder_.storage_live( receiver, span );
+    builder_.assign( builder_.place( receiver ), address_of( place, address, purpose ), span );
+    drops_.add_to_scope( receiver );
+    builder_.mark_walked( receiver );
+    locals_.insert_or_assign( receiver_param.v, receiver );
+    borrowed_bindings_.insert( receiver_param.v );
+
+    drops_.end_statement( span );
+
+    walks_.push_back( Walk_frame {
+        .walk   = walk,
+        .loop   = id,
+        .inside = { bound, receiver, receiver_param },
+        .caller = current_context(),
+        .exit   = Block_id {},
+        .depth  = drops_.depth(),
+    } );
+
+    enter( walks_.back().inside );
+    lower_statement( ast_.body( walk ) );
+
+    if( !builder_.is_terminated() )
+    {
+        if( !walks_.back().exit.is_valid() )
+        {
+            walks_.back().exit = builder_.add_block();
+        }
+
+        builder_.terminate_goto( walks_.back().exit, span );
+    }
+
+    const Walk_frame frame = std::move( walks_.back() );
+    walks_.pop_back();
+    enter( frame.caller );
+
+    // No exit means every path returned from the function, and nothing after the loop runs.
+    if( frame.exit.is_valid() )
+    {
+        builder_.switch_to( frame.exit );
+    }
+
+    drops_.pop_scope( span );
+}
+
+// D74: binds the loop's variable to what is yielded and runs one copy of the loop's body.
+void Lowering::lower_yield( Node_id id )
+{
+    Walk_frame* const found = running_walk();
+    assert( found && "the checker refuses a `yield` outside a walk" );
+
+    const std::size_t at   = static_cast<std::size_t>( found - walks_.data() );
+    const Span        span = ast_.span( id );
+
+    // A yielded temporary lives while the body borrows it.
+    drops_.push_scope();
+
+    const std::vector<Operand> operands =
+        lower_call_arguments( ast_.arguments( id ), ast_.params( walks_[at].walk ).subspan( 1 ), walks_[at].inside.bindings );
+    const std::span<const Node_id> yielded = ast_.params( walks_[at].walk ).subspan( 1 );
+
+    drops_.adopt_all_into_scope();
+
+    walks_[at].in_body = true;
+    enter( walks_[at].caller );
+
+    const Node_id  binding = ast_.binding( walks_[at].loop );
+    const bool     borrows = is_borrowed_binding( ast_, types_, binding );
+    const Type_id  type    = borrows ? binding_type_of( binding ) : type_of( binding );
+    const Local_id local   = builder_.add_local( type, ast_.span( binding ), ast_.name( binding ) );
+
+    builder_.storage_live( local, span );
+
+    // A struct bound bare copies what a `const ref` parameter lends.
+    const Operand given = operands[0];
+    const Operand value = !borrows && is_borrowed_binding( ast_, types_, yielded[0] )
+                              ? copy( builder_.deref( given.place ), type )
+                              : converted( given, type, span );
+
+    builder_.assign( builder_.place( local ), use( value ), span );
+    drops_.add_to_scope( local );
+    locals_.insert_or_assign( binding.v, local );
+
+    if( borrows )
+    {
+        borrowed_bindings_.insert( binding.v );
+    }
+
+    loops_.push_back( Loop_targets { walks_[at].exit, Block_id {}, walks_[at].depth } );
+    loops_.back().continue_depth = drops_.depth();
+
+    lower_statement( ast_.body( walks_[at].loop ) );
+
+    if( !builder_.is_terminated() )
+    {
+        builder_.terminate_goto( continue_target(), span );
+    }
+
+    // `walks_` may have grown and shrunk under the body; `at` still names this walk.
+    walks_[at].exit        = loops_.back().break_target;
+    const Block_id resumed = loops_.back().continue_target;
+    loops_.pop_back();
+
+    walks_[at].in_body = false;
+    enter( walks_[at].inside );
+
+    // Nothing resumes a body that always leaves; what the walk does next cannot run.
+    if( resumed.is_valid() )
+    {
+        builder_.switch_to( resumed );
+    }
+
+    drops_.pop_scope( span );
+}
+
 Operand Lowering::temporary( Rvalue value, Type_id type, Span span )
 {
     return copy( builder_.place( builder_.into_temp( value, type, span ) ), type );
@@ -3737,6 +3946,12 @@ void Lowering::lower_statement( Node_id id )
     case Node_kind::For_stmt:
         return lower_for( id );
 
+    case Node_kind::Walk_stmt:
+        return lower_walk( id );
+
+    case Node_kind::Yield_stmt:
+        return lower_yield( id );
+
     // Small enough to read here. Extracting them would cost a name and buy nothing.
     case Node_kind::Expr_stmt:
     case Node_kind::Discard_stmt:
@@ -3767,7 +3982,7 @@ void Lowering::lower_statement( Node_id id )
     case Node_kind::Continue_stmt:
         // The *loop's* depth. loops_.back() may be a switch between here and it, and unwinding to
         // that would leave the loop's own locals undropped.
-        drops_.unwind_to( enclosing_loop().depth, ast_.span( id ) );
+        drops_.unwind_to( enclosing_loop().continue_depth.value_or( enclosing_loop().depth ), ast_.span( id ) );
         builder_.terminate_goto( continue_target(), ast_.span( id ) );
         return;
 
@@ -4151,7 +4366,8 @@ std::vector<Function> lower(
     {
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
-        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) &&
+        // A walk has none either: it is lowered where each loop over it is written (D74).
+        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) && !ast.is_walk( id ) &&
             !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
             Lowering lowering( id, ast, resolution, types, literals, sm, overflow_checks );
@@ -4164,7 +4380,8 @@ std::vector<Function> lower(
     // next() has queued what a provided instance reaches, so skipping it still finds those.
     while( const std::optional<Instantiation> instance = instances.next() )
     {
-        if( provided( std::span( functions ).first( given ), instance->declaration, instance->arguments ) )
+        if( provided( std::span( functions ).first( given ), instance->declaration, instance->arguments ) ||
+            ast.is_walk( instance->declaration ) )
         {
             continue;
         }
@@ -5953,6 +6170,44 @@ TEST_CASE( "lower_ends_an_inner_scope_at_its_closing_brace", "[ir][lower][storag
     REQUIRE( at( text, "storage_dead " + y ) < at( text, x + " = const 3" ) );
     REQUIRE( at( text, x + " = const 3" ) < at( text, "storage_dead " + x ) );
     REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+// D74: a walk has no function of its own. Its body is lowered where the loop is written, with one
+// copy of the loop's body at each `yield`, and the receiver marked as freezing the container.
+TEST_CASE( "lower_inlines_a_walk", "[ir][lower][loops][walk]" )
+{
+    Lowered p( "class Two { i32 a_; public Two() { a_ = 1; } "
+               "void operator:( i32 item ) const { yield( a_ ); yield( a_ + 1 ); } };\n"
+               "i32 main() { Two t = Two(); i32 sum = 0; for( i32 x : t ) { sum += x * 7; } return sum; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    for( const Function& function : p.functions )
+    {
+        REQUIRE_FALSE( p.ast.is_walk( function.declaration ) );
+    }
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+
+    // The body's `* 7`, once per `yield`.
+    std::size_t copies = 0;
+    for( std::size_t at = text.find( "* const 7" ); at != std::string::npos; at = text.find( "* const 7", at + 1 ) )
+    {
+        copies += 1;
+    }
+    REQUIRE( copies == 2 );
+
+    const auto main = std::find_if(
+        p.functions.begin(),
+        p.functions.end(),
+        [&]( const Function& f ) { return p.ast.name( f.declaration ) == p.interner.intern( "main" ); }
+    );
+    REQUIRE( main != p.functions.end() );
+    REQUIRE( main->walked.size() == 1 );
+    REQUIRE( verify( *main ).empty() );
 }
 
 TEST_CASE( "lower_emits_no_markers_for_a_scope_with_no_declarations", "[ir][lower][storage]" )

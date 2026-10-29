@@ -158,8 +158,22 @@ void report_loan_errors(
             const Symbol_id   name = function.locals[error.object.v].name;
             const std::string object =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+            const Line_col taken = sm.line_col( error.taken.file, error.taken.start );
+
+            // D74: the loop's walk still reads the container after the body.
+            if( error.walked )
+            {
+                diagnostics.error(
+                    error.at,
+                    error.conflict == Loan_conflict::Moved
+                        ? fmt::format( "{} is moved while a loop walks it", object )
+                        : fmt::format( "this could change {} while a loop walks it", object ),
+                    fmt::format( "the walk goes on reading it; the loop is at {}:{}", taken.line, taken.col )
+                );
+                continue;
+            }
+
             const std::string_view holder = interner.text( function.locals[error.holder.v].name );
-            const Line_col         taken  = sm.line_col( error.taken.file, error.taken.start );
 
             std::string message;
             switch( error.conflict )

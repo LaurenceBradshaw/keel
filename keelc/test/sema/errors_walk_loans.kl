@@ -1,0 +1,91 @@
+// D74: a walk's receiver freezes its container while the walk can still reach it, so the body may
+// neither change nor move it. After the last time the walk reads it, as on a `break`, it may. One
+// error per marked line.
+class Bag
+{
+    i32[*] data_;
+    u64    count_;
+
+    public Bag( u64 n )
+    {
+        unsafe
+        {
+            data_ = alloc<i32>( n );
+        }
+        count_ = n;
+    }
+
+    ~Bag()
+    {
+        unsafe
+        {
+            free( data_ );
+        }
+    }
+
+    public void grow()
+    {
+        count_ = count_;
+    }
+
+    public u64 size() const
+    {
+        return count_;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i] );
+            }
+        }
+    }
+
+    void operator:( ref i32 item )
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( ref data_[i] );
+            }
+        }
+    }
+};
+
+void take( move Bag _ ) {}
+
+i32 main()
+{
+    Bag c = Bag( 2 );
+
+    for( const ref i32 x : c )
+    {
+        c.grow(); // error: this could change `c` while a loop walks it
+    }
+
+    for( const ref i32 x : c )
+    {
+        c = Bag( 1 ); // error: this could change `c` while a loop walks it
+    }
+
+    // Reading it is fine, and so is writing an element through a `ref` binding.
+    u64 n = 0;
+    for( ref i32 x : c )
+    {
+        n += c.size();
+        x = 1;
+    }
+
+    // Nothing reads `c` after a `break`.
+    for( const ref i32 x : c )
+    {
+        take( move c );
+        break;
+    }
+
+    return 0;
+}

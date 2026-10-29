@@ -208,7 +208,7 @@
                 },
                 {
                     "name": "keyword.control.keel",
-                    "match": "\\b(?:if|else|while|do|for|return|switch|case|default|break|continue|fallthrough|try)\\b"
+                    "match": "\\b(?:if|else|while|do|for|return|yield|switch|case|default|break|continue|fallthrough|try)\\b"
                 },
                 {
                     "name": "storage.type.function.keel",

@@ -3,6 +3,7 @@
 
 #pragma once
 #include <string>
+#include <vector>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "sema/annotations.h"
@@ -60,6 +61,9 @@ public:
     // `Expressions::infer` and `Expressions::check`, which nothing here may reach into.
     void visit( Node_id id );
 
+    // D74: a walk that loops over itself, directly or through other walks. After every body.
+    void check_walk_cycles();
+
 private:
     // One per construct, dispatched from visit - the shape parse_*() uses next door.
     void visit_function( Node_id id );
@@ -71,6 +75,7 @@ private:
     void visit_while( Node_id id );
     void visit_for( Node_id id );
     void visit_count( Node_id id );
+    void visit_walk( Node_id id );
     void visit_increment( Node_id id );
     void visit_global( Node_id id );
     void visit_block( Node_id id );
@@ -94,6 +99,15 @@ private:
     Reporter&         reporter_;
 
     Type_id current_return_;
+
+    // A walk's loop over another walk, at the loop: the edges check_walk_cycles follows.
+    struct Walk_edge
+    {
+        Node_id from;
+        Node_id to;
+        Span    at;
+    };
+    std::vector<Walk_edge> walk_edges_;
 
     u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
     u32 breakable_depth_ = 0; // `break` binds to the nearest of either

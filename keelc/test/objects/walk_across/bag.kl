@@ -1,0 +1,54 @@
+// A walk is lowered where each loop over it is written, so a module that loops over another's walk
+// reads the walk's body from that module's object (D74).
+class Bag
+{
+    i32[*] data_;
+    u64    count_;
+
+    public Bag( u64 n )
+    {
+        unsafe
+        {
+            data_ = alloc<i32>( n );
+            for( u64 i : 0..n )
+            {
+                data_[i] = cast<i32>( i ) + 1;
+            }
+        }
+        count_ = n;
+    }
+
+    ~Bag()
+    {
+        unsafe
+        {
+            free( data_ );
+        }
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        for( u64 i : 0..count_ )
+        {
+            unsafe
+            {
+                yield( data_[i] );
+            }
+        }
+    }
+};
+
+class Box<T>
+{
+    T value_;
+
+    public Box( move T value )
+    {
+        value_ = move value;
+    }
+
+    void operator:( const ref T item ) const
+    {
+        yield( value_ );
+    }
+};

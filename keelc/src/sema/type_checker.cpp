@@ -170,6 +170,7 @@ Types Checker::run()
     }
 
     statements_.visit( ast_.root() );
+    statements_.check_walk_cycles();
 
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
     // complete until every body has been.

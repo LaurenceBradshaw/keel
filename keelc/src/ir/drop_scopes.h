@@ -29,6 +29,8 @@ public:
     void one_path_since( std::size_t mark );
     // A temporary whose lifetime is now the innermost scope's; a no-op if it is not one.
     void adopt_into_scope( Local_id local );
+    // Every temporary the statement built so far: a `yield`'s, which the loop's body borrows (D74).
+    void adopt_all_into_scope();
 
     // Asserts the last statement dropped everything it built.
     void begin_statement() const;

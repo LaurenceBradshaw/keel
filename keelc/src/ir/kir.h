@@ -269,6 +269,7 @@ struct Function
     // needs it cannot work it out from the graph.
     std::vector<Local_id>   out_parameters;
     std::vector<Local_id>   one_path_temporaries; // built on one path, so dropped under a flag
+    std::vector<Local_id>   walked;               // D74: a walk's receiver, freezing what it walks
     Local_id                constructed {};       // a constructor's receiver, invalid in every other function.
     std::vector<Field_slot> fields;               // ir/slots reads them
     std::vector<Local>      locals;

@@ -288,6 +288,17 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         return false;
     }
 
+    if( walk_bindings_.contains( root.v ) )
+    {
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format( "`{}` is lent by the walk, so it cannot be modified", interner_.text( ast_.name( root ) ) ),
+            "bind it `ref`"
+        );
+
+        return false;
+    }
+
     if( ast_.is_const_binding( root ) )
     {
         // The receiver reads differently from any other const binding: the `const` that made it one
@@ -353,8 +364,9 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
     }
 
     const Node_id root = place_root( target, current_function );
-    if( root.is_valid() && ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) ||
-                             is_borrow_binding( root ) || ast_.is_const_binding( root ) || ast_.is_counter( root ) ) )
+    if( root.is_valid() &&
+        ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) || is_borrow_binding( root ) ||
+          ast_.is_const_binding( root ) || ast_.is_counter( root ) || walk_bindings_.contains( root.v ) ) )
     {
         return true;
     }
@@ -954,6 +966,11 @@ void Places::record_owned_bindings( Node_id arm, Node_id switch_stmt )
             owned_bindings_.insert( bound.v );
         }
     }
+}
+
+void Places::record_walk_binding( Node_id decl )
+{
+    walk_bindings_.insert( decl.v );
 }
 
 bool Places::owns_binding( Node_id decl ) const

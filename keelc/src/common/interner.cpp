@@ -27,7 +27,7 @@ Interner::Interner()
         "extern",   "alloc",    "free",      "fallthrough", "where",   "static",
         "private",  "public",   "fn",        "field",       "assert",  "operator", "destroy",
         "_",        "panic",    "interface", "implements",
-        "do"
+        "do",       "yield"
     };
     // clang-format on
 
@@ -50,7 +50,7 @@ Interner::Interner()
     static constexpr std::string_view k_operator_spellings[] = {
         "operator==", "operator[]", "operator<=>", "operator+",  "operator-",  "operator*",  "operator/",
         "operator%",  "operator&",  "operator|",   "operator^",  "operator~",  "operator+=", "operator-=",
-        "operator*=", "operator/=", "operator%=",  "operator&=", "operator|=", "operator^=",
+        "operator*=", "operator/=", "operator%=",  "operator&=", "operator|=", "operator^=", "operator:",
     };
 
     static_assert(

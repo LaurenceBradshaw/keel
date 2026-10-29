@@ -1,0 +1,61 @@
+error: `yield` takes 1 argument, but 2 were given
+  --> sema/errors_walk.kl:19:22
+   |
+19 |                 yield( data_[i], 1 ); // error: `yield` takes 1 argument
+   |                      ^^^^^^^^^^^^^^^
+
+error: `yield` may modify this argument
+  --> sema/errors_walk.kl:30:24
+   |
+30 |                 yield( data_[i] ); // error: needs `ref`
+   |                        ^^^^^^^^ write `ref`
+
+error: `item` is not declared
+  --> sema/errors_walk.kl:48:17
+   |
+48 |         i32 y = item; // error: `item` is not declared
+   |                 ^^^^
+
+error: a walk cannot loop over itself
+  --> sema/errors_walk.kl:63:32
+   |
+63 |         for( const ref i32 x : this ) // error: a walk cannot loop over itself
+   |                                ^^^^ it is inlined, so it would never end
+
+error: `yield` is only allowed in a walk
+  --> sema/errors_walk.kl:72:5
+   |
+72 |     yield( 1 ); // error: only allowed in a walk
+   |     ^^^^^^^^^^^ declare `void operator:( ... )`
+
+error: `i32[*]` has no walk
+  --> sema/errors_walk.kl:78:28
+   |
+78 |     for( const ref i32 x : raw ) // error: has no walk
+   |                            ^^^ count over it: `for( u64 i : 0..raw.size() )`
+
+error: `Reading` has no writing walk
+  --> sema/errors_walk.kl:83:22
+   |
+83 |     for( ref i32 x : r ) // error: has no writing walk
+   |                      ^ bind it `const ref`
+
+error: the walk yields `i32`
+  --> sema/errors_walk.kl:88:10
+   |
+88 |     for( const ref u8 x : b ) // error: the walk yields `i32`
+   |          ^^^^^^^^^^^^
+
+error: `x` is `const`
+  --> sema/errors_walk.kl:94:9
+   |
+94 |         x = 1; // error: `x` is `const`
+   |         ^ remove `const` to modify it
+
+error: `x` is lent by the walk, so it cannot be modified
+  --> sema/errors_walk.kl:99:9
+   |
+99 |         x = 1; // error: lent by the walk
+   |         ^ bind it `ref`
+
+10 errors generated

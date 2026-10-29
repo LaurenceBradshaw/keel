@@ -3,6 +3,7 @@
 
 #include "check/borrow_check.h"
 
+#include <algorithm>
 #include <span>
 #include "check/borrows.h"
 
@@ -132,6 +133,7 @@ struct Effect
     Loan_conflict conflict;
     Span          at;
     u32           depth = 0; // `Replaced`: the calls between the element and `place`
+    Local_id      via {};    // the pointer it reached `place` through, if any
 };
 
 // Each place `call` borrowed, through any calls returning a reference, as `Replaced`.
@@ -179,7 +181,12 @@ void written(
 
         if( pointer.of.is_valid() )
         {
-            out.push_back( Effect { .place = pointer.place, .conflict = Loan_conflict::Assigned, .at = at } );
+            out.push_back( Effect {
+                .place    = pointer.place,
+                .conflict = Loan_conflict::Assigned,
+                .at       = at,
+                .via      = pointer.via.is_valid() ? pointer.via : place.local,
+            } );
             return;
         }
 
@@ -248,7 +255,9 @@ void effects_of(
 
             if( borrow.of.is_valid() && borrow.purpose != Address_purpose::Read )
             {
-                out.push_back( Effect { .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at } );
+                out.push_back(
+                    Effect { .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at, .via = borrow.via }
+                );
             }
             // `&(*r)` with `r` a call's result: an element changed through that call.
             else if( borrow.bound && borrow.through != nullptr && borrow.purpose != Address_purpose::Read &&
@@ -266,10 +275,25 @@ void effects_of(
 
 // A `ref` binding of a place or of a call's result. An argument's temporary is the one-call rule's,
 // and a named pointer is assigned a copy of an address, never the address itself.
+bool is_walked( const Function& func, Local_id local )
+{
+    return std::find( func.walked.begin(), func.walked.end(), local ) != func.walked.end();
+}
+
 bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 {
-    return func.locals[local.v].name.is_valid() && borrow.assignments == 1 && borrow.bound &&
+    return ( func.locals[local.v].name.is_valid() || is_walked( func, local ) ) && borrow.assignments == 1 && borrow.bound &&
            ( borrow.of.is_valid() || borrow.through != nullptr ) && borrow.purpose != Address_purpose::Initialise;
+}
+
+// D74: a walk's receiver freezes its container as an indirect loan does, except against what the
+// walk's own code does through it.
+bool walk_conflicts(
+    const Function& func, const std::vector<bool>& owning, const Borrow& loan, Local_id holder, const Effect& effect
+)
+{
+    return effect.via != holder && ( effect.conflict == Loan_conflict::Moved || owning[effect.place.local.v] ) &&
+           overlaps( func, loan.place, effect.place );
 }
 
 // D54: a payload's loan is broken by anything reaching it, since another variant destroys it; a
@@ -382,14 +406,18 @@ check_loans( const Function& func, const std::vector<bool>& owning, const std::v
 
                     const Borrow& loan = borrows[holder.v];
 
-                    if( conflicts( func, borrows, owning, loan, effect ) )
+                    const bool walked = is_walked( func, holder );
+
+                    if( walked ? walk_conflicts( func, owning, loan, holder, effect )
+                               : conflicts( func, borrows, owning, loan, effect ) )
                     {
                         errors.push_back( Loan_error {
                             .object   = loan.of.is_valid() ? loan.of : effect.place.local,
                             .holder   = holder,
                             .at       = effect.at,
                             .taken    = loan.at,
-                            .conflict = effect.conflict
+                            .conflict = effect.conflict,
+                            .walked   = walked
                         } );
                         reported[holder.v] = true;
                     }

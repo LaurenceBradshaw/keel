@@ -107,6 +107,7 @@ private:
     void check_operators();
     void check_comparison_operator( Node_id decl, Type_id result );
     void check_index_operator( Node_id decl );
+    void check_walk_operator( Node_id decl );
     void check_binary_operator( Node_id decl );
     void check_compound_operator( Node_id decl );
     void check_unary_operator( Node_id decl );

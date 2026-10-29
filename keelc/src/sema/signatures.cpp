@@ -1010,8 +1010,9 @@ void Signatures::check_operators()
             continue;
         }
 
-        // One slot per name, and one more for `operator-()`, which shares `operator-( x )`'s.
-        std::array<Node_id, static_cast<size_t>( Operator_name::Count ) + 1> first {};
+        // One slot per name, one more for `operator-()`, which shares `operator-( x )`'s, and one for
+        // a writing walk beside the reading one (D74).
+        std::array<Node_id, static_cast<size_t>( Operator_name::Count ) + 2> first {};
 
         for( const Node_id member : ast_.members( decl ) )
         {
@@ -1023,13 +1024,23 @@ void Signatures::check_operators()
 
             const Operator_name op       = static_cast<Operator_name>( name.v - Interner::operator_name( Operator_name {} ).v );
             const bool          negation = op == Operator_name::Minus && ast_.params( member ).size() == 1;
-            Node_id& seen = first[negation ? static_cast<size_t>( Operator_name::Count ) : static_cast<size_t>( op )];
+            const bool          writing  = op == Operator_name::Walk && !ast_.is_const_method( member );
+            const std::size_t   slot     = negation  ? static_cast<size_t>( Operator_name::Count )
+                                           : writing ? static_cast<size_t>( Operator_name::Count ) + 1
+                                                     : static_cast<size_t>( op );
+            Node_id&            seen     = first[slot];
 
             if( seen.is_valid() )
             {
                 reporter_.error_at(
                     ast_.name_span( member ),
-                    fmt::format( "`{}` already has an `{}`", interner_.text( ast_.name( decl ) ), interner_.text( name ) ),
+                    op == Operator_name::Walk
+                        ? fmt::format(
+                              "`{}` already has a {} walk", interner_.text( ast_.name( decl ) ), writing ? "writing" : "reading"
+                          )
+                        : fmt::format(
+                              "`{}` already has an `{}`", interner_.text( ast_.name( decl ) ), interner_.text( name )
+                          ),
                     reporter_.previous_declaration_note( ast_.span( seen ) )
                 );
                 continue;
@@ -1073,6 +1084,10 @@ void Signatures::check_operators()
                 {
                     check_index_operator( member );
                 }
+                break;
+
+            case Operator_name::Walk:
+                check_walk_operator( member );
                 break;
 
             case Operator_name::Compare:
@@ -1269,6 +1284,61 @@ void Signatures::check_unary_operator( Node_id decl )
             ast_.name_span( decl ),
             fmt::format( "`{}` must be `const`", op_name ),
             fmt::format( "write `const` after its parameter list; `{}a` reads its operand", sym )
+        );
+    }
+}
+
+// D74: what a walk may hand its loop.
+void Signatures::check_walk_operator( Node_id decl )
+{
+    const Node_id annotation = ast_.return_type( decl );
+
+    if( !table_.is_error( types_.type_of( decl ) ) && !table_.is_void( types_.type_of( decl ) ) )
+    {
+        reporter_.error_at( ast_.span( annotation ), "a walk returns nothing", "write `void operator:( ... )`" );
+    }
+
+    const std::span<const Node_id> yielded = ast_.params( decl ).subspan( 1 );
+
+    if( yielded.empty() )
+    {
+        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "a walk hands the loop at least one value" );
+        return;
+    }
+
+    const bool reading = ast_.is_const_method( decl );
+    bool       lends   = false;
+
+    for( const Node_id param : yielded )
+    {
+        const Keyword mode = ast_.parameter_mode( param );
+
+        if( mode == Keyword::Out || mode == Keyword::Move )
+        {
+            reporter_.error_at( ast_.span( param ), "a walk lends what it yields", "take it `const ref` or `ref`" );
+        }
+        else if( mode == Keyword::Ref && !ast_.is_const_binding( param ) )
+        {
+            lends = true;
+
+            if( reading )
+            {
+                reporter_.error_at(
+                    ast_.span( param ), "a `const` walk cannot hand out `ref`", "take it `const ref`, or drop the `const`"
+                );
+            }
+        }
+
+        if( yielded.size() > 1 && !ast_.name( param ).is_valid() )
+        {
+            reporter_.error_at( ast_.span( param ), "name each value a walk yields", "a loop binds them by name" );
+        }
+    }
+
+    if( !reading && !lends )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ), "a walk that writes nothing is `const`", "write `const` after its parameter list"
         );
     }
 }

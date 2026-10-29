@@ -156,6 +156,8 @@ public:
     Node_id expression( Node_id expr_stmt ) const;
     Node_id init( Node_id for_stmt ) const;
     Node_id update( Node_id for_stmt ) const;
+    Node_id container( Node_id walk_stmt ) const;
+    Node_id binding( Node_id walk_stmt ) const; // a Var_decl or a Binding_list
 
     // `switch`.
     Node_id                  scrutinee( Node_id switch_stmt ) const;
@@ -178,6 +180,7 @@ public:
     bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
     Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members
     bool    is_requirement( Node_id method ) const;      // a method an interface declares
+    bool    is_walk( Node_id decl ) const;               // D74: a method named `operator:`
 
     // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the
     // function the access is written in, and invalid for a free function, which sees nothing private.

@@ -96,6 +96,12 @@ void Drop_scopes::adopt_into_scope( Local_id local )
     }
 }
 
+void Drop_scopes::adopt_all_into_scope()
+{
+    scope_locals_.insert( scope_locals_.end(), temporaries_.begin(), temporaries_.end() );
+    temporaries_.clear();
+}
+
 void Drop_scopes::begin_statement() const
 {
     assert( temporaries_.empty() && "a statement left an owning temporary undropped" );

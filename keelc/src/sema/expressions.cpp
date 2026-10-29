@@ -1022,6 +1022,106 @@ Type_id Expressions::
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
 }
 
+void Expressions::check_yield( Node_id id )
+{
+    if( !ast_.is_walk( current_function_ ) )
+    {
+        reporter_.error_at( ast_.span( id ), "`yield` is only allowed in a walk", "declare `void operator:( ... )`" );
+
+        for( const Node_id argument : ast_.arguments( id ) )
+        {
+            absorb( argument );
+        }
+        return;
+    }
+
+    // The walk's receiver is the one parameter a `yield` does not supply. Its own open instance
+    // binds each parameter to itself.
+    const Call_site site { id, "yield", ast_.span( id ), 1 };
+    const Type_id   receiver = types_.type_of( ast_.params( current_function_ )[0] );
+    const Bindings  bindings = aggregates_.receiver_bindings(
+        table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver, current_function_
+    );
+
+    for( const Argument_work& work : overloads_.check_call_arguments( site, current_function_, bindings, {} ) )
+    {
+        if( work.with_expectation )
+        {
+            check( work.argument, work.expected );
+        }
+        else
+        {
+            infer( work.argument );
+        }
+    }
+
+    overloads_.check_argument_markers( site, current_function_, bindings );
+}
+
+Node_id Expressions::check_walk( Node_id walk_stmt, bool writes )
+{
+    const Node_id container = ast_.container( walk_stmt );
+    const Type_id type      = infer( container );
+
+    if( table_.is_error( type ) )
+    {
+        return Node_id {};
+    }
+
+    Node_id reading;
+    Node_id writing;
+
+    if( table_.is_struct( type ) )
+    {
+        for( const Node_id member : ast_.members( table_.get( type ).declaration ) )
+        {
+            if( ast_.is_walk( member ) )
+            {
+                ( ast_.is_const_method( member ) ? reading : writing ) = member;
+            }
+        }
+    }
+
+    const Node_id walk = writes ? writing : reading;
+
+    if( !walk.is_valid() )
+    {
+        if( reading.is_valid() || writing.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( container ),
+                fmt::format( "`{}` has no {} walk", table_.name( type ), writes ? "writing" : "reading" ),
+                writes ? "bind it `const ref`" : "bind it `ref`"
+            );
+        }
+        else
+        {
+            reporter_.error_at(
+                ast_.span( container ),
+                fmt::format( "`{}` has no walk", table_.name( type ) ),
+                fmt::format( "count over it: `for( u64 i : 0..{}.size() )`", reporter_.text( ast_.span( container ) ) )
+            );
+        }
+        return Node_id {};
+    }
+
+    if( !ast_.is_visible_from( walk, current_type() ) )
+    {
+        aggregates_.report_private( container, walk );
+        return Node_id {};
+    }
+
+    if( writes && !places_.check_writable( container, current_function_, false, false ) )
+    {
+        return Node_id {};
+    }
+
+    callees_.record( walk_stmt, walk );
+    overloads_.record_method_instantiation( current_function_, walk_stmt, walk, type );
+
+    return walk;
+}
+
 void Expressions::shape_arguments( Node_id call, std::vector<Argument_shape>& shapes )
 {
     if( shapes.empty() )

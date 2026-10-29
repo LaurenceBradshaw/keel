@@ -87,6 +87,9 @@ public:
     void record_owned_bindings( Node_id arm, Node_id switch_stmt );
     bool owns_binding( Node_id decl ) const; // bound by a switch that consumes
 
+    // D74: a walk's bare binding, a copy the body may only read.
+    void record_walk_binding( Node_id decl );
+
     // D31: which parameters travel by address. Its own pass because ownership is asked of field
     // types, which are recorded only after both parameter loops have run.
     void record_borrowed_parameters();
@@ -111,6 +114,7 @@ private:
     Reporter&         reporter_;
 
     std::unordered_set<u32> owned_bindings_;
+    std::unordered_set<u32> walk_bindings_;
 };
 
 } // namespace keel::sema

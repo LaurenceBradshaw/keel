@@ -94,6 +94,12 @@ std::string_view node_kind_name( Node_kind kind )
         return "Do_stmt";
     case Node_kind::For_stmt:
         return "For_stmt";
+    case Node_kind::Walk_stmt:
+        return "Walk_stmt";
+    case Node_kind::Binding_list:
+        return "Binding_list";
+    case Node_kind::Yield_stmt:
+        return "Yield_stmt";
     case Node_kind::Struct_decl:
         return "Struct_decl";
     case Node_kind::Class_decl:

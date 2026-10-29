@@ -233,8 +233,19 @@ void Resolver::visit( Node_id id )
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) ); // before anything that can name one
         visit( ast_.return_type( id ) );
-        visit( ast_.param_list( id ) );
-        if( ast_.body( id ).is_valid() )
+        // D74: a walk's parameters name what it yields, so only its receiver is a name in its body.
+        if( ast_.is_walk( id ) )
+        {
+            for( const Node_id param : ast_.params( id ) )
+            {
+                visit( ast_.name( param ) == Interner::keyword( Keyword::This ) ? param : ast_.annotation( param ) );
+            }
+        }
+        else
+        {
+            visit( ast_.param_list( id ) );
+        }
+        if( ast_.body( id ).is_valid() && !ast_.is_walk( id ) )
         {
             for( const Node_id param : ast_.params( id ) )
             {
@@ -260,6 +271,7 @@ void Resolver::visit( Node_id id )
         declare( scopes_.back(), ast_.name( id ), id );
         return;
     case Node_kind::For_stmt:
+    case Node_kind::Walk_stmt:
         push_scope();
         for( const Node_id child : ast_.children( id ) )
         {

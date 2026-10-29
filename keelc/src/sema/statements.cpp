@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 
 #include <optional>
+#include <unordered_set>
 
 #include "lex/token.h"
 #include "sema/type_checker.h"
@@ -133,6 +134,12 @@ void Statements::visit( Node_id id )
 
     case Node_kind::For_stmt:
         return visit_for( id );
+
+    case Node_kind::Walk_stmt:
+        return visit_walk( id );
+
+    case Node_kind::Yield_stmt:
+        return expressions_.check_yield( id );
 
     case Node_kind::Increment_stmt:
         return visit_increment( id );
@@ -650,6 +657,125 @@ void Statements::visit_for( Node_id id )
     visit( ast_.body( id ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
+}
+
+// D74: `for( const ref T x : c )`. The binding takes the type of what the walk yields, and may hold
+// less than it is lent, never more.
+void Statements::visit_walk( Node_id id )
+{
+    const Node_id binding    = ast_.binding( id );
+    const Node_id annotation = ast_.annotation( binding );
+    const Keyword mode       = ast_.parameter_mode( binding );
+    const bool    borrows    = mode == Keyword::Ref;
+    const bool    writes     = borrows && !ast_.is_const_binding( binding );
+    Type_id       type       = table_.builtin( Type_kind::Error );
+
+    const Node_id walk = expressions_.check_walk( id, writes );
+
+    if( walk.is_valid() )
+    {
+        const std::span<const Node_id> yielded   = ast_.params( walk ).subspan( 1 );
+        const Type_id                  container = types_.type_of( ast_.container( id ) );
+        const Type_id                  given =
+            yielded.empty() ? type
+                                             : types_.table().substitute( types_.type_of( yielded[0] ), table_.instance_bindings( container ) );
+        const Type_id written = annotations_.resolve( annotation );
+
+        if( yielded.size() != 1 )
+        {
+            reporter_.error_at(
+                ast_.span( binding ),
+                fmt::format( "this walk yields {} values", yielded.size() ),
+                "bind them by name: `for( [ const ref key, ref value ] : m )`"
+            );
+        }
+        else if( mode == Keyword::Out || mode == Keyword::Move )
+        {
+            reporter_.error_at( ast_.span( annotation ), "a walk lends what it yields", "bind it `const ref` or `ref`" );
+        }
+        else if( written.is_valid() && !table_.is_error( written ) && written != given )
+        {
+            reporter_.error_at( ast_.span( annotation ), fmt::format( "the walk yields `{}`", table_.name( given ) ) );
+        }
+        else if( !borrows && !table_.is_error( given ) && !bounds_.satisfies( given, Bound::Copyable ) )
+        {
+            reporter_.error_at(
+                ast_.span( binding ),
+                fmt::format( "the walk lends `{}`, which a binding cannot copy", table_.name( given ) ),
+                "bind it `const ref`"
+            );
+        }
+        else
+        {
+            type = given;
+        }
+
+        if( ast_.is_walk( expressions_.current_function() ) )
+        {
+            walk_edges_.push_back( { expressions_.current_function(), walk, ast_.span( ast_.container( id ) ) } );
+        }
+    }
+
+    if( borrows && !table_.is_error( type ) )
+    {
+        places_.record_binding_address( annotation, type );
+    }
+
+    if( !borrows )
+    {
+        places_.record_walk_binding( binding );
+    }
+
+    types_.record( binding, type );
+
+    loop_depth_ += 1;
+    breakable_depth_ += 1;
+    visit( ast_.body( id ) );
+    loop_depth_ -= 1;
+    breakable_depth_ -= 1;
+}
+
+void Statements::check_walk_cycles()
+{
+    std::unordered_set<u32> reported;
+
+    for( const Walk_edge& edge : walk_edges_ )
+    {
+        if( reported.contains( edge.from.v ) )
+        {
+            continue;
+        }
+
+        // Every walk reachable from where this edge leads; the edge closes a cycle when its own
+        // walk is among them.
+        std::vector<Node_id>    pending { edge.to };
+        std::unordered_set<u32> reached;
+
+        while( !pending.empty() )
+        {
+            const Node_id walk = pending.back();
+            pending.pop_back();
+
+            if( !reached.insert( walk.v ).second )
+            {
+                continue;
+            }
+
+            for( const Walk_edge& next : walk_edges_ )
+            {
+                if( next.from == walk )
+                {
+                    pending.push_back( next.to );
+                }
+            }
+        }
+
+        if( reached.contains( edge.from.v ) )
+        {
+            reporter_.error_at( edge.at, "a walk cannot loop over itself", "it is inlined, so it would never end" );
+            reported.insert( reached.begin(), reached.end() );
+        }
+    }
 }
 
 // D59: `for( u64 i : a..b )`. The bounds are checked against the variable's type, as an

@@ -234,6 +234,7 @@ bool Recovery::at_statement_keyword() const
     case Keyword::If:
     case Keyword::While:
     case Keyword::Do:
+    case Keyword::Yield:
     case Keyword::For:
     case Keyword::Switch:
     case Keyword::Break:

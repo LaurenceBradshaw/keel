@@ -1,5 +1,5 @@
-// D59: a `for` over anything but a range is refused, naming the index form. One error: the body
-// and what follows still parse.
+// D74: a `for` over a type with no walk is refused, naming the index form. One error: the body and
+// what follows are still checked.
 i32 main()
 {
     i32[*] xs = nullptr;

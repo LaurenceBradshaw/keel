@@ -103,6 +103,13 @@ enum class Node_kind : u16
     // when absent. Counting, `for( u64 i : a..b )`: init is a Var_decl whose initialiser is the
     // Range_expr, and condition and update are invalid.
     For_stmt,
+    // `for( x : c )`, D74. children: the container, the binding (a Var_decl without an initialiser,
+    // or a Binding_list), the body.
+    Walk_stmt,
+    // `[ const ref key, ref value ]`; children: the Var_decls, each annotated with a mode alone.
+    Binding_list,
+    // children: the Arg_list.
+    Yield_stmt,
     // aux: the name; children: the Type_param_list (invalid when not generic), then the Implements_list (invalid when none),
     // then the members: Field_decls, static Var_decls, Method_decls, Constructor_decls and the Destructor_decl.
     Struct_decl,

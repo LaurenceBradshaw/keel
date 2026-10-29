@@ -1,0 +1,43 @@
+error: a walk returns nothing
+ --> sema/errors_walk_declaration.kl:6:5
+  |
+6 |     i32 operator:( const ref i32 item ) const // error: a walk returns nothing
+  |     ^^^ write `void operator:( ... )`
+
+error: a walk hands the loop at least one value
+  --> sema/errors_walk_declaration.kl:16:19
+   |
+16 |     void operator:() const {} // error: a walk hands the loop at least one value
+   |                   ^^
+
+error: a walk lends what it yields
+  --> sema/errors_walk_declaration.kl:23:21
+   |
+23 |     void operator:( move i32 item ) const {} // error: a walk lends what it yields
+   |                     ^^^^^^^^^^^^^ take it `const ref` or `ref`
+
+error: a `const` walk cannot hand out `ref`
+  --> sema/errors_walk_declaration.kl:30:21
+   |
+30 |     void operator:( ref i32 item ) const {} // error: a `const` walk cannot hand out `ref`
+   |                     ^^^^^^^^^^^^ take it `const ref`, or drop the `const`
+
+error: a walk that writes nothing is `const`
+  --> sema/errors_walk_declaration.kl:37:10
+   |
+37 |     void operator:( const ref i32 item ) {} // error: a walk that writes nothing is `const`
+   |          ^^^^^^^^^ write `const` after its parameter list
+
+error: name each value a walk yields
+  --> sema/errors_walk_declaration.kl:44:21
+   |
+44 |     void operator:( const ref i32, const ref i32 b ) const {} // error: name each value a walk yields
+   |                     ^^^^^^^^^^^^^ a loop binds them by name
+
+error: `Twice` already has a reading walk
+  --> sema/errors_walk_declaration.kl:52:10
+   |
+52 |     void operator:( const ref i32 b ) const {} // error: already has a reading walk
+   |          ^^^^^^^^^ previous declaration is at: sema/errors_walk_declaration.kl:51:5
+
+7 errors generated

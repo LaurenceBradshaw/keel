@@ -15,7 +15,7 @@ static_assert( sizeof( Statement ) == 168, "Statement changed: update kir_state.
 static_assert( sizeof( Terminator ) == 120, "Terminator changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Block ) == 128, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Function ) == 248, "Function changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Function ) == 272, "Function changed: update kir_state.cpp's walk" );
 
 namespace
 {
@@ -179,6 +179,7 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     out.put_u32( function.parameter_count );
     put_locals( out, function.out_parameters );
     put_locals( out, function.one_path_temporaries );
+    put_locals( out, function.walked );
     out.put_u32( function.constructed.v );
 
     out.put_u32( narrow_cast<u32>( function.fields.size() ) );
@@ -248,6 +249,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.parameter_count      = in.get_u32();
     function.out_parameters       = get_locals( in, refs );
     function.one_path_temporaries = get_locals( in, refs );
+    function.walked               = get_locals( in, refs );
     function.constructed          = Local_id { in.get_u32() };
 
     function.fields = get_all<Field_slot>(

@@ -25,6 +25,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         borrow.of      = Local_id {};
         borrow.bound   = false;
         borrow.through = nullptr;
+        borrow.via     = Local_id {};
 
         if( borrow.assignments != 1 || source.is_global() )
         {
@@ -52,6 +53,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             {
                 borrow.of    = inner.of;
                 borrow.place = Place { .local = inner.of };
+                borrow.via   = inner.via.is_valid() ? inner.via : source.local;
             }
             else
             {
@@ -71,6 +73,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             borrow.at      = inner.at;
             borrow.purpose = inner.purpose;
             borrow.through = inner.through;
+            borrow.via     = inner.via;
         }
         else if( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call )
         {

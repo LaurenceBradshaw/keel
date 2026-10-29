@@ -143,13 +143,15 @@ private:
     Node_id parse_return_stmt();
     // A static field passes its commit; top-level and local variables have none.
     Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
-    Node_id parse_counter();
+    // `T x : a..b` or `T x : c`: the counter, or a walk's binding with `container` set (D74).
+    Node_id parse_colon_head( Node_id& container );
     Node_id parse_expression_stmt( bool consume_semicolon = true );
     Node_id parse_prefix_increment_stmt( bool consume_semicolon );
 
     Node_id parse_if_stmt();
     Node_id parse_while_stmt();
     Node_id parse_do_stmt();
+    Node_id parse_yield_stmt();
     Node_id parse_for_stmt();
     Node_id parse_switch_stmt();
 
@@ -511,6 +513,9 @@ Symbol_id Parser::expect_operator_name()
             return Symbol_id {};
         }
         return Interner::operator_name( Operator_name::Index );
+
+    case Token_kind::Colon:
+        return Interner::operator_name( Operator_name::Walk );
 
     default:
         recovery_.error_at( span, fmt::format( "`{}` cannot be declared yet", sm_.text( span ) ) );
@@ -2626,6 +2631,11 @@ Node_id Parser::dispatch_statement()
         return parse_do_stmt();
     }
 
+    if( cursor_.check_keyword( Keyword::Yield ) )
+    {
+        return parse_yield_stmt();
+    }
+
     if( cursor_.check_keyword( Keyword::For ) )
     {
         return parse_for_stmt();
@@ -2768,7 +2778,7 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
 }
 
 // A counting `for`'s variable, up to the `)`: a Var_decl whose initialiser is the Range_expr.
-Node_id Parser::parse_counter()
+Node_id Parser::parse_colon_head( Node_id& container )
 {
     const Span start = cursor_.peek().span;
 
@@ -2786,13 +2796,14 @@ Node_id Parser::parse_counter()
 
     if( !cursor_.match( Token_kind::Dot_dot ) )
     {
-        recovery_.error_at(
-            ast_.span( lower ),
-            "`for` with `:` counts over a range",
-            fmt::format( "walk it by index: `for( u64 i : 0..{}.size() )`", sm_.text( ast_.span( lower ) ) )
-        );
+        container = lower;
 
-        return error_node( Span::merge( start, cursor_.previous().span ) );
+        const Node_id binding =
+            name.is_valid()
+                ? ast_.add( Node_kind::Var_decl, Span::merge( start, ast_.span( lower ) ), name.v, { type, Node_id {} } )
+                : error_node( Span::merge( start, cursor_.previous().span ) );
+        ast_.set_name_span( binding, name_span );
+        return binding;
     }
 
     const Node_id upper = parse_expression( 0 );
@@ -2982,6 +2993,16 @@ Node_id Parser::parse_while_stmt()
     return ast_.add( Node_kind::While_stmt, Span::merge( start, cursor_.previous().span ), 0, { condition, body } );
 }
 
+// D74: `yield( a, b );`, whose arguments are a call's.
+Node_id Parser::parse_yield_stmt()
+{
+    const Span    start = cursor_.advance().span; // `yield`
+    const Node_id args  = parse_arg_list();
+    recovery_.expect( Token_kind::Semicolon );
+
+    return ast_.add( Node_kind::Yield_stmt, Span::merge( start, cursor_.previous().span ), 0, { args } );
+}
+
 Node_id Parser::parse_do_stmt()
 {
     assert( cursor_.check_keyword( Keyword::Do ) );
@@ -3022,15 +3043,23 @@ Node_id Parser::parse_for_stmt()
     }
     const u32 condition_start = cursor_.position();
 
-    // D59: `for( u64 i : a..b )`.
+    // D59's `for( u64 i : a..b )`, and D74's `for( const ref T x : c )`.
     if( lookahead_.looks_like_counter( cursor_.position() ) )
     {
-        const Node_id counter = parse_counter();
+        Node_id       container;
+        const Node_id head = parse_colon_head( container );
         recovery_.close_header( condition_start );
         const Node_id body = parse_block();
 
+        if( container.is_valid() )
+        {
+            return ast_.add(
+                Node_kind::Walk_stmt, Span::merge( start, cursor_.previous().span ), 0, { container, head, body }
+            );
+        }
+
         return ast_.add(
-            Node_kind::For_stmt, Span::merge( start, cursor_.previous().span ), 0, { counter, Node_id {}, Node_id {}, body }
+            Node_kind::For_stmt, Span::merge( start, cursor_.previous().span ), 0, { head, Node_id {}, Node_id {}, body }
         );
     }
 
@@ -4071,6 +4100,8 @@ void silence_failed_heads( const Ast& ast, Node_id id, Diagnostics& diags )
         Node_kind::While_stmt,
         Node_kind::Do_stmt,
         Node_kind::For_stmt,
+        Node_kind::Walk_stmt,
+        Node_kind::Yield_stmt,
         Node_kind::Switch_stmt,
         Node_kind::Break_stmt,
         Node_kind::Continue_stmt,
@@ -8364,20 +8395,61 @@ TEST_CASE( "parser_counting_for", "[parse]" )
 
         REQUIRE_FALSE( p.ast().is_counter( p.child( first_statement( p ), 0 ) ) );
     }
+}
 
-    // One error, and the body and what follows the loop are still read.
-    SECTION( "a container after the `:` is refused" )
+// D74: anything but a range after the `:` is a walk: the container, a binding with no initialiser,
+// then the body.
+TEST_CASE( "parser_walk_statement", "[parse]" )
+{
+    SECTION( "a typed binding" )
     {
-        const Parsed p( "i32 main() { for( const ref i32 x : xs ) { y = 1; } return 0; }" );
+        const Parsed p( "i32 main() { for( const ref i32 x : xs.items ) { y = x; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt    = first_statement( p );
+        const Node_id binding = p.child( stmt, 1 );
+        REQUIRE( p.kind( stmt ) == Node_kind::Walk_stmt );
+        REQUIRE( p.text( p.child( stmt, 0 ) ) == "xs.items" );
+        REQUIRE( p.kind( binding ) == Node_kind::Var_decl );
+        REQUIRE( p.ast().parameter_mode( binding ) == Keyword::Ref );
+        REQUIRE( p.ast().is_const_binding( binding ) );
+        REQUIRE_FALSE( p.ast().initialiser( binding ).is_valid() );
+        REQUIRE( p.text( p.child( stmt, 2 ) ) == "{ y = x; }" );
+    }
+
+    SECTION( "an `auto` binding" )
+    {
+        const Parsed p( "i32 main() { for( auto x : make() ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Walk_stmt );
+        REQUIRE_FALSE( p.child( p.child( first_statement( p ), 1 ), 0 ).is_valid() );
+    }
+}
+
+TEST_CASE( "parser_yield_statement", "[parse]" )
+{
+    SECTION( "one argument, and two with a marker" )
+    {
+        const Parsed p( "class L { i32 x; void operator:( const ref i32 a ) const { yield( x ); yield( x, ref x ); } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id first = find_first( p.ast(), p.root(), Node_kind::Yield_stmt );
+        REQUIRE( first.is_valid() );
+        REQUIRE( p.ast().arguments( first ).size() == 1 );
+    }
+
+    SECTION( "without its parentheses, one error" )
+    {
+        const Parsed p( "i32 main() { yield x; return 0; }" );
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
-        REQUIRE( p.errors().find( "`for` with `:` counts over a range" ) != std::string::npos );
-        REQUIRE( p.errors().find( "`for( u64 i : 0..xs.size() )`" ) != std::string::npos );
-        REQUIRE( p.text( p.child( first_statement( p ), 3 ) ) == "{ y = 1; }" );
-
-        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
-        REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Return_stmt );
     }
 }
 
@@ -10951,6 +11023,19 @@ TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
         REQUIRE( method.is_valid() );
         REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Index ) );
         REQUIRE( p.children( p.child( method, 1 ) ).size() == 2 ); // the receiver, then `index`
+    }
+
+    SECTION( "`operator:` is a walk under its reserved name" )
+    {
+        const Parsed p( "class L { i32 x; void operator:( const ref i32 item ) const { yield( x ); } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Walk ) );
+        REQUIRE( p.ast().is_walk( method ) );
     }
 
     SECTION( "`operator<=>` is a method under its reserved name" )

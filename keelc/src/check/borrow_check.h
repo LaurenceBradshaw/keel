@@ -27,6 +27,7 @@ struct Loan_error
     Span          at {};     // the statement that breaks it
     Span          taken {};  // where the holder was bound
     Loan_conflict conflict = Loan_conflict::Moved;
+    bool          walked   = false; // the holder is a walk's receiver (D74), and has no name
 };
 
 // Per local, whether what it is, or points at, owns anything: only an owner can free or relocate
