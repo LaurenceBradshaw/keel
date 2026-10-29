@@ -144,7 +144,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         // no storage at all - neither has a declaration, which is why they are named here directly.
         bool temporary = ast_.kind( source ) == Node_kind::Conditional_expr ||
                          ast_.kind( source ) == Node_kind::Struct_literal || ast_.kind( source ) == Node_kind::Array_literal ||
-                         ast_.kind( source ) == Node_kind::Functions_of_expr;
+                         ast_.kind( source ) == Node_kind::Array_fill || ast_.kind( source ) == Node_kind::Functions_of_expr;
 
         if( ast_.kind( source ) == Node_kind::Call_expr )
         {

@@ -103,12 +103,20 @@ void Drop_scopes::begin_statement() const
 
 void Drop_scopes::end_statement( Span span )
 {
-    drop_built( span );
-    for( const Local_id temporary : temporaries_ )
+    end_since( 0, span );
+}
+
+void Drop_scopes::end_since( std::size_t mark, Span span )
+{
+    for( std::size_t i = temporaries_.size(); i > mark; --i )
     {
-        builder_.storage_dead( temporary, span );
+        drop( temporaries_[i - 1], span );
     }
-    temporaries_.clear();
+    for( std::size_t i = mark; i < temporaries_.size(); ++i )
+    {
+        builder_.storage_dead( temporaries_[i], span );
+    }
+    temporaries_.resize( mark );
 }
 
 void Drop_scopes::drop_built( Span span )

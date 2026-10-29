@@ -84,6 +84,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Array_literal:
         return infer_array_literal( id );
 
+    case Node_kind::Array_fill:
+        return infer_array_fill( id );
+
     case Node_kind::Cast_expr:
         return infer_cast( id );
 
@@ -305,7 +308,8 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     }
 
     // `nullptr`, which every pointer accepts
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_literal )
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_literal ||
+        ast_.kind( value ) == Node_kind::Array_fill )
     {
         return shape;
     }
@@ -2784,7 +2788,8 @@ Type_id Expressions::infer_array_index( Node_id id, Type_id array )
     return types_.record( id, table_.get( array ).element );
 }
 
-Type_id Expressions::infer_array_literal( Node_id id )
+// A literal's or a fill's array type, taken from context.
+Type_id Expressions::expected_array( Node_id id )
 {
     const Type_id                  expectation = take_expectation();
     const std::span<const Node_id> elements    = ast_.children( id );
@@ -2804,20 +2809,35 @@ Type_id Expressions::infer_array_literal( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 "an array literal needs a type to fill",
-                "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`"
+                ast_.kind( id ) == Node_kind::Array_fill ? "write its type on the variable, as in `u64[2] a = [ 0, .. ];`"
+                                                         : "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`"
             );
         }
 
         absorb_all();
-        return types_.poison( id );
+        return {};
     }
 
     if( !table_.is_array( expectation ) )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "an array literal cannot become `{}`", table_.name( expectation ) ) );
         absorb_all();
+        return {};
+    }
+
+    return expectation;
+}
+
+Type_id Expressions::infer_array_literal( Node_id id )
+{
+    const Type_id expectation = expected_array( id );
+
+    if( !expectation.is_valid() )
+    {
         return types_.poison( id );
     }
+
+    const std::span<const Node_id> elements = ast_.children( id );
 
     const Type_id element = table_.get( expectation ).element;
 
@@ -2833,7 +2853,12 @@ Type_id Expressions::infer_array_literal( Node_id id )
             ),
             "a literal lists every element"
         );
-        absorb_all();
+
+        for( const Node_id value : elements )
+        {
+            absorb( value );
+        }
+
         return types_.poison( id );
     }
 
@@ -2841,6 +2866,34 @@ Type_id Expressions::infer_array_literal( Node_id id )
     {
         check( value, element );
         places_.check_owning_source( value, element );
+    }
+
+    return types_.record( id, expectation );
+}
+
+// D60: the value is evaluated once per element, so an owning one must be built afresh each time.
+Type_id Expressions::infer_array_fill( Node_id id )
+{
+    const Type_id expectation = expected_array( id );
+
+    if( !expectation.is_valid() )
+    {
+        return types_.poison( id );
+    }
+
+    const Type_id element = table_.get( expectation ).element;
+    const Node_id value   = ast_.children( id )[0];
+
+    check( value, element );
+
+    if( !bounds_.satisfies( element, Bound::Copyable ) &&
+        ( ast_.kind( value ) == Node_kind::Marker_expr || places_.is_assignable( value ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( value ),
+            "a fill evaluates its value once per element, so one value cannot go to each",
+            fmt::format( "build a new one each time, as in `[ {}(), .. ]`", table_.name( element ) )
+        );
     }
 
     return types_.record( id, expectation );
@@ -9443,6 +9496,18 @@ TEST_CASE( "type_checker_types_a_fixed_array", "[sema][fixed_array]" )
         REQUIRE( p.type_name( nth_named( p, "Array_literal", 0 ) ) == "i32[3]" );
     }
 
+    SECTION( "a fill gives every element its value, its count from the type" )
+    {
+        const Typed p( "class Tok { u8 b; public Tok() { b = 0; } ~Tok() { } };\n"
+                       "i32 main() { i32[3] a = [ 7, .. ]; Tok[2] t = [ Tok(), .. ]; u8[2][2] m = [ [ 1, .. ], .. ]; "
+                       "return a[ 2 ] + m[ 1 ][ 0 ]; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Array_fill", 0 ) ) == "i32[3]" );
+        REQUIRE( p.type_name( nth_named( p, "Array_fill", 1 ) ) == "Tok[2]" );
+    }
+
     SECTION( "one is copied when its element is, and assigned whole or by element" )
     {
         const Typed p( "i32[2] swap( i32[2] a ) { i32[2] b = a; b[ 0 ] = a[ 1 ]; b[ 1 ] = a[ 0 ]; a = b; return a; }\n"
@@ -9524,6 +9589,20 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
           "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`" },
         { "void f() { i32 a = [ 1 ]; }", "an array literal cannot become `i32`", "" },
         { "void f() { u8[2] a = [ 1, 300 ]; }", "300", "" },
+
+        // The fill, and a local with neither.
+        { "void f() { auto a = [ 1, .. ]; }",
+          "an array literal needs a type to fill",
+          "write its type on the variable, as in `u64[2] a = [ 0, .. ];`" },
+        { "void f() { Tok t = Tok(); Tok[2] a = [ move t, .. ]; }",
+          "a fill evaluates its value once per element, so one value cannot go to each",
+          "build a new one each time, as in `[ Tok(), .. ]`" },
+        { "void f() { i32[4] a; }", "`a` needs a value for every element", "fill it, as in `i32[4] a = [ 0, .. ];`" },
+        { "void f() { bool[2][3] a; }", "`a` needs a value for every element", "`bool[2][3] a = [ [ false, .. ], .. ];`" },
+        { "void f() { u8*[2] a; }", "`a` needs a value for every element", "`u8*[2] a = [ nullptr, .. ];`" },
+        { "void f() { Tok[2] a; }",
+          "`a` needs a value for every element",
+          "give it a literal listing every element, or a fill, `[ value, .. ]`" },
 
         // The conversion is to a borrowed run of the same element, and only that.
         { "void f( i32[2] a ) { const ref i64[] r = a; }", "expected `i64[]`, but got `i32[2]`", "" },

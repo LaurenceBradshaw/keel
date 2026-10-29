@@ -16,6 +16,33 @@
 namespace keel::sema
 {
 
+namespace
+{
+
+// The fill an array of numbers, `bool`s or pointers would start from; empty for anything else.
+std::string plain_fill( const Type_table& table, Type_id type )
+{
+    if( table.is_array( type ) )
+    {
+        const std::string inner = plain_fill( table, table.get( type ).element );
+        return inner.empty() ? inner : fmt::format( "[ {}, .. ]", inner );
+    }
+
+    if( table.is_integer( type ) || table.is_float( type ) )
+    {
+        return "0";
+    }
+
+    if( table.get( type ).kind == Type_kind::Bool )
+    {
+        return "false";
+    }
+
+    return table.is_pointer( type ) || table.is_many_pointer( type ) ? "nullptr" : "";
+}
+
+} // namespace
+
 void Statements::visit( Node_id id )
 {
     if( !id.is_valid() )
@@ -309,6 +336,25 @@ void Statements::visit_var( Node_id id )
             {
                 places_.check_owning_source( init, type );
             }
+        }
+
+        // D60: every element holds a value from the declaration, so an array is never assigned later.
+        if( !init.is_valid() && mode == Keyword::Count && table_.is_array( type ) &&
+            expressions_.current_function().is_valid() )
+        {
+            const std::string fill = plain_fill( table_, type );
+
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` needs a value for every element", interner_.text( ast_.name( id ) ) ),
+                fill.empty() ? "give it a literal listing every element, or a fill, `[ value, .. ]`"
+                             : fmt::format(
+                                   "fill it, as in `{} {} = {};`",
+                                   reporter_.text( ast_.span( annotation ) ),
+                                   interner_.text( ast_.name( id ) ),
+                                   fill
+                               )
+            );
         }
 
         annotations_.refuse_never( spelled, type, "variable" );

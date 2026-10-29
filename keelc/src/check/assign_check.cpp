@@ -228,6 +228,50 @@ bool written_piecewise(
     return false;
 }
 
+// D60: an element written while its array holds nothing, reported, then counted as assigned as a
+// piecewise write is. Lowering builds a literal or a fill by index in a temporary, which is exempt,
+// and the constructor's own object keeps its rule in assign.
+bool written_by_element(
+    const Function& func, const Slot_map& slots, const Place& place, Span span, Flow& flow, Assignment_report* report
+)
+{
+    const Slots range = slots.of( place );
+
+    if( !range.element || !func.locals[place.local.v].name.is_valid() ||
+        ( func.constructed.is_valid() && place.local == func.constructed ) )
+    {
+        return false;
+    }
+
+    const Slots whole = slots.under( range.node );
+    bool        held  = true;
+    bool        ever  = false;
+
+    for( u32 leaf = whole.first; leaf < whole.last; ++leaf )
+    {
+        if( slots.is_leaf( leaf ) )
+        {
+            held = held && flow.always[leaf] != 0;
+            ever = ever || flow.ever[leaf] != 0;
+        }
+    }
+
+    if( held )
+    {
+        return false;
+    }
+
+    if( report != nullptr )
+    {
+        report->piecewise.push_back( Piecewise_write {
+            .local = place.local, .field = slots.field( range.node ), .at = span, .maybe = ever, .element = true
+        } );
+    }
+
+    set_leaves( slots, whole, flow, 1 );
+    return true;
+}
+
 // An Assign's target. Every leaf it reaches is assigned, a write past a tracked node included: an
 // enum or an array is built in place, `_2.tag` then its payload.
 void assign( const Function& func, const Slot_map& slots, const Statement& statement, Flow& flow, Assignment_report* report )
@@ -235,7 +279,8 @@ void assign( const Function& func, const Slot_map& slots, const Statement& state
     const Place& place = statement.place;
     const Slots  range = slots.of( place );
 
-    if( written_piecewise( func, slots, place, statement.span, flow, report ) )
+    if( written_by_element( func, slots, place, statement.span, flow, report ) ||
+        written_piecewise( func, slots, place, statement.span, flow, report ) )
     {
         return;
     }
@@ -1259,6 +1304,44 @@ TEST_CASE( "assign_check_refuses_a_field_write_into_an_empty_class_built_whole",
 
         INFO( c.rendered() );
         REQUIRE( c.clean() );
+    }
+}
+
+// D60: an element is written only once its array holds a value, so no element is left unset.
+TEST_CASE( "assign_check_refuses_an_element_write_into_an_unassigned_array", "[check][assign][fixed_array]" )
+{
+    constexpr std::string_view k_types = "struct S { i32[2] arr; i32 n; };\n"
+                                         "i32 main() { return 0; }\n";
+    const auto checked = [&]( std::string_view body ) { return Checked( std::string( body ) + std::string( k_types ) ); };
+
+    SECTION( "a field of a struct written one field at a time" )
+    {
+        const Checked c = checked( "void f() { S s; s.arr[ 0 ] = 1; s.n = 2; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.piecewise()[0].element );
+        REQUIRE( c.field_name( c.piecewise()[0] ) == "arr" );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "an `out` array" )
+    {
+        const Checked c = checked( "void f( out i32[2] a ) { a[ 0 ] = 1; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().size() == 1 );
+        REQUIRE( c.piecewise()[0].field == k_no_field );
+        REQUIRE( c.errors().empty() );
+    }
+
+    SECTION( "a literal's and a fill's temporaries, and an array assigned whole first" )
+    {
+        const Checked c = checked( "void f( out i32[2] a ) { a = [ 1, .. ]; a[ 1 ] = 2; i32[2] b = [ 1, 2 ]; b[ 0 ] = 3; }\n" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.piecewise().empty() );
+        REQUIRE( c.errors().empty() );
     }
 }
 

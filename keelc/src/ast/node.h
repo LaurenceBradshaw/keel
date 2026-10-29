@@ -124,6 +124,8 @@ enum class Node_kind : u16
     Struct_literal,
     // `[ a, b ]`; children: the elements.
     Array_literal,
+    // `[ x, .. ]`, D60: `x` once per element; children: the value.
+    Array_fill,
     // aux: the field's name (invalid when positional); children: the value.
     Field_init,
     // `move`, `out`, `ref`: an operator that does not change its operand's type. aux: the Keyword;

@@ -78,6 +78,7 @@ private:
     // extracting a two-line literal would cost a name and buy nothing.
     Operand lower_struct_literal( Node_id id );
     Operand lower_array_literal( Node_id id );
+    Operand lower_array_fill( Node_id id );
     // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
     Operand lower_functions_of( Node_id id );
     Operand lower_string_literal( Node_id id );
@@ -1587,6 +1588,57 @@ Operand Lowering::lower_array_literal( Node_id id )
     return copy( builder_.place( temp ), type );
 }
 
+// D60: a loop over the elements, evaluating the value once per turn and dropping what that built
+// before the next. An array holds at least one, so the test is at the bottom, and every path out
+// has assigned the array.
+Operand Lowering::lower_array_fill( Node_id id )
+{
+    const Type_id  type    = type_of( id );
+    const Type_id  element = types_.table().get( type ).element;
+    const Type_id  u64     = types_.table().integer( 64, false );
+    const Type_id  boolean = types_.table().builtin( Type_kind::Bool );
+    const Span     span    = ast_.span( id );
+    const Node_id  value   = ast_.children( id )[0];
+    const Local_id temp    = builder_.add_local( type, span );
+
+    builder_.storage_live( temp, span );
+
+    const Local_id at   = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+    const Block_id body = builder_.add_block();
+    const Block_id done = builder_.add_block();
+
+    builder_.terminate_goto( body, span );
+    builder_.switch_to( body );
+
+    const std::size_t first  = drops_.mark();
+    const Operand     filled = converted( lower_expression( value ), element, ast_.span( value ) );
+
+    builder_.assign( builder_.index( builder_.place( temp ), at ), use( moved_if_owning( filled ) ), ast_.span( value ) );
+    drops_.end_since( first, span );
+    builder_.assign(
+        builder_.place( at ),
+        binary( Token_kind::Plus, copy( builder_.place( at ), u64 ), constant( literal_pool_.add_integer( 1 ), u64 ), u64 ),
+        span
+    );
+
+    const Local_id more = builder_.into_temp(
+        binary(
+            Token_kind::Less,
+            copy( builder_.place( at ), u64 ),
+            constant( literal_pool_.add_integer( types_.table().get( type ).count ), u64 ),
+            boolean
+        ),
+        boolean,
+        span
+    );
+
+    builder_.terminate_branch( copy( builder_.place( more ), boolean ), body, done, span );
+    builder_.switch_to( done );
+    drops_.own_temporary( temp );
+
+    return copy( builder_.place( temp ), type );
+}
+
 Operand Lowering::lower_functions_of( Node_id id )
 {
     const Type_id  type     = type_of( id );
@@ -2620,6 +2672,8 @@ Operand Lowering::lower_expression( Node_id id )
         return lower_struct_literal( id );
     case Node_kind::Array_literal:
         return lower_array_literal( id );
+    case Node_kind::Array_fill:
+        return lower_array_fill( id );
 
     case Node_kind::Functions_of_expr:
         return lower_functions_of( id );
@@ -2875,6 +2929,7 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Binary_expr: // `a + b` in `a + b + c`
     case Node_kind::Struct_literal:
     case Node_kind::Array_literal:
+    case Node_kind::Array_fill:
     case Node_kind::Caller_expr:
     case Node_kind::Functions_of_expr:
     {
@@ -8238,6 +8293,24 @@ TEST_CASE( "lower_fills_an_array_from_a_literal", "[ir][lower][fixed_array]" )
     REQUIRE( text.find( "] = const 1" ) != std::string::npos );
     REQUIRE( text.find( "] = const 3" ) != std::string::npos );
     REQUIRE( text.find( "out_of_bounds" ) == std::string::npos );
+}
+
+// D60: one loop, whatever the count, so the value is lowered once and evaluated per element.
+TEST_CASE( "lower_fills_an_array_one_element_at_a_time", "[ir][lower][fixed_array]" )
+{
+    Lowered p( "class Tok { u8 b; public Tok() { b = 0; } ~Tok() { } };\n"
+               "i32 main() { Tok[3] a = [ Tok(), .. ]; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "const 3" ) != std::string::npos );
+    REQUIRE( text.find( "call Tok(" ) != std::string::npos );
+    REQUIRE( text.find( "call Tok(" ) == text.rfind( "call Tok(" ) );
 }
 
 // One synthesised destructor per owning array type, looping over the elements, as a union's is

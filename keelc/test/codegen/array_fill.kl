@@ -1,0 +1,89 @@
+// PLAN D60's fill. `[ x, .. ]` evaluates `x` once per element, in index order, so each Buf a fill
+// builds is a new one, numbered as it is made. The output is the order things are built and
+// dropped, and KEEL_VALGRIND=1 sees a drop missed or run twice.
+import t::console;
+
+u64 made;
+
+class Buf
+{
+    u64* data;
+
+    Buf()
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = made;
+        made  = made + 1;
+    }
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        t::print( "drop " );
+        t::println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+const u64 three = 3;
+
+u64 next()
+{
+    made = made + 1;
+    return made;
+}
+
+i32 main()
+{
+    // Numbers, then one element replaced.
+    {
+        u64[4] a = [ 0, .. ];
+        a[0] = 1;
+        t::println( a[0] + a[3] );
+    }
+
+    // Three Bufs built 0, 1, 2; replacing one drops it; the rest go last to first.
+    {
+        Buf[3] b = [ Buf(), .. ];
+        t::println( b[2].get() );
+        b[1] = Buf( 9 );
+    }
+
+    // A `const` size, and a call run once per element in index order.
+    {
+        u64[three] c = [ next(), .. ];
+        t::println( c[0] );
+        t::println( c[2] );
+    }
+
+    // A fill of fills.
+    {
+        u64[2][3] m = [ [ 7, .. ], .. ];
+        m[2][1] = 8;
+        t::println( m[0][0] + m[2][1] );
+    }
+
+    return 0;
+}

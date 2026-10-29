@@ -1,0 +1,25 @@
+error: `s.arr` is written one element at a time before it holds a value
+  --> sema/errors_array_elements.kl:13:5
+   |
+13 |     s.arr[0] = 1; // error
+   |     ^^^^^^^^^^^^^ assign the whole of `s.arr` first
+
+error: `a` is written one element at a time before it holds a value
+  --> sema/errors_array_elements.kl:20:5
+   |
+20 |     a[0] = 1; // error
+   |     ^^^^^^^^^ assign the whole of `a` first
+
+error: `s.arr` is written one element at a time, but may not hold a value yet
+  --> sema/errors_array_elements.kl:30:5
+   |
+30 |     s.arr[0] = 1; // error
+   |     ^^^^^^^^^^^^^ it is assigned on some paths to here, but not all - assign the whole of `s.arr` first
+
+error: `s.arr` is used before it is initialised
+  --> sema/errors_array_elements.kl:39:5
+   |
+39 |     return s.arr[1]; // error
+   |     ^^^^^^^^^^^^^^^^ assign it before reading it
+
+4 errors generated

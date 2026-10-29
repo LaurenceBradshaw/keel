@@ -1,0 +1,31 @@
+error: `a` needs a value for every element
+  --> sema/errors_array_fill.kl:28:5
+   |
+28 |     i32[4] a; // error
+   |     ^^^^^^^^^ fill it, as in `i32[4] a = [ 0, .. ];`
+
+error: `b` needs a value for every element
+  --> sema/errors_array_fill.kl:29:5
+   |
+29 |     Buf[2] b; // error
+   |     ^^^^^^^^^ give it a literal listing every element, or a fill, `[ value, .. ]`
+
+error: an array literal needs a type to fill
+  --> sema/errors_array_fill.kl:35:16
+   |
+35 |     auto   f = [ 0, .. ]; // error
+   |                ^^^^^^^^^ write its type on the variable, as in `u64[2] a = [ 0, .. ];`
+
+error: a fill evaluates its value once per element, so one value cannot go to each
+  --> sema/errors_array_fill.kl:43:18
+   |
+43 |     Buf[2] h = [ move x, .. ]; // error
+   |                  ^^^^^^ build a new one each time, as in `[ Buf(), .. ]`
+
+error: a fill evaluates its value once per element, so one value cannot go to each
+  --> sema/errors_array_fill.kl:45:18
+   |
+45 |     Buf[2] k = [ y, .. ]; // error
+   |                  ^ build a new one each time, as in `[ Buf(), .. ]`
+
+5 errors generated

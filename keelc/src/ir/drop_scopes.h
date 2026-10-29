@@ -34,6 +34,8 @@ public:
     void begin_statement() const;
     // Drop in reverse, end storage, clear: ending storage resets a one-path flag for a loop's next turn.
     void end_statement( Span span );
+    // The same for the temporaries listed since `mark`: a fill's value, built once per turn.
+    void end_since( std::size_t mark, Span span );
     // Drop but keep: a `try`'s error exit, since the `ok` path still owns them.
     void drop_built( Span span );
 

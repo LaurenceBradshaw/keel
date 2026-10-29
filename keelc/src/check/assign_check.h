@@ -40,13 +40,14 @@ struct Reassigned_field
 };
 
 // D9: a field written while the class around it, which has a constructor or a destructor, holds
-// nothing yet. It is assigned whole first.
+// nothing yet; or D60, an element written while its array holds nothing. It is assigned whole first.
 struct Piecewise_write
 {
     Local_id local {};
-    u32      field = k_no_field; // the class's own field, or k_no_field when it is the local
+    u32      field = k_no_field; // the class's or array's own field, or k_no_field when it is the local
     Span     at {};
-    bool     maybe = false; // holds a value on some paths into here, not all
+    bool     maybe   = false; // holds a value on some paths into here, not all
+    bool     element = false; // an array's element rather than a class's field
 };
 
 struct Assignment_report

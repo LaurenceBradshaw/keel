@@ -58,7 +58,8 @@ Slots Slot_map::of( const Place& place ) const
 
         if( projection.kind != Projection_kind::Field || is_leaf( slots.node ) )
         {
-            slots.exact = false;
+            slots.exact   = false;
+            slots.element = projection.kind == Projection_kind::Index;
             return slots;
         }
 

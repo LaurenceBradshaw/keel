@@ -12,10 +12,11 @@ namespace keel
 // leaf carries state; a split local's own slot holds none.
 struct Slots
 {
-    u32  node  = 0;
-    u32  first = 0;
-    u32  last  = 0;
-    bool exact = true; // false when the place goes past a tracked node: into an enum, an array, a pointer
+    u32  node    = 0;
+    u32  first   = 0;
+    u32  last    = 0;
+    bool exact   = true;  // false when the place goes past a tracked node: into an enum, an array, a pointer
+    bool element = false; // past it by an Index: an element of an array
 };
 
 // One slot per local, then one per Function::fields entry, so a definite-assignment, drop-flag or

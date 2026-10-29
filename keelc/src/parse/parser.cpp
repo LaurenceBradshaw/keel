@@ -3896,6 +3896,22 @@ Node_id Parser::parse_array_literal()
     {
         const u32 before = cursor_.position();
 
+        // D60's fill. A range is never an expression (D34), so `..` here means nothing else.
+        if( cursor_.check( Token_kind::Dot_dot ) )
+        {
+            const Span dots = cursor_.advance().span;
+
+            if( elements.size() == 1 && cursor_.check( Token_kind::R_bracket ) )
+            {
+                cursor_.advance();
+                return ast_.add( Node_kind::Array_fill, Span::merge( start, cursor_.previous().span ), 0, elements );
+            }
+
+            recovery_.error_at( dots, "`..` fills from the first element, so it comes straight after it", "write `[ x, .. ]`" );
+            cursor_.match( Token_kind::Comma );
+            continue;
+        }
+
         elements.push_back( parse_expression( 0 ) );
 
         if( !recovery_.end_list_element( Token_kind::R_bracket, list_errors, Recovery::List_site::Literal ) )
@@ -13554,6 +13570,39 @@ TEST_CASE( "parser_parses_an_array_literal", "[parse][fixed_array]" )
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
+    }
+}
+
+TEST_CASE( "parser_parses_an_array_fill", "[parse][fixed_array]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "[ 0, .. ]", "Array_fill(0)" },
+            { "[ Buf(), .. ]", "Array_fill(Call_expr(Buf,(),<none>))" },
+            { "[ [ 7, .. ], .. ]", "Array_fill(Array_fill(7))" },
+        };
+
+        for( const auto& [expression, expected] : cases )
+        {
+            INFO( expression );
+            REQUIRE( index_outline( expression ) == expected );
+        }
+    }
+
+    SECTION( "`..` anywhere but after the first element reports once" )
+    {
+        for( const char* source :
+             { "i32 main() { i32[4] a = [ 1, 2, .. ]; return 0; }",
+               "i32 main() { i32[4] a = [ .. ]; return 0; }",
+               "i32 main() { i32[4] a = [ 1, .., 2 ]; return 0; }" } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "`..` fills from the first element" ) != std::string::npos );
+        }
     }
 }
 

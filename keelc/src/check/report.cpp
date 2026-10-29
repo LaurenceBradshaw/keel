@@ -262,10 +262,12 @@ void report_unassigned_errors(
                                           ? fmt::format( "`{}`", field_name( write.field ) )
                                           : subject( write.local, write.field, "this value" );
 
+            const char* part = write.element ? "element" : "field";
+
             diagnostics.error(
                 write.at,
-                write.maybe ? fmt::format( "{} is written one field at a time, but may not hold a value yet", named )
-                            : fmt::format( "{} is written one field at a time before it holds a value", named ),
+                write.maybe ? fmt::format( "{} is written one {} at a time, but may not hold a value yet", named, part )
+                            : fmt::format( "{} is written one {} at a time before it holds a value", named, part ),
                 write.maybe
                     ? fmt::format( "it is assigned on some paths to here, but not all - assign the whole of {} first", named )
                     : fmt::format( "assign the whole of {} first", named )
