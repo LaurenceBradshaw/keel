@@ -13177,7 +13177,7 @@ TEST_CASE( "parser_parses_a_generic_interface", "[parse][interfaces][generic]" )
 // An interface has no constructor, so a method may share its name.
 TEST_CASE( "parser_parses_a_method_named_after_its_interface", "[parse][interfaces]" )
 {
-    const Parsed p( "interface from<T>\n{\n    static self from( T value );\n};" );
+    const Parsed p( "interface from<T>\n{\n    static self from( move T value );\n};" );
 
     INFO( p.errors() );
     REQUIRE_FALSE( p.has_errors() );

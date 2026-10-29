@@ -2,9 +2,9 @@
 // method, called by name or through a bound. Each check returns its own code.
 import kl::string;
 
-T build<T, A>( A value ) where T : from<A>
+T build<T, A>( move A value ) where T : from<A>
 {
-    return T::from( value );
+    return T::from( move value );
 }
 
 i32 main()

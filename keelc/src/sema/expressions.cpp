@@ -1276,6 +1276,18 @@ Type_id Expressions::infer_binary( Node_id id )
             return infer_operator_call( id, left, right, name );
         }
 
+        // `"a " + p`, where the literal cannot become `p`'s type and call its `+`: `str`'s own, which
+        // builds a `joined_text`.
+        if( literal_on_the_left && ast_.kind( left ) == Node_kind::String_literal && table_.prelude().str.is_valid() &&
+            bounds_.has_operator( table_.declared( table_.prelude().str ), name ) &&
+            !( bounds_.has_operator( known, name ) && bounds_.adopts_text( known, table_.declared( table_.prelude().str ) ) ) )
+        {
+            // What the whole `+` is expected to be says nothing about the literal.
+            take_expectation();
+            infer( left );
+            return infer_operator_call( id, left, right, name, true );
+        }
+
         // `"a" < s`: the literal adopts and is the object, which keeps the operator's order.
         if( ast_.kind( literal_side ) == Node_kind::String_literal && bounds_.calls_operator( known, name ) )
         {
@@ -1674,9 +1686,22 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     const Bindings                 bindings = operator_bindings( id, object_type, method );
     const std::span<const Node_id> params   = ast_.params( method );
 
+    const Type_id parameter = table_.substitute( types_.type_of( params[1] ), bindings );
+
     if( !argument_typed )
     {
-        check( argument, table_.substitute( types_.type_of( params[1] ), bindings ) );
+        check( argument, parameter );
+    }
+    // Typed already, so it is held to the parameter rather than checked again.
+    else if( const Type_id given = types_.type_of( argument );
+             !table_.is_error( given ) && !types_.conformances().holds( table_, given, parameter ) )
+    {
+        reporter_.error_at(
+            ast_.span( argument ),
+            fmt::format( "expected `{}`, but got `{}`", table_.name( parameter ), table_.name( given ) ),
+            text_hint( argument, parameter, given )
+        );
+        return types_.poison( id );
     }
 
     callees_.record( id, method );
@@ -3637,6 +3662,18 @@ Type_id Expressions::check( Node_id id, Type_id expected )
 
     if( table_.is_error( actual ) )
     {
+        return expected;
+    }
+
+    // As a literal adopts through `from<str>`, and it is consumed: a named one needs `move` (D31).
+    // The caller asks that of an owning target, and nothing asks it of a copyable one but this.
+    if( bounds_.adopts_joined( expected, actual ) )
+    {
+        if( bounds_.satisfies( expected, Bound::Copyable ) )
+        {
+            places_.check_owning_source( id, actual );
+        }
+
         return expected;
     }
 

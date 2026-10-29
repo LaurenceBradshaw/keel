@@ -637,6 +637,110 @@ TEST_CASE( "type_checker_types_a_string_literal_as_the_prelude's_str", "[sema][t
     }
 }
 
+// `str`'s `+` builds the prelude's `joined_text`, which owns the bytes of both.
+TEST_CASE( "type_checker_joins_two_literals_into_a_joined_text", "[sema][types][prelude]" )
+{
+    const Typed p( "i32 main() { auto j = \"a \" + \"b\"; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "joined_text" );
+}
+
+// A literal before a type it cannot become, or one with no `+`, calls `str`'s; the `joined_text` it
+// builds adopts a type made from one, consumed as any owning value is.
+TEST_CASE( "type_checker_joins_a_literal_to_text_with_no_plus", "[sema][types][prelude]" )
+{
+    const std::string declarations =
+        "class Name implements textual { str t; public Name() { t = \"nm\"; }\n"
+        "    public const ref u8[] as_text() const { return t.as_text(); } };\n"
+        "class Owned implements from<joined_text> { u64 n; public Owned( u64 n ) { this.n = n; }\n"
+        "    public static Owned from( move joined_text text ) { return Owned( text.size() ); } };\n";
+
+    SECTION( "a `textual` with no `+` gives a `joined_text`" )
+    {
+        const Typed p( declarations + "i32 main() { Name n = Name(); auto j = \"a \" + n; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "joined_text" );
+    }
+
+    SECTION( "and so does a `joined_text`, which has a `+` but is not made from a literal" )
+    {
+        const Typed p( "i32 main() { auto j = \"a \" + \"b\"; auto k = \"c \" + j; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 1 ) ) == "joined_text" );
+    }
+
+    SECTION( "a right operand that is not `textual` is one error" )
+    {
+        const Typed p( "i32 main() { u64 count = 3; auto j = \"a \" + count; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `textual`, but got `u64`" ) != std::string::npos );
+    }
+
+    SECTION( "a temporary adopts a type made from it, and takes no expectation into the literal" )
+    {
+        const Typed p( declarations + "i32 main() { Name n = Name(); Owned o = \"a \" + n; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a named one needs `move`" )
+    {
+        const Typed bare( declarations + "i32 main() { auto j = \"a \" + \"b\"; Owned o = j; return 0; }" );
+
+        INFO( bare.rendered() );
+        REQUIRE( bare.errors() == 1 );
+        REQUIRE( bare.rendered().find( "write `move j`" ) != std::string::npos );
+
+        const Typed moved( declarations + "i32 main() { auto j = \"a \" + \"b\"; Owned o = move j; return 0; }" );
+
+        INFO( moved.rendered() );
+        REQUIRE( moved.clean() );
+    }
+
+    SECTION( "an argument is chosen at the adopted tier, after one taking it as `textual`" )
+    {
+        const Typed adopted(
+            declarations + "u64 f( move Owned o ) { return 0; }\n"
+                           "i32 main() { f( \"a \" + \"b\" ); return 0; }"
+        );
+
+        INFO( adopted.rendered() );
+        REQUIRE( adopted.clean() );
+
+        const Typed widened(
+            declarations + "u64 f( move Owned o ) { return 0; }\n"
+                           "u64 f( const ref textual t ) { return 1; }\n"
+                           "i32 main() { f( \"a \" + \"b\" ); return 0; }"
+        );
+
+        INFO( widened.rendered() );
+        REQUIRE( widened.clean() );
+        const Node_id chosen = widened.types().callee_of( widened.nth( Node_kind::Call_expr, 0 ) );
+
+        REQUIRE( widened.ast().parameter_mode( widened.ast().params( chosen )[0] ) == Keyword::Ref );
+    }
+
+    SECTION( "no other `from` adopts a value" )
+    {
+        const Typed p( "class Count implements from<u64> { u64 n; public Count( u64 n ) { this.n = n; }\n"
+                       "    public static Count from( move u64 v ) { return Count( v ); } };\n"
+                       "i32 main() { u64 v = 3; Count c = v; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `Count`, but got `u64`" ) != std::string::npos );
+    }
+}
+
 // A literal takes its type from the operand beside it. Without this, `u32 bits; bits != 0` compares
 // a u32 with an i32 - which §6.4 rejects, and which no suffix exists to write around (D13). Almost
 // no unsigned code would compile.

@@ -40,11 +40,11 @@ error: expected `i32`, but got `vec`
 31 |     i32 n    = v - w;
    |                ^^^^^
 
-error: expected `plain`, but got `str`
-  --> sema/errors_operator_arithmetic.kl:33:19
+error: expected `textual`, but got `plain`
+  --> sema/errors_operator_arithmetic.kl:33:26
    |
 33 |     plain glued = "ab" + p;
-   |                   ^^^^ a string literal becomes a `plain` only if `plain` implements the prelude's `from<str>`
+   |                          ^
 
 error: no operator `<<` for `vec` and `i32`
   --> sema/errors_operator_arithmetic.kl:34:19

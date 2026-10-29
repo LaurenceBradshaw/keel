@@ -77,7 +77,7 @@ class label implements from<str>
 
     ~label() { unsafe { free( bytes ); } }
 
-    public static label from( str text ) { return label( text.size ); }
+    public static label from( move str text ) { return label( text.size ); }
     public u64 size() const { return length; }
     public label operator+( const ref label other ) const { return label( length + other.length ); }
 };

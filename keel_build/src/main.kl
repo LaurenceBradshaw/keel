@@ -98,7 +98,7 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
         case result::ok( code ):
             return result::ok( code );
         case result::err( error ):
-            return result::err( kl::string( "cannot run " ) + output );
+            return result::err( "cannot run " + output );
     }
 }
 

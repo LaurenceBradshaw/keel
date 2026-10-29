@@ -1,0 +1,31 @@
+error: expected `textual`, but got `u64`
+  --> sema/errors_joined_text.kl:35:24
+   |
+35 |     auto none = "a " + count; // error
+   |                        ^^^^^
+
+error: expected `i32`, but got `joined_text`
+  --> sema/errors_joined_text.kl:36:17
+   |
+36 |     i32 wrong = "a " + name; // error
+   |                 ^^^^^^^^^^^
+
+error: expected `Label`, but got `joined_text`
+  --> sema/errors_joined_text.kl:37:19
+   |
+37 |     Label label = "a " + name; // error
+   |                   ^^^^^^^^^^^
+
+error: `joined_text` has no method `push`
+  --> sema/errors_joined_text.kl:38:5
+   |
+38 |     joined.push( 1 ); // error
+   |     ^^^^^^^^^^^
+
+error: an owning value is transferred, not copied
+  --> sema/errors_joined_text.kl:39:18
+   |
+39 |     Owned bare = joined; // error
+   |                  ^^^^^^ write `move joined`
+
+5 errors generated

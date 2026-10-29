@@ -244,6 +244,13 @@ bool Bounds::adopts_text( Type_id type, Type_id text ) const
     return conforms( type, table_.interface( from, std::array { text }, "from" ) );
 }
 
+bool Bounds::adopts_joined( Type_id type, Type_id value ) const
+{
+    const Node_id joined = table_.prelude().joined_text;
+
+    return joined.is_valid() && value == table_.declared( joined ) && adopts_text( type, value );
+}
+
 // Reports every unmet bound rather than the first: two are two things to fix, and one per compile is
 // two compiles. What it does *not* report twice is one mistake wearing several names: `integral`
 // promises `numeric`, `comparable` and `equatable` too, so a struct fails all four.

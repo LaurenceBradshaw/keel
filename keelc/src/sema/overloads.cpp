@@ -267,7 +267,8 @@ bool Overloads::candidate_accepts(
         switch( shapes[i].kind )
         {
         case Argument_kind::Typed:
-            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) )
+            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) &&
+                !( tier == Tier::Adopted && bounds_.adopts_joined( expected, shapes[i].type ) ) )
             {
                 return false;
             }
@@ -312,13 +313,15 @@ bool Overloads::candidate_accepts(
 }
 
 // §6.4's assignment widening, numeric and by value only: a borrow is the caller's variable (D31).
-// An integer reaches a float that holds it, as it does through one candidate; distance() ranks it
-// behind every integer. An implementer also reaches its interface, which a parameter only borrows.
+// A `move` of a number is a copy too, so `from( move i64 )` takes an `i32`. An integer reaches a
+// float that holds it, as it does through one candidate; distance() ranks it behind every integer.
+// An implementer also reaches its interface, which a parameter only borrows.
 bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
 {
-    const auto numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
+    const auto    numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
+    const Keyword mode    = ast_.parameter_mode( param );
 
-    return ( ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) &&
+    return ( ( mode == Keyword::Count || mode == Keyword::Move ) && numeric( from ) && numeric( to ) &&
              types_.conformances().holds( table_, from, to ) ) ||
            ( table_.is_interface( to ) && types_.conformances().holds( table_, from, to ) );
 }

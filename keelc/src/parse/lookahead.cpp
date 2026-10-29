@@ -554,7 +554,7 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         return make_failure();
     }
 
-    // An interface has no constructor to mistake, so `static self from( T value )` in `from` is a method.
+    // An interface has no constructor to mistake, so `static self from( move T value )` in `from` is a method.
     if( member_site_ != Member_site::Interface && cursor_.check( Token_kind::Identifier ) &&
         cursor_.peek().symbol == enclosing && cursor_.peek( 1 ).kind == Token_kind::L_paren )
     {

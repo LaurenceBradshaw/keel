@@ -141,7 +141,7 @@ class path implements textual, from<str>
     }
 
     /// The path `text`, which is how a literal becomes one.
-    public static path from( str text )
+    public static path from( move str text )
     {
         return path::of( text );
     }

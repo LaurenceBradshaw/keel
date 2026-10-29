@@ -4,14 +4,14 @@ class label implements from<str>
     u64 length;
 
     public label( u64 n ) { length = n; }
-    public static label from( str text ) { return label( text.size ); }
+    public static label from( move str text ) { return label( text.size ); }
 };
 
 struct width implements from<str>
 {
     u64 n;
 
-    static width from( str text ) { return width { text.size }; }
+    static width from( move str text ) { return width { text.size }; }
 };
 
 struct plain
@@ -23,7 +23,7 @@ struct number implements from<i64>
 {
     i64 v;
 
-    static number from( i64 value ) { return number { value }; }
+    static number from( move i64 value ) { return number { value }; }
 };
 
 void both( label l ) { }

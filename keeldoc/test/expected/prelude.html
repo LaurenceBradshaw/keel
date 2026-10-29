@@ -32,6 +32,7 @@ functions.</p>
 <li class="divider">Text</li>
 <li><a href="#textual"><code>textual</code></a> <span class="kind">interface</span></li>
 <li><a href="#str"><code>str</code></a> <span class="kind">class</span></li>
+<li><a href="#joined_text"><code>joined_text</code></a> <span class="kind">class</span></li>
 <li class="divider">Conversion</li>
 <li><a href="#from"><code>from</code></a> <span class="kind">interface</span></li>
 <li class="divider">Results</li>
@@ -234,6 +235,63 @@ escapes are decoded, a <code>\0</code> included.</p>
 <p>Returns the text as a read-only reference to the run of bytes.</p>
 </div>
 </div>
+<div class="group" id="str.operator+">
+<pre class="signature"><a class="anchor" href="#str.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#joined_text">joined_text</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new <code>joined_text</code> holding these bytes and then <code>other</code>'s. A literal before a type with a
+<code>+</code> of its own becomes that type instead, so <code>&quot;a&quot; + s</code> with <code>s</code> a <code>kl::string</code> is a string.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">joined_text</span></h2>
+<div class="group" id="joined_text">
+<pre class="signature"><a class="anchor" href="#joined_text" aria-label="Link to joined_text">#</a><code><span class="kw">class</span> <span class="type">joined_text</span> <span class="kw">implements</span> <a class="type" href="#textual">textual</a></code></pre>
+<div class="doc">
+<p>Text two others were joined into, which owns its bytes: what <code>&quot;text &quot; + x</code> gives.</p>
+<p>It is <code>textual</code>, so it passes where text is read, and becomes any type that implements
+<code>from&lt;joined_text&gt;</code> where one is expected, as <code>kl::string</code> does, without copying its bytes.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="joined_text.joined_text">
+<pre class="signature"><a class="anchor" href="#joined_text.joined_text" aria-label="Link to joined_text">#</a><code><span class="kw">public</span> <span class="type">joined_text</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> b )</code></pre>
+<div class="doc">
+<p>A copy of <code>a</code>'s bytes and then <code>b</code>'s.</p>
+</div>
+</div>
+<div class="group" id="joined_text.~joined_text">
+<pre class="signature"><a class="anchor" href="#joined_text.~joined_text" aria-label="Link to ~joined_text">#</a><code><span class="type">~joined_text</span>()</code></pre>
+<div class="doc">
+<p>Frees the bytes, unless <code>release</code> handed them on.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="joined_text.as_text">
+<pre class="signature"><a class="anchor" href="#joined_text.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Returns the text as a read-only reference to the run of bytes.</p>
+</div>
+</div>
+<div class="group" id="joined_text.size">
+<pre class="signature"><a class="anchor" href="#joined_text.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many bytes there are.</p>
+</div>
+</div>
+<div class="group" id="joined_text.operator+">
+<pre class="signature"><a class="anchor" href="#joined_text.operator+" aria-label="Link to operator+">#</a><code><span class="kw">public</span> <a class="type" href="#joined_text">joined_text</a> <span class="fn">operator+</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new <code>joined_text</code> holding these bytes and then <code>other</code>'s.</p>
+</div>
+</div>
+<div class="group" id="joined_text.release">
+<pre class="signature"><a class="anchor" href="#joined_text.release" aria-label="Link to release">#</a><code><span class="kw">public</span> <a class="prim" href="#u8">u8</a>[*] <span class="fn">release</span>()</code></pre>
+<div class="doc">
+<p>Hands the bytes to the caller, who frees them, and leaves this empty. Read <code>size()</code> first.
+It is how a type implementing <code>from&lt;joined_text&gt;</code> takes the bytes over without a copy.</p>
+</div>
+</div>
 </section>
 <h2 class="divider">Conversion</h2>
 <section class="entry">
@@ -241,13 +299,14 @@ escapes are decoded, a <code>\0</code> included.</p>
 <div class="group" id="from">
 <pre class="signature"><a class="anchor" href="#from" aria-label="Link to from">#</a><code><span class="kw">interface</span> <span class="type">from</span>&lt;T&gt;</code></pre>
 <div class="doc">
-<p>A type that can be made from a <code>T</code>, called as <code>T::from( value )</code>. A string literal becomes any
-type that implements <code>from&lt;str&gt;</code>.</p>
+<p>A type that can be made from a <code>T</code>, called as <code>T::from( value )</code>, which takes the value.</p>
+<p>A string literal becomes any type that implements <code>from&lt;str&gt;</code> where one is expected, and a
+<code>joined_text</code> any type that implements <code>from&lt;joined_text&gt;</code>.</p>
 </div>
 </div>
 <h3>Methods</h3>
 <div class="group" id="from.from">
-<pre class="signature"><a class="anchor" href="#from.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> self <span class="fn">from</span>( T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#from.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> self <span class="fn">from</span>( <span class="kw">move</span> T value )</code></pre>
 </div>
 </section>
 <h2 class="divider">Results</h2>

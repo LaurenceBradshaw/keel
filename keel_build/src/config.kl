@@ -34,7 +34,7 @@ class Keelc
             case result::ok( c ):
                 if( c.code != 0 )
                 {
-                    return result::err( kl::string( "`" ) + command + "` failed" );
+                    return result::err( "`" + command + "` failed" );
                 }
 
                 kl::string id = kl::string();
@@ -54,11 +54,11 @@ class Keelc
                 }
                 if( id.is_empty() )
                 {
-                    return result::err( kl::string( "`" ) + command + "` printed no build id" );
+                    return result::err( "`" + command + "` printed no build id" );
                 }
                 return result::ok( Keelc( move keelc, move id, move kl_root ) );
             case result::err( error ):
-                return result::err( kl::string( "cannot run " ) + keelc );
+                return result::err( "cannot run " + keelc );
         }
     }
 

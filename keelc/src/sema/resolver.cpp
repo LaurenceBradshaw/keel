@@ -993,15 +993,16 @@ Prelude_items Resolver::prelude_items() const
     const auto an_aggregate = []( Node_kind kind ) { return is_aggregate( kind ); };
 
     Prelude_items items;
-    items.str        = named( "str", any );
-    items.result     = named( "result", any );
-    items.box        = named( "box", an_aggregate );
-    items.from       = named( "from", an_interface );
-    items.ordering   = named( "ordering", an_enum );
-    items.location   = named( "location", an_aggregate );
-    items.equatable  = named( "equatable", an_interface );
-    items.comparable = named( "comparable", an_interface );
-    items.hashable   = named( "hashable", an_interface );
+    items.str         = named( "str", any );
+    items.joined_text = named( "joined_text", an_aggregate );
+    items.result      = named( "result", any );
+    items.box         = named( "box", an_aggregate );
+    items.from        = named( "from", an_interface );
+    items.ordering    = named( "ordering", an_enum );
+    items.location    = named( "location", an_aggregate );
+    items.equatable   = named( "equatable", an_interface );
+    items.comparable  = named( "comparable", an_interface );
+    items.hashable    = named( "hashable", an_interface );
 
     if( const Node_id hasher = named( "hasher", an_aggregate ); hasher.is_valid() )
     {

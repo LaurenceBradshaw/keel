@@ -82,6 +82,10 @@ private:
     // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
     Operand lower_functions_of( Node_id id );
     Operand lower_string_literal( Node_id id );
+    // `to::from( value )`: an adopted literal, or an adopted `joined_text`, which is moved in.
+    Operand adopted( Operand value, Type_id to, Span span );
+    // Whether `value` is the prelude's `joined_text` and `to` a different type made from one.
+    bool adopts_joined( Type_id value, Type_id to );
     // Runs `str`'s constructor on `target`, for `bytes`.
     void construct_str( Place target, Node_id constructor, Literal_id bytes, Span span );
     // D69: the location an `@located` callee receives, passed on from this function's own caller
@@ -612,7 +616,7 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
         return operand;
     }
 
-    if( types_.table().is_union( to ) || types_.table().is_box( to ) )
+    if( types_.table().is_union( to ) || types_.table().is_box( to ) || adopts_joined( operand.type, to ) )
     {
         return united( operand, to, span );
     }
@@ -622,6 +626,11 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
 
 Operand Lowering::united( Operand operand, Type_id to, Span span )
 {
+    if( adopts_joined( operand.type, to ) )
+    {
+        return adopted( operand, to, span );
+    }
+
     // An implementer's address becomes a `Shape*` where one is wanted, as a member becomes a union.
     if( operand.type != to && types_.table().is_interface_pointer( to ) && types_.table().is_pointer( operand.type ) )
     {
@@ -1696,15 +1705,34 @@ Operand Lowering::lower_string_literal( Node_id id )
         return copy( builder_.place( local ), type );
     }
 
+    return adopted( copy( builder_.place( local ), text ), type, span );
+}
+
+Operand Lowering::adopted( Operand value, Type_id to, Span span )
+{
     const Node_id      from = types_.table().prelude().from;
     Requirement_target target =
-        requirement_target( ast_.members( from )[0], type, types_.table().interface( from, std::array { text }, "from" ) );
+        requirement_target( ast_.members( from )[0], to, types_.table().interface( from, std::array { value.type }, "from" ) );
 
-    assert( target.method.is_valid() && "an adopted literal's type implements `from<str>`" );
+    assert( target.method.is_valid() && "an adopted value's type implements `from`" );
 
-    const Operand operand[] = { copy( builder_.place( local ), text ) };
+    const Operand  operands[] = { moved_if_owning( value ) };
+    const u32      first      = builder_.add_operands( operands );
+    const Local_id result =
+        builder_.into_temp( call( target.method, first, 1, to, std::move( target.at.type_arguments ) ), to, span );
 
-    return emit_call( id, target.method, operand, target.at.bound, std::move( target.at.type_arguments ) );
+    drops_.own_temporary( result );
+
+    return copy( builder_.place( result ), to );
+}
+
+bool Lowering::adopts_joined( Type_id value, Type_id to )
+{
+    Type_table&   table  = types_.table();
+    const Node_id joined = table.prelude().joined_text;
+
+    return joined.is_valid() && value == table.declared( joined ) && to != value && !table.is_error( to ) &&
+           types_.conformances().declares( table, to, table.interface( table.prelude().from, std::array { value }, "from" ) );
 }
 
 // `str( this, data, size )`, called as the checker lets no program call it.
@@ -6200,6 +6228,36 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
         REQUIRE( text.find( "const 5)" ) != std::string::npos );
         REQUIRE( text.find( ".size" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
+    }
+}
+
+// `"a " + "b"` builds a `joined_text`, which a type made from one takes by `move`, so it is dropped
+// only where `from` did not take it.
+TEST_CASE( "lower_adopts_a_joined_text_by_moving_it", "[ir][lower][prelude]" )
+{
+    Lowered p(
+        "class Owned implements from<joined_text> { u8[*] data; Owned() { data = nullptr; }\n"
+        "    ~Owned() { unsafe { free( data ); } }\n"
+        "    public static Owned from( move joined_text text ) { Owned o = Owned(); o.data = text.release(); return o; } };\n"
+        "i32 main() { Owned a = \"a \" + \"b\"; return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    const std::size_t joined = text.find( "= call operator+(" );
+    const std::size_t from   = text.find( "= call from(move _" );
+
+    REQUIRE( joined != std::string::npos );
+    REQUIRE( from != std::string::npos );
+    REQUIRE( joined < from );
+
+    for( const Function& function : p.functions )
+    {
+        REQUIRE( verify( function ).empty() );
     }
 }
 

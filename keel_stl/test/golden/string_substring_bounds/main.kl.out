@@ -1,2 +1,2 @@
 cutting
-../../src/string.kl:134: panic: substring out of range
+../../src/string.kl:189: panic: substring out of range

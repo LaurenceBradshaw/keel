@@ -674,7 +674,7 @@ TEST_CASE( "a_prelude_generic_s_instance_in_an_object_keeps_its_open_form_first"
 {
     str text;
 
-    static name from( str text )
+    static name from( move str text )
     {
         return name { text };
     }
@@ -686,7 +686,7 @@ struct tag implements from<str>
 {
     str text;
 
-    static tag from( str text )
+    static tag from( move str text )
     {
         return tag { text };
     }

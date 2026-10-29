@@ -36,15 +36,102 @@ class str implements textual
             return data[0..size];
         }
     }
+
+    /// A new `joined_text` holding these bytes and then `other`'s. A literal before a type with a
+    /// `+` of its own becomes that type instead, so `"a" + s` with `s` a `kl::string` is a string.
+    public joined_text operator+( const ref textual other ) const
+    {
+        return joined_text( this, other );
+    }
+};
+
+/// Text two others were joined into, which owns its bytes: what `"text " + x` gives.
+///
+/// It is `textual`, so it passes where text is read, and becomes any type that implements
+/// `from<joined_text>` where one is expected, as `kl::string` does, without copying its bytes.
+class joined_text implements textual
+{
+    /// A copy of `a`'s bytes and then `b`'s.
+    public joined_text( const ref textual a, const ref textual b )
+    {
+        const ref u8[] a_bytes = a.as_text();
+        const ref u8[] b_bytes = b.as_text();
+
+        if( a_bytes.size + b_bytes.size == 0 )
+        {
+            data_ = nullptr;
+            size_ = 0;
+            return;
+        }
+
+        unsafe
+        {
+            data_ = alloc<u8>( a_bytes.size + b_bytes.size );
+            for( u64 i = 0; i < a_bytes.size; i++ )
+            {
+                data_[i] = a_bytes[i];
+            }
+            for( u64 i = 0; i < b_bytes.size; i++ )
+            {
+                data_[a_bytes.size + i] = b_bytes[i];
+            }
+        }
+        size_ = a_bytes.size + b_bytes.size;
+    }
+
+    /// Frees the bytes, unless `release` handed them on.
+    ~joined_text()
+    {
+        unsafe
+        {
+            free( data_ );
+        }
+    }
+
+    /// Returns the text as a read-only reference to the run of bytes.
+    public const ref u8[] as_text() const
+    {
+        unsafe
+        {
+            return data_[0..size_];
+        }
+    }
+
+    /// How many bytes there are.
+    public u64 size() const
+    {
+        return size_;
+    }
+
+    /// A new `joined_text` holding these bytes and then `other`'s.
+    public joined_text operator+( const ref textual other ) const
+    {
+        return joined_text( this, other );
+    }
+
+    /// Hands the bytes to the caller, who frees them, and leaves this empty. Read `size()` first.
+    /// It is how a type implementing `from<joined_text>` takes the bytes over without a copy.
+    public u8[*] release()
+    {
+        u8[*] result = data_;
+        data_ = nullptr;
+        size_ = 0;
+        return result;
+    }
+
+    private u8[*] data_;
+    private u64 size_;
 };
 
 /// --- Conversion ---
 
-/// A type that can be made from a `T`, called as `T::from( value )`. A string literal becomes any
-/// type that implements `from<str>`.
+/// A type that can be made from a `T`, called as `T::from( value )`, which takes the value.
+///
+/// A string literal becomes any type that implements `from<str>` where one is expected, and a
+/// `joined_text` any type that implements `from<joined_text>`.
 interface from<T>
 {
-    static self from( T value );
+    static self from( move T value );
 };
 
 /// --- Results ---

@@ -18,14 +18,17 @@ enum parse_error
 /// A growable sequence of bytes that owns its storage.
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
-class string implements textual, equatable, hashable, from<str>, from<u64>, from<i64>
+class string implements textual, equatable, hashable, from<str>, from<u64>, from<i64>,
+    from<joined_text>
 {
     /// --- Construction ---
 
     /// An empty string.
     string()
     {
-        bytes_ = list<u8>();
+        data_ = nullptr;
+        size_ = 0;
+        cap_ = 0;
     }
 
     /// A string holding a copy of the bytes of `text`.
@@ -33,10 +36,19 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     {
         const ref u8[] bytes = text.as_text();
 
-        bytes_ = list<u8>::with_capacity( bytes.size );
+        unsafe
+        {
+            data_ = alloc<u8>( bytes.size );
+        }
+
+        size_ = bytes.size;
+        cap_ = bytes.size;
         for( u64 i = 0; i < bytes.size; i++ )
         {
-            bytes_.push( bytes[ i ] );
+            unsafe
+            {
+                data_[i] = bytes[ i ];
+            }
         }
     }
 
@@ -44,18 +56,42 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     public static string with_capacity( u64 capacity )
     {
         string result = string();
-        result.bytes_ = list<u8>::with_capacity( capacity );
+        unsafe
+        {
+            result.data_ = alloc<u8>( capacity );
+        }
+
+        result.size_ = 0;
+        result.cap_ = capacity;
+        return result;
+    }
+
+    ~string()
+    {
+        unsafe
+        {
+            free( data_ );
+        }
+    }
+
+    /// `text`'s bytes, taken over rather than copied.
+    public static string from( move joined_text text )
+    {
+        string result = string();
+        result.size_ = text.size();
+        result.cap_ = result.size_;
+        result.data_ = text.release();
         return result;
     }
 
     /// A copy of `text`'s bytes.
-    public static string from( str text )
+    public static string from( move str text )
     {
         return string( text );
     }
 
     /// `value` written in decimal, with no leading zeros.
-    public static string from( u64 value )
+    public static string from( move u64 value )
     {
         if( value == 0 )
         {
@@ -69,13 +105,21 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
             value /= 10;
         }
 
-        result.bytes_.reverse();
+        for( u64 i = 0; i < result.size_ / 2; i++ )
+        {
+            unsafe
+            {
+                const u8 low = result.data_[i];
+                result.data_[i] = result.data_[result.size_ - 1 - i];
+                result.data_[result.size_ - 1 - i] = low;
+            }
+        }
 
         return result;
     }
 
     /// `value` written in decimal, with a leading `-` if it is negative and no leading zeros.
-    public static string from( i64 value )
+    public static string from( move i64 value )
     {
         if( value >= 0 )
         {
@@ -95,13 +139,13 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// The number of bytes.
     public u64 size() const
     {
-        return bytes_.size();
+        return size_;
     }
 
     /// Whether the string holds no bytes.
     public bool is_empty() const
     {
-        return bytes_.is_empty();
+        return size_ == 0;
     }
 
     /// --- Reading ---
@@ -109,7 +153,10 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// The bytes, borrowed. The string cannot change while they are held.
     public const ref u8[] as_text() const
     {
-        return bytes_.as_run();
+        unsafe
+        {
+            return data_[0..size_];
+        }
     }
 
     /// The byte at `index`.
@@ -119,7 +166,15 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// If `index` is not less than `size()`.
     public const ref u8 operator[]( u64 index ) const
     {
-        return bytes_[index];
+        if( index >= size() )
+        {
+            panic( "index out of range" );
+        }
+
+        unsafe
+        {
+            return data_[index];
+        }
     }
 
     /// A new string holding the `count` bytes from index `start` on.
@@ -137,7 +192,10 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         string result = string::with_capacity( count );
         for( u64 i = 0; i < count; i++ )
         {
-            result.push( bytes_[start + i] );
+            unsafe
+            {
+                result.push( data_[start + i] );
+            }
         }
 
         return result;
@@ -221,7 +279,16 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// Adds the byte `value` at the end.
     public void push( u8 value )
     {
-        bytes_.push( value );
+        if( size_ == cap_ )
+        {
+            reallocate( cap_ > 0 ? cap_ * 2 : 1 );
+        }
+
+        unsafe
+        {
+            data_[size_] = value;
+        }
+        size_ += 1;
     }
 
     /// Removes the last byte and returns it.
@@ -231,7 +298,15 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// If the string is empty.
     public u8 pop()
     {
-        return bytes_.pop();
+        if( size_ == 0 )
+        {
+            panic( "the string is empty" );
+        }
+        size_ -= 1;
+        unsafe
+        {
+            return data_[size_];
+        }
     }
 
     /// Adds a copy of every byte of `bytes` at the end.
@@ -239,7 +314,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     {
         for( u64 i = 0; i < bytes.size; i++ )
         {
-            bytes_.push( bytes[i] );
+            push( bytes[i] );
         }
     }
 
@@ -258,7 +333,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
 
         for( u64 i = 0; i < size(); i++ )
         {
-            result.push( bytes_[i] );
+            result.push( as_text()[i] );
         }
 
         for( u64 i = 0; i < text.size; i++ )
@@ -272,7 +347,13 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// Removes every byte and releases the storage.
     public void clear()
     {
-        bytes_ = list<u8>();
+        unsafe
+        {
+            free( data_ );
+        }
+        data_ = nullptr;
+        size_ = 0;
+        cap_ = 0;
     }
 
     /// --- Comparing and hashing ---
@@ -287,7 +368,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
 
         for( u64 i = 0; i < size(); i++ )
         {
-            if( bytes_[i] != other[i] )
+            if( as_text()[i] != other[i] )
             {
                 return false;
             }
@@ -316,7 +397,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
     /// the number, and `overflow` as soon as the number leaves the range of `i64`.
     public result<i64, parse_error> parse_i64() const
     {
-        const bool is_negative = !is_empty() && bytes_[0] == 45; // '-'
+        const bool is_negative = !is_empty() && as_text()[0] == 45; // '-'
         const u64 start = is_negative ? 1 : 0;
         const u64 limit = is_negative ? 9223372036854775808 : 9223372036854775807;
 
@@ -328,7 +409,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         u64 magnitude = 0;
         for( u64 i = start; i < size(); i++ )
         {
-            const u8 byte = bytes_[i];
+            const u8 byte = as_text()[i];
             if( byte < 48 || byte > 57 ) // '0'..'9'
             {
                 return result::err( parse_error::invalid_digit( i ) );
@@ -359,7 +440,7 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
 
         for( u64 i = 0; i < text.size; i++ )
         {
-            if( bytes_[at + i] != text[i] )
+            if( as_text()[at + i] != text[i] )
             {
                 return false;
             }
@@ -368,7 +449,28 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return true;
     }
 
-    private list<u8> bytes_;
+    /// Moves the bytes into a new block of `n` bytes and frees the old one.
+    private void reallocate( u64 n )
+    {
+        u8[*] new_data;
+        unsafe
+        {
+            new_data = alloc<u8>( n );
+            for( u64 i = 0; i < size_; i++ )
+            {
+                new_data[i] = data_[i];
+            }
+            free( data_ );
+        }
+
+        data_ = new_data;
+        cap_ = n;
+    }
+
+    // Bytes below `size_` are written, the rest of the `cap_` are raw.
+    private u8[*] data_;
+    private u64 size_;
+    private u64 cap_;
 };
 
 /// Whether `a` and `b` hold the same bytes in the same order.

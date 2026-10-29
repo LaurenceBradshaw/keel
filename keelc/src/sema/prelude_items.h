@@ -10,7 +10,7 @@ namespace keel
 // The prelude declarations the compiler relies on by name, each invalid without a prelude.
 struct Prelude_items
 {
-    Node_id str, result, box, from, ordering, location, hasher_write;
+    Node_id str, joined_text, result, box, from, ordering, location, hasher_write;
     Node_id equatable, comparable, hashable;
 };
 

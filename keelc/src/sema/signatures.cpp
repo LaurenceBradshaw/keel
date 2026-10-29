@@ -2911,7 +2911,9 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().all().size() == 2 ); // kl's own, for f64, and the prelude's `str`
+            REQUIRE(
+                p.types().conformances().all().size() == 3
+            ); // kl's own, for f64, and the prelude's `str` and `joined_text`
         }
     }
 
@@ -2964,7 +2966,9 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().all().size() == 2 ); // kl's own, for f64, and the prelude's `str`
+            REQUIRE(
+                p.types().conformances().all().size() == 3
+            ); // kl's own, for f64, and the prelude's `str` and `joined_text`
         }
     }
 

@@ -50,7 +50,7 @@ class Project
                 }
                 return result::ok( Project( root.file_name(), move root, tests, move found ) );
             case result::err( error ):
-                return result::err( kl::string( "cannot list " ) + root );
+                return result::err( "cannot list " + root );
         }
     }
 

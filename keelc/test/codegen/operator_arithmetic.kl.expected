@@ -88,7 +88,7 @@ struct kl__hours kl__operator_rem__S5hours_3i64( struct kl__hours*, int64_t );
 struct kl__speed kl__operator_div__S6meters_7seconds( struct kl__meters*, struct kl__seconds* );
 void kl__label__R5label_3u64__ctor( struct kl__label*, uint64_t );
 void kl__label__dtor( struct kl__label* );
-struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str );
+struct kl__label kl__from__S5label_MQ7prelude3str( struct kl_7prelude_str );
 uint64_t kl__size__S5label( struct kl__label* );
 struct kl__label kl__operator_add__S5label_5label( struct kl__label*, struct kl__label* );
 struct kl__vec kl__middle__3vec_3vec( struct kl__vec*, struct kl__vec* );
@@ -405,7 +405,7 @@ void kl__label__dtor( struct kl__label* kl_this_1 )
 }
 
 #line 80 "codegen/operator_arithmetic.kl"
-struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str kl_text_1 )
+struct kl__label kl__from__S5label_MQ7prelude3str( struct kl_7prelude_str kl_text_1 )
 {
     struct kl__label kl_t0;
     struct kl__label kl_t2;
@@ -1301,7 +1301,7 @@ int32_t kl__main__( void )
 #line 157 "codegen/operator_arithmetic.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t187, kl_t188, 2 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t190 = kl__from__S5label_Q7prelude3str( kl_t186 );
+    kl_t190 = kl__from__S5label_MQ7prelude3str( kl_t186 );
 #line 157 "codegen/operator_arithmetic.kl"
     kl_t191 = &kl_t190;
 #line 157 "codegen/operator_arithmetic.kl"
@@ -1328,7 +1328,7 @@ int32_t kl__main__( void )
 #line 157 "codegen/operator_arithmetic.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t199, kl_t200, 4 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t202 = kl__from__S5label_Q7prelude3str( kl_t198 );
+    kl_t202 = kl__from__S5label_MQ7prelude3str( kl_t198 );
 #line 157 "codegen/operator_arithmetic.kl"
     kl_t209 = true;
 #line 157 "codegen/operator_arithmetic.kl"

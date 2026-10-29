@@ -2464,14 +2464,26 @@ namespace
 
 // The whole pipeline, so what is emitted came from a real lowering rather than a hand-built
 // Function. A backend bug that only shows on real input is the kind worth catching.
+// `Input` emits only the program's own part, as the driver does, leaving out prelude code it never reaches.
+enum class Emitting : u8
+{
+    All,
+    Input,
+};
+
 struct Generated : Compiled
 {
     std::string c;
 
-    explicit Generated( std::string_view source, bool object = false )
+    explicit Generated( std::string_view source, bool object = false, Emitting emitting = Emitting::All )
         : Compiled( source, Stage::Elaborated )
     {
-        if( clean() )
+        if( clean() && emitting == Emitting::Input )
+        {
+            const Parts parts( ast, types, modules, file, all );
+            c = emit_c_from_kir( all, ast, types, literals, sm, interner, modules, &parts, file, object ).c;
+        }
+        else if( clean() )
         {
             c = emit_c_from_kir( all, ast, types, literals, sm, interner, modules, nullptr, {}, object ).c;
         }
@@ -3416,7 +3428,7 @@ TEST_CASE( "emit_kir_declares_the_runtime_when_it_is_used", "[codegen][kir][allo
     {
         // Not cosmetic: emitting them unconditionally would churn every golden in the corpus for
         // programs that never touch the heap.
-        Generated g( "i32 main() { i32 x = 1; return x; }" );
+        Generated g( "i32 main() { i32 x = 1; return x; }", false, Emitting::Input );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -4155,7 +4167,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
         const std::string_view prototype = "void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );";
 
         Generated counted( "i32 main() { unsafe { i32[*] a = alloc<i32>( 2 ); free( a ); } return 0; }" );
-        Generated single( "i32 main() { unsafe { i32* a = alloc<i32>(); free( a ); } return 0; }" );
+        Generated single( "i32 main() { unsafe { i32* a = alloc<i32>(); free( a ); } return 0; }", false, Emitting::Input );
 
         INFO( counted.c );
         REQUIRE( counted.has( prototype ) );

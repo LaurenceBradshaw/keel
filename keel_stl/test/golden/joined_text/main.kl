@@ -1,0 +1,67 @@
+// A string literal joined with `+` to text that has no `+` of its own builds the prelude's
+// `joined_text`. It passes to a `textual` parameter as it is, and becomes a `kl::string` where one is
+// expected, which takes its buffer over rather than copying it. A literal before a `kl::string`
+// still adopts `kl::string`. Every line printed is checked, and KEEL_VALGRIND=1 sees a buffer
+// freed twice or never.
+import kl::console;
+import kl::os;
+import kl::string;
+
+kl::string returned( const ref kl::path p )
+{
+    return "cannot run " + p;
+}
+
+result<u64, kl::string> failed( const ref kl::path p )
+{
+    return result::err( "cannot list " + p );
+}
+
+u64 length( move kl::string s )
+{
+    return s.size();
+}
+
+i32 main()
+{
+    kl::path p = "bin/keelc";
+
+    // Lent to a `textual` parameter, and dropped at the end of the statement.
+    kl::println( "cannot create " + p );
+
+    // A chain: the left `+` gives a `joined_text`, whose own `+` gives another.
+    kl::println( "`" + p + "` failed" );
+
+    kl::println( returned( p ) );
+
+    kl::string read = "cannot read " + p;
+    kl::println( read );
+
+    switch( move failed( p ) )
+    {
+        case result::ok( n ): { kl::println( n ); break; }
+        case result::err( e ): { kl::println( e ); break; }
+    }
+
+    kl::println( length( "ab" + p ) );
+
+    // Kept as it is, then moved into a `kl::string`, which can still grow.
+    auto joined = "x" + p;
+    kl::println( joined.size() );
+    kl::string taken = move joined;
+    taken.push( 33 );
+    taken += "?";
+    kl::println( taken );
+
+    // Two literals join too.
+    kl::println( "a" + "b" );
+
+    // Unchanged: a literal before a `kl::string` adopts it, so `==` is the string's.
+    kl::string s = "ab";
+    if( !( "xy" + s == "xyab" ) )
+    {
+        return 1;
+    }
+
+    return 0;
+}

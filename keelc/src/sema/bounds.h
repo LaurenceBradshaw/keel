@@ -100,6 +100,9 @@ public:
     bool conforms( Type_id type, Type_id interface ) const;
     // Whether a string literal becomes a `type`: only through the prelude's `from<str>`.
     bool adopts_text( Type_id type, Type_id text ) const;
+    // Whether `value` is the prelude's `joined_text` and `type` is made from one. No other `from<U>`
+    // adopts: `from<u64>` never lets a `u64` become a `kl::string`.
+    bool adopts_joined( Type_id type, Type_id value ) const;
 
     // What a type exposes. Where a receiver's methods are declared: itself, or a parameter's bounds.
     std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;

@@ -70,13 +70,13 @@ class Builder
 
         if( !in_progress_.insert( kl::string( module ) ) )
         {
-            kl::eprintln( kl::string( "keelb: importing `" ) + module + "` closes a cycle" );
+            kl::eprintln( "keelb: importing `" + module + "` closes a cycle" );
             return result::err( 1 );
         }
 
         if( in_tests( module ) && kl::is_file( project_.root() / "src" / ( module + ".kl" ) ) )
         {
-            kl::eprintln( kl::string( "keelb: `" ) + module + "` is in both src/ and test/" );
+            kl::eprintln( "keelb: `" + module + "` is in both src/ and test/" );
             return result::err( 1 );
         }
 
@@ -108,7 +108,7 @@ class Builder
 
         if( !fresh )
         {
-            kl::println( kl::string( "compiling " ) + module );
+            kl::println( "compiling " + module );
             try create_folder( object.parent() );
 
             // Every object so far, which holds all of this module's imports, direct or not.
@@ -151,7 +151,7 @@ class Builder
                 return false;
         }
 
-        kl::string source_line = kl::string( " " ) + source_hash;
+        kl::string source_line = " " + source_hash;
         bool same_build = false;
         bool same_mode = false;
         bool same_source = false;
@@ -210,7 +210,7 @@ class Builder
                 }
                 return result::ok( move imports );
             case result::err( error ):
-                kl::eprintln( kl::string( "keelb: cannot run " ) + keelc_.path() );
+                kl::eprintln( "keelb: cannot run " + keelc_.path() );
                 return result::err( 2 );
         }
     }
@@ -254,7 +254,7 @@ class Builder
                 }
                 return result::ok();
             case result::err( error ):
-                kl::eprintln( kl::string( "keelb: cannot run " ) + keelc_.path() );
+                kl::eprintln( "keelb: cannot run " + keelc_.path() );
                 return result::err( 2 );
         }
     }
@@ -354,7 +354,7 @@ class Builder
             case result::ok( text ):
                 return result::ok( move text );
             case result::err( error ):
-                kl::eprintln( kl::string( "keelb: cannot read " ) + file );
+                kl::eprintln( "keelb: cannot read " + file );
                 return result::err( 1 );
         }
     }
@@ -366,7 +366,7 @@ class Builder
             case result::ok():
                 return result::ok();
             case result::err( error ):
-                kl::eprintln( kl::string( "keelb: cannot create " ) + folder );
+                kl::eprintln( "keelb: cannot create " + folder );
                 return result::err( 1 );
         }
     }

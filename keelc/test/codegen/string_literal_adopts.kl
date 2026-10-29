@@ -15,7 +15,7 @@ class label implements from<str>
 
     ~label() { unsafe { free( bytes ); } }
 
-    public static label from( str text ) { return label( text.size ); }
+    public static label from( move str text ) { return label( text.size ); }
     public u64 size() const { return length; }
     public bool operator==( const ref label other ) const { return length == other.length; }
 };
@@ -24,7 +24,7 @@ struct width implements from<str>
 {
     u64 n;
 
-    static width from( str text ) { return width { text.size }; }
+    static width from( move str text ) { return width { text.size }; }
 };
 
 struct framed
