@@ -1,0 +1,57 @@
+// D74: an ordered map's walks visit entries from the smallest key, and an ordered set's its keys.
+// Each check asserts; under valgrind each string drops once.
+import kl::ordered_map;
+import kl::ordered_set;
+import kl::string;
+
+i32 main()
+{
+    kl::ordered_map<i32, kl::string> m = kl::ordered_map<i32, kl::string>();
+    for( i32 k : 0..40 )
+    {
+        _ = m.insert( ( k * 17 ) % 40, "v" );
+    }
+    _ = m.remove( 5 );
+
+    i32 previous = -1;
+    u64 count    = 0;
+    for( [ const ref key, const ref value ] : m )
+    {
+        assert( key > previous );
+        assert( value.size() == 1 );
+        previous = key;
+        count += 1;
+    }
+    assert( count == 39 );
+
+    for( [ const ref key, ref value ] : m )
+    {
+        if( key % 2 == 0 )
+        {
+            value += "w";
+        }
+    }
+
+    u64 bytes = 0;
+    for( [ const ref value ] : m )
+    {
+        bytes += value.size();
+    }
+    assert( bytes == 59 );
+
+    kl::ordered_set<i32> s = kl::ordered_set<i32>();
+    for( i32 k : 0..40 )
+    {
+        _ = s.insert( 39 - k );
+    }
+
+    i32 expected = 0;
+    for( i32 k : s )
+    {
+        assert( k == expected );
+        expected += 1;
+    }
+    assert( expected == 40 );
+
+    return 0;
+}

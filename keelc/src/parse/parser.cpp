@@ -145,6 +145,8 @@ private:
     Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
     // `T x : a..b` or `T x : c`: the counter, or a walk's binding with `container` set (D74).
     Node_id parse_colon_head( Node_id& container );
+    // `[ const ref key, ref value ]`: a Binding_list of Var_decls whose Mode_type holds no type.
+    Node_id parse_binding_list();
     Node_id parse_expression_stmt( bool consume_semicolon = true );
     Node_id parse_prefix_increment_stmt( bool consume_semicolon );
 
@@ -2821,6 +2823,58 @@ Node_id Parser::parse_colon_head( Node_id& container )
     return node;
 }
 
+Node_id Parser::parse_binding_list()
+{
+    const Span start = cursor_.advance().span; // `[`
+
+    std::vector<Node_id> entries;
+
+    do
+    {
+        const Span entry_start = cursor_.peek().span;
+        const bool is_const    = cursor_.check_keyword( Keyword::Const ) && cursor_.peek( 1 ).keyword() == Keyword::Ref;
+
+        if( is_const )
+        {
+            cursor_.advance();
+        }
+
+        Node_id annotation;
+        if( cursor_.at_mode_keyword() )
+        {
+            const Keyword mode = cursor_.advance().keyword();
+            annotation         = ast_.add(
+                Node_kind::Mode_type,
+                Span::merge( entry_start, cursor_.previous().span ),
+                static_cast<u32>( mode ),
+                { Node_id {} }
+            );
+
+            if( is_const )
+            {
+                annotation =
+                    ast_.add( Node_kind::Const_type, Span::merge( entry_start, cursor_.previous().span ), 0, { annotation } );
+            }
+        }
+
+        const Symbol_id name = expect_name();
+        if( !name.is_valid() )
+        {
+            break;
+        }
+
+        const Node_id entry = ast_.add(
+            Node_kind::Var_decl, Span::merge( entry_start, cursor_.previous().span ), name.v, { annotation, Node_id {} }
+        );
+        ast_.set_name_span( entry, cursor_.previous().span );
+        entries.push_back( entry );
+    } while( cursor_.match( Token_kind::Comma ) );
+
+    recovery_.expect( Token_kind::R_bracket );
+
+    return ast_.add( Node_kind::Binding_list, Span::merge( start, cursor_.previous().span ), 0, entries );
+}
+
 Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 {
     if( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
@@ -3042,6 +3096,20 @@ Node_id Parser::parse_for_stmt()
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
     const u32 condition_start = cursor_.position();
+
+    // D74's `for( [ const ref key, ref value ] : m )`.
+    if( cursor_.check( Token_kind::L_bracket ) )
+    {
+        const Node_id bindings = parse_binding_list();
+        recovery_.expect( Token_kind::Colon );
+        const Node_id container = parse_expression( 0 );
+        recovery_.close_header( condition_start );
+        const Node_id body = parse_block();
+
+        return ast_.add(
+            Node_kind::Walk_stmt, Span::merge( start, cursor_.previous().span ), 0, { container, bindings, body }
+        );
+    }
 
     // D59's `for( u64 i : a..b )`, and D74's `for( const ref T x : c )`.
     if( lookahead_.looks_like_counter( cursor_.position() ) )
@@ -8428,6 +8496,31 @@ TEST_CASE( "parser_walk_statement", "[parse]" )
         REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Walk_stmt );
         REQUIRE_FALSE( p.child( p.child( first_statement( p ), 1 ), 0 ).is_valid() );
     }
+}
+
+TEST_CASE( "parser_binding_list", "[parse]" )
+{
+    const Parsed p( "i32 main() { for( [ const ref key, ref value, count ] : m ) { } return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id stmt = first_statement( p );
+    const Node_id list = p.child( stmt, 1 );
+    REQUIRE( p.kind( stmt ) == Node_kind::Walk_stmt );
+    REQUIRE( p.text( p.child( stmt, 0 ) ) == "m" );
+    REQUIRE( p.kind( list ) == Node_kind::Binding_list );
+    REQUIRE( p.ast().children( list ).size() == 3 );
+
+    const Node_id key   = p.child( list, 0 );
+    const Node_id value = p.child( list, 1 );
+    const Node_id count = p.child( list, 2 );
+    REQUIRE( p.text( key ) == "const ref key" );
+    REQUIRE( p.ast().parameter_mode( key ) == Keyword::Ref );
+    REQUIRE( p.ast().is_const_binding( key ) );
+    REQUIRE( p.ast().parameter_mode( value ) == Keyword::Ref );
+    REQUIRE_FALSE( p.ast().is_const_binding( value ) );
+    REQUIRE_FALSE( p.ast().annotation( count ).is_valid() );
 }
 
 TEST_CASE( "parser_yield_statement", "[parse]" )

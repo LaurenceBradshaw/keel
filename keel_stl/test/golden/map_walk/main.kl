@@ -1,0 +1,50 @@
+// D74: a map's walks bind each entry's key and value by name, reading and writing, with owning
+// keys and values. Each check asserts; under valgrind each string drops once.
+import kl::map;
+import kl::string;
+
+i32 main()
+{
+    kl::map<kl::string, i32> counts = kl::map<kl::string, i32>();
+    _ = counts.insert( "one", 1 );
+    _ = counts.insert( "two", 2 );
+    _ = counts.insert( "three", 3 );
+
+    for( [ ref value ] : counts )
+    {
+        value *= 10;
+    }
+
+    i32 sum   = 0;
+    u64 bytes = 0;
+    for( [ const ref key, value ] : counts )
+    {
+        sum += value;
+        bytes += key.size();
+    }
+    assert( sum == 60 );
+    assert( bytes == 11 );
+
+    // Each value replaced in place drops the old string.
+    kl::map<i32, kl::string> names = kl::map<i32, kl::string>();
+    _ = names.insert( 1, "a" );
+    _ = names.insert( 2, "bb" );
+    _ = names.insert( 3, "ccc" );
+
+    for( [ const ref key, ref value ] : names )
+    {
+        if( key > 1 )
+        {
+            value = "longer";
+        }
+    }
+
+    bytes = 0;
+    for( [ const ref value ] : names )
+    {
+        bytes += value.size();
+    }
+    assert( bytes == 13 );
+
+    return 0;
+}

@@ -165,6 +165,32 @@ class map<K, V> where K : hashable
         }
     }
 
+    /// Each entry in `key_at`'s order: `for( [ const ref key, const ref value ] : m )`. The body may
+    /// not change the map.
+    public void operator:( const ref K key, const ref V value ) const
+    {
+        for( u64 i : 0..control_.size() )
+        {
+            unsafe
+            {
+                yield( keys_[i], values_[i] );
+            }
+        }
+    }
+
+    /// Each entry in `key_at`'s order, its value writable in place:
+    /// `for( [ const ref key, ref value ] : m )`. The body may not change the map itself.
+    public void operator:( const ref K key, ref V value )
+    {
+        for( u64 i : 0..control_.size() )
+        {
+            unsafe
+            {
+                yield( keys_[i], ref values_[i] );
+            }
+        }
+    }
+
     /// --- Changing ---
 
     /// Puts `value` under `key`, and returns the value that was there, or `none` if there was none.

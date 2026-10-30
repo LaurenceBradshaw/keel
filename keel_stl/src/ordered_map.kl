@@ -173,6 +173,34 @@ class ordered_map<K, V> where K : comparable
         }
     }
 
+    /// Each entry from the smallest key: `for( [ const ref key, const ref value ] : m )`. The body may
+    /// not change the map.
+    public void operator:( const ref K key, const ref V value ) const
+    {
+        for( u64 i : 0..control_.size() )
+        {
+            const u64 slot = control_.slot_at( i );
+            unsafe
+            {
+                yield( keys_[slot], values_[slot] );
+            }
+        }
+    }
+
+    /// Each entry from the smallest key, its value writable in place:
+    /// `for( [ const ref key, ref value ] : m )`. The body may not change the map itself.
+    public void operator:( const ref K key, ref V value )
+    {
+        for( u64 i : 0..control_.size() )
+        {
+            const u64 slot = control_.slot_at( i );
+            unsafe
+            {
+                yield( keys_[slot], ref values_[slot] );
+            }
+        }
+    }
+
     /// --- Changing ---
 
     /// Puts `value` under `key`, and returns the value that was there, or `none` if there was none.

@@ -3857,26 +3857,35 @@ void Lowering::lower_yield( Node_id id )
     walks_[at].in_body = true;
     enter( walks_[at].caller );
 
-    const Node_id  binding = ast_.binding( walks_[at].loop );
-    const bool     borrows = is_borrowed_binding( ast_, types_, binding );
-    const Type_id  type    = borrows ? binding_type_of( binding ) : type_of( binding );
-    const Local_id local   = builder_.add_local( type, ast_.span( binding ), ast_.name( binding ) );
+    // A Binding_list names the parameters it binds; what no entry names is left unused.
+    const Node_id                  binding = ast_.binding( walks_[at].loop );
+    const bool                     named   = ast_.kind( binding ) == Node_kind::Binding_list;
+    const std::span<const Node_id> entries = named ? ast_.children( binding ) : std::span<const Node_id>( &binding, 1 );
 
-    builder_.storage_live( local, span );
-
-    // A struct bound bare copies what a `const ref` parameter lends.
-    const Operand given = operands[0];
-    const Operand value = !borrows && is_borrowed_binding( ast_, types_, yielded[0] )
-                              ? copy( builder_.deref( given.place ), type )
-                              : converted( given, type, span );
-
-    builder_.assign( builder_.place( local ), use( value ), span );
-    drops_.add_to_scope( local );
-    locals_.insert_or_assign( binding.v, local );
-
-    if( borrows )
+    for( const Node_id entry : entries )
     {
-        borrowed_bindings_.insert( binding.v );
+        const auto param =
+            named ? std::ranges::find( yielded, ast_.walk_parameter( walks_[at].walk, ast_.name( entry ) ) ) : yielded.begin();
+        const bool     borrows = is_borrowed_binding( ast_, types_, entry );
+        const Type_id  type    = borrows ? binding_type_of( entry ) : type_of( entry );
+        const Local_id local   = builder_.add_local( type, ast_.span( entry ), ast_.name( entry ) );
+
+        builder_.storage_live( local, span );
+
+        // A struct bound bare copies what a `const ref` parameter lends.
+        const Operand given = operands[static_cast<std::size_t>( param - yielded.begin() )];
+        const Operand value = !borrows && is_borrowed_binding( ast_, types_, *param )
+                                  ? copy( builder_.deref( given.place ), type )
+                                  : converted( given, type, span );
+
+        builder_.assign( builder_.place( local ), use( value ), span );
+        drops_.add_to_scope( local );
+        locals_.insert_or_assign( entry.v, local );
+
+        if( borrows )
+        {
+            borrowed_bindings_.insert( entry.v );
+        }
     }
 
     loops_.push_back( Loop_targets { walks_[at].exit, Block_id {}, walks_[at].depth } );

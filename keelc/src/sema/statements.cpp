@@ -5,6 +5,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <optional>
 #include <unordered_set>
 
@@ -663,25 +664,25 @@ void Statements::visit_for( Node_id id )
 // less than it is lent, never more.
 void Statements::visit_walk( Node_id id )
 {
-    const Node_id binding    = ast_.binding( id );
-    const Node_id annotation = ast_.annotation( binding );
-    const Keyword mode       = ast_.parameter_mode( binding );
-    const bool    borrows    = mode == Keyword::Ref;
-    const bool    writes     = borrows && !ast_.is_const_binding( binding );
-    Type_id       type       = table_.builtin( Type_kind::Error );
+    const Node_id                  binding = ast_.binding( id );
+    const bool                     named   = ast_.kind( binding ) == Node_kind::Binding_list;
+    const std::span<const Node_id> entries = named ? ast_.children( binding ) : std::span<const Node_id>( &binding, 1 );
+
+    // One `ref` entry picks the writing walk.
+    const bool writes = std::ranges::any_of(
+        entries,
+        [&]( Node_id entry ) { return ast_.parameter_mode( entry ) == Keyword::Ref && !ast_.is_const_binding( entry ); }
+    );
+
+    std::vector<Type_id> types( entries.size(), table_.builtin( Type_kind::Error ) );
 
     const Node_id walk = expressions_.check_walk( id, writes );
 
     if( walk.is_valid() )
     {
-        const std::span<const Node_id> yielded   = ast_.params( walk ).subspan( 1 );
-        const Type_id                  container = types_.type_of( ast_.container( id ) );
-        const Type_id                  given =
-            yielded.empty() ? type
-                                             : types_.table().substitute( types_.type_of( yielded[0] ), table_.instance_bindings( container ) );
-        const Type_id written = annotations_.resolve( annotation );
+        const std::span<const Node_id> yielded = ast_.params( walk ).subspan( 1 );
 
-        if( yielded.size() != 1 )
+        if( !named && yielded.size() != 1 )
         {
             reporter_.error_at(
                 ast_.span( binding ),
@@ -689,25 +690,30 @@ void Statements::visit_walk( Node_id id )
                 "bind them by name: `for( [ const ref key, ref value ] : m )`"
             );
         }
-        else if( mode == Keyword::Out || mode == Keyword::Move )
-        {
-            reporter_.error_at( ast_.span( annotation ), "a walk lends what it yields", "bind it `const ref` or `ref`" );
-        }
-        else if( written.is_valid() && !table_.is_error( written ) && written != given )
-        {
-            reporter_.error_at( ast_.span( annotation ), fmt::format( "the walk yields `{}`", table_.name( given ) ) );
-        }
-        else if( !borrows && !table_.is_error( given ) && !bounds_.satisfies( given, Bound::Copyable ) )
-        {
-            reporter_.error_at(
-                ast_.span( binding ),
-                fmt::format( "the walk lends `{}`, which a binding cannot copy", table_.name( given ) ),
-                "bind it `const ref`"
-            );
-        }
         else
         {
-            type = given;
+            for( std::size_t i = 0; i < entries.size(); ++i )
+            {
+                const Node_id param = named ? ast_.walk_parameter( walk, ast_.name( entries[i] ) ) : yielded[0];
+
+                if( param.is_valid() )
+                {
+                    types[i] = check_walk_binding( id, entries[i], param );
+                    continue;
+                }
+
+                std::string names;
+                for( const Node_id other : yielded )
+                {
+                    names += fmt::format( "{}`{}`", names.empty() ? "" : ", ", interner_.text( ast_.name( other ) ) );
+                }
+
+                reporter_.error_at(
+                    ast_.name_span( entries[i] ),
+                    fmt::format( "this walk yields no `{}`", interner_.text( ast_.name( entries[i] ) ) ),
+                    fmt::format( "it yields {}", names )
+                );
+            }
         }
 
         if( ast_.is_walk( expressions_.current_function() ) )
@@ -716,23 +722,71 @@ void Statements::visit_walk( Node_id id )
         }
     }
 
-    if( borrows && !table_.is_error( type ) )
+    for( std::size_t i = 0; i < entries.size(); ++i )
     {
-        places_.record_binding_address( annotation, type );
-    }
+        const bool borrows = ast_.parameter_mode( entries[i] ) == Keyword::Ref;
 
-    if( !borrows )
-    {
-        places_.record_walk_binding( binding );
-    }
+        if( borrows && !table_.is_error( types[i] ) )
+        {
+            places_.record_binding_address( ast_.annotation( entries[i] ), types[i] );
+        }
 
-    types_.record( binding, type );
+        if( !borrows )
+        {
+            places_.record_walk_binding( entries[i] );
+        }
+
+        types_.record( entries[i], types[i] );
+    }
 
     loop_depth_ += 1;
     breakable_depth_ += 1;
     visit( ast_.body( id ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
+}
+
+// A binding may hold less than the walk lends, never more: `ref` only over `ref`, and a bare copy
+// only of a type that copies.
+Type_id Statements::check_walk_binding( Node_id loop, Node_id entry, Node_id param )
+{
+    const Node_id annotation = ast_.annotation( entry );
+    const Keyword mode       = ast_.parameter_mode( entry );
+    const Type_id container  = types_.type_of( ast_.container( loop ) );
+    const Type_id given      = types_.table().substitute( types_.type_of( param ), table_.instance_bindings( container ) );
+    const Type_id written    = annotations_.resolve( annotation );
+
+    if( mode == Keyword::Out || mode == Keyword::Move )
+    {
+        reporter_.error_at( ast_.span( annotation ), "a walk lends what it yields", "bind it `const ref` or `ref`" );
+    }
+    else if( written.is_valid() && !table_.is_error( written ) && written != given )
+    {
+        reporter_.error_at( ast_.span( annotation ), fmt::format( "the walk yields `{}`", table_.name( given ) ) );
+    }
+    else if( mode == Keyword::Ref && !ast_.is_const_binding( entry ) &&
+             ( !ast_.is_ref_parameter( param ) || ast_.is_const_binding( param ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            fmt::format( "the walk lends `{}` read-only", interner_.text( ast_.name( param ) ) ),
+            "bind it `const ref`"
+        );
+    }
+    else if( mode != Keyword::Ref && !table_.is_error( given ) && !bounds_.satisfies( given, Bound::Copyable ) )
+    {
+        reporter_.error_at(
+            ast_.span( entry ),
+            fmt::format( "the walk lends `{}`, which a binding cannot copy", table_.name( given ) ),
+            "bind it `const ref`"
+        );
+    }
+    else
+    {
+        return given;
+    }
+
+    return table_.builtin( Type_kind::Error );
 }
 
 void Statements::check_walk_cycles()

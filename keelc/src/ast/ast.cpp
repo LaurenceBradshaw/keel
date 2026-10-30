@@ -873,6 +873,18 @@ bool Ast::is_walk( Node_id decl ) const
            name( decl ) == Interner::operator_name( Operator_name::Walk );
 }
 
+Node_id Ast::walk_parameter( Node_id walk, Symbol_id name ) const
+{
+    for( const Node_id param : params( walk ).subspan( 1 ) )
+    {
+        if( this->name( param ) == name )
+        {
+            return param;
+        }
+    }
+    return Node_id {};
+}
+
 bool Ast::is_requirement( Node_id method ) const
 {
     if( !method.is_valid() || kind( method ) != Node_kind::Method_decl )

@@ -1,0 +1,37 @@
+error: this walk yields no `size`
+  --> sema/errors_walk_bindings.kl:43:37
+   |
+43 |     for( [ const ref key, const ref size ] : p ) // error: no `size`
+   |                                     ^^^^ it yields `key`, `value`
+
+error: `key` is already declared in this scope
+  --> sema/errors_walk_bindings.kl:48:17
+   |
+48 |     for( [ key, key ] : p ) // error: bound twice
+   |                 ^^^ previous declaration is at: sema/errors_walk_bindings.kl:48:12
+
+error: the walk lends `key` read-only
+  --> sema/errors_walk_bindings.kl:53:12
+   |
+53 |     for( [ ref key, ref value ] : p ) // error: `key` is read-only
+   |            ^^^ bind it `const ref`
+
+error: this walk yields 2 values
+  --> sema/errors_walk_bindings.kl:58:10
+   |
+58 |     for( const ref i32 key : p ) // error: two values
+   |          ^^^^^^^^^^^^^^^^^^^^^ bind them by name: `for( [ const ref key, ref value ] : m )`
+
+error: `key` shadows an outer declaration
+  --> sema/errors_walk_bindings.kl:65:16
+   |
+65 |         for( [ key, value ] : p ) // error: `key` shadows
+   |                ^^^ previous declaration is at: sema/errors_walk_bindings.kl:63:12
+
+error: `value` is lent by the walk, so it cannot be modified
+  --> sema/errors_walk_bindings.kl:83:9
+   |
+83 |         value = 0; // error: bare is read-only
+   |         ^^^^^ bind it `ref`
+
+6 errors generated

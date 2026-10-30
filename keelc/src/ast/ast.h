@@ -181,6 +181,7 @@ public:
     Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members
     bool    is_requirement( Node_id method ) const;      // a method an interface declares
     bool    is_walk( Node_id decl ) const;               // D74: a method named `operator:`
+    Node_id walk_parameter( Node_id walk, Symbol_id name ) const; // what it yields by that name, or invalid
 
     // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the
     // function the access is written in, and invalid for a free function, which sees nothing private.

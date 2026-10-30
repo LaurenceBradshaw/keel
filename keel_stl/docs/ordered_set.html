@@ -68,6 +68,12 @@ out of order.</p>
 <p>The number of keys less than <code>key</code>, which is where <code>key</code> sits or would sit.</p>
 </div>
 </div>
+<div class="group" id="ordered_set.operator:">
+<pre class="signature"><a class="anchor" href="#ordered_set.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each key from the smallest: <code>for( const ref K k : s )</code>. The body may not change the set.</p>
+</div>
+</div>
 <h3>Changing</h3>
 <div class="group" id="ordered_set.insert">
 <pre class="signature"><a class="anchor" href="#ordered_set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>

@@ -106,6 +106,18 @@ Does nothing if the capacity is already that large.</p>
 <p>If <code>i</code> is not less than <code>size()</code>.</p>
 </div>
 </div>
+<div class="group" id="map.operator:">
+<pre class="signature"><a class="anchor" href="#map.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> K key, <span class="kw">const</span> <span class="kw">ref</span> V value ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Each entry in <code>key_at</code>'s order: <code>for( [ const ref key, const ref value ] : m )</code>. The body may
+not change the map.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#map.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> K key, <span class="kw">ref</span> V value )</code></pre>
+<div class="doc">
+<p>Each entry in <code>key_at</code>'s order, its value writable in place:
+<code>for( [ const ref key, ref value ] : m )</code>. The body may not change the map itself.</p>
+</div>
+</div>
 <h3>Changing</h3>
 <div class="group" id="map.insert">
 <pre class="signature"><a class="anchor" href="#map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
