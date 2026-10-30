@@ -1,0 +1,34 @@
+// D74: a loop over an array freezes it as a walk's receiver does: the body may not replace what
+// owns something. An array of plain values owns nothing, so it may change. One error per
+// marked line.
+class Counted
+{
+    public i32 value;
+
+    public Counted( i32 v )
+    {
+        value = v;
+    }
+
+    ~Counted()
+    {
+    }
+};
+
+i32 main()
+{
+    Counted[2] c = [ Counted( 1 ), Counted( 2 ) ];
+
+    for( const ref Counted item : c )
+    {
+        c[0] = Counted( item.value ); // error: replaced while walked
+    }
+
+    i32[2] a = [ 1, 2 ];
+    for( i32 v : a )
+    {
+        a[1] = v;
+    }
+
+    return a[1];
+}

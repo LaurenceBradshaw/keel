@@ -1,0 +1,354 @@
+// codegen/walk_bound.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A3_3i32;
+struct kl__Bag__I3i32E;
+struct kl__A3_3f64;
+struct kl__Bag__I3f64E;
+
+struct kl__A3_3i32
+{
+    int32_t e[3];
+};
+
+struct kl__Bag__I3i32E
+{
+    struct kl__A3_3i32 kl_items;
+};
+
+struct kl__A3_3f64
+{
+    double e[3];
+};
+
+struct kl__Bag__I3f64E
+{
+    struct kl__A3_3f64 kl_items;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+void kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E*, struct kl__A3_3i32 );
+int32_t kl__sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* );
+void kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E*, struct kl__A3_3f64 );
+double kl__first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* );
+
+#line 58 "codegen/walk_bound.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Bag__I3i32E kl_b_1;
+    struct kl__Bag__I3i32E* kl_t2;
+    struct kl__A3_3i32 kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    struct kl__Bag__I3i32E* kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    struct kl__Bag__I3i32E* kl_t11;
+    struct kl__A3_3i32* kl_t12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    int32_t* kl_x_16;
+    int32_t* kl_t17;
+    int32_t* kl_v_18;
+    bool kl_t19;
+    struct kl__Bag__I3i32E* kl_t20;
+    int32_t kl_t21;
+    bool kl_t22;
+    struct kl__Bag__I3f64E kl_f_23;
+    struct kl__Bag__I3f64E* kl_t24;
+    struct kl__A3_3f64 kl_t25;
+    uint64_t kl_t26;
+    uint64_t kl_t27;
+    uint64_t kl_t28;
+    struct kl__Bag__I3f64E* kl_t30;
+    double kl_t31;
+    bool kl_t32;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t26;
+    ( void ) kl_t27;
+    ( void ) kl_t28;
+#line 60 "codegen/walk_bound.kl"
+    kl_t2 = &kl_b_1;
+#line 60 "codegen/walk_bound.kl"
+    kl_t4 = 0;
+#line 60 "codegen/walk_bound.kl"
+    kl_t3.e[kl_t4] = 1;
+#line 60 "codegen/walk_bound.kl"
+    kl_t5 = 1;
+#line 60 "codegen/walk_bound.kl"
+    kl_t3.e[kl_t5] = 2;
+#line 60 "codegen/walk_bound.kl"
+    kl_t6 = 2;
+#line 60 "codegen/walk_bound.kl"
+    kl_t3.e[kl_t6] = 3;
+#line 60 "codegen/walk_bound.kl"
+    kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
+#line 62 "codegen/walk_bound.kl"
+    kl_t8 = &kl_b_1;
+#line 62 "codegen/walk_bound.kl"
+    kl_t9 = kl__sum__I3BagI3i32EE__3BagI3i32E( kl_t8 );
+#line 62 "codegen/walk_bound.kl"
+    kl_t10 = kl_t9 != 6;
+#line 62 "codegen/walk_bound.kl"
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 64 "codegen/walk_bound.kl"
+    return kl_t0;
+    bb2:
+#line 68 "codegen/walk_bound.kl"
+    kl_t11 = &kl_b_1;
+#line 22 "codegen/walk_bound.kl"
+    kl_t12 = &( *kl_t11 ).kl_items;
+#line 22 "codegen/walk_bound.kl"
+    kl_t13 = 0;
+#line 22 "codegen/walk_bound.kl"
+    kl_t14 = 3;
+#line 22 "codegen/walk_bound.kl"
+    goto bb3;
+    bb3:
+#line 22 "codegen/walk_bound.kl"
+    kl_t15 = kl_t13 < kl_t14;
+#line 22 "codegen/walk_bound.kl"
+    if ( kl_t15 ) goto bb4; else goto bb5;
+    bb4:
+#line 22 "codegen/walk_bound.kl"
+    kl_x_16 = &( *kl_t12 ).e[kl_t13];
+#line 24 "codegen/walk_bound.kl"
+    kl_t17 = &( *kl_x_16 );
+#line 24 "codegen/walk_bound.kl"
+    kl_v_18 = kl_t17;
+#line 70 "codegen/walk_bound.kl"
+    kl_t19 = __builtin_mul_overflow( ( *kl_v_18 ), 10, &( int32_t ) { 0 } );
+#line 70 "codegen/walk_bound.kl"
+    if ( kl_t19 ) goto bb6; else goto bb7;
+    bb5:
+#line 68 "codegen/walk_bound.kl"
+    goto bb10;
+    bb6:
+    kl_rt_panic( "codegen/walk_bound.kl", 70, "arithmetic overflow: v *= 10;" );
+    bb7:
+#line 70 "codegen/walk_bound.kl"
+    ( *kl_v_18 ) = ( *kl_v_18 ) * 10;
+#line 24 "codegen/walk_bound.kl"
+    goto bb8;
+    bb8:
+#line 22 "codegen/walk_bound.kl"
+    goto bb9;
+    bb9:
+#line 22 "codegen/walk_bound.kl"
+    kl_t13 = kl_t13 + 1;
+#line 22 "codegen/walk_bound.kl"
+    goto bb3;
+    bb10:
+#line 73 "codegen/walk_bound.kl"
+    kl_t20 = &kl_b_1;
+#line 73 "codegen/walk_bound.kl"
+    kl_t21 = kl__sum__I3BagI3i32EE__3BagI3i32E( kl_t20 );
+#line 73 "codegen/walk_bound.kl"
+    kl_t22 = kl_t21 != 60;
+#line 73 "codegen/walk_bound.kl"
+    if ( kl_t22 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 2;
+#line 75 "codegen/walk_bound.kl"
+    return kl_t0;
+    bb12:
+#line 78 "codegen/walk_bound.kl"
+    kl_t24 = &kl_f_23;
+#line 78 "codegen/walk_bound.kl"
+    kl_t26 = 0;
+#line 78 "codegen/walk_bound.kl"
+    kl_t25.e[kl_t26] = 0.5;
+#line 78 "codegen/walk_bound.kl"
+    kl_t27 = 1;
+#line 78 "codegen/walk_bound.kl"
+    kl_t25.e[kl_t27] = 2.5;
+#line 78 "codegen/walk_bound.kl"
+    kl_t28 = 2;
+#line 78 "codegen/walk_bound.kl"
+    kl_t25.e[kl_t28] = 4.0;
+#line 78 "codegen/walk_bound.kl"
+    kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
+#line 80 "codegen/walk_bound.kl"
+    kl_t30 = &kl_f_23;
+#line 80 "codegen/walk_bound.kl"
+    kl_t31 = kl__first_large__I3BagI3f64EE__3BagI3f64E( kl_t30 );
+#line 80 "codegen/walk_bound.kl"
+    kl_t32 = kl_t31 != 2.5;
+#line 80 "codegen/walk_bound.kl"
+    if ( kl_t32 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 3;
+#line 82 "codegen/walk_bound.kl"
+    return kl_t0;
+    bb14:
+#line 85 "codegen/walk_bound.kl"
+    kl_t0 = 0;
+#line 85 "codegen/walk_bound.kl"
+    return kl_t0;
+}
+
+#line 7 "codegen/walk_bound.kl"
+void kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_this_1, struct kl__A3_3i32 kl_given_2 )
+{
+    ( *kl_this_1 ).kl_items = kl_given_2;
+    return;
+#line 10 "codegen/walk_bound.kl"
+}
+
+#line 29 "codegen/walk_bound.kl"
+int32_t kl__sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_total_2;
+    struct kl__Bag__I3i32E* kl_t3;
+    struct kl__A3_3i32* kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    int32_t* kl_x_8;
+    int32_t* kl_t9;
+    int32_t kl_v_10;
+    bool kl_t11;
+#line 31 "codegen/walk_bound.kl"
+    kl_total_2 = 0;
+#line 33 "codegen/walk_bound.kl"
+    kl_t3 = &( *kl_c_1 );
+#line 14 "codegen/walk_bound.kl"
+    kl_t4 = &( *kl_t3 ).kl_items;
+#line 14 "codegen/walk_bound.kl"
+    kl_t5 = 0;
+#line 14 "codegen/walk_bound.kl"
+    kl_t6 = 3;
+#line 14 "codegen/walk_bound.kl"
+    goto bb1;
+    bb1:
+#line 14 "codegen/walk_bound.kl"
+    kl_t7 = kl_t5 < kl_t6;
+#line 14 "codegen/walk_bound.kl"
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 14 "codegen/walk_bound.kl"
+    kl_x_8 = &( *kl_t4 ).e[kl_t5];
+#line 16 "codegen/walk_bound.kl"
+    kl_t9 = &( *kl_x_8 );
+#line 16 "codegen/walk_bound.kl"
+    kl_v_10 = ( *kl_t9 );
+#line 35 "codegen/walk_bound.kl"
+    kl_t11 = __builtin_add_overflow( kl_total_2, kl_v_10, &( int32_t ) { 0 } );
+#line 35 "codegen/walk_bound.kl"
+    if ( kl_t11 ) goto bb4; else goto bb5;
+    bb3:
+#line 33 "codegen/walk_bound.kl"
+    goto bb8;
+    bb4:
+    kl_rt_panic( "codegen/walk_bound.kl", 35, "arithmetic overflow: total += v;" );
+    bb5:
+#line 35 "codegen/walk_bound.kl"
+    kl_total_2 = kl_total_2 + kl_v_10;
+#line 16 "codegen/walk_bound.kl"
+    goto bb6;
+    bb6:
+#line 14 "codegen/walk_bound.kl"
+    goto bb7;
+    bb7:
+#line 14 "codegen/walk_bound.kl"
+    kl_t5 = kl_t5 + 1;
+#line 14 "codegen/walk_bound.kl"
+    goto bb1;
+    bb8:
+#line 38 "codegen/walk_bound.kl"
+    kl_t0 = kl_total_2;
+#line 38 "codegen/walk_bound.kl"
+    return kl_t0;
+}
+
+#line 7 "codegen/walk_bound.kl"
+void kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_this_1, struct kl__A3_3f64 kl_given_2 )
+{
+    ( *kl_this_1 ).kl_items = kl_given_2;
+    return;
+#line 10 "codegen/walk_bound.kl"
+}
+
+#line 42 "codegen/walk_bound.kl"
+double kl__first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* kl_c_1 )
+{
+    double kl_t0;
+    double kl_found_2;
+    struct kl__Bag__I3f64E* kl_t3;
+    struct kl__A3_3f64* kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    double* kl_x_8;
+    double* kl_t9;
+    double kl_v_10;
+    bool kl_t11;
+#line 44 "codegen/walk_bound.kl"
+    kl_found_2 = 0.0;
+#line 46 "codegen/walk_bound.kl"
+    kl_t3 = &( *kl_c_1 );
+#line 14 "codegen/walk_bound.kl"
+    kl_t4 = &( *kl_t3 ).kl_items;
+#line 14 "codegen/walk_bound.kl"
+    kl_t5 = 0;
+#line 14 "codegen/walk_bound.kl"
+    kl_t6 = 3;
+#line 14 "codegen/walk_bound.kl"
+    goto bb1;
+    bb1:
+#line 14 "codegen/walk_bound.kl"
+    kl_t7 = kl_t5 < kl_t6;
+#line 14 "codegen/walk_bound.kl"
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 14 "codegen/walk_bound.kl"
+    kl_x_8 = &( *kl_t4 ).e[kl_t5];
+#line 16 "codegen/walk_bound.kl"
+    kl_t9 = &( *kl_x_8 );
+#line 16 "codegen/walk_bound.kl"
+    kl_v_10 = ( *kl_t9 );
+#line 48 "codegen/walk_bound.kl"
+    kl_t11 = kl_v_10 > 1.0;
+#line 48 "codegen/walk_bound.kl"
+    if ( kl_t11 ) goto bb4; else goto bb6;
+    bb3:
+#line 46 "codegen/walk_bound.kl"
+    goto bb5;
+    bb4:
+#line 50 "codegen/walk_bound.kl"
+    kl_found_2 = kl_v_10;
+    goto bb5;
+    bb5:
+#line 55 "codegen/walk_bound.kl"
+    kl_t0 = kl_found_2;
+#line 55 "codegen/walk_bound.kl"
+    return kl_t0;
+    bb6:
+#line 14 "codegen/walk_bound.kl"
+    goto bb7;
+    bb7:
+#line 14 "codegen/walk_bound.kl"
+    kl_t5 = kl_t5 + 1;
+#line 14 "codegen/walk_bound.kl"
+    goto bb1;
+#line 56 "codegen/walk_bound.kl"
+}
+
+#line 58 "codegen/walk_bound.kl"
+int main( void )
+{
+#line 58 "codegen/walk_bound.kl"
+    return (int) kl__main__();
+}

@@ -1058,7 +1058,7 @@ void Expressions::check_yield( Node_id id )
     overloads_.check_argument_markers( site, current_function_, bindings );
 }
 
-Node_id Expressions::check_walk( Node_id walk_stmt, bool writes )
+Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner )
 {
     const Node_id container = ast_.container( walk_stmt );
     const Type_id type      = infer( container );
@@ -1068,12 +1068,32 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes )
         return Node_id {};
     }
 
+    // The compiler walks a run's or an array's elements itself, so no method is chosen.
+    if( table_.is_run( type ) || table_.is_array( type ) )
+    {
+        if( writes )
+        {
+            places_.check_writable( container, current_function_, false, false );
+        }
+        return Node_id {};
+    }
+
+    // A type parameter walks through the bound that requires one.
+    const bool bounded = table_.is_parameter( type );
+    owner              = type;
+
+    if( bounded )
+    {
+        const std::vector<Type_id> owners = bounds_.method_owners( type, Interner::operator_name( Operator_name::Walk ) );
+        owner                             = owners.empty() ? Type_id {} : owners.front();
+    }
+
     Node_id reading;
     Node_id writing;
 
-    if( table_.is_struct( type ) )
+    if( owner.is_valid() && ( table_.is_struct( owner ) || table_.is_interface( owner ) ) )
     {
-        for( const Node_id member : ast_.members( table_.get( type ).declaration ) )
+        for( const Node_id member : ast_.members( table_.get( owner ).declaration ) )
         {
             if( ast_.is_walk( member ) )
             {
@@ -1099,7 +1119,9 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes )
             reporter_.error_at(
                 ast_.span( container ),
                 fmt::format( "`{}` has no walk", table_.name( type ) ),
-                fmt::format( "count over it: `for( u64 i : 0..{}.size() )`", reporter_.text( ast_.span( container ) ) )
+                bounded
+                    ? std::string( "bound it by an interface that requires `operator:`" )
+                    : fmt::format( "count over it: `for( u64 i : 0..{}.size() )`", reporter_.text( ast_.span( container ) ) )
             );
         }
         return Node_id {};
@@ -1117,7 +1139,16 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes )
     }
 
     callees_.record( walk_stmt, walk );
-    overloads_.record_method_instantiation( current_function_, walk_stmt, walk, type );
+
+    // Lowering reads which instance the walk went through.
+    if( bounded )
+    {
+        callees_.record_through( walk_stmt, owner );
+    }
+    else
+    {
+        overloads_.record_method_instantiation( current_function_, walk_stmt, walk, type );
+    }
 
     return walk;
 }

@@ -14,7 +14,7 @@
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">set</span></h2>
 <div class="group" id="set">
-<pre class="signature"><a class="anchor" href="#set" aria-label="Link to set">#</a><code><span class="kw">class</span> <span class="type">set</span>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<pre class="signature"><a class="anchor" href="#set" aria-label="Link to set">#</a><code><span class="kw">class</span> <span class="type">set</span>&lt;K&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#iterable">iterable</a>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
 <div class="doc">
 <p>A hash table of keys of type <code>K</code>, each held at most once.</p>
 <p><code>kl::map</code> without the values: keys are kept in insertion order until a removal moves the last

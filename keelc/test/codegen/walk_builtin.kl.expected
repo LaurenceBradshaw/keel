@@ -1,0 +1,765 @@
+// codegen/walk_builtin.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counted;
+struct kl__Point;
+struct kl__A4_3i32;
+struct kl__A3_7Counted;
+struct kl__A2_5Point;
+
+struct kl__run__L3i32__ref { int32_t* data; uint64_t size; };
+
+struct kl__Counted
+{
+    int32_t kl_value;
+};
+
+struct kl__Point
+{
+    int32_t kl_x;
+    int32_t kl_y;
+};
+
+struct kl__A4_3i32
+{
+    int32_t e[4];
+};
+
+struct kl__A3_7Counted
+{
+    struct kl__Counted e[3];
+};
+
+struct kl__A2_5Point
+{
+    struct kl__Point e[2];
+};
+
+int32_t kl__drops__G = 0;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
+void kl__Counted__dtor( struct kl__Counted* );
+int32_t kl__sum__L3i32( int32_t*, uint64_t );
+void kl__double_all__RL3i32( int32_t*, uint64_t );
+int32_t kl__main__( void );
+void kl__A3_7Counted__dtor( struct kl__A3_7Counted* );
+
+#line 10 "codegen/walk_builtin.kl"
+void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
+{
+    ( *kl_this_1 ).kl_value = kl_v_2;
+    return;
+#line 13 "codegen/walk_builtin.kl"
+}
+
+#line 15 "codegen/walk_builtin.kl"
+void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+{
+    bool kl_t2;
+    ( void ) kl_this_1;
+#line 17 "codegen/walk_builtin.kl"
+    kl_t2 = __builtin_add_overflow( kl__drops__G, 1, &( int32_t ) { 0 } );
+#line 17 "codegen/walk_builtin.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 17 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 17, "arithmetic overflow: drops += 1;" );
+    bb2:
+#line 17 "codegen/walk_builtin.kl"
+    kl__drops__G = kl__drops__G + 1;
+    return;
+#line 18 "codegen/walk_builtin.kl"
+}
+
+#line 27 "codegen/walk_builtin.kl"
+int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+{
+    int32_t kl_t0;
+#line 27 "codegen/walk_builtin.kl"
+    struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
+    int32_t kl_total_2;
+    struct kl__run__L3i32__ref kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    int32_t* kl_t8;
+    int32_t* kl_t9;
+    int32_t kl_v_10;
+    bool kl_t11;
+#line 29 "codegen/walk_builtin.kl"
+    kl_total_2 = 0;
+#line 31 "codegen/walk_builtin.kl"
+    kl_t3 = kl_values_1;
+#line 31 "codegen/walk_builtin.kl"
+    kl_t6 = ( kl_t3 ).size;
+#line 31 "codegen/walk_builtin.kl"
+    kl_t4 = 0;
+#line 31 "codegen/walk_builtin.kl"
+    kl_t5 = kl_t6;
+#line 31 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb1:
+#line 31 "codegen/walk_builtin.kl"
+    kl_t7 = kl_t4 < kl_t5;
+#line 31 "codegen/walk_builtin.kl"
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+#line 31 "codegen/walk_builtin.kl"
+    kl_t8 = ( kl_t3 ).data;
+#line 31 "codegen/walk_builtin.kl"
+    kl_t9 = kl_t8 + kl_t4;
+#line 31 "codegen/walk_builtin.kl"
+    kl_v_10 = ( *kl_t9 );
+#line 33 "codegen/walk_builtin.kl"
+    kl_t11 = __builtin_add_overflow( kl_total_2, kl_v_10, &( int32_t ) { 0 } );
+#line 33 "codegen/walk_builtin.kl"
+    if ( kl_t11 ) goto bb4; else goto bb5;
+    bb3:
+#line 36 "codegen/walk_builtin.kl"
+    kl_t0 = kl_total_2;
+#line 36 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb4:
+#line 33 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 33, "arithmetic overflow: total += v;" );
+    bb5:
+#line 33 "codegen/walk_builtin.kl"
+    kl_total_2 = kl_total_2 + kl_v_10;
+#line 31 "codegen/walk_builtin.kl"
+    goto bb6;
+    bb6:
+#line 31 "codegen/walk_builtin.kl"
+    kl_t4 = kl_t4 + 1;
+#line 31 "codegen/walk_builtin.kl"
+    goto bb1;
+#line 37 "codegen/walk_builtin.kl"
+}
+
+#line 39 "codegen/walk_builtin.kl"
+void kl__double_all__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+{
+#line 39 "codegen/walk_builtin.kl"
+    struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
+    struct kl__run__L3i32__ref kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    int32_t* kl_t7;
+    int32_t* kl_t8;
+    int32_t* kl_v_9;
+    bool kl_t10;
+#line 41 "codegen/walk_builtin.kl"
+    kl_t2 = kl_values_1;
+#line 41 "codegen/walk_builtin.kl"
+    kl_t5 = ( kl_t2 ).size;
+#line 41 "codegen/walk_builtin.kl"
+    kl_t3 = 0;
+#line 41 "codegen/walk_builtin.kl"
+    kl_t4 = kl_t5;
+#line 41 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb1:
+#line 41 "codegen/walk_builtin.kl"
+    kl_t6 = kl_t3 < kl_t4;
+#line 41 "codegen/walk_builtin.kl"
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 41 "codegen/walk_builtin.kl"
+    kl_t7 = ( kl_t2 ).data;
+#line 41 "codegen/walk_builtin.kl"
+    kl_t8 = kl_t7 + kl_t3;
+#line 41 "codegen/walk_builtin.kl"
+    kl_v_9 = &( *kl_t8 );
+#line 43 "codegen/walk_builtin.kl"
+    kl_t10 = __builtin_mul_overflow( ( *kl_v_9 ), 2, &( int32_t ) { 0 } );
+#line 43 "codegen/walk_builtin.kl"
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb3:
+    return;
+    bb4:
+#line 43 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 43, "arithmetic overflow: v *= 2;" );
+    bb5:
+#line 43 "codegen/walk_builtin.kl"
+    ( *kl_v_9 ) = ( *kl_v_9 ) * 2;
+#line 41 "codegen/walk_builtin.kl"
+    goto bb6;
+    bb6:
+#line 41 "codegen/walk_builtin.kl"
+    kl_t3 = kl_t3 + 1;
+#line 41 "codegen/walk_builtin.kl"
+    goto bb1;
+#line 45 "codegen/walk_builtin.kl"
+}
+
+#line 47 "codegen/walk_builtin.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A4_3i32 kl_a_1;
+    struct kl__A4_3i32 kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    int32_t kl_total_7;
+    struct kl__A4_3i32* kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    int32_t kl_v_12;
+    bool kl_t13;
+    bool kl_t14;
+    uint64_t kl_t15;
+    int32_t* kl_t16;
+    struct kl__run__L3i32__ref kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    uint64_t kl_t20;
+    int32_t* kl_t21;
+    struct kl__run__L3i32__ref kl_t22;
+    bool kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    uint64_t kl_t27;
+    bool kl_t28;
+    struct kl__A3_7Counted kl_c_29;
+    struct kl__A3_7Counted kl_t30;
+    struct kl__Counted kl_t31;
+    struct kl__Counted* kl_t32;
+    struct kl__Counted kl_t34;
+    struct kl__Counted* kl_t35;
+    struct kl__Counted kl_t37;
+    struct kl__Counted* kl_t38;
+    uint64_t kl_t40;
+    uint64_t kl_t41;
+    uint64_t kl_t42;
+    struct kl__A3_7Counted* kl_t43;
+    uint64_t kl_t44;
+    uint64_t kl_t45;
+    bool kl_t46;
+    struct kl__Counted* kl_item_47;
+    bool kl_t48;
+    int32_t kl_seen_49;
+    struct kl__A3_7Counted* kl_t50;
+    uint64_t kl_t51;
+    uint64_t kl_t52;
+    bool kl_t53;
+    struct kl__Counted* kl_item_54;
+    bool kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    bool kl_t58;
+    bool kl_t59;
+    struct kl__A2_5Point kl_points_60;
+    struct kl__A2_5Point kl_t61;
+    struct kl__Point kl_t62;
+    struct kl__Point kl_t63;
+    uint64_t kl_t64;
+    uint64_t kl_t65;
+    int32_t kl_across_66;
+    struct kl__A2_5Point* kl_t67;
+    uint64_t kl_t68;
+    uint64_t kl_t69;
+    bool kl_t70;
+    struct kl__Point kl_p_71;
+    bool kl_t72;
+    int32_t kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    int32_t kl_kept_76;
+    struct kl__A4_3i32* kl_t77;
+    uint64_t kl_t78;
+    uint64_t kl_t79;
+    bool kl_t80;
+    int32_t kl_v_81;
+    bool kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    bool kl_t85;
+    bool kl_t86;
+    bool kl_t87;
+    bool kl_t88;
+    bool kl_t89;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t15;
+    ( void ) kl_t20;
+    ( void ) kl_t25;
+    ( void ) kl_t27;
+    ( void ) kl_t40;
+    ( void ) kl_t41;
+    ( void ) kl_t42;
+    ( void ) kl_t64;
+    ( void ) kl_t65;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t86 = false;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t87 = false;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t88 = false;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t89 = false;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t3 = 0;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t2.e[kl_t3] = 1;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t4 = 1;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t2.e[kl_t4] = 2;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t5 = 2;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t2.e[kl_t5] = 3;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t6 = 3;
+#line 49 "codegen/walk_builtin.kl"
+    kl_t2.e[kl_t6] = 4;
+#line 49 "codegen/walk_builtin.kl"
+    kl_a_1 = kl_t2;
+#line 51 "codegen/walk_builtin.kl"
+    kl_total_7 = 0;
+    kl_t8 = &kl_a_1;
+#line 52 "codegen/walk_builtin.kl"
+    kl_t9 = 0;
+#line 52 "codegen/walk_builtin.kl"
+    kl_t10 = 4;
+#line 52 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb1:
+#line 52 "codegen/walk_builtin.kl"
+    kl_t11 = kl_t9 < kl_t10;
+#line 52 "codegen/walk_builtin.kl"
+    if ( kl_t11 ) goto bb2; else goto bb3;
+    bb2:
+#line 52 "codegen/walk_builtin.kl"
+    kl_v_12 = ( *kl_t8 ).e[kl_t9];
+#line 54 "codegen/walk_builtin.kl"
+    kl_t13 = __builtin_add_overflow( kl_total_7, kl_v_12, &( int32_t ) { 0 } );
+#line 54 "codegen/walk_builtin.kl"
+    if ( kl_t13 ) goto bb4; else goto bb5;
+    bb3:
+#line 57 "codegen/walk_builtin.kl"
+    kl_t14 = kl_total_7 != 10;
+#line 57 "codegen/walk_builtin.kl"
+    if ( kl_t14 ) goto bb7; else goto bb8;
+    bb4:
+#line 54 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 54, "arithmetic overflow: total += v;" );
+    bb5:
+#line 54 "codegen/walk_builtin.kl"
+    kl_total_7 = kl_total_7 + kl_v_12;
+#line 52 "codegen/walk_builtin.kl"
+    goto bb6;
+    bb6:
+#line 52 "codegen/walk_builtin.kl"
+    kl_t9 = kl_t9 + 1;
+#line 52 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb7:
+#line 59 "codegen/walk_builtin.kl"
+    kl_t0 = 1;
+#line 59 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb8:
+#line 63 "codegen/walk_builtin.kl"
+    kl_t15 = 0;
+#line 63 "codegen/walk_builtin.kl"
+    kl_t16 = &kl_a_1.e[kl_t15];
+#line 63 "codegen/walk_builtin.kl"
+    kl_t17 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t16, 4 };
+#line 63 "codegen/walk_builtin.kl"
+    kl_t18 = kl__sum__L3i32( ( kl_t17 ).data, ( kl_t17 ).size );
+#line 63 "codegen/walk_builtin.kl"
+    kl_t19 = kl_t18 != 10;
+#line 63 "codegen/walk_builtin.kl"
+    if ( kl_t19 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 2;
+#line 65 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb10:
+#line 68 "codegen/walk_builtin.kl"
+    kl_t20 = 0;
+#line 68 "codegen/walk_builtin.kl"
+    kl_t21 = &kl_a_1.e[kl_t20];
+#line 68 "codegen/walk_builtin.kl"
+    kl_t22 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t21, 4 };
+#line 68 "codegen/walk_builtin.kl"
+    kl__double_all__RL3i32( ( kl_t22 ).data, ( kl_t22 ).size );
+#line 70 "codegen/walk_builtin.kl"
+    kl_t25 = 0;
+#line 70 "codegen/walk_builtin.kl"
+    kl_t26 = kl_a_1.e[kl_t25] != 2;
+#line 70 "codegen/walk_builtin.kl"
+    kl_t24 = kl_t26;
+#line 70 "codegen/walk_builtin.kl"
+    if ( kl_t24 ) goto bb12; else goto bb11;
+    bb11:
+#line 70 "codegen/walk_builtin.kl"
+    kl_t27 = 3;
+#line 70 "codegen/walk_builtin.kl"
+    kl_t28 = kl_a_1.e[kl_t27] != 8;
+#line 70 "codegen/walk_builtin.kl"
+    kl_t24 = kl_t28;
+#line 70 "codegen/walk_builtin.kl"
+    goto bb12;
+    bb12:
+#line 70 "codegen/walk_builtin.kl"
+    if ( kl_t24 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 3;
+#line 72 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb14:
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t87 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t32 = &kl_t31;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t87 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl__Counted__R7Counted_3i32__ctor( kl_t32, 1 );
+#line 76 "codegen/walk_builtin.kl"
+    kl_t88 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t35 = &kl_t34;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t88 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl__Counted__R7Counted_3i32__ctor( kl_t35, 2 );
+#line 76 "codegen/walk_builtin.kl"
+    kl_t89 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t38 = &kl_t37;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t89 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl__Counted__R7Counted_3i32__ctor( kl_t38, 3 );
+#line 76 "codegen/walk_builtin.kl"
+    kl_t40 = 0;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t30.e[kl_t40] = kl_t31;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t87 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t41 = 1;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t30.e[kl_t41] = kl_t34;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t88 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t42 = 2;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t30.e[kl_t42] = kl_t37;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t89 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = true;
+#line 76 "codegen/walk_builtin.kl"
+    kl_c_29 = kl_t30;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = false;
+#line 76 "codegen/walk_builtin.kl"
+    if ( kl_t86 ) kl__A3_7Counted__dtor( &kl_t30 );
+#line 76 "codegen/walk_builtin.kl"
+    if ( kl_t89 ) kl__Counted__dtor( &kl_t37 );
+#line 76 "codegen/walk_builtin.kl"
+    if ( kl_t88 ) kl__Counted__dtor( &kl_t34 );
+#line 76 "codegen/walk_builtin.kl"
+    if ( kl_t87 ) kl__Counted__dtor( &kl_t31 );
+#line 76 "codegen/walk_builtin.kl"
+    kl_t87 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t88 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t89 = false;
+#line 76 "codegen/walk_builtin.kl"
+    kl_t86 = false;
+#line 78 "codegen/walk_builtin.kl"
+    kl_t43 = &kl_c_29;
+#line 78 "codegen/walk_builtin.kl"
+    kl_t44 = 0;
+#line 78 "codegen/walk_builtin.kl"
+    kl_t45 = 3;
+#line 78 "codegen/walk_builtin.kl"
+    goto bb15;
+    bb15:
+#line 78 "codegen/walk_builtin.kl"
+    kl_t46 = kl_t44 < kl_t45;
+#line 78 "codegen/walk_builtin.kl"
+    if ( kl_t46 ) goto bb16; else goto bb17;
+    bb16:
+#line 78 "codegen/walk_builtin.kl"
+    kl_item_47 = &( *kl_t43 ).e[kl_t44];
+#line 80 "codegen/walk_builtin.kl"
+    kl_t48 = __builtin_mul_overflow( ( *kl_item_47 ).kl_value, 2, &( int32_t ) { 0 } );
+#line 80 "codegen/walk_builtin.kl"
+    if ( kl_t48 ) goto bb18; else goto bb19;
+    bb17:
+#line 83 "codegen/walk_builtin.kl"
+    kl_seen_49 = 0;
+    kl_t50 = &kl_c_29;
+#line 84 "codegen/walk_builtin.kl"
+    kl_t51 = 0;
+#line 84 "codegen/walk_builtin.kl"
+    kl_t52 = 3;
+#line 84 "codegen/walk_builtin.kl"
+    goto bb21;
+    bb18:
+#line 80 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 80, "arithmetic overflow: item.value *= 2;" );
+    bb19:
+#line 80 "codegen/walk_builtin.kl"
+    ( *kl_item_47 ).kl_value = ( *kl_item_47 ).kl_value * 2;
+#line 78 "codegen/walk_builtin.kl"
+    goto bb20;
+    bb20:
+#line 78 "codegen/walk_builtin.kl"
+    kl_t44 = kl_t44 + 1;
+#line 78 "codegen/walk_builtin.kl"
+    goto bb15;
+    bb21:
+#line 84 "codegen/walk_builtin.kl"
+    kl_t53 = kl_t51 < kl_t52;
+#line 84 "codegen/walk_builtin.kl"
+    if ( kl_t53 ) goto bb22; else goto bb23;
+    bb22:
+#line 84 "codegen/walk_builtin.kl"
+    kl_item_54 = &( *kl_t50 ).e[kl_t51];
+#line 86 "codegen/walk_builtin.kl"
+    kl_t55 = __builtin_add_overflow( kl_seen_49, ( *kl_item_54 ).kl_value, &( int32_t ) { 0 } );
+#line 86 "codegen/walk_builtin.kl"
+    if ( kl_t55 ) goto bb24; else goto bb25;
+    bb23:
+#line 90 "codegen/walk_builtin.kl"
+    kl_t57 = kl_seen_49 != 12;
+#line 90 "codegen/walk_builtin.kl"
+    kl_t56 = kl_t57;
+#line 90 "codegen/walk_builtin.kl"
+    if ( kl_t56 ) goto bb28; else goto bb27;
+    bb24:
+#line 86 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 86, "arithmetic overflow: seen += item.value;" );
+    bb25:
+#line 86 "codegen/walk_builtin.kl"
+    kl_seen_49 = kl_seen_49 + ( *kl_item_54 ).kl_value;
+#line 84 "codegen/walk_builtin.kl"
+    goto bb26;
+    bb26:
+#line 84 "codegen/walk_builtin.kl"
+    kl_t51 = kl_t51 + 1;
+#line 84 "codegen/walk_builtin.kl"
+    goto bb21;
+    bb27:
+#line 90 "codegen/walk_builtin.kl"
+    kl_t58 = kl__drops__G != 0;
+#line 90 "codegen/walk_builtin.kl"
+    kl_t56 = kl_t58;
+#line 90 "codegen/walk_builtin.kl"
+    goto bb28;
+    bb28:
+#line 90 "codegen/walk_builtin.kl"
+    if ( kl_t56 ) goto bb29; else goto bb30;
+    bb29:
+    kl_t0 = 4;
+#line 92 "codegen/walk_builtin.kl"
+    kl__A3_7Counted__dtor( &kl_c_29 );
+#line 92 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb30:
+    kl__A3_7Counted__dtor( &kl_c_29 );
+#line 96 "codegen/walk_builtin.kl"
+    kl_t59 = kl__drops__G != 3;
+#line 96 "codegen/walk_builtin.kl"
+    if ( kl_t59 ) goto bb31; else goto bb32;
+    bb31:
+    kl_t0 = 5;
+#line 98 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb32:
+#line 102 "codegen/walk_builtin.kl"
+    kl_t62.kl_x = 1;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t62.kl_y = 2;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t63.kl_x = 3;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t63.kl_y = 4;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t64 = 0;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t61.e[kl_t64] = kl_t62;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t65 = 1;
+#line 102 "codegen/walk_builtin.kl"
+    kl_t61.e[kl_t65] = kl_t63;
+#line 102 "codegen/walk_builtin.kl"
+    kl_points_60 = kl_t61;
+    kl_across_66 = 0;
+    kl_t67 = &kl_points_60;
+#line 104 "codegen/walk_builtin.kl"
+    kl_t68 = 0;
+#line 104 "codegen/walk_builtin.kl"
+    kl_t69 = 2;
+#line 104 "codegen/walk_builtin.kl"
+    goto bb33;
+    bb33:
+#line 104 "codegen/walk_builtin.kl"
+    kl_t70 = kl_t68 < kl_t69;
+#line 104 "codegen/walk_builtin.kl"
+    if ( kl_t70 ) goto bb34; else goto bb35;
+    bb34:
+#line 104 "codegen/walk_builtin.kl"
+    kl_p_71 = ( *kl_t67 ).e[kl_t68];
+#line 106 "codegen/walk_builtin.kl"
+    kl_t72 = __builtin_mul_overflow( kl_p_71.kl_x, kl_p_71.kl_y, &( int32_t ) { 0 } );
+#line 106 "codegen/walk_builtin.kl"
+    if ( kl_t72 ) goto bb36; else goto bb37;
+    bb35:
+#line 109 "codegen/walk_builtin.kl"
+    kl_t75 = kl_across_66 != 14;
+#line 109 "codegen/walk_builtin.kl"
+    if ( kl_t75 ) goto bb41; else goto bb42;
+    bb36:
+#line 106 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 106, "arithmetic overflow: p.x * p.y" );
+    bb37:
+#line 106 "codegen/walk_builtin.kl"
+    kl_t73 = kl_p_71.kl_x * kl_p_71.kl_y;
+#line 106 "codegen/walk_builtin.kl"
+    kl_t74 = __builtin_add_overflow( kl_across_66, kl_t73, &( int32_t ) { 0 } );
+#line 106 "codegen/walk_builtin.kl"
+    if ( kl_t74 ) goto bb38; else goto bb39;
+    bb38:
+#line 106 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 106, "arithmetic overflow: across += p.x * p.y;" );
+    bb39:
+#line 106 "codegen/walk_builtin.kl"
+    kl_across_66 = kl_across_66 + kl_t73;
+#line 104 "codegen/walk_builtin.kl"
+    goto bb40;
+    bb40:
+#line 104 "codegen/walk_builtin.kl"
+    kl_t68 = kl_t68 + 1;
+#line 104 "codegen/walk_builtin.kl"
+    goto bb33;
+    bb41:
+#line 111 "codegen/walk_builtin.kl"
+    kl_t0 = 6;
+#line 111 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb42:
+#line 115 "codegen/walk_builtin.kl"
+    kl_kept_76 = 0;
+    kl_t77 = &kl_a_1;
+#line 116 "codegen/walk_builtin.kl"
+    kl_t78 = 0;
+#line 116 "codegen/walk_builtin.kl"
+    kl_t79 = 4;
+#line 116 "codegen/walk_builtin.kl"
+    goto bb43;
+    bb43:
+#line 116 "codegen/walk_builtin.kl"
+    kl_t80 = kl_t78 < kl_t79;
+#line 116 "codegen/walk_builtin.kl"
+    if ( kl_t80 ) goto bb44; else goto bb45;
+    bb44:
+#line 116 "codegen/walk_builtin.kl"
+    kl_v_81 = ( *kl_t77 ).e[kl_t78];
+#line 118 "codegen/walk_builtin.kl"
+    kl_t82 = kl_v_81 == 4;
+#line 118 "codegen/walk_builtin.kl"
+    if ( kl_t82 ) goto bb46; else goto bb48;
+    bb45:
+#line 131 "codegen/walk_builtin.kl"
+    kl_t85 = kl_kept_76 != 8;
+#line 131 "codegen/walk_builtin.kl"
+    if ( kl_t85 ) goto bb53; else goto bb54;
+    bb46:
+#line 120 "codegen/walk_builtin.kl"
+    goto bb47;
+    bb47:
+#line 116 "codegen/walk_builtin.kl"
+    kl_t78 = kl_t78 + 1;
+#line 116 "codegen/walk_builtin.kl"
+    goto bb43;
+    bb48:
+#line 123 "codegen/walk_builtin.kl"
+    kl_t83 = kl_v_81 == 8;
+#line 123 "codegen/walk_builtin.kl"
+    if ( kl_t83 ) goto bb49; else goto bb50;
+    bb49:
+    goto bb45;
+    bb50:
+#line 128 "codegen/walk_builtin.kl"
+    kl_t84 = __builtin_add_overflow( kl_kept_76, kl_v_81, &( int32_t ) { 0 } );
+#line 128 "codegen/walk_builtin.kl"
+    if ( kl_t84 ) goto bb51; else goto bb52;
+    bb51:
+#line 128 "codegen/walk_builtin.kl"
+    kl_rt_panic( "codegen/walk_builtin.kl", 128, "arithmetic overflow: kept += v;" );
+    bb52:
+#line 128 "codegen/walk_builtin.kl"
+    kl_kept_76 = kl_kept_76 + kl_v_81;
+#line 116 "codegen/walk_builtin.kl"
+    goto bb47;
+    bb53:
+#line 133 "codegen/walk_builtin.kl"
+    kl_t0 = 7;
+#line 133 "codegen/walk_builtin.kl"
+    return kl_t0;
+    bb54:
+#line 136 "codegen/walk_builtin.kl"
+    kl_t0 = 0;
+#line 136 "codegen/walk_builtin.kl"
+    return kl_t0;
+}
+
+void kl__A3_7Counted__dtor( struct kl__A3_7Counted* kl_t1 )
+{
+    uint64_t kl_t2;
+    bool kl_t3;
+#line 6 "codegen/walk_builtin.kl"
+    kl_t2 = 3;
+#line 6 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb1:
+#line 6 "codegen/walk_builtin.kl"
+    kl_t3 = 0 < kl_t2;
+#line 6 "codegen/walk_builtin.kl"
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 6 "codegen/walk_builtin.kl"
+    kl_t2 = kl_t2 - 1;
+#line 6 "codegen/walk_builtin.kl"
+    kl__Counted__dtor( &( *kl_t1 ).e[kl_t2] );
+#line 6 "codegen/walk_builtin.kl"
+    goto bb1;
+    bb3:
+#line 6 "codegen/walk_builtin.kl"
+    return;
+#line 6 "codegen/walk_builtin.kl"
+}
+
+#line 47 "codegen/walk_builtin.kl"
+int main( void )
+{
+#line 47 "codegen/walk_builtin.kl"
+    return (int) kl__main__();
+}

@@ -1,0 +1,28 @@
+// A loop's binding needs a name: `_` is not one. One error, and none after it.
+class Bag
+{
+    i32 value_;
+
+    public Bag()
+    {
+        value_ = 1;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        yield( value_ );
+    }
+};
+
+i32 main()
+{
+    Bag b = Bag();
+    i32 n = 0;
+
+    for( const ref i32 _ : b ) // error: `_` is not a name
+    {
+        n += 1;
+    }
+
+    return n;
+}

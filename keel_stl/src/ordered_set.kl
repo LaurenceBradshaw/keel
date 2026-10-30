@@ -8,7 +8,7 @@ import ordered_control;
 /// `kl::ordered_map` without the values: `key_at` counts over the keys from the smallest, and
 /// `rank` finds where a key sits among them, both in logarithmic time. Dropping the set drops every
 /// key.
-class ordered_set<K> where K : comparable
+class ordered_set<K> implements iterable<K> where K : comparable
 {
     /// --- Construction ---
 

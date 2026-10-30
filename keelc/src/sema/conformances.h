@@ -63,7 +63,7 @@ public:
     void declare( const Type_table& table, Node_id implementer, Type_id type, Type_id interface );
     // What an interface requires through its own `implements`, in written order.
     void declare_refinement( const Type_table& table, Type_id interface, Type_id refined );
-    // The first method whose signature mentions `self`, which makes the interface a bound only.
+    // The first method that is `static`, a walk, or mentions `self`, which makes the interface a bound only.
     void declare_bound_only( Node_id interface, Node_id method );
 
     // What `type` declares, at this instance: `last<i32>` implements `sink<i32>` through `last<T>`'s `sink<T>`.

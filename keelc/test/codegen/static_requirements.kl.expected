@@ -54,7 +54,6 @@ struct kl__Owner kl__make_zero__I5OwnerE__( void );
 uint64_t kl__counted_from_zero__I5OwnerE__( void );
 struct kl__cell__I2u8E kl__zero__I2u8E__S4cellI2u8E( void );
 struct kl__cell__I3f64E kl__zero__I3f64E__S4cellI3f64E( void );
-void kl__Owner__drop( struct kl__Owner* );
 
 #line 24 "codegen/static_requirements.kl"
 struct kl__meter kl__zero__S5meter( void )
@@ -550,15 +549,6 @@ struct kl__cell__I3f64E kl__zero__I3f64E__S4cellI3f64E( void )
 #line 33 "codegen/static_requirements.kl"
     return kl_t0;
 #line 33 "codegen/static_requirements.kl"
-}
-
-void kl__Owner__drop( struct kl__Owner* kl_t1 )
-{
-#line 46 "codegen/static_requirements.kl"
-    kl__Owner__dtor( &( *kl_t1 ) );
-#line 46 "codegen/static_requirements.kl"
-    return;
-#line 46 "codegen/static_requirements.kl"
 }
 
 #line 80 "codegen/static_requirements.kl"

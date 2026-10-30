@@ -1,0 +1,86 @@
+// D74: a loop over a type parameter bounded by `iterable` runs the implementer's walk, inlined at
+// each instance. Every check returns a distinct code, so exit 0 means all of them agreed.
+class Bag<T> implements iterable<T> where T : copyable
+{
+    T[3] items;
+
+    public Bag( T[3] given )
+    {
+        items = given;
+    }
+
+    public void operator:( const ref T item ) const
+    {
+        for( const ref T x : items )
+        {
+            yield( x );
+        }
+    }
+
+    public void operator:( ref T item )
+    {
+        for( ref T x : items )
+        {
+            yield( ref x );
+        }
+    }
+};
+
+i32 sum<C>( const ref C c ) where C : iterable<i32>
+{
+    i32 total = 0;
+
+    for( i32 v : c )
+    {
+        total += v;
+    }
+
+    return total;
+}
+
+// The first element over 1, leaving by `break`.
+f64 first_large<C>( const ref C c ) where C : iterable<f64>
+{
+    f64 found = 0.0;
+
+    for( f64 v : c )
+    {
+        if( v > 1.0 )
+        {
+            found = v;
+            break;
+        }
+    }
+
+    return found;
+}
+
+i32 main()
+{
+    Bag<i32> b = Bag<i32>( [ 1, 2, 3 ] );
+
+    if( sum( b ) != 6 )
+    {
+        return 1;
+    }
+
+    // The writing walk is still the class's own.
+    for( ref i32 v : b )
+    {
+        v *= 10;
+    }
+
+    if( sum( b ) != 60 )
+    {
+        return 2;
+    }
+
+    Bag<f64> f = Bag<f64>( [ 0.5, 2.5, 4.0 ] );
+
+    if( first_large( f ) != 2.5 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

@@ -1,0 +1,57 @@
+// D74: one generic loop through `iterable`, over a list, a set and an ordered set. Each check
+// asserts; under valgrind nothing leaks.
+import kl::list;
+import kl::ordered_set;
+import kl::set;
+import kl::string;
+
+i32 sum<C>( const ref C c ) where C : iterable<i32>
+{
+    i32 total = 0;
+
+    for( i32 v : c )
+    {
+        total += v;
+    }
+
+    return total;
+}
+
+u64 bytes<C>( const ref C c ) where C : iterable<kl::string>
+{
+    u64 total = 0;
+
+    for( const ref kl::string s : c )
+    {
+        total += s.size();
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    kl::list<i32> l = kl::list<i32>();
+    l.push( 1 );
+    l.push( 2 );
+    l.push( 3 );
+    assert( sum( l ) == 6 );
+
+    kl::set<i32> s = kl::set<i32>();
+    s.insert( 10 );
+    s.insert( 20 );
+    s.insert( 10 );
+    assert( sum( s ) == 30 );
+
+    kl::ordered_set<i32> o = kl::ordered_set<i32>();
+    o.insert( 5 );
+    o.insert( 7 );
+    assert( sum( o ) == 12 );
+
+    kl::list<kl::string> words = kl::list<kl::string>();
+    words.push( "one" );
+    words.push( "three" );
+    assert( bytes( words ) == 8 );
+
+    return 0;
+}

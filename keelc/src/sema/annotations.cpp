@@ -923,7 +923,9 @@ Type_id Annotations::addressed_interface(
         method.is_valid() && !receiver_ && implemented_ != annotation )
     {
         const Node_id          owner = ast_.enclosing_aggregate( method );
-        const std::string_view why   = ast_.is_static_method( method ) ? "is `static`" : "mentions `self`";
+        const std::string_view why   = ast_.is_static_method( method ) ? "is `static`"
+                                       : ast_.is_walk( method )        ? "is a walk"
+                                                                       : "mentions `self`";
 
         reporter_.error_at(
             ast_.span( annotation ),

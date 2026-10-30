@@ -7,7 +7,7 @@ import optional;
 ///
 /// Elements sit side by side, indexed from 0. A full list doubles its capacity, so `push` takes
 /// amortised constant time. Dropping the list drops every element.
-class list<T>
+class list<T> implements iterable<T>
 {
     /// --- Construction ---
 

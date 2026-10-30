@@ -664,9 +664,12 @@ void Statements::visit_for( Node_id id )
 // less than it is lent, never more.
 void Statements::visit_walk( Node_id id )
 {
-    const Node_id                  binding = ast_.binding( id );
-    const bool                     named   = ast_.kind( binding ) == Node_kind::Binding_list;
-    const std::span<const Node_id> entries = named ? ast_.children( binding ) : std::span<const Node_id>( &binding, 1 );
+    const Node_id binding = ast_.binding( id );
+    const bool    named   = ast_.kind( binding ) == Node_kind::Binding_list;
+    const bool    unread  = ast_.kind( binding ) == Node_kind::Error; // the parser reported it
+
+    const std::span<const Node_id> entries =
+        named ? ast_.children( binding ) : std::span<const Node_id>( &binding, unread ? 0 : 1 );
 
     // One `ref` entry picks the writing walk.
     const bool writes = std::ranges::any_of(
@@ -676,13 +679,37 @@ void Statements::visit_walk( Node_id id )
 
     std::vector<Type_id> types( entries.size(), table_.builtin( Type_kind::Error ) );
 
-    const Node_id walk = expressions_.check_walk( id, writes );
+    Type_id       owner;
+    const Node_id walk = expressions_.check_walk( id, writes, owner );
+    const Type_id held = types_.type_of( ast_.container( id ) );
+
+    if( !walk.is_valid() && held.is_valid() && ( table_.is_run( held ) || table_.is_array( held ) ) )
+    {
+        const Type_id element = table_.get( held ).element;
+
+        if( named )
+        {
+            reporter_.error_at(
+                ast_.span( binding ),
+                fmt::format( "`{}` yields its elements without names", table_.name( held ) ),
+                fmt::format(
+                    "bind each one alone: `for( const ref {} x : {} )`",
+                    table_.name( element ),
+                    reporter_.text( ast_.span( ast_.container( id ) ) )
+                )
+            );
+        }
+        else if( !unread )
+        {
+            types[0] = check_walk_binding( binding, element, Node_id {} );
+        }
+    }
 
     if( walk.is_valid() )
     {
         const std::span<const Node_id> yielded = ast_.params( walk ).subspan( 1 );
 
-        if( !named && yielded.size() != 1 )
+        if( !unread && !named && yielded.size() != 1 )
         {
             reporter_.error_at(
                 ast_.span( binding ),
@@ -698,7 +725,9 @@ void Statements::visit_walk( Node_id id )
 
                 if( param.is_valid() )
                 {
-                    types[i] = check_walk_binding( id, entries[i], param );
+                    const Type_id given =
+                        types_.table().substitute( types_.type_of( param ), table_.instance_bindings( owner ) );
+                    types[i] = check_walk_binding( entries[i], given, param );
                     continue;
                 }
 
@@ -716,7 +745,8 @@ void Statements::visit_walk( Node_id id )
             }
         }
 
-        if( ast_.is_walk( expressions_.current_function() ) )
+        // A walk through a bound cannot be followed to its implementer, and needs no edge.
+        if( ast_.is_walk( expressions_.current_function() ) && !ast_.is_requirement( walk ) )
         {
             walk_edges_.push_back( { expressions_.current_function(), walk, ast_.span( ast_.container( id ) ) } );
         }
@@ -747,13 +777,11 @@ void Statements::visit_walk( Node_id id )
 }
 
 // A binding may hold less than the walk lends, never more: `ref` only over `ref`, and a bare copy
-// only of a type that copies.
-Type_id Statements::check_walk_binding( Node_id loop, Node_id entry, Node_id param )
+// only of a type that copies. `param` is invalid for a run's or an array's element.
+Type_id Statements::check_walk_binding( Node_id entry, Type_id given, Node_id param )
 {
     const Node_id annotation = ast_.annotation( entry );
     const Keyword mode       = ast_.parameter_mode( entry );
-    const Type_id container  = types_.type_of( ast_.container( loop ) );
-    const Type_id given      = types_.table().substitute( types_.type_of( param ), table_.instance_bindings( container ) );
     const Type_id written    = annotations_.resolve( annotation );
 
     if( mode == Keyword::Out || mode == Keyword::Move )
@@ -764,7 +792,7 @@ Type_id Statements::check_walk_binding( Node_id loop, Node_id entry, Node_id par
     {
         reporter_.error_at( ast_.span( annotation ), fmt::format( "the walk yields `{}`", table_.name( given ) ) );
     }
-    else if( mode == Keyword::Ref && !ast_.is_const_binding( entry ) &&
+    else if( mode == Keyword::Ref && !ast_.is_const_binding( entry ) && param.is_valid() &&
              ( !ast_.is_ref_parameter( param ) || ast_.is_const_binding( param ) ) )
     {
         reporter_.error_at(

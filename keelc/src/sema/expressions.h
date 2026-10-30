@@ -89,7 +89,7 @@ public:
     // D74: `yield( ... )`, checked as a call whose parameters are the enclosing walk's.
     void check_yield( Node_id id );
     // D74: the walk a `for( x : c )` runs, reading or writing; invalid once reported.
-    Node_id check_walk( Node_id walk_stmt, bool writes );
+    Node_id check_walk( Node_id walk_stmt, bool writes, Type_id& owner ); // `owner` declares the walk
 
     // A variant name in a pattern position - a `switch` arm's path, or a bare `case` label. The
     // payload is accounted for there, so `Shape::Circle` is complete; `Shape s = Shape::Circle;`

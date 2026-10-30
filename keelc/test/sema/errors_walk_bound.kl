@@ -1,0 +1,31 @@
+// D74: a walk is reached through a bound only, and a bound without a walk gives none. One error
+// per marked line.
+i32 held( const ref iterable<i32> c ) // error: a bound only
+{
+    return 0;
+}
+
+i32 plain<C>( const ref C c ) where C : copyable
+{
+    i32 total = 0;
+
+    for( i32 v : c ) // error: no walk
+    {
+        total += v;
+    }
+
+    return total;
+}
+
+void zero<C>( ref C c ) where C : iterable<i32>
+{
+    for( ref i32 v : c ) // error: no writing walk
+    {
+        v = 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

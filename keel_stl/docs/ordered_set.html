@@ -14,7 +14,7 @@
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">ordered_set</span></h2>
 <div class="group" id="ordered_set">
-<pre class="signature"><a class="anchor" href="#ordered_set" aria-label="Link to ordered_set">#</a><code><span class="kw">class</span> <span class="type">ordered_set</span>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<pre class="signature"><a class="anchor" href="#ordered_set" aria-label="Link to ordered_set">#</a><code><span class="kw">class</span> <span class="type">ordered_set</span>&lt;K&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#iterable">iterable</a>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
 <div class="doc">
 <p>A B-tree of keys of type <code>K</code>, each held at most once, in ascending order.</p>
 <p><code>kl::ordered_map</code> without the values: <code>key_at</code> counts over the keys from the smallest, and

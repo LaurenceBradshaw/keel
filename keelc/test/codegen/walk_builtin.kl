@@ -1,0 +1,137 @@
+// D74: a run `T[]` and an array `T[N]` are walked by the compiler, element by element. `ref` writes
+// each element in place, a bare binding copies it, and `break` and `continue` leave the step. Every
+// check returns a distinct code, so exit 0 means all of them agreed.
+i32 drops = 0;
+
+class Counted
+{
+    public i32 value;
+
+    public Counted( i32 v )
+    {
+        value = v;
+    }
+
+    ~Counted()
+    {
+        drops += 1;
+    }
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+
+    for( i32 v : values )
+    {
+        total += v;
+    }
+
+    return total;
+}
+
+void double_all( ref i32[] values )
+{
+    for( ref i32 v : values )
+    {
+        v *= 2;
+    }
+}
+
+i32 main()
+{
+    i32[4] a = [ 1, 2, 3, 4 ];
+
+    i32 total = 0;
+    for( i32 v : a )
+    {
+        total += v;
+    }
+
+    if( total != 10 )
+    {
+        return 1;
+    }
+
+    // A run lent by the array.
+    if( sum( a ) != 10 )
+    {
+        return 2;
+    }
+
+    double_all( ref a );
+
+    if( a[0] != 2 || a[3] != 8 )
+    {
+        return 3;
+    }
+
+    {
+        Counted[3] c = [ Counted( 1 ), Counted( 2 ), Counted( 3 ) ];
+
+        for( ref Counted item : c )
+        {
+            item.value *= 2;
+        }
+
+        i32 seen = 0;
+        for( const ref Counted item : c )
+        {
+            seen += item.value;
+        }
+
+        // Borrowing drops nothing.
+        if( seen != 12 || drops != 0 )
+        {
+            return 4;
+        }
+    }
+
+    if( drops != 3 )
+    {
+        return 5;
+    }
+
+    // A bare binding copies a struct that copies.
+    Point[2] points = [ Point { .x = 1, .y = 2 }, Point { .x = 3, .y = 4 } ];
+    i32      across = 0;
+    for( Point p : points )
+    {
+        across += p.x * p.y;
+    }
+
+    if( across != 14 )
+    {
+        return 6;
+    }
+
+    // `continue` skips the step, `break` ends the loop.
+    i32 kept = 0;
+    for( i32 v : a )
+    {
+        if( v == 4 )
+        {
+            continue;
+        }
+
+        if( v == 8 )
+        {
+            break;
+        }
+
+        kept += v;
+    }
+
+    if( kept != 8 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

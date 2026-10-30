@@ -8,7 +8,7 @@ import hash_control;
 /// `kl::map` without the values: keys are kept in insertion order until a removal moves the last
 /// key into the removed one's place, `key_at` counts over them, each set hashes under its own
 /// random key, and `insert` takes amortised constant time. Dropping the set drops every key.
-class set<K> where K : hashable
+class set<K> implements iterable<K> where K : hashable
 {
     /// --- Construction ---
 

@@ -1,0 +1,31 @@
+error: `values` is `const`
+ --> sema/errors_walk_builtin.kl:5:22
+  |
+5 |     for( ref i32 v : values ) // error: `values` is read-only
+  |                      ^^^^^^ remove `const` to modify it
+
+error: `i32[2]` yields its elements without names
+  --> sema/errors_walk_builtin.kl:16:10
+   |
+16 |     for( [ value ] : a ) // error: no names
+   |          ^^^^^^^^^ bind each one alone: `for( const ref i32 x : a )`
+
+error: the walk yields `i32`
+  --> sema/errors_walk_builtin.kl:21:10
+   |
+21 |     for( const ref i64 v : a ) // error: yields `i32`
+   |          ^^^^^^^^^^^^^
+
+error: `b` is `const`
+  --> sema/errors_walk_builtin.kl:27:22
+   |
+27 |     for( ref i32 v : b ) // error: `b` is const
+   |                      ^ remove `const` to modify it
+
+error: `v` is lent by the walk, so it cannot be modified
+  --> sema/errors_walk_builtin.kl:34:9
+   |
+34 |         v = 0; // error: bare is read-only
+   |         ^ bind it `ref`
+
+5 errors generated

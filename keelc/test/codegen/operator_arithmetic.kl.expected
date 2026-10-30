@@ -97,7 +97,6 @@ void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E*, i
 struct kl__pair__I3i32E kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E*, struct kl__pair__I3i32E* );
 void kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( struct kl__pair__I3f64E*, double, double );
 struct kl__pair__I3f64E kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( struct kl__pair__I3f64E*, struct kl__pair__I3f64E* );
-void kl__label__drop( struct kl__label* );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 11 "codegen/operator_arithmetic.kl"
@@ -1461,15 +1460,6 @@ struct kl__pair__I3f64E kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( stru
 #line 61 "codegen/operator_arithmetic.kl"
     return kl_t0;
 #line 61 "codegen/operator_arithmetic.kl"
-}
-
-void kl__label__drop( struct kl__label* kl_t1 )
-{
-#line 67 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &( *kl_t1 ) );
-#line 67 "codegen/operator_arithmetic.kl"
-    return;
-#line 67 "codegen/operator_arithmetic.kl"
 }
 
 #line 90 "codegen/operator_arithmetic.kl"

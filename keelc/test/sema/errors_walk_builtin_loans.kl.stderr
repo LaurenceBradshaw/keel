@@ -1,0 +1,7 @@
+error: this could change `c` while a loop walks it
+  --> sema/errors_walk_builtin_loans.kl:24:9
+   |
+24 |         c[0] = Counted( item.value ); // error: replaced while walked
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the walk goes on reading it; the loop is at 22:5
+
+1 error generated

@@ -51,7 +51,8 @@ Node_id bound_only_method( const Ast& ast, const Interner& interner, Node_id int
 {
     for( const Node_id member : ast.members( interface ) )
     {
-        if( ast.is_static_method( member ) )
+        // D74: a walk is inlined at its loop, so no vtable can hold one.
+        if( ast.is_static_method( member ) || ast.is_walk( member ) )
         {
             return member;
         }

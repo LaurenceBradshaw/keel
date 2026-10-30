@@ -317,6 +317,19 @@ interface hashable implements equatable
     void hash( ref hasher h ) const;
 };
 
+/// --- Iteration ---
+
+/// A container a loop can read through, one `T` at a time.
+///
+/// A bound only: a walk is lowered where its loop is written, so `where C : iterable<T>` is the
+/// one way to take any of them, and `for( const ref T x : c )` then reads each element in the
+/// container's own order.
+interface iterable<T>
+{
+    /// Lends each element to the loop in turn.
+    void operator:( const ref T item ) const;
+};
+
 /// --- Ownership ---
 
 /// One `T` on the heap, owned: dropping the box drops the value and frees its memory.

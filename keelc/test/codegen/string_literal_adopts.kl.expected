@@ -69,7 +69,6 @@ int32_t kl__lend__7textual( struct kl_7prelude_textual__ref );
 int32_t kl__lend__5label( struct kl__label* );
 int32_t kl__main__( void );
 struct kl__label kl__made__I5labelE__( void );
-void kl__label__drop( struct kl__label* );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
@@ -941,15 +940,6 @@ struct kl__label kl__made__I5labelE__( void )
     kl_t7 = false;
 #line 57 "codegen/string_literal_adopts.kl"
     return kl_t0;
-}
-
-void kl__label__drop( struct kl__label* kl_t1 )
-{
-#line 5 "codegen/string_literal_adopts.kl"
-    kl__label__dtor( &( *kl_t1 ) );
-#line 5 "codegen/string_literal_adopts.kl"
-    return;
-#line 5 "codegen/string_literal_adopts.kl"
 }
 
 #line 60 "codegen/string_literal_adopts.kl"

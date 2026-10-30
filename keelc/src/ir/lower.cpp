@@ -164,6 +164,7 @@ private:
     void lower_while( Node_id id );
     void lower_for( Node_id id );
     void lower_walk( Node_id id );
+    void lower_element_walk( Node_id id );
     void lower_yield( Node_id id );
 
     Operand temporary( Rvalue value, Type_id type, Span span );
@@ -3771,10 +3772,27 @@ Lowering::Walk_frame* Lowering::running_walk()
 // D74: the walk's body where the loop is written, under its own instance and receiver.
 void Lowering::lower_walk( Node_id id )
 {
-    const Node_id walk      = types_.callee_of( id );
+    if( !types_.callee_of( id ).is_valid() )
+    {
+        return lower_element_walk( id );
+    }
+
     const Node_id container = ast_.container( id );
     const Span    span      = ast_.span( id );
     const Type_id held      = type_of( container );
+
+    // A requirement is bound only, so at the instance its implementer's walk is called directly.
+    Node_id  walk  = types_.callee_of( id );
+    Bindings bound = at_instance( held ).bound;
+
+    if( ast_.is_requirement( walk ) )
+    {
+        Requirement_target target =
+            requirement_target( walk, held, types_.table().substitute( types_.through_of( id ), bindings_ ) );
+        assert( !target.through_vtable && target.method.is_valid() );
+        walk  = target.method;
+        bound = std::move( target.at.bound );
+    }
 
     drops_.push_scope();
 
@@ -3787,7 +3805,6 @@ void Lowering::lower_walk( Node_id id )
     }
 
     const Node_id  receiver_param = ast_.params( walk )[0];
-    const Bindings bound          = at_instance( held ).bound;
     const Type_id  address        = binding_type_under( receiver_param, bound );
     const Local_id receiver       = builder_.add_local( address, span );
     const auto     purpose        = ast_.is_const_method( walk ) ? Address_purpose::Read : Address_purpose::Borrow;
@@ -3831,6 +3848,142 @@ void Lowering::lower_walk( Node_id id )
     if( frame.exit.is_valid() )
     {
         builder_.switch_to( frame.exit );
+    }
+
+    drops_.pop_scope( span );
+}
+
+// D74: a run or an array, counted as lower_for counts. Its end is read once, and the index needs no
+// bounds check, since `i < end`.
+void Lowering::lower_element_walk( Node_id id )
+{
+    const Node_id container = ast_.container( id );
+    const Node_id binding   = ast_.binding( id );
+    const Span    span      = ast_.span( id );
+    const Type_id held      = type_of( container );
+    const bool    on_run    = types_.table().is_run( held );
+    const Type_id u64       = types_.table().integer( 64, false );
+    const Type_id boolean   = types_.table().builtin( Type_kind::Bool );
+    const bool    borrows   = is_borrowed_binding( ast_, types_, binding );
+    const bool    writes    = borrows && !ast_.is_const_binding( binding );
+
+    drops_.push_scope();
+
+    const Place place = lower_place( container );
+
+    if( !place.is_global() && place.num_projections == 0 )
+    {
+        drops_.adopt_into_scope( place.local );
+    }
+
+    // The loop's loan, frozen while it runs, as a walk's receiver is.
+    const Type_id  address = types_.table().pointer_to( held );
+    const Local_id holder  = builder_.add_local( address, span );
+    const Local_id count   = builder_.add_local( u64, span );
+    const Local_id end     = builder_.add_local( u64, span );
+
+    builder_.storage_live( holder, span );
+    builder_.assign(
+        builder_.place( holder ), address_of( place, address, writes ? Address_purpose::Borrow : Address_purpose::Read ), span
+    );
+    drops_.add_to_scope( holder );
+    builder_.mark_walked( holder );
+
+    const Operand size = on_run ? temporary( run_size( copy( builder_.place( holder ), address ), u64 ), u64, span )
+                                : constant( literal_pool_.add_integer( types_.table().get( held ).count ), u64 );
+
+    for( const auto& [local, value] :
+         { std::pair { count, constant( literal_pool_.add_integer( 0 ), u64 ) }, std::pair { end, size } } )
+    {
+        builder_.storage_live( local, span );
+        builder_.assign( builder_.place( local ), use( value ), span );
+        drops_.add_to_scope( local );
+    }
+
+    drops_.end_statement( span );
+
+    const Block_id header     = builder_.add_block();
+    const Block_id body_block = builder_.add_block();
+
+    builder_.terminate_goto( header, span );
+    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, drops_.depth() } );
+
+    builder_.switch_to( header );
+    const Operand below = temporary(
+        binary( Token_kind::Less, copy( builder_.place( count ), u64 ), copy( builder_.place( end ), u64 ), boolean ),
+        boolean,
+        span
+    );
+    builder_.terminate_branch( below, body_block, break_target(), span );
+
+    builder_.switch_to( body_block );
+
+    // The element binding lives for one step; `break` and `continue` both leave it.
+    drops_.push_scope();
+
+    Place element {};
+
+    if( on_run )
+    {
+        const Type_id element_pointer = types_.table().many_pointer_to( types_.table().get( held ).element );
+        const Operand data =
+            temporary( run_data( copy( builder_.place( holder ), address ), element_pointer ), element_pointer, span );
+        const Operand at = temporary(
+            binary( Token_kind::Plus, data, copy( builder_.place( count ), u64 ), element_pointer ), element_pointer, span
+        );
+        element = builder_.deref( at.place );
+    }
+    else
+    {
+        element = builder_.index( builder_.deref( builder_.place( holder ) ), count );
+    }
+
+    const Type_id  type  = borrows ? binding_type_of( binding ) : type_of( binding );
+    const Local_id local = builder_.add_local( type, ast_.span( binding ), ast_.name( binding ) );
+
+    builder_.storage_live( local, span );
+    builder_.assign(
+        builder_.place( local ),
+        borrows ? address_of( element, type, writes ? Address_purpose::Borrow : Address_purpose::Read )
+                : use( copy( element, type ) ),
+        span
+    );
+    drops_.add_to_scope( local );
+    locals_.insert_or_assign( binding.v, local );
+
+    if( borrows )
+    {
+        borrowed_bindings_.insert( binding.v );
+    }
+
+    drops_.end_statement( span );
+
+    lower_statement( ast_.body( id ) );
+    drops_.pop_scope( span );
+
+    if( !builder_.is_terminated() )
+    {
+        builder_.terminate_goto( continue_target(), span );
+    }
+
+    const Block_id latch = loops_.back().continue_target;
+    const Block_id exit  = loops_.back().break_target;
+
+    loops_.pop_back();
+
+    if( latch.is_valid() )
+    {
+        builder_.switch_to( latch );
+        const Operand one = constant( literal_pool_.add_integer( 1 ), u64 );
+        builder_.assign(
+            builder_.place( count ), binary( Token_kind::Plus, copy( builder_.place( count ), u64 ), one, u64 ), span
+        );
+        builder_.terminate_goto( header, span );
+    }
+
+    if( exit.is_valid() )
+    {
+        builder_.switch_to( exit );
     }
 
     drops_.pop_scope( span );
@@ -4274,12 +4427,18 @@ Function drop_function( const Ast& ast, Types& types, Type_id implementer )
     return function;
 }
 
-bool implements_anything( const Types& types, Type_id type )
+// A bound-only interface has no vtable, so it asks for no drop function.
+bool has_vtables( const Types& types, Type_id type )
 {
+    const Conformance_model& model = types.conformances();
+
     return std::ranges::any_of(
-        types.conformances().all(),
+        model.all(),
         [&]( const Conformance& conformance )
-        { return types.conformances().of( types.table(), type, conformance.interface ) != nullptr; }
+        {
+            return !model.bound_only_method( types.table(), conformance.interface ).is_valid() &&
+                   model.of( types.table(), type, conformance.interface ) != nullptr;
+        }
     );
 }
 
@@ -4339,7 +4498,7 @@ void append_synthesised_drops(
     for( const Type_id type : types.table().composite_types() )
     {
         if( ( types.table().is_struct( type ) || types.table().is_enum( type ) ) && !types.table().mentions_parameter( type ) &&
-            implements_anything( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
+            has_vtables( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
             !loaded( {}, std::span( &type, 1 ) ) )
         {
             functions.push_back( drop_function( ast, types, type ) );

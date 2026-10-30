@@ -1,0 +1,36 @@
+// D74: the compiler's walk over an array of strings, and over a run a list lends. Each check
+// asserts; under valgrind each string drops once.
+import kl::list;
+import kl::string;
+
+i32 main()
+{
+    kl::string[3] words = [ kl::string::from( "a" ), kl::string::from( "bc" ), kl::string::from( "def" ) ];
+
+    // Doubling each in place through `ref`.
+    for( ref kl::string w : words )
+    {
+        w += w.substring( 0, w.size() );
+    }
+
+    u64 bytes = 0;
+    for( const ref kl::string w : words )
+    {
+        bytes += w.size();
+    }
+    assert( bytes == 12 );
+    assert( words[2] == "defdef" );
+
+    kl::list<kl::string> names = kl::list<kl::string>();
+    names.push( "one" );
+    names.push( "three" );
+
+    bytes = 0;
+    for( const ref kl::string n : names.as_run() )
+    {
+        bytes += n.size();
+    }
+    assert( bytes == 8 );
+
+    return 0;
+}
