@@ -1,6 +1,7 @@
-// `kl::string::split`: pieces between separators, empty ones kept. An empty separator panics, so
-// `programs/string_split_empty_separator` covers it.
+// `kl::string`: `split`, `rfind`, `replace`, trimming and stripping, and `kl::join`. An empty separator
+// or pattern panics, so `programs/string_split_empty_separator` and `string_replace_empty_pattern` cover it.
 import kl::list;
+import kl::optional;
 import kl::string;
 import kl::test::context;
 
@@ -43,4 +44,89 @@ private void split_on_a_longer_separator( ref kl::test::context c )
     check_split( ref c, "aaa", "aa", overlap );
     str[1] longer = [ "ab" ];
     check_split( ref c, "ab", "abc", longer );
+}
+
+private void check_rfind( ref kl::test::context c, str text, str needle, u64 expected )
+{
+    kl::string s = kl::string::from( text );
+    kl::optional<u64> found = s.rfind( needle );
+    c.require( kl::is_some( found ) );
+    c.check_eq( kl::unwrap( move found ), expected );
+}
+
+private void rfind_finds_the_last( ref kl::test::context c )
+{
+    check_rfind( ref c, "abc", "a", 0 );
+    check_rfind( ref c, "abc", "c", 2 );
+    check_rfind( ref c, "a.b.c", ".", 3 );
+    check_rfind( ref c, "aaa", "aa", 1 );
+    check_rfind( ref c, "abc", "", 3 );
+    check_rfind( ref c, "", "", 0 );
+    kl::string s = "ab";
+    c.check( kl::is_none( s.rfind( "abc" ) ) );
+    c.check( kl::is_none( s.rfind( "x" ) ) );
+}
+
+private void check_replace( ref kl::test::context c, str text, str pattern, str replacement, str expected )
+{
+    kl::string s = kl::string::from( text );
+    c.check_eq( s.replace( pattern, replacement ), expected );
+}
+
+private void replace_every_occurrence( ref kl::test::context c )
+{
+    check_replace( ref c, "a.b.c", ".", "-", "a-b-c" );
+    check_replace( ref c, "abc", "x", "-", "abc" );
+    check_replace( ref c, "", "x", "-", "" );
+    check_replace( ref c, "aaa", "aa", "b", "ba" );
+    check_replace( ref c, "a.b", ".", "::", "a::b" );
+    check_replace( ref c, "a::b::", "::", "", "ab" );
+    check_replace( ref c, "abab", "ab", "abab", "abababab" );
+}
+
+private void check_trims( ref kl::test::context c, str text, str start, str end, str both )
+{
+    kl::string s = kl::string::from( text );
+    c.check_eq( s.trim_start(), start );
+    c.check_eq( s.trim_end(), end );
+    c.check_eq( s.trim(), both );
+}
+
+private void trim_removes_ascii_whitespace( ref kl::test::context c )
+{
+    check_trims( ref c, "  a b  ", "a b  ", "  a b", "a b" );
+    check_trims( ref c, "\t\n\x0B\x0C\r a \t\n\x0B\x0C\r", "a \t\n\x0B\x0C\r", "\t\n\x0B\x0C\r a", "a" );
+    check_trims( ref c, "   ", "", "", "" );
+    check_trims( ref c, "", "", "", "" );
+    check_trims( ref c, "ab", "ab", "ab", "ab" );
+}
+
+private void strip_answers_the_rest( ref kl::test::context c )
+{
+    kl::string s = "--name=value";
+    c.check_eq( kl::unwrap( s.strip_prefix( "--name=" ) ), "value" );
+    c.check_eq( kl::unwrap( s.strip_suffix( "=value" ) ), "--name" );
+    c.check_eq( kl::unwrap( s.strip_prefix( "--name=value" ) ), "" );
+    c.check_eq( kl::unwrap( s.strip_suffix( "" ) ), "--name=value" );
+    c.check( kl::is_none( s.strip_prefix( "-x" ) ) );
+    c.check( kl::is_none( s.strip_suffix( "valu" ) ) );
+    c.check( kl::is_none( s.strip_prefix( "--name=value!" ) ) );
+}
+
+private void join_puts_the_separator_between( ref kl::test::context c )
+{
+    str[3] three = [ "a", "b", "c" ];
+    c.check_eq( kl::join( three, ", " ), "a, b, c" );
+    c.check_eq( kl::join( three, "" ), "abc" );
+    str[1] one = [ "a" ];
+    c.check_eq( kl::join( one, ", " ), "a" );
+    str[2] empties = [ "", "" ];
+    c.check_eq( kl::join( empties, "-" ), "-" );
+
+    kl::list<kl::string> none = kl::list<kl::string>();
+    c.check_eq( kl::join( none.as_run(), ", " ), "" );
+    kl::list<kl::string> owned = kl::list<kl::string>();
+    owned.push( "x" );
+    owned.push( "yz" );
+    c.check_eq( kl::join( owned.as_run(), " " ), "x yz" );
 }

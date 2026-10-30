@@ -15,6 +15,7 @@
 <li><a href="#parse_error"><code>parse_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#string"><code>string</code></a> <span class="kind">class</span></li>
 <li><a href="#same_text"><code>same_text</code></a> <span class="kind">function</span></li>
+<li><a href="#join"><code>join</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">parse_error</span></h2>
@@ -146,6 +147,12 @@
 <p>The index of the first place <code>needle</code> occurs, or <code>none</code>. <code>&quot;&quot;</code> is found at 0.</p>
 </div>
 </div>
+<div class="group" id="string.rfind">
+<pre class="signature"><a class="anchor" href="#string.rfind" aria-label="Link to rfind">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">rfind</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> needle ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index of the last place <code>needle</code> occurs, or <code>none</code>. <code>&quot;&quot;</code> is found at <code>size()</code>.</p>
+</div>
+</div>
 <div class="group" id="string.split">
 <pre class="signature"><a class="anchor" href="#string.split" aria-label="Link to split">#</a><code><span class="kw">public</span> <a class="type" href="list.html#list">list</a>&lt;<a class="type" href="#string">string</a>&gt; <span class="fn">split</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> separator ) <span class="kw">const</span></code></pre>
 <div class="doc">
@@ -153,6 +160,46 @@
 split on <code>&quot;\n&quot;</code> gives <code>a</code>, <code>b</code> and an empty piece.</p>
 <h4>Panics</h4>
 <p>If <code>separator</code> is empty.</p>
+</div>
+</div>
+<div class="group" id="string.replace">
+<pre class="signature"><a class="anchor" href="#string.replace" aria-label="Link to replace">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">replace</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> pattern, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> replacement ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string with every occurrence of <code>pattern</code> replaced, matched left to right without
+overlap: <code>&quot;a.b.c&quot;</code> with <code>&quot;.&quot;</code> replaced by <code>&quot;-&quot;</code> gives <code>&quot;a-b-c&quot;</code>.</p>
+<h4>Panics</h4>
+<p>If <code>pattern</code> is empty.</p>
+</div>
+</div>
+<h3>Trimming</h3>
+<div class="group" id="string.trim_start">
+<pre class="signature"><a class="anchor" href="#string.trim_start" aria-label="Link to trim_start">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">trim_start</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string without the leading whitespace, as <code>trim</code> counts it.</p>
+</div>
+</div>
+<div class="group" id="string.trim_end">
+<pre class="signature"><a class="anchor" href="#string.trim_end" aria-label="Link to trim_end">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">trim_end</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string without the trailing whitespace, as <code>trim</code> counts it.</p>
+</div>
+</div>
+<div class="group" id="string.trim">
+<pre class="signature"><a class="anchor" href="#string.trim" aria-label="Link to trim">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">trim</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string without leading or trailing whitespace: space, <code>\t</code>, <code>\n</code>, <code>\v</code>, <code>\f</code> and <code>\r</code>.</p>
+</div>
+</div>
+<div class="group" id="string.strip_prefix">
+<pre class="signature"><a class="anchor" href="#string.strip_prefix" aria-label="Link to strip_prefix">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#string">string</a>&gt; <span class="fn">strip_prefix</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> prefix ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The rest of the string after <code>prefix</code>, or <code>none</code> if it does not begin with <code>prefix</code>.</p>
+</div>
+</div>
+<div class="group" id="string.strip_suffix">
+<pre class="signature"><a class="anchor" href="#string.strip_suffix" aria-label="Link to strip_suffix">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="type" href="#string">string</a>&gt; <span class="fn">strip_suffix</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> suffix ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The string before <code>suffix</code>, or <code>none</code> if it does not end with <code>suffix</code>.</p>
 </div>
 </div>
 <h3>Changing</h3>
@@ -227,6 +274,15 @@ the number, and <code>overflow</code> as soon as the number leaves the range of 
 <pre class="signature"><a class="anchor" href="#same_text" aria-label="Link to same_text">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">same_text</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> a, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> b )</code></pre>
 <div class="doc">
 <p>Whether <code>a</code> and <code>b</code> hold the same bytes in the same order.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">join</span></h2>
+<div class="group" id="join">
+<pre class="signature"><a class="anchor" href="#join" aria-label="Link to join">#</a><code><a class="type" href="#string">string</a> <span class="fn">join</span>&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> T[] parts, <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> separator ) <span class="kw">where</span> T : <a class="type" href="prelude.html#textual">textual</a></code></pre>
+<div class="doc">
+<p>The parts with <code>separator</code> between each pair: <code>join( [ &quot;a&quot;, &quot;b&quot; ], &quot;, &quot; )</code> gives <code>&quot;a, b&quot;</code>.</p>
 </div>
 </div>
 </section>

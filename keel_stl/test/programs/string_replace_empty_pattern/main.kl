@@ -1,0 +1,9 @@
+// Replacing an empty pattern panics.
+import kl::string;
+
+i32 main()
+{
+    kl::string s = "abc";
+    _ = s.replace( "", "x" );
+    return 0;
+}

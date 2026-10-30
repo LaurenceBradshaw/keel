@@ -236,13 +236,7 @@ class Builder
 
         if( verbose_ )
         {
-            kl::string command = kl::string( keelc_.path() );
-            for( u64 i : 0..args.size() )
-            {
-                command += " ";
-                command += args.as_run()[i];
-            }
-            kl::println( command );
+            kl::println( kl::string( keelc_.path() ) + " " + kl::join( args.as_run(), " " ) );
         }
 
         switch( kl::run( keelc_.path(), args.as_run() ) )

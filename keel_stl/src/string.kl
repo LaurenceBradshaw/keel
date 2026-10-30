@@ -243,6 +243,35 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         return optional::none;
     }
 
+    /// The index of the last place `needle` occurs, or `none`. `""` is found at `size()`.
+    public optional<u64> rfind( const ref textual needle ) const
+    {
+        const ref u8[] text = needle.as_text();
+
+        if( text.size > size() )
+        {
+            return optional::none;
+        }
+
+        u64 i = size() - text.size;
+        while( true )
+        {
+            if( matches_at( i, text ) )
+            {
+                return optional::some( i );
+            }
+
+            if( i == 0 )
+            {
+                break;
+            }
+
+            i--;
+        }
+
+        return optional::none;
+    }
+
     /// The pieces between each occurrence of `separator`, in order, empty ones kept: `"a\nb\n"`
     /// split on `"\n"` gives `a`, `b` and an empty piece.
     ///
@@ -272,6 +301,113 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         
         pieces.push( substring( start, size() - start ) );
         return pieces;
+    }
+
+    /// A new string with every occurrence of `pattern` replaced, matched left to right without
+    /// overlap: `"a.b.c"` with `"."` replaced by `"-"` gives `"a-b-c"`.
+    ///
+    /// ### Panics
+    ///
+    /// If `pattern` is empty.
+    public string replace( const ref textual pattern, const ref textual replacement ) const
+    {
+        const ref u8[] pattern_bytes = pattern.as_text();
+        const ref u8[] replacement_bytes = replacement.as_text();
+
+        if( pattern_bytes.size == 0 )
+        {
+            panic( "replace with an empty pattern" );
+        }
+
+        string result = string::with_capacity( size() );
+
+        u64 i = 0;
+        while( i < size() )
+        {
+            if( matches_at( i, pattern_bytes ) )
+            {
+                result.append( replacement_bytes );
+                i += pattern_bytes.size;
+            }
+            else
+            {
+                unsafe
+                {
+                    result.push( data_[i] );
+                }
+                i++;
+            }
+        }
+
+        return result;
+    }
+
+    /// --- Trimming ---
+
+    /// A new string without the leading whitespace, as `trim` counts it.
+    public string trim_start() const
+    {
+        u64 start = 0;
+        while( start < size() && is_space( as_text()[start] ) )
+        {
+            start++;
+        }
+
+        return substring( start, size() - start );
+    }
+
+    /// A new string without the trailing whitespace, as `trim` counts it.
+    public string trim_end() const
+    {
+        u64 end = size();
+        while( end > 0 && is_space( as_text()[end - 1] ) )
+        {
+            end--;
+        }
+
+        return substring( 0, end );
+    }
+
+    /// A new string without leading or trailing whitespace: space, `\t`, `\n`, `\v`, `\f` and `\r`.
+    public string trim() const
+    {
+        u64 start = 0;
+        while( start < size() && is_space( as_text()[start] ) )
+        {
+            start++;
+        }
+
+        u64 end = size();
+        while( end > start && is_space( as_text()[end - 1] ) )
+        {
+            end--;
+        }
+
+        return substring( start, end - start );
+    }
+
+    /// The rest of the string after `prefix`, or `none` if it does not begin with `prefix`.
+    public optional<string> strip_prefix( const ref textual prefix ) const
+    {
+        if( starts_with( prefix ) )
+        {
+            const u64 prefix_size = prefix.as_text().size;
+            return optional::some( substring( prefix_size, size() - prefix_size ) );
+        }
+
+        return optional::none;
+    }
+
+    /// The string before `suffix`, or `none` if it does not end with `suffix`.
+    public optional<string> strip_suffix( const ref textual suffix ) const
+    {
+        if( ends_with( suffix ) )
+        {
+            const u64 suffix_size = suffix.as_text().size;
+            return optional::some( substring( 0, size() - suffix_size ) );
+        }
+
+        return optional::none;
     }
 
     /// --- Changing ---
@@ -493,4 +629,42 @@ bool same_text( const ref textual a, const ref textual b )
     }
 
     return true;
+}
+
+/// Whether `byte` is ASCII whitespace.
+private bool is_space( u8 byte )
+{
+    return byte == 32 || (byte >= 9 && byte <= 13); // ' ', '\t', '\n', '\v', '\f', '\r'
+}
+
+/// The parts with `separator` between each pair: `join( [ "a", "b" ], ", " )` gives `"a, b"`.
+string join<T>( const ref T[] parts, const ref textual separator )
+    where T : textual
+{
+    const ref u8[] between = separator.as_text();
+    u64 total = 0;
+
+    for( u64 i : 0..parts.size )
+    {
+        total += parts[i].as_text().size;
+    }
+
+    if( parts.size > 1 )
+    {
+        total += between.size * (parts.size - 1);
+    }
+
+    string result = string::with_capacity( total );
+
+    for( u64 i : 0..parts.size )
+    {
+        if( i > 0 )
+        {
+            result.append( between );
+        }
+
+        result.append( parts[i].as_text() );
+    }
+
+    return result;
 }

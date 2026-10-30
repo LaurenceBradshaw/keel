@@ -1446,12 +1446,10 @@ major), which waits for the lambda decision (§12).
 
 ### Library
 
-- **Building a command's text by hand is clumsy.** `Keelc::ask` appends the program and each
-  argument with `+=` to print the command under `--verbose`, and stage 6 does the same for every
-  keelc command. Either `kl::join( const ref T[] parts, str separator ) where T : textual`, or a
-  `kl::os` function answering the text a `run` or `capture` of the same program and arguments
-  would execute, quoted so that it can be pasted. The second keeps the printed command and the
-  executed one from drifting apart.
+- **A printed command is not quoted.** keel_build prints its keelc command under `--verbose` with
+  `kl::join`, so an argument holding a space prints ambiguously. A `kl::os` function answering the
+  text a `run` or `capture` of the same program and arguments would execute, quoted so that it can
+  be pasted, keeps the printed command and the executed one from drifting apart.
 
 - **`s += s` on a `kl::string` is refused**, since it borrows `s` both as `ref` and `const ref`.
   Allowing it needs a borrow rule for a receiver read before it is written.
