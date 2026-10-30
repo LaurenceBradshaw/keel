@@ -15,6 +15,7 @@
 const u8 ORDERED_KEYS = 11;                         // the most keys a node holds
 const u8 ORDERED_MIN = 5;                           // the fewest a non-root holds; the middle
 const u64 ORDERED_NO_NODE = 0xffff_ffff_ffff_ffff;  // an empty tree's root, a leaf's child 0
+const u64 ORDERED_DEPTH = 32;                       // past any height: 6^31 keys exceed 2^64
 
 /// `count` key slots moving from `from..` to `to..`. The two may overlap.
 struct key_run
@@ -299,6 +300,58 @@ class ordered_control
         }
 
         return key_slot( n, left );
+    }
+
+    /// The owner's slot for each key from the smallest: `for( u64 slot : control_ )`.
+    public void operator:( u64 slot ) const
+    {
+        if( root_ == ORDERED_NO_NODE )
+        {
+            return;
+        }
+
+        // The path from the root; `done[d]` counts the keys of `path[d]` already yielded.
+        u64[ORDERED_DEPTH] path = [ 0, .. ];
+        u64[ORDERED_DEPTH] done = [ 0, .. ];
+        u64 depth = 0;
+        u64 n = root_;
+
+        while( true )
+        {
+            path[depth] = n;
+            done[depth] = 0;
+            depth++;
+
+            if( is_leaf( n ) )
+            {
+                for( u64 j : 0..count( n ) )
+                {
+                    yield( key_slot( n, j ) );
+                }
+
+                // Climb to the nearest node with a key left, or end.
+                depth--;
+                while( depth > 0 && done[depth - 1] == count( path[depth - 1] ) )
+                {
+                    depth--;
+                }
+
+                if( depth == 0 )
+                {
+                    return;
+                }
+
+                const u64 above = path[depth - 1];
+                const u64 j = done[depth - 1];
+                yield( key_slot( above, j ) );
+                done[depth - 1] = j + 1;
+                n = child( above, j + 1 );
+            }
+            else
+            {
+                n = child( n, 0 );
+            }
+        }
     }
 
     /// --- Inserting ---

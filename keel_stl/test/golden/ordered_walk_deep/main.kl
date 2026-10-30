@@ -1,0 +1,75 @@
+// D74: an ordered map's and set's walks step through a tree several levels deep in key order,
+// `break` and `continue` included, and an empty one yields nothing. Each check asserts.
+import kl::ordered_map;
+import kl::ordered_set;
+
+i32 main()
+{
+    kl::ordered_set<i32> empty = kl::ordered_set<i32>();
+    for( i32 k : empty )
+    {
+        assert( k == -1 );  // never reached: nothing is yielded
+    }
+
+    // 3001 is prime, so `k * 1009 % 3001` puts 0..3001 in a scattered order.
+    kl::ordered_set<i32> s = kl::ordered_set<i32>();
+    for( i32 k : 0..3001 )
+    {
+        _ = s.insert( ( k * 1009 ) % 3001 );
+    }
+    for( i32 k : 0..1000 )
+    {
+        _ = s.remove( k * 3 );
+    }
+
+    i32 previous = -1;
+    u64 count    = 0;
+    for( i32 k : s )
+    {
+        assert( k > previous );
+        assert( k % 3 != 0 || k == 3000 );
+        previous = k;
+        count += 1;
+    }
+    assert( count == 2001 );
+    assert( previous == 3000 );
+
+    i32 odd = 0;
+    for( i32 k : s )
+    {
+        if( k % 2 == 0 )
+        {
+            continue;
+        }
+
+        if( k > 2000 )
+        {
+            break;
+        }
+
+        odd += 1;
+    }
+    assert( odd == 667 );
+
+    kl::ordered_map<i32, i32> m = kl::ordered_map<i32, i32>();
+    for( i32 k : 0..3001 )
+    {
+        _ = m.insert( ( k * 1009 ) % 3001, 0 );
+    }
+
+    for( [ const ref key, ref value ] : m )
+    {
+        value = key * 2;
+    }
+
+    i32 last = -1;
+    for( [ const ref key, const ref value ] : m )
+    {
+        assert( key == last + 1 );
+        assert( value == key * 2 );
+        last = key;
+    }
+    assert( last == 3000 );
+
+    return 0;
+}

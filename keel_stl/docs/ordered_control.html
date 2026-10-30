@@ -15,6 +15,7 @@
 <li><a href="#ORDERED_KEYS"><code>ORDERED_KEYS</code></a> <span class="kind">global</span></li>
 <li><a href="#ORDERED_MIN"><code>ORDERED_MIN</code></a> <span class="kind">global</span></li>
 <li><a href="#ORDERED_NO_NODE"><code>ORDERED_NO_NODE</code></a> <span class="kind">global</span></li>
+<li><a href="#ORDERED_DEPTH"><code>ORDERED_DEPTH</code></a> <span class="kind">global</span></li>
 <li><a href="#key_run"><code>key_run</code></a> <span class="kind">struct</span></li>
 <li><a href="#key_moves"><code>key_moves</code></a> <span class="kind">struct</span></li>
 <li><a href="#ordered_control"><code>ordered_control</code></a> <span class="kind">class</span></li>
@@ -35,6 +36,12 @@
 <h2><span class="kind">global</span> <span class="">ORDERED_NO_NODE</span></h2>
 <div class="group" id="ORDERED_NO_NODE">
 <pre class="signature"><a class="anchor" href="#ORDERED_NO_NODE" aria-label="Link to ORDERED_NO_NODE">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> ORDERED_NO_NODE</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">ORDERED_DEPTH</span></h2>
+<div class="group" id="ORDERED_DEPTH">
+<pre class="signature"><a class="anchor" href="#ORDERED_DEPTH" aria-label="Link to ORDERED_DEPTH">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> ORDERED_DEPTH</code></pre>
 </div>
 </section>
 <section class="entry">
@@ -180,6 +187,12 @@ than this directly.</p>
 <pre class="signature"><a class="anchor" href="#ordered_control.slot_at" aria-label="Link to slot_at">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">slot_at</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The owner's slot for the <code>i</code>th smallest key.</p>
+</div>
+</div>
+<div class="group" id="ordered_control.operator:">
+<pre class="signature"><a class="anchor" href="#ordered_control.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <a class="prim" href="prelude.html#u64">u64</a> slot ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The owner's slot for each key from the smallest: <code>for( u64 slot : control_ )</code>.</p>
 </div>
 </div>
 <h3>Inserting</h3>

@@ -177,9 +177,8 @@ class ordered_map<K, V> where K : comparable
     /// not change the map.
     public void operator:( const ref K key, const ref V value ) const
     {
-        for( u64 i : 0..control_.size() )
+        for( u64 slot : control_ )
         {
-            const u64 slot = control_.slot_at( i );
             unsafe
             {
                 yield( keys_[slot], values_[slot] );
@@ -191,9 +190,8 @@ class ordered_map<K, V> where K : comparable
     /// `for( [ const ref key, ref value ] : m )`. The body may not change the map itself.
     public void operator:( const ref K key, ref V value )
     {
-        for( u64 i : 0..control_.size() )
+        for( u64 slot : control_ )
         {
-            const u64 slot = control_.slot_at( i );
             unsafe
             {
                 yield( keys_[slot], ref values_[slot] );

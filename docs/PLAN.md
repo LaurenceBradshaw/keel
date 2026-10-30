@@ -1464,9 +1464,6 @@ major), which waits for the lambda decision (§12).
   decide whether `hashable`'s doc states the rule. The table's own API is sound today, since no
   method hands out a key, and **an iteration API must keep it so**: keys as `const`, only values
   mutable.
-- **The `kl::ordered_map` and `kl::ordered_set` walks reach each entry through `slot_at`**, as
-  `key_at` does, so every step descends the tree from the root. An in-order walk over the tree
-  would step from one entry to the next.
 - **A `ctz` intrinsic.** `hash_control::lowest` finds a group's first match in five word
   operations; one instruction would do.
 - **`kl_rt_hash_key` is not thread-safe**: its key is drawn once, unguarded, and counted up. It

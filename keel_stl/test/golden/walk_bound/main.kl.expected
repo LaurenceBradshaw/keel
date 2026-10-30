@@ -62,6 +62,7 @@ struct kl_7prelude_str
 uint8_t kl_2kl15ordered_control_ORDERED_KEYS__G = 11;
 uint8_t kl_2kl15ordered_control_ORDERED_MIN__G = 5;
 uint64_t kl_2kl15ordered_control_ORDERED_NO_NODE__G = 18446744073709551615ull;
+uint64_t kl_2kl15ordered_control_ORDERED_DEPTH__G = 32;
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -103,7 +104,7 @@ struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_open_gap__SQ2kl15
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_close_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t, uint64_t );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
-#line 35 "../../src/ordered_control.kl"
+#line 36 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_none__SQ2kl9key_moves( void )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -112,35 +113,35 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_none__SQ2kl9key
     struct kl_2kl15ordered_control_key_run kl_t3;
     struct kl_2kl15ordered_control_key_run kl_t4;
     struct kl_2kl15ordered_control_key_run kl_t5;
-#line 38 "../../src/ordered_control.kl"
+#line 39 "../../src/ordered_control.kl"
     kl_t3.kl_from = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 38 "../../src/ordered_control.kl"
+#line 39 "../../src/ordered_control.kl"
     kl_t3.kl_to = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 38 "../../src/ordered_control.kl"
+#line 39 "../../src/ordered_control.kl"
     kl_t3.kl_count = 0;
     kl_t4.kl_from = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 39 "../../src/ordered_control.kl"
+#line 40 "../../src/ordered_control.kl"
     kl_t4.kl_to = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 39 "../../src/ordered_control.kl"
+#line 40 "../../src/ordered_control.kl"
     kl_t4.kl_count = 0;
     kl_t5.kl_from = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 40 "../../src/ordered_control.kl"
+#line 41 "../../src/ordered_control.kl"
     kl_t5.kl_to = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 40 "../../src/ordered_control.kl"
+#line 41 "../../src/ordered_control.kl"
     kl_t5.kl_count = 0;
-#line 38 "../../src/ordered_control.kl"
+#line 39 "../../src/ordered_control.kl"
     kl_t2.kl_first = kl_t3;
     kl_t2.kl_second = kl_t4;
     kl_t2.kl_third = kl_t5;
-#line 37 "../../src/ordered_control.kl"
+#line 38 "../../src/ordered_control.kl"
     kl_result_1 = kl_t2;
-#line 42 "../../src/ordered_control.kl"
+#line 43 "../../src/ordered_control.kl"
     kl_t0 = kl_result_1;
-#line 42 "../../src/ordered_control.kl"
+#line 43 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 55 "../../src/ordered_control.kl"
+#line 56 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_ordered_control__RQ2kl15ordered_control__ctor( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     ( *kl_this_1 ).kl_children_ = NULL;
@@ -153,85 +154,85 @@ void kl_2kl15ordered_control_ordered_control__RQ2kl15ordered_control__ctor( stru
     ( *kl_this_1 ).kl_free_ = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
     ( *kl_this_1 ).kl_free_count_ = 0;
     return;
-#line 66 "../../src/ordered_control.kl"
+#line 67 "../../src/ordered_control.kl"
 }
 
-#line 68 "../../src/ordered_control.kl"
+#line 69 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_ordered_control__dtor( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     bool kl_t2;
     bool kl_t4;
     bool kl_t6;
-#line 70 "../../src/ordered_control.kl"
+#line 71 "../../src/ordered_control.kl"
     kl_t2 = ( *kl_this_1 ).kl_children_ != NULL;
-#line 70 "../../src/ordered_control.kl"
+#line 71 "../../src/ordered_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 74 "../../src/ordered_control.kl"
+#line 75 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_children_ );
-#line 70 "../../src/ordered_control.kl"
+#line 71 "../../src/ordered_control.kl"
     goto bb2;
     bb2:
-#line 78 "../../src/ordered_control.kl"
+#line 79 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_counts_ != NULL;
-#line 78 "../../src/ordered_control.kl"
+#line 79 "../../src/ordered_control.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 82 "../../src/ordered_control.kl"
+#line 83 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_counts_ );
-#line 78 "../../src/ordered_control.kl"
+#line 79 "../../src/ordered_control.kl"
     goto bb4;
     bb4:
-#line 86 "../../src/ordered_control.kl"
+#line 87 "../../src/ordered_control.kl"
     kl_t6 = ( *kl_this_1 ).kl_totals_ != NULL;
-#line 86 "../../src/ordered_control.kl"
+#line 87 "../../src/ordered_control.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
-#line 90 "../../src/ordered_control.kl"
+#line 91 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_totals_ );
-#line 86 "../../src/ordered_control.kl"
+#line 87 "../../src/ordered_control.kl"
     goto bb6;
     bb6:
-#line 93 "../../src/ordered_control.kl"
+#line 94 "../../src/ordered_control.kl"
     return;
-#line 93 "../../src/ordered_control.kl"
+#line 94 "../../src/ordered_control.kl"
 }
 
-#line 98 "../../src/ordered_control.kl"
+#line 99 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_size__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     uint64_t kl_t0;
     bool kl_t2;
     uint64_t* kl_t3;
-#line 100 "../../src/ordered_control.kl"
+#line 101 "../../src/ordered_control.kl"
     kl_t2 = ( *kl_this_1 ).kl_root_ == kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 100 "../../src/ordered_control.kl"
+#line 101 "../../src/ordered_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 0;
-#line 102 "../../src/ordered_control.kl"
+#line 103 "../../src/ordered_control.kl"
     return kl_t0;
     bb2:
-#line 107 "../../src/ordered_control.kl"
+#line 108 "../../src/ordered_control.kl"
     kl_t3 = ( *kl_this_1 ).kl_totals_ + ( *kl_this_1 ).kl_root_;
-#line 107 "../../src/ordered_control.kl"
+#line 108 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_t3 );
-#line 107 "../../src/ordered_control.kl"
+#line 108 "../../src/ordered_control.kl"
     return kl_t0;
-#line 109 "../../src/ordered_control.kl"
+#line 110 "../../src/ordered_control.kl"
 }
 
-#line 112 "../../src/ordered_control.kl"
+#line 113 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_used__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 114 "../../src/ordered_control.kl"
+#line 115 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_this_1 ).kl_used_;
-#line 114 "../../src/ordered_control.kl"
+#line 115 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 118 "../../src/ordered_control.kl"
+#line 119 "../../src/ordered_control.kl"
 bool kl_2kl15ordered_control_needs_growth__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     bool kl_t0;
@@ -242,77 +243,77 @@ bool kl_2kl15ordered_control_needs_growth__SQ2kl15ordered_control( struct kl_2kl
     bool kl_t6;
     uint64_t kl_t7;
     bool kl_t8;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t2 = __builtin_sub_overflow( ( *kl_this_1 ).kl_capacity_, ( *kl_this_1 ).kl_used_, &( uint64_t ) { 0 } );
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 120 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 120, "arithmetic overflow: capacity_ - used_" );
+#line 121 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 121, "arithmetic overflow: capacity_ - used_" );
     bb2:
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t3 = ( *kl_this_1 ).kl_capacity_ - ( *kl_this_1 ).kl_used_;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t4 = __builtin_add_overflow( kl_t3, ( *kl_this_1 ).kl_free_count_, &( uint64_t ) { 0 } );
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 120 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 120, "arithmetic overflow: capacity_ - used_ + free_count_" );
+#line 121 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 121, "arithmetic overflow: capacity_ - used_ + free_count_" );
     bb4:
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t5 = kl_t3 + ( *kl_this_1 ).kl_free_count_;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_height_, 1, &( uint64_t ) { 0 } );
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     if ( kl_t6 ) goto bb5; else goto bb6;
     bb5:
-#line 120 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 120, "arithmetic overflow: height_ + 1" );
+#line 121 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 121, "arithmetic overflow: height_ + 1" );
     bb6:
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t7 = ( *kl_this_1 ).kl_height_ + 1;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t8 = kl_t5 < kl_t7;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     kl_t0 = kl_t8;
-#line 120 "../../src/ordered_control.kl"
+#line 121 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 124 "../../src/ordered_control.kl"
+#line 125 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_grown_nodes__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     uint64_t kl_t0;
     bool kl_t2;
     bool kl_t3;
     uint64_t kl_t4;
-#line 126 "../../src/ordered_control.kl"
+#line 127 "../../src/ordered_control.kl"
     kl_t2 = ( *kl_this_1 ).kl_capacity_ == 0;
-#line 126 "../../src/ordered_control.kl"
+#line 127 "../../src/ordered_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 4;
-#line 128 "../../src/ordered_control.kl"
+#line 129 "../../src/ordered_control.kl"
     return kl_t0;
     bb2:
-#line 131 "../../src/ordered_control.kl"
+#line 132 "../../src/ordered_control.kl"
     kl_t3 = __builtin_mul_overflow( ( *kl_this_1 ).kl_capacity_, 2, &( uint64_t ) { 0 } );
-#line 131 "../../src/ordered_control.kl"
+#line 132 "../../src/ordered_control.kl"
     if ( kl_t3 ) goto bb3; else goto bb4;
     bb3:
-#line 131 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 131, "arithmetic overflow: capacity_ * 2" );
+#line 132 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 132, "arithmetic overflow: capacity_ * 2" );
     bb4:
-#line 131 "../../src/ordered_control.kl"
+#line 132 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_capacity_ * 2;
-#line 131 "../../src/ordered_control.kl"
+#line 132 "../../src/ordered_control.kl"
     kl_t0 = kl_t4;
-#line 131 "../../src/ordered_control.kl"
+#line 132 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 135 "../../src/ordered_control.kl"
+#line 136 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_nodes_2 )
 {
     uint64_t* kl_children_3;
@@ -363,225 +364,225 @@ void kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( struct kl_2kl15o
     bool kl_t48;
     bool kl_t50;
     bool kl_t52;
-#line 137 "../../src/ordered_control.kl"
+#line 138 "../../src/ordered_control.kl"
     kl_children_3 = NULL;
     kl_counts_4 = NULL;
     kl_totals_5 = NULL;
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     kl_t6 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_KEYS__G, 1, &( uint8_t ) { 0 } );
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 143 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 143, "arithmetic overflow: ORDERED_KEYS + 1" );
+#line 144 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 144, "arithmetic overflow: ORDERED_KEYS + 1" );
     bb2:
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     kl_t7 = kl_2kl15ordered_control_ORDERED_KEYS__G + 1;
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     kl_t8 = ( uint64_t ) kl_t7;
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     kl_t9 = __builtin_mul_overflow( kl_nodes_2, kl_t8, &( uint64_t ) { 0 } );
-#line 143 "../../src/ordered_control.kl"
+#line 144 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb3; else goto bb4;
     bb3:
-#line 143 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 143, "arithmetic overflow: nodes * ( ORDERED_KEYS + 1" );
-    bb4:
-#line 143 "../../src/ordered_control.kl"
-    kl_t10 = kl_nodes_2 * kl_t8;
-#line 143 "../../src/ordered_control.kl"
-    kl_t11 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t10, sizeof( uint64_t ), "../../src/ordered_control.kl", 143, "out of memory: alloc<u64>( nodes * ( ORDERED_KEYS + 1 ) )" );
-#line 143 "../../src/ordered_control.kl"
-    kl_children_3 = kl_t11;
-    kl_t12 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 144, "out of memory: alloc<u64>( nodes )" );
 #line 144 "../../src/ordered_control.kl"
-    kl_counts_4 = kl_t12;
-    kl_t13 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 145, "out of memory: alloc<u64>( nodes )" );
+    kl_rt_panic( "../../src/ordered_control.kl", 144, "arithmetic overflow: nodes * ( ORDERED_KEYS + 1" );
+    bb4:
+#line 144 "../../src/ordered_control.kl"
+    kl_t10 = kl_nodes_2 * kl_t8;
+#line 144 "../../src/ordered_control.kl"
+    kl_t11 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t10, sizeof( uint64_t ), "../../src/ordered_control.kl", 144, "out of memory: alloc<u64>( nodes * ( ORDERED_KEYS + 1 ) )" );
+#line 144 "../../src/ordered_control.kl"
+    kl_children_3 = kl_t11;
+    kl_t12 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 145, "out of memory: alloc<u64>( nodes )" );
 #line 145 "../../src/ordered_control.kl"
+    kl_counts_4 = kl_t12;
+    kl_t13 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 146, "out of memory: alloc<u64>( nodes )" );
+#line 146 "../../src/ordered_control.kl"
     kl_totals_5 = kl_t13;
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     kl_n_14 = 0;
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     kl_t15 = ( *kl_this_1 ).kl_used_;
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     goto bb5;
     bb5:
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     kl_t16 = kl_n_14 < kl_t15;
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     if ( kl_t16 ) goto bb6; else goto bb7;
     bb6:
-#line 152 "../../src/ordered_control.kl"
+#line 153 "../../src/ordered_control.kl"
     kl_t17 = kl_counts_4 + kl_n_14;
-#line 152 "../../src/ordered_control.kl"
+#line 153 "../../src/ordered_control.kl"
     kl_t18 = ( *kl_this_1 ).kl_counts_ + kl_n_14;
-#line 152 "../../src/ordered_control.kl"
+#line 153 "../../src/ordered_control.kl"
     ( *kl_t17 ) = ( *kl_t18 );
     kl_t19 = kl_totals_5 + kl_n_14;
-#line 153 "../../src/ordered_control.kl"
+#line 154 "../../src/ordered_control.kl"
     kl_t20 = ( *kl_this_1 ).kl_totals_ + kl_n_14;
-#line 153 "../../src/ordered_control.kl"
+#line 154 "../../src/ordered_control.kl"
     ( *kl_t19 ) = ( *kl_t20 );
-#line 156 "../../src/ordered_control.kl"
+#line 157 "../../src/ordered_control.kl"
     kl_t21 = &( *kl_this_1 );
-#line 156 "../../src/ordered_control.kl"
+#line 157 "../../src/ordered_control.kl"
     kl_t22 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t21, kl_n_14 );
-#line 156 "../../src/ordered_control.kl"
+#line 157 "../../src/ordered_control.kl"
     if ( kl_t22 ) goto bb8; else goto bb9;
     bb7:
-#line 176 "../../src/ordered_control.kl"
+#line 177 "../../src/ordered_control.kl"
     kl_t48 = ( *kl_this_1 ).kl_children_ != NULL;
-#line 176 "../../src/ordered_control.kl"
+#line 177 "../../src/ordered_control.kl"
     if ( kl_t48 ) goto bb27; else goto bb28;
     bb8:
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t23 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_KEYS__G, 1, &( uint8_t ) { 0 } );
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     if ( kl_t23 ) goto bb10; else goto bb11;
     bb9:
-#line 167 "../../src/ordered_control.kl"
+#line 168 "../../src/ordered_control.kl"
     kl_t32 = ( *kl_this_1 ).kl_counts_ + kl_n_14;
-#line 167 "../../src/ordered_control.kl"
+#line 168 "../../src/ordered_control.kl"
     kl_t33 = __builtin_add_overflow( ( *kl_t32 ), 1, &( uint64_t ) { 0 } );
-#line 167 "../../src/ordered_control.kl"
+#line 168 "../../src/ordered_control.kl"
     if ( kl_t33 ) goto bb14; else goto bb15;
     bb10:
-#line 160 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 160, "arithmetic overflow: ORDERED_KEYS + 1" );
+#line 161 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 161, "arithmetic overflow: ORDERED_KEYS + 1" );
     bb11:
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t24 = kl_2kl15ordered_control_ORDERED_KEYS__G + 1;
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t25 = ( uint64_t ) kl_t24;
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t26 = __builtin_mul_overflow( kl_n_14, kl_t25, &( uint64_t ) { 0 } );
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     if ( kl_t26 ) goto bb12; else goto bb13;
     bb12:
-#line 160 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 160, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
+#line 161 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 161, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
     bb13:
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t27 = kl_n_14 * kl_t25;
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t28 = kl_children_3 + kl_t27;
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t29 = &( *kl_this_1 );
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     kl_t30 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t29, kl_n_14, 0 );
-#line 160 "../../src/ordered_control.kl"
+#line 161 "../../src/ordered_control.kl"
     ( *kl_t28 ) = kl_t30;
-#line 156 "../../src/ordered_control.kl"
+#line 157 "../../src/ordered_control.kl"
     goto bb26;
     bb14:
-#line 167 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 167, "arithmetic overflow: counts_[n] + 1" );
+#line 168 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 168, "arithmetic overflow: counts_[n] + 1" );
     bb15:
-#line 167 "../../src/ordered_control.kl"
+#line 168 "../../src/ordered_control.kl"
     kl_t34 = ( *kl_t32 ) + 1;
-#line 167 "../../src/ordered_control.kl"
+#line 168 "../../src/ordered_control.kl"
     kl_num_children_31 = kl_t34;
     kl_c_35 = 0;
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     kl_t36 = kl_num_children_31;
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     goto bb16;
     bb16:
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     kl_t37 = kl_c_35 < kl_t36;
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     if ( kl_t37 ) goto bb17; else goto bb18;
     bb17:
     kl_t38 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_KEYS__G, 1, &( uint8_t ) { 0 } );
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     if ( kl_t38 ) goto bb19; else goto bb20;
     bb18:
-#line 156 "../../src/ordered_control.kl"
+#line 157 "../../src/ordered_control.kl"
     goto bb26;
     bb19:
-#line 170 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 170, "arithmetic overflow: ORDERED_KEYS + 1" );
+#line 171 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 171, "arithmetic overflow: ORDERED_KEYS + 1" );
     bb20:
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t39 = kl_2kl15ordered_control_ORDERED_KEYS__G + 1;
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t40 = ( uint64_t ) kl_t39;
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t41 = __builtin_mul_overflow( kl_n_14, kl_t40, &( uint64_t ) { 0 } );
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     if ( kl_t41 ) goto bb21; else goto bb22;
     bb21:
-#line 170 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 170, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
+#line 171 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 171, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
     bb22:
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t42 = kl_n_14 * kl_t40;
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t43 = __builtin_add_overflow( kl_t42, kl_c_35, &( uint64_t ) { 0 } );
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     if ( kl_t43 ) goto bb23; else goto bb24;
     bb23:
-#line 170 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 170, "arithmetic overflow: n * ( ORDERED_KEYS + 1 ) + c" );
+#line 171 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 171, "arithmetic overflow: n * ( ORDERED_KEYS + 1 ) + c" );
     bb24:
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t44 = kl_t42 + kl_c_35;
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t45 = kl_children_3 + kl_t44;
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t46 = &( *kl_this_1 );
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     kl_t47 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t46, kl_n_14, kl_c_35 );
-#line 170 "../../src/ordered_control.kl"
+#line 171 "../../src/ordered_control.kl"
     ( *kl_t45 ) = kl_t47;
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     goto bb25;
     bb25:
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     kl_c_35 = kl_c_35 + 1;
-#line 168 "../../src/ordered_control.kl"
+#line 169 "../../src/ordered_control.kl"
     goto bb16;
     bb26:
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     kl_n_14 = kl_n_14 + 1;
-#line 148 "../../src/ordered_control.kl"
+#line 149 "../../src/ordered_control.kl"
     goto bb5;
     bb27:
-#line 180 "../../src/ordered_control.kl"
+#line 181 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_children_ );
-#line 176 "../../src/ordered_control.kl"
+#line 177 "../../src/ordered_control.kl"
     goto bb28;
     bb28:
-#line 184 "../../src/ordered_control.kl"
+#line 185 "../../src/ordered_control.kl"
     kl_t50 = ( *kl_this_1 ).kl_counts_ != NULL;
-#line 184 "../../src/ordered_control.kl"
+#line 185 "../../src/ordered_control.kl"
     if ( kl_t50 ) goto bb29; else goto bb30;
     bb29:
-#line 188 "../../src/ordered_control.kl"
+#line 189 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_counts_ );
-#line 184 "../../src/ordered_control.kl"
+#line 185 "../../src/ordered_control.kl"
     goto bb30;
     bb30:
-#line 192 "../../src/ordered_control.kl"
+#line 193 "../../src/ordered_control.kl"
     kl_t52 = ( *kl_this_1 ).kl_totals_ != NULL;
-#line 192 "../../src/ordered_control.kl"
+#line 193 "../../src/ordered_control.kl"
     if ( kl_t52 ) goto bb31; else goto bb32;
     bb31:
-#line 196 "../../src/ordered_control.kl"
+#line 197 "../../src/ordered_control.kl"
     kl_rt_free( ( *kl_this_1 ).kl_totals_ );
-#line 192 "../../src/ordered_control.kl"
+#line 193 "../../src/ordered_control.kl"
     goto bb32;
     bb32:
-#line 200 "../../src/ordered_control.kl"
+#line 201 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_children_ = kl_children_3;
     ( *kl_this_1 ).kl_counts_ = kl_counts_4;
     ( *kl_this_1 ).kl_totals_ = kl_totals_5;
     ( *kl_this_1 ).kl_capacity_ = kl_nodes_2;
     return;
-#line 204 "../../src/ordered_control.kl"
+#line 205 "../../src/ordered_control.kl"
 }
 
-#line 207 "../../src/ordered_control.kl"
+#line 208 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_clear__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     ( *kl_this_1 ).kl_root_ = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
@@ -590,20 +591,20 @@ void kl_2kl15ordered_control_clear__SQ2kl15ordered_control( struct kl_2kl15order
     ( *kl_this_1 ).kl_free_ = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
     ( *kl_this_1 ).kl_free_count_ = 0;
     return;
-#line 214 "../../src/ordered_control.kl"
+#line 215 "../../src/ordered_control.kl"
 }
 
-#line 219 "../../src/ordered_control.kl"
+#line 220 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_root__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 221 "../../src/ordered_control.kl"
+#line 222 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_this_1 ).kl_root_;
-#line 221 "../../src/ordered_control.kl"
+#line 222 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 225 "../../src/ordered_control.kl"
+#line 226 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
 {
     uint64_t kl_t0;
@@ -615,100 +616,100 @@ uint64_t kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( struct
     bool kl_t9;
     uint64_t kl_t10;
     uint64_t* kl_t11;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t4 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_KEYS__G, 1, &( uint8_t ) { 0 } );
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
-#line 229 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 229, "arithmetic overflow: ORDERED_KEYS + 1" );
+#line 230 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 230, "arithmetic overflow: ORDERED_KEYS + 1" );
     bb2:
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t5 = kl_2kl15ordered_control_ORDERED_KEYS__G + 1;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t6 = ( uint64_t ) kl_t5;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t7 = __builtin_mul_overflow( kl_node_2, kl_t6, &( uint64_t ) { 0 } );
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 229 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 229, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
+#line 230 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 230, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
     bb4:
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t8 = kl_node_2 * kl_t6;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t9 = __builtin_add_overflow( kl_t8, kl_c_3, &( uint64_t ) { 0 } );
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb5; else goto bb6;
     bb5:
-#line 229 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 229, "arithmetic overflow: node * ( ORDERED_KEYS + 1 ) + c" );
+#line 230 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 230, "arithmetic overflow: node * ( ORDERED_KEYS + 1 ) + c" );
     bb6:
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t10 = kl_t8 + kl_c_3;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t11 = ( *kl_this_1 ).kl_children_ + kl_t10;
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_t11 );
-#line 229 "../../src/ordered_control.kl"
+#line 230 "../../src/ordered_control.kl"
     return kl_t0;
-#line 231 "../../src/ordered_control.kl"
+#line 232 "../../src/ordered_control.kl"
 }
 
-#line 234 "../../src/ordered_control.kl"
+#line 235 "../../src/ordered_control.kl"
 bool kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2 )
 {
     bool kl_t0;
     struct kl_2kl15ordered_control_ordered_control* kl_t3;
     uint64_t kl_t4;
     bool kl_t5;
-#line 236 "../../src/ordered_control.kl"
+#line 237 "../../src/ordered_control.kl"
     kl_t3 = &( *kl_this_1 );
-#line 236 "../../src/ordered_control.kl"
+#line 237 "../../src/ordered_control.kl"
     kl_t4 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t3, kl_node_2, 0 );
-#line 236 "../../src/ordered_control.kl"
+#line 237 "../../src/ordered_control.kl"
     kl_t5 = kl_t4 == kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 236 "../../src/ordered_control.kl"
+#line 237 "../../src/ordered_control.kl"
     kl_t0 = kl_t5;
-#line 236 "../../src/ordered_control.kl"
+#line 237 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 240 "../../src/ordered_control.kl"
+#line 241 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2 )
 {
     uint64_t kl_t0;
     uint64_t* kl_t3;
     kl_t3 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 244 "../../src/ordered_control.kl"
+#line 245 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_t3 );
-#line 244 "../../src/ordered_control.kl"
+#line 245 "../../src/ordered_control.kl"
     return kl_t0;
-#line 246 "../../src/ordered_control.kl"
+#line 247 "../../src/ordered_control.kl"
 }
 
-#line 249 "../../src/ordered_control.kl"
+#line 250 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_subtree__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
 {
     uint64_t kl_t0;
     struct kl_2kl15ordered_control_ordered_control* kl_t4;
     uint64_t kl_t5;
     uint64_t* kl_t6;
-#line 253 "../../src/ordered_control.kl"
+#line 254 "../../src/ordered_control.kl"
     kl_t4 = &( *kl_this_1 );
-#line 253 "../../src/ordered_control.kl"
+#line 254 "../../src/ordered_control.kl"
     kl_t5 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t4, kl_node_2, kl_c_3 );
-#line 253 "../../src/ordered_control.kl"
+#line 254 "../../src/ordered_control.kl"
     kl_t6 = ( *kl_this_1 ).kl_totals_ + kl_t5;
-#line 253 "../../src/ordered_control.kl"
+#line 254 "../../src/ordered_control.kl"
     kl_t0 = ( *kl_t6 );
-#line 253 "../../src/ordered_control.kl"
+#line 254 "../../src/ordered_control.kl"
     return kl_t0;
-#line 255 "../../src/ordered_control.kl"
+#line 256 "../../src/ordered_control.kl"
 }
 
-#line 258 "../../src/ordered_control.kl"
+#line 259 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( uint64_t kl_node_1, uint64_t kl_j_2 )
 {
     uint64_t kl_t0;
@@ -717,35 +718,35 @@ uint64_t kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( uin
     uint64_t kl_t5;
     bool kl_t6;
     uint64_t kl_t7;
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t3 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t4 = __builtin_mul_overflow( kl_node_1, kl_t3, &( uint64_t ) { 0 } );
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
-#line 260 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 260, "arithmetic overflow: node * ORDERED_KEYS" );
+#line 261 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 261, "arithmetic overflow: node * ORDERED_KEYS" );
     bb2:
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t5 = kl_node_1 * kl_t3;
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t6 = __builtin_add_overflow( kl_t5, kl_j_2, &( uint64_t ) { 0 } );
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
-#line 260 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 260, "arithmetic overflow: node * ORDERED_KEYS + j" );
+#line 261 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 261, "arithmetic overflow: node * ORDERED_KEYS + j" );
     bb4:
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t7 = kl_t5 + kl_j_2;
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     kl_t0 = kl_t7;
-#line 260 "../../src/ordered_control.kl"
+#line 261 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 264 "../../src/ordered_control.kl"
+#line 265 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_slot_at__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_i_2 )
 {
     uint64_t kl_t0;
@@ -780,130 +781,130 @@ uint64_t kl_2kl15ordered_control_slot_at__SQ2kl15ordered_control_3u64( struct kl
     uint64_t kl_t32;
     bool kl_t33;
     uint64_t kl_t34;
-#line 266 "../../src/ordered_control.kl"
+#line 267 "../../src/ordered_control.kl"
     kl_t3 = &( *kl_this_1 );
-#line 266 "../../src/ordered_control.kl"
+#line 267 "../../src/ordered_control.kl"
     kl_t4 = kl_2kl15ordered_control_size__SQ2kl15ordered_control( kl_t3 );
-#line 266 "../../src/ordered_control.kl"
+#line 267 "../../src/ordered_control.kl"
     kl_t5 = kl_i_2 >= kl_t4;
-#line 266 "../../src/ordered_control.kl"
+#line 267 "../../src/ordered_control.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
     kl_t7 = &kl_t6;
-#line 268 "../../src/ordered_control.kl"
+#line 269 "../../src/ordered_control.kl"
     kl_t8 = ( uint8_t* ) "index out of range";
-#line 268 "../../src/ordered_control.kl"
+#line 269 "../../src/ordered_control.kl"
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 18 );
-#line 268 "../../src/ordered_control.kl"
-    kl_rt_panic_message( "../../src/ordered_control.kl", 268, kl_t6.kl_data, kl_t6.kl_size );
+#line 269 "../../src/ordered_control.kl"
+    kl_rt_panic_message( "../../src/ordered_control.kl", 269, kl_t6.kl_data, kl_t6.kl_size );
     bb2:
     kl_n_10 = ( *kl_this_1 ).kl_root_;
     kl_left_11 = kl_i_2;
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     goto bb3;
     bb3:
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     kl_t12 = &( *kl_this_1 );
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     kl_t13 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t12, kl_n_10 );
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     kl_t14 = !kl_t13;
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     if ( kl_t14 ) goto bb4; else goto bb5;
     bb4:
     kl_t16 = &( *kl_this_1 );
-#line 277 "../../src/ordered_control.kl"
+#line 278 "../../src/ordered_control.kl"
     kl_t17 = ( *kl_this_1 ).kl_counts_ + kl_n_10;
-#line 277 "../../src/ordered_control.kl"
+#line 278 "../../src/ordered_control.kl"
     kl_t18 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t16, kl_n_10, ( *kl_t17 ) );
-#line 277 "../../src/ordered_control.kl"
+#line 278 "../../src/ordered_control.kl"
     kl_next_15 = kl_t18;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     kl_j_19 = 0;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     kl_t21 = ( *kl_this_1 ).kl_counts_ + kl_n_10;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     kl_t20 = ( *kl_t21 );
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     goto bb6;
     bb5:
-#line 301 "../../src/ordered_control.kl"
+#line 302 "../../src/ordered_control.kl"
     kl_t34 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_10, kl_left_11 );
-#line 301 "../../src/ordered_control.kl"
+#line 302 "../../src/ordered_control.kl"
     kl_t0 = kl_t34;
-#line 301 "../../src/ordered_control.kl"
+#line 302 "../../src/ordered_control.kl"
     return kl_t0;
     bb6:
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     kl_t22 = kl_j_19 < kl_t20;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     if ( kl_t22 ) goto bb7; else goto bb8;
     bb7:
     kl_t24 = &( *kl_this_1 );
-#line 281 "../../src/ordered_control.kl"
+#line 282 "../../src/ordered_control.kl"
     kl_t25 = kl_2kl15ordered_control_subtree__SQ2kl15ordered_control_3u64_3u64( kl_t24, kl_n_10, kl_j_19 );
-#line 281 "../../src/ordered_control.kl"
+#line 282 "../../src/ordered_control.kl"
     kl_below_23 = kl_t25;
-#line 283 "../../src/ordered_control.kl"
+#line 284 "../../src/ordered_control.kl"
     kl_t26 = kl_left_11 < kl_below_23;
-#line 283 "../../src/ordered_control.kl"
+#line 284 "../../src/ordered_control.kl"
     if ( kl_t26 ) goto bb9; else goto bb10;
     bb8:
-#line 297 "../../src/ordered_control.kl"
+#line 298 "../../src/ordered_control.kl"
     kl_n_10 = kl_next_15;
-#line 275 "../../src/ordered_control.kl"
+#line 276 "../../src/ordered_control.kl"
     goto bb3;
     bb9:
-#line 285 "../../src/ordered_control.kl"
+#line 286 "../../src/ordered_control.kl"
     kl_t27 = &( *kl_this_1 );
-#line 285 "../../src/ordered_control.kl"
+#line 286 "../../src/ordered_control.kl"
     kl_t28 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t27, kl_n_10, kl_j_19 );
-#line 285 "../../src/ordered_control.kl"
+#line 286 "../../src/ordered_control.kl"
     kl_next_15 = kl_t28;
     goto bb8;
     bb10:
-#line 289 "../../src/ordered_control.kl"
+#line 290 "../../src/ordered_control.kl"
     kl_t29 = kl_left_11 == kl_below_23;
-#line 289 "../../src/ordered_control.kl"
+#line 290 "../../src/ordered_control.kl"
     if ( kl_t29 ) goto bb11; else goto bb12;
     bb11:
     kl_t30 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_10, kl_j_19 );
-#line 291 "../../src/ordered_control.kl"
+#line 292 "../../src/ordered_control.kl"
     kl_t0 = kl_t30;
-#line 291 "../../src/ordered_control.kl"
+#line 292 "../../src/ordered_control.kl"
     return kl_t0;
     bb12:
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     kl_t31 = __builtin_add_overflow( kl_below_23, 1, &( uint64_t ) { 0 } );
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     if ( kl_t31 ) goto bb13; else goto bb14;
     bb13:
-#line 294 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 294, "arithmetic overflow: below + 1" );
+#line 295 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 295, "arithmetic overflow: below + 1" );
     bb14:
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     kl_t32 = kl_below_23 + 1;
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     kl_t33 = __builtin_sub_overflow( kl_left_11, kl_t32, &( uint64_t ) { 0 } );
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     if ( kl_t33 ) goto bb15; else goto bb16;
     bb15:
-#line 294 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 294, "arithmetic overflow: left -= below + 1;" );
+#line 295 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 295, "arithmetic overflow: left -= below + 1;" );
     bb16:
-#line 294 "../../src/ordered_control.kl"
+#line 295 "../../src/ordered_control.kl"
     kl_left_11 = kl_left_11 - kl_t32;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     goto bb17;
     bb17:
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     kl_j_19 = kl_j_19 + 1;
-#line 279 "../../src/ordered_control.kl"
+#line 280 "../../src/ordered_control.kl"
     goto bb6;
-#line 302 "../../src/ordered_control.kl"
+#line 303 "../../src/ordered_control.kl"
 }
 
-#line 308 "../../src/ordered_control.kl"
+#line 361 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_prepare_insert__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -924,72 +925,72 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_prepare_insert_
     struct kl_2kl15ordered_control_ordered_control* kl_t17;
     struct kl_2kl15ordered_control_key_moves kl_t18;
     struct kl_2kl15ordered_control_key_moves kl_t19;
-#line 310 "../../src/ordered_control.kl"
+#line 363 "../../src/ordered_control.kl"
     kl_t2 = ( *kl_this_1 ).kl_root_ == kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 310 "../../src/ordered_control.kl"
+#line 363 "../../src/ordered_control.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t3 = &( *kl_this_1 );
-#line 312 "../../src/ordered_control.kl"
+#line 365 "../../src/ordered_control.kl"
     kl_t4 = kl_2kl15ordered_control_new_node__SQ2kl15ordered_control( kl_t3 );
-#line 312 "../../src/ordered_control.kl"
+#line 365 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_root_ = kl_t4;
     ( *kl_this_1 ).kl_height_ = 1;
     kl_t5 = kl_2kl15ordered_control_none__SQ2kl9key_moves(  );
-#line 314 "../../src/ordered_control.kl"
+#line 367 "../../src/ordered_control.kl"
     kl_t0 = kl_t5;
-#line 314 "../../src/ordered_control.kl"
+#line 367 "../../src/ordered_control.kl"
     return kl_t0;
     bb2:
-#line 319 "../../src/ordered_control.kl"
+#line 372 "../../src/ordered_control.kl"
     kl_t6 = ( *kl_this_1 ).kl_counts_ + ( *kl_this_1 ).kl_root_;
-#line 319 "../../src/ordered_control.kl"
+#line 372 "../../src/ordered_control.kl"
     kl_t7 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 319 "../../src/ordered_control.kl"
+#line 372 "../../src/ordered_control.kl"
     kl_t8 = ( *kl_t6 ) == kl_t7;
-#line 319 "../../src/ordered_control.kl"
+#line 372 "../../src/ordered_control.kl"
     if ( kl_t8 ) goto bb3; else goto bb6;
     bb3:
     kl_t10 = &( *kl_this_1 );
-#line 321 "../../src/ordered_control.kl"
+#line 374 "../../src/ordered_control.kl"
     kl_t11 = kl_2kl15ordered_control_new_node__SQ2kl15ordered_control( kl_t10 );
-#line 321 "../../src/ordered_control.kl"
+#line 374 "../../src/ordered_control.kl"
     kl_above_9 = kl_t11;
     kl_t12 = &( *kl_this_1 );
-#line 322 "../../src/ordered_control.kl"
+#line 375 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t12, kl_above_9, 0, ( *kl_this_1 ).kl_root_ );
     kl_t14 = ( *kl_this_1 ).kl_totals_ + kl_above_9;
-#line 323 "../../src/ordered_control.kl"
+#line 376 "../../src/ordered_control.kl"
     kl_t15 = ( *kl_this_1 ).kl_totals_ + ( *kl_this_1 ).kl_root_;
-#line 323 "../../src/ordered_control.kl"
+#line 376 "../../src/ordered_control.kl"
     ( *kl_t14 ) = ( *kl_t15 );
     ( *kl_this_1 ).kl_root_ = kl_above_9;
     kl_t16 = __builtin_add_overflow( ( *kl_this_1 ).kl_height_, 1, &( uint64_t ) { 0 } );
-#line 325 "../../src/ordered_control.kl"
+#line 378 "../../src/ordered_control.kl"
     if ( kl_t16 ) goto bb4; else goto bb5;
     bb4:
-#line 325 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 325, "arithmetic overflow: height_++;" );
+#line 378 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 378, "arithmetic overflow: height_++;" );
     bb5:
-#line 325 "../../src/ordered_control.kl"
+#line 378 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_height_ = ( *kl_this_1 ).kl_height_ + 1;
     kl_t17 = &( *kl_this_1 );
-#line 326 "../../src/ordered_control.kl"
+#line 379 "../../src/ordered_control.kl"
     kl_t18 = kl_2kl15ordered_control_split_child__SQ2kl15ordered_control_3u64_3u64( kl_t17, kl_above_9, 0 );
-#line 326 "../../src/ordered_control.kl"
+#line 379 "../../src/ordered_control.kl"
     kl_t0 = kl_t18;
-#line 326 "../../src/ordered_control.kl"
+#line 379 "../../src/ordered_control.kl"
     return kl_t0;
     bb6:
-#line 330 "../../src/ordered_control.kl"
+#line 383 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_none__SQ2kl9key_moves(  );
-#line 330 "../../src/ordered_control.kl"
+#line 383 "../../src/ordered_control.kl"
     kl_t0 = kl_t19;
-#line 330 "../../src/ordered_control.kl"
+#line 383 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 334 "../../src/ordered_control.kl"
+#line 387 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_split_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -1042,191 +1043,191 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_split_child__SQ
     uint64_t kl_t54;
     uint64_t kl_t55;
     uint64_t kl_t56;
-#line 336 "../../src/ordered_control.kl"
+#line 389 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 336 "../../src/ordered_control.kl"
+#line 389 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
-#line 336 "../../src/ordered_control.kl"
+#line 389 "../../src/ordered_control.kl"
     kl_left_4 = kl_t6;
-#line 340 "../../src/ordered_control.kl"
+#line 393 "../../src/ordered_control.kl"
     goto bb1;
     bb1:
-#line 340 "../../src/ordered_control.kl"
+#line 393 "../../src/ordered_control.kl"
     kl_t7 = ( *kl_this_1 ).kl_counts_ + kl_left_4;
-#line 340 "../../src/ordered_control.kl"
+#line 393 "../../src/ordered_control.kl"
     kl_t8 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 340 "../../src/ordered_control.kl"
+#line 393 "../../src/ordered_control.kl"
     kl_t9 = ( *kl_t7 ) == kl_t8;
-#line 340 "../../src/ordered_control.kl"
+#line 393 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb2; else goto bb3;
     bb2:
-#line 343 "../../src/ordered_control.kl"
+#line 396 "../../src/ordered_control.kl"
     kl_t11 = &( *kl_this_1 );
-#line 343 "../../src/ordered_control.kl"
+#line 396 "../../src/ordered_control.kl"
     kl_t12 = kl_2kl15ordered_control_new_node__SQ2kl15ordered_control( kl_t11 );
-#line 343 "../../src/ordered_control.kl"
+#line 396 "../../src/ordered_control.kl"
     kl_right_10 = kl_t12;
-#line 345 "../../src/ordered_control.kl"
+#line 398 "../../src/ordered_control.kl"
     kl_t13 = &( *kl_this_1 );
-#line 345 "../../src/ordered_control.kl"
+#line 398 "../../src/ordered_control.kl"
     kl_t14 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t13, kl_left_4 );
-#line 345 "../../src/ordered_control.kl"
+#line 398 "../../src/ordered_control.kl"
     kl_t15 = !kl_t14;
-#line 345 "../../src/ordered_control.kl"
+#line 398 "../../src/ordered_control.kl"
     if ( kl_t15 ) goto bb4; else goto bb15;
     bb3:
-#line 340 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 340, "assertion failed: counts_[left] == ORDERED_KEYS" );
+#line 393 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 393, "assertion failed: counts_[left] == ORDERED_KEYS" );
     bb4:
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_k_16 = 0;
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_t18 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     if ( kl_t18 ) goto bb5; else goto bb6;
     bb5:
-#line 347 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 347, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 400 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 400, "arithmetic overflow: ORDERED_MIN + 1" );
     bb6:
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_t17 = kl_t19;
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     goto bb7;
     bb7:
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_t20 = kl_k_16 < kl_t17;
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     if ( kl_t20 ) goto bb8; else goto bb9;
     bb8:
     kl_t21 = &( *kl_this_1 );
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t22 = &( *kl_this_1 );
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t23 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     if ( kl_t23 ) goto bb10; else goto bb11;
     bb9:
-#line 345 "../../src/ordered_control.kl"
+#line 398 "../../src/ordered_control.kl"
     goto bb15;
     bb10:
-#line 349 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 349, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 402 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 402, "arithmetic overflow: ORDERED_MIN + 1" );
     bb11:
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t24 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t25 = ( uint64_t ) kl_t24;
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t26 = __builtin_add_overflow( kl_t25, kl_k_16, &( uint64_t ) { 0 } );
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     if ( kl_t26 ) goto bb12; else goto bb13;
     bb12:
-#line 349 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 349, "arithmetic overflow: ORDERED_MIN + 1 + k" );
+#line 402 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 402, "arithmetic overflow: ORDERED_MIN + 1 + k" );
     bb13:
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t27 = kl_t25 + kl_k_16;
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_t28 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t22, kl_left_4, kl_t27 );
-#line 349 "../../src/ordered_control.kl"
+#line 402 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t21, kl_right_10, kl_k_16, kl_t28 );
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     goto bb14;
     bb14:
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     kl_k_16 = kl_k_16 + 1;
-#line 347 "../../src/ordered_control.kl"
+#line 400 "../../src/ordered_control.kl"
     goto bb7;
     bb15:
-#line 355 "../../src/ordered_control.kl"
+#line 408 "../../src/ordered_control.kl"
     kl_t30 = ( *kl_this_1 ).kl_counts_ + kl_right_10;
-#line 355 "../../src/ordered_control.kl"
+#line 408 "../../src/ordered_control.kl"
     ( *kl_t30 ) = kl_2kl15ordered_control_ORDERED_MIN__G;
     kl_t31 = ( *kl_this_1 ).kl_counts_ + kl_left_4;
-#line 356 "../../src/ordered_control.kl"
+#line 409 "../../src/ordered_control.kl"
     ( *kl_t31 ) = kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 359 "../../src/ordered_control.kl"
+#line 412 "../../src/ordered_control.kl"
     kl_t33 = &( *kl_this_1 );
-#line 359 "../../src/ordered_control.kl"
+#line 412 "../../src/ordered_control.kl"
     kl_t34 = kl_2kl15ordered_control_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t33, kl_parent_2, kl_c_3 );
-#line 359 "../../src/ordered_control.kl"
+#line 412 "../../src/ordered_control.kl"
     kl_gap_32 = kl_t34;
     kl_t35 = &( *kl_this_1 );
-#line 360 "../../src/ordered_control.kl"
+#line 413 "../../src/ordered_control.kl"
     kl_t36 = __builtin_add_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 360 "../../src/ordered_control.kl"
+#line 413 "../../src/ordered_control.kl"
     if ( kl_t36 ) goto bb16; else goto bb17;
     bb16:
-#line 360 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 360, "arithmetic overflow: c + 1" );
+#line 413 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 413, "arithmetic overflow: c + 1" );
     bb17:
-#line 360 "../../src/ordered_control.kl"
+#line 413 "../../src/ordered_control.kl"
     kl_t37 = kl_c_3 + 1;
-#line 360 "../../src/ordered_control.kl"
+#line 413 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t35, kl_parent_2, kl_t37, kl_right_10 );
-#line 363 "../../src/ordered_control.kl"
+#line 416 "../../src/ordered_control.kl"
     kl_t39 = ( *kl_this_1 ).kl_counts_ + kl_parent_2;
-#line 363 "../../src/ordered_control.kl"
+#line 416 "../../src/ordered_control.kl"
     kl_t40 = __builtin_add_overflow( ( *kl_t39 ), 1, &( uint64_t ) { 0 } );
-#line 363 "../../src/ordered_control.kl"
+#line 416 "../../src/ordered_control.kl"
     if ( kl_t40 ) goto bb18; else goto bb19;
     bb18:
-#line 363 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 363, "arithmetic overflow: counts_[parent]++;" );
+#line 416 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 416, "arithmetic overflow: counts_[parent]++;" );
     bb19:
-#line 363 "../../src/ordered_control.kl"
+#line 416 "../../src/ordered_control.kl"
     ( *kl_t39 ) = ( *kl_t39 ) + 1;
-#line 366 "../../src/ordered_control.kl"
+#line 419 "../../src/ordered_control.kl"
     kl_t41 = &( *kl_this_1 );
-#line 366 "../../src/ordered_control.kl"
+#line 419 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t41, kl_left_4 );
     kl_t43 = &( *kl_this_1 );
-#line 367 "../../src/ordered_control.kl"
+#line 420 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t43, kl_right_10 );
-#line 372 "../../src/ordered_control.kl"
+#line 425 "../../src/ordered_control.kl"
     kl_t47 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 372 "../../src/ordered_control.kl"
+#line 425 "../../src/ordered_control.kl"
     kl_t48 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t47 );
     kl_t49 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
-#line 372 "../../src/ordered_control.kl"
+#line 425 "../../src/ordered_control.kl"
     kl_t46.kl_from = kl_t48;
     kl_t46.kl_to = kl_t49;
     kl_t46.kl_count = 1;
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     kl_t51 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     if ( kl_t51 ) goto bb20; else goto bb21;
     bb20:
-#line 377 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 377, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 430 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 430, "arithmetic overflow: ORDERED_MIN + 1" );
     bb21:
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     kl_t52 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     kl_t53 = ( uint64_t ) kl_t52;
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     kl_t54 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t53 );
     kl_t55 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_10, 0 );
     kl_t56 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 377 "../../src/ordered_control.kl"
+#line 430 "../../src/ordered_control.kl"
     kl_t50.kl_from = kl_t54;
     kl_t50.kl_to = kl_t55;
     kl_t50.kl_count = kl_t56;
-#line 370 "../../src/ordered_control.kl"
+#line 423 "../../src/ordered_control.kl"
     kl_t45.kl_first = kl_gap_32;
     kl_t45.kl_second = kl_t46;
-#line 376 "../../src/ordered_control.kl"
+#line 429 "../../src/ordered_control.kl"
     kl_t45.kl_third = kl_t50;
-#line 369 "../../src/ordered_control.kl"
+#line 422 "../../src/ordered_control.kl"
     kl_t0 = kl_t45;
-#line 369 "../../src/ordered_control.kl"
+#line 422 "../../src/ordered_control.kl"
     return kl_t0;
-#line 382 "../../src/ordered_control.kl"
+#line 435 "../../src/ordered_control.kl"
 }
 
-#line 385 "../../src/ordered_control.kl"
+#line 438 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_descend_insert__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
 {
     uint64_t kl_t0;
@@ -1234,29 +1235,29 @@ uint64_t kl_2kl15ordered_control_descend_insert__SQ2kl15ordered_control_3u64_3u6
     bool kl_t5;
     struct kl_2kl15ordered_control_ordered_control* kl_t6;
     uint64_t kl_t7;
-#line 389 "../../src/ordered_control.kl"
+#line 442 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_totals_ + kl_node_2;
-#line 389 "../../src/ordered_control.kl"
+#line 442 "../../src/ordered_control.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_t4 ), 1, &( uint64_t ) { 0 } );
-#line 389 "../../src/ordered_control.kl"
+#line 442 "../../src/ordered_control.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 389 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 389, "arithmetic overflow: totals_[node]++;" );
+#line 442 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 442, "arithmetic overflow: totals_[node]++;" );
     bb2:
-#line 389 "../../src/ordered_control.kl"
+#line 442 "../../src/ordered_control.kl"
     ( *kl_t4 ) = ( *kl_t4 ) + 1;
-#line 392 "../../src/ordered_control.kl"
+#line 445 "../../src/ordered_control.kl"
     kl_t6 = &( *kl_this_1 );
-#line 392 "../../src/ordered_control.kl"
+#line 445 "../../src/ordered_control.kl"
     kl_t7 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t6, kl_node_2, kl_j_3 );
-#line 392 "../../src/ordered_control.kl"
+#line 445 "../../src/ordered_control.kl"
     kl_t0 = kl_t7;
-#line 392 "../../src/ordered_control.kl"
+#line 445 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 396 "../../src/ordered_control.kl"
+#line 449 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_insert_in_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_leaf_2, uint64_t kl_j_3 )
 {
     struct kl_2kl15ordered_control_key_run kl_t0;
@@ -1267,41 +1268,41 @@ struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_insert_in_leaf__S
     struct kl_2kl15ordered_control_key_run kl_t8;
     uint64_t* kl_t9;
     bool kl_t10;
-#line 400 "../../src/ordered_control.kl"
+#line 453 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_totals_ + kl_leaf_2;
-#line 400 "../../src/ordered_control.kl"
+#line 453 "../../src/ordered_control.kl"
     kl_t5 = __builtin_add_overflow( ( *kl_t4 ), 1, &( uint64_t ) { 0 } );
-#line 400 "../../src/ordered_control.kl"
+#line 453 "../../src/ordered_control.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 400 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 400, "arithmetic overflow: totals_[leaf]++;" );
+#line 453 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 453, "arithmetic overflow: totals_[leaf]++;" );
     bb2:
-#line 400 "../../src/ordered_control.kl"
+#line 453 "../../src/ordered_control.kl"
     ( *kl_t4 ) = ( *kl_t4 ) + 1;
     kl_t7 = &( *kl_this_1 );
-#line 401 "../../src/ordered_control.kl"
+#line 454 "../../src/ordered_control.kl"
     kl_t8 = kl_2kl15ordered_control_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t7, kl_leaf_2, kl_j_3 );
-#line 401 "../../src/ordered_control.kl"
+#line 454 "../../src/ordered_control.kl"
     kl_gap_6 = kl_t8;
     kl_t9 = ( *kl_this_1 ).kl_counts_ + kl_leaf_2;
-#line 402 "../../src/ordered_control.kl"
+#line 455 "../../src/ordered_control.kl"
     kl_t10 = __builtin_add_overflow( ( *kl_t9 ), 1, &( uint64_t ) { 0 } );
-#line 402 "../../src/ordered_control.kl"
+#line 455 "../../src/ordered_control.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
-#line 402 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 402, "arithmetic overflow: counts_[leaf]++;" );
+#line 455 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 455, "arithmetic overflow: counts_[leaf]++;" );
     bb4:
-#line 402 "../../src/ordered_control.kl"
+#line 455 "../../src/ordered_control.kl"
     ( *kl_t9 ) = ( *kl_t9 ) + 1;
     kl_t0 = kl_gap_6;
-#line 403 "../../src/ordered_control.kl"
+#line 456 "../../src/ordered_control.kl"
     return kl_t0;
-#line 405 "../../src/ordered_control.kl"
+#line 458 "../../src/ordered_control.kl"
 }
 
-#line 411 "../../src/ordered_control.kl"
+#line 464 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_descend_remove__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3 )
 {
     uint64_t kl_t0;
@@ -1315,57 +1316,57 @@ uint64_t kl_2kl15ordered_control_descend_remove__SQ2kl15ordered_control_3u64_3u6
     bool kl_t12;
     uint64_t* kl_t13;
     bool kl_t14;
-#line 413 "../../src/ordered_control.kl"
+#line 466 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 413 "../../src/ordered_control.kl"
+#line 466 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_node_2, kl_c_3 );
-#line 413 "../../src/ordered_control.kl"
+#line 466 "../../src/ordered_control.kl"
     kl_next_4 = kl_t6;
-#line 415 "../../src/ordered_control.kl"
+#line 468 "../../src/ordered_control.kl"
     kl_t7 = &( *kl_this_1 );
-#line 415 "../../src/ordered_control.kl"
+#line 468 "../../src/ordered_control.kl"
     kl_t8 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t7, kl_node_2 );
-#line 415 "../../src/ordered_control.kl"
+#line 468 "../../src/ordered_control.kl"
     kl_t9 = kl_t8 == 0;
-#line 415 "../../src/ordered_control.kl"
+#line 468 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb1; else goto bb4;
     bb1:
     kl_t10 = &( *kl_this_1 );
-#line 417 "../../src/ordered_control.kl"
+#line 470 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_free_node__SQ2kl15ordered_control_3u64( kl_t10, kl_node_2 );
     ( *kl_this_1 ).kl_root_ = kl_next_4;
     kl_t12 = __builtin_sub_overflow( ( *kl_this_1 ).kl_height_, 1, &( uint64_t ) { 0 } );
-#line 419 "../../src/ordered_control.kl"
+#line 472 "../../src/ordered_control.kl"
     if ( kl_t12 ) goto bb2; else goto bb3;
     bb2:
-#line 419 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 419, "arithmetic overflow: height_--;" );
+#line 472 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 472, "arithmetic overflow: height_--;" );
     bb3:
-#line 419 "../../src/ordered_control.kl"
+#line 472 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_height_ = ( *kl_this_1 ).kl_height_ - 1;
     kl_t0 = kl_next_4;
-#line 420 "../../src/ordered_control.kl"
+#line 473 "../../src/ordered_control.kl"
     return kl_t0;
     bb4:
-#line 425 "../../src/ordered_control.kl"
+#line 478 "../../src/ordered_control.kl"
     kl_t13 = ( *kl_this_1 ).kl_totals_ + kl_node_2;
-#line 425 "../../src/ordered_control.kl"
+#line 478 "../../src/ordered_control.kl"
     kl_t14 = __builtin_sub_overflow( ( *kl_t13 ), 1, &( uint64_t ) { 0 } );
-#line 425 "../../src/ordered_control.kl"
+#line 478 "../../src/ordered_control.kl"
     if ( kl_t14 ) goto bb5; else goto bb6;
     bb5:
-#line 425 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 425, "arithmetic overflow: totals_[node]--;" );
+#line 478 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 478, "arithmetic overflow: totals_[node]--;" );
     bb6:
-#line 425 "../../src/ordered_control.kl"
+#line 478 "../../src/ordered_control.kl"
     ( *kl_t13 ) = ( *kl_t13 ) - 1;
-#line 428 "../../src/ordered_control.kl"
+#line 481 "../../src/ordered_control.kl"
     kl_t0 = kl_next_4;
-#line 428 "../../src/ordered_control.kl"
+#line 481 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 433 "../../src/ordered_control.kl"
+#line 486 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_merge__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -1413,162 +1414,162 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_merge__SQ2kl15o
     struct kl_2kl15ordered_control_ordered_control* kl_t46;
     struct kl_2kl15ordered_control_ordered_control* kl_t48;
     struct kl_2kl15ordered_control_key_moves kl_t50;
-#line 435 "../../src/ordered_control.kl"
+#line 488 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 435 "../../src/ordered_control.kl"
+#line 488 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
-#line 435 "../../src/ordered_control.kl"
+#line 488 "../../src/ordered_control.kl"
     kl_left_4 = kl_t6;
     kl_t8 = &( *kl_this_1 );
-#line 436 "../../src/ordered_control.kl"
+#line 489 "../../src/ordered_control.kl"
     kl_t9 = __builtin_add_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 436 "../../src/ordered_control.kl"
+#line 489 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 436 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 436, "arithmetic overflow: c + 1" );
+#line 489 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 489, "arithmetic overflow: c + 1" );
     bb2:
-#line 436 "../../src/ordered_control.kl"
+#line 489 "../../src/ordered_control.kl"
     kl_t10 = kl_c_3 + 1;
-#line 436 "../../src/ordered_control.kl"
+#line 489 "../../src/ordered_control.kl"
     kl_t11 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t10 );
-#line 436 "../../src/ordered_control.kl"
+#line 489 "../../src/ordered_control.kl"
     kl_right_7 = kl_t11;
-#line 438 "../../src/ordered_control.kl"
+#line 491 "../../src/ordered_control.kl"
     kl_t12 = &( *kl_this_1 );
-#line 438 "../../src/ordered_control.kl"
+#line 491 "../../src/ordered_control.kl"
     kl_t13 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t12, kl_left_4 );
-#line 438 "../../src/ordered_control.kl"
+#line 491 "../../src/ordered_control.kl"
     kl_t14 = !kl_t13;
-#line 438 "../../src/ordered_control.kl"
+#line 491 "../../src/ordered_control.kl"
     if ( kl_t14 ) goto bb3; else goto bb14;
     bb3:
     kl_k_15 = 0;
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     kl_t17 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     if ( kl_t17 ) goto bb4; else goto bb5;
     bb4:
-#line 440 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 440, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 493 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 493, "arithmetic overflow: ORDERED_MIN + 1" );
     bb5:
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     kl_t18 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     kl_t16 = kl_t18;
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     goto bb6;
     bb6:
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     kl_t19 = kl_k_15 < kl_t16;
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     if ( kl_t19 ) goto bb7; else goto bb8;
     bb7:
     kl_t20 = &( *kl_this_1 );
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t21 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     if ( kl_t21 ) goto bb9; else goto bb10;
     bb8:
-#line 438 "../../src/ordered_control.kl"
+#line 491 "../../src/ordered_control.kl"
     goto bb14;
     bb9:
-#line 442 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 442, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 495 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 495, "arithmetic overflow: ORDERED_MIN + 1" );
     bb10:
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t22 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t23 = ( uint64_t ) kl_t22;
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t24 = __builtin_add_overflow( kl_t23, kl_k_15, &( uint64_t ) { 0 } );
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     if ( kl_t24 ) goto bb11; else goto bb12;
     bb11:
-#line 442 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 442, "arithmetic overflow: ORDERED_MIN + 1 + k" );
+#line 495 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 495, "arithmetic overflow: ORDERED_MIN + 1 + k" );
     bb12:
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t25 = kl_t23 + kl_k_15;
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t26 = &( *kl_this_1 );
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_t27 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t26, kl_right_7, kl_k_15 );
-#line 442 "../../src/ordered_control.kl"
+#line 495 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t20, kl_left_4, kl_t25, kl_t27 );
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     goto bb13;
     bb13:
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     kl_k_15 = kl_k_15 + 1;
-#line 440 "../../src/ordered_control.kl"
+#line 493 "../../src/ordered_control.kl"
     goto bb6;
     bb14:
-#line 448 "../../src/ordered_control.kl"
+#line 501 "../../src/ordered_control.kl"
     kl_t29 = ( *kl_this_1 ).kl_counts_ + kl_left_4;
-#line 448 "../../src/ordered_control.kl"
+#line 501 "../../src/ordered_control.kl"
     ( *kl_t29 ) = kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t32 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t33 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t34 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t33 );
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t31.kl_from = kl_t32;
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t31.kl_to = kl_t34;
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_t31.kl_count = 1;
-#line 451 "../../src/ordered_control.kl"
+#line 504 "../../src/ordered_control.kl"
     kl_down_30 = kl_t31;
-#line 453 "../../src/ordered_control.kl"
+#line 506 "../../src/ordered_control.kl"
     kl_t37 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_7, 0 );
     kl_t38 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_MIN__G, 1, &( uint8_t ) { 0 } );
-#line 454 "../../src/ordered_control.kl"
+#line 507 "../../src/ordered_control.kl"
     if ( kl_t38 ) goto bb15; else goto bb16;
     bb15:
-#line 454 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 454, "arithmetic overflow: ORDERED_MIN + 1" );
+#line 507 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 507, "arithmetic overflow: ORDERED_MIN + 1" );
     bb16:
-#line 454 "../../src/ordered_control.kl"
+#line 507 "../../src/ordered_control.kl"
     kl_t39 = kl_2kl15ordered_control_ORDERED_MIN__G + 1;
-#line 454 "../../src/ordered_control.kl"
+#line 507 "../../src/ordered_control.kl"
     kl_t40 = ( uint64_t ) kl_t39;
-#line 454 "../../src/ordered_control.kl"
+#line 507 "../../src/ordered_control.kl"
     kl_t41 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_4, kl_t40 );
     kl_t42 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 453 "../../src/ordered_control.kl"
+#line 506 "../../src/ordered_control.kl"
     kl_t36.kl_from = kl_t37;
     kl_t36.kl_to = kl_t41;
     kl_t36.kl_count = kl_t42;
-#line 452 "../../src/ordered_control.kl"
+#line 505 "../../src/ordered_control.kl"
     kl_across_35 = kl_t36;
-#line 457 "../../src/ordered_control.kl"
+#line 510 "../../src/ordered_control.kl"
     kl_t44 = &( *kl_this_1 );
-#line 457 "../../src/ordered_control.kl"
+#line 510 "../../src/ordered_control.kl"
     kl_t45 = kl_2kl15ordered_control_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t44, kl_parent_2, kl_c_3 );
-#line 457 "../../src/ordered_control.kl"
+#line 510 "../../src/ordered_control.kl"
     kl_gap_43 = kl_t45;
-#line 459 "../../src/ordered_control.kl"
+#line 512 "../../src/ordered_control.kl"
     kl_t46 = &( *kl_this_1 );
-#line 459 "../../src/ordered_control.kl"
+#line 512 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_free_node__SQ2kl15ordered_control_3u64( kl_t46, kl_right_7 );
     kl_t48 = &( *kl_this_1 );
-#line 460 "../../src/ordered_control.kl"
+#line 513 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t48, kl_left_4 );
     kl_t50.kl_first = kl_down_30;
-#line 461 "../../src/ordered_control.kl"
+#line 514 "../../src/ordered_control.kl"
     kl_t50.kl_second = kl_across_35;
-#line 461 "../../src/ordered_control.kl"
+#line 514 "../../src/ordered_control.kl"
     kl_t50.kl_third = kl_gap_43;
-#line 461 "../../src/ordered_control.kl"
+#line 514 "../../src/ordered_control.kl"
     kl_t0 = kl_t50;
-#line 461 "../../src/ordered_control.kl"
+#line 514 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 466 "../../src/ordered_control.kl"
+#line 519 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_thicken__SQ2kl15ordered_control_3u64_3u64_O3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3, uint64_t* kl_entered_4 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -1616,172 +1617,172 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_thicken__SQ2kl1
     bool kl_t46;
     uint64_t kl_t47;
     struct kl_2kl15ordered_control_key_moves kl_t48;
-#line 468 "../../src/ordered_control.kl"
+#line 521 "../../src/ordered_control.kl"
     ( *kl_entered_4 ) = kl_c_3;
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t6 = &( *kl_this_1 );
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t7 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t6, kl_parent_2, kl_c_3 );
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t8 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t5, kl_t7 );
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t9 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     kl_t10 = kl_t8 > kl_t9;
-#line 470 "../../src/ordered_control.kl"
+#line 523 "../../src/ordered_control.kl"
     if ( kl_t10 ) goto bb1; else goto bb2;
     bb1:
     kl_t11 = kl_2kl15ordered_control_none__SQ2kl9key_moves(  );
-#line 472 "../../src/ordered_control.kl"
+#line 525 "../../src/ordered_control.kl"
     kl_t0 = kl_t11;
-#line 472 "../../src/ordered_control.kl"
+#line 525 "../../src/ordered_control.kl"
     return kl_t0;
     bb2:
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t13 = kl_c_3 > 0;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t12 = kl_t13;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     if ( kl_t12 ) goto bb3; else goto bb4;
     bb3:
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t14 = &( *kl_this_1 );
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t15 = &( *kl_this_1 );
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t16 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     if ( kl_t16 ) goto bb5; else goto bb6;
     bb4:
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     if ( kl_t12 ) goto bb7; else goto bb8;
     bb5:
-#line 475 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 475, "arithmetic overflow: c - 1" );
+#line 528 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 528, "arithmetic overflow: c - 1" );
     bb6:
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t17 = kl_c_3 - 1;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t18 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t15, kl_parent_2, kl_t17 );
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t14, kl_t18 );
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t20 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t21 = kl_t19 > kl_t20;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     kl_t12 = kl_t21;
-#line 475 "../../src/ordered_control.kl"
+#line 528 "../../src/ordered_control.kl"
     goto bb4;
     bb7:
     kl_t22 = &( *kl_this_1 );
-#line 477 "../../src/ordered_control.kl"
+#line 530 "../../src/ordered_control.kl"
     kl_t23 = kl_2kl15ordered_control_borrow_from_left__SQ2kl15ordered_control_3u64_3u64( kl_t22, kl_parent_2, kl_c_3 );
-#line 477 "../../src/ordered_control.kl"
+#line 530 "../../src/ordered_control.kl"
     kl_t0 = kl_t23;
-#line 477 "../../src/ordered_control.kl"
+#line 530 "../../src/ordered_control.kl"
     return kl_t0;
     bb8:
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t25 = &( *kl_this_1 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t26 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t25, kl_parent_2 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t27 = kl_c_3 < kl_t26;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t24 = kl_t27;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     if ( kl_t24 ) goto bb9; else goto bb10;
     bb9:
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t28 = &( *kl_this_1 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t29 = &( *kl_this_1 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t30 = __builtin_add_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     if ( kl_t30 ) goto bb11; else goto bb12;
     bb10:
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     if ( kl_t24 ) goto bb13; else goto bb14;
     bb11:
-#line 480 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 480, "arithmetic overflow: c + 1" );
+#line 533 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 533, "arithmetic overflow: c + 1" );
     bb12:
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t31 = kl_c_3 + 1;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t32 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t29, kl_parent_2, kl_t31 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t33 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t28, kl_t32 );
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t34 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_MIN__G;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t35 = kl_t33 > kl_t34;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     kl_t24 = kl_t35;
-#line 480 "../../src/ordered_control.kl"
+#line 533 "../../src/ordered_control.kl"
     goto bb10;
     bb13:
     kl_t36 = &( *kl_this_1 );
-#line 482 "../../src/ordered_control.kl"
+#line 535 "../../src/ordered_control.kl"
     kl_t37 = kl_2kl15ordered_control_borrow_from_right__SQ2kl15ordered_control_3u64_3u64( kl_t36, kl_parent_2, kl_c_3 );
-#line 482 "../../src/ordered_control.kl"
+#line 535 "../../src/ordered_control.kl"
     kl_t0 = kl_t37;
-#line 482 "../../src/ordered_control.kl"
+#line 535 "../../src/ordered_control.kl"
     return kl_t0;
     bb14:
-#line 485 "../../src/ordered_control.kl"
+#line 538 "../../src/ordered_control.kl"
     kl_t38 = &( *kl_this_1 );
-#line 485 "../../src/ordered_control.kl"
+#line 538 "../../src/ordered_control.kl"
     kl_t39 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t38, kl_parent_2 );
-#line 485 "../../src/ordered_control.kl"
+#line 538 "../../src/ordered_control.kl"
     kl_t40 = kl_c_3 < kl_t39;
-#line 485 "../../src/ordered_control.kl"
+#line 538 "../../src/ordered_control.kl"
     if ( kl_t40 ) goto bb15; else goto bb16;
     bb15:
     kl_t41 = &( *kl_this_1 );
-#line 487 "../../src/ordered_control.kl"
+#line 540 "../../src/ordered_control.kl"
     kl_t42 = kl_2kl15ordered_control_merge__SQ2kl15ordered_control_3u64_3u64( kl_t41, kl_parent_2, kl_c_3 );
-#line 487 "../../src/ordered_control.kl"
+#line 540 "../../src/ordered_control.kl"
     kl_t0 = kl_t42;
-#line 487 "../../src/ordered_control.kl"
+#line 540 "../../src/ordered_control.kl"
     return kl_t0;
     bb16:
-#line 490 "../../src/ordered_control.kl"
+#line 543 "../../src/ordered_control.kl"
     kl_t43 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 490 "../../src/ordered_control.kl"
+#line 543 "../../src/ordered_control.kl"
     if ( kl_t43 ) goto bb17; else goto bb18;
     bb17:
-#line 490 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 490, "arithmetic overflow: c - 1" );
+#line 543 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 543, "arithmetic overflow: c - 1" );
     bb18:
-#line 490 "../../src/ordered_control.kl"
+#line 543 "../../src/ordered_control.kl"
     kl_t44 = kl_c_3 - 1;
-#line 490 "../../src/ordered_control.kl"
+#line 543 "../../src/ordered_control.kl"
     ( *kl_entered_4 ) = kl_t44;
     kl_t45 = &( *kl_this_1 );
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     kl_t46 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     if ( kl_t46 ) goto bb19; else goto bb20;
     bb19:
-#line 491 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 491, "arithmetic overflow: c - 1" );
+#line 544 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 544, "arithmetic overflow: c - 1" );
     bb20:
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     kl_t47 = kl_c_3 - 1;
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     kl_t48 = kl_2kl15ordered_control_merge__SQ2kl15ordered_control_3u64_3u64( kl_t45, kl_parent_2, kl_t47 );
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     kl_t0 = kl_t48;
-#line 491 "../../src/ordered_control.kl"
+#line 544 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 496 "../../src/ordered_control.kl"
+#line 549 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_remove_from_leaf__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_leaf_2, uint64_t kl_j_3 )
 {
     struct kl_2kl15ordered_control_key_run kl_t0;
@@ -1794,48 +1795,48 @@ struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_remove_from_leaf_
     uint64_t kl_t10;
     bool kl_t11;
     struct kl_2kl15ordered_control_ordered_control* kl_t12;
-#line 500 "../../src/ordered_control.kl"
+#line 553 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_totals_ + kl_leaf_2;
-#line 500 "../../src/ordered_control.kl"
+#line 553 "../../src/ordered_control.kl"
     kl_t5 = __builtin_sub_overflow( ( *kl_t4 ), 1, &( uint64_t ) { 0 } );
-#line 500 "../../src/ordered_control.kl"
+#line 553 "../../src/ordered_control.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 500 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 500, "arithmetic overflow: totals_[leaf]--;" );
+#line 553 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 553, "arithmetic overflow: totals_[leaf]--;" );
     bb2:
-#line 500 "../../src/ordered_control.kl"
+#line 553 "../../src/ordered_control.kl"
     ( *kl_t4 ) = ( *kl_t4 ) - 1;
-#line 503 "../../src/ordered_control.kl"
+#line 556 "../../src/ordered_control.kl"
     kl_t7 = &( *kl_this_1 );
-#line 503 "../../src/ordered_control.kl"
+#line 556 "../../src/ordered_control.kl"
     kl_t8 = kl_2kl15ordered_control_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t7, kl_leaf_2, kl_j_3 );
-#line 503 "../../src/ordered_control.kl"
+#line 556 "../../src/ordered_control.kl"
     kl_gap_6 = kl_t8;
-#line 505 "../../src/ordered_control.kl"
+#line 558 "../../src/ordered_control.kl"
     kl_t9 = &( *kl_this_1 );
-#line 505 "../../src/ordered_control.kl"
+#line 558 "../../src/ordered_control.kl"
     kl_t10 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t9, kl_leaf_2 );
-#line 505 "../../src/ordered_control.kl"
+#line 558 "../../src/ordered_control.kl"
     kl_t11 = kl_t10 == 0;
-#line 505 "../../src/ordered_control.kl"
+#line 558 "../../src/ordered_control.kl"
     if ( kl_t11 ) goto bb3; else goto bb4;
     bb3:
     kl_t12 = &( *kl_this_1 );
-#line 507 "../../src/ordered_control.kl"
+#line 560 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_free_node__SQ2kl15ordered_control_3u64( kl_t12, kl_leaf_2 );
     ( *kl_this_1 ).kl_root_ = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
     ( *kl_this_1 ).kl_height_ = 0;
-#line 505 "../../src/ordered_control.kl"
+#line 558 "../../src/ordered_control.kl"
     goto bb4;
     bb4:
-#line 512 "../../src/ordered_control.kl"
+#line 565 "../../src/ordered_control.kl"
     kl_t0 = kl_gap_6;
-#line 512 "../../src/ordered_control.kl"
+#line 565 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 516 "../../src/ordered_control.kl"
+#line 569 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_borrow_from_left__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -1883,159 +1884,159 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_borrow_from_lef
     bool kl_t49;
     uint64_t kl_t50;
     uint64_t kl_t51;
-#line 518 "../../src/ordered_control.kl"
+#line 571 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 518 "../../src/ordered_control.kl"
+#line 571 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
-#line 518 "../../src/ordered_control.kl"
+#line 571 "../../src/ordered_control.kl"
     kl_node_4 = kl_t6;
     kl_t8 = &( *kl_this_1 );
-#line 519 "../../src/ordered_control.kl"
+#line 572 "../../src/ordered_control.kl"
     kl_t9 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 519 "../../src/ordered_control.kl"
+#line 572 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 519 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 519, "arithmetic overflow: c - 1" );
+#line 572 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 572, "arithmetic overflow: c - 1" );
     bb2:
-#line 519 "../../src/ordered_control.kl"
+#line 572 "../../src/ordered_control.kl"
     kl_t10 = kl_c_3 - 1;
-#line 519 "../../src/ordered_control.kl"
+#line 572 "../../src/ordered_control.kl"
     kl_t11 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t10 );
-#line 519 "../../src/ordered_control.kl"
+#line 572 "../../src/ordered_control.kl"
     kl_left_7 = kl_t11;
     kl_t13 = &( *kl_this_1 );
-#line 520 "../../src/ordered_control.kl"
+#line 573 "../../src/ordered_control.kl"
     kl_t14 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t13, kl_left_7 );
-#line 520 "../../src/ordered_control.kl"
+#line 573 "../../src/ordered_control.kl"
     kl_t15 = __builtin_sub_overflow( kl_t14, 1, &( uint64_t ) { 0 } );
-#line 520 "../../src/ordered_control.kl"
+#line 573 "../../src/ordered_control.kl"
     if ( kl_t15 ) goto bb3; else goto bb4;
     bb3:
-#line 520 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 520, "arithmetic overflow: count( left ) - 1" );
+#line 573 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 573, "arithmetic overflow: count( left ) - 1" );
     bb4:
-#line 520 "../../src/ordered_control.kl"
+#line 573 "../../src/ordered_control.kl"
     kl_t16 = kl_t14 - 1;
-#line 520 "../../src/ordered_control.kl"
+#line 573 "../../src/ordered_control.kl"
     kl_last_12 = kl_t16;
-#line 522 "../../src/ordered_control.kl"
+#line 575 "../../src/ordered_control.kl"
     kl_t18 = &( *kl_this_1 );
-#line 522 "../../src/ordered_control.kl"
+#line 575 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_open_gap__SQ2kl15ordered_control_3u64_3u64( kl_t18, kl_node_4, 0 );
-#line 522 "../../src/ordered_control.kl"
+#line 575 "../../src/ordered_control.kl"
     kl_gap_17 = kl_t19;
-#line 524 "../../src/ordered_control.kl"
+#line 577 "../../src/ordered_control.kl"
     kl_t20 = &( *kl_this_1 );
-#line 524 "../../src/ordered_control.kl"
+#line 577 "../../src/ordered_control.kl"
     kl_t21 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t20, kl_node_4 );
-#line 524 "../../src/ordered_control.kl"
+#line 577 "../../src/ordered_control.kl"
     kl_t22 = !kl_t21;
-#line 524 "../../src/ordered_control.kl"
+#line 577 "../../src/ordered_control.kl"
     if ( kl_t22 ) goto bb5; else goto bb6;
     bb5:
     kl_t23 = &( *kl_this_1 );
-#line 526 "../../src/ordered_control.kl"
+#line 579 "../../src/ordered_control.kl"
     kl_t24 = &( *kl_this_1 );
-#line 526 "../../src/ordered_control.kl"
+#line 579 "../../src/ordered_control.kl"
     kl_t25 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t24, kl_node_4, 0 );
-#line 526 "../../src/ordered_control.kl"
+#line 579 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t23, kl_node_4, 1, kl_t25 );
     kl_t27 = &( *kl_this_1 );
-#line 527 "../../src/ordered_control.kl"
+#line 580 "../../src/ordered_control.kl"
     kl_t28 = &( *kl_this_1 );
-#line 527 "../../src/ordered_control.kl"
+#line 580 "../../src/ordered_control.kl"
     kl_t29 = &( *kl_this_1 );
-#line 527 "../../src/ordered_control.kl"
+#line 580 "../../src/ordered_control.kl"
     kl_t30 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t29, kl_left_7 );
-#line 527 "../../src/ordered_control.kl"
+#line 580 "../../src/ordered_control.kl"
     kl_t31 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t28, kl_left_7, kl_t30 );
-#line 527 "../../src/ordered_control.kl"
+#line 580 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t27, kl_node_4, 0, kl_t31 );
-#line 524 "../../src/ordered_control.kl"
+#line 577 "../../src/ordered_control.kl"
     goto bb6;
     bb6:
-#line 532 "../../src/ordered_control.kl"
+#line 585 "../../src/ordered_control.kl"
     kl_t33 = ( *kl_this_1 ).kl_counts_ + kl_node_4;
-#line 532 "../../src/ordered_control.kl"
+#line 585 "../../src/ordered_control.kl"
     kl_t34 = __builtin_add_overflow( ( *kl_t33 ), 1, &( uint64_t ) { 0 } );
-#line 532 "../../src/ordered_control.kl"
+#line 585 "../../src/ordered_control.kl"
     if ( kl_t34 ) goto bb7; else goto bb8;
     bb7:
-#line 532 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 532, "arithmetic overflow: counts_[node]++;" );
+#line 585 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 585, "arithmetic overflow: counts_[node]++;" );
     bb8:
-#line 532 "../../src/ordered_control.kl"
+#line 585 "../../src/ordered_control.kl"
     ( *kl_t33 ) = ( *kl_t33 ) + 1;
     kl_t35 = ( *kl_this_1 ).kl_counts_ + kl_left_7;
-#line 533 "../../src/ordered_control.kl"
+#line 586 "../../src/ordered_control.kl"
     kl_t36 = __builtin_sub_overflow( ( *kl_t35 ), 1, &( uint64_t ) { 0 } );
-#line 533 "../../src/ordered_control.kl"
+#line 586 "../../src/ordered_control.kl"
     if ( kl_t36 ) goto bb9; else goto bb10;
     bb9:
-#line 533 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 533, "arithmetic overflow: counts_[left]--;" );
+#line 586 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 586, "arithmetic overflow: counts_[left]--;" );
     bb10:
-#line 533 "../../src/ordered_control.kl"
+#line 586 "../../src/ordered_control.kl"
     ( *kl_t35 ) = ( *kl_t35 ) - 1;
-#line 536 "../../src/ordered_control.kl"
+#line 589 "../../src/ordered_control.kl"
     kl_t37 = &( *kl_this_1 );
-#line 536 "../../src/ordered_control.kl"
+#line 589 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t37, kl_node_4 );
     kl_t39 = &( *kl_this_1 );
-#line 537 "../../src/ordered_control.kl"
+#line 590 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t39, kl_left_7 );
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t43 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     if ( kl_t43 ) goto bb11; else goto bb12;
     bb11:
-#line 541 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 541, "arithmetic overflow: c - 1" );
+#line 594 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 594, "arithmetic overflow: c - 1" );
     bb12:
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t44 = kl_c_3 - 1;
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t45 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_t44 );
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t46 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_4, 0 );
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t42.kl_from = kl_t45;
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t42.kl_to = kl_t46;
-#line 541 "../../src/ordered_control.kl"
+#line 594 "../../src/ordered_control.kl"
     kl_t42.kl_count = 1;
     kl_t48 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_left_7, kl_last_12 );
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t49 = __builtin_sub_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     if ( kl_t49 ) goto bb13; else goto bb14;
     bb13:
-#line 542 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 542, "arithmetic overflow: c - 1" );
+#line 595 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 595, "arithmetic overflow: c - 1" );
     bb14:
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t50 = kl_c_3 - 1;
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t51 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_t50 );
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t47.kl_from = kl_t48;
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t47.kl_to = kl_t51;
-#line 542 "../../src/ordered_control.kl"
+#line 595 "../../src/ordered_control.kl"
     kl_t47.kl_count = 1;
-#line 540 "../../src/ordered_control.kl"
+#line 593 "../../src/ordered_control.kl"
     kl_t41.kl_first = kl_gap_17;
     kl_t41.kl_second = kl_t42;
     kl_t41.kl_third = kl_t47;
-#line 539 "../../src/ordered_control.kl"
+#line 592 "../../src/ordered_control.kl"
     kl_t0 = kl_t41;
-#line 539 "../../src/ordered_control.kl"
+#line 592 "../../src/ordered_control.kl"
     return kl_t0;
-#line 544 "../../src/ordered_control.kl"
+#line 597 "../../src/ordered_control.kl"
 }
 
-#line 547 "../../src/ordered_control.kl"
+#line 600 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_borrow_from_right__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_parent_2, uint64_t kl_c_3 )
 {
     struct kl_2kl15ordered_control_key_moves kl_t0;
@@ -2077,127 +2078,127 @@ struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_borrow_from_rig
     struct kl_2kl15ordered_control_ordered_control* kl_t41;
     struct kl_2kl15ordered_control_ordered_control* kl_t43;
     struct kl_2kl15ordered_control_key_moves kl_t45;
-#line 549 "../../src/ordered_control.kl"
+#line 602 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 549 "../../src/ordered_control.kl"
+#line 602 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t5, kl_parent_2, kl_c_3 );
-#line 549 "../../src/ordered_control.kl"
+#line 602 "../../src/ordered_control.kl"
     kl_node_4 = kl_t6;
     kl_t8 = &( *kl_this_1 );
-#line 550 "../../src/ordered_control.kl"
+#line 603 "../../src/ordered_control.kl"
     kl_t9 = __builtin_add_overflow( kl_c_3, 1, &( uint64_t ) { 0 } );
-#line 550 "../../src/ordered_control.kl"
+#line 603 "../../src/ordered_control.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-#line 550 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 550, "arithmetic overflow: c + 1" );
+#line 603 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 603, "arithmetic overflow: c + 1" );
     bb2:
-#line 550 "../../src/ordered_control.kl"
+#line 603 "../../src/ordered_control.kl"
     kl_t10 = kl_c_3 + 1;
-#line 550 "../../src/ordered_control.kl"
+#line 603 "../../src/ordered_control.kl"
     kl_t11 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t8, kl_parent_2, kl_t10 );
-#line 550 "../../src/ordered_control.kl"
+#line 603 "../../src/ordered_control.kl"
     kl_right_7 = kl_t11;
     kl_t13 = &( *kl_this_1 );
-#line 551 "../../src/ordered_control.kl"
+#line 604 "../../src/ordered_control.kl"
     kl_t14 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t13, kl_node_4 );
-#line 551 "../../src/ordered_control.kl"
+#line 604 "../../src/ordered_control.kl"
     kl_end_12 = kl_t14;
-#line 553 "../../src/ordered_control.kl"
+#line 606 "../../src/ordered_control.kl"
     kl_t15 = &( *kl_this_1 );
-#line 553 "../../src/ordered_control.kl"
+#line 606 "../../src/ordered_control.kl"
     kl_t16 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t15, kl_node_4 );
-#line 553 "../../src/ordered_control.kl"
+#line 606 "../../src/ordered_control.kl"
     kl_t17 = !kl_t16;
-#line 553 "../../src/ordered_control.kl"
+#line 606 "../../src/ordered_control.kl"
     if ( kl_t17 ) goto bb3; else goto bb6;
     bb3:
     kl_t18 = &( *kl_this_1 );
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     kl_t19 = __builtin_add_overflow( kl_end_12, 1, &( uint64_t ) { 0 } );
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     if ( kl_t19 ) goto bb4; else goto bb5;
     bb4:
-#line 555 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 555, "arithmetic overflow: end + 1" );
+#line 608 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 608, "arithmetic overflow: end + 1" );
     bb5:
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     kl_t20 = kl_end_12 + 1;
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     kl_t21 = &( *kl_this_1 );
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     kl_t22 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t21, kl_right_7, 0 );
-#line 555 "../../src/ordered_control.kl"
+#line 608 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t18, kl_node_4, kl_t20, kl_t22 );
     kl_t24 = &( *kl_this_1 );
-#line 556 "../../src/ordered_control.kl"
+#line 609 "../../src/ordered_control.kl"
     kl_t25 = &( *kl_this_1 );
-#line 556 "../../src/ordered_control.kl"
+#line 609 "../../src/ordered_control.kl"
     kl_t26 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t25, kl_right_7, 1 );
-#line 556 "../../src/ordered_control.kl"
+#line 609 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t24, kl_right_7, 0, kl_t26 );
-#line 553 "../../src/ordered_control.kl"
+#line 606 "../../src/ordered_control.kl"
     goto bb6;
     bb6:
-#line 561 "../../src/ordered_control.kl"
+#line 614 "../../src/ordered_control.kl"
     kl_t28 = ( *kl_this_1 ).kl_counts_ + kl_node_4;
-#line 561 "../../src/ordered_control.kl"
+#line 614 "../../src/ordered_control.kl"
     kl_t29 = __builtin_add_overflow( ( *kl_t28 ), 1, &( uint64_t ) { 0 } );
-#line 561 "../../src/ordered_control.kl"
+#line 614 "../../src/ordered_control.kl"
     if ( kl_t29 ) goto bb7; else goto bb8;
     bb7:
-#line 561 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 561, "arithmetic overflow: counts_[node]++;" );
+#line 614 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 614, "arithmetic overflow: counts_[node]++;" );
     bb8:
-#line 561 "../../src/ordered_control.kl"
+#line 614 "../../src/ordered_control.kl"
     ( *kl_t28 ) = ( *kl_t28 ) + 1;
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_t32 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_t33 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_4, kl_end_12 );
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_t31.kl_from = kl_t32;
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_t31.kl_to = kl_t33;
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_t31.kl_count = 1;
-#line 564 "../../src/ordered_control.kl"
+#line 617 "../../src/ordered_control.kl"
     kl_down_30 = kl_t31;
     kl_t36 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_right_7, 0 );
-#line 565 "../../src/ordered_control.kl"
+#line 618 "../../src/ordered_control.kl"
     kl_t37 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_parent_2, kl_c_3 );
-#line 565 "../../src/ordered_control.kl"
+#line 618 "../../src/ordered_control.kl"
     kl_t35.kl_from = kl_t36;
-#line 565 "../../src/ordered_control.kl"
+#line 618 "../../src/ordered_control.kl"
     kl_t35.kl_to = kl_t37;
-#line 565 "../../src/ordered_control.kl"
+#line 618 "../../src/ordered_control.kl"
     kl_t35.kl_count = 1;
-#line 565 "../../src/ordered_control.kl"
+#line 618 "../../src/ordered_control.kl"
     kl_up_34 = kl_t35;
     kl_t39 = &( *kl_this_1 );
-#line 566 "../../src/ordered_control.kl"
+#line 619 "../../src/ordered_control.kl"
     kl_t40 = kl_2kl15ordered_control_close_gap__SQ2kl15ordered_control_3u64_3u64( kl_t39, kl_right_7, 0 );
-#line 566 "../../src/ordered_control.kl"
+#line 619 "../../src/ordered_control.kl"
     kl_gap_38 = kl_t40;
-#line 568 "../../src/ordered_control.kl"
+#line 621 "../../src/ordered_control.kl"
     kl_t41 = &( *kl_this_1 );
-#line 568 "../../src/ordered_control.kl"
+#line 621 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t41, kl_node_4 );
     kl_t43 = &( *kl_this_1 );
-#line 569 "../../src/ordered_control.kl"
+#line 622 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( kl_t43, kl_right_7 );
     kl_t45.kl_first = kl_down_30;
-#line 570 "../../src/ordered_control.kl"
+#line 623 "../../src/ordered_control.kl"
     kl_t45.kl_second = kl_up_34;
-#line 570 "../../src/ordered_control.kl"
+#line 623 "../../src/ordered_control.kl"
     kl_t45.kl_third = kl_gap_38;
-#line 570 "../../src/ordered_control.kl"
+#line 623 "../../src/ordered_control.kl"
     kl_t0 = kl_t45;
-#line 570 "../../src/ordered_control.kl"
+#line 623 "../../src/ordered_control.kl"
     return kl_t0;
 }
 
-#line 575 "../../src/ordered_control.kl"
+#line 628 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_c_3, uint64_t kl_to_4 )
 {
     bool kl_t5;
@@ -2208,48 +2209,48 @@ void kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( s
     bool kl_t10;
     uint64_t kl_t11;
     uint64_t* kl_t12;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t5 = __builtin_add_overflow( kl_2kl15ordered_control_ORDERED_KEYS__G, 1, &( uint8_t ) { 0 } );
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 579 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 579, "arithmetic overflow: ORDERED_KEYS + 1" );
+#line 632 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 632, "arithmetic overflow: ORDERED_KEYS + 1" );
     bb2:
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_ORDERED_KEYS__G + 1;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t7 = ( uint64_t ) kl_t6;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t8 = __builtin_mul_overflow( kl_node_2, kl_t7, &( uint64_t ) { 0 } );
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
-#line 579 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 579, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
+#line 632 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 632, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
     bb4:
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t9 = kl_node_2 * kl_t7;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t10 = __builtin_add_overflow( kl_t9, kl_c_3, &( uint64_t ) { 0 } );
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     if ( kl_t10 ) goto bb5; else goto bb6;
     bb5:
-#line 579 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 579, "arithmetic overflow: node * ( ORDERED_KEYS + 1 ) + c" );
+#line 632 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 632, "arithmetic overflow: node * ( ORDERED_KEYS + 1 ) + c" );
     bb6:
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t11 = kl_t9 + kl_c_3;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     kl_t12 = ( *kl_this_1 ).kl_children_ + kl_t11;
-#line 579 "../../src/ordered_control.kl"
+#line 632 "../../src/ordered_control.kl"
     ( *kl_t12 ) = kl_to_4;
-#line 581 "../../src/ordered_control.kl"
+#line 634 "../../src/ordered_control.kl"
     return;
-#line 581 "../../src/ordered_control.kl"
+#line 634 "../../src/ordered_control.kl"
 }
 
-#line 583 "../../src/ordered_control.kl"
+#line 636 "../../src/ordered_control.kl"
 uint64_t kl_2kl15ordered_control_new_node__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* kl_this_1 )
 {
     uint64_t kl_t0;
@@ -2263,100 +2264,100 @@ uint64_t kl_2kl15ordered_control_new_node__SQ2kl15ordered_control( struct kl_2kl
     uint64_t* kl_t9;
     uint64_t* kl_t10;
     struct kl_2kl15ordered_control_ordered_control* kl_t11;
-#line 587 "../../src/ordered_control.kl"
+#line 640 "../../src/ordered_control.kl"
     kl_t3 = ( *kl_this_1 ).kl_free_ != kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 587 "../../src/ordered_control.kl"
+#line 640 "../../src/ordered_control.kl"
     if ( kl_t3 ) goto bb1; else goto bb5;
     bb1:
     kl_node_2 = ( *kl_this_1 ).kl_free_;
     kl_t4 = &( *kl_this_1 );
-#line 590 "../../src/ordered_control.kl"
+#line 643 "../../src/ordered_control.kl"
     kl_t5 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t4, kl_node_2, 0 );
-#line 590 "../../src/ordered_control.kl"
+#line 643 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_free_ = kl_t5;
     kl_t6 = __builtin_sub_overflow( ( *kl_this_1 ).kl_free_count_, 1, &( uint64_t ) { 0 } );
-#line 591 "../../src/ordered_control.kl"
+#line 644 "../../src/ordered_control.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 591 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 591, "arithmetic overflow: free_count_--;" );
+#line 644 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 644, "arithmetic overflow: free_count_--;" );
     bb3:
-#line 591 "../../src/ordered_control.kl"
+#line 644 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_free_count_ = ( *kl_this_1 ).kl_free_count_ - 1;
-#line 587 "../../src/ordered_control.kl"
+#line 640 "../../src/ordered_control.kl"
     goto bb4;
     bb4:
-#line 602 "../../src/ordered_control.kl"
+#line 655 "../../src/ordered_control.kl"
     kl_t9 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 602 "../../src/ordered_control.kl"
+#line 655 "../../src/ordered_control.kl"
     ( *kl_t9 ) = 0;
     kl_t10 = ( *kl_this_1 ).kl_totals_ + kl_node_2;
-#line 603 "../../src/ordered_control.kl"
+#line 656 "../../src/ordered_control.kl"
     ( *kl_t10 ) = 0;
-#line 606 "../../src/ordered_control.kl"
+#line 659 "../../src/ordered_control.kl"
     kl_t11 = &( *kl_this_1 );
-#line 606 "../../src/ordered_control.kl"
+#line 659 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t11, kl_node_2, 0, kl_2kl15ordered_control_ORDERED_NO_NODE__G );
     kl_t0 = kl_node_2;
-#line 607 "../../src/ordered_control.kl"
+#line 660 "../../src/ordered_control.kl"
     return kl_t0;
     bb5:
-#line 595 "../../src/ordered_control.kl"
+#line 648 "../../src/ordered_control.kl"
     kl_t7 = ( *kl_this_1 ).kl_used_ < ( *kl_this_1 ).kl_capacity_;
-#line 595 "../../src/ordered_control.kl"
+#line 648 "../../src/ordered_control.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb6:
-#line 596 "../../src/ordered_control.kl"
+#line 649 "../../src/ordered_control.kl"
     kl_node_2 = ( *kl_this_1 ).kl_used_;
     kl_t8 = __builtin_add_overflow( ( *kl_this_1 ).kl_used_, 1, &( uint64_t ) { 0 } );
-#line 597 "../../src/ordered_control.kl"
+#line 650 "../../src/ordered_control.kl"
     if ( kl_t8 ) goto bb8; else goto bb9;
     bb7:
-#line 595 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 595, "assertion failed: used_ < capacity_" );
+#line 648 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 648, "assertion failed: used_ < capacity_" );
     bb8:
-    kl_rt_panic( "../../src/ordered_control.kl", 597, "arithmetic overflow: used_++;" );
+    kl_rt_panic( "../../src/ordered_control.kl", 650, "arithmetic overflow: used_++;" );
     bb9:
-#line 597 "../../src/ordered_control.kl"
+#line 650 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_used_ = ( *kl_this_1 ).kl_used_ + 1;
-#line 587 "../../src/ordered_control.kl"
+#line 640 "../../src/ordered_control.kl"
     goto bb4;
-#line 608 "../../src/ordered_control.kl"
+#line 661 "../../src/ordered_control.kl"
 }
 
-#line 610 "../../src/ordered_control.kl"
+#line 663 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_free_node__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2 )
 {
     uint64_t* kl_t3;
     uint64_t* kl_t4;
     struct kl_2kl15ordered_control_ordered_control* kl_t5;
     bool kl_t7;
-#line 614 "../../src/ordered_control.kl"
+#line 667 "../../src/ordered_control.kl"
     kl_t3 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 614 "../../src/ordered_control.kl"
+#line 667 "../../src/ordered_control.kl"
     ( *kl_t3 ) = 0;
     kl_t4 = ( *kl_this_1 ).kl_totals_ + kl_node_2;
-#line 615 "../../src/ordered_control.kl"
+#line 668 "../../src/ordered_control.kl"
     ( *kl_t4 ) = 0;
-#line 618 "../../src/ordered_control.kl"
+#line 671 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 618 "../../src/ordered_control.kl"
+#line 671 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t5, kl_node_2, 0, ( *kl_this_1 ).kl_free_ );
     ( *kl_this_1 ).kl_free_ = kl_node_2;
     kl_t7 = __builtin_add_overflow( ( *kl_this_1 ).kl_free_count_, 1, &( uint64_t ) { 0 } );
-#line 620 "../../src/ordered_control.kl"
+#line 673 "../../src/ordered_control.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
-#line 620 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 620, "arithmetic overflow: free_count_++;" );
+#line 673 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 673, "arithmetic overflow: free_count_++;" );
     bb2:
-#line 620 "../../src/ordered_control.kl"
+#line 673 "../../src/ordered_control.kl"
     ( *kl_this_1 ).kl_free_count_ = ( *kl_this_1 ).kl_free_count_ + 1;
     return;
-#line 621 "../../src/ordered_control.kl"
+#line 674 "../../src/ordered_control.kl"
 }
 
-#line 623 "../../src/ordered_control.kl"
+#line 676 "../../src/ordered_control.kl"
 void kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2 )
 {
     uint64_t kl_total_3;
@@ -2375,79 +2376,79 @@ void kl_2kl15ordered_control_recount__SQ2kl15ordered_control_3u64( struct kl_2kl
     uint64_t* kl_t16;
     bool kl_t17;
     uint64_t* kl_t18;
-#line 628 "../../src/ordered_control.kl"
+#line 681 "../../src/ordered_control.kl"
     kl_t4 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 628 "../../src/ordered_control.kl"
+#line 681 "../../src/ordered_control.kl"
     kl_total_3 = ( *kl_t4 );
-#line 631 "../../src/ordered_control.kl"
+#line 684 "../../src/ordered_control.kl"
     kl_t5 = &( *kl_this_1 );
-#line 631 "../../src/ordered_control.kl"
+#line 684 "../../src/ordered_control.kl"
     kl_t6 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t5, kl_node_2 );
-#line 631 "../../src/ordered_control.kl"
+#line 684 "../../src/ordered_control.kl"
     kl_t7 = !kl_t6;
-#line 631 "../../src/ordered_control.kl"
+#line 684 "../../src/ordered_control.kl"
     if ( kl_t7 ) goto bb1; else goto bb10;
     bb1:
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_c_8 = 0;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_t10 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_t11 = __builtin_add_overflow( ( *kl_t10 ), 1, &( uint64_t ) { 0 } );
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     if ( kl_t11 ) goto bb2; else goto bb3;
     bb2:
-#line 635 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 635, "arithmetic overflow: counts_[node] + 1" );
+#line 688 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 688, "arithmetic overflow: counts_[node] + 1" );
     bb3:
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_t12 = ( *kl_t10 ) + 1;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_t9 = kl_t12;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     goto bb4;
     bb4:
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_t13 = kl_c_8 < kl_t9;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     if ( kl_t13 ) goto bb5; else goto bb6;
     bb5:
     kl_t14 = &( *kl_this_1 );
-#line 637 "../../src/ordered_control.kl"
+#line 690 "../../src/ordered_control.kl"
     kl_t15 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t14, kl_node_2, kl_c_8 );
-#line 637 "../../src/ordered_control.kl"
+#line 690 "../../src/ordered_control.kl"
     kl_t16 = ( *kl_this_1 ).kl_totals_ + kl_t15;
-#line 637 "../../src/ordered_control.kl"
+#line 690 "../../src/ordered_control.kl"
     kl_t17 = __builtin_add_overflow( kl_total_3, ( *kl_t16 ), &( uint64_t ) { 0 } );
-#line 637 "../../src/ordered_control.kl"
+#line 690 "../../src/ordered_control.kl"
     if ( kl_t17 ) goto bb7; else goto bb8;
     bb6:
-#line 631 "../../src/ordered_control.kl"
+#line 684 "../../src/ordered_control.kl"
     goto bb10;
     bb7:
-#line 637 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 637, "arithmetic overflow: total += totals_[child( node, c )];" );
+#line 690 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 690, "arithmetic overflow: total += totals_[child( node, c )];" );
     bb8:
-#line 637 "../../src/ordered_control.kl"
+#line 690 "../../src/ordered_control.kl"
     kl_total_3 = kl_total_3 + ( *kl_t16 );
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     goto bb9;
     bb9:
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     kl_c_8 = kl_c_8 + 1;
-#line 635 "../../src/ordered_control.kl"
+#line 688 "../../src/ordered_control.kl"
     goto bb4;
     bb10:
-#line 644 "../../src/ordered_control.kl"
+#line 697 "../../src/ordered_control.kl"
     kl_t18 = ( *kl_this_1 ).kl_totals_ + kl_node_2;
-#line 644 "../../src/ordered_control.kl"
+#line 697 "../../src/ordered_control.kl"
     ( *kl_t18 ) = kl_total_3;
-#line 646 "../../src/ordered_control.kl"
+#line 699 "../../src/ordered_control.kl"
     return;
-#line 646 "../../src/ordered_control.kl"
+#line 699 "../../src/ordered_control.kl"
 }
 
-#line 648 "../../src/ordered_control.kl"
+#line 701 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_open_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
 {
     struct kl_2kl15ordered_control_key_run kl_t0;
@@ -2471,98 +2472,98 @@ struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_open_gap__SQ2kl15
     uint64_t kl_t22;
     bool kl_t23;
     uint64_t kl_t24;
-#line 652 "../../src/ordered_control.kl"
+#line 705 "../../src/ordered_control.kl"
     kl_t5 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 652 "../../src/ordered_control.kl"
+#line 705 "../../src/ordered_control.kl"
     kl_num_4 = ( *kl_t5 );
-#line 654 "../../src/ordered_control.kl"
+#line 707 "../../src/ordered_control.kl"
     kl_t6 = &( *kl_this_1 );
-#line 654 "../../src/ordered_control.kl"
+#line 707 "../../src/ordered_control.kl"
     kl_t7 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t6, kl_node_2 );
-#line 654 "../../src/ordered_control.kl"
+#line 707 "../../src/ordered_control.kl"
     kl_t8 = !kl_t7;
-#line 654 "../../src/ordered_control.kl"
+#line 707 "../../src/ordered_control.kl"
     if ( kl_t8 ) goto bb1; else goto bb10;
     bb1:
     kl_c_9 = kl_num_4;
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     goto bb2;
     bb2:
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     kl_t10 = kl_c_9 > kl_j_3;
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
     kl_t11 = &( *kl_this_1 );
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     kl_t12 = __builtin_add_overflow( kl_c_9, 1, &( uint64_t ) { 0 } );
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     if ( kl_t12 ) goto bb5; else goto bb6;
     bb4:
-#line 654 "../../src/ordered_control.kl"
+#line 707 "../../src/ordered_control.kl"
     goto bb10;
     bb5:
-#line 658 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 658, "arithmetic overflow: c + 1" );
+#line 711 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 711, "arithmetic overflow: c + 1" );
     bb6:
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     kl_t13 = kl_c_9 + 1;
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     kl_t14 = &( *kl_this_1 );
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     kl_t15 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t14, kl_node_2, kl_c_9 );
-#line 658 "../../src/ordered_control.kl"
+#line 711 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t11, kl_node_2, kl_t13, kl_t15 );
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     goto bb7;
     bb7:
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     kl_t17 = __builtin_sub_overflow( kl_c_9, 1, &( uint64_t ) { 0 } );
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     if ( kl_t17 ) goto bb8; else goto bb9;
     bb8:
-#line 656 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 656, "arithmetic overflow: c--" );
+#line 709 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 709, "arithmetic overflow: c--" );
     bb9:
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     kl_c_9 = kl_c_9 - 1;
-#line 656 "../../src/ordered_control.kl"
+#line 709 "../../src/ordered_control.kl"
     goto bb2;
     bb10:
-#line 663 "../../src/ordered_control.kl"
+#line 716 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
     kl_t20 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
-#line 664 "../../src/ordered_control.kl"
+#line 717 "../../src/ordered_control.kl"
     kl_t21 = __builtin_add_overflow( kl_t20, 1, &( uint64_t ) { 0 } );
-#line 664 "../../src/ordered_control.kl"
+#line 717 "../../src/ordered_control.kl"
     if ( kl_t21 ) goto bb11; else goto bb12;
     bb11:
-#line 664 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 664, "arithmetic overflow: key_slot( node, j ) + 1" );
+#line 717 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 717, "arithmetic overflow: key_slot( node, j ) + 1" );
     bb12:
-#line 664 "../../src/ordered_control.kl"
+#line 717 "../../src/ordered_control.kl"
     kl_t22 = kl_t20 + 1;
     kl_t23 = __builtin_sub_overflow( kl_num_4, kl_j_3, &( uint64_t ) { 0 } );
-#line 665 "../../src/ordered_control.kl"
+#line 718 "../../src/ordered_control.kl"
     if ( kl_t23 ) goto bb13; else goto bb14;
     bb13:
-#line 665 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 665, "arithmetic overflow: num - j" );
+#line 718 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 718, "arithmetic overflow: num - j" );
     bb14:
-#line 665 "../../src/ordered_control.kl"
+#line 718 "../../src/ordered_control.kl"
     kl_t24 = kl_num_4 - kl_j_3;
-#line 663 "../../src/ordered_control.kl"
+#line 716 "../../src/ordered_control.kl"
     kl_t18.kl_from = kl_t19;
     kl_t18.kl_to = kl_t22;
     kl_t18.kl_count = kl_t24;
-#line 662 "../../src/ordered_control.kl"
+#line 715 "../../src/ordered_control.kl"
     kl_t0 = kl_t18;
-#line 662 "../../src/ordered_control.kl"
+#line 715 "../../src/ordered_control.kl"
     return kl_t0;
-#line 668 "../../src/ordered_control.kl"
+#line 721 "../../src/ordered_control.kl"
 }
 
-#line 670 "../../src/ordered_control.kl"
+#line 723 "../../src/ordered_control.kl"
 struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_close_gap__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3 )
 {
     struct kl_2kl15ordered_control_key_run kl_t0;
@@ -2595,139 +2596,139 @@ struct kl_2kl15ordered_control_key_run kl_2kl15ordered_control_close_gap__SQ2kl1
     uint64_t kl_t31;
     bool kl_t32;
     uint64_t kl_t33;
-#line 674 "../../src/ordered_control.kl"
+#line 727 "../../src/ordered_control.kl"
     kl_t5 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 674 "../../src/ordered_control.kl"
+#line 727 "../../src/ordered_control.kl"
     kl_num_4 = ( *kl_t5 );
-#line 676 "../../src/ordered_control.kl"
+#line 729 "../../src/ordered_control.kl"
     kl_t6 = &( *kl_this_1 );
-#line 676 "../../src/ordered_control.kl"
+#line 729 "../../src/ordered_control.kl"
     kl_t7 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t6, kl_node_2 );
-#line 676 "../../src/ordered_control.kl"
+#line 729 "../../src/ordered_control.kl"
     kl_t8 = !kl_t7;
-#line 676 "../../src/ordered_control.kl"
+#line 729 "../../src/ordered_control.kl"
     if ( kl_t8 ) goto bb1; else goto bb14;
     bb1:
     kl_t10 = __builtin_add_overflow( kl_j_3, 2, &( uint64_t ) { 0 } );
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     if ( kl_t10 ) goto bb2; else goto bb3;
     bb2:
-#line 678 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 678, "arithmetic overflow: j + 2" );
+#line 731 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 731, "arithmetic overflow: j + 2" );
     bb3:
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_t11 = kl_j_3 + 2;
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_c_9 = kl_t11;
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     goto bb4;
     bb4:
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_t12 = __builtin_add_overflow( kl_num_4, 1, &( uint64_t ) { 0 } );
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     if ( kl_t12 ) goto bb6; else goto bb7;
     bb5:
     kl_t15 = &( *kl_this_1 );
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     kl_t16 = __builtin_sub_overflow( kl_c_9, 1, &( uint64_t ) { 0 } );
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     if ( kl_t16 ) goto bb9; else goto bb10;
     bb6:
-#line 678 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 678, "arithmetic overflow: num + 1" );
+#line 731 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 731, "arithmetic overflow: num + 1" );
     bb7:
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_t13 = kl_num_4 + 1;
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_t14 = kl_c_9 < kl_t13;
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     if ( kl_t14 ) goto bb5; else goto bb8;
     bb8:
-#line 676 "../../src/ordered_control.kl"
+#line 729 "../../src/ordered_control.kl"
     goto bb14;
     bb9:
-#line 680 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 680, "arithmetic overflow: c - 1" );
+#line 733 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 733, "arithmetic overflow: c - 1" );
     bb10:
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     kl_t17 = kl_c_9 - 1;
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     kl_t18 = &( *kl_this_1 );
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     kl_t19 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t18, kl_node_2, kl_c_9 );
-#line 680 "../../src/ordered_control.kl"
+#line 733 "../../src/ordered_control.kl"
     kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( kl_t15, kl_node_2, kl_t17, kl_t19 );
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     goto bb11;
     bb11:
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_t21 = __builtin_add_overflow( kl_c_9, 1, &( uint64_t ) { 0 } );
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     if ( kl_t21 ) goto bb12; else goto bb13;
     bb12:
-#line 678 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 678, "arithmetic overflow: c++" );
+#line 731 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 731, "arithmetic overflow: c++" );
     bb13:
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     kl_c_9 = kl_c_9 + 1;
-#line 678 "../../src/ordered_control.kl"
+#line 731 "../../src/ordered_control.kl"
     goto bb4;
     bb14:
-#line 684 "../../src/ordered_control.kl"
+#line 737 "../../src/ordered_control.kl"
     kl_t22 = ( *kl_this_1 ).kl_counts_ + kl_node_2;
-#line 684 "../../src/ordered_control.kl"
+#line 737 "../../src/ordered_control.kl"
     kl_t23 = __builtin_sub_overflow( kl_num_4, 1, &( uint64_t ) { 0 } );
-#line 684 "../../src/ordered_control.kl"
+#line 737 "../../src/ordered_control.kl"
     if ( kl_t23 ) goto bb15; else goto bb16;
     bb15:
-#line 684 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 684, "arithmetic overflow: num - 1" );
+#line 737 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 737, "arithmetic overflow: num - 1" );
     bb16:
-#line 684 "../../src/ordered_control.kl"
+#line 737 "../../src/ordered_control.kl"
     kl_t24 = kl_num_4 - 1;
-#line 684 "../../src/ordered_control.kl"
+#line 737 "../../src/ordered_control.kl"
     ( *kl_t22 ) = kl_t24;
-#line 686 "../../src/ordered_control.kl"
+#line 739 "../../src/ordered_control.kl"
     kl_t26 = __builtin_add_overflow( kl_j_3, 1, &( uint64_t ) { 0 } );
-#line 686 "../../src/ordered_control.kl"
+#line 739 "../../src/ordered_control.kl"
     if ( kl_t26 ) goto bb17; else goto bb18;
     bb17:
-#line 686 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 686, "arithmetic overflow: j + 1" );
+#line 739 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 739, "arithmetic overflow: j + 1" );
     bb18:
-#line 686 "../../src/ordered_control.kl"
+#line 739 "../../src/ordered_control.kl"
     kl_t27 = kl_j_3 + 1;
-#line 686 "../../src/ordered_control.kl"
+#line 739 "../../src/ordered_control.kl"
     kl_t28 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_t27 );
     kl_t29 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
     kl_t30 = __builtin_sub_overflow( kl_num_4, kl_j_3, &( uint64_t ) { 0 } );
-#line 688 "../../src/ordered_control.kl"
+#line 741 "../../src/ordered_control.kl"
     if ( kl_t30 ) goto bb19; else goto bb20;
     bb19:
-#line 688 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 688, "arithmetic overflow: num - j" );
+#line 741 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 741, "arithmetic overflow: num - j" );
     bb20:
-#line 688 "../../src/ordered_control.kl"
+#line 741 "../../src/ordered_control.kl"
     kl_t31 = kl_num_4 - kl_j_3;
-#line 688 "../../src/ordered_control.kl"
+#line 741 "../../src/ordered_control.kl"
     kl_t32 = __builtin_sub_overflow( kl_t31, 1, &( uint64_t ) { 0 } );
-#line 688 "../../src/ordered_control.kl"
+#line 741 "../../src/ordered_control.kl"
     if ( kl_t32 ) goto bb21; else goto bb22;
     bb21:
-#line 688 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 688, "arithmetic overflow: num - j - 1" );
+#line 741 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 741, "arithmetic overflow: num - j - 1" );
     bb22:
-#line 688 "../../src/ordered_control.kl"
+#line 741 "../../src/ordered_control.kl"
     kl_t33 = kl_t31 - 1;
-#line 686 "../../src/ordered_control.kl"
+#line 739 "../../src/ordered_control.kl"
     kl_t25.kl_from = kl_t28;
     kl_t25.kl_to = kl_t29;
     kl_t25.kl_count = kl_t33;
-#line 685 "../../src/ordered_control.kl"
+#line 738 "../../src/ordered_control.kl"
     kl_t0 = kl_t25;
-#line 685 "../../src/ordered_control.kl"
+#line 738 "../../src/ordered_control.kl"
     return kl_t0;
-#line 691 "../../src/ordered_control.kl"
+#line 744 "../../src/ordered_control.kl"
 }
 
 // ../../src/ordered_set.kl
@@ -6878,6 +6879,7 @@ struct kl_2kl4list_list__IQ2kl6stringE;
 struct kl_2kl4list_list__I3i32E;
 struct kl_2kl3set_set__I3i32E;
 struct kl_2kl11ordered_set_ordered_set__I3i32E;
+struct kl__A32_3u64;
 
 struct kl_2kl6string_string
 {
@@ -6978,6 +6980,11 @@ struct kl_2kl11ordered_set_ordered_set__I3i32E
     int32_t* kl_keys_;
 };
 
+struct kl__A32_3u64
+{
+    uint64_t e[32];
+};
+
 extern uint64_t kl_2kl15ordered_control_ORDERED_NO_NODE__G;
 extern uint8_t kl_2kl15ordered_control_ORDERED_KEYS__G;
 
@@ -7045,7 +7052,6 @@ uint64_t kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( struct
 bool kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t );
 uint64_t kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t );
 uint64_t kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( uint64_t, uint64_t );
-uint64_t kl_2kl15ordered_control_slot_at__SQ2kl15ordered_control_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t );
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_prepare_insert__SQ2kl15ordered_control( struct kl_2kl15ordered_control_ordered_control* );
 struct kl_2kl15ordered_control_key_moves kl_2kl15ordered_control_split_child__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t, uint64_t );
 uint64_t kl_2kl15ordered_control_descend_insert__SQ2kl15ordered_control_3u64_3u64( struct kl_2kl15ordered_control_ordered_control*, uint64_t, uint64_t );
@@ -7570,7 +7576,7 @@ void kl_2kl11ordered_set_ordered_set__I3i32E__RQ2kl11ordered_setI3i32E__ctor( st
 #line 21 "../../src/ordered_set.kl"
 }
 
-#line 134 "../../src/ordered_set.kl"
+#line 133 "../../src/ordered_set.kl"
 bool kl_2kl11ordered_set_insert__I3i32E__SQ2kl11ordered_setI3i32E_M3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, int32_t kl_key_2 )
 {
     bool kl_t0;
@@ -7614,135 +7620,135 @@ bool kl_2kl11ordered_set_insert__I3i32E__SQ2kl11ordered_setI3i32E_M3i32( struct 
     bool kl_t44;
     struct kl_2kl15ordered_control_ordered_control* kl_t45;
     uint64_t kl_t46;
-#line 136 "../../src/ordered_set.kl"
+#line 135 "../../src/ordered_set.kl"
     kl_t3 = &( *kl_this_1 );
-#line 136 "../../src/ordered_set.kl"
+#line 135 "../../src/ordered_set.kl"
     kl_t4 = &kl_key_2;
-#line 136 "../../src/ordered_set.kl"
+#line 135 "../../src/ordered_set.kl"
     kl_t5 = kl_2kl11ordered_set_slot_of__I3i32E__SQ2kl11ordered_setI3i32E_3i32( kl_t3, kl_t4 );
-#line 136 "../../src/ordered_set.kl"
+#line 135 "../../src/ordered_set.kl"
     kl_t6 = kl_t5 != kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 136 "../../src/ordered_set.kl"
+#line 135 "../../src/ordered_set.kl"
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = false;
-#line 138 "../../src/ordered_set.kl"
+#line 137 "../../src/ordered_set.kl"
     return kl_t0;
     bb2:
-#line 141 "../../src/ordered_set.kl"
+#line 140 "../../src/ordered_set.kl"
     kl_t7 = &( *kl_this_1 ).kl_control_;
-#line 141 "../../src/ordered_set.kl"
+#line 140 "../../src/ordered_set.kl"
     kl_t8 = kl_2kl15ordered_control_needs_growth__SQ2kl15ordered_control( kl_t7 );
-#line 141 "../../src/ordered_set.kl"
+#line 140 "../../src/ordered_set.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
     kl_t9 = &( *kl_this_1 );
-#line 143 "../../src/ordered_set.kl"
+#line 142 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_grow__I3i32E__SQ2kl11ordered_setI3i32E( kl_t9 );
-#line 141 "../../src/ordered_set.kl"
+#line 140 "../../src/ordered_set.kl"
     goto bb4;
     bb4:
-#line 146 "../../src/ordered_set.kl"
+#line 145 "../../src/ordered_set.kl"
     kl_t11 = &( *kl_this_1 );
-#line 146 "../../src/ordered_set.kl"
+#line 145 "../../src/ordered_set.kl"
     kl_t12 = &( *kl_this_1 ).kl_control_;
-#line 146 "../../src/ordered_set.kl"
+#line 145 "../../src/ordered_set.kl"
     kl_t13 = kl_2kl15ordered_control_prepare_insert__SQ2kl15ordered_control( kl_t12 );
-#line 146 "../../src/ordered_set.kl"
+#line 145 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_apply__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl9key_moves( kl_t11, kl_t13 );
     kl_t16 = &( *kl_this_1 ).kl_control_;
-#line 147 "../../src/ordered_set.kl"
+#line 146 "../../src/ordered_set.kl"
     kl_t17 = kl_2kl15ordered_control_root__SQ2kl15ordered_control( kl_t16 );
-#line 147 "../../src/ordered_set.kl"
+#line 146 "../../src/ordered_set.kl"
     kl_n_15 = kl_t17;
-#line 149 "../../src/ordered_set.kl"
+#line 148 "../../src/ordered_set.kl"
     goto bb5;
     bb5:
     kl_t19 = &( *kl_this_1 );
-#line 151 "../../src/ordered_set.kl"
+#line 150 "../../src/ordered_set.kl"
     kl_t20 = &kl_key_2;
-#line 151 "../../src/ordered_set.kl"
+#line 150 "../../src/ordered_set.kl"
     kl_t21 = kl_2kl11ordered_set_position__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3i32( kl_t19, kl_n_15, kl_t20 );
-#line 151 "../../src/ordered_set.kl"
+#line 150 "../../src/ordered_set.kl"
     kl_j_18 = kl_t21;
-#line 153 "../../src/ordered_set.kl"
+#line 152 "../../src/ordered_set.kl"
     kl_t22 = &( *kl_this_1 ).kl_control_;
-#line 153 "../../src/ordered_set.kl"
+#line 152 "../../src/ordered_set.kl"
     kl_t23 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t22, kl_n_15 );
-#line 153 "../../src/ordered_set.kl"
+#line 152 "../../src/ordered_set.kl"
     if ( kl_t23 ) goto bb6; else goto bb7;
     bb6:
     kl_t24 = &( *kl_this_1 );
-#line 155 "../../src/ordered_set.kl"
+#line 154 "../../src/ordered_set.kl"
     kl_t25 = &( *kl_this_1 ).kl_control_;
-#line 155 "../../src/ordered_set.kl"
+#line 154 "../../src/ordered_set.kl"
     kl_t26 = kl_2kl15ordered_control_insert_in_leaf__SQ2kl15ordered_control_3u64_3u64( kl_t25, kl_n_15, kl_j_18 );
-#line 155 "../../src/ordered_set.kl"
+#line 154 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run( kl_t24, kl_t26 );
     kl_t29 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_15, kl_j_18 );
-#line 156 "../../src/ordered_set.kl"
+#line 155 "../../src/ordered_set.kl"
     kl_slot_28 = kl_t29;
-#line 160 "../../src/ordered_set.kl"
+#line 159 "../../src/ordered_set.kl"
     kl_t30 = ( *kl_this_1 ).kl_keys_ + kl_slot_28;
-#line 160 "../../src/ordered_set.kl"
+#line 159 "../../src/ordered_set.kl"
     ( *kl_t30 ) = kl_key_2;
-#line 163 "../../src/ordered_set.kl"
+#line 162 "../../src/ordered_set.kl"
     kl_t0 = true;
-#line 163 "../../src/ordered_set.kl"
+#line 162 "../../src/ordered_set.kl"
     return kl_t0;
     bb7:
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t31 = &( *kl_this_1 ).kl_control_;
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t32 = &( *kl_this_1 ).kl_control_;
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t33 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t32, kl_n_15, kl_j_18 );
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t34 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t31, kl_t33 );
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t35 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     kl_t36 = kl_t34 == kl_t35;
-#line 166 "../../src/ordered_set.kl"
+#line 165 "../../src/ordered_set.kl"
     if ( kl_t36 ) goto bb8; else goto bb12;
     bb8:
     kl_t37 = &( *kl_this_1 );
-#line 168 "../../src/ordered_set.kl"
+#line 167 "../../src/ordered_set.kl"
     kl_t38 = &( *kl_this_1 ).kl_control_;
-#line 168 "../../src/ordered_set.kl"
+#line 167 "../../src/ordered_set.kl"
     kl_t39 = kl_2kl15ordered_control_split_child__SQ2kl15ordered_control_3u64_3u64( kl_t38, kl_n_15, kl_j_18 );
-#line 168 "../../src/ordered_set.kl"
+#line 167 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_apply__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl9key_moves( kl_t37, kl_t39 );
-#line 172 "../../src/ordered_set.kl"
+#line 171 "../../src/ordered_set.kl"
     kl_t41 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_15, kl_j_18 );
-#line 172 "../../src/ordered_set.kl"
+#line 171 "../../src/ordered_set.kl"
     kl_t42 = ( *kl_this_1 ).kl_keys_ + kl_t41;
-#line 172 "../../src/ordered_set.kl"
+#line 171 "../../src/ordered_set.kl"
     kl_t43 = ( *kl_t42 ) < kl_key_2;
-#line 172 "../../src/ordered_set.kl"
+#line 171 "../../src/ordered_set.kl"
     if ( kl_t43 ) goto bb9; else goto bb12;
     bb9:
     kl_t44 = __builtin_add_overflow( kl_j_18, 1, &( uint64_t ) { 0 } );
-#line 174 "../../src/ordered_set.kl"
+#line 173 "../../src/ordered_set.kl"
     if ( kl_t44 ) goto bb10; else goto bb11;
     bb10:
-#line 174 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 174, "arithmetic overflow: j++;" );
+#line 173 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 173, "arithmetic overflow: j++;" );
     bb11:
-#line 174 "../../src/ordered_set.kl"
+#line 173 "../../src/ordered_set.kl"
     kl_j_18 = kl_j_18 + 1;
-#line 172 "../../src/ordered_set.kl"
+#line 171 "../../src/ordered_set.kl"
     goto bb12;
     bb12:
-#line 179 "../../src/ordered_set.kl"
+#line 178 "../../src/ordered_set.kl"
     kl_t45 = &( *kl_this_1 ).kl_control_;
-#line 179 "../../src/ordered_set.kl"
+#line 178 "../../src/ordered_set.kl"
     kl_t46 = kl_2kl15ordered_control_descend_insert__SQ2kl15ordered_control_3u64_3u64( kl_t45, kl_n_15, kl_j_18 );
-#line 179 "../../src/ordered_set.kl"
+#line 178 "../../src/ordered_set.kl"
     kl_n_15 = kl_t46;
-#line 149 "../../src/ordered_set.kl"
+#line 148 "../../src/ordered_set.kl"
     goto bb5;
-#line 181 "../../src/ordered_set.kl"
+#line 180 "../../src/ordered_set.kl"
 }
 
 #line 9 "walk_bound/main.kl"
@@ -7751,72 +7757,435 @@ int32_t kl__sum__IQ2kl11ordered_setI3i32EE__Q2kl11ordered_setI3i32E( struct kl_2
     int32_t kl_t0;
     int32_t kl_total_2;
     struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_t3;
-    uint64_t kl_i_4;
-    uint64_t kl_t5;
-    struct kl_2kl15ordered_control_ordered_control* kl_t6;
-    uint64_t kl_t7;
-    bool kl_t8;
-    uint64_t kl_slot_9;
-    struct kl_2kl15ordered_control_ordered_control* kl_t10;
-    uint64_t kl_t11;
-    int32_t* kl_t12;
-    int32_t* kl_t13;
-    int32_t kl_v_14;
-    bool kl_t15;
+    struct kl_2kl15ordered_control_ordered_control* kl_t4;
+    bool kl_t5;
+    struct kl__A32_3u64 kl_path_6;
+    struct kl__A32_3u64 kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+    struct kl__A32_3u64 kl_done_10;
+    struct kl__A32_3u64 kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    uint64_t kl_depth_14;
+    uint64_t kl_n_15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    uint64_t kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    struct kl_2kl15ordered_control_ordered_control* kl_t21;
+    bool kl_t22;
+    uint64_t kl_j_23;
+    uint64_t kl_t24;
+    struct kl_2kl15ordered_control_ordered_control* kl_t25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    uint64_t kl_t28;
+    uint64_t kl_slot_29;
+    int32_t* kl_t30;
+    int32_t* kl_t31;
+    int32_t kl_v_32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    uint64_t kl_t38;
+    uint64_t kl_t39;
+    bool kl_t40;
+    struct kl_2kl15ordered_control_ordered_control* kl_t41;
+    bool kl_t42;
+    uint64_t kl_t43;
+    uint64_t kl_t44;
+    bool kl_t45;
+    uint64_t kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    bool kl_t49;
+    uint64_t kl_above_50;
+    bool kl_t51;
+    uint64_t kl_t52;
+    uint64_t kl_t53;
+    bool kl_t54;
+    uint64_t kl_j_55;
+    bool kl_t56;
+    uint64_t kl_t57;
+    uint64_t kl_t58;
+    bool kl_t59;
+    uint64_t kl_t60;
+    uint64_t kl_slot_61;
+    int32_t* kl_t62;
+    int32_t* kl_t63;
+    int32_t kl_v_64;
+    bool kl_t65;
+    bool kl_t66;
+    uint64_t kl_t67;
+    uint64_t kl_t68;
+    bool kl_t69;
+    bool kl_t70;
+    uint64_t kl_t71;
+    struct kl_2kl15ordered_control_ordered_control* kl_t72;
+    bool kl_t73;
+    uint64_t kl_t74;
+    uint64_t kl_t75;
+    struct kl_2kl15ordered_control_ordered_control* kl_t76;
+    uint64_t kl_t77;
 #line 11 "walk_bound/main.kl"
     kl_total_2 = 0;
 #line 13 "walk_bound/main.kl"
     kl_t3 = &( *kl_c_1 );
 #line 120 "../../src/ordered_set.kl"
-    kl_i_4 = 0;
-#line 120 "../../src/ordered_set.kl"
-    kl_t6 = &( *kl_t3 ).kl_control_;
-#line 120 "../../src/ordered_set.kl"
-    kl_t7 = kl_2kl15ordered_control_size__SQ2kl15ordered_control( kl_t6 );
-#line 120 "../../src/ordered_set.kl"
-    kl_t5 = kl_t7;
-#line 120 "../../src/ordered_set.kl"
-    goto bb1;
+    kl_t4 = &( *kl_t3 ).kl_control_;
+#line 308 "../../src/ordered_control.kl"
+    kl_t5 = ( *kl_t4 ).kl_root_ == kl_2kl15ordered_control_ORDERED_NO_NODE__G;
+#line 308 "../../src/ordered_control.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-#line 120 "../../src/ordered_set.kl"
-    kl_t8 = kl_i_4 < kl_t5;
-#line 120 "../../src/ordered_set.kl"
-    if ( kl_t8 ) goto bb2; else goto bb3;
-    bb2:
-    kl_t10 = &( *kl_t3 ).kl_control_;
-#line 122 "../../src/ordered_set.kl"
-    kl_t11 = kl_2kl15ordered_control_slot_at__SQ2kl15ordered_control_3u64( kl_t10, kl_i_4 );
-#line 122 "../../src/ordered_set.kl"
-    kl_slot_9 = kl_t11;
-#line 125 "../../src/ordered_set.kl"
-    kl_t12 = ( *kl_t3 ).kl_keys_ + kl_slot_9;
-#line 125 "../../src/ordered_set.kl"
-    kl_t13 = &( *kl_t12 );
-#line 125 "../../src/ordered_set.kl"
-    kl_v_14 = ( *kl_t13 );
-#line 15 "walk_bound/main.kl"
-    kl_t15 = __builtin_add_overflow( kl_total_2, kl_v_14, &( int32_t ) { 0 } );
-#line 15 "walk_bound/main.kl"
-    if ( kl_t15 ) goto bb4; else goto bb5;
-    bb3:
 #line 13 "walk_bound/main.kl"
-    goto bb8;
+    goto bb63;
+    bb2:
+#line 314 "../../src/ordered_control.kl"
+    kl_t8 = 0;
+#line 314 "../../src/ordered_control.kl"
+    goto bb3;
+    bb3:
+#line 314 "../../src/ordered_control.kl"
+    kl_t7.e[kl_t8] = 0;
+#line 314 "../../src/ordered_control.kl"
+    kl_t8 = kl_t8 + 1;
+#line 314 "../../src/ordered_control.kl"
+    kl_t9 = kl_t8 < 32;
+#line 314 "../../src/ordered_control.kl"
+    if ( kl_t9 ) goto bb3; else goto bb4;
     bb4:
-    kl_rt_panic( "walk_bound/main.kl", 15, "arithmetic overflow: total += v;" );
+#line 314 "../../src/ordered_control.kl"
+    kl_path_6 = kl_t7;
+    kl_t12 = 0;
+#line 315 "../../src/ordered_control.kl"
+    goto bb5;
     bb5:
-#line 15 "walk_bound/main.kl"
-    kl_total_2 = kl_total_2 + kl_v_14;
-#line 125 "../../src/ordered_set.kl"
-    goto bb6;
+#line 315 "../../src/ordered_control.kl"
+    kl_t11.e[kl_t12] = 0;
+#line 315 "../../src/ordered_control.kl"
+    kl_t12 = kl_t12 + 1;
+#line 315 "../../src/ordered_control.kl"
+    kl_t13 = kl_t12 < 32;
+#line 315 "../../src/ordered_control.kl"
+    if ( kl_t13 ) goto bb5; else goto bb6;
     bb6:
-#line 120 "../../src/ordered_set.kl"
+#line 315 "../../src/ordered_control.kl"
+    kl_done_10 = kl_t11;
+    kl_depth_14 = 0;
+    kl_n_15 = ( *kl_t4 ).kl_root_;
+#line 319 "../../src/ordered_control.kl"
     goto bb7;
     bb7:
-#line 120 "../../src/ordered_set.kl"
-    kl_i_4 = kl_i_4 + 1;
-#line 120 "../../src/ordered_set.kl"
-    goto bb1;
+    kl_t16 = kl_depth_14;
+#line 321 "../../src/ordered_control.kl"
+    kl_t17 = kl_t16 < 32;
+#line 321 "../../src/ordered_control.kl"
+    if ( kl_t17 ) goto bb8; else goto bb9;
     bb8:
+#line 321 "../../src/ordered_control.kl"
+    kl_path_6.e[kl_t16] = kl_n_15;
+    kl_t18 = kl_depth_14;
+#line 322 "../../src/ordered_control.kl"
+    kl_t19 = kl_t18 < 32;
+#line 322 "../../src/ordered_control.kl"
+    if ( kl_t19 ) goto bb10; else goto bb11;
+    bb9:
+#line 321 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 321, "out of bounds: path[depth]" );
+    bb10:
+#line 322 "../../src/ordered_control.kl"
+    kl_done_10.e[kl_t18] = 0;
+    kl_t20 = __builtin_add_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 323 "../../src/ordered_control.kl"
+    if ( kl_t20 ) goto bb12; else goto bb13;
+    bb11:
+#line 322 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 322, "out of bounds: done[depth]" );
+    bb12:
+#line 323 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 323, "arithmetic overflow: depth++;" );
+    bb13:
+#line 323 "../../src/ordered_control.kl"
+    kl_depth_14 = kl_depth_14 + 1;
+#line 325 "../../src/ordered_control.kl"
+    kl_t21 = &( *kl_t4 );
+#line 325 "../../src/ordered_control.kl"
+    kl_t22 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t21, kl_n_15 );
+#line 325 "../../src/ordered_control.kl"
+    if ( kl_t22 ) goto bb14; else goto bb15;
+    bb14:
+    kl_j_23 = 0;
+#line 327 "../../src/ordered_control.kl"
+    kl_t25 = &( *kl_t4 );
+#line 327 "../../src/ordered_control.kl"
+    kl_t26 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t25, kl_n_15 );
+#line 327 "../../src/ordered_control.kl"
+    kl_t24 = kl_t26;
+#line 327 "../../src/ordered_control.kl"
+    goto bb16;
+    bb15:
+#line 352 "../../src/ordered_control.kl"
+    kl_t76 = &( *kl_t4 );
+#line 352 "../../src/ordered_control.kl"
+    kl_t77 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t76, kl_n_15, 0 );
+#line 352 "../../src/ordered_control.kl"
+    kl_n_15 = kl_t77;
+#line 325 "../../src/ordered_control.kl"
+    goto bb7;
+    bb16:
+    kl_t27 = kl_j_23 < kl_t24;
+#line 327 "../../src/ordered_control.kl"
+    if ( kl_t27 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t28 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_15, kl_j_23 );
+#line 329 "../../src/ordered_control.kl"
+    kl_slot_29 = kl_t28;
+#line 124 "../../src/ordered_set.kl"
+    kl_t30 = ( *kl_t3 ).kl_keys_ + kl_slot_29;
+#line 124 "../../src/ordered_set.kl"
+    kl_t31 = &( *kl_t30 );
+#line 124 "../../src/ordered_set.kl"
+    kl_v_32 = ( *kl_t31 );
+#line 15 "walk_bound/main.kl"
+    kl_t33 = __builtin_add_overflow( kl_total_2, kl_v_32, &( int32_t ) { 0 } );
+#line 15 "walk_bound/main.kl"
+    if ( kl_t33 ) goto bb19; else goto bb20;
+    bb18:
+#line 333 "../../src/ordered_control.kl"
+    kl_t34 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 333 "../../src/ordered_control.kl"
+    if ( kl_t34 ) goto bb24; else goto bb25;
+    bb19:
+#line 15 "walk_bound/main.kl"
+    kl_rt_panic( "walk_bound/main.kl", 15, "arithmetic overflow: total += v;" );
+    bb20:
+#line 15 "walk_bound/main.kl"
+    kl_total_2 = kl_total_2 + kl_v_32;
+#line 124 "../../src/ordered_set.kl"
+    goto bb21;
+    bb21:
+#line 329 "../../src/ordered_control.kl"
+    goto bb22;
+    bb22:
+#line 327 "../../src/ordered_control.kl"
+    goto bb23;
+    bb23:
+#line 327 "../../src/ordered_control.kl"
+    kl_j_23 = kl_j_23 + 1;
+#line 327 "../../src/ordered_control.kl"
+    goto bb16;
+    bb24:
+#line 333 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 333, "arithmetic overflow: depth--;" );
+    bb25:
+#line 333 "../../src/ordered_control.kl"
+    kl_depth_14 = kl_depth_14 - 1;
+    goto bb26;
+    bb26:
+#line 334 "../../src/ordered_control.kl"
+    kl_t36 = kl_depth_14 > 0;
+#line 334 "../../src/ordered_control.kl"
+    kl_t35 = kl_t36;
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t35 ) goto bb28; else goto bb29;
+    bb27:
+    kl_t48 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 336 "../../src/ordered_control.kl"
+    if ( kl_t48 ) goto bb39; else goto bb40;
+    bb28:
+#line 334 "../../src/ordered_control.kl"
+    kl_t37 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t37 ) goto bb30; else goto bb31;
+    bb29:
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t35 ) goto bb27; else goto bb38;
+    bb30:
+#line 334 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 334, "arithmetic overflow: depth - 1" );
+    bb31:
+#line 334 "../../src/ordered_control.kl"
+    kl_t38 = kl_depth_14 - 1;
+#line 334 "../../src/ordered_control.kl"
+    kl_t39 = kl_t38;
+#line 334 "../../src/ordered_control.kl"
+    kl_t40 = kl_t39 < 32;
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t40 ) goto bb32; else goto bb33;
+    bb32:
+#line 334 "../../src/ordered_control.kl"
+    kl_t41 = &( *kl_t4 );
+#line 334 "../../src/ordered_control.kl"
+    kl_t42 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t42 ) goto bb34; else goto bb35;
+    bb33:
+#line 334 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 334, "out of bounds: done[depth - 1]" );
+    bb34:
+#line 334 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 334, "arithmetic overflow: depth - 1" );
+    bb35:
+#line 334 "../../src/ordered_control.kl"
+    kl_t43 = kl_depth_14 - 1;
+#line 334 "../../src/ordered_control.kl"
+    kl_t44 = kl_t43;
+#line 334 "../../src/ordered_control.kl"
+    kl_t45 = kl_t44 < 32;
+#line 334 "../../src/ordered_control.kl"
+    if ( kl_t45 ) goto bb36; else goto bb37;
+    bb36:
+#line 334 "../../src/ordered_control.kl"
+    kl_t46 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t41, kl_path_6.e[kl_t44] );
+#line 334 "../../src/ordered_control.kl"
+    kl_t47 = kl_done_10.e[kl_t39] == kl_t46;
+#line 334 "../../src/ordered_control.kl"
+    kl_t35 = kl_t47;
+#line 334 "../../src/ordered_control.kl"
+    goto bb29;
+    bb37:
+#line 334 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 334, "out of bounds: path[depth - 1]" );
+    bb38:
+#line 339 "../../src/ordered_control.kl"
+    kl_t49 = kl_depth_14 == 0;
+#line 339 "../../src/ordered_control.kl"
+    if ( kl_t49 ) goto bb41; else goto bb42;
+    bb39:
+#line 336 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 336, "arithmetic overflow: depth--;" );
+    bb40:
+#line 336 "../../src/ordered_control.kl"
+    kl_depth_14 = kl_depth_14 - 1;
+#line 334 "../../src/ordered_control.kl"
+    goto bb26;
+    bb41:
+#line 341 "../../src/ordered_control.kl"
+    goto bb1;
+    bb42:
+#line 344 "../../src/ordered_control.kl"
+    kl_t51 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 344 "../../src/ordered_control.kl"
+    if ( kl_t51 ) goto bb43; else goto bb44;
+    bb43:
+#line 344 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 344, "arithmetic overflow: depth - 1" );
+    bb44:
+#line 344 "../../src/ordered_control.kl"
+    kl_t52 = kl_depth_14 - 1;
+#line 344 "../../src/ordered_control.kl"
+    kl_t53 = kl_t52;
+#line 344 "../../src/ordered_control.kl"
+    kl_t54 = kl_t53 < 32;
+#line 344 "../../src/ordered_control.kl"
+    if ( kl_t54 ) goto bb45; else goto bb46;
+    bb45:
+#line 344 "../../src/ordered_control.kl"
+    kl_above_50 = kl_path_6.e[kl_t53];
+    kl_t56 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 345 "../../src/ordered_control.kl"
+    if ( kl_t56 ) goto bb47; else goto bb48;
+    bb46:
+#line 344 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 344, "out of bounds: path[depth - 1]" );
+    bb47:
+#line 345 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 345, "arithmetic overflow: depth - 1" );
+    bb48:
+#line 345 "../../src/ordered_control.kl"
+    kl_t57 = kl_depth_14 - 1;
+#line 345 "../../src/ordered_control.kl"
+    kl_t58 = kl_t57;
+#line 345 "../../src/ordered_control.kl"
+    kl_t59 = kl_t58 < 32;
+#line 345 "../../src/ordered_control.kl"
+    if ( kl_t59 ) goto bb49; else goto bb50;
+    bb49:
+#line 345 "../../src/ordered_control.kl"
+    kl_j_55 = kl_done_10.e[kl_t58];
+    kl_t60 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_above_50, kl_j_55 );
+#line 346 "../../src/ordered_control.kl"
+    kl_slot_61 = kl_t60;
+#line 124 "../../src/ordered_set.kl"
+    kl_t62 = ( *kl_t3 ).kl_keys_ + kl_slot_61;
+#line 124 "../../src/ordered_set.kl"
+    kl_t63 = &( *kl_t62 );
+#line 124 "../../src/ordered_set.kl"
+    kl_v_64 = ( *kl_t63 );
+#line 15 "walk_bound/main.kl"
+    kl_t65 = __builtin_add_overflow( kl_total_2, kl_v_64, &( int32_t ) { 0 } );
+#line 15 "walk_bound/main.kl"
+    if ( kl_t65 ) goto bb51; else goto bb52;
+    bb50:
+#line 345 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 345, "out of bounds: done[depth - 1]" );
+    bb51:
+#line 15 "walk_bound/main.kl"
+    kl_rt_panic( "walk_bound/main.kl", 15, "arithmetic overflow: total += v;" );
+    bb52:
+#line 15 "walk_bound/main.kl"
+    kl_total_2 = kl_total_2 + kl_v_64;
+#line 124 "../../src/ordered_set.kl"
+    goto bb53;
+    bb53:
+#line 346 "../../src/ordered_control.kl"
+    goto bb54;
+    bb54:
+#line 347 "../../src/ordered_control.kl"
+    kl_t66 = __builtin_sub_overflow( kl_depth_14, 1, &( uint64_t ) { 0 } );
+#line 347 "../../src/ordered_control.kl"
+    if ( kl_t66 ) goto bb55; else goto bb56;
+    bb55:
+#line 347 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 347, "arithmetic overflow: depth - 1" );
+    bb56:
+#line 347 "../../src/ordered_control.kl"
+    kl_t67 = kl_depth_14 - 1;
+#line 347 "../../src/ordered_control.kl"
+    kl_t68 = kl_t67;
+#line 347 "../../src/ordered_control.kl"
+    kl_t69 = kl_t68 < 32;
+#line 347 "../../src/ordered_control.kl"
+    if ( kl_t69 ) goto bb57; else goto bb58;
+    bb57:
+#line 347 "../../src/ordered_control.kl"
+    kl_t70 = __builtin_add_overflow( kl_j_55, 1, &( uint64_t ) { 0 } );
+#line 347 "../../src/ordered_control.kl"
+    if ( kl_t70 ) goto bb59; else goto bb60;
+    bb58:
+#line 347 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 347, "out of bounds: done[depth - 1]" );
+    bb59:
+#line 347 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 347, "arithmetic overflow: j + 1" );
+    bb60:
+#line 347 "../../src/ordered_control.kl"
+    kl_t71 = kl_j_55 + 1;
+#line 347 "../../src/ordered_control.kl"
+    kl_done_10.e[kl_t68] = kl_t71;
+    kl_t72 = &( *kl_t4 );
+#line 348 "../../src/ordered_control.kl"
+    kl_t73 = __builtin_add_overflow( kl_j_55, 1, &( uint64_t ) { 0 } );
+#line 348 "../../src/ordered_control.kl"
+    if ( kl_t73 ) goto bb61; else goto bb62;
+    bb61:
+#line 348 "../../src/ordered_control.kl"
+    kl_rt_panic( "../../src/ordered_control.kl", 348, "arithmetic overflow: j + 1" );
+    bb62:
+#line 348 "../../src/ordered_control.kl"
+    kl_t74 = kl_j_55 + 1;
+#line 348 "../../src/ordered_control.kl"
+    kl_t75 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t72, kl_above_50, kl_t74 );
+#line 348 "../../src/ordered_control.kl"
+    kl_n_15 = kl_t75;
+#line 325 "../../src/ordered_control.kl"
+    goto bb7;
+    bb63:
 #line 18 "walk_bound/main.kl"
     kl_t0 = kl_total_2;
 #line 18 "walk_bound/main.kl"
@@ -8215,7 +8584,7 @@ void kl_2kl3set_resize__I3i32E__SQ2kl3setI3i32E_3u64( struct kl_2kl3set_set__I3i
 #line 251 "../../src/set.kl"
 }
 
-#line 275 "../../src/ordered_set.kl"
+#line 274 "../../src/ordered_set.kl"
 uint64_t kl_2kl11ordered_set_slot_of__I3i32E__SQ2kl11ordered_setI3i32E_3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, int32_t* kl_key_2 )
 {
     uint64_t kl_t0;
@@ -8237,73 +8606,73 @@ uint64_t kl_2kl11ordered_set_slot_of__I3i32E__SQ2kl11ordered_setI3i32E_3i32( str
     bool kl_t18;
     struct kl_2kl15ordered_control_ordered_control* kl_t19;
     uint64_t kl_t20;
-#line 277 "../../src/ordered_set.kl"
+#line 276 "../../src/ordered_set.kl"
     kl_t3 = &( *kl_this_1 ).kl_control_;
-#line 277 "../../src/ordered_set.kl"
+#line 276 "../../src/ordered_set.kl"
     kl_t4 = kl_2kl15ordered_control_size__SQ2kl15ordered_control( kl_t3 );
-#line 277 "../../src/ordered_set.kl"
+#line 276 "../../src/ordered_set.kl"
     kl_t5 = kl_t4 == 0;
-#line 277 "../../src/ordered_set.kl"
+#line 276 "../../src/ordered_set.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 279 "../../src/ordered_set.kl"
+#line 278 "../../src/ordered_set.kl"
     return kl_t0;
     bb2:
-#line 282 "../../src/ordered_set.kl"
+#line 281 "../../src/ordered_set.kl"
     kl_t7 = &( *kl_this_1 ).kl_control_;
-#line 282 "../../src/ordered_set.kl"
+#line 281 "../../src/ordered_set.kl"
     kl_t8 = kl_2kl15ordered_control_root__SQ2kl15ordered_control( kl_t7 );
-#line 282 "../../src/ordered_set.kl"
+#line 281 "../../src/ordered_set.kl"
     kl_n_6 = kl_t8;
-#line 284 "../../src/ordered_set.kl"
+#line 283 "../../src/ordered_set.kl"
     goto bb3;
     bb3:
     kl_t10 = &( *kl_this_1 );
-#line 286 "../../src/ordered_set.kl"
+#line 285 "../../src/ordered_set.kl"
     kl_t11 = &( *kl_key_2 );
-#line 286 "../../src/ordered_set.kl"
+#line 285 "../../src/ordered_set.kl"
     kl_t12 = kl_2kl11ordered_set_position__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3i32( kl_t10, kl_n_6, kl_t11 );
-#line 286 "../../src/ordered_set.kl"
+#line 285 "../../src/ordered_set.kl"
     kl_j_9 = kl_t12;
-#line 288 "../../src/ordered_set.kl"
+#line 287 "../../src/ordered_set.kl"
     kl_t13 = &( *kl_this_1 );
-#line 288 "../../src/ordered_set.kl"
+#line 287 "../../src/ordered_set.kl"
     kl_t14 = &( *kl_key_2 );
-#line 288 "../../src/ordered_set.kl"
+#line 287 "../../src/ordered_set.kl"
     kl_t15 = kl_2kl11ordered_set_holds_at__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3u64_3i32( kl_t13, kl_n_6, kl_j_9, kl_t14 );
-#line 288 "../../src/ordered_set.kl"
+#line 287 "../../src/ordered_set.kl"
     if ( kl_t15 ) goto bb4; else goto bb5;
     bb4:
     kl_t16 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_6, kl_j_9 );
-#line 290 "../../src/ordered_set.kl"
+#line 289 "../../src/ordered_set.kl"
     kl_t0 = kl_t16;
-#line 290 "../../src/ordered_set.kl"
+#line 289 "../../src/ordered_set.kl"
     return kl_t0;
     bb5:
-#line 293 "../../src/ordered_set.kl"
+#line 292 "../../src/ordered_set.kl"
     kl_t17 = &( *kl_this_1 ).kl_control_;
-#line 293 "../../src/ordered_set.kl"
+#line 292 "../../src/ordered_set.kl"
     kl_t18 = kl_2kl15ordered_control_is_leaf__SQ2kl15ordered_control_3u64( kl_t17, kl_n_6 );
-#line 293 "../../src/ordered_set.kl"
+#line 292 "../../src/ordered_set.kl"
     if ( kl_t18 ) goto bb6; else goto bb7;
     bb6:
     kl_t0 = kl_2kl15ordered_control_ORDERED_NO_NODE__G;
-#line 295 "../../src/ordered_set.kl"
+#line 294 "../../src/ordered_set.kl"
     return kl_t0;
     bb7:
-#line 298 "../../src/ordered_set.kl"
+#line 297 "../../src/ordered_set.kl"
     kl_t19 = &( *kl_this_1 ).kl_control_;
-#line 298 "../../src/ordered_set.kl"
+#line 297 "../../src/ordered_set.kl"
     kl_t20 = kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( kl_t19, kl_n_6, kl_j_9 );
-#line 298 "../../src/ordered_set.kl"
+#line 297 "../../src/ordered_set.kl"
     kl_n_6 = kl_t20;
-#line 284 "../../src/ordered_set.kl"
+#line 283 "../../src/ordered_set.kl"
     goto bb3;
-#line 300 "../../src/ordered_set.kl"
+#line 299 "../../src/ordered_set.kl"
 }
 
-#line 374 "../../src/ordered_set.kl"
+#line 373 "../../src/ordered_set.kl"
 void kl_2kl11ordered_set_grow__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1 )
 {
     uint64_t kl_nodes_2;
@@ -8334,145 +8703,145 @@ void kl_2kl11ordered_set_grow__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl11
     int32_t* kl_t27;
     bool kl_t28;
     struct kl_2kl15ordered_control_ordered_control* kl_t30;
-#line 376 "../../src/ordered_set.kl"
+#line 375 "../../src/ordered_set.kl"
     kl_t3 = &( *kl_this_1 ).kl_control_;
-#line 376 "../../src/ordered_set.kl"
+#line 375 "../../src/ordered_set.kl"
     kl_t4 = kl_2kl15ordered_control_grown_nodes__SQ2kl15ordered_control( kl_t3 );
-#line 376 "../../src/ordered_set.kl"
+#line 375 "../../src/ordered_set.kl"
     kl_nodes_2 = kl_t4;
-#line 381 "../../src/ordered_set.kl"
+#line 380 "../../src/ordered_set.kl"
     kl_t6 = ( uint64_t ) kl_2kl15ordered_control_ORDERED_KEYS__G;
-#line 381 "../../src/ordered_set.kl"
+#line 380 "../../src/ordered_set.kl"
     kl_t7 = __builtin_mul_overflow( kl_nodes_2, kl_t6, &( uint64_t ) { 0 } );
-#line 381 "../../src/ordered_set.kl"
+#line 380 "../../src/ordered_set.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
-#line 381 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 381, "arithmetic overflow: nodes * ORDERED_KEYS" );
+#line 380 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 380, "arithmetic overflow: nodes * ORDERED_KEYS" );
     bb2:
-#line 381 "../../src/ordered_set.kl"
+#line 380 "../../src/ordered_set.kl"
     kl_t8 = kl_nodes_2 * kl_t6;
-#line 381 "../../src/ordered_set.kl"
-    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, sizeof( int32_t ), "../../src/ordered_set.kl", 381, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
-#line 381 "../../src/ordered_set.kl"
+#line 380 "../../src/ordered_set.kl"
+    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, sizeof( int32_t ), "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
+#line 380 "../../src/ordered_set.kl"
     kl_keys_5 = kl_t9;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_n_10 = 0;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_t12 = &( *kl_this_1 ).kl_control_;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_t13 = kl_2kl15ordered_control_used__SQ2kl15ordered_control( kl_t12 );
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_t11 = kl_t13;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     goto bb3;
     bb3:
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_t14 = kl_n_10 < kl_t11;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     if ( kl_t14 ) goto bb4; else goto bb5;
     bb4:
     kl_t16 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_10, 0 );
-#line 386 "../../src/ordered_set.kl"
+#line 385 "../../src/ordered_set.kl"
     kl_first_15 = kl_t16;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_j_17 = 0;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_t19 = &( *kl_this_1 ).kl_control_;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_t20 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t19, kl_n_10 );
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_t18 = kl_t20;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     goto bb6;
     bb5:
-#line 397 "../../src/ordered_set.kl"
+#line 396 "../../src/ordered_set.kl"
     kl_t28 = ( *kl_this_1 ).kl_keys_ != NULL;
-#line 397 "../../src/ordered_set.kl"
+#line 396 "../../src/ordered_set.kl"
     if ( kl_t28 ) goto bb15; else goto bb16;
     bb6:
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_t21 = kl_j_17 < kl_t18;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     if ( kl_t21 ) goto bb7; else goto bb8;
     bb7:
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t22 = __builtin_add_overflow( kl_first_15, kl_j_17, &( uint64_t ) { 0 } );
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     if ( kl_t22 ) goto bb9; else goto bb10;
     bb8:
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     goto bb14;
     bb9:
-#line 392 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 392, "arithmetic overflow: first + j" );
+#line 391 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 391, "arithmetic overflow: first + j" );
     bb10:
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t23 = kl_first_15 + kl_j_17;
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t24 = kl_keys_5 + kl_t23;
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t25 = __builtin_add_overflow( kl_first_15, kl_j_17, &( uint64_t ) { 0 } );
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     if ( kl_t25 ) goto bb11; else goto bb12;
     bb11:
-#line 392 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 392, "arithmetic overflow: first + j" );
+#line 391 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 391, "arithmetic overflow: first + j" );
     bb12:
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t26 = kl_first_15 + kl_j_17;
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     kl_t27 = ( *kl_this_1 ).kl_keys_ + kl_t26;
-#line 392 "../../src/ordered_set.kl"
+#line 391 "../../src/ordered_set.kl"
     ( *kl_t24 ) = ( *kl_t27 );
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     goto bb13;
     bb13:
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     kl_j_17 = kl_j_17 + 1;
-#line 388 "../../src/ordered_set.kl"
+#line 387 "../../src/ordered_set.kl"
     goto bb6;
     bb14:
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     kl_n_10 = kl_n_10 + 1;
-#line 384 "../../src/ordered_set.kl"
+#line 383 "../../src/ordered_set.kl"
     goto bb3;
     bb15:
-#line 401 "../../src/ordered_set.kl"
+#line 400 "../../src/ordered_set.kl"
     kl_rt_free( ( *kl_this_1 ).kl_keys_ );
-#line 397 "../../src/ordered_set.kl"
+#line 396 "../../src/ordered_set.kl"
     goto bb16;
     bb16:
-#line 405 "../../src/ordered_set.kl"
+#line 404 "../../src/ordered_set.kl"
     ( *kl_this_1 ).kl_keys_ = kl_keys_5;
     kl_t30 = &( *kl_this_1 ).kl_control_;
-#line 406 "../../src/ordered_set.kl"
+#line 405 "../../src/ordered_set.kl"
     kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( kl_t30, kl_nodes_2 );
     return;
-#line 407 "../../src/ordered_set.kl"
+#line 406 "../../src/ordered_set.kl"
 }
 
-#line 344 "../../src/ordered_set.kl"
+#line 343 "../../src/ordered_set.kl"
 void kl_2kl11ordered_set_apply__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl9key_moves( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, struct kl_2kl15ordered_control_key_moves kl_moves_2 )
 {
     struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_t3;
     struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_t5;
     struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_t7;
-#line 346 "../../src/ordered_set.kl"
+#line 345 "../../src/ordered_set.kl"
     kl_t3 = &( *kl_this_1 );
-#line 346 "../../src/ordered_set.kl"
+#line 345 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run( kl_t3, kl_moves_2.kl_first );
     kl_t5 = &( *kl_this_1 );
-#line 347 "../../src/ordered_set.kl"
+#line 346 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run( kl_t5, kl_moves_2.kl_second );
     kl_t7 = &( *kl_this_1 );
-#line 348 "../../src/ordered_set.kl"
+#line 347 "../../src/ordered_set.kl"
     kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run( kl_t7, kl_moves_2.kl_third );
     return;
-#line 349 "../../src/ordered_set.kl"
+#line 348 "../../src/ordered_set.kl"
 }
 
-#line 243 "../../src/ordered_set.kl"
+#line 242 "../../src/ordered_set.kl"
 uint64_t kl_2kl11ordered_set_position__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, uint64_t kl_node_2, int32_t* kl_key_3 )
 {
     uint64_t kl_t0;
@@ -8490,66 +8859,66 @@ uint64_t kl_2kl11ordered_set_position__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3i3
     bool kl_t15;
     struct kl_2kl15ordered_control_ordered_control* kl_t16;
     uint64_t kl_t17;
-#line 245 "../../src/ordered_set.kl"
+#line 244 "../../src/ordered_set.kl"
     kl_t5 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, 0 );
-#line 245 "../../src/ordered_set.kl"
+#line 244 "../../src/ordered_set.kl"
     kl_first_4 = kl_t5;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_j_6 = 0;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_t8 = &( *kl_this_1 ).kl_control_;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_t9 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t8, kl_node_2 );
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_t7 = kl_t9;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     goto bb1;
     bb1:
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_t10 = kl_j_6 < kl_t7;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     if ( kl_t10 ) goto bb2; else goto bb3;
     bb2:
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     kl_t11 = __builtin_add_overflow( kl_first_4, kl_j_6, &( uint64_t ) { 0 } );
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     if ( kl_t11 ) goto bb4; else goto bb5;
     bb3:
-#line 258 "../../src/ordered_set.kl"
+#line 257 "../../src/ordered_set.kl"
     kl_t16 = &( *kl_this_1 ).kl_control_;
-#line 258 "../../src/ordered_set.kl"
+#line 257 "../../src/ordered_set.kl"
     kl_t17 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t16, kl_node_2 );
-#line 258 "../../src/ordered_set.kl"
+#line 257 "../../src/ordered_set.kl"
     kl_t0 = kl_t17;
-#line 258 "../../src/ordered_set.kl"
+#line 257 "../../src/ordered_set.kl"
     return kl_t0;
     bb4:
-#line 251 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 251, "arithmetic overflow: first + j" );
+#line 250 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 250, "arithmetic overflow: first + j" );
     bb5:
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     kl_t12 = kl_first_4 + kl_j_6;
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     kl_t13 = ( *kl_this_1 ).kl_keys_ + kl_t12;
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     kl_t14 = ( *kl_t13 ) < ( *kl_key_3 );
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     kl_t15 = !kl_t14;
-#line 251 "../../src/ordered_set.kl"
+#line 250 "../../src/ordered_set.kl"
     if ( kl_t15 ) goto bb6; else goto bb7;
     bb6:
     kl_t0 = kl_j_6;
-#line 253 "../../src/ordered_set.kl"
+#line 252 "../../src/ordered_set.kl"
     return kl_t0;
     bb7:
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     kl_j_6 = kl_j_6 + 1;
-#line 247 "../../src/ordered_set.kl"
+#line 246 "../../src/ordered_set.kl"
     goto bb1;
-#line 259 "../../src/ordered_set.kl"
+#line 258 "../../src/ordered_set.kl"
 }
 
-#line 352 "../../src/ordered_set.kl"
+#line 351 "../../src/ordered_set.kl"
 void kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, struct kl_2kl15ordered_control_key_run kl_run_2 )
 {
     bool kl_t3;
@@ -8575,135 +8944,135 @@ void kl_2kl11ordered_set_move_run__I3i32E__SQ2kl11ordered_setI3i32E_Q2kl7key_run
     uint64_t kl_t23;
     int32_t* kl_t24;
     bool kl_t25;
-#line 356 "../../src/ordered_set.kl"
+#line 355 "../../src/ordered_set.kl"
     kl_t3 = kl_run_2.kl_to < kl_run_2.kl_from;
-#line 356 "../../src/ordered_set.kl"
+#line 355 "../../src/ordered_set.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_i_4 = 0;
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     kl_t5 = kl_run_2.kl_count;
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     goto bb3;
     bb2:
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     kl_i_13 = kl_run_2.kl_count;
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     goto bb12;
     bb3:
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     kl_t6 = kl_i_4 < kl_t5;
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
     kl_t7 = __builtin_add_overflow( kl_run_2.kl_to, kl_i_4, &( uint64_t ) { 0 } );
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     if ( kl_t7 ) goto bb6; else goto bb7;
     bb5:
-#line 356 "../../src/ordered_set.kl"
+#line 355 "../../src/ordered_set.kl"
     goto bb11;
     bb6:
-#line 360 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 360, "arithmetic overflow: run.to + i" );
+#line 359 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 359, "arithmetic overflow: run.to + i" );
     bb7:
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     kl_t8 = kl_run_2.kl_to + kl_i_4;
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     kl_t9 = ( *kl_this_1 ).kl_keys_ + kl_t8;
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     kl_t10 = __builtin_add_overflow( kl_run_2.kl_from, kl_i_4, &( uint64_t ) { 0 } );
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     if ( kl_t10 ) goto bb8; else goto bb9;
     bb8:
-#line 360 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 360, "arithmetic overflow: run.from + i" );
+#line 359 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 359, "arithmetic overflow: run.from + i" );
     bb9:
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     kl_t11 = kl_run_2.kl_from + kl_i_4;
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     kl_t12 = ( *kl_this_1 ).kl_keys_ + kl_t11;
-#line 360 "../../src/ordered_set.kl"
+#line 359 "../../src/ordered_set.kl"
     ( *kl_t9 ) = ( *kl_t12 );
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     goto bb10;
     bb10:
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     kl_i_4 = kl_i_4 + 1;
-#line 358 "../../src/ordered_set.kl"
+#line 357 "../../src/ordered_set.kl"
     goto bb3;
     bb11:
-#line 371 "../../src/ordered_set.kl"
+#line 370 "../../src/ordered_set.kl"
     return;
     bb12:
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     kl_t14 = kl_i_13 > 0;
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     if ( kl_t14 ) goto bb13; else goto bb14;
     bb13:
     kl_t15 = __builtin_add_overflow( kl_run_2.kl_to, kl_i_13, &( uint64_t ) { 0 } );
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     if ( kl_t15 ) goto bb15; else goto bb16;
     bb14:
-#line 356 "../../src/ordered_set.kl"
+#line 355 "../../src/ordered_set.kl"
     goto bb11;
     bb15:
-#line 367 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 367, "arithmetic overflow: run.to + i" );
+#line 366 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 366, "arithmetic overflow: run.to + i" );
     bb16:
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t16 = kl_run_2.kl_to + kl_i_13;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t17 = __builtin_sub_overflow( kl_t16, 1, &( uint64_t ) { 0 } );
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     if ( kl_t17 ) goto bb17; else goto bb18;
     bb17:
-#line 367 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 367, "arithmetic overflow: run.to + i - 1" );
+#line 366 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 366, "arithmetic overflow: run.to + i - 1" );
     bb18:
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t18 = kl_t16 - 1;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t19 = ( *kl_this_1 ).kl_keys_ + kl_t18;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t20 = __builtin_add_overflow( kl_run_2.kl_from, kl_i_13, &( uint64_t ) { 0 } );
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     if ( kl_t20 ) goto bb19; else goto bb20;
     bb19:
-#line 367 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 367, "arithmetic overflow: run.from + i" );
+#line 366 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 366, "arithmetic overflow: run.from + i" );
     bb20:
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t21 = kl_run_2.kl_from + kl_i_13;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t22 = __builtin_sub_overflow( kl_t21, 1, &( uint64_t ) { 0 } );
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     if ( kl_t22 ) goto bb21; else goto bb22;
     bb21:
-#line 367 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 367, "arithmetic overflow: run.from + i - 1" );
+#line 366 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 366, "arithmetic overflow: run.from + i - 1" );
     bb22:
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t23 = kl_t21 - 1;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     kl_t24 = ( *kl_this_1 ).kl_keys_ + kl_t23;
-#line 367 "../../src/ordered_set.kl"
+#line 366 "../../src/ordered_set.kl"
     ( *kl_t19 ) = ( *kl_t24 );
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     goto bb23;
     bb23:
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     kl_t25 = __builtin_sub_overflow( kl_i_13, 1, &( uint64_t ) { 0 } );
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     if ( kl_t25 ) goto bb24; else goto bb25;
     bb24:
-#line 365 "../../src/ordered_set.kl"
-    kl_rt_panic( "../../src/ordered_set.kl", 365, "arithmetic overflow: i--" );
+#line 364 "../../src/ordered_set.kl"
+    kl_rt_panic( "../../src/ordered_set.kl", 364, "arithmetic overflow: i--" );
     bb25:
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     kl_i_13 = kl_i_13 - 1;
-#line 365 "../../src/ordered_set.kl"
+#line 364 "../../src/ordered_set.kl"
     goto bb12;
-#line 371 "../../src/ordered_set.kl"
+#line 370 "../../src/ordered_set.kl"
 }
 
 #line 253 "../../src/set.kl"
@@ -8803,7 +9172,7 @@ int32_t* kl_2kl3set_key_at__I3i32E__SQ2kl3setI3i32E_3u64( struct kl_2kl3set_set_
 #line 100 "../../src/set.kl"
 }
 
-#line 409 "../../src/ordered_set.kl"
+#line 408 "../../src/ordered_set.kl"
 void kl_2kl11ordered_set_drop_all__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1 )
 {
     uint64_t kl_n_2;
@@ -8817,41 +9186,41 @@ void kl_2kl11ordered_set_drop_all__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2
     uint64_t kl_t10;
     ( void ) kl_t8;
     ( void ) kl_t10;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_n_2 = 0;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_t4 = &( *kl_this_1 ).kl_control_;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_t5 = kl_2kl15ordered_control_used__SQ2kl15ordered_control( kl_t4 );
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_t3 = kl_t5;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     goto bb1;
     bb1:
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_t6 = kl_n_2 < kl_t3;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 415 "../../src/ordered_set.kl"
+#line 414 "../../src/ordered_set.kl"
     kl_t7 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_n_2, 0 );
-#line 415 "../../src/ordered_set.kl"
+#line 414 "../../src/ordered_set.kl"
     kl_t8 = ( *kl_this_1 ).kl_keys_ + kl_t7;
-#line 415 "../../src/ordered_set.kl"
+#line 414 "../../src/ordered_set.kl"
     kl_t9 = &( *kl_this_1 ).kl_control_;
-#line 415 "../../src/ordered_set.kl"
+#line 414 "../../src/ordered_set.kl"
     kl_t10 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t9, kl_n_2 );
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     goto bb4;
     bb3:
-#line 418 "../../src/ordered_set.kl"
+#line 417 "../../src/ordered_set.kl"
     return;
     bb4:
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     kl_n_2 = kl_n_2 + 1;
-#line 411 "../../src/ordered_set.kl"
+#line 410 "../../src/ordered_set.kl"
     goto bb1;
-#line 418 "../../src/ordered_set.kl"
+#line 417 "../../src/ordered_set.kl"
 }
 
 #line 444 "../../src/list.kl"
@@ -8916,7 +9285,7 @@ void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_l
 #line 471 "../../src/list.kl"
 }
 
-#line 261 "../../src/ordered_set.kl"
+#line 260 "../../src/ordered_set.kl"
 bool kl_2kl11ordered_set_holds_at__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3u64_3i32( struct kl_2kl11ordered_set_ordered_set__I3i32E* kl_this_1, uint64_t kl_node_2, uint64_t kl_j_3, int32_t* kl_key_4 )
 {
     bool kl_t0;
@@ -8926,30 +9295,30 @@ bool kl_2kl11ordered_set_holds_at__I3i32E__SQ2kl11ordered_setI3i32E_3u64_3u64_3i
     uint64_t kl_t8;
     int32_t* kl_t9;
     bool kl_t10;
-#line 263 "../../src/ordered_set.kl"
+#line 262 "../../src/ordered_set.kl"
     kl_t5 = &( *kl_this_1 ).kl_control_;
-#line 263 "../../src/ordered_set.kl"
+#line 262 "../../src/ordered_set.kl"
     kl_t6 = kl_2kl15ordered_control_count__SQ2kl15ordered_control_3u64( kl_t5, kl_node_2 );
-#line 263 "../../src/ordered_set.kl"
+#line 262 "../../src/ordered_set.kl"
     kl_t7 = kl_j_3 >= kl_t6;
-#line 263 "../../src/ordered_set.kl"
+#line 262 "../../src/ordered_set.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = false;
-#line 265 "../../src/ordered_set.kl"
+#line 264 "../../src/ordered_set.kl"
     return kl_t0;
     bb2:
-#line 270 "../../src/ordered_set.kl"
+#line 269 "../../src/ordered_set.kl"
     kl_t8 = kl_2kl15ordered_control_key_slot__SQ2kl15ordered_control_3u64_3u64( kl_node_2, kl_j_3 );
-#line 270 "../../src/ordered_set.kl"
+#line 269 "../../src/ordered_set.kl"
     kl_t9 = ( *kl_this_1 ).kl_keys_ + kl_t8;
-#line 270 "../../src/ordered_set.kl"
+#line 269 "../../src/ordered_set.kl"
     kl_t10 = ( *kl_t9 ) == ( *kl_key_4 );
-#line 270 "../../src/ordered_set.kl"
+#line 269 "../../src/ordered_set.kl"
     kl_t0 = kl_t10;
-#line 270 "../../src/ordered_set.kl"
+#line 269 "../../src/ordered_set.kl"
     return kl_t0;
-#line 272 "../../src/ordered_set.kl"
+#line 271 "../../src/ordered_set.kl"
 }
 
 #line 33 "walk_bound/main.kl"

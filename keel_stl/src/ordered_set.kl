@@ -117,9 +117,8 @@ class ordered_set<K> implements iterable<K> where K : comparable
     /// Each key from the smallest: `for( const ref K k : s )`. The body may not change the set.
     public void operator:( const ref K key ) const
     {
-        for( u64 i : 0..control_.size() )
+        for( u64 slot : control_ )
         {
-            const u64 slot = control_.slot_at( i );
             unsafe
             {
                 yield( keys_[slot] );
