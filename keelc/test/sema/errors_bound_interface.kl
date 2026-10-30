@@ -1,0 +1,39 @@
+// A `T` reaches only the interfaces its `where` clause promises, and a `const T*` only a `const`
+// interface pointer. Each mistake is reported once, where it was made.
+interface Shape
+{
+    f64 area() const;
+};
+
+interface Named
+{
+    u64 id() const;
+};
+
+f64 by_ref( const ref Shape s ) { return s.area(); }
+f64 by_pointer( Shape* s ) { return s.area(); }
+f64 by_box( move box<Shape> s ) { return s.get().area(); }
+
+void unbounded<T>( const ref T x, move box<T> b )
+{
+    by_ref( x );
+    by_box( move b );
+}
+
+void other<T>( const ref T x )
+    where T : Named
+{
+    by_ref( x );
+    const ref Shape s = x;
+}
+
+void constant<T>( const T* p )
+    where T : Shape
+{
+    by_pointer( p );
+}
+
+i32 main()
+{
+    return 0;
+}

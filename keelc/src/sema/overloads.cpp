@@ -323,7 +323,7 @@ bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
 
     return ( ( mode == Keyword::Count || mode == Keyword::Move ) && numeric( from ) && numeric( to ) &&
              types_.conformances().holds( table_, from, to ) ) ||
-           ( table_.is_interface( to ) && types_.conformances().holds( table_, from, to ) );
+           ( table_.is_interface( to ) && bounds_.reaches( from, to ) );
 }
 
 // How far `from` travels to reach `to`; smaller is closer, and 0 is exact or not a number.
@@ -866,7 +866,7 @@ std::vector<Argument_work> Overloads::check_call_arguments(
         {
             work.push_back( { arguments[i], expected, true } );
         }
-        else if( !table_.is_error( shapes[i].type ) && !types_.conformances().holds( table_, shapes[i].type, expected ) )
+        else if( !table_.is_error( shapes[i].type ) && !bounds_.reaches( shapes[i].type, expected ) )
         {
             reporter_.error_at(
                 ast_.span( arguments[i] ),

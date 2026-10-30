@@ -1,0 +1,31 @@
+error: expected `Shape`, but got `T`
+  --> sema/errors_bound_interface.kl:19:13
+   |
+19 |     by_ref( x );
+   |             ^
+
+error: expected `box<Shape>`, but got `box<T>`
+  --> sema/errors_bound_interface.kl:20:13
+   |
+20 |     by_box( move b );
+   |             ^^^^^^
+
+error: expected `Shape`, but got `T`
+  --> sema/errors_bound_interface.kl:26:13
+   |
+26 |     by_ref( x );
+   |             ^
+
+error: expected `Shape`, but got `T`
+  --> sema/errors_bound_interface.kl:27:25
+   |
+27 |     const ref Shape s = x;
+   |                         ^
+
+error: expected `Shape*`, but got `const T*`
+  --> sema/errors_bound_interface.kl:33:17
+   |
+33 |     by_pointer( p );
+   |                 ^ a pointer to `const` never converts back to one that writes
+
+5 errors generated

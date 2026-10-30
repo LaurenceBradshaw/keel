@@ -1,0 +1,52 @@
+// A bounded `T` reaches its bound's interface as a borrow, a pointer or a box, and each instance
+// passes its own implementer. Prints the text cases; exits with the failing check.
+import kl::console;
+import kl::string;
+
+interface Shape
+{
+    f64 area() const;
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    f64 area() const { return side * side; }
+};
+
+void say( const ref textual x ) { kl::println( x ); }
+
+void text<T>( const ref T x )
+    where T : textual
+{
+    say( x );
+    const ref textual y = x;
+    kl::string s = "[";
+    s += x;
+    s += y;
+    kl::println( s );
+}
+
+f64 by_ref( const ref Shape s ) { return s.area(); }
+f64 by_pointer( Shape* s ) { return s.area(); }
+f64 by_box( move box<Shape> s ) { return s.get().area(); }
+
+f64 measure<T>( ref T x, move box<T> b )
+    where T : Shape
+{
+    T* p = &x;
+    return by_ref( x ) + by_pointer( p ) + by_box( move b );
+}
+
+i32 main()
+{
+    text( "a" );
+    kl::string k = "b";
+    text( k );
+    text( "c" + k );
+
+    Square q = Square { 2.0 };
+    if( measure( ref q, box<Square>( Square { 3.0 } ) ) != 17.0 ) { return 1; }
+    return 0;
+}

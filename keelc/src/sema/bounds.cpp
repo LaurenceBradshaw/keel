@@ -232,6 +232,36 @@ bool Bounds::conforms( Type_id type, Type_id interface ) const
            types_.conformances().supplies( ast_, table_, type, interface );
 }
 
+bool Bounds::reaches( Type_id from, Type_id to ) const
+{
+    if( table_.references_error( from ) || table_.references_error( to ) || from == to )
+    {
+        return true;
+    }
+
+    const Type& f = table_.get( from );
+    const Type& t = table_.get( to );
+
+    if( table_.is_parameter( from ) && t.kind == Type_kind::Interface )
+    {
+        return promises( from, to );
+    }
+
+    if( table_.is_box( from ) && table_.is_box( to ) && table_.is_parameter( f.arguments[0] ) &&
+        table_.is_interface( t.arguments[0] ) )
+    {
+        return promises( f.arguments[0], t.arguments[0] );
+    }
+
+    if( f.kind == Type_kind::Pointer && t.kind == Type_kind::Pointer && table_.is_parameter( f.element ) &&
+        table_.is_interface( t.element ) )
+    {
+        return promises( f.element, t.element ) && ( !f.const_element || t.const_element );
+    }
+
+    return types_.conformances().holds( table_, from, to );
+}
+
 bool Bounds::adopts_text( Type_id type, Type_id text ) const
 {
     const Node_id from = table_.prelude().from;

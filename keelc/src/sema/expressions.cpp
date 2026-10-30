@@ -1825,7 +1825,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     }
     // Typed already, so it is held to the parameter rather than checked again.
     else if( const Type_id given = types_.type_of( argument );
-             !table_.is_error( given ) && !types_.conformances().holds( table_, given, parameter ) )
+             !table_.is_error( given ) && !bounds_.reaches( given, parameter ) )
     {
         reporter_.error_at(
             ast_.span( argument ),
@@ -3808,7 +3808,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         return expected;
     }
 
-    if( !types_.conformances().holds( table_, actual, expected ) )
+    if( !bounds_.reaches( actual, expected ) )
     {
         reporter_.error_at(
             ast_.span( id ),

@@ -98,6 +98,8 @@ public:
     bool                     promises( Type_id parameter, Type_id interface ) const;
     // A parameter's promise, a declared `implements`, or what the compiler supplies.
     bool conforms( Type_id type, Type_id interface ) const;
+    // Conformance_model::holds, with a parameter reaching the interfaces it promises.
+    bool reaches( Type_id from, Type_id to ) const;
     // Whether a string literal becomes a `type`: only through the prelude's `from<str>`.
     bool adopts_text( Type_id type, Type_id text ) const;
     // Whether `value` is the prelude's `joined_text` and `type` is made from one. No other `from<U>`
