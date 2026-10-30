@@ -1163,14 +1163,26 @@ Node_id Parser::parse_where_clause()
 
     do
     {
-        const Span      at   = cursor_.peek().span;
-        const Symbol_id name = expect_name();
+        const Span at   = cursor_.peek().span;
+        Symbol_id  name = expect_name();
 
         // Stop rather than spin: expect_name reports and consumes a keyword, but anything else
         // leaves the cursor where it was, and the loop below would keep asking.
         if( !name.is_valid() )
         {
             break;
+        }
+
+        // `kl::sink`: the names before the last are the package chain, as in a Named_type.
+        Node_id package {};
+        Span    name_span = cursor_.previous().span;
+
+        while( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
+        {
+            package = extend_package( package, name, name_span );
+            cursor_.advance(); // the `::`
+            name      = expect_name();
+            name_span = cursor_.previous().span;
         }
 
         // `sink<i64>`: only types can follow, so `<` opens the arguments here.
@@ -1190,13 +1202,17 @@ Node_id Parser::parse_where_clause()
             arguments = ast_.add( Node_kind::Type_arg_list, Span::merge( open, cursor_.previous().span ), 0, types );
         }
 
-        const Span bound_span = Span::merge( at, cursor_.previous().span );
-        bounds.push_back( ast_.add(
+        const Span    bound_span = Span::merge( at, cursor_.previous().span );
+        const Node_id bound      = ast_.add(
             Node_kind::Bound_name,
             bound_span,
             name.v,
-            arguments.is_valid() ? std::vector { arguments } : std::vector<Node_id> {}
-        ) );
+            package.is_valid()     ? std::vector { arguments, package }
+                 : arguments.is_valid() ? std::vector { arguments }
+                                        : std::vector<Node_id> {}
+        );
+        ast_.set_name_span( bound, name_span );
+        bounds.push_back( bound );
     } while( match_bound_separator() );
 
     // The comma before a following `where` is for the reader; `where` is what the loop in

@@ -1,0 +1,36 @@
+// A bound may name a package's interface, but nothing else there. One error per marked line.
+import kl::iterable;
+import kl::list;
+
+i32 not_an_interface<C>( const ref C c ) where C : kl::list<i32> // error: not an interface
+{
+    return 0;
+}
+
+i32 undeclared<C>( const ref C c ) where C : kl::nope // error: not declared
+{
+    return 0;
+}
+
+i32 builtin<C>( const ref C c ) where C : kl::copyable // error: the compiler's bounds have no package
+{
+    return 0;
+}
+
+i32 sum<C>( const ref C c ) where C : kl::iterable<i32>
+{
+    i32 total = 0;
+
+    for( i32 v : c )
+    {
+        total += v;
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    kl::list<i32> xs = kl::list<i32>();
+    return sum( xs );
+}

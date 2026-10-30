@@ -182,7 +182,8 @@ enum class Node_kind : u16
     Type_param_decl,
     // aux: the parameter it constrains; children: the Bound_names.
     Where_clause,
-    // aux: the bound's name; children: its Type_arg_list, when it names an interface's instance.
+    // aux: the bound's name; children: its Type_arg_list slot, when it names an interface's
+    // instance or a package, then the package Name_expr, when written.
     Bound_name,
     // aux: 0. children: the operand.
     Try_expr,

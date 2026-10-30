@@ -1,5 +1,10 @@
 // D74: a walk is reached through a bound only, and a bound without a walk gives none. One error
 // per marked line.
+interface iterable<T>
+{
+    void operator:( const ref T item ) const;
+};
+
 i32 held( const ref iterable<i32> c ) // error: a bound only
 {
     return 0;

@@ -1,19 +1,19 @@
 error: `iterable<i32>` can only bound a type parameter, because its `operator:` is a walk
- --> sema/errors_walk_bound.kl:3:21
+ --> sema/errors_walk_bound.kl:8:21
   |
-3 | i32 held( const ref iterable<i32> c ) // error: a bound only
+8 | i32 held( const ref iterable<i32> c ) // error: a bound only
   |                     ^^^^^^^^^^^^^ take a `T` with `where T : iterable<i32>` instead
 
 error: `C` has no walk
-  --> sema/errors_walk_bound.kl:12:18
+  --> sema/errors_walk_bound.kl:17:18
    |
-12 |     for( i32 v : c ) // error: no walk
+17 |     for( i32 v : c ) // error: no walk
    |                  ^ bound it by an interface that requires `operator:`
 
 error: `C` has no writing walk
-  --> sema/errors_walk_bound.kl:22:22
+  --> sema/errors_walk_bound.kl:27:22
    |
-22 |     for( ref i32 v : c ) // error: no writing walk
+27 |     for( ref i32 v : c ) // error: no writing walk
    |                      ^ bind it `const ref`
 
 3 errors generated

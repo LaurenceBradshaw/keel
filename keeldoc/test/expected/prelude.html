@@ -44,8 +44,6 @@ functions.</p>
 <li class="divider">Hashing</li>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
-<li class="divider">Iteration</li>
-<li><a href="#iterable"><code>iterable</code></a> <span class="kind">interface</span></li>
 <li class="divider">Ownership</li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
@@ -459,26 +457,6 @@ panics on a NaN.</p>
 <pre class="signature"><a class="anchor" href="#hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Feeds this value to <code>h</code>.</p>
-</div>
-</div>
-</section>
-<h2 class="divider">Iteration</h2>
-<section class="entry">
-<h2><span class="kind">interface</span> <span class="type">iterable</span></h2>
-<div class="group" id="iterable">
-<pre class="signature"><a class="anchor" href="#iterable" aria-label="Link to iterable">#</a><code><span class="kw">interface</span> <span class="type">iterable</span>&lt;T&gt;</code></pre>
-<div class="doc">
-<p>A container a loop can read through, one <code>T</code> at a time.</p>
-<p>A bound only: a walk is lowered where its loop is written, so <code>where C : iterable&lt;T&gt;</code> is the
-one way to take any of them, and <code>for( const ref T x : c )</code> then reads each element in the
-container's own order.</p>
-</div>
-</div>
-<h3>Methods</h3>
-<div class="group" id="iterable.operator:">
-<pre class="signature"><a class="anchor" href="#iterable.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
-<div class="doc">
-<p>Lends each element to the loop in turn.</p>
 </div>
 </div>
 </section>

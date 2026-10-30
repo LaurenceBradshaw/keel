@@ -4,6 +4,7 @@
 #include "sema/annotations.h"
 #include <fmt/format.h>
 #include <algorithm>
+#include "parse/module_graph.h"
 #include "sema/type_checker.h"
 
 namespace keel::sema
@@ -661,9 +662,30 @@ bool Annotations::resolve_type_arguments(
 // A bound naming an interface: its type, recorded on the name, which is where Bounds reads it.
 void Annotations::record_interface_bound( Node_id bound_name )
 {
-    const Node_id decl = resolution_.declaration_of( bound_name );
+    const Node_id decl      = resolution_.declaration_of( bound_name );
+    const Node_id package   = ast_.package( bound_name );
+    const bool    interface = decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl;
 
-    if( !decl.is_valid() || ast_.kind( decl ) != Node_kind::Interface_decl )
+    // A compiler-provided bound has no package, so a qualified name is an interface or nothing.
+    if( package.is_valid() && !interface )
+    {
+        if( decl.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( bound_name ),
+                fmt::format(
+                    "`{}::{}` is not an interface",
+                    package_text( ast_, interner_, package ),
+                    interner_.text( ast_.name( bound_name ) )
+                )
+            );
+        }
+
+        types_.record( bound_name, table_.builtin( Type_kind::Error ) );
+        return;
+    }
+
+    if( !interface )
     {
         return;
     }

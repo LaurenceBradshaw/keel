@@ -1,0 +1,13 @@
+// A qualified bound names its package and its interface apart.
+
+import shapes::area;
+
+i32 twice<T>( const ref T t ) where T : shapes::measured
+{
+    return t.area() * 2;
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1,6 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import iterable;
 import optional;
 
 /// A growable array of `T` that owns its elements and the block holding them.

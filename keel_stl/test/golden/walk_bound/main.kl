@@ -1,11 +1,12 @@
 // D74: one generic loop through `iterable`, over a list, a set and an ordered set. Each check
 // asserts; under valgrind nothing leaks.
+import kl::iterable;
 import kl::list;
 import kl::ordered_set;
 import kl::set;
 import kl::string;
 
-i32 sum<C>( const ref C c ) where C : iterable<i32>
+i32 sum<C>( const ref C c ) where C : kl::iterable<i32>
 {
     i32 total = 0;
 
@@ -17,7 +18,7 @@ i32 sum<C>( const ref C c ) where C : iterable<i32>
     return total;
 }
 
-u64 bytes<C>( const ref C c ) where C : iterable<kl::string>
+u64 bytes<C>( const ref C c ) where C : kl::iterable<kl::string>
 {
     u64 total = 0;
 

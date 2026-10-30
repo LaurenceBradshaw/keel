@@ -1,5 +1,10 @@
 // D74: a loop over a type parameter bounded by `iterable` runs the implementer's walk, inlined at
 // each instance. Every check returns a distinct code, so exit 0 means all of them agreed.
+interface iterable<T>
+{
+    void operator:( const ref T item ) const;
+};
+
 class Bag<T> implements iterable<T> where T : copyable
 {
     T[3] items;

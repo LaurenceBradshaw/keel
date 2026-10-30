@@ -1078,6 +1078,15 @@ bool Lookahead::scan_where_clauses()
                 return fail( Wanted::Name );
             }
 
+            // `kl::sink`: a package's interface.
+            while( cursor_.match( Token_kind::Colon_colon ) )
+            {
+                if( !cursor_.match( Token_kind::Identifier ) )
+                {
+                    return fail( Wanted::Name );
+                }
+            }
+
             // `sink<i64>`: an interface's instance.
             if( cursor_.match( Token_kind::Less ) )
             {
@@ -1948,6 +1957,7 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
         require_declaration( "T f<T>( T a ) where T : copyable { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : copyable & equatable { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : sink<i64> & both<i64, bool> { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : kl::sink<i64> & a::b::c { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T, U>( T a ) where T : copyable, where U : equatable { }", Declaration_kind::Function, "{" );
     }
 
@@ -2027,6 +2037,7 @@ TEST_CASE( "lookahead_says_where_and_why_a_declaration_head_fails", "[scan]" )
         require_declaration_failure( "T f<T>( T a ) where T { }", "{", Token_kind::Colon );
         require_declaration_failure( "T f<T>( T a ) where T : { }", "{", Wanted::Name );
         require_declaration_failure( "T f<T>( T a ) where T : if & A { }", "if", Wanted::Name );
+        require_declaration_failure( "T f<T>( T a ) where T : kl:: { }", "{", Wanted::Name );
     }
 }
 

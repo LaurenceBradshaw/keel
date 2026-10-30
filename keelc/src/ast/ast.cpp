@@ -210,6 +210,8 @@ Node_id Ast::package( Node_id id ) const
     case Node_kind::Import_decl:
     case Node_kind::Named_type:
         return all.empty() ? Node_id {} : all[0];
+    case Node_kind::Bound_name:
+        return all.size() > 1 ? all[1] : Node_id {};
     case Node_kind::Struct_literal:
         return !all.empty() && ( kind( all[0] ) == Node_kind::Name_expr || kind( all[0] ) == Node_kind::Path_expr )
                    ? all[0]

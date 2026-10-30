@@ -1,0 +1,19 @@
+error: `kl::list` is not an interface
+ --> qualified_bound_errors/main.kl:5:52
+  |
+5 | i32 not_an_interface<C>( const ref C c ) where C : kl::list<i32> // error: not an interface
+  |                                                    ^^^^^^^^^^^^^
+
+error: no module of `kl` that this file imports declares `nope`
+  --> qualified_bound_errors/main.kl:10:46
+   |
+10 | i32 undeclared<C>( const ref C c ) where C : kl::nope // error: not declared
+   |                                              ^^^^^^^^
+
+error: no module of `kl` that this file imports declares `copyable`
+  --> qualified_bound_errors/main.kl:15:43
+   |
+15 | i32 builtin<C>( const ref C c ) where C : kl::copyable // error: the compiler's bounds have no package
+   |                                           ^^^^^^^^^^^^
+
+3 errors generated

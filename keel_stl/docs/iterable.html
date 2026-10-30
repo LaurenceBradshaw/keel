@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::iterable</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::iterable</h1>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">iterable</span></h2>
+<div class="group" id="iterable">
+<pre class="signature"><a class="anchor" href="#iterable" aria-label="Link to iterable">#</a><code><span class="kw">interface</span> <span class="type">iterable</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A container a loop can read through, one <code>T</code> at a time.</p>
+<p>A bound only: a walk is lowered where its loop is written, so <code>where C : kl::iterable&lt;T&gt;</code> is the
+one way to take any of them, and <code>for( const ref T x : c )</code> then reads each element in the
+container's own order.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="iterable.operator:">
+<pre class="signature"><a class="anchor" href="#iterable.operator:" aria-label="Link to operator:">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator:</span>( <span class="kw">const</span> <span class="kw">ref</span> T item ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Lends each element to the loop in turn.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

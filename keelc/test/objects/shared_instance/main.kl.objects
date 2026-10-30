@@ -1,4 +1,5 @@
+../../../../keel_stl/src/iterable.kl
 ../../../../keel_stl/src/optional.kl
-../../../../keel_stl/src/list.kl optional.klo
-a.kl list.klo optional.klo
-b.kl list.klo optional.klo
+../../../../keel_stl/src/list.kl iterable.klo optional.klo
+a.kl list.klo iterable.klo optional.klo
+b.kl list.klo iterable.klo optional.klo

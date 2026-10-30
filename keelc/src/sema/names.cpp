@@ -423,10 +423,10 @@ Span Name_collector::name_span( Node_id id, bool declares ) const
         return ast_.type_name_span( id );
     }
 
-    const std::string_view name        = interner_.text( ast_.name( id ) );
-    const bool             named_apart = declares || ast_.kind( id ) == Node_kind::Where_clause;
-    const Span             node        = named_apart ? ast_.name_span( id ) : ast_.span( id );
-    const std::string_view text        = sm_.file( node.file ).text;
+    const std::string_view name = interner_.text( ast_.name( id ) );
+    const bool named_apart = declares || ast_.kind( id ) == Node_kind::Where_clause || ast_.kind( id ) == Node_kind::Bound_name;
+    const Span node        = named_apart ? ast_.name_span( id ) : ast_.span( id );
+    const std::string_view text = sm_.file( node.file ).text;
 
     u32 start = node.start;
 

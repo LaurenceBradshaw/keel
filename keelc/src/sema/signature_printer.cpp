@@ -306,6 +306,10 @@ std::string Signature_printer::where_clauses( Node_id list ) const
         for( const Node_id bound_name : ast_.bounds( clause ) )
         {
             bounds += bounds.empty() ? "" : " & ";
+            if( const Node_id package = ast_.package( bound_name ); package.is_valid() )
+            {
+                bounds += package_text( ast_, interner_, package ) + "::";
+            }
             bounds += text( ast_.name( bound_name ) );
 
             std::string arguments;

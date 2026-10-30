@@ -1,1 +1,1 @@
-../../src/list.kl:31: out of memory: alloc<T>( capacity )
+../../src/list.kl:32: out of memory: alloc<T>( capacity )

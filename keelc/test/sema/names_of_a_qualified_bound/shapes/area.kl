@@ -1,0 +1,4 @@
+interface measured
+{
+    i32 area() const;
+};
