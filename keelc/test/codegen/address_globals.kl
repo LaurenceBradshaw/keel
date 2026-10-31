@@ -1,0 +1,54 @@
+// Addresses as global initialisers: a global declared before the one it names, a function chosen
+// from an overload set by the declared signature, a static method, an array of addresses, and a
+// static field's address held by another static.
+import t::console;
+
+i32* early = &later;
+i32  later = 5;
+
+i32 seven()
+{
+    return 7;
+}
+
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+i32 twice( i32 a, i32 b )
+{
+    return a * b;
+}
+
+fn() -> i32      fp     = &seven;
+fn( i32 ) -> i32 tw     = &twice;
+fn( i32 ) -> i32 bumper = &Counter::bump;
+i32*[2]          both   = [ &later, &Counter::total ];
+
+class Counter
+{
+    public static i32  total = 0;
+    public static i32* at    = &Counter::total;
+
+    public static i32 bump( i32 by )
+    {
+        total = total + by;
+        return total;
+    }
+
+    public i32 unused;
+};
+
+i32 main()
+{
+    t::println( *early );
+    *early = 6;
+    t::println( later );
+    t::println( fp() );
+    t::println( tw( 4 ) );
+    t::println( *both[1] );
+    t::println( bumper( 3 ) );
+    t::println( *Counter::at );
+    return 0;
+}

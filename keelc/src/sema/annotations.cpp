@@ -1063,7 +1063,7 @@ public:
           reporter_( sm_, diags_ ),
           aggregates_( ast_, interner_, types_, reporter_ ),
           bounds_( ast_, interner_, literal_pool_, types_, aggregates_, reporter_ ),
-          constant_folder_( ast_, resolution_, literal_pool_, types_, bounds_, reporter_ ),
+          constant_folder_( ast_, resolution_, literal_pool_, types_, bounds_, callees_, reporter_ ),
           annotations_( ast_, interner_, resolution_, types_, bounds_, constant_folder_, reporter_ )
     {
         types_.size_to( ast_.node_count() );
@@ -1165,6 +1165,7 @@ private:
     sema::Reporter        reporter_;
     sema::Aggregates      aggregates_;
     sema::Bounds          bounds_;
+    sema::Callees         callees_;
     sema::Constant_folder constant_folder_;
     sema::Annotations     annotations_;
 

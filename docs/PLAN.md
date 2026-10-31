@@ -744,7 +744,8 @@ instance, `list<i32>::with_capacity( 8 )`. `static` before a field declares one 
 every object, named `C::count` (or bare inside the type) and refused as `c.count`; it follows a
 file-scope variable's rules — a constant initialiser, folded once, where a plain enum's variant is
 its ordinal, an enum with payloads takes none yet, a `str` takes a string literal or a
-`const str`'s name, and an array takes a literal or fill of such constants or a `const` array's name; no other struct or class, which would need building; nothing owning, since nothing drops one; and no error union, whose zero tag need not
+`const str`'s name, an array takes a literal or fill of such constants or a `const` array's name, and a pointer or
+function type takes `&g` or `&f`, the address of a non-`const` global or a function, neither generic; no other struct or class, which would need building; nothing owning, since nothing drops one; and no error union, whose zero tag need not
 name a member — and is absent from the emitted struct. A generic type gets **one storage per instantiation**, as C++, D, Zig and C# do, and the
 static's own type may not name a type parameter. A static and a member of one name collide.
 
@@ -1448,9 +1449,18 @@ major), which waits for the lambda decision (§12).
   private name of `kl`. The cost is spelling, so `import kl::console as c;` would answer it as well,
   without a second lookup rule.
 - **Globals that are not constants, or that own.** A global today is a number, `bool`, pointer,
-  plain enum, `str` or array of these whose initialiser folds. One computed at start-up, or one holding a `kl::string` or `kl::list`,
-  needs an order of initialisation and a drop at exit. Later, after consts_statics finding 3's
-  constant kinds.
+  plain enum, `str`, address or array of these whose initialiser folds. One computed at start-up, or one holding a `kl::string` or `kl::list`,
+  needs an order of initialisation and a drop at exit.
+- **A static field's initialiser is outside its type.** `static i32* at = &total;` inside `Counter`
+  says `total` is not declared, and `&Counter::total` is refused when `total` is private. The
+  initialiser should see the type's members as a method does.
+- **Spelling an array of function pointers.** `fn( i32 ) -> i32[2]` returns an array, so an array
+  of functions has no spelling. Parentheses grouping a type, `( fn( i32 ) -> i32 )[2]`, would
+  answer it and `[*]` too, leaving every existing type's meaning alone; `fn[2]( i32 ) -> i32` is
+  the other candidate. Undecided.
+- **The address of a generic's instance as a global's value.** `&id<i32>` and `&Box<i32>::made`
+  are refused as not computable yet: the constant names a declaration, and an instance needs its
+  type arguments too.
 - **A stack overflow names itself.** A guard-page handler in `kl_rt`, on its own signal stack, that
   prints "stack overflow" for a large frame or deep recursion, where today the program gets a bare
   SIGSEGV. `-fstack-clash-protection` already makes every overflow reach the guard page.

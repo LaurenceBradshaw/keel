@@ -134,7 +134,7 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
     }
 
     case Node_kind::Unary_expr:
-        // `&x` is an address and `*p` a load; neither is a value known here.
+        // `*p` is a load, which no constant is.
         switch( ast_.op( id ) )
         {
         case Token_kind::Minus:
@@ -142,6 +142,16 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
         case Token_kind::Tilde:
         case Token_kind::Bang:
             return is_constant_expression( ast_.operand( id ) );
+
+        // A `const`'s address is left out, so its reads can fold.
+        case Token_kind::Amp:
+        {
+            const Node_id operand = ast_.operand( id );
+            const Node_id named   = resolution_.declaration_of( operand );
+
+            return ( ast_.kind( operand ) == Node_kind::Name_expr || ast_.kind( operand ) == Node_kind::Path_expr ) &&
+                   !( named.is_valid() && ast_.kind( named ) == Node_kind::Var_decl && ast_.is_const_binding( named ) );
+        }
 
         default:
             return false;
@@ -162,8 +172,9 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
     case Node_kind::Cast_expr:
         return is_constant_expression( ast_.operand( id ) );
 
+    // An undeclared name is the resolver's error, and only that.
     case Node_kind::Name_expr:
-        return constant_named( id ).is_valid();
+        return constant_named( id ).is_valid() || !resolution_.declaration_of( id ).is_valid();
 
     // A plain enum's variant is its ordinal, which the checker records on the path.
     case Node_kind::Path_expr:
@@ -607,6 +618,11 @@ std::optional<Constant_value> Constant_folder::fold_value( Node_id id, Type_id t
                      : std::nullopt;
     }
 
+    if( id.is_valid() && ast_.kind( id ) == Node_kind::Unary_expr && ast_.op( id ) == Token_kind::Amp )
+    {
+        return fold_address( id );
+    }
+
     const Folded value = fold_integer( id );
 
     return value.constant && !value.overflowed ? std::optional<Constant_value>(
@@ -615,6 +631,24 @@ std::optional<Constant_value> Constant_folder::fold_value( Node_id id, Type_id t
                                                        .negative  = value.value.negative }
                                                  )
                                                : std::nullopt;
+}
+
+std::optional<Constant_value> Constant_folder::fold_address( Node_id id ) const
+{
+    const Type_id type   = types_.type_of( id );
+    const Node_id target = table_.is_function( type )  ? callees_.callee_of( id )
+                           : table_.is_pointer( type ) ? resolution_.declaration_of( ast_.operand( id ) )
+                                                       : Node_id {};
+
+    // A generic's instance, or its static's, is named by type arguments a declaration does not carry.
+    const Node_id aggregate = target.is_valid() ? ast_.enclosing_aggregate( target ) : Node_id {};
+
+    if( !target.is_valid() || ast_.is_generic( target ) || ( aggregate.is_valid() && ast_.is_generic( aggregate ) ) )
+    {
+        return std::nullopt;
+    }
+
+    return Constant_value { .kind = Constant_value::Kind::Address, .target = target };
 }
 
 std::optional<f64> Constant_folder::fold_float( Node_id id ) const
@@ -999,14 +1033,6 @@ TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][
     SECTION( "another global" )
     {
         const Typed p( "i32 first = 1;\ni32 second = first;\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-    }
-
-    SECTION( "the address of another global" )
-    {
-        const Typed p( "i32 first = 1;\ni32* second = &first;\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );

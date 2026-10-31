@@ -80,17 +80,18 @@ void read_table( Byte_reader& in, Ref_reader& refs, Each&& each )
 }
 
 // A constant and its elements, depth first.
-void write_constant( Byte_writer& out, const Constant_value& value )
+void write_constant( Byte_writer& out, Ref_writer& refs, const Constant_value& value )
 {
     out.put_u8( u8( value.kind ) );
     out.put_u64( value.magnitude );
     out.put_u8( value.negative );
     out.put_f64( value.floating );
     out.put_string( value.text );
+    refs.node( out, value.target );
     out.put_u32( narrow_cast<u32>( value.elements.size() ) );
     for( const Constant_value& element : value.elements )
     {
-        write_constant( out, element );
+        write_constant( out, refs, element );
     }
 }
 
@@ -98,7 +99,7 @@ Constant_value read_constant( Byte_reader& in, Ref_reader& refs )
 {
     Constant_value value;
     const u8       kind = in.get_u8();
-    if( kind > u8( Constant_value::Kind::Fill ) )
+    if( kind > u8( Constant_value::Kind::Address ) )
     {
         refs.fail();
     }
@@ -107,6 +108,7 @@ Constant_value read_constant( Byte_reader& in, Ref_reader& refs )
     value.negative  = in.get_u8() != 0;
     value.floating  = in.get_f64();
     value.text      = in.get_string();
+    value.target    = refs.node();
     const u32 count = in.get_u32();
     for( u32 i = 0; i < count && !refs.failed() && !in.failed(); ++i )
     {
@@ -241,7 +243,7 @@ std::string write_state(
         results,
         refs,
         nodes_where( refs, [&]( Node_id id ) { return types.constant_of( id ).has_value(); } ),
-        [&]( Node_id id ) { write_constant( results, *types.constant_of( id ) ); }
+        [&]( Node_id id ) { write_constant( results, refs, *types.constant_of( id ) ); }
     );
     write_table(
         results,

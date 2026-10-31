@@ -28,6 +28,20 @@ bool needs( const Needed& needed, Type_id type )
     return !needed || needed->contains( type.v );
 }
 
+// The functions and globals a constant names, each once.
+void add_addresses( const Constant_value& value, std::vector<Node_id>& targets )
+{
+    if( value.kind == Constant_value::Kind::Address && std::ranges::find( targets, value.target ) == targets.end() )
+    {
+        targets.push_back( value.target );
+    }
+
+    for( const Constant_value& element : value.elements )
+    {
+        add_addresses( element, targets );
+    }
+}
+
 // D41: a comparison whose operands meet in no type at all reaches the backend with each side at
 // its own widest, and every such pair is one of three shapes. Named in the canonical operand
 // order the guard is written in; a pair arriving the other way round is the same guard with the
@@ -839,6 +853,46 @@ void Kir_emitter::emit_globals()
     const std::vector<std::pair<Node_id, Type_id>> defined = defined_globals();
     std::vector<std::pair<Node_id, Type_id>>       shared;
     const std::vector<std::pair<Node_id, Type_id>> used = used_globals( shared );
+
+    // What an initialiser takes the address of is declared first, wherever it is defined.
+    std::vector<Node_id> targets;
+
+    for( const auto& [global, owner] : defined )
+    {
+        if( const std::optional<Constant_value> value = types_.constant_of( global ) )
+        {
+            add_addresses( *value, targets );
+        }
+    }
+
+    for( const auto& [global, owner] : shared )
+    {
+        if( const std::optional<Constant_value> value = types_.constant_of( global ) )
+        {
+            add_addresses( *value, targets );
+        }
+    }
+
+    for( const Node_id target : targets )
+    {
+        if( ast_.kind( target ) == Node_kind::Var_decl )
+        {
+            write_line( spelling_.global_declaration( target ) );
+            continue;
+        }
+
+        const auto is_target = [&]( const Function& function ) { return function.declaration == target; };
+
+        if( const auto own = std::ranges::find_if( functions_, is_target ); own != functions_.end() )
+        {
+            write_line( prototype( *own ) + ";" );
+        }
+        else if( const auto other = std::ranges::find_if( callees_, [&]( const Function* f ) { return is_target( *f ); } );
+                 other != callees_.end() )
+        {
+            write_line( prototype( **other ) + ";" );
+        }
+    }
 
     for( const auto& [global, owner] : defined )
     {
@@ -2437,10 +2491,17 @@ Emitted emit_c_from_kir(
         }
     }
 
+    // A function a global's initialiser names is reached by no call.
+    std::vector<Node_id> addressed;
+    for( const auto& [node, value] : types.constants() )
+    {
+        add_addresses( value, addressed );
+    }
+
     std::vector<const Function*> callees;
     for( u32 f = 0; f < functions.size(); ++f )
     {
-        if( called[f] && !mine[f] )
+        if( ( called[f] || std::ranges::find( addressed, functions[f].declaration ) != addressed.end() ) && !mine[f] )
         {
             callees.push_back( &functions[f] );
         }

@@ -1,0 +1,4 @@
+import words;
+
+fn() -> i32 from_a = &seven;
+i32*        count_in_a = &count;

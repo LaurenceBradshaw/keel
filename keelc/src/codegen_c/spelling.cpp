@@ -493,6 +493,12 @@ std::string Spelling::constant( const Constant_value& value, Type_id of ) const
         return c_float( value.floating );
     }
 
+    // A function's name is already its address in C.
+    if( value.kind == Constant_value::Kind::Address )
+    {
+        return ast.kind( value.target ) == Node_kind::Var_decl ? "&" + global( value.target ) : function( value.target );
+    }
+
     if( table.is_pointer( of ) || table.is_many_pointer( of ) )
     {
         return "NULL"; // the only pointer constant there is, and it folded to zero

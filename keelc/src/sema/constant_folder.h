@@ -9,6 +9,7 @@
 #include "common/literal_pool.h"
 #include "common/types.h"
 #include "sema/bounds.h"
+#include "sema/callees.h"
 #include "sema/reporter.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
@@ -44,6 +45,7 @@ public:
         const Literal_pool& literals,
         Types_builder&      types,
         Bounds&             bounds,
+        const Callees&      callees,
         Reporter&           reporter
     )
         : ast_( ast ),
@@ -52,12 +54,14 @@ public:
           types_( types ),
           table_( types.table() ),
           bounds_( bounds ),
+          callees_( callees ),
           reporter_( reporter )
     {
     }
 
     // What may initialise a file-scope variable: what C also accepts as a constant expression,
-    // and a `const`'s name, which folds to its value.
+    // and a `const`'s name, which folds to its value. `&x` passes on its form alone; fold_address
+    // settles the target once the checker has chosen it.
     bool is_constant_expression( Node_id id ) const;
 
     // The `const` with an initialiser that `id` names, or invalid.
@@ -84,12 +88,16 @@ public:
     std::unordered_map<u32, Constant_value> take_values();
 
 private:
+    // `&f` or `&g`: the function the checker chose, or a non-generic global.
+    std::optional<Constant_value> fold_address( Node_id id ) const;
+
     const Ast&          ast_;
     const Resolution&   resolution_;
     const Literal_pool& literal_pool_;
     Types_builder&      types_;
     const Type_table&   table_;
     Bounds&             bounds_;
+    const Callees&      callees_;
     Reporter&           reporter_;
 
     std::unordered_map<u32, Constant_value> constants_;

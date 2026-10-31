@@ -1,0 +1,7 @@
+// A function and a global that a.kl's globals take the address of, and nothing here calls.
+i32 seven()
+{
+    return 7;
+}
+
+i32 count = 4;

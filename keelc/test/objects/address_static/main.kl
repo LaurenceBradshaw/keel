@@ -1,0 +1,23 @@
+// A global's address through objects: a.klo's initialisers name a function and a global in
+// words.klo, so its C declares both, though no function of a.kl calls or reads either.
+import a;
+import words;
+
+fn() -> i32 here = &seven;
+
+i32 main()
+{
+    if( from_a() != 7 || here() != 7 )
+    {
+        return 1;
+    }
+
+    *count_in_a = 9;
+
+    if( count != 9 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

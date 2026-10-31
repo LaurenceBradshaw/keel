@@ -25,7 +25,7 @@ struct Loaded_state;
 // A file-scope initialiser, evaluated. A bool is the integer 0 or 1, and `nullptr` is the integer 0.
 // Integers keep the sign-magnitude form fits() already takes, so the range checks and the folder
 // agree without converting between them. A `str` is its literal's decoded bytes, an array its
-// elements, and a fill `[ x, .. ]` its one element.
+// elements, a fill `[ x, .. ]` its one element, and an address the function or global it names.
 struct Constant_value
 {
     enum class Kind : u8
@@ -34,7 +34,8 @@ struct Constant_value
         Float,
         Text,
         Array,
-        Fill
+        Fill,
+        Address
     };
 
     Kind                        kind      = Kind::Integer;
@@ -43,6 +44,7 @@ struct Constant_value
     f64                         floating  = 0.0;
     std::string                 text {};
     std::vector<Constant_value> elements {};
+    Node_id                     target {};
 };
 
 // A generic named with concrete type arguments at some call site. The seed for the

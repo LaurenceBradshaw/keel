@@ -10,10 +10,10 @@ namespace keel::sema
 {
 
 // An edge exists only between generics: a call in `main` is already an instance rather than a step
-// towards one, so the caller is the guard rather than the call site.
+// towards one, so the caller is the guard rather than the call site. A global's initialiser has none.
 void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_id> arguments, Span at )
 {
-    if( ast_.is_generic( from ) )
+    if( from.is_valid() && ast_.is_generic( from ) )
     {
         generic_calls_.push_back( Generic_call { .from = from, .to = to, .arguments = std::move( arguments ), .at = at } );
     }

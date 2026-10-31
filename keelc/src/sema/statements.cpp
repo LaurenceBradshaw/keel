@@ -1225,7 +1225,7 @@ void Statements::visit_global( Node_id id )
     const std::size_t earlier = reporter_.error_count();
     expressions_.check( init, type ); // range checking, and the literal adopts the declared type
 
-    if( reporter_.error_count() != earlier )
+    if( reporter_.error_count() != earlier || table_.is_error( types_.type_of( init ) ) )
     {
         return;
     }

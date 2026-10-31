@@ -1,0 +1,55 @@
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_address_globals.kl:30:40
+   |
+30 | i32*                  to_const       = &N;
+   |                                        ^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: this initialiser cannot be computed at compile time yet
+  --> sema/errors_address_globals.kl:31:40
+   |
+31 | fn( i32 ) -> i32      generic        = &id<i32>;
+   |                                        ^^^^^^^^ write its value as a literal
+
+error: this initialiser cannot be computed at compile time yet
+  --> sema/errors_address_globals.kl:32:40
+   |
+32 | i32*                  generic_static = &Box<i32>::made;
+   |                                        ^^^^^^^^^^^^^^^ write its value as a literal
+
+error: this initialiser cannot be computed at compile time yet
+  --> sema/errors_address_globals.kl:33:40
+   |
+33 | fn( i32 ) -> Box<i32> generic_method = &Box<i32>::of;
+   |                                        ^^^^^^^^^^^^^ write its value as a literal
+
+error: taking the address of `puts` needs an `unsafe` block
+  --> sema/errors_address_globals.kl:34:40
+   |
+34 | fn( u8* ) -> i32      c_function     = &puts;
+   |                                        ^^^^^ it is defined in C, so the compiler cannot check what it does with its arguments
+
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_address_globals.kl:35:40
+   |
+35 | i32*                  element        = &pair[0];
+   |                                        ^^^^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: this initialiser cannot be computed at compile time yet
+  --> sema/errors_address_globals.kl:36:40
+   |
+36 | field( P ) -> i32     offset         = &P::x;
+   |                                        ^^^^^ write its value as a literal
+
+error: `nope` is not declared
+  --> sema/errors_address_globals.kl:37:41
+   |
+37 | i32*                  undeclared     = &nope;
+   |                                         ^^^^
+
+error: `nope` is not declared
+  --> sema/errors_address_globals.kl:38:40
+   |
+38 | i32                   also           = nope;
+   |                                        ^^^^
+
+9 errors generated
