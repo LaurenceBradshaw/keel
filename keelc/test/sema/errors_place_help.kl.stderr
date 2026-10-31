@@ -1,0 +1,55 @@
+error: a `const` method cannot modify its object
+  --> sema/errors_place_help.kl:15:9
+   |
+15 |         n = 5; // error: so it can modify its object
+   |         ^ remove `const` from `get` so it can modify its object
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_place_help.kl:27:23
+   |
+27 |     const ref i32 r = 0; // error: drop `ref` to copy the value
+   |                       ^ drop `ref` to copy the value
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_place_help.kl:28:30
+   |
+28 |     const ref kl::string s = kl::string::from( "a" ) + kl::string::from( "b" ); // error: give it a variable
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ give it a variable of its own first
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_place_help.kl:48:30
+   |
+48 |     const ref kl::string s = make(); // error: give it a variable
+   |                              ^^^^^^ give it a variable of its own first
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_place_help.kl:53:21
+   |
+53 |     const ref T r = same( a ); // error: drop `ref` to copy the value
+   |                     ^^^^^^^^^ drop `ref` to copy the value
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_place_help.kl:58:21
+   |
+58 |     const ref T r = pass( move a ); // error: give it a variable
+   |                     ^^^^^^^^^^^^^^ give it a variable of its own first
+
+error: cannot assign to this expression
+  --> sema/errors_place_help.kl:63:5
+   |
+63 |     seven() = 1; // error: `seven()` is a value, not a place
+   |     ^^^^^^^ `seven()` is a value, not a place
+
+error: `v` is bound by a pattern, so it cannot be modified
+  --> sema/errors_place_help.kl:70:28
+   |
+70 |     case Small::some( v ): v = 1; break; // error: copy it into a local
+   |                            ^ a binding is read-only; copy it into a local to change it
+
+error: `s` is bound by a pattern, so it cannot be modified
+  --> sema/errors_place_help.kl:79:26
+   |
+79 |     case Big::some( s ): s = kl::string::from( "x" ); break; // error: which the `switch` does not own
+   |                          ^ it names part of the value being matched, which the `switch` does not own
+
+9 errors generated

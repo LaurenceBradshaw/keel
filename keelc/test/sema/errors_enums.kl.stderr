@@ -92,6 +92,6 @@ error: `r` is bound by a pattern, so it cannot be modified
    --> sema/errors_enums.kl:156:13
     |
 156 |             r = 2.0;
-    |             ^ it names part of the value being matched, which the `switch` does not own
+    |             ^ a binding is read-only; copy it into a local to change it
 
 16 errors generated

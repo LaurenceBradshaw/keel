@@ -20,7 +20,7 @@ error: a `ref` binding needs a variable to bind to
   --> sema/errors_const_ref.kl:41:23
    |
 41 |     const ref i32 r = make();
-   |                       ^^^^^^
+   |                       ^^^^^^ drop `ref` to copy the value
 
 error: `reads` does not modify this argument
   --> sema/errors_const_ref.kl:57:19

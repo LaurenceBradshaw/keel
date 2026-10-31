@@ -418,8 +418,12 @@ std::vector<Loan_error> check_loans(
                     if( walked ? walk_conflicts( func, borrows, owning, loan, holder, effect )
                                : conflicts( func, borrows, owning, loan, effect ) )
                     {
+                        const Local_id object = loan.of.is_valid() ? loan.of : effect.place.local;
+
                         errors.push_back( Loan_error {
-                            .object   = loan.of.is_valid() ? loan.of : effect.place.local,
+                            .object   = object,
+                            .reached  = effect.conflict == Loan_conflict::Changed && effect.place.local == object ? effect.place
+                                                                                                                  : Place {},
                             .holder   = holder,
                             .at       = effect.at,
                             .taken    = loan.at,

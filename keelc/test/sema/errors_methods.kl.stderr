@@ -2,7 +2,7 @@ error: a `const` method cannot modify its object
   --> sema/errors_methods.kl:38:9
    |
 38 |         x = 1;
-   |         ^ remove `const` from `writes_its_object` to let it
+   |         ^ remove `const` from `writes_its_object` so it can modify its object
 
 error: expected `i32`, but got `bool`
   --> sema/errors_methods.kl:43:16

@@ -1,0 +1,87 @@
+// A `ref` to a value, owning or copyable (a `T : copyable` too), a `const` method's write, a call
+// assigned to and a copied payload binding changed, each with its help, and an owning one changed in
+// place. One error per marked line.
+import kl::string;
+
+enum Small { some( i32 v ), none };
+enum Big { some( kl::string s ), none };
+
+class Counter
+{
+    i32 n;
+    public Counter() { n = 0; }
+    public i32 get() const
+    {
+        n = 5; // error: so it can modify its object
+        return n;
+    }
+};
+
+i32 seven()
+{
+    return 7;
+}
+
+void refs()
+{
+    const ref i32 r = 0; // error: drop `ref` to copy the value
+    const ref kl::string s = kl::string::from( "a" ) + kl::string::from( "b" ); // error: give it a variable
+}
+
+kl::string make()
+{
+    return kl::string::from( "m" );
+}
+
+T same<T>( T a ) where T : copyable
+{
+    return a;
+}
+
+T pass<T>( move T a )
+{
+    return move a;
+}
+
+void owned_result()
+{
+    const ref kl::string s = make(); // error: give it a variable
+}
+
+void copyable_parameter<T>( T a ) where T : copyable
+{
+    const ref T r = same( a ); // error: drop `ref` to copy the value
+}
+
+void any_parameter<T>( move T a )
+{
+    const ref T r = pass( move a ); // error: give it a variable
+}
+
+void assigns()
+{
+    seven() = 1; // error: `seven()` is a value, not a place
+}
+
+void binds( Small e )
+{
+    switch( e )
+    {
+    case Small::some( v ): v = 1; break; // error: copy it into a local
+    case Small::none: break;
+    }
+}
+
+void binds_in_place( const ref Big e )
+{
+    switch( e )
+    {
+    case Big::some( s ): s = kl::string::from( "x" ); break; // error: which the `switch` does not own
+    case Big::none: break;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

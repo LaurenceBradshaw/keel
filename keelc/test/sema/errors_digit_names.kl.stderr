@@ -44,7 +44,7 @@ error: cannot assign to this expression
   --> sema/errors_digit_names.kl:36:5
    |
 36 |     3 = v;
-   |     ^
+   |     ^ `3` is a value, not a place
 
 error: expected an identifier, found `3rd`
   --> sema/errors_digit_names.kl:38:12

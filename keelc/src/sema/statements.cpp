@@ -432,7 +432,13 @@ void Statements::visit_var( Node_id id )
         // declared before this line and so outlives it. A temporary is the one thing that would not.
         else if( !places_.is_assignable( init ) )
         {
-            reporter_.error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
+            const bool copies = bounds_.satisfies( type, Bound::Copyable );
+
+            reporter_.error_at(
+                ast_.span( init ),
+                "a `ref` binding needs a variable to bind to",
+                copies ? "drop `ref` to copy the value" : "give it a variable of its own first"
+            );
         }
         // D54: a place inside a temporary, or a call's reference to one, ends with the statement too.
         else if( const Node_id temporary = places_.borrowed_temporary( init ); temporary.is_valid() )
@@ -488,7 +494,11 @@ void Statements::visit_assign( Node_id id )
         if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) &&
             !( call && table_.is_error( call_type ) ) )
         {
-            reporter_.error_at( ast_.span( target ), "cannot assign to this expression" );
+            reporter_.error_at(
+                ast_.span( target ),
+                "cannot assign to this expression",
+                fmt::format( "`{}` is a value, not a place", reporter_.text( ast_.span( target ) ) )
+            );
         }
 
         if( !call )

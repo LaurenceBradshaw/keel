@@ -51,6 +51,36 @@ std::string subject_of(
                                : fmt::format( "`{}.{}`", interner.text( name ), field_path( function, ast, interner, field ) );
 }
 
+// A loan's object, or the field path of it a statement reached, as `h.l`: a leading Deref is how a
+// `ref` parameter is reached, and anything past a field, an element or a pointer, stops the path.
+std::string
+reached_name( const Function& function, const Ast& ast, const Interner& interner, Local_id object, const Place& reached )
+{
+    std::string name = subject_of( function, ast, interner, object, k_no_field, "this value" );
+
+    if( !function.locals[object.v].name.is_valid() || reached.local != object )
+    {
+        return name;
+    }
+
+    name.pop_back();
+    for( u32 i = 0; i < reached.num_projections; ++i )
+    {
+        const Projection& step = function.projections[reached.first_projection + i];
+
+        if( step.kind == Projection_kind::Deref && i == 0 )
+        {
+            continue;
+        }
+        if( step.kind != Projection_kind::Field )
+        {
+            break;
+        }
+        name += fmt::format( ".{}", interner.text( ast.name( step.field ) ) );
+    }
+    return name + "`";
+}
+
 // The passes report spans and a Local_id; this names the local. A second site goes in the help as
 // line:col, since a diagnostic carries one span.
 void report_move_errors(
@@ -190,10 +220,8 @@ void report_loan_errors(
                  function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ), literals
              ) )
         {
-            const Symbol_id   name = function.locals[error.object.v].name;
-            const std::string object =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
-            const Line_col taken = sm.line_col( error.taken.file, error.taken.start );
+            const std::string object = reached_name( function, ast, interner, error.object, error.reached );
+            const Line_col    taken  = sm.line_col( error.taken.file, error.taken.start );
 
             // D74: the loop's walk still reads the container after the body.
             if( error.walked )
@@ -223,7 +251,7 @@ void report_loan_errors(
                 message = fmt::format( "this could change {} while `{}` still borrows from it", object, holder );
                 break;
             case Loan_conflict::Replaced:
-                message = fmt::format( "an element of {} is replaced while `{}` still borrows from it", object, holder );
+                message = fmt::format( "an element of {} is changed while `{}` still borrows from it", object, holder );
                 break;
             }
 

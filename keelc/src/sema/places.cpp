@@ -164,7 +164,9 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
                 reporter_.error_at(
                     ast_.span( target ),
                     "a `const` method cannot modify its object",
-                    fmt::format( "remove `const` from `{}` to let it", interner_.text( ast_.name( current_function ) ) )
+                    fmt::format(
+                        "remove `const` from `{}` so it can modify its object", interner_.text( ast_.name( current_function ) )
+                    )
                 );
 
                 return false;
@@ -264,14 +266,18 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 
     const Node_id root = place_root( target, current_function );
 
-    // D7: a pattern binding is read-only. An owning payload is borrowed in place, and a copyable one
+    // D7: a pattern binding is read-only. An owning payload is borrowed in place, and a copied one
     // is held to the same rule so the two read alike. A consuming switch's binding is a local.
     if( root.is_valid() && ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) )
     {
+        const Type_id bound  = types_.type_of( root );
+        const bool    copied = bound.is_valid() && bounds_.satisfies( bound, Bound::Copyable );
+
         reporter_.error_at(
             ast_.span( target ),
             fmt::format( "`{}` is bound by a pattern, so it cannot be modified", interner_.text( ast_.name( root ) ) ),
-            "it names part of the value being matched, which the `switch` does not own"
+            copied ? "a binding is read-only; copy it into a local to change it"
+                   : "it names part of the value being matched, which the `switch` does not own"
         );
 
         return false;
@@ -309,7 +315,9 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
             reporter_.error_at(
                 ast_.span( target ),
                 "a `const` method cannot modify its object",
-                fmt::format( "remove `const` from `{}` to let it", interner_.text( ast_.name( current_function ) ) )
+                fmt::format(
+                    "remove `const` from `{}` so it can modify its object", interner_.text( ast_.name( current_function ) )
+                )
             );
 
             return false;

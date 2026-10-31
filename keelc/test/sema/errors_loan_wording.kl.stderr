@@ -1,0 +1,13 @@
+error: an element of `l` is changed while `t` still borrows from it
+  --> sema/errors_loan_wording.kl:19:5
+   |
+19 |     l[1].push( 65 ); // error: an element of `l` is changed
+   |     ^^^^ `t` is used after this; it was bound at 18:5
+
+error: this could change `h.l` while `x` still borrows from it
+  --> sema/errors_loan_wording.kl:26:5
+   |
+26 |     h.l.push( 1 ); // error: this could change `h.l`
+   |     ^^^ `x` is used after this; it was bound at 25:5
+
+2 errors generated

@@ -20,7 +20,7 @@ error: cannot assign to this expression
   --> sema/errors_absorption.kl:23:5
    |
 23 |     identity( &value ) = nullptr;
-   |     ^^^^^^^^^^^^^^^^^^
+   |     ^^^^^^^^^^^^^^^^^^ `identity( &value )` is a value, not a place
 
 error: `undeclared` is not declared
   --> sema/errors_absorption.kl:24:5

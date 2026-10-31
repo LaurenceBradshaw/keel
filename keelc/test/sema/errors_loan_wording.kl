@@ -1,0 +1,33 @@
+// D54: a method called on an element changes it without replacing it, and a change to a field
+// names that field. One error per marked line.
+import kl::list;
+import kl::string;
+
+class Holder
+{
+    public kl::list<i32> l;
+    public Holder() { l = kl::list<i32>(); }
+};
+
+void use( i32 _ )
+{
+}
+
+void element( ref kl::list<kl::string> l )
+{
+    const ref u8[] t = l[0].as_text();
+    l[1].push( 65 ); // error: an element of `l` is changed
+    _ = t[0];
+}
+
+void field_path( ref Holder h )
+{
+    ref i32 x = h.l[0];
+    h.l.push( 1 ); // error: this could change `h.l`
+    use( x );
+}
+
+i32 main()
+{
+    return 0;
+}

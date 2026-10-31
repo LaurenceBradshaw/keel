@@ -1,4 +1,4 @@
-error: an element of `l` is replaced while `t` still borrows from it
+error: an element of `l` is changed while `t` still borrows from it
   --> list_element_loans/main.kl:11:5
    |
 11 |     x = kl::string( "abcdefghijklmnopqrstuvwxyz0123456789" );

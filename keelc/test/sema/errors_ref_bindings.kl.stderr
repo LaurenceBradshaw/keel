@@ -8,13 +8,13 @@ error: a `ref` binding needs a variable to bind to
   --> sema/errors_ref_bindings.kl:19:17
    |
 19 |     ref i32 r = make();
-   |                 ^^^^^^
+   |                 ^^^^^^ drop `ref` to copy the value
 
 error: a `ref` binding needs a variable to bind to
   --> sema/errors_ref_bindings.kl:26:17
    |
 26 |     ref i32 r = 1;
-   |                 ^
+   |                 ^ drop `ref` to copy the value
 
 error: cannot borrow `u8` as `ref i32`
   --> sema/errors_ref_bindings.kl:36:17

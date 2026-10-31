@@ -16,7 +16,7 @@ error: `lo` is assigned while `s` still borrows from it
 37 |             lo = kl::list<kl::optional<kl::string>>(); // error: assigned
    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `s` is used after this; it was bound at 36:34
 
-error: an element of `lo` is replaced while `s` still borrows from it
+error: an element of `lo` is changed while `s` still borrows from it
   --> sema/errors_payload_through_element.kl:49:13
    |
 49 |             lo[0] = kl::optional<kl::string>::none; // error: replaced
