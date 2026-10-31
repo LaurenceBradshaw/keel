@@ -5,6 +5,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_set>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "sema/addresses.h"
@@ -161,6 +162,7 @@ private:
         Type_id                         interface = {}
     );
     void shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
+    void receive_markers( Node_id call );
 
     void check_deduced_bounds(
         std::span<const Node_id> parameters,
@@ -283,6 +285,9 @@ private:
     Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
     Node_id discarded_ {};     // set by infer_discarded while it runs
+
+    // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
+    std::unordered_set<u32> received_;
 
     u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
     bool unsafe_used_  = false;

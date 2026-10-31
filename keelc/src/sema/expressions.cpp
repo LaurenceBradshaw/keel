@@ -50,6 +50,7 @@ Type_id Expressions::infer( Node_id id )
         return infer_name( id );
 
     case Node_kind::Call_expr:
+        receive_markers( id );
         return infer_call( id );
 
     case Node_kind::Binary_expr:
@@ -1024,6 +1025,8 @@ Type_id Expressions::
 
 void Expressions::check_yield( Node_id id )
 {
+    receive_markers( id );
+
     if( !ast_.is_walk( current_function_ ) )
     {
         reporter_.error_at( ast_.span( id ), "`yield` is only allowed in a walk", "declare `void operator:( ... )`" );
@@ -1061,7 +1064,25 @@ void Expressions::check_yield( Node_id id )
 Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner )
 {
     const Node_id container = ast_.container( walk_stmt );
-    const Type_id type      = infer( container );
+
+    // A walk borrows its container: no marker gives it up or lends it.
+    if( ast_.kind( container ) == Node_kind::Marker_expr )
+    {
+        const Keyword          marker  = ast_.keyword( container );
+        const std::string_view keyword = marker == Keyword::Move ? "move" : marker == Keyword::Ref ? "ref" : "out";
+
+        reporter_.error_at(
+            ast_.span( container ),
+            fmt::format( "a walk borrows what it walks, so it takes no `{}`", keyword ),
+            fmt::format( "drop `{}`", keyword )
+        );
+
+        infer( ast_.operand( container ) );
+        types_.poison( container );
+        return Node_id {};
+    }
+
+    const Type_id type = infer( container );
 
     if( table_.is_error( type ) )
     {
@@ -1160,6 +1181,17 @@ void Expressions::shape_arguments( Node_id call, std::vector<Argument_shape>& sh
         for( const Node_id argument : ast_.arguments( call ) )
         {
             shapes.push_back( argument_shape( argument ) );
+        }
+    }
+}
+
+void Expressions::receive_markers( Node_id call )
+{
+    for( const Node_id argument : ast_.arguments( call ) )
+    {
+        if( ast_.kind( argument ) == Node_kind::Marker_expr )
+        {
+            received_.insert( argument.v );
         }
     }
 }
@@ -3340,6 +3372,22 @@ Type_id Expressions::infer_marker( Node_id id )
 {
     const Keyword marker  = ast_.keyword( id );
     const Node_id operand = ast_.operand( id );
+
+    // Only a parameter receives a `ref` or `out`.
+    if( marker != Keyword::Move && !received_.contains( id.v ) )
+    {
+        const bool lends = marker == Keyword::Ref;
+
+        reporter_.error_at(
+            ast_.span( id ),
+            lends ? "`ref` lends an argument to a parameter, and nothing here receives one"
+                  : "`out` hands an argument to a parameter to assign, and nothing here receives one",
+            lends ? "drop `ref`" : "drop `out`"
+        );
+
+        infer( operand );
+        return types_.poison( id );
+    }
 
     // `out` assigns through the place, so it needs one, and one that may be written. Same test as
     // `ref` for the same reason: what may be assigned is exactly what may be lent for assignment.
@@ -7510,6 +7558,68 @@ TEST_CASE( "type_checker_requires_a_place_for_a_ref_argument", "[sema][ref]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// Only a parameter receives a `ref` or `out`; anywhere else one is refused once, not taken as a move.
+TEST_CASE( "type_checker_refuses_a_marker_nothing_receives", "[sema][ref][out]" )
+{
+    for( const char* body : {
+             "i32 n = 1; i32 m = ref n;",
+             "i32 n = 1; i32 m = 0; m = out n;",
+             "i32 n = 1; _ = ref n;",
+             "E e = E::a; switch( out e ) { case E::a: break; case E::b: break; }",
+         } )
+    {
+        const Typed p( std::string( "enum E { a, b };\nvoid f() { " ) + body + " }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "nothing here receives one" ) != std::string::npos );
+    }
+
+    const Typed returned( "i32 f() { i32 n = 1; return ref n; }\ni32 main() { return 0; }" );
+    INFO( returned.rendered() );
+    REQUIRE( returned.errors() == 1 );
+    REQUIRE( returned.rendered().find( "drop `ref`" ) != std::string::npos );
+}
+
+TEST_CASE( "type_checker_accepts_a_marker_a_parameter_receives", "[sema][ref][out]" )
+{
+    constexpr std::string_view given =
+        "void bump( ref i32 n ) { n = n + 1; }\n"
+        "void init( out i32 n ) { n = 1; }\n"
+        "class B { i32 v; public B( ref i32 n ) { v = n; } public void set( out i32 n ) { n = v; } };\n"
+        "class W { i32 v; public void operator:( ref i32 x ) { yield( ref v ); } };\n";
+
+    const Typed p(
+        std::string( given ) +
+        "i32 main() { i32 n = 0; bump( ref n ); init( out n ); B b = B( ref n ); b.set( out n ); return n; }"
+    );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // A method that does not exist is the one error.
+    const Typed missing(
+        std::string( given ) + "i32 main() { i32 n = 0; B b = B( ref n ); b.nope( ref n, out n ); return n; }"
+    );
+    INFO( missing.rendered() );
+    REQUIRE( missing.errors() == 1 );
+}
+
+// A walk borrows its container, so each marker there is one error.
+TEST_CASE( "type_checker_refuses_a_marker_on_a_walk_s_container", "[sema][walk]" )
+{
+    for( const char* head : { "move a", "ref a", "out a", "move r" } )
+    {
+        const Typed p(
+            std::string( "void f( const ref i32[] r ) { i32[2] a = [ 1, 2 ]; for( i32 x : " ) + head +
+            " ) { } }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a walk borrows what it walks" ) != std::string::npos );
     }
 }
 

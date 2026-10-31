@@ -1,0 +1,37 @@
+// `ref` and `out` mark only an argument a parameter receives, and a walk takes no marker on what
+// it walks. One error per marked line.
+import kl::list;
+
+enum E { a, b };
+
+void bump( ref i32 n ) { n = n + 1; }
+
+i32 heads( E e )
+{
+    switch( ref e ) { case E::a: break; case E::b: break; } // error: nothing receives the `ref`
+    switch( out e ) { case E::a: break; case E::b: break; } // error: nothing receives the `out`
+
+    i32 n = 1;
+    i32 m = ref n; // error: nothing receives the `ref`
+    m = out n;     // error: nothing receives the `out`
+    _ = ref n;     // error: nothing receives the `ref`
+    bump( ref n );
+    bump( ref m );
+    return out n; // error: nothing receives the `out`
+}
+
+void walks( const ref i32[] r )
+{
+    kl::list<i32> l = kl::list<i32>();
+    i32[2]        a = [ 1, 2 ];
+
+    for( i32 x : move l ) { } // error: a walk borrows its container
+    for( i32 x : ref a ) { }  // error: a walk borrows its container
+    for( i32 x : out a ) { }  // error: a walk borrows its container
+    for( i32 x : move r ) { } // error: a walk borrows its container
+}
+
+i32 main()
+{
+    return 0;
+}

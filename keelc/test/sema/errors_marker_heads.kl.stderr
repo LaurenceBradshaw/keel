@@ -1,0 +1,61 @@
+error: `ref` lends an argument to a parameter, and nothing here receives one
+  --> sema/errors_marker_heads.kl:11:13
+   |
+11 |     switch( ref e ) { case E::a: break; case E::b: break; } // error: nothing receives the `ref`
+   |             ^^^^^ drop `ref`
+
+error: `out` hands an argument to a parameter to assign, and nothing here receives one
+  --> sema/errors_marker_heads.kl:12:13
+   |
+12 |     switch( out e ) { case E::a: break; case E::b: break; } // error: nothing receives the `out`
+   |             ^^^^^ drop `out`
+
+error: `ref` lends an argument to a parameter, and nothing here receives one
+  --> sema/errors_marker_heads.kl:15:13
+   |
+15 |     i32 m = ref n; // error: nothing receives the `ref`
+   |             ^^^^^ drop `ref`
+
+error: `out` hands an argument to a parameter to assign, and nothing here receives one
+  --> sema/errors_marker_heads.kl:16:9
+   |
+16 |     m = out n;     // error: nothing receives the `out`
+   |         ^^^^^ drop `out`
+
+error: `ref` lends an argument to a parameter, and nothing here receives one
+  --> sema/errors_marker_heads.kl:17:9
+   |
+17 |     _ = ref n;     // error: nothing receives the `ref`
+   |         ^^^^^ drop `ref`
+
+error: `out` hands an argument to a parameter to assign, and nothing here receives one
+  --> sema/errors_marker_heads.kl:20:12
+   |
+20 |     return out n; // error: nothing receives the `out`
+   |            ^^^^^ drop `out`
+
+error: a walk borrows what it walks, so it takes no `move`
+  --> sema/errors_marker_heads.kl:28:18
+   |
+28 |     for( i32 x : move l ) { } // error: a walk borrows its container
+   |                  ^^^^^^ drop `move`
+
+error: a walk borrows what it walks, so it takes no `ref`
+  --> sema/errors_marker_heads.kl:29:18
+   |
+29 |     for( i32 x : ref a ) { }  // error: a walk borrows its container
+   |                  ^^^^^ drop `ref`
+
+error: a walk borrows what it walks, so it takes no `out`
+  --> sema/errors_marker_heads.kl:30:18
+   |
+30 |     for( i32 x : out a ) { }  // error: a walk borrows its container
+   |                  ^^^^^ drop `out`
+
+error: a walk borrows what it walks, so it takes no `move`
+  --> sema/errors_marker_heads.kl:31:18
+   |
+31 |     for( i32 x : move r ) { } // error: a walk borrows its container
+   |                  ^^^^^^ drop `move`
+
+10 errors generated

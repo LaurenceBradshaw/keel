@@ -2831,6 +2831,8 @@ Operand Lowering::lower_expression( Node_id id )
         const Node_id operand = ast_.operand( id );
         const Type_id type    = type_of( id );
 
+        assert( ast_.keyword( id ) == Keyword::Move && "sema refuses `ref` and `out` outside an argument" );
+
         // A named variable is a place, and moving empties it. A field reads as a copy of its place, so
         // moving that place empties the field alone. A temporary is built into a statement temporary
         // first, so the caller still drops it unless the move clears its flag.
