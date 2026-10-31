@@ -1,0 +1,6 @@
+// A local array of 1 MB or more warns only under -Wlarge-local.
+i32 main()
+{
+    u8[1048576] big = [ 0, .. ];
+    return cast<i32>( big[0] );
+}

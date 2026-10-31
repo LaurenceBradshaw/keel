@@ -120,13 +120,15 @@ std::string_view warning_name( Warning which )
         return "void-variable";
     case Warning::Constant_comparison:
         return "constant-comparison";
+    case Warning::Large_local:
+        return "large-local";
     }
     return "";
 }
 
 std::optional<Warning> warning_named( std::string_view name )
 {
-    for( u8 i = 0; i <= static_cast<u8>( Warning::Constant_comparison ); ++i )
+    for( u8 i = 0; i <= static_cast<u8>( Warning::Large_local ); ++i )
     {
         if( warning_name( static_cast<Warning>( i ) ) == name )
         {

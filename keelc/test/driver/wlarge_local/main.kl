@@ -1,0 +1,13 @@
+// -Wlarge-local warns at a local array of 1 MB or more, which a thread's stack may not hold.
+void use( const ref u8[1048576] _ ) { }
+
+i32 main()
+{
+    u8[1048576] big = [ 0, .. ];
+    u8[1048575] under = [ 0, .. ];
+    i64[128][1024] nested = [ [ 0, .. ], .. ];
+    const ref u8[1048576] borrowed = big;
+    use( borrowed );
+    _ = under[0] + cast<u8>( nested[0][0] );
+    return 0;
+}

@@ -41,11 +41,14 @@ std::filesystem::path library_folder()
 
 namespace
 {
-// §7.7: C's UB becomes Keel's UB without these.
+// §7.7: C's UB becomes Keel's UB without these. Stack probes keep a large frame from stepping over
+// the guard page into other memory.
 std::string compiler_and_flags( std::string_view compiler, std::string_view cflags )
 {
     return fmt::format(
-        "{} -fwrapv -fno-strict-aliasing -std=c11{}", compiler, cflags.empty() ? std::string() : fmt::format( " {}", cflags )
+        "{} -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11{}",
+        compiler,
+        cflags.empty() ? std::string() : fmt::format( " {}", cflags )
     );
 }
 } // namespace
@@ -187,7 +190,8 @@ TEST_CASE( "compile_command_compiles_one_part_to_its_object", "[codegen_c][link]
     {
         REQUIRE(
             keel::compile_command( "clang", "-O2 -g", "out/main.kl.c", "tmp/main.kl.o" ) ==
-            "clang -fwrapv -fno-strict-aliasing -std=c11 -O2 -g -c \"out/main.kl.c\" -o \"tmp/main.kl.o\""
+            "clang -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11 -O2 -g -c \"out/main.kl.c\" -o "
+            "\"tmp/main.kl.o\""
         );
     }
 
@@ -195,7 +199,8 @@ TEST_CASE( "compile_command_compiles_one_part_to_its_object", "[codegen_c][link]
     {
         REQUIRE(
             keel::compile_command( "cc", "", "a b/main.kl.prelude.c", "main.kl.prelude.o" ) ==
-            "cc -fwrapv -fno-strict-aliasing -std=c11 -c \"a b/main.kl.prelude.c\" -o \"main.kl.prelude.o\""
+            "cc -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11 -c \"a b/main.kl.prelude.c\" -o "
+            "\"main.kl.prelude.o\""
         );
     }
 }
@@ -208,7 +213,8 @@ TEST_CASE( "link_command_links_the_runtime_after_the_objects", "[codegen_c][link
     {
         REQUIRE(
             keel::link_command( "clang", "-Wall -Werror", objects, "/rt/libkeel_rt.a", "out/main" ) ==
-            "clang -fwrapv -fno-strict-aliasing -std=c11 -Wall -Werror \"tmp/main.kl.o\" \"tmp/main.kl.prelude.o\" "
+            "clang -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11 -Wall -Werror \"tmp/main.kl.o\" "
+            "\"tmp/main.kl.prelude.o\" "
             "\"/rt/libkeel_rt.a\" -o \"out/main\""
         );
     }
@@ -217,7 +223,7 @@ TEST_CASE( "link_command_links_the_runtime_after_the_objects", "[codegen_c][link
     {
         REQUIRE(
             keel::link_command( "cc", "", std::span( objects ).first( 1 ), "libkeel_rt.a", "main" ) ==
-            "cc -fwrapv -fno-strict-aliasing -std=c11 \"tmp/main.kl.o\" \"libkeel_rt.a\" -o \"main\""
+            "cc -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11 \"tmp/main.kl.o\" \"libkeel_rt.a\" -o \"main\""
         );
     }
 }
@@ -228,7 +234,8 @@ TEST_CASE( "link_command_links_the_users_c_after_the_runtime", "[codegen_c][link
     const std::vector<std::string>           linked  = { "glue.c", "lib/libz.a", "-Llib", "-lm" };
     REQUIRE(
         keel::link_command( "cc", "", objects, "libkeel_rt.a", "main", linked ) ==
-        "cc -fwrapv -fno-strict-aliasing -std=c11 \"main.kl.o\" \"libkeel_rt.a\" \"glue.c\" \"lib/libz.a\" \"-Llib\" "
+        "cc -fwrapv -fno-strict-aliasing -fstack-clash-protection -std=c11 \"main.kl.o\" \"libkeel_rt.a\" \"glue.c\" "
+        "\"lib/libz.a\" \"-Llib\" "
         "\"-lm\" -o \"main\""
     );
 }

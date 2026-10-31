@@ -26,7 +26,8 @@ enum class Warning : u8
     Unused_parameter,
     Unused_variable,
     Void_variable,
-    Constant_comparison
+    Constant_comparison,
+    Large_local // off unless -Wlarge-local
 };
 
 std::string_view warning_name( Warning which );
@@ -90,7 +91,7 @@ private:
 
     enum class Level : u8
     {
-        On, // first, so a value-initialised levels_ has every warning on
+        On,
         Off,
         Error
     };
@@ -98,9 +99,9 @@ private:
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
     std::vector<Span>                silenced_;
-    std::map<u32, u32>               unbalanced_;         // mapping a file to the index of its brace report in items_
-    std::array<Level, 4>             levels_ {};          // indexed by Warning
-    bool                             all_errors_ = false; // a bare -Werror
+    std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
+    std::array<Level, 5>             levels_ { Level::On, Level::On, Level::On, Level::On, Level::Off }; // indexed by Warning
+    bool                             all_errors_ = false;                                                // a bare -Werror
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner

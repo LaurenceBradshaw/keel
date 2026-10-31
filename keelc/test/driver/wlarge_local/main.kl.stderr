@@ -1,0 +1,11 @@
+warning: `big` takes 1048576 bytes of stack [-Wlarge-local]
+ --> driver/wlarge_local/main.kl:6:5
+  |
+6 |     u8[1048576] big = [ 0, .. ];
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ a `kl::list` keeps its elements on the heap
+
+warning: `nested` takes 1048576 bytes of stack [-Wlarge-local]
+ --> driver/wlarge_local/main.kl:8:5
+  |
+8 |     i64[128][1024] nested = [ [ 0, .. ], .. ];
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ a `kl::list` keeps its elements on the heap

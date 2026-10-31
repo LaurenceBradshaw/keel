@@ -43,6 +43,28 @@ std::string plain_fill( const Type_table& table, Type_id type )
     return table.is_pointer( type ) || table.is_many_pointer( type ) ? "nullptr" : "";
 }
 
+// At least the bytes a value of type takes: anything without a known size counts as one.
+u64 bytes_at_least( const Type_table& table, Type_id type )
+{
+    const Type& t = table.get( type );
+
+    switch( t.kind )
+    {
+    case Type_kind::Int:
+    case Type_kind::Float:
+        return t.width / 8;
+    case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
+        return 8;
+    case Type_kind::Run:
+        return 16;
+    case Type_kind::Array:
+        return t.count * bytes_at_least( table, t.element );
+    default:
+        return 1;
+    }
+}
+
 } // namespace
 
 void Statements::visit( Node_id id )
@@ -396,6 +418,21 @@ void Statements::visit_var( Node_id id )
                 fmt::format( "`{}` is `void`, so it holds nothing", interner_.text( ast_.name( id ) ) ),
                 init.is_valid() ? fmt::format( "write `{};` on its own", reporter_.text( ast_.span( init ) ) ) : "remove it"
             );
+        }
+
+        constexpr u64 k_large_local = u64 { 1 } << 20;
+        if( table_.is_array( type ) && mode == Keyword::Count && expressions_.current_function().is_valid() )
+        {
+            const u64 bytes = bytes_at_least( table_, type );
+            if( bytes >= k_large_local )
+            {
+                reporter_.warn_at(
+                    Warning::Large_local,
+                    ast_.span( id ),
+                    fmt::format( "`{}` takes {} bytes of stack", interner_.text( ast_.name( id ) ), bytes ),
+                    "a `kl::list` keeps its elements on the heap"
+                );
+            }
         }
     }
     else if( init.is_valid() )
