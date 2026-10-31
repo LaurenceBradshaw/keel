@@ -353,8 +353,23 @@ void Statements::visit_var( Node_id id )
             }
         }
 
+        // A const local never changes once it holds a value, so it takes one where it is declared.
+        const bool constant = ast_.is_const_binding( id ) && mode == Keyword::Count;
+        if( !init.is_valid() && constant && expressions_.current_function().is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is `const`, so it needs its value here", interner_.text( ast_.name( id ) ) ),
+                fmt::format(
+                    "write `{} {} = value;`, or remove `const` to set it later",
+                    reporter_.text( ast_.span( annotation ) ),
+                    interner_.text( ast_.name( id ) )
+                )
+            );
+        }
+
         // D60: every element holds a value from the declaration, so an array is never assigned later.
-        if( !init.is_valid() && mode == Keyword::Count && table_.is_array( type ) &&
+        if( !init.is_valid() && !constant && mode == Keyword::Count && table_.is_array( type ) &&
             expressions_.current_function().is_valid() )
         {
             const std::string fill = plain_fill( table_, type );

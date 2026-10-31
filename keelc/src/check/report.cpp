@@ -191,11 +191,18 @@ void report_move_errors(
 
             const Line_col at = sm.line_col( error.moved.file, error.moved.start );
 
+            // A part moved on its own is named, as the whole was not moved there.
+            const std::string moved = error.moved_part == k_no_field
+                                          ? std::string( "it" )
+                                          : subject_of( function, ast, interner, error.local, error.moved_part, "it" );
+
             // `maybe` is an ambiguity refused, not a certainty reported, so it must read differently.
             diagnostics.error(
                 error.use,
-                error.maybe ? fmt::format( "{} may already have been moved", subject )
-                            : fmt::format( "{} is used after it was moved", subject ),
+                error.maybe ? error.moved_part == k_no_field
+                                  ? fmt::format( "{} may already have been moved", subject )
+                                  : fmt::format( "{} is used where {} may already have been moved", subject, moved )
+                            : fmt::format( "{} is used after {} was moved", subject, moved ),
                 error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
                             : fmt::format( "moved at {}:{}", at.line, at.col )
             );
@@ -221,7 +228,11 @@ void report_loan_errors(
              ) )
         {
             const std::string object = reached_name( function, ast, interner, error.object, error.reached );
+            const std::string whole  = reached_name( function, ast, interner, error.object, error.borrowed );
             const Line_col    taken  = sm.line_col( error.taken.file, error.taken.start );
+
+            // A part moved names what is borrowed too, when the two differ.
+            const std::string borrowed = object == whole ? std::string( "it" ) : whole;
 
             // D74: the loop's walk still reads the container after the body.
             if( error.walked )
@@ -229,7 +240,7 @@ void report_loan_errors(
                 diagnostics.error(
                     error.at,
                     error.conflict == Loan_conflict::Moved
-                        ? fmt::format( "{} is moved while a loop walks it", object )
+                        ? fmt::format( "{} is moved while a loop walks {}", object, borrowed )
                         : fmt::format( "this could change {} while a loop walks it", object ),
                     fmt::format( "the walk goes on reading it; the loop is at {}:{}", taken.line, taken.col )
                 );
@@ -242,7 +253,7 @@ void report_loan_errors(
             switch( error.conflict )
             {
             case Loan_conflict::Moved:
-                message = fmt::format( "{} is moved while `{}` still borrows it", object, holder );
+                message = fmt::format( "{} is moved while `{}` still borrows {}", object, holder, borrowed );
                 break;
             case Loan_conflict::Assigned:
                 message = fmt::format( "{} is assigned while `{}` still borrows from it", object, holder );
@@ -305,6 +316,21 @@ void report_unassigned_errors(
         // D9 first: when a function has both, the read is the mistake and the exit its consequence.
         for( const Uninitialised_read& read : report.reads )
         {
+            // Each place once, at its earliest read: the one fix covers every read after it.
+            const bool earlier = std::any_of(
+                report.reads.begin(),
+                report.reads.end(),
+                [&]( const Uninitialised_read& other )
+                {
+                    return other.local == read.local && other.field == read.field && other.at.file == read.at.file &&
+                           ( other.at.start < read.at.start || ( other.at.start == read.at.start && &other < &read ) );
+                }
+            );
+            if( earlier )
+            {
+                continue;
+            }
+
             if( is_constructor_field( read.local, read.field ) && read.whole )
             {
                 diagnostics.error(

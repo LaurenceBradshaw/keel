@@ -52,7 +52,7 @@ error: `s.y` is never assigned
 101 | void half_written( out S s ) // error
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
 
-error: `p.a` is used after it was moved
+error: `p` is used after `p.a` was moved
    --> sema/errors_fields.kl:109:5
     |
 109 |     keep( move p ); // error
@@ -70,7 +70,7 @@ error: `p.a` is moved into this call, so the call cannot also borrow it
 124 |     both( move p.a, ref p ); // error
     |                     ^^^^^ a call cannot take a value and borrow it at once
 
-error: `p` is moved while `r` still borrows it
+error: `p.a` is moved while `r` still borrows it
    --> sema/errors_fields.kl:135:5
     |
 135 |     sink( move p.a ); // error

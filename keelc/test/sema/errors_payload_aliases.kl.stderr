@@ -34,7 +34,7 @@ error: this could change `h` while `b` still borrows from it
 128 |             clear( ref h );
     |                    ^^^^^ `b` is used after this; it was bound at 127:28
 
-error: `h` is moved while `b` still borrows it
+error: `h` is moved while `b` still borrows `h.b`
    --> sema/errors_payload_aliases.kl:140:13
     |
 140 |             take( move h );

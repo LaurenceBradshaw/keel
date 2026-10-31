@@ -472,10 +472,11 @@ std::vector<Loan_error> check_loans(
                         const Local_id object = loan.of.is_valid() ? loan.of : effect.place.local;
 
                         errors.push_back( Loan_error {
-                            .object   = object,
-                            .reached  = effect.conflict == Loan_conflict::Changed && effect.place.local == object ? effect.place
+                            .object  = object,
+                            .reached = effect.conflict != Loan_conflict::Assigned && effect.place.local == object ? effect.place
                                                                                                                   : Place {},
-                            .holder   = holder,
+                            .holder  = holder,
+                            .borrowed = loan.of.is_valid() ? loan.place : Place {},
                             .at       = effect.at,
                             .taken    = loan.at,
                             .conflict = effect.conflict,

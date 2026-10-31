@@ -23,11 +23,12 @@ enum class Loan_conflict : u8
 // A loan broken while its holder is still used. Spans only; check/report does the wording.
 struct Loan_error
 {
-    Local_id      object {};  // what is borrowed
-    Place         reached {}; // `Changed`: the place passed or called on, when it is in `object`
-    Local_id      holder {};  // the binding that holds the loan
-    Span          at {};      // the statement that breaks it
-    Span          taken {};   // where the holder was bound
+    Local_id      object {};   // what is borrowed
+    Place         reached {};  // `Changed` or `Moved`: the place passed, called on or moved, when it is in `object`
+    Local_id      holder {};   // the binding that holds the loan
+    Place         borrowed {}; // what the loan is of, when it is in `object`
+    Span          at {};       // the statement that breaks it
+    Span          taken {};    // where the holder was bound
     Loan_conflict conflict = Loan_conflict::Moved;
     bool          walked   = false; // the holder is a walk's receiver (D74), and has no name
 };

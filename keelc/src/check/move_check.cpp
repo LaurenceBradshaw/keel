@@ -73,7 +73,7 @@ bool merge_into( Flow& into, const Flow& from )
 }
 
 // Reports a read of `range` if a leaf of it is moved; whether one was. The error names the place
-// read when every leaf is moved, and the first moved leaf otherwise.
+// read, and the part moved when one move did not take all of it.
 bool check_leaves(
     const Slot_map& slots, Local_id local, const Slots& range, Span span, const Flow& flow, std::vector<Move_error>* errors
 )
@@ -103,12 +103,39 @@ bool check_leaves(
 
     if( first != k_no_field && errors != nullptr )
     {
+        const Span moved     = flow.moved_at[first];
+        const auto same_move = [&]( u32 slot )
+        {
+            const Slots under = slots.under( slot );
+            for( u32 leaf = under.first; leaf < under.last; ++leaf )
+            {
+                if( slots.is_leaf( leaf ) && ( flow.state[leaf] == State::Live || flow.state[leaf] == State::Uninitialised ||
+                                               flow.moved_at[leaf].start != moved.start ) )
+                {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        // The largest part under the place read that the first move took whole.
+        u32 part = k_no_field;
+        if( !same_move( range.node ) )
+        {
+            part = first;
+            while( slots.parent( part ) != range.node && same_move( slots.parent( part ) ) )
+            {
+                part = slots.parent( part );
+            }
+        }
+
         errors->push_back( Move_error {
-            .local = local,
-            .field = slots.field( all ? range.node : first ),
-            .use   = span,
-            .moved = flow.moved_at[first],
-            .maybe = all ? maybe : flow.state[first] == State::Maybe_moved
+            .local      = local,
+            .field      = slots.field( range.node ),
+            .moved_part = part == k_no_field ? k_no_field : slots.field( part ),
+            .use        = span,
+            .moved      = moved,
+            .maybe      = all ? maybe : flow.state[first] == State::Maybe_moved
         } );
     }
 
@@ -746,8 +773,8 @@ TEST_CASE( "move_check_tracks_each_field_of_a_struct", "[check][move]" )
     const std::vector<Move_error> errors = half.errors();
 
     REQUIRE( errors.size() == 1 );
-    REQUIRE( errors[0].field != k_no_field );
-    REQUIRE( half.ast.name( half.functions.back().fields[errors[0].field].field ) == half.interner.find( "b" ) );
+    REQUIRE( errors[0].moved_part != k_no_field );
+    REQUIRE( half.ast.name( half.functions.back().fields[errors[0].moved_part].field ) == half.interner.find( "b" ) );
 
     const Checked whole( std::string( k_pair ) + "i32 main() { P p = P { 1, 2 }; take( move p ); look( p ); return 0; }" );
 
@@ -787,8 +814,10 @@ TEST_CASE( "move_check_tracks_a_field_moved_on_its_own", "[check][move]" )
     INFO( whole.rendered() );
     REQUIRE( whole.clean() );
     REQUIRE( whole.errors().size() == 1 );
-    REQUIRE( whole.errors()[0].field != k_no_field );
-    REQUIRE( whole.ast.name( whole.functions.back().fields[whole.errors()[0].field].field ) == whole.interner.find( "a" ) );
+    REQUIRE( whole.errors()[0].moved_part != k_no_field );
+    REQUIRE(
+        whole.ast.name( whole.functions.back().fields[whole.errors()[0].moved_part].field ) == whole.interner.find( "a" )
+    );
 }
 
 // Every borrowed argument's address is taken before the call, so the move inside it is checked

@@ -24,10 +24,11 @@ enum class Call_conflict : u8
 struct Move_error
 {
     Local_id      local {};
-    u32           field = k_no_field; // into Function::fields, when a field is what was moved
-    Span          use {};             // the read
-    Span          moved {};           // the move that killed it
-    bool          maybe    = false;   // moved on some paths, not all; for a one-call error, indices that may differ
+    u32           field      = k_no_field; // into Function::fields, when a field is what was read
+    u32           moved_part = k_no_field; // a field moved on its own, when the place read is more than it
+    Span          use {};                  // the read
+    Span          moved {};                // the move that killed it
+    bool          maybe    = false;        // moved on some paths, not all; for a one-call error, indices that may differ
     Call_conflict conflict = Call_conflict::None;
     Span          other {}; // the call's other argument, for the one-call errors
 };

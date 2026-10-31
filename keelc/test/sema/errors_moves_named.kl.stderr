@@ -1,0 +1,19 @@
+error: `x` is used before it is initialised
+  --> sema/errors_moves_named.kl:49:13
+   |
+49 |     i32 y = x + 1; // error
+   |             ^^^^^ give it a value at its declaration
+
+error: `o` is used after `o.a` was moved
+  --> sema/errors_moves_named.kl:58:5
+   |
+58 |     consume( move o ); // error
+   |     ^^^^^^^^^^^^^^^^^ moved at 56:5
+
+error: `o.a.n` is moved while `r` still borrows `o`
+  --> sema/errors_moves_named.kl:64:5
+   |
+64 |     sink( move o.a.n ); // error
+   |     ^^^^^^^^^^^^^^^^^^ `r` is used after this; it was bound at 63:5
+
+3 errors generated
