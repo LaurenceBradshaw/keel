@@ -1,0 +1,17 @@
+// A global of an enum with payloads takes no initialiser yet; one of a plain enum takes any variant.
+enum colour { red, green, blue };
+enum shape { dot, circle( f64 r ) };
+
+colour fine  = colour::blue;
+colour wrong = colour::purple;
+shape  s     = shape::dot;
+shape  zero;
+
+class Holder
+{
+    public i32 n;
+
+    public static shape kept = shape::circle( 1.0 );
+};
+
+i32 main() { return 0; }

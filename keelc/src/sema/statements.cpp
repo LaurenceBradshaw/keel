@@ -1170,6 +1170,17 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
+    // A tagged struct in C, which the emitter writes only as zero.
+    if( table_.is_enum( type ) && ast_.enum_has_payload( table_.get( type ).declaration ) )
+    {
+        reporter_.error_at(
+            ast_.span( init ),
+            fmt::format( "a {} of `{}` cannot have an initialiser yet", where, table_.name( type ) ),
+            "without one it starts as the first variant, with its payload zero"
+        );
+        return;
+    }
+
     if( !constant_folder_.is_constant_expression( init ) )
     {
         reporter_.error_at(

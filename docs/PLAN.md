@@ -742,7 +742,8 @@ function's type.
 `Type::name( args )` and refused as `value.name( args )`; a generic type's static call names its
 instance, `list<i32>::with_capacity( 8 )`. `static` before a field declares one variable shared by
 every object, named `C::count` (or bare inside the type) and refused as `c.count`; it follows a
-file-scope variable's rules — a constant initialiser, folded once; no struct or class, which would
+file-scope variable's rules — a constant initialiser, folded once, where a plain enum's variant is
+its ordinal and an enum with payloads takes none yet; no struct or class, which would
 need building; nothing owning, since nothing drops one; and no error union, whose zero tag need not
 name a member — and is absent from the emitted struct. A generic type gets **one storage per instantiation**, as C++, D, Zig and C# do, and the
 static's own type may not name a type parameter. A static and a member of one name collide.
@@ -1446,8 +1447,8 @@ major), which waits for the lambda decision (§12).
   30 `kl::eprint`s and about 15 other `kl::` qualifiers across its two modules, and needed no
   private name of `kl`. The cost is spelling, so `import kl::console as c;` would answer it as well,
   without a second lookup rule.
-- **Globals that are not constants, or that own.** A global today is a number, `bool` or pointer
-  whose initialiser folds. One computed at start-up, or one holding a `kl::string` or `kl::list`,
+- **Globals that are not constants, or that own.** A global today is a number, `bool`, pointer or
+  plain enum whose initialiser folds. One computed at start-up, or one holding a `kl::string` or `kl::list`,
   needs an order of initialisation and a drop at exit. Later, after consts_statics finding 3's
   constant kinds.
 - **A stack overflow names itself.** A guard-page handler in `kl_rt`, on its own signal stack, that

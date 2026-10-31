@@ -1,0 +1,19 @@
+error: `colour` has no variant `purple`
+ --> sema/errors_enum_globals.kl:6:16
+  |
+6 | colour wrong = colour::purple;
+  |                ^^^^^^^^^^^^^^
+
+error: a file-scope variable of `shape` cannot have an initialiser yet
+ --> sema/errors_enum_globals.kl:7:16
+  |
+7 | shape  s     = shape::dot;
+  |                ^^^^^^^^^^ without one it starts as the first variant, with its payload zero
+
+error: a static field of `shape` cannot have an initialiser yet
+  --> sema/errors_enum_globals.kl:14:32
+   |
+14 |     public static shape kept = shape::circle( 1.0 );
+   |                                ^^^^^^^^^^^^^^^^^^^^ without one it starts as the first variant, with its payload zero
+
+3 errors generated

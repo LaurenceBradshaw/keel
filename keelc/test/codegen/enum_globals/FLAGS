@@ -1,0 +1,1 @@
+--debug --emit-c --package t=../test_lib

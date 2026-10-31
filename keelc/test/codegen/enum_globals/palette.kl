@@ -1,0 +1,4 @@
+enum shade { light, mid, dark };
+
+shade chosen = shade::dark;
+const shade LIGHTEST = shade::light;

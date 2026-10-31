@@ -153,8 +153,17 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
         return is_constant_expression( ast_.operand( id ) );
 
     case Node_kind::Name_expr:
-    case Node_kind::Path_expr:
         return constant_named( id ).is_valid();
+
+    // A plain enum's variant is its ordinal, which the checker records on the path.
+    case Node_kind::Path_expr:
+    {
+        const Node_id qualifier = ast_.qualifier( id );
+        const Node_id owner     = qualifier.is_valid() ? resolution_.declaration_of( qualifier ) : Node_id {};
+
+        return constant_named( id ).is_valid() ||
+               ( owner.is_valid() && ast_.kind( owner ) == Node_kind::Enum_decl && !ast_.enum_has_payload( owner ) );
+    }
 
     default:
         return false;
@@ -266,7 +275,8 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
 
         if( !decl.is_valid() )
         {
-            return not_constant();
+            const std::optional<Constant_value> ordinal = value_of( id );
+            return ordinal ? folded( ordinal->magnitude, false ) : not_constant();
         }
 
         if( const std::optional<Constant_value> value = value_of( decl ) )

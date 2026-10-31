@@ -1,0 +1,25 @@
+// A plain enum's variant as a global's initialiser, which is its ordinal. `shade` comes from
+// another module.
+import t::console;
+import palette;
+
+enum colour { red, green, blue };
+
+colour       fav     = colour::green;
+const colour LAST    = colour::blue;
+i32          ordinal = cast<i32>( colour::blue );
+shade        copied  = shade::mid;
+
+i32 main()
+{
+    t::println( cast<i32>( fav ) );
+    t::println( cast<i32>( LAST ) );
+    t::println( ordinal );
+    t::println( cast<i32>( chosen ) );
+    t::println( cast<i32>( LIGHTEST ) );
+    t::println( cast<i32>( copied ) );
+
+    fav = colour::red;
+    t::println( cast<i32>( fav ) );
+    return 0;
+}
