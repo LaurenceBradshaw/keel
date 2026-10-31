@@ -19,11 +19,12 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
 
     for( const Statement& statement : func.statements )
     {
+        const Rvalue& value = func.rvalue( statement );
+
         if( statement.kind == Statement_kind::Assign && statement.place.is_whole_local() && chosen[statement.place.local.v] &&
-            statement.value.kind == Rvalue_kind::Use && statement.value.a.kind == Operand_kind::Copy &&
-            statement.value.a.place.is_whole_local() )
+            value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Copy && value.a.place.is_whole_local() )
         {
-            borrows[statement.place.local.v].choices.push_back( statement.value.a.place.local );
+            borrows[statement.place.local.v].choices.push_back( value.a.place.local );
         }
     }
 
@@ -35,7 +36,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         }
 
         Borrow&       borrow = borrows[statement.place.local.v];
-        const Rvalue& value  = statement.value;
+        const Rvalue& value  = func.rvalue( statement );
         const Place&  source = value.a.place;
 
         borrow.assignments++;
@@ -141,13 +142,15 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
     std::vector<bool> addressed( func.locals.size(), false );
     for( const Statement& statement : func.statements )
     {
-        if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Address_of ||
-            statement.value.a.place.is_global() || statement.value.a.place.num_projections != 0 )
+        const Rvalue& value = func.rvalue( statement );
+
+        if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Address_of || value.a.place.is_global() ||
+            value.a.place.num_projections != 0 )
         {
             continue;
         }
 
-        addressed[statement.value.a.place.local.v] = true;
+        addressed[value.a.place.local.v] = true;
     }
 
     for( std::size_t l = 0; l < borrows.size(); ++l )
@@ -160,13 +163,14 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
 
     for( const Statement& statement : func.statements )
     {
+        const Rvalue& value = func.rvalue( statement );
+
         const Place& place  = statement.place;
-        const Place& source = statement.value.a.place;
+        const Place& source = value.a.place;
 
         if( statement.kind != Statement_kind::Assign || place.is_global() || place.num_projections != 0 ||
-            borrows[place.local.v].assignments != 1 || statement.value.kind != Rvalue_kind::Use ||
-            statement.value.a.kind != Operand_kind::Copy || source.is_global() || source.num_projections != 0 ||
-            addressed[source.local.v] )
+            borrows[place.local.v].assignments != 1 || value.kind != Rvalue_kind::Use || value.a.kind != Operand_kind::Copy ||
+            source.is_global() || source.num_projections != 0 || addressed[source.local.v] )
         {
             continue;
         }
@@ -241,9 +245,7 @@ bool may_differ( const Function& func, const std::vector<Borrow>& borrows, const
 
 u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
 {
-    const std::span<const Operand> arguments(
-        func.operands.data() + element.through->first_argument, element.through->argument_count
-    );
+    const std::vector<Operand>& arguments = element.through->arguments;
 
     u32 depth = 0;
 

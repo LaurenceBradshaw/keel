@@ -28,8 +28,10 @@ u32 inline_cost( const Function& callee, const Inline_weights& weights )
         switch( statement.kind )
         {
         case Statement_kind::Assign:
-            if( statement.value.kind == Rvalue_kind::Call || statement.value.kind == Rvalue_kind::Indirect_call ||
-                statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release )
+        {
+            const Rvalue_kind kind = callee.rvalue( statement ).kind;
+            if( kind == Rvalue_kind::Call || kind == Rvalue_kind::Indirect_call || kind == Rvalue_kind::Allocate ||
+                kind == Rvalue_kind::Release )
             {
                 cost += weights.call;
                 call_like++;
@@ -39,6 +41,7 @@ u32 inline_cost( const Function& callee, const Inline_weights& weights )
                 cost += weights.statement;
             }
             break;
+        }
         case Statement_kind::Drop:
             cost += weights.call;
             call_like++;
@@ -116,7 +119,8 @@ std::optional<u32> initialised( const Function& caller, const Block& block, u32 
             continue;
         }
 
-        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
+        const Rvalue& value = caller.rvalue( statement );
+        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise )
         {
             return s;
         }
@@ -134,17 +138,26 @@ std::optional<u32> initialised( const Function& caller, const Block& block, u32 
 // no local; a constructor's `&init` moves to the continuation, so the body writes no borrowed local.
 void splice( Function& caller, Block_id at, u32 index, const Function& callee, std::optional<Place> receiver )
 {
-    // Copies: `blocks` and `statements` grow below.
-    const Block              block = caller.blocks[at];
-    const Statement          call  = caller.statements_of( block )[index];
-    const std::optional<u32> built = receiver && call.kind == Statement_kind::Assign
-                                         ? initialised( caller, block, index, caller.operands[call.value.first_argument] )
-                                         : std::nullopt;
+    // Copies: `blocks`, `statements` and `rvalues` grow below.
+    const Block              block      = caller.blocks[at];
+    const Statement_kind     call_kind  = caller.statements_of( block )[index].kind;
+    const Span               call_span  = caller.statements_of( block )[index].span;
+    const Place              call_place = caller.statements_of( block )[index].place;
+    const Rvalue             call_value = caller.rvalue( caller.statements_of( block )[index] );
+    const std::optional<u32> built      = receiver && call_kind == Statement_kind::Assign
+                                              ? initialised( caller, block, index, call_value.arguments[0] )
+                                              : std::nullopt;
+
+    // A clone: `at`'s old range stays whole, unreferenced, until the caller sweeps it.
+    const auto take = [&]( u32 s )
+    {
+        Statement statement = caller.clone( caller.statements_of( block )[s] );
+        caller.statements.push_back( std::move( statement ) );
+    };
 
     const u32      local_base = narrow_cast<u32>( caller.locals.size() );
     const u32      block_base = narrow_cast<u32>( caller.blocks.size() );
     const u32      proj_base  = narrow_cast<u32>( caller.projections.size() );
-    const u32      op_base    = narrow_cast<u32>( caller.operands.size() );
     const Local_id result { local_base };
     const Block_id continuation { block_base + narrow_cast<u32>( callee.blocks.size() ) };
 
@@ -201,32 +214,28 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
     // By place, not by kind: an `Address_of` operand is a Constant holding one.
     const auto renumber = [&]( Operand& operand ) { renumber_place( operand.place ); };
 
-    for( const Operand& operand : callee.operands )
-    {
-        Operand copy = operand;
-        renumber( copy );
-        caller.operands.push_back( copy );
-    }
-
     for( const Block& from : callee.blocks )
     {
         Block into           = from;
         into.first_statement = narrow_cast<u32>( caller.statements.size() );
 
-        for( Statement statement : callee.statements_of( from ) )
+        for( const Statement& from_statement : callee.statements_of( from ) )
         {
+            Rvalue value = callee.rvalue( from_statement );
+            renumber( value.a );
+            renumber( value.b );
+            for( Operand& argument : value.arguments )
+            {
+                renumber( argument );
+            }
+
+            Statement statement = caller.copy_of( from_statement, std::move( value ) );
             renumber_place( statement.place );
             if( statement.drop_flag.is_valid() )
             {
                 statement.drop_flag.v += local_base;
             }
-            renumber( statement.value.a );
-            renumber( statement.value.b );
-            if( statement.value.argument_count > 0 )
-            {
-                statement.value.first_argument += op_base;
-            }
-            caller.statements.push_back( statement );
+            caller.statements.push_back( std::move( statement ) );
         }
 
         Terminator& terminator = into.terminator;
@@ -257,8 +266,7 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
 
     if( built )
     {
-        const Statement statement = caller.statements_of( block )[*built];
-        caller.statements.push_back( statement );
+        take( *built );
     }
 
     if( callee.returns_a_value )
@@ -266,17 +274,16 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
         const Place from { .local = result };
         caller.statements.push_back( Statement {
             .kind  = Statement_kind::Assign,
-            .span  = call.span,
-            .place = call.place,
-            .value = use( move( from, callee.locals[k_return_slot].type ) )
+            .span  = call_span,
+            .place = call_place,
+            .value = caller.add_rvalue( use( move( from, callee.locals[k_return_slot].type ) ) )
         } );
-        caller.statements.push_back( Statement { .kind = Statement_kind::Storage_dead, .span = call.span, .place = from } );
+        caller.statements.push_back( Statement { .kind = Statement_kind::Storage_dead, .span = call_span, .place = from } );
     }
 
     for( u32 s = index + 1; s < block.statement_count; ++s )
     {
-        const Statement statement = caller.statements_of( block )[s];
-        caller.statements.push_back( statement );
+        take( s );
     }
 
     after.statement_count = narrow_cast<u32>( caller.statements.size() ) - after.first_statement;
@@ -292,8 +299,7 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
             continue;
         }
 
-        const Statement statement = caller.statements_of( block )[s];
-        caller.statements.push_back( statement );
+        take( s );
     }
 
     for( u32 p = callee.returns_a_value ? 0 : 1; p <= callee.parameter_count; ++p )
@@ -304,31 +310,30 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
         }
 
         caller.statements.push_back( Statement {
-            .kind = Statement_kind::Storage_live, .span = call.span, .place = Place { .local = Local_id { local_base + p } }
+            .kind = Statement_kind::Storage_live, .span = call_span, .place = Place { .local = Local_id { local_base + p } }
         } );
     }
 
-    assert( call.kind == Statement_kind::Drop || call.value.argument_count == callee.parameter_count );
-    for( u32 i = 0; i < call.value.argument_count; ++i )
+    assert( call_kind == Statement_kind::Drop || call_value.arguments.size() == callee.parameter_count );
+    for( u32 i = 0; i < call_value.arguments.size(); ++i )
     {
         if( i == 0 && receiver )
         {
             continue;
         }
 
-        const Operand argument = caller.operands[call.value.first_argument + i];
         caller.statements.push_back( Statement {
             .kind  = Statement_kind::Assign,
-            .span  = call.span,
+            .span  = call_span,
             .place = Place { .local = Local_id { local_base + 1 + i } },
-            .value = use( argument ),
+            .value = caller.add_rvalue( use( call_value.arguments[i] ) ),
         } );
     }
 
     Block& head          = caller.blocks[at];
     head.first_statement = head_first;
     head.statement_count = narrow_cast<u32>( caller.statements.size() ) - head_first;
-    head.terminator = Terminator { .kind = Terminator_kind::Goto, .span = call.span, .targets = { Block_id { block_base } } };
+    head.terminator = Terminator { .kind = Terminator_kind::Goto, .span = call_span, .targets = { Block_id { block_base } } };
 
     for( const Local_id temporary : callee.one_path_temporaries )
     {
@@ -379,8 +384,7 @@ bool replaceable_receiver( const Function& callee )
 
         bool all_ok = true;
         for_each_operand(
-            callee,
-            statement.value,
+            callee.rvalue( statement ),
             [&]( const Operand& operand )
             {
                 if( !ok( operand.place ) )
@@ -458,7 +462,8 @@ void inline_calls(
         [&]( const Block& block, u32 s ) -> Site
         {
             const Statement& statement = caller.statements_of( block )[s];
-            if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Call )
+            const Rvalue&    value     = std::as_const( caller ).rvalue( statement );
+            if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Call )
             {
                 return {};
             }
@@ -470,7 +475,7 @@ void inline_calls(
                     continue;
                 }
 
-                if( calls( statement, *saved[j] ) )
+                if( calls( caller, statement, *saved[j] ) )
                 {
                     const Function&      callee = *saved[j];
                     std::optional<Place> receiver;
@@ -479,11 +484,10 @@ void inline_calls(
                     if( fits && callee.constructed.is_valid() )
                     {
                         assert( callee.constructed == Local_id { 1 } );
-                        const std::optional<u32> built =
-                            initialised( caller, block, s, caller.operands[statement.value.first_argument] );
+                        const std::optional<u32> built = initialised( caller, block, s, value.arguments[0] );
                         if( built )
                         {
-                            receiver = caller.statements_of( block )[*built].value.a.place;
+                            receiver = caller.rvalue( caller.statements_of( block )[*built] ).a.place;
                         }
                         fits = receiver.has_value() && replaceable_receiver( callee );
                     }
@@ -518,7 +522,8 @@ void inline_drops(
         [&]( const Block& block, u32 s ) -> Site
         {
             const Statement& statement = caller.statements_of( block )[s];
-            if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() || !statement.value.callee.is_valid() )
+            if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() ||
+                !caller.rvalue( statement ).callee.is_valid() )
             {
                 return {};
             }
@@ -530,7 +535,7 @@ void inline_drops(
                     continue;
                 }
 
-                if( calls( statement, functions[j] ) )
+                if( calls( caller, statement, functions[j] ) )
                 {
                     if( replaceable_receiver( functions[j] ) &&
                         inline_cost( functions[j], weights ) <= threshold( statement_count, functions[j], weights ) )
@@ -588,7 +593,8 @@ struct Inlined : Compiled
     {
         return static_cast<std::size_t>( std::ranges::count_if(
             first().statements,
-            []( const Statement& s ) { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Call; }
+            [&]( const Statement& s )
+            { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == Rvalue_kind::Call; }
         ) );
     }
 

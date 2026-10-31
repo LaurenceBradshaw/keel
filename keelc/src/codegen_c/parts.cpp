@@ -42,7 +42,7 @@ Parts::Parts(
 
         for( const Statement& statement : functions[f].statements )
         {
-            const Rvalue& value = statement.value;
+            const Rvalue& value = functions[f].rvalue( statement );
 
             if( statement.kind == Statement_kind::Assign &&
                 ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) )

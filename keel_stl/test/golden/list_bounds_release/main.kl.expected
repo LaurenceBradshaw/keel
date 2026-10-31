@@ -58,10 +58,8 @@ int32_t kl__main__( void )
     struct kl_2kl4list_list__I3i32E kl_values_1;
     struct kl_2kl4list_list__I3i32E* kl_t3;
     struct kl_2kl4list_list__I3i32E* kl_t5;
-    struct kl_2kl4list_list__I3i32E* kl_t7;
     int32_t* kl_t8;
     bool kl_t9;
-    struct kl_2kl4list_list__I3i32E* kl_t10;
     int32_t* kl_t11;
     bool kl_t15;
     struct kl_7prelude_str kl_t16;
@@ -87,10 +85,8 @@ int32_t kl__main__( void )
     kl_t5 = &kl_values_1;
 #line 8 "list_bounds_release/main.kl"
     kl_2kl4list_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t5, 20 );
-#line 10 "list_bounds_release/main.kl"
-    kl_t7 = &kl_values_1;
 #line 156 "../../src/list.kl"
-    kl_t36 = 1 >= ( *kl_t7 ).kl_count_;
+    kl_t36 = 1 >= kl_values_1.kl_count_;
 #line 156 "../../src/list.kl"
     if ( kl_t36 ) goto bb5; else goto bb6;
     bb1:
@@ -101,10 +97,8 @@ int32_t kl__main__( void )
 #line 40 "../../src/list.kl"
     if ( kl_t52 ) goto bb9; else goto bb10;
     bb2:
-#line 15 "list_bounds_release/main.kl"
-    kl_t10 = &kl_values_1;
 #line 156 "../../src/list.kl"
-    kl_t15 = 2 >= ( *kl_t10 ).kl_count_;
+    kl_t15 = 2 >= kl_values_1.kl_count_;
 #line 156 "../../src/list.kl"
     if ( kl_t15 ) goto bb3; else goto bb4;
     bb3:
@@ -115,7 +109,7 @@ int32_t kl__main__( void )
     kl_rt_panic_message( "../../src/list.kl", 158, kl_t16.kl_data, kl_t16.kl_size );
     bb4:
 #line 163 "../../src/list.kl"
-    kl_t20 = ( *kl_t10 ).kl_data_ + 2;
+    kl_t20 = kl_values_1.kl_data_ + 2;
 #line 163 "../../src/list.kl"
     kl_t11 = &( *kl_t20 );
 #line 15 "list_bounds_release/main.kl"
@@ -133,7 +127,7 @@ int32_t kl__main__( void )
     kl_rt_panic_message( "../../src/list.kl", 158, kl_t37.kl_data, kl_t37.kl_size );
     bb6:
 #line 163 "../../src/list.kl"
-    kl_t41 = ( *kl_t7 ).kl_data_ + 1;
+    kl_t41 = kl_values_1.kl_data_ + 1;
 #line 163 "../../src/list.kl"
     kl_t8 = &( *kl_t41 );
 #line 10 "list_bounds_release/main.kl"

@@ -23,7 +23,7 @@ std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions
             {
                 const Function& callee = functions[c];
 
-                if( calls( statement, callee ) )
+                if( calls( functions[f], statement, callee ) )
                 {
                     edges[f].push_back( c );
                     break;

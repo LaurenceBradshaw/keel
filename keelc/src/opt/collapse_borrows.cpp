@@ -9,12 +9,12 @@ void collapse_borrows( Function& func, const Type_table& table )
 {
     for( Statement& statement : func.statements )
     {
-        if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Address_of )
+        if( statement.kind != Statement_kind::Assign || func.rvalue( statement ).kind != Rvalue_kind::Address_of )
         {
             continue;
         }
 
-        const Place& place = statement.value.a.place;
+        const Place& place = func.rvalue( statement ).a.place;
 
         // Only a local's own pointee: `&(*_1).f` is a field's address, and a deeper pointer's type needs the AST.
         if( place.is_global() || place.num_projections != 1 ||
@@ -26,13 +26,13 @@ void collapse_borrows( Function& func, const Type_table& table )
         const Type_id pointer = func.locals[place.local].type;
 
         // A class's pointer becoming an interface's builds a pair; `const` aside, the two must match.
-        if( !table.is_pointer( pointer ) || !table.is_pointer( statement.value.type ) ||
-            table.get( pointer ).element != table.get( statement.value.type ).element )
+        if( !table.is_pointer( pointer ) || !table.is_pointer( func.rvalue( statement ).type ) ||
+            table.get( pointer ).element != table.get( func.rvalue( statement ).type ).element )
         {
             continue;
         }
 
-        statement.value = use( copy( Place { .local = place.local }, pointer ) );
+        func.rvalue( statement ) = use( copy( Place { .local = place.local }, pointer ) );
     }
 }
 } // namespace keel
@@ -78,8 +78,10 @@ struct Collapsed : Compiled
             func.statements,
             [&]( const Statement& s )
             {
-                return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Address_of &&
-                       has_deref_projection( func, s.value.a.place );
+                const Rvalue& value = func.rvalue( s );
+
+                return s.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
+                       has_deref_projection( func, value.a.place );
             }
         ) );
     }

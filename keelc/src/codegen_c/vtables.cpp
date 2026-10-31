@@ -63,7 +63,7 @@ std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, std::span<cons
                 continue;
             }
 
-            const auto [implementer, interface] = converted_from( ast, types, function, statement.value );
+            const auto [implementer, interface] = converted_from( ast, types, function, function.rvalue( statement ) );
 
             if( !implementer.is_valid() )
             {

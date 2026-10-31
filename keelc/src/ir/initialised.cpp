@@ -78,8 +78,7 @@ void step( const Function& func, const Slot_map& slots, const Statement& stateme
     {
         // Moves first, so `_1 = move _1` ends holding a value. Moving one field leaves the rest.
         for_each_operand(
-            func,
-            statement.value,
+            func.rvalue( statement ),
             [&]( const Operand& operand )
             {
                 if( operand.kind != Operand_kind::Move || !is_field_path( func, operand.place ) )
@@ -104,12 +103,13 @@ void step( const Function& func, const Slot_map& slots, const Statement& stateme
         );
 
         // `_3 = &init _2`: the constructor called next fills `_2` through `_3`.
-        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
+        if( func.rvalue( statement ).kind == Rvalue_kind::Address_of &&
+            func.rvalue( statement ).address_purpose == Address_purpose::Initialise )
         {
-            const Local_id local = local_of( func, statement.value.a.place );
+            const Local_id local = local_of( func, func.rvalue( statement ).a.place );
             if( local.is_valid() )
             {
-                fill( state, local, slots.of( statement.value.a.place ), true );
+                fill( state, local, slots.of( func.rvalue( statement ).a.place ), true );
             }
         }
 
@@ -152,6 +152,8 @@ void step( const Terminator& terminator, Occupancy& state )
 
 bool writes( const Function& func, const Statement& statement, Local_id local )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     if( statement.kind != Statement_kind::Assign )
     {
         return false;
@@ -162,8 +164,8 @@ bool writes( const Function& func, const Statement& statement, Local_id local )
         return true;
     }
 
-    if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise &&
-        local_of( func, statement.value.a.place ) == local )
+    if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise &&
+        local_of( func, value.a.place ) == local )
     {
         return true;
     }
@@ -323,8 +325,9 @@ TEST_CASE( "initialised_is_cleared_by_a_move", "[ir][initialised]" )
     const Analysed p( "Box f( move Box b ) { return b; }\n" );
     REQUIRE( p.clean() );
 
-    const Occupancy state = p.after( []( const Statement& s )
-                                     { return s.kind == Statement_kind::Assign && s.value.a.kind == Operand_kind::Move; } );
+    const Occupancy state =
+        p.after( [&]( const Statement& s )
+                 { return s.kind == Statement_kind::Assign && p.first().rvalue( s ).a.kind == Operand_kind::Move; } );
 
     REQUIRE_FALSE( state.initialised[1] );
     REQUIRE( state.initialised[0] );
@@ -336,10 +339,13 @@ TEST_CASE( "initialised_is_set_by_a_constructor's_address", "[ir][initialised]" 
     const Analysed p( "Box f() { Box b = Box( 1 ); return b; }\n" );
     REQUIRE( p.clean() );
 
-    const Occupancy state =
-        p.after( []( const Statement& s )
-                 { return s.value.kind == Rvalue_kind::Address_of && s.value.address_purpose == Address_purpose::Initialise; }
-        );
+    const Occupancy state = p.after(
+        [&]( const Statement& s )
+        {
+            return p.first().rvalue( s ).kind == Rvalue_kind::Address_of &&
+                   p.first().rvalue( s ).address_purpose == Address_purpose::Initialise;
+        }
+    );
 
     REQUIRE( state.initialised[p.local( "b" ).v] );
 }
@@ -462,8 +468,9 @@ TEST_CASE( "uninitialised_is_set_by_a_move_and_cleared_by_a_write", "[ir][initia
         const Analysed p( "Box f( move Box b ) { return b; }\n" );
         REQUIRE( p.clean() );
 
-        const Occupancy state = p.after( []( const Statement& s )
-                                         { return s.kind == Statement_kind::Assign && s.value.a.kind == Operand_kind::Move; } );
+        const Occupancy state =
+            p.after( [&]( const Statement& s )
+                     { return s.kind == Statement_kind::Assign && p.first().rvalue( s ).a.kind == Operand_kind::Move; } );
 
         REQUIRE( state.uninitialised[1] );
         REQUIRE_FALSE( state.uninitialised[0] );
@@ -475,8 +482,11 @@ TEST_CASE( "uninitialised_is_set_by_a_move_and_cleared_by_a_write", "[ir][initia
         REQUIRE( p.clean() );
 
         const Occupancy state = p.after(
-            []( const Statement& s )
-            { return s.value.kind == Rvalue_kind::Address_of && s.value.address_purpose == Address_purpose::Initialise; }
+            [&]( const Statement& s )
+            {
+                return p.first().rvalue( s ).kind == Rvalue_kind::Address_of &&
+                       p.first().rvalue( s ).address_purpose == Address_purpose::Initialise;
+            }
         );
 
         REQUIRE_FALSE( state.uninitialised[p.local( "b" ).v] );

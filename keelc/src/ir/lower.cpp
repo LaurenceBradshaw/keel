@@ -1401,14 +1401,11 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
         operands.push_back( argument );
     }
 
-    const u32     first = builder_.add_operands( operands );
-    const Type_id type  = type_of( constructor ); // void
+    const Type_id type = type_of( constructor ); // void
 
     // The result is discarded, but Assign stays total: a void local is what the backend drops the
     // assignment from, leaving the bare call.
-    builder_.into_temp(
-        call( constructor, first, narrow_cast<u32>( operands.size() ), type, type_arguments_for_call( call_expr ) ), type, span
-    );
+    builder_.into_temp( call( constructor, std::move( operands ), type, type_arguments_for_call( call_expr ) ), type, span );
 }
 
 Block_id Lowering::break_target()
@@ -1787,10 +1784,9 @@ Operand Lowering::adopted( Operand value, Type_id to, Span span )
 
     assert( target.method.is_valid() && "an adopted value's type implements `from`" );
 
-    const Operand  operands[] = { moved_if_owning( value ) };
-    const u32      first      = builder_.add_operands( operands );
-    const Local_id result =
-        builder_.into_temp( call( target.method, first, 1, to, std::move( target.at.type_arguments ) ), to, span );
+    const Local_id result = builder_.into_temp(
+        call( target.method, { moved_if_owning( value ) }, to, std::move( target.at.type_arguments ) ), to, span
+    );
 
     drops_.own_temporary( result );
 
@@ -1815,16 +1811,15 @@ void Lowering::construct_str( Place target, Node_id constructor, Literal_id byte
     const Type_id data_type     = type_under( parameters[1], {} );
     const Type_id size_type     = type_under( parameters[2], {} );
 
-    const Operand operands[] = {
+    std::vector<Operand> operands = {
         temporary( address_of( target, receiver_type, Address_purpose::Initialise ), receiver_type, span ),
         temporary( literal_bytes( bytes, data_type ), data_type, span ),
         constant( literal_pool_.add_integer( literal_pool_.string( bytes ).size() ), size_type ),
     };
 
-    const u32     first = builder_.add_operands( operands );
-    const Type_id none  = type_of( constructor );
+    const Type_id none = type_of( constructor );
 
-    builder_.into_temp( call( constructor, first, 3, none ), none, span );
+    builder_.into_temp( call( constructor, std::move( operands ), none ), none, span );
 }
 
 Node_id Lowering::str_constructor() const
@@ -2412,12 +2407,12 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
 
         const Operand word   = supplied_hash( value, ast_.span( id ) );
         const Operand hasher = lower_argument( ast_.arguments( id )[0], ast_.params( requirement )[1], {} );
-        const u32     first  = builder_.add_operands( std::vector<Operand> { hasher, word } );
 
         const Node_id write = types_.table().prelude().hasher_write;
         assert( write.is_valid() && "the prelude's `hasher` has a `write`" );
 
-        const Local_id result = call_result( id, call( write, first, 2, type_of( id ) ), type_of( id ), ast_.span( id ) );
+        const Local_id result =
+            call_result( id, call( write, { hasher, word }, type_of( id ) ), type_of( id ), ast_.span( id ) );
         return copy( builder_.place( result ), type_of( id ) );
     }
 
@@ -2631,14 +2626,11 @@ Operand Lowering::emit_call(
 {
     std::vector<Operand> all( operands.begin(), operands.end() );
 
-    // Built before add_operands, since building it lays out operands of its own.
+    // Built before the call, since building it lays out statements of its own.
     if( ast_.is_located( callee ) )
     {
         all.push_back( caller_location( ast_.span( id ) ) );
     }
-
-    const u32 first = builder_.add_operands( all );
-    const u32 count = narrow_cast<u32>( all.size() );
 
     // A void call still assigns, to a void local nothing reads, so Assign always has a destination.
     const Type_id type = given.is_valid() ? given : type_of( id );
@@ -2648,8 +2640,9 @@ Operand Lowering::emit_call(
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
     const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
 
-    const Local_id result =
-        call_result( id, call( callee, first, count, result_type, std::move( type_arguments ) ), result_type, ast_.span( id ) );
+    const Local_id result = call_result(
+        id, call( callee, std::move( all ), result_type, std::move( type_arguments ) ), result_type, ast_.span( id )
+    );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
 }
@@ -2708,13 +2701,10 @@ Operand Lowering::lower_indirect_call( Node_id id )
         }
     }
 
-    const u32 first = builder_.add_operands( operands );
-
     const bool    binding     = types_.table().get( signature ).return_mode == Param_mode::Const_ref;
     const Type_id result_type = binding ? types_.table().pointer_to( type_of( id ) ) : type_of( id );
 
-    Local_id result =
-        call_result( id, indirect_call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, span );
+    Local_id result = call_result( id, indirect_call( callee, std::move( operands ), result_type ), result_type, span );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type_of( id ) );
 }
@@ -5737,9 +5727,11 @@ TEST_CASE( "lower_takes_the_address_of_the_chosen_overload", "[ir][lower][m7]" )
         {
             for( const Statement& s : func.statements )
             {
-                if( s.value.kind == Rvalue_kind::Function_address )
+                const Rvalue& value = func.rvalue( s );
+
+                if( value.kind == Rvalue_kind::Function_address )
                 {
-                    callees.push_back( s.value.callee );
+                    callees.push_back( value.callee );
                 }
             }
         }
@@ -5782,14 +5774,16 @@ TEST_CASE( "lower_takes_the_address_of_a_generic_instance", "[ir][lower][m7][gen
         {
             for( const Statement& s : func.statements )
             {
-                if( s.value.kind != Rvalue_kind::Function_address )
+                const Rvalue& value = func.rvalue( s );
+
+                if( value.kind != Rvalue_kind::Function_address )
                 {
                     continue;
                 }
 
                 std::string text;
 
-                for( const Type_id argument : s.value.type_arguments )
+                for( const Type_id argument : value.type_arguments )
                 {
                     text += p.types.table().name( argument );
                 }

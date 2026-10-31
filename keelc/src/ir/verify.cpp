@@ -118,18 +118,9 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
             operand_at( value.a, "callee" );
         }
 
-        const u64 end = static_cast<u64>( value.first_argument ) + value.argument_count;
-
-        if( end > func.operands.size() )
+        for( std::size_t i = 0; i < value.arguments.size(); ++i )
         {
-            errors.push_back( fmt::format( "{}: arguments {}..{} are out of range", where, value.first_argument, end ) );
-
-            return; // indexing them would read past the end
-        }
-
-        for( u32 i = 0; i < value.argument_count; ++i )
-        {
-            check_operand( func, func.operands[value.first_argument + i], fmt::format( "{} argument {}", where, i ), errors );
+            check_operand( func, value.arguments[i], fmt::format( "{} argument {}", where, i ), errors );
         }
 
         return;
@@ -165,8 +156,43 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
     }
 }
 
+// Whether `statement`'s rvalue is its own: one moved in from another function names an id of that
+// function's table.
+bool check_owner(
+    const Function&           func,
+    const Statement&          statement,
+    std::vector<bool>&        held,
+    const std::string&        where,
+    std::vector<std::string>& errors
+)
+{
+    if( !statement.value.is_valid() )
+    {
+        if( statement.kind == Statement_kind::Assign )
+        {
+            errors.push_back( fmt::format( "{}: an assignment holds no rvalue", where ) );
+        }
+        return false;
+    }
+
+    const Rvalue_id id = statement.value.id();
+    if( id.v >= func.rvalues.size() )
+    {
+        errors.push_back( fmt::format( "{}: rvalue {} is out of range", where, id.v ) );
+        return false;
+    }
+    if( held[id.v] )
+    {
+        errors.push_back( fmt::format( "{}: rvalue {} is held by another statement", where, id.v ) );
+    }
+    held[id.v] = true;
+    return true;
+}
+
 void check_statements( const Function& func, std::vector<std::string>& errors )
 {
+    std::vector<bool> held( func.rvalues.size(), false );
+
     for( u32 i = 0; i < func.statements.size(); ++i )
     {
         const Statement&  statement = func.statements[i];
@@ -174,10 +200,15 @@ void check_statements( const Function& func, std::vector<std::string>& errors )
 
         check_place( func, statement.place, where, errors );
 
+        const bool owned = check_owner( func, statement, held, where, errors );
+
         switch( statement.kind )
         {
         case Statement_kind::Assign:
-            check_rvalue( func, statement.value, where, errors );
+            if( owned )
+            {
+                check_rvalue( func, func.rvalue( statement ), where, errors );
+            }
             break;
 
         // Storage belongs to a whole local. A projection here would mean a field came alive on its
@@ -536,11 +567,12 @@ TEST_CASE( "verify_rejects_bad_terminator_targets", "[ir][verify]" )
 // came to be missed.
 TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
 {
-    const auto with_statement = []( Statement statement )
+    const auto with_statement = []( Statement statement, Rvalue value )
     {
         Function func = minimal();
 
-        func.statements.push_back( statement );
+        statement.value = func.add_rvalue( std::move( value ) );
+        func.statements.push_back( std::move( statement ) );
         func.blocks[k_entry_block].statement_count = 1;
 
         return func;
@@ -549,12 +581,14 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "the target of an assignment" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 9 } };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 9 } };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 0 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "statement 0: local 9 is out of range" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "statement 0: local 9 is out of range" )
+        );
     }
 
     // A place is rooted in storage - a local or a file-scope variable - and exactly one of them.
@@ -562,11 +596,12 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "a target rooted in nothing" )
     {
         Statement statement;
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        value.kind    = Rvalue_kind::Use;
+        value.a.kind  = Operand_kind::Copy;
+        value.a.place = Place { .local = Local_id { 0 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "statement 0: names no storage" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "statement 0: names no storage" ) );
     }
 
     // The other half, and the one that earns its keep: Node_id's absent value is 0xFFFFFFFF, not
@@ -575,12 +610,13 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "a target rooted in both a local and a global" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 }, .global = Node_id { 0 } };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 }, .global = Node_id { 0 } };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 0 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "names both a local and a global" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "names both a local and a global" ) );
     }
 
     // A global root is a Node_id into the AST, which verify cannot range-check - it is handed only
@@ -588,37 +624,40 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "a target rooted in a global is accepted" )
     {
         Statement statement;
-        statement.place         = Place { .global = Node_id { 3 } };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .global = Node_id { 3 } };
+        Rvalue    value;
+        statement.place = Place { .global = Node_id { 3 } };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .global = Node_id { 3 } };
 
-        REQUIRE( verify( with_statement( statement ) ).empty() );
+        REQUIRE( verify( with_statement( std::move( statement ), value ) ).empty() );
     }
 
     SECTION( "the operand of a Use" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 } };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 9 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 } };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 9 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "operand: local 9 is out of range" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "operand: local 9 is out of range" ) );
     }
 
     SECTION( "both operands of a Binary" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 } };
-        statement.value.kind    = Rvalue_kind::Binary;
-        statement.value.op      = Token_kind::Plus;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 8 } };
-        statement.value.b.kind  = Operand_kind::Copy;
-        statement.value.b.place = Place { .local = Local_id { 9 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 } };
+        value.kind      = Rvalue_kind::Binary;
+        value.op        = Token_kind::Plus;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 8 } };
+        value.b.kind    = Operand_kind::Copy;
+        value.b.place   = Place { .local = Local_id { 9 } };
 
-        const std::vector<std::string> errors = verify( with_statement( statement ) );
+        const std::vector<std::string> errors = verify( with_statement( std::move( statement ), value ) );
 
         REQUIRE( mentions( errors, "left operand: local 8 is out of range" ) );
         REQUIRE( mentions( errors, "right operand: local 9 is out of range" ) );
@@ -628,23 +667,25 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "but not an operand the kind does not use" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 } };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 } };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 0 } };
 
-        REQUIRE( verify( with_statement( statement ) ).empty() );
+        REQUIRE( verify( with_statement( std::move( statement ), value ) ).empty() );
     }
 
     SECTION( "a projection range past the end" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 }, .num_projections = 3 };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 }, .num_projections = 3 };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 0 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "projections 0..3 are out of range" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "projections 0..3 are out of range" ) );
     }
 
     // The unset sentinel is 0xFFFFFFFF, so a start plus a count overflows u32 and the range check
@@ -652,12 +693,71 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
     SECTION( "a projection range that would overflow u32" )
     {
         Statement statement;
-        statement.place         = Place { .local = Local_id { 0 }, .first_projection = 0xFFFF'FFFFu, .num_projections = 4 };
-        statement.value.kind    = Rvalue_kind::Use;
-        statement.value.a.kind  = Operand_kind::Copy;
-        statement.value.a.place = Place { .local = Local_id { 0 } };
+        Rvalue    value;
+        statement.place = Place { .local = Local_id { 0 }, .first_projection = 0xFFFF'FFFFu, .num_projections = 4 };
+        value.kind      = Rvalue_kind::Use;
+        value.a.kind    = Operand_kind::Copy;
+        value.a.place   = Place { .local = Local_id { 0 } };
 
-        REQUIRE( mentions( verify( with_statement( statement ) ), "out of range" ) );
+        REQUIRE( mentions( verify( with_statement( std::move( statement ), value ) ), "out of range" ) );
+    }
+}
+
+TEST_CASE( "verify_checks_each_rvalue_has_one_owner", "[ir][verify]" )
+{
+    const auto assigning = []( Function& func )
+    {
+        func.statements.push_back( Statement {
+            .place = Place { .local = k_return_slot },
+            .value = func.add_rvalue( use( copy( Place { .local = k_return_slot }, Type_id {} ) ) ),
+        } );
+        func.blocks[k_entry_block].statement_count++;
+    };
+
+    SECTION( "an assignment holding none" )
+    {
+        Function func = minimal();
+        func.statements.push_back( Statement { .place = Place { .local = k_return_slot } } );
+        func.blocks[k_entry_block].statement_count = 1;
+
+        REQUIRE( mentions( verify( func ), "statement 0: an assignment holds no rvalue" ) );
+    }
+
+    // Each function numbers its own rvalues, so a statement moved across names the wrong one.
+    SECTION( "a statement moved in from another function" )
+    {
+        Function from = minimal();
+        assigning( from );
+
+        Function into = minimal();
+        assigning( into );
+        into.statements.push_back( std::move( from.statements[0] ) );
+        into.blocks[k_entry_block].statement_count++;
+
+        REQUIRE( mentions( verify( into ), "statement 1: rvalue 0 is held by another statement" ) );
+    }
+
+    SECTION( "one past the table" )
+    {
+        Function from = minimal();
+        assigning( from );
+        assigning( from );
+
+        Function into = minimal();
+        into.statements.push_back( std::move( from.statements[1] ) );
+        into.blocks[k_entry_block].statement_count++;
+
+        REQUIRE( mentions( verify( into ), "statement 0: rvalue 1 is out of range" ) );
+    }
+
+    SECTION( "a copied function keeps its own" )
+    {
+        Function func = minimal();
+        assigning( func );
+        const Function copied = func;
+
+        REQUIRE( verify( copied ).empty() );
+        REQUIRE( copied.rvalue( copied.statements[0] ).kind == Rvalue_kind::Use );
     }
 }
 
@@ -669,9 +769,9 @@ TEST_CASE( "verify_checks_rvalue_fields", "[ir][verify]" )
         Statement statement;
 
         statement.place = Place { .local = Local_id { 0 } };
-        statement.value = value;
+        statement.value = func.add_rvalue( std::move( value ) );
 
-        func.statements.push_back( statement );
+        func.statements.push_back( std::move( statement ) );
         func.blocks[k_entry_block].statement_count = 1;
 
         return func;
@@ -707,17 +807,6 @@ TEST_CASE( "verify_checks_rvalue_fields", "[ir][verify]" )
         REQUIRE( mentions( verify( with_value( value ) ), "callee is not set" ) );
     }
 
-    SECTION( "a call whose arguments run past the end" )
-    {
-        Rvalue value;
-        value.kind           = Rvalue_kind::Call;
-        value.callee         = Node_id { 1 };
-        value.first_argument = 0;
-        value.argument_count = 2;
-
-        REQUIRE( mentions( verify( with_value( value ) ), "arguments 0..2 are out of range" ) );
-    }
-
     // M7 slice 3. An indirect call names no declaration, so what has to hold up is the operand the
     // callee travels on.
     SECTION( "an indirect call through a local that does not exist" )
@@ -728,18 +817,6 @@ TEST_CASE( "verify_checks_rvalue_fields", "[ir][verify]" )
         value.a.place = Place { .local = Local_id { 9 } };
 
         REQUIRE( mentions( verify( with_value( value ) ), "callee: local 9 is out of range" ) );
-    }
-
-    SECTION( "an indirect call whose arguments run past the end" )
-    {
-        Rvalue value;
-        value.kind           = Rvalue_kind::Indirect_call;
-        value.a.kind         = Operand_kind::Copy;
-        value.a.place        = Place { .local = Local_id { 0 } };
-        value.first_argument = 0;
-        value.argument_count = 2;
-
-        REQUIRE( mentions( verify( with_value( value ) ), "arguments 0..2 are out of range" ) );
     }
 
     // Address_of reads the place, not the operand: taking an address is not copying what is there.
@@ -791,7 +868,7 @@ TEST_CASE( "verify_checks_projections_and_storage", "[ir][verify]" )
         statement.kind  = Statement_kind::Storage_live;
         statement.place = Place { .local = Local_id { 0 }, .num_projections = 1 };
 
-        func.statements.push_back( statement );
+        func.statements.push_back( std::move( statement ) );
         func.blocks[k_entry_block].statement_count = 1;
 
         REQUIRE( mentions( verify( func ), "names a whole local" ) );

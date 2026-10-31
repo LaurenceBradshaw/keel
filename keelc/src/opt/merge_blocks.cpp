@@ -66,9 +66,9 @@ void merge_blocks( Function& func )
 
         for( Block_id current = h; current.is_valid(); current = next[current.v] )
         {
-            const Block&               block = func.blocks[current];
-            const Run<const Statement> run   = func.statements_of( block );
-            statements.insert( statements.end(), run.begin(), run.end() );
+            const Block&         block = func.blocks[current];
+            const Run<Statement> run   = func.statements_of( block );
+            statements.insert( statements.end(), std::make_move_iterator( run.begin() ), std::make_move_iterator( run.end() ) );
             last = block.terminator;
         }
 

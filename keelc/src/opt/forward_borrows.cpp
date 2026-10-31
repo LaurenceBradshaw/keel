@@ -25,7 +25,7 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
         }
 
         const u32     p     = statement.place.local.v;
-        const Rvalue& value = statement.value;
+        const Rvalue& value = func.rvalue( statement );
         const Type_id type  = func.locals[statement.place.local].type;
         const bool    borrow =
             value.kind == Rvalue_kind::Address_of && value.a.place.is_whole_local() &&
@@ -148,7 +148,8 @@ struct Forwarded : Compiled
     {
         return static_cast<std::size_t>( std::ranges::count_if(
             first().statements,
-            []( const Statement& s ) { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Address_of; }
+            [&]( const Statement& s )
+            { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == Rvalue_kind::Address_of; }
         ) );
     }
 

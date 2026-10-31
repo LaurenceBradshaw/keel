@@ -24,25 +24,25 @@ written( const Function& func, const Block& block, Local_id local, const Type_ta
     for( u32 s = block.statement_count; s-- > 0; )
     {
         const Statement& statement = func.statements_of( block )[s];
+        const Rvalue&    value     = func.rvalue( statement );
 
         if( statement.kind != Statement_kind::Assign )
         {
             continue;
         }
 
-        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.a.place.local == local )
+        if( value.kind == Rvalue_kind::Address_of && value.a.place.local == local )
         {
             return std::nullopt;
         }
 
         if( statement.place.local == local && !statement.place.is_global() )
         {
-            if( statement.place.num_projections == 0 && statement.value.kind == Rvalue_kind::Use &&
-                statement.value.a.kind == Operand_kind::Constant && statement.value.a.constant.is_valid() &&
-                ( types.get( statement.value.a.type ).kind == Type_kind::Int ||
-                  types.get( statement.value.a.type ).kind == Type_kind::Bool ) )
+            if( statement.place.num_projections == 0 && value.kind == Rvalue_kind::Use &&
+                value.a.kind == Operand_kind::Constant && value.a.constant.is_valid() &&
+                ( types.get( value.a.type ).kind == Type_kind::Int || types.get( value.a.type ).kind == Type_kind::Bool ) )
             {
-                return literals.integer( statement.value.a.constant );
+                return literals.integer( value.a.constant );
             }
             else
             {
@@ -150,6 +150,14 @@ namespace keel
 namespace
 {
 
+// A statement before its function holds the rvalue.
+struct Draft
+{
+    Statement_kind        kind = Statement_kind::Assign;
+    Place                 place {};
+    std::optional<Rvalue> value {};
+};
+
 // `_0` is the flag every branch tests, `_1` a `bool` nothing knows, `_2` a pointer.
 struct Graph
 {
@@ -157,7 +165,7 @@ struct Graph
     Literal_pool literals;
     Function     func;
 
-    void build( const std::vector<std::pair<std::vector<Statement>, Terminator>>& blocks )
+    void build( const std::vector<std::pair<std::vector<Draft>, Terminator>>& blocks )
     {
         func.locals = { Local { .type = flag() }, Local { .type = flag() }, Local {} };
         for( const auto& [statements, terminator] : blocks )
@@ -167,7 +175,14 @@ struct Graph
                 .statement_count = narrow_cast<u32>( statements.size() ),
                 .terminator      = terminator,
             } );
-            func.statements.insert( func.statements.end(), statements.begin(), statements.end() );
+            for( const Draft& draft : statements )
+            {
+                func.statements.push_back( Statement {
+                    .kind  = draft.kind,
+                    .place = draft.place,
+                    .value = draft.value ? func.add_rvalue( *draft.value ) : Owned_rvalue {},
+                } );
+            }
         }
     }
 
@@ -181,15 +196,15 @@ struct Graph
         return Operand { .kind = Operand_kind::Copy, .place = Place { .local = Local_id { local } }, .type = flag() };
     }
 
-    Statement set( bool value )
+    Draft set( bool value )
     {
         const Operand constant { .constant = literals.add_integer( value ? 1 : 0 ), .type = flag() };
-        return Statement { .place = Place { .local = Local_id { 0 } }, .value = Rvalue { .type = flag(), .a = constant } };
+        return Draft { .place = Place { .local = Local_id { 0 } }, .value = Rvalue { .type = flag(), .a = constant } };
     }
 
-    Statement unknown() const
+    Draft unknown() const
     {
-        return Statement { .place = Place { .local = Local_id { 0 } }, .value = Rvalue { .type = flag(), .a = read( 1 ) } };
+        return Draft { .place = Place { .local = Local_id { 0 } }, .value = Rvalue { .type = flag(), .a = read( 1 ) } };
     }
 
     Terminator branch( u32 local, u32 taken, u32 not_taken ) const
@@ -284,8 +299,7 @@ TEST_CASE( "thread_jumps_keeps_a_target_with_statements", "[opt][threading]" )
     Graph g;
     g.build( {
         { { g.set( true ) }, jump( 1 ) },
-        { { Statement { .kind = Statement_kind::Storage_dead, .place = Place { .local = Local_id { 1 } } } },
-          g.branch( 0, 2, 3 ) },
+        { { Draft { .kind = Statement_kind::Storage_dead, .place = Place { .local = Local_id { 1 } } } }, g.branch( 0, 2, 3 ) },
         { {}, done() },
         { {}, done() },
     } );
@@ -296,8 +310,8 @@ TEST_CASE( "thread_jumps_keeps_a_target_with_statements", "[opt][threading]" )
 
 TEST_CASE( "thread_jumps_keeps_an_addressed_local", "[opt][threading]" )
 {
-    Graph           g;
-    const Statement borrow {
+    Graph       g;
+    const Draft borrow {
         .place = Place { .local = Local_id { 2 } },
         .value = Rvalue { .kind = Rvalue_kind::Address_of, .a = g.read( 0 ) },
     };

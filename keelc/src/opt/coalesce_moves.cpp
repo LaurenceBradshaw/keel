@@ -107,15 +107,16 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
 
 bool copies_itself( const Function& func, const Statement& statement )
 {
-    if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Use ||
-        ( statement.value.a.kind != Operand_kind::Copy && statement.value.a.kind != Operand_kind::Move ) ||
-        statement.place.is_global() || statement.value.a.place.is_global() ||
-        statement.place.local != statement.value.a.place.local )
+    const Rvalue& value = func.rvalue( statement );
+
+    if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Use ||
+        ( value.a.kind != Operand_kind::Copy && value.a.kind != Operand_kind::Move ) || statement.place.is_global() ||
+        value.a.place.is_global() || statement.place.local != value.a.place.local )
     {
         return false;
     }
 
-    if( statement.place.num_projections != statement.value.a.place.num_projections )
+    if( statement.place.num_projections != value.a.place.num_projections )
     {
         return false;
     }
@@ -123,7 +124,7 @@ bool copies_itself( const Function& func, const Statement& statement )
     for( u32 i = 0; i < statement.place.num_projections; ++i )
     {
         const Projection& place_projection = func.projections_of( statement.place )[i];
-        const Projection& value_projection = func.projections_of( statement.value.a.place )[i];
+        const Projection& value_projection = func.projections_of( value.a.place )[i];
 
         if( place_projection.kind != value_projection.kind )
         {
@@ -142,20 +143,21 @@ bool copies_itself( const Function& func, const Statement& statement )
 
 bool mentions( const Function& func, const Statement& statement, const Place& into )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     if( overlaps( func, statement.place, into ) )
     {
         return true;
     }
 
-    if( statement.value.kind == Rvalue_kind::Address_of && overlaps( func, statement.value.a.place, into ) )
+    if( value.kind == Rvalue_kind::Address_of && overlaps( func, value.a.place, into ) )
     {
         return true;
     }
 
     bool found = false;
     for_each_operand(
-        func,
-        statement.value,
+        value,
         [&]( const Operand& operand )
         {
             if( operand.has_place() && overlaps( func, operand.place, into ) )
@@ -201,8 +203,7 @@ bool moved_whole( const Function& func, Local_id local, u32 except )
 
         bool found = false;
         for_each_operand(
-            func,
-            statement.value,
+            func.rvalue( statement ),
             [&]( const Operand& operand )
             {
                 if( operand.kind == Operand_kind::Move && operand.place.is_whole_local() && names( operand.place, local ) )
@@ -265,12 +266,13 @@ bool occupied( const Occupancy& state, const Local_set& alive, const Local_set& 
 std::optional<Candidate> candidate_at( const Function& func, u32 index )
 {
     const Statement& statement   = func.statements[index];
-    const Place&     source      = statement.value.a.place;
+    const Rvalue&    value       = func.rvalue( statement );
+    const Place&     source      = value.a.place;
     const Place&     destination = statement.place;
 
-    if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Use ||
-        !( statement.value.a.kind == Operand_kind::Move || statement.value.a.kind == Operand_kind::Copy ) ||
-        destination.is_global() || source.is_global() || destination.local == source.local )
+    if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Use ||
+        !( value.a.kind == Operand_kind::Move || value.a.kind == Operand_kind::Copy ) || destination.is_global() ||
+        source.is_global() || destination.local == source.local )
     {
         return {};
     }
@@ -530,8 +532,9 @@ bool field_interferes(
     for( u32 at = 0; at < func.statements.size(); ++at )
     {
         const Statement& statement = func.statements[at];
-        if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-            names( statement.value.a.place, c.kept ) && ( in_life[at] || reaches( func, at, c.kept, alive ) ) )
+        const Rvalue&    value     = func.rvalue( statement );
+        if( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
+            names( value.a.place, c.kept ) && ( in_life[at] || reaches( func, at, c.kept, alive ) ) )
         {
             return true;
         }
@@ -545,9 +548,10 @@ bool field_interferes(
         [&]( u32 i )
         {
             const Statement& statement = func.statements[i];
+            const Rvalue&    value     = func.rvalue( statement );
             return writes( func, statement, c.gone ) ||
-                   ( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-                     names( statement.value.a.place, c.gone ) );
+                   ( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
+                     names( value.a.place, c.gone ) );
         }
     );
 }
@@ -797,10 +801,12 @@ struct Optimised : Compiled
     {
         return static_cast<std::size_t>( std::ranges::count_if(
             first().statements,
-            []( const Statement& s )
+            [&]( const Statement& s )
             {
-                return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.has_place() &&
-                       s.value.a.place.is_whole_local() && s.place.is_whole_local();
+                const Rvalue& value = first().rvalue( s );
+
+                return s.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use && value.a.has_place() &&
+                       value.a.place.is_whole_local() && s.place.is_whole_local();
             }
         ) );
     }
@@ -830,13 +836,15 @@ struct Optimised : Compiled
             func.statements,
             [&]( const Statement& s )
             {
-                if( s.kind != Statement_kind::Assign || s.value.kind != Rvalue_kind::Use || !s.value.a.has_place() )
+                const Rvalue& value = func.rvalue( s );
+
+                if( s.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Use || !value.a.has_place() )
                 {
                     return false;
                 }
 
-                const Place& whole = into_field ? s.value.a.place : s.place;
-                const Place& field = into_field ? s.place : s.value.a.place;
+                const Place& whole = into_field ? value.a.place : s.place;
+                const Place& field = into_field ? s.place : value.a.place;
                 return whole.is_whole_local() && field_place( func, field ) &&
                        !types.table().is_builtin( func.locals[whole.local].type );
             }
@@ -1010,8 +1018,10 @@ TEST_CASE( "coalesce_moves_constructs_a_payload_in_place", "[opt][coalesce][fiel
         p.first().statements,
         [&]( const Statement& s )
         {
-            return s.value.kind == Rvalue_kind::Address_of && s.value.address_purpose == Address_purpose::Initialise &&
-                   names( s.value.a.place, k_return_slot ) && field_place( p.first(), s.value.a.place );
+            const Rvalue& value = p.first().rvalue( s );
+
+            return value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise &&
+                   names( value.a.place, k_return_slot ) && field_place( p.first(), value.a.place );
         }
     ) );
 }
@@ -1104,8 +1114,8 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
     }
 }
 
-// Splitting leaves `o.a.n`'s rebuilt pointer reaching its field through copies, which only the second
-// coalescing sees.
+// Splitting leaves `o.a.n`'s rebuilt pointer, a local of its own, reached through copies, which only
+// the second coalescing sees.
 TEST_CASE( "coalesce_moves_again_builds_a_split_field_in_place", "[opt][coalesce][field]" )
 {
     const std::string source =
@@ -1117,26 +1127,12 @@ TEST_CASE( "coalesce_moves_again_builds_a_split_field_in_place", "[opt][coalesce
         "class Outer2 { public Inner2 a; public Inner2 b; };\n"
         "void take( move Inner2 _ ) { }\n";
 
-    // A whole local into a field, of any type.
-    const auto into_fields = []( const Optimised& p )
-    {
-        const Function& func = p.first();
-        return std::ranges::count_if(
-            func.statements,
-            [&]( const Statement& s )
-            {
-                return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.has_place() &&
-                       s.value.a.place.is_whole_local() && field_place( func, s.place );
-            }
-        );
-    };
-
     const Optimised once( source );
     const Optimised again( source, Inline_weights {}, true, 2, true );
     REQUIRE( again.clean() );
     REQUIRE( again.well_formed() );
-    REQUIRE( into_fields( once ) > 0 );
-    REQUIRE( into_fields( again ) == 0 );
+    REQUIRE( once.local_copies() > 0 );
+    REQUIRE( again.local_copies() == 0 );
 }
 
 TEST_CASE( "coalesce_moves_judges_a_borrow_by_where_it_reaches", "[opt][coalesce][field]" )

@@ -88,7 +88,7 @@ std::vector<bool> slots_needing_flags( const Function& func, const Slot_map& slo
 
     for( const Statement& statement : func.statements )
     {
-        for_each_operand( func, statement.value, note );
+        for_each_operand( func.rvalue( statement ), note );
     }
 
     // A condition can move (`if ( move ready )`); its flag write lands before the terminator reads it.
@@ -165,19 +165,21 @@ allocate_flags( Function& func, const Slot_map& slots, const std::vector<bool>& 
 }
 
 // An ordinary Assign of a bool constant, so nothing downstream needs a new statement kind.
-Statement set_flag( Local_id flag, bool value, Span span, const Flag_vocabulary& vocabulary )
+Statement set_flag( Function& func, Local_id flag, bool value, Span span, const Flag_vocabulary& vocabulary )
 {
     return Statement {
         .kind  = Statement_kind::Assign,
         .span  = span,
         .place = Place { .local = flag },
-        .value = use( constant( value ? vocabulary.true_literal : vocabulary.false_literal, vocabulary.bool_type ) )
+        .value =
+            func.add_rvalue( use( constant( value ? vocabulary.true_literal : vocabulary.false_literal, vocabulary.bool_type ) )
+            )
     };
 }
 
 // The flag writes a statement implies, appended after it.
 void append_flag_writes(
-    const Function&         func,
+    Function&               func,
     const Slot_map&         slots,
     const Statement&        statement,
     const Flag_map&         flags,
@@ -194,15 +196,18 @@ void append_flag_writes(
             flags,
             slots,
             Place { .local = statement.place.local },
-            [&]( Local_id flag ) { out.push_back( set_flag( flag, false, statement.span, vocabulary ) ); }
+            [&]( Local_id flag ) { out.push_back( set_flag( func, flag, false, statement.span, vocabulary ) ); }
         );
         return;
     case Statement_kind::Assign:
+    {
+        // A copy: the flag writes below grow the table it lives in.
+        const Rvalue value = func.rvalue( statement );
+
         // The move first, then the assignment, so `_1 = move _1` ends with the flag set. Driven off the
         // operands, so linear in the statement rather than in the locals.
         for_each_operand(
-            func,
-            statement.value,
+            value,
             [&]( const Operand& operand )
             {
                 // A move out of part of a leaf, a payload, ends the whole leaf: nothing drops it after.
@@ -212,7 +217,7 @@ void append_flag_writes(
                         flags,
                         slots,
                         operand.place,
-                        [&]( Local_id flag ) { out.push_back( set_flag( flag, false, statement.span, vocabulary ) ); }
+                        [&]( Local_id flag ) { out.push_back( set_flag( func, flag, false, statement.span, vocabulary ) ); }
                     );
                 }
             }
@@ -221,22 +226,23 @@ void append_flag_writes(
             flags,
             slots,
             statement.place,
-            [&]( Local_id flag ) { out.push_back( set_flag( flag, true, statement.span, vocabulary ) ); }
+            [&]( Local_id flag ) { out.push_back( set_flag( func, flag, true, statement.span, vocabulary ) ); }
         );
 
         // A constructed local is written through its Initialise address (`_3 = &_2`), never assigned, so
         // that address sets its flag. A borrow does not, or one after a move would revive it.
-        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
+        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise )
         {
             for_each_flag(
                 flags,
                 slots,
-                statement.value.a.place,
-                [&]( Local_id flag ) { out.push_back( set_flag( flag, true, statement.span, vocabulary ) ); }
+                value.a.place,
+                [&]( Local_id flag ) { out.push_back( set_flag( func, flag, true, statement.span, vocabulary ) ); }
             );
         }
 
         return;
+    }
     case Statement_kind::Drop:
         return;
     }
@@ -293,6 +299,7 @@ void rewrite_statements( Function& func, const Slot_map& slots, const Flag_map& 
                 const Local_id flag  = flags[slot];
                 const Local_id local = slots.local( slot );
                 rebuilt.push_back( set_flag(
+                    func,
                     flag,
                     local.v >= 1 && local.v <= func.parameter_count && !is_out_parameter( func, local ) &&
                         local != func.constructed,
@@ -304,7 +311,7 @@ void rewrite_statements( Function& func, const Slot_map& slots, const Flag_map& 
 
         for( u32 i = 0; i < count; ++i )
         {
-            Statement statement = func.statements[old_first + i];
+            Statement statement = std::move( func.statements[old_first + i] );
 
             // A drop reads its flag rather than being followed by a write.
             if( statement.kind == Statement_kind::Drop )
@@ -312,8 +319,10 @@ void rewrite_statements( Function& func, const Slot_map& slots, const Flag_map& 
                 statement.drop_flag = flag_of( flags, slots, statement.place );
             }
 
-            rebuilt.push_back( statement );
-            append_flag_writes( func, slots, statement, flags, vocabulary, rebuilt );
+            std::vector<Statement> writes;
+            append_flag_writes( func, slots, statement, flags, vocabulary, writes );
+            rebuilt.push_back( std::move( statement ) );
+            rebuilt.insert( rebuilt.end(), std::make_move_iterator( writes.begin() ), std::make_move_iterator( writes.end() ) );
         }
 
         // A moving condition clears its flag before the terminator reads it.
@@ -321,7 +330,7 @@ void rewrite_statements( Function& func, const Slot_map& slots, const Flag_map& 
         {
             if( const Local_id flag = flag_of( flags, slots, block.terminator.condition.place ); flag.is_valid() )
             {
-                rebuilt.push_back( set_flag( flag, false, block.terminator.span, vocabulary ) );
+                rebuilt.push_back( set_flag( func, flag, false, block.terminator.span, vocabulary ) );
             }
         }
 

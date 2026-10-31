@@ -20,6 +20,9 @@ public:
     // exactly one place instead of at every call site.
     Builder( Node_id declaration, Type_id return_type, Span span );
 
+    // Each staged statement cloned, holding an rvalue of its own.
+    Builder( const Builder& other );
+
     Local_id add_parameter( Type_id type, Span span, Symbol_id name );
 
     // An `out` parameter's local holds a valid address; it is the *referent* that starts empty, and
@@ -66,8 +69,6 @@ public:
 
     bool is_terminated() const;
 
-    u32 add_operands( std::span<const Operand> operands ); // call arguments, return first_argument
-
     Function finish();
 
 private:
@@ -80,7 +81,7 @@ private:
     void set_terminator( Terminator terminator );
 
     // Everything except statements is append-only and needs no staging: locals, blocks,
-    // projections and operands are all indexed absolutely.
+    // and projections are all indexed absolutely.
     Function function_;
 
     // Statements, staged per block. The flat form's (first, count) ranges require a block's

@@ -156,11 +156,13 @@ void step( const Analysis& analysis, const Statement& statement, Values& values 
         return;
     }
 
+    const Rvalue& rvalue = analysis.func.rvalue( statement );
+
     // `addressed_locals` leaves out `&init`, but the call it feeds writes the local.
-    if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise &&
-        !statement.value.a.place.is_global() && analysis.tracked[statement.value.a.place.local.v] )
+    if( rvalue.kind == Rvalue_kind::Address_of && rvalue.address_purpose == Address_purpose::Initialise &&
+        !rvalue.a.place.is_global() && analysis.tracked[rvalue.a.place.local.v] )
     {
-        values[statement.value.a.place.local.v] = Value { .state = Value::State::Varying };
+        values[rvalue.a.place.local.v] = Value { .state = Value::State::Varying };
     }
 
     if( !whole_tracked( analysis, statement.place ) )
@@ -168,13 +170,13 @@ void step( const Analysis& analysis, const Statement& statement, Values& values 
         return;
     }
 
-    Value value = evaluated( analysis, statement.value, values );
+    Value value = evaluated( analysis, rvalue, values );
 
     // An assignment converts: `i64 w = n` reads an `i32`.
     if( value.state == Value::State::Constant )
     {
         const Type_id            to        = analysis.func.locals[statement.place.local].type;
-        const std::optional<u64> converted = convert( value.bits, statement.value.type, to, analysis.types );
+        const std::optional<u64> converted = convert( value.bits, rvalue.type, to, analysis.types );
         value                              = converted ? Value { .state = Value::State::Constant, .bits = *converted }
                                                        : Value { .state = Value::State::Varying };
     }
@@ -321,20 +323,20 @@ void propagate_constants( Function& func, const Type_table& types, Literal_pool&
             }
 
             // Before the step, so `_1 = copy _1 + const 1` reads the old `_1`.
-            const Value result = evaluated( analysis, statement.value, values );
+            const Value result = evaluated( analysis, func.rvalue( statement ), values );
             // Wherever it is written: a global's or a field's sum folds as a local's does.
-            if( result.state == Value::State::Constant && !is_constant( statement.value ) )
+            if( result.state == Value::State::Constant && !is_constant( func.rvalue( statement ) ) )
             {
-                statement.value = value_of( result.bits, statement.value.type, types, literals );
+                func.rvalue( statement ) = value_of( result.bits, func.rvalue( statement ).type, types, literals );
             }
             else
             {
-                rewrite( analysis, statement.value.a, values, literals );
-                rewrite( analysis, statement.value.b, values, literals );
+                rewrite( analysis, func.rvalue( statement ).a, values, literals );
+                rewrite( analysis, func.rvalue( statement ).b, values, literals );
 
-                for( u32 i = 0; i < statement.value.argument_count; ++i )
+                for( Operand& argument : func.rvalue( statement ).arguments )
                 {
-                    rewrite( analysis, func.operands[statement.value.first_argument + i], values, literals );
+                    rewrite( analysis, argument, values, literals );
                 }
             }
 
@@ -393,7 +395,7 @@ struct Propagated : Compiled
         {
             if( statement.kind == Statement_kind::Assign )
             {
-                for_each_operand( first(), statement.value, note );
+                for_each_operand( first().rvalue( statement ), note );
             }
         }
 
@@ -419,10 +421,12 @@ struct Propagated : Compiled
             first().statements,
             [&]( const Statement& s )
             {
-                const bool shape = negative ? s.value.kind == Rvalue_kind::Unary && s.value.op == Token_kind::Minus
-                                            : s.value.kind == Rvalue_kind::Use;
-                return s.kind == Statement_kind::Assign && shape && s.value.a.kind == Operand_kind::Constant &&
-                       literals.integer( s.value.a.constant ) == magnitude;
+                const Rvalue& value = first().rvalue( s );
+
+                const bool shape = negative ? value.kind == Rvalue_kind::Unary && value.op == Token_kind::Minus
+                                            : value.kind == Rvalue_kind::Use;
+                return s.kind == Statement_kind::Assign && shape && value.a.kind == Operand_kind::Constant &&
+                       literals.integer( value.a.constant ) == magnitude;
             }
         );
     }
@@ -495,7 +499,7 @@ TEST_CASE( "propagate_constants_folds_a_chain", "[opt][constants]" )
 
     for( const Statement& s : p.first().statements )
     {
-        REQUIRE( ( s.kind != Statement_kind::Assign || s.value.kind != Rvalue_kind::Binary ) );
+        REQUIRE( ( s.kind != Statement_kind::Assign || p.first().rvalue( s ).kind != Rvalue_kind::Binary ) );
     }
 }
 

@@ -173,7 +173,7 @@ void read_operand(
     }
 }
 
-// value.a, value.b, and operands[first_argument .. + argument_count].
+// value.a, value.b, and the arguments.
 void read_rvalue(
     const Function& func, const Slot_map& slots, const Rvalue& value, Span span, Flow& flow, std::vector<Move_error>* errors
 )
@@ -193,14 +193,14 @@ void read_rvalue(
         }
     }
 
-    // a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
+    // a and b cover Use, Binary, Unary and Cast, the arguments Call; an unused operand is a
     // Constant, so reading all of them needs no switch.
     read_operand( func, slots, value.a, span, flow, errors );
     read_operand( func, slots, value.b, span, flow, errors );
 
-    for( u32 i = 0; i < value.argument_count; ++i )
+    for( const Operand& argument : value.arguments )
     {
-        read_operand( func, slots, func.operands[value.first_argument + i], span, flow, errors );
+        read_operand( func, slots, argument, span, flow, errors );
     }
 
     // Taking a moved local's address is not a use of its value, so Address_of reads nothing here.
@@ -218,7 +218,7 @@ void transfer_block( const Function& func, const Slot_map& slots, Block_id block
         case Statement_kind::Assign:
         {
             // Reads before the write: `_1 = move _1 + 1` is legal.
-            read_rvalue( func, slots, statement.value, statement.span, flow, errors );
+            read_rvalue( func, slots, func.rvalue( statement ), statement.span, flow, errors );
 
             if( statement.place.is_global() )
             {
@@ -261,7 +261,7 @@ void find_moves_into_borrowing_calls(
 {
     for( const Statement& statement : func.statements )
     {
-        const Rvalue& value = statement.value;
+        const Rvalue& value = func.rvalue( statement );
 
         if( statement.kind != Statement_kind::Assign ||
             ( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call ) )
@@ -269,7 +269,7 @@ void find_moves_into_borrowing_calls(
             continue;
         }
 
-        const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
+        const std::vector<Operand>& arguments = value.arguments;
 
         for( const Operand& moved : arguments )
         {
@@ -328,7 +328,7 @@ void find_aliased_arguments(
 
     for( const Statement& statement : func.statements )
     {
-        const Rvalue& value = statement.value;
+        const Rvalue& value = func.rvalue( statement );
 
         if( statement.kind != Statement_kind::Assign ||
             ( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call ) )
@@ -336,7 +336,7 @@ void find_aliased_arguments(
             continue;
         }
 
-        const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
+        const std::vector<Operand>& arguments = value.arguments;
 
         // D75: each arm of a chosen argument is an argument of its own.
         std::vector<std::pair<std::size_t, const Borrow*>> loans;

@@ -14,6 +14,22 @@ Builder::Builder( Node_id declaration, Type_id return_type, Span span )
     switch_to( add_block() );
 }
 
+Builder::Builder( const Builder& other )
+    : function_( other.function_ ),
+      current_( other.current_ ),
+      finished_( other.finished_ )
+{
+    pending_.reserve( other.pending_.size() );
+    for( const std::vector<Statement>& staged : other.pending_ )
+    {
+        std::vector<Statement>& into = pending_.emplace_back();
+        for( const Statement& statement : staged )
+        {
+            into.push_back( function_.clone( statement ) );
+        }
+    }
+}
+
 Local_id Builder::add_parameter( Type_id type, Span span, Symbol_id name )
 {
     assert( function_.locals.size() == function_.parameter_count + 1 && "parameter count must match locals" );
@@ -112,7 +128,9 @@ Type_id Builder::type_of( Local_id id ) const
 
 void Builder::assign( Place target, Rvalue value, Span span )
 {
-    push_statement( Statement { .kind = Statement_kind::Assign, .span = span, .place = target, .value = value } );
+    push_statement( Statement {
+        .kind = Statement_kind::Assign, .span = span, .place = target, .value = function_.add_rvalue( std::move( value ) )
+    } );
 }
 
 void Builder::drop( Place place, Span span, bool replacing, Node_id destructor, std::vector<Type_id> type_arguments )
@@ -122,7 +140,7 @@ void Builder::drop( Place place, Span span, bool replacing, Node_id destructor, 
         .replacing = replacing,
         .span      = span,
         .place     = place,
-        .value { .callee = destructor, .type_arguments = std::move( type_arguments ) }
+        .value     = function_.add_rvalue( Rvalue { .callee = destructor, .type_arguments = std::move( type_arguments ) } )
     } );
 }
 
@@ -177,13 +195,6 @@ bool Builder::is_terminated() const
     return function_.blocks[current_].terminator.kind != Terminator_kind::Unset;
 }
 
-u32 Builder::add_operands( std::span<const Operand> operands )
-{
-    const u32 first = narrow_cast<u32>( function_.operands.size() );
-    function_.operands.insert( function_.operands.end(), operands.begin(), operands.end() );
-    return first;
-}
-
 Function Builder::finish()
 {
     assert( !finished_ && "finish() called twice" );
@@ -191,13 +202,17 @@ Function Builder::finish()
 
     for( const Block_id i : function_.blocks.ids() )
     {
-        const std::vector<Statement>& block_statements = pending_[i.v];
-        Block&                        block            = function_.blocks[i];
+        std::vector<Statement>& block_statements = pending_[i.v];
+        Block&                  block            = function_.blocks[i];
 
         block.first_statement = narrow_cast<u32>( function_.statements.size() );
         block.statement_count = narrow_cast<u32>( block_statements.size() );
 
-        function_.statements.insert( function_.statements.end(), block_statements.begin(), block_statements.end() );
+        function_.statements.insert(
+            function_.statements.end(),
+            std::make_move_iterator( block_statements.begin() ),
+            std::make_move_iterator( block_statements.end() )
+        );
     }
 
     return std::move( function_ );
@@ -205,7 +220,7 @@ Function Builder::finish()
 
 void Builder::push_statement( Statement statement )
 {
-    pending_[current_.v].push_back( statement );
+    pending_[current_.v].push_back( std::move( statement ) );
 }
 
 void Builder::set_terminator( Terminator terminator )
@@ -481,27 +496,22 @@ TEST_CASE( "builder_makes_a_temporary_per_value", "[ir][builder]" )
     REQUIRE( product == Local_id { 1 } );
     REQUIRE( func.statements.size() == 2 );
     REQUIRE( func.statements[0].place.local == product );
-    REQUIRE( func.statements[0].value.kind == Rvalue_kind::Binary );
+    REQUIRE( func.rvalue( func.statements[0] ).kind == Rvalue_kind::Binary );
 
     require_verifies( func );
 }
 
-TEST_CASE( "builder_records_call_arguments_contiguously", "[ir][builder]" )
+TEST_CASE( "builder_records_call_arguments", "[ir][builder]" )
 {
     Fixture f;
     Builder builder( Node_id { 1 }, f.i32(), Span {} );
 
-    const Operand arguments[] = { f.one(), f.one(), f.one() };
-    const u32     first       = builder.add_operands( arguments );
-
-    builder.into_temp( call( Node_id { 2 }, first, 3, f.i32() ), f.i32(), Span {} );
+    builder.into_temp( call( Node_id { 2 }, { f.one(), f.one(), f.one() }, f.i32() ), f.i32(), Span {} );
     builder.terminate_return( Span {} );
 
     const Function func = builder.finish();
 
-    REQUIRE( first == 0 );
-    REQUIRE( func.operands.size() == 3 );
-    REQUIRE( func.statements[0].value.argument_count == 3 );
+    REQUIRE( func.rvalue( func.statements[0] ).arguments.size() == 3 );
 
     require_verifies( func );
 }

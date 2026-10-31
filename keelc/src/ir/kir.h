@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <cassert>
+#include <utility>
 #include <vector>
 #include "ast/node.h"
 #include "common/id_vector.h"
@@ -54,6 +56,18 @@ struct Block_id
 };
 
 inline constexpr Block_id k_entry_block { 0 };
+
+struct Rvalue_id
+{
+    u32 v = k_invalid_kir_id;
+
+    bool is_valid() const
+    {
+        return v != k_invalid_kir_id;
+    }
+
+    auto operator<=>( const Rvalue_id& other ) const = default;
+};
 
 // A temporary is a local with no name. Nothing else distinguishes it: the drop analysis asks which
 // locals are live, and has no reason to care which ones the author wrote.
@@ -167,10 +181,10 @@ struct Rvalue
     Type_id     type {};
     Token_kind  op = Token_kind::Unknown; // Binary and Unary
     Operand     a {};
-    Operand     b {};               // Binary only
-    u32         first_argument = 0; // into Function::operands, for Call
-    u32         argument_count = 0;
+    Operand     b {}; // Binary only
     Node_id     callee {};
+
+    std::vector<Operand> arguments {}; // Call and Indirect_call
 
     // The callee's type arguments, for the same reason Function carries them: a Node_id no longer
     // identifies a function once one declaration can be emitted more than once. Defaulted like
@@ -187,20 +201,107 @@ enum class Statement_kind : u8
     Storage_dead,
 };
 
-// TODO: Currently 100 bytes, of which 72 are rvalue. Move rvalues to a side table, and give
-// `Operand` a `Span` in the same change: operands carry none today, so every argument of a call
-// reports at the statement - `two( a, b )` after `two( move a, move b )` gives two move errors with
-// identical carets, told apart only by the name in the message. One field on Operand fixes all four
-// places one appears (Rvalue::a, Rvalue::b, Terminator::condition, Function::operands), but it costs
-// 12 bytes there and 24 here, which is worth paying only once 72 are leaving anyway.
+// A statement's rvalue in Function::rvalues. Move-only, and made only by Function, so no two
+// statements can hold one rvalue: a second statement gets its own through Function::clone.
+class Owned_rvalue
+{
+public:
+    Owned_rvalue() = default; // none: a storage marker
+
+    Owned_rvalue( Owned_rvalue&& other ) noexcept
+        : id_( std::exchange( other.id_, Rvalue_id {} ) )
+    {
+    }
+
+    Owned_rvalue& operator=( Owned_rvalue&& other ) noexcept
+    {
+        id_ = std::exchange( other.id_, Rvalue_id {} );
+        return *this;
+    }
+
+    Owned_rvalue( const Owned_rvalue& )            = delete;
+    Owned_rvalue& operator=( const Owned_rvalue& ) = delete;
+
+    Rvalue_id id() const
+    {
+        return id_;
+    }
+
+    bool is_valid() const
+    {
+        return id_.is_valid();
+    }
+
+private:
+    friend struct Function;
+    friend class Statements;
+
+    explicit Owned_rvalue( Rvalue_id id )
+        : id_( id )
+    {
+    }
+
+    Rvalue_id id_ {};
+};
+
+// TODO: give `Operand` a `Span`: operands carry none today, so every argument of a call reports at
+// the statement - `two( a, b )` after `two( move a, move b )` gives two move errors with identical
+// carets, told apart only by the name in the message.
 struct Statement
 {
     Statement_kind kind      = Statement_kind::Assign;
     bool           replacing = false; // Drop only: its place is assigned again.
     Span           span {};
     Place          place {};     // assigned to by Assign, dropped by Drop
-    Rvalue         value {};     // Assign; a class's Drop names its destructor in callee and type_arguments
+    Owned_rvalue   value {};     // Assign; a class's Drop names its destructor in callee and type_arguments
     Local_id       drop_flag {}; // Drop only: invalid means drop unconditionally
+};
+
+// `statement` holding `value` instead of its own.
+inline Statement with_value( const Statement& statement, Owned_rvalue value )
+{
+    return Statement {
+        .kind      = statement.kind,
+        .replacing = statement.replacing,
+        .span      = statement.span,
+        .place     = statement.place,
+        .value     = std::move( value ),
+        .drop_flag = statement.drop_flag,
+    };
+}
+
+// Function::statements. Copied only with its function, whose rvalues come along.
+class Statements : public std::vector<Statement>
+{
+public:
+    Statements() = default;
+
+    Statements( std::vector<Statement>&& statements )
+        : vector( std::move( statements ) )
+    {
+    }
+
+    Statements( Statements&& )            = default;
+    Statements& operator=( Statements&& ) = default;
+    ~Statements()                         = default;
+
+private:
+    friend struct Function;
+
+    Statements( const Statements& other )
+    {
+        reserve( other.size() );
+        for( const Statement& statement : other )
+        {
+            push_back( with_value( statement, Owned_rvalue( statement.value.id() ) ) );
+        }
+    }
+
+    Statements& operator=( const Statements& other )
+    {
+        Statements copy( other );
+        return *this = std::move( copy );
+    }
 };
 
 enum class Terminator_kind : u8
@@ -277,17 +378,17 @@ struct Function
     // Which parameters arrive uninitialised. Nothing else in KIR says so - an `out` parameter's
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
-    std::vector<Local_id>      out_parameters;
-    std::vector<Local_id>      one_path_temporaries; // built on one path, so dropped under a flag
-    std::vector<Local_id>      walked;               // D74: a walk's receiver, freezing what it walks
-    std::vector<Local_id>      chosen;               // D75: assigned the address of whichever arm ran
-    Local_id                   constructed {};       // a constructor's receiver, invalid in every other function.
-    std::vector<Field_slot>    fields;               // ir/slots reads them
-    Id_vector<Local_id, Local> locals;
-    Id_vector<Block_id, Block> blocks;
-    std::vector<Statement>     statements;
-    std::vector<Projection>    projections;
-    std::vector<Operand>       operands;
+    std::vector<Local_id>        out_parameters;
+    std::vector<Local_id>        one_path_temporaries; // built on one path, so dropped under a flag
+    std::vector<Local_id>        walked;               // D74: a walk's receiver, freezing what it walks
+    std::vector<Local_id>        chosen;               // D75: assigned the address of whichever arm ran
+    Local_id                     constructed {};       // a constructor's receiver, invalid in every other function.
+    std::vector<Field_slot>      fields;               // ir/slots reads them
+    Id_vector<Local_id, Local>   locals;
+    Id_vector<Block_id, Block>   blocks;
+    Statements                   statements;
+    std::vector<Projection>      projections;
+    Id_vector<Rvalue_id, Rvalue> rvalues; // read through rvalue(); a removed statement leaves its own here
 
     // Whether local 0 is a value the body must produce. The passes have no Type_table, so this is
     // recorded the same way out_parameters is, and for the same reason: the graph does not say.
@@ -313,6 +414,36 @@ struct Function
     Run<const Statement> statements_of( Block_id block ) const
     {
         return statements_of( blocks[block] );
+    }
+
+    Owned_rvalue add_rvalue( Rvalue value )
+    {
+        return Owned_rvalue( rvalues.push_back( std::move( value ) ) );
+    }
+
+    // A storage marker holds none, and reads as an empty Use.
+    const Rvalue& rvalue( const Statement& statement ) const
+    {
+        static const Rvalue none {};
+        return statement.value.is_valid() ? rvalues[statement.value.id()] : none;
+    }
+
+    Rvalue& rvalue( const Statement& statement )
+    {
+        assert( statement.value.is_valid() && "a storage marker holds no rvalue" );
+        return rvalues[statement.value.id()];
+    }
+
+    // `statement` holding its own copy of `value`, or of nothing for a storage marker.
+    Statement copy_of( const Statement& statement, Rvalue value )
+    {
+        return with_value( statement, statement.value.is_valid() ? add_rvalue( std::move( value ) ) : Owned_rvalue {} );
+    }
+
+    // A second statement like `statement`, rvalue and arguments its own.
+    Statement clone( const Statement& statement )
+    {
+        return copy_of( statement, std::as_const( *this ).rvalue( statement ) );
     }
 
     // Read-only: places share their runs, and projected() is the only writer.
@@ -384,21 +515,21 @@ inline Place projected( Function& func, Place base, Projection projection )
 // so a helper that forgets its own argument is visible, and -Wmissing-field-initializers does not
 // fire on them - which a partial positional init does, and the release build treats as an error.
 
-// Every operand an rvalue reads: `a` and `b` cover Use, Binary, Unary and Cast, and the argument
-// range covers Call. Visiting all of them needs no switch, because an Rvalue leaves the operands its
+// Every operand an rvalue reads: `a` and `b` cover Use, Binary, Unary and Cast, and the arguments
+// cover Call. Visiting all of them needs no switch, because an Rvalue leaves the operands its
 // kind does not use at their Constant default - which is the point of that default above.
 //
 // Here rather than in a pass, because more than one pass needs it and "where operands live" is not a
 // fact any of them should own privately.
 template <typename Fn>
-void for_each_operand( const Function& func, const Rvalue& value, Fn fn )
+void for_each_operand( const Rvalue& value, Fn fn )
 {
     fn( value.a );
     fn( value.b );
 
-    for( u32 i = 0; i < value.argument_count; ++i )
+    for( const Operand& argument : value.arguments )
     {
-        fn( func.operands[value.first_argument + i] );
+        fn( argument );
     }
 }
 
@@ -419,13 +550,19 @@ void for_each_place( Func& func, Fn fn )
     for( auto& statement : func.statements )
     {
         fn( statement.place, &statement );
-        fn( statement.value.a.place, nullptr );
-        fn( statement.value.b.place, nullptr );
-    }
+        if( !statement.value.is_valid() )
+        {
+            continue;
+        }
 
-    for( auto& argument : func.operands )
-    {
-        operand( argument );
+        auto& value = func.rvalue( statement );
+        fn( value.a.place, nullptr );
+        fn( value.b.place, nullptr );
+
+        for( auto& argument : value.arguments )
+        {
+            operand( argument );
+        }
     }
 
     for( auto& block : func.blocks )
@@ -583,26 +720,23 @@ inline Rvalue field_read( Operand object, Operand offset, Type_id type )
     return Rvalue { .kind = Rvalue_kind::Field_read, .type = type, .a = object, .b = offset };
 }
 
-inline Rvalue indirect_call( Operand callee, u32 first_argument, u32 argument_count, Type_id type )
+inline Rvalue indirect_call( Operand callee, std::vector<Operand> arguments, Type_id type )
 {
     return Rvalue {
-        .kind           = Rvalue_kind::Indirect_call,
-        .type           = type,
-        .a              = callee,
-        .first_argument = first_argument,
-        .argument_count = argument_count,
+        .kind      = Rvalue_kind::Indirect_call,
+        .type      = type,
+        .a         = callee,
+        .arguments = std::move( arguments ),
     };
 }
 
-inline Rvalue
-call( Node_id callee, u32 first_argument, u32 argument_count, Type_id type, std::vector<Type_id> type_arguments = {} )
+inline Rvalue call( Node_id callee, std::vector<Operand> arguments, Type_id type, std::vector<Type_id> type_arguments = {} )
 {
     return Rvalue {
         .kind           = Rvalue_kind::Call,
         .type           = type,
-        .first_argument = first_argument,
-        .argument_count = argument_count,
         .callee         = callee,
+        .arguments      = std::move( arguments ),
         .type_arguments = std::move( type_arguments ),
     };
 }

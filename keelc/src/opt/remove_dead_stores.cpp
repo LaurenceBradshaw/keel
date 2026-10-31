@@ -19,13 +19,14 @@ bool remove_once( Function& func )
     for( u32 s = 0; s < func.statements.size(); ++s )
     {
         const Statement& statement = func.statements[s];
+        const Rvalue&    value     = std::as_const( func ).rvalue( statement );
 
         // Liveness sees locals, not pointees, so a write a pointer may read stays; so does a call or an
         // allocation, which does more than write.
         if( statement.kind != Statement_kind::Assign || statement.place.is_global() ||
             has_deref_projection( func, statement.place ) || addressed[statement.place.local.v] ||
-            statement.value.kind == Rvalue_kind::Call || statement.value.kind == Rvalue_kind::Indirect_call ||
-            statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release ||
+            value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call ||
+            value.kind == Rvalue_kind::Allocate || value.kind == Rvalue_kind::Release ||
             live.after[s][statement.place.local.v] )
         {
             continue;
@@ -89,7 +90,8 @@ struct Stored : Compiled
     std::size_t assigns( Rvalue_kind kind ) const
     {
         return static_cast<std::size_t>( std::ranges::count_if(
-            first().statements, [&]( const Statement& s ) { return s.kind == Statement_kind::Assign && s.value.kind == kind; }
+            first().statements,
+            [&]( const Statement& s ) { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == kind; }
         ) );
     }
 

@@ -349,10 +349,6 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     bool kl_t3;
     int64_t kl_t4;
-    struct kl__Point kl_t7;
-    struct kl__Point* kl_t8;
-    int32_t kl_t9;
-    bool kl_t10;
     int64_t kl_t13;
     bool kl_t14;
     bool kl_t15;
@@ -385,23 +381,6 @@ int32_t kl__main__( void )
 #line 146 "opt/inlining.kl"
     return kl_t0;
     bb3:
-#line 149 "opt/inlining.kl"
-    kl_t7.kl_x = 2;
-#line 149 "opt/inlining.kl"
-    kl_t7.kl_y = 3;
-#line 149 "opt/inlining.kl"
-    kl_t8 = &kl_t7;
-#line 67 "opt/inlining.kl"
-    kl_t9 = ( *kl_t8 ).kl_x + ( *kl_t8 ).kl_y;
-#line 149 "opt/inlining.kl"
-    kl_t10 = kl_t9 != 5;
-#line 149 "opt/inlining.kl"
-    if ( kl_t10 ) goto bb4; else goto bb5;
-    bb4:
-    kl_t0 = 3;
-#line 151 "opt/inlining.kl"
-    return kl_t0;
-    bb5:
 #line 87 "opt/inlining.kl"
     kl_t62 = kl__factorial__3i64( 4 );
 #line 87 "opt/inlining.kl"
@@ -409,28 +388,28 @@ int32_t kl__main__( void )
 #line 159 "opt/inlining.kl"
     kl_t14 = kl_t13 != 120;
 #line 159 "opt/inlining.kl"
-    if ( kl_t14 ) goto bb6; else goto bb7;
-    bb6:
+    if ( kl_t14 ) goto bb4; else goto bb5;
+    bb4:
     kl_t0 = 5;
 #line 161 "opt/inlining.kl"
     return kl_t0;
-    bb7:
+    bb5:
 #line 102 "opt/inlining.kl"
     kl_t16 = kl__is_odd__3u32( 9 );
 #line 164 "opt/inlining.kl"
     kl_t15 = !kl_t16;
 #line 164 "opt/inlining.kl"
-    if ( kl_t15 ) goto bb9; else goto bb8;
-    bb8:
+    if ( kl_t15 ) goto bb7; else goto bb6;
+    bb6:
 #line 111 "opt/inlining.kl"
     kl_t15 = kl__is_even__3u32( 9 );
 #line 164 "opt/inlining.kl"
-    if ( kl_t15 ) goto bb9; else goto bb10;
-    bb9:
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 6;
 #line 166 "opt/inlining.kl"
     return kl_t0;
-    bb10:
+    bb8:
 #line 169 "opt/inlining.kl"
     kl_t19 = kl__mixed__3i32_3i32( 2, 3 );
 #line 169 "opt/inlining.kl"
@@ -438,12 +417,12 @@ int32_t kl__main__( void )
 #line 169 "opt/inlining.kl"
     kl_t21 = kl_t19 != kl_t20;
 #line 169 "opt/inlining.kl"
-    if ( kl_t21 ) goto bb11; else goto bb12;
-    bb11:
+    if ( kl_t21 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 7;
 #line 171 "opt/inlining.kl"
     return kl_t0;
-    bb12:
+    bb10:
 #line 174 "opt/inlining.kl"
     kl_n_22 = 0;
     kl_t23 = &kl_n_22;
@@ -451,35 +430,35 @@ int32_t kl__main__( void )
     kl__set__O3i32( kl_t23 );
     kl_t25 = kl_n_22 != 9;
 #line 176 "opt/inlining.kl"
-    if ( kl_t25 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t25 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 8;
 #line 178 "opt/inlining.kl"
     return kl_t0;
-    bb14:
+    bb12:
 #line 133 "opt/inlining.kl"
     kl_f_42 = kl__twice__3i32;
     kl_t26 = kl_f_42( 4 );
 #line 181 "opt/inlining.kl"
     kl_t27 = kl_t26 != 8;
 #line 181 "opt/inlining.kl"
-    if ( kl_t27 ) goto bb15; else goto bb16;
-    bb15:
+    if ( kl_t27 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 9;
 #line 183 "opt/inlining.kl"
     return kl_t0;
-    bb16:
+    bb14:
 #line 18 "opt/inlining.kl"
     kl_t97 = kl__live__G;
 #line 187 "opt/inlining.kl"
     kl_t31 = kl_t97 != 0;
 #line 187 "opt/inlining.kl"
-    if ( kl_t31 ) goto bb17; else goto bb18;
-    bb17:
+    if ( kl_t31 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 10;
 #line 189 "opt/inlining.kl"
     return kl_t0;
-    bb18:
+    bb16:
 #line 192 "opt/inlining.kl"
     kl_t0 = 0;
 #line 192 "opt/inlining.kl"

@@ -88,47 +88,41 @@ void kl__consume__M5Inner( struct kl__Inner kl_t1 )
 int32_t kl__rebuilt__( void )
 {
     int32_t kl_t0;
-    struct kl__Box* kl_t15;
     int32_t kl_t16;
-    struct kl__Box* kl_t17;
     int32_t kl_t18;
-    struct kl__Box kl_o_59;
-    struct kl__Box kl_o_62;
+    int32_t* kl_t64;
+    int32_t* kl_o_66;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_o_59.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_t64 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
-    ( *kl_o_59.kl_value ) = 3;
+    ( *kl_t64 ) = 3;
     kl__live__G = kl__live__G + 1;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_o_62.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_o_66 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
-    ( *kl_o_62.kl_value ) = 4;
+    ( *kl_o_66 ) = 4;
     kl__live__G = kl__live__G + 1;
 #line 22 "opt/moves_after_splitting.kl"
-    kl_rt_free( kl_o_59.kl_value );
+    kl_rt_free( kl_t64 );
 #line 24 "opt/moves_after_splitting.kl"
     kl__live__G = kl__live__G - 1;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_o_59.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_t64 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
-    ( *kl_o_59.kl_value ) = 5;
+    ( *kl_t64 ) = 5;
     kl__live__G = kl__live__G + 1;
-#line 57 "opt/moves_after_splitting.kl"
-    kl_t15 = &kl_o_59;
 #line 29 "opt/moves_after_splitting.kl"
-    kl_t16 = ( *( *kl_t15 ).kl_value );
-#line 57 "opt/moves_after_splitting.kl"
-    kl_t17 = &kl_o_62;
+    kl_t16 = ( *kl_t64 );
 #line 29 "opt/moves_after_splitting.kl"
-    kl_t18 = ( *( *kl_t17 ).kl_value );
+    kl_t18 = ( *kl_o_66 );
 #line 57 "opt/moves_after_splitting.kl"
     kl_t0 = kl_t16 + kl_t18;
 #line 22 "opt/moves_after_splitting.kl"
-    kl_rt_free( kl_o_62.kl_value );
+    kl_rt_free( kl_o_66 );
 #line 24 "opt/moves_after_splitting.kl"
     kl__live__G = kl__live__G - 1;
 #line 22 "opt/moves_after_splitting.kl"
-    kl_rt_free( kl_o_59.kl_value );
+    kl_rt_free( kl_t64 );
 #line 24 "opt/moves_after_splitting.kl"
     kl__live__G = kl__live__G - 1;
 #line 57 "opt/moves_after_splitting.kl"

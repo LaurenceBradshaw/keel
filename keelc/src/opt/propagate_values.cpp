@@ -55,6 +55,8 @@ void step(
     const Function& func, const Type_table& types, const Local_set& addressed, const Statement& statement, Values& values
 )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     switch( statement.kind )
     {
     case Statement_kind::Assign:
@@ -64,10 +66,10 @@ void step(
             kill( values, statement.place.local );
         }
         // `addressed_locals` leaves out `&init`, but the call it feeds writes the local.
-        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise &&
-            !statement.value.a.place.is_global() )
+        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise &&
+            !value.a.place.is_global() )
         {
-            kill( values, statement.value.a.place.local );
+            kill( values, value.a.place.local );
         }
         break;
     // A copy must not outlive its source's storage.
@@ -78,8 +80,8 @@ void step(
         break;
     }
 
-    if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Use ||
-        !statement.place.is_whole_local() || addressed[statement.place.local.v] )
+    if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Use || !statement.place.is_whole_local() ||
+        addressed[statement.place.local.v] )
     {
         return;
     }
@@ -87,14 +89,14 @@ void step(
     // A converting assignment, `i64 w = n`, records nothing: a read of `w` must stay an `i64`.
     const Type_id   to   = func.locals[statement.place.local].type;
     const Type_kind kind = types.get( to ).kind;
-    if( statement.value.a.type != to && ( kind == Type_kind::Int || kind == Type_kind::Float ) )
+    if( value.a.type != to && ( kind == Type_kind::Int || kind == Type_kind::Float ) )
     {
         return;
     }
 
     // A fact names its direct source, so a later sweep never finds it changed; `rewrite` follows the chain.
     const Local_id into = statement.place.local;
-    const Operand& from = statement.value.a;
+    const Operand& from = value.a;
 
     if( from.kind == Operand_kind::Constant && from.constant.is_valid() )
     {
@@ -225,18 +227,18 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
             // Constant by default, so an address never moves.
             if( statement.kind == Statement_kind::Assign )
             {
-                rewrite( statement.value.a, values );
-                rewrite( statement.value.b, values );
+                rewrite( func.rvalue( statement ).a, values );
+                rewrite( func.rvalue( statement ).b, values );
 
-                for( u32 i = 0; i < statement.value.argument_count; ++i )
+                for( Operand& argument : func.rvalue( statement ).arguments )
                 {
-                    rewrite( func.operands[statement.value.first_argument + i], values );
+                    rewrite( argument, values );
                 }
 
                 // Before the step, so `_3 = copy _45 + const 0` records a copy.
-                if( std::optional<Rvalue> folded = identity( statement.value, types, literals ) )
+                if( std::optional<Rvalue> folded = identity( func.rvalue( statement ), types, literals ) )
                 {
-                    statement.value = std::move( *folded );
+                    func.rvalue( statement ) = std::move( *folded );
                 }
             }
 
@@ -299,7 +301,7 @@ struct Propagated : Compiled
         {
             if( statement.kind == Statement_kind::Assign )
             {
-                for_each_operand( first(), statement.value, note );
+                for_each_operand( first().rvalue( statement ), note );
             }
         }
 
@@ -348,8 +350,11 @@ TEST_CASE( "propagate_values_follows_a_chain_round_a_loop", "[opt][propagate]" )
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( std::ranges::none_of(
         p.first().statements,
-        []( const Statement& s )
-        { return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.kind == Operand_kind::Copy; }
+        [&]( const Statement& s )
+        {
+            return s.kind == Statement_kind::Assign && p.first().rvalue( s ).kind == Rvalue_kind::Use &&
+                   p.first().rvalue( s ).a.kind == Operand_kind::Copy;
+        }
     ) );
 }
 

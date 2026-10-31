@@ -15,17 +15,19 @@ namespace
 {
 
 // `_D = copy _S` or `move`, of a struct.
-bool copies_whole( const Statement& statement, const Type_table& table )
+bool copies_whole( const Function& func, const Statement& statement, const Type_table& table )
 {
-    return statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Use &&
-           statement.value.a.has_place() && table.is_struct( statement.value.type );
+    const Rvalue& value = func.rvalue( statement );
+    return statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use && value.a.has_place() &&
+           table.is_struct( value.type );
 }
 
 // `_P = &init _L`, building the whole of `_L`.
-bool initialises_whole( const Statement& statement )
+bool initialises_whole( const Function& func, const Statement& statement )
 {
-    return statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-           statement.value.address_purpose == Address_purpose::Initialise && statement.value.a.place.is_whole_local();
+    const Rvalue& value = func.rvalue( statement );
+    return statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
+           value.address_purpose == Address_purpose::Initialise && value.a.place.is_whole_local();
 }
 
 // The locals to split, from `first`. A local's storage markers don't count, nor does an `&init` of it
@@ -60,28 +62,29 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
     for( u32 s = 0; s < func.statements.size(); ++s )
     {
         const Statement& statement = func.statements[s];
+        const Rvalue&    value     = func.rvalue( statement );
 
         if( statement.kind == Statement_kind::Storage_dead || statement.kind == Statement_kind::Storage_live )
         {
             continue;
         }
 
-        if( initialises_whole( statement ) )
+        if( initialises_whole( func, statement ) )
         {
             use( statement.place );
             inits.push_back( s );
             continue;
         }
 
-        if( copies_whole( statement, table ) )
+        if( copies_whole( func, statement, table ) )
         {
             if( !statement.place.is_whole_local() )
             {
                 use( statement.place );
             }
-            if( !statement.value.a.place.is_whole_local() )
+            if( !value.a.place.is_whole_local() )
             {
-                use( statement.value.a.place );
+                use( value.a.place );
             }
             continue;
         }
@@ -91,8 +94,7 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
         if( statement.kind == Statement_kind::Assign )
         {
             for_each_operand(
-                func,
-                statement.value,
+                value,
                 [&]( const Operand& operand )
                 {
                     if( operand.has_place() )
@@ -102,9 +104,9 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
                 }
             );
 
-            if( statement.value.kind == Rvalue_kind::Address_of )
+            if( value.kind == Rvalue_kind::Address_of )
             {
-                use( statement.value.a.place );
+                use( value.a.place );
             }
         }
     }
@@ -132,7 +134,7 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
     for( u32 s : inits )
     {
         const Statement& statement = func.statements[s];
-        const Local_id   built     = statement.value.a.place.local;
+        const Local_id   built     = func.rvalue( statement ).a.place.local;
 
         if( statement.place.is_global() || statement.place.num_projections != 0 || mentions[statement.place.local.v] != 1 )
         {
@@ -192,27 +194,27 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
 
         for( u32 s = first; s < first + count; ++s )
         {
-            Statement statement = func.statements[s];
+            Statement statement = std::move( func.statements[s] );
 
             if( statement.kind == Statement_kind::Storage_dead || statement.kind == Statement_kind::Storage_live )
             {
                 if( !split[statement.place.local.v] )
                 {
-                    statements.push_back( statement );
+                    statements.push_back( std::move( statement ) );
                 }
                 continue;
             }
 
-            if( initialises_whole( statement ) && split[statement.value.a.place.local.v] )
+            if( initialises_whole( func, statement ) && split[func.rvalue( statement ).a.place.local.v] )
             {
                 continue;
             }
 
-            if( copies_whole( statement, types.table() ) &&
+            if( copies_whole( func, statement, types.table() ) &&
                 ( ( statement.place.is_whole_local() && split[statement.place.local.v] ) ||
-                  ( statement.value.a.place.is_whole_local() && split[statement.value.a.place.local.v] ) ) )
+                  ( func.rvalue( statement ).a.place.is_whole_local() && split[func.rvalue( statement ).a.place.local.v] ) ) )
             {
-                const Type_id type = statement.value.type;
+                const Type_id type = func.rvalue( statement ).type;
                 for( const Node_id& member : ast.members( types.table().get( type ).declaration ) )
                 {
                     if( ast.kind( member ) != Node_kind::Field_decl )
@@ -220,38 +222,39 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
                         continue;
                     }
 
-                    Statement part = statement;
-                    part.place =
+                    Rvalue value = func.rvalue( statement );
+                    Place  place =
                         projected( func, statement.place, Projection { .kind = Projection_kind::Field, .field = member } );
-                    part.value.a.place = projected(
-                        func, statement.value.a.place, Projection { .kind = Projection_kind::Field, .field = member }
-                    );
-                    part.value.type   = place_type( ast, types, func, part.place );
-                    part.value.a.type = place_type( ast, types, func, part.value.a.place );
+                    value.a.place =
+                        projected( func, value.a.place, Projection { .kind = Projection_kind::Field, .field = member } );
+                    value.type   = place_type( ast, types, func, place );
+                    value.a.type = place_type( ast, types, func, value.a.place );
 
-                    if( types.table().is_builtin( part.value.a.type ) )
+                    if( types.table().is_builtin( value.a.type ) )
                     {
-                        part.value.a.kind = Operand_kind::Copy;
+                        value.a.kind = Operand_kind::Copy;
                     }
 
-                    rewrite( part.place );
-                    rewrite( part.value.a.place );
+                    rewrite( place );
+                    rewrite( value.a.place );
 
-                    statements.push_back( part );
+                    Statement part = func.copy_of( statement, std::move( value ) );
+                    part.place     = place;
+                    statements.push_back( std::move( part ) );
                 }
                 continue;
             }
 
             rewrite( statement.place );
-            rewrite( statement.value.a.place );
-            rewrite( statement.value.b.place );
+            rewrite( func.rvalue( statement ).a.place );
+            rewrite( func.rvalue( statement ).b.place );
 
-            for( u32 i = 0; i < statement.value.argument_count; ++i )
+            for( Operand& argument : func.rvalue( statement ).arguments )
             {
-                rewrite( func.operands[statement.value.first_argument + i].place );
+                rewrite( argument.place );
             }
 
-            statements.push_back( statement );
+            statements.push_back( std::move( statement ) );
         }
 
         block.statement_count = narrow_cast<u32>( statements.size() ) - block.first_statement;
@@ -282,12 +285,16 @@ Local_id renamed( Function& func, Local_id local )
     for( Statement& statement : func.statements )
     {
         rename( statement.place );
-        rename( statement.value.a.place );
-        rename( statement.value.b.place );
+    }
 
-        for( u32 i = 0; i < statement.value.argument_count; ++i )
+    for( Rvalue& value : func.rvalues )
+    {
+        rename( value.a.place );
+        rename( value.b.place );
+
+        for( Operand& argument : value.arguments )
         {
-            rename( func.operands[statement.value.first_argument + i].place );
+            rename( argument.place );
         }
     }
 
@@ -325,13 +332,15 @@ bool reads_a_field( const Function& func, Local_id local )
 
     for( const Statement& statement : func.statements )
     {
+        const Rvalue& value = func.rvalue( statement );
+
         if( statement.kind != Statement_kind::Assign )
         {
             continue;
         }
 
-        bool any = statement.value.kind == Rvalue_kind::Address_of && names( statement.value.a.place );
-        for_each_operand( func, statement.value, [&]( const Operand& operand ) { any = any || reads( operand ); } );
+        bool any = value.kind == Rvalue_kind::Address_of && names( value.a.place );
+        for_each_operand( value, [&]( const Operand& operand ) { any = any || reads( operand ); } );
 
         if( any )
         {
@@ -392,7 +401,7 @@ void copy_parameters( Function& func, const Local_set& split )
             .kind  = Statement_kind::Assign,
             .span  = func.locals[Local_id { p }].span,
             .place = Place { .local = fresh },
-            .value = use( copy( Place { .local = Local_id { p } }, func.locals[Local_id { p }].type ) ),
+            .value = func.add_rvalue( use( copy( Place { .local = Local_id { p } }, func.locals[Local_id { p }].type ) ) ),
         } );
         func.blocks[k_entry_block].statement_count += 1;
     }
@@ -413,15 +422,15 @@ void move_into_return_slot( Function& func )
         block.first_statement = narrow_cast<u32>( func.statements.size() );
         for( u32 s = first; s < first + block.statement_count; ++s )
         {
-            const Statement statement = func.statements[s];
-            func.statements.push_back( statement );
+            Statement statement = std::move( func.statements[s] );
+            func.statements.push_back( std::move( statement ) );
         }
 
         func.statements.push_back( Statement {
             .kind  = Statement_kind::Assign,
             .span  = block.terminator.span,
             .place = Place { .local = k_return_slot },
-            .value = use( move( Place { .local = fresh }, func.locals[k_return_slot].type ) ),
+            .value = func.add_rvalue( use( move( Place { .local = fresh }, func.locals[k_return_slot].type ) ) ),
         } );
         block.statement_count += 1;
     }
@@ -510,13 +519,15 @@ struct Split : Compiled
 
         for( const Statement& s : func.statements )
         {
+            const Rvalue& value = func.rvalue( s );
+
             if( s.kind == Statement_kind::Storage_live || s.kind == Statement_kind::Storage_dead )
             {
                 continue;
             }
 
-            bool any = names( s.place ) || ( s.value.kind == Rvalue_kind::Address_of && names( s.value.a.place ) );
-            for_each_operand( func, s.value, [&]( const Operand& operand ) { any = any || reads( operand ); } );
+            bool any = names( s.place ) || ( value.kind == Rvalue_kind::Address_of && names( value.a.place ) );
+            for_each_operand( value, [&]( const Operand& operand ) { any = any || reads( operand ); } );
 
             if( any )
             {
@@ -552,8 +563,7 @@ struct Split : Compiled
             {
                 bool any = false;
                 for_each_operand(
-                    func,
-                    statement.value,
+                    func.rvalue( statement ),
                     [&]( const Operand& o ) { any = any || ( o.has_place() && !o.place.is_global() && o.place.local == of ); }
                 );
                 if( any )
@@ -584,8 +594,10 @@ struct Split : Compiled
             in.statements,
             [&]( const Statement& s )
             {
-                return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use &&
-                       s.value.a.kind == Operand_kind::Move && is( s.value.a.type );
+                const Rvalue& value = in.rvalue( s );
+
+                return s.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use &&
+                       value.a.kind == Operand_kind::Move && is( value.a.type );
             }
         );
     }
@@ -594,8 +606,10 @@ struct Split : Compiled
     {
         return std::ranges::any_of(
             func.statements,
-            []( const Statement& s )
-            { return s.value.kind == Rvalue_kind::Address_of && s.value.address_purpose == Address_purpose::Initialise; }
+            [this]( const Statement& s ) {
+                return func.rvalue( s ).kind == Rvalue_kind::Address_of &&
+                       func.rvalue( s ).address_purpose == Address_purpose::Initialise;
+            }
         );
     }
 };

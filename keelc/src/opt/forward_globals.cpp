@@ -79,12 +79,14 @@ bool same_global( const Place& a, const Place& b )
 
 bool barrier( const Function& func, const Statement& statement )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     if( statement.kind == Statement_kind::Assign )
     {
-        if( statement.value.kind == Rvalue_kind::Call || statement.value.kind == Rvalue_kind::Indirect_call ||
-            statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release ||
-            statement.value.kind == Rvalue_kind::Field_read || statement.value.kind == Rvalue_kind::Run_data ||
-            statement.value.kind == Rvalue_kind::Run_size )
+        if( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call ||
+            value.kind == Rvalue_kind::Allocate || value.kind == Rvalue_kind::Release ||
+            value.kind == Rvalue_kind::Field_read || value.kind == Rvalue_kind::Run_data ||
+            value.kind == Rvalue_kind::Run_size )
         {
             return true;
         }
@@ -102,9 +104,7 @@ bool barrier( const Function& func, const Statement& statement )
 
     bool deref_operand = false;
     for_each_operand(
-        func,
-        statement.value,
-        [&]( const Operand& operand ) { deref_operand = deref_operand || has_deref_projection( func, operand.place ); }
+        value, [&]( const Operand& operand ) { deref_operand = deref_operand || has_deref_projection( func, operand.place ); }
     );
 
     return deref_operand;
@@ -158,10 +158,10 @@ void forget( Known& known, const Function& func, const Statement& statement )
     }
 
     // `addressed_locals` leaves out `&init`, but the call it feeds writes the local.
-    if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-        statement.value.address_purpose == Address_purpose::Initialise )
+    if( statement.kind == Statement_kind::Assign && func.rvalue( statement ).kind == Rvalue_kind::Address_of &&
+        func.rvalue( statement ).address_purpose == Address_purpose::Initialise )
     {
-        written( known, statement.value.a.place );
+        written( known, func.rvalue( statement ).a.place );
     }
 }
 
@@ -231,7 +231,7 @@ void learn(
     }
 
     const Place&   place = statement.place;
-    const Rvalue&  value = statement.value;
+    const Rvalue&  value = func.rvalue( statement );
     const Operand& from  = value.a;
 
     if( whole_global( place ) )
@@ -342,7 +342,9 @@ bool read_later( const Function& func, const std::vector<u32>& counts, Block_id 
             bool read = false;
             if( statement.kind == Statement_kind::Assign )
             {
-                for_each_operand( func, statement.value, [&]( const Operand& operand ) { read = read || reads( operand ); } );
+                for_each_operand(
+                    func.rvalue( statement ), [&]( const Operand& operand ) { read = read || reads( operand ); }
+                );
             }
             if( read )
             {
@@ -387,11 +389,11 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
     std::vector<Block_id>                   targets;
     bool                                    changed = false;
 
-    const auto settle = [&]( Known& known, std::vector<Statement>& out, const Statement& statement )
+    const auto settle = [&]( Known& known, std::vector<Statement>& out, Statement&& statement )
     {
         forget( known, func, statement );
         learn( known, func, types, literals, addressed, statement );
-        out.push_back( statement );
+        out.push_back( std::move( statement ) );
     };
 
     // A worklist, not recursion: a long chain of asserts is a long chain of one-predecessor blocks.
@@ -412,21 +414,21 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
 
             for( u32 s = 0; s < block.statement_count; ++s )
             {
-                Statement statement = func.statements_of( block )[s];
+                Statement statement = std::move( func.statements_of( block )[s] );
 
                 if( statement.kind != Statement_kind::Assign )
                 {
-                    settle( known, out, statement );
+                    settle( known, out, std::move( statement ) );
                     continue;
                 }
 
                 // Reads first, so `live = copy live + const 1` reads the old `live`.
-                Rvalue& value = statement.value;
+                Rvalue& value = func.rvalue( statement );
                 changed |= rewrite( value.a, known );
                 changed |= rewrite( value.b, known );
-                for( u32 i = 0; i < value.argument_count; ++i )
+                for( Operand& argument : value.arguments )
                 {
-                    changed |= rewrite( func.operands[value.first_argument + i], known );
+                    changed |= rewrite( argument, known );
                 }
 
                 if( std::optional<Rvalue> folded = fold( value, known, types, literals ) )
@@ -454,15 +456,16 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
                     const Local_id temporary { narrow_cast<u32>( func.locals.size() ) };
                     func.locals.push_back( Local { .type = value.type, .span = statement.span } );
 
-                    Statement computed = statement;
-                    computed.place     = Place { .local = temporary };
-                    statement.value    = use( copy( computed.place, computed.value.type ) );
+                    const Type_id type     = value.type;
+                    Statement     computed = with_value( statement, std::move( statement.value ) );
+                    computed.place         = Place { .local = temporary };
+                    statement.value        = func.add_rvalue( use( copy( computed.place, type ) ) );
 
-                    settle( known, out, computed );
+                    settle( known, out, std::move( computed ) );
                     changed = true;
                 }
 
-                settle( known, out, statement );
+                settle( known, out, std::move( statement ) );
             }
 
             Terminator& terminator = func.blocks[id].terminator;
@@ -513,7 +516,9 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
     {
         func.blocks[b].first_statement = narrow_cast<u32>( statements.size() );
         func.blocks[b].statement_count = narrow_cast<u32>( rebuilt[b.v].size() );
-        statements.insert( statements.end(), rebuilt[b.v].begin(), rebuilt[b.v].end() );
+        statements.insert(
+            statements.end(), std::make_move_iterator( rebuilt[b.v].begin() ), std::make_move_iterator( rebuilt[b.v].end() )
+        );
     }
     func.statements = std::move( statements );
 
@@ -545,7 +550,9 @@ bool overwritten( const Function& func, const std::vector<u32>& counts, const Pl
             bool read = false;
             if( statement.kind == Statement_kind::Assign )
             {
-                for_each_operand( func, statement.value, [&]( const Operand& operand ) { read = read || reads( operand ); } );
+                for_each_operand(
+                    func.rvalue( statement ), [&]( const Operand& operand ) { read = read || reads( operand ); }
+                );
             }
             if( read || barrier( func, statement ) )
             {
@@ -614,7 +621,7 @@ bool remove_overwritten( Function& func, const Type_table& types )
         {
             const Statement& statement = func.statements_of( block )[s];
             if( statement.kind == Statement_kind::Assign && whole_global( statement.place ) &&
-                types.is_builtin( statement.value.type ) && !barrier( func, statement ) &&
+                types.is_builtin( func.rvalue( statement ).type ) && !barrier( func, statement ) &&
                 overwritten( func, counts, statement.place, b, s + 1 ) )
             {
                 deleted[func.statements_of( block ).position( s )] = true;
@@ -682,8 +689,7 @@ struct Forwarded : Compiled
             if( statement.kind == Statement_kind::Assign )
             {
                 for_each_operand(
-                    first(),
-                    statement.value,
+                    first().rvalue( statement ),
                     [&]( const Operand& operand ) { count += operand.kind == Operand_kind::Copy && operand.place.is_global(); }
                 );
             }
@@ -702,7 +708,8 @@ struct Forwarded : Compiled
     {
         return std::ranges::count_if(
             first().statements,
-            [&]( const Statement& s ) { return s.kind == Statement_kind::Assign && s.value.kind == kind && s.value.op == op; }
+            [&]( const Statement& s )
+            { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == kind && first().rvalue( s ).op == op; }
         );
     }
 };
@@ -764,15 +771,14 @@ TEST_CASE( "forward_globals_learns_nothing_on_a_true_arm", "[opt][globals]" )
         Local { .type = boolean }
     };
 
-    const auto statement = [&]( u32 into, Rvalue value ) { return Statement { .place = local( into ), .value = value }; };
+    const auto statement = [&]( u32 into, Rvalue value )
+    { func.statements.push_back( Statement { .place = local( into ), .value = func.add_rvalue( std::move( value ) ) } ); };
 
-    func.statements = {
-        statement( 1, overflows( Token_kind::Plus, copy( local( 2 ), i32 ), one, boolean ) ),
-        statement( 3, binary( Token_kind::Plus, copy( local( 2 ), i32 ), one, i32 ) ),
-        statement( 4, overflows( Token_kind::Minus, copy( local( 3 ), i32 ), one, boolean ) ),
-        statement( 3, binary( Token_kind::Plus, copy( local( 2 ), i32 ), one, i32 ) ),
-        statement( 4, overflows( Token_kind::Minus, copy( local( 3 ), i32 ), one, boolean ) ),
-    };
+    statement( 1, overflows( Token_kind::Plus, copy( local( 2 ), i32 ), one, boolean ) );
+    statement( 3, binary( Token_kind::Plus, copy( local( 2 ), i32 ), one, i32 ) );
+    statement( 4, overflows( Token_kind::Minus, copy( local( 3 ), i32 ), one, boolean ) );
+    statement( 3, binary( Token_kind::Plus, copy( local( 2 ), i32 ), one, i32 ) );
+    statement( 4, overflows( Token_kind::Minus, copy( local( 3 ), i32 ), one, boolean ) );
 
     const Terminator done { .kind = Terminator_kind::Return };
     func.blocks = {
@@ -795,7 +801,7 @@ TEST_CASE( "forward_globals_learns_nothing_on_a_true_arm", "[opt][globals]" )
     const auto checks = [&]( u32 block )
     {
         const Statement& s = func.statements_of( func.blocks[Block_id { block }] )[1];
-        return s.value.kind == Rvalue_kind::Overflows;
+        return func.rvalue( s ).kind == Rvalue_kind::Overflows;
     };
     REQUIRE( checks( 1 ) );
     REQUIRE( !checks( 2 ) );

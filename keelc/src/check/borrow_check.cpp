@@ -35,6 +35,8 @@ void use_operand( const Operand& operand, Live& live )
 // Live before `statement`, from live after it: a whole write kills, then every read is a use.
 void step_back( const Function& func, const Statement& statement, Live& live )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     if( statement.kind == Statement_kind::Assign )
     {
         if( statement.place.is_whole_local() )
@@ -46,17 +48,17 @@ void step_back( const Function& func, const Statement& statement, Live& live )
             use_place( statement.place, live );
         }
 
-        use_operand( statement.value.a, live );
-        use_operand( statement.value.b, live );
+        use_operand( value.a, live );
+        use_operand( value.b, live );
 
-        for( u32 i = statement.value.first_argument; i < statement.value.first_argument + statement.value.argument_count; ++i )
+        for( const Operand& argument : value.arguments )
         {
-            use_operand( func.operands[i], live );
+            use_operand( argument, live );
         }
 
-        if( statement.value.kind == Rvalue_kind::Address_of )
+        if( value.kind == Rvalue_kind::Address_of )
         {
-            use_place( statement.value.a.place, live );
+            use_place( value.a.place, live );
         }
     }
     else if( statement.kind == Statement_kind::Drop )
@@ -141,9 +143,7 @@ void replaced_through(
     const Function& func, const std::vector<Borrow>& borrows, const Rvalue& call, u32 depth, Span at, std::vector<Effect>& out
 )
 {
-    const std::span<const Operand> arguments( func.operands.data() + call.first_argument, call.argument_count );
-
-    for( const Operand& operand : arguments )
+    for( const Operand& operand : call.arguments )
     {
         if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
         {
@@ -242,8 +242,8 @@ void effects_of(
 
     if( statement.kind == Statement_kind::Assign )
     {
-        const Rvalue&                  value = statement.value;
-        const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
+        const Rvalue&               value     = func.rvalue( statement );
+        const std::vector<Operand>& arguments = value.arguments;
 
         const auto moved = [&]( const Operand& operand )
         {

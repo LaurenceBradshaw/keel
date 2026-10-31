@@ -313,7 +313,7 @@ private:
     bool is_void( const Operand& operand ) const; // D51: a `void` value is spelled nowhere
     bool holds_nothing( Type_id type ) const;     // a struct whose every field is `void`, as `Box<void>`
     bool assigns_to_void( const Place& place ) const;
-    bool writes_nothing( const Statement& statement ) const;
+    bool writes_nothing( const Function& function, const Statement& statement ) const;
     // A place's type, walked the same way place() walks its text. Drop needs it to name the
     // destructor to call.
     Type_id     type_of( const Place& place ) const;
@@ -1025,20 +1025,22 @@ void Kir_emitter::emit_comparison_guards()
     {
         for( const Statement& statement : function.statements )
         {
+            const Rvalue& value = function.rvalue( statement );
+
             if( statement.kind != Statement_kind::Assign )
             {
                 continue;
             }
 
             bool        mirror = false;
-            const Guard guard  = guard_for( statement.value, mirror );
+            const Guard guard  = guard_for( value, mirror );
 
             if( guard == Guard::None )
             {
                 continue;
             }
 
-            const Token_kind op = mirror ? mirrored( statement.value.op ) : statement.value.op;
+            const Token_kind op = mirror ? mirrored( value.op ) : value.op;
 
             for( u32 i = 0; i < std::size( guard_operators ); ++i )
             {
@@ -1242,9 +1244,11 @@ bool Kir_emitter::assigns_to_void( const Place& target ) const
     return is_void( type_of( target ) );
 }
 
-bool Kir_emitter::writes_nothing( const Statement& statement ) const
+bool Kir_emitter::writes_nothing( const Function& function, const Statement& statement ) const
 {
-    return statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Use && is_void( statement.value.a );
+    const Rvalue& value = function.rvalue( statement );
+
+    return statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use && is_void( value.a );
 }
 
 void Kir_emitter::emit_statement( const Statement& statement )
@@ -1254,13 +1258,13 @@ void Kir_emitter::emit_statement( const Statement& statement )
     case Statement_kind::Assign:
     {
         // Copying nothing: neither side has storage.
-        if( writes_nothing( statement ) )
+        if( writes_nothing( *current_, statement ) )
         {
             return;
         }
 
         line_directive( statement.span );
-        const std::string value = rvalue( statement.value, statement.span );
+        const std::string value = rvalue( current_->rvalue( statement ), statement.span );
 
         // A void local is not declared, so there is nothing to assign into - the call is the whole
         // statement. Keeping Assign total in KIR is what confines this to one rule, in one place.
@@ -1442,7 +1446,7 @@ std::vector<bool> mentioned_locals( const Function& function )
             mentioned[statement.drop_flag.v] = true;
         }
 
-        for_each_operand( function, statement.value, [&]( const Operand& operand ) { mark( operand.place ); } );
+        for_each_operand( function.rvalue( statement ), [&]( const Operand& operand ) { mark( operand.place ); } );
     }
 
     // A branch prints its condition, so the set has to cover it. Unkillable today - the temporary a
@@ -1473,12 +1477,12 @@ std::vector<bool> Kir_emitter::read_locals( const Function& function ) const
 
     for( const Statement& statement : function.statements )
     {
-        if( writes_nothing( statement ) )
+        if( writes_nothing( function, statement ) )
         {
             continue;
         }
 
-        for_each_operand( function, statement.value, [&]( const Operand& operand ) { mark( operand.place ); } );
+        for_each_operand( function.rvalue( statement ), [&]( const Operand& operand ) { mark( operand.place ); } );
 
         if( has_deref_projection( function, statement.place ) )
         {
@@ -1772,7 +1776,7 @@ std::vector<std::pair<Node_id, Type_id>> Kir_emitter::used_globals( std::vector<
         for( const Statement& statement : function.statements )
         {
             use( statement.place );
-            for_each_operand( function, statement.value, [&]( const Operand& operand ) { use( operand.place ); } );
+            for_each_operand( function.rvalue( statement ), [&]( const Operand& operand ) { use( operand.place ); } );
         }
 
         for( const Block& block : function.blocks )
@@ -1802,9 +1806,10 @@ std::vector<Node_id> Kir_emitter::externs() const
                     function.statements,
                     [&]( const Statement& statement )
                     {
-                        return statement.kind == Statement_kind::Assign && statement.value.callee == decl &&
-                               ( statement.value.kind == Rvalue_kind::Call ||
-                                 statement.value.kind == Rvalue_kind::Function_address );
+                        const Rvalue& value = function.rvalue( statement );
+
+                        return statement.kind == Statement_kind::Assign && value.callee == decl &&
+                               ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address );
                     }
                 );
             }
@@ -1841,15 +1846,14 @@ Needed Kir_emitter::needed_types() const
             stack.push_back( local.type );
         }
 
-        for( const Operand& operand : function.operands )
-        {
-            stack.push_back( operand.type );
-        }
-
         for( const Statement& statement : function.statements )
         {
-            const Rvalue& value = statement.value;
+            const Rvalue& value = function.rvalue( statement );
             stack.insert( stack.end(), { value.type, value.a.type, value.b.type } );
+            for( const Operand& argument : value.arguments )
+            {
+                stack.push_back( argument.type );
+            }
             stack.insert( stack.end(), value.type_arguments.begin(), value.type_arguments.end() );
         }
 
@@ -1949,12 +1953,14 @@ bool Kir_emitter::uses_runtime() const
     {
         for( const Statement& statement : function.statements )
         {
+            const Rvalue& value = function.rvalue( statement );
+
             if( statement.kind != Statement_kind::Assign )
             {
                 continue;
             }
 
-            if( statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release )
+            if( value.kind == Rvalue_kind::Allocate || value.kind == Rvalue_kind::Release )
             {
                 return true;
             }
@@ -1989,12 +1995,14 @@ bool Kir_emitter::uses_counted_allocation() const
     {
         for( const Statement& statement : function.statements )
         {
+            const Rvalue& value = function.rvalue( statement );
+
             if( statement.kind != Statement_kind::Assign )
             {
                 continue;
             }
 
-            if( statement.value.kind == Rvalue_kind::Allocate && statement.value.a.type.is_valid() )
+            if( value.kind == Rvalue_kind::Allocate && value.a.type.is_valid() )
             {
                 return true;
             }
@@ -2256,10 +2264,8 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
     case Rvalue_kind::Indirect_call:
     {
         std::string args;
-        for( u32 i = 0; i < rvalue.argument_count; ++i )
+        for( const Operand& argument : rvalue.arguments )
         {
-            const Operand& argument = current_->operands[rvalue.first_argument + i];
-
             if( is_void( argument ) )
             {
                 continue;
@@ -2345,13 +2351,13 @@ std::string Kir_emitter::interface_reference( Type_id interface, Type_id impleme
 // `s.area()` on a `Shape*`: the slot of the receiver's vtable, given the receiver's object.
 std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
 {
-    const std::string receiver = operand( current_->operands[rvalue.first_argument] );
+    const std::string receiver = operand( rvalue.arguments[0] );
 
     std::string args = fmt::format( "{}.self", receiver );
 
-    for( u32 i = 1; i < rvalue.argument_count; ++i )
+    for( std::size_t i = 1; i < rvalue.arguments.size(); ++i )
     {
-        const Operand& argument = current_->operands[rvalue.first_argument + i];
+        const Operand& argument = rvalue.arguments[i];
 
         if( !is_void( argument ) )
         {

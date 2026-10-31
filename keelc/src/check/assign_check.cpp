@@ -147,7 +147,7 @@ void read_operand(
     for_each_missing( slots, empty && local != func.constructed ? whole : range, flow, push( false ) );
 }
 
-// a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
+// a and b cover Use, Binary, Unary and Cast, the arguments Call; an unused operand is a
 // Constant. A borrow reads its place; an Initialise address is the rule below's.
 void read_rvalue(
     const Function&                  func,
@@ -168,9 +168,9 @@ void read_rvalue(
     read_operand( func, slots, value.a, span, flow, reads );
     read_operand( func, slots, value.b, span, flow, reads );
 
-    for( u32 i = 0; i < value.argument_count; ++i )
+    for( const Operand& argument : value.arguments )
     {
-        read_operand( func, slots, func.operands[value.first_argument + i], span, flow, reads );
+        read_operand( func, slots, argument, span, flow, reads );
     }
 }
 
@@ -342,11 +342,13 @@ void transfer_block( const Function& func, const Slot_map& slots, Block_id block
 
     for( const Statement& statement : func.statements_of( b ) )
     {
+        const Rvalue& value = func.rvalue( statement );
+
         // Reads before the write: `_1 = _1 + 1`. Outside the is_global guard, since a global target's
         // rvalue still reads locals.
         if( statement.kind == Statement_kind::Assign )
         {
-            read_rvalue( func, slots, statement.value, statement.span, flow, reads );
+            read_rvalue( func, slots, value, statement.span, flow, reads );
         }
 
         if( statement.place.is_global() )
@@ -361,10 +363,10 @@ void transfer_block( const Function& func, const Slot_map& slots, Block_id block
 
             // Only an `out` argument and a constructor's target assign through an address, so
             // `void forward( out i32 n ) { init( out n ); }` works.
-            if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() &&
-                statement.value.address_purpose == Address_purpose::Initialise )
+            if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
+                value.address_purpose == Address_purpose::Initialise )
             {
-                const Place& taken = statement.value.a.place;
+                const Place& taken = value.a.place;
 
                 if( !written_piecewise( func, slots, taken, statement.span, flow, report ) )
                 {

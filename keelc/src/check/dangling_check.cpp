@@ -45,10 +45,12 @@ std::vector<bool> tracked_pointers( const Function& func )
 
     for( const Statement& statement : func.statements )
     {
-        const Place& source = statement.value.a.place;
+        const Rvalue& value = func.rvalue( statement );
 
-        if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-            !source.is_global() && !has_deref_projection( func, source ) )
+        const Place& source = value.a.place;
+
+        if( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of && !source.is_global() &&
+            !has_deref_projection( func, source ) )
         {
             tracked[source.local.v] = false;
         }
@@ -95,7 +97,7 @@ struct Walk
     void assign( Aims& aims, const Statement& statement ) const
     {
         const Place&  place = statement.place;
-        const Rvalue& value = statement.value;
+        const Rvalue& value = func.rvalue( statement );
 
         if( place.is_global() || place.num_projections != 0 || !tracked[place.local.v] )
         {
@@ -145,16 +147,16 @@ struct Walk
 
         for( const Statement& statement : func.statements_of( block ) )
         {
+            const Rvalue& value = func.rvalue( statement );
+
             switch( statement.kind )
             {
             case Statement_kind::Assign:
                 read( aims, statement.place, statement.span );
-                for_each_operand(
-                    func, statement.value, [&]( const Operand& operand ) { read_operand( aims, operand, statement.span ); }
-                );
-                if( statement.value.kind == Rvalue_kind::Address_of )
+                for_each_operand( value, [&]( const Operand& operand ) { read_operand( aims, operand, statement.span ); } );
+                if( value.kind == Rvalue_kind::Address_of )
                 {
-                    read( aims, statement.value.a.place, statement.span );
+                    read( aims, value.a.place, statement.span );
                 }
                 assign( aims, statement );
                 break;

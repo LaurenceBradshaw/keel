@@ -169,9 +169,9 @@ struct Printer
         {
             std::string arguments;
 
-            for( u32 i = 0; i < value.argument_count; ++i )
+            for( std::size_t i = 0; i < value.arguments.size(); ++i )
             {
-                arguments += fmt::format( "{}{}", i == 0 ? "" : ", ", operand( func.operands[value.first_argument + i] ) );
+                arguments += fmt::format( "{}{}", i == 0 ? "" : ", ", operand( value.arguments[i] ) );
             }
 
             return fmt::format(
@@ -209,7 +209,7 @@ struct Printer
         switch( statement.kind )
         {
         case Statement_kind::Assign:
-            return fmt::format( "{} = {}", place( statement.place ), rvalue( statement.value ) );
+            return fmt::format( "{} = {}", place( statement.place ), rvalue( func.rvalue( statement ) ) );
 
         // `drop _1 if _7` when the local can have been moved out of, plain otherwise - so a dump of a
         // function that moves nothing looks exactly as it did before drop flags existed.
@@ -489,11 +489,10 @@ TEST_CASE( "print_spells_each_rvalue", "[ir][print]" )
     builder.assign( p, cast_to( copy( p, i32 ), f.table.integer( 8, false ) ), Span {} );
     builder.assign( p, address_of( p, i32, Address_purpose::Borrow ), Span {} );
 
-    const u32 first = builder.add_operands( std::array { two, two } );
-    builder.assign( p, call( f.first( Node_kind::Function_decl ), first, 2, i32 ), Span {} );
+    builder.assign( p, call( f.first( Node_kind::Function_decl ), { two, two }, i32 ), Span {} );
 
     // M7 slice 3: the callee is an operand, so it is spelled where the symbol would be.
-    builder.assign( p, indirect_call( copy( p, i32 ), first, 2, i32 ), Span {} );
+    builder.assign( p, indirect_call( copy( p, i32 ), { two, two }, i32 ), Span {} );
 
     builder.terminate_return( Span {} );
 

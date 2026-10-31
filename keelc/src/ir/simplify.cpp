@@ -153,12 +153,13 @@ void prune( Function& func, const std::vector<bool>& live )
         Block block = func.blocks[i];
 
         // Read the old range out before writing the new one, as drop elaboration's rebuild does:
-        // the copy below indexes the original vector.
+        // the move below indexes the original vector.
         const u32 first = block.first_statement;
         const u32 count = block.statement_count;
 
         block.first_statement = narrow_cast<u32>( statements.size() );
-        statements.insert( statements.end(), func.statements.begin() + first, func.statements.begin() + first + count );
+        const Run<Statement> run( func.statements, first, count );
+        statements.insert( statements.end(), std::make_move_iterator( run.begin() ), std::make_move_iterator( run.end() ) );
 
         const u32 targets = block.terminator.kind == Terminator_kind::Branch ? 2
                             : block.terminator.kind == Terminator_kind::Goto ? 1
@@ -204,7 +205,7 @@ void remove_statements( Function& func, const std::vector<bool>& deleted )
         {
             if( !deleted[old_first + i] )
             {
-                statements.push_back( func.statements[old_first + i] );
+                statements.push_back( std::move( func.statements[old_first + i] ) );
                 ++kept_count;
             }
         }
@@ -417,8 +418,10 @@ TEST_CASE( "simplify_folds_a_constant_branch", "[ir][simplify][returns]" )
             p.first().statements.end(),
             [&]( const Statement& statement )
             {
-                return statement.value.kind == Rvalue_kind::Use && statement.value.a.kind == Operand_kind::Constant &&
-                       statement.value.a.constant.is_valid() && p.literals.integer( statement.value.a.constant ) == 3;
+                const Rvalue& value = p.first().rvalue( statement );
+
+                return value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Constant &&
+                       value.a.constant.is_valid() && p.literals.integer( value.a.constant ) == 3;
             }
         );
 

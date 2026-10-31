@@ -10,8 +10,8 @@ static_assert( sizeof( Local ) == 24, "Local changed: update kir_state.cpp's wal
 static_assert( sizeof( Projection ) == 16, "Projection changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Place ) == 20, "Place changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Operand ) == 32, "Operand changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Rvalue ) == 120, "Rvalue changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Statement ) == 168, "Statement changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Rvalue ) == 136, "Rvalue changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Statement ) == 44, "Statement changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Terminator ) == 120, "Terminator changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Block ) == 128, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
@@ -65,9 +65,12 @@ void put_rvalue( Byte_writer& out, Ref_writer& refs, const Rvalue& value )
     out.put_u32( u32( value.op ) );
     put_operand( out, refs, value.a );
     put_operand( out, refs, value.b );
-    out.put_u32( value.first_argument );
-    out.put_u32( value.argument_count );
     refs.node( out, value.callee );
+    out.put_u32( narrow_cast<u32>( value.arguments.size() ) );
+    for( const Operand& argument : value.arguments )
+    {
+        put_operand( out, refs, argument );
+    }
     put_types( out, refs, value.type_arguments );
     out.put_u8( u8( value.address_purpose ) );
 }
@@ -82,6 +85,19 @@ void put_terminator( Byte_writer& out, Ref_writer& refs, const Terminator& termi
     out.put_u32( terminator.targets[1].v );
     put_operand( out, refs, terminator.message );
     put_operand( out, refs, terminator.at );
+}
+
+// A count, then each element; stops at the first failure, which the caller checks once.
+template <typename T, typename Get>
+std::vector<T> get_all( Byte_reader& in, Ref_reader& refs, Get&& get )
+{
+    std::vector<T> all;
+    const u32      count = in.get_u32();
+    for( u32 i = 0; i < count && !refs.failed(); ++i )
+    {
+        all.push_back( get() );
+    }
+    return all;
 }
 
 std::vector<Type_id> get_types( Byte_reader& in, Ref_reader& refs )
@@ -135,9 +151,8 @@ Rvalue get_rvalue( Byte_reader& in, Ref_reader& refs )
     value.op              = Token_kind( in.get_u32() );
     value.a               = get_operand( in, refs );
     value.b               = get_operand( in, refs );
-    value.first_argument  = in.get_u32();
-    value.argument_count  = in.get_u32();
     value.callee          = refs.node();
+    value.arguments       = get_all<Operand>( in, refs, [&] { return get_operand( in, refs ); } );
     value.type_arguments  = get_types( in, refs );
     value.address_purpose = Address_purpose( in.get_u8() );
     return value;
@@ -155,19 +170,6 @@ Terminator get_terminator( Byte_reader& in, Ref_reader& refs )
     terminator.message    = get_operand( in, refs );
     terminator.at         = get_operand( in, refs );
     return terminator;
-}
-
-// A count, then each element; stops at the first failure, which the caller checks once.
-template <typename T, typename Get>
-std::vector<T> get_all( Byte_reader& in, Ref_reader& refs, Get&& get )
-{
-    std::vector<T> all;
-    const u32      count = in.get_u32();
-    for( u32 i = 0; i < count && !refs.failed(); ++i )
-    {
-        all.push_back( get() );
-    }
-    return all;
 }
 
 } // namespace
@@ -219,7 +221,11 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
         out.put_u8( statement.replacing );
         refs.span( out, statement.span );
         put_place( out, refs, statement.place );
-        put_rvalue( out, refs, statement.value );
+        out.put_u8( statement.value.is_valid() );
+        if( statement.value.is_valid() )
+        {
+            put_rvalue( out, refs, function.rvalue( statement ) );
+        }
         out.put_u32( statement.drop_flag.v );
     }
 
@@ -230,12 +236,6 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
         refs.node( out, projection.field );
         refs.type( out, projection.member );
         out.put_u32( projection.index.v );
-    }
-
-    out.put_u32( narrow_cast<u32>( function.operands.size() ) );
-    for( const Operand& operand : function.operands )
-    {
-        put_operand( out, refs, operand );
     }
 
     out.put_u8( function.returns_a_value );
@@ -308,7 +308,10 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
             statement.replacing = in.get_u8() != 0;
             statement.span      = refs.span();
             statement.place     = get_place( in, refs );
-            statement.value     = get_rvalue( in, refs );
+            if( in.get_u8() != 0 )
+            {
+                statement.value = function.add_rvalue( get_rvalue( in, refs ) );
+            }
             statement.drop_flag = Local_id { in.get_u32() };
             return statement;
         }
@@ -328,7 +331,6 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
         }
     );
 
-    function.operands        = get_all<Operand>( in, refs, [&] { return get_operand( in, refs ); } );
     function.returns_a_value = in.get_u8() != 0;
     function.diverges        = in.get_u8() != 0;
     return function;

@@ -331,32 +331,9 @@ int32_t kl__argument__3i32( int32_t kl_a_1 )
 int32_t kl__borrowed__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    struct kl__Point kl_p_2;
-    struct kl__Point* kl_t5;
-    int32_t kl_t6;
-    bool kl_t7;
-#line 123 "opt/scalars.kl"
-    kl_p_2.kl_x = kl_a_1;
-#line 123 "opt/scalars.kl"
-    kl_p_2.kl_y = 1;
-    kl_t5 = &kl_p_2;
-#line 83 "opt/scalars.kl"
-    kl_t6 = ( *kl_t5 ).kl_x;
-#line 124 "opt/scalars.kl"
-    kl_t7 = kl_t6 == kl_a_1;
-#line 124 "opt/scalars.kl"
-    if ( kl_t7 ) goto bb1; else goto bb2;
-    bb1:
+    ( void ) kl_a_1;
 #line 124 "opt/scalars.kl"
     kl_t0 = 0;
-#line 124 "opt/scalars.kl"
-    goto bb3;
-    bb2:
-#line 124 "opt/scalars.kl"
-    kl_t0 = 5;
-#line 124 "opt/scalars.kl"
-    goto bb3;
-    bb3:
 #line 124 "opt/scalars.kl"
     return kl_t0;
 }
@@ -533,10 +510,6 @@ int32_t kl__main__( void )
     bool kl_t15;
     bool kl_t17;
     bool kl_t20;
-    struct kl__Point kl_p_39;
-    struct kl__Point* kl_t42;
-    int32_t kl_t43;
-    bool kl_t44;
 #line 176 "opt/scalars.kl"
     kl_t0 = kl__nested__(  );
 #line 178 "opt/scalars.kl"
@@ -563,17 +536,10 @@ int32_t kl__main__( void )
 #line 186 "opt/scalars.kl"
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
-#line 123 "opt/scalars.kl"
-    kl_p_39.kl_x = 5;
-#line 123 "opt/scalars.kl"
-    kl_p_39.kl_y = 1;
-    kl_t42 = &kl_p_39;
-#line 83 "opt/scalars.kl"
-    kl_t43 = ( *kl_t42 ).kl_x;
 #line 124 "opt/scalars.kl"
-    kl_t44 = kl_t43 == 5;
+    kl_t0 = 0;
 #line 124 "opt/scalars.kl"
-    if ( kl_t44 ) goto bb15; else goto bb16;
+    goto bb6;
     bb6:
 #line 190 "opt/scalars.kl"
     kl_t13 = kl_t0 == 0;
@@ -615,19 +581,6 @@ int32_t kl__main__( void )
     kl_t0 = 0;
 #line 151 "opt/scalars.kl"
     goto bb11;
-    bb15:
-#line 124 "opt/scalars.kl"
-    kl_t0 = 0;
-#line 124 "opt/scalars.kl"
-    goto bb17;
-    bb16:
-#line 124 "opt/scalars.kl"
-    kl_t0 = 5;
-#line 124 "opt/scalars.kl"
-    goto bb17;
-    bb17:
-#line 124 "opt/scalars.kl"
-    goto bb6;
 #line 208 "opt/scalars.kl"
 }
 

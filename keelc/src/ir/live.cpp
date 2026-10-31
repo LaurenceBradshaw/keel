@@ -35,6 +35,8 @@ void read( const Function& func, const Place& place, Local_set& live )
 // leaves `_1` live.
 void step_back( const Function& func, const Statement& statement, Local_set& live )
 {
+    const Rvalue& value = func.rvalue( statement );
+
     switch( statement.kind )
     {
     case Statement_kind::Assign:
@@ -50,8 +52,7 @@ void step_back( const Function& func, const Statement& statement, Local_set& liv
             live[statement.place.local.v] = true;
         }
         for_each_operand(
-            func,
-            statement.value,
+            value,
             [&]( const Operand& operand )
             {
                 if( operand.has_place() )
@@ -61,15 +62,15 @@ void step_back( const Function& func, const Statement& statement, Local_set& liv
             }
         );
         // `&init _2` reads nothing of `_2`; for_each_operand skips this operand.
-        if( statement.value.kind == Rvalue_kind::Address_of )
+        if( value.kind == Rvalue_kind::Address_of )
         {
-            if( statement.value.address_purpose != Address_purpose::Initialise )
+            if( value.address_purpose != Address_purpose::Initialise )
             {
-                read( func, statement.value.a.place, live );
+                read( func, value.a.place, live );
             }
             else
             {
-                read_indices( func, statement.value.a.place, live );
+                read_indices( func, value.a.place, live );
             }
         }
         break;
@@ -188,10 +189,12 @@ Local_set addressed_locals( const Function& func )
 
     for( const Statement& statement : func.statements )
     {
-        if( statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-            statement.value.address_purpose != Address_purpose::Initialise && !statement.value.a.place.is_global() )
+        const Rvalue& value = func.rvalue( statement );
+
+        if( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
+            value.address_purpose != Address_purpose::Initialise && !value.a.place.is_global() )
         {
-            addressed[statement.value.a.place.local.v] = true;
+            addressed[value.a.place.local.v] = true;
         }
     }
 
@@ -380,7 +383,8 @@ TEST_CASE( "writes_sees_a_field_and_a_constructor's_address_not_a_pointee", "[ir
 
     const Analysed built( "i32 f() { { Holder h = Holder( 1 ); } return 0; }\n" );
     REQUIRE( built.clean() );
-    const u32 init = built.find( []( const Statement& s ) { return s.value.kind == Rvalue_kind::Address_of; } );
+    const u32 init =
+        built.find( [&]( const Statement& s ) { return built.first().rvalue( s ).kind == Rvalue_kind::Address_of; } );
     REQUIRE( writes( built.first(), built.first().statements[init], Local_id { 1 } ) );
 
     const Analysed through( "void f( Point* p ) { p.x = 1; }\n" );
