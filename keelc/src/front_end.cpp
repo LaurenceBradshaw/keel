@@ -201,6 +201,11 @@ Front_end run_front_end(
                     simplify( function, literals );
                     merge_blocks( function );
                 }
+                // Again, for the copy chains into a field that splitting and inlining leave.
+                if( build.recoalescing )
+                {
+                    coalesce_moves( function );
+                }
                 assert( verify( function ).empty() );
             }
         }

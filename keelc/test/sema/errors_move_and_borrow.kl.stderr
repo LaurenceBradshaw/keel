@@ -28,6 +28,12 @@ error: `f` is moved into this call, so the call cannot also borrow it
 57 |     _ = f == move f;
    |         ^^^^^^^^^^^ a call cannot take a value and borrow it at once
 
+warning: `move` is not needed on an operator's operand [-Wneedless-move]
+  --> sema/errors_move_and_borrow.kl:57:14
+   |
+57 |     _ = f == move f;
+   |              ^^^^^^ it only reads the value; drop `move`
+
 error: `g` is moved into this call, so the call cannot also borrow it
   --> sema/errors_move_and_borrow.kl:61:20
    |

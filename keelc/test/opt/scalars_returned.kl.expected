@@ -20,12 +20,8 @@ int32_t kl__main__( void );
 struct kl__Point kl__built__3i32( int32_t kl_a_1 )
 {
     struct kl__Point kl_t0;
-    int32_t kl_t7;
-#line 15 "opt/scalars_returned.kl"
-    kl_t7 = kl_a_1 + 1;
+    kl_t0.kl_y = kl_a_1 + 1;
     kl_t0.kl_x = kl_a_1;
-#line 16 "opt/scalars_returned.kl"
-    kl_t0.kl_y = kl_t7;
 #line 16 "opt/scalars_returned.kl"
     return kl_t0;
 }

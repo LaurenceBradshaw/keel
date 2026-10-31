@@ -98,6 +98,10 @@ public:
         return ruled_fallthroughs_.contains( id.v );
     }
 
+    // Whether control can reach the end of this statement. Conservative one way only: it answers
+    // "yes" when unsure, so a rule can miss a divergence but never invent one.
+    bool completes_normally( Node_id id ) const;
+
 private:
     void check_enum_arm_labels( Node_id arm, Switch_coverage& state );
     void check_numeric_arm_labels( Node_id arm, Switch_coverage& state );
@@ -110,10 +114,6 @@ private:
     std::optional<std::size_t> member_offset( const Switch_coverage& state, Type_id label_type, Node_id label );
 
     std::optional<i64> fold_bound( Node_id bound, Type_id expected );
-
-    // Whether control can reach the end of this statement. Conservative one way only: it answers
-    // "yes" when unsure, so the rule below can miss a divergence but never invent one.
-    bool completes_normally( Node_id id ) const;
 
     // Whether any of an arm's labels destructures a payload. What "this arm binds" means for the
     // two rules that ask it: labels may not be stacked when one does, and nothing may fall into one.

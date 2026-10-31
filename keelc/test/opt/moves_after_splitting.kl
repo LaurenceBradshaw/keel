@@ -1,0 +1,72 @@
+// A field rebuilt after scalar replacement is built where it lies: `n`'s second `Box` is allocated
+// straight into its split field, with no copy chain between. Each check returns its own code.
+
+i32 live;
+
+class Box
+{
+    public Box( i32 v )
+    {
+        unsafe
+        {
+            value = alloc<i32>();
+        }
+        *value = v;
+        live += 1;
+    }
+
+    ~Box()
+    {
+        unsafe
+        {
+            free( value );
+        }
+        live -= 1;
+    }
+
+    public i32 get() const
+    {
+        return *value;
+    }
+
+    i32* value;
+};
+
+class Inner
+{
+    public Box n;
+    public i32 v;
+};
+
+class Outer
+{
+    public Inner a;
+    public Inner b;
+};
+
+void consume( move Inner _ )
+{
+}
+
+i32 rebuilt()
+{
+    Outer o = Outer { Inner { Box( 3 ), 0 }, Inner { Box( 4 ), 0 } };
+    consume( move o.a );
+    o.a.v = 3;
+    o.a.n = Box( 5 );
+    return o.a.n.get() + o.b.n.get();
+}
+
+i32 main()
+{
+    if( rebuilt() != 9 )
+    {
+        return 1;
+    }
+    if( live != 0 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

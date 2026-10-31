@@ -28,4 +28,10 @@ error: `a` may already have been moved
 68 |         sink( move a );
    |         ^^^^^^^^^^^^^^ moved at 68:9 on some path to here
 
+warning: `move` is not needed on an operator's operand [-Wneedless-move]
+   --> sema/errors_moves.kl:110:11
+    |
+110 |     a = ( move a ) + 1;
+    |           ^^^^^^ it only reads the value; drop `move`
+
 5 errors generated

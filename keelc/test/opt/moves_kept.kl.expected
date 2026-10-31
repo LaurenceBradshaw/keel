@@ -152,7 +152,6 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
     int64_t kl_t25;
     int64_t kl_t28;
     int64_t kl_t29;
-    int32_t kl_other_30;
     int32_t kl_t31;
     int32_t kl_t32;
 #line 15 "opt/moves_kept.kl"
@@ -163,7 +162,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
     kl_t13 = kl_t11 + 5;
 #line 66 "opt/moves_kept.kl"
     kl_t20 = true;
-    kl_other_30 = 6;
+    kl_t0 = 6;
 #line 16 "opt/moves_kept.kl"
     kl_t32 = kl__live__G + 2;
 #line 16 "opt/moves_kept.kl"
@@ -176,8 +175,6 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
 #line 68 "opt/moves_kept.kl"
     if ( kl_c_1 ) goto bb2; else goto bb1;
     bb1:
-#line 73 "opt/moves_kept.kl"
-    kl_t0 = kl_other_30;
 #line 22 "opt/moves_kept.kl"
     kl__live__G = kl__live__G - 1;
     kl_t24 = kl__trace__G * 10;
@@ -198,7 +195,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
 #line 23 "opt/moves_kept.kl"
     kl__trace__G = kl_t29;
 #line 70 "opt/moves_kept.kl"
-    kl_other_30 = kl_kept_2.kl_value;
+    kl_t0 = kl_kept_2.kl_value;
 #line 70 "opt/moves_kept.kl"
     kl_t20 = false;
 #line 68 "opt/moves_kept.kl"

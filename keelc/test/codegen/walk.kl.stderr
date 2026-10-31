@@ -1,0 +1,5 @@
+warning: this statement is never reached [-Wunreachable-code]
+  --> codegen/walk.kl:89:9
+   |
+89 |         yield( a_ + 2 );
+   |         ^^^^^^^^^^^^^^^^ the one before it always leaves the block

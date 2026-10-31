@@ -1,0 +1,76 @@
+// A statement after one that always leaves its block warns, once a block. A line ending
+// `// warning` warns exactly once; every other line warns not at all.
+never stop()
+{
+    panic( "stopped" );
+}
+
+i32 after_return()
+{
+    return 1;
+    i32 x = 2; // warning
+    return x;
+}
+
+void after_loop_exits( i32 n )
+{
+    i32 x = 0;
+    while( n > 0 )
+    {
+        break;
+        x = 1; // warning
+    }
+    for( i32 i = 0; i < n; i++ )
+    {
+        continue;
+        x = 2; // warning
+    }
+    _ = x;
+}
+
+i32 after_both_arms( bool b )
+{
+    if( b )
+    {
+        return 1;
+    }
+    else
+    {
+        return 2;
+    }
+    return 3; // warning
+}
+
+i32 after_never()
+{
+    stop();
+    return 1; // warning
+}
+
+i32 after_panic()
+{
+    panic( "no" );
+    return 1; // warning
+}
+
+// Only one arm leaves, a loop may finish, and a nested block's exit leaves the outer block too.
+i32 reached( bool b, i32 n )
+{
+    if( b )
+    {
+        return 1;
+    }
+    while( n > 0 )
+    {
+        return 2;
+    }
+    {
+        return 3;
+    }
+    return 4; // warning
+}
+
+i32 main()
+{
+    return 0;
+}

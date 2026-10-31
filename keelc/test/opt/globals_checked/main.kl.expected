@@ -17,7 +17,6 @@ int32_t kl__counter__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    int32_t kl_t4;
 #line 10 "opt/globals_checked/main.kl"
     kl_t1 = __builtin_add_overflow( kl__live__G, 1, &( int32_t ) { 0 } );
 #line 10 "opt/globals_checked/main.kl"
@@ -27,9 +26,7 @@ int32_t kl__counter__( void )
     kl_rt_panic( "opt/globals_checked/main.kl", 10, "arithmetic overflow: live += 1;" );
     bb2:
 #line 11 "opt/globals_checked/main.kl"
-    kl_t4 = kl__live__G;
-    kl_t0 = kl_t4;
-#line 12 "opt/globals_checked/main.kl"
+    kl_t0 = kl__live__G;
     return kl_t0;
 }
 

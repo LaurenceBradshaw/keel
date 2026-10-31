@@ -1433,6 +1433,9 @@ Type_id Expressions::infer_binary( Node_id id )
     const Node_id    right = ast_.rhs( id );
     const Type_id    error = table_.builtin( Type_kind::Error );
 
+    warn_read_move( left, "on an operator's operand" );
+    warn_read_move( right, "on an operator's operand" );
+
     // A literal has a value, not a type, so the other operand is what gives it one. Inferring both
     // would settle it on its default first, and `u32 bits; bits != 0` would then compare a u32
     // with an i32 - which §6.4 rejects, and which no suffix exists to write around (D13). That
@@ -1689,6 +1692,8 @@ Type_id Expressions::field_application( Node_id id, Type_id offset )
 Type_id Expressions::infer_unary( Node_id id )
 {
     const Token_kind op = ast_.op( id );
+
+    warn_read_move( ast_.operand( id ), "on an operator's operand" );
 
     // Answered before the operand is inferred: infer_name reports a bare function name, and
     // nothing here could take that diagnostic back once it is written.
@@ -3603,7 +3608,11 @@ Type_id Expressions::infer_marker( Node_id id )
     // on one is accepted though not needed.
     if( !named && bounds_.satisfies( value, Bound::Copyable ) )
     {
-        reporter_.error_at( ast_.span( operand ), "only a variable or an owned temporary can be moved" );
+        reporter_.error_at(
+            ast_.span( operand ),
+            "only a variable or an owned temporary can be moved",
+            ast_.kind( operand ) == Node_kind::Binary_expr ? "`move` takes the whole expression after it" : ""
+        );
         return types_.poison( id );
     }
 
@@ -3985,6 +3994,8 @@ void Expressions::check_condition( Node_id id )
         return;
     }
 
+    warn_read_move( id, "in a condition" );
+
     const Type_id bool_type = table_.builtin( Type_kind::Bool );
     const Type_id actual    = infer( id );
 
@@ -4000,6 +4011,22 @@ void Expressions::check_condition( Node_id id )
         fmt::format( "expected `bool`, but got `{}`", table_.name( actual ) ),
         "there is no conversion to `bool`: compare explicitly, as in `x != 0`"
     );
+}
+
+// A warning, not an error, so the flow checks still run: the move still ends the variable.
+void Expressions::warn_read_move( Node_id value, std::string_view where )
+{
+    // `move a > 0` moves `a > 0`, which infer_marker refuses.
+    if( ast_.kind( value ) == Node_kind::Marker_expr && ast_.keyword( value ) == Keyword::Move &&
+        ast_.kind( ast_.operand( value ) ) != Node_kind::Binary_expr )
+    {
+        reporter_.warn_at(
+            Warning::Needless_move,
+            ast_.span( value ),
+            fmt::format( "`move` is not needed {}", where ),
+            "it only reads the value; drop `move`"
+        );
+    }
 }
 
 // The same flag construction sets, for the two pattern positions a statement reaches: the payload

@@ -120,6 +120,10 @@ std::string_view warning_name( Warning which )
         return "void-variable";
     case Warning::Constant_comparison:
         return "constant-comparison";
+    case Warning::Needless_move:
+        return "needless-move";
+    case Warning::Unreachable_code:
+        return "unreachable-code";
     case Warning::Large_local:
         return "large-local";
     }

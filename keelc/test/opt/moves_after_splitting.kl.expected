@@ -1,0 +1,175 @@
+// opt/moves_after_splitting.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box;
+struct kl__Inner;
+struct kl__Outer;
+
+struct kl__Box
+{
+    int32_t* kl_value;
+};
+
+struct kl__Inner
+{
+    struct kl__Box kl_n;
+    int32_t kl_v;
+};
+
+struct kl__Outer
+{
+    struct kl__Inner kl_a;
+    struct kl__Inner kl_b;
+};
+
+int32_t kl__live__G;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+
+void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
+void kl__Box__dtor( struct kl__Box* );
+int32_t kl__get__S3Box( struct kl__Box* );
+void kl__consume__M5Inner( struct kl__Inner );
+int32_t kl__rebuilt__( void );
+int32_t kl__main__( void );
+
+#line 8 "opt/moves_after_splitting.kl"
+void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+{
+    int32_t* kl_t3;
+#line 12 "opt/moves_after_splitting.kl"
+    kl_t3 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+#line 12 "opt/moves_after_splitting.kl"
+    ( *kl_this_1 ).kl_value = kl_t3;
+#line 14 "opt/moves_after_splitting.kl"
+    ( *( *kl_this_1 ).kl_value ) = kl_v_2;
+    kl__live__G = kl__live__G + 1;
+    return;
+#line 16 "opt/moves_after_splitting.kl"
+}
+
+#line 18 "opt/moves_after_splitting.kl"
+void kl__Box__dtor( struct kl__Box* kl_this_1 )
+{
+#line 22 "opt/moves_after_splitting.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_value );
+#line 24 "opt/moves_after_splitting.kl"
+    kl__live__G = kl__live__G - 1;
+    return;
+#line 25 "opt/moves_after_splitting.kl"
+}
+
+#line 27 "opt/moves_after_splitting.kl"
+int32_t kl__get__S3Box( struct kl__Box* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 29 "opt/moves_after_splitting.kl"
+    kl_t0 = ( *( *kl_this_1 ).kl_value );
+#line 29 "opt/moves_after_splitting.kl"
+    return kl_t0;
+}
+
+#line 47 "opt/moves_after_splitting.kl"
+void kl__consume__M5Inner( struct kl__Inner kl_t1 )
+{
+#line 22 "opt/moves_after_splitting.kl"
+    kl_rt_free( kl_t1.kl_n.kl_value );
+#line 24 "opt/moves_after_splitting.kl"
+    kl__live__G = kl__live__G - 1;
+#line 49 "opt/moves_after_splitting.kl"
+    return;
+#line 49 "opt/moves_after_splitting.kl"
+}
+
+#line 51 "opt/moves_after_splitting.kl"
+int32_t kl__rebuilt__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box* kl_t15;
+    int32_t kl_t16;
+    struct kl__Box* kl_t17;
+    int32_t kl_t18;
+    struct kl__Box kl_o_59;
+    struct kl__Box kl_o_62;
+#line 12 "opt/moves_after_splitting.kl"
+    kl_o_59.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+#line 14 "opt/moves_after_splitting.kl"
+    ( *kl_o_59.kl_value ) = 3;
+    kl__live__G = kl__live__G + 1;
+#line 12 "opt/moves_after_splitting.kl"
+    kl_o_62.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+#line 14 "opt/moves_after_splitting.kl"
+    ( *kl_o_62.kl_value ) = 4;
+    kl__live__G = kl__live__G + 1;
+#line 22 "opt/moves_after_splitting.kl"
+    kl_rt_free( kl_o_59.kl_value );
+#line 24 "opt/moves_after_splitting.kl"
+    kl__live__G = kl__live__G - 1;
+#line 12 "opt/moves_after_splitting.kl"
+    kl_o_59.kl_value = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+#line 14 "opt/moves_after_splitting.kl"
+    ( *kl_o_59.kl_value ) = 5;
+    kl__live__G = kl__live__G + 1;
+#line 57 "opt/moves_after_splitting.kl"
+    kl_t15 = &kl_o_59;
+#line 29 "opt/moves_after_splitting.kl"
+    kl_t16 = ( *( *kl_t15 ).kl_value );
+#line 57 "opt/moves_after_splitting.kl"
+    kl_t17 = &kl_o_62;
+#line 29 "opt/moves_after_splitting.kl"
+    kl_t18 = ( *( *kl_t17 ).kl_value );
+#line 57 "opt/moves_after_splitting.kl"
+    kl_t0 = kl_t16 + kl_t18;
+#line 22 "opt/moves_after_splitting.kl"
+    kl_rt_free( kl_o_62.kl_value );
+#line 24 "opt/moves_after_splitting.kl"
+    kl__live__G = kl__live__G - 1;
+#line 22 "opt/moves_after_splitting.kl"
+    kl_rt_free( kl_o_59.kl_value );
+#line 24 "opt/moves_after_splitting.kl"
+    kl__live__G = kl__live__G - 1;
+#line 57 "opt/moves_after_splitting.kl"
+    return kl_t0;
+}
+
+#line 60 "opt/moves_after_splitting.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    bool kl_t3;
+#line 62 "opt/moves_after_splitting.kl"
+    kl_t1 = kl__rebuilt__(  );
+#line 62 "opt/moves_after_splitting.kl"
+    kl_t2 = kl_t1 != 9;
+#line 62 "opt/moves_after_splitting.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 64 "opt/moves_after_splitting.kl"
+    return kl_t0;
+    bb2:
+    kl_t3 = kl__live__G != 0;
+#line 66 "opt/moves_after_splitting.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 68 "opt/moves_after_splitting.kl"
+    return kl_t0;
+    bb4:
+#line 71 "opt/moves_after_splitting.kl"
+    kl_t0 = 0;
+#line 71 "opt/moves_after_splitting.kl"
+    return kl_t0;
+}
+
+#line 60 "opt/moves_after_splitting.kl"
+int main( void )
+{
+#line 60 "opt/moves_after_splitting.kl"
+    return (int) kl__main__();
+}

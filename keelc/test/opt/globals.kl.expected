@@ -39,13 +39,10 @@ void kl__bump__3i32( int32_t kl_n_1 )
 int32_t kl__counted__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t1;
 #line 22 "opt/globals.kl"
-    kl_t1 = kl__count__G + 1;
+    kl_t0 = kl__count__G + 1;
 #line 22 "opt/globals.kl"
-    kl__count__G = kl_t1;
-    kl_t0 = kl_t1;
-#line 23 "opt/globals.kl"
+    kl__count__G = kl_t0;
     return kl_t0;
 }
 

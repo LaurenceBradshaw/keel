@@ -82,6 +82,7 @@ private:
     void    visit_increment( Node_id id );
     void    visit_global( Node_id id );
     void    visit_block( Node_id id );
+    void    visit_statements( Node_id block ); // the block's children, warning at unreachable ones
 
     void check_returned_address( Node_id value );
     void check_kept_address( Node_id value );

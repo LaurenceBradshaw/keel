@@ -559,6 +559,11 @@ void Statements::visit_assign( Node_id id )
     const Node_id    target = ast_.target( id );
     const Node_id    value  = ast_.value( id );
 
+    if( op != Token_kind::Equal )
+    {
+        expressions_.warn_read_move( value, "on a compound assignment's value" );
+    }
+
     // A call says whether it returns a reference only once typing has chosen its callee.
     const bool    call      = ast_.kind( target ) == Node_kind::Call_expr;
     const Type_id call_type = call ? expressions_.infer( target ) : Type_id {};
@@ -1249,23 +1254,39 @@ void Statements::visit_block( Node_id id )
 {
     if( !ast_.is_unsafe( id ) )
     {
-        for( const Node_id child : ast_.children( id ) )
-        {
-            visit( child );
-        }
+        visit_statements( id );
         return;
     }
 
     // Both of the block's own rules are Expressions': the flag they read is the one
     // `require_unsafe` writes, and only the children in between are statements.
     const bool enclosing_used = expressions_.enter_unsafe( ast_.span( id ) );
-
-    for( const Node_id child : ast_.children( id ) )
-    {
-        visit( child );
-    }
-
+    visit_statements( id );
     expressions_.leave_unsafe( ast_.span( id ), enclosing_used );
+}
+
+// Warns once a block, at the first statement nothing reaches.
+void Statements::visit_statements( Node_id block )
+{
+    bool left   = false;
+    bool warned = false;
+
+    for( const Node_id child : ast_.children( block ) )
+    {
+        if( left && !warned )
+        {
+            reporter_.warn_at(
+                Warning::Unreachable_code,
+                ast_.span( child ),
+                "this statement is never reached",
+                "the one before it always leaves the block"
+            );
+            warned = true;
+        }
+
+        visit( child );
+        left = left || !coverage_.completes_normally( child );
+    }
 }
 
 void Statements::check_returned_address( Node_id value )

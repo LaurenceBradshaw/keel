@@ -1,0 +1,49 @@
+warning: `move` is not needed in a condition [-Wneedless-move]
+  --> sema/errors_read_move.kl:25:9
+   |
+25 |     if( move b ) // warning
+   |         ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed in a condition [-Wneedless-move]
+  --> sema/errors_read_move.kl:28:12
+   |
+28 |     while( move c ) // warning
+   |            ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed in a condition [-Wneedless-move]
+  --> sema/errors_read_move.kl:31:15
+   |
+31 |     i32 e = ( move d ) ? 1 : 2; // warning
+   |               ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed on an operator's operand [-Wneedless-move]
+  --> sema/errors_read_move.kl:37:15
+   |
+37 |     i32 d = ( move a ) + 1; // warning
+   |               ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed on an operator's operand [-Wneedless-move]
+  --> sema/errors_read_move.kl:38:14
+   |
+38 |     i32 e = -move b; // warning
+   |              ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed on an operator's operand [-Wneedless-move]
+  --> sema/errors_read_move.kl:39:21
+   |
+39 |     bool f = x == ( move y ); // warning
+   |                     ^^^^^^ it only reads the value; drop `move`
+
+warning: `move` is not needed on a compound assignment's value [-Wneedless-move]
+  --> sema/errors_read_move.kl:40:10
+   |
+40 |     d += move c; // warning
+   |          ^^^^^^ it only reads the value; drop `move`
+
+error: only a variable or an owned temporary can be moved
+  --> sema/errors_read_move.kl:49:14
+   |
+49 |     if( move a > 0 ) // error
+   |              ^^^^^ `move` takes the whole expression after it
+
+1 error generated

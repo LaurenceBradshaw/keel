@@ -764,19 +764,23 @@ constexpr std::string_view k_types = "class Box { public i32 v; public Box( i32 
                                      "Outer outer() { return Outer(); }\n"
                                      "i32 main() { return 0; }\n";
 
-// Optimised and elaborated, as a release build emits it. The function under test is always the first.
+// Optimised and elaborated, as a release build emits it, but coalesced once unless `recoalescing`. The
+// function under test is always the first.
 struct Optimised : Compiled
 {
     explicit Optimised(
         std::string_view              source,
-        std::optional<Inline_weights> inlining  = Inline_weights {},
-        bool                          splitting = true,
-        u32                           rounds    = 2
+        std::optional<Inline_weights> inlining     = Inline_weights {},
+        bool                          splitting    = true,
+        u32                           rounds       = 2,
+        bool                          recoalescing = false
     )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining, .splitting = splitting, .rounds = rounds }
+              Build {
+                  .optimise = true, .inlining = inlining, .splitting = splitting, .rounds = rounds, .recoalescing = recoalescing
+              }
           )
     {
     }
@@ -1096,6 +1100,41 @@ TEST_CASE( "coalesce_moves_keeps_a_field_copy_that_must_stay", "[opt][coalesce][
         REQUIRE( p.well_formed() );
         REQUIRE( p.field_copies( false ) >= 1 );
     }
+}
+
+// Splitting leaves `o.a.n`'s rebuilt pointer reaching its field through copies, which only the second
+// coalescing sees.
+TEST_CASE( "coalesce_moves_again_builds_a_split_field_in_place", "[opt][coalesce][field]" )
+{
+    const std::string source =
+        "i32 f() { Outer2 o = Outer2 { Inner2 { Cell( 3 ), 0 }, Inner2 { Cell( 4 ), 0 } }; take( move o.a ); "
+        "o.a.v = 3; o.a.n = Cell( 5 ); return o.a.n.get() + o.b.n.get(); }\n"
+        "class Cell { i32* p; public Cell( i32 v ) { unsafe { p = alloc<i32>(); } *p = v; } "
+        "~Cell() { unsafe { free( p ); } } public i32 get() const { return *p; } };\n"
+        "class Inner2 { public Cell n; public i32 v; };\n"
+        "class Outer2 { public Inner2 a; public Inner2 b; };\n"
+        "void take( move Inner2 _ ) { }\n";
+
+    // A whole local into a field, of any type.
+    const auto into_fields = []( const Optimised& p )
+    {
+        const Function& func = p.first();
+        return std::ranges::count_if(
+            func.statements,
+            [&]( const Statement& s )
+            {
+                return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.has_place() &&
+                       s.value.a.place.is_whole_local() && field_place( func, s.place );
+            }
+        );
+    };
+
+    const Optimised once( source );
+    const Optimised again( source, Inline_weights {}, true, 2, true );
+    REQUIRE( again.clean() );
+    REQUIRE( again.well_formed() );
+    REQUIRE( into_fields( once ) > 0 );
+    REQUIRE( into_fields( again ) == 0 );
 }
 
 TEST_CASE( "coalesce_moves_judges_a_borrow_by_where_it_reaches", "[opt][coalesce][field]" )

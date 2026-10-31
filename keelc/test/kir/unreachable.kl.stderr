@@ -1,0 +1,5 @@
+warning: this statement is never reached [-Wunreachable-code]
+ --> kir/unreachable.kl:6:5
+  |
+6 |     return 2;
+  |     ^^^^^^^^^ the one before it always leaves the block

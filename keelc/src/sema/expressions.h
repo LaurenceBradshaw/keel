@@ -86,6 +86,8 @@ public:
     // D5: this expression has to be a `bool` already. A rule about one expression rather than about
     // the statement around it, which is why `if`, `while`, `for` and the ternary all reach it here.
     void check_condition( Node_id id );
+    // `move` on a value that is only read, as `where` reads it.
+    void warn_read_move( Node_id value, std::string_view where );
 
     // D74: `yield( ... )`, checked as a call whose parameters are the enclosing walk's.
     void check_yield( Node_id id );

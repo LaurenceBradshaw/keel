@@ -46,6 +46,9 @@ struct Build
     // How often the passes after drop elaboration run; a test of what one round keeps sets 1.
     u32 rounds = 2;
 
+    // Coalescing again after the rounds; a test of what the first coalescing keeps turns it off.
+    bool recoalescing = true;
+
     // Keep each function as the dataflow checks left it, which a module's object holds.
     bool keep_checked = false;
 };

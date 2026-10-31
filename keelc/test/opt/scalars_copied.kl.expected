@@ -239,12 +239,8 @@ int32_t kl__opened__3i32( int32_t kl_a_1 )
 struct kl__Point kl__built__3i32( int32_t kl_a_1 )
 {
     struct kl__Point kl_t0;
-    int32_t kl_t7;
-#line 92 "opt/scalars_copied.kl"
-    kl_t7 = kl_a_1 + 1;
+    kl_t0.kl_y = kl_a_1 + 1;
     kl_t0.kl_x = kl_a_1;
-#line 93 "opt/scalars_copied.kl"
-    kl_t0.kl_y = kl_t7;
 #line 93 "opt/scalars_copied.kl"
     return kl_t0;
 }

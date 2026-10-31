@@ -21,7 +21,6 @@ int32_t kl__four__( void )
     int32_t kl_t5;
     int32_t kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
 #line 10 "opt/combined_checked/main.kl"
     kl_t1 = __builtin_add_overflow( kl__count__G, 1, &( int32_t ) { 0 } );
 #line 10 "opt/combined_checked/main.kl"
@@ -58,11 +57,9 @@ int32_t kl__four__( void )
     kl_rt_panic( "opt/combined_checked/main.kl", 13, "arithmetic overflow: count += 1;" );
     bb8:
 #line 13 "opt/combined_checked/main.kl"
-    kl_t8 = kl__count__G + 4;
+    kl_t0 = kl__count__G + 4;
 #line 13 "opt/combined_checked/main.kl"
-    kl__count__G = kl_t8;
-    kl_t0 = kl_t8;
-#line 14 "opt/combined_checked/main.kl"
+    kl__count__G = kl_t0;
     return kl_t0;
 }
 

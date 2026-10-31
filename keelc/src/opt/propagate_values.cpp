@@ -271,7 +271,9 @@ struct Propagated : Compiled
 {
     explicit Propagated( std::string_view source, u32 rounds = 2 )
         : Compiled(
-              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true, .rounds = rounds }
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .rounds = rounds, .recoalescing = false }
           )
     {
     }

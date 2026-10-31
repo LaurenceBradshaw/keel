@@ -23,11 +23,7 @@ int32_t kl__local__3i32( int32_t kl_x_1 )
 int32_t kl__counter__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
-#line 17 "opt/cancelled.kl"
-    kl_t2 = kl__count__G;
-    kl_t0 = kl_t2;
-#line 18 "opt/cancelled.kl"
+    kl_t0 = kl__count__G;
     return kl_t0;
 }
 
