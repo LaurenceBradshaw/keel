@@ -1,0 +1,25 @@
+error: `R`'s initialiser depends on `R` itself
+ --> sema/errors_const_names.kl:3:15
+  |
+3 | const i32 R = R + 1; // error
+  |               ^^^^^ a `const` cannot be defined in terms of itself
+
+error: `A`'s initialiser depends on `A` itself
+ --> sema/errors_const_names.kl:4:15
+  |
+4 | const i32 A = B * 2; // error
+  |               ^^^^^ a `const` cannot be defined in terms of itself
+
+error: `B`'s initialiser depends on `B` itself
+ --> sema/errors_const_names.kl:5:15
+  |
+5 | const i32 B = A + 1; // error
+  |               ^^^^^ a `const` cannot be defined in terms of itself
+
+error: `4000000000` does not fit in `i32`
+ --> sema/errors_const_names.kl:9:12
+  |
+9 |     return N * 1000000000; // error
+  |            ^^^^^^^^^^^^^^
+
+4 errors generated

@@ -2254,9 +2254,7 @@ Node_id Parser::parse_type_suffixes( Node_id type, Span start )
             continue;
         }
 
-        if( cursor_.check( Token_kind::L_bracket ) &&
-            ( cursor_.peek( 1 ).kind == Token_kind::Int_literal || cursor_.peek( 1 ).kind == Token_kind::Identifier ) &&
-            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+        if( cursor_.check( Token_kind::L_bracket ) && lookahead_.array_size_tokens( cursor_.position() ) != 0 )
         {
             type = parse_array_suffix( type, start );
             continue;
@@ -2295,31 +2293,27 @@ Node_id Parser::parse_type_suffixes( Node_id type, Span start )
 }
 
 // `[]` or `[*]`: refused unless it touches the type and its own tokens touch each other.
-// `[N]` after a type: only the `[` must touch it, so `i32[ 4 ]` is fine.
+// `[N]` after a type: only the `[` must touch it, so `i32[ 4 ]` is fine. The size is any
+// expression; Annotations decides whether it is constant.
 Node_id Parser::parse_array_suffix( Node_id type, Span start )
 {
-    const Token size_token = cursor_.peek( 1 );
+    const bool adjacent = cursor_.peek_is_adjacent();
+    const Span bracket  = cursor_.peek().span;
 
-    if( !cursor_.peek_is_adjacent() )
+    cursor_.advance(); // the `[`
+
+    const Node_id size = parse_expression( 0 );
+
+    if( !adjacent )
     {
         recovery_.error_at(
-            cursor_.peek().span,
+            bracket,
             "`[` must touch the type it modifies",
-            fmt::format( "write `{}[{}]`", sm_.text( ast_.span( type ) ), sm_.text( size_token.span ) )
+            fmt::format( "write `{}[{}]`", sm_.text( ast_.span( type ) ), sm_.text( ast_.span( size ) ) )
         );
     }
 
-    cursor_.advance(); // the `[`
-    cursor_.advance(); // the size
-
-    const Node_id size = ast_.add(
-        size_token.kind == Token_kind::Int_literal ? Node_kind::Int_literal : Node_kind::Name_expr,
-        size_token.span,
-        size_token.symbol.v,
-        {}
-    );
-
-    cursor_.advance(); // the `]`
+    recovery_.expect( Token_kind::R_bracket );
 
     // An array is its elements, so `const i32[4]` is a `const` array rather than one of `const i32`.
     const Span span = Span::merge( start, cursor_.previous().span );

@@ -8,7 +8,7 @@ error: an array's size must be known at compile time
   --> sema/errors_fixed_arrays.kl:26:9
    |
 26 |     i32[n] a = [ 1 ];
-   |         ^ write an integer literal, or the name of a `const`
+   |         ^ write literals and `const` names, with arithmetic over them
 
 error: `void[2]` has no element to hold
   --> sema/errors_fixed_arrays.kl:29:15

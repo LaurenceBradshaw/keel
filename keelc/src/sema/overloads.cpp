@@ -27,6 +27,16 @@ bool lends( const Ast& ast, Node_id value )
     return ast.kind( value ) == Node_kind::Conditional_expr &&
            ( lends( ast, ast.then_branch( value ) ) || lends( ast, ast.else_branch( value ) ) );
 }
+
+// An argument already reported fits nothing, and "ambiguous" or "no match" would name the wrong mistake.
+bool any_failed( const Type_table& table, std::span<const Argument_shape> shapes )
+{
+    return std::any_of(
+        shapes.begin(),
+        shapes.end(),
+        [&]( const Argument_shape& shape ) { return shape.type.is_valid() && table.is_error( shape.type ); }
+    );
+}
 } // namespace
 
 // The types the call wrote, mapped onto the callable's own type parameters. Positional, because
@@ -650,6 +660,11 @@ Node_id Overloads::select_overload(
             return reached.front();
         }
 
+        if( any_failed( table_, shapes ) )
+        {
+            return Node_id {};
+        }
+
         reporter_.error_at(
             ast_.span( site.call ),
             fmt::format( "no `{}` matches these arguments", site.name ),
@@ -662,6 +677,11 @@ Node_id Overloads::select_overload(
     // More than one matches: two candidates each closer for a different argument. Where every one
     // left is a generic the arguments cannot say it either - both fit exactly - and only the type
     // arguments can.
+    if( any_failed( table_, shapes ) )
+    {
+        return Node_id {};
+    }
+
     const bool all_generic = std::all_of(
         matching_candidates.begin(),
         matching_candidates.end(),
@@ -797,6 +817,11 @@ Node_id Overloads::
     {
         interface = instances[matching.front()];
         return candidates[matching.front()];
+    }
+
+    if( any_failed( table_, shapes ) )
+    {
+        return Node_id {};
     }
 
     if( matching.empty() )

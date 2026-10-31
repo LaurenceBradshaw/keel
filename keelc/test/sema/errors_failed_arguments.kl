@@ -1,0 +1,12 @@
+// An argument that is already an error reports once, not again as an ambiguous call. A line
+// ending `// error` reports exactly one error; every other line reports none.
+import t::console;
+
+i32 main()
+{
+    t::println( nothing );           // error
+    i32[4] a = [ 0, .. ];
+    t::println( a[4] );              // error
+    t::println( undefined_fn( 3 ) ); // error
+    return 0;
+}

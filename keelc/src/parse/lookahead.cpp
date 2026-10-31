@@ -8,17 +8,6 @@
 namespace keel
 {
 
-namespace
-{
-
-// What a `T[N]`'s size may be written as.
-bool is_array_size( Token_kind kind )
-{
-    return kind == Token_kind::Int_literal || kind == Token_kind::Identifier;
-}
-
-} // namespace
-
 Lookahead::Lookahead( std::span<const Token> tokens )
     : cursor_( tokens )
 {
@@ -399,6 +388,51 @@ bool Lookahead::head_closes( u32 at )
 
 // Shape alone, with no symbol table (L17). Taking the generic reading is safe: the comparison
 // reading never type-checks (§12).
+// Any expression may be a size; Annotations decides whether it is constant. A size never holds
+// `;`, `=` or a brace, so meeting one means this was never a type.
+u32 Lookahead::array_size_tokens( u32 at )
+{
+    cursor_.seek( at );
+
+    u32 depth = 0;
+
+    for( u32 n = 0;; ++n )
+    {
+        switch( cursor_.peek( n ).kind )
+        {
+        case Token_kind::L_bracket:
+        case Token_kind::L_paren:
+            depth += 1;
+            break;
+
+        case Token_kind::R_bracket:
+        case Token_kind::R_paren:
+            if( depth == 0 )
+            {
+                return 0;
+            }
+
+            depth -= 1;
+
+            if( depth == 0 )
+            {
+                return cursor_.peek( n ).kind == Token_kind::R_bracket && n >= 2 ? n + 1 : 0;
+            }
+            break;
+
+        case Token_kind::Semicolon:
+        case Token_kind::Equal:
+        case Token_kind::L_brace:
+        case Token_kind::R_brace:
+        case Token_kind::End_of_file:
+            return 0;
+
+        default:
+            break;
+        }
+    }
+}
+
 bool Lookahead::looks_like_type_arguments( u32 at )
 {
     cursor_.seek( at );
@@ -444,7 +478,10 @@ bool Lookahead::looks_like_type_arguments( u32 at )
                 cursor_.advance(); // `[`
                 cursor_.advance(); // `*`
             }
-            else if( is_array_size( cursor_.peek( 1 ).kind ) && cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+            // One token only, as the rule above says: `a < c[ i + 1 ] > ( d )` is a comparison.
+            else if( ( cursor_.peek( 1 ).kind == Token_kind::Int_literal || cursor_.peek( 1 ).kind == Token_kind::Identifier
+                     ) &&
+                     cursor_.peek( 2 ).kind == Token_kind::R_bracket )
             {
                 cursor_.advance(); // `[`
                 cursor_.advance(); // the size
@@ -843,12 +880,9 @@ bool Lookahead::scan_type_term()
             continue;
         }
 
-        if( cursor_.check( Token_kind::L_bracket ) && is_array_size( cursor_.peek( 1 ).kind ) &&
-            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+        if( const u32 size = cursor_.check( Token_kind::L_bracket ) ? array_size_tokens( cursor_.position() ) : 0; size != 0 )
         {
-            cursor_.advance(); // `[`
-            cursor_.advance(); // the size
-            cursor_.advance(); // `]`
+            cursor_.seek( cursor_.position() + size );
             continue;
         }
 
@@ -962,12 +996,10 @@ bool Lookahead::scan_type_and_name()
                 continue;
             }
 
-            if( cursor_.check( Token_kind::L_bracket ) && is_array_size( cursor_.peek( 1 ).kind ) &&
-                cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+            if( const u32 size = cursor_.check( Token_kind::L_bracket ) ? array_size_tokens( cursor_.position() ) : 0;
+                size != 0 )
             {
-                cursor_.advance(); // `[`
-                cursor_.advance(); // the size
-                cursor_.advance(); // `]`
+                cursor_.seek( cursor_.position() + size );
                 continue;
             }
 

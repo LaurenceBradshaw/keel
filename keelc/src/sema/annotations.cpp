@@ -867,19 +867,19 @@ std::optional<u64> Annotations::array_size( Node_id size )
         return std::nullopt;
     }
 
-    const Folded folded = constant_folder_.fold_named( size, resolution_ );
+    const Folded folded = constant_folder_.fold_integer( size );
 
-    if( !folded.constant || folded.overflowed || folded.value.negative )
+    if( !folded.constant || folded.overflowed )
     {
         reporter_.error_at(
             ast_.span( size ),
             "an array's size must be known at compile time",
-            "write an integer literal, or the name of a `const`"
+            "write literals and `const` names, with arithmetic over them"
         );
         return std::nullopt;
     }
 
-    if( folded.value.magnitude == 0 )
+    if( folded.value.magnitude == 0 || folded.value.negative )
     {
         reporter_.error_at( ast_.span( size ), "an array's size must be at least 1" );
         return std::nullopt;
@@ -1063,7 +1063,7 @@ public:
           reporter_( sm_, diags_ ),
           aggregates_( ast_, interner_, types_, reporter_ ),
           bounds_( ast_, interner_, literal_pool_, types_, aggregates_, reporter_ ),
-          constant_folder_( ast_, literal_pool_, types_, bounds_, reporter_ ),
+          constant_folder_( ast_, resolution_, literal_pool_, types_, bounds_, reporter_ ),
           annotations_( ast_, interner_, resolution_, types_, bounds_, constant_folder_, reporter_ )
     {
         types_.size_to( ast_.node_count() );

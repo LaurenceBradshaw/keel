@@ -1,0 +1,19 @@
+// An array's size may be any constant expression: literals, `const` names, and arithmetic over them.
+import t::console;
+
+const u64 N = 3;
+
+u64 sum( const ref i32[N + 1] a )
+{
+    return cast<u64>( a[0] + a[N] );
+}
+
+i32 main()
+{
+    i32[N + 1] a = [ 1, 2, 3, 4 ];
+    i32[( N + 1 ) * 2] b = [ 0, .. ];
+    b[7] = 9;
+    t::println( sum( a ) );
+    t::println( b[7] );
+    return 0;
+}

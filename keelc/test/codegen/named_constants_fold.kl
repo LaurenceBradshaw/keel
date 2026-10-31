@@ -1,0 +1,45 @@
+// A `const`'s name folds to its value wherever a constant is wanted: another const's initialiser,
+// a global's, a static field's, an array size, an index and a `case` label.
+import t::console;
+
+const i32 N = 4;
+const i32 M = N * 2;
+const f64 HALF = 0.5;
+f64 quarter = HALF * HALF;
+i64 wide = cast<i64>( M ) << 40;
+
+struct Holder
+{
+    i32 unused;
+    static const i32 size = M + 1;
+};
+
+i32 twice = Holder::size * 2;
+const u64 K = 2;
+
+i32 pick( i32 v )
+{
+    switch( v )
+    {
+    case N:
+        return 1;
+    case M:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
+i32 main()
+{
+    i32[M] arr = [ 0, .. ];
+    arr[K] = 7;
+    t::println( M );
+    t::println( quarter );
+    t::println( wide );
+    t::println( twice );
+    t::println( pick( 4 ) );
+    t::println( pick( 8 ) );
+    t::println( arr[K] );
+    return 0;
+}

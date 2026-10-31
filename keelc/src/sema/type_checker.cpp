@@ -59,7 +59,7 @@ public:
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
           bounds_( ast, interner, literals, types_, aggregates_, reporter_ ),
-          constant_folder_( ast, literals, types_, bounds_, reporter_ ),
+          constant_folder_( ast, resolution, literals, types_, bounds_, reporter_ ),
           annotations_( ast, interner, resolution, types_, bounds_, constant_folder_, reporter_ ),
           places_( ast, interner, resolution, types_, bounds_, callees_, reporter_ ),
           generic_recursion_( ast, interner, table_, reporter_ ),

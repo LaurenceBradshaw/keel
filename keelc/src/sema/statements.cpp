@@ -1071,8 +1071,12 @@ void Statements::visit_global( Node_id id )
     // `Point origin;` is caught too.
     if( table_.is_struct( type ) )
     {
-        const bool is_class = ast_.kind( table_.get( type ).declaration ) == Node_kind::Class_decl;
-        reporter_.error_at( ast_.span( id ), fmt::format( "a {} cannot be a {} yet", is_class ? "class" : "struct", where ) );
+        const bool is_str = table_.get( type ).declaration == table_.prelude().str;
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ),
+            is_str ? "a string literal has to be a local or a parameter for now" : ""
+        );
         return;
     }
 
@@ -1100,7 +1104,33 @@ void Statements::visit_global( Node_id id )
 
     if( !init.is_valid() )
     {
-        return; // zero, which C guarantees for file-scope storage
+        // Zero, which C guarantees for file-scope storage, and a `const` could never change it.
+        if( ast_.is_const_binding( id ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is `const`, so it needs its value here", interner_.text( ast_.name( id ) ) ),
+                fmt::format(
+                    "write `{}{} {} = 0;` if zero is meant",
+                    is_static_field ? "static " : "",
+                    reporter_.text( ast_.span( ast_.annotation( id ) ) ),
+                    interner_.text( ast_.name( id ) )
+                )
+            );
+        }
+
+        return;
+    }
+
+    if( ast_.is_const_binding( id ) && constant_folder_.names_itself( id ) )
+    {
+        const std::string_view name = interner_.text( ast_.name( id ) );
+        reporter_.error_at(
+            ast_.span( init ),
+            fmt::format( "`{}`'s initialiser depends on `{}` itself", name, name ),
+            "a `const` cannot be defined in terms of itself"
+        );
+        return;
     }
 
     if( !constant_folder_.is_constant_expression( init ) )
@@ -1114,7 +1144,13 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
+    const std::size_t earlier = reporter_.error_count();
     expressions_.check( init, type ); // range checking, and the literal adopts the declared type
+
+    if( reporter_.error_count() != earlier )
+    {
+        return;
+    }
 
     // Evaluated here rather than printed as an expression by the backend. The rule already says
     // this is a constant expression, so the value exists; computing it once is what lets a backend
@@ -1124,19 +1160,21 @@ void Statements::visit_global( Node_id id )
         if( const std::optional<f64> value = constant_folder_.fold_float( init ) )
         {
             constant_folder_.record_value( id, Constant_value { Constant_value::Kind::Float, 0, false, *value } );
+            return;
         }
-
-        return;
     }
-
-    const Folded value = constant_folder_.fold_integer( init );
-
-    if( value.constant && !value.overflowed )
+    else if( const Folded value = constant_folder_.fold_integer( init ); value.constant && !value.overflowed )
     {
         constant_folder_.record_value(
             id, Constant_value { Constant_value::Kind::Integer, value.value.magnitude, value.value.negative, 0.0 }
         );
+        return;
     }
+
+    // Unrecorded, the global would be emitted as zero.
+    reporter_.error_at(
+        ast_.span( init ), "this initialiser cannot be computed at compile time yet", "write its value as a literal"
+    );
 }
 
 void Statements::visit_block( Node_id id )
@@ -2918,7 +2956,7 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
                "i32 f() { return 1; }\nstruct S { i32 x; static i32 n = f(); };",
                "a static field's initialiser must be a constant expression"
            },
-           Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "a struct cannot be a static field yet" },
+           Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "`P` cannot be a static field yet" },
            Case {
                "struct Box<T> where T : copyable { T v; static T last; };",
                "a static field's type cannot name a type parameter yet"

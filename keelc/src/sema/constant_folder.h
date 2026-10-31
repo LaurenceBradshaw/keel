@@ -4,6 +4,7 @@
 #pragma once
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include "ast/ast.h"
 #include "common/literal_pool.h"
 #include "common/types.h"
@@ -37,8 +38,16 @@ struct Folded
 class Constant_folder
 {
 public:
-    Constant_folder( const Ast& ast, const Literal_pool& literals, Types_builder& types, Bounds& bounds, Reporter& reporter )
+    Constant_folder(
+        const Ast&          ast,
+        const Resolution&   resolution,
+        const Literal_pool& literals,
+        Types_builder&      types,
+        Bounds&             bounds,
+        Reporter&           reporter
+    )
         : ast_( ast ),
+          resolution_( resolution ),
           literal_pool_( literals ),
           types_( types ),
           table_( types.table() ),
@@ -47,8 +56,14 @@ public:
     {
     }
 
-    // What may initialise a file-scope variable: what C also accepts as a constant expression.
+    // What may initialise a file-scope variable: what C also accepts as a constant expression,
+    // and a `const`'s name, which folds to its value.
     bool is_constant_expression( Node_id id ) const;
+
+    // The `const` with an initialiser that `id` names, or invalid.
+    Node_id constant_named( Node_id id ) const;
+    // `decl`'s initialiser names `decl` itself, directly or through other consts.
+    bool names_itself( Node_id decl ) const;
 
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
@@ -56,8 +71,6 @@ public:
     // `known` is the type the caller already settled on - see check_constant for why it is needed.
     Folded             fold_integer( Node_id id, Type_id known = Type_id {} ) const;
     std::optional<f64> fold_float( Node_id id ) const;
-    // fold_integer, but a name of a `const` folds its initialiser: an array's size or index.
-    Folded fold_named( Node_id id, const Resolution& resolution ) const;
 
     bool    check_constant( Node_id id, Type_id type );
     Type_id record_constant( Node_id id, Type_id type );
@@ -68,6 +81,7 @@ public:
 
 private:
     const Ast&          ast_;
+    const Resolution&   resolution_;
     const Literal_pool& literal_pool_;
     Types_builder&      types_;
     const Type_table&   table_;
@@ -75,5 +89,6 @@ private:
     Reporter&           reporter_;
 
     std::unordered_map<u32, Constant_value> constants_;
+    mutable std::unordered_set<u32>         folding_; // the consts being folded, so a cycle ends
 };
 } // namespace keel::sema

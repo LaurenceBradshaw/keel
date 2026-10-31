@@ -1,0 +1,19 @@
+error: an array's size must be at least 1
+ --> sema/errors_array_size_expressions.kl:7:9
+  |
+7 |     i32[-1] negative;      // error
+  |         ^^
+
+error: an array's size must be known at compile time
+ --> sema/errors_array_size_expressions.kl:8:9
+  |
+8 |     i32[1 << 70] shifted;  // error
+  |         ^^^^^^^ write literals and `const` names, with arithmetic over them
+
+error: an array's size must be at least 1
+ --> sema/errors_array_size_expressions.kl:9:9
+  |
+9 |     i32[N - 3] empty;      // error
+  |         ^^^^^
+
+3 errors generated

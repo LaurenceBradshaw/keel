@@ -3,7 +3,9 @@
 
 #include "sema/constant_folder.h"
 #include <fmt/format.h>
+#include <cmath>
 #include <limits>
+#include <vector>
 
 namespace keel::sema
 {
@@ -150,9 +152,67 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
     case Node_kind::Cast_expr:
         return is_constant_expression( ast_.operand( id ) );
 
+    case Node_kind::Name_expr:
+    case Node_kind::Path_expr:
+        return constant_named( id ).is_valid();
+
     default:
         return false;
     }
+}
+
+Node_id Constant_folder::constant_named( Node_id id ) const
+{
+    if( !id.is_valid() || ( ast_.kind( id ) != Node_kind::Name_expr && ast_.kind( id ) != Node_kind::Path_expr ) )
+    {
+        return Node_id {};
+    }
+
+    // A loaded module's const has its value recorded and may have no initialiser.
+    const Node_id decl     = resolution_.declaration_of( id );
+    const bool    is_const = decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl && ast_.is_const_binding( decl ) &&
+                          ( ast_.initialiser( decl ).is_valid() || constants_.contains( decl.v ) );
+
+    return is_const ? decl : Node_id {};
+}
+
+bool Constant_folder::names_itself( Node_id decl ) const
+{
+    std::unordered_set<u32> seen;
+    std::vector<Node_id>    work { ast_.initialiser( decl ) };
+
+    while( !work.empty() )
+    {
+        const Node_id node = work.back();
+        work.pop_back();
+
+        if( !node.is_valid() )
+        {
+            continue;
+        }
+
+        if( const Node_id named = constant_named( node ); named.is_valid() )
+        {
+            if( named.v == decl.v )
+            {
+                return true;
+            }
+
+            if( seen.insert( named.v ).second )
+            {
+                work.push_back( ast_.initialiser( named ) );
+            }
+
+            continue;
+        }
+
+        for( const Node_id child : ast_.children( node ) )
+        {
+            work.push_back( child );
+        }
+    }
+
+    return false;
 }
 
 // Only + - * / % << >> fold. `&`, `|`, `^` and `~` cannot take a value outside the type their
@@ -199,6 +259,31 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     case Node_kind::Null_literal:
         return folded( 0, false );
 
+    case Node_kind::Name_expr:
+    case Node_kind::Path_expr:
+    {
+        const Node_id decl = constant_named( id );
+
+        if( !decl.is_valid() )
+        {
+            return not_constant();
+        }
+
+        if( const std::optional<Constant_value> value = value_of( decl ) )
+        {
+            return value->kind == Constant_value::Kind::Integer ? folded( value->magnitude, value->negative ) : not_constant();
+        }
+
+        if( !folding_.insert( decl.v ).second )
+        {
+            return not_constant();
+        }
+
+        const Folded value = fold_integer( ast_.initialiser( decl ) );
+        folding_.erase( decl.v );
+        return value;
+    }
+
     case Node_kind::Unary_expr:
     {
         const Folded operand = fold_integer( ast_.operand( id ) );
@@ -215,6 +300,9 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
 
         case Token_kind::Plus:
             return operand;
+
+        case Token_kind::Bang:
+            return folded( operand.value.magnitude == 0 ? 1 : 0, false );
 
         case Token_kind::Tilde:
         {
@@ -260,6 +348,38 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
 
     case Node_kind::Binary_expr:
     {
+        // A comparison of floats yields a bool, so it is answered here.
+        const Type_id operands = types_.type_of( ast_.lhs( id ) );
+
+        if( operands.is_valid() && table_.is_float( operands ) )
+        {
+            const std::optional<f64> x = fold_float( ast_.lhs( id ) );
+            const std::optional<f64> y = fold_float( ast_.rhs( id ) );
+
+            if( !x || !y )
+            {
+                return not_constant();
+            }
+
+            switch( ast_.op( id ) )
+            {
+            case Token_kind::Less:
+                return folded( *x < *y ? 1 : 0, false );
+            case Token_kind::Greater:
+                return folded( *x > *y ? 1 : 0, false );
+            case Token_kind::Less_equal:
+                return folded( *x <= *y ? 1 : 0, false );
+            case Token_kind::Greater_equal:
+                return folded( *x >= *y ? 1 : 0, false );
+            case Token_kind::Equal_equal:
+                return folded( *x == *y ? 1 : 0, false );
+            case Token_kind::Bang_equal:
+                return folded( *x != *y ? 1 : 0, false );
+            default:
+                return not_constant();
+            }
+        }
+
         const Folded left  = fold_integer( ast_.lhs( id ) );
         const Folded right = fold_integer( ast_.rhs( id ) );
 
@@ -306,9 +426,18 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
             return multiply_constants( a, Constant { 1ull << b.magnitude, false } );
 
         case Token_kind::Greater_greater:
-            if( b.negative || b.magnitude >= 64 || a.negative )
+            if( b.negative || b.magnitude >= 64 )
             {
                 return not_constant();
+            }
+
+            // A negative value shifts arithmetically, rounding toward negative infinity.
+            if( a.negative )
+            {
+                const u64 lost      = a.magnitude & ( ( 1ull << b.magnitude ) - 1 );
+                const u64 magnitude = ( a.magnitude >> b.magnitude ) + ( lost != 0 ? 1 : 0 );
+
+                return folded( magnitude, magnitude != 0 );
             }
 
             return folded( a.magnitude >> b.magnitude, false );
@@ -385,6 +514,31 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
         return value.is_valid() ? std::optional<f64>( literal_pool_.floating( value ) ) : std::nullopt;
     }
 
+    case Node_kind::Name_expr:
+    case Node_kind::Path_expr:
+    {
+        const Node_id decl = constant_named( id );
+
+        if( !decl.is_valid() )
+        {
+            return std::nullopt;
+        }
+
+        if( const std::optional<Constant_value> value = value_of( decl ) )
+        {
+            return value->kind == Constant_value::Kind::Float ? std::optional<f64>( value->floating ) : std::nullopt;
+        }
+
+        if( !folding_.insert( decl.v ).second )
+        {
+            return std::nullopt;
+        }
+
+        const std::optional<f64> value = fold_float( ast_.initialiser( decl ) );
+        folding_.erase( decl.v );
+        return value;
+    }
+
     case Node_kind::Unary_expr:
     {
         const std::optional<f64> operand = fold_float( ast_.operand( id ) );
@@ -419,12 +573,29 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
         return value.constant ? std::optional<f64>( static_cast<f64>( value.value.magnitude ) ) : std::nullopt;
     }
 
-    // The recursion settles which pool the operand
-    // is in. No rounding to the target's width, which would be wrong rather than thorough:
-    // check_constant measures this value with fits_float, and pre-rounding an overflow to infinity
-    // is exactly the case that check exists to catch.
+    // An integer operand folds as one: `cast<f64>( 1 << 3 )`. No rounding to the target's width,
+    // which would be wrong rather than thorough: check_constant measures this value with
+    // fits_float, and pre-rounding an overflow to infinity is exactly the case that check exists to catch.
     case Node_kind::Cast_expr:
-        return fold_float( ast_.operand( id ) );
+    {
+        const Node_id operand = ast_.operand( id );
+        const Type_id from    = types_.type_of( operand );
+
+        if( from.is_valid() && table_.is_integer( from ) )
+        {
+            const Folded value = fold_integer( operand );
+
+            if( !value.constant || value.overflowed )
+            {
+                return std::nullopt;
+            }
+
+            const f64 magnitude = static_cast<f64>( value.value.magnitude );
+            return value.value.negative ? -magnitude : magnitude;
+        }
+
+        return fold_float( operand );
+    }
 
     case Node_kind::Binary_expr:
     {
@@ -449,6 +620,9 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
 
         case Token_kind::Slash:
             return *right == 0.0 ? std::nullopt : std::optional<f64>( *left / *right );
+
+        case Token_kind::Percent:
+            return *right == 0.0 ? std::nullopt : std::optional<f64>( std::fmod( *left, *right ) );
 
         default:
             return std::nullopt;
@@ -594,19 +768,6 @@ Type_id Constant_folder::record_constant( Node_id id, Type_id type )
     }
 
     return types_.record( id, type );
-}
-
-Folded Constant_folder::fold_named( Node_id id, const Resolution& resolution ) const
-{
-    if( id.is_valid() && ast_.kind( id ) == Node_kind::Name_expr )
-    {
-        const Node_id decl     = resolution.declaration_of( id );
-        const bool    is_const = decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl && ast_.is_const_binding( decl );
-
-        return is_const ? fold_integer( ast_.initialiser( decl ) ) : not_constant();
-    }
-
-    return fold_integer( id );
 }
 
 void Constant_folder::record_value( Node_id id, Constant_value value )

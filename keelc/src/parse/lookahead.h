@@ -153,6 +153,9 @@ public:
     // At `<`: whether it opens type arguments rather than a comparison.
     bool looks_like_type_arguments( u32 at );
 
+    // How many tokens a `[ size ]` at `at` spans, the brackets included, or 0 when it is none.
+    u32 array_size_tokens( u32 at );
+
 private:
     // Whether any name before `(` opens a constructor, or only the class's own.
     enum class Constructor_names : u8

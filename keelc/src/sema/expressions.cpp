@@ -2983,7 +2983,7 @@ Type_id Expressions::infer_array_index( Node_id id, Type_id array )
         return types_.poison( id );
     }
 
-    const Folded folded = constant_folder_.fold_named( index, resolution_ );
+    const Folded folded = constant_folder_.fold_integer( index );
 
     if( folded.constant && !folded.overflowed && !folded.value.negative && folded.value.magnitude >= count )
     {
@@ -9907,7 +9907,7 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
         { "const u64 NONE = 0;\nvoid f( i32[NONE] a ) { }", "an array's size must be at least 1", "" },
         { "void f( u64 n ) { i32[n] a = [ 1 ]; }",
           "an array's size must be known at compile time",
-          "write an integer literal, or the name of a `const`" },
+          "write literals and `const` names, with arithmetic over them" },
         { "u64 n = 2;\nvoid f( i32[n] a ) { }", "an array's size must be known at compile time", "" },
         { "void f( void[2] a ) { }", "`void[2]` has no element to hold", "name the element's type, as in `u8[2]`" },
 
