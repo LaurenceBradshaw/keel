@@ -2104,10 +2104,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 392 "../../src/string.kl"
     kl_t18 = false;
 #line 392 "../../src/string.kl"
     kl_t19 = false;
+#line 392 "../../src/string.kl"
+    kl_t20 = false;
 #line 392 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 392 "../../src/string.kl"
@@ -2171,7 +2174,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 398 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 398 "../../src/string.kl"
+    kl_t20 = true;
+#line 398 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
+#line 398 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
 #line 398 "../../src/string.kl"
     return kl_t0;
 }
@@ -2197,10 +2208,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 404 "../../src/string.kl"
     kl_t18 = false;
 #line 404 "../../src/string.kl"
     kl_t19 = false;
+#line 404 "../../src/string.kl"
+    kl_t20 = false;
 #line 404 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 404 "../../src/string.kl"
@@ -2264,7 +2278,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 410 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 410 "../../src/string.kl"
+    kl_t20 = true;
+#line 410 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
+#line 410 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
 #line 410 "../../src/string.kl"
     return kl_t0;
 }

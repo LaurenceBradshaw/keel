@@ -2104,10 +2104,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t18 = false;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t19 = false;
+#line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -2171,7 +2174,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t17.tag = 1;
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = true;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t0 = kl_t17;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
 }
@@ -2197,10 +2208,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t18 = false;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t19 = false;
+#line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -2264,7 +2278,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t17.tag = 1;
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = true;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t0 = kl_t17;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
 }
@@ -3889,8 +3911,11 @@ uint64_t kl__payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t6;
     struct kl_2kl6string_string* kl_t7;
     uint64_t kl_t8;
+    bool kl_t9;
     ( void ) kl_t2;
     ( void ) kl_t5;
+#line 21 "codegen/distinct_elements.kl"
+    kl_t9 = false;
 #line 21 "codegen/distinct_elements.kl"
     kl_t2 = 0;
 #line 23 "codegen/distinct_elements.kl"
@@ -3904,9 +3929,17 @@ uint64_t kl__payload_beside__RA2_Q2kl8optionalIQ2kl6stringE( struct kl__A2_Q2kl8
 #line 24 "codegen/distinct_elements.kl"
     kl_t6.tag = 1;
 #line 24 "codegen/distinct_elements.kl"
+    kl_t9 = true;
+#line 24 "codegen/distinct_elements.kl"
     kl_2kl8optional_optional__IQ2kl6stringE__dtor( &( *kl_slots_1 ).e[kl_t5] );
 #line 24 "codegen/distinct_elements.kl"
     ( *kl_slots_1 ).e[kl_t5] = kl_t6;
+#line 24 "codegen/distinct_elements.kl"
+    kl_t9 = false;
+#line 24 "codegen/distinct_elements.kl"
+    if ( kl_t9 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t6 );
+#line 24 "codegen/distinct_elements.kl"
+    kl_t9 = false;
     kl_t7 = &( *kl_s_4 );
 #line 25 "codegen/distinct_elements.kl"
     kl_t8 = kl_2kl6string_size__SQ2kl6string( kl_t7 );

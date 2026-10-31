@@ -2678,10 +2678,13 @@ struct kl_2kl8optional_optional__I5ownedE kl_2kl4list_try_pop__I5ownedE__SQ2kl4l
     struct kl__owned kl_t6;
     bool kl_t7;
     bool kl_t8;
+    bool kl_t9;
 #line 291 "../../src/list.kl"
     kl_t7 = false;
 #line 291 "../../src/list.kl"
     kl_t8 = false;
+#line 291 "../../src/list.kl"
+    kl_t9 = false;
 #line 291 "../../src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count_ == 0;
 #line 291 "../../src/list.kl"
@@ -2689,7 +2692,15 @@ struct kl_2kl8optional_optional__I5ownedE kl_2kl4list_try_pop__I5ownedE__SQ2kl4l
     bb1:
     kl_t3.tag = 1;
 #line 293 "../../src/list.kl"
+    kl_t7 = true;
+#line 293 "../../src/list.kl"
     kl_t0 = kl_t3;
+#line 293 "../../src/list.kl"
+    kl_t7 = false;
+#line 293 "../../src/list.kl"
+    if ( kl_t7 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t3 );
+#line 293 "../../src/list.kl"
+    kl_t7 = false;
 #line 293 "../../src/list.kl"
     return kl_t0;
     bb2:
@@ -2698,29 +2709,29 @@ struct kl_2kl8optional_optional__I5ownedE kl_2kl4list_try_pop__I5ownedE__SQ2kl4l
 #line 296 "../../src/list.kl"
     kl_t6 = kl_2kl4list_pop__I5ownedE__SQ2kl4listI5ownedE( kl_t5 );
 #line 296 "../../src/list.kl"
-    kl_t8 = true;
+    kl_t9 = true;
 #line 296 "../../src/list.kl"
     kl_t4.tag = 0;
 #line 296 "../../src/list.kl"
-    kl_t7 = true;
+    kl_t8 = true;
 #line 296 "../../src/list.kl"
     kl_t4.kl_value = kl_t6;
 #line 296 "../../src/list.kl"
-    kl_t8 = false;
+    kl_t9 = false;
 #line 296 "../../src/list.kl"
-    kl_t7 = true;
+    kl_t8 = true;
 #line 296 "../../src/list.kl"
     kl_t0 = kl_t4;
 #line 296 "../../src/list.kl"
-    kl_t7 = false;
-#line 296 "../../src/list.kl"
-    if ( kl_t7 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t4 );
-#line 296 "../../src/list.kl"
-    if ( kl_t8 ) kl__owned__dtor( &kl_t6 );
-#line 296 "../../src/list.kl"
     kl_t8 = false;
 #line 296 "../../src/list.kl"
-    kl_t7 = false;
+    if ( kl_t8 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t4 );
+#line 296 "../../src/list.kl"
+    if ( kl_t9 ) kl__owned__dtor( &kl_t6 );
+#line 296 "../../src/list.kl"
+    kl_t9 = false;
+#line 296 "../../src/list.kl"
+    kl_t8 = false;
 #line 296 "../../src/list.kl"
     return kl_t0;
 }

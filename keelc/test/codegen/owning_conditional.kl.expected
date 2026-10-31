@@ -809,6 +809,7 @@ int32_t kl__main__( void )
     bool kl_t92;
     bool kl_t93;
     bool kl_t94;
+    bool kl_t95;
 #line 73 "codegen/owning_conditional.kl"
     kl_t77 = false;
 #line 73 "codegen/owning_conditional.kl"
@@ -845,6 +846,8 @@ int32_t kl__main__( void )
     kl_t93 = false;
 #line 73 "codegen/owning_conditional.kl"
     kl_t94 = false;
+#line 73 "codegen/owning_conditional.kl"
+    kl_t95 = false;
 #line 73 "codegen/owning_conditional.kl"
     kl_yes_1 = true;
     kl_no_2 = false;
@@ -1126,9 +1129,17 @@ int32_t kl__main__( void )
 #line 98 "codegen/owning_conditional.kl"
     kl_t65.tag = 1;
 #line 98 "codegen/owning_conditional.kl"
+    kl_t94 = true;
+#line 98 "codegen/owning_conditional.kl"
     kl_e_64 = kl_t65;
 #line 98 "codegen/owning_conditional.kl"
+    kl_t94 = false;
+#line 98 "codegen/owning_conditional.kl"
     kl_t93 = true;
+#line 98 "codegen/owning_conditional.kl"
+    if ( kl_t94 ) kl__Holder__dtor( &kl_t65 );
+#line 98 "codegen/owning_conditional.kl"
+    kl_t94 = false;
     if ( kl_yes_1 ) goto bb13; else goto bb14;
     bb13:
 #line 99 "codegen/owning_conditional.kl"
@@ -1136,7 +1147,7 @@ int32_t kl__main__( void )
 #line 99 "codegen/owning_conditional.kl"
     kl_t90 = false;
 #line 99 "codegen/owning_conditional.kl"
-    kl_t94 = true;
+    kl_t95 = true;
 #line 99 "codegen/owning_conditional.kl"
     goto bb15;
     bb14:
@@ -1145,18 +1156,18 @@ int32_t kl__main__( void )
 #line 99 "codegen/owning_conditional.kl"
     kl_t93 = false;
 #line 99 "codegen/owning_conditional.kl"
-    kl_t94 = true;
+    kl_t95 = true;
 #line 99 "codegen/owning_conditional.kl"
     goto bb15;
     bb15:
 #line 99 "codegen/owning_conditional.kl"
     kl_h_66 = kl_t67;
 #line 99 "codegen/owning_conditional.kl"
-    kl_t94 = false;
+    kl_t95 = false;
 #line 99 "codegen/owning_conditional.kl"
-    if ( kl_t94 ) kl__Holder__dtor( &kl_t67 );
+    if ( kl_t95 ) kl__Holder__dtor( &kl_t67 );
 #line 99 "codegen/owning_conditional.kl"
-    kl_t94 = false;
+    kl_t95 = false;
     kl_t68 = &kl_h_66;
 #line 100 "codegen/owning_conditional.kl"
     kl_t69 = kl__size__6Holder( kl_t68 );

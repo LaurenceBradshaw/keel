@@ -2104,10 +2104,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t18 = false;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t19 = false;
+#line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 392 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -2171,7 +2174,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t17.tag = 1;
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = true;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t0 = kl_t17;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 398 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
 }
@@ -2197,10 +2208,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t18 = false;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t19 = false;
+#line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 404 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -2264,7 +2278,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t17.tag = 1;
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = true;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t0 = kl_t17;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_t20 = false;
 #line 410 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
 }
@@ -7237,10 +7259,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl2os_environment__7textual( 
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t24;
     bool kl_t25;
     bool kl_t26;
+    bool kl_t27;
 #line 937 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t25 = false;
 #line 937 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t26 = false;
+#line 937 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t27 = false;
 #line 937 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_bytes_2 = NULL;
     kl_size_3 = 0;
@@ -7266,16 +7291,24 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl2os_environment__7textual( 
     bb1:
     kl_t12.tag = 1;
 #line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t25 = true;
+#line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t0 = kl_t12;
+#line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t25 = false;
+#line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    if ( kl_t25 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t12 );
+#line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t25 = false;
 #line 948 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     return kl_t0;
     bb2:
 #line 951 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t25 = false;
+    kl_t26 = false;
 #line 951 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t14 = &kl_value_13;
 #line 951 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t25 = true;
+    kl_t26 = true;
 #line 951 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_2kl6string_string__RQ2kl6string__ctor( kl_t14 );
 #line 954 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -7303,25 +7336,25 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl2os_environment__7textual( 
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t24.tag = 0;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t26 = true;
+    kl_t27 = true;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t24.kl_value = kl_value_13;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t25 = false;
+    kl_t26 = false;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t26 = true;
+    kl_t27 = true;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t0 = kl_t24;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t27 = false;
+#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    if ( kl_t27 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t24 );
+#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    kl_t27 = false;
+#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
+    if ( kl_t26 ) kl_2kl6string_string__dtor( &kl_value_13 );
+#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t26 = false;
-#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    if ( kl_t26 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t24 );
-#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t26 = false;
-#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    if ( kl_t25 ) kl_2kl6string_string__dtor( &kl_value_13 );
-#line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t25 = false;
 #line 957 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     return kl_t0;
 }

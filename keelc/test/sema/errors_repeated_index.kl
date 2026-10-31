@@ -1,0 +1,34 @@
+// D54: one index written twice, or a `const` and the literal it holds, name one element. One error
+// per marked line.
+import kl::string;
+
+void two( ref kl::string _, ref kl::string _ )
+{
+}
+
+void outs( out kl::string a, out kl::string b )
+{
+    a = kl::string::from( "a" );
+    b = kl::string::from( "b" );
+}
+
+void repeated( ref kl::string[2] arr, u64 i )
+{
+    two( ref arr[i], ref arr[i] ); // error: is the same object
+}
+
+void outs_repeated( ref kl::string[2] arr, u64 i )
+{
+    outs( out arr[i], out arr[i] ); // error: overlaps it
+}
+
+void named( ref kl::string[2] arr )
+{
+    const u64 one = 1;
+    two( ref arr[one], ref arr[1] ); // error: is the same object
+}
+
+i32 main()
+{
+    return 0;
+}

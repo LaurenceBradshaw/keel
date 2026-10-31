@@ -1,0 +1,33 @@
+// A variant with no payload, of an enum that owns, built once per turn of a fill or a loop: each
+// turn's is a new value. KEEL_VALGRIND=1 sees a drop missed or run twice.
+import kl::string;
+import kl::optional;
+
+u64 taken;
+
+void take( move kl::optional<kl::string> o )
+{
+    switch( o )
+    {
+        case kl::optional::some:
+            break;
+        case kl::optional::none:
+            taken = taken + 1;
+    }
+}
+
+i32 main()
+{
+    kl::optional<kl::string>[3] slots = [ kl::optional<kl::string>::none, .. ];
+    slots[1]                          = kl::optional<kl::string>::some( kl::string::from( "x" ) );
+
+    u64 n = 0;
+    while( n < 2 )
+    {
+        take( kl::optional<kl::string>::none );
+        n++;
+    }
+    assert( taken == 2 );
+
+    return 0;
+}

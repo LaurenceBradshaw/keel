@@ -4831,10 +4831,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 392 "../../src/string.kl"
     kl_t18 = false;
 #line 392 "../../src/string.kl"
     kl_t19 = false;
+#line 392 "../../src/string.kl"
+    kl_t20 = false;
 #line 392 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 392 "../../src/string.kl"
@@ -4898,7 +4901,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 398 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 398 "../../src/string.kl"
+    kl_t20 = true;
+#line 398 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
+#line 398 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
 #line 398 "../../src/string.kl"
     return kl_t0;
 }
@@ -4924,10 +4935,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 404 "../../src/string.kl"
     kl_t18 = false;
 #line 404 "../../src/string.kl"
     kl_t19 = false;
+#line 404 "../../src/string.kl"
+    kl_t20 = false;
 #line 404 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 404 "../../src/string.kl"
@@ -4991,7 +5005,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 410 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 410 "../../src/string.kl"
+    kl_t20 = true;
+#line 410 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
+#line 410 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
 #line 410 "../../src/string.kl"
     return kl_t0;
 }
@@ -8744,12 +8766,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_insert__I3i32
     bool kl_t55;
     bool kl_t56;
     bool kl_t57;
+    bool kl_t58;
 #line 209 "../../src/ordered_map.kl"
     kl_t55 = true;
 #line 209 "../../src/ordered_map.kl"
     kl_t56 = false;
 #line 209 "../../src/ordered_map.kl"
     kl_t57 = false;
+#line 209 "../../src/ordered_map.kl"
+    kl_t58 = false;
 #line 209 "../../src/ordered_map.kl"
     kl_t5 = &( *kl_this_1 );
 #line 209 "../../src/ordered_map.kl"
@@ -8869,7 +8894,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_insert__I3i32
 #line 244 "../../src/ordered_map.kl"
     kl_t38.tag = 1;
 #line 244 "../../src/ordered_map.kl"
+    kl_t58 = true;
+#line 244 "../../src/ordered_map.kl"
     kl_t0 = kl_t38;
+#line 244 "../../src/ordered_map.kl"
+    kl_t58 = false;
+#line 244 "../../src/ordered_map.kl"
+    if ( kl_t58 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t38 );
+#line 244 "../../src/ordered_map.kl"
+    kl_t58 = false;
 #line 244 "../../src/ordered_map.kl"
     if ( kl_t55 ) kl_2kl6string_string__dtor( &kl_value_3 );
 #line 244 "../../src/ordered_map.kl"
@@ -9012,6 +9045,7 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     bool kl_t82;
     bool kl_t83;
     bool kl_t84;
+    bool kl_t85;
 #line 267 "../../src/ordered_map.kl"
     kl_t76 = false;
 #line 267 "../../src/ordered_map.kl"
@@ -9031,6 +9065,8 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
 #line 267 "../../src/ordered_map.kl"
     kl_t84 = false;
 #line 267 "../../src/ordered_map.kl"
+    kl_t85 = false;
+#line 267 "../../src/ordered_map.kl"
     kl_t3 = &( *kl_this_1 );
 #line 267 "../../src/ordered_map.kl"
     kl_t4 = &( *kl_key_2 );
@@ -9043,7 +9079,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     bb1:
     kl_t7.tag = 1;
 #line 269 "../../src/ordered_map.kl"
+    kl_t76 = true;
+#line 269 "../../src/ordered_map.kl"
     kl_t0 = kl_t7;
+#line 269 "../../src/ordered_map.kl"
+    kl_t76 = false;
+#line 269 "../../src/ordered_map.kl"
+    if ( kl_t76 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t7 );
+#line 269 "../../src/ordered_map.kl"
+    kl_t76 = false;
 #line 269 "../../src/ordered_map.kl"
     return kl_t0;
     bb2:
@@ -9100,23 +9144,23 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     goto bb16;
     bb6:
 #line 283 "../../src/ordered_map.kl"
-    kl_t76 = false;
+    kl_t77 = false;
 #line 283 "../../src/ordered_map.kl"
     kl_t23 = &( *kl_this_1 );
 #line 283 "../../src/ordered_map.kl"
     kl_t24 = kl_2kl11ordered_map_take_value__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3u64( kl_t23, kl_slot_15 );
 #line 283 "../../src/ordered_map.kl"
-    kl_t77 = true;
+    kl_t78 = true;
 #line 283 "../../src/ordered_map.kl"
     kl_old_22 = kl_t24;
 #line 283 "../../src/ordered_map.kl"
-    kl_t77 = false;
+    kl_t78 = false;
 #line 283 "../../src/ordered_map.kl"
-    kl_t76 = true;
+    kl_t77 = true;
 #line 283 "../../src/ordered_map.kl"
-    if ( kl_t77 ) kl_2kl6string_string__dtor( &kl_t24 );
+    if ( kl_t78 ) kl_2kl6string_string__dtor( &kl_t24 );
 #line 283 "../../src/ordered_map.kl"
-    kl_t77 = false;
+    kl_t78 = false;
     kl_t25 = &( *kl_this_1 );
 #line 284 "../../src/ordered_map.kl"
     kl_t26 = &( *kl_this_1 ).kl_control_;
@@ -9126,25 +9170,25 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     kl_2kl11ordered_map_move_run__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_Q2kl7key_run( kl_t25, kl_t27 );
     kl_t29.tag = 0;
 #line 285 "../../src/ordered_map.kl"
-    kl_t78 = true;
+    kl_t79 = true;
 #line 285 "../../src/ordered_map.kl"
     kl_t29.kl_value = kl_old_22;
 #line 285 "../../src/ordered_map.kl"
-    kl_t76 = false;
+    kl_t77 = false;
 #line 285 "../../src/ordered_map.kl"
-    kl_t78 = true;
+    kl_t79 = true;
 #line 285 "../../src/ordered_map.kl"
     kl_t0 = kl_t29;
 #line 285 "../../src/ordered_map.kl"
-    kl_t78 = false;
+    kl_t79 = false;
 #line 285 "../../src/ordered_map.kl"
-    if ( kl_t78 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t29 );
+    if ( kl_t79 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t29 );
 #line 285 "../../src/ordered_map.kl"
-    kl_t78 = false;
+    kl_t79 = false;
 #line 285 "../../src/ordered_map.kl"
-    if ( kl_t76 ) kl_2kl6string_string__dtor( &kl_old_22 );
+    if ( kl_t77 ) kl_2kl6string_string__dtor( &kl_old_22 );
 #line 285 "../../src/ordered_map.kl"
-    kl_t76 = false;
+    kl_t77 = false;
 #line 285 "../../src/ordered_map.kl"
     return kl_t0;
     bb7:
@@ -9163,23 +9207,23 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
 #line 288 "../../src/ordered_map.kl"
     if ( kl_t35 ) goto bb8; else goto bb9;
     bb8:
-    kl_t79 = false;
+    kl_t80 = false;
 #line 290 "../../src/ordered_map.kl"
     kl_t37 = &( *kl_this_1 );
 #line 290 "../../src/ordered_map.kl"
     kl_t38 = kl_2kl11ordered_map_take_value__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3u64( kl_t37, kl_slot_15 );
 #line 290 "../../src/ordered_map.kl"
-    kl_t80 = true;
+    kl_t81 = true;
 #line 290 "../../src/ordered_map.kl"
     kl_old_36 = kl_t38;
 #line 290 "../../src/ordered_map.kl"
-    kl_t80 = false;
+    kl_t81 = false;
 #line 290 "../../src/ordered_map.kl"
-    kl_t79 = true;
+    kl_t80 = true;
 #line 290 "../../src/ordered_map.kl"
-    if ( kl_t80 ) kl_2kl6string_string__dtor( &kl_t38 );
+    if ( kl_t81 ) kl_2kl6string_string__dtor( &kl_t38 );
 #line 290 "../../src/ordered_map.kl"
-    kl_t80 = false;
+    kl_t81 = false;
     kl_t39 = &( *kl_this_1 );
 #line 291 "../../src/ordered_map.kl"
     kl_t40 = &( *kl_this_1 ).kl_control_;
@@ -9189,25 +9233,25 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     kl_2kl11ordered_map_take_last__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3u64_3u64( kl_t39, kl_t41, kl_slot_15 );
     kl_t43.tag = 0;
 #line 292 "../../src/ordered_map.kl"
-    kl_t81 = true;
+    kl_t82 = true;
 #line 292 "../../src/ordered_map.kl"
     kl_t43.kl_value = kl_old_36;
 #line 292 "../../src/ordered_map.kl"
-    kl_t79 = false;
+    kl_t80 = false;
 #line 292 "../../src/ordered_map.kl"
-    kl_t81 = true;
+    kl_t82 = true;
 #line 292 "../../src/ordered_map.kl"
     kl_t0 = kl_t43;
 #line 292 "../../src/ordered_map.kl"
-    kl_t81 = false;
+    kl_t82 = false;
 #line 292 "../../src/ordered_map.kl"
-    if ( kl_t81 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t43 );
+    if ( kl_t82 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t43 );
 #line 292 "../../src/ordered_map.kl"
-    kl_t81 = false;
+    kl_t82 = false;
 #line 292 "../../src/ordered_map.kl"
-    if ( kl_t79 ) kl_2kl6string_string__dtor( &kl_old_36 );
+    if ( kl_t80 ) kl_2kl6string_string__dtor( &kl_old_36 );
 #line 292 "../../src/ordered_map.kl"
-    kl_t79 = false;
+    kl_t80 = false;
 #line 292 "../../src/ordered_map.kl"
     return kl_t0;
     bb9:
@@ -9236,23 +9280,23 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
 #line 295 "../../src/ordered_map.kl"
     if ( kl_t51 ) goto bb12; else goto bb15;
     bb12:
-    kl_t82 = false;
+    kl_t83 = false;
 #line 297 "../../src/ordered_map.kl"
     kl_t53 = &( *kl_this_1 );
 #line 297 "../../src/ordered_map.kl"
     kl_t54 = kl_2kl11ordered_map_take_value__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3u64( kl_t53, kl_slot_15 );
 #line 297 "../../src/ordered_map.kl"
-    kl_t83 = true;
+    kl_t84 = true;
 #line 297 "../../src/ordered_map.kl"
     kl_old_52 = kl_t54;
 #line 297 "../../src/ordered_map.kl"
-    kl_t83 = false;
+    kl_t84 = false;
 #line 297 "../../src/ordered_map.kl"
-    kl_t82 = true;
+    kl_t83 = true;
 #line 297 "../../src/ordered_map.kl"
-    if ( kl_t83 ) kl_2kl6string_string__dtor( &kl_t54 );
+    if ( kl_t84 ) kl_2kl6string_string__dtor( &kl_t54 );
 #line 297 "../../src/ordered_map.kl"
-    kl_t83 = false;
+    kl_t84 = false;
     kl_t55 = &( *kl_this_1 );
 #line 298 "../../src/ordered_map.kl"
     kl_t56 = &( *kl_this_1 ).kl_control_;
@@ -9272,25 +9316,25 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl11ordered_map_remove__I3i32
     kl_2kl11ordered_map_take_first__I3i32_Q2kl6stringE__SQ2kl11ordered_mapI3i32_Q2kl6stringE_3u64_3u64( kl_t55, kl_t59, kl_slot_15 );
     kl_t61.tag = 0;
 #line 299 "../../src/ordered_map.kl"
-    kl_t84 = true;
+    kl_t85 = true;
 #line 299 "../../src/ordered_map.kl"
     kl_t61.kl_value = kl_old_52;
 #line 299 "../../src/ordered_map.kl"
-    kl_t82 = false;
+    kl_t83 = false;
 #line 299 "../../src/ordered_map.kl"
-    kl_t84 = true;
+    kl_t85 = true;
 #line 299 "../../src/ordered_map.kl"
     kl_t0 = kl_t61;
 #line 299 "../../src/ordered_map.kl"
-    kl_t84 = false;
+    kl_t85 = false;
 #line 299 "../../src/ordered_map.kl"
-    if ( kl_t84 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t61 );
+    if ( kl_t85 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t61 );
 #line 299 "../../src/ordered_map.kl"
-    kl_t84 = false;
+    kl_t85 = false;
 #line 299 "../../src/ordered_map.kl"
-    if ( kl_t82 ) kl_2kl6string_string__dtor( &kl_old_52 );
+    if ( kl_t83 ) kl_2kl6string_string__dtor( &kl_old_52 );
 #line 299 "../../src/ordered_map.kl"
-    kl_t82 = false;
+    kl_t83 = false;
 #line 299 "../../src/ordered_map.kl"
     return kl_t0;
     bb15:

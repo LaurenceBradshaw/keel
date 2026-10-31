@@ -1,0 +1,19 @@
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_repeated_index.kl:17:22
+   |
+17 |     two( ref arr[i], ref arr[i] ); // error: is the same object
+   |                      ^^^^^^^^^^ `ref arr[i]` at 17:10 is the same object; the callee would see it under two names
+
+error: one place is passed `out` twice to this call
+  --> sema/errors_repeated_index.kl:22:23
+   |
+22 |     outs( out arr[i], out arr[i] ); // error: overlaps it
+   |                       ^^^^^^^^^^ `out arr[i]` at 22:11 overlaps it; give each result its own variable
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_repeated_index.kl:28:24
+   |
+28 |     two( ref arr[one], ref arr[1] ); // error: is the same object
+   |                        ^^^^^^^^^^ `ref arr[one]` at 28:10 is the same object; the callee would see it under two names
+
+3 errors generated

@@ -1125,16 +1125,19 @@ Place Lowering::lower_slice_or_run_index( Node_id id )
     return builder_.deref( builder_.place( slice ) );
 }
 
-// A constant index was checked against N by sema, so only a run-time one is checked here.
+// A constant index, a literal or a `const`'s value, was checked against N by sema, so only a run-time
+// one is checked here.
 Place Lowering::lower_array_index( Node_id id )
 {
     const Node_id object = ast_.object( id );
     const Span    span   = ast_.span( id );
     const Type_id u64    = types_.table().integer( 64, false );
 
-    const Place    base  = lower_place( object );
-    const Operand  index = converted( lower_expression( ast_.index( id ) ), u64, span );
-    const Local_id local = builder_.into_temp( use( index ), u64, span ); // one per constant index too
+    const Place                         base   = lower_place( object );
+    const std::optional<Constant_value> folded = types_.constant_of( ast_.index( id ) );
+    const Operand                       index  = folded ? constant( literal_pool_.add_integer( folded->magnitude ), u64 )
+                                                        : converted( lower_expression( ast_.index( id ) ), u64, span );
+    const Local_id                      local  = builder_.into_temp( use( index ), u64, span ); // one per constant index too
 
     if( index.kind != Operand_kind::Constant )
     {
@@ -2160,6 +2163,8 @@ Operand Lowering::lower_empty_variant( Node_id id )
     builder_.assign(
         builder_.tag( place ), use( constant( literal_pool_.add_integer( ordinal->magnitude ), tag_type ) ), span
     );
+
+    drops_.own_temporary( local );
 
     return copy( place, type );
 }
@@ -8735,6 +8740,23 @@ TEST_CASE( "lower_indexes_a_fixed_array", "[ir][lower][fixed_array]" )
         INFO( text );
         REQUIRE( text.find( "out_of_bounds" ) == std::string::npos );
         REQUIRE( text.find( "copy _1[_" ) != std::string::npos );
+    }
+
+    // Sema folded it, local or file-scope, so it lowers as the constant it is.
+    SECTION( "a named constant index is not checked" )
+    {
+        Lowered p( "const u64 two = 2;\ni32 third( i32[4] a ) { const u64 one = 1; return a[ one ] + a[ two ]; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "third" );
+
+        INFO( text );
+        REQUIRE( text.find( "out_of_bounds" ) == std::string::npos );
+        REQUIRE( text.find( "copy two" ) == std::string::npos );
     }
 
     SECTION( "through a borrow, and written" )

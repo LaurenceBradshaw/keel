@@ -1,0 +1,54 @@
+// D54: a `const`'s value is a constant index, local or file-scope, so elements at a `const` and at
+// a different literal are distinct places. KEEL_VALGRIND=1 sees a payload read after its element
+// was freed.
+import kl::string;
+import kl::optional;
+
+const u64 second = 1;
+
+void replace_both( ref kl::string a, ref kl::string b )
+{
+    a = kl::string::from( "xyz" );
+    b = kl::string::from( "q" );
+}
+
+void outs( out kl::string a, out kl::string b )
+{
+    a = kl::string::from( "first" );
+    b = kl::string::from( "second" );
+}
+
+u64 payload_beside( ref kl::optional<kl::string>[2] slots )
+{
+    const u64 zero = 0;
+    switch( slots[zero] )
+    {
+        case kl::optional::some( s ):
+            slots[second] = kl::optional<kl::string>::none;
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    const u64     one   = 1;
+    kl::string[2] texts = [ kl::string::from( "ab" ), .. ];
+
+    replace_both( ref texts[0], ref texts[one] );
+    assert( texts[0].size() == 3 );
+    assert( texts[1].size() == 1 );
+
+    outs( out texts[0], out texts[second] );
+    assert( texts[0].size() == 5 );
+    assert( texts[1].size() == 6 );
+
+    kl::optional<kl::string>[2] slots = [
+        kl::optional<kl::string>::some( kl::string::from( "four" ) ),
+        kl::optional<kl::string>::some( kl::string::from( "x" ) )
+    ];
+    assert( payload_beside( ref slots ) == 4 );
+
+    return 0;
+}

@@ -27,6 +27,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         borrow.through  = nullptr;
         borrow.via      = Local_id {};
         borrow.constant = std::nullopt;
+        borrow.copy_of  = Local_id {};
 
         if( borrow.assignments != 1 || source.is_global() )
         {
@@ -95,6 +96,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
     }
 
     // An address may be taken before the one assignment, and `&init` counts.
+    std::vector<bool> addressed( func.locals.size(), false );
     for( const Statement& statement : func.statements )
     {
         if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Address_of ||
@@ -103,8 +105,31 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             continue;
         }
 
-        Borrow& borrow  = borrows[statement.value.a.place.local.v];
-        borrow.constant = std::nullopt;
+        addressed[statement.value.a.place.local.v] = true;
+    }
+
+    for( std::size_t l = 0; l < borrows.size(); ++l )
+    {
+        if( addressed[l] )
+        {
+            borrows[l].constant = std::nullopt;
+        }
+    }
+
+    for( const Statement& statement : func.statements )
+    {
+        const Place& place  = statement.place;
+        const Place& source = statement.value.a.place;
+
+        if( statement.kind != Statement_kind::Assign || place.is_global() || place.num_projections != 0 ||
+            borrows[place.local.v].assignments != 1 || statement.value.kind != Rvalue_kind::Use ||
+            statement.value.a.kind != Operand_kind::Copy || source.is_global() || source.num_projections != 0 ||
+            addressed[source.local.v] )
+        {
+            continue;
+        }
+
+        borrows[place.local.v].copy_of = source.local;
     }
 
     return borrows;
@@ -156,13 +181,15 @@ bool may_differ( const Function& func, const std::vector<Borrow>& borrows, const
         const Projection& pa = func.projections[a.first_projection + k];
         const Projection& pb = func.projections[b.first_projection + k];
 
-        if( pa.kind != pb.kind )
+        if( pa.kind != Projection_kind::Index || pb.kind != Projection_kind::Index )
         {
             continue;
         }
 
-        if( pa.kind == Projection_kind::Index && pa.index != pb.index &&
-            ( !borrows[pa.index.v].constant || !borrows[pb.index.v].constant ) )
+        const Borrow& ia = borrows[pa.index.v];
+        const Borrow& ib = borrows[pb.index.v];
+
+        if( pa.index != pb.index && !( ia.copy_of.is_valid() && ia.copy_of == ib.copy_of ) && ( !ia.constant || !ib.constant ) )
         {
             return true;
         }

@@ -251,13 +251,24 @@ int64_t kl__measure__S4HeldC8Measured( struct kl__Held* kl_this_1 )
 void kl__grow__S4HeldC8Measured_3i64( struct kl__Held* kl_this_1, int64_t kl_t2 )
 {
     struct kl__Held kl_t3;
+    bool kl_t4;
     ( void ) kl_t2;
 #line 71 "codegen/implements_for.kl"
+    kl_t4 = false;
+#line 71 "codegen/implements_for.kl"
     kl_t3.tag = 1;
+#line 71 "codegen/implements_for.kl"
+    kl_t4 = true;
 #line 71 "codegen/implements_for.kl"
     kl__Held__dtor( &( *kl_this_1 ) );
 #line 71 "codegen/implements_for.kl"
     ( *kl_this_1 ) = kl_t3;
+#line 71 "codegen/implements_for.kl"
+    kl_t4 = false;
+#line 71 "codegen/implements_for.kl"
+    if ( kl_t4 ) kl__Held__dtor( &kl_t3 );
+#line 71 "codegen/implements_for.kl"
+    kl_t4 = false;
 #line 71 "codegen/implements_for.kl"
     return;
 #line 71 "codegen/implements_for.kl"

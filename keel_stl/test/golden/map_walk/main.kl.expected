@@ -3491,10 +3491,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 392 "../../src/string.kl"
     kl_t18 = false;
 #line 392 "../../src/string.kl"
     kl_t19 = false;
+#line 392 "../../src/string.kl"
+    kl_t20 = false;
 #line 392 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 392 "../../src/string.kl"
@@ -3558,7 +3561,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 398 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 398 "../../src/string.kl"
+    kl_t20 = true;
+#line 398 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
+#line 398 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 398 "../../src/string.kl"
+    kl_t20 = false;
 #line 398 "../../src/string.kl"
     return kl_t0;
 }
@@ -3584,10 +3595,13 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
     struct kl_2kl8optional_optional__IQ2kl6stringE kl_t17;
     bool kl_t18;
     bool kl_t19;
+    bool kl_t20;
 #line 404 "../../src/string.kl"
     kl_t18 = false;
 #line 404 "../../src/string.kl"
     kl_t19 = false;
+#line 404 "../../src/string.kl"
+    kl_t20 = false;
 #line 404 "../../src/string.kl"
     kl_t3 = &( *kl_this_1 );
 #line 404 "../../src/string.kl"
@@ -3651,7 +3665,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 410 "../../src/string.kl"
     kl_t17.tag = 1;
 #line 410 "../../src/string.kl"
+    kl_t20 = true;
+#line 410 "../../src/string.kl"
     kl_t0 = kl_t17;
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
+#line 410 "../../src/string.kl"
+    if ( kl_t20 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t17 );
+#line 410 "../../src/string.kl"
+    kl_t20 = false;
 #line 410 "../../src/string.kl"
     return kl_t0;
 }
@@ -5978,12 +6000,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl3map_insert__I3i32_Q2kl6str
     bool kl_t36;
     bool kl_t37;
     bool kl_t38;
+    bool kl_t39;
 #line 201 "../../src/map.kl"
     kl_t36 = true;
 #line 201 "../../src/map.kl"
     kl_t37 = false;
 #line 201 "../../src/map.kl"
     kl_t38 = false;
+#line 201 "../../src/map.kl"
+    kl_t39 = false;
 #line 201 "../../src/map.kl"
     kl_t5 = &( *kl_this_1 );
 #line 201 "../../src/map.kl"
@@ -6093,7 +6118,15 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl3map_insert__I3i32_Q2kl6str
 #line 229 "../../src/map.kl"
     kl_t35.tag = 1;
 #line 229 "../../src/map.kl"
+    kl_t39 = true;
+#line 229 "../../src/map.kl"
     kl_t0 = kl_t35;
+#line 229 "../../src/map.kl"
+    kl_t39 = false;
+#line 229 "../../src/map.kl"
+    if ( kl_t39 ) kl_2kl8optional_optional__IQ2kl6stringE__dtor( &kl_t35 );
+#line 229 "../../src/map.kl"
+    kl_t39 = false;
 #line 229 "../../src/map.kl"
     if ( kl_t36 ) kl_2kl6string_string__dtor( &kl_value_3 );
 #line 229 "../../src/map.kl"

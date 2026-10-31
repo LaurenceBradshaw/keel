@@ -464,6 +464,18 @@ struct Checked : Compiled
         return check_moves( functions.back(), owning.back(), addressing.back(), literals );
     }
 
+    // Every function's: an array's drop, `~V[2]`, is lowered after `main`.
+    std::vector<Move_error> all_errors() const
+    {
+        std::vector<Move_error> errors;
+        for( std::size_t f = 0; f < functions.size(); ++f )
+        {
+            const std::vector<Move_error> found = check_moves( functions[f], owning[f], addressing[f], literals );
+            errors.insert( errors.end(), found.begin(), found.end() );
+        }
+        return errors;
+    }
+
     std::vector<std::vector<bool>> owning;     // per function
     std::vector<std::vector<bool>> addressing; // per function
 
@@ -960,18 +972,6 @@ TEST_CASE( "move_check_tells_constant_indices_apart", "[check][move][m9]" )
         );
     };
 
-    // `~V[2]` is lowered after `main`, so every function is checked.
-    const auto errors_of = []( const Checked& p )
-    {
-        std::vector<Move_error> errors;
-        for( std::size_t f = 0; f < p.functions.size(); ++f )
-        {
-            const std::vector<Move_error> found = check_moves( p.functions[f], p.owning[f], p.addressing[f], p.literals );
-            errors.insert( errors.end(), found.begin(), found.end() );
-        }
-        return errors;
-    };
-
     struct Refused
     {
         const char*   call;
@@ -992,7 +992,7 @@ TEST_CASE( "move_check_tells_constant_indices_apart", "[check][move][m9]" )
         INFO( refused.call << "\n" << p.rendered() );
         REQUIRE( p.clean() );
 
-        const std::vector<Move_error> errors = errors_of( p );
+        const std::vector<Move_error> errors = p.all_errors();
 
         REQUIRE( errors.size() == 1 );
         REQUIRE( errors[0].conflict == refused.conflict );
@@ -1005,7 +1005,78 @@ TEST_CASE( "move_check_tells_constant_indices_apart", "[check][move][m9]" )
 
         INFO( call << "\n" << p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( errors_of( p ).empty() );
+        REQUIRE( p.all_errors().empty() );
+    }
+}
+
+// D54: a `const`'s value is a constant index, and two copies of one unaddressed local are one index.
+TEST_CASE( "move_check_follows_named_and_repeated_indices", "[check][move][m9]" )
+{
+    constexpr std::string_view k_array = "class V { public i32 x; V() { x = 0; } ~V() { } };\n"
+                                         "const u64 second = 1;\n"
+                                         "void both( ref V a, ref V b ) { }\n"
+                                         "void outs( out V a, out V b ) { a = V(); b = V(); }\n";
+
+    const auto checked = [&]( std::string_view call )
+    {
+        return Checked(
+            std::string( k_array ) + "i32 main() { V[2] a = [ V(), .. ]; const u64 one = 1; u64 i = 0; " + std::string( call ) +
+            " return 0; }"
+        );
+    };
+
+    struct Refused
+    {
+        const char*   call;
+        Call_conflict conflict;
+    };
+
+    for( const Refused& refused : {
+             Refused { "both( ref a[1], ref a[one] );", Call_conflict::Aliased },
+             Refused { "both( ref a[second], ref a[one] );", Call_conflict::Aliased },
+             Refused { "both( ref a[i], ref a[i] );", Call_conflict::Aliased },
+             Refused { "outs( out a[i], out a[i] );", Call_conflict::Out_twice },
+         } )
+    {
+        const Checked p = checked( refused.call );
+
+        INFO( refused.call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = p.all_errors();
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].conflict == refused.conflict );
+        REQUIRE_FALSE( errors[0].maybe );
+    }
+
+    for( const char* call : { "both( ref a[0], ref a[one] );", "outs( out a[0], out a[second] );" } )
+    {
+        const Checked p = checked( call );
+
+        INFO( call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.all_errors().empty() );
+    }
+}
+
+// A payload-less variant's temporary ends with its statement, so the next turn builds a new one.
+TEST_CASE( "move_check_accepts_an_empty_variant_built_each_turn", "[check][move]" )
+{
+    constexpr std::string_view k_payload = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                           "enum H { Full( B b ), Empty };\n"
+                                           "void take( move H h ) { }\n";
+
+    for( const char* body : {
+             "H[2] hs = [ H::Empty, .. ];",
+             "u64 n = 0; while( n < 2 ) { take( H::Empty ); n++; }",
+         } )
+    {
+        const Checked p( std::string( k_payload ) + "i32 main() { " + body + " return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.all_errors().empty() );
     }
 }
 

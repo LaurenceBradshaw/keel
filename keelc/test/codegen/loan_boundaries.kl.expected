@@ -318,12 +318,15 @@ uint64_t kl__payload_before_assign__( void )
     bool kl_t13;
     bool kl_t14;
     bool kl_t15;
+    bool kl_t16;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t13 = false;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t14 = false;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t15 = false;
+#line 92 "codegen/loan_boundaries.kl"
+    kl_t16 = false;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t13 = false;
 #line 92 "codegen/loan_boundaries.kl"
@@ -377,11 +380,19 @@ uint64_t kl__payload_before_assign__( void )
 #line 105 "codegen/loan_boundaries.kl"
     kl_t12.tag = 1;
 #line 105 "codegen/loan_boundaries.kl"
+    kl_t16 = true;
+#line 105 "codegen/loan_boundaries.kl"
     if ( kl_t13 ) kl__Holder__dtor( &kl_h_1 );
 #line 105 "codegen/loan_boundaries.kl"
     kl_h_1 = kl_t12;
 #line 105 "codegen/loan_boundaries.kl"
+    kl_t16 = false;
+#line 105 "codegen/loan_boundaries.kl"
     kl_t13 = true;
+#line 105 "codegen/loan_boundaries.kl"
+    if ( kl_t16 ) kl__Holder__dtor( &kl_t12 );
+#line 105 "codegen/loan_boundaries.kl"
+    kl_t16 = false;
     kl_t0 = kl_n_6;
 #line 106 "codegen/loan_boundaries.kl"
     if ( kl_t13 ) kl__Holder__dtor( &kl_h_1 );

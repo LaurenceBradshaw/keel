@@ -2918,7 +2918,7 @@ Type_id Expressions::no_instance_named( Span at, Node_id declaration, Type_id ex
     return table_.builtin( Type_kind::Error );
 }
 
-// A constant index is checked here, so lowering checks only the rest.
+// A constant index is checked here, and recorded, so lowering emits its value and checks only the rest.
 Type_id Expressions::infer_array_index( Node_id id, Type_id array )
 {
     const Node_id index = ast_.index( id );
@@ -2939,6 +2939,13 @@ Type_id Expressions::infer_array_index( Node_id id, Type_id array )
             fmt::format( "its indices run from 0 to {}", count - 1 )
         );
         return types_.poison( id );
+    }
+
+    if( folded.constant && !folded.overflowed && !folded.value.negative )
+    {
+        constant_folder_.record_value(
+            index, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = folded.value.magnitude }
+        );
     }
 
     return types_.record( id, table_.get( array ).element );

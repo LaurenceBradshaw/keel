@@ -142,10 +142,13 @@ struct kl_2kl8optional_optional__I5ownedE kl__lookup__3u64( uint64_t kl_n_1 )
     struct kl__owned* kl_t6;
     bool kl_t8;
     bool kl_t9;
+    bool kl_t10;
 #line 40 "optional/main.kl"
     kl_t8 = false;
 #line 40 "optional/main.kl"
     kl_t9 = false;
+#line 40 "optional/main.kl"
+    kl_t10 = false;
 #line 40 "optional/main.kl"
     kl_t2 = kl_n_1 == 0;
 #line 40 "optional/main.kl"
@@ -153,40 +156,48 @@ struct kl_2kl8optional_optional__I5ownedE kl__lookup__3u64( uint64_t kl_n_1 )
     bb1:
     kl_t3.tag = 1;
 #line 42 "optional/main.kl"
+    kl_t8 = true;
+#line 42 "optional/main.kl"
     kl_t0 = kl_t3;
+#line 42 "optional/main.kl"
+    kl_t8 = false;
+#line 42 "optional/main.kl"
+    if ( kl_t8 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t3 );
+#line 42 "optional/main.kl"
+    kl_t8 = false;
 #line 42 "optional/main.kl"
     return kl_t0;
     bb2:
 #line 45 "optional/main.kl"
-    kl_t9 = false;
+    kl_t10 = false;
 #line 45 "optional/main.kl"
     kl_t6 = &kl_t5;
 #line 45 "optional/main.kl"
-    kl_t9 = true;
+    kl_t10 = true;
 #line 45 "optional/main.kl"
     kl__owned__R5owned_3u64__ctor( kl_t6, kl_n_1 );
 #line 45 "optional/main.kl"
     kl_t4.tag = 0;
 #line 45 "optional/main.kl"
-    kl_t8 = true;
+    kl_t9 = true;
 #line 45 "optional/main.kl"
     kl_t4.kl_value = kl_t5;
 #line 45 "optional/main.kl"
-    kl_t9 = false;
+    kl_t10 = false;
 #line 45 "optional/main.kl"
-    kl_t8 = true;
+    kl_t9 = true;
 #line 45 "optional/main.kl"
     kl_t0 = kl_t4;
 #line 45 "optional/main.kl"
-    kl_t8 = false;
-#line 45 "optional/main.kl"
-    if ( kl_t8 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t4 );
-#line 45 "optional/main.kl"
-    if ( kl_t9 ) kl__owned__dtor( &kl_t5 );
-#line 45 "optional/main.kl"
     kl_t9 = false;
 #line 45 "optional/main.kl"
-    kl_t8 = false;
+    if ( kl_t9 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t4 );
+#line 45 "optional/main.kl"
+    if ( kl_t10 ) kl__owned__dtor( &kl_t5 );
+#line 45 "optional/main.kl"
+    kl_t10 = false;
+#line 45 "optional/main.kl"
+    kl_t9 = false;
 #line 45 "optional/main.kl"
     return kl_t0;
 }
@@ -406,6 +417,7 @@ int32_t kl__drops__( void )
     bool kl_t14;
     bool kl_t15;
     bool kl_t16;
+    bool kl_t17;
 #line 79 "optional/main.kl"
     kl_t12 = false;
 #line 79 "optional/main.kl"
@@ -416,6 +428,8 @@ int32_t kl__drops__( void )
     kl_t15 = false;
 #line 79 "optional/main.kl"
     kl_t16 = false;
+#line 79 "optional/main.kl"
+    kl_t17 = false;
 #line 79 "optional/main.kl"
     kl_t2 = kl__lookup__3u64( 6 );
 #line 79 "optional/main.kl"
@@ -465,11 +479,19 @@ int32_t kl__drops__( void )
     kl_t14 = false;
     kl_t7.tag = 1;
 #line 91 "optional/main.kl"
+    kl_t15 = true;
+#line 91 "optional/main.kl"
     if ( kl_t13 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_slot_5 );
 #line 91 "optional/main.kl"
     kl_slot_5 = kl_t7;
 #line 91 "optional/main.kl"
+    kl_t15 = false;
+#line 91 "optional/main.kl"
     kl_t13 = true;
+#line 91 "optional/main.kl"
+    if ( kl_t15 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t7 );
+#line 91 "optional/main.kl"
+    kl_t15 = false;
     kl_t8 = kl__live__G != 0;
 #line 92 "optional/main.kl"
     if ( kl_t8 ) goto bb5; else goto bb6;
@@ -485,34 +507,34 @@ int32_t kl__drops__( void )
 #line 97 "optional/main.kl"
     kl_t9 = kl__lookup__3u64( 8 );
 #line 97 "optional/main.kl"
-    kl_t15 = true;
+    kl_t16 = true;
 #line 97 "optional/main.kl"
     if ( kl_t13 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_slot_5 );
 #line 97 "optional/main.kl"
     kl_slot_5 = kl_t9;
 #line 97 "optional/main.kl"
-    kl_t15 = false;
+    kl_t16 = false;
 #line 97 "optional/main.kl"
     kl_t13 = true;
 #line 97 "optional/main.kl"
-    if ( kl_t15 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t9 );
+    if ( kl_t16 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t9 );
 #line 97 "optional/main.kl"
-    kl_t15 = false;
+    kl_t16 = false;
     kl_t10 = kl__lookup__3u64( 9 );
 #line 98 "optional/main.kl"
-    kl_t16 = true;
+    kl_t17 = true;
 #line 98 "optional/main.kl"
     if ( kl_t13 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_slot_5 );
 #line 98 "optional/main.kl"
     kl_slot_5 = kl_t10;
 #line 98 "optional/main.kl"
-    kl_t16 = false;
+    kl_t17 = false;
 #line 98 "optional/main.kl"
     kl_t13 = true;
 #line 98 "optional/main.kl"
-    if ( kl_t16 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t10 );
+    if ( kl_t17 ) kl_2kl8optional_optional__I5ownedE__dtor( &kl_t10 );
 #line 98 "optional/main.kl"
-    kl_t16 = false;
+    kl_t17 = false;
     kl_t11 = kl__live__G != 1;
 #line 99 "optional/main.kl"
     if ( kl_t11 ) goto bb7; else goto bb8;
