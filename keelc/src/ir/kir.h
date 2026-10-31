@@ -93,6 +93,12 @@ struct Place
     {
         return global.is_valid();
     }
+
+    // A local itself, not a part of one.
+    bool is_whole_local() const
+    {
+        return !is_global() && local.is_valid() && num_projections == 0;
+    }
 };
 
 enum class Operand_kind : u8
@@ -365,6 +371,40 @@ void for_each_operand( const Function& func, const Rvalue& value, Fn fn )
     for( u32 i = 0; i < value.argument_count; ++i )
     {
         fn( func.operands[value.first_argument + i] );
+    }
+}
+
+// Every place in the function, with the statement it is the target of, or null. `Func` is `Function` or
+// `const Function`, so `fn` may rewrite them. An rvalue's own operands go regardless of kind, since an
+// address's carries its place under any kind.
+template <typename Func, typename Fn>
+void for_each_place( Func& func, Fn fn )
+{
+    const auto operand = [&]( auto& o )
+    {
+        if( o.has_place() )
+        {
+            fn( o.place, nullptr );
+        }
+    };
+
+    for( auto& statement : func.statements )
+    {
+        fn( statement.place, &statement );
+        fn( statement.value.a.place, nullptr );
+        fn( statement.value.b.place, nullptr );
+    }
+
+    for( auto& argument : func.operands )
+    {
+        operand( argument );
+    }
+
+    for( auto& block : func.blocks )
+    {
+        operand( block.terminator.condition );
+        operand( block.terminator.message );
+        operand( block.terminator.at );
     }
 }
 

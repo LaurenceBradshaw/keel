@@ -23,11 +23,6 @@ struct Candidate
     Place    into;
 };
 
-bool whole_local( const Place& place )
-{
-    return !place.is_global() && place.num_projections == 0;
-}
-
 bool is_parameter( const Function& func, Local_id local )
 {
     return local.v >= 1 && local.v <= func.parameter_count;
@@ -212,7 +207,7 @@ bool moved_whole( const Function& func, Local_id local, u32 except )
             statement.value,
             [&]( const Operand& operand )
             {
-                if( operand.kind == Operand_kind::Move && whole_local( operand.place ) && names( operand.place, local ) )
+                if( operand.kind == Operand_kind::Move && operand.place.is_whole_local() && names( operand.place, local ) )
                 {
                     found = true;
                 }
@@ -228,19 +223,19 @@ bool moved_whole( const Function& func, Local_id local, u32 except )
     for( u32 b = 0; b < func.blocks.size(); ++b )
     {
         const Terminator& terminator = func.blocks[b].terminator;
-        if( terminator.condition.kind == Operand_kind::Move && whole_local( terminator.condition.place ) &&
+        if( terminator.condition.kind == Operand_kind::Move && terminator.condition.place.is_whole_local() &&
             names( terminator.condition.place, local ) )
         {
             return true;
         }
 
-        if( terminator.message.kind == Operand_kind::Move && whole_local( terminator.message.place ) &&
+        if( terminator.message.kind == Operand_kind::Move && terminator.message.place.is_whole_local() &&
             names( terminator.message.place, local ) )
         {
             return true;
         }
 
-        if( terminator.at.kind == Operand_kind::Move && whole_local( terminator.at.place ) &&
+        if( terminator.at.kind == Operand_kind::Move && terminator.at.place.is_whole_local() &&
             names( terminator.at.place, local ) )
         {
             return true;
@@ -282,7 +277,7 @@ std::optional<Candidate> candidate_at( const Function& func, u32 index )
         return {};
     }
 
-    if( whole_local( source ) && whole_local( destination ) )
+    if( source.is_whole_local() && destination.is_whole_local() )
     {
         if( func.locals[destination.local.v].type != func.locals[source.local.v].type )
         {
@@ -317,11 +312,11 @@ std::optional<Candidate> candidate_at( const Function& func, u32 index )
 
     // `_0.a = move _3` builds `_3` in `_0.a`; `_4 = copy _1.b` reads `_1.b` where it lies.
     Candidate field { index, {}, {}, {} };
-    if( field_place( func, destination ) && whole_local( source ) )
+    if( field_place( func, destination ) && source.is_whole_local() )
     {
         field = Candidate { index, destination.local, source.local, destination };
     }
-    else if( whole_local( destination ) && field_place( func, source ) )
+    else if( destination.is_whole_local() && field_place( func, source ) )
     {
         field = Candidate { index, source.local, destination.local, source };
     }
@@ -585,51 +580,16 @@ Place moved_to( Function& func, const Place& place, const Place& into )
 
 void rename( Function& func, Local_id gone, const Place& into )
 {
-    for( Statement& statement : func.statements )
-    {
-        if( names( statement.place, gone ) )
+    for_each_place(
+        func,
+        [&]( Place& place, const Statement* )
         {
-            statement.place = moved_to( func, statement.place, into );
+            if( names( place, gone ) )
+            {
+                place = moved_to( func, place, into );
+            }
         }
-
-        if( names( statement.value.a.place, gone ) )
-        {
-            statement.value.a.place = moved_to( func, statement.value.a.place, into );
-        }
-
-        if( names( statement.value.b.place, gone ) )
-        {
-            statement.value.b.place = moved_to( func, statement.value.b.place, into );
-        }
-    }
-
-    for( Operand& operand : func.operands )
-    {
-        if( operand.has_place() && names( operand.place, gone ) )
-        {
-            operand.place = moved_to( func, operand.place, into );
-        }
-    }
-
-    for( Block& block : func.blocks )
-    {
-        Terminator& terminator = block.terminator;
-
-        if( terminator.condition.has_place() && names( terminator.condition.place, gone ) )
-        {
-            terminator.condition.place = moved_to( func, terminator.condition.place, into );
-        }
-
-        if( terminator.message.has_place() && names( terminator.message.place, gone ) )
-        {
-            terminator.message.place = moved_to( func, terminator.message.place, into );
-        }
-
-        if( terminator.at.has_place() && names( terminator.at.place, gone ) )
-        {
-            terminator.at.place = moved_to( func, terminator.at.place, into );
-        }
-    }
+    );
 
     for( Projection& projection : func.projections )
     {
@@ -834,7 +794,7 @@ struct Optimised : Compiled
             []( const Statement& s )
             {
                 return s.kind == Statement_kind::Assign && s.value.kind == Rvalue_kind::Use && s.value.a.has_place() &&
-                       whole_local( s.value.a.place ) && whole_local( s.place );
+                       s.value.a.place.is_whole_local() && s.place.is_whole_local();
             }
         ) );
     }
@@ -871,7 +831,7 @@ struct Optimised : Compiled
 
                 const Place& whole = into_field ? s.value.a.place : s.place;
                 const Place& field = into_field ? s.place : s.value.a.place;
-                return whole_local( whole ) && field_place( func, field ) &&
+                return whole.is_whole_local() && field_place( func, field ) &&
                        !types.table().is_builtin( func.locals[whole.local.v].type );
             }
         ) );

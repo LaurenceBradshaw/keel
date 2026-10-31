@@ -37,7 +37,7 @@ void step_back( const Function& func, const Statement& statement, Live& live )
 {
     if( statement.kind == Statement_kind::Assign )
     {
-        if( !statement.place.is_global() && statement.place.num_projections == 0 )
+        if( statement.place.is_whole_local() )
         {
             live[statement.place.local.v] = false;
         }

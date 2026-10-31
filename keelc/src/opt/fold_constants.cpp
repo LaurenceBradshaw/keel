@@ -368,8 +368,7 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
 
     const Type_kind kind = types.get( value.a.type ).kind;
 
-    const auto whole = []( const Operand& x )
-    { return x.kind == Operand_kind::Copy && !x.place.is_global() && x.place.num_projections == 0; };
+    const auto whole = []( const Operand& x ) { return x.kind == Operand_kind::Copy && x.place.is_whole_local(); };
 
     // Never a float, which NaN makes unequal to itself.
     if( whole( value.a ) && whole( value.b ) && value.a.place.local == value.b.place.local &&

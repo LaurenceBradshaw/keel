@@ -31,11 +31,6 @@ struct Known
     std::vector<Def>                       checked; // sums a branch's no-overflow arm proved
 };
 
-bool whole_local( const Place& place )
-{
-    return !place.is_global() && place.num_projections == 0;
-}
-
 bool whole_global( const Place& place )
 {
     return place.is_global() && place.num_projections == 0;
@@ -181,7 +176,7 @@ bool sum( const Rvalue& value, Rvalue_kind kind, const Type_table& types, const 
     }
 
     const Place& x = value.a.place;
-    return whole_global( x ) || ( whole_local( x ) && open( addressed, x.local ) );
+    return whole_global( x ) || ( x.is_whole_local() && open( addressed, x.local ) );
 }
 
 // Whether `check` proves `value`, a sum or its check, cannot overflow.
@@ -205,7 +200,7 @@ const Operand* held( const Known& known, const Place& global )
 
 const Def* def_of( const Known& known, const Operand& operand )
 {
-    if( operand.kind != Operand_kind::Copy || !whole_local( operand.place ) )
+    if( operand.kind != Operand_kind::Copy || !operand.place.is_whole_local() )
     {
         return nullptr;
     }
@@ -243,14 +238,14 @@ void learn(
     {
         if( value.kind == Rvalue_kind::Use && types.is_builtin( from.type ) &&
             ( ( from.kind == Operand_kind::Constant && from.constant.is_valid() ) ||
-              ( from.kind == Operand_kind::Copy && whole_local( from.place ) && open( addressed, from.place.local ) ) ) )
+              ( from.kind == Operand_kind::Copy && from.place.is_whole_local() && open( addressed, from.place.local ) ) ) )
         {
             known.globals.emplace_back( place, from );
         }
         return;
     }
 
-    if( !whole_local( place ) || !open( addressed, place.local ) )
+    if( !place.is_whole_local() || !open( addressed, place.local ) )
     {
         return;
     }

@@ -152,45 +152,10 @@ int32_t kl__swapped__( void )
 int32_t kl__aliased__( void )
 {
     int32_t kl_t0;
-    struct kl__Line kl_l_1;
-    struct kl__Line* kl_r_5;
-    bool kl_t8;
-    int32_t kl_t11;
-#line 75 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_a.kl_x = 1;
-#line 75 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_a.kl_y = 2;
-#line 75 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_b.kl_x = 3;
-#line 75 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_b.kl_y = 4;
-    kl_r_5 = &kl_l_1;
-    kl_t11 = ( *kl_r_5 ).kl_a.kl_y;
-#line 77 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_a.kl_x = kl_t11;
-#line 77 "opt/moves_fields_kept.kl"
-    kl_l_1.kl_a.kl_y = 7;
-    kl_t8 = kl_l_1.kl_a.kl_x == 2;
-#line 78 "opt/moves_fields_kept.kl"
-    if ( kl_t8 ) goto bb4; else goto bb2;
-    bb1:
 #line 78 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
 #line 78 "opt/moves_fields_kept.kl"
-    goto bb3;
-    bb2:
-#line 78 "opt/moves_fields_kept.kl"
-    kl_t0 = 2;
-#line 78 "opt/moves_fields_kept.kl"
-    goto bb3;
-    bb3:
-#line 78 "opt/moves_fields_kept.kl"
     return kl_t0;
-    bb4:
-#line 78 "opt/moves_fields_kept.kl"
-    kl_t8 = kl_l_1.kl_a.kl_y == 7;
-#line 78 "opt/moves_fields_kept.kl"
-    if ( kl_t8 ) goto bb1; else goto bb2;
 }
 
 #line 82 "opt/moves_fields_kept.kl"

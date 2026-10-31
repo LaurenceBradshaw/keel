@@ -10,6 +10,7 @@
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
 #include "opt/inline_calls.h"
 #include "opt/merge_blocks.h"
@@ -174,6 +175,11 @@ Front_end run_front_end(
                 // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.
                 for( u32 round = 0; round < build.rounds; ++round )
                 {
+                    // First, so the local it frees is split and propagated this round.
+                    if( build.forwarding )
+                    {
+                        forward_borrows( function, front.types.table() );
+                    }
                     if( build.splitting )
                     {
                         split_aggregates( function, ast, front.types );

@@ -87,7 +87,7 @@ struct Analysis
 
 bool whole_tracked( const Analysis& analysis, const Place& place )
 {
-    return !place.is_global() && place.num_projections == 0 && analysis.tracked[place.local.v];
+    return place.is_whole_local() && analysis.tracked[place.local.v];
 }
 
 Value read( const Analysis& analysis, const Operand& operand, const Values& values )

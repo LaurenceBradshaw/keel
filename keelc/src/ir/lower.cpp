@@ -3398,7 +3398,7 @@ void Lowering::lower_switch( Node_id id )
         matched = builder_.place( taken );
     }
 
-    if( !matched.is_global() && matched.num_projections == 0 )
+    if( matched.is_whole_local() )
     {
         drops_.adopt_into_scope( matched.local );
     }
@@ -3804,7 +3804,7 @@ void Lowering::lower_walk( Node_id id )
     // The container, a temporary kept for the loop as a switch keeps its scrutinee.
     const Place place = lower_place( container );
 
-    if( !place.is_global() && place.num_projections == 0 )
+    if( place.is_whole_local() )
     {
         drops_.adopt_into_scope( place.local );
     }
@@ -3876,7 +3876,7 @@ void Lowering::lower_element_walk( Node_id id )
 
     const Place place = lower_place( container );
 
-    if( !place.is_global() && place.num_projections == 0 )
+    if( place.is_whole_local() )
     {
         drops_.adopt_into_scope( place.local );
     }

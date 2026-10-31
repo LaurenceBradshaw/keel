@@ -1,0 +1,61 @@
+// A pointer that may point at either of two locals is not forwarded to one, so dead store removal
+// keeps a write it reads, and propagation forwards no value through it. Each check returns its own
+// code.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// `q.x = 7` is read through `p` when `a` is small.
+i32 aliased( i32 a )
+{
+    Point  q = Point { a, a };
+    Point  o = Point { a, a };
+    Point* p = &q;
+    if( a > 5 )
+    {
+        p = &o;
+    }
+    q.x = 7;
+    return p.x;
+}
+
+// `*p = a` changes `k` or `j`, so neither keeps its 3.
+i32 written( i32 a )
+{
+    i32  k = 3;
+    i32  j = 3;
+    i32* p = &k;
+    if( a > 5 )
+    {
+        p = &j;
+    }
+    *p = a;
+    return k + j;
+}
+
+i32 main()
+{
+    if( aliased( 4 ) != 7 )
+    {
+        return 1;
+    }
+
+    if( aliased( 6 ) != 6 )
+    {
+        return 2;
+    }
+
+    if( written( 4 ) != 7 )
+    {
+        return 3;
+    }
+
+    if( written( 6 ) != 9 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

@@ -15,11 +15,6 @@ namespace
 // propagate_constants has already read every integer one; a float or an `enum` is left to this.
 using Values = std::vector<std::optional<Operand>>;
 
-bool whole_local( const Place& place )
-{
-    return !place.is_global() && place.num_projections == 0;
-}
-
 // A place a fact may name: a whole local or a field of one, never through a pointer.
 bool copyable( const Function& func, const Place& place )
 {
@@ -84,7 +79,7 @@ void step(
     }
 
     if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Use ||
-        !whole_local( statement.place ) || addressed[statement.place.local.v] )
+        !statement.place.is_whole_local() || addressed[statement.place.local.v] )
     {
         return;
     }

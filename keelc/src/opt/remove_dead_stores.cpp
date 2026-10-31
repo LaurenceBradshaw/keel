@@ -69,14 +69,14 @@ constexpr std::string_view k_types = "struct Point { i32 x; i32 y; };\n"
                                      "i32 side( i32 n ) { return n; }\n"
                                      "i32 main() { return 0; }\n";
 
-// Optimised and elaborated, as a release build emits it. The function under test is always the first.
+// Optimised and elaborated, as a release build emits it, but with addresses kept. The function under test is always the first.
 struct Stored : Compiled
 {
     explicit Stored( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining }
+              Build { .optimise = true, .inlining = inlining, .forwarding = false }
           )
     {
     }

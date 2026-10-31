@@ -40,6 +40,9 @@ struct Build
     // Scalar replacement; a test of an earlier pass turns it off to see that pass's fields.
     bool splitting = true;
 
+    // `ref` forwarding; a test of an addressed local turns it off to keep the address.
+    bool forwarding = true;
+
     // How often the passes after drop elaboration run; a test of what one round keeps sets 1.
     u32 rounds = 2;
 

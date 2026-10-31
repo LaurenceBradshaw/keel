@@ -14,7 +14,7 @@ namespace
 
 bool whole_local( const Operand& operand )
 {
-    return operand.kind == Operand_kind::Copy && !operand.place.is_global() && operand.place.num_projections == 0;
+    return operand.kind == Operand_kind::Copy && operand.place.is_whole_local();
 }
 
 // Whether the local's last write in `block` is a non-zero constant; `nullopt` if it is not a constant.

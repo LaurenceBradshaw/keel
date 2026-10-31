@@ -14,12 +14,6 @@ namespace keel
 namespace
 {
 
-// `_L`, with no projection.
-bool whole_local( const Place& place )
-{
-    return !place.is_global() && place.local.is_valid() && place.num_projections == 0;
-}
-
 // `_D = copy _S` or `move`, of a struct.
 bool copies_whole( const Statement& statement, const Type_table& table )
 {
@@ -31,7 +25,7 @@ bool copies_whole( const Statement& statement, const Type_table& table )
 bool initialises_whole( const Statement& statement )
 {
     return statement.kind == Statement_kind::Assign && statement.value.kind == Rvalue_kind::Address_of &&
-           statement.value.address_purpose == Address_purpose::Initialise && whole_local( statement.value.a.place );
+           statement.value.address_purpose == Address_purpose::Initialise && statement.value.a.place.is_whole_local();
 }
 
 // The locals to split, from `first`. A local's storage markers don't count, nor does an `&init` of it
@@ -81,11 +75,11 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
 
         if( copies_whole( statement, table ) )
         {
-            if( !whole_local( statement.place ) )
+            if( !statement.place.is_whole_local() )
             {
                 use( statement.place );
             }
-            if( !whole_local( statement.value.a.place ) )
+            if( !statement.value.a.place.is_whole_local() )
             {
                 use( statement.value.a.place );
             }
@@ -215,8 +209,8 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
             }
 
             if( copies_whole( statement, types.table() ) &&
-                ( ( whole_local( statement.place ) && split[statement.place.local.v] ) ||
-                  ( whole_local( statement.value.a.place ) && split[statement.value.a.place.local.v] ) ) )
+                ( ( statement.place.is_whole_local() && split[statement.place.local.v] ) ||
+                  ( statement.value.a.place.is_whole_local() && split[statement.value.a.place.local.v] ) ) )
             {
                 const Type_id type = statement.value.type;
                 for( const Node_id& member : ast.members( types.table().get( type ).declaration ) )
@@ -478,7 +472,7 @@ constexpr std::string_view k_types = "struct Point { i32 x; i32 y; };\n"
                                      "class Held { public Held( i32 v ) { box = Box( v ); n = v + 1; } "
                                      "public Box box; public i32 n; };\n";
 
-// The release pipeline with splitting off, then the pass over the function declaring `name`.
+// The release pipeline with splitting and forwarding off, then the pass over the function declaring `name`.
 struct Split : Compiled
 {
     Function before;
@@ -489,7 +483,7 @@ struct Split : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining, .splitting = false }
+              Build { .optimise = true, .inlining = inlining, .splitting = false, .forwarding = false }
           )
     {
         for( const Function& f : functions )

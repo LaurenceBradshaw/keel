@@ -41,7 +41,7 @@ void step_back( const Function& func, const Statement& statement, Local_set& liv
     {
     case Statement_kind::Assign:
         // A field write kills nothing: the other fields still hold what they did.
-        if( !statement.place.is_global() && statement.place.num_projections == 0 )
+        if( statement.place.is_whole_local() )
         {
             live[statement.place.local.v] = false;
         }

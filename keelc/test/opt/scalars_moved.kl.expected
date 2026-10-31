@@ -99,26 +99,8 @@ int32_t kl__numbers__3i32( int32_t kl_a_1 )
 int32_t kl__pointers__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
-    int32_t kl_v_2;
-    bool kl_t11;
-    int32_t* kl_h_24;
-#line 53 "opt/scalars_moved.kl"
-    kl_v_2 = kl_a_1;
-    kl_h_24 = &kl_v_2;
-    kl_t11 = ( *kl_h_24 ) == kl_a_1;
-#line 55 "opt/scalars_moved.kl"
-    if ( kl_t11 ) goto bb1; else goto bb2;
-    bb1:
-#line 55 "opt/scalars_moved.kl"
+    ( void ) kl_a_1;
     kl_t0 = 0;
-#line 55 "opt/scalars_moved.kl"
-    goto bb3;
-    bb2:
-#line 55 "opt/scalars_moved.kl"
-    kl_t0 = 2;
-#line 55 "opt/scalars_moved.kl"
-    goto bb3;
-    bb3:
 #line 55 "opt/scalars_moved.kl"
     return kl_t0;
 }
@@ -127,26 +109,8 @@ int32_t kl__pointers__3i32( int32_t kl_a_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_v_7;
-    bool kl_t16;
-    int32_t* kl_h_50;
-#line 53 "opt/scalars_moved.kl"
-    kl_v_7 = 5;
-    kl_h_50 = &kl_v_7;
-    kl_t16 = ( *kl_h_50 ) == 5;
-#line 55 "opt/scalars_moved.kl"
-    if ( kl_t16 ) goto bb1; else goto bb2;
-    bb1:
 #line 55 "opt/scalars_moved.kl"
     kl_t0 = 0;
-#line 55 "opt/scalars_moved.kl"
-    goto bb3;
-    bb2:
-#line 55 "opt/scalars_moved.kl"
-    kl_t0 = 2;
-#line 55 "opt/scalars_moved.kl"
-    goto bb3;
-    bb3:
 #line 66 "opt/scalars_moved.kl"
     return kl_t0;
 }
