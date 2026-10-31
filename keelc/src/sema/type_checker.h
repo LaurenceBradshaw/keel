@@ -22,21 +22,23 @@ namespace keel
 
 struct Loaded_state;
 
-// A file-scope initialiser, evaluated. Two kinds cover everything Keel allows there: a bool is the
-// integer 0 or 1, and `nullptr` is the integer 0. Integers keep the sign-magnitude form fits()
-// already takes, so the range checks and the folder agree without converting between them.
+// A file-scope initialiser, evaluated. A bool is the integer 0 or 1, and `nullptr` is the integer 0.
+// Integers keep the sign-magnitude form fits() already takes, so the range checks and the folder
+// agree without converting between them. A `str` is its literal's decoded bytes.
 struct Constant_value
 {
     enum class Kind : u8
     {
         Integer,
-        Float
+        Float,
+        Text
     };
 
-    Kind kind      = Kind::Integer;
-    u64  magnitude = 0;
-    bool negative  = false;
-    f64  floating  = 0.0;
+    Kind        kind      = Kind::Integer;
+    u64         magnitude = 0;
+    bool        negative  = false;
+    f64         floating  = 0.0;
+    std::string text {};
 };
 
 // A generic named with concrete type arguments at some call site. The seed for the

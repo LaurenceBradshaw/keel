@@ -1,0 +1,17 @@
+// A `str` global takes a string literal or a `const str`'s name, and nothing else.
+str       none;
+str       number = 5;
+const str SELF   = SELF;
+str       joined = "a" + "b";
+
+class Holder
+{
+    public static str kept;
+
+    public i32 n;
+};
+
+i32 main()
+{
+    return 0;
+}

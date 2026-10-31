@@ -1105,15 +1105,20 @@ void Statements::visit_global( Node_id id )
 
     // A struct literal or a class's construction lowers to a temporary and field assignments,
     // and there is nowhere at C file scope to put those. Checked before the initialiser so
-    // `Point origin;` is caught too.
-    if( table_.is_struct( type ) )
+    // `Point origin;` is caught too. A `str` is the exception, checked below.
+    const bool is_str = table_.is_struct( type ) && table_.get( type ).declaration == table_.prelude().str;
+
+    if( is_str && !init.is_valid() )
     {
-        const bool is_str = table_.get( type ).declaration == table_.prelude().str;
         reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ),
-            is_str ? "a string literal has to be a local or a parameter for now" : ""
+            ast_.span( id ), fmt::format( "a `str` {} needs a value", where ), "write `= \"\"` for an empty one"
         );
+        return;
+    }
+
+    if( table_.is_struct( type ) && !is_str )
+    {
+        reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ) );
         return;
     }
 
@@ -1178,6 +1183,31 @@ void Statements::visit_global( Node_id id )
             fmt::format( "a {} of `{}` cannot have an initialiser yet", where, table_.name( type ) ),
             "without one it starts as the first variant, with its payload zero"
         );
+        return;
+    }
+
+    // A literal's bytes and their count, which C writes as one initialiser.
+    if( is_str )
+    {
+        const std::optional<std::string> text = constant_folder_.fold_text( init );
+
+        if( !text )
+        {
+            reporter_.error_at(
+                ast_.span( init ),
+                fmt::format( "a `str` {} must be given a string literal", where ),
+                "or the name of a `const str`"
+            );
+            return;
+        }
+
+        const std::size_t earlier = reporter_.error_count();
+        expressions_.check( init, type );
+
+        if( reporter_.error_count() == earlier )
+        {
+            constant_folder_.record_value( id, Constant_value { .kind = Constant_value::Kind::Text, .text = *text } );
+        }
         return;
     }
 

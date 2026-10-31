@@ -1,0 +1,9 @@
+// A `const str` and a generic type's `str` static; a.kl reads both from words.klo.
+const str NAME = "words";
+
+class Tagged<T> where T : copyable
+{
+    public static str label = "tag";
+
+    public T v;
+};

@@ -212,6 +212,7 @@ std::string write_state(
             results.put_u64( value.magnitude );
             results.put_u8( value.negative );
             results.put_f64( value.floating );
+            results.put_string( value.text );
         }
     );
     write_table(
@@ -398,7 +399,7 @@ std::optional<Loaded_state> read_state(
         {
             Constant_value value;
             const u8       kind = in.get_u8();
-            if( kind > u8( Constant_value::Kind::Float ) )
+            if( kind > u8( Constant_value::Kind::Text ) )
             {
                 refs.fail();
             }
@@ -406,6 +407,7 @@ std::optional<Loaded_state> read_state(
             value.magnitude = in.get_u64();
             value.negative  = in.get_u8() != 0;
             value.floating  = in.get_f64();
+            value.text      = in.get_string();
             loaded.constants.emplace_back( id, value );
         }
     );

@@ -507,6 +507,46 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     }
 }
 
+std::optional<std::string> Constant_folder::fold_text( Node_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return std::nullopt;
+    }
+
+    if( ast_.kind( id ) == Node_kind::String_literal )
+    {
+        const Literal_id value = ast_.literal( id );
+        return value.is_valid() ? std::optional<std::string>( literal_pool_.string( value ) ) : std::nullopt;
+    }
+
+    if( ast_.kind( id ) != Node_kind::Name_expr && ast_.kind( id ) != Node_kind::Path_expr )
+    {
+        return std::nullopt;
+    }
+
+    const Node_id decl = constant_named( id );
+
+    if( !decl.is_valid() )
+    {
+        return std::nullopt;
+    }
+
+    if( const std::optional<Constant_value> value = value_of( decl ) )
+    {
+        return value->kind == Constant_value::Kind::Text ? std::optional<std::string>( value->text ) : std::nullopt;
+    }
+
+    if( !folding_.insert( decl.v ).second )
+    {
+        return std::nullopt;
+    }
+
+    std::optional<std::string> value = fold_text( ast_.initialiser( decl ) );
+    folding_.erase( decl.v );
+    return value;
+}
+
 std::optional<f64> Constant_folder::fold_float( Node_id id ) const
 {
     // is_valid() first, for the same reason as fold_integer: an unrecorded type reads as an error.

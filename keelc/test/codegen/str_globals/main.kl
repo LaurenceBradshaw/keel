@@ -1,0 +1,35 @@
+// A `str` global from a string literal or a `const str`'s name, written as one C initialiser of its
+// bytes and their count. `NAME` and `Tagged` come from another module.
+import t::console;
+import words;
+
+const str GREETING = "hello";
+str       copied   = GREETING;
+str       escaped  = "a\tb\n";
+str       empty    = "";
+str       theirs   = NAME;
+
+class Names
+{
+    public static str first = "ada";
+
+    public i32 n;
+};
+
+i32 main()
+{
+    t::println( GREETING );
+    t::println( copied );
+    t::println( escaped.size );
+    t::println( empty.size );
+    t::println( theirs );
+    t::println( Names::first );
+
+    copied = "changed";
+    t::println( copied );
+
+    Tagged<u8>::label = "other";
+    t::println( Tagged<u8>::label );
+    t::println( Tagged<i32>::label );
+    return 0;
+}

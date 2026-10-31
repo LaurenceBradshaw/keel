@@ -1,0 +1,8 @@
+import words;
+
+str copied = NAME;
+
+u64 label_size()
+{
+    return Tagged<i32>::label.size;
+}

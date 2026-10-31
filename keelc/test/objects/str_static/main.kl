@@ -1,0 +1,22 @@
+// A `str` global's literal through objects: a.klo defines `Tagged<i32>::label` weakly from the value
+// words.klo recorded, and `copied` from `NAME`'s.
+import a;
+import words;
+
+i32 main()
+{
+    if( label_size() != 3 || copied.size != 5 || NAME.size != 5 )
+    {
+        return 1;
+    }
+
+    unsafe
+    {
+        if( Tagged<i32>::label.data[2] != 'g' || copied.data[0] != 'w' )
+        {
+            return 2;
+        }
+    }
+
+    return 0;
+}

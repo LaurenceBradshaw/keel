@@ -448,7 +448,20 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner, boo
 
     std::string text;
 
-    if( value->kind == Constant_value::Kind::Float )
+    if( value->kind == Constant_value::Kind::Text )
+    {
+        // `str`'s fields by name: its bytes, cast as a literal's are, and their count.
+        for( const Node_id field : ast.contained_fields( table.get( variable ).declaration ) )
+        {
+            const std::string_view field_name = interner.text( ast.name( field ) );
+            const std::string      part       = field_name == "data"
+                                                    ? fmt::format( "( {} ) {}", type( types.type_of( field ) ), c_string( value->text ) )
+                                                    : c_integer( value->text.size() );
+            text += fmt::format( "{}.{} = {}", text.empty() ? "{ " : ", ", this->field( field ), part );
+        }
+        text += " }";
+    }
+    else if( value->kind == Constant_value::Kind::Float )
     {
         text = c_float( value->floating );
     }

@@ -10,11 +10,11 @@ error: `Point` cannot be a static field yet
 26 |     static Point origin;
    |            ^^^^^^^^^^^^^
 
-error: `str` cannot be a static field yet
+error: a `str` static field needs a value
   --> sema/errors_static_fields.kl:29:12
    |
 29 |     static str label;
-   |            ^^^^^^^^^^ a string literal has to be a local or a parameter for now
+   |            ^^^^^^^^^^ write `= ""` for an empty one
 
 error: field `id` is already declared
   --> sema/errors_static_fields.kl:34:9

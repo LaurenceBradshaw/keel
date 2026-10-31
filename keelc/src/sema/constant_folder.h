@@ -71,6 +71,8 @@ public:
     // `known` is the type the caller already settled on - see check_constant for why it is needed.
     Folded             fold_integer( Node_id id, Type_id known = Type_id {} ) const;
     std::optional<f64> fold_float( Node_id id ) const;
+    // A string literal's bytes, or a `const str`'s.
+    std::optional<std::string> fold_text( Node_id id ) const;
 
     bool    check_constant( Node_id id, Type_id type );
     Type_id record_constant( Node_id id, Type_id type );
