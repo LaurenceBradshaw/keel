@@ -3909,6 +3909,19 @@ std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual
         return fmt::format( "`where {} : from<str>` lets a string literal become one", table_.name( expected ) );
     }
 
+    if( table_.is_integer( expected ) && table_.is_integer( actual ) )
+    {
+        const std::string cast =
+            fmt::format( "write `cast<{}>( {} )`", table_.name( expected ), reporter_.text( ast_.span( id ) ) );
+        const Node_id decl = constant_folder_.constant_named( id );
+
+        return decl.is_valid()
+                   ? fmt::format(
+                         "{}, or declare `{}` `{}`", cast, interner_.text( ast_.name( decl ) ), table_.name( expected )
+                     )
+                   : cast;
+    }
+
     if( !is_prelude_str( actual ) || !table_.is_struct( expected ) || table_.name( expected ) == table_.name( actual ) )
     {
         return mismatch_hint( table_, expected, actual );

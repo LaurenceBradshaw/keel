@@ -68,6 +68,8 @@ public:
     Node_id constant_named( Node_id id ) const;
     // `decl`'s initialiser names `decl` itself, directly or through other consts.
     bool names_itself( Node_id decl ) const;
+    // `id` names an integer `const` that does not fold, which its own declaration reports.
+    bool names_refused_constant( Node_id id ) const;
 
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation

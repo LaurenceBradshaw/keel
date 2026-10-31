@@ -4,6 +4,7 @@
 #include "sema/literals.h"
 #include <fmt/format.h>
 #include <cassert>
+#include <cmath>
 
 namespace keel::sema
 {
@@ -256,10 +257,21 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
     {
         if( !table_.is_float( expected ) )
         {
+            const Literal_id given = ast_.literal( literal );
+            const f64        whole = given.is_valid() ? literals_.floating( given ) : 0.5;
+            std::string      help;
+
+            if( table_.is_integer( expected ) )
+            {
+                help = std::trunc( whole ) == whole && std::fabs( whole ) < 1e18
+                           ? fmt::format(
+                                 "an integer has no `.`; write `{}`", static_cast<i64>( literal.v == id.v ? whole : -whole )
+                             )
+                           : "a fractional value cannot be an integer";
+            }
+
             reporter_.error_at(
-                ast_.span( id ),
-                fmt::format( "expected `{}`, but got a floating-point literal", table_.name( expected ) ),
-                table_.is_integer( expected ) ? "a fractional value cannot be an integer" : std::string {}
+                ast_.span( id ), fmt::format( "expected `{}`, but got a floating-point literal", table_.name( expected ) ), help
             );
 
             return expected;

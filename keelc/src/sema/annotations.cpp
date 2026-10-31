@@ -29,7 +29,7 @@ std::string_view keel_spelling_for( std::string_view cpp_spelling )
 
     static constexpr Alias aliases[] = {
         { "int", "i32" },       { "signed", "i32" },   { "unsigned", "u32" },  { "short", "i16" },    { "long", "i64" },
-        { "char", "i8" },       { "float", "f32" },    { "double", "f64" },    { "size_t", "u64" },   { "ssize_t", "i64" },
+        { "char", "u8" },       { "float", "f32" },    { "double", "f64" },    { "size_t", "u64" },   { "ssize_t", "i64" },
         { "ptrdiff_t", "i64" }, { "intptr_t", "i64" }, { "uintptr_t", "u64" }, { "int8_t", "i8" },    { "int16_t", "i16" },
         { "int32_t", "i32" },   { "int64_t", "i64" },  { "uint8_t", "u8" },    { "uint16_t", "u16" }, { "uint32_t", "u32" },
         { "uint64_t", "u64" },
@@ -869,6 +869,11 @@ std::optional<u64> Annotations::array_size( Node_id size )
 
     const Folded folded = constant_folder_.fold_integer( size );
 
+    if( !folded.constant && constant_folder_.names_refused_constant( size ) )
+    {
+        return std::nullopt;
+    }
+
     if( !folded.constant || folded.overflowed )
     {
         reporter_.error_at(
@@ -1696,7 +1701,7 @@ TEST_CASE( "d1_suggests_a_keel_spelling_for_every_rejected_c_type", "[sema][type
         { "unsigned", "u32" },
         { "short", "i16" },
         { "long", "i64" },
-        { "char", "i8" },
+        { "char", "u8" },
         { "float", "f32" },
         { "double", "f64" },
         { "size_t", "u64" },

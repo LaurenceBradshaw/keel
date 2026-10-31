@@ -1818,6 +1818,15 @@ Node_id Parser::parse_enum_decl()
             dropped_variant = true;
         }
 
+        if( cursor_.check( Token_kind::Equal ) )
+        {
+            recovery_.error_at(
+                cursor_.peek().span,
+                "a variant cannot be given a value",
+                "a variant's value is its position; Keel has no explicit discriminants"
+            );
+        }
+
         if( !recovery_.end_list_element( Token_kind::R_brace, list_errors, Recovery::List_site::Declaration ) )
         {
             gave_up = true;
@@ -2684,6 +2693,22 @@ Node_id Parser::dispatch_statement()
         parse_function_decl();
 
         return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    // Parsed as a local, so its uses do not report it undeclared.
+    if( cursor_.check_keyword( Keyword::Static ) )
+    {
+        recovery_.error_at(
+            cursor_.peek().span,
+            "a function cannot have a `static`",
+            "declare it at file scope (a `private` one keeps it to this module)"
+        );
+        cursor_.advance();
+
+        if( lookahead_.looks_like_binding( cursor_.position() ) || lookahead_.looks_like_declaration( cursor_.position() ) )
+        {
+            return parse_var_decl();
+        }
     }
 
     Declaration_scan scan = lookahead_.declaration_head( cursor_.position(), Lookahead::Scan_site::Statement );

@@ -18,6 +18,21 @@ namespace
 // ASCII only, deliberately not <cctype>: those take an int and are UB for negative char values -
 // every byte of a UTF-8 character in a string literal or comment - and are locale-dependent.
 
+// `bytes` is one well-formed UTF-8 sequence of two bytes or more.
+bool one_utf8_character( std::string_view bytes )
+{
+    const auto lead   = static_cast<unsigned char>( bytes[0] );
+    const u32  length = lead >= 0xC2 && lead <= 0xDF   ? 2
+                        : lead >= 0xE0 && lead <= 0xEF ? 3
+                        : lead >= 0xF0 && lead <= 0xF4 ? 4
+                                                       : 0;
+
+    return length == bytes.size() &&
+           std::all_of(
+               bytes.begin() + 1, bytes.end(), []( char c ) { return ( static_cast<unsigned char>( c ) & 0xC0 ) == 0x80; }
+           );
+}
+
 bool is_space( char c )
 {
     return ( c == ' ' || c == '\t' || c == '\n' || c == '\r' );
@@ -713,6 +728,15 @@ void Scanner::scan_char( u32 start )
             if( count == 0 )
             {
                 error_at( span_from( start ), "empty character literal", "write one character between the quotes" );
+            }
+            else if( count > 1 && one_utf8_character( text_.substr( start + 1, count ) ) )
+            {
+                error_at(
+                    span_from( start ),
+                    "a character literal is one byte; `" + std::string( text_.substr( start + 1, count ) ) + "` is " +
+                        std::to_string( count ) + " bytes in UTF-8",
+                    "write it in a string literal"
+                );
             }
             else if( count > 1 )
             {

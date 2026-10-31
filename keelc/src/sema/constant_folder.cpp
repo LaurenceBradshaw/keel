@@ -245,6 +245,25 @@ bool Constant_folder::names_itself( Node_id decl ) const
     return false;
 }
 
+bool Constant_folder::names_refused_constant( Node_id id ) const
+{
+    if( const Node_id decl = constant_named( id ); decl.is_valid() )
+    {
+        const Type_id type = types_.type_of( decl );
+        return ( table_.is_error( type ) || table_.is_integer( type ) ) && !fold_integer( id ).constant;
+    }
+
+    for( const Node_id child : ast_.children( id ) )
+    {
+        if( child.is_valid() && names_refused_constant( child ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Only + - * / % << >> fold. `&`, `|`, `^` and `~` cannot take a value outside the type their
 // operands came from, so there is nothing for them to overflow and nothing here to check - saying
 // "not constant" for those is the correct answer, not a shortcut.

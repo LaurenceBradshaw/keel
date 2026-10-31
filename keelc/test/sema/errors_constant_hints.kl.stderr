@@ -1,0 +1,49 @@
+error: `nope` is not declared
+ --> sema/errors_constant_hints.kl:2:15
+  |
+2 | const i32 N = nope;
+  |               ^^^^
+
+error: this initialiser cannot be computed at compile time yet
+ --> sema/errors_constant_hints.kl:3:15
+  |
+3 | const i32 M = N * 2;
+  |               ^^^^^ write its value as a literal
+
+error: unknown type `char`
+ --> sema/errors_constant_hints.kl:9:5
+  |
+9 |     char letter = 'a';
+  |     ^^^^ Keel spells this `u8`
+
+error: expected `i32`, but got a floating-point literal
+  --> sema/errors_constant_hints.kl:10:28
+   |
+10 |     i32 whole = cast<i32>( 3.0 );
+   |                            ^^^ an integer has no `.`; write `3`
+
+error: expected `i32`, but got a floating-point literal
+  --> sema/errors_constant_hints.kl:11:20
+   |
+11 |     i32 negative = -2.0;
+   |                    ^^^^ an integer has no `.`; write `-2`
+
+error: expected `i32`, but got a floating-point literal
+  --> sema/errors_constant_hints.kl:12:20
+   |
+12 |     i32 fraction = 1.5;
+   |                    ^^^ a fractional value cannot be an integer
+
+error: expected `u64`, but got `i32`
+  --> sema/errors_constant_hints.kl:14:19
+   |
+14 |     i32 named = a[K];
+   |                   ^ write `cast<u64>( K )`, or declare `K` `u64`
+
+error: expected `u64`, but got `i32`
+  --> sema/errors_constant_hints.kl:15:17
+   |
+15 |     i32 sum = a[K - 1];
+   |                 ^^^^^ write `cast<u64>( K - 1 )`
+
+8 errors generated

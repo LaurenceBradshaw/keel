@@ -32,7 +32,7 @@ error: expected `i32`, but got `u64`
   --> sema/errors_counting.kl:21:21
    |
 21 |     for( i32 i : 0..n )
-   |                     ^
+   |                     ^ write `cast<i32>( n )`
 
 error: a counting loop counts in an integer type
   --> sema/errors_counting.kl:25:18
