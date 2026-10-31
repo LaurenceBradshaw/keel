@@ -1,0 +1,51 @@
+// D54: elements at distinct constant indices are distinct places, so two of them may be passed to
+// one call, and one may change while a payload bound from another is in use. KEEL_VALGRIND=1 sees
+// a payload read after its element was freed.
+import kl::string;
+import kl::optional;
+
+void replace_both( ref kl::string a, ref kl::string b )
+{
+    a = kl::string::from( "xyz" );
+    b = kl::string::from( "q" );
+}
+
+void outs( out kl::string a, out kl::string b )
+{
+    a = kl::string::from( "first" );
+    b = kl::string::from( "second" );
+}
+
+u64 payload_beside( ref kl::optional<kl::string>[2] slots )
+{
+    switch( slots[0] )
+    {
+        case kl::optional::some( s ):
+            slots[1] = kl::optional<kl::string>::none;
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    kl::string[2] texts = [ kl::string::from( "ab" ), .. ];
+    texts[1]            = kl::string::from( "cde" );
+
+    replace_both( ref texts[0], ref texts[1] );
+    assert( texts[0].size() == 3 );
+    assert( texts[1].size() == 1 );
+
+    outs( out texts[0], out texts[1] );
+    assert( texts[0].size() == 5 );
+    assert( texts[1].size() == 6 );
+
+    kl::optional<kl::string>[2] slots = [
+        kl::optional<kl::string>::some( kl::string::from( "four" ) ),
+        kl::optional<kl::string>::some( kl::string::from( "x" ) )
+    ];
+    assert( payload_beside( ref slots ) == 4 );
+
+    return 0;
+}

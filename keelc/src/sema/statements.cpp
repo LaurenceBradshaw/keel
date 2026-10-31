@@ -311,9 +311,11 @@ void Statements::visit_return( Node_id id )
 
     // The predicate rather than check_writable: that one reports about *modifying*, and nothing
     // is being modified here. Gated on the return type owning something, because that is the whole
-    // hazard - the caller destroys the borrow too, so returning it frees one resource twice.
+    // hazard - the caller destroys the borrow too, so returning it frees one resource twice. A
+    // `const ref` result hands back the borrow itself, so only a by-value return is refused.
     if( !bounds_.satisfies( current_return_, Bound::Copyable ) &&
-        places_.is_borrow_binding( places_.place_root( value, expressions_.current_function() ) ) )
+        places_.is_borrow_binding( places_.place_root( value, expressions_.current_function() ) ) &&
+        !places_.returns_a_binding( expressions_.current_function() ) )
     {
         reporter_.error_at( ast_.span( value ), "cannot return a borrowed value", "the caller still owns it" );
     }

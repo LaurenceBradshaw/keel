@@ -9,6 +9,7 @@
 #include <string_view>
 #include "check/assign_check.h"
 #include "check/borrow_check.h"
+#include "check/dangling_check.h"
 #include "check/move_check.h"
 
 namespace keel
@@ -57,14 +58,16 @@ void report_move_errors(
     const Ast&                ast,
     const Source_manager&     sm,
     const Interner&           interner,
+    const Literal_pool&       literals,
     Types&                    types,
     Diagnostics&              diagnostics
 )
 {
     for( const Function& function : functions )
     {
-        for( const Move_error& error :
-             check_moves( function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ) ) )
+        for( const Move_error& error : check_moves(
+                 function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ), literals
+             ) )
         {
             // The lowerer moves temporaries too, so the moved value may have no name the author wrote.
             const std::string subject = subject_of( function, ast, interner, error.local, error.field, "this value" );
@@ -82,6 +85,21 @@ void report_move_errors(
             {
                 const Line_col other = sm.line_col( error.other.file, error.other.start );
 
+                if( error.maybe )
+                {
+                    diagnostics.error(
+                        error.use,
+                        "one place may be passed `out` twice to this call",
+                        fmt::format(
+                            "`{}` at {}:{} may overlap it; give each result its own variable",
+                            sm.text( error.other ),
+                            other.line,
+                            other.col
+                        )
+                    );
+                    continue;
+                }
+
                 diagnostics.error(
                     error.use,
                     "one place is passed `out` twice to this call",
@@ -97,6 +115,21 @@ void report_move_errors(
             case Call_conflict::Aliased:
             {
                 const Line_col other = sm.line_col( error.other.file, error.other.start );
+
+                if( error.maybe )
+                {
+                    diagnostics.error(
+                        error.use,
+                        "one object may be passed twice to this call, which could change it",
+                        fmt::format(
+                            "`{}` at {}:{} may be the same object; the callee could see it under two names",
+                            sm.text( error.other ),
+                            other.line,
+                            other.col
+                        )
+                    );
+                    continue;
+                }
 
                 diagnostics.error(
                     error.use,
@@ -146,14 +179,16 @@ void report_loan_errors(
     const Ast&                ast,
     const Source_manager&     sm,
     const Interner&           interner,
+    const Literal_pool&       literals,
     Types&                    types,
     Diagnostics&              diagnostics
 )
 {
     for( const Function& function : functions )
     {
-        for( const Loan_error& error :
-             check_loans( function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ) ) )
+        for( const Loan_error& error : check_loans(
+                 function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ), literals
+             ) )
         {
             const Symbol_id   name = function.locals[error.object.v].name;
             const std::string object =
@@ -196,6 +231,27 @@ void report_loan_errors(
                 error.at,
                 message,
                 fmt::format( "`{}` is used after this; it was bound at {}:{}", holder, taken.line, taken.col )
+            );
+        }
+    }
+}
+
+// D54: a read through a pointer whose target's scope has closed.
+void report_dangling_errors(
+    std::span<const Function> functions, const Ast& ast, const Interner& interner, Diagnostics& diagnostics
+)
+{
+    for( const Function& function : functions )
+    {
+        for( const Dangling_error& error : check_dangling( function ) )
+        {
+            const std::string pointer = subject_of( function, ast, interner, error.pointer, k_no_field, "this pointer" );
+            const std::string ended   = subject_of( function, ast, interner, error.ended, k_no_field, "the local" );
+
+            diagnostics.error(
+                error.at,
+                fmt::format( "{} has ended, so {} points at nothing", ended, pointer ),
+                fmt::format( "declare {} where {} is", ended, pointer )
             );
         }
     }
@@ -365,12 +421,14 @@ void report_dataflow_errors(
     const Ast&                ast,
     const Source_manager&     sm,
     const Interner&           interner,
+    const Literal_pool&       literals,
     Types&                    types,
     Diagnostics&              diagnostics
 )
 {
-    report_move_errors( functions, ast, sm, interner, types, diagnostics );
-    report_loan_errors( functions, ast, sm, interner, types, diagnostics );
+    report_move_errors( functions, ast, sm, interner, literals, types, diagnostics );
+    report_loan_errors( functions, ast, sm, interner, literals, types, diagnostics );
+    report_dangling_errors( functions, ast, interner, diagnostics );
     report_unassigned_errors( functions, ast, interner, diagnostics, types );
 }
 

@@ -1,0 +1,33 @@
+// D54: two arguments into one array are one object unless their indices are distinct constants.
+// One error per marked line.
+import kl::string;
+
+void two( ref kl::string _, ref kl::string _ )
+{
+}
+
+void outs( out kl::string a, out kl::string b )
+{
+    a = kl::string::from( "a" );
+    b = kl::string::from( "b" );
+}
+
+void same( ref kl::string[2] arr )
+{
+    two( ref arr[0], ref arr[0] ); // error: is the same object
+}
+
+void variables( ref kl::string[2] arr, u64 i, u64 j )
+{
+    two( ref arr[i], ref arr[j] ); // error: may be the same object
+}
+
+void outs_variables( ref kl::string[2] arr, u64 i, u64 j )
+{
+    outs( out arr[i], out arr[j] ); // error: may overlap
+}
+
+i32 main()
+{
+    return 0;
+}

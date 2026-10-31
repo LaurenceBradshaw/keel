@@ -6,6 +6,7 @@
 #include "ast/ast.h"
 #include "common/diagnostics.h"
 #include "common/interner.h"
+#include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
 #include "sema/type_checker.h"
@@ -21,6 +22,7 @@ void report_dataflow_errors(
     const Ast&                ast,
     const Source_manager&     sm,
     const Interner&           interner,
+    const Literal_pool&       literals,
     Types&                    types,
     Diagnostics&              diagnostics
 );

@@ -1,0 +1,19 @@
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_element_aliasing.kl:17:22
+   |
+17 |     two( ref arr[0], ref arr[0] ); // error: is the same object
+   |                      ^^^^^^^^^^ `ref arr[0]` at 17:10 is the same object; the callee would see it under two names
+
+error: one object may be passed twice to this call, which could change it
+  --> sema/errors_element_aliasing.kl:22:22
+   |
+22 |     two( ref arr[i], ref arr[j] ); // error: may be the same object
+   |                      ^^^^^^^^^^ `ref arr[i]` at 22:10 may be the same object; the callee could see it under two names
+
+error: one place may be passed `out` twice to this call
+  --> sema/errors_element_aliasing.kl:27:23
+   |
+27 |     outs( out arr[i], out arr[j] ); // error: may overlap
+   |                       ^^^^^^^^^^ `out arr[i]` at 27:11 may overlap it; give each result its own variable
+
+3 errors generated

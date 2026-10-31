@@ -321,7 +321,7 @@ bool conflicts(
 
     if( loan.of.is_valid() )
     {
-        return effect.conflict == Loan_conflict::Moved && overlaps( func, loan.place, effect.place );
+        return effect.conflict == Loan_conflict::Moved && overlaps( func, borrows, loan.place, effect.place );
     }
 
     if( effect.conflict == Loan_conflict::Replaced )
@@ -362,10 +362,11 @@ std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types
     return addressing;
 }
 
-std::vector<Loan_error>
-check_loans( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing )
+std::vector<Loan_error> check_loans(
+    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+)
 {
-    const std::vector<Borrow> borrows = borrows_of( func, addressing );
+    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals );
     const std::vector<Live>   live    = live_in( func );
 
     std::vector<Local_id> holders;
@@ -467,7 +468,7 @@ struct Loaned : Compiled
 
     std::vector<Loan_error> errors() const
     {
-        return check_loans( functions[tested], owning, addressing );
+        return check_loans( functions[tested], owning, addressing, literals );
     }
 
     std::size_t       tested = 0;
@@ -848,6 +849,19 @@ TEST_CASE( "borrow_check_freezes_what_a_walk_through_a_call_borrows", "[check][b
     REQUIRE( p.name_of( errors[0].object ) == "r" );
 
     require_accepted( k_run, k_run_locals, "for( u8 b : r.text() ) { u8 c = b; } r.grow();" );
+}
+
+// §8: a bare owning parameter returned as `const ref` hands back the caller's argument.
+TEST_CASE( "borrow_check_holds_what_a_bare_owning_return_borrows", "[check][borrow][m9]" )
+{
+    const std::string owned = std::string( k_owned ) + "const ref B bare( B b ) { return b; }\n";
+
+    require_refused(
+        owned,
+        k_owned_locals,
+        Refused { "const ref B r = bare( b ); take( move b ); u64 n = r.n;", Loan_conflict::Moved, "move b", "r", "b" }
+    );
+    require_accepted( owned, k_owned_locals, "const ref B r = bare( b ); u64 n = r.n; take( move b );" );
 }
 
 // D73: a write through an element replaces what it owns, breaking a loan reached through it by a

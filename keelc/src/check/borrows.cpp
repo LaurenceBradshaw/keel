@@ -6,7 +6,7 @@
 namespace keel
 {
 
-std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& addressing )
+std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& addressing, const Literal_pool& literals )
 {
     std::vector<Borrow> borrows( func.locals.size() );
 
@@ -22,14 +22,21 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         const Place&  source = value.a.place;
 
         borrow.assignments++;
-        borrow.of      = Local_id {};
-        borrow.bound   = false;
-        borrow.through = nullptr;
-        borrow.via     = Local_id {};
+        borrow.of       = Local_id {};
+        borrow.bound    = false;
+        borrow.through  = nullptr;
+        borrow.via      = Local_id {};
+        borrow.constant = std::nullopt;
 
         if( borrow.assignments != 1 || source.is_global() )
         {
             continue;
+        }
+
+        if( value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Constant && value.a.constant.is_valid() &&
+            literals.kind( value.a.constant ) == Literal_kind::Integer )
+        {
+            borrow.constant = literals.integer( value.a.constant );
         }
 
         const bool derefs =
@@ -87,10 +94,23 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         }
     }
 
+    // An address may be taken before the one assignment, and `&init` counts.
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Address_of ||
+            statement.value.a.place.is_global() || statement.value.a.place.num_projections != 0 )
+        {
+            continue;
+        }
+
+        Borrow& borrow  = borrows[statement.value.a.place.local.v];
+        borrow.constant = std::nullopt;
+    }
+
     return borrows;
 }
 
-bool overlaps( const Function& func, const Place& a, const Place& b )
+bool overlaps( const Function& func, const std::vector<Borrow>& borrows, const Place& a, const Place& b )
 {
     if( a.local != b.local )
     {
@@ -117,9 +137,37 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
         {
             return false;
         }
+
+        if( pa.kind == Projection_kind::Index && borrows[pa.index.v].constant && borrows[pb.index.v].constant &&
+            borrows[pa.index.v].constant != borrows[pb.index.v].constant )
+        {
+            return false;
+        }
     }
 
     return true;
+}
+
+bool may_differ( const Function& func, const std::vector<Borrow>& borrows, const Place& a, const Place& b )
+{
+    const u32 min_projections = std::min( a.num_projections, b.num_projections );
+    for( u32 k = 0; k < min_projections; ++k )
+    {
+        const Projection& pa = func.projections[a.first_projection + k];
+        const Projection& pb = func.projections[b.first_projection + k];
+
+        if( pa.kind != pb.kind )
+        {
+            continue;
+        }
+
+        if( pa.kind == Projection_kind::Index && pa.index != pb.index &&
+            ( !borrows[pa.index.v].constant || !borrows[pb.index.v].constant ) )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
@@ -148,7 +196,7 @@ u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, con
                 depth = std::max( depth, inner_depth + 1 );
             }
         }
-        else if( inner.of.is_valid() && overlaps( func, inner.place, whole ) )
+        else if( inner.of.is_valid() && overlaps( func, borrows, inner.place, whole ) )
         {
             depth = std::max( depth, 1u );
         }
@@ -166,7 +214,7 @@ bool borrows_from( const Function& func, const std::vector<Borrow>& borrows, con
 {
     if( loan.of.is_valid() )
     {
-        return overlaps( func, loan.place, place );
+        return overlaps( func, borrows, loan.place, place );
     }
 
     return loan.through != nullptr && reaches( func, borrows, loan, place );

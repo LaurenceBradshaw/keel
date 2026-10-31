@@ -3,6 +3,7 @@
 
 #pragma once
 #include <vector>
+#include "common/literal_pool.h"
 #include "ir/kir.h"
 #include "sema/type.h"
 #include "sema/type_checker.h"
@@ -39,7 +40,8 @@ std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types
 
 // D54. Each holder is reported once, at its first conflict. `owning` and `addressing` are the two
 // functions above.
-std::vector<Loan_error>
-check_loans( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing );
+std::vector<Loan_error> check_loans(
+    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+);
 
 } // namespace keel

@@ -87,7 +87,7 @@ Front_end run_front_end(
 
     // Part of the front end, not of emission: --check is what an editor wants, and an editor wants
     // use-after-move underlined.
-    report_dataflow_errors( std::span( front.functions ).subspan( given ), ast, sm, interner, front.types, diags );
+    report_dataflow_errors( std::span( front.functions ).subspan( given ), ast, sm, interner, literals, front.types, diags );
 
     if( build.keep_checked && !diags.has_errors() )
     {

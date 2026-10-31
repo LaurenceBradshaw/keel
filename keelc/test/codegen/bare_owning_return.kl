@@ -1,0 +1,17 @@
+// §8: a bare owning parameter is a borrow of the caller's argument, so it may be returned as a
+// `const ref` result, which borrows that argument in turn.
+import kl::string;
+
+const ref kl::string bare( kl::string s )
+{
+    return s;
+}
+
+i32 main()
+{
+    kl::string           a = kl::string::from( "abc" );
+    const ref kl::string r = bare( a );
+    assert( r.size() == 3 );
+    assert( a.size() == 3 );
+    return 0;
+}

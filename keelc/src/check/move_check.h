@@ -3,6 +3,7 @@
 
 #pragma once
 #include <vector>
+#include "common/literal_pool.h"
 #include "ir/kir.h"
 #include "sema/type.h"
 
@@ -26,7 +27,7 @@ struct Move_error
     u32           field = k_no_field; // into Function::fields, when a field is what was moved
     Span          use {};             // the read
     Span          moved {};           // the move that killed it
-    bool          maybe    = false;   // moved on some paths into here, not all
+    bool          maybe    = false;   // moved on some paths, not all; for a one-call error, indices that may differ
     Call_conflict conflict = Call_conflict::None;
     Span          other {}; // the call's other argument, for the one-call errors
 };
@@ -34,7 +35,8 @@ struct Move_error
 // PLAN §8. Flow-sensitive, per field, over the CFG. `owning` is check/borrow_check's
 // owning_locals: only an owner can be freed under an argument that aliases it. `addressing` is its
 // addressing_locals: only a call result that can hold an address may reach into an argument.
-std::vector<Move_error>
-check_moves( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing );
+std::vector<Move_error> check_moves(
+    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+);
 
 } // namespace keel

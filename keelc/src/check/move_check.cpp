@@ -262,7 +262,7 @@ void find_moves_into_borrowing_calls(
 
                 const Borrow& borrow = borrows[borrowed.place.local.v];
 
-                if( ( borrow.of == moved.place.local && overlaps( func, borrow.place, moved.place ) ) ||
+                if( ( borrow.of == moved.place.local && overlaps( func, borrows, borrow.place, moved.place ) ) ||
                     ( borrow.through != nullptr && reaches( func, borrows, borrow, moved.place ) ) )
                 {
                     errors.push_back( Move_error {
@@ -322,23 +322,31 @@ void find_aliased_arguments(
                 }
 
                 // Only an owner can be freed under the other name, so `v.grow( v.x )` is accepted.
-                if( i < j && a->of.is_valid() && b->of.is_valid() && overlaps( func, a->place, b->place ) &&
+                if( i < j && a->of.is_valid() && b->of.is_valid() && overlaps( func, borrows, a->place, b->place ) &&
                     owning[arguments[i].place.local.v] && owning[arguments[j].place.local.v] &&
                     ( a->purpose != Address_purpose::Read || b->purpose != Address_purpose::Read ) &&
                     !( a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise ) )
                 {
-                    errors.push_back(
-                        Move_error { .local = b->of, .use = b->at, .conflict = Call_conflict::Aliased, .other = a->at }
-                    );
+                    errors.push_back( Move_error {
+                        .local    = b->of,
+                        .use      = b->at,
+                        .maybe    = may_differ( func, borrows, a->place, b->place ),
+                        .conflict = Call_conflict::Aliased,
+                        .other    = a->at
+                    } );
                 }
 
                 // Reported at the later of the two.
                 if( i < j && a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise &&
-                    a->of.is_valid() && b->of.is_valid() && overlaps( func, a->place, b->place ) )
+                    a->of.is_valid() && b->of.is_valid() && overlaps( func, borrows, a->place, b->place ) )
                 {
-                    errors.push_back(
-                        Move_error { .local = b->of, .use = b->at, .conflict = Call_conflict::Out_twice, .other = a->at }
-                    );
+                    errors.push_back( Move_error {
+                        .local    = b->of,
+                        .use      = b->at,
+                        .maybe    = may_differ( func, borrows, a->place, b->place ),
+                        .conflict = Call_conflict::Out_twice,
+                        .other    = a->at
+                    } );
                 }
 
                 // Only `a` can be the element, so a pair is reported once.
@@ -375,8 +383,9 @@ Flow entry_flow( const Function& func, const Slot_map& slots )
 
 } // namespace
 
-std::vector<Move_error>
-check_moves( const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing )
+std::vector<Move_error> check_moves(
+    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+)
 {
     const Slot_map    slots( func );
     std::vector<Flow> in( func.blocks.size(), bottom( slots ) );
@@ -406,7 +415,7 @@ check_moves( const Function& func, const std::vector<bool>& owning, const std::v
         }
     }
 
-    const std::vector<Borrow> borrows = borrows_of( func, addressing );
+    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals );
 
     // A second walk, each block once, so a block on a back edge reports once.
     std::vector<Move_error> errors;
@@ -452,7 +461,7 @@ struct Checked : Compiled
     // The function under test is the last one lowered, `main`.
     std::vector<Move_error> errors() const
     {
-        return check_moves( functions.back(), owning.back(), addressing.back() );
+        return check_moves( functions.back(), owning.back(), addressing.back(), literals );
     }
 
     std::vector<std::vector<bool>> owning;     // per function
@@ -936,6 +945,70 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
     }
 }
 
+// D54: elements at distinct constant indices are distinct places; variable indices may be one.
+TEST_CASE( "move_check_tells_constant_indices_apart", "[check][move][m9]" )
+{
+    constexpr std::string_view k_array = "class V { public i32 x; V() { x = 0; } ~V() { } };\n"
+                                         "void both( ref V a, ref V b ) { }\n"
+                                         "void outs( out V a, out V b ) { a = V(); b = V(); }\n";
+
+    const auto checked = [&]( std::string_view call )
+    {
+        return Checked(
+            std::string( k_array ) + "i32 main() { V[2] a = [ V(), .. ]; u64 i = 0; u64 j = 1; " + std::string( call ) +
+            " return 0; }"
+        );
+    };
+
+    // `~V[2]` is lowered after `main`, so every function is checked.
+    const auto errors_of = []( const Checked& p )
+    {
+        std::vector<Move_error> errors;
+        for( std::size_t f = 0; f < p.functions.size(); ++f )
+        {
+            const std::vector<Move_error> found = check_moves( p.functions[f], p.owning[f], p.addressing[f], p.literals );
+            errors.insert( errors.end(), found.begin(), found.end() );
+        }
+        return errors;
+    };
+
+    struct Refused
+    {
+        const char*   call;
+        Call_conflict conflict;
+        bool          maybe;
+    };
+
+    for( const Refused& refused : {
+             Refused { "both( ref a[0], ref a[0] );", Call_conflict::Aliased, false },
+             Refused { "both( ref a[i], ref a[j] );", Call_conflict::Aliased, true },
+             Refused { "both( ref a[i], ref a[0] );", Call_conflict::Aliased, true },
+             Refused { "outs( out a[i], out a[j] );", Call_conflict::Out_twice, true },
+             Refused { "outs( out a[1], out a[1] );", Call_conflict::Out_twice, false },
+         } )
+    {
+        const Checked p = checked( refused.call );
+
+        INFO( refused.call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = errors_of( p );
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].conflict == refused.conflict );
+        REQUIRE( errors[0].maybe == refused.maybe );
+    }
+
+    for( const char* call : { "both( ref a[0], ref a[1] );", "outs( out a[0], out a[1] );" } )
+    {
+        const Checked p = checked( call );
+
+        INFO( call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( errors_of( p ).empty() );
+    }
+}
+
 TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
 {
     const Checked p(
@@ -945,7 +1018,7 @@ TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
-    REQUIRE( check_moves( p.functions[1], p.owning[1], p.addressing[1] ).size() == 1 );
+    REQUIRE( check_moves( p.functions[1], p.owning[1], p.addressing[1], p.literals ).size() == 1 );
 }
 
 // A borrow reads the value, so one after a move is a use; only a constructor or an `out` argument

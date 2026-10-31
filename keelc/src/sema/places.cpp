@@ -1247,6 +1247,24 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
         REQUIRE( p.errors() == 1 );
     }
 
+    // A borrow, so it is returned as a `const ref` result, and refused only as a `ref` one.
+    SECTION( "it may be returned by `const ref`" )
+    {
+        const Typed p( std::string( owning ) + "const ref B bare( B b ) { return b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and by `ref` with one error" )
+    {
+        const Typed p( std::string( owning ) + "ref B mut_bare( B b ) { return b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `ref` result must be a place this function could change" ) != std::string::npos );
+    }
+
     // A local owns what it holds, so none of this touches it. Without this case the rule could be
     // refusing every write to an owning type and the section above would not notice.
     SECTION( "and a local of the same type is unaffected" )

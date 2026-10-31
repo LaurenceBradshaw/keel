@@ -1,0 +1,19 @@
+error: `inner` has ended, so `p` points at nothing
+  --> sema/errors_dying_local_address.kl:10:5
+   |
+10 |     return *p; // error: has ended
+   |     ^^^^^^^^^^ declare `inner` where `p` is
+
+error: `inner` has ended, so `p` points at nothing
+  --> sema/errors_dying_local_address.kl:24:5
+   |
+24 |     return *p; // error: has ended
+   |     ^^^^^^^^^^ declare `inner` where `p` is
+
+error: `inner` has ended, so `p` points at nothing
+  --> sema/errors_dying_local_address.kl:35:5
+   |
+35 |     return *p; // error: has ended
+   |     ^^^^^^^^^^ declare `inner` where `p` is
+
+3 errors generated
