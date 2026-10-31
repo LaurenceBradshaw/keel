@@ -164,7 +164,7 @@ int32_t kl__main__( void )
     kl_t9 = kl_t7 + kl_p_2.kl_y;
 #line 49 "codegen/const_bindings.kl"
     kl_total_4 = kl_t9;
-    kl_t10 = __builtin_add_overflow( kl_total_4, kl__scale__G, &( int32_t ) { 0 } );
+    kl_t10 = __builtin_add_overflow( kl_total_4, 10, &( int32_t ) { 0 } );
 #line 50 "codegen/const_bindings.kl"
     if ( kl_t10 ) goto bb5; else goto bb6;
     bb5:
@@ -172,7 +172,7 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/const_bindings.kl", 50, "arithmetic overflow: total + scale" );
     bb6:
 #line 50 "codegen/const_bindings.kl"
-    kl_t11 = kl_total_4 + kl__scale__G;
+    kl_t11 = kl_total_4 + 10;
 #line 50 "codegen/const_bindings.kl"
     kl_total_4 = kl_t11;
     kl_t12 = kl__through_a_const_pointer__3i32( 6 );

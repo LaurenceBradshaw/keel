@@ -6021,7 +6021,7 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_fill__SQ2kl4file( 
 #line 536 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     if ( kl_t12 ) goto bb6; else goto bb7;
     bb6:
-    kl_t13 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_2kl2os_FILE_BUFFER__G, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 538, "out of memory: alloc<u8>( FILE_BUFFER )" );
+    kl_t13 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 538, "out of memory: alloc<u8>( FILE_BUFFER )" );
 #line 538 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     ( *kl_this_1 ).kl_buffer_ = kl_t13;
 #line 536 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -6030,7 +6030,7 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_fill__SQ2kl4file( 
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t14 = ( uint64_t ) 0;
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t15 = kl_t14 <= kl_2kl2os_FILE_BUFFER__G;
+    kl_t15 = kl_t14 <= 65536;
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     if ( kl_t15 ) goto bb9; else goto bb8;
     bb8:
@@ -6040,7 +6040,7 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_fill__SQ2kl4file( 
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t16 = ( *kl_this_1 ).kl_buffer_ + kl_t14;
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t17 = kl_2kl2os_FILE_BUFFER__G - kl_t14;
+    kl_t17 = 65536 - kl_t14;
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t18 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t16, kl_t17 };
 #line 541 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -7085,7 +7085,7 @@ struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE kl_2kl2os_read_output_
 #line 814 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_2kl6string_string__RQ2kl6string__ctor( kl_t10 );
 #line 817 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t12 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_2kl2os_FILE_BUFFER__G, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 817, "out of memory: alloc<u8>( FILE_BUFFER )" );
+    kl_t12 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 817, "out of memory: alloc<u8>( FILE_BUFFER )" );
 #line 817 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_buffer_8 = kl_t12;
     goto bb3;
@@ -7093,7 +7093,7 @@ struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE kl_2kl2os_read_output_
     kl_count_13 = 0;
     kl_t15 = ( uint64_t ) 0;
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t16 = kl_t15 <= kl_2kl2os_FILE_BUFFER__G;
+    kl_t16 = kl_t15 <= 65536;
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     if ( kl_t16 ) goto bb6; else goto bb5;
     bb4:
@@ -7134,7 +7134,7 @@ struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE kl_2kl2os_read_output_
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t17 = kl_buffer_8 + kl_t15;
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t18 = kl_2kl2os_FILE_BUFFER__G - kl_t15;
+    kl_t18 = 65536 - kl_t15;
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t19 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t17, kl_t18 };
 #line 821 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -7414,7 +7414,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_program_path__( v
 #line 963 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t46 = false;
 #line 963 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_size_1 = kl_2kl2os_PATH_BUFFER__G;
+    kl_size_1 = 4096;
     kl_bytes_2 = NULL;
     kl_status_3 = 0;
 #line 968 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -7643,7 +7643,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_current_directory
 #line 1001 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_t46 = false;
 #line 1001 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_size_1 = kl_2kl2os_PATH_BUFFER__G;
+    kl_size_1 = 4096;
     kl_bytes_2 = NULL;
     kl_status_3 = 0;
 #line 1006 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"

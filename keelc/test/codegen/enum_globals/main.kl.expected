@@ -505,7 +505,6 @@ int32_t kl__LAST__G = 2;
 int32_t kl__ordinal__G = 2;
 int32_t kl__copied__G = 1;
 extern int32_t kl_7palette_chosen__G;
-extern int32_t kl_7palette_LIGHTEST__G;
 
 int32_t kl__main__( void );
 void kl_1t7console_println__3i64( int64_t );
@@ -533,7 +532,7 @@ int32_t kl__main__( void )
     kl_t2 = ( int64_t ) kl_t1;
 #line 15 "codegen/enum_globals/main.kl"
     kl_1t7console_println__3i64( kl_t2 );
-    kl_t4 = ( int32_t ) kl__LAST__G;
+    kl_t4 = ( int32_t ) 2;
 #line 16 "codegen/enum_globals/main.kl"
     kl_t5 = ( int64_t ) kl_t4;
 #line 16 "codegen/enum_globals/main.kl"
@@ -546,7 +545,7 @@ int32_t kl__main__( void )
     kl_t10 = ( int64_t ) kl_t9;
 #line 18 "codegen/enum_globals/main.kl"
     kl_1t7console_println__3i64( kl_t10 );
-    kl_t12 = ( int32_t ) kl_7palette_LIGHTEST__G;
+    kl_t12 = ( int32_t ) 0;
 #line 19 "codegen/enum_globals/main.kl"
     kl_t13 = ( int64_t ) kl_t12;
 #line 19 "codegen/enum_globals/main.kl"

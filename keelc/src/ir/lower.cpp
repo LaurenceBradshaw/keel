@@ -4,6 +4,7 @@
 #include "ir/lower.h"
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -69,6 +70,7 @@ private:
     Requirement_target requirement_target( Node_id requirement, Type_id held, Type_id interface ) const;
 
     Place   place_for( Node_id declaration, Type_id owner = {} );
+    Operand read_name( Node_id id, Node_id decl );
     Type_id static_owner( Node_id named, Node_id decl );
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
@@ -575,6 +577,40 @@ Place Lowering::place_for( Node_id declaration, Type_id owner )
     // map by the time any name can refer to it, because use-before-declaration is a resolver error.
     assert( ast_.kind( declaration ) == Node_kind::Var_decl && "a name resolves to a local or a global" );
     return builder_.global( declaration, owner );
+}
+
+// A `const` number, `bool` or enum reads as its value, which sema recorded, so the optimiser folds through it.
+Operand Lowering::read_name( Node_id id, Node_id decl )
+{
+    const Type_id                       type = type_of( id );
+    const std::optional<Constant_value> value =
+        locals_.contains( decl.v ) || ast_.kind( decl ) != Node_kind::Var_decl || !ast_.is_const_binding( decl )
+            ? std::nullopt
+            : types_.constant_of( decl );
+    const bool scalar   = types_.table().is_builtin( type ) || types_.table().is_enum( type );
+    const bool is_float = types_.table().is_float( type );
+
+    if( !value || !scalar || value->kind != ( is_float ? Constant_value::Kind::Float : Constant_value::Kind::Integer ) )
+    {
+        return copy( place_for( decl, static_owner( id, decl ) ), type );
+    }
+
+    const bool       negative = is_float ? std::signbit( value->floating ) : value->negative;
+    const Literal_id magnitude =
+        is_float ? literal_pool_.add_float( std::fabs( value->floating ) ) : literal_pool_.add_integer( value->magnitude );
+
+    if( !negative )
+    {
+        return constant( magnitude, type );
+    }
+
+    // An operand has no negative form.
+    return copy(
+        builder_.place(
+            builder_.into_temp( unary( Token_kind::Minus, constant( magnitude, type ), type ), type, ast_.span( id ) )
+        ),
+        type
+    );
 }
 
 Type_id Lowering::static_owner( Node_id named, Node_id decl )
@@ -2703,8 +2739,7 @@ Operand Lowering::lower_expression( Node_id id )
     {
     case Node_kind::Name_expr:
     {
-        const Node_id decl = resolution_.declaration_of( id );
-        return copy( place_for( decl, static_owner( id, decl ) ), type_of( id ) );
+        return read_name( id, resolution_.declaration_of( id ) );
     }
     case Node_kind::Int_literal:
     case Node_kind::Char_literal:
@@ -2856,7 +2891,7 @@ Operand Lowering::lower_expression( Node_id id )
         // `kl::count`: a global named through its package or a static field, the only paths the resolver binds.
         if( const Node_id decl = resolution_.declaration_of( id ); decl.is_valid() )
         {
-            return copy( place_for( decl, static_owner( id, decl ) ), type_of( id ) );
+            return read_name( id, decl );
         }
 
         // D7: a bare path to a variant of a payload enum builds the struct. The checker refused one that

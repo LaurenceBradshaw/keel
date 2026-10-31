@@ -519,7 +519,7 @@ int32_t kl__pick__3i32( int32_t kl_v_1 )
     bool kl_t2;
     bool kl_t3;
 #line 24 "codegen/named_constants_fold.kl"
-    kl_t2 = kl_v_1 == kl__N__G;
+    kl_t2 = kl_v_1 == 4;
 #line 24 "codegen/named_constants_fold.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
@@ -537,7 +537,7 @@ int32_t kl__pick__3i32( int32_t kl_v_1 )
     return kl_t0;
     bb4:
 #line 26 "codegen/named_constants_fold.kl"
-    kl_t3 = kl_v_1 == kl__M__G;
+    kl_t3 = kl_v_1 == 8;
 #line 26 "codegen/named_constants_fold.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
 #line 31 "codegen/named_constants_fold.kl"
@@ -581,7 +581,7 @@ int32_t kl__main__( void )
     kl_t5 = 2;
 #line 36 "codegen/named_constants_fold.kl"
     kl_arr_1.e[kl_t5] = 7;
-    kl_t6 = ( int64_t ) kl__M__G;
+    kl_t6 = ( int64_t ) 8;
 #line 37 "codegen/named_constants_fold.kl"
     kl_1t7console_println__3i64( kl_t6 );
     kl_1t7console_println__3f64( kl__quarter__G );

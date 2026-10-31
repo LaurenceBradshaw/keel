@@ -1,0 +1,93 @@
+// A read of a `const` lowers to its value, in a release build, so what reads it folds: a number, a
+// `bool` and a static const field. A negative one is a temporary, and an enum's comparison is not
+// yet folded, but neither reads its global. A mutable global keeps its read. Each check returns its
+// own code.
+
+enum level
+{
+    low,
+    high
+};
+
+const i32   N    = 4;
+const i32   LOW  = -3;
+const f64   HALF = 0.5;
+const f64   DROP = -0.25;
+const bool  ON   = true;
+const level TOP  = level::high;
+i32         plain = 3;
+
+struct C
+{
+    i32              n;
+    static const i32 LIMIT = 3;
+};
+
+// `2 * N + C::LIMIT` is `11`.
+i32 scaled( i32 x )
+{
+    return x * N + C::LIMIT;
+}
+
+i32 lowered( i32 x )
+{
+    return x + LOW;
+}
+
+f64 halved( f64 x )
+{
+    return x * HALF + DROP;
+}
+
+// `ON` is `true`, so the other arm is gone.
+i32 switched()
+{
+    if( ON )
+    {
+        return 1;
+    }
+    return 2;
+}
+
+i32 topped()
+{
+    switch( TOP )
+    {
+    case level::low:
+        return 1;
+    case level::high:
+        return 2;
+    }
+}
+
+// `plain` is still read.
+i32 kept( i32 x )
+{
+    return x + plain;
+}
+
+i32 main()
+{
+    if( scaled( 2 ) != 11 )
+    {
+        return 1;
+    }
+    if( lowered( 5 ) != 2 )
+    {
+        return 2;
+    }
+    if( halved( 3.0 ) != 1.25 )
+    {
+        return 3;
+    }
+    if( switched() != 1 || topped() != 2 )
+    {
+        return 4;
+    }
+    if( kept( 1 ) != 4 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

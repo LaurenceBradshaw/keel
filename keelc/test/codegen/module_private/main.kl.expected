@@ -182,7 +182,7 @@ int32_t kl_6helper_total__( void )
 #line 78 "codegen/module_private/helper.kl"
     kl_t2 = kl_6helper_add__7pair_of( kl_t1 );
 #line 78 "codegen/module_private/helper.kl"
-    kl_t3 = __builtin_add_overflow( kl_6helper_BASE__G, kl_t2, &( int32_t ) { 0 } );
+    kl_t3 = __builtin_add_overflow( 40, kl_t2, &( int32_t ) { 0 } );
 #line 78 "codegen/module_private/helper.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -190,7 +190,7 @@ int32_t kl_6helper_total__( void )
     kl_rt_panic( "codegen/module_private/helper.kl", 78, "arithmetic overflow: BASE + add( pair_of { 1, 1 } )" );
     bb2:
 #line 78 "codegen/module_private/helper.kl"
-    kl_t4 = kl_6helper_BASE__G + kl_t2;
+    kl_t4 = 40 + kl_t2;
 #line 78 "codegen/module_private/helper.kl"
     kl_t0 = kl_t4;
 #line 78 "codegen/module_private/helper.kl"
@@ -264,8 +264,6 @@ int32_t kl_6helper_measure__( void )
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-extern int32_t kl_6helper_BASE__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -406,32 +404,23 @@ int32_t kl__main__( void )
 int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-    bool kl_t2;
-    int32_t kl_t3;
-    bool kl_t4;
-    int32_t kl_t5;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
 #line 103 "codegen/module_private/helper.kl"
-    kl_t2 = __builtin_sub_overflow( kl_6helper_BASE__G, kl_6helper_BASE__G, &( int32_t ) { 0 } );
+    kl_t2 = 40 - 40;
 #line 103 "codegen/module_private/helper.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    kl_t3 = __builtin_add_overflow( kl_v_1, kl_t2, &( int32_t ) { 0 } );
+#line 103 "codegen/module_private/helper.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 103 "codegen/module_private/helper.kl"
-    kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: BASE - BASE" );
+    kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: v + cast<T>( BASE - BASE )" );
     bb2:
 #line 103 "codegen/module_private/helper.kl"
-    kl_t3 = kl_6helper_BASE__G - kl_6helper_BASE__G;
+    kl_t4 = kl_v_1 + kl_t2;
 #line 103 "codegen/module_private/helper.kl"
-    kl_t4 = __builtin_add_overflow( kl_v_1, kl_t3, &( int32_t ) { 0 } );
-#line 103 "codegen/module_private/helper.kl"
-    if ( kl_t4 ) goto bb3; else goto bb4;
-    bb3:
-#line 103 "codegen/module_private/helper.kl"
-    kl_rt_panic( "codegen/module_private/helper.kl", 103, "arithmetic overflow: v + cast<T>( BASE - BASE )" );
-    bb4:
-#line 103 "codegen/module_private/helper.kl"
-    kl_t5 = kl_v_1 + kl_t3;
-#line 103 "codegen/module_private/helper.kl"
-    kl_t0 = kl_t5;
+    kl_t0 = kl_t4;
 #line 103 "codegen/module_private/helper.kl"
     return kl_t0;
 }

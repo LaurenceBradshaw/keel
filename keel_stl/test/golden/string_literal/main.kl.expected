@@ -3858,7 +3858,7 @@ void kl_2kl12hash_control_hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ctor
     bb3:
     kl_t12 = ( *kl_this_1 ).kl_groups_ + kl_g_9;
 #line 55 "../../src/hash_control.kl"
-    ( *kl_t12 ) = kl_2kl12hash_control_EMPTY_SLOTS_MASK__G;
+    ( *kl_t12 ) = 18446744073709551615ull;
 #line 53 "../../src/hash_control.kl"
     goto bb5;
     bb4:
@@ -4698,7 +4698,7 @@ void kl_2kl12hash_control_clear__SQ2kl12hash_control( struct kl_2kl12hash_contro
 #line 334 "../../src/hash_control.kl"
     kl_t5 = ( *kl_this_1 ).kl_groups_ + kl_g_2;
 #line 334 "../../src/hash_control.kl"
-    ( *kl_t5 ) = kl_2kl12hash_control_EMPTY_SLOTS_MASK__G;
+    ( *kl_t5 ) = 18446744073709551615ull;
 #line 330 "../../src/hash_control.kl"
     goto bb4;
     bb3:
@@ -4738,13 +4738,13 @@ uint64_t kl_2kl12hash_control_match_tags__SQ2kl12hash_control_3u64_3u64( uint64_
     kl_t4 = kl_word_1 ^ kl_tags_2;
 #line 355 "../../src/hash_control.kl"
     kl_x_3 = kl_t4;
-    kl_t5 = kl_x_3 - kl_2kl12hash_control_BYTE_ONES__G;
+    kl_t5 = kl_x_3 - 72340172838076673;
 #line 356 "../../src/hash_control.kl"
     kl_t6 = ~kl_x_3;
 #line 356 "../../src/hash_control.kl"
     kl_t7 = kl_t5 & kl_t6;
 #line 356 "../../src/hash_control.kl"
-    kl_t8 = kl_t7 & kl_2kl12hash_control_BYTE_MSB_MASK__G;
+    kl_t8 = kl_t7 & 9259542123273814144ull;
 #line 356 "../../src/hash_control.kl"
     kl_t0 = kl_t8;
 #line 356 "../../src/hash_control.kl"
@@ -4763,7 +4763,7 @@ uint64_t kl_2kl12hash_control_match_empty__SQ2kl12hash_control_3u64( uint64_t kl
 #line 364 "../../src/hash_control.kl"
     kl_t3 = kl_word_1 & kl_t2;
 #line 364 "../../src/hash_control.kl"
-    kl_t4 = kl_t3 & kl_2kl12hash_control_BYTE_MSB_MASK__G;
+    kl_t4 = kl_t3 & 9259542123273814144ull;
 #line 364 "../../src/hash_control.kl"
     kl_t0 = kl_t4;
 #line 364 "../../src/hash_control.kl"
@@ -4776,7 +4776,7 @@ uint64_t kl_2kl12hash_control_match_free__SQ2kl12hash_control_3u64( uint64_t kl_
     uint64_t kl_t0;
     uint64_t kl_t2;
 #line 370 "../../src/hash_control.kl"
-    kl_t2 = kl_word_1 & kl_2kl12hash_control_BYTE_MSB_MASK__G;
+    kl_t2 = kl_word_1 & 9259542123273814144ull;
 #line 370 "../../src/hash_control.kl"
     kl_t0 = kl_t2;
 #line 370 "../../src/hash_control.kl"
@@ -4814,9 +4814,9 @@ uint64_t kl_2kl12hash_control_lowest__SQ2kl12hash_control_3u64( uint64_t kl_matc
     kl_t7 = kl_t5 - 1;
 #line 379 "../../src/hash_control.kl"
     kl_below_2 = kl_t7;
-    kl_t8 = kl_below_2 & kl_2kl12hash_control_BYTE_ONES__G;
+    kl_t8 = kl_below_2 & 72340172838076673;
 #line 380 "../../src/hash_control.kl"
-    kl_t9 = kl_t8 * kl_2kl12hash_control_BYTE_ONES__G;
+    kl_t9 = kl_t8 * 72340172838076673;
 #line 380 "../../src/hash_control.kl"
     kl_t10 = kl_t9 >> 56;
 #line 380 "../../src/hash_control.kl"
@@ -4961,7 +4961,7 @@ void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( 
     ( *kl_this_1 ).kl_end_ = kl_slots_3;
     kl_t9 = kl_hash_4 >> 57;
 #line 428 "../../src/hash_control.kl"
-    kl_t10 = __builtin_mul_overflow( kl_t9, kl_2kl12hash_control_BYTE_ONES__G, &( uint64_t ) { 0 } );
+    kl_t10 = __builtin_mul_overflow( kl_t9, 72340172838076673, &( uint64_t ) { 0 } );
 #line 428 "../../src/hash_control.kl"
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
@@ -4969,7 +4969,7 @@ void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( 
     kl_rt_panic( "../../src/hash_control.kl", 428, "arithmetic overflow: hash >> 57 ) * BYTE_ONES" );
     bb4:
 #line 428 "../../src/hash_control.kl"
-    kl_t11 = kl_t9 * kl_2kl12hash_control_BYTE_ONES__G;
+    kl_t11 = kl_t9 * 72340172838076673;
 #line 428 "../../src/hash_control.kl"
     ( *kl_this_1 ).kl_tags_ = kl_t11;
 #line 432 "../../src/hash_control.kl"
