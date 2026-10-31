@@ -287,18 +287,24 @@ bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 }
 
 // D74: a walk's receiver freezes its container as an indirect loan does, except against what the
-// walk's own code does through it.
+// walk's own code does through it. The receiver may be reached through a call, as in `ll[0]`.
 bool walk_conflicts(
-    const Function& func, const std::vector<bool>& owning, const Borrow& loan, Local_id holder, const Effect& effect
+    const Function&            func,
+    const std::vector<Borrow>& borrows,
+    const std::vector<bool>&   owning,
+    const Borrow&              loan,
+    Local_id                   holder,
+    const Effect&              effect
 )
 {
     return effect.via != holder && ( effect.conflict == Loan_conflict::Moved || owning[effect.place.local.v] ) &&
-           overlaps( func, loan.place, effect.place );
+           borrows_from( func, borrows, loan, effect.place );
 }
 
-// D54: a payload's loan is broken by anything reaching it, since another variant destroys it; a
-// direct loan only by a move; an indirect one by anything reaching its object, if that object owns
-// something, since otherwise it has nothing to free or relocate. A replaced element breaks only an
+// D54: a payload's loan is broken by anything reaching it, or what the call it came through
+// borrowed, since another variant destroys it; a direct loan only by a move; an indirect one by
+// anything reaching its object, if that object owns something, since otherwise it has nothing to
+// free or relocate. A replaced element breaks only an
 // indirect loan reaching through more calls than the element, into what the element owns.
 bool conflicts(
     const Function&            func,
@@ -310,7 +316,7 @@ bool conflicts(
 {
     if( loan.purpose == Address_purpose::Payload )
     {
-        return overlaps( func, loan.place, effect.place );
+        return borrows_from( func, borrows, loan, effect.place );
     }
 
     if( loan.of.is_valid() )
@@ -408,7 +414,7 @@ check_loans( const Function& func, const std::vector<bool>& owning, const std::v
 
                     const bool walked = is_walked( func, holder );
 
-                    if( walked ? walk_conflicts( func, owning, loan, holder, effect )
+                    if( walked ? walk_conflicts( func, borrows, owning, loan, holder, effect )
                                : conflicts( func, borrows, owning, loan, effect ) )
                     {
                         errors.push_back( Loan_error {
@@ -735,6 +741,19 @@ TEST_CASE( "borrow_check_holds_what_a_payload_binding_borrows", "[check][borrow]
     {
         require_accepted( k_payload, k_payload_locals, body );
     }
+
+    // A head reached through a call borrows what the call borrowed.
+    {
+        const std::string list = std::string( k_payload ) +
+                                 "class L { H h; L() { h = H::Empty; } "
+                                 "public ref H operator[]( u64 i ) const { return h; } public void push( u64 x ) { } };\n";
+        const std::string locals = std::string( k_payload_locals ) + "L l = L(); ";
+
+        require_refused(
+            list, locals, Refused { arm( "l[0]", "l.push( 1 );" ).c_str(), Loan_conflict::Changed, "l", "b", "l" }
+        );
+        require_accepted( list, locals, arm( "l[0]", "" ) + " l.push( 1 );" );
+    }
 }
 
 // A block's method on an enum assigns `this` whole, which destroys the payload a binding holds,
@@ -808,6 +827,27 @@ TEST_CASE( "borrow_check_carries_a_loan_into_a_sub_run", "[check][borrow][textua
     {
         require_accepted( k_run, k_run_locals, body );
     }
+}
+
+// D74: a walk over what a call returned freezes what the call borrowed.
+TEST_CASE( "borrow_check_freezes_what_a_walk_through_a_call_borrows", "[check][borrow][walks]" )
+{
+    const Loaned p(
+        std::string( k_run ) + "i32 main() { " + std::string( k_run_locals ) +
+        "for( u8 b : r.text() ) { r.grow(); } return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::vector<Loan_error> errors = p.errors();
+
+    REQUIRE( errors.size() == 1 );
+    REQUIRE( errors[0].conflict == Loan_conflict::Changed );
+    REQUIRE( errors[0].walked );
+    REQUIRE( p.name_of( errors[0].object ) == "r" );
+
+    require_accepted( k_run, k_run_locals, "for( u8 b : r.text() ) { u8 c = b; } r.grow();" );
 }
 
 // D73: a write through an element replaces what it owns, breaking a loan reached through it by a

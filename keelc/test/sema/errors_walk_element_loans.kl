@@ -1,0 +1,42 @@
+// D74: a walk over an element freezes its container, reached through the call that returned the
+// element. One error per marked line.
+import kl::list;
+
+i32 indexed( ref kl::list<kl::list<i32>> ll )
+{
+    i32 sum = 0;
+    for( auto x : ll[0] )
+    {
+        ll.push( kl::list<i32>() ); // error: could change
+        sum += x;
+    }
+    return sum;
+}
+
+i32 first( ref kl::list<kl::list<i32>> ll )
+{
+    i32 sum = 0;
+    for( auto x : ll.first() )
+    {
+        ll.clear(); // error: could change
+        sum += x;
+    }
+    return sum;
+}
+
+i32 through_ref( ref kl::list<kl::list<i32>> ll )
+{
+    ref kl::list<i32> e = ll[0];
+    i32 sum = 0;
+    for( auto x : e )
+    {
+        ll.clear(); // error: could change
+        sum += x;
+    }
+    return sum;
+}
+
+i32 main()
+{
+    return 0;
+}

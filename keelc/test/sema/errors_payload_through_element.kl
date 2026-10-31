@@ -1,0 +1,72 @@
+// D54: a payload bound from an element is a loan on its container, reached through the call that
+// returned the element. Anything changing the container in the arm may destroy the payload. One
+// error per marked line.
+import kl::list;
+import kl::string;
+import kl::optional;
+
+u64 grown( ref kl::list<kl::optional<kl::string>> lo )
+{
+    switch( lo[0] )
+    {
+        case kl::optional::some( s ):
+            lo.push( kl::optional<kl::string>::none ); // error: could change
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+u64 cleared( ref kl::list<kl::optional<kl::string>> lo )
+{
+    switch( lo.first() )
+    {
+        case kl::optional::some( s ):
+            lo.clear(); // error: could change
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+u64 assigned( ref kl::list<kl::optional<kl::string>> lo )
+{
+    switch( lo[0] )
+    {
+        case kl::optional::some( s ):
+            lo = kl::list<kl::optional<kl::string>>(); // error: assigned
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+u64 replaced( ref kl::list<kl::optional<kl::string>> lo )
+{
+    switch( lo[0] )
+    {
+        case kl::optional::some( s ):
+            lo[0] = kl::optional<kl::string>::none; // error: replaced
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+u64 through_ref( ref kl::list<kl::optional<kl::string>> lo )
+{
+    ref kl::optional<kl::string> e = lo[0];
+    switch( e )
+    {
+        case kl::optional::some( s ):
+            lo.clear(); // error: could change
+            return s.size();
+        case kl::optional::none:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

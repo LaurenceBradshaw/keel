@@ -40,4 +40,7 @@ bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Bo
 // The most calls between a returned address and `whole`, or 0 when it does not reach it.
 u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole );
 
+// `loan` borrows from `place`, by its own place or through its call.
+bool borrows_from( const Function& func, const std::vector<Borrow>& borrows, const Borrow& loan, const Place& place );
+
 } // namespace keel

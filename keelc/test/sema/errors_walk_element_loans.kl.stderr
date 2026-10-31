@@ -1,0 +1,19 @@
+error: this could change `ll` while a loop walks it
+  --> sema/errors_walk_element_loans.kl:10:9
+   |
+10 |         ll.push( kl::list<i32>() ); // error: could change
+   |         ^^ the walk goes on reading it; the loop is at 8:5
+
+error: this could change `ll` while a loop walks it
+  --> sema/errors_walk_element_loans.kl:21:9
+   |
+21 |         ll.clear(); // error: could change
+   |         ^^ the walk goes on reading it; the loop is at 19:5
+
+error: this could change `ll` while a loop walks it
+  --> sema/errors_walk_element_loans.kl:33:9
+   |
+33 |         ll.clear(); // error: could change
+   |         ^^ the walk goes on reading it; the loop is at 31:5
+
+3 errors generated

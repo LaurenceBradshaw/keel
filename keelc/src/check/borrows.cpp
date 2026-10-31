@@ -162,4 +162,14 @@ bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Bo
     return reaches_depth( func, borrows, element, whole ) != 0;
 }
 
+bool borrows_from( const Function& func, const std::vector<Borrow>& borrows, const Borrow& loan, const Place& place )
+{
+    if( loan.of.is_valid() )
+    {
+        return overlaps( func, loan.place, place );
+    }
+
+    return loan.through != nullptr && reaches( func, borrows, loan, place );
+}
+
 } // namespace keel
