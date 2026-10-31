@@ -1233,19 +1233,9 @@ void Statements::visit_global( Node_id id )
     // Evaluated here rather than printed as an expression by the backend. The rule already says
     // this is a constant expression, so the value exists; computing it once is what lets a backend
     // emit a literal instead of re-deriving §6.4's conversions in its own spelling of the tree.
-    if( table_.is_float( type ) )
+    if( std::optional<Constant_value> value = constant_folder_.fold_value( init, type ) )
     {
-        if( const std::optional<f64> value = constant_folder_.fold_float( init ) )
-        {
-            constant_folder_.record_value( id, Constant_value { Constant_value::Kind::Float, 0, false, *value } );
-            return;
-        }
-    }
-    else if( const Folded value = constant_folder_.fold_integer( init ); value.constant && !value.overflowed )
-    {
-        constant_folder_.record_value(
-            id, Constant_value { Constant_value::Kind::Integer, value.value.magnitude, value.value.negative, 0.0 }
-        );
+        constant_folder_.record_value( id, std::move( *value ) );
         return;
     }
 

@@ -58,10 +58,10 @@ struct Spelling
     // say the pointer or C is told one thing and given another.
     std::string return_type( Node_id declaration ) const;
 
-    // A file-scope variable's whole definition. Its initialiser stays an expression rather than a
-    // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
-    // file scope to put the temporaries three-address form would need.
+    // A file-scope variable's whole definition, with the checker's folded value as its initialiser.
     std::string global_definition( Node_id declaration, Type_id owner = {}, bool weak = false ) const;
+    // A folded value as a C constant initialiser for `of`.
+    std::string constant( const Constant_value& value, Type_id of ) const;
     // Another part's global, which this one reads or writes.
     std::string global_declaration( Node_id declaration, Type_id owner = {} ) const;
 

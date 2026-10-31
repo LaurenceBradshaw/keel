@@ -1,0 +1,9 @@
+// A `const` array and a generic type's array static; a.kl reads both from words.klo.
+const i32[2][2] GRID = [ [ 1, 2 ], [ 3, .. ] ];
+
+class Tagged<T> where T : copyable
+{
+    public static str[2] labels = [ "tag", "label" ];
+
+    public T v;
+};

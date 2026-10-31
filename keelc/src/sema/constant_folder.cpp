@@ -3,6 +3,7 @@
 
 #include "sema/constant_folder.h"
 #include <fmt/format.h>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <vector>
@@ -121,7 +122,16 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
     case Node_kind::Bool_literal:
     case Node_kind::Char_literal:
     case Node_kind::Null_literal:
+    case Node_kind::String_literal:
         return true;
+
+    case Node_kind::Array_literal:
+    case Node_kind::Array_fill:
+    {
+        const std::span<const Node_id> elements = ast_.children( id );
+
+        return std::ranges::all_of( elements, [&]( Node_id element ) { return is_constant_expression( element ); } );
+    }
 
     case Node_kind::Unary_expr:
         // `&x` is an address and `*p` a load; neither is a value known here.
@@ -545,6 +555,66 @@ std::optional<std::string> Constant_folder::fold_text( Node_id id ) const
     std::optional<std::string> value = fold_text( ast_.initialiser( decl ) );
     folding_.erase( decl.v );
     return value;
+}
+
+std::optional<Constant_value> Constant_folder::fold_value( Node_id id, Type_id type ) const
+{
+    if( table_.is_array( type ) )
+    {
+        if( const Node_id decl = constant_named( id ); decl.is_valid() )
+        {
+            return value_of( decl );
+        }
+
+        if( !id.is_valid() || ( ast_.kind( id ) != Node_kind::Array_literal && ast_.kind( id ) != Node_kind::Array_fill ) )
+        {
+            return std::nullopt;
+        }
+
+        Constant_value value {
+            .kind = ast_.kind( id ) == Node_kind::Array_fill ? Constant_value::Kind::Fill : Constant_value::Kind::Array
+        };
+
+        for( const Node_id element : ast_.children( id ) )
+        {
+            std::optional<Constant_value> folded = fold_value( element, table_.get( type ).element );
+
+            if( !folded )
+            {
+                return std::nullopt;
+            }
+
+            value.elements.push_back( std::move( *folded ) );
+        }
+
+        return value;
+    }
+
+    // The only struct a global can hold.
+    if( table_.is_struct( type ) )
+    {
+        std::optional<std::string> text = fold_text( id );
+
+        return text ? std::optional<Constant_value>( { .kind = Constant_value::Kind::Text, .text = std::move( *text ) } )
+                    : std::nullopt;
+    }
+
+    if( table_.is_float( type ) )
+    {
+        const std::optional<f64> value = fold_float( id );
+
+        return value ? std::optional<Constant_value>( { .kind = Constant_value::Kind::Float, .floating = *value } )
+                     : std::nullopt;
+    }
+
+    const Folded value = fold_integer( id );
+
+    return value.constant && !value.overflowed ? std::optional<Constant_value>(
+                                                     { .kind      = Constant_value::Kind::Integer,
+                                                       .magnitude = value.value.magnitude,
+                                                       .negative  = value.value.negative }
+                                                 )
+                                               : std::nullopt;
 }
 
 std::optional<f64> Constant_folder::fold_float( Node_id id ) const

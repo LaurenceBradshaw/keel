@@ -79,6 +79,42 @@ void read_table( Byte_reader& in, Ref_reader& refs, Each&& each )
     }
 }
 
+// A constant and its elements, depth first.
+void write_constant( Byte_writer& out, const Constant_value& value )
+{
+    out.put_u8( u8( value.kind ) );
+    out.put_u64( value.magnitude );
+    out.put_u8( value.negative );
+    out.put_f64( value.floating );
+    out.put_string( value.text );
+    out.put_u32( narrow_cast<u32>( value.elements.size() ) );
+    for( const Constant_value& element : value.elements )
+    {
+        write_constant( out, element );
+    }
+}
+
+Constant_value read_constant( Byte_reader& in, Ref_reader& refs )
+{
+    Constant_value value;
+    const u8       kind = in.get_u8();
+    if( kind > u8( Constant_value::Kind::Fill ) )
+    {
+        refs.fail();
+    }
+    value.kind      = Constant_value::Kind( kind );
+    value.magnitude = in.get_u64();
+    value.negative  = in.get_u8() != 0;
+    value.floating  = in.get_f64();
+    value.text      = in.get_string();
+    const u32 count = in.get_u32();
+    for( u32 i = 0; i < count && !refs.failed() && !in.failed(); ++i )
+    {
+        value.elements.push_back( read_constant( in, refs ) );
+    }
+    return value;
+}
+
 } // namespace
 
 std::string write_state(
@@ -205,15 +241,7 @@ std::string write_state(
         results,
         refs,
         nodes_where( refs, [&]( Node_id id ) { return types.constant_of( id ).has_value(); } ),
-        [&]( Node_id id )
-        {
-            const Constant_value value = *types.constant_of( id );
-            results.put_u8( u8( value.kind ) );
-            results.put_u64( value.magnitude );
-            results.put_u8( value.negative );
-            results.put_f64( value.floating );
-            results.put_string( value.text );
-        }
+        [&]( Node_id id ) { write_constant( results, *types.constant_of( id ) ); }
     );
     write_table(
         results,
@@ -392,25 +420,7 @@ std::optional<Loaded_state> read_state(
     read_table( in, refs, [&]( Node_id id ) { loaded.bindings.emplace_back( id, refs.node() ); } );
     read_table( in, refs, [&]( Node_id id ) { loaded.overloads.emplace_back( id, refs.node() ); } );
     read_table( in, refs, [&]( Node_id id ) { loaded.types.emplace_back( id, refs.type() ); } );
-    read_table(
-        in,
-        refs,
-        [&]( Node_id id )
-        {
-            Constant_value value;
-            const u8       kind = in.get_u8();
-            if( kind > u8( Constant_value::Kind::Text ) )
-            {
-                refs.fail();
-            }
-            value.kind      = Constant_value::Kind( kind );
-            value.magnitude = in.get_u64();
-            value.negative  = in.get_u8() != 0;
-            value.floating  = in.get_f64();
-            value.text      = in.get_string();
-            loaded.constants.emplace_back( id, value );
-        }
-    );
+    read_table( in, refs, [&]( Node_id id ) { loaded.constants.emplace_back( id, read_constant( in, refs ) ); } );
     read_table( in, refs, [&]( Node_id id ) { loaded.callees.emplace_back( id, refs.node() ); } );
     read_table( in, refs, [&]( Node_id id ) { loaded.through.emplace_back( id, refs.type() ); } );
     read_table(

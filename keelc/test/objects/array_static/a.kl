@@ -1,0 +1,8 @@
+import words;
+
+i32[2][2] copied = GRID;
+
+u64 label_size()
+{
+    return Tagged<i32>::labels[1].size;
+}

@@ -1,0 +1,49 @@
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_array_globals.kl:22:24
+   |
+22 | i32[2]       called  = [ 1, seven() ];
+   |                        ^^^^^^^^^^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_array_globals.kl:23:24
+   |
+23 | i32[2]       named   = [ LIMIT, counter ];
+   |                        ^^^^^^^^^^^^^^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_array_globals.kl:24:24
+   |
+24 | P[1]         points  = [ P { .x = 1 } ];
+   |                        ^^^^^^^^^^^^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: a file-scope initialiser must be a constant expression
+  --> sema/errors_array_globals.kl:25:24
+   |
+25 | shape[1]     shapes  = [ shape::none ];
+   |                        ^^^^^^^^^^^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: `i32[3]` holds 3 values, but this lists 2
+  --> sema/errors_array_globals.kl:26:24
+   |
+26 | i32[3]       short   = [ 1, 2 ];
+   |                        ^^^^^^^^ a literal lists every element
+
+error: expected `i32`, but got `str`
+  --> sema/errors_array_globals.kl:27:29
+   |
+27 | i32[2]       mixed   = [ 1, "two" ];
+   |                             ^^^^^
+
+error: `300` does not fit in `u8`
+  --> sema/errors_array_globals.kl:28:26
+   |
+28 | u8[2]        big     = [ 300, .. ];
+   |                          ^^^
+
+error: `SELF`'s initialiser depends on `SELF` itself
+  --> sema/errors_array_globals.kl:29:24
+   |
+29 | const i32[2] SELF    = SELF;
+   |                        ^^^^ a `const` cannot be defined in terms of itself
+
+8 errors generated

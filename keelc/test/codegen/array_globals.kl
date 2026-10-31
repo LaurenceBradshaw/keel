@@ -1,0 +1,44 @@
+// Arrays of constants as globals, written as one C initialiser each: a fill as a range designator,
+// an element of any type a global can hold, a nested array, and a `const` array's name.
+import t::console;
+
+enum colour { red, green, blue };
+const i32 N = 7;
+const i32[3] TRIO = [ 1, 2, N ];
+i32[3] copied = TRIO;
+i32[4] fives = [ 5, .. ];
+u8[1000] zeros = [ 0, .. ];
+f64[2] halves = [ 0.5, -1.5 ];
+bool[2] flags = [ true, false ];
+colour[2] cs = [ colour::blue, colour::green ];
+str[2] names = [ "ada", "grace" ];
+i32[3][2] grid = [ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
+i32[2][2] rows = [ [ 9, .. ], [ 8, 7 ] ];
+i32*[2] ptrs = [ nullptr, .. ];
+
+class Table
+{
+    public static u16[3] widths = [ 8, 16, 32 ];
+
+    public i32 n;
+};
+
+i32 main()
+{
+    t::println( copied[2] );
+    t::println( fives[3] );
+    t::println( zeros[999] );
+    t::println( halves[1] );
+    t::println( flags[0] );
+    t::println( cs[0] == colour::blue );
+    t::println( names[1] );
+    t::println( grid[1][2] );
+    t::println( rows[0][1] );
+    t::println( rows[1][1] );
+    t::println( ptrs[1] == nullptr );
+    copied[0] = 40;
+    t::println( copied[0] );
+    t::println( TRIO[0] );
+    t::println( Table::widths[2] );
+    return 0;
+}

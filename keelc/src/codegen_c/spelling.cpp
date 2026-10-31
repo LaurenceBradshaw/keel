@@ -444,41 +444,66 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner, boo
         return fmt::format( "{}{} {};", weak_text, type( variable ), name );
     }
 
+    return fmt::format( "{}{} {} = {};", weak_text, type( variable ), name, constant( *value, variable ) );
+}
+
+std::string Spelling::constant( const Constant_value& value, Type_id of ) const
+{
     const Type_table& table = types.table();
 
-    std::string text;
+    if( value.kind == Constant_value::Kind::Array || value.kind == Constant_value::Kind::Fill )
+    {
+        const Type_id element = table.get( of ).element;
 
-    if( value->kind == Constant_value::Kind::Text )
+        // A fill's one element across every index, which C writes as a range designator.
+        if( value.kind == Constant_value::Kind::Fill )
+        {
+            return fmt::format(
+                "{{ .e = {{ [0 ... {}] = {} }} }}", table.get( of ).count - 1, constant( value.elements[0], element )
+            );
+        }
+
+        std::string text;
+
+        for( const Constant_value& part : value.elements )
+        {
+            text += fmt::format( "{}{}", text.empty() ? "" : ", ", constant( part, element ) );
+        }
+        return fmt::format( "{{ .e = {{ {} }} }}", text );
+    }
+
+    if( value.kind == Constant_value::Kind::Text )
     {
         // `str`'s fields by name: its bytes, cast as a literal's are, and their count.
-        for( const Node_id field : ast.contained_fields( table.get( variable ).declaration ) )
+        std::string text;
+
+        for( const Node_id field : ast.contained_fields( table.get( of ).declaration ) )
         {
             const std::string_view field_name = interner.text( ast.name( field ) );
             const std::string      part       = field_name == "data"
-                                                    ? fmt::format( "( {} ) {}", type( types.type_of( field ) ), c_string( value->text ) )
-                                                    : c_integer( value->text.size() );
+                                                    ? fmt::format( "( {} ) {}", type( types.type_of( field ) ), c_string( value.text ) )
+                                                    : c_integer( value.text.size() );
             text += fmt::format( "{}.{} = {}", text.empty() ? "{ " : ", ", this->field( field ), part );
         }
-        text += " }";
-    }
-    else if( value->kind == Constant_value::Kind::Float )
-    {
-        text = c_float( value->floating );
-    }
-    else if( table.is_pointer( variable ) || table.is_many_pointer( variable ) )
-    {
-        text = "NULL"; // the only pointer constant there is, and it folded to zero
-    }
-    else if( variable == table.builtin( Type_kind::Bool ) )
-    {
-        text = value->magnitude != 0 ? "true" : "false";
-    }
-    else
-    {
-        text = fmt::format( "{}{}", value->negative ? "-" : "", c_integer( value->magnitude ) );
+        return text + " }";
     }
 
-    return fmt::format( "{}{} {} = {};", weak_text, type( variable ), name, text );
+    if( value.kind == Constant_value::Kind::Float )
+    {
+        return c_float( value.floating );
+    }
+
+    if( table.is_pointer( of ) || table.is_many_pointer( of ) )
+    {
+        return "NULL"; // the only pointer constant there is, and it folded to zero
+    }
+
+    if( of == table.builtin( Type_kind::Bool ) )
+    {
+        return value.magnitude != 0 ? "true" : "false";
+    }
+
+    return fmt::format( "{}{}", value.negative ? "-" : "", c_integer( value.magnitude ) );
 }
 
 std::string Spelling::global_declaration( Node_id declaration, Type_id owner ) const

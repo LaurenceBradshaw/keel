@@ -1,0 +1,35 @@
+// What an array global's initialiser may not be: each element must be a constant a global could
+// hold on its own, and the literal must still list every element.
+struct P
+{
+    i32 x;
+};
+
+enum shape
+{
+    none,
+    circle( f64 radius )
+};
+
+i32 seven()
+{
+    return 7;
+}
+
+i32       counter = 0;
+const i32 LIMIT   = 3;
+
+i32[2]       called  = [ 1, seven() ];
+i32[2]       named   = [ LIMIT, counter ];
+P[1]         points  = [ P { .x = 1 } ];
+shape[1]     shapes  = [ shape::none ];
+i32[3]       short   = [ 1, 2 ];
+i32[2]       mixed   = [ 1, "two" ];
+u8[2]        big     = [ 300, .. ];
+const i32[2] SELF    = SELF;
+i32[2]       ok      = [ LIMIT, LIMIT * 2 ];
+
+i32 main()
+{
+    return ok[0];
+}

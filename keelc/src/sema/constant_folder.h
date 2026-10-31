@@ -73,6 +73,8 @@ public:
     std::optional<f64> fold_float( Node_id id ) const;
     // A string literal's bytes, or a `const str`'s.
     std::optional<std::string> fold_text( Node_id id ) const;
+    // What `id` gives a global of `type`; an array folds element by element.
+    std::optional<Constant_value> fold_value( Node_id id, Type_id type ) const;
 
     bool    check_constant( Node_id id, Type_id type );
     Type_id record_constant( Node_id id, Type_id type );
