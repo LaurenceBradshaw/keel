@@ -1490,3 +1490,7 @@ major), which waits for the lambda decision (§12).
   compiles larger programs.
 - **The golden runner has no UBSan mode.** `KEEL_VALGRIND=1` earns its place; UBSan catches a
   different class (the shift count in §12) and runs today only when someone sets `KEEL_CFLAGS`.
+- **KIR has no common-subexpression elimination.** A repeated pure computation with nothing
+  between that could change it is computed again: `l[0]` read twice, with only a write through an
+  `i32*` between, checks `0 >= (*_1).count_` and computes `data_ + 0` twice; `z / z != z / z`
+  divides twice. C's `-O2` removes both today. Wants its own pass, after `propagate_values`.

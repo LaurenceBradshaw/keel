@@ -1,0 +1,143 @@
+// D54's accepted loans, run together: a loan ending before the change on each path, a fresh loan
+// each round, an argument read before its container changes, disjoint fields, two `ref`s of one
+// local, a non-owning array's element across writes, and nested calls on one list. The output is
+// each value read, and KEEL_VALGRIND=1 sees a read of freed memory.
+import t::console;
+import kl::list;
+import kl::string;
+import kl::optional;
+
+bool flag( i32 n ) { return n < 2; }
+
+// The loan ends before the change on each path.
+i32 loan_ends_in_branch( ref kl::list<i32> l )
+{
+    ref i32 x = l[0];
+    if( flag( 0 ) ) { i32 v = x; l.push( 9 ); return v; }
+    l.push( 8 );
+    return 0;
+}
+
+// A fresh loan each round.
+void loan_each_round( ref kl::list<i32> l )
+{
+    i32 n = 0;
+    while( flag( n ) ) { ref i32 x = l[0]; x = x + 1; l.push( x ); n++; }
+}
+
+// The argument is read before push runs.
+void push_size( ref kl::list<i32> l ) { l.push( cast<i32>( l.size() ) ); l.push( l[0] ); }
+
+// Disjoint fields.
+struct Pair { i32 a; i32 b; };
+class Two { public kl::list<i32> a; public kl::list<i32> b; public Two() { a = kl::list<i32>(); b = kl::list<i32>(); } };
+void disjoint_fields( ref Two t2 )
+{
+    ref i32 x = t2.a[0];
+    t2.b.push( 5 );
+    x = x + t2.b[0];
+}
+
+// Two refs of one local, and a write while a ref is live.
+void two_refs()
+{
+    i32 n = 1;
+    ref i32 r1 = n;
+    ref i32 r2 = n;
+    r1 = 2;
+    n = 3;
+    t::println( r1 + r2 );
+}
+
+// A non-owning array element loan survives writes to the array.
+void array_no_owner()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    ref i32 x = a[0];
+    a[1] = 7;
+    a = [ 4, 5, 6 ];
+    t::println( x );
+}
+
+// Assigning a ref writes through it.
+void rebind()
+{
+    i32 a = 1;
+    i32 b = 2;
+    ref i32 r = a;
+    r = b;
+    b = 9;
+    t::println( a );
+}
+
+// A ref of a ref parameter's element, then the parameter read.
+i32 reborrow( ref kl::list<i32> l ) { ref i32 x = l[0]; ref i32 y = x; y = 4; return l[0] + x; }
+
+// A writable payload in place, then the head replaced after the switch.
+void payload_ref( ref kl::optional<kl::string> o )
+{
+    switch( o )
+    {
+        case kl::optional::some( s ): t::println( s.size() ); break;
+        case kl::optional::none: break;
+    }
+    o = kl::optional<kl::string>::none;
+}
+
+// An owner reassigned each round, its text borrowed and nothing live.
+void reassign_loop()
+{
+    kl::string s = kl::string::from( "a" );
+    i32 n = 0;
+    while( flag( n ) )
+    {
+        const ref u8[] t = s.as_text();
+        t::println( t.size );
+        s = kl::string::from( "b" );
+        n++;
+    }
+}
+
+// A writing walk reading another container.
+void walk_other( ref kl::list<i32> l, const ref kl::list<i32> m )
+{
+    for( ref i32 x : l ) { x = x + cast<i32>( m.size() ); }
+}
+
+// An element of one list in another's operator.
+void op_loan( ref kl::list<i32> l, ref kl::list<i32> m ) { l[0] = l[0] + m[0]; m.push( l[0] ); }
+
+// The argument runs before the call's change.
+void nested( ref kl::list<i32> l ) { l.push( l.pop() ); l.insert( 0, l.remove( 0 ) ); l.push( l[l.size() - 1] ); }
+
+i32 main()
+{
+    kl::list<i32> l = kl::list<i32>();
+    l.push( 1 );
+    kl::list<i32> m = kl::list<i32>();
+    m.push( 10 );
+    t::println( loan_ends_in_branch( ref l ) );
+    loan_each_round( ref l );
+    push_size( ref l );
+    Two t2 = Two();
+    t2.a.push( 1 );
+    disjoint_fields( ref t2 );
+    t::println( t2.a[0] );
+    two_refs();
+    array_no_owner();
+    rebind();
+    t::println( reborrow( ref l ) );
+    kl::optional<kl::string> o = kl::optional::some( kl::string::from( "abc" ) );
+    payload_ref( ref o );
+    reassign_loop();
+    walk_other( ref l, m );
+    op_loan( ref l, ref m );
+    for( auto x : l ) { t::println( x ); }
+    t::println( m[1] );
+    kl::list<i32> n = kl::list<i32>();
+    n.push( 1 );
+    n.push( 2 );
+    nested( ref n );
+    for( auto x : n ) { t::println( x ); }
+    return 0;
+}
