@@ -78,15 +78,15 @@ Live live_out( const Function& func, Block_id block, const std::vector<Live>& in
     Live out( func.locals.size(), false );
 
     std::vector<Block_id> next;
-    successors( func.blocks[block.v].terminator, next );
+    successors( func.blocks[block].terminator, next );
 
     for( std::size_t i = 0; i < next.size(); ++i )
     {
         const Block_id target = next[i];
 
-        for( std::size_t k = 0; k < func.locals.size(); ++k )
+        for( const Local_id k : func.locals.ids() )
         {
-            out[k] = out[k] || in[target.v][k];
+            out[k.v] = out[k.v] || in[target.v][k.v];
         }
     }
 
@@ -103,21 +103,21 @@ std::vector<Live> live_in( const Function& func )
     {
         changed = false;
 
-        for( u32 b = 0; b < narrow_cast<u32>( func.blocks.size() ); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
             const Block& block = func.blocks[b];
 
-            Live live = live_out( func, Block_id { b }, in );
+            Live live = live_out( func, b, in );
             step_back_terminator( block.terminator, live );
 
             for( u32 i = block.statement_count; i > 0; --i )
             {
-                step_back( func, func.statements[block.first_statement + i - 1], live );
+                step_back( func, func.statements_of( block )[i - 1], live );
             }
 
-            if( live != in[b] )
+            if( live != in[b.v] )
             {
-                in[b]   = std::move( live );
+                in[b.v] = std::move( live );
                 changed = true;
             }
         }
@@ -276,7 +276,7 @@ void effects_of(
         for( const Operand& argument : arguments )
         {
             if( argument.kind != Operand_kind::Copy || argument.place.is_global() || argument.place.num_projections != 0 ||
-                func.locals[argument.place.local.v].name.is_valid() )
+                func.locals[argument.place.local].name.is_valid() )
             {
                 continue;
             }
@@ -318,7 +318,7 @@ bool is_walked( const Function& func, Local_id local )
 
 bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 {
-    return ( func.locals[local.v].name.is_valid() || is_walked( func, local ) ) &&
+    return ( func.locals[local].name.is_valid() || is_walked( func, local ) ) &&
            ( borrow.assignments == 1 || !borrow.choices.empty() ) && borrow.bound &&
            ( borrow.of.is_valid() || borrow.through != nullptr || !borrow.choices.empty() ) &&
            borrow.purpose != Address_purpose::Initialise;
@@ -377,12 +377,12 @@ std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& ty
 {
     std::vector<bool> owning( func.locals.size(), false );
 
-    for( std::size_t l = 0; l < func.locals.size(); ++l )
+    for( const Local_id l : func.locals.ids() )
     {
         const Type&   type = types.table().get( func.locals[l].type );
         const Type_id of   = type.kind == Type_kind::Pointer ? type.element : func.locals[l].type;
 
-        owning[l] = instance_owns( ast, types.table(), of, types.recorded() );
+        owning[l.v] = instance_owns( ast, types.table(), of, types.recorded() );
     }
 
     return owning;
@@ -392,9 +392,9 @@ std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types
 {
     std::vector<bool> addressing( func.locals.size(), false );
 
-    for( std::size_t l = 0; l < func.locals.size(); ++l )
+    for( const Local_id l : func.locals.ids() )
     {
-        addressing[l] = instance_holds_address( ast, types.table(), func.locals[l].type, types.recorded() );
+        addressing[l.v] = instance_holds_address( ast, types.table(), func.locals[l].type, types.recorded() );
     }
 
     return addressing;
@@ -408,11 +408,11 @@ std::vector<Loan_error> check_loans(
     const std::vector<Live>   live    = live_in( func );
 
     std::vector<Local_id> holders;
-    for( u32 l = 0; l < narrow_cast<u32>( func.locals.size() ); ++l )
+    for( const Local_id l : func.locals.ids() )
     {
-        if( is_holder( func, borrows[l], Local_id { l } ) )
+        if( is_holder( func, borrows[l.v], l ) )
         {
-            holders.push_back( Local_id { l } );
+            holders.push_back( l );
         }
     }
 
@@ -421,10 +421,10 @@ std::vector<Loan_error> check_loans(
     std::vector<Effect>     effects;
 
     // Blocks in order, so a holder is reported at its first conflict.
-    for( u32 b = 0; b < narrow_cast<u32>( func.blocks.size() ); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Live         out   = live_out( func, Block_id { b }, live );
+        Live         out   = live_out( func, b, live );
 
         step_back_terminator( block.terminator, out );
 
@@ -433,12 +433,12 @@ std::vector<Loan_error> check_loans(
         for( u32 i = block.statement_count; i > 0; --i )
         {
             after[i - 1] = out;
-            step_back( func, func.statements[block.first_statement + i - 1], out );
+            step_back( func, func.statements_of( block )[i - 1], out );
         }
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            effects_of( func, borrows, owning, func.statements[block.first_statement + i], effects );
+            effects_of( func, borrows, owning, func.statements_of( block )[i], effects );
 
             for( const Effect& effect : effects )
             {
@@ -533,7 +533,7 @@ struct Loaned : Compiled
 
     std::string_view name_of( Local_id local ) const
     {
-        return interner.text( functions[tested].locals[local.v].name );
+        return interner.text( functions[tested].locals[local].name );
     }
 };
 

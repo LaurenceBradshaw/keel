@@ -39,7 +39,7 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
 
     for( u32 l = first; l < func.locals.size(); ++l )
     {
-        split[l] = table.is_struct( func.locals[l].type );
+        split[l] = table.is_struct( func.locals[Local_id { l }].type );
     }
 
     const auto use = [&]( const Place& place )
@@ -109,7 +109,7 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
         }
     }
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Terminator& terminator = func.blocks[b].terminator;
 
@@ -140,9 +140,9 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
         }
     }
 
-    for( u32 l = 0; l < func.locals.size(); ++l )
+    for( const Local_id l : func.locals.ids() )
     {
-        split[l] = split[l] && mentions[l] > 0;
+        split[l.v] = split[l.v] && mentions[l.v] > 0;
     }
 
     return split;
@@ -168,7 +168,7 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
 
         if( !parts.contains( { place.local.v, field.v } ) )
         {
-            const Local   whole = func.locals[place.local.v];
+            const Local   whole = func.locals[place.local];
             const Type_id type  = place_type(
                 ast,
                 types,
@@ -267,7 +267,7 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
 // A fresh local like `local`, which every place naming `local` now names, its markers included.
 Local_id renamed( Function& func, Local_id local )
 {
-    const Local whole = func.locals[local.v];
+    const Local whole = func.locals[local];
     func.locals.push_back( whole );
     const Local_id new_local = Local_id { narrow_cast<u32>( func.locals.size() - 1 ) };
 
@@ -366,7 +366,7 @@ void copy_parameters( Function& func, const Local_set& split )
     }
 
     const Block_id moved { narrow_cast<u32>( func.blocks.size() ) };
-    const Block    head = func.blocks[0];
+    const Block    head = func.blocks[k_entry_block];
     func.blocks.push_back( head );
 
     for( Block& block : func.blocks )
@@ -380,7 +380,7 @@ void copy_parameters( Function& func, const Local_set& split )
         }
     }
 
-    func.blocks[0] = Block {
+    func.blocks[k_entry_block] = Block {
         .first_statement = narrow_cast<u32>( func.statements.size() ),
         .terminator      = Terminator { .kind = Terminator_kind::Goto, .span = head.terminator.span, .targets = { moved } },
     };
@@ -390,11 +390,11 @@ void copy_parameters( Function& func, const Local_set& split )
         const Local_id fresh = renamed( func, Local_id { p } );
         func.statements.push_back( Statement {
             .kind  = Statement_kind::Assign,
-            .span  = func.locals[p].span,
+            .span  = func.locals[Local_id { p }].span,
             .place = Place { .local = fresh },
-            .value = use( copy( Place { .local = Local_id { p } }, func.locals[p].type ) ),
+            .value = use( copy( Place { .local = Local_id { p } }, func.locals[Local_id { p }].type ) ),
         } );
-        func.blocks[0].statement_count += 1;
+        func.blocks[k_entry_block].statement_count += 1;
     }
 }
 
@@ -421,7 +421,7 @@ void move_into_return_slot( Function& func )
             .kind  = Statement_kind::Assign,
             .span  = block.terminator.span,
             .place = Place { .local = k_return_slot },
-            .value = use( move( Place { .local = fresh }, func.locals[0].type ) ),
+            .value = use( move( Place { .local = fresh }, func.locals[k_return_slot].type ) ),
         } );
         block.statement_count += 1;
     }
@@ -490,7 +490,7 @@ struct Split : Compiled
         {
             for( u32 l = 0; l < f.locals.size() && !local.is_valid(); ++l )
             {
-                if( f.locals[l].name.is_valid() && interner.text( f.locals[l].name ) == name )
+                if( f.locals[Local_id { l }].name.is_valid() && interner.text( f.locals[Local_id { l }].name ) == name )
                 {
                     func  = f;
                     local = Local_id { l };
@@ -533,7 +533,7 @@ struct Split : Compiled
         for( const Statement& s : func.statements )
         {
             count += s.kind == Statement_kind::Assign && !s.place.is_global() &&
-                     types.table().is_struct( func.locals[s.place.local.v].type );
+                     types.table().is_struct( func.locals[s.place.local].type );
         }
         return count;
     }
@@ -541,20 +541,19 @@ struct Split : Compiled
     // Whether some operand reads a field of `of`, outside block `in` when given.
     bool reads( Local_id of, std::optional<u32> in = std::nullopt ) const
     {
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            if( in == b )
+            if( in == b.v )
             {
                 continue;
             }
 
-            const Block& block = func.blocks[b];
-            for( u32 s = block.first_statement; s < block.first_statement + block.statement_count; ++s )
+            for( const Statement& statement : func.statements_of( b ) )
             {
                 bool any = false;
                 for_each_operand(
                     func,
-                    func.statements[s].value,
+                    statement.value,
                     [&]( const Operand& o ) { any = any || ( o.has_place() && !o.place.is_global() && o.place.local == of ); }
                 );
                 if( any )
@@ -726,16 +725,16 @@ TEST_CASE( "split_aggregates_copies_a_parameter_once", "[opt][split]" )
     REQUIRE( p.clean() );
 
     Function func = p.before;
-    REQUIRE( func.blocks[0].statement_count == 0 );
+    REQUIRE( func.blocks[k_entry_block].statement_count == 0 );
     for( Block& block : func.blocks )
     {
         if( block.terminator.kind == Terminator_kind::Goto &&
-            block.terminator.targets[0] == func.blocks[0].terminator.targets[0] )
+            block.terminator.targets[0] == func.blocks[k_entry_block].terminator.targets[0] )
         {
             block.terminator.targets[0] = Block_id { 0 };
         }
     }
-    func.blocks[0].terminator.targets[0] = p.before.blocks[0].terminator.targets[0];
+    func.blocks[k_entry_block].terminator.targets[0] = p.before.blocks[k_entry_block].terminator.targets[0];
     REQUIRE( verify( func ).empty() );
 
     split_aggregates( func, p.ast, p.types );
@@ -787,10 +786,11 @@ TEST_CASE( "split_aggregates_moves_into_every_return", "[opt][split]" )
         }
         returns += 1;
         REQUIRE( block.statement_count >= 2 );
-        for( u32 s = block.first_statement + block.statement_count - 2; s < block.first_statement + block.statement_count; ++s )
+        const Run<const Statement> statements = p.func.statements_of( block );
+        for( u32 s = statements.size() - 2; s < statements.size(); ++s )
         {
-            REQUIRE( p.func.statements[s].place.local == k_return_slot );
-            REQUIRE( p.func.statements[s].place.num_projections == 1 );
+            REQUIRE( statements[s].place.local == k_return_slot );
+            REQUIRE( statements[s].place.num_projections == 1 );
         }
     }
     REQUIRE( returns == 2 );

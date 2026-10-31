@@ -31,14 +31,14 @@ void settle_drops( Function& func )
     const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
     std::vector<bool>            deleted( func.statements.size(), false );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Occupancy    state = entry[b];
+        Occupancy    state = entry[b.v];
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            const u32  at        = block.first_statement + i;
+            const u32  at        = func.statements_of( block ).position( i );
             Statement& statement = func.statements[at];
 
             // A pointee's occupancy is not tracked, so its flag stays.
@@ -123,12 +123,11 @@ struct Settled : Compiled
     {
         const Function& func  = first();
         std::size_t     count = 0;
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+            for( const Statement& s : func.statements_of( func.blocks[b] ) )
             {
-                const Statement& s = func.statements[func.blocks[b].first_statement + i];
-                count += ( !only || *only == b ) && s.kind == Statement_kind::Assign && s.place.local == local &&
+                count += ( !only || *only == b.v ) && s.kind == Statement_kind::Assign && s.place.local == local &&
                          s.place.num_projections == 0;
             }
         }

@@ -207,14 +207,12 @@ void read_rvalue(
 }
 
 // Every statement of a block, then its terminator's condition. Mutates `flow` in place.
-void transfer_block( const Function& func, const Slot_map& slots, u32 block, Flow& flow, std::vector<Move_error>* errors )
+void transfer_block( const Function& func, const Slot_map& slots, Block_id block, Flow& flow, std::vector<Move_error>* errors )
 {
     const Block& b = func.blocks[block];
 
-    for( u32 i = 0; i < b.statement_count; ++i )
+    for( const Statement& statement : func.statements_of( b ) )
     {
-        const Statement& statement = func.statements[b.first_statement + i];
-
         switch( statement.kind )
         {
         case Statement_kind::Assign:
@@ -442,10 +440,10 @@ std::vector<Move_error> check_moves(
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, slots, block.v, out, nullptr );
+        transfer_block( func, slots, block, out, nullptr );
 
         next.clear();
-        successors( func.blocks[block.v].terminator, next );
+        successors( func.blocks[block].terminator, next );
 
         for( const Block_id target : next )
         {
@@ -461,10 +459,10 @@ std::vector<Move_error> check_moves(
     // A second walk, each block once, so a block on a back edge reports once.
     std::vector<Move_error> errors;
 
-    for( u32 block = 0; block < func.blocks.size(); ++block )
+    for( const Block_id block : func.blocks.ids() )
     {
-        Flow flow = in[block];
-        transfer_block( func, slots, block, in[block], &errors );
+        Flow flow = in[block.v];
+        transfer_block( func, slots, block, in[block.v], &errors );
     }
 
     find_moves_into_borrowing_calls( func, slots, borrows, errors );

@@ -40,7 +40,7 @@ std::string subject_of(
     const Function& function, const Ast& ast, const Interner& interner, Local_id local, u32 field, std::string_view unnamed
 )
 {
-    const Symbol_id name = function.locals[local.v].name;
+    const Symbol_id name = function.locals[local].name;
 
     if( !name.is_valid() )
     {
@@ -58,7 +58,7 @@ reached_name( const Function& function, const Ast& ast, const Interner& interner
 {
     std::string name = subject_of( function, ast, interner, object, k_no_field, "this value" );
 
-    if( !function.locals[object.v].name.is_valid() || reached.local != object )
+    if( !function.locals[object].name.is_valid() || reached.local != object )
     {
         return name;
     }
@@ -66,7 +66,7 @@ reached_name( const Function& function, const Ast& ast, const Interner& interner
     name.pop_back();
     for( u32 i = 0; i < reached.num_projections; ++i )
     {
-        const Projection& step = function.projections[reached.first_projection + i];
+        const Projection& step = function.projections_of( reached )[i];
 
         if( step.kind == Projection_kind::Deref && i == 0 )
         {
@@ -247,7 +247,7 @@ void report_loan_errors(
                 continue;
             }
 
-            const std::string_view holder = interner.text( function.locals[error.holder.v].name );
+            const std::string_view holder = interner.text( function.locals[error.holder].name );
 
             std::string message;
             switch( error.conflict )
@@ -414,7 +414,7 @@ void report_unassigned_errors(
 
             if( error.local == k_return_slot )
             {
-                const std::string_view return_type = types.table().name( function.locals[k_return_slot.v].type );
+                const std::string_view return_type = types.table().name( function.locals[k_return_slot].type );
 
                 // Not error.maybe: a returning path leaves the graph and joins nothing, so ask the whole function.
                 const bool returns_somewhere = std::any_of(

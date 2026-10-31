@@ -4,8 +4,10 @@
 #pragma once
 #include <vector>
 #include "ast/node.h"
+#include "common/id_vector.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
+#include "common/run.h"
 #include "common/span.h"
 #include "common/types.h"
 #include "lex/token.h"
@@ -50,6 +52,8 @@ struct Block_id
 
     auto operator<=>( const Block_id& other ) const = default;
 };
+
+inline constexpr Block_id k_entry_block { 0 };
 
 // A temporary is a local with no name. Nothing else distinguishes it: the drop analysis asks which
 // locals are live, and has no reason to care which ones the author wrote.
@@ -273,31 +277,55 @@ struct Function
     // Which parameters arrive uninitialised. Nothing else in KIR says so - an `out` parameter's
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
-    std::vector<Local_id>   out_parameters;
-    std::vector<Local_id>   one_path_temporaries; // built on one path, so dropped under a flag
-    std::vector<Local_id>   walked;               // D74: a walk's receiver, freezing what it walks
-    std::vector<Local_id>   chosen;               // D75: assigned the address of whichever arm ran
-    Local_id                constructed {};       // a constructor's receiver, invalid in every other function.
-    std::vector<Field_slot> fields;               // ir/slots reads them
-    std::vector<Local>      locals;
-    std::vector<Block>      blocks;
-    std::vector<Statement>  statements;
-    std::vector<Projection> projections;
-    std::vector<Operand>    operands;
+    std::vector<Local_id>      out_parameters;
+    std::vector<Local_id>      one_path_temporaries; // built on one path, so dropped under a flag
+    std::vector<Local_id>      walked;               // D74: a walk's receiver, freezing what it walks
+    std::vector<Local_id>      chosen;               // D75: assigned the address of whichever arm ran
+    Local_id                   constructed {};       // a constructor's receiver, invalid in every other function.
+    std::vector<Field_slot>    fields;               // ir/slots reads them
+    Id_vector<Local_id, Local> locals;
+    Id_vector<Block_id, Block> blocks;
+    std::vector<Statement>     statements;
+    std::vector<Projection>    projections;
+    std::vector<Operand>       operands;
 
     // Whether local 0 is a value the body must produce. The passes have no Type_table, so this is
     // recorded the same way out_parameters is, and for the same reason: the graph does not say.
     bool returns_a_value = false;
 
     bool diverges = false; // returns `never`, so no path may reach a Return
+
+    Run<Statement> statements_of( const Block& block )
+    {
+        return Run<Statement>( statements, block.first_statement, block.statement_count );
+    }
+
+    Run<const Statement> statements_of( const Block& block ) const
+    {
+        return Run<const Statement>( statements, block.first_statement, block.statement_count );
+    }
+
+    Run<Statement> statements_of( Block_id block )
+    {
+        return statements_of( blocks[block] );
+    }
+
+    Run<const Statement> statements_of( Block_id block ) const
+    {
+        return statements_of( blocks[block] );
+    }
+
+    // Read-only: places share their runs, and projected() is the only writer.
+    Run<const Projection> projections_of( const Place& place ) const
+    {
+        return Run<const Projection>( projections, place.first_projection, place.num_projections );
+    }
 };
 
 inline bool has_deref_projection( const Function& func, const Place& place )
 {
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& projection : func.projections_of( place ) )
     {
-        const Projection& projection = func.projections[place.first_projection + i];
-
         if( projection.kind == Projection_kind::Deref )
         {
             return true;
@@ -315,9 +343,9 @@ inline bool is_field_path( const Function& func, const Place& place )
         return false;
     }
 
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& projection : func.projections_of( place ) )
     {
-        if( func.projections[place.first_projection + i].kind != Projection_kind::Field )
+        if( projection.kind != Projection_kind::Field )
         {
             return false;
         }
@@ -333,11 +361,10 @@ inline Place projected( Function& func, Place base, Projection projection )
 {
     const u32 first = narrow_cast<u32>( func.projections.size() );
 
-    for( u32 i = 0; i < base.num_projections; ++i )
+    for( Projection copied : func.projections_of( base ) )
     {
         // Read out before appending: push_back from a reference into the same vector is legal but
         // needlessly subtle.
-        const Projection copied = func.projections[base.first_projection + i];
 
         func.projections.push_back( copied );
     }

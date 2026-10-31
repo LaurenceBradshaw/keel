@@ -12,7 +12,7 @@ namespace
 std::vector<Block_id> next_blocks( const Function& func, const std::vector<u32>& counts )
 {
     std::vector<Block_id> next( func.blocks.size(), Block_id {} );
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
         if( block.terminator.kind == Terminator_kind::Goto )
@@ -20,7 +20,7 @@ std::vector<Block_id> next_blocks( const Function& func, const std::vector<u32>&
             const Block_id target = block.terminator.targets[0];
             if( target.is_valid() && counts[target.v] == 1 )
             {
-                next[b] = target;
+                next[b.v] = target;
             }
         }
     }
@@ -53,9 +53,9 @@ void merge_blocks( Function& func )
     std::vector<Statement> statements;
     statements.reserve( func.statements.size() );
 
-    for( u32 h = 0; h < func.blocks.size(); ++h )
+    for( const Block_id h : func.blocks.ids() )
     {
-        if( absorbed[h] )
+        if( absorbed[h.v] )
         {
             continue;
         }
@@ -64,14 +64,11 @@ void merge_blocks( Function& func )
         const u32  first = narrow_cast<u32>( statements.size() );
         Terminator last {};
 
-        for( Block_id current = Block_id { h }; current.is_valid(); current = next[current.v] )
+        for( Block_id current = h; current.is_valid(); current = next[current.v] )
         {
-            const Block& block = func.blocks[current.v];
-            statements.insert(
-                statements.end(),
-                func.statements.begin() + block.first_statement,
-                func.statements.begin() + block.first_statement + block.statement_count
-            );
+            const Block&               block = func.blocks[current];
+            const Run<const Statement> run   = func.statements_of( block );
+            statements.insert( statements.end(), run.begin(), run.end() );
             last = block.terminator;
         }
 
@@ -129,11 +126,11 @@ Terminator done()
 std::vector<u32> run( const Function& func, u32 block )
 {
     std::vector<u32> locals;
-    const Block&     b = func.blocks[block];
+    const Block&     b = func.blocks[Block_id { block }];
 
-    for( u32 i = 0; i < b.statement_count; ++i )
+    for( const Statement& statement : func.statements_of( b ) )
     {
-        locals.push_back( func.statements[b.first_statement + i].place.local.v );
+        locals.push_back( statement.place.local.v );
     }
 
     return locals;
@@ -149,7 +146,7 @@ TEST_CASE( "merge_blocks_joins_a_chain", "[opt][merge]" )
 
     REQUIRE( func.blocks.size() == 1 );
     REQUIRE( run( func, 0 ) == std::vector<u32> { 0, 2, 1 } );
-    REQUIRE( func.blocks[0].terminator.kind == Terminator_kind::Return );
+    REQUIRE( func.blocks[k_entry_block].terminator.kind == Terminator_kind::Return );
     REQUIRE( func.statements.size() == 3 );
 }
 
@@ -170,7 +167,7 @@ TEST_CASE( "merge_blocks_keeps_a_loop_header", "[opt][merge]" )
     merge_blocks( func );
 
     REQUIRE( func.blocks.size() == 4 );
-    REQUIRE( func.blocks[0].terminator.targets[0] == Block_id { 1 } );
+    REQUIRE( func.blocks[k_entry_block].terminator.targets[0] == Block_id { 1 } );
 }
 
 // Block 1's only predecessor is the entry, and the entry's only jump comes from block 1: without
@@ -182,7 +179,7 @@ TEST_CASE( "merge_blocks_keeps_the_entry_a_loop_returns_to", "[opt][merge]" )
 
     REQUIRE( func.blocks.size() == 1 );
     REQUIRE( run( func, 0 ) == std::vector<u32> { 0, 1 } );
-    REQUIRE( func.blocks[0].terminator.targets[0] == Block_id { 0 } );
+    REQUIRE( func.blocks[k_entry_block].terminator.targets[0] == Block_id { 0 } );
 }
 
 // A release `assert` checks nothing, and its jump goes with it.

@@ -190,14 +190,14 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func, const Slot_map&
     {
         changed = false;
 
-        for( u32 i = 0; i < func.blocks.size(); ++i )
+        for( const Block_id i : func.blocks.ids() )
         {
             const Block& block = func.blocks[i];
-            Occupancy    state = entry[i];
+            Occupancy    state = entry[i.v];
 
-            for( u32 s = 0; s < block.statement_count; ++s )
+            for( const Statement& statement : func.statements_of( block ) )
             {
-                step( func, slots, func.statements[block.first_statement + s], state );
+                step( func, slots, statement, state );
             }
 
             step( block.terminator, state );
@@ -267,11 +267,11 @@ struct Analysed : Compiled
     {
         const Symbol_id symbol = interner.find( name );
 
-        for( u32 i = 0; i < first().locals.size(); ++i )
+        for( const Local_id i : first().locals.ids() )
         {
             if( first().locals[i].name == symbol )
             {
-                return Local_id { i };
+                return i;
             }
         }
 
@@ -285,13 +285,12 @@ struct Analysed : Compiled
         const Slot_map               slots( func );
         const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
 
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            Occupancy state = entry[b];
+            Occupancy state = entry[b.v];
 
-            for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+            for( const Statement& statement : func.statements_of( func.blocks[b] ) )
             {
-                const Statement& statement = func.statements[func.blocks[b].first_statement + i];
                 step( func, slots, statement, state );
 
                 if( where( statement ) )
@@ -383,14 +382,13 @@ TEST_CASE( "initialised_survives_a_join_after_a_move_on_one_path", "[ir][initial
 
     // The join is the block that assigns the return slot.
     bool checked = false;
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
-        for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+        for( const Statement& s : func.statements_of( func.blocks[b] ) )
         {
-            const Statement& s = func.statements[func.blocks[b].first_statement + i];
             if( s.kind == Statement_kind::Assign && s.place.local == k_return_slot && s.place.num_projections == 0 )
             {
-                REQUIRE( entry[b].initialised[2] );
+                REQUIRE( entry[b.v].initialised[2] );
                 checked = true;
             }
         }
@@ -437,11 +435,11 @@ TEST_CASE( "initialised_starts_a_marked_local_storage_dead", "[ir][initialised]"
 
     REQUIRE( entry[0].storage_dead[x.v] );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         if( func.blocks[b].terminator.kind == Terminator_kind::Branch )
         {
-            REQUIRE( entry[b].storage_dead[x.v] );
+            REQUIRE( entry[b.v].storage_dead[x.v] );
         }
     }
 }
@@ -495,15 +493,14 @@ TEST_CASE( "uninitialised_and_initialised_both_hold_after_a_move_on_one_path", "
     const std::vector<Occupancy> entry = occupancy_on_entry( func, Slot_map( func ) );
 
     bool checked = false;
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
-        for( u32 i = 0; i < func.blocks[b].statement_count; ++i )
+        for( const Statement& s : func.statements_of( func.blocks[b] ) )
         {
-            const Statement& s = func.statements[func.blocks[b].first_statement + i];
             if( s.kind == Statement_kind::Assign && s.place.local == k_return_slot && s.place.num_projections == 0 )
             {
-                REQUIRE( entry[b].initialised[2] );
-                REQUIRE( entry[b].uninitialised[2] );
+                REQUIRE( entry[b.v].initialised[2] );
+                REQUIRE( entry[b.v].uninitialised[2] );
                 checked = true;
             }
         }

@@ -41,7 +41,7 @@ Block_id final_target( const Function& func, Block_id block_id )
     std::unordered_set<u32> visited {};
     while( block_id.is_valid() )
     {
-        const Block& block = func.blocks[block_id.v];
+        const Block& block = func.blocks[block_id];
 
         if( block.statement_count != 0 || block.terminator.kind != Terminator_kind::Goto )
         {
@@ -92,7 +92,7 @@ std::vector<bool> reachable( const Function& func )
 
     while( !pending.empty() )
     {
-        const Terminator& terminator = func.blocks[pending.back().v].terminator;
+        const Terminator& terminator = func.blocks[pending.back()].terminator;
 
         pending.pop_back();
 
@@ -124,11 +124,11 @@ void prune( Function& func, const std::vector<bool>& live )
     std::vector<Block_id> renumbered( func.blocks.size(), Block_id {} );
     u32                   kept = 0;
 
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
-        if( live[i] )
+        if( live[i.v] )
         {
-            renumbered[i] = Block_id { kept++ };
+            renumbered[i.v] = Block_id { kept++ };
         }
     }
 
@@ -137,15 +137,15 @@ void prune( Function& func, const std::vector<bool>& live )
         return;
     }
 
-    std::vector<Block>     blocks;
-    std::vector<Statement> statements;
+    Id_vector<Block_id, Block> blocks;
+    std::vector<Statement>     statements;
 
     blocks.reserve( kept );
     statements.reserve( func.statements.size() );
 
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
-        if( !live[i] )
+        if( !live[i.v] )
         {
             continue;
         }
@@ -349,7 +349,7 @@ TEST_CASE( "simplify_threads_a_chain_of_empty_blocks", "[ir][simplify]" )
         REQUIRE( p.problems().empty() );
         REQUIRE( p.first().blocks.size() == 2 );
 
-        const Terminator& entry = p.first().blocks[0].terminator;
+        const Terminator& entry = p.first().blocks[k_entry_block].terminator;
 
         REQUIRE( entry.kind == Terminator_kind::Branch );
         REQUIRE( entry.targets[0] == entry.targets[1] );

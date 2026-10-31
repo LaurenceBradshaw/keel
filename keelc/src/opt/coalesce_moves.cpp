@@ -46,10 +46,8 @@ bool field_place( const Function& func, const Place& place )
     }
 
     bool only_field_or_member = true;
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& projection : func.projections_of( place ) )
     {
-        const Projection& projection = func.projections[place.first_projection + i];
-
         if( projection.kind != Projection_kind::Field && projection.kind != Projection_kind::Member )
         {
             only_field_or_member = false;
@@ -75,8 +73,8 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
     const u32 shorter = std::min( a.num_projections, b.num_projections );
     for( u32 i = 0; i < shorter; ++i )
     {
-        const Projection& a_projection = func.projections[a.first_projection + i];
-        const Projection& b_projection = func.projections[b.first_projection + i];
+        const Projection& a_projection = func.projections_of( a )[i];
+        const Projection& b_projection = func.projections_of( b )[i];
 
         if( a_projection.kind == Projection_kind::Field && b_projection.kind == Projection_kind::Field &&
             a_projection.field != b_projection.field )
@@ -124,8 +122,8 @@ bool copies_itself( const Function& func, const Statement& statement )
 
     for( u32 i = 0; i < statement.place.num_projections; ++i )
     {
-        const Projection& place_projection = func.projections[statement.place.first_projection + i];
-        const Projection& value_projection = func.projections[statement.value.a.place.first_projection + i];
+        const Projection& place_projection = func.projections_of( statement.place )[i];
+        const Projection& value_projection = func.projections_of( statement.value.a.place )[i];
 
         if( place_projection.kind != value_projection.kind )
         {
@@ -220,7 +218,7 @@ bool moved_whole( const Function& func, Local_id local, u32 except )
         }
     }
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Terminator& terminator = func.blocks[b].terminator;
         if( terminator.condition.kind == Operand_kind::Move && terminator.condition.place.is_whole_local() &&
@@ -279,7 +277,7 @@ std::optional<Candidate> candidate_at( const Function& func, u32 index )
 
     if( source.is_whole_local() && destination.is_whole_local() )
     {
-        if( func.locals[destination.local.v].type != func.locals[source.local.v].type )
+        if( func.locals[destination.local].type != func.locals[source.local].type )
         {
             return {};
         }
@@ -355,19 +353,19 @@ bool interferes(
                ( occupied( s, alive, addressed, kept, kept_written ) || s.storage_dead[kept.v] );
     };
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Occupancy    state = entry[b];
+        Occupancy    state = entry[b.v];
 
-        if( clash( state, live.on_entry[b], false, false ) )
+        if( clash( state, live.on_entry[b.v], false, false ) )
         {
             return true;
         }
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            const u32        at        = block.first_statement + i;
+            const u32        at        = func.statements_of( block ).position( i );
             const Statement& statement = func.statements[at];
 
             // A drop the merge keeps loses the move that guarded it, so on another path it would destroy
@@ -404,7 +402,8 @@ bool reaches( const Function& func, u32 from, Local_id stop, const std::function
 
     const auto scan = [&]( const Block& block, u32 start )
     {
-        for( u32 at = start; at < block.first_statement + block.statement_count; ++at )
+        const Run<const Statement> statements = func.statements_of( block );
+        for( u32 at = start; at < statements.position( statements.size() ); ++at )
         {
             // A loop can come back round to `from`.
             if( at == from )
@@ -428,11 +427,16 @@ bool reaches( const Function& func, u32 from, Local_id stop, const std::function
         return Scan::Through;
     };
 
-    u32 home = 0;
-    while( from < func.blocks[home].first_statement ||
-           from >= func.blocks[home].first_statement + func.blocks[home].statement_count )
+    const auto holds = [&]( Block_id b )
     {
-        ++home;
+        const Run<const Statement> statements = func.statements_of( b );
+        return from >= statements.position( 0 ) && from < statements.position( statements.size() );
+    };
+
+    Block_id home = k_entry_block;
+    while( !holds( home ) )
+    {
+        ++home.v;
     }
 
     const Scan rest = scan( func.blocks[home], from + 1 );
@@ -456,7 +460,7 @@ bool reaches( const Function& func, u32 from, Local_id stop, const std::function
         }
 
         seen[b.v]            = true;
-        const Block& block   = func.blocks[b.v];
+        const Block& block   = func.blocks[b];
         const Scan   scanned = scan( block, block.first_statement );
         if( scanned == Scan::Hit )
         {
@@ -485,15 +489,15 @@ bool field_interferes(
     // Which statements run while `gone` holds a value.
     std::vector<bool> in_life( func.statements.size(), false );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Occupancy    state = entry[b];
-        bool         was   = occupied( state, live.on_entry[b], addressed, c.gone, false );
+        Occupancy    state = entry[b.v];
+        bool         was   = occupied( state, live.on_entry[b.v], addressed, c.gone, false );
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            const u32        at        = block.first_statement + i;
+            const u32        at        = func.statements_of( block ).position( i );
             const Statement& statement = func.statements[at];
             step( func, slots, statement, state );
 
@@ -563,15 +567,13 @@ Place moved_to( Function& func, const Place& place, const Place& into )
     moved.num_projections  = into.num_projections + place.num_projections;
 
     // By value: `push_back` may reallocate under a reference. The old range is left unused.
-    for( u32 i = 0; i < into.num_projections; ++i )
+    for( Projection projection : func.projections_of( into ) )
     {
-        const Projection projection = func.projections[into.first_projection + i];
         func.projections.push_back( projection );
     }
 
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( Projection projection : func.projections_of( place ) )
     {
-        const Projection projection = func.projections[place.first_projection + i];
         func.projections.push_back( projection );
     }
 
@@ -613,14 +615,14 @@ bool mark_deletions(
 )
 {
     bool gone_drop_kept = false;
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Occupancy    state = entry[b];
+        Occupancy    state = entry[b.v];
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            const u32        at        = block.first_statement + i;
+            const u32        at        = func.statements_of( block ).position( i );
             const Statement& statement = func.statements[at];
 
             if( at == chosen.statement )
@@ -836,7 +838,7 @@ struct Optimised : Compiled
                 const Place& whole = into_field ? s.value.a.place : s.place;
                 const Place& field = into_field ? s.place : s.value.a.place;
                 return whole.is_whole_local() && field_place( func, field ) &&
-                       !types.table().is_builtin( func.locals[whole.local.v].type );
+                       !types.table().is_builtin( func.locals[whole.local].type );
             }
         ) );
     }

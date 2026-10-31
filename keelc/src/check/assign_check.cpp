@@ -182,7 +182,7 @@ bool written_piecewise(
     const Function& func, const Slot_map& slots, const Place& place, Span span, Flow& flow, Assignment_report* report
 )
 {
-    if( !func.locals[place.local.v].name.is_valid() )
+    if( !func.locals[place.local].name.is_valid() )
     {
         return false;
     }
@@ -237,7 +237,7 @@ bool written_by_element(
 {
     const Slots range = slots.of( place );
 
-    if( !range.element || !func.locals[place.local.v].name.is_valid() ||
+    if( !range.element || !func.locals[place.local].name.is_valid() ||
         ( func.constructed.is_valid() && place.local == func.constructed ) )
     {
         return false;
@@ -335,15 +335,13 @@ void assign( const Function& func, const Slot_map& slots, const Statement& state
 // Only an Assign writes, a projected target included: an `out` struct is built through `(*_1).x`.
 // Storage_live and Storage_dead clear, so a loop carries no answer round. `report` is null during
 // the fixpoint and set for the one reporting walk.
-void transfer_block( const Function& func, const Slot_map& slots, u32 block, Flow& flow, Assignment_report* report )
+void transfer_block( const Function& func, const Slot_map& slots, Block_id block, Flow& flow, Assignment_report* report )
 {
     const Block&                     b     = func.blocks[block];
     std::vector<Uninitialised_read>* reads = report != nullptr ? &report->reads : nullptr;
 
-    for( u32 i = 0; i < b.statement_count; ++i )
+    for( const Statement& statement : func.statements_of( b ) )
     {
-        const Statement& statement = func.statements[b.first_statement + i];
-
         // Reads before the write: `_1 = _1 + 1`. Outside the is_global guard, since a global target's
         // rvalue still reads locals.
         if( statement.kind == Statement_kind::Assign )
@@ -425,7 +423,7 @@ Flow entry_flow( const Function& func, const Slot_map& slots )
 // The fall-off return reports at the signature, not its `}`.
 Span exit_span( const Function& func, const Terminator& terminator )
 {
-    const Span declaration = func.locals[k_return_slot.v].span;
+    const Span declaration = func.locals[k_return_slot].span;
     return terminator.span == declaration.last() ? declaration : terminator.span;
 }
 
@@ -450,10 +448,10 @@ Assignment_report check_assignment( const Function& func )
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, slots, block.v, out, nullptr );
+        transfer_block( func, slots, block, out, nullptr );
 
         next.clear();
-        successors( func.blocks[block.v].terminator, next );
+        successors( func.blocks[block].terminator, next );
 
         for( const Block_id target : next )
         {
@@ -466,16 +464,16 @@ Assignment_report check_assignment( const Function& func )
 
     // One walk, each block once, so a block on a back edge reports once. An unreached block is
     // skipped: it holds nothing assigned, so every read in it would report.
-    for( u32 block = 0; block < func.blocks.size(); ++block )
+    for( const Block_id block : func.blocks.ids() )
     {
         const Block& b = func.blocks[block];
 
-        if( !in[block].reached )
+        if( !in[block.v].reached )
         {
             continue;
         }
 
-        Flow flow = in[block];
+        Flow flow = in[block.v];
         transfer_block( func, slots, block, flow, &report );
 
         if( b.terminator.kind != Terminator_kind::Return )
@@ -615,9 +613,9 @@ struct Checked : Compiled
     {
         for( const Function& function : functions )
         {
-            if( read.local.v < function.locals.size() && function.locals[read.local.v].name.is_valid() )
+            if( read.local.v < function.locals.size() && function.locals[read.local].name.is_valid() )
             {
-                return interner.text( function.locals[read.local.v].name );
+                return interner.text( function.locals[read.local].name );
             }
         }
 
@@ -629,9 +627,9 @@ struct Checked : Compiled
     {
         for( const Function& function : functions )
         {
-            if( error.local.v < function.locals.size() && function.locals[error.local.v].name.is_valid() )
+            if( error.local.v < function.locals.size() && function.locals[error.local].name.is_valid() )
             {
-                return interner.text( function.locals[error.local.v].name );
+                return interner.text( function.locals[error.local].name );
             }
         }
 

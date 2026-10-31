@@ -107,7 +107,7 @@ Place Builder::index( Place base, Local_id index )
 Type_id Builder::type_of( Local_id id ) const
 {
     assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );
-    return function_.locals[id.v].type;
+    return function_.locals[id].type;
 }
 
 void Builder::assign( Place target, Rvalue value, Span span )
@@ -174,7 +174,7 @@ void Builder::terminate_unreachable( Span span )
 
 bool Builder::is_terminated() const
 {
-    return function_.blocks[current_.v].terminator.kind != Terminator_kind::Unset;
+    return function_.blocks[current_].terminator.kind != Terminator_kind::Unset;
 }
 
 u32 Builder::add_operands( std::span<const Operand> operands )
@@ -189,9 +189,9 @@ Function Builder::finish()
     assert( !finished_ && "finish() called twice" );
     finished_ = true;
 
-    for( u32 i = 0; i < function_.blocks.size(); ++i )
+    for( const Block_id i : function_.blocks.ids() )
     {
-        const std::vector<Statement>& block_statements = pending_[i];
+        const std::vector<Statement>& block_statements = pending_[i.v];
         Block&                        block            = function_.blocks[i];
 
         block.first_statement = narrow_cast<u32>( function_.statements.size() );
@@ -210,8 +210,8 @@ void Builder::push_statement( Statement statement )
 
 void Builder::set_terminator( Terminator terminator )
 {
-    assert( function_.blocks[current_.v].terminator.kind == Terminator_kind::Unset && "block already has a terminator" );
-    function_.blocks[current_.v].terminator = terminator;
+    assert( function_.blocks[current_].terminator.kind == Terminator_kind::Unset && "block already has a terminator" );
+    function_.blocks[current_].terminator = terminator;
 }
 
 } // namespace keel
@@ -281,8 +281,8 @@ TEST_CASE( "builder_establishes_the_conventions", "[ir][builder]" )
     // caller can get them wrong.
     REQUIRE( func.blocks.size() == 1 );
     REQUIRE( func.locals.size() == 1 );
-    REQUIRE( func.locals[0].type == f.i32() );
-    REQUIRE( !func.locals[0].name.is_valid() ); // the return slot has no source name
+    REQUIRE( func.locals[k_return_slot].type == f.i32() );
+    REQUIRE( !func.locals[k_return_slot].name.is_valid() ); // the return slot has no source name
     REQUIRE( func.parameter_count == 0 );
     REQUIRE( func.declaration == Node_id { 1 } );
 
@@ -310,8 +310,8 @@ TEST_CASE( "builder_numbers_locals_and_parameters", "[ir][builder]" )
     REQUIRE( func.locals.size() == 4 );
 
     // A temporary is a local with no name; nothing else distinguishes it.
-    REQUIRE( func.locals[1].name == Symbol_id { 7 } );
-    REQUIRE( !func.locals[3].name.is_valid() );
+    REQUIRE( func.locals[Local_id { 1 }].name == Symbol_id { 7 } );
+    REQUIRE( !func.locals[Local_id { 3 }].name.is_valid() );
 
     require_verifies( func );
 }
@@ -344,9 +344,10 @@ TEST_CASE( "builder_keeps_a_blocks_statements_contiguous", "[ir][builder]" )
 
     // Two of the three belong to the entry, and they are adjacent despite being emitted either
     // side of a visit to another block.
-    REQUIRE( func.blocks[0].statement_count == 2 );
-    REQUIRE( func.blocks[1].statement_count == 1 );
-    REQUIRE( func.blocks[0].first_statement + func.blocks[0].statement_count == func.blocks[1].first_statement );
+    REQUIRE( func.blocks[k_entry_block].statement_count == 2 );
+    REQUIRE( func.blocks[Block_id { 1 }].statement_count == 1 );
+    const Run<const Statement> first = func.statements_of( k_entry_block );
+    REQUIRE( first.position( first.size() ) == func.statements_of( Block_id { 1 } ).position( 0 ) );
 
     require_verifies( func );
 }
@@ -365,8 +366,8 @@ TEST_CASE( "builder_flattens_empty_blocks", "[ir][builder]" )
     const Function func = builder.finish();
 
     REQUIRE( func.statements.empty() );
-    REQUIRE( func.blocks[0].statement_count == 0 );
-    REQUIRE( func.blocks[1].statement_count == 0 );
+    REQUIRE( func.blocks[k_entry_block].statement_count == 0 );
+    REQUIRE( func.blocks[Block_id { 1 }].statement_count == 0 );
 
     require_verifies( func );
 }
@@ -408,8 +409,8 @@ TEST_CASE( "builder_builds_nested_places", "[ir][builder]" )
 
         REQUIRE( two_deep.num_projections == 2 );
         REQUIRE( func.projections[two_deep.first_projection].kind == Projection_kind::Deref );
-        REQUIRE( func.projections[two_deep.first_projection + 1].kind == Projection_kind::Field );
-        REQUIRE( func.projections[two_deep.first_projection + 1].field == Node_id { 5 } );
+        REQUIRE( func.projections_of( two_deep )[1].kind == Projection_kind::Field );
+        REQUIRE( func.projections_of( two_deep )[1].field == Node_id { 5 } );
 
         require_verifies( func );
     }
@@ -429,8 +430,8 @@ TEST_CASE( "builder_builds_nested_places", "[ir][builder]" )
         const Function func = builder.finish();
 
         REQUIRE( left.first_projection != right.first_projection );
-        REQUIRE( func.projections[left.first_projection + 1].field == Node_id { 5 } );
-        REQUIRE( func.projections[right.first_projection + 1].field == Node_id { 6 } );
+        REQUIRE( func.projections_of( left )[1].field == Node_id { 5 } );
+        REQUIRE( func.projections_of( right )[1].field == Node_id { 6 } );
 
         require_verifies( func );
     }
@@ -536,9 +537,9 @@ TEST_CASE( "builder_builds_the_control_flow_shapes", "[ir][builder]" )
         const Function func = builder.finish();
 
         REQUIRE( func.blocks.size() == 4 );
-        REQUIRE( func.blocks[0].terminator.kind == Terminator_kind::Branch );
-        REQUIRE( func.blocks[0].terminator.targets[0] == then_block );
-        REQUIRE( func.blocks[0].terminator.targets[1] == else_block );
+        REQUIRE( func.blocks[k_entry_block].terminator.kind == Terminator_kind::Branch );
+        REQUIRE( func.blocks[k_entry_block].terminator.targets[0] == then_block );
+        REQUIRE( func.blocks[k_entry_block].terminator.targets[1] == else_block );
 
         require_verifies( func );
     }
@@ -570,7 +571,7 @@ TEST_CASE( "builder_builds_the_control_flow_shapes", "[ir][builder]" )
 
         const Function func = builder.finish();
 
-        REQUIRE( func.blocks[body.v].terminator.targets[0] == header );
+        REQUIRE( func.blocks[body].terminator.targets[0] == header );
 
         require_verifies( func );
     }

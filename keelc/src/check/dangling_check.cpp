@@ -139,14 +139,12 @@ struct Walk
         normalise( aims );
     }
 
-    void block( u32 index, Aims& aims ) const
+    void block( Block_id index, Aims& aims ) const
     {
         const Block& block = func.blocks[index];
 
-        for( u32 i = 0; i < block.statement_count; ++i )
+        for( const Statement& statement : func.statements_of( block ) )
         {
-            const Statement& statement = func.statements[block.first_statement + i];
-
             switch( statement.kind )
             {
             case Statement_kind::Assign:
@@ -200,10 +198,10 @@ std::vector<Dangling_error> check_dangling( const Function& func )
         work.pop_back();
 
         Aims out = in[block.v];
-        flow.block( block.v, out );
+        flow.block( block, out );
 
         next.clear();
-        successors( func.blocks[block.v].terminator, next );
+        successors( func.blocks[block].terminator, next );
 
         // An empty state merges as no change, so a first visit is pushed regardless.
         for( const Block_id target : next )
@@ -221,9 +219,9 @@ std::vector<Dangling_error> check_dangling( const Function& func )
     std::vector<bool>           reported( func.locals.size(), false );
     const Walk                  report { .func = func, .tracked = tracked, .errors = &errors, .reported = &reported };
 
-    for( u32 block = 0; block < func.blocks.size(); ++block )
+    for( const Block_id block : func.blocks.ids() )
     {
-        report.block( block, in[block] );
+        report.block( block, in[block.v] );
     }
 
     return errors;
@@ -266,7 +264,7 @@ struct Dangled : Compiled
 
     std::string_view name_of( Local_id local ) const
     {
-        return interner.text( tested->locals[local.v].name );
+        return interner.text( tested->locals[local].name );
     }
 
     const Function* tested = nullptr;

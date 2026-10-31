@@ -411,8 +411,8 @@ Function Lowering::run()
     }
 
     Function function        = builder_.finish();
-    function.diverges        = types_.table().is_never( function.locals[k_return_slot.v].type );
-    function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type ) && !function.diverges;
+    function.diverges        = types_.table().is_never( function.locals[k_return_slot].type );
+    function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot].type ) && !function.diverges;
 
     if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
     {
@@ -421,9 +421,9 @@ Function Lowering::run()
 
     // An `out` parameter's tree and the constructor's describe the referent. A constructor's own
     // object splits even when its class has a destructor.
-    for( u32 i = 0; i < function.locals.size(); ++i )
+    for( const Local_id i : function.locals.ids() )
     {
-        const Local_id local { i };
+        const Local_id local { i.v };
         const bool     through =
             local == function.constructed ||
             std::find( function.out_parameters.begin(), function.out_parameters.end(), local ) != function.out_parameters.end();

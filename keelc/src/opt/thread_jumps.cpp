@@ -23,7 +23,7 @@ written( const Function& func, const Block& block, Local_id local, const Type_ta
 {
     for( u32 s = block.statement_count; s-- > 0; )
     {
-        const Statement& statement = func.statements[block.first_statement + s];
+        const Statement& statement = func.statements_of( block )[s];
 
         if( statement.kind != Statement_kind::Assign )
         {
@@ -83,7 +83,7 @@ void thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
     const Local_set addressed = addressed_locals( func );
     bool            changed   = false;
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         std::vector<u32> edges;
         if( func.blocks[b].terminator.kind == Terminator_kind::Branch )
@@ -98,7 +98,7 @@ void thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
         for( u32 i : edges )
         {
             const Block_id target = func.blocks[b].terminator.targets[i];
-            const Block&   into   = func.blocks[target.v];
+            const Block&   into   = func.blocks[target];
 
             if( !only_branches( into ) || addressed[into.terminator.condition.place.local.v] )
             {
@@ -118,7 +118,7 @@ void thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
             Block_id next = into.terminator.targets[*value ? 0 : 1];
             for( u32 steps = 0; steps < func.blocks.size(); ++steps )
             {
-                const Block& on = func.blocks[next.v];
+                const Block& on = func.blocks[next];
                 if( !only_branches( on ) || on.terminator.condition.place.local != local )
                 {
                     break;
@@ -203,13 +203,13 @@ struct Graph
 
     Block_id target( u32 block, u32 edge ) const
     {
-        return func.blocks[block].terminator.targets[edge];
+        return func.blocks[Block_id { block }].terminator.targets[edge];
     }
 
     // Whether the edge still reaches a block that branches, as it does before the pass.
     bool kept( u32 block, u32 edge ) const
     {
-        return func.blocks[target( block, edge ).v].terminator.kind == Terminator_kind::Branch;
+        return func.blocks[target( block, edge )].terminator.kind == Terminator_kind::Branch;
     }
 
     void run()

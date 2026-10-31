@@ -11,10 +11,8 @@ namespace
 // An index is read even in a place being written: `_2[_5] = …` reads `_5`.
 void read_indices( const Function& func, const Place& place, Local_set& live )
 {
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& projection : func.projections_of( place ) )
     {
-        const Projection& projection = func.projections[place.first_projection + i];
-
         if( projection.kind == Projection_kind::Index && projection.index.is_valid() )
         {
             live[projection.index.v] = true;
@@ -125,9 +123,9 @@ Liveness live_locals( const Function& func )
     live.on_entry.resize( func.blocks.size() );
     live.after.resize( func.statements.size() );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
-        Local_set& block_live = live.on_entry[b];
+        Local_set& block_live = live.on_entry[b.v];
         block_live.resize( func.locals.size(), false );
     }
 
@@ -147,7 +145,7 @@ Liveness live_locals( const Function& func )
         // Any order reaches the same answer; backward needs fewer rounds.
         for( u32 b = static_cast<u32>( func.blocks.size() ); b-- > 0; )
         {
-            const Block& block = func.blocks[b];
+            const Block& block = func.blocks[Block_id { b }];
             // Live at the exit: whatever any successor reads.
             Local_set state( func.locals.size(), false );
             targets.clear();
@@ -155,11 +153,11 @@ Liveness live_locals( const Function& func )
 
             for( Block_id target : targets )
             {
-                for( u32 l = 0; l < func.locals.size(); ++l )
+                for( const Local_id l : func.locals.ids() )
                 {
-                    if( live.on_entry[target.v][l] )
+                    if( live.on_entry[target.v][l.v] )
                     {
-                        state[l] = true;
+                        state[l.v] = true;
                     }
                 }
             }
@@ -168,7 +166,7 @@ Liveness live_locals( const Function& func )
 
             for( u32 i = block.statement_count; i-- > 0; )
             {
-                const u32 at   = block.first_statement + i;
+                const u32 at   = func.statements_of( block ).position( i );
                 live.after[at] = state;
                 step_back( func, func.statements[at], state );
             }
@@ -248,9 +246,9 @@ struct Analysed : Compiled
     }
 
     // The block whose first statement `where` accepts.
-    u32 block( const std::function<bool( const Statement& )>& where ) const
+    Block_id block( const std::function<bool( const Statement& )>& where ) const
     {
-        for( u32 b = 0; b < first().blocks.size(); ++b )
+        for( const Block_id b : first().blocks.ids() )
         {
             const Block& block = first().blocks[b];
             if( block.statement_count > 0 && where( first().statements[block.first_statement] ) )
@@ -260,7 +258,7 @@ struct Analysed : Compiled
         }
 
         FAIL( "no block matched" );
-        return 0;
+        return {};
     }
 
     Liveness live;
@@ -296,8 +294,8 @@ TEST_CASE( "live_is_killed_by_a_whole_write_unless_it_reads_the_local", "[ir][li
 
     REQUIRE_FALSE( p.live.on_entry[0][2] );
 
-    const u32 step = p.block( assigns( 3 ) );
-    REQUIRE( p.live.on_entry[step][3] );
+    const Block_id step = p.block( assigns( 3 ) );
+    REQUIRE( p.live.on_entry[step.v][3] );
 }
 
 // `_1.x = const 3` leaves `_1.y` as it was, so `_1` is live just before it.
@@ -329,9 +327,10 @@ TEST_CASE( "live_holds_the_return_slot_at_return", "[ir][live]" )
     const Analysed p( "i32 f( i32 a ) { i32 x = a + 1; return x * 2; }\n" );
     REQUIRE( p.clean() );
 
-    const Function& func = p.first();
-    const Block&    last = func.blocks[0];
-    REQUIRE( p.live.after[last.first_statement + last.statement_count - 1][0] );
+    const Function&            func       = p.first();
+    const Block&               last       = func.blocks[k_entry_block];
+    const Run<const Statement> statements = func.statements_of( last );
+    REQUIRE( p.live.after[statements.position( statements.size() - 1 )][0] );
 }
 
 // `n` and `t` are read at or after the header, so the step at the end of the body keeps them.
@@ -341,7 +340,7 @@ TEST_CASE( "live_reaches_round_a_loop", "[ir][live]" )
     REQUIRE( p.clean() );
 
     const Block& step = p.first().blocks[p.block( assigns( 3 ) )];
-    const u32    end  = step.first_statement + step.statement_count - 1;
+    const u32    end  = p.first().statements_of( step ).position( step.statement_count - 1 );
 
     REQUIRE( p.live.after[end][1] );
     REQUIRE( p.live.after[end][2] );

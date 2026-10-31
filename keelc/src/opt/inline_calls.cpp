@@ -108,7 +108,7 @@ std::optional<u32> initialised( const Function& caller, const Block& block, u32 
 
     for( u32 s = index; s-- > 0; )
     {
-        const Statement& statement = caller.statements[block.first_statement + s];
+        const Statement& statement = caller.statements_of( block )[s];
 
         if( statement.kind != Statement_kind::Assign || statement.place.is_global() || statement.place.num_projections != 0 ||
             statement.place.local != pointer.place.local )
@@ -135,8 +135,8 @@ std::optional<u32> initialised( const Function& caller, const Block& block, u32 
 void splice( Function& caller, Block_id at, u32 index, const Function& callee, std::optional<Place> receiver )
 {
     // Copies: `blocks` and `statements` grow below.
-    const Block              block = caller.blocks[at.v];
-    const Statement          call  = caller.statements[block.first_statement + index];
+    const Block              block = caller.blocks[at];
+    const Statement          call  = caller.statements_of( block )[index];
     const std::optional<u32> built = receiver && call.kind == Statement_kind::Assign
                                          ? initialised( caller, block, index, caller.operands[call.value.first_argument] )
                                          : std::nullopt;
@@ -213,9 +213,8 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
         Block into           = from;
         into.first_statement = narrow_cast<u32>( caller.statements.size() );
 
-        for( u32 s = 0; s < from.statement_count; ++s )
+        for( Statement statement : callee.statements_of( from ) )
         {
-            Statement statement = callee.statements[from.first_statement + s];
             renumber_place( statement.place );
             if( statement.drop_flag.is_valid() )
             {
@@ -258,7 +257,7 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
 
     if( built )
     {
-        const Statement statement = caller.statements[block.first_statement + *built];
+        const Statement statement = caller.statements_of( block )[*built];
         caller.statements.push_back( statement );
     }
 
@@ -269,14 +268,14 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
             .kind  = Statement_kind::Assign,
             .span  = call.span,
             .place = call.place,
-            .value = use( move( from, callee.locals[0].type ) )
+            .value = use( move( from, callee.locals[k_return_slot].type ) )
         } );
         caller.statements.push_back( Statement { .kind = Statement_kind::Storage_dead, .span = call.span, .place = from } );
     }
 
     for( u32 s = index + 1; s < block.statement_count; ++s )
     {
-        const Statement statement = caller.statements[block.first_statement + s];
+        const Statement statement = caller.statements_of( block )[s];
         caller.statements.push_back( statement );
     }
 
@@ -293,7 +292,7 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
             continue;
         }
 
-        const Statement statement = caller.statements[block.first_statement + s];
+        const Statement statement = caller.statements_of( block )[s];
         caller.statements.push_back( statement );
     }
 
@@ -326,7 +325,7 @@ void splice( Function& caller, Block_id at, u32 index, const Function& callee, s
         } );
     }
 
-    Block& head          = caller.blocks[at.v];
+    Block& head          = caller.blocks[at];
     head.first_statement = head_first;
     head.statement_count = narrow_cast<u32>( caller.statements.size() ) - head_first;
     head.terminator = Terminator { .kind = Terminator_kind::Goto, .span = call.span, .targets = { Block_id { block_base } } };
@@ -415,9 +414,9 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 {
     std::vector<Block_id> worklist( caller.blocks.size() );
 
-    for( u32 i = 0; i < caller.blocks.size(); ++i )
+    for( const Block_id i : caller.blocks.ids() )
     {
-        worklist[i] = Block_id { i };
+        worklist[i.v] = i;
     }
 
     while( !worklist.empty() )
@@ -425,7 +424,7 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
         const Block_id at = worklist.back();
         worklist.pop_back();
 
-        Block& block = caller.blocks[at.v];
+        Block& block = caller.blocks[at];
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
@@ -458,7 +457,7 @@ void inline_calls(
         literals,
         [&]( const Block& block, u32 s ) -> Site
         {
-            const Statement& statement = caller.statements[block.first_statement + s];
+            const Statement& statement = caller.statements_of( block )[s];
             if( statement.kind != Statement_kind::Assign || statement.value.kind != Rvalue_kind::Call )
             {
                 return {};
@@ -484,7 +483,7 @@ void inline_calls(
                             initialised( caller, block, s, caller.operands[statement.value.first_argument] );
                         if( built )
                         {
-                            receiver = caller.statements[block.first_statement + *built].value.a.place;
+                            receiver = caller.statements_of( block )[*built].value.a.place;
                         }
                         fits = receiver.has_value() && replaceable_receiver( callee );
                     }
@@ -518,7 +517,7 @@ void inline_drops(
         literals,
         [&]( const Block& block, u32 s ) -> Site
         {
-            const Statement& statement = caller.statements[block.first_statement + s];
+            const Statement& statement = caller.statements_of( block )[s];
             if( statement.kind != Statement_kind::Drop || statement.drop_flag.is_valid() || !statement.value.callee.is_valid() )
             {
                 return {};
@@ -675,7 +674,7 @@ TEST_CASE( "inline_calls_carries_the_callees_field_table", "[opt][inline]" )
 
         if( slot.parent == k_no_field )
         {
-            const Type_id type = func.locals[slot.local.v].type;
+            const Type_id type = func.locals[slot.local].type;
             REQUIRE( p.types.table().is_struct( type ) );
             REQUIRE( p.ast.enclosing_aggregate( slot.field ) == p.types.table().get( type ).declaration );
         }

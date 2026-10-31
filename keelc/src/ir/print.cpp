@@ -64,10 +64,8 @@ struct Printer
     {
         std::string text = place.is_global() ? std::string( name_of( place.global ) ) : fmt::format( "_{}", place.local.v );
 
-        for( u32 i = 0; i < place.num_projections; ++i )
+        for( const Projection& projection : func.projections_of( place ) )
         {
-            const Projection& projection = func.projections[place.first_projection + i];
-
             switch( projection.kind )
             {
             case Projection_kind::Deref:
@@ -317,31 +315,31 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
                                       : "<unnamed>"
     );
 
-    for( u32 i = 0; i < func.locals.size(); ++i )
+    for( const Local_id i : func.locals.ids() )
     {
         const Local& local = func.locals[i];
 
         // The role is positional, so it is spelled out here rather than left to be counted.
-        const std::string_view role = i == 0 ? " // return slot" : i <= func.parameter_count ? " // parameter" : "";
+        const std::string_view role = i.v == 0 ? " // return slot" : i.v <= func.parameter_count ? " // parameter" : "";
 
         out += fmt::format(
             "    let _{}: {};{}{}\n",
-            i,
+            i.v,
             printer.type_name( local.type ),
             role,
             local.name.is_valid() ? fmt::format( "{} {}", role.empty() ? " //" : "", interner.text( local.name ) ) : ""
         );
     }
 
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
         const Block& block = func.blocks[i];
 
-        out += fmt::format( "\n    bb{}:\n", i );
+        out += fmt::format( "\n    bb{}:\n", i.v );
 
         for( u32 j = 0; j < block.statement_count; ++j )
         {
-            out += fmt::format( "        {}\n", printer.statement( func.statements[block.first_statement + j] ) );
+            out += fmt::format( "        {}\n", printer.statement( func.statements_of( block )[j] ) );
         }
 
         out += fmt::format( "        {}\n", printer.terminator( block.terminator ) );

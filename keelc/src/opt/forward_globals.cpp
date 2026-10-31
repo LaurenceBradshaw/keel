@@ -250,7 +250,7 @@ void learn(
         return;
     }
 
-    const Type_id to = func.locals[place.local.v].type;
+    const Type_id to = func.locals[place.local].type;
 
     if( value.kind == Rvalue_kind::Use && from.kind == Operand_kind::Copy && whole_global( from.place ) &&
         types.is_builtin( from.type ) && from.type == to && !held( known, from.place ) )
@@ -333,11 +333,11 @@ bool read_later( const Function& func, const std::vector<u32>& counts, Block_id 
         const auto [id, start] = work.back();
         work.pop_back();
 
-        const Block& b       = func.blocks[id.v];
+        const Block& b       = func.blocks[id];
         bool         stopped = false;
         for( u32 s = start; s < b.statement_count && !stopped; ++s )
         {
-            const Statement& statement = func.statements[b.first_statement + s];
+            const Statement& statement = func.statements_of( b )[s];
 
             bool read = false;
             if( statement.kind == Statement_kind::Assign )
@@ -407,12 +407,12 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
             }
             walked[id.v] = true;
 
-            const Block             block = func.blocks[id.v];
+            const Block             block = func.blocks[id];
             std::vector<Statement>& out   = rebuilt[id.v];
 
             for( u32 s = 0; s < block.statement_count; ++s )
             {
-                Statement statement = func.statements[block.first_statement + s];
+                Statement statement = func.statements_of( block )[s];
 
                 if( statement.kind != Statement_kind::Assign )
                 {
@@ -465,7 +465,7 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
                 settle( known, out, statement );
             }
 
-            Terminator& terminator = func.blocks[id.v].terminator;
+            Terminator& terminator = func.blocks[id].terminator;
             changed |= rewrite( terminator.condition, known );
             changed |= rewrite( terminator.message, known );
             changed |= rewrite( terminator.at, known );
@@ -497,11 +497,11 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
     // A join, or a block nothing reaches, starts knowing nothing.
     for( u32 pass = 0; pass < 2; ++pass )
     {
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            if( !walked[b] && ( pass == 1 || b == 0 || counts[b] != 1 ) )
+            if( !walked[b.v] && ( pass == 1 || b.v == 0 || counts[b.v] != 1 ) )
             {
-                work.emplace_back( Block_id { b }, Known {} );
+                work.emplace_back( b, Known {} );
                 drain();
             }
         }
@@ -509,11 +509,11 @@ bool forward_round( Function& func, const Type_table& types, Literal_pool& liter
 
     std::vector<Statement> statements;
     statements.reserve( func.statements.size() );
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         func.blocks[b].first_statement = narrow_cast<u32>( statements.size() );
-        func.blocks[b].statement_count = narrow_cast<u32>( rebuilt[b].size() );
-        statements.insert( statements.end(), rebuilt[b].begin(), rebuilt[b].end() );
+        func.blocks[b].statement_count = narrow_cast<u32>( rebuilt[b.v].size() );
+        statements.insert( statements.end(), rebuilt[b.v].begin(), rebuilt[b.v].end() );
     }
     func.statements = std::move( statements );
 
@@ -536,11 +536,11 @@ bool overwritten( const Function& func, const std::vector<u32>& counts, const Pl
         const auto [id, start] = work.back();
         work.pop_back();
 
-        const Block& b       = func.blocks[id.v];
+        const Block& b       = func.blocks[id];
         bool         covered = false;
         for( u32 s = start; s < b.statement_count && !covered; ++s )
         {
-            const Statement& statement = func.statements[b.first_statement + s];
+            const Statement& statement = func.statements_of( b )[s];
 
             bool read = false;
             if( statement.kind == Statement_kind::Assign )
@@ -607,18 +607,18 @@ bool remove_overwritten( Function& func, const Type_table& types )
     std::vector<bool>      deleted( func.statements.size(), false );
     bool                   any = false;
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
         for( u32 s = 0; s < block.statement_count; ++s )
         {
-            const Statement& statement = func.statements[block.first_statement + s];
+            const Statement& statement = func.statements_of( block )[s];
             if( statement.kind == Statement_kind::Assign && whole_global( statement.place ) &&
                 types.is_builtin( statement.value.type ) && !barrier( func, statement ) &&
-                overwritten( func, counts, statement.place, Block_id { b }, s + 1 ) )
+                overwritten( func, counts, statement.place, b, s + 1 ) )
             {
-                deleted[block.first_statement + s] = true;
-                any                                = true;
+                deleted[func.statements_of( block ).position( s )] = true;
+                any                                                = true;
             }
         }
     }
@@ -794,7 +794,7 @@ TEST_CASE( "forward_globals_learns_nothing_on_a_true_arm", "[opt][globals]" )
 
     const auto checks = [&]( u32 block )
     {
-        const Statement& s = func.statements[func.blocks[block].first_statement + 1];
+        const Statement& s = func.statements_of( func.blocks[Block_id { block }] )[1];
         return s.value.kind == Rvalue_kind::Overflows;
     };
     REQUIRE( checks( 1 ) );

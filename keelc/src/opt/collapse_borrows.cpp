@@ -23,7 +23,7 @@ void collapse_borrows( Function& func, const Type_table& table )
             continue;
         }
 
-        const Type_id pointer = func.locals[place.local.v].type;
+        const Type_id pointer = func.locals[place.local].type;
 
         // A class's pointer becoming an interface's builds a pair; `const` aside, the two must match.
         if( !table.is_pointer( pointer ) || !table.is_pointer( statement.value.type ) ||

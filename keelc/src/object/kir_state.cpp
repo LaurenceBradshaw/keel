@@ -271,7 +271,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
         }
     );
 
-    function.locals = get_all<Local>(
+    function.locals = Id_vector<Local_id, Local>( get_all<Local>(
         in,
         refs,
         [&]
@@ -283,9 +283,9 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
             local.built_whole = in.get_u8() != 0;
             return local;
         }
-    );
+    ) );
 
-    function.blocks = get_all<Block>(
+    function.blocks = Id_vector<Block_id, Block>( get_all<Block>(
         in,
         refs,
         [&]
@@ -296,7 +296,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
             block.terminator      = get_terminator( in, refs );
             return block;
         }
-    );
+    ) );
 
     function.statements = get_all<Statement>(
         in,

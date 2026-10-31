@@ -54,7 +54,7 @@ Slots Slot_map::of( const Place& place ) const
 
     for( ; i < place.num_projections; ++i )
     {
-        const Projection& projection = func_.projections[place.first_projection + i];
+        const Projection& projection = func_.projections_of( place )[i];
 
         if( projection.kind != Projection_kind::Field || is_leaf( slots.node ) )
         {
@@ -126,7 +126,7 @@ u32 Slot_map::parent( u32 slot ) const
 
 bool Slot_map::built_whole( u32 slot ) const
 {
-    return slot < base_ ? func_.locals[slot].built_whole : func_.fields[slot - base_].built_whole;
+    return slot < base_ ? func_.locals[Local_id { slot }].built_whole : func_.fields[slot - base_].built_whole;
 }
 
 } // namespace keel
@@ -183,11 +183,11 @@ struct Mapped : Compiled
     Local_id local( const Function& func, std::string_view name ) const
     {
         const Symbol_id symbol = interner.find( name );
-        for( u32 i = 0; i < func.locals.size(); ++i )
+        for( const Local_id i : func.locals.ids() )
         {
             if( func.locals[i].name == symbol )
             {
-                return Local_id { i };
+                return i;
             }
         }
         FAIL( "no local " << name );

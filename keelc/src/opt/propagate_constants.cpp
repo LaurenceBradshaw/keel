@@ -66,11 +66,11 @@ Local_set tracked_locals( const Function& func, const Type_table& types )
     const Local_set addressed = addressed_locals( func );
     Local_set       tracked( func.locals.size(), false );
 
-    for( u32 l = 0; l < func.locals.size(); ++l )
+    for( const Local_id l : func.locals.ids() )
     {
-        if( !addressed[l] && is_integer( types, func.locals[l].type ) )
+        if( !addressed[l.v] && is_integer( types, func.locals[l].type ) )
         {
-            tracked[l] = true;
+            tracked[l.v] = true;
         }
     }
 
@@ -173,7 +173,7 @@ void step( const Analysis& analysis, const Statement& statement, Values& values 
     // An assignment converts: `i64 w = n` reads an `i32`.
     if( value.state == Value::State::Constant )
     {
-        const Type_id            to        = analysis.func.locals[statement.place.local.v].type;
+        const Type_id            to        = analysis.func.locals[statement.place.local].type;
         const std::optional<u64> converted = convert( value.bits, statement.value.type, to, analysis.types );
         value                              = converted ? Value { .state = Value::State::Constant, .bits = *converted }
                                                        : Value { .state = Value::State::Varying };
@@ -200,19 +200,19 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
     {
         changed = false;
 
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            if( !values[b] )
+            if( !values[b.v] )
             {
                 continue;
             }
 
             const Block& block = func.blocks[b];
-            Values       state = *values[b];
+            Values       state = *values[b.v];
 
-            for( u32 s = 0; s < block.statement_count; ++s )
+            for( const Statement& statement : func.statements_of( block ) )
             {
-                step( analysis, func.statements[block.first_statement + s], state );
+                step( analysis, statement, state );
             }
 
             // A branch on a constant takes one edge, and on a value not yet known, none.
@@ -247,13 +247,13 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
                     continue;
                 }
 
-                for( u32 l = 0; l < func.locals.size(); ++l )
+                for( const Local_id l : func.locals.ids() )
                 {
-                    const Value joined = join( ( *entry )[l], state[l] );
-                    if( joined.state != ( *entry )[l].state || joined.bits != ( *entry )[l].bits )
+                    const Value joined = join( ( *entry )[l.v], state[l.v] );
+                    if( joined.state != ( *entry )[l.v].state || joined.bits != ( *entry )[l.v].bits )
                     {
-                        ( *entry )[l] = joined;
-                        changed       = true;
+                        ( *entry )[l.v] = joined;
+                        changed         = true;
                     }
                 }
             }
@@ -302,19 +302,19 @@ void propagate_constants( Function& func, const Type_table& types, Literal_pool&
     const Analysis analysis { func, types, literals, tracked_locals( func, types ) };
     const auto     entry = values_on_entry( analysis );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
-        if( !entry[b] )
+        if( !entry[b.v] )
         {
             continue;
         }
 
-        Values values = *entry[b];
+        Values values = *entry[b.v];
         Block& block  = func.blocks[b];
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
-            Statement& statement = func.statements[block.first_statement + s];
+            Statement& statement = func.statements_of( block )[s];
             if( statement.kind != Statement_kind::Assign )
             {
                 continue;

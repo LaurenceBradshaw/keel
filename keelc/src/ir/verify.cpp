@@ -208,10 +208,10 @@ void check_statements( const Function& func, std::vector<std::string>& errors )
 
 void check_terminators( const Function& func, std::vector<std::string>& errors )
 {
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
         const Terminator& terminator = func.blocks[i].terminator;
-        const std::string where      = fmt::format( "block {}", i );
+        const std::string where      = fmt::format( "block {}", i.v );
 
         const auto check_target = [&]( Block_id target, std::string_view what )
         {
@@ -263,14 +263,14 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
 
 void check_statement_ranges( const Function& func, std::vector<std::string>& errors )
 {
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
         const Block& block = func.blocks[i];
         const u64    end   = static_cast<u64>( block.first_statement ) + block.statement_count;
 
         if( end > func.statements.size() )
         {
-            errors.push_back( fmt::format( "block {}: statements {}..{} are out of range", i, block.first_statement, end ) );
+            errors.push_back( fmt::format( "block {}: statements {}..{} are out of range", i.v, block.first_statement, end ) );
         }
     }
 }
@@ -357,7 +357,7 @@ void check_reachability( const Function& func, std::vector<std::string>& errors 
     while( !pending.empty() )
     {
         const Block_id    id         = pending.back();
-        const Terminator& terminator = func.blocks[id.v].terminator;
+        const Terminator& terminator = func.blocks[id].terminator;
 
         pending.pop_back();
 
@@ -378,11 +378,11 @@ void check_reachability( const Function& func, std::vector<std::string>& errors 
         }
     }
 
-    for( u32 i = 0; i < func.blocks.size(); ++i )
+    for( const Block_id i : func.blocks.ids() )
     {
-        if( !seen[i] )
+        if( !seen[i.v] )
         {
-            errors.push_back( fmt::format( "block {} is not reachable from block 0", i ) );
+            errors.push_back( fmt::format( "block {} is not reachable from block 0", i.v ) );
         }
     }
 }
@@ -422,7 +422,7 @@ Function minimal()
 
     func.locals.push_back( Local {} );
     func.blocks.push_back( Block {} );
-    func.blocks[0].terminator.kind = Terminator_kind::Return;
+    func.blocks[k_entry_block].terminator.kind = Terminator_kind::Return;
 
     return func;
 }
@@ -481,8 +481,8 @@ TEST_CASE( "verify_rejects_a_malformed_shape", "[ir][verify]" )
 // block nobody terminated is this error rather than a silently valid Goto to block 0.
 TEST_CASE( "verify_rejects_a_block_with_no_terminator", "[ir][verify]" )
 {
-    Function func                  = minimal();
-    func.blocks[0].terminator.kind = Terminator_kind::Unset;
+    Function func                              = minimal();
+    func.blocks[k_entry_block].terminator.kind = Terminator_kind::Unset;
 
     REQUIRE( mentions( verify( func ), "no terminator" ) );
 }
@@ -491,25 +491,25 @@ TEST_CASE( "verify_rejects_bad_terminator_targets", "[ir][verify]" )
 {
     SECTION( "an unset Goto target" )
     {
-        Function func                  = minimal();
-        func.blocks[0].terminator.kind = Terminator_kind::Goto;
+        Function func                              = minimal();
+        func.blocks[k_entry_block].terminator.kind = Terminator_kind::Goto;
 
         REQUIRE( mentions( verify( func ), "Goto target is not set" ) );
     }
 
     SECTION( "an out-of-range Goto target" )
     {
-        Function func                        = minimal();
-        func.blocks[0].terminator.kind       = Terminator_kind::Goto;
-        func.blocks[0].terminator.targets[0] = Block_id { 7 };
+        Function func                                    = minimal();
+        func.blocks[k_entry_block].terminator.kind       = Terminator_kind::Goto;
+        func.blocks[k_entry_block].terminator.targets[0] = Block_id { 7 };
 
         REQUIRE( mentions( verify( func ), "out of range" ) );
     }
 
     SECTION( "both arms of a Branch" )
     {
-        Function func                  = minimal();
-        func.blocks[0].terminator.kind = Terminator_kind::Branch;
+        Function func                              = minimal();
+        func.blocks[k_entry_block].terminator.kind = Terminator_kind::Branch;
 
         const std::vector<std::string> errors = verify( func );
 
@@ -522,11 +522,11 @@ TEST_CASE( "verify_rejects_bad_terminator_targets", "[ir][verify]" )
     {
         Function func = minimal();
 
-        func.blocks[0].terminator.kind            = Terminator_kind::Branch;
-        func.blocks[0].terminator.targets[0]      = Block_id { 0 };
-        func.blocks[0].terminator.targets[1]      = Block_id { 0 };
-        func.blocks[0].terminator.condition.kind  = Operand_kind::Copy;
-        func.blocks[0].terminator.condition.place = Place { .local = Local_id { 9 } };
+        func.blocks[k_entry_block].terminator.kind            = Terminator_kind::Branch;
+        func.blocks[k_entry_block].terminator.targets[0]      = Block_id { 0 };
+        func.blocks[k_entry_block].terminator.targets[1]      = Block_id { 0 };
+        func.blocks[k_entry_block].terminator.condition.kind  = Operand_kind::Copy;
+        func.blocks[k_entry_block].terminator.condition.place = Place { .local = Local_id { 9 } };
 
         REQUIRE( mentions( verify( func ), "condition: local 9 is out of range" ) );
     }
@@ -541,7 +541,7 @@ TEST_CASE( "verify_checks_places_wherever_they_appear", "[ir][verify]" )
         Function func = minimal();
 
         func.statements.push_back( statement );
-        func.blocks[0].statement_count = 1;
+        func.blocks[k_entry_block].statement_count = 1;
 
         return func;
     };
@@ -672,7 +672,7 @@ TEST_CASE( "verify_checks_rvalue_fields", "[ir][verify]" )
         statement.value = value;
 
         func.statements.push_back( statement );
-        func.blocks[0].statement_count = 1;
+        func.blocks[k_entry_block].statement_count = 1;
 
         return func;
     };
@@ -792,7 +792,7 @@ TEST_CASE( "verify_checks_projections_and_storage", "[ir][verify]" )
         statement.place = Place { .local = Local_id { 0 }, .num_projections = 1 };
 
         func.statements.push_back( statement );
-        func.blocks[0].statement_count = 1;
+        func.blocks[k_entry_block].statement_count = 1;
 
         REQUIRE( mentions( verify( func ), "names a whole local" ) );
     }
@@ -800,8 +800,8 @@ TEST_CASE( "verify_checks_projections_and_storage", "[ir][verify]" )
 
 TEST_CASE( "verify_checks_statement_ranges", "[ir][verify]" )
 {
-    Function func                  = minimal();
-    func.blocks[0].statement_count = 2; // there are none
+    Function func                              = minimal();
+    func.blocks[k_entry_block].statement_count = 2; // there are none
 
     REQUIRE( mentions( verify( func ), "statements 0..2 are out of range" ) );
 }
@@ -815,7 +815,7 @@ TEST_CASE( "verify_rejects_an_unreachable_block", "[ir][verify]" )
         Function func = minimal();
 
         func.blocks.push_back( Block {} );
-        func.blocks[1].terminator.kind = Terminator_kind::Return;
+        func.blocks[Block_id { 1 }].terminator.kind = Terminator_kind::Return;
 
         REQUIRE( mentions( verify( func ), "block 1 is not reachable" ) );
     }
@@ -824,11 +824,11 @@ TEST_CASE( "verify_rejects_an_unreachable_block", "[ir][verify]" )
     {
         Function func = minimal();
 
-        func.blocks[0].terminator.kind       = Terminator_kind::Goto;
-        func.blocks[0].terminator.targets[0] = Block_id { 1 };
+        func.blocks[k_entry_block].terminator.kind       = Terminator_kind::Goto;
+        func.blocks[k_entry_block].terminator.targets[0] = Block_id { 1 };
 
         func.blocks.push_back( Block {} );
-        func.blocks[1].terminator.kind = Terminator_kind::Return;
+        func.blocks[Block_id { 1 }].terminator.kind = Terminator_kind::Return;
 
         REQUIRE( verify( func ).empty() );
     }
@@ -838,12 +838,12 @@ TEST_CASE( "verify_rejects_an_unreachable_block", "[ir][verify]" )
     {
         Function func = minimal();
 
-        func.blocks[0].terminator.kind       = Terminator_kind::Goto;
-        func.blocks[0].terminator.targets[0] = Block_id { 1 };
+        func.blocks[k_entry_block].terminator.kind       = Terminator_kind::Goto;
+        func.blocks[k_entry_block].terminator.targets[0] = Block_id { 1 };
 
         func.blocks.push_back( Block {} );
-        func.blocks[1].terminator.kind       = Terminator_kind::Goto;
-        func.blocks[1].terminator.targets[0] = Block_id { 0 };
+        func.blocks[Block_id { 1 }].terminator.kind       = Terminator_kind::Goto;
+        func.blocks[Block_id { 1 }].terminator.targets[0] = Block_id { 0 };
 
         REQUIRE( verify( func ).empty() );
     }

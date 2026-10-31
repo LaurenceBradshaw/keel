@@ -1529,10 +1529,10 @@ void Kir_emitter::emit_function( const Function& function )
 
     for( u32 i = 1; i <= function.parameter_count; ++i )
     {
-        if( !is_void( function.locals[i].type ) )
+        if( !is_void( function.locals[Local_id { i }].type ) )
         {
             params += fmt::format(
-                "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[i].type, local_name( i ) )
+                "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[Local_id { i }].type, local_name( i ) )
             );
         }
     }
@@ -1542,7 +1542,7 @@ void Kir_emitter::emit_function( const Function& function )
         "{}{}{} {}( {} )",
         object_ && placed_by_reach( function ) ? "__attribute__((weak)) " : "",
         function.diverges ? "_Noreturn " : "",
-        spelling_.type( function.locals[k_return_slot.v].type ),
+        spelling_.type( function.locals[k_return_slot].type ),
         spelling_.function( function.declaration, function.type_arguments ), // matches the prototype
         params.empty() ? "void" : params
     ) );
@@ -1551,26 +1551,26 @@ void Kir_emitter::emit_function( const Function& function )
 
     const std::vector<bool> mentioned = mentioned_locals( function );
 
-    for( u32 i = 0; i < function.locals.size(); ++i )
+    for( const Local_id i : function.locals.ids() )
     {
         // Parameters are declared by the signature already, a void local cannot be declared at all,
         // and one nothing names survives only as a warning. Everything else, including the return
         // slot, needs storage here - KIR has no scoping, so there is one declaration per local at
         // the top.
-        if( i >= 1 && i <= function.parameter_count )
+        if( i.v >= 1 && i.v <= function.parameter_count )
         {
             // A run arrives as its two halves; the body names the struct.
             if( types_.table().is_run_pointer( function.locals[i].type ) )
             {
                 sync_line();
                 write_line( fmt::format(
-                    "{0} {1} = {{ {1}_data, {1}_size }};", spelling_.type( function.locals[i].type ), local_name( i )
+                    "{0} {1} = {{ {1}_data, {1}_size }};", spelling_.type( function.locals[i].type ), local_name( i.v )
                 ) );
             }
             continue;
         }
 
-        if( is_void( function.locals[i].type ) || !mentioned[i] )
+        if( is_void( function.locals[i].type ) || !mentioned[i.v] )
         {
             continue;
         }
@@ -1583,7 +1583,7 @@ void Kir_emitter::emit_function( const Function& function )
         write_line( fmt::format(
             "{} {}{};",
             spelling_.type( function.locals[i].type ),
-            local_name( i ),
+            local_name( i.v ),
             holds_nothing( function.locals[i].type ) ? " = { 0 }" : ""
         ) );
     }
@@ -1594,7 +1594,7 @@ void Kir_emitter::emit_function( const Function& function )
     for( u32 i = 1; i < function.locals.size(); ++i )
     {
         const bool never_declared = i > function.parameter_count && !mentioned[i];
-        if( is_void( function.locals[i].type ) || never_declared || read[i] )
+        if( is_void( function.locals[Local_id { i }].type ) || never_declared || read[i] )
         {
             continue;
         }
@@ -1602,18 +1602,17 @@ void Kir_emitter::emit_function( const Function& function )
         write_line( fmt::format( "( void ) {};", local_name( i ) ) );
     }
 
-    for( u32 i = 0; i < function.blocks.size(); ++i )
+    for( const Block_id i : function.blocks.ids() )
     {
         const Block& block = function.blocks[i];
 
-        if( i != 0 )
+        if( i.v != 0 )
         {
-            write_line( fmt::format( "bb{}:", i ) );
+            write_line( fmt::format( "bb{}:", i.v ) );
         }
 
-        for( u32 j = 0; j < block.statement_count; ++j )
+        for( const Statement& statement : function.statements_of( block ) )
         {
-            const Statement& statement = function.statements[block.first_statement + j];
             emit_statement( statement );
         }
 
@@ -1655,16 +1654,18 @@ std::string Kir_emitter::prototype( const Function& function ) const
 
     for( u32 i = 1; i <= function.parameter_count; ++i )
     {
-        if( !is_void( function.locals[i].type ) )
+        if( !is_void( function.locals[Local_id { i }].type ) )
         {
-            params += fmt::format( "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[i].type, "" ) );
+            params += fmt::format(
+                "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[Local_id { i }].type, "" )
+            );
         }
     }
 
     return fmt::format(
         "{}{} {}( {} )",
         function.diverges ? "_Noreturn " : "",
-        spelling_.type( function.locals[k_return_slot.v].type ),
+        spelling_.type( function.locals[k_return_slot].type ),
         spelling_.function( function.declaration, function.type_arguments ),
         params.empty() ? "void" : params
     );
@@ -1698,7 +1699,7 @@ std::string Kir_emitter::as_written( Span span ) const
 
 std::string Kir_emitter::local_name( u32 index ) const
 {
-    const Local& local = current_->locals[index];
+    const Local& local = current_->locals[Local_id { index }];
 
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
 }
@@ -1863,7 +1864,7 @@ Needed Kir_emitter::needed_types() const
     {
         for( u32 i = 0; i <= callee->parameter_count; ++i )
         {
-            stack.push_back( callee->locals[i].type );
+            stack.push_back( callee->locals[Local_id { i }].type );
         }
     }
 
@@ -2005,12 +2006,10 @@ bool Kir_emitter::uses_counted_allocation() const
 
 Type_id Kir_emitter::type_of( const Place& place ) const
 {
-    Type_id type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local.v].type;
+    Type_id type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local].type;
 
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& proj : current_->projections_of( place ) )
     {
-        const Projection& proj = current_->projections[place.first_projection + i];
-
         // Deref is the pointee, Field is the field's type *through this instance* - the declaration
         // records `Box<T>`'s field as a `T`, and a drop of it has to name the `Buf` - and a Tag is
         // the enum's underlying integer, which is also `element`. Mirrors place()'s walk.
@@ -2026,10 +2025,8 @@ std::string Kir_emitter::place( const Place& place ) const
 {
     std::string text = !place.is_global() ? local_name( place.local.v ) : spelling_.global( place.global, place.owner );
 
-    for( u32 i = 0; i < place.num_projections; ++i )
+    for( const Projection& proj : current_->projections_of( place ) )
     {
-        const Projection& proj = current_->projections[place.first_projection + i];
-
         switch( proj.kind )
         {
         case Projection_kind::Deref:

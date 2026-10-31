@@ -187,8 +187,8 @@ bool overlaps( const Function& func, const std::vector<Borrow>& borrows, const P
     u32 min_projections = std::min( a.num_projections, b.num_projections );
     for( u32 k = 0; k < min_projections; ++k )
     {
-        const Projection& pa = func.projections[a.first_projection + k];
-        const Projection& pb = func.projections[b.first_projection + k];
+        const Projection& pa = func.projections_of( a )[k];
+        const Projection& pb = func.projections_of( b )[k];
 
         if( pa.kind != pb.kind )
         {
@@ -220,8 +220,8 @@ bool may_differ( const Function& func, const std::vector<Borrow>& borrows, const
     const u32 min_projections = std::min( a.num_projections, b.num_projections );
     for( u32 k = 0; k < min_projections; ++k )
     {
-        const Projection& pa = func.projections[a.first_projection + k];
-        const Projection& pb = func.projections[b.first_projection + k];
+        const Projection& pa = func.projections_of( a )[k];
+        const Projection& pb = func.projections_of( b )[k];
 
         if( pa.kind != Projection_kind::Index || pb.kind != Projection_kind::Index )
         {

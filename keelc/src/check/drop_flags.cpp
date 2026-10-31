@@ -154,7 +154,7 @@ allocate_flags( Function& func, const Slot_map& slots, const std::vector<bool>& 
             }
 
             // Read before the push_back, which may reallocate. The flag borrows its local's span.
-            const Span span = func.locals[local].span;
+            const Span span = func.locals[Local_id { local }].span;
 
             flags[slot] = Local_id { narrow_cast<u32>( func.locals.size() ) };
             func.locals.push_back( Local { .type = vocabulary.bool_type, .span = span } );
@@ -246,9 +246,8 @@ void append_flag_writes(
 Span entry_span( const Function& func )
 {
     const Block& entry = func.blocks.front();
-    for( u32 i = 0; i < entry.statement_count; ++i )
+    for( const Statement& statement : func.statements_of( entry ) )
     {
-        const Statement& statement = func.statements[entry.first_statement + i];
         if( statement.kind != Statement_kind::Storage_live && statement.kind != Statement_kind::Storage_dead )
         {
             return statement.span;

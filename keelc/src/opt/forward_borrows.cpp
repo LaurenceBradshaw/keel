@@ -26,11 +26,11 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
 
         const u32     p     = statement.place.local.v;
         const Rvalue& value = statement.value;
-        const Type_id type  = func.locals[p].type;
+        const Type_id type  = func.locals[statement.place.local].type;
         const bool    borrow =
             value.kind == Rvalue_kind::Address_of && value.a.place.is_whole_local() &&
             ( value.address_purpose == Address_purpose::Borrow || value.address_purpose == Address_purpose::Read ) &&
-            table.is_pointer( type ) && table.get( type ).element == func.locals[value.a.place.local.v].type;
+            table.is_pointer( type ) && table.get( type ).element == func.locals[value.a.place.local].type;
 
         if( !borrow || to[p].is_valid() )
         {

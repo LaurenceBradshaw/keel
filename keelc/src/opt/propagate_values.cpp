@@ -85,7 +85,7 @@ void step(
     }
 
     // A converting assignment, `i64 w = n`, records nothing: a read of `w` must stay an `i64`.
-    const Type_id   to   = func.locals[statement.place.local.v].type;
+    const Type_id   to   = func.locals[statement.place.local].type;
     const Type_kind kind = types.get( to ).kind;
     if( statement.value.a.type != to && ( kind == Type_kind::Int || kind == Type_kind::Float ) )
     {
@@ -119,19 +119,19 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
     {
         changed = false;
 
-        for( u32 b = 0; b < func.blocks.size(); ++b )
+        for( const Block_id b : func.blocks.ids() )
         {
-            if( !values[b] )
+            if( !values[b.v] )
             {
                 continue;
             }
 
             const Block& block = func.blocks[b];
-            Values       state = *values[b];
+            Values       state = *values[b.v];
 
-            for( u32 s = 0; s < block.statement_count; ++s )
+            for( const Statement& statement : func.statements_of( block ) )
             {
-                step( func, types, addressed, func.statements[block.first_statement + s], state );
+                step( func, types, addressed, statement, state );
             }
 
             targets.clear();
@@ -148,12 +148,12 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
                 }
 
                 // A fact survives a join only if this path holds it too.
-                for( u32 l = 0; l < func.locals.size(); ++l )
+                for( const Local_id l : func.locals.ids() )
                 {
-                    if( ( *entry )[l] && ( !state[l] || !same( *( *entry )[l], *state[l] ) ) )
+                    if( ( *entry )[l.v] && ( !state[l.v] || !same( *( *entry )[l.v], *state[l.v] ) ) )
                     {
-                        ( *entry )[l] = std::nullopt;
-                        changed       = true;
+                        ( *entry )[l.v] = std::nullopt;
+                        changed         = true;
                     }
                 }
             }
@@ -207,19 +207,19 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
     const Local_set                          addressed = addressed_locals( func );
     const std::vector<std::optional<Values>> entry     = values_on_entry( func, types, addressed );
 
-    for( u32 b = 0; b < func.blocks.size(); ++b )
+    for( const Block_id b : func.blocks.ids() )
     {
-        if( !entry[b] )
+        if( !entry[b.v] )
         {
             continue;
         }
 
         Block& block  = func.blocks[b];
-        Values values = *entry[b];
+        Values values = *entry[b.v];
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
-            Statement& statement = func.statements[block.first_statement + s];
+            Statement& statement = func.statements_of( block )[s];
 
             // Reads first, so `_1 = copy _1 + const 1` reads the old `_1`. `&_2`'s operand is a
             // Constant by default, so an address never moves.
