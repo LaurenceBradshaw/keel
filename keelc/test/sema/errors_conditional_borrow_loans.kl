@@ -1,0 +1,45 @@
+// D75: a conditional borrow holds a loan on each arm, each arm is an argument of its own, and
+// `out` assigns only the arm chosen. One error per marked line.
+import kl::string;
+import kl::list;
+
+void bump( ref i32 n ) { n = n + 10; }
+void init( out i32 n ) { n = 7; }
+void grow( ref kl::list<kl::string> l ) { l.push( "z" ); }
+void two( ref kl::string _, ref kl::string _ ) { }
+
+void loans( bool c )
+{
+    kl::list<kl::string> l = kl::list<kl::string>();
+    kl::list<kl::string> m = kl::list<kl::string>();
+    l.push( "a" );
+    const ref kl::string s = l[0];
+    grow( c ? ref m : ref l ); // error: changes `l` while `s` borrows it
+    _ = s.size();
+}
+
+void frozen( bool c )
+{
+    kl::string a = "a";
+    kl::string b = "b";
+    const ref kl::string r = c ? a : b;
+    kl::string gone = move b; // error: moved while `r` borrows it
+    _ = r.size();
+}
+
+void aliased( bool c )
+{
+    kl::string a = "a";
+    kl::string b = "b";
+    two( ref a, c ? ref a : ref b ); // error: `a` twice
+}
+
+i32 uninit( bool c )
+{
+    i32 x;
+    i32 y;
+    init( c ? out x : out y );
+    return x; // error: may be uninitialised
+}
+
+i32 main() { return 0; }

@@ -37,6 +37,11 @@ void Builder::mark_walked( Local_id local )
     function_.walked.push_back( local );
 }
 
+void Builder::mark_chosen( Local_id local )
+{
+    function_.chosen.push_back( local );
+}
+
 Local_id Builder::add_local( Type_id type, Span span, Symbol_id name )
 {
     function_.locals.push_back( Local { .type = type, .span = span, .name = name } );

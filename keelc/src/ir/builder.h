@@ -28,6 +28,7 @@ public:
     // A temporary built in one arm of `?:` or on the right of `&&` or `||`: dropped under a flag.
     void     mark_one_path( Local_id local );
     void     mark_walked( Local_id local );
+    void     mark_chosen( Local_id local );
     Local_id add_local( Type_id type, Span span, Symbol_id name = {} );
 
     Block_id add_block();

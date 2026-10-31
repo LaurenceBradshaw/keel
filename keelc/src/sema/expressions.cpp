@@ -1189,10 +1189,32 @@ void Expressions::receive_markers( Node_id call )
 {
     for( const Node_id argument : ast_.arguments( call ) )
     {
-        if( ast_.kind( argument ) == Node_kind::Marker_expr )
-        {
-            received_.insert( argument.v );
-        }
+        receive_marker( argument );
+    }
+}
+
+// D75: a conditional a `ref` binding borrows, whose arms stay where they are.
+void Expressions::lend( Node_id value )
+{
+    if( ast_.kind( value ) == Node_kind::Conditional_expr )
+    {
+        lent_.insert( value.v );
+        lend( ast_.then_branch( value ) );
+        lend( ast_.else_branch( value ) );
+    }
+}
+
+// D75: each arm of a conditional argument is passed as the whole would be.
+void Expressions::receive_marker( Node_id value )
+{
+    if( ast_.kind( value ) == Node_kind::Marker_expr )
+    {
+        received_.insert( value.v );
+    }
+    else if( ast_.kind( value ) == Node_kind::Conditional_expr )
+    {
+        receive_marker( ast_.then_branch( value ) );
+        receive_marker( ast_.else_branch( value ) );
     }
 }
 
@@ -2344,7 +2366,7 @@ Type_id Expressions::infer_conditional( Node_id id )
         return types_.poison( id );
     }
 
-    if( result.is_valid() )
+    if( result.is_valid() && !lent_.contains( id.v ) )
     {
         places_.check_owning_source( ast_.then_branch( id ), result );
         places_.check_owning_source( ast_.else_branch( id ), result );
@@ -3833,8 +3855,11 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             return types_.poison( id );
         }
 
-        places_.check_owning_source( ast_.then_branch( id ), expected );
-        places_.check_owning_source( ast_.else_branch( id ), expected );
+        if( !lent_.contains( id.v ) )
+        {
+            places_.check_owning_source( ast_.then_branch( id ), expected );
+            places_.check_owning_source( ast_.else_branch( id ), expected );
+        }
         return types_.record( id, expected );
     }
 
@@ -7620,6 +7645,46 @@ TEST_CASE( "type_checker_refuses_a_marker_on_a_walk_s_container", "[sema][walk]"
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "a walk borrows what it walks" ) != std::string::npos );
+    }
+}
+
+// D75: a conditional of places is borrowed arm by arm, each written as the whole would be.
+TEST_CASE( "type_checker_checks_each_arm_of_a_conditional_borrow", "[sema][ref][d75]" )
+{
+    constexpr std::string_view given = "void bump( ref i32 n ) { n = n + 1; }\n"
+                                       "void init( out i32 n ) { n = 1; }\n"
+                                       "i32 peek( const ref i32 n ) { return n; }\n";
+
+    const Typed accepted(
+        std::string( given ) +
+        "i32 f( bool c, bool d ) { i32 a = 1; i32 b = 2; bump( c ? ref a : d ? ref b : ref a ); init( c ? out a : out b ); "
+        "ref i32 r = c ? a : b; const ref i32 q = d ? r : b; return r + q; }\ni32 main() { return 0; }"
+    );
+    INFO( accepted.rendered() );
+    REQUIRE( accepted.clean() );
+
+    struct Refused
+    {
+        const char* body;
+        const char* message;
+    };
+
+    for( const Refused& refused : {
+             Refused { "bump( c ? ref a : b );", "may modify this argument" },
+             Refused { "bump( c ? ref a : ref 1 );", "`ref` needs a variable to borrow" },
+             Refused { "bump( c ? ref a : ref n );", "cannot borrow `u8` as `ref i32`" },
+             Refused { "_ = peek( c ? ref a : a );", "does not modify this argument" },
+             Refused { "ref i32 r = c ? a : 1;", "needs a variable to bind to" },
+             Refused { "ref i32 r = c ? a : n;", "cannot borrow `u8` as `ref i32`" },
+         } )
+    {
+        const Typed p(
+            std::string( given ) + "void f( bool c ) { i32 a = 1; u8 n = 2; " + refused.body + " }\ni32 main() { return 0; }"
+        );
+
+        INFO( refused.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( refused.message ) != std::string::npos );
     }
 }
 

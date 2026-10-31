@@ -1,0 +1,25 @@
+error: this could change `l` while `s` still borrows from it
+  --> sema/errors_conditional_borrow_loans.kl:17:23
+   |
+17 |     grow( c ? ref m : ref l ); // error: changes `l` while `s` borrows it
+   |                       ^^^^^ `s` is used after this; it was bound at 16:5
+
+error: `b` is moved while `r` still borrows it
+  --> sema/errors_conditional_borrow_loans.kl:26:5
+   |
+26 |     kl::string gone = move b; // error: moved while `r` borrows it
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^ `r` is used after this; it was bound at 25:38
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_conditional_borrow_loans.kl:34:21
+   |
+34 |     two( ref a, c ? ref a : ref b ); // error: `a` twice
+   |                     ^^^^^ `ref a` at 34:10 is the same object; the callee would see it under two names
+
+error: `x` may be used before it is initialised
+  --> sema/errors_conditional_borrow_loans.kl:42:5
+   |
+42 |     return x; // error: may be uninitialised
+   |     ^^^^^^^^^ it is assigned on some paths to here, but not all
+
+4 errors generated

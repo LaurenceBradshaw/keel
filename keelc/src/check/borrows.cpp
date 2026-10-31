@@ -9,6 +9,23 @@ namespace keel
 std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& addressing, const Literal_pool& literals )
 {
     std::vector<Borrow> borrows( func.locals.size() );
+    std::vector<bool>   chosen( func.locals.size(), false );
+
+    // First, so `&(*x)` through a chosen `ref` binding finds its arms.
+    for( const Local_id local : func.chosen )
+    {
+        chosen[local.v] = true;
+    }
+
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.kind == Statement_kind::Assign && statement.place.is_whole_local() && chosen[statement.place.local.v] &&
+            statement.value.kind == Rvalue_kind::Use && statement.value.a.kind == Operand_kind::Copy &&
+            statement.value.a.place.is_whole_local() )
+        {
+            borrows[statement.place.local.v].choices.push_back( statement.value.a.place.local );
+        }
+    }
 
     for( const Statement& statement : func.statements )
     {
@@ -29,7 +46,12 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
         borrow.constant = std::nullopt;
         borrow.copy_of  = Local_id {};
 
-        if( borrow.assignments != 1 || source.is_global() )
+        if( !chosen[statement.place.local.v] )
+        {
+            borrow.choices.clear();
+        }
+
+        if( borrow.assignments != 1 || source.is_global() || chosen[statement.place.local.v] )
         {
             continue;
         }
@@ -55,6 +77,12 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             if( derefs && inner.through != nullptr )
             {
                 borrow.through = inner.through;
+            }
+            // Through a chosen `ref` binding, each of its arms.
+            else if( derefs && !inner.choices.empty() )
+            {
+                borrow.choices = inner.choices;
+                borrow.via     = source.local;
             }
             // Through a `ref` binding, `&(*r)`, it is the whole of what `r` borrows.
             else if( derefs && inner.of.is_valid() )
@@ -82,6 +110,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             borrow.purpose = inner.purpose;
             borrow.through = inner.through;
             borrow.via     = inner.via;
+            borrow.choices = inner.choices;
         }
         else if( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call )
         {
@@ -92,6 +121,19 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             {
                 borrow.through = &value;
             }
+        }
+    }
+
+    // Bound like a `ref` binding, at and for what its first arm is.
+    for( const Local_id local : func.chosen )
+    {
+        Borrow& borrow = borrows[local.v];
+
+        if( !borrow.choices.empty() )
+        {
+            borrow.bound   = true;
+            borrow.at      = borrows[borrow.choices.front().v].at;
+            borrow.purpose = borrows[borrow.choices.front().v].purpose;
         }
     }
 
@@ -212,21 +254,26 @@ u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, con
             continue;
         }
 
-        const Borrow& inner = borrows[operand.place.local.v];
-
-        if( inner.through != nullptr )
-        {
-            const u32 inner_depth = reaches_depth( func, borrows, inner, whole );
-
-            if( inner_depth != 0 )
+        for_each_choice(
+            borrows,
+            borrows[operand.place.local.v],
+            [&]( const Borrow& inner )
             {
-                depth = std::max( depth, inner_depth + 1 );
+                if( inner.through != nullptr )
+                {
+                    const u32 inner_depth = reaches_depth( func, borrows, inner, whole );
+
+                    if( inner_depth != 0 )
+                    {
+                        depth = std::max( depth, inner_depth + 1 );
+                    }
+                }
+                else if( inner.of.is_valid() && overlaps( func, borrows, inner.place, whole ) )
+                {
+                    depth = std::max( depth, 1u );
+                }
             }
-        }
-        else if( inner.of.is_valid() && overlaps( func, borrows, inner.place, whole ) )
-        {
-            depth = std::max( depth, 1u );
-        }
+        );
     }
 
     return depth;
@@ -239,12 +286,19 @@ bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Bo
 
 bool borrows_from( const Function& func, const std::vector<Borrow>& borrows, const Borrow& loan, const Place& place )
 {
-    if( loan.of.is_valid() )
-    {
-        return overlaps( func, borrows, loan.place, place );
-    }
+    return any_choice(
+        borrows,
+        loan,
+        [&]( const Borrow& choice )
+        {
+            if( choice.of.is_valid() )
+            {
+                return overlaps( func, borrows, choice.place, place );
+            }
 
-    return loan.through != nullptr && reaches( func, borrows, loan, place );
+            return choice.through != nullptr && reaches( func, borrows, choice, place );
+        }
+    );
 }
 
 } // namespace keel

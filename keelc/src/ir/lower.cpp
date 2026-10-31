@@ -145,6 +145,8 @@ private:
     // substituting with this function's would ask it to bind a parameter it has never heard of.
     Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
     Operand borrowed_argument( Node_id argument, Type_id address );
+    void    borrowed_conditional( Node_id id, Local_id into, Type_id address, Address_purpose purpose );
+    Operand borrowed_arm( Node_id arm, Type_id address, Address_purpose purpose );
 
     Operand address_operand( Place place, Type_id type, Span span, Address_purpose purpose );
     // address_of, but a `T[N]` borrowed as a `T[]` is lent as a run of its elements.
@@ -3108,7 +3110,13 @@ void Lowering::lower_var( Node_id id )
     {
         // A binding stores the address, so the initialiser is lowered as a place. A pointer owns nothing,
         // so no drop is elaborated.
-        if( borrowed )
+        if( borrowed && ast_.kind( init ) == Node_kind::Conditional_expr )
+        {
+            borrowed_conditional(
+                init, local, type, ast_.is_const_binding( id ) ? Address_purpose::Read : Address_purpose::Borrow
+            );
+        }
+        else if( borrowed )
         {
             builder_.assign(
                 builder_.place( local ),
@@ -4184,6 +4192,15 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
 
     // `ref x` is stepped through. A bare borrow and a temporary are lowered first and their address
     // taken where they landed, which also leaves the temporary to be dropped.
+    // D75: `c ? ref a : ref b` passes the address of the arm chosen.
+    if( ast_.kind( argument ) == Node_kind::Conditional_expr &&
+        ( ast_.marker_of( argument ) == Keyword::Ref || ast_.marker_of( argument ) == Keyword::Out ) )
+    {
+        const Local_id chosen = builder_.add_local( address, span );
+        borrowed_conditional( argument, chosen, address, Address_purpose::Borrow );
+        return copy( builder_.place( chosen ), address );
+    }
+
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
         const Keyword marker  = ast_.keyword( argument );
@@ -4210,6 +4227,56 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
                             : value.place;
 
     return temporary( borrow_of( place, value.type, address, Address_purpose::Read, span ), address, span );
+}
+
+// D75: `into` holds the address of whichever arm ran. Each arm's address is a temporary of its own,
+// assigned once, so the checks see one loan per arm.
+void Lowering::borrowed_conditional( Node_id id, Local_id into, Type_id address, Address_purpose purpose )
+{
+    const Span span = ast_.span( id );
+
+    const Block_id then_block = builder_.add_block();
+    const Block_id else_block = builder_.add_block();
+    const Block_id join       = builder_.add_block();
+
+    builder_.terminate_branch( lower_expression( ast_.condition( id ) ), then_block, else_block, span );
+
+    const auto lower_arm = [&]( Node_id arm )
+    {
+        const std::size_t first = drops_.mark();
+        builder_.assign( builder_.place( into ), use( borrowed_arm( arm, address, purpose ) ), ast_.span( arm ) );
+        builder_.terminate_goto( join, span );
+        drops_.one_path_since( first );
+    };
+
+    builder_.switch_to( then_block );
+    lower_arm( ast_.then_branch( id ) );
+
+    builder_.switch_to( else_block );
+    lower_arm( ast_.else_branch( id ) );
+
+    builder_.switch_to( join );
+    builder_.mark_chosen( into );
+}
+
+// An arm's own marker, if it has one, says what it is for; a `ref` binding's bare arm takes the binding's.
+Operand Lowering::borrowed_arm( Node_id arm, Type_id address, Address_purpose purpose )
+{
+    const Span span = ast_.span( arm );
+
+    if( ast_.kind( arm ) == Node_kind::Conditional_expr )
+    {
+        const Local_id chosen = builder_.add_local( address, span );
+        borrowed_conditional( arm, chosen, address, purpose );
+        return copy( builder_.place( chosen ), address );
+    }
+
+    if( ast_.kind( arm ) == Node_kind::Marker_expr )
+    {
+        return borrowed_argument( arm, address );
+    }
+
+    return temporary( borrow_of( lower_place( arm ), type_of( arm ), address, purpose, span ), address, span );
 }
 
 Operand Lowering::address_operand( Place place, Type_id type, Span span, Address_purpose purpose )

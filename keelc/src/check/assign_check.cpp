@@ -833,6 +833,18 @@ TEST_CASE( "assign_check_reports_a_read_of_an_unwritten_out_parameter", "[check]
 
 // The false-positive set: each shape initialises in a way the analysis cannot see directly, and a
 // rule slightly too strict here breaks working programs.
+// D75: `out` through a conditional assigns only the arm chosen.
+TEST_CASE( "assign_check_assigns_one_arm_of_a_conditional_out", "[check][assign][d75]" )
+{
+    const Checked p( "void init( out i32 n ) { n = 1; }\n"
+                     "i32 f( bool c ) { i32 x; i32 y; init( c ? out x : out y ); return x; }\n"
+                     "i32 main() { return f( true ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.reads().size() == 1 );
+    REQUIRE( p.reads()[0].maybe );
+}
+
 TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assign][d9]" )
 {
     for( const char* source : {

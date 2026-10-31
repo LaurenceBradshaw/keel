@@ -7,6 +7,21 @@
 
 namespace keel::sema
 {
+namespace
+{
+// `ref x` borrows `x`, and a conditional of borrows each arm's (D75).
+void push_borrowed( const Ast& ast, Node_id argument, std::vector<Node_id>& borrowed )
+{
+    if( ast.kind( argument ) == Node_kind::Conditional_expr && ast.marker_of( argument ) != Keyword::Count )
+    {
+        push_borrowed( ast, ast.then_branch( argument ), borrowed );
+        push_borrowed( ast, ast.else_branch( argument ), borrowed );
+        return;
+    }
+
+    borrowed.push_back( ast.kind( argument ) == Node_kind::Marker_expr ? ast.operand( argument ) : argument );
+}
+} // namespace
 
 bool Places::is_assignable( Node_id id ) const
 {
@@ -858,8 +873,7 @@ std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
         // A refused argument was reported where it stands.
         if( borrows( mode, types_.type_of( args[i] ) ) && !table_.is_error( types_.type_of( args[i] ) ) )
         {
-            // `ref x` borrows `x`.
-            borrowed.push_back( ast_.kind( args[i] ) == Node_kind::Marker_expr ? ast_.operand( args[i] ) : args[i] );
+            push_borrowed( ast_, args[i], borrowed );
         }
     }
 

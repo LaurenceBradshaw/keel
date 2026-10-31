@@ -654,6 +654,22 @@ bool Ast::consumes( Node_id switch_stmt ) const
     return value.is_valid() && kind( value ) == Node_kind::Marker_expr && keyword( value ) == Keyword::Move;
 }
 
+Keyword Ast::marker_of( Node_id value ) const
+{
+    if( kind( value ) == Node_kind::Marker_expr )
+    {
+        return keyword( value );
+    }
+
+    if( kind( value ) != Node_kind::Conditional_expr )
+    {
+        return Keyword::Count;
+    }
+
+    const Keyword then_marker = marker_of( then_branch( value ) );
+    return then_marker == marker_of( else_branch( value ) ) ? then_marker : Keyword::Count;
+}
+
 std::span<const Node_id> Ast::arms( Node_id switch_stmt ) const
 {
     assert( kind( switch_stmt ) == Node_kind::Switch_stmt );

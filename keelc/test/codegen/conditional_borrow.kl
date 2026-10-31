@@ -1,0 +1,56 @@
+// D75: a conditional of places borrows the arm chosen. Each call runs every path, writing through
+// each arm, nested arms, `out` arms, a `ref` local passed on with `ref r`, and an owning `const ref` local.
+import t::console;
+import kl::string;
+import kl::list;
+
+void bump( ref i32 n ) { n = n + 10; }
+void init( out i32 n ) { n = 7; }
+void grow( ref kl::string s ) { s += "!"; }
+u64 size_of( const ref kl::string s ) { return s.size(); }
+
+void args( bool c, bool d )
+{
+    i32 a = 1;
+    i32 b = 2;
+    i32 e = 3;
+    bump( c ? ref a : ref b );
+    bump( c ? ref a : d ? ref b : ref e );
+    t::println( a );
+    t::println( b );
+    t::println( e );
+    i32 x;
+    i32 y;
+    init( c ? out x : out y );
+    x = 0;
+    y = 0;
+    t::println( x + y );
+}
+
+void locals( bool c )
+{
+    i32 a = 1;
+    i32 b = 2;
+    ref i32 r = c ? a : b;
+    r = 40;
+    bump( ref r );
+    t::println( a );
+    t::println( b );
+
+    kl::string s = "x";
+    kl::string u = "yy";
+    const ref kl::string q = c ? s : u;
+    t::println( size_of( q ) );
+    grow( c ? ref s : ref u );
+    t::println( s.size() + u.size() );
+}
+
+i32 main()
+{
+    args( true, false );
+    args( false, true );
+    args( false, false );
+    locals( true );
+    locals( false );
+    return 0;
+}

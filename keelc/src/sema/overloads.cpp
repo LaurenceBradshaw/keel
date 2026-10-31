@@ -16,6 +16,17 @@ namespace keel::sema
 
 namespace
 {
+// A `ref` or `out` anywhere in a conditional's arms.
+bool lends( const Ast& ast, Node_id value )
+{
+    if( ast.kind( value ) == Node_kind::Marker_expr )
+    {
+        return ast.keyword( value ) == Keyword::Ref || ast.keyword( value ) == Keyword::Out;
+    }
+
+    return ast.kind( value ) == Node_kind::Conditional_expr &&
+           ( lends( ast, ast.then_branch( value ) ) || lends( ast, ast.else_branch( value ) ) );
+}
 } // namespace
 
 // The types the call wrote, mapped onto the callable's own type parameters. Positional, because
@@ -909,6 +920,15 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
 {
     const Keyword wanted = call_marker_of( mode );
     const Keyword given  = ast_.kind( argument ) == Node_kind::Marker_expr ? ast_.keyword( argument ) : Keyword::Count;
+
+    // D75: a borrowed conditional, or one lending in an arm, is passed arm by arm.
+    if( ast_.kind( argument ) == Node_kind::Conditional_expr &&
+        ( wanted == Keyword::Ref || wanted == Keyword::Out || lends( ast_, argument ) ) )
+    {
+        check_one_argument_marker( ast_.then_branch( argument ), mode, expected, name );
+        check_one_argument_marker( ast_.else_branch( argument ), mode, expected, name );
+        return;
+    }
 
     // D31: a borrow - `ref`, `out` or `const ref` - binds the caller's object itself, so there is no
     // conversion step for a widened copy to live in: `ref u8` and `ref i32` are different bindings.

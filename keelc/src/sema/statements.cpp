@@ -340,6 +340,10 @@ void Statements::visit_var( Node_id id )
         // check() absorbs - one diagnostic, from Annotations::resolve.
         if( init.is_valid() )
         {
+            if( mode == Keyword::Ref )
+            {
+                expressions_.lend( init );
+            }
             expressions_.check( init, type );
             // Not for a binding: `ref B r = a;` copies nothing and gives nothing away, so D31 has
             // no transfer to ask about. Only the `auto` path below can skip the test outright.
@@ -428,48 +432,72 @@ void Statements::visit_var( Node_id id )
         {
             // Already reported; says nothing about a value that failed.
         }
-        // Not a temporary: the referent has to outlive the binding, and a variable named here was
-        // declared before this line and so outlives it. A temporary is the one thing that would not.
-        else if( !places_.is_assignable( init ) )
-        {
-            const bool copies = bounds_.satisfies( type, Bound::Copyable );
-
-            reporter_.error_at(
-                ast_.span( init ),
-                "a `ref` binding needs a variable to bind to",
-                copies ? "drop `ref` to copy the value" : "give it a variable of its own first"
-            );
-        }
-        // D54: a place inside a temporary, or a call's reference to one, ends with the statement too.
-        else if( const Node_id temporary = places_.borrowed_temporary( init ); temporary.is_valid() )
-        {
-            reporter_.error_at(
-                ast_.span( temporary ),
-                "a `ref` binding cannot borrow from a temporary",
-                "it ends with this statement; give it a variable of its own first"
-            );
-        }
-        // A type that does not convert was already reported by check(); an implementer borrowed
-        // as its interface, or an array as a run, is still that very object.
-        else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) &&
-                 types_.conformances().holds( table_, types_.type_of( init ), type ) && !table_.is_interface( type ) &&
-                 !table_.is_run( type ) )
-        {
-            reporter_.error_at(
-                ast_.span( init ),
-                fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_.type_of( init ) ), table_.name( type ) ),
-                "a borrow is the variable itself, so its type must match exactly"
-            );
-        }
-        // Only a *mutable* binding would launder a read-only one. A `const ref` onto a const is
-        // exactly what the const half buys, so it skips the test rather than failing it.
-        else if( ast_.is_const_binding( id ) || places_.check_writable( init, expressions_.current_function() ) )
+        else if( check_ref_initialiser( id, init, type ) )
         {
             places_.record_binding_address( annotation, type );
         }
     }
 
     types_.record( id, type );
+}
+
+// D32's tests of what a `ref` binding borrows; a conditional's arms are each tested (D75).
+bool Statements::check_ref_initialiser( Node_id id, Node_id value, Type_id type )
+{
+    if( ast_.kind( value ) == Node_kind::Conditional_expr )
+    {
+        const bool then_ok = check_ref_initialiser( id, ast_.then_branch( value ), type );
+        const bool else_ok = check_ref_initialiser( id, ast_.else_branch( value ), type );
+        return then_ok && else_ok;
+    }
+
+    if( table_.is_error( types_.type_of( value ) ) )
+    {
+        return false;
+    }
+
+    // Not a temporary: the referent has to outlive the binding, and a variable named here was
+    // declared before this line and so outlives it. A temporary is the one thing that would not.
+    if( !places_.is_assignable( value ) )
+    {
+        const bool copies = bounds_.satisfies( type, Bound::Copyable );
+
+        reporter_.error_at(
+            ast_.span( value ),
+            "a `ref` binding needs a variable to bind to",
+            copies ? "drop `ref` to copy the value" : "give it a variable of its own first"
+        );
+        return false;
+    }
+
+    // D54: a place inside a temporary, or a call's reference to one, ends with the statement too.
+    if( const Node_id temporary = places_.borrowed_temporary( value ); temporary.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( temporary ),
+            "a `ref` binding cannot borrow from a temporary",
+            "it ends with this statement; give it a variable of its own first"
+        );
+        return false;
+    }
+
+    // A type that does not convert was already reported by check(); an implementer borrowed
+    // as its interface, or an array as a run, is still that very object.
+    if( types_.type_of( value ) != type && !table_.references_error( types_.type_of( value ) ) &&
+        types_.conformances().holds( table_, types_.type_of( value ), type ) && !table_.is_interface( type ) &&
+        !table_.is_run( type ) )
+    {
+        reporter_.error_at(
+            ast_.span( value ),
+            fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_.type_of( value ) ), table_.name( type ) ),
+            "a borrow is the variable itself, so its type must match exactly"
+        );
+        return false;
+    }
+
+    // Only a *mutable* binding would launder a read-only one. A `const ref` onto a const is
+    // exactly what the const half buys, so it skips the test rather than failing it.
+    return ast_.is_const_binding( id ) || places_.check_writable( value, expressions_.current_function() );
 }
 
 void Statements::visit_assign( Node_id id )

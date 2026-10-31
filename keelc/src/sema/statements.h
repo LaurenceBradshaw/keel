@@ -78,6 +78,7 @@ private:
     void visit_walk( Node_id id );
     // The type one binding of `loop` takes from the walk's `param`, or the error type.
     Type_id check_walk_binding( Node_id entry, Type_id given, Node_id param );
+    bool    check_ref_initialiser( Node_id id, Node_id value, Type_id type ); // false once reported
     void    visit_increment( Node_id id );
     void    visit_global( Node_id id );
     void    visit_block( Node_id id );

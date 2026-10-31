@@ -150,16 +150,23 @@ void replaced_through(
             continue;
         }
 
-        const Borrow& inner = borrows[operand.place.local.v];
-
-        if( inner.through != nullptr )
-        {
-            replaced_through( func, borrows, *inner.through, depth + 1, at, out );
-        }
-        else if( inner.of.is_valid() )
-        {
-            out.push_back( Effect { .place = inner.place, .conflict = Loan_conflict::Replaced, .at = at, .depth = depth } );
-        }
+        for_each_choice(
+            borrows,
+            borrows[operand.place.local.v],
+            [&]( const Borrow& inner )
+            {
+                if( inner.through != nullptr )
+                {
+                    replaced_through( func, borrows, *inner.through, depth + 1, at, out );
+                }
+                else if( inner.of.is_valid() )
+                {
+                    out.push_back(
+                        Effect { .place = inner.place, .conflict = Loan_conflict::Replaced, .at = at, .depth = depth }
+                    );
+                }
+            }
+        );
     }
 }
 
@@ -178,6 +185,29 @@ void written(
         func.projections[place.first_projection].kind == Projection_kind::Deref )
     {
         const Borrow& pointer = borrows[place.local.v];
+
+        // D75: a write through a chosen binding writes whichever arm it holds.
+        if( !pointer.choices.empty() )
+        {
+            for_each_choice(
+                borrows,
+                pointer,
+                [&]( const Borrow& choice )
+                {
+                    if( choice.of.is_valid() )
+                    {
+                        out.push_back(
+                            Effect { .place = choice.place, .conflict = Loan_conflict::Assigned, .at = at, .via = place.local }
+                        );
+                    }
+                    else if( choice.through != nullptr && owning[place.local.v] )
+                    {
+                        replaced_through( func, borrows, *choice.through, 1, at, out );
+                    }
+                }
+            );
+            return;
+        }
 
         if( pointer.of.is_valid() )
         {
@@ -251,20 +281,26 @@ void effects_of(
                 continue;
             }
 
-            const Borrow& borrow = borrows[argument.place.local.v];
-
-            if( borrow.of.is_valid() && borrow.purpose != Address_purpose::Read )
-            {
-                out.push_back(
-                    Effect { .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at, .via = borrow.via }
-                );
-            }
-            // `&(*r)` with `r` a call's result: an element changed through that call.
-            else if( borrow.bound && borrow.through != nullptr && borrow.purpose != Address_purpose::Read &&
-                     owning[argument.place.local.v] )
-            {
-                replaced_through( func, borrows, *borrow.through, 1, borrow.at, out );
-            }
+            // D75: a chosen argument may change either arm.
+            for_each_choice(
+                borrows,
+                borrows[argument.place.local.v],
+                [&]( const Borrow& borrow )
+                {
+                    if( borrow.of.is_valid() && borrow.purpose != Address_purpose::Read )
+                    {
+                        out.push_back( Effect {
+                            .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at, .via = borrow.via
+                        } );
+                    }
+                    // `&(*r)` with `r` a call's result: an element changed through that call.
+                    else if( borrow.bound && borrow.through != nullptr && borrow.purpose != Address_purpose::Read &&
+                             owning[argument.place.local.v] )
+                    {
+                        replaced_through( func, borrows, *borrow.through, 1, borrow.at, out );
+                    }
+                }
+            );
         }
     }
     else if( statement.kind == Statement_kind::Drop )
@@ -282,8 +318,10 @@ bool is_walked( const Function& func, Local_id local )
 
 bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 {
-    return ( func.locals[local.v].name.is_valid() || is_walked( func, local ) ) && borrow.assignments == 1 && borrow.bound &&
-           ( borrow.of.is_valid() || borrow.through != nullptr ) && borrow.purpose != Address_purpose::Initialise;
+    return ( func.locals[local.v].name.is_valid() || is_walked( func, local ) ) &&
+           ( borrow.assignments == 1 || !borrow.choices.empty() ) && borrow.bound &&
+           ( borrow.of.is_valid() || borrow.through != nullptr || !borrow.choices.empty() ) &&
+           borrow.purpose != Address_purpose::Initialise;
 }
 
 // D74: a walk's receiver freezes its container as an indirect loan does, except against what the
@@ -411,13 +449,26 @@ std::vector<Loan_error> check_loans(
                         continue;
                     }
 
-                    const Borrow& loan = borrows[holder.v];
-
                     const bool walked = is_walked( func, holder );
 
-                    if( walked ? walk_conflicts( func, borrows, owning, loan, holder, effect )
-                               : conflicts( func, borrows, owning, loan, effect ) )
+                    // D75: a chosen binding's first arm that conflicts.
+                    const Borrow* hit = nullptr;
+                    for_each_choice(
+                        borrows,
+                        borrows[holder.v],
+                        [&]( const Borrow& choice )
+                        {
+                            if( hit == nullptr && ( walked ? walk_conflicts( func, borrows, owning, choice, holder, effect )
+                                                           : conflicts( func, borrows, owning, choice, effect ) ) )
+                            {
+                                hit = &choice;
+                            }
+                        }
+                    );
+
+                    if( hit != nullptr )
                     {
+                        const Borrow&  loan   = *hit;
                         const Local_id object = loan.of.is_valid() ? loan.of : effect.place.local;
 
                         errors.push_back( Loan_error {
@@ -689,6 +740,44 @@ TEST_CASE( "borrow_check_freezes_the_object_of_an_indirect_loan", "[check][borro
 
 // D54: an object that owns nothing has nothing to free or relocate, so a returned reference into it
 // is broken only by a move, as a direct loan is.
+// D75: a conditional borrow holds a loan on each arm, and anything breaking either breaks it.
+TEST_CASE( "borrow_check_holds_each_arm_of_a_conditional_borrow", "[check][borrow][d75]" )
+{
+    SECTION( "refused" )
+    {
+        for( const Refused& refused : {
+                 Refused {
+                     "ref i32 x = v[0]; poke( i == 0 ? ref u : ref v ); i32 y = x;", Loan_conflict::Changed, "ref v", "x", "v"
+                 },
+                 Refused { "ref V r = i == 0 ? v : u; take( move u ); i32 y = r.x;", Loan_conflict::Moved, "move u", "r", "u" },
+                 Refused {
+                     "ref V r = i == 0 ? v : u; ref i32 x = r[0]; u.push( 1 ); i32 y = x;",
+                     Loan_conflict::Changed,
+                     "u",
+                     "x",
+                     "u"
+                 },
+                 Refused {
+                     "ref i32 x = v[0]; ref V r = i == 0 ? u : v; r = V(); i32 y = x;", Loan_conflict::Assigned, "r", "x", "v"
+                 },
+             } )
+        {
+            require_refused( k_vector, k_vector_locals, refused );
+        }
+    }
+
+    SECTION( "accepted" )
+    {
+        for( const char* body : {
+                 "ref i32 x = v[0]; poke( i == 0 ? ref u : ref u ); i32 y = x;",
+                 "ref V r = i == 0 ? v : u; i32 y = r.x; take( move u );",
+             } )
+        {
+            require_accepted( k_vector, k_vector_locals, body );
+        }
+    }
+}
+
 TEST_CASE( "borrow_check_freezes_only_an_owner", "[check][borrow][m9]" )
 {
     require_refused(

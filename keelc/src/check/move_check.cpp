@@ -260,10 +260,14 @@ void find_moves_into_borrowing_calls(
                     continue;
                 }
 
+                const auto hit = [&]( const Borrow& borrow )
+                {
+                    return ( borrow.of == moved.place.local && overlaps( func, borrows, borrow.place, moved.place ) ) ||
+                           ( borrow.through != nullptr && reaches( func, borrows, borrow, moved.place ) );
+                };
                 const Borrow& borrow = borrows[borrowed.place.local.v];
 
-                if( ( borrow.of == moved.place.local && overlaps( func, borrows, borrow.place, moved.place ) ) ||
-                    ( borrow.through != nullptr && reaches( func, borrows, borrow, moved.place ) ) )
+                if( any_choice( borrows, borrow, hit ) )
                 {
                     errors.push_back( Move_error {
                         .local    = moved.place.local,
@@ -294,7 +298,7 @@ void find_aliased_arguments(
 
         const Borrow& borrow = borrows[operand.place.local.v];
 
-        return borrow.of.is_valid() || borrow.through != nullptr ? &borrow : nullptr;
+        return borrow.of.is_valid() || borrow.through != nullptr || !borrow.choices.empty() ? &borrow : nullptr;
     };
 
     for( const Statement& statement : func.statements )
@@ -309,14 +313,24 @@ void find_aliased_arguments(
 
         const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
 
+        // D75: each arm of a chosen argument is an argument of its own.
+        std::vector<std::pair<std::size_t, const Borrow*>> loans;
         for( std::size_t i = 0; i < arguments.size(); ++i )
         {
-            for( std::size_t j = 0; j < arguments.size(); ++j )
+            if( const Borrow* borrow = borrow_of( arguments[i] ); borrow != nullptr )
             {
-                const Borrow* a = borrow_of( arguments[i] );
-                const Borrow* b = borrow_of( arguments[j] );
+                for_each_choice( borrows, *borrow, [&]( const Borrow& choice ) { loans.emplace_back( i, &choice ); } );
+            }
+        }
 
-                if( i == j || a == nullptr || b == nullptr )
+        for( std::size_t x = 0; x < loans.size(); ++x )
+        {
+            for( std::size_t y = 0; y < loans.size(); ++y )
+            {
+                const auto [i, a] = loans[x];
+                const auto [j, b] = loans[y];
+
+                if( i == j || ( !a->of.is_valid() && a->through == nullptr ) || ( !b->of.is_valid() && b->through == nullptr ) )
                 {
                     continue;
                 }
@@ -824,6 +838,28 @@ TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]"
 // D54's one-call rule: each borrowed argument is a loan for the whole call, so an element may not
 // be passed beside a borrow of its whole that could change it, one place may not be `out` twice, and
 // an owner may not reach the call under two names when the call could change it.
+// D75: each arm of a conditional borrow is an argument of its own.
+TEST_CASE( "move_check_refuses_an_arm_aliasing_another_argument", "[check][move][d75]" )
+{
+    constexpr std::string_view k_both = "class V { public i32 x; V() { x = 0; } ~V() { } };\n"
+                                        "void both( ref V a, ref V b ) { }\n";
+
+    const Checked refused(
+        std::string( k_both ) + "i32 main() { V v = V(); V u = V(); i32 i = 0; "
+                                "both( ref v, i == 0 ? ref u : ref v ); return 0; }"
+    );
+    INFO( refused.rendered() );
+    REQUIRE( refused.errors().size() == 1 );
+    REQUIRE( refused.errors()[0].conflict == Call_conflict::Aliased );
+
+    const Checked accepted(
+        std::string( k_both ) + "i32 main() { V v = V(); V u = V(); V w = V(); i32 i = 0; "
+                                "both( ref v, i == 0 ? ref u : ref w ); return 0; }"
+    );
+    INFO( accepted.rendered() );
+    REQUIRE( accepted.errors().empty() );
+}
+
 TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9]" )
 {
     constexpr std::string_view k_aliased =

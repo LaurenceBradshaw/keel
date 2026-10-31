@@ -91,6 +91,7 @@ public:
     void check_yield( Node_id id );
     // D74: the walk a `for( x : c )` runs, reading or writing; invalid once reported.
     Node_id check_walk( Node_id walk_stmt, bool writes, Type_id& owner ); // `owner` declares the walk
+    void    lend( Node_id value ); // D75: a `ref` binding's initialiser, before it is checked
 
     // A variant name in a pattern position - a `switch` arm's path, or a bare `case` label. The
     // payload is accounted for there, so `Shape::Circle` is complete; `Shape s = Shape::Circle;`
@@ -163,6 +164,7 @@ private:
     );
     void shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
     void receive_markers( Node_id call );
+    void receive_marker( Node_id value );
 
     void check_deduced_bounds(
         std::span<const Node_id> parameters,
@@ -288,6 +290,7 @@ private:
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
     std::unordered_set<u32> received_;
+    std::unordered_set<u32> lent_; // conditionals a `ref` binding borrows
 
     u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
     bool unsafe_used_  = false;
