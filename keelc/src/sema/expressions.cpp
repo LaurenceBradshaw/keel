@@ -3263,7 +3263,6 @@ Type_id Expressions::infer_array_fill( Node_id id )
     return types_.record( id, expectation );
 }
 
-// The resolver bound the name, but to something a literal cannot build.
 // The one of `candidates` an edit or two from `name`; none when none is, or two tie.
 Node_id Expressions::nearest_name( std::span<const Node_id> candidates, Symbol_id name ) const
 {
