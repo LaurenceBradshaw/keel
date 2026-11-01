@@ -17,10 +17,10 @@ error: this constructor never assigns `a`
    |             ^^^^^^^ every field must hold a value when the constructor returns
 
 error: `b` is used before this constructor assigns it
-  --> sema/errors_constructor_fields.kl:70:9
+  --> sema/errors_constructor_fields.kl:70:13
    |
 70 |         a = b;
-   |         ^^^^^^ assign it before reading it
+   |             ^ assign it before reading it
 
 error: `this` is used before this constructor assigns `a`
   --> sema/errors_constructor_fields.kl:82:9

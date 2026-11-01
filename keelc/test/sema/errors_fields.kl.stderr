@@ -41,10 +41,10 @@ warning: unused parameter `other` [-Wunused-parameter]
    |                                  ^^^^^ name it `_` if it is unused on purpose
 
 error: `s.y` is used before it is initialised
-  --> sema/errors_fields.kl:98:5
+  --> sema/errors_fields.kl:98:12
    |
 98 |     return s.y; // error
-   |     ^^^^^^^^^^^ assign it before reading it
+   |            ^^^ assign it before reading it
 
 error: `s.y` is never assigned
    --> sema/errors_fields.kl:101:1
@@ -53,16 +53,16 @@ error: `s.y` is never assigned
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
 
 error: `p` is used after `p.a` was moved
-   --> sema/errors_fields.kl:109:5
+   --> sema/errors_fields.kl:109:11
     |
 109 |     keep( move p ); // error
-    |     ^^^^^^^^^^^^^^ moved at 108:5
+    |           ^^^^^^ moved at 108:11
 
 error: `p.a` may already have been moved
-   --> sema/errors_fields.kl:119:5
+   --> sema/errors_fields.kl:119:11
     |
 119 |     sink( move p.a ); // error
-    |     ^^^^^^^^^^^^^^^^ moved at 116:9 on some path to here
+    |           ^^^^^^^^ moved at 116:15 on some path to here
 
 error: `p.a` is moved into this call, so the call cannot also borrow it
    --> sema/errors_fields.kl:124:21
@@ -71,10 +71,10 @@ error: `p.a` is moved into this call, so the call cannot also borrow it
     |                     ^^^^^ a call cannot take a value and borrow it at once
 
 error: `p.a` is moved while `r` still borrows it
-   --> sema/errors_fields.kl:135:5
+   --> sema/errors_fields.kl:135:11
     |
 135 |     sink( move p.a ); // error
-    |     ^^^^^^^^^^^^^^^^ `r` is used after this; it was bound at 134:5
+    |           ^^^^^^^^ `r` is used after this; it was bound at 134:5
 
 error: `c` is written one field at a time before it holds a value
    --> sema/errors_fields.kl:142:5

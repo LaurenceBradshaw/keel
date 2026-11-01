@@ -1,19 +1,19 @@
 error: `inner` has ended, so `p` points at nothing
-  --> sema/errors_dying_local_address.kl:10:5
+  --> sema/errors_dying_local_address.kl:10:12
    |
 10 |     return *p; // error: has ended
-   |     ^^^^^^^^^^ declare `inner` where `p` is
+   |            ^^ declare `inner` where `p` is
 
 error: `inner` has ended, so `p` points at nothing
-  --> sema/errors_dying_local_address.kl:24:5
+  --> sema/errors_dying_local_address.kl:24:12
    |
 24 |     return *p; // error: has ended
-   |     ^^^^^^^^^^ declare `inner` where `p` is
+   |            ^^ declare `inner` where `p` is
 
 error: `inner` has ended, so `p` points at nothing
-  --> sema/errors_dying_local_address.kl:35:5
+  --> sema/errors_dying_local_address.kl:35:12
    |
 35 |     return *p; // error: has ended
-   |     ^^^^^^^^^^ declare `inner` where `p` is
+   |            ^^ declare `inner` where `p` is
 
 3 errors generated

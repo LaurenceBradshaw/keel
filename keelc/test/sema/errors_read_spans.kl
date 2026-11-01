@@ -1,0 +1,25 @@
+// A read reports at the operand read, not the statement around it, and each argument at its own.
+import kl::list;
+
+struct P { i32 x; i32 y; };
+class B { public i32 n; ~B() { } };
+
+void two( move B _, move B _ ) { }
+
+i32 sum() { i32 v; v = v + 1; return v; }             // error: at `v`, not `v + 1`
+i32 member() { P p; return p.x + 1; }                 // error: at `p.x`
+i32 returned() { i32 x; return x; }                   // error: at `x`
+i32 bound() { i32 x; const ref i32 r = x; return r; } // error: at `x`
+
+// error: at `l`
+i32 walked() { kl::list<i32> l; i32 n = 0; for( i32 e : l ) { n = n + e; } return n; }
+
+void arguments()
+{
+    B a = B { 1 };
+    B b = B { 2 };
+    two( move a, move b );
+    two( move a, move b ); // error: `a`, then `b`, each at its own argument
+}
+
+i32 main() { return 0; }

@@ -90,7 +90,7 @@ struct Walk
     {
         if( operand.has_place() )
         {
-            read( aims, operand.place, at );
+            read( aims, operand.place, operand.span_or( at ) );
         }
     }
 

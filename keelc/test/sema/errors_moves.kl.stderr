@@ -1,32 +1,32 @@
 error: `a` is used after it was moved
-  --> sema/errors_moves.kl:12:5
+  --> sema/errors_moves.kl:12:11
    |
 12 |     sink( a );
-   |     ^^^^^^^^^ moved at 11:5
+   |           ^ moved at 11:11
 
 error: `a` is used after it was moved
-  --> sema/errors_moves.kl:22:5
+  --> sema/errors_moves.kl:22:11
    |
 22 |     sink( move a );
-   |     ^^^^^^^^^^^^^^ moved at 21:5
+   |           ^^^^^^ moved at 21:11
 
 error: `a` may already have been moved
-  --> sema/errors_moves.kl:38:5
+  --> sema/errors_moves.kl:38:11
    |
 38 |     sink( a );
-   |     ^^^^^^^^^ moved at 35:9 on some path to here
+   |           ^ moved at 35:15 on some path to here
 
 error: `a` is used after it was moved
-  --> sema/errors_moves.kl:56:5
+  --> sema/errors_moves.kl:56:11
    |
 56 |     sink( a );
-   |     ^^^^^^^^^ moved at 49:9
+   |           ^ moved at 49:15
 
 error: `a` may already have been moved
-  --> sema/errors_moves.kl:68:9
+  --> sema/errors_moves.kl:68:15
    |
 68 |         sink( move a );
-   |         ^^^^^^^^^^^^^^ moved at 68:9 on some path to here
+   |               ^^^^^^ moved at 68:15 on some path to here
 
 warning: `move` is not needed on an operator's operand [-Wneedless-move]
    --> sema/errors_moves.kl:110:11

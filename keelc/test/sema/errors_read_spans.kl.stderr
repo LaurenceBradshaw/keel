@@ -1,0 +1,43 @@
+error: `v` is used before it is initialised
+ --> sema/errors_read_spans.kl:9:24
+  |
+9 | i32 sum() { i32 v; v = v + 1; return v; }             // error: at `v`, not `v + 1`
+  |                        ^ give it a value at its declaration
+
+error: `p` is used before it is initialised
+  --> sema/errors_read_spans.kl:10:28
+   |
+10 | i32 member() { P p; return p.x + 1; }                 // error: at `p.x`
+   |                            ^^^ give it a value at its declaration
+
+error: `x` is used before it is initialised
+  --> sema/errors_read_spans.kl:11:32
+   |
+11 | i32 returned() { i32 x; return x; }                   // error: at `x`
+   |                                ^ give it a value at its declaration
+
+error: `x` is used before it is initialised
+  --> sema/errors_read_spans.kl:12:40
+   |
+12 | i32 bound() { i32 x; const ref i32 r = x; return r; } // error: at `x`
+   |                                        ^ give it a value at its declaration
+
+error: `l` is used before it is initialised
+  --> sema/errors_read_spans.kl:15:57
+   |
+15 | i32 walked() { kl::list<i32> l; i32 n = 0; for( i32 e : l ) { n = n + e; } return n; }
+   |                                                         ^ give it a value at its declaration
+
+error: `a` is used after it was moved
+  --> sema/errors_read_spans.kl:22:10
+   |
+22 |     two( move a, move b ); // error: `a`, then `b`, each at its own argument
+   |          ^^^^^^ moved at 21:10
+
+error: `b` is used after it was moved
+  --> sema/errors_read_spans.kl:22:18
+   |
+22 |     two( move a, move b ); // error: `a`, then `b`, each at its own argument
+   |                  ^^^^^^ moved at 21:18
+
+7 errors generated

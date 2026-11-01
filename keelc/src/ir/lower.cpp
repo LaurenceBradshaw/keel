@@ -75,6 +75,7 @@ private:
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
     Operand lower_expression( Node_id id ); // produces a value
+    Operand lower_unspanned( Node_id id );
 
     // One per construct, dispatched from lower_expression. The small cases stay inline there:
     // extracting a two-line literal would cost a name and buy nothing.
@@ -2723,7 +2724,18 @@ Operand Lowering::lower_field_application( Node_id id )
     );
 }
 
+// An operand keeps the innermost expression's span, so a read reports at the name read.
 Operand Lowering::lower_expression( Node_id id )
+{
+    Operand operand = lower_unspanned( id );
+    if( !operand.span.is_valid() )
+    {
+        operand.span = ast_.span( id );
+    }
+    return operand;
+}
+
+Operand Lowering::lower_unspanned( Node_id id )
 {
     switch( ast_.kind( id ) )
     {
@@ -3094,7 +3106,7 @@ void Lowering::lower_return( Node_id id )
 
             builder_.assign(
                 builder_.place( k_return_slot ),
-                borrow_of( lower_place( value ), type_of( value ), address, Address_purpose::Read, span ),
+                borrow_of( lower_place( value ), type_of( value ), address, Address_purpose::Read, ast_.span( value ) ),
                 span
             );
         }
@@ -3150,7 +3162,7 @@ void Lowering::lower_var( Node_id id )
                     type_of( init ),
                     type,
                     ast_.is_const_binding( id ) ? Address_purpose::Read : Address_purpose::Borrow,
-                    span
+                    ast_.span( init )
                 ),
                 span
             );
@@ -3850,7 +3862,7 @@ void Lowering::lower_walk( Node_id id )
     const auto     purpose        = ast_.is_const_method( walk ) ? Address_purpose::Read : Address_purpose::Borrow;
 
     builder_.storage_live( receiver, span );
-    builder_.assign( builder_.place( receiver ), address_of( place, address, purpose ), span );
+    builder_.assign( builder_.place( receiver ), address_of( place, address, purpose, ast_.span( container ) ), span );
     drops_.add_to_scope( receiver );
     builder_.mark_walked( receiver );
     locals_.insert_or_assign( receiver_param.v, receiver );
@@ -3924,7 +3936,9 @@ void Lowering::lower_element_walk( Node_id id )
 
     builder_.storage_live( holder, span );
     builder_.assign(
-        builder_.place( holder ), address_of( place, address, writes ? Address_purpose::Borrow : Address_purpose::Read ), span
+        builder_.place( holder ),
+        address_of( place, address, writes ? Address_purpose::Borrow : Address_purpose::Read, ast_.span( container ) ),
+        span
     );
     drops_.add_to_scope( holder );
     builder_.mark_walked( holder );
@@ -4315,7 +4329,7 @@ Rvalue Lowering::borrow_of( Place place, Type_id held, Type_id address, Address_
 
     if( !table.is_run_pointer( address ) || !held.is_valid() || !table.is_array( held ) )
     {
-        return address_of( place, address, purpose );
+        return address_of( place, address, purpose, span );
     }
 
     const Type_id  u64   = table.integer( 64, false );

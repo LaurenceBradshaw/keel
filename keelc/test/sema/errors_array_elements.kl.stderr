@@ -17,9 +17,9 @@ error: `s.arr` is written one element at a time, but may not hold a value yet
    |     ^^^^^^^^^^^^^ it is assigned on some paths to here, but not all - assign the whole of `s.arr` first
 
 error: `s.arr` is used before it is initialised
-  --> sema/errors_array_elements.kl:39:5
+  --> sema/errors_array_elements.kl:39:12
    |
 39 |     return s.arr[1]; // error
-   |     ^^^^^^^^^^^^^^^^ assign it before reading it
+   |            ^^^^^^^^ assign it before reading it
 
 4 errors generated

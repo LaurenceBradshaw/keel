@@ -9,11 +9,11 @@ namespace keel
 static_assert( sizeof( Local ) == 24, "Local changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Projection ) == 16, "Projection changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Place ) == 20, "Place changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Operand ) == 32, "Operand changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Rvalue ) == 136, "Rvalue changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Operand ) == 44, "Operand changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Rvalue ) == 160, "Rvalue changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Statement ) == 44, "Statement changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Terminator ) == 120, "Terminator changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Block ) == 128, "Block changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Terminator ) == 156, "Terminator changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Block ) == 164, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Function ) == 296, "Function changed: update kir_state.cpp's walk" );
 
@@ -56,6 +56,7 @@ void put_operand( Byte_writer& out, Ref_writer& refs, const Operand& operand )
     put_place( out, refs, operand.place );
     refs.literal( out, operand.constant );
     refs.type( out, operand.type );
+    refs.span( out, operand.span );
 }
 
 void put_rvalue( Byte_writer& out, Ref_writer& refs, const Rvalue& value )
@@ -140,6 +141,7 @@ Operand get_operand( Byte_reader& in, Ref_reader& refs )
     operand.place    = get_place( in, refs );
     operand.constant = refs.literal();
     operand.type     = refs.type();
+    operand.span     = refs.span();
     return operand;
 }
 

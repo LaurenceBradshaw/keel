@@ -35,10 +35,10 @@ error: this could change `h` while `b` still borrows from it
     |                    ^^^^^ `b` is used after this; it was bound at 127:28
 
 error: `h` is moved while `b` still borrows `h.b`
-   --> sema/errors_payload_aliases.kl:140:13
+   --> sema/errors_payload_aliases.kl:140:19
     |
 140 |             take( move h );
-    |             ^^^^^^^^^^^^^^ `b` is used after this; it was bound at 139:28
+    |                   ^^^^^^ `b` is used after this; it was bound at 139:28
 
 error: this could change `this` while `b` still borrows from it
    --> sema/errors_payload_aliases.kl:166:17

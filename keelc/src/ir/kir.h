@@ -136,10 +136,16 @@ struct Operand
     Place        place {};    // Copy and Move
     Literal_id   constant {}; // Constant
     Type_id      type {};
+    Span         span {}; // the expression it was lowered from; invalid when made by a pass
 
     bool has_place() const
     {
         return kind == Operand_kind::Copy || kind == Operand_kind::Move;
+    }
+
+    Span span_or( Span fallback ) const
+    {
+        return span.is_valid() ? span : fallback;
     }
 };
 
@@ -244,9 +250,6 @@ private:
     Rvalue_id id_ {};
 };
 
-// TODO: give `Operand` a `Span`: operands carry none today, so every argument of a call reports at
-// the statement - `two( a, b )` after `two( move a, move b )` gives two move errors with identical
-// carets, told apart only by the name in the message.
 struct Statement
 {
     Statement_kind kind      = Statement_kind::Assign;
@@ -689,12 +692,15 @@ inline Rvalue release( Operand a ) // type is void
     return Rvalue { .kind = Rvalue_kind::Release, .type = Type_id {}, .a = a };
 }
 
-// The operand carries only its place. An address is not a read of what lives there, so the
-// operand's kind means nothing here and verify does not look at it.
-inline Rvalue address_of( Place place, Type_id type, Address_purpose purpose )
+// The operand carries only its place, and `at` the expression borrowed. An address is not a read of
+// what lives there, so the operand's kind means nothing here and verify does not look at it.
+inline Rvalue address_of( Place place, Type_id type, Address_purpose purpose, Span at = {} )
 {
     return Rvalue {
-        .kind = Rvalue_kind::Address_of, .type = type, .a = Operand { .place = place }, .address_purpose = purpose
+        .kind            = Rvalue_kind::Address_of,
+        .type            = type,
+        .a               = Operand { .place = place, .span = at },
+        .address_purpose = purpose,
     };
 }
 

@@ -115,13 +115,14 @@ void read_operand(
 
     const Local_id local = operand.place.local;
     const Slots    range = slots.of( operand.place );
+    const Span     at    = operand.span_or( span );
 
     const auto push = [&]( bool whole )
     {
         return [&, whole]( u32 slot, bool maybe )
         {
             reads->push_back(
-                Uninitialised_read { .local = local, .field = slots.field( slot ), .at = span, .maybe = maybe, .whole = whole }
+                Uninitialised_read { .local = local, .field = slots.field( slot ), .at = at, .maybe = maybe, .whole = whole }
             );
         };
     };

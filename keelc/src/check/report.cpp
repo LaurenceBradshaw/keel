@@ -505,7 +505,7 @@ TEST_CASE( "report_names_the_moved_local", "[check][report]" )
     );
 
     REQUIRE( p.rendered().find( "`a` is used after it was moved" ) != std::string::npos );
-    REQUIRE( p.rendered().find( "moved at 2:25" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "moved at 2:31" ) != std::string::npos );
 }
 
 // D54: a refusal within one call names both arguments.

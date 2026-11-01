@@ -164,12 +164,13 @@ void read_operand(
     }
 
     const Slots range = slots.of( operand.place );
-    check_leaves( slots, operand.place.local, range, span, flow, errors );
+    const Span  at    = operand.span_or( span );
+    check_leaves( slots, operand.place.local, range, at, flow, errors );
 
     // Moving twice is a use after move, so this runs after the check.
     if( operand.kind == Operand_kind::Move && is_field_path( func, operand.place ) && range.exact )
     {
-        set_leaves( range, flow, State::Moved, span );
+        set_leaves( range, flow, State::Moved, at );
     }
 }
 
@@ -1200,7 +1201,7 @@ TEST_CASE( "move_check_reports_both_ends", "[check][move]" )
 
     REQUIRE( errors.size() == 1 );
     REQUIRE( p.text_at( errors[0].moved ).find( "move a" ) != std::string_view::npos );
-    REQUIRE( p.text_at( errors[0].use ).find( "sink( a )" ) != std::string_view::npos );
+    REQUIRE( p.text_at( errors[0].use ) == "a" );
 }
 
 // Drop elaboration drops a moved local at every scope exit; eliding it is its job, not an error.

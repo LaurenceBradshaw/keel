@@ -249,7 +249,9 @@ void effects_of(
         {
             if( operand.kind == Operand_kind::Move && is_field_path( func, operand.place ) )
             {
-                out.push_back( Effect { .place = operand.place, .conflict = Loan_conflict::Moved, .at = statement.span } );
+                out.push_back(
+                    Effect { .place = operand.place, .conflict = Loan_conflict::Moved, .at = operand.span_or( statement.span ) }
+                );
             }
         };
 
