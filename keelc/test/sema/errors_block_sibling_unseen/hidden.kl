@@ -1,0 +1,3 @@
+// A module-private interface, with a block giving `i32` its `to_int`.
+private interface secret { i32 to_int() const; };
+implements secret for i32 { i32 to_int() const { return this; } };

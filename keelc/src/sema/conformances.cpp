@@ -431,6 +431,14 @@ Node_id Conformance_model::method_for( const Type_table& table, Type_id type, Ty
 
 Node_id Conformance_model::block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const
 {
+    const std::vector<Node_id> blocks = blocks_declaring( ast, type, name );
+    return blocks.empty() ? Node_id {} : blocks.front();
+}
+
+std::vector<Node_id> Conformance_model::blocks_declaring( const Ast& ast, Type_id type, Symbol_id name ) const
+{
+    std::vector<Node_id> blocks;
+
     for( const Conformance& conformance : all() )
     {
         if( ast.kind( conformance.implementer ) != Node_kind::Implements_decl || conformance.type != type )
@@ -442,12 +450,13 @@ Node_id Conformance_model::block_declaring( const Ast& ast, Type_id type, Symbol
         {
             if( ast.kind( member ) == Node_kind::Method_decl && ast.name( member ) == name )
             {
-                return conformance.implementer;
+                blocks.push_back( conformance.implementer );
+                break;
             }
         }
     }
 
-    return Node_id {};
+    return blocks;
 }
 
 // The conformance `written` declares for `type`, whose methods are `implementer`'s members.

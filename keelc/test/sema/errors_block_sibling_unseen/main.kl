@@ -1,0 +1,10 @@
+// `secret` declares `to_int` for `i32` too, but this file cannot name it, so the help names
+// `shown` alone.
+import hidden;
+import shown;
+
+i32 main()
+{
+    i32 x = 3;
+    return x.to_int();
+}

@@ -98,6 +98,8 @@ public:
         const; // invalid where none answers
     // The `implements ... for type` block declaring `name`, or invalid.
     Node_id block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
+    // Every such block, in declaration order.
+    std::vector<Node_id> blocks_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
 
 private:
     struct Declared

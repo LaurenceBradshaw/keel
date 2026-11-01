@@ -239,6 +239,7 @@ private:
     // Asked of the enclosing *function*, never of a receiver: a static method has no receiver and
     // is as much inside its type as an instance method is.
     Node_id current_type() const;
+    Node_id this_block( Node_id callee ) const;
 
     Type_id infer_static_call( Node_id id, Node_id aggregate );
     Type_id infer_bound_static_call( Node_id id, Node_id parameter );

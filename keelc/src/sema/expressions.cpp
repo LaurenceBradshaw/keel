@@ -877,7 +877,9 @@ Type_id Expressions::infer_method_call( Node_id id )
         reporter_.error_at(
             ast_.span( callee ),
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
-            bounds_.reached_only_as( object_type, ast_.name( callee ) )
+            bounds_.reached_only_as(
+                object_type, ast_.name( callee ), this_block( callee ), resolution_, ast_.span( callee ).file
+            )
         );
 
         return types_.poison( id );
@@ -917,7 +919,9 @@ Type_id Expressions::infer_method_call( Node_id id )
         reporter_.error_at(
             ast_.span( callee ),
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
-            bounds_.reached_only_as( object_type, ast_.name( callee ) )
+            bounds_.reached_only_as(
+                object_type, ast_.name( callee ), this_block( callee ), resolution_, ast_.span( callee ).file
+            )
         );
 
         return types_.poison( id );
@@ -2200,6 +2204,15 @@ Node_id Expressions::current_type() const
     return ast_.enclosing_aggregate( current_function_ );
 }
 
+// The block a method call on `this` is written in, or invalid.
+Node_id Expressions::this_block( Node_id callee ) const
+{
+    const Node_id block = current_type();
+    return block.is_valid() && ast_.kind( block ) == Node_kind::Implements_decl && places_.names_this( ast_.object( callee ) )
+               ? block
+               : Node_id {};
+}
+
 bool Expressions::is_name( Node_id id ) const
 {
     return ast_.kind( id ) == Node_kind::Name_expr ||
@@ -3316,7 +3329,8 @@ std::string Expressions::free_function_hint( Node_id call, Type_id object_type )
     const bool        place   = through || places_.place_root( object, current_function_ ).is_valid();
     const std::string spelt   = fmt::format( "{}{}", through ? "*" : "", reporter_.text( ast_.span( object ) ) );
 
-    if( std::string help = bounds_.reached_only_as( object_type, name ); !help.empty() )
+    if( std::string help = bounds_.reached_only_as( object_type, name, this_block( callee ), resolution_, from );
+        !help.empty() )
     {
         return help;
     }

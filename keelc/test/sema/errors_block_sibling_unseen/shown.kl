@@ -1,0 +1,2 @@
+interface shown { i32 to_int() const; };
+implements shown for i32 { i32 to_int() const { return this; } };

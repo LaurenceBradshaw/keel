@@ -568,12 +568,19 @@ bool Bounds::has_operator( Type_id type, Symbol_id name ) const
 
 // A block's method answers its interface and is not the type's, so a direct call is pointed at the
 // interface. Empty when no block for `type` declares `name`.
-std::string Bounds::reached_only_as( Type_id type, Symbol_id name ) const
+std::string
+Bounds::reached_only_as( Type_id type, Symbol_id name, Node_id block, const Resolution& resolution, File_id from ) const
 {
-    const Node_id block = types_.conformances().block_declaring( ast_, type, name );
+    const auto interface_of = [&]( Node_id declaring ) { return types_.type_of( ast_.implemented( declaring )[0] ); };
+
+    std::vector<Node_id> blocks = types_.conformances().blocks_declaring( ast_, type, name );
+    std::erase_if(
+        blocks,
+        [&]( Node_id declaring ) { return !resolution.sees( ast_, from, table_.get( interface_of( declaring ) ).declaration ); }
+    );
 
     // The compiler's conformance has no method, and no vtable either.
-    if( !block.is_valid() )
+    if( blocks.empty() )
     {
         for( const Node_id which : { table_.prelude().equatable, table_.prelude().comparable, table_.prelude().hashable } )
         {
@@ -593,10 +600,35 @@ std::string Bounds::reached_only_as( Type_id type, Symbol_id name ) const
         return {};
     }
 
+    // Inside a block declaring the name, `this` is reached as that block's interface.
+    if( std::ranges::find( blocks, block ) != blocks.end() )
+    {
+        return fmt::format(
+            "`{0}` is reached only as a `{1}`; bind `this` first: `const ref {1} me = this;`",
+            interner_.text( name ),
+            table_.name( interface_of( block ) )
+        );
+    }
+
+    if( blocks.size() == 1 )
+    {
+        return fmt::format(
+            "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
+            interner_.text( name ),
+            table_.name( interface_of( blocks.front() ) )
+        );
+    }
+
+    std::string interfaces;
+    for( const Node_id declaring : blocks )
+    {
+        interfaces += fmt::format( "{}a `{}`", interfaces.empty() ? "" : " or ", table_.name( interface_of( declaring ) ) );
+    }
+
     return fmt::format(
-        "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
+        "`{}` is reached only as {}: through a `where T :` parameter bounded by one, or a pointer to one",
         interner_.text( name ),
-        table_.name( types_.type_of( ast_.implemented( block )[0] ) )
+        interfaces
     );
 }
 

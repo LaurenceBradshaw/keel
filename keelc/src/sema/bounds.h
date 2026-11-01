@@ -10,6 +10,7 @@
 #include "lex/token.h"
 #include "sema/aggregates.h"
 #include "sema/reporter.h"
+#include "sema/resolver.h"
 #include "sema/types_builder.h"
 
 namespace keel::sema
@@ -112,8 +113,10 @@ public:
     bool calls_operator( Type_id type, Symbol_id name ) const;
     // Whether `type` declares the operator `name`: itself, in an enum's block, or in a parameter's bound.
     bool has_operator( Type_id type, Symbol_id name ) const;
-    // Why a method a conformance supplies cannot be called directly. Empty when none does.
-    std::string reached_only_as( Type_id type, Symbol_id name ) const;
+    // Why a method a conformance supplies cannot be called directly, naming only interfaces `from`
+    // can see. Empty when none does. `block` is the block a call on `this` is written in, or invalid.
+    std::string
+    reached_only_as( Type_id type, Symbol_id name, Node_id block, const Resolution& resolution, File_id from ) const;
 
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.

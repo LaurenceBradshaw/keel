@@ -1,0 +1,7 @@
+error: `i32` has no methods
+ --> sema/errors_block_sibling_unseen/main.kl:9:12
+  |
+9 |     return x.to_int();
+  |            ^ `to_int` is reached only as a `shown`: through a `where T : shown` parameter, or a `shown*`
+
+1 error generated
