@@ -451,6 +451,7 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 void inline_calls(
     Function&                                   caller,
     const std::vector<std::optional<Function>>& saved,
+    const std::vector<Function>&                functions,
     const Literal_pool&                         literals,
     const Inline_weights&                       weights
 )
@@ -477,10 +478,11 @@ void inline_calls(
 
                 if( calls( caller, statement, *saved[j] ) )
                 {
-                    const Function&      callee = *saved[j];
+                    const Function&      callee   = *saved[j];
+                    const Function&      finished = functions[j];
                     std::optional<Place> receiver;
-                    bool                 fits =
-                        inlinable( callee ) && inline_cost( callee, weights ) <= threshold( statement_count, callee, weights );
+                    bool                 fits = inlinable( callee ) &&
+                                inline_cost( finished, weights ) <= threshold( statement_count, finished, weights );
                     if( fits && callee.constructed.is_valid() )
                     {
                         assert( callee.constructed == Local_id { 1 } );
@@ -576,9 +578,11 @@ constexpr std::string_view k_types = "class Box { public i64 value; public Box( 
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Inlined : Compiled
 {
-    explicit Inlined( std::string_view source, Inline_weights weights = {} )
+    explicit Inlined( std::string_view source, Inline_weights weights = {}, u32 rounds = 2 )
         : Compiled(
-              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true, .inlining = weights }
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .inlining = weights, .rounds = rounds }
           )
     {
     }
@@ -660,11 +664,16 @@ TEST_CASE( "inline_calls_inlines_a_constructor", "[opt][inline]" )
 }
 
 // The callee's `p` arrives with its fields; the inlined constructor's receiver, a pointer, brings none.
+// No rounds, so `q` is not folded away, and its slots with it.
 TEST_CASE( "inline_calls_carries_the_callees_field_table", "[opt][inline]" )
 {
-    const Inlined p( "i32 f() { Box b = Box( 4 ); return sum(); }\n"
-                     "struct Pr { i32 x; i32 y; };\n"
-                     "i32 sum() { Pr q = Pr { 1, 2 }; return q.x + q.y; }\n" );
+    const Inlined p(
+        "i32 f() { Box b = Box( 4 ); return sum(); }\n"
+        "struct Pr { i32 x; i32 y; };\n"
+        "i32 sum() { Pr q = Pr { 1, 2 }; return q.x + q.y; }\n",
+        {},
+        0
+    );
     REQUIRE( p.clean() );
     REQUIRE( p.calls() == 0 );
 
@@ -704,6 +713,46 @@ TEST_CASE( "inline_calls_keeps_a_constructor_that_passes_this_on", "[opt][inline
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.calls() == 1 );
+}
+
+// Weighed as lowered, `Two()` is over the threshold: each assignment drops the field it replaces.
+// Its own passes leave two stores, which is what its callers weigh; and no local is left behind
+// that only storage markers name.
+TEST_CASE( "inline_calls_weighs_a_callee_as_its_passes_leave_it", "[opt][inline]" )
+{
+    const Inlined p( "i64 f() { Two t = Two(); return t.a.value + t.b.value; }\n"
+                     "class Two { public Box a; public Box b; public Two() { a = Box( 1 ); b = Box( 2 ); } };\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.calls() == 0 );
+
+    for( const Function& function : p.functions )
+    {
+        std::vector<bool> named( function.locals.size(), false );
+        for( u32 l = 0; l <= function.parameter_count; ++l )
+        {
+            named[l] = true;
+        }
+        for_each_place(
+            function,
+            [&]( const Place& place, const Statement* statement )
+            {
+                if( place.local.is_valid() && ( !statement || ( statement->kind != Statement_kind::Storage_live &&
+                                                                statement->kind != Statement_kind::Storage_dead ) ) )
+                {
+                    named[place.local.v] = true;
+                }
+            }
+        );
+        for( const Statement& statement : function.statements )
+        {
+            if( statement.drop_flag.is_valid() )
+            {
+                named[statement.drop_flag.v] = true;
+            }
+        }
+        REQUIRE( std::ranges::all_of( named, []( bool n ) { return n; } ) );
+    }
 }
 
 TEST_CASE( "inline_drops_inlines_an_unconditional_drop", "[opt][inline]" )

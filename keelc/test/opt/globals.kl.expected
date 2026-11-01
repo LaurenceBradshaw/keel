@@ -100,23 +100,23 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    int32_t kl_t5;
-    bool kl_t6;
-    int32_t kl_t7;
-    bool kl_t8;
-    int32_t* kl_p_19;
-    int32_t kl_t32;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t* kl_p_6;
+    int32_t kl_t8;
 #line 22 "opt/globals.kl"
-    kl_t32 = kl__count__G + 1;
+    kl_t8 = kl__count__G + 1;
 #line 22 "opt/globals.kl"
-    kl__count__G = kl_t32;
+    kl__count__G = kl_t8;
 #line 61 "opt/globals.kl"
-    kl_t1 = kl_t32 != 1;
+    kl_t1 = kl_t8 != 1;
 #line 61 "opt/globals.kl"
     if ( kl_t1 ) goto bb2; else goto bb1;
     bb1:
 #line 61 "opt/globals.kl"
-    kl_t1 = kl_t32 != 1;
+    kl_t1 = kl_t8 != 1;
 #line 61 "opt/globals.kl"
     if ( kl_t1 ) goto bb2; else goto bb7;
     bb2:
@@ -143,23 +143,23 @@ int32_t kl__main__( void )
     bb6:
 #line 39 "opt/globals.kl"
     kl__seen__G = 5;
-    kl_p_19 = &kl__seen__G;
-    ( *kl_p_19 ) = 6;
-    kl_t7 = kl__seen__G;
+    kl_p_6 = &kl__seen__G;
+    ( *kl_p_6 ) = 6;
+    kl_t4 = kl__seen__G;
 #line 69 "opt/globals.kl"
-    kl_t8 = kl_t7 != 6;
+    kl_t5 = kl_t4 != 6;
 #line 69 "opt/globals.kl"
-    if ( kl_t8 ) goto bb4; else goto bb5;
+    if ( kl_t5 ) goto bb4; else goto bb5;
     bb7:
 #line 14 "opt/globals.kl"
     kl__seen__G = 6;
     kl__bump__3i32( 1 );
 #line 33 "opt/globals.kl"
-    kl_t5 = 50 + kl__seen__G;
+    kl_t2 = 50 + kl__seen__G;
 #line 65 "opt/globals.kl"
-    kl_t6 = kl_t5 != 57;
+    kl_t3 = kl_t2 != 57;
 #line 65 "opt/globals.kl"
-    if ( kl_t6 ) goto bb3; else goto bb6;
+    if ( kl_t3 ) goto bb3; else goto bb6;
 #line 79 "opt/globals.kl"
 }
 

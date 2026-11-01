@@ -285,13 +285,15 @@ struct Propagated : Compiled
         return functions.front();
     }
 
-    // How many operands read `local` by copy, statements and terminators both.
-    std::size_t reads( u32 local ) const
+    // How many operands read the local called `name` by copy, statements and terminators both.
+    std::size_t reads( std::string_view name ) const
     {
-        std::size_t count = 0;
-        const auto  note  = [&]( const Operand& operand )
+        const Symbol_id symbol = interner.find( name );
+        std::size_t     count  = 0;
+        const auto      note   = [&]( const Operand& operand )
         {
-            if( operand.kind == Operand_kind::Copy && !operand.place.is_global() && operand.place.local.v == local )
+            if( operand.kind == Operand_kind::Copy && !operand.place.is_global() && operand.place.local.is_valid() &&
+                first().locals[operand.place.local].name == symbol )
             {
                 ++count;
             }
@@ -316,24 +318,24 @@ struct Propagated : Compiled
 
 } // namespace
 
-// Nothing assigns `x` (`_1`) between `0` and the read, but `set` writes it through `&init`.
+// Nothing assigns `x` between `0` and the read, but `set` writes it through `&init`.
 TEST_CASE( "propagate_values_keeps_a_local_an_out_argument_rewrites", "[opt][propagate]" )
 {
     const Propagated p( "i32 f() { i32 x = 0; set( out x ); return x + 1; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 1 ) == 1 );
+    REQUIRE( p.reads( "x" ) == 1 );
 }
 
-// `b` (`_2`) is the old `a`, not the `5`; the only read of `a` left is `b = a`. One round, as the next
+// `b` is the old `a`, not the `5`; the only read of `a` left is `b = a`. One round, as the next
 // finds `a = 5` gone and forwards `b`.
 TEST_CASE( "propagate_values_keeps_a_copy_whose_source_changed", "[opt][propagate]" )
 {
     const Propagated p( "i32 f( i32 a ) { i32 b = a; a = 5; return a + b; }\n", 1 );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 1 );
-    REQUIRE( p.reads( 1 ) == 1 );
+    REQUIRE( p.reads( "b" ) == 1 );
+    REQUIRE( p.reads( "a" ) == 1 );
 }
 
 // The split `Box`'s field reaches the add through four copies, inside a loop whose counter the first
@@ -358,13 +360,13 @@ TEST_CASE( "propagate_values_follows_a_chain_round_a_loop", "[opt][propagate]" )
     ) );
 }
 
-// `p` goes whole to a call, so stays whole; `a` (`_2`) is read as `p.x`.
+// `p` goes whole to a call, so stays whole; `a` is read as `p.x`.
 TEST_CASE( "propagate_values_forwards_a_copy_of_a_field", "[opt][propagate]" )
 {
     const Propagated p( "i32 f( Point p ) { i32 a = p.x; i32 r = 0; touch( p, out r ); return a * a + r; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 0 );
+    REQUIRE( p.reads( "a" ) == 0 );
 }
 
 TEST_CASE( "propagate_values_keeps_a_field_copy_written_after", "[opt][propagate]" )
@@ -372,10 +374,10 @@ TEST_CASE( "propagate_values_keeps_a_field_copy_written_after", "[opt][propagate
     const Propagated p( "i32 f( Point p ) { i32 a = p.x; p.x = 5; i32 r = 0; touch( p, out r ); return a * a + r; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 2 );
+    REQUIRE( p.reads( "a" ) == 2 );
 }
 
-// `a` (`_3`) is `p.x` on one path and `p.y` on the other, so the join keeps neither.
+// `a` is `p.x` on one path and `p.y` on the other, so the join keeps neither.
 TEST_CASE( "propagate_values_keeps_two_fields_apart_at_a_join", "[opt][propagate]" )
 {
     const Propagated p(
@@ -384,16 +386,16 @@ TEST_CASE( "propagate_values_keeps_two_fields_apart_at_a_join", "[opt][propagate
     );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 3 ) == 2 );
+    REQUIRE( p.reads( "a" ) == 2 );
 }
 
-// `w` (`_2`) widens `n`, so `w * w` stays an `i64` multiply of `w`.
+// `w` widens `n`, so `w * w` stays an `i64` multiply of `w`.
 TEST_CASE( "propagate_values_keeps_a_widening_copy", "[opt][propagate]" )
 {
     const Propagated p( "i64 f( i32 n ) { i64 w = n; return w * w; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.reads( 2 ) == 2 );
+    REQUIRE( p.reads( "w" ) == 2 );
 }
 
 // `y == x` reads `x` twice once propagated, so SCCP folds the `!` and the branch on it.

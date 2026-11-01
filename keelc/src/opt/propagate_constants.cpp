@@ -379,13 +379,15 @@ struct Propagated : Compiled
         return functions.front();
     }
 
-    // How many operands read `local` by copy, statements and terminators both.
-    std::size_t reads( u32 local ) const
+    // How many operands read the local called `name` by copy, statements and terminators both.
+    std::size_t reads( std::string_view name ) const
     {
-        std::size_t count = 0;
-        const auto  note  = [&]( const Operand& operand )
+        const Symbol_id symbol = interner.find( name );
+        std::size_t     count  = 0;
+        const auto      note   = [&]( const Operand& operand )
         {
-            if( operand.kind == Operand_kind::Copy && !operand.place.is_global() && operand.place.local.v == local )
+            if( operand.kind == Operand_kind::Copy && !operand.place.is_global() && operand.place.local.is_valid() &&
+                first().locals[operand.place.local].name == symbol )
             {
                 ++count;
             }
@@ -443,21 +445,21 @@ TEST_CASE( "propagate_constants_takes_only_the_arm_that_runs", "[opt][constants]
     REQUIRE( p.first().blocks.size() == 1 );
 }
 
-// `k` (`_2`) is `1` round the loop: the only arm that changes it tests `k != 1`, which never holds.
+// `k` is `1` round the loop: the only arm that changes it tests `k != 1`, which never holds.
 TEST_CASE( "propagate_constants_keeps_a_constant_a_dead_arm_would_change", "[opt][constants]" )
 {
     const Propagated p( "i32 f( i32 n ) { i32 k = 1; i32 t = 0; for( i32 i = 0; i < n; i++ ) { if( k != 1 ) { k = 2; } "
                         "t = t + k; } return t; }\n" );
     REQUIRE( p.branches() == 1 );
-    REQUIRE( p.reads( 2 ) == 0 );
+    REQUIRE( p.reads( "k" ) == 0 );
 }
 
-// `i` (`_3`) is `0` from the entry, but `1` round the back edge, so the loop keeps reading it.
+// `i` is `0` from the entry, but `1` round the back edge, so the loop keeps reading it.
 TEST_CASE( "propagate_constants_keeps_a_loop_counter", "[opt][constants]" )
 {
     const Propagated p( "i32 f( i32 n ) { i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + i; } return t; }\n" );
     REQUIRE( p.branches() == 1 );
-    REQUIRE( p.reads( 3 ) == 3 );
+    REQUIRE( p.reads( "i" ) == 3 );
 }
 
 // `clamp`'s argument is `-4`, so its comparison folds and only `t - 4` is left.
@@ -476,19 +478,19 @@ TEST_CASE( "propagate_constants_sign_extends_an_assignment", "[opt][constants]" 
     REQUIRE( p.assigns( 3, true ) );
 }
 
-// `step` (`_2`) is `2` both from the entry and round the back edge.
+// `step` is `2` both from the entry and round the back edge.
 TEST_CASE( "propagate_constants_reads_a_constant_round_a_loop", "[opt][constants]" )
 {
     const Propagated p( "i32 f( i32 n ) { i32 step = 2; i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + step; } return t; }\n"
     );
-    REQUIRE( p.reads( 2 ) == 0 );
+    REQUIRE( p.reads( "step" ) == 0 );
 }
 
-// `k` (`_2`) is `1` on one path and `2` on the other, and both run.
+// `k` is `1` on one path and `2` on the other, and both run.
 TEST_CASE( "propagate_constants_keeps_a_local_the_paths_disagree_on", "[opt][constants]" )
 {
     const Propagated p( "i32 f( bool c ) { i32 k = 1; if( c ) { k = 2; } return k + 1; }\n" );
-    REQUIRE( p.reads( 2 ) == 1 );
+    REQUIRE( p.reads( "k" ) == 1 );
 }
 
 // One pass: `c - 1` is `13` without a round per fold.

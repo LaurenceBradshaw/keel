@@ -118,13 +118,13 @@ struct kl__Shape kl__wrapped__3i32( int32_t kl_v_1 )
 int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 {
     int32_t kl_t0;
+    bool kl_t2;
     bool kl_t3;
-    bool kl_t6;
-    int32_t kl_t10;
+    int32_t kl_t4;
 #line 76 "opt/moves_fields.kl"
-    kl_t3 = kl_s_1.tag == 0;
+    kl_t2 = kl_s_1.tag == 0;
 #line 76 "opt/moves_fields.kl"
-    if ( kl_t3 ) goto bb1; else goto bb4;
+    if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 77 "opt/moves_fields.kl"
     kl_t0 = kl_s_1.kl_b.kl_value;
@@ -134,9 +134,9 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 #line 77 "opt/moves_fields.kl"
     return kl_t0;
     bb2:
-    kl_t10 = kl_s_1.kl_first.kl_value * 10;
+    kl_t4 = kl_s_1.kl_first.kl_value * 10;
 #line 79 "opt/moves_fields.kl"
-    kl_t0 = kl_t10 + kl_s_1.kl_second.kl_value;
+    kl_t0 = kl_t4 + kl_s_1.kl_second.kl_value;
 #line 18 "opt/moves_fields.kl"
     kl__live__G = kl__live__G - 2;
     kl__destroyed__G = kl__destroyed__G + 2;
@@ -150,9 +150,9 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     return kl_t0;
     bb4:
 #line 78 "opt/moves_fields.kl"
-    kl_t6 = kl_s_1.tag == 1;
+    kl_t3 = kl_s_1.tag == 1;
 #line 78 "opt/moves_fields.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
 #line 83 "opt/moves_fields.kl"
 }
 
@@ -160,39 +160,39 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    bool kl_t15;
-    struct kl__Shape kl_t17;
-    int32_t kl_t18;
-    bool kl_t22;
-    struct kl__Shape kl_t24;
-    int32_t kl_t31;
-    bool kl_t36;
-    struct kl__Shape kl_t38;
-    int32_t kl_t39;
+    bool kl_t1;
+    struct kl__Shape kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    struct kl__Shape kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    struct kl__Shape kl_t8;
+    int32_t kl_t9;
 #line 12 "opt/moves_fields.kl"
-    kl_t17.kl_b.kl_value = 6;
+    kl_t2.kl_b.kl_value = 6;
     kl__live__G = kl__live__G + 1;
 #line 68 "opt/moves_fields.kl"
-    kl_t17.tag = 0;
+    kl_t2.tag = 0;
 #line 98 "opt/moves_fields.kl"
-    kl_t18 = kl__opened__M5Shape( kl_t17 );
+    kl_t3 = kl__opened__M5Shape( kl_t2 );
 #line 98 "opt/moves_fields.kl"
-    kl_t15 = kl_t18 != 6;
+    kl_t1 = kl_t3 != 6;
 #line 98 "opt/moves_fields.kl"
-    if ( kl_t15 ) goto bb3; else goto bb1;
+    if ( kl_t1 ) goto bb3; else goto bb1;
     bb1:
 #line 98 "opt/moves_fields.kl"
-    kl_t15 = kl__live__G != 0;
+    kl_t1 = kl__live__G != 0;
 #line 98 "opt/moves_fields.kl"
-    if ( kl_t15 ) goto bb3; else goto bb2;
+    if ( kl_t1 ) goto bb3; else goto bb2;
     bb2:
 #line 98 "opt/moves_fields.kl"
-    kl_t15 = kl__destroyed__G != 1;
+    kl_t1 = kl__destroyed__G != 1;
 #line 98 "opt/moves_fields.kl"
     goto bb3;
     bb3:
 #line 98 "opt/moves_fields.kl"
-    if ( kl_t15 ) goto bb4; else goto bb5;
+    if ( kl_t1 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 3;
 #line 100 "opt/moves_fields.kl"
@@ -201,43 +201,43 @@ int32_t kl__main__( void )
 #line 13 "opt/moves_fields.kl"
     kl__live__G = kl__live__G + 2;
 #line 103 "opt/moves_fields.kl"
-    kl_t24.tag = 1;
+    kl_t5.tag = 1;
 #line 103 "opt/moves_fields.kl"
-    kl_t24.kl_first.kl_value = 1;
+    kl_t5.kl_first.kl_value = 1;
 #line 103 "opt/moves_fields.kl"
-    kl_t24.kl_second.kl_value = 2;
+    kl_t5.kl_second.kl_value = 2;
 #line 103 "opt/moves_fields.kl"
-    kl_t31 = kl__opened__M5Shape( kl_t24 );
+    kl_t6 = kl__opened__M5Shape( kl_t5 );
 #line 103 "opt/moves_fields.kl"
-    kl_t22 = kl_t31 != 12;
+    kl_t4 = kl_t6 != 12;
 #line 103 "opt/moves_fields.kl"
-    if ( kl_t22 ) goto bb8; else goto bb6;
+    if ( kl_t4 ) goto bb8; else goto bb6;
     bb6:
 #line 103 "opt/moves_fields.kl"
-    kl_t22 = kl__live__G != 0;
+    kl_t4 = kl__live__G != 0;
 #line 103 "opt/moves_fields.kl"
-    if ( kl_t22 ) goto bb8; else goto bb7;
+    if ( kl_t4 ) goto bb8; else goto bb7;
     bb7:
 #line 103 "opt/moves_fields.kl"
-    kl_t22 = kl__destroyed__G != 3;
+    kl_t4 = kl__destroyed__G != 3;
 #line 103 "opt/moves_fields.kl"
     goto bb8;
     bb8:
 #line 103 "opt/moves_fields.kl"
-    if ( kl_t22 ) goto bb9; else goto bb10;
+    if ( kl_t4 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 4;
 #line 105 "opt/moves_fields.kl"
     return kl_t0;
     bb10:
 #line 108 "opt/moves_fields.kl"
-    kl_t38.tag = 2;
+    kl_t8.tag = 2;
 #line 108 "opt/moves_fields.kl"
-    kl_t39 = kl__opened__M5Shape( kl_t38 );
+    kl_t9 = kl__opened__M5Shape( kl_t8 );
 #line 108 "opt/moves_fields.kl"
-    kl_t36 = kl_t39 == 0;
+    kl_t7 = kl_t9 == 0;
 #line 108 "opt/moves_fields.kl"
-    if ( kl_t36 ) goto bb14; else goto bb12;
+    if ( kl_t7 ) goto bb14; else goto bb12;
     bb11:
 #line 108 "opt/moves_fields.kl"
     kl_t0 = 0;
@@ -253,14 +253,14 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 108 "opt/moves_fields.kl"
-    kl_t36 = kl__live__G == 0;
+    kl_t7 = kl__live__G == 0;
 #line 108 "opt/moves_fields.kl"
-    if ( kl_t36 ) goto bb15; else goto bb12;
+    if ( kl_t7 ) goto bb15; else goto bb12;
     bb15:
 #line 108 "opt/moves_fields.kl"
-    kl_t36 = kl__destroyed__G == 3;
+    kl_t7 = kl__destroyed__G == 3;
 #line 108 "opt/moves_fields.kl"
-    if ( kl_t36 ) goto bb11; else goto bb12;
+    if ( kl_t7 ) goto bb11; else goto bb12;
 }
 
 #line 37 "opt/moves_fields.kl"

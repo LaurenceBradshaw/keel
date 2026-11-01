@@ -55,13 +55,13 @@ int32_t kl__written_between__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
 {
     int32_t kl_t0;
     int32_t kl_t_3;
-    int32_t kl_t6;
+    int32_t kl_t4;
 #line 41 "opt/combined.kl"
     kl_t_3 = kl_x_1 + 3;
     kl_x_1 = kl_x_1 * kl_y_2;
-    kl_t6 = kl_t_3 + 4;
+    kl_t4 = kl_t_3 + 4;
 #line 43 "opt/combined.kl"
-    kl_t0 = kl_t6 + kl_x_1;
+    kl_t0 = kl_t4 + kl_x_1;
 #line 43 "opt/combined.kl"
     return kl_t0;
 }

@@ -3,14 +3,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct kl__Point;
-
-struct kl__Point
-{
-    int32_t kl_x;
-    int32_t kl_y;
-};
-
 int32_t kl__side__3i32( int32_t );
 int32_t kl__discard__3i32( int32_t );
 int32_t kl__overwritten__3i32( int32_t );
@@ -72,22 +64,22 @@ int32_t kl__aliased__3i32( int32_t kl_a_1 )
 int32_t kl__looped__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
-    int32_t kl_i_3;
-    bool kl_t4;
+    int32_t kl_i_2;
+    bool kl_t3;
 #line 54 "opt/dead_stores.kl"
     kl_t0 = 0;
-    kl_i_3 = 0;
+    kl_i_2 = 0;
 #line 55 "opt/dead_stores.kl"
     goto bb1;
     bb1:
 #line 55 "opt/dead_stores.kl"
-    kl_t4 = kl_i_3 < kl_n_1;
+    kl_t3 = kl_i_2 < kl_n_1;
 #line 55 "opt/dead_stores.kl"
-    if ( kl_t4 ) goto bb2; else goto bb3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
-    kl_t0 = kl_i_3;
+    kl_t0 = kl_i_2;
 #line 55 "opt/dead_stores.kl"
-    kl_i_3 = kl_i_3 + 1;
+    kl_i_2 = kl_i_2 + 1;
 #line 55 "opt/dead_stores.kl"
     goto bb1;
     bb3:
@@ -109,13 +101,13 @@ int32_t kl__fielded__3i32( int32_t kl_a_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    bool kl_t9;
-    int32_t kl_t12;
-    int32_t kl_i_23;
-    bool kl_t24;
+    bool kl_t1;
+    int32_t kl_t2;
+    int32_t kl_i_3;
+    bool kl_t4;
 #line 54 "opt/dead_stores.kl"
-    kl_t12 = 0;
-    kl_i_23 = 0;
+    kl_t2 = 0;
+    kl_i_3 = 0;
 #line 55 "opt/dead_stores.kl"
     goto bb3;
     bb1:
@@ -130,20 +122,20 @@ int32_t kl__main__( void )
     return kl_t0;
     bb3:
 #line 55 "opt/dead_stores.kl"
-    kl_t24 = kl_i_23 < 3;
+    kl_t4 = kl_i_3 < 3;
 #line 55 "opt/dead_stores.kl"
-    if ( kl_t24 ) goto bb4; else goto bb5;
+    if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
-    kl_t12 = kl_i_23;
+    kl_t2 = kl_i_3;
 #line 55 "opt/dead_stores.kl"
-    kl_i_23 = kl_i_23 + 1;
+    kl_i_3 = kl_i_3 + 1;
 #line 55 "opt/dead_stores.kl"
     goto bb3;
     bb5:
 #line 92 "opt/dead_stores.kl"
-    kl_t9 = kl_t12 != 2;
+    kl_t1 = kl_t2 != 2;
 #line 92 "opt/dead_stores.kl"
-    if ( kl_t9 ) goto bb1; else goto bb2;
+    if ( kl_t1 ) goto bb1; else goto bb2;
 #line 103 "opt/dead_stores.kl"
 }
 

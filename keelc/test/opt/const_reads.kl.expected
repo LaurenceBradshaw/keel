@@ -107,25 +107,25 @@ int32_t kl__kept__3i32( int32_t kl_x_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    double kl_t5;
+    double kl_t1;
+    bool kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
     bool kl_t6;
     bool kl_t7;
-    int32_t kl_t10;
-    int32_t kl_t12;
-    bool kl_t13;
-    bool kl_t18;
-    double kl_t22;
-    double kl_t23;
+    double kl_t8;
+    double kl_t9;
 #line 39 "opt/const_reads.kl"
-    kl_t22 = 3.0 * 0.5;
+    kl_t8 = 3.0 * 0.5;
 #line 39 "opt/const_reads.kl"
-    kl_t23 = -0.25;
+    kl_t9 = -0.25;
 #line 39 "opt/const_reads.kl"
-    kl_t5 = kl_t22 + kl_t23;
+    kl_t1 = kl_t8 + kl_t9;
 #line 79 "opt/const_reads.kl"
-    kl_t6 = kl_t5 != 1.25;
+    kl_t2 = kl_t1 != 1.25;
 #line 79 "opt/const_reads.kl"
-    if ( kl_t6 ) goto bb1; else goto bb6;
+    if ( kl_t2 ) goto bb1; else goto bb6;
     bb1:
     kl_t0 = 3;
 #line 81 "opt/const_reads.kl"
@@ -137,11 +137,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb3:
 #line 66 "opt/const_reads.kl"
-    kl_t12 = 1 + kl__plain__G;
+    kl_t5 = 1 + kl__plain__G;
 #line 87 "opt/const_reads.kl"
-    kl_t13 = kl_t12 != 4;
+    kl_t6 = kl_t5 != 4;
 #line 87 "opt/const_reads.kl"
-    if ( kl_t13 ) goto bb4; else goto bb5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 5;
 #line 89 "opt/const_reads.kl"
@@ -153,23 +153,23 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 56 "opt/const_reads.kl"
-    kl_t18 = 1 == 0;
+    kl_t7 = 1 == 0;
 #line 56 "opt/const_reads.kl"
-    if ( kl_t18 ) goto bb7; else goto bb8;
+    if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
 #line 57 "opt/const_reads.kl"
-    kl_t10 = 1;
+    kl_t4 = 1;
 #line 57 "opt/const_reads.kl"
     goto bb9;
     bb8:
-    kl_t10 = 2;
+    kl_t4 = 2;
 #line 59 "opt/const_reads.kl"
     goto bb9;
     bb9:
 #line 83 "opt/const_reads.kl"
-    kl_t7 = kl_t10 != 2;
+    kl_t3 = kl_t4 != 2;
 #line 83 "opt/const_reads.kl"
-    if ( kl_t7 ) goto bb2; else goto bb3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
 #line 93 "opt/const_reads.kl"
 }
 

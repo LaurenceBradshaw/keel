@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "ir/simplify.h"
+#include <algorithm>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace keel
@@ -220,6 +222,224 @@ void remove_statements( Function& func, const std::vector<bool>& deleted )
 void remove_unreachable_blocks( Function& func )
 {
     prune( func, reachable( func ) );
+}
+
+namespace
+{
+// The places that mean something: each statement's, each copy or move, and an address's whatever its
+// kind. A pass that folds a copy to a constant leaves the old place behind, which may be stale.
+template <typename Func, typename Fn>
+void every_place( Func& func, Fn fn )
+{
+    const auto operand = [&]( auto& o )
+    {
+        if( o.has_place() )
+        {
+            fn( o.place, nullptr );
+        }
+    };
+
+    for( auto& statement : func.statements )
+    {
+        fn( statement.place, &statement );
+        if( !statement.value.is_valid() )
+        {
+            continue;
+        }
+
+        auto& value = func.rvalue( statement );
+        if( value.kind == Rvalue_kind::Address_of )
+        {
+            fn( value.a.place, nullptr );
+        }
+        else
+        {
+            operand( value.a );
+            operand( value.b );
+        }
+        for( auto& argument : value.arguments )
+        {
+            operand( argument );
+        }
+    }
+
+    for( auto& block : func.blocks )
+    {
+        operand( block.terminator.condition );
+        operand( block.terminator.message );
+        operand( block.terminator.at );
+    }
+}
+} // namespace
+
+void remove_unused_locals( Function& func )
+{
+    const u32         count = narrow_cast<u32>( func.locals.size() );
+    std::vector<bool> used( count, false );
+
+    // The return slot and the parameters are the signature.
+    for( u32 l = 0; l <= func.parameter_count && l < count; ++l )
+    {
+        used[l] = true;
+    }
+    if( func.constructed.is_valid() )
+    {
+        used[func.constructed.v] = true;
+    }
+
+    const auto mark = [&]( const Place& place )
+    {
+        if( !place.is_global() && place.local.is_valid() )
+        {
+            used[place.local.v] = true;
+        }
+        for( const Projection& projection : func.projections_of( place ) )
+        {
+            if( projection.kind == Projection_kind::Index )
+            {
+                used[projection.index.v] = true;
+            }
+        }
+    };
+
+    // A storage marker alone does not keep its local.
+    every_place(
+        std::as_const( func ),
+        [&]( const Place& place, const Statement* statement )
+        {
+            if( !statement ||
+                ( statement->kind != Statement_kind::Storage_live && statement->kind != Statement_kind::Storage_dead ) )
+            {
+                mark( place );
+            }
+        }
+    );
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.drop_flag.is_valid() )
+        {
+            used[statement.drop_flag.v] = true;
+        }
+    }
+
+    if( std::ranges::all_of( used, []( bool u ) { return u; } ) )
+    {
+        return;
+    }
+
+    std::vector<bool> deleted( func.statements.size(), false );
+    for( u32 s = 0; s < func.statements.size(); ++s )
+    {
+        const Statement& statement = func.statements[s];
+        deleted[s] = ( statement.kind == Statement_kind::Storage_live || statement.kind == Statement_kind::Storage_dead ) &&
+                     !used[statement.place.local.v];
+    }
+    remove_statements( func, deleted );
+    func.compact_rvalues();
+
+    // A removed statement's runs go too, so every index left names a kept local; a shared run stays shared.
+    std::vector<Projection>      projections;
+    std::unordered_map<u64, u32> moved;
+    every_place(
+        func,
+        [&]( Place& place, Statement* )
+        {
+            if( place.num_projections == 0 )
+            {
+                place.first_projection = 0;
+                return;
+            }
+            const u64 key             = ( u64( place.first_projection ) << 32 ) | place.num_projections;
+            const auto [at, inserted] = moved.try_emplace( key, narrow_cast<u32>( projections.size() ) );
+            if( inserted )
+            {
+                for( const Projection& projection : func.projections_of( place ) )
+                {
+                    projections.push_back( projection );
+                }
+            }
+            place.first_projection = at->second;
+        }
+    );
+    func.projections = std::move( projections );
+
+    std::vector<Local_id>      renumbered( count );
+    Id_vector<Local_id, Local> kept;
+    for( u32 l = 0; l < count; ++l )
+    {
+        if( used[l] )
+        {
+            renumbered[l] = kept.push_back( func.locals[Local_id { l }] );
+        }
+    }
+    func.locals = std::move( kept );
+
+    const auto renumber = [&]( Local_id& local )
+    {
+        if( local.is_valid() )
+        {
+            local = renumbered[local.v];
+        }
+    };
+
+    every_place(
+        func,
+        [&]( Place& place, Statement* )
+        {
+            if( !place.is_global() )
+            {
+                renumber( place.local );
+            }
+        }
+    );
+    for( Projection& projection : func.projections )
+    {
+        if( projection.kind == Projection_kind::Index )
+        {
+            renumber( projection.index );
+        }
+    }
+    for( Statement& statement : func.statements )
+    {
+        renumber( statement.drop_flag );
+    }
+    renumber( func.constructed );
+
+    const auto renumber_all = [&]( std::vector<Local_id>& locals )
+    {
+        std::erase_if( locals, [&]( Local_id l ) { return !used[l.v]; } );
+        for( Local_id& local : locals )
+        {
+            renumber( local );
+        }
+    };
+    renumber_all( func.out_parameters );
+    renumber_all( func.one_path_temporaries );
+    renumber_all( func.walked );
+    renumber_all( func.chosen );
+
+    // A removed local's runs go whole; `parent` and `end` shift by the slots removed before them.
+    std::vector<u32> removed_before( func.fields.size() + 1, 0 );
+    for( u32 i = 0; i < func.fields.size(); ++i )
+    {
+        removed_before[i + 1] = removed_before[i] + ( used[func.fields[i].local.v] ? 0 : 1 );
+    }
+    std::vector<Field_slot> fields;
+    for( Field_slot slot : func.fields )
+    {
+        if( !used[slot.local.v] )
+        {
+            continue;
+        }
+        renumber( slot.local );
+        if( slot.parent != k_no_field )
+        {
+            slot.parent -= removed_before[slot.parent];
+        }
+        slot.end -= removed_before[slot.end];
+        fields.push_back( slot );
+    }
+    func.fields = std::move( fields );
 }
 
 void settle_debug( Function& func, Literal_id value )

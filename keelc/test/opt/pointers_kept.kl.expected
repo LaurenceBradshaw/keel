@@ -20,28 +20,28 @@ int32_t kl__aliased__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     struct kl__Point kl_q_2;
-    struct kl__Point kl_o_4;
-    struct kl__Point* kl_p_6;
-    bool kl_t8;
+    struct kl__Point kl_o_3;
+    struct kl__Point* kl_p_4;
+    bool kl_t5;
 #line 13 "opt/pointers_kept.kl"
     kl_q_2.kl_x = kl_a_1;
 #line 13 "opt/pointers_kept.kl"
     kl_q_2.kl_y = kl_a_1;
-    kl_o_4.kl_x = kl_a_1;
+    kl_o_3.kl_x = kl_a_1;
 #line 14 "opt/pointers_kept.kl"
-    kl_o_4.kl_y = kl_a_1;
-    kl_p_6 = &kl_q_2;
-    kl_t8 = kl_a_1 > 5;
+    kl_o_3.kl_y = kl_a_1;
+    kl_p_4 = &kl_q_2;
+    kl_t5 = kl_a_1 > 5;
 #line 16 "opt/pointers_kept.kl"
-    if ( kl_t8 ) goto bb1; else goto bb2;
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl_p_6 = &kl_o_4;
+    kl_p_4 = &kl_o_3;
 #line 16 "opt/pointers_kept.kl"
     goto bb2;
     bb2:
 #line 20 "opt/pointers_kept.kl"
     kl_q_2.kl_x = 7;
-    kl_t0 = ( *kl_p_6 ).kl_x;
+    kl_t0 = ( *kl_p_4 ).kl_x;
 #line 21 "opt/pointers_kept.kl"
     return kl_t0;
 }
@@ -53,14 +53,14 @@ int32_t kl__written__3i32( int32_t kl_a_1 )
     int32_t kl_k_2;
     int32_t kl_j_3;
     int32_t* kl_p_4;
-    bool kl_t6;
+    bool kl_t5;
 #line 27 "opt/pointers_kept.kl"
     kl_k_2 = 3;
     kl_j_3 = 3;
     kl_p_4 = &kl_k_2;
-    kl_t6 = kl_a_1 > 5;
+    kl_t5 = kl_a_1 > 5;
 #line 30 "opt/pointers_kept.kl"
-    if ( kl_t6 ) goto bb1; else goto bb2;
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
     kl_p_4 = &kl_j_3;
 #line 30 "opt/pointers_kept.kl"

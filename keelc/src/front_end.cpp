@@ -136,7 +136,7 @@ Front_end run_front_end(
             {
                 if( build.inlining )
                 {
-                    inline_calls( function, saved, literals, *build.inlining );
+                    inline_calls( function, saved, front.functions, literals, *build.inlining );
                 }
                 collapse_borrows( function, front.types.table() );
                 coalesce_moves( function );
@@ -206,6 +206,7 @@ Front_end run_front_end(
                 {
                     coalesce_moves( function );
                 }
+                remove_unused_locals( function );
                 assert( verify( function ).empty() );
             }
         }

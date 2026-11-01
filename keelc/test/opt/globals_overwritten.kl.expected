@@ -111,21 +111,21 @@ int32_t kl__through_a_pointer__P3i32( int32_t* kl_p_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t5;
-    bool kl_t6;
-    int32_t* kl_t9;
-    int32_t kl_t10;
-    bool kl_t11;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t* kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
 #line 40 "opt/globals_overwritten.kl"
     kl__seen__G = 5;
 #line 12 "opt/globals_overwritten.kl"
-    kl_t5 = kl__twice__3i32( 0 );
+    kl_t1 = kl__twice__3i32( 0 );
 #line 42 "opt/globals_overwritten.kl"
     kl__seen__G = 0;
 #line 78 "opt/globals_overwritten.kl"
-    kl_t6 = kl_t5 != 10;
+    kl_t2 = kl_t1 != 10;
 #line 78 "opt/globals_overwritten.kl"
-    if ( kl_t6 ) goto bb1; else goto bb2;
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 3;
 #line 80 "opt/globals_overwritten.kl"
@@ -134,15 +134,15 @@ int32_t kl__main__( void )
 #line 49 "opt/globals_overwritten.kl"
     kl__seen__G = 6;
 #line 19 "opt/globals_overwritten.kl"
-    kl_t9 = &kl__seen__G;
+    kl_t3 = &kl__seen__G;
 #line 60 "opt/globals_overwritten.kl"
     kl__seen__G = 8;
-    kl_t10 = ( *kl_t9 );
+    kl_t4 = ( *kl_t3 );
     kl__seen__G = 0;
 #line 87 "opt/globals_overwritten.kl"
-    kl_t11 = kl_t10 != 8;
+    kl_t5 = kl_t4 != 8;
 #line 87 "opt/globals_overwritten.kl"
-    if ( kl_t11 ) goto bb3; else goto bb4;
+    if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
     kl_t0 = 5;
 #line 89 "opt/globals_overwritten.kl"

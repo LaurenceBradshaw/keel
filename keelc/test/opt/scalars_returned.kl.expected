@@ -30,21 +30,21 @@ struct kl__Point kl__built__3i32( int32_t kl_a_1 )
 struct kl__Point kl__either__3i32_4bool( int32_t kl_a_1, bool kl_c_2 )
 {
     struct kl__Point kl_t0;
-    int32_t kl_t8;
+    int32_t kl_t3;
 #line 23 "opt/scalars_returned.kl"
-    kl_t8 = kl_a_1 + 1;
+    kl_t3 = kl_a_1 + 1;
     if ( kl_c_2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0.kl_x = kl_a_1;
 #line 26 "opt/scalars_returned.kl"
-    kl_t0.kl_y = kl_t8;
+    kl_t0.kl_y = kl_t3;
 #line 26 "opt/scalars_returned.kl"
     return kl_t0;
     bb2:
 #line 29 "opt/scalars_returned.kl"
-    kl_t0.kl_x = kl_t8;
+    kl_t0.kl_x = kl_t3;
 #line 29 "opt/scalars_returned.kl"
-    kl_t0.kl_y = kl_t8;
+    kl_t0.kl_y = kl_t3;
 #line 29 "opt/scalars_returned.kl"
     return kl_t0;
 }

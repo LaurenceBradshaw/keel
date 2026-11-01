@@ -110,12 +110,12 @@ struct kl__Box kl__called__4bool( bool kl_c_1 )
 struct kl__Box kl__nested__3i32( int32_t kl_n_1 )
 {
     struct kl__Box kl_t0;
+    bool kl_t2;
     bool kl_t3;
-    bool kl_t8;
 #line 51 "opt/moves_conditional.kl"
-    kl_t3 = kl_n_1 == 0;
+    kl_t2 = kl_n_1 == 0;
 #line 51 "opt/moves_conditional.kl"
-    if ( kl_t3 ) goto bb1; else goto bb2;
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 51 "opt/moves_conditional.kl"
     kl_t0.kl_value = 5;
@@ -124,9 +124,9 @@ struct kl__Box kl__nested__3i32( int32_t kl_n_1 )
     goto bb3;
     bb2:
 #line 51 "opt/moves_conditional.kl"
-    kl_t8 = kl_n_1 == 1;
+    kl_t3 = kl_n_1 == 1;
 #line 51 "opt/moves_conditional.kl"
-    if ( kl_t8 ) goto bb4; else goto bb5;
+    if ( kl_t3 ) goto bb4; else goto bb5;
     bb3:
 #line 51 "opt/moves_conditional.kl"
     return kl_t0;
@@ -174,28 +174,29 @@ struct kl__Point kl__point__4bool( bool kl_c_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    bool kl_t9;
-    struct kl__Box kl_e_20;
-    struct kl__Box kl_f_22;
-    struct kl__Box kl_g_24;
-    bool kl_t26;
-    bool kl_t35;
-    int32_t kl_t178;
-    int32_t kl_t191;
-    int32_t kl_t192;
+    bool kl_t1;
+    bool kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
 #line 14 "opt/moves_conditional.kl"
-    kl_t178 = kl__live__G + 4;
+    kl_t4 = kl__live__G + 1;
 #line 14 "opt/moves_conditional.kl"
-    kl__live__G = kl_t178;
+    kl_t5 = kl__live__G + 4;
+#line 14 "opt/moves_conditional.kl"
+    kl__live__G = kl_t5;
 #line 67 "opt/moves_conditional.kl"
-    kl_t9 = kl_t178 != 4;
+    kl_t1 = kl_t5 != 4;
 #line 67 "opt/moves_conditional.kl"
-    if ( kl_t9 ) goto bb2; else goto bb1;
+    if ( kl_t1 ) goto bb2; else goto bb1;
     bb1:
 #line 67 "opt/moves_conditional.kl"
-    kl_t9 = kl__destroyed__G != 0;
+    kl_t1 = kl__destroyed__G != 0;
 #line 67 "opt/moves_conditional.kl"
-    if ( kl_t9 ) goto bb2; else goto bb3;
+    if ( kl_t1 ) goto bb2; else goto bb3;
     bb2:
     kl_t0 = 1;
 #line 19 "opt/moves_conditional.kl"
@@ -204,66 +205,52 @@ int32_t kl__main__( void )
 #line 69 "opt/moves_conditional.kl"
     return kl_t0;
     bb3:
-#line 72 "opt/moves_conditional.kl"
-    kl_e_20 = kl__nested__3i32( 0 );
-    kl_f_22 = kl__nested__3i32( 1 );
-    kl_g_24 = kl__nested__3i32( 2 );
-    kl_t26 = kl_e_20.kl_value != 5;
+#line 14 "opt/moves_conditional.kl"
+    kl_t6 = kl_t4 + 6;
+#line 14 "opt/moves_conditional.kl"
+    kl__live__G = kl_t6;
 #line 75 "opt/moves_conditional.kl"
-    if ( kl_t26 ) goto bb8; else goto bb4;
+    kl_t2 = kl_t6 != 7;
+#line 75 "opt/moves_conditional.kl"
+    if ( kl_t2 ) goto bb5; else goto bb4;
     bb4:
 #line 75 "opt/moves_conditional.kl"
-    kl_t26 = kl_f_22.kl_value != 6;
+    kl_t2 = kl__destroyed__G != 0;
 #line 75 "opt/moves_conditional.kl"
-    if ( kl_t26 ) goto bb8; else goto bb5;
+    if ( kl_t2 ) goto bb5; else goto bb9;
     bb5:
-#line 75 "opt/moves_conditional.kl"
-    kl_t26 = kl_g_24.kl_value != 7;
-#line 75 "opt/moves_conditional.kl"
-    if ( kl_t26 ) goto bb8; else goto bb6;
-    bb6:
-#line 75 "opt/moves_conditional.kl"
-    kl_t26 = kl__live__G != 7;
-#line 75 "opt/moves_conditional.kl"
-    if ( kl_t26 ) goto bb8; else goto bb7;
-    bb7:
-#line 75 "opt/moves_conditional.kl"
-    kl_t26 = kl__destroyed__G != 0;
-#line 75 "opt/moves_conditional.kl"
-    if ( kl_t26 ) goto bb8; else goto bb12;
-    bb8:
     kl_t0 = 2;
 #line 19 "opt/moves_conditional.kl"
     kl__live__G = kl__live__G - 7;
     kl__destroyed__G = kl__destroyed__G + 7;
 #line 77 "opt/moves_conditional.kl"
     return kl_t0;
-    bb9:
+    bb6:
 #line 81 "opt/moves_conditional.kl"
-    kl_t35 = kl_t192 != 7;
+    kl_t3 = kl_t8 != 7;
 #line 81 "opt/moves_conditional.kl"
-    if ( kl_t35 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t3 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 3;
 #line 83 "opt/moves_conditional.kl"
     return kl_t0;
-    bb11:
+    bb8:
 #line 91 "opt/moves_conditional.kl"
     kl_t0 = 0;
 #line 91 "opt/moves_conditional.kl"
     return kl_t0;
-    bb12:
+    bb9:
 #line 19 "opt/moves_conditional.kl"
-    kl_t191 = kl__live__G - 7;
+    kl_t7 = kl_t4 - 1;
 #line 19 "opt/moves_conditional.kl"
-    kl__live__G = kl_t191;
-    kl_t192 = kl__destroyed__G + 7;
+    kl__live__G = kl_t7;
+    kl_t8 = kl__destroyed__G + 7;
 #line 20 "opt/moves_conditional.kl"
-    kl__destroyed__G = kl_t192;
+    kl__destroyed__G = kl_t8;
 #line 81 "opt/moves_conditional.kl"
-    kl_t35 = kl_t191 != 0;
+    kl_t3 = kl_t7 != 0;
 #line 81 "opt/moves_conditional.kl"
-    if ( kl_t35 ) goto bb10; else goto bb9;
+    if ( kl_t3 ) goto bb7; else goto bb6;
 #line 92 "opt/moves_conditional.kl"
 }
 

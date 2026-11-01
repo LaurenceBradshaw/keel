@@ -81,22 +81,22 @@ int32_t kl__joined__4bool_3i32( bool kl_c_1, int32_t kl_a_2 )
 int32_t kl__looped__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
-    int32_t kl_i_3;
-    bool kl_t4;
+    int32_t kl_i_2;
+    bool kl_t3;
 #line 52 "opt/merging.kl"
     kl_t0 = 0;
-    kl_i_3 = 0;
+    kl_i_2 = 0;
 #line 53 "opt/merging.kl"
     goto bb1;
     bb1:
 #line 53 "opt/merging.kl"
-    kl_t4 = kl_i_3 < kl_n_1;
+    kl_t3 = kl_i_2 < kl_n_1;
 #line 53 "opt/merging.kl"
-    if ( kl_t4 ) goto bb2; else goto bb3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
     bb2:
-    kl_t0 = kl_t0 + kl_i_3;
+    kl_t0 = kl_t0 + kl_i_2;
 #line 53 "opt/merging.kl"
-    kl_i_3 = kl_i_3 + 1;
+    kl_i_2 = kl_i_2 + 1;
 #line 53 "opt/merging.kl"
     goto bb1;
     bb3:
@@ -108,13 +108,13 @@ int32_t kl__looped__3i32( int32_t kl_n_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    int32_t kl_t12;
-    bool kl_t13;
-    int32_t kl_i_17;
-    bool kl_t18;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_i_3;
+    bool kl_t4;
 #line 52 "opt/merging.kl"
-    kl_t12 = 0;
-    kl_i_17 = 0;
+    kl_t1 = 0;
+    kl_i_3 = 0;
 #line 53 "opt/merging.kl"
     goto bb3;
     bb1:
@@ -129,20 +129,20 @@ int32_t kl__main__( void )
     return kl_t0;
     bb3:
 #line 53 "opt/merging.kl"
-    kl_t18 = kl_i_17 < 5;
+    kl_t4 = kl_i_3 < 5;
 #line 53 "opt/merging.kl"
-    if ( kl_t18 ) goto bb4; else goto bb5;
+    if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
-    kl_t12 = kl_t12 + kl_i_17;
+    kl_t1 = kl_t1 + kl_i_3;
 #line 53 "opt/merging.kl"
-    kl_i_17 = kl_i_17 + 1;
+    kl_i_3 = kl_i_3 + 1;
 #line 53 "opt/merging.kl"
     goto bb3;
     bb5:
 #line 82 "opt/merging.kl"
-    kl_t13 = kl_t12 != 10;
+    kl_t2 = kl_t1 != 10;
 #line 82 "opt/merging.kl"
-    if ( kl_t13 ) goto bb1; else goto bb2;
+    if ( kl_t2 ) goto bb1; else goto bb2;
 #line 88 "opt/merging.kl"
 }
 
