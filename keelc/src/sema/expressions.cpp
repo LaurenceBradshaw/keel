@@ -1138,7 +1138,24 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner 
     if( bounded )
     {
         const std::vector<Type_id> owners = bounds_.method_owners( type, Interner::operator_name( Operator_name::Walk ) );
-        owner                             = owners.empty() ? Type_id {} : owners.front();
+
+        // Two interfaces, or one at two instances: no argument picks between them.
+        if( owners.size() > 1 )
+        {
+            reporter_.error_at(
+                ast_.span( container ),
+                fmt::format(
+                    "both `{}` and `{}` walk `{}`, so the loop does not say which",
+                    table_.name( owners[0] ),
+                    table_.name( owners[1] ),
+                    table_.name( type )
+                ),
+                "loop in a function bound by only one of them"
+            );
+            return Node_id {};
+        }
+
+        owner = owners.empty() ? Type_id {} : owners.front();
     }
 
     Node_id reading;
