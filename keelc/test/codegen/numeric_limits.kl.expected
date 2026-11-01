@@ -1,0 +1,284 @@
+// codegen/numeric_limits.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int64_t kl__g_max__G = 9223372036854775807;
+int64_t kl__g_min__G = -9223372036854775808ull;
+uint64_t kl__g_u__G = 18446744073709551615ull;
+float kl__g_f__G = -3.4028234663852886e+38;
+
+int32_t kl__main__( void );
+int8_t kl__top__I2i8E__( void );
+int16_t kl__bottom__I3i16E__( void );
+uint32_t kl__top__I3u32E__( void );
+double kl__top__I3f64E__( void );
+
+#line 13 "codegen/numeric_limits.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    int64_t kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    int8_t kl_t17;
+    bool kl_t18;
+    int16_t kl_t19;
+    int16_t kl_t20;
+    bool kl_t21;
+    uint32_t kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    bool kl_t25;
+    float kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    double kl_t29;
+    bool kl_t30;
+    double kl_t31;
+    double kl_t32;
+    bool kl_t33;
+#line 15 "codegen/numeric_limits.kl"
+    kl_t2 = 2147483647 != 2147483647;
+#line 15 "codegen/numeric_limits.kl"
+    kl_t1 = kl_t2;
+#line 15 "codegen/numeric_limits.kl"
+    if ( kl_t1 ) goto bb2; else goto bb1;
+    bb1:
+#line 15 "codegen/numeric_limits.kl"
+    kl_t3 = -2147483648;
+#line 15 "codegen/numeric_limits.kl"
+    kl_t4 = -2147483648;
+#line 15 "codegen/numeric_limits.kl"
+    kl_t5 = kl_t3 != kl_t4;
+#line 15 "codegen/numeric_limits.kl"
+    kl_t1 = kl_t5;
+#line 15 "codegen/numeric_limits.kl"
+    goto bb2;
+    bb2:
+#line 15 "codegen/numeric_limits.kl"
+    if ( kl_t1 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 1;
+#line 17 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb4:
+#line 20 "codegen/numeric_limits.kl"
+    kl_t7 = 255 != 255;
+#line 20 "codegen/numeric_limits.kl"
+    kl_t6 = kl_t7;
+#line 20 "codegen/numeric_limits.kl"
+    if ( kl_t6 ) goto bb6; else goto bb5;
+    bb5:
+#line 20 "codegen/numeric_limits.kl"
+    kl_t8 = 0 != 0;
+#line 20 "codegen/numeric_limits.kl"
+    kl_t6 = kl_t8;
+#line 20 "codegen/numeric_limits.kl"
+    goto bb6;
+    bb6:
+#line 20 "codegen/numeric_limits.kl"
+    if ( kl_t6 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 2;
+#line 22 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb8:
+#line 25 "codegen/numeric_limits.kl"
+    kl_t11 = kl__g_max__G != 9223372036854775807;
+#line 25 "codegen/numeric_limits.kl"
+    kl_t10 = kl_t11;
+#line 25 "codegen/numeric_limits.kl"
+    if ( kl_t10 ) goto bb10; else goto bb9;
+    bb9:
+#line 25 "codegen/numeric_limits.kl"
+    kl_t12 = -9223372036854775808ull;
+#line 25 "codegen/numeric_limits.kl"
+    kl_t13 = kl__g_min__G != kl_t12;
+#line 25 "codegen/numeric_limits.kl"
+    kl_t10 = kl_t13;
+#line 25 "codegen/numeric_limits.kl"
+    goto bb10;
+    bb10:
+#line 25 "codegen/numeric_limits.kl"
+    kl_t9 = kl_t10;
+#line 25 "codegen/numeric_limits.kl"
+    if ( kl_t9 ) goto bb12; else goto bb11;
+    bb11:
+#line 25 "codegen/numeric_limits.kl"
+    kl_t14 = kl__g_u__G != 18446744073709551615ull;
+#line 25 "codegen/numeric_limits.kl"
+    kl_t9 = kl_t14;
+#line 25 "codegen/numeric_limits.kl"
+    goto bb12;
+    bb12:
+#line 25 "codegen/numeric_limits.kl"
+    if ( kl_t9 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 3;
+#line 27 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb14:
+#line 30 "codegen/numeric_limits.kl"
+    kl_t17 = kl__top__I2i8E__(  );
+#line 30 "codegen/numeric_limits.kl"
+    kl_t18 = kl_t17 != 127;
+#line 30 "codegen/numeric_limits.kl"
+    kl_t16 = kl_t18;
+#line 30 "codegen/numeric_limits.kl"
+    if ( kl_t16 ) goto bb16; else goto bb15;
+    bb15:
+#line 30 "codegen/numeric_limits.kl"
+    kl_t19 = kl__bottom__I3i16E__(  );
+#line 30 "codegen/numeric_limits.kl"
+    kl_t20 = -32768;
+#line 30 "codegen/numeric_limits.kl"
+    kl_t21 = kl_t19 != kl_t20;
+#line 30 "codegen/numeric_limits.kl"
+    kl_t16 = kl_t21;
+#line 30 "codegen/numeric_limits.kl"
+    goto bb16;
+    bb16:
+#line 30 "codegen/numeric_limits.kl"
+    kl_t15 = kl_t16;
+#line 30 "codegen/numeric_limits.kl"
+    if ( kl_t15 ) goto bb18; else goto bb17;
+    bb17:
+#line 30 "codegen/numeric_limits.kl"
+    kl_t22 = kl__top__I3u32E__(  );
+#line 30 "codegen/numeric_limits.kl"
+    kl_t23 = kl_t22 != 4294967295;
+#line 30 "codegen/numeric_limits.kl"
+    kl_t15 = kl_t23;
+#line 30 "codegen/numeric_limits.kl"
+    goto bb18;
+    bb18:
+#line 30 "codegen/numeric_limits.kl"
+    if ( kl_t15 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 4;
+#line 32 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb20:
+#line 35 "codegen/numeric_limits.kl"
+    kl_t25 = 3.4028234663852886e+38 != 3.4028234663852886e+38;
+#line 35 "codegen/numeric_limits.kl"
+    kl_t24 = kl_t25;
+#line 35 "codegen/numeric_limits.kl"
+    if ( kl_t24 ) goto bb22; else goto bb21;
+    bb21:
+#line 35 "codegen/numeric_limits.kl"
+    kl_t26 = -3.4028234663852886e+38;
+#line 35 "codegen/numeric_limits.kl"
+    kl_t27 = kl__g_f__G != kl_t26;
+#line 35 "codegen/numeric_limits.kl"
+    kl_t24 = kl_t27;
+#line 35 "codegen/numeric_limits.kl"
+    goto bb22;
+    bb22:
+#line 35 "codegen/numeric_limits.kl"
+    if ( kl_t24 ) goto bb23; else goto bb24;
+    bb23:
+    kl_t0 = 5;
+#line 37 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb24:
+#line 40 "codegen/numeric_limits.kl"
+    kl_t29 = kl__top__I3f64E__(  );
+#line 40 "codegen/numeric_limits.kl"
+    kl_t30 = kl_t29 != 1.7976931348623157e+308;
+#line 40 "codegen/numeric_limits.kl"
+    kl_t28 = kl_t30;
+#line 40 "codegen/numeric_limits.kl"
+    if ( kl_t28 ) goto bb26; else goto bb25;
+    bb25:
+#line 40 "codegen/numeric_limits.kl"
+    kl_t31 = -1.7976931348623157e+308;
+#line 40 "codegen/numeric_limits.kl"
+    kl_t32 = -1.7976931348623157e+308;
+#line 40 "codegen/numeric_limits.kl"
+    kl_t33 = kl_t31 != kl_t32;
+#line 40 "codegen/numeric_limits.kl"
+    kl_t28 = kl_t33;
+#line 40 "codegen/numeric_limits.kl"
+    goto bb26;
+    bb26:
+#line 40 "codegen/numeric_limits.kl"
+    if ( kl_t28 ) goto bb27; else goto bb28;
+    bb27:
+    kl_t0 = 6;
+#line 42 "codegen/numeric_limits.kl"
+    return kl_t0;
+    bb28:
+#line 45 "codegen/numeric_limits.kl"
+    kl_t0 = 0;
+#line 45 "codegen/numeric_limits.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/numeric_limits.kl"
+int8_t kl__top__I2i8E__( void )
+{
+    int8_t kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+    kl_t0 = 127;
+#line 10 "codegen/numeric_limits.kl"
+    return kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+}
+
+#line 11 "codegen/numeric_limits.kl"
+int16_t kl__bottom__I3i16E__( void )
+{
+    int16_t kl_t0;
+    int16_t kl_t1;
+#line 11 "codegen/numeric_limits.kl"
+    kl_t1 = -32768;
+#line 11 "codegen/numeric_limits.kl"
+    kl_t0 = kl_t1;
+#line 11 "codegen/numeric_limits.kl"
+    return kl_t0;
+#line 11 "codegen/numeric_limits.kl"
+}
+
+#line 10 "codegen/numeric_limits.kl"
+uint32_t kl__top__I3u32E__( void )
+{
+    uint32_t kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+    kl_t0 = 4294967295;
+#line 10 "codegen/numeric_limits.kl"
+    return kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+}
+
+#line 10 "codegen/numeric_limits.kl"
+double kl__top__I3f64E__( void )
+{
+    double kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+    kl_t0 = 1.7976931348623157e+308;
+#line 10 "codegen/numeric_limits.kl"
+    return kl_t0;
+#line 10 "codegen/numeric_limits.kl"
+}
+
+#line 13 "codegen/numeric_limits.kl"
+int main( void )
+{
+#line 13 "codegen/numeric_limits.kl"
+    return (int) kl__main__();
+}

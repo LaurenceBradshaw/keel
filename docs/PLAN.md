@@ -650,6 +650,12 @@ type, so `i8 d = 100 + 100 - 1;` is refused at the `200`. A constant that overfl
 error (`u32 d = 1 - 2;`); arithmetic on values wraps (§12). A float literal typed `f32` is its
 spelling rounded once to `f32`, never through `f64`.
 
+**A number type has two constants, `i32::max` and `i32::min`**, each of the type it names and usable
+wherever a literal is, file-scope initialisers included. A float's `min` is its most negative finite
+value, not its smallest positive one. Under `where T : numeric` (or `integral`, `floating`), `T::max`
+and `T::min` are the instance's. Each lowers to a constant, so nothing is left to fold. No other
+member of a number type exists, and neither is a function: `i32::max()` is refused.
+
 **A comparison does not pay the containment cost (D41).** It has no result to protect, so the only
 requirement is that the domain hold both operands exactly. That is a second, wider table, and it is
 the one `<`, `<=`, `>`, `>=`, `==` and `!=` are checked against:
@@ -1492,6 +1498,9 @@ major), which waits for the lambda decision (§12).
   mutable.
 - **A `ctz` intrinsic.** `hash_control::lowest` finds a group's first match in five word
   operations; one instruction would do.
+- **Float limits beyond `max` and `min`**: `f64::epsilon`, `f64::infinity` and `f64::nan` (and the
+  smallest positive normal) are left out until something needs them; they would join `max` and
+  `min` as constants of the float types.
 - **`kl_rt_hash_key` is not thread-safe**: its key is drawn once, unguarded, and counted up. It
   wants an atomic, or a key per thread, when threads arrive.
 

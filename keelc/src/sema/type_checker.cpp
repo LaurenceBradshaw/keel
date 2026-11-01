@@ -4,6 +4,7 @@
 #include "sema/type_checker.h"
 #include <fmt/format.h>
 #include <algorithm>
+#include <limits>
 #include "common/source_manager.h"
 #include "object/state.h"
 #include "sema/addresses.h"
@@ -637,6 +638,26 @@ bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
     return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.declared_type( param ) ) : types.type_of( param );
+}
+
+Constant_value numeric_limit( const Type_table& table, Type_id type, bool maximum )
+{
+    const Type& t = table.get( type );
+
+    if( table.is_float( type ) )
+    {
+        const f64 largest = t.width == 32 ? std::numeric_limits<f32>::max() : std::numeric_limits<f64>::max();
+        return Constant_value { .kind = Constant_value::Kind::Float, .floating = maximum ? largest : -largest };
+    }
+
+    const u64 top = u64 { 1 } << ( t.width - 1 );
+
+    if( !t.is_signed )
+    {
+        return Constant_value { .magnitude = maximum ? top + ( top - 1 ) : 0 };
+    }
+
+    return maximum ? Constant_value { .magnitude = top - 1 } : Constant_value { .magnitude = top, .negative = true };
 }
 
 } // namespace keel

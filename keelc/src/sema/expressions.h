@@ -229,6 +229,9 @@ private:
 
     Type_id infer_path( Node_id id );
     Type_id infer_variant_construction( Node_id id );
+    // `i32::max` and `T::max`: the number type or parameter a `max` or `min` path names, else invalid.
+    Type_id limit_owner( Node_id path ) const;
+    Type_id infer_limit( Node_id id, Type_id type );
 
     // PLAN §6.7. `P::make( 7 )` - a member reached through its type rather than an object. The
     // declaration a path's qualifier names, and the type it stands for once its own type arguments

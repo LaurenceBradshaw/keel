@@ -32,6 +32,7 @@ public:
         Types&                types,
         Literal_pool&         literals,
         const Source_manager& sm,
+        const Interner&       interner,
         bool                  overflow_checks,
         Bindings              bindings = {}
     );
@@ -71,6 +72,8 @@ private:
 
     Place   place_for( Node_id declaration, Type_id owner = {} );
     Operand read_name( Node_id id, Node_id decl );
+    // A number or enum ordinal as an operand; a negative one through a temporary.
+    Operand scalar_constant( const Constant_value& value, Type_id type, Span at );
     Type_id static_owner( Node_id named, Node_id decl );
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
@@ -298,6 +301,7 @@ private:
     Bindings              bindings_;
     Literal_pool&         literal_pool_;
     const Source_manager& sm_;
+    const Interner&       interner_;
 
     const Node_id declaration_;
     const bool    overflow_checks_;
@@ -328,6 +332,7 @@ Lowering::Lowering(
     Types&                types,
     Literal_pool&         literals,
     const Source_manager& sm,
+    const Interner&       interner,
     bool                  overflow_checks,
     Bindings              bindings
 )
@@ -337,6 +342,7 @@ Lowering::Lowering(
       bindings_( std::move( bindings ) ),
       literal_pool_( literals ),
       sm_( sm ),
+      interner_( interner ),
       declaration_( declaration ),
       overflow_checks_( overflow_checks ),
       builder_(
@@ -596,10 +602,16 @@ Operand Lowering::read_name( Node_id id, Node_id decl )
         return copy( place_for( decl, static_owner( id, decl ) ), type );
     }
 
-    const bool       negative = is_float ? std::signbit( value->floating ) : value->negative;
+    return scalar_constant( *value, type, ast_.span( id ) );
+}
+
+Operand Lowering::scalar_constant( const Constant_value& value, Type_id type, Span at )
+{
+    const bool       is_float = value.kind == Constant_value::Kind::Float;
+    const bool       negative = is_float ? std::signbit( value.floating ) : value.negative;
     const Literal_id magnitude =
-        is_float ? literal_pool_.add_float( std::fabs( value->floating ), static_cast<f32>( std::fabs( value->floating ) ) )
-                 : literal_pool_.add_integer( value->magnitude );
+        is_float ? literal_pool_.add_float( std::fabs( value.floating ), static_cast<f32>( std::fabs( value.floating ) ) )
+                 : literal_pool_.add_integer( value.magnitude );
 
     if( !negative )
     {
@@ -608,10 +620,7 @@ Operand Lowering::read_name( Node_id id, Node_id decl )
 
     // An operand has no negative form.
     return copy(
-        builder_.place(
-            builder_.into_temp( unary( Token_kind::Minus, constant( magnitude, type ), type ), type, ast_.span( id ) )
-        ),
-        type
+        builder_.place( builder_.into_temp( unary( Token_kind::Minus, constant( magnitude, type ), type ), type, at ) ), type
     );
 }
 
@@ -2905,6 +2914,16 @@ Operand Lowering::lower_unspanned( Node_id id )
             return lower_empty_variant( id );
         }
 
+        // `i32::max`, or `T::max` at this instance.
+        if( !types_.table().is_enum( type_of( id ) ) )
+        {
+            return scalar_constant(
+                numeric_limit( types_.table(), type_of( id ), interner_.text( ast_.name( id ) ) == "max" ),
+                type_of( id ),
+                ast_.span( id )
+            );
+        }
+
         // The variant's ordinal, recorded by the checker. aux holds its name.
         const std::optional<Constant_value> value = types_.constant_of( id );
 
@@ -4637,6 +4656,7 @@ std::vector<Function> lower(
     Types&                types,
     Literal_pool&         literals,
     const Source_manager& sm,
+    const Interner&       interner,
     bool                  overflow_checks,
     std::vector<Function> loaded
 )
@@ -4652,7 +4672,7 @@ std::vector<Function> lower(
         if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) && !ast.is_walk( id ) &&
             !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
-            Lowering lowering( id, ast, resolution, types, literals, sm, overflow_checks );
+            Lowering lowering( id, ast, resolution, types, literals, sm, interner, overflow_checks );
             functions.push_back( lowering.run() );
         }
     }
@@ -4669,7 +4689,15 @@ std::vector<Function> lower(
         }
 
         Lowering lowering(
-            instance->declaration, ast, resolution, types, literals, sm, overflow_checks, bindings_for( ast, types, *instance )
+            instance->declaration,
+            ast,
+            resolution,
+            types,
+            literals,
+            sm,
+            interner,
+            overflow_checks,
+            bindings_for( ast, types, *instance )
         );
 
         Function emitted = lowering.run();

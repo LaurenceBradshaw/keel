@@ -290,4 +290,7 @@ carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id va
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
 
+// `i32::max` or `i32::min` of a builtin number; a float's `min` is its most negative finite value.
+Constant_value numeric_limit( const Type_table& table, Type_id type, bool maximum );
+
 } // namespace keel

@@ -25,6 +25,7 @@ lower(
     Types&                types,
     Literal_pool&         literals,
     const Source_manager& sm,
+    const Interner&       interner,
     bool                  overflow_checks,
     std::vector<Function> loaded = {}
 );

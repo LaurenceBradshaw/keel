@@ -1,0 +1,37 @@
+error: `T` has no `max`
+ --> sema/errors_numeric_limits.kl:3:23
+  |
+3 | T plain<T>() { return T::max; }
+  |                       ^^^^^^ a `where T : numeric` clause gives it `::max` and `::min`
+
+error: `i32::max` is a value, not a function
+ --> sema/errors_numeric_limits.kl:6:13
+  |
+6 |     i32 a = i32::max();
+  |             ^^^^^^^^ write `i32::max` without the `( )`
+
+error: `i32` has no member `biggest`
+ --> sema/errors_numeric_limits.kl:7:13
+  |
+7 |     i32 b = i32::biggest;
+  |             ^^^^^^^^^^^^ a number type has only `i32::max` and `i32::min`
+
+error: `bool` is a builtin type, and has no members
+ --> sema/errors_numeric_limits.kl:8:14
+  |
+8 |     bool c = bool::max;
+  |              ^^^^
+
+error: expected `i8`, but got `i32`
+ --> sema/errors_numeric_limits.kl:9:12
+  |
+9 |     i8 d = i32::max;
+  |            ^^^^^^^^ write `cast<i8>( i32::max )`
+
+error: `2147483648` does not fit in `i32`
+  --> sema/errors_numeric_limits.kl:10:13
+   |
+10 |     i32 e = i32::max + 1;
+   |             ^^^^^^^^^^^^
+
+6 errors generated

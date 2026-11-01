@@ -1,0 +1,21 @@
+// In a release build, `T::max` at each instance and a `const` holding `i32::min` are constants:
+// every check folds away.
+
+const i32 g_min = i32::min;
+
+T top<T>() where T : numeric { return T::max; }
+
+i32 main()
+{
+    if( top<u16>() != 65535 || top<i64>() != 9223372036854775807 )
+    {
+        return 1;
+    }
+
+    if( g_min != -2147483648 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

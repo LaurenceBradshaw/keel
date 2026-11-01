@@ -69,7 +69,8 @@ Front_end run_front_end(
 
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
-    front.functions = lower( ast, front.resolution, front.types, literals, sm, build.overflow_checks, std::move( loaded ) );
+    front.functions =
+        lower( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks, std::move( loaded ) );
 
     if( through == Stage::Lowered )
     {

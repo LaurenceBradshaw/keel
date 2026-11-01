@@ -386,6 +386,18 @@ Type_id Expressions::infer_call( Node_id id )
     // rather than a name, and they part on what the qualifier names rather than on what follows it.
     if( ast_.kind( callee ) == Node_kind::Path_expr && !resolution_.declaration_of( callee ).is_valid() )
     {
+        if( limit_owner( callee ).is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}` is a value, not a function", reporter_.text( ast_.span( callee ) ) ),
+                fmt::format( "write `{}` without the `( )`", reporter_.text( ast_.span( callee ) ) )
+            );
+
+            take_call_expectation();
+            return refuse_call( id, {} );
+        }
+
         const Node_id qualifier = qualifier_declaration( callee );
 
         if( qualifier.is_valid() && ast_.kind( qualifier ) == Node_kind::Type_param_decl )
@@ -2780,8 +2792,63 @@ bool Expressions::refuses_many_member( Node_id field_expr, Type_id base_type )
     return true;
 }
 
+Type_id Expressions::limit_owner( Node_id path ) const
+{
+    const Node_id qualifier = ast_.qualifier( path );
+
+    if( !ast_.name( path ).is_valid() || ast_.kind( qualifier ) != Node_kind::Name_expr ||
+        ast_.type_arg_list( qualifier ).is_valid() )
+    {
+        return Type_id {};
+    }
+
+    if( const std::string_view member = interner_.text( ast_.name( path ) ); member != "max" && member != "min" )
+    {
+        return Type_id {};
+    }
+
+    if( const Node_id decl = resolution_.declaration_of( qualifier ); decl.is_valid() )
+    {
+        return ast_.kind( decl ) == Node_kind::Type_param_decl ? types_.type_of( decl ) : Type_id {};
+    }
+
+    const std::string_view type = interner_.text( ast_.name( qualifier ) );
+    return is_number_type_name( type ) ? table_.from_spelling( type ) : Type_id {};
+}
+
+// A builtin's limit folds to its value; a parameter's is taken at each instance.
+Type_id Expressions::infer_limit( Node_id id, Type_id type )
+{
+    take_expectation();
+
+    if( table_.is_parameter( type ) && !bounds_.has_bound( type, Bound::Numeric ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has no `{}`", table_.name( type ), interner_.text( ast_.name( id ) ) ),
+            fmt::format( "a `where {} : numeric` clause gives it `::max` and `::min`", table_.name( type ) )
+        );
+
+        return types_.poison( id );
+    }
+
+    types_.record( ast_.qualifier( id ), type );
+
+    if( !table_.is_parameter( type ) )
+    {
+        constant_folder_.record_value( id, numeric_limit( table_, type, interner_.text( ast_.name( id ) ) == "max" ) );
+    }
+
+    return types_.record( id, type );
+}
+
 Type_id Expressions::infer_path( Node_id id )
 {
+    if( const Type_id limited = limit_owner( id ); limited.is_valid() )
+    {
+        return infer_limit( id, limited );
+    }
+
     const Type_id   expectation = take_expectation();
     const Node_id   qualifier   = ast_.qualifier( id );
     const Symbol_id name        = ast_.name( id );

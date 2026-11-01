@@ -446,10 +446,21 @@ void Resolver::visit_path( Node_id id )
 
     if( bare && is_builtin_type_name( interner_.text( ast_.name( qualifier ) ) ) )
     {
-        reporter_.error_at(
-            ast_.span( qualifier ),
-            fmt::format( "`{}` is a builtin type, and has no members", interner_.text( ast_.name( qualifier ) ) )
-        );
+        const std::string_view type   = interner_.text( ast_.name( qualifier ) );
+        const Symbol_id        member = ast_.name( id );
+
+        if( !is_number_type_name( type ) )
+        {
+            reporter_.error_at( ast_.span( qualifier ), fmt::format( "`{}` is a builtin type, and has no members", type ) );
+        }
+        else if( member.is_valid() && interner_.text( member ) != "max" && interner_.text( member ) != "min" )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` has no member `{}`", type, interner_.text( member ) ),
+                fmt::format( "a number type has only `{0}::max` and `{0}::min`", type )
+            );
+        }
 
         visit( ast_.type_arg_list( id ) );
 
@@ -2291,7 +2302,7 @@ TEST_CASE( "resolver_says_a_builtin_type_is_not_a_value", "[sema][resolve]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        CHECK( p.rendered().find( "`i32` is a builtin type, and has no members" ) != std::string::npos );
+        CHECK( p.rendered().find( "`i32` has no member `make`" ) != std::string::npos );
     }
 
     SECTION( "a name that only starts like one is still not declared" )

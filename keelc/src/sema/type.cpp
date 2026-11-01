@@ -1523,6 +1523,13 @@ bool is_builtin_type_name( std::string_view spelling )
     return table.from_spelling( spelling ).is_valid();
 }
 
+bool is_number_type_name( std::string_view spelling )
+{
+    static const Type_table table;
+    const Type_id           type = table.from_spelling( spelling );
+    return type.is_valid() && ( table.is_integer( type ) || table.is_float( type ) );
+}
+
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>

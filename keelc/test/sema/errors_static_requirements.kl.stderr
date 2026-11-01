@@ -58,10 +58,10 @@ error: `area` needs an object
 69 |     return T::area();
    |            ^^^^^^^ call it as `value.area( ... )`
 
-error: `i32` is a builtin type, and has no members
+error: `i32` has no member `count`
   --> sema/errors_static_requirements.kl:80:12
    |
 80 |     return i32::count();
-   |            ^^^
+   |            ^^^^^^^^^^ a number type has only `i32::max` and `i32::min`
 
 11 errors generated

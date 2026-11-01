@@ -1,0 +1,46 @@
+// `i32::max` and `i32::min` are constants of their type, file scope included, and `T::max` under a
+// numeric bound is the instance's. A float's `min` is its most negative finite value. Each check
+// returns its own code.
+
+i64 g_max = i64::max;
+i64 g_min = i64::min;
+u64 g_u   = u64::max;
+f32 g_f   = f32::min;
+
+T top<T>() where T : numeric { return T::max; }
+T bottom<T>() where T : integral { return T::min; }
+
+i32 main()
+{
+    if( i32::max != 2147483647 || i32::min != -2147483648 )
+    {
+        return 1;
+    }
+
+    if( u8::max != 255 || u8::min != 0 )
+    {
+        return 2;
+    }
+
+    if( g_max != 9223372036854775807 || g_min != -9223372036854775808 || g_u != 18446744073709551615 )
+    {
+        return 3;
+    }
+
+    if( top<i8>() != 127 || bottom<i16>() != -32768 || top<u32>() != 4294967295 )
+    {
+        return 4;
+    }
+
+    if( f32::max != 3.4028234663852886e38 || g_f != -f32::max )
+    {
+        return 5;
+    }
+
+    if( top<f64>() != f64::max || f64::min != -1.7976931348623157e308 )
+    {
+        return 6;
+    }
+
+    return 0;
+}
