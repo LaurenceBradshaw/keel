@@ -3003,6 +3003,18 @@ Type_id Expressions::infer_field( Node_id id )
                 fmt::format( "write `{}::{}`", table_.name( object_type ), interner_.text( ast_.name( id ) ) )
             );
         }
+        else if( const Node_id method = aggregates_.find_method( object_decl, ast_.name( id ) ); method.is_valid() )
+        {
+            const std::string_view name = interner_.text( ast_.name( id ) );
+
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is a method of `{}`, not a field", name, table_.name( object_type ) ),
+                ast_.is_static_method( method )
+                    ? fmt::format( "a method is only called: `{}::{}()`", table_.name( object_type ), name )
+                    : fmt::format( "a method is only called: `{}.{}()`", reporter_.text( ast_.span( base ) ), name )
+            );
+        }
         else
         {
             std::vector<Node_id> fields;
