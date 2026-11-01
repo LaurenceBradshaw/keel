@@ -56,6 +56,6 @@ error: no operator `!` for `vec`
   --> sema/errors_operator_arithmetic.kl:35:19
    |
 35 |     bool  not_v = !v;
-   |                   ^^ both operands must be `bool`
+   |                   ^^ the operand must be `bool`
 
 10 errors generated

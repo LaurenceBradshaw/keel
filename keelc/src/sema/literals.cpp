@@ -65,7 +65,17 @@ Adoption Literals::adoption( Node_id id ) const
         return Adoption::Other;
 
     case Node_kind::Unary_expr:
-        return ast_.op( id ) == Token_kind::Minus ? adoption( ast_.operand( id ) ) : Adoption::None;
+        switch( ast_.op( id ) )
+        {
+        case Token_kind::Minus:
+            return adoption( ast_.operand( id ) );
+
+        case Token_kind::Tilde: // `~0` is a mask of whatever width the context wants
+            return adoption( ast_.operand( id ) ) == Adoption::Integer ? Adoption::Integer : Adoption::None;
+
+        default:
+            return Adoption::None;
+        }
 
     case Node_kind::Binary_expr:
         switch( result_source( ast_.op( id ) ) )

@@ -4240,8 +4240,8 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             return literals_.check_literal( id, expected );
         }
 
-        // `-( 0 - 3000000000 )`: the expectation goes through to the operation, and the minus keeps
-        // its signed-only rule.
+        // `-( 0 - 3000000000 )` and `~0`: the expectation goes through to the operation, which keeps
+        // its own rule (a minus is signed-only).
         if( literals_.adoption( id ) != Adoption::None )
         {
             const std::size_t before = reporter_.error_count();
@@ -4253,7 +4253,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
                 return types_.record( id, expected );
             }
 
-            const Type_id result = operators_.result_of_unary( Token_kind::Minus, expected, ast_.span( id ) );
+            const Type_id result = operators_.result_of_unary( ast_.op( id ), expected, ast_.span( id ) );
 
             if( !result.is_valid() )
             {

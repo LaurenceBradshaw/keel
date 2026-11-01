@@ -105,14 +105,14 @@ const Unary_rule* unary_rule_for( Token_kind kind )
 }
 
 // The help line for an operand kind. Empty where the message above it already says enough.
-std::string_view operand_requirement( Operands operands )
+std::string_view operand_requirement( Operands operands, bool unary )
 {
     switch( operands )
     {
     case Operands::Integer:
-        return "both operands must be integers";
+        return unary ? "the operand must be an integer" : "both operands must be integers";
     case Operands::Bool:
-        return "both operands must be `bool`";
+        return unary ? "the operand must be `bool`" : "both operands must be `bool`";
     case Operands::Numeric:
     case Operands::Comparable:
         return {};
@@ -333,7 +333,7 @@ Binary_result Operators::result_of_binary(
 
     if( !accepts( table_, rule->operands, lhs_type ) || !accepts( table_, rule->operands, rhs_type ) )
     {
-        return reject( operand_requirement( rule->operands ) );
+        return reject( operand_requirement( rule->operands, false ) );
     }
 
     // Two bools compare and combine directly: §6.4 has no row for bool at all.
@@ -399,7 +399,7 @@ Type_id Operators::result_of_unary( Token_kind op, Type_id operand_type, Span at
 
     if( !accepts( table_, rule->operands, operand_type ) )
     {
-        return reject( operand_requirement( rule->operands ) );
+        return reject( operand_requirement( rule->operands, true ) );
     }
 
     // C++ answers 4294967295 for `-u32(1)`: a silent wrong answer of exactly the kind D5 removes.

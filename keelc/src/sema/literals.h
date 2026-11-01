@@ -51,8 +51,9 @@ public:
     // Whether context can give this expression a type, rather than it having one of its own.
     bool is_literal_expression( Node_id id ) const;
 
-    // What check() may give the expected type to: a literal, a minus over one that may, an
-    // arithmetic operator whose operands both may, and a shift whose left operand may.
+    // What check() may give the expected type to: a literal, a minus over one that may, a `~` over
+    // an integer one, an arithmetic operator whose operands both may, and a shift whose left
+    // operand may.
     Adoption adoption( Node_id id ) const;
 
     // The fallback defaults, for a literal with nothing to give it a type. `nullptr` has none.

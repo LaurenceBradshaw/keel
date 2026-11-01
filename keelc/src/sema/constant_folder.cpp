@@ -1513,8 +1513,8 @@ TEST_CASE( "type_checker_folds_bitwise_operators", "[sema][types][constants][fol
 
         INFO( p.rendered() );
 
-        // -1 does not fit u8, so this is refused - and it is the *fold* that knows, not the parser.
-        REQUIRE( p.errors() == 1 );
+        // The `~` is checked at the u8 the context gives it, not as an i32's -1.
+        REQUIRE( p.errors() == 0 );
     }
 
     SECTION( "and on negative values, through the sign conversion" )
