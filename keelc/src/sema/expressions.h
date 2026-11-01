@@ -156,6 +156,8 @@ private:
     choose_method( Node_id id, Node_id first, Type_id receiver, std::span<const Type_id> through, std::vector<Argument_shape>& shapes, Type_id& interface );
     // A refused call still types its arguments, once each, or a mistake inside one goes unreported.
     Type_id refuse_call( Node_id id, std::span<const Argument_shape> shapes = {} );
+    // Whether `owners` spans two interfaces, each declaring `name`; reported at `at` if so.
+    bool    refuse_shared( Span at, Symbol_id name, std::span<const Type_id> owners );
     Type_id check_method_arguments(
         Node_id                         id,
         Node_id                         method,

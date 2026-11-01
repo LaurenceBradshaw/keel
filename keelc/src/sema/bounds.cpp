@@ -506,8 +506,8 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
 }
 
 // Where a receiver's methods are declared: an aggregate or an interface itself, or for a parameter,
-// every instance its `where` clause names of the first interface declaring `name`, else the first
-// it names at all. Empty when the type has no methods.
+// every instance its `where` clause names of each interface declaring `name`, grouped by interface
+// in the order written, else the first it names at all. Empty when the type has no methods.
 std::vector<Type_id> Bounds::method_owners( Type_id receiver, Symbol_id name ) const
 {
     if( table_.is_struct( receiver ) || table_.is_interface( receiver ) )
@@ -516,24 +516,25 @@ std::vector<Type_id> Bounds::method_owners( Type_id receiver, Symbol_id name ) c
     }
 
     const std::span<const Type_id> interfaces = interfaces_of( receiver );
+    std::vector<Type_id>           owners;
 
     for( const Type_id interface : interfaces )
     {
         const Node_id declaration = table_.get( interface ).declaration;
+        const auto    same        = [&]( Type_id other ) { return table_.get( other ).declaration == declaration; };
 
-        if( aggregates_.find_method( declaration, name ).is_valid() )
+        if( aggregates_.find_method( declaration, name ).is_valid() && std::ranges::none_of( owners, same ) )
         {
-            std::vector<Type_id> owners;
-            std::ranges::copy_if(
-                interfaces,
-                std::back_inserter( owners ),
-                [&]( Type_id other ) { return table_.get( other ).declaration == declaration; }
-            );
-            return owners;
+            std::ranges::copy_if( interfaces, std::back_inserter( owners ), same );
         }
     }
 
-    return interfaces.empty() ? std::vector<Type_id> {} : std::vector { interfaces.front() };
+    if( owners.empty() && !interfaces.empty() )
+    {
+        owners.push_back( interfaces.front() );
+    }
+
+    return owners;
 }
 
 bool Bounds::calls_operator( Type_id type, Symbol_id name ) const

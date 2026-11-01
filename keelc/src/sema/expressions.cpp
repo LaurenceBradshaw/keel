@@ -863,6 +863,11 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
+    if( refuse_shared( ast_.span( callee ), ast_.name( callee ), owners ) )
+    {
+        return refuse_call( id );
+    }
+
     // The declaration, not the call: find_method searches a declaration's members, and hands back
     // the first of however many share the name.
     const Node_id first = aggregates_.find_method( table_.get( owners.front() ).declaration, ast_.name( callee ) );
@@ -1423,6 +1428,31 @@ Node_id Expressions::
 
     shape_arguments( id, shapes );
     return overloads_.select_method( id, first, receiver, viable, through, shapes, interface );
+}
+
+bool Expressions::refuse_shared( Span at, Symbol_id name, std::span<const Type_id> owners )
+{
+    const auto other = std::ranges::find_if(
+        owners, [&]( Type_id owner ) { return table_.get( owner ).declaration != table_.get( owners.front() ).declaration; }
+    );
+
+    if( other == owners.end() )
+    {
+        return false;
+    }
+
+    reporter_.error_at(
+        at,
+        fmt::format(
+            "`{}` is declared by both `{}` and `{}`, so the call does not say which",
+            interner_.text( name ),
+            table_.name( owners.front() ),
+            table_.name( *other )
+        ),
+        "call it from a function bound by only one of them"
+    );
+
+    return true;
 }
 
 Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> shapes )
@@ -2086,7 +2116,21 @@ Node_id Expressions::find_operator(
     const Node_id block =
         table_.is_enum( object_type ) ? types_.conformances().block_declaring( ast_, object_type, name ) : Node_id {};
     const std::vector<Type_id> owners = block.is_valid() ? std::vector<Type_id> {} : bounds_.method_owners( object_type, name );
-    const Node_id              declaration = block.is_valid() ? block : table_.get( owners.front() ).declaration;
+
+    // Two bounds may each declare `-`, one with one operand and one with two.
+    std::vector<Type_id> answering;
+    std::ranges::copy_if(
+        owners,
+        std::back_inserter( answering ),
+        [&]( Type_id owner )
+        {
+            bool unused = false;
+            return aggregates_.find_operator( table_.get( owner ).declaration, name, operands, unused ).is_valid();
+        }
+    );
+
+    const Type_id owner       = block.is_valid() ? Type_id {} : answering.empty() ? owners.front() : answering.front();
+    const Node_id declaration = block.is_valid() ? block : table_.get( owner ).declaration;
 
     const auto type_argument = [&]
     {
@@ -2095,6 +2139,12 @@ Node_id Expressions::find_operator(
             infer( argument );
         }
     };
+
+    if( refuse_shared( ast_.span( id ), name, answering ) )
+    {
+        type_argument();
+        return Node_id {};
+    }
 
     bool          malformed = false;
     const Node_id method    = aggregates_.find_operator( declaration, name, operands, malformed );
@@ -2132,7 +2182,7 @@ Node_id Expressions::find_operator(
     // Lowering reads which instance the operator went through.
     if( table_.is_parameter( object_type ) )
     {
-        callees_.record_through( id, owners.front() );
+        callees_.record_through( id, owner );
     }
 
     return method;
@@ -2260,6 +2310,11 @@ Type_id Expressions::infer_bound_static_call( Node_id id, Node_id parameter )
             fmt::format( "a `where` clause naming an interface gives `{}` that interface's methods", table_.name( instance ) )
         );
 
+        return refuse_call( id, shapes );
+    }
+
+    if( refuse_shared( ast_.span( path ), name, owners ) )
+    {
         return refuse_call( id, shapes );
     }
 
