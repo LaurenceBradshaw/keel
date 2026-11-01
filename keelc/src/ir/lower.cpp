@@ -807,28 +807,21 @@ void Lowering::write_error( Place target, Type_id to, Place source, Type_id from
     builder_.switch_to( done );
 }
 
-// D28: a narrowing `cast` ends the program unless the value comes back unchanged, sign included.
+// D28: a narrowing `cast` ends the program unless the value comes back unchanged, sign included. A float target
+// may round, but a finite value may not become infinite.
 Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
 {
     const Type_table& table = types_.table();
     const Type_id     from  = operand.type;
     const Operand     value = converted( operand, to, span );
 
-    if( !table.is_integer( from ) || !table.is_integer( to ) )
+    const auto numeric = [&]( Type_id type ) { return table.is_integer( type ) || table.is_float( type ); };
+    if( !numeric( from ) || !numeric( to ) || table.holds( from, to ) )
     {
         return value;
     }
 
-    const Type& source = table.get( from );
-    const Type& target = table.get( to );
-
-    const bool holds =
-        source.is_signed == target.is_signed ? target.width >= source.width : target.is_signed && target.width > source.width;
-    if( holds )
-    {
-        return value;
-    }
-
+    const Type&    source  = table.get( from );
     const Type_id  boolean = table.builtin( Type_kind::Bool );
     const Block_id fail    = builder_.add_block();
 
@@ -839,10 +832,59 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
         builder_.switch_to( pass );
     };
 
+    const auto float_constant = [&]( f64 v, Type_id type )
+    { return constant( literal_pool_.add_float( v, static_cast<f32>( v ) ), type ); };
+
+    if( table.is_float( from ) )
+    {
+        // The least f64 that rounds to an infinite f32. NaN is let through, and so is an infinity.
+        const f64      bound  = 0x1.ffffffp127;
+        const Block_id done   = builder_.add_block();
+        const Block_id large  = builder_.add_block();
+        const Block_id below  = builder_.add_block();
+        const Block_id finite = builder_.add_block();
+
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Less, operand, float_constant( bound, from ), boolean ), boolean, span ),
+            below,
+            large,
+            span
+        );
+        builder_.switch_to( below );
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Greater, operand, float_constant( -bound, from ), boolean ), boolean, span ),
+            done,
+            large,
+            span
+        );
+        builder_.switch_to( large );
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Equal_equal, operand, operand, boolean ), boolean, span ), finite, done, span
+        );
+        builder_.switch_to( finite );
+        builder_.terminate_branch(
+            temporary( binary( Token_kind::Equal_equal, converted( value, from, span ), operand, boolean ), boolean, span ),
+            done,
+            fail,
+            span
+        );
+        builder_.switch_to( fail );
+        builder_.terminate_panic( span, Failure::Cast );
+        builder_.switch_to( done );
+        return value;
+    }
+
+    if( table.is_float( to ) )
+    {
+        // 2^bits is exact in either float and past the source's range, where converting back is undefined.
+        const f64 limit = std::ldexp( 1.0, source.is_signed ? source.width - 1 : source.width );
+        require( binary( Token_kind::Less, value, float_constant( limit, to ), boolean ) );
+    }
+
     // A round trip misses a change of sign: -1 as a u32 comes back as -1.
     require( binary( Token_kind::Equal_equal, converted( value, from, span ), operand, boolean ) );
 
-    if( source.is_signed != target.is_signed )
+    if( table.is_integer( to ) && source.is_signed != table.get( to ).is_signed )
     {
         const Operand signed_side = source.is_signed ? operand : value;
         require( binary(

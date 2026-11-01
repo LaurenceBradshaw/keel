@@ -31,24 +31,32 @@ int32_t kl__main__( void )
     float kl_scaled_18;
     float kl_t19;
     bool kl_t20;
-    double kl_precise_21;
-    float kl_rougher_22;
-    float kl_t23;
-    bool kl_t24;
-    bool kl_yes_25;
-    bool kl_no_26;
-    int32_t kl_t27;
+    int32_t kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    double kl_precise_24;
+    float kl_rougher_25;
+    float kl_t26;
+    bool kl_t27;
     bool kl_t28;
-    int32_t kl_t29;
-    bool kl_t30;
-    uint8_t kl_direct_31;
+    bool kl_t29;
+    double kl_t30;
+    bool kl_t31;
     bool kl_t32;
-    int64_t kl_total_33;
-    int64_t kl_t34;
-    int64_t kl_t35;
+    bool kl_yes_33;
+    bool kl_no_34;
+    int32_t kl_t35;
     bool kl_t36;
-    int64_t kl_t37;
+    int32_t kl_t37;
     bool kl_t38;
+    uint8_t kl_direct_39;
+    bool kl_t40;
+    int64_t kl_total_41;
+    int64_t kl_t42;
+    int64_t kl_t43;
+    bool kl_t44;
+    int64_t kl_t45;
+    bool kl_t46;
 #line 7 "codegen/conversions.kl"
     kl_big_1 = 300;
     kl_t3 = ( uint8_t ) kl_big_1;
@@ -110,92 +118,132 @@ int32_t kl__main__( void )
 #line 27 "codegen/conversions.kl"
     kl_t19 = ( float ) kl_small_14;
 #line 27 "codegen/conversions.kl"
-    kl_scaled_18 = kl_t19;
-    kl_t20 = kl_scaled_18 != 7.0;
-#line 28 "codegen/conversions.kl"
-    if ( kl_t20 ) goto bb9; else goto bb10;
+    kl_t20 = kl_t19 < 2147483648.0;
+#line 27 "codegen/conversions.kl"
+    if ( kl_t20 ) goto bb10; else goto bb9;
     bb9:
+#line 27 "codegen/conversions.kl"
+    kl_rt_panic( "codegen/conversions.kl", 27, "cast out of range: cast<f32>( small )" );
+    bb10:
+#line 27 "codegen/conversions.kl"
+    kl_t21 = ( int32_t ) kl_t19;
+#line 27 "codegen/conversions.kl"
+    kl_t22 = kl_t21 == kl_small_14;
+#line 27 "codegen/conversions.kl"
+    if ( kl_t22 ) goto bb11; else goto bb9;
+    bb11:
+#line 27 "codegen/conversions.kl"
+    kl_scaled_18 = kl_t19;
+    kl_t23 = kl_scaled_18 != 7.0;
+#line 28 "codegen/conversions.kl"
+    if ( kl_t23 ) goto bb12; else goto bb13;
+    bb12:
 #line 28 "codegen/conversions.kl"
     kl_t0 = 5;
 #line 28 "codegen/conversions.kl"
     return kl_t0;
-    bb10:
+    bb13:
 #line 31 "codegen/conversions.kl"
-    kl_precise_21 = 2.5;
-    kl_t23 = ( float ) kl_precise_21;
+    kl_precise_24 = 2.5;
+    kl_t26 = ( float ) kl_precise_24;
 #line 32 "codegen/conversions.kl"
-    kl_rougher_22 = kl_t23;
-    kl_t24 = kl_rougher_22 != 2.5;
+    kl_t27 = kl_precise_24 < 3.4028235677973366e+38;
+#line 32 "codegen/conversions.kl"
+    if ( kl_t27 ) goto bb17; else goto bb16;
+    bb14:
+#line 32 "codegen/conversions.kl"
+    kl_rt_panic( "codegen/conversions.kl", 32, "cast out of range: cast<f32>( precise )" );
+    bb15:
+#line 32 "codegen/conversions.kl"
+    kl_rougher_25 = kl_t26;
+    kl_t32 = kl_rougher_25 != 2.5;
 #line 33 "codegen/conversions.kl"
-    if ( kl_t24 ) goto bb11; else goto bb12;
-    bb11:
+    if ( kl_t32 ) goto bb19; else goto bb20;
+    bb16:
+#line 32 "codegen/conversions.kl"
+    kl_t29 = kl_precise_24 == kl_precise_24;
+#line 32 "codegen/conversions.kl"
+    if ( kl_t29 ) goto bb18; else goto bb15;
+    bb17:
+#line 32 "codegen/conversions.kl"
+    kl_t28 = kl_precise_24 > -3.4028235677973366e+38;
+#line 32 "codegen/conversions.kl"
+    if ( kl_t28 ) goto bb15; else goto bb16;
+    bb18:
+#line 32 "codegen/conversions.kl"
+    kl_t30 = ( double ) kl_t26;
+#line 32 "codegen/conversions.kl"
+    kl_t31 = kl_t30 == kl_precise_24;
+#line 32 "codegen/conversions.kl"
+    if ( kl_t31 ) goto bb15; else goto bb14;
+    bb19:
 #line 33 "codegen/conversions.kl"
     kl_t0 = 6;
 #line 33 "codegen/conversions.kl"
     return kl_t0;
-    bb12:
+    bb20:
 #line 36 "codegen/conversions.kl"
-    kl_yes_25 = true;
-    kl_no_26 = false;
-    kl_t27 = ( int32_t ) kl_yes_25;
+    kl_yes_33 = true;
+    kl_no_34 = false;
+    kl_t35 = ( int32_t ) kl_yes_33;
 #line 38 "codegen/conversions.kl"
-    kl_t28 = kl_t27 != 1;
+    kl_t36 = kl_t35 != 1;
 #line 38 "codegen/conversions.kl"
-    if ( kl_t28 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t36 ) goto bb21; else goto bb22;
+    bb21:
 #line 38 "codegen/conversions.kl"
     kl_t0 = 7;
 #line 38 "codegen/conversions.kl"
     return kl_t0;
-    bb14:
+    bb22:
 #line 39 "codegen/conversions.kl"
-    kl_t29 = ( int32_t ) kl_no_26;
+    kl_t37 = ( int32_t ) kl_no_34;
 #line 39 "codegen/conversions.kl"
-    kl_t30 = kl_t29 != 0;
+    kl_t38 = kl_t37 != 0;
 #line 39 "codegen/conversions.kl"
-    if ( kl_t30 ) goto bb15; else goto bb16;
-    bb15:
+    if ( kl_t38 ) goto bb23; else goto bb24;
+    bb23:
 #line 39 "codegen/conversions.kl"
     kl_t0 = 8;
 #line 39 "codegen/conversions.kl"
     return kl_t0;
-    bb16:
+    bb24:
 #line 42 "codegen/conversions.kl"
-    kl_direct_31 = 200;
-    kl_t32 = kl_direct_31 != 200;
+    kl_direct_39 = 200;
+    kl_t40 = kl_direct_39 != 200;
 #line 43 "codegen/conversions.kl"
-    if ( kl_t32 ) goto bb17; else goto bb18;
-    bb17:
+    if ( kl_t40 ) goto bb25; else goto bb26;
+    bb25:
 #line 43 "codegen/conversions.kl"
     kl_t0 = 9;
 #line 43 "codegen/conversions.kl"
     return kl_t0;
-    bb18:
+    bb26:
 #line 46 "codegen/conversions.kl"
-    kl_t34 = ( int64_t ) kl_small_14;
+    kl_t42 = ( int64_t ) kl_small_14;
 #line 46 "codegen/conversions.kl"
-    kl_t35 = ( int64_t ) kl_byte_10;
+    kl_t43 = ( int64_t ) kl_byte_10;
 #line 46 "codegen/conversions.kl"
-    kl_t36 = __builtin_add_overflow( kl_t34, kl_t35, &( int64_t ) { 0 } );
+    kl_t44 = __builtin_add_overflow( kl_t42, kl_t43, &( int64_t ) { 0 } );
 #line 46 "codegen/conversions.kl"
-    if ( kl_t36 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t44 ) goto bb27; else goto bb28;
+    bb27:
 #line 46 "codegen/conversions.kl"
     kl_rt_panic( "codegen/conversions.kl", 46, "arithmetic overflow: cast<i64>( small ) + wrap<i64>( byte )" );
-    bb20:
+    bb28:
 #line 46 "codegen/conversions.kl"
-    kl_t37 = kl_t34 + kl_t35;
+    kl_t45 = kl_t42 + kl_t43;
 #line 46 "codegen/conversions.kl"
-    kl_total_33 = kl_t37;
-    kl_t38 = kl_total_33 != 207;
+    kl_total_41 = kl_t45;
+    kl_t46 = kl_total_41 != 207;
 #line 47 "codegen/conversions.kl"
-    if ( kl_t38 ) goto bb21; else goto bb22;
-    bb21:
+    if ( kl_t46 ) goto bb29; else goto bb30;
+    bb29:
 #line 47 "codegen/conversions.kl"
     kl_t0 = 10;
 #line 47 "codegen/conversions.kl"
     return kl_t0;
-    bb22:
+    bb30:
     kl_t0 = 0;
 #line 49 "codegen/conversions.kl"
     return kl_t0;

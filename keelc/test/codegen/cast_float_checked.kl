@@ -1,0 +1,40 @@
+// A `cast` to a float that keeps the value: an integer at each float's mantissa and at a signed
+// minimum, and f64 to f32 rounding, underflowing to zero, at the largest `f32` and on an infinity
+// or a NaN. None of these aborts.
+i32 id32( i32 x ) { return x; }
+i64 id( i64 x ) { return x; }
+f64 idf( f64 x ) { return x; }
+
+i32 main()
+{
+    if( cast<f32>( id32( 16777216 ) ) != 16777216.0 || cast<f32>( id32( -2147483648 ) ) != -2147483648.0 )
+    {
+        return 1;
+    }
+
+    if( cast<f64>( id( 9007199254740992 ) ) != 9007199254740992.0 ||
+        cast<f64>( id( -9223372036854775807 - 1 ) ) != -9223372036854775808.0 )
+    {
+        return 2;
+    }
+
+    if( cast<f32>( idf( 1e-50 ) ) != 0.0 || cast<f64>( cast<f32>( idf( 1.1 ) ) ) == 1.1 )
+    {
+        return 3;
+    }
+
+    if( cast<f32>( idf( 3.40282356e38 ) ) != 3.4028235e38 || cast<f32>( idf( -3.40282356e38 ) ) != -3.4028235e38 )
+    {
+        return 4;
+    }
+
+    f64 inf = idf( 1.0 ) / idf( 0.0 );
+    f64 nan = inf - inf;
+    f32 n   = cast<f32>( nan );
+    if( cast<f32>( inf ) != cast<f32>( inf ) || cast<f32>( -inf ) >= 0.0 || n == n )
+    {
+        return 5;
+    }
+
+    return 0;
+}

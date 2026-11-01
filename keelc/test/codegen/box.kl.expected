@@ -61,6 +61,7 @@ struct kl__Shape__vtable
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 double kl__area__S6Square( struct kl__Square* );
 void kl__grow__S6Square_3f64( struct kl__Square*, double );
@@ -216,7 +217,10 @@ double kl__area__S6Framed( struct kl__Framed* kl_this_1 )
     struct kl__Buffer* kl_t2;
     uint64_t kl_t3;
     double kl_t4;
-    double kl_t5;
+    bool kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    double kl_t8;
 #line 56 "codegen/box.kl"
     kl_t2 = &( *kl_this_1 ).kl_frame;
 #line 56 "codegen/box.kl"
@@ -224,9 +228,24 @@ double kl__area__S6Framed( struct kl__Framed* kl_this_1 )
 #line 56 "codegen/box.kl"
     kl_t4 = ( double ) kl_t3;
 #line 56 "codegen/box.kl"
-    kl_t5 = kl_t4 + ( *kl_this_1 ).kl_extra;
+    kl_t5 = kl_t4 < 1.8446744073709552e+19;
 #line 56 "codegen/box.kl"
-    kl_t0 = kl_t5;
+    if ( kl_t5 ) goto bb2; else goto bb1;
+    bb1:
+#line 56 "codegen/box.kl"
+    kl_rt_panic( "codegen/box.kl", 56, "cast out of range: cast<f64>( frame.count() )" );
+    bb2:
+#line 56 "codegen/box.kl"
+    kl_t6 = ( uint64_t ) kl_t4;
+#line 56 "codegen/box.kl"
+    kl_t7 = kl_t6 == kl_t3;
+#line 56 "codegen/box.kl"
+    if ( kl_t7 ) goto bb3; else goto bb1;
+    bb3:
+#line 56 "codegen/box.kl"
+    kl_t8 = kl_t4 + ( *kl_this_1 ).kl_extra;
+#line 56 "codegen/box.kl"
+    kl_t0 = kl_t8;
 #line 56 "codegen/box.kl"
     return kl_t0;
 #line 56 "codegen/box.kl"

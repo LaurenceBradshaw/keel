@@ -1,0 +1,11 @@
+// An f64 `cast` to `f32` may round, but it aborts when a finite value would become infinite.
+i32 main()
+{
+    f64 x = 3.4028235e38;
+    _ = cast<f32>( x );
+
+    x = 1e39;
+    _ = cast<f32>( x );
+
+    return 7;
+}

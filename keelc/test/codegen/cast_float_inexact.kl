@@ -1,0 +1,12 @@
+// An integer `cast` to a float aborts when the float can't hold it exactly. 2^24 + 1 rounds in an
+// `f32`, though 2^24 doesn't.
+i32 main()
+{
+    i32 x = 16777216;
+    _ = cast<f32>( x );
+
+    x = 16777217;
+    _ = cast<f32>( x );
+
+    return 7;
+}

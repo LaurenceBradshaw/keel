@@ -1,0 +1,1 @@
+codegen/cast_float_infinite.kl:8: cast out of range: cast<f32>( x )
