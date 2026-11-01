@@ -29,9 +29,9 @@ error: `a` may already have been moved
    |               ^^^^^^ moved at 68:15 on some path to here
 
 warning: `move` is not needed on an operator's operand [-Wneedless-move]
-   --> sema/errors_moves.kl:110:11
+   --> sema/errors_moves.kl:110:9
     |
 110 |     a = ( move a ) + 1;
-    |           ^^^^^^ it only reads the value; drop `move`
+    |         ^^^^^^^^^^ it only reads the value; drop `move`
 
 5 errors generated

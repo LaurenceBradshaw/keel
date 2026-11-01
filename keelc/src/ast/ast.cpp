@@ -43,6 +43,11 @@ void Ast::set_name_span( Node_id decl, Span span )
     name_spans_[decl.v] = span;
 }
 
+void Ast::set_span( Node_id id, Span span )
+{
+    nodes_[id.v].span = span;
+}
+
 void Ast::set_type_name_span( Node_id literal, Span span )
 {
     type_name_spans_[literal.v] = span;

@@ -616,7 +616,7 @@ int32_t kl__main__( void )
     if ( kl_t14 ) goto bb8; else goto bb7;
     bb7:
 #line 21 "codegen/compare_nan.kl"
-    kl_rt_panic( "codegen/compare_nan.kl", 21, "NaN has no order: nan <=> 1.0" );
+    kl_rt_panic( "codegen/compare_nan.kl", 21, "NaN has no order: ( nan <=> 1.0 )" );
     bb8:
 #line 21 "codegen/compare_nan.kl"
     kl_t16 = kl_nan_1 < 1.0;

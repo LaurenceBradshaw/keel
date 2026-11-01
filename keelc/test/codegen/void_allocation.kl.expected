@@ -552,7 +552,7 @@ bool kl__same_start__I4voidE__3u64( uint64_t kl_n_1 )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 15 "codegen/void_allocation.kl"
-    kl_rt_panic( "codegen/void_allocation.kl", 15, "arithmetic overflow: n - 1" );
+    kl_rt_panic( "codegen/void_allocation.kl", 15, "arithmetic overflow: ( n - 1 )" );
     bb2:
 #line 15 "codegen/void_allocation.kl"
     kl_t8 = kl_n_1 - 1;
@@ -595,7 +595,7 @@ bool kl__same_start__I3i32E__3u64( uint64_t kl_n_1 )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 15 "codegen/void_allocation.kl"
-    kl_rt_panic( "codegen/void_allocation.kl", 15, "arithmetic overflow: n - 1" );
+    kl_rt_panic( "codegen/void_allocation.kl", 15, "arithmetic overflow: ( n - 1 )" );
     bb2:
 #line 15 "codegen/void_allocation.kl"
     kl_t8 = kl_n_1 - 1;

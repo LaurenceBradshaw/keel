@@ -165,7 +165,7 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
     goto bb7;
     bb10:
 #line 43 "codegen/numbers.kl"
-    kl_rt_panic( "codegen/numbers.kl", 43, "arithmetic overflow: estimate + value / estimate" );
+    kl_rt_panic( "codegen/numbers.kl", 43, "arithmetic overflow: ( estimate + value / estimate )" );
     bb11:
 #line 43 "codegen/numbers.kl"
     kl_t12 = kl_estimate_3 + kl_t10;
@@ -227,7 +227,7 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
     goto bb19;
     bb22:
 #line 48 "codegen/numbers.kl"
-    kl_rt_panic( "codegen/numbers.kl", 48, "arithmetic overflow: estimate + value / estimate" );
+    kl_rt_panic( "codegen/numbers.kl", 48, "arithmetic overflow: ( estimate + value / estimate )" );
     bb23:
 #line 48 "codegen/numbers.kl"
     kl_t22 = kl_estimate_3 + kl_t20;

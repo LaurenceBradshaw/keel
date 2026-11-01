@@ -1,0 +1,23 @@
+// The help for a value that is not a `bool` names the value, compares a pointer with `nullptr`,
+// and offers nothing for a type with no zero.
+void nothing() { }
+
+enum Colour { red, green };
+
+i32 main()
+{
+    u64  count = 3;
+    i32* ptr   = nullptr;
+    i32  a     = 1;
+    i32  b     = 2;
+
+    if( count ) { } // error
+    while( ptr ) { } // error
+    if( a + b ) { } // error
+    if( ( a - b ) ) { } // error
+    if( nothing() ) { } // error
+    bool c = cast<bool>( ptr ); // error
+    bool d = cast<bool>( Colour::red ); // error
+
+    return 0;
+}

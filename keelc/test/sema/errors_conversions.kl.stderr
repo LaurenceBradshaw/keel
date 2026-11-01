@@ -8,7 +8,7 @@ error: `cast` cannot convert `i32` to `bool`
   --> sema/errors_conversions.kl:14:18
    |
 14 |     i32 tested = cast<bool>( whole );
-   |                  ^^^^^^^^^^^^^^^^^^^ compare it instead, as in `x != 0`
+   |                  ^^^^^^^^^^^^^^^^^^^ compare explicitly, as in `whole != 0`
 
 error: `wrap` cannot convert `i32` to `f32`
   --> sema/errors_conversions.kl:15:20

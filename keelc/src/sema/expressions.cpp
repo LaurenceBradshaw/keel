@@ -3819,8 +3819,13 @@ Type_id Expressions::infer_cast( Node_id id )
     // A literal has a value and no type, so `cast` is the context that gives it one:
     // `cast<u8>( 300 )` is the ordinary out-of-range error rather than a conversion, and
     // `cast<f32>( 1 )` is simply an f32 literal. `wrap` must not do this - accepting a value the
-    // target cannot hold is the entire point of it.
-    const bool from_literal = is_cast && !table_.is_error( target ) && literals_.is_literal_expression( operand );
+    // target cannot hold is the entire point of it. Only toward a number, so `cast<bool>( 5 )` is the
+    // refused conversion rather than a mismatch; `cast<i32>( 3.0 )` keeps the literal's own help.
+    const Adoption family = literals_.adoption( operand );
+    const bool     number = table_.is_integer( target ) || table_.is_float( target ) || table_.is_parameter( target );
+    const bool     admits = ast_.kind( operand ) == Node_kind::Null_literal ||
+                        ( number && ( family == Adoption::Integer || family == Adoption::Floating ) );
+    const bool from_literal = is_cast && !table_.is_error( target ) && admits && literals_.is_literal_expression( operand );
 
     const Type_id value = from_literal ? check( operand, target ) : infer( operand );
 
@@ -3835,7 +3840,7 @@ Type_id Expressions::infer_cast( Node_id id )
         return types_.record( id, target );
     }
 
-    const Conversion_result result = operators_.convert( is_cast, value, target, ast_.span( id ) );
+    const Conversion_result result = operators_.convert( is_cast, value, target, operand, ast_.span( id ) );
 
     if( !result.type.is_valid() )
     {
@@ -4421,15 +4426,19 @@ std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual
 // A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that
 // nothing told it what type to be - which is exactly what the error that got us here already
 // explains. Inferring it anyway is how one mistake produces two diagnostics.
-void Expressions::absorb( Node_id id )
+Type_id Expressions::absorb( Node_id id )
 {
-    if( id.is_valid() && !literals_.is_literal_expression( id ) )
+    if( !id.is_valid() || literals_.is_literal_expression( id ) )
     {
-        // The context failed, so nothing inside may ask what it wanted.
-        expected_ = table_.builtin( Type_kind::Error );
-        infer( id );
-        expected_ = Type_id {};
+        return Type_id {};
     }
+
+    // The context failed, so nothing inside may ask what it wanted.
+    expected_            = table_.builtin( Type_kind::Error );
+    const Type_id result = infer( id );
+    expected_            = Type_id {};
+
+    return result;
 }
 
 Type_id Expressions::take_expectation()
@@ -4473,10 +4482,12 @@ void Expressions::check_condition( Node_id id )
 
     // D5's sharpest break from C++ habit, so the message says what to write instead rather than
     // only what is wrong.
+    const std::string compare = operators_.compare_help( actual, id );
+
     reporter_.error_at(
         ast_.span( id ),
         fmt::format( "expected `bool`, but got `{}`", table_.name( actual ) ),
-        "there is no conversion to `bool`: compare explicitly, as in `x != 0`"
+        compare.empty() ? "there is no conversion to `bool`" : fmt::format( "there is no conversion to `bool`: {}", compare )
     );
 }
 

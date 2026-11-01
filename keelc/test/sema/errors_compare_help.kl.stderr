@@ -1,0 +1,43 @@
+error: expected `bool`, but got `u64`
+  --> sema/errors_compare_help.kl:14:9
+   |
+14 |     if( count ) { } // error
+   |         ^^^^^ there is no conversion to `bool`: compare explicitly, as in `count != 0`
+
+error: expected `bool`, but got `i32*`
+  --> sema/errors_compare_help.kl:15:12
+   |
+15 |     while( ptr ) { } // error
+   |            ^^^ there is no conversion to `bool`: compare explicitly, as in `ptr != nullptr`
+
+error: expected `bool`, but got `i32`
+  --> sema/errors_compare_help.kl:16:9
+   |
+16 |     if( a + b ) { } // error
+   |         ^^^^^ there is no conversion to `bool`: compare explicitly, as in `( a + b ) != 0`
+
+error: expected `bool`, but got `i32`
+  --> sema/errors_compare_help.kl:17:9
+   |
+17 |     if( ( a - b ) ) { } // error
+   |         ^^^^^^^^^ there is no conversion to `bool`: compare explicitly, as in `( a - b ) != 0`
+
+error: expected `bool`, but got `void`
+  --> sema/errors_compare_help.kl:18:9
+   |
+18 |     if( nothing() ) { } // error
+   |         ^^^^^^^^^ there is no conversion to `bool`
+
+error: `cast` cannot convert `i32*` to `bool`
+  --> sema/errors_compare_help.kl:19:14
+   |
+19 |     bool c = cast<bool>( ptr ); // error
+   |              ^^^^^^^^^^^^^^^^^ compare explicitly, as in `ptr != nullptr`
+
+error: `cast` cannot convert `Colour` to `bool`
+  --> sema/errors_compare_help.kl:20:14
+   |
+20 |     bool d = cast<bool>( Colour::red ); // error
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^ an `enum`'s tag converts only to an integer
+
+7 errors generated

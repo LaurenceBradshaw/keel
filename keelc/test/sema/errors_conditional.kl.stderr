@@ -14,7 +14,7 @@ error: expected `bool`, but got `i32`
   --> sema/errors_conditional.kl:31:14
    |
 31 |     auto c = a ? 1 : 2;
-   |              ^ there is no conversion to `bool`: compare explicitly, as in `x != 0`
+   |              ^ there is no conversion to `bool`: compare explicitly, as in `a != 0`
 
 error: expected `i32`, but got `bool`
   --> sema/errors_conditional.kl:40:24

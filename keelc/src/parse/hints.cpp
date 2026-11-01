@@ -5,6 +5,7 @@
 #include <array>
 #include <optional>
 #include <ranges>
+#include <utility>
 
 namespace keel
 {
@@ -47,7 +48,7 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place )
 {
     // clang-format off
-    constexpr std::array<Stop_hint, 9> hints = {
+    constexpr std::array<Stop_hint, 10> hints = {
         Stop_hint { Token_kind::Semicolon, Token_kind::Equal, "a field cannot be given a value here yet: set it in the constructor", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each field with its own type", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Member },
@@ -57,6 +58,7 @@ std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place plac
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Statement },
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C", Hint_place::Declaration },
         Stop_hint { Token_kind::L_brace, Token_kind::Colon, "Keel has no initialiser lists: put the initialisation in the constructor's body", Hint_place::Member },
+        Stop_hint { Token_kind::R_paren, Token_kind::Equal, "`=` assigns, and an assignment is not a value: compare with `==`", Hint_place::Header },
     };
     // clang-format on
 
@@ -65,6 +67,16 @@ std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place plac
         [wanted, found, place]( const Stop_hint& h ) { return h.wanted == wanted && h.found == found && h.place == place; }
     );
     return it != hints.end() ? it->hint : std::string_view {};
+}
+
+std::string_view expression_hint( Token_kind found )
+{
+    constexpr std::array<std::pair<Token_kind, std::string_view>, 1> hints = {
+        std::pair { Token_kind::Plus, "there is no unary `+`: write the operand on its own" },
+    };
+
+    const auto it = std::ranges::find( hints, found, &std::pair<Token_kind, std::string_view>::first );
+    return it != hints.end() ? it->second : std::string_view {};
 }
 
 } // namespace keel
@@ -138,6 +150,18 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
     {
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Colon, member ), "in the constructor's body" ) );
         REQUIRE( stop_hint( Token_kind::L_brace, Token_kind::Colon, declaration ).empty() );
+    }
+
+    SECTION( "for a head that met `=`" )
+    {
+        REQUIRE( has( stop_hint( Token_kind::R_paren, Token_kind::Equal, Hint_place::Header ), "compare with `==`" ) );
+        REQUIRE( stop_hint( Token_kind::R_paren, Token_kind::Equal, Hint_place::Statement ).empty() );
+    }
+
+    SECTION( "for a token that cannot start an expression" )
+    {
+        REQUIRE( has( expression_hint( Token_kind::Plus ), "no unary `+`" ) );
+        REQUIRE( expression_hint( Token_kind::Star ).empty() );
     }
 
     // A file-scope variable may have a value, so there is nothing to say.

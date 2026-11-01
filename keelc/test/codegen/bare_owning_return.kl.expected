@@ -3042,7 +3042,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
     if ( kl_t44 ) goto bb24; else goto bb25;
     bb24:
 #line 556 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 556, "arithmetic overflow: limit - digit" );
+    kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 556, "arithmetic overflow: (limit - digit)" );
     bb25:
 #line 556 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t45 = kl_limit_17 - kl_digit_41;

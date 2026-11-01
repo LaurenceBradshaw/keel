@@ -271,9 +271,15 @@ void Statements::visit_return( Node_id id )
 
     if( current_return_ == void_type )
     {
-        // Typed anyway: a mistake inside the expression is still a mistake worth reporting.
-        expressions_.absorb( value );
-        reporter_.error_at( ast_.span( value ), "a `void` function cannot return a value" );
+        // Typed anyway: a mistake inside the expression is still a mistake worth reporting, and
+        // then the only one.
+        const Type_id absorbed = expressions_.absorb( value );
+
+        if( !absorbed.is_valid() || !table_.is_error( absorbed ) )
+        {
+            reporter_.error_at( ast_.span( value ), "a `void` function cannot return a value" );
+        }
+
         return;
     }
 

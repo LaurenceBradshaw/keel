@@ -572,6 +572,20 @@ void Scanner::scan_number( u32 start )
         return;
     }
 
+    if( leading_zero && ( peek() == 'o' || peek() == 'O' ) )
+    {
+        advance();
+        scan_digits( is_digit, false );
+        error_at(
+            span_from( start ),
+            "octal literals are not supported",
+            "Keel has no octal literals; write the value in hex or decimal"
+        );
+
+        finish_number( start, Token_kind::Int_literal, false, Literal_id {} );
+        return;
+    }
+
     scan_digits( is_digit, true );
 
     bool ok = true;

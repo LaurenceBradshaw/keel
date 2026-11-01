@@ -29,10 +29,10 @@ error: a `ref` binding cannot borrow from a temporary
    |                 ^^^^^^^^^^ it ends with this statement; give it a variable of its own first
 
 error: this value is a temporary, so writing to it has no effect
-  --> sema/errors_temporary_writes.kl:53:7
+  --> sema/errors_temporary_writes.kl:53:5
    |
 53 |     ( c ? a : b ).t = 4;
-   |       ^^^^^^^^^ assign it to a variable and modify that
+   |     ^^^^^^^^^^^^^ assign it to a variable and modify that
 
 error: this value is a temporary, so writing to it has no effect
   --> sema/errors_temporary_writes.kl:56:5

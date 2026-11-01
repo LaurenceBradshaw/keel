@@ -223,7 +223,7 @@ int32_t kl__main__( void )
     if ( kl_t27 ) goto bb8; else goto bb9;
     bb8:
 #line 22 "codegen/fixed_array_halves.kl"
-    kl_rt_panic( "codegen/fixed_array_halves.kl", 22, "arithmetic overflow: v[ 1 ] - 2 + ( count( rows ) == 3 \077 0 : 1" );
+    kl_rt_panic( "codegen/fixed_array_halves.kl", 22, "arithmetic overflow: v[ 1 ] - 2 + ( count( rows ) == 3 \077 0 : 1 )" );
     bb9:
 #line 22 "codegen/fixed_array_halves.kl"
     kl_t28 = kl_t20 + kl_t21;

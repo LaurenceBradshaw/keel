@@ -708,7 +708,8 @@ pointer types: `T*` to `T[*]`, to or from `void*`, and dropping `const`.
 Two asymmetries are deliberate. `wrap` accepts a widening integer conversion — it simply never
 wraps — so it is total over integer-to-integer. And `cast` gives a **literal** its type from context
 rather than converting it: `cast<u8>( 300 )` is the ordinary out-of-range error and
-`cast<u8>( 200 )` is simply a `u8` literal. `wrap` must not do this — accepting a value the target
+`cast<u8>( 200 )` is simply a `u8` literal. Only toward a number or a type parameter: in
+`cast<bool>( 5 )` the literal is an `i32`, and the refusal is the conversion's. `wrap` must not do this — accepting a value the target
 cannot hold is the whole point of it — so `wrap<u8>( 300 )` infers `i32` and then wraps to 44.
 Both work on a type parameter: `wrap<i32>( a )` for an `integral` `T`, `cast<f64>( a )` for a
 `floating` one.

@@ -538,7 +538,7 @@ uint64_t kl_2kl12hash_control_usable__SQ2kl12hash_control_3u64( uint64_t kl_slot
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 191 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 191, "arithmetic overflow: slots / 8 ) * 7" );
+    kl_rt_panic( "../../src/hash_control.kl", 191, "arithmetic overflow: ( slots / 8 ) * 7" );
     bb2:
 #line 191 "../../src/hash_control.kl"
     kl_t4 = kl_t2 * 7;
@@ -626,7 +626,7 @@ uint64_t kl_2kl12hash_control_free_slot__SQ2kl12hash_control_3u64( struct kl_2kl
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 216 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 216, "arithmetic overflow: slots_ >> 3 ) - 1" );
+    kl_rt_panic( "../../src/hash_control.kl", 216, "arithmetic overflow: ( slots_ >> 3 ) - 1" );
     bb2:
 #line 216 "../../src/hash_control.kl"
     kl_t6 = kl_t4 - 1;
@@ -693,7 +693,7 @@ uint64_t kl_2kl12hash_control_free_slot__SQ2kl12hash_control_3u64( struct kl_2kl
     if ( kl_t21 ) goto bb12; else goto bb13;
     bb12:
 #line 235 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 235, "arithmetic overflow: group + stride" );
+    kl_rt_panic( "../../src/hash_control.kl", 235, "arithmetic overflow: ( group + stride )" );
     bb13:
 #line 235 "../../src/hash_control.kl"
     kl_t22 = kl_group_7 + kl_stride_9;
@@ -1096,7 +1096,7 @@ uint64_t kl_2kl12hash_control_lowest__SQ2kl12hash_control_3u64( uint64_t kl_matc
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 379 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 379, "arithmetic overflow: matches & wrap<u64>( 0 - matches ) ) >> 7 ) - 1" );
+    kl_rt_panic( "../../src/hash_control.kl", 379, "arithmetic overflow: ( ( matches & wrap<u64>( 0 - matches ) ) >> 7 ) - 1" );
     bb2:
 #line 379 "../../src/hash_control.kl"
     kl_t7 = kl_t5 - 1;
@@ -1137,7 +1137,7 @@ uint64_t kl_2kl12hash_control_byte__SQ2kl12hash_control_3u64( struct kl_2kl12has
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 390 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 390, "arithmetic overflow: slot & 7 ) * 8" );
+    kl_rt_panic( "../../src/hash_control.kl", 390, "arithmetic overflow: ( ( slot & 7 ) * 8 )" );
     bb2:
 #line 390 "../../src/hash_control.kl"
     kl_t7 = kl_t5 * 8;
@@ -1180,7 +1180,7 @@ void kl_2kl12hash_control_set_byte__SQ2kl12hash_control_3u64_3u64( struct kl_2kl
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 397 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 397, "arithmetic overflow: slot & 7 ) * 8" );
+    kl_rt_panic( "../../src/hash_control.kl", 397, "arithmetic overflow: ( slot & 7 ) * 8" );
     bb2:
 #line 397 "../../src/hash_control.kl"
     kl_t7 = kl_t5 * 8;
@@ -1236,7 +1236,7 @@ void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( 
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 424 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 424, "arithmetic overflow: slots >> 3 ) - 1" );
+    kl_rt_panic( "../../src/hash_control.kl", 424, "arithmetic overflow: ( slots >> 3 ) - 1" );
     bb2:
 #line 424 "../../src/hash_control.kl"
     kl_t7 = kl_t5 - 1;
@@ -1254,7 +1254,7 @@ void kl_2kl12hash_control_hash_probe__RQ2kl10hash_probe_NK3u64_3u64_3u64__ctor( 
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
 #line 428 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 428, "arithmetic overflow: hash >> 57 ) * BYTE_ONES" );
+    kl_rt_panic( "../../src/hash_control.kl", 428, "arithmetic overflow: ( hash >> 57 ) * BYTE_ONES" );
     bb4:
 #line 428 "../../src/hash_control.kl"
     kl_t11 = kl_t9 * 72340172838076673;
@@ -1364,7 +1364,7 @@ uint64_t kl_2kl12hash_control_next__SQ2kl10hash_probe( struct kl_2kl12hash_contr
     if ( kl_t14 ) goto bb14; else goto bb15;
     bb14:
 #line 458 "../../src/hash_control.kl"
-    kl_rt_panic( "../../src/hash_control.kl", 458, "arithmetic overflow: group_ + stride_" );
+    kl_rt_panic( "../../src/hash_control.kl", 458, "arithmetic overflow: ( group_ + stride_ )" );
     bb15:
 #line 458 "../../src/hash_control.kl"
     kl_t15 = ( *kl_this_1 ).kl_group_ + ( *kl_this_1 ).kl_stride_;
@@ -4429,7 +4429,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
     if ( kl_t44 ) goto bb24; else goto bb25;
     bb24:
 #line 556 "../../src/string.kl"
-    kl_rt_panic( "../../src/string.kl", 556, "arithmetic overflow: limit - digit" );
+    kl_rt_panic( "../../src/string.kl", 556, "arithmetic overflow: (limit - digit)" );
     bb25:
 #line 556 "../../src/string.kl"
     kl_t45 = kl_limit_17 - kl_digit_41;

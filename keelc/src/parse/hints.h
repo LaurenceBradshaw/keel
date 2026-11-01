@@ -15,6 +15,7 @@ enum class Hint_place : u8
     Member,
     Declaration,
     Statement,
+    Header, // the `)` closing an `if`, `while`, `for` or `switch` head
 };
 
 // Help for a word dropped at `place`, or empty when there is none.
@@ -22,5 +23,8 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place );
 
 // Help for a head at `place` that stopped at `found` where it wanted `wanted`, or empty.
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place );
+
+// Help for `found` where an expression was wanted, or empty.
+std::string_view expression_hint( Token_kind found );
 
 } // namespace keel

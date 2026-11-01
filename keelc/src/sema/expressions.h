@@ -78,8 +78,8 @@ public:
     Type_id check( Node_id id, Type_id expected ); // expression, with one
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
-    void    absorb( Node_id id );
-    Type_id take_expectation(); // expected_, cleared
+    Type_id absorb( Node_id id ); // what it inferred, invalid for a literal
+    Type_id take_expectation();   // expected_, cleared
 
     Type_id take_call_expectation();
 

@@ -316,7 +316,9 @@ void Recovery::close_header( u32 condition_start )
     {
         if( !failed_since( condition_start ) )
         {
-            error_expected( Token_kind::R_paren );
+            error_expected(
+                Token_kind::R_paren, std::string( stop_hint( Token_kind::R_paren, cursor_.peek().kind, Hint_place::Header ) )
+            );
         }
         u32 depth = 1;
         for( u32 i = condition_start; i < cursor_.position(); ++i )

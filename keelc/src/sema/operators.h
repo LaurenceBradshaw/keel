@@ -85,7 +85,10 @@ public:
 
     // `cast` and `wrap` over a resolved target: which conversions exist, and the help for the ones
     // that do not.
-    Conversion_result convert( bool is_cast, Type_id value, Type_id target, Span at );
+    Conversion_result convert( bool is_cast, Type_id value, Type_id target, Node_id operand, Span at );
+
+    // How to test `operand` instead of converting it to `bool`: empty for a type with no zero.
+    std::string compare_help( Type_id type, Node_id operand ) const;
 
     void refuse_single_pointer_arithmetic( Type_id pointer, Span at );
 

@@ -41,6 +41,7 @@ public:
     void set_located( Node_id decl );
     void set_name_span( Node_id decl, Span span );
     void set_type_name_span( Node_id literal, Span span );
+    void set_span( Node_id id, Span span ); // a grouping's parentheses, which leave no node
 
     // ---- Raw fields ----
 

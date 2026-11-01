@@ -3772,7 +3772,27 @@ Node_id Parser::parse_keyword_prefix( Span start )
         const Keyword which = cursor_.peek().keyword();
         cursor_.advance();
 
-        recovery_.expect( Token_kind::Less );
+        // One report, then the operand as written, so its `(` is not the next error.
+        if( !cursor_.check( Token_kind::Less ) )
+        {
+            const std::string_view word = which == Keyword::Cast ? "cast" : "wrap";
+
+            recovery_.fail_at(
+                cursor_.peek().span,
+                fmt::format( "`{}` needs a target type", word ),
+                fmt::format( "write it in angle brackets, as in `{}<T>( x )`", word )
+            );
+
+            if( cursor_.match( Token_kind::L_paren ) )
+            {
+                parse_expression( 0 );
+                recovery_.expect( Token_kind::R_paren );
+            }
+
+            return error_node( Span::merge( start, cursor_.previous().span ) );
+        }
+
+        cursor_.advance();
         const Node_id type = parse_type();
 
         // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
@@ -3992,16 +4012,18 @@ Node_id Parser::parse_prefix()
         return operand;
     }
 
-    // Grouping: the inner node is returned unchanged, so the parentheses leave no trace in the
-    // tree. Only D16 needs to know they were there, which is what mark_parenthesised records.
     case Token_kind::L_bracket:
         return parse_array_literal();
 
+    // Grouping: the inner node is returned with its span widened to the parentheses, so an
+    // expression built on it starts at the `(`. Only D16 needs to know they were there, which is
+    // what mark_parenthesised records.
     case Token_kind::L_paren:
     {
         cursor_.advance();
         const Node_id inner = parse_expression( 0 );
         recovery_.expect( Token_kind::R_paren );
+        ast_.set_span( inner, Span::merge( start, cursor_.previous().span ) );
         mark_parenthesised( inner );
         return inner;
     }
@@ -4023,7 +4045,11 @@ Node_id Parser::parse_prefix()
         break;
     }
 
-    recovery_.fail_at( cursor_.peek().span, fmt::format( "expected an expression, found {}", recovery_.found_text() ) );
+    recovery_.fail_at(
+        cursor_.peek().span,
+        fmt::format( "expected an expression, found {}", recovery_.found_text() ),
+        std::string( expression_hint( cursor_.peek().kind ) )
+    );
 
     return error_node( start );
 }
@@ -5319,11 +5345,12 @@ TEST_CASE( "parser_binary_operator_is_recorded_in_aux", "[parse]" )
     }
 }
 
-// Grouping returns the inner node unchanged, so the parentheses leave no trace at all.
+// Grouping returns the inner node, its span widened to the parentheses.
 TEST_CASE( "parser_grouping_produces_no_node", "[parse]" )
 {
     REQUIRE( shape_of( "( 1 + 2 )" ) == shape_of( "1 + 2" ) );
-    REQUIRE( shape_of( "( ( ( 7 ) ) )" ) == "7" );
+    REQUIRE( shape_of( "( ( ( 7 ) ) )" ) == "( ( ( 7 ) ) )" ); // a leaf renders as its span's text
+    REQUIRE( shape_of( "( 100 ) * 2" ) == "*(( 100 ),2)" );
     REQUIRE( shape_of( "( 1 + 2 ) * 3" ) == "*(+(1,2),3)" );
     REQUIRE( shape_of( "1 + ( 2 * 3 )" ) == "+(1,*(2,3))" );
 

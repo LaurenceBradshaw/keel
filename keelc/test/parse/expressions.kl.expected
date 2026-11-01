@@ -26,8 +26,8 @@ Source_file                             1:1-25:1
     Param_list                          11:13-11:15 "()"
     Block                               12:1-14:2
       Return_stmt                       13:5-13:26
-        Binary_expr                     13:14-13:25 op=*
-          Binary_expr                   13:14-13:19 op=+
+        Binary_expr                     13:12-13:25 op=*
+          Binary_expr                   13:12-13:21 op=+
             Int_literal                 13:14-13:15 "1"
             Int_literal                 13:18-13:19 "2"
           Int_literal                   13:24-13:25 "3"

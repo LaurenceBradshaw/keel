@@ -5,10 +5,10 @@ warning: this comparison is always false [-Wconstant-comparison]
     |         ^^^^^^^^^ `-1` is outside the range of `u64`
 
 warning: this comparison is always true [-Wconstant-comparison]
-   --> codegen/comparisons_mixed.kl:132:12
+   --> codegen/comparisons_mixed.kl:132:10
     |
 132 |     if( !( imax < 18446744073709551615 ) ) { return 48; }
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `18446744073709551615` is outside the range of `i64`
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `18446744073709551615` is outside the range of `i64`
 
 warning: this comparison is always false [-Wconstant-comparison]
    --> codegen/comparisons_mixed.kl:133:9
@@ -17,7 +17,7 @@ warning: this comparison is always false [-Wconstant-comparison]
     |         ^^^^^^^^^^ `300` is outside the range of `i8`
 
 warning: this comparison is always true [-Wconstant-comparison]
-   --> codegen/comparisons_mixed.kl:134:12
+   --> codegen/comparisons_mixed.kl:134:10
     |
 134 |     if( !( zero != 0 - 1 ) ) { return 50; }
-    |            ^^^^^^^^^^^^^ `-1` is outside the range of `u64`
+    |          ^^^^^^^^^^^^^^^^^ `-1` is outside the range of `u64`

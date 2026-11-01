@@ -1,0 +1,9 @@
+// `=` in a head is an assignment where a comparison was meant.
+i32 main()
+{
+    i32 x = 0;
+
+    if( x = 1 ) { } // error
+
+    return x;
+}

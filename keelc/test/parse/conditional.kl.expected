@@ -83,7 +83,7 @@ Source_file                             1:1-48:1
       Return_stmt                       27:5-27:39
         Conditional_expr                27:12-27:38
           Name_expr                     27:12-27:13 "p"
-          Conditional_expr              27:18-27:32
+          Conditional_expr              27:16-27:34
             Binary_expr                 27:18-27:24 op=||
               Name_expr                 27:18-27:19 "q"
               Name_expr                 27:23-27:24 "r"
@@ -106,8 +106,8 @@ Source_file                             1:1-48:1
         Named_type                      32:54-32:57 "i32"
     Block                               33:1-35:2
       Return_stmt                       34:5-34:34
-        Conditional_expr                34:14-34:33
-          Conditional_expr              34:14-34:23
+        Conditional_expr                34:12-34:33
+          Conditional_expr              34:12-34:25
             Name_expr                   34:14-34:15 "a"
             Name_expr                   34:18-34:19 "b"
             Name_expr                   34:22-34:23 "c"

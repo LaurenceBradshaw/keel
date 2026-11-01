@@ -1,0 +1,8 @@
+// `0o` is the same missing octal as a leading zero.
+i32 main()
+{
+    i32 a = 0o755; // error
+    i32 b = 0O17; // error
+
+    return a + b;
+}

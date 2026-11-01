@@ -600,7 +600,7 @@ int32_t kl__main__( void )
     if ( kl_t36 ) goto bb37; else goto bb36;
     bb36:
 #line 101 "codegen/operator_compare.kl"
-    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> 0.25" );
+    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: ( half <=> 0.25 )" );
     bb37:
 #line 101 "codegen/operator_compare.kl"
     kl_t38 = kl_half_5 < 0.25;
@@ -643,7 +643,7 @@ int32_t kl__main__( void )
     if ( kl_t35 ) goto bb53; else goto bb54;
     bb45:
 #line 101 "codegen/operator_compare.kl"
-    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> half" );
+    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: ( half <=> half )" );
     bb46:
 #line 101 "codegen/operator_compare.kl"
     kl_t42 = kl_half_5 == kl_half_5;

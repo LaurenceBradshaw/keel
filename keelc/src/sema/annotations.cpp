@@ -313,6 +313,11 @@ Type_id Annotations::resolve_generic( Node_id annotation )
         return table_.builtin( Type_kind::Error );
     }
 
+    if( !decl.is_valid() && !ast_.package( base ).is_valid() && is_builtin_type_name( interner_.text( ast_.name( base ) ) ) )
+    {
+        return refuse_not_generic( annotation, interner_.text( ast_.name( base ) ) );
+    }
+
     if( !decl.is_valid() )
     {
         // The base resolved to nothing. Reporting here rather than through the Named_type case

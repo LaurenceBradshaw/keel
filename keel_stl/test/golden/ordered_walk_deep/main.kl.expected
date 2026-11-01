@@ -357,7 +357,7 @@ void kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( struct kl_2kl15o
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 144 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 144, "arithmetic overflow: nodes * ( ORDERED_KEYS + 1" );
+    kl_rt_panic( "../../src/ordered_control.kl", 144, "arithmetic overflow: nodes * ( ORDERED_KEYS + 1 )" );
     bb2:
 #line 144 "../../src/ordered_control.kl"
     kl_t9 = kl_nodes_2 * kl_t7;
@@ -423,7 +423,7 @@ void kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( struct kl_2kl15o
     if ( kl_t31 ) goto bb10; else goto bb11;
     bb8:
 #line 161 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 161, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
+    kl_rt_panic( "../../src/ordered_control.kl", 161, "arithmetic overflow: n * ( ORDERED_KEYS + 1 )" );
     bb9:
 #line 161 "../../src/ordered_control.kl"
     kl_t25 = kl_n_13 * kl_t23;
@@ -468,7 +468,7 @@ void kl_2kl15ordered_control_grow__SQ2kl15ordered_control_3u64( struct kl_2kl15o
     goto bb20;
     bb15:
 #line 171 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 171, "arithmetic overflow: n * ( ORDERED_KEYS + 1" );
+    kl_rt_panic( "../../src/ordered_control.kl", 171, "arithmetic overflow: n * ( ORDERED_KEYS + 1 )" );
     bb16:
 #line 171 "../../src/ordered_control.kl"
     kl_t39 = kl_n_13 * kl_t37;
@@ -580,7 +580,7 @@ uint64_t kl_2kl15ordered_control_child__SQ2kl15ordered_control_3u64_3u64( struct
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 230 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 230, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
+    kl_rt_panic( "../../src/ordered_control.kl", 230, "arithmetic overflow: node * ( ORDERED_KEYS + 1 )" );
     bb2:
 #line 230 "../../src/ordered_control.kl"
     kl_t7 = kl_node_2 * kl_t5;
@@ -2110,7 +2110,7 @@ void kl_2kl15ordered_control_set_child__SQ2kl15ordered_control_3u64_3u64_3u64( s
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 632 "../../src/ordered_control.kl"
-    kl_rt_panic( "../../src/ordered_control.kl", 632, "arithmetic overflow: node * ( ORDERED_KEYS + 1" );
+    kl_rt_panic( "../../src/ordered_control.kl", 632, "arithmetic overflow: node * ( ORDERED_KEYS + 1 )" );
     bb2:
 #line 632 "../../src/ordered_control.kl"
     kl_t8 = kl_node_2 * kl_t6;
@@ -3596,7 +3596,7 @@ int32_t kl__main__( void )
     goto bb70;
     bb67:
 #line 18 "ordered_walk_deep/main.kl"
-    kl_rt_panic( "ordered_walk_deep/main.kl", 18, "arithmetic overflow: k * 1009" );
+    kl_rt_panic( "ordered_walk_deep/main.kl", 18, "arithmetic overflow: ( k * 1009 )" );
     bb68:
 #line 18 "ordered_walk_deep/main.kl"
     kl_t89 = kl_k_84 * 1009;
@@ -4504,7 +4504,7 @@ int32_t kl__main__( void )
     if ( kl_t286 ) goto bb236; else goto bb237;
     bb233:
 #line 57 "ordered_walk_deep/main.kl"
-    kl_rt_panic( "ordered_walk_deep/main.kl", 57, "arithmetic overflow: k * 1009" );
+    kl_rt_panic( "ordered_walk_deep/main.kl", 57, "arithmetic overflow: ( k * 1009 )" );
     bb234:
 #line 57 "ordered_walk_deep/main.kl"
     kl_t281 = kl_k_276 * 1009;

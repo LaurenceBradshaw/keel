@@ -25,7 +25,7 @@ uint64_t kl__high_flag__3u64( uint64_t kl_byte_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 6 "codegen/shift_constant.kl"
-    kl_rt_panic( "codegen/shift_constant.kl", 6, "arithmetic overflow: byte * 8" );
+    kl_rt_panic( "codegen/shift_constant.kl", 6, "arithmetic overflow: ( byte * 8 )" );
     bb2:
 #line 6 "codegen/shift_constant.kl"
     kl_t3 = kl_byte_1 * 8;

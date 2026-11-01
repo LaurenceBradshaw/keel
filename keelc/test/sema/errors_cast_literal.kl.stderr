@@ -1,0 +1,31 @@
+error: `cast` cannot convert `i32` to `void`
+ --> sema/errors_cast_literal.kl:7:12
+  |
+7 |     return cast<void>( x ); // error: the conversion only
+  |            ^^^^^^^^^^^^^^^
+
+error: `cast` cannot convert `i32` to `bool`
+  --> sema/errors_cast_literal.kl:12:14
+   |
+12 |     bool t = cast<bool>( 5 ); // error
+   |              ^^^^^^^^^^^^^^^ compare explicitly, as in `5 != 0`
+
+error: `cast` cannot convert `bool` to `f32`
+  --> sema/errors_cast_literal.kl:13:14
+   |
+13 |     f32  f = cast<f32>( false ); // error
+   |              ^^^^^^^^^^^^^^^^^^
+
+error: `cast` cannot convert `i32` to `u8*`
+  --> sema/errors_cast_literal.kl:14:14
+   |
+14 |     u8*  p = cast<u8*>( 42 ); // error
+   |              ^^^^^^^^^^^^^^^
+
+error: `cast` cannot convert `i32` to `E`
+  --> sema/errors_cast_literal.kl:15:14
+   |
+15 |     E    e = cast<E>( 1 ); // error
+   |              ^^^^^^^^^^^^
+
+5 errors generated

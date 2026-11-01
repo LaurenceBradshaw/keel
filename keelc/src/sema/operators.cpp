@@ -428,7 +428,36 @@ Type_id Operators::result_of_conditional( Type_id then_type, Type_id else_type, 
     return then_type;
 }
 
-Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id target, Span at )
+std::string Operators::compare_help( Type_id type, Node_id operand ) const
+{
+    const bool pointer = table_.is_pointer( type ) || table_.is_many_pointer( type );
+
+    if( !pointer && !table_.is_integer( type ) && !table_.is_float( type ) )
+    {
+        return {};
+    }
+
+    const std::string_view text = reporter_.text( ast_.span( operand ) );
+
+    // Already one group when its first `(` closes at the end, as in `( a + b )`.
+    bool grouped = text.starts_with( '(' );
+
+    for( std::size_t i = 0, depth = 0; grouped && i < text.size(); ++i )
+    {
+        depth += text[i] == '(';
+        depth -= text[i] == ')';
+        grouped = depth != 0 || i + 1 == text.size();
+    }
+
+    const Node_kind kind  = ast_.kind( operand );
+    const bool      loose = !grouped && ( kind == Node_kind::Binary_expr || kind == Node_kind::Conditional_expr );
+
+    return fmt::format(
+        "compare explicitly, as in `{}{}{} != {}`", loose ? "( " : "", text, loose ? " )" : "", pointer ? "nullptr" : "0"
+    );
+}
+
+Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id target, Node_id operand, Span at )
 {
     const std::string_view name = is_cast ? "cast" : "wrap";
     Type_id                witness;
@@ -497,9 +526,9 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
         {
             help = "rounding is not implied; this needs an explicit rounding function";
         }
-        else if( table_.is_integer( failed_from ) && failed_to == table_.builtin( Type_kind::Bool ) )
+        else if( failed_to == table_.builtin( Type_kind::Bool ) )
         {
-            help = "compare it instead, as in `x != 0`";
+            help = compare_help( failed_from, operand );
         }
 
         // `T` is what the author wrote and the witness is what refused it. Only one of the two is

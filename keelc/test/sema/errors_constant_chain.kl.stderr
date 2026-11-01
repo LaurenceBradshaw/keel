@@ -11,10 +11,10 @@ error: `260` does not fit in `u8`
    |               ^^^^^^^^^^^^^
 
 error: `-1` does not fit in `u32`
-  --> sema/errors_constant_chain.kl:22:20
+  --> sema/errors_constant_chain.kl:22:18
    |
 22 |     u32 under = -( 1 - 2 );
-   |                    ^^^^^
+   |                  ^^^^^^^^^
 
 error: `200` does not fit in `i8`
   --> sema/errors_constant_chain.kl:23:15
@@ -32,7 +32,7 @@ error: division by zero
   --> sema/errors_constant_chain.kl:25:16
    |
 25 |     i32 zero = 1 / ( 2 - 2 );
-   |                ^^^^^^^^^^^
+   |                ^^^^^^^^^^^^^
 
 error: no operator `-` for `u32`
   --> sema/errors_constant_chain.kl:26:20
