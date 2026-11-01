@@ -436,7 +436,15 @@ std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee )
     // Types the bound as well as reading it: fold_integer only folds, and lowering needs the node
     // to carry a type. Against the *scrutinee's* type, so `case 1..5:` over an `f64` compares
     // against 1.0 and 5.0 rather than needing a cast nobody wrote.
+    const std::size_t before = reporter_.error_count();
+
     expressions_.check( bound, scrutinee );
+
+    // A bound that failed to type is already reported; folding it would say so again.
+    if( reporter_.error_count() != before )
+    {
+        return std::nullopt;
+    }
 
     const Folded folded = constant_folder_.fold_integer( bound );
 
