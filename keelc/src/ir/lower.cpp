@@ -881,10 +881,16 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
         require( binary( Token_kind::Less, value, float_constant( limit, to ), boolean ) );
     }
 
-    // A round trip misses a change of sign: -1 as a u32 comes back as -1.
-    require( binary( Token_kind::Equal_equal, converted( value, from, span ), operand, boolean ) );
+    // Only a narrower integer target can lose bits; a wider one only changes the sign.
+    const bool narrows = !table.is_integer( to ) || table.get( to ).width < source.width;
+    if( narrows )
+    {
+        require( binary( Token_kind::Equal_equal, converted( value, from, span ), operand, boolean ) );
+    }
 
-    if( table.is_integer( to ) && source.is_signed != table.get( to ).is_signed )
+    // A round trip misses a change of sign that keeps every bit: -1 as a u32 comes back as -1. A signed source
+    // narrowed to unsigned comes back non-negative, so its round trip already fails a negative.
+    if( table.is_integer( to ) && source.is_signed != table.get( to ).is_signed && !( source.is_signed && narrows ) )
     {
         const Operand signed_side = source.is_signed ? operand : value;
         require( binary(
@@ -6955,9 +6961,25 @@ TEST_CASE( "lower_checks_a_narrowing_cast", "[ir][lower][cast]" )
         REQUIRE( text.find( "copy _1 as u8" ) != std::string::npos );
         REQUIRE( text.find( "as i32" ) != std::string::npos );
         REQUIRE( text.find( "== copy _1" ) != std::string::npos );
-        REQUIRE( text.find( "copy _1 >= const 0" ) != std::string::npos );
+        // A negative comes back non-negative, so the round trip already fails it.
+        REQUIRE( text.find( ">= const 0" ) == std::string::npos );
         REQUIRE( text.find( "cast_failed" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // Every bit survives, so only the sign is tested.
+    SECTION( "signedness changed, not narrower" )
+    {
+        Lowered p( "u64 f( i8 x ) { return cast<u64>( x ); }" );
+
+        INFO( p.rendered() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "cast_failed" ) != std::string::npos );
+        REQUIRE( text.find( "copy _1 >= const 0" ) != std::string::npos );
+        REQUIRE( text.find( "==" ) == std::string::npos );
     }
 
     // Unsigned to signed: the converted value is the one whose sign is tested.

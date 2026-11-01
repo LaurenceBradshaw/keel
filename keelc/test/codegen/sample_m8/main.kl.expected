@@ -636,94 +636,85 @@ struct kl_2kl6string_string kl_2kl6string_from__SQ2kl6string_M3i64( int64_t kl_v
     struct kl_2kl6string_string kl_t0;
     bool kl_t2;
     uint64_t kl_t3;
-    int64_t kl_t4;
-    bool kl_t5;
-    bool kl_t6;
-    struct kl_2kl6string_string kl_t7;
-    uint64_t kl_magnitude_8;
-    int64_t kl_t9;
-    uint64_t kl_t10;
-    struct kl_2kl6string_string kl_result_11;
+    bool kl_t4;
+    struct kl_2kl6string_string kl_t5;
+    uint64_t kl_magnitude_6;
+    int64_t kl_t7;
+    uint64_t kl_t8;
+    struct kl_2kl6string_string kl_result_9;
+    struct kl_2kl6string_string* kl_t10;
     struct kl_2kl6string_string* kl_t12;
     struct kl_2kl6string_string* kl_t14;
-    struct kl_2kl6string_string* kl_t16;
-    struct kl_2kl6string_string kl_t17;
-    struct kl_7prelude_textual__ref kl_t18;
-    bool kl_t20;
-    bool kl_t21;
+    struct kl_2kl6string_string kl_t15;
+    struct kl_7prelude_textual__ref kl_t16;
+    bool kl_t18;
+    bool kl_t19;
 #line 124 "../../keel_stl/src/string.kl"
-    kl_t20 = false;
+    kl_t18 = false;
 #line 124 "../../keel_stl/src/string.kl"
-    kl_t21 = false;
+    kl_t19 = false;
 #line 124 "../../keel_stl/src/string.kl"
     kl_t2 = kl_value_1 >= 0;
 #line 124 "../../keel_stl/src/string.kl"
-    if ( kl_t2 ) goto bb1; else goto bb5;
+    if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
     kl_t3 = ( uint64_t ) kl_value_1;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t4 = ( int64_t ) kl_t3;
+    kl_t4 = kl_value_1 >= 0;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t5 = kl_t4 == kl_value_1;
-#line 126 "../../keel_stl/src/string.kl"
-    if ( kl_t5 ) goto bb3; else goto bb2;
+    if ( kl_t4 ) goto bb3; else goto bb2;
     bb2:
 #line 126 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 126, "cast out of range: cast<u64>( value )" );
     bb3:
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t6 = kl_value_1 >= 0;
+    kl_t5 = kl_2kl6string_from__SQ2kl6string_M3u64( kl_t3 );
 #line 126 "../../keel_stl/src/string.kl"
-    if ( kl_t6 ) goto bb4; else goto bb2;
-    bb4:
+    kl_t18 = true;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t7 = kl_2kl6string_from__SQ2kl6string_M3u64( kl_t3 );
+    kl_t0 = kl_t5;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t20 = true;
+    kl_t18 = false;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t0 = kl_t7;
+    if ( kl_t18 ) kl_2kl6string_string__dtor( &kl_t5 );
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t20 = false;
-#line 126 "../../keel_stl/src/string.kl"
-    if ( kl_t20 ) kl_2kl6string_string__dtor( &kl_t7 );
-#line 126 "../../keel_stl/src/string.kl"
-    kl_t20 = false;
+    kl_t18 = false;
 #line 126 "../../keel_stl/src/string.kl"
     return kl_t0;
-    bb5:
+    bb4:
 #line 129 "../../keel_stl/src/string.kl"
-    kl_t9 = 0 - kl_value_1;
+    kl_t7 = 0 - kl_value_1;
 #line 129 "../../keel_stl/src/string.kl"
-    kl_t10 = ( uint64_t ) kl_t9;
+    kl_t8 = ( uint64_t ) kl_t7;
 #line 129 "../../keel_stl/src/string.kl"
-    kl_magnitude_8 = kl_t10;
-    kl_t21 = false;
+    kl_magnitude_6 = kl_t8;
+    kl_t19 = false;
 #line 130 "../../keel_stl/src/string.kl"
-    kl_t12 = &kl_result_11;
+    kl_t10 = &kl_result_9;
 #line 130 "../../keel_stl/src/string.kl"
-    kl_t21 = true;
+    kl_t19 = true;
 #line 130 "../../keel_stl/src/string.kl"
-    kl_2kl6string_string__RQ2kl6string__ctor( kl_t12 );
-    kl_t14 = &kl_result_11;
+    kl_2kl6string_string__RQ2kl6string__ctor( kl_t10 );
+    kl_t12 = &kl_result_9;
 #line 131 "../../keel_stl/src/string.kl"
-    kl_2kl6string_push__SQ2kl6string_2u8( kl_t14, 45 );
-    kl_t16 = &kl_result_11;
+    kl_2kl6string_push__SQ2kl6string_2u8( kl_t12, 45 );
+    kl_t14 = &kl_result_9;
 #line 132 "../../keel_stl/src/string.kl"
-    kl_t17 = kl_2kl6string_from__SQ2kl6string_M3u64( kl_magnitude_8 );
+    kl_t15 = kl_2kl6string_from__SQ2kl6string_M3u64( kl_magnitude_6 );
 #line 132 "../../keel_stl/src/string.kl"
-    kl_t18 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t17, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t16 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 132 "../../keel_stl/src/string.kl"
-    kl_2kl6string_operator_add_assign__SQ2kl6string_7textual( kl_t16, kl_t18 );
+    kl_2kl6string_operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t16 );
 #line 132 "../../keel_stl/src/string.kl"
-    kl_2kl6string_string__dtor( &kl_t17 );
+    kl_2kl6string_string__dtor( &kl_t15 );
 #line 134 "../../keel_stl/src/string.kl"
-    kl_t0 = kl_result_11;
+    kl_t0 = kl_result_9;
 #line 134 "../../keel_stl/src/string.kl"
-    kl_t21 = false;
+    kl_t19 = false;
 #line 134 "../../keel_stl/src/string.kl"
-    if ( kl_t21 ) kl_2kl6string_string__dtor( &kl_result_11 );
+    if ( kl_t19 ) kl_2kl6string_string__dtor( &kl_result_9 );
 #line 134 "../../keel_stl/src/string.kl"
-    kl_t21 = false;
+    kl_t19 = false;
 #line 134 "../../keel_stl/src/string.kl"
     return kl_t0;
 }
@@ -2869,9 +2860,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
     uint64_t kl_t57;
     int64_t kl_t58;
     int64_t kl_t59;
-    uint64_t kl_t60;
-    bool kl_t61;
-    bool kl_t62;
+    bool kl_t60;
 #line 536 "../../keel_stl/src/string.kl"
     kl_t4 = &( *kl_this_1 );
 #line 536 "../../keel_stl/src/string.kl"
@@ -3113,11 +3102,9 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 564 "../../keel_stl/src/string.kl"
     kl_t59 = ( int64_t ) kl_magnitude_24;
 #line 564 "../../keel_stl/src/string.kl"
-    kl_t60 = ( uint64_t ) kl_t59;
+    kl_t60 = kl_t59 >= 0;
 #line 564 "../../keel_stl/src/string.kl"
-    kl_t61 = kl_t60 == kl_magnitude_24;
-#line 564 "../../keel_stl/src/string.kl"
-    if ( kl_t61 ) goto bb39; else goto bb38;
+    if ( kl_t60 ) goto bb39; else goto bb38;
     bb37:
 #line 564 "../../keel_stl/src/string.kl"
     kl_t55.tag = 0;
@@ -3131,11 +3118,6 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 564 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 564, "cast out of range: cast<i64>( magnitude )" );
     bb39:
-#line 564 "../../keel_stl/src/string.kl"
-    kl_t62 = kl_t59 >= 0;
-#line 564 "../../keel_stl/src/string.kl"
-    if ( kl_t62 ) goto bb40; else goto bb38;
-    bb40:
 #line 564 "../../keel_stl/src/string.kl"
     kl_t56 = kl_t59;
 #line 564 "../../keel_stl/src/string.kl"
@@ -4645,12 +4627,11 @@ int32_t kl__main__( void )
     int32_t kl_t142;
     bool kl_t143;
     bool kl_t144;
-    bool kl_t145;
-    uint64_t kl_t146;
+    uint64_t kl_t145;
+    bool kl_t146;
     bool kl_t147;
-    bool kl_t148;
 #line 124 "codegen/sample_m8/main.kl"
-    kl_t148 = false;
+    kl_t147 = false;
 #line 124 "codegen/sample_m8/main.kl"
     kl_t1 = kl__raw_sum__3u64( 4 );
 #line 124 "codegen/sample_m8/main.kl"
@@ -4914,11 +4895,11 @@ int32_t kl__main__( void )
 #line 156 "codegen/sample_m8/main.kl"
     kl_t88 = &kl_hello_62;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t148 = false;
+    kl_t147 = false;
 #line 156 "codegen/sample_m8/main.kl"
     kl_t90 = &kl_t89;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t148 = true;
+    kl_t147 = true;
 #line 156 "codegen/sample_m8/main.kl"
     kl_t92 = &kl_t91;
 #line 156 "codegen/sample_m8/main.kl"
@@ -4955,9 +4936,9 @@ int32_t kl__main__( void )
     goto bb34;
     bb34:
 #line 156 "codegen/sample_m8/main.kl"
-    if ( kl_t148 ) kl_2kl6string_string__dtor( &kl_t89 );
+    if ( kl_t147 ) kl_2kl6string_string__dtor( &kl_t89 );
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t148 = false;
+    kl_t147 = false;
 #line 156 "codegen/sample_m8/main.kl"
     if ( kl_t82 ) goto bb35; else goto bb36;
     bb35:
@@ -5150,15 +5131,10 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/sample_m8/main.kl", 170, "cast out of range: cast<u8>( v[15] )" );
     bb61:
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t144 = ( *kl_t140 ) >= 0;
+    kl_t144 = kl_t141 != 225;
 #line 170 "codegen/sample_m8/main.kl"
-    if ( kl_t144 ) goto bb62; else goto bb60;
+    if ( kl_t144 ) goto bb62; else goto bb63;
     bb62:
-#line 170 "codegen/sample_m8/main.kl"
-    kl_t145 = kl_t141 != 225;
-#line 170 "codegen/sample_m8/main.kl"
-    if ( kl_t145 ) goto bb63; else goto bb64;
-    bb63:
 #line 170 "codegen/sample_m8/main.kl"
     kl_t0 = 11;
 #line 170 "codegen/sample_m8/main.kl"
@@ -5169,13 +5145,13 @@ int32_t kl__main__( void )
     kl_2kl6string_string__dtor( &kl_hello_62 );
 #line 170 "codegen/sample_m8/main.kl"
     return kl_t0;
+    bb63:
+    kl_t145 = kl__shuffle__(  );
+#line 172 "codegen/sample_m8/main.kl"
+    kl_t146 = kl_t145 != 32541;
+#line 172 "codegen/sample_m8/main.kl"
+    if ( kl_t146 ) goto bb64; else goto bb65;
     bb64:
-    kl_t146 = kl__shuffle__(  );
-#line 172 "codegen/sample_m8/main.kl"
-    kl_t147 = kl_t146 != 32541;
-#line 172 "codegen/sample_m8/main.kl"
-    if ( kl_t147 ) goto bb65; else goto bb66;
-    bb65:
 #line 172 "codegen/sample_m8/main.kl"
     kl_t0 = 12;
 #line 172 "codegen/sample_m8/main.kl"
@@ -5186,7 +5162,7 @@ int32_t kl__main__( void )
     kl_2kl6string_string__dtor( &kl_hello_62 );
 #line 172 "codegen/sample_m8/main.kl"
     return kl_t0;
-    bb66:
+    bb65:
     kl_t0 = kl__alive__G;
 #line 174 "codegen/sample_m8/main.kl"
     kl_2kl4list_list__I3i32E__dtor( &kl_v_102 );
