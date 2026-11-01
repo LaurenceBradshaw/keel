@@ -741,6 +741,43 @@ void Signatures::declare_enums()
             underlying = table_.integer( 32, true );
         }
 
+        // A tag is the variant's index, so every index must fit the underlying type.
+        const std::span<const Node_id> variants = ast_.variants( child );
+
+        if( !variants.empty() && !table_.is_error( underlying ) && !table_.fits( variants.size() - 1, false, underlying ) )
+        {
+            u64 first = 0;
+            while( table_.fits( first, false, underlying ) )
+            {
+                ++first;
+            }
+
+            const bool is_signed = table_.get( underlying ).is_signed;
+            u8         width     = 16;
+            while( width < 64 && !table_.fits( variants.size() - 1, false, table_.integer( width, is_signed ) ) )
+            {
+                width *= 2;
+            }
+
+            reporter_.error_at(
+                ast_.span( variants[first] ),
+                fmt::format(
+                    "`{}` is variant {}, which `{}` cannot hold",
+                    interner_.text( ast_.name( variants[first] ) ),
+                    first,
+                    table_.name( underlying )
+                ),
+                fmt::format(
+                    "`{}` has {} variants; back it with `{}`",
+                    name,
+                    variants.size(),
+                    table_.name( table_.integer( width, is_signed ) )
+                )
+            );
+
+            underlying = table_.integer( width, is_signed ); // absorbed, as above
+        }
+
         const Type_id type = table_.enumeration( child, arguments, name, underlying );
 
         types_.record( child, type );
@@ -1823,6 +1860,68 @@ TEST_CASE( "type_checker_checks_an_enum_declaration", "[sema][enum]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 2 );
         REQUIRE( p.rendered().find( "already has a variant `Red`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_an_enum_wider_than_its_underlying_type", "[sema][enum]" )
+{
+    // `enum E : <underlying> { V0, V1, ... }` with `count` variants, each `payload` appended.
+    const auto declared = []( std::string_view underlying, u32 count, std::string_view payload = "" )
+    {
+        std::string source = fmt::format( "enum E : {} {{ ", underlying );
+        for( u32 i = 0; i < count; ++i )
+        {
+            source += fmt::format( "{}V{}{}", i == 0 ? "" : ", ", i, payload );
+        }
+        return source + " };\n";
+    };
+
+    SECTION( "256 variants fit a u8" )
+    {
+        const Typed p( declared( "u8", 256 ) + "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "257 do not, reported once at the first that doesn't fit" )
+    {
+        const Typed p( declared( "u8", 257 ) + "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`V256` is variant 256, which `u8` cannot hold" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`E` has 257 variants; back it with `u16`" ) != std::string::npos );
+    }
+
+    SECTION( "the help keeps the signedness" )
+    {
+        const Typed p( declared( "i8", 129 ) + "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`V128` is variant 128, which `i8` cannot hold" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "back it with `i16`" ) != std::string::npos );
+    }
+
+    SECTION( "a payload enum is held to it too" )
+    {
+        const Typed p( declared( "u8", 257, "( i32 x )" ) + "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "which `u8` cannot hold" ) != std::string::npos );
+    }
+
+    SECTION( "uses of the refused enum say nothing more" )
+    {
+        const Typed p(
+            declared( "u8", 257 ) +
+            "bool same() { return E::V256 == E::V0; }\nu16 tag() { return cast<u16>( E::V256 ); }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 
