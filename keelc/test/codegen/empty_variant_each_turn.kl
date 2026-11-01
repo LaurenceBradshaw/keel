@@ -18,13 +18,13 @@ void take( move kl::optional<kl::string> o )
 
 i32 main()
 {
-    kl::optional<kl::string>[3] slots = [ kl::optional<kl::string>::none, .. ];
-    slots[1]                          = kl::optional<kl::string>::some( kl::string::from( "x" ) );
+    kl::optional<kl::string>[3] slots = [ kl::optional::none, .. ];
+    slots[1]                          = kl::optional::some( kl::string::from( "x" ) );
 
     u64 n = 0;
     while( n < 2 )
     {
-        take( kl::optional<kl::string>::none );
+        take( kl::optional::none );
         n++;
     }
     assert( taken == 2 );

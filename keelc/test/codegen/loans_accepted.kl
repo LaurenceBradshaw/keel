@@ -81,7 +81,7 @@ void payload_ref( ref kl::optional<kl::string> o )
         case kl::optional::some( s ): t::println( s.size() ); break;
         case kl::optional::none: break;
     }
-    o = kl::optional<kl::string>::none;
+    o = kl::optional::none;
 }
 
 // An owner reassigned each round, its text borrowed and nothing live.

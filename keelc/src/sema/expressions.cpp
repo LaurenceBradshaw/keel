@@ -2763,6 +2763,30 @@ Type_id Expressions::infer_path( Node_id id )
         // constant expression. Lowering needs the number, and aux holds the name.
         constant_folder_.record_value( id, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = i } );
 
+        // §6.7: `Opt<i32>::Some` is not a spelling. Reported, then read without the arguments, so a
+        // `case` still covers its variant.
+        const Node_id type_args = ast_.type_arg_list( id );
+
+        if( type_args.is_valid() )
+        {
+            const std::string spelling = fmt::format(
+                "{}::{}{}",
+                reporter_.text( ast_.span( qualifier ) ),
+                interner_.text( name ),
+                ast_.payload( variants[i] ).empty() ? "" : "( ... )"
+            );
+
+            reporter_.error_at(
+                ast_.span( type_args ),
+                ast_.is_generic( decl ) ? fmt::format(
+                                              "a variant takes its instance from where the value lands, not from `{}`",
+                                              reporter_.text( ast_.span( type_args ) )
+                                          )
+                                        : fmt::format( "`{}` is not generic", owner ),
+                fmt::format( "write `{}`", spelling )
+            );
+        }
+
         // D7: a variant with a payload is not a *value* until it has one. `Shape s = Shape::Circle;`
         // is as incomplete as a struct literal with no fields, and saying so here is better than
         // letting it type as a Shape and produce garbage in the payload.
@@ -2797,6 +2821,11 @@ Type_id Expressions::infer_path( Node_id id )
         // Nothing named an instance, and a generic declaration's own type is the open form -
         // `Opt<T>`, which is a template rather than anything a value can hold. Left to the mismatch
         // below it would escape through `auto`, which has no expectation to disagree with.
+        if( ast_.is_generic( decl ) && type_args.is_valid() )
+        {
+            return types_.poison( id );
+        }
+
         if( ast_.is_generic( decl ) )
         {
             return types_.record( id, no_instance_named( ast_.span( id ), decl, expectation ) );
@@ -7237,6 +7266,71 @@ TEST_CASE( "expressions_take_a_variant_instance_from_the_expectation", "[sema][p
     REQUIRE( p.type_name( p.nth( Node_kind::Path_expr, 0 ) ) == "Opt<Red>" );
 }
 
+TEST_CASE( "type_checker_refuses_type_arguments_on_a_variant", "[sema][payload][generic]" )
+{
+    const auto checked = []( std::string_view body )
+    {
+        return Typed( fmt::format(
+            "enum Opt<T> where T : copyable {{ None, Some( T v ) }};\n"
+            "enum Colour {{ Red, Green }};\n"
+            "i32 main() {{ {} return 0; }}",
+            body
+        ) );
+    };
+
+    const std::string_view instance = "a variant takes its instance from where the value lands";
+
+    SECTION( "contradicting, with a payload" )
+    {
+        const Typed p = checked( "Opt<i64> o = Opt<bool>::Some( 5 );" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( fmt::format( "{}, not from `<bool>`", instance ) ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `Opt::Some( ... )`" ) != std::string::npos );
+    }
+
+    SECTION( "agreeing, without a payload" )
+    {
+        const Typed p = checked( "Opt<i32> o = Opt<i32>::None;" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `Opt::None`" ) != std::string::npos );
+    }
+
+    // The arguments are not taken as the instance, and saying nothing names one would be false.
+    SECTION( "auto, with and without a payload" )
+    {
+        const Typed p = checked( "auto a = Opt<i32>::Some( 1 ); auto b = Opt<i32>::None;" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "nothing here says which" ) == std::string::npos );
+    }
+
+    SECTION( "an enum that is not generic" )
+    {
+        const Typed p = checked( "Colour c = Colour<i32>::Red;" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Colour` is not generic" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `Colour::Red`" ) != std::string::npos );
+    }
+
+    // A refused label still covers its variant.
+    SECTION( "in a case" )
+    {
+        const Typed p = checked( "Opt<i32> o = Opt::Some( 1 ); switch( o ) {\n"
+                                 "case Opt<i32>::Some( v ): break; case Opt<i32>::None: break; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "does not cover" ) == std::string::npos );
+    }
+}
+
 // D35's flag is saved and restored around an inner block rather than cleared, so an outer block
 // that has already spent its permission is not reported as unused once an inner one returns.
 TEST_CASE( "expressions_leave_an_outer_unsafe_block_used", "[sema][unsafe]" )
@@ -9858,12 +9952,12 @@ TEST_CASE( "type_checker_lets_a_void_payload_take_no_argument", "[sema][void][pa
     {
         const char* two = "enum Two<T> { a( T x, i32 y ) };\n";
 
-        const Typed fine( std::string( prelude ) + two + "i32 main() { Two<void> t = Two<void>::a( 5 ); return 0; }" );
+        const Typed fine( std::string( prelude ) + two + "i32 main() { Two<void> t = Two::a( 5 ); return 0; }" );
 
         INFO( fine.rendered() );
         REQUIRE( fine.clean() );
 
-        const Typed wrong( std::string( prelude ) + two + "i32 main() { Two<void> t = Two<void>::a( true ); return 0; }" );
+        const Typed wrong( std::string( prelude ) + two + "i32 main() { Two<void> t = Two::a( true ); return 0; }" );
 
         INFO( wrong.rendered() );
         REQUIRE( wrong.errors() == 1 );

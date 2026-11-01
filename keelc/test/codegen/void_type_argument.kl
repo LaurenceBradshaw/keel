@@ -92,7 +92,7 @@ i32 main()
     Pair<void> p = Pair { note(), 7 };
     t::println( p.second );
 
-    Two<void> t = Two<void>::a( 9 );
+    Two<void> t = Two::a( 9 );
     switch( t )
     {
         case Two::a( y ):

@@ -10,7 +10,7 @@ u64 grown( ref kl::list<kl::optional<kl::string>> lo )
     switch( lo[0] )
     {
         case kl::optional::some( s ):
-            lo.push( kl::optional<kl::string>::none ); // error: could change
+            lo.push( kl::optional::none ); // error: could change
             return s.size();
         case kl::optional::none:
             return 0;
@@ -46,7 +46,7 @@ u64 replaced( ref kl::list<kl::optional<kl::string>> lo )
     switch( lo[0] )
     {
         case kl::optional::some( s ):
-            lo[0] = kl::optional<kl::string>::none; // error: replaced
+            lo[0] = kl::optional::none; // error: replaced
             return s.size();
         case kl::optional::none:
             return 0;

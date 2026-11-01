@@ -1,7 +1,7 @@
 error: this could change `lo` while `s` still borrows from it
   --> sema/errors_payload_through_element.kl:13:13
    |
-13 |             lo.push( kl::optional<kl::string>::none ); // error: could change
+13 |             lo.push( kl::optional::none ); // error: could change
    |             ^^ `s` is used after this; it was bound at 12:34
 
 error: this could change `lo` while `s` still borrows from it
@@ -19,8 +19,8 @@ error: `lo` is assigned while `s` still borrows from it
 error: an element of `lo` is changed while `s` still borrows from it
   --> sema/errors_payload_through_element.kl:49:13
    |
-49 |             lo[0] = kl::optional<kl::string>::none; // error: replaced
-   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `s` is used after this; it was bound at 48:34
+49 |             lo[0] = kl::optional::none; // error: replaced
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `s` is used after this; it was bound at 48:34
 
 error: this could change `lo` while `s` still borrows from it
   --> sema/errors_payload_through_element.kl:62:13

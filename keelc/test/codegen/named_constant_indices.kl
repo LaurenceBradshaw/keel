@@ -24,7 +24,7 @@ u64 payload_beside( ref kl::optional<kl::string>[2] slots )
     switch( slots[zero] )
     {
         case kl::optional::some( s ):
-            slots[second] = kl::optional<kl::string>::none;
+            slots[second] = kl::optional::none;
             return s.size();
         case kl::optional::none:
             return 0;
@@ -45,8 +45,8 @@ i32 main()
     assert( texts[1].size() == 6 );
 
     kl::optional<kl::string>[2] slots = [
-        kl::optional<kl::string>::some( kl::string::from( "four" ) ),
-        kl::optional<kl::string>::some( kl::string::from( "x" ) )
+        kl::optional::some( kl::string::from( "four" ) ),
+        kl::optional::some( kl::string::from( "x" ) )
     ];
     assert( payload_beside( ref slots ) == 4 );
 
