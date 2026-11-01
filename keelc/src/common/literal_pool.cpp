@@ -19,9 +19,9 @@ Literal_id Literal_pool::add_integer( u64 magnitude )
     return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
-Literal_id Literal_pool::add_float( f64 value )
+Literal_id Literal_pool::add_float( f64 value, f32 narrow )
 {
-    entries_.push_back( value );
+    entries_.push_back( Float { value, narrow } );
     return Literal_id { narrow_cast<u32>( entries_.size() - 1 ) };
 }
 
@@ -40,7 +40,13 @@ u64 Literal_pool::integer( Literal_id id ) const
 f64 Literal_pool::floating( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::Float && "invalid Literal_id" );
-    return std::get<f64>( entries_[id.v] );
+    return std::get<Float>( entries_[id.v] ).value;
+}
+
+f32 Literal_pool::narrow( Literal_id id ) const
+{
+    assert( id.is_valid() && id.v < entries_.size() && kind( id ) == Literal_kind::Float && "invalid Literal_id" );
+    return std::get<Float>( entries_[id.v] ).narrow;
 }
 
 std::string_view Literal_pool::string( Literal_id id ) const
@@ -87,7 +93,7 @@ TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
 
     SECTION( "a float leaves the integers alone" )
     {
-        const Literal_id f = pool.add_float( 1.5 );
+        const Literal_id f = pool.add_float( 1.5, 1.5f );
 
         REQUIRE( pool.floating( f ) == 1.5 );
         REQUIRE( pool.integer( small ) == 42 ); // unmoved by the float
@@ -121,7 +127,7 @@ TEST_CASE( "literal_pool_ids_name_their_kind", "[common][literals]" )
     Literal_pool pool;
 
     const Literal_id i = pool.add_integer( 1 );
-    const Literal_id f = pool.add_float( 1.0 );
+    const Literal_id f = pool.add_float( 1.0, 1.0f );
     const Literal_id s = pool.add_string( "1" );
 
     REQUIRE( pool.kind( i ) == Literal_kind::Integer );

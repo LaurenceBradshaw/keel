@@ -684,7 +684,14 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
     {
         const Literal_id value = ast_.literal( id );
 
-        return value.is_valid() ? std::optional<f64>( literal_pool_.floating( value ) ) : std::nullopt;
+        if( !value.is_valid() )
+        {
+            return std::nullopt;
+        }
+
+        const Type_id type = types_.type_of( id );
+        return type.is_valid() && table_.get( type ).width == 32 ? literal_pool_.narrow( value )
+                                                                 : literal_pool_.floating( value );
     }
 
     case Node_kind::Name_expr:

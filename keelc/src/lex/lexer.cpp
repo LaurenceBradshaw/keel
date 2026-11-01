@@ -413,7 +413,7 @@ Literal_id Scanner::intern_float( u32 start )
         return Literal_id {};
     }
 
-    return literal_pool_.add_float( value );
+    return literal_pool_.add_float( value, std::strtof( clean.c_str(), nullptr ) );
 }
 
 void Scanner::scan_identifier_or_keyword( u32 start )

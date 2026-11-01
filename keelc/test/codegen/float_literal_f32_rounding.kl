@@ -1,0 +1,21 @@
+// An `f32` literal is read as an `f32` once, never through `f64`: 2^53 + 2^29 + 1 rounds up to
+// 2^53 + 2^30, where `f64` would land halfway between two `f32`s and then round down to 2^53.
+import t::console;
+
+f32 global = 9007199791611905.0;
+f32 negative = -9007199791611905.0;
+
+f32 lit() { return 9007199791611905.0; }
+
+i32 main()
+{
+    f32 x = 9007199791611905.0;
+    t::println( cast<f64>( x ) );             // 9007200328482816
+    t::println( cast<f64>( lit() ) );         // 9007200328482816
+    t::println( cast<f64>( -x ) );            // -9007200328482816
+    t::println( cast<f64>( global ) );        // 9007200328482816
+    t::println( cast<f64>( negative ) );      // -9007200328482816
+    f64 wide = 9007199791611905.0;
+    t::println( wide );                       // 9007199791611904
+    return 0;
+}

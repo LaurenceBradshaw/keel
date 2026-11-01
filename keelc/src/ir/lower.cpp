@@ -598,7 +598,8 @@ Operand Lowering::read_name( Node_id id, Node_id decl )
 
     const bool       negative = is_float ? std::signbit( value->floating ) : value->negative;
     const Literal_id magnitude =
-        is_float ? literal_pool_.add_float( std::fabs( value->floating ) ) : literal_pool_.add_integer( value->magnitude );
+        is_float ? literal_pool_.add_float( std::fabs( value->floating ), static_cast<f32>( std::fabs( value->floating ) ) )
+                 : literal_pool_.add_integer( value->magnitude );
 
     if( !negative )
     {
@@ -1065,7 +1066,7 @@ Operand Lowering::supplied_hash( Operand value, Span span )
     builder_.terminate_panic( span, Failure::Unhashable );
     builder_.switch_to( pass );
 
-    const Operand zero     = constant( literal_pool_.add_float( 0.0 ), value.type );
+    const Operand zero     = constant( literal_pool_.add_float( 0.0, 0.0f ), value.type );
     const Operand positive = temporary( binary( Token_kind::Plus, value, zero, value.type ), value.type, span );
     const Operand bits     = temporary( bits_of( positive, number ), number, span );
 
@@ -2755,7 +2756,7 @@ Operand Lowering::lower_unspanned( Node_id id )
         {
             const u64 magnitude = literal_pool_.integer( ast_.literal( id ) );
 
-            return constant( literal_pool_.add_float( static_cast<f64>( magnitude ) ), type );
+            return constant( literal_pool_.add_float( static_cast<f64>( magnitude ), static_cast<f32>( magnitude ) ), type );
         }
 
         return constant( ast_.literal( id ), type );
@@ -3262,7 +3263,7 @@ void Lowering::lower_increment( Node_id id )
     const Operand    left        = copy( target, target_type );
     // The literal pool matching the type: an integer 1 typed f64 would name an unrelated float.
     const Literal_id one =
-        types_.table().is_float( target_type ) ? literal_pool_.add_float( 1.0 ) : literal_pool_.add_integer( 1 );
+        types_.table().is_float( target_type ) ? literal_pool_.add_float( 1.0, 1.0f ) : literal_pool_.add_integer( 1 );
 
     // A pointer steps by an integer; a 1 typed as the pointer is a null constant.
     const Type_id step  = types_.table().is_many_pointer( target_type ) ? types_.table().integer( 64, false ) : target_type;

@@ -43,19 +43,27 @@ public:
     Literal_pool();
 
     Literal_id add_integer( u64 magnitude );
-    Literal_id add_float( f64 value );
+    // `narrow` is the spelling read as an `f32` directly, not `value` rounded again.
+    Literal_id add_float( f64 value, f32 narrow );
     Literal_id add_string( std::string bytes );
 
     // The node kind chooses: Int_literal reads integer(), Float_literal reads floating(). A read
     // through the wrong kind asserts.
     u64              integer( Literal_id id ) const;
     f64              floating( Literal_id id ) const;
+    f32              narrow( Literal_id id ) const;
     std::string_view string( Literal_id id ) const;
     Literal_kind     kind( Literal_id id ) const;
 
 private:
+    struct Float
+    {
+        f64 value;
+        f32 narrow;
+    };
+
     // Each alternative's index is its Literal_kind plus one, which kind() relies on.
-    std::vector<std::variant<std::monostate, u64, f64, std::string>> entries_;
+    std::vector<std::variant<std::monostate, u64, Float, std::string>> entries_;
 };
 
 } // namespace keel

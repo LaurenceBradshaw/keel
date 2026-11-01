@@ -647,7 +647,8 @@ program. That cell is the containment rule's cost, not the type system's.
 an error, and so is `f32 x = -1e40;`. In a chain of operations over literals, such as
 `u32 a = 1 + 2 + 3;` or `i64 a = 0 - 3000000000 - 1;`, each operation is checked in the declared
 type, so `i8 d = 100 + 100 - 1;` is refused at the `200`. A constant that overflows its type is an
-error (`u32 d = 1 - 2;`); arithmetic on values wraps (§12).
+error (`u32 d = 1 - 2;`); arithmetic on values wraps (§12). A float literal typed `f32` is its
+spelling rounded once to `f32`, never through `f64`.
 
 **A comparison does not pay the containment cost (D41).** It has no result to protect, so the only
 requirement is that the domain hold both operands exactly. That is a second, wider table, and it is

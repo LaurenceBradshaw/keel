@@ -70,7 +70,7 @@ error: the shift count is out of range
 20 |     i32 backwards = 1 << -1;
    |                          ^^ `i32` is 32 bits wide, so the count must be between 0 and 31
 
-error: `1.0000000000000001e+60` does not fit in `f32`
+error: `1.0000000300949327e+60` does not fit in `f32`
   --> sema/errors_constants.kl:22:16
    |
 22 |     f32 huge = 1e30 * 1e30;

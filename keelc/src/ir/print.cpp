@@ -111,8 +111,13 @@ struct Printer
 
             // The operand's type decides which table the literal is in; a bool arrives here as an
             // integer 0 or 1.
-            return types.is_float( operand.type ) ? fmt::format( "const {}", literals.floating( operand.constant ) )
-                                                  : fmt::format( "const {}", literals.integer( operand.constant ) );
+            if( types.is_float( operand.type ) )
+            {
+                return types.get( operand.type ).width == 32 ? fmt::format( "const {}", literals.narrow( operand.constant ) )
+                                                             : fmt::format( "const {}", literals.floating( operand.constant ) );
+            }
+
+            return fmt::format( "const {}", literals.integer( operand.constant ) );
         case Operand_kind::Debug:
             return "debug";
         }

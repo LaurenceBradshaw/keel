@@ -2074,7 +2074,9 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
     case Type_kind::Many_pointer:
         return "NULL";
     case Type_kind::Float:
-        return c_float( literal_pool_.floating( literal ) );
+        return c_float(
+            types_.table().get( type ).width == 32 ? literal_pool_.narrow( literal ) : literal_pool_.floating( literal )
+        );
     case Type_kind::Int:
     case Type_kind::Enum: // a variant is its index; the C type is the underlying integer
         return c_integer( literal_pool_.integer( literal ) );

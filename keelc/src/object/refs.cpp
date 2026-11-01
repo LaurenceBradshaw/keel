@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "object/refs.h"
+#include <bit>
 #include <cassert>
 #include "parse/module_graph.h"
 
@@ -128,6 +129,7 @@ void Ref_writer::literal( Byte_writer& out, Literal_id id )
         break;
     case Literal_kind::Float:
         out.put_f64( literals_.floating( id ) );
+        out.put_u32( std::bit_cast<u32>( literals_.narrow( id ) ) );
         break;
     case Literal_kind::String:
         out.put_string( literals_.string( id ) );
@@ -588,7 +590,10 @@ Literal_id Ref_reader::literal()
     case u8( Literal_kind::Integer ) + 1:
         return literals_.add_integer( in_.get_u64() );
     case u8( Literal_kind::Float ) + 1:
-        return literals_.add_float( in_.get_f64() );
+    {
+        const f64 value = in_.get_f64();
+        return literals_.add_float( value, std::bit_cast<f32>( in_.get_u32() ) );
+    }
     case u8( Literal_kind::String ) + 1:
         return literals_.add_string( std::string( in_.get_string() ) );
     default:
