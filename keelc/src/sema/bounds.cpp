@@ -779,7 +779,10 @@ Type_id Bounds::type_the_literal_overflows( Node_id literal, bool negative, Boun
             // A float literal only reaches here under `floating`, whose admissible set is floats.
             assert( table_.is_float( candidate ) && "a fractional literal was measured against an integer" );
 
-            if( !table_.fits_float( literal_pool_.floating( value ), candidate ) )
+            const f64 read =
+                table_.get( candidate ).width == 32 ? literal_pool_.narrow( value ) : literal_pool_.floating( value );
+
+            if( !table_.fits_float( read, candidate ) )
             {
                 return candidate;
             }

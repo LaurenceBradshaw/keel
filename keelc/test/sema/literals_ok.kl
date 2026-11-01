@@ -13,5 +13,6 @@ i32 main()
     u8   j = '\n'; _ = j;
     u8   k = '\xFF'; _ = k;
     u32  l = 'z'; _ = l;             // and fits any integer type wide enough
+    f32  m = 3.4028235e38; _ = m;    // the largest `f32`, rounded down from 8 digits
     return 0;
 }

@@ -1083,10 +1083,9 @@ bool Type_table::fits_float( f64 value, Type_id type ) const
         return true;
     }
 
-    // Range only. Precision loss is not range failure - 0.1 is inexact in every binary float, and
-    // rejecting inexactness would reject nearly every literal written. Underflow to a denormal or
-    // to zero is IEEE working as specified.
-    return std::abs( value ) <= static_cast<f64>( std::numeric_limits<f32>::max() );
+    // Range only: whether the rounding is finite, so a value up to half a step above the largest
+    // `f32` rounds down to it. Inexactness and underflow are IEEE working as specified.
+    return !std::isinf( static_cast<f32>( value ) );
 }
 
 Type_id Type_table::default_integer() const
@@ -2763,6 +2762,14 @@ TEST_CASE( "type_table_fits_float_checks_range_only", "[sema][type]" )
         REQUIRE( table.fits_float( 3.4e38, f32_type ) );
         REQUIRE( table.fits_float( -3.4e38, f32_type ) );
         REQUIRE( table.fits_float( 0.0, f32_type ) );
+    }
+
+    // The largest `f32` to 8 digits is above it, and still rounds down to it.
+    SECTION( "one that rounds down to the largest does" )
+    {
+        REQUIRE( table.fits_float( 3.4028235e38, f32_type ) );
+        REQUIRE( table.fits_float( 3.40282356e38, f32_type ) );
+        REQUIRE_FALSE( table.fits_float( 3.4028236e38, f32_type ) );
     }
 
     // 0.1 is inexact in every binary float. Range and representability are different questions,

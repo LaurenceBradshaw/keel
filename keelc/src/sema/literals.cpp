@@ -279,8 +279,14 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
 
         const Literal_id value = ast_.literal( literal );
 
-        // A literal the lexer could not scan has no value recorded. It reported there.
-        if( value.is_valid() && !table_.fits_float( literals_.floating( value ), expected ) )
+        // A literal the lexer could not scan has no value recorded. It reported there. An `f32` is
+        // measured by its own rounding of the spelling, not the `f64` rounded again.
+        if( value.is_valid() &&
+            !table_.fits_float(
+                table_.is_float( expected ) && table_.get( expected ).width == 32 ? literals_.narrow( value )
+                                                                                  : literals_.floating( value ),
+                expected
+            ) )
         {
             reporter_.error_at(
                 ast_.span( id ),
