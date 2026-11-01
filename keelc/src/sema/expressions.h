@@ -209,6 +209,7 @@ private:
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in Literals::infer_literal.
     Type_id infer_struct_literal( Node_id id );
+    void    report_literal_of_non_struct( Node_id id, Node_id decl );
     Type_id expected_array( Node_id id ); // invalid once reported
     Type_id infer_array_literal( Node_id id );
     Type_id infer_array_fill( Node_id id );

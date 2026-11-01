@@ -3121,6 +3121,51 @@ Type_id Expressions::infer_array_fill( Node_id id )
     return types_.record( id, expectation );
 }
 
+// The resolver bound the name, but to something a literal cannot build.
+void Expressions::report_literal_of_non_struct( Node_id id, Node_id decl )
+{
+    const std::string_view name = interner_.text( ast_.name( decl ) );
+    const Span             at   = ast_.type_name_span( id );
+
+    std::string_view what = "a declaration";
+    switch( ast_.kind( decl ) )
+    {
+    case Node_kind::Enum_decl:
+    {
+        const std::span<const Node_id> variants = ast_.variants( decl );
+        std::string                    help     = "write a variant";
+        if( !variants.empty() )
+        {
+            const bool payload = !ast_.children( variants[0] ).empty();
+            help += fmt::format( ", `{}::{}{}`", name, interner_.text( ast_.name( variants[0] ) ), payload ? "( ... )" : "" );
+        }
+        reporter_.error_at( at, fmt::format( "`{}` is an `enum`, so it cannot be built from a literal", name ), help );
+        return;
+    }
+    case Node_kind::Interface_decl:
+        what = "an interface";
+        break;
+    case Node_kind::Function_decl:
+    case Node_kind::Method_decl:
+        what = "a function";
+        break;
+    case Node_kind::Type_param_decl:
+        what = "a type parameter";
+        break;
+    case Node_kind::Var_decl:
+    case Node_kind::Param_decl:
+    case Node_kind::Binding_decl:
+        what = "a variable";
+        break;
+    default:
+        break;
+    }
+
+    reporter_.error_at(
+        at, fmt::format( "`{}` is {}, so it cannot be built from a literal", name, what ), "a literal builds a `struct`"
+    );
+}
+
 Type_id Expressions::infer_struct_literal( Node_id id )
 {
     const Type_id expectation = take_expectation();
@@ -3132,6 +3177,11 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
     if( !decl.is_valid() || !is_aggregate( ast_.kind( decl ) ) )
     {
+        if( decl.is_valid() )
+        {
+            report_literal_of_non_struct( id, decl );
+        }
+
         for( const Node_id init : ast_.initialisers( id ) )
         {
             absorb( ast_.value( init ) ); // type the values anyway
@@ -6720,6 +6770,73 @@ TEST_CASE( "type_checker_rejects_a_literal_for_a_constructed_class", "[sema][agg
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_rejects_a_literal_of_a_name_that_is_not_a_struct", "[sema][aggregates]" )
+{
+    const auto refused = []( std::string_view source, std::string_view message, std::string_view help )
+    {
+        const Typed p( source );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+        REQUIRE( p.rendered().find( help ) != std::string::npos );
+    };
+
+    SECTION( "an enum, pointed at a variant" )
+    {
+        refused(
+            "enum Colour { Red, Green };\ni32 main() { Colour c = Colour { 1 }; return 0; }",
+            "`Colour` is an `enum`, so it cannot be built from a literal",
+            "write a variant, `Colour::Red`"
+        );
+    }
+
+    SECTION( "a payload enum, pointed at a construction" )
+    {
+        refused(
+            "enum Shape { Circle( f64 r ), Dot };\ni32 main() { Shape s = Shape { 1.0 }; return 0; }",
+            "`Shape` is an `enum`",
+            "`Shape::Circle( ... )`"
+        );
+    }
+
+    SECTION( "an interface" )
+    {
+        refused(
+            "interface I { i32 f() const; };\ni32 main() { auto i = I {}; return 0; }",
+            "`I` is an interface",
+            "a literal builds a `struct`"
+        );
+    }
+
+    SECTION( "a function" )
+    {
+        refused(
+            "i32 f() { return 1; }\ni32 main() { auto g = f { }; return 0; }",
+            "`f` is a function",
+            "a literal builds a `struct`"
+        );
+    }
+
+    SECTION( "a type parameter" )
+    {
+        refused(
+            "T make<T>() { return T {}; }\ni32 main() { return make<i32>(); }",
+            "`T` is a type parameter",
+            "a literal builds a `struct`"
+        );
+    }
+
+    SECTION( "a variable" )
+    {
+        refused(
+            "struct P { i32 x; i32 y; };\ni32 main() { P p = P { 1, 2 }; P q = p { .x = 3 }; return 0; }",
+            "`p` is a variable",
+            "a literal builds a `struct`"
+        );
     }
 }
 
