@@ -213,6 +213,8 @@ private:
     Type_id     infer_struct_literal( Node_id id );
     void        report_literal_of_non_struct( Node_id id, Node_id decl );
     std::string free_function_hint( Node_id call, Type_id object_type ) const;
+    Node_id     nearest_name( std::span<const Node_id> candidates, Symbol_id name ) const;
+    std::string method_hint( Node_id callee, Type_id object_type, std::span<const Type_id> owners ) const;
     std::string field_hint( std::span<const Node_id> fields, Symbol_id name, bool missing ) const;
     Type_id     expected_array( Node_id id ); // invalid once reported
     Type_id     infer_array_literal( Node_id id );

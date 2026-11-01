@@ -1,0 +1,19 @@
+error: `T` has no method `tlak`
+  --> sema/errors_method_near_name.kl:16:57
+   |
+16 | i32 through<T>( const ref T t ) where T : Talk { return t.tlak(); }
+   |                                                         ^^^^^^ did you mean `talk`?
+
+error: `kl::list<i32>` has no method `psuh`
+  --> sema/errors_method_near_name.kl:22:5
+   |
+22 |     l.psuh( 1 );
+   |     ^^^^^^ did you mean `push`?
+
+error: `Cat` has no method `speek`
+  --> sema/errors_method_near_name.kl:23:12
+   |
+23 |     return c.speek();
+   |            ^^^^^^^ did you mean `speak`?
+
+3 errors generated

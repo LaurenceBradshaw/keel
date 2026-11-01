@@ -1,0 +1,24 @@
+// An unknown method one edit from a method the receiver has names that method.
+import kl::list;
+
+class Cat
+{
+    public i32 n;
+    public Cat( i32 v ) { n = v; }
+    public i32 speak() const { return n; }
+};
+
+interface Talk
+{
+    i32 talk() const;
+};
+
+i32 through<T>( const ref T t ) where T : Talk { return t.tlak(); }
+
+i32 main()
+{
+    Cat c = Cat( 1 );
+    kl::list<i32> l;
+    l.psuh( 1 );
+    return c.speek();
+}

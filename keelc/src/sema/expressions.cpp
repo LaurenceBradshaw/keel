@@ -877,9 +877,7 @@ Type_id Expressions::infer_method_call( Node_id id )
         reporter_.error_at(
             ast_.span( callee ),
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
-            bounds_.reached_only_as(
-                object_type, ast_.name( callee ), this_block( callee ), resolution_, ast_.span( callee ).file
-            )
+            method_hint( callee, object_type, owners )
         );
 
         return types_.poison( id );
@@ -919,9 +917,7 @@ Type_id Expressions::infer_method_call( Node_id id )
         reporter_.error_at(
             ast_.span( callee ),
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
-            bounds_.reached_only_as(
-                object_type, ast_.name( callee ), this_block( callee ), resolution_, ast_.span( callee ).file
-            )
+            method_hint( callee, object_type, owners )
         );
 
         return types_.poison( id );
@@ -3268,9 +3264,8 @@ Type_id Expressions::infer_array_fill( Node_id id )
 }
 
 // The resolver bound the name, but to something a literal cannot build.
-// The help for `name`, which none of `fields` has: the one field an edit or two away, else all of
-// them when there are four or fewer. `missing` says they are the fields a literal has not given.
-std::string Expressions::field_hint( std::span<const Node_id> fields, Symbol_id name, bool missing ) const
+// The one of `candidates` an edit or two from `name`; none when none is, or two tie.
+Node_id Expressions::nearest_name( std::span<const Node_id> candidates, Symbol_id name ) const
 {
     const std::string_view written = interner_.text( name );
     const std::size_t      reach   = std::max<std::size_t>( written.size(), 3 ) / 3;
@@ -3279,13 +3274,13 @@ std::string Expressions::field_hint( std::span<const Node_id> fields, Symbol_id 
     std::size_t best = reach + 1;
     bool        tied = false;
 
-    for( const Node_id field : fields )
+    for( const Node_id candidate : candidates )
     {
-        const std::size_t distance = edit_distance( written, interner_.text( ast_.name( field ) ) );
+        const std::size_t distance = edit_distance( written, interner_.text( ast_.name( candidate ) ) );
         if( distance < best )
         {
             best    = distance;
-            nearest = field;
+            nearest = candidate;
             tied    = false;
         }
         else if( distance == best )
@@ -3294,7 +3289,45 @@ std::string Expressions::field_hint( std::span<const Node_id> fields, Symbol_id 
         }
     }
 
-    if( nearest.is_valid() && !tied )
+    return tied ? Node_id {} : nearest;
+}
+
+// The help for a method `object_type` lacks: reached_only_as's, else the nearest method the caller
+// can see on the type, or on any interface a parameter's `where` clause names.
+std::string Expressions::method_hint( Node_id callee, Type_id object_type, std::span<const Type_id> owners ) const
+{
+    std::string help = bounds_.reached_only_as(
+        object_type, ast_.name( callee ), this_block( callee ), resolution_, ast_.span( callee ).file
+    );
+    if( !help.empty() )
+    {
+        return help;
+    }
+
+    std::vector<Node_id> methods;
+    for( const Type_id owner : table_.is_parameter( object_type ) ? bounds_.interfaces_of( object_type ) : owners )
+    {
+        for( const Node_id member : ast_.members( table_.get( owner ).declaration ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Method_decl && ast_.is_visible_from( member, current_type() ) &&
+                std::ranges::find( methods, member ) == methods.end() )
+            {
+                methods.push_back( member );
+            }
+        }
+    }
+
+    const Node_id nearest = nearest_name( methods, ast_.name( callee ) );
+
+    return nearest.is_valid() ? fmt::format( "did you mean `{}`?", interner_.text( ast_.name( nearest ) ) ) : std::string {};
+}
+
+// The help for `name`, which none of `fields` has: the one field an edit or two away, else all of
+// them when there are four or fewer. `missing` says they are the fields a literal has not given.
+std::string Expressions::field_hint( std::span<const Node_id> fields, Symbol_id name, bool missing ) const
+{
+    const Node_id nearest = nearest_name( fields, name );
+    if( nearest.is_valid() )
     {
         return fmt::format( "did you mean `{}`?", interner_.text( ast_.name( nearest ) ) );
     }
