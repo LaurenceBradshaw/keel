@@ -1,0 +1,13 @@
+error: floating-point literal is out of range for `f64`
+ --> sema/errors_float_literal_overflow.kl:2:9
+  |
+2 | f64 a = 1.8e308;
+  |         ^^^^^^^
+
+error: floating-point literal is out of range for `f64`
+ --> sema/errors_float_literal_overflow.kl:3:9
+  |
+3 | f32 b = 1e400;
+  |         ^^^^^
+
+2 errors generated

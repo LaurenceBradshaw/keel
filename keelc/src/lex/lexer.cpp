@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <optional>
 #include <string>
@@ -404,10 +405,10 @@ Literal_id Scanner::intern_float( u32 start )
 {
     const std::string clean = strip_separators( text_.substr( start, pos_ - start ) );
 
-    errno              = 0;
     const double value = std::strtod( clean.c_str(), nullptr );
 
-    if( errno == ERANGE )
+    // Only overflow is out of range; strtod's ERANGE also flags a subnormal or underflow to zero.
+    if( std::isinf( value ) )
     {
         error_at( span_from( start ), "floating-point literal is out of range for `f64`" );
         return Literal_id {};
@@ -1366,6 +1367,36 @@ TEST_CASE( "lexer_records_float_literal_values", "[lex]" )
         REQUIRE( lexed.kind( 0 ) == Token_kind::Float_literal );
         REQUIRE( lexed.floating( 0 ) == c.value );
     }
+}
+
+// strtod sets ERANGE for these too; only an infinity is out of range.
+TEST_CASE( "lexer_keeps_a_float_literal_that_underflows", "[lex]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        f64              value;
+    };
+
+    static const Case cases[] = {
+        { "4.9e-324", 4.9e-324 },
+        { "1e-310", 1e-310 },
+        { "1e-400", 0.0 },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Lexed lexed( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.floating( 0 ) == c.value );
+    }
+
+    const Lexed over( "1.8e308" );
+
+    REQUIRE( over.has_errors() );
+    REQUIRE_FALSE( over.has_value( 0 ) );
 }
 
 // Only the lexer can catch this: by the time sema sees the node the digits are gone.

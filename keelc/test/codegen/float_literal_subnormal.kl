@@ -1,0 +1,16 @@
+// An `f64` literal below the smallest normal keeps its value, and one below every subnormal is 0;
+// only a literal beyond the largest `f64` is out of range.
+import t::console;
+
+i32 main()
+{
+    f64 tiny = 4.9e-324;
+    f64 sub = 1e-310;
+    f64 gone = 1e-400;
+    f32 f = 1e-50;
+    t::println( tiny > 0.0 );      // true
+    t::println( sub > 0.0 );       // true
+    t::println( gone == 0.0 );     // true
+    t::println( f == 0.0 );        // true
+    return 0;
+}

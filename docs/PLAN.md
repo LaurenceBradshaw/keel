@@ -650,7 +650,8 @@ type, so `i8 d = 100 + 100 - 1;` is refused at the `200`. A `-` or `~` over such
 type too, so `u8 m = ~0;` is 255. A constant that overflows its type is an
 error (`u32 d = 1 - 2;`); arithmetic on values wraps (§12). A float literal typed `f32` is its
 spelling rounded once to `f32`, never through `f64`. It fits when that rounding is finite, so `3.4028235e38`, a little above
-the largest `f32`, is accepted as it.
+the largest `f32`, is accepted as it. Only overflow is out of range: a float literal smaller than
+its type's least subnormal is 0, so `f64 x = 1e-400;` is accepted.
 
 **A number type has two constants, `i32::max` and `i32::min`**, each of the type it names and usable
 wherever a literal is, file-scope initialisers included. A float's `min` is its most negative finite

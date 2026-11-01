@@ -1,0 +1,3 @@
+// A float literal beyond the largest `f64` is out of range, whatever type it is given.
+f64 a = 1.8e308;
+f32 b = 1e400;
