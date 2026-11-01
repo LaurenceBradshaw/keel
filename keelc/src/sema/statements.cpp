@@ -510,7 +510,8 @@ bool Statements::check_ref_initialiser( Node_id id, Node_id value, Type_id type 
 
     // Not a temporary: the referent has to outlive the binding, and a variable named here was
     // declared before this line and so outlives it. A temporary is the one thing that would not.
-    if( !places_.is_assignable( value ) )
+    // `this` outlives the method's body, so it may be borrowed too.
+    if( !places_.is_assignable( value ) && !places_.names_this( value ) )
     {
         const bool copies = bounds_.satisfies( type, Bound::Copyable );
 

@@ -1,0 +1,36 @@
+// D32: `this` binds to a `ref` local like any other variable: in a class, as itself or its interface,
+// and writing through it; in a block, where it is the way to call a sibling requirement.
+import t::console;
+
+interface A { i32 foo() const; };
+
+class C implements A
+{
+    public i32 k;
+    public C() { k = 1; }
+    public i32 foo() const { return k; }
+    public i32 own() const { const ref C me = this; return me.k + 10; }
+    public i32 as_a() const { const ref A me = this; return me.foo() + 20; }
+    public void bump() { ref C me = this; me.k = me.k + 5; }
+};
+
+interface adder { i32 to_int() const; i32 plus( i32 n ) const; };
+
+implements adder for i32
+{
+    i32 to_int() const { return this; }
+    i32 plus( i32 n ) const { const ref adder me = this; return me.to_int() + n; }
+};
+
+i32 sum<T>( const ref T t ) where T : adder { return t.plus( 100 ); }
+
+i32 main()
+{
+    C c = C();
+    t::println( c.own() );
+    t::println( c.as_a() );
+    c.bump();
+    t::println( c.k );
+    t::println( sum<i32>( 7 ) );
+    return 0;
+}
