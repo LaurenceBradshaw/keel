@@ -10,10 +10,12 @@ namespace keel
 {
 namespace
 {
-// The local each pointer can only point at, where the pointer never escapes.
+// The local each pointer can only point at, where the pointer never escapes. A pointer assigned
+// once, a copy of another, points where that one does.
 std::vector<Local_id> forwarded_to( const Function& func, const Type_table& table )
 {
     std::vector<Local_id>         to( func.locals.size() );
+    std::vector<Local_id>         copy_of( func.locals.size() );
     std::vector<bool>             refused( func.locals.size(), false );
     std::vector<const Statement*> assigned_by( func.locals.size(), nullptr );
 
@@ -31,18 +33,22 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
             value.kind == Rvalue_kind::Address_of && value.a.place.is_whole_local() &&
             ( value.address_purpose == Address_purpose::Borrow || value.address_purpose == Address_purpose::Read ) &&
             table.is_pointer( type ) && table.get( type ).element == func.locals[value.a.place.local].type;
+        const bool copy = value.kind == Rvalue_kind::Use && value.a.has_place() && value.a.place.is_whole_local() &&
+                          table.is_pointer( type ) && func.locals[value.a.place.local].type == type;
 
-        if( !borrow || to[p].is_valid() )
+        if( ( !borrow && !copy ) || assigned_by[p] != nullptr )
         {
             refused[p] = true;
             continue;
         }
 
-        to[p]          = value.a.place.local;
-        assigned_by[p] = &statement;
+        ( borrow ? to[p] : copy_of[p] ) = value.a.place.local;
+        assigned_by[p]                  = &statement;
     }
 
-    // A whole `_p` anywhere but its own assignment and storage markers is the pointer escaping.
+    // A whole `_p` anywhere but its own assignment, storage markers and a copy into another is the
+    // pointer escaping.
+    std::vector<u32> uses( func.locals.size(), 0 );
     for_each_place(
         func,
         [&]( const Place& place, const Statement* owner )
@@ -54,11 +60,55 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
 
             const bool marker = owner != nullptr &&
                                 ( owner->kind == Statement_kind::Storage_live || owner->kind == Statement_kind::Storage_dead );
-            refused[place.local.v] = refused[place.local.v] || !marker;
+            uses[place.local.v] += !marker;
         }
     );
 
+    for( const Local_id q : copy_of )
+    {
+        if( q.is_valid() )
+        {
+            uses[q.v]--;
+        }
+    }
+
+    for( u32 p = 0; p < uses.size(); ++p )
+    {
+        refused[p] = refused[p] || uses[p] > 0;
+    }
+
     refused[k_return_slot.v] = true;
+
+    // A copy is forwarded only with what it copies, and copying into one kept is an escape.
+    for( bool changed = true; changed; )
+    {
+        changed = false;
+        for( u32 p = 0; p < to.size(); ++p )
+        {
+            const Local_id q = copy_of[p];
+            if( !q.is_valid() || refused[p] == refused[q.v] )
+            {
+                continue;
+            }
+            refused[p] = refused[q.v] = true;
+            changed                   = true;
+        }
+    }
+
+    // Each copy takes its source's target; a cycle of copies has none.
+    for( bool changed = true; changed; )
+    {
+        changed = false;
+        for( u32 p = 0; p < to.size(); ++p )
+        {
+            const Local_id q = copy_of[p];
+            if( q.is_valid() && !to[p].is_valid() && to[q.v].is_valid() )
+            {
+                to[p]   = to[q.v];
+                changed = true;
+            }
+        }
+    }
 
     for( u32 p = 0; p < to.size(); ++p )
     {
@@ -180,6 +230,18 @@ TEST_CASE( "forward_borrows_names_the_local_a_ref_points_at", "[opt][forward]" )
         REQUIRE( p.addresses() == 0 );
         REQUIRE( p.derefs() == 0 );
     }
+}
+
+// An inlined method's `this` is a copy of the caller's pointer, which points at the same local.
+TEST_CASE( "forward_borrows_names_the_local_a_copied_pointer_points_at", "[opt][forward]" )
+{
+    const Forwarded p( "i64 f() { Counter a = Counter(); Counter b = Counter(); a.both( ref b ); return a.n + b.n; }\n"
+                       "class Counter { public i64 n; public Counter() { n = 1; } public void times( i64 k ) { n = n * k; }"
+                       " public void both( ref Counter o ) { times( 2 ); this.times( 3 ); o.times( 5 ); } };\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.addresses() == 0 );
+    REQUIRE( p.derefs() == 0 );
 }
 
 // Pointing at one of two, at a class as its interface, or passed on: each keeps its address.

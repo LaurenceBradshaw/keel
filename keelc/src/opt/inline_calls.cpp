@@ -412,11 +412,71 @@ bool replaceable_receiver( const Function& callee )
     return true;
 }
 
-// Splices whatever `pick` chooses, then rescans the continuation for more.
+// The `&f` an indirect call's callee always holds: its local assigned once, that or a copy of one
+// that does, and never addressed. Spliced-out statements are skipped, so the blocks are walked.
+const Rvalue* known_function( const Function& caller, const Operand& callee )
+{
+    if( !callee.has_place() || !callee.place.is_whole_local() )
+    {
+        return nullptr;
+    }
+
+    Local_id local = callee.place.local;
+
+    for( u32 hops = 0; hops < caller.locals.size(); ++hops )
+    {
+        const Rvalue* only    = nullptr;
+        u32           writes  = 0;
+        bool          address = false;
+
+        for( const Block& block : caller.blocks )
+        {
+            for( const Statement& statement : caller.statements_of( block ) )
+            {
+                if( statement.kind != Statement_kind::Assign )
+                {
+                    continue;
+                }
+
+                const Rvalue& value = caller.rvalue( statement );
+                address             = address || ( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
+                                       value.a.place.local == local );
+                if( !statement.place.is_global() && statement.place.local == local )
+                {
+                    ++writes;
+                    only = statement.place.is_whole_local() ? &value : nullptr;
+                }
+            }
+        }
+
+        if( writes != 1 || address || only == nullptr )
+        {
+            return nullptr;
+        }
+
+        if( only->kind == Rvalue_kind::Function_address )
+        {
+            return only;
+        }
+
+        if( only->kind != Rvalue_kind::Use || !only->a.has_place() || !only->a.place.is_whole_local() )
+        {
+            return nullptr;
+        }
+
+        local = only->a.place.local;
+    }
+
+    return nullptr;
+}
+
+// Splices whatever `pick` chooses, then rescans the continuation for more. A spliced body was
+// inlined into already, so only its indirect calls are offered again: one may now be known.
 template <typename Pick>
 void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 {
     std::vector<Block_id> worklist( caller.blocks.size() );
+    std::vector<bool>     spliced( caller.blocks.size(), false );
 
     for( const Block_id i : caller.blocks.ids() )
     {
@@ -432,11 +492,25 @@ void inline_each( Function& caller, const Literal_pool& literals, Pick pick )
 
         for( u32 s = 0; s < block.statement_count; ++s )
         {
+            const Statement& statement = caller.statements_of( block )[s];
+            if( spliced[at.v] && ( statement.kind != Statement_kind::Assign ||
+                                   std::as_const( caller ).rvalue( statement ).kind != Rvalue_kind::Indirect_call ) )
+            {
+                continue;
+            }
+
             const Site site = pick( block, s );
             if( site.callee )
             {
+                const bool inner      = spliced[at.v];
+                const u32  block_base = narrow_cast<u32>( caller.blocks.size() );
                 splice( caller, at, s, *site.callee, site.receiver );
-                worklist.push_back( Block_id { narrow_cast<u32>( caller.blocks.size() ) - 1 } );
+                spliced.resize( caller.blocks.size(), true );
+                spliced.back() = inner;
+                for( u32 b = block_base; b < caller.blocks.size(); ++b )
+                {
+                    worklist.push_back( Block_id { b } );
+                }
                 break;
             }
         }
@@ -464,6 +538,16 @@ void inline_calls(
         {
             const Statement& statement = caller.statements_of( block )[s];
             const Rvalue&    value     = std::as_const( caller ).rvalue( statement );
+
+            // A call through a local holding a known function is a call to it, inlined or not.
+            if( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Indirect_call )
+            {
+                if( const Rvalue* known = known_function( caller, value.a ) )
+                {
+                    caller.rvalue( statement ) = call( known->callee, value.arguments, value.type, known->type_arguments );
+                }
+            }
+
             if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Call )
             {
                 return {};
@@ -599,6 +683,15 @@ struct Inlined : Compiled
             first().statements,
             [&]( const Statement& s )
             { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == Rvalue_kind::Call; }
+        ) );
+    }
+
+    std::size_t indirect_calls() const
+    {
+        return static_cast<std::size_t>( std::ranges::count_if(
+            first().statements,
+            [&]( const Statement& s )
+            { return s.kind == Statement_kind::Assign && first().rvalue( s ).kind == Rvalue_kind::Indirect_call; }
         ) );
     }
 
@@ -753,6 +846,34 @@ TEST_CASE( "inline_calls_weighs_a_callee_as_its_passes_leave_it", "[opt][inline]
         }
         REQUIRE( std::ranges::all_of( named, []( bool n ) { return n; } ) );
     }
+}
+
+// A local holding `&twice`, its own or an inlined callee's parameter, calls `twice`, which then inlines.
+TEST_CASE( "inline_calls_inlines_a_call_through_a_known_function", "[opt][inline]" )
+{
+    for( const char* source : {
+             "i32 f( i32 a ) { fn( i32 ) -> i32 g = &twice; return g( a ); }\n",
+             "i32 f( i32 a ) { return apply( &twice, a ); }\n"
+             "i32 apply( fn( i32 ) -> i32 g, i32 x ) { return g( x ); }\n",
+         } )
+    {
+        const Inlined p( source );
+        INFO( source );
+        REQUIRE( p.clean() );
+        REQUIRE( verify( p.first() ).empty() );
+        REQUIRE( p.calls() == 0 );
+        REQUIRE( p.indirect_calls() == 0 );
+    }
+}
+
+// Assigned twice, the local may hold either.
+TEST_CASE( "inline_calls_keeps_a_call_through_a_reassigned_local", "[opt][inline]" )
+{
+    const Inlined p( "i32 f( i32 a ) { fn( i32 ) -> i32 g = &twice; if( a > 0 ) { g = &thrice; } return g( a ); }\n"
+                     "i32 thrice( i32 x ) { return x * 3; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.indirect_calls() == 1 );
 }
 
 TEST_CASE( "inline_drops_inlines_an_unconditional_drop", "[opt][inline]" )

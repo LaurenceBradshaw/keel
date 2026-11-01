@@ -7,6 +7,6 @@
 
 namespace keel
 {
-// `(*_p)` becomes `_k` where `_p` is assigned once, `&_k`, and never escapes; release only.
+// `(*_p)` becomes `_k` where `_p` is assigned once, `&_k` or a copy of such a pointer, and never escapes; release only.
 void forward_borrows( Function& func, const Type_table& table );
 } // namespace keel

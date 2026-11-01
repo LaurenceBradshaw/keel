@@ -10,8 +10,21 @@ namespace keel
 namespace
 {
 
-// Which functions each one calls; a call to a body-less extern has no edge. Calls × functions, a map
-// by declaration if it shows.
+// Whether `statement` takes `callee`'s address, which the inliner may turn into a call.
+bool addresses( const Function& caller, const Statement& statement, const Function& callee )
+{
+    if( statement.kind != Statement_kind::Assign )
+    {
+        return false;
+    }
+
+    const Rvalue& value = caller.rvalue( statement );
+    return value.kind == Rvalue_kind::Function_address && value.callee == callee.declaration &&
+           value.type_arguments == callee.type_arguments;
+}
+
+// Which functions each one calls or takes the address of; a call to a body-less extern has no edge.
+// Calls × functions, a map by declaration if it shows.
 std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions )
 {
     std::vector<std::vector<u32>> edges( functions.size() );
@@ -23,7 +36,7 @@ std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions
             {
                 const Function& callee = functions[c];
 
-                if( calls( functions[f], statement, callee ) )
+                if( calls( functions[f], statement, callee ) || addresses( functions[f], statement, callee ) )
                 {
                     edges[f].push_back( c );
                     break;

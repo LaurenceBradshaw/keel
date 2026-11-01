@@ -1,0 +1,61 @@
+// In a release build, a method's receiver reached as `this`, as another object, through a method's
+// address or through a pointer is the object itself: every call inlines and every check folds away.
+// A call through a local or a parameter holding a known function is a call to it. Each check
+// returns its own code.
+
+class Counter
+{
+    public i64 n;
+    public Counter() { n = 1; }
+    public void times( i64 k ) { n = n * k; }
+    public i64 get() const { return n; }
+    public static i64 seven() { return 7; }
+    public void all( ref Counter other )
+    {
+        times( 2 );
+        this.times( 3 );
+        other.times( 5 );
+        times( Counter::seven() );
+    }
+};
+
+i64 call_it( fn() -> i64 f ) { return f(); }
+
+i32 main()
+{
+    Counter a = Counter();
+    Counter b = Counter();
+    a.all( ref b );
+
+    if( a.get() != 42 || b.get() != 5 )
+    {
+        return 1;
+    }
+
+    fn( const ref Counter ) -> i64 g = &Counter::get;
+    if( g( a ) != 42 )
+    {
+        return 2;
+    }
+
+    fn( ref Counter, i64 ) -> void m = &Counter::times;
+    m( ref b, 11 );
+    if( b.get() != 55 )
+    {
+        return 3;
+    }
+
+    if( call_it( &Counter::seven ) != 7 )
+    {
+        return 4;
+    }
+
+    Counter* p = &a;
+    p.times( 13 );
+    if( a.get() != 546 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

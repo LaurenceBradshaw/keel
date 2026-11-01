@@ -1,0 +1,40 @@
+// Every way to reach a method's receiver, counted: a bare call, `this.`, another object's method, a
+// static, a method's address applied to an object, a static's address passed on, and a pointer.
+import t::console;
+
+class Counter
+{
+    public i64 n;
+    public Counter() { n = 1; }
+    public void times( i64 k ) { n = n * k; }
+    public i64 get() const { return n; }
+    public static i64 seven() { return 7; }
+    public void all( ref Counter other )
+    {
+        times( 2 );
+        this.times( 3 );
+        other.times( 5 );
+        times( Counter::seven() );
+    }
+};
+
+i64 call_it( fn() -> i64 f ) { return f(); }
+
+i32 main()
+{
+    Counter a = Counter();
+    Counter b = Counter();
+    a.all( ref b );
+    t::println( a.get() ); // 42
+    t::println( b.get() ); // 5
+    fn( const ref Counter ) -> i64 g = &Counter::get;
+    t::println( g( a ) ); // 42
+    fn( ref Counter, i64 ) -> void m = &Counter::times;
+    m( ref b, 11 );
+    t::println( b.get() ); // 55
+    t::println( call_it( &Counter::seven ) ); // 7
+    Counter* p = &a;
+    p.times( 13 );
+    t::println( a.get() ); // 546
+    return 0;
+}
