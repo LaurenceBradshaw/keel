@@ -187,6 +187,7 @@ void simplify( Function& func, const Literal_pool& literals )
     fold_constant_branches( func, literals );
     thread_gotos( func );
     remove_unreachable_blocks( func );
+    func.compact_rvalues();
 }
 
 void remove_statements( Function& func, const std::vector<bool>& deleted )
@@ -426,6 +427,20 @@ TEST_CASE( "simplify_folds_a_constant_branch", "[ir][simplify][returns]" )
         );
 
         REQUIRE_FALSE( assigns_three );
+    }
+
+    SECTION( "the pruned arm's rvalues leave the table too" )
+    {
+        const Simplified p( "i32 f() { i32 b = 1; if( false ) { b = 2; } return b; }" + k_main );
+
+        const Function& func = p.first();
+        const u32       held = narrow_cast<u32>( std::count_if(
+            func.statements.begin(),
+            func.statements.end(),
+            []( const Statement& statement ) { return statement.value.is_valid(); }
+        ) );
+
+        REQUIRE( func.rvalues.size() == held );
     }
 }
 

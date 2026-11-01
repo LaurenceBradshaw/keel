@@ -391,7 +391,7 @@ struct Function
     Id_vector<Block_id, Block>   blocks;
     Statements                   statements;
     std::vector<Projection>      projections;
-    Id_vector<Rvalue_id, Rvalue> rvalues; // read through rvalue(); a removed statement leaves its own here
+    Id_vector<Rvalue_id, Rvalue> rvalues; // read through rvalue(); a removed statement's stays until simplify compacts
 
     // Whether local 0 is a value the body must produce. The passes have no Type_table, so this is
     // recorded the same way out_parameters is, and for the same reason: the graph does not say.
@@ -447,6 +447,21 @@ struct Function
     Statement clone( const Statement& statement )
     {
         return copy_of( statement, std::as_const( *this ).rvalue( statement ) );
+    }
+
+    // Drops the rvalues no statement holds; the rest are renumbered in statement order.
+    void compact_rvalues()
+    {
+        Id_vector<Rvalue_id, Rvalue> kept;
+        kept.reserve( statements.size() );
+        for( Statement& statement : statements )
+        {
+            if( statement.value.is_valid() )
+            {
+                statement.value = Owned_rvalue( kept.push_back( std::move( rvalues[statement.value.id()] ) ) );
+            }
+        }
+        rvalues = std::move( kept );
     }
 
     // Read-only: places share their runs, and projected() is the only writer.
