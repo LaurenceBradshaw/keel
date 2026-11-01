@@ -25,6 +25,33 @@ Symbol_id operator_for( Token_kind op )
     return name ? Interner::operator_name( *name ) : Symbol_id {};
 }
 
+// Insertions, deletions, substitutions and swaps of neighbours, so `widht` is one from `width`.
+std::size_t edit_distance( std::string_view a, std::string_view b )
+{
+    std::vector<std::vector<std::size_t>> d( a.size() + 1, std::vector<std::size_t>( b.size() + 1 ) );
+
+    for( std::size_t i = 0; i <= a.size(); ++i )
+    {
+        for( std::size_t j = 0; j <= b.size(); ++j )
+        {
+            if( i == 0 || j == 0 )
+            {
+                d[i][j] = i + j;
+                continue;
+            }
+
+            d[i][j] = std::min( { d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + ( a[i - 1] == b[j - 1] ? 0 : 1 ) } );
+
+            if( i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] )
+            {
+                d[i][j] = std::min( d[i][j], d[i - 2][j - 2] + 1 );
+            }
+        }
+    }
+
+    return d[a.size()][b.size()];
+}
+
 } // namespace
 
 Type_id Expressions::infer( Node_id id )
@@ -831,7 +858,7 @@ Type_id Expressions::infer_method_call( Node_id id )
                 ? fmt::format(
                       "a `where` clause naming an interface gives `{}` that interface's methods", table_.name( object_type )
                   )
-                : bounds_.reached_only_as( object_type, ast_.name( callee ) )
+                : free_function_hint( id, object_type )
         );
         return types_.poison( id );
     }
@@ -2923,9 +2950,19 @@ Type_id Expressions::infer_field( Node_id id )
         }
         else
         {
+            std::vector<Node_id> fields;
+            for( const Node_id member : object_decl.is_valid() ? ast_.members( object_decl ) : std::span<const Node_id> {} )
+            {
+                if( ast_.kind( member ) == Node_kind::Field_decl && ast_.is_visible_from( member, current_type() ) )
+                {
+                    fields.push_back( member );
+                }
+            }
+
             reporter_.error_at(
                 ast_.span( id ),
-                fmt::format( "`{}` has no field `{}`", table_.name( object_type ), interner_.text( ast_.name( id ) ) )
+                fmt::format( "`{}` has no field `{}`", table_.name( object_type ), interner_.text( ast_.name( id ) ) ),
+                field_hint( fields, ast_.name( id ), false )
             );
         }
 
@@ -3151,6 +3188,123 @@ Type_id Expressions::infer_array_fill( Node_id id )
 }
 
 // The resolver bound the name, but to something a literal cannot build.
+// The help for `name`, which none of `fields` has: the one field an edit or two away, else all of
+// them when there are four or fewer. `missing` says they are the fields a literal has not given.
+std::string Expressions::field_hint( std::span<const Node_id> fields, Symbol_id name, bool missing ) const
+{
+    const std::string_view written = interner_.text( name );
+    const std::size_t      reach   = std::max<std::size_t>( written.size(), 3 ) / 3;
+
+    Node_id     nearest;
+    std::size_t best = reach + 1;
+    bool        tied = false;
+
+    for( const Node_id field : fields )
+    {
+        const std::size_t distance = edit_distance( written, interner_.text( ast_.name( field ) ) );
+        if( distance < best )
+        {
+            best    = distance;
+            nearest = field;
+            tied    = false;
+        }
+        else if( distance == best )
+        {
+            tied = true;
+        }
+    }
+
+    if( nearest.is_valid() && !tied )
+    {
+        return fmt::format( "did you mean `{}`?", interner_.text( ast_.name( nearest ) ) );
+    }
+
+    if( fields.empty() || fields.size() > 4 )
+    {
+        return {};
+    }
+
+    std::string text = missing ? "" : fields.size() == 1 ? "its one field is " : "its fields are ";
+    for( std::size_t i = 0; i < fields.size(); ++i )
+    {
+        text += fmt::format( "`{}`", interner_.text( ast_.name( fields[i] ) ) );
+        text += i + 2 == fields.size() ? " and " : i + 1 == fields.size() ? "" : ", ";
+    }
+
+    return missing ? text + ( fields.size() == 1 ? " is not given" : " are not given" ) : text;
+}
+
+// `o.unwrap()` on a type with no methods: reached_only_as's help, or else the first function of that
+// name the type's own package declares, that the call's file can name and whose first parameter
+// takes the receiver, called as one.
+std::string Expressions::free_function_hint( Node_id call, Type_id object_type ) const
+{
+    const Node_id   callee = ast_.callee( call );
+    const Node_id   object = ast_.object( callee );
+    const Symbol_id name   = ast_.name( callee );
+    const File_id   from   = ast_.span( call ).file;
+
+    // `p.f()` on a pointer passes `*p`; a temporary is no place, so it goes to `move` bare and to `ref` not at all.
+    const bool        through = table_.is_pointer( types_.type_of( object ) );
+    const bool        place   = through || places_.place_root( object, current_function_ ).is_valid();
+    const std::string spelt   = fmt::format( "{}{}", through ? "*" : "", reporter_.text( ast_.span( object ) ) );
+
+    if( std::string help = bounds_.reached_only_as( object_type, name ); !help.empty() )
+    {
+        return help;
+    }
+
+    const Node_id owner = table_.get( object_type ).declaration;
+    if( !owner.is_valid() )
+    {
+        return {};
+    }
+
+    const Symbol_id package = resolution_.package_of( ast_.span( owner ).file );
+
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Function_decl || ast_.name( decl ) != name || ast_.params( decl ).empty() ||
+            resolution_.package_of( ast_.span( decl ).file ) != package || !resolution_.sees( ast_, from, decl ) )
+        {
+            continue;
+        }
+
+        const Node_id first = ast_.params( decl )[0];
+        const Type_id taken = types_.type_of( first );
+        Bindings      deduced;
+        if( !taken.is_valid() || !table_.deduce( taken, object_type, deduced ) ||
+            table_.substitute( taken, deduced ) != object_type )
+        {
+            continue;
+        }
+
+        const Param_mode mode = parameter_mode_of( ast_, first );
+        if( !place && ( mode == Param_mode::Ref || mode == Param_mode::Out ) )
+        {
+            continue;
+        }
+
+        const std::string_view marker    = !place                     ? ""
+                                           : mode == Param_mode::Move ? "move "
+                                           : mode == Param_mode::Ref  ? "ref "
+                                           : mode == Param_mode::Out  ? "out "
+                                                                      : "";
+        const bool             qualified = package != resolution_.package_of( from );
+
+        return fmt::format(
+            "`{0}` is a function: write `{1}{0}( {2}{3}{4} )`",
+            interner_.text( name ),
+            qualified ? fmt::format( "{}::", interner_.text( package ) ) : std::string {},
+            marker,
+            spelt,
+            ast_.arguments( call ).empty() ? "" : ", ..."
+        );
+    }
+
+    return {};
+}
+
 void Expressions::report_literal_of_non_struct( Node_id id, Node_id decl )
 {
     const std::string_view name = interner_.text( ast_.name( decl ) );
@@ -3290,6 +3444,30 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // rather than being quietly retyped to whatever was wanted.
     const bool names_an_instance = expectation.is_valid() && table_.get( expectation ).declaration == decl;
 
+    // `Box<i32> { 1 }`: refused, then read as `Box { 1 }`, or as poison when nothing else names the instance.
+    if( const Node_id type_args = ast_.type_arg_list( id ); type_args.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( type_args ),
+            ast_.is_generic( decl ) ? fmt::format(
+                                          "a literal takes its instance from where it lands, not from `{}`",
+                                          reporter_.text( ast_.span( type_args ) )
+                                      )
+                                    : fmt::format( "`{}` is not generic", struct_name ),
+            fmt::format( "write `{} {{ ... }}`", reporter_.text( ast_.type_name_span( id ) ) )
+        );
+
+        if( !names_an_instance && ast_.is_generic( decl ) )
+        {
+            for( const Node_id init : initialisers )
+            {
+                absorb( ast_.value( init ) );
+            }
+
+            return types_.poison( id );
+        }
+    }
+
     if( !names_an_instance && ast_.is_generic( decl ) )
     {
         const Type_id poison = no_instance_named( ast_.type_name_span( id ), decl, expectation );
@@ -3373,6 +3551,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     }
 
     std::unordered_map<u32, Node_id> seen;
+    std::vector<Node_id>             unknown;
 
     for( const Node_id init : initialisers )
     {
@@ -3389,9 +3568,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
         if( !field.is_valid() )
         {
-            reporter_.error_at(
-                ast_.span( init ), fmt::format( "`{}` has no field `{}`", struct_name, interner_.text( name ) )
-            );
+            unknown.push_back( init );
             absorb( value );
             continue;
         }
@@ -3404,18 +3581,32 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         check( value, aggregates_.field_type( result, field ) );
     }
 
+    std::vector<Node_id> missing;
+    for( const Node_id field : fields )
+    {
+        if( ast_.name( field ).is_valid() && seen.find( ast_.name( field ).v ) == seen.end() )
+        {
+            missing.push_back( field );
+        }
+    }
+
+    // A misspelt name is most likely one of the missing fields, so it alone is reported.
+    for( const Node_id init : unknown )
+    {
+        reporter_.error_at(
+            ast_.span( init ),
+            fmt::format( "`{}` has no field `{}`", struct_name, interner_.text( ast_.name( init ) ) ),
+            field_hint( missing, ast_.name( init ), true )
+        );
+    }
+
     // Every field that is missing, not just the first: a struct that gained three fields should
     // say so once rather than over three compiles. A mixed literal's unnamed one is the same mistake.
-    for( const Node_id field : mixed ? std::span<const Node_id> {} : std::span<const Node_id>( fields ) )
+    for( const Node_id field : mixed || !unknown.empty() ? std::span<const Node_id> {} : std::span<const Node_id>( missing ) )
     {
-        const Symbol_id name = ast_.name( field );
-
-        if( name.is_valid() && seen.find( name.v ) == seen.end() )
-        {
-            reporter_.error_at(
-                ast_.type_name_span( id ), fmt::format( "field `{}` is not initialised", interner_.text( name ) )
-            );
-        }
+        reporter_.error_at(
+            ast_.type_name_span( id ), fmt::format( "field `{}` is not initialised", interner_.text( ast_.name( field ) ) )
+        );
     }
 
     return types_.record( id, result );
@@ -4734,6 +4925,149 @@ TEST_CASE( "expressions_underline_the_part_of_a_literal_that_is_wrong", "[sema][
     SECTION( "the initialiser that mixes the two conventions" )
     {
         underlined( "i32 main() { P q = P { .x = 1, 2 }; return 0; }", "all positional or all named", "2:32", 1 );
+    }
+}
+
+// A literal or member spelt the way another language spells it is one error, whose help is the fix.
+TEST_CASE( "expressions_name_the_fix_for_a_misspelt_literal", "[sema][types]" )
+{
+    constexpr std::string_view types = "struct P { i32 x; i32 y; }; struct Q { i32 width; i32 height; i32 depth; };\n"
+                                       "struct B<T> where T : copyable { T v; }; enum Shape { Circle( f64 radius ), Dot };\n"
+                                       "f64 area( const ref Shape s ) { return 0.0; }\n"
+                                       "f64 grow( ref Shape s, f64 by ) { return by; }\n"
+                                       "f64 mix( f64 a, f64 b ) { return a + b; }\n"
+                                       "enum Opt<T> { Some( T v ), None }; bool take<T>( move Opt<T> o ) { return true; }\n"
+                                       "i32 narrow( Opt<i32> o ) { return 0; } Opt<i64> make() { return Opt::None; }\n";
+
+    const auto one_error = [types]( std::string_view main, std::string_view message, std::string_view help )
+    {
+        const Typed       p( std::string( types ) + std::string( main ) );
+        const std::string rendered = p.rendered();
+
+        INFO( rendered );
+
+        std::size_t errors = 0; // the resolver's and the parser's too, which p.errors() does not count
+        for( std::size_t i = rendered.find( "error:" ); i != std::string::npos; i = rendered.find( "error:", i + 1 ) )
+        {
+            ++errors;
+        }
+
+        REQUIRE( errors == 1 );
+        REQUIRE( rendered.find( message ) != std::string::npos );
+        REQUIRE( rendered.find( help ) != std::string::npos );
+    };
+
+    SECTION( "a builtin type's name" )
+    {
+        one_error(
+            "i32 main() { i32 a = i32 { 1 }; return a; }",
+            "`i32` is not a struct, so it cannot be built from a literal",
+            "write the value, or `cast<i32>( ... )`"
+        );
+    }
+
+    SECTION( "a variant, or a type's member" )
+    {
+        one_error(
+            "i32 main() { Shape s = Shape::Circle { 1.0 }; return 0; }",
+            "`Shape::Circle` is a variant, not a struct",
+            "write `Shape::Circle( ... )`"
+        );
+        one_error( "i32 main() { Shape s = Shape::Dot {}; return 0; }", "`Shape::Dot` is a variant", "write `Shape::Dot`" );
+        one_error( "i32 main() { Shape s = Shape::Line { 1 }; return 0; }", "`Shape` has no variant `Line`", "" );
+        one_error( "i32 main() { P p = P::Circle { 1 }; return 0; }", "`P` declares no type `Circle`", "" );
+    }
+
+    SECTION( "a misspelt field in a literal, with the field it meant left out" )
+    {
+        one_error( "i32 main() { P p = P { .x = 1, .yy = 2 }; return p.x; }", "`P` has no field `yy`", "did you mean `y`?" );
+        one_error(
+            "i32 main() { Q q = Q { .width = 1, .hieght = 2, .depth = 3 }; return 0; }",
+            "`Q` has no field `hieght`",
+            "did you mean `height`?"
+        );
+        one_error( "i32 main() { P p = P { .x = 1, .zzzz = 2 }; return p.x; }", "`P` has no field `zzzz`", "`y` is not given" );
+    }
+
+    SECTION( "a field that does not exist" )
+    {
+        one_error( "i32 main() { P p = P { 1, 2 }; return p.z; }", "`P` has no field `z`", "its fields are `x` and `y`" );
+        one_error( "i32 main() { Q q = Q { 1, 2, 3 }; return q.widht; }", "`Q` has no field `widht`", "did you mean `width`?" );
+        one_error(
+            "i32 main() { Q q = Q { 1, 2, 3 }; return q.q; }",
+            "`Q` has no field `q`",
+            "its fields are `width`, `height` and `depth`"
+        );
+    }
+
+    SECTION( "a function called as a method, with the outer call quiet" )
+    {
+        one_error(
+            "f64 id( f64 v ) { return v; }\ni32 main() { Shape s = Shape::Dot; f64 a = id( s.area() ); return 0; }",
+            "`Shape` has no methods",
+            "`area` is a function: write `area( s )`"
+        );
+        one_error(
+            "i32 main() { Shape s = Shape::Dot; f64 b = s.grow( 2.0 ); return 0; }",
+            "`Shape` has no methods",
+            "`grow` is a function: write `grow( ref s, ... )`"
+        );
+        one_error(
+            "i32 main() { Shape s = Shape::Dot; Shape* p = &s; f64 b = p.grow( 2.0 ); return 0; }",
+            "`Shape` has no methods",
+            "write `grow( ref *p, ... )`"
+        );
+    }
+
+    SECTION( "a function suggested only where it would be accepted" )
+    {
+        one_error(
+            "i32 main() { Opt<i64> o = Opt::None; bool v = o.take(); return 0; }", "no methods", "write `take( move o )`"
+        );
+        one_error( "i32 main() { bool v = make().take(); return 0; }", "no methods", "write `take( make() )`" );
+
+        const auto silent = [types]( std::string_view main )
+        {
+            const Typed p( std::string( types ) + std::string( main ) );
+
+            INFO( p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "is a function" ) == std::string::npos );
+        };
+
+        silent( "i32 main() { Opt<i64> o = Opt::None; i32 v = o.narrow(); return 0; }" ); // another instance
+        silent( "Shape shape() { return Shape::Dot; }\ni32 main() { f64 b = shape().grow( 2.0 ); return 0; }"
+        ); // `ref` of a temporary
+    }
+
+    SECTION( "type arguments on a literal" )
+    {
+        one_error(
+            "i32 main() { auto b = B<i32> { 1 }; return 0; }",
+            "a literal takes its instance from where it lands, not from `<i32>`",
+            "write `B { ... }`"
+        );
+        one_error( "i32 main() { B<i32> b = B<i32> { 1 }; return 0; }", "not from `<i32>`", "write `B { ... }`" );
+        one_error( "i32 main() { P p = P<i32> { 1, 2 }; return 0; }", "`P` is not generic", "write `P { ... }`" );
+    }
+
+    SECTION( "a payload given by name" )
+    {
+        one_error(
+            "i32 main() { Shape s = Shape::Circle( .radius = 1.0 ); return 0; }",
+            "arguments are given in order, not by name",
+            "remove `.radius =`"
+        );
+        one_error( "i32 main() { f64 a = mix( .a = 1.0, .b = 2.0 ); return 0; }", "given in order", "remove `.a =`" );
+    }
+
+    SECTION( "a missing comma between named initialisers" )
+    {
+        one_error(
+            "i32 main() { P p = P { .x = 1 .y = 2 }; return p.x; }",
+            "expected `,` between initialisers",
+            "write `,` before `.y`"
+        );
     }
 }
 
@@ -7400,10 +7734,10 @@ TEST_CASE( "type_checker_absorbs_a_literal_beside_a_failed_operand", "[sema][typ
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
 
-        // Two errors, but two *facts*: the name is wrong, and so the real field went uninitialised.
-        REQUIRE( p.errors() == 2 );
+        // One error: the uninitialised field is what the wrong name most likely meant, so the help names it.
+        REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "has no field `bad`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "field `q` is not initialised" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`q` is not given" ) != std::string::npos );
     }
 }
 

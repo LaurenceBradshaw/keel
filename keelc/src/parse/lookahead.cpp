@@ -499,10 +499,11 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         cursor_.advance();
     }
 
-    return depth == 0 && ( cursor_.check( Token_kind::Colon_colon ) || cursor_.check( Token_kind::L_paren ) ||
-                           cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::Comma ) ||
-                           cursor_.check( Token_kind::R_paren ) || cursor_.check( Token_kind::R_bracket ) ||
-                           cursor_.check( Token_kind::R_brace ) || cursor_.check( Token_kind::Dot ) );
+    return depth == 0 &&
+           ( cursor_.check( Token_kind::Colon_colon ) || cursor_.check( Token_kind::L_paren ) ||
+             cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::Comma ) ||
+             cursor_.check( Token_kind::R_paren ) || cursor_.check( Token_kind::R_bracket ) ||
+             cursor_.check( Token_kind::R_brace ) || cursor_.check( Token_kind::Dot ) || cursor_.check( Token_kind::L_brace ) );
 }
 
 Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )

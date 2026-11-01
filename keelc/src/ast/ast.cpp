@@ -347,6 +347,11 @@ Node_id Ast::type_arg_list( Node_id id ) const
         return all.empty() ? Node_id {} : all[0];
     case Node_kind::Path_expr:
         return all.size() > 1 ? all[1] : Node_id {};
+    case Node_kind::Struct_literal: // `Box<i32> { 1 }`, written only to be refused
+    {
+        const std::size_t at = package( id ).is_valid() ? 1 : 0;
+        return all.size() > at && kind( all[at] ) == Node_kind::Type_arg_list ? all[at] : Node_id {};
+    }
     default:
         assert( false && "this kind has no type arguments" );
         return Node_id {};
@@ -526,7 +531,7 @@ Node_id Ast::qualifier( Node_id path ) const
 std::span<const Node_id> Ast::initialisers( Node_id id ) const
 {
     assert( kind( id ) == Node_kind::Struct_literal && "initialisers are a struct literal's, not any node's" );
-    return children( id ).subspan( package( id ).is_valid() ? 1 : 0 );
+    return children( id ).subspan( ( package( id ).is_valid() ? 1 : 0 ) + ( type_arg_list( id ).is_valid() ? 1 : 0 ) );
 }
 
 Node_id Ast::value( Node_id id ) const

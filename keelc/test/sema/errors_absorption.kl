@@ -23,7 +23,7 @@ i32 main()
     identity( &value ) = nullptr;
     undeclared = nullptr;
 
-    // Two errors here, but two facts: the name is wrong, and so the real field went uninitialised.
+    // One error: the uninitialised field is what the wrong name most likely meant, so the help names it.
     auto p = Point { .wrong = nullptr };
 
     return 0;

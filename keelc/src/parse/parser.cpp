@@ -190,7 +190,7 @@ private:
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
-    Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
+    Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {}, Node_id type_args = {} );
     Node_id parse_array_literal();
 
     // One initialiser. aux is the field name in the designated form, invalid in the positional one.
@@ -3606,6 +3606,14 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
         return member_access( left, Node_kind::Path_expr, scoped, types );
     }
 
+    // `Box<i32> { 1 }`: the literal carries the list, for the checker to refuse.
+    if( cursor_.check( Token_kind::L_brace ) && ast_.kind( left ) == Node_kind::Name_expr )
+    {
+        const Node_id literal = parse_struct_literal( ast_.span( left ), ast_.name( left ), Node_id {}, types );
+        ast_.set_type_name_span( literal, ast_.span( left ) );
+        return literal;
+    }
+
     // The list belongs to the name because there is no call to hang it on, the same slot a path already gives its
     // qualifier.
     if( !cursor_.check( Token_kind::L_paren ) )
@@ -4033,9 +4041,27 @@ Node_id Parser::parse_arg_list()
 
     if( !cursor_.check( Token_kind::R_paren ) )
     {
-        const std::size_t list_errors = diags_.error_count();
+        const std::size_t list_errors    = diags_.error_count();
+        bool              named_reported = false;
         do
         {
+            // `Shape::Circle( .radius = 1.0 )`: a struct literal's spelling, refused once and read as `1.0`.
+            if( cursor_.check( Token_kind::Dot ) && cursor_.peek( 1 ).kind == Token_kind::Identifier &&
+                cursor_.peek( 2 ).kind == Token_kind::Equal )
+            {
+                const Span named = Span::merge( cursor_.peek().span, cursor_.peek( 2 ).span );
+                if( !named_reported )
+                {
+                    recovery_.error_at(
+                        named, "arguments are given in order, not by name", fmt::format( "remove `{}`", sm_.text( named ) )
+                    );
+                    named_reported = true;
+                }
+                cursor_.advance();
+                cursor_.advance();
+                cursor_.advance();
+            }
+
             args.push_back( parse_expression( 0 ) );
             if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
@@ -4101,16 +4127,19 @@ Node_id Parser::parse_array_literal()
     return ast_.add( Node_kind::Array_literal, Span::merge( start, cursor_.previous().span ), 0, elements );
 }
 
-Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
+Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package, Node_id type_args )
 {
-    const Span name = cursor_.previous().span; // both callers have just consumed the type's name
+    const Span name = cursor_.previous().span; // the callers have just consumed the type's name
     recovery_.expect( Token_kind::L_brace );
 
     std::vector<Node_id> initialisers;
 
-    if( package.is_valid() )
+    for( const Node_id prefix : { package, type_args } )
     {
-        initialisers.push_back( package );
+        if( prefix.is_valid() )
+        {
+            initialisers.push_back( prefix );
+        }
     }
 
     const std::size_t list_errors = diags_.error_count();
@@ -4120,6 +4149,42 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
         const u32 before = cursor_.position();
 
         initialisers.push_back( parse_field_init() );
+
+        // `P { .x = 1 .y = 2 }` reads `1 .y` as a field of `1`: split it back into two initialisers.
+        for( Node_id value = ast_.value( initialisers.back() );
+             cursor_.check( Token_kind::Equal ) && ast_.kind( value ) == Node_kind::Field_expr && !is_parenthesised( value );
+             value = ast_.value( initialisers.back() ) )
+        {
+            const Span init   = ast_.span( initialisers.back() );
+            const Span object = ast_.span( ast_.object( value ) );
+            const Span field  = Span { .file = object.file, .start = object.end, .end = ast_.span( value ).end };
+
+            std::string_view spelt = sm_.text( field );
+            spelt.remove_prefix( std::min( spelt.find( '.' ), spelt.size() ) );
+
+            recovery_.error_at(
+                Span { .file = object.file, .start = object.end, .end = object.end },
+                "expected `,` between initialisers",
+                fmt::format( "write `,` before `{}`", spelt )
+            );
+
+            initialisers.back() = ast_.add(
+                Node_kind::Field_init,
+                Span { .file = init.file, .start = init.start, .end = object.end },
+                ast_.name( initialisers.back() ).v,
+                { ast_.object( value ) }
+            );
+
+            cursor_.advance(); // the `=`
+            const Node_id next = parse_expression( 0 );
+
+            initialisers.push_back( ast_.add(
+                Node_kind::Field_init,
+                Span::merge( Span { .file = object.file, .start = object.end, .end = object.end }, cursor_.previous().span ),
+                ast_.name( value ).v,
+                { next }
+            ) );
+        }
 
         if( !recovery_.end_list_element( Token_kind::R_brace, list_errors, Recovery::List_site::Literal ) )
         {

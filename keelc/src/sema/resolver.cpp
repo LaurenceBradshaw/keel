@@ -74,6 +74,8 @@ private:
     Prelude_items prelude_items() const;
     Node_id       lookup_qualified( Node_id package, Node_id use );
     Symbol_id     package_named( Node_id qualifier ) const;
+    Node_id       qualifier_type( Node_id qualifier, Node_id use );
+    void          refuse_member_literal( Node_id literal, Node_id owner );
     Node_id       visible_from( Node_id use, Node_id head );
     bool          refuse_builtin_name( Symbol_id name, Node_id decl );
     void          refuse_unimported( Node_id use, Node_id decl );
@@ -345,7 +347,11 @@ void Resolver::visit( Node_id id )
     {
         const Symbol_id name = ast_.name( id );
 
-        if( ast_.package( id ).is_valid() )
+        if( const Node_id owner = qualifier_type( ast_.package( id ), id ); owner.is_valid() )
+        {
+            refuse_member_literal( id, owner );
+        }
+        else if( ast_.package( id ).is_valid() )
         {
             bindings_[id.v] = lookup_qualified( ast_.package( id ), id );
         }
@@ -358,6 +364,16 @@ void Resolver::visit( Node_id id )
         else if( const Node_id decl = lookup( name, id ); decl.is_valid() )
         {
             bind( id, decl );
+        }
+        else if( is_builtin_type_name( interner_.text( name ) ) )
+        {
+            reporter_.error_at(
+                ast_.type_name_span( id ),
+                fmt::format( "`{}` is not a struct, so it cannot be built from a literal", interner_.text( name ) ),
+                ast_.initialisers( id ).size() == 1
+                    ? fmt::format( "write the value, or `cast<{}>( ... )`", interner_.text( name ) )
+                    : std::string {}
+            );
         }
         else
         {
@@ -960,6 +976,61 @@ Symbol_id Resolver::package_named( Node_id qualifier ) const
 
     const Symbol_id package = interner_.find( package_text( ast_, interner_, qualifier ) );
     return package.is_valid() && modules_.is_package( package ) ? package : Symbol_id {};
+}
+
+// The enum, struct or class a literal's qualifier names, as `Shape` in `Shape::Circle { 1.0 }`; invalid otherwise.
+Node_id Resolver::qualifier_type( Node_id qualifier, Node_id use )
+{
+    if( !qualifier.is_valid() || ast_.type_arg_list( qualifier ).is_valid() || package_named( qualifier ).is_valid() )
+    {
+        return Node_id {};
+    }
+
+    Node_id decl;
+    if( ast_.kind( qualifier ) == Node_kind::Name_expr )
+    {
+        decl = lookup( ast_.name( qualifier ), use );
+    }
+    else if( const Symbol_id package =
+                 ast_.kind( qualifier ) == Node_kind::Path_expr ? package_named( ast_.qualifier( qualifier ) ) : Symbol_id {};
+             package.is_valid() )
+    {
+        decl = lookup_in( package, ast_.name( qualifier ), use );
+    }
+
+    return decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ) ? decl
+                                                                                                                 : Node_id {};
+}
+
+// `Shape::Circle { 1.0 }`: a variant is built with `( ... )`, and a struct holds no types.
+void Resolver::refuse_member_literal( Node_id literal, Node_id owner )
+{
+    unresolved_[literal.v] = true;
+
+    const std::string owner_spelt = package_text( ast_, interner_, ast_.package( literal ) );
+    const auto        name        = interner_.text( ast_.name( literal ) );
+    const Span        span        = ast_.span( literal );
+
+    if( ast_.kind( owner ) != Node_kind::Enum_decl )
+    {
+        reporter_.error_at( span, fmt::format( "`{}` declares no type `{}`", owner_spelt, name ) );
+        return;
+    }
+
+    const auto variants = ast_.variants( owner );
+    const auto variant  = std::ranges::find_if( variants, [&]( Node_id v ) { return ast_.name( v ) == ast_.name( literal ); } );
+
+    if( variant == variants.end() )
+    {
+        reporter_.error_at( span, fmt::format( "`{}` has no variant `{}`", owner_spelt, name ) );
+        return;
+    }
+
+    reporter_.error_at(
+        span,
+        fmt::format( "`{}::{}` is a variant, not a struct", owner_spelt, name ),
+        fmt::format( "write `{}::{}{}`", owner_spelt, name, ast_.payload( *variant ).empty() ? "" : "( ... )" )
+    );
 }
 
 Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
