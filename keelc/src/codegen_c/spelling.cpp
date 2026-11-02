@@ -220,7 +220,10 @@ std::string Spelling::drop_function( Type_id implementer ) const
 
 std::string Spelling::field( Node_id declaration ) const
 {
-    return mangle_field( interner.text( ast.name( declaration ) ) );
+    const Node_id variant = ast.variant_of( declaration );
+    return variant.is_valid()
+               ? mangle_payload_field( interner.text( ast.name( variant ) ), interner.text( ast.name( declaration ) ) )
+               : mangle_field( interner.text( ast.name( declaration ) ) );
 }
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const

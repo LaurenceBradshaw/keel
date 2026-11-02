@@ -28,7 +28,7 @@ struct kl_7prelude_location
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_value;
+    int32_t kl_4some_value;
 };
 
 _Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t*, uint64_t );
@@ -87,7 +87,7 @@ int32_t kl_2kl8optional_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( stru
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 40 "../../src/optional.kl"
-    kl_v_5 = kl_o_1.kl_value;
+    kl_v_5 = kl_o_1.kl_4some_value;
     kl_t0 = kl_v_5;
 #line 41 "../../src/optional.kl"
     return kl_t0;

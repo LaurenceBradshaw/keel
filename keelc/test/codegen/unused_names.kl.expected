@@ -528,14 +528,14 @@ struct kl_7prelude_str
 struct kl__Lost
 {
     int32_t tag;
-    struct kl__Noisy kl_why;
+    struct kl__Noisy kl_4gone_why;
 };
 
 struct kl_7prelude_result__I3u64_4LostE
 {
     int32_t tag;
-    uint64_t kl_value;
-    struct kl__Lost kl_error;
+    uint64_t kl_2ok_value;
+    struct kl__Lost kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -693,7 +693,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 67 "codegen/unused_names.kl"
     kl_t8 = true;
 #line 67 "codegen/unused_names.kl"
-    kl_t2.kl_value = 1;
+    kl_t2.kl_2ok_value = 1;
 #line 67 "codegen/unused_names.kl"
     kl_t8 = true;
 #line 67 "codegen/unused_names.kl"
@@ -720,7 +720,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 70 "codegen/unused_names.kl"
     kl_t10 = true;
 #line 70 "codegen/unused_names.kl"
-    kl_t4.kl_why = kl_t5;
+    kl_t4.kl_4gone_why = kl_t5;
 #line 70 "codegen/unused_names.kl"
     kl_t11 = false;
 #line 70 "codegen/unused_names.kl"
@@ -730,7 +730,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 70 "codegen/unused_names.kl"
     kl_t9 = true;
 #line 70 "codegen/unused_names.kl"
-    kl_t3.kl_error = kl_t4;
+    kl_t3.kl_3err_error = kl_t4;
 #line 70 "codegen/unused_names.kl"
     kl_t10 = false;
 #line 70 "codegen/unused_names.kl"
@@ -780,7 +780,7 @@ void kl__borrowed__4bool( bool kl_fine_1 )
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 78 "codegen/unused_names.kl"
-    kl_v_4 = kl_t2.kl_value;
+    kl_v_4 = kl_t2.kl_2ok_value;
     kl_t6 = &kl_t5;
 #line 79 "codegen/unused_names.kl"
     kl_t7 = ( uint8_t* ) "ok";
@@ -793,7 +793,7 @@ void kl__borrowed__4bool( bool kl_fine_1 )
     goto bb3;
     bb2:
 #line 81 "codegen/unused_names.kl"
-    kl_e_11 = &kl_t2.kl_error;
+    kl_e_11 = &kl_t2.kl_3err_error;
     kl_t13 = &kl_t12;
 #line 82 "codegen/unused_names.kl"
     kl_t14 = ( uint8_t* ) "err";
@@ -863,7 +863,7 @@ void kl__consumed__4bool( bool kl_fine_1 )
 #line 92 "codegen/unused_names.kl"
     kl_t22 = false;
 #line 92 "codegen/unused_names.kl"
-    kl_v_6 = kl_t5.kl_value;
+    kl_v_6 = kl_t5.kl_2ok_value;
     kl_t8 = &kl_t7;
 #line 93 "codegen/unused_names.kl"
     kl_t9 = ( uint8_t* ) "ok";
@@ -880,7 +880,7 @@ void kl__consumed__4bool( bool kl_fine_1 )
 #line 95 "codegen/unused_names.kl"
     kl_t22 = false;
 #line 95 "codegen/unused_names.kl"
-    kl_e_14 = kl_t13.kl_error;
+    kl_e_14 = kl_t13.kl_3err_error;
     kl_t16 = &kl_t15;
 #line 96 "codegen/unused_names.kl"
     kl_t17 = ( uint8_t* ) "err";
@@ -965,7 +965,7 @@ void kl__Lost__dtor( struct kl__Lost* kl_t1 )
     return;
     bb2:
 #line 48 "codegen/unused_names.kl"
-    kl__Noisy__dtor( &( *kl_t1 ).kl_why );
+    kl__Noisy__dtor( &( *kl_t1 ).kl_4gone_why );
 #line 48 "codegen/unused_names.kl"
     goto bb1;
 #line 51 "codegen/unused_names.kl"
@@ -984,7 +984,7 @@ void kl_7prelude_result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4L
     return;
     bb2:
 #line 143 "<prelude>"
-    kl__Lost__dtor( &( *kl_t1 ).kl_error );
+    kl__Lost__dtor( &( *kl_t1 ).kl_3err_error );
 #line 143 "<prelude>"
     goto bb1;
 #line 149 "<prelude>"

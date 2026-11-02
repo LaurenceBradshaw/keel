@@ -515,14 +515,14 @@ struct kl_7prelude_str
 struct kl_7prelude_result__I3i32_3i32E
 {
     int32_t tag;
-    int32_t kl_value;
-    int32_t kl_error;
+    int32_t kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I4void_3i32E
 {
     int32_t tag;
-    int32_t kl_error;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -624,7 +624,7 @@ struct kl_7prelude_result__I3i32_3i32E kl__checked__S7counter( struct kl__counte
     ( *kl_this_1 ).kl_n_ = ( *kl_this_1 ).kl_n_ + 1;
     kl_t3.tag = 0;
 #line 27 "codegen/temporary_receiver.kl"
-    kl_t3.kl_value = ( *kl_this_1 ).kl_n_;
+    kl_t3.kl_2ok_value = ( *kl_this_1 ).kl_n_;
 #line 27 "codegen/temporary_receiver.kl"
     kl_t0 = kl_t3;
 #line 27 "codegen/temporary_receiver.kl"
@@ -699,7 +699,7 @@ struct kl_7prelude_result__I4void_3i32E kl__run__( void )
     if ( kl_t16 ) goto bb1; else goto bb2;
     bb1:
 #line 40 "codegen/temporary_receiver.kl"
-    kl_t17 = kl_t15.kl_value;
+    kl_t17 = kl_t15.kl_2ok_value;
 #line 40 "codegen/temporary_receiver.kl"
     kl_b_9 = kl_t17;
 #line 40 "codegen/temporary_receiver.kl"
@@ -735,21 +735,21 @@ struct kl_7prelude_result__I4void_3i32E kl__run__( void )
 #line 40 "codegen/temporary_receiver.kl"
     kl_t0.tag = 1;
 #line 40 "codegen/temporary_receiver.kl"
-    kl_t0.kl_error = kl_t15.kl_error;
+    kl_t0.kl_3err_error = kl_t15.kl_3err_error;
 #line 40 "codegen/temporary_receiver.kl"
     kl__counter__dtor( &kl_t10 );
 #line 40 "codegen/temporary_receiver.kl"
     return kl_t0;
     bb3:
 #line 49 "codegen/temporary_receiver.kl"
-    kl_v_31 = kl_t29.kl_value;
+    kl_v_31 = kl_t29.kl_2ok_value;
     kl_t32 = ( int64_t ) kl_v_31;
 #line 50 "codegen/temporary_receiver.kl"
     kl_1t7console_println__3i64( kl_t32 );
     goto bb5;
     bb4:
 #line 52 "codegen/temporary_receiver.kl"
-    kl_e_34 = kl_t29.kl_error;
+    kl_e_34 = kl_t29.kl_3err_error;
     goto bb5;
     bb5:
 #line 57 "codegen/temporary_receiver.kl"

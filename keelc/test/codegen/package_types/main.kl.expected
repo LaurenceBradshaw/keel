@@ -119,8 +119,8 @@ struct kl_5kinds6shapes_Counter
 struct kl_5kinds6shapes_Shape
 {
     int32_t tag;
-    int32_t kl_radius;
-    int32_t kl_side;
+    int32_t kl_6Circle_radius;
+    int32_t kl_6Square_side;
 };
 
 struct kl_5kinds6shapes_Box__I3i32E
@@ -166,13 +166,13 @@ int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds6shapes_Shape kl_s_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 21 "codegen/package_types/main.kl"
-    kl_r_3 = kl_s_1.kl_radius;
+    kl_r_3 = kl_s_1.kl_6Circle_radius;
     kl_t4 = __builtin_mul_overflow( 3, kl_r_3, &( int32_t ) { 0 } );
 #line 22 "codegen/package_types/main.kl"
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
 #line 23 "codegen/package_types/main.kl"
-    kl_a_8 = kl_s_1.kl_side;
+    kl_a_8 = kl_s_1.kl_6Square_side;
     kl_t9 = __builtin_mul_overflow( kl_a_8, kl_a_8, &( int32_t ) { 0 } );
 #line 24 "codegen/package_types/main.kl"
     if ( kl_t9 ) goto bb7; else goto bb8;
@@ -374,7 +374,7 @@ int32_t kl__main__( void )
     bb18:
     kl_t28.tag = 0;
 #line 46 "codegen/package_types/main.kl"
-    kl_t28.kl_radius = 2;
+    kl_t28.kl_6Circle_radius = 2;
 #line 46 "codegen/package_types/main.kl"
     kl_t29 = kl__measure__Q5kinds5Shape( kl_t28 );
 #line 46 "codegen/package_types/main.kl"
@@ -387,7 +387,7 @@ int32_t kl__main__( void )
 #line 46 "codegen/package_types/main.kl"
     kl_t31.tag = 1;
 #line 46 "codegen/package_types/main.kl"
-    kl_t31.kl_side = 3;
+    kl_t31.kl_6Square_side = 3;
 #line 46 "codegen/package_types/main.kl"
     kl_t32 = kl__measure__Q5kinds5Shape( kl_t31 );
 #line 46 "codegen/package_types/main.kl"

@@ -514,7 +514,7 @@ struct kl_7prelude_str
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_b;
+    struct kl__Buf kl_4Full_b;
 };
 
 struct kl_7prelude_textual__vtable
@@ -662,7 +662,7 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 58 "codegen/owning_conditional.kl"
-    kl_b_3 = &( *kl_h_1 ).kl_b;
+    kl_b_3 = &( *kl_h_1 ).kl_4Full_b;
     kl_t4 = &( *kl_b_3 );
 #line 59 "codegen/owning_conditional.kl"
     kl_t5 = kl__get__S3Buf( kl_t4 );
@@ -1106,7 +1106,7 @@ int32_t kl__main__( void )
 #line 97 "codegen/owning_conditional.kl"
     kl_t91 = true;
 #line 97 "codegen/owning_conditional.kl"
-    kl_t60.kl_b = kl_t61;
+    kl_t60.kl_4Full_b = kl_t61;
 #line 97 "codegen/owning_conditional.kl"
     kl_t92 = false;
 #line 97 "codegen/owning_conditional.kl"
@@ -1235,7 +1235,7 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     return;
     bb2:
 #line 37 "codegen/owning_conditional.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_b );
+    kl__Buf__dtor( &( *kl_t1 ).kl_4Full_b );
 #line 37 "codegen/owning_conditional.kl"
     goto bb1;
 #line 41 "codegen/owning_conditional.kl"

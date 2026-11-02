@@ -96,6 +96,8 @@ std::string mangle_local( std::string_view name, u32 local );
 
 // `kl_<name>`: a struct's fields have distinct names, and the prefix keeps one off a C keyword.
 std::string mangle_field( std::string_view name );
+// `kl_<length><variant>_<name>`: every variant's payload shares one struct, and two may share a name.
+std::string mangle_payload_field( std::string_view variant, std::string_view name );
 // `kl_<owner>_<name>__G` at file scope, `kl_<owner>_<name>__GS<enclosing>` for a static field. `G`
 // starts no encoded parameter, so no function's argtypes can spell it.
 std::string mangle_global( const Mangled_owner& owner, std::string_view name, Type_id enclosing, const Type_table& types );

@@ -28,9 +28,9 @@ struct kl__Line
 struct kl__Shape
 {
     int32_t tag;
-    struct kl__Box kl_b;
-    struct kl__Box kl_first;
-    struct kl__Box kl_second;
+    struct kl__Box kl_5boxed_b;
+    struct kl__Box kl_6paired_first;
+    struct kl__Box kl_6paired_second;
 };
 
 int32_t kl__live__G;
@@ -106,7 +106,7 @@ struct kl__Shape kl__wrapped__3i32( int32_t kl_v_1 )
 {
     struct kl__Shape kl_t0;
 #line 12 "opt/moves_fields.kl"
-    kl_t0.kl_b.kl_value = kl_v_1;
+    kl_t0.kl_5boxed_b.kl_value = kl_v_1;
     kl__live__G = kl__live__G + 1;
 #line 68 "opt/moves_fields.kl"
     kl_t0.tag = 0;
@@ -127,16 +127,16 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 77 "opt/moves_fields.kl"
-    kl_t0 = kl_s_1.kl_b.kl_value;
+    kl_t0 = kl_s_1.kl_5boxed_b.kl_value;
 #line 18 "opt/moves_fields.kl"
     kl__live__G = kl__live__G - 1;
     kl__destroyed__G = kl__destroyed__G + 1;
 #line 77 "opt/moves_fields.kl"
     return kl_t0;
     bb2:
-    kl_t4 = kl_s_1.kl_first.kl_value * 10;
+    kl_t4 = kl_s_1.kl_6paired_first.kl_value * 10;
 #line 79 "opt/moves_fields.kl"
-    kl_t0 = kl_t4 + kl_s_1.kl_second.kl_value;
+    kl_t0 = kl_t4 + kl_s_1.kl_6paired_second.kl_value;
 #line 18 "opt/moves_fields.kl"
     kl__live__G = kl__live__G - 2;
     kl__destroyed__G = kl__destroyed__G + 2;
@@ -170,7 +170,7 @@ int32_t kl__main__( void )
     struct kl__Shape kl_t8;
     int32_t kl_t9;
 #line 12 "opt/moves_fields.kl"
-    kl_t2.kl_b.kl_value = 6;
+    kl_t2.kl_5boxed_b.kl_value = 6;
     kl__live__G = kl__live__G + 1;
 #line 68 "opt/moves_fields.kl"
     kl_t2.tag = 0;
@@ -203,9 +203,9 @@ int32_t kl__main__( void )
 #line 103 "opt/moves_fields.kl"
     kl_t5.tag = 1;
 #line 103 "opt/moves_fields.kl"
-    kl_t5.kl_first.kl_value = 1;
+    kl_t5.kl_6paired_first.kl_value = 1;
 #line 103 "opt/moves_fields.kl"
-    kl_t5.kl_second.kl_value = 2;
+    kl_t5.kl_6paired_second.kl_value = 2;
 #line 103 "opt/moves_fields.kl"
     kl_t6 = kl__opened__M5Shape( kl_t5 );
 #line 103 "opt/moves_fields.kl"

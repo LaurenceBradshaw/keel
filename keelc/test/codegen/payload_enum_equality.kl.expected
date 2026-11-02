@@ -496,7 +496,7 @@ struct kl__Shape;
 struct kl__Shape
 {
     int32_t tag;
-    int32_t kl_r;
+    int32_t kl_6Circle_r;
 };
 
 int32_t kl__radius__5Shape( struct kl__Shape* );
@@ -524,7 +524,7 @@ int32_t kl__radius__5Shape( struct kl__Shape* kl_s_1 )
     return kl_t0;
     bb2:
 #line 18 "codegen/payload_enum_equality.kl"
-    kl_r_4 = ( *kl_s_1 ).kl_r;
+    kl_r_4 = ( *kl_s_1 ).kl_6Circle_r;
     kl_t0 = kl_r_4;
 #line 19 "codegen/payload_enum_equality.kl"
     return kl_t0;
@@ -584,7 +584,7 @@ int32_t kl__main__( void )
 #line 33 "codegen/payload_enum_equality.kl"
     kl_t2.tag = 1;
 #line 33 "codegen/payload_enum_equality.kl"
-    kl_t2.kl_r = 1;
+    kl_t2.kl_6Circle_r = 1;
 #line 33 "codegen/payload_enum_equality.kl"
     kl_one_1 = kl_t2;
 #line 35 "codegen/payload_enum_equality.kl"
@@ -592,7 +592,7 @@ int32_t kl__main__( void )
 #line 35 "codegen/payload_enum_equality.kl"
     kl_t4.tag = 1;
 #line 35 "codegen/payload_enum_equality.kl"
-    kl_t4.kl_r = 1;
+    kl_t4.kl_6Circle_r = 1;
 #line 35 "codegen/payload_enum_equality.kl"
     kl_t5 = &kl_t4;
 #line 35 "codegen/payload_enum_equality.kl"
@@ -603,7 +603,7 @@ int32_t kl__main__( void )
 #line 36 "codegen/payload_enum_equality.kl"
     kl_t9.tag = 1;
 #line 36 "codegen/payload_enum_equality.kl"
-    kl_t9.kl_r = 2;
+    kl_t9.kl_6Circle_r = 2;
 #line 36 "codegen/payload_enum_equality.kl"
     kl_t10 = &kl_t9;
 #line 36 "codegen/payload_enum_equality.kl"

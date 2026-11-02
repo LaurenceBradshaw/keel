@@ -20,7 +20,16 @@ Node_id Ast::add( Node_kind kind, Span span, u32 aux, std::span<const Node_id> c
 
     broken_.push_back( is_broken );
 
-    return Node_id { narrow_cast<u32>( nodes_.size() - 1 ) };
+    const Node_id id { narrow_cast<u32>( nodes_.size() - 1 ) };
+    if( kind == Node_kind::Variant_decl )
+    {
+        for( const Node_id field : children )
+        {
+            variants_[field.v] = id.v;
+        }
+    }
+
+    return id;
 }
 
 void Ast::set_root( Node_id id )
@@ -397,6 +406,12 @@ std::span<const Node_id> Ast::payload( Node_id variant ) const
 {
     assert( kind( variant ) == Node_kind::Variant_decl );
     return children( variant );
+}
+
+Node_id Ast::variant_of( Node_id field ) const
+{
+    const auto it = variants_.find( field.v );
+    return it != variants_.end() ? Node_id { it->second } : Node_id {};
 }
 
 Node_id Ast::implementer( Node_id block ) const
@@ -1055,6 +1070,19 @@ TEST_CASE( "ast_children_round_trip", "[ast]" )
     REQUIRE( kids.size() == 2 );
     REQUIRE( kids[0] == first );
     REQUIRE( kids[1] == second );
+}
+
+TEST_CASE( "ast_payload_field_knows_its_variant", "[ast]" )
+{
+    Ast ast;
+
+    const Node_id field   = ast.add( Node_kind::Field_decl, at( 0, 1 ), 0, {} );
+    const Node_id variant = ast.add( Node_kind::Variant_decl, at( 0, 2 ), 0, { field } );
+    const Node_id member  = ast.add( Node_kind::Field_decl, at( 3, 4 ), 0, {} );
+    ast.add( Node_kind::Struct_decl, at( 3, 5 ), 0, { member } );
+
+    REQUIRE( ast.variant_of( field ) == variant );
+    REQUIRE( !ast.variant_of( member ).is_valid() );
 }
 
 // children_ holds every list back to back, so a bug in the offset or count shows up as one node

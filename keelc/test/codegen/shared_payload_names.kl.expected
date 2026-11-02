@@ -1,0 +1,190 @@
+// codegen/shared_payload_names.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Reading;
+
+struct kl__Reading
+{
+    int32_t tag;
+    int32_t kl_5Short_x;
+    int32_t kl_4Long_x;
+    int64_t kl_4Long_y;
+    int32_t kl_4Pair_y;
+    int32_t kl_4Pair_x;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__read__7Reading( struct kl__Reading* );
+int32_t kl__main__( void );
+
+#line 10 "codegen/shared_payload_names.kl"
+int32_t kl__read__7Reading( struct kl__Reading* kl_r_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_x_3;
+    bool kl_t4;
+    int32_t kl_x_5;
+    int64_t kl_y_6;
+    int32_t kl_t7;
+    int64_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    int32_t kl_y_12;
+    int32_t kl_x_13;
+    bool kl_t14;
+    int32_t kl_t15;
+#line 14 "codegen/shared_payload_names.kl"
+    kl_t2 = ( *kl_r_1 ).tag == 0;
+#line 14 "codegen/shared_payload_names.kl"
+    if ( kl_t2 ) goto bb1; else goto bb4;
+    bb1:
+#line 14 "codegen/shared_payload_names.kl"
+    kl_x_3 = ( *kl_r_1 ).kl_5Short_x;
+#line 14 "codegen/shared_payload_names.kl"
+    kl_t0 = kl_x_3;
+#line 14 "codegen/shared_payload_names.kl"
+    return kl_t0;
+    bb2:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_x_5 = ( *kl_r_1 ).kl_4Long_x;
+#line 15 "codegen/shared_payload_names.kl"
+    kl_y_6 = ( *kl_r_1 ).kl_4Long_y;
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t7 = ( int32_t ) kl_y_6;
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t8 = ( int64_t ) kl_t7;
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t9 = kl_t8 == kl_y_6;
+#line 15 "codegen/shared_payload_names.kl"
+    if ( kl_t9 ) goto bb6; else goto bb5;
+    bb3:
+#line 16 "codegen/shared_payload_names.kl"
+    kl_y_12 = ( *kl_r_1 ).kl_4Pair_y;
+#line 16 "codegen/shared_payload_names.kl"
+    kl_x_13 = ( *kl_r_1 ).kl_4Pair_x;
+#line 16 "codegen/shared_payload_names.kl"
+    kl_t14 = __builtin_sub_overflow( kl_x_13, kl_y_12, &( int32_t ) { 0 } );
+#line 16 "codegen/shared_payload_names.kl"
+    if ( kl_t14 ) goto bb9; else goto bb10;
+    bb4:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t4 = ( *kl_r_1 ).tag == 1;
+#line 15 "codegen/shared_payload_names.kl"
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb5:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_rt_panic( "codegen/shared_payload_names.kl", 15, "cast out of range: cast<i32>( y )" );
+    bb6:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t10 = __builtin_add_overflow( kl_x_5, kl_t7, &( int32_t ) { 0 } );
+#line 15 "codegen/shared_payload_names.kl"
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_rt_panic( "codegen/shared_payload_names.kl", 15, "arithmetic overflow: x + cast<i32>( y )" );
+    bb8:
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t11 = kl_x_5 + kl_t7;
+#line 15 "codegen/shared_payload_names.kl"
+    kl_t0 = kl_t11;
+#line 15 "codegen/shared_payload_names.kl"
+    return kl_t0;
+    bb9:
+#line 16 "codegen/shared_payload_names.kl"
+    kl_rt_panic( "codegen/shared_payload_names.kl", 16, "arithmetic overflow: x - y" );
+    bb10:
+#line 16 "codegen/shared_payload_names.kl"
+    kl_t15 = kl_x_13 - kl_y_12;
+#line 16 "codegen/shared_payload_names.kl"
+    kl_t0 = kl_t15;
+#line 16 "codegen/shared_payload_names.kl"
+    return kl_t0;
+#line 18 "codegen/shared_payload_names.kl"
+}
+
+#line 20 "codegen/shared_payload_names.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Reading kl_t1;
+    struct kl__Reading* kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    struct kl__Reading kl_t5;
+    struct kl__Reading* kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+    struct kl__Reading kl_t9;
+    struct kl__Reading* kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+#line 22 "codegen/shared_payload_names.kl"
+    kl_t1.tag = 0;
+#line 22 "codegen/shared_payload_names.kl"
+    kl_t1.kl_5Short_x = 4;
+#line 22 "codegen/shared_payload_names.kl"
+    kl_t2 = &kl_t1;
+#line 22 "codegen/shared_payload_names.kl"
+    kl_t3 = kl__read__7Reading( kl_t2 );
+#line 22 "codegen/shared_payload_names.kl"
+    kl_t4 = kl_t3 != 4;
+#line 22 "codegen/shared_payload_names.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 24 "codegen/shared_payload_names.kl"
+    return kl_t0;
+    bb2:
+    kl_t5.tag = 1;
+#line 26 "codegen/shared_payload_names.kl"
+    kl_t5.kl_4Long_x = 4;
+#line 26 "codegen/shared_payload_names.kl"
+    kl_t5.kl_4Long_y = 10;
+#line 26 "codegen/shared_payload_names.kl"
+    kl_t6 = &kl_t5;
+#line 26 "codegen/shared_payload_names.kl"
+    kl_t7 = kl__read__7Reading( kl_t6 );
+#line 26 "codegen/shared_payload_names.kl"
+    kl_t8 = kl_t7 != 14;
+#line 26 "codegen/shared_payload_names.kl"
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 28 "codegen/shared_payload_names.kl"
+    return kl_t0;
+    bb4:
+    kl_t9.tag = 2;
+#line 30 "codegen/shared_payload_names.kl"
+    kl_t9.kl_4Pair_y = 1;
+#line 30 "codegen/shared_payload_names.kl"
+    kl_t9.kl_4Pair_x = 7;
+#line 30 "codegen/shared_payload_names.kl"
+    kl_t10 = &kl_t9;
+#line 30 "codegen/shared_payload_names.kl"
+    kl_t11 = kl__read__7Reading( kl_t10 );
+#line 30 "codegen/shared_payload_names.kl"
+    kl_t12 = kl_t11 != 6;
+#line 30 "codegen/shared_payload_names.kl"
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+#line 32 "codegen/shared_payload_names.kl"
+    return kl_t0;
+    bb6:
+#line 35 "codegen/shared_payload_names.kl"
+    kl_t0 = 0;
+#line 35 "codegen/shared_payload_names.kl"
+    return kl_t0;
+}
+
+#line 20 "codegen/shared_payload_names.kl"
+int main( void )
+{
+#line 20 "codegen/shared_payload_names.kl"
+    return (int) kl__main__();
+}

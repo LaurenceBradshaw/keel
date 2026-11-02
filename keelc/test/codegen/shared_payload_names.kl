@@ -1,0 +1,36 @@
+// Two variants may name a payload field alike. Every payload shares one C struct, so each field is
+// spelled with its variant's name. Each check returns its own code.
+enum Reading
+{
+    Short( i32 x ),
+    Long( i32 x, i64 y ),
+    Pair( i32 y, i32 x ),
+};
+
+i32 read( const ref Reading r )
+{
+    switch( r )
+    {
+        case Reading::Short( x ): return x;
+        case Reading::Long( x, y ): return x + cast<i32>( y );
+        case Reading::Pair( y, x ): return x - y;
+    }
+}
+
+i32 main()
+{
+    if( read( Reading::Short( 4 ) ) != 4 )
+    {
+        return 1;
+    }
+    if( read( Reading::Long( 4, 10 ) ) != 14 )
+    {
+        return 2;
+    }
+    if( read( Reading::Pair( 1, 7 ) ) != 6 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

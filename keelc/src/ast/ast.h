@@ -117,6 +117,7 @@ public:
     std::span<const Node_id> variants( Node_id id ) const;
     Node_id                  underlying_type( Node_id enum_decl ) const;
     std::span<const Node_id> payload( Node_id variant ) const;
+    Node_id                  variant_of( Node_id field ) const; // the Variant_decl a payload field is in, else invalid
     std::span<const Node_id> implemented( Node_id aggregate ) const;
     Node_id                  implementer( Node_id block ) const; // the type an Implements_decl is for
 
@@ -223,6 +224,7 @@ private:
     std::unordered_set<u32>         located_;
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
+    std::unordered_map<u32, u32>    variants_;        // payload field to its variant
 
     std::vector<bool> broken_;
     std::vector<Span> failures_;

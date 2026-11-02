@@ -526,41 +526,41 @@ struct kl_7prelude_str
 struct kl__Lost
 {
     int32_t tag;
-    struct kl__Buf kl_why;
+    struct kl__Buf kl_4gone_why;
 };
 
 struct kl_7prelude_result__I3u64_3BadE
 {
     int32_t tag;
-    uint64_t kl_value;
-    int32_t kl_error;
+    uint64_t kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I3Buf_3BadE
 {
     int32_t tag;
-    struct kl__Buf kl_value;
-    int32_t kl_error;
+    struct kl__Buf kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I3u64_4LostE
 {
     int32_t tag;
-    uint64_t kl_value;
-    struct kl__Lost kl_error;
+    uint64_t kl_2ok_value;
+    struct kl__Lost kl_3err_error;
 };
 
 struct kl_7prelude_result__I4bool_3BadE
 {
     int32_t tag;
-    bool kl_value;
-    int32_t kl_error;
+    bool kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -682,7 +682,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__size__3u64( uint64_t kl_n_1 )
     bb1:
     kl_t3.tag = 1;
 #line 57 "codegen/try.kl"
-    kl_t3.kl_error = 0;
+    kl_t3.kl_3err_error = 0;
 #line 57 "codegen/try.kl"
     kl_t0 = kl_t3;
 #line 57 "codegen/try.kl"
@@ -691,7 +691,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__size__3u64( uint64_t kl_n_1 )
 #line 60 "codegen/try.kl"
     kl_t4.tag = 0;
 #line 60 "codegen/try.kl"
-    kl_t4.kl_value = kl_n_1;
+    kl_t4.kl_2ok_value = kl_n_1;
 #line 60 "codegen/try.kl"
     kl_t0 = kl_t4;
 #line 60 "codegen/try.kl"
@@ -731,7 +731,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__make__3u64( uint64_t kl_n_1 )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 65 "codegen/try.kl"
-    kl_t8 = kl_t6.kl_value;
+    kl_t8 = kl_t6.kl_2ok_value;
 #line 65 "codegen/try.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t4, kl_t8 );
 #line 65 "codegen/try.kl"
@@ -739,7 +739,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__make__3u64( uint64_t kl_n_1 )
 #line 65 "codegen/try.kl"
     kl_t10 = true;
 #line 65 "codegen/try.kl"
-    kl_t2.kl_value = kl_t3;
+    kl_t2.kl_2ok_value = kl_t3;
 #line 65 "codegen/try.kl"
     kl_t11 = false;
 #line 65 "codegen/try.kl"
@@ -762,7 +762,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__make__3u64( uint64_t kl_n_1 )
 #line 65 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 65 "codegen/try.kl"
-    kl_t0.kl_error = kl_t6.kl_error;
+    kl_t0.kl_3err_error = kl_t6.kl_3err_error;
 #line 65 "codegen/try.kl"
     return kl_t0;
 }
@@ -785,7 +785,7 @@ struct kl_7prelude_result__I4void_3BadE kl__check__4bool( bool kl_fine_1 )
     bb1:
     kl_t3.tag = 1;
 #line 72 "codegen/try.kl"
-    kl_t3.kl_error = 0;
+    kl_t3.kl_3err_error = 0;
 #line 72 "codegen/try.kl"
     kl_t0 = kl_t3;
 #line 72 "codegen/try.kl"
@@ -861,7 +861,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__one__3u64( uint64_t kl_n_1 )
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
 #line 83 "codegen/try.kl"
-    kl_t11 = kl_t9.kl_value;
+    kl_t11 = kl_t9.kl_2ok_value;
 #line 83 "codegen/try.kl"
     kl_t20 = true;
 #line 83 "codegen/try.kl"
@@ -891,7 +891,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__one__3u64( uint64_t kl_n_1 )
 #line 83 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 83 "codegen/try.kl"
-    kl_t0.kl_error = kl_t9.kl_error;
+    kl_t0.kl_3err_error = kl_t9.kl_3err_error;
 #line 83 "codegen/try.kl"
     if ( kl_t19 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t8 );
 #line 83 "codegen/try.kl"
@@ -907,7 +907,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__one__3u64( uint64_t kl_n_1 )
 #line 84 "codegen/try.kl"
     kl_t12.tag = 0;
 #line 84 "codegen/try.kl"
-    kl_t12.kl_value = kl_t18;
+    kl_t12.kl_2ok_value = kl_t18;
 #line 84 "codegen/try.kl"
     kl_t0 = kl_t12;
 #line 84 "codegen/try.kl"
@@ -954,7 +954,7 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fine_1 )
 #line 90 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 90 "codegen/try.kl"
-    kl_t0.kl_error = kl_t3.kl_error;
+    kl_t0.kl_3err_error = kl_t3.kl_3err_error;
 #line 90 "codegen/try.kl"
     return kl_t0;
     bb3:
@@ -976,7 +976,7 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fine_1 )
 #line 91 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 91 "codegen/try.kl"
-    kl_t0.kl_error = kl_t6.kl_error;
+    kl_t0.kl_3err_error = kl_t6.kl_3err_error;
 #line 91 "codegen/try.kl"
     return kl_t0;
 #line 94 "codegen/try.kl"
@@ -1045,7 +1045,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__early__3u64( uint64_t kl_n_1 )
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 104 "codegen/try.kl"
-    kl_t9 = kl_t7.kl_value;
+    kl_t9 = kl_t7.kl_2ok_value;
 #line 104 "codegen/try.kl"
     kl_t10 = kl__sum__M3Buf_3u64( kl_t3, kl_t9 );
 #line 104 "codegen/try.kl"
@@ -1053,7 +1053,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__early__3u64( uint64_t kl_n_1 )
 #line 104 "codegen/try.kl"
     kl_t2.tag = 0;
 #line 104 "codegen/try.kl"
-    kl_t2.kl_value = kl_t10;
+    kl_t2.kl_2ok_value = kl_t10;
 #line 104 "codegen/try.kl"
     kl_t0 = kl_t2;
 #line 104 "codegen/try.kl"
@@ -1066,7 +1066,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__early__3u64( uint64_t kl_n_1 )
 #line 104 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 104 "codegen/try.kl"
-    kl_t0.kl_error = kl_t7.kl_error;
+    kl_t0.kl_3err_error = kl_t7.kl_3err_error;
 #line 104 "codegen/try.kl"
     if ( kl_t11 ) kl__Buf__dtor( &kl_t3 );
 #line 104 "codegen/try.kl"
@@ -1105,7 +1105,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__wrapped__3u64( uint64_t kl_n_1 )
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 110 "codegen/try.kl"
-    kl_t6 = kl_t4.kl_value;
+    kl_t6 = kl_t4.kl_2ok_value;
 #line 110 "codegen/try.kl"
     kl_t9 = true;
 #line 110 "codegen/try.kl"
@@ -1113,7 +1113,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__wrapped__3u64( uint64_t kl_n_1 )
 #line 110 "codegen/try.kl"
     kl_t7 = true;
 #line 110 "codegen/try.kl"
-    kl_t2.kl_value = kl_t6;
+    kl_t2.kl_2ok_value = kl_t6;
 #line 110 "codegen/try.kl"
     kl_t9 = false;
 #line 110 "codegen/try.kl"
@@ -1140,7 +1140,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__wrapped__3u64( uint64_t kl_n_1 )
 #line 110 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 110 "codegen/try.kl"
-    kl_t0.kl_error = kl_t4.kl_error;
+    kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 110 "codegen/try.kl"
     if ( kl_t8 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t3 );
 #line 110 "codegen/try.kl"
@@ -1207,7 +1207,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
 #line 115 "codegen/try.kl"
-    kl_t10 = kl_t8.kl_value;
+    kl_t10 = kl_t8.kl_2ok_value;
 #line 115 "codegen/try.kl"
     kl_t22 = true;
 #line 115 "codegen/try.kl"
@@ -1263,7 +1263,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
 #line 115 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 115 "codegen/try.kl"
-    kl_t0.kl_error = kl_t8.kl_error;
+    kl_t0.kl_3err_error = kl_t8.kl_3err_error;
 #line 115 "codegen/try.kl"
     if ( kl_t21 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t7 );
 #line 115 "codegen/try.kl"
@@ -1279,7 +1279,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__paired__3u64( uint64_t kl_n_1 )
 #line 116 "codegen/try.kl"
     kl_t11.tag = 0;
 #line 116 "codegen/try.kl"
-    kl_t11.kl_value = kl_t17;
+    kl_t11.kl_2ok_value = kl_t17;
 #line 116 "codegen/try.kl"
     kl_t0 = kl_t11;
 #line 116 "codegen/try.kl"
@@ -1376,7 +1376,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__chosen__3u64( uint64_t kl_n_1 )
 #line 123 "codegen/try.kl"
     kl_t15.tag = 0;
 #line 123 "codegen/try.kl"
-    kl_t15.kl_value = kl_t17;
+    kl_t15.kl_2ok_value = kl_t17;
 #line 123 "codegen/try.kl"
     kl_t0 = kl_t15;
 #line 123 "codegen/try.kl"
@@ -1385,7 +1385,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__chosen__3u64( uint64_t kl_n_1 )
     return kl_t0;
     bb4:
 #line 122 "codegen/try.kl"
-    kl_t13 = kl_t11.kl_value;
+    kl_t13 = kl_t11.kl_2ok_value;
 #line 122 "codegen/try.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t9, kl_t13 );
 #line 122 "codegen/try.kl"
@@ -1400,7 +1400,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__chosen__3u64( uint64_t kl_n_1 )
 #line 122 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 122 "codegen/try.kl"
-    kl_t0.kl_error = kl_t11.kl_error;
+    kl_t0.kl_3err_error = kl_t11.kl_3err_error;
 #line 122 "codegen/try.kl"
     if ( kl_t19 ) kl__Buf__dtor( &kl_t5 );
 #line 122 "codegen/try.kl"
@@ -1447,7 +1447,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 131 "codegen/try.kl"
     kl_t10 = true;
 #line 131 "codegen/try.kl"
-    kl_t4.kl_why = kl_t5;
+    kl_t4.kl_4gone_why = kl_t5;
 #line 131 "codegen/try.kl"
     kl_t11 = false;
 #line 131 "codegen/try.kl"
@@ -1457,7 +1457,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 131 "codegen/try.kl"
     kl_t9 = true;
 #line 131 "codegen/try.kl"
-    kl_t3.kl_error = kl_t4;
+    kl_t3.kl_3err_error = kl_t4;
 #line 131 "codegen/try.kl"
     kl_t10 = false;
 #line 131 "codegen/try.kl"
@@ -1486,7 +1486,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 134 "codegen/try.kl"
     kl_t12 = true;
 #line 134 "codegen/try.kl"
-    kl_t8.kl_value = 1;
+    kl_t8.kl_2ok_value = 1;
 #line 134 "codegen/try.kl"
     kl_t12 = true;
 #line 134 "codegen/try.kl"
@@ -1533,7 +1533,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__relay__4bool( bool kl_fine_1 )
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 139 "codegen/try.kl"
-    kl_t6 = kl_t4.kl_value;
+    kl_t6 = kl_t4.kl_2ok_value;
 #line 139 "codegen/try.kl"
     kl_v_2 = kl_t6;
 #line 139 "codegen/try.kl"
@@ -1547,7 +1547,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__relay__4bool( bool kl_fine_1 )
 #line 139 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 139 "codegen/try.kl"
-    kl_t0.kl_error = kl_t4.kl_error;
+    kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 139 "codegen/try.kl"
     if ( kl_t10 ) kl_7prelude_result__I3u64_4LostE__dtor( &kl_t3 );
 #line 139 "codegen/try.kl"
@@ -1563,7 +1563,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__relay__4bool( bool kl_fine_1 )
 #line 140 "codegen/try.kl"
     kl_t11 = true;
 #line 140 "codegen/try.kl"
-    kl_t7.kl_value = kl_t9;
+    kl_t7.kl_2ok_value = kl_t9;
 #line 140 "codegen/try.kl"
     kl_t11 = true;
 #line 140 "codegen/try.kl"
@@ -1629,7 +1629,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__grow__M3Buf( struct kl__Buf kl_b_1 )
     if ( kl_t11 ) goto bb3; else goto bb4;
     bb3:
 #line 146 "codegen/try.kl"
-    kl_t12 = kl_t10.kl_value;
+    kl_t12 = kl_t10.kl_2ok_value;
 #line 146 "codegen/try.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t4, kl_t12 );
 #line 146 "codegen/try.kl"
@@ -1637,7 +1637,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__grow__M3Buf( struct kl__Buf kl_b_1 )
 #line 146 "codegen/try.kl"
     kl_t14 = true;
 #line 146 "codegen/try.kl"
-    kl_t2.kl_value = kl_t3;
+    kl_t2.kl_2ok_value = kl_t3;
 #line 146 "codegen/try.kl"
     kl_t15 = false;
 #line 146 "codegen/try.kl"
@@ -1662,7 +1662,7 @@ struct kl_7prelude_result__I3Buf_3BadE kl__grow__M3Buf( struct kl__Buf kl_b_1 )
 #line 146 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 146 "codegen/try.kl"
-    kl_t0.kl_error = kl_t10.kl_error;
+    kl_t0.kl_3err_error = kl_t10.kl_3err_error;
 #line 146 "codegen/try.kl"
     kl__Buf__dtor( &kl_b_1 );
 #line 146 "codegen/try.kl"
@@ -1724,7 +1724,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__refill__3u64( uint64_t kl_n_1 )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 152 "codegen/try.kl"
-    kl_t8 = kl_t6.kl_value;
+    kl_t8 = kl_t6.kl_2ok_value;
 #line 152 "codegen/try.kl"
     kl_t18 = true;
 #line 152 "codegen/try.kl"
@@ -1760,7 +1760,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__refill__3u64( uint64_t kl_n_1 )
 #line 152 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 152 "codegen/try.kl"
-    kl_t0.kl_error = kl_t6.kl_error;
+    kl_t0.kl_3err_error = kl_t6.kl_3err_error;
 #line 152 "codegen/try.kl"
     if ( kl_t17 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t5 );
 #line 152 "codegen/try.kl"
@@ -1771,7 +1771,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__refill__3u64( uint64_t kl_n_1 )
     return kl_t0;
     bb3:
 #line 153 "codegen/try.kl"
-    kl_t12 = kl_t10.kl_value;
+    kl_t12 = kl_t10.kl_2ok_value;
 #line 153 "codegen/try.kl"
     kl_t20 = true;
 #line 153 "codegen/try.kl"
@@ -1796,7 +1796,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__refill__3u64( uint64_t kl_n_1 )
 #line 154 "codegen/try.kl"
     kl_t13.tag = 0;
 #line 154 "codegen/try.kl"
-    kl_t13.kl_value = kl_t15;
+    kl_t13.kl_2ok_value = kl_t15;
 #line 154 "codegen/try.kl"
     kl_t0 = kl_t13;
 #line 154 "codegen/try.kl"
@@ -1809,7 +1809,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__refill__3u64( uint64_t kl_n_1 )
 #line 153 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 153 "codegen/try.kl"
-    kl_t0.kl_error = kl_t10.kl_error;
+    kl_t0.kl_3err_error = kl_t10.kl_3err_error;
 #line 153 "codegen/try.kl"
     if ( kl_t19 ) kl_7prelude_result__I3Buf_3BadE__dtor( &kl_t9 );
 #line 153 "codegen/try.kl"
@@ -1865,7 +1865,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__total__3u64( uint64_t kl_count_1 )
 #line 168 "codegen/try.kl"
     kl_t21.tag = 0;
 #line 168 "codegen/try.kl"
-    kl_t21.kl_value = kl_all_2;
+    kl_t21.kl_2ok_value = kl_all_2;
 #line 168 "codegen/try.kl"
     kl_t0 = kl_t21;
 #line 168 "codegen/try.kl"
@@ -1887,7 +1887,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__total__3u64( uint64_t kl_count_1 )
     if ( kl_t12 ) goto bb6; else goto bb7;
     bb6:
 #line 165 "codegen/try.kl"
-    kl_t13 = kl_t11.kl_value;
+    kl_t13 = kl_t11.kl_2ok_value;
 #line 165 "codegen/try.kl"
     kl_t14 = kl__size__3u64( kl_t13 );
 #line 165 "codegen/try.kl"
@@ -1900,14 +1900,14 @@ struct kl_7prelude_result__I3u64_3BadE kl__total__3u64( uint64_t kl_count_1 )
 #line 165 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 165 "codegen/try.kl"
-    kl_t0.kl_error = kl_t11.kl_error;
+    kl_t0.kl_3err_error = kl_t11.kl_3err_error;
 #line 165 "codegen/try.kl"
     kl__Buf__dtor( &kl_held_5 );
 #line 165 "codegen/try.kl"
     return kl_t0;
     bb8:
 #line 165 "codegen/try.kl"
-    kl_t17 = kl_t15.kl_value;
+    kl_t17 = kl_t15.kl_2ok_value;
 #line 165 "codegen/try.kl"
     kl_t18 = __builtin_add_overflow( kl_all_2, kl_t17, &( uint64_t ) { 0 } );
 #line 165 "codegen/try.kl"
@@ -1916,7 +1916,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__total__3u64( uint64_t kl_count_1 )
 #line 165 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 165 "codegen/try.kl"
-    kl_t0.kl_error = kl_t15.kl_error;
+    kl_t0.kl_3err_error = kl_t15.kl_3err_error;
 #line 165 "codegen/try.kl"
     kl__Buf__dtor( &kl_held_5 );
 #line 165 "codegen/try.kl"
@@ -1968,13 +1968,13 @@ struct kl_7prelude_result__I4bool_3BadE kl__small__3u64( uint64_t kl_n_1 )
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 173 "codegen/try.kl"
-    kl_t6 = kl_t4.kl_value;
+    kl_t6 = kl_t4.kl_2ok_value;
 #line 173 "codegen/try.kl"
     kl_t7 = kl_t6 < 2;
 #line 173 "codegen/try.kl"
     kl_t2.tag = 0;
 #line 173 "codegen/try.kl"
-    kl_t2.kl_value = kl_t7;
+    kl_t2.kl_2ok_value = kl_t7;
 #line 173 "codegen/try.kl"
     kl_t0 = kl_t2;
 #line 173 "codegen/try.kl"
@@ -1983,7 +1983,7 @@ struct kl_7prelude_result__I4bool_3BadE kl__small__3u64( uint64_t kl_n_1 )
 #line 173 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 173 "codegen/try.kl"
-    kl_t0.kl_error = kl_t4.kl_error;
+    kl_t0.kl_3err_error = kl_t4.kl_3err_error;
 #line 173 "codegen/try.kl"
     return kl_t0;
 }
@@ -2008,20 +2008,20 @@ struct kl_7prelude_result__I3u64_3BadE kl__branch__3u64( uint64_t kl_n_1 )
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
 #line 178 "codegen/try.kl"
-    kl_t5 = kl_t3.kl_value;
+    kl_t5 = kl_t3.kl_2ok_value;
 #line 178 "codegen/try.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb2:
 #line 178 "codegen/try.kl"
     kl_t0.tag = 1;
 #line 178 "codegen/try.kl"
-    kl_t0.kl_error = kl_t3.kl_error;
+    kl_t0.kl_3err_error = kl_t3.kl_3err_error;
 #line 178 "codegen/try.kl"
     return kl_t0;
     bb3:
     kl_t6.tag = 0;
 #line 180 "codegen/try.kl"
-    kl_t6.kl_value = 1;
+    kl_t6.kl_2ok_value = 1;
 #line 180 "codegen/try.kl"
     kl_t0 = kl_t6;
 #line 180 "codegen/try.kl"
@@ -2030,7 +2030,7 @@ struct kl_7prelude_result__I3u64_3BadE kl__branch__3u64( uint64_t kl_n_1 )
 #line 183 "codegen/try.kl"
     kl_t7.tag = 0;
 #line 183 "codegen/try.kl"
-    kl_t7.kl_value = 2;
+    kl_t7.kl_2ok_value = 2;
 #line 183 "codegen/try.kl"
     kl_t0 = kl_t7;
 #line 183 "codegen/try.kl"
@@ -2058,7 +2058,7 @@ void kl__show__Q7prelude6resultI3u64_3BadE( struct kl_7prelude_result__I3u64_3Ba
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 190 "codegen/try.kl"
-    kl_v_3 = kl_r_1.kl_value;
+    kl_v_3 = kl_r_1.kl_2ok_value;
     kl_t5 = &kl_t4;
 #line 191 "codegen/try.kl"
     kl_t6 = ( uint8_t* ) "ok ";
@@ -2072,7 +2072,7 @@ void kl__show__Q7prelude6resultI3u64_3BadE( struct kl_7prelude_result__I3u64_3Ba
     goto bb3;
     bb2:
 #line 194 "codegen/try.kl"
-    kl_e_11 = kl_r_1.kl_error;
+    kl_e_11 = kl_r_1.kl_3err_error;
     kl_t13 = &kl_t12;
 #line 195 "codegen/try.kl"
     kl_t14 = ( uint8_t* ) "err";
@@ -2120,7 +2120,7 @@ void kl__show_void__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     goto bb3;
     bb2:
 #line 207 "codegen/try.kl"
-    kl_e_9 = kl_r_1.kl_error;
+    kl_e_9 = kl_r_1.kl_3err_error;
     kl_t11 = &kl_t10;
 #line 208 "codegen/try.kl"
     kl_t12 = ( uint8_t* ) "err";
@@ -2180,7 +2180,7 @@ void kl__show_buf__MQ7prelude6resultI3Buf_3BadE( struct kl_7prelude_result__I3Bu
 #line 217 "codegen/try.kl"
     kl_t24 = false;
 #line 217 "codegen/try.kl"
-    kl_b_5 = kl_t4.kl_value;
+    kl_b_5 = kl_t4.kl_2ok_value;
     kl_t7 = &kl_t6;
 #line 218 "codegen/try.kl"
     kl_t8 = ( uint8_t* ) "ok ";
@@ -2204,7 +2204,7 @@ void kl__show_buf__MQ7prelude6resultI3Buf_3BadE( struct kl_7prelude_result__I3Bu
 #line 221 "codegen/try.kl"
     kl_t24 = false;
 #line 221 "codegen/try.kl"
-    kl_e_16 = kl_t15.kl_error;
+    kl_e_16 = kl_t15.kl_3err_error;
     kl_t18 = &kl_t17;
 #line 222 "codegen/try.kl"
     kl_t19 = ( uint8_t* ) "err";
@@ -2270,7 +2270,7 @@ void kl__show_lost__MQ7prelude6resultI3u64_4LostE( struct kl_7prelude_result__I3
 #line 231 "codegen/try.kl"
     kl_t22 = false;
 #line 231 "codegen/try.kl"
-    kl_v_5 = kl_t4.kl_value;
+    kl_v_5 = kl_t4.kl_2ok_value;
     kl_t7 = &kl_t6;
 #line 232 "codegen/try.kl"
     kl_t8 = ( uint8_t* ) "ok ";
@@ -2288,7 +2288,7 @@ void kl__show_lost__MQ7prelude6resultI3u64_4LostE( struct kl_7prelude_result__I3
 #line 235 "codegen/try.kl"
     kl_t22 = false;
 #line 235 "codegen/try.kl"
-    kl_e_14 = kl_t13.kl_error;
+    kl_e_14 = kl_t13.kl_3err_error;
     kl_t16 = &kl_t15;
 #line 236 "codegen/try.kl"
     kl_t17 = ( uint8_t* ) "err";
@@ -2605,7 +2605,7 @@ void kl__Lost__dtor( struct kl__Lost* kl_t1 )
     return;
     bb2:
 #line 48 "codegen/try.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_why );
+    kl__Buf__dtor( &( *kl_t1 ).kl_4gone_why );
 #line 48 "codegen/try.kl"
     goto bb1;
 #line 51 "codegen/try.kl"
@@ -2624,7 +2624,7 @@ void kl_7prelude_result__I3Buf_3BadE__dtor( struct kl_7prelude_result__I3Buf_3Ba
     return;
     bb2:
 #line 143 "<prelude>"
-    kl__Buf__dtor( &( *kl_t1 ).kl_value );
+    kl__Buf__dtor( &( *kl_t1 ).kl_2ok_value );
 #line 143 "<prelude>"
     goto bb1;
 #line 149 "<prelude>"
@@ -2643,7 +2643,7 @@ void kl_7prelude_result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4L
     return;
     bb2:
 #line 143 "<prelude>"
-    kl__Lost__dtor( &( *kl_t1 ).kl_error );
+    kl__Lost__dtor( &( *kl_t1 ).kl_3err_error );
 #line 143 "<prelude>"
     goto bb1;
 #line 149 "<prelude>"

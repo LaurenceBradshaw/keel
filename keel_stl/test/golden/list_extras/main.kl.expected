@@ -57,7 +57,7 @@ struct kl_2kl4list_list__I5ownedE
 struct kl_2kl8optional_optional__I5ownedE
 {
     int32_t tag;
-    struct kl__owned kl_value;
+    struct kl__owned kl_4some_value;
 };
 
 struct kl_2kl4list_list__I3i32E
@@ -70,7 +70,7 @@ struct kl_2kl4list_list__I3i32E
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_value;
+    int32_t kl_4some_value;
 };
 
 int32_t kl__live__G;
@@ -2715,7 +2715,7 @@ struct kl_2kl8optional_optional__I5ownedE kl_2kl4list_try_pop__I5ownedE__SQ2kl4l
 #line 296 "../../src/list.kl"
     kl_t8 = true;
 #line 296 "../../src/list.kl"
-    kl_t4.kl_value = kl_t6;
+    kl_t4.kl_4some_value = kl_t6;
 #line 296 "../../src/list.kl"
     kl_t9 = false;
 #line 296 "../../src/list.kl"
@@ -2776,7 +2776,7 @@ struct kl__owned kl_2kl8optional_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struc
 #line 23 "../../src/optional.kl"
     kl_t13 = false;
 #line 23 "../../src/optional.kl"
-    kl_v_6 = kl_t5.kl_value;
+    kl_v_6 = kl_t5.kl_4some_value;
 #line 23 "../../src/optional.kl"
     kl_t13 = true;
     kl_t0 = kl_v_6;
@@ -2820,7 +2820,7 @@ bool kl_2kl8optional_is_some__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl8opt
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 66 "../../src/optional.kl"
-    kl_v_3 = &( *kl_o_1 ).kl_value;
+    kl_v_3 = &( *kl_o_1 ).kl_4some_value;
     kl_t0 = true;
 #line 67 "../../src/optional.kl"
     return kl_t0;
@@ -2844,7 +2844,7 @@ bool kl_2kl8optional_is_none__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl8opt
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 78 "../../src/optional.kl"
-    kl_v_3 = &( *kl_o_1 ).kl_value;
+    kl_v_3 = &( *kl_o_1 ).kl_4some_value;
     kl_t0 = false;
 #line 79 "../../src/optional.kl"
     return kl_t0;
@@ -3638,7 +3638,7 @@ struct kl_2kl8optional_optional__I3i32E kl_2kl4list_try_pop__I3i32E__SQ2kl4listI
 #line 296 "../../src/list.kl"
     kl_t4.tag = 0;
 #line 296 "../../src/list.kl"
-    kl_t4.kl_value = kl_t6;
+    kl_t4.kl_4some_value = kl_t6;
 #line 296 "../../src/list.kl"
     kl_t0 = kl_t4;
 #line 296 "../../src/list.kl"
@@ -3657,7 +3657,7 @@ int32_t kl_2kl8optional_value_or__I3i32E__MQ2kl8optionalI3i32E_M3i32( struct kl_
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "../../src/optional.kl"
-    kl_v_4 = kl_o_1.kl_value;
+    kl_v_4 = kl_o_1.kl_4some_value;
     kl_t0 = kl_v_4;
 #line 55 "../../src/optional.kl"
     return kl_t0;
@@ -4239,7 +4239,7 @@ void kl_2kl8optional_optional__I5ownedE__dtor( struct kl_2kl8optional_optional__
     return;
     bb2:
 #line 5 "../../src/optional.kl"
-    kl__owned__dtor( &( *kl_t1 ).kl_value );
+    kl__owned__dtor( &( *kl_t1 ).kl_4some_value );
 #line 5 "../../src/optional.kl"
     goto bb1;
 #line 11 "../../src/optional.kl"

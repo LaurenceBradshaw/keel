@@ -21,7 +21,7 @@ struct kl__Box
 struct kl__Shape
 {
     int32_t tag;
-    struct kl__Point kl_at;
+    struct kl__Point kl_3dot_at;
 };
 
 void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
@@ -197,9 +197,9 @@ int32_t kl__opened__3i32( int32_t kl_a_1 )
     int32_t kl_t5;
     bool kl_t6;
 #line 79 "opt/scalars_copied.kl"
-    kl_s_2.kl_at.kl_x = kl_a_1;
+    kl_s_2.kl_3dot_at.kl_x = kl_a_1;
 #line 79 "opt/scalars_copied.kl"
-    kl_s_2.kl_at.kl_y = 2;
+    kl_s_2.kl_3dot_at.kl_y = 2;
 #line 79 "opt/scalars_copied.kl"
     kl_s_2.tag = 0;
 #line 82 "opt/scalars_copied.kl"
@@ -208,7 +208,7 @@ int32_t kl__opened__3i32( int32_t kl_a_1 )
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 83 "opt/scalars_copied.kl"
-    kl_t4 = kl_s_2.kl_at.kl_x + kl_s_2.kl_at.kl_y;
+    kl_t4 = kl_s_2.kl_3dot_at.kl_x + kl_s_2.kl_3dot_at.kl_y;
 #line 83 "opt/scalars_copied.kl"
     kl_t5 = kl_a_1 + 2;
 #line 83 "opt/scalars_copied.kl"

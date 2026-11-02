@@ -20,7 +20,7 @@ struct kl__Tracked
 struct kl__Held
 {
     int32_t tag;
-    struct kl__Tracked kl_t;
+    struct kl__Tracked kl_4Full_t;
 };
 
 struct kl_7prelude_box__I8MeasuredE
@@ -236,7 +236,7 @@ int64_t kl__measure__S4HeldC8Measured( struct kl__Held* kl_this_1 )
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 64 "codegen/implements_for.kl"
-    kl_t_3 = &( *kl_this_1 ).kl_t;
+    kl_t_3 = &( *kl_this_1 ).kl_4Full_t;
     kl_t0 = ( *kl_t_3 ).kl_n;
 #line 65 "codegen/implements_for.kl"
     return kl_t0;
@@ -505,7 +505,7 @@ int32_t kl__main__( void )
 #line 107 "codegen/implements_for.kl"
     kl_t73 = true;
 #line 107 "codegen/implements_for.kl"
-    kl_t30.kl_t = kl_t31;
+    kl_t30.kl_4Full_t = kl_t31;
 #line 107 "codegen/implements_for.kl"
     kl_t74 = false;
 #line 107 "codegen/implements_for.kl"
@@ -632,7 +632,7 @@ int32_t kl__main__( void )
 #line 117 "codegen/implements_for.kl"
     kl_t77 = true;
 #line 117 "codegen/implements_for.kl"
-    kl_t61.kl_t = kl_t62;
+    kl_t61.kl_4Full_t = kl_t62;
 #line 117 "codegen/implements_for.kl"
     kl_t78 = false;
 #line 117 "codegen/implements_for.kl"
@@ -926,7 +926,7 @@ void kl__Held__dtor( struct kl__Held* kl_t1 )
     return;
     bb2:
 #line 30 "codegen/implements_for.kl"
-    kl__Tracked__dtor( &( *kl_t1 ).kl_t );
+    kl__Tracked__dtor( &( *kl_t1 ).kl_4Full_t );
 #line 30 "codegen/implements_for.kl"
     goto bb1;
 #line 34 "codegen/implements_for.kl"

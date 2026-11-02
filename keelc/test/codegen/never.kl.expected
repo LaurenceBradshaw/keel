@@ -522,7 +522,7 @@ struct kl_7prelude_str
 struct kl__opt__I5NoisyE
 {
     int32_t tag;
-    struct kl__Noisy kl_value;
+    struct kl__Noisy kl_4some_value;
 };
 
 struct kl_7prelude_textual__vtable
@@ -922,7 +922,7 @@ int32_t kl__main__( void )
 #line 138 "codegen/never.kl"
     kl_t33 = true;
 #line 138 "codegen/never.kl"
-    kl_t8.kl_value = kl_t9;
+    kl_t8.kl_4some_value = kl_t9;
 #line 138 "codegen/never.kl"
     kl_t34 = false;
 #line 138 "codegen/never.kl"
@@ -1083,7 +1083,7 @@ struct kl__Noisy kl__unwrap__I5NoisyE__M3optI5NoisyE( struct kl__opt__I5NoisyE k
 #line 72 "codegen/never.kl"
     kl_t12 = false;
 #line 72 "codegen/never.kl"
-    kl_v_5 = kl_t4.kl_value;
+    kl_v_5 = kl_t4.kl_4some_value;
 #line 72 "codegen/never.kl"
     kl_t12 = true;
     kl_t0 = kl_v_5;
@@ -1127,7 +1127,7 @@ void kl__opt__I5NoisyE__dtor( struct kl__opt__I5NoisyE* kl_t1 )
     return;
     bb2:
 #line 22 "codegen/never.kl"
-    kl__Noisy__dtor( &( *kl_t1 ).kl_value );
+    kl__Noisy__dtor( &( *kl_t1 ).kl_4some_value );
 #line 22 "codegen/never.kl"
     goto bb1;
 #line 26 "codegen/never.kl"

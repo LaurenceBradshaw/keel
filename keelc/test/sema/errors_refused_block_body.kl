@@ -1,0 +1,28 @@
+// A block for this package's own struct or class is refused once. Its bodies are not checked: the
+// bare field, the private one, and the mistyped return would all read differently inside the type.
+interface Named
+{
+    u64 id() const;
+};
+
+class Y
+{
+    u64 d;
+};
+
+struct Z
+{
+    u64 e;
+};
+
+implements Named for Y
+{
+    u64 id() const { return d + this.d; }
+};
+
+implements Named for Z
+{
+    u64 id() const { return e + "x"; }
+};
+
+i32 main() { return 0; }

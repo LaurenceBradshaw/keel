@@ -2694,7 +2694,7 @@ struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_value;
+    int32_t kl_4some_value;
 };
 
 struct kl__A32_3u64
@@ -5889,7 +5889,7 @@ struct kl_2kl8optional_optional__I3i32E kl_2kl11ordered_map_insert__I3i32_3i32E_
     ( *kl_t11 ) = kl_value_3;
     kl_t12.tag = 0;
 #line 217 "../../src/ordered_map.kl"
-    kl_t12.kl_value = kl_old_9;
+    kl_t12.kl_4some_value = kl_old_9;
 #line 217 "../../src/ordered_map.kl"
     kl_t0 = kl_t12;
 #line 217 "../../src/ordered_map.kl"

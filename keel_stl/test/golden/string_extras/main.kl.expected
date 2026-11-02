@@ -67,13 +67,13 @@ struct kl_7prelude_hasher
 struct kl_2kl6string_parse_error
 {
     int32_t tag;
-    uint64_t kl_index;
+    uint64_t kl_13invalid_digit_index;
 };
 
 struct kl_2kl8optional_optional__I3u64E
 {
     int32_t tag;
-    uint64_t kl_value;
+    uint64_t kl_4some_value;
 };
 
 struct kl_2kl4list_list__IQ2kl6stringE
@@ -86,14 +86,14 @@ struct kl_2kl4list_list__IQ2kl6stringE
 struct kl_2kl8optional_optional__IQ2kl6stringE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_value;
+    struct kl_2kl6string_string kl_4some_value;
 };
 
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_value;
-    struct kl_2kl6string_parse_error kl_error;
+    int64_t kl_2ok_value;
+    struct kl_2kl6string_parse_error kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -1141,7 +1141,7 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_find__SQ2kl6string_7textua
 #line 239 "../../src/string.kl"
     kl_t21.tag = 0;
 #line 239 "../../src/string.kl"
-    kl_t21.kl_value = kl_i_11;
+    kl_t21.kl_4some_value = kl_i_11;
 #line 239 "../../src/string.kl"
     kl_t0 = kl_t21;
 #line 239 "../../src/string.kl"
@@ -1248,7 +1248,7 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_rfind__SQ2kl6string_7textu
 #line 261 "../../src/string.kl"
     kl_t20.tag = 0;
 #line 261 "../../src/string.kl"
-    kl_t20.kl_value = kl_i_11;
+    kl_t20.kl_4some_value = kl_i_11;
 #line 261 "../../src/string.kl"
     kl_t0 = kl_t20;
 #line 261 "../../src/string.kl"
@@ -2142,7 +2142,7 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 395 "../../src/string.kl"
     kl_t18 = true;
 #line 395 "../../src/string.kl"
-    kl_t10.kl_value = kl_t16;
+    kl_t10.kl_4some_value = kl_t16;
 #line 395 "../../src/string.kl"
     kl_t19 = false;
 #line 395 "../../src/string.kl"
@@ -2246,7 +2246,7 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 407 "../../src/string.kl"
     kl_t18 = true;
 #line 407 "../../src/string.kl"
-    kl_t10.kl_value = kl_t16;
+    kl_t10.kl_4some_value = kl_t16;
 #line 407 "../../src/string.kl"
     kl_t19 = false;
 #line 407 "../../src/string.kl"
@@ -2942,7 +2942,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 542 "../../src/string.kl"
     kl_t22.tag = 1;
 #line 542 "../../src/string.kl"
-    kl_t22.kl_error = kl_t23;
+    kl_t22.kl_3err_error = kl_t23;
 #line 542 "../../src/string.kl"
     kl_t0 = kl_t22;
 #line 542 "../../src/string.kl"
@@ -3003,11 +3003,11 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
     bb20:
     kl_t40.tag = 1;
 #line 551 "../../src/string.kl"
-    kl_t40.kl_index = kl_i_25;
+    kl_t40.kl_13invalid_digit_index = kl_i_25;
 #line 551 "../../src/string.kl"
     kl_t39.tag = 1;
 #line 551 "../../src/string.kl"
-    kl_t39.kl_error = kl_t40;
+    kl_t39.kl_3err_error = kl_t40;
 #line 551 "../../src/string.kl"
     kl_t0 = kl_t39;
 #line 551 "../../src/string.kl"
@@ -3046,7 +3046,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 558 "../../src/string.kl"
     kl_t48.tag = 1;
 #line 558 "../../src/string.kl"
-    kl_t48.kl_error = kl_t49;
+    kl_t48.kl_3err_error = kl_t49;
 #line 558 "../../src/string.kl"
     kl_t0 = kl_t48;
 #line 558 "../../src/string.kl"
@@ -3109,7 +3109,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 564 "../../src/string.kl"
     kl_t55.tag = 0;
 #line 564 "../../src/string.kl"
-    kl_t55.kl_value = kl_t56;
+    kl_t55.kl_2ok_value = kl_t56;
 #line 564 "../../src/string.kl"
     kl_t0 = kl_t55;
 #line 564 "../../src/string.kl"
@@ -3683,7 +3683,7 @@ void kl_2kl8optional_optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optio
     return;
     bb2:
 #line 5 "../../src/optional.kl"
-    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_value );
+    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_4some_value );
 #line 5 "../../src/optional.kl"
     goto bb1;
 #line 11 "../../src/optional.kl"
@@ -3730,20 +3730,20 @@ struct kl_7prelude_str
 struct kl_2kl6string_parse_error
 {
     int32_t tag;
-    uint64_t kl_index;
+    uint64_t kl_13invalid_digit_index;
 };
 
 struct kl_2kl8optional_optional__I3u64E
 {
     int32_t tag;
-    uint64_t kl_value;
+    uint64_t kl_4some_value;
 };
 
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_value;
-    struct kl_2kl6string_parse_error kl_error;
+    int64_t kl_2ok_value;
+    struct kl_2kl6string_parse_error kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -5590,7 +5590,7 @@ bool kl__parses_to__Q7prelude3str_3i64( struct kl_7prelude_str kl_text_1, int64_
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
 #line 138 "string_extras/main.kl"
-    kl_value_10 = kl_t8.kl_value;
+    kl_value_10 = kl_t8.kl_2ok_value;
     kl_t11 = kl_value_10 == kl_expected_2;
 #line 139 "string_extras/main.kl"
     kl_t0 = kl_t11;
@@ -5598,7 +5598,7 @@ bool kl__parses_to__Q7prelude3str_3i64( struct kl_7prelude_str kl_text_1, int64_
     return kl_t0;
     bb2:
 #line 140 "string_extras/main.kl"
-    kl_e_12 = kl_t8.kl_error;
+    kl_e_12 = kl_t8.kl_3err_error;
     kl_t0 = false;
 #line 141 "string_extras/main.kl"
     return kl_t0;
@@ -5622,7 +5622,7 @@ int64_t kl__reason__Q2kl11parse_error( struct kl_2kl6string_parse_error kl_e_1 )
     if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
 #line 150 "string_extras/main.kl"
-    kl_at_3 = kl_e_1.kl_index;
+    kl_at_3 = kl_e_1.kl_13invalid_digit_index;
     kl_t4 = ( int64_t ) kl_at_3;
 #line 151 "string_extras/main.kl"
     kl_t5 = kl_t4 >= 0;
@@ -5689,7 +5689,7 @@ int64_t kl__refusal__Q7prelude3str( struct kl_7prelude_str kl_text_1 )
     if ( kl_t8 ) goto bb1; else goto bb2;
     bb1:
 #line 164 "string_extras/main.kl"
-    kl_value_9 = kl_t7.kl_value;
+    kl_value_9 = kl_t7.kl_2ok_value;
     kl_t10 = -3;
 #line 165 "string_extras/main.kl"
     kl_t0 = kl_t10;
@@ -5697,7 +5697,7 @@ int64_t kl__refusal__Q7prelude3str( struct kl_7prelude_str kl_text_1 )
     return kl_t0;
     bb2:
 #line 166 "string_extras/main.kl"
-    kl_e_11 = kl_t7.kl_error;
+    kl_e_11 = kl_t7.kl_3err_error;
     kl_t12 = kl__reason__Q2kl11parse_error( kl_e_11 );
 #line 167 "string_extras/main.kl"
     kl_t0 = kl_t12;
@@ -6255,13 +6255,13 @@ int32_t kl__parses__( void )
     if ( kl_t145 ) goto bb43; else goto bb44;
     bb43:
 #line 211 "string_extras/main.kl"
-    kl_value_146 = kl_t144.kl_value;
+    kl_value_146 = kl_t144.kl_2ok_value;
     kl_t147 = kl_value_146 != kl_lowest_138;
 #line 212 "string_extras/main.kl"
     if ( kl_t147 ) goto bb45; else goto bb46;
     bb44:
 #line 217 "string_extras/main.kl"
-    kl_e_148 = kl_t144.kl_error;
+    kl_e_148 = kl_t144.kl_3err_error;
     kl_t0 = 24;
 #line 218 "string_extras/main.kl"
     return kl_t0;
@@ -6359,7 +6359,7 @@ uint64_t kl_2kl8optional_value_or__I3u64E__MQ2kl8optionalI3u64E_M3u64( struct kl
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "../../src/optional.kl"
-    kl_v_4 = kl_o_1.kl_value;
+    kl_v_4 = kl_o_1.kl_4some_value;
     kl_t0 = kl_v_4;
 #line 55 "../../src/optional.kl"
     return kl_t0;
@@ -6383,7 +6383,7 @@ bool kl_2kl8optional_is_none__I3u64E__Q2kl8optionalI3u64E( struct kl_2kl8optiona
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 78 "../../src/optional.kl"
-    kl_v_3 = ( *kl_o_1 ).kl_value;
+    kl_v_3 = ( *kl_o_1 ).kl_4some_value;
     kl_t0 = false;
 #line 79 "../../src/optional.kl"
     return kl_t0;

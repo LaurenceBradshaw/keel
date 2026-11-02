@@ -107,6 +107,17 @@ void Statements::visit( Node_id id )
     case Node_kind::Block:
         return visit_block( id );
 
+    // A refused block's body is not checked; the refusal says what is wrong with it.
+    case Node_kind::Implements_decl:
+        if( !table_.is_error( types_.type_of( id ) ) )
+        {
+            for( const Node_id member : ast_.members( id ) )
+            {
+                visit( member );
+            }
+        }
+        return;
+
     case Node_kind::Expr_stmt:
     {
         const Type_id type = expressions_.infer_discarded( ast_.expression( id ) );

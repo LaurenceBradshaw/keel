@@ -67,13 +67,13 @@ struct kl_7prelude_hasher
 struct kl_2kl6string_parse_error
 {
     int32_t tag;
-    uint64_t kl_index;
+    uint64_t kl_13invalid_digit_index;
 };
 
 struct kl_2kl8optional_optional__I3u64E
 {
     int32_t tag;
-    uint64_t kl_value;
+    uint64_t kl_4some_value;
 };
 
 struct kl_2kl4list_list__IQ2kl6stringE
@@ -86,14 +86,14 @@ struct kl_2kl4list_list__IQ2kl6stringE
 struct kl_2kl8optional_optional__IQ2kl6stringE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_value;
+    struct kl_2kl6string_string kl_4some_value;
 };
 
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_value;
-    struct kl_2kl6string_parse_error kl_error;
+    int64_t kl_2ok_value;
+    struct kl_2kl6string_parse_error kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -1141,7 +1141,7 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_find__SQ2kl6string_7textua
 #line 239 "../../keel_stl/src/string.kl"
     kl_t21.tag = 0;
 #line 239 "../../keel_stl/src/string.kl"
-    kl_t21.kl_value = kl_i_11;
+    kl_t21.kl_4some_value = kl_i_11;
 #line 239 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t21;
 #line 239 "../../keel_stl/src/string.kl"
@@ -1248,7 +1248,7 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_rfind__SQ2kl6string_7textu
 #line 261 "../../keel_stl/src/string.kl"
     kl_t20.tag = 0;
 #line 261 "../../keel_stl/src/string.kl"
-    kl_t20.kl_value = kl_i_11;
+    kl_t20.kl_4some_value = kl_i_11;
 #line 261 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t20;
 #line 261 "../../keel_stl/src/string.kl"
@@ -2142,7 +2142,7 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_prefix__SQ2kl
 #line 395 "../../keel_stl/src/string.kl"
     kl_t18 = true;
 #line 395 "../../keel_stl/src/string.kl"
-    kl_t10.kl_value = kl_t16;
+    kl_t10.kl_4some_value = kl_t16;
 #line 395 "../../keel_stl/src/string.kl"
     kl_t19 = false;
 #line 395 "../../keel_stl/src/string.kl"
@@ -2246,7 +2246,7 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_strip_suffix__SQ2kl
 #line 407 "../../keel_stl/src/string.kl"
     kl_t18 = true;
 #line 407 "../../keel_stl/src/string.kl"
-    kl_t10.kl_value = kl_t16;
+    kl_t10.kl_4some_value = kl_t16;
 #line 407 "../../keel_stl/src/string.kl"
     kl_t19 = false;
 #line 407 "../../keel_stl/src/string.kl"
@@ -2942,7 +2942,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 542 "../../keel_stl/src/string.kl"
     kl_t22.tag = 1;
 #line 542 "../../keel_stl/src/string.kl"
-    kl_t22.kl_error = kl_t23;
+    kl_t22.kl_3err_error = kl_t23;
 #line 542 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t22;
 #line 542 "../../keel_stl/src/string.kl"
@@ -3003,11 +3003,11 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
     bb20:
     kl_t40.tag = 1;
 #line 551 "../../keel_stl/src/string.kl"
-    kl_t40.kl_index = kl_i_25;
+    kl_t40.kl_13invalid_digit_index = kl_i_25;
 #line 551 "../../keel_stl/src/string.kl"
     kl_t39.tag = 1;
 #line 551 "../../keel_stl/src/string.kl"
-    kl_t39.kl_error = kl_t40;
+    kl_t39.kl_3err_error = kl_t40;
 #line 551 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t39;
 #line 551 "../../keel_stl/src/string.kl"
@@ -3046,7 +3046,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 558 "../../keel_stl/src/string.kl"
     kl_t48.tag = 1;
 #line 558 "../../keel_stl/src/string.kl"
-    kl_t48.kl_error = kl_t49;
+    kl_t48.kl_3err_error = kl_t49;
 #line 558 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t48;
 #line 558 "../../keel_stl/src/string.kl"
@@ -3109,7 +3109,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_parse_i64__SQ2
 #line 564 "../../keel_stl/src/string.kl"
     kl_t55.tag = 0;
 #line 564 "../../keel_stl/src/string.kl"
-    kl_t55.kl_value = kl_t56;
+    kl_t55.kl_2ok_value = kl_t56;
 #line 564 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t55;
 #line 564 "../../keel_stl/src/string.kl"
@@ -3683,7 +3683,7 @@ void kl_2kl8optional_optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optio
     return;
     bb2:
 #line 5 "../../keel_stl/src/optional.kl"
-    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_value );
+    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_4some_value );
 #line 5 "../../keel_stl/src/optional.kl"
     goto bb1;
 #line 11 "../../keel_stl/src/optional.kl"
@@ -4219,15 +4219,15 @@ struct kl_7prelude_str
 struct kl_7prelude_result__IQ2kl6string_8Io_errorE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_value;
-    int32_t kl_error;
+    struct kl_2kl6string_string kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I3u64_11Parse_errorE
 {
     int32_t tag;
-    uint64_t kl_value;
-    int32_t kl_error;
+    uint64_t kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl__U8Io_error11Parse_errorE
@@ -4243,8 +4243,8 @@ struct kl__U8Io_error11Parse_errorE
 struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE
 {
     int32_t tag;
-    uint64_t kl_value;
-    struct kl__U8Io_error11Parse_errorE kl_error;
+    uint64_t kl_2ok_value;
+    struct kl__U8Io_error11Parse_errorE kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -4316,7 +4316,7 @@ struct kl_7prelude_result__IQ2kl6string_8Io_errorE kl__read_file__4bool_4bool( b
 #line 21 "codegen/error_union_string/main.kl"
     kl_t19 = true;
 #line 21 "codegen/error_union_string/main.kl"
-    kl_t4.kl_error = 0;
+    kl_t4.kl_3err_error = 0;
 #line 21 "codegen/error_union_string/main.kl"
     kl_t19 = true;
 #line 21 "codegen/error_union_string/main.kl"
@@ -4370,7 +4370,7 @@ struct kl_7prelude_result__IQ2kl6string_8Io_errorE kl__read_file__4bool_4bool( b
 #line 24 "codegen/error_union_string/main.kl"
     kl_t20 = true;
 #line 24 "codegen/error_union_string/main.kl"
-    kl_t5.kl_value = kl_t6;
+    kl_t5.kl_2ok_value = kl_t6;
 #line 24 "codegen/error_union_string/main.kl"
     kl_t21 = false;
 #line 24 "codegen/error_union_string/main.kl"
@@ -4410,7 +4410,7 @@ struct kl_7prelude_result__I3u64_11Parse_errorE kl__parse_config__Q2kl6string( s
     bb1:
     kl_t4.tag = 1;
 #line 31 "codegen/error_union_string/main.kl"
-    kl_t4.kl_error = 0;
+    kl_t4.kl_3err_error = 0;
 #line 31 "codegen/error_union_string/main.kl"
     kl_t0 = kl_t4;
 #line 31 "codegen/error_union_string/main.kl"
@@ -4423,7 +4423,7 @@ struct kl_7prelude_result__I3u64_11Parse_errorE kl__parse_config__Q2kl6string( s
 #line 34 "codegen/error_union_string/main.kl"
     kl_t5.tag = 0;
 #line 34 "codegen/error_union_string/main.kl"
-    kl_t5.kl_value = kl_t7;
+    kl_t5.kl_2ok_value = kl_t7;
 #line 34 "codegen/error_union_string/main.kl"
     kl_t0 = kl_t5;
 #line 34 "codegen/error_union_string/main.kl"
@@ -4466,7 +4466,7 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load_config__4boo
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 39 "codegen/error_union_string/main.kl"
-    kl_t7 = kl_t5.kl_value;
+    kl_t7 = kl_t5.kl_2ok_value;
 #line 39 "codegen/error_union_string/main.kl"
     kl_t16 = true;
 #line 39 "codegen/error_union_string/main.kl"
@@ -4494,21 +4494,21 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load_config__4boo
 #line 39 "codegen/error_union_string/main.kl"
     kl_t0.tag = 1;
 #line 39 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.tag = 1016381985;
+    kl_t0.kl_3err_error.tag = 1016381985;
 #line 39 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.e1016381985 = kl_t5.kl_error;
+    kl_t0.kl_3err_error.e1016381985 = kl_t5.kl_3err_error;
 #line 39 "codegen/error_union_string/main.kl"
     if ( kl_t15 ) kl_7prelude_result__IQ2kl6string_8Io_errorE__dtor( &kl_t4 );
 #line 39 "codegen/error_union_string/main.kl"
     return kl_t0;
     bb3:
 #line 40 "codegen/error_union_string/main.kl"
-    kl_t13 = kl_t11.kl_value;
+    kl_t13 = kl_t11.kl_2ok_value;
 #line 40 "codegen/error_union_string/main.kl"
     kl_config_8 = kl_t13;
     kl_t14.tag = 0;
 #line 41 "codegen/error_union_string/main.kl"
-    kl_t14.kl_value = kl_config_8;
+    kl_t14.kl_2ok_value = kl_config_8;
 #line 41 "codegen/error_union_string/main.kl"
     kl_t0 = kl_t14;
 #line 41 "codegen/error_union_string/main.kl"
@@ -4519,9 +4519,9 @@ struct kl_7prelude_result__I3u64_U8Io_error11Parse_errorEE kl__load_config__4boo
 #line 40 "codegen/error_union_string/main.kl"
     kl_t0.tag = 1;
 #line 40 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.tag = 3320057666;
+    kl_t0.kl_3err_error.tag = 3320057666;
 #line 40 "codegen/error_union_string/main.kl"
-    kl_t0.kl_error.e3320057666 = kl_t11.kl_error;
+    kl_t0.kl_3err_error.e3320057666 = kl_t11.kl_3err_error;
 #line 40 "codegen/error_union_string/main.kl"
     kl_2kl6string_string__dtor( &kl_text_3 );
 #line 40 "codegen/error_union_string/main.kl"
@@ -4555,7 +4555,7 @@ void kl__show__Q7prelude6resultI3u64_U8Io_error11Parse_errorEE( struct kl_7prelu
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 48 "codegen/error_union_string/main.kl"
-    kl_size_3 = kl_r_1.kl_value;
+    kl_size_3 = kl_r_1.kl_2ok_value;
     kl_t5 = &kl_t4;
 #line 49 "codegen/error_union_string/main.kl"
     kl_t6 = ( uint8_t* ) "loaded ";
@@ -4569,7 +4569,7 @@ void kl__show__Q7prelude6resultI3u64_U8Io_error11Parse_errorEE( struct kl_7prelu
     goto bb3;
     bb2:
 #line 52 "codegen/error_union_string/main.kl"
-    kl_e_11 = kl_r_1.kl_error;
+    kl_e_11 = kl_r_1.kl_3err_error;
 #line 55 "codegen/error_union_string/main.kl"
     kl_t12 = kl_e_11.tag == 1016381985;
 #line 55 "codegen/error_union_string/main.kl"
@@ -4643,7 +4643,7 @@ void kl_7prelude_result__IQ2kl6string_8Io_errorE__dtor( struct kl_7prelude_resul
     return;
     bb2:
 #line 143 "<prelude>"
-    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_value );
+    kl_2kl6string_string__dtor( &( *kl_t1 ).kl_2ok_value );
 #line 143 "<prelude>"
     goto bb1;
 #line 149 "<prelude>"

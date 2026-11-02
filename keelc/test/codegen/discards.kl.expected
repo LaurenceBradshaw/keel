@@ -515,14 +515,14 @@ struct kl_7prelude_str
 struct kl_7prelude_result__I7Counter_3BadE
 {
     int32_t tag;
-    struct kl__Counter kl_value;
-    int32_t kl_error;
+    struct kl__Counter kl_2ok_value;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error;
+    int32_t kl_3err_error;
 };
 
 struct kl_7prelude_textual__vtable
@@ -613,7 +613,7 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
 #line 31 "codegen/discards.kl"
     kl_t7 = true;
 #line 31 "codegen/discards.kl"
-    kl_t2.kl_error = 0;
+    kl_t2.kl_3err_error = 0;
 #line 31 "codegen/discards.kl"
     kl_t7 = true;
 #line 31 "codegen/discards.kl"
@@ -640,7 +640,7 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
 #line 34 "codegen/discards.kl"
     kl_t8 = true;
 #line 34 "codegen/discards.kl"
-    kl_t3.kl_value = kl_t4;
+    kl_t3.kl_2ok_value = kl_t4;
 #line 34 "codegen/discards.kl"
     kl_t9 = false;
 #line 34 "codegen/discards.kl"
@@ -676,7 +676,7 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     bb1:
     kl_t2.tag = 1;
 #line 41 "codegen/discards.kl"
-    kl_t2.kl_error = 0;
+    kl_t2.kl_3err_error = 0;
 #line 41 "codegen/discards.kl"
     kl_t0 = kl_t2;
 #line 41 "codegen/discards.kl"
@@ -793,7 +793,7 @@ void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Cou
     return;
     bb2:
 #line 143 "<prelude>"
-    kl__Counter__dtor( &( *kl_t1 ).kl_value );
+    kl__Counter__dtor( &( *kl_t1 ).kl_2ok_value );
 #line 143 "<prelude>"
     goto bb1;
 #line 149 "<prelude>"

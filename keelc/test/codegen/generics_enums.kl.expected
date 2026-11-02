@@ -21,25 +21,25 @@ struct kl__Box__I3f64E
 struct kl__Wrap__I3f64E
 {
     int32_t tag;
-    struct kl__Box__I3f64E kl_b;
+    struct kl__Box__I3f64E kl_4Held_b;
 };
 
 struct kl__Opt__I3i32E
 {
     int32_t tag;
-    int32_t kl_v;
+    int32_t kl_4Some_v;
 };
 
 struct kl__Opt__I3f64E
 {
     int32_t tag;
-    double kl_v;
+    double kl_4Some_v;
 };
 
 struct kl__Opt__I6ColourE
 {
     int32_t tag;
-    int32_t kl_v;
+    int32_t kl_4Some_v;
 };
 
 struct kl__Slot__I3i32E
@@ -56,14 +56,14 @@ struct kl__Box__I3i32E
 struct kl__Wrap__I3i32E
 {
     int32_t tag;
-    struct kl__Box__I3i32E kl_b;
+    struct kl__Box__I3i32E kl_4Held_b;
 };
 
 struct kl__Span2__I3i32_3f64E
 {
     int32_t tag;
-    int32_t kl_first;
-    double kl_second;
+    int32_t kl_4Both_first;
+    double kl_4Both_second;
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
@@ -120,12 +120,12 @@ int32_t kl__main__( void )
 #line 68 "codegen/generics_enums.kl"
     kl_t3.tag = 1;
 #line 68 "codegen/generics_enums.kl"
-    kl_t3.kl_v = 7;
+    kl_t3.kl_4Some_v = 7;
 #line 68 "codegen/generics_enums.kl"
     kl_a_2 = kl_t3;
     kl_t5.tag = 1;
 #line 69 "codegen/generics_enums.kl"
-    kl_t5.kl_v = 0.5;
+    kl_t5.kl_4Some_v = 0.5;
 #line 69 "codegen/generics_enums.kl"
     kl_b_4 = kl_t5;
     kl_t7.tag = 0;
@@ -178,7 +178,7 @@ int32_t kl__main__( void )
 #line 95 "codegen/generics_enums.kl"
     kl_t17.tag = 1;
 #line 95 "codegen/generics_enums.kl"
-    kl_t17.kl_v = 1;
+    kl_t17.kl_4Some_v = 1;
 #line 95 "codegen/generics_enums.kl"
     kl_tinted_16 = kl_t17;
 #line 99 "codegen/generics_enums.kl"
@@ -187,7 +187,7 @@ int32_t kl__main__( void )
     if ( kl_t18 ) goto bb9; else goto bb10;
     bb9:
 #line 99 "codegen/generics_enums.kl"
-    kl_c_19 = kl_tinted_16.kl_v;
+    kl_c_19 = kl_tinted_16.kl_4Some_v;
     kl_t20 = kl_c_19 != 1;
 #line 100 "codegen/generics_enums.kl"
     if ( kl_t20 ) goto bb11; else goto bb12;
@@ -205,7 +205,7 @@ int32_t kl__main__( void )
 #line 112 "codegen/generics_enums.kl"
     kl_t22.tag = 1;
 #line 112 "codegen/generics_enums.kl"
-    kl_t22.kl_v = 9;
+    kl_t22.kl_4Some_v = 9;
 #line 112 "codegen/generics_enums.kl"
     kl_s_21.kl_value = kl_t22;
     kl_s_21.kl_tag = 3;
@@ -225,13 +225,13 @@ int32_t kl__main__( void )
 #line 124 "codegen/generics_enums.kl"
     kl_t27.tag = 0;
 #line 124 "codegen/generics_enums.kl"
-    kl_t27.kl_b = kl_bx_25;
+    kl_t27.kl_4Held_b = kl_bx_25;
 #line 124 "codegen/generics_enums.kl"
     kl_w_26 = kl_t27;
 #line 126 "codegen/generics_enums.kl"
     goto bb15;
     bb15:
-    kl_held_28 = kl_w_26.kl_b;
+    kl_held_28 = kl_w_26.kl_4Held_b;
     kl_t29 = kl_held_28.kl_v != 5;
 #line 129 "codegen/generics_enums.kl"
     if ( kl_t29 ) goto bb16; else goto bb17;
@@ -243,17 +243,17 @@ int32_t kl__main__( void )
 #line 138 "codegen/generics_enums.kl"
     kl_t31.tag = 0;
 #line 138 "codegen/generics_enums.kl"
-    kl_t31.kl_first = 2;
+    kl_t31.kl_4Both_first = 2;
 #line 138 "codegen/generics_enums.kl"
-    kl_t31.kl_second = 1.5;
+    kl_t31.kl_4Both_second = 1.5;
 #line 138 "codegen/generics_enums.kl"
     kl_pair_30 = kl_t31;
 #line 140 "codegen/generics_enums.kl"
     goto bb18;
     bb18:
-    kl_first_32 = kl_pair_30.kl_first;
+    kl_first_32 = kl_pair_30.kl_4Both_first;
 #line 142 "codegen/generics_enums.kl"
-    kl_second_33 = kl_pair_30.kl_second;
+    kl_second_33 = kl_pair_30.kl_4Both_second;
     kl_t34 = kl_first_32 != 2;
 #line 143 "codegen/generics_enums.kl"
     if ( kl_t34 ) goto bb19; else goto bb20;
@@ -321,7 +321,7 @@ int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int3
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "codegen/generics_enums.kl"
-    kl_v_4 = kl_o_1.kl_v;
+    kl_v_4 = kl_o_1.kl_4Some_v;
     kl_t0 = kl_v_4;
 #line 55 "codegen/generics_enums.kl"
     return kl_t0;
@@ -344,7 +344,7 @@ double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, doubl
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 54 "codegen/generics_enums.kl"
-    kl_v_4 = kl_o_1.kl_v;
+    kl_v_4 = kl_o_1.kl_4Some_v;
     kl_t0 = kl_v_4;
 #line 55 "codegen/generics_enums.kl"
     return kl_t0;

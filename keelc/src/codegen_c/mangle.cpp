@@ -370,6 +370,11 @@ std::string mangle_field( std::string_view name )
     return fmt::format( "kl_{}", c_name( name ) );
 }
 
+std::string mangle_payload_field( std::string_view variant, std::string_view name )
+{
+    return fmt::format( "kl_{}{}_{}", variant.size(), c_name( variant ), c_name( name ) );
+}
+
 std::string mangle_global( const Mangled_owner& owner, std::string_view name, Type_id enclosing, const Type_table& types )
 {
     std::string text = fmt::format( "kl_{}_{}__G", module_slot( owner ), c_name( name ) );
@@ -890,6 +895,13 @@ TEST_CASE( "mangle_field_is_its_name", "[codegen][mangle]" )
 {
     REQUIRE( mangle_field( "x" ) == "kl_x" );
     REQUIRE( mangle_field( "x" ) != mangle_field( "kl_x" ) );
+}
+
+TEST_CASE( "mangle_payload_field_names_its_variant", "[codegen][mangle]" )
+{
+    REQUIRE( mangle_payload_field( "A", "x" ) == "kl_1A_x" );
+    REQUIRE( mangle_payload_field( "A", "x" ) != mangle_payload_field( "B", "x" ) );
+    REQUIRE( mangle_payload_field( "A", "B_x" ) != mangle_payload_field( "A_B", "x" ) );
 }
 
 } // namespace keel

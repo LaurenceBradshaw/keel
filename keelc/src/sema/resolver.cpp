@@ -104,6 +104,8 @@ private:
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
+    bool refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
+
     // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
     std::unordered_map<Symbol_id, Node_id> current_members_;
@@ -246,6 +248,11 @@ void Resolver::visit( Node_id id )
         else
         {
             visit( ast_.param_list( id ) );
+        }
+        if( refused_block_ )
+        {
+            pop_scope();
+            return;
         }
         if( ast_.body( id ).is_valid() && !ast_.is_walk( id ) )
         {
@@ -622,6 +629,13 @@ void Resolver::visit_block( Node_id id )
 
     visit( ast_.implementer( id ) );
 
+    // Signatures refuses a block for this package's own struct or class, and its bodies would only
+    // repeat that: what they name belongs inside the type.
+    const Node_id type = bindings_[ast_.implementer( id ).v];
+    refused_block_     = type.is_valid() &&
+                     ( ast_.kind( type ) == Node_kind::Struct_decl || ast_.kind( type ) == Node_kind::Class_decl ) &&
+                     modules_.package_of( ast_.span( type ).file ) == modules_.package_of( ast_.span( id ).file );
+
     push_scope( Scope_kind::Barrier );
 
     if( self_.is_valid() )
@@ -638,6 +652,7 @@ void Resolver::visit_block( Node_id id )
     }
 
     pop_scope();
+    refused_block_ = false;
 }
 
 // Fields are a member namespace, not a lexical one, so they are deliberately *not* in scopes_ here:

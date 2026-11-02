@@ -26,7 +26,7 @@ struct kl__W
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_b;
+    struct kl__Buf kl_4Full_b;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -342,7 +342,7 @@ uint64_t kl__payload_before_assign__( void )
 #line 92 "codegen/loan_boundaries.kl"
     kl_t14 = true;
 #line 92 "codegen/loan_boundaries.kl"
-    kl_t2.kl_b = kl_t3;
+    kl_t2.kl_4Full_b = kl_t3;
 #line 92 "codegen/loan_boundaries.kl"
     kl_t15 = false;
 #line 92 "codegen/loan_boundaries.kl"
@@ -368,7 +368,7 @@ uint64_t kl__payload_before_assign__( void )
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
 #line 97 "codegen/loan_boundaries.kl"
-    kl_b_8 = &kl_h_1.kl_b;
+    kl_b_8 = &kl_h_1.kl_4Full_b;
     kl_k_9 = &( *kl_b_8 );
     kl_t10 = &( *kl_k_9 );
 #line 99 "codegen/loan_boundaries.kl"
@@ -500,7 +500,7 @@ void kl__Holder__dtor( struct kl__Holder* kl_t1 )
     return;
     bb2:
 #line 23 "codegen/loan_boundaries.kl"
-    kl__Buf__dtor( &( *kl_t1 ).kl_b );
+    kl__Buf__dtor( &( *kl_t1 ).kl_4Full_b );
 #line 23 "codegen/loan_boundaries.kl"
     goto bb1;
 #line 27 "codegen/loan_boundaries.kl"
