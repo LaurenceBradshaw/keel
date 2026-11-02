@@ -1,0 +1,24 @@
+// The help for a type missing a bound's interface names what this package may write: a block for
+// another package's type, and nothing where both the type and the interface are another's.
+import kit::parts;
+
+interface Shape
+{
+    f64 area() const;
+};
+
+interface Big implements Shape
+{
+    i32 n() const;
+};
+
+f64 big<T>( const ref T t ) where T : Big { return t.area(); }
+i32 rated<T>( const ref T t ) where T : kit::Rated { return t.rate(); }
+
+i32 main()
+{
+    kit::Part p = kit::Part { 1 };
+    big( p );   // a block for each, since `kit::Part` is declared in `kit`
+    rated( p ); // `kit`'s type and `kit`'s interface: only `kit` can
+    return 0;
+}

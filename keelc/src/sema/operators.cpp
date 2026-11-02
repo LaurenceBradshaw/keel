@@ -603,7 +603,8 @@ TEST_CASE( "operators_answer_the_ternary_from_two_types_alone", "[sema][operator
     sema::Reporter      reporter( sm, diags );
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
-    sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
+    const Resolution    resolution;
+    sema::Bounds        bounds( ast, interner, resolution, pool, types, aggregates, reporter );
     sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     const Type_id i32 = types.table().integer( 32, true );
@@ -635,7 +636,8 @@ TEST_CASE( "operators_refuse_to_negate_an_unsigned_type", "[sema][operator]" )
     sema::Reporter      reporter( sm, diags );
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
-    sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
+    const Resolution    resolution;
+    sema::Bounds        bounds( ast, interner, resolution, pool, types, aggregates, reporter );
     sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     // D5: C++ answers 4294967295 for `-u32( 1 )`, which is the silent wrong answer Keel refuses.
@@ -680,7 +682,8 @@ TEST_CASE( "operators_take_a_shift_from_its_left_operand_only", "[sema][operator
     sema::Reporter      reporter( sm, diags );
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
-    sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
+    const Resolution    resolution;
+    sema::Bounds        bounds( ast, interner, resolution, pool, types, aggregates, reporter );
     sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     const Type_id u8  = types.table().integer( 8, false );

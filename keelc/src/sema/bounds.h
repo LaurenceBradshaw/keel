@@ -71,6 +71,7 @@ public:
     Bounds(
         const Ast&          ast,
         const Interner&     interner,
+        const Resolution&   resolution,
         const Literal_pool& literals,
         Types_builder&      types,
         Aggregates&         aggregates,
@@ -78,6 +79,7 @@ public:
     )
         : ast_( ast ),
           interner_( interner ),
+          resolution_( resolution ),
           literal_pool_( literals ),
           types_( types ),
           table_( types.table() ),
@@ -148,6 +150,8 @@ private:
     std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
     // Why a type the compiler would make `interface` is not one: its own `equatable` replaced it.
     std::string dropped_help( Type_id type, Type_id interface ) const;
+    // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.
+    std::string conforming_help( Type_id type, Type_id interface, Span at ) const;
 
     void
     report_unmet( Node_id parameter, Span at, Type_id argument, std::string_view callee, Bound bound, std::string_view name );
@@ -172,6 +176,7 @@ private:
 
     const Ast&          ast_;
     const Interner&     interner_;
+    const Resolution&   resolution_;
     const Literal_pool& literal_pool_;
     Types_builder&      types_;
     Type_table&         table_;

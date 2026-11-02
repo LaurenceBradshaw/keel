@@ -346,12 +346,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                 : table_.is_prelude_interface( interface ) &&
                         ( table_.is_builtin( argument ) || table_.is_pointer( argument ) || table_.is_many_pointer( argument ) )
                     ? fmt::format( "the compiler makes only numbers `{}`", table_.name( interface ) )
-                : table_.package( argument ) == "prelude" ? std::string {} // a program cannot redeclare it
-                : table_.is_struct( argument )
-                    ? fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
-                    : fmt::format(
-                          "write `implements {1} for {0} {{ ... }}`", table_.name( argument ), table_.name( interface )
-                      )
+                    : conforming_help( argument, interface, at )
             );
         }
     }
@@ -457,6 +452,48 @@ std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise 
         table_.name( parameter ),
         interner_.text( ast_.name( owner ) )
     );
+}
+
+// A struct of the caller's package lists all it misses in its `implements`; anything else takes a
+// block per interface, where the orphan rule lets the caller's package write one.
+std::string Bounds::conforming_help( Type_id type, Type_id interface, Span at ) const
+{
+    std::vector<Type_id> missing = closed( std::span( &interface, 1 ) );
+    std::erase_if( missing, [&]( Type_id each ) { return conforms( type, each ); } );
+    std::ranges::reverse( missing ); // what is refined first
+
+    const Node_id   declaration = table_.get( type ).declaration;
+    const Symbol_id here        = resolution_.package_of( at.file );
+    const Symbol_id owner =
+        declaration.is_valid() ? resolution_.package_of( ast_.span( declaration ).file ) : resolution_.prelude_package();
+    const auto ours = [&]( Type_id each )
+    {
+        const Node_id declared_at = table_.get( each ).declaration;
+        return declared_at.is_valid() && resolution_.package_of( ast_.span( declared_at ).file ) == here;
+    };
+
+    if( table_.is_struct( type ) && here == owner )
+    {
+        std::string list;
+        for( const Type_id each : missing )
+        {
+            list += fmt::format( "{}{}", list.empty() ? "" : ", ", table_.name( each ) );
+        }
+        return fmt::format( "declare `{}` with `implements {}`", table_.name( type ), list );
+    }
+
+    std::string blocks;
+    for( const Type_id each : missing )
+    {
+        if( here != owner && !ours( each ) && std::ranges::none_of( table_.get( each ).arguments, ours ) )
+        {
+            return {}; // only the type's or the interface's package may write it
+        }
+        blocks += fmt::format(
+            "{}`implements {} for {} {{ ... }}`", blocks.empty() ? "write " : " and ", table_.name( each ), table_.name( type )
+        );
+    }
+    return blocks;
 }
 
 std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
@@ -1279,7 +1316,7 @@ public:
           ),
           reporter_( sm_, diags_ ),
           aggregates_( ast_, interner_, types_, reporter_ ),
-          bounds_( ast_, interner_, literal_pool_, types_, aggregates_, reporter_ )
+          bounds_( ast_, interner_, resolution_, literal_pool_, types_, aggregates_, reporter_ )
     {
         types_.size_to( ast_.node_count() );
 
@@ -1413,6 +1450,7 @@ private:
     Diagnostics    diags_;
     Ast            ast_;
 
+    Resolution          resolution_; // empty: every file in one package
     sema::Types_builder types_;
     sema::Reporter      reporter_;
     sema::Aggregates    aggregates_;
@@ -2044,6 +2082,35 @@ TEST_CASE( "bounds_meet_an_interface_by_a_block", "[sema][interfaces][implements
             REQUIRE( p.rendered().find( "needs a `T` that implements `Shape`" ) != std::string::npos );
             REQUIRE( p.rendered().find( c[1] ) != std::string::npos );
         }
+    }
+}
+
+// Writing only the bound's interface would leave what it refines missing, the next error.
+TEST_CASE( "bounds_help_names_what_the_interface_refines", "[sema][interfaces][refinement]" )
+{
+    const std::string declared = "interface Shape { f64 area() const; };\n"
+                                 "interface Big implements Shape { i32 n() const; };\n"
+                                 "struct Plain { i32 x; };\n"
+                                 "struct Half implements Shape { i32 x; f64 area() const { return 1.0; } };\n"
+                                 "f64 big<T>( const ref T t ) where T : Big { return t.area(); }\n"
+                                 "bool lt<T>( const ref T a, const ref T b ) where T : comparable { return a < b; }\n";
+
+    const char* cases[][2] = {
+        { "i32 main() { Plain p = Plain { 1 }; lt( p, p ); return 0; }",
+          "declare `Plain` with `implements equatable, comparable`" },
+        { "i32 main() { Plain p = Plain { 1 }; big( p ); return 0; }", "declare `Plain` with `implements Shape, Big`" },
+        { "i32 main() { Half h = Half { 1 }; big( h ); return 0; }", "declare `Half` with `implements Big`" },
+        { "i32 main() { i64 x = 1; big( x ); return 0; }",
+          "write `implements Shape for i64 { ... }` and `implements Big for i64 { ... }`" },
+    };
+
+    for( const auto& c : cases )
+    {
+        const Typed p( declared + c[0] );
+
+        INFO( c[0] << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c[1] ) != std::string::npos );
     }
 }
 

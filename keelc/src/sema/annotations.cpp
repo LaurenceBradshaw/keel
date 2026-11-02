@@ -1072,7 +1072,7 @@ public:
           resolution_( resolve( ast_, sm_, interner_, diags_ ) ),
           reporter_( sm_, diags_ ),
           aggregates_( ast_, interner_, types_, reporter_ ),
-          bounds_( ast_, interner_, literal_pool_, types_, aggregates_, reporter_ ),
+          bounds_( ast_, interner_, resolution_, literal_pool_, types_, aggregates_, reporter_ ),
           constant_folder_( ast_, resolution_, literal_pool_, types_, bounds_, callees_, reporter_ ),
           annotations_( ast_, interner_, resolution_, types_, bounds_, constant_folder_, reporter_ )
     {

@@ -59,7 +59,7 @@ public:
           types_( std::move( table ) ),
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
-          bounds_( ast, interner, literals, types_, aggregates_, reporter_ ),
+          bounds_( ast, interner, resolution, literals, types_, aggregates_, reporter_ ),
           constant_folder_( ast, resolution, literals, types_, bounds_, callees_, reporter_ ),
           annotations_( ast, interner, resolution, types_, bounds_, constant_folder_, reporter_ ),
           places_( ast, interner, resolution, types_, bounds_, callees_, reporter_ ),

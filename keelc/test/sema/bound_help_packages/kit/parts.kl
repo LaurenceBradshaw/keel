@@ -1,0 +1,9 @@
+interface Rated
+{
+    i32 rate() const;
+};
+
+struct Part
+{
+    i32 n;
+};

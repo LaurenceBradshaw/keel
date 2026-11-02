@@ -38,7 +38,7 @@ error: `ordered` needs a `T` that implements `comparable`, but `Plain` does not
   --> sema/errors_inference.kl:93:21
    |
 93 |     return ordered( p );
-   |                     ^ declare `Plain` with `implements comparable`
+   |                     ^ declare `Plain` with `implements equatable, comparable`
 
 error: this call to `which` is ambiguous
    --> sema/errors_inference.kl:111:12

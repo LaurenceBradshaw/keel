@@ -1,0 +1,13 @@
+error: `big` needs a `T` that implements `Big`, but `kit::Part` does not
+  --> sema/bound_help_packages/main.kl:21:10
+   |
+21 |     big( p );   // a block for each, since `kit::Part` is declared in `kit`
+   |          ^ write `implements Shape for kit::Part { ... }` and `implements Big for kit::Part { ... }`
+
+error: `rated` needs a `T` that implements `Rated`, but `kit::Part` does not
+  --> sema/bound_help_packages/main.kl:22:12
+   |
+22 |     rated( p ); // `kit`'s type and `kit`'s interface: only `kit` can
+   |            ^
+
+2 errors generated
