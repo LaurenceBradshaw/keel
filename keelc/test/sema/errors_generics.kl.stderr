@@ -28,23 +28,17 @@ error: a generic needs at least one type parameter
 18 | T empty<>( i32 a )
    |         ^
 
-error: unknown type `T`
-  --> sema/errors_generics.kl:23:1
-   |
-23 | T inline_bound<comparable T>( T a )
-   | ^
-
 error: a type parameter is a name on its own here
-  --> sema/errors_generics.kl:23:27
+  --> sema/errors_generics.kl:23:16
    |
 23 | T inline_bound<comparable T>( T a )
-   |                           ^ write the bound in a `where` clause after the parameter list
+   |                ^^^^^^^^^^ write the bound in a `where` clause after the parameter list
 
-error: unknown type `T`
-  --> sema/errors_generics.kl:23:31
+error: cannot return a borrowed value
+  --> sema/errors_generics.kl:25:12
    |
-23 | T inline_bound<comparable T>( T a )
-   |                               ^
+25 |     return a;
+   |            ^ the caller still owns it
 
 error: `not_a_generic` is not a generic
   --> sema/errors_generics.kl:45:12
@@ -130,4 +124,4 @@ error: `T` does not promise `comparable`, and `needs_comparable` requires it of 
 134 |     needs_comparable<T>( a );
     |                      ^ add `comparable` to the `where` clause for `T` on `forwards`
 
-22 errors generated
+21 errors generated

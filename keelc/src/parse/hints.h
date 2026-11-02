@@ -15,7 +15,8 @@ enum class Hint_place : u8
     Member,
     Declaration,
     Statement,
-    Header, // the `)` closing an `if`, `while`, `for` or `switch` head
+    Header,          // the `)` closing an `if`, `while`, `for` or `switch` head
+    Type_parameters, // the `>` closing a declaration's type parameters
 };
 
 // Help for a word dropped at `place`, or empty when there is none.

@@ -48,7 +48,7 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place )
 {
     // clang-format off
-    constexpr std::array<Stop_hint, 10> hints = {
+    constexpr std::array<Stop_hint, 11> hints = {
         Stop_hint { Token_kind::Semicolon, Token_kind::Equal, "a field cannot be given a value here yet: set it in the constructor", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each field with its own type", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Member },
@@ -59,6 +59,7 @@ std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place plac
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C", Hint_place::Declaration },
         Stop_hint { Token_kind::L_brace, Token_kind::Colon, "Keel has no initialiser lists: put the initialisation in the constructor's body", Hint_place::Member },
         Stop_hint { Token_kind::R_paren, Token_kind::Equal, "`=` assigns, and an assignment is not a value: compare with `==`", Hint_place::Header },
+        Stop_hint { Token_kind::Greater, Token_kind::Equal, "a type parameter has no default: write the type argument at each use", Hint_place::Type_parameters },
     };
     // clang-format on
 

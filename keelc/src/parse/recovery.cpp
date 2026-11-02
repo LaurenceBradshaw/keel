@@ -432,7 +432,7 @@ bool Recovery::gap_before( u32 at ) const
            before_kind != Token_kind::Comma;
 }
 
-bool Recovery::expect_generic_close()
+bool Recovery::expect_generic_close( std::optional<Hint_place> place )
 {
     if( cursor_.match_generic_close() )
     {
@@ -441,7 +441,10 @@ bool Recovery::expect_generic_close()
 
     if( !unclosed_at_ || cursor_.position() != *unclosed_at_ )
     {
-        error_expected( Token_kind::Greater );
+        error_expected(
+            Token_kind::Greater,
+            place ? std::string( stop_hint( Token_kind::Greater, cursor_.peek().kind, *place ) ) : std::string {}
+        );
     }
 
     skip_to_generic_close();

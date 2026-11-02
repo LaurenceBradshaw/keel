@@ -78,6 +78,7 @@ private:
     void          refuse_member_literal( Node_id literal, Node_id owner );
     Node_id       visible_from( Node_id use, Node_id head );
     bool          refuse_builtin_name( Symbol_id name, Node_id decl );
+    void          refuse_leading_name( Node_id param );
     void          refuse_unimported( Node_id use, Node_id decl );
     void          refuse_private( Node_id use, Node_id decl );
     std::string   module_name( File_id file ) const;
@@ -101,6 +102,8 @@ private:
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
     std::vector<Scope>   scopes_;
+    std::vector<bool>    reported_;     // a declaration refused already: a method shares its aggregate's parameters
+    std::vector<bool>    value_params_; // `<i32 N>`'s `N`, whose uses as a value stay quiet
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
@@ -121,6 +124,8 @@ Resolution Resolver::run()
     unresolved_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
     fallbacks_.assign( ast_.node_count(), Node_id {} );
+    reported_.assign( ast_.node_count(), false );
+    value_params_.assign( ast_.node_count(), false );
 
     // Two passes at file scope: every top-level declaration is collected before any body is
     // resolved, which is what makes recursion and mutual recursion work with no forward
@@ -277,6 +282,7 @@ void Resolver::visit( Node_id id )
         }
         return;
     case Node_kind::Type_param_decl:
+        refuse_leading_name( id );
         declare( scopes_.back(), ast_.name( id ), id );
         return;
     case Node_kind::For_stmt:
@@ -312,7 +318,11 @@ void Resolver::visit( Node_id id )
 
         const Node_id decl = lookup( name, id );
 
-        if( decl.is_valid() )
+        if( decl.is_valid() && value_params_[decl.v] )
+        {
+            // already refused where it was declared
+        }
+        else if( decl.is_valid() )
         {
             bind( id, decl );
         }
@@ -1152,10 +1162,49 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
     return head;
 }
 
+// The name before a type parameter's: a type makes it a value parameter, anything else a bound.
+void Resolver::refuse_leading_name( Node_id param )
+{
+    const std::span<const Node_id> leading = ast_.children( param );
+
+    if( leading.empty() || reported_[leading[0].v] )
+    {
+        return;
+    }
+
+    reported_[leading[0].v]     = true;
+    const Symbol_id        name = ast_.name( leading[0] );
+    const Node_id          decl = lookup( name, leading[0] );
+    const std::string_view text = interner_.text( name );
+
+    if( is_builtin_type_name( text ) || ( decl.is_valid() && ast_.kind( decl ) != Node_kind::Interface_decl ) )
+    {
+        value_params_[param.v] = true;
+        reporter_.error_at(
+            ast_.name_span( leading[0] ),
+            fmt::format( "`{}` is a value parameter, which Keel does not support yet", interner_.text( ast_.name( param ) ) ),
+            "a type parameter is a name on its own"
+        );
+        return;
+    }
+
+    reporter_.error_at(
+        ast_.name_span( leading[0] ),
+        "a type parameter is a name on its own here",
+        "write the bound in a `where` clause after the parameter list"
+    );
+}
+
 bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
 {
     if( is_builtin_type_name( interner_.text( name ) ) )
     {
+        if( reported_[decl.v] )
+        {
+            return true;
+        }
+
+        reported_[decl.v] = true;
         reporter_.error_at(
             ast_.name_span( decl ),
             fmt::format( "`{}` is the name of a builtin type", interner_.text( name ) ),
@@ -2058,6 +2107,39 @@ TEST_CASE( "resolver_rejects_a_local_shadowing_a_field", "[sema][resolve][aggreg
 }
 
 // A builtin type's name is reserved: declaring one would shadow the type for the rest of its scope.
+TEST_CASE( "resolver_names_a_leading_name_before_a_type_parameter", "[sema][resolve][generic]" )
+{
+    const auto once = []( const Resolved& p, std::string_view message )
+    {
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+    };
+
+    SECTION( "a bound, and the parameter after it is still declared" )
+    {
+        once( Resolved( "T id<comparable T>( T a ) { return a; }\ni32 main() { return 0; }" ), "a name on its own here" );
+    }
+
+    // `N` is declared, so its value use is not "not declared"; nor is it "a type, not a value".
+    SECTION( "a type makes it a value parameter, and its uses are quiet" )
+    {
+        once(
+            Resolved( "class Value<i32 N> { i32 v; public Value() { v = N; } };\ni32 main() { return 0; }" ),
+            "`N` is a value parameter, which Keel does not support yet"
+        );
+        once( Resolved( "struct P { i32 x; };\nvoid f<P p>() { }\ni32 main() { return 0; }" ), "`p` is a value parameter" );
+    }
+
+    SECTION( "an interface is a bound" )
+    {
+        once(
+            Resolved( "interface Shape { f64 area() const; };\nvoid f<Shape S>() { }\ni32 main() { return 0; }" ),
+            "a name on its own here"
+        );
+    }
+}
+
 TEST_CASE( "resolver_refuses_a_builtin_type_name", "[sema][resolve]" )
 {
     const auto refused = []( const Resolved& p, std::string_view name )
@@ -2126,6 +2208,12 @@ TEST_CASE( "resolver_refuses_a_builtin_type_name", "[sema][resolve]" )
     SECTION( "a type parameter" )
     {
         refused( Resolved( "i64 id<i64>( i64 x ) { return x; }\ni32 main() { return 0; }" ), "i64" );
+    }
+
+    // A method shares its aggregate's parameter list, so declares each parameter a second time.
+    SECTION( "an aggregate's type parameter, once" )
+    {
+        refused( Resolved( "class Box<i32> { i32 v; public void m() { } };\ni32 main() { return 0; }" ), "i32" );
     }
 
     // Members enter no lexical scope outside a member body, but every body inside one sees them.

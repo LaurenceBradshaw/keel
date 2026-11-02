@@ -1142,7 +1142,7 @@ std::vector<Node_id> Parser::parse_type_params()
             params.push_back( parse_type_param() );
         } while( cursor_.match( Token_kind::Comma ) );
 
-        recovery_.expect_generic_close();
+        recovery_.expect_generic_close( Hint_place::Type_parameters );
     }
 
     return params;
@@ -2467,20 +2467,21 @@ Node_id Parser::parse_param()
 
 Node_id Parser::parse_type_param()
 {
-    const Span      at        = cursor_.peek().span;
-    const Symbol_id name      = expect_name();
-    const Span      name_span = cursor_.previous().span;
+    const Span at        = cursor_.peek().span;
+    Symbol_id  name      = expect_name();
+    Span       name_span = cursor_.previous().span;
 
-    // `<comparable T>` is C++'s terse form. Named here, or the stray name derails the parameter list.
-    if( cursor_.check( Token_kind::Identifier ) )
+    // `<comparable T>` or `<i32 N>`: the second name is the parameter's, and the first is kept for
+    // the resolver, which knows whether it is a bound or a type and says which.
+    std::vector<Node_id> leading;
+    if( name.is_valid() && cursor_.check( Token_kind::Identifier ) )
     {
-        recovery_.error_at(
-            cursor_.peek().span,
-            "a type parameter is a name on its own here",
-            "write the bound in a `where` clause after the parameter list"
-        );
+        const Node_id stray = ast_.add( Node_kind::Bound_name, name_span, name.v, {} );
+        ast_.set_name_span( stray, name_span );
+        leading.push_back( stray );
 
-        cursor_.advance();
+        name      = expect_name();
+        name_span = cursor_.previous().span;
     }
 
     // A nameless type parameter is not one: every later pass reads its name.
@@ -2489,7 +2490,7 @@ Node_id Parser::parse_type_param()
         return error_node( Span::merge( at, cursor_.previous().span ) );
     }
 
-    const Node_id node = ast_.add( Node_kind::Type_param_decl, at, name.v, {} );
+    const Node_id node = ast_.add( Node_kind::Type_param_decl, at, name.v, leading );
     ast_.set_name_span( node, name_span );
     return node;
 }
@@ -7303,14 +7304,17 @@ TEST_CASE( "parser_rejects_a_malformed_type_parameter_list", "[parse][generic]" 
     SECTION( "the C++ terse-bound spelling is named once, not cascaded" )
     {
         // `<comparable T>` is what a C++ reader writes first. Left unhandled the stray name derails
-        // the parameter list and then the signature - a dozen diagnostics for one habit.
+        // the parameter list and then the signature - a dozen diagnostics for one habit. The
+        // resolver reports it, knowing a bound from a type; the parser keeps `T` and the stray name.
         const Parsed p( "T id<comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
 
-        REQUIRE( p.has_errors() );
         INFO( p.errors() );
-        REQUIRE( p.errors().find( "a name on its own" ) != std::string::npos );
-        REQUIRE( p.errors().find( "`where` clause" ) != std::string::npos );
-        REQUIRE( p.error_count() == 1 );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id param = find_first( p.ast(), p.root(), Node_kind::Type_param_decl );
+        REQUIRE( p.text( param ).starts_with( "comparable" ) );
+        REQUIRE( p.children( param ).size() == 1 );
+        REQUIRE( p.kind( p.child( param, 0 ) ) == Node_kind::Bound_name );
     }
 
     SECTION( "and the declaration after it still parses" )

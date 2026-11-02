@@ -1,0 +1,31 @@
+error: `N` is a value parameter, which Keel does not support yet
+ --> sema/errors_value_parameters.kl:3:13
+  |
+3 | class Value<i32 N> // error
+  |             ^^^ a type parameter is a name on its own
+
+error: `p` is a value parameter, which Keel does not support yet
+  --> sema/errors_value_parameters.kl:10:9
+   |
+10 | void at<Point p>() { } // error
+   |         ^^^^^ a type parameter is a name on its own
+
+error: `W` is a value parameter, which Keel does not support yet
+  --> sema/errors_value_parameters.kl:12:11
+   |
+12 | u64 width<u64 W>() { return W; } // error
+   |           ^^^ a type parameter is a name on its own
+
+error: `i32` is the name of a builtin type
+  --> sema/errors_value_parameters.kl:15:14
+   |
+15 | class Holder<i32> // error
+   |              ^^^ a declaration may not take one
+
+error: expected `>`, found `=`
+  --> sema/errors_value_parameters.kl:23:16
+   |
+23 | class Default<T = i32> { T v; public Default( T x ) { v = x; } }; // error
+   |                ^ a type parameter has no default: write the type argument at each use
+
+5 errors generated
