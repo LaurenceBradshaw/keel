@@ -1,0 +1,37 @@
+error: `Clash` requires `f` to return `i64`, and `Base` requires it to return `i32`
+  --> sema/errors_requirement_conflicts.kl:12:5
+   |
+12 |     i64 f() const;
+   |     ^^^^^^^^^^^^^^ no type could implement both; rename one, or make the two agree
+
+error: `Dup` requires `f` twice
+  --> sema/errors_requirement_conflicts.kl:24:5
+   |
+24 |     i32 f() const;
+   |     ^^^^^^^^^^^^^^ remove one
+
+error: `Shape` requires `area` to return `f64`, and `Other` requires it to return `i32`
+  --> sema/errors_requirement_conflicts.kl:37:34
+   |
+37 | interface Both implements Shape, Other
+   |                                  ^^^^^ no type could implement both; rename one, or make the two agree
+
+error: `Shape` requires `area` to return `f64`, and `Other` requires it to return `i32`
+  --> sema/errors_requirement_conflicts.kl:79:29
+   |
+79 | i32 one<T>( const ref T t ) where T : Shape & Other
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^ no type could implement both; rename one, or make the two agree
+
+error: `Stat` requires `make` to be `static`, and `Inst` requires it to take an object
+  --> sema/errors_requirement_conflicts.kl:84:29
+   |
+84 | i32 two<T>( const ref T t ) where T : Stat & Inst
+   |                             ^^^^^^^^^^^^^^^^^^^^^ no type could implement both; rename one, or make the two agree
+
+error: `Held` and `Copied` both require `at`, but only one returns it by `ref`
+  --> sema/errors_requirement_conflicts.kl:89:25
+   |
+89 | i32 three<T>( ref T t ) where T : Held & Copied
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^ no type could implement both; rename one, or make the two agree
+
+6 errors generated

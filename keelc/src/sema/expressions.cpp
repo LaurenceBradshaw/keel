@@ -1488,6 +1488,11 @@ bool Expressions::refuse_shared( Span at, Symbol_id name, std::span<const Type_i
         return false;
     }
 
+    if( bounds_.conflicted( owners.front(), name ) && bounds_.conflicted( *other, name ) )
+    {
+        return true; // the requirements' own conflict is the error
+    }
+
     reporter_.error_at(
         at,
         fmt::format(

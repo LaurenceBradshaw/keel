@@ -164,6 +164,7 @@ Types Checker::run()
     // Every signature is typed by here, and nothing below reads the answer before a body does.
     types_.conformances().complete( ast_, table_, types_.recorded() );
     report_conformance_errors( ast_, interner_, table_, types_.recorded(), types_.conformances(), reporter_ );
+    bounds_.check_requirement_sets();
 
     for( const Loaded_state& state : states_ )
     {

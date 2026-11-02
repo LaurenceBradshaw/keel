@@ -915,6 +915,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         if( const auto interfaces = interfaces_.find( it->v ); interfaces != interfaces_.end() )
         {
             require_refinements( interfaces->second );
+            where_sets_.emplace_back( *it, ast_.span( where_clause ) );
         }
 
         bounds_.emplace( it->v, direct_bounds );
@@ -933,6 +934,242 @@ void Bounds::require_refinements( std::vector<Type_id>& interfaces ) const
             {
                 interfaces.push_back( refined );
             }
+        }
+    }
+}
+
+std::vector<Type_id> Bounds::closed( std::span<const Type_id> interfaces ) const
+{
+    std::vector<Type_id> all( interfaces.begin(), interfaces.end() );
+    require_refinements( all );
+    return all;
+}
+
+// Same name and parameters is one method to an implementer, so its return, `ref` and `static` must
+// agree; `const` need not, since a `const` method answers both.
+std::optional<Bounds::Requirement_conflict>
+Bounds::conflicting_requirements( std::span<const Type_id> set, Type_id self, Type_id whole ) const
+{
+    const std::span<const Type_id> recorded = types_.recorded();
+    const auto type_of = [&]( Node_id node ) { return node.v < recorded.size() ? recorded[node.v] : Type_id {}; };
+
+    std::vector<Bindings>             bindings;
+    std::vector<std::vector<Type_id>> closures;
+
+    for( const Type_id interface : set )
+    {
+        Bindings each = table_.instance_bindings( interface );
+        each.emplace( table_.self_of( table_.get( interface ).declaration ).v, self );
+        bindings.push_back( std::move( each ) );
+        closures.push_back( closed( std::span( &interface, 1 ) ) );
+    }
+
+    // A pair one member already brings together is that member's own error.
+    const auto owned_elsewhere = [&]( Type_id a, Type_id b )
+    {
+        for( std::size_t k = 0; k < set.size(); ++k )
+        {
+            if( set[k] != whole && std::ranges::find( closures[k], a ) != closures[k].end() &&
+                std::ranges::find( closures[k], b ) != closures[k].end() )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const auto requirements = [&]( Type_id interface )
+    {
+        std::vector<Node_id> methods;
+
+        for( const Node_id member : ast_.members( table_.get( interface ).declaration ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Method_decl )
+            {
+                methods.push_back( member );
+            }
+        }
+
+        return methods;
+    };
+
+    for( std::size_t i = 0; i < set.size(); ++i )
+    {
+        for( std::size_t j = i; j < set.size(); ++j )
+        {
+            if( owned_elsewhere( set[i], set[j] ) )
+            {
+                continue;
+            }
+
+            const std::vector<Node_id> left  = requirements( set[i] );
+            const std::vector<Node_id> right = requirements( set[j] );
+
+            for( std::size_t a = 0; a < left.size(); ++a )
+            {
+                for( std::size_t b = i == j ? a + 1 : 0; b < right.size(); ++b )
+                {
+                    const Node_id first  = left[a];
+                    const Node_id second = right[b];
+
+                    const std::span<const Node_id> firsts  = ast_.explicit_params( first );
+                    const std::span<const Node_id> seconds = ast_.explicit_params( second );
+
+                    if( ast_.name( first ) != ast_.name( second ) || firsts.size() != seconds.size() )
+                    {
+                        continue;
+                    }
+
+                    bool same_parameters = true;
+
+                    for( std::size_t k = 0; k < firsts.size() && same_parameters; ++k )
+                    {
+                        const Type_id one   = table_.substitute( type_of( firsts[k] ), bindings[i] );
+                        const Type_id other = table_.substitute( type_of( seconds[k] ), bindings[j] );
+
+                        same_parameters = one == other && !table_.references_error( one ) &&
+                                          parameter_mode_of( ast_, firsts[k] ) == parameter_mode_of( ast_, seconds[k] );
+                    }
+
+                    if( !same_parameters )
+                    {
+                        continue;
+                    }
+
+                    const Type_id one   = table_.substitute( type_of( first ), bindings[i] );
+                    const Type_id other = table_.substitute( type_of( second ), bindings[j] );
+
+                    if( table_.references_error( one ) || table_.references_error( other ) )
+                    {
+                        continue;
+                    }
+
+                    const bool differs = one != other || ast_.is_ref_parameter( first ) != ast_.is_ref_parameter( second ) ||
+                                         ast_.is_static_method( first ) != ast_.is_static_method( second );
+
+                    if( differs || i == j )
+                    {
+                        return Requirement_conflict {
+                            .first = first, .first_owner = set[i], .second = second, .second_owner = set[j]
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+bool Bounds::conflicted( Type_id owner, Symbol_id name ) const
+{
+    return conflicted_.contains( u64 { table_.get( owner ).declaration.v } << 32 | name.v );
+}
+
+void Bounds::report_conflict( const Requirement_conflict& conflict, Span at )
+{
+    for( const Type_id owner : { conflict.first_owner, conflict.second_owner } )
+    {
+        conflicted_.insert( u64 { table_.get( owner ).declaration.v } << 32 | ast_.name( conflict.first ).v );
+    }
+
+    const std::string_view name   = interner_.text( ast_.name( conflict.first ) );
+    const std::string      first  = std::string( table_.name( conflict.first_owner ) );
+    const std::string      second = std::string( table_.name( conflict.second_owner ) );
+
+    if( conflict.first_owner == conflict.second_owner )
+    {
+        reporter_.error_at( at, fmt::format( "`{}` requires `{}` twice", first, name ), "remove one" );
+        return;
+    }
+
+    std::string message;
+
+    if( ast_.is_static_method( conflict.first ) != ast_.is_static_method( conflict.second ) )
+    {
+        const bool        first_static = ast_.is_static_method( conflict.first );
+        const std::string as_static    = first_static ? first : second;
+        const std::string as_method    = first_static ? second : first;
+
+        message = fmt::format(
+            "`{}` requires `{}` to be `static`, and `{}` requires it to take an object", as_static, name, as_method
+        );
+    }
+    else if( ast_.is_ref_parameter( conflict.first ) != ast_.is_ref_parameter( conflict.second ) )
+    {
+        message = fmt::format( "`{}` and `{}` both require `{}`, but only one returns it by `ref`", first, second, name );
+    }
+    else
+    {
+        message = fmt::format(
+            "`{}` requires `{}` to return `{}`, and `{}` requires it to return `{}`",
+            first,
+            name,
+            table_.name( types_.type_of( conflict.first ) ),
+            second,
+            table_.name( types_.type_of( conflict.second ) )
+        );
+    }
+
+    reporter_.error_at( at, message, "no type could implement both; rename one, or make the two agree" );
+}
+
+void Bounds::check_requirement_sets()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Interface_decl )
+        {
+            continue;
+        }
+
+        const Type_id              interface = types_.type_of( child );
+        const std::vector<Type_id> set       = closed( std::span( &interface, 1 ) );
+        const auto                 conflict  = conflicting_requirements( set, interface, interface );
+
+        if( !conflict )
+        {
+            continue;
+        }
+
+        // At its own requirement where it has one, else at the `implements` that brings in the second.
+        const auto own = [&]( Node_id method ) { return ast_.enclosing_aggregate( method ) == child; };
+        Span       at  = ast_.span( child );
+
+        if( own( conflict->second ) )
+        {
+            at = ast_.span( conflict->second );
+        }
+        else if( own( conflict->first ) )
+        {
+            at = ast_.span( conflict->first );
+        }
+        else
+        {
+            for( const Node_id written : ast_.implemented( child ) )
+            {
+                const Type_id              refined = types_.type_of( written );
+                const std::vector<Type_id> reach   = closed( std::span( &refined, 1 ) );
+
+                if( std::ranges::find( reach, conflict->second_owner ) != reach.end() )
+                {
+                    at = ast_.span( written );
+                    break;
+                }
+            }
+        }
+
+        report_conflict( *conflict, at );
+    }
+
+    for( const auto& [parameter, at] : where_sets_ )
+    {
+        const std::vector<Type_id>& set = interfaces_.at( parameter.v );
+
+        if( const auto conflict = conflicting_requirements( set, types_.type_of( parameter ), Type_id {} ) )
+        {
+            report_conflict( *conflict, at );
         }
     }
 }

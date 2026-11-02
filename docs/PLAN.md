@@ -895,7 +895,11 @@ conforms per instance. **An interface type is never held by value**: a `Shape` l
 bare parameter or type argument, written or deduced, is refused, so `kl::list<Shape>` is and
 `kl::list<Shape*>` is not, and `touch( s )` on a `const ref Shape` deduces nothing; a closed set of shapes is an `enum`. A bare parameter is refused rather than read as `const ref`,
 since that would be a rule of its own. **An interface's method may not be generic**, since a vtable
-slot is one compiled function. **An interface may be generic**, `interface sink<T>`, its arguments
+slot is one compiled function. **Requirements no type can meet are refused**: two of one name
+and parameters, reached through one interface's refinements or one `where` clause, are one method
+to an implementer, so a different return, `ref` return or `static` is refused once, where they
+first meet, and so is one interface naming a requirement twice; `const` may differ, since a `const`
+method answers both. **An interface may be generic**, `interface sink<T>`, its arguments
 always written: each instance is its own interface, with its own conformance and vtable, so one type
 may implement `sink<i64>` and `sink<bool>`, each requirement answered by the method whose signature
 matches with the arguments substituted. A bound may name an instance, `where T : sink<str>`, its

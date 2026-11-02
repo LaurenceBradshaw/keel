@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include "ast/ast.h"
 #include "common/types.h"
 #include "lex/token.h"
@@ -130,6 +131,11 @@ public:
     Type_id    type_the_literal_overflows( Node_id literal, bool negative, Bound_set bounds ) const;
 
     void declare_type_parameters( Node_id declaration, Node_id list );
+    // Each interface's closed requirements, then each `where` clause's: two that no one method can
+    // answer are refused. Once every signature is typed.
+    void check_requirement_sets();
+    // Whether `name` on `owner` was one half of a conflict already reported, so a call need not add one.
+    bool conflicted( Type_id owner, Symbol_id name ) const;
 
 private:
     // `integral` promises everything `numeric` does, and so on. Expanded once at the `where` clause
@@ -146,6 +152,21 @@ private:
     void
     report_unmet( Node_id parameter, Span at, Type_id argument, std::string_view callee, Bound bound, std::string_view name );
 
+    struct Requirement_conflict
+    {
+        Node_id first;
+        Type_id first_owner;
+        Node_id second;
+        Type_id second_owner;
+    };
+
+    // The interfaces and everything they require.
+    std::vector<Type_id> closed( std::span<const Type_id> interfaces ) const;
+    // The first pair in `set` no one method answers that no member but `whole` already brings together.
+    std::optional<Requirement_conflict>
+         conflicting_requirements( std::span<const Type_id> set, Type_id self, Type_id whole ) const;
+    void report_conflict( const Requirement_conflict& conflict, Span at );
+
     std::vector<Type_id> possible_types( Type_id type ) const;
     std::vector<Type_id> admissible_numeric_types( Bound_set bounds ) const;
 
@@ -160,6 +181,8 @@ private:
     std::unordered_map<u32, Bound_set>            bounds_;     // Type_param_decl -> its closed bound set
     std::unordered_map<u32, std::vector<Type_id>> interfaces_; // Type_param_decl -> the interfaces it names
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
+    std::vector<std::pair<Node_id, Span>>         where_sets_; // each clause naming an interface, as written
+    std::unordered_set<u64>                       conflicted_; // Interface_decl node << 32 | name, per reported conflict
 
     struct Deferred
     {
