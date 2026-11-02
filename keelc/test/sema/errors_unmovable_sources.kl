@@ -1,0 +1,50 @@
+// A copy, return or `move` argument out of a borrow or a pointee, where `move` is no fix.
+import kl::list;
+
+interface Shape
+{
+    f64 area() const;
+};
+
+class Own
+{
+    i32 n;
+
+    public Own() { n = 1; }
+    ~Own() { }
+};
+
+void take( move Own o ) { }
+
+T from_parameter_type<T>( const ref T x ) where T : comparable
+{
+    T y = x;
+    return y;
+}
+
+void from_const_ref( const ref Own o ) { Own t = o; }
+void from_ref( ref Own o ) { Own t = o; }
+void from_ref_local( ref Own o ) { ref Own r = o; Own t = r; }
+void from_pointee( Own* p ) { Own t = *p; }
+void from_pointee_auto( Own* p ) { auto t = *p; }
+void interface_auto( Shape* p ) { auto v = *p; }
+void pass_borrow( const ref Own o ) { take( o ); }
+
+Own return_const_ref( const ref Own o ) { return o; }
+Own return_ref( ref Own o ) { return o; }
+
+class Holder
+{
+    Own o;
+
+    public Holder() { o = Own(); }
+    ~Holder() { }
+
+    void copy_this() { Holder h = this; }
+    void copy_field() { Own t = this.o; }
+    Holder return_this() { return this; }
+    void pass_field() { take( this.o ); }
+    void push_this() { kl::list<Holder> l; l.push( this ); }
+};
+
+i32 main() { return 0; }

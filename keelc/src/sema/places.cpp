@@ -538,6 +538,55 @@ bool Places::is_borrow_binding( Node_id decl ) const
            !bounds_.satisfies( types_.type_of( decl ), Bound::Copyable );
 }
 
+bool Places::is_borrowed( Node_id decl ) const
+{
+    return is_borrow_binding( decl ) ||
+           ( decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Param_decl || ast_.kind( decl ) == Node_kind::Var_decl ) &&
+             ast_.parameter_mode( decl ) == Keyword::Ref );
+}
+
+std::string Places::borrowed_help( Node_id decl ) const
+{
+    if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
+    {
+        return "a method borrows its object; move the object where the method is called instead";
+    }
+
+    if( ast_.kind( decl ) == Node_kind::Param_decl )
+    {
+        return fmt::format(
+            "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
+        );
+    }
+
+    return ast_.kind( decl ) == Node_kind::Var_decl ? "move the variable it refers to instead" : "";
+}
+
+std::string Places::unmovable_help( Node_id value, Type_id type ) const
+{
+    Node_id root    = value;
+    bool    pointee = false;
+    while( ast_.kind( root ) == Node_kind::Field_expr && !pointee )
+    {
+        root    = ast_.object( root );
+        pointee = table_.is_pointer( types_.type_of( root ) );
+    }
+    pointee = pointee || ( ast_.kind( root ) == Node_kind::Unary_expr && ast_.op( root ) == Token_kind::Star );
+
+    const Node_id decl = ast_.kind( root ) == Node_kind::Name_expr ? resolution_.declaration_of( root ) : Node_id {};
+    if( !pointee && !is_borrowed( decl ) )
+    {
+        return {};
+    }
+
+    if( table_.is_parameter( type ) )
+    {
+        return fmt::format( "require `{} : copyable` to copy it", table_.name( type ) );
+    }
+
+    return pointee ? "a pointee cannot be moved; move the variable it points into instead" : borrowed_help( decl );
+}
+
 Node_id Places::receiver_of( Node_id function ) const
 {
     if( !ast_.has_receiver( function ) )
@@ -886,6 +935,12 @@ void Places::check_owning_source( Node_id value, Type_id type )
     if( !value.is_valid() || bounds_.satisfies( type, Bound::Copyable ) || ast_.kind( value ) == Node_kind::Marker_expr ||
         bounds_.satisfies( types_.type_of( value ), Bound::Copyable ) )
     {
+        return;
+    }
+
+    if( const std::string help = unmovable_help( value, type ); !help.empty() )
+    {
+        reporter_.error_at( ast_.span( value ), "an owning value is transferred, not copied", help );
         return;
     }
 

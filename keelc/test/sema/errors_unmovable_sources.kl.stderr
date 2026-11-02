@@ -1,0 +1,91 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:21:11
+   |
+21 |     T y = x;
+   |           ^ require `T : copyable` to copy it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:25:50
+   |
+25 | void from_const_ref( const ref Own o ) { Own t = o; }
+   |                                                  ^ take it as `move Own o` to own it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:26:38
+   |
+26 | void from_ref( ref Own o ) { Own t = o; }
+   |                                      ^ take it as `move Own o` to own it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:27:59
+   |
+27 | void from_ref_local( ref Own o ) { ref Own r = o; Own t = r; }
+   |                                                           ^ move the variable it refers to instead
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:28:39
+   |
+28 | void from_pointee( Own* p ) { Own t = *p; }
+   |                                       ^^ a pointee cannot be moved; move the variable it points into instead
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:29:45
+   |
+29 | void from_pointee_auto( Own* p ) { auto t = *p; }
+   |                                             ^^ a pointee cannot be moved; move the variable it points into instead
+
+error: `Shape` is an interface, so it cannot be held by value
+  --> sema/errors_unmovable_sources.kl:30:44
+   |
+30 | void interface_auto( Shape* p ) { auto v = *p; }
+   |                                            ^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+
+error: `take` takes ownership of this argument
+  --> sema/errors_unmovable_sources.kl:31:45
+   |
+31 | void pass_borrow( const ref Own o ) { take( o ); }
+   |                                             ^ take it as `move Own o` to own it
+
+error: cannot return a borrowed value
+  --> sema/errors_unmovable_sources.kl:33:50
+   |
+33 | Own return_const_ref( const ref Own o ) { return o; }
+   |                                                  ^ the caller still owns it
+
+error: cannot return a borrowed value
+  --> sema/errors_unmovable_sources.kl:34:38
+   |
+34 | Own return_ref( ref Own o ) { return o; }
+   |                                      ^ the caller still owns it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:43:35
+   |
+43 |     void copy_this() { Holder h = this; }
+   |                                   ^^^^ a method borrows its object; move the object where the method is called instead
+
+error: an owning value is transferred, not copied
+  --> sema/errors_unmovable_sources.kl:44:33
+   |
+44 |     void copy_field() { Own t = this.o; }
+   |                                 ^^^^^^ a method borrows its object; move the object where the method is called instead
+
+error: cannot return a borrowed value
+  --> sema/errors_unmovable_sources.kl:45:35
+   |
+45 |     Holder return_this() { return this; }
+   |                                   ^^^^ the caller still owns it
+
+error: `take` takes ownership of this argument
+  --> sema/errors_unmovable_sources.kl:46:31
+   |
+46 |     void pass_field() { take( this.o ); }
+   |                               ^^^^^^ a method borrows its object; move the object where the method is called instead
+
+error: `push` takes ownership of this argument
+  --> sema/errors_unmovable_sources.kl:47:52
+   |
+47 |     void push_this() { kl::list<Holder> l; l.push( this ); }
+   |                                                    ^^^^ a method borrows its object; move the object where the method is called instead
+
+15 errors generated

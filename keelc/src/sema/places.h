@@ -50,8 +50,12 @@ public:
     // The `const` field a place is, or is part of, short of any pointer; or invalid.
     Node_id const_field( Node_id place ) const;
     // Whether `place` is a constructor's own `const` field, written whole.
-    bool initialises_const_field( Node_id place, Node_id current_function ) const;
-    bool is_borrow_binding( Node_id decl ) const;
+    bool        initialises_const_field( Node_id place, Node_id current_function ) const;
+    bool        is_borrow_binding( Node_id decl ) const;
+    bool        is_borrowed( Node_id decl ) const;   // a borrow binding, or a `ref` parameter or local
+    std::string borrowed_help( Node_id decl ) const; // how to own what a borrowed `decl` names
+    // Why `move value` is no fix: it is rooted in a borrow or a pointee. Empty otherwise.
+    std::string unmovable_help( Node_id value, Type_id type ) const;
 
     // Parameter 0 of a method, constructor or destructor - the synthesised `this`. Invalid for a
     // free function, which has no receiver for a bare name to be rooted in.

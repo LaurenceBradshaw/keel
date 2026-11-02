@@ -8,7 +8,7 @@ error: an owning value is transferred, not copied
   --> sema/errors_owning_payloads.kl:37:16
    |
 37 |     Holder c = h;
-   |                ^ write `move h`
+   |                ^ take it as `move Holder h` to own it
 
 error: an owning value is transferred, not copied
   --> sema/errors_owning_payloads.kl:45:26

@@ -4029,38 +4029,9 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    if( places_.is_borrow_binding( decl ) )
+    if( places_.is_borrowed( decl ) )
     {
-        reporter_.error_at(
-            ast_.span( operand ),
-            "cannot move out of a borrow",
-            fmt::format(
-                "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
-            )
-        );
-        return types_.poison( id );
-    }
-
-    if( decl.is_valid() && ast_.parameter_mode( decl ) == Keyword::Ref )
-    {
-        std::string help;
-
-        if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
-        {
-            help = "a method borrows its object; move the object where the method is called instead";
-        }
-        else if( ast_.kind( decl ) == Node_kind::Param_decl )
-        {
-            help = fmt::format(
-                "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
-            );
-        }
-        else if( ast_.kind( decl ) == Node_kind::Var_decl )
-        {
-            help = "move the variable it refers to instead";
-        }
-
-        reporter_.error_at( ast_.span( operand ), "cannot move out of a borrow", help );
+        reporter_.error_at( ast_.span( operand ), "cannot move out of a borrow", places_.borrowed_help( decl ) );
         return types_.poison( id );
     }
 

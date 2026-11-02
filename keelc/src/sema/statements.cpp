@@ -353,7 +353,7 @@ void Statements::visit_return( Node_id id )
     // hazard - the caller destroys the borrow too, so returning it frees one resource twice. A
     // `const ref` result hands back the borrow itself, so only a by-value return is refused.
     if( !bounds_.satisfies( current_return_, Bound::Copyable ) &&
-        places_.is_borrow_binding( places_.place_root( value, expressions_.current_function() ) ) &&
+        places_.is_borrowed( places_.place_root( value, expressions_.current_function() ) ) &&
         !places_.returns_a_binding( expressions_.current_function() ) )
     {
         reporter_.error_at( ast_.span( value ), "cannot return a borrowed value", "the caller still owns it" );
@@ -459,6 +459,19 @@ void Statements::visit_var( Node_id id )
         if( table_.is_run( type ) )
         {
             expressions_.refuse_run_value( init );
+            type = table_.builtin( Type_kind::Error );
+        }
+
+        // An annotation would be refused by Annotations::addressed_interface; `auto` has none.
+        if( table_.is_interface( type ) )
+        {
+            const std::string_view name = table_.name( type );
+
+            reporter_.error_at(
+                ast_.span( init ),
+                fmt::format( "`{}` is an interface, so it cannot be held by value", name ),
+                fmt::format( "borrow one as `const ref {0}` or `ref {0}`, or point at one with `{0}*`", name )
+            );
             type = table_.builtin( Type_kind::Error );
         }
 
