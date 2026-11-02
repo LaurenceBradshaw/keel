@@ -146,6 +146,17 @@ void kl_rt_write_f64( int32_t stream, double value )
         }
     }
 
+    // `%g` writes 10 at one digit as `1e+01`; up to 1e15, print every integer digit instead.
+    const char* e = strchr( buf, 'e' );
+    if( e != NULL )
+    {
+        const int exponent = atoi( e + 1 );
+        if( exponent >= 0 && exponent <= 15 )
+        {
+            snprintf( buf, sizeof buf, "%.*g", exponent + 1, value );
+        }
+    }
+
     const char* digits        = buf + ( buf[0] == '-' );
     const bool  needs_decimal = digits[strspn( digits, "0123456789" )] == '\0';
 
