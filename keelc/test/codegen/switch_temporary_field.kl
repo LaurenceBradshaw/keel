@@ -1,0 +1,80 @@
+// A switch or walk over a field of an owning temporary keeps the temporary until it ends, so each
+// destructor's line comes after its arms or steps.
+import t::console;
+
+enum K
+{
+    On,
+    Off
+};
+
+enum P
+{
+    Some( i32 n ),
+    None
+};
+
+class N
+{
+    public i32 v;
+    public K   k;
+    public P   p;
+    public i32[3] items;
+
+    public N( i32 v )
+    {
+        this.v = v;
+        k      = K::On;
+        p      = P::Some( v + 1 );
+        items  = [ v, v + 1, v + 2 ];
+    }
+
+    ~N()
+    {
+        t::print( "drop " );
+        t::println( v );
+    }
+};
+
+N make( i32 v )
+{
+    return N( v );
+}
+
+i32 main()
+{
+    switch( make( 1 ).v )
+    {
+        case 1:
+            t::println( "one" );
+            break;
+        default:
+            return 1;
+    }
+
+    switch( make( 2 ).k )
+    {
+        case K::On:
+            t::println( "on" );
+            break;
+        case K::Off:
+            return 2;
+    }
+
+    switch( make( 3 ).p )
+    {
+        case P::Some( n ):
+            t::println( n );
+            break;
+        case P::None:
+            return 3;
+    }
+
+    for( i32 x : make( 4 ).items )
+    {
+        t::println( x );
+    }
+
+    t::println( "end" );
+    return 0;
+}

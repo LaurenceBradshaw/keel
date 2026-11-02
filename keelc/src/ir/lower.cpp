@@ -3513,7 +3513,8 @@ void Lowering::lower_switch( Node_id id )
         matched = builder_.place( taken );
     }
 
-    if( matched.is_whole_local() )
+    // The owner of `make().v` too, which the arms still read.
+    if( !matched.is_global() )
     {
         drops_.adopt_into_scope( matched.local );
     }
@@ -3919,7 +3920,7 @@ void Lowering::lower_walk( Node_id id )
     // The container, a temporary kept for the loop as a switch keeps its scrutinee.
     const Place place = lower_place( container );
 
-    if( place.is_whole_local() )
+    if( !place.is_global() )
     {
         drops_.adopt_into_scope( place.local );
     }
@@ -3991,7 +3992,7 @@ void Lowering::lower_element_walk( Node_id id )
 
     const Place place = lower_place( container );
 
-    if( place.is_whole_local() )
+    if( !place.is_global() )
     {
         drops_.adopt_into_scope( place.local );
     }
