@@ -1,0 +1,25 @@
+error: `T` cannot be `Shape`: an interface is never a type argument
+  --> sema/errors_deduced_interface.kl:52:12
+   |
+52 |     touch( s );
+   |            ^ pass the implementer itself, or take `const ref Shape` in a function that is not generic
+
+error: `T` cannot be `Shape`: an interface is never a type argument
+  --> sema/errors_deduced_interface.kl:53:22
+   |
+53 |     f64 a = area_of( s );
+   |                      ^ pass the implementer itself, or take `const ref Shape` in a function that is not generic
+
+error: `T` cannot be `Shape`: an interface is never a type argument
+  --> sema/errors_deduced_interface.kl:54:20
+   |
+54 |     auto h = hold( s );
+   |                    ^ pass the implementer itself, or take `const ref Shape` in a function that is not generic
+
+error: `T` cannot be `Shape`: an interface is never a type argument
+  --> sema/errors_deduced_interface.kl:55:20
+   |
+55 |     u64 n = boxed( b );
+   |                    ^ pass the implementer itself, or take `const ref Shape` in a function that is not generic
+
+4 errors generated

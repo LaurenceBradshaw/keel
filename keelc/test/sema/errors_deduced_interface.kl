@@ -1,0 +1,60 @@
+// An interface is never a type argument, written or deduced: a generic's body may hold its `T` by
+// value. Each refusal is at the argument that settled `T`. A pointer to one, or the implementer
+// itself, is an ordinary type argument.
+interface Shape
+{
+    f64 area() const;
+};
+
+struct Sq implements Shape
+{
+    f64 s;
+
+    f64 area() const { return s; }
+};
+
+struct Ptr<T>
+{
+    const T* p;
+};
+
+void touch<T>( const ref T x )
+{
+}
+
+f64 area_of<T>( const ref T x ) where T : Shape
+{
+    return x.area();
+}
+
+Ptr<T> hold<T>( const ref T x )
+{
+    return Ptr { &x };
+}
+
+u64 boxed<T>( const ref box<T> b )
+{
+    return 1;
+}
+
+u64 pointed<T>( T p ) where T : copyable
+{
+    return 2;
+}
+
+i32 main()
+{
+    Sq              q = Sq { 3.0 };
+    const ref Shape s = q;
+    box<Shape>      b = box<Sq>( Sq { 1.0 } );
+    const Shape*    p = &q;
+
+    touch( s );
+    f64 a = area_of( s );
+    auto h = hold( s );
+    u64 n = boxed( b );
+
+    u64 m = pointed( p );
+    f64 c = area_of( q );
+    return 0;
+}

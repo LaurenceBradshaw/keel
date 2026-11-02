@@ -890,8 +890,8 @@ vtable, and `ref Shape`, `const ref Shape`, `Shape*` and `box<Shape>` dispatch t
 before `where` — and never structural; a missing method, or one differing in its parameters, return,
 `const`, `static` or own type parameters, is reported at the `implements`. A generic implementer
 conforms per instance. **An interface type is never held by value**: a `Shape` local, field, global,
-bare parameter or type argument is refused, so `kl::list<Shape>` is and `kl::list<Shape*>` is not; a
-closed set of shapes is an `enum`. A bare parameter is refused rather than read as `const ref`,
+bare parameter or type argument, written or deduced, is refused, so `kl::list<Shape>` is and
+`kl::list<Shape*>` is not, and `touch( s )` on a `const ref Shape` deduces nothing; a closed set of shapes is an `enum`. A bare parameter is refused rather than read as `const ref`,
 since that would be a rule of its own. **An interface's method may not be generic**, since a vtable
 slot is one compiled function. **An interface may be generic**, `interface sink<T>`, its arguments
 always written: each instance is its own interface, with its own conformance and vtable, so one type

@@ -1279,7 +1279,7 @@ void Expressions::receive_marker( Node_id value )
     }
 }
 
-// A deduced type argument is never a run, and keeps its bounds however it was arrived at.
+// A deduced type argument is never a run or an interface, and keeps its bounds however it was arrived at.
 // Underlined at the argument that settled each, or the call where nothing did.
 void Expressions::check_deduced_bounds(
     std::span<const Node_id> parameters,
@@ -1311,6 +1311,24 @@ void Expressions::check_deduced_bounds(
                     table_.name( resolved[i] )
                 ),
                 fmt::format( "take the run as `const ref {}`", table_.name( resolved[i] ) )
+            );
+            continue;
+        }
+
+        // A generic's body may hold its `T` by value, which no interface can be.
+        if( resolved[i].is_valid() && table_.is_interface( resolved[i] ) )
+        {
+            reporter_.error_at(
+                bound_by_span,
+                fmt::format(
+                    "`{}` cannot be `{}`: an interface is never a type argument",
+                    interner_.text( ast_.name( parameters[i] ) ),
+                    table_.name( resolved[i] )
+                ),
+                fmt::format(
+                    "pass the implementer itself, or take `const ref {}` in a function that is not generic",
+                    table_.name( resolved[i] )
+                )
             );
             continue;
         }
