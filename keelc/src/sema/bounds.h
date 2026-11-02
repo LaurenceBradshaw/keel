@@ -143,6 +143,7 @@ public:
     std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
 
 private:
+    void check_each_bound( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
     // `integral` promises everything `numeric` does, and so on. Expanded once at the `where` clause
     // rather than walked at each query, which is what makes every later test one mask.
     Bound_set closure( Bound_set direct );
@@ -189,6 +190,7 @@ private:
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
     std::vector<std::pair<Node_id, Span>>         where_sets_; // each clause naming an interface, as written
     std::unordered_set<u64>                       conflicted_; // Interface_decl node << 32 | name, per reported conflict
+    std::unordered_set<u64>                       unmet_;      // Type_param_decl << 32 | argument, per refused type instance
 
     struct Deferred
     {

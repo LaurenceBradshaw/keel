@@ -10,16 +10,10 @@ error: expected an identifier, found `(`
 12 |     Circle( f64 radius ),
    |                          ^
 
-error: expected an identifier, found `,`
-  --> sema/errors_nameless_enum_parts.kl:18:14
+error: a payload field needs a name
+  --> sema/errors_nameless_enum_parts.kl:18:11
    |
 18 |     Both( f64, f64 ),
-   |              ^
+   |           ^^^ write one after its type, as in `Circle( f64 radius )`
 
-error: expected an identifier, found `)`
-  --> sema/errors_nameless_enum_parts.kl:18:19
-   |
-18 |     Both( f64, f64 ),
-   |                   ^
-
-4 errors generated
+3 errors generated

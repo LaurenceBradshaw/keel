@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "object/state.h"
+#include "sema/bounds.h"
 #include "sema/reporter.h"
 #include "sema/type.h"
 
@@ -79,6 +80,7 @@ private:
     Node_id       visible_from( Node_id use, Node_id head );
     bool          refuse_builtin_name( Symbol_id name, Node_id decl );
     void          refuse_leading_name( Node_id param );
+    void          refuse_hiding_name( Node_id param );
     void          refuse_unimported( Node_id use, Node_id decl );
     void          refuse_private( Node_id use, Node_id decl );
     std::string   module_name( File_id file ) const;
@@ -283,6 +285,7 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Type_param_decl:
         refuse_leading_name( id );
+        refuse_hiding_name( id );
         declare( scopes_.back(), ast_.name( id ), id );
         return;
     case Node_kind::For_stmt:
@@ -1193,6 +1196,53 @@ void Resolver::refuse_leading_name( Node_id param )
         "a type parameter is a name on its own here",
         "write the bound in a `where` clause after the parameter list"
     );
+}
+
+// A type parameter named like a bound or a type would hide it from the whole declaration.
+void Resolver::refuse_hiding_name( Node_id param )
+{
+    const Symbol_id   name = ast_.name( param );
+    const File_id     file = ast_.span( param ).file;
+    const std::string help = "a type parameter would hide it; give it a name of its own, such as `T`";
+
+    if( sema::bound_for_name( interner_.text( name ) ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( param ), fmt::format( "`{}` already names a bound", interner_.text( name ) ), help
+        );
+        return;
+    }
+
+    for( const Symbol_id package : { modules_.package_of( file ), modules_.prelude_package() } )
+    {
+        const auto scope = packages_.find( package );
+        if( scope == packages_.end() )
+        {
+            continue;
+        }
+
+        const auto found = scope->second.names.find( name );
+        if( found == scope->second.names.end() || !can_name( modules_, ast_, file, found->second ) )
+        {
+            continue;
+        }
+
+        const Node_kind kind = ast_.kind( found->second );
+
+        if( is_aggregate( kind ) || kind == Node_kind::Enum_decl || kind == Node_kind::Interface_decl )
+        {
+            reporter_.error_at(
+                ast_.name_span( param ),
+                fmt::format(
+                    "`{}` already names {}",
+                    interner_.text( name ),
+                    kind == Node_kind::Interface_decl ? "an interface" : "a type"
+                ),
+                help
+            );
+            return;
+        }
+    }
 }
 
 bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )

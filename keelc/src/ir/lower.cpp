@@ -2662,6 +2662,11 @@ std::vector<Operand> Lowering::lower_call_arguments(
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
         operands[i] = converted( operands[i], binding_type_under( parameters[i], callee_bound ), ast_.span( arguments[i] ) );
+        // A conversion's temporary still reports at the argument written.
+        if( !operands[i].span.is_valid() )
+        {
+            operands[i].span = ast_.span( arguments[i] );
+        }
 
         // The parameter's mode rather than what the call wrote, so the caller's end-of-statement drop
         // never fires on what it handed away.

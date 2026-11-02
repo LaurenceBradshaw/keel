@@ -1,0 +1,27 @@
+// D54 through locals holding the borrows: reported at the call, not where each was taken.
+interface Shape { i32 area() const; };
+struct Sq implements Shape { i32 s; i32 area() const { return s; } };
+
+i32 both( Shape* a, Shape* b ) { return a.area() + b.area(); }
+
+i32 as_interface()
+{
+    Sq     x = Sq { 2 };
+    Shape* a = &x;
+    Shape* b = &x;
+    return both( a, b );
+}
+
+i32 converted()
+{
+    Sq  x = Sq { 2 };
+    Sq* a = &x;
+    Sq* b = &x;
+    return both( a, b );
+}
+
+i32 written()
+{
+    Sq x = Sq { 2 };
+    return both( &x, &x );
+}

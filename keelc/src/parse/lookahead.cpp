@@ -551,6 +551,13 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
             return make_head( Member_kind::Destructor, start );
         }
 
+        // The parser refuses it: an interface holds only method signatures.
+        if( member_site_ == Member_site::Interface && cursor_.check( Token_kind::Semicolon ) )
+        {
+            has_body = false;
+            return make_head( Member_kind::Destructor, start );
+        }
+
         fail( Wanted::Token, Token_kind::L_brace );
         return make_failure();
     }
@@ -567,6 +574,13 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
 
         if( cursor_.check( Token_kind::L_brace ) )
         {
+            return make_head( Member_kind::Constructor, start );
+        }
+
+        // The parser refuses it: an interface holds only method signatures.
+        if( member_site_ == Member_site::Interface && cursor_.check( Token_kind::Semicolon ) )
+        {
+            has_body = false;
             return make_head( Member_kind::Constructor, start );
         }
 

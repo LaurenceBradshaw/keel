@@ -1470,7 +1470,34 @@ Node_id Parser::parse_interface_decl()
             break;
         }
 
-        const Node_id member = parse_member( *chunk.head, name, type_params, true );
+        const std::span<const Token> tokens = cursor_.tokens();
+        const Member_head&           head   = *chunk.head;
+
+        // Without a body, a constructor or destructor would stop at its `;` as a missing definition.
+        if( ( head.kind == Member_kind::Constructor || head.kind == Member_kind::Destructor ) &&
+            tokens[head.commit].kind == Token_kind::Semicolon )
+        {
+            recovery_.error_at(
+                Span::merge( tokens[head.start].span, tokens[head.commit].span ), "an `interface` holds only method signatures"
+            );
+            cursor_.seek( head.commit + 1 );
+            reported_line = std::nullopt;
+            continue;
+        }
+
+        const auto access = std::ranges::find_if(
+            tokens.subspan( head.start, head.commit - head.start ),
+            []( const Token& token ) {
+                return token.kind == Token_kind::Keyword &&
+                       ( token.keyword() == Keyword::Public || token.keyword() == Keyword::Private );
+            }
+        );
+        if( access != tokens.begin() + head.commit )
+        {
+            recovery_.error_at( access->span, "an interface's methods are public", "remove it" );
+        }
+
+        const Node_id member = parse_member( head, name, type_params, true );
 
         if( ast_.broken( member ) )
         {
@@ -1920,10 +1947,20 @@ Node_id Parser::parse_variant_decl()
                 break;
             }
 
-            const u32       before          = cursor_.position();
-            const Span      field_start     = cursor_.peek().span;
-            const Node_id   type            = parse_type();
-            const Symbol_id field_name      = expect_name();
+            const u32     before      = cursor_.position();
+            const Span    field_start = cursor_.peek().span;
+            const Node_id type        = parse_type();
+
+            // Said once per payload: a second unnamed field is the same mistake.
+            const bool unnamed = cursor_.check( Token_kind::Comma ) || cursor_.check( Token_kind::R_paren );
+            if( unnamed && list_errors == diags_.error_count() )
+            {
+                recovery_.error_at(
+                    ast_.span( type ), "a payload field needs a name", "write one after its type, as in `Circle( f64 radius )`"
+                );
+            }
+
+            const Symbol_id field_name      = unnamed ? Symbol_id {} : expect_name();
             const Span      field_name_span = cursor_.previous().span;
 
             payload.push_back(

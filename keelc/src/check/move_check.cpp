@@ -339,6 +339,10 @@ void find_aliased_arguments(
 
         const std::vector<Operand>& arguments = value.arguments;
 
+        // The loan where the call wrote it, else the argument naming a local that holds it.
+        const auto at = [&]( std::size_t i, const Borrow& loan )
+        { return arguments[i].span.contains( loan.at ) ? loan.at : arguments[i].span_or( loan.at ); };
+
         // D75: each arm of a chosen argument is an argument of its own.
         std::vector<std::pair<std::size_t, const Borrow*>> loans;
         for( std::size_t i = 0; i < arguments.size(); ++i )
@@ -369,10 +373,10 @@ void find_aliased_arguments(
                 {
                     errors.push_back( Move_error {
                         .local    = b->of,
-                        .use      = b->at,
+                        .use      = at( j, *b ),
                         .maybe    = may_differ( func, borrows, a->place, b->place ),
                         .conflict = Call_conflict::Aliased,
-                        .other    = a->at
+                        .other    = at( i, *a )
                     } );
                 }
 
@@ -382,10 +386,10 @@ void find_aliased_arguments(
                 {
                     errors.push_back( Move_error {
                         .local    = b->of,
-                        .use      = b->at,
+                        .use      = at( j, *b ),
                         .maybe    = may_differ( func, borrows, a->place, b->place ),
                         .conflict = Call_conflict::Out_twice,
-                        .other    = a->at
+                        .other    = at( i, *a )
                     } );
                 }
 
@@ -394,7 +398,7 @@ void find_aliased_arguments(
                     reaches( func, borrows, *a, b->place ) )
                 {
                     errors.push_back( Move_error {
-                        .local = b->of, .use = a->at, .conflict = Call_conflict::Element_and_whole, .other = b->at
+                        .local = b->of, .use = at( i, *a ), .conflict = Call_conflict::Element_and_whole, .other = at( j, *b )
                     } );
                 }
             }

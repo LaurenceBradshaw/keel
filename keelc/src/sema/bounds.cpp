@@ -288,6 +288,30 @@ bool Bounds::adopts_joined( Type_id type, Type_id value ) const
 // A span rather than a node, because a deduced type argument has no annotation to underline.
 void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments )
 {
+    // A type's instance is one type however often it is named, so `Sorted<Plain> s = Sorted( x );` is one mistake.
+    const auto owner   = owner_of_.find( parameter.v );
+    const bool of_type = owner != owner_of_.end() &&
+                         ( is_aggregate( ast_.kind( owner->second ) ) || ast_.kind( owner->second ) == Node_kind::Enum_decl );
+    const u64 instance = static_cast<u64>( parameter.v ) << 32 | argument.v;
+
+    if( of_type && unmet_.contains( instance ) )
+    {
+        return;
+    }
+
+    const std::size_t before = reporter_.error_count();
+    check_each_bound( parameter, at, argument, callee, arguments );
+
+    if( of_type && reporter_.error_count() != before )
+    {
+        unmet_.insert( instance );
+    }
+}
+
+void Bounds::check_each_bound(
+    Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments
+)
+{
     // An interface is met by a declared `implements`, or by a parameter promising it in turn.
     if( const auto named = interfaces_.find( parameter.v ); named != interfaces_.end() && !table_.references_error( argument ) )
     {
@@ -911,6 +935,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         }
 
         Bound_set direct_bounds = 0;
+        Bound_set written       = 0;
         for( const Node_id bound_node : ast_.bounds( where_clause ) )
         {
             // Already reported where it was resolved.
@@ -922,10 +947,38 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
             std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
             std::optional<Bound> bound      = bound_for_name( bound_name );
 
+            const auto report_repeat = [&]( std::string_view named )
+            {
+                reporter_.error_at(
+                    ast_.span( bound_node ),
+                    fmt::format( "`{}` is named twice for `{}`", named, interner_.text( subject_name ) ),
+                    "remove one"
+                );
+            };
+
             if( !bound && types_.type_of( bound_node ).is_valid() && table_.is_interface( types_.type_of( bound_node ) ) )
             {
-                interfaces_[it->v].push_back( types_.type_of( bound_node ) );
+                std::vector<Type_id>& named = interfaces_[it->v];
+
+                if( std::ranges::find( named, types_.type_of( bound_node ) ) != named.end() )
+                {
+                    report_repeat( table_.name( types_.type_of( bound_node ) ) );
+                    continue;
+                }
+
+                named.push_back( types_.type_of( bound_node ) );
                 continue;
+            }
+
+            if( bound && contains( written, *bound ) )
+            {
+                report_repeat( bound_name );
+                continue;
+            }
+
+            if( bound )
+            {
+                written |= static_cast<Bound_set>( *bound );
             }
 
             if( !bound )

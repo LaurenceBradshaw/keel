@@ -1,0 +1,19 @@
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_aliased_locals.kl:12:21
+   |
+12 |     return both( a, b );
+   |                     ^ `a` at 12:18 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_aliased_locals.kl:20:21
+   |
+20 |     return both( a, b );
+   |                     ^ `a` at 20:18 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+  --> sema/errors_aliased_locals.kl:26:22
+   |
+26 |     return both( &x, &x );
+   |                      ^^ `&x` at 26:18 is the same object; the callee would see it under two names
+
+3 errors generated

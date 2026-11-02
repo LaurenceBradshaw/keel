@@ -1,0 +1,19 @@
+error: a payload field needs a name
+ --> sema/errors_payload_names.kl:5:11
+  |
+5 |     link( i32, box<List> ),
+  |           ^^^ write one after its type, as in `Circle( f64 radius )`
+
+error: a payload field needs a name
+  --> sema/errors_payload_names.kl:10:13
+   |
+10 |     circle( f64 ),
+   |             ^^^ write one after its type, as in `Circle( f64 radius )`
+
+error: a payload field needs a name
+  --> sema/errors_payload_names.kl:11:23
+   |
+11 |     square( f64 side, f64 ),
+   |                       ^^^ write one after its type, as in `Circle( f64 radius )`
+
+3 errors generated

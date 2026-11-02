@@ -1,0 +1,22 @@
+// One mistake, one error: a bound named twice, an instance's unmet bound, a name a parameter hides.
+interface Shape { i32 area() const; };
+struct Plain { i32 n; };
+
+class Sorted<T> where T : comparable & copyable
+{
+    T item;
+    public Sorted( T x ) { item = x; }
+};
+
+void twice<T>( T _ ) where T : copyable & copyable { }
+void twice_interface<T>( const ref T _ ) where T : Shape & Shape { }
+
+// The annotation and the constructor name one instance.
+void instance( Plain x )
+{
+    Sorted<Plain> s = Sorted( x );
+}
+
+void hides_bound<copyable>( copyable _ ) { }
+void hides_interface<Shape>( Shape _ ) { }
+void hides_struct<Plain>( Plain _ ) { }
