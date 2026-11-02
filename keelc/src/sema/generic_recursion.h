@@ -39,7 +39,14 @@ public:
     std::vector<Generic_call>  take_generic_calls();
 
 private:
-    bool expands_forever( Node_id generic, std::vector<Node_id>& path, std::optional<Span> grown_at );
+    // A generic on the current walk, and the growing edge that entered it.
+    struct Step
+    {
+        Node_id             generic;
+        std::optional<Span> grown_at;
+    };
+
+    bool expands_forever( Node_id generic, std::vector<Step>& path );
     bool wraps_a_parameter( Type_id argument ) const;
 
     const Ast&        ast_;

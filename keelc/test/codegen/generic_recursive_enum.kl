@@ -1,0 +1,47 @@
+// A generic enum holding a box of itself is a finite set of instances: `chain<i32>` needs only
+// `box<chain<i32>>`, which needs only itself. Each list is built, counted and summed.
+import t::console;
+
+enum chain<T> where T : copyable
+{
+    link( T head, box<chain<T>> rest ),
+    end
+};
+
+chain<T> push<T>( T head, move chain<T> rest ) where T : copyable
+{
+    return chain::link( head, box<chain<T>>( move rest ) );
+}
+
+i32 count<T>( const ref chain<T> c ) where T : copyable
+{
+    switch( c )
+    {
+        case chain::link( head, rest ):
+            return 1 + count( rest.get() );
+        case chain::end:
+            return 0;
+    }
+}
+
+i64 sum( const ref chain<i64> c )
+{
+    switch( c )
+    {
+        case chain::link( head, rest ):
+            return head + sum( rest.get() );
+        case chain::end:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    chain<i64> numbers = push<i64>( 1, push<i64>( 2, push<i64>( 3, chain::end ) ) );
+    chain<f64> empty   = chain::end;
+
+    t::println( count( numbers ) );
+    t::println( sum( numbers ) );
+    t::println( count( empty ) );
+    return 0;
+}

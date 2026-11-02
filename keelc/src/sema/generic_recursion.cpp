@@ -113,7 +113,7 @@ void Generic_recursion::mark_reported( Node_id declaration )
 // at a depth nobody can justify: a cycle carrying at least one edge that builds a type.
 void Generic_recursion::check()
 {
-    std::vector<Node_id> path;
+    std::vector<Step> path;
 
     for( const Generic_call& edge : generic_calls_ )
     {
@@ -123,26 +123,29 @@ void Generic_recursion::check()
         }
 
         path.clear();
-        path.push_back( edge.from );
+        path.push_back( Step { .generic = edge.from, .grown_at = std::nullopt } );
 
-        expands_forever( edge.from, path, std::nullopt );
+        expands_forever( edge.from, path );
     }
 }
 
-// Depth-first from one generic, carrying whether any edge on the current path built a type. Returns
-// whether it reported, so a cycle is named once rather than once per way round it.
-bool Generic_recursion::expands_forever( Node_id generic, std::vector<Node_id>& path, std::optional<Span> grown_at )
+// Depth-first from one generic, each step carrying the growing edge that entered it. Only growth
+// inside a cycle counts: `chain<T>` naming `box<chain<T>>` grows on the way in, but box's own
+// forwarding cycle is finite. Returns whether it reported, so a cycle is named once rather than
+// once per way round it.
+bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& path )
 {
     for( const Generic_call& edge : generic_calls_ )
     {
-        if( edge.from != generic )
+        // Into a cycle already named, from a generic that only leads to it.
+        if( edge.from != generic || expanding_.contains( edge.to.v ) )
         {
             continue;
         }
 
         // The span of the *growing* call, kept rather than a flag: the edge that closes the cycle
         // is usually an innocent-looking forward, and pointing at it would name the wrong line.
-        std::optional<Span> grows = grown_at;
+        std::optional<Span> grows;
 
         for( const Type_id argument : edge.arguments )
         {
@@ -152,57 +155,67 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Node_id>& 
             }
         }
 
-        const bool closes = std::find( path.begin(), path.end(), edge.to ) != path.end();
+        const auto closing = std::ranges::find_if( path, [&]( const Step& step ) { return step.generic == edge.to; } );
 
-        if( closes && grows )
+        if( closing == path.end() )
         {
-            const auto name_of = [&]( Node_id declaration )
-            { return std::string( interner_.text( ast_.name( declaration ) ) ); };
+            path.push_back( Step { .generic = edge.to, .grown_at = grows } );
 
-            // The cycle as written, from where it closes: `f` -> `g` -> `f`. A self-call renders as
-            // `f` -> `f`, which reads correctly without a second phrasing for it.
-            std::string cycle;
+            const bool reported = expands_forever( edge.to, path );
 
-            for( auto step = std::find( path.begin(), path.end(), edge.to ); step != path.end(); ++step )
+            path.pop_back();
+
+            if( reported )
             {
-                cycle += fmt::format( "`{}` to ", name_of( *step ) );
+                return true;
             }
 
-            cycle += fmt::format( "`{}`", name_of( edge.to ) );
-
-            for( const Node_id step : path )
-            {
-                expanding_.insert( step.v );
-            }
-
-            reporter_.error_at(
-                *grows,
-                fmt::format( "`{}` is instantiated with a bigger type argument each time round", name_of( edge.to ) ),
-                fmt::format(
-                    "{}, and each round builds a type out of the last - so no set of instances ever "
-                    "finishes; forward the parameter itself, or take the built type as a second parameter",
-                    cycle
-                )
-            );
-
-            return true;
+            continue;
         }
 
-        if( closes )
+        // The edge into `closing` is outside the cycle; every later one is on it.
+        std::optional<Span> grown_at;
+
+        for( auto step = std::next( closing ); step != path.end() && !grown_at; ++step )
+        {
+            grown_at = step->grown_at;
+        }
+
+        if( !grown_at )
+        {
+            grown_at = grows;
+        }
+
+        if( !grown_at )
         {
             continue; // a cycle that forwards its parameters is finite, and is ordinary recursion
         }
 
-        path.push_back( edge.to );
+        const auto name_of = [&]( Node_id declaration ) { return std::string( interner_.text( ast_.name( declaration ) ) ); };
 
-        const bool reported = expands_forever( edge.to, path, grows );
+        // The cycle as written, from where it closes: `f` -> `g` -> `f`. A self-call renders as
+        // `f` -> `f`, which reads correctly without a second phrasing for it.
+        std::string cycle;
 
-        path.pop_back();
-
-        if( reported )
+        for( auto step = closing; step != path.end(); ++step )
         {
-            return true;
+            cycle += fmt::format( "`{}` to ", name_of( step->generic ) );
+            expanding_.insert( step->generic.v );
         }
+
+        cycle += fmt::format( "`{}`", name_of( edge.to ) );
+
+        reporter_.error_at(
+            *grown_at,
+            fmt::format( "`{}` is instantiated with a bigger type argument each time round", name_of( edge.to ) ),
+            fmt::format(
+                "{}, and each round builds a type out of the last - so no set of instances ever "
+                "finishes; forward the parameter itself, or take the built type as a second parameter",
+                cycle
+            )
+        );
+
+        return true;
     }
 
     return false;
@@ -357,6 +370,30 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
         REQUIRE( p.rendered().find( "f<T*>( p )" ) != std::string::npos );
     }
 
+    SECTION( "a growing call into a forwarding cycle is finite" )
+    {
+        // `outer<i32>` needs `depth<i32*>`, which needs only itself.
+        const Typed p( "i32 depth<U>( U a, i32 n ) where U : copyable { return depth<U>( a, n ); }\n"
+                       "i32 outer<T>( T a ) where T : copyable { return depth<T*>( &a, 3 ); }\n"
+                       "i32 main() { return outer<i32>( 5 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a growing cycle after one is still refused, once" )
+    {
+        const Typed p( "i32 depth<U>( U a, i32 n ) where U : copyable { return depth<U>( a, n ); }\n"
+                       "i32 grow<T>( T a ) where T : copyable { T* p = &a; return depth<T*>( p, 1 ) + grow<T*>( p ); }\n"
+                       "i32 outer<T>( T a ) where T : copyable { return grow<T>( a ); }\n"
+                       "i32 main() { return outer<i32>( 5 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`grow` to `grow`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "grow<T*>( p )" ) != std::string::npos );
+    }
+
     SECTION( "it is reported without anything being instantiated" )
     {
         // The graph is over declarations, so `main` naming none of them changes nothing. Reporting
@@ -403,6 +440,17 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "bigger type argument each time round" ) != std::string::npos );
         REQUIRE( p.rendered().find( "`A` to `B` to `A`" ) != std::string::npos );
+    }
+
+    SECTION( "the cycle named is the one that grows, not the prelude box's own" )
+    {
+        const Typed p( "struct S<T> where T : copyable { T t; box<S<fn( T ) -> void>>* s; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`S` is instantiated with a bigger type argument each time round" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`S` to `S`" ) != std::string::npos );
     }
 
     SECTION( "the cycle may close through a type argument rather than the type itself" )

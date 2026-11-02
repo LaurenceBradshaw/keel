@@ -1,0 +1,25 @@
+// A generic that builds a type and then calls a self-recursive generic is a finite set:
+// `once<i32>` needs `count<i32*>`, which needs only itself.
+import t::console;
+
+i64 count<T>( i64 n, T x ) where T : copyable
+{
+    if( n == 0 )
+    {
+        return 0;
+    }
+
+    return 1 + count( n - 1, x );
+}
+
+i64 once<T>( T x ) where T : copyable
+{
+    T* p = &x;
+    return count( 2, p );
+}
+
+i32 main()
+{
+    t::println( once<i32>( 5 ) );
+    return 0;
+}
