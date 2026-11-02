@@ -26,4 +26,8 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
 // `x + c`, `x - c` or `x` for `outer`, `(copy _t) op2 const c2` with `_t = x op1 const c1`, each `op`
 // `+` or `-`; nullopt otherwise. The caller knows `outer.a` reads what `inner` wrote, and `x` is unchanged.
 std::optional<Rvalue> combined( const Rvalue& outer, const Rvalue& inner, const Type_table& types, Literal_pool& literals );
+
+// `x as B` for `outer`, `(copy _t) as B` with `_t = x as A` of an integer `x`, when `A` holds every `x`
+// or `B` is an integer no wider than `A`; `x` itself when `B` is its type. Same caller contract.
+std::optional<Rvalue> composed( const Rvalue& outer, const Rvalue& inner, const Type_table& types );
 } // namespace keel

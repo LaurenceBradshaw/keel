@@ -16,7 +16,7 @@ namespace keel
 namespace
 {
 
-// `x op const c` as written, `op` `+` or `-`: a sum, or the check of one.
+// `x op const c` as written, `op` `+` or `-`: a sum, or the check of one; or `x as T`.
 struct Def
 {
     Rvalue value;
@@ -165,18 +165,18 @@ void forget( Known& known, const Function& func, const Statement& statement )
     }
 }
 
-// `x op const c`, `op` `+` or `-` of an integer, with `x` a whole local no pointer reaches or a whole global.
+// An integer read of a whole local no pointer reaches or a whole global.
+bool tracked( const Operand& x, const Type_table& types, const Local_set& addressed )
+{
+    return x.kind == Operand_kind::Copy && types.get( x.type ).kind == Type_kind::Int &&
+           ( whole_global( x.place ) || ( x.place.is_whole_local() && open( addressed, x.place.local ) ) );
+}
+
+// `x op const c`, `op` `+` or `-`, with `x` tracked.
 bool sum( const Rvalue& value, Rvalue_kind kind, const Type_table& types, const Local_set& addressed )
 {
-    if( value.kind != kind || ( value.op != Token_kind::Plus && value.op != Token_kind::Minus ) ||
-        types.get( value.a.type ).kind != Type_kind::Int || value.a.kind != Operand_kind::Copy ||
-        value.b.kind != Operand_kind::Constant || !value.b.constant.is_valid() )
-    {
-        return false;
-    }
-
-    const Place& x = value.a.place;
-    return whole_global( x ) || ( x.is_whole_local() && open( addressed, x.local ) );
+    return value.kind == kind && ( value.op == Token_kind::Plus || value.op == Token_kind::Minus ) &&
+           value.b.kind == Operand_kind::Constant && value.b.constant.is_valid() && tracked( value.a, types, addressed );
 }
 
 // Whether `check` proves `value`, a sum or its check, cannot overflow.
@@ -266,6 +266,11 @@ void learn(
                     std::ranges::any_of( known.checked, [&]( const Def& check ) { return proves( check, value, literals ); } );
         known.defs.emplace_back( place.local, std::move( def ) );
     }
+    else if( value.kind == Rvalue_kind::Cast && value.type == to && tracked( from, types, addressed ) &&
+             !rooted_at( from.place, place ) )
+    {
+        known.defs.emplace_back( place.local, Def { .value = value } );
+    }
 }
 
 // A read of a whole global with a fact reads the fact instead.
@@ -287,7 +292,7 @@ bool rewrite( Operand& operand, const Known& known )
     return true;
 }
 
-// What `value` reduces to by what the walk knows: a chain of sums combined, or a check another proves.
+// What `value` reduces to by what the walk knows: a chain of sums or casts combined, or a check another proves.
 std::optional<Rvalue> fold( const Rvalue& value, const Known& known, const Type_table& types, Literal_pool& literals )
 {
     const Def* inner = def_of( known, value.a );
@@ -295,6 +300,11 @@ std::optional<Rvalue> fold( const Rvalue& value, const Known& known, const Type_
     if( value.kind == Rvalue_kind::Binary )
     {
         return inner && inner->current ? combined( value, inner->value, types, literals ) : std::nullopt;
+    }
+
+    if( value.kind == Rvalue_kind::Cast )
+    {
+        return inner && inner->current ? composed( value, inner->value, types ) : std::nullopt;
     }
 
     if( value.kind != Rvalue_kind::Overflows )

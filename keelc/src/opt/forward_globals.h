@@ -10,7 +10,7 @@ namespace keel
 {
 // After propagate_constants: within a run of blocks each entered only from the last, a read of a whole
 // global takes the constant or local last written to it, a write nothing reads before the next goes,
-// `(x + c) - c` is `x`, and a check an earlier one proves is false; release only. Whether it changed
-// anything.
+// `(x + c) - c` is `x`, two casts that compose are one, and a check an earlier one proves is false;
+// release only. Whether it changed anything.
 bool forward_globals( Function& func, const Type_table& types, Literal_pool& literals );
 } // namespace keel

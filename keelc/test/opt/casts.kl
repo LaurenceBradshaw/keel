@@ -1,0 +1,44 @@
+// Two casts in a row, in a release build: a widening then any integer, or any integer then a
+// narrower one, is one cast; a round trip back to the source's type is a copy. A narrowing then a
+// widening keeps both. Each check returns its own code.
+
+// `x as i64`.
+i64 widened( u8 x ) { return cast<i64>( cast<i32>( x ) ); }
+
+// `x as u8`.
+u8 wrapped( i64 x ) { return wrap<u8>( wrap<u16>( x ) ); }
+
+// `x as u32`: the sign extends, then the top half goes.
+u32 extended( i8 x ) { return wrap<u32>( wrap<u64>( x ) ); }
+
+// `x`.
+u8 round_trip( u8 x ) { return cast<u8>( cast<i32>( x ) ); }
+
+// The wrap drops bits the widening cannot bring back, so both stay.
+i64 narrowed( i32 x ) { return cast<i64>( wrap<u8>( x ) ); }
+
+i32 main()
+{
+    if( widened( 200 ) != 200 )
+    {
+        return 1;
+    }
+    if( wrapped( 0x12345 ) != 0x45 )
+    {
+        return 2;
+    }
+    if( extended( -1 ) != 0xFFFFFFFF )
+    {
+        return 3;
+    }
+    if( round_trip( 255 ) != 255 )
+    {
+        return 4;
+    }
+    if( narrowed( 0x1FF ) != 255 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

@@ -487,6 +487,31 @@ std::optional<Rvalue> combined( const Rvalue& outer, const Rvalue& inner, const 
     return binary( Token_kind::Plus, inner.a, constant( literals.add_integer( net ), outer.type ), outer.type );
 }
 
+std::optional<Rvalue> composed( const Rvalue& outer, const Rvalue& inner, const Type_table& types )
+{
+    const std::optional<Integer> from = integer_type( types, inner.a.type );
+    const std::optional<Integer> via  = integer_type( types, inner.type );
+    const Type_kind              to   = types.get( outer.type ).kind;
+
+    if( outer.kind != Rvalue_kind::Cast || inner.kind != Rvalue_kind::Cast || outer.a.type != inner.type || !from || !via ||
+        ( to != Type_kind::Int && to != Type_kind::Float ) )
+    {
+        return std::nullopt;
+    }
+
+    // `via` holds every `from` value, or `to` keeps no more bits than `via` does.
+    const bool lossless =
+        via->is_signed == from->is_signed ? via->width >= from->width : via->is_signed && via->width > from->width;
+    const bool narrower = to == Type_kind::Int && types.get( outer.type ).width <= via->width;
+
+    if( !lossless && !narrower )
+    {
+        return std::nullopt;
+    }
+
+    return outer.type == inner.a.type ? use( inner.a ) : cast_to( inner.a, outer.type );
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -657,6 +682,41 @@ TEST_CASE( "fold_constants_keeps_a_combined_minimum", "[opt][fold]" )
     REQUIRE( wrapped );
     REQUIRE( wrapped->op == Token_kind::Minus );
     REQUIRE( literals.integer( wrapped->b.constant ) == 2147483648u );
+}
+
+// A widening then anything, or anything then a narrower integer, is one cast; a narrowing then a widening is not.
+TEST_CASE( "fold_constants_composes_two_casts", "[opt][fold]" )
+{
+    const Type_table types;
+    const Type_id    u8    = types.integer( 8, false );
+    const Type_id    i8    = types.integer( 8, true );
+    const Type_id    u16   = types.integer( 16, false );
+    const Type_id    i32   = types.integer( 32, true );
+    const Type_id    i64   = types.integer( 64, true );
+    const Type_id    u64   = types.integer( 64, false );
+    const auto       chain = [&]( Type_id from, Type_id via, Type_id to )
+    {
+        return composed(
+            cast_to( copy( Place { .local = Local_id { 2 } }, via ), to ),
+            cast_to( copy( Place { .local = Local_id { 1 } }, from ), via ),
+            types
+        );
+    };
+
+    const std::optional<Rvalue> widened = chain( u8, i32, i64 );
+    REQUIRE( widened );
+    REQUIRE( widened->kind == Rvalue_kind::Cast );
+    REQUIRE( widened->a.place.local == Local_id { 1 } );
+    REQUIRE( widened->type == i64 );
+
+    REQUIRE( chain( i64, u16, u8 ) );
+    REQUIRE( chain( i8, u64, i32 ) );
+    REQUIRE( chain( u8, i32, u8 )->kind == Rvalue_kind::Use );
+
+    REQUIRE( !chain( i32, u8, i64 ) );
+    REQUIRE( !chain( i8, u8, i32 ) );
+    REQUIRE( !chain( u8, i8, i32 ) );
+    REQUIRE( !chain( i32, u64, types.builtin( Type_kind::Bool ) ) );
 }
 
 } // namespace keel
