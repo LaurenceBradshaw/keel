@@ -411,16 +411,15 @@ void Resolver::visit( Node_id id )
     case Node_kind::Implements_decl:
         visit_block( id );
         return;
-    // A bound the compiler provides names nothing; one naming an interface is bound to it here, and
-    // the checker reports a name that is neither.
+    // A bound the compiler provides names nothing; one naming a declaration is bound to it here,
+    // and the checker reports one that is not an interface.
     case Node_kind::Bound_name:
         // `kl::sink`: a miss is reported, as for a qualified type; what it names is checked later.
         if( ast_.package( id ).is_valid() )
         {
             bindings_[id.v] = lookup_qualified( ast_.package( id ), id );
         }
-        else if( const Node_id decl = lookup( ast_.name( id ), id );
-                 decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+        else if( const Node_id decl = lookup( ast_.name( id ), id ); decl.is_valid() )
         {
             bind( id, decl );
         }

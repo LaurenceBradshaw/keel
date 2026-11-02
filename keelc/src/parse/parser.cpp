@@ -88,8 +88,11 @@ private:
     // One `where T : A & B`. Several are separated by `, where` - the comma is for the reader, and
     // `where` is what the parser keys on.
     Node_id parse_where_clause();
-    // Every `where` clause at the cursor, appended to `generics`; refused when `generic` is false.
-    void parse_where_clauses( bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help );
+    // Every `where` clause at the cursor, appended to `generics`; refused when `generic` is false,
+    // or when it names one of `outer`, the enclosing aggregate's parameters.
+    void parse_where_clauses(
+        bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help, Node_id outer = {}
+    );
 
     // `&` between bounds, and a diagnostic for the two plausible wrong guesses.
     bool match_bound_separator();
@@ -202,7 +205,8 @@ private:
     Token_cursor           cursor_;
     Lookahead              lookahead_;
     std::vector<Symbol_id> classes_;
-    Node_id                block_type_; // while in an `implements ... for` block, the type its methods receive
+    Node_id                block_type_;     // while in an `implements ... for` block, the type its methods receive
+    Span                   aggregate_name_; // the aggregate or interface whose members are being parsed
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -986,7 +990,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     }
 
     parse_where_clauses(
-        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : copyable`"
+        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : copyable`", type_params
     );
 
     reach_commit( head.commit );
@@ -1040,11 +1044,33 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
 }
 
 // Written after the parameter list on a function or method, after the name on a type.
-void Parser::parse_where_clauses( bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help )
+void Parser::parse_where_clauses(
+    bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help, Node_id outer
+)
 {
     while( cursor_.check_keyword( Keyword::Where ) )
     {
         const Node_id clause = parse_where_clause();
+
+        // No conditional methods: a bound on the aggregate's parameter holds for every method.
+        const std::vector<Node_id> outer_params = ast_.type_parameters( outer );
+        if( ast_.kind( clause ) == Node_kind::Where_clause &&
+            std::any_of(
+                outer_params.begin(), outer_params.end(), [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); }
+            ) )
+        {
+            const std::string_view subject   = sm_.text( ast_.name_span( clause ) );
+            const std::string_view aggregate = sm_.text( aggregate_name_ );
+            recovery_.error_at(
+                ast_.span( clause ),
+                fmt::format( "`{}` is `{}`'s parameter, so its bounds go on `{}`", subject, aggregate, aggregate ),
+                fmt::format(
+                    "write the clause after `{}`'s parameters, or make this method a free generic function", aggregate
+                )
+            );
+
+            continue;
+        }
 
         // A clause with nothing to constrain. Reported here rather than left to sema, because
         // without it the declaration would look generic to everything downstream.
@@ -1275,6 +1301,7 @@ Node_id Parser::parse_aggregate_decl()
     bool                 dropped = false;
     std::optional<u32>   reported_line;
     classes_.push_back( name );
+    aggregate_name_ = name_span;
     while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
     {
         if( skip_access_label( is_class ) )
@@ -1410,6 +1437,7 @@ Node_id Parser::parse_interface_decl()
     }
 
     classes_.push_back( name );
+    aggregate_name_ = name_span;
     // the two slots a struct has: type parameters, then implements
     std::vector<Node_id> members { type_params, implements };
     std::optional<u32>   reported_line;
@@ -11464,8 +11492,23 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
         const Parsed p( "class Box<T> { T v; T get() const where T : copyable { return v; } };" );
 
         REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "`T` is `Box`'s parameter, so its bounds go on `Box`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "or make this method a free generic function" ) != std::string::npos );
+    }
+
+    SECTION( "a method's clause on a name that is no one's parameter still asks for parameters" )
+    {
+        const Parsed p( "class Box<T> { T v; T get() const where U : copyable { return v; } };" );
+
         REQUIRE( p.errors().find( "a `where` clause needs type parameters" ) != std::string::npos );
         REQUIRE( p.errors().find( "U map<U>( U a ) where U : copyable" ) != std::string::npos );
+    }
+
+    SECTION( "a generic method's clause on the aggregate's parameter is refused in the parser" )
+    {
+        const Parsed p( "struct Box<T> where T : copyable { T v; U f<U>( U u ) const where T : numeric { return u; } };" );
+
+        REQUIRE( p.errors().find( "`T` is `Box`'s parameter, so its bounds go on `Box`" ) != std::string::npos );
     }
 }
 

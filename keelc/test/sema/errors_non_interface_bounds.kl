@@ -1,0 +1,12 @@
+// A known type that is not an interface is refused as one; only a name nothing declares is unknown.
+struct Plain { i32 x; };
+enum Colour { red, green };
+
+void on_struct<T>( T t ) where T : Plain {}
+void on_builtin<T>( T t ) where T : i32 {}
+void on_enum<T>( T t ) where T : Colour {}
+void among<T>( T t ) where T : copyable & Plain {}
+void on_parameter<T, U>( T t, U u ) where T : U, where U : copyable {}
+void on_nothing<T>( T t ) where T : Nope {}
+
+i32 main() { return 0; }

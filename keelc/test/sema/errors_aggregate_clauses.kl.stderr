@@ -1,0 +1,37 @@
+error: `T` is `Cell`'s parameter, so its bounds go on `Cell`
+ --> sema/errors_aggregate_clauses.kl:6:44
+  |
+6 |     bool same( const ref Cell<T> o ) const where T : equatable { return v == o.v; }
+  |                                            ^^^^^^^^^^^^^^^^^^^ write the clause after `Cell`'s parameters, or make this method a free generic function
+
+error: no operator `==` for `T` and `T`
+ --> sema/errors_aggregate_clauses.kl:6:73
+  |
+6 |     bool same( const ref Cell<T> o ) const where T : equatable { return v == o.v; }
+  |                                                                         ^^^^^^^^ `==` needs `equatable`; add `equatable` to the `where` clause for `T` on `Cell`
+
+error: `T` is `Cell`'s parameter, so its bounds go on `Cell`
+ --> sema/errors_aggregate_clauses.kl:8:51
+  |
+8 |     bool with<U>( U u ) const where U : copyable, where T : comparable { return v < v; }
+  |                                                   ^^^^^^^^^^^^^^^^^^^^ write the clause after `Cell`'s parameters, or make this method a free generic function
+
+error: no operator `<` for `T` and `T`
+ --> sema/errors_aggregate_clauses.kl:8:81
+  |
+8 |     bool with<U>( U u ) const where U : copyable, where T : comparable { return v < v; }
+  |                                                                                 ^^^^^ `<` needs `comparable`; add `comparable` to the `where` clause for `T` on `Cell`
+
+error: `T` is `sink`'s parameter, so its bounds go on `sink`
+  --> sema/errors_aggregate_clauses.kl:13:21
+   |
+13 |     void put( T x ) where T : copyable;
+   |                     ^^^^^^^^^^^^^^^^^^ write the clause after `sink`'s parameters, or make this method a free generic function
+
+error: no operator `==` for `T` and `T`
+  --> sema/errors_aggregate_clauses.kl:21:54
+   |
+21 |     bool same( const ref Plain<T> o ) const { return v == o.v; }
+   |                                                      ^^^^^^^^ `==` needs `equatable`; add `equatable` to the `where` clause for `T` on `Plain`
+
+6 errors generated

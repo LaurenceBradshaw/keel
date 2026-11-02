@@ -434,6 +434,12 @@ void Bounds::report_unmet(
     );
 }
 
+Node_id Bounds::owner_of( Type_id parameter ) const
+{
+    const auto it = owner_of_.find( table_.get( parameter ).declaration.v );
+    return it == owner_of_.end() ? Node_id {} : it->second;
+}
+
 std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise ) const
 {
     // An interface's `self` has no owner, and no clause it could take would help.
@@ -924,11 +930,14 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
 
             if( !bound )
             {
-                // The span is the name, not the clause, and the list comes from the table
-                // rather than from this string - so adding a bound updates the message.
+                // A type that is not an interface is known, just not a bound. The span is the
+                // name, not the clause, and the list comes from the table rather than from this
+                // string - so adding a bound updates the message.
+                const bool known = resolution_.declaration_of( bound_node ).is_valid() || is_builtin_type_name( bound_name );
                 reporter_.error_at(
                     ast_.span( bound_node ),
-                    fmt::format( "unknown bound `{}`", bound_name ),
+                    known ? fmt::format( "`{}` is not an interface", bound_name )
+                          : fmt::format( "unknown bound `{}`", bound_name ),
                     fmt::format( "a bound is an interface, or one of {}", known_bound_names() )
                 );
                 continue;
@@ -2023,7 +2032,7 @@ TEST_CASE( "bounds_meet_an_interface_only_by_implements", "[sema][interfaces]" )
           "`both` needs a `T` that implements `Named`, but `Sq` does not",
           "declare `Sq` with `implements Named`" },
         { "f64 odd<T>( const ref T t ) where T : Plain { return 0.0; }\ni32 main() { return 0; }",
-          "unknown bound `Plain`",
+          "`Plain` is not an interface",
           "a bound is an interface, or one of" },
     };
 

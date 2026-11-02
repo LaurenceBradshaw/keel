@@ -16,17 +16,17 @@ error: `T` is already declared in this scope
 25 |     V over<T, V>( V v ) const where V : copyable { return v; }
    |            ^ previous declaration is at: sema/errors_generic_methods.kl:3:11
 
-error: `T` is not a type parameter of `bounded`
+error: `T` is `Box`'s parameter, so its bounds go on `Box`
   --> sema/errors_generic_methods.kl:28:51
    |
 28 |     U bounded<U>( U u ) const where U : copyable, where T : numeric { return u; }
-   |                                                   ^^^^^^^^^^^^^^^^^
+   |                                                   ^^^^^^^^^^^^^^^^^ write the clause after `Box`'s parameters, or make this method a free generic function
 
-error: a `where` clause needs type parameters
+error: `T` is `Box`'s parameter, so its bounds go on `Box`
   --> sema/errors_generic_methods.kl:31:21
    |
 31 |     T plain() const where T : numeric { return value; }
-   |                     ^^^^^^^^^^^^^^^^^ write them on the name, as in `U map<U>( U a ) where U : copyable`
+   |                     ^^^^^^^^^^^^^^^^^ write the clause after `Box`'s parameters, or make this method a free generic function
 
 error: `get` is not a generic method
   --> sema/errors_generic_methods.kl:43:13

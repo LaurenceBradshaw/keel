@@ -137,7 +137,10 @@ public:
     // answer are refused. Once every signature is typed.
     void check_requirement_sets();
     // Whether `name` on `owner` was one half of a conflict already reported, so a call need not add one.
-    bool conflicted( Type_id owner, Symbol_id name ) const;
+    bool    conflicted( Type_id owner, Symbol_id name ) const;
+    Node_id owner_of( Type_id parameter ) const; // the declaration that introduced it, or invalid
+    // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
+    std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
 
 private:
     // `integral` promises everything `numeric` does, and so on. Expanded once at the `where` clause
@@ -146,8 +149,6 @@ private:
     // What a clause's interfaces require, closed over, so `where T : Shape` promises `Named` too.
     void require_refinements( std::vector<Type_id>& interfaces ) const;
 
-    // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
-    std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
     // Why a type the compiler would make `interface` is not one: its own `equatable` replaced it.
     std::string dropped_help( Type_id type, Type_id interface ) const;
     // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.

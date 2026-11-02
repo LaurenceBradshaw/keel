@@ -224,23 +224,27 @@ Binary_result Operators::result_of_binary(
         if( !met )
         {
             const std::string_view required = interface.is_valid() ? table_.name( interface ) : name_of_bound( *bound );
+            const std::string_view promise  = against_a_number ? "numeric" : required;
+
+            // The aggregate's `T` takes its clause on the aggregate, which may already have one.
+            const Node_id     owner = bounds_.owner_of( parameter );
+            const std::string fix   = owner.is_valid() && owner != current_function
+                                          ? bounds_.forwarded_help( parameter, promise )
+                                          : fmt::format(
+                                              "write `where {} : {}` on `{}`",
+                                              table_.name( parameter ),
+                                              promise,
+                                              interner_.text( ast_.name( current_function ) )
+                                          );
 
             return reject(
                 against_a_number ? fmt::format(
-                                       "`{}` must be a number to compare against `{}`; write `where {} : numeric` on `{}`",
+                                       "`{}` must be a number to compare against `{}`; {}",
                                        table_.name( parameter ),
                                        table_.name( other ),
-                                       table_.name( parameter ),
-                                       interner_.text( ast_.name( current_function ) )
+                                       fix
                                    )
-                                 : fmt::format(
-                                       "`{}` needs `{}`; write `where {} : {}` on `{}`",
-                                       token_kind_spelling( op ),
-                                       required,
-                                       table_.name( parameter ),
-                                       required,
-                                       interner_.text( ast_.name( current_function ) )
-                                   )
+                                 : fmt::format( "`{}` needs `{}`; {}", token_kind_spelling( op ), required, fix )
             );
         }
 
