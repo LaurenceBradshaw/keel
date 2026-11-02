@@ -337,7 +337,7 @@ Argument_shape Expressions::argument_shape( Node_id argument )
 
     // `nullptr`, which every pointer accepts
     if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_literal ||
-        ast_.kind( value ) == Node_kind::Array_fill )
+        ast_.kind( value ) == Node_kind::Array_fill || is_open_address( value ) )
     {
         return shape;
     }
@@ -375,6 +375,26 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
 
     return shape;
+}
+
+bool Expressions::is_open_address( Node_id value ) const
+{
+    if( ast_.kind( value ) != Node_kind::Unary_expr || ast_.op( value ) != Token_kind::Amp )
+    {
+        return false;
+    }
+
+    const Node_id operand = ast_.operand( value );
+    if( ast_.kind( operand ) != Node_kind::Name_expr && ast_.kind( operand ) != Node_kind::Path_expr )
+    {
+        return false;
+    }
+
+    const Node_id declaration = resolution_.declaration_of( operand );
+
+    return declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Function_decl &&
+           ( overloads_.next_visible( value, declaration ).is_valid() ||
+             ( ast_.is_generic( declaration ) && !ast_.type_arg_list( operand ).is_valid() ) );
 }
 
 Type_id Expressions::infer_call( Node_id id )
@@ -1522,7 +1542,8 @@ Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> sh
         }
 
         // A generic struct literal has no instance without the parameter; its fields are still typed.
-        if( i < shapes.size() && shapes[i].kind == Argument_kind::Instance )
+        // An open `&f` has no function without it, which says nothing the refusal has not.
+        if( ( i < shapes.size() && shapes[i].kind == Argument_kind::Instance ) || is_open_address( arguments[i] ) )
         {
             check( arguments[i], table_.builtin( Type_kind::Error ) );
             continue;

@@ -17,6 +17,8 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
     const std::string_view name  = interner_.text( ast_.name( ast_.operand( id ) ) );
 
     const Node_id type_args = ast_.type_arg_list( ast_.operand( id ) );
+    // An error expectation is a refused context, which already said why there is no signature.
+    const bool refused_context = expectation.is_valid() && table_.is_error( expectation );
 
     if( overloads_.next_visible( id, declaration ).is_valid() )
     {
@@ -42,11 +44,14 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
         }
         else
         {
-            reporter_.error_at(
-                ast_.span( id ),
-                fmt::format( "`{}` is overloaded, so its address names no one function", name ),
-                "assigning it to a variable of one signature will choose between them"
-            );
+            if( !refused_context )
+            {
+                reporter_.error_at(
+                    ast_.span( id ),
+                    fmt::format( "`{}` is overloaded, so its address names no one function", name ),
+                    "assigning it to a variable of one signature will choose between them"
+                );
+            }
 
             return types_.record( id, error );
         }
@@ -54,11 +59,14 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
 
     if( ast_.is_generic( declaration ) && !type_args.is_valid() )
     {
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` is generic, so its address names no one function", name ),
-            fmt::format( "write its type arguments, as in `&{}<i32>`", name )
-        );
+        if( !refused_context )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is generic, so its address names no one function", name ),
+                fmt::format( "write its type arguments, as in `&{}<i32>`", name )
+            );
+        }
 
         return types_.record( id, error );
     }

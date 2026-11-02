@@ -1,0 +1,23 @@
+// `&widen` is overloaded, so the parameter it is passed to chooses: `T` from `n`, `U` from `r`.
+
+U apply<T, U>( fn( T ) -> U f, T x ) where T : copyable, where U : copyable
+{
+    return f( x );
+}
+
+i64 widen( i32 x )
+{
+    return cast<i64>( x ) + 100;
+}
+
+i64 widen( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    i32 n = 5;
+    i64 r = apply( &widen, n );
+    return cast<i32>( r );
+}

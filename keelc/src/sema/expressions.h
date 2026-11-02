@@ -146,6 +146,8 @@ private:
     // What an argument can say about itself before a candidate has been chosen. It takes a node and
     // infers it, which is the half `Overloads` may not do - so the walk keeps it.
     Argument_shape argument_shape( Node_id argument );
+    // `&f` of an overloaded or generic `f`: only the parameter it is passed to can name one function.
+    bool is_open_address( Node_id value ) const;
 
     Type_id infer_method_call( Node_id id );
     Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );

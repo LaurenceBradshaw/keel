@@ -1,0 +1,103 @@
+// codegen/function_pointer_overload_deduced.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef int64_t ( *kl__fn__F3i32E3i64 )( int32_t );
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int64_t kl__widen__3i32( int32_t );
+int64_t kl__widen__3i64( int64_t );
+int32_t kl__main__( void );
+int64_t kl__apply__I3i32_3i64E__F3i32E3i64_3i32( kl__fn__F3i32E3i64, int32_t );
+
+#line 8 "codegen/function_pointer_overload_deduced.kl"
+int64_t kl__widen__3i32( int32_t kl_x_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_t2;
+    bool kl_t3;
+    int64_t kl_t4;
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    kl_t2 = ( int64_t ) kl_x_1;
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    kl_t3 = __builtin_add_overflow( kl_t2, 100, &( int64_t ) { 0 } );
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    kl_rt_panic( "codegen/function_pointer_overload_deduced.kl", 10, "arithmetic overflow: cast<i64>( x ) + 100" );
+    bb2:
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    kl_t4 = kl_t2 + 100;
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    kl_t0 = kl_t4;
+#line 10 "codegen/function_pointer_overload_deduced.kl"
+    return kl_t0;
+}
+
+#line 13 "codegen/function_pointer_overload_deduced.kl"
+int64_t kl__widen__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+#line 15 "codegen/function_pointer_overload_deduced.kl"
+    kl_t0 = kl_x_1;
+#line 15 "codegen/function_pointer_overload_deduced.kl"
+    return kl_t0;
+}
+
+#line 18 "codegen/function_pointer_overload_deduced.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_n_1;
+    int64_t kl_r_2;
+    kl__fn__F3i32E3i64 kl_t3;
+    int64_t kl_t4;
+    int32_t kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+#line 20 "codegen/function_pointer_overload_deduced.kl"
+    kl_n_1 = 5;
+    kl_t3 = kl__widen__3i32;
+#line 21 "codegen/function_pointer_overload_deduced.kl"
+    kl_t4 = kl__apply__I3i32_3i64E__F3i32E3i64_3i32( kl_t3, kl_n_1 );
+#line 21 "codegen/function_pointer_overload_deduced.kl"
+    kl_r_2 = kl_t4;
+    kl_t5 = ( int32_t ) kl_r_2;
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    kl_t6 = ( int64_t ) kl_t5;
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    kl_t7 = kl_t6 == kl_r_2;
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    if ( kl_t7 ) goto bb2; else goto bb1;
+    bb1:
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    kl_rt_panic( "codegen/function_pointer_overload_deduced.kl", 22, "cast out of range: cast<i32>( r )" );
+    bb2:
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    kl_t0 = kl_t5;
+#line 22 "codegen/function_pointer_overload_deduced.kl"
+    return kl_t0;
+}
+
+#line 3 "codegen/function_pointer_overload_deduced.kl"
+int64_t kl__apply__I3i32_3i64E__F3i32E3i64_3i32( kl__fn__F3i32E3i64 kl_f_1, int32_t kl_x_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_t3;
+#line 5 "codegen/function_pointer_overload_deduced.kl"
+    kl_t3 = kl_f_1( kl_x_2 );
+#line 5 "codegen/function_pointer_overload_deduced.kl"
+    kl_t0 = kl_t3;
+#line 5 "codegen/function_pointer_overload_deduced.kl"
+    return kl_t0;
+}
+
+#line 18 "codegen/function_pointer_overload_deduced.kl"
+int main( void )
+{
+#line 18 "codegen/function_pointer_overload_deduced.kl"
+    return (int) kl__main__();
+}
