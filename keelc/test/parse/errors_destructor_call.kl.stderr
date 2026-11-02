@@ -1,0 +1,13 @@
+error: a destructor cannot be named
+  --> parse/errors_destructor_call.kl:19:7
+   |
+19 |     x.~R();
+   |       ^^ it runs by itself when the value's lifetime ends, and `_ = move x;` ends a local `x` now
+
+error: a destructor cannot be named
+  --> parse/errors_destructor_call.kl:21:7
+   |
+21 |     p.~R();
+   |       ^^ it runs by itself when the value's lifetime ends, and `_ = move x;` ends a local `x` now
+
+2 errors generated

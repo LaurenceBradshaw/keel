@@ -422,7 +422,7 @@ Symbol_id Parser::expect_member_name()
     recovery_.error_at(
         Span::merge( tilde, cursor_.previous().span ),
         "a destructor cannot be named",
-        "it runs by itself when the value's lifetime ends"
+        "it runs by itself when the value's lifetime ends, and `_ = move x;` ends a local `x` now"
     );
 
     return Symbol_id {};
@@ -3509,8 +3509,8 @@ Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
 
             cursor_.advance();
 
-            // expect_name rather than a bare expect: a keyword here was meant as the member name.
-            left = member_access( left, Node_kind::Field_expr, expect_name() );
+            // Not a bare expect: a keyword here was meant as the member name, and `x.~R()` is a habit.
+            left = member_access( left, Node_kind::Field_expr, expect_member_name() );
             continue;
         }
 

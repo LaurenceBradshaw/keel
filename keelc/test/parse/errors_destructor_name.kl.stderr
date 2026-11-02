@@ -2,12 +2,12 @@ error: a destructor cannot be named
   --> parse/errors_destructor_name.kl:19:18
    |
 19 |     auto p = &C::~C;
-   |                  ^^ it runs by itself when the value's lifetime ends
+   |                  ^^ it runs by itself when the value's lifetime ends, and `_ = move x;` ends a local `x` now
 
 error: a destructor cannot be named
   --> parse/errors_destructor_name.kl:20:8
    |
 20 |     C::~C();
-   |        ^^ it runs by itself when the value's lifetime ends
+   |        ^^ it runs by itself when the value's lifetime ends, and `_ = move x;` ends a local `x` now
 
 2 errors generated

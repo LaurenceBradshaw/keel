@@ -1,0 +1,23 @@
+// A destructor cannot be called through a value or a pointer, as `x.~R()` or `p->~R()` would.
+class R
+{
+    i32 n;
+
+    R( i32 v )
+    {
+        n = v;
+    }
+
+    ~R()
+    {
+    }
+};
+
+i32 main()
+{
+    R x = R( 1 );
+    x.~R();
+    R* p = &x;
+    p.~R();
+    return 0;
+}
