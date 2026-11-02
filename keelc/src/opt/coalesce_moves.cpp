@@ -609,13 +609,15 @@ void rename( Function& func, Local_id gone, const Place& into )
 }
 
 // Marks the move, `gone`'s storage markers and each drop of an uninitialised `gone` or `kept`; answers
-// whether a drop of `gone` stays.
+// whether a drop of `gone` stays, and sets `flag_lost` when a deleted drop was an assignment's, the one
+// thing that gave the place its flag.
 bool mark_deletions(
     const Function&               func,
     const Candidate&              chosen,
     const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
-    std::vector<bool>&            deleted
+    std::vector<bool>&            deleted,
+    bool&                         flag_lost
 )
 {
     bool gone_drop_kept = false;
@@ -644,6 +646,7 @@ bool mark_deletions(
                     ( names( statement.place, chosen.kept ) && !state.initialised[chosen.kept.v] ) )
                 {
                     deleted[at] = true;
+                    flag_lost   = flag_lost || ( statement.replacing && !has_deref_projection( func, statement.place ) );
                 }
                 else if( names( statement.place, chosen.gone ) )
                 {
@@ -701,9 +704,12 @@ bool coalesce_round( Function& func )
     // Every mark reads `entry` against the statements as analysed, so all come before any rename.
     std::vector<bool> deleted( func.statements.size(), false );
     std::vector<bool> gone_drop_kept( chosen.size(), false );
+    std::vector<bool> flag_lost( chosen.size(), false );
     for( u32 c = 0; c < chosen.size(); ++c )
     {
-        gone_drop_kept[c] = mark_deletions( func, chosen[c], slots, entry, deleted );
+        bool lost         = false;
+        gone_drop_kept[c] = mark_deletions( func, chosen[c], slots, entry, deleted, lost );
+        flag_lost[c]      = lost;
     }
 
     for( const Candidate& c : chosen )
@@ -723,6 +729,12 @@ bool coalesce_round( Function& func )
 
     for( u32 c = 0; c < chosen.size(); ++c )
     {
+        // `P x; if( c ) { x = … }` merged: the drop at the end still needs a flag on the path that skips it.
+        if( flag_lost[c] && std::ranges::find( func.one_path_temporaries, chosen[c].kept ) == func.one_path_temporaries.end() )
+        {
+            func.one_path_temporaries.push_back( chosen[c].kept );
+        }
+
         // A field merge's locals were refused if either was listed.
         if( chosen[c].into.num_projections != 0 )
         {

@@ -1,0 +1,263 @@
+// Every drop path under an injected failure: `get` fails at op `failing`, and each body runs once
+// per op. `live` counts the P values alive, so a missed drop prints a leak; valgrind sees a double
+// free. Prints the number of failing runs.
+import t::console;
+import kl::optional;
+
+i64 live = 0;
+i64 ops = 0;
+i64 failing = 0;
+
+class P
+{
+    u64* d;
+    public P() { unsafe { d = alloc<u64>(); } *d = 0; live = live + 1; }
+    ~P() { live = live - 1; unsafe { free( d ); } }
+};
+
+result<P, i32> get()
+{
+    ops = ops + 1;
+    if( ops == failing )
+    {
+        return result::err( 1 );
+    }
+    return result::ok( P() );
+}
+
+void sink( move P _ ) {}
+
+class Two
+{
+    public P a;
+    public P b;
+};
+
+class Three
+{
+    public P a;
+    public P b;
+    public P c;
+};
+
+class Outer
+{
+    public Two a;
+    public P b;
+};
+
+result<void, i32> dynamic_init( bool c )
+{
+    P x;
+    if( c )
+    {
+        x = try get();
+    }
+    return result::ok();
+}
+
+result<void, i32> dynamic_drop( bool c )
+{
+    P x = try get();
+    if( c )
+    {
+        kl::optional<P> o = kl::optional::some( move x );
+    }
+    return result::ok();
+}
+
+result<void, i32> struct_dynamic_drop( bool c0, bool c1, bool c )
+{
+    for( u64 i : 0..2 )
+    {
+        Three x;
+        Two y;
+        if( ( c0 && i == 0 ) || ( c1 && i == 1 ) )
+        {
+            x = Three { try get(), try get(), try get() };
+            y = Two { try get(), try get() };
+            if( c )
+            {
+                sink( move x.b );
+                sink( move y.a );
+            }
+        }
+    }
+    return result::ok();
+}
+
+result<void, i32> field_assignment( bool c0 )
+{
+    Outer x = Outer { Two { try get(), try get() }, try get() };
+    x.b = try get();
+    x.b = try get();
+    P f = move x.a.a;
+    if( c0 )
+    {
+        x.a.a = move f;
+    }
+    return result::ok();
+}
+
+result<void, i32> assignment2( bool c0, bool c1 )
+{
+    P v = try get();
+    P w = try get();
+    if( c0 )
+    {
+        sink( move v );
+    }
+    v = move w;
+    if( c1 )
+    {
+        w = try get();
+    }
+    return result::ok();
+}
+
+result<void, i32> assignment1( bool c0 )
+{
+    P v = try get();
+    P w = try get();
+    if( c0 )
+    {
+        sink( move v );
+    }
+    v = move w;
+    return result::ok();
+}
+
+result<void, i32> array_simple()
+{
+    P[4] x = [ try get(), try get(), try get(), try get() ];
+    return result::ok();
+}
+
+result<void, i32> mixed_drop_and_nondrop()
+{
+    P x;
+    i32 y;
+    P z;
+    x = try get();
+    y = 5;
+    z = try get();
+    return result::ok();
+}
+
+result<void, i32> init_move( bool c )
+{
+    kl::optional<P> foo = c ? kl::optional::some( try get() ) : kl::optional::none;
+    kl::optional<P> x;
+    switch( move foo )
+    {
+        case kl::optional::some( b ):
+            x = kl::optional::some( move b );
+            break;
+        case kl::optional::none:
+            break;
+    }
+    return result::ok();
+}
+
+result<P, i32> after_return()
+{
+    _ = try get();
+    P p = try get();
+    {
+        _ = try get();
+        P q = try get();
+        return get();
+    }
+}
+
+result<void, i32> after_init_by_loop()
+{
+    _ = try get();
+    P p = try get();
+    P q;
+    while( true )
+    {
+        _ = try get();
+        P r = try get();
+        q = try get();
+        break;
+    }
+    return result::ok();
+}
+
+result<void, i32> body( u64 k )
+{
+    switch( k )
+    {
+        case 0: return dynamic_init( false );
+        case 1: return dynamic_init( true );
+        case 2: return dynamic_drop( false );
+        case 3: return dynamic_drop( true );
+        case 4: return assignment2( false, false );
+        case 5: return assignment2( false, true );
+        case 6: return assignment2( true, false );
+        case 7: return assignment2( true, true );
+        case 8: return assignment1( false );
+        case 9: return assignment1( true );
+        case 10: return array_simple();
+        case 11: return struct_dynamic_drop( false, false, false );
+        case 12: return struct_dynamic_drop( false, false, true );
+        case 13: return struct_dynamic_drop( false, true, false );
+        case 14: return struct_dynamic_drop( false, true, true );
+        case 15: return struct_dynamic_drop( true, false, false );
+        case 16: return struct_dynamic_drop( true, false, true );
+        case 17: return struct_dynamic_drop( true, true, false );
+        case 18: return struct_dynamic_drop( true, true, true );
+        case 19: return field_assignment( false );
+        case 20: return field_assignment( true );
+        case 21: return mixed_drop_and_nondrop();
+        case 22: return init_move( false );
+        case 23: return init_move( true );
+        case 24:
+            _ = try after_return();
+            return result::ok();
+        case 25: return after_init_by_loop();
+        default: return result::ok();
+    }
+}
+
+i32 main()
+{
+    i32 bad = 0;
+    i64 runs = 0;
+    for( u64 k : 0..26 )
+    {
+        ops = 0;
+        failing = -1;
+        _ = body( k );
+        const i64 total = ops;
+        if( live != 0 )
+        {
+            t::print( "leak in " ); t::println( k );
+            bad = bad + 1;
+        }
+        for( i64 f : 1..total + 1 )
+        {
+            ops = 0;
+            failing = f;
+            runs = runs + 1;
+            switch( body( k ) )
+            {
+                case result::ok():
+                    t::print( "no failure in " ); t::println( k );
+                    bad = bad + 1;
+                    break;
+                case result::err( e ):
+                    break;
+            }
+            if( live != 0 )
+            {
+                t::print( "leak in " ); t::print( k ); t::print( " at " ); t::println( f );
+                bad = bad + 1;
+                live = 0;
+            }
+        }
+    }
+    t::println( runs );
+    return bad;
+}

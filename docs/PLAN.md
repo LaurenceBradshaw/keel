@@ -1478,6 +1478,9 @@ major), which waits for the lambda decision (§12).
   of functions has no spelling. Parentheses grouping a type, `( fn( i32 ) -> i32 )[2]`, would
   answer it and `[*]` too, leaving every existing type's meaning alone; `fn[2]( i32 ) -> i32` is
   the other candidate. Undecided.
+- **An array literal walked directly has no type.** `for( const ref N x : [ N( 40 ) ] )` is
+  refused with "an array literal needs a type to fill", although the binding names the element. The
+  binding's type could give the literal its element type. Small; wait for a program that wants it.
 - **The address of a generic's instance as a global's value.** `&id<i32>` and `&Box<i32>::made`
   are refused as not computable yet: the constant names a declaration, and an instance needs its
   type arguments too.
