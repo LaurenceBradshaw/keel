@@ -244,6 +244,22 @@ TEST_CASE( "forward_borrows_names_the_local_a_copied_pointer_points_at", "[opt][
     REQUIRE( p.derefs() == 0 );
 }
 
+// A borrow of a field, which only splitting makes a borrow of a whole local.
+TEST_CASE( "forward_borrows_names_the_field_splitting_made_a_local", "[opt][forward]" )
+{
+    const Forwarded p(
+        "i32 f() { Holder h = Holder(); return h.x() + deep( h ); }\n"
+        "struct Pair { i32 x; i32 y; };\n"
+        "class Holder { Pair p; public Holder() { p = Pair { 1, 2 }; } public const ref Pair get() const { return p; }"
+        " public const ref i32 x() const { return get().x; } };\n"
+        "const ref i32 deep( const ref Holder h ) { return h.get().x; }\n"
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.addresses() == 0 );
+    REQUIRE( p.derefs() == 0 );
+}
+
 // Pointing at one of two, or passed on: each keeps its address.
 TEST_CASE( "forward_borrows_keeps_a_pointer_that_may_point_elsewhere", "[opt][forward]" )
 {

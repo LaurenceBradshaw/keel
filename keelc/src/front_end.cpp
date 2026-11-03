@@ -194,6 +194,11 @@ Front_end run_front_end(
                     if( build.splitting )
                     {
                         split_aggregates( function, ast, front.types );
+                        // Again, for a borrow of a field that splitting made a whole local.
+                        if( build.forwarding )
+                        {
+                            forward_borrows( function, front.types.table() );
+                        }
                     }
                     // Folds a local compared with itself, so SCCP branches on the constant; without it, SCCP writes
                     // a negative constant into a copy of one, which nothing then forwards.
