@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include "ast/ast.h"
+#include "common/interner.h"
 #include "ir/kir.h"
 #include "parse/module_graph.h"
 #include "sema/type_checker.h"
@@ -60,5 +61,18 @@ private:
     std::vector<std::vector<u32>>     reaches_;
     std::vector<File_id>              owners_;
 };
+
+// A release program build's sweep: drops every function the input's `main` does not reach through
+// calls, `&f`, drops, vtables or a global's initialiser, so their types and vtables go too. Keeps
+// `provided` in step; a program without `main` keeps everything.
+void remove_unreached(
+    std::vector<Function>& functions,
+    std::vector<File_id>&  provided,
+    const Ast&             ast,
+    Types&                 types,
+    const Module_graph&    modules,
+    File_id                input,
+    const Interner&        interner
+);
 
 } // namespace keel

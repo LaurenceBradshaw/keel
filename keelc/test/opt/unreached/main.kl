@@ -1,0 +1,60 @@
+// A release program keeps only what `main` reaches: `unused`, `area_of<Square>` and `Square`'s
+// vtable go, with `Square` itself; `seven`, which a global names, and `Circle`'s vtable, which a
+// call `main` keeps converts to, stay.
+
+interface Shape
+{
+    i32 area() const;
+};
+
+struct Square implements Shape
+{
+    i32 side;
+
+    i32 area() const
+    {
+        return side * side;
+    }
+};
+
+struct Circle implements Shape
+{
+    i32 r;
+
+    i32 area() const
+    {
+        return 3 * r * r;
+    }
+};
+
+i32 seven()
+{
+    return 7;
+}
+
+fn() -> i32 named = &seven;
+
+i32 area_of<T>( const ref T t )
+    where T : Shape
+{
+    return t.area();
+}
+
+i32 unused( i32 n )
+{
+    Square s = Square { n };
+    const ref Shape p = s;
+    return area_of( s ) + p.area();
+}
+
+// Recursive, so never inlined: its dispatch stays.
+i32 total( const ref Shape s, i32 n )
+{
+    return n == 0 ? 0 : s.area() + total( s, n - 1 );
+}
+
+i32 main()
+{
+    Circle c = Circle { 1 };
+    return total( c, 2 ) + named() == 13 ? 0 : 1;
+}

@@ -1,1 +1,1 @@
---overflow-checks --emit-c
+--overflow-checks --emit-c --keep-unreached

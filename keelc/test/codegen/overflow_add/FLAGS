@@ -1,1 +1,1 @@
---overflow-checks --emit-c --package t=../test_lib
+--overflow-checks --emit-c --keep-unreached --package t=../test_lib

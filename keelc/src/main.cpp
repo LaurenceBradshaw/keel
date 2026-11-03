@@ -74,6 +74,7 @@ int main( int argc, char** argv )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
+        ( "keep-unreached",  "Without --debug, keep the functions main never reaches" )
         ( "runtime",         "Link this runtime library instead of the one keelc carries", cxxopts::value<std::string>() )
         ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
@@ -465,6 +466,12 @@ int main( int argc, char** argv )
     if( diagnostics.has_errors() || stop == Stop::Check )
     {
         return finish();
+    }
+
+    // A release program build has every function, so it drops what `main` never reaches.
+    if( !debug && !as_module && !args.count( "keep-unreached" ) )
+    {
+        keel::remove_unreached( front.functions, front.provided, ast, types, prog.modules, file_id.value(), interner );
     }
 
     const keel::Parts parts( ast, types, prog.modules, file_id.value(), functions, front.provided );

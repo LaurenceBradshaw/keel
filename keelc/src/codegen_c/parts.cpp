@@ -186,6 +186,102 @@ u32 Parts::find( Node_id declaration, std::span<const Type_id> type_arguments ) 
     return k_invalid_kir_id;
 }
 
+namespace
+{
+void add_targets( const Constant_value& value, std::vector<Node_id>& targets )
+{
+    if( value.kind == Constant_value::Kind::Address )
+    {
+        targets.push_back( value.target );
+    }
+    for( const Constant_value& element : value.elements )
+    {
+        add_targets( element, targets );
+    }
+}
+} // namespace
+
+void remove_unreached(
+    std::vector<Function>& functions,
+    std::vector<File_id>&  provided,
+    const Ast&             ast,
+    Types&                 types,
+    const Module_graph&    modules,
+    File_id                input,
+    const Interner&        interner
+)
+{
+    std::vector<u32>  stack;
+    std::vector<bool> reached( functions.size(), false );
+
+    {
+        const Parts parts( ast, types, modules, input, functions, provided );
+
+        // Every global is written, so what an initialiser names is a root too.
+        std::vector<Node_id> addressed;
+        for( const auto& [node, value] : types.constants() )
+        {
+            add_targets( value, addressed );
+        }
+
+        bool has_main = false;
+        for( u32 f = 0; f < functions.size(); ++f )
+        {
+            const Node_id decl = functions[f].declaration;
+            const bool    main = decl.is_valid() && ast.kind( decl ) == Node_kind::Function_decl && parts.of( decl ) == input &&
+                              interner.text( ast.name( decl ) ) == "main";
+
+            has_main = has_main || main;
+            if( main || ( decl.is_valid() && std::ranges::find( addressed, decl ) != addressed.end() ) )
+            {
+                reached[f] = true;
+                stack.push_back( f );
+            }
+        }
+
+        if( !has_main )
+        {
+            return; // a library: anything may be called
+        }
+
+        while( !stack.empty() )
+        {
+            const u32 f = stack.back();
+            stack.pop_back();
+
+            for( const u32 callee : parts.reaches( f ) )
+            {
+                if( !reached[callee] )
+                {
+                    reached[callee] = true;
+                    stack.push_back( callee );
+                }
+            }
+        }
+    }
+
+    u32 kept          = 0;
+    u32 kept_provided = 0;
+    for( u32 f = 0; f < functions.size(); ++f )
+    {
+        if( !reached[f] )
+        {
+            continue;
+        }
+        if( f < provided.size() )
+        {
+            provided[kept_provided++] = provided[f];
+        }
+        if( kept != f )
+        {
+            functions[kept] = std::move( functions[f] ); // never onto itself, which would empty it
+        }
+        ++kept;
+    }
+    functions.resize( kept );
+    provided.resize( kept_provided );
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -195,6 +291,7 @@ u32 Parts::find( Node_id declaration, std::span<const Type_id> type_arguments ) 
 #include <string>
 #include <string_view>
 #include <utility>
+#include "check/pipeline_test_support.h"
 #include "common/temp_dir.h"
 #include "front_end.h"
 
@@ -379,6 +476,54 @@ TEST_CASE( "parts_gives_an_unreached_destructor_to_the_input", "[codegen_c][part
 
     REQUIRE( split.clean() );
     REQUIRE( split.drop_part_of( "Spare" ) == "main.kl" );
+}
+
+// `made` reaches `Framed`'s drop only through its vtable; nothing reaches `Spare` or `unused`.
+TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen_c][parts][interfaces]" )
+{
+    Compiled p(
+        std::string( k_shapes ) + "i32 unused() { return 1; }\ni32 main() { return made(); }\n", Stage::Elaborated, Build {}
+    );
+    REQUIRE( p.clean() );
+
+    std::vector<File_id> provided;
+    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file, p.interner );
+
+    const Type_table& table = p.types.table();
+    const auto        kept  = [&]( std::string_view name )
+    {
+        return std::ranges::any_of(
+            p.all,
+            [&]( const Function& f )
+            { return f.declaration.is_valid() && p.interner.text( p.ast.name( f.declaration ) ) == name; }
+        );
+    };
+    const auto dropper = [&]( std::string_view type )
+    {
+        return std::ranges::any_of(
+            p.all,
+            [&]( const Function& f )
+            { return !f.declaration.is_valid() && f.type_arguments.size() == 1 && table.name( f.type_arguments[0] ) == type; }
+        );
+    };
+
+    REQUIRE( kept( "main" ) );
+    REQUIRE( kept( "made" ) );
+    REQUIRE( dropper( "Framed" ) );
+    REQUIRE_FALSE( dropper( "Spare" ) );
+    REQUIRE_FALSE( kept( "unused" ) );
+}
+
+// A library, with no `main`, keeps every function.
+TEST_CASE( "remove_unreached_keeps_everything_without_main", "[codegen_c][parts]" )
+{
+    Compiled p( "i32 one() { return 1; }\n", Stage::Elaborated, Build {} );
+    REQUIRE( p.clean() );
+
+    const std::size_t    before = p.all.size();
+    std::vector<File_id> provided;
+    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file, p.interner );
+    REQUIRE( p.all.size() == before );
 }
 
 } // namespace keel

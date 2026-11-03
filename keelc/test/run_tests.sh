@@ -357,10 +357,11 @@ run_one()
     # A directory each, since keelc names the .c after the input and every program is a main.kl.
     local build_dir="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
 
-    # The suite's flags without --emit-c or --check, which would stop keelc before it builds anything.
+    # The suite's flags without --emit-c or --check, which would stop keelc before it builds anything,
+    # or --keep-unreached, which only keeps a golden's functions to read.
     local build_flags=()
     for flag in "${suite_flags[@]}"; do
-        [ "$flag" != "--emit-c" ] && [ "$flag" != "--check" ] && build_flags+=( "$flag" )
+        [ "$flag" != "--emit-c" ] && [ "$flag" != "--check" ] && [ "$flag" != "--keep-unreached" ] && build_flags+=( "$flag" )
     done
 
     # Emptied first, so a failed build cannot leave last run's program or objects behind.
