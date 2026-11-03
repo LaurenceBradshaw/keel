@@ -816,6 +816,14 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function, std::vec
         return Node_id {};
     }
 
+    // A global outlives every call, and one owning nothing cannot be freed under the caller.
+    if( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl &&
+        !ast_.span( current_function ).contains( ast_.span( root ) ) &&
+        bounds_.satisfies( types_.type_of( root ), Bound::Copyable ) )
+    {
+        return Node_id {};
+    }
+
     // A binding is never reseated (D32), so it lasts as long as what it was bound to.
     if( const std::optional<Bound_to> bound = bound_to( root ) )
     {
@@ -1869,15 +1877,24 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
         REQUIRE( p.rendered().find( "`r` refers to `a`, which dies when this function returns" ) != std::string::npos );
     }
 
-    SECTION( "a global is refused as a global, bare or through a ref local" )
+    // A global outlives every call.
+    SECTION( "a global is returned, bare or through a ref local" )
     {
-        const Typed p( "const i32 G = 3;\nconst ref i32 bad() { return G; }\n"
-                       "const ref i32 worse() { const ref i32 r = G; return r; }\ni32 main() { return 0; }" );
+        const Typed p( "const i32 G = 3;\ni32 counter = 0;\nconst ref i32 a() { return G; }\n"
+                       "const ref i32 b() { const ref i32 r = G; return r; }\nref i32 c() { return counter; }\n"
+                       "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 2 );
-        REQUIRE( p.rendered().find( "dies" ) == std::string::npos );
-        REQUIRE( p.rendered().find( "a global cannot be returned by reference" ) != std::string::npos );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but a `ref` result from a const global is still refused" )
+    {
+        const Typed p( "const i32 G = 3;\nref i32 bad() { return G; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a place this function could change" ) != std::string::npos );
     }
 
     SECTION( "a conditional of two parameters is returned from each branch" )

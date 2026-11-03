@@ -350,12 +350,7 @@ void Statements::visit_return( Node_id id )
             const Node_id root = places_.bound_root( part, function );
             const Node_id own  = places_.place_root( part, function );
 
-            if( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl &&
-                !ast_.span( function ).contains( ast_.span( root ) ) )
-            {
-                reporter_.error_at( ast_.span( part ), "a global cannot be returned by reference", "return a copy" );
-            }
-            else if( root.is_valid() && own.is_valid() && root != own )
+            if( root.is_valid() && own.is_valid() && root != own )
             {
                 reporter_.error_at(
                     ast_.span( part ),

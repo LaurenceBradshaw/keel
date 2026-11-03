@@ -1,0 +1,36 @@
+// §8: a global outlives every call, so a reference to one can be returned, bare or through a `ref`
+// local. Each check compares or writes through the result; exit 0 when all hold.
+const i32 limit = 3;
+i32 counter = 0;
+
+const ref i32 the_limit()
+{
+    return limit;
+}
+
+const ref i32 through_a_ref_local()
+{
+    const ref i32 r = limit;
+    return r;
+}
+
+ref i32 the_counter()
+{
+    return counter;
+}
+
+i32 main()
+{
+    if( &the_limit() != &limit || &through_a_ref_local() != &limit )
+    {
+        return 1;
+    }
+
+    the_counter() = 7;
+    if( counter != 7 )
+    {
+        return 2;
+    }
+
+    return 0;
+}
