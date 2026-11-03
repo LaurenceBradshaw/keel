@@ -23,7 +23,7 @@ std::vector<Node_id> Aggregates::order_structs()
             continue;
         }
 
-        if( !is_aggregate( ast_.kind( child ) ) )
+        if( !holds_fields( child ) )
         {
             continue;
         }
@@ -65,6 +65,8 @@ void Aggregates::report_containment_cycle( Node_id decl, const std::vector<Node_
         route += interner_.text( ast_.name( node ) );
     }
 
+    route += "; hold one through `box`";
+
     reporter_.error_at(
         ast_.span( decl ), fmt::format( "`{}` contains itself, so it has no size", interner_.text( ast_.name( decl ) ) ), route
     );
@@ -81,13 +83,8 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
     path.push_back( decl );
 
-    for( Node_id field : ast_.members( decl ) )
+    for( Node_id field : ast_.contained_fields( decl ) )
     {
-        if( ast_.kind( field ) != Node_kind::Field_decl )
-        {
-            continue;
-        }
-
         // Read back what the field pass recorded. Calling Annotations::resolve again would report
         // every unknown type and D1 suggestion a second time.
         Type_id field_type = types_.type_of( field );
@@ -100,7 +97,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
         // A pointer to a struct is finite, so only by-value containment counts - which is what
         // makes `struct Node { Node* next; }` legal once pointers arrive at M3.
-        if( !field_type.is_valid() || table_.is_error( field_type ) || !table_.is_struct( field_type ) )
+        if( !field_type.is_valid() || table_.is_error( field_type ) || !has_fields( field_type ) )
         {
             continue;
         }
@@ -115,7 +112,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
     // by-value members. A generic aggregate is walked for the cycle above and then left out of this
     // order, but still recorded in containment_order_.
     containment_order_.push_back( decl );
-    if( !ast_.is_generic( decl ) )
+    if( is_aggregate( ast_.kind( decl ) ) && !ast_.is_generic( decl ) )
     {
         struct_order_.push_back( decl );
     }
@@ -132,7 +129,7 @@ bool Aggregates::contains_through( Type_id type, std::vector<Node_id>& path )
     }
 
     const Node_id decl = table_.get( type ).declaration;
-    if( !table_.is_struct( type ) || !is_aggregate( ast_.kind( decl ) ) )
+    if( !has_fields( type ) || !holds_fields( decl ) )
     {
         return false;
     }
@@ -191,13 +188,8 @@ bool Aggregates::holds_by_value( Node_id generic, std::size_t index, std::vector
     const Node_id decl = params[index];
     const Type_id type = types_.type_of( decl );
 
-    for( Node_id field : ast_.members( generic ) )
+    for( Node_id field : ast_.contained_fields( generic ) )
     {
-        if( ast_.kind( field ) != Node_kind::Field_decl )
-        {
-            continue;
-        }
-
         const Type_id field_type = types_.type_of( field );
 
         if( mentions_by_value( field_type, type, visiting ) )
@@ -225,7 +217,7 @@ bool Aggregates::mentions_by_value( Type_id type, Type_id parameter, std::vector
         return mentions_by_value( table_.get( type ).element, parameter, visiting );
     }
 
-    if( !table_.is_struct( type ) )
+    if( !has_fields( type ) )
     {
         return false;
     }
@@ -244,6 +236,17 @@ bool Aggregates::mentions_by_value( Type_id type, Type_id parameter, std::vector
     return false;
 }
 
+// A struct, a class or an enum, whose payloads hold fields as a struct does.
+bool Aggregates::holds_fields( Node_id decl ) const
+{
+    return decl.is_valid() && ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl );
+}
+
+bool Aggregates::has_fields( Type_id type ) const
+{
+    return table_.is_struct( type ) || table_.is_enum( type );
+}
+
 bool Aggregates::is_acyclic( Node_id decl ) const
 {
     return std::find( containment_order_.begin(), containment_order_.end(), decl ) != containment_order_.end();
@@ -256,7 +259,7 @@ bool Aggregates::mentions_a_cycle( Type_id type ) const
         return mentions_a_cycle( table_.get( type ).element );
     }
 
-    if( table_.is_struct( type ) && !is_acyclic( table_.get( type ).declaration ) )
+    if( has_fields( type ) && !is_acyclic( table_.get( type ).declaration ) )
     {
         return true;
     }

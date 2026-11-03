@@ -56,13 +56,13 @@ error: `Odd` contains itself, so it has no size
   --> sema/errors_generic_aggregates.kl:87:1
    |
 87 | struct Odd<T> where T : copyable
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Odd -> Odd
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Odd -> Odd; hold one through `box`
 
 error: `Deep` contains itself, so it has no size
   --> sema/errors_generic_aggregates.kl:92:1
    |
 92 | struct Deep<T> where T : copyable
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deep -> Deep
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deep -> Deep; hold one through `box`
 
 error: `Grows` is instantiated with a bigger type argument each time round
    --> sema/errors_generic_aggregates.kl:101:5

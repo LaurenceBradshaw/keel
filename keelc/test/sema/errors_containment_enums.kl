@@ -1,0 +1,56 @@
+// A payload holds its fields by value, as a struct does, so an enum can contain itself too.
+enum MList
+{
+    Cons( i32 v, MList rest ),
+    Nil,
+};
+
+// Through a struct.
+struct P
+{
+    i32 n;
+    Q   q;
+};
+
+enum Q
+{
+    X( P p ),
+    Y,
+};
+
+// Through a second enum, neither used.
+enum Object_type
+{
+    Sig( Type_sig s ),
+    Plain,
+};
+
+enum Type_sig
+{
+    Of( Object_type o ),
+    None,
+};
+
+// Through a generic enum's parameter.
+enum Holder<T>
+{
+    Has( T value ),
+    Empty,
+};
+
+struct Loop
+{
+    Holder<Loop> h;
+};
+
+// Held through `box`, it has a size.
+enum List
+{
+    Cons( i32 v, box<List> rest ),
+    Nil,
+};
+
+i32 main()
+{
+    return 0;
+}

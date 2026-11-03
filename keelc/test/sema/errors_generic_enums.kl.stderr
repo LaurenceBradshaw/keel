@@ -1,43 +1,43 @@
-error: `Bad` is instantiated with a bigger type argument each time round
-  --> sema/errors_generic_enums.kl:31:8
+error: `Bad` contains itself, so it has no size
+  --> sema/errors_generic_enums.kl:29:1
    |
-31 |     V( Bad<Box<T>> b )
-   |        ^^^^^^^^^^^^^ `Bad` to `Bad`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+29 | enum Bad<T> where T : copyable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Bad -> Bad; hold one through `box`
 
-error: `Worse` is instantiated with a bigger type argument each time round
-  --> sema/errors_generic_enums.kl:38:8
+error: `Worse` contains itself, so it has no size
+  --> sema/errors_generic_enums.kl:35:1
    |
-38 |     V( Worse<Opt<T>> w )
-   |        ^^^^^^^^^^^^^^^ `Worse` to `Worse`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+35 | enum Worse<T> where T : copyable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Worse -> Worse; hold one through `box`
 
 error: `Opt` takes 1 type argument, but 2 were given
-  --> sema/errors_generic_enums.kl:43:8
+  --> sema/errors_generic_enums.kl:42:8
    |
-43 |     Opt<i32, f64> too_many;
+42 |     Opt<i32, f64> too_many;
    |        ^^^^^^^^^^ `Opt` declares `T`
 
 error: `Pair` takes 2 type arguments, but 1 was given
-  --> sema/errors_generic_enums.kl:44:9
+  --> sema/errors_generic_enums.kl:43:9
    |
-44 |     Pair<i32>     too_few;
+43 |     Pair<i32>     too_few;
    |         ^^^^^ `Pair` declares `A` and `B`
 
 error: `Opt` is generic, so its type arguments must be written
-  --> sema/errors_generic_enums.kl:45:5
+  --> sema/errors_generic_enums.kl:44:5
    |
-45 |     Opt           bare;
+44 |     Opt           bare;
    |     ^^^ as in `Opt<i32>`
 
 error: `Buf` is not `copyable`, and `Opt` requires it of `T`
-  --> sema/errors_generic_enums.kl:46:9
+  --> sema/errors_generic_enums.kl:45:9
    |
-46 |     Opt<Buf>      unbounded;
+45 |     Opt<Buf>      unbounded;
    |         ^^^ it owns something, itself or through a field, so copying it would own that twice
 
 error: expected `Opt<i32>`, but got `Opt<f64>`
-  --> sema/errors_generic_enums.kl:51:9
+  --> sema/errors_generic_enums.kl:50:9
    |
-51 |     a = b;
+50 |     a = b;
    |         ^
 
 7 errors generated

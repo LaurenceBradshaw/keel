@@ -1,0 +1,13 @@
+error: `Bad` is instantiated with a bigger type argument each time round
+  --> sema/errors_generic_enums_growth.kl:17:8
+   |
+17 |     V( Bad<Box<T>>* b )
+   |        ^^^^^^^^^^^^^^ `Bad` to `Bad`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Worse` is instantiated with a bigger type argument each time round
+  --> sema/errors_generic_enums_growth.kl:24:8
+   |
+24 |     V( Worse<Opt<T>>* w )
+   |        ^^^^^^^^^^^^^^^^ `Worse` to `Worse`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+2 errors generated

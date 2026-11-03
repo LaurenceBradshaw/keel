@@ -82,6 +82,8 @@ private:
     bool contains_through( Type_id type, std::vector<Node_id>& path );
     bool holds_by_value( Node_id generic, std::size_t index, std::vector<Node_id>& visiting ) const;
     bool mentions_by_value( Type_id type, Type_id parameter, std::vector<Node_id>& visiting ) const;
+    bool holds_fields( Node_id decl ) const;
+    bool has_fields( Type_id type ) const;
 
     const Ast&      ast_;
     const Interner& interner_;
@@ -89,9 +91,10 @@ private:
     Type_table&     table_;
     Reporter&       reporter_;
 
-    std::vector<Node_id> struct_order_;      // dependencies first
-    std::vector<Node_id> containment_order_; // every aggregate, generics too, dependencies first; the proved-acyclic set
-    bool                 ordered_ = false;
+    std::vector<Node_id> struct_order_; // dependencies first
+    std::vector<Node_id>
+         containment_order_; // every aggregate and enum, generics too, dependencies first; the proved-acyclic set
+    bool ordered_ = false;
 };
 
 } // namespace keel::sema
