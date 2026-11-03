@@ -294,6 +294,7 @@ void remove_unreached(
 #include "check/pipeline_test_support.h"
 #include "common/temp_dir.h"
 #include "front_end.h"
+#include "ir/verify.h"
 
 namespace keel
 {
@@ -512,6 +513,13 @@ TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen_c][parts][inter
     REQUIRE( dropper( "Framed" ) );
     REQUIRE_FALSE( dropper( "Spare" ) );
     REQUIRE_FALSE( kept( "unused" ) );
+
+    // Each kept function whole, not only its name: one moved onto itself would lose its body.
+    for( const Function& f : p.all )
+    {
+        REQUIRE_FALSE( f.blocks.empty() );
+        REQUIRE( verify( f ).empty() );
+    }
 }
 
 // A library, with no `main`, keeps every function.
