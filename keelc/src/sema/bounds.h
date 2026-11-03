@@ -112,6 +112,8 @@ public:
 
     // What a type exposes. Where a receiver's methods are declared: itself, or a parameter's bounds.
     std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;
+    // Whether a missing method may be one a refused requirement cycle dropped, so goes unreported.
+    bool misses_cyclic_refinement( Type_id receiver ) const;
     // Whether the operator `name` on `type` calls a method: any struct's, or one has_operator finds.
     bool calls_operator( Type_id type, Symbol_id name ) const;
     // Whether `type` declares the operator `name`: itself, in an enum's block, or in a parameter's bound.

@@ -187,6 +187,18 @@ void Conformance_model::declare_bound_only( Node_id interface, Node_id method )
     bound_only_.emplace( interface.v, method );
 }
 
+void Conformance_model::declare_cyclic( Node_id interface )
+{
+    cyclic_.push_back( interface );
+}
+
+bool Conformance_model::reaches_cyclic( const Type_table& table, Node_id interface ) const
+{
+    return std::ranges::any_of(
+        cyclic_, [&]( Node_id cyclic ) { return cyclic == interface || refines_declaration( table, interface, cyclic ); }
+    );
+}
+
 Node_id Conformance_model::implementer_of( const Type_table& table, Type_id type, Type_id interface ) const
 {
     if( !type.is_valid() || !table.is_interface( interface ) )

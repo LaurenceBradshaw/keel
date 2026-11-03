@@ -906,6 +906,11 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     if( !first.is_valid() && !table_.is_struct( object_type ) )
     {
+        if( bounds_.misses_cyclic_refinement( object_type ) )
+        {
+            return refuse_call( id );
+        }
+
         reporter_.error_at(
             ast_.span( callee ),
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
@@ -2404,6 +2409,11 @@ Type_id Expressions::infer_bound_static_call( Node_id id, Node_id parameter )
 
     if( !first.is_valid() )
     {
+        if( bounds_.misses_cyclic_refinement( instance ) )
+        {
+            return refuse_call( id, shapes );
+        }
+
         reporter_.error_at(
             ast_.span( path ), fmt::format( "`{}` has no static method `{}`", table_.name( instance ), interner_.text( name ) )
         );

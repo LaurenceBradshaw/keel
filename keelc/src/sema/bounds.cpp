@@ -604,6 +604,14 @@ std::vector<Type_id> Bounds::method_owners( Type_id receiver, Symbol_id name ) c
     return owners;
 }
 
+bool Bounds::misses_cyclic_refinement( Type_id receiver ) const
+{
+    const auto cyclic = [&]( Type_id interface )
+    { return types_.conformances().reaches_cyclic( table_, table_.get( interface ).declaration ); };
+
+    return table_.is_interface( receiver ) ? cyclic( receiver ) : std::ranges::any_of( interfaces_of( receiver ), cyclic );
+}
+
 bool Bounds::calls_operator( Type_id type, Symbol_id name ) const
 {
     return name.is_valid() && ( table_.is_struct( type ) || has_operator( type, name ) );

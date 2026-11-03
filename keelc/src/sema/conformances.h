@@ -65,6 +65,8 @@ public:
     void declare_refinement( const Type_table& table, Type_id interface, Type_id refined );
     // The first method that is `static`, a walk, or mentions `self`, which makes the interface a bound only.
     void declare_bound_only( Node_id interface, Node_id method );
+    // An interface whose requirement closing a cycle was refused, so its refinements are incomplete.
+    void declare_cyclic( Node_id interface );
 
     // What `type` declares, at this instance: `last<i32>` implements `sink<i32>` through `last<T>`'s `sink<T>`.
     bool    declares( const Type_table& table, Type_id type, Type_id interface ) const;
@@ -85,6 +87,8 @@ public:
     // The same, between Interface_decl nodes, whatever the arguments.
     bool    refines_declaration( const Type_table& table, Node_id interface, Node_id other ) const;
     Node_id bound_only_method( const Type_table& table, Type_id interface ) const; // invalid when it may be a type
+    // Whether the interface, or one it requires, was declared cyclic.
+    bool reaches_cyclic( const Type_table& table, Node_id interface ) const;
 
     // Phase 2: asked of each aggregate's `implements` list, and of each block.
     void complete( const Ast& ast, Type_table& table, std::span<const Type_id> recorded );
@@ -116,6 +120,7 @@ private:
     std::unordered_map<u32, std::vector<Declared>> builtin_;     // built-in type -> what its blocks implement
     std::unordered_map<u32, std::vector<Type_id>>  refinements_; // Interface_decl node -> what it requires, as written
     std::unordered_map<u32, Node_id>               bound_only_;  // Interface_decl node -> the method mentioning `self`
+    std::vector<Node_id>                           cyclic_;      // Interface_decl nodes with a refused requirement
 
     std::vector<Conformance>       conformances_;
     std::vector<Conformance_error> errors_;

@@ -266,6 +266,7 @@ void Signatures::declare_interface_requirements()
                         table_.base_name( refined )
                     )
                 );
+                types_.conformances().declare_cyclic( child );
                 continue;
             }
 

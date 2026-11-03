@@ -1,0 +1,19 @@
+error: `Again` cannot require `Loop`, which already requires `Again`
+ --> sema/errors_cyclic_refinement.kl:9:28
+  |
+9 | interface Again implements Loop
+  |                            ^^^^
+
+error: `C` cannot require `B`, which already requires `C`
+  --> sema/errors_cyclic_refinement.kl:25:24
+   |
+25 | interface C implements B
+   |                        ^
+
+error: `Only` implements `Loop` but not `Again`, which `Loop` requires
+  --> sema/errors_cyclic_refinement.kl:31:24
+   |
+31 | struct Only implements Loop
+   |                        ^^^^ add `Again` to `Only`'s `implements` list
+
+3 errors generated
