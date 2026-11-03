@@ -756,7 +756,7 @@ Node_id Places::borrowed_temporary( Node_id place ) const
     return Node_id {};
 }
 
-Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
+Node_id Places::escaping_part( Node_id value, Node_id current_function, std::vector<Node_id>* walks ) const
 {
     // A run's `size` and `data` are the callee's own copy of its description.
     if( describes_run( value ) )
@@ -788,7 +788,7 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
     {
         for( const Node_id argument : borrowed_arguments( source ) )
         {
-            if( const Node_id part = escaping_part( argument, current_function ); part.is_valid() )
+            if( const Node_id part = escaping_part( argument, current_function, walks ); part.is_valid() )
             {
                 return part;
             }
@@ -804,7 +804,92 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
         return Node_id {};
     }
 
+    // A binding is never reseated (D32), so it lasts as long as what it was bound to.
+    if( const std::optional<Bound_to> bound = bound_to( root ) )
+    {
+        if( bound->walk.is_valid() && walks != nullptr )
+        {
+            walks->push_back( bound->walk );
+        }
+        return escaping_part( bound->source, current_function, walks ).is_valid() ? value : Node_id {};
+    }
+
     return value;
+}
+
+std::optional<Places::Bound_to> Places::bound_to( Node_id decl ) const
+{
+    if( !decl.is_valid() )
+    {
+        return std::nullopt;
+    }
+
+    if( const auto found = bound_to_.find( decl.v ); found != bound_to_.end() )
+    {
+        return found->second;
+    }
+
+    if( ast_.kind( decl ) == Node_kind::Var_decl && ast_.parameter_mode( decl ) == Keyword::Ref &&
+        ast_.initialiser( decl ).is_valid() )
+    {
+        return Bound_to { ast_.initialiser( decl ), Node_id {} };
+    }
+
+    return std::nullopt;
+}
+
+void Places::record_walk_borrow( Node_id binding, Node_id container, Node_id walk )
+{
+    bound_to_.insert_or_assign( binding.v, Bound_to { container, walk } );
+}
+
+bool Places::lends_its_receiver( Node_id walk ) const
+{
+    std::unordered_set<u32> seen;
+    return lends_its_receiver( walk, seen );
+}
+
+// Each argument must be rooted in the receiver, the walk's one readable parameter: a temporary or a
+// local of the walk dies at the end of its `yield`.
+bool Places::lends_its_receiver( Node_id walk, std::unordered_set<u32>& seen ) const
+{
+    if( !seen.insert( walk.v ).second )
+    {
+        return true; // a cycle, refused already
+    }
+
+    std::vector<Node_id> pending { ast_.body( walk ) };
+
+    while( !pending.empty() )
+    {
+        const Node_id id = pending.back();
+        pending.pop_back();
+
+        if( !id.is_valid() )
+        {
+            continue;
+        }
+
+        if( ast_.kind( id ) == Node_kind::Yield_stmt )
+        {
+            for( Node_id argument : ast_.arguments( id ) )
+            {
+                argument = ast_.kind( argument ) == Node_kind::Marker_expr ? ast_.operand( argument ) : argument;
+
+                std::vector<Node_id> inner;
+                if( escaping_part( argument, walk, &inner ).is_valid() ||
+                    !std::ranges::all_of( inner, [&]( Node_id next ) { return lends_its_receiver( next, seen ); } ) )
+                {
+                    return false;
+                }
+            }
+        }
+
+        const std::span<const Node_id> children = ast_.children( id );
+        pending.insert( pending.end(), children.begin(), children.end() );
+    }
+
+    return true;
 }
 
 // The field a place reads, bare or through an object, or invalid.
@@ -1024,13 +1109,8 @@ bool Places::check_owning_return( Node_id value, Type_id type )
     return true;
 }
 
-void Places::record_owned_bindings( Node_id arm, Node_id switch_stmt )
+void Places::record_arm_bindings( Node_id arm, Node_id switch_stmt )
 {
-    if( !ast_.consumes( switch_stmt ) )
-    {
-        return;
-    }
-
     for( const Node_id label : ast_.labels( arm ) )
     {
         if( ast_.kind( label ) != Node_kind::Variant_pattern )
@@ -1040,7 +1120,18 @@ void Places::record_owned_bindings( Node_id arm, Node_id switch_stmt )
 
         for( const Node_id bound : ast_.bindings( label ) )
         {
-            owned_bindings_.insert( bound.v );
+            const Type_id type = types_.type_of( bound );
+
+            if( ast_.consumes( switch_stmt ) )
+            {
+                owned_bindings_.insert( bound.v );
+            }
+            // Lowering borrows only an owning payload in place and copies the rest; a `T` may be either.
+            else if( type.is_valid() && !table_.is_error( type ) && !table_.mentions_parameter( type ) &&
+                     !bounds_.satisfies( type, Bound::Copyable ) )
+            {
+                bound_to_.insert_or_assign( bound.v, Bound_to { ast_.scrutinee( switch_stmt ), Node_id {} } );
+            }
         }
     }
 }
@@ -1736,15 +1827,13 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
         REQUIRE( p.errors() == 1 );
     }
 
-    // Conservative and deliberately so: the rule traces the returned *expression*, and a local
-    // binding is not a parameter however safe its referent happens to be. Relaxing this is
-    // additive, so it waits for a program that wants it.
-    SECTION( "and a local ref binding is not a parameter, even when its referent would be safe" )
+    // A binding is never reseated, so it lasts as long as what it was bound to.
+    SECTION( "a local ref binding of a parameter is traced to the parameter" )
     {
         const Typed p( "const ref i32 bad( const ref i32 a ) { const ref i32 r = a; return r; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.errors() == 0 );
     }
 
     SECTION( "and a call returning a reference into a local is still local" )

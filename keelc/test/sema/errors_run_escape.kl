@@ -66,7 +66,7 @@ const ref u8[] from_a_local_many_pointer( u64 size )
     }
 }
 
-// A local binding is not a parameter, however safe its referent happens to be.
+// Accepted: a local binding lasts as long as the parameter it was bound to.
 const ref u8[] slices_a_local_binding( const ref u8[] text )
 {
     const ref u8[] local = text;

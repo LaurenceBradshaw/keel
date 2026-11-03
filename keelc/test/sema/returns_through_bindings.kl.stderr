@@ -1,0 +1,37 @@
+error: a returned reference must borrow from a parameter
+  --> sema/returns_through_bindings.kl:76:12
+   |
+76 |     return p; // error: dies
+   |            ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/returns_through_bindings.kl:85:16
+   |
+85 |         return x; // error: dies
+   |                ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/returns_through_bindings.kl:96:20
+   |
+96 |             return s; // error: dies
+   |                    ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+   --> sema/returns_through_bindings.kl:106:12
+    |
+106 |     return p; // error: dies
+    |            ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+   --> sema/returns_through_bindings.kl:114:20
+    |
+114 |             return n; // error: a copy
+    |                    ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+   --> sema/returns_through_bindings.kl:141:16
+    |
+141 |         return x; // error: the walk's own
+    |                ^ the walk it comes from yields a value of its own, not part of the container
+
+6 errors generated

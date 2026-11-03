@@ -63,6 +63,8 @@ public:
 
     // D74: a walk that loops over itself, directly or through other walks. After every body.
     void check_walk_cycles();
+    // §8: a returned walk binding, once every walk it went through can be read whole.
+    void check_walk_returns();
 
 private:
     // One per construct, dispatched from visit - the shape parse_*() uses next door.
@@ -112,6 +114,14 @@ private:
         Span    at;
     };
     std::vector<Walk_edge> walk_edges_;
+
+    // A return accepted through walk bindings, and the walks that must lend their containers.
+    struct Walk_return
+    {
+        Node_id              value;
+        std::vector<Node_id> walks;
+    };
+    std::vector<Walk_return> walk_returns_;
 
     u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
     u32 breakable_depth_ = 0; // `break` binds to the nearest of either

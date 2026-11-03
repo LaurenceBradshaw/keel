@@ -1,0 +1,100 @@
+// §8: a reference returned through a `ref` local, a walk binding or a payload binding is the place
+// it was bound to, not a copy. Each check writes or compares through the result; exit 0 when all hold.
+import kl::list;
+import kl::string;
+import kl::optional;
+
+struct P
+{
+    i32 x;
+};
+
+const ref i32 through_a_ref_local( const ref P a )
+{
+    const ref i32 p = a.x;
+    const ref i32 q = p;
+    return q;
+}
+
+ref i32 through_a_writable_ref_local( ref P p )
+{
+    ref i32 x = p.x;
+    return x;
+}
+
+const ref i32 first_above( const ref kl::list<i32> v, i32 floor, const ref i32 fallback )
+{
+    for( const ref i32 x : v )
+    {
+        if( x > floor )
+        {
+            return x;
+        }
+    }
+    return fallback;
+}
+
+ref i32 last_of( ref i32[3] a, ref i32 fallback )
+{
+    for( ref i32 x : a )
+    {
+        if( x == 3 )
+        {
+            return x;
+        }
+    }
+    return fallback;
+}
+
+const ref kl::string held( const ref kl::optional<kl::string> o, const ref kl::string fallback )
+{
+    switch( o )
+    {
+        case kl::optional::some( s ):
+            return s;
+        case kl::optional::none:
+            return fallback;
+    }
+}
+
+i32 main()
+{
+    P a = P { 4 };
+    if( &through_a_ref_local( a ) != &a.x )
+    {
+        return 1;
+    }
+
+    through_a_writable_ref_local( ref a ) = 7;
+    if( a.x != 7 )
+    {
+        return 2;
+    }
+
+    kl::list<i32> v = kl::list<i32>();
+    v.push( 1 );
+    v.push( 5 );
+    v.push( 9 );
+    i32 none = 0;
+    if( &first_above( v, 2, none ) != &v[1] || &first_above( v, 20, none ) != &none )
+    {
+        return 3;
+    }
+
+    i32[3] b = [ 1, 2, 3 ];
+    i32 spare = 0;
+    last_of( ref b, ref spare ) = 30;
+    if( b[2] != 30 )
+    {
+        return 4;
+    }
+
+    kl::optional<kl::string> o = kl::optional::some( kl::string::from( "held" ) );
+    kl::string fallback = kl::string::from( "fallback" );
+    if( held( o, fallback ).size() != 4 || held( kl::optional::none, fallback ).size() != 8 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

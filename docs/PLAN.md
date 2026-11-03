@@ -1057,15 +1057,20 @@ References obey one blunt structural rule instead:
 > at each call (D73).
 
 A **reference parameter** is one that travels by address: `ref T`, `const ref T`, `this`, and a
-bare parameter of an owning type, which D31 makes a read-only borrow, so it may be returned as a `const ref` result and, being read-only, not as a `ref` one (D73). A local `ref` binding does not
-count, even where its referent is a parameter: the rule traces the returned expression to its root,
-and a binding is not a parameter. A call returning a reference is traced through its borrowed
-arguments and receiver, so `return pick( a, b );` is accepted when each is a reference parameter. That conservatism is deliberate and relaxing it is additive.
+bare parameter of an owning type, which D31 makes a read-only borrow, so it may be returned as a `const ref` result and, being read-only, not as a `ref` one (D73). **A binding is traced to what it
+was bound to**, which D32 fixes at its declaration: a `ref` local to its initialiser, a walk's
+`const ref` or `ref` binding to the walked container, and a payload binding to the `switch` head
+when the payload is borrowed in place, which is when it owns something and the `switch` does not
+consume it; a copied payload is a local. A declared walk lends its container only when its parameter
+travels by address and every `yield` argument is itself rooted in the receiver, so a walk that
+yields `a_ + 1` lends a temporary; that is asked once every body is checked. A call returning a
+reference is traced through its borrowed arguments and receiver, so `return pick( a, b );` is
+accepted when each is a reference parameter.
 
 **Why returning one needs no lifetimes.** D32 makes a `ref` binding initialised at its declaration
 and never reseated. Everything nameable at a binding's declaration lives in an enclosing-or-same
 scope, so **anything alive at a call site outlives any `ref` binding declared at that call site** —
-whichever parameter the result came from. The question Rust answers with lifetime parameters does
+whichever parameter the result came from, and through however many bindings inside the callee. The question Rust answers with lifetime parameters does
 not arise. What remains is a syntactic check with no dataflow.
 
 **Raw pointers are outside this rule, and that is the point.** `ref` is the spelling that cannot

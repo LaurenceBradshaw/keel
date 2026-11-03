@@ -41,8 +41,7 @@ const ref i32 returns_a_field_of_a_local()
     return v.x;
 }
 
-// Conservative and deliberately so: the rule traces the returned *expression*, and a local binding
-// is not a parameter however safe its referent happens to be.
+// Accepted: a local binding is never reseated, so it lasts as long as what it was bound to.
 const ref i32 returns_a_local_binding( const ref i32 a )
 {
     const ref i32 r = a;

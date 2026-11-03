@@ -303,12 +303,14 @@ void Statements::visit_return( Node_id id )
     // §8's non-escaping rule. A `ref` binding is initialised at its declaration and never reseated,
     // so everything nameable at a call site outlives any binding declared there - which is why
     // *which* parameter the result came from does not matter, and why this needs no dataflow.
-    // Syntactic: trace the returned expression, and the borrowed arguments of any call returning a
-    // reference, to their roots, and require a parameter that travels by address. A bare parameter
+    // Syntactic: trace the returned expression, through the borrowed arguments of any call returning
+    // a reference and any binding to what it was bound to, to its roots, and require a parameter that
+    // travels by address. A bare parameter
     // of an owning type is one, since the caller owns the object.
     if( places_.returns_a_binding( expressions_.current_function() ) && !table_.is_error( types_.type_of( value ) ) )
     {
-        const Node_id part = places_.escaping_part( value, expressions_.current_function() );
+        std::vector<Node_id> walks;
+        const Node_id        part = places_.escaping_part( value, expressions_.current_function(), &walks );
 
         const Node_id function = expressions_.current_function();
 
@@ -323,7 +325,11 @@ void Statements::visit_return( Node_id id )
         }
         else if( !part.is_valid() )
         {
-            // Every part borrows from a parameter.
+            // Every part borrows from a parameter, once each walk it went through lends its container.
+            if( !walks.empty() )
+            {
+                walk_returns_.push_back( { value, std::move( walks ) } );
+            }
         }
         else if( places_.describes_run( part ) )
         {
@@ -742,7 +748,7 @@ void Statements::visit_switch( Node_id id )
     for( const Node_id arm : ast_.arms( id ) )
     {
         coverage_.check_arm_labels( arm, covered );
-        places_.record_owned_bindings( arm, id );
+        places_.record_arm_bindings( arm, id );
         visit( ast_.body( arm ) );
     }
     breakable_depth_ -= 1;
@@ -806,6 +812,7 @@ void Statements::visit_walk( Node_id id )
     );
 
     std::vector<Type_id> types( entries.size(), table_.builtin( Type_kind::Error ) );
+    std::vector<Node_id> params( entries.size() ); // what each yields, when a declared walk does
 
     Type_id       owner;
     const Node_id walk = expressions_.check_walk( id, writes, owner );
@@ -853,6 +860,7 @@ void Statements::visit_walk( Node_id id )
 
                 if( param.is_valid() )
                 {
+                    params[i] = param;
                     const Type_id given =
                         types_.table().substitute( types_.type_of( param ), table_.instance_bindings( owner ) );
                     types[i] = check_walk_binding( entries[i], given, param );
@@ -887,6 +895,12 @@ void Statements::visit_walk( Node_id id )
         if( borrows && !table_.is_error( types[i] ) )
         {
             places_.record_binding_address( ast_.annotation( entries[i] ), types[i] );
+
+            // A parameter a declared walk takes by value is the walk's own copy.
+            if( !walk.is_valid() || places_.returns_a_binding( params[i] ) )
+            {
+                places_.record_walk_borrow( entries[i], ast_.container( id ), walk );
+            }
         }
 
         if( !borrows )
@@ -984,6 +998,21 @@ void Statements::check_walk_cycles()
         {
             reporter_.error_at( edge.at, "a walk cannot loop over itself", "it is inlined, so it would never end" );
             reported.insert( reached.begin(), reached.end() );
+        }
+    }
+}
+
+void Statements::check_walk_returns()
+{
+    for( const Walk_return& returned : walk_returns_ )
+    {
+        if( !std::ranges::all_of( returned.walks, [&]( Node_id walk ) { return places_.lends_its_receiver( walk ); } ) )
+        {
+            reporter_.error_at(
+                ast_.span( returned.value ),
+                "a returned reference must borrow from a parameter",
+                "the walk it comes from yields a value of its own, not part of the container"
+            );
         }
     }
 }

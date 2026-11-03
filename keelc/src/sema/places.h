@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include "ast/ast.h"
@@ -75,8 +77,15 @@ public:
     Node_id borrowed_temporary( Node_id place ) const;
 
     // §8: the part of a returned reference that is not a borrowed parameter, through any calls
-    // returning a reference, or invalid.
-    Node_id escaping_part( Node_id value, Node_id current_function ) const;
+    // returning a reference and any binding to what it is bound to, or invalid. `walks` gathers
+    // the walks a binding was bound by, which lends_its_receiver must answer for once every body is typed.
+    Node_id escaping_part( Node_id value, Node_id current_function, std::vector<Node_id>* walks = nullptr ) const;
+
+    // D74: whether every `yield` of `walk` lends only what its receiver holds.
+    bool lends_its_receiver( Node_id walk ) const;
+
+    // §8: a walk's `ref` binding is bound to its container, through `walk` unless the compiler supplies it.
+    void record_walk_borrow( Node_id binding, Node_id container, Node_id walk );
 
     // D73: whether a `const` method's result is read-only only because its receiver is.
     bool follows_receiver( Node_id value, Node_id current_function ) const;
@@ -87,8 +96,8 @@ public:
     bool check_owning_return( Node_id value, Type_id type );
 
     // D7: a consuming switch's bindings own their payloads; any other binding borrows its payload,
-    // which check/borrow_check holds as a loan.
-    void record_owned_bindings( Node_id arm, Node_id switch_stmt );
+    // which check/borrow_check holds as a loan, and an owning one is bound to the head (§8).
+    void record_arm_bindings( Node_id arm, Node_id switch_stmt );
     bool owns_binding( Node_id decl ) const; // bound by a switch that consumes
 
     // D74: a walk's bare binding, a copy the body may only read.
@@ -107,6 +116,16 @@ private:
     Node_id              field_declaration( Node_id place ) const;
     bool                 returns_writable( Node_id call ) const;     // a `ref` result, not `const ref`
     bool                 follows_its_receiver( Node_id call ) const; // a `const` method's `ref` result
+    bool                 lends_its_receiver( Node_id walk, std::unordered_set<u32>& seen ) const;
+
+    // What a borrowing binding refers into, fixed where it is bound (D32): a `ref` local's
+    // initialiser, a walk's container or a `switch` head; and the walk, when one lends it.
+    struct Bound_to
+    {
+        Node_id source;
+        Node_id walk;
+    };
+    std::optional<Bound_to> bound_to( Node_id decl ) const;
 
     const Ast&        ast_;
     const Interner&   interner_;
@@ -117,8 +136,9 @@ private:
     const Callees&    callees_;
     Reporter&         reporter_;
 
-    std::unordered_set<u32> owned_bindings_;
-    std::unordered_set<u32> walk_bindings_;
+    std::unordered_set<u32>           owned_bindings_;
+    std::unordered_set<u32>           walk_bindings_;
+    std::unordered_map<u32, Bound_to> bound_to_; // walk and payload bindings
 };
 
 } // namespace keel::sema
