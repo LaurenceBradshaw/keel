@@ -1,0 +1,55 @@
+// D75 at a `return`: a conditional of places returned by reference is the arm chosen, not a copy.
+// Each check compares or writes through the result; exit 0 when all hold.
+import kl::string;
+
+const ref i32 either( bool first, const ref i32 a, const ref i32 b )
+{
+    return first ? a : b;
+}
+
+ref i32 either_writable( bool first, ref i32 a, ref i32 b )
+{
+    return first ? a : b;
+}
+
+const ref i32 nested( i32 which, const ref i32 a, const ref i32 b, const ref i32 c )
+{
+    return which == 0 ? a : which == 1 ? b : c;
+}
+
+const ref kl::string longer( const ref kl::string a, const ref kl::string b )
+{
+    return a.size() >= b.size() ? a : b;
+}
+
+i32 main()
+{
+    i32 x = 1;
+    i32 y = 2;
+    i32 z = 3;
+
+    if( &either( true, x, y ) != &x || &either( false, x, y ) != &y )
+    {
+        return 1;
+    }
+
+    either_writable( false, ref x, ref y ) = 7;
+    if( x != 1 || y != 7 )
+    {
+        return 2;
+    }
+
+    if( &nested( 0, x, y, z ) != &x || &nested( 1, x, y, z ) != &y || &nested( 2, x, y, z ) != &z )
+    {
+        return 3;
+    }
+
+    kl::string s = "four";
+    kl::string t = "three";
+    if( &longer( s, t ) != &t )
+    {
+        return 4;
+    }
+
+    return 0;
+}

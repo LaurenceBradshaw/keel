@@ -1279,17 +1279,6 @@ void Expressions::receive_markers( Node_id call )
     }
 }
 
-// D75: a conditional a `ref` binding borrows, whose arms stay where they are.
-void Expressions::lend( Node_id value )
-{
-    if( ast_.kind( value ) == Node_kind::Conditional_expr )
-    {
-        lent_.insert( value.v );
-        lend( ast_.then_branch( value ) );
-        lend( ast_.else_branch( value ) );
-    }
-}
-
 // D75: each arm of a conditional argument is passed as the whole would be.
 void Expressions::receive_marker( Node_id value )
 {
@@ -2545,7 +2534,7 @@ Type_id Expressions::infer_conditional( Node_id id )
         return types_.poison( id );
     }
 
-    if( result.is_valid() && !lent_.contains( id.v ) )
+    if( result.is_valid() && !places_.is_lent( id ) )
     {
         places_.check_owning_source( ast_.then_branch( id ), result );
         places_.check_owning_source( ast_.else_branch( id ), result );
@@ -4361,7 +4350,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             return types_.poison( id );
         }
 
-        if( !lent_.contains( id.v ) )
+        if( !places_.is_lent( id ) )
         {
             places_.check_owning_source( ast_.then_branch( id ), expected );
             places_.check_owning_source( ast_.else_branch( id ), expected );

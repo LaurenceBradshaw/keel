@@ -3177,11 +3177,20 @@ void Lowering::lower_return( Node_id id )
             // form would buy nothing.
             const Type_id address = binding_type_of( declaration_ );
 
-            builder_.assign(
-                builder_.place( k_return_slot ),
-                borrow_of( lower_place( value ), type_of( value ), address, Address_purpose::Read, ast_.span( value ) ),
-                span
-            );
+            if( ast_.kind( value ) == Node_kind::Conditional_expr ) // D75: the arm chosen
+            {
+                const Local_id chosen = builder_.add_local( address, span );
+                borrowed_conditional( value, chosen, address, Address_purpose::Read );
+                builder_.assign( builder_.place( k_return_slot ), use( copy( builder_.place( chosen ), address ) ), span );
+            }
+            else
+            {
+                builder_.assign(
+                    builder_.place( k_return_slot ),
+                    borrow_of( lower_place( value ), type_of( value ), address, Address_purpose::Read, ast_.span( value ) ),
+                    span
+                );
+            }
         }
         else
         {

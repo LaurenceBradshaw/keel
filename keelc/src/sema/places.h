@@ -90,6 +90,13 @@ public:
     // §8: a walk's `ref` binding is bound to its container, through `walk` unless the compiler supplies it.
     void record_walk_borrow( Node_id binding, Node_id container, Node_id walk );
 
+    // D75: a conditional a `ref` binding or result borrows, whose arms stay where they are.
+    void lend( Node_id value );
+    bool is_lent( Node_id id ) const
+    {
+        return lent_.contains( id.v );
+    }
+
     // D73: whether a `const` method's result is read-only only because its receiver is.
     bool follows_receiver( Node_id value, Node_id current_function ) const;
 
@@ -142,6 +149,7 @@ private:
     std::unordered_set<u32>           owned_bindings_;
     std::unordered_set<u32>           walk_bindings_;
     std::unordered_map<u32, Bound_to> bound_to_; // walk and payload bindings
+    std::unordered_set<u32>           lent_;     // conditionals borrowed rather than materialised
 };
 
 } // namespace keel::sema

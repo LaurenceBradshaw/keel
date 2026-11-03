@@ -294,6 +294,10 @@ void Statements::visit_return( Node_id id )
         return;
     }
 
+    if( places_.returns_a_binding( expressions_.current_function() ) )
+    {
+        places_.lend( value ); // D75: a returned conditional is the arm chosen, not a copy
+    }
     expressions_.check( value, current_return_ );
 
     // The `T*` half of §8's rule, for a local whose storage ends here.
@@ -337,12 +341,6 @@ void Statements::visit_return( Node_id id )
                 ast_.span( part ),
                 "`size` and `data` describe the run, so they cannot be returned by reference",
                 "return a copy"
-            );
-        }
-        else if( ast_.kind( part ) == Node_kind::Conditional_expr )
-        {
-            reporter_.error_at(
-                ast_.span( part ), "a returned reference must borrow from a parameter", "return from each branch with `if`"
             );
         }
         else
@@ -411,7 +409,7 @@ void Statements::visit_var( Node_id id )
         {
             if( mode == Keyword::Ref )
             {
-                expressions_.lend( init );
+                places_.lend( init );
             }
             expressions_.check( init, type );
             // Not for a binding: `ref B r = a;` copies nothing and gives nothing away, so D31 has

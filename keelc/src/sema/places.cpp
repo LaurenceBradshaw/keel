@@ -368,6 +368,12 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 // rooted in a `const` binding, a pattern binding, a counter or a read-only borrow. A temporary is check_writable's alone.
 bool Places::is_read_only( Node_id target, Node_id current_function ) const
 {
+    if( is_lent( target ) )
+    {
+        return is_read_only( ast_.then_branch( target ), current_function ) ||
+               is_read_only( ast_.else_branch( target ), current_function );
+    }
+
     if( through_const_pointer( target ).is_valid() || const_field( target ).is_valid() )
     {
         return true;
@@ -770,6 +776,13 @@ Node_id Places::borrowed_temporary( Node_id place ) const
 
 Node_id Places::escaping_part( Node_id value, Node_id current_function, std::vector<Node_id>* walks ) const
 {
+    // D75: a borrowed conditional escapes where either arm does.
+    if( is_lent( value ) )
+    {
+        const Node_id part = escaping_part( ast_.then_branch( value ), current_function, walks );
+        return part.is_valid() ? part : escaping_part( ast_.else_branch( value ), current_function, walks );
+    }
+
     // A run's `size` and `data` are the callee's own copy of its description.
     if( describes_run( value ) )
     {
@@ -952,8 +965,24 @@ Node_id Places::field_declaration( Node_id place ) const
 // Rooted in the receiver, reached only through pointer fields declared to write and through `ref`
 // results that follow their own receivers. Anything declared `const` on the way is read-only
 // whatever the caller holds.
+void Places::lend( Node_id value )
+{
+    if( ast_.kind( value ) == Node_kind::Conditional_expr )
+    {
+        lent_.insert( value.v );
+        lend( ast_.then_branch( value ) );
+        lend( ast_.else_branch( value ) );
+    }
+}
+
 bool Places::follows_receiver( Node_id value, Node_id current_function ) const
 {
+    if( is_lent( value ) )
+    {
+        return follows_receiver( ast_.then_branch( value ), current_function ) &&
+               follows_receiver( ast_.else_branch( value ), current_function );
+    }
+
     Node_id place = value;
 
     while( !const_field( place ).is_valid() )
@@ -1897,15 +1926,38 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
         REQUIRE( p.rendered().find( "a place this function could change" ) != std::string::npos );
     }
 
-    SECTION( "a conditional of two parameters is returned from each branch" )
+    SECTION( "a conditional of parameters is returned, nested or through a ref local" )
     {
         const Typed p( "bool f() { return true; }\n"
-                       "const ref i32 bad( const ref i32 a, const ref i32 b ) { return f() ? a : b; }\n"
+                       "const ref i32 a( const ref i32 x, const ref i32 y ) { return f() ? x : y; }\n"
+                       "ref i32 b( ref i32 x, ref i32 y, ref i32 z ) { return f() ? x : f() ? y : z; }\n"
+                       "const ref i32 c( const ref i32 x, const ref i32 y ) { const ref i32 r = f() ? x : y; return r; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "but an arm that dies is refused at that arm" )
+    {
+        const Typed p( "bool f() { return true; }\n"
+                       "const ref i32 bad( const ref i32 a ) { i32 nn = 1; return f() ? a : nn; }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "return from each branch with `if`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( " ^^ anything else here dies" ) != std::string::npos );
+    }
+
+    SECTION( "and a `ref` result with a read-only arm" )
+    {
+        const Typed p( "bool f() { return true; }\n"
+                       "ref i32 bad( const ref i32 a, ref i32 b ) { return f() ? a : b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a place this function could change" ) != std::string::npos );
     }
 }
 
