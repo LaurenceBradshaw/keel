@@ -10,6 +10,7 @@
 #include "ir/verify.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
+#include "opt/devirtualise_calls.h"
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
 #include "opt/inline_calls.h"
@@ -117,7 +118,11 @@ Front_end run_front_end(
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
     std::vector<bool> finished( front.functions.size(), false ); // each function once optimised, as its droppers inline it
 
-    for( const std::vector<u32>& group : callees_first( front.functions ) )
+    // A call made direct, before or after inlining, finds its callee optimised already.
+    const std::vector<std::vector<u32>> dispatched =
+        build.optimise ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
+
+    for( const std::vector<u32>& group : callees_first( front.functions, dispatched ) )
     {
         for( const u32 f : group )
         {
@@ -138,6 +143,11 @@ Front_end run_front_end(
                 if( build.inlining )
                 {
                     inline_calls( function, saved, front.functions, literals, *build.inlining );
+                    // An inlined body's dispatch may now see its implementer.
+                    if( devirtualise_calls( function, ast, front.types ) )
+                    {
+                        inline_calls( function, saved, front.functions, literals, *build.inlining );
+                    }
                 }
                 collapse_borrows( function, front.types.table() );
                 coalesce_moves( function );

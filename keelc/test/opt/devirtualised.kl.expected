@@ -1,0 +1,123 @@
+// opt/devirtualised.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Sq;
+
+struct kl__Shape__vtable;
+struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
+
+struct kl__Sq
+{
+    double kl_s;
+};
+
+struct kl__Shape__vtable
+{
+    void ( *drop )( void* );
+    double ( *kl__area__ )( void* );
+};
+
+double kl__area__S2Sq( struct kl__Sq* );
+double kl__dyn_area__5Shape( struct kl__Shape__ref );
+double kl__local_ref__3f64( double );
+double kl__through_call__3f64( double );
+double kl__through_ptr__3f64( double );
+int32_t kl__main__( void );
+
+#line 14 "opt/devirtualised.kl"
+double kl__area__S2Sq( struct kl__Sq* kl_this_1 )
+{
+    double kl_t0;
+#line 16 "opt/devirtualised.kl"
+    kl_t0 = ( *kl_this_1 ).kl_s * ( *kl_this_1 ).kl_s;
+#line 16 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 20 "opt/devirtualised.kl"
+double kl__dyn_area__5Shape( struct kl__Shape__ref kl_s_1 )
+{
+    double kl_t0;
+#line 22 "opt/devirtualised.kl"
+    kl_t0 = kl_s_1.vtable->kl__area__( kl_s_1.self );
+#line 22 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 25 "opt/devirtualised.kl"
+double kl__local_ref__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 16 "opt/devirtualised.kl"
+    kl_t0 = kl_x_1 * kl_x_1;
+#line 29 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 32 "opt/devirtualised.kl"
+double kl__through_call__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 16 "opt/devirtualised.kl"
+    kl_t0 = kl_x_1 * kl_x_1;
+#line 35 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 38 "opt/devirtualised.kl"
+double kl__through_ptr__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 16 "opt/devirtualised.kl"
+    kl_t0 = kl_x_1 * kl_x_1;
+#line 42 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 45 "opt/devirtualised.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    double kl_t1;
+    double kl_t2;
+    double kl_t3;
+    double kl_t4;
+    double kl_t5;
+    bool kl_t6;
+#line 16 "opt/devirtualised.kl"
+    kl_t1 = 2.0 * 2.0;
+#line 16 "opt/devirtualised.kl"
+    kl_t2 = 2.0 * 2.0;
+#line 47 "opt/devirtualised.kl"
+    kl_t3 = kl_t1 + kl_t2;
+#line 16 "opt/devirtualised.kl"
+    kl_t4 = 2.0 * 2.0;
+#line 47 "opt/devirtualised.kl"
+    kl_t5 = kl_t3 + kl_t4;
+#line 47 "opt/devirtualised.kl"
+    kl_t6 = kl_t5 == 12.0;
+#line 47 "opt/devirtualised.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 47 "opt/devirtualised.kl"
+    kl_t0 = 0;
+#line 47 "opt/devirtualised.kl"
+    goto bb3;
+    bb2:
+#line 47 "opt/devirtualised.kl"
+    kl_t0 = 1;
+#line 47 "opt/devirtualised.kl"
+    goto bb3;
+    bb3:
+#line 47 "opt/devirtualised.kl"
+    return kl_t0;
+}
+
+#line 45 "opt/devirtualised.kl"
+int main( void )
+{
+#line 45 "opt/devirtualised.kl"
+    return (int) kl__main__();
+}

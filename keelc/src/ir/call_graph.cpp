@@ -105,9 +105,13 @@ void visit( Walk& walk, u32 f )
 
 } // namespace
 
-std::vector<std::vector<u32>> callees_first( const std::vector<Function>& functions )
+std::vector<std::vector<u32>> callees_first( const std::vector<Function>& functions, const std::vector<std::vector<u32>>& also )
 {
-    const std::vector<std::vector<u32>> edges = call_edges( functions );
+    std::vector<std::vector<u32>> edges = call_edges( functions );
+    for( u32 f = 0; f < also.size(); f++ )
+    {
+        edges[f].insert( edges[f].end(), also[f].begin(), also[f].end() );
+    }
 
     Walk walk {
         .edges    = edges,

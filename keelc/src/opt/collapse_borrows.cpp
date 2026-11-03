@@ -60,8 +60,12 @@ constexpr std::string_view k_types =
 // Optimised, as a release build lowers it. The function under test is always the first.
 struct Collapsed : Compiled
 {
-    explicit Collapsed( std::string_view source )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .optimise = true } )
+    explicit Collapsed( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ),
+              Stage::Elaborated,
+              Build { .optimise = true, .inlining = inlining }
+          )
     {
     }
 
@@ -97,10 +101,11 @@ TEST_CASE( "collapse_borrows_copies_the_pointer_a_deref_borrows", "[opt][collaps
     REQUIRE( p.deref_borrows() == 0 );
 }
 
-// Its `&` builds the interface's pair, which is not the pointer.
+// Its `&` builds the interface's pair, which is not the pointer. Not inlined, so the call is not
+// made direct and the pair stays.
 TEST_CASE( "collapse_borrows_keeps_a_class_pointer_becoming_an_interface_one", "[opt][collapse]" )
 {
-    const Collapsed p( "i32 f( const ref Box b ) { return measure( b ); }\n" );
+    const Collapsed p( "i32 f( const ref Box b ) { return measure( b ); }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.deref_borrows() == 1 );

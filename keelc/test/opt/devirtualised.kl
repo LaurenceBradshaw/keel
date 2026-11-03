@@ -1,0 +1,48 @@
+// A requirement called through a pointer made a few lines earlier from a known implementer calls
+// that implementer's method, which then inlines: through a `ref`, a call taking one, and a pointer.
+// None is left to need `Sq`'s vtable.
+
+interface Shape
+{
+    f64 area() const;
+};
+
+struct Sq implements Shape
+{
+    f64 s;
+
+    f64 area() const
+    {
+        return s * s;
+    }
+};
+
+f64 dyn_area( const ref Shape s )
+{
+    return s.area();
+}
+
+f64 local_ref( f64 x )
+{
+    Sq              q = Sq { x };
+    const ref Shape s = q;
+    return s.area();
+}
+
+f64 through_call( f64 x )
+{
+    Sq q = Sq { x };
+    return dyn_area( q );
+}
+
+f64 through_ptr( f64 x )
+{
+    Sq     q = Sq { x };
+    Shape* p = &q;
+    return ( *p ).area();
+}
+
+i32 main()
+{
+    return local_ref( 2.0 ) + through_call( 2.0 ) + through_ptr( 2.0 ) == 12.0 ? 0 : 1;
+}

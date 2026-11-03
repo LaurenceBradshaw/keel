@@ -20,6 +20,7 @@ inline bool calls( const Function& caller, const Statement& statement, const Fun
 
 // Indices into `functions`, grouped into the sets that call each other (Tarjan), each group after
 // every group it calls into or takes the address of. A function calling nothing, or only itself, is
-// a group of one.
-std::vector<std::vector<u32>> callees_first( const std::vector<Function>& functions );
+// a group of one. `also` adds edges the statements do not show.
+std::vector<std::vector<u32>>
+callees_first( const std::vector<Function>& functions, const std::vector<std::vector<u32>>& also = {} );
 } // namespace keel

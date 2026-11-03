@@ -244,12 +244,11 @@ TEST_CASE( "forward_borrows_names_the_local_a_copied_pointer_points_at", "[opt][
     REQUIRE( p.derefs() == 0 );
 }
 
-// Pointing at one of two, at a class as its interface, or passed on: each keeps its address.
+// Pointing at one of two, or passed on: each keeps its address.
 TEST_CASE( "forward_borrows_keeps_a_pointer_that_may_point_elsewhere", "[opt][forward]" )
 {
     for( const char* source : {
              "i32 f( i32 a ) { i32 x = 1; i32 y = 2; i32* p = &x; if( a > 0 ) { p = &y; } return *p; }\n",
-             "i32 f( i32 a ) { Box b = Box( a ); const ref shape s = b; return s.area(); }\n",
          } )
     {
         const Forwarded p( source );

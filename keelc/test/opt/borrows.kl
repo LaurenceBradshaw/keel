@@ -1,6 +1,6 @@
 // M11's `&(*x)` peephole, in a release build: a borrow of what a pointer points at is that pointer,
 // so a borrow passed on, a borrow-returning call's result and a method called on `this` emit no
-// `&( *`. A class borrowed as an interface keeps its `&`, which builds the interface's pointer.
+// `&( *`. A class borrowed as an interface is called directly, so it inlines.
 // Each check returns its own code.
 
 interface shape
@@ -50,7 +50,7 @@ i32 measure( const ref shape s )
     return s.area();
 }
 
-// A class pointer to an interface pointer: the `&` stays.
+// A class pointer to an interface pointer: `area` is called directly.
 i32 widen( const ref Square s )
 {
     return measure( s );
