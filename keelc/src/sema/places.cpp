@@ -715,6 +715,18 @@ Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
     return Node_id {};
 }
 
+Node_id Places::bound_root( Node_id place, Node_id current_function ) const
+{
+    Node_id root = place_root( place, current_function );
+
+    while( const std::optional<Bound_to> bound = bound_to( root ) )
+    {
+        root = place_root( bound->source, current_function );
+    }
+
+    return root;
+}
+
 Node_id Places::borrowed_temporary( Node_id place ) const
 {
     const Node_id source = place_source( place );
@@ -1844,6 +1856,39 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "must borrow from a parameter" ) != std::string::npos );
+    }
+
+    // The help names what really dies, and says nothing dies when nothing does.
+    SECTION( "a ref local of a local names the local" )
+    {
+        const Typed p( "struct P { i32 x; };\nconst ref i32 bad() { P a = P { 1 }; const ref i32 r = a.x; return r; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`r` refers to `a`, which dies when this function returns" ) != std::string::npos );
+    }
+
+    SECTION( "a global is refused as a global, bare or through a ref local" )
+    {
+        const Typed p( "const i32 G = 3;\nconst ref i32 bad() { return G; }\n"
+                       "const ref i32 worse() { const ref i32 r = G; return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "dies" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "a global cannot be returned by reference" ) != std::string::npos );
+    }
+
+    SECTION( "a conditional of two parameters is returned from each branch" )
+    {
+        const Typed p( "bool f() { return true; }\n"
+                       "const ref i32 bad( const ref i32 a, const ref i32 b ) { return f() ? a : b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "return from each branch with `if`" ) != std::string::npos );
     }
 }
 

@@ -73,6 +73,9 @@ public:
     // The declaration whose storage ends when `current_function` returns, or invalid.
     Node_id dying_storage( Node_id place, Node_id current_function ) const;
 
+    // The declaration a place is rooted in, through every binding to what it was bound to (D32).
+    Node_id bound_root( Node_id place, Node_id current_function ) const;
+
     // D54: the temporary a place depends on, through any calls returning a reference, or invalid.
     Node_id borrowed_temporary( Node_id place ) const;
 

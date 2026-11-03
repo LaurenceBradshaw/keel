@@ -2,25 +2,25 @@ error: a returned reference must borrow from a parameter
   --> sema/returns_through_bindings.kl:76:12
    |
 76 |     return p; // error: dies
-   |            ^ anything else here dies when this function returns
+   |            ^ `p` refers to `a`, which dies when this function returns
 
 error: a returned reference must borrow from a parameter
   --> sema/returns_through_bindings.kl:85:16
    |
 85 |         return x; // error: dies
-   |                ^ anything else here dies when this function returns
+   |                ^ `x` refers to `v`, which dies when this function returns
 
 error: a returned reference must borrow from a parameter
   --> sema/returns_through_bindings.kl:96:20
    |
 96 |             return s; // error: dies
-   |                    ^ anything else here dies when this function returns
+   |                    ^ `s` refers to `o`, which dies when this function returns
 
 error: a returned reference must borrow from a parameter
    --> sema/returns_through_bindings.kl:106:12
     |
 106 |     return p; // error: dies
-    |            ^ anything else here dies when this function returns
+    |            ^ `p` refers to `a`, which dies when this function returns
 
 error: a returned reference must borrow from a parameter
    --> sema/returns_through_bindings.kl:114:20

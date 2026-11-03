@@ -339,13 +339,42 @@ void Statements::visit_return( Node_id id )
                 "return a copy"
             );
         }
-        else
+        else if( ast_.kind( part ) == Node_kind::Conditional_expr )
         {
             reporter_.error_at(
-                ast_.span( part ),
-                "a returned reference must borrow from a parameter",
-                "anything else here dies when this function returns"
+                ast_.span( part ), "a returned reference must borrow from a parameter", "return from each branch with `if`"
             );
+        }
+        else
+        {
+            const Node_id root = places_.bound_root( part, function );
+            const Node_id own  = places_.place_root( part, function );
+
+            if( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl &&
+                !ast_.span( function ).contains( ast_.span( root ) ) )
+            {
+                reporter_.error_at( ast_.span( part ), "a global cannot be returned by reference", "return a copy" );
+            }
+            else if( root.is_valid() && own.is_valid() && root != own )
+            {
+                reporter_.error_at(
+                    ast_.span( part ),
+                    "a returned reference must borrow from a parameter",
+                    fmt::format(
+                        "`{}` refers to `{}`, which dies when this function returns",
+                        interner_.text( ast_.name( own ) ),
+                        interner_.text( ast_.name( root ) )
+                    )
+                );
+            }
+            else
+            {
+                reporter_.error_at(
+                    ast_.span( part ),
+                    "a returned reference must borrow from a parameter",
+                    "anything else here dies when this function returns"
+                );
+            }
         }
     }
 
