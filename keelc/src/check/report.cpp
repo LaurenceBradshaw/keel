@@ -468,6 +468,96 @@ void report_unassigned_errors(
     }
 }
 
+// The first call a function makes of itself, when no path from its entry reaches a `return`
+// without making one; invalid otherwise. A `panic` the author wrote is a way out; a check the
+// compiler added is not, as a build may leave it out.
+Span unconditional_self_call( const Function& function )
+{
+    std::vector<bool>     seen( function.blocks.size(), false );
+    std::vector<Block_id> work { Block_id { 0 } };
+    std::vector<Block_id> next;
+    Span                  first {};
+    seen[0] = true;
+
+    while( !work.empty() )
+    {
+        const Block_id at = work.back();
+        work.pop_back();
+
+        Span call {};
+        for( const Statement& statement : function.statements_of( at ) )
+        {
+            if( statement.kind == Statement_kind::Assign && function.rvalue( statement ).kind == Rvalue_kind::Call &&
+                function.rvalue( statement ).callee == function.declaration )
+            {
+                call = statement.span;
+                break;
+            }
+        }
+
+        if( call.is_valid() )
+        {
+            first = first.is_valid() && first.start < call.start ? first : call;
+            continue;
+        }
+
+        const Terminator& terminator = function.blocks[at].terminator;
+        if( terminator.kind == Terminator_kind::Return ||
+            ( terminator.kind == Terminator_kind::Panic && terminator.failure == Failure::Message ) )
+        {
+            return Span {};
+        }
+
+        next.clear();
+        successors( terminator, next );
+        for( const Block_id to : next )
+        {
+            if( !seen[to.v] )
+            {
+                seen[to.v] = true;
+                work.push_back( to );
+            }
+        }
+    }
+    return first;
+}
+
+// Once a declaration, however many instances it has.
+void report_unconditional_recursion(
+    std::span<const Function> functions,
+    const Ast&                ast,
+    const Source_manager&     sm,
+    const Interner&           interner,
+    Diagnostics&              diagnostics
+)
+{
+    std::vector<Node_id> warned;
+    for( const Function& function : functions )
+    {
+        if( std::ranges::find( warned, function.declaration ) != warned.end() )
+        {
+            continue;
+        }
+
+        const Span call = unconditional_self_call( function );
+        if( !call.is_valid() )
+        {
+            continue;
+        }
+
+        warned.push_back( function.declaration );
+        const Line_col at = sm.line_col( call.file, call.start );
+        diagnostics.warning(
+            Warning::Unconditional_recursion,
+            ast.name_span( function.declaration ),
+            fmt::format(
+                "`{}` calls itself on every path, so it never returns", interner.text( ast.name( function.declaration ) )
+            ),
+            fmt::format( "every path reaches the call at {}:{}; return without it on some path", at.line, at.col )
+        );
+    }
+}
+
 } // namespace
 
 void report_dataflow_errors(
@@ -484,6 +574,7 @@ void report_dataflow_errors(
     report_loan_errors( functions, ast, sm, interner, literals, types, diagnostics );
     report_dangling_errors( functions, ast, interner, diagnostics );
     report_unassigned_errors( functions, ast, interner, diagnostics, types );
+    report_unconditional_recursion( functions, ast, sm, interner, diagnostics );
 }
 
 } // namespace keel

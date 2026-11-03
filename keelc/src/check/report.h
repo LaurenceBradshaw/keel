@@ -15,8 +15,8 @@ namespace keel
 {
 
 // The wording for what the dataflow checks find: use after move (§8), D54's broken loans, and D9's
-// and D31's unassigned reads, `out` parameters and return slot. The passes return spans and locals;
-// this names them.
+// and D31's unassigned reads, `out` parameters and return slot; and the warning for a function that
+// calls itself on every path. The passes return spans and locals; this names them.
 void report_dataflow_errors(
     std::span<const Function> functions,
     const Ast&                ast,

@@ -124,6 +124,8 @@ std::string_view warning_name( Warning which )
         return "needless-move";
     case Warning::Unreachable_code:
         return "unreachable-code";
+    case Warning::Unconditional_recursion:
+        return "unconditional-recursion";
     case Warning::Large_local:
         return "large-local";
     }

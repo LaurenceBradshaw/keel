@@ -29,6 +29,7 @@ enum class Warning : u8
     Constant_comparison,
     Needless_move,
     Unreachable_code,
+    Unconditional_recursion,
     Large_local // off unless -Wlarge-local
 };
 
@@ -103,7 +104,7 @@ private:
     std::vector<Span>                silenced_;
     std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
     // Indexed by Warning: every one on but large-local.
-    std::array<Level, 7> levels_ { Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::Off };
+    std::array<Level, 8> levels_ { Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::Off };
     bool                 all_errors_ = false; // a bare -Werror
 };
 
