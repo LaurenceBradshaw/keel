@@ -151,6 +151,10 @@ private:
     void push( Token_kind kind, u32 start, Symbol_id symbol = Symbol_id {} );
     void error_at( Span span, std::string message, std::string help = {} );
 
+    // The code point a UTF-8 sequence led by `lead` spells, consuming it; nothing when malformed.
+    std::optional<char32_t> scan_utf8( unsigned char lead );
+    void                    report_non_ascii( char32_t code, u32 start );
+
     void skip_trivia();
     void skip_line_comment();
 
@@ -935,21 +939,15 @@ void Scanner::scan_punctuation( char c, u32 start )
         break;
     }
 
-    // Pasting from a web page is the usual source of these; naming the character beats printing an
-    // invisible byte.
-    if( c == '\xC2' && peek() == '\xA0' )
-    {
-        advance();
-        error_at( span_from( start ), "unexpected non-breaking space (U+00A0)", "replace it with an ordinary space" );
-        push( Token_kind::Unknown, start );
-        return;
-    }
-
     const unsigned char byte = static_cast<unsigned char>( c );
 
     if( byte >= 0x20 && byte < 0x7F )
     {
         error_at( span_from( start ), "unexpected character `" + std::string( 1, c ) + "`" );
+    }
+    else if( const std::optional<char32_t> code = scan_utf8( byte ) )
+    {
+        report_non_ascii( *code, start );
     }
     else
     {
@@ -959,6 +957,88 @@ void Scanner::scan_punctuation( char c, u32 start )
     }
 
     push( Token_kind::Unknown, start );
+}
+
+std::optional<char32_t> Scanner::scan_utf8( unsigned char lead )
+{
+    u32      length = 0;
+    char32_t code   = 0;
+    if( lead >= 0xC2 && lead <= 0xDF )
+    {
+        length = 2;
+        code   = lead & 0x1F;
+    }
+    else if( lead >= 0xE0 && lead <= 0xEF )
+    {
+        length = 3;
+        code   = lead & 0x0F;
+    }
+    else if( lead >= 0xF0 && lead <= 0xF4 )
+    {
+        length = 4;
+        code   = lead & 0x07;
+    }
+    else
+    {
+        return std::nullopt;
+    }
+
+    for( u32 i = 0; i + 1 < length; ++i )
+    {
+        const unsigned char next = static_cast<unsigned char>( peek( i ) );
+        if( next < 0x80 || next > 0xBF )
+        {
+            return std::nullopt;
+        }
+        code = ( code << 6 ) | ( next & 0x3F );
+    }
+
+    pos_ += length - 1;
+    return code;
+}
+
+void Scanner::report_non_ascii( char32_t code, u32 start )
+{
+    // Characters pasted from a web page or a word processor, and the ASCII each stands in for.
+    struct Look_alike
+    {
+        char32_t    code;
+        const char* name; // when the character itself is invisible
+        const char* replacement;
+    };
+    static constexpr Look_alike k_look_alikes[] = {
+        { 0x00A0, "non-breaking space", "an ordinary space" },
+        { 0xFF06, nullptr, "`&`" },
+        { 0x201C, nullptr, "`\"`" },
+        { 0x201D, nullptr, "`\"`" },
+        { 0x2018, nullptr, "`'`" },
+        { 0x2019, nullptr, "`'`" },
+        { 0x2212, nullptr, "`-`" },
+        { 0x2013, nullptr, "`-`" },
+        { 0x2014, nullptr, "`-`" },
+        { 0xFF1B, nullptr, "`;`" },
+        { 0xFF08, nullptr, "`(`" },
+        { 0xFF09, nullptr, "`)`" },
+    };
+
+    static constexpr char k_hex[] = "0123456789ABCDEF";
+    std::string           hex;
+    for( int shift = code > 0xFFFF ? 16 : 12; shift >= 0; shift -= 4 )
+    {
+        hex += k_hex[( code >> shift ) & 0x0F];
+    }
+
+    const auto row = std::find_if(
+        std::begin( k_look_alikes ), std::end( k_look_alikes ), [code]( const Look_alike& l ) { return l.code == code; }
+    );
+    const std::string written( text_.substr( start, pos_ - start ) );
+    const std::string message = row != std::end( k_look_alikes ) && row->name
+                                    ? "unexpected " + std::string( row->name ) + " (U+" + hex + ")"
+                                    : "unexpected character `" + written + "` (U+" + hex + ")";
+    const std::string help    = row != std::end( k_look_alikes )
+                                    ? "replace it with " + std::string( row->replacement )
+                                    : "outside a literal or comment, source is ASCII: names are ASCII letters, digits and `_`";
+    error_at( span_from( start ), message, help );
 }
 
 } // namespace
@@ -1962,6 +2042,32 @@ TEST_CASE( "lexer_unexpected_characters", "[lex]" )
         const Lexed lexed( "a\xC2\xA0"
                            "b" );
         REQUIRE( lexed.rendered().find( "non-breaking space" ) != std::string::npos );
+    }
+
+    SECTION( "a multi-byte character is one error, with its look-alike" )
+    {
+        const Lexed lexed( "a \xEF\xBC\x86 b" );
+        REQUIRE( lexed.count() == 3 );
+        REQUIRE( lexed.kind( 1 ) == Token_kind::Unknown );
+        REQUIRE( lexed.rendered().find( "unexpected character `\xEF\xBC\x86` (U+FF06)" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "replace it with `&`" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "unexpected byte" ) == std::string::npos );
+    }
+
+    SECTION( "a letter in a name is one error" )
+    {
+        const Lexed lexed( "caf\xC3\xA9" );
+        REQUIRE( lexed.count() == 2 );
+        REQUIRE( lexed.rendered().find( "(U+00E9)" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "names are ASCII letters, digits and `_`" ) != std::string::npos );
+    }
+
+    SECTION( "a malformed sequence still prints the byte" )
+    {
+        const Lexed lexed( std::string_view( "\xFF\xC3", 2 ) );
+        REQUIRE( lexed.count() == 2 );
+        REQUIRE( lexed.rendered().find( "unexpected byte 0xFF" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "unexpected byte 0xC3" ) != std::string::npos );
     }
 }
 

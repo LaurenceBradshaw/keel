@@ -312,7 +312,7 @@ These are load-bearing and painful to retrofit.
 | --- | --- |
 | **Memory** | Every structure is a `std::vector` addressed by handles, and nothing is freed: the compiler is a batch process and it exits. A long-lived language server would need this revisited (§12). |
 | **Handles** | Refer to nodes by `u32` index wrappers (`struct Node_id { u32 v; };`), not pointers. Arrays grow without invalidating references; nodes stay small; dumping is trivial. |
-| **Identifiers** | Interned at lex time into a `Symbol_id`. All name comparison is integer comparison. |
+| **Identifiers** | Interned at lex time into a `Symbol_id`. All name comparison is integer comparison. Names are ASCII letters, digits and `_`; a non-ASCII character outside a literal or comment is one error, naming its code point and, for a look-alike such as `＆` or `“`, the ASCII it stands in for. |
 | **Spans** | Every AST node, type, and KIR instruction stores `{ File_id, u32 start, u32 end }` — half-open byte offsets, not line/column. Diagnostics are a large part of a real compiler, and retrofitting spans is miserable. |
 | **AST shape** | A tagged struct — kind, span, a `u32` `aux` whose meaning depends on the kind, and a run of children in one shared array — not a class hierarchy with visitors. Everything a pass learns lives in side tables keyed by `Node_id`. |
 | **Errors** | A `Diagnostics` sink collected and reported in batch. Never `exit()` from deep in the compiler. Parser and checker both recover and continue, and one mistake gives one error. |
