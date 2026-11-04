@@ -1,0 +1,67 @@
+// `box::replace` swaps the value in place and hands back the old one, which the caller then owns.
+// It is how a long chain is dropped without one frame per link: each pass leaves a `Nil` behind,
+// so dropping the link it came from is shallow. Exits with the failing check.
+enum List
+{
+    Cons( i64 v, box<List> rest ),
+    Nil,
+};
+
+class Counted
+{
+    i64* drops_;
+
+    public Counted( i64* drops ) { drops_ = drops; }
+
+    ~Counted() { *drops_ = *drops_ + 1; }
+};
+
+i64 unlink( move List l )
+{
+    i64  links = 0;
+    List cur   = move l;
+    while( true )
+    {
+        switch( move cur )
+        {
+            case List::Cons( v, rest ):
+                cur = rest.replace( List::Nil );
+                links = links + 1;
+                break;
+            case List::Nil:
+                return links;
+        }
+    }
+}
+
+i32 main()
+{
+    List l = List::Nil;
+    for( i64 i = 0; i < 1000000; i = i + 1 )
+    {
+        l = List::Cons( i, box<List>( move l ) );
+    }
+
+    if( unlink( move l ) != 1000000 )
+    {
+        return 1;
+    }
+
+    i64 drops = 0;
+    {
+        box<Counted> b = box<Counted>( Counted( &drops ) );
+        Counted old = b.replace( Counted( &drops ) );
+        if( drops != 0 )
+        {
+            return 2;
+        }
+    }
+
+    // The old value and the box's new one.
+    if( drops != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

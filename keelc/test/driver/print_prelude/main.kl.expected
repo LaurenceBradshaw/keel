@@ -353,6 +353,19 @@ class box<T>
         return *p_;
     }
 
+    /// Puts `value` in the box and hands back what it held.
+    public T replace( move T value )
+    {
+        unsafe
+        {
+            // Raw slot reads and writes, so neither drops: the old value leaves and the new one arrives.
+            T[*] slot = cast<T[*]>( p_ );
+            T old = move slot[0];
+            slot[0] = move value;
+            return old;
+        }
+    }
+
     private T* p_;
 };
 

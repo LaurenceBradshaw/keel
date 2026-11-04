@@ -1034,7 +1034,25 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    return check_method_arguments( id, method, object_type, expectation, shapes, interface );
+    const Type_id type = check_method_arguments( id, method, object_type, expectation, shapes, interface );
+
+    // Only a `box<Shape>`'s methods can hand back a `Shape` itself.
+    if( table_.is_interface( type ) && !places_.call_returns_a_binding( id ) )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format(
+                "`{}` would hand back a `{}` by value, and an interface cannot be held by value",
+                interner_.text( ast_.name( callee ) ),
+                table_.name( type )
+            ),
+            "only a borrow or a `box` holds an interface"
+        );
+
+        return types_.poison( id );
+    }
+
+    return type;
 }
 
 // Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
@@ -9010,6 +9028,22 @@ TEST_CASE( "type_checker_says_how_to_make_a_box_of_an_interface", "[sema][interf
         std::string::npos
     );
     REQUIRE( p.rendered().find( "is an interface, so it cannot be held by value" ) == std::string::npos );
+}
+
+// `get` borrows the `Shape`; `replace` would hand one back.
+TEST_CASE( "type_checker_refuses_replacing_in_a_box_of_an_interface", "[sema][interfaces]" )
+{
+    const Typed p( "interface Shape { f64 area() const; };\n"
+                   "struct Square implements Shape { f64 side; f64 area() const { return side; } };\n"
+                   "i32 main() { box<Shape> s = box<Square>( Square { 1.0 } ); const ref Shape r = s.get();"
+                   " s.replace( Square { 2.0 } ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE(
+        p.rendered().find( "`replace` would hand back a `Shape` by value, and an interface cannot be held by value" ) !=
+        std::string::npos
+    );
 }
 
 // A sibling is callable by bare name: methods join the member scope alongside fields, so
