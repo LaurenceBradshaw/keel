@@ -177,7 +177,7 @@ private:
     Node_id parse_expression_before_increment();
     Node_id parse_case_bound();
 
-    Node_id parse_postfix( Node_id left, bool increment_follows );
+    Node_id parse_postfix( Node_id left, Expression_use use );
     Node_id parse_type_argument_suffix( Node_id left );
     Node_id member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments = {} );
 
@@ -189,7 +189,7 @@ private:
     Node_id parse_prefix();
     Node_id parse_keyword_prefix( Span start );
 
-    Node_id parse_arg_list();
+    Node_id parse_arg_list( bool pattern = false ); // a pattern's list may hold `_`
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -215,6 +215,9 @@ private:
     // Grouping parentheses leave no node, so D16's `a & b == c` against `(a & b) == c` is tracked here
     // by Node_id rather than in the AST.
     std::vector<bool> parenthesised_;
+
+    std::vector<Span> label_discards_; // the `_`s parse_arg_list took in the label being parsed
+    bool              in_label_ = false;
 };
 
 // Spaced by 10 so a level can be inserted. 0 is not an infix operator, which ends the Pratt loop.
@@ -3321,6 +3324,8 @@ Node_id Parser::parse_switch_stmt()
             }
             else
             {
+                label_discards_.clear();
+                in_label_           = true;
                 const Node_id lower = parse_case_bound();
 
                 // D7: `case Shape::Circle( r ):` binds names. The postfix loop already folded it into a Call_expr,
@@ -3336,7 +3341,9 @@ Node_id Parser::parse_switch_stmt()
                             if( !ast_.broken( lower ) )
                             {
                                 recovery_.error_at(
-                                    ast_.span( argument ), "a pattern binds names", "write a name for each field of the payload"
+                                    ast_.span( argument ),
+                                    "a pattern binds names",
+                                    "write a name, or `_`, for each field of the payload"
                                 );
                             }
                             continue;
@@ -3346,9 +3353,17 @@ Node_id Parser::parse_switch_stmt()
                     }
 
                     children.push_back( ast_.add( Node_kind::Variant_pattern, ast_.span( lower ), 0, parts ) );
+                    label_discards_.clear();
+                    in_label_ = false;
 
                     recovery_.expect( Token_kind::Colon );
                     continue;
+                }
+
+                // The call was not the whole label, so its `_`s stand for nothing.
+                for( const Span discard : label_discards_ )
+                {
+                    recovery_.error_at( discard, "`_` stands only for a field of a pattern" );
                 }
 
                 // D34: a range is parsed only here and as an index, not in the expression grammar.
@@ -3364,6 +3379,7 @@ Node_id Parser::parse_switch_stmt()
                 {
                     children.push_back( lower );
                 }
+                in_label_ = false;
             }
 
             recovery_.expect( Token_kind::Colon );
@@ -3416,7 +3432,7 @@ Node_id Parser::parse_switch_stmt()
 
 Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, Expression_use use )
 {
-    Node_id left = parse_postfix( parse_prefix(), use == Expression_use::Before_increment );
+    Node_id left = parse_postfix( parse_prefix(), use );
 
     while( true )
     {
@@ -3520,8 +3536,10 @@ Node_id Parser::parse_case_bound()
 
 // The postfix forms, which bind tighter than any infix operator: calls, type arguments, `.`, `::`,
 // `[]`, and a misplaced `++`.
-Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
+Node_id Parser::parse_postfix( Node_id left, Expression_use use )
 {
+    const bool increment_follows = use == Expression_use::Before_increment;
+
     while( true )
     {
         if( !increment_follows && ( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) ) )
@@ -3546,7 +3564,7 @@ Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
         // Binary_expr node, so it does not need the parentheses check below.
         if( cursor_.check( Token_kind::L_paren ) )
         {
-            Node_id args = parse_arg_list();
+            Node_id args = parse_arg_list( use == Expression_use::Case_bound && ast_.kind( left ) == Node_kind::Path_expr );
 
             left = ast_.add(
                 Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }
@@ -3895,9 +3913,16 @@ Node_id Parser::parse_keyword_prefix( Span start )
     if( cursor_.check_keyword( Keyword::Underscore ) )
     {
         cursor_.advance();
-        recovery_.error_at(
-            cursor_.previous().span, "`_` can only be assigned to", "`_ = f();` calls `f` and discards what it returns"
-        );
+        if( in_label_ )
+        {
+            recovery_.error_at( cursor_.previous().span, "`_` stands only for a field of a pattern" );
+        }
+        else
+        {
+            recovery_.error_at(
+                cursor_.previous().span, "`_` can only be assigned to", "`_ = f();` calls `f` and discards what it returns"
+            );
+        }
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
@@ -4120,7 +4145,7 @@ Node_id Parser::parse_prefix()
     return error_node( start );
 }
 
-Node_id Parser::parse_arg_list()
+Node_id Parser::parse_arg_list( bool pattern )
 {
     const Span start = cursor_.peek().span;
 
@@ -4154,7 +4179,18 @@ Node_id Parser::parse_arg_list()
                 cursor_.advance();
             }
 
-            args.push_back( parse_expression( 0 ) );
+            // D7: `case Shape::Rect( _, h ):` skips a field, as a nameless binding.
+            if( pattern && cursor_.check_keyword( Keyword::Underscore ) &&
+                ( cursor_.peek( 1 ).kind == Token_kind::Comma || cursor_.peek( 1 ).kind == Token_kind::R_paren ) )
+            {
+                const Span discard = cursor_.advance().span;
+                label_discards_.push_back( discard );
+                args.push_back( ast_.add( Node_kind::Name_expr, discard, k_invalid_symbol, {} ) );
+            }
+            else
+            {
+                args.push_back( parse_expression( 0 ) );
+            }
             if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
                 return ast_.add( Node_kind::Arg_list, Span::merge( start, cursor_.previous().span ), 0, args );

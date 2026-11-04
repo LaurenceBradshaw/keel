@@ -1,0 +1,25 @@
+error: `_` stands only for a field of a pattern
+  --> parse/errors_switch_pattern_discard.kl:12:27
+   |
+12 |         case Shape::Rect( _, _ ).w: return 1;
+   |                           ^
+
+error: `_` stands only for a field of a pattern
+  --> parse/errors_switch_pattern_discard.kl:12:30
+   |
+12 |         case Shape::Rect( _, _ ).w: return 1;
+   |                              ^
+
+error: `_` stands only for a field of a pattern
+  --> parse/errors_switch_pattern_discard.kl:13:29
+   |
+13 |         case Shape::Rect( ( _ ), h ): return 2;
+   |                             ^
+
+error: `_` stands only for a field of a pattern
+  --> parse/errors_switch_pattern_discard.kl:14:14
+   |
+14 |         case _: return 3;
+   |              ^
+
+4 errors generated

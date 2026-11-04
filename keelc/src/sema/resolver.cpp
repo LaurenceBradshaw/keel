@@ -310,6 +310,11 @@ void Resolver::visit( Node_id id )
     {
         const Symbol_id name = ast_.name( id );
 
+        if( !name.is_valid() ) // a `_` outside a pattern's fields, which the parser refused
+        {
+            return;
+        }
+
         if( name == self_ )
         {
             reporter_.error_at(
@@ -532,7 +537,10 @@ void Resolver::visit_case_arm( Node_id id )
 
         for( const Node_id binding : ast_.bindings( label ) )
         {
-            declare( scopes_.back(), ast_.name( binding ), binding );
+            if( ast_.name( binding ).is_valid() ) // `_` holds the field but has no name
+            {
+                declare( scopes_.back(), ast_.name( binding ), binding );
+            }
         }
     }
 

@@ -1,0 +1,41 @@
+// `_` stands for a payload field nothing names. A consuming switch still drops the field it holds,
+// once. Exits with the failing check.
+class Counted
+{
+    i64* drops_;
+    public Counted( i64* drops ) { drops_ = drops; }
+    ~Counted() { *drops_ = *drops_ + 1; }
+};
+
+enum Shape
+{
+    Rect( f64 w, f64 h ),
+    Tagged( Counted c, i64 n ),
+};
+
+f64 height( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Rect( _, h ): return h;
+        case Shape::Tagged( _, _ ): return 0.0;
+    }
+}
+
+i64 take( i64* drops )
+{
+    switch( move Shape::Tagged( Counted( drops ), 7 ) )
+    {
+        case Shape::Tagged( _, n ): return n;
+        case Shape::Rect( w, _ ): return 0;
+    }
+}
+
+i32 main()
+{
+    if( height( Shape::Rect( 1.0, 2.0 ) ) != 2.0 ) { return 1; }
+    i64 drops = 0;
+    if( take( &drops ) != 7 ) { return 2; }
+    if( drops != 1 ) { return 3; }
+    return 0;
+}

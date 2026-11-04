@@ -1,0 +1,22 @@
+// `_` stands for a field only where the call is the whole label, so each one below is refused once,
+// with no help about discarding a call.
+enum Shape
+{
+    Rect( f64 w, f64 h ),
+};
+
+i32 width( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Rect( _, _ ).w: return 1;
+        case Shape::Rect( ( _ ), h ): return 2;
+        case _: return 3;
+        default: return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}
