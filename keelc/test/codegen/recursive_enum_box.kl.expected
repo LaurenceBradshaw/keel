@@ -1,0 +1,410 @@
+// codegen/recursive_enum_box.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counted;
+struct kl_7prelude_box__I4ListE;
+struct kl__List;
+
+struct kl__Counted
+{
+    int64_t* kl_drops_;
+};
+
+struct kl_7prelude_box__I4ListE
+{
+    struct kl__List* kl_p_;
+};
+
+struct kl__List
+{
+    int32_t tag;
+    int64_t kl_4Cons_v;
+    struct kl__Counted kl_4Cons_c;
+    struct kl_7prelude_box__I4ListE kl_4Cons_rest;
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__Counted__R7Counted_P3i64__ctor( struct kl__Counted*, int64_t* );
+void kl__Counted__dtor( struct kl__Counted* );
+struct kl__List kl__build__3i64_P3i64( int64_t, int64_t* );
+int64_t kl__sum__4List( struct kl__List* );
+int32_t kl__main__( void );
+void kl_7prelude_box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7prelude_box__I4ListE*, struct kl__List );
+struct kl__List* kl_7prelude_get__I4ListE__SQ7prelude3boxI4ListE( struct kl_7prelude_box__I4ListE* );
+void kl_7prelude_box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* );
+void kl__List__dtor( struct kl__List* );
+
+#line 7 "codegen/recursive_enum_box.kl"
+void kl__Counted__R7Counted_P3i64__ctor( struct kl__Counted* kl_this_1, int64_t* kl_drops_2 )
+{
+#line 7 "codegen/recursive_enum_box.kl"
+    ( *kl_this_1 ).kl_drops_ = kl_drops_2;
+#line 7 "codegen/recursive_enum_box.kl"
+    return;
+#line 7 "codegen/recursive_enum_box.kl"
+}
+
+#line 9 "codegen/recursive_enum_box.kl"
+void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+{
+    bool kl_t2;
+    int64_t kl_t3;
+#line 9 "codegen/recursive_enum_box.kl"
+    kl_t2 = __builtin_add_overflow( ( *( *kl_this_1 ).kl_drops_ ), 1, &( int64_t ) { 0 } );
+#line 9 "codegen/recursive_enum_box.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 9 "codegen/recursive_enum_box.kl"
+    kl_rt_panic( "codegen/recursive_enum_box.kl", 9, "arithmetic overflow: *drops_ + 1" );
+    bb2:
+#line 9 "codegen/recursive_enum_box.kl"
+    kl_t3 = ( *( *kl_this_1 ).kl_drops_ ) + 1;
+#line 9 "codegen/recursive_enum_box.kl"
+    ( *( *kl_this_1 ).kl_drops_ ) = kl_t3;
+#line 9 "codegen/recursive_enum_box.kl"
+    return;
+#line 9 "codegen/recursive_enum_box.kl"
+}
+
+#line 18 "codegen/recursive_enum_box.kl"
+struct kl__List kl__build__3i64_P3i64( int64_t kl_n_1, int64_t* kl_drops_2 )
+{
+    struct kl__List kl_t0;
+    bool kl_t3;
+    struct kl__List kl_t4;
+    struct kl__List kl_t5;
+    struct kl__Counted kl_t6;
+    struct kl__Counted* kl_t7;
+    struct kl_7prelude_box__I4ListE kl_t9;
+    struct kl_7prelude_box__I4ListE* kl_t10;
+    bool kl_t11;
+    int64_t kl_t12;
+    struct kl__List kl_t13;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t15 = false;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t16 = false;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t17 = false;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t18 = false;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t19 = false;
+#line 20 "codegen/recursive_enum_box.kl"
+    kl_t3 = kl_n_1 == 0;
+#line 20 "codegen/recursive_enum_box.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4.tag = 1;
+#line 22 "codegen/recursive_enum_box.kl"
+    kl_t15 = true;
+#line 22 "codegen/recursive_enum_box.kl"
+    kl_t0 = kl_t4;
+#line 22 "codegen/recursive_enum_box.kl"
+    kl_t15 = false;
+#line 22 "codegen/recursive_enum_box.kl"
+    if ( kl_t15 ) kl__List__dtor( &kl_t4 );
+#line 22 "codegen/recursive_enum_box.kl"
+    kl_t15 = false;
+#line 22 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+    bb2:
+    kl_t17 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t7 = &kl_t6;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t17 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl__Counted__R7Counted_P3i64__ctor( kl_t7, kl_drops_2 );
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t18 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t10 = &kl_t9;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t18 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t11 = __builtin_sub_overflow( kl_n_1, 1, &( int64_t ) { 0 } );
+#line 24 "codegen/recursive_enum_box.kl"
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_rt_panic( "codegen/recursive_enum_box.kl", 24, "arithmetic overflow: n - 1" );
+    bb4:
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t12 = kl_n_1 - 1;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t13 = kl__build__3i64_P3i64( kl_t12, kl_drops_2 );
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t19 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_7prelude_box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( kl_t10, kl_t13 );
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t19 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t5.tag = 0;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t5.kl_4Cons_v = kl_n_1;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t5.kl_4Cons_c = kl_t6;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t17 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t5.kl_4Cons_rest = kl_t9;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t18 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = true;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t0 = kl_t5;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    if ( kl_t16 ) kl__List__dtor( &kl_t5 );
+#line 24 "codegen/recursive_enum_box.kl"
+    if ( kl_t18 ) kl_7prelude_box__I4ListE__dtor( &kl_t9 );
+#line 24 "codegen/recursive_enum_box.kl"
+    if ( kl_t19 ) kl__List__dtor( &kl_t13 );
+#line 24 "codegen/recursive_enum_box.kl"
+    if ( kl_t17 ) kl__Counted__dtor( &kl_t6 );
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t17 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t19 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t18 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    kl_t16 = false;
+#line 24 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+}
+
+#line 27 "codegen/recursive_enum_box.kl"
+int64_t kl__sum__4List( struct kl__List* kl_l_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+    int64_t kl_v_3;
+    struct kl__Counted* kl_c_4;
+    struct kl_7prelude_box__I4ListE* kl_rest_5;
+    struct kl_7prelude_box__I4ListE* kl_t6;
+    struct kl__List* kl_t7;
+    struct kl__List* kl_t8;
+    int64_t kl_t9;
+    bool kl_t10;
+    int64_t kl_t11;
+    ( void ) kl_c_4;
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t2 = ( *kl_l_1 ).tag == 0;
+#line 31 "codegen/recursive_enum_box.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_v_3 = ( *kl_l_1 ).kl_4Cons_v;
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_c_4 = &( *kl_l_1 ).kl_4Cons_c;
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_rest_5 = &( *kl_l_1 ).kl_4Cons_rest;
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t6 = &( *kl_rest_5 );
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t7 = kl_7prelude_get__I4ListE__SQ7prelude3boxI4ListE( kl_t6 );
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t8 = &( *kl_t7 );
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t9 = kl__sum__4List( kl_t8 );
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t10 = __builtin_add_overflow( kl_v_3, kl_t9, &( int64_t ) { 0 } );
+#line 31 "codegen/recursive_enum_box.kl"
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb2:
+#line 32 "codegen/recursive_enum_box.kl"
+    kl_t0 = 0;
+#line 32 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+    bb3:
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_rt_panic( "codegen/recursive_enum_box.kl", 31, "arithmetic overflow: v + sum( rest.get() )" );
+    bb4:
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t11 = kl_v_3 + kl_t9;
+#line 31 "codegen/recursive_enum_box.kl"
+    kl_t0 = kl_t11;
+#line 31 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+#line 34 "codegen/recursive_enum_box.kl"
+}
+
+#line 36 "codegen/recursive_enum_box.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_drops_1;
+    struct kl__List kl_l_2;
+    int64_t* kl_t3;
+    struct kl__List kl_t4;
+    struct kl__List* kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+#line 38 "codegen/recursive_enum_box.kl"
+    kl_t10 = false;
+#line 38 "codegen/recursive_enum_box.kl"
+    kl_drops_1 = 0;
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_t3 = &kl_drops_1;
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_t4 = kl__build__3i64_P3i64( 4, kl_t3 );
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_t10 = true;
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_l_2 = kl_t4;
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_t10 = false;
+#line 40 "codegen/recursive_enum_box.kl"
+    if ( kl_t10 ) kl__List__dtor( &kl_t4 );
+#line 40 "codegen/recursive_enum_box.kl"
+    kl_t10 = false;
+    kl_t5 = &kl_l_2;
+#line 41 "codegen/recursive_enum_box.kl"
+    kl_t6 = kl__sum__4List( kl_t5 );
+#line 41 "codegen/recursive_enum_box.kl"
+    kl_t7 = kl_t6 != 10;
+#line 41 "codegen/recursive_enum_box.kl"
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 43 "codegen/recursive_enum_box.kl"
+    kl__List__dtor( &kl_l_2 );
+#line 43 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+    bb2:
+    kl_t8 = kl_drops_1 != 0;
+#line 45 "codegen/recursive_enum_box.kl"
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 47 "codegen/recursive_enum_box.kl"
+    kl__List__dtor( &kl_l_2 );
+#line 47 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+    bb4:
+    kl__List__dtor( &kl_l_2 );
+#line 51 "codegen/recursive_enum_box.kl"
+    kl_t9 = kl_drops_1 != 4;
+#line 51 "codegen/recursive_enum_box.kl"
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+#line 53 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+    bb6:
+#line 56 "codegen/recursive_enum_box.kl"
+    kl_t0 = 0;
+#line 56 "codegen/recursive_enum_box.kl"
+    return kl_t0;
+}
+
+#line 330 "<prelude>"
+void kl_7prelude_box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7prelude_box__I4ListE* kl_this_1, struct kl__List kl_value_2 )
+{
+    struct kl__List* kl_slot_3;
+    struct kl__List* kl_t4;
+    struct kl__List* kl_t5;
+    struct kl__List* kl_t6;
+    struct kl__List* kl_t7;
+    bool kl_t8;
+#line 335 "<prelude>"
+    kl_t8 = true;
+#line 335 "<prelude>"
+    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__List ), "<prelude>", 335, "out of memory: alloc<T>( 1 )" );
+#line 335 "<prelude>"
+    kl_slot_3 = kl_t4;
+    kl_t5 = kl_slot_3 + 0;
+#line 336 "<prelude>"
+    ( *kl_t5 ) = kl_value_2;
+#line 336 "<prelude>"
+    kl_t8 = false;
+    kl_t6 = kl_slot_3 + 0;
+#line 337 "<prelude>"
+    kl_t7 = &( *kl_t6 );
+#line 337 "<prelude>"
+    ( *kl_this_1 ).kl_p_ = kl_t7;
+#line 339 "<prelude>"
+    if ( kl_t8 ) kl__List__dtor( &kl_value_2 );
+#line 339 "<prelude>"
+    kl_t8 = false;
+#line 339 "<prelude>"
+    return;
+#line 339 "<prelude>"
+}
+
+#line 351 "<prelude>"
+struct kl__List* kl_7prelude_get__I4ListE__SQ7prelude3boxI4ListE( struct kl_7prelude_box__I4ListE* kl_this_1 )
+{
+    struct kl__List* kl_t0;
+#line 353 "<prelude>"
+    kl_t0 = &( *( *kl_this_1 ).kl_p_ );
+#line 353 "<prelude>"
+    return kl_t0;
+}
+
+#line 341 "<prelude>"
+void kl_7prelude_box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* kl_this_1 )
+{
+    struct kl__List* kl_t2;
+#line 345 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_;
+#line 345 "<prelude>"
+    kl__List__dtor( &( *kl_t2 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 348 "<prelude>"
+    return;
+#line 348 "<prelude>"
+}
+
+#line 12 "codegen/recursive_enum_box.kl"
+void kl__List__dtor( struct kl__List* kl_t1 )
+{
+    bool kl_t2;
+#line 12 "codegen/recursive_enum_box.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+#line 12 "codegen/recursive_enum_box.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 12 "codegen/recursive_enum_box.kl"
+    return;
+    bb2:
+#line 12 "codegen/recursive_enum_box.kl"
+    kl_7prelude_box__I4ListE__dtor( &( *kl_t1 ).kl_4Cons_rest );
+#line 12 "codegen/recursive_enum_box.kl"
+    kl__Counted__dtor( &( *kl_t1 ).kl_4Cons_c );
+#line 12 "codegen/recursive_enum_box.kl"
+    goto bb1;
+#line 16 "codegen/recursive_enum_box.kl"
+}
+
+#line 36 "codegen/recursive_enum_box.kl"
+int main( void )
+{
+#line 36 "codegen/recursive_enum_box.kl"
+    return (int) kl__main__();
+}

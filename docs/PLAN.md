@@ -1512,7 +1512,9 @@ major), which waits for the lambda decision (§12).
   type arguments too.
 - **A stack overflow names itself.** A guard-page handler in `kl_rt`, on its own signal stack, that
   prints "stack overflow" for a large frame or deep recursion, where today the program gets a bare
-  SIGSEGV. `-fstack-clash-protection` already makes every overflow reach the guard page.
+  SIGSEGV. `-fstack-clash-protection` already makes every overflow reach the guard page. The
+  handler first writes the runtime's pending output with `write(2)`, since today a crash loses
+  everything printed before it, then re-raises. Not urgent.
 
 - **Can `print`'s numeric overloads become one generic over `integral` and one over `floating`**,
   each calling the `kl_rt` extern that overload selection picks for its `T`? That removes the

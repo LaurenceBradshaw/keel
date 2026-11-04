@@ -1,0 +1,57 @@
+// An enum that holds itself through `box`: built by recursion, read back by recursion, and dropped
+// whole when it leaves scope, every link once. Exits with the failing check.
+class Counted
+{
+    i64* drops_;
+
+    public Counted( i64* drops ) { drops_ = drops; }
+
+    ~Counted() { *drops_ = *drops_ + 1; }
+};
+
+enum List
+{
+    Cons( i64 v, Counted c, box<List> rest ),
+    Nil,
+};
+
+List build( i64 n, i64* drops )
+{
+    if( n == 0 )
+    {
+        return List::Nil;
+    }
+    return List::Cons( n, Counted( drops ), box<List>( build( n - 1, drops ) ) );
+}
+
+i64 sum( const ref List l )
+{
+    switch( l )
+    {
+        case List::Cons( v, c, rest ): return v + sum( rest.get() );
+        case List::Nil: return 0;
+    }
+}
+
+i32 main()
+{
+    i64 drops = 0;
+    {
+        List l = build( 4, &drops );
+        if( sum( l ) != 10 )
+        {
+            return 1;
+        }
+        if( drops != 0 )
+        {
+            return 2;
+        }
+    }
+
+    if( drops != 4 )
+    {
+        return 3;
+    }
+
+    return 0;
+}
