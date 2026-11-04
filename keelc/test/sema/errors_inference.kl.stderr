@@ -50,7 +50,7 @@ error: nothing here says what `T` is in `unbox`
    --> sema/errors_inference.kl:118:5
     |
 118 |     unbox( Box { 1 } );
-    |     ^^^^^ write the type arguments, as in `unbox<i32>( ... )`
+    |     ^^^^^ write the literal's type arguments, as in `Box<i32> { ... }`
 
 error: `T` cannot be both `i32` and `bool`
    --> sema/errors_inference.kl:136:17

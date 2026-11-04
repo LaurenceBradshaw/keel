@@ -408,6 +408,8 @@ void Resolver::visit( Node_id id )
             visit( init );
         }
 
+        visit( ast_.type_arg_list( id ) );
+
         return;
     }
     case Node_kind::Case_arm:

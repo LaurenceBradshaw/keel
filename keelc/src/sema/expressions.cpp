@@ -343,8 +343,9 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     }
 
     // Unrecorded, like `true`: its fields are checked once, against the parameter chosen. A name
-    // that did not resolve is already reported, so it rules out nothing.
-    if( ast_.kind( value ) == Node_kind::Struct_literal )
+    // that did not resolve is already reported, so it rules out nothing. `Box<i32> { 1 }` names its
+    // instance, so it is typed like any other argument.
+    if( ast_.kind( value ) == Node_kind::Struct_literal && !ast_.type_arg_list( value ).is_valid() )
     {
         const Node_id decl = resolution_.declaration_of( value );
         if( decl.is_valid() && is_aggregate( ast_.kind( decl ) ) )
@@ -3697,34 +3698,33 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         }
     }
 
-    // Which instance this literal builds. The declaration test is what keeps a wrong expectation
-    // out: `Box<i32> x = Plain { 1 };` falls through and is refused by the ordinary mismatch below,
-    // rather than being quietly retyped to whatever was wanted.
-    const bool names_an_instance = expectation.is_valid() && table_.get( expectation ).declaration == decl;
+    // Which instance this literal builds: the one written, `Box<i32> { 1 }`, else the expectation's. The declaration
+    // test is what keeps a wrong expectation out: `Box<i32> x = Plain { 1 };` falls through and is refused by the
+    // ordinary mismatch, rather than being quietly retyped to whatever was wanted.
+    Type_id instance = expectation.is_valid() && table_.get( expectation ).declaration == decl ? expectation : Type_id {};
 
-    // `Box<i32> { 1 }`: refused, then read as `Box { 1 }`, or as poison when nothing else names the instance.
     if( const Node_id type_args = ast_.type_arg_list( id ); type_args.is_valid() )
     {
-        reporter_.error_at(
-            ast_.span( type_args ),
-            ast_.is_generic( decl ) ? fmt::format(
-                                          "a literal takes its instance from where it lands, not from `{}`",
-                                          reporter_.text( ast_.span( type_args ) )
-                                      )
-                                    : fmt::format( "`{}` is not generic", struct_name ),
-            fmt::format( "write `{} {{ ... }}`", reporter_.text( ast_.type_name_span( id ) ) )
-        );
-
-        if( !names_an_instance && ast_.is_generic( decl ) )
+        if( !ast_.is_generic( decl ) )
+        {
+            reporter_.error_at(
+                ast_.span( type_args ),
+                fmt::format( "`{}` is not generic", struct_name ),
+                fmt::format( "write `{} {{ ... }}`", reporter_.text( ast_.type_name_span( id ) ) )
+            );
+        }
+        else if( instance = annotations_.written_instance( decl, type_args, struct_name ); table_.is_error( instance ) )
         {
             for( const Node_id init : initialisers )
             {
                 absorb( ast_.value( init ) );
             }
 
-            return types_.poison( id );
+            return types_.record( id, instance );
         }
     }
+
+    const bool names_an_instance = instance.is_valid();
 
     if( !names_an_instance && ast_.is_generic( decl ) )
     {
@@ -3738,7 +3738,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         return types_.record( id, poison );
     }
 
-    const Type_id result = names_an_instance ? expectation : types_.type_of( decl );
+    const Type_id result = names_an_instance ? instance : types_.type_of( decl );
 
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
@@ -5293,12 +5293,13 @@ TEST_CASE( "expressions_name_the_fix_for_a_misspelt_literal", "[sema][types]" )
 
     SECTION( "type arguments on a literal" )
     {
-        one_error(
-            "i32 main() { auto b = B<i32> { 1 }; return 0; }",
-            "a literal takes its instance from where it lands, not from `<i32>`",
-            "write `B { ... }`"
-        );
-        one_error( "i32 main() { B<i32> b = B<i32> { 1 }; return 0; }", "not from `<i32>`", "write `B { ... }`" );
+        const Typed p( std::string( types ) + "i32 main() { auto b = B<i64> { 1 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.type_name( p.nth( Node_kind::Struct_literal, 0 ) ) == "B<i64>" );
+
+        one_error( "i32 main() { B<i64> b = B<i32> { 1 }; return 0; }", "expected `B<i64>`, but got `B<i32>`", "" );
         one_error( "i32 main() { P p = P<i32> { 1, 2 }; return 0; }", "`P` is not generic", "write `P { ... }`" );
     }
 

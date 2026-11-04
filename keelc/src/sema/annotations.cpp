@@ -1017,6 +1017,11 @@ Type_id Annotations::qualifier_type( Node_id path, Node_id declaration )
         return table_.builtin( Type_kind::Error );
     }
 
+    return written_instance( declaration, type_args, name );
+}
+
+Type_id Annotations::written_instance( Node_id declaration, Node_id type_args, std::string_view name )
+{
     std::vector<Type_id> arguments;
 
     if( !resolve_type_arguments( ast_.type_parameters( ast_.type_param_list( declaration ) ), type_args, name, arguments ) )

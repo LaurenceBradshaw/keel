@@ -111,8 +111,8 @@ bool two_generics_match( Box<i32> b )
     return which( b );
 }
 
-// A struct literal takes its instance from the expectation, and here the expectation is what is
-// being deduced - so it says nothing, exactly as a numeric literal says nothing.
+// A struct literal without type arguments takes its instance from the expectation, and here the
+// expectation is what is being deduced - so it says nothing, and the help asks for `Box<i32> { 1 }`.
 void a_struct_literal_says_nothing()
 {
     unbox( Box { 1 } );

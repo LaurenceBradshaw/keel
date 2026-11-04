@@ -57,6 +57,9 @@ public:
     // The instance a path's qualifier names, `Box<i32>` in `Box<i32>::of`; an error once reported.
     Type_id qualifier_type( Node_id path, Node_id declaration );
 
+    // The instance `type_args` names of a generic aggregate, `Box<i32>` in `Box<i32> { 1 }`; an error once reported.
+    Type_id written_instance( Node_id declaration, Node_id type_args, std::string_view name );
+
     // A `where` bound naming an interface: records that interface's type on the name.
     void record_interface_bound( Node_id bound_name );
 

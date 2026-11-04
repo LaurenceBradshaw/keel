@@ -1,0 +1,27 @@
+// A generic literal names its instance as `Wrap<T> { x }`, so it can stand where nothing else says what
+// `T` is, here as an argument the callee deduces from. Exits with the failing check.
+struct Wrap<T> where T : copyable
+{
+    T x;
+};
+
+T unwrap<T>( Wrap<T> w ) where T : copyable { return w.x; }
+
+T once<T>( T x ) where T : copyable { return unwrap( Wrap<T> { x } ); }
+
+i32 main()
+{
+    i32 seven = 7;
+    if( once( seven ) != 7 )
+    {
+        return 1;
+    }
+
+    auto w = Wrap<i64> { 5 };
+    if( unwrap( w ) != 5 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

@@ -829,8 +829,10 @@ on a method that declares none are refused rather than ignored.
 
 **A generic aggregate's or enum's instance comes from context.** `Box<i32> b = Box { 7 };` and
 `Opt<i32> o = Opt::Some( 7 );` take their instance from the expectation, and with none —
-`auto x = Opt::Some( 7 );` — it is an error. `Box<i32> { 7 }` and `Opt<i32>::Some( 7 )` are not
-spellings.
+`auto x = Opt::Some( 7 );` — it is an error. A struct literal may also name its instance, as a
+constructor call does: `Box<i32> { 7 }`, so `count( Wrap<T> { x } )` needs no local. A written
+instance that disagrees with the expectation is the ordinary mismatch. `Opt<i32>::Some( 7 )` is
+not yet a spelling.
 
 **Literals in generic bodies.** An integer literal adopts a `numeric` `T`, a float literal needs
 `floating`, and `true` and `nullptr` never adopt. Its range is checked at the definition against

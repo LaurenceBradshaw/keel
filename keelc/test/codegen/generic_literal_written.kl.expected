@@ -1,0 +1,111 @@
+// codegen/generic_literal_written.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Wrap__I3i64E;
+struct kl__Wrap__I3i32E;
+
+struct kl__Wrap__I3i64E
+{
+    int64_t kl_x;
+};
+
+struct kl__Wrap__I3i32E
+{
+    int32_t kl_x;
+};
+
+int32_t kl__main__( void );
+int32_t kl__once__I3i32E__3i32( int32_t );
+int64_t kl__unwrap__I3i64E__4WrapI3i64E( struct kl__Wrap__I3i64E );
+int32_t kl__unwrap__I3i32E__4WrapI3i32E( struct kl__Wrap__I3i32E );
+
+#line 12 "codegen/generic_literal_written.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_seven_1;
+    int32_t kl_t2;
+    bool kl_t3;
+    struct kl__Wrap__I3i64E kl_w_4;
+    struct kl__Wrap__I3i64E kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+#line 14 "codegen/generic_literal_written.kl"
+    kl_seven_1 = 7;
+    kl_t2 = kl__once__I3i32E__3i32( kl_seven_1 );
+#line 15 "codegen/generic_literal_written.kl"
+    kl_t3 = kl_t2 != 7;
+#line 15 "codegen/generic_literal_written.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 17 "codegen/generic_literal_written.kl"
+    return kl_t0;
+    bb2:
+#line 20 "codegen/generic_literal_written.kl"
+    kl_t5.kl_x = 5;
+#line 20 "codegen/generic_literal_written.kl"
+    kl_w_4 = kl_t5;
+    kl_t6 = kl__unwrap__I3i64E__4WrapI3i64E( kl_w_4 );
+#line 21 "codegen/generic_literal_written.kl"
+    kl_t7 = kl_t6 != 5;
+#line 21 "codegen/generic_literal_written.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 23 "codegen/generic_literal_written.kl"
+    return kl_t0;
+    bb4:
+#line 26 "codegen/generic_literal_written.kl"
+    kl_t0 = 0;
+#line 26 "codegen/generic_literal_written.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/generic_literal_written.kl"
+int32_t kl__once__I3i32E__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E kl_t2;
+    int32_t kl_t3;
+#line 10 "codegen/generic_literal_written.kl"
+    kl_t2.kl_x = kl_x_1;
+#line 10 "codegen/generic_literal_written.kl"
+    kl_t3 = kl__unwrap__I3i32E__4WrapI3i32E( kl_t2 );
+#line 10 "codegen/generic_literal_written.kl"
+    kl_t0 = kl_t3;
+#line 10 "codegen/generic_literal_written.kl"
+    return kl_t0;
+#line 10 "codegen/generic_literal_written.kl"
+}
+
+#line 8 "codegen/generic_literal_written.kl"
+int64_t kl__unwrap__I3i64E__4WrapI3i64E( struct kl__Wrap__I3i64E kl_w_1 )
+{
+    int64_t kl_t0;
+#line 8 "codegen/generic_literal_written.kl"
+    kl_t0 = kl_w_1.kl_x;
+#line 8 "codegen/generic_literal_written.kl"
+    return kl_t0;
+#line 8 "codegen/generic_literal_written.kl"
+}
+
+#line 8 "codegen/generic_literal_written.kl"
+int32_t kl__unwrap__I3i32E__4WrapI3i32E( struct kl__Wrap__I3i32E kl_w_1 )
+{
+    int32_t kl_t0;
+#line 8 "codegen/generic_literal_written.kl"
+    kl_t0 = kl_w_1.kl_x;
+#line 8 "codegen/generic_literal_written.kl"
+    return kl_t0;
+#line 8 "codegen/generic_literal_written.kl"
+}
+
+#line 12 "codegen/generic_literal_written.kl"
+int main( void )
+{
+#line 12 "codegen/generic_literal_written.kl"
+    return (int) kl__main__();
+}

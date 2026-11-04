@@ -225,10 +225,17 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
 
         if( found == bindings.end() )
         {
+            // `count( 2, Wrap { x } )`: the literal is what has no instance, so its type arguments are the fix.
+            const auto literal = std::ranges::find( shapes, Argument_kind::Instance, &Argument_shape::kind );
+
             reporter_.error_at(
                 site.at,
                 fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), site.name ),
-                fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
+                literal != shapes.end() ? fmt::format(
+                                              "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
+                                              interner_.text( ast_.name( literal->declaration ) )
+                                          )
+                                        : fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
             );
 
             return std::nullopt;
@@ -3238,6 +3245,18 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "nothing here says what `U` is in `second`" ) != std::string::npos );
+    }
+
+    SECTION( "a generic literal that names no instance is the fix" )
+    {
+        const Typed p( "struct Wrap<T> where T : copyable { T x; };\n"
+                       "i64 count<T>( T x ) where T : copyable { return 0; }\n"
+                       "i64 once<T>( T x ) where T : copyable { return count( Wrap { x } ); }\n"
+                       "i64 twice<T>( T x ) where T : copyable { return count( Wrap<T> { x } ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write the literal's type arguments, as in `Wrap<i32> { ... }`" ) != std::string::npos );
     }
 
     // Deduction reads an argument without judging it, so the one that deduced nothing still has to
