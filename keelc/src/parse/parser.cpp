@@ -3334,8 +3334,48 @@ Node_id Parser::parse_switch_stmt()
                 {
                     std::vector<Node_id> parts { ast_.callee( lower ) };
 
+                    std::vector<Node_id> nested_names;
+
                     for( const Node_id argument : ast_.arguments( lower ) )
                     {
+                        const bool nests = ast_.kind( argument ) == Node_kind::Path_expr ||
+                                           ( ast_.kind( argument ) == Node_kind::Call_expr &&
+                                             ast_.kind( ast_.callee( argument ) ) == Node_kind::Path_expr );
+
+                        if( nests )
+                        {
+                            if( !ast_.broken( lower ) )
+                            {
+                                recovery_.fail_at(
+                                    ast_.span( argument ),
+                                    "a pattern does not nest",
+                                    "bind it, and `switch` on the binding inside this arm"
+                                );
+                            }
+
+                            // Its names are still declared, poisoned, so their uses stay quiet.
+                            std::vector<Node_id> pending { argument };
+
+                            while( !pending.empty() )
+                            {
+                                const Node_id inner = pending.back();
+                                pending.pop_back();
+
+                                if( ast_.kind( inner ) == Node_kind::Name_expr )
+                                {
+                                    nested_names.push_back( inner );
+                                }
+                                else if( ast_.kind( inner ) == Node_kind::Call_expr )
+                                {
+                                    for( const Node_id part : ast_.arguments( inner ) )
+                                    {
+                                        pending.push_back( part );
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+
                         if( ast_.kind( argument ) != Node_kind::Name_expr )
                         {
                             if( !ast_.broken( lower ) )
@@ -3350,6 +3390,11 @@ Node_id Parser::parse_switch_stmt()
                         }
 
                         parts.push_back( ast_.add( Node_kind::Binding_decl, ast_.span( argument ), ast_.aux( argument ), {} ) );
+                    }
+
+                    for( const Node_id name : nested_names )
+                    {
+                        parts.push_back( ast_.add( Node_kind::Binding_decl, ast_.span( name ), ast_.aux( name ), {} ) );
                     }
 
                     children.push_back( ast_.add( Node_kind::Variant_pattern, ast_.span( lower ), 0, parts ) );
@@ -3564,7 +3609,7 @@ Node_id Parser::parse_postfix( Node_id left, Expression_use use )
         // Binary_expr node, so it does not need the parentheses check below.
         if( cursor_.check( Token_kind::L_paren ) )
         {
-            Node_id args = parse_arg_list( use == Expression_use::Case_bound && ast_.kind( left ) == Node_kind::Path_expr );
+            Node_id args = parse_arg_list( in_label_ && ast_.kind( left ) == Node_kind::Path_expr );
 
             left = ast_.add(
                 Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }

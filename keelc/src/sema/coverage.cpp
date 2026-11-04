@@ -396,6 +396,16 @@ void Coverage::check_variant_pattern( Node_id pattern, Switch_coverage& state )
 
     const std::size_t index = *offset + static_cast<std::size_t>( ordinal->magnitude );
 
+    // The parser has reported it; it still covers its variant, and its bindings stay poisoned.
+    if( ast_.broken( pattern ) )
+    {
+        if( !covered[index].is_valid() )
+        {
+            covered[index] = path;
+        }
+        return;
+    }
+
     if( covered[index].is_valid() )
     {
         reporter_.error_at(
