@@ -1,19 +1,25 @@
 error: expected an identifier, found `:`
- --> sema/errors_nameless_enum_parts.kl:5:5
+ --> sema/errors_nameless_enum_parts.kl:6:5
   |
-5 | enum : u8
+6 | enum : u8
   |     ^
 
 error: expected an identifier, found `(`
-  --> sema/errors_nameless_enum_parts.kl:12:26
+  --> sema/errors_nameless_enum_parts.kl:13:26
    |
-12 |     Circle( f64 radius ),
+13 |     Circle( f64 radius ),
    |                          ^
 
 error: a payload field needs a name
-  --> sema/errors_nameless_enum_parts.kl:18:11
+  --> sema/errors_nameless_enum_parts.kl:19:11
    |
-18 |     Both( f64, f64 ),
+19 |     Both( f64, f64 ),
    |           ^^^ write one after its type, as in `Circle( f64 radius )`
+
+warning: this statement is never reached [-Wunreachable-code]
+  --> sema/errors_nameless_enum_parts.kl:30:5
+   |
+30 |     return 0;
+   |     ^^^^^^^^^ the one before it always leaves the block
 
 3 errors generated

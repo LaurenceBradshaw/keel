@@ -1,0 +1,13 @@
+error: a `case` with a body must say how it ends
+  --> sema/errors_switch_arm_breaks_out.kl:12:9
+   |
+12 |         case Shape::Circle:
+   |         ^^^^^^^^^^^^^^^^^^^ end it with `break;` or `return;`, or `fallthrough;` to run on into the next `case`
+
+error: a `case` with a body must say how it ends
+  --> sema/errors_switch_arm_breaks_out.kl:32:9
+   |
+32 |         case 0:
+   |         ^^^^^^^ end it with `break;` or `return;`, or `fallthrough;` to run on into the next `case`
+
+2 errors generated

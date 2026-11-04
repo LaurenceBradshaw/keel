@@ -106,6 +106,7 @@ public:
     bool completes_normally( Node_id id ) const;
 
 private:
+    bool breaks_out( Node_id id ) const;
     void check_enum_arm_labels( Node_id arm, Switch_coverage& state );
     void check_numeric_arm_labels( Node_id arm, Switch_coverage& state );
     void finish_enum_switch( const Switch_coverage& state );
@@ -133,6 +134,7 @@ private:
     Reporter&         reporter_;
 
     std::unordered_set<u32> ruled_fallthroughs_;
+    std::unordered_set<u32> exhaustive_; // switches proved to take some arm, so a gap is not a way out
 };
 
 } // namespace keel::sema

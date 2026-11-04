@@ -1,6 +1,7 @@
 // An enum or a variant with no name is not one, so the parser leaves it out; a payload field with
 // no name is still one, and only a duplicate's report reads that name. Each is reported once, by
-// the parser, and nothing after it is disturbed - the switch below covers Shape as one variant.
+// the parser, and nothing after it is disturbed - the switch below covers Shape as one variant,
+// so the `return` after it is never reached.
 
 enum : u8
 {

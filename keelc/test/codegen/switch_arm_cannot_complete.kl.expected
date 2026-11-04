@@ -1,0 +1,166 @@
+// codegen/switch_arm_cannot_complete.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__nested__5Shape_5Shape( int32_t, int32_t );
+int32_t kl__spins__3i32( int32_t );
+int32_t kl__main__( void );
+
+#line 9 "codegen/switch_arm_cannot_complete.kl"
+int32_t kl__nested__5Shape_5Shape( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+#line 13 "codegen/switch_arm_cannot_complete.kl"
+    kl_t3 = kl_a_1 == 0;
+#line 13 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 16 "codegen/switch_arm_cannot_complete.kl"
+    kl_t4 = kl_b_2 == 0;
+#line 16 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb2:
+#line 19 "codegen/switch_arm_cannot_complete.kl"
+    kl_t0 = 3;
+#line 19 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb3:
+#line 16 "codegen/switch_arm_cannot_complete.kl"
+    kl_t0 = 1;
+#line 16 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb4:
+#line 17 "codegen/switch_arm_cannot_complete.kl"
+    kl_t0 = 2;
+#line 17 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+#line 21 "codegen/switch_arm_cannot_complete.kl"
+}
+
+#line 23 "codegen/switch_arm_cannot_complete.kl"
+int32_t kl__spins__3i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+#line 27 "codegen/switch_arm_cannot_complete.kl"
+    kl_t2 = kl_n_1 == 0;
+#line 27 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 36 "codegen/switch_arm_cannot_complete.kl"
+    kl_t6 = -1;
+#line 36 "codegen/switch_arm_cannot_complete.kl"
+    kl_t0 = kl_t6;
+#line 36 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb2:
+#line 30 "codegen/switch_arm_cannot_complete.kl"
+    kl_t3 = __builtin_add_overflow( kl_n_1, 1, &( int32_t ) { 0 } );
+#line 30 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+#line 30 "codegen/switch_arm_cannot_complete.kl"
+    kl_rt_panic( "codegen/switch_arm_cannot_complete.kl", 30, "arithmetic overflow: n + 1" );
+    bb4:
+#line 30 "codegen/switch_arm_cannot_complete.kl"
+    kl_t4 = kl_n_1 + 1;
+#line 30 "codegen/switch_arm_cannot_complete.kl"
+    kl_n_1 = kl_t4;
+    kl_t5 = kl_n_1 == 5;
+#line 31 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t5 ) goto bb5; else goto bb2;
+    bb5:
+    kl_t0 = kl_n_1;
+#line 33 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+#line 38 "codegen/switch_arm_cannot_complete.kl"
+}
+
+#line 40 "codegen/switch_arm_cannot_complete.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+#line 42 "codegen/switch_arm_cannot_complete.kl"
+    kl_t1 = kl__nested__5Shape_5Shape( 0, 0 );
+#line 42 "codegen/switch_arm_cannot_complete.kl"
+    kl_t2 = kl_t1 != 1;
+#line 42 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 44 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb2:
+    kl_t3 = kl__nested__5Shape_5Shape( 0, 1 );
+#line 46 "codegen/switch_arm_cannot_complete.kl"
+    kl_t4 = kl_t3 != 2;
+#line 46 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 48 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb4:
+    kl_t5 = kl__nested__5Shape_5Shape( 1, 0 );
+#line 50 "codegen/switch_arm_cannot_complete.kl"
+    kl_t6 = kl_t5 != 3;
+#line 50 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+#line 52 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb6:
+    kl_t7 = kl__spins__3i32( 0 );
+#line 54 "codegen/switch_arm_cannot_complete.kl"
+    kl_t8 = kl_t7 != 5;
+#line 54 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t8 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 4;
+#line 56 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb8:
+    kl_t9 = kl__spins__3i32( 1 );
+#line 58 "codegen/switch_arm_cannot_complete.kl"
+    kl_t10 = -1;
+#line 58 "codegen/switch_arm_cannot_complete.kl"
+    kl_t11 = kl_t9 != kl_t10;
+#line 58 "codegen/switch_arm_cannot_complete.kl"
+    if ( kl_t11 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 5;
+#line 60 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+    bb10:
+    kl_t0 = 0;
+#line 62 "codegen/switch_arm_cannot_complete.kl"
+    return kl_t0;
+}
+
+#line 40 "codegen/switch_arm_cannot_complete.kl"
+int main( void )
+{
+#line 40 "codegen/switch_arm_cannot_complete.kl"
+    return (int) kl__main__();
+}

@@ -91,6 +91,12 @@ void Coverage::check_arm_labels( Node_id arm, Switch_coverage& state )
 
 void Coverage::finish_switch( const Switch_coverage& state )
 {
+    if( state.has_default ||
+        ( !state.numeric && std::ranges::all_of( state.variants, []( Node_id v ) { return v.is_valid(); } ) ) )
+    {
+        exhaustive_.insert( state.switch_id.v );
+    }
+
     if( state.numeric )
     {
         finish_numeric_switch( state );
@@ -631,9 +637,34 @@ bool Coverage::completes_normally( Node_id id ) const
     case Node_kind::While_stmt:
     case Node_kind::Do_stmt:
     case Node_kind::For_stmt:
+    {
+        // Only a written `true` is taken as never false.
+        const Node_id condition = ast_.condition( id );
+        const bool    forever =
+            condition.is_valid() && ast_.kind( condition ) == Node_kind::Bool_literal && ast_.is_true( condition );
+        return !forever || breaks_out( ast_.body( id ) );
+    }
     case Node_kind::Walk_stmt:
-    case Node_kind::Switch_stmt:
         return true;
+    case Node_kind::Switch_stmt:
+    {
+        // One left uncovered is already an error, and is taken as completing rather than add another.
+        if( !exhaustive_.contains( id.v ) )
+        {
+            return true;
+        }
+
+        for( const Node_id arm : ast_.arms( id ) )
+        {
+            const Node_id body = ast_.body( arm );
+            if( completes_normally( body ) || breaks_out( body ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
     case Node_kind::Block:
     {
         for( const Node_id child : ast_.children( id ) )
@@ -666,6 +697,33 @@ bool Coverage::completes_normally( Node_id id ) const
     }
     default:
         return true;
+    }
+}
+
+// Whether a `break` here leaves the statement this is the body of: nested loops and switches take
+// their own.
+bool Coverage::breaks_out( Node_id id ) const
+{
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Break_stmt:
+        return true;
+    case Node_kind::While_stmt:
+    case Node_kind::Do_stmt:
+    case Node_kind::For_stmt:
+    case Node_kind::Walk_stmt:
+    case Node_kind::Switch_stmt:
+        return false;
+    default:
+        for( const Node_id child : ast_.children( id ) )
+        {
+            if( child.is_valid() && breaks_out( child ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -948,17 +1006,23 @@ TEST_CASE( "type_checker_asks_whether_an_arm_can_finish", "[sema][switch][arms]"
         REQUIRE( p.clean() );
     }
 
-    SECTION( "a loop is assumed to finish" )
+    SECTION( "a loop is assumed to finish unless its condition is `true`" )
     {
-        // Conservative: `while( true )` never finishes, and knowing that needs constant folding.
-        // Erring this way reports an arm that did not need it, rather than missing one that did.
         const Typed p(
-            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: while( true ) { } default: } }\n"
+            std::string( e ) + "void f( E x, bool c ) { switch( x ) { case E::A: while( c ) { } default: } }\n"
                                "i32 main() { return 0; }"
         );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+
+        const Typed forever(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: while( true ) { } default: } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( forever.rendered() );
+        REQUIRE( forever.clean() );
     }
 }
 

@@ -1,0 +1,63 @@
+// An arm that cannot complete needs no ending of its own: one whose last statement is a `switch`
+// that leaves on every arm, or a `while( true )` left only by `return`. Exits with the failing check.
+enum Shape
+{
+    Circle,
+    Square,
+};
+
+i32 nested( Shape a, Shape b )
+{
+    switch( a )
+    {
+        case Shape::Circle:
+            switch( b )
+            {
+                case Shape::Circle: return 1;
+                case Shape::Square: return 2;
+            }
+        case Shape::Square: return 3;
+    }
+}
+
+i32 spins( i32 n )
+{
+    switch( n )
+    {
+        case 0:
+            while( true )
+            {
+                n = n + 1;
+                if( n == 5 )
+                {
+                    return n;
+                }
+            }
+        default: return -1;
+    }
+}
+
+i32 main()
+{
+    if( nested( Shape::Circle, Shape::Circle ) != 1 )
+    {
+        return 1;
+    }
+    if( nested( Shape::Circle, Shape::Square ) != 2 )
+    {
+        return 2;
+    }
+    if( nested( Shape::Square, Shape::Circle ) != 3 )
+    {
+        return 3;
+    }
+    if( spins( 0 ) != 5 )
+    {
+        return 4;
+    }
+    if( spins( 1 ) != -1 )
+    {
+        return 5;
+    }
+    return 0;
+}
