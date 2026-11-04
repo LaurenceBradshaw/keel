@@ -1,0 +1,25 @@
+error: a `case` bound is an integer
+  --> sema/errors_switch_float_bound.kl:11:14
+   |
+11 |         case 0.5..1.5:
+   |              ^^^^^^^^ `case 0..2:` over a `f64` compares against 0.0 and 2.0
+
+error: a `case` bound is an integer
+  --> sema/errors_switch_float_bound.kl:13:14
+   |
+13 |         case 2..2.5:
+   |              ^^^^^^ `case 0..2:` over a `f64` compares against 0.0 and 2.0
+
+error: a `case` bound is an integer
+  --> sema/errors_switch_float_bound.kl:15:14
+   |
+15 |         case K..9:
+   |              ^^^^ `case 0..2:` over a `f64` compares against 0.0 and 2.0
+
+error: a `case` label must be known at compile time
+  --> sema/errors_switch_float_bound.kl:17:18
+   |
+17 |         case 10..y:
+   |                  ^ a `switch` decides which arm runs by comparing constants
+
+4 errors generated

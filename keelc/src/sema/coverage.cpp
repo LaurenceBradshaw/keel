@@ -261,6 +261,19 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
             const std::optional<Wide> low  = fold_bound( ast_.lower( label ), state.type );
             const std::optional<Wide> high = fold_bound( ast_.upper( label ), state.type, true );
 
+            // fold_bound leaves a fractional bound to here, so the label is reported once.
+            const auto fractional = [&]( Node_id bound, const std::optional<Wide>& value )
+            { return !value.has_value() && constant_folder_.fold_float( bound ).has_value(); };
+
+            if( state.floating && ( fractional( ast_.lower( label ), low ) || fractional( ast_.upper( label ), high ) ) )
+            {
+                reporter_.error_at(
+                    ast_.span( label ),
+                    "a `case` bound is an integer",
+                    fmt::format( "`case 0..2:` over a `{}` compares against 0.0 and 2.0", table_.name( state.type ) )
+                );
+            }
+
             if( !low.has_value() || !high.has_value() )
             {
                 continue;
@@ -485,6 +498,12 @@ std::optional<Wide> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool
 
     if( !folded.constant )
     {
+        // A fractional bound over a float; the caller reports it once for the range.
+        if( table_.is_float( scrutinee ) && constant_folder_.fold_float( bound ).has_value() )
+        {
+            return std::nullopt;
+        }
+
         reporter_.error_at(
             ast_.span( bound ),
             "a `case` label must be known at compile time",
