@@ -4082,6 +4082,17 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
+    // A `ref` result names a value its owner still holds and will drop.
+    if( ast_.kind( root ) == Node_kind::Call_expr && places_.call_returns_a_binding( root ) )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            "a value returned by reference cannot be moved",
+            "what the call reaches still owns it; take it out through a method that returns it by value"
+        );
+        return types_.poison( id );
+    }
+
     // `*p` names something this function does not own, so moving out of it leaves a hole nothing
     // tracks.
     if( ast_.kind( root ) == Node_kind::Unary_expr && ast_.op( root ) == Token_kind::Star )
@@ -7532,6 +7543,19 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "an element reached through `[]` cannot be moved out" ) != std::string::npos );
+    }
+
+    // Its owner still holds it and would drop it again.
+    SECTION( "nor what a call returns by reference" )
+    {
+        const Typed p( "class B { u64 n; B() { n = 0; } ~B() { } };\n"
+                       "class H { B b; H() { b = B(); } public ref B get() { return b; }"
+                       " public const ref B peek() const { return b; } };\n"
+                       "i32 main() { H h = H(); B x = move h.get(); B y = move h.peek(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "a value returned by reference cannot be moved" ) != std::string::npos );
     }
 
     // A raw slot is the container's own business, inside `unsafe`.
