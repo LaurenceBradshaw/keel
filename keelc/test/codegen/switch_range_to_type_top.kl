@@ -1,0 +1,77 @@
+// A range may end one past its type's last value, so `200..256` over a `u8` reaches 255; one
+// starting at the type's first value, or covering the whole type, works too. Exits with the
+// failing check.
+const i32 TOP = 256;
+
+i32 top( u8 n )
+{
+    switch( n )
+    {
+        case 0..200: return 1;
+        case 200..256: return 2;
+        default: return 0;
+    }
+}
+
+i32 named( u8 n )
+{
+    switch( n )
+    {
+        case 250..TOP: return 2;
+        default: return 0;
+    }
+}
+
+i32 signed_top( i8 n )
+{
+    switch( n )
+    {
+        case -128..0: return 1;
+        case 0..128: return 2;
+        default: return 0;
+    }
+}
+
+i32 wide( u32 n )
+{
+    switch( n )
+    {
+        case 4294967290..4294967296: return 3;
+        default: return 0;
+    }
+}
+
+i32 whole( u8 n )
+{
+    switch( n )
+    {
+        case 0..256: return 5;
+        default: return 0;
+    }
+}
+
+i32 main()
+{
+    if( top( 255 ) != 2 || top( 200 ) != 2 || top( 199 ) != 1 )
+    {
+        return 1;
+    }
+    if( named( 255 ) != 2 || named( 249 ) != 0 )
+    {
+        return 2;
+    }
+    if( signed_top( 127 ) != 2 || signed_top( -128 ) != 1 )
+    {
+        return 3;
+    }
+    if( wide( 4294967295 ) != 3 || wide( 4294967289 ) != 0 )
+    {
+        return 4;
+    }
+    if( whole( 0 ) != 5 || whole( 255 ) != 5 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

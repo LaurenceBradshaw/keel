@@ -253,7 +253,7 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
         if( is_range )
         {
             const std::optional<i64> low  = fold_bound( ast_.lower( label ), state.type );
-            const std::optional<i64> high = fold_bound( ast_.upper( label ), state.type );
+            const std::optional<i64> high = fold_bound( ast_.upper( label ), state.type, true );
 
             if( !low.has_value() || !high.has_value() )
             {
@@ -277,6 +277,21 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 
             interval.low  = *low;
             interval.high = *high;
+
+            // For lowering, which leaves out a test the scrutinee's type already settles.
+            const auto record = [&]( Node_id bound, i64 value )
+            {
+                constant_folder_.record_value(
+                    bound,
+                    Constant_value {
+                        .magnitude = value < 0 ? 0 - static_cast<u64>( value ) : static_cast<u64>( value ),
+                        .negative  = value < 0
+                    }
+                );
+            };
+
+            record( ast_.lower( label ), *low );
+            record( ast_.upper( label ), *high );
         }
         else
         {
@@ -431,14 +446,31 @@ std::optional<std::size_t> Coverage::member_offset( const Switch_coverage& state
 // A `case` bound is always an integer, whatever the scrutinee is - D34 gives `..` one meaning, and
 // the meaning it will need for slicing is an integer one. So `case 1..5:` reads the same over an
 // `f64` as over an `i32`, and `1.5..7.3` has no spelling.
-std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee )
+std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool past_end )
 {
     // Types the bound as well as reading it: fold_integer only folds, and lowering needs the node
     // to carry a type. Against the *scrutinee's* type, so `case 1..5:` over an `f64` compares
     // against 1.0 and 5.0 rather than needing a cast nobody wrote.
     const std::size_t before = reporter_.error_count();
 
-    expressions_.check( bound, scrutinee );
+    // `case 200..256:` over a `u8` ends past the type's top, so its bound is typed as an `i64`.
+    // A 64-bit type has no wider type to use.
+    Type_id typed_as = scrutinee;
+
+    if( past_end && table_.is_integer( scrutinee ) )
+    {
+        const Folded  end   = constant_folder_.fold_integer( bound, scrutinee );
+        const Type_id wide  = table_.integer( 64, true );
+        const u64     value = end.value.magnitude;
+
+        if( end.constant && !end.overflowed && !end.value.negative && value > 0 && !table_.fits( value, false, scrutinee ) &&
+            table_.fits( value - 1, false, scrutinee ) && table_.fits( value, false, wide ) )
+        {
+            typed_as = wide;
+        }
+    }
+
+    expressions_.check( bound, typed_as );
 
     // A bound that failed to type is already reported; folding it would say so again.
     if( reporter_.error_count() != before )

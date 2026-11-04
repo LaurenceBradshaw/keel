@@ -3442,6 +3442,41 @@ void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matche
         return;
     }
 
+    // A bound at the type's end settles its test, and C warns about a comparison that is always
+    // true. Coverage recorded each bound's value; a float scrutinee has no end to reach.
+    const auto at_end = [&]( Node_id bound, bool maximum )
+    {
+        const std::optional<Constant_value> value = types_.constant_of( bound );
+
+        if( !value || !types_.table().is_integer( matched_type ) )
+        {
+            return false;
+        }
+
+        const Constant_value limit = numeric_limit( types_.table(), matched_type, maximum );
+
+        return maximum ? !value->negative && value->magnitude == limit.magnitude + 1
+                       : value->negative == limit.negative && value->magnitude == limit.magnitude;
+    };
+
+    const bool from_bottom = at_end( ast_.lower( label ), false );
+    const bool to_top      = at_end( ast_.upper( label ), true );
+
+    // Every value of the type: the next label is never reached, but its tests still need a block.
+    if( from_bottom && to_top )
+    {
+        builder_.terminate_goto( body, span );
+        builder_.switch_to( builder_.add_block() );
+        return;
+    }
+
+    if( from_bottom || to_top )
+    {
+        to_top ? branch_on( Token_kind::Greater_equal, ast_.lower( label ), body )
+               : branch_on( Token_kind::Less, ast_.upper( label ), body );
+        return;
+    }
+
     // D34: half-open, so the upper bound is `<` and not `<=`. The lower test's true edge is the
     // upper test rather than the body, which is what makes the pair a conjunction.
     const Block_id in_range = builder_.add_block();

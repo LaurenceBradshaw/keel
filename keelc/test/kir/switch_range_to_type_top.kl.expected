@@ -1,0 +1,45 @@
+fn top {
+    let _0: i32; // return slot
+    let _1: u8; // parameter n
+    let _2: bool;
+
+    bb0:
+        _2 = copy _1 >= const 200
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _0 = const 0
+        return
+}
+fn bottom {
+    let _0: i32; // return slot
+    let _1: u8; // parameter n
+    let _2: bool;
+
+    bb0:
+        _2 = copy _1 < const 200
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _0 = const 0
+        return
+}
+fn whole {
+    let _0: i32; // return slot
+    let _1: u8; // parameter n
+
+    bb0:
+        goto -> bb1
+
+    bb1:
+        _0 = const 1
+        return
+}

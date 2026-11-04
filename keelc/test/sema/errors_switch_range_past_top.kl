@@ -1,0 +1,19 @@
+// A range may end one past its type's top, but no further, and that end still counts for overlap.
+i32 too_far( u8 n )
+{
+    switch( n )
+    {
+        case 200..257: return 1;
+        default: return 0;
+    }
+}
+
+i32 overlap( u8 n )
+{
+    switch( n )
+    {
+        case 255: return 2;
+        case 200..256: return 1;
+        default: return 0;
+    }
+}

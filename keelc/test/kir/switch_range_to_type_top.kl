@@ -1,0 +1,28 @@
+// A range bound at its type's end has no test: `200..256` over a `u8` is one `>=`, `0..200` one
+// `<`, and `0..256` none.
+i32 top( u8 n )
+{
+    switch( n )
+    {
+        case 200..256: return 1;
+        default: return 0;
+    }
+}
+
+i32 bottom( u8 n )
+{
+    switch( n )
+    {
+        case 0..200: return 1;
+        default: return 0;
+    }
+}
+
+i32 whole( u8 n )
+{
+    switch( n )
+    {
+        case 0..256: return 1;
+        default: return 0;
+    }
+}

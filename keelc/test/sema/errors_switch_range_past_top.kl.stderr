@@ -1,0 +1,13 @@
+error: `257` does not fit in `u8`
+ --> sema/errors_switch_range_past_top.kl:6:19
+  |
+6 |         case 200..257: return 1;
+  |                   ^^^
+
+error: this `case` overlaps an earlier one
+  --> sema/errors_switch_range_past_top.kl:16:14
+   |
+16 |         case 200..256: return 1;
+   |              ^^^^^^^^ previous declaration is at: sema/errors_switch_range_past_top.kl:15:14
+
+2 errors generated

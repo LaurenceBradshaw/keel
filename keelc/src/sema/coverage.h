@@ -53,13 +53,13 @@ class Coverage
 {
 public:
     Coverage(
-        const Ast&             ast,
-        const Interner&        interner,
-        Types_builder&         types,
-        Aggregates&            aggregates,
-        const Constant_folder& constant_folder,
-        Expressions&           expressions,
-        Reporter&              reporter
+        const Ast&       ast,
+        const Interner&  interner,
+        Types_builder&   types,
+        Aggregates&      aggregates,
+        Constant_folder& constant_folder,
+        Expressions&     expressions,
+        Reporter&        reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -113,20 +113,21 @@ private:
     // Where a label's enum starts among the switch's variants, or nothing once reported.
     std::optional<std::size_t> member_offset( const Switch_coverage& state, Type_id label_type, Node_id label );
 
-    std::optional<i64> fold_bound( Node_id bound, Type_id expected );
+    // `past_end` for a range's upper bound, which may be one past the type's last value.
+    std::optional<i64> fold_bound( Node_id bound, Type_id expected, bool past_end = false );
 
     // Whether any of an arm's labels destructures a payload. What "this arm binds" means for the
     // two rules that ask it: labels may not be stacked when one does, and nothing may fall into one.
     bool arm_binds( Node_id arm ) const;
 
-    const Ast&             ast_;
-    const Interner&        interner_;
-    Types_builder&         types_;
-    const Type_table&      table_;
-    Aggregates&            aggregates_;
-    const Constant_folder& constant_folder_;
-    Expressions&           expressions_;
-    Reporter&              reporter_;
+    const Ast&        ast_;
+    const Interner&   interner_;
+    Types_builder&    types_;
+    const Type_table& table_;
+    Aggregates&       aggregates_;
+    Constant_folder&  constant_folder_;
+    Expressions&      expressions_;
+    Reporter&         reporter_;
 
     std::unordered_set<u32> ruled_fallthroughs_;
 };
