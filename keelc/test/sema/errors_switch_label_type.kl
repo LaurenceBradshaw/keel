@@ -1,0 +1,30 @@
+// A label of the wrong type is reported once, by its type check, not again as "not known at compile
+// time" - a string, a variant, a fraction, and a range bound of the wrong type.
+
+enum Colour : u8
+{
+    Red,
+    Green,
+};
+
+i32 f( i32 n )
+{
+    switch( n )
+    {
+        case "one":
+            return 1;
+        case Colour::Red:
+            return 2;
+        case 1.5:
+            return 3;
+        case 1..Colour::Green:
+            return 4;
+        default:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return f( 1 );
+}

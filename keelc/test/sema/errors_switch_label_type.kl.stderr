@@ -1,0 +1,25 @@
+error: expected `i32`, but got `str`
+  --> sema/errors_switch_label_type.kl:14:14
+   |
+14 |         case "one":
+   |              ^^^^^
+
+error: expected `i32`, but got `Colour`
+  --> sema/errors_switch_label_type.kl:16:14
+   |
+16 |         case Colour::Red:
+   |              ^^^^^^^^^^^
+
+error: expected `i32`, but got a floating-point literal
+  --> sema/errors_switch_label_type.kl:18:14
+   |
+18 |         case 1.5:
+   |              ^^^ a fractional value cannot be an integer
+
+error: expected `i32`, but got `Colour`
+  --> sema/errors_switch_label_type.kl:20:17
+   |
+20 |         case 1..Colour::Green:
+   |                 ^^^^^^^^^^^^^
+
+4 errors generated
