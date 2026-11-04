@@ -20,10 +20,13 @@ namespace keel::sema
 // PLAN D34. A `case` label over a number is an interval, half-open: `case 3:` is [3, 4) and
 // `case 1..5:` is [1, 5). One representation for both is what makes overlap a single pairwise walk
 // rather than three cases - value/value, value/range and range/range.
+// Wider than any scrutinee, so every value of `u64` and `i64` has an interval.
+using Wide = __int128;
+
 struct Interval
 {
-    i64     low  = 0;
-    i64     high = 0; // exclusive
+    Wide    low  = 0;
+    Wide    high = 0; // exclusive
     Node_id label {};
 };
 
@@ -114,7 +117,7 @@ private:
     std::optional<std::size_t> member_offset( const Switch_coverage& state, Type_id label_type, Node_id label );
 
     // `past_end` for a range's upper bound, which may be one past the type's last value.
-    std::optional<i64> fold_bound( Node_id bound, Type_id expected, bool past_end = false );
+    std::optional<Wide> fold_bound( Node_id bound, Type_id expected, bool past_end = false );
 
     // Whether any of an arm's labels destructures a payload. What "this arm binds" means for the
     // two rules that ask it: labels may not be stacked when one does, and nothing may fall into one.

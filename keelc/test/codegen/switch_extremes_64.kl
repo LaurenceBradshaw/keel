@@ -1,0 +1,41 @@
+// Labels at the ends of the 64-bit types: `u64`'s top, `i64`'s bottom, and an `i64` range ending one
+// past its top. A `u64` range stops short of the top, which a single label then takes. Exits with
+// the failing check.
+i32 top( u64 n )
+{
+    switch( n )
+    {
+        case 0: return 1;
+        case 18446744073709551615: return 2;
+        case 9223372036854775808..18446744073709551615: return 3;
+        case 10..9223372036854775808: return 4;
+        default: return 0;
+    }
+}
+
+i32 signed_top( i64 n )
+{
+    switch( n )
+    {
+        case -9223372036854775808: return 1;
+        case 50: return 2;
+        case 100..9223372036854775808: return 3;
+        case -9223372036854775807..-100: return 4;
+        default: return 0;
+    }
+}
+
+i32 main()
+{
+    if( top( 0 ) != 1 ) { return 1; }
+    if( top( 18446744073709551615 ) != 2 ) { return 2; }
+    if( top( 18446744073709551614 ) != 3 ) { return 3; }
+    if( top( 9223372036854775808 ) != 3 ) { return 4; }
+    if( top( 9223372036854775807 ) != 4 ) { return 5; }
+    if( top( 5 ) != 0 ) { return 6; }
+    if( signed_top( -9223372036854775808 ) != 1 ) { return 7; }
+    if( signed_top( 9223372036854775807 ) != 3 ) { return 8; }
+    if( signed_top( -9223372036854775807 ) != 4 ) { return 9; }
+    if( signed_top( 0 ) != 0 ) { return 10; }
+    return 0;
+}

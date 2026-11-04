@@ -252,8 +252,8 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 
         if( is_range )
         {
-            const std::optional<i64> low  = fold_bound( ast_.lower( label ), state.type );
-            const std::optional<i64> high = fold_bound( ast_.upper( label ), state.type, true );
+            const std::optional<Wide> low  = fold_bound( ast_.lower( label ), state.type );
+            const std::optional<Wide> high = fold_bound( ast_.upper( label ), state.type, true );
 
             if( !low.has_value() || !high.has_value() )
             {
@@ -279,14 +279,10 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
             interval.high = *high;
 
             // For lowering, which leaves out a test the scrutinee's type already settles.
-            const auto record = [&]( Node_id bound, i64 value )
+            const auto record = [&]( Node_id bound, Wide value )
             {
                 constant_folder_.record_value(
-                    bound,
-                    Constant_value {
-                        .magnitude = value < 0 ? 0 - static_cast<u64>( value ) : static_cast<u64>( value ),
-                        .negative  = value < 0
-                    }
+                    bound, Constant_value { .magnitude = static_cast<u64>( value < 0 ? -value : value ), .negative = value < 0 }
                 );
             };
 
@@ -295,7 +291,7 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
         }
         else
         {
-            const std::optional<i64> value = fold_bound( label, state.type );
+            const std::optional<Wide> value = fold_bound( label, state.type );
 
             if( !value.has_value() )
             {
@@ -446,21 +442,22 @@ std::optional<std::size_t> Coverage::member_offset( const Switch_coverage& state
 // A `case` bound is always an integer, whatever the scrutinee is - D34 gives `..` one meaning, and
 // the meaning it will need for slicing is an integer one. So `case 1..5:` reads the same over an
 // `f64` as over an `i32`, and `1.5..7.3` has no spelling.
-std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool past_end )
+std::optional<Wide> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool past_end )
 {
     // Types the bound as well as reading it: fold_integer only folds, and lowering needs the node
     // to carry a type. Against the *scrutinee's* type, so `case 1..5:` over an `f64` compares
     // against 1.0 and 5.0 rather than needing a cast nobody wrote.
     const std::size_t before = reporter_.error_count();
 
-    // `case 200..256:` over a `u8` ends past the type's top, so its bound is typed as an `i64`.
-    // A 64-bit type has no wider type to use.
+    // `case 200..256:` over a `u8` ends past the type's top, so its bound is typed as an `i64`, or
+    // over an `i64` as a `u64`. 2^64 has no type, so a `u64` range stops short of the top.
     Type_id typed_as = scrutinee;
 
     if( past_end && table_.is_integer( scrutinee ) )
     {
         const Folded  end   = constant_folder_.fold_integer( bound, scrutinee );
-        const Type_id wide  = table_.integer( 64, true );
+        const Type&   type  = table_.get( scrutinee );
+        const Type_id wide  = table_.integer( 64, !( type.is_signed && type.width == 64 ) );
         const u64     value = end.value.magnitude;
 
         if( end.constant && !end.overflowed && !end.value.negative && value > 0 && !table_.fits( value, false, scrutinee ) &&
@@ -491,15 +488,7 @@ std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool 
         return std::nullopt;
     }
 
-    // The interval arithmetic below is signed, and a label at the very top of `u64` is not worth
-    // widening it for - saying so is better than being quietly wrong about the overlap.
-    if( folded.overflowed || folded.value.magnitude > static_cast<u64>( std::numeric_limits<i64>::max() ) )
-    {
-        reporter_.error_at( ast_.span( bound ), "this `case` label is too large to check for overlap" );
-        return std::nullopt;
-    }
-
-    const i64 magnitude = static_cast<i64>( folded.value.magnitude );
+    const Wide magnitude = folded.value.magnitude;
 
     return folded.value.negative ? -magnitude : magnitude;
 }
