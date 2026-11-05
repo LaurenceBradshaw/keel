@@ -1,0 +1,7 @@
+// A module and a subfolder of one name in the program's folder are refused, as in a package.
+import both::inner;
+
+i32 main()
+{
+    return 0;
+}

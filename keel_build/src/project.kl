@@ -28,14 +28,26 @@ class Project
         const bool tests = kl::is_file( root / "test/main.kl" );
 
         kl::list<kl::pair<kl::string, kl::path>> found = kl::list<kl::pair<kl::string, kl::path>>();
-        switch( move kl::list_directory( root ) )
+        try add_packages( root, true, ref found );
+        try add_packages( root / "src", false, ref found );
+        return result::ok( Project( root.file_name(), move root, tests, move found ) );
+    }
+
+    // Each folder in `folder` that holds a `.kl` is a package: the root's, and `src/`'s, which keelc
+    // names from the top too.
+    private static result<void, kl::string> add_packages(
+        const ref kl::path folder, bool is_root, ref kl::list<kl::pair<kl::string, kl::path>> found
+    )
+    {
+        switch( move kl::list_directory( folder ) )
         {
             case result::ok( entries ):
                 for( u64 i : 0..entries.size() )
                 {
                     kl::path entry = entries.pop();
-                    if( !kl::is_directory( entry ) || entry.file_name() == "src" || 
-                        entry.file_name() == "test" || entry.file_name() == "build" ||
+                    const bool reserved = entry.file_name() == "src" || entry.file_name() == "test" || 
+                                          entry.file_name() == "build";
+                    if( !kl::is_directory( entry ) || ( is_root && reserved ) || 
                         entry.file_name().starts_with( "." ) || !holds_keel( entry ) )
                     {
                         continue;
@@ -46,11 +58,21 @@ class Project
                         return result::err( "a folder named kl cannot be a package: kl is the standard library" );
                     }
 
+                    for( u64 j : 0..found.size() )
+                    {
+                        if( found.as_run()[j].first == entry.file_name() )
+                        {
+                            return result::err( 
+                                "a folder named " + entry.file_name() + " is in both src/ and the project root" 
+                            );
+                        }
+                    }
+
                     found.push( kl::pair<kl::string, kl::path>( entry.file_name(), move entry ) );
                 }
-                return result::ok( Project( root.file_name(), move root, tests, move found ) );
+                return result::ok();
             case result::err( error ):
-                return result::err( "cannot list " + root );
+                return result::err( "cannot list " + folder );
         }
     }
 

@@ -44,6 +44,19 @@ std::string read_package_info(
     return doc_comment( sm.file( *file ).text, "//!" );
 }
 
+bool holds_keel( const std::filesystem::path& folder )
+{
+    std::error_code ignored;
+    for( const auto& entry : std::filesystem::directory_iterator( folder, ignored ) )
+    {
+        if( entry.is_regular_file( ignored ) && entry.path().extension() == ".kl" )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Each subfolder of `root` that directly holds a `.kl` is the package `parent::name`, and so on below it.
 void add_nested_packages(
     Symbol_id                                       parent,
@@ -55,19 +68,6 @@ void add_nested_packages(
     Diagnostics&                                    diags
 )
 {
-    const auto holds_keel = []( const std::filesystem::path& folder )
-    {
-        std::error_code ignored;
-        for( const auto& entry : std::filesystem::directory_iterator( folder, ignored ) )
-        {
-            if( entry.is_regular_file( ignored ) && entry.path().extension() == ".kl" )
-            {
-                return true;
-            }
-        }
-        return false;
-    };
-
     std::vector<std::filesystem::path> folders;
     std::error_code                    ignored;
     for( const auto& entry : std::filesystem::directory_iterator( root, ignored ) )
@@ -99,6 +99,60 @@ void add_nested_packages(
         roots[package.v] = folder;
         add_nested_packages( package, folder, modules, roots, sm, interner, diags );
     }
+}
+
+// The program's subfolder `sub/deeper` is the package `sub::deeper` when each level holds a `.kl`, added
+// when `import` first names it, so a folder nothing imports is never looked at. False when refused.
+bool add_program_package(
+    Symbol_id                                       package,
+    const std::filesystem::path&                    program_folder,
+    Span                                            at,
+    std::span<const Package>                        given,
+    Module_graph&                                   modules,
+    std::unordered_map<u32, std::filesystem::path>& roots,
+    const Interner&                                 interner,
+    Diagnostics&                                    diags
+)
+{
+    const std::string     text   = std::string( interner.text( package ) );
+    std::filesystem::path folder = program_folder;
+    for( std::size_t begin = 0; begin <= text.size(); )
+    {
+        const std::size_t end   = std::min( text.find( "::", begin ), text.size() );
+        const std::string piece = text.substr( begin, end - begin );
+        const std::string name  = text.substr( 0, end );
+        std::error_code   ignored;
+        if( std::filesystem::is_regular_file( folder / ( piece + ".kl" ), ignored ) &&
+            std::filesystem::is_directory( folder / piece, ignored ) )
+        {
+            diags.error( at, fmt::format( "the module `{0}` and the package `{0}` share a name", name ), "rename one of them" );
+            modules.add_missing_package( package );
+            return false;
+        }
+
+        folder /= piece;
+        if( !holds_keel( folder ) )
+        {
+            return true;
+        }
+
+        // A `--package`'s own scan found what is below it; the build tool gives `src/sub` so.
+        if( const auto it = std::ranges::find( given, name, &Package::name ); begin == 0 && it != given.end() )
+        {
+            std::error_code same;
+            if( std::filesystem::equivalent( it->root, folder, same ) )
+            {
+                return true;
+            }
+            diags.error( at, fmt::format( "the folder `{0}` and the package `{0}` share a name", name ), "rename the folder" );
+            return false;
+        }
+        begin = end + 2;
+    }
+
+    modules.add_package( package );
+    roots[package.v] = folder;
+    return true;
 }
 
 } // namespace
@@ -152,6 +206,9 @@ Program load_program(
             package_docs[package_id] = read_package_info( root, sm, interner, literals, diags );
         }
     }
+
+    const bool              is_program_package = !modules.package_of( input ).is_valid();
+    std::unordered_set<u32> program_packages;
 
     if( !as_module )
     {
@@ -219,6 +276,13 @@ Program load_program(
                 std::filesystem::path module_folder = program_folder;
                 if( package_id.is_valid() )
                 {
+                    if( is_program_package && program_packages.insert( package_id.v ).second &&
+                        !add_program_package(
+                            package_id, program_folder, ast.span( decl ), packages, modules, package_roots, interner, diags
+                        ) )
+                    {
+                        continue;
+                    }
                     if( const auto it = package_roots.find( package_id.v ); it != package_roots.end() )
                     {
                         module_folder = it->second;
@@ -237,7 +301,11 @@ Program load_program(
                                 fmt::format( "there is no package `{}`", interner.text( package_id ) ),
                                 interner.text( package_id ).find( "::" ) != std::string_view::npos
                                     ? std::string( "a nested package is a subfolder of its parent that holds `.kl` files" )
-                                    : fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
+                                    : fmt::format(
+                                          "a package is a subfolder holding `.kl` files, or is named with "
+                                          "`--package {}=<dir>`",
+                                          interner.text( package_id )
+                                      )
                             );
                         }
                         modules.add_missing_package( package_id );

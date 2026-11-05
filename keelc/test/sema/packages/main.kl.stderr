@@ -8,7 +8,7 @@ error: there is no package `foo`
  --> sema/packages/main.kl:5:1
   |
 5 | import foo::geom;
-  | ^^^^^^^^^^^^^^^^^ a package is named with `--package foo=<dir>`
+  | ^^^^^^^^^^^^^^^^^ a package is a subfolder holding `.kl` files, or is named with `--package foo=<dir>`
 
 error: there is no package `atlas::core`
  --> sema/packages/main.kl:6:1

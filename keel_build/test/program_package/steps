@@ -1,0 +1,4 @@
+# A subfolder of src/ is a package named from the top; one that shares a name with a root folder is refused.
+keelb build; echo "exit $?"
+build/release/program_package; echo "exit $?"
+( cd clash && keelb build; echo "exit $?" )

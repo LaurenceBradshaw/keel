@@ -253,8 +253,8 @@ class Builder
         }
     }
 
-    // `kl::a::b` is `<kl folder>/a/b.kl`, `p::x` is `<root>/p/x.kl`, and `x` is `<root>/src/x.kl`, or
-    // `<root>/test/x.kl` when `in_tests`.
+    // `kl::a::b` is `<kl folder>/a/b.kl`, `p::q::x` is `<p's folder>/q/x.kl`, and `x` is `<root>/src/x.kl`,
+    // or `<root>/test/x.kl` when `in_tests`.
     private kl::path source_of( const ref kl::string module ) const
     {
         if( module.starts_with( "kl::" ) )
@@ -264,6 +264,19 @@ class Builder
 
         if( last_separator( module ) < module.size() )
         {
+            kl::list<kl::string> pieces = module.split( "::" );
+            const u64 top = pieces.as_run()[0].size();
+            const kl::string rest = folders( module.substring( top + 2, module.size() - top - 2 ) ) + ".kl";
+
+            const ref kl::list<kl::pair<kl::string, kl::path>> packages = project_.packages();
+            for( u64 i : 0..packages.size() )
+            {
+                const ref kl::pair<kl::string, kl::path> package = packages.as_run()[i];
+                if( package.first == pieces.as_run()[0] )
+                {
+                    return package.second / rest;
+                }
+            }
             return project_.root() / ( folders( module ) + ".kl" );
         }
 

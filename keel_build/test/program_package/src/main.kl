@@ -1,0 +1,7 @@
+import sub::leaf;
+import sub::deeper::bottom;
+
+i32 main()
+{
+    return sub::one() + sub::deeper::two();
+}

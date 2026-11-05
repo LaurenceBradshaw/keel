@@ -2,6 +2,6 @@ error: there is no package `absent`
  --> sema/missing_package/main.kl:2:1
   |
 2 | import absent::shapes;
-  | ^^^^^^^^^^^^^^^^^^^^^^ a package is named with `--package absent=<dir>`
+  | ^^^^^^^^^^^^^^^^^^^^^^ a package is a subfolder holding `.kl` files, or is named with `--package absent=<dir>`
 
 1 error generated

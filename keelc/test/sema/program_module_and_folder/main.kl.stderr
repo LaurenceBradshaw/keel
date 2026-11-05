@@ -1,0 +1,7 @@
+error: the module `both` and the package `both` share a name
+ --> sema/program_module_and_folder/main.kl:2:1
+  |
+2 | import both::inner;
+  | ^^^^^^^^^^^^^^^^^^^ rename one of them
+
+1 error generated

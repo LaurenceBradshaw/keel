@@ -1,0 +1,7 @@
+compiling sub::leaf
+compiling sub::deeper::bottom
+linking
+exit 0
+exit 3
+keelb: a folder named util is in both src/ and the project root
+exit 2

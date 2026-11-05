@@ -1,0 +1,7 @@
+// A subfolder of the program's folder may not share a name with a `--package` elsewhere.
+import util::x;
+
+i32 main()
+{
+    return 0;
+}

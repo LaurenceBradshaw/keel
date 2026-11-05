@@ -1,0 +1,10 @@
+// A subfolder of the program's folder is a package named from the top: `sub`, `sub::deeper`.
+import sub::leaf;
+import sub::deeper::bottom;
+
+i32 main()
+{
+    if( sub::one() != 1 ) { return 1; }
+    if( sub::deeper::two() != 2 ) { return 2; }
+    return 0;
+}
