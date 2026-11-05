@@ -196,6 +196,9 @@ void report_move_errors(
                                           ? std::string( "it" )
                                           : subject_of( function, ast, interner, error.local, error.moved_part, "it" );
 
+            // A move that reaches itself came round a loop.
+            const bool again = error.moved.contains( error.use ) || error.use.contains( error.moved );
+
             // `maybe` is an ambiguity refused, not a certainty reported, so it must read differently.
             diagnostics.error(
                 error.use,
@@ -203,8 +206,9 @@ void report_move_errors(
                                   ? fmt::format( "{} may already have been moved", subject )
                                   : fmt::format( "{} is used where {} may already have been moved", subject, moved )
                             : fmt::format( "{} is used after {} was moved", subject, moved ),
-                error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
-                            : fmt::format( "moved at {}:{}", at.line, at.col )
+                again         ? std::string( "moved here in an earlier turn of the loop" )
+                : error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
+                              : fmt::format( "moved at {}:{}", at.line, at.col )
             );
         }
     }

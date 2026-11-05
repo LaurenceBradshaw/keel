@@ -1,0 +1,13 @@
+error: `o` may already have been moved
+  --> sema/errors_move_in_earlier_turn.kl:17:17
+   |
+17 |         switch( move o )
+   |                 ^^^^^^ moved here in an earlier turn of the loop
+
+error: `n` may already have been moved
+  --> sema/errors_move_in_earlier_turn.kl:29:30
+   |
+29 |     while( true ) { consume( move n ); }
+   |                              ^^^^^^ moved at 28:24 on some path to here
+
+2 errors generated

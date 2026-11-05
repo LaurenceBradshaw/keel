@@ -1,0 +1,32 @@
+import kl::optional;
+
+class N
+{
+    u64* d;
+    public N( u64 n ) { unsafe { d = alloc<u64>(); } *d = n; }
+    ~N() { unsafe { free( d ); } }
+};
+
+void consume( move N _ ) {}
+
+// the scrutinee moved by the same `switch` one turn earlier.
+void consumed_each_turn( move kl::optional<N> o )
+{
+    while( true )
+    {
+        switch( move o )
+        {
+            case kl::optional::some( _ ): break;
+            case kl::optional::none: break;
+        }
+    }
+}
+
+// a move before the loop still names where it was.
+void moved_before( move N n, bool b )
+{
+    if( b ) { consume( move n ); }
+    while( true ) { consume( move n ); }
+}
+
+i32 main() { return 0; }
