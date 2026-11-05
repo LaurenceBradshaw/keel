@@ -1,0 +1,26 @@
+// A loop that never finishes leaves its block: what follows warns. One with a `break` may finish,
+// so what follows it is reached. A line ending `// warning` warns exactly once.
+i32 endless()
+{
+    while( true )
+    {
+    }
+    return 0; // warning
+}
+
+i32 left_by_break( i32 n )
+{
+    while( true )
+    {
+        if( n > 0 )
+        {
+            break;
+        }
+    }
+    return n;
+}
+
+i32 main()
+{
+    return left_by_break( 1 );
+}
