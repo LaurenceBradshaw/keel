@@ -336,6 +336,11 @@ bool Lookahead::looks_like_counter( u32 at )
     cursor_.seek( at );
     site_ = Scan_site::Statement;
 
+    if( cursor_.check_keyword( Keyword::Underscore ) )
+    {
+        return cursor_.peek( 1 ).kind == Token_kind::Colon;
+    }
+
     if( cursor_.match_keyword( Keyword::Auto ) )
     {
         if( !cursor_.match( Token_kind::Identifier ) )

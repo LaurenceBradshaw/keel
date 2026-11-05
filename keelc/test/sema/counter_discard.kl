@@ -1,0 +1,16 @@
+// `for( _ : a..b )` counts without naming the counter, and nothing warns.
+i32 main()
+{
+    u64 top = 4;
+    i32 n = 0;
+
+    for( _ : 0..3 )
+    {
+        n += 1;
+    }
+    for( _ : 1..top )
+    {
+        n += 10;
+    }
+    return n;
+}

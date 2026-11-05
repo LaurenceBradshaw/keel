@@ -2888,13 +2888,16 @@ Node_id Parser::parse_colon_head( Node_id& container )
 {
     const Span start = cursor_.peek().span;
 
+    // `for( _ : c )` and `for( _ : a..b )`: a nameless binding or counter.
+    const bool discard = cursor_.match_keyword( Keyword::Underscore );
+
     Node_id type;
-    if( !cursor_.match_keyword( Keyword::Auto ) )
+    if( !discard && !cursor_.match_keyword( Keyword::Auto ) )
     {
         type = parse_type_with_mode();
     }
 
-    const Symbol_id name      = expect_name();
+    const Symbol_id name      = discard ? Symbol_id {} : expect_name();
     const Span      name_span = cursor_.previous().span;
 
     recovery_.expect( Token_kind::Colon );
@@ -2904,8 +2907,15 @@ Node_id Parser::parse_colon_head( Node_id& container )
     {
         container = lower;
 
+        // A nameless `const ref`, so any element type walks.
+        if( discard )
+        {
+            type = ast_.add( Node_kind::Mode_type, start, static_cast<u32>( Keyword::Ref ), { Node_id {} } );
+            type = ast_.add( Node_kind::Const_type, start, 0, { type } );
+        }
+
         const Node_id binding =
-            name.is_valid()
+            name.is_valid() || discard
                 ? ast_.add( Node_kind::Var_decl, Span::merge( start, ast_.span( lower ) ), name.v, { type, Node_id {} } )
                 : error_node( Span::merge( start, cursor_.previous().span ) );
         ast_.set_name_span( binding, name_span );
@@ -2916,7 +2926,7 @@ Node_id Parser::parse_colon_head( Node_id& container )
     const Node_id range =
         ast_.add( Node_kind::Range_expr, Span::merge( ast_.span( lower ), ast_.span( upper ) ), 0, { lower, upper } );
 
-    if( !name.is_valid() )
+    if( !name.is_valid() && !discard )
     {
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
@@ -8787,6 +8797,35 @@ TEST_CASE( "parser_walk_statement", "[parse]" )
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Walk_stmt );
         REQUIRE_FALSE( p.child( p.child( first_statement( p ), 1 ), 0 ).is_valid() );
+    }
+
+    SECTION( "a `_` binding is a nameless `const ref`" )
+    {
+        const Parsed p( "i32 main() { for( _ : xs ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id binding = p.child( first_statement( p ), 1 );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Walk_stmt );
+        REQUIRE( p.kind( binding ) == Node_kind::Var_decl );
+        REQUIRE_FALSE( p.ast().name( binding ).is_valid() );
+        REQUIRE( p.ast().parameter_mode( binding ) == Keyword::Ref );
+        REQUIRE( p.ast().is_const_binding( binding ) );
+    }
+
+    SECTION( "a `_` counter is a nameless one" )
+    {
+        const Parsed p( "i32 main() { for( _ : 0..3 ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id counter = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::For_stmt );
+        REQUIRE( p.ast().is_counter( counter ) );
+        REQUIRE_FALSE( p.ast().name( counter ).is_valid() );
+        REQUIRE_FALSE( p.ast().annotation( counter ).is_valid() );
     }
 }
 

@@ -311,11 +311,13 @@ void report_unused(
         }
 
         const Node_id init = ast.initialiser( unused );
+        const bool    walk = std::ranges::find( resolution.unused().walks, unused ) != resolution.unused().walks.end();
         reporter.warn_at(
             Warning::Unused_variable,
             ast.name_span( unused ),
             fmt::format( "unused variable `{}`", name ),
-            init.is_valid()
+            walk ? "write `_` in its place: `for( _ : c )`"
+            : init.is_valid()
                 ? fmt::format( "write `_ = {};` if only the initialiser is wanted", reporter.text( ast.span( init ) ) )
                 : "remove it"
         );

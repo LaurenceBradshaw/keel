@@ -32,6 +32,7 @@ inline bool can_name( const Module_graph& modules, const Ast& ast, File_id from,
 struct Unused
 {
     std::vector<Node_id>                     names;    // parameters and locals
+    std::vector<Node_id>                     walks;    // those of names that are a walk's lone binding
     std::vector<Node_id>                     privates; // top-level private declarations nothing public reaches
     std::vector<std::pair<File_id, File_id>> imports;  // (importer, imported) where the importer names nothing imported
 };

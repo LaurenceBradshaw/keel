@@ -1,0 +1,52 @@
+// `for( _ : c )` walks without naming the element: nothing warns, and an element that cannot copy
+// walks too, since `_` only borrows it. A declared walk lends to `_` as to any `const ref`.
+class Held
+{
+    public i32 value;
+
+    public Held( i32 v )
+    {
+        value = v;
+    }
+
+    ~Held()
+    {
+    }
+};
+
+class Bag
+{
+    i32 value_;
+
+    public Bag()
+    {
+        value_ = 1;
+    }
+
+    void operator:( const ref i32 item ) const
+    {
+        yield( value_ );
+    }
+};
+
+i32 main()
+{
+    Held[2] held = [ Held( 1 ), Held( 2 ) ];
+    i32[3]  small = [ 1, 2, 3 ];
+    Bag     bag = Bag();
+    i32     n = 0;
+
+    for( _ : held )
+    {
+        n += 1;
+    }
+    for( _ : small )
+    {
+        n += 1;
+    }
+    for( _ : bag )
+    {
+        n += 1;
+    }
+    return n;
+}

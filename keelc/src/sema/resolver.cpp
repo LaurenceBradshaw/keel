@@ -101,6 +101,7 @@ private:
     std::vector<Node_id> bindings_;
     std::vector<bool>    used_;              // a declaration some use was bound to
     std::vector<Node_id> unused_candidates_; // parameters of functions with bodies, and locals
+    std::vector<Node_id> walk_bindings_;     // each walk's lone binding
     std::vector<bool>    unresolved_;
     std::vector<bool>    unreported_; // see Resolution::is_unreported
     std::vector<Node_id> next_overload_;
@@ -126,6 +127,7 @@ Resolution Resolver::run()
     bindings_.assign( ast_.node_count(), Node_id {} );
     used_.assign( ast_.node_count(), false );
     unused_candidates_.clear();
+    walk_bindings_.clear();
     unresolved_.assign( ast_.node_count(), false );
     unreported_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
@@ -296,6 +298,10 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::For_stmt:
     case Node_kind::Walk_stmt:
+        if( ast_.kind( id ) == Node_kind::Walk_stmt && ast_.kind( ast_.binding( id ) ) == Node_kind::Var_decl )
+        {
+            walk_bindings_.push_back( ast_.binding( id ) );
+        }
         push_scope();
         for( const Node_id child : ast_.children( id ) )
         {
@@ -307,7 +313,7 @@ void Resolver::visit( Node_id id )
         visit( ast_.annotation( id ) );
         visit( ast_.initialiser( id ) );
         declare( scopes_.back(), ast_.name( id ), id );
-        if( !ast_.is_counter( id ) )
+        if( !ast_.is_counter( id ) && ast_.name( id ).is_valid() ) // a walk's `_` is never read
         {
             unused_candidates_.push_back( id );
         }
@@ -1343,6 +1349,7 @@ Unused Resolver::unused() const
 {
     Unused unused;
     std::ranges::copy_if( unused_candidates_, std::back_inserter( unused.names ), [&]( Node_id c ) { return !used_[c.v]; } );
+    std::ranges::copy_if( walk_bindings_, std::back_inserter( unused.walks ), [&]( Node_id c ) { return !used_[c.v]; } );
     find_unreached( unused );
     return unused;
 }
