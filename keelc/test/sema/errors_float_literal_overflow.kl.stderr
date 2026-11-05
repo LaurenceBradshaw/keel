@@ -1,13 +1,13 @@
-error: floating-point literal is out of range for `f64`
+error: `1.8e308` does not fit in `f64`
  --> sema/errors_float_literal_overflow.kl:2:9
   |
 2 | f64 a = 1.8e308;
-  |         ^^^^^^^
+  |         ^^^^^^^ the largest `f64` is 1.7976931348623157e308
 
-error: floating-point literal is out of range for `f64`
+error: `1e400` does not fit in `f64`
  --> sema/errors_float_literal_overflow.kl:3:9
   |
 3 | f32 b = 1e400;
-  |         ^^^^^
+  |         ^^^^^ the largest `f64` is 1.7976931348623157e308
 
 2 errors generated

@@ -414,7 +414,11 @@ Literal_id Scanner::intern_float( u32 start )
     // Only overflow is out of range; strtod's ERANGE also flags a subnormal or underflow to zero.
     if( std::isinf( value ) )
     {
-        error_at( span_from( start ), "floating-point literal is out of range for `f64`" );
+        error_at(
+            span_from( start ),
+            "`" + std::string( text_.substr( start, pos_ - start ) ) + "` does not fit in `f64`",
+            "the largest `f64` is 1.7976931348623157e308"
+        );
         return Literal_id {};
     }
 
@@ -1491,6 +1495,8 @@ TEST_CASE( "lexer_keeps_a_float_literal_that_underflows", "[lex]" )
 
     REQUIRE( over.has_errors() );
     REQUIRE_FALSE( over.has_value( 0 ) );
+    REQUIRE( over.rendered().find( "`1.8e308` does not fit in `f64`" ) != std::string::npos );
+    REQUIRE( over.rendered().find( "the largest `f64` is 1.7976931348623157e308" ) != std::string::npos );
 }
 
 // Only the lexer can catch this: by the time sema sees the node the digits are gone.

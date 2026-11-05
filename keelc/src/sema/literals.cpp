@@ -291,21 +291,20 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
 
         // A literal the lexer could not scan has no value recorded. It reported there. An `f32` is
         // measured by its own rounding of the spelling, not the `f64` rounded again.
+        const bool narrow = table_.is_float( expected ) && table_.get( expected ).width == 32;
+
         if( value.is_valid() &&
-            !table_.fits_float(
-                table_.is_float( expected ) && table_.get( expected ).width == 32 ? literals_.narrow( value )
-                                                                                  : literals_.floating( value ),
-                expected
-            ) )
+            !table_.fits_float( narrow ? literals_.narrow( value ) : literals_.floating( value ), expected ) )
         {
             reporter_.error_at(
                 ast_.span( id ),
                 fmt::format(
                     "`{}{}` does not fit in `{}`",
-                    literal == id ? "" : "-", // the sign lives in the Unary_expr, not in the value
-                    literals_.floating( value ),
+                    literal == id ? "" : "-", // the sign lives in the Unary_expr, not in the literal
+                    reporter_.text( ast_.span( literal ) ),
                     table_.name( expected )
-                )
+                ),
+                narrow ? "the largest `f32` is 3.4028235e38" : "the largest `f64` is 1.7976931348623157e308"
             );
 
             return expected;
@@ -1072,7 +1071,8 @@ TEST_CASE( "type_checker_range_checks_float_literals", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`-1e+40`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`-1e40` does not fit in `f32`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the largest `f32` is 3.4028235e38" ) != std::string::npos );
     }
 
     SECTION( "a value at the edge is accepted" )
@@ -1107,7 +1107,7 @@ TEST_CASE( "type_checker_range_checks_float_literals", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.rendered().find( "out of range" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`1e400` does not fit in `f64`" ) != std::string::npos );
     }
 
     // This regressed when fits_float replaced the is_float() guard: every float-into-integer
