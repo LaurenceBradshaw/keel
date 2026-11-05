@@ -224,8 +224,7 @@ int32_t kl__looped__( void )
     int64_t kl_t12;
     int64_t kl_t13;
     int32_t kl_a_14;
-#line 90 "opt/moves_kept.kl"
-    kl_a_14 = 1;
+    int32_t kl_t15;
 #line 16 "opt/moves_kept.kl"
     kl__live__G = kl__live__G + 1;
     kl__trace__G = 1;
@@ -234,18 +233,14 @@ int32_t kl__looped__( void )
 #line 91 "opt/moves_kept.kl"
     goto bb1;
     bb1:
-#line 91 "opt/moves_kept.kl"
-    kl_t2 = kl_i_1 <= 3;
-#line 91 "opt/moves_kept.kl"
-    if ( kl_t2 ) goto bb2; else goto bb3;
-    bb2:
 #line 17 "opt/moves_kept.kl"
     kl_t5 = kl__trace__G * 10;
 #line 17 "opt/moves_kept.kl"
     kl_t6 = ( int64_t ) kl_i_1;
 #line 17 "opt/moves_kept.kl"
     kl_t7 = kl_t5 + kl_t6;
-#line 23 "opt/moves_kept.kl"
+#line 22 "opt/moves_kept.kl"
+    kl_t15 = kl__live__G;
     kl_t8 = kl_t7 * 10;
 #line 23 "opt/moves_kept.kl"
     kl_t9 = kl_t8 + 9;
@@ -256,40 +251,42 @@ int32_t kl__looped__( void )
 #line 91 "opt/moves_kept.kl"
     kl_i_1 = kl_i_1 + 1;
 #line 91 "opt/moves_kept.kl"
-    goto bb1;
-    bb3:
+    kl_t2 = kl_i_1 <= 3;
+#line 91 "opt/moves_kept.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb2:
 #line 96 "opt/moves_kept.kl"
     kl_t3 = kl_a_14 != 3;
 #line 96 "opt/moves_kept.kl"
-    if ( kl_t3 ) goto bb4; else goto bb8;
-    bb4:
+    if ( kl_t3 ) goto bb3; else goto bb7;
+    bb3:
     kl_t0 = 4;
 #line 22 "opt/moves_kept.kl"
-    kl__live__G = kl__live__G - 1;
-    kl_t12 = kl__trace__G * 10;
+    kl__live__G = kl_t15 - 1;
+    kl_t12 = kl_t9 * 10;
 #line 23 "opt/moves_kept.kl"
     kl_t13 = kl_t12 + 9;
 #line 23 "opt/moves_kept.kl"
     kl__trace__G = kl_t13;
 #line 98 "opt/moves_kept.kl"
     return kl_t0;
-    bb5:
+    bb4:
 #line 102 "opt/moves_kept.kl"
     kl_t0 = 0;
 #line 102 "opt/moves_kept.kl"
-    goto bb7;
-    bb6:
+    goto bb6;
+    bb5:
 #line 102 "opt/moves_kept.kl"
     kl_t0 = 5;
 #line 102 "opt/moves_kept.kl"
-    goto bb7;
-    bb7:
+    goto bb6;
+    bb6:
 #line 102 "opt/moves_kept.kl"
     return kl_t0;
-    bb8:
+    bb7:
 #line 22 "opt/moves_kept.kl"
-    kl__live__G = kl__live__G - 1;
-    kl_t10 = kl__trace__G * 10;
+    kl__live__G = kl_t15 - 1;
+    kl_t10 = kl_t9 * 10;
 #line 23 "opt/moves_kept.kl"
     kl_t11 = kl_t10 + 9;
 #line 23 "opt/moves_kept.kl"
@@ -297,23 +294,23 @@ int32_t kl__looped__( void )
 #line 102 "opt/moves_kept.kl"
     kl_t4 = kl_t11 == 129399;
 #line 102 "opt/moves_kept.kl"
-    if ( kl_t4 ) goto bb5; else goto bb6;
+    if ( kl_t4 ) goto bb4; else goto bb5;
 }
 
 #line 105 "opt/moves_kept.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    bool kl_t1;
-    struct kl__Box kl_x_2;
-    struct kl__Box kl_y_3;
+    struct kl__Box kl_x_1;
+    struct kl__Box kl_y_2;
+    bool kl_t3;
     bool kl_t4;
-    bool kl_t5;
+    int32_t kl_t5;
     int32_t kl_t6;
-    int32_t kl_t7;
+    bool kl_t7;
     bool kl_t8;
     bool kl_t9;
-    bool kl_t10;
+    int64_t kl_t10;
     int64_t kl_t11;
     int64_t kl_t12;
     int64_t kl_t13;
@@ -321,134 +318,119 @@ int32_t kl__main__( void )
     int64_t kl_t15;
     int64_t kl_t16;
     int64_t kl_t17;
-    int64_t kl_t18;
-    int32_t kl_t19;
+    int32_t kl_t18;
 #line 16 "opt/moves_kept.kl"
-    kl_t19 = kl__live__G + 1;
+    kl_t18 = kl__live__G + 1;
 #line 42 "opt/moves_kept.kl"
-    kl_t10 = kl_t19 != 1;
+    kl_t9 = kl_t18 != 1;
 #line 42 "opt/moves_kept.kl"
-    if ( kl_t10 ) goto bb16; else goto bb18;
+    if ( kl_t9 ) goto bb14; else goto bb15;
     bb1:
-#line 110 "opt/moves_kept.kl"
-    return kl_t0;
-    bb2:
-#line 113 "opt/moves_kept.kl"
-    kl__trace__G = 0;
-#line 115 "opt/moves_kept.kl"
-    kl_x_2 = kl__early__4bool( true );
-    kl_y_3 = kl__early__4bool( false );
-    kl_t4 = kl_x_2.kl_value != 4;
 #line 117 "opt/moves_kept.kl"
-    if ( kl_t4 ) goto bb6; else goto bb3;
+    kl_t3 = kl_y_2.kl_value != 3;
+#line 117 "opt/moves_kept.kl"
+    if ( kl_t3 ) goto bb4; else goto bb2;
+    bb2:
+#line 117 "opt/moves_kept.kl"
+    kl_t3 = kl__live__G != 2;
+#line 117 "opt/moves_kept.kl"
+    if ( kl_t3 ) goto bb4; else goto bb3;
     bb3:
 #line 117 "opt/moves_kept.kl"
-    kl_t4 = kl_y_3.kl_value != 3;
+    kl_t3 = kl__trace__G != 3493;
 #line 117 "opt/moves_kept.kl"
-    if ( kl_t4 ) goto bb6; else goto bb4;
+    if ( kl_t3 ) goto bb4; else goto bb16;
     bb4:
-#line 117 "opt/moves_kept.kl"
-    kl_t4 = kl__live__G != 2;
-#line 117 "opt/moves_kept.kl"
-    if ( kl_t4 ) goto bb6; else goto bb5;
-    bb5:
-#line 117 "opt/moves_kept.kl"
-    kl_t4 = kl__trace__G != 3493;
-#line 117 "opt/moves_kept.kl"
-    if ( kl_t4 ) goto bb6; else goto bb19;
-    bb6:
     kl_t0 = 10;
 #line 23 "opt/moves_kept.kl"
-    kl_t15 = kl__trace__G * 10;
+    kl_t14 = kl__trace__G * 10;
 #line 23 "opt/moves_kept.kl"
-    kl_t16 = kl_t15 + 9;
+    kl_t15 = kl_t14 + 9;
 #line 22 "opt/moves_kept.kl"
     kl__live__G = kl__live__G - 2;
-    kl_t17 = kl_t16 * 10;
+    kl_t16 = kl_t15 * 10;
 #line 23 "opt/moves_kept.kl"
-    kl_t18 = kl_t17 + 9;
+    kl_t17 = kl_t16 + 9;
 #line 23 "opt/moves_kept.kl"
-    kl__trace__G = kl_t18;
+    kl__trace__G = kl_t17;
 #line 119 "opt/moves_kept.kl"
     return kl_t0;
+    bb5:
+#line 123 "opt/moves_kept.kl"
+    kl_t6 = kl__one_path__4bool( false );
+#line 123 "opt/moves_kept.kl"
+    kl_t4 = kl_t6 != 6;
+#line 123 "opt/moves_kept.kl"
+    if ( kl_t4 ) goto bb7; else goto bb6;
+    bb6:
+#line 123 "opt/moves_kept.kl"
+    kl_t4 = kl__live__G != 0;
+#line 123 "opt/moves_kept.kl"
+    if ( kl_t4 ) goto bb7; else goto bb8;
     bb7:
-#line 123 "opt/moves_kept.kl"
-    kl_t7 = kl__one_path__4bool( false );
-#line 123 "opt/moves_kept.kl"
-    kl_t5 = kl_t7 != 6;
-#line 123 "opt/moves_kept.kl"
-    if ( kl_t5 ) goto bb9; else goto bb8;
-    bb8:
-#line 123 "opt/moves_kept.kl"
-    kl_t5 = kl__live__G != 0;
-#line 123 "opt/moves_kept.kl"
-    if ( kl_t5 ) goto bb9; else goto bb10;
-    bb9:
     kl_t0 = 11;
 #line 125 "opt/moves_kept.kl"
     return kl_t0;
-    bb10:
+    bb8:
 #line 134 "opt/moves_kept.kl"
     kl_t0 = kl__looped__(  );
-    kl_t8 = kl_t0 != 0;
+    kl_t7 = kl_t0 != 0;
 #line 135 "opt/moves_kept.kl"
+    if ( kl_t7 ) goto bb9; else goto bb10;
+    bb9:
+    return kl_t0;
+    bb10:
+#line 140 "opt/moves_kept.kl"
+    kl_t8 = kl__live__G == 0;
+#line 140 "opt/moves_kept.kl"
     if ( kl_t8 ) goto bb11; else goto bb12;
     bb11:
-    return kl_t0;
-    bb12:
-#line 140 "opt/moves_kept.kl"
-    kl_t9 = kl__live__G == 0;
-#line 140 "opt/moves_kept.kl"
-    if ( kl_t9 ) goto bb13; else goto bb14;
-    bb13:
 #line 140 "opt/moves_kept.kl"
     kl_t0 = 0;
 #line 140 "opt/moves_kept.kl"
-    goto bb15;
-    bb14:
+    goto bb13;
+    bb12:
 #line 140 "opt/moves_kept.kl"
     kl_t0 = 12;
 #line 140 "opt/moves_kept.kl"
-    goto bb15;
-    bb15:
+    goto bb13;
+    bb13:
 #line 140 "opt/moves_kept.kl"
     return kl_t0;
-    bb16:
+    bb14:
 #line 44 "opt/moves_kept.kl"
     kl_t0 = 1;
 #line 23 "opt/moves_kept.kl"
     kl__trace__G = 1299;
-    goto bb17;
-    bb17:
-#line 108 "opt/moves_kept.kl"
-    kl_t1 = kl_t0 != 0;
-#line 108 "opt/moves_kept.kl"
-    if ( kl_t1 ) goto bb1; else goto bb2;
-    bb18:
+#line 110 "opt/moves_kept.kl"
+    return kl_t0;
+    bb15:
+#line 113 "opt/moves_kept.kl"
+    kl__trace__G = 0;
+#line 115 "opt/moves_kept.kl"
+    kl_x_1 = kl__early__4bool( true );
+    kl_y_2 = kl__early__4bool( false );
+    kl_t3 = kl_x_1.kl_value != 4;
+#line 117 "opt/moves_kept.kl"
+    if ( kl_t3 ) goto bb4; else goto bb1;
+    bb16:
 #line 23 "opt/moves_kept.kl"
-    kl__trace__G = 1299;
-#line 48 "opt/moves_kept.kl"
-    kl_t0 = 0;
-#line 48 "opt/moves_kept.kl"
-    goto bb17;
-    bb19:
+    kl_t10 = kl__trace__G * 10;
 #line 23 "opt/moves_kept.kl"
-    kl_t11 = kl__trace__G * 10;
-#line 23 "opt/moves_kept.kl"
-    kl_t12 = kl_t11 + 9;
+    kl_t11 = kl_t10 + 9;
 #line 22 "opt/moves_kept.kl"
     kl__live__G = kl__live__G - 2;
-    kl_t13 = kl_t12 * 10;
+    kl_t12 = kl_t11 * 10;
 #line 23 "opt/moves_kept.kl"
-    kl_t14 = kl_t13 + 9;
+    kl_t13 = kl_t12 + 9;
 #line 23 "opt/moves_kept.kl"
-    kl__trace__G = kl_t14;
+    kl__trace__G = kl_t13;
 #line 123 "opt/moves_kept.kl"
-    kl_t6 = kl__one_path__4bool( true );
+    kl_t5 = kl__one_path__4bool( true );
 #line 123 "opt/moves_kept.kl"
-    kl_t5 = kl_t6 != 5;
+    kl_t4 = kl_t5 != 5;
 #line 123 "opt/moves_kept.kl"
-    if ( kl_t5 ) goto bb9; else goto bb7;
+    if ( kl_t4 ) goto bb7; else goto bb5;
 #line 141 "opt/moves_kept.kl"
 }
 

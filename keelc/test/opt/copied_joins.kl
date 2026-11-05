@@ -1,0 +1,49 @@
+// M11, a release build: a join that only tests a value its predecessor wrote as a constant is copied into
+// that predecessor, and the copy's test folds. Each `try` here keeps only `make`'s own `x == 3`.
+
+result<i32, i32> make( i32 x )
+{
+    if( x == 3 )
+    {
+        return result::err( 1 );
+    }
+    return result::ok( x * 2 );
+}
+
+result<i32, i32> sum( i32 s )
+{
+    return result::ok( try make( s ) + try make( s + 1 ) );
+}
+
+// The entry's first test folds, so the loop's test moves to its end.
+i32 count()
+{
+    i32 t = 0;
+    for( i32 i = 0; i < 4; i++ )
+    {
+        t = t + i;
+    }
+    return t;
+}
+
+i32 main()
+{
+    switch( sum( 0 ) )
+    {
+        case result::ok( v ):
+            if( v != 2 ) { return 1; }
+            break;
+        case result::err( _ ):
+            return 2;
+    }
+    switch( sum( 2 ) )
+    {
+        case result::ok( _ ):
+            return 3;
+        case result::err( e ):
+            if( e != 1 ) { return 4; }
+            break;
+    }
+    if( count() != 6 ) { return 5; }
+    return 0;
+}

@@ -205,7 +205,10 @@ Front_end run_front_end(
                     // Folds a local compared with itself, so SCCP branches on the constant.
                     propagate_values( function, front.types.table(), literals );
                     propagate_constants( function, front.types.table(), literals );
-                    thread_jumps( function, front.types.table(), literals );
+                    if( thread_jumps( function, front.types.table(), literals ) )
+                    {
+                        propagate_constants( function, front.types.table(), literals );
+                    }
                     // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
                     if( forward_globals( function, front.types.table(), literals ) )
                     {

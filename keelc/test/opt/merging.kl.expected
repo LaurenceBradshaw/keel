@@ -128,17 +128,15 @@ int32_t kl__main__( void )
 #line 87 "opt/merging.kl"
     return kl_t0;
     bb3:
-#line 53 "opt/merging.kl"
-    kl_t4 = kl_i_3 < 5;
-#line 53 "opt/merging.kl"
-    if ( kl_t4 ) goto bb4; else goto bb5;
-    bb4:
+#line 55 "opt/merging.kl"
     kl_t1 = kl_t1 + kl_i_3;
 #line 53 "opt/merging.kl"
     kl_i_3 = kl_i_3 + 1;
 #line 53 "opt/merging.kl"
-    goto bb3;
-    bb5:
+    kl_t4 = kl_i_3 < 5;
+#line 53 "opt/merging.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb4:
 #line 82 "opt/merging.kl"
     kl_t2 = kl_t1 != 10;
 #line 82 "opt/merging.kl"

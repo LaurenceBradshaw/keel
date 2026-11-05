@@ -433,32 +433,30 @@ int32_t kl__main__( void )
 #line 62 "opt/propagation_chains.kl"
     goto bb2;
     bb18:
-#line 49 "opt/propagation_chains.kl"
-    kl_t28 = kl_i_27 < 4;
-#line 49 "opt/propagation_chains.kl"
-    if ( kl_t28 ) goto bb19; else goto bb20;
-    bb19:
+#line 51 "opt/propagation_chains.kl"
     kl_t_26 = kl_t_26 + kl_i_27;
 #line 49 "opt/propagation_chains.kl"
     kl_i_27 = kl_i_27 + 1;
 #line 49 "opt/propagation_chains.kl"
-    goto bb18;
-    bb20:
+    kl_t28 = kl_i_27 < 4;
+#line 49 "opt/propagation_chains.kl"
+    if ( kl_t28 ) goto bb18; else goto bb19;
+    bb19:
 #line 53 "opt/propagation_chains.kl"
     kl_t29 = kl_t_26 == 6;
 #line 53 "opt/propagation_chains.kl"
-    if ( kl_t29 ) goto bb21; else goto bb22;
-    bb21:
+    if ( kl_t29 ) goto bb20; else goto bb21;
+    bb20:
 #line 53 "opt/propagation_chains.kl"
     kl_t0 = 0;
 #line 53 "opt/propagation_chains.kl"
-    goto bb23;
-    bb22:
+    goto bb22;
+    bb21:
 #line 53 "opt/propagation_chains.kl"
     kl_t0 = 1;
 #line 53 "opt/propagation_chains.kl"
-    goto bb23;
-    bb23:
+    goto bb22;
+    bb22:
 #line 104 "opt/propagation_chains.kl"
     kl_t1 = kl_t0 == 0;
 #line 104 "opt/propagation_chains.kl"

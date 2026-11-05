@@ -418,123 +418,75 @@ int32_t kl__main__( void )
     bool kl_t4;
     bool kl_t5;
     bool kl_t6;
-    bool kl_t7;
-    bool kl_t8;
-    bool kl_t9;
-    bool kl_t10;
-    int32_t kl_t11;
-    int32_t kl_t12;
-    int32_t kl_t13;
-    int32_t kl_t14;
+    int32_t kl_t7;
+    int32_t kl_t8;
 #line 14 "opt/constructors.kl"
-    kl_t11 = kl__live__G + 1;
+    kl_t7 = kl__live__G + 1;
 #line 75 "opt/constructors.kl"
-    kl_t9 = kl_t11 != 1;
+    kl_t5 = kl_t7 != 1;
 #line 75 "opt/constructors.kl"
-    if ( kl_t9 ) goto bb16; else goto bb20;
+    if ( kl_t5 ) goto bb9; else goto bb11;
     bb1:
-#line 139 "opt/constructors.kl"
-    kl_t2 = kl_t0 == 0;
-#line 139 "opt/constructors.kl"
-    if ( kl_t2 ) goto bb2; else goto bb3;
-    bb2:
-    kl_t0 = kl__branched__4bool( true );
-#line 139 "opt/constructors.kl"
-    goto bb3;
-    bb3:
-#line 143 "opt/constructors.kl"
-    kl_t3 = kl_t0 == 0;
-#line 143 "opt/constructors.kl"
-    if ( kl_t3 ) goto bb4; else goto bb5;
-    bb4:
+#line 145 "opt/constructors.kl"
     kl_t0 = kl__branched__4bool( false );
 #line 143 "opt/constructors.kl"
-    goto bb5;
-    bb5:
+    goto bb2;
+    bb2:
 #line 147 "opt/constructors.kl"
-    kl_t4 = kl_t0 == 0;
+    kl_t2 = kl_t0 == 0;
 #line 147 "opt/constructors.kl"
-    if ( kl_t4 ) goto bb6; else goto bb7;
-    bb6:
+    if ( kl_t2 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = kl__handed__(  );
 #line 147 "opt/constructors.kl"
-    goto bb7;
-    bb7:
+    goto bb4;
+    bb4:
 #line 151 "opt/constructors.kl"
-    kl_t5 = kl_t0 == 0;
+    kl_t3 = kl_t0 == 0;
 #line 151 "opt/constructors.kl"
-    if ( kl_t5 ) goto bb8; else goto bb9;
-    bb8:
+    if ( kl_t3 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = kl__sometimes__4bool( true );
 #line 151 "opt/constructors.kl"
-    goto bb9;
-    bb9:
+    goto bb6;
+    bb6:
 #line 155 "opt/constructors.kl"
-    kl_t6 = kl_t0 == 0;
+    kl_t4 = kl_t0 == 0;
 #line 155 "opt/constructors.kl"
-    if ( kl_t6 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t4 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = kl__sometimes__4bool( false );
 #line 155 "opt/constructors.kl"
-    goto bb11;
-    bb11:
+    goto bb8;
+    bb8:
 #line 160 "opt/constructors.kl"
     return kl_t0;
+    bb9:
+#line 77 "opt/constructors.kl"
+    kl_t0 = 1;
+#line 143 "opt/constructors.kl"
+    goto bb2;
+    bb10:
+#line 81 "opt/constructors.kl"
+    kl_t0 = 1;
+#line 143 "opt/constructors.kl"
+    goto bb2;
+    bb11:
+#line 19 "opt/constructors.kl"
+    kl_t8 = kl__live__G;
+#line 81 "opt/constructors.kl"
+    kl_t6 = kl_t8 == 0;
+#line 81 "opt/constructors.kl"
+    if ( kl_t6 ) goto bb12; else goto bb10;
     bb12:
-#line 14 "opt/constructors.kl"
-    kl_t13 = kl__live__G + 1;
-#line 89 "opt/constructors.kl"
-    kl_t7 = kl_t13 != 1;
-#line 89 "opt/constructors.kl"
-    if ( kl_t7 ) goto bb13; else goto bb21;
-    bb13:
-    kl_t0 = 2;
-#line 91 "opt/constructors.kl"
-    goto bb1;
-    bb14:
-#line 95 "opt/constructors.kl"
-    kl_t0 = 0;
-#line 95 "opt/constructors.kl"
-    goto bb1;
-    bb15:
-#line 95 "opt/constructors.kl"
-    kl_t0 = 2;
-#line 95 "opt/constructors.kl"
-    goto bb1;
-    bb16:
-#line 77 "opt/constructors.kl"
-    kl_t0 = 1;
-#line 77 "opt/constructors.kl"
-    goto bb19;
-    bb17:
-#line 81 "opt/constructors.kl"
-    kl_t0 = 0;
-#line 81 "opt/constructors.kl"
-    goto bb19;
-    bb18:
-#line 81 "opt/constructors.kl"
-    kl_t0 = 1;
-#line 81 "opt/constructors.kl"
-    goto bb19;
-    bb19:
-#line 135 "opt/constructors.kl"
+#line 19 "opt/constructors.kl"
+    kl__live__G = 0;
+#line 141 "opt/constructors.kl"
+    kl_t0 = kl__branched__4bool( true );
+#line 143 "opt/constructors.kl"
     kl_t1 = kl_t0 == 0;
-#line 135 "opt/constructors.kl"
-    if ( kl_t1 ) goto bb12; else goto bb1;
-    bb20:
-#line 19 "opt/constructors.kl"
-    kl_t12 = kl__live__G;
-#line 81 "opt/constructors.kl"
-    kl_t10 = kl_t12 == 0;
-#line 81 "opt/constructors.kl"
-    if ( kl_t10 ) goto bb17; else goto bb18;
-    bb21:
-#line 19 "opt/constructors.kl"
-    kl_t14 = kl__live__G;
-#line 95 "opt/constructors.kl"
-    kl_t8 = kl_t14 == 0;
-#line 95 "opt/constructors.kl"
-    if ( kl_t8 ) goto bb14; else goto bb15;
+#line 143 "opt/constructors.kl"
+    if ( kl_t1 ) goto bb1; else goto bb2;
 #line 161 "opt/constructors.kl"
 }
 

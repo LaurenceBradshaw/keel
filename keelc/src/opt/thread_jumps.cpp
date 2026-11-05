@@ -149,9 +149,141 @@ bool select_flags( Function& func, const Type_table& types, const Literal_pool& 
     return any;
 }
 
+constexpr u32 k_copied_statements = 2;
+
+// A branch on a whole local after at most `k_copied_statements` scalar writes to whole locals.
+bool small_join( const Function& func, const Block& block )
+{
+    if( block.statement_count == 0 || block.statement_count > k_copied_statements ||
+        block.terminator.kind != Terminator_kind::Branch || !whole_local( block.terminator.condition ) )
+    {
+        return false;
+    }
+
+    for( const Statement& statement : func.statements_of( block ) )
+    {
+        if( statement.kind != Statement_kind::Assign || statement.place.is_global() || !statement.place.is_whole_local() )
+        {
+            return false;
+        }
+
+        const Rvalue& value = func.rvalue( statement );
+        if( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Binary && value.kind != Rvalue_kind::Unary &&
+            value.kind != Rvalue_kind::Cast )
+        {
+            return false;
+        }
+
+        bool scalar = true;
+        for_each_operand(
+            value,
+            [&]( const Operand& operand )
+            { scalar = scalar && ( operand.kind == Operand_kind::Constant || whole_local( operand ) ); }
+        );
+        if( !scalar )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// A `goto` into a small join whose input the predecessor writes a constant takes a copy of the join,
+// so the next round folds its branch on that edge.
+bool copy_joins( Function& func, const Type_table& types, const Literal_pool& literals )
+{
+    std::vector<Block_id> copied( func.blocks.size() );
+    bool                  any = false;
+
+    for( const Block_id b : func.blocks.ids() )
+    {
+        const Block& from = func.blocks[b];
+        if( from.terminator.kind != Terminator_kind::Goto || from.terminator.targets[0] == b ||
+            !small_join( func, func.blocks[from.terminator.targets[0]] ) )
+        {
+            continue;
+        }
+
+        // Whether each local the join writes is settled by constants on this edge.
+        const Block&                           join = func.blocks[from.terminator.targets[0]];
+        std::vector<std::pair<Local_id, bool>> wrote;
+        const auto                             settled = [&]( Local_id local )
+        {
+            for( auto it = wrote.rbegin(); it != wrote.rend(); ++it )
+            {
+                if( it->first == local )
+                {
+                    return it->second;
+                }
+            }
+            return written( func, from, local, types, literals ).has_value();
+        };
+
+        for( const Statement& statement : func.statements_of( join ) )
+        {
+            bool known = true;
+            for_each_operand(
+                func.rvalue( statement ),
+                [&]( const Operand& operand )
+                { known = known && ( operand.kind == Operand_kind::Constant || settled( operand.place.local ) ); }
+            );
+            wrote.emplace_back( statement.place.local, known );
+        }
+
+        if( settled( join.terminator.condition.place.local ) )
+        {
+            copied[b.v] = from.terminator.targets[0];
+            any         = true;
+        }
+    }
+
+    if( !any )
+    {
+        return false;
+    }
+
+    std::vector<std::vector<Statement>> copies( func.blocks.size() );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        if( copied[b.v].is_valid() )
+        {
+            for( const Statement& statement : func.statements_of( copied[b.v] ) )
+            {
+                copies[b.v].push_back( func.clone( statement ) );
+            }
+        }
+    }
+
+    std::vector<Statement> statements;
+    statements.reserve( func.statements.size() );
+
+    for( const Block_id b : func.blocks.ids() )
+    {
+        Block&    block = func.blocks[b];
+        const u32 first = narrow_cast<u32>( statements.size() );
+        for( Statement& statement : func.statements_of( block ) )
+        {
+            statements.push_back( std::move( statement ) );
+        }
+        if( copied[b.v].is_valid() )
+        {
+            statements.insert(
+                statements.end(), std::make_move_iterator( copies[b.v].begin() ), std::make_move_iterator( copies[b.v].end() )
+            );
+            block.terminator = func.blocks[copied[b.v]].terminator;
+        }
+        block.first_statement = first;
+        block.statement_count = narrow_cast<u32>( statements.size() ) - first;
+    }
+
+    func.statements = std::move( statements );
+    return true;
+}
+
 } // namespace
 
-void thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals )
+bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals )
 {
     const Local_set addressed = addressed_locals( func );
     bool            changed   = false;
@@ -205,10 +337,12 @@ void thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
     }
 
     // A join every edge now goes past has no predecessor left, nor a selected flag's false arm.
-    if( select_flags( func, types, literals ) || changed )
+    const bool copied = copy_joins( func, types, literals );
+    if( select_flags( func, types, literals ) || changed || copied )
     {
         remove_unreachable_blocks( func );
     }
+    return copied;
 }
 
 } // namespace keel

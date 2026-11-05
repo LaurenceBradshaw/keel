@@ -10,6 +10,7 @@ namespace keel
 {
 // After propagate_constants: an edge into a block that only branches on a local goes straight to the
 // arm that local's value on the edge takes, and a branch whose arms only set one flag sets it
-// without one; release only.
-void thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals );
+// without one. Whether a small join was copied into a predecessor that settles its branch, for SCCP
+// to fold; release only.
+bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals );
 } // namespace keel
