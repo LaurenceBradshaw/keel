@@ -1,0 +1,16 @@
+// A private overload that alone takes the arguments is named, not the public one's arity.
+class Acct
+{
+    i32 v;
+    public Acct() { v = 0; }
+    private Acct( i32 x ) { v = x; }
+    public i32 pick() { return v; }
+    private i32 pick( i32 x ) { return x; }
+};
+
+i32 main()
+{
+    Acct a = Acct( 3 );
+    Acct b = Acct();
+    return b.pick( 3 );
+}

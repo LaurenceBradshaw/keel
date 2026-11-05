@@ -716,13 +716,15 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
     std::vector<Node_id> candidates;
     std::vector<Node_id> hidden;
 
-    // A private method is skipped from outside, as a private constructor is; with none visible
-    // they are all kept, for the caller to refuse.
+    // A private method is skipped from outside, as a private constructor is. With none visible, or
+    // only a private one taking this many arguments, the private ones are kept for the caller to refuse.
     for( Node_id candidate = first; candidate.is_valid(); candidate = next_overload( candidate ) )
     {
         ( ast_.is_visible_from( candidate, from ) ? candidates : hidden ).push_back( candidate );
     }
-    if( candidates.empty() )
+    const auto takes = [&]( Node_id candidate )
+    { return ast_.explicit_params( candidate ).size() == ast_.arguments( call ).size(); };
+    if( candidates.empty() || ( std::ranges::none_of( candidates, takes ) && std::ranges::any_of( hidden, takes ) ) )
     {
         candidates = std::move( hidden );
     }

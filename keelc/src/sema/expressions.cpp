@@ -509,7 +509,7 @@ Type_id Expressions::infer_call( Node_id id )
             }
         }
 
-        candidates = constructor_candidates( callee, decl );
+        candidates = constructor_candidates( id, decl );
 
         if( candidates.empty() )
         {
@@ -657,12 +657,16 @@ Type_id Expressions::infer_call( Node_id id )
 // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructors, but the
 // result is the type itself - a constructor returns nothing and writes through `this`. They share
 // the type's name rather than a scope, so they have no chain to walk.
-std::vector<Node_id> Expressions::constructor_candidates( Node_id callee, Node_id aggregate )
+std::vector<Node_id> Expressions::constructor_candidates( Node_id call, Node_id aggregate )
 {
-    const std::string_view name = interner_.text( ast_.name( callee ) );
+    const Node_id          callee    = ast_.callee( call );
+    const std::string_view name      = interner_.text( ast_.name( callee ) );
+    const std::size_t      arguments = ast_.arguments( call ).size();
+    const auto             takes = [&]( Node_id candidate ) { return ast_.explicit_params( candidate ).size() == arguments; };
 
     std::vector<Node_id> candidates;
-    std::size_t          hidden = 0;
+    std::size_t          hidden       = 0;
+    bool                 hidden_takes = false;
 
     for( const Node_id member : ast_.members( aggregate ) )
     {
@@ -686,10 +690,14 @@ std::vector<Node_id> Expressions::constructor_candidates( Node_id callee, Node_i
         else
         {
             ++hidden;
+            hidden_takes = hidden_takes || takes( member );
         }
     }
 
-    if( candidates.empty() && hidden != 0 )
+    // Only a private one takes this many arguments: that, not the public ones' arity, is the mistake.
+    const bool only_hidden_takes = hidden_takes && std::ranges::none_of( candidates, takes );
+
+    if( ( candidates.empty() && hidden != 0 ) || only_hidden_takes )
     {
         const bool is_prelude_str = aggregate == table_.prelude().str;
 
@@ -707,11 +715,16 @@ std::vector<Node_id> Expressions::constructor_candidates( Node_id callee, Node_i
 
         reporter_.error_at(
             ast_.span( callee ),
-            fmt::format( "`{}`'s constructor is private", name ),
+            candidates.empty()
+                ? fmt::format( "`{}`'s constructor is private", name )
+                : fmt::format(
+                      "`{}`'s constructor taking {} argument{} is private", name, arguments, arguments == 1 ? "" : "s"
+                  ),
             is_prelude_str ? "only a string literal makes one"
             : has_factory  ? "build it through one of its own static methods instead"
                            : ""
         );
+        candidates.clear();
     }
     else if( candidates.empty() )
     {

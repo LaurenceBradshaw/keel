@@ -129,7 +129,7 @@ private:
     Type_id infer_bare_variant( Node_id id, Type_id scrutinee ); // `case Red:`, invalid unless a variant
     Type_id infer_call( Node_id id );
     // Empty after reporting why none can be called.
-    std::vector<Node_id> constructor_candidates( Node_id callee, Node_id aggregate );
+    std::vector<Node_id> constructor_candidates( Node_id call, Node_id aggregate );
     // A callee that names a variable, parameter or field rather than a function.
     Type_id call_through_value( Node_id id, Node_id decl );
     // Invalid after reporting why none was chosen.

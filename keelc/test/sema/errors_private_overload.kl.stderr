@@ -1,0 +1,13 @@
+error: `Acct`'s constructor taking 1 argument is private
+  --> sema/errors_private_overload.kl:13:14
+   |
+13 |     Acct a = Acct( 3 );
+   |              ^^^^
+
+error: `pick` is private to `Acct`
+  --> sema/errors_private_overload.kl:15:12
+   |
+15 |     return b.pick( 3 );
+   |            ^^^^^^ only that type's own members may name it
+
+2 errors generated
