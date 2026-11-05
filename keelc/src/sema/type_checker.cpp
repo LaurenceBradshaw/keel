@@ -118,6 +118,11 @@ public:
     }
 
     Types run();
+    // The unused names whose type may own, and so may be kept for their destructor.
+    std::span<const Node_id> may_own_unused() const
+    {
+        return may_own_unused_;
+    }
 
 private:
     void absorb( const Loaded_state& state );
@@ -150,6 +155,8 @@ private:
     Coverage          coverage_;
     Statements        statements_;
     Signatures        signatures_;
+
+    std::vector<Node_id> may_own_unused_;
 };
 
 Types Checker::run()
@@ -178,6 +185,16 @@ Types Checker::run()
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
     // complete until every body has been.
     generic_recursion_.check();
+
+    // Asked here, while the bounds are known: a `T` that is `copyable` cannot own.
+    for( const Node_id unused : resolution_.unused().names )
+    {
+        const Type_id type = types_.type_of( unused );
+        if( !type.is_valid() || !bounds_.satisfies( type, Bound::Copyable ) )
+        {
+            may_own_unused_.push_back( unused );
+        }
+    }
 
     return Types(
         types_.take_table(),
@@ -309,15 +326,17 @@ bool may_act( const Ast& ast, const Types& types, Node_id expr )
 
 // A local that owns is kept for its destructor, which runs at the end of its scope.
 void report_unused(
-    const Ast&            ast,
-    const Resolution&     resolution,
-    Types&                types,
-    const Source_manager& sm,
-    const Interner&       interner,
-    Diagnostics&          diags
+    const Ast&               ast,
+    const Resolution&        resolution,
+    Types&                   types,
+    std::span<const Node_id> may_own,
+    const Source_manager&    sm,
+    const Interner&          interner,
+    Diagnostics&             diags
 )
 {
     sema::Reporter reporter( sm, diags );
+    const auto     owns = [&]( Node_id n ) { return std::ranges::find( may_own, n ) != may_own.end(); };
 
     for( const Node_id unused : resolution.unused().names )
     {
@@ -333,8 +352,7 @@ void report_unused(
 
             // `_` does not drop at once, as `_ = e;` does.
             const Type_id type  = types.type_of( unused );
-            const bool    owned = parameter_mode_of( ast, unused ) == Param_mode::Move && type.is_valid() &&
-                               instance_owns( ast, types.table(), type, types.recorded() );
+            const bool    owned = parameter_mode_of( ast, unused ) == Param_mode::Move && type.is_valid() && owns( unused );
             reporter.warn_at(
                 Warning::Unused_parameter,
                 ast.name_span( unused ),
@@ -345,9 +363,7 @@ void report_unused(
             continue;
         }
 
-        const Type_id type = types.type_of( unused );
-        if( !is_borrowed_binding( ast, types, unused ) && ( !type.is_valid() || types.table().mentions_parameter( type ) ||
-                                                            instance_owns( ast, types.table(), type, types.recorded() ) ) )
+        if( !is_borrowed_binding( ast, types, unused ) && owns( unused ) )
         {
             continue;
         }
@@ -421,12 +437,13 @@ Types type_check(
     std::span<const Loaded_state> states
 )
 {
-    Types types = sema::Checker( ast, interner, resolution, sm, literals, diags, std::move( table ), states ).run();
+    sema::Checker checker( ast, interner, resolution, sm, literals, diags, std::move( table ), states );
+    Types         types = checker.run();
 
     // No warnings over errors: a use inside an `Error` node is never bound.
     if( !diags.has_errors() )
     {
-        report_unused( ast, resolution, types, sm, interner, diags );
+        report_unused( ast, resolution, types, checker.may_own_unused(), sm, interner, diags );
     }
 
     return types;

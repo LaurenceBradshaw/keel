@@ -3239,6 +3239,20 @@ TEST_CASE( "type_check_warns_about_unused_names", "[sema][unused]" )
         REQUIRE( p.rendered().empty() );
     }
 
+    SECTION( "a parameter type that cannot own is warned; one that may own is kept" )
+    {
+        const Typed p( "void kept<T>( move T a, T b ) { T spare = move a; const T* p = &b; }\n"
+                       "void copied<T>( move T a, T b ) where T : copyable { T spare = b; }\n"
+                       "i32 main() { kept<i32>( 1, 2 ); copied<i32>( 1, 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( count( p.rendered(), "unused variable `spare`" ) == 1 );
+        REQUIRE( count( p.rendered(), "unused variable `p`" ) == 1 );
+        REQUIRE( count( p.rendered(), "unused parameter `a`" ) == 1 );
+        REQUIRE( p.rendered().find( "still drops" ) == std::string::npos );
+    }
+
     SECTION( "nor beside an error" )
     {
         const Typed p( "i32 main() { i32 x = true; return 0; }" );
