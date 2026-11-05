@@ -711,13 +711,20 @@ Node_id Overloads::select_overload(
 
 // The same narrowing, made from a receiver's members rather than from a scope. A method call writes
 // no type arguments - the receiver carries them - so arity is the only filter before the types.
-std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface )
+std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface, Node_id from )
 {
     std::vector<Node_id> candidates;
+    std::vector<Node_id> hidden;
 
+    // A private method is skipped from outside, as a private constructor is; with none visible
+    // they are all kept, for the caller to refuse.
     for( Node_id candidate = first; candidate.is_valid(); candidate = next_overload( candidate ) )
     {
-        candidates.push_back( candidate );
+        ( ast_.is_visible_from( candidate, from ) ? candidates : hidden ).push_back( candidate );
+    }
+    if( candidates.empty() )
+    {
+        candidates = std::move( hidden );
     }
 
     if( candidates.size() == 1 )

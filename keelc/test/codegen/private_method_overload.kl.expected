@@ -1,0 +1,129 @@
+// codegen/private_method_overload.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Acct;
+
+struct kl__Acct
+{
+    int32_t kl_n;
+};
+
+int32_t kl__pick__S4Acct_3i32( struct kl__Acct*, int32_t );
+int32_t kl__pick__S4Acct_3i64( struct kl__Acct*, int64_t );
+int32_t kl__inside__S4Acct( struct kl__Acct* );
+void kl__Acct__R4Acct__ctor( struct kl__Acct* );
+int32_t kl__main__( void );
+
+#line 6 "codegen/private_method_overload.kl"
+int32_t kl__pick__S4Acct_3i32( struct kl__Acct* kl_this_1, int32_t kl_t2 )
+{
+    int32_t kl_t0;
+    ( void ) kl_this_1;
+    ( void ) kl_t2;
+#line 6 "codegen/private_method_overload.kl"
+    kl_t0 = 1;
+#line 6 "codegen/private_method_overload.kl"
+    return kl_t0;
+#line 6 "codegen/private_method_overload.kl"
+}
+
+#line 7 "codegen/private_method_overload.kl"
+int32_t kl__pick__S4Acct_3i64( struct kl__Acct* kl_this_1, int64_t kl_t2 )
+{
+    int32_t kl_t0;
+    ( void ) kl_this_1;
+    ( void ) kl_t2;
+#line 7 "codegen/private_method_overload.kl"
+    kl_t0 = 2;
+#line 7 "codegen/private_method_overload.kl"
+    return kl_t0;
+#line 7 "codegen/private_method_overload.kl"
+}
+
+#line 8 "codegen/private_method_overload.kl"
+int32_t kl__inside__S4Acct( struct kl__Acct* kl_this_1 )
+{
+    int32_t kl_t0;
+    struct kl__Acct* kl_t2;
+    int32_t kl_t3;
+#line 8 "codegen/private_method_overload.kl"
+    kl_t2 = &( *kl_this_1 );
+#line 8 "codegen/private_method_overload.kl"
+    kl_t3 = kl__pick__S4Acct_3i32( kl_t2, 1 );
+#line 8 "codegen/private_method_overload.kl"
+    kl_t0 = kl_t3;
+#line 8 "codegen/private_method_overload.kl"
+    return kl_t0;
+#line 8 "codegen/private_method_overload.kl"
+}
+
+#line 9 "codegen/private_method_overload.kl"
+void kl__Acct__R4Acct__ctor( struct kl__Acct* kl_this_1 )
+{
+#line 9 "codegen/private_method_overload.kl"
+    ( *kl_this_1 ).kl_n = 0;
+#line 9 "codegen/private_method_overload.kl"
+    return;
+#line 9 "codegen/private_method_overload.kl"
+}
+
+#line 12 "codegen/private_method_overload.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Acct kl_a_1;
+    struct kl__Acct* kl_t2;
+    struct kl__Acct* kl_t4;
+    int64_t kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    struct kl__Acct* kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+#line 14 "codegen/private_method_overload.kl"
+    kl_t2 = &kl_a_1;
+#line 14 "codegen/private_method_overload.kl"
+    kl__Acct__R4Acct__ctor( kl_t2 );
+    kl_t4 = &kl_a_1;
+#line 15 "codegen/private_method_overload.kl"
+    kl_t5 = ( int64_t ) 1;
+#line 15 "codegen/private_method_overload.kl"
+    kl_t6 = kl__pick__S4Acct_3i64( kl_t4, kl_t5 );
+#line 15 "codegen/private_method_overload.kl"
+    kl_t7 = kl_t6 != 2;
+#line 15 "codegen/private_method_overload.kl"
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 15 "codegen/private_method_overload.kl"
+    kl_t0 = 1;
+#line 15 "codegen/private_method_overload.kl"
+    return kl_t0;
+    bb2:
+#line 16 "codegen/private_method_overload.kl"
+    kl_t8 = &kl_a_1;
+#line 16 "codegen/private_method_overload.kl"
+    kl_t9 = kl__inside__S4Acct( kl_t8 );
+#line 16 "codegen/private_method_overload.kl"
+    kl_t10 = kl_t9 != 1;
+#line 16 "codegen/private_method_overload.kl"
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb3:
+#line 16 "codegen/private_method_overload.kl"
+    kl_t0 = 2;
+#line 16 "codegen/private_method_overload.kl"
+    return kl_t0;
+    bb4:
+#line 17 "codegen/private_method_overload.kl"
+    kl_t0 = 0;
+#line 17 "codegen/private_method_overload.kl"
+    return kl_t0;
+}
+
+#line 12 "codegen/private_method_overload.kl"
+int main( void )
+{
+#line 12 "codegen/private_method_overload.kl"
+    return (int) kl__main__();
+}

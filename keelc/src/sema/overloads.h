@@ -137,7 +137,7 @@ public:
     // parameters rather than the declaration's `T`. Invalid for a free function, which is named
     // rather than instantiated - the method pair below takes the receiver for the same reason.
     std::vector<Node_id> viable_overloads( const Call_site& site, std::span<const Node_id> candidates );
-    std::vector<Node_id> viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface );
+    std::vector<Node_id> viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface, Node_id from );
 
     Node_id select_overload(
         const Call_site&                site,

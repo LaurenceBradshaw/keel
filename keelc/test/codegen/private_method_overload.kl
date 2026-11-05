@@ -1,0 +1,18 @@
+// A private method is not a candidate from outside its type: `pick( i32 )` is the exact match, but
+// only `pick( i64 )` is seen. Inside, both are.
+class Acct
+{
+    private i32 n;
+    private i32 pick( i32 _ ) { return 1; }
+    public i32 pick( i64 _ ) { return 2; }
+    public i32 inside() { return pick( cast<i32>( 1 ) ); }
+    public Acct() { n = 0; }
+};
+
+i32 main()
+{
+    Acct a = Acct();
+    if( a.pick( cast<i32>( 1 ) ) != 2 ) { return 1; }
+    if( a.inside() != 1 ) { return 2; }
+    return 0;
+}

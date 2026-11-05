@@ -1497,7 +1497,7 @@ Node_id Expressions::
     choose_method( Node_id id, Node_id first, Type_id receiver, std::span<const Type_id> through, std::vector<Argument_shape>& shapes, Type_id& interface )
 {
     const std::vector<Node_id> viable =
-        overloads_.viable_methods( id, first, receiver, through.empty() ? Type_id {} : through.front() );
+        overloads_.viable_methods( id, first, receiver, through.empty() ? Type_id {} : through.front(), current_type() );
 
     if( viable.size() == 1 && through.size() <= 1 )
     {
