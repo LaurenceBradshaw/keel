@@ -428,6 +428,29 @@ Type_id Literals::standalone_literal_type( Node_id id, Type_id known ) const
 // hold is legal, and its answer does not depend on that operand at all. D41 is why it compiles;
 // this is why it is still worth saying. Deliberately a warning - the code is well defined and
 // means something, it just does not mean what it looks like.
+namespace
+{
+
+// `a op b` as `b op' a`.
+Token_kind mirrored( Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Less:
+        return Token_kind::Greater;
+    case Token_kind::Greater:
+        return Token_kind::Less;
+    case Token_kind::Less_equal:
+        return Token_kind::Greater_equal;
+    case Token_kind::Greater_equal:
+        return Token_kind::Less_equal;
+    default:
+        return op;
+    }
+}
+
+} // namespace
+
 void Literals::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id lhs_type, Type_id rhs_type )
 {
     const Folded folded[2] = {
@@ -442,9 +465,51 @@ void Literals::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id l
         const Folded  value = constant_on_the_left ? folded[0] : folded[1];
         const Type_id other = constant_on_the_left ? rhs_type : lhs_type;
 
-        if( !value.constant || value.overflowed || table_.fits( value.value.magnitude, value.value.negative, other ) )
+        if( !value.constant || value.overflowed )
         {
             continue;
+        }
+
+        const u64  magnitude = value.value.magnitude;
+        const bool negative  = value.value.negative;
+
+        if( table_.fits( magnitude, negative, other ) )
+        {
+            if( !table_.is_integer( other ) )
+            {
+                continue;
+            }
+
+            // In range, but on an edge: one step further out no longer fits.
+            const bool at_max = !negative && ( magnitude == ~u64 {} || !table_.fits( magnitude + 1, false, other ) );
+            const bool at_min =
+                negative ? !table_.fits( magnitude + 1, true, other ) : magnitude == 0 && !table_.fits( 1, true, other );
+
+            // Read as `other op constant`: `>= min` and `<= max` hold, `< min` and `> max` never do.
+            const Token_kind seen = constant_on_the_left ? mirrored( op ) : op;
+            const bool       always_true =
+                ( at_min && seen == Token_kind::Greater_equal ) || ( at_max && seen == Token_kind::Less_equal );
+            const bool always_false = ( at_min && seen == Token_kind::Less ) || ( at_max && seen == Token_kind::Greater );
+
+            if( !always_true && !always_false )
+            {
+                continue;
+            }
+
+            reporter_.warn_at(
+                Warning::Constant_comparison,
+                ast_.span( id ),
+                fmt::format( "this comparison is always {}", always_true ? "true" : "false" ),
+                fmt::format(
+                    "`{}{}` is the {} `{}`",
+                    negative ? "-" : "",
+                    magnitude,
+                    at_min ? "smallest" : "largest",
+                    table_.name( other )
+                )
+            );
+
+            return;
         }
 
         // A range is contiguous, so a value outside it is above all of it or below all of it, and
@@ -853,6 +918,57 @@ TEST_CASE( "type_checker_lets_a_literal_adopt_the_other_operand", "[sema][types]
         REQUIRE( p.clean() );
         REQUIRE( p.rendered().find( "this comparison is always true" ) != std::string::npos );
         REQUIRE( p.rendered().find( "`300` is outside the range of `u8`" ) != std::string::npos );
+    }
+
+    SECTION( "a constant on the type's own edge settles it too" )
+    {
+        struct Case
+        {
+            const char* source;
+            const char* answer;
+            const char* help;
+        };
+
+        static const Case cases[] = {
+            { "i32 main() { u8 b = 1; if( b >= 0 ) { return 1; } return 0; }", "always true", "`0` is the smallest `u8`" },
+            { "i32 main() { u8 b = 1; if( b <= 255 ) { return 1; } return 0; }", "always true", "`255` is the largest `u8`" },
+            { "i32 main() { u8 b = 1; if( b > 255 ) { return 1; } return 0; }", "always false", "`255` is the largest `u8`" },
+            { "i32 main() { u32 n = 1; if( n < 0 ) { return 1; } return 0; }", "always false", "`0` is the smallest `u32`" },
+            { "i32 main() { i8 t = 1; if( -128 > t ) { return 1; } return 0; }", "always false", "`-128` is the smallest `i8`"
+            },
+            { "i32 main() { u64 n = 1; if( 18446744073709551615 >= n ) { return 1; } return 0; }",
+              "always true",
+              "`18446744073709551615` is the largest `u64`" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( c.source );
+
+            INFO( "source: " << c.source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.rendered().find( c.answer ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+        }
+    }
+
+    // An edge with an operator that still depends on the operand.
+    SECTION( "but not when the operand still decides" )
+    {
+        static const char* sources[] = {
+            "i32 main() { u8 b = 1; if( b > 0 ) { return 1; } return 0; }",
+            "i32 main() { u8 b = 1; if( b == 255 ) { return 1; } return 0; }",
+            "i32 main() { u8 b = 1; if( 0 >= b ) { return 1; } return 0; }",
+            "i32 main() { i32 x = 1; if( x >= 0 ) { return 1; } return 0; }",
+        };
+
+        for( const char* source : sources )
+        {
+            const Typed p( source );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.rendered().find( "this comparison" ) == std::string::npos );
+        }
     }
 
     // Two literals have nothing to adopt from, so both take their defaults.
