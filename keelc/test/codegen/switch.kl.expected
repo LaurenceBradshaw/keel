@@ -14,9 +14,6 @@ int32_t kl__weight__6Colour( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-    bool kl_t4;
-#line 17 "codegen/switch.kl"
     kl_t2 = kl_c_1 == 0;
 #line 17 "codegen/switch.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
@@ -34,13 +31,13 @@ int32_t kl__weight__6Colour( int32_t kl_c_1 )
     return kl_t0;
     bb4:
 #line 18 "codegen/switch.kl"
-    kl_t3 = kl_c_1 == 1;
+    kl_t2 = kl_c_1 == 1;
 #line 18 "codegen/switch.kl"
-    if ( kl_t3 ) goto bb1; else goto bb5;
+    if ( kl_t2 ) goto bb1; else goto bb5;
     bb5:
-    kl_t4 = kl_c_1 == 2;
+    kl_t2 = kl_c_1 == 2;
 #line 20 "codegen/switch.kl"
-    if ( kl_t4 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 25 "codegen/switch.kl"
 }
 
@@ -49,9 +46,6 @@ int32_t kl__exhaustive__6Colour( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-    bool kl_t4;
-#line 33 "codegen/switch.kl"
     kl_t2 = kl_c_1 == 0;
 #line 33 "codegen/switch.kl"
     if ( kl_t2 ) goto bb1; else goto bb5;
@@ -74,13 +68,13 @@ int32_t kl__exhaustive__6Colour( int32_t kl_c_1 )
     return kl_t0;
     bb5:
 #line 35 "codegen/switch.kl"
-    kl_t3 = kl_c_1 == 1;
+    kl_t2 = kl_c_1 == 1;
 #line 35 "codegen/switch.kl"
-    if ( kl_t3 ) goto bb2; else goto bb6;
+    if ( kl_t2 ) goto bb2; else goto bb6;
     bb6:
-    kl_t4 = kl_c_1 == 2;
+    kl_t2 = kl_c_1 == 2;
 #line 37 "codegen/switch.kl"
-    if ( kl_t4 ) goto bb3; else goto bb4;
+    if ( kl_t2 ) goto bb3; else goto bb4;
 #line 42 "codegen/switch.kl"
 }
 

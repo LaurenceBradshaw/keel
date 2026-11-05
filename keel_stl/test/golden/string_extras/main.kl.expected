@@ -5613,9 +5613,8 @@ int64_t kl__reason__Q2kl11parse_error( struct kl_2kl6string_parse_error kl_e_1 )
     uint64_t kl_at_3;
     int64_t kl_t4;
     bool kl_t5;
-    bool kl_t6;
+    int64_t kl_t6;
     int64_t kl_t7;
-    int64_t kl_t8;
 #line 150 "string_extras/main.kl"
     kl_t2 = kl_e_1.tag == 1;
 #line 150 "string_extras/main.kl"
@@ -5629,22 +5628,22 @@ int64_t kl__reason__Q2kl11parse_error( struct kl_2kl6string_parse_error kl_e_1 )
 #line 151 "string_extras/main.kl"
     if ( kl_t5 ) goto bb6; else goto bb5;
     bb2:
-    kl_t7 = -1;
+    kl_t6 = -1;
 #line 153 "string_extras/main.kl"
-    kl_t0 = kl_t7;
+    kl_t0 = kl_t6;
 #line 153 "string_extras/main.kl"
     return kl_t0;
     bb3:
-    kl_t8 = -2;
+    kl_t7 = -2;
 #line 155 "string_extras/main.kl"
-    kl_t0 = kl_t8;
+    kl_t0 = kl_t7;
 #line 155 "string_extras/main.kl"
     return kl_t0;
     bb4:
 #line 152 "string_extras/main.kl"
-    kl_t6 = kl_e_1.tag == 0;
+    kl_t2 = kl_e_1.tag == 0;
 #line 152 "string_extras/main.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
     bb5:
 #line 151 "string_extras/main.kl"
     kl_rt_panic( "string_extras/main.kl", 151, "cast out of range: cast<i64>( at )" );

@@ -2,8 +2,6 @@ fn bucket {
     let _0: i32; // return slot
     let _1: i32; // parameter n
     let _2: bool;
-    let _3: bool;
-    let _4: bool;
 
     bb0:
         _2 = copy _1 >= const 1
@@ -22,18 +20,17 @@ fn bucket {
         return
 
     bb4:
-        _3 = copy _1 < const 5
-        branch copy _3 -> bb1, bb5
+        _2 = copy _1 < const 5
+        branch copy _2 -> bb1, bb5
 
     bb5:
-        _4 = copy _1 == const 20
-        branch copy _4 -> bb2, bb3
+        _2 = copy _1 == const 20
+        branch copy _2 -> bb2, bb3
 }
 fn grade {
     let _0: i32; // return slot
     let _1: f64; // parameter x
     let _2: bool;
-    let _3: bool;
 
     bb0:
         _2 = copy _1 >= const 0
@@ -48,8 +45,8 @@ fn grade {
         return
 
     bb3:
-        _3 = copy _1 < const 1
-        branch copy _3 -> bb1, bb2
+        _2 = copy _1 < const 1
+        branch copy _2 -> bb1, bb2
 }
 fn main {
     let _0: i32; // return slot

@@ -14,11 +14,6 @@ int32_t kl__bucket__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-    bool kl_t4;
-    bool kl_t5;
-    bool kl_t6;
-#line 11 "codegen/switch_ranges.kl"
     kl_t2 = kl_n_1 >= 1;
 #line 11 "codegen/switch_ranges.kl"
     if ( kl_t2 ) goto bb4; else goto bb5;
@@ -38,23 +33,23 @@ int32_t kl__bucket__3i32( int32_t kl_n_1 )
     return kl_t0;
     bb4:
 #line 11 "codegen/switch_ranges.kl"
-    kl_t3 = kl_n_1 < 5;
+    kl_t2 = kl_n_1 < 5;
 #line 11 "codegen/switch_ranges.kl"
-    if ( kl_t3 ) goto bb1; else goto bb5;
+    if ( kl_t2 ) goto bb1; else goto bb5;
     bb5:
-    kl_t4 = kl_n_1 >= 5;
+    kl_t2 = kl_n_1 >= 5;
 #line 13 "codegen/switch_ranges.kl"
-    if ( kl_t4 ) goto bb6; else goto bb7;
+    if ( kl_t2 ) goto bb6; else goto bb7;
     bb6:
 #line 13 "codegen/switch_ranges.kl"
-    kl_t5 = kl_n_1 < 10;
+    kl_t2 = kl_n_1 < 10;
 #line 13 "codegen/switch_ranges.kl"
-    if ( kl_t5 ) goto bb2; else goto bb7;
+    if ( kl_t2 ) goto bb2; else goto bb7;
     bb7:
 #line 14 "codegen/switch_ranges.kl"
-    kl_t6 = kl_n_1 == 20;
+    kl_t2 = kl_n_1 == 20;
 #line 14 "codegen/switch_ranges.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 19 "codegen/switch_ranges.kl"
 }
 
@@ -63,10 +58,6 @@ int32_t kl__grade__3f64( double kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-    bool kl_t4;
-    bool kl_t5;
-#line 27 "codegen/switch_ranges.kl"
     kl_t2 = kl_x_1 >= 0.0;
 #line 27 "codegen/switch_ranges.kl"
     if ( kl_t2 ) goto bb4; else goto bb5;
@@ -85,18 +76,18 @@ int32_t kl__grade__3f64( double kl_x_1 )
     return kl_t0;
     bb4:
 #line 27 "codegen/switch_ranges.kl"
-    kl_t3 = kl_x_1 < 1.0;
+    kl_t2 = kl_x_1 < 1.0;
 #line 27 "codegen/switch_ranges.kl"
-    if ( kl_t3 ) goto bb1; else goto bb5;
+    if ( kl_t2 ) goto bb1; else goto bb5;
     bb5:
-    kl_t4 = kl_x_1 >= 1.0;
+    kl_t2 = kl_x_1 >= 1.0;
 #line 29 "codegen/switch_ranges.kl"
-    if ( kl_t4 ) goto bb6; else goto bb3;
+    if ( kl_t2 ) goto bb6; else goto bb3;
     bb6:
 #line 29 "codegen/switch_ranges.kl"
-    kl_t5 = kl_x_1 < 10.0;
+    kl_t2 = kl_x_1 < 10.0;
 #line 29 "codegen/switch_ranges.kl"
-    if ( kl_t5 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 34 "codegen/switch_ranges.kl"
 }
 

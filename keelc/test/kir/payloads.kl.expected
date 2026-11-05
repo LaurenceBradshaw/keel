@@ -3,10 +3,9 @@ fn area {
     let _1: Shape; // parameter s
     let _2: bool;
     let _3: f64; // r
-    let _4: bool;
-    let _5: f64; // w
-    let _6: f64; // h
-    let _7: f64;
+    let _4: f64; // w
+    let _5: f64; // h
+    let _6: f64;
 
     bb0:
         _2 = copy _1.tag == const 0
@@ -19,12 +18,12 @@ fn area {
         return
 
     bb2:
+        storage_live _4
+        _4 = copy _1.width
         storage_live _5
-        _5 = copy _1.width
-        storage_live _6
-        _6 = copy _1.height
-        _7 = copy _5 * copy _6
-        _0 = copy _7
+        _5 = copy _1.height
+        _6 = copy _4 * copy _5
+        _0 = copy _6
         return
 
     bb3:
@@ -32,8 +31,8 @@ fn area {
         return
 
     bb4:
-        _4 = copy _1.tag == const 1
-        branch copy _4 -> bb2, bb3
+        _2 = copy _1.tag == const 1
+        branch copy _2 -> bb2, bb3
 }
 fn code {
     let _0: i32; // return slot

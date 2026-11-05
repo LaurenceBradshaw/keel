@@ -34,10 +34,9 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     double kl_r_3;
     double kl_t4;
     double kl_t5;
-    bool kl_t6;
-    double kl_w_7;
-    double kl_h_8;
-    double kl_t9;
+    double kl_w_6;
+    double kl_h_7;
+    double kl_t8;
 #line 23 "codegen/payloads.kl"
     kl_t2 = kl_s_1.tag == 0;
 #line 23 "codegen/payloads.kl"
@@ -54,12 +53,12 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     return kl_t0;
     bb2:
 #line 25 "codegen/payloads.kl"
-    kl_w_7 = kl_s_1.kl_4Rect_width;
+    kl_w_6 = kl_s_1.kl_4Rect_width;
 #line 25 "codegen/payloads.kl"
-    kl_h_8 = kl_s_1.kl_4Rect_height;
-    kl_t9 = kl_w_7 * kl_h_8;
+    kl_h_7 = kl_s_1.kl_4Rect_height;
+    kl_t8 = kl_w_6 * kl_h_7;
 #line 26 "codegen/payloads.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = kl_t8;
 #line 26 "codegen/payloads.kl"
     return kl_t0;
     bb3:
@@ -68,9 +67,9 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     return kl_t0;
     bb4:
 #line 25 "codegen/payloads.kl"
-    kl_t6 = kl_s_1.tag == 1;
+    kl_t2 = kl_s_1.tag == 1;
 #line 25 "codegen/payloads.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 30 "codegen/payloads.kl"
 }
 

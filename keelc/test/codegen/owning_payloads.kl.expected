@@ -672,18 +672,17 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     struct kl__Buf* kl_b_3;
     struct kl__Buf* kl_t4;
     uint64_t kl_t5;
-    bool kl_t6;
-    uint64_t kl_extra_7;
-    struct kl__Buf* kl_left_8;
-    struct kl__Buf* kl_right_9;
-    struct kl__Buf* kl_t10;
-    uint64_t kl_t11;
-    bool kl_t12;
-    uint64_t kl_t13;
-    struct kl__Buf* kl_t14;
-    uint64_t kl_t15;
-    bool kl_t16;
-    uint64_t kl_t17;
+    uint64_t kl_extra_6;
+    struct kl__Buf* kl_left_7;
+    struct kl__Buf* kl_right_8;
+    struct kl__Buf* kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    uint64_t kl_t12;
+    struct kl__Buf* kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    uint64_t kl_t16;
 #line 71 "codegen/owning_payloads.kl"
     kl_t2 = ( *kl_h_1 ).tag == 0;
 #line 71 "codegen/owning_payloads.kl"
@@ -700,49 +699,49 @@ uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
     return kl_t0;
     bb2:
 #line 73 "codegen/owning_payloads.kl"
-    kl_extra_7 = ( *kl_h_1 ).kl_4Pair_extra;
+    kl_extra_6 = ( *kl_h_1 ).kl_4Pair_extra;
 #line 73 "codegen/owning_payloads.kl"
-    kl_left_8 = &( *kl_h_1 ).kl_4Pair_left;
+    kl_left_7 = &( *kl_h_1 ).kl_4Pair_left;
 #line 73 "codegen/owning_payloads.kl"
-    kl_right_9 = &( *kl_h_1 ).kl_4Pair_right;
-    kl_t10 = &( *kl_left_8 );
+    kl_right_8 = &( *kl_h_1 ).kl_4Pair_right;
+    kl_t9 = &( *kl_left_7 );
 #line 74 "codegen/owning_payloads.kl"
-    kl_t11 = kl__get__S3Buf( kl_t10 );
+    kl_t10 = kl__get__S3Buf( kl_t9 );
 #line 74 "codegen/owning_payloads.kl"
-    kl_t12 = __builtin_add_overflow( kl_extra_7, kl_t11, &( uint64_t ) { 0 } );
+    kl_t11 = __builtin_add_overflow( kl_extra_6, kl_t10, &( uint64_t ) { 0 } );
 #line 74 "codegen/owning_payloads.kl"
-    if ( kl_t12 ) goto bb5; else goto bb6;
+    if ( kl_t11 ) goto bb5; else goto bb6;
     bb3:
     kl_t0 = 0;
 #line 76 "codegen/owning_payloads.kl"
     return kl_t0;
     bb4:
 #line 73 "codegen/owning_payloads.kl"
-    kl_t6 = ( *kl_h_1 ).tag == 2;
+    kl_t2 = ( *kl_h_1 ).tag == 2;
 #line 73 "codegen/owning_payloads.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
     bb5:
 #line 74 "codegen/owning_payloads.kl"
     kl_rt_panic( "codegen/owning_payloads.kl", 74, "arithmetic overflow: extra + left.get()" );
     bb6:
 #line 74 "codegen/owning_payloads.kl"
-    kl_t13 = kl_extra_7 + kl_t11;
+    kl_t12 = kl_extra_6 + kl_t10;
 #line 74 "codegen/owning_payloads.kl"
-    kl_t14 = &( *kl_right_9 );
+    kl_t13 = &( *kl_right_8 );
 #line 74 "codegen/owning_payloads.kl"
-    kl_t15 = kl__get__S3Buf( kl_t14 );
+    kl_t14 = kl__get__S3Buf( kl_t13 );
 #line 74 "codegen/owning_payloads.kl"
-    kl_t16 = __builtin_add_overflow( kl_t13, kl_t15, &( uint64_t ) { 0 } );
+    kl_t15 = __builtin_add_overflow( kl_t12, kl_t14, &( uint64_t ) { 0 } );
 #line 74 "codegen/owning_payloads.kl"
-    if ( kl_t16 ) goto bb7; else goto bb8;
+    if ( kl_t15 ) goto bb7; else goto bb8;
     bb7:
 #line 74 "codegen/owning_payloads.kl"
     kl_rt_panic( "codegen/owning_payloads.kl", 74, "arithmetic overflow: extra + left.get() + right.get()" );
     bb8:
 #line 74 "codegen/owning_payloads.kl"
-    kl_t17 = kl_t13 + kl_t15;
+    kl_t16 = kl_t12 + kl_t14;
 #line 74 "codegen/owning_payloads.kl"
-    kl_t0 = kl_t17;
+    kl_t0 = kl_t16;
 #line 74 "codegen/owning_payloads.kl"
     return kl_t0;
 #line 78 "codegen/owning_payloads.kl"
@@ -894,25 +893,25 @@ int32_t kl__main__( void )
     struct kl__Buf* kl_b_44;
     struct kl__Buf* kl_t45;
     uint64_t kl_t46;
-    bool kl_t48;
-    uint64_t kl_extra_49;
-    struct kl__Buf* kl_left_50;
-    struct kl__Buf* kl_right_51;
-    struct kl__Option__I6HolderE kl_t52;
-    struct kl__Holder kl_t53;
-    struct kl__Buf kl_t54;
-    struct kl__Buf* kl_t55;
-    struct kl__Option__I6HolderE* kl_t57;
-    uint64_t kl_t58;
-    struct kl__Keeper kl_k_60;
-    struct kl__Keeper* kl_t61;
-    struct kl__Holder kl_t62;
-    struct kl__Buf kl_t63;
-    struct kl__Buf* kl_t64;
-    struct kl_7prelude_str kl_t67;
-    struct kl_7prelude_str* kl_t68;
-    uint8_t* kl_t69;
-    struct kl_7prelude_textual__ref kl_t71;
+    uint64_t kl_extra_48;
+    struct kl__Buf* kl_left_49;
+    struct kl__Buf* kl_right_50;
+    struct kl__Option__I6HolderE kl_t51;
+    struct kl__Holder kl_t52;
+    struct kl__Buf kl_t53;
+    struct kl__Buf* kl_t54;
+    struct kl__Option__I6HolderE* kl_t56;
+    uint64_t kl_t57;
+    struct kl__Keeper kl_k_59;
+    struct kl__Keeper* kl_t60;
+    struct kl__Holder kl_t61;
+    struct kl__Buf kl_t62;
+    struct kl__Buf* kl_t63;
+    struct kl_7prelude_str kl_t66;
+    struct kl_7prelude_str* kl_t67;
+    uint8_t* kl_t68;
+    struct kl_7prelude_textual__ref kl_t70;
+    bool kl_t72;
     bool kl_t73;
     bool kl_t74;
     bool kl_t75;
@@ -931,10 +930,11 @@ int32_t kl__main__( void )
     bool kl_t88;
     bool kl_t89;
     bool kl_t90;
-    bool kl_t91;
-    ( void ) kl_extra_49;
-    ( void ) kl_left_50;
-    ( void ) kl_right_51;
+    ( void ) kl_extra_48;
+    ( void ) kl_left_49;
+    ( void ) kl_right_50;
+#line 104 "codegen/owning_payloads.kl"
+    kl_t72 = false;
 #line 104 "codegen/owning_payloads.kl"
     kl_t73 = false;
 #line 104 "codegen/owning_payloads.kl"
@@ -972,93 +972,91 @@ int32_t kl__main__( void )
 #line 104 "codegen/owning_payloads.kl"
     kl_t90 = false;
 #line 104 "codegen/owning_payloads.kl"
-    kl_t91 = false;
-#line 104 "codegen/owning_payloads.kl"
-    kl_t73 = false;
+    kl_t72 = false;
 #line 104 "codegen/owning_payloads.kl"
     kl_t2 = &kl_x_1;
 #line 104 "codegen/owning_payloads.kl"
-    kl_t73 = true;
+    kl_t72 = true;
 #line 104 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t2, 1 );
-    kl_t74 = false;
+    kl_t73 = false;
 #line 105 "codegen/owning_payloads.kl"
     kl_t5.tag = 0;
 #line 105 "codegen/owning_payloads.kl"
-    kl_t75 = true;
+    kl_t74 = true;
 #line 105 "codegen/owning_payloads.kl"
     kl_t5.kl_4Full_b = kl_x_1;
 #line 105 "codegen/owning_payloads.kl"
-    kl_t73 = false;
-#line 105 "codegen/owning_payloads.kl"
-    kl_t75 = true;
-#line 105 "codegen/owning_payloads.kl"
-    kl_h_4 = kl_t5;
-#line 105 "codegen/owning_payloads.kl"
-    kl_t75 = false;
+    kl_t72 = false;
 #line 105 "codegen/owning_payloads.kl"
     kl_t74 = true;
 #line 105 "codegen/owning_payloads.kl"
-    if ( kl_t75 ) kl__Holder__dtor( &kl_t5 );
+    kl_h_4 = kl_t5;
 #line 105 "codegen/owning_payloads.kl"
-    kl_t75 = false;
+    kl_t74 = false;
+#line 105 "codegen/owning_payloads.kl"
+    kl_t73 = true;
+#line 105 "codegen/owning_payloads.kl"
+    if ( kl_t74 ) kl__Holder__dtor( &kl_t5 );
+#line 105 "codegen/owning_payloads.kl"
+    kl_t74 = false;
     kl_t6 = &kl_h_4;
 #line 106 "codegen/owning_payloads.kl"
     kl_t7 = kl__size__6Holder( kl_t6 );
 #line 106 "codegen/owning_payloads.kl"
     kl_1t7console_println__3u64( kl_t7 );
 #line 109 "codegen/owning_payloads.kl"
-    kl_t77 = false;
+    kl_t76 = false;
 #line 109 "codegen/owning_payloads.kl"
     kl_t12 = &kl_t11;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t77 = true;
+    kl_t76 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t12, 2 );
 #line 109 "codegen/owning_payloads.kl"
-    kl_t78 = false;
+    kl_t77 = false;
 #line 109 "codegen/owning_payloads.kl"
     kl_t15 = &kl_t14;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t78 = true;
+    kl_t77 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t15, 3 );
 #line 109 "codegen/owning_payloads.kl"
     kl_t10.tag = 2;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t76 = true;
+    kl_t75 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl_t10.kl_4Pair_extra = 10;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t76 = true;
+    kl_t75 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl_t10.kl_4Pair_left = kl_t11;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t77 = false;
+    kl_t76 = false;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t76 = true;
+    kl_t75 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl_t10.kl_4Pair_right = kl_t14;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t78 = false;
+    kl_t77 = false;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t76 = true;
+    kl_t75 = true;
 #line 109 "codegen/owning_payloads.kl"
     kl_p_9 = kl_t10;
 #line 109 "codegen/owning_payloads.kl"
+    kl_t75 = false;
+#line 109 "codegen/owning_payloads.kl"
+    if ( kl_t75 ) kl__Holder__dtor( &kl_t10 );
+#line 109 "codegen/owning_payloads.kl"
+    if ( kl_t77 ) kl__Buf__dtor( &kl_t14 );
+#line 109 "codegen/owning_payloads.kl"
+    if ( kl_t76 ) kl__Buf__dtor( &kl_t11 );
+#line 109 "codegen/owning_payloads.kl"
     kl_t76 = false;
-#line 109 "codegen/owning_payloads.kl"
-    if ( kl_t76 ) kl__Holder__dtor( &kl_t10 );
-#line 109 "codegen/owning_payloads.kl"
-    if ( kl_t78 ) kl__Buf__dtor( &kl_t14 );
-#line 109 "codegen/owning_payloads.kl"
-    if ( kl_t77 ) kl__Buf__dtor( &kl_t11 );
 #line 109 "codegen/owning_payloads.kl"
     kl_t77 = false;
 #line 109 "codegen/owning_payloads.kl"
-    kl_t78 = false;
-#line 109 "codegen/owning_payloads.kl"
-    kl_t76 = false;
+    kl_t75 = false;
     kl_t17 = &kl_p_9;
 #line 110 "codegen/owning_payloads.kl"
     kl_t18 = kl__size__6Holder( kl_t17 );
@@ -1077,130 +1075,130 @@ int32_t kl__main__( void )
 #line 115 "codegen/owning_payloads.kl"
     kl__consume__M6Holder( kl_h_4 );
 #line 115 "codegen/owning_payloads.kl"
-    kl_t74 = false;
+    kl_t73 = false;
 #line 118 "codegen/owning_payloads.kl"
-    kl_t79 = false;
+    kl_t78 = false;
 #line 118 "codegen/owning_payloads.kl"
     kl_t26.tag = 1;
 #line 118 "codegen/owning_payloads.kl"
-    kl_t80 = true;
+    kl_t79 = true;
 #line 118 "codegen/owning_payloads.kl"
     kl_e_25 = kl_t26;
 #line 118 "codegen/owning_payloads.kl"
-    kl_t80 = false;
+    kl_t79 = false;
 #line 118 "codegen/owning_payloads.kl"
-    kl_t79 = true;
+    kl_t78 = true;
 #line 118 "codegen/owning_payloads.kl"
-    if ( kl_t80 ) kl__Holder__dtor( &kl_t26 );
+    if ( kl_t79 ) kl__Holder__dtor( &kl_t26 );
 #line 118 "codegen/owning_payloads.kl"
-    kl_t80 = false;
-    kl_t82 = false;
+    kl_t79 = false;
+    kl_t81 = false;
 #line 119 "codegen/owning_payloads.kl"
     kl_t29 = &kl_t28;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t82 = true;
+    kl_t81 = true;
 #line 119 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t29, 5 );
 #line 119 "codegen/owning_payloads.kl"
     kl_t27.tag = 0;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t81 = true;
+    kl_t80 = true;
 #line 119 "codegen/owning_payloads.kl"
     kl_t27.kl_4Full_b = kl_t28;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t82 = false;
+    kl_t81 = false;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t81 = true;
+    kl_t80 = true;
 #line 119 "codegen/owning_payloads.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_e_25 );
+    if ( kl_t78 ) kl__Holder__dtor( &kl_e_25 );
 #line 119 "codegen/owning_payloads.kl"
     kl_e_25 = kl_t27;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t81 = false;
+    kl_t80 = false;
 #line 119 "codegen/owning_payloads.kl"
-    kl_t79 = true;
+    kl_t78 = true;
 #line 119 "codegen/owning_payloads.kl"
-    if ( kl_t81 ) kl__Holder__dtor( &kl_t27 );
+    if ( kl_t80 ) kl__Holder__dtor( &kl_t27 );
 #line 119 "codegen/owning_payloads.kl"
-    if ( kl_t82 ) kl__Buf__dtor( &kl_t28 );
-#line 119 "codegen/owning_payloads.kl"
-    kl_t82 = false;
+    if ( kl_t81 ) kl__Buf__dtor( &kl_t28 );
 #line 119 "codegen/owning_payloads.kl"
     kl_t81 = false;
-    kl_t84 = false;
+#line 119 "codegen/owning_payloads.kl"
+    kl_t80 = false;
+    kl_t83 = false;
 #line 120 "codegen/owning_payloads.kl"
     kl_t33 = &kl_t32;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t84 = true;
+    kl_t83 = true;
 #line 120 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t33, 6 );
 #line 120 "codegen/owning_payloads.kl"
     kl_t31.tag = 0;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t83 = true;
+    kl_t82 = true;
 #line 120 "codegen/owning_payloads.kl"
     kl_t31.kl_4Full_b = kl_t32;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t84 = false;
+    kl_t83 = false;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t83 = true;
+    kl_t82 = true;
 #line 120 "codegen/owning_payloads.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_e_25 );
+    if ( kl_t78 ) kl__Holder__dtor( &kl_e_25 );
 #line 120 "codegen/owning_payloads.kl"
     kl_e_25 = kl_t31;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t83 = false;
+    kl_t82 = false;
 #line 120 "codegen/owning_payloads.kl"
-    kl_t79 = true;
+    kl_t78 = true;
 #line 120 "codegen/owning_payloads.kl"
-    if ( kl_t83 ) kl__Holder__dtor( &kl_t31 );
+    if ( kl_t82 ) kl__Holder__dtor( &kl_t31 );
 #line 120 "codegen/owning_payloads.kl"
-    if ( kl_t84 ) kl__Buf__dtor( &kl_t32 );
-#line 120 "codegen/owning_payloads.kl"
-    kl_t84 = false;
+    if ( kl_t83 ) kl__Buf__dtor( &kl_t32 );
 #line 120 "codegen/owning_payloads.kl"
     kl_t83 = false;
+#line 120 "codegen/owning_payloads.kl"
+    kl_t82 = false;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t86 = false;
+    kl_t85 = false;
 #line 122 "codegen/owning_payloads.kl"
     kl_t38 = &kl_t37;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t86 = true;
+    kl_t85 = true;
 #line 122 "codegen/owning_payloads.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t38, 7 );
 #line 122 "codegen/owning_payloads.kl"
     kl_t36.tag = 0;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t85 = true;
+    kl_t84 = true;
 #line 122 "codegen/owning_payloads.kl"
     kl_t36.kl_4Some_value = kl_t37;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t86 = false;
+    kl_t85 = false;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t85 = true;
+    kl_t84 = true;
 #line 122 "codegen/owning_payloads.kl"
     kl_o_35 = kl_t36;
 #line 122 "codegen/owning_payloads.kl"
-    kl_t85 = false;
+    kl_t84 = false;
 #line 122 "codegen/owning_payloads.kl"
-    if ( kl_t85 ) kl__Option__I3BufE__dtor( &kl_t36 );
+    if ( kl_t84 ) kl__Option__I3BufE__dtor( &kl_t36 );
 #line 122 "codegen/owning_payloads.kl"
-    if ( kl_t86 ) kl__Buf__dtor( &kl_t37 );
-#line 122 "codegen/owning_payloads.kl"
-    kl_t86 = false;
+    if ( kl_t85 ) kl__Buf__dtor( &kl_t37 );
 #line 122 "codegen/owning_payloads.kl"
     kl_t85 = false;
+#line 122 "codegen/owning_payloads.kl"
+    kl_t84 = false;
     kl_t41.tag = 1;
 #line 123 "codegen/owning_payloads.kl"
-    kl_t87 = true;
+    kl_t86 = true;
 #line 123 "codegen/owning_payloads.kl"
     kl_none_40 = kl_t41;
 #line 123 "codegen/owning_payloads.kl"
-    kl_t87 = false;
+    kl_t86 = false;
 #line 123 "codegen/owning_payloads.kl"
-    if ( kl_t87 ) kl__Option__I3BufE__dtor( &kl_t41 );
+    if ( kl_t86 ) kl__Option__I3BufE__dtor( &kl_t41 );
 #line 123 "codegen/owning_payloads.kl"
-    kl_t87 = false;
+    kl_t86 = false;
 #line 126 "codegen/owning_payloads.kl"
     kl_t42 = kl__make__3u64( 8 );
 #line 128 "codegen/owning_payloads.kl"
@@ -1218,11 +1216,11 @@ int32_t kl__main__( void )
     goto bb5;
     bb2:
 #line 131 "codegen/owning_payloads.kl"
-    kl_extra_49 = kl_t42.kl_4Pair_extra;
+    kl_extra_48 = kl_t42.kl_4Pair_extra;
 #line 131 "codegen/owning_payloads.kl"
-    kl_left_50 = &kl_t42.kl_4Pair_left;
+    kl_left_49 = &kl_t42.kl_4Pair_left;
 #line 131 "codegen/owning_payloads.kl"
-    kl_right_51 = &kl_t42.kl_4Pair_right;
+    kl_right_50 = &kl_t42.kl_4Pair_right;
     kl_t0 = 1;
 #line 132 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_t42 );
@@ -1231,19 +1229,19 @@ int32_t kl__main__( void )
 #line 132 "codegen/owning_payloads.kl"
     kl__Option__I3BufE__dtor( &kl_o_35 );
 #line 132 "codegen/owning_payloads.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_e_25 );
+    if ( kl_t78 ) kl__Holder__dtor( &kl_e_25 );
 #line 132 "codegen/owning_payloads.kl"
-    kl_t79 = false;
+    kl_t78 = false;
 #line 132 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_p_9 );
 #line 132 "codegen/owning_payloads.kl"
-    if ( kl_t74 ) kl__Holder__dtor( &kl_h_4 );
-#line 132 "codegen/owning_payloads.kl"
-    kl_t74 = false;
-#line 132 "codegen/owning_payloads.kl"
-    if ( kl_t73 ) kl__Buf__dtor( &kl_x_1 );
+    if ( kl_t73 ) kl__Holder__dtor( &kl_h_4 );
 #line 132 "codegen/owning_payloads.kl"
     kl_t73 = false;
+#line 132 "codegen/owning_payloads.kl"
+    if ( kl_t72 ) kl__Buf__dtor( &kl_x_1 );
+#line 132 "codegen/owning_payloads.kl"
+    kl_t72 = false;
 #line 132 "codegen/owning_payloads.kl"
     return kl_t0;
     bb3:
@@ -1255,132 +1253,132 @@ int32_t kl__main__( void )
 #line 134 "codegen/owning_payloads.kl"
     kl__Option__I3BufE__dtor( &kl_o_35 );
 #line 134 "codegen/owning_payloads.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_e_25 );
+    if ( kl_t78 ) kl__Holder__dtor( &kl_e_25 );
 #line 134 "codegen/owning_payloads.kl"
-    kl_t79 = false;
+    kl_t78 = false;
 #line 134 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_p_9 );
 #line 134 "codegen/owning_payloads.kl"
-    if ( kl_t74 ) kl__Holder__dtor( &kl_h_4 );
-#line 134 "codegen/owning_payloads.kl"
-    kl_t74 = false;
-#line 134 "codegen/owning_payloads.kl"
-    if ( kl_t73 ) kl__Buf__dtor( &kl_x_1 );
+    if ( kl_t73 ) kl__Holder__dtor( &kl_h_4 );
 #line 134 "codegen/owning_payloads.kl"
     kl_t73 = false;
+#line 134 "codegen/owning_payloads.kl"
+    if ( kl_t72 ) kl__Buf__dtor( &kl_x_1 );
+#line 134 "codegen/owning_payloads.kl"
+    kl_t72 = false;
 #line 134 "codegen/owning_payloads.kl"
     return kl_t0;
     bb4:
 #line 131 "codegen/owning_payloads.kl"
-    kl_t48 = kl_t42.tag == 2;
+    kl_t43 = kl_t42.tag == 2;
 #line 131 "codegen/owning_payloads.kl"
-    if ( kl_t48 ) goto bb2; else goto bb3;
+    if ( kl_t43 ) goto bb2; else goto bb3;
     bb5:
 #line 126 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_t42 );
 #line 137 "codegen/owning_payloads.kl"
-    kl_t89 = false;
+    kl_t88 = false;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t55 = &kl_t54;
-#line 137 "codegen/owning_payloads.kl"
-    kl_t89 = true;
-#line 137 "codegen/owning_payloads.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t55, 9 );
-#line 137 "codegen/owning_payloads.kl"
-    kl_t53.tag = 0;
+    kl_t54 = &kl_t53;
 #line 137 "codegen/owning_payloads.kl"
     kl_t88 = true;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t53.kl_4Full_b = kl_t54;
-#line 137 "codegen/owning_payloads.kl"
-    kl_t89 = false;
-#line 137 "codegen/owning_payloads.kl"
-    kl_t88 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t54, 9 );
 #line 137 "codegen/owning_payloads.kl"
     kl_t52.tag = 0;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t52.kl_4Some_value = kl_t53;
+    kl_t87 = true;
+#line 137 "codegen/owning_payloads.kl"
+    kl_t52.kl_4Full_b = kl_t53;
 #line 137 "codegen/owning_payloads.kl"
     kl_t88 = false;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t57 = &kl_t52;
+    kl_t87 = true;
 #line 137 "codegen/owning_payloads.kl"
-    kl_t58 = kl__nested__6OptionI6HolderE( kl_t57 );
+    kl_t51.tag = 0;
 #line 137 "codegen/owning_payloads.kl"
-    kl_1t7console_println__3u64( kl_t58 );
+    kl_t51.kl_4Some_value = kl_t52;
 #line 137 "codegen/owning_payloads.kl"
-    kl__Option__I6HolderE__dtor( &kl_t52 );
+    kl_t87 = false;
 #line 137 "codegen/owning_payloads.kl"
-    if ( kl_t88 ) kl__Holder__dtor( &kl_t53 );
+    kl_t56 = &kl_t51;
 #line 137 "codegen/owning_payloads.kl"
-    if ( kl_t89 ) kl__Buf__dtor( &kl_t54 );
+    kl_t57 = kl__nested__6OptionI6HolderE( kl_t56 );
 #line 137 "codegen/owning_payloads.kl"
+    kl_1t7console_println__3u64( kl_t57 );
+#line 137 "codegen/owning_payloads.kl"
+    kl__Option__I6HolderE__dtor( &kl_t51 );
+#line 137 "codegen/owning_payloads.kl"
+    if ( kl_t87 ) kl__Holder__dtor( &kl_t52 );
+#line 137 "codegen/owning_payloads.kl"
+    if ( kl_t88 ) kl__Buf__dtor( &kl_t53 );
+#line 137 "codegen/owning_payloads.kl"
+    kl_t88 = false;
+#line 137 "codegen/owning_payloads.kl"
+    kl_t87 = false;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t60 = &kl_k_59;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t90 = false;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t63 = &kl_t62;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t90 = true;
+#line 139 "codegen/owning_payloads.kl"
+    kl__Buf__R3Buf_3u64__ctor( kl_t63, 11 );
+#line 139 "codegen/owning_payloads.kl"
+    kl_t61.tag = 0;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t89 = true;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t61.kl_4Full_b = kl_t62;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t90 = false;
+#line 139 "codegen/owning_payloads.kl"
+    kl_t89 = true;
+#line 139 "codegen/owning_payloads.kl"
+    kl__Keeper__R6Keeper_M6Holder__ctor( kl_t60, kl_t61 );
+#line 139 "codegen/owning_payloads.kl"
     kl_t89 = false;
-#line 137 "codegen/owning_payloads.kl"
-    kl_t88 = false;
 #line 139 "codegen/owning_payloads.kl"
-    kl_t61 = &kl_k_60;
+    if ( kl_t89 ) kl__Holder__dtor( &kl_t61 );
 #line 139 "codegen/owning_payloads.kl"
-    kl_t91 = false;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t64 = &kl_t63;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t91 = true;
-#line 139 "codegen/owning_payloads.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t64, 11 );
-#line 139 "codegen/owning_payloads.kl"
-    kl_t62.tag = 0;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t90 = true;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t62.kl_4Full_b = kl_t63;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t91 = false;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t90 = true;
-#line 139 "codegen/owning_payloads.kl"
-    kl__Keeper__R6Keeper_M6Holder__ctor( kl_t61, kl_t62 );
+    if ( kl_t90 ) kl__Buf__dtor( &kl_t62 );
 #line 139 "codegen/owning_payloads.kl"
     kl_t90 = false;
 #line 139 "codegen/owning_payloads.kl"
-    if ( kl_t90 ) kl__Holder__dtor( &kl_t62 );
-#line 139 "codegen/owning_payloads.kl"
-    if ( kl_t91 ) kl__Buf__dtor( &kl_t63 );
-#line 139 "codegen/owning_payloads.kl"
-    kl_t91 = false;
-#line 139 "codegen/owning_payloads.kl"
-    kl_t90 = false;
+    kl_t89 = false;
 #line 141 "codegen/owning_payloads.kl"
-    kl_t68 = &kl_t67;
+    kl_t67 = &kl_t66;
 #line 141 "codegen/owning_payloads.kl"
-    kl_t69 = ( uint8_t* ) "end";
+    kl_t68 = ( uint8_t* ) "end";
 #line 141 "codegen/owning_payloads.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t68, kl_t69, 3 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t67, kl_t68, 3 );
 #line 141 "codegen/owning_payloads.kl"
-    kl_t71 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t67, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t70 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t66, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 141 "codegen/owning_payloads.kl"
-    kl_1t7console_println__7textual( kl_t71 );
+    kl_1t7console_println__7textual( kl_t70 );
     kl_t0 = 0;
 #line 142 "codegen/owning_payloads.kl"
-    kl__Holder__dtor( &kl_k_60.kl_held );
+    kl__Holder__dtor( &kl_k_59.kl_held );
 #line 142 "codegen/owning_payloads.kl"
     kl__Option__I3BufE__dtor( &kl_none_40 );
 #line 142 "codegen/owning_payloads.kl"
     kl__Option__I3BufE__dtor( &kl_o_35 );
 #line 142 "codegen/owning_payloads.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_e_25 );
+    if ( kl_t78 ) kl__Holder__dtor( &kl_e_25 );
 #line 142 "codegen/owning_payloads.kl"
-    kl_t79 = false;
+    kl_t78 = false;
 #line 142 "codegen/owning_payloads.kl"
     kl__Holder__dtor( &kl_p_9 );
 #line 142 "codegen/owning_payloads.kl"
-    if ( kl_t74 ) kl__Holder__dtor( &kl_h_4 );
-#line 142 "codegen/owning_payloads.kl"
-    kl_t74 = false;
-#line 142 "codegen/owning_payloads.kl"
-    if ( kl_t73 ) kl__Buf__dtor( &kl_x_1 );
+    if ( kl_t73 ) kl__Holder__dtor( &kl_h_4 );
 #line 142 "codegen/owning_payloads.kl"
     kl_t73 = false;
+#line 142 "codegen/owning_payloads.kl"
+    if ( kl_t72 ) kl__Buf__dtor( &kl_x_1 );
+#line 142 "codegen/owning_payloads.kl"
+    kl_t72 = false;
 #line 142 "codegen/owning_payloads.kl"
     return kl_t0;
 }

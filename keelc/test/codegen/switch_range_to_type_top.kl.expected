@@ -17,8 +17,6 @@ int32_t kl__top__2u8( uint8_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-#line 10 "codegen/switch_range_to_type_top.kl"
     kl_t2 = kl_n_1 < 200;
 #line 10 "codegen/switch_range_to_type_top.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
@@ -39,9 +37,9 @@ int32_t kl__top__2u8( uint8_t kl_n_1 )
     return kl_t0;
     bb4:
 #line 11 "codegen/switch_range_to_type_top.kl"
-    kl_t3 = kl_n_1 >= 200;
+    kl_t2 = kl_n_1 >= 200;
 #line 11 "codegen/switch_range_to_type_top.kl"
-    if ( kl_t3 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 14 "codegen/switch_range_to_type_top.kl"
 }
 
@@ -71,8 +69,6 @@ int32_t kl__signed_top__2i8( int8_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-#line 29 "codegen/switch_range_to_type_top.kl"
     kl_t2 = kl_n_1 < 0;
 #line 29 "codegen/switch_range_to_type_top.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
@@ -93,9 +89,9 @@ int32_t kl__signed_top__2i8( int8_t kl_n_1 )
     return kl_t0;
     bb4:
 #line 30 "codegen/switch_range_to_type_top.kl"
-    kl_t3 = kl_n_1 >= 0;
+    kl_t2 = kl_n_1 >= 0;
 #line 30 "codegen/switch_range_to_type_top.kl"
-    if ( kl_t3 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 33 "codegen/switch_range_to_type_top.kl"
 }
 

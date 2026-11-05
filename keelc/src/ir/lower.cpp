@@ -167,7 +167,8 @@ private:
     void lower_increment( Node_id id );
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
-    void lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body );
+    void
+    lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body, Local_id& test );
     void lower_arm_body( Node_id arm, Place matched, Type_id matched_type, Block_id fallthrough_to, bool consumes );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
@@ -3357,7 +3358,10 @@ void Lowering::lower_increment( Node_id id )
 
 // One label's test. Leaves the builder in the block a failed test falls into: the next label, the
 // next arm, or the fallback. D34: a range is two chained comparisons, so KIR needs no conjunction.
-void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body )
+// Every test writes the switch's one `test`, dead after its branch, so locals stay linear in arms.
+void Lowering::lower_case_test(
+    Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body, Local_id& test
+)
 {
     const Span    span    = ast_.span( label );
     const Type_id boolean = types_.table().builtin( Type_kind::Bool );
@@ -3381,13 +3385,25 @@ void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matche
         return lower_expression( bound );
     };
 
+    const auto tested = [&]( Rvalue comparison )
+    {
+        if( !test.is_valid() )
+        {
+            test = builder_.add_local( boolean, span );
+        }
+
+        builder_.assign( builder_.place( test ), comparison, span );
+
+        return copy( builder_.place( test ), boolean );
+    };
+
     const auto branch_on = [&]( Token_kind op, Node_id bound, Block_id on_true )
     {
-        const Operand  value = value_of( bound );
-        const Local_id test  = builder_.into_temp( binary( op, scrutinee, value, boolean ), boolean, span );
-        const Block_id next  = builder_.add_block();
+        const Operand  value     = value_of( bound );
+        const Operand  condition = tested( binary( op, scrutinee, value, boolean ) );
+        const Block_id next      = builder_.add_block();
 
-        builder_.terminate_branch( copy( builder_.place( test ), boolean ), on_true, next, span );
+        builder_.terminate_branch( condition, on_true, next, span );
         builder_.switch_to( next );
     };
 
@@ -3400,19 +3416,15 @@ void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matche
         const Type_id  tag_type = types_.table().get( matched_type ).element;
         const Block_id inner    = builder_.add_block();
 
-        const Local_id held = builder_.into_temp(
-            binary(
-                Token_kind::Equal_equal,
-                scrutinee,
-                constant( literal_pool_.add_integer( types_.table().error_tag( member ) ), tag_type ),
-                boolean
-            ),
-            boolean,
-            span
-        );
+        const Operand  held   = tested( binary(
+            Token_kind::Equal_equal,
+            scrutinee,
+            constant( literal_pool_.add_integer( types_.table().error_tag( member ) ), tag_type ),
+            boolean
+        ) );
         const Block_id missed = builder_.add_block();
 
-        builder_.terminate_branch( copy( builder_.place( held ), boolean ), inner, missed, span );
+        builder_.terminate_branch( held, inner, missed, span );
         builder_.switch_to( inner );
 
         const Place   value   = builder_.member( matched, member );
@@ -3420,10 +3432,9 @@ void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matche
         const Type_id ordinal = tagged ? types_.table().get( member ).element : member;
         const Operand read    = copy( tagged ? builder_.tag( value ) : value, ordinal );
 
-        const Local_id test =
-            builder_.into_temp( binary( Token_kind::Equal_equal, read, value_of( path ), boolean ), boolean, span );
+        const Operand bound = value_of( path );
 
-        builder_.terminate_branch( copy( builder_.place( test ), boolean ), body, missed, span );
+        builder_.terminate_branch( tested( binary( Token_kind::Equal_equal, read, bound, boolean ) ), body, missed, span );
         builder_.switch_to( missed );
         return;
     }
@@ -3623,6 +3634,8 @@ void Lowering::lower_switch( Node_id id )
 
     const Block_id fallback_block = fallback.is_valid() ? bodies[fallback_index] : Block_id {};
 
+    Local_id test; // every label's comparison, added by the first
+
     for( std::size_t index = 0; index < arms.size(); ++index )
     {
         const Node_id arm = arms[index];
@@ -3638,7 +3651,7 @@ void Lowering::lower_switch( Node_id id )
 
         for( const Node_id label : labels )
         {
-            lower_case_test( scrutinee, matched, scrutinee_type, label, body );
+            lower_case_test( scrutinee, matched, scrutinee_type, label, body, test );
         }
 
         // The block the last false edge left us in, so the arms chain without any block needing to

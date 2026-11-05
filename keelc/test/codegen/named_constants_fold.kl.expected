@@ -517,8 +517,6 @@ int32_t kl__pick__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bool kl_t3;
-#line 24 "codegen/named_constants_fold.kl"
     kl_t2 = kl_v_1 == 4;
 #line 24 "codegen/named_constants_fold.kl"
     if ( kl_t2 ) goto bb1; else goto bb4;
@@ -537,9 +535,9 @@ int32_t kl__pick__3i32( int32_t kl_v_1 )
     return kl_t0;
     bb4:
 #line 26 "codegen/named_constants_fold.kl"
-    kl_t3 = kl_v_1 == 8;
+    kl_t2 = kl_v_1 == 8;
 #line 26 "codegen/named_constants_fold.kl"
-    if ( kl_t3 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb2; else goto bb3;
 #line 31 "codegen/named_constants_fold.kl"
 }
 

@@ -4011,9 +4011,8 @@ struct kl_2kl2os_os_error kl_2kl2os_os_error_of__3i32( int32_t kl_code_1 )
     int32_t kl_t3;
     bool kl_t4;
     struct kl_2kl2os_os_error kl_t5;
-    bool kl_t6;
+    struct kl_2kl2os_os_error kl_t6;
     struct kl_2kl2os_os_error kl_t7;
-    struct kl_2kl2os_os_error kl_t8;
 #line 69 "../../src/os.kl"
     kl_kind_2 = 0;
 #line 72 "../../src/os.kl"
@@ -4032,24 +4031,24 @@ struct kl_2kl2os_os_error kl_2kl2os_os_error_of__3i32( int32_t kl_code_1 )
 #line 78 "../../src/os.kl"
     return kl_t0;
     bb2:
-    kl_t7.tag = 1;
+    kl_t6.tag = 1;
 #line 80 "../../src/os.kl"
-    kl_t0 = kl_t7;
+    kl_t0 = kl_t6;
 #line 80 "../../src/os.kl"
     return kl_t0;
     bb3:
-    kl_t8.tag = 2;
+    kl_t7.tag = 2;
 #line 82 "../../src/os.kl"
-    kl_t8.kl_5other_code = kl_code_1;
+    kl_t7.kl_5other_code = kl_code_1;
 #line 82 "../../src/os.kl"
-    kl_t0 = kl_t8;
+    kl_t0 = kl_t7;
 #line 82 "../../src/os.kl"
     return kl_t0;
     bb4:
 #line 79 "../../src/os.kl"
-    kl_t6 = kl_kind_2 == 7;
+    kl_t4 = kl_kind_2 == 7;
 #line 79 "../../src/os.kl"
-    if ( kl_t6 ) goto bb2; else goto bb3;
+    if ( kl_t4 ) goto bb2; else goto bb3;
 #line 84 "../../src/os.kl"
 }
 
@@ -4061,18 +4060,13 @@ struct kl_2kl2os_file_error kl_2kl2os_file_error_of__3i32( int32_t kl_code_1 )
     int32_t kl_t3;
     bool kl_t4;
     struct kl_2kl2os_file_error kl_t5;
-    bool kl_t6;
+    struct kl_2kl2os_file_error kl_t6;
     struct kl_2kl2os_file_error kl_t7;
-    bool kl_t8;
+    struct kl_2kl2os_file_error kl_t8;
     struct kl_2kl2os_file_error kl_t9;
-    bool kl_t10;
+    struct kl_2kl2os_file_error kl_t10;
     struct kl_2kl2os_file_error kl_t11;
-    bool kl_t12;
-    struct kl_2kl2os_file_error kl_t13;
-    bool kl_t14;
-    struct kl_2kl2os_file_error kl_t15;
-    struct kl_2kl2os_file_error kl_t16;
-    struct kl_2kl2os_os_error kl_t17;
+    struct kl_2kl2os_os_error kl_t12;
 #line 89 "../../src/os.kl"
     kl_kind_2 = 0;
 #line 92 "../../src/os.kl"
@@ -4091,66 +4085,66 @@ struct kl_2kl2os_file_error kl_2kl2os_file_error_of__3i32( int32_t kl_code_1 )
 #line 98 "../../src/os.kl"
     return kl_t0;
     bb2:
-    kl_t7.tag = 1;
+    kl_t6.tag = 1;
 #line 100 "../../src/os.kl"
-    kl_t0 = kl_t7;
+    kl_t0 = kl_t6;
 #line 100 "../../src/os.kl"
     return kl_t0;
     bb3:
-    kl_t9.tag = 2;
+    kl_t7.tag = 2;
 #line 102 "../../src/os.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = kl_t7;
 #line 102 "../../src/os.kl"
     return kl_t0;
     bb4:
-    kl_t11.tag = 3;
+    kl_t8.tag = 3;
 #line 104 "../../src/os.kl"
-    kl_t0 = kl_t11;
+    kl_t0 = kl_t8;
 #line 104 "../../src/os.kl"
     return kl_t0;
     bb5:
-    kl_t13.tag = 4;
+    kl_t9.tag = 4;
 #line 106 "../../src/os.kl"
-    kl_t0 = kl_t13;
+    kl_t0 = kl_t9;
 #line 106 "../../src/os.kl"
     return kl_t0;
     bb6:
-    kl_t15.tag = 5;
+    kl_t10.tag = 5;
 #line 108 "../../src/os.kl"
-    kl_t0 = kl_t15;
+    kl_t0 = kl_t10;
 #line 108 "../../src/os.kl"
     return kl_t0;
     bb7:
-    kl_t17 = kl_2kl2os_os_error_of__3i32( kl_code_1 );
+    kl_t12 = kl_2kl2os_os_error_of__3i32( kl_code_1 );
 #line 110 "../../src/os.kl"
-    kl_t16.tag = 6;
+    kl_t11.tag = 6;
 #line 110 "../../src/os.kl"
-    kl_t16.kl_2os_error = kl_t17;
+    kl_t11.kl_2os_error = kl_t12;
 #line 110 "../../src/os.kl"
-    kl_t0 = kl_t16;
+    kl_t0 = kl_t11;
 #line 110 "../../src/os.kl"
     return kl_t0;
     bb8:
 #line 99 "../../src/os.kl"
-    kl_t6 = kl_kind_2 == 2;
+    kl_t4 = kl_kind_2 == 2;
 #line 99 "../../src/os.kl"
-    if ( kl_t6 ) goto bb2; else goto bb9;
+    if ( kl_t4 ) goto bb2; else goto bb9;
     bb9:
-    kl_t8 = kl_kind_2 == 3;
+    kl_t4 = kl_kind_2 == 3;
 #line 101 "../../src/os.kl"
-    if ( kl_t8 ) goto bb3; else goto bb10;
+    if ( kl_t4 ) goto bb3; else goto bb10;
     bb10:
-    kl_t10 = kl_kind_2 == 4;
+    kl_t4 = kl_kind_2 == 4;
 #line 103 "../../src/os.kl"
-    if ( kl_t10 ) goto bb4; else goto bb11;
+    if ( kl_t4 ) goto bb4; else goto bb11;
     bb11:
-    kl_t12 = kl_kind_2 == 5;
+    kl_t4 = kl_kind_2 == 5;
 #line 105 "../../src/os.kl"
-    if ( kl_t12 ) goto bb5; else goto bb12;
+    if ( kl_t4 ) goto bb5; else goto bb12;
     bb12:
-    kl_t14 = kl_kind_2 == 8;
+    kl_t4 = kl_kind_2 == 8;
 #line 107 "../../src/os.kl"
-    if ( kl_t14 ) goto bb6; else goto bb7;
+    if ( kl_t4 ) goto bb6; else goto bb7;
 #line 112 "../../src/os.kl"
 }
 
@@ -4974,11 +4968,9 @@ struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_2kl2os_path_kind
     struct kl_2kl2os_file_error kl_t11;
     bool kl_t12;
     struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t13;
-    bool kl_t14;
+    struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t14;
     struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t15;
-    bool kl_t16;
-    struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t17;
-    struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t18;
+    struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_t16;
 #line 249 "../../src/os.kl"
     kl_kind_2 = 0;
     kl_status_3 = 0;
@@ -5023,38 +5015,38 @@ struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE kl_2kl2os_path_kind
 #line 265 "../../src/os.kl"
     return kl_t0;
     bb4:
-    kl_t15.tag = 0;
+    kl_t14.tag = 0;
 #line 267 "../../src/os.kl"
-    kl_t15.kl_2ok_value = 2;
+    kl_t14.kl_2ok_value = 2;
 #line 267 "../../src/os.kl"
-    kl_t0 = kl_t15;
+    kl_t0 = kl_t14;
 #line 267 "../../src/os.kl"
     return kl_t0;
     bb5:
-    kl_t17.tag = 0;
+    kl_t15.tag = 0;
 #line 269 "../../src/os.kl"
-    kl_t17.kl_2ok_value = 3;
+    kl_t15.kl_2ok_value = 3;
 #line 269 "../../src/os.kl"
-    kl_t0 = kl_t17;
+    kl_t0 = kl_t15;
 #line 269 "../../src/os.kl"
     return kl_t0;
     bb6:
-    kl_t18.tag = 0;
+    kl_t16.tag = 0;
 #line 271 "../../src/os.kl"
-    kl_t18.kl_2ok_value = 0;
+    kl_t16.kl_2ok_value = 0;
 #line 271 "../../src/os.kl"
-    kl_t0 = kl_t18;
+    kl_t0 = kl_t16;
 #line 271 "../../src/os.kl"
     return kl_t0;
     bb7:
 #line 266 "../../src/os.kl"
-    kl_t14 = kl_kind_2 == 2;
+    kl_t12 = kl_kind_2 == 2;
 #line 266 "../../src/os.kl"
-    if ( kl_t14 ) goto bb4; else goto bb8;
+    if ( kl_t12 ) goto bb4; else goto bb8;
     bb8:
-    kl_t16 = kl_kind_2 == 3;
+    kl_t12 = kl_kind_2 == 3;
 #line 268 "../../src/os.kl"
-    if ( kl_t16 ) goto bb5; else goto bb6;
+    if ( kl_t12 ) goto bb5; else goto bb6;
 #line 273 "../../src/os.kl"
 }
 
@@ -9001,10 +8993,9 @@ int32_t kl__code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_re
     struct kl_2kl2os_file_error kl_e_4;
     bool kl_t5;
     int32_t kl_t6;
-    bool kl_t7;
-    struct kl_2kl2os_os_error kl_inner_8;
+    struct kl_2kl2os_os_error kl_inner_7;
+    int32_t kl_t8;
     int32_t kl_t9;
-    int32_t kl_t10;
 #line 27 "os_process/main.kl"
     kl_t2 = kl_r_1.tag == 0;
 #line 27 "os_process/main.kl"
@@ -9031,23 +9022,23 @@ int32_t kl__code__Q7prelude6resultI3i32_Q2kl10file_errorE( struct kl_7prelude_re
     return kl_t0;
     bb4:
 #line 34 "os_process/main.kl"
-    kl_inner_8 = kl_e_4.kl_2os_error;
-    kl_t9 = kl__os_code__Q2kl8os_error( kl_inner_8 );
+    kl_inner_7 = kl_e_4.kl_2os_error;
+    kl_t8 = kl__os_code__Q2kl8os_error( kl_inner_7 );
 #line 35 "os_process/main.kl"
-    kl_t0 = kl_t9;
+    kl_t0 = kl_t8;
 #line 35 "os_process/main.kl"
     return kl_t0;
     bb5:
-    kl_t10 = -99;
+    kl_t9 = -99;
 #line 37 "os_process/main.kl"
-    kl_t0 = kl_t10;
+    kl_t0 = kl_t9;
 #line 37 "os_process/main.kl"
     return kl_t0;
     bb6:
 #line 34 "os_process/main.kl"
-    kl_t7 = kl_e_4.tag == 6;
+    kl_t5 = kl_e_4.tag == 6;
 #line 34 "os_process/main.kl"
-    if ( kl_t7 ) goto bb4; else goto bb5;
+    if ( kl_t5 ) goto bb4; else goto bb5;
 #line 40 "os_process/main.kl"
 }
 
