@@ -94,6 +94,7 @@ void kl__E__dtor( struct kl__E* kl_t1 )
 void kl__O__dtor( struct kl__O* kl_t1 )
 {
     bool kl_t2;
+    bool kl_t3;
 #line 13 "opt/nested_tags.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
 #line 13 "opt/nested_tags.kl"
@@ -102,9 +103,14 @@ void kl__O__dtor( struct kl__O* kl_t1 )
 #line 13 "opt/nested_tags.kl"
     return;
     bb2:
-#line 13 "opt/nested_tags.kl"
-    kl__E__dtor( &( *kl_t1 ).kl_4some_e );
-#line 13 "opt/nested_tags.kl"
+#line 11 "opt/nested_tags.kl"
+    kl_t3 = ( *kl_t1 ).kl_4some_e.tag == 0;
+#line 11 "opt/nested_tags.kl"
+    if ( kl_t3 ) goto bb3; else goto bb1;
+    bb3:
+#line 8 "opt/nested_tags.kl"
+    ( *kl_t1 ).kl_4some_e.kl_4full_d.kl_v = 0;
+#line 8 "opt/nested_tags.kl"
     goto bb1;
 #line 13 "opt/nested_tags.kl"
 }

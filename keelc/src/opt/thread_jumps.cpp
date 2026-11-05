@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/thread_jumps.h"
+#include <algorithm>
 #include <optional>
 #include "ir/live.h"
 #include "ir/simplify.h"
@@ -281,6 +282,173 @@ bool copy_joins( Function& func, const Type_table& types, const Literal_pool& li
     return true;
 }
 
+// `_L`, `_L.f` or `_L.f.tag`: a local's own storage, which only a statement naming it writes.
+bool local_part( const Function& func, const Operand& operand )
+{
+    if( operand.kind != Operand_kind::Copy || operand.place.is_global() || !operand.place.local.is_valid() )
+    {
+        return false;
+    }
+    const Run<const Projection> run = func.projections_of( operand.place );
+    return std::ranges::all_of(
+        run, []( const Projection& p ) { return p.kind == Projection_kind::Field || p.kind == Projection_kind::Tag; }
+    );
+}
+
+bool same_operand( const Function& func, const Operand& a, const Operand& b, const Literal_pool& literals )
+{
+    if( a.kind == Operand_kind::Constant && b.kind == Operand_kind::Constant )
+    {
+        return a.constant.is_valid() && b.constant.is_valid() && a.type == b.type &&
+               literals.integer( a.constant ) == literals.integer( b.constant );
+    }
+    if( !local_part( func, a ) || !local_part( func, b ) || a.place.local != b.place.local ||
+        a.place.num_projections != b.place.num_projections )
+    {
+        return false;
+    }
+    const Run<const Projection> x = func.projections_of( a.place );
+    const Run<const Projection> y = func.projections_of( b.place );
+    for( u32 i = 0; i < x.size(); ++i )
+    {
+        if( x[i].kind != y[i].kind || x[i].field != y[i].field )
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// `c = x op y` over constants and locals' parts, as the block's last write of `c`; its index.
+std::optional<u32> test_of( const Function& func, const Block& block, Local_id c )
+{
+    for( u32 s = block.statement_count; s-- > 0; )
+    {
+        const Statement& statement = func.statements_of( block )[s];
+        if( statement.kind != Statement_kind::Assign || statement.place.is_global() || statement.place.local != c )
+        {
+            continue;
+        }
+
+        const Rvalue& value  = func.rvalue( statement );
+        const auto    scalar = [&]( const Operand& o ) { return o.kind == Operand_kind::Constant || local_part( func, o ); };
+        if( statement.place.is_whole_local() && value.kind == Rvalue_kind::Binary && scalar( value.a ) && scalar( value.b ) )
+        {
+            return s;
+        }
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+// A branch on a test that a block on its only path in already branched on, with neither operand
+// written between: the edge it came by decides it.
+bool repeat_tests( Function& func, const Local_set& addressed, const Literal_pool& literals )
+{
+    std::vector<u32>      counts = predecessor_counts( func );
+    std::vector<Block_id> from( func.blocks.size() );
+    std::vector<Block_id> targets;
+    for( const Block_id b : func.blocks.ids() )
+    {
+        targets.clear();
+        successors( func.blocks[b].terminator, targets );
+        for( const Block_id target : targets )
+        {
+            from[target.v] = b;
+        }
+    }
+
+    bool changed = false;
+    for( const Block_id b : func.blocks.ids() )
+    {
+        Block& block = func.blocks[b];
+        if( block.terminator.kind != Terminator_kind::Branch || !whole_local( block.terminator.condition ) )
+        {
+            continue;
+        }
+
+        const std::optional<u32> at = test_of( func, block, block.terminator.condition.place.local );
+        if( !at )
+        {
+            continue;
+        }
+
+        const Rvalue& test     = func.rvalue( func.statements_of( block )[*at] );
+        const auto    operands = { test.a, test.b };
+        if( std::ranges::any_of(
+                operands, [&]( const Operand& o ) { return local_part( func, o ) && addressed[o.place.local.v]; }
+            ) )
+        {
+            continue;
+        }
+
+        // Whether statements `[begin, end)` of `on` write an operand.
+        const auto writes = [&]( const Block& on, u32 begin, u32 end )
+        {
+            for( u32 s = begin; s < end; ++s )
+            {
+                const Statement& statement = func.statements_of( on )[s];
+                // `&init` is not in `addressed`, but the call it feeds writes the local.
+                const bool addressing = statement.kind == Statement_kind::Assign &&
+                                        func.rvalue( statement ).kind == Rvalue_kind::Address_of &&
+                                        !func.rvalue( statement ).a.place.is_global();
+                for( const Operand& o : operands )
+                {
+                    if( local_part( func, o ) && ( ( !statement.place.is_global() && statement.place.local == o.place.local ) ||
+                                                   ( addressing && func.rvalue( statement ).a.place.local == o.place.local ) ) )
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        if( writes( block, 0, *at ) )
+        {
+            continue;
+        }
+
+        Block_id on = b;
+        for( u32 steps = 0; steps < func.blocks.size() && on.v != 0 && counts[on.v] == 1; ++steps )
+        {
+            const Block_id up   = from[on.v];
+            const Block&   prev = func.blocks[up];
+
+            std::optional<u32> earlier;
+            if( prev.terminator.kind == Terminator_kind::Branch && whole_local( prev.terminator.condition ) )
+            {
+                earlier = test_of( func, prev, prev.terminator.condition.place.local );
+            }
+
+            if( earlier )
+            {
+                const Rvalue& seen = func.rvalue( func.statements_of( prev )[*earlier] );
+                if( seen.op == test.op && same_operand( func, seen.a, test.a, literals ) &&
+                    same_operand( func, seen.b, test.b, literals ) && !writes( prev, *earlier + 1, prev.statement_count ) )
+                {
+                    const u32 taken  = prev.terminator.targets[0] == on ? 0 : 1;
+                    block.terminator = Terminator {
+                        .kind    = Terminator_kind::Goto,
+                        .span    = block.terminator.span,
+                        .targets = { block.terminator.targets[taken] }
+                    };
+                    changed = true;
+                    break;
+                }
+            }
+
+            if( writes( prev, 0, prev.statement_count ) )
+            {
+                break;
+            }
+            on = up;
+        }
+    }
+
+    return changed;
+}
+
 } // namespace
 
 bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals )
@@ -337,8 +505,9 @@ bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
     }
 
     // A join every edge now goes past has no predecessor left, nor a selected flag's false arm.
-    const bool copied = copy_joins( func, types, literals );
-    if( select_flags( func, types, literals ) || changed || copied )
+    const bool copied   = copy_joins( func, types, literals );
+    const bool repeated = repeat_tests( func, addressed, literals );
+    if( select_flags( func, types, literals ) || changed || copied || repeated )
     {
         remove_unreachable_blocks( func );
     }
@@ -412,6 +581,19 @@ struct Graph
     Draft unknown() const
     {
         return Draft { .place = Place { .local = Local_id { 0 } }, .value = Rvalue { .type = flag(), .a = read( 1 ) } };
+    }
+
+    // `_0 = _1 == true`.
+    Draft test()
+    {
+        const Operand constant { .constant = literals.add_integer( 1 ), .type = flag() };
+        return Draft {
+            .place = Place { .local = Local_id { 0 } },
+            .value =
+                Rvalue {
+                    .kind = Rvalue_kind::Binary, .type = flag(), .op = Token_kind::Equal_equal, .a = read( 1 ), .b = constant
+                }
+        };
     }
 
     Terminator branch( u32 local, u32 taken, u32 not_taken ) const
@@ -604,6 +786,63 @@ TEST_CASE( "thread_jumps_joins_arms_that_agree", "[opt][threading]" )
 }
 
 // The whole release pipeline over `round`'s shape: one test of the flag is left.
+// The false edge of `_1 == true` reaches the same test again: it goes the false way.
+TEST_CASE( "thread_jumps_folds_a_repeated_test", "[opt][threading]" )
+{
+    Graph g;
+    g.build( {
+        { { g.test() }, g.branch( 0, 1, 2 ) },
+        { {}, done() },
+        { { g.test() }, g.branch( 0, 3, 4 ) },
+        { {}, done() },
+        { {}, done() },
+    } );
+    g.run();
+
+    // The true arm, unreached, is gone.
+    REQUIRE( g.func.blocks[Block_id { 2 }].terminator.kind == Terminator_kind::Goto );
+    REQUIRE( g.func.blocks.size() == 4 );
+}
+
+// `_1` is written between the tests, so the second is its own.
+TEST_CASE( "thread_jumps_keeps_a_test_of_a_rewritten_operand", "[opt][threading]" )
+{
+    Graph g;
+    Draft write = g.unknown();
+    write.place = Place { .local = Local_id { 1 } };
+    g.build( {
+        { { g.test() }, g.branch( 0, 1, 2 ) },
+        { {}, done() },
+        { { write, g.test() }, g.branch( 0, 3, 4 ) },
+        { {}, done() },
+        { {}, done() },
+    } );
+    g.run();
+
+    REQUIRE( g.func.blocks[Block_id { 2 }].terminator.kind == Terminator_kind::Branch );
+}
+
+// `otherwise_drops`: only `empty` reaches `default:`, so its drop of `s` tests nothing.
+TEST_CASE( "thread_jumps_drops_nothing_on_a_default_arm", "[opt][threading]" )
+{
+    const Compiled p(
+        "class D { public i32 v; public D( i32 x ) { v = x; } ~D() { v = 0; } };\n"
+        "enum E { full( D d ), empty };\n"
+        "i32 f( move E s ) { switch( move s ) { case E::full( d ): return d.v; default: return 1; } }\n"
+        "i32 main() { return 0; }\n",
+        Stage::Elaborated,
+        Build { .optimise = true }
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    const Function& f = p.functions[2];
+    REQUIRE( verify( f ).empty() );
+    REQUIRE(
+        std::ranges::count_if( f.blocks, []( const Block& b ) { return b.terminator.kind == Terminator_kind::Branch; } ) == 1
+    );
+}
+
 TEST_CASE( "thread_jumps_leaves_one_test_of_an_and", "[opt][threading]" )
 {
     const Compiled p(

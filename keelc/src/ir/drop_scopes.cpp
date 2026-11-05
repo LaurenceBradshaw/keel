@@ -17,9 +17,15 @@ void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Ty
 
     // Which payload is live is known only at run time, so the drop is a call to the enum's
     // synthesised destructor rather than an expansion here (D30); a union's and an array's likewise,
-    // and an interface's goes through its vtable.
-    if( types.table().is_enum( type ) || types.table().is_union( type ) || types.table().is_interface( type ) ||
-        types.table().is_array( type ) )
+    // and an interface's goes through its vtable. An enum's names its destructor, so a pass can inline it.
+    if( types.table().is_enum( type ) )
+    {
+        const std::span<const Type_id> arguments = types.table().get( type ).arguments;
+        builder.drop( place, span, replacing, types.table().get( type ).declaration, { arguments.begin(), arguments.end() } );
+        return;
+    }
+
+    if( types.table().is_union( type ) || types.table().is_interface( type ) || types.table().is_array( type ) )
     {
         builder.drop( place, span, replacing );
         return;

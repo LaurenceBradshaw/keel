@@ -479,47 +479,18 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    bool kl_t2;
-    bool kl_t3;
-    bool kl_t4;
-    bool kl_t5;
-    bool kl_t6;
 #line 180 "opt/scalars.kl"
     kl_t0 = kl__passed__3i32( 5 );
 #line 182 "opt/scalars.kl"
     kl_t1 = kl_t0 == 0;
 #line 182 "opt/scalars.kl"
-    if ( kl_t1 ) goto bb6; else goto bb1;
+    if ( kl_t1 ) goto bb1; else goto bb2;
     bb1:
-#line 186 "opt/scalars.kl"
-    kl_t2 = kl_t0 == 0;
-#line 186 "opt/scalars.kl"
-    if ( kl_t2 ) goto bb6; else goto bb2;
-    bb2:
-#line 190 "opt/scalars.kl"
-    kl_t3 = kl_t0 == 0;
-#line 190 "opt/scalars.kl"
-    if ( kl_t3 ) goto bb6; else goto bb3;
-    bb3:
-#line 194 "opt/scalars.kl"
-    kl_t4 = kl_t0 == 0;
-#line 194 "opt/scalars.kl"
-    if ( kl_t4 ) goto bb6; else goto bb4;
-    bb4:
-#line 198 "opt/scalars.kl"
-    kl_t5 = kl_t0 == 0;
-#line 198 "opt/scalars.kl"
-    if ( kl_t5 ) goto bb6; else goto bb5;
-    bb5:
-#line 202 "opt/scalars.kl"
-    kl_t6 = kl_t0 == 0;
-#line 202 "opt/scalars.kl"
-    if ( kl_t6 ) goto bb6; else goto bb7;
-    bb6:
+#line 204 "opt/scalars.kl"
     kl_t0 = kl__dropped__(  );
 #line 202 "opt/scalars.kl"
-    goto bb7;
-    bb7:
+    goto bb2;
+    bb2:
 #line 207 "opt/scalars.kl"
     return kl_t0;
 }

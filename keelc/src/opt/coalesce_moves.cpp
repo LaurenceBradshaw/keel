@@ -957,12 +957,13 @@ TEST_CASE( "coalesce_moves_keeps_two_values_alive_at_once", "[opt][coalesce]" )
 }
 
 // The scrutinee merges into the parameter; the arm that never moved it drops it once, and the
-// parameter's own drop, of a value already moved, goes.
+// parameter's own drop, of a value already moved, goes. Not inlined, so the drop stays a drop.
 TEST_CASE( "coalesce_moves_drops_a_scrutinee_once", "[opt][coalesce]" )
 {
     const Optimised p(
         "i32 f( move Shape s ) { switch( move s ) { case Shape::boxed( b ): return b.v; case Shape::empty: return 0; } }\n"
-        "enum Shape { boxed( Box b ), empty };\n"
+        "enum Shape { boxed( Box b ), empty };\n",
+        std::nullopt
     );
     REQUIRE( p.clean() );
     REQUIRE( p.well_formed() );

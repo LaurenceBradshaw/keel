@@ -826,7 +826,7 @@ TEST_CASE( "split_aggregates_splits_an_enum", "[opt][split]" )
     REQUIRE( !p.named() );
 }
 
-// Dropped whole, so it stays.
+// Dropped whole, its destructor not inlined, so it stays.
 TEST_CASE( "split_aggregates_keeps_an_enum_dropped_whole", "[opt][split]" )
 {
     const Split p(
@@ -834,7 +834,8 @@ TEST_CASE( "split_aggregates_keeps_an_enum_dropped_whole", "[opt][split]" )
         "enum E { full( D d ), empty };\n"
         "i32 f( i32 a ) { E e = E::full( D( a ) ); "
         "switch( e ) { case E::full( d ): return d.v; case E::empty: return 0; } }\n",
-        "e"
+        "e",
+        std::nullopt
     );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.func ).empty() );

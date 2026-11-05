@@ -144,8 +144,6 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
     bb3:
     kl_t0 = 0;
 #line 81 "opt/moves_fields.kl"
-    kl__Shape__dtor( &kl_s_1 );
-#line 81 "opt/moves_fields.kl"
     return kl_t0;
     bb4:
 #line 78 "opt/moves_fields.kl"

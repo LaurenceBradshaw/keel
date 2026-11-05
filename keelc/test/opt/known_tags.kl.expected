@@ -92,18 +92,19 @@ int32_t kl__built__3i32( int32_t kl_w_1 )
 int32_t kl__dropped_whole__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-    struct kl__Held kl_h_2;
-    struct kl__Res* kl_r_3;
+    struct kl__Res* kl_r_2;
+    int32_t kl_t3;
+    struct kl__Res kl_h_4;
 #line 10 "opt/known_tags.kl"
-    kl_h_2.kl_4full_r.kl_v = kl_x_1;
-#line 32 "opt/known_tags.kl"
-    kl_h_2.tag = 0;
+    kl_h_4.kl_v = kl_x_1;
 #line 35 "opt/known_tags.kl"
-    kl_r_3 = &kl_h_2.kl_4full_r;
+    kl_r_2 = &kl_h_4;
 #line 35 "opt/known_tags.kl"
-    kl_t0 = ( *kl_r_3 ).kl_v;
-#line 35 "opt/known_tags.kl"
-    kl__Held__dtor( &kl_h_2 );
+    kl_t0 = ( *kl_r_2 ).kl_v;
+#line 11 "opt/known_tags.kl"
+    kl_t3 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t3;
 #line 35 "opt/known_tags.kl"
     return kl_t0;
 #line 38 "opt/known_tags.kl"
@@ -116,6 +117,7 @@ int32_t kl__moved__3i32( int32_t kl_x_1 )
     struct kl__Held kl_h_2;
     struct kl__Held kl_g_3;
     struct kl__Res* kl_r_4;
+    int32_t kl_t5;
 #line 43 "opt/known_tags.kl"
     kl_h_2.tag = 0;
 #line 43 "opt/known_tags.kl"
@@ -125,8 +127,10 @@ int32_t kl__moved__3i32( int32_t kl_x_1 )
     kl_r_4 = &kl_g_3.kl_4full_r;
 #line 47 "opt/known_tags.kl"
     kl_t0 = ( *kl_r_4 ).kl_v;
-#line 47 "opt/known_tags.kl"
-    kl__Held__dtor( &kl_g_3 );
+#line 11 "opt/known_tags.kl"
+    kl_t5 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t5;
 #line 47 "opt/known_tags.kl"
     return kl_t0;
 #line 50 "opt/known_tags.kl"
@@ -166,18 +170,20 @@ int32_t kl__main__( void )
     struct kl__Held kl_h_7;
     struct kl__Held kl_g_8;
     struct kl__Res* kl_r_9;
-    struct kl__Held kl_h_10;
-    struct kl__Res* kl_r_11;
+    struct kl__Res* kl_r_10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    struct kl__Res kl_h_13;
 #line 10 "opt/known_tags.kl"
-    kl_h_10.kl_4full_r.kl_v = 4;
-#line 32 "opt/known_tags.kl"
-    kl_h_10.tag = 0;
+    kl_h_13.kl_v = 4;
 #line 35 "opt/known_tags.kl"
-    kl_r_11 = &kl_h_10.kl_4full_r;
+    kl_r_10 = &kl_h_13;
 #line 35 "opt/known_tags.kl"
-    kl_t2 = ( *kl_r_11 ).kl_v;
-#line 35 "opt/known_tags.kl"
-    kl__Held__dtor( &kl_h_10 );
+    kl_t2 = ( *kl_r_10 ).kl_v;
+#line 11 "opt/known_tags.kl"
+    kl_t11 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t11;
 #line 69 "opt/known_tags.kl"
     kl_t1 = kl_t2 != 4;
 #line 69 "opt/known_tags.kl"
@@ -192,15 +198,17 @@ int32_t kl__main__( void )
     kl_r_9 = &kl_g_8.kl_4full_r;
 #line 47 "opt/known_tags.kl"
     kl_t3 = ( *kl_r_9 ).kl_v;
-#line 47 "opt/known_tags.kl"
-    kl__Held__dtor( &kl_g_8 );
+#line 11 "opt/known_tags.kl"
+    kl_t12 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t12;
 #line 69 "opt/known_tags.kl"
     kl_t1 = kl_t3 != 5;
 #line 69 "opt/known_tags.kl"
     if ( kl_t1 ) goto bb3; else goto bb2;
     bb2:
 #line 69 "opt/known_tags.kl"
-    kl_t1 = kl__dropped__G != 2;
+    kl_t1 = kl_t12 != 2;
 #line 69 "opt/known_tags.kl"
     if ( kl_t1 ) goto bb3; else goto bb4;
     bb3:

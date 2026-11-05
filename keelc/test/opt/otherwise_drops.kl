@@ -1,0 +1,35 @@
+// M11, a release build: an arm that only a variant owning nothing reaches drops nothing. The enum's
+// destructor is inlined at the drop, and its test of the tag repeats the switch's, so `pick`'s
+// `default:` arm keeps no test and no drop.
+
+i32 dropped = 0;
+
+class Res
+{
+    public i32 v;
+    public Res( i32 x ) { v = x; }
+    ~Res() { dropped = dropped + 1; }
+};
+
+enum Held { full( Res r ), empty, other( i32 k ) };
+
+i32 pick( move Held h )
+{
+    switch( move h )
+    {
+        case Held::full( r ):
+            return r.v;
+        default:
+            return 1;
+    }
+}
+
+i32 main()
+{
+    if( pick( Held::full( Res( 7 ) ) ) != 7 ) { return 1; }
+    if( dropped != 1 ) { return 2; }
+    if( pick( Held::empty ) != 1 ) { return 3; }
+    if( pick( Held::other( 2 ) ) != 1 ) { return 4; }
+    if( dropped != 1 ) { return 5; }
+    return 0;
+}

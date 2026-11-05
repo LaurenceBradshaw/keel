@@ -201,8 +201,6 @@ int32_t kl__one_path__M5Shape_4bool( struct kl__Shape kl_s_1, bool kl_c_2 )
 #line 118 "opt/moves_fields_kept.kl"
     kl_t0 = 0;
 #line 118 "opt/moves_fields_kept.kl"
-    kl__Shape__dtor( &kl_s_1 );
-#line 118 "opt/moves_fields_kept.kl"
     return kl_t0;
     bb3:
 #line 114 "opt/moves_fields_kept.kl"
