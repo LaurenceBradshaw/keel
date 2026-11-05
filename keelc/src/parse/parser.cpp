@@ -3328,9 +3328,26 @@ Node_id Parser::parse_switch_stmt()
                 in_label_           = true;
                 const Node_id lower = parse_case_bound();
 
+                const auto names_callee = [&]( Node_id call )
+                {
+                    return ast_.kind( call ) == Node_kind::Call_expr &&
+                           ( ast_.kind( ast_.callee( call ) ) == Node_kind::Path_expr ||
+                             ast_.kind( ast_.callee( call ) ) == Node_kind::Name_expr );
+                };
+                const auto nests = [&]( Node_id argument )
+                { return ast_.kind( argument ) == Node_kind::Path_expr || names_callee( argument ); };
+
+                // A bare `Circle( r )` is a pattern missing its enum; `f( 1 )` stays a call.
+                const bool bare_pattern =
+                    names_callee( lower ) && ast_.kind( ast_.callee( lower ) ) == Node_kind::Name_expr &&
+                    std::ranges::all_of(
+                        ast_.arguments( lower ),
+                        [&]( Node_id argument ) { return ast_.kind( argument ) == Node_kind::Name_expr || nests( argument ); }
+                    );
+
                 // D7: `case Shape::Circle( r ):` binds names. The postfix loop already folded it into a Call_expr,
                 // so the pattern is converted from that, which also keeps the bindings away from the resolver.
-                if( ast_.kind( lower ) == Node_kind::Call_expr && ast_.kind( ast_.callee( lower ) ) == Node_kind::Path_expr )
+                if( bare_pattern || ( names_callee( lower ) && ast_.kind( ast_.callee( lower ) ) == Node_kind::Path_expr ) )
                 {
                     std::vector<Node_id> parts { ast_.callee( lower ) };
 
@@ -3338,11 +3355,7 @@ Node_id Parser::parse_switch_stmt()
 
                     for( const Node_id argument : ast_.arguments( lower ) )
                     {
-                        const bool nests = ast_.kind( argument ) == Node_kind::Path_expr ||
-                                           ( ast_.kind( argument ) == Node_kind::Call_expr &&
-                                             ast_.kind( ast_.callee( argument ) ) == Node_kind::Path_expr );
-
-                        if( nests )
+                        if( nests( argument ) )
                         {
                             if( !ast_.broken( lower ) )
                             {
@@ -3609,7 +3622,9 @@ Node_id Parser::parse_postfix( Node_id left, Expression_use use )
         // Binary_expr node, so it does not need the parentheses check below.
         if( cursor_.check( Token_kind::L_paren ) )
         {
-            Node_id args = parse_arg_list( in_label_ && ast_.kind( left ) == Node_kind::Path_expr );
+            Node_id args = parse_arg_list(
+                in_label_ && ( ast_.kind( left ) == Node_kind::Path_expr || ast_.kind( left ) == Node_kind::Name_expr )
+            );
 
             left = ast_.add(
                 Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }

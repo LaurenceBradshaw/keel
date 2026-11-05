@@ -101,6 +101,7 @@ private:
     std::vector<bool>    used_;              // a declaration some use was bound to
     std::vector<Node_id> unused_candidates_; // parameters of functions with bodies, and locals
     std::vector<bool>    unresolved_;
+    std::vector<bool>    unreported_; // see Resolution::is_unreported
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
     std::vector<Scope>   scopes_;
@@ -110,6 +111,7 @@ private:
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
     bool refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
+    bool naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
 
     // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
@@ -124,6 +126,7 @@ Resolution Resolver::run()
     used_.assign( ast_.node_count(), false );
     unused_candidates_.clear();
     unresolved_.assign( ast_.node_count(), false );
+    unreported_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
     fallbacks_.assign( ast_.node_count(), Node_id {} );
     reported_.assign( ast_.node_count(), false );
@@ -189,6 +192,7 @@ Resolution Resolver::run()
     return Resolution(
         std::move( bindings_ ),
         std::move( unresolved_ ),
+        std::move( unreported_ ),
         std::move( next_overload_ ),
         std::move( fallbacks_ ),
         prelude_items(),
@@ -337,6 +341,10 @@ void Resolver::visit( Node_id id )
         else if( is_builtin_type_name( interner_.text( name ) ) )
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( name ) ) );
+        }
+        else if( naming_label_ )
+        {
+            unreported_[id.v] = true;
         }
         else
         {
@@ -526,14 +534,20 @@ void Resolver::visit_case_arm( Node_id id )
 
     for( const Node_id label : ast_.labels( id ) )
     {
-        if( ast_.kind( label ) != Node_kind::Variant_pattern )
+        const bool    pattern = ast_.kind( label ) == Node_kind::Variant_pattern;
+        const Node_id named   = pattern ? ast_.variant_path( label ) : label;
+
+        // An undeclared bare `Red` is left to the checker, which knows the scrutinee's variants.
+        naming_label_ = ast_.kind( named ) == Node_kind::Name_expr;
+        visit( named ); // a pattern's path resolves like any other
+        naming_label_ = false;
+
+        if( !pattern )
         {
-            visit( label );
             continue;
         }
 
-        // The path resolves like any other; the bindings are declarations rather than uses.
-        visit( ast_.variant_path( label ) );
+        // The bindings are declarations rather than uses.
 
         for( const Node_id binding : ast_.bindings( label ) )
         {

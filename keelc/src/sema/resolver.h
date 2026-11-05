@@ -34,6 +34,7 @@ public:
     Resolution(
         std::vector<Node_id> bindings,
         std::vector<bool>    unresolved,
+        std::vector<bool>    unreported,
         std::vector<Node_id> next_overload,
         std::vector<Node_id> fallbacks,
         const Prelude_items& prelude,
@@ -42,6 +43,7 @@ public:
     )
         : bindings_( std::move( bindings ) ),
           unresolved_( std::move( unresolved ) ),
+          unreported_( std::move( unreported ) ),
           next_overload_( std::move( next_overload ) ),
           fallbacks_( std::move( fallbacks ) ),
           prelude_( prelude ),
@@ -117,6 +119,12 @@ public:
         return use.v < unresolved_.size() ? unresolved_[use.v] : false;
     }
 
+    // An undeclared `case` label name left for the checker, which knows the scrutinee's variants.
+    bool is_unreported( Node_id use ) const
+    {
+        return use.v < unreported_.size() ? unreported_[use.v] : false;
+    }
+
     // Parameters of functions with bodies, and locals, that no use was bound to, in declaration order.
     const std::vector<Node_id>& unused() const
     {
@@ -126,6 +134,7 @@ public:
 private:
     std::vector<Node_id> bindings_;
     std::vector<bool>    unresolved_;
+    std::vector<bool>    unreported_;
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
     Prelude_items        prelude_;

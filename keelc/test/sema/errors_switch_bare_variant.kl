@@ -1,0 +1,52 @@
+// A label naming a variant without its enum is refused once, with the spelling it meant, and then
+// read as that variant: the switch is covered and the pattern's binding is typed, so nothing after
+// it is reported. A name that is no variant of the scrutinee is refused without a hint.
+enum Colour : u8
+{
+    Red,
+    Green,
+};
+
+enum Shape
+{
+    Circle( f64 radius ),
+    Dot,
+};
+
+i32 pick( Colour c )
+{
+    switch( c )
+    {
+        case Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+    }
+}
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Circle( r ):
+            return r * r;
+        case Dot:
+            return 0.0;
+    }
+}
+
+i32 other( Colour c )
+{
+    switch( c )
+    {
+        case Purple:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

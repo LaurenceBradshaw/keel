@@ -126,6 +126,7 @@ public:
 
 private:
     Type_id infer_name( Node_id id );
+    Type_id infer_bare_variant( Node_id id, Type_id scrutinee ); // `case Red:`, invalid unless a variant
     Type_id infer_call( Node_id id );
     // Empty after reporting why none can be called.
     std::vector<Node_id> constructor_candidates( Node_id callee, Node_id aggregate );

@@ -214,6 +214,10 @@ Type_id Expressions::infer_name( Node_id id )
 
     if( !decl.is_valid() )
     {
+        if( resolution_.is_unreported( id ) )
+        {
+            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( ast_.name( id ) ) ) );
+        }
         return types_.poison( id ); // the resolver already said so
     }
 
@@ -4554,6 +4558,14 @@ void Expressions::warn_read_move( Node_id value, std::string_view where )
 // is accounted for there, so the path inside it names a variant rather than standing for a value.
 Type_id Expressions::infer_in_pattern( Node_id path, Type_id scrutinee )
 {
+    if( resolution_.is_unreported( path ) )
+    {
+        if( const Type_id named = infer_bare_variant( path, scrutinee ); named.is_valid() )
+        {
+            return named;
+        }
+    }
+
     naming_variant_         = true;
     expected_               = scrutinee;
     const Type_id path_type = infer( path );
@@ -4561,6 +4573,48 @@ Type_id Expressions::infer_in_pattern( Node_id path, Type_id scrutinee )
     expected_               = Type_id {};
 
     return path_type;
+}
+
+// `case Red:` over a `Colour` names a variant of the scrutinee: reported with its spelling, then
+// read as that variant, so coverage and the bindings carry on. Invalid when no variant is named so.
+Type_id Expressions::infer_bare_variant( Node_id id, Type_id scrutinee )
+{
+    std::vector<Type_id> enums;
+
+    if( table_.is_union( scrutinee ) )
+    {
+        enums.assign( table_.get( scrutinee ).arguments.begin(), table_.get( scrutinee ).arguments.end() );
+    }
+    else if( table_.is_enum( scrutinee ) )
+    {
+        enums.push_back( scrutinee );
+    }
+
+    for( const Type_id type : enums )
+    {
+        const std::span<const Node_id> variants = ast_.variants( table_.get( type ).declaration );
+
+        for( std::size_t i = 0; i < variants.size(); ++i )
+        {
+            if( ast_.name( variants[i] ) != ast_.name( id ) )
+            {
+                continue;
+            }
+
+            const std::string_view name = interner_.text( ast_.name( id ) );
+
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is not declared", name ),
+                fmt::format( "write `{}::{}`", table_.base_name( type ), name )
+            );
+
+            constant_folder_.record_value( id, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = i } );
+            return types_.record( id, type );
+        }
+    }
+
+    return Type_id {};
 }
 
 // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
