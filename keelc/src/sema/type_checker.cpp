@@ -265,6 +265,48 @@ void name_declarations(
 namespace
 {
 
+// Whether evaluating `expr` may do something: a call, or an operator a method may implement.
+bool may_act( const Ast& ast, const Types& types, Node_id expr )
+{
+    if( !expr.is_valid() )
+    {
+        return false;
+    }
+    switch( ast.kind( expr ) )
+    {
+    case Node_kind::Int_literal:
+    case Node_kind::Float_literal:
+    case Node_kind::String_literal:
+    case Node_kind::Char_literal:
+    case Node_kind::Bool_literal:
+    case Node_kind::Null_literal:
+    case Node_kind::Name_expr:
+    case Node_kind::Path_expr:
+    case Node_kind::Field_expr:
+    case Node_kind::Marker_expr:
+    case Node_kind::Cast_expr:
+    case Node_kind::Conditional_expr:
+    case Node_kind::Struct_literal:
+    case Node_kind::Field_init:
+    case Node_kind::Array_literal:
+    case Node_kind::Array_fill:
+        break;
+    case Node_kind::Binary_expr:
+    case Node_kind::Unary_expr:
+    {
+        const Type_id operand = types.type_of( ast.child( expr, 0 ) );
+        if( !operand.is_valid() || !( types.table().is_builtin( operand ) || types.table().is_pointer( operand ) ) )
+        {
+            return true;
+        }
+        break;
+    }
+    default:
+        return true;
+    }
+    return std::ranges::any_of( ast.children( expr ), [&]( Node_id child ) { return may_act( ast, types, child ); } );
+}
+
 // A local that owns is kept for its destructor, which runs at the end of its scope.
 void report_unused(
     const Ast&            ast,
@@ -317,7 +359,7 @@ void report_unused(
             ast.name_span( unused ),
             fmt::format( "unused variable `{}`", name ),
             walk ? "write `_` in its place: `for( _ : c )`"
-            : init.is_valid()
+            : may_act( ast, types, init )
                 ? fmt::format( "write `_ = {};` if only the initialiser is wanted", reporter.text( ast.span( init ) ) )
                 : "remove it"
         );

@@ -14,13 +14,13 @@ warning: unused variable `constant` [-Wunused-variable]
    --> codegen/unused_names.kl:104:11
     |
 104 |     u64   constant  = 3;
-    |           ^^^^^^^^ write `_ = 3;` if only the initialiser is wanted
+    |           ^^^^^^^^ remove it
 
 warning: unused variable `p` [-Wunused-variable]
    --> codegen/unused_names.kl:105:11
     |
 105 |     Point p         = Point { 1, 2 };
-    |           ^ write `_ = Point { 1, 2 };` if only the initialiser is wanted
+    |           ^ remove it
 
 warning: unused variable `seven` [-Wunused-variable]
    --> codegen/unused_names.kl:107:11

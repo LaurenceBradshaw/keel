@@ -3207,8 +3207,23 @@ TEST_CASE( "type_check_warns_about_unused_names", "[sema][unused]" )
         REQUIRE( p.clean() );
         REQUIRE( count( p.rendered(), "unused parameter `a`" ) == 1 );
         REQUIRE( count( p.rendered(), "unused variable `b`" ) == 1 );
-        REQUIRE( p.rendered().find( "write `_ = 1;` if only the initialiser is wanted" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "^ remove it" ) != std::string::npos );
         REQUIRE( count( p.rendered(), "unused variable `c`" ) == 0 );
+    }
+
+    SECTION( "`_ = …;` is offered only for an initialiser that does something" )
+    {
+        const Typed p( "struct P { i32 v; i32 get() const { return v; } };\n"
+                       "i32 one() { return 1; }\n"
+                       "i32 main() { i32 x = 2; i32* q = &x; const ref i32 r = x; P s = P { x }; i32 a = one() + 1; "
+                       "i32 b = s.get(); i32 c = -x * 3; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "write `_ = one() + 1;` if only the initialiser is wanted" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `_ = s.get();` if only the initialiser is wanted" ) != std::string::npos );
+        REQUIRE( count( p.rendered(), "if only the initialiser is wanted" ) == 2 );
+        REQUIRE( count( p.rendered(), "^ remove it" ) == 3 );
     }
 
     SECTION( "but not what is unused on purpose or cannot be used" )
