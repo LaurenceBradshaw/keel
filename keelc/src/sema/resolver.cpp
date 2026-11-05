@@ -83,6 +83,8 @@ private:
     void          refuse_hiding_name( Node_id param );
     void          refuse_unimported( Node_id use, Node_id decl );
     void          refuse_private( Node_id use, Node_id decl );
+    void          refuse_private_in_public();
+    void          refuse_private_types( Node_id type, std::string_view owner, std::string_view fix );
     std::string   module_name( File_id file ) const;
     void          refuse_other_package( Node_id use, Node_id decl );
 
@@ -177,6 +179,7 @@ Resolution Resolver::run()
     }
 
     visit( ast_.root() );
+    refuse_private_in_public();
 
     // A loaded module's bodies were resolved when its object was built; its top-level names were
     // declared above with every other module's.
@@ -1331,6 +1334,124 @@ void Resolver::refuse_private( Node_id use, Node_id decl )
         fmt::format( "`{}` is private to `{}`", interner_.text( ast_.name( decl ) ), module_name( ast_.span( decl ).file ) ),
         "only that module's own declarations may name it"
     );
+}
+
+// A public declaration's written signature may not name a module-private type.
+void Resolver::refuse_private_in_public()
+{
+    const auto signature = [&]( Node_id fn, std::string_view owner, std::string_view fix )
+    {
+        refuse_private_types( ast_.return_type( fn ), owner, fix );
+        for( const Node_id param : ast_.explicit_params( fn ) )
+        {
+            refuse_private_types( ast_.annotation( param ), owner, fix );
+        }
+    };
+
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        const File_id file = ast_.span( decl ).file;
+        if( file == modules_.prelude_file() || modules_.is_loaded( file ) || ast_.access( decl ) == Access::Private ||
+            !ast_.name( decl ).is_valid() )
+        {
+            continue;
+        }
+
+        const std::string name = fmt::format( "`{}`", interner_.text( ast_.name( decl ) ) );
+        switch( ast_.kind( decl ) )
+        {
+        case Node_kind::Function_decl:
+            signature( decl, name, name );
+            break;
+        case Node_kind::Var_decl:
+            refuse_private_types( ast_.annotation( decl ), name, name );
+            break;
+        case Node_kind::Enum_decl:
+            for( const Node_id variant : ast_.variants( decl ) )
+            {
+                if( !ast_.name( variant ).is_valid() )
+                {
+                    continue;
+                }
+                const std::string owner =
+                    fmt::format( "`{}::{}`", interner_.text( ast_.name( decl ) ), interner_.text( ast_.name( variant ) ) );
+                for( const Node_id field : ast_.payload( variant ) )
+                {
+                    refuse_private_types( ast_.annotation( field ), owner, name );
+                }
+            }
+            break;
+        case Node_kind::Struct_decl:
+        case Node_kind::Class_decl:
+        case Node_kind::Interface_decl:
+            for( const Node_id member : ast_.members( decl ) )
+            {
+                if( ast_.access( member ) == Access::Private || ast_.kind( member ) == Node_kind::Destructor_decl ||
+                    ( !ast_.name( member ).is_valid() && ast_.kind( member ) != Node_kind::Constructor_decl ) )
+                {
+                    continue;
+                }
+                // Only a class has private members.
+                const bool        ctor = ast_.kind( member ) == Node_kind::Constructor_decl;
+                const std::string owner =
+                    ctor
+                        ? fmt::format( "{}'s constructor", name )
+                        : fmt::format( "`{}::{}`", interner_.text( ast_.name( decl ) ), interner_.text( ast_.name( member ) ) );
+                const std::string fix = ast_.kind( decl ) != Node_kind::Class_decl ? name
+                                        : ctor                                     ? std::string( "the constructor" )
+                                                                                   : owner;
+                if( is_function_like( ast_.kind( member ) ) )
+                {
+                    signature( member, owner, fix );
+                }
+                else if( ast_.kind( member ) == Node_kind::Field_decl )
+                {
+                    refuse_private_types( ast_.annotation( member ), owner, fix );
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void Resolver::refuse_private_types( Node_id type, std::string_view owner, std::string_view fix )
+{
+    std::vector<Node_id> stack;
+    if( type.is_valid() )
+    {
+        stack.push_back( type );
+    }
+    while( !stack.empty() )
+    {
+        const Node_id id = stack.back();
+        stack.pop_back();
+        if( ast_.kind( id ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        const Node_id decl = bindings_[id.v];
+        // From another module the name was refused already.
+        if( decl.is_valid() && ast_.access( decl ) == Access::Private && ast_.span( decl ).file == ast_.span( id ).file &&
+            ( ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ) )
+        {
+            const std::string_view name = interner_.text( ast_.name( decl ) );
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is private to `{}`, but {} is not", name, module_name( ast_.span( decl ).file ), owner ),
+                fmt::format( "make {} private, or `{}` public", fix, name )
+            );
+        }
+        for( const Node_id child : ast_.children( id ) )
+        {
+            if( child.is_valid() )
+            {
+                stack.push_back( child );
+            }
+        }
+    }
 }
 
 void Resolver::refuse_other_package( Node_id use, Node_id decl )

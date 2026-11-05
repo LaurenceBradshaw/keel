@@ -1,0 +1,26 @@
+// A public declaration's signature may not name a module-private type; its body may.
+private struct inner { i32 x; };
+private enum shade { light, dark };
+private interface quiet { i32 q() const; };
+
+inner make() { return inner { 1 }; }
+i32 read( inner* p ) { return p.x; }
+shade[2] pair = [ shade::light, shade::dark ];
+
+struct Outer { inner held; };
+enum Wrapped { Some( inner value ), None };
+interface Maker { inner made() const; };
+
+class Holder
+{
+    private inner kept;
+    public Holder( inner i ) { kept = i; }
+    public inner get() const { return kept; }
+    private inner peek() const { return kept; }
+};
+
+// Accepted: private signatures, and a public body.
+private inner helper() { return inner { 2 }; }
+i32 body() { return helper().x; }
+
+i32 main() { return body() - 2; }

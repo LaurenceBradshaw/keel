@@ -1,0 +1,49 @@
+error: `inner` is private to `errors_private_in_public`, but `make` is not
+ --> sema/errors_private_in_public.kl:6:1
+  |
+6 | inner make() { return inner { 1 }; }
+  | ^^^^^ make `make` private, or `inner` public
+
+error: `inner` is private to `errors_private_in_public`, but `read` is not
+ --> sema/errors_private_in_public.kl:7:11
+  |
+7 | i32 read( inner* p ) { return p.x; }
+  |           ^^^^^ make `read` private, or `inner` public
+
+error: `shade` is private to `errors_private_in_public`, but `pair` is not
+ --> sema/errors_private_in_public.kl:8:1
+  |
+8 | shade[2] pair = [ shade::light, shade::dark ];
+  | ^^^^^ make `pair` private, or `shade` public
+
+error: `inner` is private to `errors_private_in_public`, but `Outer::held` is not
+  --> sema/errors_private_in_public.kl:10:16
+   |
+10 | struct Outer { inner held; };
+   |                ^^^^^ make `Outer` private, or `inner` public
+
+error: `inner` is private to `errors_private_in_public`, but `Wrapped::Some` is not
+  --> sema/errors_private_in_public.kl:11:22
+   |
+11 | enum Wrapped { Some( inner value ), None };
+   |                      ^^^^^ make `Wrapped` private, or `inner` public
+
+error: `inner` is private to `errors_private_in_public`, but `Maker::made` is not
+  --> sema/errors_private_in_public.kl:12:19
+   |
+12 | interface Maker { inner made() const; };
+   |                   ^^^^^ make `Maker` private, or `inner` public
+
+error: `inner` is private to `errors_private_in_public`, but `Holder`'s constructor is not
+  --> sema/errors_private_in_public.kl:17:20
+   |
+17 |     public Holder( inner i ) { kept = i; }
+   |                    ^^^^^ make the constructor private, or `inner` public
+
+error: `inner` is private to `errors_private_in_public`, but `Holder::get` is not
+  --> sema/errors_private_in_public.kl:18:12
+   |
+18 |     public inner get() const { return kept; }
+   |            ^^^^^ make `Holder::get` private, or `inner` public
+
+8 errors generated
