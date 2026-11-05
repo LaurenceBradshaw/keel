@@ -200,7 +200,7 @@ Front_end run_front_end(
                         {
                             forward_borrows( function, front.types.table() );
                         }
-                        shadow_tags( function, front.types.table() );
+                        shadow_tags( function );
                     }
                     // Folds a local compared with itself, so SCCP branches on the constant.
                     propagate_values( function, front.types.table(), literals );

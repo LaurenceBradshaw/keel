@@ -3,11 +3,10 @@
 
 #pragma once
 #include "ir/kir.h"
-#include "sema/type.h"
 
 namespace keel
 {
-// After split_aggregates: a tagged local that no address reaches whole or at its tag reads its tag
-// from a scalar local, written beside each write, so SCCP sees it; release only.
-void shadow_tags( Function& func, const Type_table& types );
+// After split_aggregates: a tag of a local or of a field under it, that no address reaches, is read from
+// a scalar local written beside each write, so SCCP sees it; release only.
+void shadow_tags( Function& func );
 } // namespace keel

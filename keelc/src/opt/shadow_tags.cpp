@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/shadow_tags.h"
+#include <algorithm>
+#include <map>
+#include <optional>
 
 namespace keel
 {
@@ -9,25 +12,72 @@ namespace keel
 namespace
 {
 
-// `_L.tag`, of a whole local.
-bool names_tag( const Function& func, const Place& place )
+// A local and the fields under it: `_L.f.g`.
+using Path = std::pair<u32, std::vector<u32>>;
+
+// A local's place, as its leading fields and how many projections follow them.
+std::optional<std::pair<Path, u32>> leading( const Function& func, const Place& place )
 {
-    return !place.is_global() && place.local.is_valid() && place.num_projections == 1 &&
-           func.projections[place.first_projection].kind == Projection_kind::Tag;
+    if( place.is_global() || !place.local.is_valid() )
+    {
+        return std::nullopt;
+    }
+
+    const Run<const Projection> run = func.projections_of( place );
+    Path                        path { place.local.v, {} };
+    u32                         i = 0;
+    for( ; i < run.size() && run[i].kind == Projection_kind::Field; ++i )
+    {
+        path.second.push_back( run[i].field.v );
+    }
+    return std::pair { std::move( path ), run.size() - i };
 }
 
-// Each local's shadow, invalid for one without: past the parameters, its tag named, and no address of it whole
-// or of its tag.
-std::vector<Local_id> shadows( Function& func, const Type_table& types )
+// `_L.f.g`.
+std::optional<Path> path_of( const Function& func, const Place& place )
 {
-    std::vector<bool> named( func.locals.size(), false );
-    std::vector<bool> addressed( func.locals.size(), false );
+    std::optional<std::pair<Path, u32>> l = leading( func, place );
+    return l && l->second == 0 ? std::make_optional( std::move( l->first ) ) : std::nullopt;
+}
+
+// `_L.f.g.tag`, as `_L.f.g`.
+std::optional<Path> tag_of( const Function& func, const Place& place )
+{
+    std::optional<std::pair<Path, u32>> l   = leading( func, place );
+    const bool                          tag = l && l->second == 1 &&
+                     func.projections[place.first_projection + place.num_projections - 1].kind == Projection_kind::Tag;
+    return tag ? std::make_optional( std::move( l->first ) ) : std::nullopt;
+}
+
+bool under( const Path& prefix, const Path& path )
+{
+    return prefix.first == path.first && prefix.second.size() <= path.second.size() &&
+           std::equal( prefix.second.begin(), prefix.second.end(), path.second.begin() );
+}
+
+Path joined( const Path& base, const Path& path, std::size_t from )
+{
+    Path out = base;
+    out.second.insert( out.second.end(), path.second.begin() + static_cast<std::ptrdiff_t>( from ), path.second.end() );
+    return out;
+}
+
+// Each tag's shadow: past the parameters, named, or moved into one that is, and no address of it or
+// above it.
+std::map<Path, Local_id> shadows( Function& func )
+{
+    std::map<Path, Type_id>            wanted;
+    std::vector<Path>                  addressed;
+    std::vector<std::pair<Path, Path>> moves;
 
     const auto note = [&]( const Operand& operand )
     {
-        if( operand.has_place() && names_tag( func, operand.place ) )
+        if( operand.has_place() )
         {
-            named[operand.place.local.v] = true;
+            if( std::optional<Path> tag = tag_of( func, operand.place ) )
+            {
+                wanted.emplace( std::move( *tag ), operand.type );
+            }
         }
     };
 
@@ -40,16 +90,28 @@ std::vector<Local_id> shadows( Function& func, const Type_table& types )
 
         const Rvalue& value = func.rvalue( statement );
 
-        if( names_tag( func, statement.place ) )
+        if( std::optional<Path> tag = tag_of( func, statement.place ) )
         {
-            named[statement.place.local.v] = true;
+            wanted.emplace( std::move( *tag ), value.type );
         }
 
-        if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() &&
-            ( value.a.place.is_whole_local() || names_tag( func, value.a.place ) ) )
+        if( value.kind == Rvalue_kind::Address_of )
         {
-            addressed[value.a.place.local.v] = true;
+            if( std::optional<std::pair<Path, u32>> l = leading( func, value.a.place ) )
+            {
+                addressed.push_back( std::move( l->first ) );
+            }
             continue;
+        }
+
+        if( value.kind == Rvalue_kind::Use && value.a.has_place() )
+        {
+            std::optional<Path> to   = path_of( func, statement.place );
+            std::optional<Path> from = path_of( func, value.a.place );
+            if( to && from )
+            {
+                moves.emplace_back( std::move( *to ), std::move( *from ) );
+            }
         }
 
         for_each_operand( value, note );
@@ -62,16 +124,31 @@ std::vector<Local_id> shadows( Function& func, const Type_table& types )
         note( block.terminator.at );
     }
 
-    std::vector<Local_id> shadow( func.locals.size() );
-    for( u32 l = func.parameter_count + 1; l < named.size(); ++l )
+    // A type is never its own part, so this stops.
+    for( bool grew = true; grew; )
     {
-        if( named[l] && !addressed[l] )
+        grew = false;
+        for( const auto& [to, from] : moves )
         {
-            shadow[l] = Local_id { narrow_cast<u32>( func.locals.size() ) };
-            func.locals.push_back( Local {
-                .type = types.get( func.locals[Local_id { l }].type ).element,
-                .span = func.locals[Local_id { l }].span,
-            } );
+            for( const auto& [tag, type] : wanted )
+            {
+                if( under( to, tag ) )
+                {
+                    grew = wanted.emplace( joined( from, tag, to.second.size() ), type ).second || grew;
+                }
+            }
+        }
+    }
+
+    std::map<Path, Local_id> shadow;
+    for( const auto& [tag, type] : wanted )
+    {
+        if( tag.first > func.parameter_count &&
+            std::ranges::none_of( addressed, [&]( const Path& a ) { return under( a, tag ); } ) )
+        {
+            const Span span = func.locals[Local_id { tag.first }].span;
+            shadow.emplace( tag, Local_id { narrow_cast<u32>( func.locals.size() ) } );
+            func.locals.push_back( Local { .type = type, .span = span } );
         }
     }
 
@@ -80,20 +157,23 @@ std::vector<Local_id> shadows( Function& func, const Type_table& types )
 
 } // namespace
 
-void shadow_tags( Function& func, const Type_table& types )
+void shadow_tags( Function& func )
 {
-    const std::vector<Local_id> shadow = shadows( func, types );
+    const std::map<Path, Local_id> shadow = shadows( func );
 
-    const auto of    = [&]( const Place& place ) { return names_tag( func, place ) ? shadow[place.local.v] : Local_id {}; };
-    const auto whole = [&]( const Place& place ) {
-        return !place.is_global() && place.is_whole_local() && place.local.v < shadow.size() ? shadow[place.local.v]
-                                                                                             : Local_id {};
+    const auto find = [&]( const std::optional<Path>& tag )
+    {
+        const auto it = tag ? shadow.find( *tag ) : shadow.end();
+        return it == shadow.end() ? Local_id {} : it->second;
     };
     const auto read = [&]( Operand& operand )
     {
-        if( operand.has_place() && of( operand.place ).is_valid() )
+        if( operand.has_place() )
         {
-            operand = copy( Place { .local = of( operand.place ) }, operand.type );
+            if( const Local_id tag = find( tag_of( func, operand.place ) ); tag.is_valid() )
+            {
+                operand = copy( Place { .local = tag }, operand.type );
+            }
         }
     };
 
@@ -124,7 +204,7 @@ void shadow_tags( Function& func, const Type_table& types )
                 read( argument );
             }
 
-            if( const Local_id tag = of( statement.place ); tag.is_valid() )
+            if( const Local_id tag = find( tag_of( func, statement.place ) ); tag.is_valid() )
             {
                 const Place   place   = statement.place;
                 const Type_id type    = func.locals[tag].type;
@@ -136,22 +216,45 @@ void shadow_tags( Function& func, const Type_table& types )
                 continue;
             }
 
-            const Local_id refreshed = whole( statement.place );
-            const Local_id from  = value.kind == Rvalue_kind::Use && value.a.has_place() ? whole( value.a.place ) : Local_id {};
-            const Place    local = statement.place;
-            const Span     span  = statement.span;
+            const std::optional<Path> to = path_of( func, statement.place );
+            const std::optional<Path> from =
+                value.kind == Rvalue_kind::Use && value.a.has_place() ? path_of( func, value.a.place ) : std::nullopt;
+            const Place local = statement.place;
+            const Span  span  = statement.span;
             statements.push_back( std::move( statement ) );
 
-            if( refreshed.is_valid() )
+            if( !to )
             {
-                const Type_id type   = func.locals[refreshed].type;
-                const Place   source = from.is_valid() ? Place { .local = from }
-                                                       : projected( func, local, Projection { .kind = Projection_kind::Tag } );
+                continue;
+            }
+
+            // Each tag the write reaches, from the source's shadow or read back.
+            for( const auto& [tag, refreshed] : shadow )
+            {
+                if( !under( *to, tag ) )
+                {
+                    continue;
+                }
+
+                const Local_id moved = from ? find( joined( *from, tag, to->second.size() ) ) : Local_id {};
+                Place          source { .local = moved };
+                if( !moved.is_valid() )
+                {
+                    source = local;
+                    for( std::size_t f = to->second.size(); f < tag.second.size(); ++f )
+                    {
+                        source = projected(
+                            func, source, Projection { .kind = Projection_kind::Field, .field = Node_id { tag.second[f] } }
+                        );
+                    }
+                    source = projected( func, source, Projection { .kind = Projection_kind::Tag } );
+                }
+
                 statements.push_back( Statement {
                     .kind  = Statement_kind::Assign,
                     .span  = span,
                     .place = Place { .local = refreshed },
-                    .value = func.add_rvalue( use( copy( source, type ) ) ),
+                    .value = func.add_rvalue( use( copy( source, func.locals[refreshed].type ) ) ),
                 } );
             }
         }
@@ -181,6 +284,7 @@ namespace
 
 constexpr std::string_view k_types = "class D { public i32 v; public D( i32 x ) { v = x; } ~D() { v = 0; } };\n"
                                      "enum E { full( D d ), empty };\n"
+                                     "enum O { some( E e ), none };\n"
                                      "i32 main() { return 0; }\n";
 
 // Released, then the branches of the function declaring a local `h`.
@@ -224,6 +328,15 @@ TEST_CASE( "shadow_tags_carries_a_tag_through_a_move", "[opt][tags]" )
 {
     const Shadowed p( "i32 f( i32 x ) { E h = E::full( D( x ) ); E g = move h; "
                       "switch( g ) { case E::full( d ): return d.v; case E::empty: return 0; } }\n" );
+    REQUIRE( p.branches() == 0 );
+}
+
+// The payload's tag is built in its own local and moved in, then `o` is moved: still known.
+TEST_CASE( "shadow_tags_carries_a_nested_tag", "[opt][tags]" )
+{
+    const Shadowed p( "i32 f( i32 h ) { O o = O::some( E::full( D( h ) ) ); O g = move o; "
+                      "switch( move g ) { case O::some( e ): switch( move e ) { case E::full( d ): return d.v; "
+                      "case E::empty: return 1; } case O::none: return 0; } }\n" );
     REQUIRE( p.branches() == 0 );
 }
 

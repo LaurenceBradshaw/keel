@@ -1,0 +1,117 @@
+// opt/nested_tags.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__D;
+struct kl__E;
+struct kl__O;
+
+struct kl__D
+{
+    int32_t kl_v;
+};
+
+struct kl__E
+{
+    int32_t tag;
+    struct kl__D kl_4full_d;
+};
+
+struct kl__O
+{
+    int32_t tag;
+    struct kl__E kl_4some_e;
+};
+
+void kl__D__R1D_3i32__ctor( struct kl__D*, int32_t );
+void kl__D__dtor( struct kl__D* );
+int32_t kl__pick__3i32( int32_t );
+int32_t kl__main__( void );
+void kl__E__dtor( struct kl__E* );
+void kl__O__dtor( struct kl__O* );
+
+#line 7 "opt/nested_tags.kl"
+void kl__D__R1D_3i32__ctor( struct kl__D* kl_this_1, int32_t kl_x_2 )
+{
+#line 7 "opt/nested_tags.kl"
+    ( *kl_this_1 ).kl_v = kl_x_2;
+#line 7 "opt/nested_tags.kl"
+    return;
+#line 7 "opt/nested_tags.kl"
+}
+
+#line 8 "opt/nested_tags.kl"
+void kl__D__dtor( struct kl__D* kl_this_1 )
+{
+#line 8 "opt/nested_tags.kl"
+    ( *kl_this_1 ).kl_v = 0;
+#line 8 "opt/nested_tags.kl"
+    return;
+#line 8 "opt/nested_tags.kl"
+}
+
+#line 15 "opt/nested_tags.kl"
+int32_t kl__pick__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 25 "opt/nested_tags.kl"
+    kl_t0 = kl_x_1;
+#line 25 "opt/nested_tags.kl"
+    return kl_t0;
+#line 32 "opt/nested_tags.kl"
+}
+
+#line 34 "opt/nested_tags.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    kl_t0 = 0;
+#line 37 "opt/nested_tags.kl"
+    return kl_t0;
+}
+
+#line 11 "opt/nested_tags.kl"
+void kl__E__dtor( struct kl__E* kl_t1 )
+{
+    bool kl_t2;
+#line 11 "opt/nested_tags.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+#line 11 "opt/nested_tags.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 11 "opt/nested_tags.kl"
+    return;
+    bb2:
+#line 8 "opt/nested_tags.kl"
+    ( *kl_t1 ).kl_4full_d.kl_v = 0;
+#line 8 "opt/nested_tags.kl"
+    goto bb1;
+#line 11 "opt/nested_tags.kl"
+}
+
+#line 13 "opt/nested_tags.kl"
+void kl__O__dtor( struct kl__O* kl_t1 )
+{
+    bool kl_t2;
+#line 13 "opt/nested_tags.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+#line 13 "opt/nested_tags.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 13 "opt/nested_tags.kl"
+    return;
+    bb2:
+#line 13 "opt/nested_tags.kl"
+    kl__E__dtor( &( *kl_t1 ).kl_4some_e );
+#line 13 "opt/nested_tags.kl"
+    goto bb1;
+#line 13 "opt/nested_tags.kl"
+}
+
+#line 34 "opt/nested_tags.kl"
+int main( void )
+{
+#line 34 "opt/nested_tags.kl"
+    return (int) kl__main__();
+}

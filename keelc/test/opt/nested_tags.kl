@@ -1,0 +1,38 @@
+// M11, a release build: a tag inside a payload, built in its own local and moved in, is known where a
+// `switch` reads it, so `pick` keeps no test of either tag.
+
+class D
+{
+    public i32 v;
+    public D( i32 x ) { v = x; }
+    ~D() { v = 0; }
+};
+
+enum E { full( D d ), empty };
+
+enum O { some( E e ), none };
+
+i32 pick( i32 x )
+{
+    O o = O::some( E::full( D( x ) ) );
+    O g = move o;
+    switch( move g )
+    {
+        case O::some( e ):
+            switch( move e )
+            {
+                case E::full( d ):
+                    return d.v;
+                case E::empty:
+                    return 1;
+            }
+        case O::none:
+            return 2;
+    }
+}
+
+i32 main()
+{
+    if( pick( 7 ) != 7 ) { return 1; }
+    return 0;
+}
