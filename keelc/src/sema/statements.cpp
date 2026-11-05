@@ -3234,6 +3234,22 @@ TEST_CASE( "type_check_warns_about_unused_names", "[sema][unused]" )
     }
 }
 
+// An owning `move` parameter's help says `_` still drops it; any other's does not.
+TEST_CASE( "type_check_says_an_unused_move_parameter_still_drops", "[sema][unused]" )
+{
+    const Typed p( "class held { i32 n; public held( i32 v ) { n = v; } ~held() { } };\n"
+                   "void f( move held h, move i32 k, i32 j ) { }\n"
+                   "i32 main() { f( held( 1 ), 2, 3 ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    const std::string rendered = p.rendered();
+    const std::size_t drops    = rendered.find( "it still drops when the function ends" );
+    REQUIRE( drops != std::string::npos );
+    REQUIRE( rendered.find( "it still drops", drops + 1 ) == std::string::npos );
+    REQUIRE( rendered.find( "unused parameter `k`" ) != std::string::npos );
+}
+
 // D52. Discarding a `result` loses its error, so a statement may not, unless it says so with `_ =`.
 TEST_CASE( "statements_refuse_a_discarded_result", "[sema][discard]" )
 {

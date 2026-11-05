@@ -289,11 +289,16 @@ void report_unused(
                 continue;
             }
 
+            // `_` does not drop at once, as `_ = e;` does.
+            const Type_id type  = types.type_of( unused );
+            const bool    owned = parameter_mode_of( ast, unused ) == Param_mode::Move && type.is_valid() &&
+                               instance_owns( ast, types.table(), type, types.recorded() );
             reporter.warn_at(
                 Warning::Unused_parameter,
                 ast.name_span( unused ),
                 fmt::format( "unused parameter `{}`", name ),
-                "name it `_` if it is unused on purpose"
+                owned ? "name it `_` if it is unused on purpose; it still drops when the function ends"
+                      : "name it `_` if it is unused on purpose"
             );
             continue;
         }

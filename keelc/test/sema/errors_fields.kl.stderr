@@ -8,19 +8,19 @@ warning: unused parameter `b` [-Wunused-parameter]
   --> sema/errors_fields.kl:78:21
    |
 78 | void sink( move Buf b )
-   |                     ^ name it `_` if it is unused on purpose
+   |                     ^ name it `_` if it is unused on purpose; it still drops when the function ends
 
 warning: unused parameter `p` [-Wunused-parameter]
   --> sema/errors_fields.kl:82:19
    |
 82 | void keep( move P p )
-   |                   ^ name it `_` if it is unused on purpose
+   |                   ^ name it `_` if it is unused on purpose; it still drops when the function ends
 
 warning: unused parameter `b` [-Wunused-parameter]
   --> sema/errors_fields.kl:86:21
    |
 86 | void both( move Buf b, ref P p )
-   |                     ^ name it `_` if it is unused on purpose
+   |                     ^ name it `_` if it is unused on purpose; it still drops when the function ends
 
 warning: unused parameter `p` [-Wunused-parameter]
   --> sema/errors_fields.kl:86:30
@@ -32,7 +32,7 @@ warning: unused parameter `b` [-Wunused-parameter]
   --> sema/errors_fields.kl:90:23
    |
 90 | void beside( move Buf b, ref Buf other )
-   |                       ^ name it `_` if it is unused on purpose
+   |                       ^ name it `_` if it is unused on purpose; it still drops when the function ends
 
 warning: unused parameter `other` [-Wunused-parameter]
   --> sema/errors_fields.kl:90:34
