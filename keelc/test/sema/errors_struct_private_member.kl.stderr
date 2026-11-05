@@ -1,0 +1,7 @@
+error: a `struct` has no private members
+ --> sema/errors_struct_private_member.kl:2:20
+  |
+2 | struct Pt { i32 x; private i32 y; };
+  |                    ^^^^^^^ write `class` instead, which is the kind that hides what it holds
+
+1 error generated

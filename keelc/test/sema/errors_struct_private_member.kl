@@ -1,0 +1,8 @@
+// A struct's refused `private` is reported once; the member stays public after it.
+struct Pt { i32 x; private i32 y; };
+
+i32 main()
+{
+    Pt p = Pt { 1, 2 };
+    return p.y;
+}

@@ -1785,9 +1785,10 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
     // public by default.
     const bool private_by_default = is_class && ( head.kind == Member_kind::Field || head.kind == Member_kind::Static_var );
 
+    // A struct's refused `private` is dropped, so only the error above reports it.
     ast_.set_access(
         member,
-        wrote_access ? ( wrote_private ? Access::Private : Access::Public )
+        wrote_access ? ( wrote_private && is_class ? Access::Private : Access::Public )
                      : ( private_by_default ? Access::Private : Access::Public )
     );
 
