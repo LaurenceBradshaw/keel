@@ -32,7 +32,8 @@ bool initialises_whole( const Function& func, const Statement& statement )
 
 // The locals to split, from `first`. A local's storage markers don't count, nor does an `&init` of it
 // whose pointer nothing else names: an inlined constructor's, left after its body; and a whole copy
-// doesn't count on a side that is a whole local.
+// doesn't count on a side that is a whole local. An enum is never split at a whole copy, so only past the
+// parameters, whose split would add one.
 Local_set splittable( const Function& func, const Type_table& table, u32 first )
 {
     Local_set        split( func.locals.size(), false );
@@ -41,7 +42,8 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
 
     for( u32 l = first; l < func.locals.size(); ++l )
     {
-        split[l] = table.is_struct( func.locals[Local_id { l }].type );
+        const Type_id type = func.locals[Local_id { l }].type;
+        split[l]           = table.is_struct( type ) || ( l > func.parameter_count && table.is_enum( type ) );
     }
 
     const auto use = [&]( const Place& place )
@@ -53,7 +55,8 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
 
         mentions[place.local.v] += 1;
 
-        if( place.num_projections == 0 || func.projections[place.first_projection].kind != Projection_kind::Field )
+        if( place.num_projections == 0 || ( func.projections[place.first_projection].kind != Projection_kind::Field &&
+                                            func.projections[place.first_projection].kind != Projection_kind::Tag ) )
         {
             split[place.local.v] = false;
         }
@@ -150,7 +153,7 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
     return split;
 }
 
-// One new local per split local and field named, keyed by both; each place loses its first
+// One new local per split local and field or tag named, keyed by both (a tag's field is node 0); each place loses its first
 // projection, the split locals' markers and `&init`s go, and a whole copy of a split local becomes one
 // copy per field. Rebuilt block by block.
 void split_locals( Function& func, const Local_set& split, const Ast& ast, Types& types )
@@ -810,12 +813,28 @@ TEST_CASE( "split_aggregates_moves_into_every_return", "[opt][split]" )
     REQUIRE( returns == 2 );
 }
 
-TEST_CASE( "split_aggregates_keeps_an_enum", "[opt][split]" )
+// Named only through its tag and payload, so split like a struct.
+TEST_CASE( "split_aggregates_splits_an_enum", "[opt][split]" )
 {
     const Split p(
         "i32 f( i32 a ) { Shape s = Shape::dot( Point { a, 2 } ); "
         "switch( s ) { case Shape::dot( at ): return at.x; case Shape::none: return 0; } }\n",
         "s"
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE( !p.named() );
+}
+
+// Dropped whole, so it stays.
+TEST_CASE( "split_aggregates_keeps_an_enum_dropped_whole", "[opt][split]" )
+{
+    const Split p(
+        "class D { public i32 v; public D( i32 x ) { v = x; } ~D() { v = 0; } };\n"
+        "enum E { full( D d ), empty };\n"
+        "i32 f( i32 a ) { E e = E::full( D( a ) ); "
+        "switch( e ) { case E::full( d ): return d.v; case E::empty: return 0; } }\n",
+        "e"
     );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.func ).empty() );

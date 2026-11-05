@@ -10,6 +10,7 @@ namespace keel
 {
 // After inline_drops: a struct or class local, a parameter with a field written, or the return slot
 // with a field read, that every place names through a field becomes one local per field named,
-// repeated for nested fields; release only.
+// repeated for nested fields; so does an enum local every place names through its tag or a payload
+// field; release only.
 void split_aggregates( Function& func, const Ast& ast, Types& types );
 } // namespace keel

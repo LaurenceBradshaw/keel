@@ -1,0 +1,259 @@
+// opt/known_tags.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Res;
+struct kl__Shape;
+struct kl__Held;
+
+struct kl__Res
+{
+    int32_t kl_v;
+};
+
+struct kl__Shape
+{
+    int32_t tag;
+    int32_t kl_6circle_r;
+    int32_t kl_4rect_w;
+    int32_t kl_4rect_h;
+};
+
+struct kl__Held
+{
+    int32_t tag;
+    struct kl__Res kl_4full_r;
+};
+
+int32_t kl__dropped__G = 0;
+
+void kl__Res__R3Res_3i32__ctor( struct kl__Res*, int32_t );
+void kl__Res__dtor( struct kl__Res* );
+struct kl__Shape kl__make__3i32( int32_t );
+int32_t kl__built__3i32( int32_t );
+int32_t kl__dropped_whole__3i32( int32_t );
+int32_t kl__moved__3i32( int32_t );
+int32_t kl__given__5Shape( struct kl__Shape );
+int32_t kl__main__( void );
+void kl__Held__dtor( struct kl__Held* );
+
+#line 10 "opt/known_tags.kl"
+void kl__Res__R3Res_3i32__ctor( struct kl__Res* kl_this_1, int32_t kl_x_2 )
+{
+#line 10 "opt/known_tags.kl"
+    ( *kl_this_1 ).kl_v = kl_x_2;
+#line 10 "opt/known_tags.kl"
+    return;
+#line 10 "opt/known_tags.kl"
+}
+
+#line 11 "opt/known_tags.kl"
+void kl__Res__dtor( struct kl__Res* kl_this_1 )
+{
+    int32_t kl_t2;
+    ( void ) kl_this_1;
+#line 11 "opt/known_tags.kl"
+    kl_t2 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t2;
+#line 11 "opt/known_tags.kl"
+    return;
+#line 11 "opt/known_tags.kl"
+}
+
+#line 17 "opt/known_tags.kl"
+struct kl__Shape kl__make__3i32( int32_t kl_w_1 )
+{
+    struct kl__Shape kl_t0;
+#line 17 "opt/known_tags.kl"
+    kl_t0.tag = 1;
+#line 17 "opt/known_tags.kl"
+    kl_t0.kl_4rect_w = kl_w_1;
+#line 17 "opt/known_tags.kl"
+    kl_t0.kl_4rect_h = 10;
+#line 17 "opt/known_tags.kl"
+    return kl_t0;
+#line 17 "opt/known_tags.kl"
+}
+
+#line 20 "opt/known_tags.kl"
+int32_t kl__built__3i32( int32_t kl_w_1 )
+{
+    int32_t kl_t0;
+#line 24 "opt/known_tags.kl"
+    kl_t0 = kl_w_1 + 10;
+#line 24 "opt/known_tags.kl"
+    return kl_t0;
+#line 27 "opt/known_tags.kl"
+}
+
+#line 30 "opt/known_tags.kl"
+int32_t kl__dropped_whole__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    struct kl__Held kl_h_2;
+    struct kl__Res* kl_r_3;
+#line 10 "opt/known_tags.kl"
+    kl_h_2.kl_4full_r.kl_v = kl_x_1;
+#line 32 "opt/known_tags.kl"
+    kl_h_2.tag = 0;
+#line 35 "opt/known_tags.kl"
+    kl_r_3 = &kl_h_2.kl_4full_r;
+#line 35 "opt/known_tags.kl"
+    kl_t0 = ( *kl_r_3 ).kl_v;
+#line 35 "opt/known_tags.kl"
+    kl__Held__dtor( &kl_h_2 );
+#line 35 "opt/known_tags.kl"
+    return kl_t0;
+#line 38 "opt/known_tags.kl"
+}
+
+#line 41 "opt/known_tags.kl"
+int32_t kl__moved__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    struct kl__Held kl_h_2;
+    struct kl__Held kl_g_3;
+    struct kl__Res* kl_r_4;
+#line 43 "opt/known_tags.kl"
+    kl_h_2.tag = 0;
+#line 43 "opt/known_tags.kl"
+    kl_h_2.kl_4full_r.kl_v = kl_x_1;
+    kl_g_3 = kl_h_2;
+#line 47 "opt/known_tags.kl"
+    kl_r_4 = &kl_g_3.kl_4full_r;
+#line 47 "opt/known_tags.kl"
+    kl_t0 = ( *kl_r_4 ).kl_v;
+#line 47 "opt/known_tags.kl"
+    kl__Held__dtor( &kl_g_3 );
+#line 47 "opt/known_tags.kl"
+    return kl_t0;
+#line 50 "opt/known_tags.kl"
+}
+
+#line 53 "opt/known_tags.kl"
+int32_t kl__given__5Shape( struct kl__Shape kl_s_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    kl_t2 = kl_s_1.tag == 0;
+#line 57 "opt/known_tags.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 57 "opt/known_tags.kl"
+    kl_t0 = kl_s_1.kl_6circle_r;
+#line 57 "opt/known_tags.kl"
+    return kl_t0;
+    bb2:
+#line 58 "opt/known_tags.kl"
+    kl_t0 = 0;
+#line 58 "opt/known_tags.kl"
+    return kl_t0;
+#line 60 "opt/known_tags.kl"
+}
+
+#line 62 "opt/known_tags.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    struct kl__Shape kl_t5;
+    struct kl__Shape kl_s_6;
+    struct kl__Held kl_h_7;
+    struct kl__Held kl_g_8;
+    struct kl__Res* kl_r_9;
+    struct kl__Held kl_h_10;
+    struct kl__Res* kl_r_11;
+#line 10 "opt/known_tags.kl"
+    kl_h_10.kl_4full_r.kl_v = 4;
+#line 32 "opt/known_tags.kl"
+    kl_h_10.tag = 0;
+#line 35 "opt/known_tags.kl"
+    kl_r_11 = &kl_h_10.kl_4full_r;
+#line 35 "opt/known_tags.kl"
+    kl_t2 = ( *kl_r_11 ).kl_v;
+#line 35 "opt/known_tags.kl"
+    kl__Held__dtor( &kl_h_10 );
+#line 69 "opt/known_tags.kl"
+    kl_t1 = kl_t2 != 4;
+#line 69 "opt/known_tags.kl"
+    if ( kl_t1 ) goto bb3; else goto bb1;
+    bb1:
+#line 43 "opt/known_tags.kl"
+    kl_h_7.tag = 0;
+#line 43 "opt/known_tags.kl"
+    kl_h_7.kl_4full_r.kl_v = 5;
+    kl_g_8 = kl_h_7;
+#line 47 "opt/known_tags.kl"
+    kl_r_9 = &kl_g_8.kl_4full_r;
+#line 47 "opt/known_tags.kl"
+    kl_t3 = ( *kl_r_9 ).kl_v;
+#line 47 "opt/known_tags.kl"
+    kl__Held__dtor( &kl_g_8 );
+#line 69 "opt/known_tags.kl"
+    kl_t1 = kl_t3 != 5;
+#line 69 "opt/known_tags.kl"
+    if ( kl_t1 ) goto bb3; else goto bb2;
+    bb2:
+#line 69 "opt/known_tags.kl"
+    kl_t1 = kl__dropped__G != 2;
+#line 69 "opt/known_tags.kl"
+    if ( kl_t1 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 71 "opt/known_tags.kl"
+    return kl_t0;
+    bb4:
+#line 74 "opt/known_tags.kl"
+    kl_t5.tag = 2;
+#line 74 "opt/known_tags.kl"
+    kl_s_6 = kl_t5;
+#line 58 "opt/known_tags.kl"
+    kl_s_6.kl_6circle_r = 0;
+#line 74 "opt/known_tags.kl"
+    kl_t4 = kl_s_6.kl_6circle_r != 0;
+#line 74 "opt/known_tags.kl"
+    if ( kl_t4 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+#line 76 "opt/known_tags.kl"
+    return kl_t0;
+    bb6:
+#line 79 "opt/known_tags.kl"
+    kl_t0 = 0;
+#line 79 "opt/known_tags.kl"
+    return kl_t0;
+}
+
+#line 15 "opt/known_tags.kl"
+void kl__Held__dtor( struct kl__Held* kl_t1 )
+{
+    bool kl_t2;
+    int32_t kl_t3;
+#line 15 "opt/known_tags.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+#line 15 "opt/known_tags.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 15 "opt/known_tags.kl"
+    return;
+    bb2:
+#line 11 "opt/known_tags.kl"
+    kl_t3 = kl__dropped__G + 1;
+#line 11 "opt/known_tags.kl"
+    kl__dropped__G = kl_t3;
+#line 11 "opt/known_tags.kl"
+    goto bb1;
+#line 15 "opt/known_tags.kl"
+}
+
+#line 62 "opt/known_tags.kl"
+int main( void )
+{
+#line 62 "opt/known_tags.kl"
+    return (int) kl__main__();
+}

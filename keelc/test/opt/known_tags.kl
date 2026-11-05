@@ -1,0 +1,80 @@
+// M11, a release build: a tag written as a constant is known where it is read. A value used only through its
+// tag and payload fields is split like a struct, and the tag of one dropped or moved whole is still read as
+// the constant it was given, so the branch on it goes. A parameter's tag is not known and its test stays.
+
+i32 dropped = 0;
+
+class Res
+{
+    public i32 v;
+    public Res( i32 x ) { v = x; }
+    ~Res() { dropped = dropped + 1; }
+};
+
+enum Shape { circle( i32 r ), rect( i32 w, i32 h ), dot };
+enum Held { full( Res r ), empty };
+
+Shape make( i32 w ) { return Shape::rect( w, 10 ); }
+
+// Built and switched on: split, so `w + 10` is all that is left.
+i32 built( i32 w )
+{
+    switch( make( w ) )
+    {
+        case Shape::rect( a, b ): return a + b;
+        default: return 0;
+    }
+}
+
+// Dropped whole after the switch: only `full` runs.
+i32 dropped_whole( i32 x )
+{
+    Held h = Held::full( Res( x ) );
+    switch( h )
+    {
+        case Held::full( r ): return r.v;
+        case Held::empty: return -1;
+    }
+}
+
+// Moved whole before the switch: the tag goes with it.
+i32 moved( i32 x )
+{
+    Held h = Held::full( Res( x ) );
+    Held g = move h;
+    switch( g )
+    {
+        case Held::full( r ): return r.v;
+        case Held::empty: return -1;
+    }
+}
+
+// A parameter's tag comes from the caller, so its test stays.
+i32 given( Shape s )
+{
+    switch( s )
+    {
+        case Shape::circle( r ): return r;
+        default: return 0;
+    }
+}
+
+i32 main()
+{
+    if( built( 3 ) != 13 )
+    {
+        return 1;
+    }
+
+    if( dropped_whole( 4 ) != 4 || moved( 5 ) != 5 || dropped != 2 )
+    {
+        return 2;
+    }
+
+    if( given( Shape::circle( 6 ) ) != 6 || given( Shape::dot ) != 0 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

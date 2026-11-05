@@ -19,6 +19,7 @@
 #include "opt/propagate_values.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
+#include "opt/shadow_tags.h"
 #include "opt/split_aggregates.h"
 #include "opt/thread_jumps.h"
 
@@ -199,9 +200,9 @@ Front_end run_front_end(
                         {
                             forward_borrows( function, front.types.table() );
                         }
+                        shadow_tags( function, front.types.table() );
                     }
-                    // Folds a local compared with itself, so SCCP branches on the constant; without it, SCCP writes
-                    // a negative constant into a copy of one, which nothing then forwards.
+                    // Folds a local compared with itself, so SCCP branches on the constant.
                     propagate_values( function, front.types.table(), literals );
                     propagate_constants( function, front.types.table(), literals );
                     thread_jumps( function, front.types.table(), literals );
