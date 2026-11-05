@@ -9,6 +9,7 @@
 namespace keel
 {
 // After propagate_constants: an edge into a block that only branches on a local goes straight to the
-// arm that local's value on the edge takes; release only.
+// arm that local's value on the edge takes, and a branch whose arms only set one flag sets it
+// without one; release only.
 void thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals );
 } // namespace keel

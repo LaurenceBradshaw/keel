@@ -76,6 +76,79 @@ bool only_branches( const Block& block )
            whole_local( block.terminator.condition );
 }
 
+// The `bool` constant a block's one statement writes to a whole local, before a `goto`.
+std::optional<bool> sets_flag( const Function& func, const Block& block, const Type_table& types, const Literal_pool& literals )
+{
+    if( block.statement_count != 1 || block.terminator.kind != Terminator_kind::Goto )
+    {
+        return std::nullopt;
+    }
+
+    const Statement& statement = func.statements_of( block )[0];
+    if( statement.kind != Statement_kind::Assign || statement.place.is_global() || !statement.place.is_whole_local() )
+    {
+        return std::nullopt;
+    }
+
+    const Rvalue& value = func.rvalue( statement );
+    if( value.kind != Rvalue_kind::Use || value.a.kind != Operand_kind::Constant || !value.a.constant.is_valid() ||
+        types.get( value.a.type ).kind != Type_kind::Bool )
+    {
+        return std::nullopt;
+    }
+
+    return literals.integer( value.a.constant ) != 0;
+}
+
+// `x = true` and `x = false` on a branch's two arms, both then to one join: the true arm writes the
+// condition, or its negation, or keeps a constant both write, and the branch becomes a `goto` to it.
+bool select_flags( Function& func, const Type_table& types, const Literal_pool& literals )
+{
+    const std::vector<u32> counts = predecessor_counts( func );
+    bool                   any    = false;
+
+    for( Block& block : func.blocks )
+    {
+        Terminator& terminator = block.terminator;
+        if( terminator.kind != Terminator_kind::Branch || terminator.condition.kind != Operand_kind::Copy ||
+            terminator.targets[0] == terminator.targets[1] || counts[terminator.targets[0].v] != 1 ||
+            counts[terminator.targets[1].v] != 1 )
+        {
+            continue;
+        }
+
+        const Block&              taken     = func.blocks[terminator.targets[0]];
+        const Block&              not_taken = func.blocks[terminator.targets[1]];
+        const std::optional<bool> on        = sets_flag( func, taken, types, literals );
+        const std::optional<bool> off       = sets_flag( func, not_taken, types, literals );
+
+        if( !on || !off || taken.terminator.targets[0] != not_taken.terminator.targets[0] )
+        {
+            continue;
+        }
+
+        const Statement& write = func.statements_of( taken )[0];
+        if( write.place.local != func.statements_of( not_taken )[0].place.local )
+        {
+            continue;
+        }
+
+        // Arms that agree keep the constant.
+        if( *on != *off )
+        {
+            Rvalue& value = func.rvalue( write );
+            value         = *on ? use( terminator.condition ) : unary( Token_kind::Bang, terminator.condition, value.type );
+        }
+
+        terminator.kind       = Terminator_kind::Goto;
+        terminator.targets[1] = Block_id {};
+        terminator.condition  = Operand {};
+        any                   = true;
+    }
+
+    return any;
+}
+
 } // namespace
 
 void thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals )
@@ -131,8 +204,8 @@ void thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
         }
     }
 
-    // A join every edge now goes past has no predecessor left.
-    if( changed )
+    // A join every edge now goes past has no predecessor left, nor a selected flag's false arm.
+    if( select_flags( func, types, literals ) || changed )
     {
         remove_unreachable_blocks( func );
     }
@@ -357,6 +430,43 @@ TEST_CASE( "thread_jumps_stops_at_an_empty_loop", "[opt][threading]" )
     g.run();
 
     REQUIRE( g.kept( 0, 0 ) );
+}
+
+// `_0 = _1 ? false : true` becomes `_0 = !_1`, with no branch.
+TEST_CASE( "thread_jumps_selects_a_flag", "[opt][threading]" )
+{
+    Graph g;
+    g.build( {
+        { {}, g.branch( 1, 1, 2 ) },
+        { { g.set( false ) }, jump( 3 ) },
+        { { g.set( true ) }, jump( 3 ) },
+        { {}, done() },
+    } );
+    g.run();
+
+    REQUIRE( verify( g.func ).empty() );
+    REQUIRE( g.func.blocks.size() == 3 );
+    REQUIRE( g.func.blocks[k_entry_block].terminator.kind == Terminator_kind::Goto );
+    const Rvalue& value = g.func.rvalue( g.func.statements_of( g.func.blocks[g.target( 0, 0 )] )[0] );
+    REQUIRE( value.kind == Rvalue_kind::Unary );
+    REQUIRE( value.a.place.local == Local_id { 1 } );
+}
+
+// Both arms set the flag `true`: it stays the constant, and the branch goes.
+TEST_CASE( "thread_jumps_joins_arms_that_agree", "[opt][threading]" )
+{
+    Graph g;
+    g.build( {
+        { {}, g.branch( 1, 1, 2 ) },
+        { { g.set( true ) }, jump( 3 ) },
+        { { g.set( true ) }, jump( 3 ) },
+        { {}, done() },
+    } );
+    g.run();
+
+    REQUIRE( g.func.blocks[k_entry_block].terminator.kind == Terminator_kind::Goto );
+    const Rvalue& value = g.func.rvalue( g.func.statements_of( g.func.blocks[g.target( 0, 0 )] )[0] );
+    REQUIRE( value.a.kind == Operand_kind::Constant );
 }
 
 // The whole release pipeline over `round`'s shape: one test of the flag is left.

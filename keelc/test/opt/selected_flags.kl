@@ -1,0 +1,34 @@
+// M11, a release build: a branch whose two arms only set one flag `true` and `false` sets it to the
+// condition, or to its negation, and leaves no branch.
+
+// `b = x > 3`.
+bool above( i32 x )
+{
+    bool b;
+    if( x > 3 ) { b = true; } else { b = false; }
+    return b;
+}
+
+// `b = !( x > 3 )`.
+bool not_above( i32 x )
+{
+    bool b;
+    if( x > 3 ) { b = false; } else { b = true; }
+    return b;
+}
+
+// Both arms agree: the flag is the constant, and no branch is left either.
+bool always( i32 x )
+{
+    bool b;
+    if( x > 3 ) { b = true; } else { b = true; }
+    return b;
+}
+
+i32 main()
+{
+    if( !above( 4 ) || above( 3 ) ) { return 1; }
+    if( not_above( 4 ) || !not_above( 3 ) ) { return 2; }
+    if( !always( 0 ) ) { return 3; }
+    return 0;
+}

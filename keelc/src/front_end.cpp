@@ -217,6 +217,8 @@ Front_end run_front_end(
                     // Dead store removal can empty a block, so threading goes first.
                     simplify( function, literals );
                     merge_blocks( function );
+                    // So no marker of a local a pass removed is left for the next round.
+                    remove_unused_locals( function );
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )

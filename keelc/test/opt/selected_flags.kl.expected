@@ -1,0 +1,56 @@
+// opt/selected_flags.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+bool kl__above__3i32( int32_t );
+bool kl__not_above__3i32( int32_t );
+bool kl__always__3i32( int32_t );
+int32_t kl__main__( void );
+
+#line 5 "opt/selected_flags.kl"
+bool kl__above__3i32( int32_t kl_x_1 )
+{
+    bool kl_t0;
+    kl_t0 = kl_x_1 > 3;
+    return kl_t0;
+}
+
+#line 13 "opt/selected_flags.kl"
+bool kl__not_above__3i32( int32_t kl_x_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+#line 16 "opt/selected_flags.kl"
+    kl_t2 = kl_x_1 > 3;
+#line 16 "opt/selected_flags.kl"
+    kl_t0 = !kl_t2;
+    return kl_t0;
+}
+
+#line 21 "opt/selected_flags.kl"
+bool kl__always__3i32( int32_t kl_x_1 )
+{
+    bool kl_t0;
+    ( void ) kl_x_1;
+#line 24 "opt/selected_flags.kl"
+    kl_t0 = true;
+    return kl_t0;
+}
+
+#line 28 "opt/selected_flags.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+#line 33 "opt/selected_flags.kl"
+    kl_t0 = 0;
+#line 33 "opt/selected_flags.kl"
+    return kl_t0;
+}
+
+#line 28 "opt/selected_flags.kl"
+int main( void )
+{
+#line 28 "opt/selected_flags.kl"
+    return (int) kl__main__();
+}
