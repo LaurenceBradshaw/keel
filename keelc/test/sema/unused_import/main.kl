@@ -1,0 +1,13 @@
+// -Wunused-import warns at an import whose module this file names nothing from. A qualified name,
+// and an overload the checker picks from another module, each use their import.
+import counts;
+import more_counts;
+import idle;
+import kit::shades;
+import kit::spare;
+
+i32 main()
+{
+    kit::shade s = kit::shade::dark;
+    return tally( true ) + cast<i32>( s == kit::shade::light );
+}

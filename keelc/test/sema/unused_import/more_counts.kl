@@ -1,0 +1,1 @@
+i32 tally( bool b ) { return b ? 0 : 1; }

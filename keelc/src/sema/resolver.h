@@ -3,6 +3,7 @@
 
 #pragma once
 #include <span>
+#include <utility>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -27,6 +28,14 @@ inline bool can_name( const Module_graph& modules, const Ast& ast, File_id from,
 // Which declaration each use refers to, indexed by the use's Node_id. A side table rather than a
 // field on Node: aux still holds the Symbol_id that diagnostics need, and the AST stays immutable
 // after parsing.
+// What nothing names, warned only when the front end found no error.
+struct Unused
+{
+    std::vector<Node_id>                     names;    // parameters and locals
+    std::vector<Node_id>                     privates; // top-level private declarations nothing public reaches
+    std::vector<std::pair<File_id, File_id>> imports;  // (importer, imported) where the importer names nothing imported
+};
+
 class Resolution
 {
 public:
@@ -39,7 +48,7 @@ public:
         std::vector<Node_id> fallbacks,
         const Prelude_items& prelude,
         const Module_graph&  modules,
-        std::vector<Node_id> unused = {}
+        Unused               unused = {}
     )
         : bindings_( std::move( bindings ) ),
           unresolved_( std::move( unresolved ) ),
@@ -125,8 +134,7 @@ public:
         return use.v < unreported_.size() ? unreported_[use.v] : false;
     }
 
-    // Parameters of functions with bodies, and locals, that no use was bound to, in declaration order.
-    const std::vector<Node_id>& unused() const
+    const Unused& unused() const
     {
         return unused_;
     }
@@ -139,7 +147,7 @@ private:
     std::vector<Node_id> fallbacks_;
     Prelude_items        prelude_;
     Module_graph         modules_;
-    std::vector<Node_id> unused_;
+    Unused               unused_;
 };
 
 // A loaded module's bindings are taken from its state rather than resolved again.

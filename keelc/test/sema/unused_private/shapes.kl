@@ -1,0 +1,5 @@
+// Another module's private ones are judged from its own public declarations.
+private i32 side() { return 0; }
+private i32 orphan() { return 9; }
+
+i32 area() { return side() * side(); }

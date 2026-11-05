@@ -1,0 +1,46 @@
+// -Wunused-private warns at a top-level private declaration that nothing public in its module
+// reaches, a pair naming only each other included; what a public function, a block or an
+// overload set reaches stays quiet, and so does a public one nothing names.
+import shapes;
+
+private i32 dead() { return 1; }
+private i32 ping() { return pong(); }
+private i32 pong() { return ping(); }
+private const i32 UNUSED = 3;
+private struct spare { i32 a; };
+private class hidden
+{
+    i32 n;
+    hidden() { n = 0; }
+};
+private enum lost
+{
+    a,
+    b
+};
+private interface quiet { i32 q() const; };
+
+private const i32 BASE = 2;
+private struct cell { i32 v; };
+private i32 doubled( i32 v ) { return v * BASE; }
+private i32 picked( i32 v ) { return v; }
+private i32 picked( bool b ) { return b ? 1 : 0; }
+private interface sized { i32 size() const; };
+private enum box
+{
+    full
+};
+private i32 from_block() { return 4; }
+
+implements sized for box
+{
+    i32 size() const { return from_block(); }
+};
+
+i32 never_named() { return 0; }
+
+i32 main()
+{
+    cell c = cell { doubled( 1 ) };
+    return c.v + picked( true ) - 5 + area();
+}

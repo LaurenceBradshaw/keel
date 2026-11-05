@@ -277,7 +277,7 @@ void report_unused(
 {
     sema::Reporter reporter( sm, diags );
 
-    for( const Node_id unused : resolution.unused() )
+    for( const Node_id unused : resolution.unused().names )
     {
         const std::string_view name = interner.text( ast.name( unused ) );
 
@@ -318,6 +318,48 @@ void report_unused(
             init.is_valid()
                 ? fmt::format( "write `_ = {};` if only the initialiser is wanted", reporter.text( ast.span( init ) ) )
                 : "remove it"
+        );
+    }
+
+    for( const Node_id decl : resolution.unused().privates )
+    {
+        const std::string_view kind = [&]() -> std::string_view
+        {
+            switch( ast.kind( decl ) )
+            {
+            case Node_kind::Function_decl:
+                return "function";
+            case Node_kind::Var_decl:
+                return ast.is_const_binding( decl ) ? "constant" : "variable";
+            case Node_kind::Struct_decl:
+                return "struct";
+            case Node_kind::Class_decl:
+                return "class";
+            case Node_kind::Enum_decl:
+                return "enum";
+            default:
+                return "interface";
+            }
+        }();
+        reporter.warn_at(
+            Warning::Unused_private,
+            ast.name_span( decl ),
+            fmt::format( "unused private {} `{}`", kind, interner.text( ast.name( decl ) ) ),
+            "nothing public in this module reaches it; remove it"
+        );
+    }
+
+    for( const auto& [from, to] : resolution.unused().imports )
+    {
+        const Span       span = resolution.import_span( from, to );
+        std::string_view name = reporter.text( span ); // `import kl::list;`
+        name.remove_prefix( std::min( name.find_first_not_of( " \t", std::string_view( "import" ).size() ), name.size() ) );
+        name = name.substr( 0, name.find_first_of( " \t;" ) );
+        reporter.warn_at(
+            Warning::Unused_import,
+            span,
+            fmt::format( "unused import `{}`", name ),
+            "this file names nothing it declares; remove it"
         );
     }
 }

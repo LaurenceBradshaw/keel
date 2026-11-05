@@ -126,6 +126,10 @@ std::string_view warning_name( Warning which )
         return "unreachable-code";
     case Warning::Unconditional_recursion:
         return "unconditional-recursion";
+    case Warning::Unused_import:
+        return "unused-import";
+    case Warning::Unused_private:
+        return "unused-private";
     case Warning::Large_local:
         return "large-local";
     }

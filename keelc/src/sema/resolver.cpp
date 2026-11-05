@@ -86,7 +86,8 @@ private:
     std::string   module_name( File_id file ) const;
     void          refuse_other_package( Node_id use, Node_id decl );
 
-    std::vector<Node_id> unused() const;
+    Unused unused() const;
+    void   find_unreached( Unused& unused ) const;
 
     const Ast& ast_;
 
@@ -189,6 +190,7 @@ Resolution Resolver::run()
         }
     }
 
+    Unused unnamed = unused(); // before bindings_ is moved
     return Resolution(
         std::move( bindings_ ),
         std::move( unresolved_ ),
@@ -197,7 +199,7 @@ Resolution Resolver::run()
         std::move( fallbacks_ ),
         prelude_items(),
         modules_,
-        unused()
+        std::move( unnamed )
     );
 }
 
@@ -1337,11 +1339,144 @@ void Resolver::refuse_other_package( Node_id use, Node_id decl )
     );
 }
 
-std::vector<Node_id> Resolver::unused() const
+Unused Resolver::unused() const
 {
-    std::vector<Node_id> unused;
-    std::ranges::copy_if( unused_candidates_, std::back_inserter( unused ), [&]( Node_id c ) { return !used_[c.v]; } );
+    Unused unused;
+    std::ranges::copy_if( unused_candidates_, std::back_inserter( unused.names ), [&]( Node_id c ) { return !used_[c.v]; } );
+    find_unreached( unused );
     return unused;
+}
+
+// A private declaration is reached from its module's public ones and `implements` blocks, through
+// what each names; an import is used when its importer names something it declares.
+void Resolver::find_unreached( Unused& unused ) const
+{
+    const File_id prelude = modules_.prelude_file();
+    const auto    checked = [&]( File_id file ) { return file != prelude && !modules_.is_loaded( file ); };
+
+    std::vector<Node_id> top( ast_.node_count() ); // the top-level declaration each node is in
+    std::vector<Node_id> tops;
+    std::vector<Node_id> stack;
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( !checked( ast_.span( decl ).file ) || ast_.kind( decl ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        tops.push_back( decl );
+        stack.push_back( decl );
+        while( !stack.empty() )
+        {
+            const Node_id id = stack.back();
+            stack.pop_back();
+            top[id.v] = decl;
+            for( const Node_id child : ast_.children( id ) )
+            {
+                if( child.is_valid() )
+                {
+                    stack.push_back( child );
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<u32, u32>> links; // (top-level declaration, one it names), by node
+    std::unordered_set<u64>          named; // (importer, imported) file pairs
+    for( u32 use = 0; use < top.size(); ++use )
+    {
+        const File_id from = ast_.span( Node_id { use } ).file;
+
+        // It lists its package's functions by type, private ones included.
+        if( top[use].is_valid() && ast_.kind( Node_id { use } ) == Node_kind::Functions_of_expr )
+        {
+            for( const Node_id decl : ast_.declarations( ast_.root() ) )
+            {
+                const File_id to = ast_.span( decl ).file;
+                if( ast_.kind( decl ) == Node_kind::Function_decl && modules_.package_of( to ) == modules_.package_of( from ) )
+                {
+                    named.insert( ( u64 { from.v } << 32 ) | to.v );
+                    if( top[decl.v].is_valid() )
+                    {
+                        links.emplace_back( top[use].v, decl.v );
+                    }
+                }
+            }
+        }
+
+        if( !top[use].is_valid() || !bindings_[use].is_valid() )
+        {
+            continue;
+        }
+
+        // The checker may pick any overload of the set, wherever it is declared.
+        for( Node_id decl = bindings_[use]; decl.is_valid(); decl = next_overload_[decl.v] )
+        {
+            const File_id to = ast_.span( decl ).file;
+            if( to != from )
+            {
+                named.insert( ( u64 { from.v } << 32 ) | to.v );
+            }
+            else if( top[decl.v].is_valid() && top[decl.v] != top[use] )
+            {
+                links.emplace_back( top[use].v, top[decl.v].v );
+            }
+        }
+    }
+    std::ranges::sort( links );
+
+    std::vector<bool> reached( ast_.node_count(), false );
+    for( const Node_id decl : tops )
+    {
+        if( ast_.access( decl ) != Access::Private || ast_.kind( decl ) == Node_kind::Implements_decl )
+        {
+            reached[decl.v] = true;
+            stack.push_back( decl );
+        }
+    }
+    while( !stack.empty() )
+    {
+        const u32 from = stack.back().v;
+        stack.pop_back();
+        for( auto it = std::ranges::lower_bound( links, std::pair<u32, u32> { from, 0 } );
+             it != links.end() && it->first == from;
+             ++it )
+        {
+            if( !reached[it->second] )
+            {
+                reached[it->second] = true;
+                stack.push_back( Node_id { it->second } );
+            }
+        }
+    }
+
+    // A module build cannot see the program, whose `@functions_of` may list any of them.
+    const auto listable = [&]( Node_id decl )
+    {
+        return !modules_.has_program() && ast_.kind( decl ) == Node_kind::Function_decl && !ast_.is_extern( decl ) &&
+               !ast_.is_generic( decl );
+    };
+    std::ranges::copy_if(
+        tops, std::back_inserter( unused.privates ), [&]( Node_id d ) { return !reached[d.v] && !listable( d ); }
+    );
+
+    for( u32 file = 0; file < sm_.file_count(); ++file )
+    {
+        const File_id from { file };
+        if( !checked( from ) )
+        {
+            continue;
+        }
+
+        for( const File_id to : modules_.imports( from ) )
+        {
+            if( to != prelude && modules_.import_span( from, to ).is_valid() &&
+                !named.contains( ( u64 { from.v } << 32 ) | to.v ) )
+            {
+                unused.imports.emplace_back( from, to );
+            }
+        }
+    }
 }
 
 } // namespace

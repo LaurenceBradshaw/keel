@@ -30,6 +30,8 @@ enum class Warning : u8
     Needless_move,
     Unreachable_code,
     Unconditional_recursion,
+    Unused_import,
+    Unused_private,
     Large_local // off unless -Wlarge-local
 };
 
@@ -107,8 +109,10 @@ private:
     std::vector<u32>                 quiet_;      // File_id::v
     std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
     // Indexed by Warning: every one on but large-local.
-    std::array<Level, 8> levels_ { Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::Off };
-    bool                 all_errors_ = false; // a bare -Werror
+    std::array<Level, 10> levels_ {
+        Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::Off
+    };
+    bool all_errors_ = false; // a bare -Werror
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner

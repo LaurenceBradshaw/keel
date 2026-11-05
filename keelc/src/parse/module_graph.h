@@ -4,6 +4,7 @@
 #pragma once
 #include <algorithm>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -60,6 +61,11 @@ public:
     }
 
     // Where `from` wrote its `import` of `to`.
+    std::span<const File_id> imports( File_id from ) const
+    {
+        return from.v < edges_.size() ? std::span<const File_id>( edges_[from.v] ) : std::span<const File_id> {};
+    }
+
     Span import_span( File_id from, File_id to ) const
     {
         const auto it = import_spans_.find( edge( from, to ) );
@@ -247,6 +253,11 @@ public:
     void set_program( File_id file )
     {
         program_ = file;
+    }
+
+    bool has_program() const
+    {
+        return program_.is_valid();
     }
 
     bool is_program( File_id file ) const

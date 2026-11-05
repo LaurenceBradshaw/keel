@@ -1,0 +1,53 @@
+warning: unused private function `dead` [-Wunused-private]
+ --> sema/unused_private/main.kl:6:13
+  |
+6 | private i32 dead() { return 1; }
+  |             ^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private function `ping` [-Wunused-private]
+ --> sema/unused_private/main.kl:7:13
+  |
+7 | private i32 ping() { return pong(); }
+  |             ^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private function `pong` [-Wunused-private]
+ --> sema/unused_private/main.kl:8:13
+  |
+8 | private i32 pong() { return ping(); }
+  |             ^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private constant `UNUSED` [-Wunused-private]
+ --> sema/unused_private/main.kl:9:19
+  |
+9 | private const i32 UNUSED = 3;
+  |                   ^^^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private struct `spare` [-Wunused-private]
+  --> sema/unused_private/main.kl:10:16
+   |
+10 | private struct spare { i32 a; };
+   |                ^^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private class `hidden` [-Wunused-private]
+  --> sema/unused_private/main.kl:11:15
+   |
+11 | private class hidden
+   |               ^^^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private enum `lost` [-Wunused-private]
+  --> sema/unused_private/main.kl:16:14
+   |
+16 | private enum lost
+   |              ^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private interface `quiet` [-Wunused-private]
+  --> sema/unused_private/main.kl:21:19
+   |
+21 | private interface quiet { i32 q() const; };
+   |                   ^^^^^ nothing public in this module reaches it; remove it
+
+warning: unused private function `orphan` [-Wunused-private]
+ --> sema/unused_private/shapes.kl:3:13
+  |
+3 | private i32 orphan() { return 9; }
+  |             ^^^^^^ nothing public in this module reaches it; remove it

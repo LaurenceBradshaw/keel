@@ -1,0 +1,11 @@
+warning: unused import `idle` [-Wunused-import]
+ --> sema/unused_import/main.kl:5:1
+  |
+5 | import idle;
+  | ^^^^^^^^^^^^ this file names nothing it declares; remove it
+
+warning: unused import `kit::spare` [-Wunused-import]
+ --> sema/unused_import/main.kl:7:1
+  |
+7 | import kit::spare;
+  | ^^^^^^^^^^^^^^^^^^ this file names nothing it declares; remove it

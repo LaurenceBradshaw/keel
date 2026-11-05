@@ -3,6 +3,8 @@
 {"kind":"file","path":"sema/declarations/packageinfo.kl"}
 {"kind":"file","path":"sema/declarations/geo/packageinfo.kl"}
 {"kind":"file","path":"sema/declarations/geo/shapes.kl"}
+{"kind":"diagnostic","severity":"warning","file":"sema/declarations/main.kl","line":3,"col":1,"end_line":3,"end_col":20,"message":"unused import `geo::shapes`","help":"this file names nothing it declares; remove it"}
+{"kind":"diagnostic","severity":"warning","file":"sema/declarations/main.kl","line":6,"col":13,"end_line":6,"end_col":19,"message":"unused private function `helper`","help":"nothing public in this module reaches it; remove it"}
 {"kind":"package","name":"","doc":"The program's own package: its documentation, keyed by the empty name."}
 {"kind":"package","name":"geo","doc":"Plane geometry.\n\nEvery length is in metres."}
 {"kind":"declaration","declares":"function","name":"helper","file":"sema/declarations/main.kl","line":6,"col":13,"end_col":19,"access":"private","signature":"private i32 helper()","doc":"Kept to this file, and said so in its signature."}
