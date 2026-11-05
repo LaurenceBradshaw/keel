@@ -16,7 +16,7 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
 // `bits` of `from` as a `to`: a signed source sign-extends.
 std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table& types );
 
-// `bits` of `type` written as lowering writes a literal: a negative is `-const m`.
+// `bits` of `type` as a constant.
 Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& literals );
 
 // What `value` reduces to without knowing its operands: a whole local compared with itself, or

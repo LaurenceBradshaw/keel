@@ -36,7 +36,9 @@ enum class Literal_kind : u8
 // sema and codegen.
 //
 // Integers are stored as an unsigned magnitude. Sign is a separate Unary_expr node, so the pool
-// never sees a negative number - which is why Type_table::fits() takes `negative` separately.
+// never sees a negative number - which is why Type_table::fits() takes `negative` separately. A KIR
+// constant operand instead stores an integer's bits at its type's width, so a negative is its two's
+// complement.
 class Literal_pool
 {
 public:

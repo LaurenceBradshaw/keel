@@ -678,14 +678,13 @@ int32_t kl__checked__3i32( int32_t kl_v_1 )
     bool kl_t4;
     int32_t kl_t5;
     struct kl_7prelude_str kl_t6;
-    int32_t kl_t7;
-    bool kl_t8;
-    struct kl_7prelude_str kl_t9;
-    struct kl_7prelude_str* kl_t10;
-    uint8_t* kl_t11;
-    struct kl_7prelude_str kl_t13;
-    struct kl_7prelude_str* kl_t14;
-    uint8_t* kl_t15;
+    bool kl_t7;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str kl_t12;
+    struct kl_7prelude_str* kl_t13;
+    uint8_t* kl_t14;
 #line 90 "codegen/never.kl"
     kl_t3 = kl_v_1 >= 0;
 #line 90 "codegen/never.kl"
@@ -696,11 +695,9 @@ int32_t kl__checked__3i32( int32_t kl_v_1 )
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
 #line 96 "codegen/never.kl"
-    kl_t7 = -100;
+    kl_t7 = kl_v_1 < -100;
 #line 96 "codegen/never.kl"
-    kl_t8 = kl_v_1 < kl_t7;
-#line 96 "codegen/never.kl"
-    if ( kl_t8 ) goto bb6; else goto bb7;
+    if ( kl_t7 ) goto bb6; else goto bb7;
     bb3:
 #line 92 "codegen/never.kl"
     kl_rt_panic( "codegen/never.kl", 92, "arithmetic overflow: v * 2" );
@@ -718,24 +715,24 @@ int32_t kl__checked__3i32( int32_t kl_v_1 )
     return kl_t0;
     bb6:
 #line 96 "codegen/never.kl"
-    kl_t10 = &kl_t9;
+    kl_t9 = &kl_t8;
 #line 96 "codegen/never.kl"
-    kl_t11 = ( uint8_t* ) "far below zero";
+    kl_t10 = ( uint8_t* ) "far below zero";
 #line 96 "codegen/never.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 14 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 14 );
 #line 96 "codegen/never.kl"
-    kl_t6 = kl_t9;
+    kl_t6 = kl_t8;
 #line 96 "codegen/never.kl"
     goto bb8;
     bb7:
 #line 96 "codegen/never.kl"
-    kl_t14 = &kl_t13;
+    kl_t13 = &kl_t12;
 #line 96 "codegen/never.kl"
-    kl_t15 = ( uint8_t* ) "negative";
+    kl_t14 = ( uint8_t* ) "negative";
 #line 96 "codegen/never.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 8 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t13, kl_t14, 8 );
 #line 96 "codegen/never.kl"
-    kl_t6 = kl_t13;
+    kl_t6 = kl_t12;
 #line 96 "codegen/never.kl"
     goto bb8;
     bb8:

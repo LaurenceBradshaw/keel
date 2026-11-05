@@ -163,14 +163,11 @@ void kl__store__3i32_O3i32( int32_t kl_v_1, int32_t* kl_into_2 )
 int32_t kl__passed__( void )
 {
     int32_t kl_t0;
-    int32_t kl_n_1;
-    int32_t* kl_t2;
-#line 90 "opt/constants.kl"
-    kl_n_1 = -4;
+    int32_t* kl_t1;
     kl_t0 = 0;
-    kl_t2 = &kl_t0;
+    kl_t1 = &kl_t0;
 #line 92 "opt/constants.kl"
-    kl__store__3i32_O3i32( kl_n_1, kl_t2 );
+    kl__store__3i32_O3i32( -4, kl_t1 );
     return kl_t0;
 }
 
@@ -183,17 +180,15 @@ int32_t kl__main__( void )
     int32_t kl_t3;
     bool kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
-    bool kl_t7;
-    int32_t kl_n_8;
-    int32_t* kl_t9;
+    bool kl_t6;
+    int32_t* kl_t7;
+    int32_t kl_i_9;
+    bool kl_t10;
     int32_t kl_i_11;
     bool kl_t12;
-    int32_t kl_i_13;
-    bool kl_t14;
 #line 38 "opt/constants.kl"
     kl_t1 = 0;
-    kl_i_13 = 0;
+    kl_i_11 = 0;
 #line 39 "opt/constants.kl"
     goto bb10;
     bb1:
@@ -207,18 +202,15 @@ int32_t kl__main__( void )
 #line 120 "opt/constants.kl"
     return kl_t0;
     bb3:
-#line 90 "opt/constants.kl"
-    kl_n_8 = -4;
+#line 91 "opt/constants.kl"
     kl_t5 = 0;
-    kl_t9 = &kl_t5;
+    kl_t7 = &kl_t5;
 #line 92 "opt/constants.kl"
-    kl__store__3i32_O3i32( kl_n_8, kl_t9 );
+    kl__store__3i32_O3i32( -4, kl_t7 );
 #line 128 "opt/constants.kl"
-    kl_t6 = -4;
+    kl_t6 = kl_t5 != -4;
 #line 128 "opt/constants.kl"
-    kl_t7 = kl_t5 != kl_t6;
-#line 128 "opt/constants.kl"
-    if ( kl_t7 ) goto bb4; else goto bb5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 7;
 #line 130 "opt/constants.kl"
@@ -230,13 +222,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 63 "opt/constants.kl"
-    kl_t12 = kl_i_11 < 4;
+    kl_t10 = kl_i_9 < 4;
 #line 63 "opt/constants.kl"
-    if ( kl_t12 ) goto bb7; else goto bb8;
+    if ( kl_t10 ) goto bb7; else goto bb8;
     bb7:
-    kl_t3 = kl_t3 + kl_i_11;
+    kl_t3 = kl_t3 + kl_i_9;
 #line 63 "opt/constants.kl"
-    kl_i_11 = kl_i_11 + 1;
+    kl_i_9 = kl_i_9 + 1;
 #line 63 "opt/constants.kl"
     goto bb6;
     bb8:
@@ -247,14 +239,14 @@ int32_t kl__main__( void )
     bb9:
 #line 62 "opt/constants.kl"
     kl_t3 = 0;
-    kl_i_11 = 0;
+    kl_i_9 = 0;
 #line 63 "opt/constants.kl"
     goto bb6;
     bb10:
 #line 39 "opt/constants.kl"
-    kl_t14 = kl_i_13 < 3;
+    kl_t12 = kl_i_11 < 3;
 #line 39 "opt/constants.kl"
-    if ( kl_t14 ) goto bb12; else goto bb11;
+    if ( kl_t12 ) goto bb12; else goto bb11;
     bb11:
 #line 108 "opt/constants.kl"
     kl_t2 = kl_t1 != 3;
@@ -264,7 +256,7 @@ int32_t kl__main__( void )
 #line 45 "opt/constants.kl"
     kl_t1 = kl_t1 + 1;
 #line 39 "opt/constants.kl"
-    kl_i_13 = kl_i_13 + 1;
+    kl_i_11 = kl_i_11 + 1;
 #line 39 "opt/constants.kl"
     goto bb10;
 #line 134 "opt/constants.kl"

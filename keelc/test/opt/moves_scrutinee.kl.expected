@@ -219,41 +219,40 @@ int32_t kl__main__( void )
     bool kl_t6;
     int32_t kl_t7;
     int32_t kl_t8;
-    int32_t kl_t9;
-    struct kl_7prelude_result__I3i32_5FaultE kl_t10;
+    struct kl_7prelude_result__I3i32_5FaultE kl_t9;
+    bool kl_t10;
     bool kl_t11;
-    bool kl_t12;
-    struct kl_7prelude_result__I3i32_5FaultE kl_t13;
+    struct kl_7prelude_result__I3i32_5FaultE kl_t12;
+    bool kl_t13;
     bool kl_t14;
-    bool kl_t15;
-    struct kl__Shape kl_s_16;
-    bool kl_t17;
-    struct kl__Shape kl_s_18;
-    bool kl_t19;
-    int32_t kl_t20;
+    struct kl__Shape kl_s_15;
+    bool kl_t16;
+    struct kl__Shape kl_s_17;
+    bool kl_t18;
+    int32_t kl_t19;
 #line 13 "opt/moves_scrutinee.kl"
-    kl_t20 = kl__live__G + 1;
+    kl_t19 = kl__live__G + 1;
 #line 13 "opt/moves_scrutinee.kl"
-    kl__live__G = kl_t20;
+    kl__live__G = kl_t19;
 #line 80 "opt/moves_scrutinee.kl"
     kl_t2.tag = 0;
 #line 80 "opt/moves_scrutinee.kl"
     kl_t2.kl_5boxed_b.kl_value = 7;
 #line 80 "opt/moves_scrutinee.kl"
-    kl_s_18 = kl_t2;
+    kl_s_17 = kl_t2;
 #line 42 "opt/moves_scrutinee.kl"
-    kl_t19 = kl_s_18.tag == 0;
+    kl_t18 = kl_s_17.tag == 0;
 #line 42 "opt/moves_scrutinee.kl"
-    if ( kl_t19 ) goto bb25; else goto bb26;
+    if ( kl_t18 ) goto bb25; else goto bb26;
     bb1:
 #line 80 "opt/moves_scrutinee.kl"
     kl_t4.tag = 1;
 #line 80 "opt/moves_scrutinee.kl"
-    kl_s_16 = kl_t4;
+    kl_s_15 = kl_t4;
 #line 42 "opt/moves_scrutinee.kl"
-    kl_t17 = kl_s_16.tag == 0;
+    kl_t16 = kl_s_15.tag == 0;
 #line 42 "opt/moves_scrutinee.kl"
-    if ( kl_t17 ) goto bb22; else goto bb23;
+    if ( kl_t16 ) goto bb22; else goto bb23;
     bb2:
 #line 80 "opt/moves_scrutinee.kl"
     kl_t1 = kl__live__G != 0;
@@ -282,9 +281,7 @@ int32_t kl__main__( void )
 #line 85 "opt/moves_scrutinee.kl"
     kl_t8 = kl__local__4bool( false );
 #line 85 "opt/moves_scrutinee.kl"
-    kl_t9 = -1;
-#line 85 "opt/moves_scrutinee.kl"
-    kl_t6 = kl_t8 != kl_t9;
+    kl_t6 = kl_t8 != -1;
 #line 85 "opt/moves_scrutinee.kl"
     if ( kl_t6 ) goto bb10; else goto bb8;
     bb8:
@@ -303,16 +300,16 @@ int32_t kl__main__( void )
     return kl_t0;
     bb11:
 #line 90 "opt/moves_scrutinee.kl"
-    kl_t10 = kl__tried__4bool( true );
+    kl_t9 = kl__tried__4bool( true );
 #line 92 "opt/moves_scrutinee.kl"
-    kl_t11 = kl_t10.tag == 0;
+    kl_t10 = kl_t9.tag == 0;
 #line 92 "opt/moves_scrutinee.kl"
-    if ( kl_t11 ) goto bb12; else goto bb13;
+    if ( kl_t10 ) goto bb12; else goto bb13;
     bb12:
 #line 93 "opt/moves_scrutinee.kl"
-    kl_t12 = kl_t10.kl_2ok_value != 9;
+    kl_t11 = kl_t9.kl_2ok_value != 9;
 #line 93 "opt/moves_scrutinee.kl"
-    if ( kl_t12 ) goto bb14; else goto bb15;
+    if ( kl_t11 ) goto bb14; else goto bb15;
     bb13:
 #line 99 "opt/moves_scrutinee.kl"
     kl_t0 = 4;
@@ -325,11 +322,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb15:
 #line 102 "opt/moves_scrutinee.kl"
-    kl_t13 = kl__tried__4bool( false );
+    kl_t12 = kl__tried__4bool( false );
 #line 104 "opt/moves_scrutinee.kl"
-    kl_t14 = kl_t13.tag == 0;
+    kl_t13 = kl_t12.tag == 0;
 #line 104 "opt/moves_scrutinee.kl"
-    if ( kl_t14 ) goto bb16; else goto bb17;
+    if ( kl_t13 ) goto bb16; else goto bb17;
     bb16:
 #line 105 "opt/moves_scrutinee.kl"
     kl_t0 = 5;
@@ -337,9 +334,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb17:
 #line 110 "opt/moves_scrutinee.kl"
-    kl_t15 = kl__live__G == 0;
+    kl_t14 = kl__live__G == 0;
 #line 110 "opt/moves_scrutinee.kl"
-    if ( kl_t15 ) goto bb21; else goto bb19;
+    if ( kl_t14 ) goto bb21; else goto bb19;
     bb18:
 #line 110 "opt/moves_scrutinee.kl"
     kl_t0 = 0;
@@ -355,12 +352,12 @@ int32_t kl__main__( void )
     return kl_t0;
     bb21:
 #line 110 "opt/moves_scrutinee.kl"
-    kl_t15 = kl__destroyed__G == 3;
+    kl_t14 = kl__destroyed__G == 3;
 #line 110 "opt/moves_scrutinee.kl"
-    if ( kl_t15 ) goto bb18; else goto bb19;
+    if ( kl_t14 ) goto bb18; else goto bb19;
     bb22:
 #line 43 "opt/moves_scrutinee.kl"
-    kl_t5 = kl_s_16.kl_5boxed_b.kl_value;
+    kl_t5 = kl_s_15.kl_5boxed_b.kl_value;
 #line 18 "opt/moves_scrutinee.kl"
     kl__live__G = kl__live__G - 1;
     kl__destroyed__G = kl__destroyed__G + 1;
@@ -369,7 +366,7 @@ int32_t kl__main__( void )
     bb23:
     kl_t5 = 0;
 #line 45 "opt/moves_scrutinee.kl"
-    kl__Shape__dtor( &kl_s_16 );
+    kl__Shape__dtor( &kl_s_15 );
 #line 45 "opt/moves_scrutinee.kl"
     goto bb24;
     bb24:
@@ -379,16 +376,16 @@ int32_t kl__main__( void )
     if ( kl_t1 ) goto bb4; else goto bb2;
     bb25:
 #line 43 "opt/moves_scrutinee.kl"
-    kl_t3 = kl_s_18.kl_5boxed_b.kl_value;
+    kl_t3 = kl_s_17.kl_5boxed_b.kl_value;
 #line 18 "opt/moves_scrutinee.kl"
-    kl__live__G = kl_t20 - 1;
+    kl__live__G = kl_t19 - 1;
     kl__destroyed__G = kl__destroyed__G + 1;
 #line 43 "opt/moves_scrutinee.kl"
     goto bb27;
     bb26:
     kl_t3 = 0;
 #line 45 "opt/moves_scrutinee.kl"
-    kl__Shape__dtor( &kl_s_18 );
+    kl__Shape__dtor( &kl_s_17 );
 #line 45 "opt/moves_scrutinee.kl"
     goto bb27;
     bb27:

@@ -1,0 +1,42 @@
+// A negative literal, a negative `const` and a negative case label, each at its type's width.
+const i32 floor = -3;
+
+bool below( i32 n )
+{
+    return n < -10;
+}
+
+i32 band( i32 n )
+{
+    switch( n )
+    {
+        case -10..-5: return 1;
+        case -5: return 2;
+        default: return 3;
+    }
+}
+
+i32 at_floor( i32 n )
+{
+    return n + floor;
+}
+
+i8 narrow()
+{
+    return -128;
+}
+
+i64 wide()
+{
+    return -9223372036854775808;
+}
+
+f64 fraction()
+{
+    return -1.5;
+}
+
+i32 main()
+{
+    return 0;
+}

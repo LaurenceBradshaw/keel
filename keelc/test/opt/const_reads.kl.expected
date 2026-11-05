@@ -37,11 +37,8 @@ int32_t kl__scaled__3i32( int32_t kl_x_1 )
 int32_t kl__lowered__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-    int32_t kl_t2;
 #line 34 "opt/const_reads.kl"
-    kl_t2 = -3;
-#line 34 "opt/const_reads.kl"
-    kl_t0 = kl_x_1 + kl_t2;
+    kl_t0 = kl_x_1 + -3;
 #line 34 "opt/const_reads.kl"
     return kl_t0;
 }
@@ -51,13 +48,10 @@ double kl__halved__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
-    double kl_t3;
 #line 39 "opt/const_reads.kl"
     kl_t2 = kl_x_1 * 0.5;
 #line 39 "opt/const_reads.kl"
-    kl_t3 = -0.25;
-#line 39 "opt/const_reads.kl"
-    kl_t0 = kl_t2 + kl_t3;
+    kl_t0 = kl_t2 + -0.25;
 #line 39 "opt/const_reads.kl"
     return kl_t0;
 }
@@ -115,13 +109,10 @@ int32_t kl__main__( void )
     bool kl_t6;
     bool kl_t7;
     double kl_t8;
-    double kl_t9;
 #line 39 "opt/const_reads.kl"
     kl_t8 = 3.0 * 0.5;
 #line 39 "opt/const_reads.kl"
-    kl_t9 = -0.25;
-#line 39 "opt/const_reads.kl"
-    kl_t1 = kl_t8 + kl_t9;
+    kl_t1 = kl_t8 + -0.25;
 #line 79 "opt/const_reads.kl"
     kl_t2 = kl_t1 != 1.25;
 #line 79 "opt/const_reads.kl"

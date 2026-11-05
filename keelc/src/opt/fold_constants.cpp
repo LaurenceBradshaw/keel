@@ -31,33 +31,6 @@ std::optional<Integer> integer_type( const Type_table& types, Type_id type )
     return std::nullopt;
 }
 
-u64 truncate( u64 bits, u8 width )
-{
-    if( width == 64 )
-    {
-        return bits;
-    }
-
-    return bits & ( ( 1ull << width ) - 1 );
-}
-
-i64 as_signed( u64 bits, u8 width )
-{
-    if( width == 64 )
-    {
-        return static_cast<i64>( bits );
-    }
-
-    const u64 sign_bit = 1ull << ( width - 1 );
-    if( bits & sign_bit )
-    {
-        const u64 mask = ~0ull << width;
-        return static_cast<i64>( bits | mask );
-    }
-
-    return static_cast<i64>( bits );
-}
-
 std::optional<u64> arithmetic( Token_kind op, u64 a, u64 b, Integer type )
 {
     switch( op )
@@ -349,14 +322,7 @@ std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table
 
 Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& literals )
 {
-    const Integer integer = *integer_type( types, type );
-    if( integer.is_signed && ( bits & ( 1ull << ( integer.width - 1 ) ) ) )
-    {
-        const u64 magnitude = truncate( ~bits + 1, integer.width );
-        return unary( Token_kind::Minus, constant( literals.add_integer( magnitude ), type ), type );
-    }
-
-    return use( constant( literals.add_integer( bits ), type ) );
+    return use( constant( literals.add_integer( truncate( bits, integer_type( types, type )->width ) ), type ) );
 }
 
 std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Literal_pool& literals )
@@ -470,17 +436,11 @@ std::optional<Rvalue> combined( const Rvalue& outer, const Rvalue& inner, const 
         return use( inner.a );
     }
 
-    // A negative is a subtraction, as an operand has no negative form.
-    const u64 top = 1ull << ( integer.width - 1 );
-    if( net & top )
+    // A negative is a subtraction, which reads better; a signed minimum has no positive magnitude.
+    const u64 top       = 1ull << ( integer.width - 1 );
+    const u64 magnitude = truncate( ~net + 1, integer.width );
+    if( ( net & top ) && !( magnitude == net && integer.is_signed ) )
     {
-        // A signed minimum has no positive magnitude.
-        const u64 magnitude = truncate( ~net + 1, integer.width );
-        if( magnitude == net && integer.is_signed )
-        {
-            return std::nullopt;
-        }
-
         return binary( Token_kind::Minus, inner.a, constant( literals.add_integer( magnitude ), outer.type ), outer.type );
     }
 
@@ -527,7 +487,7 @@ constexpr Integer k_i64 { .width = 64, .is_signed = true };
 
 } // namespace
 
-// `2147483647 + 1` is the minimum, written as lowering writes `-2147483648`.
+// `2147483647 + 1` is the minimum, written as its bits.
 TEST_CASE( "fold_constants_wraps_a_signed_sum", "[opt][fold]" )
 {
     const Type_table types;
@@ -539,9 +499,8 @@ TEST_CASE( "fold_constants_wraps_a_signed_sum", "[opt][fold]" )
     REQUIRE( bits == 0x8000'0000u );
 
     const Rvalue folded = value_of( *bits, i32, types, literals );
-    REQUIRE( folded.kind == Rvalue_kind::Unary );
-    REQUIRE( folded.op == Token_kind::Minus );
-    REQUIRE( literals.integer( folded.a.constant ) == 2147483648u );
+    REQUIRE( folded.kind == Rvalue_kind::Use );
+    REQUIRE( literals.integer( folded.a.constant ) == 0x8000'0000u );
 }
 
 // `-4` as an `i32` is `-4` as an `i64`, not `4294967292`; an unsigned source zero-extends.
@@ -657,8 +616,8 @@ TEST_CASE( "fold_constants_combines_two_sums", "[opt][fold]" )
     REQUIRE( none->a.place.local == x.place.local );
 }
 
-// A signed minimum has no positive constant to subtract, and `*` is not a sum; an unsigned minimum is.
-TEST_CASE( "fold_constants_keeps_a_combined_minimum", "[opt][fold]" )
+// A signed minimum has no positive constant to subtract, so it is added; `*` is not a sum; an unsigned minimum is subtracted.
+TEST_CASE( "fold_constants_adds_a_combined_signed_minimum", "[opt][fold]" )
 {
     const Type_table types;
     Literal_pool     literals;
@@ -668,7 +627,11 @@ TEST_CASE( "fold_constants_keeps_a_combined_minimum", "[opt][fold]" )
     const auto       sum        = [&]( Token_kind op, u32 local, u64 n, Type_id type )
     { return binary( op, copy( Place { .local = Local_id { local } }, type ), c( n, type ), type ); };
 
-    REQUIRE( !combined( sum( Token_kind::Plus, 2, 1, i32 ), sum( Token_kind::Plus, 1, 2147483647, i32 ), types, literals ) );
+    const std::optional<Rvalue> signed_minimum =
+        combined( sum( Token_kind::Plus, 2, 1, i32 ), sum( Token_kind::Plus, 1, 2147483647, i32 ), types, literals );
+    REQUIRE( signed_minimum );
+    REQUIRE( signed_minimum->op == Token_kind::Plus );
+    REQUIRE( literals.integer( signed_minimum->b.constant ) == 0x8000'0000u );
     REQUIRE( !combined(
         binary( Token_kind::Star, copy( Place { .local = Local_id { 2 } }, i32 ), c( 2, i32 ), i32 ),
         sum( Token_kind::Plus, 1, 3, i32 ),

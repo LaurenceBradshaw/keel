@@ -118,20 +118,19 @@ int32_t kl__main__( void )
     bool kl_t21;
     int32_t kl_t22;
     bool kl_t23;
-    double kl_t24;
-    int32_t kl_t25;
-    bool kl_t26;
-    int32_t kl_t27;
-    bool kl_t28;
+    int32_t kl_t24;
+    bool kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+    int32_t kl_t28;
     int32_t kl_t29;
-    int32_t kl_t30;
-    bool kl_t31;
-    int32_t kl_t32;
-    bool kl_t33;
+    bool kl_t30;
+    int32_t kl_t31;
+    bool kl_t32;
+    int32_t kl_t33;
     int32_t kl_t34;
-    int32_t kl_t35;
-    bool kl_t36;
-    int32_t kl_t37;
+    bool kl_t35;
+    int32_t kl_t36;
 #line 38 "codegen/switch_ranges.kl"
     kl_total_1 = 0;
 #line 41 "codegen/switch_ranges.kl"
@@ -267,66 +266,64 @@ int32_t kl__main__( void )
     return kl_t0;
     bb22:
 #line 54 "codegen/switch_ranges.kl"
-    kl_t24 = -1.0;
+    kl_t24 = kl__grade__3f64( -1.0 );
 #line 54 "codegen/switch_ranges.kl"
-    kl_t25 = kl__grade__3f64( kl_t24 );
+    kl_t25 = kl_t24 != 3;
 #line 54 "codegen/switch_ranges.kl"
-    kl_t26 = kl_t25 != 3;
-#line 54 "codegen/switch_ranges.kl"
-    if ( kl_t26 ) goto bb23; else goto bb24;
+    if ( kl_t25 ) goto bb23; else goto bb24;
     bb23:
 #line 54 "codegen/switch_ranges.kl"
     kl_t0 = 24;
 #line 54 "codegen/switch_ranges.kl"
     return kl_t0;
     bb24:
-    kl_t27 = kl__bucket__3i32( 3 );
+    kl_t26 = kl__bucket__3i32( 3 );
 #line 56 "codegen/switch_ranges.kl"
-    kl_t28 = __builtin_mul_overflow( kl_t27, 100, &( int32_t ) { 0 } );
+    kl_t27 = __builtin_mul_overflow( kl_t26, 100, &( int32_t ) { 0 } );
 #line 56 "codegen/switch_ranges.kl"
-    if ( kl_t28 ) goto bb25; else goto bb26;
+    if ( kl_t27 ) goto bb25; else goto bb26;
     bb25:
 #line 56 "codegen/switch_ranges.kl"
     kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100" );
     bb26:
 #line 56 "codegen/switch_ranges.kl"
-    kl_t29 = kl_t27 * 100;
+    kl_t28 = kl_t26 * 100;
 #line 56 "codegen/switch_ranges.kl"
-    kl_t30 = kl__bucket__3i32( 7 );
+    kl_t29 = kl__bucket__3i32( 7 );
 #line 56 "codegen/switch_ranges.kl"
-    kl_t31 = __builtin_mul_overflow( kl_t30, 10, &( int32_t ) { 0 } );
+    kl_t30 = __builtin_mul_overflow( kl_t29, 10, &( int32_t ) { 0 } );
 #line 56 "codegen/switch_ranges.kl"
-    if ( kl_t31 ) goto bb27; else goto bb28;
+    if ( kl_t30 ) goto bb27; else goto bb28;
     bb27:
 #line 56 "codegen/switch_ranges.kl"
     kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 7 ) * 10" );
     bb28:
 #line 56 "codegen/switch_ranges.kl"
-    kl_t32 = kl_t30 * 10;
+    kl_t31 = kl_t29 * 10;
 #line 56 "codegen/switch_ranges.kl"
-    kl_t33 = __builtin_add_overflow( kl_t29, kl_t32, &( int32_t ) { 0 } );
+    kl_t32 = __builtin_add_overflow( kl_t28, kl_t31, &( int32_t ) { 0 } );
 #line 56 "codegen/switch_ranges.kl"
-    if ( kl_t33 ) goto bb29; else goto bb30;
+    if ( kl_t32 ) goto bb29; else goto bb30;
     bb29:
 #line 56 "codegen/switch_ranges.kl"
     kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100 + bucket( 7 ) * 10" );
     bb30:
 #line 56 "codegen/switch_ranges.kl"
-    kl_t34 = kl_t29 + kl_t32;
+    kl_t33 = kl_t28 + kl_t31;
 #line 56 "codegen/switch_ranges.kl"
-    kl_t35 = kl__grade__3f64( 0.25 );
+    kl_t34 = kl__grade__3f64( 0.25 );
 #line 56 "codegen/switch_ranges.kl"
-    kl_t36 = __builtin_add_overflow( kl_t34, kl_t35, &( int32_t ) { 0 } );
+    kl_t35 = __builtin_add_overflow( kl_t33, kl_t34, &( int32_t ) { 0 } );
 #line 56 "codegen/switch_ranges.kl"
-    if ( kl_t36 ) goto bb31; else goto bb32;
+    if ( kl_t35 ) goto bb31; else goto bb32;
     bb31:
 #line 56 "codegen/switch_ranges.kl"
     kl_rt_panic( "codegen/switch_ranges.kl", 56, "arithmetic overflow: bucket( 3 ) * 100 + bucket( 7 ) * 10 + grade( 0.25 )" );
     bb32:
 #line 56 "codegen/switch_ranges.kl"
-    kl_t37 = kl_t34 + kl_t35;
+    kl_t36 = kl_t33 + kl_t34;
 #line 56 "codegen/switch_ranges.kl"
-    kl_total_1 = kl_t37;
+    kl_total_1 = kl_t36;
 #line 58 "codegen/switch_ranges.kl"
     kl_t0 = kl_total_1;
 #line 58 "codegen/switch_ranges.kl"

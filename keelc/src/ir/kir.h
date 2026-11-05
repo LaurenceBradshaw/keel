@@ -134,7 +134,7 @@ struct Operand
     // reference to a local.
     Operand_kind kind = Operand_kind::Constant;
     Place        place {};    // Copy and Move
-    Literal_id   constant {}; // Constant
+    Literal_id   constant {}; // Constant: an integer's bits at the type's width, a float's signed value
     Type_id      type {};
     Span         span {}; // the expression it was lowered from; invalid when made by a pass
 
@@ -629,6 +629,23 @@ inline std::vector<u32> predecessor_counts( const Function& func )
     }
 
     return counts;
+}
+
+// `bits` kept to their low `width`.
+inline u64 truncate( u64 bits, u8 width )
+{
+    return width == 64 ? bits : bits & ( ( 1ull << width ) - 1 );
+}
+
+// `bits` read as a `width`-bit signed integer.
+inline i64 as_signed( u64 bits, u8 width )
+{
+    if( width == 64 || !( bits & ( 1ull << ( width - 1 ) ) ) )
+    {
+        return static_cast<i64>( bits );
+    }
+
+    return static_cast<i64>( bits | ( ~0ull << width ) );
 }
 
 inline Operand copy( Place place, Type_id type )

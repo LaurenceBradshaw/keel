@@ -80,11 +80,9 @@ int32_t kl__main__( void )
     int32_t kl_neg_46;
     int32_t kl_i_47;
     int32_t kl_t48;
-    int32_t kl_t49;
+    bool kl_t49;
     bool kl_t50;
     bool kl_t51;
-    int32_t kl_t52;
-    bool kl_t53;
 #line 12 "codegen/counting.kl"
     kl_sum_1 = 0;
     kl_i_2 = 0;
@@ -329,9 +327,7 @@ int32_t kl__main__( void )
     if ( kl_t45 ) goto bb51; else goto bb52;
     bb51:
     kl_neg_46 = 0;
-    kl_t49 = -3;
-#line 64 "codegen/counting.kl"
-    kl_i_47 = kl_t49;
+    kl_i_47 = -3;
 #line 64 "codegen/counting.kl"
     kl_t48 = 0;
 #line 64 "codegen/counting.kl"
@@ -341,13 +337,13 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/counting.kl", 61, "assertion failed: last == 3" );
     bb53:
 #line 64 "codegen/counting.kl"
-    kl_t50 = kl_i_47 < kl_t48;
+    kl_t49 = kl_i_47 < kl_t48;
 #line 64 "codegen/counting.kl"
-    if ( kl_t50 ) goto bb54; else goto bb55;
+    if ( kl_t49 ) goto bb54; else goto bb55;
     bb54:
-    kl_t51 = __builtin_add_overflow( kl_neg_46, kl_i_47, &( int32_t ) { 0 } );
+    kl_t50 = __builtin_add_overflow( kl_neg_46, kl_i_47, &( int32_t ) { 0 } );
 #line 66 "codegen/counting.kl"
-    if ( kl_t51 ) goto bb56; else goto bb57;
+    if ( kl_t50 ) goto bb56; else goto bb57;
     bb55:
     goto bb59;
     bb56:
@@ -365,11 +361,9 @@ int32_t kl__main__( void )
     goto bb53;
     bb59:
 #line 68 "codegen/counting.kl"
-    kl_t52 = -6;
+    kl_t51 = kl_neg_46 == -6;
 #line 68 "codegen/counting.kl"
-    kl_t53 = kl_neg_46 == kl_t52;
-#line 68 "codegen/counting.kl"
-    if ( kl_t53 ) goto bb60; else goto bb61;
+    if ( kl_t51 ) goto bb60; else goto bb61;
     bb60:
 #line 69 "codegen/counting.kl"
     kl_t0 = 0;

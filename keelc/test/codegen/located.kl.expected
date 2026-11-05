@@ -663,10 +663,9 @@ int32_t kl__main__( void )
     struct kl_7prelude_str* kl_t40;
     uint8_t* kl_t41;
     struct kl_7prelude_textual__ref kl_t43;
-    int64_t kl_t45;
-    struct kl_7prelude_location kl_t46;
-    struct kl_7prelude_str* kl_t47;
-    uint8_t* kl_t48;
+    struct kl_7prelude_location kl_t45;
+    struct kl_7prelude_str* kl_t46;
+    uint8_t* kl_t47;
 #line 48 "codegen/located.kl"
     kl_t2 = &kl_t1.kl_file;
 #line 48 "codegen/located.kl"
@@ -772,17 +771,15 @@ int32_t kl__main__( void )
     kl_t43 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t39, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 63 "codegen/located.kl"
     kl_1t7console_println__7textual( kl_t43 );
-    kl_t45 = -1;
+    kl_t46 = &kl_t45.kl_file;
 #line 64 "codegen/located.kl"
-    kl_t47 = &kl_t46.kl_file;
+    kl_t47 = ( uint8_t* ) "codegen/located.kl";
 #line 64 "codegen/located.kl"
-    kl_t48 = ( uint8_t* ) "codegen/located.kl";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t46, kl_t47, 18 );
 #line 64 "codegen/located.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t47, kl_t48, 18 );
+    kl_t45.kl_line = 64;
 #line 64 "codegen/located.kl"
-    kl_t46.kl_line = 64;
-#line 64 "codegen/located.kl"
-    kl__expect_positive__3i64( kl_t45, kl_t46 );
+    kl__expect_positive__3i64( -1, kl_t45 );
     kl_t0 = 0;
 #line 65 "codegen/located.kl"
     return kl_t0;

@@ -14,11 +14,10 @@ int32_t kl__main__( void )
     int32_t kl_x_1;
     uint32_t kl_t2;
     bool kl_t3;
-    int32_t kl_t4;
-    uint32_t kl_t5;
-    bool kl_t6;
+    uint32_t kl_t4;
+    bool kl_t5;
     ( void ) kl_t2;
-    ( void ) kl_t5;
+    ( void ) kl_t4;
 #line 5 "codegen/cast_out_of_range.kl"
     kl_x_1 = 7;
     kl_t2 = ( uint32_t ) kl_x_1;
@@ -30,14 +29,12 @@ int32_t kl__main__( void )
 #line 6 "codegen/cast_out_of_range.kl"
     kl_rt_panic( "codegen/cast_out_of_range.kl", 6, "cast out of range: cast<u32>( x )" );
     bb2:
-    kl_t4 = -1;
-#line 8 "codegen/cast_out_of_range.kl"
-    kl_x_1 = kl_t4;
-    kl_t5 = ( uint32_t ) kl_x_1;
+    kl_x_1 = -1;
+    kl_t4 = ( uint32_t ) kl_x_1;
 #line 9 "codegen/cast_out_of_range.kl"
-    kl_t6 = kl_x_1 >= 0;
+    kl_t5 = kl_x_1 >= 0;
 #line 9 "codegen/cast_out_of_range.kl"
-    if ( kl_t6 ) goto bb4; else goto bb3;
+    if ( kl_t5 ) goto bb4; else goto bb3;
     bb3:
 #line 9 "codegen/cast_out_of_range.kl"
     kl_rt_panic( "codegen/cast_out_of_range.kl", 9, "cast out of range: cast<u32>( x )" );

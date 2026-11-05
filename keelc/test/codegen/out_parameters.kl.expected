@@ -25,14 +25,13 @@ void kl__divide__3i32_3i32_O3i32_O3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t*
 {
     bool kl_t5;
     int32_t kl_t6;
-    int32_t kl_t7;
+    bool kl_t7;
     bool kl_t8;
-    bool kl_t9;
-    int32_t kl_t10;
-    bool kl_t11;
-    int32_t kl_t12;
-    bool kl_t13;
-    int32_t kl_t14;
+    int32_t kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    int32_t kl_t13;
 #line 12 "codegen/out_parameters.kl"
     kl_t5 = kl_b_2 != 0;
 #line 12 "codegen/out_parameters.kl"
@@ -42,35 +41,33 @@ void kl__divide__3i32_3i32_O3i32_O3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t*
     kl_rt_panic( "codegen/out_parameters.kl", 12, "division by zero: a / b" );
     bb2:
 #line 12 "codegen/out_parameters.kl"
-    kl_t6 = -1;
+    kl_t7 = kl_b_2 == -1;
 #line 12 "codegen/out_parameters.kl"
-    kl_t8 = kl_b_2 == kl_t6;
-#line 12 "codegen/out_parameters.kl"
-    if ( kl_t8 ) goto bb3; else goto bb4;
+    if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
 #line 12 "codegen/out_parameters.kl"
-    kl_t9 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
+    kl_t8 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
 #line 12 "codegen/out_parameters.kl"
-    if ( kl_t9 ) goto bb6; else goto bb7;
+    if ( kl_t8 ) goto bb6; else goto bb7;
     bb4:
 #line 12 "codegen/out_parameters.kl"
-    kl_t7 = kl_a_1 / kl_b_2;
+    kl_t6 = kl_a_1 / kl_b_2;
 #line 12 "codegen/out_parameters.kl"
     goto bb5;
     bb5:
 #line 12 "codegen/out_parameters.kl"
-    kl_t10 = kl_t7;
+    kl_t9 = kl_t6;
 #line 12 "codegen/out_parameters.kl"
-    ( *kl_quotient_3 ) = kl_t10;
-    kl_t11 = __builtin_mul_overflow( ( *kl_quotient_3 ), kl_b_2, &( int32_t ) { 0 } );
+    ( *kl_quotient_3 ) = kl_t9;
+    kl_t10 = __builtin_mul_overflow( ( *kl_quotient_3 ), kl_b_2, &( int32_t ) { 0 } );
 #line 13 "codegen/out_parameters.kl"
-    if ( kl_t11 ) goto bb8; else goto bb9;
+    if ( kl_t10 ) goto bb8; else goto bb9;
     bb6:
 #line 12 "codegen/out_parameters.kl"
     kl_rt_panic( "codegen/out_parameters.kl", 12, "arithmetic overflow: a / b" );
     bb7:
 #line 12 "codegen/out_parameters.kl"
-    kl_t7 = -kl_a_1;
+    kl_t6 = -kl_a_1;
 #line 12 "codegen/out_parameters.kl"
     goto bb5;
     bb8:
@@ -78,19 +75,19 @@ void kl__divide__3i32_3i32_O3i32_O3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t*
     kl_rt_panic( "codegen/out_parameters.kl", 13, "arithmetic overflow: quotient * b" );
     bb9:
 #line 13 "codegen/out_parameters.kl"
-    kl_t12 = ( *kl_quotient_3 ) * kl_b_2;
+    kl_t11 = ( *kl_quotient_3 ) * kl_b_2;
 #line 13 "codegen/out_parameters.kl"
-    kl_t13 = __builtin_sub_overflow( kl_a_1, kl_t12, &( int32_t ) { 0 } );
+    kl_t12 = __builtin_sub_overflow( kl_a_1, kl_t11, &( int32_t ) { 0 } );
 #line 13 "codegen/out_parameters.kl"
-    if ( kl_t13 ) goto bb10; else goto bb11;
+    if ( kl_t12 ) goto bb10; else goto bb11;
     bb10:
 #line 13 "codegen/out_parameters.kl"
     kl_rt_panic( "codegen/out_parameters.kl", 13, "arithmetic overflow: a - quotient * b" );
     bb11:
 #line 13 "codegen/out_parameters.kl"
-    kl_t14 = kl_a_1 - kl_t12;
+    kl_t13 = kl_a_1 - kl_t11;
 #line 13 "codegen/out_parameters.kl"
-    ( *kl_remainder_4 ) = kl_t14;
+    ( *kl_remainder_4 ) = kl_t13;
     return;
 #line 14 "codegen/out_parameters.kl"
 }

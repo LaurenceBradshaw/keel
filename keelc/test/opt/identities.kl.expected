@@ -159,28 +159,25 @@ int32_t kl__main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    double kl_t2;
-    double kl_sum_3;
-    double kl_t4;
-    bool kl_t5;
-    double kl_nan_6;
-    bool kl_t7;
+    double kl_sum_2;
+    double kl_t3;
+    bool kl_t4;
+    double kl_nan_5;
+    bool kl_t6;
 #line 60 "opt/identities.kl"
-    kl_nan_6 = 0.0 / 0.0;
+    kl_nan_5 = 0.0 / 0.0;
 #line 28 "opt/identities.kl"
-    kl_t7 = kl_nan_6 == kl_nan_6;
+    kl_t6 = kl_nan_5 == kl_nan_5;
 #line 61 "opt/identities.kl"
-    if ( kl_t7 ) goto bb6; else goto bb7;
+    if ( kl_t6 ) goto bb6; else goto bb7;
     bb1:
-#line 89 "opt/identities.kl"
-    kl_t2 = -0.0;
 #line 68 "opt/identities.kl"
-    kl_sum_3 = kl_t2 + 0.0;
-    kl_t4 = 1.0 / kl_sum_3;
+    kl_sum_2 = -0.0 + 0.0;
+    kl_t3 = 1.0 / kl_sum_2;
 #line 69 "opt/identities.kl"
-    kl_t5 = kl_t4 > 0.0;
+    kl_t4 = kl_t3 > 0.0;
 #line 69 "opt/identities.kl"
-    if ( kl_t5 ) goto bb3; else goto bb4;
+    if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
 #line 92 "opt/identities.kl"
     return kl_t0;

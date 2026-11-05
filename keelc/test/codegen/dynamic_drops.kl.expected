@@ -3818,43 +3818,42 @@ int32_t kl__main__( void )
     uint64_t kl_k_3;
     uint64_t kl_t4;
     bool kl_t5;
-    int64_t kl_t6;
-    int64_t kl_total_8;
-    bool kl_t9;
-    struct kl_7prelude_str kl_t10;
-    struct kl_7prelude_str* kl_t11;
-    uint8_t* kl_t12;
-    struct kl_7prelude_textual__ref kl_t14;
-    bool kl_t17;
-    int32_t kl_t18;
-    int64_t kl_f_19;
-    int64_t kl_t20;
-    bool kl_t21;
-    int64_t kl_t22;
+    int64_t kl_total_7;
+    bool kl_t8;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+    struct kl_7prelude_textual__ref kl_t13;
+    bool kl_t16;
+    int32_t kl_t17;
+    int64_t kl_f_18;
+    int64_t kl_t19;
+    bool kl_t20;
+    int64_t kl_t21;
+    bool kl_t22;
     bool kl_t23;
-    bool kl_t24;
-    int64_t kl_t25;
-    struct kl_7prelude_result__I4void_3i32E kl_t26;
-    bool kl_t27;
-    struct kl_7prelude_str kl_t28;
-    struct kl_7prelude_str* kl_t29;
-    uint8_t* kl_t30;
-    struct kl_7prelude_textual__ref kl_t32;
-    bool kl_t35;
-    int32_t kl_t36;
-    int32_t kl_e_37;
-    bool kl_t38;
-    struct kl_7prelude_str kl_t39;
-    struct kl_7prelude_str* kl_t40;
-    uint8_t* kl_t41;
-    struct kl_7prelude_textual__ref kl_t43;
-    struct kl_7prelude_str kl_t46;
-    struct kl_7prelude_str* kl_t47;
-    uint8_t* kl_t48;
-    struct kl_7prelude_textual__ref kl_t50;
-    bool kl_t53;
-    int32_t kl_t54;
-    ( void ) kl_e_37;
+    int64_t kl_t24;
+    struct kl_7prelude_result__I4void_3i32E kl_t25;
+    bool kl_t26;
+    struct kl_7prelude_str kl_t27;
+    struct kl_7prelude_str* kl_t28;
+    uint8_t* kl_t29;
+    struct kl_7prelude_textual__ref kl_t31;
+    bool kl_t34;
+    int32_t kl_t35;
+    int32_t kl_e_36;
+    bool kl_t37;
+    struct kl_7prelude_str kl_t38;
+    struct kl_7prelude_str* kl_t39;
+    uint8_t* kl_t40;
+    struct kl_7prelude_textual__ref kl_t42;
+    struct kl_7prelude_str kl_t45;
+    struct kl_7prelude_str* kl_t46;
+    uint8_t* kl_t47;
+    struct kl_7prelude_textual__ref kl_t49;
+    bool kl_t52;
+    int32_t kl_t53;
+    ( void ) kl_e_36;
 #line 226 "codegen/dynamic_drops.kl"
     kl_bad_1 = 0;
     kl_runs_2 = 0;
@@ -3870,14 +3869,12 @@ int32_t kl__main__( void )
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
     kl__ops__G = 0;
-    kl_t6 = -1;
-#line 231 "codegen/dynamic_drops.kl"
-    kl__failing__G = kl_t6;
+    kl__failing__G = -1;
     kl__body__3u64( kl_k_3 );
-    kl_total_8 = kl__ops__G;
-    kl_t9 = kl__live__G != 0;
+    kl_total_7 = kl__ops__G;
+    kl_t8 = kl__live__G != 0;
 #line 234 "codegen/dynamic_drops.kl"
-    if ( kl_t9 ) goto bb4; else goto bb7;
+    if ( kl_t8 ) goto bb4; else goto bb7;
     bb3:
 #line 261 "codegen/dynamic_drops.kl"
     kl_1t7console_println__3i64( kl_runs_2 );
@@ -3886,58 +3883,58 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 236 "codegen/dynamic_drops.kl"
-    kl_t11 = &kl_t10;
+    kl_t10 = &kl_t9;
 #line 236 "codegen/dynamic_drops.kl"
-    kl_t12 = ( uint8_t* ) "leak in ";
+    kl_t11 = ( uint8_t* ) "leak in ";
 #line 236 "codegen/dynamic_drops.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 8 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 8 );
 #line 236 "codegen/dynamic_drops.kl"
-    kl_t14 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 236 "codegen/dynamic_drops.kl"
-    kl_1t7console_print__7textual( kl_t14 );
+    kl_1t7console_print__7textual( kl_t13 );
 #line 236 "codegen/dynamic_drops.kl"
     kl_1t7console_println__3u64( kl_k_3 );
-    kl_t17 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
+    kl_t16 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
 #line 237 "codegen/dynamic_drops.kl"
-    if ( kl_t17 ) goto bb5; else goto bb6;
+    if ( kl_t16 ) goto bb5; else goto bb6;
     bb5:
 #line 237 "codegen/dynamic_drops.kl"
     kl_rt_panic( "codegen/dynamic_drops.kl", 237, "arithmetic overflow: bad + 1" );
     bb6:
 #line 237 "codegen/dynamic_drops.kl"
-    kl_t18 = kl_bad_1 + 1;
+    kl_t17 = kl_bad_1 + 1;
 #line 237 "codegen/dynamic_drops.kl"
-    kl_bad_1 = kl_t18;
+    kl_bad_1 = kl_t17;
 #line 234 "codegen/dynamic_drops.kl"
     goto bb7;
     bb7:
 #line 239 "codegen/dynamic_drops.kl"
-    kl_f_19 = 1;
+    kl_f_18 = 1;
 #line 239 "codegen/dynamic_drops.kl"
-    kl_t21 = __builtin_add_overflow( kl_total_8, 1, &( int64_t ) { 0 } );
+    kl_t20 = __builtin_add_overflow( kl_total_7, 1, &( int64_t ) { 0 } );
 #line 239 "codegen/dynamic_drops.kl"
-    if ( kl_t21 ) goto bb8; else goto bb9;
+    if ( kl_t20 ) goto bb8; else goto bb9;
     bb8:
 #line 239 "codegen/dynamic_drops.kl"
     kl_rt_panic( "codegen/dynamic_drops.kl", 239, "arithmetic overflow: total + 1" );
     bb9:
 #line 239 "codegen/dynamic_drops.kl"
-    kl_t22 = kl_total_8 + 1;
+    kl_t21 = kl_total_7 + 1;
 #line 239 "codegen/dynamic_drops.kl"
-    kl_t20 = kl_t22;
+    kl_t19 = kl_t21;
 #line 239 "codegen/dynamic_drops.kl"
     goto bb10;
     bb10:
 #line 239 "codegen/dynamic_drops.kl"
-    kl_t23 = kl_f_19 < kl_t20;
+    kl_t22 = kl_f_18 < kl_t19;
 #line 239 "codegen/dynamic_drops.kl"
-    if ( kl_t23 ) goto bb11; else goto bb12;
+    if ( kl_t22 ) goto bb11; else goto bb12;
     bb11:
     kl__ops__G = 0;
-    kl__failing__G = kl_f_19;
-    kl_t24 = __builtin_add_overflow( kl_runs_2, 1, &( int64_t ) { 0 } );
+    kl__failing__G = kl_f_18;
+    kl_t23 = __builtin_add_overflow( kl_runs_2, 1, &( int64_t ) { 0 } );
 #line 243 "codegen/dynamic_drops.kl"
-    if ( kl_t24 ) goto bb13; else goto bb14;
+    if ( kl_t23 ) goto bb13; else goto bb14;
     bb12:
 #line 228 "codegen/dynamic_drops.kl"
     goto bb24;
@@ -3946,88 +3943,88 @@ int32_t kl__main__( void )
     kl_rt_panic( "codegen/dynamic_drops.kl", 243, "arithmetic overflow: runs + 1" );
     bb14:
 #line 243 "codegen/dynamic_drops.kl"
-    kl_t25 = kl_runs_2 + 1;
+    kl_t24 = kl_runs_2 + 1;
 #line 243 "codegen/dynamic_drops.kl"
-    kl_runs_2 = kl_t25;
-    kl_t26 = kl__body__3u64( kl_k_3 );
+    kl_runs_2 = kl_t24;
+    kl_t25 = kl__body__3u64( kl_k_3 );
 #line 246 "codegen/dynamic_drops.kl"
-    kl_t27 = kl_t26.tag == 0;
+    kl_t26 = kl_t25.tag == 0;
 #line 246 "codegen/dynamic_drops.kl"
-    if ( kl_t27 ) goto bb15; else goto bb16;
+    if ( kl_t26 ) goto bb15; else goto bb16;
     bb15:
 #line 247 "codegen/dynamic_drops.kl"
-    kl_t29 = &kl_t28;
+    kl_t28 = &kl_t27;
 #line 247 "codegen/dynamic_drops.kl"
-    kl_t30 = ( uint8_t* ) "no failure in ";
+    kl_t29 = ( uint8_t* ) "no failure in ";
 #line 247 "codegen/dynamic_drops.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t29, kl_t30, 14 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t28, kl_t29, 14 );
 #line 247 "codegen/dynamic_drops.kl"
-    kl_t32 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t28, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t31 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t27, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 247 "codegen/dynamic_drops.kl"
-    kl_1t7console_print__7textual( kl_t32 );
+    kl_1t7console_print__7textual( kl_t31 );
 #line 247 "codegen/dynamic_drops.kl"
     kl_1t7console_println__3u64( kl_k_3 );
-    kl_t35 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
+    kl_t34 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
 #line 248 "codegen/dynamic_drops.kl"
-    if ( kl_t35 ) goto bb17; else goto bb18;
+    if ( kl_t34 ) goto bb17; else goto bb18;
     bb16:
-    kl_e_37 = kl_t26.kl_3err_error;
+    kl_e_36 = kl_t25.kl_3err_error;
     goto bb19;
     bb17:
 #line 248 "codegen/dynamic_drops.kl"
     kl_rt_panic( "codegen/dynamic_drops.kl", 248, "arithmetic overflow: bad + 1" );
     bb18:
 #line 248 "codegen/dynamic_drops.kl"
-    kl_t36 = kl_bad_1 + 1;
+    kl_t35 = kl_bad_1 + 1;
 #line 248 "codegen/dynamic_drops.kl"
-    kl_bad_1 = kl_t36;
+    kl_bad_1 = kl_t35;
     goto bb19;
     bb19:
 #line 253 "codegen/dynamic_drops.kl"
-    kl_t38 = kl__live__G != 0;
+    kl_t37 = kl__live__G != 0;
 #line 253 "codegen/dynamic_drops.kl"
-    if ( kl_t38 ) goto bb20; else goto bb23;
+    if ( kl_t37 ) goto bb20; else goto bb23;
     bb20:
-    kl_t40 = &kl_t39;
+    kl_t39 = &kl_t38;
 #line 255 "codegen/dynamic_drops.kl"
-    kl_t41 = ( uint8_t* ) "leak in ";
+    kl_t40 = ( uint8_t* ) "leak in ";
 #line 255 "codegen/dynamic_drops.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t40, kl_t41, 8 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t39, kl_t40, 8 );
 #line 255 "codegen/dynamic_drops.kl"
-    kl_t43 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t39, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t38, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 255 "codegen/dynamic_drops.kl"
-    kl_1t7console_print__7textual( kl_t43 );
+    kl_1t7console_print__7textual( kl_t42 );
 #line 255 "codegen/dynamic_drops.kl"
     kl_1t7console_print__3u64( kl_k_3 );
 #line 255 "codegen/dynamic_drops.kl"
-    kl_t47 = &kl_t46;
+    kl_t46 = &kl_t45;
 #line 255 "codegen/dynamic_drops.kl"
-    kl_t48 = ( uint8_t* ) " at ";
+    kl_t47 = ( uint8_t* ) " at ";
 #line 255 "codegen/dynamic_drops.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t47, kl_t48, 4 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t46, kl_t47, 4 );
 #line 255 "codegen/dynamic_drops.kl"
-    kl_t50 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t46, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t49 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t45, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 255 "codegen/dynamic_drops.kl"
-    kl_1t7console_print__7textual( kl_t50 );
+    kl_1t7console_print__7textual( kl_t49 );
 #line 255 "codegen/dynamic_drops.kl"
-    kl_1t7console_println__3i64( kl_f_19 );
-    kl_t53 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
+    kl_1t7console_println__3i64( kl_f_18 );
+    kl_t52 = __builtin_add_overflow( kl_bad_1, 1, &( int32_t ) { 0 } );
 #line 256 "codegen/dynamic_drops.kl"
-    if ( kl_t53 ) goto bb21; else goto bb22;
+    if ( kl_t52 ) goto bb21; else goto bb22;
     bb21:
 #line 256 "codegen/dynamic_drops.kl"
     kl_rt_panic( "codegen/dynamic_drops.kl", 256, "arithmetic overflow: bad + 1" );
     bb22:
 #line 256 "codegen/dynamic_drops.kl"
-    kl_t54 = kl_bad_1 + 1;
+    kl_t53 = kl_bad_1 + 1;
 #line 256 "codegen/dynamic_drops.kl"
-    kl_bad_1 = kl_t54;
+    kl_bad_1 = kl_t53;
     kl__live__G = 0;
 #line 253 "codegen/dynamic_drops.kl"
     goto bb23;
     bb23:
 #line 239 "codegen/dynamic_drops.kl"
-    kl_f_19 = kl_f_19 + 1;
+    kl_f_18 = kl_f_18 + 1;
 #line 239 "codegen/dynamic_drops.kl"
     goto bb10;
     bb24:

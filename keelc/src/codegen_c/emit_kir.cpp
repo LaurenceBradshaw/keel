@@ -2079,7 +2079,23 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
         );
     case Type_kind::Int:
     case Type_kind::Enum: // a variant is its index; the C type is the underlying integer
-        return c_integer( literal_pool_.integer( literal ) );
+    {
+        const Type& t    = types_.table().get( type );
+        const u64   bits = literal_pool_.integer( literal );
+
+        if( t.kind == Type_kind::Int && t.is_signed && as_signed( bits, t.width ) < 0 )
+        {
+            // C has no signed literal for it.
+            if( t.width == 64 && bits == 1ull << 63 )
+            {
+                return "INT64_MIN";
+            }
+
+            return "-" + c_integer( truncate( 0 - bits, t.width ) );
+        }
+
+        return c_integer( bits );
+    }
 
     default:
         assert( false && "no C spelling for this type" );
@@ -2155,7 +2171,12 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
     }
 
     case Rvalue_kind::Unary:
-        return fmt::format( "{}{}", token_kind_spelling( rvalue.op ), operand( rvalue.a ) );
+    {
+        std::string operand_text = operand( rvalue.a );
+        return fmt::format(
+            "{}{}", token_kind_spelling( rvalue.op ), operand_text.starts_with( "-" ) ? " " + operand_text : operand_text
+        );
+    }
 
     // The builtin judges the fit by its third argument's type.
     case Rvalue_kind::Overflows:

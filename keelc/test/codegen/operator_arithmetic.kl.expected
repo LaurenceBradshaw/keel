@@ -312,9 +312,8 @@ struct kl__hours kl__operator_rem__S5hours_3i64( struct kl__hours* kl_this_1, in
     struct kl__hours kl_t3;
     bool kl_t4;
     int64_t kl_t5;
-    int64_t kl_t6;
-    bool kl_t7;
-    int64_t kl_t8;
+    bool kl_t6;
+    int64_t kl_t7;
 #line 33 "codegen/operator_arithmetic.kl"
     kl_t4 = kl_day_2 != 0;
 #line 33 "codegen/operator_arithmetic.kl"
@@ -324,26 +323,24 @@ struct kl__hours kl__operator_rem__S5hours_3i64( struct kl__hours* kl_this_1, in
     kl_rt_panic( "codegen/operator_arithmetic.kl", 33, "remainder by zero: h % day" );
     bb2:
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t5 = -1;
+    kl_t6 = kl_day_2 == -1;
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t7 = kl_day_2 == kl_t5;
-#line 33 "codegen/operator_arithmetic.kl"
-    if ( kl_t7 ) goto bb3; else goto bb4;
+    if ( kl_t6 ) goto bb3; else goto bb4;
     bb3:
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t6 = 0;
+    kl_t5 = 0;
 #line 33 "codegen/operator_arithmetic.kl"
     goto bb5;
     bb4:
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t6 = ( *kl_this_1 ).kl_h % kl_day_2;
+    kl_t5 = ( *kl_this_1 ).kl_h % kl_day_2;
 #line 33 "codegen/operator_arithmetic.kl"
     goto bb5;
     bb5:
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t8 = kl_t6;
+    kl_t7 = kl_t5;
 #line 33 "codegen/operator_arithmetic.kl"
-    kl_t3.kl_h = kl_t8;
+    kl_t3.kl_h = kl_t7;
 #line 33 "codegen/operator_arithmetic.kl"
     kl_t0 = kl_t3;
 #line 33 "codegen/operator_arithmetic.kl"
@@ -556,173 +553,171 @@ int32_t kl__main__( void )
     struct kl__vec kl_t39;
     struct kl__vec* kl_t40;
     struct kl__vec kl_t41;
-    double kl_t42;
-    double kl_t43;
-    struct kl__vec* kl_t44;
-    bool kl_t45;
-    bool kl_t46;
-    struct kl__vec* kl_t47;
+    struct kl__vec* kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    struct kl__vec* kl_t45;
+    struct kl__vec* kl_t46;
+    struct kl__vec kl_t47;
     struct kl__vec* kl_t48;
     struct kl__vec kl_t49;
     struct kl__vec* kl_t50;
     struct kl__vec kl_t51;
     struct kl__vec* kl_t52;
-    struct kl__vec kl_t53;
-    struct kl__vec* kl_t54;
+    bool kl_t53;
+    bool kl_t54;
     bool kl_t55;
     bool kl_t56;
-    bool kl_t57;
-    bool kl_t58;
-    struct kl__vec* kl_t59;
+    struct kl__vec* kl_t57;
+    struct kl__vec* kl_t58;
+    struct kl__vec kl_t59;
     struct kl__vec* kl_t60;
     struct kl__vec kl_t61;
     struct kl__vec* kl_t62;
     struct kl__vec kl_t63;
     struct kl__vec* kl_t64;
-    struct kl__vec kl_t65;
-    struct kl__vec* kl_t66;
-    bool kl_t67;
-    bool kl_t68;
-    struct kl__vec* kl_t69;
+    bool kl_t65;
+    bool kl_t66;
+    struct kl__vec* kl_t67;
+    struct kl__vec* kl_t68;
+    struct kl__vec kl_t69;
     struct kl__vec* kl_t70;
     struct kl__vec kl_t71;
     struct kl__vec* kl_t72;
     struct kl__vec kl_t73;
     struct kl__vec* kl_t74;
-    struct kl__vec kl_t75;
-    struct kl__vec* kl_t76;
-    bool kl_t77;
-    bool kl_t78;
-    struct kl__vec* kl_t79;
+    bool kl_t75;
+    bool kl_t76;
+    struct kl__vec* kl_t77;
+    struct kl__vec* kl_t78;
+    struct kl__vec kl_t79;
     struct kl__vec* kl_t80;
-    struct kl__vec kl_t81;
-    struct kl__vec* kl_t82;
+    struct kl__vec* kl_t81;
+    struct kl__vec kl_t82;
     struct kl__vec* kl_t83;
     struct kl__vec kl_t84;
     struct kl__vec* kl_t85;
-    struct kl__vec kl_t86;
-    struct kl__vec* kl_t87;
+    bool kl_t86;
+    bool kl_t87;
     bool kl_t88;
-    bool kl_t89;
-    bool kl_t90;
-    struct kl__vec* kl_t91;
+    struct kl__vec* kl_t89;
+    struct kl__vec* kl_t90;
+    struct kl__vec kl_t91;
     struct kl__vec* kl_t92;
     struct kl__vec kl_t93;
     struct kl__vec* kl_t94;
-    struct kl__vec kl_t95;
-    struct kl__vec* kl_t96;
-    bool kl_t97;
-    bool kl_t98;
-    struct kl__vec kl_t99;
-    struct kl__vec* kl_t100;
+    bool kl_t95;
+    bool kl_t96;
+    struct kl__vec kl_t97;
+    struct kl__vec* kl_t98;
+    struct kl__vec* kl_t99;
+    struct kl__vec kl_t100;
     struct kl__vec* kl_t101;
     struct kl__vec kl_t102;
     struct kl__vec* kl_t103;
-    struct kl__vec kl_t104;
-    struct kl__vec* kl_t105;
-    bool kl_t106;
-    bool kl_t107;
-    struct kl__bits kl_m_108;
+    bool kl_t104;
+    bool kl_t105;
+    struct kl__bits kl_m_106;
+    struct kl__bits kl_t107;
+    struct kl__bits kl_n_108;
     struct kl__bits kl_t109;
-    struct kl__bits kl_n_110;
-    struct kl__bits kl_t111;
+    bool kl_t110;
+    bool kl_t111;
     bool kl_t112;
-    bool kl_t113;
-    bool kl_t114;
-    struct kl__bits* kl_t115;
-    struct kl__bits kl_t116;
-    bool kl_t117;
-    struct kl__bits* kl_t118;
-    struct kl__bits kl_t119;
-    bool kl_t120;
-    struct kl__bits* kl_t121;
-    struct kl__bits kl_t122;
-    bool kl_t123;
-    struct kl__bits* kl_t124;
-    struct kl__bits kl_t125;
-    bool kl_t126;
+    struct kl__bits* kl_t113;
+    struct kl__bits kl_t114;
+    bool kl_t115;
+    struct kl__bits* kl_t116;
+    struct kl__bits kl_t117;
+    bool kl_t118;
+    struct kl__bits* kl_t119;
+    struct kl__bits kl_t120;
+    bool kl_t121;
+    struct kl__bits* kl_t122;
+    struct kl__bits kl_t123;
+    bool kl_t124;
+    struct kl__hours kl_t125;
+    struct kl__hours* kl_t126;
     struct kl__hours kl_t127;
-    struct kl__hours* kl_t128;
-    struct kl__hours kl_t129;
-    bool kl_t130;
-    struct kl__speed kl_s_131;
-    struct kl__meters kl_t132;
-    struct kl__meters* kl_t133;
-    struct kl__seconds kl_t134;
-    struct kl__seconds* kl_t135;
-    struct kl__speed kl_t136;
-    bool kl_t137;
-    struct kl__pair__I3i32E kl_p_138;
-    struct kl__pair__I3i32E kl_t139;
+    bool kl_t128;
+    struct kl__speed kl_s_129;
+    struct kl__meters kl_t130;
+    struct kl__meters* kl_t131;
+    struct kl__seconds kl_t132;
+    struct kl__seconds* kl_t133;
+    struct kl__speed kl_t134;
+    bool kl_t135;
+    struct kl__pair__I3i32E kl_p_136;
+    struct kl__pair__I3i32E kl_t137;
+    struct kl__pair__I3i32E* kl_t138;
     struct kl__pair__I3i32E* kl_t140;
+    struct kl__pair__I3i32E kl_t141;
     struct kl__pair__I3i32E* kl_t142;
-    struct kl__pair__I3i32E kl_t143;
     struct kl__pair__I3i32E* kl_t144;
-    struct kl__pair__I3i32E* kl_t146;
-    struct kl__pair__I3i32E kl_t147;
-    struct kl__pair__I3f64E kl_q_148;
-    struct kl__pair__I3f64E kl_t149;
+    struct kl__pair__I3i32E kl_t145;
+    struct kl__pair__I3f64E kl_q_146;
+    struct kl__pair__I3f64E kl_t147;
+    struct kl__pair__I3f64E* kl_t148;
     struct kl__pair__I3f64E* kl_t150;
+    struct kl__pair__I3f64E kl_t151;
     struct kl__pair__I3f64E* kl_t152;
-    struct kl__pair__I3f64E kl_t153;
     struct kl__pair__I3f64E* kl_t154;
-    struct kl__pair__I3f64E* kl_t156;
-    struct kl__pair__I3f64E kl_t157;
+    struct kl__pair__I3f64E kl_t155;
+    bool kl_t156;
+    bool kl_t157;
     bool kl_t158;
     bool kl_t159;
     bool kl_t160;
     bool kl_t161;
     bool kl_t162;
-    bool kl_t163;
-    bool kl_t164;
-    struct kl__label kl_l_165;
-    struct kl__label* kl_t166;
-    struct kl__label kl_joined_168;
+    struct kl__label kl_l_163;
+    struct kl__label* kl_t164;
+    struct kl__label kl_joined_166;
+    struct kl__label* kl_t167;
+    struct kl__label kl_t168;
     struct kl__label* kl_t169;
-    struct kl__label kl_t170;
     struct kl__label* kl_t171;
+    struct kl__label kl_t172;
     struct kl__label* kl_t173;
-    struct kl__label kl_t174;
-    struct kl__label* kl_t175;
-    struct kl__label* kl_t176;
-    struct kl__label kl_t177;
-    bool kl_t178;
-    struct kl__label* kl_t179;
-    uint64_t kl_t180;
-    bool kl_t181;
-    struct kl__label* kl_t182;
-    uint64_t kl_t183;
-    bool kl_t184;
-    bool kl_t185;
-    struct kl_7prelude_str kl_t186;
-    struct kl_7prelude_str* kl_t187;
-    uint8_t* kl_t188;
-    struct kl__label kl_t190;
-    struct kl__label* kl_t191;
+    struct kl__label* kl_t174;
+    struct kl__label kl_t175;
+    bool kl_t176;
+    struct kl__label* kl_t177;
+    uint64_t kl_t178;
+    bool kl_t179;
+    struct kl__label* kl_t180;
+    uint64_t kl_t181;
+    bool kl_t182;
+    bool kl_t183;
+    struct kl_7prelude_str kl_t184;
+    struct kl_7prelude_str* kl_t185;
+    uint8_t* kl_t186;
+    struct kl__label kl_t188;
+    struct kl__label* kl_t189;
+    struct kl__label* kl_t190;
+    struct kl__label kl_t191;
     struct kl__label* kl_t192;
-    struct kl__label kl_t193;
-    struct kl__label* kl_t194;
-    uint64_t kl_t195;
-    bool kl_t196;
-    struct kl__label* kl_t197;
-    struct kl_7prelude_str kl_t198;
-    struct kl_7prelude_str* kl_t199;
-    uint8_t* kl_t200;
+    uint64_t kl_t193;
+    bool kl_t194;
+    struct kl__label* kl_t195;
+    struct kl_7prelude_str kl_t196;
+    struct kl_7prelude_str* kl_t197;
+    uint8_t* kl_t198;
+    struct kl__label kl_t200;
+    struct kl__label* kl_t201;
     struct kl__label kl_t202;
     struct kl__label* kl_t203;
-    struct kl__label kl_t204;
-    struct kl__label* kl_t205;
-    uint64_t kl_t206;
+    uint64_t kl_t204;
+    bool kl_t205;
+    bool kl_t206;
     bool kl_t207;
     bool kl_t208;
-    bool kl_t209;
-    bool kl_t210;
+#line 92 "codegen/operator_arithmetic.kl"
+    kl_t206 = false;
+#line 92 "codegen/operator_arithmetic.kl"
+    kl_t207 = false;
 #line 92 "codegen/operator_arithmetic.kl"
     kl_t208 = false;
-#line 92 "codegen/operator_arithmetic.kl"
-    kl_t209 = false;
-#line 92 "codegen/operator_arithmetic.kl"
-    kl_t210 = false;
 #line 92 "codegen/operator_arithmetic.kl"
     kl_t2.kl_x = 1.0;
 #line 92 "codegen/operator_arithmetic.kl"
@@ -843,48 +838,44 @@ int32_t kl__main__( void )
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t40 = &kl_t39;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t42 = -1.0;
+    kl_t41.kl_x = -1.0;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t43 = -2.0;
+    kl_t41.kl_y = -2.0;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t41.kl_x = kl_t42;
+    kl_t42 = &kl_t41;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t41.kl_y = kl_t43;
+    kl_t43 = kl__operator_eq__S3vec_3vec( kl_t40, kl_t42 );
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t44 = &kl_t41;
+    kl_t44 = !kl_t43;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t45 = kl__operator_eq__S3vec_3vec( kl_t40, kl_t44 );
-#line 105 "codegen/operator_arithmetic.kl"
-    kl_t46 = !kl_t45;
-#line 105 "codegen/operator_arithmetic.kl"
-    kl_t37 = kl_t46;
+    kl_t37 = kl_t44;
 #line 105 "codegen/operator_arithmetic.kl"
     if ( kl_t37 ) goto bb10; else goto bb9;
     bb9:
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t47 = &kl_b_3;
+    kl_t45 = &kl_b_3;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t48 = &kl_a_1;
+    kl_t46 = &kl_a_1;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t49 = kl__operator_sub__S3vec( kl_t48 );
+    kl_t47 = kl__operator_sub__S3vec( kl_t46 );
+#line 105 "codegen/operator_arithmetic.kl"
+    kl_t48 = &kl_t47;
+#line 105 "codegen/operator_arithmetic.kl"
+    kl_t49 = kl__operator_sub__S3vec_3vec( kl_t45, kl_t48 );
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t50 = &kl_t49;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t51 = kl__operator_sub__S3vec_3vec( kl_t47, kl_t50 );
+    kl_t51.kl_x = 4.0;
+#line 105 "codegen/operator_arithmetic.kl"
+    kl_t51.kl_y = 6.0;
 #line 105 "codegen/operator_arithmetic.kl"
     kl_t52 = &kl_t51;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t53.kl_x = 4.0;
+    kl_t53 = kl__operator_eq__S3vec_3vec( kl_t50, kl_t52 );
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t53.kl_y = 6.0;
+    kl_t54 = !kl_t53;
 #line 105 "codegen/operator_arithmetic.kl"
-    kl_t54 = &kl_t53;
-#line 105 "codegen/operator_arithmetic.kl"
-    kl_t55 = kl__operator_eq__S3vec_3vec( kl_t52, kl_t54 );
-#line 105 "codegen/operator_arithmetic.kl"
-    kl_t56 = !kl_t55;
-#line 105 "codegen/operator_arithmetic.kl"
-    kl_t37 = kl_t56;
+    kl_t37 = kl_t54;
 #line 105 "codegen/operator_arithmetic.kl"
     goto bb10;
     bb10:
@@ -896,486 +887,486 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t59 = &kl_a_1;
+    kl_t57 = &kl_a_1;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t60 = &kl_b_3;
+    kl_t58 = &kl_b_3;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t61 = kl__operator_mul__S3vec_3f64( kl_t60, 2.0 );
+    kl_t59 = kl__operator_mul__S3vec_3f64( kl_t58, 2.0 );
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t60 = &kl_t59;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t61 = kl__operator_add__S3vec_3vec( kl_t57, kl_t60 );
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t62 = &kl_t61;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t63 = kl__operator_add__S3vec_3vec( kl_t59, kl_t62 );
+    kl_t63.kl_x = 7.0;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t63.kl_y = 10.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t64 = &kl_t63;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t65.kl_x = 7.0;
+    kl_t65 = kl__operator_eq__S3vec_3vec( kl_t62, kl_t64 );
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t65.kl_y = 10.0;
+    kl_t66 = !kl_t65;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t66 = &kl_t65;
+    kl_t56 = kl_t66;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t67 = kl__operator_eq__S3vec_3vec( kl_t64, kl_t66 );
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t68 = !kl_t67;
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t58 = kl_t68;
-#line 111 "codegen/operator_arithmetic.kl"
-    if ( kl_t58 ) goto bb14; else goto bb13;
+    if ( kl_t56 ) goto bb14; else goto bb13;
     bb13:
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t69 = &kl_a_1;
+    kl_t67 = &kl_a_1;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t70 = &kl_b_3;
+    kl_t68 = &kl_b_3;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t71 = kl__operator_add__S3vec_3vec( kl_t69, kl_t70 );
+    kl_t69 = kl__operator_add__S3vec_3vec( kl_t67, kl_t68 );
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t70 = &kl_t69;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t71 = kl__operator_mul__S3vec_3f64( kl_t70, 2.0 );
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t72 = &kl_t71;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t73 = kl__operator_mul__S3vec_3f64( kl_t72, 2.0 );
+    kl_t73.kl_x = 8.0;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t73.kl_y = 12.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t74 = &kl_t73;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t75.kl_x = 8.0;
+    kl_t75 = kl__operator_eq__S3vec_3vec( kl_t72, kl_t74 );
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t75.kl_y = 12.0;
+    kl_t76 = !kl_t75;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t76 = &kl_t75;
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t77 = kl__operator_eq__S3vec_3vec( kl_t74, kl_t76 );
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t78 = !kl_t77;
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t58 = kl_t78;
+    kl_t56 = kl_t76;
 #line 111 "codegen/operator_arithmetic.kl"
     goto bb14;
     bb14:
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t57 = kl_t58;
+    kl_t55 = kl_t56;
 #line 111 "codegen/operator_arithmetic.kl"
-    if ( kl_t57 ) goto bb16; else goto bb15;
+    if ( kl_t55 ) goto bb16; else goto bb15;
     bb15:
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t79 = &kl_a_1;
+    kl_t77 = &kl_a_1;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t80 = &kl_b_3;
+    kl_t78 = &kl_b_3;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t81 = kl__operator_add__S3vec_3vec( kl_t79, kl_t80 );
+    kl_t79 = kl__operator_add__S3vec_3vec( kl_t77, kl_t78 );
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t82 = &kl_t81;
+    kl_t80 = &kl_t79;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t83 = &kl_a_1;
+    kl_t81 = &kl_a_1;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t84 = kl__operator_add__S3vec_3vec( kl_t82, kl_t83 );
+    kl_t82 = kl__operator_add__S3vec_3vec( kl_t80, kl_t81 );
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t83 = &kl_t82;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t84.kl_x = 5.0;
+#line 111 "codegen/operator_arithmetic.kl"
+    kl_t84.kl_y = 8.0;
 #line 111 "codegen/operator_arithmetic.kl"
     kl_t85 = &kl_t84;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t86.kl_x = 5.0;
+    kl_t86 = kl__operator_eq__S3vec_3vec( kl_t83, kl_t85 );
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t86.kl_y = 8.0;
+    kl_t87 = !kl_t86;
 #line 111 "codegen/operator_arithmetic.kl"
-    kl_t87 = &kl_t86;
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t88 = kl__operator_eq__S3vec_3vec( kl_t85, kl_t87 );
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t89 = !kl_t88;
-#line 111 "codegen/operator_arithmetic.kl"
-    kl_t57 = kl_t89;
+    kl_t55 = kl_t87;
 #line 111 "codegen/operator_arithmetic.kl"
     goto bb16;
     bb16:
 #line 111 "codegen/operator_arithmetic.kl"
-    if ( kl_t57 ) goto bb17; else goto bb18;
+    if ( kl_t55 ) goto bb17; else goto bb18;
     bb17:
     kl_t0 = 4;
 #line 113 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb18:
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t91 = &kl_a_1;
+    kl_t89 = &kl_a_1;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t92 = &kl_b_3;
+    kl_t90 = &kl_b_3;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t93 = kl__middle__3vec_3vec( kl_t91, kl_t92 );
+    kl_t91 = kl__middle__3vec_3vec( kl_t89, kl_t90 );
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t92 = &kl_t91;
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t93.kl_x = 2.0;
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t93.kl_y = 3.0;
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t94 = &kl_t93;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t95.kl_x = 2.0;
+    kl_t95 = kl__operator_eq__S3vec_3vec( kl_t92, kl_t94 );
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t95.kl_y = 3.0;
+    kl_t96 = !kl_t95;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t96 = &kl_t95;
+    kl_t88 = kl_t96;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t97 = kl__operator_eq__S3vec_3vec( kl_t94, kl_t96 );
-#line 116 "codegen/operator_arithmetic.kl"
-    kl_t98 = !kl_t97;
-#line 116 "codegen/operator_arithmetic.kl"
-    kl_t90 = kl_t98;
-#line 116 "codegen/operator_arithmetic.kl"
-    if ( kl_t90 ) goto bb20; else goto bb19;
+    if ( kl_t88 ) goto bb20; else goto bb19;
     bb19:
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t99.kl_x = 1.0;
+    kl_t97.kl_x = 1.0;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t99.kl_y = 1.0;
+    kl_t97.kl_y = 1.0;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t100 = &kl_t99;
+    kl_t98 = &kl_t97;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t101 = &kl_a_1;
+    kl_t99 = &kl_a_1;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t102 = kl__operator_add__S3vec_3vec( kl_t100, kl_t101 );
+    kl_t100 = kl__operator_add__S3vec_3vec( kl_t98, kl_t99 );
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t101 = &kl_t100;
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t102.kl_x = 2.0;
+#line 116 "codegen/operator_arithmetic.kl"
+    kl_t102.kl_y = 3.0;
 #line 116 "codegen/operator_arithmetic.kl"
     kl_t103 = &kl_t102;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t104.kl_x = 2.0;
+    kl_t104 = kl__operator_eq__S3vec_3vec( kl_t101, kl_t103 );
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t104.kl_y = 3.0;
+    kl_t105 = !kl_t104;
 #line 116 "codegen/operator_arithmetic.kl"
-    kl_t105 = &kl_t104;
-#line 116 "codegen/operator_arithmetic.kl"
-    kl_t106 = kl__operator_eq__S3vec_3vec( kl_t103, kl_t105 );
-#line 116 "codegen/operator_arithmetic.kl"
-    kl_t107 = !kl_t106;
-#line 116 "codegen/operator_arithmetic.kl"
-    kl_t90 = kl_t107;
+    kl_t88 = kl_t105;
 #line 116 "codegen/operator_arithmetic.kl"
     goto bb20;
     bb20:
 #line 116 "codegen/operator_arithmetic.kl"
-    if ( kl_t90 ) goto bb21; else goto bb22;
+    if ( kl_t88 ) goto bb21; else goto bb22;
     bb21:
     kl_t0 = 5;
 #line 118 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb22:
 #line 121 "codegen/operator_arithmetic.kl"
-    kl_t109.kl_v = 12;
+    kl_t107.kl_v = 12;
 #line 121 "codegen/operator_arithmetic.kl"
-    kl_m_108 = kl_t109;
-    kl_t111.kl_v = 10;
+    kl_m_106 = kl_t107;
+    kl_t109.kl_v = 10;
 #line 122 "codegen/operator_arithmetic.kl"
-    kl_n_110 = kl_t111;
+    kl_n_108 = kl_t109;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t115 = &kl_m_108;
+    kl_t113 = &kl_m_106;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t116 = kl__operator_and__S4bits_4bits( kl_t115, kl_n_110 );
+    kl_t114 = kl__operator_and__S4bits_4bits( kl_t113, kl_n_108 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t117 = kl_t116.kl_v != 8;
+    kl_t115 = kl_t114.kl_v != 8;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t114 = kl_t117;
+    kl_t112 = kl_t115;
 #line 124 "codegen/operator_arithmetic.kl"
-    if ( kl_t114 ) goto bb24; else goto bb23;
+    if ( kl_t112 ) goto bb24; else goto bb23;
     bb23:
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t118 = &kl_m_108;
+    kl_t116 = &kl_m_106;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t119 = kl__operator_or__S4bits_4bits( kl_t118, kl_n_110 );
+    kl_t117 = kl__operator_or__S4bits_4bits( kl_t116, kl_n_108 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t120 = kl_t119.kl_v != 14;
+    kl_t118 = kl_t117.kl_v != 14;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t114 = kl_t120;
+    kl_t112 = kl_t118;
 #line 124 "codegen/operator_arithmetic.kl"
     goto bb24;
     bb24:
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t113 = kl_t114;
+    kl_t111 = kl_t112;
 #line 124 "codegen/operator_arithmetic.kl"
-    if ( kl_t113 ) goto bb26; else goto bb25;
+    if ( kl_t111 ) goto bb26; else goto bb25;
     bb25:
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t121 = &kl_m_108;
+    kl_t119 = &kl_m_106;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t122 = kl__operator_xor__S4bits_4bits( kl_t121, kl_n_110 );
+    kl_t120 = kl__operator_xor__S4bits_4bits( kl_t119, kl_n_108 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t123 = kl_t122.kl_v != 6;
+    kl_t121 = kl_t120.kl_v != 6;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t113 = kl_t123;
+    kl_t111 = kl_t121;
 #line 124 "codegen/operator_arithmetic.kl"
     goto bb26;
     bb26:
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t112 = kl_t113;
+    kl_t110 = kl_t111;
 #line 124 "codegen/operator_arithmetic.kl"
-    if ( kl_t112 ) goto bb28; else goto bb27;
+    if ( kl_t110 ) goto bb28; else goto bb27;
     bb27:
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t124 = &kl_m_108;
+    kl_t122 = &kl_m_106;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t125 = kl__operator_not__S4bits( kl_t124 );
+    kl_t123 = kl__operator_not__S4bits( kl_t122 );
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t126 = kl_t125.kl_v != 243;
+    kl_t124 = kl_t123.kl_v != 243;
 #line 124 "codegen/operator_arithmetic.kl"
-    kl_t112 = kl_t126;
+    kl_t110 = kl_t124;
 #line 124 "codegen/operator_arithmetic.kl"
     goto bb28;
     bb28:
 #line 124 "codegen/operator_arithmetic.kl"
-    if ( kl_t112 ) goto bb29; else goto bb30;
+    if ( kl_t110 ) goto bb29; else goto bb30;
     bb29:
     kl_t0 = 6;
 #line 126 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb30:
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t127.kl_h = 50;
+    kl_t125.kl_h = 50;
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t128 = &kl_t127;
+    kl_t126 = &kl_t125;
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t129 = kl__operator_rem__S5hours_3i64( kl_t128, 24 );
+    kl_t127 = kl__operator_rem__S5hours_3i64( kl_t126, 24 );
 #line 129 "codegen/operator_arithmetic.kl"
-    kl_t130 = kl_t129.kl_h != 2;
+    kl_t128 = kl_t127.kl_h != 2;
 #line 129 "codegen/operator_arithmetic.kl"
-    if ( kl_t130 ) goto bb31; else goto bb32;
+    if ( kl_t128 ) goto bb31; else goto bb32;
     bb31:
     kl_t0 = 7;
 #line 131 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb32:
 #line 134 "codegen/operator_arithmetic.kl"
-    kl_t132.kl_m = 100.0;
+    kl_t130.kl_m = 100.0;
+#line 134 "codegen/operator_arithmetic.kl"
+    kl_t131 = &kl_t130;
+#line 134 "codegen/operator_arithmetic.kl"
+    kl_t132.kl_s = 8.0;
 #line 134 "codegen/operator_arithmetic.kl"
     kl_t133 = &kl_t132;
 #line 134 "codegen/operator_arithmetic.kl"
-    kl_t134.kl_s = 8.0;
+    kl_t134 = kl__operator_div__S6meters_7seconds( kl_t131, kl_t133 );
 #line 134 "codegen/operator_arithmetic.kl"
-    kl_t135 = &kl_t134;
-#line 134 "codegen/operator_arithmetic.kl"
-    kl_t136 = kl__operator_div__S6meters_7seconds( kl_t133, kl_t135 );
-#line 134 "codegen/operator_arithmetic.kl"
-    kl_s_131 = kl_t136;
+    kl_s_129 = kl_t134;
 #line 136 "codegen/operator_arithmetic.kl"
-    kl_t137 = kl_s_131.kl_per_second != 12.5;
+    kl_t135 = kl_s_129.kl_per_second != 12.5;
 #line 136 "codegen/operator_arithmetic.kl"
-    if ( kl_t137 ) goto bb33; else goto bb34;
+    if ( kl_t135 ) goto bb33; else goto bb34;
     bb33:
     kl_t0 = 8;
 #line 138 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb34:
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_t140 = &kl_t139;
+    kl_t138 = &kl_t137;
 #line 141 "codegen/operator_arithmetic.kl"
-    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t140, 1, 2 );
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t138, 1, 2 );
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_t142 = &kl_t139;
+    kl_t140 = &kl_t137;
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_t144 = &kl_t143;
+    kl_t142 = &kl_t141;
 #line 141 "codegen/operator_arithmetic.kl"
-    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t144, 10, 20 );
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t142, 10, 20 );
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_t146 = &kl_t143;
+    kl_t144 = &kl_t141;
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_t147 = kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t142, kl_t146 );
+    kl_t145 = kl__operator_add__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t140, kl_t144 );
 #line 141 "codegen/operator_arithmetic.kl"
-    kl_p_138 = kl_t147;
-    kl_t150 = &kl_t149;
+    kl_p_136 = kl_t145;
+    kl_t148 = &kl_t147;
 #line 142 "codegen/operator_arithmetic.kl"
-    kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( kl_t150, 0.5, 1.0 );
+    kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( kl_t148, 0.5, 1.0 );
 #line 142 "codegen/operator_arithmetic.kl"
-    kl_t152 = &kl_t149;
+    kl_t150 = &kl_t147;
 #line 142 "codegen/operator_arithmetic.kl"
-    kl_t154 = &kl_t153;
+    kl_t152 = &kl_t151;
 #line 142 "codegen/operator_arithmetic.kl"
-    kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( kl_t154, 0.5, 1.0 );
+    kl__pair__I3f64E__R4pairI3f64E_3f64_3f64__ctor( kl_t152, 0.5, 1.0 );
 #line 142 "codegen/operator_arithmetic.kl"
-    kl_t156 = &kl_t153;
+    kl_t154 = &kl_t151;
 #line 142 "codegen/operator_arithmetic.kl"
-    kl_t157 = kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( kl_t152, kl_t156 );
+    kl_t155 = kl__operator_add__I3f64E__S4pairI3f64E_4pairI3f64E( kl_t150, kl_t154 );
 #line 142 "codegen/operator_arithmetic.kl"
-    kl_q_148 = kl_t157;
+    kl_q_146 = kl_t155;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t161 = kl_p_138.kl_left != 11;
+    kl_t159 = kl_p_136.kl_left != 11;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t160 = kl_t161;
+    kl_t158 = kl_t159;
 #line 144 "codegen/operator_arithmetic.kl"
-    if ( kl_t160 ) goto bb36; else goto bb35;
+    if ( kl_t158 ) goto bb36; else goto bb35;
     bb35:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t162 = kl_p_138.kl_right != 22;
+    kl_t160 = kl_p_136.kl_right != 22;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t160 = kl_t162;
+    kl_t158 = kl_t160;
 #line 144 "codegen/operator_arithmetic.kl"
     goto bb36;
     bb36:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t159 = kl_t160;
+    kl_t157 = kl_t158;
 #line 144 "codegen/operator_arithmetic.kl"
-    if ( kl_t159 ) goto bb38; else goto bb37;
+    if ( kl_t157 ) goto bb38; else goto bb37;
     bb37:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t163 = kl_q_148.kl_left != 1.0;
+    kl_t161 = kl_q_146.kl_left != 1.0;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t159 = kl_t163;
+    kl_t157 = kl_t161;
 #line 144 "codegen/operator_arithmetic.kl"
     goto bb38;
     bb38:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t158 = kl_t159;
+    kl_t156 = kl_t157;
 #line 144 "codegen/operator_arithmetic.kl"
-    if ( kl_t158 ) goto bb40; else goto bb39;
+    if ( kl_t156 ) goto bb40; else goto bb39;
     bb39:
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t164 = kl_q_148.kl_right != 2.0;
+    kl_t162 = kl_q_146.kl_right != 2.0;
 #line 144 "codegen/operator_arithmetic.kl"
-    kl_t158 = kl_t164;
+    kl_t156 = kl_t162;
 #line 144 "codegen/operator_arithmetic.kl"
     goto bb40;
     bb40:
 #line 144 "codegen/operator_arithmetic.kl"
-    if ( kl_t158 ) goto bb41; else goto bb42;
+    if ( kl_t156 ) goto bb41; else goto bb42;
     bb41:
     kl_t0 = 9;
 #line 146 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb42:
 #line 149 "codegen/operator_arithmetic.kl"
-    kl_t166 = &kl_l_165;
+    kl_t164 = &kl_l_163;
 #line 149 "codegen/operator_arithmetic.kl"
-    kl__label__R5label_3u64__ctor( kl_t166, 3 );
-    kl_t169 = &kl_l_165;
+    kl__label__R5label_3u64__ctor( kl_t164, 3 );
+    kl_t167 = &kl_l_163;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t171 = &kl_t170;
+    kl_t169 = &kl_t168;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl__label__R5label_3u64__ctor( kl_t171, 4 );
+    kl__label__R5label_3u64__ctor( kl_t169, 4 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t173 = &kl_t170;
+    kl_t171 = &kl_t168;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t174 = kl__operator_add__S5label_5label( kl_t169, kl_t173 );
+    kl_t172 = kl__operator_add__S5label_5label( kl_t167, kl_t171 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t175 = &kl_t174;
+    kl_t173 = &kl_t172;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t176 = &kl_l_165;
+    kl_t174 = &kl_l_163;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t177 = kl__operator_add__S5label_5label( kl_t175, kl_t176 );
+    kl_t175 = kl__operator_add__S5label_5label( kl_t173, kl_t174 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t208 = true;
+    kl_t206 = true;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_joined_168 = kl_t177;
+    kl_joined_166 = kl_t175;
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t208 = false;
+    kl_t206 = false;
 #line 150 "codegen/operator_arithmetic.kl"
-    if ( kl_t208 ) kl__label__dtor( &kl_t177 );
+    if ( kl_t206 ) kl__label__dtor( &kl_t175 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_t174 );
+    kl__label__dtor( &kl_t172 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_t170 );
+    kl__label__dtor( &kl_t168 );
 #line 150 "codegen/operator_arithmetic.kl"
-    kl_t208 = false;
+    kl_t206 = false;
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t179 = &kl_joined_168;
+    kl_t177 = &kl_joined_166;
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t180 = kl__size__S5label( kl_t179 );
+    kl_t178 = kl__size__S5label( kl_t177 );
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t181 = kl_t180 != 10;
+    kl_t179 = kl_t178 != 10;
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t178 = kl_t181;
+    kl_t176 = kl_t179;
 #line 152 "codegen/operator_arithmetic.kl"
-    if ( kl_t178 ) goto bb44; else goto bb43;
+    if ( kl_t176 ) goto bb44; else goto bb43;
     bb43:
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t182 = &kl_l_165;
+    kl_t180 = &kl_l_163;
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t183 = kl__size__S5label( kl_t182 );
+    kl_t181 = kl__size__S5label( kl_t180 );
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t184 = kl_t183 != 3;
+    kl_t182 = kl_t181 != 3;
 #line 152 "codegen/operator_arithmetic.kl"
-    kl_t178 = kl_t184;
+    kl_t176 = kl_t182;
 #line 152 "codegen/operator_arithmetic.kl"
     goto bb44;
     bb44:
 #line 152 "codegen/operator_arithmetic.kl"
-    if ( kl_t178 ) goto bb45; else goto bb46;
+    if ( kl_t176 ) goto bb45; else goto bb46;
     bb45:
     kl_t0 = 10;
 #line 154 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_joined_168 );
+    kl__label__dtor( &kl_joined_166 );
 #line 154 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_l_165 );
+    kl__label__dtor( &kl_l_163 );
 #line 154 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb46:
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t187 = &kl_t186;
+    kl_t185 = &kl_t184;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t188 = ( uint8_t* ) "ab";
+    kl_t186 = ( uint8_t* ) "ab";
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t187, kl_t188, 2 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t185, kl_t186, 2 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t190 = kl__from__S5label_MQ7prelude3str( kl_t186 );
+    kl_t188 = kl__from__S5label_MQ7prelude3str( kl_t184 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t191 = &kl_t190;
+    kl_t189 = &kl_t188;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t192 = &kl_l_165;
+    kl_t190 = &kl_l_163;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t193 = kl__operator_add__S5label_5label( kl_t191, kl_t192 );
+    kl_t191 = kl__operator_add__S5label_5label( kl_t189, kl_t190 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t194 = &kl_t193;
+    kl_t192 = &kl_t191;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t195 = kl__size__S5label( kl_t194 );
+    kl_t193 = kl__size__S5label( kl_t192 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t196 = kl_t195 != 5;
+    kl_t194 = kl_t193 != 5;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t185 = kl_t196;
+    kl_t183 = kl_t194;
 #line 157 "codegen/operator_arithmetic.kl"
-    if ( kl_t185 ) goto bb48; else goto bb47;
+    if ( kl_t183 ) goto bb48; else goto bb47;
     bb47:
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t197 = &kl_l_165;
+    kl_t195 = &kl_l_163;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t199 = &kl_t198;
+    kl_t197 = &kl_t196;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t200 = ( uint8_t* ) "abcd";
+    kl_t198 = ( uint8_t* ) "abcd";
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t199, kl_t200, 4 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t197, kl_t198, 4 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t202 = kl__from__S5label_MQ7prelude3str( kl_t198 );
+    kl_t200 = kl__from__S5label_MQ7prelude3str( kl_t196 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t209 = true;
+    kl_t207 = true;
+#line 157 "codegen/operator_arithmetic.kl"
+    kl_t201 = &kl_t200;
+#line 157 "codegen/operator_arithmetic.kl"
+    kl_t202 = kl__operator_add__S5label_5label( kl_t195, kl_t201 );
+#line 157 "codegen/operator_arithmetic.kl"
+    kl_t208 = true;
 #line 157 "codegen/operator_arithmetic.kl"
     kl_t203 = &kl_t202;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t204 = kl__operator_add__S5label_5label( kl_t197, kl_t203 );
+    kl_t204 = kl__size__S5label( kl_t203 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t210 = true;
+    kl_t205 = kl_t204 != 7;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t205 = &kl_t204;
-#line 157 "codegen/operator_arithmetic.kl"
-    kl_t206 = kl__size__S5label( kl_t205 );
-#line 157 "codegen/operator_arithmetic.kl"
-    kl_t207 = kl_t206 != 7;
-#line 157 "codegen/operator_arithmetic.kl"
-    kl_t185 = kl_t207;
+    kl_t183 = kl_t205;
 #line 157 "codegen/operator_arithmetic.kl"
     goto bb48;
     bb48:
 #line 157 "codegen/operator_arithmetic.kl"
-    if ( kl_t210 ) kl__label__dtor( &kl_t204 );
+    if ( kl_t208 ) kl__label__dtor( &kl_t202 );
 #line 157 "codegen/operator_arithmetic.kl"
-    if ( kl_t209 ) kl__label__dtor( &kl_t202 );
+    if ( kl_t207 ) kl__label__dtor( &kl_t200 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_t193 );
+    kl__label__dtor( &kl_t191 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_t190 );
+    kl__label__dtor( &kl_t188 );
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t209 = false;
+    kl_t207 = false;
 #line 157 "codegen/operator_arithmetic.kl"
-    kl_t210 = false;
+    kl_t208 = false;
 #line 157 "codegen/operator_arithmetic.kl"
-    if ( kl_t185 ) goto bb49; else goto bb50;
+    if ( kl_t183 ) goto bb49; else goto bb50;
     bb49:
     kl_t0 = 11;
 #line 159 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_joined_168 );
+    kl__label__dtor( &kl_joined_166 );
 #line 159 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_l_165 );
+    kl__label__dtor( &kl_l_163 );
 #line 159 "codegen/operator_arithmetic.kl"
     return kl_t0;
     bb50:
 #line 162 "codegen/operator_arithmetic.kl"
     kl_t0 = 0;
 #line 162 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_joined_168 );
+    kl__label__dtor( &kl_joined_166 );
 #line 162 "codegen/operator_arithmetic.kl"
-    kl__label__dtor( &kl_l_165 );
+    kl__label__dtor( &kl_l_163 );
 #line 162 "codegen/operator_arithmetic.kl"
     return kl_t0;
 }

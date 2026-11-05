@@ -16,9 +16,8 @@ int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     int32_t kl_remainder_4;
     bool kl_t5;
     int32_t kl_t6;
-    int32_t kl_t7;
-    bool kl_t8;
-    int32_t kl_t9;
+    bool kl_t7;
+    int32_t kl_t8;
 #line 5 "codegen/gcd.kl"
     goto bb1;
     bb1:
@@ -40,26 +39,24 @@ int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_rt_panic( "codegen/gcd.kl", 7, "remainder by zero: a % b" );
     bb5:
 #line 7 "codegen/gcd.kl"
-    kl_t6 = -1;
+    kl_t7 = kl_b_2 == -1;
 #line 7 "codegen/gcd.kl"
-    kl_t8 = kl_b_2 == kl_t6;
-#line 7 "codegen/gcd.kl"
-    if ( kl_t8 ) goto bb6; else goto bb7;
+    if ( kl_t7 ) goto bb6; else goto bb7;
     bb6:
 #line 7 "codegen/gcd.kl"
-    kl_t7 = 0;
+    kl_t6 = 0;
 #line 7 "codegen/gcd.kl"
     goto bb8;
     bb7:
 #line 7 "codegen/gcd.kl"
-    kl_t7 = kl_a_1 % kl_b_2;
+    kl_t6 = kl_a_1 % kl_b_2;
 #line 7 "codegen/gcd.kl"
     goto bb8;
     bb8:
 #line 7 "codegen/gcd.kl"
-    kl_t9 = kl_t7;
+    kl_t8 = kl_t6;
 #line 7 "codegen/gcd.kl"
-    kl_remainder_4 = kl_t9;
+    kl_remainder_4 = kl_t8;
     kl_a_1 = kl_b_2;
     kl_b_2 = kl_remainder_4;
 #line 5 "codegen/gcd.kl"

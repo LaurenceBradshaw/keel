@@ -72,16 +72,10 @@ int32_t kl__top__3u64( uint64_t kl_n_1 )
 int32_t kl__signed_top__3i64( int64_t kl_n_1 )
 {
     int32_t kl_t0;
-    int64_t kl_t2;
-    bool kl_t3;
-    int64_t kl_t4;
-    int64_t kl_t5;
+    bool kl_t2;
+    kl_t2 = kl_n_1 == INT64_MIN;
 #line 20 "codegen/switch_extremes_64.kl"
-    kl_t2 = -9223372036854775808ull;
-#line 20 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl_n_1 == kl_t2;
-#line 20 "codegen/switch_extremes_64.kl"
-    if ( kl_t3 ) goto bb1; else goto bb6;
+    if ( kl_t2 ) goto bb1; else goto bb6;
     bb1:
 #line 20 "codegen/switch_extremes_64.kl"
     kl_t0 = 1;
@@ -109,28 +103,24 @@ int32_t kl__signed_top__3i64( int64_t kl_n_1 )
     return kl_t0;
     bb6:
 #line 21 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl_n_1 == 50;
+    kl_t2 = kl_n_1 == 50;
 #line 21 "codegen/switch_extremes_64.kl"
-    if ( kl_t3 ) goto bb2; else goto bb7;
+    if ( kl_t2 ) goto bb2; else goto bb7;
     bb7:
 #line 22 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl_n_1 >= 100;
+    kl_t2 = kl_n_1 >= 100;
 #line 22 "codegen/switch_extremes_64.kl"
-    if ( kl_t3 ) goto bb3; else goto bb8;
+    if ( kl_t2 ) goto bb3; else goto bb8;
     bb8:
 #line 23 "codegen/switch_extremes_64.kl"
-    kl_t4 = -9223372036854775807;
+    kl_t2 = kl_n_1 >= -9223372036854775807;
 #line 23 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl_n_1 >= kl_t4;
-#line 23 "codegen/switch_extremes_64.kl"
-    if ( kl_t3 ) goto bb9; else goto bb5;
+    if ( kl_t2 ) goto bb9; else goto bb5;
     bb9:
 #line 23 "codegen/switch_extremes_64.kl"
-    kl_t5 = -100;
+    kl_t2 = kl_n_1 < -100;
 #line 23 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl_n_1 < kl_t5;
-#line 23 "codegen/switch_extremes_64.kl"
-    if ( kl_t3 ) goto bb4; else goto bb5;
+    if ( kl_t2 ) goto bb4; else goto bb5;
 #line 26 "codegen/switch_extremes_64.kl"
 }
 
@@ -150,16 +140,14 @@ int32_t kl__main__( void )
     bool kl_t10;
     int32_t kl_t11;
     bool kl_t12;
-    int64_t kl_t13;
-    int32_t kl_t14;
-    bool kl_t15;
-    int32_t kl_t16;
-    bool kl_t17;
-    int64_t kl_t18;
+    int32_t kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
     int32_t kl_t19;
     bool kl_t20;
-    int32_t kl_t21;
-    bool kl_t22;
 #line 30 "codegen/switch_extremes_64.kl"
     kl_t1 = kl__top__3u64( 0 );
 #line 30 "codegen/switch_extremes_64.kl"
@@ -233,13 +221,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 36 "codegen/switch_extremes_64.kl"
-    kl_t13 = -9223372036854775808ull;
+    kl_t13 = kl__signed_top__3i64( INT64_MIN );
 #line 36 "codegen/switch_extremes_64.kl"
-    kl_t14 = kl__signed_top__3i64( kl_t13 );
+    kl_t14 = kl_t13 != 1;
 #line 36 "codegen/switch_extremes_64.kl"
-    kl_t15 = kl_t14 != 1;
-#line 36 "codegen/switch_extremes_64.kl"
-    if ( kl_t15 ) goto bb13; else goto bb14;
+    if ( kl_t14 ) goto bb13; else goto bb14;
     bb13:
 #line 36 "codegen/switch_extremes_64.kl"
     kl_t0 = 7;
@@ -247,11 +233,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 37 "codegen/switch_extremes_64.kl"
-    kl_t16 = kl__signed_top__3i64( 9223372036854775807 );
+    kl_t15 = kl__signed_top__3i64( 9223372036854775807 );
 #line 37 "codegen/switch_extremes_64.kl"
-    kl_t17 = kl_t16 != 3;
+    kl_t16 = kl_t15 != 3;
 #line 37 "codegen/switch_extremes_64.kl"
-    if ( kl_t17 ) goto bb15; else goto bb16;
+    if ( kl_t16 ) goto bb15; else goto bb16;
     bb15:
 #line 37 "codegen/switch_extremes_64.kl"
     kl_t0 = 8;
@@ -259,13 +245,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 38 "codegen/switch_extremes_64.kl"
-    kl_t18 = -9223372036854775807;
+    kl_t17 = kl__signed_top__3i64( -9223372036854775807 );
 #line 38 "codegen/switch_extremes_64.kl"
-    kl_t19 = kl__signed_top__3i64( kl_t18 );
+    kl_t18 = kl_t17 != 4;
 #line 38 "codegen/switch_extremes_64.kl"
-    kl_t20 = kl_t19 != 4;
-#line 38 "codegen/switch_extremes_64.kl"
-    if ( kl_t20 ) goto bb17; else goto bb18;
+    if ( kl_t18 ) goto bb17; else goto bb18;
     bb17:
 #line 38 "codegen/switch_extremes_64.kl"
     kl_t0 = 9;
@@ -273,11 +257,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 39 "codegen/switch_extremes_64.kl"
-    kl_t21 = kl__signed_top__3i64( 0 );
+    kl_t19 = kl__signed_top__3i64( 0 );
 #line 39 "codegen/switch_extremes_64.kl"
-    kl_t22 = kl_t21 != 0;
+    kl_t20 = kl_t19 != 0;
 #line 39 "codegen/switch_extremes_64.kl"
-    if ( kl_t22 ) goto bb19; else goto bb20;
+    if ( kl_t20 ) goto bb19; else goto bb20;
     bb19:
 #line 39 "codegen/switch_extremes_64.kl"
     kl_t0 = 10;

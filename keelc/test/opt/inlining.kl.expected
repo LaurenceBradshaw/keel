@@ -350,19 +350,18 @@ int32_t kl__main__( void )
     bool kl_t5;
     bool kl_t6;
     int32_t kl_t7;
-    int32_t kl_t8;
-    bool kl_t9;
-    int32_t kl_n_10;
-    int32_t* kl_t11;
+    bool kl_t8;
+    int32_t kl_n_9;
+    int32_t* kl_t10;
+    bool kl_t12;
     bool kl_t13;
-    bool kl_t14;
-    int64_t kl_t15;
-    int64_t kl_i_16;
-    bool kl_t17;
-    int64_t kl_t18;
+    int64_t kl_t14;
+    int64_t kl_i_15;
+    bool kl_t16;
+    int64_t kl_t17;
 #line 56 "opt/inlining.kl"
     kl_t2 = 0;
-    kl_i_16 = 0;
+    kl_i_15 = 0;
 #line 57 "opt/inlining.kl"
     goto bb15;
     bb1:
@@ -376,9 +375,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb3:
 #line 87 "opt/inlining.kl"
-    kl_t15 = kl__factorial__3i64( 4 );
+    kl_t14 = kl__factorial__3i64( 4 );
 #line 87 "opt/inlining.kl"
-    kl_t3 = 5 * kl_t15;
+    kl_t3 = 5 * kl_t14;
 #line 159 "opt/inlining.kl"
     kl_t4 = kl_t3 != 120;
 #line 159 "opt/inlining.kl"
@@ -407,35 +406,33 @@ int32_t kl__main__( void )
 #line 169 "opt/inlining.kl"
     kl_t7 = kl__mixed__3i32_3i32( 2, 3 );
 #line 169 "opt/inlining.kl"
-    kl_t8 = -35;
+    kl_t8 = kl_t7 != -35;
 #line 169 "opt/inlining.kl"
-    kl_t9 = kl_t7 != kl_t8;
-#line 169 "opt/inlining.kl"
-    if ( kl_t9 ) goto bb9; else goto bb10;
+    if ( kl_t8 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 7;
 #line 171 "opt/inlining.kl"
     return kl_t0;
     bb10:
 #line 174 "opt/inlining.kl"
-    kl_n_10 = 0;
-    kl_t11 = &kl_n_10;
+    kl_n_9 = 0;
+    kl_t10 = &kl_n_9;
 #line 175 "opt/inlining.kl"
-    kl__set__O3i32( kl_t11 );
-    kl_t13 = kl_n_10 != 9;
+    kl__set__O3i32( kl_t10 );
+    kl_t12 = kl_n_9 != 9;
 #line 176 "opt/inlining.kl"
-    if ( kl_t13 ) goto bb11; else goto bb12;
+    if ( kl_t12 ) goto bb11; else goto bb12;
     bb11:
     kl_t0 = 8;
 #line 178 "opt/inlining.kl"
     return kl_t0;
     bb12:
 #line 18 "opt/inlining.kl"
-    kl_t18 = kl__live__G;
+    kl_t17 = kl__live__G;
 #line 187 "opt/inlining.kl"
-    kl_t14 = kl_t18 != 0;
+    kl_t13 = kl_t17 != 0;
 #line 187 "opt/inlining.kl"
-    if ( kl_t14 ) goto bb13; else goto bb14;
+    if ( kl_t13 ) goto bb13; else goto bb14;
     bb13:
     kl_t0 = 10;
 #line 189 "opt/inlining.kl"
@@ -447,13 +444,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb15:
 #line 57 "opt/inlining.kl"
-    kl_t17 = kl_i_16 < 4;
+    kl_t16 = kl_i_15 < 4;
 #line 57 "opt/inlining.kl"
-    if ( kl_t17 ) goto bb16; else goto bb17;
+    if ( kl_t16 ) goto bb16; else goto bb17;
     bb16:
-    kl_t2 = kl_t2 + kl_i_16;
+    kl_t2 = kl_t2 + kl_i_15;
 #line 57 "opt/inlining.kl"
-    kl_i_16 = kl_i_16 + 1;
+    kl_i_15 = kl_i_15 + 1;
 #line 57 "opt/inlining.kl"
     goto bb15;
     bb17:

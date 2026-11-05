@@ -110,12 +110,11 @@ fn main {
     let _36: const u8[*];
     let _37: void;
     let _38: void;
-    let _39: i64;
-    let _40: location;
-    let _41: str*;
-    let _42: const u8[*];
+    let _39: location;
+    let _40: str*;
+    let _41: const u8[*];
+    let _42: void;
     let _43: void;
-    let _44: void;
 
     bb0:
         storage_live _1
@@ -185,13 +184,12 @@ fn main {
         _37 = call str(copy _35, copy _36, const 14)
         _34.line = const 61
         _38 = call expect_positive(const 5, copy _34)
-        _39 = -const 1
-        storage_live _40
-        _41 = &init _40.file
-        _42 = bytes "kir/located.kl"
-        _43 = call str(copy _41, copy _42, const 14)
-        _40.line = const 62
-        _44 = call expect_positive(copy _39, copy _40)
+        storage_live _39
+        _40 = &init _39.file
+        _41 = bytes "kir/located.kl"
+        _42 = call str(copy _40, copy _41, const 14)
+        _39.line = const 62
+        _43 = call expect_positive(const -1, copy _39)
         _0 = const 0
         storage_dead _20
         return

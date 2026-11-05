@@ -441,46 +441,45 @@ int32_t kl__main__( void )
     bool kl_t35;
     bool kl_t36;
     struct kl__Point kl_t37;
-    int32_t kl_t38;
-    bool kl_t39;
-    struct kl__Rect kl_offset_40;
-    struct kl__Rect kl_t41;
+    bool kl_t38;
+    struct kl__Rect kl_offset_39;
+    struct kl__Rect kl_t40;
+    struct kl__Point kl_t41;
     struct kl__Point kl_t42;
-    struct kl__Point kl_t43;
-    int64_t kl_t44;
+    int64_t kl_t43;
+    bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-    bool kl_t47;
-    struct kl__Rect kl_shared_48;
-    struct kl__Rect kl_t49;
+    struct kl__Rect kl_shared_47;
+    struct kl__Rect kl_t48;
+    bool kl_t49;
     bool kl_t50;
     bool kl_t51;
     bool kl_t52;
-    bool kl_t53;
-    int64_t kl_t54;
-    bool kl_t55;
-    struct kl__Rect kl_far_56;
-    struct kl__Rect kl_t57;
+    int64_t kl_t53;
+    bool kl_t54;
+    struct kl__Rect kl_far_55;
+    struct kl__Rect kl_t56;
+    struct kl__Point kl_t57;
     struct kl__Point kl_t58;
-    struct kl__Point kl_t59;
-    struct kl__Rect kl_none_60;
-    struct kl__Rect kl_t61;
+    struct kl__Rect kl_none_59;
+    struct kl__Rect kl_t60;
+    bool kl_t61;
     bool kl_t62;
     bool kl_t63;
-    bool kl_t64;
-    int64_t kl_t65;
-    bool kl_t66;
-    struct kl__Rect kl_huge_67;
-    struct kl__Rect kl_t68;
+    int64_t kl_t64;
+    bool kl_t65;
+    struct kl__Rect kl_huge_66;
+    struct kl__Rect kl_t67;
+    struct kl__Point kl_t68;
     struct kl__Point kl_t69;
-    struct kl__Point kl_t70;
-    int64_t kl_t71;
-    bool kl_t72;
-    struct kl__Rect kl_itself_73;
-    struct kl__Rect kl_t74;
+    int64_t kl_t70;
+    bool kl_t71;
+    struct kl__Rect kl_itself_72;
+    struct kl__Rect kl_t73;
+    int64_t kl_t74;
     int64_t kl_t75;
-    int64_t kl_t76;
-    bool kl_t77;
+    bool kl_t76;
 #line 115 "codegen/geometry.kl"
     kl_t2.kl_x = 1.5;
 #line 115 "codegen/geometry.kl"
@@ -666,15 +665,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb24:
 #line 143 "codegen/geometry.kl"
-    kl_t38 = -1;
-#line 143 "codegen/geometry.kl"
-    kl_t37.kl_x = kl_t38;
+    kl_t37.kl_x = -1;
 #line 143 "codegen/geometry.kl"
     kl_t37.kl_y = 1;
 #line 143 "codegen/geometry.kl"
-    kl_t39 = kl__contains__4Rect_5Point( kl_unit_22, kl_t37 );
+    kl_t38 = kl__contains__4Rect_5Point( kl_unit_22, kl_t37 );
 #line 143 "codegen/geometry.kl"
-    if ( kl_t39 ) goto bb25; else goto bb26;
+    if ( kl_t38 ) goto bb25; else goto bb26;
     bb25:
 #line 143 "codegen/geometry.kl"
     kl_t0 = 13;
@@ -682,49 +679,49 @@ int32_t kl__main__( void )
     return kl_t0;
     bb26:
 #line 146 "codegen/geometry.kl"
-    kl_t42.kl_x = 6;
+    kl_t41.kl_x = 6;
 #line 146 "codegen/geometry.kl"
-    kl_t42.kl_y = 5;
+    kl_t41.kl_y = 5;
 #line 146 "codegen/geometry.kl"
-    kl_t43.kl_x = 2;
+    kl_t42.kl_x = 2;
 #line 146 "codegen/geometry.kl"
-    kl_t43.kl_y = 1;
+    kl_t42.kl_y = 1;
 #line 146 "codegen/geometry.kl"
-    kl_t41.kl_high = kl_t42;
+    kl_t40.kl_high = kl_t41;
 #line 146 "codegen/geometry.kl"
-    kl_t41.kl_low = kl_t43;
+    kl_t40.kl_low = kl_t42;
 #line 146 "codegen/geometry.kl"
-    kl_offset_40 = kl_t41;
+    kl_offset_39 = kl_t40;
 #line 148 "codegen/geometry.kl"
-    kl_t44 = kl__area__4Rect( kl_offset_40 );
+    kl_t43 = kl__area__4Rect( kl_offset_39 );
 #line 148 "codegen/geometry.kl"
-    kl_t45 = kl_t44 != 16;
+    kl_t44 = kl_t43 != 16;
 #line 148 "codegen/geometry.kl"
-    if ( kl_t45 ) goto bb27; else goto bb28;
+    if ( kl_t44 ) goto bb27; else goto bb28;
     bb27:
 #line 148 "codegen/geometry.kl"
     kl_t0 = 14;
 #line 148 "codegen/geometry.kl"
     return kl_t0;
     bb28:
-    kl_t46 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_offset_40 );
+    kl_t45 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_offset_39 );
 #line 150 "codegen/geometry.kl"
-    kl_t47 = !kl_t46;
+    kl_t46 = !kl_t45;
 #line 150 "codegen/geometry.kl"
-    if ( kl_t47 ) goto bb29; else goto bb30;
+    if ( kl_t46 ) goto bb29; else goto bb30;
     bb29:
 #line 150 "codegen/geometry.kl"
     kl_t0 = 15;
 #line 150 "codegen/geometry.kl"
     return kl_t0;
     bb30:
-    kl_t49 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_offset_40 );
+    kl_t48 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_offset_39 );
 #line 152 "codegen/geometry.kl"
-    kl_shared_48 = kl_t49;
+    kl_shared_47 = kl_t48;
 #line 154 "codegen/geometry.kl"
-    kl_t50 = kl_shared_48.kl_low.kl_x != 2;
+    kl_t49 = kl_shared_47.kl_low.kl_x != 2;
 #line 154 "codegen/geometry.kl"
-    if ( kl_t50 ) goto bb31; else goto bb32;
+    if ( kl_t49 ) goto bb31; else goto bb32;
     bb31:
 #line 154 "codegen/geometry.kl"
     kl_t0 = 16;
@@ -732,9 +729,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb32:
 #line 155 "codegen/geometry.kl"
-    kl_t51 = kl_shared_48.kl_low.kl_y != 1;
+    kl_t50 = kl_shared_47.kl_low.kl_y != 1;
 #line 155 "codegen/geometry.kl"
-    if ( kl_t51 ) goto bb33; else goto bb34;
+    if ( kl_t50 ) goto bb33; else goto bb34;
     bb33:
 #line 155 "codegen/geometry.kl"
     kl_t0 = 17;
@@ -742,9 +739,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb34:
 #line 156 "codegen/geometry.kl"
-    kl_t52 = kl_shared_48.kl_high.kl_x != 4;
+    kl_t51 = kl_shared_47.kl_high.kl_x != 4;
 #line 156 "codegen/geometry.kl"
-    if ( kl_t52 ) goto bb35; else goto bb36;
+    if ( kl_t51 ) goto bb35; else goto bb36;
     bb35:
 #line 156 "codegen/geometry.kl"
     kl_t0 = 18;
@@ -752,9 +749,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb36:
 #line 157 "codegen/geometry.kl"
-    kl_t53 = kl_shared_48.kl_high.kl_y != 3;
+    kl_t52 = kl_shared_47.kl_high.kl_y != 3;
 #line 157 "codegen/geometry.kl"
-    if ( kl_t53 ) goto bb37; else goto bb38;
+    if ( kl_t52 ) goto bb37; else goto bb38;
     bb37:
 #line 157 "codegen/geometry.kl"
     kl_t0 = 19;
@@ -762,11 +759,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb38:
 #line 158 "codegen/geometry.kl"
-    kl_t54 = kl__area__4Rect( kl_shared_48 );
+    kl_t53 = kl__area__4Rect( kl_shared_47 );
 #line 158 "codegen/geometry.kl"
-    kl_t55 = kl_t54 != 4;
+    kl_t54 = kl_t53 != 4;
 #line 158 "codegen/geometry.kl"
-    if ( kl_t55 ) goto bb39; else goto bb40;
+    if ( kl_t54 ) goto bb39; else goto bb40;
     bb39:
 #line 158 "codegen/geometry.kl"
     kl_t0 = 20;
@@ -774,26 +771,26 @@ int32_t kl__main__( void )
     return kl_t0;
     bb40:
 #line 161 "codegen/geometry.kl"
-    kl_t58.kl_x = 100;
+    kl_t57.kl_x = 100;
 #line 161 "codegen/geometry.kl"
-    kl_t58.kl_y = 100;
+    kl_t57.kl_y = 100;
 #line 161 "codegen/geometry.kl"
-    kl_t59.kl_x = 110;
+    kl_t58.kl_x = 110;
 #line 161 "codegen/geometry.kl"
-    kl_t59.kl_y = 110;
+    kl_t58.kl_y = 110;
 #line 161 "codegen/geometry.kl"
-    kl_t57.kl_low = kl_t58;
+    kl_t56.kl_low = kl_t57;
 #line 161 "codegen/geometry.kl"
-    kl_t57.kl_high = kl_t59;
+    kl_t56.kl_high = kl_t58;
 #line 161 "codegen/geometry.kl"
-    kl_far_56 = kl_t57;
-    kl_t61 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_far_56 );
+    kl_far_55 = kl_t56;
+    kl_t60 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_far_55 );
 #line 162 "codegen/geometry.kl"
-    kl_none_60 = kl_t61;
+    kl_none_59 = kl_t60;
 #line 164 "codegen/geometry.kl"
-    kl_t62 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_far_56 );
+    kl_t61 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_far_55 );
 #line 164 "codegen/geometry.kl"
-    if ( kl_t62 ) goto bb41; else goto bb42;
+    if ( kl_t61 ) goto bb41; else goto bb42;
     bb41:
 #line 164 "codegen/geometry.kl"
     kl_t0 = 21;
@@ -801,11 +798,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb42:
 #line 165 "codegen/geometry.kl"
-    kl_t63 = kl__is_empty__4Rect( kl_none_60 );
+    kl_t62 = kl__is_empty__4Rect( kl_none_59 );
 #line 165 "codegen/geometry.kl"
-    kl_t64 = !kl_t63;
+    kl_t63 = !kl_t62;
 #line 165 "codegen/geometry.kl"
-    if ( kl_t64 ) goto bb43; else goto bb44;
+    if ( kl_t63 ) goto bb43; else goto bb44;
     bb43:
 #line 165 "codegen/geometry.kl"
     kl_t0 = 22;
@@ -813,11 +810,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb44:
 #line 166 "codegen/geometry.kl"
-    kl_t65 = kl__area__4Rect( kl_none_60 );
+    kl_t64 = kl__area__4Rect( kl_none_59 );
 #line 166 "codegen/geometry.kl"
-    kl_t66 = kl_t65 != 0;
+    kl_t65 = kl_t64 != 0;
 #line 166 "codegen/geometry.kl"
-    if ( kl_t66 ) goto bb45; else goto bb46;
+    if ( kl_t65 ) goto bb45; else goto bb46;
     bb45:
 #line 166 "codegen/geometry.kl"
     kl_t0 = 23;
@@ -825,25 +822,25 @@ int32_t kl__main__( void )
     return kl_t0;
     bb46:
 #line 169 "codegen/geometry.kl"
-    kl_t69.kl_x = 0;
+    kl_t68.kl_x = 0;
 #line 169 "codegen/geometry.kl"
-    kl_t69.kl_y = 0;
+    kl_t68.kl_y = 0;
 #line 169 "codegen/geometry.kl"
-    kl_t70.kl_x = 100000;
+    kl_t69.kl_x = 100000;
 #line 169 "codegen/geometry.kl"
-    kl_t70.kl_y = 100000;
+    kl_t69.kl_y = 100000;
 #line 169 "codegen/geometry.kl"
-    kl_t68.kl_low = kl_t69;
+    kl_t67.kl_low = kl_t68;
 #line 169 "codegen/geometry.kl"
-    kl_t68.kl_high = kl_t70;
+    kl_t67.kl_high = kl_t69;
 #line 169 "codegen/geometry.kl"
-    kl_huge_67 = kl_t68;
+    kl_huge_66 = kl_t67;
 #line 171 "codegen/geometry.kl"
-    kl_t71 = kl__area__4Rect( kl_huge_67 );
+    kl_t70 = kl__area__4Rect( kl_huge_66 );
 #line 171 "codegen/geometry.kl"
-    kl_t72 = kl_t71 != 10000000000;
+    kl_t71 = kl_t70 != 10000000000;
 #line 171 "codegen/geometry.kl"
-    if ( kl_t72 ) goto bb47; else goto bb48;
+    if ( kl_t71 ) goto bb47; else goto bb48;
     bb47:
 #line 171 "codegen/geometry.kl"
     kl_t0 = 24;
@@ -851,17 +848,17 @@ int32_t kl__main__( void )
     return kl_t0;
     bb48:
 #line 174 "codegen/geometry.kl"
-    kl_t74 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_unit_22 );
+    kl_t73 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_unit_22 );
 #line 174 "codegen/geometry.kl"
-    kl_itself_73 = kl_t74;
+    kl_itself_72 = kl_t73;
 #line 176 "codegen/geometry.kl"
-    kl_t75 = kl__area__4Rect( kl_itself_73 );
+    kl_t74 = kl__area__4Rect( kl_itself_72 );
 #line 176 "codegen/geometry.kl"
-    kl_t76 = kl__area__4Rect( kl_unit_22 );
+    kl_t75 = kl__area__4Rect( kl_unit_22 );
 #line 176 "codegen/geometry.kl"
-    kl_t77 = kl_t75 != kl_t76;
+    kl_t76 = kl_t74 != kl_t75;
 #line 176 "codegen/geometry.kl"
-    if ( kl_t77 ) goto bb49; else goto bb50;
+    if ( kl_t76 ) goto bb49; else goto bb50;
     bb49:
 #line 176 "codegen/geometry.kl"
     kl_t0 = 25;

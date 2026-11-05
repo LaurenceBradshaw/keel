@@ -15,178 +15,172 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_a_1;
     int64_t kl_b_2;
-    int64_t kl_t3;
-    uint32_t kl_c_4;
-    int32_t kl_d_5;
-    uint8_t kl_narrower_6;
-    uint8_t kl_t7;
-    int32_t kl_t8;
-    bool kl_t9;
-    int8_t kl_signed_narrower_10;
-    int8_t kl_t11;
-    int64_t kl_t12;
-    bool kl_t13;
-    int32_t kl_to_signed_14;
-    int32_t kl_t15;
-    bool kl_t16;
-    uint32_t kl_to_unsigned_17;
-    uint32_t kl_t18;
-    bool kl_t19;
-    int64_t kl_wider_20;
-    int64_t kl_t21;
+    uint32_t kl_c_3;
+    int32_t kl_d_4;
+    uint8_t kl_narrower_5;
+    uint8_t kl_t6;
+    int32_t kl_t7;
+    bool kl_t8;
+    int8_t kl_signed_narrower_9;
+    int8_t kl_t10;
+    int64_t kl_t11;
+    bool kl_t12;
+    int32_t kl_to_signed_13;
+    int32_t kl_t14;
+    bool kl_t15;
+    uint32_t kl_to_unsigned_16;
+    uint32_t kl_t17;
+    bool kl_t18;
+    int64_t kl_wider_19;
+    int64_t kl_t20;
+    bool kl_t21;
     bool kl_t22;
     bool kl_t23;
     bool kl_t24;
     bool kl_t25;
     bool kl_t26;
-    int8_t kl_t27;
+    bool kl_t27;
     bool kl_t28;
     bool kl_t29;
     bool kl_t30;
-    bool kl_t31;
+    uint8_t kl_t31;
     bool kl_t32;
     uint8_t kl_t33;
     bool kl_t34;
-    uint8_t kl_t35;
-    bool kl_t36;
 #line 10 "codegen/cast_checked.kl"
     kl_a_1 = 200;
-    kl_t3 = -128;
-#line 11 "codegen/cast_checked.kl"
-    kl_b_2 = kl_t3;
-    kl_c_4 = 2147483647;
-    kl_d_5 = 0;
+    kl_b_2 = -128;
+    kl_c_3 = 2147483647;
+    kl_d_4 = 0;
 #line 15 "codegen/cast_checked.kl"
-    kl_t7 = ( uint8_t ) kl_a_1;
+    kl_t6 = ( uint8_t ) kl_a_1;
 #line 15 "codegen/cast_checked.kl"
-    kl_t8 = ( int32_t ) kl_t7;
+    kl_t7 = ( int32_t ) kl_t6;
 #line 15 "codegen/cast_checked.kl"
-    kl_t9 = kl_t8 == kl_a_1;
+    kl_t8 = kl_t7 == kl_a_1;
 #line 15 "codegen/cast_checked.kl"
-    if ( kl_t9 ) goto bb2; else goto bb1;
+    if ( kl_t8 ) goto bb2; else goto bb1;
     bb1:
 #line 15 "codegen/cast_checked.kl"
     kl_rt_panic( "codegen/cast_checked.kl", 15, "cast out of range: cast<u8>( a )" );
     bb2:
 #line 15 "codegen/cast_checked.kl"
-    kl_narrower_6 = kl_t7;
-    kl_t11 = ( int8_t ) kl_b_2;
+    kl_narrower_5 = kl_t6;
+    kl_t10 = ( int8_t ) kl_b_2;
 #line 16 "codegen/cast_checked.kl"
-    kl_t12 = ( int64_t ) kl_t11;
+    kl_t11 = ( int64_t ) kl_t10;
 #line 16 "codegen/cast_checked.kl"
-    kl_t13 = kl_t12 == kl_b_2;
+    kl_t12 = kl_t11 == kl_b_2;
 #line 16 "codegen/cast_checked.kl"
-    if ( kl_t13 ) goto bb4; else goto bb3;
+    if ( kl_t12 ) goto bb4; else goto bb3;
     bb3:
 #line 16 "codegen/cast_checked.kl"
     kl_rt_panic( "codegen/cast_checked.kl", 16, "cast out of range: cast<i8>( b )" );
     bb4:
 #line 16 "codegen/cast_checked.kl"
-    kl_signed_narrower_10 = kl_t11;
-    kl_t15 = ( int32_t ) kl_c_4;
+    kl_signed_narrower_9 = kl_t10;
+    kl_t14 = ( int32_t ) kl_c_3;
 #line 17 "codegen/cast_checked.kl"
-    kl_t16 = kl_t15 >= 0;
+    kl_t15 = kl_t14 >= 0;
 #line 17 "codegen/cast_checked.kl"
-    if ( kl_t16 ) goto bb6; else goto bb5;
+    if ( kl_t15 ) goto bb6; else goto bb5;
     bb5:
 #line 17 "codegen/cast_checked.kl"
     kl_rt_panic( "codegen/cast_checked.kl", 17, "cast out of range: cast<i32>( c )" );
     bb6:
 #line 17 "codegen/cast_checked.kl"
-    kl_to_signed_14 = kl_t15;
-    kl_t18 = ( uint32_t ) kl_d_5;
+    kl_to_signed_13 = kl_t14;
+    kl_t17 = ( uint32_t ) kl_d_4;
 #line 18 "codegen/cast_checked.kl"
-    kl_t19 = kl_d_5 >= 0;
+    kl_t18 = kl_d_4 >= 0;
 #line 18 "codegen/cast_checked.kl"
-    if ( kl_t19 ) goto bb8; else goto bb7;
+    if ( kl_t18 ) goto bb8; else goto bb7;
     bb7:
 #line 18 "codegen/cast_checked.kl"
     kl_rt_panic( "codegen/cast_checked.kl", 18, "cast out of range: cast<u32>( d )" );
     bb8:
 #line 18 "codegen/cast_checked.kl"
-    kl_to_unsigned_17 = kl_t18;
-    kl_t21 = ( int64_t ) kl_a_1;
+    kl_to_unsigned_16 = kl_t17;
+    kl_t20 = ( int64_t ) kl_a_1;
 #line 19 "codegen/cast_checked.kl"
-    kl_wider_20 = kl_t21;
+    kl_wider_19 = kl_t20;
 #line 21 "codegen/cast_checked.kl"
-    kl_t26 = kl_narrower_6 != 200;
+    kl_t25 = kl_narrower_5 != 200;
 #line 21 "codegen/cast_checked.kl"
-    kl_t25 = kl_t26;
+    kl_t24 = kl_t25;
 #line 21 "codegen/cast_checked.kl"
-    if ( kl_t25 ) goto bb10; else goto bb9;
+    if ( kl_t24 ) goto bb10; else goto bb9;
     bb9:
 #line 21 "codegen/cast_checked.kl"
-    kl_t27 = -128;
+    kl_t26 = kl_signed_narrower_9 != -128;
 #line 21 "codegen/cast_checked.kl"
-    kl_t28 = kl_signed_narrower_10 != kl_t27;
-#line 21 "codegen/cast_checked.kl"
-    kl_t25 = kl_t28;
+    kl_t24 = kl_t26;
 #line 21 "codegen/cast_checked.kl"
     goto bb10;
     bb10:
 #line 21 "codegen/cast_checked.kl"
-    kl_t24 = kl_t25;
+    kl_t23 = kl_t24;
 #line 21 "codegen/cast_checked.kl"
-    if ( kl_t24 ) goto bb12; else goto bb11;
+    if ( kl_t23 ) goto bb12; else goto bb11;
     bb11:
 #line 21 "codegen/cast_checked.kl"
-    kl_t29 = kl_to_signed_14 != 2147483647;
+    kl_t27 = kl_to_signed_13 != 2147483647;
 #line 21 "codegen/cast_checked.kl"
-    kl_t24 = kl_t29;
+    kl_t23 = kl_t27;
 #line 21 "codegen/cast_checked.kl"
     goto bb12;
     bb12:
 #line 21 "codegen/cast_checked.kl"
-    kl_t23 = kl_t24;
+    kl_t22 = kl_t23;
 #line 21 "codegen/cast_checked.kl"
-    if ( kl_t23 ) goto bb14; else goto bb13;
+    if ( kl_t22 ) goto bb14; else goto bb13;
     bb13:
 #line 21 "codegen/cast_checked.kl"
-    kl_t30 = kl_to_unsigned_17 != 0;
+    kl_t28 = kl_to_unsigned_16 != 0;
 #line 21 "codegen/cast_checked.kl"
-    kl_t23 = kl_t30;
+    kl_t22 = kl_t28;
 #line 21 "codegen/cast_checked.kl"
     goto bb14;
     bb14:
 #line 21 "codegen/cast_checked.kl"
-    kl_t22 = kl_t23;
+    kl_t21 = kl_t22;
 #line 21 "codegen/cast_checked.kl"
-    if ( kl_t22 ) goto bb16; else goto bb15;
+    if ( kl_t21 ) goto bb16; else goto bb15;
     bb15:
 #line 21 "codegen/cast_checked.kl"
-    kl_t31 = kl_wider_20 != 200;
+    kl_t29 = kl_wider_19 != 200;
 #line 21 "codegen/cast_checked.kl"
-    kl_t22 = kl_t31;
+    kl_t21 = kl_t29;
 #line 21 "codegen/cast_checked.kl"
     goto bb16;
     bb16:
 #line 21 "codegen/cast_checked.kl"
-    if ( kl_t22 ) goto bb17; else goto bb18;
+    if ( kl_t21 ) goto bb17; else goto bb18;
     bb17:
     kl_t0 = 1;
 #line 23 "codegen/cast_checked.kl"
     return kl_t0;
     bb18:
 #line 26 "codegen/cast_checked.kl"
-    kl_t33 = kl__down__I2u8E__2u8( 5 );
+    kl_t31 = kl__down__I2u8E__2u8( 5 );
 #line 26 "codegen/cast_checked.kl"
-    kl_t34 = kl_t33 != 5;
+    kl_t32 = kl_t31 != 5;
 #line 26 "codegen/cast_checked.kl"
-    kl_t32 = kl_t34;
+    kl_t30 = kl_t32;
 #line 26 "codegen/cast_checked.kl"
-    if ( kl_t32 ) goto bb20; else goto bb19;
+    if ( kl_t30 ) goto bb20; else goto bb19;
     bb19:
 #line 26 "codegen/cast_checked.kl"
-    kl_t35 = kl__down__I3i64E__3i64( 255 );
+    kl_t33 = kl__down__I3i64E__3i64( 255 );
 #line 26 "codegen/cast_checked.kl"
-    kl_t36 = kl_t35 != 255;
+    kl_t34 = kl_t33 != 255;
 #line 26 "codegen/cast_checked.kl"
-    kl_t32 = kl_t36;
+    kl_t30 = kl_t34;
 #line 26 "codegen/cast_checked.kl"
     goto bb20;
     bb20:
 #line 26 "codegen/cast_checked.kl"
-    if ( kl_t32 ) goto bb21; else goto bb22;
+    if ( kl_t30 ) goto bb21; else goto bb22;
     bb21:
     kl_t0 = 2;
 #line 28 "codegen/cast_checked.kl"

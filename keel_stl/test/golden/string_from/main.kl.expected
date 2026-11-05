@@ -3798,18 +3798,17 @@ int32_t kl__main__( void )
     struct kl_2kl6string_string* kl_t45;
     bool kl_t46;
     bool kl_t47;
-    int64_t kl_t48;
-    struct kl_2kl6string_string kl_t49;
-    struct kl_2kl6string_string* kl_t50;
-    struct kl_2kl6string_string kl_t51;
-    struct kl_2kl6string_string* kl_t52;
-    struct kl_7prelude_str kl_t53;
-    struct kl_7prelude_str* kl_t54;
-    uint8_t* kl_t55;
-    struct kl_7prelude_textual__ref kl_t57;
-    struct kl_2kl6string_string* kl_t59;
+    struct kl_2kl6string_string kl_t48;
+    struct kl_2kl6string_string* kl_t49;
+    struct kl_2kl6string_string kl_t50;
+    struct kl_2kl6string_string* kl_t51;
+    struct kl_7prelude_str kl_t52;
+    struct kl_7prelude_str* kl_t53;
+    uint8_t* kl_t54;
+    struct kl_7prelude_textual__ref kl_t56;
+    struct kl_2kl6string_string* kl_t58;
+    bool kl_t59;
     bool kl_t60;
-    bool kl_t61;
 #line 12 "string_from/main.kl"
     kl_t2 = &kl_t1;
 #line 12 "string_from/main.kl"
@@ -3922,35 +3921,33 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 27 "string_from/main.kl"
-    kl_t48 = -7;
+    kl_t48 = kl__build__IQ2kl6string_3i64E__M3i64( -7 );
 #line 27 "string_from/main.kl"
-    kl_t49 = kl__build__IQ2kl6string_3i64E__M3i64( kl_t48 );
+    kl_t49 = &kl_t48;
 #line 27 "string_from/main.kl"
-    kl_t50 = &kl_t49;
+    kl_t51 = &kl_t50;
 #line 27 "string_from/main.kl"
-    kl_t52 = &kl_t51;
+    kl_t53 = &kl_t52;
 #line 27 "string_from/main.kl"
-    kl_t54 = &kl_t53;
+    kl_t54 = ( uint8_t* ) "-7";
 #line 27 "string_from/main.kl"
-    kl_t55 = ( uint8_t* ) "-7";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t53, kl_t54, 2 );
 #line 27 "string_from/main.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t54, kl_t55, 2 );
+    kl_t56 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t52, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 27 "string_from/main.kl"
-    kl_t57 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t53, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_2kl6string_string__RQ2kl6string_7textual__ctor( kl_t51, kl_t56 );
 #line 27 "string_from/main.kl"
-    kl_2kl6string_string__RQ2kl6string_7textual__ctor( kl_t52, kl_t57 );
+    kl_t58 = &kl_t50;
 #line 27 "string_from/main.kl"
-    kl_t59 = &kl_t51;
+    kl_t59 = kl_2kl6string_operator_eq__SQ2kl6string_Q2kl6string( kl_t49, kl_t58 );
 #line 27 "string_from/main.kl"
-    kl_t60 = kl_2kl6string_operator_eq__SQ2kl6string_Q2kl6string( kl_t50, kl_t59 );
+    kl_t60 = !kl_t59;
 #line 27 "string_from/main.kl"
-    kl_t61 = !kl_t60;
+    kl_2kl6string_string__dtor( &kl_t50 );
 #line 27 "string_from/main.kl"
-    kl_2kl6string_string__dtor( &kl_t51 );
+    kl_2kl6string_string__dtor( &kl_t48 );
 #line 27 "string_from/main.kl"
-    kl_2kl6string_string__dtor( &kl_t49 );
-#line 27 "string_from/main.kl"
-    if ( kl_t61 ) goto bb7; else goto bb8;
+    if ( kl_t60 ) goto bb7; else goto bb8;
     bb7:
     kl_t0 = 4;
 #line 29 "string_from/main.kl"

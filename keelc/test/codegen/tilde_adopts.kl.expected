@@ -43,12 +43,11 @@ int32_t kl__main__( void )
     bool kl_t17;
     bool kl_t18;
     bool kl_t19;
-    int8_t kl_t20;
+    bool kl_t20;
     bool kl_t21;
     bool kl_t22;
-    bool kl_t23;
-    uint8_t kl_t24;
-    bool kl_t25;
+    uint8_t kl_t23;
+    bool kl_t24;
 #line 7 "codegen/tilde_adopts.kl"
     kl_t2 = ~0;
 #line 7 "codegen/tilde_adopts.kl"
@@ -89,11 +88,9 @@ int32_t kl__main__( void )
     if ( kl_t16 ) goto bb4; else goto bb3;
     bb3:
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t20 = -1;
+    kl_t20 = kl_s_5 != -1;
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t21 = kl_s_5 != kl_t20;
-#line 13 "codegen/tilde_adopts.kl"
-    kl_t16 = kl_t21;
+    kl_t16 = kl_t20;
 #line 13 "codegen/tilde_adopts.kl"
     goto bb4;
     bb4:
@@ -103,9 +100,9 @@ int32_t kl__main__( void )
     if ( kl_t15 ) goto bb6; else goto bb5;
     bb5:
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t22 = kl_w_7 != 18446744073709551607ull;
+    kl_t21 = kl_w_7 != 18446744073709551607ull;
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t15 = kl_t22;
+    kl_t15 = kl_t21;
 #line 13 "codegen/tilde_adopts.kl"
     goto bb6;
     bb6:
@@ -115,9 +112,9 @@ int32_t kl__main__( void )
     if ( kl_t14 ) goto bb8; else goto bb7;
     bb7:
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t23 = kl_k_10 != 3840;
+    kl_t22 = kl_k_10 != 3840;
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t14 = kl_t23;
+    kl_t14 = kl_t22;
 #line 13 "codegen/tilde_adopts.kl"
     goto bb8;
     bb8:
@@ -127,11 +124,11 @@ int32_t kl__main__( void )
     if ( kl_t13 ) goto bb10; else goto bb9;
     bb9:
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t24 = kl__mask__(  );
+    kl_t23 = kl__mask__(  );
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t25 = kl_t24 != 255;
+    kl_t24 = kl_t23 != 255;
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t13 = kl_t25;
+    kl_t13 = kl_t24;
 #line 13 "codegen/tilde_adopts.kl"
     goto bb10;
     bb10:

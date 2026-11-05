@@ -50,16 +50,13 @@ int32_t kl__spins__3i32( int32_t kl_n_1 )
     bool kl_t3;
     int32_t kl_t4;
     bool kl_t5;
-    int32_t kl_t6;
 #line 27 "codegen/switch_arm_cannot_complete.kl"
     kl_t2 = kl_n_1 == 0;
 #line 27 "codegen/switch_arm_cannot_complete.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
 #line 36 "codegen/switch_arm_cannot_complete.kl"
-    kl_t6 = -1;
-#line 36 "codegen/switch_arm_cannot_complete.kl"
-    kl_t0 = kl_t6;
+    kl_t0 = -1;
 #line 36 "codegen/switch_arm_cannot_complete.kl"
     return kl_t0;
     bb2:
@@ -98,8 +95,7 @@ int32_t kl__main__( void )
     int32_t kl_t7;
     bool kl_t8;
     int32_t kl_t9;
-    int32_t kl_t10;
-    bool kl_t11;
+    bool kl_t10;
 #line 42 "codegen/switch_arm_cannot_complete.kl"
     kl_t1 = kl__nested__5Shape_5Shape( 0, 0 );
 #line 42 "codegen/switch_arm_cannot_complete.kl"
@@ -143,11 +139,9 @@ int32_t kl__main__( void )
     bb8:
     kl_t9 = kl__spins__3i32( 1 );
 #line 58 "codegen/switch_arm_cannot_complete.kl"
-    kl_t10 = -1;
+    kl_t10 = kl_t9 != -1;
 #line 58 "codegen/switch_arm_cannot_complete.kl"
-    kl_t11 = kl_t9 != kl_t10;
-#line 58 "codegen/switch_arm_cannot_complete.kl"
-    if ( kl_t11 ) goto bb9; else goto bb10;
+    if ( kl_t10 ) goto bb9; else goto bb10;
     bb9:
     kl_t0 = 5;
 #line 60 "codegen/switch_arm_cannot_complete.kl"

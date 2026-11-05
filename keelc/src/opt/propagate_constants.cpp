@@ -616,7 +616,6 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
     return values;
 }
 
-// A negative has no operand form, so its read stays.
 void rewrite( const Analysis& analysis, Operand& operand, const Values& values, Literal_pool& literals )
 {
     if( operand.kind != Operand_kind::Copy || !whole_tracked( analysis, operand.place ) )
@@ -628,25 +627,14 @@ void rewrite( const Analysis& analysis, Operand& operand, const Values& values, 
 
     if( v.state == Value::State::Constant )
     {
-        const Rvalue result = value_of( v.bits, operand.type, analysis.types, literals );
-
-        if( result.kind == Rvalue_kind::Use && result.a.kind == Operand_kind::Constant )
-        {
-            operand = result.a;
-        }
+        operand = value_of( v.bits, operand.type, analysis.types, literals ).a;
     }
 }
 
 // Already folded; `add_integer` appends, so folding it again only grows the pool.
 bool is_constant( const Rvalue& value )
 {
-    if( value.a.kind == Operand_kind::Constant &&
-        ( value.kind == Rvalue_kind::Use || ( value.kind == Rvalue_kind::Unary && value.op == Token_kind::Minus ) ) )
-    {
-        return true;
-    }
-
-    return false;
+    return value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Constant;
 }
 // Within a block, which local each holds the same number as, through copies and casts that keep it: so a checked
 // cast's round trip compares a number with itself.
@@ -870,8 +858,8 @@ struct Propagated : Compiled
         ) );
     }
 
-    // Whether some statement assigns the constant `magnitude`, negated if `negative`.
-    bool assigns( u64 magnitude, bool negative = false ) const
+    // Whether some statement assigns the constant of these bits.
+    bool assigns( u64 bits ) const
     {
         return std::ranges::any_of(
             first().statements,
@@ -879,10 +867,8 @@ struct Propagated : Compiled
             {
                 const Rvalue& value = first().rvalue( s );
 
-                const bool shape = negative ? value.kind == Rvalue_kind::Unary && value.op == Token_kind::Minus
-                                            : value.kind == Rvalue_kind::Use;
-                return s.kind == Statement_kind::Assign && shape && value.a.kind == Operand_kind::Constant &&
-                       literals.integer( value.a.constant ) == magnitude;
+                return s.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Use &&
+                       value.a.kind == Operand_kind::Constant && literals.integer( value.a.constant ) == bits;
             }
         );
     }
@@ -929,7 +915,14 @@ TEST_CASE( "propagate_constants_reads_a_negative_through_a_branch", "[opt][const
 TEST_CASE( "propagate_constants_sign_extends_an_assignment", "[opt][constants]" )
 {
     const Propagated p( "i64 f() { i32 a = 3; i32 n = a - 7; i64 w = n; return w + 1; }\n" );
-    REQUIRE( p.assigns( 3, true ) );
+    REQUIRE( p.assigns( static_cast<u64>( -3 ) ) );
+}
+
+// `n` is `-4`, and the recursive call, never inlined, reads the constant.
+TEST_CASE( "propagate_constants_forwards_a_negative", "[opt][constants]" )
+{
+    const Propagated p( "i64 f( i64 t ) { i64 a = 3; i64 n = a - 7; if( t > 0 ) { return f( n ); } return t; }\n" );
+    REQUIRE( p.reads( "n" ) == 0 );
 }
 
 // `step` is `2` both from the entry and round the back edge.

@@ -117,6 +117,10 @@ struct Printer
                                                              : fmt::format( "const {}", literals.floating( operand.constant ) );
             }
 
+            if( const Type& type = types.get( operand.type ); type.kind == Type_kind::Int && type.is_signed )
+            {
+                return fmt::format( "const {}", as_signed( literals.integer( operand.constant ), type.width ) );
+            }
             return fmt::format( "const {}", literals.integer( operand.constant ) );
         case Operand_kind::Debug:
             return "debug";

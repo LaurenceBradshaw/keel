@@ -536,10 +536,9 @@ int32_t kl__divide__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     int32_t kl_t0;
     bool kl_t3;
     int32_t kl_t4;
-    int32_t kl_t5;
+    bool kl_t5;
     bool kl_t6;
-    bool kl_t7;
-    int32_t kl_t8;
+    int32_t kl_t7;
 #line 7 "codegen/division_by_zero.kl"
     kl_t3 = kl_b_2 != 0;
 #line 7 "codegen/division_by_zero.kl"
@@ -549,26 +548,24 @@ int32_t kl__divide__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_rt_panic( "codegen/division_by_zero.kl", 7, "division by zero: a / b" );
     bb2:
 #line 7 "codegen/division_by_zero.kl"
-    kl_t4 = -1;
+    kl_t5 = kl_b_2 == -1;
 #line 7 "codegen/division_by_zero.kl"
-    kl_t6 = kl_b_2 == kl_t4;
-#line 7 "codegen/division_by_zero.kl"
-    if ( kl_t6 ) goto bb3; else goto bb4;
+    if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
 #line 7 "codegen/division_by_zero.kl"
-    kl_t7 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
+    kl_t6 = __builtin_sub_overflow( 0, kl_a_1, &( int32_t ) { 0 } );
 #line 7 "codegen/division_by_zero.kl"
-    if ( kl_t7 ) goto bb6; else goto bb7;
+    if ( kl_t6 ) goto bb6; else goto bb7;
     bb4:
 #line 7 "codegen/division_by_zero.kl"
-    kl_t5 = kl_a_1 / kl_b_2;
+    kl_t4 = kl_a_1 / kl_b_2;
 #line 7 "codegen/division_by_zero.kl"
     goto bb5;
     bb5:
 #line 7 "codegen/division_by_zero.kl"
-    kl_t8 = kl_t5;
+    kl_t7 = kl_t4;
 #line 7 "codegen/division_by_zero.kl"
-    kl_t0 = kl_t8;
+    kl_t0 = kl_t7;
 #line 7 "codegen/division_by_zero.kl"
     return kl_t0;
     bb6:
@@ -576,7 +573,7 @@ int32_t kl__divide__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
     kl_rt_panic( "codegen/division_by_zero.kl", 7, "arithmetic overflow: a / b" );
     bb7:
 #line 7 "codegen/division_by_zero.kl"
-    kl_t5 = -kl_a_1;
+    kl_t4 = -kl_a_1;
 #line 7 "codegen/division_by_zero.kl"
     goto bb5;
 }

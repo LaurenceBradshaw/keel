@@ -72,8 +72,8 @@ private:
 
     Place   place_for( Node_id declaration, Type_id owner = {} );
     Operand read_name( Node_id id, Node_id decl );
-    // A number or enum ordinal as an operand; a negative one through a temporary.
-    Operand scalar_constant( const Constant_value& value, Type_id type, Span at );
+    // A number or enum ordinal as an operand.
+    Operand scalar_constant( const Constant_value& value, Type_id type );
     Type_id static_owner( Node_id named, Node_id decl );
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
@@ -603,26 +603,19 @@ Operand Lowering::read_name( Node_id id, Node_id decl )
         return copy( place_for( decl, static_owner( id, decl ) ), type );
     }
 
-    return scalar_constant( *value, type, ast_.span( id ) );
+    return scalar_constant( *value, type );
 }
 
-Operand Lowering::scalar_constant( const Constant_value& value, Type_id type, Span at )
+Operand Lowering::scalar_constant( const Constant_value& value, Type_id type )
 {
-    const bool       is_float = value.kind == Constant_value::Kind::Float;
-    const bool       negative = is_float ? std::signbit( value.floating ) : value.negative;
-    const Literal_id magnitude =
-        is_float ? literal_pool_.add_float( std::fabs( value.floating ), static_cast<f32>( std::fabs( value.floating ) ) )
-                 : literal_pool_.add_integer( value.magnitude );
-
-    if( !negative )
+    if( value.kind == Constant_value::Kind::Float )
     {
-        return constant( magnitude, type );
+        return constant( literal_pool_.add_float( value.floating, static_cast<f32>( value.floating ) ), type );
     }
 
-    // An operand has no negative form.
-    return copy(
-        builder_.place( builder_.into_temp( unary( Token_kind::Minus, constant( magnitude, type ), type ), type, at ) ), type
-    );
+    const u64 bits = value.negative ? truncate( 0 - value.magnitude, types_.table().get( type ).width ) : value.magnitude;
+
+    return constant( literal_pool_.add_integer( bits ), type );
 }
 
 Type_id Lowering::static_owner( Node_id named, Node_id decl )
@@ -963,9 +956,8 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
         return binary( op, left, right, type );
     }
 
-    const Operand minus_one =
-        temporary( unary( Token_kind::Minus, constant( literal_pool_.add_integer( 1 ), type ), type ), type, span );
-    const Local_id result = builder_.add_local( type, span );
+    const Operand  minus_one = constant( literal_pool_.add_integer( truncate( ~0ull, table.get( type ).width ) ), type );
+    const Local_id result    = builder_.add_local( type, span );
 
     const Block_id negate = builder_.add_block();
     const Block_id divide = builder_.add_block();
@@ -2162,6 +2154,22 @@ Operand Lowering::lower_unary( Node_id id )
 
     const Operand a = lower_expression( ast_.operand( id ) );
 
+    // The checker refused a constant that negates out of its type.
+    if( op == Token_kind::Minus && a.kind == Operand_kind::Constant )
+    {
+        if( types_.table().is_float( type ) )
+        {
+            return constant(
+                literal_pool_.add_float( -literal_pool_.floating( a.constant ), -literal_pool_.narrow( a.constant ) ), type
+            );
+        }
+
+        return constant(
+            literal_pool_.add_integer( truncate( 0 - literal_pool_.integer( a.constant ), types_.table().get( type ).width ) ),
+            type
+        );
+    }
+
     if( op == Token_kind::Minus && !wrapping_.contains( id.v ) )
     {
         check_overflow( Token_kind::Minus, constant( literal_pool_.add_integer( 0 ), type ), a, type, span );
@@ -2972,9 +2980,7 @@ Operand Lowering::lower_unspanned( Node_id id )
         if( !types_.table().is_enum( type_of( id ) ) )
         {
             return scalar_constant(
-                numeric_limit( types_.table(), type_of( id ), interner_.text( ast_.name( id ) ) == "max" ),
-                type_of( id ),
-                ast_.span( id )
+                numeric_limit( types_.table(), type_of( id ), interner_.text( ast_.name( id ) ) == "max" ), type_of( id )
             );
         }
 

@@ -1,7 +1,7 @@
 // M11's conditional constant propagation, in a release build: a local that holds one constant on
 // every path that runs reads as that constant, a negative one too, and a branch on a constant never
-// makes its other arm reachable. A loop counter, a local two running paths disagree on, and a
-// negative passed to a call stay. Each check returns its own code.
+// makes its other arm reachable. A loop counter and a local two running paths disagree on stay. Each
+// check returns its own code.
 
 bool big( i32 x )
 {
@@ -83,7 +83,7 @@ void store( i32 v, out i32 into )
     into = v;
 }
 
-// `n` is `-4`, which has no operand form, so the call reads `n`.
+// `n` is `-4`, so the call reads the constant.
 i32 passed()
 {
     i32 a = 3;

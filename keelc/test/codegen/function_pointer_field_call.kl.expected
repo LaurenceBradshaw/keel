@@ -167,29 +167,27 @@ int32_t kl__main__( void )
     bool kl_t11;
     kl__fn__F3i32E3i32 kl_t12;
     int32_t kl_t13;
-    int32_t kl_t14;
-    bool kl_t15;
-    struct kl__Holder* kl_p_16;
-    struct kl__Holder* kl_t17;
-    int32_t kl_t18;
-    int32_t kl_t19;
-    bool kl_t20;
-    struct kl__Box__I3i32E kl_b_21;
-    struct kl__Box__I3i32E kl_t22;
-    kl__fn__FM3i32E3i32 kl_t23;
-    int32_t kl_two_24;
-    int32_t kl_seven_25;
-    int32_t kl_t26;
-    bool kl_t27;
-    struct kl__Box__I3i32E* kl_t28;
-    int32_t kl_t29;
-    bool kl_t30;
-    struct kl__Counter kl_c_31;
-    struct kl__Counter kl_t32;
-    kl__fn__FR3i32E4void kl_t33;
-    int32_t kl_n_34;
-    int32_t* kl_t35;
-    bool kl_t37;
+    bool kl_t14;
+    struct kl__Holder* kl_p_15;
+    struct kl__Holder* kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    struct kl__Box__I3i32E kl_b_19;
+    struct kl__Box__I3i32E kl_t20;
+    kl__fn__FM3i32E3i32 kl_t21;
+    int32_t kl_two_22;
+    int32_t kl_seven_23;
+    int32_t kl_t24;
+    bool kl_t25;
+    struct kl__Box__I3i32E* kl_t26;
+    int32_t kl_t27;
+    bool kl_t28;
+    struct kl__Counter kl_c_29;
+    struct kl__Counter kl_t30;
+    kl__fn__FR3i32E4void kl_t31;
+    int32_t kl_n_32;
+    int32_t* kl_t33;
+    bool kl_t35;
 #line 55 "codegen/function_pointer_field_call.kl"
     kl_t3 = kl__twice__3i32;
 #line 55 "codegen/function_pointer_field_call.kl"
@@ -242,11 +240,9 @@ int32_t kl__main__( void )
     kl_h_1.kl_cb = kl_t12;
     kl_t13 = kl_h_1.kl_cb( 3 );
 #line 63 "codegen/function_pointer_field_call.kl"
-    kl_t14 = -3;
+    kl_t14 = kl_t13 != -3;
 #line 63 "codegen/function_pointer_field_call.kl"
-    kl_t15 = kl_t13 != kl_t14;
-#line 63 "codegen/function_pointer_field_call.kl"
-    if ( kl_t15 ) goto bb7; else goto bb8;
+    if ( kl_t14 ) goto bb7; else goto bb8;
     bb7:
 #line 63 "codegen/function_pointer_field_call.kl"
     kl_t0 = 4;
@@ -254,34 +250,32 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 66 "codegen/function_pointer_field_call.kl"
-    kl_t17 = &kl_h_1;
+    kl_t16 = &kl_h_1;
 #line 66 "codegen/function_pointer_field_call.kl"
-    kl_p_16 = kl_t17;
-    kl_t18 = ( *kl_p_16 ).kl_cb( 6 );
+    kl_p_15 = kl_t16;
+    kl_t17 = ( *kl_p_15 ).kl_cb( 6 );
 #line 67 "codegen/function_pointer_field_call.kl"
-    kl_t19 = -6;
+    kl_t18 = kl_t17 != -6;
 #line 67 "codegen/function_pointer_field_call.kl"
-    kl_t20 = kl_t18 != kl_t19;
-#line 67 "codegen/function_pointer_field_call.kl"
-    if ( kl_t20 ) goto bb9; else goto bb10;
+    if ( kl_t18 ) goto bb9; else goto bb10;
     bb9:
 #line 67 "codegen/function_pointer_field_call.kl"
     kl_t0 = 5;
 #line 67 "codegen/function_pointer_field_call.kl"
     return kl_t0;
     bb10:
-    kl_t23 = kl__twice_moved__M3i32;
+    kl_t21 = kl__twice_moved__M3i32;
 #line 69 "codegen/function_pointer_field_call.kl"
-    kl_t22.kl_f = kl_t23;
+    kl_t20.kl_f = kl_t21;
 #line 69 "codegen/function_pointer_field_call.kl"
-    kl_b_21 = kl_t22;
-    kl_two_24 = 2;
-    kl_seven_25 = 7;
-    kl_t26 = kl_b_21.kl_f( kl_two_24 );
+    kl_b_19 = kl_t20;
+    kl_two_22 = 2;
+    kl_seven_23 = 7;
+    kl_t24 = kl_b_19.kl_f( kl_two_22 );
 #line 72 "codegen/function_pointer_field_call.kl"
-    kl_t27 = kl_t26 != 4;
+    kl_t25 = kl_t24 != 4;
 #line 72 "codegen/function_pointer_field_call.kl"
-    if ( kl_t27 ) goto bb11; else goto bb12;
+    if ( kl_t25 ) goto bb11; else goto bb12;
     bb11:
 #line 72 "codegen/function_pointer_field_call.kl"
     kl_t0 = 6;
@@ -289,13 +283,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 73 "codegen/function_pointer_field_call.kl"
-    kl_t28 = &kl_b_21;
+    kl_t26 = &kl_b_19;
 #line 73 "codegen/function_pointer_field_call.kl"
-    kl_t29 = kl__apply__I3i32E__S3BoxI3i32E_M3i32( kl_t28, kl_seven_25 );
+    kl_t27 = kl__apply__I3i32E__S3BoxI3i32E_M3i32( kl_t26, kl_seven_23 );
 #line 73 "codegen/function_pointer_field_call.kl"
-    kl_t30 = kl_t29 != 14;
+    kl_t28 = kl_t27 != 14;
 #line 73 "codegen/function_pointer_field_call.kl"
-    if ( kl_t30 ) goto bb13; else goto bb14;
+    if ( kl_t28 ) goto bb13; else goto bb14;
     bb13:
 #line 73 "codegen/function_pointer_field_call.kl"
     kl_t0 = 7;
@@ -303,18 +297,18 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 76 "codegen/function_pointer_field_call.kl"
-    kl_t33 = kl__bump__R3i32;
+    kl_t31 = kl__bump__R3i32;
 #line 76 "codegen/function_pointer_field_call.kl"
-    kl_t32.kl_step = kl_t33;
+    kl_t30.kl_step = kl_t31;
 #line 76 "codegen/function_pointer_field_call.kl"
-    kl_c_31 = kl_t32;
-    kl_n_34 = 1;
-    kl_t35 = &kl_n_34;
+    kl_c_29 = kl_t30;
+    kl_n_32 = 1;
+    kl_t33 = &kl_n_32;
 #line 78 "codegen/function_pointer_field_call.kl"
-    kl_c_31.kl_step( kl_t35 );
-    kl_t37 = kl_n_34 != 2;
+    kl_c_29.kl_step( kl_t33 );
+    kl_t35 = kl_n_32 != 2;
 #line 79 "codegen/function_pointer_field_call.kl"
-    if ( kl_t37 ) goto bb15; else goto bb16;
+    if ( kl_t35 ) goto bb15; else goto bb16;
     bb15:
 #line 79 "codegen/function_pointer_field_call.kl"
     kl_t0 = 8;
