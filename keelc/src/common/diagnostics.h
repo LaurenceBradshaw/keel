@@ -64,6 +64,8 @@ public:
     // A brace the lexer could not pair: its file keeps this and one other error.
     void unbalanced( Span span, std::string message, std::string help = {} );
     void warning( Warning which, Span span, std::string message, std::string help = {} );
+    // A file its reader cannot change, as another package's: its warnings are dropped.
+    void quiet( File_id file );
 
     // flag is what follows -W, read left to right as the command line gives them; false for a name
     // no warning has.
@@ -102,6 +104,7 @@ private:
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
     std::vector<Span>                silenced_;
+    std::vector<u32>                 quiet_;      // File_id::v
     std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
     // Indexed by Warning: every one on but large-local.
     std::array<Level, 8> levels_ { Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::On, Level::Off };

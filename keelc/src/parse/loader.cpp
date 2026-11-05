@@ -288,6 +288,25 @@ Program load_program(
         }
     }
 
+    // A `--package` outside the input's folder is someone else's, so its warnings are not this build's.
+    const std::filesystem::path base       = std::filesystem::absolute( program_folder.empty() ? "." : program_folder );
+    const Symbol_id             own        = modules.package_of( input );
+    const auto                  is_outside = [&]( const std::filesystem::path& root )
+    {
+        std::error_code             ignored;
+        const std::filesystem::path within = std::filesystem::relative( root, base, ignored );
+        return within.empty() || *within.begin() == "..";
+    };
+    for( const u32 file : loaded )
+    {
+        const Symbol_id package = modules.package_of( File_id { file } );
+        const auto      root    = package_roots.find( package.v );
+        if( package.is_valid() && package != own && root != package_roots.end() && is_outside( root->second ) )
+        {
+            diags.quiet( File_id { file } );
+        }
+    }
+
     // After the prelude, which every state names, and each object after the objects it was built against.
     std::vector<const Object*> order;
     const auto                 visit = [&]( auto&& self, const Object& object ) -> void
@@ -417,19 +436,23 @@ namespace keel
 namespace
 {
 
-// A program on disk: `main.kl` and whatever else it names, loaded the way the driver loads one. The
-// package `kl` is the directory `kl/` beside it.
+// A program on disk: `main` and whatever else it names, loaded the way the driver loads one. The
+// package `kl` is the directory `kl/`.
 class Loaded
 {
 public:
-    explicit Loaded( std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = {} )
+    explicit Loaded(
+        std::initializer_list<std::pair<const char*, std::string_view>> files,
+        std::string_view                                                prelude = {},
+        std::string_view                                                main    = "main.kl"
+    )
     {
         for( const auto& [name, text] : files )
         {
             dir_.write( name, text );
         }
 
-        const std::optional<File_id> input = sm_.load_file( dir_.path / "main.kl" );
+        const std::optional<File_id> input = sm_.load_file( dir_.path / main );
 
         REQUIRE( input.has_value() );
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
@@ -483,6 +506,13 @@ public:
     std::size_t errors() const
     {
         return diags_.error_count();
+    }
+
+    // Whether a warning in `file` would be shown.
+    bool warns_in( std::string_view file )
+    {
+        diags_.warning( Warning::Unused_variable, Span { files_.at( std::string( file ) ), 0, 0 }, "probe" );
+        return rendered().find( "probe" ) != std::string::npos;
     }
 
     std::string rendered() const
@@ -923,6 +953,39 @@ TEST_CASE( "loader_loads_the_prelude_with_every_program", "[parse][loader][prelu
 }
 
 // D53: a package's documentation is its `packageinfo.kl`, which holds nothing but comments.
+// A `--package` beside the program's folder is another author's; one inside it is the program's own.
+TEST_CASE( "loader_quiets_a_package_outside_the_program's_folder", "[parse][loader][packages]" )
+{
+    SECTION( "outside" )
+    {
+        Loaded p(
+            {
+                { "app/main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+                { "kl/geom.kl", "i32 area() { return 4; }\n" },
+            },
+            {},
+            "app/main.kl"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( !p.warns_in( "kl/geom.kl" ) );
+        REQUIRE( p.warns_in( "app/main.kl" ) );
+    }
+
+    SECTION( "inside" )
+    {
+        Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.warns_in( "kl/geom.kl" ) );
+    }
+}
+
 TEST_CASE( "loader_reads_a_package's_packageinfo", "[parse][loader][packages][docs]" )
 {
     constexpr std::string_view info = "// Copyright\n//! The kl package.\n//!\n//! More.\n";

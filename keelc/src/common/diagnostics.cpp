@@ -148,13 +148,18 @@ void Diagnostics::warning( Warning which, Span span, std::string message, std::s
 {
     const Level level = levels_[static_cast<u8>( which )];
 
-    if( level == Level::Off )
+    if( level == Level::Off || std::ranges::find( quiet_, span.file.v ) != quiet_.end() )
     {
         return;
     }
 
     const Severity severity = level == Level::Error || all_errors_ ? Severity::Error : Severity::Warning;
     items_.push_back( { severity, span, std::move( message ), std::move( help ), false, which } );
+}
+
+void Diagnostics::quiet( File_id file )
+{
+    quiet_.push_back( file.v );
 }
 
 bool Diagnostics::apply_warning_flag( std::string_view flag )
