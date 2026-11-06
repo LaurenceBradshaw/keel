@@ -386,6 +386,7 @@ struct Function
     std::vector<Local_id>        walked;               // D74: a walk's receiver, freezing what it walks
     std::vector<Local_id>        chosen;               // D75: assigned the address of whichever arm ran
     Local_id                     constructed {};       // a constructor's receiver, invalid in every other function.
+    std::vector<Node_id>         defaulted_fields;     // D77: a constructor's fields given their default at entry
     std::vector<Field_slot>      fields;               // ir/slots reads them
     Id_vector<Local_id, Local>   locals;
     Id_vector<Block_id, Block>   blocks;

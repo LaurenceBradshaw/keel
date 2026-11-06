@@ -1,0 +1,22 @@
+// A payload's field takes no default, and is still declared.
+enum Shape
+{
+    Circle( f64 radius = 1.0 ),
+    Square( f64 side )
+};
+
+f64 size( Shape s )
+{
+    switch( s )
+    {
+    case Shape::Circle( r ):
+        return r;
+    case Shape::Square( side ):
+        return side;
+    }
+}
+
+i32 main()
+{
+    return size( Shape::Circle( 2.0 ) ) > 1.0 ? 0 : 1;
+}

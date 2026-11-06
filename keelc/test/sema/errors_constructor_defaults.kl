@@ -1,0 +1,25 @@
+// A `const` field with a default is assigned by its constructor on every path or on none.
+class Fixed
+{
+    const i32 limit = 9;
+    i32       count = 0;
+
+    Fixed( bool b )
+    {
+        if( b )
+        {
+            limit = 1;
+        }
+    }
+
+    public i32 get() const
+    {
+        return limit + count;
+    }
+};
+
+i32 main()
+{
+    Fixed f = Fixed( true );
+    return f.get();
+}

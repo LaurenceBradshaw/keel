@@ -1,0 +1,37 @@
+error: `T()` needs `where T : defaultable`
+ --> sema/errors_defaultable.kl:4:12
+  |
+4 |     return T();
+  |            ^ a type parameter is called only for its default
+
+error: `T()` takes no arguments
+ --> sema/errors_defaultable.kl:9:15
+  |
+9 |     return T( x );
+  |               ^ it is the default, which is built from nothing
+
+error: `Colour` is not `defaultable`, and `zero` requires it of `T`
+  --> sema/errors_defaultable.kl:45:21
+   |
+45 |     Colour c = zero<Colour>();
+   |                     ^^^^^^ an enum has no default: which variant is the program's to say
+
+error: `Half` is not `defaultable`, and `zero` requires it of `T`
+  --> sema/errors_defaultable.kl:46:21
+   |
+46 |     Half   h = zero<Half>();
+   |                     ^^^^ its field `y` has no default
+
+error: `Hidden` is not `defaultable`, and `zero` requires it of `T`
+  --> sema/errors_defaultable.kl:47:21
+   |
+47 |     Hidden d = zero<Hidden>();
+   |                     ^^^^^^ `Hidden` has no public constructor taking nothing
+
+error: `i32` is a type, not a value
+  --> sema/errors_defaultable.kl:48:16
+   |
+48 |     i32    i = i32(); // outside a generic, a number writes its literal
+   |                ^^^
+
+6 errors generated

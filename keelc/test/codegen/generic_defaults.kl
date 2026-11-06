@@ -1,0 +1,60 @@
+// D77: a generic aggregate's default may call a generic and build owning values, and is lowered
+// under the instance it builds, including one reached only from another generic.
+import kl::console;
+import kl::list;
+import kl::string;
+
+T zero<T>() where T : defaultable
+{
+    return T();
+}
+
+struct Pair<A, B> where A : copyable & defaultable, where B : copyable
+{
+    A first = zero<A>();
+    B second;
+};
+
+class Bag<T> where T : defaultable
+{
+    kl::list<T> items = kl::list<T>();
+    T           spare = T();
+    i32         n;
+
+    Bag( i32 k )
+    {
+        n = k;
+
+        if( k > 1 )
+        {
+            items.push( T() );
+        }
+    }
+
+    public u64 size() const
+    {
+        return items.size();
+    }
+};
+
+Pair<A, B> make<A, B>( B b ) where A : copyable & defaultable, where B : copyable
+{
+    return Pair<A, B> { .second = b };
+}
+
+u64 fill<T>() where T : defaultable
+{
+    Bag<T> bag = Bag<T>( 2 );
+    return bag.size();
+}
+
+i32 main()
+{
+    Pair<i32, f64>  p   = make<i32, f64>( 2.5 );
+    u64             n   = fill<kl::string>();
+    Bag<kl::string> one = Bag<kl::string>( 1 );
+
+    kl::println( n );
+
+    return p.first == 0 && p.second == 2.5 && n == 1 && one.size() == 0 ? 0 : 1;
+}

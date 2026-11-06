@@ -686,7 +686,7 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
     }
     else
     {
-        if( cursor_.check( Token_kind::Semicolon ) )
+        if( cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::Equal ) )
         {
             return make_head( Member_kind::Field, start );
         }
@@ -1450,6 +1450,7 @@ TEST_CASE( "lookahead_recognises_each_member_head", "[scan]" )
     SECTION( "the five kinds, committed at their `{`, `=` or `;`" )
     {
         require_head( "i32 a;", Member_kind::Field, ";" );
+        require_head( "i32 a = 1;", Member_kind::Field, "=" );
         require_head( "i32 get() const { return 0; }", Member_kind::Method, "{" );
         require_head( "C( i32 v ) { }", Member_kind::Constructor, "{" );
         require_head( "~C() { }", Member_kind::Destructor, "{" );
@@ -1577,7 +1578,6 @@ TEST_CASE( "lookahead_says_where_and_why_a_head_fails", "[scan]" )
 
     SECTION( "a field that goes on past its name" )
     {
-        require_failure( "i32 b = 3;", "=", Token_kind::Semicolon );
         require_failure( "i32 b, c;", ",", Token_kind::Semicolon );
         require_failure( "i32 b[4];", "[", Token_kind::Semicolon );
     }

@@ -35,8 +35,9 @@ struct Reassigned_field
 {
     u32  field = k_no_field; // into Function::fields
     Span at {};
-    bool maybe    = false; // holds a value on some paths into here, not all
-    bool is_const = false; // refused for being const rather than for owning
+    bool maybe     = false; // holds a value on some paths into here, not all
+    bool is_const  = false; // refused for being const rather than for owning
+    bool defaulted = false; // given its default at entry (D77)
 };
 
 // D9: a field written while the class around it, which has a constructor or a destructor, holds

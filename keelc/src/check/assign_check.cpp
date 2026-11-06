@@ -318,13 +318,17 @@ void assign( const Function& func, const Slot_map& slots, const Statement& state
                 }
             }
 
-            if( report != nullptr && ever && ( owed.is_owning || owed.is_const ) )
+            // D77: a default written at entry is replaced, dropped first; a `const` one is not.
+            const bool defaulted = std::ranges::find( func.defaulted_fields, owed.field ) != func.defaulted_fields.end();
+
+            if( report != nullptr && ever && ( owed.is_const || ( owed.is_owning && !defaulted ) ) )
             {
                 report->reassigned.push_back( Reassigned_field {
-                    .field    = slots.field( range.node ),
-                    .at       = statement.span,
-                    .maybe    = !held,
-                    .is_const = owed.is_const,
+                    .field     = slots.field( range.node ),
+                    .at        = statement.span,
+                    .maybe     = !held,
+                    .is_const  = owed.is_const,
+                    .defaulted = defaulted,
                 } );
             }
         }

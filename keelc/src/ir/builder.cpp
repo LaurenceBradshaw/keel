@@ -120,6 +120,17 @@ Place Builder::index( Place base, Local_id index )
     return projected( function_, base, Projection { .kind = Projection_kind::Index, .index = index } );
 }
 
+Node_id Builder::last_field( const Place& place ) const
+{
+    if( place.num_projections == 0 )
+    {
+        return {};
+    }
+
+    const Projection& last = function_.projections[place.first_projection + place.num_projections - 1];
+    return last.kind == Projection_kind::Field ? last.field : Node_id {};
+}
+
 Type_id Builder::type_of( Local_id id ) const
 {
     assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );

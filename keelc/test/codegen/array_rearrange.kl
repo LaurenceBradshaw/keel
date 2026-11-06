@@ -1,0 +1,29 @@
+// D77: `swap` and `replace` reorder a `T[N]`'s elements, owning ones included, and every slot stays live.
+import kl::console;
+import kl::string;
+
+i32 main()
+{
+    kl::string[3] names = [ kl::string( "a" ), kl::string( "b" ), kl::string( "c" ) ];
+
+    names.swap( 0, 2 );
+    names.swap( 1, 1 ); // one index with itself does nothing
+
+    kl::string old   = names.replace( 1, kl::string( "B" ) );
+    kl::string fresh = kl::string( "Z" );
+    kl::string other = names.replace( 0, move fresh );
+
+    for( const ref kl::string name : names )
+    {
+        kl::println( name );
+    }
+
+    kl::println( old );
+    kl::println( other );
+
+    i32[4] numbers = [ 1, 2, 3, 4 ];
+    numbers.swap( 0, 3 );
+    const i32 was = numbers.replace( 1, 9 );
+
+    return numbers[0] == 4 && numbers[1] == 9 && numbers[3] == 1 && was == 2 ? 0 : 1;
+}

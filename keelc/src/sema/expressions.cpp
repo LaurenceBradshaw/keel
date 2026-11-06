@@ -214,7 +214,11 @@ Type_id Expressions::infer_name( Node_id id )
 
     if( !decl.is_valid() )
     {
-        if( resolution_.is_unreported( id ) )
+        if( resolution_.is_unreported( id ) && in_default() && interner_.text( ast_.name( id ) ) == "this" )
+        {
+            refuse_in_default( ast_.span( id ) );
+        }
+        else if( resolution_.is_unreported( id ) )
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( ast_.name( id ) ) ) );
         }
@@ -244,6 +248,12 @@ Type_id Expressions::infer_name( Node_id id )
     // D22: a bare field name is `this.field` written implicitly, so it needs a receiver to be
     // written through. M7's static method is declared inside the type and has none, which is the
     // one place the member scope reaches a field that no object backs.
+    if( decl_kind == Node_kind::Field_decl && in_default() )
+    {
+        refuse_in_default( ast_.span( id ) );
+        return types_.poison( id );
+    }
+
     if( decl_kind == Node_kind::Field_decl && !places_.receiver_of( current_function_ ).is_valid() )
     {
         reporter_.error_at(
@@ -526,6 +536,10 @@ Type_id Expressions::infer_call( Node_id id )
         // in reach by name, and the receiver is the one this function was given.
         return infer_implicit_method_call( id, decl, expectation );
     }
+    else if( ast_.kind( decl ) == Node_kind::Type_param_decl )
+    {
+        return infer_default_call( id, decl );
+    }
     else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
         return call_through_value( id, decl );
@@ -738,6 +752,88 @@ std::vector<Node_id> Expressions::constructor_candidates( Node_id call, Node_id 
     return candidates;
 }
 
+Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id array )
+{
+    const Node_id                  callee    = ast_.callee( id );
+    const std::string_view         name      = interner_.text( ast_.name( callee ) );
+    const std::span<const Node_id> arguments = ast_.arguments( id );
+    const Type_id                  u64       = table_.integer( 64, false );
+    const Type_id                  element   = table_.get( array ).element;
+
+    if( name == "size" && arguments.empty() )
+    {
+        return types_.record( id, u64 );
+    }
+
+    if( ( name == "swap" || name == "replace" ) && arguments.size() == 2 )
+    {
+        const bool swap = name == "swap";
+
+        receive_markers( id );
+        check( arguments[0], u64 );
+        check( arguments[1], swap ? u64 : element );
+
+        if( !swap )
+        {
+            places_.check_owning_source( arguments[1], element );
+        }
+
+        places_.check_writable( object, current_function_ );
+
+        return types_.record( id, swap ? table_.builtin( Type_kind::Void ) : element );
+    }
+
+    for( const Node_id argument : arguments )
+    {
+        infer( argument );
+    }
+
+    const bool known = name == "size" || name == "swap" || name == "replace";
+
+    reporter_.error_at(
+        ast_.span( callee ),
+        known ? fmt::format( "`{}` takes {} arguments", name, name == "size" ? "no" : "2" )
+              : fmt::format( "`{}` has no method `{}`", table_.name( array ), name ),
+        "an array has `size()`, `swap( i, j )` and `replace( i, move v )`"
+    );
+    return types_.poison( id );
+}
+
+// D77: `T()`, the default of a `defaultable` parameter.
+Type_id Expressions::infer_default_call( Node_id id, Node_id parameter )
+{
+    const Type_id                  type      = types_.type_of( parameter );
+    const std::span<const Node_id> arguments = ast_.arguments( id );
+    const std::string_view         name      = interner_.text( ast_.name( parameter ) );
+
+    for( const Node_id argument : arguments )
+    {
+        infer( argument );
+    }
+
+    if( !arguments.empty() )
+    {
+        reporter_.error_at(
+            Span::merge( ast_.span( arguments.front() ), ast_.span( arguments.back() ) ),
+            fmt::format( "`{}()` takes no arguments", name ),
+            "it is the default, which is built from nothing"
+        );
+        return types_.poison( id );
+    }
+
+    if( !bounds_.satisfies( type, Bound::Defaultable ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.callee( id ) ),
+            fmt::format( "`{}()` needs `where {} : defaultable`", name, name ),
+            "a type parameter is called only for its default"
+        );
+        return types_.poison( id );
+    }
+
+    return types_.record( id, type );
+}
+
 Type_id Expressions::call_through_value( Node_id id, Node_id decl )
 {
     const Node_id callee = ast_.callee( id );
@@ -886,27 +982,10 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    // An array's one method.
+    // An array's methods: `size()`, and D77's `swap` and `replace`.
     if( table_.is_array( object_type ) )
     {
-        const bool is_size = interner_.text( ast_.name( callee ) ) == "size" && ast_.arguments( id ).empty();
-
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            infer( argument );
-        }
-
-        if( !is_size )
-        {
-            reporter_.error_at(
-                ast_.span( callee ),
-                fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
-                "an array has only `size()`"
-            );
-            return types_.poison( id );
-        }
-
-        return types_.record( id, table_.integer( 64, false ) );
+        return infer_array_method( id, object, object_type );
     }
 
     const std::vector<Type_id> owners = bounds_.method_owners( object_type, ast_.name( callee ) );
@@ -1481,6 +1560,12 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first, Type
         callees_.record( id, method );
 
         return check_method_arguments( id, method, instance, expectation, shapes );
+    }
+
+    if( !receiver.is_valid() && in_default() )
+    {
+        refuse_in_default( ast_.span( ast_.callee( id ) ) );
+        return refuse_call( id, shapes );
     }
 
     if( !receiver.is_valid() )
@@ -2335,6 +2420,21 @@ Node_id Expressions::find_operator(
 // checked against its fields exactly as a call's are checked against a parameter list. The result
 // is the *enum*, never the payload - a constructed variant is a Shape, and which one it is is a
 // question only `switch` may ask.
+// D77: a field's default, which Statements checks with the field as the current function.
+bool Expressions::in_default() const
+{
+    return current_function_.is_valid() && ast_.kind( current_function_ ) == Node_kind::Field_decl;
+}
+
+void Expressions::refuse_in_default( Span at )
+{
+    reporter_.error_at(
+        at,
+        "a default cannot read the object it builds",
+        fmt::format( "it runs before `{}` holds a value", interner_.text( ast_.name( current_type() ) ) )
+    );
+}
+
 Node_id Expressions::current_type() const
 {
     return ast_.enclosing_aggregate( current_function_ );
@@ -3826,7 +3926,10 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         );
     }
 
-    if( named == 0 )
+    // `P {}` for a type with defaults is the named form with every field left out (D77).
+    const bool defaults = std::ranges::any_of( fields, [&]( Node_id f ) { return ast_.default_value( f ).is_valid(); } );
+
+    if( named == 0 && ( !initialisers.empty() || !defaults ) )
     {
         if( initialisers.size() != fields.size() )
         {
@@ -3900,7 +4003,8 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     std::vector<Node_id> missing;
     for( const Node_id field : fields )
     {
-        if( ast_.name( field ).is_valid() && seen.find( ast_.name( field ).v ) == seen.end() )
+        if( ast_.name( field ).is_valid() && seen.find( ast_.name( field ).v ) == seen.end() &&
+            !ast_.default_value( field ).is_valid() )
         {
             missing.push_back( field );
         }
@@ -4219,6 +4323,16 @@ Type_id Expressions::infer_try( Node_id id )
     // The payload is recorded even when refused, so the use of a refused `try` does not fail too.
     if( !current_function_.is_valid() )
     {
+        return types_.record( id, payload );
+    }
+
+    if( in_default() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            "a default cannot `try`",
+            "it runs where the object is built, and has no caller to pass the error to"
+        );
         return types_.record( id, payload );
     }
 

@@ -1,0 +1,16 @@
+// What `swap` and `replace` refuse: a `const` array, an owning value without `move`, the wrong count.
+import kl::string;
+
+i32 main()
+{
+    const i32[2] fixed = [ 1, 2 ];
+    fixed.swap( 0, 1 );
+
+    kl::string[2] names = [ kl::string( "a" ), kl::string( "b" ) ];
+    kl::string    s     = kl::string( "s" );
+    kl::string    t     = names.replace( 0, s );
+
+    names.swap( 0 );
+    names.sort();
+    return 0;
+}

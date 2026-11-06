@@ -36,6 +36,7 @@ public:
     void reached_by( const Function& function );
 
 private:
+    void queue_default_calls( Type_id composite );
     void queue_new_composites();
 
     const Ast&                 ast_;

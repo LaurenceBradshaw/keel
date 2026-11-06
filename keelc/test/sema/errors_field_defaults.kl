@@ -1,0 +1,42 @@
+// What a field's default may name: statics and other types, never the object it builds.
+result<i32, i32> parse()
+{
+    return result::ok( 1 );
+}
+
+struct Point
+{
+    i32  x = 1;
+    i32  y = x;
+    bool b = 3;
+    i32  z = this.x;
+    i32  w = area();
+    i32  s = Point::origin;
+    i32  t = origin;
+    static i32 origin = 0;
+
+    i32 area() const
+    {
+        return x * y;
+    }
+};
+
+class Parsed
+{
+    public i32 n = try parse();
+};
+
+struct Pair
+{
+    i32 a = 1;
+    i32 b;
+};
+
+i32 main()
+{
+    Point p = Point { 1, 2, true, 3, 4, 5, 6 };
+    Pair  q = Pair { 2 };      // positional lists every field
+    Pair  r = Pair {};         // `b` has no default
+    Pair  s = Pair { .b = 2 }; // accepted
+    return p.x + q.a + r.a + s.a;
+}

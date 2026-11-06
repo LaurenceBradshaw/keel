@@ -48,8 +48,7 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place )
 {
     // clang-format off
-    constexpr std::array<Stop_hint, 11> hints = {
-        Stop_hint { Token_kind::Semicolon, Token_kind::Equal, "a field cannot be given a value here yet: set it in the constructor", Hint_place::Member },
+    constexpr std::array<Stop_hint, 10> hints = {
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each field with its own type", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "the size goes after the element type, as in `i32[4] a`", Hint_place::Member },
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here", Hint_place::Member },
@@ -131,7 +130,6 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
 
     SECTION( "for a member that stopped short" )
     {
-        REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::Equal, member ), "set it in the constructor" ) );
         REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::Comma, member ), "each field with its own type" ) );
         REQUIRE( has( stop_hint( Token_kind::Semicolon, Token_kind::L_bracket, member ), "`i32[4] a`" ) );
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, member ), "no forward declarations" ) );

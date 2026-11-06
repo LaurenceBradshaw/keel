@@ -123,7 +123,7 @@ enum class Node_kind : u16
     // `Colour::Red`; aux: the member's name; children: the qualifier, then its Type_arg_list when
     // written.
     Path_expr,
-    // aux: the name; children: the type.
+    // aux: the name; children: the type, then the default (D77) when written.
     Field_decl,
     // aux: the field's name; children: the object.
     Field_expr,

@@ -123,6 +123,7 @@ private:
 
     bool    refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
     bool    naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
+    bool    in_default_    = false; // a field's default (D77), where `this` is left to the checker
     Node_id path_;                  // the Path_expr whose children are being visited
 
     // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
@@ -374,9 +375,9 @@ void Resolver::visit( Node_id id )
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( name ) ) );
         }
-        else if( naming_label_ )
+        else if( naming_label_ || ( in_default_ && name == Interner::keyword( Keyword::This ) ) )
         {
-            unreported_[id.v] = true;
+            unreported_[id.v] = true; // the checker words these
         }
         else if( !refuse_module( id, path_.is_valid() && ast_.qualifier( path_ ) == id ? path_ : Node_id {} ) )
         {
@@ -682,6 +683,12 @@ void Resolver::visit_aggregate( Node_id id )
         {
             visit( member );
         }
+        else if( ast_.kind( member ) == Node_kind::Field_decl )
+        {
+            in_default_ = true;
+            visit( ast_.default_value( member ) );
+            in_default_ = false;
+        }
     }
 
     // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
@@ -752,7 +759,7 @@ std::unordered_map<u32, Node_id> Resolver::declare_members( Node_id aggregate )
 
         if( ast_.kind( field ) == Node_kind::Field_decl )
         {
-            visit( field ); // the field's type annotation still resolves through the normal path
+            visit( ast_.annotation( field ) ); // the default resolves with the members, in visit_aggregate
         }
         else
         {

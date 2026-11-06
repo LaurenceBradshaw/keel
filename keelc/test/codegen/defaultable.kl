@@ -1,0 +1,76 @@
+// D77: `T()` in a generic is the default of whatever `T` turns out to be.
+import kl::console;
+import kl::string;
+
+T zero<T>() where T : defaultable
+{
+    return T();
+}
+
+// `numeric` implies `defaultable`.
+T doubled<T>() where T : numeric
+{
+    T a = T();
+    return a + a;
+}
+
+struct Origin
+{
+    i32 x = 1;
+    i32 y = 2;
+};
+
+class Counter
+{
+    i32 n = 5;
+
+    public i32 get() const
+    {
+        return n;
+    }
+};
+
+class Slot<T> where T : copyable
+{
+    T*  at   = nullptr;
+    i32 size = 3;
+
+    public i32 get() const
+    {
+        return size;
+    }
+};
+
+// A generic aggregate's default may be its parameter's.
+class Holder<T> where T : defaultable & copyable
+{
+    T held = T();
+
+    public T get() const
+    {
+        return held;
+    }
+};
+
+i32 main()
+{
+    i32         a = zero<i32>();
+    bool        b = zero<bool>();
+    f64         f = zero<f64>();
+    i32*        p = zero<i32*>();
+    Origin      o = zero<Origin>();
+    Counter     c = zero<Counter>();
+    Slot<u8>    s = zero<Slot<u8>>();
+    kl::string  t = zero<kl::string>();
+    Holder<i64> h = Holder<i64>();
+
+    kl::println( t.size() );
+
+    if( a != 0 || b || f != 0.0 || p != nullptr || o.y != 2 || c.get() != 5 || s.get() != 3 || h.get() != 0 ||
+        doubled<i32>() != 0 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

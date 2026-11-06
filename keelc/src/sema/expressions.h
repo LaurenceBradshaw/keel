@@ -130,6 +130,8 @@ private:
     Type_id infer_call( Node_id id );
     // Empty after reporting why none can be called.
     std::vector<Node_id> constructor_candidates( Node_id call, Node_id aggregate );
+    Type_id              infer_default_call( Node_id id, Node_id parameter );
+    Type_id              infer_array_method( Node_id id, Node_id object, Type_id array );
     // A callee that names a variable, parameter or field rather than a function.
     Type_id call_through_value( Node_id id, Node_id decl );
     // Invalid after reporting why none was chosen.
@@ -246,6 +248,8 @@ private:
     // Asked of the enclosing *function*, never of a receiver: a static method has no receiver and
     // is as much inside its type as an instance method is.
     Node_id current_type() const;
+    bool    in_default() const;
+    void    refuse_in_default( Span at );
     Node_id this_block( Node_id callee ) const;
 
     Type_id infer_static_call( Node_id id, Node_id aggregate );

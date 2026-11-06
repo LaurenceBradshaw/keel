@@ -51,6 +51,7 @@ public:
     Place index( Place base, Local_id index );
 
     Type_id type_of( Local_id id ) const;
+    Node_id last_field( const Place& place ) const; // the Field_decl a place ends in, else invalid
 
     void assign( Place target, Rvalue value, Span span );
     void

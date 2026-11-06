@@ -465,8 +465,10 @@ void report_unassigned_errors(
                 error.at,
                 error.maybe ? fmt::format( "`{}` may already hold a value here", field_name( error.field ) )
                             : fmt::format( "`{}` already holds a value here", field_name( error.field ) ),
-                error.is_const ? "a constructor assigns a `const` field once on each path"
-                               : "a constructor assigns an owning field once on each path"
+                error.defaulted
+                    ? fmt::format( "`{}` has a default, so assign it on every path or on none", field_name( error.field ) )
+                : error.is_const ? "a constructor assigns a `const` field once on each path"
+                                 : "a constructor assigns an owning field once on each path"
             );
         }
     }

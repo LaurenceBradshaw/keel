@@ -15,7 +15,7 @@ static_assert( sizeof( Statement ) == 44, "Statement changed: update kir_state.c
 static_assert( sizeof( Terminator ) == 156, "Terminator changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Block ) == 164, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
-static_assert( sizeof( Function ) == 296, "Function changed: update kir_state.cpp's walk" );
+static_assert( sizeof( Function ) == 320, "Function changed: update kir_state.cpp's walk" );
 
 namespace
 {
@@ -186,6 +186,11 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     put_locals( out, function.walked );
     put_locals( out, function.chosen );
     out.put_u32( function.constructed.v );
+    out.put_u32( narrow_cast<u32>( function.defaulted_fields.size() ) );
+    for( const Node_id field : function.defaulted_fields )
+    {
+        refs.node( out, field );
+    }
 
     out.put_u32( narrow_cast<u32>( function.fields.size() ) );
     for( const Field_slot& slot : function.fields )
@@ -255,6 +260,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.walked               = get_locals( in, refs );
     function.chosen               = get_locals( in, refs );
     function.constructed          = Local_id { in.get_u32() };
+    function.defaulted_fields     = get_all<Node_id>( in, refs, [&] { return refs.node(); } );
 
     function.fields = get_all<Field_slot>(
         in,

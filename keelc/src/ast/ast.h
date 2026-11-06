@@ -122,9 +122,10 @@ public:
     Node_id                  implementer( Node_id block ) const; // the type an Implements_decl is for
 
     // Bindings: Param_decl, Var_decl, Field_decl.
-    Node_id annotation( Node_id decl ) const;    // invalid for `auto`
-    Node_id initialiser( Node_id decl ) const;   // Var_decl only
-    Node_id declared_type( Node_id decl ) const; // the annotation, or what a function or Field_type returns
+    Node_id annotation( Node_id decl ) const;     // invalid for `auto`
+    Node_id initialiser( Node_id decl ) const;    // Var_decl only
+    Node_id default_value( Node_id field ) const; // Field_decl only; invalid when none was written
+    Node_id declared_type( Node_id decl ) const;  // the annotation, or what a function or Field_type returns
 
     // Types.
     Node_id inner_type( Node_id id ) const; // Pointer_, Many_pointer_, Run_, Array_, Mode_ and Const_type
@@ -179,11 +180,12 @@ public:
     bool    is_const_method( Node_id method ) const;  // written with a trailing `const`: a `const ref` receiver
     bool    has_destructor( Node_id declaration ) const;
     bool    has_constructor( Node_id declaration ) const;
-    Node_id destructor( Node_id declaration ) const;     // the Destructor_decl member; invalid if there is none
-    bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
-    Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members
-    bool    is_requirement( Node_id method ) const;      // a method an interface declares
-    bool    is_walk( Node_id decl ) const;               // D74: a method named `operator:`
+    Node_id default_constructor( Node_id declaration ) const; // D77: a public one taking nothing; invalid if none
+    Node_id destructor( Node_id declaration ) const;          // the Destructor_decl member; invalid if there is none
+    bool    enum_has_payload( Node_id enum_decl ) const;      // D7: decides whether the enum is an integer or a tagged struct
+    Node_id enclosing_aggregate( Node_id member ) const;      // invalid for nodes with no members
+    bool    is_requirement( Node_id method ) const;           // a method an interface declares
+    bool    is_walk( Node_id decl ) const;                    // D74: a method named `operator:`
     Node_id walk_parameter( Node_id walk, Symbol_id name ) const; // what it yields by that name, or invalid
 
     // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the

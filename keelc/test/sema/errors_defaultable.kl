@@ -1,0 +1,50 @@
+// `T()` needs `defaultable` and takes nothing; an unmet `defaultable` says what is missing.
+T plain<T>() where T : copyable
+{
+    return T();
+}
+
+T given<T>( T x ) where T : defaultable
+{
+    return T( x );
+}
+
+T zero<T>() where T : defaultable
+{
+    return T();
+}
+
+enum Colour
+{
+    Red,
+    Green
+};
+
+struct Half
+{
+    i32 x = 1;
+    i32 y;
+};
+
+class Hidden
+{
+    i32 n = 1;
+
+    private Hidden()
+    {
+    }
+
+    public i32 get() const
+    {
+        return n;
+    }
+};
+
+i32 main()
+{
+    Colour c = zero<Colour>();
+    Half   h = zero<Half>();
+    Hidden d = zero<Hidden>();
+    i32    i = i32(); // outside a generic, a number writes its literal
+    return 0;
+}

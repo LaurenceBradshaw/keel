@@ -25,6 +25,9 @@ std::string print_signature(
     const Bindings&   bindings = {}
 );
 
+// D77: a field's signature with ` = value` as written, since a literal or constructor may rely on it.
+std::string with_default( const Ast& ast, const Source_manager& sm, Node_id decl, std::string signature );
+
 // A declaration's `///` lines without their markers, or empty when it has none.
 std::string documentation( const Ast& ast, const Source_manager& sm, Node_id decl );
 

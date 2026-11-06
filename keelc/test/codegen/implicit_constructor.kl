@@ -1,0 +1,40 @@
+// D77: a class that declares no constructor and gives every field a default is built by `C()`.
+import kl::console;
+import kl::string;
+
+class Counter
+{
+    i32        count = 2;
+    kl::string name  = kl::string( "counter" );
+
+    public i32 get() const
+    {
+        return count;
+    }
+
+    public void show() const
+    {
+        kl::println( name );
+    }
+};
+
+class Slot<T> where T : copyable
+{
+    T*  at   = nullptr;
+    i32 size = 1;
+
+    public i32 get() const
+    {
+        return at == nullptr ? size : 0;
+    }
+};
+
+i32 main()
+{
+    Counter   c = Counter();
+    Slot<f64> s = Slot<f64>();
+
+    c.show();
+
+    return c.get() + s.get() == 3 ? 0 : 1;
+}

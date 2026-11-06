@@ -13,6 +13,12 @@ namespace keel::sema
 // towards one, so the caller is the guard rather than the call site. A global's initialiser has none.
 void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_id> arguments, Span at )
 {
+    // D77: a default runs wherever its aggregate is built, so its calls are the aggregate's.
+    if( from.is_valid() && ast_.kind( from ) == Node_kind::Field_decl )
+    {
+        from = ast_.enclosing_aggregate( from );
+    }
+
     if( from.is_valid() && ast_.is_generic( from ) )
     {
         generic_calls_.push_back( Generic_call { .from = from, .to = to, .arguments = std::move( arguments ), .at = at } );

@@ -2,36 +2,36 @@ error: `Plain` is not an interface
  --> sema/errors_non_interface_bounds.kl:5:36
   |
 5 | void on_struct<T>( T t ) where T : Plain {}
-  |                                    ^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+  |                                    ^^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: `i32` is not an interface
  --> sema/errors_non_interface_bounds.kl:6:37
   |
 6 | void on_builtin<T>( T t ) where T : i32 {}
-  |                                     ^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+  |                                     ^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: `Colour` is not an interface
  --> sema/errors_non_interface_bounds.kl:7:34
   |
 7 | void on_enum<T>( T t ) where T : Colour {}
-  |                                  ^^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+  |                                  ^^^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: `Plain` is not an interface
  --> sema/errors_non_interface_bounds.kl:8:43
   |
 8 | void among<T>( T t ) where T : copyable & Plain {}
-  |                                           ^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+  |                                           ^^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: `U` is not an interface
  --> sema/errors_non_interface_bounds.kl:9:47
   |
 9 | void on_parameter<T, U>( T t, U u ) where T : U, where U : copyable {}
-  |                                               ^ a bound is an interface, or one of copyable, numeric, integral and floating
+  |                                               ^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: unknown bound `Nope`
   --> sema/errors_non_interface_bounds.kl:10:37
    |
 10 | void on_nothing<T>( T t ) where T : Nope {}
-   |                                     ^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+   |                                     ^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 6 errors generated

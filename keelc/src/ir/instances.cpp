@@ -192,8 +192,13 @@ void Instance_queue::reached_by( const Function& function )
 
         const Rvalue& value = function.rvalue( statement );
 
+        // D77: `T()` calls the constructor of whatever `T` became, which the checker saw no call of.
+        const bool generic_constructor = value.kind == Rvalue_kind::Call && value.callee.is_valid() &&
+                                         ast_.kind( value.callee ) == Node_kind::Constructor_decl &&
+                                         ast_.is_generic( value.callee );
+
         if( ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) &&
-            is_block_method( value.callee ) )
+            ( is_block_method( value.callee ) || generic_constructor ) )
         {
             queue( pending_, types_, { .declaration = value.callee, .arguments = value.type_arguments } );
             continue;
@@ -230,6 +235,40 @@ void Instance_queue::queue_new_composites()
     {
         queue_destructor( ast_, types_, composites[composites_seen_], pending_ );
         queue_conformances( ast_, types_, composites[composites_seen_], pending_ );
+        queue_default_calls( composites[composites_seen_] );
+    }
+}
+
+// D77: a default is lowered wherever its aggregate is built, so what a generic aggregate's default
+// calls is reached by each closed instance of the aggregate, under that instance's arguments.
+void Instance_queue::queue_default_calls( Type_id composite )
+{
+    const Type& held = types_.table().get( composite );
+
+    if( !is_generic_aggregate( ast_, held ) )
+    {
+        return;
+    }
+
+    const Bindings bindings =
+        bindings_for( ast_, types_, Instantiation { held.declaration, { held.arguments.begin(), held.arguments.end() } } );
+
+    for( const Generic_call& edge : types_.generic_calls() )
+    {
+        // An aggregate's other edges are the generic types its fields name, which are no calls.
+        if( edge.from != held.declaration || !is_function_like( ast_.kind( edge.to ) ) )
+        {
+            continue;
+        }
+
+        Instantiation reached { .declaration = edge.to, .arguments = {} };
+
+        for( const Type_id argument : edge.arguments )
+        {
+            reached.arguments.push_back( types_.table().substitute( argument, bindings ) );
+        }
+
+        queue( pending_, types_, std::move( reached ) );
     }
 }
 

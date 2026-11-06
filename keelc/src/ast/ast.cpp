@@ -443,6 +443,13 @@ Node_id Ast::initialiser( Node_id decl ) const
     return child( decl, 1 );
 }
 
+Node_id Ast::default_value( Node_id field ) const
+{
+    assert( kind( field ) == Node_kind::Field_decl );
+    const std::span<const Node_id> all = children( field );
+    return all.size() > 1 ? all[1] : Node_id {};
+}
+
 Node_id Ast::declared_type( Node_id decl ) const
 {
     switch( kind( decl ) )
@@ -841,6 +848,20 @@ bool Ast::is_const_method( Node_id method ) const
 bool Ast::has_destructor( Node_id declaration ) const
 {
     return destructor( declaration ).is_valid();
+}
+
+Node_id Ast::default_constructor( Node_id declaration ) const
+{
+    for( const Node_id member : members( declaration ) )
+    {
+        if( kind( member ) == Node_kind::Constructor_decl && params( member ).size() == 1 &&
+            access( member ) == Access::Public )
+        {
+            return member;
+        }
+    }
+
+    return {};
 }
 
 bool Ast::has_constructor( Node_id declaration ) const

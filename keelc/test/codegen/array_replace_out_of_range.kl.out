@@ -1,0 +1,2 @@
+before
+codegen/array_replace_out_of_range.kl:10: out of bounds: numbers.replace( far, 3 )

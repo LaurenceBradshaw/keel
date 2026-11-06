@@ -12,9 +12,11 @@
 #include <fmt/format.h>
 #include <vector>
 #include "ast/node.h"
+#include "check/assign_check.h"
 #include "ir/builder.h"
 #include "ir/drop_scopes.h"
 #include "ir/instances.h"
+#include "sema/bounds.h"
 
 namespace keel
 {
@@ -38,6 +40,12 @@ public:
     );
 
     Function run();
+
+    // D77: the defaulted fields a constructor's body may leave unassigned, written at its entry.
+    void default_at_entry( std::vector<Node_id> fields )
+    {
+        defaulted_at_entry_ = std::move( fields );
+    }
 
 private:
     // A node's type, and a declaration's binding type, with this instantiation's parameters bound.
@@ -83,6 +91,9 @@ private:
     // One per construct, dispatched from lower_expression. The small cases stay inline there:
     // extracting a two-line literal would cost a name and buy nothing.
     Operand lower_struct_literal( Node_id id );
+    Operand lower_field_default( Node_id field, Type_id instance );
+    Operand lower_default( Type_id type, Span span );
+    Operand lower_array_rearrange( Node_id id, Node_id object, Type_id array );
     Operand lower_array_literal( Node_id id );
     Operand lower_array_fill( Node_id id );
     // `@functions_of( T )`: each listed function's `<module>.<name>` and address, in a `T[N]`.
@@ -300,6 +311,7 @@ private:
     // This instantiation's type parameters, bound. Empty for an ordinary function, which is
     // what makes the substitution below the identity and lets one path serve both.
     Bindings              bindings_;
+    std::vector<Node_id>  defaulted_at_entry_;
     Literal_pool&         literal_pool_;
     const Source_manager& sm_;
     const Interner&       interner_;
@@ -407,6 +419,15 @@ Function Lowering::run()
         drops_.add_to_scope( parameter );
     }
 
+    // D77: the fields the body may leave unassigned, which lower() found by lowering it once without.
+    for( const Node_id field : defaulted_at_entry_ )
+    {
+        const Place   object = builder_.deref( builder_.place( receiver_ ) );
+        const Operand value  = lower_field_default( field, types_.table().get( builder_.type_of( receiver_ ) ).element );
+        builder_.assign( builder_.field( object, field ), use( moved_if_owning( value ) ), ast_.span( field ) );
+        drops_.end_statement( ast_.span( field ) ); // each default is a statement of its own
+    }
+
     lower_statement( ast_.body( declaration_ ) );
 
     // The fall-off-the-end path: a `return` has already unwound to 0, and unwind_to is a no-op on a
@@ -424,7 +445,8 @@ Function Lowering::run()
 
     if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
     {
-        function.constructed = receiver_;
+        function.constructed      = receiver_;
+        function.defaulted_fields = defaulted_at_entry_;
     }
 
     // An `out` parameter's tree and the constructor's describe the referent. A constructor's own
@@ -1303,7 +1325,10 @@ bool Lowering::is_construction( Node_id id ) const
 
 bool Lowering::initialises_field( const Place& target ) const
 {
-    return ast_.kind( declaration_ ) == Node_kind::Constructor_decl && target.local == receiver_ && target.num_projections == 2;
+    // A field given its default at entry already holds a value, so the body's write replaces it.
+    return ast_.kind( declaration_ ) == Node_kind::Constructor_decl && target.local == receiver_ &&
+           target.num_projections == 2 &&
+           std::ranges::find( defaulted_at_entry_, builder_.last_field( target ) ) == defaulted_at_entry_.end();
 }
 
 bool Lowering::writes_a_slot( Node_id target ) const
@@ -1690,6 +1715,26 @@ Operand Lowering::lower_struct_literal( Node_id id )
         index += 1;
     }
 
+    // D77: after the written values, the defaults of the fields left out, in declaration order.
+    std::vector<std::pair<Node_id, Operand>> defaults;
+
+    for( const Node_id field : fields )
+    {
+        const bool written = std::ranges::any_of(
+            ast_.initialisers( id ), [&]( Node_id init ) { return ast_.name( init ) == ast_.name( field ); }
+        );
+
+        if( ast_.default_value( field ).is_valid() && !written )
+        {
+            defaults.emplace_back( field, lower_field_default( field, type ) );
+        }
+    }
+
+    for( const auto& [field, value] : defaults )
+    {
+        builder_.assign( builder_.field( builder_.place( temp ), field ), use( moved_if_owning( value ) ), span );
+    }
+
     index = 0;
 
     for( const auto& [initialiser, value] : values )
@@ -1709,6 +1754,23 @@ Operand Lowering::lower_struct_literal( Node_id id )
     drops_.own_temporary( temp );
 
     return copy( builder_.place( temp ), type );
+}
+
+// D77: the default is written in its aggregate's parameters, so it is lowered under the instance's.
+Operand Lowering::lower_field_default( Node_id field, Type_id instance )
+{
+    const Type&    held  = types_.table().get( instance );
+    const Bindings saved = std::exchange(
+        bindings_,
+        bindings_for( ast_, types_, Instantiation { held.declaration, { held.arguments.begin(), held.arguments.end() } } )
+    );
+    const Node_id value   = ast_.default_value( field );
+    const Operand lowered = converted(
+        lower_expression( value ), field_type( ast_, types_.table(), instance, field, types_.recorded() ), ast_.span( value )
+    );
+
+    bindings_ = saved;
+    return lowered;
 }
 
 // As lower_struct_literal: every value is lowered before any element is written.
@@ -2545,8 +2607,170 @@ Operand Lowering::lower_method_call_on(
     return emit_call( id, method, operands, callee_bound, std::move( type_arguments ), type );
 }
 
+// D77: `T()` at the type this instance gave `T`.
+Operand Lowering::lower_default( Type_id type, Span span )
+{
+    switch( sema::default_of( ast_, types_.table(), type ) )
+    {
+    case sema::Default_kind::Zero:
+        return constant(
+            types_.table().is_float( type ) ? literal_pool_.add_float( 0.0, 0.0f ) : literal_pool_.add_integer( 0 ), type
+        );
+
+    case sema::Default_kind::Literal:
+    {
+        const Local_id temp = builder_.add_local( type, span );
+        builder_.storage_live( temp, span );
+
+        for( const Node_id field : ast_.members( types_.table().get( type ).declaration ) )
+        {
+            if( ast_.kind( field ) == Node_kind::Field_decl )
+            {
+                const Operand value = lower_field_default( field, type );
+                builder_.assign( builder_.field( builder_.place( temp ), field ), use( moved_if_owning( value ) ), span );
+            }
+        }
+
+        drops_.own_temporary( temp );
+        return copy( builder_.place( temp ), type );
+    }
+
+    case sema::Default_kind::Constructor:
+    {
+        const Type&    held        = types_.table().get( type );
+        const Node_id  constructor = ast_.default_constructor( held.declaration );
+        const Local_id local       = builder_.add_local( type, span );
+        const Type_id  receiver    = binding_type_under(
+            ast_.params( constructor )[0],
+            bindings_for( ast_, types_, Instantiation { held.declaration, { held.arguments.begin(), held.arguments.end() } } )
+        );
+
+        builder_.storage_live( local, span );
+
+        std::vector<Operand> operands { copy(
+            builder_.place( builder_.into_temp(
+                address_of( builder_.place( local ), receiver, Address_purpose::Initialise ), receiver, span
+            ) ),
+            receiver
+        ) };
+
+        const Type_id none = type_of( constructor );
+        builder_.into_temp(
+            call( constructor, std::move( operands ), none, { held.arguments.begin(), held.arguments.end() } ), none, span
+        );
+
+        drops_.own_temporary( local );
+        return copy( builder_.place( local ), type );
+    }
+
+    case sema::Default_kind::None:
+        break;
+    }
+
+    assert( false && "the checker refuses `T()` at a type with no default" );
+    return {};
+}
+
+// D77: `a.swap( i, j )` and `a.replace( i, move v )`. The elements move through a `T[*]` of the
+// array, whose slots are written without a drop (D49), as `kl::list` does; every slot ends live.
+Operand Lowering::lower_array_rearrange( Node_id id, Node_id object, Type_id array )
+{
+    Type_table&    table   = types_.table();
+    const Span     span    = ast_.span( id );
+    const Type_id  u64     = table.integer( 64, false );
+    const Type_id  boolean = table.builtin( Type_kind::Bool );
+    const Type_id  element = table.get( array ).element;
+    const Type_id  data    = table.many_pointer_to( element );
+    const bool     swap    = interner_.text( ast_.name( ast_.callee( id ) ) ) == "swap";
+    const auto     args    = ast_.arguments( id );
+    const Place    held    = lower_place( object );
+    const Place    base    = table.is_pointer( type_of( object ) ) ? builder_.deref( held ) : held;
+    const Operand  count   = constant( literal_pool_.add_integer( table.get( array ).count ), u64 );
+    const Local_id first   = builder_.into_temp( use( converted( lower_expression( args[0] ), u64, span ) ), u64, span );
+    const Local_id second =
+        swap ? builder_.into_temp( use( converted( lower_expression( args[1] ), u64, span ) ), u64, span ) : Local_id {};
+    const Operand  value = swap ? Operand {} : converted( lower_expression( args[1] ), element, span );
+    const Block_id fail  = builder_.add_block();
+
+    for( const Local_id index : { first, second } )
+    {
+        if( index.is_valid() )
+        {
+            const Block_id pass = builder_.add_block();
+            builder_.terminate_branch(
+                temporary( binary( Token_kind::Less, copy( builder_.place( index ), u64 ), count, boolean ), boolean, span ),
+                pass,
+                fail,
+                span
+            );
+            builder_.switch_to( pass );
+        }
+    }
+
+    const Block_id checked = builder_.current();
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, Failure::Bounds );
+    builder_.switch_to( checked );
+
+    const Local_id zero  = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+    const Operand  start = temporary( address_of( builder_.index( base, zero ), data, Address_purpose::Borrow ), data, span );
+    const auto     slot  = [&]( Local_id index )
+    {
+        return builder_.deref(
+            temporary( binary( Token_kind::Plus, start, copy( builder_.place( index ), u64 ), data ), data, span ).place
+        );
+    };
+
+    if( swap )
+    {
+        const Block_id exchange = builder_.add_block();
+        const Block_id done     = builder_.add_block();
+        builder_.terminate_branch(
+            temporary(
+                binary(
+                    Token_kind::Equal_equal,
+                    copy( builder_.place( first ), u64 ),
+                    copy( builder_.place( second ), u64 ),
+                    boolean
+                ),
+                boolean,
+                span
+            ),
+            done,
+            exchange,
+            span
+        );
+        builder_.switch_to( exchange );
+
+        const Local_id held_first = builder_.add_local( element, span );
+        builder_.storage_live( held_first, span );
+        builder_.assign( builder_.place( held_first ), use( move( slot( first ), element ) ), span );
+        builder_.assign( slot( first ), use( move( slot( second ), element ) ), span );
+        builder_.assign( slot( second ), use( move( builder_.place( held_first ), element ) ), span );
+        builder_.storage_dead( held_first, span );
+        builder_.terminate_goto( done, span );
+        builder_.switch_to( done );
+
+        return constant( literal_pool_.add_integer( 0 ), type_of( id ) );
+    }
+
+    const Local_id taken = builder_.add_local( element, span );
+    builder_.storage_live( taken, span );
+    builder_.assign( builder_.place( taken ), use( move( slot( first ), element ) ), span );
+    builder_.assign( slot( first ), use( moved_if_owning( value ) ), span );
+    drops_.own_temporary( taken );
+
+    return copy( builder_.place( taken ), element );
+}
+
 Operand Lowering::lower_call( Node_id id )
 {
+    if( ast_.kind( ast_.callee( id ) ) == Node_kind::Name_expr &&
+        ast_.kind( resolution_.declaration_of( ast_.callee( id ) ) ) == Node_kind::Type_param_decl )
+    {
+        return lower_default( type_of( id ), ast_.span( id ) );
+    }
+
     // D7: a call whose callee is a path may construct a variant. Checked first: the checker recorded
     // an ordinal for a variant and a callable for `P::make( 7 )`.
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Path_expr && !types_.callee_of( id ).is_valid() )
@@ -2575,6 +2799,11 @@ Operand Lowering::lower_call( Node_id id )
         const Node_id object = ast_.object( ast_.callee( id ) );
         const Type_id held   = types_.table().is_pointer( type_of( object ) ) ? types_.table().get( type_of( object ) ).element
                                                                               : type_of( object );
+
+        if( types_.table().is_array( held ) && interner_.text( ast_.name( ast_.callee( id ) ) ) != "size" )
+        {
+            return lower_array_rearrange( id, object, held );
+        }
 
         if( types_.table().is_array( held ) )
         {
@@ -4794,6 +5023,95 @@ bool provided( std::span<const Function> functions, Node_id declaration, std::sp
     );
 }
 
+// D77: the defaulted fields a constructor's body leaves unassigned at a read or a way out, which D9
+// would report: those are given their default at entry, and every other default never runs.
+std::vector<Node_id> fields_wanting_defaults( const Ast& ast, const Function& function )
+{
+    std::vector<Node_id> wanted;
+
+    const auto want = [&]( u32 slot )
+    {
+        if( slot == k_no_field )
+        {
+            return;
+        }
+
+        while( function.fields[slot].parent != k_no_field )
+        {
+            slot = function.fields[slot].parent;
+        }
+
+        const Node_id field = function.fields[slot].field;
+
+        if( ast.default_value( field ).is_valid() && std::ranges::find( wanted, field ) == wanted.end() )
+        {
+            wanted.push_back( field );
+        }
+    };
+
+    const Assignment_report report = check_assignment( function );
+
+    for( const Unassigned_error& error : report.unassigned )
+    {
+        if( error.local == function.constructed )
+        {
+            want( error.field );
+        }
+    }
+
+    for( const Uninitialised_read& read : report.reads )
+    {
+        if( read.local == function.constructed )
+        {
+            want( read.field );
+        }
+    }
+
+    // In declaration order, as a literal runs them.
+    std::ranges::sort( wanted, {}, []( Node_id n ) { return n.v; } );
+    return wanted;
+}
+
+Function lower_function(
+    Node_id               declaration,
+    const Ast&            ast,
+    const Resolution&     resolution,
+    Types&                types,
+    Literal_pool&         literals,
+    const Source_manager& sm,
+    const Interner&       interner,
+    bool                  overflow_checks,
+    const Bindings&       bindings
+)
+{
+    Lowering lowering( declaration, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
+    Function function = lowering.run();
+
+    const bool has_defaults =
+        ast.kind( declaration ) == Node_kind::Constructor_decl &&
+        std::ranges::any_of(
+            ast.members( ast.enclosing_aggregate( declaration ) ),
+            [&]( Node_id member )
+            { return ast.kind( member ) == Node_kind::Field_decl && ast.default_value( member ).is_valid(); }
+        );
+
+    if( !has_defaults )
+    {
+        return function;
+    }
+
+    std::vector<Node_id> wanted = fields_wanting_defaults( ast, function );
+
+    if( wanted.empty() )
+    {
+        return function;
+    }
+
+    Lowering again( declaration, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
+    again.default_at_entry( std::move( wanted ) );
+    return again.run();
+}
+
 std::vector<Function> lower(
     const Ast&            ast,
     const Resolution&     resolution,
@@ -4816,8 +5134,7 @@ std::vector<Function> lower(
         if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) && !ast.is_walk( id ) &&
             !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
-            Lowering lowering( id, ast, resolution, types, literals, sm, interner, overflow_checks );
-            functions.push_back( lowering.run() );
+            functions.push_back( lower_function( id, ast, resolution, types, literals, sm, interner, overflow_checks, {} ) );
         }
     }
 
@@ -4837,7 +5154,7 @@ std::vector<Function> lower(
             continue;
         }
 
-        Lowering lowering(
+        Function emitted = lower_function(
             instance->declaration,
             ast,
             resolution,
@@ -4848,8 +5165,6 @@ std::vector<Function> lower(
             overflow_checks,
             bindings_for( ast, types, *instance )
         );
-
-        Function emitted = lowering.run();
 
         emitted.type_arguments = instance->arguments;
 

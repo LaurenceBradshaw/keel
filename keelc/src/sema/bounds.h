@@ -22,13 +22,23 @@ namespace keel::sema
 // ordinal here would make `copyable` the empty set.
 enum class Bound : u8
 {
-    Copyable = 1u << 0, // trivially copyable - D29's `struct`, and what D31 needs to permit a copy
-    Numeric  = 1u << 1,
-    Integral = 1u << 2,
-    Floating = 1u << 3,
+    Copyable    = 1u << 0, // trivially copyable - D29's `struct`, and what D31 needs to permit a copy
+    Numeric     = 1u << 1,
+    Integral    = 1u << 2,
+    Floating    = 1u << 3,
+    Defaultable = 1u << 4, // D77: `T()` is a value
 };
 
 using Bound_set = u8;
+
+// D77: what `T()` lowers to at a concrete type.
+enum class Default_kind : u8
+{
+    None,
+    Zero,        // a number, `bool` or pointer
+    Literal,     // a struct whose every field has a default
+    Constructor, // a class's public constructor taking nothing
+};
 
 // Setting a bit is the only mutation a set has.
 constexpr Bound_set operator|=( Bound_set& bits, Bound bound )
@@ -50,6 +60,7 @@ std::string_view name_of_bound( Bound bound );
 std::string_view bound_requirement( Bound bound );
 
 std::optional<Bound> bound_for_name( std::string_view spelling );
+Default_kind         default_of( const Ast& ast, const Type_table& table, Type_id type );
 std::optional<Bound> operator_to_bound( Token_kind kind );
 
 // `cast` preserves the value and `wrap` keeps the low bits, so a pair of type kinds may permit one,
@@ -88,8 +99,9 @@ public:
     {
     }
 
-    bool has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
-    bool satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
+    bool         has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
+    bool         satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
+    Default_kind default_of( Type_id type ) const;             // D77: how a concrete type's `T()` is made
     void check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
     // The `copyable` checks that came before the struct order, which is what answers them.
     void check_deferred();
@@ -143,6 +155,7 @@ public:
     Node_id owner_of( Type_id parameter ) const; // the declaration that introduced it, or invalid
     // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
     std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
+    std::string defaultable_help( Type_id argument, std::string general ) const;
     // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.
     std::string conforming_help( Type_id type, Type_id interface, Span at ) const;
 

@@ -1,0 +1,53 @@
+// D77: a constructor gives a field its default only where the body could leave it unassigned.
+import kl::console;
+import kl::string;
+
+i32 tick( i32 n )
+{
+    kl::println( n );
+    return n;
+}
+
+class Settings
+{
+    i32        unset  = 3;              // never assigned: the default runs
+    i32        always = tick( 99 );     // assigned on every path first: never runs
+    kl::string label  = kl::string( "default" ); // assigned on one path: replaced there
+    const i32  fixed  = 9;              // a `const` field left to its default
+    i32        early  = 4;              // read before the body assigns it
+    i32        sum;
+
+    Settings( bool named )
+    {
+        always = 1;
+        sum    = early + 1;
+
+        if( named )
+        {
+            label = kl::string( "named" );
+        }
+
+        early = 6;
+    }
+
+    public i32 total() const
+    {
+        return unset + always + fixed + early + sum;
+    }
+
+    public void show() const
+    {
+        kl::println( label );
+    }
+};
+
+i32 main()
+{
+    Settings a = Settings( true );
+    Settings b = Settings( false );
+
+    a.show();
+    b.show();
+
+    return a.total() == 24 && b.total() == 24 ? 0 : 1;
+}

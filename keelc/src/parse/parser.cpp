@@ -1385,6 +1385,24 @@ Node_id Parser::parse_aggregate_decl()
         );
     }
 
+    // D77: a class with no constructor whose every field has a default is built by `C()`.
+    const auto is_kind     = [&]( Node_kind kind ) { return [this, kind]( Node_id m ) { return ast_.kind( m ) == kind; }; };
+    const bool all_default = std::ranges::all_of(
+        members, [&]( Node_id m ) { return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid(); }
+    );
+
+    if( is_class && wrote_field && !dropped && all_default &&
+        std::ranges::none_of( members, is_kind( Node_kind::Constructor_decl ) ) )
+    {
+        const Node_id receiver = synthesise_receiver( name, type_params, name_span, false );
+        const Node_id params   = ast_.add( Node_kind::Param_list, name_span, 0, { receiver } );
+        const Node_id body     = ast_.add( Node_kind::Block, name_span, 0, {} );
+        const Node_id made =
+            ast_.add( Node_kind::Constructor_decl, name_span, name.v, { Node_id {}, params, body, type_params } );
+        ast_.set_name_span( made, name_span );
+        members.push_back( made );
+    }
+
     // insert type_params as child 0, and implements as child 1
     members.insert( members.begin(), { type_params, implements } );
 
@@ -1993,6 +2011,19 @@ Node_id Parser::parse_variant_decl()
             const Symbol_id field_name      = unnamed ? Symbol_id {} : expect_name();
             const Span      field_name_span = cursor_.previous().span;
 
+            // Parsed so the field is still declared, then dropped: a payload takes no default (D77).
+            if( cursor_.check( Token_kind::Equal ) )
+            {
+                const Span equal = cursor_.peek().span;
+                cursor_.advance();
+                parse_expression( 0 );
+                recovery_.error_at(
+                    equal,
+                    "a variant's field takes no default",
+                    fmt::format( "give its value where the variant is built, as in `{}( ... )`", sm_.text( name_span ) )
+                );
+            }
+
             payload.push_back(
                 ast_.add( Node_kind::Field_decl, Span::merge( field_start, cursor_.previous().span ), field_name.v, { type } )
             );
@@ -2046,6 +2077,14 @@ Node_id Parser::parse_field_decl( u32 commit )
 
     // Missing when the head scan kept the field because a member starts where its `;` should be.
     reach_commit( commit );
+
+    // D77: the field's default.
+    Node_id value;
+    if( cursor_.match( Token_kind::Equal ) )
+    {
+        value = parse_expression( 0 );
+    }
+
     recovery_.expect( Token_kind::Semicolon );
 
     // A nameless declaration is not one: sema reads every declaration's name.
@@ -2054,7 +2093,9 @@ Node_id Parser::parse_field_decl( u32 commit )
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    const Node_id node = ast_.add( Node_kind::Field_decl, Span::merge( start, cursor_.previous().span ), name.v, { type } );
+    const Span    span = Span::merge( start, cursor_.previous().span );
+    const Node_id node = value.is_valid() ? ast_.add( Node_kind::Field_decl, span, name.v, { type, value } )
+                                          : ast_.add( Node_kind::Field_decl, span, name.v, { type } );
     ast_.set_name_span( node, name_span );
     return node;
 }
@@ -12072,15 +12113,15 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
     SECTION( "a member stopped short says what stopped it" )
     {
         const Parsed p( "class C {\n"
-                        "    i32 a = 5;\n"
+                        "    i32 a, c;\n"
                         "    i32 b;\n"
                         "};" );
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
-        REQUIRE( has( p, "expected `;`, found `=`" ) );
-        REQUIRE( has( p, "t.kl:2:11" ) );
-        REQUIRE( has( p, "set it in the constructor" ) );
+        REQUIRE( has( p, "expected `;`, found `,`" ) );
+        REQUIRE( has( p, "t.kl:2:10" ) );
+        REQUIRE( has( p, "each field with its own type" ) );
         REQUIRE( member_names( p ) == "b" );
     }
 
@@ -12259,11 +12300,11 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
     // Whatever was dropped may have been the field, so "no fields" would be a guess.
     SECTION( "an aggregate whose only field was dropped is not also fieldless" )
     {
-        const Parsed p( "struct S {\n    i32 a = 5;\n};" );
+        const Parsed p( "struct S {\n    i32 a, c;\n};" );
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
-        REQUIRE( has( p, "expected `;`, found `=`" ) );
+        REQUIRE( has( p, "expected `;`, found `,`" ) );
     }
 
     // The member said what went wrong; the rest of its line is its own leftovers.

@@ -215,7 +215,11 @@ void Statements::visit( Node_id id )
     {
         for( const Node_id member : ast_.members( id ) )
         {
-            if( ast_.kind( member ) != Node_kind::Var_decl )
+            if( ast_.kind( member ) == Node_kind::Field_decl )
+            {
+                visit_default( member );
+            }
+            else if( ast_.kind( member ) != Node_kind::Var_decl )
             {
                 visit( member );
             }
@@ -1168,6 +1172,22 @@ void Statements::visit_increment( Node_id id )
                  : std::string {}
         );
     }
+}
+
+// D77: checked once, as a generic body is, with the field standing in for the function it runs in.
+void Statements::visit_default( Node_id field )
+{
+    const Node_id value = ast_.default_value( field );
+    const Type_id type  = types_.type_of( field );
+
+    if( !value.is_valid() || table_.is_error( type ) )
+    {
+        return;
+    }
+
+    const Node_id enclosing = expressions_.enter_function( field );
+    expressions_.check( value, type );
+    expressions_.leave_function( enclosing );
 }
 
 void Statements::visit_global( Node_id id )

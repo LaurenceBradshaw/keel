@@ -1,0 +1,12 @@
+// An index past the array's size panics before any element moves.
+import t::console;
+
+i32 main()
+{
+    i32[2] numbers = [ 1, 2 ];
+    u64    far     = 5;
+
+    t::println( "before" );
+    numbers.swap( 0, far );
+    return 0;
+}

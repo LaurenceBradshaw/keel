@@ -20,7 +20,7 @@ error: unknown bound `Equatable`
   --> sema/errors_bounds.kl:61:49
    |
 61 | bool old_spelling<T>( const ref T a ) where T : Equatable
-   |                                                 ^^^^^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+   |                                                 ^^^^^^^^^ a bound is an interface, or one of copyable, numeric, integral, floating and defaultable
 
 error: `hashable` can only bound a type parameter, because it requires `equatable`, whose `operator==` mentions `self`
   --> sema/errors_bounds.kl:66:22

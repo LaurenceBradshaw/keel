@@ -32,7 +32,7 @@ error: `i32[4]` has no method `length`
   --> sema/errors_fixed_arrays.kl:46:12
    |
 46 |     return a.length();
-   |            ^^^^^^^^ an array has only `size()`
+   |            ^^^^^^^^ an array has `size()`, `swap( i, j )` and `replace( i, move v )`
 
 error: an element of an array cannot be moved out
   --> sema/errors_fixed_arrays.kl:52:18

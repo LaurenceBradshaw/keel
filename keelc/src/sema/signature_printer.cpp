@@ -365,6 +365,16 @@ std::string print_signature(
     return Signature_printer( ast, resolution, types, interner, bindings ).declaration( decl );
 }
 
+std::string with_default( const Ast& ast, const Source_manager& sm, Node_id decl, std::string signature )
+{
+    if( ast.kind( decl ) == Node_kind::Field_decl && ast.default_value( decl ).is_valid() )
+    {
+        signature += fmt::format( " = {}", sm.text( ast.span( ast.default_value( decl ) ) ) );
+    }
+
+    return signature;
+}
+
 std::string documentation( const Ast& ast, const Source_manager& sm, Node_id decl )
 {
     const Span doc = ast.doc_span( decl );

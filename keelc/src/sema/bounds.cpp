@@ -27,6 +27,7 @@ constexpr Named_bound k_bounds[] = {
     { "numeric", sema::Bound::Numeric },
     { "integral", sema::Bound::Integral },
     { "floating", sema::Bound::Floating },
+    { "defaultable", sema::Bound::Defaultable },
 };
 
 // Absent pairs are refused, and the omissions are the point: float to int has no one obvious
@@ -109,6 +110,9 @@ std::string_view bound_requirement( Bound bound )
         return "it has to be an integer";
     case Bound::Floating:
         return "it has to be a float";
+    case Bound::Defaultable:
+        return "it needs a default: a number, `bool` or pointer, a struct whose every field has one, or a class with a "
+               "public constructor taking nothing";
     }
 
     return {};
@@ -197,9 +201,46 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
         return table_.is_integer( type );
     case Bound::Floating:
         return table_.is_float( type );
+    case Bound::Defaultable:
+        return default_of( type ) != Default_kind::None;
     }
 
     return false;
+}
+
+// D77: how a concrete type's `T()` is made. Lowering asks too, at each instance.
+Default_kind default_of( const Ast& ast_, const Type_table& table_, Type_id type )
+{
+    if( table_.is_builtin( type ) || table_.is_pointer( type ) || table_.is_many_pointer( type ) )
+    {
+        return Default_kind::Zero;
+    }
+
+    if( !table_.is_struct( type ) )
+    {
+        return Default_kind::None;
+    }
+
+    const Node_id declaration = table_.get( type ).declaration;
+
+    if( ast_.kind( declaration ) == Node_kind::Class_decl )
+    {
+        return ast_.default_constructor( declaration ).is_valid() ? Default_kind::Constructor : Default_kind::None;
+    }
+
+    const bool every =
+        ast_.kind( declaration ) == Node_kind::Struct_decl &&
+        std::ranges::all_of(
+            ast_.members( declaration ),
+            [&]( Node_id m ) { return ast_.kind( m ) != Node_kind::Field_decl || ast_.default_value( m ).is_valid(); }
+        );
+
+    return every ? Default_kind::Literal : Default_kind::None;
+}
+
+Default_kind Bounds::default_of( Type_id type ) const
+{
+    return sema::default_of( ast_, table_, type );
 }
 
 std::span<const Type_id> Bounds::interfaces_of( Type_id parameter ) const
@@ -457,6 +498,11 @@ void Bounds::report_unmet(
 
     std::string help = forwarded ? forwarded_help( argument, name ) : std::string( bound_requirement( bound ) );
 
+    if( !forwarded && bound == Bound::Defaultable )
+    {
+        help = defaultable_help( argument, std::move( help ) );
+    }
+
     reporter_.error_at(
         at,
         fmt::format(
@@ -475,6 +521,37 @@ Node_id Bounds::owner_of( Type_id parameter ) const
 {
     const auto it = owner_of_.find( table_.get( parameter ).declaration.v );
     return it == owner_of_.end() ? Node_id {} : it->second;
+}
+
+// D77: what keeps an aggregate from a default, which the general requirement can only list.
+std::string Bounds::defaultable_help( Type_id argument, std::string general ) const
+{
+    if( table_.is_enum( argument ) )
+    {
+        return "an enum has no default: which variant is the program's to say";
+    }
+
+    if( !table_.is_struct( argument ) )
+    {
+        return general;
+    }
+
+    const Node_id declaration = table_.get( argument ).declaration;
+
+    if( ast_.kind( declaration ) == Node_kind::Class_decl )
+    {
+        return fmt::format( "`{}` has no public constructor taking nothing", table_.name( argument ) );
+    }
+
+    for( const Node_id field : ast_.members( declaration ) )
+    {
+        if( ast_.kind( field ) == Node_kind::Field_decl && !ast_.default_value( field ).is_valid() )
+        {
+            return fmt::format( "its field `{}` has no default", interner_.text( ast_.name( field ) ) );
+        }
+    }
+
+    return general;
 }
 
 std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise ) const
@@ -1353,6 +1430,7 @@ Bound_set Bounds::closure( Bound_set direct )
         // builtin copies. An arithmetic class that owns a resource would make it false, and the
         // failure is safe - `copyable` is in the promised set, so the call site refuses it.
         direct |= Bound::Copyable;
+        direct |= Bound::Defaultable; // every number is zero
     }
 
     return direct;
