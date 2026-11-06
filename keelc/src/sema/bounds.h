@@ -192,7 +192,7 @@ private:
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
     std::vector<std::pair<Node_id, Span>>         where_sets_; // each clause naming an interface, as written
     std::unordered_set<u64>                       conflicted_; // Interface_decl node << 32 | name, per reported conflict
-    std::unordered_set<u64>                       unmet_;      // Type_param_decl << 32 | argument, per refused type instance
+    std::unordered_set<u64> unmet_; // Type_param_decl or its type << 32 | argument, per refused type instance
 
     struct Deferred
     {

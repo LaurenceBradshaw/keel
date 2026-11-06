@@ -923,11 +923,16 @@ Span Annotations::const_keyword( Node_id const_type ) const
 // so the help can name it.
 Type_id Annotations::refuse_self( Node_id annotation, Node_id decl )
 {
+    // A refused block's type is an error, but its written type still names it.
+    const Type_id type = !decl.is_valid()                                  ? Type_id {}
+                         : ast_.kind( decl ) == Node_kind::Implements_decl ? types_.type_of( ast_.implementer( decl ) )
+                                                                           : types_.type_of( decl );
+
     reporter_.error_at(
         ast_.span( annotation ),
         "`self` is written only inside an `interface`",
-        decl.is_valid() ? fmt::format( "write `{}`, the type's own name", table_.name( types_.type_of( decl ) ) )
-                        : std::string( "it names the type that implements the interface" )
+        type.is_valid() && !table_.is_error( type ) ? fmt::format( "write `{}`, the type's own name", table_.name( type ) )
+                                                    : std::string( "it names the type that implements the interface" )
     );
 
     return table_.builtin( Type_kind::Error );

@@ -390,6 +390,7 @@ void Signatures::declare_block( Node_id block )
     types_.record( written, interface );
 
     const Type_id type = annotations_.resolve_implementer( ast_.implementer( block ) );
+    types_.record( ast_.implementer( block ), type ); // what a refused block's help names
     if( table_.is_error( type ) )
     {
         types_.record( block, type );
@@ -460,25 +461,37 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
     Bindings named;
     table_.deduce( type, type, named );
 
-    for( const Node_id parameter : ast_.type_parameters( list ) )
+    const std::vector<Node_id> parameters = ast_.type_parameters( list );
+
+    for( auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter )
     {
-        if( !named.contains( types_.type_of( parameter ).v ) )
+        if( std::any_of(
+                parameters.begin(), parameter, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( *parameter ); }
+            ) )
+        {
+            return true; // the resolver reports the second `T`
+        }
+
+        if( !named.contains( types_.type_of( *parameter ).v ) )
         {
             reporter_.error_at(
-                ast_.span( parameter ),
-                fmt::format( "`{}` is not named in `{}`", interner_.text( ast_.name( parameter ) ), table_.name( type ) ),
+                ast_.span( *parameter ),
+                fmt::format( "`{}` is not named in `{}`", interner_.text( ast_.name( *parameter ) ), table_.name( type ) ),
                 "a block's parameters are bound by matching its type, so each must appear there"
             );
             return true;
         }
     }
 
-    const std::vector<Node_id> parameters = ast_.type_parameters( list );
-
     for( const Node_id clause : ast_.where_clauses( list ) )
     {
         const auto subject =
             std::ranges::find_if( parameters, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); } );
+
+        if( subject == parameters.end() )
+        {
+            return true; // bounds reports the unknown subject
+        }
 
         for( const Node_id bound :
              ast_.kind( clause ) == Node_kind::Where_clause ? ast_.bounds( clause ) : std::span<const Node_id> {} )
@@ -492,8 +505,7 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
 
             // Every instance is `copyable` there already, so matching need not ask.
             const std::optional<Bound> builtin = bound_for_name( interner_.text( ast_.name( bound ) ) );
-            if( builtin == Bound::Copyable && subject != parameters.end() &&
-                requires_copyable( type, types_.type_of( *subject ) ) )
+            if( builtin == Bound::Copyable && requires_copyable( type, types_.type_of( *subject ) ) )
             {
                 continue;
             }

@@ -115,8 +115,9 @@ private:
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_; // see Resolution::fallback_of and hidden_function
     std::vector<Scope>   scopes_;
-    std::vector<bool>    reported_;     // a declaration refused already: a method shares its aggregate's parameters
-    std::vector<bool>    value_params_; // `<i32 N>`'s `N`, whose uses as a value stay quiet
+    std::vector<bool>    reported_;       // a declaration refused already: a method shares its aggregate's parameters
+    std::vector<bool>    value_params_;   // `<i32 N>`'s `N`, whose uses as a value stay quiet
+    std::vector<bool>    checked_params_; // a type parameter checked once, before its methods share it
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
@@ -143,6 +144,7 @@ Resolution Resolver::run()
     fallbacks_.assign( ast_.node_count(), Node_id {} );
     reported_.assign( ast_.node_count(), false );
     value_params_.assign( ast_.node_count(), false );
+    checked_params_.assign( ast_.node_count(), false );
 
     // Two passes at file scope: every top-level declaration is collected before any body is
     // resolved, which is what makes recursion and mutual recursion work with no forward
@@ -303,6 +305,16 @@ void Resolver::visit( Node_id id )
         }
         return;
     case Node_kind::Type_param_decl:
+        // A method's list repeats its aggregate's or block's parameters, already checked there.
+        if( checked_params_[id.v] )
+        {
+            if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
+            {
+                scopes_.back().names.try_emplace( ast_.name( id ), id );
+            }
+            return;
+        }
+        checked_params_[id.v] = true;
         refuse_leading_name( id );
         refuse_hiding_name( id );
         declare( scopes_.back(), ast_.name( id ), id );

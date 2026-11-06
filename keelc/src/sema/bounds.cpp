@@ -293,8 +293,10 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
     const bool of_type = owner != owner_of_.end() &&
                          ( is_aggregate( ast_.kind( owner->second ) ) || ast_.kind( owner->second ) == Node_kind::Enum_decl );
     const u64 instance = static_cast<u64>( parameter.v ) << 32 | argument.v;
+    // And `Pair<A, A>` is one mistake in `A`, not one per parameter it fills.
+    const u64 filled = of_type ? static_cast<u64>( owner->second.v ) << 32 | argument.v : 0;
 
-    if( of_type && unmet_.contains( instance ) )
+    if( of_type && ( unmet_.contains( instance ) || unmet_.contains( filled ) ) )
     {
         return;
     }
@@ -305,6 +307,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
     if( of_type && reporter_.error_count() != before )
     {
         unmet_.insert( instance );
+        unmet_.insert( filled );
     }
 }
 
