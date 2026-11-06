@@ -35,7 +35,20 @@ public:
     std::size_t record_instantiation( Node_id declaration, std::vector<Type_id> arguments );
     void        mark_reported( Node_id declaration );
 
-    void check();
+    bool check(); // whether every generic's instances are finite
+
+    std::span<const Generic_call> calls() const
+    {
+        return generic_calls_;
+    }
+    std::span<const Generic_call> implied() const
+    {
+        return implied_;
+    }
+    std::span<const Generic_call> size_roots() const
+    {
+        return size_roots_;
+    }
 
     std::vector<Instantiation> take_instantiations();
     std::vector<Generic_call>  take_generic_calls();
@@ -50,6 +63,7 @@ private:
     };
 
     void record_uses( Node_id from, Type_id type, Span at, std::vector<Generic_call>& into );
+    void record_size_roots( Node_id to, std::span<const Type_id> arguments, Span at );
     bool expands_forever( Node_id generic, std::vector<Step>& path );
     bool wraps_a_parameter( Type_id argument ) const;
 
@@ -72,6 +86,9 @@ private:
 
     // The generic call graph, in declaration order. See Generic_call.
     std::vector<Generic_call> generic_calls_;
+
+    // Edges out of non-generic code that write a size, `Ring<1>` in `main`: where Size_suffixes starts.
+    std::vector<Generic_call> size_roots_;
 };
 
 } // namespace keel::sema

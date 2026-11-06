@@ -1,0 +1,37 @@
+// A suffix over a size parameter that is 0, or has no value, at one instance: reported at the size
+// the caller wrote, however many generics carried it, with the suffix named in the help.
+const u64 One = 1;
+
+struct Ring<u64 N>
+{
+    u64[N - 1] slots;
+};
+
+struct Slab<u64 N>
+{
+    u8[N - 1] bytes;
+};
+
+struct Holder
+{
+    Ring<One> ring;
+};
+
+u64 inner<u64 N>() { Slab<N> s = Slab<N> { [ 0, .. ] }; return N; }
+u64 outer<u64 N>() { return inner<N>(); }
+
+u64 huge<u64 N>() { u8[N * 1000000000000] a = [ 0, .. ]; return N; }
+u64 below<u64 N>() { u8[N - 3] a = [ 0, .. ]; return N; }
+u64 split<u64 W, u64 H>() { u8[W / ( H - 2 )] a = [ 0, .. ]; return W; }
+u64 shorter<u64 N>( const ref u64[N] a ) { u8[N - 1] b = [ 0, .. ]; return N; }
+
+i32 main()
+{
+    outer<1>();
+    huge<100000000>();
+    below<2>();
+    split<4, 2>();
+    u64[1] one = [ 5 ];
+    shorter( one );
+    return 0;
+}

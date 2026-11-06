@@ -28,6 +28,10 @@ void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_
 
         generic_calls_.push_back( Generic_call { .from = from, .to = to, .arguments = std::move( arguments ), .at = at } );
     }
+    else
+    {
+        record_size_roots( to, arguments, at );
+    }
 }
 
 // A type a generic body names is an instance it makes, as a call is: `Grow<Grow<T>>* p;` in
@@ -50,9 +54,16 @@ void Generic_recursion::record_bodies( Node_id id, Node_id from, std::span<const
         }
     }
 
-    if( from.is_valid() && id.v < types.size() && types[id.v].is_valid() && seen_.insert( types[id.v].v ).second )
+    if( id.v < types.size() && types[id.v].is_valid() && seen_.insert( types[id.v].v ).second )
     {
-        record_uses( from, types[id.v], ast_.span( id ), implied_ );
+        if( from.is_valid() )
+        {
+            record_uses( from, types[id.v], ast_.span( id ), implied_ );
+        }
+        else
+        {
+            record_size_roots( Node_id {}, std::span( &types[id.v], 1 ), ast_.span( id ) );
+        }
     }
 
     for( const Node_id child : ast_.children( id ) )
@@ -132,6 +143,33 @@ void Generic_recursion::record_uses( Node_id from, Type_id type, Span at, std::v
     }
 }
 
+// The call itself and every generic type its arguments name, kept only where an argument is a
+// written size, so a program without sizes keeps nothing.
+void Generic_recursion::record_size_roots( Node_id to, std::span<const Type_id> arguments, Span at )
+{
+    std::vector<Generic_call> found;
+
+    if( to.is_valid() )
+    {
+        found.push_back( Generic_call { .from = {}, .to = to, .arguments = { arguments.begin(), arguments.end() }, .at = at } );
+    }
+
+    for( const Type_id argument : arguments )
+    {
+        record_uses( Node_id {}, argument, at, found );
+    }
+
+    const auto written = [&]( Type_id argument ) { return table_.is_size( argument ) && table_.get( argument ).width == 0; };
+
+    for( Generic_call& call : found )
+    {
+        if( std::ranges::any_of( call.arguments, written ) )
+        {
+            size_roots_.push_back( std::move( call ) );
+        }
+    }
+}
+
 // Deduplicated on insert: `id<i32>( 1 )` written twice is one instantiation, because one is all
 // that will be emitted. A linear scan rather than a set - the list is short, and hashing a vector
 // of Type_ids to avoid a handful of comparisons is not a trade worth making yet.
@@ -159,7 +197,7 @@ void Generic_recursion::mark_reported( Node_id declaration )
 // `f<T>` calling `g<T>` is fine however deep the cycle runs; `f<T>` calling `f<T*>` is not, because
 // each step builds a type a level deeper than the last. The shape is decidable rather than capped
 // at a depth nobody can justify: a cycle carrying at least one edge that builds a type.
-void Generic_recursion::check()
+bool Generic_recursion::check()
 {
     // The implied edges join the walk only: the instance queue follows calls, not these.
     const std::size_t exported = generic_calls_.size();
@@ -181,6 +219,7 @@ void Generic_recursion::check()
     }
 
     generic_calls_.resize( exported );
+    return expanding_.empty();
 }
 
 // Depth-first from one generic, each step carrying the growing edge that entered it. Only growth

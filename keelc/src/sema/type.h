@@ -273,13 +273,13 @@ public:
     bool                 is_prelude_interface( Type_id interface ) const; // equatable, comparable or hashable
     // A non-generic declaration's one type, or invalid when it has none yet.
     Type_id declared( Node_id declaration ) const;
+    // A size's value once `bindings` are read through, or none while it is open or fails.
+    std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
 
 private:
     Type_id     add( const Type& type, std::string_view name );
     std::string const_spelling( Type_id element, bool const_element ) const;
     static u8   width_index( u8 width );
-    // A size's value once `bindings` are read through, or none while it is open or fails.
-    std::optional<u64> evaluate( Type_id size, const Bindings& bindings ) const;
 
     Type_id composite(
         Type_kind kind, Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id element

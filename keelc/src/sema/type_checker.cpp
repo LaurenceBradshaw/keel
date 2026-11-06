@@ -22,6 +22,7 @@
 #include "sema/places.h"
 #include "sema/reporter.h"
 #include "sema/signatures.h"
+#include "sema/size_suffixes.h"
 #include "sema/statements.h"
 #include "sema/types_builder.h"
 
@@ -185,7 +186,11 @@ Types Checker::run()
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
     // complete until every body has been.
     generic_recursion_.record_bodies( ast_.root(), Node_id {}, types_.recorded() );
-    generic_recursion_.check();
+    if( generic_recursion_.check() )
+    {
+        Size_suffixes( ast_, interner_, table_, types_.recorded(), reporter_ )
+            .check( generic_recursion_.size_roots(), generic_recursion_.calls(), generic_recursion_.implied() );
+    }
 
     // Asked here, while the bounds are known: a `T` that is `copyable` cannot own.
     for( const Node_id unused : resolution_.unused().names )
