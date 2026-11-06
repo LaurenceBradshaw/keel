@@ -932,7 +932,7 @@ requires nothing. A block's `where` bounds only its own parameters, names interf
 mention them, and names `copyable` only where the type after `for` already requires it; deciding
 whether an instance conforms then terminates, since each binding is smaller than the instance. One
 that misses a bound does not conform, and a bound that asks for it is refused naming the block's
-unmet bound. A block for `equatable`, `comparable` or `hashable` on `T*` is refused, since the
+unmet bound. A block for `equatable`, `comparable` or `hashable` on any pointer is refused, since the
 compiler compares and hashes every pointer by address. A generic block's methods are instantiated
 per instance a call or a vtable reaches, as a generic aggregate's are. **Rust's orphan rule**: a
 block is written in the package that declares the interface, the type (a pointer's being its

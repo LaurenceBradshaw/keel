@@ -531,12 +531,14 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
     }
 
     // The compiler compares and hashes every pointer by its address.
-    if( ( table_.is_pointer( type ) || table_.is_many_pointer( type ) ) && table_.is_parameter( table_.get( type ).element ) &&
-        table_.is_interface( interface ) && table_.is_prelude_interface( interface ) )
+    if( ( table_.is_pointer( type ) || table_.is_many_pointer( type ) ) && table_.is_prelude_interface( interface ) )
     {
+        const std::string pointer = table_.is_parameter( table_.get( type ).element )
+                                        ? std::string( "every pointer" )
+                                        : fmt::format( "`{}`", table_.name( type ) );
         reporter_.error_at(
             ast_.name_span( block ),
-            fmt::format( "a block cannot make every pointer `{}`", table_.name( interface ) ),
+            fmt::format( "a block cannot make {} `{}`", pointer, table_.name( interface ) ),
             "the compiler compares and hashes a pointer by its address"
         );
         return true;
@@ -3255,6 +3257,17 @@ TEST_CASE( "signatures_declare_a_generic_block", "[sema][interfaces][implements_
         refused(
             "implements<T> hashable for T* { void hash( ref hasher h ) const { } };",
             "a block cannot make every pointer `hashable`"
+        );
+        refused(
+            "struct Opaque { i32 v; };\n"
+            "implements equatable for Opaque* { bool operator==( const ref Opaque* other ) const { return true; } };",
+            "a block cannot make `Opaque*` `equatable`"
+        );
+        refused(
+            "struct Wrap<T> where T : copyable { T v; };\n"
+            "implements<T> comparable for Wrap<T>* where T : copyable & comparable { ordering operator<=>( const ref Wrap<T>* "
+            "other ) const { return ordering::equal; } };",
+            "a block cannot make `Wrap<T>*` `comparable`"
         );
     }
 
