@@ -1,0 +1,79 @@
+// An enum local is tracked through joins and loops; a payload enum, named through its tag, is not.
+
+enum Shade : u8 { light, dark };
+enum Shape { dot, circle( f64 r ) };
+
+// `const 0`: both arms hold `light`.
+i32 joined( bool c )
+{
+    Shade s = Shade::light;
+    if( c )
+    {
+        s = Shade::light;
+    }
+    return cast<i32>( s );
+}
+
+// The `switch` folds to `total`, since `s` is `dark` around the loop.
+i32 looped( i32 n )
+{
+    Shade s     = Shade::dark;
+    i32   total = 0;
+    for( i32 i = 0; i < n; i += 1 )
+    {
+        s = Shade::dark;
+        total += 1;
+    }
+    switch( s )
+    {
+    case Shade::light: return 0;
+    case Shade::dark: return total;
+    }
+}
+
+// `const 1` on the taken edge: the test narrows `s` to `dark`.
+i32 narrowed( Shade s )
+{
+    if( s == Shade::dark )
+    {
+        return cast<i32>( s );
+    }
+    return 0;
+}
+
+// Kept: `s` may hold either variant.
+i32 payload( bool c )
+{
+    Shape s = Shape::dot;
+    if( c )
+    {
+        s = Shape::circle( 1.0 );
+    }
+    switch( s )
+    {
+    case Shape::dot: return 1;
+    case Shape::circle( r ): return 2;
+    }
+}
+
+i32 main()
+{
+    if( joined( true ) != 0 || joined( false ) != 0 )
+    {
+        return 1;
+    }
+    if( looped( 3 ) != 3 || looped( 0 ) != 0 )
+    {
+        return 2;
+    }
+    if( narrowed( Shade::dark ) != 1 || narrowed( Shade::light ) != 0 )
+    {
+        return 4;
+    }
+    if( payload( false ) != 1 || payload( true ) != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

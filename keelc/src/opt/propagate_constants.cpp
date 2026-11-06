@@ -44,9 +44,16 @@ struct Value
 
 using Values = std::vector<Value>;
 
-std::optional<Bounds> limits( const Type_table& types, Type_id type )
+// An enum as its tag.
+const Type& scalar( const Type_table& types, Type_id type )
 {
     const Type& t = types.get( type );
+    return t.kind == Type_kind::Enum ? types.get( t.element ) : t;
+}
+
+std::optional<Bounds> limits( const Type_table& types, Type_id type )
+{
+    const Type& t = scalar( types, type );
 
     if( t.kind == Type_kind::Bool )
     {
@@ -85,7 +92,7 @@ std::optional<Bounds> bounds( const Value& v, Type_id type, const Type_table& ty
 
     if( v.state == Value::State::Constant )
     {
-        const Type& t = types.get( type );
+        const Type& t = scalar( types, type );
         Wide        n = v.bits;
         if( t.is_signed && t.width < 64 && ( v.bits >> ( t.width - 1 ) ) & 1 )
         {
@@ -118,7 +125,7 @@ Value of_bounds( Bounds b, Type_id type, const Type_table& types )
 
     if( b.lo == b.hi )
     {
-        const Type& t    = types.get( type );
+        const Type& t    = scalar( types, type );
         u64         bits = static_cast<u64>( b.lo );
         if( t.kind == Type_kind::Int && t.width < 64 )
         {
@@ -193,15 +200,30 @@ bool is_integer( const Type_table& types, Type_id type )
     return false;
 }
 
-// Integers and `bool` no pointer reaches; every other read is Varying.
+// Integers, `bool` and enums no pointer reaches; every other read is Varying. An enum is its tag
+// only when nothing projects from it: a payload enum is always named through `.tag`.
 Local_set tracked_locals( const Function& func, const Type_table& types )
 {
     const Local_set addressed = addressed_locals( func );
+    Local_set       projected( func.locals.size(), false );
     Local_set       tracked( func.locals.size(), false );
+
+    for_each_place(
+        func,
+        [&]( const Place& place, const Statement* )
+        {
+            if( !place.is_global() && place.local.is_valid() && place.num_projections > 0 )
+            {
+                projected[place.local.v] = true;
+            }
+        }
+    );
 
     for( const Local_id l : func.locals.ids() )
     {
-        if( !addressed[l.v] && is_integer( types, func.locals[l].type ) )
+        const Type_id type = func.locals[l].type;
+        if( !addressed[l.v] &&
+            ( is_integer( types, type ) || ( types.get( type ).kind == Type_kind::Enum && !projected[l.v] ) ) )
         {
             tracked[l.v] = true;
         }
@@ -225,7 +247,7 @@ bool whole_tracked( const Analysis& analysis, const Place& place )
 
 Value read( const Analysis& analysis, const Operand& operand, const Values& values )
 {
-    // An enum constant is its tag; an enum local is not tracked, since it may carry payloads.
+    // An enum constant is its tag.
     if( operand.kind == Operand_kind::Constant && operand.constant.is_valid() &&
         ( is_integer( analysis.types, operand.type ) || analysis.types.get( operand.type ).kind == Type_kind::Enum ) )
     {
