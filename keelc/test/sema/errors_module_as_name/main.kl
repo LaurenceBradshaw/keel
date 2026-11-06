@@ -1,0 +1,14 @@
+// A module or a package written where a declaration is wanted is named as one, and once.
+import helper;
+import pk::tools;
+
+i32 through_module() { return helper::read( 1 ); }
+i32 through_module_type() { helper::Holder h = helper::Holder { 2 }; return h.v; }
+i32 through_package_module() { return pk::tools::shown(); }
+i32 module_as_value() { i32 v = helper; return v; }
+i32 package_as_value() { i32 v = pk; return v; }
+
+i32 main()
+{
+    return 0;
+}

@@ -8,6 +8,7 @@
 #include <iterator>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include "object/state.h"
 #include "sema/bounds.h"
 #include "sema/reporter.h"
@@ -75,6 +76,8 @@ private:
     Prelude_items prelude_items() const;
     Node_id       lookup_qualified( Node_id package, Node_id use );
     Symbol_id     package_named( Node_id qualifier ) const;
+    bool          is_name_chain( Node_id qualifier ) const;
+    bool          refuse_module( Node_id named, Node_id use );
     Node_id       qualifier_type( Node_id qualifier, Node_id use );
     void          refuse_member_literal( Node_id literal, Node_id owner );
     Node_id       visible_from( Node_id use, Node_id head );
@@ -114,8 +117,9 @@ private:
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
-    bool refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
-    bool naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
+    bool    refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
+    bool    naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
+    Node_id path_;                  // the Path_expr whose children are being visited
 
     // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
@@ -357,7 +361,7 @@ void Resolver::visit( Node_id id )
         {
             unreported_[id.v] = true;
         }
-        else
+        else if( !refuse_module( id, path_.is_valid() && ast_.qualifier( path_ ) == id ? path_ : Node_id {} ) )
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
@@ -512,10 +516,14 @@ void Resolver::visit_path( Node_id id )
         return;
     }
 
+    const Node_id outer = std::exchange( path_, id );
+
     for( const Node_id child : ast_.children( id ) )
     {
         visit( child );
     }
+
+    path_ = outer;
 
     if( !bare )
     {
@@ -1019,6 +1027,12 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
     {
         unresolved_[use.v] = true;
 
+        if( refuse_module( package, use ) ||
+            refuse_module( use, path_.is_valid() && ast_.qualifier( path_ ) == use ? path_ : Node_id {} ) )
+        {
+            return bindings_[use.v];
+        }
+
         if( !modules_.is_missing( package_name ) )
         {
             reporter_.error_at(
@@ -1031,20 +1045,75 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
     return decl;
 }
 
-// The package `qualifier` spells, when it is a chain of names with no type arguments; invalid otherwise.
-Symbol_id Resolver::package_named( Node_id qualifier ) const
+// A chain of names with no type arguments, as `pk::tools`.
+bool Resolver::is_name_chain( Node_id qualifier ) const
 {
     for( Node_id link = qualifier;; link = ast_.qualifier( link ) )
     {
         const Node_kind kind = ast_.kind( link );
         if( ( kind != Node_kind::Name_expr && kind != Node_kind::Path_expr ) || ast_.type_arg_list( link ).is_valid() )
         {
-            return Symbol_id {};
+            return false;
         }
         if( kind == Node_kind::Name_expr )
         {
-            break;
+            return true;
         }
+    }
+}
+
+// `named` spells a package, or a module its file imports, where a declaration was wanted: reported.
+// `use` is the name it qualifies, if any, bound as if written without the module.
+bool Resolver::refuse_module( Node_id named, Node_id use )
+{
+    if( !named.is_valid() || !is_name_chain( named ) )
+    {
+        return false;
+    }
+
+    const std::string spelt = package_text( ast_, interner_, named );
+
+    if( !use.is_valid() && modules_.is_package( interner_.find( spelt ) ) )
+    {
+        reporter_.error_at( ast_.span( named ), fmt::format( "`{}` is a package, not a value", spelt ) );
+        return true;
+    }
+
+    const auto imports = modules_.imports( ast_.span( named ).file );
+    const auto module  = std::ranges::find_if( imports, [&]( File_id file ) { return module_name( file ) == spelt; } );
+
+    if( module == imports.end() )
+    {
+        return false;
+    }
+
+    if( !use.is_valid() )
+    {
+        reporter_.error_at( ast_.span( named ), fmt::format( "`{}` is a module, not a value", spelt ) );
+        return true;
+    }
+
+    const Symbol_id package = modules_.package_of( *module );
+    const Symbol_id name    = ast_.name( use );
+
+    reporter_.error_at(
+        ast_.span( named ),
+        fmt::format( "`{}` is a module; its names are written without it", spelt ),
+        fmt::format( "write `{}`", qualified( interner_, package, interner_.text( name ) ) )
+    );
+
+    bindings_[use.v]   = lookup_in( package, name, use );
+    unresolved_[use.v] = !bindings_[use.v].is_valid();
+
+    return true;
+}
+
+// The package `qualifier` spells, when it is a chain of names with no type arguments; invalid otherwise.
+Symbol_id Resolver::package_named( Node_id qualifier ) const
+{
+    if( !is_name_chain( qualifier ) )
+    {
+        return Symbol_id {};
     }
 
     const Symbol_id package = interner_.find( package_text( ast_, interner_, qualifier ) );

@@ -1,0 +1,2 @@
+// Read as `pk::shown`, never through `pk::tools`.
+i32 shown() { return 1; }

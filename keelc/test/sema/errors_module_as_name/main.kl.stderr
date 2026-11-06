@@ -1,0 +1,37 @@
+error: `helper` is a module; its names are written without it
+ --> sema/errors_module_as_name/main.kl:5:31
+  |
+5 | i32 through_module() { return helper::read( 1 ); }
+  |                               ^^^^^^ write `read`
+
+error: `helper` is a module; its names are written without it
+ --> sema/errors_module_as_name/main.kl:6:29
+  |
+6 | i32 through_module_type() { helper::Holder h = helper::Holder { 2 }; return h.v; }
+  |                             ^^^^^^ write `Holder`
+
+error: `helper` is a module; its names are written without it
+ --> sema/errors_module_as_name/main.kl:6:48
+  |
+6 | i32 through_module_type() { helper::Holder h = helper::Holder { 2 }; return h.v; }
+  |                                                ^^^^^^ write `Holder`
+
+error: `pk::tools` is a module; its names are written without it
+ --> sema/errors_module_as_name/main.kl:7:39
+  |
+7 | i32 through_package_module() { return pk::tools::shown(); }
+  |                                       ^^^^^^^^^ write `pk::shown`
+
+error: `helper` is a module, not a value
+ --> sema/errors_module_as_name/main.kl:8:33
+  |
+8 | i32 module_as_value() { i32 v = helper; return v; }
+  |                                 ^^^^^^
+
+error: `pk` is a package, not a value
+ --> sema/errors_module_as_name/main.kl:9:34
+  |
+9 | i32 package_as_value() { i32 v = pk; return v; }
+  |                                  ^^
+
+6 errors generated
