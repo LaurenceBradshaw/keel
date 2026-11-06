@@ -76,6 +76,12 @@ public:
         return decl.v < fallbacks_.size() ? fallbacks_[decl.v] : Node_id {};
     }
 
+    // The function a local or parameter of its name hides; invalid where none is.
+    Node_id hidden_function( Node_id local ) const
+    {
+        return fallback_of( local );
+    }
+
     // The next declaration of the same name in the same scope, or invalid at the end of the chain.
     // Per-declaration rather than per-use: a use has one name, and the set belongs to the name.
     Node_id next_overload( Node_id declaration ) const

@@ -8,13 +8,13 @@ error: `Repeats` already has a variant `P`
   --> sema/errors_enums.kl:26:5
    |
 26 |     P
-   |     ^
+   |     ^ previous declaration is at: sema/errors_enums.kl:24:5
 
 error: `Red` is not declared
   --> sema/errors_enums.kl:36:16
    |
 36 |     Colour c = Red;
-   |                ^^^
+   |                ^^^ write `Colour::Red`
 
 error: expected `i32`, but got `Colour`
   --> sema/errors_enums.kl:43:13

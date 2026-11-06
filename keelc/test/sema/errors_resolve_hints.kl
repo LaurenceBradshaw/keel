@@ -1,0 +1,16 @@
+// Small resolve diagnostics: each says what the name is, or where it was first declared.
+enum E { a, b };
+enum F { a };
+enum D { x, y, x };
+
+i32 one() { return 1; }
+
+i32 main() {
+    E e = b;
+    E f = a;
+    i32 one = 2;
+    i32 n = one();
+    E v = E::a;
+    E w = v::a;
+    return 0;
+}

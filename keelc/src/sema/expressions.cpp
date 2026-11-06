@@ -775,7 +775,19 @@ Type_id Expressions::call_through_value( Node_id id, Node_id decl )
         }
     }
 
-    reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", interner_.text( ast_.name( callee ) ) ) );
+    const auto    name   = interner_.text( ast_.name( callee ) );
+    const Node_id hidden = resolution_.hidden_function( decl );
+
+    reporter_.error_at(
+        ast_.span( callee ),
+        fmt::format( "`{}` is not callable", name ),
+        hidden.is_valid() ? fmt::format(
+                                "this `{}` is the {}, which hides the function of that name",
+                                name,
+                                ast_.kind( decl ) == Node_kind::Param_decl ? "parameter" : "local"
+                            )
+                          : std::string {}
+    );
     return refuse_call( id );
 }
 
@@ -2995,9 +3007,13 @@ Type_id Expressions::infer_path( Node_id id )
 
     if( ast_.kind( decl ) != Node_kind::Enum_decl )
     {
+        const Node_kind   kind = ast_.kind( decl );
+        const std::string what = kind == Node_kind::Var_decl || kind == Node_kind::Param_decl ? "is a variable, not a type"
+                                 : kind == Node_kind::Function_decl                           ? "is a function, not a type"
+                                                                                              : "is not a type";
         reporter_.error_at(
             ast_.span( qualifier ),
-            fmt::format( "`{}` is not a type", owner ),
+            fmt::format( "`{}` {}", owner, what ),
             "`::` reaches a variant of an `enum` or a static method of a `struct` or `class`"
         );
 

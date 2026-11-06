@@ -3,6 +3,7 @@
 
 #include "sema/resolver.h"
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
@@ -78,6 +79,8 @@ private:
     Symbol_id     package_named( Node_id qualifier ) const;
     bool          is_name_chain( Node_id qualifier ) const;
     bool          refuse_module( Node_id named, Node_id use );
+    void          note_hidden_function( Node_id local );
+    std::string   variant_hint( Symbol_id name, Node_id use ) const;
     Node_id       qualifier_type( Node_id qualifier, Node_id use );
     void          refuse_member_literal( Node_id literal, Node_id owner );
     Node_id       visible_from( Node_id use, Node_id head );
@@ -110,7 +113,7 @@ private:
     std::vector<bool>    unresolved_;
     std::vector<bool>    unreported_; // see Resolution::is_unreported
     std::vector<Node_id> next_overload_;
-    std::vector<Node_id> fallbacks_;
+    std::vector<Node_id> fallbacks_; // see Resolution::fallback_of and hidden_function
     std::vector<Scope>   scopes_;
     std::vector<bool>    reported_;     // a declaration refused already: a method shares its aggregate's parameters
     std::vector<bool>    value_params_; // `<i32 N>`'s `N`, whose uses as a value stay quiet
@@ -296,6 +299,7 @@ void Resolver::visit( Node_id id )
         if( ast_.name( id ).is_valid() )
         {
             declare( scopes_.back(), ast_.name( id ), id );
+            note_hidden_function( id );
         }
         return;
     case Node_kind::Type_param_decl:
@@ -320,6 +324,7 @@ void Resolver::visit( Node_id id )
         visit( ast_.annotation( id ) );
         visit( ast_.initialiser( id ) );
         declare( scopes_.back(), ast_.name( id ), id );
+        note_hidden_function( id );
         if( !ast_.is_counter( id ) && ast_.name( id ).is_valid() ) // a walk's `_` is never read
         {
             unused_candidates_.push_back( id );
@@ -363,7 +368,9 @@ void Resolver::visit( Node_id id )
         }
         else if( !refuse_module( id, path_.is_valid() && ast_.qualifier( path_ ) == id ? path_ : Node_id {} ) )
         {
-            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+            reporter_.error_at(
+                ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ), variant_hint( name, id )
+            );
         }
 
         visit( ast_.type_arg_list( id ) );
@@ -1173,6 +1180,65 @@ void Resolver::refuse_member_literal( Node_id literal, Node_id owner )
         fmt::format( "`{}::{}` is a variant, not a struct", owner_spelt, name ),
         fmt::format( "write `{}::{}{}`", owner_spelt, name, ast_.payload( *variant ).empty() ? "" : "( ... )" )
     );
+}
+
+// For the "is not callable" help: the function of a local's name in its package or the prelude.
+void Resolver::note_hidden_function( Node_id local )
+{
+    const Symbol_id name = ast_.name( local );
+    const File_id   file = ast_.span( local ).file;
+
+    for( const Symbol_id package : { modules_.package_of( file ), modules_.prelude_package() } )
+    {
+        const auto scope = packages_.find( package );
+        if( scope == packages_.end() || !scope->second.names.contains( name ) )
+        {
+            continue;
+        }
+
+        for( Node_id d = scope->second.names.at( name ); d.is_valid(); d = next_overload_[d.v] )
+        {
+            if( ast_.kind( d ) == Node_kind::Function_decl && can_name( modules_, ast_, file, d ) )
+            {
+                fallbacks_[local.v] = d;
+                return;
+            }
+        }
+    }
+}
+
+// "write `E::a`" when a bare name is a variant of an enum the use can name; empty when none is.
+std::string Resolver::variant_hint( Symbol_id name, Node_id use ) const
+{
+    const File_id            file = ast_.span( use ).file;
+    std::vector<std::string> spelt;
+
+    for( const auto& [package, scope] : packages_ )
+    {
+        for( const auto& [_, decl] : scope.names )
+        {
+            if( ast_.kind( decl ) != Node_kind::Enum_decl || !can_name( modules_, ast_, file, decl ) )
+            {
+                continue;
+            }
+
+            const auto variants = ast_.variants( decl );
+            if( std::ranges::any_of( variants, [&]( Node_id v ) { return ast_.name( v ) == name; } ) )
+            {
+                spelt.push_back( fmt::format(
+                    "`{}::{}`", qualified( interner_, package, interner_.text( ast_.name( decl ) ) ), interner_.text( name )
+                ) );
+            }
+        }
+    }
+
+    if( spelt.empty() )
+    {
+        return {};
+    }
+
+    std::ranges::sort( spelt );
+    return fmt::format( "write {}", fmt::join( spelt, " or " ) );
 }
 
 Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )

@@ -5,6 +5,7 @@
 
 #include <fmt/format.h>
 
+#include <unordered_map>
 #include <unordered_set>
 
 // The signature pass: what each kind of top-level declaration contributes, and the rules over an
@@ -785,16 +786,19 @@ void Signatures::declare_enums()
 
         // Reported per repeat rather than once, the same shape check_aggregate_members uses for a
         // field: three collisions should say so in one compile rather than over three.
-        std::unordered_set<u32> seen;
+        std::unordered_map<u32, Node_id> seen;
 
         for( const Node_id variant : ast_.variants( child ) )
         {
             const Symbol_id variant_name = ast_.name( variant );
+            const auto [first, fresh]    = seen.try_emplace( variant_name.v, variant );
 
-            if( !seen.insert( variant_name.v ).second )
+            if( !fresh )
             {
                 reporter_.error_at(
-                    ast_.span( variant ), fmt::format( "`{}` already has a variant `{}`", name, interner_.text( variant_name ) )
+                    ast_.span( variant ),
+                    fmt::format( "`{}` already has a variant `{}`", name, interner_.text( variant_name ) ),
+                    reporter_.previous_declaration_note( ast_.span( first->second ) )
                 );
             }
         }
