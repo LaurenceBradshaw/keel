@@ -118,6 +118,15 @@ std::string_view bound_requirement( Bound bound )
     return {};
 }
 
+Type_id declare_type_parameter( const Ast& ast, const Interner& interner, Type_table& table, Node_id type_param )
+{
+    const std::string_view         name    = interner.text( ast.name( type_param ) );
+    const std::span<const Node_id> leading = ast.children( type_param );
+    const Type_id value_type = leading.empty() ? Type_id {} : table.from_spelling( interner.text( ast.name( leading[0] ) ) );
+
+    return value_type.is_valid() ? table.size_parameter( type_param, name, value_type ) : table.parameter( type_param, name );
+}
+
 std::optional<Bound> bound_for_name( std::string_view spelling )
 {
     for( const Named_bound& known : k_bounds )
@@ -1024,7 +1033,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
 
     for( const Node_id type_param : type_params )
     {
-        types_.record( type_param, table_.parameter( type_param, interner_.text( ast_.name( type_param ) ) ) );
+        types_.record( type_param, declare_type_parameter( ast_, interner_, table_, type_param ) );
         owner_of_.emplace( type_param.v, declaration );
     }
 
@@ -1054,6 +1063,15 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
                           interner_.text( subject_name ),
                           interner_.text( ast_.name( declaration ) )
                       )
+            );
+            continue;
+        }
+
+        if( table_.is_size_parameter( types_.type_of( *it ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( where_clause ),
+                fmt::format( "`{}` is a size; a `where` clause constrains a type", interner_.text( subject_name ) )
             );
             continue;
         }

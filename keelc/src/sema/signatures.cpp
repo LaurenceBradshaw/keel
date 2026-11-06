@@ -198,7 +198,7 @@ void Signatures::declare_parameters( Node_id list )
 {
     for( const Node_id type_param : ast_.type_parameters( list ) )
     {
-        types_.record( type_param, table_.parameter( type_param, interner_.text( ast_.name( type_param ) ) ) );
+        types_.record( type_param, declare_type_parameter( ast_, interner_, table_, type_param ) );
     }
 }
 

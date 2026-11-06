@@ -1,0 +1,25 @@
+error: a size parameter is a `u64`
+ --> sema/errors_size_params.kl:4:15
+  |
+4 | struct Signed<i32 N> { i32 x; };
+  |               ^^^ other types are not supported yet
+
+error: a size parameter is a `u64`
+ --> sema/errors_size_params.kl:6:16
+  |
+6 | struct Pointed<Point N> { i32 x; };
+  |                ^^^^^ write `u64 N`
+
+error: `N` is a size; a `where` clause constrains a type
+ --> sema/errors_size_params.kl:8:46
+  |
+8 | struct Bounded<T, u64 N> where T : copyable, where N : copyable { T x; };
+  |                                              ^^^^^^^^^^^^^^^^^^
+
+error: `N` is a size, not a type
+  --> sema/errors_size_params.kl:10:23
+   |
+10 | struct Typed<u64 N> { N x; };
+   |                       ^
+
+4 errors generated

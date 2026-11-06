@@ -76,6 +76,7 @@ public:
 private:
     // The long cases of resolve().
     Type_id resolve_named( Node_id annotation );
+    Type_id resolve_size_argument( Node_id argument );
     Type_id resolve_generic( Node_id annotation );
     Type_id resolve_function_type( Node_id annotation );
     Type_id resolve_field_type( Node_id annotation );

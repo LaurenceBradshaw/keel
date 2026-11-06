@@ -335,7 +335,17 @@ std::string Signature_printer::where_clauses( Node_id list ) const
 std::string Signature_printer::type_parameter( Node_id param ) const
 {
     const Type_id argument = bound( param );
-    return argument.is_valid() ? std::string( types_.table().name( argument ) ) : std::string( text( ast_.name( param ) ) );
+    if( argument.is_valid() )
+    {
+        return std::string( types_.table().name( argument ) );
+    }
+
+    const Type_id parameter = types_.type_of( param );
+    return parameter.is_valid() && types_.table().is_size_parameter( parameter )
+               ? fmt::format(
+                     "{} {}", types_.table().name( types_.table().get( parameter ).element ), text( ast_.name( param ) )
+                 )
+               : std::string( text( ast_.name( param ) ) );
 }
 
 // Written for every member, `public` included, so a reader need not know each aggregate's default.
@@ -569,6 +579,14 @@ TEST_CASE( "signatures_print_a_block_with_its_parameters", "[sema][signature][in
 
     REQUIRE( printed.block( 0 ) == "implements Named for i32" );
     REQUIRE( printed.block( 1 ) == "implements<A, B> Named for Pair<A, B> where A : Named, where B : Named" );
+}
+
+TEST_CASE( "signatures_print_a_size_parameter_with_its_type", "[sema][signature][size]" )
+{
+    const Printed printed( "struct Grid<T, u64 N> where T : copyable { T x; };\nvoid f<u64 N, T>( T x ) { }\n" );
+
+    REQUIRE( printed( Node_kind::Struct_decl, "Grid" ) == "struct Grid<T, u64 N> where T : copyable" );
+    REQUIRE( printed( Node_kind::Function_decl, "f" ) == "void f<u64 N, T>( T x )" );
 }
 
 TEST_CASE( "signatures_print_a_generic_interface_and_its_instances", "[sema][signature][interface]" )

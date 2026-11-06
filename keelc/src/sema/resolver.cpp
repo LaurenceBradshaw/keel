@@ -116,7 +116,7 @@ private:
     std::vector<Node_id> fallbacks_; // see Resolution::fallback_of and hidden_function
     std::vector<Scope>   scopes_;
     std::vector<bool>    reported_;       // a declaration refused already: a method shares its aggregate's parameters
-    std::vector<bool>    value_params_;   // `<i32 N>`'s `N`, whose uses as a value stay quiet
+    std::vector<bool>    value_params_;   // `<Point N>`'s `N`, refused, whose uses stay quiet
     std::vector<bool>    checked_params_; // a type parameter checked once, before its methods share it
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
@@ -1363,7 +1363,7 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
     return head;
 }
 
-// The name before a type parameter's: a type makes it a value parameter, anything else a bound.
+// The name before a type parameter's: a builtin type makes it a size, anything else a bound.
 void Resolver::refuse_leading_name( Node_id param )
 {
     const std::span<const Node_id> leading = ast_.children( param );
@@ -1378,14 +1378,21 @@ void Resolver::refuse_leading_name( Node_id param )
     const Node_id          decl = lookup( name, leading[0] );
     const std::string_view text = interner_.text( name );
 
-    if( is_builtin_type_name( text ) || ( decl.is_valid() && ast_.kind( decl ) != Node_kind::Interface_decl ) )
+    if( is_builtin_type_name( text ) )
+    {
+        if( text != "u64" )
+        {
+            reporter_.error_at(
+                ast_.name_span( leading[0] ), "a size parameter is a `u64`", "other types are not supported yet"
+            );
+        }
+        return;
+    }
+
+    if( decl.is_valid() && ast_.kind( decl ) != Node_kind::Interface_decl )
     {
         value_params_[param.v] = true;
-        reporter_.error_at(
-            ast_.name_span( leading[0] ),
-            fmt::format( "`{}` is a value parameter, which Keel does not support yet", interner_.text( ast_.name( param ) ) ),
-            "a type parameter is a name on its own"
-        );
+        reporter_.error_at( ast_.name_span( leading[0] ), "a size parameter is a `u64`", "write `u64 N`" );
         return;
     }
 
@@ -2666,13 +2673,20 @@ TEST_CASE( "resolver_names_a_leading_name_before_a_type_parameter", "[sema][reso
     }
 
     // `N` is declared, so its value use is not "not declared"; nor is it "a type, not a value".
-    SECTION( "a type makes it a value parameter, and its uses are quiet" )
+    SECTION( "a builtin type makes it a size parameter, and only `u64` is accepted" )
     {
+        const Resolved accepted( "u64 f<u64 N>() { return N; }\ni32 main() { return 0; }" );
+        INFO( accepted.rendered() );
+        REQUIRE( accepted.errors() == 0 );
         once(
             Resolved( "class Value<i32 N> { i32 v; public Value() { v = N; } };\ni32 main() { return 0; }" ),
-            "`N` is a value parameter, which Keel does not support yet"
+            "a size parameter is a `u64`"
         );
-        once( Resolved( "struct P { i32 x; };\nvoid f<P p>() { }\ni32 main() { return 0; }" ), "`p` is a value parameter" );
+    }
+
+    SECTION( "a user type is refused, and its uses are quiet" )
+    {
+        once( Resolved( "struct P { i32 x; };\nvoid f<P p>() { p; }\ni32 main() { return 0; }" ), "write `u64 N`" );
     }
 
     SECTION( "an interface is a bound" )

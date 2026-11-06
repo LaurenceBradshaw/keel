@@ -63,6 +63,9 @@ std::optional<Bound> bound_for_name( std::string_view spelling );
 Default_kind         default_of( const Ast& ast, const Type_table& table, Type_id type );
 std::optional<Bound> operator_to_bound( Token_kind kind );
 
+// `T`, or `u64 N`'s size parameter: a leading builtin type is the value type.
+Type_id declare_type_parameter( const Ast& ast, const Interner& interner, Type_table& table, Node_id type_param );
+
 // `cast` preserves the value and `wrap` keeps the low bits, so a pair of type kinds may permit one,
 // both or neither. They are not one operator with two spellings.
 enum class Conversion : u8

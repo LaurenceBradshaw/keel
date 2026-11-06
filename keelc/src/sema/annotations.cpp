@@ -250,6 +250,14 @@ Type_id Annotations::resolve_named( Node_id annotation )
             return table_.builtin( Type_kind::Error );
         }
 
+        if( table_.is_size_parameter( types_.type_of( decl ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ), fmt::format( "`{}` is a size, not a type", interner_.text( ast_.name( annotation ) ) )
+            );
+            return table_.builtin( Type_kind::Error );
+        }
+
         return types_.type_of( decl );
     }
 
@@ -647,9 +655,11 @@ bool Annotations::resolve_type_arguments(
         resolved.reserve( parameters.size() );
 
         // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
-        for( const Node_id argument : given )
+        for( std::size_t i = 0; i < given.size(); ++i )
         {
-            const Type_id type = resolve( argument, false );
+            const Node_id argument = given[i];
+            const Type_id type = table_.is_size_parameter( types_.type_of( parameters[i] ) ) ? resolve_size_argument( argument )
+                                                                                             : resolve( argument, false );
             resolved.push_back( refuse_never( argument, type, "type argument" ) ? table_.builtin( Type_kind::Error ) : type );
         }
     }
@@ -662,10 +672,30 @@ bool Annotations::resolve_type_arguments(
 
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
+        if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
+        {
+            continue;
+        }
+
         bounds_.check_bounds( parameters[i], ast_.span( given[i] ), resolved[i], name, bindings );
     }
 
     return true;
+}
+
+// A size parameter's argument: another size parameter passed on.
+Type_id Annotations::resolve_size_argument( Node_id argument )
+{
+    const Node_id decl = ast_.kind( argument ) == Node_kind::Named_type ? resolution_.declaration_of( argument ) : Node_id {};
+
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Type_param_decl &&
+        table_.is_size_parameter( types_.type_of( decl ) ) )
+    {
+        types_.record( argument, types_.type_of( decl ) );
+        return types_.type_of( decl );
+    }
+
+    return resolve( argument, false );
 }
 
 // A bound naming an interface: its type, recorded on the name, which is where Bounds reads it.
