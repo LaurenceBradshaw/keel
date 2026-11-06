@@ -2329,12 +2329,12 @@ Node_id Expressions::find_operator(
     Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text, std::size_t operands
 )
 {
-    // An enum's operator is its block's, and so is a struct's that declares none; a block missing it
+    // An enum's or array's operator is its block's, and so is a struct's that declares none; a block missing it
     // was reported as a conformance error. A parameter's is its bound's, and an implementer missing
     // it was reported the same way.
-    const bool from_block =
-        table_.is_enum( object_type ) || ( table_.is_struct( object_type ) &&
-                                           !aggregates_.find_method( table_.get( object_type ).declaration, name ).is_valid() );
+    const bool from_block = table_.is_enum( object_type ) || table_.is_array( object_type ) ||
+                            ( table_.is_struct( object_type ) &&
+                              !aggregates_.find_method( table_.get( object_type ).declaration, name ).is_valid() );
     const Node_id block = from_block ? types_.conformances().block_declaring( ast_, table_, object_type, name ) : Node_id {};
 
     // A generic block's method is reached as its interface's, which lowering finds at this instance.

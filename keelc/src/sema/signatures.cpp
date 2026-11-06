@@ -86,7 +86,7 @@ Type_id pointee( const Type_table& table, Type_id type )
     return type;
 }
 
-// A built-in, a struct, class or enum, or a pointer to one or to a parameter.
+// A built-in, a struct, class, enum or array, or a pointer to one or to a parameter.
 bool blockable( const Type_table& table, Type_id type )
 {
     const Type_id head = pointee( table, type );
@@ -96,7 +96,7 @@ bool blockable( const Type_table& table, Type_id type )
         return true;
     }
 
-    return table.is_builtin( head ) || table.is_struct( head ) || table.is_enum( head );
+    return table.is_builtin( head ) || table.is_struct( head ) || table.is_enum( head ) || table.is_array( head );
 }
 
 } // namespace
@@ -452,7 +452,7 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
             fmt::format( "`{}` cannot implement an interface through a block", table_.name( type ) ),
             table_.is_parameter( type )
                 ? fmt::format( "`{0}` alone would be every type; write the type `{0}` is part of", table_.name( type ) )
-                : "a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one"
+                : "a block is for a built-in type, a `struct`, `class` or `enum`, an array, or a pointer to one"
         );
         return true;
     }
@@ -3134,7 +3134,8 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
 
     SECTION( "anything else is refused once, at the type" )
     {
-        const std::string_view help = "a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one";
+        const std::string_view help =
+            "a block is for a built-in type, a `struct`, `class` or `enum`, an array, or a pointer to one";
 
         struct Case
         {
@@ -3146,7 +3147,6 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
             { "fn( i32 ) -> i32", "`fn( i32 ) -> i32` cannot implement an interface through a block" },
             { "Hashable", "`Hashable` cannot implement an interface through a block" },
             { "Hashable*", "`Hashable*` cannot implement an interface through a block" },
-            { "i32[2]", "`i32[2]` cannot implement an interface through a block" },
         };
 
         for( const Case& c : cases )
@@ -3220,7 +3220,7 @@ TEST_CASE( "signatures_declare_a_generic_block", "[sema][interfaces][implements_
 
             INFO( block << "\n" << p.rendered() );
             REQUIRE( p.errors() == 0 );
-            REQUIRE( p.types().conformances().all().size() == 3 ); // with the prelude's two
+            REQUIRE( p.types().conformances().all().size() == 5 ); // with the prelude's four
         }
     }
 
@@ -3359,9 +3359,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE(
-                p.types().conformances().all().size() == 3
-            ); // kl's own, for f64, and the prelude's `str` and `joined_text`
+            REQUIRE( p.types().conformances().all().size() == 5 ); // kl's own, for f64, and the prelude's four
         }
     }
 
@@ -3414,9 +3412,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE(
-                p.types().conformances().all().size() == 3
-            ); // kl's own, for f64, and the prelude's `str` and `joined_text`
+            REQUIRE( p.types().conformances().all().size() == 5 ); // kl's own, for f64, and the prelude's four
         }
     }
 

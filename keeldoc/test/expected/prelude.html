@@ -39,11 +39,13 @@ functions.</p>
 <li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
 <li class="divider">Comparison</li>
 <li><a href="#equatable"><code>equatable</code></a> <span class="kind">interface</span></li>
+<li><a href="#T,-u64-N&gt;-equatable-for-T[N]-where-T-:-equatable"><code>T, u64 N&gt; equatable for T[N] where T : equatable</code></a> <span class="kind">implements</span></li>
 <li><a href="#ordering"><code>ordering</code></a> <span class="kind">enum</span></li>
 <li><a href="#comparable"><code>comparable</code></a> <span class="kind">interface</span></li>
 <li class="divider">Hashing</li>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
+<li><a href="#T,-u64-N&gt;-hashable-for-T[N]-where-T-:-hashable"><code>T, u64 N&gt; hashable for T[N] where T : hashable</code></a> <span class="kind">implements</span></li>
 <li class="divider">Ownership</li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
@@ -354,6 +356,19 @@ equatable without writing anything.</p>
 </div>
 </section>
 <section class="entry">
+<h2><span class="kind">implements</span> <span class="">T, u64 N&gt; equatable for T[N] where T : equatable</span></h2>
+<div class="group" id="T,-u64-N&gt;-equatable-for-T[N]-where-T-:-equatable">
+<pre class="signature"><a class="anchor" href="#T,-u64-N&gt;-equatable-for-T[N]-where-T-:-equatable" aria-label="Link to T, u64 N&gt; equatable for T[N] where T : equatable">#</a><code><span class="kw">implements</span>&lt;T, <a class="prim" href="#u64">u64</a> N&gt; <a class="type" href="#equatable">equatable</a> <span class="kw">for</span> T[N] <span class="kw">where</span> T : <a class="type" href="#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>Two arrays are equal when they hold equal elements in the same order.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T,-u64-N&gt;-equatable-for-T[N]-where-T-:-equatable.operator==">
+<pre class="signature"><a class="anchor" href="#T,-u64-N&gt;-equatable-for-T[N]-where-T-:-equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> T[N] other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
 <h2><span class="kind">enum</span> <span class="type">ordering</span></h2>
 <div class="group" id="ordering">
 <pre class="signature"><a class="anchor" href="#ordering" aria-label="Link to ordering">#</a><code><span class="kw">enum</span> <span class="type">ordering</span></code></pre>
@@ -458,6 +473,19 @@ panics on a NaN.</p>
 <div class="doc">
 <p>Feeds this value to <code>h</code>.</p>
 </div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T, u64 N&gt; hashable for T[N] where T : hashable</span></h2>
+<div class="group" id="T,-u64-N&gt;-hashable-for-T[N]-where-T-:-hashable">
+<pre class="signature"><a class="anchor" href="#T,-u64-N&gt;-hashable-for-T[N]-where-T-:-hashable" aria-label="Link to T, u64 N&gt; hashable for T[N] where T : hashable">#</a><code><span class="kw">implements</span>&lt;T, <a class="prim" href="#u64">u64</a> N&gt; <a class="type" href="#hashable">hashable</a> <span class="kw">for</span> T[N] <span class="kw">where</span> T : <a class="type" href="#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>An array hashes each element in order; its type fixes the size.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T,-u64-N&gt;-hashable-for-T[N]-where-T-:-hashable.hash">
+<pre class="signature"><a class="anchor" href="#T,-u64-N&gt;-hashable-for-T[N]-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 </div>
 </section>
 <h2 class="divider">Ownership</h2>

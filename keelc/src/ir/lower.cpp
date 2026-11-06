@@ -2078,7 +2078,7 @@ Lowering::Requirement_target Lowering::bound_operator( Token_kind op, Type_id he
     const Type_table& table     = types_.table();
     const Type_id     interface = Conformance_model::interface_for( table, op );
 
-    if( ( !table.is_struct( held ) && !table.is_enum( held ) ) || !interface.is_valid() )
+    if( ( !table.is_struct( held ) && !table.is_enum( held ) && !table.is_array( held ) ) || !interface.is_valid() )
     {
         return {};
     }
@@ -2822,20 +2822,22 @@ Operand Lowering::lower_call( Node_id id )
         return copy( builder_.place( local ), type );
     }
 
-    // `a.size()` on a `T[N]` is N. The object is still lowered, so a call there still runs.
+    // `a.size()` on a `T[N]` is N. The object is still lowered, so a call there still runs. Any other
+    // name is a block's, reached through a bound.
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
     {
         const Node_id object = ast_.object( ast_.callee( id ) );
         const Type_id held   = types_.table().is_pointer( type_of( object ) ) ? types_.table().get( type_of( object ) ).element
                                                                               : type_of( object );
 
-        if( ( types_.table().is_array( held ) || types_.table().is_run( held ) ) &&
-            interner_.text( ast_.name( ast_.callee( id ) ) ) != "size" )
+        const std::string_view name = interner_.text( ast_.name( ast_.callee( id ) ) );
+
+        if( ( types_.table().is_array( held ) || types_.table().is_run( held ) ) && ( name == "swap" || name == "replace" ) )
         {
             return lower_array_rearrange( id, object, held );
         }
 
-        if( types_.table().is_array( held ) )
+        if( types_.table().is_array( held ) && name == "size" )
         {
             lower_expression( object );
             return constant( literal_pool_.add_integer( types_.table().get( held ).count ), type_of( id ) );

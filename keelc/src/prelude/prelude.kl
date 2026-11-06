@@ -160,6 +160,23 @@ interface equatable
     bool operator==( const ref self other ) const;
 };
 
+/// Two arrays are equal when they hold equal elements in the same order.
+implements<T, u64 N> equatable for T[N] where T : equatable
+{
+    bool operator==( const ref T[N] other ) const
+    {
+        for( u64 i : 0..N )
+        {
+            if( this[i] != other[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
 /// How one value compares with another, as `operator<=>` answers.
 ///
 /// `a < b`, `a <= b`, `a > b` and `a >= b` all come from `a <=> b`. On a float, `<=>` panics if
@@ -315,6 +332,18 @@ interface hashable implements equatable
 {
     /// Feeds this value to `h`.
     void hash( ref hasher h ) const;
+};
+
+/// An array hashes each element in order; its type fixes the size.
+implements<T, u64 N> hashable for T[N] where T : hashable
+{
+    void hash( ref hasher h ) const
+    {
+        for( u64 i : 0..N )
+        {
+            this[i].hash( ref h );
+        }
+    }
 };
 
 /// --- Ownership ---

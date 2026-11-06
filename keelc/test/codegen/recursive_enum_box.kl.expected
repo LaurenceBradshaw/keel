@@ -323,7 +323,7 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-#line 330 "<prelude>"
+#line 359 "<prelude>"
 void kl_7prelude_box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7prelude_box__I4ListE* kl_this_1, struct kl__List kl_value_2 )
 {
     struct kl__List* kl_slot_3;
@@ -332,53 +332,53 @@ void kl_7prelude_box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7pr
     struct kl__List* kl_t6;
     struct kl__List* kl_t7;
     bool kl_t8;
-#line 335 "<prelude>"
+#line 364 "<prelude>"
     kl_t8 = true;
-#line 335 "<prelude>"
-    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__List ), "<prelude>", 335, "out of memory: alloc<T>( 1 )" );
-#line 335 "<prelude>"
+#line 364 "<prelude>"
+    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__List ), "<prelude>", 364, "out of memory: alloc<T>( 1 )" );
+#line 364 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
-#line 336 "<prelude>"
+#line 365 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
-#line 336 "<prelude>"
+#line 365 "<prelude>"
     kl_t8 = false;
     kl_t6 = kl_slot_3 + 0;
-#line 337 "<prelude>"
+#line 366 "<prelude>"
     kl_t7 = &( *kl_t6 );
-#line 337 "<prelude>"
+#line 366 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 339 "<prelude>"
+#line 368 "<prelude>"
     if ( kl_t8 ) kl__List__dtor( &kl_value_2 );
-#line 339 "<prelude>"
+#line 368 "<prelude>"
     kl_t8 = false;
-#line 339 "<prelude>"
+#line 368 "<prelude>"
     return;
-#line 339 "<prelude>"
+#line 368 "<prelude>"
 }
 
-#line 351 "<prelude>"
+#line 380 "<prelude>"
 struct kl__List* kl_7prelude_get__I4ListE__SQ7prelude3boxI4ListE( struct kl_7prelude_box__I4ListE* kl_this_1 )
 {
     struct kl__List* kl_t0;
-#line 353 "<prelude>"
+#line 382 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 353 "<prelude>"
+#line 382 "<prelude>"
     return kl_t0;
 }
 
-#line 341 "<prelude>"
+#line 370 "<prelude>"
 void kl_7prelude_box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* kl_this_1 )
 {
     struct kl__List* kl_t2;
-#line 345 "<prelude>"
+#line 374 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 345 "<prelude>"
+#line 374 "<prelude>"
     kl__List__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 348 "<prelude>"
+#line 377 "<prelude>"
     return;
-#line 348 "<prelude>"
+#line 377 "<prelude>"
 }
 
 #line 12 "codegen/recursive_enum_box.kl"

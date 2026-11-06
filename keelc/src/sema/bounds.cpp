@@ -758,7 +758,7 @@ bool Bounds::has_operator( Type_id type, Symbol_id name ) const
         return false;
     }
 
-    if( table_.is_enum( type ) )
+    if( table_.is_enum( type ) || table_.is_array( type ) )
     {
         return types_.conformances().block_declaring( ast_, table_, type, name ).is_valid();
     }

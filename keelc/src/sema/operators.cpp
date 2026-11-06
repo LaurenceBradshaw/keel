@@ -334,6 +334,12 @@ Binary_result Operators::result_of_binary(
         return { bool_type };
     }
 
+    // An array's `==` is a prelude block that answers only where its element does.
+    if( interface.is_valid() && table_.is_array( lhs_type ) && conformances_.unmet_bound( table_, lhs_type, interface ) )
+    {
+        return reject( bounds_.conforming_help( lhs_type, interface, at ) );
+    }
+
     const Binary_rule* rule = binary_rule_for( op );
 
     if( rule == nullptr )

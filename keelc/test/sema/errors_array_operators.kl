@@ -1,0 +1,29 @@
+// `==` on an array of a type with no `==`, `<=>` on an array, and a program's block for an array
+// of an interface it does not own.
+struct Plain
+{
+    i32 x;
+};
+
+bool same( const ref Plain[2] a, const ref Plain[2] b )
+{
+    return a == b;
+}
+
+ordering order( i32[2] a, i32[2] b )
+{
+    return a <=> b;
+}
+
+implements equatable for i32[3]
+{
+    bool operator==( const ref i32[3] other ) const
+    {
+        return true;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

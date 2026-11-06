@@ -9125,13 +9125,13 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-#line 351 "<prelude>"
+#line 380 "<prelude>"
 struct kl__Shape__ref kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t0;
-#line 353 "<prelude>"
+#line 382 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
-#line 353 "<prelude>"
+#line 382 "<prelude>"
     return kl_t0;
 }
 
@@ -9253,7 +9253,7 @@ void kl__text__IQ2kl6stringE__Q2kl6string( struct kl_2kl6string_string* kl_x_1 )
 #line 29 "codegen/bound_interface.kl"
 }
 
-#line 330 "<prelude>"
+#line 359 "<prelude>"
 void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE* kl_this_1, struct kl__Square kl_value_2 )
 {
     struct kl__Square* kl_slot_3;
@@ -9261,21 +9261,21 @@ void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct 
     struct kl__Square* kl_t5;
     struct kl__Square* kl_t6;
     struct kl__Square* kl_t7;
-#line 335 "<prelude>"
-    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 335, "out of memory: alloc<T>( 1 )" );
-#line 335 "<prelude>"
+#line 364 "<prelude>"
+    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 364, "out of memory: alloc<T>( 1 )" );
+#line 364 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
-#line 336 "<prelude>"
+#line 365 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
     kl_t6 = kl_slot_3 + 0;
-#line 337 "<prelude>"
+#line 366 "<prelude>"
     kl_t7 = &( *kl_t6 );
-#line 337 "<prelude>"
+#line 366 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 339 "<prelude>"
+#line 368 "<prelude>"
     return;
-#line 339 "<prelude>"
+#line 368 "<prelude>"
 }
 
 #line 35 "codegen/bound_interface.kl"
@@ -9326,28 +9326,28 @@ double kl__measure__I6SquareE__R6Square_MQ7prelude3boxI6SquareE( struct kl__Squa
     return kl_t0;
 }
 
-#line 341 "<prelude>"
+#line 370 "<prelude>"
 void kl_7prelude_box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t2;
-#line 345 "<prelude>"
+#line 374 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 345 "<prelude>"
+#line 374 "<prelude>"
     kl_t2.vtable->drop( kl_t2.self );
     kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
-#line 348 "<prelude>"
+#line 377 "<prelude>"
     return;
-#line 348 "<prelude>"
+#line 377 "<prelude>"
 }
 
-#line 341 "<prelude>"
+#line 370 "<prelude>"
 void kl_7prelude_box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_this_1 )
 {
-#line 346 "<prelude>"
+#line 375 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 348 "<prelude>"
+#line 377 "<prelude>"
     return;
-#line 348 "<prelude>"
+#line 377 "<prelude>"
 }
 
 #line 143 "<prelude>"

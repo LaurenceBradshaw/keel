@@ -1196,7 +1196,7 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
     const Type_id            shape        = p.types().type_of( shape_decl );
     const Type_id            named        = p.types().type_of( named_decl );
 
-    REQUIRE( conformances.all().size() == 5 ); // and the prelude's `str` and `joined_text` as `textual`
+    REQUIRE( conformances.all().size() == 7 ); // and the prelude's four
     REQUIRE( conformances.errors().empty() );
 
     const Conformance* sq_shape = conformances.find( square, shape );
@@ -1347,7 +1347,7 @@ TEST_CASE( "conformances_refuse_a_repeated_interface", "[sema][interfaces]" )
     REQUIRE( p.rendered().find( "`Sq` already implements `Shape`" ) != std::string::npos );
 
     const Conformance_model& conformances = p.types().conformances();
-    REQUIRE( conformances.all().size() == 3 ); // and the prelude's `str` and `joined_text` as `textual`
+    REQUIRE( conformances.all().size() == 5 ); // and the prelude's four
     REQUIRE( conformances.errors()[0].at.start == source.find( "Shape {", source.find( "implements" ) ) ); // the second
 }
 
@@ -1465,7 +1465,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.types().conformances().all().size() == 3 ); // and the prelude's `str` and `joined_text` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 5 ); // and the prelude's four
     }
 
     SECTION( "a generic implementer answers with its open form" )
@@ -1584,7 +1584,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
         const Type_id interface = p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) );
         const char*   types[]   = { "i32", "kl::P", "Colour" };
 
-        REQUIRE( p.types().conformances().all().size() == 5 ); // and the prelude's `str` and `joined_text` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 7 ); // and the prelude's four
 
         for( std::size_t i = 0; i < 3; ++i )
         {
@@ -1687,14 +1687,14 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
     SECTION( "a block whose type is refused is not checked" )
     {
         const Typed p(
-            hashable + "implements Hashable for i32[2] { };\n"
+            hashable + "implements Hashable for fn( i32 ) -> i32 { };\n"
                        "i32 main() { return 0; }"
         );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "cannot implement an interface through a block" ) != std::string::npos );
-        REQUIRE( p.types().conformances().all().size() == 2 ); // the prelude's `str` and `joined_text` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 4 ); // the prelude's four
     }
 }
 

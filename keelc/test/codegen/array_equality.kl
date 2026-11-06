@@ -1,0 +1,50 @@
+// `==`, `!=` and `hash` on `T[N]`, from the prelude's blocks: nested, over a struct, as a map key.
+import kl::console;
+import kl::map;
+
+struct Point implements equatable, hashable
+{
+    i32 x;
+    i32 y;
+
+    bool operator==( const ref Point other ) const
+    {
+        return x == other.x && y == other.y;
+    }
+
+    void hash( ref hasher h ) const
+    {
+        h.write( cast<u64>( x ) );
+        h.write( cast<u64>( y ) );
+    }
+};
+
+i32 main()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    i32[3] b = [ 1, 2, 3 ];
+    i32[3] c = [ 1, 2, 4 ];
+    kl::println( a == b );
+    kl::println( a == c );
+    kl::println( a != c );
+    kl::println( a != b );
+
+    i32[2][3] m = [ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ] ];
+    i32[2][3] n = [ [ 1, 2 ], [ 3, 4 ], [ 5, 7 ] ];
+    kl::println( m == m );
+    kl::println( m == n );
+
+    Point[2] p = [ Point { 1, 2 }, Point { 3, 4 } ];
+    Point[2] q = [ Point { 1, 2 }, Point { 3, 5 } ];
+    kl::println( p == p );
+    kl::println( p == q );
+
+    kl::map<i32[2], i32> k = kl::map<i32[2], i32>();
+    k.insert( [ 1, 2 ], 10 );
+    k.insert( [ 3, 4 ], 20 );
+    k.insert( [ 1, 2 ], 30 );
+    kl::println( k.size() );
+    kl::println( k.contains( [ 3, 4 ] ) );
+    kl::println( k.contains( [ 4, 3 ] ) );
+    return 0;
+}

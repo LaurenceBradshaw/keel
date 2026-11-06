@@ -26,7 +26,7 @@ error: `Hashable` cannot implement an interface through a block
   --> sema/errors_implements_for.kl:59:25
    |
 59 | implements Hashable for Hashable
-   |                         ^^^^^^^^ a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one
+   |                         ^^^^^^^^ a block is for a built-in type, a `struct`, `class` or `enum`, an array, or a pointer to one
 
 error: `self` is written only inside an `interface`
   --> sema/errors_implements_for.kl:69:9
