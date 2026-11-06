@@ -592,6 +592,37 @@ Type_id resolved( const Type_table& table, Type_id type, const Bindings& bound )
     return type;
 }
 
+// Whether `parameter` is part of `type` once bound parameters are read through.
+bool occurs( const Type_table& table, Type_id parameter, Type_id type, const Bindings& bound )
+{
+    type = resolved( table, type, bound );
+    if( type == parameter )
+    {
+        return true;
+    }
+
+    if( table.is_parameter( type ) )
+    {
+        return false;
+    }
+
+    const Type& t = table.get( type );
+    if( t.element.is_valid() && occurs( table, parameter, t.element, bound ) )
+    {
+        return true;
+    }
+
+    for( const Type_id argument : t.arguments )
+    {
+        if( occurs( table, parameter, argument, bound ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
 {
     a = resolved( table, a, bound );
@@ -604,7 +635,14 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
 
     if( table.is_parameter( a ) || table.is_parameter( b ) )
     {
-        bound.emplace( table.is_parameter( a ) ? a.v : b.v, table.is_parameter( a ) ? b : a );
+        const Type_id parameter = table.is_parameter( a ) ? a : b;
+        const Type_id other     = table.is_parameter( a ) ? b : a;
+        if( occurs( table, parameter, other, bound ) )
+        {
+            return false; // `T` against `Wrap<T>`: no finite type is both
+        }
+
+        bound.emplace( parameter.v, other );
         return true;
     }
 
