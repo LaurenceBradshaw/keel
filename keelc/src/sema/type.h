@@ -144,6 +144,8 @@ public:
     // all, which is not an error here - the ordinary argument check reports that - so a caller
     // deduces into a scratch map and keeps it only when this returns true.
     bool deduce( Type_id pattern, Type_id actual, Bindings& into ) const;
+    // Whether one binding of their parameters, free and distinct, makes `a` be `b` and `c` be `d`.
+    bool unifies( Type_id a, Type_id b, Type_id c, Type_id d ) const;
 
     const Type&      get( Type_id id ) const;
     std::string_view name( Type_id id ) const; // "i32", "u8*" - for diagnostics

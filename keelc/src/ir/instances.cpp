@@ -3,6 +3,7 @@
 
 #include "ir/instances.h"
 #include <algorithm>
+#include "ir/place_type.h"
 
 namespace keel
 {
@@ -107,6 +108,26 @@ void queue_conformances( const Ast& ast, const Types& types, Type_id composite, 
 
 } // namespace
 
+std::optional<std::vector<Type_id>>
+block_arguments( const Ast& ast, const Types& types, const Conformance& conformance, Type_id type )
+{
+    const std::optional<Bindings> bindings = types.conformances().bindings_at( types.table(), conformance, type );
+
+    if( !bindings )
+    {
+        return std::nullopt;
+    }
+
+    std::vector<Type_id> arguments;
+
+    for( const Node_id parameter : ast.type_parameters( ast.type_param_list( conformance.implementer ) ) )
+    {
+        arguments.push_back( bindings->at( types.type_of( parameter ).v ) );
+    }
+
+    return arguments;
+}
+
 Instance_queue::Instance_queue( const Ast& ast, Types& types )
     : ast_( ast ),
       types_( types )
@@ -152,6 +173,51 @@ std::optional<Instantiation> Instance_queue::next()
     }
 
     return instance;
+}
+
+void Instance_queue::reached_by( const Function& function )
+{
+    const auto is_block_method = [&]( Node_id callee )
+    {
+        const Node_id block = callee.is_valid() ? ast_.enclosing_aggregate( callee ) : Node_id {};
+        return block.is_valid() && ast_.kind( block ) == Node_kind::Implements_decl && ast_.is_generic( block );
+    };
+
+    for( const Statement& statement : function.statements )
+    {
+        if( statement.kind != Statement_kind::Assign )
+        {
+            continue;
+        }
+
+        const Rvalue& value = function.rvalue( statement );
+
+        if( ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) &&
+            is_block_method( value.callee ) )
+        {
+            queue( pending_, types_, { .declaration = value.callee, .arguments = value.type_arguments } );
+            continue;
+        }
+
+        const auto [implementer, interface] = interface_conversion( ast_, types_, function, value );
+        const Conformance* conformance =
+            implementer.is_valid() ? types_.conformances().of( types_.table(), implementer, interface ) : nullptr;
+
+        if( conformance == nullptr || !conformance->block || !ast_.is_generic( conformance->implementer ) )
+        {
+            continue;
+        }
+
+        const std::vector<Type_id> arguments = *block_arguments( ast_, types_, *conformance, implementer );
+
+        for( const Node_id method : conformance->methods )
+        {
+            if( method.is_valid() )
+            {
+                queue( pending_, types_, { .declaration = method, .arguments = arguments } );
+            }
+        }
+    }
 }
 
 // From where the last call stopped: composite_types() is in interning order, so whatever was

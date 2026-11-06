@@ -1495,6 +1495,12 @@ void Overloads::record_method_instantiation(
     Node_id from, Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own
 )
 {
+    // A requirement has no body; lowering finds the implementer's at the instance.
+    if( ast_.is_requirement( method ) )
+    {
+        return;
+    }
+
     std::vector<Type_id> arguments;
 
     if( receiver.is_valid() && table_.is_struct( receiver ) )

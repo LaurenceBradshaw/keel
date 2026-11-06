@@ -16,3 +16,37 @@ class pair<A, B>
     /// The second value.
     public B second;
 };
+
+/// Two pairs are equal when both their values are.
+implements<A, B> equatable for pair<A, B> where A : equatable, where B : equatable
+{
+    bool operator==( const ref pair<A, B> other ) const
+    {
+        return this.first == other.first && this.second == other.second;
+    }
+};
+
+/// Pairs order by their first values, then by their second.
+implements<A, B> comparable for pair<A, B> where A : comparable, where B : comparable
+{
+    ordering operator<=>( const ref pair<A, B> other ) const
+    {
+        ordering by_first = this.first <=> other.first;
+        if( by_first != ordering::equal )
+        {
+            return by_first;
+        }
+
+        return this.second <=> other.second;
+    }
+};
+
+/// A pair hashes its first value, then its second.
+implements<A, B> hashable for pair<A, B> where A : hashable, where B : hashable
+{
+    void hash( ref hasher h ) const
+    {
+        this.first.hash( ref h );
+        this.second.hash( ref h );
+    }
+};

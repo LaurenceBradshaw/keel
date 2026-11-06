@@ -491,8 +491,10 @@ Span unconditional_self_call( const Function& function )
         Span call {};
         for( const Statement& statement : function.statements_of( at ) )
         {
+            // Another instance of the same declaration is another function: `Wrap<Wrap<i32>>`'s reaching `Wrap<i32>`'s.
             if( statement.kind == Statement_kind::Assign && function.rvalue( statement ).kind == Rvalue_kind::Call &&
-                function.rvalue( statement ).callee == function.declaration )
+                function.rvalue( statement ).callee == function.declaration &&
+                function.rvalue( statement ).type_arguments == function.type_arguments )
             {
                 call = statement.span;
                 break;

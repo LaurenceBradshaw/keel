@@ -590,7 +590,8 @@ Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, S
 {
     const Node_id named =
         block_type_.is_valid() ? clone_type( block_type_ ) : ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
-    const Node_id param = type_params.is_valid() ? generic_self( named, type_params, span ) : named;
+    // A block's type is written whole after `for`, so its parameters are already in it.
+    const Node_id param = type_params.is_valid() && !block_type_.is_valid() ? generic_self( named, type_params, span ) : named;
     const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { param } );
     const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
 
@@ -1062,7 +1063,17 @@ void Parser::parse_where_clauses(
                 outer_params.begin(), outer_params.end(), [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); }
             ) )
         {
-            const std::string_view subject   = sm_.text( ast_.name_span( clause ) );
+            const std::string_view subject = sm_.text( ast_.name_span( clause ) );
+            if( block_type_.is_valid() )
+            {
+                recovery_.error_at(
+                    ast_.span( clause ),
+                    fmt::format( "`{}` is the block's parameter, so its bounds go on the block", subject ),
+                    fmt::format( "write the clause after `for {}`", sm_.text( ast_.span( block_type_ ) ) )
+                );
+                continue;
+            }
+
             const std::string_view aggregate = sm_.text( aggregate_name_ );
             recovery_.error_at(
                 ast_.span( clause ),
@@ -1547,6 +1558,12 @@ Node_id Parser::parse_implements_decl()
     const Span start = cursor_.peek().span;
     cursor_.match_keyword( Keyword::Implements );
 
+    // `implements<A, B>`: the block's own parameters, which the interface and the type may name.
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+    Span                 generic_span  = Span::merge( generic_start, cursor_.previous().span );
+
     const Node_id interface   = parse_type();
     bool          well_formed = !ast_.broken( interface );
 
@@ -1579,6 +1596,15 @@ Node_id Parser::parse_implements_decl()
         );
         well_formed = false;
     }
+
+    parse_where_clauses(
+        generic,
+        generics,
+        generic_span,
+        "write them after `implements`, as in `implements<T> hashable for list<T> where T : hashable`"
+    );
+
+    const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
     if( !recovery_.expect( Token_kind::L_brace ) )
     {
@@ -1622,7 +1648,7 @@ Node_id Parser::parse_implements_decl()
             break;
         }
 
-        const Node_id member = parse_member( *chunk.head, enclosing, Node_id {}, true );
+        const Node_id member = parse_member( *chunk.head, enclosing, type_params, true );
 
         reported_line = ast_.broken( member ) ? std::optional<u32>( recovery_.line_of( cursor_.previous() ) ) : std::nullopt;
 
@@ -1654,7 +1680,7 @@ Node_id Parser::parse_implements_decl()
     }
 
     const Node_id list = ast_.add( Node_kind::Implements_list, ast_.span( interface ), 0, { interface } );
-    methods.insert( methods.begin(), { Node_id {}, list, type } );
+    methods.insert( methods.begin(), { type_params, list, type } );
 
     const Node_id node =
         ast_.add( Node_kind::Implements_decl, Span::merge( start, cursor_.previous().span ), Symbol_id {}.v, methods );
@@ -13926,6 +13952,52 @@ TEST_CASE( "parser_parses_an_implements_block", "[parse][interfaces][implements_
     SECTION( "the dump names it" )
     {
         REQUIRE( p.dump().find( "Implements_decl" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_parses_a_generic_implements_block", "[parse][interfaces][implements_for][generic_blocks]" )
+{
+    const Parsed p( "implements<A, B> hashable for pair<A, B> where A : hashable, where B : hashable\n"
+                    "{\n"
+                    "    void hash( ref hasher h ) const { }\n"
+                    "};" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl   = find_first( p.ast(), p.root(), Node_kind::Implements_decl );
+    const Node_id params = p.ast().type_param_list( decl );
+
+    REQUIRE( params.is_valid() );
+    REQUIRE( p.ast().type_parameters( params ).size() == 2 );
+    REQUIRE( p.ast().where_clauses( params ).size() == 2 );
+    REQUIRE( p.text( p.ast().implementer( decl ) ) == "pair<A, B>" );
+    REQUIRE( p.members( decl ).size() == 1 );
+
+    SECTION( "the receiver is the type after `for`, not wrapped again" )
+    {
+        const Node_id receiver = p.child( p.child( p.members( decl )[0], 1 ), 0 );
+        const Node_id type     = p.child( p.child( p.child( receiver, 0 ), 0 ), 0 );
+
+        REQUIRE( p.kind( type ) == Node_kind::Generic_type );
+        REQUIRE( p.text( type ) == "pair<A, B>" );
+    }
+
+    SECTION( "a method's clause on the block's parameter is refused, naming the block" )
+    {
+        const Parsed q( "implements<T> Shape for list<T> { f64 area() const where T : copyable { return 0.0; } };" );
+
+        REQUIRE( q.error_count() == 1 );
+        REQUIRE( q.errors().find( "`T` is the block's parameter, so its bounds go on the block" ) != std::string::npos );
+        REQUIRE( q.errors().find( "write the clause after `for list<T>`" ) != std::string::npos );
+    }
+
+    SECTION( "a `where` with no parameters is refused" )
+    {
+        const Parsed q( "implements Shape for i32 where T : copyable { f64 area() const { return 0.0; } };" );
+
+        REQUIRE( q.error_count() == 1 );
+        REQUIRE( q.errors().find( "a `where` clause needs type parameters" ) != std::string::npos );
     }
 }
 

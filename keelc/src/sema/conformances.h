@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
 #include <span>
 #include <unordered_map>
 #include <vector>
@@ -20,6 +21,7 @@ struct Conformance
 {
     Node_id              implementer {}; // the aggregate or the block whose methods answer
     Type_id              type {};        // what conforms: an aggregate's open form, or a block's type
+    bool                 block = false;  // `type` is a pattern, matched with the block's `where` met
     Type_id              interface {};
     std::vector<Node_id> requirements {}; // the interface's methods, in declaration order
     std::vector<Node_id> methods {};      // parallel to requirements; invalid where none answers
@@ -35,6 +37,7 @@ enum class Conformance_problem : u8
     Generic,     // the implementer's has type parameters of its own
     Private,     // the implementer's is hidden from a caller holding the interface
     Repeated,    // the type already conforms to the interface
+    Overlapping, // another block or `implements` could make one instance conform as well
     Unrequested, // a block's method the interface does not declare
     Unrefined,   // the type does not conform to an interface this one requires
     Located,     // the implementer's receives a location the interface's callers cannot pass
@@ -59,8 +62,13 @@ struct Conformance_error
 class Conformance_model
 {
 public:
-    // Phase 1. `type` is a block's type, or an aggregate's open form; a generic's instances share it.
+    // Phase 1. `type` is an aggregate's open form; a generic's instances share it.
     void declare( const Type_table& table, Node_id implementer, Type_id type, Type_id interface );
+    // A block's type is a pattern its parameters are bound by matching.
+    void declare_block( Node_id block, Type_id pattern, Type_id interface );
+    // What a type parameter promises, refinements included; a block's `where` is read from it.
+    void declare_promised( Type_id parameter, std::span<const Type_id> interfaces );
+    void declare_payload_enum( Node_id declaration ); // which enums the compiler gives no `==`
     // What an interface requires through its own `implements`, in written order.
     void declare_refinement( const Type_table& table, Type_id interface, Type_id refined );
     // The first method that is `static`, a walk, or mentions `self`, which makes the interface a bound only.
@@ -78,6 +86,21 @@ public:
     // The prelude interface an operator asks for: `equatable` for `==` and `!=`, `comparable` for the
     // orderings, and invalid otherwise.
     static Type_id interface_for( const Type_table& table, Token_kind op );
+    // Whether `type` meets `interface`: declared, supplied, or promised by a parameter.
+    bool conforms( const Type_table& table, Type_id type, Type_id interface ) const;
+    // The bindings under which `block`'s pattern is `type`, its `where` met; nullopt where it is not.
+    std::optional<Bindings> covers( const Type_table& table, Type_id pattern, Type_id type ) const;
+    // A block whose type matches `type` for `interface` but whose `where` fails there: what it misses first.
+    struct Unmet_bound
+    {
+        Node_id block;
+        Type_id parameter;
+        Type_id interface;
+        Type_id argument;
+    };
+    std::optional<Unmet_bound> unmet_bound( const Type_table& table, Type_id type, Type_id interface ) const;
+    // A conformance's parameters at `type`: a block's by matching, an aggregate's by its instance.
+    std::optional<Bindings> bindings_at( const Type_table& table, const Conformance& conformance, Type_id type ) const;
     // Type_table::holds, with an implementer reaching its interface as a borrow, a pointer or a box.
     bool holds( const Type_table& table, Type_id from, Type_id to ) const;
 
@@ -101,9 +124,9 @@ public:
     Node_id            method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement )
         const; // invalid where none answers
     // The `implements ... for type` block declaring `name`, or invalid.
-    Node_id block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
+    Node_id block_declaring( const Ast& ast, const Type_table& table, Type_id type, Symbol_id name ) const;
     // Every such block, in declaration order.
-    std::vector<Node_id> blocks_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
+    std::vector<Node_id> blocks_declaring( const Ast& ast, const Type_table& table, Type_id type, Symbol_id name ) const;
 
 private:
     struct Declared
@@ -112,12 +135,23 @@ private:
         Type_id interface; // as written: a generic implementer's names its own parameters
     };
 
+    struct Block
+    {
+        Node_id node;
+        Type_id pattern;
+        Type_id interface; // as written, naming the block's parameters
+    };
+
+    bool kind_supplies( const Type_table& table, Type_id type, Type_id interface ) const;
+
     void conform(
         const Ast& ast, Type_table& table, std::span<const Type_id> recorded, Node_id implementer, Node_id written, Type_id type
     );
 
-    std::unordered_map<u32, std::vector<Declared>> declared_;    // struct or enum declaration -> what it implements
-    std::unordered_map<u32, std::vector<Declared>> builtin_;     // built-in type -> what its blocks implement
+    std::unordered_map<u32, std::vector<Declared>> declared_; // struct or enum declaration -> what it implements
+    std::vector<Block>                             blocks_;   // in declaration order
+    std::unordered_map<u32, std::vector<Type_id>>  promised_; // parameter type -> what it promises
+    std::vector<Node_id>                           payload_enums_;
     std::unordered_map<u32, std::vector<Type_id>>  refinements_; // Interface_decl node -> what it requires, as written
     std::unordered_map<u32, Node_id>               bound_only_;  // Interface_decl node -> the method mentioning `self`
     std::vector<Node_id>                           cyclic_;      // Interface_decl nodes with a refused requirement

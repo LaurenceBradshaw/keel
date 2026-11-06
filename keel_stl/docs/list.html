@@ -11,6 +11,11 @@
 <header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
 <main>
 <h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::list</h1>
+<ul class="contents">
+<li><a href="#list"><code>list</code></a> <span class="kind">class</span></li>
+<li><a href="#T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable"><code>T&gt; equatable for list&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></li>
+<li><a href="#T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable"><code>T&gt; hashable for list&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></li>
+</ul>
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">list</span></h2>
 <div class="group" id="list">
@@ -207,6 +212,32 @@ Does nothing if <code>n</code> is at least <code>size()</code>.</p>
 <div class="doc">
 <p>Reverses the order of the elements in place.</p>
 </div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T&gt; equatable for list&lt;T&gt; where T : equatable</span></h2>
+<div class="group" id="T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable">
+<pre class="signature"><a class="anchor" href="#T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable" aria-label="Link to T&gt; equatable for list&lt;T&gt; where T : equatable">#</a><code><span class="kw">implements</span>&lt;T&gt; <a class="type" href="prelude.html#equatable">equatable</a> <span class="kw">for</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>Two lists are equal when they hold equal elements in the same order.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable.operator==">
+<pre class="signature"><a class="anchor" href="#T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#list">list</a>&lt;T&gt; other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T&gt; hashable for list&lt;T&gt; where T : hashable</span></h2>
+<div class="group" id="T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable">
+<pre class="signature"><a class="anchor" href="#T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable" aria-label="Link to T&gt; hashable for list&lt;T&gt; where T : hashable">#</a><code><span class="kw">implements</span>&lt;T&gt; <a class="type" href="prelude.html#hashable">hashable</a> <span class="kw">for</span> <a class="type" href="#list">list</a>&lt;T&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A list hashes each element in order, then its size.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable.hash">
+<pre class="signature"><a class="anchor" href="#T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 </div>
 </section>
 </main>

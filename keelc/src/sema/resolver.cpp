@@ -684,6 +684,10 @@ void Resolver::visit_aggregate( Node_id id )
 // its refusal can name the type.
 void Resolver::visit_block( Node_id id )
 {
+    // The block's own parameters, before the interface and the type that name them.
+    push_scope( Scope_kind::Barrier );
+    visit( ast_.type_param_list( id ) );
+
     for( const Node_id implemented : ast_.implemented( id ) )
     {
         visit( implemented );
@@ -691,14 +695,16 @@ void Resolver::visit_block( Node_id id )
 
     visit( ast_.implementer( id ) );
 
-    // Signatures refuses a block for this package's own struct or class, and its bodies would only
-    // repeat that: what they name belongs inside the type.
-    const Node_id type = bindings_[ast_.implementer( id ).v];
-    refused_block_     = type.is_valid() &&
+    // Signatures refuses an unconditional block for this package's own struct or class, and its
+    // bodies would only repeat that: what they name belongs inside the type.
+    const Node_id written = ast_.kind( ast_.implementer( id ) ) == Node_kind::Generic_type
+                                ? ast_.generic_name( ast_.implementer( id ) )
+                                : ast_.implementer( id );
+    const Node_id type    = bindings_[written.v];
+    refused_block_        = type.is_valid() &&
                      ( ast_.kind( type ) == Node_kind::Struct_decl || ast_.kind( type ) == Node_kind::Class_decl ) &&
-                     modules_.package_of( ast_.span( type ).file ) == modules_.package_of( ast_.span( id ).file );
-
-    push_scope( Scope_kind::Barrier );
+                     modules_.package_of( ast_.span( type ).file ) == modules_.package_of( ast_.span( id ).file ) &&
+                     ast_.where_clauses( ast_.type_param_list( id ) ).empty();
 
     if( self_.is_valid() )
     {

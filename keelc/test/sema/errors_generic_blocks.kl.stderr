@@ -1,0 +1,43 @@
+error: `Pair<A, A>` could meet `Pair<A, B>` at one type, and both implement `Named`
+  --> sema/errors_generic_blocks.kl:24:15
+   |
+24 | implements<A> Named for Pair<A, A> where A : copyable // error: could meet the block above
+   |               ^^^^^ the block at sema/errors_generic_blocks.kl:19:1 implements it first; narrow one so no type matches both
+
+error: `T` cannot implement an interface through a block
+  --> sema/errors_generic_blocks.kl:29:25
+   |
+29 | implements<T> Named for T // error: a bare parameter is every type
+   |                         ^ `T` alone would be every type; write the type `T` is part of
+
+error: `B` is not named in `Pair<A, i32>`
+  --> sema/errors_generic_blocks.kl:34:15
+   |
+34 | implements<A, B> equatable for Pair<A, i32> where A : copyable // error: `B` is not in the type
+   |               ^ a block's parameters are bound by matching its type, so each must appear there
+
+error: a block cannot make every pointer `hashable`
+  --> sema/errors_generic_blocks.kl:39:28
+   |
+39 | implements<T> hashable for T* // error: every pointer is hashed by the compiler
+   |                            ^^ the compiler compares and hashes a pointer by its address
+
+error: a block cannot be conditional on `numeric` yet
+  --> sema/errors_generic_blocks.kl:44:62
+   |
+44 | implements<A> equatable for Pair<A, u8> where A : copyable & numeric // error: not an interface
+   |                                                              ^^^^^^^ a block's `where` names interfaces, and `copyable` where its type requires it
+
+error: `Pair<Opaque, u8>` has no `operator==`
+  --> sema/errors_generic_blocks.kl:68:9
+   |
+68 |     if( q == q ) // error: `Opaque` is not `equatable`, which the block asks of `T`
+   |         ^^^^^^ the block at sema/errors_generic_blocks.kl:59:15 makes `Pair<T, u8>` implement `equatable` only where `T : equatable`, which `Opaque` is not
+
+error: `read` needs a `T` that implements `Named`, but `Pair<bool, i32>` does not
+  --> sema/errors_generic_blocks.kl:72:18
+   |
+72 |     return read( p ); // error: `bool` is not `Named`, which the block asks of `A`
+   |                  ^ the block at sema/errors_generic_blocks.kl:19:18 makes `Pair<A, B>` implement `Named` only where `A : Named`, which `bool` is not
+
+7 errors generated

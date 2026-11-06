@@ -484,3 +484,39 @@ class list<T> implements iterable<T>
     private u64 count_;
     private u64 cap_;
 };
+
+/// Two lists are equal when they hold equal elements in the same order.
+implements<T> equatable for list<T> where T : equatable
+{
+    bool operator==( const ref list<T> other ) const
+    {
+        if( this.size() != other.size() )
+        {
+            return false;
+        }
+
+        for( u64 i : 0..this.size() )
+        {
+            if( this[i] != other[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+/// A list hashes each element in order, then its size.
+implements<T> hashable for list<T> where T : hashable
+{
+    void hash( ref hasher h ) const
+    {
+        for( u64 i : 0..this.size() )
+        {
+            this[i].hash( ref h );
+        }
+
+        h.write( this.size() );
+    }
+};

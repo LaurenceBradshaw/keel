@@ -476,6 +476,11 @@ std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise 
     // aggregate, which the signature pass reaches with no enclosing function.
     const Node_id owner = owner_of_.at( table_.get( parameter ).declaration.v );
 
+    if( ast_.kind( owner ) == Node_kind::Implements_decl )
+    {
+        return fmt::format( "add `{}` to the block's `where` clause for `{}`", promise, table_.name( parameter ) );
+    }
+
     return fmt::format(
         "add `{}` to the `where` clause for `{}` on `{}`",
         promise,
@@ -488,6 +493,20 @@ std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise 
 // block per interface, where the orphan rule lets the caller's package write one.
 std::string Bounds::conforming_help( Type_id type, Type_id interface, Span at ) const
 {
+    // A block that would answer but for its own `where`.
+    if( const auto unmet = types_.conformances().unmet_bound( table_, type, interface ) )
+    {
+        return fmt::format(
+            "the block at {} makes `{}` implement `{}` only where `{} : {}`, which `{}` is not",
+            reporter_.position( ast_.span( ast_.implemented( unmet->block )[0] ) ),
+            table_.name( types_.type_of( unmet->block ) ),
+            table_.name( interface ),
+            table_.name( unmet->parameter ),
+            table_.name( unmet->interface ),
+            table_.name( unmet->argument )
+        );
+    }
+
     std::vector<Type_id> missing = closed( std::span( &interface, 1 ) );
     std::erase_if( missing, [&]( Type_id each ) { return conforms( type, each ); } );
     std::ranges::reverse( missing ); // what is refined first
@@ -626,7 +645,7 @@ bool Bounds::has_operator( Type_id type, Symbol_id name ) const
 
     if( table_.is_enum( type ) )
     {
-        return types_.conformances().block_declaring( ast_, type, name ).is_valid();
+        return types_.conformances().block_declaring( ast_, table_, type, name ).is_valid();
     }
 
     // A bound's `==` and `<=>` are the prelude's, which result_of_binary answers.
@@ -648,7 +667,7 @@ Bounds::reached_only_as( Type_id type, Symbol_id name, Node_id block, const Reso
 {
     const auto interface_of = [&]( Node_id declaring ) { return types_.type_of( ast_.implemented( declaring )[0] ); };
 
-    std::vector<Node_id> blocks = types_.conformances().blocks_declaring( ast_, type, name );
+    std::vector<Node_id> blocks = types_.conformances().blocks_declaring( ast_, table_, type, name );
     std::erase_if(
         blocks,
         [&]( Node_id declaring ) { return !resolution.sees( ast_, from, table_.get( interface_of( declaring ) ).declaration ); }
@@ -922,11 +941,13 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         {
             reporter_.error_at(
                 ast_.span( where_clause ),
-                fmt::format(
-                    "`{}` is not a type parameter of `{}`",
-                    interner_.text( subject_name ),
-                    interner_.text( ast_.name( declaration ) )
-                )
+                ast_.kind( declaration ) == Node_kind::Implements_decl
+                    ? fmt::format( "`{}` is not a type parameter of the block", interner_.text( subject_name ) )
+                    : fmt::format(
+                          "`{}` is not a type parameter of `{}`",
+                          interner_.text( subject_name ),
+                          interner_.text( ast_.name( declaration ) )
+                      )
             );
             continue;
         }
@@ -1026,6 +1047,14 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         }
 
         bounds_.emplace( it->v, direct_bounds );
+    }
+
+    for( const Node_id type_param : type_params )
+    {
+        if( const auto interfaces = interfaces_.find( type_param.v ); interfaces != interfaces_.end() )
+        {
+            types_.conformances().declare_promised( types_.type_of( type_param ), interfaces->second );
+        }
     }
 }
 

@@ -579,6 +579,81 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     }
 }
 
+namespace
+{
+
+Type_id resolved( const Type_table& table, Type_id type, const Bindings& bound )
+{
+    for( auto found = bound.find( type.v ); table.is_parameter( type ) && found != bound.end(); found = bound.find( type.v ) )
+    {
+        type = found->second;
+    }
+
+    return type;
+}
+
+bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
+{
+    a = resolved( table, a, bound );
+    b = resolved( table, b, bound );
+
+    if( a == b )
+    {
+        return true;
+    }
+
+    if( table.is_parameter( a ) || table.is_parameter( b ) )
+    {
+        bound.emplace( table.is_parameter( a ) ? a.v : b.v, table.is_parameter( a ) ? b : a );
+        return true;
+    }
+
+    const Type& x = table.get( a );
+    const Type& y = table.get( b );
+
+    if( x.kind != y.kind )
+    {
+        return false;
+    }
+
+    switch( x.kind )
+    {
+    case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
+    case Type_kind::Run:
+        return x.const_element == y.const_element && unify( table, x.element, y.element, bound );
+    case Type_kind::Array:
+        return x.count == y.count && unify( table, x.element, y.element, bound );
+    case Type_kind::Struct:
+    case Type_kind::Enum:
+    case Type_kind::Interface:
+        if( x.declaration != y.declaration || x.arguments.size() != y.arguments.size() )
+        {
+            return false;
+        }
+
+        for( std::size_t i = 0; i < x.arguments.size(); ++i )
+        {
+            if( !unify( table, x.arguments[i], y.arguments[i], bound ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    default:
+        return false; // distinct leaves
+    }
+}
+
+} // namespace
+
+bool Type_table::unifies( Type_id a, Type_id b, Type_id c, Type_id d ) const
+{
+    Bindings bound;
+    return unify( *this, a, b, bound ) && unify( *this, c, d, bound );
+}
+
 const Type& Type_table::get( Type_id id ) const
 {
     assert( id.is_valid() );

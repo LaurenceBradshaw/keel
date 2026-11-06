@@ -106,7 +106,13 @@ std::string Signature_printer::declaration( Node_id decl ) const
             where_clauses( ast_.type_param_list( decl ) )
         );
     case Node_kind::Implements_decl:
-        return fmt::format( "implements {} for {}", type( ast_.implemented( decl )[0] ), type( ast_.implementer( decl ) ) );
+        return fmt::format(
+            "implements{} {} for {}{}",
+            type_parameters( ast_.type_param_list( decl ) ),
+            type( ast_.implemented( decl )[0] ),
+            type( ast_.implementer( decl ) ),
+            where_clauses( ast_.type_param_list( decl ) )
+        );
     case Node_kind::Enum_decl:
     {
         const Node_id underlying = ast_.underlying_type( decl );
@@ -416,6 +422,20 @@ public:
         return Node_id {};
     }
 
+    // A block has no name, so the nth of them.
+    std::string block( u32 n ) const
+    {
+        for( u32 i = 0; i < ast_.node_count(); ++i )
+        {
+            if( ast_.kind( Node_id { i } ) == Node_kind::Implements_decl && n-- == 0 )
+            {
+                return print_signature( ast_, resolution_, types_, interner_, Node_id { i }, {} );
+            }
+        }
+        FAIL( "no such block" );
+        return {};
+    }
+
     std::string operator()( Node_kind kind, std::string_view name, const Bindings& bindings = {} ) const
     {
         return print_signature( ast_, resolution_, types_, interner_, find( kind, name ), bindings );
@@ -527,6 +547,18 @@ TEST_CASE( "signatures_print_interfaces_and_their_implementers", "[sema][signatu
     REQUIRE( printed( Node_kind::Interface_decl, "Solid" ) == "interface Solid implements Shape, Named" );
     REQUIRE( printed( Node_kind::Struct_decl, "Square" ) == "struct Square implements Shape, Named" );
     REQUIRE( printed( Node_kind::Class_decl, "Pair" ) == "class Pair<T> implements Shape where T : copyable" );
+}
+
+TEST_CASE( "signatures_print_a_block_with_its_parameters", "[sema][signature][interface][generic_blocks]" )
+{
+    const Printed printed( "interface Named { u64 size() const; };\n"
+                           "implements Named for i32 { u64 size() const { return 4; } };\n"
+                           "class Pair<A, B> { A a; B b; };\n"
+                           "implements<A, B> Named for Pair<A, B> where A : Named, where B : Named\n"
+                           "{ u64 size() const { return 8; } };\n" );
+
+    REQUIRE( printed.block( 0 ) == "implements Named for i32" );
+    REQUIRE( printed.block( 1 ) == "implements<A, B> Named for Pair<A, B> where A : Named, where B : Named" );
 }
 
 TEST_CASE( "signatures_print_a_generic_interface_and_its_instances", "[sema][signature][interface]" )

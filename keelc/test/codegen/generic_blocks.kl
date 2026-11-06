@@ -1,0 +1,57 @@
+// M12: a block with parameters of its own conforms every instance its type matches whose
+// arguments meet its `where`: through a bound, nested, through the vtable, as `==`, and for a
+// pointer.
+interface Named
+{
+    i32 code() const;
+};
+
+implements Named for i32
+{
+    i32 code() const { return this; }
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Wrap<T> where T : copyable & Named
+{
+    i32 code() const { return this.v.code() + 100; }
+};
+
+implements<T> equatable for Wrap<T> where T : copyable & equatable
+{
+    bool operator==( const ref Wrap<T> other ) const { return this.v == other.v; }
+};
+
+implements<T> Named for T* where T : Named
+{
+    i32 code() const { return ( *this ).code() + 1000; }
+};
+
+i32 read<T>( const ref T x ) where T : Named
+{
+    return x.code();
+}
+
+i32 through( const Named* n )
+{
+    return n.code();
+}
+
+i32 main()
+{
+    Wrap<i32> a = Wrap<i32> { 7 };
+    Wrap<i32> b = Wrap<i32> { 7 };
+    Wrap<Wrap<i32>> nested = Wrap<Wrap<i32>> { Wrap<i32> { 3 } };
+    i32* p = &a.v;
+
+    if( read( a ) != 107 ) { return 1; }
+    if( read( nested ) != 203 ) { return 2; }
+    if( through( &a ) != 107 ) { return 3; }
+    if( !( a == b ) || a != b ) { return 4; }
+    if( read( p ) != 1007 ) { return 5; }
+    return 0;
+}

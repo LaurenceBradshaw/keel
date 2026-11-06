@@ -143,6 +143,8 @@ public:
     Node_id owner_of( Type_id parameter ) const; // the declaration that introduced it, or invalid
     // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
     std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
+    // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.
+    std::string conforming_help( Type_id type, Type_id interface, Span at ) const;
 
 private:
     void check_each_bound( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
@@ -154,8 +156,6 @@ private:
 
     // Why a type the compiler would make `interface` is not one: its own `equatable` replaced it.
     std::string dropped_help( Type_id type, Type_id interface ) const;
-    // What conforms `type` to `interface` and all it refines, written at `at`; empty where nothing there can.
-    std::string conforming_help( Type_id type, Type_id interface, Span at ) const;
 
     void
     report_unmet( Node_id parameter, Span at, Type_id argument, std::string_view callee, Bound bound, std::string_view name );

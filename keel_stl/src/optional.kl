@@ -81,3 +81,74 @@ bool is_none<T>( const ref optional<T> o )
             return true;
     }
 }
+/// Two optionals are equal when both are empty, or both hold equal values.
+implements<T> equatable for optional<T> where T : equatable
+{
+    bool operator==( const ref optional<T> other ) const
+    {
+        switch( this )
+        {
+            case optional::some( mine ):
+                switch( other )
+                {
+                    case optional::some( theirs ):
+                        return mine == theirs;
+                    case optional::none:
+                        return false;
+                }
+            case optional::none:
+                switch( other )
+                {
+                    case optional::some( _ ):
+                        return false;
+                    case optional::none:
+                        return true;
+                }
+        }
+    }
+};
+
+/// An empty optional comes before any that holds a value; two that hold values order by them.
+implements<T> comparable for optional<T> where T : comparable
+{
+    ordering operator<=>( const ref optional<T> other ) const
+    {
+        switch( this )
+        {
+            case optional::some( mine ):
+                switch( other )
+                {
+                    case optional::some( theirs ):
+                        return mine <=> theirs;
+                    case optional::none:
+                        return ordering::greater;
+                }
+            case optional::none:
+                switch( other )
+                {
+                    case optional::some( _ ):
+                        return ordering::less;
+                    case optional::none:
+                        return ordering::equal;
+                }
+        }
+    }
+};
+
+/// An optional hashes whether it holds a value, then the value.
+implements<T> hashable for optional<T> where T : hashable
+{
+    void hash( ref hasher h ) const
+    {
+        switch( this )
+        {
+            case optional::some( value ):
+                h.write( 1 );
+                value.hash( ref h );
+                break;
+            case optional::none:
+                h.write( 0 );
+                break;
+        }
+    }
+};

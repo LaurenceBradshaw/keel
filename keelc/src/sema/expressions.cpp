@@ -2226,10 +2226,27 @@ Node_id Expressions::find_operator(
     Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text, std::size_t operands
 )
 {
-    // An enum's operator is its block's; a block missing it was reported as a conformance error. A
-    // parameter's is its bound's, and an implementer missing it was reported the same way.
-    const Node_id block =
-        table_.is_enum( object_type ) ? types_.conformances().block_declaring( ast_, object_type, name ) : Node_id {};
+    // An enum's operator is its block's, and so is a struct's that declares none; a block missing it
+    // was reported as a conformance error. A parameter's is its bound's, and an implementer missing
+    // it was reported the same way.
+    const bool from_block =
+        table_.is_enum( object_type ) || ( table_.is_struct( object_type ) &&
+                                           !aggregates_.find_method( table_.get( object_type ).declaration, name ).is_valid() );
+    const Node_id block = from_block ? types_.conformances().block_declaring( ast_, table_, object_type, name ) : Node_id {};
+
+    // A generic block's method is reached as its interface's, which lowering finds at this instance.
+    if( block.is_valid() && ast_.is_generic( block ) )
+    {
+        const Type_id      written     = types_.type_of( ast_.implemented( block )[0] );
+        const Conformance* conformance = types_.conformances().find( block, written );
+        const Type_id      interface =
+            table_.substitute( written, *types_.conformances().bindings_at( table_, *conformance, object_type ) );
+
+        bool unused = false;
+        callees_.record_through( id, interface );
+        return aggregates_.find_operator( table_.get( interface ).declaration, name, operands, unused );
+    }
+
     const std::vector<Type_id> owners = block.is_valid() ? std::vector<Type_id> {} : bounds_.method_owners( object_type, name );
 
     // Two bounds may each declare `-`, one with one operand and one with two.
@@ -2278,10 +2295,18 @@ Node_id Expressions::find_operator(
         const bool own_package =
             resolution_.package_of( ast_.span( declaration ).file ) == resolution_.package_of( ast_.span( id ).file );
 
+        // A block that would answer but for its `where` is what to point at.
+        const Type_id interface =
+            ast_.kind( id ) == Node_kind::Binary_expr ? Conformance_model::interface_for( table_, ast_.op( id ) ) : Type_id {};
+        const bool unmet =
+            interface.is_valid() && types_.conformances().unmet_bound( table_, object_type, interface ).has_value();
+
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` has no `{}`", table_.name( object_type ), interner_.text( name ) ),
-            own_package ? fmt::format( "declare `{}` in it", declaration_text ) : std::string {}
+            unmet         ? bounds_.conforming_help( object_type, interface, ast_.span( id ) )
+            : own_package ? fmt::format( "declare `{}` in it", declaration_text )
+                          : std::string {}
         );
 
         return Node_id {};

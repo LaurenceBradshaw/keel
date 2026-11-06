@@ -1,0 +1,15 @@
+// M12: a pair is hashable only where both its values are, so one holding an interface pointer is
+// no set's key.
+import kl::pair;
+import kl::set;
+
+interface Shape
+{
+    f64 area() const;
+};
+
+i32 main()
+{
+    kl::set<kl::pair<i32, Shape*>> cells = kl::set<kl::pair<i32, Shape*>>(); // error: names `B : hashable`
+    return cast<i32>( cells.size() );
+}

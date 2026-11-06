@@ -558,7 +558,28 @@ Lowering::Requirement_target Lowering::requirement_target( Node_id requirement, 
         return { requirement, { table.instance_bindings( held ), {} }, true };
     }
 
-    return { types_.conformances().method_for( table, held, interface, requirement ), at_instance( held ) };
+    const Node_id method = types_.conformances().method_for( table, held, interface, requirement );
+    const Node_id block  = method.is_valid() ? ast_.enclosing_aggregate( method ) : Node_id {};
+
+    // A generic block's parameters are bound by matching `held` against its type, not by `held`'s own.
+    if( block.is_valid() && ast_.kind( block ) == Node_kind::Implements_decl && ast_.is_generic( block ) )
+    {
+        const Conformance* conformance = types_.conformances().of( table, held, interface );
+        assert( conformance && conformance->implementer == block );
+
+        std::vector<Type_id>       arguments = *block_arguments( ast_, types_, *conformance, held );
+        Bindings                   bound;
+        const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( block ) );
+
+        for( std::size_t i = 0; i < parameters.size(); ++i )
+        {
+            bound.emplace( types_.type_of( parameters[i] ).v, arguments[i] );
+        }
+
+        return { method, { std::move( bound ), std::move( arguments ) } };
+    }
+
+    return { method, at_instance( held ) };
 }
 
 Place Lowering::place_for( Node_id declaration, Type_id owner )
@@ -4796,6 +4817,11 @@ std::vector<Function> lower(
 
     Instance_queue instances( ast, types );
 
+    for( const Function& function : functions )
+    {
+        instances.reached_by( function );
+    }
+
     // next() has queued what a provided instance reaches, so skipping it still finds those.
     while( const std::optional<Instantiation> instance = instances.next() )
     {
@@ -4821,6 +4847,7 @@ std::vector<Function> lower(
 
         emitted.type_arguments = instance->arguments;
 
+        instances.reached_by( emitted );
         functions.push_back( std::move( emitted ) );
     }
 

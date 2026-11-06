@@ -5,6 +5,7 @@
 #include <optional>
 #include <vector>
 #include "ast/ast.h"
+#include "ir/kir.h"
 #include "sema/type.h"
 #include "sema/type_checker.h"
 
@@ -30,6 +31,10 @@ public:
     // conformance is the next.
     std::optional<Instantiation> next();
 
+    // The generic blocks' methods a lowered function calls or converts to an interface through,
+    // which no call site the checker saw names.
+    void reached_by( const Function& function );
+
 private:
     void queue_new_composites();
 
@@ -39,6 +44,10 @@ private:
     std::size_t                at_              = 0;
     std::size_t                composites_seen_ = 0;
 };
+
+// A generic block's arguments where it covers `type`, in its parameters' order.
+std::optional<std::vector<Type_id>>
+block_arguments( const Ast& ast, const Types& types, const Conformance& conformance, Type_id type );
 
 // The instance's type arguments bound to its declaration's parameters, positionally.
 Bindings bindings_for( const Ast& ast, const Types& types, const Instantiation& instance );

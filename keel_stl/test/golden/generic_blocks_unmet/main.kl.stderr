@@ -1,0 +1,7 @@
+error: `set` needs a `K` that implements `hashable`, but `kl::pair<i32, Shape*>` does not
+  --> generic_blocks_unmet/main.kl:13:13
+   |
+13 |     kl::set<kl::pair<i32, Shape*>> cells = kl::set<kl::pair<i32, Shape*>>(); // error: names `B : hashable`
+   |             ^^^^^^^^^^^^^^^^^^^^^^ the block at ../../src/pair.kl:45:18 makes `kl::pair<A, B>` implement `hashable` only where `B : hashable`, which `Shape*` is not
+
+1 error generated

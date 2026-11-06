@@ -75,6 +75,30 @@ Node_id bound_only_method( const Ast& ast, const Interner& interner, Node_id int
     return Node_id {};
 }
 
+// What a pointer points at, through every level; anything else is itself.
+Type_id pointee( const Type_table& table, Type_id type )
+{
+    while( table.is_pointer( type ) || table.is_many_pointer( type ) )
+    {
+        type = table.get( type ).element;
+    }
+
+    return type;
+}
+
+// A built-in, a struct, class or enum, or a pointer to one or to a parameter.
+bool blockable( const Type_table& table, Type_id type )
+{
+    const Type_id head = pointee( table, type );
+
+    if( head != type && table.is_parameter( head ) )
+    {
+        return true;
+    }
+
+    return table.is_builtin( head ) || table.is_struct( head ) || table.is_enum( head );
+}
+
 } // namespace
 
 void Signatures::declare()
@@ -297,7 +321,8 @@ void Signatures::declare_type_bounds()
 {
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( is_aggregate( ast_.kind( child ) ) || ast_.kind( child ) == Node_kind::Enum_decl )
+        if( is_aggregate( ast_.kind( child ) ) || ast_.kind( child ) == Node_kind::Enum_decl ||
+            ast_.kind( child ) == Node_kind::Implements_decl )
         {
             declare_bounds( child, ast_.type_param_list( child ) );
         }
@@ -371,79 +396,210 @@ void Signatures::declare_block( Node_id block )
         return;
     }
 
-    const bool declared = ( table_.is_struct( type ) || table_.is_enum( type ) ) && table_.get( type ).arguments.empty();
-    if( !table_.is_builtin( type ) && !declared )
+    if( !refuse_block( block, type, interface ) )
+    {
+        types_.record( block, type );
+
+        if( table_.is_interface( interface ) )
+        {
+            types_.conformances().declare_block( block, type, interface );
+        }
+
+        return;
+    }
+
+    types_.record( block, table_.builtin( Type_kind::Error ) );
+}
+
+// Whether `pattern` holds `parameter` as an argument its declaration requires to be `copyable`.
+bool Signatures::requires_copyable( Type_id pattern, Type_id parameter ) const
+{
+    if( table_.is_pointer( pattern ) || table_.is_many_pointer( pattern ) )
+    {
+        return requires_copyable( table_.get( pattern ).element, parameter );
+    }
+
+    if( !table_.is_struct( pattern ) && !table_.is_enum( pattern ) )
+    {
+        return false;
+    }
+
+    const std::span<const Type_id> arguments = table_.get( pattern ).arguments;
+    const std::vector<Node_id>     declared = ast_.type_parameters( ast_.type_param_list( table_.get( pattern ).declaration ) );
+
+    for( std::size_t i = 0; i < arguments.size() && i < declared.size(); ++i )
+    {
+        if( ( arguments[i] == parameter && bounds_.has_bound( types_.type_of( declared[i] ), Bound::Copyable ) ) ||
+            requires_copyable( arguments[i], parameter ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Reports why `block` cannot make `type` an `interface`, if it cannot.
+bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
+{
+    const Node_id list = ast_.type_param_list( block );
+
+    if( !blockable( table_, type ) )
     {
         reporter_.error_at(
             ast_.name_span( block ),
             fmt::format( "`{}` cannot implement an interface through a block", table_.name( type ) ),
-            "a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters"
+            table_.is_parameter( type )
+                ? fmt::format( "`{0}` alone would be every type; write the type `{0}` is part of", table_.name( type ) )
+                : "a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one"
         );
-
-        types_.record( block, table_.builtin( Type_kind::Error ) );
-        return;
+        return true;
     }
 
-    const Node_id declaration = table_.get( type ).declaration;
+    // Each parameter is bound by matching an instance against the type.
+    Bindings named;
+    table_.deduce( type, type, named );
 
-    // A built-in type belongs to the prelude.
-    const Symbol_id here  = resolution_.package_of( ast_.span( block ).file );
-    const Symbol_id owner = declared ? resolution_.package_of( ast_.span( declaration ).file ) : resolution_.prelude_package();
+    for( const Node_id parameter : ast_.type_parameters( list ) )
+    {
+        if( !named.contains( types_.type_of( parameter ).v ) )
+        {
+            reporter_.error_at(
+                ast_.span( parameter ),
+                fmt::format( "`{}` is not named in `{}`", interner_.text( ast_.name( parameter ) ), table_.name( type ) ),
+                "a block's parameters are bound by matching its type, so each must appear there"
+            );
+            return true;
+        }
+    }
 
-    // A package's own struct or class says what it implements where it is declared, so a block for
-    // one is only ever the interface's package reaching a type it cannot edit.
-    if( table_.is_struct( type ) && here == owner )
+    const std::vector<Node_id> parameters = ast_.type_parameters( list );
+
+    for( const Node_id clause : ast_.where_clauses( list ) )
+    {
+        const auto subject =
+            std::ranges::find_if( parameters, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); } );
+
+        for( const Node_id bound :
+             ast_.kind( clause ) == Node_kind::Where_clause ? ast_.bounds( clause ) : std::span<const Node_id> {} )
+        {
+            const Type_id named_bound = types_.type_of( bound );
+
+            if( named_bound.is_valid() && table_.is_error( named_bound ) )
+            {
+                continue; // reported where it was resolved
+            }
+
+            // Every instance is `copyable` there already, so matching need not ask.
+            const std::optional<Bound> builtin = bound_for_name( interner_.text( ast_.name( bound ) ) );
+            if( builtin == Bound::Copyable && subject != parameters.end() &&
+                requires_copyable( type, types_.type_of( *subject ) ) )
+            {
+                continue;
+            }
+
+            if( builtin )
+            {
+                reporter_.error_at(
+                    ast_.span( bound ),
+                    fmt::format( "a block cannot be conditional on `{}` yet", interner_.text( ast_.name( bound ) ) ),
+                    "a block's `where` names interfaces, and `copyable` where its type requires it"
+                );
+                return true;
+            }
+
+            if( !named_bound.is_valid() || !table_.is_interface( named_bound ) )
+            {
+                reporter_.error_at(
+                    ast_.span( bound ),
+                    "a block's `where` names only interfaces",
+                    "a block is matched by the interfaces its arguments meet"
+                );
+                return true;
+            }
+
+            if( table_.mentions_parameter( named_bound ) )
+            {
+                reporter_.error_at(
+                    ast_.span( bound ),
+                    "a block's bound cannot name the block's parameters yet",
+                    fmt::format( "write `{}` with no type arguments from the block", table_.base_name( named_bound ) )
+                );
+                return true;
+            }
+        }
+    }
+
+    // The compiler compares and hashes every pointer by its address.
+    if( ( table_.is_pointer( type ) || table_.is_many_pointer( type ) ) && table_.is_parameter( table_.get( type ).element ) &&
+        table_.is_interface( interface ) && table_.is_prelude_interface( interface ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( block ),
+            fmt::format( "a block cannot make every pointer `{}`", table_.name( interface ) ),
+            "the compiler compares and hashes a pointer by its address"
+        );
+        return true;
+    }
+
+    // A pointer belongs to its element's package, and a built-in to the prelude's.
+    const Type_id   head        = pointee( table_, type );
+    const Node_id   declared_at = table_.get( head ).declaration;
+    const Symbol_id here        = resolution_.package_of( ast_.span( block ).file );
+    const Symbol_id owner       = table_.is_parameter( head ) ? Symbol_id {}
+                                  : declared_at.is_valid()    ? resolution_.package_of( ast_.span( declared_at ).file )
+                                                              : resolution_.prelude_package();
+
+    // An unconditional block covers every instance, which the declaration's own `implements` says.
+    const std::span<const Type_id> arguments = table_.get( type ).arguments;
+    const bool open = std::ranges::all_of( arguments, [&]( Type_id each ) { return table_.is_parameter( each ); } ) &&
+                      named.size() == arguments.size();
+
+    if( table_.is_struct( type ) && here == owner && open && ast_.where_clauses( list ).empty() )
     {
         reporter_.error_at(
             ast_.name_span( block ),
             fmt::format( "`{}` is declared in this package, so a block cannot be written for it", table_.name( type ) ),
             fmt::format(
-                "write `implements {}` where `{}` is declared", reporter_.text( ast_.span( written ) ), table_.name( type )
+                "write `implements {}` where `{}` is declared",
+                reporter_.text( ast_.span( ast_.implemented( block )[0] ) ),
+                table_.name( type )
             )
         );
-
-        types_.record( block, table_.builtin( Type_kind::Error ) );
-        return;
+        return true;
     }
 
-    if( table_.is_interface( interface ) )
+    if( !table_.is_interface( interface ) )
     {
-        const Symbol_id issuer = resolution_.package_of( ast_.span( table_.get( interface ).declaration ).file );
-
-        // An argument counts by its own declaration; `sink<celsius*>` does not make `celsius`'s package an owner.
-        const auto owns_argument = [&]( Type_id argument )
-        {
-            const Node_id declared_at = table_.get( argument ).declaration;
-            return declared_at.is_valid() && resolution_.package_of( ast_.span( declared_at ).file ) == here;
-        };
-
-        if( here != owner && here != issuer && std::ranges::none_of( table_.get( interface ).arguments, owns_argument ) )
-        {
-            reporter_.error_at(
-                ast_.name_span( block ),
-                fmt::format(
-                    "a block for `{0}` must be in the package that declares `{0}`{1}",
-                    table_.name( type ),
-                    table_.get( interface ).arguments.empty()
-                        ? fmt::format( " or `{}`", table_.name( interface ) )
-                        : fmt::format( ", `{}` or one of its type arguments", table_.name( interface ) )
-                ),
-                fmt::format(
-                    "two packages could otherwise each make `{}` a `{}`", table_.name( type ), table_.name( interface )
-                )
-            );
-
-            types_.record( block, table_.builtin( Type_kind::Error ) );
-            return;
-        }
+        return false;
     }
 
-    types_.record( block, type );
+    const Symbol_id issuer = resolution_.package_of( ast_.span( table_.get( interface ).declaration ).file );
 
-    if( table_.is_interface( interface ) )
+    // An argument counts by its own declaration; `sink<celsius*>` does not make `celsius`'s package an owner.
+    const auto owns_argument = [&]( Type_id argument )
     {
-        types_.conformances().declare( table_, block, type, interface );
+        const Node_id declared_at = table_.get( argument ).declaration;
+        return declared_at.is_valid() && resolution_.package_of( ast_.span( declared_at ).file ) == here;
+    };
+
+    if( here != owner && here != issuer && std::ranges::none_of( table_.get( interface ).arguments, owns_argument ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( block ),
+            fmt::format(
+                "a block for `{0}` must be in the package that declares `{0}`{1}",
+                table_.name( type ),
+                table_.get( interface ).arguments.empty()
+                    ? fmt::format( " or `{}`", table_.name( interface ) )
+                    : fmt::format( ", `{}` or one of its type arguments", table_.name( interface ) )
+            ),
+            fmt::format( "two packages could otherwise each make `{}` a `{}`", table_.name( type ), table_.name( interface ) )
+        );
+        return true;
     }
+
+    return false;
 }
 
 void Signatures::declare_fields()
@@ -718,6 +874,11 @@ void Signatures::declare_enums()
         const std::string_view name = interner_.text( ast_.name( child ) );
 
         declare_parameters( ast_.type_param_list( child ) );
+
+        if( ast_.enum_has_payload( child ) )
+        {
+            types_.conformances().declare_payload_enum( child );
+        }
 
         std::vector<Type_id> arguments;
 
@@ -2961,8 +3122,7 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
 
     SECTION( "anything else is refused once, at the type" )
     {
-        const std::string_view help =
-            "a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters";
+        const std::string_view help = "a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one";
 
         struct Case
         {
@@ -2971,12 +3131,10 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
         };
 
         const Case cases[] = {
-            { "i32*", "`i32*` cannot implement an interface through a block" },
-            { "const i32*", "`const i32*` cannot implement an interface through a block" },
-            { "i32[*]", "`i32[*]` cannot implement an interface through a block" },
             { "fn( i32 ) -> i32", "`fn( i32 ) -> i32` cannot implement an interface through a block" },
-            { "Pair<i32>", "`Pair<i32>` cannot implement an interface through a block" },
             { "Hashable", "`Hashable` cannot implement an interface through a block" },
+            { "Hashable*", "`Hashable*` cannot implement an interface through a block" },
+            { "i32[2]", "`i32[2]` cannot implement an interface through a block" },
         };
 
         for( const Case& c : cases )
@@ -3020,6 +3178,99 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
 
 // The orphan rule: a block is written where its interface or its type is declared, and a built-in
 // type is the prelude's. So two packages can never both make one type conform to one interface.
+TEST_CASE( "signatures_declare_a_generic_block", "[sema][interfaces][implements_for][generic_blocks]" )
+{
+    const std::string hashable = "interface Hashable { u64 hash() const; };\n"
+                                 "class Pair<A, B> { A a; B b; };\n";
+
+    const auto refused = [&]( std::string_view block, std::string_view message )
+    {
+        const Typed p( hashable + std::string( block ) + "\ni32 main() { return 0; }" );
+
+        INFO( block << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+    };
+
+    SECTION( "a pointer, a pointer to a parameter, an instance, or a conditional open form" )
+    {
+        for( const char* block : {
+                 "implements Hashable for i32* { u64 hash() const { return 1; } };",
+                 "implements<T> Hashable for T* { u64 hash() const { return 1; } };",
+                 "implements Hashable for Pair<i32, u8> { u64 hash() const { return 1; } };",
+                 "implements<A> Hashable for Pair<A, A> { u64 hash() const { return 1; } };",
+                 "implements<A, B> Hashable for Pair<A, B> where A : Hashable { u64 hash() const { return 1; } };",
+                 "struct Wrap<T> where T : copyable { T v; };\n"
+                 "implements<T> Hashable for Wrap<T> where T : copyable & Hashable { u64 hash() const { return 1; } };",
+             } )
+        {
+            const Typed p( hashable + block + "\ni32 main() { return 0; }" );
+
+            INFO( block << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 0 );
+            REQUIRE( p.types().conformances().all().size() == 3 ); // with the prelude's two
+        }
+    }
+
+    SECTION( "an unconditional block for every instance belongs on the declaration" )
+    {
+        refused(
+            "implements<A, B> Hashable for Pair<A, B> { u64 hash() const { return 1; } };",
+            "`Pair<A, B>` is declared in this package, so a block cannot be written for it"
+        );
+    }
+
+    SECTION( "a bare parameter would be every type" )
+    {
+        refused(
+            "implements<T> Hashable for T { u64 hash() const { return 1; } };",
+            "`T` alone would be every type; write the type `T` is part of"
+        );
+    }
+
+    SECTION( "every parameter is named in the type" )
+    {
+        refused(
+            "implements<A, B> Hashable for Pair<A, i32> where B : Hashable { u64 hash() const { return 1; } };",
+            "`B` is not named in `Pair<A, i32>`"
+        );
+    }
+
+    SECTION( "a bound is an interface without the block's parameters" )
+    {
+        refused(
+            "implements<A, B> Hashable for Pair<A, B> where A : copyable { u64 hash() const { return 1; } };",
+            "a block cannot be conditional on `copyable` yet"
+        );
+        refused(
+            "struct Wrap<T> where T : copyable { T v; };\n"
+            "implements<T> Hashable for Wrap<T> where T : copyable & numeric { u64 hash() const { return 1; } };",
+            "a block cannot be conditional on `numeric` yet"
+        );
+        refused(
+            "interface sink<T> { void put( T x ); };\n"
+            "implements<A, B> Hashable for Pair<A, B> where A : sink<B> { u64 hash() const { return 1; } };",
+            "a block's bound cannot name the block's parameters yet"
+        );
+    }
+
+    SECTION( "the compiler's equality and hash of every pointer stand" )
+    {
+        refused(
+            "implements<T> hashable for T* { void hash( ref hasher h ) const { } };",
+            "a block cannot make every pointer `hashable`"
+        );
+    }
+
+    SECTION( "a `where` subject that is not the block's" )
+    {
+        refused(
+            "implements<A, B> Hashable for Pair<A, B> where C : Hashable { u64 hash() const { return 1; } };",
+            "`C` is not a type parameter of the block"
+        );
+    }
+}
+
 TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][interfaces][implements_for][packages]" )
 {
     const std::string prelude = std::string( prelude_source() ) + "interface Sized { u64 size() const; };\n";

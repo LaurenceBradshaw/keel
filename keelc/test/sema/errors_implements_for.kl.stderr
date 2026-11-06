@@ -22,23 +22,11 @@ error: `Q` is declared in this package, so a block cannot be written for it
 43 | implements Hashable for Q
    |                         ^ write `implements Hashable` where `Q` is declared
 
-error: `i32*` cannot implement an interface through a block
-  --> sema/errors_implements_for.kl:49:25
-   |
-49 | implements Hashable for i32*
-   |                         ^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
-
-error: `Pair<i32>` cannot implement an interface through a block
-  --> sema/errors_implements_for.kl:54:25
-   |
-54 | implements Hashable for Pair<i32>
-   |                         ^^^^^^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
-
 error: `Hashable` cannot implement an interface through a block
   --> sema/errors_implements_for.kl:59:25
    |
 59 | implements Hashable for Hashable
-   |                         ^^^^^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
+   |                         ^^^^^^^^ a block is for a built-in type, a `struct`, `class` or `enum`, or a pointer to one
 
 error: `self` is written only inside an `interface`
   --> sema/errors_implements_for.kl:69:9
@@ -64,4 +52,4 @@ error: `i32` has no methods
 100 |     x.hash();
     |     ^ `hash` is reached only as a `Hashable`: through a `where T : Hashable` parameter, or a `Hashable*`
 
-11 errors generated
+9 errors generated

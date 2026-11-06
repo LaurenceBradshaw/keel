@@ -18,6 +18,9 @@
 <li><a href="#value_or"><code>value_or</code></a> <span class="kind">function</span></li>
 <li><a href="#is_some"><code>is_some</code></a> <span class="kind">function</span></li>
 <li><a href="#is_none"><code>is_none</code></a> <span class="kind">function</span></li>
+<li><a href="#T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable"><code>T&gt; equatable for optional&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></li>
+<li><a href="#T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable"><code>T&gt; comparable for optional&lt;T&gt; where T : comparable</code></a> <span class="kind">implements</span></li>
+<li><a href="#T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable"><code>T&gt; hashable for optional&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">optional</span></h2>
@@ -89,6 +92,45 @@
 <div class="doc">
 <p>Whether an optional holds nothing.</p>
 </div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T&gt; equatable for optional&lt;T&gt; where T : equatable</span></h2>
+<div class="group" id="T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable">
+<pre class="signature"><a class="anchor" href="#T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable" aria-label="Link to T&gt; equatable for optional&lt;T&gt; where T : equatable">#</a><code><span class="kw">implements</span>&lt;T&gt; <a class="type" href="prelude.html#equatable">equatable</a> <span class="kw">for</span> <a class="type" href="#optional">optional</a>&lt;T&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>Two optionals are equal when both are empty, or both hold equal values.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable.operator==">
+<pre class="signature"><a class="anchor" href="#T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T&gt; comparable for optional&lt;T&gt; where T : comparable</span></h2>
+<div class="group" id="T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable">
+<pre class="signature"><a class="anchor" href="#T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable" aria-label="Link to T&gt; comparable for optional&lt;T&gt; where T : comparable">#</a><code><span class="kw">implements</span>&lt;T&gt; <a class="type" href="prelude.html#comparable">comparable</a> <span class="kw">for</span> <a class="type" href="#optional">optional</a>&lt;T&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#comparable">comparable</a></code></pre>
+<div class="doc">
+<p>An empty optional comes before any that holds a value; two that hold values order by them.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; other ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">T&gt; hashable for optional&lt;T&gt; where T : hashable</span></h2>
+<div class="group" id="T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable">
+<pre class="signature"><a class="anchor" href="#T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable" aria-label="Link to T&gt; hashable for optional&lt;T&gt; where T : hashable">#</a><code><span class="kw">implements</span>&lt;T&gt; <a class="type" href="prelude.html#hashable">hashable</a> <span class="kw">for</span> <a class="type" href="#optional">optional</a>&lt;T&gt; <span class="kw">where</span> T : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>An optional hashes whether it holds a value, then the value.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable.hash">
+<pre class="signature"><a class="anchor" href="#T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 </div>
 </section>
 </main>

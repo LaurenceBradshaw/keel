@@ -1,0 +1,58 @@
+// M12: `pair` and `optional` are equatable, comparable and hashable wherever their arguments are,
+// through kl's conditional blocks, and `list` equatable and hashable; a list has no order.
+import kl::list;
+import kl::optional;
+import kl::pair;
+import kl::set;
+
+kl::list<i32> of( i32 a, i32 b )
+{
+    kl::list<i32> made = kl::list<i32>();
+    made.push( a );
+    made.push( b );
+    return made;
+}
+
+i32 main()
+{
+    // A set of cells holds each once and finds it.
+    kl::set<kl::pair<i32, i32>> cells = kl::set<kl::pair<i32, i32>>();
+    cells.insert( kl::pair<i32, i32>( 1, 2 ) );
+    cells.insert( kl::pair<i32, i32>( 3, 4 ) );
+    cells.insert( kl::pair<i32, i32>( 1, 2 ) );
+    if( cells.size() != 2 || !cells.contains( kl::pair<i32, i32>( 3, 4 ) ) || cells.contains( kl::pair<i32, i32>( 2, 1 ) ) )
+    {
+        return 1;
+    }
+
+    // Lists compare element by element.
+    if( of( 1, 2 ) != of( 1, 2 ) || of( 1, 2 ) == of( 2, 1 ) )
+    {
+        return 2;
+    }
+
+    // Pairs order by their first values, then by their second.
+    if( !( kl::pair<i32, i32>( 1, 9 ) < kl::pair<i32, i32>( 2, 0 ) ) || !( kl::pair<i32, i32>( 1, 2 ) < kl::pair<i32, i32>( 1, 3 ) ) )
+    {
+        return 3;
+    }
+
+    // An empty optional comes first, and two holding values order by them.
+    kl::optional<i32> none = kl::optional::none;
+    kl::optional<i32> one = kl::optional::some( 1 );
+    kl::optional<i32> also = kl::optional::some( 1 );
+    if( none == one || !( none < one ) || also != one )
+    {
+        return 4;
+    }
+
+    // Nested: a set of pairs of lists.
+    kl::set<kl::pair<kl::list<i32>, bool>> nested = kl::set<kl::pair<kl::list<i32>, bool>>();
+    nested.insert( kl::pair<kl::list<i32>, bool>( of( 1, 2 ), true ) );
+    if( !nested.contains( kl::pair<kl::list<i32>, bool>( of( 1, 2 ), true ) ) )
+    {
+        return 5;
+    }
+
+    return 0;
+}
