@@ -37,11 +37,19 @@ public:
     check( std::span<const Generic_call> roots, std::span<const Generic_call> calls, std::span<const Generic_call> implied );
 
 private:
+    // Which written size a size came from: the `occurrence`th one of `value` in the origin's span.
+    struct Source
+    {
+        u64 value      = 0;
+        u32 occurrence = 0;
+    };
+
     // A declaration and its size arguments; a type argument's slot is left invalid.
     struct Instance
     {
-        Node_id              declaration;
-        std::vector<Type_id> sizes;
+        Node_id                            declaration;
+        std::vector<Type_id>               sizes;
+        std::vector<std::optional<Source>> sources; // parallel to `sizes`
     };
 
     struct Suffix
@@ -51,11 +59,11 @@ private:
     };
 
     void                    collect( Node_id id, Node_id owner );
-    std::optional<Instance> reach( const Generic_call& edge, const Bindings& caller );
+    std::optional<Instance> reach( const Generic_call& edge, const Bindings& bindings, const Instance* caller );
     Bindings                bindings_of( const Instance& instance ) const;
     bool                    report( const Instance& instance, Span origin );
     std::string             name_of( const Instance& instance ) const;
-    Span                    written( Span origin, std::span<const u64> values ) const;
+    Span                    written( Span origin, std::span<const u64> values, std::span<const Source> sources ) const;
     Type_id                 failing( Type_id size, const Bindings& bindings ) const;
     void                    parameters_of( Type_id size, std::vector<Type_id>& into ) const;
 

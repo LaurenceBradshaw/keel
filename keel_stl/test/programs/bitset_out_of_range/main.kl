@@ -1,0 +1,10 @@
+// `kl::bitset` checks every index: setting the bit past the end aborts, naming the check in the library.
+import kl::bitset;
+
+i32 main()
+{
+    kl::bitset<65> bits = kl::bitset<65> {};
+    bits.set( 64 );
+    bits.set( 65 );
+    return 0;
+}

@@ -17,6 +17,12 @@ bool is_constant_size( const Type_table& table, Type_id id )
     return table.is_size( id ) && table.get( id ).width == 0;
 }
 
+// Whether the edge writes a size of its own, which makes it the origin of what it reaches.
+bool writes( const Type_table& table, const Generic_call& edge )
+{
+    return std::ranges::any_of( edge.arguments, [&]( Type_id argument ) { return is_constant_size( table, argument ); } );
+}
+
 } // namespace
 
 void Size_suffixes::check(
@@ -48,7 +54,7 @@ void Size_suffixes::check(
     {
         for( const Generic_call& edge : edges )
         {
-            if( std::optional<Instance> instance = reach( edge, {} ) )
+            if( std::optional<Instance> instance = reach( edge, {}, nullptr ) )
             {
                 starts.emplace_back( std::move( *instance ), edge.at );
             }
@@ -85,12 +91,9 @@ void Size_suffixes::check(
 
             for( const Generic_call* edge : out_of[instance.declaration.v] )
             {
-                if( std::optional<Instance> reached = reach( *edge, bindings ) )
+                if( std::optional<Instance> reached = reach( *edge, bindings, &instance ) )
                 {
-                    const bool writes = std::ranges::any_of(
-                        edge->arguments, [&]( Type_id argument ) { return is_constant_size( table_, argument ); }
-                    );
-                    pending.emplace_back( std::move( *reached ), writes ? edge->at : origin );
+                    pending.emplace_back( std::move( *reached ), writes( table_, *edge ) ? edge->at : origin );
                 }
             }
         }
@@ -128,26 +131,51 @@ void Size_suffixes::collect( Node_id id, Node_id owner )
 
 // The instance an edge makes under its caller's sizes, or none when it takes no size or one is
 // still open.
-std::optional<Size_suffixes::Instance> Size_suffixes::reach( const Generic_call& edge, const Bindings& caller )
+std::optional<Size_suffixes::Instance>
+Size_suffixes::reach( const Generic_call& edge, const Bindings& bindings, const Instance* caller )
 {
-    Instance instance { .declaration = edge.to, .sizes = {} };
+    Instance instance { .declaration = edge.to, .sizes = {}, .sources = {} };
     bool     sized = false;
 
-    for( const Type_id argument : edge.arguments )
+    // A size passed straight through keeps the caller's source, unless this edge is a new origin.
+    const std::vector<Node_id> passed = caller && !writes( table_, edge )
+                                            ? ast_.type_parameters( ast_.type_param_list( caller->declaration ) )
+                                            : std::vector<Node_id> {};
+
+    for( std::size_t i = 0; i < edge.arguments.size(); ++i )
     {
+        const Type_id argument = edge.arguments[i];
+
         if( !table_.is_size( argument ) && !table_.is_size_parameter( argument ) )
         {
             instance.sizes.push_back( Type_id {} );
+            instance.sources.emplace_back();
             continue;
         }
 
-        const std::optional<u64> value = table_.evaluate( argument, caller );
+        const std::optional<u64> value = table_.evaluate( argument, bindings );
         if( !value )
         {
             return std::nullopt;
         }
 
+        std::optional<Source> source;
+        if( is_constant_size( table_, argument ) )
+        {
+            const auto earlier =
+                std::ranges::count( edge.arguments.begin(), edge.arguments.begin() + std::ptrdiff_t( i ), argument );
+            source = Source { .value = *value, .occurrence = u32( earlier ) };
+        }
+        for( std::size_t p = 0; p < passed.size() && p < caller->sources.size(); ++p )
+        {
+            if( passed[p].v < types_.size() && types_[passed[p].v] == argument )
+            {
+                source = caller->sources[p];
+            }
+        }
+
         instance.sizes.push_back( table_.size( *value ) );
+        instance.sources.push_back( source );
         sized = true;
     }
 
@@ -215,10 +243,21 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
         std::vector<Type_id> blamed;
         parameters_of( divides ? table_.get( step ).arguments[1] : step, blamed );
 
-        std::vector<u64> values;
+        const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( instance.declaration ) );
+
+        std::vector<u64>    values;
+        std::vector<Source> sources;
         for( const Type_id parameter : blamed )
         {
             values.push_back( *table_.evaluate( parameter, bindings ) );
+
+            for( std::size_t p = 0; p < parameters.size() && p < instance.sources.size(); ++p )
+            {
+                if( parameters[p].v < types_.size() && types_[parameters[p].v] == parameter && instance.sources[p] )
+                {
+                    sources.push_back( *instance.sources[p] );
+                }
+            }
         }
 
         const std::string reason = value                     ? "is 0"
@@ -227,7 +266,7 @@ bool Size_suffixes::report( const Instance& instance, Span origin )
                                                              : "overflows a `u64`";
 
         reporter_.error_at(
-            written( origin, values ),
+            written( origin, values, sources ),
             fmt::format(
                 "`{}` makes {}", name_of( instance ), value ? "an array of 0 elements" : "an array whose size " + reason
             ),
@@ -266,31 +305,46 @@ std::string Size_suffixes::name_of( const Instance& instance ) const
     return fmt::format( "{}<{}>", interner_.text( ast_.name( named ) ), arguments );
 }
 
-// The size the caller wrote, inside the edge's span: the first whose value the suffix read, else
-// the first at all, else the whole edge when the sizes were deduced.
-Span Size_suffixes::written( Span origin, std::span<const u64> values ) const
+// The size the caller wrote, inside the edge's span: the one a source names, else the first whose
+// value the suffix read, else the first at all, else the whole edge when the sizes were deduced.
+Span Size_suffixes::written( Span origin, std::span<const u64> values, std::span<const Source> sources ) const
 {
-    std::optional<Span> any;
+    std::vector<std::pair<Span, u64>> sizes;
 
     for( u32 i = 0; i < ast_.node_count() && i < types_.size(); ++i )
     {
         const Span span = ast_.span( Node_id { i } );
 
-        if( span.file != origin.file || span.start < origin.start || span.end > origin.end || !types_[i].is_valid() ||
-            !is_constant_size( table_, types_[i] ) )
+        if( span.file == origin.file && span.start >= origin.start && span.end <= origin.end && types_[i].is_valid() &&
+            is_constant_size( table_, types_[i] ) )
         {
-            continue;
+            sizes.emplace_back( span, table_.get( types_[i] ).count );
         }
+    }
 
-        if( std::ranges::find( values, table_.get( types_[i] ).count ) != values.end() )
+    std::ranges::sort( sizes, {}, []( const auto& size ) { return size.first.start; } );
+
+    for( const Source& source : sources )
+    {
+        u32 seen = 0;
+        for( const auto& [span, value] : sizes )
+        {
+            if( value == source.value && seen++ == source.occurrence )
+            {
+                return span;
+            }
+        }
+    }
+
+    for( const auto& [span, value] : sizes )
+    {
+        if( std::ranges::find( values, value ) != values.end() )
         {
             return span;
         }
-
-        any = any ? any : span;
     }
 
-    return any.value_or( origin );
+    return sizes.empty() ? origin : sizes.front().first;
 }
 
 // The innermost step of a computed size that has no value.

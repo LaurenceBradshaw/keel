@@ -1,0 +1,121 @@
+// `kl::bitset` at the word edges: every method agrees across one word, a full word and one past
+// it, and the spare bits of the last word never show.
+import kl::bitset;
+import kl::map;
+import kl::test::context;
+
+// Every single-bit and whole-set method at bits 0 and N - 1.
+private void edges<u64 N>( ref kl::test::context c )
+{
+    kl::bitset<N> a = kl::bitset<N> {};
+    c.check_eq( a.size(), N );
+    c.check_eq( a.count(), 0 );
+    c.check( a.none() && !a.any() && !a.all() );
+
+    a.set( 0 );
+    a.set( N - 1 );
+    c.check( a.test( 0 ) && a.test( N - 1 ) );
+    c.check( a.any() && !a.none() );
+    c.check_eq( a.count(), N == 1 ? 1 : 2 );
+
+    a.clear( 0 );
+    c.check( !a.test( 0 ) );
+    a.flip( 0 );
+    c.check( a.test( 0 ) );
+    a.flip( N - 1 );
+    c.check( N == 1 || !a.test( N - 1 ) );
+    a.assign( N - 1, true );
+    c.check( a.test( N - 1 ) );
+    a.assign( 0, false );
+    c.check( N == 1 || !a.test( 0 ) );
+
+    a.set_all();
+    c.check_eq( a.count(), N );
+    c.check( a.all() && a.any() && !a.none() );
+
+    a.clear_all();
+    c.check_eq( a.count(), 0 );
+    c.check( a.none() && !a.any() && !a.all() );
+}
+
+private void at_word_edges( ref kl::test::context c )
+{
+    edges<1>( ref c );
+    edges<64>( ref c );
+    edges<65>( ref c );
+}
+
+// Readers mask the last word, so what lies past bit N never counts.
+private void spare_bits_are_ignored( ref kl::test::context c )
+{
+    kl::bitset<65> fresh = kl::bitset<65> {};
+    kl::bitset<65> a = kl::bitset<65> {};
+    a.flip_all();
+    a.flip_all();
+    c.check( a == fresh );
+
+    a.set( 7 );
+    c.check( ~~a == a );
+
+    kl::bitset<65> high = kl::bitset<65> {};
+    high.set( 64 );
+    kl::bitset<65> b = kl::bitset<65> {};
+    b.words[1] = ~cast<u64>( 0 );
+    c.check_eq( b.count(), 1 );
+    c.check( b == high );
+
+    b.words[0] = ~cast<u64>( 0 );
+    c.check( b.all() );
+
+    kl::map<kl::bitset<65>, u64> m = kl::map<kl::bitset<65>, u64>();
+    m.insert( high, 1 );
+    b.words[0] = 0;
+    c.check( m.contains( b ) );
+}
+
+// Bits on both sides of the word edge, against hand-computed answers.
+private void operators_combine( ref kl::test::context c )
+{
+    kl::bitset<65> a = kl::bitset<65> {};
+    a.set( 1 );
+    a.set( 63 );
+    a.set( 64 );
+    kl::bitset<65> b = kl::bitset<65> {};
+    b.set( 1 );
+    b.set( 64 );
+    b.set( 2 );
+
+    kl::bitset<65> both = kl::bitset<65> {};
+    both.set( 1 );
+    both.set( 64 );
+    kl::bitset<65> either = both;
+    either.set( 2 );
+    either.set( 63 );
+    kl::bitset<65> one = kl::bitset<65> {};
+    one.set( 2 );
+    one.set( 63 );
+
+    c.check( ( a & b ) == both );
+    c.check( ( a | b ) == either );
+    c.check( ( a ^ b ) == one );
+    c.check_eq( ( ~a ).count(), 62 );
+
+    kl::bitset<65> x = a;
+    x &= b;
+    c.check( x == ( a & b ) );
+    x = a;
+    x |= b;
+    c.check( x == ( a | b ) );
+    x = a;
+    x ^= b;
+    c.check( x == ( a ^ b ) );
+}
+
+private void copies( ref kl::test::context c )
+{
+    kl::bitset<65> a = kl::bitset<65> {};
+    kl::bitset<65> b = a;
+    b.set( 3 );
+    c.check( !a.test( 3 ) );
+    c.check( b.test( 3 ) );
+}

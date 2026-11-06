@@ -1,0 +1,19 @@
+// A conditional of literals chooses an overload as a literal does: by the types that hold both arms.
+// Each marked line is one error.
+void two( u64 _, u64 _ ) { }
+void two( i64 _, i64 _ ) { }
+void wide( u8 _ ) { }
+void wide( u64 _ ) { }
+void small( u8 _ ) { }
+void small( i8 _ ) { }
+
+i32 main()
+{
+    u64  x = 3;
+    bool c = x > 1;
+    two( x, c ? 1 : 2 );
+    wide( c ? 1 : 300 );
+    small( c ? -1 : 100 );
+    small( c ? -1 : 200 );                          // error: no `small` holds both arms
+    return 0;
+}

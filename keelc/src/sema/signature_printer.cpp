@@ -178,9 +178,12 @@ std::string Signature_printer::type( Node_id annotation ) const
     {
         const Node_id declared = resolution_.declaration_of( annotation );
 
+        // A use prints the parameter's argument or its name, never the declaring `u64 N`.
         if( declared.is_valid() && ast_.kind( declared ) == Node_kind::Type_param_decl )
         {
-            return type_parameter( declared );
+            const Type_id argument = bound( declared );
+            return argument.is_valid() ? std::string( types_.table().name( argument ) )
+                                       : std::string( text( ast_.name( declared ) ) );
         }
 
         const Node_id package = ast_.package( annotation );
@@ -592,6 +595,14 @@ TEST_CASE( "signatures_print_a_size_parameter_with_its_type", "[sema][signature]
 
     REQUIRE( printed( Node_kind::Struct_decl, "Grid" ) == "struct Grid<T, u64 N> where T : copyable" );
     REQUIRE( printed( Node_kind::Function_decl, "f" ) == "void f<u64 N, T>( T x )" );
+}
+
+TEST_CASE( "signatures_print_a_used_size_parameter_by_name", "[sema][signature][size]" )
+{
+    const Printed printed( "struct Bits<u64 N> { u64[N] w = [ 0, .. ]; };\n"
+                           "void g<u64 N>( const ref Bits<N> b ) { }\n" );
+
+    REQUIRE( printed( Node_kind::Function_decl, "g" ) == "void g<u64 N>( const ref Bits<N> b )" );
 }
 
 TEST_CASE( "signatures_print_an_array_size_over_a_size_parameter", "[sema][signature][size]" )

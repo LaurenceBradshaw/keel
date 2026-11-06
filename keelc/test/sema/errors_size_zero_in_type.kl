@@ -1,0 +1,12 @@
+// A size written in a type is checked as one written at a call. Each marked line is one error.
+struct Bits<u64 N> { u64[N] words = [ 0, .. ]; };
+
+u64 width( const ref Bits<0> b )                    // error: at least 1
+{
+    return b.words[0];
+}
+
+i32 main()
+{
+    return 0;
+}

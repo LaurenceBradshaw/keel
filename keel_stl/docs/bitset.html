@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::bitset</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::bitset</h1>
+<section class="entry">
+<h2><span class="kind">struct</span> <span class="type">bitset</span></h2>
+<div class="group" id="bitset">
+<pre class="signature"><a class="anchor" href="#bitset" aria-label="Link to bitset">#</a><code><span class="kw">struct</span> <span class="type">bitset</span>&lt;<a class="prim" href="prelude.html#u64">u64</a> N&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A fixed set of <code>N</code> bits, indexed from 0.</p>
+<p>A bitset copies like a number. <code>kl::bitset&lt;64&gt; {}</code> is one with every bit clear. Every method
+that takes an index panics when it is not less than <code>N</code>.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="bitset.words">
+<pre class="signature"><a class="anchor" href="#bitset.words" aria-label="Link to words">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a>[(N + 63) / 64] words = [ 0, .. ]</code></pre>
+<div class="doc">
+<p>The bits, 64 to a word, from bit 0 of the first word. The last word's bits past <code>N</code> are
+spare: every reader ignores them, so they may hold anything.</p>
+</div>
+</div>
+<h3>Single bits</h3>
+<div class="group" id="bitset.test">
+<pre class="signature"><a class="anchor" href="#bitset.test" aria-label="Link to test">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">test</span>( <a class="prim" href="prelude.html#u64">u64</a> i ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether bit <code>i</code> is set.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.set">
+<pre class="signature"><a class="anchor" href="#bitset.set" aria-label="Link to set">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set</span>( <a class="prim" href="prelude.html#u64">u64</a> i )</code></pre>
+<div class="doc">
+<p>Sets bit <code>i</code>.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.clear">
+<pre class="signature"><a class="anchor" href="#bitset.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>( <a class="prim" href="prelude.html#u64">u64</a> i )</code></pre>
+<div class="doc">
+<p>Clears bit <code>i</code>.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.flip">
+<pre class="signature"><a class="anchor" href="#bitset.flip" aria-label="Link to flip">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">flip</span>( <a class="prim" href="prelude.html#u64">u64</a> i )</code></pre>
+<div class="doc">
+<p>Flips bit <code>i</code>.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.assign">
+<pre class="signature"><a class="anchor" href="#bitset.assign" aria-label="Link to assign">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">assign</span>( <a class="prim" href="prelude.html#u64">u64</a> i, <a class="prim" href="prelude.html#bool">bool</a> on )</code></pre>
+<div class="doc">
+<p>Sets bit <code>i</code> if <code>on</code>, and clears it otherwise.</p>
+<h4>Panics</h4>
+<p>If <code>i</code> is not less than <code>N</code>.</p>
+</div>
+</div>
+<h3>The whole set</h3>
+<div class="group" id="bitset.size">
+<pre class="signature"><a class="anchor" href="#bitset.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of bits, <code>N</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.count">
+<pre class="signature"><a class="anchor" href="#bitset.count" aria-label="Link to count">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">count</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of bits set.</p>
+</div>
+</div>
+<div class="group" id="bitset.any">
+<pre class="signature"><a class="anchor" href="#bitset.any" aria-label="Link to any">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">any</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether any bit is set.</p>
+</div>
+</div>
+<div class="group" id="bitset.none">
+<pre class="signature"><a class="anchor" href="#bitset.none" aria-label="Link to none">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">none</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether no bit is set.</p>
+</div>
+</div>
+<div class="group" id="bitset.all">
+<pre class="signature"><a class="anchor" href="#bitset.all" aria-label="Link to all">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">all</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether every bit is set.</p>
+</div>
+</div>
+<div class="group" id="bitset.set_all">
+<pre class="signature"><a class="anchor" href="#bitset.set_all" aria-label="Link to set_all">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">set_all</span>()</code></pre>
+<div class="doc">
+<p>Sets every bit.</p>
+</div>
+</div>
+<div class="group" id="bitset.clear_all">
+<pre class="signature"><a class="anchor" href="#bitset.clear_all" aria-label="Link to clear_all">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear_all</span>()</code></pre>
+<div class="doc">
+<p>Clears every bit.</p>
+</div>
+</div>
+<div class="group" id="bitset.flip_all">
+<pre class="signature"><a class="anchor" href="#bitset.flip_all" aria-label="Link to flip_all">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">flip_all</span>()</code></pre>
+<div class="doc">
+<p>Flips every bit.</p>
+</div>
+</div>
+<h3>Comparing and combining</h3>
+<div class="group" id="bitset.operator==">
+<pre class="signature"><a class="anchor" href="#bitset.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Two bitsets are equal when the same bits are set.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator&amp;=">
+<pre class="signature"><a class="anchor" href="#bitset.operator&amp;=" aria-label="Link to operator&amp;=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator&amp;=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other )</code></pre>
+<div class="doc">
+<p>Clears every bit that is clear in <code>other</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator|=">
+<pre class="signature"><a class="anchor" href="#bitset.operator|=" aria-label="Link to operator|=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator|=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other )</code></pre>
+<div class="doc">
+<p>Sets every bit that is set in <code>other</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator^=">
+<pre class="signature"><a class="anchor" href="#bitset.operator^=" aria-label="Link to operator^=">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">operator^=</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other )</code></pre>
+<div class="doc">
+<p>Flips every bit that is set in <code>other</code>.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator&amp;">
+<pre class="signature"><a class="anchor" href="#bitset.operator&amp;" aria-label="Link to operator&amp;">#</a><code><span class="kw">public</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; <span class="fn">operator&amp;</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The bits set in both.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator|">
+<pre class="signature"><a class="anchor" href="#bitset.operator|" aria-label="Link to operator|">#</a><code><span class="kw">public</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; <span class="fn">operator|</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The bits set in either.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator^">
+<pre class="signature"><a class="anchor" href="#bitset.operator^" aria-label="Link to operator^">#</a><code><span class="kw">public</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; <span class="fn">operator^</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The bits set in exactly one.</p>
+</div>
+</div>
+<div class="group" id="bitset.operator~">
+<pre class="signature"><a class="anchor" href="#bitset.operator~" aria-label="Link to operator~">#</a><code><span class="kw">public</span> <a class="type" href="#bitset">bitset</a>&lt;N&gt; <span class="fn">operator~</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Every bit flipped.</p>
+</div>
+</div>
+<div class="group" id="bitset.hash">
+<pre class="signature"><a class="anchor" href="#bitset.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="prelude.html#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Feeds the set bits to <code>h</code>, so equal bitsets hash alike.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

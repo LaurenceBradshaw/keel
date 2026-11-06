@@ -1,0 +1,7 @@
+error: `N` is a size, which is at least 1
+ --> sema/errors_size_zero_in_type.kl:4:27
+  |
+4 | u64 width( const ref Bits<0> b )                    // error: at least 1
+  |                           ^
+
+1 error generated

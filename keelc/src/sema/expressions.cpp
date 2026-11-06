@@ -302,6 +302,34 @@ Type_id Expressions::infer_name( Node_id id )
     return types_.record( id, types_.type_of( decl ) );
 }
 
+// An integer literal's value as magnitude and sign. A conditional's arms fold to the one value whose
+// types hold both: the larger, or a negative one past either arm when an arm is negative.
+static std::optional<std::pair<u64, bool>> fold_arms( const Ast& ast, const Constant_folder& folder, Node_id node )
+{
+    if( ast.kind( node ) == Node_kind::Conditional_expr )
+    {
+        const auto a = fold_arms( ast, folder, ast.then_branch( node ) );
+        const auto b = fold_arms( ast, folder, ast.else_branch( node ) );
+        if( !a || !b )
+        {
+            return std::nullopt;
+        }
+        if( !a->second && !b->second )
+        {
+            return std::pair { std::max( a->first, b->first ), false };
+        }
+        const auto need = []( std::pair<u64, bool> v ) { return v.second ? v.first : v.first + 1; };
+        return std::pair { std::max( need( *a ), need( *b ) ), true };
+    }
+
+    const Folded literal = folder.fold_integer( node );
+    if( !literal.constant || literal.overflowed )
+    {
+        return std::nullopt;
+    }
+    return std::pair { literal.value.magnitude, literal.value.negative };
+}
+
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
 // context is the thing being chosen, a literal or arithmetic on literals of one family narrows the
 // set to that family, and an integer one to the types that hold its value. A struct literal names
@@ -343,12 +371,11 @@ Argument_shape Expressions::argument_shape( Node_id argument )
 
         if( shape.kind == Argument_kind::Integer )
         {
-            const Folded literal = constant_folder_.fold_integer( value );
-            if( literal.constant && !literal.overflowed )
+            if( const auto folded = fold_arms( ast_, constant_folder_, value ) )
             {
                 shape.valued    = true;
-                shape.magnitude = literal.value.magnitude;
-                shape.negative  = literal.value.negative;
+                shape.magnitude = folded->first;
+                shape.negative  = folded->second;
             }
         }
 

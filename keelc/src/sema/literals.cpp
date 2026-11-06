@@ -102,6 +102,19 @@ Adoption Literals::adoption( Node_id id ) const
 
         return Adoption::None;
 
+    case Node_kind::Conditional_expr: // `c ? 1 : 2` takes its type from where it lands, as `1 + 2` does
+    {
+        const Adoption then_arm = adoption( ast_.then_branch( id ) );
+        const Adoption else_arm = adoption( ast_.else_branch( id ) );
+
+        if( then_arm == Adoption::None || else_arm == Adoption::None )
+        {
+            return Adoption::None;
+        }
+
+        return then_arm == else_arm ? then_arm : Adoption::Other;
+    }
+
     default:
         return Adoption::None;
     }

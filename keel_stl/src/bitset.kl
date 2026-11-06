@@ -1,0 +1,324 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The bits of the last word that are in use.
+private u64 last_word_mask( u64 bits )
+{
+    if( bits % 64 == 0 )
+    {
+        return ~0;
+    }
+
+    return ( cast<u64>( 1 ) << ( bits % 64 ) ) - 1;
+}
+
+/// A fixed set of `N` bits, indexed from 0.
+///
+/// A bitset copies like a number. `kl::bitset<64> {}` is one with every bit clear. Every method
+/// that takes an index panics when it is not less than `N`.
+struct bitset<u64 N> implements equatable, hashable
+{
+    /// The bits, 64 to a word, from bit 0 of the first word. The last word's bits past `N` are
+    /// spare: every reader ignores them, so they may hold anything.
+    u64[(N + 63) / 64] words = [ 0, .. ];
+
+    /// --- Single bits ---
+
+    /// Whether bit `i` is set.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `N`.
+    bool test( u64 i ) const
+    {
+        if( i >= N )
+        {
+            panic( "index out of range" );
+        }
+
+        return ( words[i / 64] & ( cast<u64>( 1 ) << ( i % 64 ) ) ) != 0;
+    }
+
+    /// Sets bit `i`.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `N`.
+    void set( u64 i )
+    {
+        if( i >= N )
+        {
+            panic( "index out of range" );
+        }
+
+        words[i / 64] |= cast<u64>( 1 ) << ( i % 64 );
+    }
+
+    /// Clears bit `i`.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `N`.
+    void clear( u64 i )
+    {
+        if( i >= N )
+        {
+            panic( "index out of range" );
+        }
+
+        words[i / 64] &= ~( cast<u64>( 1 ) << ( i % 64 ) );
+    }
+
+    /// Flips bit `i`.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `N`.
+    void flip( u64 i )
+    {
+        if( i >= N )
+        {
+            panic( "index out of range" );
+        }
+
+        words[i / 64] ^= cast<u64>( 1 ) << ( i % 64 );
+    }
+
+    /// Sets bit `i` if `on`, and clears it otherwise.
+    ///
+    /// ### Panics
+    ///
+    /// If `i` is not less than `N`.
+    void assign( u64 i, bool on )
+    {
+        if( on )
+        {
+            set( i );
+        }
+        else
+        {
+            clear( i );
+        }
+    }
+
+    /// --- The whole set ---
+
+    /// The number of bits, `N`.
+    u64 size() const
+    {
+        return N;
+    }
+
+    /// The number of bits set.
+    u64 count() const
+    {
+        u64 result = 0;
+        for( u64 w : 0..words.size() )
+        {
+            u64 word = words[w];
+            if( w == words.size() - 1 )
+            {
+                word &= last_word_mask( N );
+            }
+
+            while( word != 0 )
+            {
+                word &= word - 1;
+                result++;
+            }
+        }
+
+        return result;
+    }
+
+    /// Whether any bit is set.
+    bool any() const
+    {
+        for( u64 w : 0..words.size() )
+        {
+            u64 word = words[w];
+            if( w == words.size() - 1 )
+            {
+                word &= last_word_mask( N );
+            }
+
+            if( word != 0 )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Whether no bit is set.
+    bool none() const
+    {
+        for( u64 w : 0..words.size() )
+        {
+            u64 word = words[w];
+            if( w == words.size() - 1 )
+            {
+                word &= last_word_mask( N );
+            }
+
+            if( word != 0 )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// Whether every bit is set.
+    bool all() const
+    {
+        for( u64 w : 0..words.size() )
+        {
+            u64 word = words[w];
+            if( w == words.size() - 1 )
+            {
+                if( ( word & last_word_mask( N ) ) != last_word_mask( N ) )
+                {
+                    return false;
+                }
+            }
+            else if( word != ~cast<u64>( 0 ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// Sets every bit.
+    void set_all()
+    {
+        for( u64 w : 0..words.size() )
+        {
+            if( w == words.size() - 1 )
+            {
+                words[w] = last_word_mask( N );
+            }
+            else
+            {
+                words[w] = ~cast<u64>( 0 );
+            }
+        }
+    }
+
+    /// Clears every bit.
+    void clear_all()
+    {
+        for( u64 w : 0..words.size() )
+        {
+            words[w] = 0;
+        }
+    }
+
+    /// Flips every bit.
+    void flip_all()
+    {
+        for( u64 w : 0..words.size() )
+        {
+            if( w == words.size() - 1 )
+            {
+                words[w] ^= last_word_mask( N );
+            }
+            else
+            {
+                words[w] ^= ~cast<u64>( 0 );
+            }
+        }
+    }
+
+    /// --- Comparing and combining ---
+
+    /// Two bitsets are equal when the same bits are set.
+    bool operator==( const ref bitset<N> other ) const
+    {
+        const u64 last = words.size() - 1;
+        for( u64 w : 0..last )
+        {
+            if( words[w] != other.words[w] )
+            {
+                return false;
+            }
+        }
+
+        return ( words[last] & last_word_mask( N ) ) == ( other.words[last] & last_word_mask( N ) );
+    }
+
+    /// Clears every bit that is clear in `other`.
+    void operator&=( const ref bitset<N> other )
+    {
+        for( u64 w : 0..words.size() )
+        {
+            words[w] &= other.words[w];
+        }
+    }
+
+    /// Sets every bit that is set in `other`.
+    void operator|=( const ref bitset<N> other )
+    {
+        for( u64 w : 0..words.size() )
+        {
+            words[w] |= other.words[w];
+        }
+    }
+
+    /// Flips every bit that is set in `other`.
+    void operator^=( const ref bitset<N> other )
+    {
+        for( u64 w : 0..words.size() )
+        {
+            words[w] ^= other.words[w];
+        }
+    }
+
+    /// The bits set in both.
+    bitset<N> operator&( const ref bitset<N> other ) const
+    {
+        bitset<N> result = this;
+        result &= other;
+        return result;
+    }
+
+    /// The bits set in either.
+    bitset<N> operator|( const ref bitset<N> other ) const
+    {
+        bitset<N> result = this;
+        result |= other;
+        return result;
+    }
+
+    /// The bits set in exactly one.
+    bitset<N> operator^( const ref bitset<N> other ) const
+    {
+        bitset<N> result = this;
+        result ^= other;
+        return result;
+    }
+
+    /// Every bit flipped.
+    bitset<N> operator~() const
+    {
+        bitset<N> result = this;
+        result.flip_all();
+        return result;
+    }
+
+    /// Feeds the set bits to `h`, so equal bitsets hash alike.
+    void hash( ref hasher h ) const
+    {
+        const u64 last = words.size() - 1;
+        for( u64 w : 0..last )
+        {
+            h.write( words[w] );
+        }
+
+        h.write( words[last] & last_word_mask( N ) );
+    }
+};
