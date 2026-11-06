@@ -465,13 +465,27 @@ bool Lookahead::looks_like_type_arguments( u32 at )
             depth -= 2;
             break;
 
-        // A type argument holds no call, literal or operator: meeting one means a comparison.
+        // A type argument holds no call or operator, and a literal only as a size: meeting one means a comparison.
         case Token_kind::Colon_colon:
         case Token_kind::Identifier:
         case Token_kind::Star:
         case Token_kind::Comma:
         case Token_kind::Pipe:
             break;
+
+        // A size, `bitset<64>`, only as a whole argument: `a < 4 + 1 > b` stays arithmetic.
+        case Token_kind::Int_literal:
+        {
+            const Token_kind before = cursor_.previous().kind;
+            const Token_kind after  = cursor_.peek( 1 ).kind;
+
+            if( ( before != Token_kind::Less && before != Token_kind::Comma ) ||
+                ( after != Token_kind::Comma && after != Token_kind::Greater && after != Token_kind::Greater_greater ) )
+            {
+                return false;
+            }
+            break;
+        }
 
         case Token_kind::L_bracket:
             if( cursor_.peek( 1 ).kind == Token_kind::R_bracket )
@@ -794,6 +808,12 @@ bool Lookahead::scan_type()
     return true;
 }
 
+// A size, `bitset<64>`, or a type.
+bool Lookahead::scan_type_argument()
+{
+    return cursor_.match( Token_kind::Int_literal ) || scan_type();
+}
+
 bool Lookahead::scan_type_term()
 {
     cursor_.match_keyword( Keyword::Const );
@@ -859,7 +879,7 @@ bool Lookahead::scan_type_term()
         {
             do
             {
-                if( !scan_type() )
+                if( !scan_type_argument() )
                 {
                     return false;
                 }
@@ -1144,7 +1164,7 @@ bool Lookahead::scan_where_clauses()
             {
                 do
                 {
-                    if( !scan_type() )
+                    if( !scan_type_argument() )
                     {
                         return false;
                     }
@@ -1914,11 +1934,21 @@ TEST_CASE( "lookahead_answers_the_parsers_lookahead", "[scan]" )
         CHECK( type_arguments( "a < b > ( c )" ) );
     }
 
+    SECTION( "a size is a whole type argument" )
+    {
+        CHECK( type_arguments( "f<4>( x )" ) );
+        CHECK( type_arguments( "a < 1 > ( c )" ) );
+        CHECK( type_arguments( "Grid<i32, 2, 3>::make()" ) );
+        CHECK( type_arguments( "make<Box<i32, 4>>()" ) );
+        CHECK_FALSE( type_arguments( "a < 4 > b" ) );
+        CHECK_FALSE( type_arguments( "a < 1 + 2 > ( c )" ) );
+        CHECK_FALSE( type_arguments( "a < b[ 1 + 2 ] > ( c )" ) );
+    }
+
     SECTION( "a comparison is not type arguments" )
     {
         CHECK_FALSE( type_arguments( "a < b > c" ) );
         CHECK_FALSE( type_arguments( "a < b;" ) );
-        CHECK_FALSE( type_arguments( "a < 1 > ( c )" ) );
         CHECK_FALSE( type_arguments( "a < b >> c" ) );
     }
 

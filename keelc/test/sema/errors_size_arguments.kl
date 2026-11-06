@@ -1,0 +1,17 @@
+// D78: a size argument, `bitset<64>`, is given only where the generic declares a size. A type
+// parameter given one is refused, wherever the argument list is written.
+struct Box<T> where T : copyable
+{
+    T v;
+};
+
+i32 id<T>( i32 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    Box<4> b = Box<4> { 1 };
+    return id<4>( 1 );
+}

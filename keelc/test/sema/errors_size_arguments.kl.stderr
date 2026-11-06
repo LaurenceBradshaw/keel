@@ -1,0 +1,19 @@
+error: a size is given where a type is wanted
+  --> sema/errors_size_arguments.kl:15:9
+   |
+15 |     Box<4> b = Box<4> { 1 };
+   |         ^
+
+error: a size is given where a type is wanted
+  --> sema/errors_size_arguments.kl:15:20
+   |
+15 |     Box<4> b = Box<4> { 1 };
+   |                    ^
+
+error: a size is given where a type is wanted
+  --> sema/errors_size_arguments.kl:16:15
+   |
+16 |     return id<4>( 1 );
+   |               ^
+
+3 errors generated

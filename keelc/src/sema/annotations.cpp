@@ -192,6 +192,10 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
         return resolve_field_type( annotation );
     case Node_kind::Union_type:
         return resolve_union( annotation );
+    case Node_kind::Int_literal:
+        // A size argument where a type is wanted: `Box<4>`.
+        reporter_.error_at( ast_.span( annotation ), "a size is given where a type is wanted" );
+        return table_.builtin( Type_kind::Error );
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );

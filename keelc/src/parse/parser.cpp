@@ -122,6 +122,7 @@ private:
     // --- types. `u32*` is a type *expression* and gets nodes of its own. ---
 
     Node_id parse_type();
+    Node_id parse_type_argument();
     Node_id parse_type_term();
     Node_id parse_function_type( Span start );
     Node_id parse_field_type( Span start );
@@ -1235,7 +1236,7 @@ Node_id Parser::parse_where_clause()
 
             do
             {
-                types.push_back( parse_type() );
+                types.push_back( parse_type_argument() );
             } while( cursor_.match( Token_kind::Comma ) );
 
             recovery_.expect_generic_close();
@@ -2162,6 +2163,18 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params
     return node;
 }
 
+// A size argument, `bitset<64>`, is a literal; a name stays a Named_type for sema to tell apart.
+Node_id Parser::parse_type_argument()
+{
+    if( cursor_.check( Token_kind::Int_literal ) && !cursor_.peek().bad )
+    {
+        const Token& literal = cursor_.advance();
+        return ast_.add( Node_kind::Int_literal, literal.span, literal.symbol.v, {} );
+    }
+
+    return parse_type();
+}
+
 // `A | B`: an error union (§6.7), of every term written.
 Node_id Parser::parse_type()
 {
@@ -2312,7 +2325,7 @@ Node_id Parser::parse_named_type( Span start )
         {
             do
             {
-                arguments.push_back( parse_type() );
+                arguments.push_back( parse_type_argument() );
             } while( cursor_.match( Token_kind::Comma ) );
         }
 
@@ -3789,7 +3802,7 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
 
     do
     {
-        arguments.push_back( parse_type() );
+        arguments.push_back( parse_type_argument() );
     } while( cursor_.match( Token_kind::Comma ) );
 
     recovery_.expect_generic_close();
@@ -14297,6 +14310,30 @@ TEST_CASE( "parser_parses_an_array_fill", "[parse][fixed_array]" )
             REQUIRE( p.error_count() == 1 );
             REQUIRE( p.errors().find( "`..` fills from the first element" ) != std::string::npos );
         }
+    }
+}
+
+// D78: a size is a whole type argument, `bitset<64>`. A name stays a Named_type, as the parser
+// cannot tell `WIDTH` from `T`.
+TEST_CASE( "parser_parses_a_size_argument", "[parse][size_params]" )
+{
+    SECTION( "in a declared type" )
+    {
+        REQUIRE( declared_type( "bitset<64> b;" ) == "Generic_type(bitset,Type_arg_list(64))" );
+        REQUIRE( declared_type( "Grid<i32, 2, 3> g;" ) == "Generic_type(Grid,Type_arg_list(i32,2,3))" );
+        REQUIRE( declared_type( "Box<Ring<4>> b;" ) == "Generic_type(Box,Type_arg_list(Generic_type(Ring,Type_arg_list(4))))" );
+    }
+
+    SECTION( "in a call" )
+    {
+        REQUIRE( index_outline( "f<4>( x )" ) == "Call_expr(f,Arg_list(x),Type_arg_list(4))" );
+        REQUIRE( index_outline( "Grid<i32, 2, 3>::make()" ).find( "Type_arg_list(i32,2,3)" ) != std::string::npos );
+    }
+
+    SECTION( "a comparison stays a comparison" )
+    {
+        REQUIRE( index_outline( "a < 4 > b" ).starts_with( "Binary_expr" ) );
+        REQUIRE( index_outline( "a < 1 + 2 > ( b )" ).starts_with( "Binary_expr" ) );
     }
 }
 
