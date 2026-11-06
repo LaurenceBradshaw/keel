@@ -1,7 +1,6 @@
 // A read of a `const` lowers to its value, in a release build, so what reads it folds: a number, a
-// `bool` and a static const field. A negative one is a temporary, and an enum's comparison is not
-// yet folded, but neither reads its global. A mutable global keeps its read. Each check returns its
-// own code.
+// `bool`, an enum and a static const field. A negative one is a temporary, but does not read its
+// global. A mutable global keeps its read. Each check returns its own code.
 
 enum level
 {

@@ -20,84 +20,75 @@ int32_t kl__topped__( void );
 int32_t kl__kept__3i32( int32_t );
 int32_t kl__main__( void );
 
-#line 27 "opt/const_reads.kl"
+#line 26 "opt/const_reads.kl"
 int32_t kl__scaled__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-#line 29 "opt/const_reads.kl"
+#line 28 "opt/const_reads.kl"
     kl_t2 = kl_x_1 * 4;
-#line 29 "opt/const_reads.kl"
+#line 28 "opt/const_reads.kl"
     kl_t0 = kl_t2 + 3;
-#line 29 "opt/const_reads.kl"
+#line 28 "opt/const_reads.kl"
     return kl_t0;
 }
 
-#line 32 "opt/const_reads.kl"
+#line 31 "opt/const_reads.kl"
 int32_t kl__lowered__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-#line 34 "opt/const_reads.kl"
+#line 33 "opt/const_reads.kl"
     kl_t0 = kl_x_1 + -3;
-#line 34 "opt/const_reads.kl"
+#line 33 "opt/const_reads.kl"
     return kl_t0;
 }
 
-#line 37 "opt/const_reads.kl"
+#line 36 "opt/const_reads.kl"
 double kl__halved__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
-#line 39 "opt/const_reads.kl"
+#line 38 "opt/const_reads.kl"
     kl_t2 = kl_x_1 * 0.5;
-#line 39 "opt/const_reads.kl"
+#line 38 "opt/const_reads.kl"
     kl_t0 = kl_t2 + -0.25;
-#line 39 "opt/const_reads.kl"
+#line 38 "opt/const_reads.kl"
     return kl_t0;
 }
 
-#line 43 "opt/const_reads.kl"
+#line 42 "opt/const_reads.kl"
 int32_t kl__switched__( void )
 {
     int32_t kl_t0;
-#line 47 "opt/const_reads.kl"
+#line 46 "opt/const_reads.kl"
     kl_t0 = 1;
-#line 47 "opt/const_reads.kl"
+#line 46 "opt/const_reads.kl"
     return kl_t0;
-#line 50 "opt/const_reads.kl"
+#line 49 "opt/const_reads.kl"
 }
 
-#line 52 "opt/const_reads.kl"
+#line 51 "opt/const_reads.kl"
 int32_t kl__topped__( void )
 {
     int32_t kl_t0;
-    bool kl_t1;
-    kl_t1 = 1 == 0;
-#line 56 "opt/const_reads.kl"
-    if ( kl_t1 ) goto bb1; else goto bb2;
-    bb1:
-#line 57 "opt/const_reads.kl"
-    kl_t0 = 1;
-#line 57 "opt/const_reads.kl"
-    return kl_t0;
-    bb2:
+#line 58 "opt/const_reads.kl"
     kl_t0 = 2;
-#line 59 "opt/const_reads.kl"
+#line 58 "opt/const_reads.kl"
     return kl_t0;
-#line 61 "opt/const_reads.kl"
+#line 60 "opt/const_reads.kl"
 }
 
-#line 64 "opt/const_reads.kl"
+#line 63 "opt/const_reads.kl"
 int32_t kl__kept__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
-#line 66 "opt/const_reads.kl"
+#line 65 "opt/const_reads.kl"
     kl_t0 = kl_x_1 + kl__plain__G;
-#line 66 "opt/const_reads.kl"
+#line 65 "opt/const_reads.kl"
     return kl_t0;
 }
 
-#line 69 "opt/const_reads.kl"
+#line 68 "opt/const_reads.kl"
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -105,52 +96,40 @@ int32_t kl__main__( void )
     bool kl_t2;
     int32_t kl_t3;
     bool kl_t4;
-    bool kl_t5;
-    double kl_t6;
-#line 39 "opt/const_reads.kl"
-    kl_t6 = 3.0 * 0.5;
-#line 39 "opt/const_reads.kl"
-    kl_t1 = kl_t6 + -0.25;
-#line 79 "opt/const_reads.kl"
+    double kl_t5;
+#line 38 "opt/const_reads.kl"
+    kl_t5 = 3.0 * 0.5;
+#line 38 "opt/const_reads.kl"
+    kl_t1 = kl_t5 + -0.25;
+#line 78 "opt/const_reads.kl"
     kl_t2 = kl_t1 != 1.25;
-#line 79 "opt/const_reads.kl"
-    if ( kl_t2 ) goto bb1; else goto bb6;
+#line 78 "opt/const_reads.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 3;
-#line 81 "opt/const_reads.kl"
+#line 80 "opt/const_reads.kl"
     return kl_t0;
     bb2:
-#line 85 "opt/const_reads.kl"
-    kl_t0 = 4;
-#line 85 "opt/const_reads.kl"
-    return kl_t0;
-    bb3:
-#line 66 "opt/const_reads.kl"
+#line 65 "opt/const_reads.kl"
     kl_t3 = 1 + kl__plain__G;
-#line 87 "opt/const_reads.kl"
+#line 86 "opt/const_reads.kl"
     kl_t4 = kl_t3 != 4;
-#line 87 "opt/const_reads.kl"
-    if ( kl_t4 ) goto bb4; else goto bb5;
-    bb4:
+#line 86 "opt/const_reads.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 5;
-#line 89 "opt/const_reads.kl"
+#line 88 "opt/const_reads.kl"
     return kl_t0;
-    bb5:
-#line 92 "opt/const_reads.kl"
+    bb4:
+#line 91 "opt/const_reads.kl"
     kl_t0 = 0;
-#line 92 "opt/const_reads.kl"
+#line 91 "opt/const_reads.kl"
     return kl_t0;
-    bb6:
-#line 56 "opt/const_reads.kl"
-    kl_t5 = 1 == 0;
-#line 56 "opt/const_reads.kl"
-    if ( kl_t5 ) goto bb2; else goto bb3;
-#line 93 "opt/const_reads.kl"
 }
 
-#line 69 "opt/const_reads.kl"
+#line 68 "opt/const_reads.kl"
 int main( void )
 {
-#line 69 "opt/const_reads.kl"
+#line 68 "opt/const_reads.kl"
     return (int) kl__main__();
 }

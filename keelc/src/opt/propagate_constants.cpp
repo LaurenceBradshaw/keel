@@ -225,7 +225,9 @@ bool whole_tracked( const Analysis& analysis, const Place& place )
 
 Value read( const Analysis& analysis, const Operand& operand, const Values& values )
 {
-    if( operand.kind == Operand_kind::Constant && operand.constant.is_valid() && is_integer( analysis.types, operand.type ) )
+    // An enum constant is its tag; an enum local is not tracked, since it may carry payloads.
+    if( operand.kind == Operand_kind::Constant && operand.constant.is_valid() &&
+        ( is_integer( analysis.types, operand.type ) || analysis.types.get( operand.type ).kind == Type_kind::Enum ) )
     {
         return Value { .state = Value::State::Constant, .bits = analysis.literals.integer( operand.constant ) };
     }

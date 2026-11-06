@@ -1,0 +1,25 @@
+// A cast of an enum constant folds to its tag, directly and through an inlined call.
+
+enum Shade : u8 { light, dark };
+
+private Shade darkest() { return Shade::dark; }
+
+// `const 1`.
+i32 tag() { return cast<i32>( Shade::dark ); }
+
+// `const 1`, once `darkest` is inlined.
+i64 inlined() { return cast<i64>( darkest() ); }
+
+i32 main()
+{
+    if( tag() != 1 )
+    {
+        return 1;
+    }
+    if( inlined() != 1 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

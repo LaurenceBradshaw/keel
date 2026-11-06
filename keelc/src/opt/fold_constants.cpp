@@ -28,6 +28,12 @@ std::optional<Integer> integer_type( const Type_table& types, Type_id type )
         return Integer { .width = 8, .is_signed = false };
     }
 
+    // Its tag.
+    if( t.kind == Type_kind::Enum )
+    {
+        return integer_type( types, t.element );
+    }
+
     return std::nullopt;
 }
 
@@ -298,12 +304,6 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
 
 std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table& types )
 {
-    if( ( types.get( from ).kind != Type_kind::Int && types.get( from ).kind != Type_kind::Bool ) ||
-        ( types.get( to ).kind != Type_kind::Int && types.get( to ).kind != Type_kind::Bool ) )
-    {
-        return std::nullopt;
-    }
-
     const std::optional<Integer> integer_to   = integer_type( types, to );
     const std::optional<Integer> integer_from = integer_type( types, from );
 
