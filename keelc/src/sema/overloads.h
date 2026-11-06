@@ -47,7 +47,7 @@ struct Argument_shape
     Type_id       type        = {};
     Node_id       declaration = {};
     bool          valued      = false; // whether an integer literal folded to the value below
-    u64           magnitude   = 0;
+    u64           magnitude   = 0;     // an integer's value, or an array literal's count
     bool          negative    = false;
     Keyword       marker      = Keyword::Count;
     bool          recorded    = false; // whether infer() has already run over it
@@ -216,6 +216,7 @@ private:
     );
 
     bool fits( Node_id call, Node_id candidate, u32 implicit_params ) const;
+    bool deduce_shape( Type_id pattern, const Argument_shape& shape, Bindings& into ); // an array literal's count too
 
     // The signature as a call site would have to write it, and a list of them - both read four
     // collaborators, which is what keeps them members rather than file-local free functions.

@@ -81,7 +81,7 @@ bool Overloads::deduce_for_candidate(
         // argument does not have the parameter's type.
         Bindings deduced;
 
-        if( !table_.deduce( types_.type_of( params[i] ), shapes[i].type, deduced ) )
+        if( !deduce_shape( types_.type_of( params[i] ), shapes[i], deduced ) )
         {
             continue;
         }
@@ -104,6 +104,30 @@ bool Overloads::deduce_for_candidate(
         resolved.push_back( found->second );
     }
 
+    return true;
+}
+
+// `E[N]` given an array literal of `count` elements binds `N` to `count`; the elements are checked later.
+bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bindings& into )
+{
+    if( shape.kind != Argument_kind::Anything || shape.magnitude == 0 )
+    {
+        return table_.deduce( pattern, shape.type, into );
+    }
+
+    if( !pattern.is_valid() || table_.get( pattern ).kind != Type_kind::Array )
+    {
+        return false;
+    }
+
+    const Type_id extent = table_.get( pattern ).arguments[0];
+
+    if( !table_.is_size_parameter( extent ) )
+    {
+        return false;
+    }
+
+    into.emplace( extent.v, table_.size( shape.magnitude ) );
     return true;
 }
 
@@ -150,7 +174,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         // behind that no argument actually justified.
         Bindings deduced;
 
-        if( !table_.deduce( types_.type_of( params[i] ), shapes[i].type, deduced ) )
+        if( !deduce_shape( types_.type_of( params[i] ), shapes[i], deduced ) )
         {
             continue; // the argument does not match the parameter's shape; check() reports that
         }
@@ -235,7 +259,11 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
                                               "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
                                               interner_.text( ast_.name( literal->declaration ) )
                                           )
-                                        : fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
+                                        : fmt::format(
+                                              "write the type arguments, as in `{}<{}>( ... )`",
+                                              site.name,
+                                              table_.is_size_parameter( types_.type_of( parameter ) ) ? "4" : "i32"
+                                          )
             );
 
             return std::nullopt;

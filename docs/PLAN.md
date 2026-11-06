@@ -1535,6 +1535,13 @@ major), which waits for the lambda decision (§12).
 - **Can `print`'s numeric overloads become one generic over `integral` and one over `floating`**,
   each calling the `kl_rt` extern that overload selection picks for its `T`? That removes the
   per-width overloads. It depends on selection inside an instance seeing `T`'s concrete type.
+- **A failure the compiler can prove is an error.** `a[N - 2]` in `at<u64 N>` called as `at<1>`
+  compiles and panics at run time, though the instance's index is a constant past the end. The rule
+  is wider than size parameters: whatever the compiler can show must happen (an index out of bounds,
+  an overflow under `--debug`, a division by zero, a `none` unwrapped) should be refused, not left
+  to panic. Per instance it must name the caller's argument with a note in the body, as D78's
+  suffix check does. Undecided: where the proof runs (sema's folding, or KIR after constant
+  propagation, which sees through inlining) and whether a path that only might run counts.
 
 ### Library
 

@@ -355,9 +355,16 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         return shape;
     }
 
+    // An array literal's count can still deduce a size parameter.
+    if( ast_.kind( value ) == Node_kind::Array_literal )
+    {
+        shape.magnitude = ast_.children( value ).size();
+        return shape;
+    }
+
     // `nullptr`, which every pointer accepts
-    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_literal ||
-        ast_.kind( value ) == Node_kind::Array_fill || is_open_address( value ) )
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_fill ||
+        is_open_address( value ) )
     {
         return shape;
     }
@@ -1674,9 +1681,11 @@ Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> sh
             continue;
         }
 
-        // A generic struct literal has no instance without the parameter; its fields are still typed.
+        // A generic struct literal has no instance without the parameter, nor an array literal its
+        // type; their fields and elements are still typed.
         // An open `&f` has no function without it, which says nothing the refusal has not.
-        if( ( i < shapes.size() && shapes[i].kind == Argument_kind::Instance ) || is_open_address( arguments[i] ) )
+        if( ( i < shapes.size() && shapes[i].kind == Argument_kind::Instance ) || is_open_address( arguments[i] ) ||
+            ast_.kind( arguments[i] ) == Node_kind::Array_literal || ast_.kind( arguments[i] ) == Node_kind::Array_fill )
         {
             check( arguments[i], table_.builtin( Type_kind::Error ) );
             continue;
@@ -11095,6 +11104,16 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
 }
 
 // D69: what an `@located` function may do, beside what the golden refuses.
+TEST_CASE( "expressions_deduce_a_size_from_an_array_literal", "[sema][size_params]" )
+{
+    const Typed p( "u64 n<u64 N>( const ref i32[N] _ ) { return N; }\n"
+                   "i32 main() { u64 k = n( [ 1, 2, 3 ] ); return cast<i32>( k ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( nth_named( p, "Array_literal", 0 ) ) == "i32[3]" );
+}
+
 TEST_CASE( "expressions_type_what_a_located_function_reads", "[sema][directive]" )
 {
     SECTION( "`@caller()` is a `location`, and `panic` takes one" )

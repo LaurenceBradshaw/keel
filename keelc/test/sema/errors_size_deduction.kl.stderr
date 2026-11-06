@@ -1,0 +1,13 @@
+error: nothing here says what `N` is in `sum`
+  --> sema/errors_size_deduction.kl:10:12
+   |
+10 |     return sum( r ); // error
+   |            ^^^ write the type arguments, as in `sum<4>( ... )`
+
+error: nothing here says what `N` is in `sum`
+  --> sema/errors_size_deduction.kl:15:13
+   |
+15 |     u64 a = sum( [ 7, .. ] ); // error
+   |             ^^^ write the type arguments, as in `sum<4>( ... )`
+
+2 errors generated

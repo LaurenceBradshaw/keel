@@ -1,0 +1,59 @@
+// A size parameter is deduced from an array argument, from an array literal's count, and from an
+// instance's size argument. `i32[N]` is an exact match for an array, so it beats `i32[]`.
+import t::console;
+
+u64 sum<u64 N>( const ref i32[N] a )
+{
+    u64 s = 0;
+    for( u64 i = 0; i < N; i = i + 1 )
+    {
+        s = s + cast<u64>( a[i] );
+    }
+    return s;
+}
+
+u64 which<u64 N>( const ref i32[N] _ )
+{
+    return 1;
+}
+
+u64 which( const ref i32[] _ )
+{
+    return 2;
+}
+
+struct Bits<u64 N>
+{
+    u64[N] words;
+};
+
+u64 first_set<u64 N>( const ref Bits<N> b )
+{
+    for( u64 i = 0; i < N; i = i + 1 )
+    {
+        if( b.words[i] != 0 )
+        {
+            return i;
+        }
+    }
+    return N;
+}
+
+const ref i32[] view( const ref i32[3] a )
+{
+    return a;
+}
+
+i32 main()
+{
+    i32[3] arr = [ 1, 2, 3 ];
+
+    t::println( sum( arr ) );
+    t::println( sum( [ 1, 2, 3, 4 ] ) );
+    t::println( which( arr ) );
+    t::println( which( view( arr ) ) );
+
+    Bits<3> b = Bits<3> { [ 0, 0, 9 ] };
+    t::println( first_set( b ) );
+    return 0;
+}
