@@ -157,6 +157,10 @@ private:
     Unused               unused_;
 };
 
+// Whether an `implements ... for` block covers every instance of its type: each argument a distinct
+// parameter of the block, and no bound but `copyable`. In the type's own package that is refused.
+bool covers_every_instance( const Ast& ast, const Interner& interner, Node_id block );
+
 // A loaded module's bindings are taken from its state rather than resolved again.
 Resolution resolve(
     const Ast&                    ast,

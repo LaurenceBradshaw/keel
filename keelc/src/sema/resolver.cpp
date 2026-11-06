@@ -704,7 +704,7 @@ void Resolver::visit_block( Node_id id )
     refused_block_        = type.is_valid() &&
                      ( ast_.kind( type ) == Node_kind::Struct_decl || ast_.kind( type ) == Node_kind::Class_decl ) &&
                      modules_.package_of( ast_.span( type ).file ) == modules_.package_of( ast_.span( id ).file ) &&
-                     ast_.where_clauses( ast_.type_param_list( id ) ).empty();
+                     covers_every_instance( ast_, interner_, id );
 
     if( self_.is_valid() )
     {
@@ -1763,6 +1763,50 @@ Resolution resolve(
 )
 {
     return Resolver( ast, sm, interner, diags, modules, states ).run();
+}
+
+bool covers_every_instance( const Ast& ast, const Interner& interner, Node_id block )
+{
+    const Node_id list = ast.type_param_list( block );
+    const Node_id type = ast.implementer( block );
+
+    std::vector<Symbol_id> named;
+    if( ast.kind( type ) == Node_kind::Generic_type )
+    {
+        for( const Node_id argument : ast.type_args( type ) )
+        {
+            if( ast.kind( argument ) != Node_kind::Named_type || ast.package( argument ).is_valid() )
+            {
+                return false;
+            }
+            named.push_back( ast.name( argument ) );
+        }
+    }
+
+    const std::vector<Node_id> parameters = ast.type_parameters( list );
+    if( named.size() != parameters.size() ||
+        !std::ranges::all_of( parameters, [&]( Node_id p ) { return std::ranges::count( named, ast.name( p ) ) == 1; } ) )
+    {
+        return false;
+    }
+
+    // `copyable` adds nothing: the type requires it, or the block is refused for naming it.
+    for( const Node_id clause : ast.where_clauses( list ) )
+    {
+        if( ast.kind( clause ) != Node_kind::Where_clause )
+        {
+            return false;
+        }
+        for( const Node_id bound : ast.bounds( clause ) )
+        {
+            if( sema::bound_for_name( interner.text( ast.name( bound ) ) ) != sema::Bound::Copyable )
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 } // namespace keel

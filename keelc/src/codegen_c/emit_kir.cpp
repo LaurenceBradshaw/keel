@@ -11,6 +11,7 @@
 #include "codegen_c/spelling.h"
 #include "codegen_c/vtables.h"
 #include "common/types.h"
+#include "ir/instances.h"
 
 namespace keel
 {
@@ -753,8 +754,18 @@ void Kir_emitter::emit_vtables()
 {
     for( const Vtable& vtable : vtables_ )
     {
-        const std::span<const Type_id> type_arguments = types_.table().get( vtable.implementer ).arguments;
-        const std::string              self_type      = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
+        // A block's methods take the block's arguments, which `Pair<A, A>` or `Wrap<i32>` do not share with the type.
+        std::vector<Type_id> type_arguments(
+            types_.table().get( vtable.implementer ).arguments.begin(), types_.table().get( vtable.implementer ).arguments.end()
+        );
+        Bindings           method_bindings = types_.table().instance_bindings( vtable.implementer );
+        const Conformance* conformance     = types_.conformances().of( types_.table(), vtable.implementer, vtable.interface );
+        if( conformance != nullptr && conformance->block )
+        {
+            type_arguments  = *block_arguments( ast_, types_, *conformance, vtable.implementer );
+            method_bindings = *types_.conformances().bindings_at( types_.table(), *conformance, vtable.implementer );
+        }
+        const std::string self_type = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
 
         std::vector<std::string> slots;
 
@@ -798,8 +809,7 @@ void Kir_emitter::emit_vtables()
                 {
                     // A bare `T` borrows, where the implementer may take its `copyable` argument by value.
                     const Type_id taken = types_.table().substitute(
-                        binding_type( ast_, types_, ast_.explicit_params( vtable.methods[i] )[p] ),
-                        types_.table().instance_bindings( vtable.implementer )
+                        binding_type( ast_, types_, ast_.explicit_params( vtable.methods[i] )[p] ), method_bindings
                     );
                     const bool copied = types_.table().is_pointer( type ) && !types_.table().is_pointer( taken );
 

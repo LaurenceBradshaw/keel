@@ -1,0 +1,335 @@
+// codegen/concrete_blocks.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Wrap__I3i32E;
+struct kl__Pair__I2u8_2u8E;
+
+struct kl__Named__vtable;
+struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
+
+struct kl__Wrap__I3i32E
+{
+    int32_t kl_v;
+};
+
+struct kl__Pair__I2u8_2u8E
+{
+    uint8_t kl_a;
+    uint8_t kl_b;
+};
+
+struct kl__Named__vtable
+{
+    void ( *drop )( void* );
+    int32_t ( *kl__code__ )( void* );
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* );
+bool kl__operator_eq__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E*, struct kl__Wrap__I3i32E* );
+int32_t kl__through__PK5Named( struct kl__Named__ref );
+int32_t kl__main__( void );
+int32_t kl__read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* );
+bool kl__operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E*, struct kl__Wrap__I3i32E* );
+int32_t kl__read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E* );
+int32_t kl__code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* );
+
+static void kl__Wrap__I3i32E__as_kl__Named__drop( void* self )
+{
+    ( void ) self;
+}
+
+static int32_t kl__Wrap__I3i32E__as_kl__Named__kl__code__( void* self )
+{
+    return kl__code__S4WrapI3i32EC5Named( ( struct kl__Wrap__I3i32E* ) self );
+}
+
+static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wrap__I3i32E__as_kl__Named__drop, kl__Wrap__I3i32E__as_kl__Named__kl__code__ };
+
+static void kl__Pair__I2u8_2u8E__as_kl__Named__drop( void* self )
+{
+    ( void ) self;
+}
+
+static int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__code__( void* self )
+{
+    return kl__code__I2u8E__S4PairI2u8_2u8EC5Named( ( struct kl__Pair__I2u8_2u8E* ) self );
+}
+
+static const struct kl__Named__vtable kl__Pair__I2u8_2u8E__as_kl__Named = { kl__Pair__I2u8_2u8E__as_kl__Named__drop, kl__Pair__I2u8_2u8E__as_kl__Named__kl__code__ };
+
+#line 21 "codegen/concrete_blocks.kl"
+int32_t kl__code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_k_2;
+    bool kl_t3;
+    int32_t kl_t4;
+#line 23 "codegen/concrete_blocks.kl"
+    kl_k_2 = 2;
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_v, kl_k_2, &( int32_t ) { 0 } );
+#line 24 "codegen/concrete_blocks.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 24 "codegen/concrete_blocks.kl"
+    kl_rt_panic( "codegen/concrete_blocks.kl", 24, "arithmetic overflow: this.v + k" );
+    bb2:
+#line 24 "codegen/concrete_blocks.kl"
+    kl_t4 = ( *kl_this_1 ).kl_v + kl_k_2;
+#line 24 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t4;
+#line 24 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 30 "codegen/concrete_blocks.kl"
+bool kl__operator_eq__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E* kl_this_1, struct kl__Wrap__I3i32E* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 30 "codegen/concrete_blocks.kl"
+    kl_t3 = ( *kl_this_1 ).kl_v == ( *kl_other_2 ).kl_v;
+#line 30 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t3;
+#line 30 "codegen/concrete_blocks.kl"
+    return kl_t0;
+#line 30 "codegen/concrete_blocks.kl"
+}
+
+#line 47 "codegen/concrete_blocks.kl"
+int32_t kl__through__PK5Named( struct kl__Named__ref kl_n_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 49 "codegen/concrete_blocks.kl"
+    kl_t2 = kl_n_1.vtable->kl__code__( kl_n_1.self );
+#line 49 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t2;
+#line 49 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 52 "codegen/concrete_blocks.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E kl_w_1;
+    struct kl__Wrap__I3i32E kl_t2;
+    struct kl__Pair__I2u8_2u8E kl_p_3;
+    struct kl__Pair__I2u8_2u8E kl_t4;
+    struct kl__Wrap__I3i32E* kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    struct kl__Wrap__I3i32E* kl_t8;
+    struct kl__Named__ref kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    struct kl__Wrap__I3i32E* kl_t13;
+    struct kl__Wrap__I3i32E* kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    struct kl__Wrap__I3i32E* kl_t17;
+    struct kl__Wrap__I3i32E* kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    struct kl__Pair__I2u8_2u8E* kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    struct kl__Pair__I2u8_2u8E* kl_t24;
+    struct kl__Named__ref kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+#line 54 "codegen/concrete_blocks.kl"
+    kl_t2.kl_v = 5;
+#line 54 "codegen/concrete_blocks.kl"
+    kl_w_1 = kl_t2;
+    kl_t4.kl_a = 1;
+#line 55 "codegen/concrete_blocks.kl"
+    kl_t4.kl_b = 2;
+#line 55 "codegen/concrete_blocks.kl"
+    kl_p_3 = kl_t4;
+#line 57 "codegen/concrete_blocks.kl"
+    kl_t5 = &kl_w_1;
+#line 57 "codegen/concrete_blocks.kl"
+    kl_t6 = kl__read__I4WrapI3i32EE__4WrapI3i32E( kl_t5 );
+#line 57 "codegen/concrete_blocks.kl"
+    kl_t7 = kl_t6 != 7;
+#line 57 "codegen/concrete_blocks.kl"
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 57 "codegen/concrete_blocks.kl"
+    kl_t0 = 1;
+#line 57 "codegen/concrete_blocks.kl"
+    return kl_t0;
+    bb2:
+#line 58 "codegen/concrete_blocks.kl"
+    kl_t8 = &kl_w_1;
+#line 58 "codegen/concrete_blocks.kl"
+    kl_t9 = ( struct kl__Named__ref ) { ( void* ) kl_t8, &kl__Wrap__I3i32E__as_kl__Named };
+#line 58 "codegen/concrete_blocks.kl"
+    kl_t10 = kl__through__PK5Named( kl_t9 );
+#line 58 "codegen/concrete_blocks.kl"
+    kl_t11 = kl_t10 != 7;
+#line 58 "codegen/concrete_blocks.kl"
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+#line 58 "codegen/concrete_blocks.kl"
+    kl_t0 = 2;
+#line 58 "codegen/concrete_blocks.kl"
+    return kl_t0;
+    bb4:
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t13 = &kl_w_1;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t14 = &kl_w_1;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t15 = kl__operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( kl_t13, kl_t14 );
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t16 = !kl_t15;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t12 = kl_t16;
+#line 59 "codegen/concrete_blocks.kl"
+    if ( kl_t12 ) goto bb6; else goto bb5;
+    bb5:
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t17 = &kl_w_1;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t18 = &kl_w_1;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t19 = kl__operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( kl_t17, kl_t18 );
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t20 = !kl_t19;
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t12 = kl_t20;
+#line 59 "codegen/concrete_blocks.kl"
+    goto bb6;
+    bb6:
+#line 59 "codegen/concrete_blocks.kl"
+    if ( kl_t12 ) goto bb7; else goto bb8;
+    bb7:
+#line 59 "codegen/concrete_blocks.kl"
+    kl_t0 = 3;
+#line 59 "codegen/concrete_blocks.kl"
+    return kl_t0;
+    bb8:
+#line 60 "codegen/concrete_blocks.kl"
+    kl_t21 = &kl_p_3;
+#line 60 "codegen/concrete_blocks.kl"
+    kl_t22 = kl__read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( kl_t21 );
+#line 60 "codegen/concrete_blocks.kl"
+    kl_t23 = kl_t22 != 9;
+#line 60 "codegen/concrete_blocks.kl"
+    if ( kl_t23 ) goto bb9; else goto bb10;
+    bb9:
+#line 60 "codegen/concrete_blocks.kl"
+    kl_t0 = 4;
+#line 60 "codegen/concrete_blocks.kl"
+    return kl_t0;
+    bb10:
+#line 61 "codegen/concrete_blocks.kl"
+    kl_t24 = &kl_p_3;
+#line 61 "codegen/concrete_blocks.kl"
+    kl_t25 = ( struct kl__Named__ref ) { ( void* ) kl_t24, &kl__Pair__I2u8_2u8E__as_kl__Named };
+#line 61 "codegen/concrete_blocks.kl"
+    kl_t26 = kl__through__PK5Named( kl_t25 );
+#line 61 "codegen/concrete_blocks.kl"
+    kl_t27 = kl_t26 != 9;
+#line 61 "codegen/concrete_blocks.kl"
+    if ( kl_t27 ) goto bb11; else goto bb12;
+    bb11:
+#line 61 "codegen/concrete_blocks.kl"
+    kl_t0 = 5;
+#line 61 "codegen/concrete_blocks.kl"
+    return kl_t0;
+    bb12:
+#line 62 "codegen/concrete_blocks.kl"
+    kl_t0 = 0;
+#line 62 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 42 "codegen/concrete_blocks.kl"
+int32_t kl__read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* kl_x_1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E* kl_t2;
+    int32_t kl_t3;
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t2 = &( *kl_x_1 );
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t3 = kl__code__S4WrapI3i32EC5Named( kl_t2 );
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t3;
+#line 44 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 30 "codegen/concrete_blocks.kl"
+bool kl__operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E* kl_this_1, struct kl__Wrap__I3i32E* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 30 "codegen/concrete_blocks.kl"
+    kl_t3 = ( *kl_this_1 ).kl_v == ( *kl_other_2 ).kl_v;
+#line 30 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t3;
+#line 30 "codegen/concrete_blocks.kl"
+    return kl_t0;
+#line 30 "codegen/concrete_blocks.kl"
+}
+
+#line 42 "codegen/concrete_blocks.kl"
+int32_t kl__read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E* kl_x_1 )
+{
+    int32_t kl_t0;
+    struct kl__Pair__I2u8_2u8E* kl_t2;
+    int32_t kl_t3;
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t2 = &( *kl_x_1 );
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t3 = kl__code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
+#line 44 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t3;
+#line 44 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 35 "codegen/concrete_blocks.kl"
+int32_t kl__code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* kl_this_1 )
+{
+    int32_t kl_t0;
+    uint8_t kl_second_2;
+    int32_t kl_t3;
+    bool kl_t4;
+#line 37 "codegen/concrete_blocks.kl"
+    kl_second_2 = ( *kl_this_1 ).kl_b;
+    kl_t4 = kl_second_2 == ( *kl_this_1 ).kl_a;
+#line 38 "codegen/concrete_blocks.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 38 "codegen/concrete_blocks.kl"
+    kl_t3 = 1;
+#line 38 "codegen/concrete_blocks.kl"
+    goto bb3;
+    bb2:
+#line 38 "codegen/concrete_blocks.kl"
+    kl_t3 = 9;
+#line 38 "codegen/concrete_blocks.kl"
+    goto bb3;
+    bb3:
+#line 38 "codegen/concrete_blocks.kl"
+    kl_t0 = kl_t3;
+#line 38 "codegen/concrete_blocks.kl"
+    return kl_t0;
+}
+
+#line 52 "codegen/concrete_blocks.kl"
+int main( void )
+{
+#line 52 "codegen/concrete_blocks.kl"
+    return (int) kl__main__();
+}

@@ -579,6 +579,12 @@ Lowering::Requirement_target Lowering::requirement_target( Node_id requirement, 
         return { method, { std::move( bound ), std::move( arguments ) } };
     }
 
+    // A block for one instance, `Wrap<i32>`, has no parameters to bind.
+    if( block.is_valid() && ast_.kind( block ) == Node_kind::Implements_decl )
+    {
+        return { method, {} };
+    }
+
     return { method, at_instance( held ) };
 }
 

@@ -550,12 +550,8 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
                                   : declared_at.is_valid()    ? resolution_.package_of( ast_.span( declared_at ).file )
                                                               : resolution_.prelude_package();
 
-    // An unconditional block covers every instance, which the declaration's own `implements` says.
-    const std::span<const Type_id> arguments = table_.get( type ).arguments;
-    const bool open = std::ranges::all_of( arguments, [&]( Type_id each ) { return table_.is_parameter( each ); } ) &&
-                      named.size() == arguments.size();
-
-    if( table_.is_struct( type ) && here == owner && open && ast_.where_clauses( list ).empty() )
+    // A block covering every instance says what the declaration's own `implements` would.
+    if( table_.is_struct( type ) && here == owner && covers_every_instance( ast_, interner_, block ) )
     {
         reporter_.error_at(
             ast_.name_span( block ),

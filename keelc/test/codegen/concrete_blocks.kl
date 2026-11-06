@@ -1,0 +1,63 @@
+// M12: a block for one instance of this package's generic type, and one whose parameters are not
+// the type's, called through a bound, through the vtable and as `==`. Exits with the failing check.
+interface Named
+{
+    i32 code() const;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+struct Pair<A, B> where A : copyable, where B : copyable
+{
+    A a;
+    B b;
+};
+
+implements Named for Wrap<i32>
+{
+    i32 code() const
+    {
+        i32 k = 2;
+        return this.v + k;
+    }
+};
+
+implements equatable for Wrap<i32>
+{
+    bool operator==( const ref Wrap<i32> other ) const { return this.v == other.v; }
+};
+
+implements<A> Named for Pair<A, A> where A : copyable & equatable
+{
+    i32 code() const
+    {
+        A second = this.b;
+        return second == this.a ? 1 : 9;
+    }
+};
+
+i32 read<T>( const ref T x ) where T : Named
+{
+    return x.code();
+}
+
+i32 through( const Named* n )
+{
+    return n.code();
+}
+
+i32 main()
+{
+    Wrap<i32>    w = Wrap<i32> { 5 };
+    Pair<u8, u8> p = Pair<u8, u8> { 1, 2 };
+
+    if( read( w ) != 7 ) { return 1; }
+    if( through( &w ) != 7 ) { return 2; }
+    if( !( w == w ) || w != w ) { return 3; }
+    if( read( p ) != 9 ) { return 4; }
+    if( through( &p ) != 9 ) { return 5; }
+    return 0;
+}

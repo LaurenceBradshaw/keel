@@ -1,0 +1,21 @@
+// M12: a block that covers every instance of this package's type is refused, even when its `where`
+// only restates the `copyable` the type requires. One error per marked line.
+interface Named
+{
+    i32 code() const;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Wrap<T> where T : copyable // error: unconditional in all but spelling
+{
+    i32 code() const { return 1; }
+};
+
+i32 main()
+{
+    return 0;
+}
