@@ -21,7 +21,46 @@ void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_
 
     if( from.is_valid() && ast_.is_generic( from ) )
     {
+        for( const Type_id argument : arguments )
+        {
+            record_uses( from, argument, at, implied_ ); // `count<Grow<T>>()` makes a `Grow<T>`
+        }
+
         generic_calls_.push_back( Generic_call { .from = from, .to = to, .arguments = std::move( arguments ), .at = at } );
+    }
+}
+
+// A type a generic body names is an instance it makes, as a call is: `Grow<Grow<T>>* p;` in
+// `~Grow` makes a bigger `Grow` per instance. And each instance runs its destructor.
+void Generic_recursion::record_bodies( Node_id id, Node_id from, std::span<const Type_id> types )
+{
+    const Node_kind kind = ast_.kind( id );
+
+    if( is_function_like( kind ) || kind == Node_kind::Field_decl )
+    {
+        from = kind == Node_kind::Field_decl ? ast_.enclosing_aggregate( id ) : id;
+        from = from.is_valid() && ast_.is_generic( from ) ? from : Node_id {};
+        seen_.clear();
+
+        if( from.is_valid() && kind == Node_kind::Destructor_decl )
+        {
+            implied_.push_back(
+                Generic_call { .from = ast_.enclosing_aggregate( id ), .to = id, .arguments = {}, .at = ast_.span( id ) }
+            );
+        }
+    }
+
+    if( from.is_valid() && id.v < types.size() && types[id.v].is_valid() && seen_.insert( types[id.v].v ).second )
+    {
+        record_uses( from, types[id.v], ast_.span( id ), implied_ );
+    }
+
+    for( const Node_id child : ast_.children( id ) )
+    {
+        if( child.is_valid() )
+        {
+            record_bodies( child, from, types );
+        }
     }
 }
 
@@ -43,6 +82,11 @@ void Generic_recursion::absorb_call( Generic_call call )
 
 void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at )
 {
+    record_uses( from, type, at, generic_calls_ );
+}
+
+void Generic_recursion::record_uses( Node_id from, Type_id type, Span at, std::vector<Generic_call>& into )
+{
     if( !type.is_valid() )
     {
         return;
@@ -58,7 +102,7 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
     case Type_kind::Many_pointer:
     case Type_kind::Run:
     case Type_kind::Array:
-        record_generic_uses( from, described.element, at );
+        record_uses( from, described.element, at, into );
         break;
 
     case Type_kind::Struct:
@@ -67,20 +111,18 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
         {
             const std::vector<Type_id> arguments { described.arguments.begin(), described.arguments.end() };
 
-            generic_calls_.push_back(
-                Generic_call { .from = from, .to = described.declaration, .arguments = arguments, .at = at }
-            );
+            into.push_back( Generic_call { .from = from, .to = described.declaration, .arguments = arguments, .at = at } );
 
             for( const Type_id argument : described.arguments )
             {
-                record_generic_uses( from, argument, at );
+                record_uses( from, argument, at, into );
             }
         }
         break;
     case Type_kind::Union:
         for( const Type_id member : described.arguments )
         {
-            record_generic_uses( from, member, at );
+            record_uses( from, member, at, into );
         }
         break;
 
@@ -119,6 +161,10 @@ void Generic_recursion::mark_reported( Node_id declaration )
 // at a depth nobody can justify: a cycle carrying at least one edge that builds a type.
 void Generic_recursion::check()
 {
+    // The implied edges join the walk only: the instance queue follows calls, not these.
+    const std::size_t exported = generic_calls_.size();
+    generic_calls_.insert( generic_calls_.end(), implied_.begin(), implied_.end() );
+
     std::vector<Step> path;
 
     for( const Generic_call& edge : generic_calls_ )
@@ -133,6 +179,8 @@ void Generic_recursion::check()
 
         expands_forever( edge.from, path );
     }
+
+    generic_calls_.resize( exported );
 }
 
 // Depth-first from one generic, each step carrying the growing edge that entered it. Only growth
@@ -197,7 +245,11 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
             continue; // a cycle that forwards its parameters is finite, and is ordinary recursion
         }
 
-        const auto name_of = [&]( Node_id declaration ) { return std::string( interner_.text( ast_.name( declaration ) ) ); };
+        const auto name_of = [&]( Node_id declaration )
+        {
+            const std::string_view tilde = ast_.kind( declaration ) == Node_kind::Destructor_decl ? "~" : "";
+            return fmt::format( "{}{}", tilde, interner_.text( ast_.name( declaration ) ) );
+        };
 
         // The cycle as written, from where it closes: `f` -> `g` -> `f`. A self-call renders as
         // `f` -> `f`, which reads correctly without a second phrasing for it.

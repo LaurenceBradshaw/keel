@@ -1,0 +1,25 @@
+error: `Local` is instantiated with a bigger type argument each time round
+  --> sema/errors_growing_instances.kl:10:16
+   |
+10 |     ~Local() { Local<Local<T>>* p = nullptr; n = 0; }
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Local` to `~Local` to `Local`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Called` is instantiated with a bigger type argument each time round
+  --> sema/errors_growing_instances.kl:17:21
+   |
+17 |     ~Called() { n = count<Called<Called<T>>>(); }
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ `Called` to `~Called` to `Called`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Through` is instantiated with a bigger type argument each time round
+  --> sema/errors_growing_instances.kl:20:20
+   |
+20 | void helper<T>() { Through<Through<T>>* p = nullptr; }
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Through` to `~Through` to `helper` to `Through`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Defaulted` is instantiated with a bigger type argument each time round
+  --> sema/errors_growing_instances.kl:31:13
+   |
+31 |     i32 n = count<Defaulted<Defaulted<T>>>();
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Defaulted` to `Defaulted`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+4 errors generated

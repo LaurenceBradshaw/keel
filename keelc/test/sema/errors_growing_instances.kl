@@ -1,0 +1,46 @@
+// A destructor or a field default runs for every instance of its aggregate, so one that names a
+// bigger instance makes a new instance each time round.
+
+i32 count<T>() { return 1; }
+
+class Local<T>
+{
+    i32 n;
+    Local( i32 k ) { n = k; }
+    ~Local() { Local<Local<T>>* p = nullptr; n = 0; }
+};
+
+class Called<T>
+{
+    i32 n;
+    Called( i32 k ) { n = k; }
+    ~Called() { n = count<Called<Called<T>>>(); }
+};
+
+void helper<T>() { Through<Through<T>>* p = nullptr; }
+
+class Through<T>
+{
+    i32 n;
+    Through( i32 k ) { n = k; }
+    ~Through() { helper<T>(); }
+};
+
+class Defaulted<T>
+{
+    i32 n = count<Defaulted<Defaulted<T>>>();
+};
+
+// An ordinary method is lowered only where it is called, so this one is finite.
+class Method<T>
+{
+    i32 n;
+    Method( i32 k ) { n = k; }
+    public i32 get() const { return count<Method<Method<T>>>(); }
+};
+
+i32 main()
+{
+    Method<i32> m = Method<i32>( 1 );
+    return m.get() - 1;
+}

@@ -184,6 +184,7 @@ Types Checker::run()
 
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
     // complete until every body has been.
+    generic_recursion_.record_bodies( ast_.root(), Node_id {}, types_.recorded() );
     generic_recursion_.check();
 
     // Asked here, while the bounds are known: a `T` that is `copyable` cannot own.
