@@ -1,0 +1,1 @@
+i32 twice( i32 v ) { return v * 2; }

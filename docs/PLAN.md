@@ -732,7 +732,7 @@ Rules decided and built (or decided and scheduled) that have no D-number, becaus
 territory rather than divergences from a C++ meaning.
 
 **Modules and packages.** `import name;` loads `name.kl` from the importing file's package, and
-loading is transitive and deduplicated by canonical path, so diamonds are free; an import cycle is refused at the import that closes it (D71). Imports come
+loading is transitive and deduplicated by canonical path, so diamonds are free; an import cycle is refused at the import that closes it (D71), and a module imported twice by one file at the second import. Imports come
 before every declaration. **A module is the unit of import; a package is the namespace**: the
 program's own package is unnamed and rooted at the input file's directory, and another package is
 named on the command line, `--package kl=<dir>`, as one identifier that is not a keyword or

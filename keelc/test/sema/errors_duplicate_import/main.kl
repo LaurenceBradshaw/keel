@@ -1,0 +1,11 @@
+// An import written twice is one error at the second; a package's module repeated is too, and a
+// module and a package's module of one name are two imports.
+import helper;
+import kit::helper;
+import helper;
+import kit::helper;
+
+i32 main()
+{
+    return twice( 1 ) + kit::thrice( 1 );
+}

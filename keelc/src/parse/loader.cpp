@@ -247,6 +247,8 @@ Program load_program(
         prog.first_node[current.v]            = narrow_cast<u32>( ast.node_count() );
         const std::vector<Node_id> file_decls = parse_into( ast, tokens, sm, diags );
 
+        std::unordered_map<std::string, Span> imported;
+
         for( const Node_id decl : file_decls )
         {
             if( ast.kind( decl ) == Node_kind::Import_decl )
@@ -256,6 +258,19 @@ Program load_program(
                                                             : modules.package_of( current );
                 const std::string_view module_name    = interner.text( ast.name( decl ) );
                 const std::string      qualified_name = qualified( interner, package_id, module_name );
+
+                if( const auto [first, fresh] = imported.try_emplace( qualified_name, ast.span( decl ) ); !fresh )
+                {
+                    const Line_col at = sm.line_col( first->second.file, first->second.start );
+                    diags.error(
+                        ast.span( decl ),
+                        fmt::format( "`{}` is already imported", qualified_name ),
+                        fmt::format(
+                            "previous import is at: {}:{}:{}; remove this one", sm.file( current ).path, at.line, at.col
+                        )
+                    );
+                    continue;
+                }
 
                 if( const auto it = object_files.find( qualified_name ); it != object_files.end() )
                 {

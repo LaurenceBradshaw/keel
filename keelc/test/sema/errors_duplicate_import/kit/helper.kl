@@ -1,0 +1,1 @@
+i32 thrice( i32 v ) { return v * 3; }

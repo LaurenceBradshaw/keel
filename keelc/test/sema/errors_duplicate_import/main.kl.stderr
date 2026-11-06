@@ -1,0 +1,13 @@
+error: `helper` is already imported
+ --> sema/errors_duplicate_import/main.kl:5:1
+  |
+5 | import helper;
+  | ^^^^^^^^^^^^^^ previous import is at: sema/errors_duplicate_import/main.kl:3:1; remove this one
+
+error: `kit::helper` is already imported
+ --> sema/errors_duplicate_import/main.kl:6:1
+  |
+6 | import kit::helper;
+  | ^^^^^^^^^^^^^^^^^^^ previous import is at: sema/errors_duplicate_import/main.kl:4:1; remove this one
+
+2 errors generated
