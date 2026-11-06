@@ -1,0 +1,4 @@
+// Read through its package, never through `helper`.
+struct Holder { i32 v; };
+
+i32 read( i32 x ) { return x; }

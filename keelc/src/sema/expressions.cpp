@@ -2946,11 +2946,11 @@ Type_id Expressions::infer_path( Node_id id )
 
     const Node_id decl = qualifier_declaration( id );
 
-    // An unresolved qualifier was answered for by the resolver - reported, or silent through a missing
-    // package; anything else is not a name at all, and `f()::x` deserves its own complaint.
+    // An unresolved qualifier or path was answered for by the resolver - reported, or silent through a
+    // missing package; anything else is not a name at all, and `f()::x` deserves its own complaint.
     if( !decl.is_valid() )
     {
-        if( !is_name( qualifier ) && !resolution_.is_unresolved( qualifier ) )
+        if( !is_name( qualifier ) && !resolution_.is_unresolved( qualifier ) && !resolution_.is_unresolved( id ) )
         {
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }

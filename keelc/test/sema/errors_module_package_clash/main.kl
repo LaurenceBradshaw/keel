@@ -1,0 +1,13 @@
+// A module beside a package of its name: the clash is the one error, wherever the name is used.
+// A name its module lacks gets no help, and a missing nested package is reported once.
+import helper;
+import pk::tools;
+import pk::tools::inner;
+import zz::yy::m;
+
+i32 lacking() { return helper::nope( 1 ); }
+i32 clashed() { return pk::tools::nope(); }
+i32 also_clashed() { return pk::tools::deep(); }
+i32 nested() { return zz::yy::f(); }
+
+i32 main() { return 0; }

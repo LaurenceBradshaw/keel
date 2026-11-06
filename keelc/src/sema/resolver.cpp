@@ -1034,19 +1034,21 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
     {
         unresolved_[use.v] = true;
 
+        if( modules_.is_missing( package_name ) )
+        {
+            return decl;
+        }
+
         if( refuse_module( package, use ) ||
             refuse_module( use, path_.is_valid() && ast_.qualifier( path_ ) == use ? path_ : Node_id {} ) )
         {
             return bindings_[use.v];
         }
 
-        if( !modules_.is_missing( package_name ) )
-        {
-            reporter_.error_at(
-                ast_.span( use ),
-                fmt::format( "no module of `{}` that this file imports declares `{}`", package_spelt, interner_.text( name ) )
-            );
-        }
+        reporter_.error_at(
+            ast_.span( use ),
+            fmt::format( "no module of `{}` that this file imports declares `{}`", package_spelt, interner_.text( name ) )
+        );
     }
 
     return decl;
@@ -1103,14 +1105,15 @@ bool Resolver::refuse_module( Node_id named, Node_id use )
     const Symbol_id package = modules_.package_of( *module );
     const Symbol_id name    = ast_.name( use );
 
+    bindings_[use.v]   = lookup_in( package, name, use );
+    unresolved_[use.v] = !bindings_[use.v].is_valid();
+
     reporter_.error_at(
         ast_.span( named ),
         fmt::format( "`{}` is a module; its names are written without it", spelt ),
-        fmt::format( "write `{}`", qualified( interner_, package, interner_.text( name ) ) )
+        unresolved_[use.v] ? std::string {}
+                           : fmt::format( "write `{}`", qualified( interner_, package, interner_.text( name ) ) )
     );
-
-    bindings_[use.v]   = lookup_in( package, name, use );
-    unresolved_[use.v] = !bindings_[use.v].is_valid();
 
     return true;
 }
