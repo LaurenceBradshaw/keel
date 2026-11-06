@@ -317,6 +317,13 @@ Binary_result Operators::result_of_binary(
 
         if( table_.is_enum( lhs_type ) && ast_.enum_has_payload( table_.get( lhs_type ).declaration ) )
         {
+            // A block that would answer but for its `where`; another block for the type would overlap it.
+            const Type_id equatable = table_.declared( table_.prelude().equatable );
+            if( conformances_.unmet_bound( table_, lhs_type, equatable ) )
+            {
+                return reject( bounds_.conforming_help( lhs_type, equatable, at ) );
+            }
+
             const std::string help = fmt::format(
                 "`{0}` carries payloads; test its variant with `switch`, or write `implements equatable for {0} {{ ... }}`",
                 table_.name( lhs_type )

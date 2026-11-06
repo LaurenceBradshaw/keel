@@ -1,0 +1,109 @@
+// What the help names when a block exists but does not answer.
+interface Named
+{
+    i32 code() const;
+};
+
+interface Other
+{
+    i32 o() const;
+};
+
+interface Shape implements Named
+{
+    i32 area() const;
+};
+
+interface Solid implements Other
+{
+    i32 volume() const;
+};
+
+implements Named for i32
+{
+    i32 code() const { return this; }
+};
+
+struct Box3<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Box3<T> where T : copyable & Other
+{
+    i32 code() const { return 1; }
+};
+
+// error: names the narrower block and the bound to add; the call stays quiet
+implements<T> Shape for Box3<T> where T : copyable & Named
+{
+    i32 area() const { return 2; }
+};
+
+// error: no `Other` block, so the conditional form is asked for
+implements<T> Solid for Box3<T> where T : copyable & Named
+{
+    i32 volume() const { return 3; }
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Wrap<T> where T : copyable & Named
+{
+    i32 code() const { return 4; }
+};
+
+implements<T> Named for const T* where T : Named
+{
+    i32 code() const { return 5; }
+};
+
+enum Opt<T> where T : copyable
+{
+    some( T v ),
+    none
+};
+
+implements<T> equatable for Opt<T> where T : copyable & equatable
+{
+    bool operator==( const ref Opt<T> other ) const { return true; }
+};
+
+struct Opaque
+{
+    i32 x;
+};
+
+i32 area<T>( const ref T x ) where T : Shape
+{
+    return x.area();
+}
+
+i32 read<T>( const ref T x ) where T : Named
+{
+    return x.code();
+}
+
+i32 through( const Named* n )
+{
+    return n.code();
+}
+
+i32 main()
+{
+    Wrap<bool> w = Wrap<bool> { true };
+    i32        x = 3;
+    i32*       q = &x;
+    Opt<Opaque> a = Opt::some( Opaque { 1 } );
+
+    i32 total = area( Box3<i32> { 3 } );
+    // error: the `where` that `bool` misses
+    total = total + through( &w );
+    // error: the `const T*` block, not another for `i32*`
+    total = total + read( q );
+    // error: the `where` that `Opaque` misses, not a second block
+    return a == a ? total : 0;
+}

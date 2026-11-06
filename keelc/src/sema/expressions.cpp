@@ -4504,6 +4504,18 @@ std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual
                    : cast;
     }
 
+    // `&w` where a `const Named*` was wanted: what makes `w`'s type a `Named`.
+    if( table_.is_interface_pointer( expected ) && table_.is_pointer( actual ) )
+    {
+        const Type_id interface = table_.get( expected ).element;
+        const Type_id element   = table_.get( actual ).element;
+
+        if( !bounds_.conforms( element, interface ) )
+        {
+            return bounds_.conforming_help( element, interface, ast_.span( id ) );
+        }
+    }
+
     if( !is_prelude_str( actual ) || !table_.is_struct( expected ) || table_.name( expected ) == table_.name( actual ) )
     {
         return mismatch_hint( table_, expected, actual );

@@ -1,0 +1,31 @@
+error: `Box3<T>` implements `Shape` but not `Named`, which `Shape` requires
+  --> sema/errors_block_help.kl:38:15
+   |
+38 | implements<T> Shape for Box3<T> where T : copyable & Named
+   |               ^^^^^ the block at sema/errors_block_help.kl:32:25 makes `Box3<T>` implement `Named` only where `T : Other`; add `Other` to this block's `where` clause for `T`
+
+error: `Box3<T>` implements `Solid` but not `Other`, which `Solid` requires
+  --> sema/errors_block_help.kl:44:15
+   |
+44 | implements<T> Solid for Box3<T> where T : copyable & Named
+   |               ^^^^^ write `implements Other for Box3<T>` as well, with this block's parameters and `where`
+
+error: expected `const Named*`, but got `Wrap<bool>*`
+   --> sema/errors_block_help.kl:104:30
+    |
+104 |     total = total + through( &w );
+    |                              ^^ the block at sema/errors_block_help.kl:54:25 makes `Wrap<T>` implement `Named` only where `T : Named`, which `bool` is not
+
+error: `read` needs a `T` that implements `Named`, but `i32*` does not
+   --> sema/errors_block_help.kl:106:27
+    |
+106 |     total = total + read( q );
+    |                           ^ `const i32*` implements `Named`, so pass a `const i32*`
+
+error: no operator `==` for `Opt<Opaque>` and `Opt<Opaque>`
+   --> sema/errors_block_help.kl:108:12
+    |
+108 |     return a == a ? total : 0;
+    |            ^^^^^^ the block at sema/errors_block_help.kl:70:29 makes `Opt<T>` implement `equatable` only where `T : equatable`, which `Opaque` is not
+
+5 errors generated

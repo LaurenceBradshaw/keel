@@ -335,6 +335,16 @@ void Bounds::check_each_bound(
                 ) ||
                 std::ranges::any_of(
                     failing, [&]( Type_id failed ) { return types_.conformances().refines( table_, failed, interface ); }
+                ) ||
+                // Met through one that requires it: the implementer missing it was told.
+                std::ranges::any_of(
+                    named->second,
+                    [&]( Type_id other )
+                    {
+                        const Type_id refining = table_.substitute( other, arguments );
+                        return refining != interface && types_.conformances().refines( table_, refining, interface ) &&
+                               conforms( argument, refining );
+                    }
                 ) )
             {
                 continue;
@@ -508,6 +518,22 @@ std::string Bounds::conforming_help( Type_id type, Type_id interface, Span at ) 
             table_.name( unmet->interface ),
             table_.name( unmet->argument )
         );
+    }
+
+    // An `i32*` where a block covers `const T*`: another block for `i32*` is not what is missing.
+    if( table_.is_pointer( type ) && !table_.points_to_const( type ) )
+    {
+        const Type_id read_only = table_.pointer_to( table_.get( type ).element, true );
+
+        if( conforms( read_only, interface ) )
+        {
+            return fmt::format(
+                "`{}` implements `{}`, so pass a `{}`",
+                table_.name( read_only ),
+                table_.name( interface ),
+                table_.name( read_only )
+            );
+        }
     }
 
     std::vector<Type_id> missing = closed( std::span( &interface, 1 ) );

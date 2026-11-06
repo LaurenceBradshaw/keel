@@ -863,12 +863,44 @@ void report_conformance_errors(
         if( error.problem == Conformance_problem::Unrefined )
         {
             const std::string_view refined = table.name( error.refined );
+            std::string            help;
+
+            if( !in_block )
+            {
+                help = fmt::format( "add `{}` to `{}`'s `implements` list", refined, type );
+            }
+            // A narrower block answers where this one's `where` promises its bound too.
+            else if( const auto unmet = model.unmet_bound( table, error.self, error.refined ) )
+            {
+                help = fmt::format(
+                    "the block at {} makes `{}` implement `{}` only where `{} : {}`; {}",
+                    reporter.position( ast.name_span( unmet->block ) ),
+                    table.name( recorded_type( recorded, unmet->block ) ),
+                    refined,
+                    table.name( unmet->parameter ),
+                    table.name( unmet->interface ),
+                    table.is_parameter( unmet->argument ) ? fmt::format(
+                                                                "add `{}` to this block's `where` clause for `{}`",
+                                                                table.name( unmet->interface ),
+                                                                table.name( unmet->argument )
+                                                            )
+                                                          : fmt::format( "which `{}` is not", table.name( unmet->argument ) )
+                );
+            }
+            // Without its `where`, a block for the type's own package would be refused.
+            else
+            {
+                help = !ast.type_parameters( ast.type_param_list( error.implementer ) ).empty()
+                           ? fmt::format(
+                                 "write `implements {} for {}` as well, with this block's parameters and `where`", refined, type
+                             )
+                           : fmt::format( "write `implements {} for {}` as well", refined, type );
+            }
 
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}` implements `{}` but not `{}`, which `{}` requires", type, interface, refined, interface ),
-                in_block ? fmt::format( "write `implements {} for {}` as well", refined, type )
-                         : fmt::format( "add `{}` to `{}`'s `implements` list", refined, type )
+                help
             );
             continue;
         }
