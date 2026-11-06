@@ -1481,6 +1481,9 @@ major), which waits for the lambda decision (§12).
   on `count<T, u64 N>` says it takes 2 type arguments, then *an array literal needs a type to
   fill*. The second is a cascade from the count path. Whether a partial list should deduce the rest
   is a separate question.
+- **A struct whose conformance failed also fails its wrappers' `==`**: `struct K implements
+  hashable` with no `==` is refused, and then `==` on a `K[2]` or a `kl::optional<K>` adds *no
+  operator `==`*. The refused conformance should count as met for what depends on it.
 
 ### Tooling
 

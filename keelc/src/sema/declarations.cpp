@@ -204,11 +204,21 @@ void Declaration_collector::open_top_level( Node_id decl )
     }
 }
 
-// What a block is known by, since it declares no name: `Measured for i64`.
+// What a block is known by, since it declares no name: `Measured for i64`, without its `<T>`.
 std::string Declaration_collector::block_name( Node_id block ) const
 {
-    constexpr std::string_view keyword = "implements ";
-    return print_signature( ast_, resolution_, types_, interner_, block ).substr( keyword.size() );
+    const std::string signature = print_signature( ast_, resolution_, types_, interner_, block );
+
+    std::size_t at    = std::string_view( "implements" ).size();
+    int         depth = 0;
+
+    do
+    {
+        depth += signature[at] == '<' ? 1 : signature[at] == '>' ? -1 : 0;
+        ++at;
+    } while( depth > 0 && at < signature.size() );
+
+    return signature.substr( at < signature.size() && signature[at] == ' ' ? at + 1 : at );
 }
 
 } // namespace
@@ -429,6 +439,40 @@ TEST_CASE( "declarations_list_an_interface_and_its_methods", "[sema][declaration
             "method public f64 area() const [Square] ",
         }
     );
+}
+
+TEST_CASE( "declarations_name_a_generic_block_without_its_parameters", "[sema][declarations][implements]" )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const File_id file = sm.add_file(
+        "t.kl",
+        "interface Named { i32 name() const; };\n"
+        "implements<u64 N> Named for i32[N] { i32 name() const { return 1; } };\n"
+    );
+    const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+    const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+    REQUIRE_FALSE( diags.has_errors() );
+
+    std::vector<std::string> named;
+    for( const Declaration& decl : collect_declarations( ast, resolution, types, sm, interner ) )
+    {
+        if( decl.kind == "implements" )
+        {
+            named.push_back( decl.name );
+        }
+        else if( decl.kind == "method" && decl.parent != "Named" )
+        {
+            named.push_back( decl.parent );
+        }
+    }
+
+    REQUIRE( named == std::vector<std::string> { "Named for i32[N]", "Named for i32[N]" } );
 }
 
 TEST_CASE( "declarations_render_as_json_lines_after_their_packages", "[sema][declarations]" )

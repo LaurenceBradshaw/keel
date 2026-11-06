@@ -77,9 +77,9 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dl class="summaries">
 <dt><a href="list.html#list"><code>list</code></a> <span class="kind">class</span></dt>
 <dd>A growable array of <code>T</code> that owns its elements and the block holding them.</dd>
-<dt><a href="list.html#T&gt;-equatable-for-list&lt;T&gt;-where-T-:-equatable"><code>T&gt; equatable for list&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="list.html#equatable-for-list&lt;T&gt;-where-T-:-equatable"><code>equatable for list&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
 <dd>Two lists are equal when they hold equal elements in the same order.</dd>
-<dt><a href="list.html#T&gt;-hashable-for-list&lt;T&gt;-where-T-:-hashable"><code>T&gt; hashable for list&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="list.html#hashable-for-list&lt;T&gt;-where-T-:-hashable"><code>hashable for list&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
 <dd>A list hashes each element in order, then its size.</dd>
 </dl>
 </section>
@@ -105,11 +105,11 @@ end of input. A read error is also <code>false</code>; the careful path is <code
 <dd>Whether an optional holds a value.</dd>
 <dt><a href="optional.html#is_none"><code>is_none</code></a> <span class="kind">function</span></dt>
 <dd>Whether an optional holds nothing.</dd>
-<dt><a href="optional.html#T&gt;-equatable-for-optional&lt;T&gt;-where-T-:-equatable"><code>T&gt; equatable for optional&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="optional.html#equatable-for-optional&lt;T&gt;-where-T-:-equatable"><code>equatable for optional&lt;T&gt; where T : equatable</code></a> <span class="kind">implements</span></dt>
 <dd>Two optionals are equal when both are empty, or both hold equal values.</dd>
-<dt><a href="optional.html#T&gt;-comparable-for-optional&lt;T&gt;-where-T-:-comparable"><code>T&gt; comparable for optional&lt;T&gt; where T : comparable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="optional.html#comparable-for-optional&lt;T&gt;-where-T-:-comparable"><code>comparable for optional&lt;T&gt; where T : comparable</code></a> <span class="kind">implements</span></dt>
 <dd>An empty optional comes before any that holds a value; two that hold values order by them.</dd>
-<dt><a href="optional.html#T&gt;-hashable-for-optional&lt;T&gt;-where-T-:-hashable"><code>T&gt; hashable for optional&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="optional.html#hashable-for-optional&lt;T&gt;-where-T-:-hashable"><code>hashable for optional&lt;T&gt; where T : hashable</code></a> <span class="kind">implements</span></dt>
 <dd>An optional hashes whether it holds a value, then the value.</dd>
 </dl>
 </section>
@@ -231,11 +231,11 @@ empty or holds <code>=</code> never is.</dd>
 <dl class="summaries">
 <dt><a href="pair.html#pair"><code>pair</code></a> <span class="kind">class</span></dt>
 <dd>Two values, of possibly different types, held together.</dd>
-<dt><a href="pair.html#A,-B&gt;-equatable-for-pair&lt;A,-B&gt;-where-A-:-equatable,-where-B-:-equatable"><code>A, B&gt; equatable for pair&lt;A, B&gt; where A : equatable, where B : equatable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="pair.html#equatable-for-pair&lt;A,-B&gt;-where-A-:-equatable,-where-B-:-equatable"><code>equatable for pair&lt;A, B&gt; where A : equatable, where B : equatable</code></a> <span class="kind">implements</span></dt>
 <dd>Two pairs are equal when both their values are.</dd>
-<dt><a href="pair.html#A,-B&gt;-comparable-for-pair&lt;A,-B&gt;-where-A-:-comparable,-where-B-:-comparable"><code>A, B&gt; comparable for pair&lt;A, B&gt; where A : comparable, where B : comparable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="pair.html#comparable-for-pair&lt;A,-B&gt;-where-A-:-comparable,-where-B-:-comparable"><code>comparable for pair&lt;A, B&gt; where A : comparable, where B : comparable</code></a> <span class="kind">implements</span></dt>
 <dd>Pairs order by their first values, then by their second.</dd>
-<dt><a href="pair.html#A,-B&gt;-hashable-for-pair&lt;A,-B&gt;-where-A-:-hashable,-where-B-:-hashable"><code>A, B&gt; hashable for pair&lt;A, B&gt; where A : hashable, where B : hashable</code></a> <span class="kind">implements</span></dt>
+<dt><a href="pair.html#hashable-for-pair&lt;A,-B&gt;-where-A-:-hashable,-where-B-:-hashable"><code>hashable for pair&lt;A, B&gt; where A : hashable, where B : hashable</code></a> <span class="kind">implements</span></dt>
 <dd>A pair hashes its first value, then its second.</dd>
 </dl>
 </section>
