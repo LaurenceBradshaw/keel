@@ -4,23 +4,11 @@ error: a size parameter is a `u64`
 3 | class Value<i32 N> // error
   |             ^^^ other types are not supported yet
 
-error: `N` is a type, not a value
- --> sema/errors_value_parameters.kl:6:26
-  |
-6 |     public Value() { v = N; }
-  |                          ^
-
 error: a size parameter is a `u64`
   --> sema/errors_value_parameters.kl:10:9
    |
 10 | void at<Point p>() { } // error
    |         ^^^^^ write `u64 N`
-
-error: `W` is a type, not a value
-  --> sema/errors_value_parameters.kl:12:29
-   |
-12 | u64 width<u64 W>() { return W; } // error
-   |                             ^
 
 error: `i32` is the name of a builtin type
   --> sema/errors_value_parameters.kl:15:14
@@ -34,4 +22,4 @@ error: expected `>`, found `=`
 23 | class Default<T = i32> { T v; public Default( T x ) { v = x; } }; // error
    |                ^ a type parameter has no default: write the type argument at each use
 
-6 errors generated
+4 errors generated

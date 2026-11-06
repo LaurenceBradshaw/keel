@@ -441,7 +441,7 @@ void Ref_reader::read_types()
         {
             const Type_id element = type();
             const Type_id extent  = type();
-            if( !failed() && extent.is_valid() && table_.is_size( extent ) )
+            if( !failed() && extent.is_valid() && ( table_.is_size( extent ) || table_.is_size_parameter( extent ) ) )
             {
                 id = table_.array_of( element, extent );
             }

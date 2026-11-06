@@ -66,6 +66,8 @@ public:
 
     // The `const` with an initialiser that `id` names, or invalid.
     Node_id constant_named( Node_id id ) const;
+    // The size parameter `id` names, which is known only per instance and so is no constant.
+    Node_id size_parameter_named( Node_id id ) const;
     // `decl`'s initialiser names `decl` itself, directly or through other consts.
     bool names_itself( Node_id decl ) const;
     // `id` names an integer `const` that does not fold, which its own declaration reports.

@@ -514,6 +514,16 @@ std::optional<Wide> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool
             return std::nullopt;
         }
 
+        if( const Node_id size = constant_folder_.size_parameter_named( bound ); size.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( bound ),
+                fmt::format( "`{}` is known only per instance", interner_.text( ast_.name( size ) ) ),
+                "a `switch` decides which arm runs by comparing constants"
+            );
+            return std::nullopt;
+        }
+
         reporter_.error_at(
             ast_.span( bound ),
             "a `case` label must be known at compile time",

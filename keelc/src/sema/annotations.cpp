@@ -658,8 +658,27 @@ bool Annotations::resolve_type_arguments(
         for( std::size_t i = 0; i < given.size(); ++i )
         {
             const Node_id argument = given[i];
-            const Type_id type = table_.is_size_parameter( types_.type_of( parameters[i] ) ) ? resolve_size_argument( argument )
-                                                                                             : resolve( argument, false );
+            Type_id       type     = Type_id {};
+            if( table_.is_size_parameter( types_.type_of( parameters[i] ) ) )
+            {
+                type = resolve_size_argument( parameters[i], argument );
+            }
+            else if( ast_.kind( argument ) == Node_kind::Int_literal )
+            {
+                reporter_.error_at(
+                    ast_.span( argument ),
+                    fmt::format(
+                        "`{}` takes a type, but `{}` is a size",
+                        interner_.text( ast_.name( parameters[i] ) ),
+                        constant_folder_.fold_integer( argument ).value.magnitude
+                    )
+                );
+                type = table_.builtin( Type_kind::Error );
+            }
+            else
+            {
+                type = resolve( argument, false );
+            }
             resolved.push_back( refuse_never( argument, type, "type argument" ) ? table_.builtin( Type_kind::Error ) : type );
         }
     }
@@ -683,19 +702,62 @@ bool Annotations::resolve_type_arguments(
     return true;
 }
 
-// A size parameter's argument: another size parameter passed on.
-Type_id Annotations::resolve_size_argument( Node_id argument )
+// A size parameter's argument: a literal, a `const`, or a size parameter passed on.
+Type_id Annotations::resolve_size_argument( Node_id parameter, Node_id argument )
 {
-    const Node_id decl = ast_.kind( argument ) == Node_kind::Named_type ? resolution_.declaration_of( argument ) : Node_id {};
-
-    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Type_param_decl &&
-        table_.is_size_parameter( types_.type_of( decl ) ) )
+    if( const Node_id forwarded = constant_folder_.size_parameter_named( argument ); forwarded.is_valid() )
     {
-        types_.record( argument, types_.type_of( decl ) );
-        return types_.type_of( decl );
+        return types_.record( argument, types_.type_of( forwarded ) );
     }
 
-    return resolve( argument, false );
+    const Node_id decl = ast_.kind( argument ) == Node_kind::Named_type ? resolution_.declaration_of( argument ) : Node_id {};
+
+    const bool is_value =
+        ast_.kind( argument ) == Node_kind::Int_literal || ( decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl );
+
+    if( !is_value )
+    {
+        const Type_id type = resolve( argument, false );
+        if( !table_.is_error( type ) )
+        {
+            reporter_.error_at(
+                ast_.span( argument ),
+                fmt::format(
+                    "`{}` takes a size, but `{}` is a type", interner_.text( ast_.name( parameter ) ), table_.name( type )
+                )
+            );
+        }
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const std::string_view name   = interner_.text( ast_.name( parameter ) );
+    const Folded           folded = constant_folder_.fold_integer( argument );
+
+    if( !folded.constant && constant_folder_.names_refused_constant( argument ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !folded.constant || folded.overflowed )
+    {
+        reporter_.error_at(
+            ast_.span( argument ),
+            fmt::format( "`{}` takes a size known at compile time", name ),
+            "write a literal or a `const`"
+        );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( folded.value.magnitude == 0 || folded.value.negative )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` is a size, which is at least 1", name ) );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    constant_folder_.record_value(
+        argument, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = folded.value.magnitude }
+    );
+    return types_.record( argument, table_.size( folded.value.magnitude ) );
 }
 
 // A bound naming an interface: its type, recorded on the name, which is where Bounds reads it.
@@ -862,8 +924,22 @@ bool Annotations::refuse_never( Node_id annotation, Type_id type, std::string_vi
 
 Type_id Annotations::resolve_array( Node_id annotation )
 {
-    const Type_id            element = resolve( ast_.inner_type( annotation ), false );
-    const std::optional<u64> count   = array_size( ast_.array_size( annotation ) );
+    const Type_id element   = resolve( ast_.inner_type( annotation ), false );
+    const Node_id suffix    = ast_.array_size( annotation );
+    const Node_id parameter = size_parameter_read( suffix );
+
+    if( parameter.is_valid() )
+    {
+        const Type_id extent = size_tree( suffix, parameter );
+        if( !table_.is_error( extent ) )
+        {
+            types_.record( suffix, extent ); // what Signature_printer reads back
+        }
+        return table_.is_error( element ) || table_.is_error( extent ) ? table_.builtin( Type_kind::Error )
+                                                                       : table_.array_of( element, extent );
+    }
+
+    const std::optional<u64> count = array_size( suffix );
 
     if( table_.is_error( element ) )
     {
@@ -934,6 +1010,83 @@ std::optional<u64> Annotations::array_size( Node_id size )
         size, Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = folded.value.magnitude }
     );
     return folded.value.magnitude;
+}
+
+Node_id Annotations::size_parameter_read( Node_id size ) const
+{
+    if( !size.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    if( ast_.kind( size ) == Node_kind::Name_expr )
+    {
+        return constant_folder_.size_parameter_named( size );
+    }
+
+    for( const Node_id child : ast_.children( size ) )
+    {
+        if( const Node_id found = size_parameter_read( child ); found.is_valid() )
+        {
+            return found;
+        }
+    }
+
+    return Node_id {};
+}
+
+// Folded when it reads no parameter; otherwise built as a size, to be computed per instance.
+Type_id Annotations::size_tree( Node_id size, Node_id parameter )
+{
+    if( !size_parameter_read( size ).is_valid() )
+    {
+        const Folded folded = constant_folder_.fold_integer( size );
+        if( folded.constant && !folded.overflowed && !folded.value.negative )
+        {
+            return table_.size( folded.value.magnitude );
+        }
+        if( !constant_folder_.names_refused_constant( size ) )
+        {
+            reporter_.error_at(
+                ast_.span( size ),
+                "an array's size must be known at compile time",
+                "write literals and `const` names, with arithmetic over them"
+            );
+        }
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( ast_.kind( size ) == Node_kind::Name_expr )
+    {
+        return types_.type_of( resolution_.declaration_of( size ) );
+    }
+
+    if( ast_.kind( size ) == Node_kind::Binary_expr )
+    {
+        static constexpr std::pair<Token_kind, Size_op> ops[] = {
+            { Token_kind::Plus, Size_op::Add },
+            { Token_kind::Minus, Size_op::Subtract },
+            { Token_kind::Star, Size_op::Multiply },
+            { Token_kind::Slash, Size_op::Divide },
+            { Token_kind::Percent, Size_op::Remainder },
+        };
+
+        for( const auto& [token, op] : ops )
+        {
+            if( ast_.op( size ) == token )
+            {
+                const Type_id lhs = size_tree( ast_.lhs( size ), parameter );
+                const Type_id rhs = size_tree( ast_.rhs( size ), parameter );
+                return table_.size_op( op, lhs, rhs );
+            }
+        }
+    }
+
+    reporter_.error_at(
+        ast_.span( size ),
+        fmt::format( "an array's size over `{}` may use `+`, `-`, `*`, `/` and `%`", interner_.text( ast_.name( parameter ) ) )
+    );
+    return table_.builtin( Type_kind::Error );
 }
 
 Span Annotations::const_keyword( Node_id const_type ) const

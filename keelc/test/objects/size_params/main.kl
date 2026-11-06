@@ -1,0 +1,13 @@
+// sized.klo holds generics over `T[N]` and `T[W * H]`; each instance is made here from the loaded form.
+import sized;
+
+i32 main()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    if( total<3>( a ) != 6 ) { return 1; }
+
+    Grid<i32, 2, 3> g = Grid<i32, 2, 3> { [ 7, .. ] };
+    if( area<2, 3>( g ) != 6 || g.cells[5] != 7 ) { return 2; }
+
+    return 0;
+}

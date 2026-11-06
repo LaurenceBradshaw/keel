@@ -639,8 +639,8 @@ void Statements::visit_assign( Node_id id )
         // A name that does not resolve, or resolves to a type or function, is already reported by
         // infer_name, and a qualified one the resolver could not bind by the resolver. Anything
         // else - a literal, a call, an arithmetic expression - has nothing else to report it.
-        if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) &&
-            !( call && table_.is_error( call_type ) ) )
+        if( ( ast_.kind( target ) != Node_kind::Name_expr || constant_folder_.size_parameter_named( target ).is_valid() ) &&
+            !resolution_.is_unresolved( target ) && !( call && table_.is_error( call_type ) ) )
         {
             reporter_.error_at(
                 ast_.span( target ),

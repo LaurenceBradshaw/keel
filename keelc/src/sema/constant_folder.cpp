@@ -195,7 +195,8 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
 
 Node_id Constant_folder::constant_named( Node_id id ) const
 {
-    if( !id.is_valid() || ( ast_.kind( id ) != Node_kind::Name_expr && ast_.kind( id ) != Node_kind::Path_expr ) )
+    if( !id.is_valid() || ( ast_.kind( id ) != Node_kind::Name_expr && ast_.kind( id ) != Node_kind::Path_expr &&
+                            ast_.kind( id ) != Node_kind::Named_type ) )
     {
         return Node_id {};
     }
@@ -206,6 +207,20 @@ Node_id Constant_folder::constant_named( Node_id id ) const
                           ( ast_.initialiser( decl ).is_valid() || constants_.contains( decl.v ) );
 
     return is_const ? decl : Node_id {};
+}
+
+Node_id Constant_folder::size_parameter_named( Node_id id ) const
+{
+    if( !id.is_valid() || ( ast_.kind( id ) != Node_kind::Name_expr && ast_.kind( id ) != Node_kind::Named_type ) )
+    {
+        return Node_id {};
+    }
+
+    const Node_id decl = resolution_.declaration_of( id );
+    return decl.is_valid() && ast_.kind( decl ) == Node_kind::Type_param_decl &&
+                   table_.is_size_parameter( types_.type_of( decl ) )
+               ? decl
+               : Node_id {};
 }
 
 bool Constant_folder::names_itself( Node_id decl ) const
@@ -310,6 +325,7 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     case Node_kind::Null_literal:
         return folded( 0, false );
 
+    case Node_kind::Named_type: // a size argument naming a `const`
     case Node_kind::Name_expr:
     case Node_kind::Path_expr:
     {

@@ -76,14 +76,16 @@ public:
 private:
     // The long cases of resolve().
     Type_id resolve_named( Node_id annotation );
-    Type_id resolve_size_argument( Node_id argument );
+    Type_id resolve_size_argument( Node_id parameter, Node_id argument );
     Type_id resolve_generic( Node_id annotation );
     Type_id resolve_function_type( Node_id annotation );
     Type_id resolve_field_type( Node_id annotation );
     Type_id resolve_union( Node_id annotation );
     Type_id resolve_array( Node_id annotation );
 
-    std::optional<u64> array_size( Node_id size ); // empty when not known at compile time
+    std::optional<u64> array_size( Node_id size );                   // empty when not known at compile time
+    Type_id            size_tree( Node_id size, Node_id parameter ); // a suffix over `parameter`
+    Node_id            size_parameter_read( Node_id size ) const;    // the first size parameter `size` reads
 
     Span const_keyword( Node_id const_type ) const;
 

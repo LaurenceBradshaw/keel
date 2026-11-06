@@ -639,7 +639,16 @@ Place Lowering::place_for( Node_id declaration, Type_id owner )
 // A `const` number, `bool` or enum reads as its value, which sema recorded, so the optimiser folds through it.
 Operand Lowering::read_name( Node_id id, Node_id decl )
 {
-    const Type_id                       type = type_of( id );
+    const Type_id type = type_of( id );
+
+    // A size parameter is its instance's constant.
+    if( ast_.kind( decl ) == Node_kind::Type_param_decl )
+    {
+        const Type& size = types_.table().get( types_.table().substitute( types_.type_of( decl ), bindings_ ) );
+        assert( size.kind == Type_kind::Size && size.width == 0 && "an instance binds every size parameter" );
+        return constant( literal_pool_.add_integer( size.count ), type );
+    }
+
     const std::optional<Constant_value> value =
         locals_.contains( decl.v ) || ast_.kind( decl ) != Node_kind::Var_decl || !ast_.is_const_binding( decl )
             ? std::nullopt

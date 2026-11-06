@@ -1,0 +1,20 @@
+// Generics over an extent, loaded from sized.klo by main.kl.
+u64 total<u64 N>( const ref i32[N] a )
+{
+    u64 sum = 0;
+    for( u64 i = 0; i < N; i++ )
+    {
+        sum = sum + cast<u64>( a[i] );
+    }
+    return sum;
+}
+
+struct Grid<T, u64 W, u64 H> where T : copyable
+{
+    T[W * H] cells;
+};
+
+u64 area<u64 W, u64 H>( const ref Grid<i32, W, H> g )
+{
+    return g.cells.size();
+}

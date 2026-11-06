@@ -238,6 +238,12 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.poison( id );
     }
 
+    // A size parameter reads as its value, known per instance.
+    if( decl_kind == Node_kind::Type_param_decl && table_.is_size_parameter( types_.type_of( decl ) ) )
+    {
+        return types_.record( id, table_.get( types_.type_of( decl ) ).element );
+    }
+
     if( is_aggregate( decl_kind ) || decl_kind == Node_kind::Enum_decl || decl_kind == Node_kind::Type_param_decl )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( ast_.name( id ) ) ) );
@@ -3436,7 +3442,9 @@ Type_id Expressions::infer_array_index( Node_id id, Type_id array )
 
     const Folded folded = constant_folder_.fold_integer( index );
 
-    if( folded.constant && !folded.overflowed && !folded.value.negative && folded.value.magnitude >= count )
+    // An extent over a size parameter is known only per instance, where the run-time check stands.
+    if( folded.constant && !folded.overflowed && !folded.value.negative && table_.is_sized_array( array ) &&
+        folded.value.magnitude >= count )
     {
         reporter_.error_at(
             ast_.span( index ),
@@ -3508,6 +3516,21 @@ Type_id Expressions::infer_array_literal( Node_id id )
     const std::span<const Node_id> elements = ast_.children( id );
 
     const Type_id element = table_.get( expectation ).element;
+
+    if( !table_.is_sized_array( expectation ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}`'s length is known only per instance", table_.name( expectation ) ),
+            "fill it with `[ x, .. ]`"
+        );
+
+        for( const Node_id value : elements )
+        {
+            absorb( value );
+        }
+        return types_.poison( id );
+    }
 
     if( elements.size() != table_.get( expectation ).count )
     {

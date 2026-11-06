@@ -1,0 +1,49 @@
+error: an array's size over `N` may use `+`, `-`, `*`, `/` and `%`
+ --> sema/errors_size_param_uses.kl:9:29
+  |
+9 | struct Shifted<u64 N> { i32[N << 1] x; };           // error: only + - * / %
+  |                             ^^^^^^
+
+error: `i32[N]`'s length is known only per instance
+  --> sema/errors_size_param_uses.kl:15:21
+   |
+15 |     i32[N] listed = [ 1, 2 ];                       // error: listed against T[N]
+   |                     ^^^^^^^^ fill it with `[ x, .. ]`
+
+error: cannot assign to this expression
+  --> sema/errors_size_param_uses.kl:16:5
+   |
+16 |     N = 3;                                          // error: not assignable
+   |     ^ `N` is a value, not a place
+
+error: `N` is known only per instance
+  --> sema/errors_size_param_uses.kl:20:14
+   |
+20 |         case N:                                     // error: known only per instance
+   |              ^ a `switch` decides which arm runs by comparing constants
+
+error: `N` is a size, which is at least 1
+  --> sema/errors_size_param_uses.kl:32:11
+   |
+32 |     first<0>( a );                                  // error: at least 1
+   |           ^
+
+error: `N` takes a size, but `i32` is a type
+  --> sema/errors_size_param_uses.kl:33:11
+   |
+33 |     first<i32>( a );                                // error: a type
+   |           ^^^
+
+error: `N` takes a size known at compile time
+  --> sema/errors_size_param_uses.kl:34:11
+   |
+34 |     first<n>( a );                                  // error: a run-time value
+   |           ^ write a literal or a `const`
+
+error: `T` takes a type, but `4` is a size
+  --> sema/errors_size_param_uses.kl:35:9
+   |
+35 |     Box<4>* b = nullptr;                            // error: `T` takes a type
+   |         ^
+
+8 errors generated

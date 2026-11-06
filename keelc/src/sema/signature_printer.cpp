@@ -206,9 +206,14 @@ std::string Signature_printer::type( Node_id annotation ) const
         return type( ast_.inner_type( annotation ) ) + "[]";
     case Node_kind::Array_type:
     {
-        // A name prints as written; a literal by the value Annotations recorded for it.
-        const Node_id                       size  = ast_.array_size( annotation );
-        const std::optional<Constant_value> value = types_.constant_of( size );
+        // A size over a parameter prints as its type, a name as written, a literal by its value.
+        const Node_id                       size   = ast_.array_size( annotation );
+        const std::optional<Constant_value> value  = types_.constant_of( size );
+        const Type_id                       extent = types_.type_of( size );
+        if( extent.is_valid() )
+        {
+            return fmt::format( "{}[{}]", type( ast_.inner_type( annotation ) ), types_.table().name( extent ) );
+        }
         return ast_.kind( size ) == Node_kind::Name_expr
                    ? fmt::format( "{}[{}]", type( ast_.inner_type( annotation ) ), text( ast_.name( size ) ) )
                : value.has_value() ? fmt::format( "{}[{}]", type( ast_.inner_type( annotation ) ), value->magnitude )
@@ -587,6 +592,13 @@ TEST_CASE( "signatures_print_a_size_parameter_with_its_type", "[sema][signature]
 
     REQUIRE( printed( Node_kind::Struct_decl, "Grid" ) == "struct Grid<T, u64 N> where T : copyable" );
     REQUIRE( printed( Node_kind::Function_decl, "f" ) == "void f<u64 N, T>( T x )" );
+}
+
+TEST_CASE( "signatures_print_an_array_size_over_a_size_parameter", "[sema][signature][size]" )
+{
+    const Printed printed( "u64 f<u64 W, u64 H>( const ref i32[( W + 1 ) * H] a ) { return 0; }\n" );
+
+    REQUIRE( printed( Node_kind::Function_decl, "f" ) == "u64 f<u64 W, u64 H>( const ref i32[(W + 1) * H] a )" );
 }
 
 TEST_CASE( "signatures_print_a_generic_interface_and_its_instances", "[sema][signature][interface]" )
