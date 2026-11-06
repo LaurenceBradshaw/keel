@@ -180,7 +180,19 @@ u32 Ref_writer::type_index( Type_id id )
         break;
     case Type_kind::Array:
         type( entry, described.element );
-        entry.put_u64( described.count );
+        type( entry, described.arguments[0] );
+        break;
+    case Type_kind::Size:
+        entry.put_u8( described.width );
+        if( described.width == 0 )
+        {
+            entry.put_u64( described.count );
+        }
+        else
+        {
+            type( entry, described.arguments[0] );
+            type( entry, described.arguments[1] );
+        }
         break;
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -203,6 +215,7 @@ u32 Ref_writer::type_index( Type_id id )
         break;
     case Type_kind::Parameter:
         node( entry, described.declaration );
+        type( entry, described.element ); // a size parameter's value type
         break;
     case Type_kind::Function:
         type( entry, described.element );
@@ -427,11 +440,34 @@ void Ref_reader::read_types()
         case Type_kind::Array:
         {
             const Type_id element = type();
-            const u64     n       = in_.get_u64();
-            if( !failed() )
+            const Type_id extent  = type();
+            if( !failed() && extent.is_valid() && table_.is_size( extent ) )
             {
-                id = table_.array_of( element, n );
+                id = table_.array_of( element, extent );
             }
+            else
+            {
+                fail();
+            }
+            break;
+        }
+        case Type_kind::Size:
+        {
+            const u8 op = in_.get_u8();
+            if( op == 0 )
+            {
+                id = table_.size( in_.get_u64() );
+                break;
+            }
+
+            const Type_id lhs = type();
+            const Type_id rhs = type();
+            if( failed() || op > u8( Size_op::Remainder ) || !lhs.is_valid() || !rhs.is_valid() )
+            {
+                fail();
+                break;
+            }
+            id = table_.size_op( Size_op( op ), lhs, rhs );
             break;
         }
         case Type_kind::Struct:
@@ -454,15 +490,19 @@ void Ref_reader::read_types()
         }
         case Type_kind::Parameter:
         {
-            const Node_id decl = declaration();
+            const Node_id decl       = declaration();
+            const Type_id value_type = type();
             if( failed() )
             {
                 break;
             }
 
-            id = program_.ast.kind( decl ) == Node_kind::Interface_decl
-                     ? table_.self_of( decl )
-                     : table_.parameter( decl, interner_.text( program_.ast.name( decl ) ) );
+            const std::string_view name = program_.ast.kind( decl ) == Node_kind::Interface_decl
+                                              ? std::string_view {}
+                                              : interner_.text( program_.ast.name( decl ) );
+            id                          = program_.ast.kind( decl ) == Node_kind::Interface_decl ? table_.self_of( decl )
+                                          : value_type.is_valid() ? table_.size_parameter( decl, name, value_type )
+                                                                  : table_.parameter( decl, name );
             break;
         }
         case Type_kind::Function:

@@ -127,17 +127,149 @@ Type_id Type_table::run_of( Type_id element )
 
 Type_id Type_table::array_of( Type_id element, u64 count )
 {
-    const auto it = arrays_.find( { element.v, count } );
+    return array_of( element, size( count ) );
+}
+
+Type_id Type_table::array_of( Type_id element, Type_id extent )
+{
+    if( is_error( extent ) )
+    {
+        return error_;
+    }
+
+    const auto it = arrays_.find( { element.v, extent.v } );
     if( it != arrays_.end() )
     {
         return it->second;
     }
 
+    const Type&                 described = get( extent );
+    const std::vector<Type_id>& stored    = arguments_.emplace_back( std::vector<Type_id> { extent } );
+
     const Type_id id =
-        add( { .kind = Type_kind::Array, .element = element, .count = count },
-             fmt::format( "{}[{}]", name( element ), count ) );
-    arrays_.emplace( std::pair { element.v, count }, id );
+        add( { .kind      = Type_kind::Array,
+               .element   = element,
+               .arguments = stored,
+               .count     = described.width == 0 && described.kind == Type_kind::Size ? described.count : 0 },
+             fmt::format( "{}[{}]", name( element ), name( extent ) ) );
+    arrays_.emplace( std::pair { element.v, extent.v }, id );
     return id;
+}
+
+Type_id Type_table::size( u64 value )
+{
+    const auto it = sizes_.find( value );
+    if( it != sizes_.end() )
+    {
+        return it->second;
+    }
+
+    const Type_id id = add( { .kind = Type_kind::Size, .count = value }, fmt::format( "{}", value ) );
+    sizes_.emplace( value, id );
+    return id;
+}
+
+namespace
+{
+
+std::optional<u64> apply( Size_op op, u64 lhs, u64 rhs )
+{
+    u64 result = 0;
+    switch( op )
+    {
+    case Size_op::Add:
+        return __builtin_add_overflow( lhs, rhs, &result ) ? std::nullopt : std::optional( result );
+    case Size_op::Subtract:
+        return __builtin_sub_overflow( lhs, rhs, &result ) ? std::nullopt : std::optional( result );
+    case Size_op::Multiply:
+        return __builtin_mul_overflow( lhs, rhs, &result ) ? std::nullopt : std::optional( result );
+    case Size_op::Divide:
+        return rhs == 0 ? std::nullopt : std::optional( lhs / rhs );
+    case Size_op::Remainder:
+        return rhs == 0 ? std::nullopt : std::optional( lhs % rhs );
+    default:
+        assert( false );
+        return std::nullopt;
+    }
+}
+
+// How tightly a size binds when it is an operand: a sum 1, a product 2, a leaf 3.
+int precedence( const Type& described )
+{
+    if( described.kind != Type_kind::Size || described.width == 0 )
+    {
+        return 3;
+    }
+
+    const Size_op op = Size_op( described.width );
+    return op == Size_op::Add || op == Size_op::Subtract ? 1 : 2;
+}
+
+} // namespace
+
+Type_id Type_table::size_op( Size_op op, Type_id lhs, Type_id rhs )
+{
+    if( is_error( lhs ) || is_error( rhs ) )
+    {
+        return error_;
+    }
+
+    const Type& l = get( lhs );
+    const Type& r = get( rhs );
+
+    if( l.kind == Type_kind::Size && l.width == 0 && r.kind == Type_kind::Size && r.width == 0 )
+    {
+        const std::optional<u64> value = apply( op, l.count, r.count );
+        return value ? size( *value ) : error_;
+    }
+
+    const std::tuple key { u8( op ), lhs.v, rhs.v };
+    const auto       it = size_ops_.find( key );
+    if( it != size_ops_.end() )
+    {
+        return it->second;
+    }
+
+    static constexpr std::string_view spellings[] = { "", "+", "-", "*", "/", "%" };
+
+    const int  binds   = precedence( { .kind = Type_kind::Size, .width = u8( op ) } );
+    const auto operand = [&]( Type_id side, bool right )
+    {
+        const int inner = precedence( get( side ) );
+        return inner < binds || ( right && inner == binds ) ? fmt::format( "({})", name( side ) ) : std::string( name( side ) );
+    };
+    const std::string spelling = fmt::format( "{} {} {}", operand( lhs, false ), spellings[u8( op )], operand( rhs, true ) );
+
+    const std::vector<Type_id>& stored = arguments_.emplace_back( std::vector<Type_id> { lhs, rhs } );
+
+    const Type_id id = add( { .kind = Type_kind::Size, .width = u8( op ), .arguments = stored }, spelling );
+    size_ops_.emplace( key, id );
+    return id;
+}
+
+std::optional<u64> Type_table::evaluate( Type_id size, const Bindings& bindings ) const
+{
+    const Type& described = get( size );
+
+    if( described.kind == Type_kind::Parameter )
+    {
+        const auto bound = bindings.find( size.v );
+        return bound == bindings.end() || bound->second == size ? std::nullopt : evaluate( bound->second, bindings );
+    }
+
+    if( described.kind != Type_kind::Size )
+    {
+        return std::nullopt;
+    }
+
+    if( described.width == 0 )
+    {
+        return described.count;
+    }
+
+    const std::optional<u64> lhs = evaluate( described.arguments[0], bindings );
+    const std::optional<u64> rhs = evaluate( described.arguments[1], bindings );
+    return lhs && rhs ? apply( Size_op( described.width ), *lhs, *rhs ) : std::nullopt;
 }
 
 Type_id Type_table::function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode )
@@ -255,6 +387,13 @@ Type_id Type_table::parameter( Node_id declaration, std::string_view name )
     return id;
 }
 
+Type_id Type_table::size_parameter( Node_id declaration, std::string_view name, Type_id value_type )
+{
+    const Type_id id     = parameter( declaration, name );
+    types_[id.v].element = value_type;
+    return id;
+}
+
 Type_id Type_table::interface( Node_id declaration, std::span<const Type_id> arguments, std::string_view name )
 {
     return composite( Type_kind::Interface, declaration, arguments, name, Type_id {} );
@@ -281,12 +420,14 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
     case Type_kind::Run:
-    case Type_kind::Array:
         return mentions_parameter( described.element );
+    case Type_kind::Array:
+        return mentions_parameter( described.element ) || mentions_parameter( described.arguments[0] );
     case Type_kind::Enum:
     case Type_kind::Struct:
     case Type_kind::Union:
     case Type_kind::Interface:
+    case Type_kind::Size:
         for( Type_id arg : described.arguments )
         {
             if( mentions_parameter( arg ) )
@@ -355,7 +496,20 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Array:
     {
-        return array_of( substitute( described.element, bindings ), described.count );
+        return array_of( substitute( described.element, bindings ), substitute( described.arguments[0], bindings ) );
+    }
+    case Type_kind::Size:
+    {
+        if( described.width == 0 )
+        {
+            return type;
+        }
+
+        return size_op(
+            Size_op( described.width ),
+            substitute( described.arguments[0], bindings ),
+            substitute( described.arguments[1], bindings )
+        );
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -496,13 +650,25 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     // design: a `T` matches an `i32`, and testing kinds first would refuse every deduction there
     // is. First binding wins - a parameter appearing twice in one pattern disagrees with itself,
     // and the ordinary argument check reports that against the whole argument.
+    const Type& a = get( actual );
+
     if( p.kind == Type_kind::Parameter )
     {
+        // A size binds only a size, and a type never does.
+        if( is_size_parameter( pattern ) != ( a.kind == Type_kind::Size || is_size_parameter( actual ) ) )
+        {
+            return false;
+        }
+
         into.emplace( pattern.v, actual );
         return true;
     }
 
-    const Type& a = get( actual );
+    // A computed extent binds nothing; it is checked once substituted.
+    if( p.kind == Type_kind::Size && p.width != 0 )
+    {
+        return true;
+    }
 
     // An array lent where a run is wanted is read as that run, as holds() has it.
     if( p.kind == Type_kind::Run && a.kind == Type_kind::Array )
@@ -522,7 +688,9 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     case Type_kind::Run:
         return deduce( p.element, a.element, into );
     case Type_kind::Array:
-        return p.count == a.count && deduce( p.element, a.element, into );
+        return deduce( p.arguments[0], a.arguments[0], into ) && deduce( p.element, a.element, into );
+    case Type_kind::Size:
+        return pattern == actual;
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
@@ -661,7 +829,9 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
     case Type_kind::Run:
         return x.const_element == y.const_element && unify( table, x.element, y.element, bound );
     case Type_kind::Array:
-        return x.count == y.count && unify( table, x.element, y.element, bound );
+        return unify( table, x.arguments[0], y.arguments[0], bound ) && unify( table, x.element, y.element, bound );
+    case Type_kind::Size:
+        return x.width != 0 || y.width != 0; // a computed size may be any value
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
@@ -1085,6 +1255,22 @@ bool Type_table::is_array( Type_id id ) const
     return get( id ).kind == Type_kind::Array;
 }
 
+bool Type_table::is_sized_array( Type_id id ) const
+{
+    return is_array( id ) && get( id ).count != 0;
+}
+
+bool Type_table::is_size( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Size;
+}
+
+bool Type_table::is_size_parameter( Type_id id ) const
+{
+    return is_parameter( id ) && get( id ).element.is_valid();
+}
+
 bool Type_table::is_run( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1266,7 +1452,7 @@ std::string Type_table::stable_name( Type_id id ) const
     case Type_kind::Run:
         return fmt::format( "{}[]", stable_name( described.element ) );
     case Type_kind::Array:
-        return fmt::format( "{}[{}]", stable_name( described.element ), described.count );
+        return fmt::format( "{}[{}]", stable_name( described.element ), stable_name( described.arguments[0] ) );
     case Type_kind::Field:
         return fmt::format( "field( {} ) -> {}", stable_name( described.arguments[0] ), stable_name( described.element ) );
     // Sorted by name, as the members' own order is by id, which differs between compiles.
@@ -1393,7 +1579,9 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
     case Type_kind::Run:
         return p.const_element == a.const_element && substitutes_to( p.element, bindings, a.element );
     case Type_kind::Array:
-        return p.count == a.count && substitutes_to( p.element, bindings, a.element );
+        return substitutes_to( p.arguments[0], bindings, a.arguments[0] ) && substitutes_to( p.element, bindings, a.element );
+    case Type_kind::Size:
+        return a.width == 0 && evaluate( pattern, bindings ) == a.count;
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
@@ -3205,6 +3393,100 @@ TEST_CASE( "type_table_interns_a_fixed_array", "[sema][type][fixed_array]" )
     REQUIRE( table.deduce( t_two, table.array_of( u8, 2 ), bindings ) );
     REQUIRE( bindings.at( t.v ) == u8 );
     REQUIRE_FALSE( table.deduce( t_two, table.array_of( u8, 3 ), bindings ) );
+}
+
+TEST_CASE( "type_table_interns_a_size", "[sema][type][size]" )
+{
+    Type_table table;
+
+    const Type_id u64         = table.integer( 64, false );
+    const Type_id i32         = table.integer( 32, true );
+    const Type_id n           = table.size_parameter( Node_id { 1 }, "N", u64 );
+    const Type_id t           = table.parameter( Node_id { 2 }, "T" );
+    const Type_id sixty_three = table.size( 63 );
+    const Type_id words = table.size_op( Size_op::Divide, table.size_op( Size_op::Add, n, sixty_three ), table.size( 64 ) );
+
+    SECTION( "a constant is interned by its value" )
+    {
+        REQUIRE( table.size( 4 ) == table.size( 4 ) );
+        REQUIRE( table.size( 4 ) != table.size( 5 ) );
+        REQUIRE( table.is_size( table.size( 4 ) ) );
+        REQUIRE( table.name( table.size( 4 ) ) == "4" );
+        REQUIRE( table.array_of( i32, table.size( 4 ) ) == table.array_of( i32, 4 ) );
+        REQUIRE( table.is_sized_array( table.array_of( i32, 4 ) ) );
+    }
+
+    SECTION( "a size parameter keeps its value type" )
+    {
+        REQUIRE( table.is_size_parameter( n ) );
+        REQUIRE( table.get( n ).element == u64 );
+        REQUIRE_FALSE( table.is_size_parameter( t ) );
+    }
+
+    SECTION( "two constants fold, and a failure is the Error type" )
+    {
+        REQUIRE( table.size_op( Size_op::Add, table.size( 2 ), table.size( 3 ) ) == table.size( 5 ) );
+        REQUIRE( table.size_op( Size_op::Remainder, table.size( 7 ), table.size( 4 ) ) == table.size( 3 ) );
+        REQUIRE( table.is_error( table.size_op( Size_op::Subtract, table.size( 1 ), table.size( 2 ) ) ) );
+        REQUIRE( table.is_error( table.size_op( Size_op::Multiply, table.size( 1ull << 63 ), table.size( 2 ) ) ) );
+        REQUIRE( table.is_error( table.size_op( Size_op::Divide, table.size( 1 ), table.size( 0 ) ) ) );
+        REQUIRE( table.is_error( table.size_op( Size_op::Remainder, n, table.size( 0 ) ) ) == false );
+    }
+
+    SECTION( "an open size is interned by its operands and named with only the parentheses it needs" )
+    {
+        REQUIRE( table.size_op( Size_op::Divide, table.size_op( Size_op::Add, n, sixty_three ), table.size( 64 ) ) == words );
+        REQUIRE( table.name( words ) == "(N + 63) / 64" );
+        REQUIRE(
+            table.name( table.size_op( Size_op::Add, n, table.size_op( Size_op::Multiply, n, table.size( 2 ) ) ) ) ==
+            "N + N * 2"
+        );
+        REQUIRE(
+            table.name( table.size_op( Size_op::Subtract, n, table.size_op( Size_op::Subtract, n, table.size( 1 ) ) ) ) ==
+            "N - (N - 1)"
+        );
+
+        const Type_id open = table.array_of( u64, words );
+        REQUIRE( table.name( open ) == "u64[(N + 63) / 64]" );
+        REQUIRE( table.mentions_parameter( open ) );
+        REQUIRE_FALSE( table.is_sized_array( open ) );
+    }
+
+    SECTION( "substitution folds an open extent" )
+    {
+        const Bindings at_64 { { n.v, table.size( 64 ) } };
+        const Type_id  open = table.array_of( u64, words );
+
+        REQUIRE( table.substitute( open, at_64 ) == table.array_of( u64, 1 ) );
+        REQUIRE( table.substitutes_to( open, at_64, table.array_of( u64, 1 ) ) );
+        REQUIRE_FALSE( table.substitutes_to( open, at_64, table.array_of( u64, 2 ) ) );
+        REQUIRE( table.is_error( table.substitute(
+            table.array_of( u64, table.size_op( Size_op::Subtract, n, table.size( 1 ) ) ), { { n.v, table.size( 0 ) } }
+        ) ) );
+    }
+
+    SECTION( "an extent is deduced, and a size binds only a size parameter" )
+    {
+        const Type_id pattern = table.array_of( t, n );
+
+        Bindings bindings;
+        REQUIRE( table.deduce( pattern, table.array_of( i32, 3 ), bindings ) );
+        REQUIRE( bindings.at( n.v ) == table.size( 3 ) );
+        REQUIRE( bindings.at( t.v ) == i32 );
+        REQUIRE( table.name( pattern ) == "T[N]" );
+
+        Bindings wrong;
+        REQUIRE_FALSE( table.deduce( n, i32, wrong ) );
+        REQUIRE_FALSE( table.deduce( t, table.size( 3 ), wrong ) );
+
+        // A computed extent binds nothing, and is checked once substituted.
+        Bindings none;
+        REQUIRE( table.deduce( table.array_of( u64, words ), table.array_of( u64, 7 ), none ) );
+        REQUIRE( none.empty() );
+
+        REQUIRE( table.unifies( pattern, table.array_of( i32, 3 ), t, i32 ) );
+        REQUIRE_FALSE( table.unifies( table.array_of( i32, 3 ), table.array_of( i32, 4 ), t, t ) );
+    }
 }
 
 TEST_CASE( "type_table_interns_a_run", "[sema][type][run]" )
