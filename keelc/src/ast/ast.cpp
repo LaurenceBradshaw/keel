@@ -361,7 +361,7 @@ Node_id Ast::type_arg_list( Node_id id ) const
         return all.empty() ? Node_id {} : all[0];
     case Node_kind::Path_expr:
         return all.size() > 1 ? all[1] : Node_id {};
-    case Node_kind::Struct_literal: // `Box<i32> { 1 }`, written only to be refused
+    case Node_kind::Struct_literal: // `kl::bitset<64> {}`
     {
         const std::size_t at = package( id ).is_valid() ? 1 : 0;
         return all.size() > at && kind( all[at] ) == Node_kind::Type_arg_list ? all[at] : Node_id {};

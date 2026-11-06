@@ -3841,11 +3841,23 @@ Node_id Parser::parse_type_argument_suffix( Node_id left )
         return member_access( left, Node_kind::Path_expr, scoped, types );
     }
 
-    // `Box<i32> { 1 }`: the literal carries the list, for the checker to refuse.
-    if( cursor_.check( Token_kind::L_brace ) && ast_.kind( left ) == Node_kind::Name_expr )
+    // `kl::bitset<64> {}`: the literal carries the package, then the list.
+    const bool is_path = ast_.kind( left ) == Node_kind::Path_expr && !ast_.type_arg_list( left ).is_valid();
+
+    if( cursor_.check( Token_kind::L_brace ) && ( ast_.kind( left ) == Node_kind::Name_expr || is_path ) )
     {
-        const Node_id literal = parse_struct_literal( ast_.span( left ), ast_.name( left ), Node_id {}, types );
-        ast_.set_type_name_span( literal, ast_.span( left ) );
+        const Span    whole   = ast_.span( left );
+        const Node_id package = is_path ? ast_.children( left )[0] : Node_id {};
+        Span          name    = whole;
+
+        if( is_path )
+        {
+            const std::string_view text = sm_.text( whole );
+            name.start                  = whole.start + u32( text.find_first_not_of( ": \t\r\n", text.rfind( ':' ) ) );
+        }
+
+        const Node_id literal = parse_struct_literal( whole, ast_.name( left ), package, types );
+        ast_.set_type_name_span( literal, name );
         return literal;
     }
 
@@ -13534,6 +13546,44 @@ TEST_CASE( "parser_reads_a_type_from_a_package", "[parse][packages]" )
         REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Path_expr );
         REQUIRE( p.text( p.child( literal, 0 ) ) == "kl::test" );
         REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Field_init );
+    }
+
+    SECTION( "a generic struct literal" )
+    {
+        const Parsed p( "i32 main() { auto q = kl::ptr<i32> { null }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( literal.is_valid() );
+        REQUIRE( p.name( literal ) == "ptr" );
+        REQUIRE( p.children( literal ).size() == 3 );
+        REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Name_expr );
+        REQUIRE( p.name( p.child( literal, 0 ) ) == "kl" );
+        REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.kind( p.child( literal, 2 ) ) == Node_kind::Field_init );
+        REQUIRE( p.text( p.ast().type_name_span( literal ) ) == "ptr" );
+    }
+
+    SECTION( "a generic struct literal from a nested package" )
+    {
+        const Parsed p( "i32 main() { auto c = kl::test::cell<4> {}; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( literal.is_valid() );
+        REQUIRE( p.name( literal ) == "cell" );
+        REQUIRE( p.children( literal ).size() == 2 );
+        REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.text( p.child( literal, 0 ) ) == "kl::test" );
+        REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.kind( p.child( p.child( literal, 1 ), 0 ) ) == Node_kind::Int_literal );
+        REQUIRE( p.text( p.ast().type_name_span( literal ) ) == "cell" );
     }
 
     // `<` read as a type argument list rather than a comparison, `::` and all.
