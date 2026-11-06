@@ -498,7 +498,7 @@ std::string Bounds::conforming_help( Type_id type, Type_id interface, Span at ) 
     {
         return fmt::format(
             "the block at {} makes `{}` implement `{}` only where `{} : {}`, which `{}` is not",
-            reporter_.position( ast_.span( ast_.implemented( unmet->block )[0] ) ),
+            reporter_.position( ast_.name_span( unmet->block ) ),
             table_.name( types_.type_of( unmet->block ) ),
             table_.name( interface ),
             table_.name( unmet->parameter ),

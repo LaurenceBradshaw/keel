@@ -814,32 +814,38 @@ void report_conformance_errors(
         const bool             in_block  = ast.kind( error.implementer ) == Node_kind::Implements_decl;
         const std::string_view interface = table.name( error.interface );
         // A block's type as written after `for`; an aggregate's by its name, whatever its parameters.
-        const std::string_view type =
-            in_block && !table.get( error.self ).arguments.empty() ? table.name( error.self ) : table.base_name( error.self );
+        const Type&            self = table.get( error.self );
+        const std::string_view type = in_block && ( !self.arguments.empty() || self.element.is_valid() )
+                                          ? table.name( error.self )
+                                          : table.base_name( error.self );
+        const bool blocks = in_block && error.found.is_valid() && ast.kind( error.found ) == Node_kind::Implements_decl;
 
         if( error.problem == Conformance_problem::Repeated )
         {
             // Two blocks may come from two packages, each owning an argument.
-            const bool blocks = in_block && ast.kind( error.found ) == Node_kind::Implements_decl;
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}` already implements `{}`", type, interface ),
-                blocks ? fmt::format( "the block at {} implements it first", reporter.position( ast.span( error.found ) ) ) : ""
+                blocks ? fmt::format( "the block at {} implements it first", reporter.position( ast.name_span( error.found ) ) )
+                       : ""
             );
             continue;
         }
 
         if( error.problem == Conformance_problem::Overlapping )
         {
+            const std::string_view earlier = table.name( error.refined );
+            const std::string      first   = reporter.position( ast.name_span( error.found ) );
             reporter.error_at(
                 error.at,
-                fmt::
-                    format( "`{}` could meet `{}` at one type, and both implement `{}`", type, table.name( error.refined ), interface ),
-                fmt::format(
-                    "{} at {} implements it first; narrow one so no type matches both",
-                    ast.kind( error.found ) == Node_kind::Implements_decl ? "the block" : "the declaration",
-                    reporter.position( ast.span( error.found ) )
-                )
+                type == earlier
+                    ? fmt::format( "two blocks for `{}` both implement `{}`", type, interface )
+                    : fmt::format( "`{}` could meet `{}` at one type, and both implement `{}`", type, earlier, interface ),
+                blocks ? fmt::format(
+                             "the block at {} implements it first; a `where` does not keep blocks apart, so narrow one's type",
+                             first
+                         )
+                       : fmt::format( "the declaration at {} implements it first; narrow one so no type matches both", first )
             );
             continue;
         }

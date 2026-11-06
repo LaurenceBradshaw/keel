@@ -8,6 +8,6 @@ error: `i32` already implements `both<left::mark, right::mark>`
   --> sema/generic_interface_packages/left/marks.kl:10:12
    |
 10 | implements shapes::both<mark, right::mark> for i32
-   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the block at sema/generic_interface_packages/right/blocks.kl:6:1 implements it first
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the block at sema/generic_interface_packages/right/blocks.kl:6:47 implements it first
 
 2 errors generated

@@ -1,0 +1,19 @@
+error: two blocks for `Wrap<T>` both implement `Named`
+  --> sema/errors_block_names.kl:30:15
+   |
+30 | implements<T> Named for Wrap<T> where T : copyable & Odd
+   |               ^^^^^ the block at sema/errors_block_names.kl:24:25 implements it first; a `where` does not keep blocks apart, so narrow one's type
+
+error: `Wrap<T>*` could meet `T*` at one type, and both implement `Odd`
+  --> sema/errors_block_names.kl:41:15
+   |
+41 | implements<T> Odd for Wrap<T>* where T : copyable
+   |               ^^^ the block at sema/errors_block_names.kl:35:23 implements it first; a `where` does not keep blocks apart, so narrow one's type
+
+error: a block for `kl::list<T*>` must be in the package that declares `kl::list` or `hashable`
+  --> sema/errors_block_names.kl:47:28
+   |
+47 | implements<T> hashable for kl::list<T*>
+   |                            ^^^^^^^^^^^^ two packages could otherwise each make `kl::list<T*>` a `hashable`
+
+3 errors generated

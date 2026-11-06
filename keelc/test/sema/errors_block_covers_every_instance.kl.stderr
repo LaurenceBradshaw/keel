@@ -2,6 +2,6 @@ error: `Wrap<T>` is declared in this package, so a block cannot be written for i
   --> sema/errors_block_covers_every_instance.kl:13:25
    |
 13 | implements<T> Named for Wrap<T> where T : copyable // error: unconditional in all but spelling
-   |                         ^^^^^^^ write `implements Named` where `Wrap<T>` is declared
+   |                         ^^^^^^^ write `implements Named` where `Wrap` is declared
 
 1 error generated

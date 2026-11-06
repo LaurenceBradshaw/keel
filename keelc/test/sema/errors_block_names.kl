@@ -1,0 +1,55 @@
+// How block errors name a block's type and where the earlier block is.
+import kl::list;
+
+interface Named
+{
+    i32 code() const;
+};
+
+interface Even
+{
+    i32 e() const;
+};
+
+interface Odd
+{
+    i32 o() const;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements<T> Named for Wrap<T> where T : copyable & Even
+{
+    i32 code() const { return 1; }
+};
+
+// error: one spelling, and bounds do not keep blocks apart
+implements<T> Named for Wrap<T> where T : copyable & Odd
+{
+    i32 code() const { return 2; }
+};
+
+implements<T> Odd for T* where T : Named
+{
+    i32 o() const { return 1; }
+};
+
+// error: the pointer is spelled in full
+implements<T> Odd for Wrap<T>* where T : copyable
+{
+    i32 o() const { return 2; }
+};
+
+// error: names `kl::list`, not the instance
+implements<T> hashable for kl::list<T*>
+{
+    void hash( ref hasher h ) const {}
+};
+
+i32 main()
+{
+    return 0;
+}

@@ -545,12 +545,13 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
     }
 
     // A pointer belongs to its element's package, and a built-in to the prelude's.
-    const Type_id   head        = pointee( table_, type );
-    const Node_id   declared_at = table_.get( head ).declaration;
-    const Symbol_id here        = resolution_.package_of( ast_.span( block ).file );
-    const Symbol_id owner       = table_.is_parameter( head ) ? Symbol_id {}
-                                  : declared_at.is_valid()    ? resolution_.package_of( ast_.span( declared_at ).file )
-                                                              : resolution_.prelude_package();
+    const Type_id          head        = pointee( table_, type );
+    const Node_id          declared_at = table_.get( head ).declaration;
+    const Symbol_id        here        = resolution_.package_of( ast_.span( block ).file );
+    const Symbol_id        owner       = table_.is_parameter( head ) ? Symbol_id {}
+                                         : declared_at.is_valid()    ? resolution_.package_of( ast_.span( declared_at ).file )
+                                                                     : resolution_.prelude_package();
+    const std::string_view declared    = table_.name( head ).substr( 0, table_.name( head ).find( '<' ) );
 
     // A block covering every instance says what the declaration's own `implements` would.
     if( table_.is_struct( type ) && here == owner && covers_every_instance( ast_, interner_, block ) )
@@ -561,7 +562,7 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
             fmt::format(
                 "write `implements {}` where `{}` is declared",
                 reporter_.text( ast_.span( ast_.implemented( block )[0] ) ),
-                table_.name( type )
+                declared
             )
         );
         return true;
@@ -586,8 +587,9 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
         reporter_.error_at(
             ast_.name_span( block ),
             fmt::format(
-                "a block for `{0}` must be in the package that declares `{0}`{1}",
+                "a block for `{}` must be in the package that declares `{}`{}",
                 table_.name( type ),
+                declared,
                 table_.get( interface ).arguments.empty()
                     ? fmt::format( " or `{}`", table_.name( interface ) )
                     : fmt::format( ", `{}` or one of its type arguments", table_.name( interface ) )

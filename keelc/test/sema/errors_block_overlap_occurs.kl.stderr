@@ -2,6 +2,6 @@ error: `Pair<Wrap<V>, V>` could meet `Pair<T, Wrap<U>>` at one type, and both im
   --> sema/errors_block_overlap_occurs.kl:53:15
    |
 53 | implements<V> Tagged for Pair<Wrap<V>, V> where V : copyable // error: both at `Pair<Wrap<Wrap<U>>, Wrap<U>>`
-   |               ^^^^^^ the block at sema/errors_block_overlap_occurs.kl:48:1 implements it first; narrow one so no type matches both
+   |               ^^^^^^ the block at sema/errors_block_overlap_occurs.kl:48:29 implements it first; a `where` does not keep blocks apart, so narrow one's type
 
 1 error generated

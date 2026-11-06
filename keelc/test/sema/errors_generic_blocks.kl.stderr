@@ -2,7 +2,7 @@ error: `Pair<A, A>` could meet `Pair<A, B>` at one type, and both implement `Nam
   --> sema/errors_generic_blocks.kl:24:15
    |
 24 | implements<A> Named for Pair<A, A> where A : copyable // error: could meet the block above
-   |               ^^^^^ the block at sema/errors_generic_blocks.kl:19:1 implements it first; narrow one so no type matches both
+   |               ^^^^^ the block at sema/errors_generic_blocks.kl:19:28 implements it first; a `where` does not keep blocks apart, so narrow one's type
 
 error: `T` cannot implement an interface through a block
   --> sema/errors_generic_blocks.kl:29:25
@@ -32,12 +32,12 @@ error: `Pair<Opaque, u8>` has no `operator==`
   --> sema/errors_generic_blocks.kl:68:9
    |
 68 |     if( q == q ) // error: `Opaque` is not `equatable`, which the block asks of `T`
-   |         ^^^^^^ the block at sema/errors_generic_blocks.kl:59:15 makes `Pair<T, u8>` implement `equatable` only where `T : equatable`, which `Opaque` is not
+   |         ^^^^^^ the block at sema/errors_generic_blocks.kl:59:29 makes `Pair<T, u8>` implement `equatable` only where `T : equatable`, which `Opaque` is not
 
 error: `read` needs a `T` that implements `Named`, but `Pair<bool, i32>` does not
   --> sema/errors_generic_blocks.kl:72:18
    |
 72 |     return read( p ); // error: `bool` is not `Named`, which the block asks of `A`
-   |                  ^ the block at sema/errors_generic_blocks.kl:19:18 makes `Pair<A, B>` implement `Named` only where `A : Named`, which `bool` is not
+   |                  ^ the block at sema/errors_generic_blocks.kl:19:28 makes `Pair<A, B>` implement `Named` only where `A : Named`, which `bool` is not
 
 7 errors generated
