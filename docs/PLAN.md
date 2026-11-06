@@ -1477,6 +1477,10 @@ major), which waits for the lambda decision (§12).
   says *`u64` is a type, not a value*, then *this call to `println` is ambiguous*. The second is a
   cascade; a poisoned argument should end the call quietly. The first could also help with
   `cast<u64>( b )` (D28), from the C++-habit table.
+- **A call with too few type arguments also reports its array literal**: `count<i64>( [ 1, 2 ] )`
+  on `count<T, u64 N>` says it takes 2 type arguments, then *an array literal needs a type to
+  fill*. The second is a cascade from the count path. Whether a partial list should deduce the rest
+  is a separate question.
 
 ### Tooling
 

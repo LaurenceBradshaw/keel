@@ -46,6 +46,7 @@ private:
     {
         Node_id             generic;
         std::optional<Span> grown_at;
+        bool                by_size = false; // the growth is a size computed from the last
     };
 
     void record_uses( Node_id from, Type_id type, Span at, std::vector<Generic_call>& into );

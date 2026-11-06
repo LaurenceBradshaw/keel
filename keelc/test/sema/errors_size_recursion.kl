@@ -1,0 +1,6 @@
+// A size computed from `N` and passed back round a cycle makes a new instance each time, bigger
+// or smaller.
+void grow<u64 N>( i32[N] a ) { i32[N + 1] b = [ 0, .. ]; grow( b ); }
+void shrink<u64 N>( i32[N] a ) { i32[N - 1] b = [ 0, .. ]; shrink( b ); }
+
+i32 main() { return 0; }

@@ -1,0 +1,29 @@
+// A cycle that forwards `N`, through a function and through a struct's own pointer, is finite.
+import t::console;
+
+struct Ring<u64 N> { i32[N] v; Ring<N>* next; };
+
+u64 depth<u64 N>( const ref i32[N] a, u64 d )
+{
+    if( d == 0 ) { return N; }
+    return depth<N>( a, d - 1 );
+}
+
+u64 count<T, u64 N>( const ref T[N] a, u64 d ) where T : copyable
+{
+    if( d == 0 ) { return N; }
+    return count<T, N>( a, d - 1 );
+}
+
+u64 length<u64 N>( const ref Ring<N> r ) { return r.next == nullptr ? N : N + length( *r.next ); }
+
+i32 main()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    Ring<2> tail = Ring<2> { [ 4, 5 ], nullptr };
+    Ring<2> head = Ring<2> { [ 6, 7 ], &tail };
+    t::println( depth( a, 2 ) );
+    t::println( count( a, 2 ) );
+    t::println( length( head ) );
+    return 0;
+}

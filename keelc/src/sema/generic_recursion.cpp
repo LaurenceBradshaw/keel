@@ -200,12 +200,14 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
         // The span of the *growing* call, kept rather than a flag: the edge that closes the cycle
         // is usually an innocent-looking forward, and pointing at it would name the wrong line.
         std::optional<Span> grows;
+        bool                by_size = false;
 
         for( const Type_id argument : edge.arguments )
         {
             if( !grows && wraps_a_parameter( argument ) )
             {
-                grows = edge.at;
+                grows   = edge.at;
+                by_size = table_.is_size( argument );
             }
         }
 
@@ -213,7 +215,7 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
 
         if( closing == path.end() )
         {
-            path.push_back( Step { .generic = edge.to, .grown_at = grows } );
+            path.push_back( Step { .generic = edge.to, .grown_at = grows, .by_size = by_size } );
 
             const bool reported = expands_forever( edge.to, path );
 
@@ -229,15 +231,18 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
 
         // The edge into `closing` is outside the cycle; every later one is on it.
         std::optional<Span> grown_at;
+        bool                grown_by_size = false;
 
         for( auto step = std::next( closing ); step != path.end() && !grown_at; ++step )
         {
-            grown_at = step->grown_at;
+            grown_at      = step->grown_at;
+            grown_by_size = step->by_size;
         }
 
         if( !grown_at )
         {
-            grown_at = grows;
+            grown_at      = grows;
+            grown_by_size = by_size;
         }
 
         if( !grown_at )
@@ -262,6 +267,20 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& pat
         }
 
         cycle += fmt::format( "`{}`", name_of( edge.to ) );
+
+        if( grown_by_size )
+        {
+            reporter_.error_at(
+                *grown_at,
+                fmt::format( "`{}` is instantiated with a different size each time round", name_of( edge.to ) ),
+                fmt::format(
+                    "{}, and each round computes a size from the last - so no set of instances ever "
+                    "finishes; forward the size parameter itself",
+                    cycle
+                )
+            );
+            return true;
+        }
 
         reporter_.error_at(
             *grown_at,
@@ -460,6 +479,45 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "bigger type argument" ) != std::string::npos );
+    }
+}
+
+// D78: a size forwards like a `T`, and a suffix over it is growth in either direction.
+TEST_CASE( "generic_recursion_over_a_size_parameter", "[sema][generic][size_params]" )
+{
+    SECTION( "a cycle forwarding `N` is finite" )
+    {
+        const Typed p( "u64 f<u64 N>( i32[N] a, u64 d ) { if( d == 0 ) { return N; } return f<N>( a, d - 1 ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "growing `T` beside a forwarded `N` is still refused" )
+    {
+        const Typed p( "void f<T, u64 N>( T[N] a ) where T : copyable { T* p = &a[0]; f<T*, N>( [ p, .. ] ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is instantiated with a bigger type argument each time round" ) != std::string::npos );
+    }
+
+    SECTION( "a size computed from `N` is refused, smaller as well as bigger" )
+    {
+        for( const std::string_view op : { "+", "-" } )
+        {
+            const Typed p(
+                fmt::format( "void f<u64 N>( i32[N] a ) {{ i32[N {} 1] b = [ 0, .. ]; f( b ); }}\n", op ) +
+                "i32 main() { return 0; }"
+            );
+
+            INFO( p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`f` is instantiated with a different size each time round" ) != std::string::npos );
+            REQUIRE( p.rendered().find( "forward the size parameter itself" ) != std::string::npos );
+        }
     }
 }
 
