@@ -773,7 +773,9 @@ Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id arr
     const Type_id                  u64       = table_.integer( 64, false );
     const Type_id                  element   = table_.get( array ).element;
 
-    if( name == "size" && arguments.empty() )
+    const bool run = table_.is_run( array );
+
+    if( name == "size" && arguments.empty() && !run )
     {
         return types_.record( id, u64 );
     }
@@ -801,13 +803,14 @@ Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id arr
         infer( argument );
     }
 
-    const bool known = name == "size" || name == "swap" || name == "replace";
+    const bool known = ( name == "size" && !run ) || name == "swap" || name == "replace";
 
     reporter_.error_at(
         ast_.span( callee ),
         known ? fmt::format( "`{}` takes {} arguments", name, name == "size" ? "no" : "2" )
               : fmt::format( "`{}` has no method `{}`", table_.name( array ), name ),
-        "an array has `size()`, `swap( i, j )` and `replace( i, move v )`"
+        run ? "a run has the field `size`, and `swap( i, j )` and `replace( i, move v )`"
+            : "an array has `size()`, `swap( i, j )` and `replace( i, move v )`"
     );
     return types_.poison( id );
 }
@@ -995,8 +998,8 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    // An array's methods: `size()`, and D77's `swap` and `replace`.
-    if( table_.is_array( object_type ) )
+    // An array's methods: `size()`, and D77's `swap` and `replace`, which a run has too.
+    if( table_.is_array( object_type ) || table_.is_run( object_type ) )
     {
         return infer_array_method( id, object, object_type );
     }

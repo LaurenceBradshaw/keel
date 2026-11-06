@@ -2680,22 +2680,38 @@ Operand Lowering::lower_default( Type_id type, Span span )
     return {};
 }
 
-// D77: `a.swap( i, j )` and `a.replace( i, move v )`. The elements move through a `T[*]` of the
-// array, whose slots are written without a drop (D49), as `kl::list` does; every slot ends live.
+// D77: `a.swap( i, j )` and `a.replace( i, move v )`, on an array or a run. The elements move
+// through a `T[*]`, whose slots are written without a drop (D49), as `kl::list` does; every slot
+// ends live.
 Operand Lowering::lower_array_rearrange( Node_id id, Node_id object, Type_id array )
 {
-    Type_table&    table   = types_.table();
-    const Span     span    = ast_.span( id );
-    const Type_id  u64     = table.integer( 64, false );
-    const Type_id  boolean = table.builtin( Type_kind::Bool );
-    const Type_id  element = table.get( array ).element;
-    const Type_id  data    = table.many_pointer_to( element );
-    const bool     swap    = interner_.text( ast_.name( ast_.callee( id ) ) ) == "swap";
-    const auto     args    = ast_.arguments( id );
-    const Place    held    = lower_place( object );
-    const Place    base    = table.is_pointer( type_of( object ) ) ? builder_.deref( held ) : held;
-    const Operand  count   = constant( literal_pool_.add_integer( table.get( array ).count ), u64 );
-    const Local_id first   = builder_.into_temp( use( converted( lower_expression( args[0] ), u64, span ) ), u64, span );
+    Type_table&   table   = types_.table();
+    const Span    span    = ast_.span( id );
+    const Type_id u64     = table.integer( 64, false );
+    const Type_id boolean = table.builtin( Type_kind::Bool );
+    const Type_id element = table.get( array ).element;
+    const Type_id data    = table.many_pointer_to( element );
+    const bool    swap    = interner_.text( ast_.name( ast_.callee( id ) ) ) == "swap";
+    const auto    args    = ast_.arguments( id );
+
+    Operand count {};
+    Operand start {};
+    Place   base {};
+
+    if( table.is_run( array ) )
+    {
+        const Operand run = run_pointer( object );
+        count             = temporary( run_size( run, u64 ), u64, span );
+        start             = temporary( run_data( run, data ), data, span );
+    }
+    else
+    {
+        const Place held = lower_place( object );
+        base             = table.is_pointer( type_of( object ) ) ? builder_.deref( held ) : held;
+        count            = constant( literal_pool_.add_integer( table.get( array ).count ), u64 );
+    }
+
+    const Local_id first = builder_.into_temp( use( converted( lower_expression( args[0] ), u64, span ) ), u64, span );
     const Local_id second =
         swap ? builder_.into_temp( use( converted( lower_expression( args[1] ), u64, span ) ), u64, span ) : Local_id {};
     const Operand  value = swap ? Operand {} : converted( lower_expression( args[1] ), element, span );
@@ -2721,9 +2737,13 @@ Operand Lowering::lower_array_rearrange( Node_id id, Node_id object, Type_id arr
     builder_.terminate_panic( span, Failure::Bounds );
     builder_.switch_to( checked );
 
-    const Local_id zero  = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
-    const Operand  start = temporary( address_of( builder_.index( base, zero ), data, Address_purpose::Borrow ), data, span );
-    const auto     slot  = [&]( Local_id index )
+    if( !table.is_run( array ) )
+    {
+        const Local_id zero = builder_.into_temp( use( constant( literal_pool_.add_integer( 0 ), u64 ) ), u64, span );
+        start = temporary( address_of( builder_.index( base, zero ), data, Address_purpose::Borrow ), data, span );
+    }
+
+    const auto slot = [&]( Local_id index )
     {
         return builder_.deref(
             temporary( binary( Token_kind::Plus, start, copy( builder_.place( index ), u64 ), data ), data, span ).place
@@ -2809,7 +2829,8 @@ Operand Lowering::lower_call( Node_id id )
         const Type_id held   = types_.table().is_pointer( type_of( object ) ) ? types_.table().get( type_of( object ) ).element
                                                                               : type_of( object );
 
-        if( types_.table().is_array( held ) && interner_.text( ast_.name( ast_.callee( id ) ) ) != "size" )
+        if( ( types_.table().is_array( held ) || types_.table().is_run( held ) ) &&
+            interner_.text( ast_.name( ast_.callee( id ) ) ) != "size" )
         {
             return lower_array_rearrange( id, object, held );
         }

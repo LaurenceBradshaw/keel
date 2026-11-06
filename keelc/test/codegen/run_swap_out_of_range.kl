@@ -1,0 +1,16 @@
+// An index past the run's size panics before any element moves.
+import t::console;
+
+void exchange( ref i32[] numbers, u64 far )
+{
+    numbers.swap( 0, far );
+}
+
+i32 main()
+{
+    i32[2] numbers = [ 1, 2 ];
+
+    t::println( "before" );
+    exchange( ref numbers, 2 );
+    return 0;
+}

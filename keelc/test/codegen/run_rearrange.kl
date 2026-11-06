@@ -1,0 +1,36 @@
+// `swap` and `replace` through a `ref T[]`, owning elements included; every slot stays live.
+import kl::console;
+import kl::string;
+
+kl::string rearrange( ref kl::string[] names )
+{
+    names.swap( 0, 2 );
+    names.swap( 1, 1 ); // one index with itself does nothing
+
+    kl::string fresh = kl::string( "Z" );
+    return names.replace( 1, move fresh );
+}
+
+i32 bump( ref i32[] numbers )
+{
+    numbers.swap( 0, numbers.size - 1 );
+    return numbers.replace( 1, 9 );
+}
+
+i32 main()
+{
+    kl::string[3] names = [ kl::string( "a" ), kl::string( "b" ), kl::string( "c" ) ];
+    kl::string    old   = rearrange( ref names );
+
+    for( const ref kl::string name : names )
+    {
+        kl::println( name );
+    }
+
+    kl::println( old );
+
+    i32[4]    numbers = [ 1, 2, 3, 4 ];
+    const i32 was     = bump( ref numbers );
+
+    return numbers[0] == 4 && numbers[1] == 9 && numbers[3] == 1 && was == 2 ? 0 : 1;
+}

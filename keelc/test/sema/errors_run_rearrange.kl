@@ -1,0 +1,23 @@
+// What `swap` and `replace` refuse on a run: a read-only one, an owning value without `move`,
+// and `size()`, which on a run is a field.
+import kl::string;
+
+void read_only( const ref i32[] numbers )
+{
+    numbers.swap( 0, 1 );
+}
+
+kl::string copy_in( ref kl::string[] names, kl::string s )
+{
+    return names.replace( 0, s );
+}
+
+u64 count( ref i32[] numbers )
+{
+    return numbers.size();
+}
+
+i32 main()
+{
+    return 0;
+}

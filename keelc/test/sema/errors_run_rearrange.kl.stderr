@@ -1,0 +1,19 @@
+error: `numbers` is `const`
+ --> sema/errors_run_rearrange.kl:7:5
+  |
+7 |     numbers.swap( 0, 1 );
+  |     ^^^^^^^ remove `const` to modify it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_run_rearrange.kl:12:30
+   |
+12 |     return names.replace( 0, s );
+   |                              ^ take it as `move kl::string s` to own it
+
+error: `i32[]` has no method `size`
+  --> sema/errors_run_rearrange.kl:17:12
+   |
+17 |     return numbers.size();
+   |            ^^^^^^^^^^^^ a run has the field `size`, and `swap( i, j )` and `replace( i, move v )`
+
+3 errors generated
