@@ -1663,13 +1663,14 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
 Bindings Type_table::instance_bindings( Type_id instance ) const
 {
     Bindings result;
-    if( !( is_interface( instance ) || is_struct( instance ) || is_enum( instance ) ) || get( instance ).arguments.empty() )
+    if( !( is_interface( instance ) || is_struct( instance ) || is_enum( instance ) || is_closure( instance ) ) ||
+        get( instance ).arguments.empty() )
     {
         return result;
     }
 
-    const auto&                    instances  = is_interface( instance ) ? interfaces_ : composites_;
-    const Type_id                  open       = instances.at( get( instance ).declaration.v ).front().type;
+    const auto&   instances = is_interface( instance ) ? interfaces_ : is_closure( instance ) ? closures_ : composites_;
+    const Type_id open      = instances.at( get( instance ).declaration.v ).front().type;
     const std::span<const Type_id> parameters = get( open ).arguments;
 
     for( std::size_t i = 0; i < parameters.size(); ++i )

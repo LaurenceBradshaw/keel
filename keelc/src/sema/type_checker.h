@@ -275,7 +275,7 @@ bool may_own(
 // D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
 // a drop is elaborated against this one.
 bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
-// A struct or class with no destructor: definite assignment and drops track each field on its own.
+// A struct or class with no destructor, or a closure: definite assignment and drops track each field on its own.
 bool splits_into_fields( const Ast& ast, const Type_table& table, Type_id type );
 // A struct or class with a constructor or destructor: while it holds nothing, it is assigned only whole.
 bool built_whole( const Ast& ast, const Type_table& table, Type_id type );
@@ -285,6 +285,8 @@ bool instance_holds_address( const Ast& ast, Type_table& table, Type_id instance
 // emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
+// A closure's capture holds a copy when it is written bare and does not own; otherwise an address.
+bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded );
 std::vector<Node_id>
 carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id variant, std::span<const Type_id> recorded );
 

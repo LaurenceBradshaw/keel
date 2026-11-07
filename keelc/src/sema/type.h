@@ -269,7 +269,7 @@ public:
     bool substitutes_to( Type_id pattern, const Bindings& bindings, Type_id actual ) const;
 
     // The open form's parameters, each bound to this instance's argument, for an interface, struct,
-    // class or enum. Empty for anything else or a non-generic.
+    // class, enum or closure. Empty for anything else or a non-generic.
     Bindings instance_bindings( Type_id instance ) const;
 
     // A copy of the resolver's, for the conformance model and the emitter, which see only this table.

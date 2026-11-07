@@ -49,6 +49,11 @@ struct Printer
 
     std::string_view name_of( Node_id declaration ) const
     {
+        if( ast.kind( declaration ) == Node_kind::Lambda_expr )
+        {
+            return "<lambda>";
+        }
+
         const Symbol_id name = ast.name( declaration );
 
         return name.is_valid() ? interner.text( name ) : "<unnamed>";

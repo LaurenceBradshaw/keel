@@ -296,8 +296,8 @@ Node_id Ast::body( Node_id id ) const
 
 std::span<const Node_id> Ast::captures( Node_id lambda ) const
 {
-    assert( kind( lambda ) == Node_kind::Lambda_expr );
-    return children( child( lambda, 3 ) );
+    assert( kind( lambda ) == Node_kind::Lambda_expr || kind( lambda ) == Node_kind::Unary_expr );
+    return kind( lambda ) == Node_kind::Lambda_expr ? children( child( lambda, 3 ) ) : std::span<const Node_id> {};
 }
 
 Node_id Ast::captured( Node_id capture ) const
@@ -483,6 +483,8 @@ Node_id Ast::declared_type( Node_id decl ) const
         return return_type( decl );
     case Node_kind::Field_type:
         return child( decl, 0 );
+    case Node_kind::Lambda_expr:
+        return return_type( decl );
     default:
         return is_function_like( kind( decl ) ) ? return_type( decl ) : annotation( decl );
     }

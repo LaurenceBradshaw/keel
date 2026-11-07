@@ -15,7 +15,8 @@ namespace keel
 {
 
 // The loaded modules' functions as given, then a Function per Function_decl, in declaration order,
-// then one per instance, then a destructor per closed owning enum. None of the given is lowered again.
+// each followed by its lambdas, then one per instance, each followed by its lambdas, then a destructor per closed
+// owning enum. None of the given is lowered again.
 std::vector<Function>
 // Types is mutable only for its table: lowering interns types the checker never named - `T*` as
 // `i32*` in an instance, `i32*` for a borrowed argument. Nothing the checker recorded changes.

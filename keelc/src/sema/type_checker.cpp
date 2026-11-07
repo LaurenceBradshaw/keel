@@ -534,9 +534,21 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
         return Type_id {};
     }
 
+    if( table.is_closure( aggregate ) )
+    {
+        const Type_id held = table.substitute( recorded[field.v], table.instance_bindings( aggregate ) );
+        return copies_capture( ast, table, field, held, recorded ) ? held : table.pointer_to( held );
+    }
+
     // An empty map makes this the identity, which is every non-generic aggregate - so the ordinary
     // path costs a lookup that finds nothing rather than a branch here.
     return table.substitute( recorded[field.v], aggregate_bindings( ast, table, aggregate, recorded ) );
+}
+
+bool copies_capture( const Ast& ast, Type_table& table, Node_id capture, Type_id held, std::span<const Type_id> recorded )
+{
+    return ast.kind( ast.captured( capture ) ) != Node_kind::Marker_expr &&
+           ast.name( capture ) != Interner::keyword( Keyword::This ) && !instance_owns( ast, table, held, recorded );
 }
 
 std::vector<Node_id>
@@ -730,7 +742,8 @@ static bool holds_address(
 
 bool splits_into_fields( const Ast& ast, const Type_table& table, Type_id type )
 {
-    return type.is_valid() && table.is_struct( type ) && !ast.has_destructor( table.get( type ).declaration );
+    return type.is_valid() &&
+           ( table.is_closure( type ) || ( table.is_struct( type ) && !ast.has_destructor( table.get( type ).declaration ) ) );
 }
 
 bool built_whole( const Ast& ast, const Type_table& table, Type_id type )

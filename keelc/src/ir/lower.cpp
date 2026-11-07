@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <filesystem>
+#include <iterator>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -24,6 +25,46 @@ namespace keel
 
 namespace
 {
+
+// A lambda's `fn` signature under `bindings`: its closure's, or the `fn` type it has.
+Type_id lambda_signature( Types& types, Node_id lambda, const Bindings& bindings )
+{
+    const Type_id type = types.table().substitute( types.type_of( lambda ), bindings );
+    return types.table().is_closure( type ) ? types.table().get( type ).element : type;
+}
+
+Type_id returned_type( const Ast& ast, Types& types, Node_id declaration, const Bindings& bindings )
+{
+    switch( ast.kind( declaration ) )
+    {
+    case Node_kind::Var_decl: // a build function
+        return types.table().builtin( Type_kind::Void );
+    case Node_kind::Lambda_expr:
+        return types.table().get( lambda_signature( types, declaration, bindings ) ).element;
+    default:
+        return types.table().substitute( binding_type( ast, types, declaration ), bindings );
+    }
+}
+
+// What tells one lambda's functions apart: the bindings of the instance it is written in, by parameter.
+std::vector<Type_id> lambda_arguments( const Bindings& bindings )
+{
+    std::vector<std::pair<u32, Type_id>> sorted( bindings.begin(), bindings.end() );
+    std::ranges::sort( sorted, {}, []( const auto& binding ) { return binding.first; } );
+
+    std::vector<Type_id> arguments;
+    for( const auto& [parameter, argument] : sorted )
+    {
+        arguments.push_back( argument );
+    }
+    return arguments;
+}
+
+// How an argument travels to a parameter of an `fn` type: a borrow, or a bare owning value, by address.
+bool by_address( Param_mode mode, bool owning )
+{
+    return ( mode != Param_mode::Value && mode != Param_mode::Move ) || ( mode == Param_mode::Value && owning );
+}
 
 class Lowering
 {
@@ -120,6 +161,13 @@ private:
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
     Operand lower_indirect_call( Node_id id );
+    // A lambda's parameters: `env` first when it captures, then each as its signature passes it.
+    void lambda_parameters();
+    // Each capture read out of `env` once, into a local its name then reaches as a parameter's.
+    void load_captures();
+    // A lambda's value: its function's address as an `fn`, or at a bound the closure of its captures.
+    Operand lower_lambda( Node_id id );
+    Operand closure_value( Node_id id, Type_id closure );
     Operand lower_field_application( Node_id id );
     Operand lower_method_call( Node_id id );
     Operand lower_method_call_on(
@@ -330,6 +378,7 @@ private:
     std::unordered_map<u32, Local_id> locals_;
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
     Local_id                          caller_ {};   // The hidden last parameter of an `@located` function.
+    Local_id                          env_ {};      // A capturing lambda's closure, by address.
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because drops_ has no scope to put them in until then.
     std::vector<Local_id>   owned_parameters_;
@@ -365,19 +414,19 @@ Lowering::Lowering(
       interner_( interner ),
       declaration_( declaration ),
       overflow_checks_( overflow_checks ),
-      builder_(
-          declaration,
-          ast.kind( declaration ) == Node_kind::Var_decl
-              ? types.table().builtin( Type_kind::Void )
-              : types.table().substitute( binding_type( ast, types, declaration ), bindings_ ),
-          ast_.span( declaration )
-      ),
+      builder_( declaration, returned_type( ast, types, declaration, bindings_ ), ast_.span( declaration ) ),
       locals_(),
       drops_( builder_, ast_, types_ )
 {
     // A build function, named for its first global, takes nothing.
     if( ast_.kind( declaration ) == Node_kind::Var_decl )
     {
+        return;
+    }
+
+    if( ast_.kind( declaration ) == Node_kind::Lambda_expr )
+    {
+        lambda_parameters();
         return;
     }
 
@@ -435,6 +484,8 @@ Function Lowering::run()
     {
         drops_.add_to_scope( parameter );
     }
+
+    load_captures();
 
     // D77: the fields the body may leave unassigned, which lower() found by lowering it once without.
     for( const Node_id field : defaulted_at_entry_ )
@@ -529,9 +580,12 @@ Function Lowering::finished()
 
 void Lowering::add_fields( Function& function, Local_id local, Type_id aggregate, u32 parent )
 {
-    for( const Node_id member : ast_.members( types_.table().get( aggregate ).declaration ) )
+    const Node_id holder  = types_.table().get( aggregate ).declaration;
+    const bool    closure = types_.table().is_closure( aggregate );
+
+    for( const Node_id member : closure ? ast_.captures( holder ) : ast_.members( holder ) )
     {
-        if( ast_.kind( member ) != Node_kind::Field_decl )
+        if( ast_.kind( member ) != ( closure ? Node_kind::Capture_decl : Node_kind::Field_decl ) )
         {
             continue;
         }
@@ -2294,6 +2348,12 @@ Operand Lowering::lower_unary( Node_id id )
             return temporary( address, type, span );
         }
 
+        // At an `fn` bound, `&f` is a closure of nothing, and the call through it names `f`.
+        if( types_.table().is_closure( type ) )
+        {
+            return closure_value( id, type );
+        }
+
         // Nor is a field: `&C::x` is an offset, which names the field and no object.
         if( types_.table().is_field( type ) )
         {
@@ -3089,7 +3149,25 @@ Operand Lowering::lower_indirect_call( Node_id id )
     std::span<const Type_id> args = types_.table().get( signature ).arguments;
     std::vector<Type_id>     arguments( args.begin(), args.end() );
 
-    Operand callee = lower_expression( ast_.callee( id ) );
+    // A parameter bound by an `fn` type, in an instance where it is a closure: a direct call.
+    const Node_id named =
+        ast_.kind( ast_.callee( id ) ) == Node_kind::Name_expr ? resolution_.declaration_of( ast_.callee( id ) ) : Node_id {};
+    const Type_id closure = named.is_valid() && ast_.kind( named ) == Node_kind::Param_decl
+                                ? types_.table().substitute( types_.type_of( named ), bindings_ )
+                                : Type_id {};
+    const bool    direct  = closure.is_valid() && types_.table().is_closure( closure );
+    const Node_id holder  = direct ? types_.table().get( closure ).declaration : Node_id {};
+
+    Operand callee;
+    if( !direct )
+    {
+        callee = lower_expression( ast_.callee( id ) );
+    }
+    else if( !ast_.captures( holder ).empty() )
+    {
+        const Type_id address = types_.table().pointer_to( closure );
+        callee = temporary( address_of( lower_place( ast_.callee( id ) ), address, Address_purpose::Read ), address, span );
+    }
 
     const std::span<const Param_mode> modes   = types_.table().get( signature ).modes;
     const std::span<const Node_id>    written = ast_.arguments( id );
@@ -3137,9 +3215,146 @@ Operand Lowering::lower_indirect_call( Node_id id )
     const bool    binding     = types_.table().get( signature ).return_mode == Param_mode::Const_ref;
     const Type_id result_type = binding ? types_.table().pointer_to( type_of( id ) ) : type_of( id );
 
-    Local_id result = call_result( id, indirect_call( callee, std::move( operands ), result_type ), result_type, span );
+    Local_id result {};
+
+    if( !direct )
+    {
+        result = call_result( id, indirect_call( callee, std::move( operands ), result_type ), result_type, span );
+    }
+    else if( ast_.kind( holder ) == Node_kind::Lambda_expr )
+    {
+        if( callee.type.is_valid() )
+        {
+            operands.insert( operands.begin(), callee );
+        }
+        const std::vector<Type_id> type_arguments = lambda_arguments( types_.table().instance_bindings( closure ) );
+        result = call_result( id, call( holder, std::move( operands ), result_type, type_arguments ), result_type, span );
+    }
+    else // `&f`'s closure: `f` itself, at the instance its address named where it was written
+    {
+        const Bindings             saved          = std::exchange( bindings_, types_.table().instance_bindings( closure ) );
+        const std::vector<Type_id> type_arguments = type_arguments_for_call( holder );
+        bindings_                                 = saved;
+        result                                    = call_result(
+            id, call( types_.callee_of( holder ), std::move( operands ), result_type, type_arguments ), result_type, span
+        );
+    }
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type_of( id ) );
+}
+
+void Lowering::lambda_parameters()
+{
+    const Type_id closure = types_.table().substitute( types_.type_of( declaration_ ), bindings_ );
+
+    if( !ast_.captures( declaration_ ).empty() )
+    {
+        env_ = builder_.add_parameter( types_.table().pointer_to( closure ), ast_.span( declaration_ ), Symbol_id {} );
+    }
+
+    const Type&                    signature = types_.table().get( lambda_signature( types_, declaration_, bindings_ ) );
+    const std::span<const Node_id> params    = ast_.params( declaration_ );
+
+    for( std::size_t i = 0; i < params.size(); ++i )
+    {
+        const Param_mode mode    = signature.modes[i];
+        const Type_id    type    = signature.arguments[i];
+        const bool       address = by_address( mode, owns( type ) );
+        const Local_id   local   = builder_.add_parameter(
+            address ? types_.table().pointer_to( type ) : type, ast_.span( params[i] ), ast_.name( params[i] )
+        );
+
+        locals_.emplace( params[i].v, local );
+
+        if( address )
+        {
+            borrowed_bindings_.insert( params[i].v );
+        }
+        if( mode == Param_mode::Out )
+        {
+            builder_.mark_out_parameter( local );
+        }
+        if( mode == Param_mode::Move )
+        {
+            owned_parameters_.push_back( local );
+        }
+    }
+}
+
+void Lowering::load_captures()
+{
+    if( !env_.is_valid() )
+    {
+        return;
+    }
+
+    const Place   closure = builder_.deref( builder_.place( env_ ) );
+    const Type_id type    = types_.table().get( builder_.type_of( env_ ) ).element;
+
+    for( const Node_id capture : ast_.captures( declaration_ ) )
+    {
+        const Type_id  held  = field_type( ast_, types_.table(), type, capture, types_.recorded() );
+        const Type_id  value = types_.table().substitute( types_.type_of( capture ), types_.table().instance_bindings( type ) );
+        const Span     span  = ast_.span( capture );
+        const Local_id local = builder_.into_temp( use( copy( builder_.field( closure, capture ), held ) ), held, span );
+
+        locals_.emplace( capture.v, local );
+
+        if( !copies_capture( ast_, types_.table(), capture, value, types_.recorded() ) )
+        {
+            borrowed_bindings_.insert( capture.v );
+        }
+        if( ast_.name( capture ) == Interner::keyword( Keyword::This ) )
+        {
+            receiver_             = local;
+            receiver_declaration_ = capture;
+        }
+    }
+}
+
+Operand Lowering::lower_lambda( Node_id id )
+{
+    const Type_id type = type_of( id );
+
+    if( types_.table().is_function( type ) )
+    {
+        return temporary( function_address( id, type, lambda_arguments( bindings_ ) ), type, ast_.span( id ) );
+    }
+
+    return closure_value( id, type );
+}
+
+// Each capture's value or address, lowered before any is stored, then written field by field.
+Operand Lowering::closure_value( Node_id id, Type_id closure )
+{
+    // A closure of nothing has no field to assign, so it is a constant.
+    if( ast_.captures( id ).empty() )
+    {
+        return constant( literal_pool_.add_integer( 0 ), closure );
+    }
+
+    const Span     span = ast_.span( id );
+    const Local_id temp = builder_.add_local( closure, span );
+
+    builder_.storage_live( temp, span );
+
+    std::vector<std::pair<Node_id, Operand>> values;
+
+    for( const Node_id capture : ast_.captures( id ) )
+    {
+        const Type_id held    = field_type( ast_, types_.table(), closure, capture, types_.recorded() );
+        const Node_id written = ast_.captured( capture );
+        const bool    copied  = copies_capture( ast_, types_.table(), capture, type_of( capture ), types_.recorded() );
+
+        values.emplace_back( capture, copied ? lower_expression( written ) : borrowed_argument( written, held ) );
+    }
+
+    for( const auto& [capture, value] : values )
+    {
+        builder_.assign( builder_.field( builder_.place( temp ), capture ), use( value ), ast_.span( capture ) );
+    }
+
+    return copy( builder_.place( temp ), closure );
 }
 
 Operand Lowering::lower_field_application( Node_id id )
@@ -3175,6 +3390,8 @@ Operand Lowering::lower_unspanned( Node_id id )
     {
         return read_name( id, resolution_.declaration_of( id ) );
     }
+    case Node_kind::Lambda_expr:
+        return lower_lambda( id );
     case Node_kind::Int_literal:
     case Node_kind::Char_literal:
     {
@@ -5324,6 +5541,38 @@ std::vector<Function> lower(
     std::vector<Function> functions = std::move( loaded );
     const std::size_t     given     = functions.size();
 
+    // The lambdas written in `declaration`, nested ones too, each under the bindings it was lowered at.
+    const auto lower_lambdas = [&]( Node_id declaration, const Bindings& bindings )
+    {
+        std::vector<Function> lowered;
+        std::vector<Node_id>  pending { ast.body( declaration ) };
+
+        while( !pending.empty() )
+        {
+            const Node_id node = pending.back();
+            pending.pop_back();
+
+            if( !node.is_valid() )
+            {
+                continue;
+            }
+            if( ast.kind( node ) == Node_kind::Lambda_expr )
+            {
+                Function lambda =
+                    lower_function( node, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
+                lambda.type_arguments = lambda_arguments( bindings );
+                lowered.push_back( std::move( lambda ) );
+            }
+            for( const Node_id child : ast.children( node ) )
+            {
+                pending.push_back( child );
+            }
+        }
+        return lowered;
+    };
+
+    const auto add = [&]( std::vector<Function> more ) { std::ranges::move( more, std::back_inserter( functions ) ); };
+
     for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
         // A generic has no code of its own - it is the template the instantiations below are
@@ -5333,6 +5582,7 @@ std::vector<Function> lower(
             !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
             functions.push_back( lower_function( id, ast, resolution, types, literals, sm, interner, overflow_checks, {} ) );
+            add( lower_lambdas( id, {} ) );
         }
     }
 
@@ -5364,22 +5614,20 @@ std::vector<Function> lower(
             continue;
         }
 
-        Function emitted = lower_function(
-            instance->declaration,
-            ast,
-            resolution,
-            types,
-            literals,
-            sm,
-            interner,
-            overflow_checks,
-            bindings_for( ast, types, *instance )
-        );
+        const Bindings bindings = bindings_for( ast, types, *instance );
+        Function       emitted =
+            lower_function( instance->declaration, ast, resolution, types, literals, sm, interner, overflow_checks, bindings );
 
         emitted.type_arguments = instance->arguments;
 
         instances.reached_by( emitted );
         functions.push_back( std::move( emitted ) );
+
+        for( Function& lambda : lower_lambdas( instance->declaration, bindings ) )
+        {
+            instances.reached_by( lambda );
+            functions.push_back( std::move( lambda ) );
+        }
     }
 
     append_synthesised_drops( ast, types, literals, functions, given );
@@ -9432,6 +9680,103 @@ TEST_CASE( "lower_calls_through_a_bound_directly", "[ir][lower][interfaces][gene
         REQUIRE( text.find( "let _2: const Pair<i32>*;" ) != std::string::npos );
         REQUIRE( text.find( "call area(copy _2)" ) != std::string::npos );
         REQUIRE( p.named( "area" ).find( "let _1: Pair<i32>*; // parameter this" ) != std::string::npos );
+    }
+}
+
+// Each lambda's own functions, in the order lowered.
+std::vector<std::string> lambdas_of( Lowered& p )
+{
+    std::vector<std::string> found;
+    for( std::size_t i = 0; i < p.functions.size(); ++i )
+    {
+        if( p.text( i ).starts_with( "fn <lambda> " ) )
+        {
+            found.push_back( p.text( i ) );
+        }
+    }
+    return found;
+}
+
+TEST_CASE( "lower_gives_each_lambda_a_function", "[ir][lower][lambda]" )
+{
+    const std::string apply = "i32 apply<F>( F f, i32 x ) where F : fn( i32 ) -> i32 { return f( x ); }\n";
+
+    SECTION( "a captureless lambda as an `fn` value is its function's address" )
+    {
+        Lowered p( "i32 main() { fn( i32 ) -> i32 f = fn[]( i32 x ) -> i32 { return x; }; return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+        REQUIRE( p.named( "main" ).find( "= &<lambda>" ) != std::string::npos );
+        REQUIRE( lambdas_of( p ).size() == 1 );
+        REQUIRE( lambdas_of( p )[0].find( "let _1: i32; // parameter x" ) != std::string::npos );
+    }
+
+    SECTION( "a capturing lambda at a bound is called directly, its closure first" )
+    {
+        Lowered p(
+            apply + "i32 main() { i32 k = 1; i32 m = 0; return apply( fn[ k, ref m ]( a ) -> i32 { m = a; return k; }, 2 ); }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string main = p.named( "main" );
+        INFO( main );
+        REQUIRE( main.find( ".k = copy _1" ) != std::string::npos );
+        REQUIRE( main.find( "= &borrow _2" ) != std::string::npos );
+        REQUIRE( p.named( "apply" ).find( "call <lambda>(copy _3, copy _2)" ) != std::string::npos );
+
+        const std::string lambda = lambdas_of( p ).at( 0 );
+        INFO( lambda );
+        REQUIRE( lambda.find( "copy (*_1).k" ) != std::string::npos );
+        REQUIRE( lambda.find( "let _2: i32; // parameter a" ) != std::string::npos );
+    }
+
+    SECTION( "a bare parameter is passed as the bound says" )
+    {
+        Lowered p( "i32 apply<F>( F f, i32 x ) where F : fn( const ref i32 ) -> i32 { return f( x ); }\n"
+                   "i32 main() { return apply( fn[]( a ) -> i32 { return a; }, 2 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+        REQUIRE( lambdas_of( p ).at( 0 ).find( "let _1: i32*; // parameter a" ) != std::string::npos );
+        REQUIRE( lambdas_of( p ).at( 0 ).find( "_0 = copy (*_1)" ) != std::string::npos );
+    }
+
+    SECTION( "a captured `this` is the lambda's receiver" )
+    {
+        Lowered p( "void run<F>( F f ) where F : fn() -> void { f(); }\n"
+                   "struct Counter { i32 n; void bump() { n++; } void go() { run( fn[ ref this ]() { n = 5; bump(); } ); } };\n"
+                   "i32 main() { Counter c = Counter { 0 }; c.go(); return c.n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string lambda = lambdas_of( p ).at( 0 );
+        INFO( lambda );
+        REQUIRE( lambda.find( "_2 = copy (*_1).this" ) != std::string::npos );
+        REQUIRE( lambda.find( "(*_2).n = const 5" ) != std::string::npos );
+        REQUIRE( lambda.find( "call bump(copy" ) != std::string::npos );
+    }
+
+    SECTION( "`&f` at a bound calls `f` directly, and a lambda in a generic is lowered per instance" )
+    {
+        Lowered p(
+            apply + "i32 twice( i32 x ) { return x * 2; }\n"
+                    "i32 keep<T>( T x ) where T : copyable { return apply( fn[ x ]( a ) -> i32 { return a; }, 1 ); }\n"
+                    "i32 main() { return apply( &twice, 3 ) + keep<i32>( 1 ) + keep<i64>( 2 ); }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+        REQUIRE( p.named( "apply" ).find( "call twice(copy _2)" ) != std::string::npos );
+        REQUIRE( lambdas_of( p ).size() == 2 );
     }
 }
 

@@ -217,10 +217,12 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
                 ( ( statement.place.is_whole_local() && split[statement.place.local.v] ) ||
                   ( func.rvalue( statement ).a.place.is_whole_local() && split[func.rvalue( statement ).a.place.local.v] ) ) )
             {
-                const Type_id type = func.rvalue( statement ).type;
-                for( const Node_id& member : ast.members( types.table().get( type ).declaration ) )
+                const Type_id type    = func.rvalue( statement ).type;
+                const Node_id holder  = types.table().get( type ).declaration;
+                const bool    closure = types.table().is_closure( type );
+                for( const Node_id& member : closure ? ast.captures( holder ) : ast.members( holder ) )
                 {
-                    if( ast.kind( member ) != Node_kind::Field_decl )
+                    if( ast.kind( member ) != ( closure ? Node_kind::Capture_decl : Node_kind::Field_decl ) )
                     {
                         continue;
                     }
