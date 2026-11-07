@@ -4,11 +4,11 @@ error: a `str` file-scope variable needs a value
 2 | str       none;
   | ^^^^^^^^^^^^^^^ write `= ""` for an empty one
 
-error: a `str` file-scope variable must be given a string literal
+error: expected `str`, but got an integer literal
  --> sema/errors_str_globals.kl:3:20
   |
 3 | str       number = 5;
-  |                    ^ or the name of a `const str`
+  |                    ^
 
 error: `SELF`'s initialiser depends on `SELF` itself
  --> sema/errors_str_globals.kl:4:20
@@ -16,11 +16,11 @@ error: `SELF`'s initialiser depends on `SELF` itself
 4 | const str SELF   = SELF;
   |                    ^^^^ a `const` cannot be defined in terms of itself
 
-error: a `str` file-scope variable must be given a string literal
+error: expected `str`, but got `joined_text`
  --> sema/errors_str_globals.kl:5:20
   |
 5 | str       joined = "a" + "b";
-  |                    ^^^^^^^^^ or the name of a `const str`
+  |                    ^^^^^^^^^
 
 error: a `str` static field needs a value
  --> sema/errors_str_globals.kl:9:19

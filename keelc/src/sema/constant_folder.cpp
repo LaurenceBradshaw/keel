@@ -1054,52 +1054,46 @@ TEST_CASE( "type_checker_accepts_a_constant_expression_global", "[sema][types][g
         }
     }
 
-    // Short-circuit operators emit control flow, which file scope has nowhere to put - so they are
-    // outside the rule however constant their operands are.
+    // Short-circuit operators emit control flow, so they are built (D80) however constant their
+    // operands are.
     SECTION( "but not the short-circuit operators" )
     {
         const Typed p( "bool ready = true && false;\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( p.constant_of( p.nth( Node_kind::Var_decl, 0 ) ).has_value() );
     }
 }
 
-TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][globals]" )
+// D80: an initialiser that does not fold is built before `main`, so it records no value.
+TEST_CASE( "type_checker_builds_a_computed_global_initialiser", "[sema][types][globals]" )
 {
-    SECTION( "a call" )
+    struct Case
     {
-        const Typed p( "i32 make() { return 1; }\ni32 total = make();\ni32 main() { return 0; }\n" );
+        const char* head;
+        std::size_t total; // which Var_decl is `total`
+    };
 
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
+    for( const Case c :
+         { Case { "i32 make() { return 1; }\ni32 total = make();", 0 },
+           Case { "i32 first = 1;\ni32 total = first;", 1 },
+           Case { "struct Point { i32 x; };\nPoint total = Point { 0 };", 0 } } )
+    {
+        const Typed p( std::string( c.head ) + "\ni32 main() { return 0; }\n" );
+
+        INFO( c.head << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( p.constant_of( p.nth( Node_kind::Var_decl, c.total ) ).has_value() );
     }
 
-    // This is the one the rule exists for: allowing it is the static initialisation order fiasco.
-    SECTION( "another global" )
-    {
-        const Typed p( "i32 first = 1;\ni32 second = first;\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-    }
-
-    // Not a constant-folding question: a struct literal lowers to a temporary and field
-    // assignments, which cannot appear at C file scope.
-    SECTION( "a struct literal" )
-    {
-        const Typed p( "struct Point { i32 x; };\nPoint origin = Point { 0 };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() >= 1 );
-    }
-
-    SECTION( "and a struct-typed global at all" )
+    SECTION( "but a struct with no default needs an initialiser" )
     {
         const Typed p( "struct Point { i32 x; };\nPoint origin;\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a file-scope variable of `Point` needs an initialiser" ) != std::string::npos );
     }
 }
 

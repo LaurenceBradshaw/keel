@@ -4,12 +4,6 @@ error: `nope` is not declared
 2 | const i32 N = nope;
   |               ^^^^
 
-error: this initialiser cannot be computed at compile time yet
- --> sema/errors_constant_hints.kl:3:15
-  |
-3 | const i32 M = N * 2;
-  |               ^^^^^ write its value as a literal
-
 error: unknown type `char`
  --> sema/errors_constant_hints.kl:9:5
   |
@@ -46,4 +40,4 @@ error: expected `u64`, but got `i32`
 15 |     i32 sum = a[K - 1];
    |                 ^^^^^ write `cast<u64>( K - 1 )`
 
-8 errors generated
+7 errors generated

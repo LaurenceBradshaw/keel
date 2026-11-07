@@ -355,7 +355,7 @@ Built build_clock( const Temp_dir& dir, bool debug )
     const Spelling spelling { front.program.ast, front.types, interner, front.program.modules, sm };
     for( const Function& function : front.functions )
     {
-        const std::string name = spelling.function( function.declaration, function.type_arguments );
+        const std::string name = spelling.function( function );
         if( parts.of( function ) == input &&
             ( name.find( "advance" ) != std::string::npos || name.find( "read" ) != std::string::npos ) )
         {

@@ -2468,8 +2468,9 @@ Node_id Expressions::find_operator(
 // D77: a field's default, which Statements checks with the field as the current function.
 bool Expressions::in_default() const
 {
-    return current_function_.is_valid() && ( ast_.kind( current_function_ ) == Node_kind::Field_decl ||
-                                             ast_.kind( current_function_ ) == Node_kind::Param_decl );
+    return current_function_.is_valid() &&
+           ( ast_.kind( current_function_ ) == Node_kind::Field_decl ||
+             ast_.kind( current_function_ ) == Node_kind::Param_decl || ast_.kind( current_function_ ) == Node_kind::Var_decl );
 }
 
 void Expressions::refuse_in_default( Span at )
@@ -4285,6 +4286,18 @@ Type_id Expressions::infer_marker( Node_id id )
     const bool    named =
         decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
 
+    // D80: a global holds its value until the program ends.
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Var_decl &&
+        !ast_.span( current_function_ ).contains( ast_.span( decl ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            fmt::format( "`{}` is a global, so it cannot be moved from", interner_.text( ast_.name( decl ) ) ),
+            "a global keeps a value until the program ends"
+        );
+        return types_.poison( id );
+    }
+
     // A consuming switch's binding owns its payload as a local owns its value.
     if( places_.owns_binding( decl ) )
     {
@@ -4395,6 +4408,16 @@ Type_id Expressions::infer_try( Node_id id )
     // The payload is recorded even when refused, so the use of a refused `try` does not fail too.
     if( !current_function_.is_valid() )
     {
+        return types_.record( id, payload );
+    }
+
+    if( ast_.kind( current_function_ ) == Node_kind::Var_decl )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            "a global's initialiser cannot `try`",
+            "it runs before `main`, and has no caller to pass the error to"
+        );
         return types_.record( id, payload );
     }
 

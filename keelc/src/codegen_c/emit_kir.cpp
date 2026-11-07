@@ -267,22 +267,24 @@ private:
     void line_directive( Span span );
     void sync_line();
 
-    void emit_prologue();
-    void emit_composite_forwards();
-    void emit_run_references();
-    void emit_interface_references();
-    void emit_composites();
-    void emit_vtable_types();
-    void emit_vtables();
-    void emit_function_types();
-    void emit_globals();
-    void emit_prototypes();
-    void emit_runtime_prototypes();
-    void emit_comparison_guards();
-    void emit_externs();
-    void emit_functions();
-    void emit_main_shim();
-    void emit_main_shim_with_arguments( const std::string& symbol, Type_id str_type );
+    void                         emit_prologue();
+    void                         emit_composite_forwards();
+    void                         emit_run_references();
+    void                         emit_interface_references();
+    void                         emit_composites();
+    void                         emit_vtable_types();
+    void                         emit_vtables();
+    void                         emit_function_types();
+    void                         emit_globals();
+    void                         emit_prototypes();
+    void                         emit_runtime_prototypes();
+    void                         emit_comparison_guards();
+    void                         emit_externs();
+    void                         emit_functions();
+    void                         emit_main_shim();
+    void                         emit_main_shim_with_arguments( const std::string& symbol, Type_id str_type );
+    std::vector<const Function*> global_functions( bool drops ) const;
+    void                         emit_calls( const std::vector<const Function*>& functions );
 
     void emit_statement( const Statement& statement );
     void emit_terminator( const Terminator& terminator, const Function& function );
@@ -1163,10 +1165,64 @@ void Kir_emitter::emit_main_shim()
     write_line( "int main( void )" );
     write_line( "{" );
     indent_ += 4;
-    sync_line();
-    write_line( fmt::format( "return (int) {}();", symbol ) );
+    const std::vector<const Function*> builds = global_functions( false );
+    if( builds.empty() )
+    {
+        sync_line();
+        write_line( fmt::format( "return (int) {}();", symbol ) );
+    }
+    else
+    {
+        emit_calls( builds );
+        sync_line();
+        write_line( fmt::format( "int result = (int) {}();", symbol ) );
+        emit_calls( global_functions( true ) );
+        write_line( "return result;" );
+    }
     indent_ -= 4;
     write_line( "}" );
+}
+
+// Every module's build or drop functions, dependencies first, or for drops last.
+std::vector<const Function*> Kir_emitter::global_functions( bool drops ) const
+{
+    const auto wanted = [&]( const Function& f ) { return f.globals.is_valid() && f.drops_globals == drops; };
+
+    std::vector<const Function*> found;
+    for( const Function* callee : callees_ )
+    {
+        if( wanted( *callee ) )
+        {
+            found.push_back( callee );
+        }
+    }
+    for( const Function& function : functions_ )
+    {
+        if( wanted( function ) )
+        {
+            found.push_back( &function );
+        }
+    }
+
+    if( parts_ != nullptr )
+    {
+        const std::span<const File_id> order = parts_->order();
+        const auto rank = [&]( const Function* f ) { return std::ranges::find( order, parts_->of( *f ) ) - order.begin(); };
+        std::ranges::stable_sort( found, {}, rank );
+    }
+    if( drops )
+    {
+        std::ranges::reverse( found );
+    }
+    return found;
+}
+
+void Kir_emitter::emit_calls( const std::vector<const Function*>& functions )
+{
+    for( const Function* function : functions )
+    {
+        write_line( fmt::format( "{}();", spelling_.function( *function ) ) );
+    }
 }
 
 // `str`'s fields are set directly: the shim is the runtime's side of the boundary, as a literal is
@@ -1211,8 +1267,10 @@ void Kir_emitter::emit_main_shim_with_arguments( const std::string& symbol, Type
     write_line( fmt::format( "args[i].{} = strlen( argv[i + 1] );", size_field ) );
     indent_ -= 4;
     write_line( "}" );
+    emit_calls( global_functions( false ) );
     sync_line(); // the backtrace's `main` frame shows the Keel `main`'s line
     write_line( fmt::format( "int result = (int) {}( args, count );", symbol ) );
+    emit_calls( global_functions( true ) );
     write_line( "kl_rt_free( args );" );
     write_line( "return result;" );
     indent_ -= 4;
@@ -1551,13 +1609,13 @@ void Kir_emitter::emit_function( const Function& function )
         }
     }
 
-    defined_.push_back( spelling_.function( function.declaration, function.type_arguments ) );
+    defined_.push_back( spelling_.function( function ) );
     write_line( fmt::format(
         "{}{}{} {}( {} )",
         object_ && placed_by_reach( function ) ? "__attribute__((weak)) " : "",
         function.diverges ? "_Noreturn " : "",
         spelling_.type( function.locals[k_return_slot].type ),
-        spelling_.function( function.declaration, function.type_arguments ), // matches the prototype
+        spelling_.function( function ), // matches the prototype
         params.empty() ? "void" : params
     ) );
     write_line( "{" );
@@ -1680,7 +1738,7 @@ std::string Kir_emitter::prototype( const Function& function ) const
         "{}{} {}( {} )",
         function.diverges ? "_Noreturn " : "",
         spelling_.type( function.locals[k_return_slot].type ),
-        spelling_.function( function.declaration, function.type_arguments ),
+        spelling_.function( function ),
         params.empty() ? "void" : params
     );
 }
@@ -2537,7 +2595,9 @@ Emitted emit_c_from_kir(
     std::vector<const Function*> callees;
     for( u32 f = 0; f < functions.size(); ++f )
     {
-        if( ( called[f] || std::ranges::find( addressed, functions[f].declaration ) != addressed.end() ) && !mine[f] )
+        const bool shim_calls = functions[f].globals.is_valid() && parts != nullptr && modules.is_program( part );
+        if( ( called[f] || shim_calls || std::ranges::find( addressed, functions[f].declaration ) != addressed.end() ) &&
+            !mine[f] )
         {
             callees.push_back( &functions[f] );
         }
@@ -2593,6 +2653,15 @@ struct Generated : Compiled
 };
 
 } // namespace
+
+TEST_CASE( "emit_kir_keeps_the_plain_shim_when_every_global_folds", "[codegen][kir][globals]" )
+{
+    Generated g( "i32 g = 3;\ni32 main() { return g; }\n", false, Emitting::Input );
+    REQUIRE( g.clean() );
+
+    const std::string shim = g.c.substr( g.c.find( "int main(" ) );
+    REQUIRE( shim == "int main( void )\n{\n#line 2 \"t.kl\"\n    return (int) kl__main__();\n}\n" );
+}
 
 TEST_CASE( "emit_kir_writes_a_function", "[codegen][kir]" )
 {

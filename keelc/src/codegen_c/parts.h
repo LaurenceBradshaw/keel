@@ -15,14 +15,16 @@ namespace keel
 {
 
 // An instance or a synthesised function: placed by which module reaches it, so several may define it.
+// A module's build and drop functions are its own.
 inline bool placed_by_reach( const Function& function )
 {
-    return !function.type_arguments.empty() || !function.declaration.is_valid();
+    return !function.globals.is_valid() && ( !function.type_arguments.empty() || !function.declaration.is_valid() );
 }
 
 // Which module's C file each function goes in (D71). Every part compiles alone.
 //
 //   a function declared at no type arguments   its declaration's module
+//   a build or drop function                   its globals' module
 //   an instance or a synthesised function      the first module, dependencies first, whose own
 //                                              functions reach it; the input's when none does
 //   one of the first `provided`, loaded        the module whose object held it
@@ -62,8 +64,9 @@ private:
     std::vector<File_id>              owners_;
 };
 
-// A release program build's sweep: drops every function the input's `main` does not reach through
-// calls, `&f`, drops, vtables or a global's initialiser, so their types and vtables go too. Keeps
+// A release program build's sweep: drops every function that neither the input's `main` nor a build
+// or drop function reaches through calls, `&f`, drops, vtables or a global's initialiser, so their
+// types and vtables go too. Keeps
 // `provided` in step; a program without `main` keeps everything.
 void remove_unreached(
     std::vector<Function>& functions,

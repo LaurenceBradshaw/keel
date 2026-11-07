@@ -15,6 +15,8 @@
 
 namespace keel
 {
+
+struct Function;
 struct Spelling
 {
     const Ast&            ast;
@@ -41,6 +43,8 @@ struct Spelling
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.
     std::string function( Node_id declaration, std::span<const Type_id> type_arguments = {} ) const;
+    // As above, or a module's build or drop function: "kl_2kl2os_0build". No name starts with a digit.
+    std::string function( const Function& function ) const;
     // A vtable slot: the requirement's name and parameters, so an overloaded requirement has two.
     std::string slot( Node_id requirement ) const;
     // A global or static field. `owner` is the instance whose static this is, invalid otherwise.

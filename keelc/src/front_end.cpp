@@ -60,7 +60,7 @@ Front_end run_front_end(
     {
         for( const Function& function : state.functions )
         {
-            if( !provided( loaded, function.declaration, function.type_arguments ) )
+            if( function.globals.is_valid() || !provided( loaded, function.declaration, function.type_arguments ) )
             {
                 loaded.push_back( function );
                 front.provided.push_back( state.file );

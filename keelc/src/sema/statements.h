@@ -85,6 +85,7 @@ private:
     void    visit_default( Node_id decl, Node_id owner = {} );
     bool    refuse_param_default( Node_id function, Node_id param );
     void    visit_global( Node_id id );
+    void    refuse_later_globals( Node_id global, Node_id init );
     void    visit_block( Node_id id );
     void    visit_statements( Node_id block ); // the block's children, warning at unreachable ones
 

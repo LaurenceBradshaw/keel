@@ -8,6 +8,7 @@
 
 #include <fmt/format.h>
 #include "codegen_c/mangle.h"
+#include "ir/kir.h"
 #include "lex/token.h"
 
 namespace keel
@@ -224,6 +225,16 @@ std::string Spelling::field( Node_id declaration ) const
     return variant.is_valid()
                ? mangle_payload_field( interner.text( ast.name( variant ) ), interner.text( ast.name( declaration ) ) )
                : mangle_field( interner.text( ast.name( declaration ) ) );
+}
+
+std::string Spelling::function( const Function& function ) const
+{
+    if( function.globals.is_valid() )
+    {
+        return fmt::format( "kl_{}_0{}", module_slot( owner( function.globals ) ), function.drops_globals ? "drop" : "build" );
+    }
+
+    return this->function( function.declaration, function.type_arguments );
 }
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const

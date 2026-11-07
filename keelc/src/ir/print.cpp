@@ -314,15 +314,19 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
     const bool synthesised = !func.declaration.is_valid() && !func.type_arguments.empty();
     const bool united = synthesised && ( types.is_union( func.type_arguments[0] ) || types.is_array( func.type_arguments[0] ) );
 
-    std::string out = fmt::format(
-        "fn {}{} {{\n",
-        destructor || united ? "~"
-        : synthesised        ? "drop "
-                             : "",
-        synthesised                   ? types.name( func.type_arguments[0] )
-        : func.declaration.is_valid() ? printer.name_of( func.declaration )
-                                      : "<unnamed>"
-    );
+    // D80: a module's, named for its first built global.
+    std::string out =
+        func.globals.is_valid()
+            ? fmt::format( "fn {} {} {{\n", func.drops_globals ? "drop" : "build", printer.name_of( func.globals ) )
+            : fmt::format(
+                  "fn {}{} {{\n",
+                  destructor || united ? "~"
+                  : synthesised        ? "drop "
+                                       : "",
+                  synthesised                   ? types.name( func.type_arguments[0] )
+                  : func.declaration.is_valid() ? printer.name_of( func.declaration )
+                                                : "<unnamed>"
+              );
 
     for( const Local_id i : func.locals.ids() )
     {

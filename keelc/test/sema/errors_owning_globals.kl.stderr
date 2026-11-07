@@ -1,37 +1,31 @@
-error: `Holds` cannot be a file-scope variable yet
+error: a file-scope variable of `Holds` needs an initialiser
   --> sema/errors_owning_globals.kl:26:1
    |
 26 | Holds held;
-   | ^^^^^^^^^^^ nothing drops a file-scope variable, so what it owns would leak
+   | ^^^^^^^^^^^ an enum has no default: which variant is the program's to say
 
-error: `Holds` cannot be a file-scope variable yet
-  --> sema/errors_owning_globals.kl:27:1
-   |
-27 | Holds initialised = Holds::none;
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ nothing drops a file-scope variable, so what it owns would leak
-
-error: `result<Buf, i32>` cannot be a file-scope variable yet
+error: a file-scope variable of `result<Buf, i32>` needs an initialiser
   --> sema/errors_owning_globals.kl:28:1
    |
 28 | result<Buf, i32> wrapped;
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^ nothing drops a file-scope variable, so what it owns would leak
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ an enum has no default: which variant is the program's to say
 
-error: `Holds | Plain` cannot be a file-scope variable yet
+error: a file-scope variable of `Holds | Plain` needs an initialiser
   --> sema/errors_owning_globals.kl:29:1
    |
 29 | Holds | Plain united;
    | ^^^^^^^^^^^^^^^^^^^^^ its zero need not be one of its members
 
-error: `Holds` cannot be a static field yet
+error: a static field of `Holds` needs an initialiser
   --> sema/errors_owning_globals.kl:35:12
    |
 35 |     static Holds last;
-   |            ^^^^^^^^^^^ nothing drops a static field, so what it owns would leak
+   |            ^^^^^^^^^^^ an enum has no default: which variant is the program's to say
 
-error: `Plain | Bad` cannot be a file-scope variable yet
+error: a file-scope variable of `Plain | Bad` needs an initialiser
   --> sema/errors_owning_globals.kl:41:1
    |
 41 | Plain | Bad copyable;
    | ^^^^^^^^^^^^^^^^^^^^^ its zero need not be one of its members
 
-6 errors generated
+5 errors generated

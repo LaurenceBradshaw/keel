@@ -382,12 +382,14 @@ struct Function
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
     std::vector<Local_id>        out_parameters;
-    std::vector<Local_id>        one_path_temporaries; // built on one path, so dropped under a flag
-    std::vector<Local_id>        walked;               // D74: a walk's receiver, freezing what it walks
-    std::vector<Local_id>        chosen;               // D75: assigned the address of whichever arm ran
-    Local_id                     constructed {};       // a constructor's receiver, invalid in every other function.
-    std::vector<Node_id>         defaulted_fields;     // D77: a constructor's fields given their default at entry
-    std::vector<Field_slot>      fields;               // ir/slots reads them
+    std::vector<Local_id>        one_path_temporaries;  // built on one path, so dropped under a flag
+    std::vector<Local_id>        walked;                // D74: a walk's receiver, freezing what it walks
+    std::vector<Local_id>        chosen;                // D75: assigned the address of whichever arm ran
+    Local_id                     constructed {};        // a constructor's receiver, invalid in every other function.
+    std::vector<Node_id>         defaulted_fields;      // D77: a constructor's fields given their default at entry
+    Node_id                      globals {};            // D80: a module's build or drop function, by its first built global
+    bool                         drops_globals = false; // which of the two
+    std::vector<Field_slot>      fields;                // ir/slots reads them
     Id_vector<Local_id, Local>   locals;
     Id_vector<Block_id, Block>   blocks;
     Statements                   statements;

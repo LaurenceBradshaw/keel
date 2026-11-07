@@ -90,9 +90,7 @@ void Statements::visit( Node_id id )
             }
 
             // A file-scope variable is checked differently from a local: its type came from the
-            // signature pass, and its initialiser must be a literal. Everything else - functions
-            // above all - takes the ordinary path, which is what this case replaced when it took
-            // over from the recursing default.
+            // signature pass. Everything else - functions above all - takes the ordinary path.
             if( ast_.kind( child ) == Node_kind::Var_decl )
             {
                 visit_global( child );
@@ -1254,7 +1252,8 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    const bool is_static_field = ast_.enclosing_aggregate( id ).is_valid();
+    const Node_id aggregate       = ast_.enclosing_aggregate( id );
+    const bool    is_static_field = aggregate.is_valid();
 
     if( is_static_field && table_.mentions_parameter( type ) )
     {
@@ -1262,12 +1261,8 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    const std::string_view where = is_static_field ? "static field" : "file-scope variable";
-
-    // A struct literal or a class's construction lowers to a temporary and field assignments,
-    // and there is nowhere at C file scope to put those. Checked before the initialiser so
-    // `Point origin;` is caught too. A `str` is the exception, checked below.
-    const bool is_str = table_.is_struct( type ) && table_.get( type ).declaration == table_.prelude().str;
+    const std::string_view where  = is_static_field ? "static field" : "file-scope variable";
+    const bool             is_str = table_.is_struct( type ) && table_.get( type ).declaration == table_.prelude().str;
 
     if( is_str && !init.is_valid() )
     {
@@ -1277,38 +1272,27 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    if( table_.is_struct( type ) && !is_str )
-    {
-        reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ) );
-        return;
-    }
-
-    // Zero is the only value one can start with, and its tag may name an enum from another union.
-    if( table_.is_union( type ) )
-    {
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ),
-            "its zero need not be one of its members"
-        );
-        return;
-    }
-
-    // Nothing runs at program exit to drop it. Checked before the initialiser so `Holds h;` is caught too.
-    if( !bounds_.satisfies( type, Bound::Copyable ) )
-    {
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` cannot be a {} yet", table_.name( type ), where ),
-            fmt::format( "nothing drops a {}, so what it owns would leak", where )
-        );
-        return;
-    }
-
+    // D80: zero, which C guarantees for file-scope storage, or `T()` run before `main`.
     if( !init.is_valid() )
     {
-        // Zero, which C guarantees for file-scope storage, and a `const` could never change it.
-        if( ast_.is_const_binding( id ) )
+        const Default_kind made = bounds_.default_of( type );
+
+        if( made == Default_kind::Literal || made == Default_kind::Constructor )
+        {
+            return;
+        }
+
+        // A union's zero need not be one of its members.
+        if( table_.is_struct( type ) || table_.is_union( type ) || !bounds_.satisfies( type, Bound::Copyable ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "a {} of `{}` needs an initialiser", where, table_.name( type ) ),
+                table_.is_union( type ) ? "its zero need not be one of its members"
+                                        : bounds_.defaultable_help( type, "it has no default" )
+            );
+        }
+        else if( ast_.is_const_binding( id ) )
         {
             reporter_.error_at(
                 ast_.span( id ),
@@ -1336,74 +1320,93 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    // A tagged struct in C, which the emitter writes only as zero.
-    if( table_.is_enum( type ) && ast_.enum_has_payload( table_.get( type ).declaration ) )
-    {
-        reporter_.error_at(
-            ast_.span( init ),
-            fmt::format( "a {} of `{}` cannot have an initialiser yet", where, table_.name( type ) ),
-            "without one it starts as the first variant, with its payload zero"
-        );
-        return;
-    }
-
-    // A literal's bytes and their count, which C writes as one initialiser.
-    if( is_str )
-    {
-        const std::optional<std::string> text = constant_folder_.fold_text( init );
-
-        if( !text )
-        {
-            reporter_.error_at(
-                ast_.span( init ),
-                fmt::format( "a `str` {} must be given a string literal", where ),
-                "or the name of a `const str`"
-            );
-            return;
-        }
-
-        const std::size_t earlier = reporter_.error_count();
-        expressions_.check( init, type );
-
-        if( reporter_.error_count() == earlier )
-        {
-            constant_folder_.record_value( id, Constant_value { .kind = Constant_value::Kind::Text, .text = *text } );
-        }
-        return;
-    }
-
-    if( !constant_folder_.is_constant_expression( init ) )
-    {
-        reporter_.error_at(
-            ast_.span( init ),
-            fmt::format( "a {} initialiser must be a constant expression", is_static_field ? "static field's" : "file-scope" ),
-            "it may use literals and arithmetic over them, but nothing that has to run"
-        );
-
-        return;
-    }
-
-    const std::size_t earlier = reporter_.error_count();
-    expressions_.check( init, type ); // range checking, and the literal adopts the declared type
+    // Checked as a default is, so `try` is refused and a static field sees its type's privates.
+    const std::size_t earlier   = reporter_.error_count();
+    const Node_id     enclosing = expressions_.enter_function( id );
+    expressions_.check( init, type );
+    expressions_.leave_function( enclosing );
 
     if( reporter_.error_count() != earlier || table_.is_error( types_.type_of( init ) ) )
     {
         return;
     }
 
-    // Evaluated here rather than printed as an expression by the backend. The rule already says
-    // this is a constant expression, so the value exists; computing it once is what lets a backend
-    // emit a literal instead of re-deriving §6.4's conversions in its own spelling of the tree.
-    if( std::optional<Constant_value> value = constant_folder_.fold_value( init, type ) )
+    // Static data: a literal's bytes, or a value the folder computes once. An owning value is built.
+    const bool copyable = bounds_.satisfies( type, Bound::Copyable );
+
+    if( copyable && is_str )
     {
-        constant_folder_.record_value( id, std::move( *value ) );
+        if( std::optional<std::string> text = constant_folder_.fold_text( init ) )
+        {
+            constant_folder_.record_value( id, Constant_value { .kind = Constant_value::Kind::Text, .text = *text } );
+            return;
+        }
+    }
+    else if( copyable && constant_folder_.is_constant_expression( init ) )
+    {
+        if( std::optional<Constant_value> value = constant_folder_.fold_value( init, type ) )
+        {
+            constant_folder_.record_value( id, std::move( *value ) );
+            return;
+        }
+    }
+
+    // Built before `main`, once per program, which a generic's instances could not share.
+    if( is_static_field && ast_.is_generic( aggregate ) )
+    {
+        reporter_.error_at(
+            ast_.span( init ),
+            "a static field of a generic type needs a constant initialiser",
+            "it may use literals and arithmetic over them, but nothing that has to run"
+        );
         return;
     }
 
-    // Unrecorded, the global would be emitted as zero.
-    reporter_.error_at(
-        ast_.span( init ), "this initialiser cannot be computed at compile time yet", "write its value as a literal"
-    );
+    refuse_later_globals( id, init );
+}
+
+// D80: a built initialiser runs in declaration order, so it may read only what is built before it.
+// A later `const` that folds is static data, there from the start.
+void Statements::refuse_later_globals( Node_id global, Node_id init )
+{
+    const Span           at = ast_.span( global );
+    std::vector<Node_id> work { init };
+
+    while( !work.empty() )
+    {
+        const Node_id node = work.back();
+        work.pop_back();
+
+        if( !node.is_valid() )
+        {
+            continue;
+        }
+
+        const Node_id named = ast_.kind( node ) == Node_kind::Name_expr || ast_.kind( node ) == Node_kind::Path_expr
+                                  ? resolution_.declaration_of( node )
+                                  : Node_id {};
+
+        if( named.is_valid() && ast_.kind( named ) == Node_kind::Var_decl && ast_.span( named ).file == at.file &&
+            ast_.span( named ).start >= at.start &&
+            !( ast_.is_const_binding( named ) && constant_folder_.is_constant_expression( ast_.initialiser( named ) ) ) )
+        {
+            const std::string_view reader = interner_.text( ast_.name( global ) );
+            const std::string_view read   = interner_.text( ast_.name( named ) );
+
+            reporter_.error_at(
+                ast_.span( node ),
+                named == global ? fmt::format( "`{}` is read while it is being built", read )
+                                : fmt::format( "`{}` is built after `{}`", read, reader ),
+                "a global may read only those declared before it"
+            );
+            continue;
+        }
+
+        for( const Node_id child : ast_.children( node ) )
+        {
+            work.push_back( child );
+        }
+    }
 }
 
 void Statements::visit_block( Node_id id )
@@ -2147,13 +2150,7 @@ TEST_CASE( "type_checker_rejects_break_and_continue_outside_a_loop", "[sema][typ
     }
 }
 
-// A file-scope initialiser must be a literal. Not because anything cannot be computed, but because
-// there is no constant folder: the restriction is the honest statement of what the compiler can
-// actually evaluate, and widening it later breaks nothing that compiles under it.
-//
-// It also removes two problems outright. A global cannot name another global, so initialisation
-// order never exists as a question; and no global can hold a type with a destructor, so M3 never
-// has to sequence global teardown.
+// A literal initialiser folds to static data.
 TEST_CASE( "type_checker_accepts_a_literal_initialised_global", "[sema][types][globals]" )
 {
     SECTION( "an integer, taking its type from the annotation" )
@@ -3161,7 +3158,7 @@ TEST_CASE( "type_checker_refuses_a_kept_address_of_a_temporary", "[sema][escape]
 }
 
 // A static field is storage for the whole program, as a file-scope variable is, and takes the same
-// rules: a constant initialiser, folded once, and no struct yet.
+// rules (D80).
 TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][static]" )
 {
     SECTION( "its initialiser is folded" )
@@ -3197,11 +3194,7 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
     };
 
     for( const Case c :
-         { Case {
-               "i32 f() { return 1; }\nstruct S { i32 x; static i32 n = f(); };",
-               "a static field's initialiser must be a constant expression"
-           },
-           Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "`P` cannot be a static field yet" },
+         { Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "a static field of `P` needs an initialiser" },
            Case {
                "struct Box<T> where T : copyable { T v; static T last; };",
                "a static field's type cannot name a type parameter yet"
@@ -3212,7 +3205,7 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
            },
            Case {
                "struct Box<T> where T : copyable { T v; static i32 made = f(); };\ni32 f() { return 1; }",
-               "a static field's initialiser must be a constant expression"
+               "a static field of a generic type needs a constant initialiser"
            } } )
     {
         const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );
@@ -3220,6 +3213,67 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
         INFO( c.program << "\n" << p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+
+    SECTION( "one that runs is built" )
+    {
+        const Typed p( "i32 f() { return 1; }\nstruct S { i32 x; static i32 n = f(); };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D80: what does not fold is built before `main`, in declaration order, and never moved from.
+TEST_CASE( "statements_check_a_built_global", "[sema][statements][globals]" )
+{
+    const std::string lib = "class Items { public Items() { n_ = 0; } ~Items() {} u64 n_; };\n"
+                            "class Fixed { public Fixed( i32 n ) { n_ = n; } i32 n_; };\n"
+                            "i32 f() { return 1; }\n";
+
+    struct Case
+    {
+        const char* program;
+        const char* message; // empty when accepted
+    };
+
+    for( const Case c :
+         { Case { "Items items;", "" },
+           Case { "i32 n = f();", "" },
+           Case { "i32 n = 1 + 2;", "" },
+           Case { "const Items fixed = Items();", "" },
+           Case { "i32 a = b;\ni32 b = f();", "`b` is built after `a`" },
+           Case { "i32 a = f() + a;", "`a` is read while it is being built" },
+           Case { "i32 a = f() + B;\nconst i32 B = 2;", "" },
+           Case { "struct S { static i32 a = S::b + f(); static i32 b = 1; };", "`b` is built after `a`" },
+           Case { "Fixed fixed;", "a file-scope variable of `Fixed` needs an initialiser" },
+           Case {
+               "enum Bad { nope };\nresult<i32, Bad> g() { return result::ok( 1 ); }\ni32 n = try g();",
+               "a global's initialiser cannot `try`"
+           },
+           Case { "Items items;\nItems take() { return move items; }", "`items` is a global, so it cannot be moved from" } } )
+    {
+        const Typed p( lib + c.program + "\ni32 main() { return 0; }" );
+
+        INFO( c.program << "\n" << p.rendered() );
+
+        if( std::string_view( c.message ).empty() )
+        {
+            REQUIRE( p.clean() );
+        }
+        else
+        {
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "a folding initialiser records its value" )
+    {
+        const Typed p( "i32 n = 1 + 2;\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.constant_of( p.nth( Node_kind::Var_decl, 0 ) ).has_value() );
     }
 }
 

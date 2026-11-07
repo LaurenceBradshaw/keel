@@ -89,7 +89,7 @@ Parts::Parts(
     {
         if( declared( f ) )
         {
-            owners_[f] = of( functions[f].declaration );
+            owners_[f] = of( functions[f] );
         }
     }
 
@@ -143,6 +143,11 @@ Parts::Parts(
 
 File_id Parts::of( const Function& function ) const
 {
+    if( function.globals.is_valid() )
+    {
+        return of( function.globals );
+    }
+
     if( function.declaration.is_valid() && function.type_arguments.empty() )
     {
         return of( function.declaration );
@@ -232,7 +237,8 @@ void remove_unreached(
                               interner.text( ast.name( decl ) ) == "main";
 
             has_main = has_main || main;
-            if( main || ( decl.is_valid() && std::ranges::find( addressed, decl ) != addressed.end() ) )
+            if( main || functions[f].globals.is_valid() ||
+                ( decl.is_valid() && std::ranges::find( addressed, decl ) != addressed.end() ) )
             {
                 reached[f] = true;
                 stack.push_back( f );
@@ -292,6 +298,7 @@ void remove_unreached(
 #include <string_view>
 #include <utility>
 #include "check/pipeline_test_support.h"
+#include "codegen_c/emit_kir.h"
 #include "common/temp_dir.h"
 #include "front_end.h"
 #include "ir/verify.h"
@@ -350,6 +357,24 @@ public:
             }
         }
         return order.size();
+    }
+
+    // The C `main` the input's part ends with.
+    std::string shim()
+    {
+        const std::string c = emit_c_from_kir(
+                                  front_->functions,
+                                  front_->program.ast,
+                                  front_->types,
+                                  literals_,
+                                  sm_,
+                                  interner_,
+                                  front_->program.modules,
+                                  &*parts_,
+                                  parts_->input()
+        )
+                                  .c;
+        return c.substr( c.find( "int main(" ) );
     }
 
 private:
@@ -453,6 +478,30 @@ TEST_CASE( "parts_gives_an_instance_to_the_first_module_that_reaches_it", "[code
         REQUIRE( split.clean() );
         REQUIRE( split.part_of( "pick", "i32" ) == "main.kl" );
     }
+}
+
+TEST_CASE( "the_shim_builds_modules_dependencies_first_and_drops_them_in_reverse", "[codegen_c][parts][globals]" )
+{
+    constexpr std::string_view k_buf =
+        "class Buf { u8[*] b; public Buf() { unsafe { b = alloc<u8>( 1 ); } } ~Buf() { unsafe { free( b ); } } };\n";
+
+    Split split( {
+        { "main.kl", "import a;\nimport b;\nBuf third = Buf();\ni32 main() { return 0; }\n" },
+        { "b.kl", "import a;\nBuf second = Buf();\n" },
+        { "a.kl", std::string( k_buf ) + "Buf first = Buf();\n" },
+    } );
+    REQUIRE( split.clean() );
+
+    const std::string shim = split.shim();
+    const auto        at   = [&]( std::string_view call ) { return shim.find( call ); };
+
+    REQUIRE( at( "kl_1a_0build();" ) < at( "kl_1b_0build();" ) );
+    REQUIRE( at( "kl_1b_0build();" ) < at( "kl__0build();" ) );
+    REQUIRE( at( "kl__0build();" ) < at( "int result" ) );
+    REQUIRE( at( "int result" ) < at( "kl__0drop();" ) );
+    REQUIRE( at( "kl__0drop();" ) < at( "kl_1b_0drop();" ) );
+    REQUIRE( at( "kl_1b_0drop();" ) < at( "kl_1a_0drop();" ) );
+    REQUIRE( at( "kl_1a_0drop();" ) < at( "return result;" ) );
 }
 
 TEST_CASE( "parts_follows_a_vtable_to_its_drop_function", "[codegen_c][parts][interfaces]" )

@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <filesystem>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -41,6 +42,9 @@ public:
 
     Function run();
 
+    // D80: a module's build function, which runs each built global's initialiser in turn.
+    Function run_build( std::span<const Node_id> globals );
+
     // D77: the defaulted fields a constructor's body may leave unassigned, written at its entry.
     void default_at_entry( std::vector<Node_id> fields )
     {
@@ -48,6 +52,9 @@ public:
     }
 
 private:
+    // The finished graph, with what the passes cannot read from it recorded.
+    Function finished();
+
     // A node's type, and a declaration's binding type, with this instantiation's parameters bound.
     // Every type read goes through these: an escaped `Parameter` trips Spelling::type's assert.
     Type_id type_of( Node_id id );
@@ -359,11 +366,21 @@ Lowering::Lowering(
       declaration_( declaration ),
       overflow_checks_( overflow_checks ),
       builder_(
-          declaration, types.table().substitute( binding_type( ast, types, declaration ), bindings_ ), ast_.span( declaration )
+          declaration,
+          ast.kind( declaration ) == Node_kind::Var_decl
+              ? types.table().builtin( Type_kind::Void )
+              : types.table().substitute( binding_type( ast, types, declaration ), bindings_ ),
+          ast_.span( declaration )
       ),
       locals_(),
       drops_( builder_, ast_, types_ )
 {
+    // A build function, named for its first global, takes nothing.
+    if( ast_.kind( declaration ) == Node_kind::Var_decl )
+    {
+        return;
+    }
+
     for( const Node_id param : ast_.params( declaration ) )
     {
         if( ast_.kind( param ) == Node_kind::Param_decl )
@@ -439,6 +456,46 @@ Function Lowering::run()
         builder_.terminate_return( span );
     }
 
+    return finished();
+}
+
+Function Lowering::run_build( std::span<const Node_id> globals )
+{
+    drops_.push_scope();
+
+    for( const Node_id global : globals )
+    {
+        const Span    span   = ast_.span( global );
+        const Type_id type   = type_of( global );
+        const Place   target = builder_.global( global );
+        const Node_id init   = ast_.initialiser( global );
+
+        // Assigned, never replaced: the zero C gave it holds nothing to drop.
+        if( init.is_valid() && is_construction( init ) && type_of( init ) == type )
+        {
+            lower_construction( target, init );
+        }
+        else
+        {
+            const Operand value =
+                init.is_valid() ? united( lower_expression( init ), type, span ) : lower_default( type, span );
+            builder_.assign( target, use( moved_if_owning( value ) ), span );
+        }
+
+        drops_.end_statement( span );
+    }
+
+    drops_.pop_scope( ast_.span( globals.back() ).last() );
+    builder_.terminate_return( ast_.span( globals.back() ).last() );
+
+    Function function    = finished();
+    function.declaration = {};
+    function.globals     = globals.front();
+    return function;
+}
+
+Function Lowering::finished()
+{
     Function function        = builder_.finish();
     function.diverges        = types_.table().is_never( function.locals[k_return_slot].type );
     function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot].type ) && !function.diverges;
@@ -5059,6 +5116,100 @@ void append_synthesised_drops(
     }
 }
 
+// D80: whether a global or static field runs code before `main`, rather than being static data.
+bool is_built( const Ast& ast, const Types& types, Node_id global )
+{
+    if( types.constant_of( global ).has_value() )
+    {
+        return false;
+    }
+
+    if( ast.initialiser( global ).is_valid() )
+    {
+        return true;
+    }
+
+    const sema::Default_kind made = sema::default_of( ast, types.table(), types.type_of( global ) );
+    return made == sema::Default_kind::Literal || made == sema::Default_kind::Constructor;
+}
+
+// Each module's built globals and static fields, in declaration order.
+std::vector<std::vector<Node_id>> built_globals( const Ast& ast, const Types& types, const Resolution& resolution )
+{
+    std::vector<std::vector<Node_id>> modules;
+    File_id                           last {};
+
+    const auto add = [&]( Node_id global )
+    {
+        const File_id file = ast.span( global ).file;
+
+        if( resolution.modules().is_loaded( file ) || !is_built( ast, types, global ) )
+        {
+            return;
+        }
+
+        if( modules.empty() || file != last )
+        {
+            modules.emplace_back();
+            last = file;
+        }
+
+        modules.back().push_back( global );
+    };
+
+    for( const Node_id child : ast.declarations( ast.root() ) )
+    {
+        if( ast.kind( child ) == Node_kind::Var_decl )
+        {
+            add( child );
+        }
+        else if( is_aggregate( ast.kind( child ) ) && !ast.is_generic( child ) )
+        {
+            for( const Node_id member : ast.members( child ) )
+            {
+                if( ast.kind( member ) == Node_kind::Var_decl )
+                {
+                    add( member );
+                }
+            }
+        }
+    }
+
+    return modules;
+}
+
+// D80: the owning ones of a module's built globals, dropped last to first. None leaves no function.
+std::optional<Function> globals_drop( const Ast& ast, Types& types, std::span<const Node_id> globals )
+{
+    const Span span = ast.span( globals.back() ).last();
+
+    Builder builder( Node_id {}, types.table().builtin( Type_kind::Void ), span );
+    bool    owning = false;
+
+    for( std::size_t i = globals.size(); i > 0; --i )
+    {
+        const Type_id type = types.type_of( globals[i - 1] );
+
+        if( instance_owns( ast, types.table(), type, types.recorded() ) )
+        {
+            drop_place( builder, ast, types, builder.global( globals[i - 1] ), type, span, false );
+            owning = true;
+        }
+    }
+
+    if( !owning )
+    {
+        return std::nullopt;
+    }
+
+    builder.terminate_return( span );
+
+    Function function      = builder.finish();
+    function.globals       = globals.front();
+    function.drops_globals = true;
+    return function;
+}
+
 } // namespace
 
 bool provided( std::span<const Function> functions, Node_id declaration, std::span<const Type_id> type_arguments )
@@ -5182,6 +5333,18 @@ std::vector<Function> lower(
             !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
             functions.push_back( lower_function( id, ast, resolution, types, literals, sm, interner, overflow_checks, {} ) );
+        }
+    }
+
+    // Before the queue, so what an initialiser instantiates is lowered too.
+    for( const std::vector<Node_id>& globals : built_globals( ast, types, resolution ) )
+    {
+        Lowering lowering( globals.front(), ast, resolution, types, literals, sm, interner, overflow_checks );
+        functions.push_back( lowering.run_build( globals ) );
+
+        if( std::optional<Function> drop = globals_drop( ast, types, globals ) )
+        {
+            functions.push_back( std::move( *drop ) );
         }
     }
 
@@ -9529,6 +9692,78 @@ TEST_CASE( "lower_lends_an_array_as_a_run", "[ir][lower][fixed_array][run]" )
     INFO( text );
     REQUIRE( count( text, "run( " ) == 2 );
     REQUIRE( text.find( ", const 2 )" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_builds_and_drops_a_modules_globals", "[ir][lower][globals]" )
+{
+    constexpr std::string_view k_source =
+        "class Buf { u8 b; public Buf() { b = 0; } public i32 size() const { return 1; } ~Buf() { } };\n"
+        "struct Pair { i32 a = 1; i32 b = 2; };\n"
+        "i32 f() { return 3; }\n"
+        "i32 first = f();\n"
+        "i32 second = Buf().size();\n"
+        "Pair pair;\n"
+        "const Buf kept = Buf();\n"
+        "Buf later = Buf();\n"
+        "i32 folded = 1 + 2;\n"
+        "i32 main() { return 0; }";
+
+    Lowered p( k_source );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string build = p.named( "build first" );
+
+    INFO( build );
+    REQUIRE( build.find( "let _0: void; // return slot" ) != std::string::npos );
+
+    // In declaration order, each statement's temporary dropped before the next global.
+    const std::size_t first  = build.find( "first = " );
+    const std::size_t second = build.find( "second = " );
+    const std::size_t temp   = build.find( "drop _", second );
+    const std::size_t pair   = build.find( "pair = " );
+    const std::size_t kept   = build.find( "&init kept" );
+    const std::size_t later  = build.find( "&init later" );
+
+    REQUIRE( first < second );
+    REQUIRE( second < temp );
+    REQUIRE( temp < pair );
+    REQUIRE( pair < kept );
+    REQUIRE( kept < later );
+    REQUIRE( later != std::string::npos );
+
+    // Static data, as before.
+    REQUIRE( build.find( "folded" ) == std::string::npos );
+
+    const std::string drop = p.named( "drop first" );
+
+    INFO( drop );
+    REQUIRE( drop.find( "drop later" ) < drop.find( "drop kept" ) );
+    REQUIRE( drop.find( "drop kept" ) != std::string::npos );
+    REQUIRE( drop.find( "second" ) == std::string::npos );
+
+    // The checks run on them as on any function.
+    const Compiled checked( k_source, Stage::Elaborated );
+    INFO( checked.rendered() );
+    REQUIRE( checked.clean() );
+}
+
+TEST_CASE( "lower_gives_folded_globals_no_build_function", "[ir][lower][globals]" )
+{
+    Lowered p( "i32 a = 1 + 2;\n"
+               "class Buf { u8 b; public Buf() { b = 0; } ~Buf() { } };\n"
+               "i32 b = a;\n"
+               "i32 main() { Buf x = Buf(); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.named( "build a" ).empty() );
+
+    // Built, but owning nothing: a build function and no drop.
+    REQUIRE_FALSE( p.named( "build b" ).empty() );
+    REQUIRE( p.named( "drop b" ).empty() );
 }
 
 } // namespace keel
