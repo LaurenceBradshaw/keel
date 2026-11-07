@@ -1,0 +1,21 @@
+// A field merge must not land a write to the local while the field still holds a value read later.
+enum Opt<T> where T : copyable { None, Some( T v ) };
+
+T unwrap<T>( Opt<T> o, T fallback ) where T : copyable
+{
+    switch( o )
+    {
+        case Opt::Some( v ): return v;
+        case Opt::None: return fallback;
+    }
+}
+
+i32 main()
+{
+    Opt<i32> a = Opt::Some( 7 );
+    if( unwrap<i32>( a, 0 ) != 7 )
+    {
+        return 1;
+    }
+    return 0;
+}

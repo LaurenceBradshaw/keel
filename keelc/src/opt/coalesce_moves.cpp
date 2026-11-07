@@ -105,6 +105,11 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
     return true;
 }
 
+bool same_projection( const Projection& a, const Projection& b )
+{
+    return a.kind == b.kind && a.member == b.member && a.field == b.field && a.index == b.index;
+}
+
 bool copies_itself( const Function& func, const Statement& statement )
 {
     const Rvalue& value = func.rvalue( statement );
@@ -123,16 +128,7 @@ bool copies_itself( const Function& func, const Statement& statement )
 
     for( u32 i = 0; i < statement.place.num_projections; ++i )
     {
-        const Projection& place_projection = func.projections_of( statement.place )[i];
-        const Projection& value_projection = func.projections_of( value.a.place )[i];
-
-        if( place_projection.kind != value_projection.kind )
-        {
-            return false;
-        }
-
-        if( place_projection.member != value_projection.member || place_projection.field != value_projection.field ||
-            place_projection.index != value_projection.index )
+        if( !same_projection( func.projections_of( statement.place )[i], func.projections_of( value.a.place )[i] ) )
         {
             return false;
         }
@@ -141,15 +137,8 @@ bool copies_itself( const Function& func, const Statement& statement )
     return true;
 }
 
-bool mentions( const Function& func, const Statement& statement, const Place& into )
+bool reads( const Function& func, const Rvalue& value, const Place& into )
 {
-    const Rvalue& value = func.rvalue( statement );
-
-    if( overlaps( func, statement.place, into ) )
-    {
-        return true;
-    }
-
     if( value.kind == Rvalue_kind::Address_of && overlaps( func, value.a.place, into ) )
     {
         return true;
@@ -168,6 +157,32 @@ bool mentions( const Function& func, const Statement& statement, const Place& in
     );
 
     return found;
+}
+
+bool mentions( const Function& func, const Statement& statement, const Place& into )
+{
+    return overlaps( func, statement.place, into ) || reads( func, func.rvalue( statement ), into );
+}
+
+// Whether `statement` overwrites all of `into`: its place is `into` or a prefix of it.
+bool covers( const Function& func, const Statement& statement, const Place& into )
+{
+    const Place& place = statement.place;
+    if( statement.kind != Statement_kind::Assign || !names( place, into.local ) ||
+        place.num_projections > into.num_projections )
+    {
+        return false;
+    }
+
+    for( u32 i = 0; i < place.num_projections; ++i )
+    {
+        if( !same_projection( func.projections_of( place )[i], func.projections_of( into )[i] ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool mentions( const Function& func, const Terminator& terminator, const Place& into )
@@ -391,9 +406,22 @@ bool interferes(
     return false;
 }
 
-// Whether some path after `func.statements[from]` reaches a statement `hit` accepts without passing a
-// storage marker of `stop`.
-bool reaches( const Function& func, u32 from, Local_id stop, const std::function<bool( u32 )>& hit )
+bool marks( const Function& func, u32 at, Local_id local )
+{
+    const Statement& statement = func.statements[at];
+    return ( statement.kind == Statement_kind::Storage_live || statement.kind == Statement_kind::Storage_dead ) &&
+           names( statement.place, local );
+}
+
+// Whether some path after `func.statements[from]` reaches a statement `hit` accepts, or a terminator
+// `ends` accepts, without passing a statement `stop` accepts.
+bool reaches(
+    const Function&                                 func,
+    u32                                             from,
+    const std::function<bool( u32 )>&               stop,
+    const std::function<bool( u32 )>&               hit,
+    const std::function<bool( const Terminator& )>& ends = {}
+)
 {
     enum class Scan
     {
@@ -418,15 +446,13 @@ bool reaches( const Function& func, u32 from, Local_id stop, const std::function
                 return Scan::Hit;
             }
 
-            const Statement& statement = func.statements[at];
-            if( ( statement.kind == Statement_kind::Storage_live || statement.kind == Statement_kind::Storage_dead ) &&
-                names( statement.place, stop ) )
+            if( stop( at ) )
             {
                 return Scan::Stopped;
             }
         }
 
-        return Scan::Through;
+        return ends && ends( block.terminator ) ? Scan::Hit : Scan::Through;
     };
 
     const auto holds = [&]( Block_id b )
@@ -528,13 +554,39 @@ bool field_interferes(
     }
 
     // A pointer to `kept` reaches the field without naming it, so a borrow that can reach `gone`'s life clashes.
-    const auto alive = [&]( u32 i ) { return static_cast<bool>( in_life[i] ); };
+    const auto alive       = [&]( u32 i ) { return static_cast<bool>( in_life[i] ); };
+    const auto kept_marked = [&]( u32 i ) { return marks( func, i, c.kept ); };
     for( u32 at = 0; at < func.statements.size(); ++at )
     {
         const Statement& statement = func.statements[at];
         const Rvalue&    value     = func.rvalue( statement );
         if( statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Address_of &&
-            names( value.a.place, c.kept ) && ( in_life[at] || reaches( func, at, c.kept, alive ) ) )
+            names( value.a.place, c.kept ) && ( in_life[at] || reaches( func, at, kept_marked, alive ) ) )
+        {
+            return true;
+        }
+    }
+
+    // After the merge, any other write to `gone` lands in the field, so the field's value must not be read
+    // after it before something overwrites the whole field.
+    const auto overwritten = [&]( u32 i ) { return kept_marked( i ) || covers( func, func.statements[i], c.into ); };
+    const auto read        = [&]( u32 i )
+    {
+        const Statement& statement = func.statements[i];
+        if( statement.kind == Statement_kind::Storage_live || statement.kind == Statement_kind::Storage_dead )
+        {
+            return false;
+        }
+
+        return covers( func, statement, c.into ) ? reads( func, func.rvalue( statement ), c.into )
+                                                 : mentions( func, statement, c.into );
+    };
+    const auto read_at_end = [&]( const Terminator& terminator ) { return mentions( func, terminator, c.into ); };
+
+    for( u32 at = 0; at < func.statements.size(); ++at )
+    {
+        if( at != c.statement && writes( func, func.statements[at], c.gone ) &&
+            reaches( func, at, overwritten, read, read_at_end ) )
         {
             return true;
         }
@@ -544,7 +596,7 @@ bool field_interferes(
     return reaches(
         func,
         c.statement,
-        c.gone,
+        [&]( u32 i ) { return marks( func, i, c.gone ); },
         [&]( u32 i )
         {
             const Statement& statement = func.statements[i];
