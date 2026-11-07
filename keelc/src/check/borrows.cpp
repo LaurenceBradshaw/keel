@@ -151,6 +151,25 @@ std::vector<Borrow> borrows_of(
         }
     }
 
+    // A closure is built field by field, never assigned whole.
+    for( const Statement& statement : func.statements )
+    {
+        const Rvalue& value = func.rvalue( statement );
+        const Place&  place = statement.place;
+
+        if( statement.kind == Statement_kind::Assign && !place.is_global() && place.num_projections == 1 &&
+            func.projections[place.first_projection].kind == Projection_kind::Field &&
+            borrows[place.local.v].assignments == 0 && value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Copy &&
+            value.a.place.is_whole_local() )
+        {
+            const Borrow& stored = borrows[value.a.place.local.v];
+            if( stored.holds_place() || stored.through != nullptr || !stored.choices.empty() )
+            {
+                borrows[place.local.v].captures.push_back( value.a.place.local );
+            }
+        }
+    }
+
     // Bound like a `ref` binding, at and for what its first arm is.
     for( const Local_id local : func.chosen )
     {

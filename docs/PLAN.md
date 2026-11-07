@@ -1445,6 +1445,10 @@ major), which waits for the lambda decision (§12).
 - **A global's initialiser can read a later global through a call** (D80): the name is refused,
   but `i32 a = f();` with `f` reading a later `b` reads `b`'s zero, as C++ does. The write sets
   could carry what each function reads, and refuse the call.
+- **An earlier argument's address outlives a later argument's call.** `set( ref x, grow( ref v ) )`
+  with `x` bound to `v[0]` takes `&x` before `grow` runs, and `grow` may reallocate `v` under it; a
+  lambda's `ref` capture, `both( fn[ref x]( … ) …, grow( ref v ) )`, does the same. The loans pass
+  checks only named holders; an argument's temporary should hold its loan until its call.
 - **A payload enum is a struct of every variant's fields, not a union**, so it is as large as all
   its payloads together. Invisible while nothing guarantees an enum's layout; the fix is confined to
   the emitter.

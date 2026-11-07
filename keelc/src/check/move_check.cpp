@@ -291,14 +291,19 @@ void find_moves_into_borrowing_calls(
                     return ( borrow.of == moved.place.local && overlaps( func, borrows, borrow.place, moved.place ) ) ||
                            ( borrow.through != nullptr && reaches( func, borrows, borrow, moved.place ) );
                 };
-                const Borrow& borrow = borrows[borrowed.place.local.v];
+                const Borrow* found = nullptr;
+                for_each_carried(
+                    borrows,
+                    borrowed.place.local,
+                    [&]( const Borrow& loan, Local_id ) { found = found == nullptr && hit( loan ) ? &loan : found; }
+                );
 
-                if( any_choice( borrows, borrow, hit ) )
+                if( found != nullptr )
                 {
                     errors.push_back( Move_error {
                         .local    = moved.place.local,
                         .field    = slots.field( slots.of( moved.place ).node ),
-                        .use      = borrow.at,
+                        .use      = found->at,
                         .moved    = statement.span,
                         .conflict = Call_conflict::Moved_and_borrowed
                     } );
@@ -328,7 +333,9 @@ void find_aliased_arguments(
 
         const Borrow& borrow = borrows[operand.place.local.v];
 
-        return borrow.holds_place() || borrow.through != nullptr || !borrow.choices.empty() ? &borrow : nullptr;
+        return borrow.holds_place() || borrow.through != nullptr || !borrow.choices.empty() || !borrow.captures.empty()
+                   ? &borrow
+                   : nullptr;
     };
 
     for( const Statement& statement : func.statements )
@@ -347,13 +354,23 @@ void find_aliased_arguments(
         const auto at = [&]( std::size_t i, const Borrow& loan )
         { return arguments[i].span.contains( loan.at ) ? loan.at : arguments[i].span_or( loan.at ); };
 
-        // D75: each arm of a chosen argument is an argument of its own.
-        std::vector<std::pair<std::size_t, const Borrow*>> loans;
+        // D75: each arm of a chosen argument is an argument of its own; D81: a closure's captures are its argument's.
+        struct Loan
+        {
+            std::size_t   argument;
+            const Borrow* borrow;
+            Local_id      holder; // the pointer whose pointee is lent
+        };
+        std::vector<Loan> loans;
         for( std::size_t i = 0; i < arguments.size(); ++i )
         {
-            if( const Borrow* borrow = borrow_of( arguments[i] ); borrow != nullptr )
+            if( borrow_of( arguments[i] ) != nullptr )
             {
-                for_each_choice( borrows, *borrow, [&]( const Borrow& choice ) { loans.emplace_back( i, &choice ); } );
+                for_each_carried(
+                    borrows,
+                    arguments[i].place.local,
+                    [&]( const Borrow& loan, Local_id holder ) { loans.push_back( { i, &loan, holder } ); }
+                );
             }
         }
 
@@ -362,7 +379,7 @@ void find_aliased_arguments(
         {
             for( const Node_id global : call->writes )
             {
-                for( const auto [i, loan] : loans )
+                for( const auto [i, loan, holder] : loans )
                 {
                     if( borrows_from( func, borrows, *loan, Place { .global = global } ) )
                     {
@@ -381,8 +398,8 @@ void find_aliased_arguments(
         {
             for( std::size_t y = 0; y < loans.size(); ++y )
             {
-                const auto [i, a] = loans[x];
-                const auto [j, b] = loans[y];
+                const auto [i, a, a_holder] = loans[x];
+                const auto [j, b, b_holder] = loans[y];
 
                 if( i == j || ( !a->holds_place() && a->through == nullptr ) || ( !b->holds_place() && b->through == nullptr ) )
                 {
@@ -391,7 +408,7 @@ void find_aliased_arguments(
 
                 // Only an owner can be freed under the other name, so `v.grow( v.x )` is accepted.
                 if( i < j && a->holds_place() && b->holds_place() && overlaps( func, borrows, a->place, b->place ) &&
-                    owning[arguments[i].place.local.v] && owning[arguments[j].place.local.v] &&
+                    owning[a_holder.v] && owning[b_holder.v] &&
                     ( a->purpose != Address_purpose::Read || b->purpose != Address_purpose::Read ) &&
                     !( a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise ) )
                 {
@@ -934,6 +951,51 @@ TEST_CASE( "move_check_refuses_an_arm_aliasing_another_argument", "[check][move]
     );
     INFO( accepted.rendered() );
     REQUIRE( accepted.errors().empty() );
+}
+
+// D81: a closure's captures are loans of the argument it is, reported at the capture.
+TEST_CASE( "move_check_counts_a_closures_captures_as_its_loans", "[check][move][lambda]" )
+{
+    constexpr std::string_view k_calls = "class V { public i32 x; V() { x = 0; } ~V() { } };\n"
+                                         "i32 change<F>( ref V v, F f ) where F : fn( i32 ) -> i32 { return f( v.x ); }\n"
+                                         "i32 look<F>( const ref V v, F f ) where F : fn( i32 ) -> i32 { return f( v.x ); }\n"
+                                         "i32 take<F>( move V v, F f ) where F : fn( i32 ) -> i32 { return f( 0 ); }\n";
+
+    struct Refused
+    {
+        const char*   call;
+        Call_conflict conflict;
+        const char*   at;
+    };
+
+    for( const Refused& refused :
+         { Refused { "change( ref v, fn[ v ]( a ) -> i32 { return a + v.x; } );", Call_conflict::Aliased, "v" },
+           Refused { "look( v, fn[ ref v ]( a ) -> i32 { v.x = a; return a; } );", Call_conflict::Aliased, "ref v" },
+           Refused { "take( move v, fn[ v ]( a ) -> i32 { return a + v.x; } );", Call_conflict::Moved_and_borrowed, "v" } } )
+    {
+        const Checked p( std::string( k_calls ) + "i32 main() { V v = V(); " + refused.call + " return 0; }" );
+
+        INFO( refused.call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = p.all_errors();
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].conflict == refused.conflict );
+        REQUIRE( p.text_at( errors[0].use ) == refused.at );
+    }
+
+    // Two reads, and a capture of another object.
+    for( const char* call :
+         { "look( v, fn[ v ]( a ) -> i32 { return a + v.x; } );",
+           "V u = V(); change( ref u, fn[ v ]( a ) -> i32 { return a + v.x; } );" } )
+    {
+        const Checked p( std::string( k_calls ) + "i32 main() { V v = V(); " + call + " return 0; }" );
+
+        INFO( call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.all_errors().empty() );
+    }
 }
 
 TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9]" )

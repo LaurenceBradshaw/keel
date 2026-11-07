@@ -33,6 +33,7 @@ struct Borrow
     std::optional<u64>       constant {};   // the integer it always holds: assigned once from a constant, never addressed
     Local_id                 copy_of {};    // the local it copies whole: assigned once, from one never addressed
     std::vector<Local_id>    choices {};    // D75: the arms' addresses, one of which it holds
+    std::vector<Local_id>    captures {};   // D81: the addresses stored in its fields, a closure's borrows
 
     bool holds_place() const
     {
@@ -63,6 +64,21 @@ bool any_choice( const std::vector<Borrow>& borrows, const Borrow& borrow, Pred&
     bool found = false;
     for_each_choice( borrows, borrow, [&]( const Borrow& choice ) { found = found || pred( choice ); } );
     return found;
+}
+
+// Each loan the pointer `local` carries, with the pointer holding it: its own, and when it is or borrows
+// a closure, its captures'.
+template <class Fn>
+void for_each_carried( const std::vector<Borrow>& borrows, Local_id local, Fn&& fn )
+{
+    const Borrow& borrow = borrows[local.v];
+    for_each_choice( borrows, borrow, [&]( const Borrow& loan ) { fn( loan, local ); } );
+
+    const Borrow& closure = borrow.of.is_valid() && borrow.place.num_projections == 0 ? borrows[borrow.of.v] : borrow;
+    for( const Local_id capture : closure.captures )
+    {
+        for_each_choice( borrows, borrows[capture.v], [&]( const Borrow& loan ) { fn( loan, capture ); } );
+    }
 }
 
 // One per local, indexed by Local_id.
