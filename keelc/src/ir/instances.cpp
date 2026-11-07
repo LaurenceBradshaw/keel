@@ -128,6 +128,35 @@ block_arguments( const Ast& ast, const Types& types, const Conformance& conforma
     return arguments;
 }
 
+Thunk thunk_for( const Ast& ast, Types& types, Type_id implementer, Type_id interface, Node_id requirement, Node_id method )
+{
+    Type_table& table   = types.table();
+    const auto& written = table.get( implementer ).arguments;
+    Thunk       thunk { { written.begin(), written.end() }, {} };
+    Bindings    method_bindings = table.instance_bindings( implementer );
+
+    // A block's methods take the block's arguments, which `Pair<A, A>` or `Wrap<i32>` do not share with the type.
+    if( const Conformance* conformance = types.conformances().of( table, implementer, interface );
+        conformance != nullptr && conformance->block )
+    {
+        thunk.type_arguments = *block_arguments( ast, types, *conformance, implementer );
+        method_bindings      = *types.conformances().bindings_at( table, *conformance, implementer );
+    }
+
+    const Bindings interface_bindings = table.instance_bindings( interface );
+    const auto     asked              = ast.explicit_params( requirement );
+    const auto     taken              = ast.explicit_params( method );
+
+    for( std::size_t p = 0; p < asked.size(); ++p )
+    {
+        const Type_id type = table.substitute( binding_type( ast, types, asked[p] ), interface_bindings );
+        const Type_id held = table.substitute( binding_type( ast, types, taken[p] ), method_bindings );
+        thunk.copied.push_back( table.is_pointer( type ) && !table.is_pointer( held ) );
+    }
+
+    return thunk;
+}
+
 Instance_queue::Instance_queue( const Ast& ast, Types& types )
     : ast_( ast ),
       types_( types )

@@ -1,0 +1,125 @@
+// opt/devirtualised_thunks.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__tally;
+struct kl__Wrap__I3i32E;
+
+struct kl__Named__vtable;
+struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
+struct kl__sink__I3i64E__vtable;
+struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable* vtable; };
+
+struct kl__tally
+{
+    int64_t kl_sum_;
+};
+
+struct kl__Wrap__I3i32E
+{
+    int32_t kl_v;
+};
+
+struct kl__Named__vtable
+{
+    void ( *drop )( void* );
+    int32_t ( *kl__code__ )( void* );
+};
+
+struct kl__sink__I3i64E__vtable
+{
+    void ( *drop )( void* );
+    void ( *kl__put__1T )( void*, int64_t* );
+};
+
+void kl__tally__R5tally__ctor( struct kl__tally* );
+void kl__put__S5tally_3i64( struct kl__tally*, int64_t );
+int64_t kl__sum__S5tally( struct kl__tally* );
+void kl__feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref, int64_t );
+int32_t kl__code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* );
+int32_t kl__through__PK5Named( struct kl__Named__ref );
+int32_t kl__main__( void );
+
+#line 11 "opt/devirtualised_thunks.kl"
+void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
+{
+#line 11 "opt/devirtualised_thunks.kl"
+    ( *kl_this_1 ).kl_sum_ = 0;
+#line 11 "opt/devirtualised_thunks.kl"
+    return;
+#line 11 "opt/devirtualised_thunks.kl"
+}
+
+#line 12 "opt/devirtualised_thunks.kl"
+void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
+{
+#line 12 "opt/devirtualised_thunks.kl"
+    ( *kl_this_1 ).kl_sum_ = ( *kl_this_1 ).kl_sum_ + kl_value_2;
+#line 12 "opt/devirtualised_thunks.kl"
+    return;
+#line 12 "opt/devirtualised_thunks.kl"
+}
+
+#line 13 "opt/devirtualised_thunks.kl"
+int64_t kl__sum__S5tally( struct kl__tally* kl_this_1 )
+{
+    int64_t kl_t0;
+#line 13 "opt/devirtualised_thunks.kl"
+    kl_t0 = ( *kl_this_1 ).kl_sum_;
+#line 13 "opt/devirtualised_thunks.kl"
+    return kl_t0;
+#line 13 "opt/devirtualised_thunks.kl"
+}
+
+#line 16 "opt/devirtualised_thunks.kl"
+void kl__feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref kl_s_1, int64_t kl_v_2 )
+{
+    int64_t* kl_t3;
+#line 16 "opt/devirtualised_thunks.kl"
+    kl_t3 = &kl_v_2;
+#line 16 "opt/devirtualised_thunks.kl"
+    kl_s_1.vtable->kl__put__1T( kl_s_1.self, kl_t3 );
+#line 16 "opt/devirtualised_thunks.kl"
+    return;
+#line 16 "opt/devirtualised_thunks.kl"
+}
+
+#line 30 "opt/devirtualised_thunks.kl"
+int32_t kl__code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 30 "opt/devirtualised_thunks.kl"
+    kl_t0 = ( *kl_this_1 ).kl_v + 2;
+#line 30 "opt/devirtualised_thunks.kl"
+    return kl_t0;
+#line 30 "opt/devirtualised_thunks.kl"
+}
+
+#line 33 "opt/devirtualised_thunks.kl"
+int32_t kl__through__PK5Named( struct kl__Named__ref kl_n_1 )
+{
+    int32_t kl_t0;
+#line 33 "opt/devirtualised_thunks.kl"
+    kl_t0 = kl_n_1.vtable->kl__code__( kl_n_1.self );
+#line 33 "opt/devirtualised_thunks.kl"
+    return kl_t0;
+#line 33 "opt/devirtualised_thunks.kl"
+}
+
+#line 35 "opt/devirtualised_thunks.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+#line 42 "opt/devirtualised_thunks.kl"
+    kl_t0 = 0;
+#line 42 "opt/devirtualised_thunks.kl"
+    return kl_t0;
+}
+
+#line 35 "opt/devirtualised_thunks.kl"
+int main( void )
+{
+#line 35 "opt/devirtualised_thunks.kl"
+    return (int) kl__main__();
+}

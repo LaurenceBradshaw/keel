@@ -1,0 +1,43 @@
+// A devirtualised call follows the vtable thunk: a bare `T` borrowed is passed by value to a method
+// taking it so, and a block's method takes the block's arguments, not the type's.
+interface sink<T>
+{
+    void put( T value );
+};
+
+class tally implements sink<i64>
+{
+    i64 sum_;
+    public tally() { sum_ = 0; }
+    public void put( i64 value ) { sum_ += value; }
+    public i64 sum() const { return sum_; }
+};
+
+void feed( ref sink<i64> s, i64 v ) { s.put( v ); }
+
+interface Named
+{
+    i32 code() const;
+};
+
+struct Wrap<T> where T : copyable
+{
+    T v;
+};
+
+implements Named for Wrap<i32>
+{
+    i32 code() const { return this.v + 2; }
+};
+
+i32 through( const Named* n ) { return n.code(); }
+
+i32 main()
+{
+    tally t = tally();
+    feed( ref t, 4 );
+    if( t.sum() != 4 ) { return 1; }
+    Wrap<i32> w = Wrap<i32> { 5 };
+    if( through( &w ) != 7 ) { return 2; }
+    return 0;
+}

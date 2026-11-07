@@ -50,6 +50,16 @@ private:
 std::optional<std::vector<Type_id>>
 block_arguments( const Ast& ast, const Types& types, const Conformance& conformance, Type_id type );
 
+// How an interface slot calls the implementer's method: a generic block's own arguments, and per
+// explicit parameter whether it dereferences, where a bare `T` borrows and the method takes it by value.
+struct Thunk
+{
+    std::vector<Type_id> type_arguments;
+    std::vector<bool>    copied;
+};
+
+Thunk thunk_for( const Ast& ast, Types& types, Type_id implementer, Type_id interface, Node_id requirement, Node_id method );
+
 // The instance's type arguments bound to its declaration's parameters, positionally.
 Bindings bindings_for( const Ast& ast, const Types& types, const Instantiation& instance );
 

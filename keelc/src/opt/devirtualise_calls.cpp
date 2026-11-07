@@ -6,6 +6,7 @@
 #include <optional>
 #include <span>
 #include <utility>
+#include "ir/instances.h"
 #include "ir/place_type.h"
 
 namespace keel
@@ -197,25 +198,36 @@ bool devirtualise_calls( Function& func, const Ast& ast, Types& types )
         }
 
         // A copied pointer keeps its own type, so the copy forwards; C takes it where `const` is asked.
-        const Type_id              pointer   = origin->made.kind == Rvalue_kind::Use
-                                                   ? origin->made.type
-                                                   : table.pointer_to( origin->type, table.get( held ).const_element );
-        const std::vector<Type_id> arguments = [&]
-        {
-            const auto& written = table.get( origin->type ).arguments;
-            return std::vector<Type_id>( written.begin(), written.end() );
-        }();
+        const Type_id pointer = origin->made.kind == Rvalue_kind::Use
+                                    ? origin->made.type
+                                    : table.pointer_to( origin->type, table.get( held ).const_element );
 
         Rvalue& made                     = func.rvalue( *only[p] );
         made                             = origin->made;
         made.type                        = pointer;
         func.locals[Local_id { p }].type = pointer;
 
+        // As the vtable's thunk would: `copy (*q)` where a bare `T` borrows and the
+        // method takes it by value.
         for( u32 i = 0; i < calls[p].size(); ++i )
         {
+            const Node_id requirement = func.rvalue( *calls[p][i] ).callee;
+            Thunk         called      = thunk_for( ast, types, origin->type, interface, requirement, methods[i] );
+
+            for( u32 a = 1; a < func.rvalue( *calls[p][i] ).arguments.size(); ++a )
+            {
+                const Operand argument = func.rvalue( *calls[p][i] ).arguments[a];
+                if( called.copied[a - 1] && !table.is_run_pointer( argument.type ) )
+                {
+                    const Type_id pointee = table.get( argument.type ).element;
+                    const Place   place   = projected( func, argument.place, Projection { .kind = Projection_kind::Deref } );
+                    func.rvalue( *calls[p][i] ).arguments[a] = copy( place, pointee );
+                }
+            }
+
             Rvalue& value           = func.rvalue( *calls[p][i] );
             value.callee            = methods[i];
-            value.type_arguments    = arguments;
+            value.type_arguments    = std::move( called.type_arguments );
             value.arguments[0].type = pointer;
         }
 
@@ -248,7 +260,10 @@ std::vector<std::vector<u32>> dispatch_edges( const std::vector<Function>& funct
                 continue;
             }
 
-            const auto& arguments = types.table().get( implementer ).arguments;
+            const auto&                written   = types.table().get( implementer ).arguments;
+            const std::vector<Type_id> arguments = conformance->block
+                                                       ? *block_arguments( ast, types, *conformance, implementer )
+                                                       : std::vector<Type_id>( written.begin(), written.end() );
             for( u32 c = 0; c < functions.size(); ++c )
             {
                 const bool answers =

@@ -756,17 +756,6 @@ void Kir_emitter::emit_vtables()
 {
     for( const Vtable& vtable : vtables_ )
     {
-        // A block's methods take the block's arguments, which `Pair<A, A>` or `Wrap<i32>` do not share with the type.
-        std::vector<Type_id> type_arguments(
-            types_.table().get( vtable.implementer ).arguments.begin(), types_.table().get( vtable.implementer ).arguments.end()
-        );
-        Bindings           method_bindings = types_.table().instance_bindings( vtable.implementer );
-        const Conformance* conformance     = types_.conformances().of( types_.table(), vtable.implementer, vtable.interface );
-        if( conformance != nullptr && conformance->block )
-        {
-            type_arguments  = *block_arguments( ast_, types_, *conformance, vtable.implementer );
-            method_bindings = *types_.conformances().bindings_at( types_.table(), *conformance, vtable.implementer );
-        }
         const std::string self_type = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
 
         std::vector<std::string> slots;
@@ -799,6 +788,8 @@ void Kir_emitter::emit_vtables()
         {
             const Node_id requirement = vtable.requirements[i];
             const Type_id returned    = at_instance( requirement );
+            const Thunk   called =
+                thunk_for( ast_, types_, vtable.implementer, vtable.interface, requirement, vtable.methods[i] );
 
             std::string parameters = "void* self";
             std::string arguments  = fmt::format( "( {} ) self", self_type );
@@ -809,17 +800,11 @@ void Kir_emitter::emit_vtables()
 
                 if( !is_void( type ) )
                 {
-                    // A bare `T` borrows, where the implementer may take its `copyable` argument by value.
-                    const Type_id taken = types_.table().substitute(
-                        binding_type( ast_, types_, ast_.explicit_params( vtable.methods[i] )[p] ), method_bindings
-                    );
-                    const bool copied = types_.table().is_pointer( type ) && !types_.table().is_pointer( taken );
-
                     // A run's two halves go straight on, never rebuilt.
                     const std::string name = fmt::format( "p{}", p );
                     parameters += fmt::format( ", {}", spelling_.parameter( type, name ) );
                     arguments += types_.table().is_run_pointer( type ) ? fmt::format( ", {0}_data, {0}_size", name )
-                                 : copied                              ? fmt::format( ", *{}", name )
+                                 : called.copied[p]                    ? fmt::format( ", *{}", name )
                                                                        : fmt::format( ", {}", name );
                 }
             }
@@ -832,7 +817,7 @@ void Kir_emitter::emit_vtables()
             write_line( fmt::format(
                 "{}{}( {} );",
                 is_void( returned ) ? "" : "return ",
-                spelling_.function( vtable.methods[i], type_arguments ),
+                spelling_.function( vtable.methods[i], called.type_arguments ),
                 arguments
             ) );
             indent_ -= 4;
