@@ -257,6 +257,11 @@ void name_declarations(
     const Interner&          interner
 );
 
+// Each closure's module, which with its site names it in C.
+void name_closures(
+    Type_table& table, const Ast& ast, const Module_graph& modules, const Source_manager& sm, const Interner& interner
+);
+
 // A mode's two spellings: a `Param_mode` in a type, and the `Keyword` a call site writes. Bare and `const ref` share the
 // empty marker, since after either the caller's variable is unchanged (D31), but stay two modes, so neither maps back.
 Param_mode parameter_mode_of( const Ast& ast, Node_id param );

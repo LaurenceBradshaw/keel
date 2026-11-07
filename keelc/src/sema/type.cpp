@@ -371,7 +371,9 @@ Type_id Type_table::structure( Node_id declaration, std::span<const Type_id> arg
     return composite( Type_kind::Struct, declaration, arguments, name, Type_id {} );
 }
 
-Type_id Type_table::closure( Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name )
+Type_id Type_table::closure(
+    Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name, u64 site
+)
 {
     std::vector<Instance>& instances = closures_[declaration.v];
 
@@ -392,6 +394,7 @@ Type_id Type_table::closure( Node_id declaration, Type_id signature, std::span<c
     described.element     = signature;
     described.declaration = declaration;
     described.arguments   = owned;
+    described.count       = site;
 
     const Type_id id = add( described, name );
     instances.push_back( Instance { owned, id } );
@@ -604,7 +607,9 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             substituted.push_back( substitute( argument, bindings ) );
         }
 
-        return closure( described.declaration, substitute( described.element, bindings ), substituted, name( type ) );
+        return closure(
+            described.declaration, substitute( described.element, bindings ), substituted, name( type ), described.count
+        );
     }
     default:
         return type;
@@ -978,6 +983,23 @@ std::vector<Type_id> Type_table::interface_types() const
             {
                 result.push_back( instance.type );
             }
+        }
+    }
+
+    std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+
+    return result;
+}
+
+std::vector<Type_id> Type_table::closure_types() const
+{
+    std::vector<Type_id> result;
+
+    for( const auto& [declaration, instances] : closures_ )
+    {
+        for( const Instance& instance : instances )
+        {
+            result.push_back( instance.type );
         }
     }
 
@@ -1468,6 +1490,12 @@ std::string_view Type_table::package( Type_id id ) const
 void Type_table::set_module( Node_id declaration, std::string module )
 {
     modules_[declaration.v] = std::move( module );
+}
+
+std::string_view Type_table::module( Type_id id ) const
+{
+    const auto it = modules_.find( get( id ).declaration.v );
+    return it == modules_.end() ? std::string_view {} : it->second;
 }
 
 std::string Type_table::stable_name( Type_id id ) const
@@ -3690,12 +3718,12 @@ TEST_CASE( "type_table_interns_a_closure", "[sema][type][lambda]" )
     const Parameter takes[] { { t, Param_mode::Value } };
     const Type_id   open = table.function( table.builtin( Type_kind::Bool ), takes );
     const Type_id   args[] { t };
-    const Type_id   lambda = table.closure( Node_id { 7 }, open, args, "fn[] at 2:9" );
+    const Type_id   lambda = table.closure( Node_id { 7 }, open, args, "fn[] at 2:9", 20 );
 
     SECTION( "one per declaration and arguments" )
     {
-        REQUIRE( table.closure( Node_id { 7 }, open, args, "fn[] at 2:9" ) == lambda );
-        REQUIRE( table.closure( Node_id { 8 }, open, args, "fn[] at 3:9" ) != lambda );
+        REQUIRE( table.closure( Node_id { 7 }, open, args, "fn[] at 2:9", 20 ) == lambda );
+        REQUIRE( table.closure( Node_id { 8 }, open, args, "fn[] at 3:9", 30 ) != lambda );
         REQUIRE( table.is_closure( lambda ) );
         REQUIRE( table.name( lambda ) == "fn[] at 2:9" );
     }
@@ -3715,7 +3743,7 @@ TEST_CASE( "type_table_interns_a_closure", "[sema][type][lambda]" )
     {
         Bindings      bindings;
         const Type_id closed = table.substitute( lambda, { { t.v, i32 } } );
-        const Type_id other  = table.closure( Node_id { 8 }, table.get( closed ).element, {}, "fn[] at 3:9" );
+        const Type_id other  = table.closure( Node_id { 8 }, table.get( closed ).element, {}, "fn[] at 3:9", 30 );
 
         REQUIRE_FALSE( table.deduce( lambda, other, bindings ) );
         REQUIRE( table.deduce( lambda, closed, bindings ) );

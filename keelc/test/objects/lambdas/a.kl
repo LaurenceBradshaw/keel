@@ -1,0 +1,16 @@
+// Lambdas in a module: a generic taking one, a function passing one, a generic whose body holds one.
+i32 apply<F>( F f, i32 x ) where F : fn( i32 ) -> i32
+{
+    return f( x );
+}
+
+i32 add_to( i32 k, i32 x )
+{
+    return apply( fn[ k ]( y ) -> i32 { return y + k; }, x );
+}
+
+T same<T>( T x ) where T : copyable
+{
+    fn( T ) -> T id = fn[]( T y ) -> T { return y; };
+    return id( x );
+}

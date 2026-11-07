@@ -24,6 +24,20 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const N
 namespace
 {
 
+// An aggregate's fields, or a closure's captures.
+std::vector<Node_id> held_fields( const Ast& ast, const Type_table& table, Type_id type )
+{
+    const Node_id declaration = table.get( type ).declaration;
+
+    if( table.is_closure( type ) )
+    {
+        const std::span<const Node_id> captures = ast.captures( declaration );
+        return { captures.begin(), captures.end() };
+    }
+
+    return ast.contained_fields( declaration );
+}
+
 bool needs( const Needed& needed, Type_id type )
 {
     return !needed || needed->contains( type.v );
@@ -597,8 +611,6 @@ void Kir_emitter::emit_composites()
 
     for( const Type_id type : struct_order_ )
     {
-        const Node_id declaration = types_.table().get( type ).declaration;
-
         write_line( spelling_.structure( type ) );
         write_line( "{" );
         indent_ += 4;
@@ -645,14 +657,12 @@ void Kir_emitter::emit_composites()
             write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( type ).element ) ) );
         }
 
-        for( const Node_id field : ast_.contained_fields( declaration ) )
+        for( const Node_id field : held_fields( ast_, types_.table(), type ) )
         {
             // The field's type through *this* instance: what the declaration says is `T`, which is
             // true of the template and has no C spelling. Every instance was interned while the
             // order was built, so nothing new is named here.
-            const Type_id spelled = types_.table().substitute(
-                types_.type_of( field ), aggregate_bindings( ast_, types_.table(), type, types_.recorded() )
-            );
+            const Type_id spelled = field_type( ast_, types_.table(), type, field, types_.recorded() );
 
             if( is_void( spelled ) )
             {
@@ -1969,9 +1979,10 @@ Needed Kir_emitter::needed_types() const
         stack.push_back( described.element );
         stack.insert( stack.end(), described.arguments.begin(), described.arguments.end() );
 
-        if( table.is_struct( type ) || ( table.is_enum( type ) && ast_.enum_has_payload( described.declaration ) ) )
+        if( table.is_struct( type ) || table.is_closure( type ) ||
+            ( table.is_enum( type ) && ast_.enum_has_payload( described.declaration ) ) )
         {
-            for( const Node_id field : ast_.contained_fields( described.declaration ) )
+            for( const Node_id field : held_fields( ast_, table, type ) )
             {
                 stack.push_back( field_type( ast_, table, type, field, types_.recorded() ) );
             }
@@ -2126,6 +2137,8 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
         return "NULL";
     case Type_kind::Many_pointer:
         return "NULL";
+    case Type_kind::Closure: // one of no captures
+        return "0";
     case Type_kind::Float:
         return c_float(
             types_.table().get( type ).width == 32 ? literal_pool_.narrow( literal ) : literal_pool_.floating( literal )
@@ -2477,7 +2490,8 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const N
         // checked first because enum_has_payload asserts on anything but an Enum_decl.
         const bool writes_a_struct =
             types.table().is_struct( type ) || types.table().is_union( type ) || types.table().is_array( type ) ||
-            ( types.table().is_enum( type ) && ast.enum_has_payload( types.table().get( type ).declaration ) );
+            ( types.table().is_enum( type ) && ast.enum_has_payload( types.table().get( type ).declaration ) ) ||
+            ( types.table().is_closure( type ) && !ast.captures( types.table().get( type ).declaration ).empty() );
 
         if( !writes_a_struct )
         {
@@ -2510,7 +2524,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const N
         }
         else
         {
-            for( const Node_id member : ast.contained_fields( types.table().get( type ).declaration ) )
+            for( const Node_id member : held_fields( ast, types.table(), type ) )
             {
                 self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
             }
@@ -2527,7 +2541,8 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const N
         visit( visit, types.table().composite_types()[at] );
     }
 
-    for( const auto& types_of_kind : { types.table().union_types(), types.table().array_types() } )
+    for( const auto& types_of_kind :
+         { types.table().union_types(), types.table().array_types(), types.table().closure_types() } )
     {
         for( const Type_id type : types_of_kind )
         {

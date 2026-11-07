@@ -1689,7 +1689,8 @@ bool Expressions::bind_fn_parameters(
                     argument,
                     shape.type,
                     open_parameters(),
-                    fmt::format( "{} at {}", reporter_.text( span ), reporter_.line_col( span ) )
+                    fmt::format( "{} at {}", reporter_.text( span ), reporter_.line_col( span ) ),
+                    span.start
                 )
             );
         }
@@ -4421,7 +4422,11 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
         return types_.record(
             id,
             table_.closure(
-                id, signature, open_parameters(), fmt::format( "fn[…] at {}", reporter_.line_col( ast_.span( id ) ) )
+                id,
+                signature,
+                open_parameters(),
+                fmt::format( "fn[…] at {}", reporter_.line_col( ast_.span( id ) ) ),
+                ast_.span( id ).start
             )
         );
     }

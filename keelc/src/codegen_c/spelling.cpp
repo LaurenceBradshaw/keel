@@ -91,6 +91,10 @@ std::string Spelling::type( Type_id type ) const
     case Type_kind::Array:
         return structure( type );
 
+    // A closure of nothing is the constant 0 in a byte.
+    case Type_kind::Closure:
+        return ast.captures( described.declaration ).empty() ? "uint8_t" : structure( type );
+
     case Type_kind::Pointer:
         if( types.table().is_interface( described.element ) )
         {
@@ -136,6 +140,11 @@ std::string Spelling::structure( Type_id type ) const
     if( types.table().is_array( type ) )
     {
         return fmt::format( "struct {}", mangle_array( type, types.table() ) );
+    }
+
+    if( types.table().is_closure( type ) )
+    {
+        return fmt::format( "struct {}", mangle_closure( type, types.table() ) );
     }
 
     return fmt::format( "struct {}", mangle_struct( owner( types.table().get( type ).declaration ), type, types.table() ) );
@@ -253,6 +262,15 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.is_extern( declaration ) )
     {
         return std::string( interner.text( ast.name( declaration ) ) );
+    }
+
+    // A lambda is named by its site, and its instance by the enclosing function's bindings; a
+    // name starting with a digit is one no declaration has.
+    if( ast.kind( declaration ) == Node_kind::Lambda_expr )
+    {
+        return mangle_function(
+            owner( declaration ), fmt::format( "0lambda{}", ast.span( declaration ).start ), {}, types.table(), type_arguments
+        );
     }
 
     // A destructor's aux is the type's own name, and an instantiation is told apart by its type

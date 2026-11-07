@@ -141,7 +141,9 @@ public:
     Type_id structure( Node_id declaration, std::span<const Type_id> arguments, std::string_view name );
 
     // Interned by declaration and arguments. `name` is the caller's (`fn[] at 3:5`); arguments are not shown.
-    Type_id closure( Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name );
+    // `site` is the declaration's offset in its file, which with its module names it in C (`count`).
+    Type_id
+    closure( Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name, u64 site );
 
     // A type parameter, before any instantiation substitutes it away. Keyed by its Type_param_decl,
     // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
@@ -185,6 +187,7 @@ public:
     std::vector<Type_id> interface_types() const; // in interning order; no open form, which has no vtable
     std::vector<Type_id> run_types() const;       // in interning order
     std::vector<Type_id> array_types() const;     // in interning order
+    std::vector<Type_id> closure_types() const;   // in interning order
     // Every function type interned, in interning order. Separate from composite_types because the
     // one consumer of that list wants types that become a C struct, and a function type becomes a
     // typedef instead.
@@ -248,6 +251,7 @@ public:
     void             set_package( Node_id declaration, std::string_view package, bool shown = true );
     std::string_view package( Type_id id ) const;
     void             set_module( Node_id declaration, std::string module ); // `kl::ring`, for stable_name
+    std::string_view module( Type_id id ) const;                            // empty when not set
 
     // The name a type has in every compile: name() with each declared type's module before it.
     std::string stable_name( Type_id id ) const;

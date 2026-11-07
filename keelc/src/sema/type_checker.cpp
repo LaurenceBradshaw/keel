@@ -182,6 +182,7 @@ Types Checker::run()
     statements_.visit( ast_.root() );
     statements_.check_walk_cycles();
     statements_.check_walk_returns();
+    name_closures( table_, ast_, resolution_.modules(), sm_, interner_ );
 
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
     // complete until every body has been.
@@ -282,6 +283,17 @@ void name_declarations(
         {
             table.set_module( decl, module_name( modules, sm, interner, ast.span( decl ).file ) );
         }
+    }
+}
+
+void name_closures(
+    Type_table& table, const Ast& ast, const Module_graph& modules, const Source_manager& sm, const Interner& interner
+)
+{
+    for( const Type_id closure : table.closure_types() )
+    {
+        const Node_id declaration = table.get( closure ).declaration;
+        table.set_module( declaration, module_name( modules, sm, interner, ast.span( declaration ).file ) );
     }
 }
 

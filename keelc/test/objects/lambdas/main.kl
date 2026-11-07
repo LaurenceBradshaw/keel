@@ -1,0 +1,16 @@
+// a.klo holds apply at its own lambda; the program's sits at the same offset in its file, so only
+// the module tells the two instances apart, in its name and symbol
+import a;
+
+i32 main()
+{
+    i32 m = 100;
+    i32 r = apply( fn[ m ]( y ) -> i32 { return y * m; }, 3 );
+
+    if( add_to( 1, 2 ) != 3 ) { return 1; }
+    if( r != 300 ) { return 2; }
+    if( same<i32>( 7 ) != 7 ) { return 3; }
+    if( same<bool>( true ) != true ) { return 4; }
+
+    return 0;
+}

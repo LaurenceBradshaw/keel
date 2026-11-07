@@ -157,6 +157,35 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // A lambda's or `&f`'s closure is `Z<module>_<site>_`, the module's parts length-prefixed,
+    // then its arguments as an aggregate's.
+    if( types.is_closure( id ) )
+    {
+        out += 'Z';
+        std::string_view module = types.module( id );
+        while( !module.empty() )
+        {
+            const std::size_t      end  = module.find( "::" );
+            const std::string_view part = module.substr( 0, end );
+            out += fmt::format( "{}{}", part.size(), part );
+            module = end == std::string_view::npos ? std::string_view {} : module.substr( end + 2 );
+        }
+        out += fmt::format( "_{}_", types.get( id ).count );
+
+        const std::span<const Type_id> arguments = types.get( id ).arguments;
+        if( !arguments.empty() )
+        {
+            out += 'I';
+            for( std::size_t i = 0; i < arguments.size(); ++i )
+            {
+                out += i == 0 ? "" : "_";
+                encode_type( out, arguments[i], types );
+            }
+            out += 'E';
+        }
+        return;
+    }
+
     // `A | B` is `U1A1BE`: the members in their sorted order, so `B | A` is the same.
     if( types.is_union( id ) )
     {
@@ -316,6 +345,15 @@ std::string mangle_struct( const Mangled_owner& owner, Type_id type, const Type_
 }
 
 std::string mangle_union( Type_id type, const Type_table& types )
+{
+    std::string encoded;
+
+    encode_type( encoded, type, types );
+
+    return fmt::format( "kl__{}", encoded );
+}
+
+std::string mangle_closure( Type_id type, const Type_table& types )
 {
     std::string encoded;
 
@@ -907,6 +945,23 @@ TEST_CASE( "mangle_global_names_each_instantiation", "[codegen][mangle][static]"
     {
         REQUIRE( mangle_global( {}, "f", {}, table ) != mangle_function( {}, "f", {}, table ) );
     }
+}
+
+// A closure is its module and its offset there, so two modules' lambdas at one offset stay apart.
+TEST_CASE( "mangle_closure_names_its_module_and_site", "[codegen][mangle][lambda]" )
+{
+    Type_table table;
+
+    const Type_id i32       = table.integer( 32, true );
+    const Type_id signature = table.function( i32, {} );
+    const Type_id ring      = table.closure( Node_id { 7 }, signature, std::array { i32 }, "fn[…] at 2:9", 42 );
+    const Type_id main      = table.closure( Node_id { 8 }, signature, {}, "fn[…] at 2:9", 42 );
+    table.set_module( Node_id { 7 }, "kl::ring" );
+    table.set_module( Node_id { 8 }, "main" );
+
+    REQUIRE( mangle_closure( ring, table ) == "kl__Z2kl4ring_42_I3i32E" );
+    REQUIRE( mangle_closure( main, table ) == "kl__Z4main_42_" );
+    REQUIRE( mangle_function( {}, "run", {}, table, std::array { main } ) == "kl__run__IZ4main_42_E__" );
 }
 
 TEST_CASE( "mangle_field_is_its_name", "[codegen][mangle]" )

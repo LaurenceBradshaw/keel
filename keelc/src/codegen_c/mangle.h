@@ -69,6 +69,8 @@ std::string mangle_function(
 std::string mangle_struct( const Mangled_owner& owner, Type_id type, const Type_table& types );
 // `kl__U<members>E`: no package declares a union, and its members name one each.
 std::string mangle_union( Type_id type, const Type_table& types );
+// `kl__Z<module>_<site>_`, the struct a capturing closure is.
+std::string mangle_closure( Type_id type, const Type_table& types );
 // `kl__fn__F<params>E<return>`, the name of the C typedef a function type is spelled
 // through. A typedef because a C function-pointer type is a declarator, with the name inside it,
 // and every caller of Spelling::type writes the type and then the name.

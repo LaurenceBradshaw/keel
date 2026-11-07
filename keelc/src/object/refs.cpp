@@ -195,7 +195,15 @@ u32 Ref_writer::type_index( Type_id id )
         }
         break;
     case Type_kind::Closure:
-        assert( false && "a closure type is not written to an object yet" );
+        node( entry, described.declaration );
+        type( entry, described.element );
+        entry.put_u32( narrow_cast<u32>( described.arguments.size() ) );
+        for( const Type_id argument : described.arguments )
+        {
+            type( entry, argument );
+        }
+        entry.put_string( table_.name( id ) );
+        entry.put_u64( described.count );
         break;
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -489,6 +497,23 @@ void Ref_reader::read_types()
             id                          = kind == Type_kind::Struct ? table_.structure( decl, args, name )
                                           : kind == Type_kind::Enum ? table_.enumeration( decl, args, name, underlying )
                                                                     : table_.interface( decl, args, name );
+            break;
+        }
+        case Type_kind::Closure:
+        {
+            const Node_id              decl      = declaration();
+            const Type_id              signature = type();
+            const std::vector<Type_id> args      = list();
+            const std::string          name( in_.get_string() );
+            const u64                  site = in_.get_u64();
+            if( !failed() && signature.is_valid() )
+            {
+                id = table_.closure( decl, signature, args, name, site );
+            }
+            else
+            {
+                fail();
+            }
             break;
         }
         case Type_kind::Parameter:

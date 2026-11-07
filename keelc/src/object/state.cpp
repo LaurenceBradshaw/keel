@@ -418,6 +418,7 @@ std::optional<Loaded_state> read_state(
 
     name_declarations( table, ast, loaded.declarations, program.modules, sm, interner );
     refs.read_types();
+    name_closures( table, ast, program.modules, sm, interner );
 
     read_table( in, refs, [&]( Node_id id ) { loaded.bindings.emplace_back( id, refs.node() ); } );
     read_table( in, refs, [&]( Node_id id ) { loaded.overloads.emplace_back( id, refs.node() ); } );
