@@ -1,0 +1,23 @@
+// opt/mixed_sign_compare.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+
+#line 2 "opt/mixed_sign_compare.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+#line 10 "opt/mixed_sign_compare.kl"
+    kl_t0 = 0;
+#line 10 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+}
+
+#line 2 "opt/mixed_sign_compare.kl"
+int main( void )
+{
+#line 2 "opt/mixed_sign_compare.kl"
+    return (int) kl__main__();
+}

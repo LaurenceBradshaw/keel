@@ -1,0 +1,11 @@
+// A comparison of a u64 with an i64 folds by value: `-1` is below `1u`, and `0u <= -1` is false.
+i32 main()
+{
+    i32 small = 0 - 1;
+    u64 big   = 1;
+    if( ( big <=> small ) != ordering::greater ) { return 2; }
+    u64 zero = 0;
+    i64 minus = 0 - 1;
+    if( zero <= minus ) { return 3; }
+    return 0;
+}

@@ -103,55 +103,39 @@ std::optional<u64> arithmetic( Token_kind op, u64 a, u64 b, Integer type )
     }
 }
 
-std::optional<bool> comparison( Token_kind op, u64 a, u64 b, Integer type )
+__extension__ typedef __int128 Wide;
+
+// The number `bits` names, read as `type`.
+Wide number( u64 bits, Integer type )
 {
+    return type.is_signed ? Wide( as_signed( bits, type.width ) ) : Wide( truncate( bits, type.width ) );
+}
+
+// By value, so operands of different signedness compare as the emitted guard does.
+std::optional<bool> comparison( Token_kind op, u64 a, u64 b, Integer a_type, Integer b_type )
+{
+    const Wide x = number( a, a_type );
+    const Wide y = number( b, b_type );
+
     switch( op )
     {
     case Token_kind::Equal_equal:
-        return a == b;
+        return x == y;
 
     case Token_kind::Bang_equal:
-        return a != b;
+        return x != y;
 
     case Token_kind::Less:
-        if( type.is_signed )
-        {
-            return as_signed( a, type.width ) < as_signed( b, type.width );
-        }
-        else
-        {
-            return a < b;
-        }
+        return x < y;
 
     case Token_kind::Greater:
-        if( type.is_signed )
-        {
-            return as_signed( a, type.width ) > as_signed( b, type.width );
-        }
-        else
-        {
-            return a > b;
-        }
+        return x > y;
 
     case Token_kind::Less_equal:
-        if( type.is_signed )
-        {
-            return as_signed( a, type.width ) <= as_signed( b, type.width );
-        }
-        else
-        {
-            return a <= b;
-        }
+        return x <= y;
 
     case Token_kind::Greater_equal:
-        if( type.is_signed )
-        {
-            return as_signed( a, type.width ) >= as_signed( b, type.width );
-        }
-        else
-        {
-            return a >= b;
-        }
+        return x >= y;
 
     default:
         return std::nullopt;
@@ -161,7 +145,7 @@ std::optional<bool> comparison( Token_kind op, u64 a, u64 b, Integer type )
 std::optional<bool> against_zero( const Rvalue& value, std::optional<u64> a, std::optional<u64> b, const Type_table& types )
 {
     const std::optional<Integer> integer = integer_type( types, value.a.type );
-    if( value.kind != Rvalue_kind::Binary || !integer || integer->is_signed )
+    if( value.kind != Rvalue_kind::Binary || !integer || integer->is_signed || value.a.type != value.b.type )
     {
         return std::nullopt;
     }
@@ -261,7 +245,8 @@ std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::opt
             return overflows( value.op, *a, *b, *integer ) ? 1 : 0;
         }
 
-        if( const std::optional<bool> result = comparison( value.op, *a, *b, *integer ) )
+        const std::optional<Integer> b_integer = integer_type( types, value.b.type );
+        if( const std::optional<bool> result = comparison( value.op, *a, *b, *integer, b_integer.value_or( *integer ) ) )
         {
             return *result ? 1 : 0;
         }
@@ -513,6 +498,24 @@ TEST_CASE( "fold_constants_sign_extends_a_cast", "[opt][fold]" )
 
     REQUIRE( evaluate( cast_to( constant( Literal_id {}, i32 ), i64 ), 0xFFFF'FFFCu, std::nullopt, types ) == ~0ull - 3 );
     REQUIRE( evaluate( cast_to( constant( Literal_id {}, u32 ), i64 ), 0xFFFF'FFFCu, std::nullopt, types ) == 0xFFFF'FFFCu );
+}
+
+// `1u < -1` is false by value, and `0u <= -1` is not decided by the unsigned zero.
+TEST_CASE( "fold_constants_compares_mixed_signedness_by_value", "[opt][fold]" )
+{
+    const Type_table types;
+    const Type_id    u64_type = types.integer( 64, false );
+    const Type_id    i64      = types.integer( 64, true );
+
+    const Type_id boolean = types.builtin( Type_kind::Bool );
+
+    const auto compare = [&]( Token_kind op )
+    { return binary( op, constant( Literal_id {}, u64_type ), constant( Literal_id {}, i64 ), boolean ); };
+
+    REQUIRE( evaluate( compare( Token_kind::Less ), 1, ~0ull, types ) == 0u );
+    REQUIRE( evaluate( compare( Token_kind::Greater ), 1, ~0ull, types ) == 1u );
+    REQUIRE( evaluate( compare( Token_kind::Equal_equal ), ~0ull, ~0ull, types ) == 0u );
+    REQUIRE( evaluate( compare( Token_kind::Less_equal ), 0, ~0ull, types ) == 0u );
 }
 
 // The check before a zero divisor panics, so the division stays.
