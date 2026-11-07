@@ -111,6 +111,8 @@ public:
 
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
+    // The `fn` type a parameter's `where F : fn( … )` names, or invalid.
+    Type_id signature_of( Type_id parameter ) const;
 
     // The interfaces a parameter's `where` clause names, in the order written, then what they require.
     std::span<const Type_id> interfaces_of( Type_id parameter ) const;
@@ -205,6 +207,7 @@ private:
 
     std::unordered_map<u32, Bound_set>            bounds_;     // Type_param_decl -> its closed bound set
     std::unordered_map<u32, std::vector<Type_id>> interfaces_; // Type_param_decl -> the interfaces it names
+    std::unordered_map<u32, Type_id>              signatures_; // Type_param_decl -> its `fn` bound
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
     std::vector<std::pair<Node_id, Span>>         where_sets_; // each clause naming an interface, as written
     std::unordered_set<u64>                       conflicted_; // Interface_decl node << 32 | name, per reported conflict

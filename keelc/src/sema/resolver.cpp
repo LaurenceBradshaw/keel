@@ -2030,7 +2030,8 @@ bool covers_every_instance( const Ast& ast, const Interner& interner, Node_id bl
         }
         for( const Node_id bound : ast.bounds( clause ) )
         {
-            if( sema::bound_for_name( interner.text( ast.name( bound ) ) ) != sema::Bound::Copyable )
+            if( ast.kind( bound ) == Node_kind::Function_type ||
+                sema::bound_for_name( interner.text( ast.name( bound ) ) ) != sema::Bound::Copyable )
             {
                 return false;
             }

@@ -215,6 +215,11 @@ void Signatures::declare_bounds( Node_id declaration, Node_id list )
 
         for( const Node_id bound : ast_.bounds( clause ) )
         {
+            if( ast_.kind( bound ) == Node_kind::Function_type )
+            {
+                types_.record( bound, annotations_.resolve( bound ) );
+                continue;
+            }
             annotations_.record_interface_bound( bound );
         }
     }
@@ -498,9 +503,9 @@ bool Signatures::refuse_block( Node_id block, Type_id type, Type_id interface )
         {
             const Type_id named_bound = types_.type_of( bound );
 
-            if( named_bound.is_valid() && table_.is_error( named_bound ) )
+            if( ast_.kind( bound ) == Node_kind::Function_type || ( named_bound.is_valid() && table_.is_error( named_bound ) ) )
             {
-                continue; // reported where it was resolved
+                continue; // reported where it was resolved, or by Bounds
             }
 
             // Every instance is `copyable` there already, so matching need not ask.
@@ -701,7 +706,7 @@ void Signatures::declare_functions()
             }
 
             const Node_id param_type_node = ast_.annotation( param );
-            const Type_id param_type      = annotations_.resolve( param_type_node );
+            const Type_id param_type      = annotations_.resolve_parameter( param_type_node, bare_type( param_type_node ) );
             annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
             annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
             types_.record( param, param_type );
@@ -807,9 +812,10 @@ void Signatures::declare_member_functions()
             {
                 const bool    is_receiver     = ast_.has_receiver( member ) && param == ast_.params( member )[0];
                 const Node_id param_type_node = ast_.annotation( param );
-                const Type_id param_type      = is_receiver && ast_.kind( child ) == Node_kind::Interface_decl
-                                                    ? annotations_.resolve_receiver( param_type_node )
-                                                    : annotations_.resolve( param_type_node );
+                const Type_id param_type =
+                    is_receiver && ast_.kind( child ) == Node_kind::Interface_decl
+                        ? annotations_.resolve_receiver( param_type_node )
+                        : annotations_.resolve_parameter( param_type_node, bare_type( param_type_node ) );
                 annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
                 annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
                 types_.record( param, param_type );

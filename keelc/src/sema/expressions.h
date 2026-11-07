@@ -190,8 +190,23 @@ private:
         const Call_site&         site
     );
 
-    std::optional<std::vector<Type_id>>
-    method_type_arguments( const Call_site& site, Node_id method, std::vector<Argument_shape>& shapes, Type_id expectation );
+    std::optional<std::vector<Type_id>> method_type_arguments(
+        const Call_site&             site,
+        Node_id                      method,
+        const Bindings&              receiver,
+        std::vector<Argument_shape>& shapes,
+        Type_id                      expectation
+    );
+    // An argument for an fn-bounded `F`, checked once the others have deduced what its bound needs.
+    bool bind_fn_parameters(
+        std::span<const Node_id>     parameters,
+        const Call_site&             site,
+        Node_id                      callable,
+        Bindings                     bindings,
+        std::vector<Type_id>&        resolved,
+        std::vector<Node_id>&        bound_by,
+        std::vector<Argument_shape>& shapes
+    );
 
     // These two infer their operands and hand the types to `Operators`, which holds the rules.
     // Address-of and dereference stay in infer_unary: neither is in the rule table, and the first
@@ -236,8 +251,10 @@ private:
 
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
     Type_id infer_marker( Node_id id );
-    Type_id infer_lambda( Node_id id, Type_id expected );
-    Type_id lambda_parameter( Node_id param, std::size_t index, Type_id expected, Param_mode& mode );
+    // `slot`: `expected` is an fn bound's signature, and the lambda gets a closure type of its own.
+    Type_id              infer_lambda( Node_id id, Type_id expected, bool slot = false );
+    std::vector<Type_id> open_parameters() const; // the type parameters the home function sees
+    Type_id              lambda_parameter( Node_id param, std::size_t index, Type_id expected, Param_mode& mode );
     // The function a lambda is written in, through any enclosing lambda: the generic its calls belong to.
     Node_id home_function() const;
 
@@ -318,6 +335,7 @@ private:
     // overload - so nothing nested inside reads an expectation that belongs to its parent.
     Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
+    Node_id call_argument_;    // the argument being shaped: where an fn-bounded `f` may be named
     Node_id default_owner_;    // the function whose parameter's default is being checked
     Node_id discarded_ {};     // set by infer_discarded while it runs
 

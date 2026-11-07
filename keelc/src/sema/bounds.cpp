@@ -841,6 +841,17 @@ Bounds::reached_only_as( Type_id type, Symbol_id name, Node_id block, const Reso
     );
 }
 
+Type_id Bounds::signature_of( Type_id parameter ) const
+{
+    if( !table_.is_parameter( parameter ) )
+    {
+        return {};
+    }
+
+    const auto found = signatures_.find( table_.get( parameter ).declaration.v );
+    return found == signatures_.end() ? Type_id {} : found->second;
+}
+
 Bound_set Bounds::bounds_for( Type_id parameter ) const
 {
     if( !table_.is_parameter( parameter ) )
@@ -1084,6 +1095,27 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
                 ast_.span( where_clause ),
                 fmt::format( "duplicate where clause for type parameter `{}`", interner_.text( subject_name ) )
             );
+            continue;
+        }
+
+        // The parser makes a signature the clause's only bound.
+        if( const std::span<const Node_id> written = ast_.bounds( where_clause );
+            written.size() == 1 && ast_.kind( written[0] ) == Node_kind::Function_type )
+        {
+            if( ast_.kind( declaration ) != Node_kind::Function_decl && ast_.kind( declaration ) != Node_kind::Method_decl )
+            {
+                reporter_.error_at(
+                    ast_.span( written[0] ),
+                    "an `fn` bound is written on a function's type parameter",
+                    "a type stores an `fn` value as a field of `fn` type"
+                );
+            }
+            else if( const Type_id signature = types_.type_of( written[0] );
+                     signature.is_valid() && !table_.is_error( signature ) )
+            {
+                signatures_.emplace( it->v, signature );
+            }
+            bounds_.emplace( it->v, Bound_set { 0 } );
             continue;
         }
 

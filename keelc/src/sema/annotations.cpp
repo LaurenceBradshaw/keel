@@ -47,6 +47,14 @@ std::string_view keel_spelling_for( std::string_view cpp_spelling )
 }
 } // namespace
 
+Type_id Annotations::resolve_parameter( Node_id annotation, Node_id bare )
+{
+    parameter_          = bare;
+    const Type_id typed = resolve( annotation );
+    parameter_          = {};
+    return typed;
+}
+
 Type_id Annotations::resolve( Node_id annotation, bool outermost )
 {
     // An invalid Node_id is `auto`, not a mistake - the parser writes one deliberately.
@@ -254,6 +262,18 @@ Type_id Annotations::resolve_named( Node_id annotation )
         {
             reporter_.error_at(
                 ast_.span( annotation ), fmt::format( "`{}` is a size, not a type", interner_.text( ast_.name( annotation ) ) )
+            );
+            return table_.builtin( Type_kind::Error );
+        }
+
+        // What binds `F` lives only for the call, so nothing may hold one past it.
+        if( annotation != parameter_ && bounds_.signature_of( types_.type_of( decl ) ).is_valid() )
+        {
+            const std::string_view name = interner_.text( ast_.name( annotation ) );
+            reporter_.error_at(
+                ast_.span( annotation ),
+                fmt::format( "`{}` is a function passed to the call, so it can only be a parameter's type", name ),
+                "call it, or pass it on to a parameter whose type has an `fn` bound"
             );
             return table_.builtin( Type_kind::Error );
         }

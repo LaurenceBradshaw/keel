@@ -31,6 +31,12 @@ std::string Reporter::position( Span span ) const
     return fmt::format( "{}:{}:{}", path, loc.line, loc.col );
 }
 
+std::string Reporter::line_col( Span span ) const
+{
+    const Line_col loc = sm_.line_col( span.file, span.start );
+    return fmt::format( "{}:{}", loc.line, loc.col );
+}
+
 std::string Reporter::module_name( File_id file ) const
 {
     return std::filesystem::path( sm_.file( file ).path ).stem().string();

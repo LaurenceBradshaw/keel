@@ -46,6 +46,9 @@ public:
     // `outermost` is false inside a wrapper, which is what tells a pointer to `const` from a
     // `const` binding.
     Type_id resolve( Node_id annotation, bool outermost = true );
+    // A parameter's type, where `bare` (the annotation under its `const` and mode) may name an
+    // fn-bounded `F`.
+    Type_id resolve_parameter( Node_id annotation, Node_id bare );
 
     // False only when the *count* is wrong, which is the one failure that leaves nothing usable
     // behind. An argument that failed to resolve, or that broke a bound, is reported and still
@@ -109,6 +112,7 @@ private:
     Node_id borrowed_ {};      // the annotation a `ref` just wrapped: the one place a run may be written
     bool    receiver_ = false; // resolving an interface method's receiver, which a bound-only interface allows
     Node_id implemented_ {};   // the instance after `implements`, which names a promise rather than a holder
+    Node_id parameter_ {};     // a parameter's bare type: the one place an fn-bounded `F` may be named
 };
 
 } // namespace keel::sema

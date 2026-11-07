@@ -190,7 +190,8 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         {
             const auto found = deduced.find( types_.type_of( parameter ).v );
 
-            if( found == deduced.end() )
+            // An fn-bounded `F` is bound by its argument once the rest are known.
+            if( found == deduced.end() || bounds_.signature_of( types_.type_of( parameter ) ).is_valid() )
             {
                 continue;
             }
@@ -251,6 +252,13 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
     for( const Node_id parameter : parameters )
     {
         const auto found = bindings.find( types_.type_of( parameter ).v );
+
+        if( found == bindings.end() && bounds_.signature_of( types_.type_of( parameter ) ).is_valid() )
+        {
+            deduction.resolved.push_back( {} );
+            deduction.bound_by.push_back( {} );
+            continue;
+        }
 
         if( found == bindings.end() )
         {

@@ -254,6 +254,19 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.poison( id );
     }
 
+    // What binds an fn-bounded `F` lives only for the call, so `f` is called or passed on.
+    if( id != call_argument_ && bounds_.signature_of( types_.type_of( decl ) ).is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` is a function passed to this call, so it can only be called or passed on",
+                interner_.text( ast_.name( id ) )
+            )
+        );
+        return types_.poison( id );
+    }
+
     // D22: a bare field name is `this.field` written implicitly, so it needs a receiver to be
     // written through. M7's static method is declared inside the type and has none, which is the
     // one place the member scope reaches a field that no object backs.
@@ -394,9 +407,9 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         return shape;
     }
 
-    // `nullptr`, which every pointer accepts
+    // `nullptr`, which every pointer accepts; a lambda, typed against the parameter chosen
     if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Array_fill ||
-        is_open_address( value ) )
+        ast_.kind( value ) == Node_kind::Lambda_expr || is_open_address( value ) )
     {
         return shape;
     }
@@ -428,7 +441,9 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         }
     }
 
+    call_argument_ = value;
     shape.type     = infer( argument );
+    call_argument_ = {};
     shape.recorded = true;
 
     // A broken argument is already reported, so it rules out no candidate.
@@ -663,7 +678,15 @@ Type_id Expressions::infer_call( Node_id id )
             ast_.type_parameters( ast_.type_param_list( callable ) ), site, callable, shapes, result, expectation
         );
 
-        if( !deduced )
+        if( !deduced || !bind_fn_parameters(
+                            ast_.type_parameters( ast_.type_param_list( callable ) ),
+                            site,
+                            callable,
+                            {},
+                            deduced->resolved,
+                            deduced->bound_by,
+                            shapes
+                        ) )
         {
             return refuse_call( id, shapes );
         }
@@ -896,6 +919,10 @@ Type_id Expressions::call_through_value( Node_id id, Node_id decl )
         if( table_.is_function( type ) )
         {
             return indirect_call( id, decl, type );
+        }
+        if( const Type_id signature = bounds_.signature_of( type ); signature.is_valid() )
+        {
+            return indirect_call( id, decl, signature );
         }
         if( table_.is_field( type ) )
         {
@@ -1226,18 +1253,19 @@ Type_id Expressions::
     // Copied because deduction may type arguments, and the checks below must see which it did.
     std::vector<Argument_shape> shaped( shapes.begin(), shapes.end() );
 
-    const std::optional<std::vector<Type_id>> own_arguments = method_type_arguments( site, method, shaped, expectation );
-
-    if( !own_arguments )
-    {
-        return refuse_call( id, shaped );
-    }
-
     // The receiver's arguments are the method's: `p.first()` on a `Pair<i32>` is that instance's
     // `first`, and the declaration's `T` means nothing until they are applied. Reading either the
     // parameters or the result without them is how a method returns `T` to a caller expecting i32.
     // A generic method's own arguments are bound beside them.
     Bindings bindings = aggregates_.receiver_bindings( receiver, method, interface );
+
+    const std::optional<std::vector<Type_id>> own_arguments =
+        method_type_arguments( site, method, bindings, shaped, expectation );
+
+    if( !own_arguments )
+    {
+        return refuse_call( id, shaped );
+    }
 
     const std::vector<Node_id> own = ast_.type_parameters( ast_.own_type_param_list( method ) );
 
@@ -1530,7 +1558,7 @@ void Expressions::check_deduced_bounds(
 // has none, and none at all once a mistake is reported. Only its own: the receiver supplies the
 // rest, so a `T` the arguments would also deduce is not asked about.
 std::optional<std::vector<Type_id>> Expressions::method_type_arguments(
-    const Call_site& site, Node_id method, std::vector<Argument_shape>& shapes, Type_id expectation
+    const Call_site& site, Node_id method, const Bindings& receiver, std::vector<Argument_shape>& shapes, Type_id expectation
 )
 {
     const std::vector<Node_id> own       = ast_.type_parameters( ast_.own_type_param_list( method ) );
@@ -1566,7 +1594,7 @@ std::optional<std::vector<Type_id>> Expressions::method_type_arguments(
     std::optional<Deduction> deduced =
         overloads_.deduce_type_arguments( own, site, method, shapes, types_.type_of( method ), expectation );
 
-    if( !deduced )
+    if( !deduced || !bind_fn_parameters( own, site, method, receiver, deduced->resolved, deduced->bound_by, shapes ) )
     {
         return std::nullopt;
     }
@@ -1574,6 +1602,88 @@ std::optional<std::vector<Type_id>> Expressions::method_type_arguments(
     check_deduced_bounds( own, deduced->resolved, deduced->bound_by, site );
 
     return deduced->resolved;
+}
+
+bool Expressions::bind_fn_parameters(
+    std::span<const Node_id>     parameters,
+    const Call_site&             site,
+    Node_id                      callable,
+    Bindings                     bindings,
+    std::vector<Type_id>&        resolved,
+    std::vector<Node_id>&        bound_by,
+    std::vector<Argument_shape>& shapes
+)
+{
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        if( resolved[i].is_valid() )
+        {
+            bindings.insert_or_assign( types_.type_of( parameters[i] ).v, resolved[i] );
+        }
+    }
+
+    const std::span<const Node_id> params    = ast_.params( callable ).subspan( site.implicit_params );
+    const std::span<const Node_id> arguments = ast_.arguments( site.call );
+    const std::size_t              shared    = std::min( { params.size(), arguments.size(), shapes.size() } );
+
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        if( resolved[i].is_valid() )
+        {
+            continue;
+        }
+
+        const Type_id open = types_.type_of( parameters[i] );
+        std::size_t   j    = 0;
+        while( j < shared && types_.type_of( params[j] ) != open )
+        {
+            ++j;
+        }
+
+        if( j == shared )
+        {
+            reporter_.error_at(
+                site.at,
+                fmt::format(
+                    "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameters[i] ) ), site.name
+                ),
+                "pass a function or a lambda for it"
+            );
+            return false;
+        }
+
+        const Node_id   argument = arguments[j];
+        const Type_id   expected = table_.substitute( bounds_.signature_of( open ), bindings );
+        Argument_shape& shape    = shapes[j];
+
+        if( !shape.recorded )
+        {
+            shape.type     = ast_.kind( argument ) == Node_kind::Lambda_expr ? infer_lambda( argument, expected, true )
+                                                                             : check( argument, expected );
+            shape.kind     = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
+            shape.recorded = true;
+        }
+        else if( !table_.is_error( shape.type ) && shape.type != expected && bounds_.signature_of( shape.type ) != expected )
+        {
+            reporter_.error_at(
+                ast_.span( argument ),
+                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( shape.type ) ),
+                mismatch_hint( table_, expected, shape.type )
+            );
+            return false;
+        }
+
+        if( table_.is_error( shape.type ) )
+        {
+            return false;
+        }
+
+        resolved[i] = shape.type;
+        bound_by[i] = argument;
+        bindings.insert_or_assign( open.v, shape.type );
+    }
+
+    return true;
 }
 
 // D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
@@ -1734,7 +1844,8 @@ Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> sh
         // type; their fields and elements are still typed.
         // An open `&f` has no function without it, which says nothing the refusal has not.
         if( ( i < shapes.size() && shapes[i].kind == Argument_kind::Instance ) || is_open_address( arguments[i] ) ||
-            ast_.kind( arguments[i] ) == Node_kind::Array_literal || ast_.kind( arguments[i] ) == Node_kind::Array_fill )
+            ast_.kind( arguments[i] ) == Node_kind::Array_literal || ast_.kind( arguments[i] ) == Node_kind::Array_fill ||
+            ast_.kind( arguments[i] ) == Node_kind::Lambda_expr )
         {
             check( arguments[i], table_.builtin( Type_kind::Error ) );
             continue;
@@ -4181,7 +4292,7 @@ Type_id Expressions::infer_cast( Node_id id )
 }
 
 // A lambda is typed where it is written; its body waits for Statements (take_lambdas).
-Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
+Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
 {
     lambda_homes_[id.v] = home_function();
     lambdas_.push_back( id );
@@ -4215,18 +4326,33 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
         types_.record( capture, type );
     }
 
-    if( fn_expected && table_.get( expected ).arguments.size() != params.size() )
+    const bool closure_expected = !slot && expected.is_valid() && table_.is_closure( expected );
+    const bool absorbing        = expected.is_valid() && table_.is_error( expected ); // its call is refused
+
+    if( closure_expected )
     {
         reporter_.error_at(
-            ast_.span( ast_.param_list( id ) ),
-            fmt::format(
-                "this lambda takes {} parameter{}, but `{}` takes {}",
-                params.size(),
-                params.size() == 1 ? "" : "s",
-                table_.name( expected ),
-                table_.get( expected ).arguments.size()
-            )
+            ast_.span( id ),
+            fmt::format( "each lambda has a type of its own, so this one cannot be `{}`", table_.name( expected ) ),
+            "give it a type parameter of its own"
         );
+    }
+
+    if( closure_expected || ( fn_expected && table_.get( expected ).arguments.size() != params.size() ) )
+    {
+        if( !closure_expected )
+        {
+            reporter_.error_at(
+                ast_.span( ast_.param_list( id ) ),
+                fmt::format(
+                    "this lambda takes {} parameter{}, but `{}` takes {}",
+                    params.size(),
+                    params.size() == 1 ? "" : "s",
+                    table_.name( expected ),
+                    table_.get( expected ).arguments.size()
+                )
+            );
+        }
         for( const Node_id param : params )
         {
             types_.record( param, table_.builtin( Type_kind::Error ) );
@@ -4241,7 +4367,7 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
     for( std::size_t i = 0; i < params.size(); ++i )
     {
         Param_mode    mode = Param_mode::Value;
-        const Type_id type = lambda_parameter( params[i], i, fn_expected ? expected : Type_id {}, mode );
+        const Type_id type = lambda_parameter( params[i], i, fn_expected || absorbing ? expected : Type_id {}, mode );
 
         poisoned = poisoned || table_.is_error( type );
         parameters.push_back( Parameter { type, mode } );
@@ -4253,9 +4379,35 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
 
     lambda_returns_[id.v] = return_type;
 
-    if( poisoned || table_.is_error( return_type ) )
+    if( absorbing || poisoned || table_.is_error( return_type ) )
     {
         return types_.poison( id );
+    }
+
+    const Type_id signature = table_.function( return_type, parameters );
+
+    if( slot )
+    {
+        if( signature != expected )
+        {
+            const Type_id wanted = table_.get( expected ).element;
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( signature ) ),
+                !written_return.is_valid() && !table_.is_void( wanted )
+                    ? fmt::format( "say what it returns: `-> {}` after its parameters", table_.name( wanted ) )
+                    : std::string {}
+            );
+            lambda_returns_[id.v] = table_.builtin( Type_kind::Error ); // its body's returns are not reported again
+            return types_.poison( id );
+        }
+
+        return types_.record(
+            id,
+            table_.closure(
+                id, signature, open_parameters(), fmt::format( "fn[…] at {}", reporter_.line_col( ast_.span( id ) ) )
+            )
+        );
     }
 
     if( captures )
@@ -4270,7 +4422,29 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
         return types_.poison( id );
     }
 
-    return types_.record( id, table_.function( return_type, parameters ) );
+    return types_.record( id, signature );
+}
+
+std::vector<Type_id> Expressions::open_parameters() const
+{
+    const Node_id        home = home_function();
+    const Node_id        type = current_type();
+    std::vector<Type_id> open;
+
+    const auto add = [&]( Node_id list )
+    {
+        for( const Node_id parameter : ast_.type_parameters( list ) )
+        {
+            open.push_back( types_.type_of( parameter ) );
+        }
+    };
+
+    if( type.is_valid() )
+    {
+        add( ast_.type_param_list( type ) );
+    }
+    add( ast_.kind( home ) == Node_kind::Method_decl ? ast_.own_type_param_list( home ) : ast_.type_param_list( home ) );
+    return open;
 }
 
 // A written parameter's type, or what the expected `fn` type gives one written bare.
@@ -4286,6 +4460,11 @@ Type_id Expressions::lambda_parameter( Node_id param, std::size_t index, Type_id
             "write one; only a lambda passed where an `fn` type is expected may leave it out"
         );
         return types_.record( param, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !spelled.is_valid() && table_.is_error( expected ) )
+    {
+        return types_.record( param, expected );
     }
 
     if( !spelled.is_valid() )
@@ -11443,6 +11622,73 @@ TEST_CASE( "expressions_check_a_lambda", "[sema][lambda]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 2 );
         REQUIRE( p.rendered().find( "a `const` method cannot modify its object" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "expressions_check_fn_bounds", "[sema][lambda]" )
+{
+    const std::string_view generics = "i32 apply<F>( F f, i32 x ) where F : fn( i32 ) -> i32 { return f( x ); }\n"
+                                      "i32 again<G>( G g ) where G : fn( i32 ) -> i32 { return apply( g, 1 ); }\n";
+
+    const auto refuses = [&]( std::string_view code, std::string_view message, std::size_t errors = 1 )
+    {
+        const Typed p( fmt::format( "{}{}", generics, code ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == errors );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+    };
+
+    SECTION( "a lambda passed to `F` captures and gets a type of its own" )
+    {
+        const Typed p( fmt::format(
+            "{}T first<T, F>( T a, T b, F less ) where T : copyable, where F : fn( T, T ) -> bool\n"
+            "{{ return less( b, a ) ? b : a; }}\n"
+            "struct P {{ i32 a; i32 b; i32 pick<F>( F better ) where F : fn( i32, i32 ) -> bool\n"
+            "{{ return better( a, b ) ? a : b; }} }};\n"
+            "void run<F>( F f ) where F : fn() -> void {{ f(); }}\n"
+            "i32 twice( i32 x ) {{ return x * 2; }}\n"
+            "i32 main() {{ i32 k = 3; i32 n = 0; run( fn[ ref n ]() {{ n += 1; }} );\n"
+            "P p = P {{ 1, 2 }};\n"
+            "return apply( fn[ k ]( a ) -> i32 {{ return a + k; }}, 4 ) + first( k, 4, fn[]( x, y ) -> bool {{ return x < y; "
+            "}} )\n"
+            "+ p.pick( fn[ k ]( x, y ) -> bool {{ return x + k > y; }} ) + again( fn[ n ]( x ) -> i32 {{ return x + n; }} )\n"
+            "+ apply( &twice, 1 ); }}",
+            generics
+        ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 1 ) ) == "fn[…] at 11:15" );
+    }
+
+    SECTION( "the argument must be the bound" )
+    {
+        refuses(
+            "void first<T, F>( T a, F f ) where F : fn( T ) -> void {}\n"
+            "i32 main() { first( 1, fn[]( x ) {} ); return 0; }",
+            "nothing here says what `T` is in `first`"
+        );
+        refuses( "i32 main() { return apply( fn[]( a ) { return a; }, 1 ); }", "say what it returns: `-> i32`" );
+        refuses( "i32 main() { return apply( fn[]( a, b ) -> i32 { return a; }, 1 ); }", "this lambda takes 2 parameters" );
+        refuses( "bool odd( i32 x ) { return true; }\ni32 main() { return apply( &odd, 1 ); }", "but got `fn( i32 ) -> bool`" );
+        refuses( "i32 main() { return apply( 5, 1 ); }", "expected `fn( i32 ) -> i32`, but got an integer literal" );
+        refuses(
+            "void two<F>( F a, F b ) where F : fn() -> void { a(); }\ni32 main() { two( fn[]() {}, fn[]() {} ); return 0; }",
+            "each lambda has a type of its own"
+        );
+    }
+
+    SECTION( "`f` is only called or passed on" )
+    {
+        refuses( "F keep<F>( F f ) where F : fn() -> void { return f; }", "so it can only be a parameter's type", 2 );
+        refuses( "void hold<F>( F f ) where F : fn() -> void { F* p = nullptr; }", "so it can only be a parameter's type" );
+        refuses( "i32 add<F>( F f ) where F : fn() -> i32 { return f + 1; }", "can only be called or passed on" );
+        refuses( "i32 member<F>( F f ) where F : fn() -> i32 { return f.x; }", "can only be called or passed on" );
+        refuses(
+            "i32 store<F>( F f ) where F : fn() -> i32 { fn() -> i32 g = f; return g(); }", "can only be called or passed on"
+        );
+        refuses( "struct S<F> where F : fn() -> void { i32 x; };", "an `fn` bound is written on a function's type parameter" );
     }
 }
 
