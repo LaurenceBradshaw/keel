@@ -5,7 +5,9 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "sema/addresses.h"
@@ -110,6 +112,12 @@ public:
     {
         return current_function_;
     }
+    // The lambdas typed since the last call, whose bodies Statements checks once their declaration is done.
+    std::vector<Node_id> take_lambdas()
+    {
+        return std::exchange( lambdas_, {} );
+    }
+    Type_id returned_by( Node_id function ) const; // a function's return type, or a lambda's
 
     bool is_result( Type_id type ) const; // an instance of the prelude's `result`
 
@@ -228,6 +236,10 @@ private:
 
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
     Type_id infer_marker( Node_id id );
+    Type_id infer_lambda( Node_id id, Type_id expected );
+    Type_id lambda_parameter( Node_id param, std::size_t index, Type_id expected, Param_mode& mode );
+    // The function a lambda is written in, through any enclosing lambda: the generic its calls belong to.
+    Node_id home_function() const;
 
     Type_id infer_try( Node_id id );
     bool    error_travels( Type_id from, Type_id to ) const; // whether `try` may pass `from` up as `to`
@@ -308,6 +320,10 @@ private:
     Node_id current_function_; // whose annotation the escape rule reads
     Node_id default_owner_;    // the function whose parameter's default is being checked
     Node_id discarded_ {};     // set by infer_discarded while it runs
+
+    std::vector<Node_id>             lambdas_;        // typed, body not yet checked
+    std::unordered_map<u32, Node_id> lambda_homes_;   // Lambda_expr -> home_function where it is written
+    std::unordered_map<u32, Type_id> lambda_returns_; // Lambda_expr -> what its body returns
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
     std::unordered_set<u32> received_;

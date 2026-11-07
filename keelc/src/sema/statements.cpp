@@ -94,10 +94,12 @@ void Statements::visit( Node_id id )
             if( ast_.kind( child ) == Node_kind::Var_decl )
             {
                 visit_global( child );
-                continue;
             }
-
-            visit( child );
+            else
+            {
+                visit( child );
+            }
+            visit_lambdas();
         }
 
         return;
@@ -250,9 +252,6 @@ void Statements::visit_function( Node_id id )
     }
 
     // The declaration pass already typed the signature, so only the body is left.
-    //
-    // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
-    // otherwise leave the enclosing function checking its returns against the wrong type.
     const Type_id enclosing_return   = current_return_;
     const Node_id enclosing_function = expressions_.enter_function( id );
 
@@ -260,6 +259,24 @@ void Statements::visit_function( Node_id id )
     visit( ast_.body( id ) );
     current_return_ = enclosing_return;
     expressions_.leave_function( enclosing_function );
+}
+
+// After the declaration they are written in, since an expression never visits a statement. Each
+// body is a function's: its own return type, and no loop around it.
+void Statements::visit_lambdas()
+{
+    for( std::vector<Node_id> lambdas = expressions_.take_lambdas(); !lambdas.empty(); lambdas = expressions_.take_lambdas() )
+    {
+        for( const Node_id lambda : lambdas )
+        {
+            const Node_id enclosing = expressions_.enter_function( lambda );
+
+            current_return_ = expressions_.returned_by( lambda );
+            visit( ast_.body( lambda ) );
+            expressions_.leave_function( enclosing );
+        }
+    }
+    current_return_ = {};
 }
 
 void Statements::visit_return( Node_id id )
@@ -292,6 +309,24 @@ void Statements::visit_return( Node_id id )
 
     if( current_return_ == void_type )
     {
+        const Node_id function = expressions_.current_function();
+
+        // `-> R` left out: inferred, a literal too, for the help to name what it returns.
+        if( ast_.kind( function ) == Node_kind::Lambda_expr && !ast_.return_type( function ).is_valid() )
+        {
+            const Type_id returned = expressions_.infer( value );
+
+            if( !table_.is_error( returned ) )
+            {
+                reporter_.error_at(
+                    ast_.span( value ),
+                    "this lambda returns `void`, so `return` cannot take a value",
+                    fmt::format( "say what it returns: `-> {}` after its parameters", table_.name( returned ) )
+                );
+            }
+            return;
+        }
+
         // Typed anyway: a mistake inside the expression is still a mistake worth reporting, and
         // then the only one.
         const Type_id absorbed = expressions_.absorb( value );

@@ -59,9 +59,10 @@ public:
     // Why `move value` is no fix: it is rooted in a borrow or a pointee. Empty otherwise.
     std::string unmovable_help( Node_id value, Type_id type ) const;
 
-    // Parameter 0 of a method, constructor or destructor - the synthesised `this`. Invalid for a
-    // free function, which has no receiver for a bare name to be rooted in.
+    // Parameter 0 of a method, constructor or destructor - the synthesised `this` - or a lambda's
+    // captured `this`. Invalid for a free function, which has no receiver for a bare name to be rooted in.
     Node_id receiver_of( Node_id function ) const;
+    bool    is_read_capture( Node_id decl ) const; // a capture written bare, which only reads
 
     Node_id place_root( Node_id id, Node_id current_function ) const;
     Node_id place_source( Node_id id ) const;

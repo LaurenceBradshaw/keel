@@ -64,7 +64,8 @@ bool Places::is_assignable( Node_id id ) const
 
     // `this` is not a place to borrow or move from; assigning it whole is the statement's own
     // question (visit_assign, visit_increment).
-    if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
+    if( ( ast_.kind( decl ) == Node_kind::Param_decl || ast_.kind( decl ) == Node_kind::Capture_decl ) &&
+        ast_.name( decl ) == Interner::keyword( Keyword::This ) )
     {
         return false;
     }
@@ -72,7 +73,8 @@ bool Places::is_assignable( Node_id id ) const
     // A pattern binding names a place like the rest. Whether it may be *written* is
     // check_writable's question, and it answers no - which is the same split `const` uses.
     return ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ||
-           ast_.kind( decl ) == Node_kind::Field_decl || ast_.kind( decl ) == Node_kind::Binding_decl;
+           ast_.kind( decl ) == Node_kind::Field_decl || ast_.kind( decl ) == Node_kind::Binding_decl ||
+           ast_.kind( decl ) == Node_kind::Capture_decl;
 }
 
 // A bare `this`, the receiver itself rather than a field reached through it.
@@ -80,7 +82,8 @@ bool Places::names_this( Node_id id ) const
 {
     const Node_id decl = resolution_.declaration_of( id );
     return id.is_valid() && ast_.kind( id ) == Node_kind::Name_expr && decl.is_valid() &&
-           ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This );
+           ( ast_.kind( decl ) == Node_kind::Param_decl || ast_.kind( decl ) == Node_kind::Capture_decl ) &&
+           ast_.name( decl ) == Interner::keyword( Keyword::This );
 }
 
 // The address is recorded on the annotation exactly when a declaration is a borrow - the same
@@ -89,7 +92,7 @@ bool Places::names_this( Node_id id ) const
 // one and the return type of the other, so "returns a binding" and "is a borrow" are one question.
 bool Places::returns_a_binding( Node_id decl ) const
 {
-    if( !decl.is_valid() )
+    if( !decl.is_valid() || ast_.kind( decl ) == Node_kind::Lambda_expr )
     {
         return false;
     }
@@ -320,6 +323,21 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         return false;
     }
 
+    if( is_read_capture( root ) )
+    {
+        const std::string_view name = interner_.text( ast_.name( root ) );
+
+        reporter_.error_at(
+            ast_.span( target ),
+            ast_.name( root ) == Interner::keyword( Keyword::This )
+                ? std::string( "`this` is captured read-only, so its object cannot be modified" )
+                : fmt::format( "`{}` is captured read-only, so it cannot be modified", name ),
+            fmt::format( "capture it as `ref {}`", name )
+        );
+
+        return false;
+    }
+
     if( ast_.is_const_binding( root ) )
     {
         // The receiver reads differently from any other const binding: the `const` that made it one
@@ -393,9 +411,9 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
     }
 
     const Node_id root = place_root( target, current_function );
-    if( root.is_valid() &&
-        ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) || is_borrow_binding( root ) ||
-          ast_.is_const_binding( root ) || ast_.is_counter( root ) || walk_bindings_.contains( root.v ) ) )
+    if( root.is_valid() && ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) ||
+                             is_borrow_binding( root ) || ast_.is_const_binding( root ) || ast_.is_counter( root ) ||
+                             walk_bindings_.contains( root.v ) || is_read_capture( root ) ) )
     {
         return true;
     }
@@ -595,6 +613,18 @@ std::string Places::unmovable_help( Node_id value, Type_id type ) const
 
 Node_id Places::receiver_of( Node_id function ) const
 {
+    if( function.is_valid() && ast_.kind( function ) == Node_kind::Lambda_expr )
+    {
+        for( const Node_id capture : ast_.captures( function ) )
+        {
+            if( ast_.kind( capture ) == Node_kind::Capture_decl && ast_.name( capture ) == Interner::keyword( Keyword::This ) )
+            {
+                return capture;
+            }
+        }
+        return Node_id {};
+    }
+
     if( !ast_.has_receiver( function ) )
     {
         return Node_id {};
@@ -603,6 +633,12 @@ Node_id Places::receiver_of( Node_id function ) const
     const std::span<const Node_id> params = ast_.params( function );
 
     return params.empty() ? Node_id {} : params[0];
+}
+
+bool Places::is_read_capture( Node_id decl ) const
+{
+    return decl.is_valid() && ast_.kind( decl ) == Node_kind::Capture_decl &&
+           ast_.kind( ast_.captured( decl ) ) != Node_kind::Marker_expr;
 }
 
 Node_id Places::place_root( Node_id id, Node_id current_function ) const

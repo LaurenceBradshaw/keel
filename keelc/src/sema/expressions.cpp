@@ -188,6 +188,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Conditional_expr:
         return infer_conditional( id );
 
+    case Node_kind::Lambda_expr:
+        return infer_lambda( id, take_expectation() );
+
     default:
         // A node that is not an expression. Its children are still typed, so a mistake inside one
         // is not swallowed by the parent being unsupported.
@@ -296,7 +299,9 @@ Type_id Expressions::infer_name( Node_id id )
     if( decl_kind == Node_kind::Field_decl )
     {
         // The object is the receiver; the field's own `const` fixes the pointer, not what it points at.
-        return types_.record( id, read_only_field( ast_.is_const_method( current_function_ ), types_.type_of( decl ) ) );
+        const bool read_only =
+            ast_.is_const_method( current_function_ ) || places_.is_read_capture( places_.receiver_of( current_function_ ) );
+        return types_.record( id, read_only_field( read_only, types_.type_of( decl ) ) );
     }
 
     return types_.record( id, types_.type_of( decl ) );
@@ -999,7 +1004,7 @@ std::optional<Bindings> Expressions::instantiate(
 
     Bindings bindings = overloads_.type_bindings( callable, resolved );
 
-    overloads_.record_instance( current_function_, site.call, callable, std::move( resolved ) );
+    overloads_.record_instance( home_function(), site.call, callable, std::move( resolved ) );
 
     return bindings;
 }
@@ -1257,7 +1262,7 @@ Type_id Expressions::
 
     overloads_.check_argument_markers( site, method, bindings );
 
-    overloads_.record_method_instantiation( current_function_, id, method, receiver, *own_arguments );
+    overloads_.record_method_instantiation( home_function(), id, method, receiver, *own_arguments );
 
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
 }
@@ -1424,7 +1429,7 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner 
     }
     else
     {
-        overloads_.record_method_instantiation( current_function_, walk_stmt, walk, type );
+        overloads_.record_method_instantiation( home_function(), walk_stmt, walk, type );
     }
 
     return walk;
@@ -1620,6 +1625,20 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first, Type
         );
 
         return refuse_call( id, shapes );
+    }
+
+    if( !ast_.is_const_method( method ) && places_.is_read_capture( receiver ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.callee( id ) ),
+            fmt::format(
+                "`this` is captured read-only, so `{}`, which may modify the object, cannot be called",
+                interner_.text( ast_.name( method ) )
+            ),
+            "capture it as `ref this`"
+        );
+
+        return types_.poison( id );
     }
 
     if( !ast_.is_const_method( method ) && ast_.is_const_binding( receiver ) )
@@ -1847,7 +1866,7 @@ Type_id Expressions::infer_binary( Node_id id )
     }
 
     const Binary_result result = operators_.result_of_binary(
-        op, lhs_type, rhs_type, current_function_, ast_.span( id ), ast_.span( left ), ast_.span( right )
+        op, lhs_type, rhs_type, home_function(), ast_.span( id ), ast_.span( left ), ast_.span( right )
     );
 
     if( !result.type.is_valid() )
@@ -2006,7 +2025,7 @@ Type_id Expressions::infer_unary( Node_id id )
 
         if( declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Function_decl )
         {
-            const Type_id type = addresses_.function_address( id, declaration, take_expectation(), current_function_ );
+            const Type_id type = addresses_.function_address( id, declaration, take_expectation(), home_function() );
 
             if( !table_.is_error( type ) && ast_.is_extern( callees_.callee_of( id ) ) )
             {
@@ -2029,7 +2048,7 @@ Type_id Expressions::infer_unary( Node_id id )
         const Node_id qualified_declaration = qualifier_declaration( ast_.operand( id ) );
         if( qualified_declaration.is_valid() && is_aggregate( ast_.kind( qualified_declaration ) ) )
         {
-            return addresses_.method_address( id, qualified_declaration, take_expectation(), current_function_ );
+            return addresses_.method_address( id, qualified_declaration, take_expectation(), home_function() );
         }
     }
 
@@ -2197,7 +2216,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     }
 
     callees_.record( id, method );
-    overloads_.record_method_instantiation( current_function_, id, method, object_type );
+    overloads_.record_method_instantiation( home_function(), id, method, object_type );
 
     // `<` tests the variant `<=>` answers, so a comparison's result is not the method's.
     if( comparison )
@@ -2250,7 +2269,7 @@ bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id ta
 
     check( value, param );
     callees_.record( id, method );
-    overloads_.record_method_instantiation( current_function_, id, method, target_type );
+    overloads_.record_method_instantiation( home_function(), id, method, target_type );
 
     const Type_id returned = table_.substitute( types_.type_of( method ), bindings );
 
@@ -2293,7 +2312,7 @@ Type_id Expressions::infer_unary_operator( Node_id id, Type_id operand_type, Sym
     }
 
     callees_.record( id, method );
-    overloads_.record_method_instantiation( current_function_, id, method, operand_type );
+    overloads_.record_method_instantiation( home_function(), id, method, operand_type );
 
     return types_.record( id, table_.substitute( types_.type_of( method ), operator_bindings( id, operand_type, method ) ) );
 }
@@ -2345,7 +2364,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     }
 
     callees_.record( id, method );
-    overloads_.record_method_instantiation( current_function_, id, method, object_type );
+    overloads_.record_method_instantiation( home_function(), id, method, object_type );
 
     return types_.record( id, returned );
 }
@@ -2490,10 +2509,8 @@ void Expressions::refuse_in_default( Span at )
 
 Node_id Expressions::current_type() const
 {
-    return ast_.enclosing_aggregate(
-        current_function_.is_valid() && ast_.kind( current_function_ ) == Node_kind::Param_decl ? default_owner_
-                                                                                                : current_function_
-    );
+    const Node_id home = home_function();
+    return ast_.enclosing_aggregate( home.is_valid() && ast_.kind( home ) == Node_kind::Param_decl ? default_owner_ : home );
 }
 
 // The block a method call on `this` is written in, or invalid.
@@ -4163,6 +4180,149 @@ Type_id Expressions::infer_cast( Node_id id )
     return is_cast ? constant_folder_.record_constant( id, result.type ) : types_.record( id, result.type );
 }
 
+// A lambda is typed where it is written; its body waits for Statements (take_lambdas).
+Type_id Expressions::infer_lambda( Node_id id, Type_id expected )
+{
+    lambda_homes_[id.v] = home_function();
+    lambdas_.push_back( id );
+
+    const bool                     fn_expected = expected.is_valid() && table_.is_function( expected );
+    const std::span<const Node_id> params      = ast_.params( id );
+    bool                           captures    = false;
+
+    // In the enclosing scope: a capture reads its name where the lambda is written.
+    for( const Node_id capture : ast_.captures( id ) )
+    {
+        if( ast_.kind( capture ) != Node_kind::Capture_decl )
+        {
+            continue;
+        }
+
+        captures              = true;
+        const Node_id written = ast_.captured( capture );
+        const bool    lent    = ast_.kind( written ) == Node_kind::Marker_expr;
+        const Node_id named   = lent ? ast_.children( written )[0] : written;
+        const Type_id type    = infer( named );
+
+        if( lent && !table_.is_error( type ) )
+        {
+            places_.check_writable( named, current_function_ );
+        }
+        if( lent )
+        {
+            types_.record( written, type );
+        }
+        types_.record( capture, type );
+    }
+
+    if( fn_expected && table_.get( expected ).arguments.size() != params.size() )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.param_list( id ) ),
+            fmt::format(
+                "this lambda takes {} parameter{}, but `{}` takes {}",
+                params.size(),
+                params.size() == 1 ? "" : "s",
+                table_.name( expected ),
+                table_.get( expected ).arguments.size()
+            )
+        );
+        for( const Node_id param : params )
+        {
+            types_.record( param, table_.builtin( Type_kind::Error ) );
+        }
+        lambda_returns_[id.v] = table_.builtin( Type_kind::Error );
+        return types_.poison( id );
+    }
+
+    std::vector<Parameter> parameters;
+    bool                   poisoned = false;
+
+    for( std::size_t i = 0; i < params.size(); ++i )
+    {
+        Param_mode    mode = Param_mode::Value;
+        const Type_id type = lambda_parameter( params[i], i, fn_expected ? expected : Type_id {}, mode );
+
+        poisoned = poisoned || table_.is_error( type );
+        parameters.push_back( Parameter { type, mode } );
+    }
+
+    const Node_id written_return = ast_.return_type( id );
+    const Type_id return_type =
+        written_return.is_valid() ? annotations_.resolve( written_return ) : table_.builtin( Type_kind::Void );
+
+    lambda_returns_[id.v] = return_type;
+
+    if( poisoned || table_.is_error( return_type ) )
+    {
+        return types_.poison( id );
+    }
+
+    if( captures )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            "a lambda that captures can only be passed straight to a call",
+            fn_expected
+                ? fmt::format( "an `{}` value holds no captures; take a type parameter bound by it", table_.name( expected ) )
+                : std::string( "pass it as an argument, to a parameter whose type is bound by an `fn` type" )
+        );
+        return types_.poison( id );
+    }
+
+    return types_.record( id, table_.function( return_type, parameters ) );
+}
+
+// A written parameter's type, or what the expected `fn` type gives one written bare.
+Type_id Expressions::lambda_parameter( Node_id param, std::size_t index, Type_id expected, Param_mode& mode )
+{
+    const Node_id spelled = ast_.annotation( param );
+
+    if( !spelled.is_valid() && !expected.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( param ),
+            fmt::format( "`{}` has no type", interner_.text( ast_.name( param ) ) ),
+            "write one; only a lambda passed where an `fn` type is expected may leave it out"
+        );
+        return types_.record( param, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !spelled.is_valid() )
+    {
+        mode = table_.get( expected ).modes[index];
+        return types_.record( param, table_.get( expected ).arguments[index] );
+    }
+
+    const Node_id unwrapped = ast_.unwrap_const( spelled );
+    const Node_id bare      = ast_.kind( unwrapped ) == Node_kind::Mode_type ? ast_.inner_type( unwrapped ) : unwrapped;
+    const Type_id type      = annotations_.resolve( spelled );
+
+    annotations_.refuse_void( bare, type, "parameter", "passes" );
+    annotations_.refuse_never( bare, type, "parameter" );
+    mode = parameter_mode_of( ast_, param );
+
+    return types_.record( param, type );
+}
+
+Node_id Expressions::home_function() const
+{
+    if( current_function_.is_valid() && ast_.kind( current_function_ ) == Node_kind::Lambda_expr )
+    {
+        return lambda_homes_.at( current_function_.v );
+    }
+    return current_function_;
+}
+
+Type_id Expressions::returned_by( Node_id function ) const
+{
+    if( ast_.kind( function ) == Node_kind::Lambda_expr )
+    {
+        return lambda_returns_.at( function.v );
+    }
+    return types_.type_of( function );
+}
+
 Type_id Expressions::infer_marker( Node_id id )
 {
     const Keyword marker  = ast_.keyword( id );
@@ -4304,6 +4464,19 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.record( id, value );
     }
 
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Capture_decl )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            "a capture cannot be moved",
+            fmt::format(
+                "`{}` belongs to where the lambda is written; a lambda only copies or borrows it",
+                interner_.text( ast_.name( decl ) )
+            )
+        );
+        return types_.poison( id );
+    }
+
     if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Binding_decl )
     {
         reporter_.error_at(
@@ -4431,8 +4604,10 @@ Type_id Expressions::infer_try( Node_id id )
         return types_.record( id, payload );
     }
 
-    const Type_id          returned = types_.type_of( current_function_ );
-    const std::string_view function = interner_.text( ast_.name( current_function_ ) );
+    const Type_id     returned = returned_by( current_function_ );
+    const std::string function = ast_.kind( current_function_ ) == Node_kind::Lambda_expr
+                                     ? std::string( "this lambda" )
+                                     : fmt::format( "`{}`", interner_.text( ast_.name( current_function_ ) ) );
 
     if( !returned.is_valid() || table_.is_error( returned ) )
     {
@@ -4443,7 +4618,7 @@ Type_id Expressions::infer_try( Node_id id )
     {
         reporter_.error_at(
             ast_.span( id ),
-            fmt::format( "`try` passes an error on to the caller, so `{}` must return a `result`", function ),
+            fmt::format( "`try` passes an error on to the caller, so {} must return a `result`", function ),
             fmt::format( "it returns `{}`", table_.name( returned ) )
         );
 
@@ -4474,7 +4649,7 @@ Type_id Expressions::infer_try( Node_id id )
         reporter_.error_at(
             ast_.span( id ),
             fmt::format(
-                "`try` passes on a `{}` error, but `{}` returns `{}`", table_.name( error ), function, table_.name( returned )
+                "`try` passes on a `{}` error, but {} returns `{}`", table_.name( error ), function, table_.name( returned )
             ),
             lacking.empty() ? std::string {} : fmt::format( "add {} to `{}`", lacking, table_.name( held ) )
         );
@@ -4892,8 +5067,7 @@ Type_id Expressions::infer_bare_variant( Node_id id, Type_id scrutinee )
     return Type_id {};
 }
 
-// Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
-// otherwise leave the enclosing function's rules reading the wrong declaration.
+// Returns the enclosing one: a parameter's default is checked from inside its function.
 Node_id Expressions::enter_function( Node_id id, Node_id owner )
 {
     const Node_id enclosing = current_function_;
@@ -11205,6 +11379,70 @@ TEST_CASE( "expressions_type_what_a_located_function_reads", "[sema][directive]"
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "expressions_check_a_lambda", "[sema][lambda]" )
+{
+    const auto refuses = []( std::string_view body, std::string_view message, std::size_t errors = 1 )
+    {
+        const Typed p( fmt::format(
+            "struct C {{ i32 n; void bump() {{ n++; }} i32 get() const {{ return n; }}\n"
+            "void m() {{ {} }} }};\ni32 main() {{ i32 k = 1; {} return 0; }}",
+            body.starts_with( "this:" ) ? body.substr( 5 ) : "",
+            body.starts_with( "this:" ) ? "" : body
+        ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == errors );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+    };
+
+    SECTION( "captureless, as an `fn` value or with its own type" )
+    {
+        const Typed p( "i32 apply( fn( i32 ) -> i32 f ) { return f( 1 ); }\n"
+                       "i32 main() { fn( i32 ) -> i32 t = fn[]( i32 x ) -> i32 { return x; };\n"
+                       "auto g = fn[]( i32 y ) -> i32 { return y; };\n"
+                       "return apply( fn[]( x ) -> i32 { return x + 1; } ) + t( 0 ) + g( 0 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 2 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "refused where its type cannot come from" )
+    {
+        refuses( "auto b = fn[]( x ) -> i32 { return x; };", "`x` has no type" );
+        refuses( "fn( i32 ) -> i32 d = fn[]( i32 p, i32 q ) -> i32 { return p; };", "this lambda takes 2 parameters" );
+        refuses( "fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; };", "expected `fn( i32 ) -> i32`, but got" );
+        refuses( "auto c = fn[]() { return 3; };", "say what it returns: `-> i32` after its parameters" );
+    }
+
+    SECTION( "a capturing one only as a call's argument" )
+    {
+        refuses( "auto a = fn[ k ]() -> i32 { return k; };", "a lambda that captures can only be passed straight to a call" );
+        refuses( "fn() -> i32 e = fn[ k ]() -> i32 { return k; };", "an `fn() -> i32` value holds no captures" );
+    }
+
+    SECTION( "a bare capture only reads" )
+    {
+        refuses( "auto a = fn[ k ]() { k = 2; };", "`k` is captured read-only, so it cannot be modified", 2 );
+        refuses( "auto a = fn[ k ]() { i32 z = move k; };", "a capture cannot be moved", 2 );
+        refuses( "auto a = fn[ ref k ]() { k = 2; };", "a lambda that captures" );
+        refuses( "this:auto a = fn[ this ]() { n = 1; };", "`this` is captured read-only, so its object", 2 );
+        refuses( "this:auto a = fn[ this ]() { bump(); };", "so `bump`, which may modify the object, cannot be called", 2 );
+        refuses( "this:auto a = fn[ this ]() -> i32 { return get() + this.n; };", "a lambda that captures" );
+        refuses( "this:auto a = fn[ ref this ]() { n = 1; bump(); };", "a lambda that captures" );
+    }
+
+    SECTION( "`ref` needs a place it may write" )
+    {
+        const Typed p( "struct C { i32 n; i32 peek() const { auto f = fn[ ref this ]() {}; return n; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "a `const` method cannot modify its object" ) != std::string::npos );
     }
 }
 

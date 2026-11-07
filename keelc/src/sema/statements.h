@@ -69,6 +69,7 @@ public:
 private:
     // One per construct, dispatched from visit - the shape parse_*() uses next door.
     void visit_function( Node_id id );
+    void visit_lambdas(); // the bodies of the lambdas typed so far, and of any inside them
     void visit_return( Node_id id );
     void visit_var( Node_id id );
     void visit_assign( Node_id id );
