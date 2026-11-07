@@ -60,6 +60,7 @@ private:
 
     // The function type a declaration would be written as; refused receives the first parameter carrying a mode.
     Type_id written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused );
+    bool    drops_defaults( Node_id declaration, Type_id written, Type_id wanted ) const;
     // Which overload the expected signature names, or nothing - reported - when the set holds no such one.
     Node_id
     overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature, const Bindings& bindings );

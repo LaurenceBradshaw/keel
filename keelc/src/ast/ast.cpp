@@ -261,6 +261,13 @@ std::span<const Node_id> Ast::explicit_params( Node_id fn ) const
     return !all.empty() && name( all[0] ) == Interner::keyword( Keyword::This ) ? all.subspan( 1 ) : all;
 }
 
+std::size_t Ast::required_params( Node_id fn ) const
+{
+    const std::span<const Node_id> all = explicit_params( fn );
+
+    return std::size_t( std::ranges::find_if( all, [&]( Node_id p ) { return default_value( p ).is_valid(); } ) - all.begin() );
+}
+
 Node_id Ast::body( Node_id id ) const
 {
     switch( kind( id ) )
@@ -443,10 +450,10 @@ Node_id Ast::initialiser( Node_id decl ) const
     return child( decl, 1 );
 }
 
-Node_id Ast::default_value( Node_id field ) const
+Node_id Ast::default_value( Node_id decl ) const
 {
-    assert( kind( field ) == Node_kind::Field_decl );
-    const std::span<const Node_id> all = children( field );
+    assert( kind( decl ) == Node_kind::Field_decl || kind( decl ) == Node_kind::Param_decl );
+    const std::span<const Node_id> all = children( decl );
     return all.size() > 1 ? all[1] : Node_id {};
 }
 

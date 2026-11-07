@@ -3,7 +3,7 @@ import t::console;
 
 i32 main()
 {
-    t::println( "before" );
+    t::print( "before" );
 
     u64 n = 4611686018427387904;
     u8[*] bytes;

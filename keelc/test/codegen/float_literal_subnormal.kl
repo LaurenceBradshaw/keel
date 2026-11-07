@@ -8,9 +8,9 @@ i32 main()
     f64 sub = 1e-310;
     f64 gone = 1e-400;
     f32 f = 1e-50;
-    t::println( tiny > 0.0 );      // true
-    t::println( sub > 0.0 );       // true
-    t::println( gone == 0.0 );     // true
-    t::println( f == 0.0 );        // true
+    t::print( tiny > 0.0 );      // true
+    t::print( sub > 0.0 );       // true
+    t::print( gone == 0.0 );     // true
+    t::print( f == 0.0 );        // true
     return 0;
 }

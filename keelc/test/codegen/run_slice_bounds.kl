@@ -18,10 +18,10 @@ i32 main()
 
     unsafe
     {
-        t::println( length( data[ 0..4 ], 1, 3 ) );
-        t::println( length( data[ 0..4 ], 3, 2 ) );
+        t::print( length( data[ 0..4 ], 1, 3 ) );
+        t::print( length( data[ 0..4 ], 3, 2 ) );
     }
 
-    t::println( "unreached" );
+    t::print( "unreached" );
     return 0;
 }

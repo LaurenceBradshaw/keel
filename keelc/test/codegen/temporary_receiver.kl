@@ -12,7 +12,7 @@ class counter
 
     ~counter()
     {
-        t::println( "drop" );
+        t::print( "drop" );
     }
 
     public i32 bump()
@@ -34,11 +34,11 @@ result<void, i32> run()
 {
     // In an initialiser.
     i32 a = counter( 1 ).bump();
-    t::println( a );
+    t::print( a );
 
     // Under `try`.
     i32 b = try counter( 2 ).checked();
-    t::println( b );
+    t::print( b );
 
     // After `_ =`.
     _ = counter( 3 ).checked();
@@ -47,14 +47,14 @@ result<void, i32> run()
     switch( counter( 4 ).checked() )
     {
         case result::ok( v ):
-            t::println( v );
+            t::print( v );
             break;
         case result::err( e ):
             break;
     }
 
     // As an argument.
-    t::println( counter( 5 ).bump() );
+    t::print( counter( 5 ).bump() );
 
     return result::ok();
 }

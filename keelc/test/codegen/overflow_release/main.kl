@@ -9,6 +9,6 @@ i32 add( i32 a, i32 b )
 
 i32 main()
 {
-    t::println( add( 2147483647, 1 ) );
+    t::print( add( 2147483647, 1 ) );
     return 0;
 }

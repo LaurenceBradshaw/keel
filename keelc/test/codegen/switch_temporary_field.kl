@@ -31,8 +31,8 @@ class N
 
     ~N()
     {
-        t::print( "drop " );
-        t::println( v );
+        t::print( "drop ", "" );
+        t::print( v );
     }
 };
 
@@ -46,7 +46,7 @@ i32 main()
     switch( make( 1 ).v )
     {
         case 1:
-            t::println( "one" );
+            t::print( "one" );
             break;
         default:
             return 1;
@@ -55,7 +55,7 @@ i32 main()
     switch( make( 2 ).k )
     {
         case K::On:
-            t::println( "on" );
+            t::print( "on" );
             break;
         case K::Off:
             return 2;
@@ -64,7 +64,7 @@ i32 main()
     switch( make( 3 ).p )
     {
         case P::Some( n ):
-            t::println( n );
+            t::print( n );
             break;
         case P::None:
             return 3;
@@ -72,9 +72,9 @@ i32 main()
 
     for( i32 x : make( 4 ).items )
     {
-        t::println( x );
+        t::print( x );
     }
 
-    t::println( "end" );
+    t::print( "end" );
     return 0;
 }

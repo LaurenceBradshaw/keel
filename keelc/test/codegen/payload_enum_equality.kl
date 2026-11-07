@@ -32,9 +32,9 @@ i32 main()
 {
     Shape one = Shape::Circle( 1 );
 
-    t::println( one == Shape::Circle( 1 ) );
-    t::println( one == Shape::Circle( 2 ) );
-    t::println( one != Shape::Dot );
-    t::println( Shape::Dot == Shape::Dot );
+    t::print( one == Shape::Circle( 1 ) );
+    t::print( one == Shape::Circle( 2 ) );
+    t::print( one != Shape::Dot );
+    t::print( Shape::Dot == Shape::Dot );
     return 0;
 }

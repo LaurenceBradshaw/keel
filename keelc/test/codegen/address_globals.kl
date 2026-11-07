@@ -42,13 +42,13 @@ class Counter
 
 i32 main()
 {
-    t::println( *early );
+    t::print( *early );
     *early = 6;
-    t::println( later );
-    t::println( fp() );
-    t::println( tw( 4 ) );
-    t::println( *both[1] );
-    t::println( bumper( 3 ) );
-    t::println( *Counter::at );
+    t::print( later );
+    t::print( fp() );
+    t::print( tw( 4 ) );
+    t::print( *both[1] );
+    t::print( bumper( 3 ) );
+    t::print( *Counter::at );
     return 0;
 }

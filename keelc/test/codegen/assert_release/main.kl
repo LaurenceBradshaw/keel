@@ -8,12 +8,12 @@ class Noisy
     public Noisy()
     {
         ok_ = false;
-        t::println( "built" );
+        t::print( "built" );
     }
 
     ~Noisy()
     {
-        t::println( "dropped" );
+        t::print( "dropped" );
     }
 
     public bool ok() const
@@ -26,7 +26,7 @@ class Noisy
 
 bool shout()
 {
-    t::println( "ran" );
+    t::print( "ran" );
     return false;
 }
 
@@ -36,6 +36,6 @@ i32 main()
     assert( shout() );
     assert( Noisy().ok() );
 
-    t::println( "done" );
+    t::print( "done" );
     return 0;
 }

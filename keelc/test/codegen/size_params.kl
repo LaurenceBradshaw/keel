@@ -40,13 +40,13 @@ i32 main()
     i32[3] three = [ 1, 2, 3 ];
     i32[4] four  = [ 5, 6, 7, 8 ];
 
-    t::println( total<3>( three ) );
-    t::println( total<Four>( four ) );
-    t::println( forwarded<3>( three ) );
-    t::println( filled<5>( 2 ) );
+    t::print( total<3>( three ) );
+    t::print( total<Four>( four ) );
+    t::print( forwarded<3>( three ) );
+    t::print( filled<5>( 2 ) );
 
     Grid<i32, 2, 3> g = Grid<i32, 2, 3> { [ 7, .. ] };
-    t::println( area<2, 3>( g ) );
-    t::println( cast<u64>( g.cells[5] ) );
+    t::print( area<2, 3>( g ) );
+    t::print( cast<u64>( g.cells[5] ) );
     return 0;
 }

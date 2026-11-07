@@ -131,7 +131,7 @@ def _qualified(package, name):
 
 
 def demangle_function(symbol, signature=True):
-    """`kl_2kl7console_println__3i64` is `kl::println(i64)`, or `kl::println` without the
+    """`kl_2kl7console_print__3i64_7textual` is `kl::print(i64, textual)`, or `kl::print` without the
     signature; anything else is None."""
     try:
         reader = _Reader(symbol)
@@ -337,7 +337,7 @@ def _functions():
 
 
 class _KeelBreak(gdb.Command):
-    """kbreak NAME: break on every Keel function named NAME, such as `manhattan`, `kl::println` or
+    """kbreak NAME: break on every Keel function named NAME, such as `manhattan`, `kl::print` or
     `kl::list<i32>::push`, one breakpoint per overload."""
 
     def __init__(self):

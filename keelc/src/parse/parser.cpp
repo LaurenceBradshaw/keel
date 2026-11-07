@@ -132,6 +132,7 @@ private:
     Node_id parse_array_suffix( Node_id type, Span start );
     Node_id parse_type_with_mode();
     Node_id parse_param();
+    void    refuse_gap_after_default( std::span<const Node_id> params );
 
     // --- statements ---
 
@@ -1134,7 +1135,41 @@ Node_id Parser::parse_param_list( Node_id leading )
 
     recovery_.expect( Token_kind::R_paren );
 
+    refuse_gap_after_default( params );
+
     return ast_.add( Node_kind::Param_list, Span::merge( start, cursor_.previous().span ), 0, params );
+}
+
+// D79: defaults come last, since a call fills its arguments from the left.
+void Parser::refuse_gap_after_default( std::span<const Node_id> params )
+{
+    Node_id defaulted;
+
+    for( const Node_id param : params )
+    {
+        if( ast_.kind( param ) != Node_kind::Param_decl )
+        {
+            continue;
+        }
+
+        if( ast_.default_value( param ).is_valid() )
+        {
+            defaulted = param;
+        }
+        else if( defaulted.is_valid() )
+        {
+            recovery_.error_at(
+                ast_.span( param ),
+                "a parameter after a default needs one too",
+                fmt::format(
+                    "give `{}` a default, or move it before `{}`",
+                    sm_.text( ast_.name_span( param ) ),
+                    sm_.text( ast_.name_span( defaulted ) )
+                )
+            );
+            return;
+        }
+    }
 }
 
 std::vector<Node_id> Parser::parse_type_params()
@@ -2581,7 +2616,16 @@ Node_id Parser::parse_param()
     }
     const Span name_span = cursor_.previous().span;
 
-    const Node_id node = ast_.add( Node_kind::Param_decl, Span::merge( start, cursor_.previous().span ), name.v, { type } );
+    // D79: the parameter's default.
+    Node_id value;
+    if( cursor_.match( Token_kind::Equal ) )
+    {
+        value = parse_expression( 0 );
+    }
+
+    const Span    span = Span::merge( start, cursor_.previous().span );
+    const Node_id node = value.is_valid() ? ast_.add( Node_kind::Param_decl, span, name.v, { type, value } )
+                                          : ast_.add( Node_kind::Param_decl, span, name.v, { type } );
     ast_.set_name_span( node, name_span );
     return node;
 }
@@ -14384,6 +14428,42 @@ TEST_CASE( "parser_parses_a_size_argument", "[parse][size_params]" )
     {
         REQUIRE( index_outline( "a < 4 > b" ).starts_with( "Binary_expr" ) );
         REQUIRE( index_outline( "a < 1 + 2 > ( b )" ).starts_with( "Binary_expr" ) );
+    }
+}
+
+TEST_CASE( "parser_parses_a_parameter_default", "[parse][param_defaults]" )
+{
+    SECTION( "the default is the parameter's second child" )
+    {
+        const Parsed p( "void f( i32 a, i32 b = 2, P c = P { 1 } ) { }" );
+
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id                  f      = find_first( p.ast(), p.root(), Node_kind::Function_decl );
+        const std::span<const Node_id> params = p.ast().params( f );
+        const Node_id                  a      = params[0];
+        const Node_id                  b      = params[1];
+        const Node_id                  c      = params[2];
+
+        REQUIRE_FALSE( p.ast().default_value( a ).is_valid() );
+        REQUIRE( p.text( p.ast().default_value( b ) ) == "2" );
+        REQUIRE( p.text( p.ast().default_value( c ) ) == "P { 1 }" );
+        REQUIRE( p.ast().required_params( f ) == 1 );
+    }
+
+    SECTION( "a parameter after a default needs one too" )
+    {
+        const Parsed p( "void f( i32 a = 1, i32 b ) { }" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "give `b` a default, or move it before `a`" ) != std::string::npos );
+    }
+
+    SECTION( "a function type's parameter takes none" )
+    {
+        const Parsed p( "fn( i32 = 1 ) -> void g;" );
+
+        REQUIRE( p.has_errors() );
     }
 }
 

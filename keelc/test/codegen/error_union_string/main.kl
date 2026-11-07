@@ -46,17 +46,17 @@ void show( result<u64, Parse_error | Io_error> r )
     switch( r )
     {
     case result::ok( size ):
-        t::print( "loaded " );
-        t::println( size );
+        t::print( "loaded ", "" );
+        t::print( size );
         break;
     case result::err( e ):
         switch( e )
         {
         case Io_error::missing:
-            t::println( "missing" );
+            t::print( "missing" );
             break;
         case Parse_error::empty:
-            t::println( "empty" );
+            t::print( "empty" );
             break;
         }
         break;

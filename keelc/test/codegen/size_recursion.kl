@@ -22,8 +22,8 @@ i32 main()
     i32[3] a = [ 1, 2, 3 ];
     Ring<2> tail = Ring<2> { [ 4, 5 ], nullptr };
     Ring<2> head = Ring<2> { [ 6, 7 ], &tail };
-    t::println( depth( a, 2 ) );
-    t::println( count( a, 2 ) );
-    t::println( length( head ) );
+    t::print( depth( a, 2 ) );
+    t::print( count( a, 2 ) );
+    t::print( length( head ) );
     return 0;
 }

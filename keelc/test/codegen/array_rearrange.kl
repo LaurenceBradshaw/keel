@@ -15,11 +15,11 @@ i32 main()
 
     for( const ref kl::string name : names )
     {
-        kl::println( name );
+        kl::print( name );
     }
 
-    kl::println( old );
-    kl::println( other );
+    kl::print( old );
+    kl::print( other );
 
     i32[4] numbers = [ 1, 2, 3, 4 ];
     numbers.swap( 0, 3 );

@@ -1,0 +1,41 @@
+// D79: where a parameter's default is refused, and what it may not read.
+i32 later( i32 a = 1, i32 b ) { return a + b; }
+
+void writes( ref i32 n = 0 ) { }
+void fills( out i32 n = 0 ) { n = 1; }
+
+i32 reads_another( i32 a, i32 b = a ) { return b; }
+
+extern i32 abs( i32 v = 0 );
+
+interface sized
+{
+    u64 size( u64 extra = 0 ) const;
+};
+
+interface shape
+{
+    f64 area( f64 scale ) const;
+};
+
+struct Square implements shape
+{
+    f64 side;
+
+    f64 area( f64 scale = 2.0 ) const { return side * side * scale; }
+
+    f64 scaled( f64 by = side ) const { return by; }
+    f64 again( f64 by = this.side ) const { return by; }
+    f64 called( f64 by = area() ) const { return by; }
+
+    bool operator==( const ref Square other = Square { 1.0 } ) const { return side == other.side; }
+};
+
+i32 two( i32 a, i32 b = 2 ) { return a + b; }
+
+i32 main( const ref str[] args = [ "keel" ] )
+{
+    two();
+    two( 1, 2, 3 );
+    return args.size == 0 ? 1 : 0;
+}

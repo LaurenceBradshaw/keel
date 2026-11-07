@@ -28,20 +28,20 @@ const bool flag = !false;
 
 i32 main()
 {
-    t::println( shifted );
-    t::println( shifted_negated );
-    t::println( shifted_cast );
-    t::println( shifted_all );
-    t::println( shifted_exact );
-    t::println( not_false );
-    t::println( not_compare );
-    t::println( less_floats );
-    t::println( equal_floats );
-    t::println( below_zero );
-    t::println( cast_shift );
-    t::println( cast_negative );
-    t::println( remainder );
-    t::println( Holder::quarter );
-    t::println( flag );
+    t::print( shifted );
+    t::print( shifted_negated );
+    t::print( shifted_cast );
+    t::print( shifted_all );
+    t::print( shifted_exact );
+    t::print( not_false );
+    t::print( not_compare );
+    t::print( less_floats );
+    t::print( equal_floats );
+    t::print( below_zero );
+    t::print( cast_shift );
+    t::print( cast_negative );
+    t::print( remainder );
+    t::print( Holder::quarter );
+    t::print( flag );
     return 0;
 }

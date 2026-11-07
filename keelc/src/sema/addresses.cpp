@@ -135,6 +135,17 @@ Type_id Addresses::function_address( Node_id id, Node_id declaration, Type_id ex
         return types_.record( id, error );
     }
 
+    if( expectation.is_valid() && drops_defaults( declaration, signature, expectation ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "a default is not part of `{}`'s type, so `&{}` is `{}`", name, name, table_.name( signature ) ),
+            fmt::format( "call `{}` from a function of type `{}` instead", name, table_.name( expectation ) )
+        );
+
+        return types_.record( id, error );
+    }
+
     // Recorded after the refusal, because a refused address seeds no instance.
     if( type_args.is_valid() )
     {
@@ -428,6 +439,7 @@ Node_id Addresses::overload_for_signature(
 )
 {
     std::vector<std::string> offered;
+    bool                     defaulted = false;
     for( Node_id candidate = first; candidate.is_valid(); candidate = overloads_.next_visible( id, candidate ) )
     {
         if( ast_.is_generic( candidate ) && bindings.empty() )
@@ -448,6 +460,8 @@ Node_id Addresses::overload_for_signature(
             return candidate;
         }
 
+        defaulted = defaulted || drops_defaults( candidate, written, signature );
+
         offered.push_back( fmt::format( "`{}`", table_.name( written ) ) );
     }
 
@@ -466,10 +480,41 @@ Node_id Addresses::overload_for_signature(
     reporter_.error_at(
         ast_.span( id ),
         fmt::format( "no overload of `{}` has the type `{}`", name, table_.name( signature ) ),
-        offered.empty() ? "none of its overloads can be written as a type" : fmt::format( "its overloads are {}", text )
+        offered.empty() ? "none of its overloads can be written as a type"
+        : defaulted     ? fmt::format( "its overloads are {}, and a default is not part of a type", text )
+                        : fmt::format( "its overloads are {}", text )
     );
 
     return Node_id {};
+}
+
+// D79: whether `wanted` is `written` with some of `declaration`'s defaulted parameters left off.
+bool Addresses::drops_defaults( Node_id declaration, Type_id written, Type_id wanted ) const
+{
+    if( !written.is_valid() || !table_.is_function( written ) || !table_.is_function( wanted ) )
+    {
+        return false;
+    }
+
+    const Type&       full  = table_.get( written );
+    const Type&       cut   = table_.get( wanted );
+    const std::size_t count = cut.arguments.size();
+
+    if( full.element != cut.element || full.return_mode != cut.return_mode || count < ast_.required_params( declaration ) ||
+        count >= full.arguments.size() )
+    {
+        return false;
+    }
+
+    for( std::size_t i = 0; i < count; ++i )
+    {
+        if( full.arguments[i] != cut.arguments[i] || full.modes[i] != cut.modes[i] )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace keel::sema

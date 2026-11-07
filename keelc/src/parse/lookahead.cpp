@@ -1231,14 +1231,23 @@ bool Lookahead::skip_parens()
         return fail( Wanted::Token, Token_kind::L_paren );
     }
 
-    u32 depth = 0;
+    u32  depth     = 0;
+    bool defaulted = false; // past a parameter's `=`, where a struct literal's braces belong (D79)
     while( !cursor_.check( Token_kind::R_paren ) || depth > 0 )
     {
+        if( defaulted && cursor_.check( Token_kind::L_brace ) )
+        {
+            skip_braces();
+            continue;
+        }
+
         if( cursor_.at_end() || cursor_.check( Token_kind::L_brace ) || cursor_.check( Token_kind::R_brace ) ||
             cursor_.check( Token_kind::Semicolon ) )
         {
             return fail( Wanted::Token, Token_kind::R_paren );
         }
+
+        defaulted = defaulted || ( depth == 1 && cursor_.check( Token_kind::Equal ) );
 
         if( cursor_.check( Token_kind::L_paren ) )
         {

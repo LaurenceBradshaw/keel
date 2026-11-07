@@ -2973,6 +2973,21 @@ std::vector<Operand> Lowering::lower_call_arguments(
         }
     }
 
+    // D79: the defaults the call left out, after every written argument, under the callee's bindings.
+    for( std::size_t i = arguments.size(); i < parameters.size(); ++i )
+    {
+        const Node_id  value   = ast_.default_value( parameters[i] );
+        const Bindings saved   = std::exchange( bindings_, callee_bound );
+        Operand        operand = converted(
+            lower_argument( value, parameters[i], callee_bound ),
+            binding_type_under( parameters[i], callee_bound ),
+            ast_.span( value )
+        );
+
+        bindings_ = saved;
+        operands.push_back( is_move_parameter( parameters[i] ) ? moved_if_owning( operand ) : operand );
+    }
+
     return operands;
 }
 

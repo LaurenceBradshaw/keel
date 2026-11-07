@@ -14,15 +14,15 @@ i32 main()
 
     kl::string s = kl::string( "squares" );
     s.push( 58 );
-    kl::println( s );
+    kl::print( s );
 
     i64 total = 0;
     for( u64 i = 0; i < 4; i++ )
     {
         total = total + v[i];
     }
-    kl::print( total );
-    kl::println( "" );
+    kl::print( total, "" );
+    kl::print( "" );
 
     kl::optional<i32> last = v.try_pop();
     if( kl::unwrap( move last ) != 16 ) { return 1; }

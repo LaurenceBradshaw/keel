@@ -82,7 +82,8 @@ private:
     Type_id check_walk_binding( Node_id entry, Type_id given, Node_id param );
     bool    check_ref_initialiser( Node_id id, Node_id value, Type_id type ); // false once reported
     void    visit_increment( Node_id id );
-    void    visit_default( Node_id field );
+    void    visit_default( Node_id decl, Node_id owner = {} );
+    bool    refuse_param_default( Node_id function, Node_id param );
     void    visit_global( Node_id id );
     void    visit_block( Node_id id );
     void    visit_statements( Node_id block ); // the block's children, warning at unreachable ones

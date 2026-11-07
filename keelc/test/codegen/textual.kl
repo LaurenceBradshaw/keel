@@ -18,18 +18,18 @@ struct Name implements textual
 
 void show( str _ )
 {
-    t::print( "exact " );
+    t::print( "exact ", "" );
 }
 
 void show( const ref textual _ )
 {
-    t::print( "borrowed " );
+    t::print( "borrowed ", "" );
 }
 
 // One candidate, so the conditional is checked against `textual`: its arms stay `str`s.
 void one( const ref textual t )
 {
-    t::println( t );
+    t::print( t );
 }
 
 i32 main()
@@ -38,15 +38,15 @@ i32 main()
     Name name  = Name { hello.data, 3 };
     bool yes   = true;
 
-    t::println( "text" );
-    t::println( name );
-    t::println( yes );
-    t::print( yes ? "a" : "b" );
-    t::println( 42 );
-    t::eprintln( name );
+    t::print( "text" );
+    t::print( name );
+    t::print( yes );
+    t::print( yes ? "a" : "b", "" );
+    t::print( 42 );
+    t::eprint( name );
     show( hello );
     show( name );
-    t::println( "" );
+    t::print( "" );
     one( yes ? "c" : "d" );
     return 0;
 }

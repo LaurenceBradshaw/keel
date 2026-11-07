@@ -6,13 +6,13 @@ i32 main()
 {
     i32 x = 0;
 
-    t::print( "before " );
-    t::println( cast<i64>( 42 ) );
-    t::eprintln( "to stderr" );
-    t::print( "unterminated" );
+    t::print( "before ", "" );
+    t::print( cast<i64>( 42 ) );
+    t::eprint( "to stderr" );
+    t::print( "unterminated", "" );
 
     assert( x == 1 );
 
-    t::println( "never" );
+    t::print( "never" );
     return 0;
 }

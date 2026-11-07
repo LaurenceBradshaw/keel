@@ -4,7 +4,7 @@ import kl::string;
 
 i32 tick( i32 n )
 {
-    kl::println( n );
+    kl::print( n );
     return n;
 }
 
@@ -42,8 +42,8 @@ i32 main()
     Named  c = Named { .n = 5 };
     Box<f64> box = Box<f64> { .v = 1.5 };
 
-    kl::println( a.name );
-    kl::println( c.label );
+    kl::print( a.name );
+    kl::print( c.label );
 
     if( a.x != 1 || a.y != 2 || b.x != 4 || o.x + o.y != 0 || c.n != 5 || box.kind != 7 || box.at != nullptr )
     {

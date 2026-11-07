@@ -1,0 +1,15 @@
+// defaulted.klo carries each default with its tree; the calls here leave them out.
+import defaulted;
+
+i32 main()
+{
+    if( add( 1 ) != 12 || add( 1, 2 ) != 3 ) { return 1; }
+
+    const i32 zero = 0;
+    if( either( zero ) != 0 || either<u64>( 0, 4 ) != 4 ) { return 2; }
+
+    const Scale s = Scale { 2 };
+    if( s.times() != 6 || s.times( 5 ) != 10 ) { return 3; }
+
+    return 0;
+}

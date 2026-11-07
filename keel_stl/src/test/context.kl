@@ -30,7 +30,7 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprintln( "check failed" );
+            kl::eprint( "check failed" );
         }
     }
 
@@ -42,11 +42,10 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprint( "check_eq failed: " );
-            kl::eprint( a );
-            kl::eprint( " != " );
+            kl::eprint( "check_eq failed: ", "" );
+            kl::eprint( a, "" );
+            kl::eprint( " != ", "" );
             kl::eprint( b );
-            kl::eprint( "\n" );
         }
     }
 
@@ -58,11 +57,10 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprint( "check_eq failed: " );
-            kl::eprint( a );
-            kl::eprint( " != " );
+            kl::eprint( "check_eq failed: ", "" );
+            kl::eprint( a, "" );
+            kl::eprint( " != ", "" );
             kl::eprint( b );
-            kl::eprint( "\n" );
         }
     }
 
@@ -75,11 +73,10 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprint( "check_eq failed: " );
-            kl::eprint( a );
-            kl::eprint( " != " );
+            kl::eprint( "check_eq failed: ", "" );
+            kl::eprint( a, "" );
+            kl::eprint( " != ", "" );
             kl::eprint( b );
-            kl::eprint( "\n" );
         }
     }
 
@@ -91,11 +88,10 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprint( "check_eq failed: " );
-            kl::eprint( a );
-            kl::eprint( " != " );
+            kl::eprint( "check_eq failed: ", "" );
+            kl::eprint( a, "" );
+            kl::eprint( " != ", "" );
             kl::eprint( b );
-            kl::eprint( "\n" );
         }
     }
 
@@ -108,11 +104,11 @@ class context
         {
             failures_ += 1;
             eprint_location();
-            kl::eprint( "check_eq failed: \"" );
-            kl::eprint( a );
-            kl::eprint( "\" != \"" );
-            kl::eprint( b );
-            kl::eprint( "\"\n" );
+            kl::eprint( "check_eq failed: \"", "" );
+            kl::eprint( a, "" );
+            kl::eprint( "\" != \"", "" );
+            kl::eprint( b, "" );
+            kl::eprint( "\"\n", "" );
         }
     }
 
@@ -130,10 +126,10 @@ class context
     @located
     private void eprint_location()
     {
-        kl::eprint( @caller().file );
-        kl::eprint( ":" );
-        kl::eprint( @caller().line );
-        kl::eprint( ": " );
+        kl::eprint( @caller().file, "" );
+        kl::eprint( ":", "" );
+        kl::eprint( @caller().line, "" );
+        kl::eprint( ": ", "" );
     }
 
     private u64 failures_;

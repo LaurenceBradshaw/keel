@@ -215,6 +215,7 @@ private:
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
     );
 
+    bool takes( Node_id candidate, std::size_t count ) const;
     bool fits( Node_id call, Node_id candidate, u32 implicit_params ) const;
     bool deduce_shape( Type_id pattern, const Argument_shape& shape, Bindings& into ); // an array literal's count too
 
@@ -226,7 +227,7 @@ private:
     std::string candidate_list( std::span<const Node_id> candidates, const Bindings& bindings );
     std::string candidate_list( std::span<const Node_id> candidates, std::span<const Bindings> bindings ); // one each
 
-    bool parameters_collide( Node_id first, Node_id second, bool member );
+    bool parameters_collide( Node_id first, Node_id second, bool member, std::optional<std::size_t> count = {} );
     // Why `second` cannot be declared beside `first`, or nothing when it can.
     std::optional<Conflict> conflict( Node_id first, Node_id second, bool member );
     void                    check_overloaded_pair( Node_id first, Node_id second, bool member );

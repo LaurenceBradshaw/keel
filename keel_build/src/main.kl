@@ -151,8 +151,8 @@ i32 main( const ref str[] args )
             }
             break;
         case result::err( error ):
-            kl::eprintln( "keelb: " + error );
-            kl::eprint( cl.usage() );
+            kl::eprint( "keelb: " + error );
+            kl::eprint( cl.usage(), "" );
             return 2;
     }
 
@@ -165,8 +165,8 @@ i32 main( const ref str[] args )
             testing = true;
             break;
         case Command::Error( message ):
-            kl::eprintln( "keelb: " + message );
-            kl::eprint( cl.usage() );
+            kl::eprint( "keelb: " + message );
+            kl::eprint( cl.usage(), "" );
             return 2;
     }
 
@@ -175,7 +175,7 @@ i32 main( const ref str[] args )
         case result::ok( code ):
             return code;
         case result::err( error ):
-            kl::eprintln( "keelb: " + error );
+            kl::eprint( "keelb: " + error );
             return 2;
     }
 }

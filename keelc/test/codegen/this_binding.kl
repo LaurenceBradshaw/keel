@@ -27,10 +27,10 @@ i32 sum<T>( const ref T t ) where T : adder { return t.plus( 100 ); }
 i32 main()
 {
     C c = C();
-    t::println( c.own() );
-    t::println( c.as_a() );
+    t::print( c.own() );
+    t::print( c.as_a() );
     c.bump();
-    t::println( c.k );
-    t::println( sum<i32>( 7 ) );
+    t::print( c.k );
+    t::print( sum<i32>( 7 ) );
     return 0;
 }

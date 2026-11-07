@@ -36,7 +36,7 @@ i32 main()
         sum += xs[i];
     }
 
-    kl::println( name );
-    kl::println( sum );
+    kl::print( name );
+    kl::print( sum );
     return sum == 70 ? 0 : 1;
 }

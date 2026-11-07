@@ -201,17 +201,17 @@ i32 main()
     switch( sum( numbers ) )
     {
         case result::ok( total ):
-            kl::println( total );            // 42
+            kl::print( total );              // 42
             return 0;
         case result::err:
-            kl::eprintln( "not a number" );
+            kl::eprint( "not a number" );
             return 1;
     }
 }
 ```
 
 **Not yet built:** a build tool, which is next; lambdas, and with them a `for` over a container;
-default parameter and field values; and a printing interface, so a generic body can print a `T`.
+and a printing interface, so a generic body can print a `T`.
 `docs/PLAN.md` §12 has the open questions.
 
 ---

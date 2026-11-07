@@ -25,16 +25,16 @@ i32 main()
     Counter a = Counter();
     Counter b = Counter();
     a.all( ref b );
-    t::println( a.get() ); // 42
-    t::println( b.get() ); // 5
+    t::print( a.get() ); // 42
+    t::print( b.get() ); // 5
     fn( const ref Counter ) -> i64 g = &Counter::get;
-    t::println( g( a ) ); // 42
+    t::print( g( a ) ); // 42
     fn( ref Counter, i64 ) -> void m = &Counter::times;
     m( ref b, 11 );
-    t::println( b.get() ); // 55
-    t::println( call_it( &Counter::seven ) ); // 7
+    t::print( b.get() ); // 55
+    t::print( call_it( &Counter::seven ) ); // 7
     Counter* p = &a;
     p.times( 13 );
-    t::println( a.get() ); // 546
+    t::print( a.get() ); // 546
     return 0;
 }

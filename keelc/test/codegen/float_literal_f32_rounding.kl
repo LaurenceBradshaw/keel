@@ -10,12 +10,12 @@ f32 lit() { return 9007199791611905.0; }
 i32 main()
 {
     f32 x = 9007199791611905.0;
-    t::println( cast<f64>( x ) );             // 9007200328482816
-    t::println( cast<f64>( lit() ) );         // 9007200328482816
-    t::println( cast<f64>( -x ) );            // -9007200328482816
-    t::println( cast<f64>( global ) );        // 9007200328482816
-    t::println( cast<f64>( negative ) );      // -9007200328482816
+    t::print( cast<f64>( x ) );             // 9007200328482816
+    t::print( cast<f64>( lit() ) );         // 9007200328482816
+    t::print( cast<f64>( -x ) );            // -9007200328482816
+    t::print( cast<f64>( global ) );        // 9007200328482816
+    t::print( cast<f64>( negative ) );      // -9007200328482816
     f64 wide = 9007199791611905.0;
-    t::println( wide );                       // 9007199791611904
+    t::print( wide );                       // 9007199791611904
     return 0;
 }

@@ -203,7 +203,7 @@ result<void, Fault | Colour> checked( i32 n )
         return result::err( Colour::Red );
     }
 
-    println( "checked" );
+    print( "checked" );
     return result::ok();
 }
 
@@ -217,13 +217,13 @@ void report( result<void, Fault | Colour> r )
         switch( e )
         {
         case Fault::Lost( code ):
-            eprintln( code );
+            eprint( code );
             break;
         case Fault::Late:
         case Colour::Red:
         case Colour::Green:
         case Colour::Blue:
-            eprint( "other\n" );
+            eprint( "other\n", "" );
             break;
         }
         break;

@@ -40,8 +40,8 @@ i32 main()
     chain<i64> numbers = push<i64>( 1, push<i64>( 2, push<i64>( 3, chain::end ) ) );
     chain<f64> empty   = chain::end;
 
-    t::println( count( numbers ) );
-    t::println( sum( numbers ) );
-    t::println( count( empty ) );
+    t::print( count( numbers ) );
+    t::print( sum( numbers ) );
+    t::print( count( empty ) );
     return 0;
 }

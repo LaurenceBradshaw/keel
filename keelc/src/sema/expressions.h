@@ -103,7 +103,8 @@ public:
     // Whose body the walk is inside. Written only around a function, read by four classes: the two
     // below take it as a parameter, and `Statements` above reads it back. It is walk state, and
     // this is the walk - which is what settled a field that looked as though it belonged to no one.
-    Node_id enter_function( Node_id id ); // returns the enclosing one, for leave_function
+    // Returns the enclosing one, for leave_function. `owner` is a parameter default's function (D79).
+    Node_id enter_function( Node_id id, Node_id owner = {} );
     void    leave_function( Node_id enclosing );
     Node_id current_function() const
     {
@@ -305,6 +306,7 @@ private:
     // overload - so nothing nested inside reads an expectation that belongs to its parent.
     Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
+    Node_id default_owner_;    // the function whose parameter's default is being checked
     Node_id discarded_ {};     // set by infer_discarded while it runs
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.

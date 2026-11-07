@@ -1,7 +1,7 @@
 error: nothing here says what `T` is in `through_bound`
-  --> sema/errors_undeduced_argument.kl:12:17
+  --> sema/errors_undeduced_argument.kl:12:15
    |
-12 |     t::println( through_bound( 4 ) ); // error
-   |                 ^^^^^^^^^^^^^ write the type arguments, as in `through_bound<i32>( ... )`
+12 |     t::print( through_bound( 4 ) ); // error
+   |               ^^^^^^^^^^^^^ write the type arguments, as in `through_bound<i32>( ... )`
 
 1 error generated

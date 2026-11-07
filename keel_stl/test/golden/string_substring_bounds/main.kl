@@ -7,7 +7,7 @@ import kl::string;
 i32 main()
 {
     kl::string text = kl::string( "hello" );
-    kl::println( "cutting" );
+    kl::print( "cutting" );
     kl::string tail = text.substring( 1, 7 );
     return 0;
 }

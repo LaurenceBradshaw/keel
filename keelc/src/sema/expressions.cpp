@@ -2468,11 +2468,18 @@ Node_id Expressions::find_operator(
 // D77: a field's default, which Statements checks with the field as the current function.
 bool Expressions::in_default() const
 {
-    return current_function_.is_valid() && ast_.kind( current_function_ ) == Node_kind::Field_decl;
+    return current_function_.is_valid() && ( ast_.kind( current_function_ ) == Node_kind::Field_decl ||
+                                             ast_.kind( current_function_ ) == Node_kind::Param_decl );
 }
 
 void Expressions::refuse_in_default( Span at )
 {
+    if( ast_.kind( current_function_ ) == Node_kind::Param_decl )
+    {
+        reporter_.error_at( at, "a default cannot read the object it is called on", "it runs at the caller, before the call" );
+        return;
+    }
+
     reporter_.error_at(
         at,
         "a default cannot read the object it builds",
@@ -2482,7 +2489,10 @@ void Expressions::refuse_in_default( Span at )
 
 Node_id Expressions::current_type() const
 {
-    return ast_.enclosing_aggregate( current_function_ );
+    return ast_.enclosing_aggregate(
+        current_function_.is_valid() && ast_.kind( current_function_ ) == Node_kind::Param_decl ? default_owner_
+                                                                                                : current_function_
+    );
 }
 
 // The block a method call on `this` is written in, or invalid.
@@ -4861,10 +4871,11 @@ Type_id Expressions::infer_bare_variant( Node_id id, Type_id scrutinee )
 
 // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
 // otherwise leave the enclosing function's rules reading the wrong declaration.
-Node_id Expressions::enter_function( Node_id id )
+Node_id Expressions::enter_function( Node_id id, Node_id owner )
 {
     const Node_id enclosing = current_function_;
     current_function_       = id;
+    default_owner_          = owner;
 
     return enclosing;
 }

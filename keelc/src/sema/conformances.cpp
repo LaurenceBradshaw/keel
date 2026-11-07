@@ -134,6 +134,11 @@ std::optional<Conformance_problem> answer(
             return Conformance_problem::Located;
         }
 
+        if( ast.required_params( member ) != ast.explicit_params( member ).size() )
+        {
+            return Conformance_problem::Defaulted;
+        }
+
         if( ast.access( member ) == Access::Private )
         {
             return Conformance_problem::Private;
@@ -964,6 +969,13 @@ void report_conformance_errors(
                 )
             );
             break;
+        case Conformance_problem::Defaulted:
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}`'s `{}` cannot have a default, since it answers `{}`", type, method, interface ),
+                fmt::format( "a call through `{}` would not see it; pass the value at each call instead", interface )
+            );
+            break;
         case Conformance_problem::Private:
             reporter.error_at(
                 error.at,
@@ -1278,6 +1290,10 @@ TEST_CASE( "conformances_report_each_problem", "[sema][interfaces]" )
           Conformance_problem::Located,
           "`Sq`'s `grow` cannot be `@located`, since it answers `Shape`",
           "a call through `Shape` passes no location" },
+        { "f64 area() const { return s; } void grow( f64 by = 1.0 ) { }",
+          Conformance_problem::Defaulted,
+          "`Sq`'s `grow` cannot have a default, since it answers `Shape`",
+          "a call through `Shape` would not see it" },
     };
 
     for( const Case& c : cases )

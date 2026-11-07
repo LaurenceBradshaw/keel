@@ -16,7 +16,7 @@ i32 main()
         return 1;
     }
 
-    t::println( "before" );
+    t::print( "before" );
 
     if( ( nan <=> 1.0 ) == ordering::less )
     {

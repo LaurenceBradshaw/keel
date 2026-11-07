@@ -1,0 +1,115 @@
+// D79: a call that leaves a parameter out gets its default, run after the written arguments.
+import kl::console;
+import kl::string;
+
+i32 tick( i32 n )
+{
+    kl::print( n );
+    return n;
+}
+
+i32 limit = 40;
+
+i32 add( i32 a, i32 b = 2, i32 c = tick( 3 ) )
+{
+    return a + b + c;
+}
+
+// An owning default is built at each call that needs one, and dropped after it.
+u64 length( const ref kl::string text = kl::string( "fresh" ) )
+{
+    return text.size();
+}
+
+u64 keep( move kl::string text = kl::string( "moved" ) )
+{
+    return text.size();
+}
+
+i32 capped( i32 n, i32 most = limit )
+{
+    return n < most ? n : most;
+}
+
+T either<T>( T value, T fallback = T() ) where T : numeric
+{
+    return value == T() ? fallback : value;
+}
+
+struct Counter
+{
+    i32 n;
+
+    static i32 step = 5;
+
+    i32 bumped( i32 by = step ) const
+    {
+        return n + by;
+    }
+
+    static Counter at( i32 n = 7 )
+    {
+        return Counter { n };
+    }
+};
+
+struct Wrap<T> where T : numeric
+{
+    T v;
+
+    T plus( T by = T() ) const
+    {
+        return v + by;
+    }
+};
+
+class Named
+{
+    public kl::string label;
+    public i32        size;
+
+    Named( str text = "anonymous", i32 size = 1 )
+    {
+        label     = kl::string( text );
+        this.size = size;
+    }
+};
+
+i32 main()
+{
+    i32 failures = 0;
+
+    // The written arguments run first, then the defaults in order: `tick( 1 )`, then `tick( 3 )`.
+    if( add( tick( 1 ) ) != 6 ) { failures += 1; }
+    if( add( 1, 10 ) != 14 ) { failures += 1; }
+    if( add( 1, 10, 100 ) != 111 ) { failures += 1; }
+
+    if( length() != 5 ) { failures += 1; }
+    if( length( kl::string( "given" ) ) != 5 ) { failures += 1; }
+    if( keep() != 5 ) { failures += 1; }
+
+    if( capped( 99 ) != 40 ) { failures += 1; }
+    limit = 50;
+    if( capped( 99 ) != 50 ) { failures += 1; }
+
+    const i32 zero = 0;
+    if( either( zero ) != 0 ) { failures += 1; }
+    if( either( zero, 9 ) != 9 ) { failures += 1; }
+    if( either<u64>( 4 ) != 4 ) { failures += 1; }
+
+    const Counter c = Counter::at();
+    if( c.n != 7 || c.bumped() != 12 || c.bumped( 1 ) != 8 ) { failures += 1; }
+    if( Counter::at( 2 ).bumped() != 7 ) { failures += 1; }
+
+    const Wrap<f64> w = Wrap<f64> { 1.5 };
+    if( w.plus() != 1.5 || w.plus( 1.0 ) != 2.5 ) { failures += 1; }
+
+    const Named a = Named();
+    const Named b = Named( "given" );
+    const Named d = Named( "both", 3 );
+    kl::print( a.label );
+    kl::print( b.label );
+    if( a.size != 1 || b.size != 1 || d.size != 3 ) { failures += 1; }
+
+    return failures;
+}

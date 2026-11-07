@@ -27,7 +27,7 @@ enum Bad
 
 void note()
 {
-    t::println( "note" );
+    t::print( "note" );
 }
 
 T same<T>( T a ) where T : copyable
@@ -38,7 +38,7 @@ T same<T>( T a ) where T : copyable
 
 void look<T>( const ref T _ )
 {
-    t::println( "look" );
+    t::print( "look" );
 }
 
 Box<T> boxed<T>( T v ) where T : copyable
@@ -53,7 +53,7 @@ result<void, Bad> step( bool fail )
         return result::err( Bad::nope );
     }
 
-    t::println( "step" );
+    t::print( "step" );
     return result::ok();
 }
 
@@ -62,7 +62,7 @@ result<void, Bad> steps( bool fail )
     switch( step( fail ) )
     {
         case result::ok:
-            t::println( "done" );
+            t::print( "done" );
             return result::ok();
         case result::err( e ):
             return result::err( e );
@@ -74,10 +74,10 @@ i32 report( result<void, Bad> r )
     switch( r )
     {
         case result::ok:
-            t::println( "ok" );
+            t::print( "ok" );
             return 0;
         case result::err( e ):
-            t::println( "err" );
+            t::print( "err" );
             return 1;
     }
 }
@@ -90,19 +90,19 @@ i32 main()
     Box<void> c = b;
     look( c );
     Pair<void> p = Pair { note(), 7 };
-    t::println( p.second );
+    t::print( p.second );
 
     Two<void> t = Two::a( 9 );
     switch( t )
     {
         case Two::a( y ):
-            t::println( y );
+            t::print( y );
             break;
         case Two::b:
             break;
     }
 
     i32 failures = report( steps( false ) ) + report( steps( true ) );
-    t::println( failures );
+    t::print( failures );
     return failures - 1;
 }

@@ -19,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -80,7 +80,7 @@ class Holder
 
 void sink( move Buf b )
 {
-    t::println( b.get() );
+    t::print( b.get() );
 }
 
 void fill( out P p )
@@ -105,7 +105,7 @@ void filled_through_out()
 {
     P q;
     fill( out q );
-    t::println( q.b.get() );
+    t::print( q.b.get() );
 }
 
 void filled_in_place()
@@ -170,14 +170,14 @@ void replaced_after_construction()
 {
     C c = C( 18 );
     c.n = 1;
-    t::println( c.n );
+    t::print( c.n );
 }
 
 void built_through_out()
 {
     C d = C( 0 );
     build( out d );
-    t::println( d.n );
+    t::print( d.n );
 }
 
 i32 main()

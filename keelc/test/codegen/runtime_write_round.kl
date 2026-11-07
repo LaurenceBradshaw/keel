@@ -3,11 +3,11 @@ import t::console;
 
 i32 main()
 {
-    t::println( 10.0 );
-    t::println( 100.0 );
-    t::println( 1200.0 );
-    t::println( 1e15 );
-    t::println( 1e16 );
-    t::println( -10.0 );
+    t::print( 10.0 );
+    t::print( 100.0 );
+    t::print( 1200.0 );
+    t::print( 1e15 );
+    t::print( 1e16 );
+    t::print( -10.0 );
     return 0;
 }

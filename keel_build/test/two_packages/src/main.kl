@@ -4,6 +4,6 @@ import kl::string;
 
 i32 main()
 {
-    kl::println( kl::string::from( geo::length() ) );
+    kl::print( kl::string::from( geo::length() ) );
     return 0;
 }

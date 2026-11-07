@@ -20,8 +20,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -85,31 +85,31 @@ i32 main()
     Buf v;
 
     fill( out v, 1 );
-    t::println( v.get() );
+    t::print( v.get() );
 
     // Read before the drop.
     fill( out v, v.get() + 1 );
-    t::println( v.get() );
+    t::print( v.get() );
 
     refill( out v );
-    t::println( v.get() );
+    t::print( v.get() );
 
     forward( out v );
-    t::println( v.get() );
+    t::print( v.get() );
 
     through( ref v );
-    t::println( v.get() );
+    t::print( v.get() );
 
     Buf w;
 
     maybe( out w, false );
-    t::println( w.get() );
+    t::print( w.get() );
 
     maybe( out w, true );
-    t::println( w.get() );
+    t::print( w.get() );
 
     Pair p = Pair( 40 );
-    t::println( p.a.get() );
+    t::print( p.a.get() );
 
     return 0;
 }

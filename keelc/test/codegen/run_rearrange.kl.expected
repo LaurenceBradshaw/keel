@@ -8222,26 +8222,17 @@ void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-void kl_2kl7console_print__7textual( struct kl_7prelude_textual__ref );
-void kl_2kl7console_print__3i64( int64_t );
-void kl_2kl7console_print__3u64( uint64_t );
-void kl_2kl7console_print__3f64( double );
-void kl_2kl7console_print__4bool( bool );
-void kl_2kl7console_println__7textual( struct kl_7prelude_textual__ref );
-void kl_2kl7console_println__3i64( int64_t );
-void kl_2kl7console_println__3u64( uint64_t );
-void kl_2kl7console_println__3f64( double );
-void kl_2kl7console_println__4bool( bool );
-void kl_2kl7console_eprint__7textual( struct kl_7prelude_textual__ref );
-void kl_2kl7console_eprint__3i64( int64_t );
-void kl_2kl7console_eprint__3u64( uint64_t );
-void kl_2kl7console_eprint__3f64( double );
-void kl_2kl7console_eprint__4bool( bool );
-void kl_2kl7console_eprintln__7textual( struct kl_7prelude_textual__ref );
-void kl_2kl7console_eprintln__3i64( int64_t );
-void kl_2kl7console_eprintln__3u64( uint64_t );
-void kl_2kl7console_eprintln__3f64( double );
-void kl_2kl7console_eprintln__4bool( bool );
+void kl_2kl7console_write_text__3i32_7textual( int32_t, struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_2kl7console_eprint__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_2kl7console_eprint__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_2kl7console_eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_2kl7console_eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_2kl7console_eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
 bool kl_2kl7console_input__RQ2kl6string( struct kl_2kl6string_string* );
 void kl_2kl2os_file__dtor( struct kl_2kl2os_file* );
 struct kl_2kl2os_file kl_2kl2os_standard_input__SQ2kl4file( void );
@@ -8261,431 +8252,242 @@ static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as
 
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
-#line 18 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
+#line 15 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7prelude_textual__ref kl_text_2 )
 {
-    struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
-    struct kl__run__L2u8__ref kl_t4;
-    uint8_t* kl_t5;
-    uint64_t kl_t6;
+    struct kl__run__L2u8__ref kl_r_3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    uint8_t* kl_t6;
+    uint64_t kl_t7;
+#line 17 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_text_2;
+#line 17 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t5 = kl_t4.vtable->kl__as_text__( kl_t4.self );
+#line 17 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_r_3 = kl_t5;
 #line 20 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t3 = kl_text_1;
+    kl_t6 = ( kl_r_3 ).data;
 #line 20 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
+    kl_t7 = ( kl_r_3 ).size;
 #line 20 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_r_2 = kl_t4;
-#line 23 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( kl_r_2 ).data;
-#line 23 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t6 = ( kl_r_2 ).size;
-#line 23 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_rt_write( 1, kl_t5, kl_t6 );
-#line 25 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_rt_write( kl_stream_1, kl_t6, kl_t7 );
+#line 22 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     return;
-#line 25 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 22 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
-#line 28 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_print__3i64( int64_t kl_value_1 )
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_print__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 31 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_text_1;
+#line 31 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 1, kl_t3 );
+    kl_t5 = kl_end_2;
 #line 32 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 1, kl_t5 );
+    return;
+#line 33 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 36 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_print__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 40 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_rt_write_i64( 1, kl_value_1 );
-#line 34 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 42 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 42 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 1, kl_t4 );
     return;
-#line 34 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 43 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
-#line 37 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_print__3u64( uint64_t kl_value_1 )
+#line 46 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_print__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-#line 41 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    struct kl_7prelude_textual__ref kl_t4;
+#line 50 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_rt_write_u64( 1, kl_value_1 );
-#line 43 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    return;
-#line 43 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 48 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_print__3f64( double kl_value_1 )
-{
 #line 52 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 52 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 53 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 58 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_print__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 62 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_rt_write_f64( 1, kl_value_1 );
-#line 54 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 64 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 64 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 1, kl_t4 );
     return;
-#line 54 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 65 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
-#line 57 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_print__4bool( bool kl_value_1 )
+#line 68 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_print__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-    struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_str kl_t7;
-    struct kl_7prelude_str* kl_t8;
-    uint8_t* kl_t9;
-    struct kl_7prelude_textual__ref kl_t11;
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    if ( kl_value_1 ) goto bb1; else goto bb2;
-    bb1:
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t4 = &kl_t3;
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "true";
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_t3;
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    goto bb3;
-    bb2:
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t8 = &kl_t7;
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t9 = ( uint8_t* ) "false";
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 5 );
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_t7;
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    goto bb3;
-    bb3:
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 59 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t11 );
-    return;
-#line 60 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 63 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_println__7textual( struct kl_7prelude_textual__ref kl_text_1 )
-{
-    struct kl_7prelude_textual__ref kl_t2;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_7prelude_textual__ref kl_t8;
-#line 65 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_text_1;
-#line 65 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t2 );
-    kl_t5 = &kl_t4;
-#line 66 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t6 = ( uint8_t* ) "\012";
-#line 66 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
-#line 66 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 66 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t8 );
-    return;
-#line 67 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
 #line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_println__3i64( int64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 72 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__3i64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 73 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 73 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 73 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 73 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t7 );
-    return;
-#line 74 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 77 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_println__3u64( uint64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 79 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__3u64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t7 );
-    return;
-#line 81 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 84 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_println__3f64( double kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 86 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__3f64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 87 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 87 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 87 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 87 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t7 );
-    return;
-#line 88 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 91 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_println__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 93 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__4bool( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 94 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 94 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 94 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 94 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_print__7textual( kl_t7 );
-    return;
-#line 95 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 102 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
-{
-    struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
-    struct kl__run__L2u8__ref kl_t4;
-    uint8_t* kl_t5;
-    uint64_t kl_t6;
-#line 104 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t3 = kl_text_1;
-#line 104 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
-#line 104 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_r_2 = kl_t4;
-#line 107 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( kl_r_2 ).data;
-#line 107 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t6 = ( kl_r_2 ).size;
-#line 107 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_rt_write( 2, kl_t5, kl_t6 );
-#line 109 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    return;
-#line 109 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 112 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprint__3i64( int64_t kl_value_1 )
-{
-#line 116 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_rt_write_i64( 2, kl_value_1 );
-#line 118 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    return;
-#line 118 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 121 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprint__3u64( uint64_t kl_value_1 )
-{
-#line 125 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_rt_write_u64( 2, kl_value_1 );
-#line 127 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    return;
-#line 127 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 132 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprint__3f64( double kl_value_1 )
-{
-#line 136 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_rt_write_f64( 2, kl_value_1 );
-#line 138 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    return;
-#line 138 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 141 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprint__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_str kl_t7;
-    struct kl_7prelude_str* kl_t8;
-    uint8_t* kl_t9;
-    struct kl_7prelude_textual__ref kl_t11;
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t4 = &kl_t3;
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "true";
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_t3;
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t5 = &kl_t4;
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_t4;
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     goto bb3;
     bb2:
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t8 = &kl_t7;
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t9 = ( uint8_t* ) "false";
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 5 );
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_t7;
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t9 = &kl_t8;
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_t8;
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     goto bb3;
     bb3:
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 143 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t11 );
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t13 = kl_end_2;
+#line 70 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_print__7textual_7textual( kl_t12, kl_t13 );
     return;
-#line 144 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 71 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
-#line 147 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprintln__7textual( struct kl_7prelude_textual__ref kl_text_1 )
+#line 78 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_eprint__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-    struct kl_7prelude_textual__ref kl_t2;
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_text_1;
+#line 80 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 2, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 81 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 2, kl_t5 );
+    return;
+#line 82 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 85 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_eprint__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 89 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_rt_write_i64( 2, kl_value_1 );
+#line 91 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 91 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 92 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 95 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_eprint__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 99 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_rt_write_u64( 2, kl_value_1 );
+#line 101 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 101 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 102 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 107 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_eprint__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 111 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_rt_write_f64( 2, kl_value_1 );
+#line 113 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t4 = kl_end_2;
+#line 113 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 114 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+}
+
+#line 117 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+void kl_2kl7console_eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_7prelude_textual__ref kl_t8;
-#line 149 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t2 = kl_text_1;
-#line 149 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t2 );
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t5 = &kl_t4;
-#line 150 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t6 = ( uint8_t* ) "\012";
-#line 150 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
-#line 150 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 150 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t8 );
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_t4;
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    goto bb3;
+    bb2:
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t9 = &kl_t8;
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t3 = kl_t8;
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    goto bb3;
+    bb3:
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t13 = kl_end_2;
+#line 119 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_2kl7console_eprint__7textual_7textual( kl_t12, kl_t13 );
     return;
-#line 151 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 120 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
-#line 154 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprintln__3i64( int64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 156 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__3i64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 157 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 157 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 157 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 157 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t7 );
-    return;
-#line 158 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 161 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprintln__3u64( uint64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 163 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__3u64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 164 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 164 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 164 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 164 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t7 );
-    return;
-#line 165 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 168 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprintln__3f64( double kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 170 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__3f64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 171 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 171 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 171 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 171 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t7 );
-    return;
-#line 172 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 175 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-void kl_2kl7console_eprintln__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 177 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__4bool( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 178 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 178 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 178 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 178 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-    kl_2kl7console_eprint__7textual( kl_t7 );
-    return;
-#line 179 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
-}
-
-#line 185 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 126 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 bool kl_2kl7console_input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1 )
 {
     bool kl_t0;
@@ -8699,47 +8501,47 @@ bool kl_2kl7console_input__RQ2kl6string( struct kl_2kl6string_string* kl_line_1 
     struct kl_2kl2os_file_error kl_e_9;
     bool kl_t10;
     ( void ) kl_e_9;
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t10 = false;
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t3 = kl_2kl2os_standard_input__SQ2kl4file(  );
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t10 = true;
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_in_2 = kl_t3;
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t10 = false;
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     if ( kl_t10 ) kl_2kl2os_file__dtor( &kl_t3 );
-#line 187 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 128 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t10 = false;
-#line 189 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 130 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t4 = &kl_in_2;
-#line 189 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 130 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t5 = &( *kl_line_1 );
-#line 189 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 130 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t6 = kl_2kl2os_read_line__SQ2kl4file_RQ2kl6string( kl_t4, kl_t5 );
-#line 191 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 132 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_t7 = kl_t6.tag == 0;
-#line 191 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 132 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
-#line 191 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 132 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_more_8 = kl_t6.kl_2ok_value;
     kl_t0 = kl_more_8;
-#line 192 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 133 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_2kl2os_file__dtor( &kl_in_2 );
-#line 192 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 133 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     return kl_t0;
     bb2:
-#line 193 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 134 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_e_9 = kl_t6.kl_3err_error;
     kl_t0 = false;
-#line 194 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 135 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     kl_2kl2os_file__dtor( &kl_in_2 );
-#line 194 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 135 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
     return kl_t0;
-#line 196 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+#line 137 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
 }
 
 // codegen/run_rearrange.kl
@@ -8845,7 +8647,7 @@ void kl__A3_Q2kl6string__dtor( struct kl__A3_Q2kl6string* );
 void kl_2kl6string_string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_string*, struct kl_7prelude_textual__ref );
 void kl_2kl6string_string__dtor( struct kl_2kl6string_string* );
 struct kl__run__L2u8__ref kl_2kl6string_as_text__SQ2kl6string( struct kl_2kl6string_string* );
-void kl_2kl7console_println__7textual( struct kl_7prelude_textual__ref );
+void kl_2kl7console_print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_2kl2os_process__dtor( struct kl_2kl2os_process* );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
@@ -9217,64 +9019,72 @@ int32_t kl__main__( void )
     bool kl_t38;
     struct kl_2kl6string_string* kl_name_39;
     struct kl_7prelude_textual__ref kl_t40;
-    struct kl_7prelude_textual__ref kl_t42;
-    struct kl__A4_3i32 kl_numbers_44;
-    struct kl__A4_3i32 kl_t45;
-    uint64_t kl_t46;
-    uint64_t kl_t47;
-    uint64_t kl_t48;
-    uint64_t kl_t49;
-    int32_t kl_was_50;
-    uint64_t kl_t51;
-    int32_t* kl_t52;
-    struct kl__run__L3i32__ref kl_t53;
-    int32_t kl_t54;
-    int32_t kl_t55;
-    bool kl_t56;
-    bool kl_t57;
-    bool kl_t58;
+    struct kl_7prelude_str kl_t41;
+    struct kl_7prelude_str* kl_t42;
+    uint8_t* kl_t43;
+    struct kl_7prelude_textual__ref kl_t45;
+    struct kl_7prelude_textual__ref kl_t47;
+    struct kl_7prelude_str kl_t48;
+    struct kl_7prelude_str* kl_t49;
+    uint8_t* kl_t50;
+    struct kl_7prelude_textual__ref kl_t52;
+    struct kl__A4_3i32 kl_numbers_54;
+    struct kl__A4_3i32 kl_t55;
+    uint64_t kl_t56;
+    uint64_t kl_t57;
+    uint64_t kl_t58;
     uint64_t kl_t59;
-    bool kl_t60;
+    int32_t kl_was_60;
     uint64_t kl_t61;
-    bool kl_t62;
-    uint64_t kl_t63;
-    bool kl_t64;
-    bool kl_t65;
+    int32_t* kl_t62;
+    struct kl__run__L3i32__ref kl_t63;
+    int32_t kl_t64;
+    int32_t kl_t65;
     bool kl_t66;
     bool kl_t67;
     bool kl_t68;
-    bool kl_t69;
+    uint64_t kl_t69;
     bool kl_t70;
+    uint64_t kl_t71;
+    bool kl_t72;
+    uint64_t kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    bool kl_t76;
+    bool kl_t77;
+    bool kl_t78;
+    bool kl_t79;
+    bool kl_t80;
     ( void ) kl_t27;
     ( void ) kl_t28;
     ( void ) kl_t29;
     ( void ) kl_t31;
-    ( void ) kl_t46;
-    ( void ) kl_t47;
-    ( void ) kl_t48;
-    ( void ) kl_t49;
-    ( void ) kl_t51;
+    ( void ) kl_t56;
+    ( void ) kl_t57;
+    ( void ) kl_t58;
     ( void ) kl_t59;
     ( void ) kl_t61;
-    ( void ) kl_t63;
+    ( void ) kl_t69;
+    ( void ) kl_t71;
+    ( void ) kl_t73;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = false;
+    kl_t76 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t67 = false;
+    kl_t77 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t68 = false;
+    kl_t78 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t69 = false;
+    kl_t79 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t70 = false;
+    kl_t80 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = false;
+    kl_t76 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t67 = false;
+    kl_t77 = false;
 #line 22 "codegen/run_rearrange.kl"
     kl_t4 = &kl_t3;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t67 = true;
+    kl_t77 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_t6 = &kl_t5;
 #line 22 "codegen/run_rearrange.kl"
@@ -9286,11 +9096,11 @@ int32_t kl__main__( void )
 #line 22 "codegen/run_rearrange.kl"
     kl_2kl6string_string__RQ2kl6string_7textual__ctor( kl_t4, kl_t9 );
 #line 22 "codegen/run_rearrange.kl"
-    kl_t68 = false;
+    kl_t78 = false;
 #line 22 "codegen/run_rearrange.kl"
     kl_t12 = &kl_t11;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t68 = true;
+    kl_t78 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_t14 = &kl_t13;
 #line 22 "codegen/run_rearrange.kl"
@@ -9302,11 +9112,11 @@ int32_t kl__main__( void )
 #line 22 "codegen/run_rearrange.kl"
     kl_2kl6string_string__RQ2kl6string_7textual__ctor( kl_t12, kl_t17 );
 #line 22 "codegen/run_rearrange.kl"
-    kl_t69 = false;
+    kl_t79 = false;
 #line 22 "codegen/run_rearrange.kl"
     kl_t20 = &kl_t19;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t69 = true;
+    kl_t79 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_t22 = &kl_t21;
 #line 22 "codegen/run_rearrange.kl"
@@ -9322,45 +9132,45 @@ int32_t kl__main__( void )
 #line 22 "codegen/run_rearrange.kl"
     kl_t2.e[kl_t27] = kl_t3;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t67 = false;
+    kl_t77 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = true;
+    kl_t76 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_t28 = 1;
 #line 22 "codegen/run_rearrange.kl"
     kl_t2.e[kl_t28] = kl_t11;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t68 = false;
+    kl_t78 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = true;
+    kl_t76 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_t29 = 2;
 #line 22 "codegen/run_rearrange.kl"
     kl_t2.e[kl_t29] = kl_t19;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t69 = false;
+    kl_t79 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = true;
+    kl_t76 = true;
 #line 22 "codegen/run_rearrange.kl"
     kl_names_1 = kl_t2;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = false;
+    kl_t76 = false;
 #line 22 "codegen/run_rearrange.kl"
-    if ( kl_t66 ) kl__A3_Q2kl6string__dtor( &kl_t2 );
+    if ( kl_t76 ) kl__A3_Q2kl6string__dtor( &kl_t2 );
 #line 22 "codegen/run_rearrange.kl"
-    if ( kl_t69 ) kl_2kl6string_string__dtor( &kl_t19 );
+    if ( kl_t79 ) kl_2kl6string_string__dtor( &kl_t19 );
 #line 22 "codegen/run_rearrange.kl"
-    if ( kl_t68 ) kl_2kl6string_string__dtor( &kl_t11 );
+    if ( kl_t78 ) kl_2kl6string_string__dtor( &kl_t11 );
 #line 22 "codegen/run_rearrange.kl"
-    if ( kl_t67 ) kl_2kl6string_string__dtor( &kl_t3 );
+    if ( kl_t77 ) kl_2kl6string_string__dtor( &kl_t3 );
 #line 22 "codegen/run_rearrange.kl"
-    kl_t67 = false;
+    kl_t77 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t68 = false;
+    kl_t78 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t69 = false;
+    kl_t79 = false;
 #line 22 "codegen/run_rearrange.kl"
-    kl_t66 = false;
+    kl_t76 = false;
     kl_t31 = 0;
 #line 23 "codegen/run_rearrange.kl"
     kl_t32 = &kl_names_1.e[kl_t31];
@@ -9369,15 +9179,15 @@ int32_t kl__main__( void )
 #line 23 "codegen/run_rearrange.kl"
     kl_t34 = kl__rearrange__RLQ2kl6string( ( kl_t33 ).data, ( kl_t33 ).size );
 #line 23 "codegen/run_rearrange.kl"
-    kl_t70 = true;
+    kl_t80 = true;
 #line 23 "codegen/run_rearrange.kl"
     kl_old_30 = kl_t34;
 #line 23 "codegen/run_rearrange.kl"
-    kl_t70 = false;
+    kl_t80 = false;
 #line 23 "codegen/run_rearrange.kl"
-    if ( kl_t70 ) kl_2kl6string_string__dtor( &kl_t34 );
+    if ( kl_t80 ) kl_2kl6string_string__dtor( &kl_t34 );
 #line 23 "codegen/run_rearrange.kl"
-    kl_t70 = false;
+    kl_t80 = false;
 #line 25 "codegen/run_rearrange.kl"
     kl_t35 = &kl_names_1;
 #line 25 "codegen/run_rearrange.kl"
@@ -9396,50 +9206,65 @@ int32_t kl__main__( void )
     kl_name_39 = &( *kl_t35 ).e[kl_t36];
 #line 27 "codegen/run_rearrange.kl"
     kl_t40 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_name_39 ), &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t42 = &kl_t41;
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t43 = ( uint8_t* ) "\012";
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t42, kl_t43, 1 );
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t45 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t41, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 27 "codegen/run_rearrange.kl"
-    kl_2kl7console_println__7textual( kl_t40 );
+    kl_2kl7console_print__7textual_7textual( kl_t40, kl_t45 );
 #line 25 "codegen/run_rearrange.kl"
     goto bb4;
     bb3:
 #line 30 "codegen/run_rearrange.kl"
-    kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_old_30, &kl_2kl6string_string__as_kl_7prelude_textual };
-#line 30 "codegen/run_rearrange.kl"
-    kl_2kl7console_println__7textual( kl_t42 );
+    kl_t47 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_old_30, &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t49 = &kl_t48;
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t50 = ( uint8_t* ) "\012";
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t49, kl_t50, 1 );
+#line 29 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/console.kl"
+    kl_t52 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t48, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_2kl7console_print__7textual_7textual( kl_t47, kl_t52 );
 #line 32 "codegen/run_rearrange.kl"
-    kl_t46 = 0;
+    kl_t56 = 0;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t45.e[kl_t46] = 1;
+    kl_t55.e[kl_t56] = 1;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t47 = 1;
+    kl_t57 = 1;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t45.e[kl_t47] = 2;
+    kl_t55.e[kl_t57] = 2;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t48 = 2;
+    kl_t58 = 2;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t45.e[kl_t48] = 3;
+    kl_t55.e[kl_t58] = 3;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t49 = 3;
+    kl_t59 = 3;
 #line 32 "codegen/run_rearrange.kl"
-    kl_t45.e[kl_t49] = 4;
+    kl_t55.e[kl_t59] = 4;
 #line 32 "codegen/run_rearrange.kl"
-    kl_numbers_44 = kl_t45;
-    kl_t51 = 0;
+    kl_numbers_54 = kl_t55;
+    kl_t61 = 0;
 #line 33 "codegen/run_rearrange.kl"
-    kl_t52 = &kl_numbers_44.e[kl_t51];
+    kl_t62 = &kl_numbers_54.e[kl_t61];
 #line 33 "codegen/run_rearrange.kl"
-    kl_t53 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t52, 4 };
+    kl_t63 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t62, 4 };
 #line 33 "codegen/run_rearrange.kl"
-    kl_t54 = kl__bump__RL3i32( ( kl_t53 ).data, ( kl_t53 ).size );
+    kl_t64 = kl__bump__RL3i32( ( kl_t63 ).data, ( kl_t63 ).size );
 #line 33 "codegen/run_rearrange.kl"
-    kl_was_50 = kl_t54;
+    kl_was_60 = kl_t64;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t59 = 0;
+    kl_t69 = 0;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t60 = kl_numbers_44.e[kl_t59] == 4;
+    kl_t70 = kl_numbers_54.e[kl_t69] == 4;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t58 = kl_t60;
+    kl_t68 = kl_t70;
 #line 35 "codegen/run_rearrange.kl"
-    if ( kl_t58 ) goto bb8; else goto bb9;
+    if ( kl_t68 ) goto bb8; else goto bb9;
     bb4:
 #line 25 "codegen/run_rearrange.kl"
     kl_t36 = kl_t36 + 1;
@@ -9447,17 +9272,17 @@ int32_t kl__main__( void )
     goto bb1;
     bb5:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t55 = 0;
+    kl_t65 = 0;
 #line 35 "codegen/run_rearrange.kl"
     goto bb7;
     bb6:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t55 = 1;
+    kl_t65 = 1;
 #line 35 "codegen/run_rearrange.kl"
     goto bb7;
     bb7:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t0 = kl_t55;
+    kl_t0 = kl_t65;
 #line 35 "codegen/run_rearrange.kl"
     kl_2kl6string_string__dtor( &kl_old_30 );
 #line 35 "codegen/run_rearrange.kl"
@@ -9466,42 +9291,42 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t61 = 1;
+    kl_t71 = 1;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t62 = kl_numbers_44.e[kl_t61] == 9;
+    kl_t72 = kl_numbers_54.e[kl_t71] == 9;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t58 = kl_t62;
+    kl_t68 = kl_t72;
 #line 35 "codegen/run_rearrange.kl"
     goto bb9;
     bb9:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t57 = kl_t58;
+    kl_t67 = kl_t68;
 #line 35 "codegen/run_rearrange.kl"
-    if ( kl_t57 ) goto bb10; else goto bb11;
+    if ( kl_t67 ) goto bb10; else goto bb11;
     bb10:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t63 = 3;
+    kl_t73 = 3;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t64 = kl_numbers_44.e[kl_t63] == 1;
+    kl_t74 = kl_numbers_54.e[kl_t73] == 1;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t57 = kl_t64;
+    kl_t67 = kl_t74;
 #line 35 "codegen/run_rearrange.kl"
     goto bb11;
     bb11:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t56 = kl_t57;
+    kl_t66 = kl_t67;
 #line 35 "codegen/run_rearrange.kl"
-    if ( kl_t56 ) goto bb12; else goto bb13;
+    if ( kl_t66 ) goto bb12; else goto bb13;
     bb12:
 #line 35 "codegen/run_rearrange.kl"
-    kl_t65 = kl_was_50 == 2;
+    kl_t75 = kl_was_60 == 2;
 #line 35 "codegen/run_rearrange.kl"
-    kl_t56 = kl_t65;
+    kl_t66 = kl_t75;
 #line 35 "codegen/run_rearrange.kl"
     goto bb13;
     bb13:
 #line 35 "codegen/run_rearrange.kl"
-    if ( kl_t56 ) goto bb5; else goto bb6;
+    if ( kl_t66 ) goto bb5; else goto bb6;
 }
 
 #line 143 "<prelude>"

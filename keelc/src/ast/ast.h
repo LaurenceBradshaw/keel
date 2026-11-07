@@ -101,6 +101,7 @@ public:
     Node_id                  param_list( Node_id id ) const;
     std::span<const Node_id> params( Node_id id ) const;          // the Param_decls, receiver included
     std::span<const Node_id> explicit_params( Node_id fn ) const; // past the receiver, when there is one
+    std::size_t              required_params( Node_id fn ) const; // the explicit ones before the first default
     Node_id                  body( Node_id id ) const;            // also the loops and Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
@@ -122,10 +123,10 @@ public:
     Node_id                  implementer( Node_id block ) const; // the type an Implements_decl is for
 
     // Bindings: Param_decl, Var_decl, Field_decl.
-    Node_id annotation( Node_id decl ) const;     // invalid for `auto`
-    Node_id initialiser( Node_id decl ) const;    // Var_decl only
-    Node_id default_value( Node_id field ) const; // Field_decl only; invalid when none was written
-    Node_id declared_type( Node_id decl ) const;  // the annotation, or what a function or Field_type returns
+    Node_id annotation( Node_id decl ) const;    // invalid for `auto`
+    Node_id initialiser( Node_id decl ) const;   // Var_decl only
+    Node_id default_value( Node_id decl ) const; // Field_decl or Param_decl; invalid when none was written
+    Node_id declared_type( Node_id decl ) const; // the annotation, or what a function or Field_type returns
 
     // Types.
     Node_id inner_type( Node_id id ) const; // Pointer_, Many_pointer_, Run_, Array_, Mode_ and Const_type

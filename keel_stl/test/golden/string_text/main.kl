@@ -21,9 +21,9 @@ i32 main()
     kl::string text = kl::string( "hello, world" );
     kl::string word = kl::string( "world" );
 
-    kl::println( text );
-    kl::print( word );
-    kl::println( "" );
+    kl::print( text );
+    kl::print( word, "" );
+    kl::print( "" );
 
     // A temporary `kl::string` borrowed as a `textual` is dropped after the call.
     if( !text.ends_with( word ) || !text.starts_with( kl::string( "hello" ) ) || text.starts_with( word ) )
@@ -39,7 +39,7 @@ i32 main()
     // Its own buffer: changing the copy leaves the original as it was.
     kl::string copy = kl::string( text );
     copy.push( 33 );
-    kl::println( copy );
+    kl::print( copy );
 
     if( copy.size() != 13 || text.size() != 12 )
     {

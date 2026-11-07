@@ -21,7 +21,7 @@ bool same_start<U>( u64 n )
 
 i32 main()
 {
-    t::println( same_start<void>( 3 ) );
-    t::println( same_start<i32>( 3 ) );
+    t::print( same_start<void>( 3 ) );
+    t::print( same_start<i32>( 3 ) );
     return 0;
 }

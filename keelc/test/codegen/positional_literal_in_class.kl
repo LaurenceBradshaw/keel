@@ -5,7 +5,7 @@ import t::console;
 class noisy
 {
     noisy( i32 n ) { n_ = n; }
-    ~noisy() { t::println( n_ ); }
+    ~noisy() { t::print( n_ ); }
     private i32 n_;
 };
 
@@ -28,8 +28,8 @@ struct point
 i32 main()
 {
     pair p = pair::make( 1, 2 );
-    t::println( p.first() );
+    t::print( p.first() );
     point q = point { 3, 4 };
-    t::println( q.length() );
+    t::print( q.length() );
     return 0;
 }

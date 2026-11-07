@@ -116,7 +116,7 @@ i32 run( const ref entry[] tests, const ref str[] args )
         }
         else if( arg.starts_with( "--" ) )
         {
-            kl::eprintln( "unknown option: " + arg );
+            kl::eprint( "unknown option: " + arg );
             return 2;
         }
         else
@@ -131,7 +131,7 @@ i32 run( const ref entry[] tests, const ref str[] args )
         {
             if( selected( tests[i].name, filters ) )
             {
-                kl::println( tests[i].name );
+                kl::print( tests[i].name );
             }
         }
         return 0;
@@ -151,29 +151,29 @@ i32 run( const ref entry[] tests, const ref str[] args )
         i32 code = run_one( t, fork );
         if( code == 0 )
         {
-            kl::println( "pass " + name );
+            kl::print( "pass " + name );
             n_passed++;
             continue;
         }
         else if( code == 1 )
         {
-            kl::println( "FAIL " + name );
+            kl::print( "FAIL " + name );
         }
         else if( code == 134 )
         {
-            kl::println( "FAIL " + name + " (panic)" );
+            kl::print( "FAIL " + name + " (panic)" );
         }
         else if( code >= 128 )
         {
-            kl::println( "FAIL " + name + " (signal " + kl::string::from( code - 128 ) + ")" );
+            kl::print( "FAIL " + name + " (signal " + kl::string::from( code - 128 ) + ")" );
         }
         else
         {
-            kl::println( "FAIL " + name + " (exit " + kl::string::from( code ) + ")" );
+            kl::print( "FAIL " + name + " (exit " + kl::string::from( code ) + ")" );
         }
         n_failed++;
     }
 
-    kl::println( kl::string::from( n_passed ) + " passed, " + kl::string::from( n_failed ) + " failed" );
+    kl::print( kl::string::from( n_passed ) + " passed, " + kl::string::from( n_failed ) + " failed" );
     return n_failed == 0 ? 0 : 1;
 }

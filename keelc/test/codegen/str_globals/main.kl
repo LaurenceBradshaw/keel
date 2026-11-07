@@ -18,18 +18,18 @@ class Names
 
 i32 main()
 {
-    t::println( GREETING );
-    t::println( copied );
-    t::println( escaped.size );
-    t::println( empty.size );
-    t::println( theirs );
-    t::println( Names::first );
+    t::print( GREETING );
+    t::print( copied );
+    t::print( escaped.size );
+    t::print( empty.size );
+    t::print( theirs );
+    t::print( Names::first );
 
     copied = "changed";
-    t::println( copied );
+    t::print( copied );
 
     Tagged<u8>::label = "other";
-    t::println( Tagged<u8>::label );
-    t::println( Tagged<i32>::label );
+    t::print( Tagged<u8>::label );
+    t::print( Tagged<i32>::label );
     return 0;
 }

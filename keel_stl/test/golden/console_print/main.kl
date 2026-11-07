@@ -1,4 +1,4 @@
-// `kl::print`, `println`, `eprint` and `eprintln`, each over `str`, `i64`, `u64`, `f64` and `bool`,
+// `kl::print` and `eprint`, with and without `end`, over `str`, `i64`, `u64`, `f64` and `bool`,
 // with no `unsafe` at the call. The `e` forms write to stderr, which the golden captures
 // together with stdout, in the order the program wrote them.
 import kl::console;
@@ -10,37 +10,37 @@ i32 main()
     f64 third    = 1.0 / 3.0;
     bool yes     = true;
 
-    kl::print( "print: " );
+    kl::print( "print: ", "" );
+    kl::print( negative, "" );
+    kl::print( " ", "" );
+    kl::print( large, "" );
+    kl::print( " ", "" );
+    kl::print( third, "" );
+    kl::print( " ", "" );
+    kl::print( yes, "" );
+    kl::print( "\n", "" );
+
+    kl::print( "println" );
     kl::print( negative );
-    kl::print( " " );
     kl::print( large );
-    kl::print( " " );
     kl::print( third );
-    kl::print( " " );
-    kl::print( yes );
-    kl::print( "\n" );
+    kl::print( false );
 
-    kl::println( "println" );
-    kl::println( negative );
-    kl::println( large );
-    kl::println( third );
-    kl::println( false );
+    kl::eprint( "eprint: ", "" );
+    kl::eprint( negative, "" );
+    kl::eprint( " ", "" );
+    kl::eprint( large, "" );
+    kl::eprint( " ", "" );
+    kl::eprint( third, "" );
+    kl::eprint( " ", "" );
+    kl::eprint( yes, "" );
+    kl::eprint( "\n", "" );
 
-    kl::eprint( "eprint: " );
+    kl::eprint( "eprintln" );
     kl::eprint( negative );
-    kl::eprint( " " );
     kl::eprint( large );
-    kl::eprint( " " );
     kl::eprint( third );
-    kl::eprint( " " );
-    kl::eprint( yes );
-    kl::eprint( "\n" );
-
-    kl::eprintln( "eprintln" );
-    kl::eprintln( negative );
-    kl::eprintln( large );
-    kl::eprintln( third );
-    kl::eprintln( false );
+    kl::eprint( false );
 
     // Narrower numbers widen to the overload of their kind and signedness.
     i8 small  = -7;
@@ -48,14 +48,14 @@ i32 main()
     f32 half  = 0.5;
     i32 count = 3;
 
-    kl::println( small );
-    kl::println( byte );
-    kl::println( half );
-    kl::println( count );
+    kl::print( small );
+    kl::print( byte );
+    kl::print( half );
+    kl::print( count );
 
     // A literal of either family, once its type is written.
-    kl::println( 2.5 );
-    kl::println( cast<i64>( 5 ) );
+    kl::print( 2.5 );
+    kl::print( cast<i64>( 5 ) );
 
     return 0;
 }

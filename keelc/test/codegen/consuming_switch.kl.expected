@@ -27,26 +27,17 @@ void kl_rt_write_i64( int32_t, int64_t );
 void kl_rt_write_u64( int32_t, uint64_t );
 void kl_rt_write_f64( int32_t, double );
 
-void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_print__3i64( int64_t );
-void kl_1t7console_print__3u64( uint64_t );
-void kl_1t7console_print__3f64( double );
-void kl_1t7console_print__4bool( bool );
-void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_eprint__3i64( int64_t );
-void kl_1t7console_eprint__3u64( uint64_t );
-void kl_1t7console_eprint__3f64( double );
-void kl_1t7console_eprint__4bool( bool );
-void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_println__3i64( int64_t );
-void kl_1t7console_println__3u64( uint64_t );
-void kl_1t7console_println__3f64( double );
-void kl_1t7console_println__4bool( bool );
-void kl_1t7console_eprintln__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_eprintln__3i64( int64_t );
-void kl_1t7console_eprintln__3u64( uint64_t );
-void kl_1t7console_eprintln__3f64( double );
-void kl_1t7console_eprintln__4bool( bool );
+void kl_1t7console_write_text__3i32_7textual( int32_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__4bool_7textual( bool, struct kl_7prelude_textual__ref );
+void kl_1t7console_eprint__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_eprint__3i64_7textual( int64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
+void kl_1t7console_eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
+void kl_1t7console_eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
@@ -62,428 +53,239 @@ static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__as
 
 static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__as_text__ };
 
-#line 13 "../test_lib/console.kl"
-void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref kl_text_1 )
+#line 12 "../test_lib/console.kl"
+void kl_1t7console_write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7prelude_textual__ref kl_text_2 )
 {
-    struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
-    struct kl__run__L2u8__ref kl_t4;
-    uint8_t* kl_t5;
-    uint64_t kl_t6;
-#line 15 "../test_lib/console.kl"
-    kl_t3 = kl_text_1;
-#line 15 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
-#line 15 "../test_lib/console.kl"
-    kl_r_2 = kl_t4;
-#line 18 "../test_lib/console.kl"
-    kl_t5 = ( kl_r_2 ).data;
-#line 18 "../test_lib/console.kl"
-    kl_t6 = ( kl_r_2 ).size;
-#line 18 "../test_lib/console.kl"
-    kl_rt_write( 1, kl_t5, kl_t6 );
-#line 20 "../test_lib/console.kl"
+    struct kl__run__L2u8__ref kl_r_3;
+    struct kl_7prelude_textual__ref kl_t4;
+    struct kl__run__L2u8__ref kl_t5;
+    uint8_t* kl_t6;
+    uint64_t kl_t7;
+#line 14 "../test_lib/console.kl"
+    kl_t4 = kl_text_2;
+#line 14 "../test_lib/console.kl"
+    kl_t5 = kl_t4.vtable->kl__as_text__( kl_t4.self );
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t5;
+#line 17 "../test_lib/console.kl"
+    kl_t6 = ( kl_r_3 ).data;
+#line 17 "../test_lib/console.kl"
+    kl_t7 = ( kl_r_3 ).size;
+#line 17 "../test_lib/console.kl"
+    kl_rt_write( kl_stream_1, kl_t6, kl_t7 );
+#line 19 "../test_lib/console.kl"
     return;
-#line 20 "../test_lib/console.kl"
+#line 19 "../test_lib/console.kl"
 }
 
-#line 23 "../test_lib/console.kl"
-void kl_1t7console_print__3i64( int64_t kl_value_1 )
+#line 24 "../test_lib/console.kl"
+void kl_1t7console_print__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 26 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 26 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 1, kl_t3 );
+    kl_t5 = kl_end_2;
 #line 27 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 1, kl_t5 );
+    return;
+#line 28 "../test_lib/console.kl"
+}
+
+#line 31 "../test_lib/console.kl"
+void kl_1t7console_print__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 35 "../test_lib/console.kl"
     kl_rt_write_i64( 1, kl_value_1 );
-#line 29 "../test_lib/console.kl"
+#line 37 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 37 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 1, kl_t4 );
     return;
-#line 29 "../test_lib/console.kl"
+#line 38 "../test_lib/console.kl"
 }
 
-#line 32 "../test_lib/console.kl"
-void kl_1t7console_print__3u64( uint64_t kl_value_1 )
+#line 41 "../test_lib/console.kl"
+void kl_1t7console_print__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-#line 36 "../test_lib/console.kl"
+    struct kl_7prelude_textual__ref kl_t4;
+#line 45 "../test_lib/console.kl"
     kl_rt_write_u64( 1, kl_value_1 );
-#line 38 "../test_lib/console.kl"
-    return;
-#line 38 "../test_lib/console.kl"
-}
-
-#line 43 "../test_lib/console.kl"
-void kl_1t7console_print__3f64( double kl_value_1 )
-{
 #line 47 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 47 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 1, kl_t4 );
+    return;
+#line 48 "../test_lib/console.kl"
+}
+
+#line 53 "../test_lib/console.kl"
+void kl_1t7console_print__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 57 "../test_lib/console.kl"
     kl_rt_write_f64( 1, kl_value_1 );
-#line 49 "../test_lib/console.kl"
+#line 59 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 59 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 1, kl_t4 );
     return;
-#line 49 "../test_lib/console.kl"
-}
-
-#line 52 "../test_lib/console.kl"
-void kl_1t7console_print__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t2;
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_str kl_t7;
-    struct kl_7prelude_str* kl_t8;
-    uint8_t* kl_t9;
-    struct kl_7prelude_textual__ref kl_t11;
-#line 54 "../test_lib/console.kl"
-    if ( kl_value_1 ) goto bb1; else goto bb2;
-    bb1:
-#line 54 "../test_lib/console.kl"
-    kl_t4 = &kl_t3;
-#line 54 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "true";
-#line 54 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-#line 54 "../test_lib/console.kl"
-    kl_t2 = kl_t3;
-#line 54 "../test_lib/console.kl"
-    goto bb3;
-    bb2:
-#line 54 "../test_lib/console.kl"
-    kl_t8 = &kl_t7;
-#line 54 "../test_lib/console.kl"
-    kl_t9 = ( uint8_t* ) "false";
-#line 54 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 5 );
-#line 54 "../test_lib/console.kl"
-    kl_t2 = kl_t7;
-#line 54 "../test_lib/console.kl"
-    goto bb3;
-    bb3:
-#line 54 "../test_lib/console.kl"
-    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 54 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t11 );
-    return;
-#line 55 "../test_lib/console.kl"
-}
-
 #line 60 "../test_lib/console.kl"
-void kl_1t7console_eprint__7textual( struct kl_7prelude_textual__ref kl_text_1 )
-{
-    struct kl__run__L2u8__ref kl_r_2;
-    struct kl_7prelude_textual__ref kl_t3;
-    struct kl__run__L2u8__ref kl_t4;
-    uint8_t* kl_t5;
-    uint64_t kl_t6;
-#line 62 "../test_lib/console.kl"
-    kl_t3 = kl_text_1;
-#line 62 "../test_lib/console.kl"
-    kl_t4 = kl_t3.vtable->kl__as_text__( kl_t3.self );
-#line 62 "../test_lib/console.kl"
-    kl_r_2 = kl_t4;
-#line 65 "../test_lib/console.kl"
-    kl_t5 = ( kl_r_2 ).data;
-#line 65 "../test_lib/console.kl"
-    kl_t6 = ( kl_r_2 ).size;
-#line 65 "../test_lib/console.kl"
-    kl_rt_write( 2, kl_t5, kl_t6 );
-#line 67 "../test_lib/console.kl"
-    return;
-#line 67 "../test_lib/console.kl"
 }
 
-#line 70 "../test_lib/console.kl"
-void kl_1t7console_eprint__3i64( int64_t kl_value_1 )
+#line 63 "../test_lib/console.kl"
+void kl_1t7console_print__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-#line 74 "../test_lib/console.kl"
-    kl_rt_write_i64( 2, kl_value_1 );
-#line 76 "../test_lib/console.kl"
-    return;
-#line 76 "../test_lib/console.kl"
-}
-
-#line 79 "../test_lib/console.kl"
-void kl_1t7console_eprint__3u64( uint64_t kl_value_1 )
-{
-#line 83 "../test_lib/console.kl"
-    kl_rt_write_u64( 2, kl_value_1 );
-#line 85 "../test_lib/console.kl"
-    return;
-#line 85 "../test_lib/console.kl"
-}
-
-#line 90 "../test_lib/console.kl"
-void kl_1t7console_eprint__3f64( double kl_value_1 )
-{
-#line 94 "../test_lib/console.kl"
-    kl_rt_write_f64( 2, kl_value_1 );
-#line 96 "../test_lib/console.kl"
-    return;
-#line 96 "../test_lib/console.kl"
-}
-
-#line 99 "../test_lib/console.kl"
-void kl_1t7console_eprint__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_str kl_t7;
-    struct kl_7prelude_str* kl_t8;
-    uint8_t* kl_t9;
-    struct kl_7prelude_textual__ref kl_t11;
-#line 101 "../test_lib/console.kl"
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+#line 65 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
-#line 101 "../test_lib/console.kl"
-    kl_t4 = &kl_t3;
-#line 101 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "true";
-#line 101 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-#line 101 "../test_lib/console.kl"
-    kl_t2 = kl_t3;
-#line 101 "../test_lib/console.kl"
+#line 65 "../test_lib/console.kl"
+    kl_t5 = &kl_t4;
+#line 65 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 65 "../test_lib/console.kl"
     goto bb3;
     bb2:
-#line 101 "../test_lib/console.kl"
-    kl_t8 = &kl_t7;
-#line 101 "../test_lib/console.kl"
-    kl_t9 = ( uint8_t* ) "false";
-#line 101 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 5 );
-#line 101 "../test_lib/console.kl"
-    kl_t2 = kl_t7;
-#line 101 "../test_lib/console.kl"
+#line 65 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 65 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 65 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 65 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 65 "../test_lib/console.kl"
     goto bb3;
     bb3:
-#line 101 "../test_lib/console.kl"
-    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 101 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t11 );
+#line 65 "../test_lib/console.kl"
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 65 "../test_lib/console.kl"
+    kl_t13 = kl_end_2;
+#line 65 "../test_lib/console.kl"
+    kl_1t7console_print__7textual_7textual( kl_t12, kl_t13 );
     return;
-#line 102 "../test_lib/console.kl"
+#line 66 "../test_lib/console.kl"
 }
 
-#line 105 "../test_lib/console.kl"
-void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref kl_text_1 )
+#line 71 "../test_lib/console.kl"
+void kl_1t7console_eprint__7textual_7textual( struct kl_7prelude_textual__ref kl_text_1, struct kl_7prelude_textual__ref kl_end_2 )
 {
-    struct kl_7prelude_textual__ref kl_t2;
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
+#line 73 "../test_lib/console.kl"
+    kl_t3 = kl_text_1;
+#line 73 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 2, kl_t3 );
+    kl_t5 = kl_end_2;
+#line 74 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 2, kl_t5 );
+    return;
+#line 75 "../test_lib/console.kl"
+}
+
+#line 78 "../test_lib/console.kl"
+void kl_1t7console_eprint__3i64_7textual( int64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 82 "../test_lib/console.kl"
+    kl_rt_write_i64( 2, kl_value_1 );
+#line 84 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 84 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 85 "../test_lib/console.kl"
+}
+
+#line 88 "../test_lib/console.kl"
+void kl_1t7console_eprint__3u64_7textual( uint64_t kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 92 "../test_lib/console.kl"
+    kl_rt_write_u64( 2, kl_value_1 );
+#line 94 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 94 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 95 "../test_lib/console.kl"
+}
+
+#line 100 "../test_lib/console.kl"
+void kl_1t7console_eprint__3f64_7textual( double kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_textual__ref kl_t4;
+#line 104 "../test_lib/console.kl"
+    kl_rt_write_f64( 2, kl_value_1 );
+#line 106 "../test_lib/console.kl"
+    kl_t4 = kl_end_2;
+#line 106 "../test_lib/console.kl"
+    kl_1t7console_write_text__3i32_7textual( 2, kl_t4 );
+    return;
+#line 107 "../test_lib/console.kl"
+}
+
+#line 110 "../test_lib/console.kl"
+void kl_1t7console_eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_textual__ref kl_end_2 )
+{
+    struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_7prelude_textual__ref kl_t8;
-#line 107 "../test_lib/console.kl"
-    kl_t2 = kl_text_1;
-#line 107 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t2 );
-    kl_t5 = &kl_t4;
-#line 108 "../test_lib/console.kl"
-    kl_t6 = ( uint8_t* ) "\012";
-#line 108 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
-#line 108 "../test_lib/console.kl"
-    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 108 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t8 );
-    return;
-#line 109 "../test_lib/console.kl"
-}
-
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
 #line 112 "../test_lib/console.kl"
-void kl_1t7console_println__3i64( int64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 114 "../test_lib/console.kl"
-    kl_1t7console_print__3i64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 115 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 115 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 115 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 115 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t7 );
-    return;
-#line 116 "../test_lib/console.kl"
-}
-
-#line 119 "../test_lib/console.kl"
-void kl_1t7console_println__3u64( uint64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 121 "../test_lib/console.kl"
-    kl_1t7console_print__3u64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 122 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 122 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 122 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 122 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t7 );
-    return;
-#line 123 "../test_lib/console.kl"
-}
-
-#line 126 "../test_lib/console.kl"
-void kl_1t7console_println__3f64( double kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 128 "../test_lib/console.kl"
-    kl_1t7console_print__3f64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 129 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 129 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 129 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 129 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t7 );
-    return;
-#line 130 "../test_lib/console.kl"
-}
-
-#line 133 "../test_lib/console.kl"
-void kl_1t7console_println__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 135 "../test_lib/console.kl"
-    kl_1t7console_print__4bool( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 136 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 136 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 136 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 136 "../test_lib/console.kl"
-    kl_1t7console_print__7textual( kl_t7 );
-    return;
-#line 137 "../test_lib/console.kl"
-}
-
-#line 140 "../test_lib/console.kl"
-void kl_1t7console_eprintln__7textual( struct kl_7prelude_textual__ref kl_text_1 )
-{
-    struct kl_7prelude_textual__ref kl_t2;
-    struct kl_7prelude_str kl_t4;
-    struct kl_7prelude_str* kl_t5;
-    uint8_t* kl_t6;
-    struct kl_7prelude_textual__ref kl_t8;
-#line 142 "../test_lib/console.kl"
-    kl_t2 = kl_text_1;
-#line 142 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t2 );
+    if ( kl_value_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 112 "../test_lib/console.kl"
     kl_t5 = &kl_t4;
-#line 143 "../test_lib/console.kl"
-    kl_t6 = ( uint8_t* ) "\012";
-#line 143 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
-#line 143 "../test_lib/console.kl"
-    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 143 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t8 );
+#line 112 "../test_lib/console.kl"
+    kl_t6 = ( uint8_t* ) "true";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t4;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb2:
+#line 112 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 112 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "false";
+#line 112 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 5 );
+#line 112 "../test_lib/console.kl"
+    kl_t3 = kl_t8;
+#line 112 "../test_lib/console.kl"
+    goto bb3;
+    bb3:
+#line 112 "../test_lib/console.kl"
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 112 "../test_lib/console.kl"
+    kl_t13 = kl_end_2;
+#line 112 "../test_lib/console.kl"
+    kl_1t7console_eprint__7textual_7textual( kl_t12, kl_t13 );
     return;
-#line 144 "../test_lib/console.kl"
-}
-
-#line 147 "../test_lib/console.kl"
-void kl_1t7console_eprintln__3i64( int64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 149 "../test_lib/console.kl"
-    kl_1t7console_eprint__3i64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 150 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 150 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 150 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 150 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t7 );
-    return;
-#line 151 "../test_lib/console.kl"
-}
-
-#line 154 "../test_lib/console.kl"
-void kl_1t7console_eprintln__3u64( uint64_t kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 156 "../test_lib/console.kl"
-    kl_1t7console_eprint__3u64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 157 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 157 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 157 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 157 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t7 );
-    return;
-#line 158 "../test_lib/console.kl"
-}
-
-#line 161 "../test_lib/console.kl"
-void kl_1t7console_eprintln__3f64( double kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 163 "../test_lib/console.kl"
-    kl_1t7console_eprint__3f64( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 164 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 164 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 164 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 164 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t7 );
-    return;
-#line 165 "../test_lib/console.kl"
-}
-
-#line 168 "../test_lib/console.kl"
-void kl_1t7console_eprintln__4bool( bool kl_value_1 )
-{
-    struct kl_7prelude_str kl_t3;
-    struct kl_7prelude_str* kl_t4;
-    uint8_t* kl_t5;
-    struct kl_7prelude_textual__ref kl_t7;
-#line 170 "../test_lib/console.kl"
-    kl_1t7console_eprint__4bool( kl_value_1 );
-    kl_t4 = &kl_t3;
-#line 171 "../test_lib/console.kl"
-    kl_t5 = ( uint8_t* ) "\012";
-#line 171 "../test_lib/console.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 1 );
-#line 171 "../test_lib/console.kl"
-    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 171 "../test_lib/console.kl"
-    kl_1t7console_eprint__7textual( kl_t7 );
-    return;
-#line 172 "../test_lib/console.kl"
+#line 113 "../test_lib/console.kl"
 }
 
 // codegen/consuming_switch.kl
@@ -541,9 +343,8 @@ uint64_t kl__refill__M6Holder( struct kl__Holder );
 void kl__through__M6Holder( struct kl__Holder );
 int32_t kl__main__( void );
 void kl__Holder__dtor( struct kl__Holder* );
-void kl_1t7console_print__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_println__7textual( struct kl_7prelude_textual__ref );
-void kl_1t7console_println__3u64( uint64_t );
+void kl_1t7console_print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
+void kl_1t7console_print__3u64_7textual( uint64_t, struct kl_7prelude_textual__ref );
 void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 struct kl__run__L2u8__ref kl_7prelude_as_text__SQ7prelude3str( struct kl_7prelude_str* );
 
@@ -580,6 +381,14 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
     struct kl_7prelude_textual__ref kl_t6;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_str* kl_t8;
+    uint8_t* kl_t9;
+    struct kl_7prelude_textual__ref kl_t11;
+    struct kl_7prelude_str kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
+    struct kl_7prelude_textual__ref kl_t17;
 #line 23 "codegen/consuming_switch.kl"
     kl_t3 = &kl_t2;
 #line 23 "codegen/consuming_switch.kl"
@@ -589,8 +398,25 @@ void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
 #line 23 "codegen/consuming_switch.kl"
     kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 23 "codegen/consuming_switch.kl"
-    kl_1t7console_print__7textual( kl_t6 );
-    kl_1t7console_println__3u64( ( *( *kl_this_1 ).kl_data ) );
+    kl_t8 = &kl_t7;
+#line 23 "codegen/consuming_switch.kl"
+    kl_t9 = ( uint8_t* ) "";
+#line 23 "codegen/consuming_switch.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 0 );
+#line 23 "codegen/consuming_switch.kl"
+    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 23 "codegen/consuming_switch.kl"
+    kl_1t7console_print__7textual_7textual( kl_t6, kl_t11 );
+#line 41 "../test_lib/console.kl"
+    kl_t14 = &kl_t13;
+#line 41 "../test_lib/console.kl"
+    kl_t15 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t17 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t13, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "codegen/consuming_switch.kl"
+    kl_1t7console_print__3u64_7textual( ( *( *kl_this_1 ).kl_data ), kl_t17 );
 #line 28 "codegen/consuming_switch.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 30 "codegen/consuming_switch.kl"
@@ -805,42 +631,46 @@ struct kl__Buf kl__maybe__4bool_M6Holder( bool kl_c_1, struct kl__Holder kl_h_2 
     struct kl_7prelude_str* kl_t8;
     uint8_t* kl_t9;
     struct kl_7prelude_textual__ref kl_t11;
-    struct kl__Buf kl_t13;
-    struct kl__Buf* kl_t14;
-    struct kl__Holder kl_t16;
-    uint64_t kl_extra_17;
-    struct kl__Buf kl_left_18;
-    struct kl__Buf kl_right_19;
-    struct kl__Buf kl_t20;
-    struct kl__Buf* kl_t21;
-    struct kl__Buf kl_t23;
-    struct kl__Buf* kl_t24;
-    bool kl_t26;
-    bool kl_t27;
-    bool kl_t28;
-    bool kl_t29;
-    bool kl_t30;
+    struct kl_7prelude_str kl_t12;
+    struct kl_7prelude_str* kl_t13;
+    uint8_t* kl_t14;
+    struct kl_7prelude_textual__ref kl_t16;
+    struct kl__Buf kl_t18;
+    struct kl__Buf* kl_t19;
+    struct kl__Holder kl_t21;
+    uint64_t kl_extra_22;
+    struct kl__Buf kl_left_23;
+    struct kl__Buf kl_right_24;
+    struct kl__Buf kl_t25;
+    struct kl__Buf* kl_t26;
+    struct kl__Buf kl_t28;
+    struct kl__Buf* kl_t29;
     bool kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    bool kl_t36;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t26 = true;
+    kl_t31 = true;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t28 = false;
+    kl_t33 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t29 = false;
+    kl_t34 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t30 = false;
+    kl_t35 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t31 = false;
+    kl_t36 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 67 "codegen/consuming_switch.kl"
     kl_t3 = kl_h_2;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t31 = false;
 #line 67 "codegen/consuming_switch.kl"
-    kl_t27 = true;
+    kl_t32 = true;
 #line 69 "codegen/consuming_switch.kl"
     kl_t4 = kl_t3.tag == 0;
 #line 69 "codegen/consuming_switch.kl"
@@ -849,78 +679,78 @@ struct kl__Buf kl__maybe__4bool_M6Holder( bool kl_c_1, struct kl__Holder kl_h_2 
 #line 69 "codegen/consuming_switch.kl"
     kl_t5 = kl_t3;
 #line 69 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 69 "codegen/consuming_switch.kl"
-    kl_t28 = false;
+    kl_t33 = false;
 #line 69 "codegen/consuming_switch.kl"
     kl_b_6 = kl_t5.kl_4Full_b;
 #line 69 "codegen/consuming_switch.kl"
-    kl_t28 = true;
+    kl_t33 = true;
     if ( kl_c_1 ) goto bb5; else goto bb6;
     bb2:
 #line 77 "codegen/consuming_switch.kl"
-    kl_t16 = kl_t3;
+    kl_t21 = kl_t3;
 #line 77 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 77 "codegen/consuming_switch.kl"
-    kl_extra_17 = kl_t16.kl_4Pair_extra;
+    kl_extra_22 = kl_t21.kl_4Pair_extra;
 #line 77 "codegen/consuming_switch.kl"
-    kl_left_18 = kl_t16.kl_4Pair_left;
+    kl_left_23 = kl_t21.kl_4Pair_left;
 #line 77 "codegen/consuming_switch.kl"
-    kl_right_19 = kl_t16.kl_4Pair_right;
-    kl_t30 = false;
+    kl_right_24 = kl_t21.kl_4Pair_right;
+    kl_t35 = false;
 #line 78 "codegen/consuming_switch.kl"
-    kl_t21 = &kl_t20;
+    kl_t26 = &kl_t25;
 #line 78 "codegen/consuming_switch.kl"
-    kl_t30 = true;
+    kl_t35 = true;
 #line 78 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t21, kl_extra_17 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t26, kl_extra_22 );
 #line 78 "codegen/consuming_switch.kl"
-    kl_t0 = kl_t20;
+    kl_t0 = kl_t25;
 #line 78 "codegen/consuming_switch.kl"
-    kl_t30 = false;
+    kl_t35 = false;
 #line 78 "codegen/consuming_switch.kl"
-    if ( kl_t30 ) kl__Buf__dtor( &kl_t20 );
+    if ( kl_t35 ) kl__Buf__dtor( &kl_t25 );
 #line 78 "codegen/consuming_switch.kl"
-    kl_t30 = false;
+    kl_t35 = false;
 #line 78 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_right_19 );
+    kl__Buf__dtor( &kl_right_24 );
 #line 78 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_left_18 );
+    kl__Buf__dtor( &kl_left_23 );
 #line 78 "codegen/consuming_switch.kl"
-    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    if ( kl_t32 ) kl__Holder__dtor( &kl_t3 );
 #line 78 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 78 "codegen/consuming_switch.kl"
-    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    if ( kl_t31 ) kl__Holder__dtor( &kl_h_2 );
 #line 78 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t31 = false;
 #line 78 "codegen/consuming_switch.kl"
     return kl_t0;
     bb3:
+    kl_t36 = false;
+#line 80 "codegen/consuming_switch.kl"
+    kl_t29 = &kl_t28;
+#line 80 "codegen/consuming_switch.kl"
+    kl_t36 = true;
+#line 80 "codegen/consuming_switch.kl"
+    kl__Buf__R3Buf_3u64__ctor( kl_t29, 0 );
+#line 80 "codegen/consuming_switch.kl"
+    kl_t0 = kl_t28;
+#line 80 "codegen/consuming_switch.kl"
+    kl_t36 = false;
+#line 80 "codegen/consuming_switch.kl"
+    if ( kl_t36 ) kl__Buf__dtor( &kl_t28 );
+#line 80 "codegen/consuming_switch.kl"
+    kl_t36 = false;
+#line 80 "codegen/consuming_switch.kl"
+    if ( kl_t32 ) kl__Holder__dtor( &kl_t3 );
+#line 80 "codegen/consuming_switch.kl"
+    kl_t32 = false;
+#line 80 "codegen/consuming_switch.kl"
+    if ( kl_t31 ) kl__Holder__dtor( &kl_h_2 );
+#line 80 "codegen/consuming_switch.kl"
     kl_t31 = false;
-#line 80 "codegen/consuming_switch.kl"
-    kl_t24 = &kl_t23;
-#line 80 "codegen/consuming_switch.kl"
-    kl_t31 = true;
-#line 80 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t24, 0 );
-#line 80 "codegen/consuming_switch.kl"
-    kl_t0 = kl_t23;
-#line 80 "codegen/consuming_switch.kl"
-    kl_t31 = false;
-#line 80 "codegen/consuming_switch.kl"
-    if ( kl_t31 ) kl__Buf__dtor( &kl_t23 );
-#line 80 "codegen/consuming_switch.kl"
-    kl_t31 = false;
-#line 80 "codegen/consuming_switch.kl"
-    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
-#line 80 "codegen/consuming_switch.kl"
-    kl_t27 = false;
-#line 80 "codegen/consuming_switch.kl"
-    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
-#line 80 "codegen/consuming_switch.kl"
-    kl_t26 = false;
 #line 80 "codegen/consuming_switch.kl"
     return kl_t0;
     bb4:
@@ -932,19 +762,19 @@ struct kl__Buf kl__maybe__4bool_M6Holder( bool kl_c_1, struct kl__Holder kl_h_2 
 #line 72 "codegen/consuming_switch.kl"
     kl_t0 = kl_b_6;
 #line 72 "codegen/consuming_switch.kl"
-    kl_t28 = false;
+    kl_t33 = false;
 #line 72 "codegen/consuming_switch.kl"
-    if ( kl_t28 ) kl__Buf__dtor( &kl_b_6 );
+    if ( kl_t33 ) kl__Buf__dtor( &kl_b_6 );
 #line 72 "codegen/consuming_switch.kl"
-    kl_t28 = false;
+    kl_t33 = false;
 #line 72 "codegen/consuming_switch.kl"
-    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    if ( kl_t32 ) kl__Holder__dtor( &kl_t3 );
 #line 72 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 72 "codegen/consuming_switch.kl"
-    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    if ( kl_t31 ) kl__Holder__dtor( &kl_h_2 );
 #line 72 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t31 = false;
 #line 72 "codegen/consuming_switch.kl"
     return kl_t0;
     bb6:
@@ -956,35 +786,43 @@ struct kl__Buf kl__maybe__4bool_M6Holder( bool kl_c_1, struct kl__Holder kl_h_2 
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 4 );
 #line 75 "codegen/consuming_switch.kl"
     kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t7, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t13 = &kl_t12;
+#line 24 "../test_lib/console.kl"
+    kl_t14 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t13, kl_t14, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t16 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 75 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t11 );
-    kl_t29 = false;
+    kl_1t7console_print__7textual_7textual( kl_t11, kl_t16 );
+    kl_t34 = false;
 #line 76 "codegen/consuming_switch.kl"
-    kl_t14 = &kl_t13;
+    kl_t19 = &kl_t18;
 #line 76 "codegen/consuming_switch.kl"
-    kl_t29 = true;
+    kl_t34 = true;
 #line 76 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t14, 0 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t19, 0 );
 #line 76 "codegen/consuming_switch.kl"
-    kl_t0 = kl_t13;
+    kl_t0 = kl_t18;
 #line 76 "codegen/consuming_switch.kl"
-    kl_t29 = false;
+    kl_t34 = false;
 #line 76 "codegen/consuming_switch.kl"
-    if ( kl_t29 ) kl__Buf__dtor( &kl_t13 );
+    if ( kl_t34 ) kl__Buf__dtor( &kl_t18 );
 #line 76 "codegen/consuming_switch.kl"
-    kl_t29 = false;
+    kl_t34 = false;
 #line 76 "codegen/consuming_switch.kl"
-    if ( kl_t28 ) kl__Buf__dtor( &kl_b_6 );
+    if ( kl_t33 ) kl__Buf__dtor( &kl_b_6 );
 #line 76 "codegen/consuming_switch.kl"
-    kl_t28 = false;
+    kl_t33 = false;
 #line 76 "codegen/consuming_switch.kl"
-    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    if ( kl_t32 ) kl__Holder__dtor( &kl_t3 );
 #line 76 "codegen/consuming_switch.kl"
-    kl_t27 = false;
+    kl_t32 = false;
 #line 76 "codegen/consuming_switch.kl"
-    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    if ( kl_t31 ) kl__Holder__dtor( &kl_h_2 );
 #line 76 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t31 = false;
 #line 76 "codegen/consuming_switch.kl"
     return kl_t0;
 #line 82 "codegen/consuming_switch.kl"
@@ -1000,28 +838,36 @@ uint64_t kl__count__M6Holder( struct kl__Holder kl_h_1 )
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
     struct kl_7prelude_textual__ref kl_t8;
-    struct kl__Holder kl_t10;
-    uint64_t kl_extra_11;
-    struct kl__Buf kl_left_12;
-    struct kl__Buf kl_right_13;
-    struct kl_7prelude_str kl_t14;
-    struct kl_7prelude_str* kl_t15;
-    uint8_t* kl_t16;
-    struct kl_7prelude_textual__ref kl_t18;
-    bool kl_t20;
-    bool kl_t21;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl__Holder kl_t15;
+    uint64_t kl_extra_16;
+    struct kl__Buf kl_left_17;
+    struct kl__Buf kl_right_18;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+    struct kl_7prelude_textual__ref kl_t23;
+    struct kl_7prelude_str kl_t24;
+    struct kl_7prelude_str* kl_t25;
+    uint8_t* kl_t26;
+    struct kl_7prelude_textual__ref kl_t28;
+    bool kl_t30;
+    bool kl_t31;
 #line 87 "codegen/consuming_switch.kl"
-    kl_t20 = true;
+    kl_t30 = true;
 #line 87 "codegen/consuming_switch.kl"
-    kl_t21 = false;
+    kl_t31 = false;
 #line 87 "codegen/consuming_switch.kl"
-    kl_t21 = false;
+    kl_t31 = false;
 #line 87 "codegen/consuming_switch.kl"
     kl_t2 = kl_h_1;
 #line 87 "codegen/consuming_switch.kl"
-    kl_t20 = false;
+    kl_t30 = false;
 #line 87 "codegen/consuming_switch.kl"
-    kl_t21 = true;
+    kl_t31 = true;
 #line 89 "codegen/consuming_switch.kl"
     kl_t3 = kl_t2.tag == 0;
 #line 89 "codegen/consuming_switch.kl"
@@ -1035,33 +881,41 @@ uint64_t kl__count__M6Holder( struct kl__Holder kl_h_1 )
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
 #line 90 "codegen/consuming_switch.kl"
     kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t10 = &kl_t9;
+#line 24 "../test_lib/console.kl"
+    kl_t11 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 90 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t8 );
+    kl_1t7console_print__7textual_7textual( kl_t8, kl_t13 );
     goto bb4;
     bb2:
 #line 92 "codegen/consuming_switch.kl"
-    kl_t10 = kl_t2;
+    kl_t15 = kl_t2;
 #line 92 "codegen/consuming_switch.kl"
-    kl_t21 = false;
+    kl_t31 = false;
 #line 92 "codegen/consuming_switch.kl"
-    kl_extra_11 = kl_t10.kl_4Pair_extra;
+    kl_extra_16 = kl_t15.kl_4Pair_extra;
 #line 92 "codegen/consuming_switch.kl"
-    kl_left_12 = kl_t10.kl_4Pair_left;
+    kl_left_17 = kl_t15.kl_4Pair_left;
 #line 92 "codegen/consuming_switch.kl"
-    kl_right_13 = kl_t10.kl_4Pair_right;
-    kl_t0 = kl_extra_11;
+    kl_right_18 = kl_t15.kl_4Pair_right;
+    kl_t0 = kl_extra_16;
 #line 93 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_right_13 );
+    kl__Buf__dtor( &kl_right_18 );
 #line 93 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_left_12 );
+    kl__Buf__dtor( &kl_left_17 );
 #line 93 "codegen/consuming_switch.kl"
-    if ( kl_t21 ) kl__Holder__dtor( &kl_t2 );
+    if ( kl_t31 ) kl__Holder__dtor( &kl_t2 );
 #line 93 "codegen/consuming_switch.kl"
-    kl_t21 = false;
+    kl_t31 = false;
 #line 93 "codegen/consuming_switch.kl"
-    if ( kl_t20 ) kl__Holder__dtor( &kl_h_1 );
+    if ( kl_t30 ) kl__Holder__dtor( &kl_h_1 );
 #line 93 "codegen/consuming_switch.kl"
-    kl_t20 = false;
+    kl_t30 = false;
 #line 93 "codegen/consuming_switch.kl"
     return kl_t0;
     bb3:
@@ -1071,24 +925,32 @@ uint64_t kl__count__M6Holder( struct kl__Holder kl_h_1 )
     if ( kl_t3 ) goto bb2; else goto bb4;
     bb4:
 #line 87 "codegen/consuming_switch.kl"
-    if ( kl_t21 ) kl__Holder__dtor( &kl_t2 );
+    if ( kl_t31 ) kl__Holder__dtor( &kl_t2 );
 #line 87 "codegen/consuming_switch.kl"
-    kl_t21 = false;
+    kl_t31 = false;
 #line 98 "codegen/consuming_switch.kl"
-    kl_t15 = &kl_t14;
+    kl_t20 = &kl_t19;
 #line 98 "codegen/consuming_switch.kl"
-    kl_t16 = ( uint8_t* ) "after";
+    kl_t21 = ( uint8_t* ) "after";
 #line 98 "codegen/consuming_switch.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t15, kl_t16, 5 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 5 );
 #line 98 "codegen/consuming_switch.kl"
-    kl_t18 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t14, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t23 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t19, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t25 = &kl_t24;
+#line 24 "../test_lib/console.kl"
+    kl_t26 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t25, kl_t26, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t28 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t24, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 98 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t18 );
+    kl_1t7console_print__7textual_7textual( kl_t23, kl_t28 );
     kl_t0 = 0;
 #line 99 "codegen/consuming_switch.kl"
-    if ( kl_t20 ) kl__Holder__dtor( &kl_h_1 );
+    if ( kl_t30 ) kl__Holder__dtor( &kl_h_1 );
 #line 99 "codegen/consuming_switch.kl"
-    kl_t20 = false;
+    kl_t30 = false;
 #line 99 "codegen/consuming_switch.kl"
     return kl_t0;
 }
@@ -1272,33 +1134,45 @@ void kl__through__M6Holder( struct kl__Holder kl_h_1 )
     struct kl__Buf kl_b_5;
     struct kl__Buf* kl_t6;
     uint64_t kl_t7;
-    struct kl_7prelude_str kl_t9;
-    struct kl_7prelude_str* kl_t10;
-    uint8_t* kl_t11;
-    struct kl_7prelude_textual__ref kl_t13;
-    struct kl__Holder kl_t15;
-    uint64_t kl_extra_16;
-    struct kl__Buf kl_left_17;
-    struct kl__Buf kl_right_18;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_str kl_t14;
+    struct kl_7prelude_str* kl_t15;
+    uint8_t* kl_t16;
+    struct kl_7prelude_textual__ref kl_t18;
     struct kl_7prelude_str kl_t19;
     struct kl_7prelude_str* kl_t20;
     uint8_t* kl_t21;
     struct kl_7prelude_textual__ref kl_t23;
-    bool kl_t25;
-    bool kl_t26;
-    ( void ) kl_extra_16;
+    struct kl__Holder kl_t25;
+    uint64_t kl_extra_26;
+    struct kl__Buf kl_left_27;
+    struct kl__Buf kl_right_28;
+    struct kl_7prelude_str kl_t29;
+    struct kl_7prelude_str* kl_t30;
+    uint8_t* kl_t31;
+    struct kl_7prelude_textual__ref kl_t33;
+    struct kl_7prelude_str kl_t34;
+    struct kl_7prelude_str* kl_t35;
+    uint8_t* kl_t36;
+    struct kl_7prelude_textual__ref kl_t38;
+    bool kl_t40;
+    bool kl_t41;
+    ( void ) kl_extra_26;
 #line 122 "codegen/consuming_switch.kl"
-    kl_t25 = true;
+    kl_t40 = true;
 #line 122 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t41 = false;
 #line 122 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t41 = false;
 #line 122 "codegen/consuming_switch.kl"
     kl_t2 = kl_h_1;
 #line 122 "codegen/consuming_switch.kl"
-    kl_t25 = false;
+    kl_t40 = false;
 #line 122 "codegen/consuming_switch.kl"
-    kl_t26 = true;
+    kl_t41 = true;
 #line 124 "codegen/consuming_switch.kl"
     kl_t3 = kl_t2.tag == 0;
 #line 124 "codegen/consuming_switch.kl"
@@ -1307,42 +1181,58 @@ void kl__through__M6Holder( struct kl__Holder kl_h_1 )
 #line 124 "codegen/consuming_switch.kl"
     kl_t4 = kl_t2;
 #line 124 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t41 = false;
 #line 124 "codegen/consuming_switch.kl"
     kl_b_5 = kl_t4.kl_4Full_b;
     kl_t6 = &kl_b_5;
 #line 125 "codegen/consuming_switch.kl"
     kl_t7 = kl__get__S3Buf( kl_t6 );
+#line 41 "../test_lib/console.kl"
+    kl_t9 = &kl_t8;
+#line 41 "../test_lib/console.kl"
+    kl_t10 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t8, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 125 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t7 );
+    kl_1t7console_print__3u64_7textual( kl_t7, kl_t12 );
     kl__Buf__dtor( &kl_b_5 );
 #line 126 "codegen/consuming_switch.kl"
     goto bb2;
     bb2:
-    kl_t10 = &kl_t9;
+    kl_t15 = &kl_t14;
 #line 128 "codegen/consuming_switch.kl"
-    kl_t11 = ( uint8_t* ) "through";
+    kl_t16 = ( uint8_t* ) "through";
 #line 128 "codegen/consuming_switch.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 7 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t15, kl_t16, 7 );
 #line 128 "codegen/consuming_switch.kl"
-    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t18 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t14, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t20 = &kl_t19;
+#line 24 "../test_lib/console.kl"
+    kl_t21 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t23 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t19, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 128 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t13 );
+    kl_1t7console_print__7textual_7textual( kl_t18, kl_t23 );
     goto bb5;
     bb3:
 #line 130 "codegen/consuming_switch.kl"
-    kl_t15 = kl_t2;
+    kl_t25 = kl_t2;
 #line 130 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t41 = false;
 #line 130 "codegen/consuming_switch.kl"
-    kl_extra_16 = kl_t15.kl_4Pair_extra;
+    kl_extra_26 = kl_t25.kl_4Pair_extra;
 #line 130 "codegen/consuming_switch.kl"
-    kl_left_17 = kl_t15.kl_4Pair_left;
+    kl_left_27 = kl_t25.kl_4Pair_left;
 #line 130 "codegen/consuming_switch.kl"
-    kl_right_18 = kl_t15.kl_4Pair_right;
-    kl__Buf__dtor( &kl_right_18 );
+    kl_right_28 = kl_t25.kl_4Pair_right;
+    kl__Buf__dtor( &kl_right_28 );
 #line 131 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_left_17 );
+    kl__Buf__dtor( &kl_left_27 );
 #line 131 "codegen/consuming_switch.kl"
     goto bb5;
     bb4:
@@ -1352,22 +1242,30 @@ void kl__through__M6Holder( struct kl__Holder kl_h_1 )
     if ( kl_t3 ) goto bb2; else goto bb3;
     bb5:
 #line 122 "codegen/consuming_switch.kl"
-    if ( kl_t26 ) kl__Holder__dtor( &kl_t2 );
+    if ( kl_t41 ) kl__Holder__dtor( &kl_t2 );
 #line 122 "codegen/consuming_switch.kl"
-    kl_t26 = false;
+    kl_t41 = false;
 #line 134 "codegen/consuming_switch.kl"
-    kl_t20 = &kl_t19;
+    kl_t30 = &kl_t29;
 #line 134 "codegen/consuming_switch.kl"
-    kl_t21 = ( uint8_t* ) "done";
+    kl_t31 = ( uint8_t* ) "done";
 #line 134 "codegen/consuming_switch.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 4 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t30, kl_t31, 4 );
 #line 134 "codegen/consuming_switch.kl"
-    kl_t23 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t19, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t33 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t29, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t35 = &kl_t34;
+#line 24 "../test_lib/console.kl"
+    kl_t36 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t35, kl_t36, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t38 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t34, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 134 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t23 );
-    if ( kl_t25 ) kl__Holder__dtor( &kl_h_1 );
+    kl_1t7console_print__7textual_7textual( kl_t33, kl_t38 );
+    if ( kl_t40 ) kl__Holder__dtor( &kl_h_1 );
 #line 135 "codegen/consuming_switch.kl"
-    kl_t25 = false;
+    kl_t40 = false;
 #line 135 "codegen/consuming_switch.kl"
     return;
 #line 135 "codegen/consuming_switch.kl"
@@ -1384,480 +1282,588 @@ int32_t kl__main__( void )
     struct kl__Buf kl_t6;
     struct kl__Buf* kl_t7;
     uint64_t kl_t8;
-    struct kl__Buf kl_r_10;
-    struct kl__Holder kl_t11;
-    struct kl__Buf kl_t12;
-    struct kl__Buf* kl_t13;
-    struct kl__Buf kl_t15;
-    struct kl__Buf* kl_t16;
-    struct kl__Buf kl_t18;
-    struct kl__Buf* kl_t19;
-    uint64_t kl_t20;
-    struct kl__Buf kl_m_22;
-    struct kl__Holder kl_t23;
-    struct kl__Buf kl_t24;
-    struct kl__Buf* kl_t25;
-    uint64_t kl_t26;
-    struct kl__Buf kl_k_28;
-    struct kl__Holder kl_t29;
-    struct kl__Buf kl_t30;
-    struct kl__Buf* kl_t31;
-    uint64_t kl_t32;
-    struct kl__Holder kl_t34;
-    uint64_t kl_t35;
-    struct kl__Holder kl_t37;
-    struct kl__Buf kl_t38;
-    struct kl__Buf* kl_t39;
-    struct kl__Buf kl_t41;
-    struct kl__Buf* kl_t42;
-    uint64_t kl_t44;
-    struct kl__Holder kl_t46;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl__Buf kl_r_15;
+    struct kl__Holder kl_t16;
+    struct kl__Buf kl_t17;
+    struct kl__Buf* kl_t18;
+    struct kl__Buf kl_t20;
+    struct kl__Buf* kl_t21;
+    struct kl__Buf kl_t23;
+    struct kl__Buf* kl_t24;
+    uint64_t kl_t25;
+    struct kl_7prelude_str kl_t26;
+    struct kl_7prelude_str* kl_t27;
+    uint8_t* kl_t28;
+    struct kl_7prelude_textual__ref kl_t30;
+    struct kl__Buf kl_m_32;
+    struct kl__Holder kl_t33;
+    struct kl__Buf kl_t34;
+    struct kl__Buf* kl_t35;
+    uint64_t kl_t36;
+    struct kl_7prelude_str kl_t37;
+    struct kl_7prelude_str* kl_t38;
+    uint8_t* kl_t39;
+    struct kl_7prelude_textual__ref kl_t41;
+    struct kl__Buf kl_k_43;
+    struct kl__Holder kl_t44;
+    struct kl__Buf kl_t45;
+    struct kl__Buf* kl_t46;
     uint64_t kl_t47;
-    struct kl__Holder kl_t49;
-    struct kl__Buf kl_kept_51;
-    struct kl__Buf* kl_t52;
+    struct kl_7prelude_str kl_t48;
+    struct kl_7prelude_str* kl_t49;
+    uint8_t* kl_t50;
+    struct kl_7prelude_textual__ref kl_t52;
     struct kl__Holder kl_t54;
-    struct kl__Holder kl_t55;
-    bool kl_t56;
-    struct kl__Holder kl_t57;
-    struct kl__Buf kl_b_58;
-    struct kl__Holder kl_t59;
-    uint64_t kl_extra_60;
-    struct kl__Buf kl_left_61;
-    struct kl__Buf kl_right_62;
-    struct kl__Buf* kl_t63;
-    uint64_t kl_t64;
-    struct kl_7prelude_str kl_t66;
-    struct kl_7prelude_str* kl_t67;
-    uint8_t* kl_t68;
-    struct kl_7prelude_textual__ref kl_t70;
-    bool kl_t72;
-    bool kl_t73;
-    bool kl_t74;
-    bool kl_t75;
-    bool kl_t76;
-    bool kl_t77;
-    bool kl_t78;
-    bool kl_t79;
-    bool kl_t80;
-    bool kl_t81;
-    bool kl_t82;
-    bool kl_t83;
-    bool kl_t84;
-    bool kl_t85;
-    bool kl_t86;
-    bool kl_t87;
-    bool kl_t88;
-    bool kl_t89;
-    bool kl_t90;
+    uint64_t kl_t55;
+    struct kl_7prelude_str kl_t56;
+    struct kl_7prelude_str* kl_t57;
+    uint8_t* kl_t58;
+    struct kl_7prelude_textual__ref kl_t60;
+    struct kl__Holder kl_t62;
+    struct kl__Buf kl_t63;
+    struct kl__Buf* kl_t64;
+    struct kl__Buf kl_t66;
+    struct kl__Buf* kl_t67;
+    uint64_t kl_t69;
+    struct kl_7prelude_str kl_t70;
+    struct kl_7prelude_str* kl_t71;
+    uint8_t* kl_t72;
+    struct kl_7prelude_textual__ref kl_t74;
+    struct kl__Holder kl_t76;
+    uint64_t kl_t77;
+    struct kl_7prelude_str kl_t78;
+    struct kl_7prelude_str* kl_t79;
+    uint8_t* kl_t80;
+    struct kl_7prelude_textual__ref kl_t82;
+    struct kl__Holder kl_t84;
+    struct kl__Buf kl_kept_86;
+    struct kl__Buf* kl_t87;
+    struct kl__Holder kl_t89;
+    struct kl__Holder kl_t90;
     bool kl_t91;
-    bool kl_t92;
-    ( void ) kl_extra_60;
+    struct kl__Holder kl_t92;
+    struct kl__Buf kl_b_93;
+    struct kl__Holder kl_t94;
+    uint64_t kl_extra_95;
+    struct kl__Buf kl_left_96;
+    struct kl__Buf kl_right_97;
+    struct kl__Buf* kl_t98;
+    uint64_t kl_t99;
+    struct kl_7prelude_str kl_t100;
+    struct kl_7prelude_str* kl_t101;
+    uint8_t* kl_t102;
+    struct kl_7prelude_textual__ref kl_t104;
+    struct kl_7prelude_str kl_t106;
+    struct kl_7prelude_str* kl_t107;
+    uint8_t* kl_t108;
+    struct kl_7prelude_textual__ref kl_t110;
+    struct kl_7prelude_str kl_t111;
+    struct kl_7prelude_str* kl_t112;
+    uint8_t* kl_t113;
+    struct kl_7prelude_textual__ref kl_t115;
+    bool kl_t117;
+    bool kl_t118;
+    bool kl_t119;
+    bool kl_t120;
+    bool kl_t121;
+    bool kl_t122;
+    bool kl_t123;
+    bool kl_t124;
+    bool kl_t125;
+    bool kl_t126;
+    bool kl_t127;
+    bool kl_t128;
+    bool kl_t129;
+    bool kl_t130;
+    bool kl_t131;
+    bool kl_t132;
+    bool kl_t133;
+    bool kl_t134;
+    bool kl_t135;
+    bool kl_t136;
+    bool kl_t137;
+    ( void ) kl_extra_95;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t72 = false;
+    kl_t117 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t73 = false;
+    kl_t118 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t74 = false;
+    kl_t119 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t75 = false;
+    kl_t120 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t76 = false;
+    kl_t121 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t77 = false;
+    kl_t122 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t78 = false;
+    kl_t123 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t79 = false;
+    kl_t124 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t80 = false;
+    kl_t125 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t81 = false;
+    kl_t126 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t82 = false;
+    kl_t127 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t83 = false;
+    kl_t128 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t84 = false;
+    kl_t129 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t85 = false;
+    kl_t130 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t86 = false;
+    kl_t131 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t87 = false;
+    kl_t132 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t88 = false;
+    kl_t133 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t89 = false;
+    kl_t134 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t90 = false;
+    kl_t135 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t91 = false;
+    kl_t136 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t92 = false;
+    kl_t137 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t73 = false;
+    kl_t118 = false;
 #line 139 "codegen/consuming_switch.kl"
     kl_t4 = &kl_t3;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t73 = true;
+    kl_t118 = true;
 #line 139 "codegen/consuming_switch.kl"
     kl__Buf__R3Buf_3u64__ctor( kl_t4, 1 );
 #line 139 "codegen/consuming_switch.kl"
     kl_t2.tag = 0;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t72 = true;
+    kl_t117 = true;
 #line 139 "codegen/consuming_switch.kl"
     kl_t2.kl_4Full_b = kl_t3;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t73 = false;
+    kl_t118 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t72 = true;
+    kl_t117 = true;
 #line 139 "codegen/consuming_switch.kl"
     kl_t6 = kl__take__M6Holder( kl_t2 );
 #line 139 "codegen/consuming_switch.kl"
-    kl_t72 = false;
+    kl_t117 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t74 = true;
+    kl_t119 = true;
 #line 139 "codegen/consuming_switch.kl"
     kl_a_1 = kl_t6;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t74 = false;
+    kl_t119 = false;
 #line 139 "codegen/consuming_switch.kl"
-    if ( kl_t74 ) kl__Buf__dtor( &kl_t6 );
+    if ( kl_t119 ) kl__Buf__dtor( &kl_t6 );
 #line 139 "codegen/consuming_switch.kl"
-    if ( kl_t72 ) kl__Holder__dtor( &kl_t2 );
+    if ( kl_t117 ) kl__Holder__dtor( &kl_t2 );
 #line 139 "codegen/consuming_switch.kl"
-    if ( kl_t73 ) kl__Buf__dtor( &kl_t3 );
+    if ( kl_t118 ) kl__Buf__dtor( &kl_t3 );
 #line 139 "codegen/consuming_switch.kl"
-    kl_t73 = false;
+    kl_t118 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t72 = false;
+    kl_t117 = false;
 #line 139 "codegen/consuming_switch.kl"
-    kl_t74 = false;
+    kl_t119 = false;
     kl_t7 = &kl_a_1;
 #line 140 "codegen/consuming_switch.kl"
     kl_t8 = kl__get__S3Buf( kl_t7 );
+#line 41 "../test_lib/console.kl"
+    kl_t10 = &kl_t9;
+#line 41 "../test_lib/console.kl"
+    kl_t11 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 140 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t8 );
+    kl_1t7console_print__3u64_7textual( kl_t8, kl_t13 );
 #line 142 "codegen/consuming_switch.kl"
-    kl_t76 = false;
+    kl_t121 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t13 = &kl_t12;
+    kl_t18 = &kl_t17;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t76 = true;
+    kl_t121 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t13, 2 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t18, 2 );
 #line 142 "codegen/consuming_switch.kl"
-    kl_t77 = false;
+    kl_t122 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t16 = &kl_t15;
+    kl_t21 = &kl_t20;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t77 = true;
+    kl_t122 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t16, 3 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t21, 3 );
 #line 142 "codegen/consuming_switch.kl"
-    kl_t11.tag = 2;
+    kl_t16.tag = 2;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = true;
+    kl_t120 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t11.kl_4Pair_extra = 5;
+    kl_t16.kl_4Pair_extra = 5;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = true;
+    kl_t120 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t11.kl_4Pair_left = kl_t12;
+    kl_t16.kl_4Pair_left = kl_t17;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t76 = false;
+    kl_t121 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = true;
+    kl_t120 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t11.kl_4Pair_right = kl_t15;
+    kl_t16.kl_4Pair_right = kl_t20;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t77 = false;
+    kl_t122 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = true;
+    kl_t120 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t18 = kl__take__M6Holder( kl_t11 );
+    kl_t23 = kl__take__M6Holder( kl_t16 );
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = false;
+    kl_t120 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t78 = true;
+    kl_t123 = true;
 #line 142 "codegen/consuming_switch.kl"
-    kl_r_10 = kl_t18;
+    kl_r_15 = kl_t23;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t78 = false;
+    kl_t123 = false;
 #line 142 "codegen/consuming_switch.kl"
-    if ( kl_t78 ) kl__Buf__dtor( &kl_t18 );
+    if ( kl_t123 ) kl__Buf__dtor( &kl_t23 );
 #line 142 "codegen/consuming_switch.kl"
-    if ( kl_t75 ) kl__Holder__dtor( &kl_t11 );
+    if ( kl_t120 ) kl__Holder__dtor( &kl_t16 );
 #line 142 "codegen/consuming_switch.kl"
-    if ( kl_t77 ) kl__Buf__dtor( &kl_t15 );
+    if ( kl_t122 ) kl__Buf__dtor( &kl_t20 );
 #line 142 "codegen/consuming_switch.kl"
-    if ( kl_t76 ) kl__Buf__dtor( &kl_t12 );
+    if ( kl_t121 ) kl__Buf__dtor( &kl_t17 );
 #line 142 "codegen/consuming_switch.kl"
-    kl_t76 = false;
+    kl_t121 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t77 = false;
+    kl_t122 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t75 = false;
+    kl_t120 = false;
 #line 142 "codegen/consuming_switch.kl"
-    kl_t78 = false;
-    kl_t19 = &kl_r_10;
+    kl_t123 = false;
+    kl_t24 = &kl_r_15;
 #line 143 "codegen/consuming_switch.kl"
-    kl_t20 = kl__get__S3Buf( kl_t19 );
+    kl_t25 = kl__get__S3Buf( kl_t24 );
+#line 41 "../test_lib/console.kl"
+    kl_t27 = &kl_t26;
+#line 41 "../test_lib/console.kl"
+    kl_t28 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t27, kl_t28, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t30 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t26, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 143 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t20 );
+    kl_1t7console_print__3u64_7textual( kl_t25, kl_t30 );
 #line 145 "codegen/consuming_switch.kl"
-    kl_t23 = kl__make__3u64( 4 );
+    kl_t33 = kl__make__3u64( 4 );
 #line 145 "codegen/consuming_switch.kl"
-    kl_t79 = true;
+    kl_t124 = true;
 #line 145 "codegen/consuming_switch.kl"
-    kl_t24 = kl__maybe__4bool_M6Holder( true, kl_t23 );
+    kl_t34 = kl__maybe__4bool_M6Holder( true, kl_t33 );
 #line 145 "codegen/consuming_switch.kl"
-    kl_t79 = false;
+    kl_t124 = false;
 #line 145 "codegen/consuming_switch.kl"
-    kl_t80 = true;
+    kl_t125 = true;
 #line 145 "codegen/consuming_switch.kl"
-    kl_m_22 = kl_t24;
+    kl_m_32 = kl_t34;
 #line 145 "codegen/consuming_switch.kl"
-    kl_t80 = false;
+    kl_t125 = false;
 #line 145 "codegen/consuming_switch.kl"
-    if ( kl_t80 ) kl__Buf__dtor( &kl_t24 );
+    if ( kl_t125 ) kl__Buf__dtor( &kl_t34 );
 #line 145 "codegen/consuming_switch.kl"
-    if ( kl_t79 ) kl__Holder__dtor( &kl_t23 );
+    if ( kl_t124 ) kl__Holder__dtor( &kl_t33 );
 #line 145 "codegen/consuming_switch.kl"
-    kl_t79 = false;
+    kl_t124 = false;
 #line 145 "codegen/consuming_switch.kl"
-    kl_t80 = false;
-    kl_t25 = &kl_m_22;
+    kl_t125 = false;
+    kl_t35 = &kl_m_32;
 #line 146 "codegen/consuming_switch.kl"
-    kl_t26 = kl__get__S3Buf( kl_t25 );
+    kl_t36 = kl__get__S3Buf( kl_t35 );
+#line 41 "../test_lib/console.kl"
+    kl_t38 = &kl_t37;
+#line 41 "../test_lib/console.kl"
+    kl_t39 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t38, kl_t39, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t37, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 146 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t26 );
+    kl_1t7console_print__3u64_7textual( kl_t36, kl_t41 );
 #line 148 "codegen/consuming_switch.kl"
-    kl_t29 = kl__make__3u64( 5 );
+    kl_t44 = kl__make__3u64( 5 );
 #line 148 "codegen/consuming_switch.kl"
-    kl_t81 = true;
+    kl_t126 = true;
 #line 148 "codegen/consuming_switch.kl"
-    kl_t30 = kl__maybe__4bool_M6Holder( false, kl_t29 );
+    kl_t45 = kl__maybe__4bool_M6Holder( false, kl_t44 );
 #line 148 "codegen/consuming_switch.kl"
-    kl_t81 = false;
+    kl_t126 = false;
 #line 148 "codegen/consuming_switch.kl"
-    kl_t82 = true;
+    kl_t127 = true;
 #line 148 "codegen/consuming_switch.kl"
-    kl_k_28 = kl_t30;
+    kl_k_43 = kl_t45;
 #line 148 "codegen/consuming_switch.kl"
-    kl_t82 = false;
+    kl_t127 = false;
 #line 148 "codegen/consuming_switch.kl"
-    if ( kl_t82 ) kl__Buf__dtor( &kl_t30 );
+    if ( kl_t127 ) kl__Buf__dtor( &kl_t45 );
 #line 148 "codegen/consuming_switch.kl"
-    if ( kl_t81 ) kl__Holder__dtor( &kl_t29 );
+    if ( kl_t126 ) kl__Holder__dtor( &kl_t44 );
 #line 148 "codegen/consuming_switch.kl"
-    kl_t81 = false;
+    kl_t126 = false;
 #line 148 "codegen/consuming_switch.kl"
-    kl_t82 = false;
-    kl_t31 = &kl_k_28;
+    kl_t127 = false;
+    kl_t46 = &kl_k_43;
 #line 149 "codegen/consuming_switch.kl"
-    kl_t32 = kl__get__S3Buf( kl_t31 );
+    kl_t47 = kl__get__S3Buf( kl_t46 );
+#line 41 "../test_lib/console.kl"
+    kl_t49 = &kl_t48;
+#line 41 "../test_lib/console.kl"
+    kl_t50 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t49, kl_t50, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t52 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t48, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 149 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t32 );
+    kl_1t7console_print__3u64_7textual( kl_t47, kl_t52 );
 #line 151 "codegen/consuming_switch.kl"
-    kl_t34 = kl__make__3u64( 6 );
+    kl_t54 = kl__make__3u64( 6 );
 #line 151 "codegen/consuming_switch.kl"
-    kl_t83 = true;
+    kl_t128 = true;
 #line 151 "codegen/consuming_switch.kl"
-    kl_t35 = kl__count__M6Holder( kl_t34 );
+    kl_t55 = kl__count__M6Holder( kl_t54 );
 #line 151 "codegen/consuming_switch.kl"
-    kl_t83 = false;
+    kl_t128 = false;
+#line 41 "../test_lib/console.kl"
+    kl_t57 = &kl_t56;
+#line 41 "../test_lib/console.kl"
+    kl_t58 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t57, kl_t58, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t60 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t56, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 151 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t35 );
+    kl_1t7console_print__3u64_7textual( kl_t55, kl_t60 );
 #line 151 "codegen/consuming_switch.kl"
-    if ( kl_t83 ) kl__Holder__dtor( &kl_t34 );
+    if ( kl_t128 ) kl__Holder__dtor( &kl_t54 );
 #line 151 "codegen/consuming_switch.kl"
-    kl_t83 = false;
-    kl_t85 = false;
+    kl_t128 = false;
+    kl_t130 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t39 = &kl_t38;
+    kl_t64 = &kl_t63;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t85 = true;
+    kl_t130 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t39, 8 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t64, 8 );
 #line 152 "codegen/consuming_switch.kl"
-    kl_t86 = false;
+    kl_t131 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t42 = &kl_t41;
+    kl_t67 = &kl_t66;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t86 = true;
+    kl_t131 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t42, 9 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t67, 9 );
 #line 152 "codegen/consuming_switch.kl"
-    kl_t37.tag = 2;
+    kl_t62.tag = 2;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = true;
+    kl_t129 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t37.kl_4Pair_extra = 7;
+    kl_t62.kl_4Pair_extra = 7;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = true;
+    kl_t129 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t37.kl_4Pair_left = kl_t38;
+    kl_t62.kl_4Pair_left = kl_t63;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t85 = false;
+    kl_t130 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = true;
+    kl_t129 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t37.kl_4Pair_right = kl_t41;
+    kl_t62.kl_4Pair_right = kl_t66;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t86 = false;
+    kl_t131 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = true;
+    kl_t129 = true;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t44 = kl__count__M6Holder( kl_t37 );
+    kl_t69 = kl__count__M6Holder( kl_t62 );
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = false;
+    kl_t129 = false;
+#line 41 "../test_lib/console.kl"
+    kl_t71 = &kl_t70;
+#line 41 "../test_lib/console.kl"
+    kl_t72 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t71, kl_t72, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t74 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t70, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 152 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t44 );
+    kl_1t7console_print__3u64_7textual( kl_t69, kl_t74 );
 #line 152 "codegen/consuming_switch.kl"
-    if ( kl_t84 ) kl__Holder__dtor( &kl_t37 );
+    if ( kl_t129 ) kl__Holder__dtor( &kl_t62 );
 #line 152 "codegen/consuming_switch.kl"
-    if ( kl_t86 ) kl__Buf__dtor( &kl_t41 );
+    if ( kl_t131 ) kl__Buf__dtor( &kl_t66 );
 #line 152 "codegen/consuming_switch.kl"
-    if ( kl_t85 ) kl__Buf__dtor( &kl_t38 );
+    if ( kl_t130 ) kl__Buf__dtor( &kl_t63 );
 #line 152 "codegen/consuming_switch.kl"
-    kl_t85 = false;
+    kl_t130 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t86 = false;
+    kl_t131 = false;
 #line 152 "codegen/consuming_switch.kl"
-    kl_t84 = false;
+    kl_t129 = false;
 #line 154 "codegen/consuming_switch.kl"
-    kl_t46 = kl__make__3u64( 10 );
+    kl_t76 = kl__make__3u64( 10 );
 #line 154 "codegen/consuming_switch.kl"
-    kl_t87 = true;
+    kl_t132 = true;
 #line 154 "codegen/consuming_switch.kl"
-    kl_t47 = kl__refill__M6Holder( kl_t46 );
+    kl_t77 = kl__refill__M6Holder( kl_t76 );
 #line 154 "codegen/consuming_switch.kl"
-    kl_t87 = false;
+    kl_t132 = false;
+#line 41 "../test_lib/console.kl"
+    kl_t79 = &kl_t78;
+#line 41 "../test_lib/console.kl"
+    kl_t80 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t79, kl_t80, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t82 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t78, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 154 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t47 );
+    kl_1t7console_print__3u64_7textual( kl_t77, kl_t82 );
 #line 154 "codegen/consuming_switch.kl"
-    if ( kl_t87 ) kl__Holder__dtor( &kl_t46 );
+    if ( kl_t132 ) kl__Holder__dtor( &kl_t76 );
 #line 154 "codegen/consuming_switch.kl"
-    kl_t87 = false;
+    kl_t132 = false;
 #line 156 "codegen/consuming_switch.kl"
-    kl_t49 = kl__make__3u64( 11 );
+    kl_t84 = kl__make__3u64( 11 );
 #line 156 "codegen/consuming_switch.kl"
-    kl_t88 = true;
+    kl_t133 = true;
 #line 156 "codegen/consuming_switch.kl"
-    kl__through__M6Holder( kl_t49 );
+    kl__through__M6Holder( kl_t84 );
 #line 156 "codegen/consuming_switch.kl"
-    kl_t88 = false;
+    kl_t133 = false;
 #line 156 "codegen/consuming_switch.kl"
-    if ( kl_t88 ) kl__Holder__dtor( &kl_t49 );
+    if ( kl_t133 ) kl__Holder__dtor( &kl_t84 );
 #line 156 "codegen/consuming_switch.kl"
-    kl_t88 = false;
+    kl_t133 = false;
 #line 159 "codegen/consuming_switch.kl"
-    kl_t89 = false;
+    kl_t134 = false;
 #line 159 "codegen/consuming_switch.kl"
-    kl_t52 = &kl_kept_51;
+    kl_t87 = &kl_kept_86;
 #line 159 "codegen/consuming_switch.kl"
-    kl_t89 = true;
+    kl_t134 = true;
 #line 159 "codegen/consuming_switch.kl"
-    kl__Buf__R3Buf_3u64__ctor( kl_t52, 12 );
+    kl__Buf__R3Buf_3u64__ctor( kl_t87, 12 );
 #line 161 "codegen/consuming_switch.kl"
-    kl_t54 = kl__make__3u64( 13 );
+    kl_t89 = kl__make__3u64( 13 );
 #line 161 "codegen/consuming_switch.kl"
-    kl_t90 = true;
+    kl_t135 = true;
 #line 161 "codegen/consuming_switch.kl"
-    kl_t91 = false;
+    kl_t136 = false;
 #line 161 "codegen/consuming_switch.kl"
-    kl_t55 = kl_t54;
+    kl_t90 = kl_t89;
 #line 161 "codegen/consuming_switch.kl"
-    kl_t90 = false;
+    kl_t135 = false;
 #line 161 "codegen/consuming_switch.kl"
-    kl_t91 = true;
+    kl_t136 = true;
 #line 161 "codegen/consuming_switch.kl"
-    if ( kl_t90 ) kl__Holder__dtor( &kl_t54 );
+    if ( kl_t135 ) kl__Holder__dtor( &kl_t89 );
 #line 161 "codegen/consuming_switch.kl"
-    kl_t90 = false;
+    kl_t135 = false;
 #line 163 "codegen/consuming_switch.kl"
-    kl_t56 = kl_t55.tag == 0;
+    kl_t91 = kl_t90.tag == 0;
 #line 163 "codegen/consuming_switch.kl"
-    if ( kl_t56 ) goto bb1; else goto bb3;
+    if ( kl_t91 ) goto bb1; else goto bb3;
     bb1:
 #line 163 "codegen/consuming_switch.kl"
-    kl_t57 = kl_t55;
+    kl_t92 = kl_t90;
 #line 163 "codegen/consuming_switch.kl"
-    kl_t91 = false;
+    kl_t136 = false;
 #line 163 "codegen/consuming_switch.kl"
-    kl_t92 = false;
+    kl_t137 = false;
 #line 163 "codegen/consuming_switch.kl"
-    kl_b_58 = kl_t57.kl_4Full_b;
+    kl_b_93 = kl_t92.kl_4Full_b;
 #line 163 "codegen/consuming_switch.kl"
-    kl_t92 = true;
-    if ( kl_t89 ) kl__Buf__dtor( &kl_kept_51 );
+    kl_t137 = true;
+    if ( kl_t134 ) kl__Buf__dtor( &kl_kept_86 );
 #line 164 "codegen/consuming_switch.kl"
-    kl_kept_51 = kl_b_58;
+    kl_kept_86 = kl_b_93;
 #line 164 "codegen/consuming_switch.kl"
-    kl_t92 = false;
+    kl_t137 = false;
 #line 164 "codegen/consuming_switch.kl"
-    kl_t89 = true;
-    if ( kl_t92 ) kl__Buf__dtor( &kl_b_58 );
+    kl_t134 = true;
+    if ( kl_t137 ) kl__Buf__dtor( &kl_b_93 );
 #line 165 "codegen/consuming_switch.kl"
-    kl_t92 = false;
+    kl_t137 = false;
 #line 165 "codegen/consuming_switch.kl"
     goto bb4;
     bb2:
 #line 168 "codegen/consuming_switch.kl"
-    kl_t59 = kl_t55;
+    kl_t94 = kl_t90;
 #line 168 "codegen/consuming_switch.kl"
-    kl_t91 = false;
+    kl_t136 = false;
 #line 168 "codegen/consuming_switch.kl"
-    kl_extra_60 = kl_t59.kl_4Pair_extra;
+    kl_extra_95 = kl_t94.kl_4Pair_extra;
 #line 168 "codegen/consuming_switch.kl"
-    kl_left_61 = kl_t59.kl_4Pair_left;
+    kl_left_96 = kl_t94.kl_4Pair_left;
 #line 168 "codegen/consuming_switch.kl"
-    kl_right_62 = kl_t59.kl_4Pair_right;
-    kl__Buf__dtor( &kl_right_62 );
+    kl_right_97 = kl_t94.kl_4Pair_right;
+    kl__Buf__dtor( &kl_right_97 );
 #line 169 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_left_61 );
+    kl__Buf__dtor( &kl_left_96 );
 #line 169 "codegen/consuming_switch.kl"
     goto bb4;
     bb3:
 #line 166 "codegen/consuming_switch.kl"
-    kl_t56 = kl_t55.tag == 1;
+    kl_t91 = kl_t90.tag == 1;
 #line 166 "codegen/consuming_switch.kl"
-    if ( kl_t56 ) goto bb4; else goto bb2;
+    if ( kl_t91 ) goto bb4; else goto bb2;
     bb4:
 #line 161 "codegen/consuming_switch.kl"
-    if ( kl_t91 ) kl__Holder__dtor( &kl_t55 );
+    if ( kl_t136 ) kl__Holder__dtor( &kl_t90 );
 #line 161 "codegen/consuming_switch.kl"
-    kl_t91 = false;
+    kl_t136 = false;
 #line 172 "codegen/consuming_switch.kl"
-    kl_t63 = &kl_kept_51;
+    kl_t98 = &kl_kept_86;
 #line 172 "codegen/consuming_switch.kl"
-    kl_t64 = kl__get__S3Buf( kl_t63 );
+    kl_t99 = kl__get__S3Buf( kl_t98 );
+#line 41 "../test_lib/console.kl"
+    kl_t101 = &kl_t100;
+#line 41 "../test_lib/console.kl"
+    kl_t102 = ( uint8_t* ) "\012";
+#line 41 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t101, kl_t102, 1 );
+#line 41 "../test_lib/console.kl"
+    kl_t104 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t100, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 172 "codegen/consuming_switch.kl"
-    kl_1t7console_println__3u64( kl_t64 );
+    kl_1t7console_print__3u64_7textual( kl_t99, kl_t104 );
 #line 174 "codegen/consuming_switch.kl"
-    kl_t67 = &kl_t66;
+    kl_t107 = &kl_t106;
 #line 174 "codegen/consuming_switch.kl"
-    kl_t68 = ( uint8_t* ) "end";
+    kl_t108 = ( uint8_t* ) "end";
 #line 174 "codegen/consuming_switch.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t67, kl_t68, 3 );
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t107, kl_t108, 3 );
 #line 174 "codegen/consuming_switch.kl"
-    kl_t70 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t66, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t110 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t106, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t112 = &kl_t111;
+#line 24 "../test_lib/console.kl"
+    kl_t113 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t112, kl_t113, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t115 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t111, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 174 "codegen/consuming_switch.kl"
-    kl_1t7console_println__7textual( kl_t70 );
+    kl_1t7console_print__7textual_7textual( kl_t110, kl_t115 );
     kl_t0 = 0;
 #line 175 "codegen/consuming_switch.kl"
-    if ( kl_t89 ) kl__Buf__dtor( &kl_kept_51 );
+    if ( kl_t134 ) kl__Buf__dtor( &kl_kept_86 );
 #line 175 "codegen/consuming_switch.kl"
-    kl_t89 = false;
+    kl_t134 = false;
 #line 175 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_k_28 );
+    kl__Buf__dtor( &kl_k_43 );
 #line 175 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_m_22 );
+    kl__Buf__dtor( &kl_m_32 );
 #line 175 "codegen/consuming_switch.kl"
-    kl__Buf__dtor( &kl_r_10 );
+    kl__Buf__dtor( &kl_r_15 );
 #line 175 "codegen/consuming_switch.kl"
     kl__Buf__dtor( &kl_a_1 );
 #line 175 "codegen/consuming_switch.kl"

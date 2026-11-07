@@ -63,19 +63,19 @@ i32 main()
     unsafe
     {
         fill( ref data[ 0..6 ], 1 );
-        t::println( sum( data[ 0..6 ] ) );
+        t::print( sum( data[ 0..6 ] ) );
 
         ref i32[] all = data[ 0..6 ];
-        t::println( sum( all[ 2..5 ] ) );
-        t::println( all[ 1..5 ][ 1..3 ][ 1 ] );
-        t::println( all[ 2..4 ].size );
-        t::println( all[ 3..6 ].data[ 0 ] );
+        t::print( sum( all[ 2..5 ] ) );
+        t::print( all[ 1..5 ][ 1..3 ][ 1 ] );
+        t::print( all[ 2..4 ].size );
+        t::print( all[ 3..6 ].data[ 0 ] );
 
         const i32[*] read_only = data;
-        t::println( sum( view( read_only, 4 ) ) );
+        t::print( sum( view( read_only, 4 ) ) );
 
         points[ 0 ].x = 5;
-        t::println( far( ref points[ 0..3 ] ) );
+        t::print( far( ref points[ 0..3 ] ) );
     }
 
     unsafe

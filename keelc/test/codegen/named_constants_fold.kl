@@ -34,12 +34,12 @@ i32 main()
 {
     i32[M] arr = [ 0, .. ];
     arr[K] = 7;
-    t::println( M );
-    t::println( quarter );
-    t::println( wide );
-    t::println( twice );
-    t::println( pick( 4 ) );
-    t::println( pick( 8 ) );
-    t::println( arr[K] );
+    t::print( M );
+    t::print( quarter );
+    t::print( wide );
+    t::print( twice );
+    t::print( pick( 4 ) );
+    t::print( pick( 8 ) );
+    t::print( arr[K] );
     return 0;
 }

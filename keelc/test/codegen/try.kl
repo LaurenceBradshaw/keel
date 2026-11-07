@@ -19,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -72,7 +72,7 @@ result<void, Bad> check( bool fine )
         return result::err( Bad::nope );
     }
 
-    t::println( "checked" );
+    t::print( "checked" );
     return result::ok();
 }
 
@@ -89,7 +89,7 @@ result<void, Bad> steps( bool fine )
 {
     try check( true );
     try check( fine );
-    t::println( "after" );
+    t::print( "after" );
     return result::ok();
 }
 
@@ -188,11 +188,11 @@ void show( result<u64, Bad> r )
     switch( r )
     {
     case result::ok( v ):
-        t::print( "ok " );
-        t::println( v );
+        t::print( "ok ", "" );
+        t::print( v );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }
@@ -202,10 +202,10 @@ void show_void( result<void, Bad> r )
     switch( r )
     {
     case result::ok:
-        t::println( "ok" );
+        t::print( "ok" );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }
@@ -215,11 +215,11 @@ void show_buf( move result<Buf, Bad> r )
     switch( move r )
     {
     case result::ok( b ):
-        t::print( "ok " );
-        t::println( b.get() );
+        t::print( "ok ", "" );
+        t::print( b.get() );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }
@@ -229,54 +229,54 @@ void show_lost( move result<u64, Lost> r )
     switch( move r )
     {
     case result::ok( v ):
-        t::print( "ok " );
-        t::println( v );
+        t::print( "ok ", "" );
+        t::print( v );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }
 
 i32 main()
 {
-    t::println( "one" );
+    t::print( "one" );
     show( one( 1 ) );
     show( one( 3 ) );
 
-    t::println( "steps" );
+    t::print( "steps" );
     show_void( steps( true ) );
     show_void( steps( false ) );
 
-    t::println( "early" );
+    t::print( "early" );
     show( early( 2 ) );
     show( early( 3 ) );
 
-    t::println( "wrapped" );
+    t::print( "wrapped" );
     show_buf( move wrapped( 2 ) );
     show_buf( move wrapped( 3 ) );
 
-    t::println( "paired" );
+    t::print( "paired" );
     show( paired( 2 ) );
     show( paired( 3 ) );
 
-    t::println( "chosen" );
+    t::print( "chosen" );
     show( chosen( 2 ) );
     show( chosen( 3 ) );
 
-    t::println( "relay" );
+    t::print( "relay" );
     show_lost( move relay( true ) );
     show_lost( move relay( false ) );
 
-    t::println( "refill" );
+    t::print( "refill" );
     show( refill( 0 ) );
     show( refill( 1 ) );
 
-    t::println( "total" );
+    t::print( "total" );
     show( total( 3 ) );
     show( total( 5 ) );
 
-    t::println( "branch" );
+    t::print( "branch" );
     show( branch( 1 ) );
     show( branch( 2 ) );
     show( branch( 3 ) );

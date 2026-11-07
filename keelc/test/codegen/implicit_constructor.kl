@@ -14,7 +14,7 @@ class Counter
 
     public void show() const
     {
-        kl::println( name );
+        kl::print( name );
     }
 };
 

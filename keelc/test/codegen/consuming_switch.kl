@@ -20,8 +20,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -72,7 +72,7 @@ Buf maybe( bool c, move Holder h )
                 return move b;
             }
 
-            t::println( "kept" );
+            t::print( "kept" );
             return Buf( 0 );
         case Holder::Pair( extra, left, right ):
             return Buf( extra );
@@ -87,7 +87,7 @@ u64 count( move Holder h )
     switch( move h )
     {
         case Holder::Full:
-            t::println( "full" );
+            t::print( "full" );
             break;
         case Holder::Pair( extra, left, right ):
             return extra;
@@ -95,7 +95,7 @@ u64 count( move Holder h )
             break;
     }
 
-    t::println( "after" );
+    t::print( "after" );
     return 0;
 }
 
@@ -122,36 +122,36 @@ void through( move Holder h )
     switch( move h )
     {
         case Holder::Full( b ):
-            t::println( b.get() );
+            t::print( b.get() );
             fallthrough;
         case Holder::Empty:
-            t::println( "through" );
+            t::print( "through" );
             break;
         case Holder::Pair( extra, left, right ):
             break;
     }
 
-    t::println( "done" );
+    t::print( "done" );
 }
 
 i32 main()
 {
     Buf a = take( move Holder::Full( Buf( 1 ) ) );
-    t::println( a.get() );
+    t::print( a.get() );
 
     Buf r = take( move Holder::Pair( 5, Buf( 2 ), Buf( 3 ) ) );
-    t::println( r.get() );
+    t::print( r.get() );
 
     Buf m = maybe( true, move make( 4 ) );
-    t::println( m.get() );
+    t::print( m.get() );
 
     Buf k = maybe( false, move make( 5 ) );
-    t::println( k.get() );
+    t::print( k.get() );
 
-    t::println( count( move make( 6 ) ) );
-    t::println( count( move Holder::Pair( 7, Buf( 8 ), Buf( 9 ) ) ) );
+    t::print( count( move make( 6 ) ) );
+    t::print( count( move Holder::Pair( 7, Buf( 8 ), Buf( 9 ) ) ) );
 
-    t::println( refill( move make( 10 ) ) );
+    t::print( refill( move make( 10 ) ) );
 
     through( move make( 11 ) );
 
@@ -169,8 +169,8 @@ i32 main()
             break;
     }
 
-    t::println( kept.get() );
+    t::print( kept.get() );
 
-    t::println( "end" );
+    t::print( "end" );
     return 0;
 }

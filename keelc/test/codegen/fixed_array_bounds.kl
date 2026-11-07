@@ -11,8 +11,8 @@ i32 main()
 {
     i32[4] a = [ 1, 2, 3, 4 ];
 
-    t::println( at( a, 3 ) );
-    t::println( at( a, 4 ) );
-    t::println( "unreached" );
+    t::print( at( a, 3 ) );
+    t::print( at( a, 4 ) );
+    t::print( "unreached" );
     return 0;
 }

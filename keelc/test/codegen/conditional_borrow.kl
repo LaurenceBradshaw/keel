@@ -16,15 +16,15 @@ void args( bool c, bool d )
     i32 e = 3;
     bump( c ? ref a : ref b );
     bump( c ? ref a : d ? ref b : ref e );
-    t::println( a );
-    t::println( b );
-    t::println( e );
+    t::print( a );
+    t::print( b );
+    t::print( e );
     i32 x;
     i32 y;
     init( c ? out x : out y );
     x = 0;
     y = 0;
-    t::println( x + y );
+    t::print( x + y );
 }
 
 void locals( bool c )
@@ -34,15 +34,15 @@ void locals( bool c )
     ref i32 r = c ? a : b;
     r = 40;
     bump( ref r );
-    t::println( a );
-    t::println( b );
+    t::print( a );
+    t::print( b );
 
     kl::string s = "x";
     kl::string u = "yy";
     const ref kl::string q = c ? s : u;
-    t::println( size_of( q ) );
+    t::print( size_of( q ) );
     grow( c ? ref s : ref u );
-    t::println( s.size() + u.size() );
+    t::print( s.size() + u.size() );
 }
 
 i32 main()

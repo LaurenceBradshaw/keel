@@ -142,13 +142,13 @@ i32 main( const ref str[] args )
             return 12;
     }
 
-    kl::println( "parent first" );
+    kl::print( "parent first" );
     str[1] child = [ "child second" ];
     if( code( kl::run( "echo", child ) ) != 0 )
     {
         return 13;
     }
-    kl::println( "parent third" );
+    kl::print( "parent third" );
 
     return 0;
 }

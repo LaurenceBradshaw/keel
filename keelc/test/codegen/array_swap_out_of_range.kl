@@ -6,7 +6,7 @@ i32 main()
     i32[2] numbers = [ 1, 2 ];
     u64    far     = 5;
 
-    t::println( "before" );
+    t::print( "before" );
     numbers.swap( 0, far );
     return 0;
 }

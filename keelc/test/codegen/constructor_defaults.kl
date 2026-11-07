@@ -4,7 +4,7 @@ import kl::string;
 
 i32 tick( i32 n )
 {
-    kl::println( n );
+    kl::print( n );
     return n;
 }
 
@@ -37,7 +37,7 @@ class Settings
 
     public void show() const
     {
-        kl::println( label );
+        kl::print( label );
     }
 };
 

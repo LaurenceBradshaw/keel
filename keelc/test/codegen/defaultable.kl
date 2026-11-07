@@ -64,7 +64,7 @@ i32 main()
     kl::string  t = zero<kl::string>();
     Holder<i64> h = Holder<i64>();
 
-    kl::println( t.size() );
+    kl::print( t.size() );
 
     if( a != 0 || b || f != 0.0 || p != nullptr || o.y != 2 || c.get() != 5 || s.get() != 3 || h.get() != 0 ||
         doubled<i32>() != 0 )

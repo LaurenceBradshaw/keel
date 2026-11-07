@@ -6,6 +6,6 @@ import kl::list;
 i32 main()
 {
     kl::list<i32> values = kl::list<i32>();
-    kl::println( "looking" );
+    kl::print( "looking" );
     return values.first();
 }

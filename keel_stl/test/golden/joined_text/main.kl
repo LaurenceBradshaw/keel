@@ -27,34 +27,34 @@ i32 main()
     kl::path p = "bin/keelc";
 
     // Lent to a `textual` parameter, and dropped at the end of the statement.
-    kl::println( "cannot create " + p );
+    kl::print( "cannot create " + p );
 
     // A chain: the left `+` gives a `joined_text`, whose own `+` gives another.
-    kl::println( "`" + p + "` failed" );
+    kl::print( "`" + p + "` failed" );
 
-    kl::println( returned( p ) );
+    kl::print( returned( p ) );
 
     kl::string read = "cannot read " + p;
-    kl::println( read );
+    kl::print( read );
 
     switch( move failed( p ) )
     {
-        case result::ok( n ): { kl::println( n ); break; }
-        case result::err( e ): { kl::println( e ); break; }
+        case result::ok( n ): { kl::print( n ); break; }
+        case result::err( e ): { kl::print( e ); break; }
     }
 
-    kl::println( length( "ab" + p ) );
+    kl::print( length( "ab" + p ) );
 
     // Kept as it is, then moved into a `kl::string`, which can still grow.
     auto joined = "x" + p;
-    kl::println( joined.size() );
+    kl::print( joined.size() );
     kl::string taken = move joined;
     taken.push( 33 );
     taken += "?";
-    kl::println( taken );
+    kl::print( taken );
 
     // Two literals join too.
-    kl::println( "a" + "b" );
+    kl::print( "a" + "b" );
 
     // Unchanged: a literal before a `kl::string` adopts it, so `==` is the string's.
     kl::string s = "ab";

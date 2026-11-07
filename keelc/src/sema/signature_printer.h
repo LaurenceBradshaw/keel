@@ -15,14 +15,16 @@ namespace keel
 
 // A declaration on one line as its source writes it, without its body or initialiser:
 // `public void push( move T value )`. A type parameter `bindings` binds reads as its argument, and
-// its `where` clause is left out: `public void push( move i32 value )`.
+// its `where` clause is left out: `public void push( move i32 value )`. Given `sm`, a parameter's
+// default is written too (D79).
 std::string print_signature(
-    const Ast&        ast,
-    const Resolution& resolution,
-    const Types&      types,
-    const Interner&   interner,
-    Node_id           decl,
-    const Bindings&   bindings = {}
+    const Ast&            ast,
+    const Resolution&     resolution,
+    const Types&          types,
+    const Interner&       interner,
+    Node_id               decl,
+    const Bindings&       bindings = {},
+    const Source_manager* sm       = nullptr
 );
 
 // D77: a field's signature with ` = value` as written, since a literal or constructor may rely on it.

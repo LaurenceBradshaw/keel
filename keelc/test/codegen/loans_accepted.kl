@@ -46,7 +46,7 @@ void two_refs()
     ref i32 r2 = n;
     r1 = 2;
     n = 3;
-    t::println( r1 + r2 );
+    t::print( r1 + r2 );
 }
 
 // A non-owning array element loan survives writes to the array.
@@ -56,7 +56,7 @@ void array_no_owner()
     ref i32 x = a[0];
     a[1] = 7;
     a = [ 4, 5, 6 ];
-    t::println( x );
+    t::print( x );
 }
 
 // Assigning a ref writes through it.
@@ -67,7 +67,7 @@ void rebind()
     ref i32 r = a;
     r = b;
     b = 9;
-    t::println( a );
+    t::print( a );
 }
 
 // A ref of a ref parameter's element, then the parameter read.
@@ -78,7 +78,7 @@ void payload_ref( ref kl::optional<kl::string> o )
 {
     switch( o )
     {
-        case kl::optional::some( s ): t::println( s.size() ); break;
+        case kl::optional::some( s ): t::print( s.size() ); break;
         case kl::optional::none: break;
     }
     o = kl::optional::none;
@@ -92,7 +92,7 @@ void reassign_loop()
     while( flag( n ) )
     {
         const ref u8[] t = s.as_text();
-        t::println( t.size );
+        t::print( t.size );
         s = kl::string::from( "b" );
         n++;
     }
@@ -116,28 +116,28 @@ i32 main()
     l.push( 1 );
     kl::list<i32> m = kl::list<i32>();
     m.push( 10 );
-    t::println( loan_ends_in_branch( ref l ) );
+    t::print( loan_ends_in_branch( ref l ) );
     loan_each_round( ref l );
     push_size( ref l );
     Two t2 = Two();
     t2.a.push( 1 );
     disjoint_fields( ref t2 );
-    t::println( t2.a[0] );
+    t::print( t2.a[0] );
     two_refs();
     array_no_owner();
     rebind();
-    t::println( reborrow( ref l ) );
+    t::print( reborrow( ref l ) );
     kl::optional<kl::string> o = kl::optional::some( kl::string::from( "abc" ) );
     payload_ref( ref o );
     reassign_loop();
     walk_other( ref l, m );
     op_loan( ref l, ref m );
-    for( auto x : l ) { t::println( x ); }
-    t::println( m[1] );
+    for( auto x : l ) { t::print( x ); }
+    t::print( m[1] );
     kl::list<i32> n = kl::list<i32>();
     n.push( 1 );
     n.push( 2 );
     nested( ref n );
-    for( auto x : n ) { t::println( x ); }
+    for( auto x : n ) { t::print( x ); }
     return 0;
 }

@@ -20,6 +20,6 @@ i64 once<T>( T x ) where T : copyable
 
 i32 main()
 {
-    t::println( once<i32>( 5 ) );
+    t::print( once<i32>( 5 ) );
     return 0;
 }

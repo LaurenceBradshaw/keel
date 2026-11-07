@@ -10,9 +10,9 @@ i32 main()
 
     while( kl::input( ref line ) )
     {
-        kl::print( "[" );
-        kl::print( line );
-        kl::println( "]" );
+        kl::print( "[", "" );
+        kl::print( line, "" );
+        kl::print( "]" );
         count++;
     }
 

@@ -81,6 +81,8 @@ private:
     bool          refuse_module( Node_id named, Node_id use );
     void          note_hidden_function( Node_id local );
     std::string   variant_hint( Symbol_id name, Node_id use ) const;
+    void          visit_param_defaults( Node_id function );
+    bool          names_parameter( Symbol_id name ) const;
     Node_id       qualifier_type( Node_id qualifier, Node_id use );
     void          refuse_member_literal( Node_id literal, Node_id owner );
     Node_id       visible_from( Node_id use, Node_id head );
@@ -124,6 +126,7 @@ private:
     bool    refused_block_ = false; // in a block Signatures refuses, whose bodies are not resolved
     bool    naming_label_  = false; // a `case` label's bare name, left unreported if undeclared
     bool    in_default_    = false; // a field's default (D77), where `this` is left to the checker
+    Node_id defaulting_    = {};    // the function whose parameter defaults are being visited (D79)
     Node_id path_;                  // the Path_expr whose children are being visited
 
     // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
@@ -275,6 +278,7 @@ void Resolver::visit( Node_id id )
         }
         else
         {
+            visit_param_defaults( id );
             visit( ast_.param_list( id ) );
         }
         if( refused_block_ )
@@ -382,7 +386,9 @@ void Resolver::visit( Node_id id )
         else if( !refuse_module( id, path_.is_valid() && ast_.qualifier( path_ ) == id ? path_ : Node_id {} ) )
         {
             reporter_.error_at(
-                ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ), variant_hint( name, id )
+                ast_.span( id ),
+                fmt::format( "`{}` is not declared", interner_.text( name ) ),
+                names_parameter( name ) ? "a default cannot read another parameter" : variant_hint( name, id )
             );
         }
 
@@ -1236,6 +1242,27 @@ void Resolver::note_hidden_function( Node_id local )
 }
 
 // "write `E::a`" when a bare name is a variant of an enum the use can name; empty when none is.
+// D79: visited before the parameters are declared, so a default reads none of them.
+void Resolver::visit_param_defaults( Node_id function )
+{
+    defaulting_ = function;
+    in_default_ = true;
+
+    for( const Node_id param : ast_.params( function ) )
+    {
+        visit( ast_.default_value( param ) );
+    }
+
+    in_default_ = false;
+    defaulting_ = {};
+}
+
+bool Resolver::names_parameter( Symbol_id name ) const
+{
+    return defaulting_.is_valid() &&
+           std::ranges::any_of( ast_.params( defaulting_ ), [&]( Node_id param ) { return ast_.name( param ) == name; } );
+}
+
 std::string Resolver::variant_hint( Symbol_id name, Node_id use ) const
 {
     const File_id            file = ast_.span( use ).file;

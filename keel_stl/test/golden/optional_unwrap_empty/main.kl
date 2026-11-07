@@ -6,6 +6,6 @@ import kl::optional;
 i32 main()
 {
     kl::optional<i32> missing = kl::optional::none;
-    kl::println( "looking" );
+    kl::print( "looking" );
     return kl::unwrap( missing );
 }

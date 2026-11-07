@@ -14,7 +14,7 @@ class Noisy
 
     ~Noisy()
     {
-        t::println( "dropped" );
+        t::print( "dropped" );
     }
 };
 
@@ -27,6 +27,6 @@ i32 main()
 {
     Noisy n = Noisy( 1 );
 
-    t::println( "before" );
+    t::print( "before" );
     fail( "out of cheese" );
 }

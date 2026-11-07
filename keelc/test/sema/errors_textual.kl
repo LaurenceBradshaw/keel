@@ -9,7 +9,7 @@ struct Point
 i32 main()
 {
     Point p = Point { 1 };
-    t::println( p );
-    t::eprint( &p );
+    t::print( p );
+    t::eprint( &p, "" );
     return 0;
 }

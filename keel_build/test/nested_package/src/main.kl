@@ -4,6 +4,6 @@ import kl::string;
 
 i32 main()
 {
-    kl::println( kl::string::from( geo::solid::cube( 3 ) ) );
+    kl::print( kl::string::from( geo::solid::cube( 3 ) ) );
     return 0;
 }

@@ -16,13 +16,19 @@ class Signature_printer
 {
 public:
     Signature_printer(
-        const Ast& ast, const Resolution& resolution, const Types& types, const Interner& interner, const Bindings& bindings
+        const Ast&            ast,
+        const Resolution&     resolution,
+        const Types&          types,
+        const Interner&       interner,
+        const Bindings&       bindings,
+        const Source_manager* sm
     )
         : ast_( ast ),
           resolution_( resolution ),
           types_( types ),
           interner_( interner ),
-          bindings_( bindings )
+          bindings_( bindings ),
+          sm_( sm )
     {
     }
 
@@ -45,11 +51,12 @@ private:
         return interner_.text( name );
     }
 
-    const Ast&        ast_;
-    const Resolution& resolution_;
-    const Types&      types_;
-    const Interner&   interner_;
-    const Bindings&   bindings_;
+    const Ast&            ast_;
+    const Resolution&     resolution_;
+    const Types&          types_;
+    const Interner&       interner_;
+    const Bindings&       bindings_;
+    const Source_manager* sm_; // where a default's text is read, when given
 };
 
 std::string Signature_printer::declaration( Node_id decl ) const
@@ -269,6 +276,11 @@ std::string Signature_printer::parameters( Node_id fn ) const
     {
         params += params.empty() ? "( " : ", ";
         params += binding( param );
+
+        if( sm_ && ast_.default_value( param ).is_valid() )
+        {
+            params += fmt::format( " = {}", sm_->text( ast_.span( ast_.default_value( param ) ) ) );
+        }
     }
     return params.empty() ? "()" : params + " )";
 }
@@ -372,15 +384,16 @@ Type_id Signature_printer::bound( Node_id param ) const
 } // namespace
 
 std::string print_signature(
-    const Ast&        ast,
-    const Resolution& resolution,
-    const Types&      types,
-    const Interner&   interner,
-    Node_id           decl,
-    const Bindings&   bindings
+    const Ast&            ast,
+    const Resolution&     resolution,
+    const Types&          types,
+    const Interner&       interner,
+    Node_id               decl,
+    const Bindings&       bindings,
+    const Source_manager* sm
 )
 {
-    return Signature_printer( ast, resolution, types, interner, bindings ).declaration( decl );
+    return Signature_printer( ast, resolution, types, interner, bindings, sm ).declaration( decl );
 }
 
 std::string with_default( const Ast& ast, const Source_manager& sm, Node_id decl, std::string signature )

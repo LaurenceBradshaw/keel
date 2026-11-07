@@ -3,12 +3,12 @@ import t::console;
 
 i32 main( const ref str[] args )
 {
-    t::println( args.size );
+    t::print( args.size );
 
     for( u64 i : 0..args.size )
     {
-        t::println( args[ i ] );
-        t::println( args[ i ].size );
+        t::print( args[ i ] );
+        t::print( args[ i ].size );
     }
 
     return 0;

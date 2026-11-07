@@ -22,8 +22,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -115,39 +115,39 @@ u64 guarded()
 
 i32 main()
 {
-    t::println( "projected" );
-    t::println( projected( true ) );
-    t::println( projected( false ) );
+    t::print( "projected" );
+    t::print( projected( true ) );
+    t::print( projected( false ) );
 
-    t::println( "method" );
-    t::println( method( true ) );
-    t::println( method( false ) );
+    t::print( "method" );
+    t::print( method( true ) );
+    t::print( method( false ) );
 
-    t::println( "both" );
-    t::println( both( true ) );
-    t::println( both( false ) );
+    t::print( "both" );
+    t::print( both( true ) );
+    t::print( both( false ) );
 
-    t::println( "either" );
-    t::println( either( true ) );
-    t::println( either( false ) );
+    t::print( "either" );
+    t::print( either( true ) );
+    t::print( either( false ) );
 
-    t::println( "nested" );
-    t::println( nested( true, true ) );
-    t::println( nested( true, false ) );
-    t::println( nested( false, true ) );
+    t::print( "nested" );
+    t::print( nested( true, true ) );
+    t::print( nested( true, false ) );
+    t::print( nested( false, true ) );
 
-    t::println( "lent" );
-    t::println( lent( true ) );
-    t::println( lent( false ) );
+    t::print( "lent" );
+    t::print( lent( true ) );
+    t::print( lent( false ) );
 
-    t::println( "mixed" );
-    t::println( mixed( true ) );
-    t::println( mixed( false ) );
+    t::print( "mixed" );
+    t::print( mixed( true ) );
+    t::print( mixed( false ) );
 
-    t::println( "looped" );
-    t::println( looped( 4 ) );
+    t::print( "looped" );
+    t::print( looped( 4 ) );
 
-    t::println( "guarded" );
-    t::println( guarded() );
+    t::print( "guarded" );
+    t::print( guarded() );
     return 0;
 }

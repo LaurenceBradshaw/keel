@@ -13,7 +13,7 @@ i32 main()
     i32[N + 1] a = [ 1, 2, 3, 4 ];
     i32[( N + 1 ) * 2] b = [ 0, .. ];
     b[7] = 9;
-    t::println( sum( a ) );
-    t::println( b[7] );
+    t::print( sum( a ) );
+    t::print( b[7] );
     return 0;
 }

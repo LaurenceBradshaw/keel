@@ -19,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -84,8 +84,8 @@ Holder make( u64 n )
 
 void consume( move Holder h )
 {
-    t::print( "consumed " );
-    t::println( size( h ) );
+    t::print( "consumed ", "" );
+    t::print( size( h ) );
 }
 
 u64 nested( Option<Holder> o )
@@ -103,14 +103,14 @@ i32 main()
 {
     Buf    x = Buf( 1 );
     Holder h = Holder::Full( move x );
-    t::println( size( h ) );
+    t::print( size( h ) );
 
     // Right before left: a payload drops in reverse, as fields do.
     Holder p = Holder::Pair( 10, Buf( 2 ), Buf( 3 ) );
-    t::println( size( p ) );
+    t::print( size( p ) );
 
     // A temporary, dropped at the end of its statement.
-    t::println( size( make( 4 ) ) );
+    t::print( size( make( 4 ) ) );
 
     consume( move h );
 
@@ -126,7 +126,7 @@ i32 main()
     switch( make( 8 ) )
     {
         case Holder::Full( b ):
-            t::println( b.get() );
+            t::print( b.get() );
             break;
         case Holder::Pair( extra, left, right ):
             return 1;
@@ -134,10 +134,10 @@ i32 main()
             return 2;
     }
 
-    t::println( nested( Option::Some( Holder::Full( Buf( 9 ) ) ) ) );
+    t::print( nested( Option::Some( Holder::Full( Buf( 9 ) ) ) ) );
 
     Keeper k = Keeper( move Holder::Full( Buf( 11 ) ) );
 
-    t::println( "end" );
+    t::print( "end" );
     return 0;
 }

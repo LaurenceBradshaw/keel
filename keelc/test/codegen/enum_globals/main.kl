@@ -12,14 +12,14 @@ shade        copied  = shade::mid;
 
 i32 main()
 {
-    t::println( cast<i32>( fav ) );
-    t::println( cast<i32>( LAST ) );
-    t::println( ordinal );
-    t::println( cast<i32>( chosen ) );
-    t::println( cast<i32>( LIGHTEST ) );
-    t::println( cast<i32>( copied ) );
+    t::print( cast<i32>( fav ) );
+    t::print( cast<i32>( LAST ) );
+    t::print( ordinal );
+    t::print( cast<i32>( chosen ) );
+    t::print( cast<i32>( LIGHTEST ) );
+    t::print( cast<i32>( copied ) );
 
     fav = colour::red;
-    t::println( cast<i32>( fav ) );
+    t::print( cast<i32>( fav ) );
     return 0;
 }

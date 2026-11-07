@@ -41,7 +41,7 @@ i32 main()
             return 5;
     }
 
-    kl::println( "println" );
+    kl::print( "println" );
 
     switch( kl::file::standard_output().write( "standard_output" ) )
     {
@@ -51,8 +51,8 @@ i32 main()
             return 6;
     }
 
-    kl::eprintln( "" );
-    kl::print( "print\n" );
+    kl::eprint( "" );
+    kl::print( "print\n", "" );
 
     kl::file error = kl::file::standard_error();
 

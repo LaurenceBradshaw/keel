@@ -48,12 +48,12 @@ i32 main()
 {
     i32[3] arr = [ 1, 2, 3 ];
 
-    t::println( sum( arr ) );
-    t::println( sum( [ 1, 2, 3, 4 ] ) );
-    t::println( which( arr ) );
-    t::println( which( view( arr ) ) );
+    t::print( sum( arr ) );
+    t::print( sum( [ 1, 2, 3, 4 ] ) );
+    t::print( which( arr ) );
+    t::print( which( view( arr ) ) );
 
     Bits<3> b = Bits<3> { [ 0, 0, 9 ] };
-    t::println( first_set( b ) );
+    t::print( first_set( b ) );
     return 0;
 }

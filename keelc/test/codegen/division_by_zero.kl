@@ -9,6 +9,6 @@ i32 divide( i32 a, i32 b )
 
 i32 main()
 {
-    t::println( "before" );
+    t::print( "before" );
     return divide( 7, 0 );
 }

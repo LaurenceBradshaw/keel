@@ -10,7 +10,7 @@ i32 main()
 {
     i32[2] numbers = [ 1, 2 ];
 
-    t::println( "before" );
+    t::print( "before" );
     exchange( ref numbers, 2 );
     return 0;
 }

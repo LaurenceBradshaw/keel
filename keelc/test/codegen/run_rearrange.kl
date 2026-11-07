@@ -24,10 +24,10 @@ i32 main()
 
     for( const ref kl::string name : names )
     {
-        kl::println( name );
+        kl::print( name );
     }
 
-    kl::println( old );
+    kl::print( old );
 
     i32[4]    numbers = [ 1, 2, 3, 4 ];
     const i32 was     = bump( ref numbers );

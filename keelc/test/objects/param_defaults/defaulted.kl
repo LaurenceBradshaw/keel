@@ -1,0 +1,22 @@
+// Functions with defaults, loaded from defaulted.klo by main.kl.
+i32 base = 10;
+
+i32 add( i32 a, i32 b = base + 1 )
+{
+    return a + b;
+}
+
+T either<T>( T value, T fallback = T() ) where T : numeric
+{
+    return value == T() ? fallback : value;
+}
+
+struct Scale
+{
+i32 by;
+
+i32 times( i32 n = 3 ) const
+    {
+        return by * n;
+    }
+};

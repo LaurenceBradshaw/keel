@@ -15,7 +15,7 @@ class Noisy
 
     ~Noisy()
     {
-        t::println( "dropped" );
+        t::print( "dropped" );
     }
 };
 

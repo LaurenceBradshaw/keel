@@ -4,9 +4,9 @@ import t::console;
 
 i32 main()
 {
-    t::println( nothing );           // error
+    t::print( nothing );           // error
     i32[4] a = [ 0, .. ];
-    t::println( a[4] );              // error
-    t::println( undefined_fn( 3 ) ); // error
+    t::print( a[4] );              // error
+    t::print( undefined_fn( 3 ) ); // error
     return 0;
 }

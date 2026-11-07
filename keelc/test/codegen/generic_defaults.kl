@@ -54,7 +54,7 @@ i32 main()
     u64             n   = fill<kl::string>();
     Bag<kl::string> one = Bag<kl::string>( 1 );
 
-    kl::println( n );
+    kl::print( n );
 
     return p.first == 0 && p.second == 2.5 && n == 1 && one.size() == 0 ? 0 : 1;
 }

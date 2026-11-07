@@ -41,6 +41,7 @@ enum class Conformance_problem : u8
     Unrequested, // a block's method the interface does not declare
     Unrefined,   // the type does not conform to an interface this one requires
     Located,     // the implementer's receives a location the interface's callers cannot pass
+    Defaulted,   // the implementer's has a default the interface's callers would not see
 };
 
 struct Conformance_error

@@ -43,9 +43,9 @@ void helper( ref kl::test::context c )
 
 void requires( ref kl::test::context c )
 {
-    kl::println( "before require" );
+    kl::print( "before require" );
     c.require( false );
-    kl::println( "never printed" );
+    kl::print( "never printed" );
 }
 
 void panics( ref kl::test::context _ )

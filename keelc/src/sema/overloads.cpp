@@ -131,17 +131,22 @@ bool Overloads::deduce_shape( Type_id pattern, const Argument_shape& shape, Bind
     return true;
 }
 
+// D79: whether `count` arguments fill `candidate`'s parameters, its defaults taking the rest.
+bool Overloads::takes( Node_id candidate, std::size_t count ) const
+{
+    return count >= ast_.required_params( candidate ) && count <= ast_.explicit_params( candidate ).size();
+}
+
 // Whether `candidate` takes as many arguments and type arguments as the call wrote.
 bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) const
 {
     const std::span<const Node_id> arguments = ast_.arguments( call );
     const std::size_t              written   = ast_.type_args( call ).size();
-    const std::size_t              params    = ast_.params( candidate ).size() - implicit_params;
 
     // A call that wrote type arguments means them, so a candidate has to take exactly that many
     // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
     // about genericity, so both kinds stay and the types decide below.
-    return params == arguments.size() &&
+    return takes( candidate, arguments.size() ) &&
            ( written == 0 || ast_.type_parameters( ast_.type_param_list( candidate ) ).size() == written );
 }
 
@@ -613,9 +618,7 @@ std::vector<Node_id> Overloads::viable_overloads( const Call_site& site, std::sp
         // Which of the two filters emptied it. Both are things the call site wrote, so naming the
         // wrong one would send the author to the wrong half of their own line.
         const bool arity = std::none_of(
-            candidates.begin(),
-            candidates.end(),
-            [&]( Node_id candidate ) { return ast_.params( candidate ).size() - site.implicit_params == arguments.size(); }
+            candidates.begin(), candidates.end(), [&]( Node_id candidate ) { return takes( candidate, arguments.size() ); }
         );
 
         reporter_.error_at(
@@ -750,9 +753,8 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
     {
         ( ast_.is_visible_from( candidate, from ) ? candidates : hidden ).push_back( candidate );
     }
-    const auto takes = [&]( Node_id candidate )
-    { return ast_.explicit_params( candidate ).size() == ast_.arguments( call ).size(); };
-    if( candidates.empty() || ( std::ranges::none_of( candidates, takes ) && std::ranges::any_of( hidden, takes ) ) )
+    const auto fills = [&]( Node_id candidate ) { return takes( candidate, ast_.arguments( call ).size() ); };
+    if( candidates.empty() || ( std::ranges::none_of( candidates, fills ) && std::ranges::any_of( hidden, fills ) ) )
     {
         candidates = std::move( hidden );
     }
@@ -770,7 +772,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
 
     for( const Node_id candidate : candidates )
     {
-        if( ast_.explicit_params( candidate ).size() == arguments.size() )
+        if( takes( candidate, arguments.size() ) )
         {
             viable.push_back( candidate );
         }
@@ -910,14 +912,16 @@ std::vector<Argument_work> Overloads::check_call_arguments(
     const std::span<const Node_id> arguments = ast_.arguments( site.call );
     std::vector<Argument_work>     work;
 
-    if( params.size() != arguments.size() )
+    if( !takes( callable, arguments.size() ) )
     {
+        const std::size_t least = ast_.required_params( callable );
+
         reporter_.error_at(
             ast_.span( ast_.arg_list( site.call ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 site.name,
-                params.size(),
+                least == params.size() ? fmt::format( "{}", least ) : fmt::format( "{} to {}", least, params.size() ),
                 params.size() == 1 ? "" : "s",
                 arguments.size(),
                 arguments.size() == 1 ? "was" : "were"
@@ -1086,14 +1090,21 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
     }
 }
 
-bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
+bool Overloads::parameters_collide( Node_id first, Node_id second, bool member, std::optional<std::size_t> count )
 {
     // A member's parameter 0 is the receiver, which the call site never writes - so two that differ
     // only in it, `area()` and `area() const`, are one signature and have to be refused here. Asked
     // of each signature rather than of the kind, and separately: M7's static method is a member with
     // no receiver, so a pair may legitimately disagree about whether there is one to skip.
-    const std::span<const Node_id> mine   = ast_.explicit_params( first );
-    const std::span<const Node_id> theirs = ast_.explicit_params( second );
+    std::span<const Node_id> mine   = ast_.explicit_params( first );
+    std::span<const Node_id> theirs = ast_.explicit_params( second );
+
+    // D79: a count compares only the parameters a call of that many arguments writes.
+    if( count )
+    {
+        mine   = mine.first( *count );
+        theirs = theirs.first( *count );
+    }
 
     if( mine.size() != theirs.size() )
     {
@@ -1183,6 +1194,26 @@ std::optional<Conflict> Overloads::conflict( Node_id first, Node_id second, bool
     }
 
     const bool exact = parameters_collide( first, second, false );
+
+    // D79: with defaults, a call of some count might fill either.
+    if( !exact )
+    {
+        const std::size_t least = std::max( ast_.required_params( first ), ast_.required_params( second ) );
+        const std::size_t most  = std::min( ast_.explicit_params( first ).size(), ast_.explicit_params( second ).size() );
+
+        for( std::size_t count = least; count <= most; ++count )
+        {
+            if( parameters_collide( first, second, false, count ) )
+            {
+                return Conflict {
+                    fmt::format(
+                        "a call of `{}` with {} argument{} could mean either declaration", name, count, count == 1 ? "" : "s"
+                    ),
+                    "remove a default, or change a parameter's type"
+                };
+            }
+        }
+    }
 
     if( !exact )
     {
@@ -1448,6 +1479,11 @@ std::string Overloads::signature_of( Node_id callable, const Bindings& bindings 
             marker == Keyword::Count ? "" : fmt::format( "{} ", interner_.text( Interner::keyword( marker ) ) ),
             table_.name( bound ? table_.substitute( types_.type_of( params[i] ), bindings ) : types_.type_of( params[i] ) )
         );
+
+        if( const Node_id value = ast_.default_value( params[i] ); value.is_valid() )
+        {
+            text += fmt::format( " = {}", reporter_.text( ast_.span( value ) ) );
+        }
     }
 
     return text + ( params.empty() ? ")" : " )" );

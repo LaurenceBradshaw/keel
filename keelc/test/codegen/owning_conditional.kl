@@ -19,8 +19,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -47,8 +47,8 @@ u64 peek( Buf b )
 
 void eat( move Buf b )
 {
-    t::print( "ate " );
-    t::println( b.get() );
+    t::print( "ate ", "" );
+    t::print( b.get() );
 }
 
 u64 size( Holder h )
@@ -76,29 +76,29 @@ i32 main()
     Buf a = Buf( 1 );
     Buf b = Buf( 2 );
     Buf x = yes ? move a : move b;
-    t::println( x.get() );
+    t::print( x.get() );
 
     // Temporaries: the one not built is never dropped.
     Buf t = no ? Buf( 3 ) : Buf( 4 );
-    t::println( t.get() );
+    t::print( t.get() );
 
     // A borrow of the result: the moved arm's temporary drops at the end of the statement.
     Buf c = Buf( 5 );
     Buf d = Buf( 6 );
-    t::println( peek( no ? move c : move d ) );
-    t::println( "after peek" );
+    t::print( peek( no ? move c : move d ) );
+    t::print( "after peek" );
 
     // A `move` parameter takes the conditional itself with `move`, as it takes any temporary.
     Buf g = Buf( 7 );
     eat( move ( yes ? move g : Buf( 70 ) ) );
 
-    t::println( pick( no, move Buf( 8 ), move Buf( 9 ) ).get() );
+    t::print( pick( no, move Buf( 8 ), move Buf( 9 ) ).get() );
 
     Holder f = Holder::Full( Buf( 10 ) );
     Holder e = Holder::Empty;
     Holder h = yes ? move f : move e;
-    t::println( size( h ) );
+    t::print( size( h ) );
 
-    t::println( "end" );
+    t::print( "end" );
     return 0;
 }

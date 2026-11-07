@@ -25,20 +25,20 @@ class Table
 
 i32 main()
 {
-    t::println( copied[2] );
-    t::println( fives[3] );
-    t::println( zeros[999] );
-    t::println( halves[1] );
-    t::println( flags[0] );
-    t::println( cs[0] == colour::blue );
-    t::println( names[1] );
-    t::println( grid[1][2] );
-    t::println( rows[0][1] );
-    t::println( rows[1][1] );
-    t::println( ptrs[1] == nullptr );
+    t::print( copied[2] );
+    t::print( fives[3] );
+    t::print( zeros[999] );
+    t::print( halves[1] );
+    t::print( flags[0] );
+    t::print( cs[0] == colour::blue );
+    t::print( names[1] );
+    t::print( grid[1][2] );
+    t::print( rows[0][1] );
+    t::print( rows[1][1] );
+    t::print( ptrs[1] == nullptr );
     copied[0] = 40;
-    t::println( copied[0] );
-    t::println( TRIO[0] );
-    t::println( Table::widths[2] );
+    t::print( copied[0] );
+    t::print( TRIO[0] );
+    t::print( Table::widths[2] );
     return 0;
 }

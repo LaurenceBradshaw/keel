@@ -15,7 +15,7 @@ struct Square implements Shape
     f64 area() const { return side * side; }
 };
 
-void say( const ref textual x ) { kl::println( x ); }
+void say( const ref textual x ) { kl::print( x ); }
 
 void text<T>( const ref T x )
     where T : textual
@@ -25,7 +25,7 @@ void text<T>( const ref T x )
     kl::string s = "[";
     s += x;
     s += y;
-    kl::println( s );
+    kl::print( s );
 }
 
 f64 by_ref( const ref Shape s ) { return s.area(); }

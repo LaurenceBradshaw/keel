@@ -1,0 +1,13 @@
+// D79: a default is not part of a function's type, so `&f` has every parameter.
+i32 one( i32 a, i32 b = 2 ) { return a + b; }
+
+i32 two( i32 a, i32 b = 2 ) { return a + b; }
+i32 two( f64 a ) { return 0; }
+
+i32 main()
+{
+    fn( i32, i32 ) -> i32 full  = &one;
+    fn( i32 ) -> i32      short = &one;
+    fn( i32 ) -> i32      over  = &two;
+    return full( 1, 2 ) + short( 1 ) + over( 1 );
+}

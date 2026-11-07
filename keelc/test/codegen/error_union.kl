@@ -20,8 +20,8 @@ class Buf
 
     ~Buf()
     {
-        t::print( "drop " );
-        t::println( *data );
+        t::print( "drop ", "" );
+        t::print( *data );
 
         unsafe
         {
@@ -119,21 +119,21 @@ void report( move Parse_error | Io_error | Lost e )
     switch( move e )
     {
     case Io_error::missing:
-        t::println( "missing" );
+        t::print( "missing" );
         break;
     case Io_error::denied:
-        t::println( "denied" );
+        t::print( "denied" );
         break;
     case Parse_error::bad_line( line ):
-        t::print( "bad line " );
-        t::println( line );
+        t::print( "bad line ", "" );
+        t::print( line );
         break;
     case Parse_error::empty:
-        t::println( "empty" );
+        t::print( "empty" );
         break;
     case Lost::gone( b ):
-        t::print( "gone " );
-        t::println( b.get() );
+        t::print( "gone ", "" );
+        t::print( b.get() );
         break;
     }
 }
@@ -143,8 +143,8 @@ void show( move result<u64, Io_error | Lost | Parse_error> r )
     switch( move r )
     {
     case result::ok( v ):
-        t::print( "ok " );
-        t::println( v );
+        t::print( "ok ", "" );
+        t::print( v );
         break;
     case result::err( e ):
         report( move e );
@@ -158,18 +158,18 @@ void peek( result<u64, Io_error | Lost | Parse_error> r )
     switch( r )
     {
     case result::ok( v ):
-        t::print( "peek ok " );
-        t::println( v );
+        t::print( "peek ok ", "" );
+        t::print( v );
         break;
     case result::err( e ):
         switch( e )
         {
         case Lost::gone( b ):
-            t::print( "peek gone " );
-            t::println( b.get() );
+            t::print( "peek gone ", "" );
+            t::print( b.get() );
             break;
         default:
-            t::println( "peek other" );
+            t::print( "peek other" );
             break;
         }
         break;
@@ -183,10 +183,10 @@ void bare( move Io_error | Lost e )
     {
     case Io_error::missing:
     case Io_error::denied:
-        t::println( "io" );
+        t::print( "io" );
         break;
     case Lost::gone:
-        t::println( "gone" );
+        t::print( "gone" );
         break;
     }
 }
@@ -215,7 +215,7 @@ void held()
     h.last   = Io_error::denied;
 
     Opt<Io_error | Lost> o = Opt::some( Lost::gone( Buf( 61 ) ) );
-    t::println( "held" );
+    t::print( "held" );
 }
 
 // A generic member, found by its declaration.
@@ -234,21 +234,21 @@ void show_optional( result<u64, Io_error | Opt<u64>> r )
     switch( r )
     {
     case result::ok( v ):
-        t::println( v );
+        t::print( v );
         break;
     case result::err( e ):
         switch( e )
         {
         case Opt::some( v ):
-            t::print( "some " );
-            t::println( v );
+            t::print( "some ", "" );
+            t::print( v );
             break;
         case Opt::none:
-            t::println( "none" );
+            t::print( "none" );
             break;
         case Io_error::missing:
         case Io_error::denied:
-            t::println( "io" );
+            t::print( "io" );
             break;
         }
         break;
@@ -257,26 +257,26 @@ void show_optional( result<u64, Io_error | Opt<u64>> r )
 
 i32 main()
 {
-    t::println( "load" );
+    t::print( "load" );
     show( move same( 0 ) );
     show( move same( 1 ) );
     show( move same( 7 ) );
     show( move same( 9 ) );
     show( move same( 3 ) );
 
-    t::println( "peek" );
+    t::print( "peek" );
     peek( same( 1 ) );
     peek( same( 0 ) );
     peek( same( 4 ) );
 
-    t::println( "locals" );
+    t::print( "locals" );
     locals( true );
     locals( false );
 
-    t::println( "held" );
+    t::print( "held" );
     held();
 
-    t::println( "optional" );
+    t::print( "optional" );
     show_optional( optional( true ) );
     show_optional( optional( false ) );
     return 0;

@@ -141,7 +141,7 @@ std::vector<Name> Name_collector::run()
                   *kind,
                   declared_name_span( decl ),
                   with_default(
-                      ast_, sm_, decl, print_signature( ast_, resolution_, types_, interner_, decl, bindings_at( id ) )
+                      ast_, sm_, decl, print_signature( ast_, resolution_, types_, interner_, decl, bindings_at( id ), &sm_ )
                   ),
                   documentation( ast_, sm_, decl ),
                   owner != owners_.end() ? print_signature( ast_, resolution_, types_, interner_, owner->second ) : "" }

@@ -29,7 +29,7 @@ i32 volume( box<i32> b )
 
 i32 main()
 {
-    t::println( volume( cube { 3 } ) );
-    t::println( volume( box { 5 } ) );
+    t::print( volume( cube { 3 } ) );
+    t::print( volume( box { 5 } ) );
     return 0;
 }

@@ -18,7 +18,7 @@ i32 main()
 {
     f64 nan = quotient( 0.0, 0.0 );
 
-    t::println( "before" );
+    t::print( "before" );
 
     if( digest( nan ) == 0 )
     {

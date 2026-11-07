@@ -243,6 +243,14 @@ void Statements::visit( Node_id id )
 
 void Statements::visit_function( Node_id id )
 {
+    for( const Node_id param : ast_.params( id ) )
+    {
+        if( ast_.default_value( param ).is_valid() && !refuse_param_default( id, param ) )
+        {
+            visit_default( param, id );
+        }
+    }
+
     // The declaration pass already typed the signature, so only the body is left.
     //
     // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
@@ -1174,18 +1182,64 @@ void Statements::visit_increment( Node_id id )
     }
 }
 
-// D77: checked once, as a generic body is, with the field standing in for the function it runs in.
-void Statements::visit_default( Node_id field )
+// D79: where a default could not be seen by every call, or has no place to bind.
+bool Statements::refuse_param_default( Node_id function, Node_id param )
 {
-    const Node_id value = ast_.default_value( field );
-    const Type_id type  = types_.type_of( field );
+    const Span       at     = ast_.span( ast_.default_value( param ) );
+    const Keyword    marker = ast_.call_marker( param );
+    std::string_view where;
+
+    if( ast_.is_requirement( function ) )
+    {
+        where = "an interface's method";
+    }
+    else if( ast_.is_extern( function ) )
+    {
+        where = "an `extern`";
+    }
+    else if( Interner::is_operator_name( ast_.name( function ) ) )
+    {
+        where = "an operator";
+    }
+    else if( ast_.kind( function ) == Node_kind::Function_decl && interner_.text( ast_.name( function ) ) == "main" )
+    {
+        where = "`main`";
+    }
+
+    if( !where.empty() )
+    {
+        reporter_.error_at(
+            at, fmt::format( "{} cannot have a default parameter", where ), "pass the value at each call instead"
+        );
+        return true;
+    }
+
+    if( marker == Keyword::Ref || marker == Keyword::Out )
+    {
+        reporter_.error_at(
+            at,
+            marker == Keyword::Ref ? "a `ref` parameter cannot have a default" : "an `out` parameter cannot have a default",
+            "it needs a place the caller names"
+        );
+        return true;
+    }
+
+    return false;
+}
+
+// D77, D79: checked once, as a generic body is, with the field or parameter standing in for the
+// function it runs in.
+void Statements::visit_default( Node_id decl, Node_id owner )
+{
+    const Node_id value = ast_.default_value( decl );
+    const Type_id type  = types_.type_of( decl );
 
     if( !value.is_valid() || table_.is_error( type ) )
     {
         return;
     }
 
-    const Node_id enclosing = expressions_.enter_function( field );
+    const Node_id enclosing = expressions_.enter_function( decl, owner );
     expressions_.check( value, type );
     expressions_.leave_function( enclosing );
 }

@@ -14,8 +14,8 @@ class Noisy
 
     ~Noisy()
     {
-        t::print( "drop " );
-        t::println( n );
+        t::print( "drop ", "" );
+        t::print( n );
     }
 };
 
@@ -52,7 +52,7 @@ enum Lost
 
 u64 noisy( u64 v )
 {
-    t::println( "noisy" );
+    t::print( "noisy" );
     return v;
 }
 
@@ -76,10 +76,10 @@ void borrowed( bool fine )
     switch( fetch( fine ) )
     {
     case result::ok( v ):
-        t::println( "ok" );
+        t::print( "ok" );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }
@@ -90,10 +90,10 @@ void consumed( bool fine )
     switch( move fetch( fine ) )
     {
     case result::ok( v ):
-        t::println( "ok" );
+        t::print( "ok" );
         break;
     case result::err( e ):
-        t::println( "err" );
+        t::print( "err" );
         break;
     }
 }

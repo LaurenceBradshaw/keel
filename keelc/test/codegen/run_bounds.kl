@@ -16,10 +16,10 @@ i32 main()
         data      = alloc<u8>( 4 );
         data[ 3 ] = 9;
 
-        t::println( at( data[ 0..4 ], 3 ) );
-        t::println( at( data[ 0..4 ], 4 ) );
+        t::print( at( data[ 0..4 ], 3 ) );
+        t::print( at( data[ 0..4 ], 4 ) );
     }
 
-    t::println( "unreached" );
+    t::print( "unreached" );
     return 0;
 }
