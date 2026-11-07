@@ -1204,6 +1204,9 @@ only `.kl` files and expectations. Every compiler works this way (rustc's UI tes
   directory, emptied before each build, so the files it writes stay out of the suite. A golden diff can say the emitted C is unchanged, never that it
   is correct, so codegen fixtures check their own answers and return a distinct code for each wrong
   one. A fixture expected to exit 134 aborts on purpose and is not run under valgrind.
+- **A run fixture built with `--debug` is built and run again without it**, so the KIR passes run,
+  and must give the same exit code and output. `<name>.kl.debug_only` skips that for a fixture whose
+  answer is a `--debug` check's: an overflow, an `assert`.
 - The C is built with `-Wall -Wextra -Werror`, passed as `$KEEL_C_WARNINGS` since keelc drops the
   `-W` words of `$CFLAGS` (D66). `CC`, `KEEL_CFLAGS`, `KEEL_C_WARNINGS`, `KEEL_RT`, `KEEL_ARTIFACTS`, `KEEL_JOBS` and
   `KEEL_RUN_TIMEOUT` override the compiler, its flags, its warnings, the runtime library, where artefacts go, the
@@ -1442,12 +1445,6 @@ major), which waits for the lambda decision (§12).
 - **A global's initialiser can read a later global through a call** (D80): the name is refused,
   but `i32 a = f();` with `f` reading a later `b` reads `b`'s zero, as C++ does. The write sets
   could carry what each function reads, and refuse the call.
-- **Release builds miscompile some codegen fixtures**, which the suite builds only under `--debug`.
-  `thread_jumps`' `repeat_tests` reads a non-integer literal as an integer in `structs`,
-  `generics_aggregates`, `generics_construction`, `generics_conversions`, `interfaces`,
-  `literal_context`, `numeric_limits` and `pointers`, an assertion only a checked keelc sees. And
-  `generics_enums`, `payloads`, `operator_compare` and `generic_interfaces_dynamic` exit with the
-  wrong code. A suite that also builds each fixture in release would hold them.
 - **A payload enum is a struct of every variant's fields, not a union**, so it is as large as all
   its payloads together. Invisible while nothing guarantees an enum's layout; the fix is confined to
   the emitter.

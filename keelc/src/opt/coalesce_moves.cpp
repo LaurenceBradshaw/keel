@@ -105,11 +105,6 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
     return true;
 }
 
-bool same_projection( const Projection& a, const Projection& b )
-{
-    return a.kind == b.kind && a.member == b.member && a.field == b.field && a.index == b.index;
-}
-
 bool copies_itself( const Function& func, const Statement& statement )
 {
     const Rvalue& value = func.rvalue( statement );

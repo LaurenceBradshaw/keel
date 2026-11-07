@@ -310,7 +310,7 @@ Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& 
     return use( constant( literals.add_integer( truncate( bits, integer_type( types, type )->width ) ), type ) );
 }
 
-std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Literal_pool& literals )
+std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const Type_table& types, Literal_pool& literals )
 {
     if( value.kind != Rvalue_kind::Binary )
     {
@@ -319,11 +319,11 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
 
     const Type_kind kind = types.get( value.a.type ).kind;
 
-    const auto whole = []( const Operand& x ) { return x.kind == Operand_kind::Copy && x.place.is_whole_local(); };
-
     // Never a float, which NaN makes unequal to itself.
-    if( whole( value.a ) && whole( value.b ) && value.a.place.local == value.b.place.local &&
-        ( kind == Type_kind::Int || kind == Type_kind::Bool || kind == Type_kind::Pointer ) )
+    if( value.a.kind == Operand_kind::Copy && value.b.kind == Operand_kind::Copy &&
+        same_place( func, value.a.place, value.b.place ) &&
+        ( kind == Type_kind::Int || kind == Type_kind::Bool || kind == Type_kind::Pointer || kind == Type_kind::Many_pointer ||
+          kind == Type_kind::Enum ) )
     {
         switch( value.op )
         {
@@ -387,6 +387,25 @@ std::optional<Rvalue> identity( const Rvalue& value, const Type_table& types, Li
     }
 
     return std::nullopt;
+}
+
+void fold_identities( Function& func, const Type_table& types, Literal_pool& literals )
+{
+    for( const Block_id b : func.blocks.ids() )
+    {
+        for( Statement& statement : func.statements_of( func.blocks[b] ) )
+        {
+            if( statement.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+
+            if( std::optional<Rvalue> folded = identity( func, func.rvalue( statement ), types, literals ) )
+            {
+                func.rvalue( statement ) = std::move( *folded );
+            }
+        }
+    }
 }
 
 // Combined wrapped at the type's width: exact without overflow checks, and with them past every check.
@@ -537,16 +556,17 @@ TEST_CASE( "fold_constants_divides_min_by_minus_one", "[opt][fold]" )
 TEST_CASE( "fold_constants_folds_a_local_compared_with_itself", "[opt][fold]" )
 {
     const Type_table types;
+    const Function   func;
     Literal_pool     literals;
     const Type_id    i32     = types.integer( 32, true );
     const Type_id    boolean = types.builtin( Type_kind::Bool );
     const Operand    x       = copy( Place { .local = Local_id { 1 } }, i32 );
 
-    const std::optional<Rvalue> equal = identity( binary( Token_kind::Equal_equal, x, x, boolean ), types, literals );
+    const std::optional<Rvalue> equal = identity( func, binary( Token_kind::Equal_equal, x, x, boolean ), types, literals );
     REQUIRE( equal );
     REQUIRE( literals.integer( equal->a.constant ) == 1 );
 
-    const std::optional<Rvalue> below = identity( binary( Token_kind::Less, x, x, boolean ), types, literals );
+    const std::optional<Rvalue> below = identity( func, binary( Token_kind::Less, x, x, boolean ), types, literals );
     REQUIRE( below );
     REQUIRE( literals.integer( below->a.constant ) == 0 );
 }
@@ -555,44 +575,56 @@ TEST_CASE( "fold_constants_folds_a_local_compared_with_itself", "[opt][fold]" )
 TEST_CASE( "fold_constants_keeps_a_float_compared_with_itself", "[opt][fold]" )
 {
     const Type_table types;
+    const Function   func;
     Literal_pool     literals;
     const Type_id    f64 = types.floating( 64 );
     const Operand    x   = copy( Place { .local = Local_id { 1 } }, f64 );
 
-    REQUIRE( !identity( binary( Token_kind::Equal_equal, x, x, types.builtin( Type_kind::Bool ) ), types, literals ) );
+    REQUIRE( !identity( func, binary( Token_kind::Equal_equal, x, x, types.builtin( Type_kind::Bool ) ), types, literals ) );
 }
 
-// `_1.a == _1.a` would fold too, but only a whole local is judged.
-TEST_CASE( "fold_constants_keeps_a_projected_place_compared_with_itself", "[opt][fold]" )
+// `_1.a == _1.a`, but not `_1.a == _1.b`.
+TEST_CASE( "fold_constants_folds_a_projected_place_compared_with_itself", "[opt][fold]" )
 {
     const Type_table types;
+    Function         func;
     Literal_pool     literals;
-    const Type_id    i32 = types.integer( 32, true );
-    const Operand    x   = copy( Place { .local = Local_id { 1 }, .num_projections = 1 }, i32 );
+    const Type_id    i32     = types.integer( 32, true );
+    const Type_id    boolean = types.builtin( Type_kind::Bool );
+    const Place      root { .local = Local_id { 1 } };
+    const Operand    a =
+        copy( projected( func, root, Projection { .kind = Projection_kind::Field, .field = Node_id { 1 } } ), i32 );
+    const Operand a2 =
+        copy( projected( func, root, Projection { .kind = Projection_kind::Field, .field = Node_id { 1 } } ), i32 );
+    const Operand b =
+        copy( projected( func, root, Projection { .kind = Projection_kind::Field, .field = Node_id { 2 } } ), i32 );
 
-    REQUIRE( !identity( binary( Token_kind::Equal_equal, x, x, types.builtin( Type_kind::Bool ) ), types, literals ) );
+    REQUIRE( identity( func, binary( Token_kind::Equal_equal, a, a2, boolean ), types, literals ) );
+    REQUIRE( !identity( func, binary( Token_kind::Equal_equal, a, b, boolean ), types, literals ) );
 }
 
 TEST_CASE( "fold_constants_folds_an_added_zero", "[opt][fold]" )
 {
     const Type_table types;
+    const Function   func;
     Literal_pool     literals;
     const Type_id    i32  = types.integer( 32, true );
     const Operand    x    = copy( Place { .local = Local_id { 1 } }, i32 );
     const Operand    zero = constant( literals.add_integer( 0 ), i32 );
 
-    const std::optional<Rvalue> sum = identity( binary( Token_kind::Plus, zero, x, i32 ), types, literals );
+    const std::optional<Rvalue> sum = identity( func, binary( Token_kind::Plus, zero, x, i32 ), types, literals );
     REQUIRE( sum );
     REQUIRE( sum->kind == Rvalue_kind::Use );
     REQUIRE( sum->a.place.local == x.place.local );
 
-    REQUIRE( !identity( binary( Token_kind::Minus, zero, x, i32 ), types, literals ) );
+    REQUIRE( !identity( func, binary( Token_kind::Minus, zero, x, i32 ), types, literals ) );
 }
 
 // `(x + 3) + 4` is `x + 7`, `(x + 3) - 5` is `x - 2`, and `(x - 3) + 3` is `x`.
 TEST_CASE( "fold_constants_combines_two_sums", "[opt][fold]" )
 {
     const Type_table types;
+    const Function   func;
     Literal_pool     literals;
     const Type_id    i32 = types.integer( 32, true );
     const Operand    x   = copy( Place { .local = Local_id { 1 } }, i32 );
@@ -623,6 +655,7 @@ TEST_CASE( "fold_constants_combines_two_sums", "[opt][fold]" )
 TEST_CASE( "fold_constants_adds_a_combined_signed_minimum", "[opt][fold]" )
 {
     const Type_table types;
+    const Function   func;
     Literal_pool     literals;
     const Type_id    i32        = types.integer( 32, true );
     const Type_id    unsigned32 = types.integer( 32, false );

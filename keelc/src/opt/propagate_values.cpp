@@ -239,7 +239,7 @@ void propagate_values( Function& func, const Type_table& types, Literal_pool& li
                 }
 
                 // Before the step, so `_3 = copy _45 + const 0` records a copy.
-                if( std::optional<Rvalue> folded = identity( func.rvalue( statement ), types, literals ) )
+                if( std::optional<Rvalue> folded = identity( func, func.rvalue( statement ), types, literals ) )
                 {
                     func.rvalue( statement ) = std::move( *folded );
                 }

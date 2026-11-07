@@ -487,6 +487,30 @@ inline bool has_deref_projection( const Function& func, const Place& place )
     return false;
 }
 
+inline bool same_projection( const Projection& a, const Projection& b )
+{
+    return a.kind == b.kind && a.member == b.member && a.field == b.field && a.index == b.index;
+}
+
+// The same root and the same projections.
+inline bool same_place( const Function& func, const Place& a, const Place& b )
+{
+    if( a.local != b.local || a.global != b.global || a.num_projections != b.num_projections )
+    {
+        return false;
+    }
+
+    for( u32 i = 0; i < a.num_projections; ++i )
+    {
+        if( !same_projection( func.projections_of( a )[i], func.projections_of( b )[i] ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // A local followed only by fields, `p` or `p.a.b`: what a field move may name.
 inline bool is_field_path( const Function& func, const Place& place )
 {

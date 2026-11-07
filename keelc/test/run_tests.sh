@@ -31,6 +31,10 @@
 # is one an earlier line wrote, and any other word is a flag. keelc is given every object written, or
 # only those of a line holding nothing but .klo words, and the build directory is cut from its output.
 #
+# A run fixture whose FLAGS hold --debug is built and run a second time without it, so the KIR passes
+# run, and must give the same exit code and output. A <name>.kl.debug_only marker skips that, for a
+# fixture whose answer is a --debug check's.
+#
 #   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
@@ -342,6 +346,38 @@ check_run()
     return 0
 }
 
+# Builds a --debug fixture again without --debug, so the KIR passes run, and checks it gives the same
+# answer. Skipped under --update, which records the debug build's answer, and for a fixture marked
+# <name>.kl.debug_only, whose answer is a --debug check's.
+# $1 the fixture path  $2 its build directory  $3.. the build flags  -> echoes any problem
+check_release()
+{
+    local src="$1" release_dir="${2}_release"
+    shift 2
+
+    [ "$update" -eq 1 ] || [ -f "${src}.debug_only" ] && return 0
+
+    local flags=() flag debug=0
+    for flag in "$@"; do
+        if [ "$flag" = "--debug" ]; then debug=1; else flags+=( "$flag" ); fi
+    done
+    [ "$debug" -eq 1 ] || return 0
+
+    rm -rf "$release_dir"
+    mkdir -p "$release_dir"
+
+    local messages
+    messages="$(
+        klos=()
+        if [ ! -f "${src}.objects" ] || build_objects "$src" "$release_dir" "${flags[@]}"; then
+            check_run "$src" "$release_dir" "${flags[@]}"
+        fi
+    )"
+
+    [ -n "$messages" ] && { echo "    without --debug:"; echo "$messages"; }
+    return 0
+}
+
 # Checks one fixture, and writes its verdict to $results/<index>: "pass", "FAIL" or "updated" on the
 # first line, then any messages. $out and $err are its own, so fixtures can run side by side.
 # $1 the index  $2 the fixture path
@@ -406,6 +442,7 @@ run_one()
         # already says so.
         if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
             check_run "$src" "$build_dir" "${build_flags[@]}"
+            check_release "$src" "$build_dir" "${build_flags[@]}"
         fi
     )"
 
@@ -460,7 +497,7 @@ fi
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' ! -name '*.kl.link' \
-    ! -name '*.kl.objects' \
+    ! -name '*.kl.objects' ! -name '*.kl.debug_only' \
     \( ! -name '*.c' -o -name '*.kl.c' -o -name '*.prelude.c' \) \
     ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 

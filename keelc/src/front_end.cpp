@@ -11,6 +11,7 @@
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
 #include "opt/devirtualise_calls.h"
+#include "opt/fold_constants.h"
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
 #include "opt/inline_calls.h"
@@ -238,6 +239,8 @@ Front_end run_front_end(
                 if( build.recoalescing )
                 {
                     coalesce_moves( function );
+                    // Merging two locals can make `a != a`.
+                    fold_identities( function, front.types.table(), literals );
                 }
                 remove_unused_locals( function );
                 assert( verify( function ).empty() );
