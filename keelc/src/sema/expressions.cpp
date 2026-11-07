@@ -1678,6 +1678,22 @@ bool Expressions::bind_fn_parameters(
             return false;
         }
 
+        // `&f` gets a type of its own, so the instance calls `f` directly.
+        if( table_.is_function( shape.type ) && ast_.kind( argument ) == Node_kind::Unary_expr &&
+            callees_.callee_of( argument ).is_valid() )
+        {
+            const Span span = ast_.span( argument );
+            shape.type      = types_.record(
+                argument,
+                table_.closure(
+                    argument,
+                    shape.type,
+                    open_parameters(),
+                    fmt::format( "{} at {}", reporter_.text( span ), reporter_.line_col( span ) )
+                )
+            );
+        }
+
         resolved[i] = shape.type;
         bound_by[i] = argument;
         bindings.insert_or_assign( open.v, shape.type );
@@ -11660,6 +11676,25 @@ TEST_CASE( "expressions_check_fn_bounds", "[sema][lambda]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 1 ) ) == "fn[…] at 11:15" );
+    }
+
+    SECTION( "`&f` passed to `F` gets a type of its own" )
+    {
+        const Typed p( fmt::format(
+            "{}i32 twice( i32 x ) {{ return x * 2; }}\n"
+            "i32 pick( i32 x ) {{ return x; }}\ni32 pick( bool x ) {{ return 0; }}\n"
+            "T same<T>( T x ) where T : copyable {{ return x; }}\n"
+            "T onto<T, F>( T x, F f ) where T : copyable, where F : fn( T ) -> T {{ return f( x ); }}\n"
+            "T both<T>( T x ) where T : copyable {{ return onto( x, &same<T> ); }}\n"
+            "i32 main() {{ return apply( &twice, 1 ) + apply( &pick, 2 ) + both<i32>( 3 ); }}",
+            generics
+        ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "&same<T> at 8:55" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "&twice at 9:28" );
     }
 
     SECTION( "the argument must be the bound" )
