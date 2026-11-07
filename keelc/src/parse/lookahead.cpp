@@ -1142,6 +1142,17 @@ bool Lookahead::scan_where_clauses()
             return false;
         }
 
+        // `fn( … ) -> R`, the parameter's one bound.
+        if( cursor_.check_keyword( Keyword::Fn ) )
+        {
+            if( !scan_type() )
+            {
+                return false;
+            }
+            cursor_.match( Token_kind::Comma );
+            continue;
+        }
+
         bool separator = false;
         do
         {

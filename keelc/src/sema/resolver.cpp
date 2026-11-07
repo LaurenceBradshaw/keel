@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -47,13 +48,15 @@ private:
     enum class Scope_kind
     {
         Transparent,
-        Barrier
+        Barrier,
+        Lambda // a barrier to declare's shadow walk; lookup through it is refused for locals
     };
 
     struct Scope
     {
         std::unordered_map<Symbol_id, Node_id> names;
         Scope_kind                             kind = Scope_kind::Transparent;
+        Node_id                                lambda; // the Lambda_expr, for Scope_kind::Lambda
     };
 
     void visit( Node_id id );
@@ -62,6 +65,11 @@ private:
     void visit_enum( Node_id id );
     void visit_aggregate( Node_id id );
     void visit_block( Node_id id ); // an `implements ... for` block, not a function body
+    void visit_lambda( Node_id id );
+    void refuse_capture( Node_id capture );
+    void refuse_uncaptured( Node_id use, Symbol_id name, Node_id decl, const Scope& lambda );
+    bool is_local( Symbol_id name, Node_id decl ) const;
+    bool is_instance_member( Node_id decl ) const;
 
     std::unordered_map<u32, Node_id> declare_members( Node_id aggregate );
 
@@ -120,6 +128,8 @@ private:
     std::vector<bool>    reported_;       // a declaration refused already: a method shares its aggregate's parameters
     std::vector<bool>    value_params_;   // `<Point N>`'s `N`, refused, whose uses stay quiet
     std::vector<bool>    checked_params_; // a type parameter checked once, before its methods share it
+
+    std::set<std::pair<u32, u32>> uncaptured_; // (lambda, declaration) already refused
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
@@ -298,6 +308,9 @@ void Resolver::visit( Node_id id )
         }
         visit( ast_.body( id ) );
         pop_scope();
+        return;
+    case Node_kind::Lambda_expr:
+        visit_lambda( id );
         return;
     case Node_kind::Param_decl:
         visit( ast_.annotation( id ) ); // which may name a struct
@@ -748,6 +761,160 @@ void Resolver::visit_block( Node_id id )
     refused_block_ = false;
 }
 
+// The captures resolve where the lambda is written; they and the parameters are its scope's names.
+void Resolver::visit_lambda( Node_id id )
+{
+    for( const Node_id capture : ast_.captures( id ) )
+    {
+        if( ast_.kind( capture ) == Node_kind::Capture_decl )
+        {
+            visit( ast_.captured( capture ) );
+            refuse_capture( capture );
+        }
+    }
+
+    push_scope( Scope_kind::Lambda );
+    scopes_.back().lambda = id;
+
+    for( const Node_id capture : ast_.captures( id ) )
+    {
+        if( ast_.kind( capture ) == Node_kind::Capture_decl )
+        {
+            declare( scopes_.back(), ast_.name( capture ), capture );
+        }
+    }
+
+    visit( ast_.return_type( id ) );
+    visit( ast_.param_list( id ) );
+
+    for( const Node_id param : ast_.params( id ) )
+    {
+        if( ast_.name( param ).is_valid() )
+        {
+            unused_candidates_.push_back( param );
+        }
+    }
+
+    visit( ast_.body( id ) );
+    pop_scope();
+}
+
+// Only a local or parameter is captured; a member is reached through `this`.
+void Resolver::refuse_capture( Node_id capture )
+{
+    const Symbol_id name  = ast_.name( capture );
+    Node_id         named = ast_.captured( capture );
+
+    if( ast_.kind( named ) == Node_kind::Marker_expr )
+    {
+        named = ast_.children( named )[0];
+    }
+
+    const Node_id decl = bindings_[named.v];
+
+    if( !decl.is_valid() || name == Interner::keyword( Keyword::This ) )
+    {
+        return; // unresolved and reported, or the receiver
+    }
+
+    if( is_instance_member( decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( named ),
+            fmt::format( "`{}` is a member, so a lambda reaches it through `this`", interner_.text( name ) ),
+            "capture `this`: `fn[ this ]` reads it, `fn[ ref this ]` writes it"
+        );
+    }
+    else if( !is_local( name, decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( named ),
+            fmt::format( "`{}` is not a local, so it cannot be captured", interner_.text( name ) ),
+            "a lambda names globals, functions and types without capturing them"
+        );
+    }
+}
+
+// Reached across `lambda`'s boundary: a local or the receiver must be captured, and a member needs `this`.
+void Resolver::refuse_uncaptured( Node_id use, Symbol_id name, Node_id decl, const Scope& lambda )
+{
+    const bool receiver = name == Interner::keyword( Keyword::This );
+    const bool member   = is_instance_member( decl );
+
+    if( !receiver && !member && !is_local( name, decl ) )
+    {
+        return;
+    }
+    if( member && lambda.names.contains( Interner::keyword( Keyword::This ) ) )
+    {
+        return;
+    }
+    if( !uncaptured_.emplace( lambda.lambda.v, decl.v ).second )
+    {
+        return;
+    }
+
+    const std::string_view text = interner_.text( name );
+
+    if( member )
+    {
+        reporter_.error_at(
+            ast_.span( use ),
+            fmt::format( "`{}` is a member, and this lambda does not capture `this`", text ),
+            "capture it: `fn[ this ]` reads through it, `fn[ ref this ]` writes through it"
+        );
+    }
+    else
+    {
+        reporter_.error_at(
+            ast_.span( use ),
+            fmt::format( "`{}` is not captured by this lambda", text ),
+            receiver ? "capture it: `fn[ this ]` reads through it, `fn[ ref this ]` writes through it"
+                     : fmt::format( "capture it: `fn[ {0} ]` reads it, `fn[ ref {0} ]` writes it", text )
+        );
+    }
+}
+
+// A variable of some enclosing function body, not a global or a static member.
+bool Resolver::is_local( Symbol_id name, Node_id decl ) const
+{
+    const Node_kind kind = ast_.kind( decl );
+
+    if( kind != Node_kind::Var_decl && kind != Node_kind::Param_decl && kind != Node_kind::Capture_decl &&
+        kind != Node_kind::Binding_decl )
+    {
+        return false;
+    }
+    if( const auto member = current_members_.find( name ); member != current_members_.end() && member->second == decl )
+    {
+        return false;
+    }
+
+    return std::ranges::any_of(
+        scopes_,
+        [&]( const Scope& scope )
+        {
+            const auto found = scope.names.find( name );
+            return found != scope.names.end() && found->second == decl;
+        }
+    );
+}
+
+// A field, or a method with a receiver: each needs `this`.
+bool Resolver::is_instance_member( Node_id decl ) const
+{
+    const auto member = current_members_.find( ast_.name( decl ) );
+
+    if( member == current_members_.end() || member->second != decl )
+    {
+        return false;
+    }
+
+    return ast_.kind( decl ) == Node_kind::Field_decl ||
+           ( ast_.kind( decl ) == Node_kind::Method_decl && !ast_.params( decl ).empty() &&
+             ast_.name( ast_.params( decl )[0] ) == Interner::keyword( Keyword::This ) );
+}
+
 // Fields are a member namespace, not a lexical one, so they are deliberately *not* in scopes_ here:
 // that would put `Point` in scope as a field and let it shadow the type `Point` while the fields'
 // own annotations are resolved. A local map gives the duplicate check without the pollution, and
@@ -908,7 +1075,8 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
     // scope walk because the field scope sits below the member body's barrier - it has to, so a
     // parameter wins the lookup - and the walk stops at that barrier.
     const auto member = current_members_.find( name );
-    if( ast_.kind( decl ) != Node_kind::Param_decl && member != current_members_.end() )
+    if( ast_.kind( decl ) != Node_kind::Param_decl && ast_.kind( decl ) != Node_kind::Capture_decl &&
+        member != current_members_.end() )
     {
         const std::string_view what = ast_.kind( member->second ) == Node_kind::Method_decl ? "method" : "field";
         reporter_.error_at(
@@ -921,7 +1089,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
 
     // D19. The declaration stays in the map even when it shadows, so later uses bind to the
     // variable actually written rather than to the outer one.
-    if( scope.kind == Scope_kind::Barrier )
+    if( scope.kind != Scope_kind::Transparent )
     {
         return;
     }
@@ -940,7 +1108,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
             return;
         }
 
-        if( s->kind == Scope_kind::Barrier )
+        if( s->kind != Scope_kind::Transparent )
         {
             return;
         }
@@ -995,12 +1163,22 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         return Node_id {};
     }
 
+    const Scope* crossed = nullptr; // the innermost lambda the search has left
+
     for( auto it = scopes_.rbegin(); it != scopes_.rend(); ++it )
     {
         const auto found = it->names.find( name );
         if( found != it->names.end() )
         {
+            if( crossed )
+            {
+                refuse_uncaptured( use, name, found->second, *crossed );
+            }
             return visible_from( use, found->second );
+        }
+        if( it->kind == Scope_kind::Lambda && !crossed )
+        {
+            crossed = &*it;
         }
     }
 
@@ -3900,6 +4078,64 @@ TEST_CASE( "resolver_refuses_an_interface_named_after_a_package", "[sema][resolv
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "`kl` is the name of a package" ) != std::string::npos );
+}
+
+TEST_CASE( "resolver_binds_a_lambdas_captures_and_parameters", "[sema][resolve][lambda]" )
+{
+    const Resolved p( "void f() { }\ni32 main() { i32 total = 0; f( fn[ ref total ]( i32 x ) { total += x; } ); return total; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 0 );
+    REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 1 ) ) == p.nth( Node_kind::Var_decl, 0 ) ); // the capture
+    REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 2 ) ) == p.nth( Node_kind::Capture_decl, 0 ) );
+    REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 3 ) ) == p.nth( Node_kind::Param_decl, 0 ) );
+}
+
+TEST_CASE( "resolver_refuses_what_a_lambda_does_not_capture", "[sema][resolve][lambda]" )
+{
+    static const std::pair<const char*, const char*> cases[] = {
+        { "i32 main() { i32 x = 0; f( fn[]() { x += 1; x += 2; } ); return x; }", "`x` is not captured by this lambda" },
+        { "i32 main( i32 x ) { f( fn[]() -> i32 { return x; } ); return 0; }", "`fn[ ref x ]` writes it" },
+        { "i32 main() { i32 x = 0; f( fn[ x ]() { f( fn[]() -> i32 { return x; } ); } ); return x; }",
+          "`x` is not captured by this lambda" },
+        { "struct P { i32 v; void m() { f( fn[]() -> i32 { return v; } ); } };",
+          "`v` is a member, and this lambda does not capture `this`" },
+        { "struct P { i32 v; void m() { f( fn[]() -> i32 { return this.v; } ); } };", "`this` is not captured by this lambda" },
+        { "struct P { i32 v; void m() { f( fn[ v ]() { } ); } };", "a lambda reaches it through `this`" },
+        { "i32 g = 0;\ni32 main() { f( fn[ g ]() { } ); return 0; }", "`g` is not a local" },
+        { "i32 main() { i32 x = 0; f( fn[ x, ref x ]() { } ); return x; }", "already declared in this scope" },
+        { "i32 main() { i32 x = 0; f( fn[ x ]( i32 x ) { } ); return x; }", "already declared in this scope" },
+        { "i32 main() { i32 x = 0; f( fn[ x ]() { i32 x = 1; } ); return x; }", "shadows an outer declaration" },
+    };
+
+    for( const auto& [source, message] : cases )
+    {
+        const Resolved p( std::string( "void f() { }\n" ) + source );
+
+        INFO( "source: " << source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( message ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "resolver_lets_a_lambda_name_what_needs_no_capture", "[sema][resolve][lambda]" )
+{
+    static const char* sources[] = {
+        "i32 g = 0;\ni32 h() { return 1; }\ni32 main() { f( fn[]() -> i32 { return g + h(); } ); return 0; }",
+        "struct P { i32 v; void m() { f( fn[ this ]() -> i32 { return v + this.v; } ); } };",
+        "struct P { i32 v; void m() { f( fn[ ref this ]() { f( fn[ this ]() -> i32 { return v; } ); } ); } };",
+        "T id<T>( T t ) where T : copyable { f( fn[]( T u ) -> T { return u; } ); return t; }",
+        "i32 main() { i32 x = 0; f( fn[ x ]( i32 y ) { i32 z = x + y; } ); return x; }",
+    };
+
+    for( const char* source : sources )
+    {
+        const Resolved p( std::string( "void f() { }\n" ) + source );
+
+        INFO( "source: " << source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
 }
 
 } // namespace keel

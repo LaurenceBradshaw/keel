@@ -238,13 +238,19 @@ Node_id Ast::package( Node_id id ) const
 
 Node_id Ast::return_type( Node_id id ) const
 {
-    assert( ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type ) && "no return type here" );
+    assert(
+        ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type || kind( id ) == Node_kind::Lambda_expr ) &&
+        "no return type here"
+    );
     return child( id, 0 );
 }
 
 Node_id Ast::param_list( Node_id id ) const
 {
-    assert( ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type ) && "no parameters here" );
+    assert(
+        ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type || kind( id ) == Node_kind::Lambda_expr ) &&
+        "no parameters here"
+    );
     return child( id, 1 );
 }
 
@@ -255,7 +261,7 @@ std::span<const Node_id> Ast::params( Node_id id ) const
 
 std::span<const Node_id> Ast::explicit_params( Node_id fn ) const
 {
-    assert( is_function_like( kind( fn ) ) );
+    assert( is_function_like( kind( fn ) ) || kind( fn ) == Node_kind::Lambda_expr );
     const std::span<const Node_id> all = params( fn );
 
     return !all.empty() && name( all[0] ) == Interner::keyword( Keyword::This ) ? all.subspan( 1 ) : all;
@@ -283,9 +289,21 @@ Node_id Ast::body( Node_id id ) const
     case Node_kind::Case_arm:
         return children( id ).back();
     default:
-        assert( is_function_like( kind( id ) ) && "this kind has no body" );
+        assert( ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Lambda_expr ) && "this kind has no body" );
         return child( id, 2 );
     }
+}
+
+std::span<const Node_id> Ast::captures( Node_id lambda ) const
+{
+    assert( kind( lambda ) == Node_kind::Lambda_expr );
+    return children( child( lambda, 3 ) );
+}
+
+Node_id Ast::captured( Node_id capture ) const
+{
+    assert( kind( capture ) == Node_kind::Capture_decl );
+    return child( capture, 0 );
 }
 
 Node_id Ast::type_param_list( Node_id id ) const

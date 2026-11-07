@@ -195,6 +195,14 @@ enum class Node_kind : u16
     // Type_param_list slot, always invalid for now, the Implements_list holding the interface, the
     // type it is for, then the Method_decls.
     Implements_decl,
+    // `fn[ caps ]( params ) -> R { … }`. children as Function_decl's first three (the return type
+    // invalid when left out), then the Capture_list. A Param_decl's type is invalid when left out.
+    Lambda_expr,
+    // children: the Capture_decls.
+    Capture_list,
+    // aux: the name (`this` for `[ this ]`); children: what is captured, a Name_expr or a `ref`
+    // Marker_expr around one.
+    Capture_decl,
 
     Count
 };

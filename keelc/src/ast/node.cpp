@@ -178,6 +178,12 @@ std::string_view node_kind_name( Node_kind kind )
         return "Implements_list";
     case Node_kind::Implements_decl:
         return "Implements_decl";
+    case Node_kind::Lambda_expr:
+        return "Lambda_expr";
+    case Node_kind::Capture_list:
+        return "Capture_list";
+    case Node_kind::Capture_decl:
+        return "Capture_decl";
 
     case Node_kind::Count:
         break;
@@ -215,6 +221,7 @@ Aux_meaning aux_meaning( Node_kind kind )
     case Node_kind::Bound_name:
     case Node_kind::Interface_decl:
     case Node_kind::Implements_decl:
+    case Node_kind::Capture_decl:
         return Aux_meaning::Symbol;
     case Node_kind::Int_literal:
     case Node_kind::Float_literal:

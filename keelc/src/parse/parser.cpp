@@ -190,6 +190,9 @@ private:
     // unchanged, so the parens leave no trace.
     Node_id parse_prefix();
     Node_id parse_keyword_prefix( Span start );
+    Node_id parse_lambda( Span start );
+    Node_id parse_capture();
+    Node_id parse_lambda_param();
 
     Node_id parse_arg_list( bool pattern = false ); // a pattern's list may hold `_`
 
@@ -1236,6 +1239,25 @@ Node_id Parser::parse_where_clause()
     recovery_.expect( Token_kind::Colon );
 
     std::vector<Node_id> bounds;
+
+    // `where F : fn( … ) -> R`: a signature is the clause's one bound.
+    if( cursor_.check_keyword( Keyword::Fn ) )
+    {
+        const Span at = cursor_.advance().span;
+        bounds.push_back( parse_function_type( at ) );
+
+        cursor_.match( Token_kind::Comma );
+
+        if( !subject.is_valid() )
+        {
+            return error_node( Span::merge( start, cursor_.previous().span ) );
+        }
+
+        const Node_id node =
+            ast_.add( Node_kind::Where_clause, Span::merge( start, cursor_.previous().span ), subject.v, bounds );
+        ast_.set_name_span( node, subject_span );
+        return node;
+    }
 
     do
     {
@@ -3960,6 +3982,12 @@ Node_id Parser::member_access( Node_id left, Node_kind kind, Symbol_id name, Nod
 // two conversions.
 Node_id Parser::parse_keyword_prefix( Span start )
 {
+    if( cursor_.check_keyword( Keyword::Fn ) && cursor_.peek( 1 ).kind == Token_kind::L_bracket )
+    {
+        cursor_.advance();
+        return parse_lambda( start );
+    }
+
     if( cursor_.check_keyword( Keyword::True ) || cursor_.check_keyword( Keyword::False ) )
     {
         const bool value = cursor_.check_keyword( Keyword::True );
@@ -4142,6 +4170,141 @@ Node_id Parser::parse_keyword_prefix( Span start )
     // Not a keyword that starts an expression. Invalid rather than a diagnostic, so the caller
     // reports it on the same path an unknown token takes - one message, in one place.
     return Node_id {};
+}
+
+// `fn[ captures ]( params ) -> R { … }`, past the `fn`.
+Node_id Parser::parse_lambda( Span start )
+{
+    const Span           open = cursor_.advance().span; // the `[`
+    std::vector<Node_id> captures;
+
+    if( !cursor_.check( Token_kind::R_bracket ) )
+    {
+        const std::size_t list_errors = diags_.error_count();
+        do
+        {
+            captures.push_back( parse_capture() );
+
+            if( !recovery_.end_list_element( Token_kind::R_bracket, list_errors ) )
+            {
+                break;
+            }
+        } while( cursor_.match( Token_kind::Comma ) );
+    }
+
+    recovery_.expect( Token_kind::R_bracket );
+    const Node_id capture_list = ast_.add( Node_kind::Capture_list, Span::merge( open, cursor_.previous().span ), 0, captures );
+
+    const Span           params_open = cursor_.peek().span;
+    std::vector<Node_id> params;
+
+    recovery_.expect( Token_kind::L_paren );
+
+    if( !cursor_.check( Token_kind::R_paren ) )
+    {
+        const std::size_t list_errors = diags_.error_count();
+        do
+        {
+            params.push_back( parse_lambda_param() );
+
+            if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
+            {
+                break;
+            }
+        } while( cursor_.match( Token_kind::Comma ) );
+    }
+
+    recovery_.expect( Token_kind::R_paren );
+    const Node_id param_list =
+        ast_.add( Node_kind::Param_list, Span::merge( params_open, cursor_.previous().span ), 0, params );
+
+    Node_id return_type {};
+    if( cursor_.match( Token_kind::Arrow ) )
+    {
+        return_type = parse_type_with_mode();
+    }
+
+    const Node_id body = parse_block( 0, Span {} );
+
+    return ast_.add(
+        Node_kind::Lambda_expr,
+        Span::merge( start, cursor_.previous().span ),
+        0,
+        { return_type, param_list, body, capture_list }
+    );
+}
+
+// `x`, `ref x`, `this` or `ref this`.
+Node_id Parser::parse_capture()
+{
+    const Span start = cursor_.peek().span;
+
+    if( cursor_.check_keyword( Keyword::Move ) || cursor_.check_keyword( Keyword::Out ) )
+    {
+        recovery_.error_at(
+            cursor_.peek().span,
+            fmt::format( "a lambda cannot capture by `{}`", sm_.text( cursor_.peek().span ) ),
+            "a capture is a copy, written bare, or a borrow, written `ref`"
+        );
+        cursor_.advance();
+    }
+
+    const bool by_ref = cursor_.match_keyword( Keyword::Ref );
+
+    Node_id   name_expr;
+    Symbol_id name;
+
+    if( cursor_.check_keyword( Keyword::This ) )
+    {
+        cursor_.advance();
+        name      = Interner::keyword( Keyword::This );
+        name_expr = ast_.add( Node_kind::Name_expr, cursor_.previous().span, name.v, {} );
+    }
+    else
+    {
+        name = expect_name();
+        if( !name.is_valid() )
+        {
+            return error_node( Span::merge( start, cursor_.previous().span ) );
+        }
+        name_expr = ast_.add( Node_kind::Name_expr, cursor_.previous().span, name.v, {} );
+    }
+
+    const Span    name_span = cursor_.previous().span;
+    const Node_id captured =
+        by_ref ? ast_.add(
+                     Node_kind::Marker_expr, Span::merge( start, name_span ), static_cast<u32>( Keyword::Ref ), { name_expr }
+                 )
+               : name_expr;
+
+    const Node_id node = ast_.add( Node_kind::Capture_decl, Span::merge( start, name_span ), name.v, { captured } );
+    ast_.set_name_span( node, name_span );
+    return node;
+}
+
+// A parameter as a function's, or a bare name whose type and mode the expected `fn` type supplies.
+Node_id Parser::parse_lambda_param()
+{
+    const Token_kind after = cursor_.peek( 1 ).kind;
+
+    if( ( cursor_.check( Token_kind::Identifier ) || cursor_.check_keyword( Keyword::Underscore ) ) &&
+        ( after == Token_kind::Comma || after == Token_kind::R_paren ) )
+    {
+        const Span      at   = cursor_.advance().span;
+        const Symbol_id name = cursor_.previous().kind == Token_kind::Identifier ? cursor_.previous().symbol : Symbol_id {};
+        const Node_id   node = ast_.add( Node_kind::Param_decl, at, name.v, { Node_id {} } );
+        ast_.set_name_span( node, at );
+        return node;
+    }
+
+    const Node_id param = parse_param();
+
+    if( ast_.default_value( param ).is_valid() )
+    {
+        recovery_.error_at( ast_.span( ast_.default_value( param ) ), "a lambda's parameter takes no default" );
+    }
+
+    return param;
 }
 
 Node_id Parser::parse_prefix()
@@ -14464,6 +14627,106 @@ TEST_CASE( "parser_parses_a_parameter_default", "[parse][param_defaults]" )
         const Parsed p( "fn( i32 = 1 ) -> void g;" );
 
         REQUIRE( p.has_errors() );
+    }
+}
+
+TEST_CASE( "parser_reads_a_lambda", "[parse][lambda]" )
+{
+    SECTION( "captures with modes, typed parameters and a return type" )
+    {
+        const Parsed p( "void f() { g( fn[ a, ref b, this ]( const ref i32 x, i32 y ) -> bool { return x < y; } ); }" );
+
+        INFO( p.errors() );
+        REQUIRE( !p.has_errors() );
+
+        const Node_id lambda = find_first( p.ast(), p.root(), Node_kind::Lambda_expr );
+        REQUIRE( lambda.is_valid() );
+        REQUIRE( p.ast().return_type( lambda ).is_valid() );
+        REQUIRE( p.ast().params( lambda ).size() == 2 );
+        REQUIRE( p.name( p.ast().params( lambda )[1] ) == "y" );
+        REQUIRE( p.kind( p.ast().body( lambda ) ) == Node_kind::Block );
+
+        const std::span<const Node_id> captures = p.ast().captures( lambda );
+        REQUIRE( captures.size() == 3 );
+        REQUIRE( p.name( captures[0] ) == "a" );
+        REQUIRE( p.kind( p.ast().captured( captures[0] ) ) == Node_kind::Name_expr );
+        REQUIRE( p.name( captures[1] ) == "b" );
+        REQUIRE( p.kind( p.ast().captured( captures[1] ) ) == Node_kind::Marker_expr );
+        REQUIRE( p.name( captures[2] ) == "this" );
+    }
+
+    SECTION( "bare parameters, no captures, no return type" )
+    {
+        const Parsed p( "void f() { g( fn[]( a, _ ) { h( a ); } ); }" );
+
+        INFO( p.errors() );
+        REQUIRE( !p.has_errors() );
+
+        const Node_id lambda = find_first( p.ast(), p.root(), Node_kind::Lambda_expr );
+        REQUIRE( !p.ast().return_type( lambda ).is_valid() );
+        REQUIRE( p.ast().captures( lambda ).empty() );
+        REQUIRE( p.ast().params( lambda ).size() == 2 );
+        REQUIRE( p.name( p.ast().params( lambda )[0] ) == "a" );
+        REQUIRE( !p.child( p.ast().params( lambda )[0], 0 ).is_valid() );
+        REQUIRE( !p.ast().name( p.ast().params( lambda )[1] ).is_valid() );
+    }
+
+    SECTION( "`fn(` is still a type" )
+    {
+        const Parsed p( "void f() { fn( i32 ) -> i32 g = &h; }" );
+
+        INFO( p.errors() );
+        REQUIRE( !p.has_errors() );
+        REQUIRE( !find_first( p.ast(), p.root(), Node_kind::Lambda_expr ).is_valid() );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Var_decl );
+    }
+
+    SECTION( "a `move` capture is refused" )
+    {
+        const Parsed p( "void f() { g( fn[ move a ]() { } ); }" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "a lambda cannot capture by `move`" ) != std::string::npos );
+    }
+
+    SECTION( "a parameter default is refused" )
+    {
+        const Parsed p( "void f() { g( fn[]( i32 a = 1 ) { } ); }" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "a lambda's parameter takes no default" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_reads_an_fn_bound", "[parse][lambda]" )
+{
+    SECTION( "one signature" )
+    {
+        const Parsed p( "void sort<T, F>( F less ) where F : fn( const ref T, const ref T ) -> bool { }" );
+
+        INFO( p.errors() );
+        REQUIRE( !p.has_errors() );
+
+        const Node_id clause = find_first( p.ast(), p.root(), Node_kind::Where_clause );
+        REQUIRE( p.name( clause ) == "F" );
+        REQUIRE( p.children( clause ).size() == 1 );
+        REQUIRE( p.kind( p.child( clause, 0 ) ) == Node_kind::Function_type );
+    }
+
+    SECTION( "followed by another clause" )
+    {
+        const Parsed p( "void f<T, F>( F g ) where F : fn( T ) -> void, where T : copyable { }" );
+
+        INFO( p.errors() );
+        REQUIRE( !p.has_errors() );
+    }
+
+    // The return type reads `void &`, so the error lands there; one error is all that matters.
+    SECTION( "joined to another bound" )
+    {
+        const Parsed p( "void f<F>( F g ) where F : fn() -> void & copyable { }" );
+
+        REQUIRE( p.error_count() == 1 );
     }
 }
 

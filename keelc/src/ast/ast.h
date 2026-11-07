@@ -105,6 +105,8 @@ public:
     Node_id                  body( Node_id id ) const;            // also the loops and Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
+    std::span<const Node_id> captures( Node_id lambda ) const;        // the Capture_decls
+    Node_id                  captured( Node_id capture ) const;       // the Name_expr or `ref` Marker_expr
     Node_id                  type_param_list( Node_id id ) const;     // aggregate, Enum_decl, function-like
     Node_id                  own_type_param_list( Node_id id ) const; // a method's own; invalid for anything else
     std::vector<Node_id>     type_parameters( Node_id list ) const;   // the Type_param_decls; empty for an invalid list
