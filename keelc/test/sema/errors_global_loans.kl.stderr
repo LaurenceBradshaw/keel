@@ -1,0 +1,37 @@
+error: this could change `G` while `x` still borrows from it
+  --> sema/errors_global_loans.kl:58:5
+   |
+58 |     f();
+   |     ^^^ `f` may change `G`, and `x` is used after this; it was bound at 57:5
+
+error: `h` may change `G` itself, so it cannot also be lent it
+  --> sema/errors_global_loans.kl:64:8
+   |
+64 |     h( ref G.items );
+   |        ^^^^^^^^^^^ copy what the call needs out of `G` before it
+
+error: this could change `G` while `x` still borrows from it
+  --> sema/errors_global_loans.kl:70:5
+   |
+70 |     f();
+   |     ^^^ `f` may change `G`, and `x` is used after this; it was bound at 69:5
+
+error: this could change `G` while `x` still borrows from it
+  --> sema/errors_global_loans.kl:77:5
+   |
+77 |     change();
+   |     ^^^^^^^^ `x` is used after this; it was bound at 76:5
+
+error: this could change `G` while `x` still borrows from it
+  --> sema/errors_global_loans.kl:84:5
+   |
+84 |     s.take( 2 );
+   |     ^^^^^^^^^^^ `take` may change `G`, and `x` is used after this; it was bound at 83:5
+
+error: this could change `G` while `x` still borrows from it
+  --> sema/errors_global_loans.kl:91:5
+   |
+91 |     outer();
+   |     ^^^^^^^ `outer` may change `G`, and `x` is used after this; it was bound at 90:5
+
+6 errors generated

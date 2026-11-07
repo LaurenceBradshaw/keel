@@ -1,0 +1,22 @@
+// A global is built in declaration order, so its initialiser may read only those declared before it.
+i32 twice( i32 n )
+{
+    return n * 2;
+}
+
+i32 a = twice( b );
+i32 b = twice( 3 );
+i32 c = twice( c );
+
+struct Counts
+{
+    i32 n;
+
+    static i32 first = twice( Counts::second );
+    static i32 second = twice( 4 );
+};
+
+i32 main()
+{
+    return a + b + c + Counts::first;
+}

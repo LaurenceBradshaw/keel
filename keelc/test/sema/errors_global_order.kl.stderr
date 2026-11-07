@@ -1,0 +1,19 @@
+error: `b` is built after `a`
+ --> sema/errors_global_order.kl:7:16
+  |
+7 | i32 a = twice( b );
+  |                ^ a global may read only those declared before it
+
+error: `c` is read while it is being built
+ --> sema/errors_global_order.kl:9:16
+  |
+9 | i32 c = twice( c );
+  |                ^ a global may read only those declared before it
+
+error: `second` is built after `first`
+  --> sema/errors_global_order.kl:15:31
+   |
+15 |     static i32 first = twice( Counts::second );
+   |                               ^^^^^^^^^^^^^^ a global may read only those declared before it
+
+3 errors generated

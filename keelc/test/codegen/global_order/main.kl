@@ -1,0 +1,12 @@
+// D80: modules are built dependencies first, b then a then main, and dropped in reverse.
+import kl::console;
+import a;
+import b;
+
+Noisy outer = Noisy( 3 );
+
+i32 main()
+{
+    kl::print( "main" );
+    return level() == 2 ? 0 : 1;
+}

@@ -1,0 +1,9 @@
+// store given as an object; its global is built before main and freed after, which valgrind sees.
+import store;
+
+i32 main()
+{
+    if( kept_size() != 8 ) { return 1; }
+
+    return 0;
+}

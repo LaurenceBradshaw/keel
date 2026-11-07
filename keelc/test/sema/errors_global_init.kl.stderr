@@ -1,0 +1,25 @@
+error: a global's initialiser cannot `try`
+  --> sema/errors_global_init.kl:31:14
+   |
+31 | i32 parsed = try parse( 1 );
+   |              ^^^^^^^^^^^^^^ it runs before `main`, and has no caller to pass the error to
+
+error: a file-scope variable of `Handle` needs an initialiser
+  --> sema/errors_global_init.kl:32:1
+   |
+32 | Handle handle;
+   | ^^^^^^^^^^^^^^ `Handle` has no public constructor taking nothing
+
+error: a file-scope variable of `Small | Other` needs an initialiser
+  --> sema/errors_global_init.kl:34:1
+   |
+34 | Small | Other either;
+   | ^^^^^^^^^^^^^^^^^^^^^ its zero need not be one of its members
+
+error: `items` is a global, so it cannot be moved from
+  --> sema/errors_global_init.kl:38:17
+   |
+38 |     return move items;
+   |                 ^^^^^ a global keeps a value until the program ends
+
+4 errors generated

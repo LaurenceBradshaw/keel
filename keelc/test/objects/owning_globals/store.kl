@@ -1,0 +1,35 @@
+// An owning global in a module built as an object: the program's shim builds and drops it.
+class Store
+{
+    u8[*] bytes;
+    u64   size;
+
+    public Store( u64 n )
+    {
+        unsafe
+        {
+            bytes = alloc<u8>( n );
+        }
+        size = n;
+    }
+
+    ~Store()
+    {
+        unsafe
+        {
+            free( bytes );
+        }
+    }
+
+    public u64 capacity() const
+    {
+        return size;
+    }
+};
+
+Store kept = Store( 8 );
+
+u64 kept_size()
+{
+    return kept.capacity();
+}

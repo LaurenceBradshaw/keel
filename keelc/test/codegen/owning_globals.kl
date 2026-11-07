@@ -1,0 +1,93 @@
+// D80: globals that own. Each is built before `main` in declaration order and dropped after it in
+// reverse, so the output shows the order and valgrind sees every buffer freed once.
+import kl::console;
+import kl::list;
+import kl::string;
+
+class Noisy
+{
+    i32 id;
+
+    Noisy( i32 n )
+    {
+        id = n;
+        kl::print( "build ", "" );
+        kl::print( id );
+    }
+
+    ~Noisy()
+    {
+        kl::print( "drop ", "" );
+        kl::print( id );
+    }
+};
+
+struct Settings
+{
+    i32 width = 80;
+    i32 height = 24;
+};
+
+class Bag
+{
+    public kl::list<i32> items = kl::list<i32>();
+    public i32           count = 0;
+
+    public static kl::list<i32> made = kl::list<i32>();
+
+    public Bag()
+    {
+    }
+};
+
+i32 announced( i32 n )
+{
+    kl::print( "announced ", "" );
+    kl::print( n );
+    return n;
+}
+
+Noisy           first = Noisy( 1 );
+kl::list<i32>   numbers;
+kl::string      greeting = "hi";
+Settings        settings;
+i32             told = announced( 7 );
+Noisy           second = Noisy( 2 );
+const kl::string motto = kl::string( "kept" );
+Bag             bag;
+Noisy           third = Noisy( 3 );
+
+void tally()
+{
+    bag.count = bag.count + 1;
+    bag.items.push( bag.count );
+    Bag::made.push( bag.count );
+}
+
+i32 main()
+{
+    kl::print( "main" );
+
+    numbers.push( 4 );
+    numbers.push( 5 );
+    if( numbers.size() != 2 || numbers[1] != 5 ) { return 1; }
+
+    kl::print( greeting );
+    kl::print( motto );
+    if( settings.width != 80 || settings.height != 24 || told != 7 ) { return 2; }
+
+    // count is the global's inline storage, so no write of `bag` moves it.
+    ref i32 count = bag.count;
+    tally();
+    tally();
+    if( count != 2 ) { return 3; }
+
+    for( i32 x : bag.items )
+    {
+        kl::print( x );
+    }
+
+    if( Bag::made.size() != 2 ) { return 4; }
+
+    return 0;
+}

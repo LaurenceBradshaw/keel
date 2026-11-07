@@ -1,0 +1,44 @@
+// A built global's initialiser is checked as a field default is, a type with no default needs one,
+// a global is never moved from, and a union has no zero to start from.
+import kl::list;
+
+result<i32, i32> parse( i32 n )
+{
+    return result::ok( n );
+}
+
+class Handle
+{
+    i32 fd;
+
+    public Handle( i32 n )
+    {
+        fd = n;
+    }
+};
+
+enum Small
+{
+    one,
+    two
+};
+
+enum Other
+{
+    three
+};
+
+i32 parsed = try parse( 1 );
+Handle handle;
+kl::list<i32> items;
+Small | Other either;
+
+kl::list<i32> take()
+{
+    return move items;
+}
+
+i32 main()
+{
+    return parsed;
+}

@@ -1,0 +1,8 @@
+import b;
+
+Noisy middle = Noisy( 2 );
+
+i32 level()
+{
+    return 2;
+}

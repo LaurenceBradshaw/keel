@@ -1,0 +1,103 @@
+// A loan of what a global owns ends at any call that may change that global, however far the call
+// reaches: two calls deep, through a `fn` value, or through an interface method.
+import kl::list;
+
+class Bag
+{
+    public kl::list<i32> items = kl::list<i32>();
+
+    public Bag()
+    {
+    }
+};
+
+Bag G;
+
+void f()
+{
+    G.items.push( 1 );
+}
+
+void outer()
+{
+    f();
+}
+
+void h( ref kl::list<i32> _ )
+{
+    G = Bag();
+}
+
+ref i32 first()
+{
+    return G.items[0];
+}
+
+interface sink
+{
+    void take( i32 n );
+};
+
+class Into implements sink
+{
+    i32 n = 0;
+
+    public Into()
+    {
+    }
+
+    public void take( i32 n )
+    {
+        G.items.push( n );
+    }
+};
+
+i32 held_across_a_write()
+{
+    ref i32 x = G.items[0];
+    f();
+    return x;
+}
+
+void lent_to_a_writer()
+{
+    h( ref G.items );
+}
+
+i32 returned_across_a_write()
+{
+    ref i32 x = first();
+    f();
+    return x;
+}
+
+i32 through_a_fn_value( fn() -> void change )
+{
+    ref i32 x = G.items[0];
+    change();
+    return x;
+}
+
+i32 through_an_interface( ref sink s )
+{
+    ref i32 x = G.items[0];
+    s.take( 2 );
+    return x;
+}
+
+i32 two_calls_deep()
+{
+    ref i32 x = G.items[0];
+    outer();
+    return x;
+}
+
+i32 main()
+{
+    G.items.push( 0 );
+    lent_to_a_writer();
+
+    Into into = Into();
+    return held_across_a_write() + returned_across_a_write() + through_a_fn_value( &f ) +
+           through_an_interface( ref into ) + two_calls_deep();
+}

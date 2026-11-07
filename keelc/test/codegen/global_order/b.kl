@@ -1,0 +1,22 @@
+// Imported by a, so built first and dropped last.
+import kl::console;
+
+class Noisy
+{
+    i32 id;
+
+    public Noisy( i32 n )
+    {
+        id = n;
+        kl::print( "build ", "" );
+        kl::print( id );
+    }
+
+    ~Noisy()
+    {
+        kl::print( "drop ", "" );
+        kl::print( id );
+    }
+};
+
+Noisy deepest = Noisy( 1 );
