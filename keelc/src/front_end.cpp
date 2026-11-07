@@ -91,7 +91,18 @@ Front_end run_front_end(
 
     // Part of the front end, not of emission: --check is what an editor wants, and an editor wants
     // use-after-move underlined.
-    report_dataflow_errors( std::span( front.functions ).subspan( given ), ast, sm, interner, literals, front.types, diags );
+    // D80: over every function, loaded ones included, since a loaded callee may write a global.
+    const std::vector<Global_effects> globals = global_effects_of( front.functions, ast, front.types );
+    report_dataflow_errors(
+        std::span( front.functions ).subspan( given ),
+        std::span( globals ).subspan( given ),
+        ast,
+        sm,
+        interner,
+        literals,
+        front.types,
+        diags
+    );
 
     if( build.keep_checked && !diags.has_errors() )
     {

@@ -3,10 +3,14 @@
 
 #include "check/borrows.h"
 
+#include <algorithm>
+
 namespace keel
 {
 
-std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& addressing, const Literal_pool& literals )
+std::vector<Borrow> borrows_of(
+    const Function& func, const std::vector<bool>& addressing, const Literal_pool& literals, const Global_effects& globals
+)
 {
     std::vector<Borrow> borrows( func.locals.size() );
     std::vector<bool>   chosen( func.locals.size(), false );
@@ -41,8 +45,10 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
 
         borrow.assignments++;
         borrow.of       = Local_id {};
+        borrow.place    = Place {};
         borrow.bound    = false;
         borrow.through  = nullptr;
+        borrow.into     = {};
         borrow.via      = Local_id {};
         borrow.constant = std::nullopt;
         borrow.copy_of  = Local_id {};
@@ -52,8 +58,21 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             borrow.choices.clear();
         }
 
-        if( borrow.assignments != 1 || source.is_global() || chosen[statement.place.local.v] )
+        if( borrow.assignments != 1 || chosen[statement.place.local.v] )
         {
+            continue;
+        }
+
+        // D80: a global's place is borrowed as a local's is; anything else read from one is not tracked.
+        if( source.is_global() )
+        {
+            if( value.kind == Rvalue_kind::Address_of )
+            {
+                borrow.at      = statement.span;
+                borrow.bound   = true;
+                borrow.purpose = value.address_purpose;
+                borrow.place   = source;
+            }
             continue;
         }
 
@@ -78,6 +97,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             if( derefs && inner.through != nullptr )
             {
                 borrow.through = inner.through;
+                borrow.into    = inner.into;
             }
             // Through a chosen `ref` binding, each of its arms.
             else if( derefs && !inner.choices.empty() )
@@ -86,10 +106,11 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
                 borrow.via     = source.local;
             }
             // Through a `ref` binding, `&(*r)`, it is the whole of what `r` borrows.
-            else if( derefs && inner.of.is_valid() )
+            else if( derefs && inner.holds_place() )
             {
                 borrow.of    = inner.of;
-                borrow.place = Place { .local = inner.of };
+                borrow.place = inner.of.is_valid() ? Place { .local = inner.of }
+                                                   : Place { .global = inner.place.global, .owner = inner.place.owner };
                 borrow.via   = inner.via.is_valid() ? inner.via : source.local;
             }
             else
@@ -110,6 +131,7 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             borrow.at      = inner.at;
             borrow.purpose = inner.purpose;
             borrow.through = inner.through;
+            borrow.into    = inner.into;
             borrow.via     = inner.via;
             borrow.choices = inner.choices;
         }
@@ -121,6 +143,10 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
             if( addressing[statement.place.local.v] )
             {
                 borrow.through = &value;
+                if( const Call_effects* call = globals.of( func, value ) )
+                {
+                    borrow.into = call->returns_into;
+                }
             }
         }
     }
@@ -181,9 +207,14 @@ std::vector<Borrow> borrows_of( const Function& func, const std::vector<bool>& a
     return borrows;
 }
 
+bool same_root( const Place& a, const Place& b )
+{
+    return a.local == b.local && a.global == b.global && a.owner == b.owner;
+}
+
 bool overlaps( const Function& func, const std::vector<Borrow>& borrows, const Place& a, const Place& b )
 {
-    if( a.local != b.local )
+    if( !same_root( a, b ) )
     {
         return false;
     }
@@ -247,7 +278,8 @@ u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, con
 {
     const std::vector<Operand>& arguments = element.through->arguments;
 
-    u32 depth = 0;
+    // D80: the call may return an address into a global, without being lent it.
+    u32 depth = std::ranges::any_of( element.into, [&]( Node_id global ) { return whole.global == global; } ) ? 1 : 0;
 
     for( const Operand& operand : arguments )
     {
@@ -270,7 +302,7 @@ u32 reaches_depth( const Function& func, const std::vector<Borrow>& borrows, con
                         depth = std::max( depth, inner_depth + 1 );
                     }
                 }
-                else if( inner.of.is_valid() && overlaps( func, borrows, inner.place, whole ) )
+                else if( inner.holds_place() && overlaps( func, borrows, inner.place, whole ) )
                 {
                     depth = std::max( depth, 1u );
                 }
@@ -293,7 +325,7 @@ bool borrows_from( const Function& func, const std::vector<Borrow>& borrows, con
         loan,
         [&]( const Borrow& choice )
         {
-            if( choice.of.is_valid() )
+            if( choice.holds_place() )
             {
                 return overlaps( func, borrows, choice.place, place );
             }

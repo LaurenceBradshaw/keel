@@ -51,14 +51,17 @@ std::string subject_of(
                                : fmt::format( "`{}.{}`", interner.text( name ), field_path( function, ast, interner, field ) );
 }
 
-// A loan's object, or the field path of it a statement reached, as `h.l`: a leading Deref is how a
-// `ref` parameter is reached, and anything past a field, an element or a pointer, stops the path.
-std::string
-reached_name( const Function& function, const Ast& ast, const Interner& interner, Local_id object, const Place& reached )
+// A loan's object, a local or a global, or the field path of it a statement reached, as `h.l`: a
+// leading Deref is how a `ref` parameter is reached, and anything past a field, an element or a
+// pointer, stops the path.
+std::string reached_name(
+    const Function& function, const Ast& ast, const Interner& interner, Local_id object, Node_id global, const Place& reached
+)
 {
-    std::string name = subject_of( function, ast, interner, object, k_no_field, "this value" );
+    std::string name = global.is_valid() ? fmt::format( "`{}`", interner.text( ast.name( global ) ) )
+                                         : subject_of( function, ast, interner, object, k_no_field, "this value" );
 
-    if( !function.locals[object].name.is_valid() || reached.local != object )
+    if( global.is_valid() ? reached.global != global : !function.locals[object].name.is_valid() || reached.local != object )
     {
         return name;
     }
@@ -84,26 +87,47 @@ reached_name( const Function& function, const Ast& ast, const Interner& interner
 // The passes report spans and a Local_id; this names the local. A second site goes in the help as
 // line:col, since a diagnostic carries one span.
 void report_move_errors(
-    std::span<const Function> functions,
-    const Ast&                ast,
-    const Source_manager&     sm,
-    const Interner&           interner,
-    const Literal_pool&       literals,
-    Types&                    types,
-    Diagnostics&              diagnostics
+    std::span<const Function>       functions,
+    std::span<const Global_effects> globals,
+    const Ast&                      ast,
+    const Source_manager&           sm,
+    const Interner&                 interner,
+    const Literal_pool&             literals,
+    Types&                          types,
+    Diagnostics&                    diagnostics
 )
 {
-    for( const Function& function : functions )
+    for( std::size_t f = 0; f < functions.size(); ++f )
     {
+        const Function& function = functions[f];
+
         for( const Move_error& error : check_moves(
-                 function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ), literals
+                 function,
+                 owning_locals( function, ast, types ),
+                 addressing_locals( function, ast, types ),
+                 literals,
+                 globals[f]
              ) )
         {
             // The lowerer moves temporaries too, so the moved value may have no name the author wrote.
-            const std::string subject = subject_of( function, ast, interner, error.local, error.field, "this value" );
+            const std::string subject = error.global.is_valid()
+                                            ? fmt::format( "`{}`", interner.text( ast.name( error.global ) ) )
+                                            : subject_of( function, ast, interner, error.local, error.field, "this value" );
 
             switch( error.conflict )
             {
+            case Call_conflict::Global_written:
+            {
+                const std::string writer = error.writer.is_valid()
+                                               ? fmt::format( "`{}`", interner.text( ast.name( error.writer ) ) )
+                                               : std::string( "the function called" );
+                diagnostics.error(
+                    error.use,
+                    fmt::format( "{} may change {} itself, so it cannot also be lent it", writer, subject ),
+                    fmt::format( "copy what the call needs out of {} before it", subject )
+                );
+                continue;
+            }
             case Call_conflict::Moved_and_borrowed:
                 diagnostics.error(
                     error.use,
@@ -216,23 +240,30 @@ void report_move_errors(
 
 // D54: a loan broken while its holder is still used, named with where the holder was bound.
 void report_loan_errors(
-    std::span<const Function> functions,
-    const Ast&                ast,
-    const Source_manager&     sm,
-    const Interner&           interner,
-    const Literal_pool&       literals,
-    Types&                    types,
-    Diagnostics&              diagnostics
+    std::span<const Function>       functions,
+    std::span<const Global_effects> globals,
+    const Ast&                      ast,
+    const Source_manager&           sm,
+    const Interner&                 interner,
+    const Literal_pool&             literals,
+    Types&                          types,
+    Diagnostics&                    diagnostics
 )
 {
-    for( const Function& function : functions )
+    for( std::size_t f = 0; f < functions.size(); ++f )
     {
+        const Function& function = functions[f];
+
         for( const Loan_error& error : check_loans(
-                 function, owning_locals( function, ast, types ), addressing_locals( function, ast, types ), literals
+                 function,
+                 owning_locals( function, ast, types ),
+                 addressing_locals( function, ast, types ),
+                 literals,
+                 globals[f]
              ) )
         {
-            const std::string object = reached_name( function, ast, interner, error.object, error.reached );
-            const std::string whole  = reached_name( function, ast, interner, error.object, error.borrowed );
+            const std::string object = reached_name( function, ast, interner, error.object, error.global, error.reached );
+            const std::string whole  = reached_name( function, ast, interner, error.object, error.global, error.borrowed );
             const Line_col    taken  = sm.line_col( error.taken.file, error.taken.start );
 
             // A part moved names what is borrowed too, when the two differ.
@@ -270,10 +301,16 @@ void report_loan_errors(
                 break;
             }
 
+            // D80: a callee's write set, not this function, changes the global.
+            const std::string writer =
+                error.writer.is_valid()
+                    ? fmt::format( "`{}` may change {}, and ", interner.text( ast.name( error.writer ) ), object )
+                    : std::string();
+
             diagnostics.error(
                 error.at,
                 message,
-                fmt::format( "`{}` is used after this; it was bound at {}:{}", holder, taken.line, taken.col )
+                fmt::format( "{}`{}` is used after this; it was bound at {}:{}", writer, holder, taken.line, taken.col )
             );
         }
     }
@@ -569,17 +606,18 @@ void report_unconditional_recursion(
 } // namespace
 
 void report_dataflow_errors(
-    std::span<const Function> functions,
-    const Ast&                ast,
-    const Source_manager&     sm,
-    const Interner&           interner,
-    const Literal_pool&       literals,
-    Types&                    types,
-    Diagnostics&              diagnostics
+    std::span<const Function>       functions,
+    std::span<const Global_effects> globals,
+    const Ast&                      ast,
+    const Source_manager&           sm,
+    const Interner&                 interner,
+    const Literal_pool&             literals,
+    Types&                          types,
+    Diagnostics&                    diagnostics
 )
 {
-    report_move_errors( functions, ast, sm, interner, literals, types, diagnostics );
-    report_loan_errors( functions, ast, sm, interner, literals, types, diagnostics );
+    report_move_errors( functions, globals, ast, sm, interner, literals, types, diagnostics );
+    report_loan_errors( functions, globals, ast, sm, interner, literals, types, diagnostics );
     report_dangling_errors( functions, ast, interner, diagnostics );
     report_unassigned_errors( functions, ast, interner, diagnostics, types );
     report_unconditional_recursion( functions, ast, sm, interner, diagnostics );

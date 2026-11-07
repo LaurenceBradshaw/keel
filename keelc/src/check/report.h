@@ -4,6 +4,7 @@
 #pragma once
 #include <span>
 #include "ast/ast.h"
+#include "check/global_writes.h"
 #include "common/diagnostics.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
@@ -18,13 +19,14 @@ namespace keel
 // and D31's unassigned reads, `out` parameters and return slot; and the warning for a function that
 // calls itself on every path. The passes return spans and locals; this names them.
 void report_dataflow_errors(
-    std::span<const Function> functions,
-    const Ast&                ast,
-    const Source_manager&     sm,
-    const Interner&           interner,
-    const Literal_pool&       literals,
-    Types&                    types,
-    Diagnostics&              diagnostics
+    std::span<const Function>       functions,
+    std::span<const Global_effects> globals, // one per function (D80)
+    const Ast&                      ast,
+    const Source_manager&           sm,
+    const Interner&                 interner,
+    const Literal_pool&             literals,
+    Types&                          types,
+    Diagnostics&                    diagnostics
 );
 
 } // namespace keel

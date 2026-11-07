@@ -136,7 +136,14 @@ struct Effect
     Span          at;
     u32           depth = 0; // `Replaced`: the calls between the element and `place`
     Local_id      via {};    // the pointer it reached `place` through, if any
+    Node_id       writer {}; // D80: the callee whose write set holds the global `place`
 };
+
+// Whether what `place` is rooted in owns anything.
+bool owns( const std::vector<bool>& owning, const Global_effects& globals, const Place& place )
+{
+    return place.is_global() ? globals.owns( place.global ) : owning[place.local.v];
+}
 
 // Each place `call` borrowed, through any calls returning a reference, as `Replaced`.
 void replaced_through(
@@ -194,7 +201,7 @@ void written(
                 pointer,
                 [&]( const Borrow& choice )
                 {
-                    if( choice.of.is_valid() )
+                    if( choice.holds_place() )
                     {
                         out.push_back(
                             Effect { .place = choice.place, .conflict = Loan_conflict::Assigned, .at = at, .via = place.local }
@@ -209,7 +216,7 @@ void written(
             return;
         }
 
-        if( pointer.of.is_valid() )
+        if( pointer.holds_place() )
         {
             out.push_back( Effect {
                 .place    = pointer.place,
@@ -229,11 +236,26 @@ void written(
     out.push_back( Effect { .place = place, .conflict = Loan_conflict::Assigned, .at = at } );
 }
 
+// D80: each owning global the call or drop may write, through the functions it reaches.
+void called( const Function& func, const Global_effects& globals, const Rvalue& value, Span at, std::vector<Effect>& out )
+{
+    if( const Call_effects* call = globals.of( func, value ) )
+    {
+        for( const Node_id global : call->writes )
+        {
+            out.push_back( Effect {
+                .place = Place { .global = global }, .conflict = Loan_conflict::Changed, .at = at, .writer = value.callee
+            } );
+        }
+    }
+}
+
 // Every move, assignment, drop and changing argument in one statement.
 void effects_of(
     const Function&            func,
     const std::vector<Borrow>& borrows,
     const std::vector<bool>&   owning,
+    const Global_effects&      globals,
     const Statement&           statement,
     std::vector<Effect>&       out
 )
@@ -263,15 +285,14 @@ void effects_of(
             moved( argument );
         }
 
-        if( !statement.place.is_global() )
-        {
-            written( func, borrows, owning, statement.place, statement.span, out );
-        }
+        written( func, borrows, owning, statement.place, statement.span, out );
 
         if( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call )
         {
             return;
         }
+
+        called( func, globals, value, statement.span, out );
 
         // Checked at the call rather than where the address is taken, so an argument read by value
         // in the same call is not still live: `v.push( x )`.
@@ -289,7 +310,7 @@ void effects_of(
                 borrows[argument.place.local.v],
                 [&]( const Borrow& borrow )
                 {
-                    if( borrow.of.is_valid() && borrow.purpose != Address_purpose::Read )
+                    if( borrow.holds_place() && borrow.purpose != Address_purpose::Read )
                     {
                         out.push_back( Effect {
                             .place = borrow.place, .conflict = Loan_conflict::Changed, .at = borrow.at, .via = borrow.via
@@ -308,6 +329,11 @@ void effects_of(
     else if( statement.kind == Statement_kind::Drop )
     {
         written( func, borrows, owning, statement.place, statement.span, out );
+
+        if( statement.value.is_valid() )
+        {
+            called( func, globals, func.rvalue( statement ), statement.span, out );
+        }
     }
 }
 
@@ -322,7 +348,7 @@ bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
 {
     return ( func.locals[local].name.is_valid() || is_walked( func, local ) ) &&
            ( borrow.assignments == 1 || !borrow.choices.empty() ) && borrow.bound &&
-           ( borrow.of.is_valid() || borrow.through != nullptr || !borrow.choices.empty() ) &&
+           ( borrow.holds_place() || borrow.through != nullptr || !borrow.choices.empty() ) &&
            borrow.purpose != Address_purpose::Initialise;
 }
 
@@ -332,12 +358,13 @@ bool walk_conflicts(
     const Function&            func,
     const std::vector<Borrow>& borrows,
     const std::vector<bool>&   owning,
+    const Global_effects&      globals,
     const Borrow&              loan,
     Local_id                   holder,
     const Effect&              effect
 )
 {
-    return effect.via != holder && ( effect.conflict == Loan_conflict::Moved || owning[effect.place.local.v] ) &&
+    return effect.via != holder && ( effect.conflict == Loan_conflict::Moved || owns( owning, globals, effect.place ) ) &&
            borrows_from( func, borrows, loan, effect.place );
 }
 
@@ -350,6 +377,7 @@ bool conflicts(
     const Function&            func,
     const std::vector<Borrow>& borrows,
     const std::vector<bool>&   owning,
+    const Global_effects&      globals,
     const Borrow&              loan,
     const Effect&              effect
 )
@@ -359,7 +387,7 @@ bool conflicts(
         return borrows_from( func, borrows, loan, effect.place );
     }
 
-    if( loan.of.is_valid() )
+    if( loan.holds_place() )
     {
         return effect.conflict == Loan_conflict::Moved && overlaps( func, borrows, loan.place, effect.place );
     }
@@ -369,7 +397,7 @@ bool conflicts(
         return loan.through != nullptr && reaches_depth( func, borrows, loan, effect.place ) > effect.depth;
     }
 
-    return loan.through != nullptr && ( effect.conflict == Loan_conflict::Moved || owning[effect.place.local.v] ) &&
+    return loan.through != nullptr && ( effect.conflict == Loan_conflict::Moved || owns( owning, globals, effect.place ) ) &&
            reaches( func, borrows, loan, effect.place );
 }
 
@@ -403,10 +431,14 @@ std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types
 }
 
 std::vector<Loan_error> check_loans(
-    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+    const Function&          func,
+    const std::vector<bool>& owning,
+    const std::vector<bool>& addressing,
+    const Literal_pool&      literals,
+    const Global_effects&    globals
 )
 {
-    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals );
+    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals, globals );
     const std::vector<Live>   live    = live_in( func );
 
     std::vector<Local_id> holders;
@@ -440,7 +472,7 @@ std::vector<Loan_error> check_loans(
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
-            effects_of( func, borrows, owning, func.statements_of( block )[i], effects );
+            effects_of( func, borrows, owning, globals, func.statements_of( block )[i], effects );
 
             for( const Effect& effect : effects )
             {
@@ -460,8 +492,9 @@ std::vector<Loan_error> check_loans(
                         borrows[holder.v],
                         [&]( const Borrow& choice )
                         {
-                            if( hit == nullptr && ( walked ? walk_conflicts( func, borrows, owning, choice, holder, effect )
-                                                           : conflicts( func, borrows, owning, choice, effect ) ) )
+                            if( hit == nullptr &&
+                                ( walked ? walk_conflicts( func, borrows, owning, globals, choice, holder, effect )
+                                         : conflicts( func, borrows, owning, globals, choice, effect ) ) )
                             {
                                 hit = &choice;
                             }
@@ -470,17 +503,20 @@ std::vector<Loan_error> check_loans(
 
                     if( hit != nullptr )
                     {
-                        const Borrow&  loan   = *hit;
-                        const Local_id object = loan.of.is_valid() ? loan.of : effect.place.local;
+                        const Borrow& loan = *hit;
+                        const Place&  root = loan.holds_place() ? loan.place : effect.place;
 
                         errors.push_back( Loan_error {
-                            .object  = object,
-                            .reached = effect.conflict != Loan_conflict::Assigned && effect.place.local == object ? effect.place
-                                                                                                                  : Place {},
-                            .holder  = holder,
-                            .borrowed = loan.of.is_valid() ? loan.place : Place {},
+                            .object   = root.local,
+                            .global   = root.global,
+                            .reached  = effect.conflict != Loan_conflict::Assigned && same_root( effect.place, root )
+                                            ? effect.place
+                                            : Place {},
+                            .holder   = holder,
+                            .borrowed = loan.holds_place() ? loan.place : Place {},
                             .at       = effect.at,
                             .taken    = loan.at,
+                            .writer   = effect.writer,
                             .conflict = effect.conflict,
                             .walked   = walked
                         } );
@@ -522,16 +558,27 @@ struct Loaned : Compiled
                 addressing = addressing_locals( functions[f], ast, types );
             }
         }
+
+        const std::vector<Global_effects> effects = global_effects_of( all, ast, types );
+        for( std::size_t f = 0; f < all.size(); ++f )
+        {
+            if( all[f].declaration == functions[tested].declaration &&
+                all[f].type_arguments == functions[tested].type_arguments )
+            {
+                globals = effects[f];
+            }
+        }
     }
 
     std::vector<Loan_error> errors() const
     {
-        return check_loans( functions[tested], owning, addressing, literals );
+        return check_loans( functions[tested], owning, addressing, literals, globals );
     }
 
     std::size_t       tested = 0;
     std::vector<bool> owning;
     std::vector<bool> addressing;
+    Global_effects    globals;
 
     std::string_view name_of( Local_id local ) const
     {
@@ -992,6 +1039,83 @@ TEST_CASE( "borrow_check_refuses_replacing_what_an_element_owns", "[check][borro
         {
             require_accepted( k_elements, k_elements_locals, body );
         }
+    }
+}
+
+constexpr std::string_view k_globals =
+    "class Bag { public V items; public i32 count; public Bag() { items = V(); count = 0; } };\n"
+    "Bag G = Bag();\n"
+    "Bag H = Bag();\n"
+    "R T = R();\n"
+    "void f() { G.items.push( 1 ); }\n"
+    "void grow() { T.grow(); }\n"
+    "ref i32 first() { return G.items[0]; }\n";
+
+// D80: a loan reaching what an owning global owns ends at any call that may write that global.
+TEST_CASE( "borrow_check_ends_a_loan_of_a_global_at_a_call_that_writes_it", "[check][borrow][d80]" )
+{
+    const std::string prelude = std::string( k_vector ) + std::string( k_run ) + std::string( k_globals );
+
+    struct Case
+    {
+        const char*   body;
+        Loan_conflict conflict;
+        const char*   at;
+        const char*   holder;
+        const char*   writer; // empty when the function itself changes the global
+    };
+
+    for( const Case& refused : {
+             Case { "ref i32 x = G.items[0]; f(); i32 y = x;", Loan_conflict::Changed, "f()", "x", "f" },
+             Case { "ref i32 x = first(); f(); i32 y = x;", Loan_conflict::Changed, "f()", "x", "f" },
+             Case { "ref i32 x = G.items[0]; G.items.push( 1 ); i32 y = x;", Loan_conflict::Changed, "G.items", "x", "" },
+             Case { "ref i32 x = G.items[0]; G = Bag(); i32 y = x;", Loan_conflict::Assigned, "G", "x", "" },
+             Case { "ref Bag b = G; ref i32 x = b.items[0]; f(); i32 y = x;", Loan_conflict::Changed, "f()", "x", "f" },
+         } )
+    {
+        const Loaned p( prelude + "i32 main() { " + refused.body + " return 0; }" );
+
+        INFO( refused.body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Loan_error> errors = p.errors();
+
+        REQUIRE( errors.size() == 1 );
+        CHECK( errors[0].conflict == refused.conflict );
+        CHECK( p.sm.text( errors[0].at ).find( refused.at ) != std::string_view::npos );
+        CHECK( p.name_of( errors[0].holder ) == refused.holder );
+        CHECK( p.interner.text( p.ast.name( errors[0].global ) ) == "G" );
+        CHECK( ( errors[0].writer.is_valid() ? p.interner.text( p.ast.name( errors[0].writer ) ) : "" ) == refused.writer );
+    }
+
+    // A walk over what a global owns, and a call that changes it in the loop.
+    {
+        const Loaned p( prelude + "i32 main() { for( u8 b : T.text() ) { grow(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Loan_error> errors = p.errors();
+
+        REQUIRE( errors.size() == 1 );
+        CHECK( errors[0].walked );
+        CHECK( p.interner.text( p.ast.name( errors[0].global ) ) == "T" );
+    }
+
+    // Inline storage, another global, dead before the call, or only read.
+    for( const char* body : {
+             "ref i32 n = G.count; f(); i32 y = n;",
+             "ref i32 x = G.items[0]; H.items.push( 1 ); i32 y = x;",
+             "ref i32 x = G.items[0]; i32 y = x; f();",
+             "ref i32 x = first(); i32 n = G.items.size(); i32 y = x;",
+             "for( u8 b : T.text() ) { u8 c = b; }",
+         } )
+    {
+        const Loaned p( prelude + "i32 main() { " + body + " return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        CHECK( p.errors().empty() );
     }
 }
 

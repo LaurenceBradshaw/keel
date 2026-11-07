@@ -829,10 +829,9 @@ Node_id Places::escaping_part( Node_id value, Node_id current_function, std::vec
         return Node_id {};
     }
 
-    // A global outlives every call, and one owning nothing cannot be freed under the caller.
+    // A global outlives every call; D80 checks the caller's loan of one against write sets.
     if( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl &&
-        !ast_.span( current_function ).contains( ast_.span( root ) ) &&
-        bounds_.satisfies( types_.type_of( root ), Bound::Copyable ) )
+        !ast_.span( current_function ).contains( ast_.span( root ) ) )
     {
         return Node_id {};
     }

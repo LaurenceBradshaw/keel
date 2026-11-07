@@ -11,11 +11,26 @@
 namespace keel
 {
 
+// What one call or drop may do to the owning globals, through the functions it may reach.
+struct Call_effects
+{
+    Rvalue_id            call {};
+    std::vector<Node_id> writes;
+    std::vector<Node_id> returns_into;
+};
+
 // D80: what a function may do to the owning globals, through any call. Each list is sorted.
 struct Global_effects
 {
-    std::vector<Node_id> writes;       // assigned, dropped, or lent other than to read
-    std::vector<Node_id> returns_into; // its returned address may point into storage the global owns
+    std::vector<Node_id>      writes;       // assigned, dropped, or lent other than to read
+    std::vector<Node_id>      returns_into; // its returned address may point into the global
+    std::vector<Node_id>      owning;       // the owning globals it names, or its calls reach
+    std::vector<Call_effects> calls;        // by `call`; only those with an effect
+
+    // Null when the call has no effect.
+    const Call_effects* of( const Function& function, const Rvalue& call ) const;
+
+    bool owns( Node_id global ) const;
 };
 
 // One per function. An indirect call reaches every function whose address is taken, and an

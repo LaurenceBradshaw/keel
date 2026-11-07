@@ -4,7 +4,6 @@
 #include "check/global_writes.h"
 
 #include <algorithm>
-#include <numeric>
 #include <unordered_map>
 #include "ir/call_graph.h"
 
@@ -75,7 +74,7 @@ public:
             changed = false;
             for( const u32 f : returning )
             {
-                changed = join( into_[f], pointers_of( f ).into[0] ) || changed;
+                changed = join( into_[f], pointers_of( f )[0] ) || changed;
             }
         }
 
@@ -96,36 +95,17 @@ public:
             }
         }
 
-        // Declaration order, as Node_ids are.
-        std::vector<std::size_t> order( globals_.size() );
-        std::iota( order.begin(), order.end(), std::size_t { 0 } );
-        std::ranges::sort( order, {}, [&]( std::size_t g ) { return globals_[g]; } );
-
         for( u32 f = 0; f < count; ++f )
         {
-            for( const std::size_t g : order )
-            {
-                if( writes_[f][g] )
-                {
-                    effects[f].writes.push_back( globals_[g] );
-                }
-                if( into_[f][g] )
-                {
-                    effects[f].returns_into.push_back( globals_[g] );
-                }
-            }
+            effects[f].writes       = listed( writes_[f] );
+            effects[f].returns_into = listed( into_[f] );
+            effects[f].owning       = listed( owning_in( f ) );
+            effects[f].calls        = calls_of( f );
         }
         return effects;
     }
 
 private:
-    // Per local, which globals it may point at: their own storage, or storage they own.
-    struct Pointers
-    {
-        std::vector<Set> own;
-        std::vector<Set> into;
-    };
-
     std::span<const Function>                 functions_;
     const Ast&                                ast_;
     Types&                                    types_;
@@ -135,9 +115,61 @@ private:
     std::unordered_map<u32, std::vector<u32>> answering_; // requirement → functions
     std::vector<u32>                          addressed_; // whose address is taken
     std::vector<u32>                          destructors_;
+    std::vector<Set>                          named_; // the owning globals each function names
     std::vector<Set>                          writes_;
     std::vector<Set>                          into_;
     std::vector<std::vector<u32>>             callees_;
+
+    // In declaration order, as Node_ids are.
+    std::vector<Node_id> listed( const Set& set ) const
+    {
+        std::vector<Node_id> globals;
+        for( std::size_t g = 0; g < set.size(); ++g )
+        {
+            if( set[g] )
+            {
+                globals.push_back( globals_[g] );
+            }
+        }
+        std::ranges::sort( globals );
+        return globals;
+    }
+
+    // Those it names, and those its calls write or return into.
+    Set owning_in( u32 f ) const
+    {
+        Set owning = named_[f];
+        join( owning, writes_[f] );
+        for( const u32 c : callees_[f] )
+        {
+            join( owning, into_[c] );
+        }
+        return owning;
+    }
+
+    std::vector<Call_effects> calls_of( u32 f ) const
+    {
+        const Function&           function = functions_[f];
+        std::vector<Call_effects> calls;
+        for( const Statement& statement : function.statements )
+        {
+            Set writes( globals_.size(), false );
+            Set into( globals_.size(), false );
+            for( const u32 c : callees_of( function, statement ) )
+            {
+                join( writes, writes_[c] );
+                join( into, into_[c] );
+            }
+
+            Call_effects call { .call = statement.value.id(), .writes = listed( writes ), .returns_into = listed( into ) };
+            if( !call.writes.empty() || !call.returns_into.empty() )
+            {
+                calls.push_back( std::move( call ) );
+            }
+        }
+        std::ranges::sort( calls, {}, &Call_effects::call );
+        return calls;
+    }
 
     std::vector<u32> named( Node_id declaration, std::span<const Type_id> arguments ) const
     {
@@ -186,13 +218,14 @@ private:
         }
     }
 
-    void note_place( const Place& place )
+    void note_place( const Place& place, std::vector<Node_id>& named )
     {
         if( !place.is_global() )
         {
             return;
         }
         note_global( place.global );
+        named.push_back( place.global );
         if( const std::optional<Constant_value> value = types_.constant_of( place.global ) )
         {
             note_constant( *value );
@@ -201,6 +234,7 @@ private:
 
     void gather()
     {
+        std::vector<std::vector<Node_id>> named_by( functions_.size() );
         for( u32 f = 0; f < functions_.size(); ++f )
         {
             const Function& function = functions_[f];
@@ -211,23 +245,35 @@ private:
 
             for( const Statement& statement : function.statements )
             {
-                note_place( statement.place );
+                note_place( statement.place, named_by[f] );
                 if( !statement.value.is_valid() )
                 {
                     continue;
                 }
 
                 const Rvalue& value = function.rvalue( statement );
-                note_place( value.a.place );
-                note_place( value.b.place );
+                note_place( value.a.place, named_by[f] );
+                note_place( value.b.place, named_by[f] );
                 for( const Operand& argument : value.arguments )
                 {
-                    note_place( argument.place );
+                    note_place( argument.place, named_by[f] );
                 }
 
                 if( value.kind == Rvalue_kind::Function_address )
                 {
                     std::ranges::copy( named( value.callee, value.type_arguments ), std::back_inserter( addressed_ ) );
+                }
+            }
+        }
+
+        named_.assign( functions_.size(), Set( globals_.size(), false ) );
+        for( u32 f = 0; f < functions_.size(); ++f )
+        {
+            for( const Node_id global : named_by[f] )
+            {
+                if( const std::size_t g = index_of( global ); g != k_none )
+                {
+                    named_[f][g] = true;
                 }
             }
         }
@@ -304,45 +350,15 @@ private:
         return index_.at( global.v );
     }
 
-    bool derefs( const Function& function, const Place& place, u32 from ) const
-    {
-        const auto steps = function.projections_of( place );
-        for( u32 i = from; i < place.num_projections; ++i )
-        {
-            if( steps[i].kind == Projection_kind::Deref )
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool through_pointer( const Function& function, const Place& place ) const
     {
         return !place.is_global() && place.num_projections != 0 &&
                function.projections_of( place )[0].kind == Projection_kind::Deref;
     }
 
-    // What the address of `place` may point at.
-    void address( const Function& function, const Pointers& pointers, const Place& place, Set& own, Set& into ) const
-    {
-        if( place.is_global() )
-        {
-            if( const std::size_t g = index_of( place.global ); g != k_none )
-            {
-                ( derefs( function, place, 0 ) ? into : own )[g] = true;
-            }
-        }
-        else if( through_pointer( function, place ) )
-        {
-            const Set& base_own = pointers.own[place.local.v];
-            join( into, pointers.into[place.local.v] );
-            join( derefs( function, place, 1 ) ? into : own, base_own );
-        }
-    }
-
-    // What a pointer read from `place` may point at.
-    void copied( const Function& function, const Pointers& pointers, const Place& place, Set& own, Set& into ) const
+    // The globals the address of `place`, or with `copy` a pointer read from it, may point into:
+    // the global itself or what it owns, or what the pointer it is reached through points into.
+    void reached( const std::vector<Set>& pointers, const Function& function, const Place& place, bool copy, Set& into ) const
     {
         if( place.is_global() )
         {
@@ -351,33 +367,26 @@ private:
                 into[g] = true;
             }
         }
-        else if( through_pointer( function, place ) )
+        else if( through_pointer( function, place ) || ( copy && place.local.is_valid() ) )
         {
-            join( into, pointers.own[place.local.v] );
-            join( into, pointers.into[place.local.v] );
-        }
-        else if( place.local.is_valid() )
-        {
-            join( own, pointers.own[place.local.v] );
-            join( into, pointers.into[place.local.v] );
+            join( into, pointers[place.local.v] );
         }
     }
 
-    void operand( const Function& function, const Pointers& pointers, const Operand& from, Set& own, Set& into ) const
+    // Per local, which globals it may point into. Flow-insensitive: every assignment to a whole
+    // local, until nothing changes.
+    std::vector<Set> pointers_of( u32 f ) const
     {
-        if( from.kind != Operand_kind::Constant )
-        {
-            copied( function, pointers, from.place, own, into );
-        }
-    }
+        const Function&  function = functions_[f];
+        const Set        none( globals_.size(), false );
+        std::vector<Set> pointers( function.locals.size(), none );
 
-    // Flow-insensitive: every assignment to a whole local, until nothing changes.
-    Pointers pointers_of( u32 f ) const
-    {
-        const Function& function = functions_[f];
-        const Set       none( globals_.size(), false );
-        Pointers        pointers {
-            std::vector<Set>( function.locals.size(), none ), std::vector<Set>( function.locals.size(), none )
+        const auto operand = [&]( const Operand& from, Set& into )
+        {
+            if( from.kind != Operand_kind::Constant )
+            {
+                reached( pointers, function, from.place, true, into );
+            }
         };
 
         for( bool changed = true; changed; )
@@ -391,22 +400,20 @@ private:
                 }
 
                 const Rvalue& value = function.rvalue( statement );
-                Set           own   = none;
                 Set           into  = none;
 
                 switch( value.kind )
                 {
                 case Rvalue_kind::Address_of:
-                    address( function, pointers, value.a.place, own, into );
+                    reached( pointers, function, value.a.place, false, into );
                     break;
                 case Rvalue_kind::Call:
                 case Rvalue_kind::Indirect_call:
                     // A returned address may point at whatever its arguments reach.
                     for( const Operand& argument : value.arguments )
                     {
-                        operand( function, pointers, argument, own, into );
+                        operand( argument, into );
                     }
-                    join( into, own );
                     for( const u32 c : callees_of( function, statement ) )
                     {
                         join( into, into_[c] );
@@ -417,47 +424,35 @@ private:
                 case Rvalue_kind::Cast:
                 case Rvalue_kind::Run_of:
                 case Rvalue_kind::Run_data:
-                    operand( function, pointers, value.a, own, into );
-                    operand( function, pointers, value.b, own, into );
-                    break;
-                case Rvalue_kind::Field_read: // what is stored where `a` points
-                    operand( function, pointers, value.a, into, into );
+                case Rvalue_kind::Field_read:
+                    operand( value.a, into );
+                    operand( value.b, into );
                     break;
                 default:
                     break;
                 }
 
                 // A field path of a local holds what its parts hold.
-                const u32 local = statement.place.local.v;
                 if( !through_pointer( function, statement.place ) )
                 {
-                    changed = join( pointers.own[local], own ) || changed;
-                    changed = join( pointers.into[local], into ) || changed;
+                    changed = join( pointers[statement.place.local.v], into ) || changed;
                 }
             }
         }
         return pointers;
     }
 
-    void direct_writes( u32 f, const Pointers& pointers )
+    void direct_writes( u32 f, const std::vector<Set>& pointers )
     {
         const Function& function = functions_[f];
-        Set&            writes   = writes_[f];
 
-        const auto write_to = [&]( const Place& place )
-        {
-            Set own( globals_.size(), false );
-            Set into( globals_.size(), false );
-            address( function, pointers, place, own, into );
-            join( writes, own );
-            join( writes, into );
-        };
+        const auto written = [&]( const Place& place ) { reached( pointers, function, place, false, writes_[f] ); };
 
         for( const Statement& statement : function.statements )
         {
             if( statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop )
             {
-                write_to( statement.place );
+                written( statement.place );
             }
 
             if( statement.value.is_valid() )
@@ -465,7 +460,7 @@ private:
                 const Rvalue& value = function.rvalue( statement );
                 if( value.kind == Rvalue_kind::Address_of && value.address_purpose != Address_purpose::Read )
                 {
-                    write_to( value.a.place );
+                    written( value.a.place );
                 }
             }
         }
@@ -475,6 +470,23 @@ private:
 };
 
 } // namespace
+
+const Call_effects* Global_effects::of( const Function& function, const Rvalue& call ) const
+{
+    if( calls.empty() || function.rvalues.empty() || &call < &function.rvalues.front() || &call > &function.rvalues.back() )
+    {
+        return nullptr;
+    }
+
+    const Rvalue_id id { narrow_cast<u32>( &call - &function.rvalues.front() ) };
+    const auto      it = std::ranges::lower_bound( calls, id, {}, &Call_effects::call );
+    return it != calls.end() && it->call == id ? &*it : nullptr;
+}
+
+bool Global_effects::owns( Node_id global ) const
+{
+    return std::ranges::binary_search( owning, global );
+}
 
 std::vector<Global_effects> global_effects_of( std::span<const Function> functions, const Ast& ast, Types& types )
 {
@@ -626,7 +638,7 @@ TEST_CASE( "global_effects_of finds a write in a destructor a drop runs", "[glob
     CHECK( p.names( "two" ) == "G" );
 }
 
-TEST_CASE( "global_effects_of finds an address returned into what a global owns", "[global_writes]" )
+TEST_CASE( "global_effects_of finds an address returned into a global", "[global_writes]" )
 {
     const Effects_of p( "const u8* raw() { return G.first(); }\n"
                         "const u8* again() { return raw(); }\n"
@@ -636,7 +648,7 @@ TEST_CASE( "global_effects_of finds an address returned into what a global owns"
     REQUIRE( p.clean() );
     CHECK( p.names( "raw", true ) == "G" );
     CHECK( p.names( "again", true ) == "G" );
-    CHECK( p.names( "whole", true ).empty() ); // the global's own storage
+    CHECK( p.names( "whole", true ) == "G" ); // its own storage, which `whole().b` reaches past
     CHECK( p.names( "raw" ).empty() );
 }
 

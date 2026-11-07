@@ -3,6 +3,7 @@
 
 #pragma once
 #include <vector>
+#include "check/global_writes.h"
 #include "common/literal_pool.h"
 #include "ir/kir.h"
 #include "sema/type.h"
@@ -23,12 +24,14 @@ enum class Loan_conflict : u8
 // A loan broken while its holder is still used. Spans only; check/report does the wording.
 struct Loan_error
 {
-    Local_id      object {};   // what is borrowed
+    Local_id      object {};   // what is borrowed, unless it is a global
+    Node_id       global {};   // D80: the global borrowed
     Place         reached {};  // `Changed` or `Moved`: the place passed, called on or moved, when it is in `object`
     Local_id      holder {};   // the binding that holds the loan
     Place         borrowed {}; // what the loan is of, when it is in `object`
     Span          at {};       // the statement that breaks it
     Span          taken {};    // where the holder was bound
+    Node_id       writer {};   // D80: the callee whose write set ended the loan, when one did
     Loan_conflict conflict = Loan_conflict::Moved;
     bool          walked   = false; // the holder is a walk's receiver (D74), and has no name
 };
@@ -41,9 +44,13 @@ std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& ty
 std::vector<bool> addressing_locals( const Function& func, const Ast& ast, Types& types );
 
 // D54. Each holder is reported once, at its first conflict. `owning` and `addressing` are the two
-// functions above.
+// functions above, and `globals` is what each call may do to the owning globals (D80).
 std::vector<Loan_error> check_loans(
-    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+    const Function&          func,
+    const std::vector<bool>& owning,
+    const std::vector<bool>& addressing,
+    const Literal_pool&      literals,
+    const Global_effects&    globals
 );
 
 } // namespace keel

@@ -312,7 +312,11 @@ void find_moves_into_borrowing_calls(
 // borrow of its whole that could change it, one place may not be `out` twice, and one object may
 // not travel under two names when the call could change or, through `out`, destroy it.
 void find_aliased_arguments(
-    const Function& func, const std::vector<Borrow>& borrows, const std::vector<bool>& owning, std::vector<Move_error>& errors
+    const Function&            func,
+    const std::vector<Borrow>& borrows,
+    const std::vector<bool>&   owning,
+    const Global_effects&      globals,
+    std::vector<Move_error>&   errors
 )
 {
     const auto borrow_of = [&]( const Operand& operand ) -> const Borrow*
@@ -324,7 +328,7 @@ void find_aliased_arguments(
 
         const Borrow& borrow = borrows[operand.place.local.v];
 
-        return borrow.of.is_valid() || borrow.through != nullptr || !borrow.choices.empty() ? &borrow : nullptr;
+        return borrow.holds_place() || borrow.through != nullptr || !borrow.choices.empty() ? &borrow : nullptr;
     };
 
     for( const Statement& statement : func.statements )
@@ -353,6 +357,26 @@ void find_aliased_arguments(
             }
         }
 
+        // D80: a call that may write a global is lent no part of it, nor what it owns.
+        if( const Call_effects* call = globals.of( func, value ) )
+        {
+            for( const Node_id global : call->writes )
+            {
+                for( const auto [i, loan] : loans )
+                {
+                    if( borrows_from( func, borrows, *loan, Place { .global = global } ) )
+                    {
+                        errors.push_back( Move_error {
+                            .use      = at( i, *loan ),
+                            .conflict = Call_conflict::Global_written,
+                            .global   = global,
+                            .writer   = value.callee,
+                        } );
+                    }
+                }
+            }
+        }
+
         for( std::size_t x = 0; x < loans.size(); ++x )
         {
             for( std::size_t y = 0; y < loans.size(); ++y )
@@ -360,13 +384,13 @@ void find_aliased_arguments(
                 const auto [i, a] = loans[x];
                 const auto [j, b] = loans[y];
 
-                if( i == j || ( !a->of.is_valid() && a->through == nullptr ) || ( !b->of.is_valid() && b->through == nullptr ) )
+                if( i == j || ( !a->holds_place() && a->through == nullptr ) || ( !b->holds_place() && b->through == nullptr ) )
                 {
                     continue;
                 }
 
                 // Only an owner can be freed under the other name, so `v.grow( v.x )` is accepted.
-                if( i < j && a->of.is_valid() && b->of.is_valid() && overlaps( func, borrows, a->place, b->place ) &&
+                if( i < j && a->holds_place() && b->holds_place() && overlaps( func, borrows, a->place, b->place ) &&
                     owning[arguments[i].place.local.v] && owning[arguments[j].place.local.v] &&
                     ( a->purpose != Address_purpose::Read || b->purpose != Address_purpose::Read ) &&
                     !( a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise ) )
@@ -376,29 +400,35 @@ void find_aliased_arguments(
                         .use      = at( j, *b ),
                         .maybe    = may_differ( func, borrows, a->place, b->place ),
                         .conflict = Call_conflict::Aliased,
-                        .other    = at( i, *a )
+                        .other    = at( i, *a ),
+                        .global   = b->place.global
                     } );
                 }
 
                 // Reported at the later of the two.
                 if( i < j && a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise &&
-                    a->of.is_valid() && b->of.is_valid() && overlaps( func, borrows, a->place, b->place ) )
+                    a->holds_place() && b->holds_place() && overlaps( func, borrows, a->place, b->place ) )
                 {
                     errors.push_back( Move_error {
                         .local    = b->of,
                         .use      = at( j, *b ),
                         .maybe    = may_differ( func, borrows, a->place, b->place ),
                         .conflict = Call_conflict::Out_twice,
-                        .other    = at( i, *a )
+                        .other    = at( i, *a ),
+                        .global   = b->place.global
                     } );
                 }
 
                 // Only `a` can be the element, so a pair is reported once.
-                if( a->through != nullptr && b->through == nullptr && b->of.is_valid() && b->purpose != Address_purpose::Read &&
+                if( a->through != nullptr && b->through == nullptr && b->holds_place() && b->purpose != Address_purpose::Read &&
                     reaches( func, borrows, *a, b->place ) )
                 {
                     errors.push_back( Move_error {
-                        .local = b->of, .use = at( i, *a ), .conflict = Call_conflict::Element_and_whole, .other = at( j, *b )
+                        .local    = b->of,
+                        .use      = at( i, *a ),
+                        .conflict = Call_conflict::Element_and_whole,
+                        .other    = at( j, *b ),
+                        .global   = b->place.global
                     } );
                 }
             }
@@ -428,7 +458,11 @@ Flow entry_flow( const Function& func, const Slot_map& slots )
 } // namespace
 
 std::vector<Move_error> check_moves(
-    const Function& func, const std::vector<bool>& owning, const std::vector<bool>& addressing, const Literal_pool& literals
+    const Function&          func,
+    const std::vector<bool>& owning,
+    const std::vector<bool>& addressing,
+    const Literal_pool&      literals,
+    const Global_effects&    globals
 )
 {
     const Slot_map    slots( func );
@@ -459,7 +493,7 @@ std::vector<Move_error> check_moves(
         }
     }
 
-    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals );
+    const std::vector<Borrow> borrows = borrows_of( func, addressing, literals, globals );
 
     // A second walk, each block once, so a block on a back edge reports once.
     std::vector<Move_error> errors;
@@ -471,7 +505,7 @@ std::vector<Move_error> check_moves(
     }
 
     find_moves_into_borrowing_calls( func, slots, borrows, errors );
-    find_aliased_arguments( func, borrows, owning, errors );
+    find_aliased_arguments( func, borrows, owning, globals, errors );
 
     return errors;
 }
@@ -495,17 +529,26 @@ struct Checked : Compiled
     explicit Checked( std::string_view source )
         : Compiled( source )
     {
+        const std::vector<Global_effects> effects = global_effects_of( all, ast, types );
         for( const Function& function : functions )
         {
             owning.push_back( owning_locals( function, ast, types ) );
             addressing.push_back( addressing_locals( function, ast, types ) );
+            globals.emplace_back();
+            for( std::size_t f = 0; f < all.size(); ++f )
+            {
+                if( all[f].declaration == function.declaration && all[f].type_arguments == function.type_arguments )
+                {
+                    globals.back() = effects[f];
+                }
+            }
         }
     }
 
     // The function under test is the last one lowered, `main`.
     std::vector<Move_error> errors() const
     {
-        return check_moves( functions.back(), owning.back(), addressing.back(), literals );
+        return check_moves( functions.back(), owning.back(), addressing.back(), literals, globals.back() );
     }
 
     // Every function's: an array's drop, `~V[2]`, is lowered after `main`.
@@ -514,7 +557,7 @@ struct Checked : Compiled
         std::vector<Move_error> errors;
         for( std::size_t f = 0; f < functions.size(); ++f )
         {
-            const std::vector<Move_error> found = check_moves( functions[f], owning[f], addressing[f], literals );
+            const std::vector<Move_error> found = check_moves( functions[f], owning[f], addressing[f], literals, globals[f] );
             errors.insert( errors.end(), found.begin(), found.end() );
         }
         return errors;
@@ -522,6 +565,7 @@ struct Checked : Compiled
 
     std::vector<std::vector<bool>> owning;     // per function
     std::vector<std::vector<bool>> addressing; // per function
+    std::vector<Global_effects>    globals;    // per function
 
     std::string_view text_at( Span span ) const
     {
@@ -1157,7 +1201,7 @@ TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
-    REQUIRE( check_moves( p.functions[1], p.owning[1], p.addressing[1], p.literals ).size() == 1 );
+    REQUIRE( check_moves( p.functions[1], p.owning[1], p.addressing[1], p.literals, p.globals[1] ).size() == 1 );
 }
 
 // A borrow reads the value, so one after a move is a use; only a constructor or an `out` argument
@@ -1218,6 +1262,43 @@ TEST_CASE( "move_check_says_nothing_about_drops", "[check][move]" )
     INFO( p.rendered() );
     REQUIRE( p.clean() );
     REQUIRE( p.errors().empty() );
+}
+
+// D80: a call that may write a global is lent no part of it, so the callee never meets it twice.
+TEST_CASE( "move_check_refuses_lending_a_global_to_a_call_that_writes_it", "[check][move][d80]" )
+{
+    const std::string prelude =
+        "class V { i32 x; public V() { x = 0; } ~V() { } public ref i32 operator[]( u64 i ) const { return x; } };\n"
+        "class Bag { public V items; public i32 count; public Bag() { items = V(); count = 0; } };\n"
+        "Bag G = Bag();\n"
+        "Bag H = Bag();\n"
+        "void h( ref V v ) { G = Bag(); }\n"
+        "void look( const ref i32 n ) { G = Bag(); }\n"
+        "void keep( ref V v ) { }\n";
+
+    for( const char* body : { "h( ref G.items );", "look( G.items[0] );", "look( G.count );" } )
+    {
+        const Checked p( prelude + "i32 main() { " + body + " return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = p.all_errors();
+
+        REQUIRE( errors.size() == 1 );
+        CHECK( errors[0].conflict == Call_conflict::Global_written );
+        CHECK( p.interner.text( p.ast.name( errors[0].global ) ) == "G" );
+        CHECK( p.text_at( errors[0].use ).find( "G" ) != std::string_view::npos );
+    }
+
+    for( const char* body : { "h( ref H.items );", "keep( ref G.items );" } )
+    {
+        const Checked p( prelude + "i32 main() { " + body + " return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        CHECK( p.all_errors().empty() );
+    }
 }
 
 } // namespace keel
