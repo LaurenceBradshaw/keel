@@ -168,8 +168,9 @@ bool Name_collector::is_package( Node_id id ) const
 {
     const Node_kind kind = ast_.kind( id );
 
-    if( ( kind != Node_kind::Name_expr && kind != Node_kind::Path_expr ) || resolution_.declaration_of( id ).is_valid() ||
-        ast_.type_arg_list( id ).is_valid() )
+    // A pattern's `_` has no name.
+    if( ( kind != Node_kind::Name_expr && kind != Node_kind::Path_expr ) || !ast_.name( id ).is_valid() ||
+        resolution_.declaration_of( id ).is_valid() || ast_.type_arg_list( id ).is_valid() )
     {
         return false;
     }
@@ -423,6 +424,12 @@ Span Name_collector::name_span( Node_id id, bool declares ) const
     if( ast_.kind( id ) == Node_kind::Struct_literal )
     {
         return ast_.type_name_span( id );
+    }
+
+    // A `_` binding has nothing to name.
+    if( !ast_.name( id ).is_valid() )
+    {
+        return Span {};
     }
 
     const std::string_view name = interner_.text( ast_.name( id ) );

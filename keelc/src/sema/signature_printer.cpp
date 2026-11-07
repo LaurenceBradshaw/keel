@@ -163,7 +163,8 @@ std::string Signature_printer::binding( Node_id decl ) const
 {
     const Node_id     annotation = ast_.kind( decl ) == Node_kind::Binding_decl ? Node_id {} : ast_.annotation( decl );
     const std::string written    = annotation.is_valid() ? type( annotation ) : recorded_type( decl );
-    return fmt::format( "{} {}", written, text( ast_.name( decl ) ) );
+    // A payload's field, as in `held( i32 )`, has no name.
+    return ast_.name( decl ).is_valid() ? fmt::format( "{} {}", written, text( ast_.name( decl ) ) ) : written;
 }
 
 std::string Signature_printer::recorded_type( Node_id decl ) const

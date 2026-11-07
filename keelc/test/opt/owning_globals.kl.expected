@@ -1,0 +1,177 @@
+// opt/owning_globals.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Store;
+
+struct kl__Store
+{
+    uint8_t* kl_bytes;
+    uint64_t kl_size;
+};
+
+struct kl__Store kl__first__G;
+struct kl__Store kl__second__G;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+uint64_t kl__depth__3u64( uint64_t );
+void kl__Store__R5Store_3u64__ctor( struct kl__Store*, uint64_t );
+void kl__Store__dtor( struct kl__Store* );
+int32_t kl__main__( void );
+void kl__0build( void );
+void kl__0drop( void );
+
+#line 3 "opt/owning_globals.kl"
+uint64_t kl__depth__3u64( uint64_t kl_n_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+#line 5 "opt/owning_globals.kl"
+    kl_t2 = kl_n_1 == 0;
+#line 5 "opt/owning_globals.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 5 "opt/owning_globals.kl"
+    kl_t0 = 0;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb2:
+#line 5 "opt/owning_globals.kl"
+    kl_t3 = kl_n_1 - 1;
+#line 5 "opt/owning_globals.kl"
+    kl_t4 = kl__depth__3u64( kl_t3 );
+#line 5 "opt/owning_globals.kl"
+    kl_t0 = kl_t4 + 1;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb3:
+#line 5 "opt/owning_globals.kl"
+    return kl_t0;
+}
+
+#line 13 "opt/owning_globals.kl"
+void kl__Store__R5Store_3u64__ctor( struct kl__Store* kl_this_1, uint64_t kl_n_2 )
+{
+    uint8_t* kl_t3;
+#line 17 "opt/owning_globals.kl"
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+#line 17 "opt/owning_globals.kl"
+    ( *kl_this_1 ).kl_bytes = kl_t3;
+#line 19 "opt/owning_globals.kl"
+    ( *kl_this_1 ).kl_size = kl_n_2;
+    return;
+#line 20 "opt/owning_globals.kl"
+}
+
+#line 22 "opt/owning_globals.kl"
+void kl__Store__dtor( struct kl__Store* kl_this_1 )
+{
+    uint64_t kl_t2;
+    uint64_t kl_n_4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+#line 24 "opt/owning_globals.kl"
+    kl_n_4 = ( *kl_this_1 ).kl_size;
+#line 5 "opt/owning_globals.kl"
+    kl_t5 = kl_n_4 == 0;
+#line 5 "opt/owning_globals.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 5 "opt/owning_globals.kl"
+    kl_t2 = 0;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb2:
+#line 5 "opt/owning_globals.kl"
+    kl_t6 = kl_n_4 - 1;
+#line 5 "opt/owning_globals.kl"
+    kl_t7 = kl__depth__3u64( kl_t6 );
+#line 5 "opt/owning_globals.kl"
+    kl_t2 = kl_t7 + 1;
+#line 5 "opt/owning_globals.kl"
+    goto bb3;
+    bb3:
+#line 24 "opt/owning_globals.kl"
+    ( *kl_this_1 ).kl_size = kl_t2;
+#line 27 "opt/owning_globals.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_bytes );
+#line 29 "opt/owning_globals.kl"
+    return;
+#line 29 "opt/owning_globals.kl"
+}
+
+#line 35 "opt/owning_globals.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    uint64_t kl_t1;
+    bool kl_t2;
+#line 37 "opt/owning_globals.kl"
+    kl_t1 = kl__first__G.kl_size + kl__second__G.kl_size;
+#line 37 "opt/owning_globals.kl"
+    kl_t2 = kl_t1 == 12;
+#line 37 "opt/owning_globals.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 37 "opt/owning_globals.kl"
+    kl_t0 = 0;
+#line 37 "opt/owning_globals.kl"
+    goto bb3;
+    bb2:
+#line 37 "opt/owning_globals.kl"
+    kl_t0 = 1;
+#line 37 "opt/owning_globals.kl"
+    goto bb3;
+    bb3:
+#line 37 "opt/owning_globals.kl"
+    return kl_t0;
+}
+
+void kl__0build( void )
+{
+    uint8_t* kl_t1;
+    uint8_t* kl_t2;
+#line 17 "opt/owning_globals.kl"
+    kl_t1 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+#line 17 "opt/owning_globals.kl"
+    kl__first__G.kl_bytes = kl_t1;
+#line 19 "opt/owning_globals.kl"
+    kl__first__G.kl_size = 4;
+#line 17 "opt/owning_globals.kl"
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 8, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+#line 17 "opt/owning_globals.kl"
+    kl__second__G.kl_bytes = kl_t2;
+#line 19 "opt/owning_globals.kl"
+    kl__second__G.kl_size = 8;
+#line 33 "opt/owning_globals.kl"
+    return;
+#line 33 "opt/owning_globals.kl"
+}
+
+void kl__0drop( void )
+{
+#line 33 "opt/owning_globals.kl"
+    kl__Store__dtor( &kl__second__G );
+#line 33 "opt/owning_globals.kl"
+    kl__Store__dtor( &kl__first__G );
+#line 33 "opt/owning_globals.kl"
+    return;
+#line 33 "opt/owning_globals.kl"
+}
+
+#line 35 "opt/owning_globals.kl"
+int main( void )
+{
+    kl__0build();
+#line 35 "opt/owning_globals.kl"
+    int result = (int) kl__main__();
+    kl__0drop();
+    return result;
+}

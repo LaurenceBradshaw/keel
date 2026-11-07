@@ -1,0 +1,19 @@
+// A pattern's `_` names nothing, so it has no entry.
+
+enum Slot
+{
+    empty,
+    held( i32 value ),
+};
+
+i32 main()
+{
+    Slot s = Slot::held( 3 );
+    switch( s )
+    {
+        case Slot::held( _ ):
+            return 0;
+        case Slot::empty:
+            return 1;
+    }
+}

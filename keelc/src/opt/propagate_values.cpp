@@ -76,7 +76,10 @@ void step(
     case Statement_kind::Drop:
     case Statement_kind::Storage_live:
     case Statement_kind::Storage_dead:
-        kill( values, statement.place.local );
+        if( !statement.place.is_global() )
+        {
+            kill( values, statement.place.local );
+        }
         break;
     }
 

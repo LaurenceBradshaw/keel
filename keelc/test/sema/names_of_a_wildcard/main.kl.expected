@@ -1,0 +1,16 @@
+{"kind":"file","path":"sema/names_of_a_wildcard/main.kl"}
+{"kind":"file","path":"<prelude>"}
+{"kind":"name","refers_to":"enum","file":"sema/names_of_a_wildcard/main.kl","line":3,"col":6,"end_col":10,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":3,"decl_col":6,"decl_end_col":10,"signature":"enum Slot"}
+{"kind":"name","refers_to":"variant","file":"sema/names_of_a_wildcard/main.kl","line":5,"col":5,"end_col":10,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":5,"decl_col":5,"decl_end_col":10,"signature":"empty"}
+{"kind":"name","refers_to":"variant","file":"sema/names_of_a_wildcard/main.kl","line":6,"col":5,"end_col":9,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":6,"decl_col":5,"decl_end_col":9,"signature":"held( i32 value )"}
+{"kind":"name","refers_to":"field","file":"sema/names_of_a_wildcard/main.kl","line":6,"col":15,"end_col":20,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":6,"decl_col":15,"decl_end_col":20,"signature":"i32 value"}
+{"kind":"name","refers_to":"function","file":"sema/names_of_a_wildcard/main.kl","line":9,"col":5,"end_col":9,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":9,"decl_col":5,"decl_end_col":9,"signature":"i32 main()"}
+{"kind":"name","refers_to":"enum","file":"sema/names_of_a_wildcard/main.kl","line":11,"col":5,"end_col":9,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":3,"decl_col":6,"decl_end_col":10,"signature":"enum Slot"}
+{"kind":"name","refers_to":"variable","file":"sema/names_of_a_wildcard/main.kl","line":11,"col":10,"end_col":11,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":11,"decl_col":10,"decl_end_col":11,"signature":"Slot s"}
+{"kind":"name","refers_to":"enum","file":"sema/names_of_a_wildcard/main.kl","line":11,"col":14,"end_col":18,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":3,"decl_col":6,"decl_end_col":10,"signature":"enum Slot"}
+{"kind":"name","refers_to":"variant","file":"sema/names_of_a_wildcard/main.kl","line":11,"col":20,"end_col":24,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":6,"decl_col":5,"decl_end_col":9,"signature":"held( i32 value )"}
+{"kind":"name","refers_to":"variable","file":"sema/names_of_a_wildcard/main.kl","line":12,"col":13,"end_col":14,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":11,"decl_col":10,"decl_end_col":11,"signature":"Slot s"}
+{"kind":"name","refers_to":"enum","file":"sema/names_of_a_wildcard/main.kl","line":14,"col":14,"end_col":18,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":3,"decl_col":6,"decl_end_col":10,"signature":"enum Slot"}
+{"kind":"name","refers_to":"variant","file":"sema/names_of_a_wildcard/main.kl","line":14,"col":20,"end_col":24,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":6,"decl_col":5,"decl_end_col":9,"signature":"held( i32 value )"}
+{"kind":"name","refers_to":"enum","file":"sema/names_of_a_wildcard/main.kl","line":16,"col":14,"end_col":18,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":3,"decl_col":6,"decl_end_col":10,"signature":"enum Slot"}
+{"kind":"name","refers_to":"variant","file":"sema/names_of_a_wildcard/main.kl","line":16,"col":20,"end_col":25,"decl_file":"sema/names_of_a_wildcard/main.kl","decl_line":5,"decl_col":5,"decl_end_col":10,"signature":"empty"}

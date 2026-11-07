@@ -1,0 +1,38 @@
+// A global's drop in the synthesised drop function: value propagation leaves a global place alone.
+// The destructor recurses, so it is never inlined and its drop stays a statement.
+u64 depth( u64 n )
+{
+    return n == 0 ? 0 : depth( n - 1 ) + 1;
+}
+
+class Store
+{
+    u8[*] bytes;
+    public u64 size;
+
+    public Store( u64 n )
+    {
+        unsafe
+        {
+            bytes = alloc<u8>( n );
+        }
+        size = n;
+    }
+
+    ~Store()
+    {
+        size = depth( size );
+        unsafe
+        {
+            free( bytes );
+        }
+    }
+};
+
+Store first = Store( 4 );
+Store second = Store( 8 );
+
+i32 main()
+{
+    return first.size + second.size == 12 ? 0 : 1;
+}

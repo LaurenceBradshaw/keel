@@ -1,0 +1,13 @@
+// A payload field written without a name is refused, and its variant's signature still prints.
+
+enum Slot
+{
+    empty,
+    held( i32 ),
+};
+
+i32 main()
+{
+    Slot s = Slot::empty;
+    return 0;
+}
