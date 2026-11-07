@@ -68,7 +68,7 @@ bool same( const Operand& a, const Operand& b )
 bool same_constant( const Operand& a, const Operand& b, const Literal_pool& literals )
 {
     return a.kind == Operand_kind::Constant && b.kind == Operand_kind::Constant && a.constant.is_valid() &&
-           b.constant.is_valid() && a.type == b.type && literals.integer( a.constant ) == literals.integer( b.constant );
+           b.constant.is_valid() && a.type == b.type && literals.same( a.constant, b.constant );
 }
 
 bool same_global( const Place& a, const Place& b )

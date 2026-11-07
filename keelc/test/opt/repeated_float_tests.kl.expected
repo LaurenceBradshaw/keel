@@ -1,0 +1,95 @@
+// opt/repeated_float_tests.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__classify__3f64( double );
+int32_t kl__main__( void );
+
+#line 3 "opt/repeated_float_tests.kl"
+int32_t kl__classify__3f64( double kl_x_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    bool kl_t3;
+#line 5 "opt/repeated_float_tests.kl"
+    kl_t0 = 0;
+    kl_t2 = kl_x_1 < 3.0;
+#line 6 "opt/repeated_float_tests.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 6 "opt/repeated_float_tests.kl"
+    goto bb2;
+    bb2:
+#line 10 "opt/repeated_float_tests.kl"
+    kl_t3 = kl_x_1 < 3.0;
+#line 10 "opt/repeated_float_tests.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = kl_t0 + 2;
+#line 10 "opt/repeated_float_tests.kl"
+    goto bb4;
+    bb4:
+#line 14 "opt/repeated_float_tests.kl"
+    return kl_t0;
+}
+
+#line 17 "opt/repeated_float_tests.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_t1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 5 "opt/repeated_float_tests.kl"
+    kl_t2 = 0;
+    kl_t5 = 1.0 < 3.0;
+#line 6 "opt/repeated_float_tests.kl"
+    if ( kl_t5 ) goto bb6; else goto bb7;
+    bb1:
+#line 5 "opt/repeated_float_tests.kl"
+    kl_t3 = 0;
+    kl_t4 = 4.0 < 3.0;
+#line 6 "opt/repeated_float_tests.kl"
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb2:
+#line 21 "opt/repeated_float_tests.kl"
+    kl_t0 = 1;
+#line 21 "opt/repeated_float_tests.kl"
+    return kl_t0;
+    bb3:
+    kl_t0 = 0;
+#line 23 "opt/repeated_float_tests.kl"
+    return kl_t0;
+    bb4:
+#line 12 "opt/repeated_float_tests.kl"
+    kl_t3 = 1 + 2;
+#line 10 "opt/repeated_float_tests.kl"
+    goto bb5;
+    bb5:
+#line 19 "opt/repeated_float_tests.kl"
+    kl_t1 = kl_t3 != 0;
+#line 19 "opt/repeated_float_tests.kl"
+    if ( kl_t1 ) goto bb2; else goto bb3;
+    bb6:
+#line 12 "opt/repeated_float_tests.kl"
+    kl_t2 = 1 + 2;
+#line 10 "opt/repeated_float_tests.kl"
+    goto bb7;
+    bb7:
+#line 19 "opt/repeated_float_tests.kl"
+    kl_t1 = kl_t2 != 3;
+#line 19 "opt/repeated_float_tests.kl"
+    if ( kl_t1 ) goto bb2; else goto bb1;
+#line 24 "opt/repeated_float_tests.kl"
+}
+
+#line 17 "opt/repeated_float_tests.kl"
+int main( void )
+{
+#line 17 "opt/repeated_float_tests.kl"
+    return (int) kl__main__();
+}

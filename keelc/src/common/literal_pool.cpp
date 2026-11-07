@@ -3,6 +3,7 @@
 
 #include "common/literal_pool.h"
 
+#include <bit>
 #include <cassert>
 
 namespace keel
@@ -62,6 +63,25 @@ Literal_kind Literal_pool::kind( Literal_id id ) const
     return Literal_kind( entries_[id.v].index() - 1 );
 }
 
+bool Literal_pool::same( Literal_id a, Literal_id b ) const
+{
+    if( kind( a ) != kind( b ) )
+    {
+        return false;
+    }
+    switch( kind( a ) )
+    {
+    case Literal_kind::Integer:
+        return integer( a ) == integer( b );
+    case Literal_kind::Float:
+        return std::bit_cast<u64>( floating( a ) ) == std::bit_cast<u64>( floating( b ) ) &&
+               std::bit_cast<u32>( narrow( a ) ) == std::bit_cast<u32>( narrow( b ) );
+    case Literal_kind::String:
+        return string( a ) == string( b );
+    }
+    return false;
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -69,6 +89,18 @@ Literal_kind Literal_pool::kind( Literal_id id ) const
 
 namespace keel
 {
+
+TEST_CASE( "literal_pool_same_compares_kind_and_value", "[common][literals]" )
+{
+    Literal_pool pool;
+
+    REQUIRE( pool.same( pool.add_integer( 3 ), pool.add_integer( 3 ) ) );
+    REQUIRE_FALSE( pool.same( pool.add_integer( 3 ), pool.add_float( 3.0, 3.0f ) ) );
+    REQUIRE( pool.same( pool.add_float( 3.0, 3.0f ), pool.add_float( 3.0, 3.0f ) ) );
+    REQUIRE_FALSE( pool.same( pool.add_float( 0.0, 0.0f ), pool.add_float( -0.0, -0.0f ) ) );
+    REQUIRE( pool.same( pool.add_string( "ab" ), pool.add_string( "ab" ) ) );
+    REQUIRE_FALSE( pool.same( pool.add_string( "ab" ), pool.add_string( "a" ) ) );
+}
 
 TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
 {

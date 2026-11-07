@@ -56,6 +56,8 @@ public:
     f32              narrow( Literal_id id ) const;
     std::string_view string( Literal_id id ) const;
     Literal_kind     kind( Literal_id id ) const;
+    // Same kind and value; floats by bit pattern, so NaN matches itself and 0.0 does not match -0.0.
+    bool same( Literal_id a, Literal_id b ) const;
 
 private:
     struct Float

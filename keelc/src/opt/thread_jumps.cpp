@@ -299,8 +299,7 @@ bool same_operand( const Function& func, const Operand& a, const Operand& b, con
 {
     if( a.kind == Operand_kind::Constant && b.kind == Operand_kind::Constant )
     {
-        return a.constant.is_valid() && b.constant.is_valid() && a.type == b.type &&
-               literals.integer( a.constant ) == literals.integer( b.constant );
+        return a.constant.is_valid() && b.constant.is_valid() && a.type == b.type && literals.same( a.constant, b.constant );
     }
     if( !local_part( func, a ) || !local_part( func, b ) || a.place.local != b.place.local ||
         a.place.num_projections != b.place.num_projections )
