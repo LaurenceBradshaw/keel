@@ -47,7 +47,7 @@ void step_back( const Function& func, const Statement& statement, Local_set& liv
         }
         read_indices( func, statement.place, live );
         // `(*_3).x = …` reads the pointer `_3`.
-        if( has_deref_projection( func, statement.place ) )
+        if( !statement.place.is_global() && has_deref_projection( func, statement.place ) )
         {
             live[statement.place.local.v] = true;
         }

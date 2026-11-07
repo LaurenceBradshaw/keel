@@ -1,0 +1,14 @@
+// A write through a pointer held in a global: liveness reads the pointer, which is a global, not a local.
+
+i32* early = &later;
+i32  later = 5;
+
+i32 main()
+{
+    *early = 6;
+    if( later != 6 )
+    {
+        return 1;
+    }
+    return 0;
+}
