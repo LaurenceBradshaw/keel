@@ -15,8 +15,6 @@ private extern i32 kl_rt_file_read( i32 fd, ref u8[] buffer, u64* count );
 private extern i32 kl_rt_file_write( i32 fd, const ref u8[] data );
 private extern i32 kl_rt_file_close( i32 fd );
 private extern i32 kl_rt_error_kind( i32 code );
-private extern i32 kl_rt_input_fill( u8[*]* data, u64* size );
-private extern void kl_rt_input_take( u64 count );
 private extern i32 kl_rt_path_kind( const ref u8[] path, i32* kind );
 private extern i32 kl_rt_create_directory( const ref u8[] path );
 private extern i32 kl_rt_delete_directory( const ref u8[] path );
@@ -325,6 +323,34 @@ enum file_mode
 
 // The bytes a file reads at a time.
 private const u64 FILE_BUFFER = 65536;
+
+// Standard input's buffer, shared by every `file::standard_input`.
+private class input_buffer
+{
+    public input_buffer()
+    {
+        data = nullptr;
+        start = 0;
+        end = 0;
+    }
+
+    ~input_buffer()
+    {
+        unsafe
+        {
+            if( data != nullptr )
+            {
+                free( data );
+            }
+        }
+    }
+
+    public u8[*] data; // `nullptr` until first read
+    public u64 start;
+    public u64 end;
+};
+
+private input_buffer input;
 private const u64 PATH_BUFFER = 4096;
 
 /// An open file, closed when it is dropped.
@@ -514,17 +540,31 @@ class file
         i32 status = 0;
         if( shared_ )
         {
-            unsafe
+            if( input.start == input.end )
             {
-                status = kl_rt_input_fill( &buffer_, &end_ );
+                u64 count = 0;
+                unsafe
+                {
+                    if( input.data == nullptr )
+                    {
+                        input.data = alloc<u8>( FILE_BUFFER );
+                    }
+
+                    status = kl_rt_file_read( 0, ref input.data[0..FILE_BUFFER], &count );
+                }
+
+                if( status != 0 )
+                {
+                    return result::err( file_error_of( status ) );
+                }
+
+                input.start = 0;
+                input.end = count;
             }
 
-            if( status != 0 )
-            {
-                return result::err( file_error_of( status ) );
-            }
-
-            start_ = 0;
+            buffer_ = input.data;
+            start_ = input.start;
+            end_ = input.end;
             return result::ok();
         }
 
@@ -560,10 +600,7 @@ class file
 
         if( shared_ )
         {
-            unsafe
-            {
-                kl_rt_input_take( count );
-            }
+            input.start += count;
         }
     }
 
@@ -572,7 +609,7 @@ class file
     private u8[*] buffer_; // `nullptr` until first read
     private u64 start_;    // the buffered bytes are `buffer_[start_..end_]`
     private u64 end_;
-    private bool shared_; // reading through the runtime's shared standard-input buffer
+    private bool shared_; // reading through `input`, standard input's shared buffer
 };
 
 /// The whole of the file at `name`.

@@ -220,31 +220,15 @@ static void pipe_stdin( const char* text )
     close( ends[0] );
 }
 
-// What one read brings in is handed out until taken, with no read in between, then 0 at the end.
-static void input_fill_take( void )
-{
-    pipe_stdin( "ab\ncd" );
-
-    uint8_t* data = NULL;
-    uint64_t a = 9, b = 9, c = 9;
-    kl_rt_input_fill( &data, &a );
-    kl_rt_input_take( 3 );
-    kl_rt_input_fill( &data, &b );
-    printf( "%llu %llu %.2s ", (unsigned long long) a, (unsigned long long) b, (const char*) data );
-    kl_rt_input_take( 2 );
-    printf( "%d ", kl_rt_input_fill( &data, &c ) );
-    printf( "%llu", (unsigned long long) c );
-}
-
 // Reading standard input flushes a prompt first; a raw write after it lands after it.
 static void input_flushes_stdout( void )
 {
     pipe_stdin( "x" );
 
-    uint8_t* data = NULL;
+    uint8_t  data[1];
     uint64_t size = 0;
     kl_rt_write( 1, (const uint8_t*) "prompt", 6 );
-    kl_rt_input_fill( &data, &size );
+    kl_rt_file_read( 0, data, sizeof data, &size );
     if( write( 1, "|after", 6 ) != 6 )
     {
         exit( 2 );
@@ -526,10 +510,6 @@ int main( void )
     r = run( error_kinds );
     check( "error_kinds", "stdout", r.out, "1223456780" );
     check_exit( "error_kinds", &r, false );
-
-    r = run( input_fill_take );
-    check( "input_fill_take", "stdout", r.out, "5 2 cd 0 0" );
-    check_exit( "input_fill_take", &r, false );
 
     r = run( input_flushes_stdout );
     check( "input_flushes_stdout", "stdout", r.out, "prompt|after" );
