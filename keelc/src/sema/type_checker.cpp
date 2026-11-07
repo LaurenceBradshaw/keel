@@ -689,8 +689,8 @@ static bool holds_address(
         return false;
     }
 
-    // Some implementer may hold one, and only the vtable knows which.
-    if( table.is_interface( instance ) )
+    // Some implementer may hold one, and only the vtable knows which; a closure may borrow a capture.
+    if( table.is_interface( instance ) || table.is_closure( instance ) )
     {
         return true;
     }

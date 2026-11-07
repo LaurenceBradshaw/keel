@@ -194,6 +194,9 @@ u32 Ref_writer::type_index( Type_id id )
             type( entry, described.arguments[1] );
         }
         break;
+    case Type_kind::Closure:
+        assert( false && "a closure type is not written to an object yet" );
+        break;
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:

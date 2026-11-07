@@ -371,6 +371,33 @@ Type_id Type_table::structure( Node_id declaration, std::span<const Type_id> arg
     return composite( Type_kind::Struct, declaration, arguments, name, Type_id {} );
 }
 
+Type_id Type_table::closure( Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name )
+{
+    std::vector<Instance>& instances = closures_[declaration.v];
+
+    for( const Instance& seen : instances )
+    {
+        if( std::ranges::equal( seen.arguments, arguments ) )
+        {
+            return seen.type;
+        }
+    }
+
+    const std::span<const Type_id> owned =
+        arguments.empty() ? std::span<const Type_id> {}
+                          : std::span<const Type_id>( arguments_.emplace_back( arguments.begin(), arguments.end() ) );
+
+    Type described;
+    described.kind        = Type_kind::Closure;
+    described.element     = signature;
+    described.declaration = declaration;
+    described.arguments   = owned;
+
+    const Type_id id = add( described, name );
+    instances.push_back( Instance { owned, id } );
+    return id;
+}
+
 Type_id Type_table::parameter( Node_id declaration, std::string_view name )
 {
     const auto it = params_.find( declaration.v );
@@ -427,6 +454,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Struct:
     case Type_kind::Union:
     case Type_kind::Interface:
+    case Type_kind::Closure:
     case Type_kind::Size:
         for( Type_id arg : described.arguments )
         {
@@ -563,6 +591,21 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     {
         return field( substitute( described.arguments[0], bindings ), substitute( described.element, bindings ) );
     }
+    case Type_kind::Closure:
+    {
+        if( described.arguments.empty() )
+        {
+            return type;
+        }
+
+        std::vector<Type_id> substituted;
+        for( const Type_id argument : described.arguments )
+        {
+            substituted.push_back( substitute( argument, bindings ) );
+        }
+
+        return closure( described.declaration, substitute( described.element, bindings ), substituted, name( type ) );
+    }
     default:
         return type;
     }
@@ -694,6 +737,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
+    case Type_kind::Closure:
         // Two aggregates of one shape are still two types: `Box<T>` deduces nothing from a
         // `Wrap<i32>`, and without this it would deduce `T = i32` from an unrelated declaration.
         if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
@@ -835,6 +879,7 @@ bool unify( const Type_table& table, Type_id a, Type_id b, Bindings& bound )
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
+    case Type_kind::Closure:
         if( x.declaration != y.declaration || x.arguments.size() != y.arguments.size() )
         {
             return false;
@@ -1297,6 +1342,12 @@ bool Type_table::is_function( Type_id id ) const
     return get( id ).kind == Type_kind::Function;
 }
 
+bool Type_table::is_closure( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Closure;
+}
+
 bool Type_table::is_field( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1445,6 +1496,9 @@ std::string Type_table::stable_name( Type_id id ) const
         text += base_name( id );
         return described.arguments.empty() ? text : fmt::format( "{}<{}>", text, list( described.arguments, ", " ) );
     }
+    case Type_kind::Closure:
+        return described.arguments.empty() ? std::string( name( id ) )
+                                           : fmt::format( "{}<{}>", name( id ), list( described.arguments, ", " ) );
     case Type_kind::Pointer:
         return fmt::format( "{}{}*", described.const_element ? "const " : "", stable_name( described.element ) );
     case Type_kind::Many_pointer:
@@ -1585,6 +1639,7 @@ bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type
     case Type_kind::Struct:
     case Type_kind::Enum:
     case Type_kind::Interface:
+    case Type_kind::Closure:
         if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
         {
             return false;
@@ -3622,6 +3677,48 @@ TEST_CASE( "type_table_walks_into_a_run", "[sema][type][run][generic]" )
 
         REQUIRE( table.deduce( t, table.run_of( u8 ), bindings ) );
         REQUIRE( bindings.at( t.v ) == table.run_of( u8 ) );
+    }
+}
+
+TEST_CASE( "type_table_interns_a_closure", "[sema][type][lambda]" )
+{
+    Type_table table;
+
+    const Type_id   t   = table.parameter( Node_id { 3 }, "T" );
+    const Type_id   i32 = table.integer( 32, true );
+    const Parameter takes[] { { t, Param_mode::Value } };
+    const Type_id   open = table.function( table.builtin( Type_kind::Bool ), takes );
+    const Type_id   args[] { t };
+    const Type_id   lambda = table.closure( Node_id { 7 }, open, args, "fn[] at 2:9" );
+
+    SECTION( "one per declaration and arguments" )
+    {
+        REQUIRE( table.closure( Node_id { 7 }, open, args, "fn[] at 2:9" ) == lambda );
+        REQUIRE( table.closure( Node_id { 8 }, open, args, "fn[] at 3:9" ) != lambda );
+        REQUIRE( table.is_closure( lambda ) );
+        REQUIRE( table.name( lambda ) == "fn[] at 2:9" );
+    }
+
+    SECTION( "substitution makes the instance's closure, signature included" )
+    {
+        const Type_id   closed = table.substitute( lambda, { { t.v, i32 } } );
+        const Parameter at[] { { i32, Param_mode::Value } };
+
+        REQUIRE( table.mentions_parameter( lambda ) );
+        REQUIRE_FALSE( table.mentions_parameter( closed ) );
+        REQUIRE( table.get( closed ).element == table.function( table.builtin( Type_kind::Bool ), at ) );
+        REQUIRE( table.stable_name( closed ) == "fn[] at 2:9<i32>" );
+    }
+
+    SECTION( "deduction matches only the same lambda" )
+    {
+        Bindings      bindings;
+        const Type_id closed = table.substitute( lambda, { { t.v, i32 } } );
+        const Type_id other  = table.closure( Node_id { 8 }, table.get( closed ).element, {}, "fn[] at 3:9" );
+
+        REQUIRE_FALSE( table.deduce( lambda, other, bindings ) );
+        REQUIRE( table.deduce( lambda, closed, bindings ) );
+        REQUIRE( bindings.at( t.v ) == i32 );
     }
 }
 

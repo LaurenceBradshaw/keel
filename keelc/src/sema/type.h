@@ -49,6 +49,8 @@ enum class Type_kind : u8
     Union,     // `A | B`; `arguments` are the members, sorted
     Interface, // `declaration` is the Interface_decl; reached only through a borrow or a pointer
     Size,      // a `u64` extent: `count` is a constant's value, `width` a Size_op over `arguments`
+    Closure,   // a lambda's own type: `declaration` the Lambda_expr, `element` its `fn` signature,
+               // `arguments` the enclosing generic's parameters
 };
 
 // Size_op::Constant is 0, so a constant size's `width` is 0.
@@ -138,6 +140,9 @@ public:
     // composed here, from the arguments' own names, so one place decides how a generic type reads.
     Type_id structure( Node_id declaration, std::span<const Type_id> arguments, std::string_view name );
 
+    // Interned by declaration and arguments. `name` is the caller's (`fn[] at 3:5`); arguments are not shown.
+    Type_id closure( Node_id declaration, Type_id signature, std::span<const Type_id> arguments, std::string_view name );
+
     // A type parameter, before any instantiation substitutes it away. Keyed by its Type_param_decl,
     // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
     Type_id parameter( Node_id declaration, std::string_view name );
@@ -205,6 +210,7 @@ public:
     bool points_to_const( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
+    bool is_closure( Type_id id ) const;
     bool is_field( Type_id id ) const;
     bool is_never( Type_id id ) const;
     bool is_builtin( Type_id id ) const; // a number or `bool`: a value type no declaration owns
@@ -309,6 +315,7 @@ private:
 
     std::unordered_map<u32, std::vector<Instance>> composites_;
     std::unordered_map<u32, std::vector<Instance>> interfaces_; // Interface_decl node -> its instances
+    std::unordered_map<u32, std::vector<Instance>> closures_;   // Lambda_expr node -> its instances
     std::unordered_map<u32, Type_id>               params_;     // Type_param_decl node -> type parameter
     std::deque<std::string>                        composed_;
 
