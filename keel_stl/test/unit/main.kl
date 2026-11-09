@@ -13,6 +13,7 @@ import reassignment_tests;
 import ring_tests;
 import set_tests;
 import string_tests;
+import test_tests;
 import time_tests;
 
 i32 main( const ref str[] args )

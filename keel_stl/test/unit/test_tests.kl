@@ -1,0 +1,16 @@
+// `kl::test::context::expect_panic` passes when its body panics with the expected message.
+import kl::list;
+import kl::ring;
+import kl::test::context;
+
+private void expect_panic_passes_on_a_guards_panic( ref kl::test::context c )
+{
+    kl::list<i32> values = kl::list<i32>();
+    values.push( 1 );
+    c.expect_panic( "index out of range", fn[ values ]() { _ = values[3]; } );
+
+    kl::ring<i32> r = kl::ring<i32>::with_capacity( 1 );
+    c.expect_panic( "the ring is empty", fn[ ref r ]() { _ = r.pop_front(); } );
+
+    c.expect_panic( "boom", fn[]() { panic( "boom" ); } );
+}

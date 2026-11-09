@@ -1,0 +1,30 @@
+// `kl::test::context::expect_panic`: a matching panic passes, and no panic or the wrong message
+// fails at the test's line, the child's own report kept inside the failure.
+import kl::test::context;
+import kl::test::run;
+
+void passes( ref kl::test::context c )
+{
+    c.expect_panic( "boom", fn[]() { panic( "a boom here" ); } );
+}
+
+void no_panic( ref kl::test::context c )
+{
+    c.expect_panic( "boom", fn[]() {} );
+}
+
+void wrong_message( ref kl::test::context c )
+{
+    c.expect_panic( "boom", fn[]() { panic( "other" ); } );
+}
+
+i32 main( const ref str[] args )
+{
+    kl::test::entry[3] tests = [
+        kl::test::entry { "passes", &passes },
+        kl::test::entry { "no_panic", &no_panic },
+        kl::test::entry { "wrong_message", &wrong_message }
+    ];
+
+    return kl::test::run( tests, args );
+}

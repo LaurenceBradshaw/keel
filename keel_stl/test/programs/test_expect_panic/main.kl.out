@@ -1,0 +1,6 @@
+pass passes
+programs/test_expect_panic/main.kl:13: expect_panic failed: no panic (exit 0), wanted "boom"
+FAIL no_panic
+programs/test_expect_panic/main.kl:18: expect_panic failed: wanted "boom", the panic said: programs/test_expect_panic/main.kl:18: panic: other
+FAIL wrong_message
+1 passed, 2 failed
