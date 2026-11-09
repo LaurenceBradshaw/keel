@@ -8,6 +8,7 @@
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/ValueHandle.h>
 #include <llvm/IR/Verifier.h>
@@ -24,6 +25,7 @@
 #include "codegen/failure.h"
 #include "codegen/layout.h"
 #include "codegen_c/spelling.h"
+#include "ir/call_graph.h"
 #include "ir/vtables.h"
 
 namespace keel
@@ -93,6 +95,7 @@ private:
     llvm::Function* runtime( std::string_view name, llvm::Type* result, std::vector<llvm::Type*> parameters, bool diverges );
 
     void define( const Function& function, llvm::Function* defined );
+    void check_stack( llvm::Function* defined );
 
     // DWARF under --debug: Keel's names for functions, locals, types and fields, and its lines.
     llvm::DIFile* file( File_id id );
@@ -151,6 +154,7 @@ private:
     const Spelling               spelling_;
     const Layout                 layout_;
     const std::vector<Vtable>    vtables_;
+    const std::vector<bool>      deep_;  // D76: each function's stack check at entry
     const Parts*                 parts_; // null emits the whole compile
     const File_id                part_;
     const bool                   klo_;
@@ -209,6 +213,7 @@ Llvm_emitter::Llvm_emitter(
       spelling_( Spelling { program, types, interner, modules, sm } ),
       layout_( program, types.table() ),
       vtables_( vtables_needed( types, functions ) ),
+      deep_( deep_drops( functions ) ),
       parts_( options.parts ),
       part_( options.part ),
       klo_( options.klo ),
@@ -678,7 +683,16 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
             store( local.type, &*argument++, slot );
         }
     }
-    builder_.CreateBr( blocks_[0] );
+    const bool pointer = function.parameter_count == 1 && table().is_pointer( function.locals[Local_id { 1 }].type );
+    if( deep_[static_cast<std::size_t>( &function - functions_.data() )] && pointer &&
+        is_void( function.locals[k_return_slot].type ) )
+    {
+        check_stack( defined );
+    }
+    else
+    {
+        builder_.CreateBr( blocks_[0] );
+    }
 
     for( const Block_id i : function.blocks.ids() )
     {
@@ -701,6 +715,42 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         }
     }
     builder_.SetCurrentDebugLocation( {} );
+}
+
+// Under kl_rt_stack_low, the drop runs again on a fresh segment, from its start.
+void Llvm_emitter::check_stack( llvm::Function* defined )
+{
+    llvm::Type*           word = builder_.getInt64Ty();
+    llvm::GlobalVariable* low  = module_->getGlobalVariable( "kl_rt_stack_low" );
+    if( low == nullptr )
+    {
+        low = new llvm::GlobalVariable(
+            *module_,
+            word,
+            false,
+            llvm::GlobalValue::ExternalLinkage,
+            nullptr,
+            "kl_rt_stack_low",
+            nullptr,
+            llvm::GlobalValue::InitialExecTLSModel
+        );
+    }
+
+    llvm::Value*      here   = builder_.CreatePtrToInt( builder_.CreateStackSave(), word );
+    llvm::BasicBlock* deeper = llvm::BasicBlock::Create( *context_, "deeper", defined );
+    builder_.CreateCondBr(
+        builder_.CreateICmpULT( here, builder_.CreateLoad( word, low ) ),
+        deeper,
+        blocks_[0],
+        llvm::MDBuilder( *context_ ).createBranchWeights( 1, 1 << 20 )
+    );
+
+    builder_.SetInsertPoint( deeper );
+    llvm::Type* pointer = builder_.getPtrTy();
+    builder_.CreateCall(
+        runtime( "kl_rt_deeper", builder_.getVoidTy(), { pointer, pointer }, false ), { defined, defined->getArg( 0 ) }
+    );
+    builder_.CreateRetVoid();
 }
 
 llvm::DIFile* Llvm_emitter::file( File_id id )
@@ -734,7 +784,9 @@ void Llvm_emitter::describe( const Function& function, llvm::Function* defined )
     if( source )
     {
         const Described& described = program_[function.declaration];
-        name = described.aggregate_name.empty() ? described.name : described.aggregate_name + "::" + described.name;
+        const bool       ends      = described.kind == Declared::Enum || described.kind == Declared::Destructor;
+        name =
+            ( described.aggregate_name.empty() ? "" : described.aggregate_name + "::" ) + ( ends ? "~" : "" ) + described.name;
         span = described.span;
         if( const std::string package = spelling_.owner( function.declaration ).package;
             !package.empty() && package != "prelude" )

@@ -12,6 +12,7 @@
 #include "codegen/mangle.h"
 #include "codegen_c/spelling.h"
 #include "common/types.h"
+#include "ir/call_graph.h"
 #include "ir/vtables.h"
 
 namespace keel
@@ -58,7 +59,8 @@ public:
         const Module_graph&          modules,
         const Parts*                 parts,
         File_id                      part,
-        bool                         object
+        bool                         object,
+        std::vector<bool>            deep
     );
 
     Emitted run();
@@ -151,6 +153,9 @@ private:
     std::vector<Vtable>          vtables_; // static, so each part writes its own
     Needed                       needed_;
     std::vector<Type_id>         struct_order_;
+    std::vector<bool>            deep_; // D76: by function, which check the stack at entry
+
+    bool checks_stack( const Function& function ) const;
 };
 
 Kir_emitter::Kir_emitter(
@@ -164,7 +169,8 @@ Kir_emitter::Kir_emitter(
     const Module_graph&          modules,
     const Parts*                 parts,
     File_id                      part,
-    bool                         object
+    bool                         object,
+    std::vector<bool>            deep
 )
     : functions_( functions ),
       program_( program ),
@@ -180,8 +186,16 @@ Kir_emitter::Kir_emitter(
       callees_( std::move( callees ) ),
       vtables_( vtables_needed( types, functions ) ),
       needed_( needed_types() ),
-      struct_order_( emitted_struct_order( program, types.table(), needed_ ) )
+      struct_order_( emitted_struct_order( program, types.table(), needed_ ) ),
+      deep_( std::move( deep ) )
 {
+}
+
+bool Kir_emitter::checks_stack( const Function& function ) const
+{
+    const bool pointer = function.parameter_count == 1 && types_.table().is_pointer( function.locals[Local_id { 1 }].type );
+    return deep_[static_cast<std::size_t>( &function - functions_.data() )] && pointer &&
+           is_void( function.locals[k_return_slot].type );
 }
 
 Emitted Kir_emitter::run()
@@ -731,6 +745,13 @@ void Kir_emitter::emit_runtime_prototypes()
         any = true;
     }
 
+    if( std::ranges::any_of( functions_, [&]( const Function& function ) { return checks_stack( function ); } ) )
+    {
+        write_line( "extern _Thread_local uintptr_t kl_rt_stack_low;" );
+        write_line( "void kl_rt_deeper( void ( * )( void* ), void* );" );
+        any = true;
+    }
+
     if( any )
     {
         write_line( "" );
@@ -1165,6 +1186,20 @@ void Kir_emitter::emit_function( const Function& function )
         }
 
         write_line( fmt::format( "( void ) {};", local_name( i ) ) );
+    }
+
+    // Under kl_rt_stack_low, the drop runs again on a fresh segment, from its start.
+    if( checks_stack( function ) )
+    {
+        write_line( "if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )" );
+        write_line( "{" );
+        write_line( fmt::format(
+            "    kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) {}, {} );",
+            spelling_.function( function ),
+            local_name( 1 )
+        ) );
+        write_line( "    return;" );
+        write_line( "}" );
     }
 
     for( const Block_id i : function.blocks.ids() )
@@ -1979,9 +2014,11 @@ Emitted emit_c_from_kir(
     bool                         object
 )
 {
-    std::vector<Function> own;
-    std::vector<bool>     mine( functions.size() );
-    std::vector<bool>     called( functions.size() );
+    std::vector<Function>   own;
+    std::vector<bool>       own_deep;
+    const std::vector<bool> deep = deep_drops( functions );
+    std::vector<bool>       mine( functions.size() );
+    std::vector<bool>       called( functions.size() );
 
     for( u32 f = 0; f < functions.size(); ++f )
     {
@@ -1990,6 +2027,7 @@ Emitted emit_c_from_kir(
         if( mine[f] )
         {
             own.push_back( functions[f] );
+            own_deep.push_back( deep[f] );
 
             for( const u32 callee : parts != nullptr ? parts->reaches( f ) : std::span<const u32> {} )
             {
@@ -2014,7 +2052,21 @@ Emitted emit_c_from_kir(
         }
     }
 
-    return Kir_emitter( own, std::move( callees ), program, types, literals, sm, interner, modules, parts, part, object ).run();
+    return Kir_emitter(
+               own,
+               std::move( callees ),
+               program,
+               types,
+               literals,
+               sm,
+               interner,
+               modules,
+               parts,
+               part,
+               object,
+               std::move( own_deep )
+    )
+        .run();
 }
 
 } // namespace keel

@@ -145,6 +145,29 @@ std::vector<std::vector<u32>> callees_first( const std::vector<Function>& functi
 
     return walk.groups;
 }
+
+std::vector<bool> deep_drops( const std::vector<Function>& functions )
+{
+    std::vector<bool> deep( functions.size() );
+    for( const std::vector<u32>& group : callees_first( functions ) )
+    {
+        for( const u32 f : group )
+        {
+            for( const Statement& statement : functions[f].statements )
+            {
+                const bool back =
+                    statement.kind == Statement_kind::Drop &&
+                    std::ranges::any_of( group, [&]( u32 c ) { return calls( functions[f], statement, functions[c] ); } );
+                if( back )
+                {
+                    deep[f] = true;
+                    break;
+                }
+            }
+        }
+    }
+    return deep;
+}
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
@@ -233,6 +256,22 @@ TEST_CASE( "callees_first_puts_a_destructor_before_its_dropper", "[ir][call_grap
                      "i32 user() { Box b = Box(); return b.v; }\n" );
     REQUIRE( p.clean() );
     REQUIRE( p.group_of_destructor() < p.group_of( "user" ) );
+}
+
+TEST_CASE( "deep_drops_marks_a_drop_that_reaches_itself", "[ir][call_graph]" )
+{
+    // `~box` drops a `List`, whose drop drops the `box`: both check. `user` drops a `List` but is not
+    // reached back.
+    const Graphed           chain( "enum List { Cons( i64 v, box<List> rest ), Nil };\n"
+                                   "void user() { List l = List::Cons( 1, box<List>( List::Nil ) ); }\n" );
+    const std::vector<bool> deep = deep_drops( chain.all );
+    REQUIRE( chain.clean() );
+    REQUIRE( std::ranges::count( deep, true ) == 2 );
+    REQUIRE( !deep[chain.groups[chain.group_of( "user" )][0]] );
+
+    const Graphed shallow( "class Box { public i32 v; public Box() { v = 0; } ~Box() { } };\n"
+                           "i32 user() { Box b = Box(); return b.v; }\n" );
+    REQUIRE( std::ranges::count( deep_drops( shallow.all ), true ) == 0 );
 }
 
 } // namespace keel

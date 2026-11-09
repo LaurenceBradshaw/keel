@@ -1,0 +1,400 @@
+// codegen/deep_drop.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Link;
+struct kl_7prelude_box__I4ListE;
+struct kl__List;
+
+struct kl__Link
+{
+    struct kl__Link* kl_next_;
+};
+_Static_assert( sizeof( struct kl__Link ) == 8 && _Alignof( struct kl__Link ) == 8 && offsetof( struct kl__Link, kl_next_ ) == 0, "layout" );
+
+struct kl_7prelude_box__I4ListE
+{
+    struct kl__List* kl_p_;
+};
+_Static_assert( sizeof( struct kl_7prelude_box__I4ListE ) == 8 && _Alignof( struct kl_7prelude_box__I4ListE ) == 8 && offsetof( struct kl_7prelude_box__I4ListE, kl_p_ ) == 0, "layout" );
+
+struct kl__List
+{
+    int32_t tag;
+    union
+    {
+        struct
+        {
+            int64_t kl_4Cons_v;
+            struct kl_7prelude_box__I4ListE kl_4Cons_rest;
+        };
+    };
+};
+_Static_assert( sizeof( struct kl__List ) == 24 && _Alignof( struct kl__List ) == 8 && offsetof( struct kl__List, kl_4Cons_v ) == 8 && offsetof( struct kl__List, kl_4Cons_rest ) == 16, "layout" );
+
+int64_t kl__live__G;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+extern _Thread_local uintptr_t kl_rt_stack_low;
+void kl_rt_deeper( void ( * )( void* ), void* );
+
+void kl__4Link__R4Link_P4Link__ctor( struct kl__Link*, struct kl__Link* );
+void kl__4Link__dtor( struct kl__Link* );
+int32_t kl__4main__( void );
+void kl_7prelude_3box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7prelude_box__I4ListE*, struct kl__List );
+void kl_7prelude_3box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* );
+void kl__4List__dtor( struct kl__List* );
+
+#line 16 "codegen/deep_drop.kl"
+void kl__4Link__R4Link_P4Link__ctor( struct kl__Link* kl_this_1, struct kl__Link* kl_next_2 )
+{
+    bool kl_t3;
+#line 18 "codegen/deep_drop.kl"
+    ( *kl_this_1 ).kl_next_ = kl_next_2;
+    kl_t3 = __builtin_add_overflow( kl__live__G, 1, &( int64_t ) { 0 } );
+#line 19 "codegen/deep_drop.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 19 "codegen/deep_drop.kl"
+    kl_rt_panic( "codegen/deep_drop.kl", 19, "arithmetic overflow: live += 1;" );
+    bb2:
+#line 19 "codegen/deep_drop.kl"
+    kl__live__G = kl__live__G + 1;
+    return;
+#line 20 "codegen/deep_drop.kl"
+}
+
+#line 22 "codegen/deep_drop.kl"
+void kl__4Link__dtor( struct kl__Link* kl_this_1 )
+{
+    bool kl_t2;
+    bool kl_t3;
+    struct kl__Link* kl_t4;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl__4Link__dtor, kl_this_1 );
+        return;
+    }
+#line 24 "codegen/deep_drop.kl"
+    kl_t2 = __builtin_sub_overflow( kl__live__G, 1, &( int64_t ) { 0 } );
+#line 24 "codegen/deep_drop.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 24 "codegen/deep_drop.kl"
+    kl_rt_panic( "codegen/deep_drop.kl", 24, "arithmetic overflow: live -= 1;" );
+    bb2:
+#line 24 "codegen/deep_drop.kl"
+    kl__live__G = kl__live__G - 1;
+    kl_t3 = ( *kl_this_1 ).kl_next_ != NULL;
+#line 25 "codegen/deep_drop.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+#line 29 "codegen/deep_drop.kl"
+    kl_t4 = ( *kl_this_1 ).kl_next_;
+#line 29 "codegen/deep_drop.kl"
+    kl__4Link__dtor( &( *kl_t4 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_next_ );
+#line 25 "codegen/deep_drop.kl"
+    goto bb4;
+    bb4:
+#line 33 "codegen/deep_drop.kl"
+    return;
+#line 33 "codegen/deep_drop.kl"
+}
+
+#line 36 "codegen/deep_drop.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__List kl_l_1;
+    struct kl__List kl_t2;
+    int64_t kl_i_3;
+    bool kl_t4;
+    struct kl__List kl_t5;
+    struct kl_7prelude_box__I4ListE kl_t6;
+    struct kl_7prelude_box__I4ListE* kl_t7;
+    bool kl_t9;
+    int64_t kl_t10;
+    struct kl__Link* kl_head_11;
+    int64_t kl_i_12;
+    bool kl_t13;
+    struct kl__Link* kl_link_14;
+    struct kl__Link* kl_t15;
+    struct kl__Link* kl_t16;
+    struct kl__Link kl_t17;
+    struct kl__Link* kl_t18;
+    struct kl__Link* kl_t20;
+    struct kl__Link* kl_t21;
+    bool kl_t22;
+    int64_t kl_t23;
+    struct kl__Link kl_first_24;
+    struct kl__Link* kl_t25;
+    bool kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+    bool kl_t32;
+#line 39 "codegen/deep_drop.kl"
+    kl_t28 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t29 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t30 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t31 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t32 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t28 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t2.tag = 1;
+#line 39 "codegen/deep_drop.kl"
+    kl_t29 = true;
+#line 39 "codegen/deep_drop.kl"
+    kl_l_1 = kl_t2;
+#line 39 "codegen/deep_drop.kl"
+    kl_t29 = false;
+#line 39 "codegen/deep_drop.kl"
+    kl_t28 = true;
+#line 39 "codegen/deep_drop.kl"
+    if ( kl_t29 ) kl__4List__dtor( &kl_t2 );
+#line 39 "codegen/deep_drop.kl"
+    kl_t29 = false;
+    kl_i_3 = 0;
+#line 40 "codegen/deep_drop.kl"
+    goto bb1;
+    bb1:
+#line 40 "codegen/deep_drop.kl"
+    kl_t4 = kl_i_3 < 1000000;
+#line 40 "codegen/deep_drop.kl"
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t31 = false;
+#line 42 "codegen/deep_drop.kl"
+    kl_t7 = &kl_t6;
+#line 42 "codegen/deep_drop.kl"
+    kl_t31 = true;
+#line 42 "codegen/deep_drop.kl"
+    kl_7prelude_3box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( kl_t7, kl_l_1 );
+#line 42 "codegen/deep_drop.kl"
+    kl_t28 = false;
+#line 42 "codegen/deep_drop.kl"
+    kl_t5.tag = 0;
+#line 42 "codegen/deep_drop.kl"
+    kl_t30 = true;
+#line 42 "codegen/deep_drop.kl"
+    kl_t5.kl_4Cons_v = kl_i_3;
+#line 42 "codegen/deep_drop.kl"
+    kl_t30 = true;
+#line 42 "codegen/deep_drop.kl"
+    kl_t5.kl_4Cons_rest = kl_t6;
+#line 42 "codegen/deep_drop.kl"
+    kl_t31 = false;
+#line 42 "codegen/deep_drop.kl"
+    kl_t30 = true;
+#line 42 "codegen/deep_drop.kl"
+    if ( kl_t28 ) kl__4List__dtor( &kl_l_1 );
+#line 42 "codegen/deep_drop.kl"
+    kl_l_1 = kl_t5;
+#line 42 "codegen/deep_drop.kl"
+    kl_t30 = false;
+#line 42 "codegen/deep_drop.kl"
+    kl_t28 = true;
+#line 42 "codegen/deep_drop.kl"
+    if ( kl_t30 ) kl__4List__dtor( &kl_t5 );
+#line 42 "codegen/deep_drop.kl"
+    if ( kl_t31 ) kl_7prelude_3box__I4ListE__dtor( &kl_t6 );
+#line 42 "codegen/deep_drop.kl"
+    kl_t31 = false;
+#line 42 "codegen/deep_drop.kl"
+    kl_t30 = false;
+#line 40 "codegen/deep_drop.kl"
+    goto bb4;
+    bb3:
+#line 44 "codegen/deep_drop.kl"
+    if ( kl_t28 ) kl__4List__dtor( &kl_l_1 );
+#line 44 "codegen/deep_drop.kl"
+    kl_t28 = false;
+#line 47 "codegen/deep_drop.kl"
+    kl_head_11 = NULL;
+    kl_i_12 = 0;
+#line 48 "codegen/deep_drop.kl"
+    goto bb7;
+    bb4:
+#line 40 "codegen/deep_drop.kl"
+    kl_t9 = __builtin_add_overflow( kl_i_3, 1, &( int64_t ) { 0 } );
+#line 40 "codegen/deep_drop.kl"
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
+#line 40 "codegen/deep_drop.kl"
+    kl_rt_panic( "codegen/deep_drop.kl", 40, "arithmetic overflow: i + 1" );
+    bb6:
+#line 40 "codegen/deep_drop.kl"
+    kl_t10 = kl_i_3 + 1;
+#line 40 "codegen/deep_drop.kl"
+    kl_i_3 = kl_t10;
+#line 40 "codegen/deep_drop.kl"
+    goto bb1;
+    bb7:
+#line 48 "codegen/deep_drop.kl"
+    kl_t13 = kl_i_12 < 1000000;
+#line 48 "codegen/deep_drop.kl"
+    if ( kl_t13 ) goto bb8; else goto bb9;
+    bb8:
+#line 52 "codegen/deep_drop.kl"
+    kl_t15 = ( struct kl__Link* ) kl_rt_alloc_many( ( size_t ) 1, 8, "codegen/deep_drop.kl", 52, "out of memory: alloc<Link>( 1 )" );
+#line 52 "codegen/deep_drop.kl"
+    kl_link_14 = kl_t15;
+    kl_t16 = kl_link_14 + 0;
+#line 53 "codegen/deep_drop.kl"
+    kl_t32 = false;
+#line 53 "codegen/deep_drop.kl"
+    kl_t18 = &kl_t17;
+#line 53 "codegen/deep_drop.kl"
+    kl_t32 = true;
+#line 53 "codegen/deep_drop.kl"
+    kl__4Link__R4Link_P4Link__ctor( kl_t18, kl_head_11 );
+#line 53 "codegen/deep_drop.kl"
+    ( *kl_t16 ) = kl_t17;
+#line 53 "codegen/deep_drop.kl"
+    kl_t32 = false;
+#line 53 "codegen/deep_drop.kl"
+    if ( kl_t32 ) kl__4Link__dtor( &kl_t17 );
+#line 53 "codegen/deep_drop.kl"
+    kl_t32 = false;
+    kl_t20 = kl_link_14 + 0;
+#line 54 "codegen/deep_drop.kl"
+    kl_t21 = &( *kl_t20 );
+#line 54 "codegen/deep_drop.kl"
+    kl_head_11 = kl_t21;
+#line 48 "codegen/deep_drop.kl"
+    goto bb10;
+    bb9:
+#line 57 "codegen/deep_drop.kl"
+    kl_t25 = &kl_first_24;
+#line 57 "codegen/deep_drop.kl"
+    kl__4Link__R4Link_P4Link__ctor( kl_t25, kl_head_11 );
+    kl__4Link__dtor( &kl_first_24 );
+#line 60 "codegen/deep_drop.kl"
+    kl_t27 = kl__live__G != 0;
+#line 60 "codegen/deep_drop.kl"
+    if ( kl_t27 ) goto bb13; else goto bb14;
+    bb10:
+#line 48 "codegen/deep_drop.kl"
+    kl_t22 = __builtin_add_overflow( kl_i_12, 1, &( int64_t ) { 0 } );
+#line 48 "codegen/deep_drop.kl"
+    if ( kl_t22 ) goto bb11; else goto bb12;
+    bb11:
+#line 48 "codegen/deep_drop.kl"
+    kl_rt_panic( "codegen/deep_drop.kl", 48, "arithmetic overflow: i + 1" );
+    bb12:
+#line 48 "codegen/deep_drop.kl"
+    kl_t23 = kl_i_12 + 1;
+#line 48 "codegen/deep_drop.kl"
+    kl_i_12 = kl_t23;
+#line 48 "codegen/deep_drop.kl"
+    goto bb7;
+    bb13:
+#line 62 "codegen/deep_drop.kl"
+    kl_t0 = 1;
+#line 62 "codegen/deep_drop.kl"
+    return kl_t0;
+    bb14:
+#line 65 "codegen/deep_drop.kl"
+    kl_t0 = 0;
+#line 65 "codegen/deep_drop.kl"
+    return kl_t0;
+}
+
+#line 382 "<prelude>"
+void kl_7prelude_3box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7prelude_box__I4ListE* kl_this_1, struct kl__List kl_value_2 )
+{
+    struct kl__List* kl_slot_3;
+    struct kl__List* kl_t4;
+    struct kl__List* kl_t5;
+    struct kl__List* kl_t6;
+    struct kl__List* kl_t7;
+    bool kl_t8;
+#line 387 "<prelude>"
+    kl_t8 = true;
+#line 387 "<prelude>"
+    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, 24, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+#line 387 "<prelude>"
+    kl_slot_3 = kl_t4;
+    kl_t5 = kl_slot_3 + 0;
+#line 388 "<prelude>"
+    ( *kl_t5 ) = kl_value_2;
+#line 388 "<prelude>"
+    kl_t8 = false;
+    kl_t6 = kl_slot_3 + 0;
+#line 389 "<prelude>"
+    kl_t7 = &( *kl_t6 );
+#line 389 "<prelude>"
+    ( *kl_this_1 ).kl_p_ = kl_t7;
+#line 391 "<prelude>"
+    if ( kl_t8 ) kl__4List__dtor( &kl_value_2 );
+#line 391 "<prelude>"
+    kl_t8 = false;
+#line 391 "<prelude>"
+    return;
+#line 391 "<prelude>"
+}
+
+#line 393 "<prelude>"
+void kl_7prelude_3box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* kl_this_1 )
+{
+    struct kl__List* kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I4ListE__dtor, kl_this_1 );
+        return;
+    }
+#line 397 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p_;
+#line 397 "<prelude>"
+    kl__4List__dtor( &( *kl_t2 ) );
+    kl_rt_free( ( *kl_this_1 ).kl_p_ );
+#line 400 "<prelude>"
+    return;
+#line 400 "<prelude>"
+}
+
+#line 4 "codegen/deep_drop.kl"
+void kl__4List__dtor( struct kl__List* kl_t1 )
+{
+    bool kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl__4List__dtor, kl_t1 );
+        return;
+    }
+#line 4 "codegen/deep_drop.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+#line 4 "codegen/deep_drop.kl"
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+#line 4 "codegen/deep_drop.kl"
+    return;
+    bb2:
+#line 4 "codegen/deep_drop.kl"
+    kl_7prelude_3box__I4ListE__dtor( &( *kl_t1 ).kl_4Cons_rest );
+#line 4 "codegen/deep_drop.kl"
+    goto bb1;
+#line 8 "codegen/deep_drop.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 36 "codegen/deep_drop.kl"
+    kl_t0 = kl__4main__(  );
+#line 36 "codegen/deep_drop.kl"
+    return kl_t0;
+#line 36 "codegen/deep_drop.kl"
+}
+

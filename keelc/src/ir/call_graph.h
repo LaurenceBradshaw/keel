@@ -23,4 +23,7 @@ inline bool calls( const Function& caller, const Statement& statement, const Fun
 // a group of one. `also` adds edges the statements do not show.
 std::vector<std::vector<u32>>
 callees_first( const std::vector<Function>& functions, const std::vector<std::vector<u32>>& also = {} );
+
+// D76: which functions drop something whose drop can reach them again, so they check the stack.
+std::vector<bool> deep_drops( const std::vector<Function>& functions );
 } // namespace keel

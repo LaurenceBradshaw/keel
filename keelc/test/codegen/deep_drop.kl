@@ -1,0 +1,66 @@
+// A drop that reaches itself moves to more stack when it runs low: a million-link `box` chain, and
+// a class whose destructor ends the next node itself, both dropped with no loop of the user's. Exits
+// with the failing check.
+enum List
+{
+    Cons( i64 v, box<List> rest ),
+    Nil,
+};
+
+i64 live;
+
+class Link
+{
+    Link* next_;
+
+    public Link( Link* next )
+    {
+        next_ = next;
+        live += 1;
+    }
+
+    ~Link()
+    {
+        live -= 1;
+        if( next_ != nullptr )
+        {
+            unsafe
+            {
+                destroy( next_ );
+                free( next_ );
+            }
+        }
+    }
+};
+
+i32 main()
+{
+    {
+        List l = List::Nil;
+        for( i64 i = 0; i < 1000000; i = i + 1 )
+        {
+            l = List::Cons( i, box<List>( move l ) );
+        }
+    }
+
+    {
+        Link* head = nullptr;
+        for( i64 i = 0; i < 1000000; i = i + 1 )
+        {
+            unsafe
+            {
+                Link[*] link = alloc<Link>( 1 );
+                link[0]      = Link( head );
+                head         = &link[0];
+            }
+        }
+        Link first = Link( head );
+    }
+
+    if( live != 0 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

@@ -367,6 +367,8 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+extern _Thread_local uintptr_t kl_rt_stack_low;
+void kl_rt_deeper( void ( * )( void* ), void* );
 
 int64_t kl__3sum__5chainI3i64E( struct kl__chain__I3i64E* );
 int32_t kl__4main__( void );
@@ -774,6 +776,11 @@ int32_t kl__5count__I3f64E__5chainI3f64E( struct kl__chain__I3f64E* kl_c_1 )
 void kl_7prelude_3box__I5chainI3i64EE__dtor( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1 )
 {
     struct kl__chain__I3i64E* kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3i64EE__dtor, kl_this_1 );
+        return;
+    }
 #line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 397 "<prelude>"
@@ -788,6 +795,11 @@ void kl_7prelude_3box__I5chainI3i64EE__dtor( struct kl_7prelude_box__I5chainI3i6
 void kl_7prelude_3box__I5chainI3f64EE__dtor( struct kl_7prelude_box__I5chainI3f64EE* kl_this_1 )
 {
     struct kl__chain__I3f64E* kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3f64EE__dtor, kl_this_1 );
+        return;
+    }
 #line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 397 "<prelude>"
@@ -846,6 +858,11 @@ struct kl__chain__I3f64E* kl_7prelude_3get__I5chainI3f64EE__SQ7prelude3boxI5chai
 void kl__5chain__I3i64E__dtor( struct kl__chain__I3i64E* kl_t1 )
 {
     bool kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl__5chain__I3i64E__dtor, kl_t1 );
+        return;
+    }
 #line 5 "codegen/generic_recursive_enum.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
 #line 5 "codegen/generic_recursive_enum.kl"
@@ -865,6 +882,11 @@ void kl__5chain__I3i64E__dtor( struct kl__chain__I3i64E* kl_t1 )
 void kl__5chain__I3f64E__dtor( struct kl__chain__I3f64E* kl_t1 )
 {
     bool kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl__5chain__I3f64E__dtor, kl_t1 );
+        return;
+    }
 #line 5 "codegen/generic_recursive_enum.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
 #line 5 "codegen/generic_recursive_enum.kl"

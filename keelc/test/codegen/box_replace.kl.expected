@@ -44,6 +44,8 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+extern _Thread_local uintptr_t kl_rt_stack_low;
+void kl_rt_deeper( void ( * )( void* ), void* );
 
 void kl__7Counted__R7Counted_P3i64__ctor( struct kl__Counted*, int64_t* );
 void kl__7Counted__dtor( struct kl__Counted* );
@@ -629,6 +631,11 @@ struct kl__Counted kl_7prelude_7replace__I7CountedE__SQ7prelude3boxI7CountedE_M7
 void kl_7prelude_3box__I4ListE__dtor( struct kl_7prelude_box__I4ListE* kl_this_1 )
 {
     struct kl__List* kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I4ListE__dtor, kl_this_1 );
+        return;
+    }
 #line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 397 "<prelude>"
@@ -657,6 +664,11 @@ void kl_7prelude_3box__I7CountedE__dtor( struct kl_7prelude_box__I7CountedE* kl_
 void kl__4List__dtor( struct kl__List* kl_t1 )
 {
     bool kl_t2;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl__4List__dtor, kl_t1 );
+        return;
+    }
 #line 4 "codegen/box_replace.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
 #line 4 "codegen/box_replace.kl"

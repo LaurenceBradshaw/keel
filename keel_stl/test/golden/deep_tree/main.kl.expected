@@ -1,0 +1,594 @@
+// ../../src/iterable.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+// ../../src/optional.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+// ../../src/list.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+
+// deep_tree/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl_2kl4list_list__I4TreeE;
+struct kl__Tree;
+struct kl_7prelude_str;
+
+struct kl_2kl4list_list__I4TreeE
+{
+    struct kl__Tree* kl_data_;
+    uint64_t kl_count_;
+    uint64_t kl_cap_;
+};
+_Static_assert( sizeof( struct kl_2kl4list_list__I4TreeE ) == 24 && _Alignof( struct kl_2kl4list_list__I4TreeE ) == 8 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I4TreeE, kl_cap_ ) == 16, "layout" );
+
+struct kl__Tree
+{
+    struct kl_2kl4list_list__I4TreeE kl_children;
+};
+_Static_assert( sizeof( struct kl__Tree ) == 24 && _Alignof( struct kl__Tree ) == 8 && offsetof( struct kl__Tree, kl_children ) == 0, "layout" );
+
+struct kl_7prelude_str
+{
+    uint8_t* kl_data;
+    uint64_t kl_size;
+};
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+extern _Thread_local uintptr_t kl_rt_stack_low;
+void kl_rt_deeper( void ( * )( void* ), void* );
+
+void kl__4Tree__R4Tree__ctor( struct kl__Tree* );
+int32_t kl__4main__( void );
+void kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( struct kl_2kl4list_list__I4TreeE* );
+void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_list__I4TreeE*, struct kl__Tree );
+struct kl__Tree* kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
+void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* );
+void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
+uint64_t kl_2kl4list_4size__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* );
+void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t, uint64_t );
+void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* );
+void kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE*, uint64_t );
+void kl_2kl4list_list__I4TreeE__drop( void* );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+
+#line 9 "deep_tree/main.kl"
+void kl__4Tree__R4Tree__ctor( struct kl__Tree* kl_this_1 )
+{
+    struct kl_2kl4list_list__I4TreeE kl_t2;
+    struct kl_2kl4list_list__I4TreeE* kl_t3;
+    bool kl_t5;
+#line 9 "deep_tree/main.kl"
+    kl_t5 = false;
+#line 9 "deep_tree/main.kl"
+    kl_t5 = false;
+#line 9 "deep_tree/main.kl"
+    kl_t3 = &kl_t2;
+#line 9 "deep_tree/main.kl"
+    kl_t5 = true;
+#line 9 "deep_tree/main.kl"
+    kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( kl_t3 );
+#line 9 "deep_tree/main.kl"
+    ( *kl_this_1 ).kl_children = kl_t2;
+#line 9 "deep_tree/main.kl"
+    kl_t5 = false;
+#line 9 "deep_tree/main.kl"
+    if ( kl_t5 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_t2 );
+#line 9 "deep_tree/main.kl"
+    kl_t5 = false;
+#line 9 "deep_tree/main.kl"
+    return;
+#line 9 "deep_tree/main.kl"
+}
+
+#line 12 "deep_tree/main.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Tree kl_root_1;
+    struct kl__Tree* kl_t2;
+    struct kl__Tree* kl_at_4;
+    struct kl__Tree* kl_t5;
+    int64_t kl_i_6;
+    bool kl_t7;
+    struct kl_2kl4list_list__I4TreeE* kl_t8;
+    struct kl__Tree kl_t9;
+    struct kl__Tree* kl_t10;
+    struct kl_2kl4list_list__I4TreeE* kl_t13;
+    struct kl__Tree* kl_t14;
+    struct kl__Tree* kl_t15;
+    bool kl_t16;
+    int64_t kl_t17;
+    bool kl_t18;
+#line 14 "deep_tree/main.kl"
+    kl_t18 = false;
+#line 14 "deep_tree/main.kl"
+    kl_t2 = &kl_root_1;
+#line 14 "deep_tree/main.kl"
+    kl__4Tree__R4Tree__ctor( kl_t2 );
+    kl_t5 = &kl_root_1;
+#line 15 "deep_tree/main.kl"
+    kl_at_4 = kl_t5;
+    kl_i_6 = 0;
+#line 16 "deep_tree/main.kl"
+    goto bb1;
+    bb1:
+#line 16 "deep_tree/main.kl"
+    kl_t7 = kl_i_6 < 1000000;
+#line 16 "deep_tree/main.kl"
+    if ( kl_t7 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t8 = &( *kl_at_4 ).kl_children;
+#line 18 "deep_tree/main.kl"
+    kl_t18 = false;
+#line 18 "deep_tree/main.kl"
+    kl_t10 = &kl_t9;
+#line 18 "deep_tree/main.kl"
+    kl_t18 = true;
+#line 18 "deep_tree/main.kl"
+    kl__4Tree__R4Tree__ctor( kl_t10 );
+#line 18 "deep_tree/main.kl"
+    kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( kl_t8, kl_t9 );
+#line 18 "deep_tree/main.kl"
+    kl_t18 = false;
+#line 18 "deep_tree/main.kl"
+    if ( kl_t18 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_t9.kl_children );
+#line 18 "deep_tree/main.kl"
+    kl_t18 = false;
+    kl_t13 = &( *kl_at_4 ).kl_children;
+#line 19 "deep_tree/main.kl"
+    kl_t14 = kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( kl_t13, 0 );
+#line 19 "deep_tree/main.kl"
+    kl_t15 = &( *kl_t14 );
+#line 19 "deep_tree/main.kl"
+    kl_at_4 = kl_t15;
+#line 16 "deep_tree/main.kl"
+    goto bb4;
+    bb3:
+#line 21 "deep_tree/main.kl"
+    kl_t0 = 0;
+#line 21 "deep_tree/main.kl"
+    kl_2kl4list_4list__I4TreeE__dtor( &kl_root_1.kl_children );
+#line 21 "deep_tree/main.kl"
+    return kl_t0;
+    bb4:
+#line 16 "deep_tree/main.kl"
+    kl_t16 = __builtin_add_overflow( kl_i_6, 1, &( int64_t ) { 0 } );
+#line 16 "deep_tree/main.kl"
+    if ( kl_t16 ) goto bb5; else goto bb6;
+    bb5:
+#line 16 "deep_tree/main.kl"
+    kl_rt_panic( "deep_tree/main.kl", 16, "arithmetic overflow: i + 1" );
+    bb6:
+#line 16 "deep_tree/main.kl"
+    kl_t17 = kl_i_6 + 1;
+#line 16 "deep_tree/main.kl"
+    kl_i_6 = kl_t17;
+#line 16 "deep_tree/main.kl"
+    goto bb1;
+#line 22 "deep_tree/main.kl"
+}
+
+#line 16 "../../src/list.kl"
+void kl_2kl4list_4list__I4TreeE__RQ2kl4listI4TreeE__ctor( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+{
+    ( *kl_this_1 ).kl_data_ = NULL;
+    ( *kl_this_1 ).kl_count_ = 0;
+    ( *kl_this_1 ).kl_cap_ = 0;
+    return;
+#line 21 "../../src/list.kl"
+}
+
+#line 213 "../../src/list.kl"
+void kl_2kl4list_4push__I4TreeE__SQ2kl4listI4TreeE_M4Tree( struct kl_2kl4list_list__I4TreeE* kl_this_1, struct kl__Tree kl_value_2 )
+{
+    struct kl_2kl4list_list__I4TreeE* kl_t3;
+    struct kl__Tree* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 215 "../../src/list.kl"
+    kl_t7 = true;
+#line 215 "../../src/list.kl"
+    kl_t3 = &( *kl_this_1 );
+#line 215 "../../src/list.kl"
+    kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( kl_t3 );
+#line 219 "../../src/list.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_ + ( *kl_this_1 ).kl_count_;
+#line 219 "../../src/list.kl"
+    ( *kl_t5 ) = kl_value_2;
+#line 219 "../../src/list.kl"
+    kl_t7 = false;
+#line 221 "../../src/list.kl"
+    kl_t6 = __builtin_add_overflow( ( *kl_this_1 ).kl_count_, 1, &( uint64_t ) { 0 } );
+#line 221 "../../src/list.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 221 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 221, "arithmetic overflow: count_ += 1;" );
+    bb2:
+#line 221 "../../src/list.kl"
+    ( *kl_this_1 ).kl_count_ = ( *kl_this_1 ).kl_count_ + 1;
+    if ( kl_t7 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_value_2.kl_children );
+#line 222 "../../src/list.kl"
+    kl_t7 = false;
+#line 222 "../../src/list.kl"
+    return;
+#line 222 "../../src/list.kl"
+}
+
+#line 154 "../../src/list.kl"
+struct kl__Tree* kl_2kl4list_14operator_index__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_index_2 )
+{
+    struct kl__Tree* kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl__Tree* kl_t8;
+#line 156 "../../src/list.kl"
+    kl_t3 = kl_index_2 >= ( *kl_this_1 ).kl_count_;
+#line 156 "../../src/list.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = &kl_t4;
+#line 158 "../../src/list.kl"
+    kl_t6 = ( uint8_t* ) "index out of range";
+#line 158 "../../src/list.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+#line 158 "../../src/list.kl"
+    kl_rt_panic_message( "../../src/list.kl", 158, kl_t4.kl_data, kl_t4.kl_size );
+    bb2:
+#line 163 "../../src/list.kl"
+    kl_t8 = ( *kl_this_1 ).kl_data_ + kl_index_2;
+#line 163 "../../src/list.kl"
+    kl_t0 = &( *kl_t8 );
+#line 163 "../../src/list.kl"
+    return kl_t0;
+#line 165 "../../src/list.kl"
+}
+
+#line 38 "../../src/list.kl"
+void kl_2kl4list_4list__I4TreeE__dtor( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+{
+    bool kl_t2;
+    struct kl__Tree* kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__Tree* kl_t7;
+    if( ( uintptr_t ) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_2kl4list_4list__I4TreeE__dtor, kl_this_1 );
+        return;
+    }
+#line 40 "../../src/list.kl"
+    kl_t2 = ( *kl_this_1 ).kl_data_ != NULL;
+#line 40 "../../src/list.kl"
+    if ( kl_t2 ) goto bb1; else goto bb5;
+    bb1:
+#line 44 "../../src/list.kl"
+    kl_t3 = ( *kl_this_1 ).kl_data_;
+#line 44 "../../src/list.kl"
+    kl_t4 = ( *kl_this_1 ).kl_count_;
+#line 44 "../../src/list.kl"
+    kl_t5 = 0;
+#line 44 "../../src/list.kl"
+    goto bb2;
+    bb2:
+#line 44 "../../src/list.kl"
+    kl_t6 = kl_t5 < kl_t4;
+#line 44 "../../src/list.kl"
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+#line 44 "../../src/list.kl"
+    kl_t7 = kl_t3 + kl_t5;
+#line 44 "../../src/list.kl"
+    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t7 ).kl_children );
+#line 44 "../../src/list.kl"
+    kl_t5 = kl_t5 + 1;
+#line 44 "../../src/list.kl"
+    goto bb2;
+    bb4:
+#line 45 "../../src/list.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_ );
+#line 40 "../../src/list.kl"
+    goto bb5;
+    bb5:
+#line 48 "../../src/list.kl"
+    return;
+#line 48 "../../src/list.kl"
+}
+
+#line 355 "../../src/list.kl"
+void kl_2kl4list_8truncate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_n_2 )
+{
+    bool kl_t3;
+    struct kl__Tree* kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    struct kl__Tree* kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    struct kl__Tree* kl_t11;
+#line 357 "../../src/list.kl"
+    kl_t3 = kl_n_2 >= ( *kl_this_1 ).kl_count_;
+#line 357 "../../src/list.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    return;
+    bb2:
+#line 364 "../../src/list.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_ + kl_n_2;
+#line 364 "../../src/list.kl"
+    kl_t5 = __builtin_sub_overflow( ( *kl_this_1 ).kl_count_, kl_n_2, &( uint64_t ) { 0 } );
+#line 364 "../../src/list.kl"
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+#line 364 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 364, "arithmetic overflow: count_ - n" );
+    bb4:
+#line 364 "../../src/list.kl"
+    kl_t6 = ( *kl_this_1 ).kl_count_ - kl_n_2;
+#line 364 "../../src/list.kl"
+    kl_t7 = kl_t4;
+#line 364 "../../src/list.kl"
+    kl_t8 = kl_t6;
+#line 364 "../../src/list.kl"
+    kl_t9 = 0;
+#line 364 "../../src/list.kl"
+    goto bb5;
+    bb5:
+#line 364 "../../src/list.kl"
+    kl_t10 = kl_t9 < kl_t8;
+#line 364 "../../src/list.kl"
+    if ( kl_t10 ) goto bb6; else goto bb7;
+    bb6:
+#line 364 "../../src/list.kl"
+    kl_t11 = kl_t7 + kl_t9;
+#line 364 "../../src/list.kl"
+    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t11 ).kl_children );
+#line 364 "../../src/list.kl"
+    kl_t9 = kl_t9 + 1;
+#line 364 "../../src/list.kl"
+    goto bb5;
+    bb7:
+#line 367 "../../src/list.kl"
+    ( *kl_this_1 ).kl_count_ = kl_n_2;
+    return;
+#line 368 "../../src/list.kl"
+}
+
+#line 53 "../../src/list.kl"
+uint64_t kl_2kl4list_4size__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 55 "../../src/list.kl"
+    kl_t0 = ( *kl_this_1 ).kl_count_;
+#line 55 "../../src/list.kl"
+    return kl_t0;
+}
+
+#line 407 "../../src/list.kl"
+void kl_2kl4list_4swap__I4TreeE__SQ2kl4listI4TreeE_3u64_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+{
+    bool kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_str* kl_t8;
+    uint8_t* kl_t9;
+    bool kl_t11;
+    struct kl__Tree kl_temp_12;
+    struct kl__Tree* kl_t13;
+    struct kl__Tree* kl_t14;
+    struct kl__Tree* kl_t15;
+    struct kl__Tree* kl_t16;
+    bool kl_t17;
+#line 409 "../../src/list.kl"
+    kl_t17 = false;
+#line 409 "../../src/list.kl"
+    kl_t5 = kl_a_2 >= ( *kl_this_1 ).kl_count_;
+#line 409 "../../src/list.kl"
+    kl_t4 = kl_t5;
+#line 409 "../../src/list.kl"
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+#line 409 "../../src/list.kl"
+    kl_t6 = kl_b_3 >= ( *kl_this_1 ).kl_count_;
+#line 409 "../../src/list.kl"
+    kl_t4 = kl_t6;
+#line 409 "../../src/list.kl"
+    goto bb2;
+    bb2:
+#line 409 "../../src/list.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t8 = &kl_t7;
+#line 411 "../../src/list.kl"
+    kl_t9 = ( uint8_t* ) "index out of range";
+#line 411 "../../src/list.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
+#line 411 "../../src/list.kl"
+    kl_rt_panic_message( "../../src/list.kl", 411, kl_t7.kl_data, kl_t7.kl_size );
+    bb4:
+#line 414 "../../src/list.kl"
+    kl_t11 = kl_a_2 == kl_b_3;
+#line 414 "../../src/list.kl"
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+    return;
+    bb6:
+#line 421 "../../src/list.kl"
+    kl_t17 = false;
+#line 421 "../../src/list.kl"
+    kl_t13 = ( *kl_this_1 ).kl_data_ + kl_a_2;
+#line 421 "../../src/list.kl"
+    kl_temp_12 = ( *kl_t13 );
+#line 421 "../../src/list.kl"
+    kl_t17 = true;
+    kl_t14 = ( *kl_this_1 ).kl_data_ + kl_a_2;
+#line 422 "../../src/list.kl"
+    kl_t15 = ( *kl_this_1 ).kl_data_ + kl_b_3;
+#line 422 "../../src/list.kl"
+    ( *kl_t14 ) = ( *kl_t15 );
+    kl_t16 = ( *kl_this_1 ).kl_data_ + kl_b_3;
+#line 423 "../../src/list.kl"
+    ( *kl_t16 ) = kl_temp_12;
+#line 423 "../../src/list.kl"
+    kl_t17 = false;
+    if ( kl_t17 ) kl_2kl4list_4list__I4TreeE__dtor( &kl_temp_12.kl_children );
+#line 424 "../../src/list.kl"
+    kl_t17 = false;
+    return;
+#line 425 "../../src/list.kl"
+}
+
+#line 474 "../../src/list.kl"
+void kl_2kl4list_20reallocate_if_needed__I4TreeE__SQ2kl4listI4TreeE( struct kl_2kl4list_list__I4TreeE* kl_this_1 )
+{
+    bool kl_t2;
+    struct kl_2kl4list_list__I4TreeE* kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+#line 476 "../../src/list.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count_ == ( *kl_this_1 ).kl_cap_;
+#line 476 "../../src/list.kl"
+    if ( kl_t2 ) goto bb1; else goto bb7;
+    bb1:
+    kl_t3 = &( *kl_this_1 );
+#line 478 "../../src/list.kl"
+    kl_t5 = ( *kl_this_1 ).kl_cap_ > 0;
+#line 478 "../../src/list.kl"
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 478 "../../src/list.kl"
+    kl_t6 = __builtin_mul_overflow( ( *kl_this_1 ).kl_cap_, 2, &( uint64_t ) { 0 } );
+#line 478 "../../src/list.kl"
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb3:
+#line 478 "../../src/list.kl"
+    kl_t4 = 1;
+#line 478 "../../src/list.kl"
+    goto bb4;
+    bb4:
+#line 478 "../../src/list.kl"
+    kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( kl_t3, kl_t4 );
+#line 476 "../../src/list.kl"
+    goto bb7;
+    bb5:
+    kl_rt_panic( "../../src/list.kl", 478, "arithmetic overflow: cap_ * 2" );
+    bb6:
+#line 478 "../../src/list.kl"
+    kl_t7 = ( *kl_this_1 ).kl_cap_ * 2;
+#line 478 "../../src/list.kl"
+    kl_t4 = kl_t7;
+#line 478 "../../src/list.kl"
+    goto bb4;
+    bb7:
+    return;
+#line 480 "../../src/list.kl"
+}
+
+#line 444 "../../src/list.kl"
+void kl_2kl4list_10reallocate__I4TreeE__SQ2kl4listI4TreeE_3u64( struct kl_2kl4list_list__I4TreeE* kl_this_1, uint64_t kl_n_2 )
+{
+    struct kl__Tree* kl_new_data_3;
+    struct kl__Tree* kl_t4;
+    bool kl_t5;
+    uint64_t kl_i_6;
+    bool kl_t7;
+    struct kl__Tree* kl_t8;
+    struct kl__Tree* kl_t9;
+    bool kl_t10;
+#line 449 "../../src/list.kl"
+    kl_t4 = ( struct kl__Tree* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+#line 449 "../../src/list.kl"
+    kl_new_data_3 = kl_t4;
+#line 452 "../../src/list.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_ != NULL;
+#line 452 "../../src/list.kl"
+    if ( kl_t5 ) goto bb1; else goto bb8;
+    bb1:
+    kl_i_6 = 0;
+#line 454 "../../src/list.kl"
+    goto bb2;
+    bb2:
+#line 454 "../../src/list.kl"
+    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_;
+#line 454 "../../src/list.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 458 "../../src/list.kl"
+    kl_t8 = kl_new_data_3 + kl_i_6;
+#line 458 "../../src/list.kl"
+    kl_t9 = ( *kl_this_1 ).kl_data_ + kl_i_6;
+#line 458 "../../src/list.kl"
+    ( *kl_t8 ) = ( *kl_t9 );
+#line 454 "../../src/list.kl"
+    goto bb5;
+    bb4:
+#line 465 "../../src/list.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_ );
+#line 452 "../../src/list.kl"
+    goto bb8;
+    bb5:
+    kl_t10 = __builtin_add_overflow( kl_i_6, 1, &( uint64_t ) { 0 } );
+#line 454 "../../src/list.kl"
+    if ( kl_t10 ) goto bb6; else goto bb7;
+    bb6:
+#line 454 "../../src/list.kl"
+    kl_rt_panic( "../../src/list.kl", 454, "arithmetic overflow: i++" );
+    bb7:
+#line 454 "../../src/list.kl"
+    kl_i_6 = kl_i_6 + 1;
+#line 454 "../../src/list.kl"
+    goto bb2;
+    bb8:
+#line 469 "../../src/list.kl"
+    ( *kl_this_1 ).kl_data_ = kl_new_data_3;
+    ( *kl_this_1 ).kl_cap_ = kl_n_2;
+    return;
+#line 471 "../../src/list.kl"
+}
+
+void kl_2kl4list_list__I4TreeE__drop( void* kl_t1 )
+{
+    struct kl_2kl4list_list__I4TreeE* kl_t2;
+#line 11 "../../src/list.kl"
+    kl_t2 = ( struct kl_2kl4list_list__I4TreeE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I4TreeE__dtor( &( *kl_t2 ) );
+#line 11 "../../src/list.kl"
+    return;
+#line 11 "../../src/list.kl"
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 12 "deep_tree/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 12 "deep_tree/main.kl"
+    return kl_t0;
+#line 12 "deep_tree/main.kl"
+}
+

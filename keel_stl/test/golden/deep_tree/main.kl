@@ -1,0 +1,22 @@
+// A tree a million levels deep drops without overflowing the stack: `kl::list<Tree>`'s drop reaches
+// itself through each child, so it moves to more stack when it runs low.
+import kl::list;
+
+class Tree
+{
+    public kl::list<Tree> children;
+
+    public Tree() { children = kl::list<Tree>(); }
+};
+
+i32 main()
+{
+    Tree  root = Tree();
+    Tree* at   = &root;
+    for( i64 i = 0; i < 1000000; i = i + 1 )
+    {
+        at.children.push( Tree() );
+        at = &at.children[0];
+    }
+    return 0;
+}

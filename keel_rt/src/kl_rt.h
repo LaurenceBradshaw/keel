@@ -54,4 +54,7 @@ int32_t        kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** 
 int32_t        kl_rt_program_path( uint8_t* buffer, uint64_t size, uint64_t* length );
 int32_t        kl_rt_current_directory( uint8_t* buffer, uint64_t size, uint64_t* length );
 
+extern _Thread_local uintptr_t kl_rt_stack_low; // D76: a deep drop under it calls kl_rt_deeper
+void                           kl_rt_deeper( void ( *drop )( void* ), void* value );
+
 #endif // KL_RT_H
