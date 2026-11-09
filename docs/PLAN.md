@@ -930,8 +930,9 @@ implementer seen as an interface gets one `static const` vtable of thunks, writt
 program's half of the C. **Owning one is `box<T>`**, the prelude's: one `T` on the heap, a `T*`
 read by `get()`. It is the one type taking an interface as its type argument, so `box<Shape>` holds a
 `Shape*`, and a `box<Circle>` converts to it wherever one is wanted, as `Circle*` does to `Shape*`;
-`move` is still written. The conversion is a `Cast` in KIR and a fresh fat pointer in C, the
-allocation unmoved. `box<Shape>( c )` is refused, since it names a constructor taking a `Shape`.
+`move` is still written; a bare `box<Shape>` parameter borrows a view of the same allocation,
+which the caller still owns and drops. The conversion is a `Cast` in KIR and a fresh fat pointer in
+C, the allocation unmoved. `box<Shape>( c )` is refused, since it names a constructor taking a `Shape`.
 Dropping one goes through the vtable's first slot, `drop`, which calls a drop function lowering
 synthesises for each owning implementer: its `~` and then its fields, which no function of its own
 does. `destroy( p )` ends the one value behind a `T*`, and `destroy( p, n )` a run of `T[*]` slots;
@@ -1449,10 +1450,6 @@ major), no longer blocked now that D81 has settled lambdas.
   bare parameter, `peek( c ? a : b )` on a `kl::string`, is still refused as a transfer: overload
   shaping infers the argument before any parameter is chosen, so `infer_conditional` cannot know it
   is borrowed. A walk's container, `for( x : c ? a : b )`, is refused as today.
-- **A `box<Square>` passed to a bare `box<shape>` parameter is borrowed unconverted**: the call
-  takes the `box<Square>`'s address as a `box<shape>*`, so `s.get().area()` in the callee reads
-  past it and crashes. A written temporary, a named local and a default all do it. The borrow needs
-  a `box<shape>` view of the same object, or the call must be refused.
 - **A global's initialiser can read a later global through a call** (D80): the name is refused,
   but `i32 a = f();` with `f` reading a later `b` reads `b`'s zero, as C++ does. The write sets
   could carry what each function reads, and refuse the call.

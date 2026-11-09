@@ -4994,9 +4994,16 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
 
     // A constant has no address; reachable only through a generic, as `f<i32>( 1 )` against a bare
     // `T a`. Materialised into a temporary that lives to the end of the statement.
-    const Place place = value.kind == Operand_kind::Constant
-                            ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
-                            : value.place;
+    Place place = value.kind == Operand_kind::Constant ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
+                                                       : value.place;
+
+    // A `box<Square>` read as a `box<shape>` is borrowed through a view: the same allocation, never
+    // dropped, as the caller's box still owns it.
+    const Type_id wanted = types_.table().get( address ).element;
+    if( value.type != wanted && types_.table().is_box( wanted ) && types_.table().is_box( value.type ) )
+    {
+        place = builder_.place( builder_.into_temp( cast_to( copy( place, value.type ), wanted ), wanted, span ) );
+    }
 
     return temporary( borrow_of( place, value.type, address, Address_purpose::Read, span ), address, span );
 }

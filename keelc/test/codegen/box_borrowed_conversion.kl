@@ -1,0 +1,49 @@
+// A `box<Square>` passed to a bare `box<shape>` parameter is borrowed through a converted view of
+// the same allocation: named, a temporary, a default, a method argument and a call through an fn
+// value. The caller still owns and drops it. Exits with the failing check.
+import kl::string;
+
+interface shape
+{
+    f64 area() const;
+};
+
+struct Square implements shape
+{
+    f64 side;
+    f64 area() const { return side * side; }
+};
+
+class Framed implements shape
+{
+    kl::string name;
+    public Framed( str n ) { name = kl::string( n ); }
+    public f64 area() const { return cast<f64>( name.size() ); }
+};
+
+f64 peek( box<shape> s ) { return s.get().area(); }
+f64 peek_or( box<shape> s = box<Square>( Square{ 5.0 } ) ) { return s.get().area(); }
+f64 take( move box<shape> s ) { return s.get().area(); }
+
+struct Holder
+{
+    i32 n;
+    f64 look( box<shape> s ) const { return s.get().area(); }
+};
+
+i32 main()
+{
+    box<Square> b = box<Square>( Square{ 3.0 } );
+    box<Framed> fr = box<Framed>( Framed( "abcd" ) );
+    if( peek( b ) != 9.0 ) { return 1; }
+    if( peek( fr ) != 4.0 ) { return 2; }
+    if( peek( box<Framed>( Framed( "xy" ) ) ) != 2.0 ) { return 3; }
+    if( peek_or() != 25.0 ) { return 4; }
+    Holder h = Holder{ 0 };
+    if( h.look( fr ) != 4.0 ) { return 5; }
+    fn( box<shape> ) -> f64 g = &peek;
+    if( g( b ) != 9.0 ) { return 6; }
+    if( take( move fr ) != 4.0 ) { return 7; }
+    if( peek( b ) != 9.0 ) { return 8; }
+    return 0;
+}
