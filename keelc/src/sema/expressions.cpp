@@ -2479,7 +2479,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
         return types_.poison( id );
     }
 
-    const Bindings&                bindings = aggregates_.bindings_of( object_type );
+    const Bindings                 bindings = operator_bindings( id, object_type, method );
     const std::span<const Node_id> params   = ast_.params( method );
     const Type_id                  returned = table_.substitute( types_.type_of( method ), bindings );
 
@@ -2492,7 +2492,12 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     }
 
     callees_.record( id, method );
-    overloads_.record_method_instantiation( home_function(), id, method, object_type );
+
+    // A bound's requirement is not instantiated; lowering finds the implementer's at each instance.
+    if( !table_.is_parameter( object_type ) )
+    {
+        overloads_.record_method_instantiation( home_function(), id, method, object_type );
+    }
 
     return types_.record( id, returned );
 }
@@ -3063,7 +3068,8 @@ Type_id Expressions::infer_index( Node_id id )
         return infer_array_index( id, base );
     }
 
-    if( table_.is_struct( base ) )
+    // A parameter's `[]` is its bound's, and find_operator reports a bound declaring none.
+    if( table_.is_struct( base ) || table_.is_parameter( base ) )
     {
         if( is_range )
         {
@@ -4391,8 +4397,9 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
     }
 
     const Node_id written_return = ast_.return_type( id );
-    const Type_id return_type =
-        written_return.is_valid() ? annotations_.resolve( written_return ) : table_.builtin( Type_kind::Void );
+    const Type_id return_type    = written_return.is_valid() ? annotations_.resolve( written_return )
+                                   : fn_expected             ? table_.get( expected ).element
+                                                             : table_.builtin( Type_kind::Void );
 
     lambda_returns_[id.v] = return_type;
 
@@ -4407,13 +4414,8 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
     {
         if( signature != expected )
         {
-            const Type_id wanted = table_.get( expected ).element;
             reporter_.error_at(
-                ast_.span( id ),
-                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( signature ) ),
-                !written_return.is_valid() && !table_.is_void( wanted )
-                    ? fmt::format( "say what it returns: `-> {}` after its parameters", table_.name( wanted ) )
-                    : std::string {}
+                ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( signature ) )
             );
             lambda_returns_[id.v] = table_.builtin( Type_kind::Error ); // its body's returns are not reported again
             return types_.poison( id );
@@ -11683,6 +11685,18 @@ TEST_CASE( "expressions_check_fn_bounds", "[sema][lambda]" )
         REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 1 ) ) == "fn[…] at 11:15" );
     }
 
+    SECTION( "a lambda left without `-> R` returns what its bound or `fn` type does" )
+    {
+        const Typed p( fmt::format(
+            "{}i32 main() {{ fn( i32 ) -> i32 g = fn[]( a ) {{ return a + 1; }};\n"
+            "return apply( fn[]( a ) {{ return a * 2; }}, 3 ) + g( 1 ); }}",
+            generics
+        ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
     SECTION( "`&f` passed to `F` gets a type of its own" )
     {
         const Typed p( fmt::format(
@@ -11709,7 +11723,7 @@ TEST_CASE( "expressions_check_fn_bounds", "[sema][lambda]" )
             "i32 main() { first( 1, fn[]( x ) {} ); return 0; }",
             "nothing here says what `T` is in `first`"
         );
-        refuses( "i32 main() { return apply( fn[]( a ) { return a; }, 1 ); }", "say what it returns: `-> i32`" );
+        refuses( "i32 main() { return apply( fn[]( a ) -> bool { return true; }, 1 ); }", "but got `fn( i32 ) -> bool`" );
         refuses( "i32 main() { return apply( fn[]( a, b ) -> i32 { return a; }, 1 ); }", "this lambda takes 2 parameters" );
         refuses( "bool odd( i32 x ) { return true; }\ni32 main() { return apply( &odd, 1 ); }", "but got `fn( i32 ) -> bool`" );
         refuses( "i32 main() { return apply( 5, 1 ); }", "expected `fn( i32 ) -> i32`, but got an integer literal" );

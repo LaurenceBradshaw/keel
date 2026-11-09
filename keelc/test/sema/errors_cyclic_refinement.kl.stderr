@@ -10,10 +10,10 @@ error: `C` cannot require `B`, which already requires `C`
 25 | interface C implements B
    |                        ^
 
-error: `Only` implements `Loop` but not `Again`, which `Loop` requires
+error: `Only` implements `Again` but has no method `turn`
   --> sema/errors_cyclic_refinement.kl:31:24
    |
 31 | struct Only implements Loop
-   |                        ^^^^ add `Again` to `Only`'s `implements` list
+   |                        ^^^^ add `i32 turn() const` to `Only`
 
 3 errors generated

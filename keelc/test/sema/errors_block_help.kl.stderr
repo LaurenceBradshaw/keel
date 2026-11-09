@@ -4,11 +4,11 @@ error: `Box3<T>` implements `Shape` but not `Named`, which `Shape` requires
 38 | implements<T> Shape for Box3<T> where T : copyable & Named
    |               ^^^^^ the block at sema/errors_block_help.kl:32:25 makes `Box3<T>` implement `Named` only where `T : Other`; add `Other` to this block's `where` clause for `T`
 
-error: `Box3<T>` implements `Solid` but not `Other`, which `Solid` requires
+error: `Box3<T>` implements `Other` but has no method `o`
   --> sema/errors_block_help.kl:44:15
    |
 44 | implements<T> Solid for Box3<T> where T : copyable & Named
-   |               ^^^^^ write `implements Other for Box3<T>` as well, with this block's parameters and `where`
+   |               ^^^^^ add `i32 o() const` to the block
 
 error: expected `const Named*`, but got `Wrap<bool>*`
    --> sema/errors_block_help.kl:104:30

@@ -4,6 +4,7 @@
 #include "sema/conformances.h"
 #include <fmt/format.h>
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <optional>
 #include "sema/type_checker.h"
@@ -170,12 +171,19 @@ bool declares_as( const Type_table& table, Type_id declared, Type_id type, Type_
 }
 
 // A number gets all three. `bool`, a payload-free enum and a pointer get equality and a hash, but
-// no order. An interface pointer is two words, and gets nothing yet.
+// no order. An interface pointer is two words, and gets nothing yet. An array is a
+// `fixed_memory` of its element.
 bool supplied( const Type_table& table, Type_id type, Type_id interface, bool payload )
 {
     if( !interface.is_valid() )
     {
         return false;
+    }
+
+    if( table.is_array( type ) && table.is_interface( interface ) &&
+        table.get( interface ).declaration == table.prelude().fixed_memory )
+    {
+        return table.get( interface ).arguments.size() == 1 && table.get( interface ).arguments[0] == table.get( type ).element;
     }
 
     const bool number = table.is_integer( type ) || table.is_float( type );
@@ -233,8 +241,9 @@ bool Conformance_model::conforms( const Type_table& table, Type_id type, Type_id
         return found != promised_.end() && std::ranges::find( found->second, interface ) != found->second.end();
     }
 
-    return declares( table, type, interface ) ||
-           ( kind_supplies( table, type, interface ) && !declares( table, type, table.declared( table.prelude().equatable ) ) );
+    return declares( table, type, interface ) || ( kind_supplies( table, type, interface ) &&
+                                                   ( !table.is_prelude_interface( interface ) ||
+                                                     !declares( table, type, table.declared( table.prelude().equatable ) ) ) );
 }
 
 // Terminates: each binding is smaller than `type`, since a pattern is never a bare parameter.
@@ -379,7 +388,8 @@ bool Conformance_model::declares( const Type_table& table, Type_id type, Type_id
 bool Conformance_model::supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface ) const
 {
     return supplied_by_kind( ast, table, type, interface ) && !declares( table, type, interface ) &&
-           !declares( table, type, table.declared( table.prelude().equatable ) );
+           ( !table.is_prelude_interface( interface ) || !declares( table, type, table.declared( table.prelude().equatable ) )
+           );
 }
 
 // supplied_by_kind without the tree: payloads as signatures recorded them.
@@ -441,6 +451,60 @@ bool Conformance_model::holds( const Type_table& table, Type_id from, Type_id to
     }
 
     return table.holds( from, to );
+}
+
+std::vector<Type_id> Conformance_model::instances_of( Type_table& table, Type_id type, Node_id interface ) const
+{
+    std::vector<Type_id> found;
+    const auto           add = [&]( Type_id each )
+    {
+        if( table.is_interface( each ) && table.get( each ).declaration == interface &&
+            std::ranges::find( found, each ) == found.end() )
+        {
+            found.push_back( each );
+        }
+    };
+
+    if( table.is_parameter( type ) )
+    {
+        if( const auto promised = promised_.find( type.v ); promised != promised_.end() )
+        {
+            std::ranges::for_each( promised->second, add );
+        }
+
+        return found;
+    }
+
+    if( table.is_struct( type ) || table.is_enum( type ) )
+    {
+        if( const auto declared = declared_.find( table.get( type ).declaration.v ); declared != declared_.end() )
+        {
+            for( const Declared& each : declared->second )
+            {
+                add( table.substitute( each.interface, table.instance_bindings( type ) ) );
+            }
+        }
+    }
+
+    for( const Block& block : blocks_ )
+    {
+        if( table.get( block.interface ).declaration != interface )
+        {
+            continue;
+        }
+
+        if( const std::optional<Bindings> bindings = covers( table, block.pattern, type ) )
+        {
+            add( table.substitute( block.interface, *bindings ) );
+        }
+    }
+
+    if( table.is_array( type ) && interface == table.prelude().fixed_memory )
+    {
+        add( table.interface( interface, std::array { table.get( type ).element }, "fixed_memory" ) );
+    }
+
+    return found;
 }
 
 std::vector<Type_id> Conformance_model::refinements( Type_table& table, Type_id interface ) const
@@ -605,23 +669,22 @@ Conformance_model::blocks_declaring( const Ast& ast, const Type_table& table, Ty
     return blocks;
 }
 
-// The conformance `written` declares for `type`, whose methods are `implementer`'s members.
+// That `type` is an `interface`, written at `at`, whose methods are `implementer`'s members.
 void Conformance_model::conform(
-    const Ast& ast, Type_table& table, std::span<const Type_id> recorded, Node_id implementer, Node_id written, Type_id type
+    const Ast&               ast,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    Node_id                  implementer,
+    Type_id                  interface,
+    Span                     at,
+    Type_id                  type
 )
 {
-    const Type_id interface = recorded_type( recorded, written );
-
-    if( !interface.is_valid() || !table.is_interface( interface ) )
-    {
-        return; // reported where it was resolved
-    }
-
     if( const Conformance* first = of( table, type, interface ) )
     {
         errors_.push_back(
             { .problem     = Conformance_problem::Repeated,
-              .at          = ast.span( written ),
+              .at          = at,
               .implementer = implementer,
               .interface   = interface,
               .found       = first->implementer,
@@ -638,7 +701,7 @@ void Conformance_model::conform(
         {
             errors_.push_back(
                 { .problem     = Conformance_problem::Overlapping,
-                  .at          = ast.span( written ),
+                  .at          = at,
                   .implementer = implementer,
                   .interface   = interface,
                   .found       = earlier.implementer,
@@ -677,7 +740,7 @@ void Conformance_model::conform(
         {
             errors_.push_back( {
                 .problem     = *problem,
-                .at          = ast.span( written ),
+                .at          = at,
                 .implementer = implementer,
                 .interface   = interface,
                 .requirement = requirement,
@@ -687,75 +750,135 @@ void Conformance_model::conform(
         }
     }
 
-    // Only what the interface requires directly: each of those checks its own when the type conforms to it.
+    conformances_.push_back( std::move( conformance ) );
+}
+
+// Each refinement `interface` implies and nothing answers yet, checked against the same members.
+void Conformance_model::conform_implied(
+    const Ast&               ast,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    Node_id                  implementer,
+    Type_id                  interface,
+    Span                     at,
+    Type_id                  type
+)
+{
     for( const Type_id refined : refinements( table, interface ) )
     {
-        if( !declares( table, type, refined ) && !supplies( ast, table, type, refined ) )
+        if( of( table, type, refined ) || supplied_by_kind( ast, table, type, refined ) )
+        {
+            continue;
+        }
+
+        // A block answering it under a narrower `where` would overlap an implied one.
+        if( unmet_bound( table, type, refined ) )
         {
             errors_.push_back( {
                 .problem     = Conformance_problem::Unrefined,
-                .at          = ast.span( written ),
+                .at          = at,
                 .implementer = implementer,
                 .interface   = interface,
                 .self        = type,
                 .refined     = refined,
             } );
+            continue;
         }
+
+        conform( ast, table, recorded, implementer, refined, at, type );
+        conform_implied( ast, table, recorded, implementer, refined, at, type );
     }
-
-    if( ast.kind( implementer ) == Node_kind::Implements_decl )
-    {
-        for( const Node_id member : ast.members( implementer ) )
-        {
-            const bool requested = std::ranges::any_of(
-                conformance.requirements, [&]( Node_id requirement ) { return ast.name( requirement ) == ast.name( member ); }
-            );
-
-            if( ast.kind( member ) == Node_kind::Method_decl && !requested )
-            {
-                errors_.push_back( {
-                    .problem     = Conformance_problem::Unrequested,
-                    .at          = ast.name_span( member ),
-                    .implementer = implementer,
-                    .interface   = interface,
-                    .found       = member,
-                    .self        = type,
-                } );
-            }
-        }
-    }
-
-    conformances_.push_back( std::move( conformance ) );
 }
 
+// A block's method no conformance of the block requires, written or implied. A refused block's
+// methods were reported with it.
+void Conformance_model::check_requested( const Ast& ast, Node_id block, Type_id interface, Type_id type )
+{
+    if( std::ranges::none_of( conformances_, [&]( const Conformance& each ) { return each.implementer == block; } ) )
+    {
+        return;
+    }
+
+    for( const Node_id member : ast.members( block ) )
+    {
+        const bool requested = std::ranges::any_of(
+            conformances_,
+            [&]( const Conformance& conformance )
+            {
+                return conformance.implementer == block &&
+                       std::ranges::any_of(
+                           conformance.requirements,
+                           [&]( Node_id requirement ) { return ast.name( requirement ) == ast.name( member ); }
+                       );
+            }
+        );
+
+        if( ast.kind( member ) == Node_kind::Method_decl && !requested )
+        {
+            errors_.push_back( {
+                .problem     = Conformance_problem::Unrequested,
+                .at          = ast.name_span( member ),
+                .implementer = block,
+                .interface   = interface,
+                .found       = member,
+                .self        = type,
+            } );
+        }
+    }
+}
+
+// Written conformances first, so one written anywhere answers before an implied one would.
 void Conformance_model::complete( const Ast& ast, Type_table& table, std::span<const Type_id> recorded )
 {
     assert( !completed_ && "conformances are completed once" );
     completed_ = true; // conform's own `of` reads what is built so far
 
+    struct Written
+    {
+        Node_id implementer;
+        Type_id interface;
+        Span    at;
+        Type_id type;
+    };
+    std::vector<Written> written;
+
     for( const Node_id decl : ast.declarations( ast.root() ) )
     {
-        if( ast.kind( decl ) == Node_kind::Implements_decl )
+        const bool block = ast.kind( decl ) == Node_kind::Implements_decl;
+        if( !block && !is_aggregate( ast.kind( decl ) ) )
         {
-            const Type_id type = recorded_type( recorded, decl );
+            continue;
+        }
 
-            // A refused block conforms nothing.
-            if( type.is_valid() && !table.is_error( type ) )
+        const Type_id type = recorded_type( recorded, decl );
+
+        // A refused block conforms nothing.
+        if( block && ( !type.is_valid() || table.is_error( type ) ) )
+        {
+            continue;
+        }
+
+        for( const Node_id each : ast.implemented( decl ) )
+        {
+            const Type_id interface = recorded_type( recorded, each );
+            if( interface.is_valid() && table.is_interface( interface ) ) // otherwise reported where it was resolved
             {
-                conform( ast, table, recorded, decl, ast.implemented( decl )[0], type );
+                written.push_back( { decl, interface, ast.span( each ), type } );
+                conform( ast, table, recorded, decl, interface, ast.span( each ), type );
             }
-
-            continue;
         }
+    }
 
-        if( !is_aggregate( ast.kind( decl ) ) )
-        {
-            continue;
-        }
+    for( const Written& each : written )
+    {
+        conform_implied( ast, table, recorded, each.implementer, each.interface, each.at, each.type );
+    }
 
-        for( const Node_id written : ast.implemented( decl ) )
+    for( const Written& each : written )
+    {
+        if( ast.kind( each.implementer ) == Node_kind::Implements_decl )
         {
-            conform( ast, table, recorded, decl, written, recorded_type( recorded, decl ) );
+            check_requested( ast, each.implementer, each.interface, each.type );
         }
     }
 }
@@ -868,39 +991,21 @@ void report_conformance_errors(
         if( error.problem == Conformance_problem::Unrefined )
         {
             const std::string_view refined = table.name( error.refined );
-            std::string            help;
-
-            if( !in_block )
-            {
-                help = fmt::format( "add `{}` to `{}`'s `implements` list", refined, type );
-            }
-            // A narrower block answers where this one's `where` promises its bound too.
-            else if( const auto unmet = model.unmet_bound( table, error.self, error.refined ) )
-            {
-                help = fmt::format(
-                    "the block at {} makes `{}` implement `{}` only where `{} : {}`; {}",
-                    reporter.position( ast.name_span( unmet->block ) ),
-                    table.name( recorded_type( recorded, unmet->block ) ),
-                    refined,
-                    table.name( unmet->parameter ),
-                    table.name( unmet->interface ),
-                    table.is_parameter( unmet->argument ) ? fmt::format(
-                                                                "add `{}` to this block's `where` clause for `{}`",
-                                                                table.name( unmet->interface ),
-                                                                table.name( unmet->argument )
-                                                            )
-                                                          : fmt::format( "which `{}` is not", table.name( unmet->argument ) )
-                );
-            }
-            // Without its `where`, a block for the type's own package would be refused.
-            else
-            {
-                help = !ast.type_parameters( ast.type_param_list( error.implementer ) ).empty()
-                           ? fmt::format(
-                                 "write `implements {} for {}` as well, with this block's parameters and `where`", refined, type
-                             )
-                           : fmt::format( "write `implements {} for {}` as well", refined, type );
-            }
+            const auto             unmet   = model.unmet_bound( table, error.self, error.refined );
+            const std::string      help    = fmt::format(
+                "the block at {} makes `{}` implement `{}` only where `{} : {}`; {}",
+                reporter.position( ast.name_span( unmet->block ) ),
+                table.name( recorded_type( recorded, unmet->block ) ),
+                refined,
+                table.name( unmet->parameter ),
+                table.name( unmet->interface ),
+                table.is_parameter( unmet->argument ) ? fmt::format(
+                                                            "add `{}` to this block's `where` clause for `{}`",
+                                                            table.name( unmet->interface ),
+                                                            table.name( unmet->argument )
+                                                        )
+                                                              : fmt::format( "which `{}` is not", table.name( unmet->argument ) )
+            );
 
             reporter.error_at(
                 error.at,
@@ -1416,13 +1521,10 @@ TEST_CASE( "conformances_substitute_a_refinement_per_instance", "[sema][interfac
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
-    REQUIRE(
-        p.rendered().find( "`unmet` implements `counted<i32>` but not `sink<i32>`, which `counted<i32>` requires" ) !=
-        std::string::npos
-    );
+    REQUIRE( p.rendered().find( "`unmet`'s `put` does not match the one `sink<i32>` declares" ) != std::string::npos );
 
     const Conformance_error& error = p.types().conformances().errors()[0];
-    REQUIRE( error.problem == Conformance_problem::Unrefined );
+    REQUIRE( error.problem == Conformance_problem::Mismatched );
     REQUIRE( error.implementer == p.nth( Node_kind::Struct_decl, 1 ) );
 }
 

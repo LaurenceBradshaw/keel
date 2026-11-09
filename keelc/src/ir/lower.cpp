@@ -206,13 +206,13 @@ private:
     // In an instance, the method of `held`'s own conformance that `op` calls, or invalid where the
     // operator is the compiler's.
     Requirement_target bound_operator( Token_kind op, Type_id held ) const;
-    Operand            lower_operator_index( Node_id id, Node_id method );
-    Operand            lower_variant_construction( Node_id id );
-    Operand            lower_try( Node_id id );
-    Operand            lower_empty_variant( Node_id id );
-    void               bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes );
-    Place              lower_place( Node_id id );     // names where a value lives
-    void               lower_statement( Node_id id ); // emits, produces nothing
+    Operand lower_operator_index( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments );
+    Operand lower_variant_construction( Node_id id );
+    Operand lower_try( Node_id id );
+    Operand lower_empty_variant( Node_id id );
+    void    bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes );
+    Place   lower_place( Node_id id );     // names where a value lives
+    void    lower_statement( Node_id id ); // emits, produces nothing
     // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
     // substituting with this function's would ask it to bind a parameter it has never heard of.
     Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
@@ -2300,11 +2300,10 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
 }
 
 // `v[i]` calls `v.operator[]( i )`, and the place is what the returned reference or pointer names.
-Operand Lowering::lower_operator_index( Node_id id, Node_id method )
+Operand
+Lowering::lower_operator_index( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments )
 {
-    const Span     span     = ast_.span( id );
-    const Bindings bindings = bindings_for_call( id );
-
+    const Span    span  = ast_.span( id );
     const Node_id index = ast_.index( id );
 
     const Operand receiver = address_operand(
@@ -2312,7 +2311,7 @@ Operand Lowering::lower_operator_index( Node_id id, Node_id method )
     );
 
     return lower_method_call_on(
-        id, method, receiver, { &index, 1 }, type_under( method, bindings ), bindings, type_arguments_for_call( id )
+        id, method, receiver, { &index, 1 }, type_under( method, bindings ), bindings, std::move( type_arguments )
     );
 }
 
@@ -2940,7 +2939,7 @@ Operand Lowering::lower_call( Node_id id )
     }
 
     // `a.size()` on a `T[N]` is N. The object is still lowered, so a call there still runs. Any other
-    // name is a block's, reached through a bound.
+    // name is a block's, reached through a bound. These also answer `fixed_memory`'s requirements.
     if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
     {
         const Node_id object = ast_.object( ast_.callee( id ) );
@@ -3657,9 +3656,29 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Index_expr:
     {
         // A `ref` result is already the element's place; a pointer is one deref short of it.
+        // Through a bound: an array's is the compiler's `fixed_memory`, anything else its implementer's.
+        if( const Node_id method = types_.callee_of( id ); method.is_valid() && ast_.is_requirement( method ) )
+        {
+            const Type_id held = type_of( ast_.object( id ) );
+
+            if( types_.table().is_array( held ) )
+            {
+                return lower_array_index( id );
+            }
+
+            Requirement_target target =
+                requirement_target( method, held, types_.table().substitute( types_.through_of( id ), bindings_ ) );
+            assert( !target.through_vtable && "a parameter's argument is never an interface" );
+
+            const Place result =
+                lower_operator_index( id, target.method, target.at.bound, std::move( target.at.type_arguments ) ).place;
+            return is_borrowed_binding( ast_, types_, target.method ) ? result : builder_.deref( result );
+        }
+
         if( const Node_id method = types_.callee_of( id ); method.is_valid() )
         {
-            const Place result = lower_operator_index( id, method ).place;
+            const Place result =
+                lower_operator_index( id, method, bindings_for_call( id ), type_arguments_for_call( id ) ).place;
             return is_borrowed_binding( ast_, types_, method ) ? result : builder_.deref( result );
         }
 

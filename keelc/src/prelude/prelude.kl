@@ -346,6 +346,29 @@ implements<T, u64 N> hashable for T[N] where T : hashable
     }
 };
 
+/// --- Memory ---
+
+/// A run of `T` laid out one after another, of a size the holder does not change.
+///
+/// `T[N]` implements it without writing anything. A generic algorithm over a `C` with `C :
+/// fixed_memory<T>` takes an array, a `kl::list` or a `kl::ring` alike.
+interface fixed_memory<T>
+{
+    /// How many elements there are.
+    u64 size() const;
+    /// The element at `index`, which panics outside `size()`.
+    ref T operator[]( u64 index ) const;
+    /// Exchanges the elements at `a` and `b`, which panics outside `size()`.
+    void swap( u64 a, u64 b );
+};
+
+/// A `fixed_memory` whose size can shrink.
+interface dynamic_memory<T> implements fixed_memory<T>
+{
+    /// Keeps the first `n` elements and drops the rest; does nothing when `n` is not less than `size()`.
+    void truncate( u64 n );
+};
+
 /// --- Ownership ---
 
 /// One `T` on the heap, owned: dropping the box drops the value and frees its memory.

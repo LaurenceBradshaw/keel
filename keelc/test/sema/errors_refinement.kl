@@ -1,6 +1,5 @@
-// D40: an interface requires another by naming it after `implements`. Conforming to it needs the
-// other declared as well, since a requirement is not inheritance; a cycle is refused at the name
-// that closes it; one requiring a bound-only interface is bound-only too; and a `ref` to the
+// D40: an interface requires another by naming it after `implements`. Conforming to it implies the
+// other, checked against the same members; a cycle is refused at the name that closes it; one requiring a bound-only interface is bound-only too; and a `ref` to the
 // requiring interface does not become one of the required.
 interface Named
 {

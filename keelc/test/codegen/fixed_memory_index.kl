@@ -1,0 +1,39 @@
+// D82: `c[i]` through a `fixed_memory` bound reads and writes, at a `T[N]` and at a class.
+import kl::console;
+
+class Bag implements fixed_memory<i32>
+{
+    public Bag() { }
+    public u64 size() const { return 3; }
+    public ref i32 operator[]( u64 index ) const { return v_[index]; }
+    public void swap( u64 a, u64 b ) { v_.swap( a, b ); }
+    private i32[3] v_ = [ 1, 2, 3 ];
+};
+
+T first<C, T>( const ref C c ) where C : fixed_memory<T>, where T : copyable
+{
+    return c[0];
+}
+
+void rotate<C, T>( ref C c ) where C : fixed_memory<T>, where T : copyable
+{
+    const T kept = c[0];
+    for( u64 i = 1; i < c.size(); i++ )
+    {
+        c[i - 1] = c[i];
+    }
+    c[c.size() - 1] = kept;
+}
+
+i32 main()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    rotate<i32[3], i32>( ref a );
+    kl::print( a[0] );
+    kl::print( first<i32[3], i32>( a ) );
+    Bag b = Bag();
+    rotate<Bag, i32>( ref b );
+    kl::print( b[2] );
+    kl::print( first<Bag, i32>( b ) );
+    return 0;
+}

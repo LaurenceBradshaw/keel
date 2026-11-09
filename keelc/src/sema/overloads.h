@@ -84,6 +84,16 @@ struct Deduction
     std::vector<Node_id> bound_by;
 };
 
+// A bound that could not bind what it names: `argument`, bound to `parameter`, conforms to no
+// instance of `interface` that fits, or to several.
+struct Bound_gap
+{
+    Type_id              parameter {};
+    Type_id              argument {};
+    Type_id              interface {}; // naming a parameter still open
+    std::vector<Type_id> instances {}; // the fitting ones: none, or two or more
+};
+
 // Which callable a call names, and what its arguments then have to be. None of these re-enters the
 // expression walk, which is the rule every class below it obeys: selection takes the argument
 // *shapes* the caller reduced them to, and argument checking hands the walk back a list to perform.
@@ -214,6 +224,11 @@ private:
     bool deduce_for_candidate(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
     );
+    // `T` from `C`'s one conformance to `C : fixed_memory<T>`, repeated until nothing is added.
+    std::vector<Bound_gap> deduce_through_bounds( std::span<const Node_id> parameters, Bindings& bindings );
+    // `f<i32, 4>`'s list: each parameter's binding in `known`, or a placeholder.
+    std::string example_arguments( std::span<const Node_id> parameters, const Bindings& known ) const;
+    Type_id     placeholders( Type_id type, const Bindings& known );
 
     bool takes( Node_id candidate, std::size_t count ) const;
     bool fits( Node_id call, Node_id candidate, u32 implicit_params ) const;

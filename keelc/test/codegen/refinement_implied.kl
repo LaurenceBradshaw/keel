@@ -1,0 +1,52 @@
+// D40: listing an interface implies the ones it requires. `Point` lists only `hashable` and is
+// `equatable` by its own `==`, a map key; `Tile`'s block for `comparable` keeps the compiler's `==`.
+import kl::console;
+import kl::map;
+
+struct Point implements hashable
+{
+    i32 x;
+    i32 y;
+
+    bool operator==( const ref Point other ) const
+    {
+        return x == other.x && y == other.y;
+    }
+
+    void hash( ref hasher h ) const
+    {
+        h.write( cast<u64>( x ) );
+        h.write( cast<u64>( y ) );
+    }
+};
+
+enum Tile
+{
+    Floor,
+    Wall,
+};
+
+implements comparable for Tile
+{
+    ordering operator<=>( const ref Tile other ) const
+    {
+        return cast<u8>( this ) <=> cast<u8>( other );
+    }
+};
+
+bool same<T>( const ref T a, const ref T b ) where T : equatable
+{
+    return a == b;
+}
+
+i32 main()
+{
+    kl::map<Point, i32> m = kl::map<Point, i32>();
+    m.insert( Point { 1, 2 }, 3 );
+    kl::print( m.contains( Point { 1, 2 } ) );
+    kl::print( same( Point { 1, 2 }, Point { 1, 3 } ) );
+    kl::print( Tile::Floor == Tile::Floor );
+    kl::print( Tile::Floor < Tile::Wall );
+    kl::print( same( Tile::Wall, Tile::Wall ) );
+    return 0;
+}

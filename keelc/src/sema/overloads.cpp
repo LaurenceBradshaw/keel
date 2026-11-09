@@ -37,6 +37,13 @@ bool any_failed( const Type_table& table, std::span<const Argument_shape> shapes
         [&]( const Argument_shape& shape ) { return shape.type.is_valid() && table.is_error( shape.type ); }
     );
 }
+// Whether `type` names `parameter`: matching a type against itself binds each it names.
+bool mentions( const Type_table& table, Type_id type, Type_id parameter )
+{
+    Bindings named;
+    table.deduce( type, type, named );
+    return named.contains( parameter.v );
+}
 } // namespace
 
 // The types the call wrote, mapped onto the callable's own type parameters. Positional, because
@@ -92,7 +99,10 @@ bool Overloads::deduce_for_candidate(
         }
     }
 
-    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( callable ) ) )
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
+    deduce_through_bounds( parameters, bindings );
+
+    for( const Node_id parameter : parameters )
     {
         const auto found = bindings.find( types_.type_of( parameter ).v );
 
@@ -105,6 +115,122 @@ bool Overloads::deduce_for_candidate(
     }
 
     return true;
+}
+
+std::vector<Bound_gap> Overloads::deduce_through_bounds( std::span<const Node_id> parameters, Bindings& bindings )
+{
+    const auto open = [&]( Type_id interface )
+    {
+        return std::ranges::any_of(
+            parameters,
+            [&]( Node_id each )
+            {
+                const Type_id parameter = types_.type_of( each );
+                return !bindings.contains( parameter.v ) && mentions( table_, interface, parameter );
+            }
+        );
+    };
+
+    std::vector<Bound_gap> gaps;
+
+    for( bool added = true; added; )
+    {
+        added = false;
+        gaps.clear();
+
+        for( const Node_id each : parameters )
+        {
+            const Type_id parameter = types_.type_of( each );
+            const auto    bound     = bindings.find( parameter.v );
+
+            if( bound == bindings.end() )
+            {
+                continue;
+            }
+
+            for( const Type_id interface : bounds_.interfaces_of( parameter ) )
+            {
+                if( !open( interface ) )
+                {
+                    continue;
+                }
+
+                Bound_gap gap { parameter, bound->second, interface, {} };
+                Bindings  deduced;
+
+                for( const Type_id instance :
+                     types_.conformances().instances_of( table_, bound->second, table_.get( interface ).declaration ) )
+                {
+                    Bindings   scratch;
+                    const bool fits = table_.deduce( interface, instance, scratch ) &&
+                                      std::ranges::all_of(
+                                          scratch,
+                                          [&]( const auto& pair )
+                                          {
+                                              const auto known = bindings.find( pair.first );
+                                              return known == bindings.end() || known->second == pair.second;
+                                          }
+                                      );
+
+                    if( fits )
+                    {
+                        gap.instances.push_back( instance );
+                        deduced = std::move( scratch );
+                    }
+                }
+
+                if( gap.instances.size() == 1 )
+                {
+                    bindings.merge( deduced );
+                    added = true;
+                    break; // `bound` may be invalidated, and the next turn asks again
+                }
+
+                gaps.push_back( std::move( gap ) );
+            }
+
+            if( added )
+            {
+                break;
+            }
+        }
+    }
+
+    return gaps;
+}
+
+// `fixed_memory<T>` with `T` open reads as `fixed_memory<i32>`, for a help naming one to write.
+Type_id Overloads::placeholders( Type_id type, const Bindings& known )
+{
+    Bindings named;
+    table_.deduce( type, type, named );
+
+    for( auto& [parameter, bound] : named )
+    {
+        const auto found = known.find( parameter );
+        bound            = found != known.end()                                ? found->second
+                           : table_.is_size_parameter( Type_id { parameter } ) ? table_.size( 4 )
+                                                                               : table_.integer( 32, true );
+    }
+
+    return table_.substitute( type, named );
+}
+
+std::string Overloads::example_arguments( std::span<const Node_id> parameters, const Bindings& known ) const
+{
+    std::string list;
+
+    for( const Node_id each : parameters )
+    {
+        const Type_id          parameter = types_.type_of( each );
+        const auto             found     = known.find( parameter.v );
+        const std::string_view written   = found != known.end()                    ? table_.name( found->second )
+                                           : table_.is_size_parameter( parameter ) ? "4"
+                                                                                   : "i32";
+        list += fmt::format( "{}{}", list.empty() ? "" : ", ", written );
+    }
+
+    return list;
 }
 
 // `E[N]` given an array literal of `count` elements binds `N` to `count`; the elements are checked later.
@@ -226,6 +352,8 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
         }
     }
 
+    const std::vector<Bound_gap> gaps = deduce_through_bounds( parameters, bindings );
+
     // Whatever the arguments left open. `T make<T>()` has no argument to read at all, which is the
     // case this exists for. `result` rather than the callable's own type because a constructor
     // produces the aggregate rather than returning anything - `Box<i32> b = Box( 7 );` reads its
@@ -260,6 +388,63 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
             continue;
         }
 
+        // What a bound on another parameter would have said, had its argument conformed once.
+        const Type_id open = types_.type_of( parameter );
+        const auto    gap =
+            std::ranges::find_if( gaps, [&]( const Bound_gap& each ) { return mentions( table_, each.interface, open ); } );
+
+        if( found == bindings.end() && gap != gaps.end() && gap->instances.empty() )
+        {
+            reporter_.error_at(
+                site.at,
+                fmt::format(
+                    "`{}` needs a `{}` that implements `{}`, but `{}` does not",
+                    site.name,
+                    table_.name( gap->parameter ),
+                    table_.name( gap->interface ),
+                    table_.name( gap->argument )
+                ),
+                bounds_.conforming_help( gap->argument, placeholders( gap->interface, bindings ), site.at )
+            );
+            return std::nullopt;
+        }
+
+        if( found == bindings.end() && gap != gaps.end() )
+        {
+            std::string instances;
+            for( std::size_t i = 0; i < gap->instances.size(); ++i )
+            {
+                instances += fmt::format(
+                    "{}`{}`",
+                    i == 0                           ? ""
+                    : i + 1 == gap->instances.size() ? " and "
+                                                     : ", ",
+                    table_.name( gap->instances[i] )
+                );
+            }
+
+            Bindings first = bindings;
+            table_.deduce( gap->interface, gap->instances[0], first );
+
+            reporter_.error_at(
+                site.at,
+                fmt::format(
+                    "`{}` implements `{}` more than once, so nothing says what `{}` is in `{}`",
+                    table_.name( gap->argument ),
+                    table_.base_name( gap->interface ),
+                    interner_.text( ast_.name( parameter ) ),
+                    site.name
+                ),
+                fmt::format(
+                    "it implements {}; write the type arguments, as in `{}<{}>( ... )`",
+                    instances,
+                    site.name,
+                    example_arguments( parameters, first )
+                )
+            );
+            return std::nullopt;
+        }
+
         if( found == bindings.end() )
         {
             // `count( 2, Wrap { x } )`: the literal is what has no instance, so its type arguments are the fix.
@@ -268,15 +453,14 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
             reporter_.error_at(
                 site.at,
                 fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), site.name ),
-                literal != shapes.end() ? fmt::format(
-                                              "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
-                                              interner_.text( ast_.name( literal->declaration ) )
-                                          )
-                                        : fmt::format(
-                                              "write the type arguments, as in `{}<{}>( ... )`",
-                                              site.name,
-                                              table_.is_size_parameter( types_.type_of( parameter ) ) ? "4" : "i32"
-                                          )
+                literal != shapes.end()
+                    ? fmt::format(
+                          "write the literal's type arguments, as in `{}<i32> {{ ... }}`",
+                          interner_.text( ast_.name( literal->declaration ) )
+                      )
+                    : fmt::format(
+                          "write the type arguments, as in `{}<{}>( ... )`", site.name, example_arguments( parameters, {} )
+                      )
             );
 
             return std::nullopt;

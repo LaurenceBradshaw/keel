@@ -26,7 +26,7 @@ error: nothing here says what `U` is in `second`
   --> sema/errors_inference.kl:79:5
    |
 79 |     second( a );
-   |     ^^^^^^ write the type arguments, as in `second<i32>( ... )`
+   |     ^^^^^^ write the type arguments, as in `second<i32, i32>( ... )`
 
 error: expected `Box<i32>`, but got `i32`
   --> sema/errors_inference.kl:86:19

@@ -1,0 +1,66 @@
+// D82: `T` deduced from `C`'s one conformance to its bound: over `kl::iterable`, at an array, at a
+// class, inside a generic through its own bound, and where a lambda's parameters need `T`.
+import kl::console;
+import kl::list;
+import kl::iterable;
+
+class Bag implements fixed_memory<i32>
+{
+    public Bag() { }
+    public u64 size() const { return 3; }
+    public ref i32 operator[]( u64 index ) const { return v_[index]; }
+    public void swap( u64 a, u64 b ) { v_.swap( a, b ); }
+    private i32[3] v_ = [ 1, 2, 3 ];
+};
+
+u64 count<C, T>( const ref C c ) where C : kl::iterable<T>
+{
+    u64 n = 0;
+    for( _ : c )
+    {
+        n++;
+    }
+    return n;
+}
+
+void flip<C, T>( ref C c ) where C : fixed_memory<T>
+{
+    c.swap( 0, c.size() - 1 );
+}
+
+void flip_twice<C, T>( ref C c ) where C : fixed_memory<T>
+{
+    flip( ref c );
+    flip( ref c );
+}
+
+T pick<C, T, F>( const ref C c, F better ) where C : fixed_memory<T>, where T : copyable, where F : fn( const ref T, const ref T ) -> bool
+{
+    T best = c[0];
+    for( u64 i = 1; i < c.size(); i++ )
+    {
+        if( better( c[i], best ) )
+        {
+            best = c[i];
+        }
+    }
+    return best;
+}
+
+i32 main()
+{
+    kl::list<i32> l = kl::list<i32>();
+    l.push( 4 );
+    l.push( 5 );
+    kl::print( count( l ) );
+    i32[3] a = [ 1, 2, 3 ];
+    flip( ref a );
+    kl::print( a[0] );
+    Bag b = Bag();
+    flip( ref b );
+    kl::print( b[0] );
+    flip_twice( ref a );
+    kl::print( a[0] );
+    kl::print( pick( a, fn[]( x, y ) { return x > y; } ) );
+    return 0;
+}

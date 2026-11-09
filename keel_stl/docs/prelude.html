@@ -46,6 +46,9 @@ functions.</p>
 <li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
 <li><a href="#hashable-for-T[N]-where-T-:-hashable"><code>hashable for T[N] where T : hashable</code></a> <span class="kind">implements</span></li>
+<li class="divider">Memory</li>
+<li><a href="#fixed_memory"><code>fixed_memory</code></a> <span class="kind">interface</span></li>
+<li><a href="#dynamic_memory"><code>dynamic_memory</code></a> <span class="kind">interface</span></li>
 <li class="divider">Ownership</li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
@@ -486,6 +489,53 @@ panics on a NaN.</p>
 <h3>Methods</h3>
 <div class="group" id="hashable-for-T[N]-where-T-:-hashable.hash">
 <pre class="signature"><a class="anchor" href="#hashable-for-T[N]-where-T-:-hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
+</div>
+</section>
+<h2 class="divider">Memory</h2>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">fixed_memory</span></h2>
+<div class="group" id="fixed_memory">
+<pre class="signature"><a class="anchor" href="#fixed_memory" aria-label="Link to fixed_memory">#</a><code><span class="kw">interface</span> <span class="type">fixed_memory</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A run of <code>T</code> laid out one after another, of a size the holder does not change.</p>
+<p><code>T[N]</code> implements it without writing anything. A generic algorithm over a <code>C</code> with <code>C :
+fixed_memory&lt;T&gt;</code> takes an array, a <code>kl::list</code> or a <code>kl::ring</code> alike.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="fixed_memory.size">
+<pre class="signature"><a class="anchor" href="#fixed_memory.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many elements there are.</p>
+</div>
+</div>
+<div class="group" id="fixed_memory.operator[]">
+<pre class="signature"><a class="anchor" href="#fixed_memory.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">ref</span> T <span class="fn">operator[]</span>( <a class="prim" href="#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The element at <code>index</code>, which panics outside <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="fixed_memory.swap">
+<pre class="signature"><a class="anchor" href="#fixed_memory.swap" aria-label="Link to swap">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">swap</span>( <a class="prim" href="#u64">u64</a> a, <a class="prim" href="#u64">u64</a> b )</code></pre>
+<div class="doc">
+<p>Exchanges the elements at <code>a</code> and <code>b</code>, which panics outside <code>size()</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">dynamic_memory</span></h2>
+<div class="group" id="dynamic_memory">
+<pre class="signature"><a class="anchor" href="#dynamic_memory" aria-label="Link to dynamic_memory">#</a><code><span class="kw">interface</span> <span class="type">dynamic_memory</span>&lt;T&gt; <span class="kw">implements</span> <a class="type" href="#fixed_memory">fixed_memory</a>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A <code>fixed_memory</code> whose size can shrink.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="dynamic_memory.truncate">
+<pre class="signature"><a class="anchor" href="#dynamic_memory.truncate" aria-label="Link to truncate">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">truncate</span>( <a class="prim" href="#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Keeps the first <code>n</code> elements and drops the rest; does nothing when <code>n</code> is not less than <code>size()</code>.</p>
+</div>
 </div>
 </section>
 <h2 class="divider">Ownership</h2>

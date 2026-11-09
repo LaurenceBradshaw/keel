@@ -39,7 +39,7 @@ enum class Conformance_problem : u8
     Repeated,    // the type already conforms to the interface
     Overlapping, // another block or `implements` could make one instance conform as well
     Unrequested, // a block's method the interface does not declare
-    Unrefined,   // the type does not conform to an interface this one requires
+    Unrefined,   // an implied interface a block answers only under a `where` this type does not meet
     Located,     // the implementer's receives a location the interface's callers cannot pass
     Defaulted,   // the implementer's has a default the interface's callers would not see
 };
@@ -53,7 +53,7 @@ struct Conformance_error
     Node_id             requirement {}; // the interface's method
     Node_id             found {};   // the implementer's method of that name, where one exists; Repeated: the first implementer
     Type_id             self {};    // the implementer's type, which the requirement's `self` stands for
-    Type_id             refined {}; // Unrefined: the interface required
+    Type_id             refined {}; // Overlapping: the earlier conformance's type; Unrefined: the interface implied
 };
 
 // Everything `implements` means, filled in two phases. Phase 1, while signatures are declared:
@@ -105,6 +105,10 @@ public:
     // Type_table::holds, with an implementer reaching its interface as a borrow, a pointer or a box.
     bool holds( const Type_table& table, Type_id from, Type_id to ) const;
 
+    // Each instance of the Interface_decl `interface` that `type` conforms to: declared, a block's,
+    // the compiler's, or a parameter's promise. Implied ones are declared, so they are included.
+    std::vector<Type_id> instances_of( Type_table& table, Type_id type, Node_id interface ) const;
+
     std::vector<Type_id> refinements( Type_table& table, Type_id interface ) const; // substituted for this instance
     // Whether `other` is required by `interface`, directly or through what it requires.
     bool refines( Type_table& table, Type_id interface, Type_id other ) const;
@@ -146,8 +150,24 @@ private:
     bool kind_supplies( const Type_table& table, Type_id type, Type_id interface ) const;
 
     void conform(
-        const Ast& ast, Type_table& table, std::span<const Type_id> recorded, Node_id implementer, Node_id written, Type_id type
+        const Ast&               ast,
+        Type_table&              table,
+        std::span<const Type_id> recorded,
+        Node_id                  implementer,
+        Type_id                  interface,
+        Span                     at,
+        Type_id                  type
     );
+    void conform_implied(
+        const Ast&               ast,
+        Type_table&              table,
+        std::span<const Type_id> recorded,
+        Node_id                  implementer,
+        Type_id                  interface,
+        Span                     at,
+        Type_id                  type
+    );
+    void check_requested( const Ast& ast, Node_id block, Type_id interface, Type_id type );
 
     std::unordered_map<u32, std::vector<Declared>> declared_; // struct or enum declaration -> what it implements
     std::vector<Block>                             blocks_;   // in declaration order

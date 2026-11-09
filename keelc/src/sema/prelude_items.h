@@ -12,6 +12,7 @@ struct Prelude_items
 {
     Node_id str, joined_text, result, box, from, ordering, location, hasher_write;
     Node_id equatable, comparable, hashable;
+    Node_id fixed_memory, dynamic_memory;
 };
 
 } // namespace keel

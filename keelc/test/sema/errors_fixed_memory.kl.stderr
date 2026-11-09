@@ -1,0 +1,7 @@
+error: `flip` needs a `C` that implements `fixed_memory<i64>`, but `i32[3]` does not
+  --> sema/errors_fixed_memory.kl:10:10
+   |
+10 |     flip<i32[3], i64>( ref a );
+   |          ^^^^^^
+
+1 error generated

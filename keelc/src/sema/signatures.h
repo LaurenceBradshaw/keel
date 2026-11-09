@@ -85,6 +85,8 @@ private:
     void    declare_type_bounds();
     Node_id required_bound_only( Type_id interface ) const;
     void    declare_implements();
+    void    declare_written();
+    void    declare_implied( Node_id implementer, Type_id type, Type_id interface );
     void    declare_block( Node_id block ); // an `implements ... for` block, not a function body
     bool    refuse_block( Node_id block, Type_id type, Type_id interface );
     bool    requires_copyable( Type_id pattern, Type_id parameter ) const;

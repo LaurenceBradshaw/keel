@@ -353,8 +353,62 @@ Node_id Signatures::required_bound_only( Type_id interface ) const
     return Node_id {};
 }
 
+// What `interface` requires, which listing it implies, unless the compiler's own answers.
+void Signatures::declare_implied( Node_id implementer, Type_id type, Type_id interface )
+{
+    for( const Type_id refined : types_.conformances().refinements( table_, interface ) )
+    {
+        if( Conformance_model::supplied_by_kind( ast_, table_, type, refined ) ||
+            types_.conformances().declares( table_, type, refined ) ||
+            types_.conformances().unmet_bound( table_, type, refined ) )
+        {
+            continue;
+        }
+
+        if( ast_.kind( implementer ) == Node_kind::Implements_decl )
+        {
+            types_.conformances().declare_block( implementer, type, refined );
+        }
+        else
+        {
+            types_.conformances().declare( table_, implementer, type, refined );
+        }
+
+        declare_implied( implementer, type, refined );
+    }
+}
+
 // What each aggregate says it implements, once every type exists to be named there by mistake.
+// The implied ones after every written one, so a written one answers first.
 void Signatures::declare_implements()
+{
+    declare_written();
+
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        const bool block = ast_.kind( child ) == Node_kind::Implements_decl;
+        if( ast_.kind( child ) == Node_kind::Error || ( !block && !is_aggregate( ast_.kind( child ) ) ) )
+        {
+            continue;
+        }
+
+        const Type_id type = types_.type_of( child );
+        if( !type.is_valid() || table_.is_error( type ) )
+        {
+            continue;
+        }
+
+        for( const Node_id written : ast_.implemented( child ) )
+        {
+            if( const Type_id interface = types_.type_of( written ); interface.is_valid() && table_.is_interface( interface ) )
+            {
+                declare_implied( child, type, interface );
+            }
+        }
+    }
+}
+
+void Signatures::declare_written()
 {
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {

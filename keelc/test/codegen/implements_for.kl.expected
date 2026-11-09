@@ -806,7 +806,7 @@ void kl__grow_twice__I4SizeE__R4Size( int32_t* kl_v_1 )
 #line 83 "codegen/implements_for.kl"
 }
 
-#line 359 "<prelude>"
+#line 382 "<prelude>"
 void kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( struct kl_7prelude_box__I3i64E* kl_this_1, int64_t kl_value_2 )
 {
     int64_t* kl_slot_3;
@@ -814,34 +814,34 @@ void kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( struct kl_7prelu
     int64_t* kl_t5;
     int64_t* kl_t6;
     int64_t* kl_t7;
-#line 364 "<prelude>"
-    kl_t4 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "<prelude>", 364, "out of memory: alloc<T>( 1 )" );
-#line 364 "<prelude>"
+#line 387 "<prelude>"
+    kl_t4 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+#line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
-#line 365 "<prelude>"
+#line 388 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
     kl_t6 = kl_slot_3 + 0;
-#line 366 "<prelude>"
+#line 389 "<prelude>"
     kl_t7 = &( *kl_t6 );
-#line 366 "<prelude>"
+#line 389 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 368 "<prelude>"
+#line 391 "<prelude>"
     return;
-#line 368 "<prelude>"
+#line 391 "<prelude>"
 }
 
-#line 380 "<prelude>"
+#line 403 "<prelude>"
 struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t0;
-#line 382 "<prelude>"
+#line 405 "<prelude>"
     kl_t0 = ( *kl_this_1 ).kl_p_;
-#line 382 "<prelude>"
+#line 405 "<prelude>"
     return kl_t0;
 }
 
-#line 359 "<prelude>"
+#line 382 "<prelude>"
 void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7prelude_box__I4HeldE* kl_this_1, struct kl__Held kl_value_2 )
 {
     struct kl__Held* kl_slot_3;
@@ -850,67 +850,67 @@ void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7pr
     struct kl__Held* kl_t6;
     struct kl__Held* kl_t7;
     bool kl_t8;
-#line 364 "<prelude>"
+#line 387 "<prelude>"
     kl_t8 = true;
-#line 364 "<prelude>"
-    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 364, "out of memory: alloc<T>( 1 )" );
-#line 364 "<prelude>"
+#line 387 "<prelude>"
+    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+#line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
-#line 365 "<prelude>"
+#line 388 "<prelude>"
     ( *kl_t5 ) = kl_value_2;
-#line 365 "<prelude>"
+#line 388 "<prelude>"
     kl_t8 = false;
     kl_t6 = kl_slot_3 + 0;
-#line 366 "<prelude>"
+#line 389 "<prelude>"
     kl_t7 = &( *kl_t6 );
-#line 366 "<prelude>"
+#line 389 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 368 "<prelude>"
+#line 391 "<prelude>"
     if ( kl_t8 ) kl__Held__dtor( &kl_value_2 );
-#line 368 "<prelude>"
+#line 391 "<prelude>"
     kl_t8 = false;
-#line 368 "<prelude>"
+#line 391 "<prelude>"
     return;
-#line 368 "<prelude>"
+#line 391 "<prelude>"
 }
 
-#line 370 "<prelude>"
+#line 393 "<prelude>"
 void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t2;
-#line 374 "<prelude>"
+#line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 374 "<prelude>"
+#line 397 "<prelude>"
     kl_t2.vtable->drop( kl_t2.self );
     kl_rt_free( ( ( *kl_this_1 ).kl_p_ ).self );
-#line 377 "<prelude>"
+#line 400 "<prelude>"
     return;
-#line 377 "<prelude>"
+#line 400 "<prelude>"
 }
 
-#line 370 "<prelude>"
+#line 393 "<prelude>"
 void kl_7prelude_box__I3i64E__dtor( struct kl_7prelude_box__I3i64E* kl_this_1 )
 {
-#line 375 "<prelude>"
+#line 398 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 377 "<prelude>"
+#line 400 "<prelude>"
     return;
-#line 377 "<prelude>"
+#line 400 "<prelude>"
 }
 
-#line 370 "<prelude>"
+#line 393 "<prelude>"
 void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* kl_this_1 )
 {
     struct kl__Held* kl_t2;
-#line 374 "<prelude>"
+#line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 374 "<prelude>"
+#line 397 "<prelude>"
     kl__Held__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 377 "<prelude>"
+#line 400 "<prelude>"
     return;
-#line 377 "<prelude>"
+#line 400 "<prelude>"
 }
 
 #line 30 "codegen/implements_for.kl"

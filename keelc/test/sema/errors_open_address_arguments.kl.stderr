@@ -2,13 +2,13 @@ error: nothing here says what `T` is in `apply`
   --> sema/errors_open_address_arguments.kl:36:13
    |
 36 |     i64 r = apply( &widen, 3 );
-   |             ^^^^^ write the type arguments, as in `apply<i32>( ... )`
+   |             ^^^^^ write the type arguments, as in `apply<i32, i32>( ... )`
 
 error: nothing here says what `T` is in `apply`
   --> sema/errors_open_address_arguments.kl:37:13
    |
 37 |     i64 s = apply( &id, 3 );
-   |             ^^^^^ write the type arguments, as in `apply<i32>( ... )`
+   |             ^^^^^ write the type arguments, as in `apply<i32, i32>( ... )`
 
 error: `apply` takes 2 type arguments, but 1 was given
   --> sema/errors_open_address_arguments.kl:42:18

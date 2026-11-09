@@ -18,7 +18,7 @@ enum parse_error
 /// A growable sequence of bytes that owns its storage.
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
-class string implements textual, equatable, hashable, from<str>, from<u64>, from<i64>,
+class string implements textual, equatable, comparable, hashable, from<str>, from<u64>, from<i64>,
     from<joined_text>
 {
     /// --- Construction ---
@@ -511,6 +511,35 @@ class string implements textual, equatable, hashable, from<str>, from<u64>, from
         }
 
         return true;
+    }
+
+    /// Orders by the first byte that differs, and a string before any it is a prefix of.
+    public ordering operator<=>( const ref string other ) const
+    {
+        const u64 min_size = size() < other.size() ? size() : other.size();
+
+        for( u64 i = 0; i < min_size; i++ )
+        {
+            if( as_text()[i] < other[i] )
+            {
+                return ordering::less;
+            }
+            else if( as_text()[i] > other[i] )
+            {
+                return ordering::greater;
+            }
+        }
+
+        if( size() < other.size() )
+        {
+            return ordering::less;
+        }
+        else if( size() > other.size() )
+        {
+            return ordering::greater;
+        }
+
+        return ordering::equal;
     }
 
     /// Feeds the bytes and their count, as `write_bytes` does, so a string hashes as a literal of

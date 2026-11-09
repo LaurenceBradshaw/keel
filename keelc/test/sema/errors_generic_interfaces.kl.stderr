@@ -34,11 +34,11 @@ error: `half`'s `put` does not match the one `sink<bool>` declares
 68 | struct half implements sink<i64>, sink<bool>
    |                                   ^^^^^^^^^^ `sink<bool>` wants `void put( bool value )`
 
-error: `unrefined` implements `counted_sink<i32>` but not `sink<i32>`, which `counted_sink<i32>` requires
+error: `unrefined`'s `put` does not match the one `sink<i32>` declares
   --> sema/errors_generic_interfaces.kl:76:29
    |
 76 | struct unrefined implements counted_sink<i32>, sink<i64>
-   |                             ^^^^^^^^^^^^^^^^^ add `sink<i32>` to `unrefined`'s `implements` list
+   |                             ^^^^^^^^^^^^^^^^^ `sink<i32>` wants `void put( i32 value )`
 
 error: `Shape` is an interface, so it cannot be held by value
   --> sema/errors_generic_interfaces.kl:85:33

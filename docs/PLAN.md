@@ -895,6 +895,15 @@ tests the tag, as an owning enum does (D30).
 **Interfaces (M9.5).** One `interface` declaration, method signatures only, serves both uses (no field, constructor or destructor, and no `public` or `private`, since every one is public):
 `where T : Shape` is monomorphised, each instance calling the implementer's method directly with no
 vtable, and `ref Shape`, `const ref Shape`, `Shape*` and `box<Shape>` dispatch through one. No `dyn`.
+**Which to write**: a bound where the interface is called in a loop or the type is known at the
+call, and a type where the value is kept in a variable, field or collection, or chosen at run time.
+A bound's instance calls the implementer directly, so the passes can inline it, and it takes any
+interface, a bound-only one too; the cost is one copy per type, in code size and build time. A type
+compiles once and lets a `kl::list<box<Shape>>` hold circles and squares together; the cost is an
+indirect call per method that nothing removes, and only an interface that can stand as a type
+qualifies. A function parameter splits the same way: `F` bounded by an `fn` type takes any lambda,
+capturing or not, and is called directly; the plain `fn` type is a code pointer, for storing, and
+holds only a named function or a lambda that captures nothing.
 **Conformance is declared** — `class Circle implements Shape, Named`, after any type parameters and
 before `where` — and never structural; a missing method, or one differing in its parameters, return,
 `const`, `static` or own type parameters, is reported at the `implements`. A generic implementer

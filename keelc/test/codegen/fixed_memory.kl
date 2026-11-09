@@ -1,0 +1,31 @@
+// D82: `fixed_memory<T>` through a bound, at a `T[N]`, whose conformance is the compiler's, and at a
+// class that implements it.
+import kl::console;
+
+class Bag implements fixed_memory<i32>
+{
+    public Bag() { }
+    public u64 size() const { return 3; }
+    public ref i32 operator[]( u64 index ) const { return v_[index]; }
+    public void swap( u64 a, u64 b ) { v_.swap( a, b ); }
+    private i32[3] v_ = [ 1, 2, 3 ];
+};
+
+void flip<C, T>( ref C c ) where C : fixed_memory<T>
+{
+    c.swap( 0, c.size() - 1 );
+}
+
+i32 main()
+{
+    i32[3] a = [ 1, 2, 3 ];
+    flip<i32[3], i32>( ref a );
+    kl::print( a[0] );
+    kl::print( a[2] );
+
+    Bag b = Bag();
+    flip<Bag, i32>( ref b );
+    kl::print( b[0] );
+    kl::print( b[2] );
+    return 0;
+}
