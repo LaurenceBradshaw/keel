@@ -32,6 +32,11 @@
                 "title": "Show Header",
                 "category": "Keel",
                 "icon": "$(list-flat)"
+            },
+            {
+                "command": "keel.checkProgram",
+                "title": "Check Program",
+                "category": "Keel"
             }
         ],
         "keybindings": [
@@ -56,6 +61,10 @@
                 },
                 {
                     "command": "keel.showHeader",
+                    "when": "editorLangId == keel && resourceScheme == file"
+                },
+                {
+                    "command": "keel.checkProgram",
                     "when": "editorLangId == keel && resourceScheme == file"
                 }
             ]

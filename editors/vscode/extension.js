@@ -4,7 +4,8 @@
 // Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports,
 // colours each name by what it refers to, shows its declaration and doc on hover, and goes from a name
 // to its declaration - in the prelude too, which keelc prints for it. Its header view lists a file's
-// declarations without their bodies, each name going to its definition.
+// declarations without their bodies, each name going to its definition. *Check Program* checks
+// from the file declaring `main()`, and its diagnostics stay until it runs again.
 
 'use strict';
 
@@ -406,11 +407,52 @@ function semantic_tokens( names )
     return builder.build();
 }
 
+// The `.kl` file beside `file` that declares `main()`, or undefined.
+function program_root( file )
+{
+    const declares_main = /^[ \t]*(?:[\w:<>\[\]*]+[ \t]+)+main[ \t]*\(/m;
+    const folder = path.dirname( file );
+    const files = [ file, ...fs.readdirSync( folder ).filter( ( f ) => f.endsWith( '.kl' ) ).map( ( f ) => path.join( folder, f ) ) ];
+    return files.find( ( f ) =>
+    {
+        try
+        {
+            return declares_main.test( fs.readFileSync( f, 'utf8' ) );
+        }
+        catch
+        {
+            return false;
+        }
+    } );
+}
+
+const same_diagnostic = ( a, b ) => a.message === b.message && a.range.isEqual( b.range ) && a.severity === b.severity;
+
 function activate( context )
 {
     const collection = vscode.languages.createDiagnosticCollection( 'keel' );
+    const program = vscode.languages.createDiagnosticCollection( 'keel-program' );
     const output = vscode.window.createOutputChannel( 'Keel' );
-    context.subscriptions.push( collection, output );
+    context.subscriptions.push( collection, program, output );
+
+    // One line per run in the *Keel* output channel, so a check that found nothing still shows.
+    function log_run( what, file, started, by_file )
+    {
+        const count = ( severity ) =>
+            [ ...by_file.values() ].reduce( ( n, list ) => n + list.filter( ( d ) => d.severity === severity ).length, 0 );
+        const seconds = ( ( Date.now() - started ) / 1000 ).toFixed( 1 );
+        output.appendLine( `${what} ${path.basename( file )}: ${count( vscode.DiagnosticSeverity.Error )} errors, ` +
+            `${count( vscode.DiagnosticSeverity.Warning )} warnings, ${by_file.size} files (${seconds}s)` );
+    }
+
+    // A program diagnostic the file's own check also reports is shown once, by that check.
+    function drop_repeats( key )
+    {
+        const uri = vscode.Uri.parse( key );
+        const own = collection.get( uri ) ?? [];
+        const kept = ( program.get( uri ) ?? [] ).filter( ( d ) => !own.some( ( o ) => same_diagnostic( o, d ) ) );
+        program.set( uri, kept );
+    }
 
     // One run per saved file at a time: a newer save kills the older run, and its output is dropped.
     const running = new Map();
@@ -466,7 +508,8 @@ function activate( context )
             previous.kill();
         }
 
-        const child = child_process.execFile( compiler, args, { cwd }, ( error, stdout, stderr ) =>
+        const started = Date.now();
+        const child = child_process.execFile( compiler, args, { cwd, maxBuffer: 64 * 1024 * 1024 }, ( error, stdout, stderr ) =>
         {
             if( running.get( saved ) !== child )
             {
@@ -493,9 +536,11 @@ function activate( context )
             }
 
             const result = parse( stdout, cwd, saved, compiler );
+            log_run( 'checked', saved, started, result.by_file );
             for( const [ key, diagnostics ] of result.by_file )
             {
                 collection.set( vscode.Uri.parse( key ), diagnostics );
+                drop_repeats( key );
             }
             for( const [ key, list ] of result.names )
             {
@@ -718,6 +763,62 @@ function activate( context )
                 targetSelectionRange: link.target.range,
             } ];
         },
+    } ) );
+
+    // The whole program, from its root: what a file checked alone cannot be sure of.
+    context.subscriptions.push( vscode.commands.registerCommand( 'keel.checkProgram', () =>
+    {
+        const editor = vscode.window.activeTextEditor;
+        if( !editor || editor.document.languageId !== 'keel' || editor.document.uri.scheme !== 'file' )
+        {
+            return;
+        }
+
+        const root = program_root( editor.document.uri.fsPath );
+        if( !root )
+        {
+            vscode.window.showWarningMessage( 'Keel: no file in this folder declares `main()`.' );
+            return;
+        }
+
+        const folder = vscode.workspace.getWorkspaceFolder( editor.document.uri );
+        const cwd = folder ? folder.uri.fsPath : path.dirname( root );
+        const config = vscode.workspace.getConfiguration( 'keel', editor.document.uri );
+        const compiler = path.resolve( cwd, config.get( 'compilerPath' ) );
+        const args = [ '--check', '--diagnostics=json' ];
+        for( const spec of config.get( 'packages' ) )
+        {
+            args.push( '--package', spec );
+        }
+        args.push( path.relative( cwd, root ) );
+
+        vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Window, title: `Keel: checking ${path.basename( root )}` },
+            () => new Promise( ( resolve ) =>
+            {
+                const started = Date.now();
+                output.appendLine( `checking the program from ${path.relative( cwd, root )}...` );
+                child_process.execFile( compiler, args, { cwd, maxBuffer: 64 * 1024 * 1024 }, ( error, stdout, stderr ) =>
+                {
+                    resolve();
+                    if( error && error.code !== 1 )
+                    {
+                        output.appendLine( `keelc ${args.join( ' ' )} (in ${cwd}) failed:` );
+                        output.appendLine( stderr.trim() || String( error ) );
+                        return;
+                    }
+
+                    program.clear();
+                    const by_file = parse( stdout, cwd, root, compiler ).by_file;
+                    log_run( 'checked the program from', root, started, by_file );
+                    for( const [ key, diagnostics ] of by_file )
+                    {
+                        program.set( vscode.Uri.parse( key ), diagnostics );
+                        drop_repeats( key );
+                    }
+                } );
+            } )
+        );
     } ) );
 
     context.subscriptions.push( vscode.workspace.onDidSaveTextDocument( check ) );

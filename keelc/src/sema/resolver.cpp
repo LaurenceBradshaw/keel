@@ -1955,12 +1955,16 @@ void Resolver::find_unreached( Unused& unused ) const
         }
     }
 
-    // A module build cannot see the program, whose `@functions_of` may list any of them.
-    const auto listable = [&]( Node_id decl )
+    // A module build, or a file checked alone with no `main`, cannot see the program, whose
+    // `@functions_of` may list any of them.
+    const auto is_main = [&]( Node_id d )
     {
-        return !modules_.has_program() && ast_.kind( decl ) == Node_kind::Function_decl && !ast_.is_extern( decl ) &&
-               !ast_.is_generic( decl );
+        return modules_.is_program( ast_.span( d ).file ) && ast_.kind( d ) == Node_kind::Function_decl &&
+               interner_.text( ast_.name( d ) ) == "main";
     };
+    const bool whole    = modules_.has_program() && std::ranges::any_of( ast_.declarations( ast_.root() ), is_main );
+    const auto listable = [&]( Node_id decl )
+    { return !whole && ast_.kind( decl ) == Node_kind::Function_decl && !ast_.is_extern( decl ) && !ast_.is_generic( decl ); };
     std::ranges::copy_if(
         tops, std::back_inserter( unused.privates ), [&]( Node_id d ) { return !reached[d.v] && !listable( d ); }
     );

@@ -21,10 +21,13 @@ It has no dependencies and needs no build step. Two settings:
   `build/debug/bin/keelc`, so build keelc first.
 - `keel.packages`: the packages to pass, each as `name=<dir>`, the same as keelc's `--package`.
 
-The saved file is checked as the program's root, which is its `main.kl` when it has one. Saving a
-module that another file imports checks the module and what it imports, but not the file importing it.
-Errors that come from how the two files use each other only show once that file is saved as well.
-If keelc cannot run at all, the reason is written to the *Keel* output channel.
+The saved file is checked alone, with what it imports but not the file importing it, so it reports
+only what it can be sure of: a file with no `main()` cannot see the program's `@functions_of`, so
+none of its private functions is reported unused. *Keel: Check Program* checks the whole program
+from the file beside it that declares `main()`; what that finds stays shown until it runs again,
+except what a file's own check also reports, which shows once.
+The *Keel* output channel has a line for each check: what it found and how long it took, or why
+keelc could not run.
 
 `sample/` is for checking the highlighting by eye: two modules and a package, using every kind of
 Keel syntax. From this folder, it passes `keelc --check --package extra=sample/extra sample/main.kl`.

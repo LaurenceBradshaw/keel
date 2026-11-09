@@ -1,7 +1,6 @@
 // `kl::command_line`: flags, options in both forms, positionals, `--`, each refusal and the usage.
 // `value` on an absent option panics, so `programs/command_line_value_absent` covers it.
 import kl::command_line;
-import kl::string;
 import kl::test::context;
 
 private void flags_options_and_positionals( ref kl::test::context c )

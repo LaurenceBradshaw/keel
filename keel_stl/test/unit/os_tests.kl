@@ -2,7 +2,6 @@
 // several directory levels. The runner runs this program as `./program` in a scratch directory,
 // with stdin from /dev/null.
 import kl::os;
-import kl::string;
 import kl::test::context;
 
 // Whether `r` succeeded.
