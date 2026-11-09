@@ -3,6 +3,7 @@
 
 #include "codegen_llvm/emit_llvm.h"
 #include <fmt/format.h>
+#include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/LLVMContext.h>
@@ -93,6 +94,13 @@ private:
 
     void define( const Function& function, llvm::Function* defined );
 
+    // DWARF under --debug: Keel's names for functions, locals, types and fields, and its lines.
+    llvm::DIFile* file( File_id id );
+    llvm::DIType* debug_type( Type_id type );
+    void          describe( const Function& function, llvm::Function* defined );
+    void          describe_local( Local_id local, llvm::Value* slot );
+    void          locate( Span span );
+
     // Braun et al.'s SSA construction (§2.2) for the locals `promote` chooses. A block is KIR's, and
     // `blocks_.size()` stands for the entry block, where the parameters arrive.
     void           promote( const Function& function );
@@ -154,6 +162,14 @@ private:
 
     std::unordered_map<std::string, llvm::Constant*> strings_;
 
+    std::unique_ptr<llvm::DIBuilder>                   di_; // null without --debug
+    llvm::DICompileUnit*                               unit_ = nullptr;
+    std::unordered_map<u32, llvm::DIFile*>             files_;
+    std::unordered_map<u32, llvm::DIType*>             debug_types_;
+    llvm::DISubprogram*                                subprogram_ = nullptr;
+    File_id                                            subprogram_file_ {};
+    std::unordered_map<u32, llvm::DILexicalBlockFile*> elsewhere_; // the subprogram's lines in another file
+
     // The function being defined.
     const Function*                current_ = nullptr;
     llvm::Function*                defined_ = nullptr;
@@ -205,6 +221,35 @@ Llvm_emitter::Llvm_emitter(
 
 llvm::Module& Llvm_emitter::run()
 {
+    if( debug_ )
+    {
+        di_           = std::make_unique<llvm::DIBuilder>( *module_ );
+        File_id first = part_;
+        for( const Function& function : functions_ )
+        {
+            if( !first.is_valid() && function.declaration.is_valid() )
+            {
+                first = program_[function.declaration].span.file;
+            }
+        }
+        unit_ = di_->createCompileUnit(
+            llvm::dwarf::DW_LANG_C_plus_plus_14,
+            first.is_valid() ? file( first ) : di_->createFile( "keel", "." ),
+            "keelc",
+            false,
+            "",
+            0,
+            "",
+            llvm::DICompileUnit::FullDebug,
+            0,
+            true,
+            false,
+            llvm::DICompileUnit::DebugNameTableKind::None // lld's merged index is one gdb rejects
+        );
+        module_->addModuleFlag( llvm::Module::Warning, "Debug Info Version", llvm::DEBUG_METADATA_VERSION );
+        module_->addModuleFlag( llvm::Module::Warning, "Dwarf Version", 4 ); // valgrind reads no DWARF 5 string forms
+    }
+
     // Every signature first, so a body may call one defined below it.
     std::vector<llvm::Function*> declared;
     for( const Function& function : functions_ )
@@ -236,6 +281,10 @@ llvm::Module& Llvm_emitter::run()
         define( function, declared[i] );
     }
 
+    if( di_ != nullptr )
+    {
+        di_->finalize();
+    }
     return *module_;
 }
 
@@ -530,6 +579,10 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
     // As the C is compiled: stack probes (§7 rule 7), and unwind tables for a debugger's backtrace.
     defined->addFnAttr( "probe-stack", "inline-asm" );
     defined->setUWTableKind( llvm::UWTableKind::Async );
+    if( debug_ )
+    {
+        defined->addFnAttr( "frame-pointer", "all" ); // gdb finds a prologue's end by its frame setup
+    }
 
     entry_ = llvm::BasicBlock::Create( *context_, "entry", defined );
     blocks_.clear();
@@ -539,6 +592,7 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
     }
 
     builder_.SetInsertPoint( entry_ );
+    describe( function, defined );
     locals_.assign( function.locals.size(), nullptr );
 
     llvm::Function::arg_iterator argument = defined->arg_begin();
@@ -597,6 +651,7 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         if( parameter && kind == Held::Memory && argument->hasByValAttr() )
         {
             locals_[i.v] = &*argument++; // the callee's own copy
+            describe_local( i, locals_[i.v] );
             continue;
         }
 
@@ -607,6 +662,7 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         );
         slot->setAlignment( align( local.type ) );
         locals_[i.v] = slot;
+        describe_local( i, slot );
 
         if( parameter && kind == Held::Memory )
         {
@@ -632,6 +688,7 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         {
             statement( each );
         }
+        locate( function.blocks[i].terminator.span );
         terminator( function.blocks[i].terminator );
         exits_[i.v]  = builder_.GetInsertBlock();
         filled_[i.v] = true;
@@ -643,6 +700,256 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
             seal_if_ready( target.v );
         }
     }
+    builder_.SetCurrentDebugLocation( {} );
+}
+
+llvm::DIFile* Llvm_emitter::file( File_id id )
+{
+    llvm::DIFile*& found = files_[id.v];
+    if( found == nullptr )
+    {
+        const std::filesystem::path path = std::filesystem::absolute( sm_.file( id ).path ).lexically_normal();
+        found                            = di_->createFile( path.filename().string(), path.parent_path().string() );
+    }
+    return found;
+}
+
+// A function the user did not write (drop glue, a thunk, a guard, a module's globals, the `main`
+// that calls Keel's) is the compiler's own, under its symbol.
+void Llvm_emitter::describe( const Function& function, llvm::Function* defined )
+{
+    subprogram_ = nullptr;
+    elsewhere_.clear();
+    if( di_ == nullptr )
+    {
+        return;
+    }
+
+    std::string    name   = defined->getName().str();
+    Span           span   = {};
+    llvm::DIScope* scope  = unit_;
+    auto           flags  = llvm::DISubprogram::SPFlagDefinition;
+    const bool     source = function.declaration.is_valid() && !function.entry && !function.globals.is_valid() &&
+                        function.compares == Token_kind::Unknown && !function.thunk_of.is_valid();
+    if( source )
+    {
+        const Described& described = program_[function.declaration];
+        name = described.aggregate_name.empty() ? described.name : described.aggregate_name + "::" + described.name;
+        span = described.span;
+        if( const std::string package = spelling_.owner( function.declaration ).package;
+            !package.empty() && package != "prelude" )
+        {
+            scope = di_->createNameSpace( unit_, package, false );
+        }
+    }
+    if( !source || !span.is_valid() )
+    {
+        flags |= llvm::DISubprogram::SPFlagLocalToUnit;
+    }
+
+    subprogram_file_   = span.is_valid() ? span.file : File_id {};
+    llvm::DIFile* in   = span.is_valid() ? file( span.file ) : unit_->getFile();
+    const u32     line = span.is_valid() ? sm_.line_col( span.file, span.start ).line : 0;
+    subprogram_        = di_->createFunction(
+        scope,
+        name,
+        "", // a mangled name would be what gdb shows
+        in,
+        line,
+        di_->createSubroutineType( di_->getOrCreateTypeArray( {} ) ),
+        line,
+        source ? llvm::DINode::FlagPrototyped : llvm::DINode::FlagArtificial,
+        flags
+    );
+    defined->setSubprogram( subprogram_ );
+
+    builder_.SetCurrentDebugLocation( {} ); // the entry block's work is the prologue, as clang's is
+}
+
+// A named local, parameters numbered from 1.
+void Llvm_emitter::describe_local( Local_id local, llvm::Value* slot )
+{
+    const Local& described = current_->locals[local];
+    if( subprogram_ == nullptr || !described.name.is_valid() || current_->entry )
+    {
+        return;
+    }
+    llvm::DIType* type = debug_type( described.type );
+    if( type == nullptr )
+    {
+        return;
+    }
+
+    const Span        span = described.span.is_valid() ? described.span : Span {};
+    const u32         line = span.is_valid() ? sm_.line_col( span.file, span.start ).line : 0;
+    llvm::DIFile*     in   = span.is_valid() ? file( span.file ) : subprogram_->getFile();
+    const std::string name( interner_.text( described.name ) );
+
+    llvm::DILocalVariable* variable = local.v >= 1 && local.v <= current_->parameter_count
+                                          ? di_->createParameterVariable( subprogram_, name, local.v, in, line, type, true )
+                                          : di_->createAutoVariable( subprogram_, name, in, line, type, true );
+    di_->insertDeclare(
+        slot, variable, di_->createExpression(), llvm::DILocation::get( *context_, line, 0, subprogram_ ), entry_
+    );
+}
+
+// A span outside the subprogram's file is in a lexical block of that file; an invalid one keeps the line before it.
+void Llvm_emitter::locate( Span span )
+{
+    if( subprogram_ == nullptr || !span.is_valid() )
+    {
+        return;
+    }
+    llvm::DIScope* scope = subprogram_;
+    if( span.file != subprogram_file_ )
+    {
+        llvm::DILexicalBlockFile*& block = elsewhere_[span.file.v];
+        if( block == nullptr )
+        {
+            block = di_->createLexicalBlockFile( subprogram_, file( span.file ) );
+        }
+        scope = block;
+    }
+    const Line_col at = sm_.line_col( span.file, span.start );
+    builder_.SetCurrentDebugLocation( llvm::DILocation::get( *context_, at.line, at.col, scope ) );
+}
+
+// Keel's name for each type; a struct's fields by name and offset. A payload enum shows its tag,
+// a union only its size, and a scalar enum its integer.
+llvm::DIType* Llvm_emitter::debug_type( Type_id type )
+{
+    if( const auto found = debug_types_.find( type.v ); found != debug_types_.end() )
+    {
+        return found->second;
+    }
+
+    const Type&       described = table().get( type );
+    const std::string name      = std::string( table().name( type ) );
+    const u64         bits      = is_void( type ) ? 0 : layout_.size( type ) * 8;
+    const u32         aligned   = is_void( type ) ? 0 : static_cast<u32>( layout_.align( type ) * 8 );
+    const auto        basic     = [&]( u64 width, unsigned encoding ) { return di_->createBasicType( name, width, encoding ); };
+    const auto        pointer   = [&]( llvm::DIType* to ) { return di_->createPointerType( to, 64, 64, std::nullopt, name ); };
+    const auto        pointee   = [&]( Type_id element ) { return is_void( element ) ? nullptr : debug_type( element ); };
+
+    // Members of a struct that may reach itself through a pointer, so it is a placeholder until they are built.
+    const auto composite = [&]( auto members )
+    {
+        llvm::DICompositeType* placeholder = di_->createReplaceableCompositeType(
+            llvm::dwarf::DW_TAG_structure_type, name, unit_, nullptr, 0, 0, bits, aligned
+        );
+        debug_types_[type.v] = placeholder;
+        std::vector<llvm::Metadata*> elements;
+        const auto                   member = [&]( std::string_view field, llvm::DIType* of, u64 size, u64 at )
+        {
+            if( of != nullptr )
+            {
+                elements.push_back(
+                    di_->createMemberType( placeholder, field, nullptr, 0, size * 8, 0, at * 8, llvm::DINode::FlagZero, of )
+                );
+            }
+        };
+        members( member );
+        llvm::DICompositeType* whole = di_->createStructType(
+            unit_, name, nullptr, 0, bits, aligned, llvm::DINode::FlagZero, nullptr, di_->getOrCreateArray( elements )
+        );
+        return di_->replaceTemporary( llvm::TempDIType( placeholder ), whole );
+    };
+
+    llvm::DIType* made = nullptr;
+    switch( described.kind )
+    {
+    case Type_kind::Bool:
+        made = basic( 8, llvm::dwarf::DW_ATE_boolean );
+        break;
+    case Type_kind::Int:
+        made = basic( described.width, described.is_signed ? llvm::dwarf::DW_ATE_signed : llvm::dwarf::DW_ATE_unsigned );
+        break;
+    case Type_kind::Float:
+        made = basic( described.width, llvm::dwarf::DW_ATE_float );
+        break;
+    case Type_kind::Field:
+        made = basic( 64, llvm::dwarf::DW_ATE_unsigned );
+        break;
+    case Type_kind::Function:
+        made = pointer( nullptr );
+        break;
+    case Type_kind::Many_pointer:
+        made = pointer( pointee( described.element ) );
+        break;
+    case Type_kind::Pointer:
+        if( held( type ) != Held::Pair )
+        {
+            made = pointer( pointee( described.element ) );
+            break;
+        }
+        made = composite(
+            [&]( auto member )
+            {
+                const bool run = table().is_run( described.element );
+                member( run ? "data" : "object", di_->createPointerType( nullptr, 64 ), 8, 0 );
+                if( run )
+                {
+                    member( "size", di_->createBasicType( "u64", 64, llvm::dwarf::DW_ATE_unsigned ), 8, 8 );
+                }
+                else
+                {
+                    member( "vtable", di_->createPointerType( nullptr, 64 ), 8, 8 );
+                }
+            }
+        );
+        break;
+    case Type_kind::Enum:
+        if( held( type ) == Held::Scalar )
+        {
+            made = di_->createTypedef( debug_type( described.element ), name, nullptr, 0, unit_ );
+            break;
+        }
+        made = composite( [&]( auto member )
+                          { member( "tag", debug_type( described.element ), layout_.size( described.element ), 0 ); } );
+        break;
+    case Type_kind::Closure:
+        if( held( type ) == Held::Scalar )
+        {
+            made = basic( 8, llvm::dwarf::DW_ATE_unsigned );
+            break;
+        }
+        [[fallthrough]];
+    case Type_kind::Struct:
+        made = composite(
+            [&]( auto member )
+            {
+                for( const Held_field& field : program_.fields( type ) )
+                {
+                    member(
+                        program_[field.declaration].name,
+                        is_void( field.type ) ? nullptr : debug_type( field.type ),
+                        layout_.size( field.type ),
+                        layout_.offset( type, field.declaration )
+                    );
+                }
+            }
+        );
+        break;
+    case Type_kind::Union:
+        made = composite( []( auto ) {} );
+        break;
+    case Type_kind::Array:
+        if( llvm::DIType* element = pointee( described.element ) )
+        {
+            made = di_->createArrayType(
+                bits,
+                aligned,
+                element,
+                di_->getOrCreateArray( { di_->getOrCreateSubrange( 0, static_cast<int64_t>( described.count ) ) } )
+            );
+        }
+        break;
+    default: // nothing a named local holds
+        break;
+    }
+
+    debug_types_[type.v] = made;
+    return made;
 }
 
 // A scalar nothing takes the address of, though what it points at may be; under --debug, only a
@@ -816,6 +1123,7 @@ void Llvm_emitter::seal_if_ready( u32 block )
 
 void Llvm_emitter::statement( const Statement& statement )
 {
+    locate( statement.span );
     switch( statement.kind )
     {
     case Statement_kind::Assign:
@@ -1835,8 +2143,9 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
-// x86-64 Linux at -O3's machine passes, and none of LLVM's IR passes (§2.2): Keel optimises its own IR.
-std::string write_object( llvm::Module& module, const std::filesystem::path& object )
+// x86-64 Linux at -O3's machine passes (none under --debug, so each line keeps its code), and none of LLVM's IR passes (§2.2):
+// Keel optimises its own IR.
+std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug )
 {
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
@@ -1852,7 +2161,13 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     }
 
     const std::unique_ptr<llvm::TargetMachine> machine( target->createTargetMachine(
-        triple, "x86-64", "", llvm::TargetOptions {}, llvm::Reloc::PIC_, std::nullopt, llvm::CodeGenOptLevel::Aggressive
+        triple,
+        "x86-64",
+        "",
+        llvm::TargetOptions {},
+        llvm::Reloc::PIC_,
+        std::nullopt,
+        debug ? llvm::CodeGenOptLevel::None : llvm::CodeGenOptLevel::Aggressive
     ) );
     module.setTargetTriple( triple );
     module.setDataLayout( machine->createDataLayout() );
@@ -1918,7 +2233,7 @@ Llvm_output emit_llvm(
 
         if( output.error.empty() && !options.object.empty() )
         {
-            output.error = write_object( module, options.object );
+            output.error = write_object( module, options.object, options.debug );
         }
     }
     catch( const Refusal& refusal )
@@ -1976,6 +2291,26 @@ TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_names_it", "[codegen]
     REQUIRE( promoted.ir.find( "alloca" ) == std::string::npos );
     REQUIRE( kept.error.empty() );
     REQUIRE( kept.ir.find( "%i = alloca i32" ) != std::string::npos );
+}
+
+TEST_CASE( "emit_llvm_describes_functions_and_locals_only_under_debug", "[codegen][llvm]" )
+{
+    Compiled p( "i32 count( i32 n ) { i32 i = n; return i; }\ni32 main() { return count( 0 ); }\n", Stage::Elaborated );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output release =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+    const Llvm_output debug =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true } );
+
+    INFO( debug.ir );
+    REQUIRE( debug.error.empty() );
+    REQUIRE( debug.ir.find( "distinct !DISubprogram(name: \"count\"" ) != std::string::npos );
+    REQUIRE( debug.ir.find( "!DILocalVariable(name: \"n\", arg: 1" ) != std::string::npos );
+    REQUIRE( debug.ir.find( "!DILocalVariable(name: \"i\"" ) != std::string::npos );
+    REQUIRE( debug.ir.find( "name: \"i32\", size: 32, encoding: DW_ATE_signed" ) != std::string::npos );
+    REQUIRE( release.ir.find( "!dbg" ) == std::string::npos );
 }
 
 } // namespace keel
