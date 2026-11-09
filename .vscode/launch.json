@@ -2,9 +2,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // Builds examples/debugging.kl with --debug and -g, then runs it under gdb: set
-            // breakpoints in the .kl file. Locals show as kl_<name>_<n>; editors/gdb/keel.py shows
-            // Keel values and function names.
+            // Builds examples/debugging.kl with --debug, then runs it under gdb: set breakpoints in
+            // the .kl file. Locals and functions show by their Keel names.
             "name": "Debug a Keel program (examples/debugging.kl)",
             "type": "cppdbg",
             "request": "launch",
@@ -23,16 +22,6 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 },
-                {
-                    "description": "Show Keel values and names",
-                    "text": "source ${workspaceFolder}/editors/gdb/keel.py",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Apply its frame filter to the call stack and variables",
-                    "text": "-enable-frame-filters",
-                    "ignoreFailures": true
-                }
             ]
         },
         {

@@ -96,6 +96,7 @@ int write_object(
         .build       = std::string( build_id() ),
         .debug       = options.debug,
         .overflow    = options.overflow,
+        .llvm        = options.llvm,
         .module      = module_name( program.modules, sm, interner, input ),
         .source      = sm.file( input ).path,
         .source_hash = fnv1a( sm.file( input ).text ),
@@ -221,7 +222,7 @@ std::optional<Object> read_object( const std::filesystem::path& path, std::strin
     return object;
 }
 
-std::optional<std::string> refused( std::span<const Object> objects, bool debug, bool overflow )
+std::optional<std::string> refused( std::span<const Object> objects, bool debug, bool overflow, bool llvm )
 {
     const auto named = [&]( std::string_view module ) -> const Object*
     {
@@ -261,6 +262,16 @@ std::optional<std::string> refused( std::span<const Object> objects, bool debug,
                 object.path,
                 manifest.overflow ? "with" : "without",
                 overflow ? "has" : "does not have"
+            );
+        }
+
+        if( manifest.llvm != llvm )
+        {
+            return fmt::format(
+                "'{}' was built by the {} backend, and this build uses {}",
+                object.path,
+                manifest.llvm ? "LLVM" : "C",
+                llvm ? "LLVM" : "C"
             );
         }
 
@@ -818,31 +829,38 @@ TEST_CASE( "refused_names_the_first_object_that_cannot_be_built_with", "[object]
     const Object optional = object_named( "optional.klo", "kl::optional", 1 );
     const Object list     = object_named( "list.klo", "kl::list", 2, { { "kl::optional", 1 } } );
 
-    REQUIRE( !refused( std::vector { optional, list }, true, true ) );
+    REQUIRE( !refused( std::vector { optional, list }, true, true, false ) );
 
     REQUIRE(
-        refused( std::vector { optional, list }, false, true ) ==
+        refused( std::vector { optional, list }, false, true, false ) ==
         "'optional.klo' is a debug object, and this is a release build"
     );
     REQUIRE(
-        refused( std::vector { optional, list }, true, false ) ==
+        refused( std::vector { optional, list }, true, false, false ) ==
         "'optional.klo' was built with overflow checks, and this build does not have them"
+    );
+
+    REQUIRE(
+        refused( std::vector { optional, list }, true, true, true ) ==
+        "'optional.klo' was built by the C backend, and this build uses LLVM"
     );
 
     Object other = optional;
     other.manifest.build += "0";
-    REQUIRE( refused( std::vector { other }, true, true ) == "'optional.klo' was built by another keelc; build it again" );
+    REQUIRE(
+        refused( std::vector { other }, true, true, false ) == "'optional.klo' was built by another keelc; build it again"
+    );
 
     REQUIRE(
-        refused( std::vector { optional, object_named( "optional2.klo", "kl::optional", 3 ) }, true, true ) ==
+        refused( std::vector { optional, object_named( "optional2.klo", "kl::optional", 3 ) }, true, true, false ) ==
         "'optional.klo' and 'optional2.klo' are both `kl::optional`"
     );
     REQUIRE(
-        refused( std::vector { list }, true, true ) ==
+        refused( std::vector { list }, true, true, false ) ==
         "'list.klo' was built against `kl::optional`, and no object for `kl::optional` was given"
     );
     REQUIRE(
-        refused( std::vector { object_named( "optional.klo", "kl::optional", 9 ), list }, true, true ) ==
+        refused( std::vector { object_named( "optional.klo", "kl::optional", 9 ), list }, true, true, false ) ==
         "'list.klo' was built against another `kl::optional` than 'optional.klo'; build 'list.klo' again"
     );
 }

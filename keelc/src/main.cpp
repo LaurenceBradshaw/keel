@@ -67,7 +67,7 @@ int main( int argc, char** argv )
         ( "dump-kir",        "Print the lowered KIR and stop" )
         ( "emit-c",          "Print the generated C and stop" )
         ( "emit-llvm",       "Print the generated LLVM IR and stop" )
-        ( "backend",         "The code generator: c or llvm", cxxopts::value<std::string>()->default_value( "c" ) )
+        ( "backend",         "The code generator: c or llvm", cxxopts::value<std::string>()->default_value( "llvm" ) )
         ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
         ( "imports",         "Print the input's imports as written, one per line, and stop" )
@@ -479,7 +479,7 @@ int main( int argc, char** argv )
         }
         given.push_back( *object );
     }
-    if( const std::optional<std::string> refusal = keel::refused( given, debug, overflow_checks ) )
+    if( const std::optional<std::string> refusal = keel::refused( given, debug, overflow_checks, backend == "llvm" ) )
     {
         fmt::print( stderr, "keelc: {}\n", *refusal );
         return 2;

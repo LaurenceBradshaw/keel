@@ -152,7 +152,7 @@ the ownership and lifetime model is that member here.
 ## Status
 
 This is an in-progress compiler, not a released language. The front end, the IR and its optimiser,
-the move and borrow checks and the C backend all work, and the standard library, the `kl` package,
+the move and borrow checks and both backends, LLVM and C, all work, and the standard library, the `kl` package,
 is written in Keel: `list`, `string`, `optional`, `pair`, `ring`, `map`, `set`, `ordered_map`,
 `ordered_set`, files, paths and processes, time, and a unit test runner.
 
@@ -370,7 +370,8 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--with-prelude` | With `--declarations`, list the prelude's declarations too |
 | `--as-prelude` | With `--check`, check the input as the prelude, in place of the one keelc carries |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
-| `--emit-c` | Print the generated C and stop |
+| `--backend c` | Generate C and build it with `$CC`, in place of LLVM (the default) |
+| `--emit-c` / `--emit-llvm` | Print the generated C or LLVM IR and stop |
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `-q` / `--quiet` | Print only diagnostics. Without it, a check or build ends with one line on stderr: errors, warnings, files and seconds |
@@ -384,16 +385,16 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `-W<name>` / `-Wno-<name>` | Turn a warning on or off: `unused-parameter`, `unused-variable`, `void-variable`, `constant-comparison`, `needless-move`, `unreachable-code`, `unconditional-recursion`, `unused-import`, `unused-private`, and `large-local` (off by default) |
 | `-Werror` / `-Werror=<name>` | Make every warning, or that one, an error |
 
-`keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS` without its `-W` and
+With `--backend c`, `keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS` without its `-W` and
 `-pedantic` words (`-Wl,`, `-Wa,` and `-Wp,` are kept): Keel's warnings are Keel's, and the C is never
-the user's to fix.
+the user's to fix. A `.c` given after the `.kl` is compiled with `$CC` on either backend.
 
 [`editors/vscode`](editors/vscode) is a VS Code extension: highlighting, keelc's errors underlined on
 save, names coloured by what they refer to, hovers, and go-to-definition. Its README says how to install it.
 
-[`editors/gdb/keel.py`](editors/gdb/keel.py) shows a program's values and call stack in Keel under
-gdb: build with `--debug` and `CFLAGS=-g`, then `source editors/gdb/keel.py`. `examples/debugging.kl`
-is a program to step through.
+A `--debug` build carries DWARF in Keel's names, so gdb shows functions, locals and fields as the
+`.kl` writes them. `examples/debugging.kl` is a program to step through. For `--backend c`, build with
+`CFLAGS=-g` too and `source editors/gdb/keel_c.py`.
 
 `keeldoc` writes a package's documentation as HTML pages from its `///` and `//!` comments. The
 library's are in [`keel_stl/docs`](keel_stl/docs); after changing a doc comment, regenerate them:
@@ -443,11 +444,12 @@ keel_rt              the runtime floor (allocation, writing, panics), and its te
 keel_stl             the standard library, the `kl` package, and its pages in docs/
 keeldoc              the doc tool: keelc's --declarations to HTML pages
 editors/vscode       the VS Code extension
-editors/gdb          the gdb script
+editors/gdb          the gdb checks, and a script for the C backend
 ```
 
-The C backend is not the portability boundary — KIR is. It is kept clean enough that another backend
-could consume it, and eventually one will, most likely LLVM.
+Neither backend is the portability boundary — KIR is. LLVM is the default and links in-process with
+lld; the C backend stays, built with `--backend c`, and an object built by one backend is refused by
+the other.
 
 ## Documents
 

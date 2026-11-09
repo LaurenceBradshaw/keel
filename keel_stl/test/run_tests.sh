@@ -14,7 +14,7 @@
 #   run_tests.sh <path-to-keelc> [--update]
 #
 #   KEEL_VALGRIND=1   run each program under valgrind too, failing on any error it reports
-#   KEEL_BACKEND      the backend each program is built with, as --backend (default: c)
+#   KEEL_BACKEND      the backend each program is built with, as --backend (default: llvm)
 #   KEEL_COMPARE      a second backend: each program is built and run with it too, and must pass the
 #                     same checks and print what the first backend's build did
 #   KEEL_JOBS, KEEL_RUN_TIMEOUT, CC, KEEL_CFLAGS, KEEL_C_WARNINGS, KEEL_RT   as for keelc's runner
@@ -34,7 +34,7 @@ update=0
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
-backend="${KEEL_BACKEND:-c}"
+backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
 export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
 

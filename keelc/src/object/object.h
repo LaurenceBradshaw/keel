@@ -44,6 +44,6 @@ int write_object(
 std::optional<Object> read_object( const std::filesystem::path& path, std::string& error );
 
 // Why these objects cannot be built with, in command-line order, or nothing when they can.
-std::optional<std::string> refused( std::span<const Object> objects, bool debug, bool overflow );
+std::optional<std::string> refused( std::span<const Object> objects, bool debug, bool overflow, bool llvm );
 
 } // namespace keel

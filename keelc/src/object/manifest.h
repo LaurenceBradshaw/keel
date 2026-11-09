@@ -21,7 +21,8 @@ struct Manifest
     std::string build {}; // the keelc's build_id()
     bool        debug    = false;
     bool        overflow = false;
-    std::string module {}; // qualified, as `kl::time`
+    bool        llvm     = false; // the native part's backend
+    std::string module {};        // qualified, as `kl::time`
     std::string source {};
     u64         source_hash = 0;
 

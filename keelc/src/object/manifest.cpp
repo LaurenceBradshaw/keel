@@ -38,6 +38,7 @@ std::string write_manifest( const Manifest& manifest )
     std::string out = fmt::format( "keel object {}\nbuild {}\n", manifest.format, manifest.build );
     out += manifest.debug ? "mode debug\n" : "mode release\n";
     out += manifest.overflow ? "overflow\n" : "";
+    out += manifest.llvm ? "backend llvm\n" : "backend c\n";
     out += fmt::format( "module {}\nsource {} {}\n", manifest.module, manifest.source, hex( manifest.source_hash ) );
 
     for( const auto& [module, hash] : manifest.depends )
@@ -50,7 +51,7 @@ std::string write_manifest( const Manifest& manifest )
 std::optional<Manifest> read_manifest( std::string_view text )
 {
     Manifest manifest;
-    bool     has_format = false, has_build = false, has_mode = false, has_module = false, has_source = false;
+    bool has_format = false, has_build = false, has_mode = false, has_backend = false, has_module = false, has_source = false;
 
     while( !text.empty() )
     {
@@ -88,6 +89,11 @@ std::optional<Manifest> read_manifest( std::string_view text )
         {
             manifest.overflow = true;
         }
+        else if( key == "backend" && ( rest == "c" || rest == "llvm" ) )
+        {
+            manifest.llvm = rest == "llvm";
+            has_backend   = true;
+        }
         else if( key == "module" )
         {
             manifest.module = rest;
@@ -121,7 +127,7 @@ std::optional<Manifest> read_manifest( std::string_view text )
         }
     }
 
-    if( !has_build || !has_mode || !has_module || !has_source )
+    if( !has_build || !has_mode || !has_backend || !has_module || !has_source )
     {
         return std::nullopt;
     }
@@ -142,6 +148,7 @@ TEST_CASE( "manifest_round_trips", "[object][manifest]" )
         .build       = "abc123",
         .debug       = true,
         .overflow    = true,
+        .llvm        = true,
         .module      = "kl::list",
         .source      = "/src/my kl/list.kl",
         .source_hash = 0x0123456789abcdef,
@@ -150,7 +157,7 @@ TEST_CASE( "manifest_round_trips", "[object][manifest]" )
 
     const std::string text = write_manifest( written );
     REQUIRE(
-        text == "keel object 1\nbuild abc123\nmode debug\noverflow\nmodule kl::list\nsource /src/my kl/list.kl "
+        text == "keel object 1\nbuild abc123\nmode debug\noverflow\nbackend llvm\nmodule kl::list\nsource /src/my kl/list.kl "
                 "0123456789abcdef\ndepends kl::optional 000000000000002a\n"
     );
 
@@ -160,6 +167,7 @@ TEST_CASE( "manifest_round_trips", "[object][manifest]" )
     REQUIRE( read->build == written.build );
     REQUIRE( read->debug );
     REQUIRE( read->overflow );
+    REQUIRE( read->llvm );
     REQUIRE( read->module == written.module );
     REQUIRE( read->source == written.source );
     REQUIRE( read->source_hash == written.source_hash );
@@ -175,9 +183,10 @@ TEST_CASE( "manifest_refuses_what_it_did_not_write", "[object][manifest]" )
     REQUIRE( !read_manifest( "keel object\n" ).has_value() );
     REQUIRE( !read_manifest( good.substr( 0, good.size() - 1 ) ).has_value() ); // no final newline
     REQUIRE( !read_manifest( good + "colour blue\n" ).has_value() );
-    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode fast\nmodule m\nsource m.kl 0\n" ).has_value() );
-    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode debug\nmodule m\nsource m.kl zz\n" ).has_value() );
-    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode debug\nsource m.kl 0\n" ).has_value() ); // no module
+    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode fast\nbackend c\nmodule m\nsource m.kl 0\n" ).has_value() );
+    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode debug\nmodule m\nsource m.kl 0\n" ).has_value() ); // no backend
+    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode debug\nbackend c\nmodule m\nsource m.kl zz\n" ).has_value() );
+    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode debug\nbackend c\nsource m.kl 0\n" ).has_value() ); // no module
 }
 
 } // namespace keel

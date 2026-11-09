@@ -1,8 +1,8 @@
 # Copyright 2026 Laurence Bradshaw
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Shows a Keel program's values and frames in Keel in gdb. Load it with
-# `source editors/gdb/keel.py`; VS Code's cppdbg also needs `-enable-frame-filters`.
+# For the C backend (`--backend c`), whose DWARF is the C's: shows a Keel program's values and
+# frames in Keel in gdb. Load it with `source editors/gdb/keel_c.py`; VS Code's cppdbg also needs `-enable-frame-filters`.
 
 import os
 import re
@@ -213,9 +213,14 @@ def demangle_local(name):
     return match.group(1) if match else name
 
 
+def demangle_field(name):
+    """`kl_size_` is `size_`."""
+    return name[len("kl_") :] if name.startswith("kl_") else name
+
+
 def _field(value, name):
     for field in value.type.strip_typedefs().fields():
-        if demangle_local(field.name).rstrip("_") == name:
+        if demangle_field(field.name).rstrip("_") == name:
             return value[field]
     raise gdb.GdbError("no field {} in {}".format(name, value.type))
 
@@ -269,7 +274,7 @@ class _StructPrinter:
 
     def children(self):
         for field in self.value.type.strip_typedefs().fields():
-            yield demangle_local(field.name), self.value[field]
+            yield demangle_field(field.name), self.value[field]
 
 
 def _lookup(value):
@@ -277,8 +282,7 @@ def _lookup(value):
     if kind.code != gdb.TYPE_CODE_STRUCT or not (kind.tag or "").startswith("kl_"):
         return None
     if kind.tag == "kl_2kl6string_string":
-        text = _field(value, "bytes")
-        return _StringPrinter(_field(text, "data"), _field(text, "count"))
+        return _StringPrinter(_field(value, "data"), _field(value, "size"))
     if kind.tag == "kl_7prelude_str":
         return _StringPrinter(_field(value, "data"), _field(value, "size"))
     if kind.tag.startswith("kl_2kl4list_list__I"):

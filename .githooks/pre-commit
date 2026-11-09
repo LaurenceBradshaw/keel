@@ -135,7 +135,7 @@ check_goldens()
         [ -x "$runner" ] || continue
 
         any=1
-        KEEL_COMPARE=llvm "$runner" ./build/debug/bin/keelc || return 1
+        KEEL_COMPARE=c "$runner" ./build/debug/bin/keelc || return 1
     done
 
     if [ "$any" -eq 0 ]; then
@@ -165,11 +165,11 @@ check_docs()
     rm -rf "$out"
 }
 
-# keelb's own unit tests, built by keelb, then its goldens with a second keelb from the LLVM backend. Both use the release keelb.
+# keelb's own unit tests, built by keelb, then its goldens with a second keelb from the C backend. Both use the release keelb.
 check_keel_build()
 {
     ( cd keel_build && ../build/release/bin/keelb test --cache ../build/keel_build ) || return 1
-    KEEL_COMPARE=llvm keel_build/test/run_tests.sh ./build/release/bin/keelb
+    KEEL_COMPARE=c keel_build/test/run_tests.sh ./build/release/bin/keelb
 }
 
 echo "pre-commit:"

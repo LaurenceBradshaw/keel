@@ -1,6 +1,6 @@
 // A program to step through in a debugger: "Debug a Keel program (examples/debugging.kl)" in
-// .vscode/launch.json builds it with --debug and -g, then runs it under gdb. Locals show as
-// kl_<name>_<n>; editors/gdb/keel.py shows their values and the call stack in Keel.
+// .vscode/launch.json builds it with --debug, then runs it under gdb, which shows its locals and
+// functions by their Keel names.
 import kl::console;
 import kl::list;
 import kl::string;

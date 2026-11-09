@@ -35,7 +35,7 @@
 # run, and must give the same exit code and output. A <name>.kl.debug_only marker skips that, for a
 # fixture whose answer is a --debug check's.
 #
-#   KEEL_BACKEND  the backend a run fixture is built with, as --backend (default: c). A fixture's
+#   KEEL_BACKEND  the backend a run fixture is built with, as --backend (default: llvm). A fixture's
 #               .out and .run are checked with it; .expected stays the C backend's output.
 #   KEEL_COMPARE  a second backend: each run fixture is built and run with it too, objects and the
 #               release build included, and must pass the same checks and print what the first did.
@@ -103,7 +103,7 @@ fi
 
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 
-backend="${KEEL_BACKEND:-c}"
+backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
 
 # keelc runs the C compiler; the runner only configures it.
