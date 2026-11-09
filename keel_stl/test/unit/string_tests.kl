@@ -130,3 +130,15 @@ private void join_puts_the_separator_between( ref kl::test::context c )
     owned.push( "yz" );
     c.check_eq( kl::join( owned.as_run(), " " ), "x yz" );
 }
+
+private void string_orders_by_bytes( ref kl::test::context c )
+{
+    kl::string ab = kl::string::from( "ab" );
+    kl::string b = kl::string::from( "b" );
+    kl::string abc = kl::string::from( "abc" );
+    kl::string x = kl::string::from( "x" );
+    c.check( ab < b );
+    c.check( ab < abc );
+    c.check( !( b < ab ) );
+    c.check( ( x <=> x ) == ordering::equal );
+}

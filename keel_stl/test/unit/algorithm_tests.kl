@@ -1,0 +1,227 @@
+// `kl::algorithm` over lists, rings and arrays, with lambdas, named functions and the value forms;
+// `owned` checks that removing and deduplicating destroy each dropped element once.
+import kl::algorithm;
+import kl::list;
+import kl::optional;
+import kl::ring;
+import kl::string;
+import kl::test::context;
+import owned;
+
+private kl::list<kl::string> strings( const ref str[] texts )
+{
+    kl::list<kl::string> result = kl::list<kl::string>();
+    for( u64 i : 0..texts.size )
+    {
+        result.push( kl::string::from( texts[i] ) );
+    }
+    return result;
+}
+
+private void check_strings( ref kl::test::context c, const ref kl::list<kl::string> got, const ref str[] expected )
+{
+    c.require( got.size() == expected.size );
+    for( u64 i : 0..expected.size )
+    {
+        c.check_eq( got[i], expected[i] );
+    }
+}
+
+private kl::list<kl::string> fruit()
+{
+    str[4] texts = [ "pear", "fig", "banana", "apple" ];
+    return strings( texts );
+}
+
+private void sort_orders_strings_by_a_lambda( ref kl::test::context c )
+{
+    kl::list<kl::string> names = fruit();
+    kl::sort( ref names, fn[]( a, b ) { return a < b; } );
+    str[4] up = [ "apple", "banana", "fig", "pear" ];
+    check_strings( ref c, names, up );
+
+    kl::sort( ref names, fn[]( a, b ) { return a > b; } );
+    str[4] down = [ "pear", "fig", "banana", "apple" ];
+    check_strings( ref c, names, down );
+
+    kl::list<kl::string> none = kl::list<kl::string>();
+    kl::sort( ref none, fn[]( a, b ) { return a < b; } );
+    c.check( none.is_empty() );
+
+    str[1] lone = [ "fig" ];
+    kl::list<kl::string> one = strings( lone );
+    kl::sort( ref one, fn[]( a, b ) { return a < b; } );
+    check_strings( ref c, one, lone );
+}
+
+private void sort_orders_many_values( ref kl::test::context c )
+{
+    kl::list<u64> values = kl::list<u64>();
+    for( u64 i : 0..100 )
+    {
+        values.push( ( i * 37 ) % 100 );
+    }
+    kl::sort( ref values );
+    for( u64 i : 0..100 )
+    {
+        c.check_eq( values[i], i );
+    }
+}
+
+private void sort_orders_arrays_and_rings( ref kl::test::context c )
+{
+    i32[5] numbers = [ 3, -1, 4, 1, -5 ];
+    kl::sort( ref numbers );
+    i32[5] sorted = [ -5, -1, 1, 3, 4 ];
+    for( u64 i : 0..5 )
+    {
+        c.check_eq( numbers[i], sorted[i] );
+    }
+
+    kl::ring<u64> wrapped = kl::ring<u64>::with_capacity( 4 );
+    wrapped.push_back( 9 );
+    wrapped.push_back( 7 );
+    wrapped.push_front( 8 );
+    wrapped.push_front( 2 );
+    kl::sort( ref wrapped );
+    c.check_eq( wrapped[0], 2 );
+    c.check_eq( wrapped[1], 7 );
+    c.check_eq( wrapped[2], 8 );
+    c.check_eq( wrapped[3], 9 );
+}
+
+private bool shorter( const ref kl::string a, const ref kl::string b )
+{
+    return a.size() < b.size();
+}
+
+private void sort_takes_a_named_function( ref kl::test::context c )
+{
+    kl::list<kl::string> names = fruit();
+    kl::sort( ref names, &shorter );
+    c.check_eq( names[0], "fig" );
+    c.check_eq( names[3], "banana" );
+}
+
+private void remove_if_drops_what_a_capturing_lambda_picks( ref kl::test::context c )
+{
+    str[6] texts = [ "fig", "pear", "fig", "apple", "kiwi", "fig" ];
+    kl::list<kl::string> names = strings( texts );
+    kl::string unwanted = kl::string::from( "fig" );
+    kl::remove_if( ref names, fn[ unwanted ]( x ) { return x == unwanted; } );
+    str[3] kept = [ "pear", "apple", "kiwi" ];
+    check_strings( ref c, names, kept );
+}
+
+private void remove_drops_each_equal_value( ref kl::test::context c )
+{
+    kl::list<i32> values = kl::list<i32>();
+    i32[6] pushed = [ 1, 2, 1, 3, 1, 1 ];
+    for( i32 v : pushed )
+    {
+        values.push( v );
+    }
+    kl::remove( ref values, 1 );
+    c.require( values.size() == 2 );
+    c.check_eq( values[0], 2 );
+    c.check_eq( values[1], 3 );
+}
+
+private void remove_if_drops_each_removed_element( ref kl::test::context c )
+{
+    {
+        kl::list<owned> values = kl::list<owned>();
+        for( u64 i : 0..5 )
+        {
+            values.push( owned( i ) );
+        }
+        kl::remove_if( ref values, fn[]( x ) { return x.value() % 2 == 0; } );
+        c.check_eq( live, 2 );
+        c.require( values.size() == 2 );
+        c.check_eq( values[0].value(), 1 );
+        c.check_eq( values[1].value(), 3 );
+    }
+    c.check_eq( live, 0 );
+}
+
+private void index_of_and_contains_find_the_first_match( ref kl::test::context c )
+{
+    kl::list<u64> values = kl::list<u64>();
+    u64[5] pushed = [ 4, 7, 2, 7, 9 ];
+    for( u64 v : pushed )
+    {
+        values.push( v );
+    }
+    c.check_eq( kl::unwrap( kl::index_of( values, 7 ) ), 1 );
+    c.check( kl::is_none( kl::index_of( values, 5 ) ) );
+    c.check_eq( kl::unwrap( kl::index_if( values, fn[]( x ) { return x > 7; } ) ), 4 );
+    c.check( kl::contains( values, 2 ) );
+    c.check( !kl::contains( values, 5 ) );
+    c.check( kl::contains_if( values, fn[]( x ) { return x % 3 == 0; } ) );
+
+    c.check( kl::contains( pushed, 9 ) );
+    c.check( !kl::contains( pushed, 3 ) );
+}
+
+private void binary_search_finds_a_value( ref kl::test::context c )
+{
+    str[4] texts = [ "apple", "banana", "fig", "pear" ];
+    kl::list<kl::string> names = strings( texts );
+    kl::string wanted = kl::string::from( "fig" );
+    c.check_eq( kl::unwrap( kl::binary_search_by( names, fn[ wanted ]( x ) { return x <=> wanted; } ) ), 2 );
+    kl::string missing = kl::string::from( "grape" );
+    c.check( kl::is_none( kl::binary_search_by( names, fn[ missing ]( x ) { return x <=> missing; } ) ) );
+
+    c.check_eq( kl::unwrap( kl::binary_search( names, wanted ) ), 2 );
+    c.check( kl::is_none( kl::binary_search( names, missing ) ) );
+
+    u64[7] numbers = [ 1, 3, 5, 7, 9, 11, 13 ];
+    for( u64 i : 0..7 )
+    {
+        c.check_eq( kl::unwrap( kl::binary_search( numbers, numbers[i] ) ), i );
+    }
+    c.check( kl::is_none( kl::binary_search( numbers, 0 ) ) );
+    c.check( kl::is_none( kl::binary_search( numbers, 8 ) ) );
+    c.check( kl::is_none( kl::binary_search( numbers, 14 ) ) );
+
+    kl::list<kl::string> none = kl::list<kl::string>();
+    c.check( kl::is_none( kl::binary_search( none, wanted ) ) );
+}
+
+private void dedup_keeps_the_first_of_each_run( ref kl::test::context c )
+{
+    str[5] texts = [ "a", "a", "b", "a", "a" ];
+    kl::list<kl::string> letters = strings( texts );
+    kl::dedup( ref letters );
+    str[3] kept = [ "a", "b", "a" ];
+    check_strings( ref c, letters, kept );
+
+    {
+        kl::list<owned> values = kl::list<owned>();
+        values.push( owned( 1 ) );
+        values.push( owned( 1 ) );
+        values.push( owned( 2 ) );
+        kl::dedup( ref values, fn[]( a, b ) { return a.value() == b.value(); } );
+        c.check_eq( live, 2 );
+        c.check_eq( values[0].value(), 1 );
+        c.check_eq( values[1].value(), 2 );
+    }
+    c.check_eq( live, 0 );
+}
+
+private void array_builds_each_element_from_its_index( ref kl::test::context c )
+{
+    {
+        owned[3] made = kl::array( fn[]( i ) { return owned( i * 10 ); } );
+        c.check_eq( live, 3 );
+        c.check_eq( made[0].value(), 0 );
+        c.check_eq( made[1].value(), 10 );
+        c.check_eq( made[2].value(), 20 );
+    }
+    c.check_eq( live, 0 );
+
+    u64 base = 5;
+    u64[3] offset = kl::array( fn[ base ]( i ) { return base + i; } );
+    c.check_eq( offset[0], 5 );
+    c.check_eq( offset[2], 7 );
+}
