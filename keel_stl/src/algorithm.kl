@@ -1,0 +1,159 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import optional;
+
+// Sinks `root` until it is no less than its children, within the first `end` elements.
+private void sift_down<C, T, F>( ref C items, u64 root, u64 end, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    while( true )
+    {
+        u64 child = root * 2 + 1;
+        
+        if( child >= end )
+        {
+            return;
+        }
+        
+        if( child + 1 < end && less( items[child], items[child + 1] ) )
+        {
+            child += 1;
+        }
+        
+        if( !less( items[root], items[child] ) )
+        {
+            return;
+        }
+
+        items.swap( root, child );
+        root = child;
+    }
+}
+
+/// Orders `items` so no element is `less` than the one before it.
+///
+/// A heap sort: O(n log n) and in place, but equal elements may change order.
+void sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    u64 n = items.size();
+
+    for( u64 i = n / 2; i > 0; i-- )
+    {
+        sift_down( ref items, i - 1, n, less );
+    }
+
+    for( u64 end = n; end > 1; end-- )
+    {
+        items.swap( 0, end - 1 );
+        sift_down( ref items, 0, end - 1, less );
+    }
+}
+
+/// The index of the first element `matches` picks, or none.
+optional<u64> index_of<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
+{
+    for( u64 i = 0; i < items.size(); i++ )
+    {
+        if( matches( items[i] ) )
+        {
+            return optional::some( i );
+        }
+    }
+
+    return optional::none;
+}
+
+/// Whether `matches` picks any element.
+bool contains<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
+{
+    return is_some( index_of( items, matches ) );
+}
+
+/// The index of an element `compare` calls `equal`, or none.
+///
+/// `compare` says how each element orders against the one sought, and `items` must already be in
+/// that order. Which of several equal elements it finds is unspecified.
+optional<u64> binary_search<C, T, F>( const ref C items, F compare ) where C : fixed_memory<T>, where F : fn( const ref T ) -> ordering
+{
+    u64 low = 0;
+    u64 high = items.size();
+
+    while( low < high )
+    {
+        u64 mid = low + ( high - low ) / 2;
+        ordering cmp = compare( items[mid] );
+
+        if( cmp == ordering::equal )
+        {
+            return optional::some( mid );
+        }
+        else if( cmp == ordering::less )
+        {
+            high = mid;
+        }
+        else
+        {
+            low = mid + 1;
+        }
+    }
+
+    return optional::none;
+}
+
+/// Drops every element `drop` picks, keeping the rest in order.
+void remove_if<C, T, F>( ref C items, F drop ) where C : dynamic_memory<T>, where F : fn( const ref T ) -> bool
+{
+    u64 kept = 0;
+    
+    for( u64 i : 0..items.size() )
+    {
+        if( !drop( items[i] ) )
+        {
+            items.swap( kept, i );
+            kept += 1;
+        }
+    }
+
+    items.truncate( kept );
+}
+
+/// Drops each element `same` calls equal to the one kept before it, so sorted `items` keep one
+/// of each run.
+void dedup<C, T, F>( ref C items, F same ) where C : dynamic_memory<T>, where F : fn( const ref T, const ref T ) -> bool
+{
+    if( items.size() < 2 )
+    {
+        return;
+    }
+
+    u64 kept = 1;
+
+    for( u64 i : 1..items.size() )
+    {
+        if( !same( items[kept - 1], items[i] ) )
+        {
+            items.swap( kept, i );
+            kept += 1;
+        }
+    }
+
+    items.truncate( kept );
+}
+
+// `next`, then counts it on.
+private u64 advance( ref u64 next )
+{
+    u64 at = next;
+    next += 1;
+    return at;
+}
+
+/// An array whose element at each index is `make( index )`, made in index order.
+///
+/// `T` and `N` come from the type the result is given to: `buf[4] bufs = kl::array( fn[]( i ) { return buf( i ); } );`.
+T[N] array<T, u64 N, F>( F make ) where F : fn( u64 ) -> T
+{
+    u64 next = 0;
+    T[N] made = [ make( advance( ref next ) ), .. ];
+    return made;
+}

@@ -9,7 +9,7 @@ import optional;
 /// front. A ring never grows on its own: pushing onto a full one panics, `try_push_back` hands the
 /// element back, and `push_back_evict` makes room by removing the element at the other end. Only
 /// `reserve` changes the capacity. Dropping the ring drops every element.
-class ring<T>
+class ring<T> implements fixed_memory<T>
 {
     /// --- Construction ---
 
@@ -324,6 +324,33 @@ class ring<T>
         destroy_live();
         head_ = 0;
         count_ = 0;
+    }
+
+    /// --- Reordering ---
+
+    /// Exchanges the elements `a` and `b` places from the front.
+    ///
+    /// ### Panics
+    ///
+    /// If either is not less than `size()`.
+    public void swap( u64 a, u64 b )
+    {
+        if( a >= count_ || b >= count_ )
+        {
+            panic( "index out of range" );
+        }
+
+        if( a == b )
+        {
+            return;
+        }
+
+        unsafe
+        {
+            T temp = move data_[slot( a )];
+            data_[slot( a )] = move data_[slot( b )];
+            data_[slot( b )] = move temp;
+        }
     }
 
     /// --- Internals ---

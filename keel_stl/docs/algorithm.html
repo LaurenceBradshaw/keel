@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::algorithm</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::algorithm</h1>
+<ul class="contents">
+<li><a href="#sort"><code>sort</code></a> <span class="kind">function</span></li>
+<li><a href="#index_of"><code>index_of</code></a> <span class="kind">function</span></li>
+<li><a href="#contains"><code>contains</code></a> <span class="kind">function</span></li>
+<li><a href="#binary_search"><code>binary_search</code></a> <span class="kind">function</span></li>
+<li><a href="#remove_if"><code>remove_if</code></a> <span class="kind">function</span></li>
+<li><a href="#dedup"><code>dedup</code></a> <span class="kind">function</span></li>
+<li><a href="#array"><code>array</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sort</span></h2>
+<div class="group" id="sort">
+<pre class="signature"><a class="anchor" href="#sort" aria-label="Link to sort">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">sort</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, F less ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T, <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>Orders <code>items</code> so no element is <code>less</code> than the one before it.</p>
+<p>A heap sort: O(n log n) and in place, but equal elements may change order.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">index_of</span></h2>
+<div class="group" id="index_of">
+<pre class="signature"><a class="anchor" href="#index_of" aria-label="Link to index_of">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">index_of</span>&lt;C, T, F&gt;( <span class="kw">const</span> <span class="kw">ref</span> C items, F matches ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>The index of the first element <code>matches</code> picks, or none.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">contains</span></h2>
+<div class="group" id="contains">
+<pre class="signature"><a class="anchor" href="#contains" aria-label="Link to contains">#</a><code><a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>&lt;C, T, F&gt;( <span class="kw">const</span> <span class="kw">ref</span> C items, F matches ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>Whether <code>matches</code> picks any element.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">binary_search</span></h2>
+<div class="group" id="binary_search">
+<pre class="signature"><a class="anchor" href="#binary_search" aria-label="Link to binary_search">#</a><code><a class="type" href="optional.html#optional">optional</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">binary_search</span>&lt;C, T, F&gt;( <span class="kw">const</span> <span class="kw">ref</span> C items, F compare ) <span class="kw">where</span> C : <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="type" href="prelude.html#ordering">ordering</a></code></pre>
+<div class="doc">
+<p>The index of an element <code>compare</code> calls <code>equal</code>, or none.</p>
+<p><code>compare</code> says how each element orders against the one sought, and <code>items</code> must already be in
+that order. Which of several equal elements it finds is unspecified.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">remove_if</span></h2>
+<div class="group" id="remove_if">
+<pre class="signature"><a class="anchor" href="#remove_if" aria-label="Link to remove_if">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">remove_if</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, F drop ) <span class="kw">where</span> C : <a class="type" href="prelude.html#dynamic_memory">dynamic_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>Drops every element <code>drop</code> picks, keeping the rest in order.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">dedup</span></h2>
+<div class="group" id="dedup">
+<pre class="signature"><a class="anchor" href="#dedup" aria-label="Link to dedup">#</a><code><a class="prim" href="prelude.html#void">void</a> <span class="fn">dedup</span>&lt;C, T, F&gt;( <span class="kw">ref</span> C items, F same ) <span class="kw">where</span> C : <a class="type" href="prelude.html#dynamic_memory">dynamic_memory</a>&lt;T&gt;, <span class="kw">where</span> F : <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T, <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; <a class="prim" href="prelude.html#bool">bool</a></code></pre>
+<div class="doc">
+<p>Drops each element <code>same</code> calls equal to the one kept before it, so sorted <code>items</code> keep one
+of each run.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">array</span></h2>
+<div class="group" id="array">
+<pre class="signature"><a class="anchor" href="#array" aria-label="Link to array">#</a><code>T[N] <span class="fn">array</span>&lt;T, <a class="prim" href="prelude.html#u64">u64</a> N, F&gt;( F make ) <span class="kw">where</span> F : <span class="kw">fn</span>( <a class="prim" href="prelude.html#u64">u64</a> ) -&gt; T</code></pre>
+<div class="doc">
+<p>An array whose element at each index is <code>make( index )</code>, made in index order.</p>
+<p><code>T</code> and <code>N</code> come from the type the result is given to: <code>buf[4] bufs = kl::array( fn[]( i ) { return buf( i ); } );</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

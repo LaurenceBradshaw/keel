@@ -1545,7 +1545,13 @@ std::vector<bool> Kir_emitter::read_locals( const Function& function ) const
             continue;
         }
 
-        for_each_operand( function.rvalue( statement ), [&]( const Operand& operand ) { mark( operand.place ); } );
+        const Rvalue& value = function.rvalue( statement );
+
+        // A borrow of a `void` is spelled 0, reading nothing.
+        if( !( value.kind == Rvalue_kind::Address_of && is_void( type_of( value.a.place ) ) ) )
+        {
+            for_each_operand( value, [&]( const Operand& operand ) { mark( operand.place ); } );
+        }
 
         if( has_deref_projection( function, statement.place ) )
         {

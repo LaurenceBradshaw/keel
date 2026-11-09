@@ -14,7 +14,7 @@
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">ring</span></h2>
 <div class="group" id="ring">
-<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> <span class="type">ring</span>&lt;T&gt;</code></pre>
+<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> <span class="type">ring</span>&lt;T&gt; <span class="kw">implements</span> <a class="type" href="prelude.html#fixed_memory">fixed_memory</a>&lt;T&gt;</code></pre>
 <div class="doc">
 <p>A fixed-capacity double-ended queue of <code>T</code> that owns its elements and the block holding them.</p>
 <p>Elements are added and removed at either end in constant time, and indexed from 0 at the
@@ -168,6 +168,15 @@ block in order. Does nothing if the capacity is already that large.</p>
 <pre class="signature"><a class="anchor" href="#ring.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
 <div class="doc">
 <p>Drops every element; the capacity is kept.</p>
+</div>
+</div>
+<h3>Reordering</h3>
+<div class="group" id="ring.swap">
+<pre class="signature"><a class="anchor" href="#ring.swap" aria-label="Link to swap">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">swap</span>( <a class="prim" href="prelude.html#u64">u64</a> a, <a class="prim" href="prelude.html#u64">u64</a> b )</code></pre>
+<div class="doc">
+<p>Exchanges the elements <code>a</code> and <code>b</code> places from the front.</p>
+<h4>Panics</h4>
+<p>If either is not less than <code>size()</code>.</p>
 </div>
 </div>
 </section>

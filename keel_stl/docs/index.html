@@ -18,6 +18,26 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 </div>
 <h2>Modules</h2>
 <section class="module">
+<h3><a href="algorithm.html">algorithm</a></h3>
+<dl class="summaries">
+<dt><a href="algorithm.html#sort"><code>sort</code></a> <span class="kind">function</span></dt>
+<dd>Orders <code>items</code> so no element is <code>less</code> than the one before it.</dd>
+<dt><a href="algorithm.html#index_of"><code>index_of</code></a> <span class="kind">function</span></dt>
+<dd>The index of the first element <code>matches</code> picks, or none.</dd>
+<dt><a href="algorithm.html#contains"><code>contains</code></a> <span class="kind">function</span></dt>
+<dd>Whether <code>matches</code> picks any element.</dd>
+<dt><a href="algorithm.html#binary_search"><code>binary_search</code></a> <span class="kind">function</span></dt>
+<dd>The index of an element <code>compare</code> calls <code>equal</code>, or none.</dd>
+<dt><a href="algorithm.html#remove_if"><code>remove_if</code></a> <span class="kind">function</span></dt>
+<dd>Drops every element <code>drop</code> picks, keeping the rest in order.</dd>
+<dt><a href="algorithm.html#dedup"><code>dedup</code></a> <span class="kind">function</span></dt>
+<dd>Drops each element <code>same</code> calls equal to the one kept before it, so sorted <code>items</code> keep one
+of each run.</dd>
+<dt><a href="algorithm.html#array"><code>array</code></a> <span class="kind">function</span></dt>
+<dd>An array whose element at each index is <code>make( index )</code>, made in index order.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="bitset.html">bitset</a></h3>
 <dl class="summaries">
 <dt><a href="bitset.html#bitset"><code>bitset</code></a> <span class="kind">struct</span></dt>
