@@ -1,0 +1,545 @@
+// codegen/extern_abi.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Mixed;
+struct kl__Three;
+struct kl__Tiny;
+struct kl__A4_3f32;
+struct kl__Four;
+struct kl__Big;
+struct kl__Two;
+
+typedef struct kl__Mixed ( *kl__fn__F5MixedE5Mixed )( struct kl__Mixed );
+
+struct kl__Mixed
+{
+    int64_t kl_a;
+    double kl_b;
+};
+_Static_assert( sizeof( struct kl__Mixed ) == 16 && _Alignof( struct kl__Mixed ) == 8 && offsetof( struct kl__Mixed, kl_a ) == 0 && offsetof( struct kl__Mixed, kl_b ) == 8, "layout" );
+
+struct kl__Three
+{
+    float kl_x;
+    float kl_y;
+    float kl_z;
+};
+_Static_assert( sizeof( struct kl__Three ) == 12 && _Alignof( struct kl__Three ) == 4 && offsetof( struct kl__Three, kl_x ) == 0 && offsetof( struct kl__Three, kl_y ) == 4 && offsetof( struct kl__Three, kl_z ) == 8, "layout" );
+
+struct kl__Tiny
+{
+    uint8_t kl_a;
+    int16_t kl_b;
+};
+_Static_assert( sizeof( struct kl__Tiny ) == 4 && _Alignof( struct kl__Tiny ) == 2 && offsetof( struct kl__Tiny, kl_a ) == 0 && offsetof( struct kl__Tiny, kl_b ) == 2, "layout" );
+
+struct kl__A4_3f32
+{
+    float e[4];
+};
+_Static_assert( sizeof( struct kl__A4_3f32 ) == 16 && _Alignof( struct kl__A4_3f32 ) == 4, "layout" );
+
+struct kl__Four
+{
+    struct kl__A4_3f32 kl_v;
+};
+_Static_assert( sizeof( struct kl__Four ) == 16 && _Alignof( struct kl__Four ) == 4 && offsetof( struct kl__Four, kl_v ) == 0, "layout" );
+
+struct kl__Big
+{
+    int64_t kl_a;
+    int64_t kl_b;
+    int64_t kl_c;
+};
+_Static_assert( sizeof( struct kl__Big ) == 24 && _Alignof( struct kl__Big ) == 8 && offsetof( struct kl__Big, kl_a ) == 0 && offsetof( struct kl__Big, kl_b ) == 8 && offsetof( struct kl__Big, kl_c ) == 16, "layout" );
+
+struct kl__Two
+{
+    int64_t kl_a;
+    int64_t kl_b;
+};
+_Static_assert( sizeof( struct kl__Two ) == 16 && _Alignof( struct kl__Two ) == 8 && offsetof( struct kl__Two, kl_a ) == 0 && offsetof( struct kl__Two, kl_b ) == 8, "layout" );
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+struct kl__Mixed mixed( struct kl__Mixed, double );
+struct kl__Three three( struct kl__Three );
+struct kl__Tiny tiny( struct kl__Tiny );
+struct kl__Four four( struct kl__Four );
+struct kl__Big big( struct kl__Big, int64_t );
+int64_t crowded( int64_t, int64_t, int64_t, int64_t, int64_t, struct kl__Two, int64_t );
+struct kl__Mixed apply( kl__fn__F5MixedE5Mixed, struct kl__Mixed );
+
+struct kl__Mixed kl__5twice__5Mixed( struct kl__Mixed );
+int32_t kl__4main__( void );
+
+#line 19 "codegen/extern_abi.kl"
+struct kl__Mixed kl__5twice__5Mixed( struct kl__Mixed kl_m_1 )
+{
+    struct kl__Mixed kl_t0;
+    struct kl__Mixed kl_t2;
+    bool kl_t3;
+    int64_t kl_t4;
+    double kl_t5;
+#line 21 "codegen/extern_abi.kl"
+    kl_t3 = __builtin_mul_overflow( kl_m_1.kl_a, 2, &( int64_t ) { 0 } );
+#line 21 "codegen/extern_abi.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 21 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 21, "arithmetic overflow: m.a * 2" );
+    bb2:
+#line 21 "codegen/extern_abi.kl"
+    kl_t4 = kl_m_1.kl_a * 2;
+#line 21 "codegen/extern_abi.kl"
+    kl_t5 = kl_m_1.kl_b * 2.0;
+#line 21 "codegen/extern_abi.kl"
+    kl_t2.kl_a = kl_t4;
+#line 21 "codegen/extern_abi.kl"
+    kl_t2.kl_b = kl_t5;
+#line 21 "codegen/extern_abi.kl"
+    kl_t0 = kl_t2;
+#line 21 "codegen/extern_abi.kl"
+    return kl_t0;
+}
+
+#line 24 "codegen/extern_abi.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_wrong_1;
+    struct kl__Mixed kl_m_2;
+    struct kl__Mixed kl_t3;
+    struct kl__Mixed kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
+    struct kl__Three kl_t_11;
+    struct kl__Three kl_t12;
+    struct kl__Three kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    int32_t kl_t21;
+    struct kl__Tiny kl_s_22;
+    struct kl__Tiny kl_t23;
+    struct kl__Tiny kl_t24;
+    int32_t kl_t25;
+    bool kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    int32_t kl_t30;
+    struct kl__Four kl_f_31;
+    struct kl__Four kl_t32;
+    struct kl__A4_3f32 kl_t33;
+    uint64_t kl_t34;
+    uint64_t kl_t35;
+    uint64_t kl_t36;
+    uint64_t kl_t37;
+    struct kl__Four kl_t38;
+    int32_t kl_t39;
+    bool kl_t40;
+    uint64_t kl_t41;
+    bool kl_t42;
+    uint64_t kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    int32_t kl_t46;
+    struct kl__Big kl_b_47;
+    struct kl__Big kl_t48;
+    struct kl__Big kl_t49;
+    int32_t kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    int32_t kl_t55;
+    int32_t kl_t56;
+    struct kl__Two kl_t57;
+    int64_t kl_t58;
+    bool kl_t59;
+    bool kl_t60;
+    int32_t kl_t61;
+    struct kl__Mixed kl_a_62;
+    kl__fn__F5MixedE5Mixed kl_t63;
+    struct kl__Mixed kl_t64;
+    struct kl__Mixed kl_t65;
+    int32_t kl_t66;
+    bool kl_t67;
+    bool kl_t68;
+    bool kl_t69;
+    bool kl_t70;
+    int32_t kl_t71;
+    ( void ) kl_t34;
+    ( void ) kl_t35;
+    ( void ) kl_t36;
+    ( void ) kl_t37;
+    ( void ) kl_t41;
+    ( void ) kl_t43;
+#line 26 "codegen/extern_abi.kl"
+    kl_wrong_1 = 0;
+#line 29 "codegen/extern_abi.kl"
+    kl_t3.kl_a = 3;
+#line 29 "codegen/extern_abi.kl"
+    kl_t3.kl_b = 1.5;
+#line 29 "codegen/extern_abi.kl"
+    kl_t4 = mixed( kl_t3, 2.0 );
+#line 29 "codegen/extern_abi.kl"
+    kl_m_2 = kl_t4;
+    kl_t7 = kl_m_2.kl_a == 6;
+#line 30 "codegen/extern_abi.kl"
+    kl_t6 = kl_t7;
+#line 30 "codegen/extern_abi.kl"
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb1:
+#line 30 "codegen/extern_abi.kl"
+    kl_t5 = 0;
+#line 30 "codegen/extern_abi.kl"
+    goto bb3;
+    bb2:
+#line 30 "codegen/extern_abi.kl"
+    kl_t5 = 1;
+#line 30 "codegen/extern_abi.kl"
+    goto bb3;
+    bb3:
+#line 30 "codegen/extern_abi.kl"
+    kl_t9 = __builtin_add_overflow( kl_wrong_1, kl_t5, &( int32_t ) { 0 } );
+#line 30 "codegen/extern_abi.kl"
+    if ( kl_t9 ) goto bb6; else goto bb7;
+    bb4:
+#line 30 "codegen/extern_abi.kl"
+    kl_t8 = kl_m_2.kl_b == 3.0;
+#line 30 "codegen/extern_abi.kl"
+    kl_t6 = kl_t8;
+#line 30 "codegen/extern_abi.kl"
+    goto bb5;
+    bb5:
+#line 30 "codegen/extern_abi.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb6:
+#line 30 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 30, "arithmetic overflow: wrong + ( m.a == 6 && m.b == 3.0 \077 0 : 1 )" );
+    bb7:
+#line 30 "codegen/extern_abi.kl"
+    kl_t10 = kl_wrong_1 + kl_t5;
+#line 30 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t10;
+    kl_t12.kl_x = 1.0;
+#line 31 "codegen/extern_abi.kl"
+    kl_t12.kl_y = 2.0;
+#line 31 "codegen/extern_abi.kl"
+    kl_t12.kl_z = 3.0;
+#line 31 "codegen/extern_abi.kl"
+    kl_t13 = three( kl_t12 );
+#line 31 "codegen/extern_abi.kl"
+    kl_t_11 = kl_t13;
+    kl_t17 = kl_t_11.kl_x == 3.0;
+#line 32 "codegen/extern_abi.kl"
+    kl_t16 = kl_t17;
+#line 32 "codegen/extern_abi.kl"
+    if ( kl_t16 ) goto bb11; else goto bb12;
+    bb8:
+#line 32 "codegen/extern_abi.kl"
+    kl_t14 = 0;
+#line 32 "codegen/extern_abi.kl"
+    goto bb10;
+    bb9:
+#line 32 "codegen/extern_abi.kl"
+    kl_t14 = 2;
+#line 32 "codegen/extern_abi.kl"
+    goto bb10;
+    bb10:
+#line 32 "codegen/extern_abi.kl"
+    kl_t20 = __builtin_add_overflow( kl_wrong_1, kl_t14, &( int32_t ) { 0 } );
+#line 32 "codegen/extern_abi.kl"
+    if ( kl_t20 ) goto bb15; else goto bb16;
+    bb11:
+#line 32 "codegen/extern_abi.kl"
+    kl_t18 = kl_t_11.kl_y == 2.0;
+#line 32 "codegen/extern_abi.kl"
+    kl_t16 = kl_t18;
+#line 32 "codegen/extern_abi.kl"
+    goto bb12;
+    bb12:
+#line 32 "codegen/extern_abi.kl"
+    kl_t15 = kl_t16;
+#line 32 "codegen/extern_abi.kl"
+    if ( kl_t15 ) goto bb13; else goto bb14;
+    bb13:
+#line 32 "codegen/extern_abi.kl"
+    kl_t19 = kl_t_11.kl_z == 1.0;
+#line 32 "codegen/extern_abi.kl"
+    kl_t15 = kl_t19;
+#line 32 "codegen/extern_abi.kl"
+    goto bb14;
+    bb14:
+#line 32 "codegen/extern_abi.kl"
+    if ( kl_t15 ) goto bb8; else goto bb9;
+    bb15:
+#line 32 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 32, "arithmetic overflow: wrong + ( t.x == 3.0 && t.y == 2.0 && t.z == 1.0 \077 0 : 2 )" );
+    bb16:
+#line 32 "codegen/extern_abi.kl"
+    kl_t21 = kl_wrong_1 + kl_t14;
+#line 32 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t21;
+    kl_t23.kl_a = 7;
+#line 33 "codegen/extern_abi.kl"
+    kl_t23.kl_b = -300;
+#line 33 "codegen/extern_abi.kl"
+    kl_t24 = tiny( kl_t23 );
+#line 33 "codegen/extern_abi.kl"
+    kl_s_22 = kl_t24;
+    kl_t27 = kl_s_22.kl_a == 8;
+#line 34 "codegen/extern_abi.kl"
+    kl_t26 = kl_t27;
+#line 34 "codegen/extern_abi.kl"
+    if ( kl_t26 ) goto bb20; else goto bb21;
+    bb17:
+#line 34 "codegen/extern_abi.kl"
+    kl_t25 = 0;
+#line 34 "codegen/extern_abi.kl"
+    goto bb19;
+    bb18:
+#line 34 "codegen/extern_abi.kl"
+    kl_t25 = 4;
+#line 34 "codegen/extern_abi.kl"
+    goto bb19;
+    bb19:
+#line 34 "codegen/extern_abi.kl"
+    kl_t29 = __builtin_add_overflow( kl_wrong_1, kl_t25, &( int32_t ) { 0 } );
+#line 34 "codegen/extern_abi.kl"
+    if ( kl_t29 ) goto bb22; else goto bb23;
+    bb20:
+#line 34 "codegen/extern_abi.kl"
+    kl_t28 = kl_s_22.kl_b == -301;
+#line 34 "codegen/extern_abi.kl"
+    kl_t26 = kl_t28;
+#line 34 "codegen/extern_abi.kl"
+    goto bb21;
+    bb21:
+#line 34 "codegen/extern_abi.kl"
+    if ( kl_t26 ) goto bb17; else goto bb18;
+    bb22:
+#line 34 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 34, "arithmetic overflow: wrong + ( s.a == 8 && s.b == -301 \077 0 : 4 )" );
+    bb23:
+#line 34 "codegen/extern_abi.kl"
+    kl_t30 = kl_wrong_1 + kl_t25;
+#line 34 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t30;
+    kl_t34 = 0;
+#line 35 "codegen/extern_abi.kl"
+    kl_t33.e[kl_t34] = 1.0;
+#line 35 "codegen/extern_abi.kl"
+    kl_t35 = 1;
+#line 35 "codegen/extern_abi.kl"
+    kl_t33.e[kl_t35] = 2.0;
+#line 35 "codegen/extern_abi.kl"
+    kl_t36 = 2;
+#line 35 "codegen/extern_abi.kl"
+    kl_t33.e[kl_t36] = 3.0;
+#line 35 "codegen/extern_abi.kl"
+    kl_t37 = 3;
+#line 35 "codegen/extern_abi.kl"
+    kl_t33.e[kl_t37] = 4.0;
+#line 35 "codegen/extern_abi.kl"
+    kl_t32.kl_v = kl_t33;
+#line 35 "codegen/extern_abi.kl"
+    kl_t38 = four( kl_t32 );
+#line 35 "codegen/extern_abi.kl"
+    kl_f_31 = kl_t38;
+    kl_t41 = 0;
+#line 36 "codegen/extern_abi.kl"
+    kl_t42 = kl_f_31.kl_v.e[kl_t41] == 4.0;
+#line 36 "codegen/extern_abi.kl"
+    kl_t40 = kl_t42;
+#line 36 "codegen/extern_abi.kl"
+    if ( kl_t40 ) goto bb27; else goto bb28;
+    bb24:
+#line 36 "codegen/extern_abi.kl"
+    kl_t39 = 0;
+#line 36 "codegen/extern_abi.kl"
+    goto bb26;
+    bb25:
+#line 36 "codegen/extern_abi.kl"
+    kl_t39 = 8;
+#line 36 "codegen/extern_abi.kl"
+    goto bb26;
+    bb26:
+#line 36 "codegen/extern_abi.kl"
+    kl_t45 = __builtin_add_overflow( kl_wrong_1, kl_t39, &( int32_t ) { 0 } );
+#line 36 "codegen/extern_abi.kl"
+    if ( kl_t45 ) goto bb29; else goto bb30;
+    bb27:
+#line 36 "codegen/extern_abi.kl"
+    kl_t43 = 3;
+#line 36 "codegen/extern_abi.kl"
+    kl_t44 = kl_f_31.kl_v.e[kl_t43] == 1.0;
+#line 36 "codegen/extern_abi.kl"
+    kl_t40 = kl_t44;
+#line 36 "codegen/extern_abi.kl"
+    goto bb28;
+    bb28:
+#line 36 "codegen/extern_abi.kl"
+    if ( kl_t40 ) goto bb24; else goto bb25;
+    bb29:
+#line 36 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 36, "arithmetic overflow: wrong + ( f.v[0] == 4.0 && f.v[3] == 1.0 \077 0 : 8 )" );
+    bb30:
+#line 36 "codegen/extern_abi.kl"
+    kl_t46 = kl_wrong_1 + kl_t39;
+#line 36 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t46;
+    kl_t48.kl_a = 1;
+#line 37 "codegen/extern_abi.kl"
+    kl_t48.kl_b = 2;
+#line 37 "codegen/extern_abi.kl"
+    kl_t48.kl_c = 3;
+#line 37 "codegen/extern_abi.kl"
+    kl_t49 = big( kl_t48, 10 );
+#line 37 "codegen/extern_abi.kl"
+    kl_b_47 = kl_t49;
+    kl_t52 = kl_b_47.kl_a == 11;
+#line 38 "codegen/extern_abi.kl"
+    kl_t51 = kl_t52;
+#line 38 "codegen/extern_abi.kl"
+    if ( kl_t51 ) goto bb34; else goto bb35;
+    bb31:
+#line 38 "codegen/extern_abi.kl"
+    kl_t50 = 0;
+#line 38 "codegen/extern_abi.kl"
+    goto bb33;
+    bb32:
+#line 38 "codegen/extern_abi.kl"
+    kl_t50 = 16;
+#line 38 "codegen/extern_abi.kl"
+    goto bb33;
+    bb33:
+#line 38 "codegen/extern_abi.kl"
+    kl_t54 = __builtin_add_overflow( kl_wrong_1, kl_t50, &( int32_t ) { 0 } );
+#line 38 "codegen/extern_abi.kl"
+    if ( kl_t54 ) goto bb36; else goto bb37;
+    bb34:
+#line 38 "codegen/extern_abi.kl"
+    kl_t53 = kl_b_47.kl_c == 13;
+#line 38 "codegen/extern_abi.kl"
+    kl_t51 = kl_t53;
+#line 38 "codegen/extern_abi.kl"
+    goto bb35;
+    bb35:
+#line 38 "codegen/extern_abi.kl"
+    if ( kl_t51 ) goto bb31; else goto bb32;
+    bb36:
+#line 38 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 38, "arithmetic overflow: wrong + ( b.a == 11 && b.c == 13 \077 0 : 16 )" );
+    bb37:
+#line 38 "codegen/extern_abi.kl"
+    kl_t55 = kl_wrong_1 + kl_t50;
+#line 38 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t55;
+    kl_t57.kl_a = 6;
+#line 39 "codegen/extern_abi.kl"
+    kl_t57.kl_b = 7;
+#line 39 "codegen/extern_abi.kl"
+    kl_t58 = crowded( 1, 2, 3, 4, 5, kl_t57, 8 );
+#line 39 "codegen/extern_abi.kl"
+    kl_t59 = kl_t58 == 12345678;
+#line 39 "codegen/extern_abi.kl"
+    if ( kl_t59 ) goto bb38; else goto bb39;
+    bb38:
+#line 39 "codegen/extern_abi.kl"
+    kl_t56 = 0;
+#line 39 "codegen/extern_abi.kl"
+    goto bb40;
+    bb39:
+#line 39 "codegen/extern_abi.kl"
+    kl_t56 = 32;
+#line 39 "codegen/extern_abi.kl"
+    goto bb40;
+    bb40:
+#line 39 "codegen/extern_abi.kl"
+    kl_t60 = __builtin_add_overflow( kl_wrong_1, kl_t56, &( int32_t ) { 0 } );
+#line 39 "codegen/extern_abi.kl"
+    if ( kl_t60 ) goto bb41; else goto bb42;
+    bb41:
+#line 39 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 39, "arithmetic overflow: wrong + ( crowded( 1, 2, 3, 4, 5, Two { 6, 7 }, 8 ) == 12345678 \077 0 : 32 )" );
+    bb42:
+#line 39 "codegen/extern_abi.kl"
+    kl_t61 = kl_wrong_1 + kl_t56;
+#line 39 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t61;
+    kl_t63 = kl__5twice__5Mixed;
+#line 40 "codegen/extern_abi.kl"
+    kl_t64.kl_a = 5;
+#line 40 "codegen/extern_abi.kl"
+    kl_t64.kl_b = 0.25;
+#line 40 "codegen/extern_abi.kl"
+    kl_t65 = apply( kl_t63, kl_t64 );
+#line 40 "codegen/extern_abi.kl"
+    kl_a_62 = kl_t65;
+    kl_t68 = kl_a_62.kl_a == 11;
+#line 41 "codegen/extern_abi.kl"
+    kl_t67 = kl_t68;
+#line 41 "codegen/extern_abi.kl"
+    if ( kl_t67 ) goto bb46; else goto bb47;
+    bb43:
+#line 41 "codegen/extern_abi.kl"
+    kl_t66 = 0;
+#line 41 "codegen/extern_abi.kl"
+    goto bb45;
+    bb44:
+#line 41 "codegen/extern_abi.kl"
+    kl_t66 = 64;
+#line 41 "codegen/extern_abi.kl"
+    goto bb45;
+    bb45:
+#line 41 "codegen/extern_abi.kl"
+    kl_t70 = __builtin_add_overflow( kl_wrong_1, kl_t66, &( int32_t ) { 0 } );
+#line 41 "codegen/extern_abi.kl"
+    if ( kl_t70 ) goto bb48; else goto bb49;
+    bb46:
+#line 41 "codegen/extern_abi.kl"
+    kl_t69 = kl_a_62.kl_b == 1.5;
+#line 41 "codegen/extern_abi.kl"
+    kl_t67 = kl_t69;
+#line 41 "codegen/extern_abi.kl"
+    goto bb47;
+    bb47:
+#line 41 "codegen/extern_abi.kl"
+    if ( kl_t67 ) goto bb43; else goto bb44;
+    bb48:
+#line 41 "codegen/extern_abi.kl"
+    kl_rt_panic( "codegen/extern_abi.kl", 41, "arithmetic overflow: wrong + ( a.a == 11 && a.b == 1.5 \077 0 : 64 )" );
+    bb49:
+#line 41 "codegen/extern_abi.kl"
+    kl_t71 = kl_wrong_1 + kl_t66;
+#line 41 "codegen/extern_abi.kl"
+    kl_wrong_1 = kl_t71;
+#line 43 "codegen/extern_abi.kl"
+    kl_t0 = kl_wrong_1;
+#line 43 "codegen/extern_abi.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 24 "codegen/extern_abi.kl"
+    kl_t0 = kl__4main__(  );
+#line 24 "codegen/extern_abi.kl"
+    return kl_t0;
+#line 24 "codegen/extern_abi.kl"
+}
+

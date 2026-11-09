@@ -15,6 +15,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <array>
 #include <memory>
 #include <unordered_map>
 #include "codegen/failure.h"
@@ -32,11 +33,6 @@ struct Refusal
 {
     std::string what;
 };
-
-[[noreturn]] void not_yet( std::string_view what )
-{
-    throw Refusal { fmt::format( "the LLVM backend cannot emit {} yet", what ) };
-}
 
 [[noreturn]] void malformed( std::string_view what )
 {
@@ -78,7 +74,12 @@ private:
     llvm::Type* memory_type( Type_id type ) const;
     llvm::Align align( Type_id type ) const;
 
-    // Keel's convention: an aggregate travels by `byval` and returns through `sret`.
+    // The SysV x86-64 C ABI, for Keel's own calls too: an aggregate of at most 16 bytes travels as
+    // its eightbytes while registers last, else by `byval`, and returns through `sret` when larger.
+    void                      classify( Type_id type, u64 at, std::array<bool, 2>& integer ) const;
+    std::vector<llvm::Type*>  eightbytes( Type_id type ) const;
+    std::vector<llvm::Value*> split( Type_id type, llvm::Value* from, const std::vector<llvm::Type*>& parts );
+    void                      join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to );
     std::pair<llvm::FunctionType*, llvm::AttributeList>
                     signature( Type_id result, std::span<const Type_id> parameters, bool diverges );
     llvm::Function* declare( std::string_view name, Type_id result, std::span<const Type_id> parameters, bool diverges );
@@ -99,7 +100,7 @@ private:
     llvm::Value* load( Type_id type, llvm::Value* from );
     void         store( Type_id type, llvm::Value* value, llvm::Value* to );
     void         copy( Type_id type, llvm::Value* to, llvm::Value* from );
-    llvm::Value* temporary( Type_id type );
+    llvm::Value* temporary( Type_id type, u64 bytes = 0 ); // `bytes`: a padded size instead
 
     llvm::Value* operand( const Operand& operand );
     llvm::Value* constant( Literal_id literal, Type_id type ) const;
@@ -304,6 +305,8 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
     std::vector<llvm::AttributeSet> attributes;
     llvm::Type*                     returned = builder_.getVoidTy();
     llvm::AttrBuilder               returns( context );
+    u64                             integers = 6;
+    u64                             floats   = 8;
 
     switch( held( result ) )
     {
@@ -318,6 +321,13 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
         break;
     case Held::Memory:
     {
+        const std::vector<llvm::Type*> parts = eightbytes( result );
+        if( !parts.empty() )
+        {
+            returned = parts.size() == 1 ? parts[0] : llvm::StructType::get( context, parts );
+            break;
+        }
+        --integers;
         llvm::AttrBuilder into( context );
         into.addStructRetAttr( memory_type( result ) );
         into.addAlignmentAttr( align( result ) );
@@ -337,15 +347,36 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
         case Held::Scalar:
             types.push_back( value_type( parameter ) );
             widened( passed, parameter );
+            if( u64& left = types.back()->isFloatingPointTy() ? floats : integers; left > 0 )
+            {
+                --left;
+            }
             break;
         case Held::Pair:
             types.push_back( value_type( parameter ) );
+            integers -= std::min<u64>( integers, 2 );
             break;
         case Held::Memory:
+        {
+            const std::vector<llvm::Type*> parts = eightbytes( parameter );
+            const u64                      wide =
+                static_cast<u64>( std::ranges::count_if( parts, []( llvm::Type* part ) { return part->isIntegerTy(); } ) );
+            if( !parts.empty() && wide <= integers && parts.size() - wide <= floats )
+            {
+                integers -= wide;
+                floats -= parts.size() - wide;
+                for( llvm::Type* part : parts )
+                {
+                    types.push_back( part );
+                    attributes.emplace_back();
+                }
+                continue;
+            }
             types.push_back( builder_.getPtrTy() );
             passed.addByValAttr( memory_type( parameter ) );
             passed.addAlignmentAttr( align( parameter ) );
             break;
+        }
         }
         attributes.push_back( llvm::AttributeSet::get( context, passed ) );
     }
@@ -410,18 +441,6 @@ llvm::Function* Llvm_emitter::callee( const Rvalue& value )
     }
 
     const Described& described = program_[value.callee];
-    for( const Type_id type : described.passed )
-    {
-        if( held( type ) == Held::Memory )
-        {
-            not_yet( "an `extern` call passing a struct by value" );
-        }
-    }
-    if( held( described.type ) == Held::Memory )
-    {
-        not_yet( "an `extern` call returning a struct by value" );
-    }
-
     return declare( name, described.type, described.passed, table().is_never( described.type ) );
 }
 
@@ -480,9 +499,9 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         }
 
         const bool parameter = i.v >= 1 && i.v <= function.parameter_count;
-        if( parameter && kind == Held::Memory )
+        if( parameter && kind == Held::Memory && argument->hasByValAttr() )
         {
-            locals_[i.v] = &*argument++; // `byval`: the callee's own copy
+            locals_[i.v] = &*argument++; // the callee's own copy
             continue;
         }
 
@@ -494,7 +513,16 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         slot->setAlignment( align( local.type ) );
         locals_[i.v] = slot;
 
-        if( parameter )
+        if( parameter && kind == Held::Memory )
+        {
+            std::vector<llvm::Value*> parts;
+            for( u64 n = eightbytes( local.type ).size(); n > 0; --n )
+            {
+                parts.push_back( &*argument++ );
+            }
+            join( local.type, parts, slot );
+        }
+        else if( parameter )
         {
             store( local.type, &*argument++, slot );
         }
@@ -608,9 +636,24 @@ void Llvm_emitter::terminator( const Terminator& terminator )
     case Terminator_kind::Return:
     {
         const Type_id type = current_->locals[k_return_slot].type;
-        if( held( type ) == Held::Nothing || held( type ) == Held::Memory )
+        if( held( type ) == Held::Nothing || defined_->hasStructRetAttr() )
         {
             builder_.CreateRetVoid();
+            return;
+        }
+        if( held( type ) == Held::Memory )
+        {
+            const std::vector<llvm::Value*> parts = split( type, locals_[k_return_slot.v], eightbytes( type ) );
+            llvm::Value*                    whole = parts[0];
+            if( parts.size() > 1 )
+            {
+                whole = llvm::PoisonValue::get( defined_->getReturnType() );
+                for( u32 i = 0; i < parts.size(); ++i )
+                {
+                    whole = builder_.CreateInsertValue( whole, parts[i], i );
+                }
+            }
+            builder_.CreateRet( whole );
             return;
         }
         builder_.CreateRet( load( type, locals_[k_return_slot.v] ) );
@@ -793,11 +836,94 @@ void Llvm_emitter::copy( Type_id type, llvm::Value* to, llvm::Value* from )
     builder_.CreateMemCpy( to, align( type ), from, align( type ), layout_.size( type ) );
 }
 
+// Marks each eightbyte that holds anything but a float.
+void Llvm_emitter::classify( Type_id type, u64 at, std::array<bool, 2>& integer ) const
+{
+    const Type& described = table().get( type );
+    const u64   size      = layout_.size( type );
+    switch( described.kind )
+    {
+    case Type_kind::Float:
+        return;
+    case Type_kind::Struct:
+    case Type_kind::Closure:
+        for( const Held_field& field : program_.fields( type ) )
+        {
+            classify( field.type, at + layout_.offset( type, field.declaration ), integer );
+        }
+        return;
+    case Type_kind::Array:
+        for( u64 i = 0; i < described.count; ++i )
+        {
+            classify( described.element, at + i * layout_.size( described.element ), integer );
+        }
+        return;
+    default: // a payload enum or union is refused at an extern, so all of it counts as integer
+        for( u64 byte = at; byte < at + size; byte += 8 - byte % 8 )
+        {
+            integer[byte / 8] = true;
+        }
+    }
+}
+
+// An `i64` or `double` per eightbyte of an aggregate passed in registers; none when it is in memory.
+std::vector<llvm::Type*> Llvm_emitter::eightbytes( Type_id type ) const
+{
+    const u64 size = layout_.size( type );
+    if( size == 0 || size > 16 )
+    {
+        return {};
+    }
+    std::array<bool, 2> integer {};
+    classify( type, 0, integer );
+    std::vector<llvm::Type*> parts;
+    for( u64 i = 0; i * 8 < size; ++i )
+    {
+        parts.push_back( integer[i] ? builder_.getInt64Ty() : builder_.getDoubleTy() );
+    }
+    return parts;
+}
+
+// A whole number of eightbytes, so the last part never reads or writes past the aggregate.
+std::vector<llvm::Value*> Llvm_emitter::split( Type_id type, llvm::Value* from, const std::vector<llvm::Type*>& parts )
+{
+    if( layout_.size( type ) % 8 != 0 )
+    {
+        llvm::Value* padded = temporary( type, 8 * parts.size() );
+        copy( type, padded, from );
+        from = padded;
+    }
+    std::vector<llvm::Value*> values;
+    for( u64 i = 0; i < parts.size(); ++i )
+    {
+        values.push_back( builder_.CreateAlignedLoad(
+            parts[i], offset( from, 8 * i ), llvm::Align( std::min<u64>( 8, layout_.align( type ) ) )
+        ) );
+    }
+    return values;
+}
+
+void Llvm_emitter::join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to )
+{
+    llvm::Value* into = layout_.size( type ) % 8 != 0 ? temporary( type, 8 * parts.size() ) : to;
+    for( u64 i = 0; i < parts.size(); ++i )
+    {
+        builder_.CreateAlignedStore(
+            parts[i], offset( into, 8 * i ), llvm::Align( std::min<u64>( 8, layout_.align( type ) ) )
+        );
+    }
+    if( into != to )
+    {
+        copy( type, to, into );
+    }
+}
+
 // Storage for one statement's aggregate, in the entry block.
-llvm::Value* Llvm_emitter::temporary( Type_id type )
+llvm::Value* Llvm_emitter::temporary( Type_id type, u64 bytes )
 {
     llvm::IRBuilder<> at( entry_, entry_->begin() );
-    llvm::AllocaInst* slot = at.CreateAlloca( memory_type( type ) );
+    llvm::AllocaInst* slot =
+        at.CreateAlloca( bytes == 0 ? memory_type( type ) : llvm::ArrayType::get( builder_.getInt8Ty(), bytes ) );
     slot->setAlignment( align( type ) );
     return slot;
 }
@@ -1178,7 +1304,7 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
     }
 
     std::vector<llvm::Value*> arguments;
-    if( result != nullptr )
+    if( returns_memory )
     {
         arguments.push_back( result );
     }
@@ -1189,7 +1315,21 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
         {
             continue;
         }
-        arguments.push_back( held( type ) == Held::Memory ? address( argument.place ) : operand( argument ) );
+        if( held( type ) != Held::Memory )
+        {
+            arguments.push_back( operand( argument ) );
+        }
+        else if( attributes.hasParamAttr( static_cast<u32>( arguments.size() ), llvm::Attribute::ByVal ) )
+        {
+            arguments.push_back( address( argument.place ) );
+        }
+        else
+        {
+            for( llvm::Value* part : split( type, address( argument.place ), eightbytes( type ) ) )
+            {
+                arguments.push_back( part );
+            }
+        }
     }
 
     if( arguments.size() != signed_as->getNumParams() )
@@ -1199,6 +1339,19 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
 
     llvm::CallInst* made = builder_.CreateCall( signed_as, target, arguments );
     made->setAttributes( attributes );
+    if( result != nullptr && !returns_memory )
+    {
+        std::vector<llvm::Value*> parts = { made };
+        if( auto* pair = llvm::dyn_cast<llvm::StructType>( made->getType() ) )
+        {
+            parts.clear();
+            for( u32 i = 0; i < pair->getNumElements(); ++i )
+            {
+                parts.push_back( builder_.CreateExtractValue( made, i ) );
+            }
+        }
+        join( value.type, parts, result );
+    }
     return made;
 }
 

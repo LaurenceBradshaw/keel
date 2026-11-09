@@ -1,0 +1,44 @@
+// Each SysV x86-64 class crossing to C by value, both ways, and a Keel function C calls back:
+// integer and float eightbytes mixed, a 12-byte tail, a float array, a struct in memory, and a
+// small struct pushed to the stack once the integer registers run out. The C side is extern_abi.c.
+struct Mixed { i64 a; f64 b; };
+struct Three { f32 x; f32 y; f32 z; };
+struct Tiny { u8 a; i16 b; };
+struct Four { f32[4] v; };
+struct Big { i64 a; i64 b; i64 c; };
+struct Two { i64 a; i64 b; };
+
+extern Mixed mixed( Mixed m, f64 scale );
+extern Three three( Three t );
+extern Tiny tiny( Tiny t );
+extern Four four( Four f );
+extern Big big( Big b, i64 add );
+extern i64 crowded( i64 a, i64 b, i64 c, i64 d, i64 e, Two t, i64 f );
+extern Mixed apply( fn( Mixed ) -> Mixed f, Mixed m );
+
+Mixed twice( Mixed m )
+{
+    return Mixed { m.a * 2, m.b * 2.0 };
+}
+
+i32 main()
+{
+    i32 wrong = 0;
+    unsafe
+    {
+        Mixed m = mixed( Mixed { 3, 1.5 }, 2.0 );
+        wrong = wrong + ( m.a == 6 && m.b == 3.0 ? 0 : 1 );
+        Three t = three( Three { 1.0, 2.0, 3.0 } );
+        wrong = wrong + ( t.x == 3.0 && t.y == 2.0 && t.z == 1.0 ? 0 : 2 );
+        Tiny s = tiny( Tiny { 7, -300 } );
+        wrong = wrong + ( s.a == 8 && s.b == -301 ? 0 : 4 );
+        Four f = four( Four { [ 1.0, 2.0, 3.0, 4.0 ] } );
+        wrong = wrong + ( f.v[0] == 4.0 && f.v[3] == 1.0 ? 0 : 8 );
+        Big b = big( Big { 1, 2, 3 }, 10 );
+        wrong = wrong + ( b.a == 11 && b.c == 13 ? 0 : 16 );
+        wrong = wrong + ( crowded( 1, 2, 3, 4, 5, Two { 6, 7 }, 8 ) == 12345678 ? 0 : 32 );
+        Mixed a = apply( &twice, Mixed { 5, 0.25 } );
+        wrong = wrong + ( a.a == 11 && a.b == 1.5 ? 0 : 64 );
+    }
+    return wrong;
+}
