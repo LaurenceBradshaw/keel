@@ -8,6 +8,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/ValueHandle.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/FileSystem.h>
@@ -15,6 +16,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <unordered_map>
@@ -60,9 +62,7 @@ public:
         const Source_manager&        sm,
         const Interner&              interner,
         const Module_graph&          modules,
-        const Parts*                 parts,
-        File_id                      part,
-        bool                         klo
+        const Llvm_options&          options
     );
 
     llvm::Module& run();
@@ -92,9 +92,20 @@ private:
     llvm::Function* runtime( std::string_view name, llvm::Type* result, std::vector<llvm::Type*> parameters, bool diverges );
 
     void define( const Function& function, llvm::Function* defined );
-    void statement( const Statement& statement );
-    void terminator( const Terminator& terminator );
-    void panic( const Terminator& terminator );
+
+    // Braun et al.'s SSA construction (§2.2) for the locals `promote` chooses. A block is KIR's, and
+    // `blocks_.size()` stands for the entry block, where the parameters arrive.
+    void           promote( const Function& function );
+    llvm::Value*   value_of( Local_id local ); // a promoted local's value, or a load of its slot
+    llvm::Value*   read( Local_id local, u32 block );
+    llvm::Value*   read_above( Local_id local, u32 block );
+    llvm::PHINode* phi( Local_id local, u32 block );
+    llvm::Value*   fill( Local_id local, u32 block, llvm::PHINode* phi );
+    llvm::Value*   remove_if_trivial( llvm::PHINode* phi );
+    void           seal_if_ready( u32 block );
+    void           statement( const Statement& statement );
+    void           terminator( const Terminator& terminator );
+    void           panic( const Terminator& terminator );
 
     Type_id      type_of( const Place& place ) const;
     Type_id      operand_type( const Operand& operand ) const;
@@ -135,6 +146,7 @@ private:
     const Parts*                 parts_; // null emits the whole compile
     const File_id                part_;
     const bool                   klo_;
+    const bool                   debug_;
 
     std::unique_ptr<llvm::LLVMContext> context_;
     std::unique_ptr<llvm::Module>      module_;
@@ -147,8 +159,19 @@ private:
     llvm::Function*                defined_ = nullptr;
     llvm::BasicBlock*              entry_   = nullptr; // its allocas
     std::vector<llvm::BasicBlock*> blocks_;
-    std::vector<llvm::Value*>      locals_;  // each local's address, null for one holding nothing
+    std::vector<llvm::Value*>      locals_;  // each local's address, null for one holding nothing or promoted
     Span                           span_ {}; // the statement being emitted
+
+    // Its promotion, by block.
+    std::vector<bool>                                             promoted_;
+    std::vector<std::vector<u32>>                                 predecessors_;
+    std::vector<llvm::BasicBlock*>                                exits_; // where a filled block's terminator is
+    std::vector<bool>                                             filled_;
+    std::vector<bool>                                             sealed_; // every predecessor filled
+    std::vector<std::unordered_map<u32, llvm::WeakTrackingVH>>    current_values_;
+    std::vector<std::vector<std::pair<Local_id, llvm::PHINode*>>> incomplete_; // in a block not yet sealed
+    std::vector<llvm::PHINode*>                                   filling_;    // phis taking operands now
+    u32                                                           block_ = 0;  // the block being filled
 };
 
 Llvm_emitter::Llvm_emitter(
@@ -159,9 +182,7 @@ Llvm_emitter::Llvm_emitter(
     const Source_manager&        sm,
     const Interner&              interner,
     const Module_graph&          modules,
-    const Parts*                 parts,
-    File_id                      part,
-    bool                         klo
+    const Llvm_options&          options
 )
     : functions_( functions ),
       program_( program ),
@@ -172,9 +193,10 @@ Llvm_emitter::Llvm_emitter(
       spelling_( Spelling { program, types, interner, modules, sm } ),
       layout_( program, types.table() ),
       vtables_( vtables_needed( types, functions ) ),
-      parts_( parts ),
-      part_( part ),
-      klo_( klo ),
+      parts_( options.parts ),
+      part_( options.part ),
+      klo_( options.klo ),
+      debug_( options.debug ),
       context_( std::make_unique<llvm::LLVMContext>() ),
       module_( std::make_unique<llvm::Module>( "keel", *context_ ) ),
       builder_( *context_ )
@@ -525,7 +547,35 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         locals_[k_return_slot.v] = &*argument++;
     }
 
-    // Every local an alloca in the entry block; a parameter's arrives into its own.
+    promote( function );
+    const u32 entry = static_cast<u32>( blocks_.size() );
+    predecessors_.assign( entry + 1, {} );
+    predecessors_[0].push_back( entry );
+    std::vector<Block_id> targets;
+    for( const Block_id i : function.blocks.ids() )
+    {
+        targets.clear();
+        successors( function.blocks[i].terminator, targets );
+        for( const Block_id target : targets )
+        {
+            predecessors_[target.v].push_back( i.v );
+        }
+    }
+    exits_.assign( entry + 1, nullptr );
+    exits_[entry] = entry_;
+    filled_.assign( entry + 1, false );
+    filled_[entry] = true;
+    sealed_.assign( entry + 1, false );
+    sealed_[entry] = true;
+    current_values_.assign( entry + 1, {} );
+    incomplete_.assign( entry + 1, {} );
+    for( u32 i = 0; i < entry; ++i )
+    {
+        seal_if_ready( i );
+    }
+    block_ = entry;
+
+    // Every other local an alloca in the entry block; a parameter's arrives into its own.
     for( const Local_id i : function.locals.ids() )
     {
         const Local& local = function.locals[i];
@@ -536,6 +586,14 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
         }
 
         const bool parameter = i.v >= 1 && i.v <= function.parameter_count;
+        if( promoted_[i.v] )
+        {
+            if( parameter )
+            {
+                current_values_[entry][i.v] = &*argument++;
+            }
+            continue;
+        }
         if( parameter && kind == Held::Memory && argument->hasByValAttr() )
         {
             locals_[i.v] = &*argument++; // the callee's own copy
@@ -568,13 +626,192 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
 
     for( const Block_id i : function.blocks.ids() )
     {
+        block_ = i.v;
         builder_.SetInsertPoint( blocks_[i.v] );
         for( const Statement& each : function.statements_of( i ) )
         {
             statement( each );
         }
         terminator( function.blocks[i].terminator );
+        exits_[i.v]  = builder_.GetInsertBlock();
+        filled_[i.v] = true;
+
+        targets.clear();
+        successors( function.blocks[i].terminator, targets );
+        for( const Block_id target : targets )
+        {
+            seal_if_ready( target.v );
+        }
     }
+}
+
+// A scalar nothing takes the address of, though what it points at may be; under --debug, only a
+// temporary, so a debugger finds every named local.
+void Llvm_emitter::promote( const Function& function )
+{
+    promoted_.assign( function.locals.size(), false );
+    for( const Local_id i : function.locals.ids() )
+    {
+        const Local& local = function.locals[i];
+        promoted_[i.v]     = held( local.type ) == Held::Scalar && !( debug_ && local.name.is_valid() );
+    }
+
+    const auto check = [&]( const Place& place, bool addressed )
+    {
+        if( place.is_global() || !place.local.is_valid() )
+        {
+            return;
+        }
+        if( place.num_projections == 0 ? addressed : function.projections_of( place )[0].kind != Projection_kind::Deref )
+        {
+            promoted_[place.local.v] = false;
+        }
+    };
+    const auto check_operand = [&]( const Operand& operand )
+    {
+        if( operand.has_place() )
+        {
+            check( operand.place, false );
+        }
+    };
+
+    for( const Statement& statement : function.statements )
+    {
+        check( statement.place, statement.kind == Statement_kind::Drop );
+        if( statement.kind != Statement_kind::Assign )
+        {
+            continue;
+        }
+        const Rvalue& value = function.rvalue( statement );
+        if( value.kind == Rvalue_kind::Address_of ) // whatever its operand's kind
+        {
+            check( value.a.place, true );
+        }
+        check_operand( value.a );
+        check_operand( value.b );
+        for( const Operand& argument : value.arguments )
+        {
+            check_operand( argument );
+        }
+    }
+}
+
+llvm::Value* Llvm_emitter::value_of( Local_id local )
+{
+    return promoted_[local.v] ? read( local, block_ ) : load( current_->locals[local].type, locals_[local.v] );
+}
+
+llvm::Value* Llvm_emitter::read( Local_id local, u32 block )
+{
+    const auto found = current_values_[block].find( local.v );
+    return found != current_values_[block].end() ? static_cast<llvm::Value*>( found->second ) : read_above( local, block );
+}
+
+// None reaching it reads as zero, as only a block no path enters can see.
+llvm::Value* Llvm_emitter::read_above( Local_id local, u32 block )
+{
+    const std::vector<u32>& above = predecessors_[block];
+    llvm::Value*            value = nullptr;
+    if( !sealed_[block] )
+    {
+        llvm::PHINode* waiting = phi( local, block );
+        incomplete_[block].emplace_back( local, waiting );
+        value = waiting;
+    }
+    else if( above.empty() )
+    {
+        value = llvm::Constant::getNullValue( value_type( current_->locals[local].type ) );
+    }
+    else if( above.size() == 1 )
+    {
+        value = read( local, above[0] );
+    }
+    else
+    {
+        llvm::PHINode* joined           = phi( local, block );
+        current_values_[block][local.v] = joined; // ends a cycle back here
+        value                           = fill( local, block, joined );
+    }
+    current_values_[block][local.v] = value;
+    return value;
+}
+
+llvm::PHINode* Llvm_emitter::phi( Local_id local, u32 block )
+{
+    llvm::IRBuilder<> at( blocks_[block], blocks_[block]->begin() );
+    return at.CreatePHI( value_type( current_->locals[local].type ), static_cast<u32>( predecessors_[block].size() ) );
+}
+
+llvm::Value* Llvm_emitter::fill( Local_id local, u32 block, llvm::PHINode* phi )
+{
+    filling_.push_back( phi );
+    for( const u32 above : predecessors_[block] )
+    {
+        phi->addIncoming( read( local, above ), exits_[above] );
+    }
+    filling_.pop_back();
+    return remove_if_trivial( phi );
+}
+
+// One that joins a single value is that value, and so may be a phi that took this one, the value
+// itself among them, so it is tracked.
+llvm::Value* Llvm_emitter::remove_if_trivial( llvm::PHINode* phi )
+{
+    llvm::Value* same = nullptr;
+    for( llvm::Value* incoming : phi->incoming_values() )
+    {
+        if( incoming == same || incoming == phi )
+        {
+            continue;
+        }
+        if( same != nullptr )
+        {
+            return phi;
+        }
+        same = incoming;
+    }
+    if( same == nullptr )
+    {
+        same = llvm::Constant::getNullValue( phi->getType() );
+    }
+
+    std::vector<llvm::WeakVH> users;
+    for( llvm::User* user : phi->users() )
+    {
+        if( user != phi && llvm::isa<llvm::PHINode>( user ) )
+        {
+            users.emplace_back( user );
+        }
+    }
+    const llvm::WeakTrackingVH result = same;
+    phi->replaceAllUsesWith( same );
+    phi->eraseFromParent();
+
+    for( const llvm::WeakVH& user : users )
+    {
+        llvm::Value* still = user;
+        if( still != nullptr && std::ranges::find( filling_, still ) == filling_.end() )
+        {
+            remove_if_trivial( llvm::cast<llvm::PHINode>( still ) );
+        }
+    }
+    return result;
+}
+
+void Llvm_emitter::seal_if_ready( u32 block )
+{
+    if( sealed_[block] ||
+        !std::ranges::all_of( predecessors_[block], [&]( u32 above ) { return static_cast<bool>( filled_[above] ); } ) )
+    {
+        return;
+    }
+    const std::vector<std::pair<Local_id, llvm::PHINode*>> waiting = std::move( incomplete_[block] );
+    incomplete_[block].clear();
+    for( const auto& [local, phi] : waiting )
+    {
+        fill( local, block, phi );
+    }
+    sealed_[block] = true;
 }
 
 void Llvm_emitter::statement( const Statement& statement )
@@ -595,7 +832,11 @@ void Llvm_emitter::statement( const Statement& statement )
 
         // Into a `void` place, only what the rvalue does.
         llvm::Value* result = rvalue( value );
-        if( result != nullptr && held( target ) != Held::Nothing )
+        if( result != nullptr && statement.place.is_whole_local() && promoted_[statement.place.local.v] )
+        {
+            current_values_[block_][statement.place.local.v] = result;
+        }
+        else if( result != nullptr && held( target ) != Held::Nothing )
         {
             store( target, result, address( statement.place ) );
         }
@@ -607,10 +848,9 @@ void Llvm_emitter::statement( const Statement& statement )
         llvm::BasicBlock* dropped = nullptr;
         if( statement.drop_flag.is_valid() )
         {
-            const Type_id     flag = current_->locals[statement.drop_flag].type;
             llvm::BasicBlock* drop = llvm::BasicBlock::Create( *context_, "drop", defined_ );
             dropped                = llvm::BasicBlock::Create( *context_, "dropped", defined_ );
-            builder_.CreateCondBr( load( flag, locals_[statement.drop_flag.v] ), drop, dropped );
+            builder_.CreateCondBr( value_of( statement.drop_flag ), drop, dropped );
             builder_.SetInsertPoint( drop );
         }
 
@@ -693,7 +933,7 @@ void Llvm_emitter::terminator( const Terminator& terminator )
             builder_.CreateRet( whole );
             return;
         }
-        builder_.CreateRet( load( type, locals_[k_return_slot.v] ) );
+        builder_.CreateRet( value_of( k_return_slot ) );
         return;
     }
 
@@ -802,15 +1042,30 @@ Type_id Llvm_emitter::field_type( Type_id aggregate, Node_id field ) const
 // A place's address, walked as Description::type_of walks its type.
 llvm::Value* Llvm_emitter::address( const Place& place )
 {
-    Type_id      type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local].type;
-    llvm::Value* at   = place.is_global() ? global( place.global, place.owner ) : locals_[place.local.v];
+    Type_id                     type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local].type;
+    llvm::Value*                at   = place.is_global() ? global( place.global, place.owner ) : locals_[place.local.v];
+    const Run<const Projection> projections = current_->projections_of( place );
+    u32                         first       = 0;
+
+    // A promoted pointer is its value, and `promote` let only a deref reach through it.
+    if( !place.is_global() && promoted_[place.local.v] )
+    {
+        if( projections.size() == 0 )
+        {
+            malformed( "the address of a local held as a value" );
+        }
+        at    = read( place.local, block_ );
+        type  = table().get( type ).element;
+        first = 1;
+    }
     if( at == nullptr )
     {
         malformed( "a place in a local that holds nothing" );
     }
 
-    for( const Projection& projection : current_->projections_of( place ) )
+    for( u32 i = first; i < projections.size(); ++i )
     {
+        const Projection& projection = projections[i];
         switch( projection.kind )
         {
         case Projection_kind::Field:
@@ -835,7 +1090,7 @@ llvm::Value* Llvm_emitter::address( const Place& place )
         case Projection_kind::Index:
         {
             const Type_id element = table().get( type ).element;
-            llvm::Value*  index   = load( current_->locals[projection.index].type, locals_[projection.index.v] );
+            llvm::Value*  index   = value_of( projection.index );
             at                    = builder_.CreateGEP(
                 builder_.getInt8Ty(), at, builder_.CreateMul( index, builder_.getInt64( layout_.size( element ) ) )
             );
@@ -983,6 +1238,10 @@ llvm::Value* Llvm_emitter::operand( const Operand& operand )
         if( held( type ) == Held::Memory )
         {
             malformed( "an aggregate read as one value" );
+        }
+        if( operand.place.is_whole_local() && promoted_[operand.place.local.v] )
+        {
+            return read( operand.place.local, block_ );
         }
         return load( type, address( operand.place ) );
     }
@@ -1626,14 +1885,10 @@ Llvm_output emit_llvm(
     const Source_manager&        sm,
     const Interner&              interner,
     const Module_graph&          modules,
-    const std::filesystem::path& object,
-    bool                         print,
-    const Parts*                 parts,
-    File_id                      part,
-    bool                         klo
+    const Llvm_options&          options
 )
 {
-    Llvm_emitter emitter( functions, program, types, literals, sm, interner, modules, parts, part, klo );
+    Llvm_emitter emitter( functions, program, types, literals, sm, interner, modules, options );
     Llvm_output  output;
 
     try
@@ -1655,15 +1910,15 @@ Llvm_output emit_llvm(
             }
         }
 
-        if( print )
+        if( options.print )
         {
             llvm::raw_string_ostream text( output.ir );
             module.print( text, nullptr );
         }
 
-        if( output.error.empty() && !object.empty() )
+        if( output.error.empty() && !options.object.empty() )
         {
-            output.error = write_object( module, object );
+            output.error = write_object( module, options.object );
         }
     }
     catch( const Refusal& refusal )
@@ -1689,7 +1944,8 @@ TEST_CASE( "emit_llvm_writes_a_function_the_verifier_accepts", "[codegen][llvm]"
     REQUIRE( p.clean() );
 
     const Description program = describe( p.ast, p.types, p.interner );
-    const Llvm_output out     = emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, {}, true );
+    const Llvm_output out =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
 
     INFO( out.error );
     INFO( out.ir );
@@ -1697,6 +1953,29 @@ TEST_CASE( "emit_llvm_writes_a_function_the_verifier_accepts", "[codegen][llvm]"
     REQUIRE( out.ir.find( "define i32 @kl__5twice__3i32(i32 %0)" ) != std::string::npos );
     REQUIRE( out.ir.find( "mul i32" ) != std::string::npos );
     REQUIRE( out.ir.find( " nsw " ) == std::string::npos );
+}
+
+TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_names_it", "[codegen][llvm]" )
+{
+    Compiled p(
+        "i32 count( i32 n ) { i32 i = 0; while( i < n ) { i = i + 1; } return i; }\n"
+        "i32 main() { return count( 3 ) - 3; }\n",
+        Stage::Elaborated
+    );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const Llvm_output promoted =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
+    const Llvm_output kept =
+        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true } );
+
+    INFO( promoted.ir );
+    REQUIRE( promoted.error.empty() );
+    REQUIRE( promoted.ir.find( "phi i32" ) != std::string::npos );
+    REQUIRE( promoted.ir.find( "alloca" ) == std::string::npos );
+    REQUIRE( kept.error.empty() );
+    REQUIRE( kept.ir.find( "%i = alloca i32" ) != std::string::npos );
 }
 
 } // namespace keel

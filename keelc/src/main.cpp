@@ -613,8 +613,9 @@ int main( int argc, char** argv )
 
     if( stop == Stop::Llvm )
     {
-        const keel::Llvm_output ir =
-            keel::emit_llvm( functions, program, types, literals, sm, interner, prog.modules, {}, true );
+        const keel::Llvm_output ir = keel::emit_llvm(
+            functions, program, types, literals, sm, interner, prog.modules, { .print = true, .debug = debug }
+        );
         std::cout << ir.ir;
         if( !ir.error.empty() )
         {
@@ -704,7 +705,14 @@ int main( int argc, char** argv )
             }
             objects.push_back( object_dir.path / std::filesystem::path( c_name( part ) ).replace_extension( ".o" ) );
             const keel::Llvm_output built = keel::emit_llvm(
-                functions, program, types, literals, sm, interner, prog.modules, objects.back(), false, &parts, part
+                functions,
+                program,
+                types,
+                literals,
+                sm,
+                interner,
+                prog.modules,
+                { .object = objects.back(), .parts = &parts, .part = part, .debug = debug }
             );
             if( !built.error.empty() )
             {

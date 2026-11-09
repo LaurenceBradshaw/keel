@@ -128,11 +128,7 @@ int write_object(
                 sm,
                 interner,
                 program.modules,
-                native,
-                false,
-                &parts,
-                input,
-                true
+                { .object = native, .parts = &parts, .part = input, .klo = true, .debug = true }
             );
             if( !built.error.empty() )
             {

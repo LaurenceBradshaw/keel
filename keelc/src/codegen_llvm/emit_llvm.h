@@ -25,9 +25,17 @@ struct Llvm_output
     std::vector<std::string> defined; // every symbol the object defines with external linkage, for a .klo's index
 };
 
-// `part` as one LLVM module, or the whole compile when `parts` is null: written as an object to
-// `object` unless it is empty, and printed into `ir` when `print` is set. In a .klo (`klo`) an
-// instance is a COMDAT, as several objects may define it. Types is mutable only for its table.
+struct Llvm_options
+{
+    std::filesystem::path object {};       // written there unless empty
+    bool                  print = false;   // into Llvm_output::ir
+    const Parts*          parts = nullptr; // null emits the whole compile as one module
+    File_id               part {};         // else the part this module is
+    bool                  klo   = false;   // an instance is a COMDAT, as several objects may define it
+    bool                  debug = false;   // a named local stays in memory, for a debugger
+};
+
+// The compile as one LLVM module. Types is mutable only for its table.
 Llvm_output emit_llvm(
     const std::vector<Function>& functions,
     const Description&           program,
@@ -36,11 +44,7 @@ Llvm_output emit_llvm(
     const Source_manager&        sm,
     const Interner&              interner,
     const Module_graph&          modules,
-    const std::filesystem::path& object,
-    bool                         print = false,
-    const Parts*                 parts = nullptr,
-    File_id                      part  = {},
-    bool                         klo   = false
+    const Llvm_options&          options
 );
 
 } // namespace keel
