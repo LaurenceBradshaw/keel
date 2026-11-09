@@ -121,7 +121,8 @@ std::vector<Borrow> borrows_of(
         }
         // An address computed from an address (a cast, `p + i`, a run's data, a sub-run) borrows what it does.
         // An integer's `+` copies an empty borrow.
-        else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast || value.kind == Rvalue_kind::Run_of ||
+        else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast ||
+                   value.kind == Rvalue_kind::Make_interface || value.kind == Rvalue_kind::Run_of ||
                    value.kind == Rvalue_kind::Run_data ||
                    ( value.kind == Rvalue_kind::Binary && value.op == Token_kind::Plus ) ) &&
                  value.a.kind == Operand_kind::Copy && source.num_projections == 0 )

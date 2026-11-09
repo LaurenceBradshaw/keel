@@ -233,7 +233,7 @@ void Instance_queue::reached_by( const Function& function )
             continue;
         }
 
-        const auto [implementer, interface] = interface_conversion( ast_, types_, function, value );
+        const auto [implementer, interface] = interface_conversion( types_.table(), value );
         const Conformance* conformance =
             implementer.is_valid() ? types_.conformances().of( types_.table(), implementer, interface ) : nullptr;
 

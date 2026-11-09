@@ -150,11 +150,11 @@ void kl_2kl4list_10reallocate__I3i64E__SQ2kl4listI3i64E_3u64( struct kl_2kl4list
 void kl_2kl4list_10reallocate__I4boolE__SQ2kl4listI4boolE_3u64( struct kl_2kl4list_list__I4boolE*, uint64_t );
 void kl_2kl4list_10reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4list_list__I5ownedE*, uint64_t );
 void kl_2kl4list_10reallocate__I3u64E__SQ2kl4listI3u64E_3u64( struct kl_2kl4list_list__I3u64E*, uint64_t );
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* );
-void kl_2kl4list_list__I3i64E__drop( struct kl_2kl4list_list__I3i64E* );
-void kl_2kl4list_list__I4boolE__drop( struct kl_2kl4list_list__I4boolE* );
-void kl_2kl4list_list__I5ownedE__drop( struct kl_2kl4list_list__I5ownedE* );
-void kl_2kl4list_list__I3u64E__drop( struct kl_2kl4list_list__I3u64E* );
+void kl_2kl4list_list__I3i32E__drop( void* );
+void kl_2kl4list_list__I3i64E__drop( void* );
+void kl_2kl4list_list__I4boolE__drop( void* );
+void kl_2kl4list_list__I5ownedE__drop( void* );
+void kl_2kl4list_list__I3u64E__drop( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 11 "list_map/main.kl"
@@ -2914,46 +2914,61 @@ void kl_2kl4list_10reallocate__I3u64E__SQ2kl4listI3u64E_3u64( struct kl_2kl4list
 #line 471 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* kl_t1 )
+void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I3i32E* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I3i32E* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I3i64E__drop( struct kl_2kl4list_list__I3i64E* kl_t1 )
+void kl_2kl4list_list__I3i64E__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I3i64E* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I3i64E__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I3i64E* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I3i64E__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I4boolE__drop( struct kl_2kl4list_list__I4boolE* kl_t1 )
+void kl_2kl4list_list__I4boolE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I4boolE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I4boolE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I4boolE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I4boolE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I5ownedE__drop( struct kl_2kl4list_list__I5ownedE* kl_t1 )
+void kl_2kl4list_list__I5ownedE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I5ownedE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I5ownedE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I5ownedE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I5ownedE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I3u64E__drop( struct kl_2kl4list_list__I3u64E* kl_t1 )
+void kl_2kl4list_list__I3u64E__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I3u64E* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I3u64E__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I3u64E* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I3u64E__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"

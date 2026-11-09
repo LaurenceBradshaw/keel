@@ -554,7 +554,7 @@ struct Checked : Compiled
             globals.emplace_back();
             for( std::size_t f = 0; f < all.size(); ++f )
             {
-                if( all[f].declaration == function.declaration && all[f].type_arguments == function.type_arguments )
+                if( same_function( all[f], function ) )
                 {
                     globals.back() = effects[f];
                 }

@@ -90,6 +90,15 @@ public:
             return;
 
         case Rvalue_kind::Cast:
+            operand( value.a, at );
+            if( ( table_.is_interface_pointer( value.type ) &&
+                  !( table_.is_pointer( value.a.type ) && table_.is_interface( table_.get( value.a.type ).element ) ) ) ||
+                table_.is_box( value.type ) )
+            {
+                errors_.push_back( fmt::format( "{}: a cast makes {} from {}", at, name( value.type ), name( value.a.type ) ) );
+            }
+            return;
+
         case Rvalue_kind::Bits:
         case Rvalue_kind::Run_data:
         case Rvalue_kind::Run_size:
@@ -111,10 +120,34 @@ public:
             }
             return;
 
+        case Rvalue_kind::Make_interface:
+            operand( value.a, at );
+            if( !table_.is_interface_pointer( value.type ) || !table_.is_pointer( value.a.type ) ||
+                table_.is_interface( table_.get( value.a.type ).element ) )
+            {
+                errors_.push_back(
+                    fmt::format( "{}: an interface is made from {} as {}", at, name( value.a.type ), name( value.type ) )
+                );
+            }
+            return;
+
         case Rvalue_kind::Address_of:
+            address( value, at );
+            return;
+
         case Rvalue_kind::Function_address:
         case Rvalue_kind::Field_offset:
             return;
+        }
+    }
+
+    // An address is its place's pointer: an implementer's becomes an interface pointer only through Make_interface.
+    void address( const Rvalue& value, const At& at )
+    {
+        const Type_id held = place( value.a.place );
+        if( table_.is_interface_pointer( value.type ) && !table_.is_interface( held ) )
+        {
+            errors_.push_back( fmt::format( "{}: the address of {} is {}", at, name( held ), name( value.type ) ) );
         }
     }
 
@@ -183,22 +216,13 @@ private:
 
         if( is_comparison( value.op ) && value.op != Token_kind::Less_equal_greater )
         {
-            // D41's mixed comparisons, until they are calls.
-            if( value.a.type == value.b.type || !is_comparison_width( value.a.type ) || !is_comparison_width( value.b.type ) )
-            {
-                expect( value.b.type, value.a.type, at, "the right operand" );
-            }
+            expect( value.b.type, value.a.type, at, "the right operand" );
             expect( value.type, table_.builtin( Type_kind::Bool ), at, "a comparison" );
             return;
         }
 
         expect( value.b.type, value.a.type, at, "the right operand" );
         expect( value.type, value.a.type, at, "a binary" );
-    }
-
-    bool is_comparison_width( Type_id type ) const
-    {
-        return type == table_.integer( 64, true ) || type == table_.integer( 64, false ) || type == table_.floating( 64 );
     }
 
     const Ast&                ast_;
@@ -237,7 +261,7 @@ const Function* Type_verifier::callee( const Rvalue& value ) const
 
     for( const u32 i : found->second )
     {
-        if( program_[i].type_arguments == value.type_arguments && !program_[i].globals.is_valid() )
+        if( names( value, program_[i] ) && !program_[i].globals.is_valid() )
         {
             return &program_[i];
         }

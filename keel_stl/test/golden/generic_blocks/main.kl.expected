@@ -1551,7 +1551,7 @@ bool kl_2kl4pair_11operator_eq__I3i32_3i32E__SQ2kl4pairI3i32_3i32EC9equatable_Q2
 void kl_2kl4pair_4hash__IQ2kl4listI3i32E_4boolE__SQ2kl4pairIQ2kl4listI3i32E_4boolEC8hashable_RQ7prelude6hasher( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE*, struct kl_7prelude_hasher* );
 bool kl_2kl4pair_11operator_eq__IQ2kl4listI3i32E_4boolE__SQ2kl4pairIQ2kl4listI3i32E_4boolEC9equatable_Q2kl4pairIQ2kl4listI3i32E_4boolE( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE*, struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* );
 void kl_2kl4list_4hash__I3i32E__SQ2kl4listI3i32EC8hashable_RQ7prelude6hasher( struct kl_2kl4list_list__I3i32E*, struct kl_7prelude_hasher* );
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* );
+void kl_2kl4list_list__I3i32E__drop( void* );
 void kl_2kl12hash_control_12hash_control__dtor( struct kl_2kl12hash_control_hash_control* );
 struct kl_2kl12hash_control_hash_control kl_2kl12hash_control_5fresh__SQ2kl12hash_control( void );
 struct kl_2kl12hash_control_hash_control kl_2kl12hash_control_7resized__SQ2kl12hash_control_3u64( struct kl_2kl12hash_control_hash_control*, uint64_t );
@@ -3943,10 +3943,13 @@ void kl_2kl4list_4hash__I3i32E__SQ2kl4listI3i32EC8hashable_RQ7prelude6hasher( st
 #line 521 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* kl_t1 )
+void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I3i32E* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I3i32E* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"

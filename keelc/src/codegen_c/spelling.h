@@ -17,6 +17,7 @@ namespace keel
 {
 
 struct Function;
+struct Rvalue;
 struct Spelling
 {
     const Ast&            ast;
@@ -43,6 +44,10 @@ struct Spelling
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.
     std::string function( Node_id declaration, std::span<const Type_id> type_arguments = {} ) const;
+    // A Call's or Function_address's callee, a D41 guard among them.
+    std::string callee( const Rvalue& value ) const;
+    // D41's guard for `op` between its two operand types: "kl_cmp_lt_i64_u64".
+    std::string guard( Token_kind op, std::span<const Type_id> operands ) const;
     // As above, or a module's build or drop function: "kl_2kl2os_0build". No name starts with a digit.
     std::string function( const Function& function ) const;
     // A vtable slot: the requirement's name and parameters, so an overloaded requirement has two.

@@ -39,19 +39,10 @@ void kl_1t7console_6eprint__3u64_7textual( uint64_t, struct kl_7prelude_textual_
 void kl_1t7console_6eprint__3f64_7textual( double, struct kl_7prelude_textual__ref );
 void kl_1t7console_6eprint__4bool_7textual( bool, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
-
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 12 "../test_lib/console.kl"
 void kl_1t7console_10write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7prelude_textual__ref kl_text_2 )
@@ -146,8 +137,9 @@ void kl_1t7console_5print__4bool_7textual( bool kl_value_1, struct kl_7prelude_t
     struct kl_7prelude_str kl_t8;
     struct kl_7prelude_str* kl_t9;
     uint8_t* kl_t10;
-    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_str* kl_t12;
     struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
 #line 65 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
@@ -174,11 +166,13 @@ void kl_1t7console_5print__4bool_7textual( bool kl_value_1, struct kl_7prelude_t
     goto bb3;
     bb3:
 #line 65 "../test_lib/console.kl"
-    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t12 = &kl_t3;
 #line 65 "../test_lib/console.kl"
-    kl_t13 = kl_end_2;
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 65 "../test_lib/console.kl"
-    kl_1t7console_5print__7textual_7textual( kl_t12, kl_t13 );
+    kl_t14 = kl_end_2;
+#line 65 "../test_lib/console.kl"
+    kl_1t7console_5print__7textual_7textual( kl_t13, kl_t14 );
     return;
 #line 66 "../test_lib/console.kl"
 }
@@ -251,8 +245,9 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
     struct kl_7prelude_str kl_t8;
     struct kl_7prelude_str* kl_t9;
     uint8_t* kl_t10;
-    struct kl_7prelude_textual__ref kl_t12;
+    struct kl_7prelude_str* kl_t12;
     struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
 #line 112 "../test_lib/console.kl"
     if ( kl_value_1 ) goto bb1; else goto bb2;
     bb1:
@@ -279,11 +274,13 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
     goto bb3;
     bb3:
 #line 112 "../test_lib/console.kl"
-    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t12 = &kl_t3;
 #line 112 "../test_lib/console.kl"
-    kl_t13 = kl_end_2;
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 112 "../test_lib/console.kl"
-    kl_1t7console_6eprint__7textual_7textual( kl_t12, kl_t13 );
+    kl_t14 = kl_end_2;
+#line 112 "../test_lib/console.kl"
+    kl_1t7console_6eprint__7textual_7textual( kl_t13, kl_t14 );
     return;
 #line 113 "../test_lib/console.kl"
 }
@@ -323,19 +320,10 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 int32_t kl__4main__( void );
 void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref, struct kl_7prelude_textual__ref );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
-
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 4 "codegen/array_replace_out_of_range.kl"
 int32_t kl__4main__( void )
@@ -349,21 +337,23 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str kl_t6;
     struct kl_7prelude_str* kl_t7;
     uint8_t* kl_t8;
-    struct kl_7prelude_textual__ref kl_t10;
-    struct kl_7prelude_str kl_t11;
-    struct kl_7prelude_str* kl_t12;
-    uint8_t* kl_t13;
-    struct kl_7prelude_textual__ref kl_t15;
-    uint64_t kl_t17;
-    bool kl_t18;
+    struct kl_7prelude_str* kl_t10;
+    struct kl_7prelude_textual__ref kl_t11;
+    struct kl_7prelude_str kl_t12;
+    struct kl_7prelude_str* kl_t13;
+    uint8_t* kl_t14;
+    struct kl_7prelude_str* kl_t16;
+    struct kl_7prelude_textual__ref kl_t17;
     uint64_t kl_t19;
-    int32_t* kl_t20;
-    int32_t kl_t21;
+    bool kl_t20;
+    uint64_t kl_t21;
     int32_t* kl_t22;
-    int32_t* kl_t23;
+    int32_t kl_t23;
+    int32_t* kl_t24;
+    int32_t* kl_t25;
     ( void ) kl_t3;
     ( void ) kl_t4;
-    ( void ) kl_t19;
+    ( void ) kl_t21;
 #line 6 "codegen/array_replace_out_of_range.kl"
     kl_t3 = 0;
 #line 6 "codegen/array_replace_out_of_range.kl"
@@ -382,40 +372,44 @@ int32_t kl__4main__( void )
 #line 9 "codegen/array_replace_out_of_range.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 6 );
 #line 9 "codegen/array_replace_out_of_range.kl"
-    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t6, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 24 "../test_lib/console.kl"
-    kl_t12 = &kl_t11;
-#line 24 "../test_lib/console.kl"
-    kl_t13 = ( uint8_t* ) "\012";
-#line 24 "../test_lib/console.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t12, kl_t13, 1 );
-#line 24 "../test_lib/console.kl"
-    kl_t15 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t11, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t10 = &kl_t6;
 #line 9 "codegen/array_replace_out_of_range.kl"
-    kl_1t7console_5print__7textual_7textual( kl_t10, kl_t15 );
-    kl_t17 = kl_far_5;
+    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 24 "../test_lib/console.kl"
+    kl_t13 = &kl_t12;
+#line 24 "../test_lib/console.kl"
+    kl_t14 = ( uint8_t* ) "\012";
+#line 24 "../test_lib/console.kl"
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t13, kl_t14, 1 );
+#line 24 "../test_lib/console.kl"
+    kl_t16 = &kl_t12;
+#line 24 "../test_lib/console.kl"
+    kl_t17 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t16, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 9 "codegen/array_replace_out_of_range.kl"
+    kl_1t7console_5print__7textual_7textual( kl_t11, kl_t17 );
+    kl_t19 = kl_far_5;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t18 = kl_t17 < 2;
+    kl_t20 = kl_t19 < 2;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    if ( kl_t18 ) goto bb2; else goto bb1;
+    if ( kl_t20 ) goto bb2; else goto bb1;
     bb1:
 #line 10 "codegen/array_replace_out_of_range.kl"
     kl_rt_panic( "codegen/array_replace_out_of_range.kl", 10, "out of bounds: numbers.replace( far, 3 )" );
     bb2:
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t19 = 0;
+    kl_t21 = 0;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t20 = &kl_numbers_1.e[kl_t19];
+    kl_t22 = &kl_numbers_1.e[kl_t21];
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t22 = kl_t20 + kl_t17;
+    kl_t24 = kl_t22 + kl_t19;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t21 = ( *kl_t22 );
+    kl_t23 = ( *kl_t24 );
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t23 = kl_t20 + kl_t17;
+    kl_t25 = kl_t22 + kl_t19;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    ( *kl_t23 ) = 3;
+    ( *kl_t25 ) = 3;
 #line 10 "codegen/array_replace_out_of_range.kl"
-    kl_t0 = kl_t21;
+    kl_t0 = kl_t23;
 #line 10 "codegen/array_replace_out_of_range.kl"
     return kl_t0;
 }

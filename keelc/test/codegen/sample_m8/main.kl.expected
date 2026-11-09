@@ -152,37 +152,19 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
-void kl_2kl6string_string__drop( struct kl_2kl6string_string* );
+void kl_2kl6string_string__drop( void* );
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_7prelude_11joined_text__dtor( struct kl_7prelude_joined_text* );
 uint64_t kl_7prelude_4size__SQ7prelude11joined_text( struct kl_7prelude_joined_text* );
 uint8_t* kl_7prelude_7release__SQ7prelude11joined_text( struct kl_7prelude_joined_text* );
 void kl_7prelude_11write_bytes__SQ7prelude6hasher_L2u8( struct kl_7prelude_hasher*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
-
-static void kl_2kl6string_string__as_kl_7prelude_textual__drop( void* self )
-{
-    kl_2kl6string_string__drop( ( struct kl_2kl6string_string* ) self );
-}
-
-static struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_2kl6string_7as_text__SQ2kl6string( ( struct kl_2kl6string_string* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__as_kl_7prelude_textual__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 27 "../../keel_stl/src/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
@@ -391,28 +373,31 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( st
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
     struct kl_2kl6string_string* kl_t3;
-    struct kl_7prelude_textual__ref kl_t4;
-    bool kl_t6;
+    struct kl_7prelude_str* kl_t4;
+    struct kl_7prelude_textual__ref kl_t5;
+    bool kl_t7;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../keel_stl/src/string.kl"
     kl_t3 = &kl_t2;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t6 = true;
+    kl_t7 = true;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_text_1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t4 = &kl_text_1;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t4 );
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 90 "../../keel_stl/src/string.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t5 );
 #line 90 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t2;
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../keel_stl/src/string.kl"
-    if ( kl_t6 ) kl_2kl6string_6string__dtor( &kl_t2 );
+    if ( kl_t7 ) kl_2kl6string_6string__dtor( &kl_t2 );
 #line 90 "../../keel_stl/src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../keel_stl/src/string.kl"
     return kl_t0;
 }
@@ -427,50 +412,51 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     struct kl_7prelude_str kl_t5;
     struct kl_7prelude_str* kl_t6;
     uint8_t* kl_t7;
-    struct kl_7prelude_textual__ref kl_t9;
-    struct kl_2kl6string_string kl_result_11;
-    struct kl_2kl6string_string* kl_t12;
-    bool kl_t14;
-    struct kl_2kl6string_string* kl_t15;
-    uint64_t kl_t16;
-    bool kl_t17;
-    uint64_t kl_t18;
-    uint8_t kl_t19;
-    uint64_t kl_t20;
-    bool kl_t21;
-    uint64_t kl_i_23;
-    uint64_t kl_t24;
-    bool kl_t25;
-    uint8_t kl_low_26;
-    uint8_t* kl_t27;
+    struct kl_7prelude_str* kl_t9;
+    struct kl_7prelude_textual__ref kl_t10;
+    struct kl_2kl6string_string kl_result_12;
+    struct kl_2kl6string_string* kl_t13;
+    bool kl_t15;
+    struct kl_2kl6string_string* kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    uint64_t kl_t19;
+    uint8_t kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    uint64_t kl_i_24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    uint8_t kl_low_27;
     uint8_t* kl_t28;
-    bool kl_t29;
-    uint64_t kl_t30;
-    bool kl_t31;
-    uint64_t kl_t32;
-    uint8_t* kl_t33;
-    bool kl_t34;
-    uint64_t kl_t35;
-    bool kl_t36;
-    uint64_t kl_t37;
-    uint8_t* kl_t38;
-    bool kl_t39;
+    uint8_t* kl_t29;
+    bool kl_t30;
+    uint64_t kl_t31;
+    bool kl_t32;
+    uint64_t kl_t33;
+    uint8_t* kl_t34;
+    bool kl_t35;
+    uint64_t kl_t36;
+    bool kl_t37;
+    uint64_t kl_t38;
+    uint8_t* kl_t39;
     bool kl_t40;
     bool kl_t41;
-#line 96 "../../keel_stl/src/string.kl"
-    kl_t40 = false;
+    bool kl_t42;
 #line 96 "../../keel_stl/src/string.kl"
     kl_t41 = false;
+#line 96 "../../keel_stl/src/string.kl"
+    kl_t42 = false;
 #line 96 "../../keel_stl/src/string.kl"
     kl_t2 = kl_value_1 == 0;
 #line 96 "../../keel_stl/src/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../keel_stl/src/string.kl"
     kl_t4 = &kl_t3;
 #line 98 "../../keel_stl/src/string.kl"
-    kl_t40 = true;
+    kl_t41 = true;
 #line 98 "../../keel_stl/src/string.kl"
     kl_t6 = &kl_t5;
 #line 98 "../../keel_stl/src/string.kl"
@@ -478,45 +464,47 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
 #line 98 "../../keel_stl/src/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 1 );
 #line 98 "../../keel_stl/src/string.kl"
-    kl_t9 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t5, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t9 = &kl_t5;
 #line 98 "../../keel_stl/src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t9 );
+    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 98 "../../keel_stl/src/string.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t10 );
 #line 98 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t3;
 #line 98 "../../keel_stl/src/string.kl"
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../keel_stl/src/string.kl"
-    if ( kl_t40 ) kl_2kl6string_6string__dtor( &kl_t3 );
+    if ( kl_t41 ) kl_2kl6string_6string__dtor( &kl_t3 );
 #line 98 "../../keel_stl/src/string.kl"
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../keel_stl/src/string.kl"
     return kl_t0;
     bb2:
 #line 101 "../../keel_stl/src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 101 "../../keel_stl/src/string.kl"
-    kl_t12 = &kl_result_11;
+    kl_t13 = &kl_result_12;
 #line 101 "../../keel_stl/src/string.kl"
-    kl_t41 = true;
+    kl_t42 = true;
 #line 101 "../../keel_stl/src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string__ctor( kl_t12 );
+    kl_2kl6string_6string__RQ2kl6string__ctor( kl_t13 );
     goto bb3;
     bb3:
 #line 102 "../../keel_stl/src/string.kl"
-    kl_t14 = kl_value_1 > 0;
+    kl_t15 = kl_value_1 > 0;
 #line 102 "../../keel_stl/src/string.kl"
-    if ( kl_t14 ) goto bb4; else goto bb5;
+    if ( kl_t15 ) goto bb4; else goto bb5;
     bb4:
-    kl_t15 = &kl_result_11;
+    kl_t16 = &kl_result_12;
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t16 = kl_value_1 % 10;
+    kl_t17 = kl_value_1 % 10;
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t17 = __builtin_add_overflow( 48, kl_t16, &( uint64_t ) { 0 } );
+    kl_t18 = __builtin_add_overflow( 48, kl_t17, &( uint64_t ) { 0 } );
 #line 104 "../../keel_stl/src/string.kl"
-    if ( kl_t17 ) goto bb6; else goto bb7;
+    if ( kl_t18 ) goto bb6; else goto bb7;
     bb5:
 #line 108 "../../keel_stl/src/string.kl"
-    kl_i_23 = 0;
+    kl_i_24 = 0;
 #line 108 "../../keel_stl/src/string.kl"
     goto bb10;
     bb6:
@@ -524,50 +512,50 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     kl_rt_panic( "../../keel_stl/src/string.kl", 104, "arithmetic overflow: 48 + value % 10" );
     bb7:
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t18 = 48 + kl_t16;
+    kl_t19 = 48 + kl_t17;
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t19 = ( uint8_t ) kl_t18;
+    kl_t20 = ( uint8_t ) kl_t19;
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t20 = ( uint64_t ) kl_t19;
+    kl_t21 = ( uint64_t ) kl_t20;
 #line 104 "../../keel_stl/src/string.kl"
-    kl_t21 = kl_t20 == kl_t18;
+    kl_t22 = kl_t21 == kl_t19;
 #line 104 "../../keel_stl/src/string.kl"
-    if ( kl_t21 ) goto bb9; else goto bb8;
+    if ( kl_t22 ) goto bb9; else goto bb8;
     bb8:
 #line 104 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 104, "cast out of range: cast<u8>( 48 + value % 10 )" );
     bb9:
 #line 104 "../../keel_stl/src/string.kl"
-    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t15, kl_t19 );
+    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t16, kl_t20 );
     kl_value_1 = kl_value_1 / 10;
 #line 102 "../../keel_stl/src/string.kl"
     goto bb3;
     bb10:
 #line 108 "../../keel_stl/src/string.kl"
-    kl_t24 = kl_result_11.kl_size_ / 2;
+    kl_t25 = kl_result_12.kl_size_ / 2;
 #line 108 "../../keel_stl/src/string.kl"
-    kl_t25 = kl_i_23 < kl_t24;
+    kl_t26 = kl_i_24 < kl_t25;
 #line 108 "../../keel_stl/src/string.kl"
-    if ( kl_t25 ) goto bb11; else goto bb12;
+    if ( kl_t26 ) goto bb11; else goto bb12;
     bb11:
 #line 112 "../../keel_stl/src/string.kl"
-    kl_t27 = kl_result_11.kl_data_ + kl_i_23;
+    kl_t28 = kl_result_12.kl_data_ + kl_i_24;
 #line 112 "../../keel_stl/src/string.kl"
-    kl_low_26 = ( *kl_t27 );
-    kl_t28 = kl_result_11.kl_data_ + kl_i_23;
+    kl_low_27 = ( *kl_t28 );
+    kl_t29 = kl_result_12.kl_data_ + kl_i_24;
 #line 113 "../../keel_stl/src/string.kl"
-    kl_t29 = __builtin_sub_overflow( kl_result_11.kl_size_, 1, &( uint64_t ) { 0 } );
+    kl_t30 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
 #line 113 "../../keel_stl/src/string.kl"
-    if ( kl_t29 ) goto bb13; else goto bb14;
+    if ( kl_t30 ) goto bb13; else goto bb14;
     bb12:
 #line 118 "../../keel_stl/src/string.kl"
-    kl_t0 = kl_result_11;
+    kl_t0 = kl_result_12;
 #line 118 "../../keel_stl/src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 118 "../../keel_stl/src/string.kl"
-    if ( kl_t41 ) kl_2kl6string_6string__dtor( &kl_result_11 );
+    if ( kl_t42 ) kl_2kl6string_6string__dtor( &kl_result_12 );
 #line 118 "../../keel_stl/src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 118 "../../keel_stl/src/string.kl"
     return kl_t0;
     bb13:
@@ -575,57 +563,57 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     kl_rt_panic( "../../keel_stl/src/string.kl", 113, "arithmetic overflow: result.size_ - 1" );
     bb14:
 #line 113 "../../keel_stl/src/string.kl"
-    kl_t30 = kl_result_11.kl_size_ - 1;
+    kl_t31 = kl_result_12.kl_size_ - 1;
 #line 113 "../../keel_stl/src/string.kl"
-    kl_t31 = __builtin_sub_overflow( kl_t30, kl_i_23, &( uint64_t ) { 0 } );
+    kl_t32 = __builtin_sub_overflow( kl_t31, kl_i_24, &( uint64_t ) { 0 } );
 #line 113 "../../keel_stl/src/string.kl"
-    if ( kl_t31 ) goto bb15; else goto bb16;
+    if ( kl_t32 ) goto bb15; else goto bb16;
     bb15:
 #line 113 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 113, "arithmetic overflow: result.size_ - 1 - i" );
     bb16:
 #line 113 "../../keel_stl/src/string.kl"
-    kl_t32 = kl_t30 - kl_i_23;
+    kl_t33 = kl_t31 - kl_i_24;
 #line 113 "../../keel_stl/src/string.kl"
-    kl_t33 = kl_result_11.kl_data_ + kl_t32;
+    kl_t34 = kl_result_12.kl_data_ + kl_t33;
 #line 113 "../../keel_stl/src/string.kl"
-    ( *kl_t28 ) = ( *kl_t33 );
-    kl_t34 = __builtin_sub_overflow( kl_result_11.kl_size_, 1, &( uint64_t ) { 0 } );
+    ( *kl_t29 ) = ( *kl_t34 );
+    kl_t35 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
 #line 114 "../../keel_stl/src/string.kl"
-    if ( kl_t34 ) goto bb17; else goto bb18;
+    if ( kl_t35 ) goto bb17; else goto bb18;
     bb17:
 #line 114 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 114, "arithmetic overflow: result.size_ - 1" );
     bb18:
 #line 114 "../../keel_stl/src/string.kl"
-    kl_t35 = kl_result_11.kl_size_ - 1;
+    kl_t36 = kl_result_12.kl_size_ - 1;
 #line 114 "../../keel_stl/src/string.kl"
-    kl_t36 = __builtin_sub_overflow( kl_t35, kl_i_23, &( uint64_t ) { 0 } );
+    kl_t37 = __builtin_sub_overflow( kl_t36, kl_i_24, &( uint64_t ) { 0 } );
 #line 114 "../../keel_stl/src/string.kl"
-    if ( kl_t36 ) goto bb19; else goto bb20;
+    if ( kl_t37 ) goto bb19; else goto bb20;
     bb19:
 #line 114 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 114, "arithmetic overflow: result.size_ - 1 - i" );
     bb20:
 #line 114 "../../keel_stl/src/string.kl"
-    kl_t37 = kl_t35 - kl_i_23;
+    kl_t38 = kl_t36 - kl_i_24;
 #line 114 "../../keel_stl/src/string.kl"
-    kl_t38 = kl_result_11.kl_data_ + kl_t37;
+    kl_t39 = kl_result_12.kl_data_ + kl_t38;
 #line 114 "../../keel_stl/src/string.kl"
-    ( *kl_t38 ) = kl_low_26;
+    ( *kl_t39 ) = kl_low_27;
 #line 108 "../../keel_stl/src/string.kl"
     goto bb21;
     bb21:
 #line 108 "../../keel_stl/src/string.kl"
-    kl_t39 = __builtin_add_overflow( kl_i_23, 1, &( uint64_t ) { 0 } );
+    kl_t40 = __builtin_add_overflow( kl_i_24, 1, &( uint64_t ) { 0 } );
 #line 108 "../../keel_stl/src/string.kl"
-    if ( kl_t39 ) goto bb22; else goto bb23;
+    if ( kl_t40 ) goto bb22; else goto bb23;
     bb22:
 #line 108 "../../keel_stl/src/string.kl"
     kl_rt_panic( "../../keel_stl/src/string.kl", 108, "arithmetic overflow: i++" );
     bb23:
 #line 108 "../../keel_stl/src/string.kl"
-    kl_i_23 = kl_i_23 + 1;
+    kl_i_24 = kl_i_24 + 1;
 #line 108 "../../keel_stl/src/string.kl"
     goto bb10;
 #line 119 "../../keel_stl/src/string.kl"
@@ -647,13 +635,14 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
     struct kl_2kl6string_string* kl_t12;
     struct kl_2kl6string_string* kl_t14;
     struct kl_2kl6string_string kl_t15;
-    struct kl_7prelude_textual__ref kl_t16;
-    bool kl_t18;
+    struct kl_2kl6string_string* kl_t16;
+    struct kl_7prelude_textual__ref kl_t17;
     bool kl_t19;
-#line 124 "../../keel_stl/src/string.kl"
-    kl_t18 = false;
+    bool kl_t20;
 #line 124 "../../keel_stl/src/string.kl"
     kl_t19 = false;
+#line 124 "../../keel_stl/src/string.kl"
+    kl_t20 = false;
 #line 124 "../../keel_stl/src/string.kl"
     kl_t2 = kl_value_1 >= 0;
 #line 124 "../../keel_stl/src/string.kl"
@@ -671,15 +660,15 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
 #line 126 "../../keel_stl/src/string.kl"
     kl_t5 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_t3 );
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t18 = true;
+    kl_t19 = true;
 #line 126 "../../keel_stl/src/string.kl"
     kl_t0 = kl_t5;
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t18 = false;
+    kl_t19 = false;
 #line 126 "../../keel_stl/src/string.kl"
-    if ( kl_t18 ) kl_2kl6string_6string__dtor( &kl_t5 );
+    if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t5 );
 #line 126 "../../keel_stl/src/string.kl"
-    kl_t18 = false;
+    kl_t19 = false;
 #line 126 "../../keel_stl/src/string.kl"
     return kl_t0;
     bb4:
@@ -689,11 +678,11 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
     kl_t8 = ( uint64_t ) kl_t7;
 #line 129 "../../keel_stl/src/string.kl"
     kl_magnitude_6 = kl_t8;
-    kl_t19 = false;
+    kl_t20 = false;
 #line 130 "../../keel_stl/src/string.kl"
     kl_t10 = &kl_result_9;
 #line 130 "../../keel_stl/src/string.kl"
-    kl_t19 = true;
+    kl_t20 = true;
 #line 130 "../../keel_stl/src/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t10 );
     kl_t12 = &kl_result_9;
@@ -703,19 +692,21 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
 #line 132 "../../keel_stl/src/string.kl"
     kl_t15 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_magnitude_6 );
 #line 132 "../../keel_stl/src/string.kl"
-    kl_t16 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t16 = &kl_t15;
 #line 132 "../../keel_stl/src/string.kl"
-    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t16 );
+    kl_t17 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t16, &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 132 "../../keel_stl/src/string.kl"
+    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t17 );
 #line 132 "../../keel_stl/src/string.kl"
     kl_2kl6string_6string__dtor( &kl_t15 );
 #line 134 "../../keel_stl/src/string.kl"
     kl_t0 = kl_result_9;
 #line 134 "../../keel_stl/src/string.kl"
-    kl_t19 = false;
+    kl_t20 = false;
 #line 134 "../../keel_stl/src/string.kl"
-    if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_result_9 );
+    if ( kl_t20 ) kl_2kl6string_6string__dtor( &kl_result_9 );
 #line 134 "../../keel_stl/src/string.kl"
-    kl_t19 = false;
+    kl_t20 = false;
 #line 134 "../../keel_stl/src/string.kl"
     return kl_t0;
 }
@@ -3895,13 +3886,30 @@ void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_opti
 #line 11 "../../keel_stl/src/optional.kl"
 }
 
-void kl_2kl6string_string__drop( struct kl_2kl6string_string* kl_t1 )
+void kl_2kl6string_string__drop( void* kl_t1 )
 {
+    struct kl_2kl6string_string* kl_t2;
 #line 21 "../../keel_stl/src/string.kl"
-    kl_2kl6string_6string__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+#line 21 "../../keel_stl/src/string.kl"
+    kl_2kl6string_6string__dtor( &( *kl_t2 ) );
 #line 21 "../../keel_stl/src/string.kl"
     return;
 #line 21 "../../keel_stl/src/string.kl"
+}
+
+#line 11 "<prelude>"
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl6string_string* kl_t2;
+#line 154 "../../keel_stl/src/string.kl"
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+#line 154 "../../keel_stl/src/string.kl"
+    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
+#line 154 "../../keel_stl/src/string.kl"
+    return kl_t0;
+#line 11 "<prelude>"
 }
 
 // codegen/sample_m8/geo/shapes.kl
@@ -4173,9 +4181,9 @@ void kl_2kl4list_20reallocate_if_needed__I6TicketE__SQ2kl4listI6TicketE( struct 
 void kl_2kl4list_20reallocate_if_needed__I3i32E__SQ2kl4listI3i32E( struct kl_2kl4list_list__I3i32E* );
 void kl_2kl4list_10reallocate__I6TicketE__SQ2kl4listI6TicketE_3u64( struct kl_2kl4list_list__I6TicketE*, uint64_t );
 void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
-void kl_2kl4list_list__IQ2kl6stringE__drop( struct kl_2kl4list_list__IQ2kl6stringE* );
-void kl_2kl4list_list__I6TicketE__drop( struct kl_2kl4list_list__I6TicketE* );
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* );
+void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
+void kl_2kl4list_list__I6TicketE__drop( void* );
+void kl_2kl4list_list__I3i32E__drop( void* );
 void kl_6ledger_4post__3i32( int32_t );
 int32_t kl_3geo6shapes_4area__Q3geo5Shape( struct kl_3geo6shapes_Shape );
 void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_string*, struct kl_7prelude_textual__ref );
@@ -4184,20 +4192,11 @@ uint8_t* kl_2kl6string_14operator_index__SQ2kl6string_3u64( struct kl_2kl6string
 void kl_2kl6string_4push__SQ2kl6string_2u8( struct kl_2kl6string_string*, uint8_t );
 bool kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
-
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 16 "codegen/sample_m8/main.kl"
 void kl__6Ticket__R6Ticket_3u64__ctor( struct kl__Ticket* kl_this_1, uint64_t kl_v_2 )
@@ -4784,51 +4783,51 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str kl_t64;
     struct kl_7prelude_str* kl_t65;
     uint8_t* kl_t66;
-    struct kl_7prelude_textual__ref kl_t68;
-    struct kl_2kl6string_string kl_again_70;
-    struct kl_2kl6string_string* kl_t71;
-    struct kl_7prelude_str kl_t72;
-    struct kl_7prelude_str* kl_t73;
-    uint8_t* kl_t74;
-    struct kl_7prelude_textual__ref kl_t76;
-    struct kl_2kl6string_string* kl_t78;
+    struct kl_7prelude_str* kl_t68;
+    struct kl_7prelude_textual__ref kl_t69;
+    struct kl_2kl6string_string kl_again_71;
+    struct kl_2kl6string_string* kl_t72;
+    struct kl_7prelude_str kl_t73;
+    struct kl_7prelude_str* kl_t74;
+    uint8_t* kl_t75;
+    struct kl_7prelude_str* kl_t77;
+    struct kl_7prelude_textual__ref kl_t78;
     struct kl_2kl6string_string* kl_t80;
-    bool kl_t82;
-    bool kl_t83;
-    struct kl_2kl6string_string* kl_t84;
-    struct kl_2kl6string_string* kl_t85;
-    bool kl_t86;
-    bool kl_t87;
-    struct kl_2kl6string_string* kl_t88;
-    struct kl_2kl6string_string kl_t89;
+    struct kl_2kl6string_string* kl_t82;
+    bool kl_t84;
+    bool kl_t85;
+    struct kl_2kl6string_string* kl_t86;
+    struct kl_2kl6string_string* kl_t87;
+    bool kl_t88;
+    bool kl_t89;
     struct kl_2kl6string_string* kl_t90;
-    struct kl_7prelude_str kl_t91;
-    struct kl_7prelude_str* kl_t92;
-    uint8_t* kl_t93;
-    struct kl_7prelude_textual__ref kl_t95;
-    struct kl_2kl6string_string* kl_t97;
-    bool kl_t98;
-    struct kl_2kl6string_string* kl_t99;
-    uint8_t* kl_t100;
+    struct kl_2kl6string_string kl_t91;
+    struct kl_2kl6string_string* kl_t92;
+    struct kl_7prelude_str kl_t93;
+    struct kl_7prelude_str* kl_t94;
+    uint8_t* kl_t95;
+    struct kl_7prelude_str* kl_t97;
+    struct kl_7prelude_textual__ref kl_t98;
+    struct kl_2kl6string_string* kl_t100;
     bool kl_t101;
-    struct kl_2kl4list_list__I3i32E kl_v_102;
-    struct kl_2kl4list_list__I3i32E* kl_t103;
-    int32_t kl_i_105;
-    bool kl_t106;
-    struct kl_2kl4list_list__I3i32E* kl_t107;
-    bool kl_t108;
-    int32_t kl_t109;
+    struct kl_2kl6string_string* kl_t102;
+    uint8_t* kl_t103;
+    bool kl_t104;
+    struct kl_2kl4list_list__I3i32E kl_v_105;
+    struct kl_2kl4list_list__I3i32E* kl_t106;
+    int32_t kl_i_108;
+    bool kl_t109;
+    struct kl_2kl4list_list__I3i32E* kl_t110;
     bool kl_t111;
-    bool kl_t112;
-    struct kl_2kl4list_list__I3i32E* kl_t113;
-    uint64_t kl_t114;
+    int32_t kl_t112;
+    bool kl_t114;
     bool kl_t115;
     struct kl_2kl4list_list__I3i32E* kl_t116;
     uint64_t kl_t117;
     bool kl_t118;
-    bool kl_t119;
-    struct kl_2kl4list_list__I3i32E* kl_t120;
-    int32_t* kl_t121;
+    struct kl_2kl4list_list__I3i32E* kl_t119;
+    uint64_t kl_t120;
+    bool kl_t121;
     bool kl_t122;
     struct kl_2kl4list_list__I3i32E* kl_t123;
     int32_t* kl_t124;
@@ -4836,27 +4835,30 @@ int32_t kl__4main__( void )
     struct kl_2kl4list_list__I3i32E* kl_t126;
     int32_t* kl_t127;
     bool kl_t128;
-    bool kl_t129;
-    struct kl_2kl4list_list__I3i32E* kl_t130;
-    int32_t* kl_t131;
+    struct kl_2kl4list_list__I3i32E* kl_t129;
+    int32_t* kl_t130;
+    bool kl_t131;
     bool kl_t132;
     struct kl_2kl4list_list__I3i32E* kl_t133;
-    int32_t kl_t134;
+    int32_t* kl_t134;
     bool kl_t135;
     struct kl_2kl4list_list__I3i32E* kl_t136;
-    uint64_t kl_t137;
+    int32_t kl_t137;
     bool kl_t138;
     struct kl_2kl4list_list__I3i32E* kl_t139;
-    int32_t* kl_t140;
-    uint8_t kl_t141;
-    int32_t kl_t142;
-    bool kl_t143;
-    bool kl_t144;
-    uint64_t kl_t145;
+    uint64_t kl_t140;
+    bool kl_t141;
+    struct kl_2kl4list_list__I3i32E* kl_t142;
+    int32_t* kl_t143;
+    uint8_t kl_t144;
+    int32_t kl_t145;
     bool kl_t146;
     bool kl_t147;
+    uint64_t kl_t148;
+    bool kl_t149;
+    bool kl_t150;
 #line 124 "codegen/sample_m8/main.kl"
-    kl_t147 = false;
+    kl_t150 = false;
 #line 124 "codegen/sample_m8/main.kl"
     kl_t1 = kl__7raw_sum__3u64( 4 );
 #line 124 "codegen/sample_m8/main.kl"
@@ -5085,115 +5087,121 @@ int32_t kl__4main__( void )
 #line 152 "codegen/sample_m8/main.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t65, kl_t66, 5 );
 #line 152 "codegen/sample_m8/main.kl"
-    kl_t68 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t64, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t68 = &kl_t64;
 #line 152 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t63, kl_t68 );
-    kl_t71 = &kl_again_70;
+    kl_t69 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t68, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 152 "codegen/sample_m8/main.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t63, kl_t69 );
+    kl_t72 = &kl_again_71;
 #line 153 "codegen/sample_m8/main.kl"
-    kl_t73 = &kl_t72;
+    kl_t74 = &kl_t73;
 #line 153 "codegen/sample_m8/main.kl"
-    kl_t74 = ( uint8_t* ) "hel";
+    kl_t75 = ( uint8_t* ) "hel";
 #line 153 "codegen/sample_m8/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t73, kl_t74, 3 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t74, kl_t75, 3 );
 #line 153 "codegen/sample_m8/main.kl"
-    kl_t76 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t72, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t77 = &kl_t73;
 #line 153 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t71, kl_t76 );
-    kl_t78 = &kl_again_70;
+    kl_t78 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t77, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 153 "codegen/sample_m8/main.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t72, kl_t78 );
+    kl_t80 = &kl_again_71;
 #line 154 "codegen/sample_m8/main.kl"
-    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t78, 108 );
-    kl_t80 = &kl_again_70;
+    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t80, 108 );
+    kl_t82 = &kl_again_71;
 #line 155 "codegen/sample_m8/main.kl"
-    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t80, 111 );
-    kl_t84 = &kl_hello_62;
+    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t82, 111 );
+    kl_t86 = &kl_hello_62;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t85 = &kl_again_70;
+    kl_t87 = &kl_again_71;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t86 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t84, kl_t85 );
+    kl_t88 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t86, kl_t87 );
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t87 = !kl_t86;
+    kl_t89 = !kl_t88;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t83 = kl_t87;
+    kl_t85 = kl_t89;
 #line 156 "codegen/sample_m8/main.kl"
-    if ( kl_t83 ) goto bb32; else goto bb31;
+    if ( kl_t85 ) goto bb32; else goto bb31;
     bb31:
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t88 = &kl_hello_62;
+    kl_t90 = &kl_hello_62;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t147 = false;
-#line 156 "codegen/sample_m8/main.kl"
-    kl_t90 = &kl_t89;
-#line 156 "codegen/sample_m8/main.kl"
-    kl_t147 = true;
+    kl_t150 = false;
 #line 156 "codegen/sample_m8/main.kl"
     kl_t92 = &kl_t91;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t93 = ( uint8_t* ) "help";
+    kl_t150 = true;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t92, kl_t93, 4 );
+    kl_t94 = &kl_t93;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t95 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t91, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t95 = ( uint8_t* ) "help";
 #line 156 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t90, kl_t95 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t94, kl_t95, 4 );
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t97 = &kl_t89;
+    kl_t97 = &kl_t93;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t98 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t88, kl_t97 );
+    kl_t98 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t97, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t83 = kl_t98;
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t92, kl_t98 );
+#line 156 "codegen/sample_m8/main.kl"
+    kl_t100 = &kl_t91;
+#line 156 "codegen/sample_m8/main.kl"
+    kl_t101 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t90, kl_t100 );
+#line 156 "codegen/sample_m8/main.kl"
+    kl_t85 = kl_t101;
 #line 156 "codegen/sample_m8/main.kl"
     goto bb32;
     bb32:
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t82 = kl_t83;
+    kl_t84 = kl_t85;
 #line 156 "codegen/sample_m8/main.kl"
-    if ( kl_t82 ) goto bb34; else goto bb33;
+    if ( kl_t84 ) goto bb34; else goto bb33;
     bb33:
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t99 = &kl_hello_62;
+    kl_t102 = &kl_hello_62;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t100 = kl_2kl6string_14operator_index__SQ2kl6string_3u64( kl_t99, 1 );
+    kl_t103 = kl_2kl6string_14operator_index__SQ2kl6string_3u64( kl_t102, 1 );
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t101 = ( *kl_t100 ) != 101;
+    kl_t104 = ( *kl_t103 ) != 101;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t82 = kl_t101;
+    kl_t84 = kl_t104;
 #line 156 "codegen/sample_m8/main.kl"
     goto bb34;
     bb34:
 #line 156 "codegen/sample_m8/main.kl"
-    if ( kl_t147 ) kl_2kl6string_6string__dtor( &kl_t89 );
+    if ( kl_t150 ) kl_2kl6string_6string__dtor( &kl_t91 );
 #line 156 "codegen/sample_m8/main.kl"
-    kl_t147 = false;
+    kl_t150 = false;
 #line 156 "codegen/sample_m8/main.kl"
-    if ( kl_t82 ) goto bb35; else goto bb36;
+    if ( kl_t84 ) goto bb35; else goto bb36;
     bb35:
 #line 156 "codegen/sample_m8/main.kl"
     kl_t0 = 8;
 #line 156 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 156 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 156 "codegen/sample_m8/main.kl"
     return kl_t0;
     bb36:
 #line 159 "codegen/sample_m8/main.kl"
-    kl_t103 = &kl_v_102;
+    kl_t106 = &kl_v_105;
 #line 159 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t103 );
-    kl_i_105 = 0;
+    kl_2kl4list_4list__I3i32E__RQ2kl4listI3i32E__ctor( kl_t106 );
+    kl_i_108 = 0;
 #line 160 "codegen/sample_m8/main.kl"
     goto bb37;
     bb37:
 #line 160 "codegen/sample_m8/main.kl"
-    kl_t106 = kl_i_105 < 20;
+    kl_t109 = kl_i_108 < 20;
 #line 160 "codegen/sample_m8/main.kl"
-    if ( kl_t106 ) goto bb38; else goto bb39;
+    if ( kl_t109 ) goto bb38; else goto bb39;
     bb38:
-    kl_t107 = &kl_v_102;
+    kl_t110 = &kl_v_105;
 #line 162 "codegen/sample_m8/main.kl"
-    kl_t108 = __builtin_mul_overflow( kl_i_105, kl_i_105, &( int32_t ) { 0 } );
+    kl_t111 = __builtin_mul_overflow( kl_i_108, kl_i_108, &( int32_t ) { 0 } );
 #line 162 "codegen/sample_m8/main.kl"
-    if ( kl_t108 ) goto bb40; else goto bb41;
+    if ( kl_t111 ) goto bb40; else goto bb41;
     bb39:
     goto bb45;
     bb40:
@@ -5201,188 +5209,188 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/sample_m8/main.kl", 162, "arithmetic overflow: i * i" );
     bb41:
 #line 162 "codegen/sample_m8/main.kl"
-    kl_t109 = kl_i_105 * kl_i_105;
+    kl_t112 = kl_i_108 * kl_i_108;
 #line 162 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t107, kl_t109 );
+    kl_2kl4list_4push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t110, kl_t112 );
 #line 160 "codegen/sample_m8/main.kl"
     goto bb42;
     bb42:
 #line 160 "codegen/sample_m8/main.kl"
-    kl_t111 = __builtin_add_overflow( kl_i_105, 1, &( int32_t ) { 0 } );
+    kl_t114 = __builtin_add_overflow( kl_i_108, 1, &( int32_t ) { 0 } );
 #line 160 "codegen/sample_m8/main.kl"
-    if ( kl_t111 ) goto bb43; else goto bb44;
+    if ( kl_t114 ) goto bb43; else goto bb44;
     bb43:
 #line 160 "codegen/sample_m8/main.kl"
     kl_rt_panic( "codegen/sample_m8/main.kl", 160, "arithmetic overflow: i++" );
     bb44:
 #line 160 "codegen/sample_m8/main.kl"
-    kl_i_105 = kl_i_105 + 1;
+    kl_i_108 = kl_i_108 + 1;
 #line 160 "codegen/sample_m8/main.kl"
     goto bb37;
     bb45:
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t113 = &kl_v_102;
+    kl_t116 = &kl_v_105;
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t114 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t113 );
+    kl_t117 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t116 );
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t115 = kl_t114 == 20;
+    kl_t118 = kl_t117 == 20;
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t112 = kl_t115;
+    kl_t115 = kl_t118;
 #line 164 "codegen/sample_m8/main.kl"
-    if ( kl_t112 ) goto bb48; else goto bb49;
+    if ( kl_t115 ) goto bb48; else goto bb49;
     bb46:
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t120 = &kl_v_102;
+    kl_t123 = &kl_v_105;
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t121 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t120, 7 );
+    kl_t124 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t123, 7 );
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t122 = ( *kl_t121 ) != 49;
+    kl_t125 = ( *kl_t124 ) != 49;
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t119 = kl_t122;
+    kl_t122 = kl_t125;
 #line 165 "codegen/sample_m8/main.kl"
-    if ( kl_t119 ) goto bb51; else goto bb50;
+    if ( kl_t122 ) goto bb51; else goto bb50;
     bb47:
 #line 164 "codegen/sample_m8/main.kl"
     kl_rt_panic( "codegen/sample_m8/main.kl", 164, "assertion failed: v.size() == 20 && v.capacity() >= 20" );
     bb48:
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t116 = &kl_v_102;
+    kl_t119 = &kl_v_105;
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t117 = kl_2kl4list_8capacity__I3i32E__SQ2kl4listI3i32E( kl_t116 );
+    kl_t120 = kl_2kl4list_8capacity__I3i32E__SQ2kl4listI3i32E( kl_t119 );
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t118 = kl_t117 >= 20;
+    kl_t121 = kl_t120 >= 20;
 #line 164 "codegen/sample_m8/main.kl"
-    kl_t112 = kl_t118;
+    kl_t115 = kl_t121;
 #line 164 "codegen/sample_m8/main.kl"
     goto bb49;
     bb49:
 #line 164 "codegen/sample_m8/main.kl"
-    if ( kl_t112 ) goto bb46; else goto bb47;
+    if ( kl_t115 ) goto bb46; else goto bb47;
     bb50:
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t123 = &kl_v_102;
+    kl_t126 = &kl_v_105;
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t124 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t123, 19 );
+    kl_t127 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t126, 19 );
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t125 = ( *kl_t124 ) != 361;
+    kl_t128 = ( *kl_t127 ) != 361;
 #line 165 "codegen/sample_m8/main.kl"
-    kl_t119 = kl_t125;
+    kl_t122 = kl_t128;
 #line 165 "codegen/sample_m8/main.kl"
     goto bb51;
     bb51:
 #line 165 "codegen/sample_m8/main.kl"
-    if ( kl_t119 ) goto bb52; else goto bb53;
+    if ( kl_t122 ) goto bb52; else goto bb53;
     bb52:
 #line 165 "codegen/sample_m8/main.kl"
     kl_t0 = 9;
 #line 165 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl_v_102 );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_v_105 );
 #line 165 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 165 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 165 "codegen/sample_m8/main.kl"
     return kl_t0;
     bb53:
-    kl_t126 = &kl_v_102;
+    kl_t129 = &kl_v_105;
 #line 167 "codegen/sample_m8/main.kl"
-    kl_t127 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t126, 0 );
+    kl_t130 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t129, 0 );
 #line 167 "codegen/sample_m8/main.kl"
-    ( *kl_t127 ) = 5;
-    kl_t130 = &kl_v_102;
+    ( *kl_t130 ) = 5;
+    kl_t133 = &kl_v_105;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t131 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t130, 0 );
+    kl_t134 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t133, 0 );
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t132 = ( *kl_t131 ) != 5;
+    kl_t135 = ( *kl_t134 ) != 5;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t129 = kl_t132;
+    kl_t132 = kl_t135;
 #line 168 "codegen/sample_m8/main.kl"
-    if ( kl_t129 ) goto bb55; else goto bb54;
+    if ( kl_t132 ) goto bb55; else goto bb54;
     bb54:
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t133 = &kl_v_102;
+    kl_t136 = &kl_v_105;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t134 = kl_2kl4list_3pop__I3i32E__SQ2kl4listI3i32E( kl_t133 );
+    kl_t137 = kl_2kl4list_3pop__I3i32E__SQ2kl4listI3i32E( kl_t136 );
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t135 = kl_t134 != 361;
+    kl_t138 = kl_t137 != 361;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t129 = kl_t135;
+    kl_t132 = kl_t138;
 #line 168 "codegen/sample_m8/main.kl"
     goto bb55;
     bb55:
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t128 = kl_t129;
+    kl_t131 = kl_t132;
 #line 168 "codegen/sample_m8/main.kl"
-    if ( kl_t128 ) goto bb57; else goto bb56;
+    if ( kl_t131 ) goto bb57; else goto bb56;
     bb56:
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t136 = &kl_v_102;
+    kl_t139 = &kl_v_105;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t137 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t136 );
+    kl_t140 = kl_2kl4list_4size__I3i32E__SQ2kl4listI3i32E( kl_t139 );
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t138 = kl_t137 != 19;
+    kl_t141 = kl_t140 != 19;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_t128 = kl_t138;
+    kl_t131 = kl_t141;
 #line 168 "codegen/sample_m8/main.kl"
     goto bb57;
     bb57:
 #line 168 "codegen/sample_m8/main.kl"
-    if ( kl_t128 ) goto bb58; else goto bb59;
+    if ( kl_t131 ) goto bb58; else goto bb59;
     bb58:
 #line 168 "codegen/sample_m8/main.kl"
     kl_t0 = 10;
 #line 168 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl_v_102 );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_v_105 );
 #line 168 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 168 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 168 "codegen/sample_m8/main.kl"
     return kl_t0;
     bb59:
-    kl_t139 = &kl_v_102;
+    kl_t142 = &kl_v_105;
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t140 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t139, 15 );
+    kl_t143 = kl_2kl4list_14operator_index__I3i32E__SQ2kl4listI3i32E_3u64( kl_t142, 15 );
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t141 = ( uint8_t ) ( *kl_t140 );
+    kl_t144 = ( uint8_t ) ( *kl_t143 );
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t142 = ( int32_t ) kl_t141;
+    kl_t145 = ( int32_t ) kl_t144;
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t143 = kl_t142 == ( *kl_t140 );
+    kl_t146 = kl_t145 == ( *kl_t143 );
 #line 170 "codegen/sample_m8/main.kl"
-    if ( kl_t143 ) goto bb61; else goto bb60;
+    if ( kl_t146 ) goto bb61; else goto bb60;
     bb60:
 #line 170 "codegen/sample_m8/main.kl"
     kl_rt_panic( "codegen/sample_m8/main.kl", 170, "cast out of range: cast<u8>( v[15] )" );
     bb61:
 #line 170 "codegen/sample_m8/main.kl"
-    kl_t144 = kl_t141 != 225;
+    kl_t147 = kl_t144 != 225;
 #line 170 "codegen/sample_m8/main.kl"
-    if ( kl_t144 ) goto bb62; else goto bb63;
+    if ( kl_t147 ) goto bb62; else goto bb63;
     bb62:
 #line 170 "codegen/sample_m8/main.kl"
     kl_t0 = 11;
 #line 170 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl_v_102 );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_v_105 );
 #line 170 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 170 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 170 "codegen/sample_m8/main.kl"
     return kl_t0;
     bb63:
-    kl_t145 = kl__7shuffle__(  );
+    kl_t148 = kl__7shuffle__(  );
 #line 172 "codegen/sample_m8/main.kl"
-    kl_t146 = kl_t145 != 32541;
+    kl_t149 = kl_t148 != 32541;
 #line 172 "codegen/sample_m8/main.kl"
-    if ( kl_t146 ) goto bb64; else goto bb65;
+    if ( kl_t149 ) goto bb64; else goto bb65;
     bb64:
 #line 172 "codegen/sample_m8/main.kl"
     kl_t0 = 12;
 #line 172 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl_v_102 );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_v_105 );
 #line 172 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 172 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 172 "codegen/sample_m8/main.kl"
@@ -5390,9 +5398,9 @@ int32_t kl__4main__( void )
     bb65:
     kl_t0 = kl__alive__G;
 #line 174 "codegen/sample_m8/main.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &kl_v_102 );
+    kl_2kl4list_4list__I3i32E__dtor( &kl_v_105 );
 #line 174 "codegen/sample_m8/main.kl"
-    kl_2kl6string_6string__dtor( &kl_again_70 );
+    kl_2kl6string_6string__dtor( &kl_again_71 );
 #line 174 "codegen/sample_m8/main.kl"
     kl_2kl6string_6string__dtor( &kl_hello_62 );
 #line 174 "codegen/sample_m8/main.kl"
@@ -6703,28 +6711,37 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
 #line 471 "../../keel_stl/src/list.kl"
 }
 
-void kl_2kl4list_list__IQ2kl6stringE__drop( struct kl_2kl4list_list__IQ2kl6stringE* kl_t1 )
+void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__IQ2kl6stringE* kl_t2;
 #line 11 "../../keel_stl/src/list.kl"
-    kl_2kl4list_4list__IQ2kl6stringE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__IQ2kl6stringE* ) kl_t1;
+#line 11 "../../keel_stl/src/list.kl"
+    kl_2kl4list_4list__IQ2kl6stringE__dtor( &( *kl_t2 ) );
 #line 11 "../../keel_stl/src/list.kl"
     return;
 #line 11 "../../keel_stl/src/list.kl"
 }
 
-void kl_2kl4list_list__I6TicketE__drop( struct kl_2kl4list_list__I6TicketE* kl_t1 )
+void kl_2kl4list_list__I6TicketE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I6TicketE* kl_t2;
 #line 11 "../../keel_stl/src/list.kl"
-    kl_2kl4list_4list__I6TicketE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I6TicketE* ) kl_t1;
+#line 11 "../../keel_stl/src/list.kl"
+    kl_2kl4list_4list__I6TicketE__dtor( &( *kl_t2 ) );
 #line 11 "../../keel_stl/src/list.kl"
     return;
 #line 11 "../../keel_stl/src/list.kl"
 }
 
-void kl_2kl4list_list__I3i32E__drop( struct kl_2kl4list_list__I3i32E* kl_t1 )
+void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I3i32E* kl_t2;
 #line 11 "../../keel_stl/src/list.kl"
-    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I3i32E* ) kl_t1;
+#line 11 "../../keel_stl/src/list.kl"
+    kl_2kl4list_4list__I3i32E__dtor( &( *kl_t2 ) );
 #line 11 "../../keel_stl/src/list.kl"
     return;
 #line 11 "../../keel_stl/src/list.kl"

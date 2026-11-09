@@ -166,9 +166,10 @@ enum class Rvalue_kind : u8
     Release,
     Function_address,
     Indirect_call,
-    Field_offset,  // callee is the Field_decl; the aggregate is argument 0 of the field type
-    Field_read,    // a is the object's address, b the offset
-    Literal_bytes, // the address of a string literal's bytes; a is the literal
+    Field_offset,   // callee is the Field_decl; the aggregate is argument 0 of the field type
+    Field_read,     // a is the object's address, b the offset
+    Literal_bytes,  // the address of a string literal's bytes; a is the literal
+    Make_interface, // §6.7: `a` is an implementer's address, and the type the interface pointer of it and its vtable
 };
 
 enum class Address_purpose : u8
@@ -185,7 +186,7 @@ struct Rvalue
 {
     Rvalue_kind kind = Rvalue_kind::Use;
     Type_id     type {};
-    Token_kind  op = Token_kind::Unknown; // Binary and Unary
+    Token_kind  op = Token_kind::Unknown; // Binary and Unary; a Call's to a D41 guard, which no declaration has
     Operand     a {};
     Operand     b {}; // Binary only
     Node_id     callee {};
@@ -381,15 +382,17 @@ struct Function
     // Which parameters arrive uninitialised. Nothing else in KIR says so - an `out` parameter's
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
-    std::vector<Local_id>        out_parameters;
-    std::vector<Local_id>        one_path_temporaries;  // built on one path, so dropped under a flag
-    std::vector<Local_id>        walked;                // D74: a walk's receiver, freezing what it walks
-    std::vector<Local_id>        chosen;                // D75: assigned the address of whichever arm ran
-    Local_id                     constructed {};        // a constructor's receiver, invalid in every other function.
-    std::vector<Node_id>         defaulted_fields;      // D77: a constructor's fields given their default at entry
-    Node_id                      globals {};            // D80: a module's build or drop function, by its first built global
-    bool                         drops_globals = false; // which of the two
-    std::vector<Field_slot>      fields;                // ir/slots reads them
+    std::vector<Local_id> out_parameters;
+    std::vector<Local_id> one_path_temporaries;           // built on one path, so dropped under a flag
+    std::vector<Local_id> walked;                         // D74: a walk's receiver, freezing what it walks
+    std::vector<Local_id> chosen;                         // D75: assigned the address of whichever arm ran
+    Local_id              constructed {};                 // a constructor's receiver, invalid in every other function.
+    std::vector<Node_id>  defaulted_fields;               // D77: a constructor's fields given their default at entry
+    Node_id               globals {};                     // D80: a module's build or drop function, by its first built global
+    Token_kind            compares = Token_kind::Unknown; // D41: a guard's comparison; its type arguments are the operands'
+    Type_id thunk_of {}; // §6.7: the interface a thunk's vtable slot is in; declared by the requirement, at the implementer
+    bool    drops_globals = false;       // which of the two
+    std::vector<Field_slot>      fields; // ir/slots reads them
     Id_vector<Local_id, Local>   locals;
     Id_vector<Block_id, Block>   blocks;
     Statements                   statements;
@@ -473,6 +476,21 @@ struct Function
         return Run<const Projection>( projections, place.first_projection, place.num_projections );
     }
 };
+
+// The same function: a declaration lowers once per instantiation, a guard once per comparison, and
+// a requirement once per implementer and interface its thunk answers it for.
+inline bool same_function( const Function& a, const Function& b )
+{
+    return a.declaration == b.declaration && a.compares == b.compares && a.thunk_of == b.thunk_of &&
+           a.type_arguments == b.type_arguments;
+}
+
+// Whether `value`, a call or a function's address, names `function`. Only a vtable names a thunk.
+inline bool names( const Rvalue& value, const Function& function )
+{
+    return value.callee == function.declaration && value.op == function.compares && !function.thunk_of.is_valid() &&
+           value.type_arguments == function.type_arguments;
+}
 
 inline bool has_deref_projection( const Function& func, const Place& place )
 {
@@ -770,6 +788,11 @@ inline Rvalue function_address( Node_id callee, Type_id type, std::vector<Type_i
     };
 }
 
+inline Rvalue make_interface( Operand address, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Make_interface, .type = type, .a = address };
+}
+
 inline Rvalue literal_bytes( Literal_id literal, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Literal_bytes, .type = type, .a = constant( literal, type ) };
@@ -792,6 +815,18 @@ inline Rvalue indirect_call( Operand callee, std::vector<Operand> arguments, Typ
         .type      = type,
         .a         = callee,
         .arguments = std::move( arguments ),
+    };
+}
+
+// D41: `a op b` where no type holds both, as a call of the guard for the pair; `a` is the integer, and signed if both are.
+inline Rvalue guard_call( Token_kind op, Operand a, Operand b, Type_id boolean )
+{
+    return Rvalue {
+        .kind           = Rvalue_kind::Call,
+        .type           = boolean,
+        .op             = op,
+        .arguments      = { a, b },
+        .type_arguments = { a.type, b.type },
     };
 }
 

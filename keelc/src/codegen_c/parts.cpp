@@ -3,8 +3,8 @@
 
 #include "codegen_c/parts.h"
 #include <algorithm>
-#include "codegen_c/vtables.h"
 #include "ir/place_type.h"
+#include "ir/vtables.h"
 
 namespace keel
 {
@@ -47,7 +47,7 @@ Parts::Parts(
             if( statement.kind == Statement_kind::Assign &&
                 ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) )
             {
-                reach( find( value.callee, value.type_arguments ) );
+                reach( find( value.callee, value.type_arguments, value.op ) );
             }
             else if( statement.kind == Statement_kind::Drop && value.callee.is_valid() )
             {
@@ -71,9 +71,9 @@ Parts::Parts(
 
         for( const Vtable& vtable : vtables_needed( ast, types, std::span( &functions[f], 1 ) ) )
         {
-            for( const Node_id method : vtable.methods )
+            for( const Node_id requirement : vtable.requirements )
             {
-                reach( find( method, table.get( vtable.implementer ).arguments ) );
+                reach( find( requirement, std::span( &vtable.implementer, 1 ), Token_kind::Unknown, vtable.interface ) );
             }
 
             reach( find( {}, std::span( &vtable.implementer, 1 ) ) );
@@ -153,7 +153,7 @@ File_id Parts::of( const Function& function ) const
         return of( function.declaration );
     }
 
-    return owners_[find( function.declaration, function.type_arguments )];
+    return owners_[find( function.declaration, function.type_arguments, function.compares, function.thunk_of )];
 }
 
 File_id Parts::of( Node_id declaration ) const
@@ -176,13 +176,14 @@ File_id Parts::input() const
     return order_.back();
 }
 
-u32 Parts::find( Node_id declaration, std::span<const Type_id> type_arguments ) const
+u32 Parts::find( Node_id declaration, std::span<const Type_id> type_arguments, Token_kind compares, Type_id thunk_of ) const
 {
     const auto [first, last] = by_declaration_.equal_range( declaration.v );
 
     for( auto it = first; it != last; ++it )
     {
-        if( std::ranges::equal( functions_[it->second].type_arguments, type_arguments ) )
+        if( functions_[it->second].compares == compares && functions_[it->second].thunk_of == thunk_of &&
+            std::ranges::equal( functions_[it->second].type_arguments, type_arguments ) )
         {
             return it->second;
         }

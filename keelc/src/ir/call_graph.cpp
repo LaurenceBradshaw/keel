@@ -20,8 +20,7 @@ bool addresses( const Function& caller, const Statement& statement, const Functi
     }
 
     const Rvalue& value = caller.rvalue( statement );
-    return value.kind == Rvalue_kind::Function_address && value.callee == callee.declaration &&
-           value.type_arguments == callee.type_arguments;
+    return value.kind == Rvalue_kind::Function_address && names( value, callee );
 }
 
 // Which functions each one calls or takes the address of; a call to a body-less extern has no edge.

@@ -3,6 +3,7 @@
 
 #include "front_end.h"
 #include <fmt/core.h>
+#include <algorithm>
 #include "check/drop_flags.h"
 #include "check/report.h"
 #include "ir/call_graph.h"
@@ -91,7 +92,8 @@ Front_end run_front_end(
     {
         for( const Function& function : state.functions )
         {
-            if( function.globals.is_valid() || !provided( loaded, function.declaration, function.type_arguments ) )
+            if( function.globals.is_valid() ||
+                std::ranges::none_of( loaded, [&]( const Function& kept ) { return same_function( kept, function ); } ) )
             {
                 loaded.push_back( function );
                 front.provided.push_back( state.file );

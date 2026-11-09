@@ -40,6 +40,10 @@ void kl__4feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref, int64_t );
 int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* );
 int32_t kl__7through__PK5Named( struct kl__Named__ref );
 int32_t kl__4main__( void );
+void kl__tally__drop( void* );
+void kl__tally__as_kl__sink__I3i64E__kl__3put__1T( void*, int64_t* );
+void kl__Wrap__I3i32E__drop( void* );
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* );
 
 #line 11 "opt/devirtualised_thunks.kl"
 void kl__5tally__R5tally__ctor( struct kl__tally* kl_this_1 )
@@ -115,6 +119,55 @@ int32_t kl__4main__( void )
     kl_t0 = 0;
 #line 42 "opt/devirtualised_thunks.kl"
     return kl_t0;
+}
+
+void kl__tally__drop( void* kl_t1 )
+{
+    ( void ) kl_t1;
+#line 8 "opt/devirtualised_thunks.kl"
+    return;
+#line 8 "opt/devirtualised_thunks.kl"
+}
+
+#line 5 "opt/devirtualised_thunks.kl"
+void kl__tally__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
+{
+    struct kl__tally* kl_t3;
+    struct kl__tally* kl_this_4;
+    int64_t kl_value_5;
+#line 12 "opt/devirtualised_thunks.kl"
+    kl_t3 = ( struct kl__tally* ) kl_t1;
+#line 12 "opt/devirtualised_thunks.kl"
+    kl_this_4 = kl_t3;
+#line 12 "opt/devirtualised_thunks.kl"
+    kl_value_5 = ( *kl_t2 );
+#line 12 "opt/devirtualised_thunks.kl"
+    ( *kl_this_4 ).kl_sum_ = ( *kl_t3 ).kl_sum_ + kl_value_5;
+#line 12 "opt/devirtualised_thunks.kl"
+    return;
+#line 5 "opt/devirtualised_thunks.kl"
+}
+
+void kl__Wrap__I3i32E__drop( void* kl_t1 )
+{
+    ( void ) kl_t1;
+#line 23 "opt/devirtualised_thunks.kl"
+    return;
+#line 23 "opt/devirtualised_thunks.kl"
+}
+
+#line 20 "opt/devirtualised_thunks.kl"
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E* kl_t2;
+#line 30 "opt/devirtualised_thunks.kl"
+    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+#line 30 "opt/devirtualised_thunks.kl"
+    kl_t0 = ( *kl_t2 ).kl_v + 2;
+#line 30 "opt/devirtualised_thunks.kl"
+    return kl_t0;
+#line 20 "opt/devirtualised_thunks.kl"
 }
 
 #line 35 "opt/devirtualised_thunks.kl"

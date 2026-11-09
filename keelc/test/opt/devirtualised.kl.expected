@@ -25,6 +25,8 @@ double kl__9local_ref__3f64( double );
 double kl__12through_call__3f64( double );
 double kl__11through_ptr__3f64( double );
 int32_t kl__4main__( void );
+void kl__Sq__drop( void* );
+double kl__Sq__as_kl__Shape__kl__4area__( void* );
 
 #line 14 "opt/devirtualised.kl"
 double kl__4area__S2Sq( struct kl__Sq* kl_this_1 )
@@ -113,6 +115,28 @@ int32_t kl__4main__( void )
     bb3:
 #line 47 "opt/devirtualised.kl"
     return kl_t0;
+}
+
+void kl__Sq__drop( void* kl_t1 )
+{
+    ( void ) kl_t1;
+#line 10 "opt/devirtualised.kl"
+    return;
+#line 10 "opt/devirtualised.kl"
+}
+
+#line 7 "opt/devirtualised.kl"
+double kl__Sq__as_kl__Shape__kl__4area__( void* kl_t1 )
+{
+    double kl_t0;
+    struct kl__Sq* kl_t2;
+#line 14 "opt/devirtualised.kl"
+    kl_t2 = ( struct kl__Sq* ) kl_t1;
+#line 16 "opt/devirtualised.kl"
+    kl_t0 = ( *kl_t2 ).kl_s * ( *kl_t2 ).kl_s;
+#line 14 "opt/devirtualised.kl"
+    return kl_t0;
+#line 7 "opt/devirtualised.kl"
 }
 
 #line 45 "opt/devirtualised.kl"

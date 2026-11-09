@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "codegen_c/vtables.h"
+#include "ir/vtables.h"
 #include <algorithm>
 #include <utility>
 #include "ir/place_type.h"
@@ -22,7 +22,7 @@ std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, std::span<cons
                 continue;
             }
 
-            const auto [implementer, interface] = interface_conversion( ast, types, function, function.rvalue( statement ) );
+            const auto [implementer, interface] = interface_conversion( types.table(), function.rvalue( statement ) );
 
             if( !implementer.is_valid() )
             {

@@ -13,8 +13,7 @@ namespace keel
 // The type a place names, walked as the emitter walks its text.
 Type_id place_type( const Ast& ast, Types& types, const Function& function, const Place& place );
 
-// The implementer and interface of a conversion to an interface pointer or `box<Shape>`, or neither
-// when the value is one already: `&(*s)` with `s` a `Shape*` is `s` again, and needs no table.
-std::pair<Type_id, Type_id> interface_conversion( const Ast& ast, Types& types, const Function& function, const Rvalue& value );
+// The implementer and interface a Make_interface pairs, or neither for any other rvalue.
+std::pair<Type_id, Type_id> interface_conversion( const Type_table& table, const Rvalue& value );
 
 } // namespace keel

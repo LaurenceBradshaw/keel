@@ -666,6 +666,38 @@ TEST_CASE( "a_module_given_as_an_object_is_not_lowered_again", "[object]" )
     }
 }
 
+// D41: a guard an object holds keeps its comparison, so the program calling the same one lowers none.
+TEST_CASE( "a_module_given_as_an_object_keeps_its_guards", "[object][guard]" )
+{
+    const Temp_dir dir;
+    dir.write( "kl/order.kl", "bool below( i64 a, u64 b ) { return a < b; }\nbool above( i64 a, u64 b ) { return a > b; }\n" );
+    const std::filesystem::path main = dir.write(
+        "main.kl", "import kl::order;\ni32 main() { i64 a = 1; u64 b = 2; return a < b && kl::above( a, b ) ? 1 : 0; }\n"
+    );
+
+    std::string                 error;
+    const std::optional<Object> order = read_object( compile_object( dir, "kl/order.kl", {} ), error );
+    REQUIRE( order );
+
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+    const File_id  input = *sm.load_file( main );
+    Front_end      front = run_front_end(
+        input, Stage::Elaborated, { .optimise = true }, sm, interner, literals, diags, {}, false, std::span( &*order, 1 )
+    );
+    std::ostringstream rendered;
+    diags.render( sm, rendered );
+    INFO( rendered.str() );
+    REQUIRE( !diags.has_errors() );
+
+    const auto guards = [&]( Token_kind op )
+    { return std::ranges::count_if( front.functions, [&]( const Function& f ) { return f.compares == op; } ); };
+    REQUIRE( guards( Token_kind::Less ) == 1 );
+    REQUIRE( guards( Token_kind::Greater ) == 1 );
+}
+
 // A state that names only `from<str>` must not leave it the table's first `from`, which reads as the open form.
 TEST_CASE( "a_prelude_generic_s_instance_in_an_object_keeps_its_open_form_first", "[object]" )
 {

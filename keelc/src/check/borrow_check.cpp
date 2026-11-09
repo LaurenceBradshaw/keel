@@ -587,8 +587,7 @@ struct Loaned : Compiled
         const std::vector<Global_effects> effects = global_effects_of( all, ast, types );
         for( std::size_t f = 0; f < all.size(); ++f )
         {
-            if( all[f].declaration == functions[tested].declaration &&
-                all[f].type_arguments == functions[tested].type_arguments )
+            if( same_function( all[f], functions[tested] ) )
             {
                 globals = effects[f];
             }

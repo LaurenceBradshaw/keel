@@ -117,7 +117,9 @@ origin_of( const Ast& ast, Types& types, const Function& func, const Assignments
         }
 
         if( !( value.kind == Rvalue_kind::Address_of && through ) &&
-            ( ( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Cast ) || !copied ) )
+            ( ( value.kind != Rvalue_kind::Use && value.kind != Rvalue_kind::Cast && value.kind != Rvalue_kind::Make_interface
+              ) ||
+              !copied ) )
         {
             return std::nullopt;
         }
@@ -250,8 +252,7 @@ std::vector<std::vector<u32>> dispatch_edges( const std::vector<Function>& funct
                 continue;
             }
 
-            const auto [implementer, interface] =
-                interface_conversion( ast, types, functions[f], functions[f].rvalue( statement ) );
+            const auto [implementer, interface] = interface_conversion( types.table(), functions[f].rvalue( statement ) );
             const Conformance* conformance =
                 implementer.is_valid() ? types.conformances().of( types.table(), implementer, interface ) : nullptr;
 

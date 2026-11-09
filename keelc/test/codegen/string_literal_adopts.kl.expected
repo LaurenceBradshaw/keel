@@ -70,19 +70,10 @@ int32_t kl__4lend__5label( struct kl__label* );
 int32_t kl__4main__( void );
 struct kl__label kl__4made__I5labelE__( void );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
-
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 10 "codegen/string_literal_adopts.kl"
 void kl__5label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
@@ -427,21 +418,21 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str kl_t92;
     struct kl_7prelude_str* kl_t93;
     uint8_t* kl_t94;
-    struct kl_7prelude_textual__ref kl_t96;
-    int32_t kl_t97;
-    bool kl_t98;
-    struct kl__label kl_t99;
-    struct kl__label* kl_t100;
-    uint64_t kl_t101;
-    bool kl_t102;
-    struct kl__label kl_escaped_103;
-    struct kl_7prelude_str kl_t104;
-    struct kl_7prelude_str* kl_t105;
-    uint8_t* kl_t106;
-    struct kl__label kl_t108;
-    struct kl__label* kl_t109;
-    uint64_t kl_t110;
-    bool kl_t111;
+    struct kl_7prelude_str* kl_t96;
+    struct kl_7prelude_textual__ref kl_t97;
+    int32_t kl_t98;
+    bool kl_t99;
+    struct kl__label kl_t100;
+    struct kl__label* kl_t101;
+    uint64_t kl_t102;
+    bool kl_t103;
+    struct kl__label kl_escaped_104;
+    struct kl_7prelude_str kl_t105;
+    struct kl_7prelude_str* kl_t106;
+    uint8_t* kl_t107;
+    struct kl__label kl_t109;
+    struct kl__label* kl_t110;
+    uint64_t kl_t111;
     bool kl_t112;
     bool kl_t113;
     bool kl_t114;
@@ -452,8 +443,7 @@ int32_t kl__4main__( void )
     bool kl_t119;
     bool kl_t120;
     bool kl_t121;
-#line 62 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    bool kl_t122;
 #line 62 "codegen/string_literal_adopts.kl"
     kl_t113 = false;
 #line 62 "codegen/string_literal_adopts.kl"
@@ -473,7 +463,9 @@ int32_t kl__4main__( void )
 #line 62 "codegen/string_literal_adopts.kl"
     kl_t121 = false;
 #line 62 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t122 = false;
+#line 62 "codegen/string_literal_adopts.kl"
+    kl_t113 = false;
 #line 62 "codegen/string_literal_adopts.kl"
     kl_t3 = &kl_t2;
 #line 62 "codegen/string_literal_adopts.kl"
@@ -483,17 +475,17 @@ int32_t kl__4main__( void )
 #line 62 "codegen/string_literal_adopts.kl"
     kl_t6 = kl__4from__S5label_MQ7prelude3str( kl_t2 );
 #line 62 "codegen/string_literal_adopts.kl"
-    kl_t113 = true;
+    kl_t114 = true;
 #line 62 "codegen/string_literal_adopts.kl"
     kl_a_1 = kl_t6;
 #line 62 "codegen/string_literal_adopts.kl"
-    kl_t113 = false;
+    kl_t114 = false;
 #line 62 "codegen/string_literal_adopts.kl"
-    kl_t112 = true;
+    kl_t113 = true;
 #line 62 "codegen/string_literal_adopts.kl"
-    if ( kl_t113 ) kl__5label__dtor( &kl_t6 );
+    if ( kl_t114 ) kl__5label__dtor( &kl_t6 );
 #line 62 "codegen/string_literal_adopts.kl"
-    kl_t113 = false;
+    kl_t114 = false;
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t10 = &kl_a_1;
 #line 64 "codegen/string_literal_adopts.kl"
@@ -514,7 +506,7 @@ int32_t kl__4main__( void )
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t17 = kl__4from__S5label_MQ7prelude3str( kl_t13 );
 #line 64 "codegen/string_literal_adopts.kl"
-    kl_t114 = true;
+    kl_t115 = true;
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t18 = &kl_t17;
 #line 64 "codegen/string_literal_adopts.kl"
@@ -540,7 +532,7 @@ int32_t kl__4main__( void )
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t25 = kl__4from__S5label_MQ7prelude3str( kl_t21 );
 #line 64 "codegen/string_literal_adopts.kl"
-    kl_t115 = true;
+    kl_t116 = true;
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t26 = &kl_t25;
 #line 64 "codegen/string_literal_adopts.kl"
@@ -560,7 +552,7 @@ int32_t kl__4main__( void )
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t29 = kl__4give__(  );
 #line 64 "codegen/string_literal_adopts.kl"
-    kl_t116 = true;
+    kl_t117 = true;
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t30 = &kl_t29;
 #line 64 "codegen/string_literal_adopts.kl"
@@ -573,25 +565,25 @@ int32_t kl__4main__( void )
     goto bb6;
     bb6:
 #line 64 "codegen/string_literal_adopts.kl"
-    if ( kl_t116 ) kl__5label__dtor( &kl_t29 );
+    if ( kl_t117 ) kl__5label__dtor( &kl_t29 );
 #line 64 "codegen/string_literal_adopts.kl"
-    if ( kl_t115 ) kl__5label__dtor( &kl_t25 );
+    if ( kl_t116 ) kl__5label__dtor( &kl_t25 );
 #line 64 "codegen/string_literal_adopts.kl"
-    if ( kl_t114 ) kl__5label__dtor( &kl_t17 );
-#line 64 "codegen/string_literal_adopts.kl"
-    kl_t114 = false;
+    if ( kl_t115 ) kl__5label__dtor( &kl_t17 );
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t115 = false;
 #line 64 "codegen/string_literal_adopts.kl"
     kl_t116 = false;
 #line 64 "codegen/string_literal_adopts.kl"
+    kl_t117 = false;
+#line 64 "codegen/string_literal_adopts.kl"
     if ( kl_t7 ) goto bb7; else goto bb8;
     bb7:
     kl_t0 = 1;
 #line 66 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 66 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 66 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb8:
@@ -604,19 +596,19 @@ int32_t kl__4main__( void )
 #line 69 "codegen/string_literal_adopts.kl"
     kl_t37 = kl__4from__S5label_MQ7prelude3str( kl_t33 );
 #line 69 "codegen/string_literal_adopts.kl"
-    kl_t117 = true;
+    kl_t118 = true;
 #line 69 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 69 "codegen/string_literal_adopts.kl"
     kl_a_1 = kl_t37;
 #line 69 "codegen/string_literal_adopts.kl"
-    kl_t117 = false;
+    kl_t118 = false;
 #line 69 "codegen/string_literal_adopts.kl"
-    kl_t112 = true;
+    kl_t113 = true;
 #line 69 "codegen/string_literal_adopts.kl"
-    if ( kl_t117 ) kl__5label__dtor( &kl_t37 );
+    if ( kl_t118 ) kl__5label__dtor( &kl_t37 );
 #line 69 "codegen/string_literal_adopts.kl"
-    kl_t117 = false;
+    kl_t118 = false;
 #line 71 "codegen/string_literal_adopts.kl"
     kl_t40 = &kl_a_1;
 #line 71 "codegen/string_literal_adopts.kl"
@@ -647,7 +639,7 @@ int32_t kl__4main__( void )
 #line 71 "codegen/string_literal_adopts.kl"
     kl_t53 = kl__4from__S5label_MQ7prelude3str( kl_t49 );
 #line 71 "codegen/string_literal_adopts.kl"
-    kl_t118 = true;
+    kl_t119 = true;
 #line 71 "codegen/string_literal_adopts.kl"
     kl_t54 = &kl_t53;
 #line 71 "codegen/string_literal_adopts.kl"
@@ -677,7 +669,7 @@ int32_t kl__4main__( void )
 #line 71 "codegen/string_literal_adopts.kl"
     kl_t63 = kl__4from__S5label_MQ7prelude3str( kl_t59 );
 #line 71 "codegen/string_literal_adopts.kl"
-    kl_t119 = true;
+    kl_t120 = true;
 #line 71 "codegen/string_literal_adopts.kl"
     kl_t64 = &kl_t63;
 #line 71 "codegen/string_literal_adopts.kl"
@@ -688,23 +680,23 @@ int32_t kl__4main__( void )
     goto bb12;
     bb12:
 #line 71 "codegen/string_literal_adopts.kl"
-    if ( kl_t119 ) kl__5label__dtor( &kl_t63 );
+    if ( kl_t120 ) kl__5label__dtor( &kl_t63 );
 #line 71 "codegen/string_literal_adopts.kl"
-    if ( kl_t118 ) kl__5label__dtor( &kl_t53 );
+    if ( kl_t119 ) kl__5label__dtor( &kl_t53 );
 #line 71 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_t45 );
 #line 71 "codegen/string_literal_adopts.kl"
-    kl_t118 = false;
-#line 71 "codegen/string_literal_adopts.kl"
     kl_t119 = false;
+#line 71 "codegen/string_literal_adopts.kl"
+    kl_t120 = false;
 #line 71 "codegen/string_literal_adopts.kl"
     if ( kl_t38 ) goto bb13; else goto bb14;
     bb13:
     kl_t0 = 2;
 #line 73 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 73 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 73 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb14:
@@ -727,9 +719,9 @@ int32_t kl__4main__( void )
     bb15:
     kl_t0 = 3;
 #line 80 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 80 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 80 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb16:
@@ -744,15 +736,15 @@ int32_t kl__4main__( void )
 #line 83 "codegen/string_literal_adopts.kl"
     kl_t80 = kl__4from__S5label_MQ7prelude3str( kl_t76 );
 #line 83 "codegen/string_literal_adopts.kl"
-    kl_t120 = true;
+    kl_t121 = true;
 #line 83 "codegen/string_literal_adopts.kl"
     kl__6holder__R6holder_M5label__ctor( kl_t75, kl_t80 );
 #line 83 "codegen/string_literal_adopts.kl"
-    kl_t120 = false;
+    kl_t121 = false;
 #line 83 "codegen/string_literal_adopts.kl"
-    if ( kl_t120 ) kl__5label__dtor( &kl_t80 );
+    if ( kl_t121 ) kl__5label__dtor( &kl_t80 );
 #line 83 "codegen/string_literal_adopts.kl"
-    kl_t120 = false;
+    kl_t121 = false;
 #line 85 "codegen/string_literal_adopts.kl"
     kl_t82 = &kl_h_74;
 #line 85 "codegen/string_literal_adopts.kl"
@@ -766,9 +758,9 @@ int32_t kl__4main__( void )
 #line 87 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_h_74.kl_held );
 #line 87 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 87 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 87 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb18:
@@ -794,13 +786,15 @@ int32_t kl__4main__( void )
 #line 90 "codegen/string_literal_adopts.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t93, kl_t94, 1 );
 #line 90 "codegen/string_literal_adopts.kl"
-    kl_t96 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t92, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t96 = &kl_t92;
 #line 90 "codegen/string_literal_adopts.kl"
-    kl_t97 = kl__4lend__7textual( kl_t96 );
+    kl_t97 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t96, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 90 "codegen/string_literal_adopts.kl"
-    kl_t98 = kl_t97 != 1;
+    kl_t98 = kl__4lend__7textual( kl_t97 );
 #line 90 "codegen/string_literal_adopts.kl"
-    kl_t85 = kl_t98;
+    kl_t99 = kl_t98 != 1;
+#line 90 "codegen/string_literal_adopts.kl"
+    kl_t85 = kl_t99;
 #line 90 "codegen/string_literal_adopts.kl"
     goto bb20;
     bb20:
@@ -811,84 +805,84 @@ int32_t kl__4main__( void )
 #line 92 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_h_74.kl_held );
 #line 92 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 92 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 92 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb22:
 #line 95 "codegen/string_literal_adopts.kl"
-    kl_t99 = kl__4made__I5labelE__(  );
+    kl_t100 = kl__4made__I5labelE__(  );
 #line 95 "codegen/string_literal_adopts.kl"
-    kl_t100 = &kl_t99;
+    kl_t101 = &kl_t100;
 #line 95 "codegen/string_literal_adopts.kl"
-    kl_t101 = kl__4size__S5label( kl_t100 );
+    kl_t102 = kl__4size__S5label( kl_t101 );
 #line 95 "codegen/string_literal_adopts.kl"
-    kl_t102 = kl_t101 != 5;
+    kl_t103 = kl_t102 != 5;
 #line 95 "codegen/string_literal_adopts.kl"
-    kl__5label__dtor( &kl_t99 );
+    kl__5label__dtor( &kl_t100 );
 #line 95 "codegen/string_literal_adopts.kl"
-    if ( kl_t102 ) goto bb23; else goto bb24;
+    if ( kl_t103 ) goto bb23; else goto bb24;
     bb23:
     kl_t0 = 6;
 #line 97 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_h_74.kl_held );
 #line 97 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 97 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 97 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb24:
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t105 = &kl_t104;
+    kl_t106 = &kl_t105;
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t106 = ( uint8_t* ) "a\011b";
+    kl_t107 = ( uint8_t* ) "a\011b";
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t105, kl_t106, 3 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t106, kl_t107, 3 );
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t108 = kl__4from__S5label_MQ7prelude3str( kl_t104 );
+    kl_t109 = kl__4from__S5label_MQ7prelude3str( kl_t105 );
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t121 = true;
+    kl_t122 = true;
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_escaped_103 = kl_t108;
+    kl_escaped_104 = kl_t109;
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t121 = false;
+    kl_t122 = false;
 #line 101 "codegen/string_literal_adopts.kl"
-    if ( kl_t121 ) kl__5label__dtor( &kl_t108 );
+    if ( kl_t122 ) kl__5label__dtor( &kl_t109 );
 #line 101 "codegen/string_literal_adopts.kl"
-    kl_t121 = false;
+    kl_t122 = false;
 #line 103 "codegen/string_literal_adopts.kl"
-    kl_t109 = &kl_escaped_103;
+    kl_t110 = &kl_escaped_104;
 #line 103 "codegen/string_literal_adopts.kl"
-    kl_t110 = kl__4size__S5label( kl_t109 );
+    kl_t111 = kl__4size__S5label( kl_t110 );
 #line 103 "codegen/string_literal_adopts.kl"
-    kl_t111 = kl_t110 != 3;
+    kl_t112 = kl_t111 != 3;
 #line 103 "codegen/string_literal_adopts.kl"
-    if ( kl_t111 ) goto bb25; else goto bb26;
+    if ( kl_t112 ) goto bb25; else goto bb26;
     bb25:
     kl_t0 = 7;
 #line 105 "codegen/string_literal_adopts.kl"
-    kl__5label__dtor( &kl_escaped_103 );
+    kl__5label__dtor( &kl_escaped_104 );
 #line 105 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_h_74.kl_held );
 #line 105 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 105 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 105 "codegen/string_literal_adopts.kl"
     return kl_t0;
     bb26:
 #line 108 "codegen/string_literal_adopts.kl"
     kl_t0 = 0;
 #line 108 "codegen/string_literal_adopts.kl"
-    kl__5label__dtor( &kl_escaped_103 );
+    kl__5label__dtor( &kl_escaped_104 );
 #line 108 "codegen/string_literal_adopts.kl"
     kl__5label__dtor( &kl_h_74.kl_held );
 #line 108 "codegen/string_literal_adopts.kl"
-    if ( kl_t112 ) kl__5label__dtor( &kl_a_1 );
+    if ( kl_t113 ) kl__5label__dtor( &kl_a_1 );
 #line 108 "codegen/string_literal_adopts.kl"
-    kl_t112 = false;
+    kl_t113 = false;
 #line 108 "codegen/string_literal_adopts.kl"
     return kl_t0;
 }

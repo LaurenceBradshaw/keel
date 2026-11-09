@@ -58,7 +58,7 @@ void* kl_2kl4list_14operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2
 void kl_2kl4list_4swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t, uint64_t );
 void kl_2kl4list_20reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
 void kl_2kl4list_10reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
-void kl_2kl4list_list__I4voidE__drop( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_list__I4voidE__drop( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 5 "void_list/main.kl"
@@ -716,10 +716,13 @@ void kl_2kl4list_10reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4li
 #line 471 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__I4voidE__drop( struct kl_2kl4list_list__I4voidE* kl_t1 )
+void kl_2kl4list_list__I4voidE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__I4voidE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__I4voidE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__I4voidE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__I4voidE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"

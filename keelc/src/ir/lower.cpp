@@ -18,6 +18,7 @@
 #include "ir/builder.h"
 #include "ir/drop_scopes.h"
 #include "ir/instances.h"
+#include "ir/vtables.h"
 #include "sema/bounds.h"
 
 namespace keel
@@ -44,6 +45,41 @@ Type_id returned_type( const Ast& ast, Types& types, Node_id declaration, const 
     default:
         return types.table().substitute( binding_type( ast, types, declaration ), bindings );
     }
+}
+
+// `a < b` is `b > a`; for a NaN too, where every one of the six is false both ways round.
+Token_kind mirrored( Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Less:
+        return Token_kind::Greater;
+    case Token_kind::Greater:
+        return Token_kind::Less;
+    case Token_kind::Less_equal:
+        return Token_kind::Greater_equal;
+    case Token_kind::Greater_equal:
+        return Token_kind::Less_equal;
+    default:
+        return op;
+    }
+}
+
+// D41: a comparison, through the guard for the pair when no type holds both, its operands put in the guard's order.
+Rvalue compared( const Type_table& table, Token_kind op, Operand a, Operand b, Type_id boolean )
+{
+    if( a.type == b.type )
+    {
+        return binary( op, a, b, boolean );
+    }
+
+    if( table.is_float( a.type ) || ( !table.is_float( b.type ) && !table.get( a.type ).is_signed ) )
+    {
+        std::swap( a, b );
+        op = mirrored( op );
+    }
+
+    return guard_call( op, a, b, boolean );
 }
 
 // What tells one lambda's functions apart: the bindings of the instance it is written in, by parameter.
@@ -221,7 +257,8 @@ private:
     Operand borrowed_arm( Node_id arm, Type_id address, Address_purpose purpose );
 
     Operand address_operand( Place place, Type_id type, Span span, Address_purpose purpose );
-    // address_of, but a `T[N]` borrowed as a `T[]` is lent as a run of its elements.
+    // address_of, but a `T[N]` borrowed as a `T[]` is lent as a run of its elements, and an
+    // implementer borrowed as an interface is paired with its vtable.
     Rvalue borrow_of( Place place, Type_id held, Type_id address, Address_purpose purpose, Span span );
 
     // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
@@ -300,7 +337,8 @@ private:
     Operand converted( Operand operand, Type_id to, Span span );
     // §6.7: a member into a union holding it, in a temporary of the union; a number cast to `to`;
     // anything else as it is.
-    Operand united( Operand operand, Type_id to, Span span );
+    Operand  united( Operand operand, Type_id to, Span span );
+    Local_id reboxed( Place from, Type_id held, Type_id to, bool moves, Span span );
     // A shift count or pointer offset at the integer type `to`.
     Operand counted( Operand operand, Type_id to, Span span );
     // An integer constant holding the same value at the integer type `to`, if `to` holds it.
@@ -846,7 +884,7 @@ Type_id Lowering::operation_type( Node_id node )
 }
 
 // How far a comparison operand widens on its own, so every pair with no common type reduces to
-// i64/u64, i64/f64 or u64/f64, and the backend writes three guards.
+// i64/u64, i64/f64 or u64/f64, each with its own guard.
 Type_id Lowering::comparison_width( Type_id type ) const
 {
     const Type_table& table = types_.table();
@@ -855,7 +893,6 @@ Type_id Lowering::comparison_width( Type_id type ) const
 }
 
 // Converts to `to`, so a binary's operands share a type in KIR and no backend re-derives §6.4.
-// D41's exception: a comparison with no common type keeps its operands unequal.
 Operand Lowering::converted( Operand operand, Type_id to, Span span )
 {
     if( operand.type == to )
@@ -863,7 +900,8 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
         return operand;
     }
 
-    if( types_.table().is_union( to ) || types_.table().is_box( to ) || adopts_joined( operand.type, to ) )
+    if( types_.table().is_union( to ) || types_.table().is_box( to ) || types_.table().is_interface_pointer( to ) ||
+        adopts_joined( operand.type, to ) )
     {
         return united( operand, to, span );
     }
@@ -906,6 +944,22 @@ std::optional<Operand> Lowering::retyped( const Operand& operand, Type_id to )
     return same;
 }
 
+// A `box<Shape>` of the allocation `box<Circle>` `from` holds, built field by field: its pointer,
+// moved or copied out, paired with the vtable.
+Local_id Lowering::reboxed( Place from, Type_id held, Type_id to, bool moves, Span span )
+{
+    Type_table&   table   = types_.table();
+    const Node_id pointer = ast_.contained_fields( table.get( to ).declaration )[0];
+    const Type_id own     = table.pointer_to( table.get( held ).arguments[0] );
+    const Type_id wanted  = table.pointer_to( table.get( to ).arguments[0] );
+
+    const Place    field   = builder_.field( from, pointer );
+    const Operand  address = temporary( use( moves ? move( field, own ) : copy( field, own ) ), own, span );
+    const Local_id boxed   = builder_.add_local( to, span );
+    builder_.assign( builder_.field( builder_.place( boxed ), pointer ), make_interface( address, wanted ), span );
+    return boxed;
+}
+
 Operand Lowering::united( Operand operand, Type_id to, Span span )
 {
     if( adopts_joined( operand.type, to ) )
@@ -916,12 +970,15 @@ Operand Lowering::united( Operand operand, Type_id to, Span span )
     // An implementer's address becomes a `Shape*` where one is wanted, as a member becomes a union.
     if( operand.type != to && types_.table().is_interface_pointer( to ) && types_.table().is_pointer( operand.type ) )
     {
-        return temporary( cast_to( operand, to ), to, span );
+        const bool paired = types_.table().is_interface( types_.table().get( operand.type ).element );
+        return temporary( paired ? cast_to( operand, to ) : make_interface( operand, to ), to, span );
     }
 
+    // `box<Circle>` as a `box<Shape>`: its pointer moves out into the new box.
     if( operand.type != to && types_.table().is_box( to ) && types_.table().is_box( operand.type ) )
     {
-        return move( builder_.place( builder_.into_temp( cast_to( moved_if_owning( operand ), to ), to, span ) ), to );
+        const Local_id old = builder_.into_temp( use( moved_if_owning( operand ) ), operand.type, span );
+        return move( builder_.place( reboxed( builder_.place( old ), operand.type, to, true, span ) ), to );
     }
 
     const Type_table& table  = types_.table();
@@ -1256,7 +1313,7 @@ Operand Lowering::three_way( Operand left, Operand right, Span span )
     const Type_id     ordering = table.declared( table.prelude().ordering );
 
     const auto test = [&]( Token_kind op, Operand a, Operand b ) -> Operand
-    { return temporary( binary( op, a, b, boolean ), boolean, span ); };
+    { return temporary( compared( table, op, a, b, boolean ), boolean, span ); };
 
     // A float literal is never a NaN.
     const auto may_be_nan = [&]( Operand side ) { return table.is_float( side.type ) && side.kind != Operand_kind::Constant; };
@@ -2215,9 +2272,8 @@ Operand Lowering::lower_binary( Node_id id )
     // A shift's count is a width, not a value meeting the left operand: it is cast to the left type.
     const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
 
-    // D41's other case: no common type, so each operand widens within its own kind and the backend
-    // compares them as they are. The only binary whose operands reach KIR with different types,
-    // besides a pointer and its 64-bit offset.
+    // D41's other case: no common type, so each operand widens within its own kind and a guard
+    // compares them.
     const bool by_cases = is_comparison( op ) && !operation.is_valid();
 
     const bool offsets = types_.table().is_many_pointer( raw_left.type );
@@ -2235,6 +2291,10 @@ Operand Lowering::lower_binary( Node_id id )
     if( op == Token_kind::Less_equal_greater )
     {
         return three_way( left, right, span );
+    }
+    if( by_cases )
+    {
+        return temporary( compared( types_.table(), op, left, right, type ), type, span );
     }
     return temporary( checked_arithmetic( op, left, right, type, span, wrapping_.contains( id.v ) ), type, span );
 }
@@ -2416,7 +2476,8 @@ Operand Lowering::lower_unary( Node_id id )
 
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
-        const Rvalue address = address_of( lower_place( ast_.operand( id ) ), type, Address_purpose::Borrow );
+        const Rvalue address =
+            borrow_of( lower_place( ast_.operand( id ) ), type_of( ast_.operand( id ) ), type, Address_purpose::Borrow, span );
 
         return temporary( address, type, span );
     }
@@ -5058,7 +5119,7 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
     const Type_id wanted = types_.table().get( address ).element;
     if( value.type != wanted && types_.table().is_box( wanted ) && types_.table().is_box( value.type ) )
     {
-        place = builder_.place( builder_.into_temp( cast_to( copy( place, value.type ), wanted ), wanted, span ) );
+        place = builder_.place( reboxed( place, value.type, wanted, false, span ) );
     }
 
     return temporary( borrow_of( place, value.type, address, Address_purpose::Read, span ), address, span );
@@ -5122,6 +5183,12 @@ Operand Lowering::address_operand( Place place, Type_id type, Span span, Address
 Rvalue Lowering::borrow_of( Place place, Type_id held, Type_id address, Address_purpose purpose, Span span )
 {
     Type_table& table = types_.table();
+
+    if( table.is_interface_pointer( address ) && held.is_valid() && !table.is_interface( held ) )
+    {
+        const Type_id own = table.pointer_to( held, table.get( address ).const_element );
+        return make_interface( temporary( address_of( place, own, purpose, span ), own, span ), address );
+    }
 
     if( !table.is_run_pointer( address ) || !held.is_valid() || !table.is_array( held ) )
     {
@@ -5318,22 +5385,237 @@ Function array_destructor( const Ast& ast, Types& types, Literal_pool& literals,
 }
 
 // A vtable's drop slot: the implementer's whole drop, its `~` and then its fields, which no
-// function of its own does. Declared by nothing; its type argument is the implementer.
-Function drop_function( const Ast& ast, Types& types, Type_id implementer )
+// function of its own does, from the `void*` the interface holds. Declared by nothing; its type
+// argument is the implementer.
+Function drop_function( const Ast& ast, Types& types, Type_id implementer, Span span )
 {
-    const Span span = ast.span( types.table().get( implementer ).declaration );
+    Type_table&   table = types.table();
+    const Type_id held  = table.pointer_to( implementer );
+    const Type_id any   = table.pointer_to( table.builtin( Type_kind::Void ) );
 
-    Builder builder( Node_id {}, types.table().builtin( Type_kind::Void ), span );
+    Builder builder( Node_id {}, table.builtin( Type_kind::Void ), span );
 
-    const Local_id self = builder.add_parameter( types.table().pointer_to( implementer ), span, Symbol_id {} );
+    const Local_id self   = builder.add_parameter( any, span, Symbol_id {} );
+    const Local_id object = builder.into_temp( cast_to( copy( builder.place( self ), any ), held ), held, span );
 
-    drop_place( builder, ast, types, builder.deref( builder.place( self ) ), implementer, span, false );
+    drop_place( builder, ast, types, builder.deref( builder.place( object ) ), implementer, span, false );
     builder.terminate_return( span );
 
     Function function = builder.finish();
     function.type_arguments.push_back( implementer );
 
     return function;
+}
+
+// A vtable's slot for its `i`th requirement: the `void*` made the implementer's address again,
+// and each argument passed on, read through where the requirement takes a reference and the
+// method a value. Declared by the requirement, at the implementer.
+Function thunk_function( const Ast& ast, Types& types, const Vtable& vtable, std::size_t i, const Function& method )
+{
+    Type_table&    table       = types.table();
+    const Node_id  requirement = vtable.requirements[i];
+    const Span     span        = ast.span( vtable.methods[i] );
+    const Thunk    called      = thunk_for( ast, types, vtable.implementer, vtable.interface, requirement, vtable.methods[i] );
+    const Bindings bindings    = table.instance_bindings( vtable.interface );
+    const auto     at_instance = [&]( Node_id node ) { return table.substitute( binding_type( ast, types, node ), bindings ); };
+
+    const Type_id returned = at_instance( requirement );
+    const Type_id any      = table.pointer_to( table.builtin( Type_kind::Void ) );
+    const Type_id self     = method.locals[Local_id { 1 }].type;
+
+    Builder builder( requirement, returned, span );
+
+    const Local_id        held   = builder.add_parameter( any, span, Symbol_id {} );
+    const auto            params = ast.explicit_params( requirement );
+    std::vector<Local_id> locals;
+    for( const Node_id param : params )
+    {
+        locals.push_back( builder.add_parameter( at_instance( param ), span, Symbol_id {} ) );
+    }
+
+    std::vector<Operand> arguments {
+        copy( builder.place( builder.into_temp( cast_to( copy( builder.place( held ), any ), self ), self, span ) ), self )
+    };
+
+    for( std::size_t p = 0; p < params.size(); ++p )
+    {
+        const Type_id  type  = at_instance( params[p] );
+        const Local_id local = locals[p];
+        const Type_id  taken = method.locals[Local_id { narrow_cast<u32>( p + 2 ) }].type;
+
+        arguments.push_back(
+            called.copied[p]                                      ? copy( builder.deref( builder.place( local ) ), taken )
+            : instance_owns( ast, table, type, types.recorded() ) ? move( builder.place( local ), type )
+                                                                  : copy( builder.place( local ), type )
+        );
+    }
+
+    builder.assign(
+        builder.place( k_return_slot ), call( vtable.methods[i], std::move( arguments ), returned, called.type_arguments ), span
+    );
+    if( table.is_never( returned ) )
+    {
+        builder.terminate_unreachable( span );
+    }
+    else
+    {
+        builder.terminate_return( span );
+    }
+
+    Function function        = builder.finish();
+    function.type_arguments  = { vtable.implementer };
+    function.thunk_of        = vtable.interface;
+    function.returns_a_value = !table.is_void( returned ) && !table.is_never( returned );
+    function.diverges        = table.is_never( returned );
+    return function;
+}
+
+// Each vtable's thunks, and its implementer's drop function when it owns nothing and so has
+// none yet, unless an object holds them.
+void append_thunks( const Ast& ast, Types& types, std::vector<Function>& functions )
+{
+    for( const Vtable& vtable : vtables_needed( ast, types, functions ) )
+    {
+        if( !provided( functions, {}, std::span( &vtable.implementer, 1 ) ) )
+        {
+            const Node_id named = types.table().get( vtable.implementer ).declaration;
+            functions.push_back( drop_function(
+                ast,
+                types,
+                vtable.implementer,
+                ast.span( named.is_valid() ? named : types.table().get( vtable.interface ).declaration )
+            ) );
+        }
+
+        for( std::size_t i = 0; i < vtable.requirements.size(); ++i )
+        {
+            Function key;
+            key.declaration    = vtable.requirements[i];
+            key.type_arguments = { vtable.implementer };
+            key.thunk_of       = vtable.interface;
+            if( std::ranges::any_of( functions, [&]( const Function& f ) { return same_function( f, key ); } ) )
+            {
+                continue;
+            }
+
+            const Thunk called =
+                thunk_for( ast, types, vtable.implementer, vtable.interface, vtable.requirements[i], vtable.methods[i] );
+            const auto method = std::ranges::find_if(
+                functions,
+                [&]( const Function& f )
+                {
+                    return f.declaration == vtable.methods[i] && f.type_arguments == called.type_arguments &&
+                           f.compares == Token_kind::Unknown && !f.thunk_of.is_valid();
+                }
+            );
+            assert( method != functions.end() && "a vtable's method is lowered before its thunk" );
+            Function thunk = thunk_function( ast, types, vtable, i, *method );
+            functions.push_back( std::move( thunk ) );
+        }
+    }
+}
+
+// D41: `a op b` for the pair a guard call names, `a` an integer and `b` the other integer or an `f64`.
+// A negative `a` is below every `u64`, and past that the two name the same number. A float `b` is
+// tested before it is truncated, as NaN and the out-of-range are what make the truncation undefined;
+// past those `t` is exact, and `b` against it again is the fraction that breaks a tie.
+Function guard_function( Types& types, Literal_pool& literals, Token_kind op, Type_id left, Type_id right, Span span )
+{
+    const Type_table& table   = types.table();
+    const Type_id     boolean = table.builtin( Type_kind::Bool );
+    const bool        ordered = op != Token_kind::Equal_equal && op != Token_kind::Bang_equal;
+    const bool        less    = op == Token_kind::Less || op == Token_kind::Less_equal;
+
+    Builder    builder( Node_id {}, boolean, span );
+    const auto finished = [&]
+    {
+        Function function        = builder.finish();
+        function.compares        = op;
+        function.type_arguments  = { left, right };
+        function.returns_a_value = true;
+        return function;
+    };
+
+    const Operand a = copy( builder.place( builder.add_parameter( left, span, Symbol_id {} ) ), left );
+    const Operand b = copy( builder.place( builder.add_parameter( right, span, Symbol_id {} ) ), right );
+
+    const auto answer = [&]( bool value )
+    {
+        const Block_id block = builder.add_block();
+        builder.switch_to( block );
+        builder.assign( builder.place( k_return_slot ), use( constant( literals.add_integer( value ), boolean ) ), span );
+        builder.terminate_return( span );
+        return block;
+    };
+    const auto test = [&]( Rvalue value, bool then )
+    {
+        const Operand  holds = copy( builder.place( builder.into_temp( std::move( value ), boolean, span ) ), boolean );
+        const Block_id from  = builder.current();
+        const Block_id done  = answer( then );
+        const Block_id next  = builder.add_block();
+        builder.switch_to( from );
+        builder.terminate_branch( holds, done, next, span );
+        builder.switch_to( next );
+    };
+    const auto settle = [&]( Rvalue value )
+    {
+        builder.assign( builder.place( k_return_slot ), std::move( value ), span );
+        builder.terminate_return( span );
+    };
+
+    if( !table.is_float( right ) )
+    {
+        test(
+            binary( Token_kind::Less, a, constant( literals.add_integer( 0 ), left ), boolean ),
+            less || op == Token_kind::Bang_equal
+        );
+        const Operand wide = copy( builder.place( builder.into_temp( cast_to( a, right ), right, span ) ), right );
+        settle( binary( op, wide, b, boolean ) );
+        return finished();
+    }
+
+    const bool   is_signed = table.get( left ).is_signed;
+    const double above     = is_signed ? 9223372036854775808.0 : 18446744073709551616.0;
+    const double below     = is_signed ? -9223372036854775808.0 : 0.0;
+
+    const auto real = [&]( double value ) { return constant( literals.add_float( value, static_cast<f32>( value ) ), right ); };
+
+    test( binary( Token_kind::Bang_equal, b, b, boolean ), op == Token_kind::Bang_equal );
+    test( binary( Token_kind::Greater_equal, b, real( above ), boolean ), less || op == Token_kind::Bang_equal );
+    test( binary( Token_kind::Less, b, real( below ), boolean ), ( ordered && !less ) || op == Token_kind::Bang_equal );
+
+    const Operand t = copy( builder.place( builder.into_temp( cast_to( b, left ), left, span ) ), left );
+    if( ordered )
+    {
+        test( binary( less ? Token_kind::Less : Token_kind::Greater, a, t, boolean ), true );
+    }
+    test( binary( Token_kind::Bang_equal, a, t, boolean ), op == Token_kind::Bang_equal );
+
+    const Operand back = copy( builder.place( builder.into_temp( cast_to( t, right ), right, span ) ), right );
+    settle( binary( mirrored( op ), b, back, boolean ) );
+    return finished();
+}
+
+// A guard for each one a function calls, unless an object holds it.
+void append_guards( Types& types, Literal_pool& literals, std::vector<Function>& functions )
+{
+    for( std::size_t f = 0; f < functions.size(); ++f )
+    {
+        for( std::size_t s = 0; s < functions[f].statements.size(); ++s )
+        {
+            const Statement& statement = functions[f].statements[s];
+            const Rvalue&    value     = std::as_const( functions[f] ).rvalue( statement );
+            if( statement.kind != Statement_kind::Assign || value.kind != Rvalue_kind::Call ||
+                value.op == Token_kind::Unknown || provided( functions, {}, value.type_arguments, value.op ) )
+            {
+                continue;
+            }
+            const Token_kind           op       = value.op;
+            const std::vector<Type_id> operands = value.type_arguments;
+            const Span                 span     = statement.span;
+            functions.push_back( guard_function( types, literals, op, operands[0], operands[1], span ) );
+        }
+    }
 }
 
 // A bound-only interface has no vtable, so it asks for no drop function.
@@ -5410,7 +5692,7 @@ void append_synthesised_drops(
             has_vtables( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) &&
             !loaded( {}, std::span( &type, 1 ) ) )
         {
-            functions.push_back( drop_function( ast, types, type ) );
+            functions.push_back( drop_function( ast, types, type, ast.span( types.table().get( type ).declaration ) ) );
         }
     }
 }
@@ -5511,12 +5793,17 @@ std::optional<Function> globals_drop( const Ast& ast, Types& types, std::span<co
 
 } // namespace
 
-bool provided( std::span<const Function> functions, Node_id declaration, std::span<const Type_id> type_arguments )
+bool provided(
+    std::span<const Function> functions, Node_id declaration, std::span<const Type_id> type_arguments, Token_kind compares
+)
 {
     return std::ranges::any_of(
         functions,
         [&]( const Function& function )
-        { return function.declaration == declaration && std::ranges::equal( function.type_arguments, type_arguments ); }
+        {
+            return function.declaration == declaration && function.compares == compares && !function.thunk_of.is_valid() &&
+                   std::ranges::equal( function.type_arguments, type_arguments );
+        }
     );
 }
 
@@ -5713,6 +6000,8 @@ std::vector<Function> lower(
     }
 
     append_synthesised_drops( ast, types, literals, functions, given );
+    append_thunks( ast, types, functions );
+    append_guards( types, literals, functions );
 
     return functions;
 }
@@ -6146,6 +6435,34 @@ TEST_CASE( "lower_makes_conversions_explicit", "[ir][lower]" )
         REQUIRE( text.find( "_4 = copy _3 & const 31" ) != std::string::npos );
         REQUIRE( text.find( "_5 = copy _1 << copy _4" ) != std::string::npos );
     }
+}
+
+// D41: no type holds both operands, so the comparison calls the guard for the pair, integer first.
+TEST_CASE( "lower_calls_a_guard_for_a_comparison_with_no_common_type", "[ir][lower][guard]" )
+{
+    Lowered p( "bool f( u64 a, i64 b ) { return a > b; }\nbool g( f64 a, u64 b ) { return a == b; }\ni32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    INFO( p.text( 0 ) );
+    REQUIRE( p.text( 0 ).find( "call <i64 < u64>(copy _2, copy _1)" ) != std::string::npos );
+    INFO( p.text( 1 ) );
+    REQUIRE( p.text( 1 ).find( "call <u64 == f64>(copy _2, copy _1)" ) != std::string::npos );
+
+    const std::string less = p.named( "<i64 < u64>" );
+    INFO( less );
+    REQUIRE( less.find( "_3 = copy _1 < const -" ) == std::string::npos ); // compared with 0, not a negative
+    REQUIRE( less.find( "_3 = copy _1 < const 0" ) != std::string::npos );
+    REQUIRE( less.find( "_4 = copy _1 as u64" ) != std::string::npos );
+    REQUIRE( less.find( "_0 = copy _4 < copy _2" ) != std::string::npos );
+
+    const std::string equal = p.named( "<u64 == f64>" );
+    INFO( equal );
+    REQUIRE( equal.find( "_3 = copy _2 != copy _2" ) != std::string::npos );
+    REQUIRE( equal.find( "copy _2 as u64" ) != std::string::npos );
+    REQUIRE( equal.find( "_0 = copy _2 == copy _" ) != std::string::npos );
 }
 
 TEST_CASE( "lower_expands_assignment", "[ir][lower]" )
@@ -9903,14 +10220,16 @@ TEST_CASE( "lower_synthesises_a_drop_function_for_an_owning_implementer", "[ir][
     const std::string text = p.named( "drop Framed" );
 
     INFO( text );
-    REQUIRE( text.find( "let _1: Framed*; // parameter" ) != std::string::npos );
-    REQUIRE( text.find( "drop (*_1).frame" ) != std::string::npos );
+    REQUIRE( text.find( "let _1: void*; // parameter" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = copy _1 as Framed*" ) != std::string::npos );
+    REQUIRE( text.find( "drop (*_2).frame" ) != std::string::npos );
 
     // Owning nothing, its vtable's slot calls nothing.
     REQUIRE( p.named( "drop Sq" ).empty() );
 }
 
-// `box<Circle>` to `box<Shape>` is a `Cast` of the moved box, so the source is not dropped again.
+// `box<Circle>` to `box<Shape>` moves the box's pointer out into a new box, paired with its vtable,
+// so the source is not dropped again.
 TEST_CASE( "lower_casts_a_box_to_a_box_of_its_interface", "[ir][lower][interfaces]" )
 {
     Lowered p(
@@ -9925,7 +10244,9 @@ TEST_CASE( "lower_casts_a_box_to_a_box_of_its_interface", "[ir][lower][interface
     const std::string text = p.named( "f" );
 
     INFO( text );
-    REQUIRE( text.find( "move _1 as box<Shape>" ) != std::string::npos );
+    REQUIRE( text.find( "_3 = move _1" ) != std::string::npos );
+    REQUIRE( text.find( "_4 = move _3.p_" ) != std::string::npos );
+    REQUIRE( text.find( "_5.p_ = interface copy _4 as Shape*" ) != std::string::npos );
 }
 
 // `Box<i64>` is first interned by lowering `make<i64>`, after every instance before it was queued.

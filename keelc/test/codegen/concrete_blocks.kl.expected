@@ -36,30 +36,14 @@ int32_t kl__4read__I4WrapI3i32EE__4WrapI3i32E( struct kl__Wrap__I3i32E* );
 bool kl__11operator_eq__I3i32E__S4WrapI3i32EC9equatable_4WrapI3i32E( struct kl__Wrap__I3i32E*, struct kl__Wrap__I3i32E* );
 int32_t kl__4read__I4PairI2u8_2u8EE__4PairI2u8_2u8E( struct kl__Pair__I2u8_2u8E* );
 int32_t kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* );
+void kl__Wrap__I3i32E__drop( void* );
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* );
+void kl__Pair__I2u8_2u8E__drop( void* );
+int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* );
 
-static void kl__Wrap__I3i32E__as_kl__Named__drop( void* self )
-{
-    ( void ) self;
-}
+static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wrap__I3i32E__drop, kl__Wrap__I3i32E__as_kl__Named__kl__4code__ };
 
-static int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* self )
-{
-    return kl__4code__S4WrapI3i32EC5Named( ( struct kl__Wrap__I3i32E* ) self );
-}
-
-static const struct kl__Named__vtable kl__Wrap__I3i32E__as_kl__Named = { kl__Wrap__I3i32E__as_kl__Named__drop, kl__Wrap__I3i32E__as_kl__Named__kl__4code__ };
-
-static void kl__Pair__I2u8_2u8E__as_kl__Named__drop( void* self )
-{
-    ( void ) self;
-}
-
-static int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* self )
-{
-    return kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( ( struct kl__Pair__I2u8_2u8E* ) self );
-}
-
-static const struct kl__Named__vtable kl__Pair__I2u8_2u8E__as_kl__Named = { kl__Pair__I2u8_2u8E__as_kl__Named__drop, kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__ };
+static const struct kl__Named__vtable kl__Pair__I2u8_2u8E__as_kl__Named = { kl__Pair__I2u8_2u8E__drop, kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__ };
 
 #line 21 "codegen/concrete_blocks.kl"
 int32_t kl__4code__S4WrapI3i32EC5Named( struct kl__Wrap__I3i32E* kl_this_1 )
@@ -325,6 +309,56 @@ int32_t kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( struct kl__Pair__I2u8_2u8E* kl
     kl_t0 = kl_t3;
 #line 38 "codegen/concrete_blocks.kl"
     return kl_t0;
+}
+
+void kl__Wrap__I3i32E__drop( void* kl_t1 )
+{
+    struct kl__Wrap__I3i32E* kl_t2;
+    ( void ) kl_t2;
+#line 8 "codegen/concrete_blocks.kl"
+    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+#line 8 "codegen/concrete_blocks.kl"
+    return;
+#line 8 "codegen/concrete_blocks.kl"
+}
+
+#line 5 "codegen/concrete_blocks.kl"
+int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Wrap__I3i32E* kl_t2;
+#line 21 "codegen/concrete_blocks.kl"
+    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+#line 21 "codegen/concrete_blocks.kl"
+    kl_t0 = kl__4code__S4WrapI3i32EC5Named( kl_t2 );
+#line 21 "codegen/concrete_blocks.kl"
+    return kl_t0;
+#line 5 "codegen/concrete_blocks.kl"
+}
+
+void kl__Pair__I2u8_2u8E__drop( void* kl_t1 )
+{
+    struct kl__Pair__I2u8_2u8E* kl_t2;
+    ( void ) kl_t2;
+#line 13 "codegen/concrete_blocks.kl"
+    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
+#line 13 "codegen/concrete_blocks.kl"
+    return;
+#line 13 "codegen/concrete_blocks.kl"
+}
+
+#line 5 "codegen/concrete_blocks.kl"
+int32_t kl__Pair__I2u8_2u8E__as_kl__Named__kl__4code__( void* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Pair__I2u8_2u8E* kl_t2;
+#line 35 "codegen/concrete_blocks.kl"
+    kl_t2 = ( struct kl__Pair__I2u8_2u8E* ) kl_t1;
+#line 35 "codegen/concrete_blocks.kl"
+    kl_t0 = kl__4code__I2u8E__S4PairI2u8_2u8EC5Named( kl_t2 );
+#line 35 "codegen/concrete_blocks.kl"
+    return kl_t0;
+#line 5 "codegen/concrete_blocks.kl"
 }
 
 #line 52 "codegen/concrete_blocks.kl"

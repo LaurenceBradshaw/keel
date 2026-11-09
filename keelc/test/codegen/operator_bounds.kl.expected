@@ -54,18 +54,10 @@ struct kl__vec kl__6negate__I3vecE__3vec( struct kl__vec* );
 int32_t kl__6negate__I4signE__4sign( int32_t* );
 void kl__4fill__I3bag_3i32E__R3bag_3i32( struct kl__bag*, int32_t* );
 void kl__4fill__I5votes_4boolE__R5votes_4bool( struct kl__votes*, bool* );
+void kl__length__drop( void* );
+double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void*, double );
 
-static void kl__length__as_kl__scaled__drop( void* self )
-{
-    ( void ) self;
-}
-
-static double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void* self, double p0 )
-{
-    return kl__12operator_mul__S6length_3f64( ( struct kl__length* ) self, p0 );
-}
-
-static const struct kl__scaled__vtable kl__length__as_kl__scaled = { kl__length__as_kl__scaled__drop, kl__length__as_kl__scaled__kl__12operator_mul__3f64 };
+static const struct kl__scaled__vtable kl__length__as_kl__scaled = { kl__length__drop, kl__length__as_kl__scaled__kl__12operator_mul__3f64 };
 
 #line 31 "codegen/operator_bounds.kl"
 struct kl__vec kl__12operator_add__S3vec_3vec( struct kl__vec* kl_this_1, struct kl__vec* kl_other_2 )
@@ -288,9 +280,10 @@ int32_t kl__4main__( void )
     bool kl_t44;
     struct kl__length kl_l_45;
     struct kl__length kl_t46;
-    struct kl__scaled__ref kl_t47;
-    double kl_t48;
-    bool kl_t49;
+    struct kl__length* kl_t47;
+    struct kl__scaled__ref kl_t48;
+    double kl_t49;
+    bool kl_t50;
 #line 110 "codegen/operator_bounds.kl"
     kl_t2.kl_x = 1;
 #line 110 "codegen/operator_bounds.kl"
@@ -454,13 +447,15 @@ int32_t kl__4main__( void )
     kl_t46.kl_m = 1.5;
 #line 145 "codegen/operator_bounds.kl"
     kl_l_45 = kl_t46;
-    kl_t47 = ( struct kl__scaled__ref ) { ( void* ) &kl_l_45, &kl__length__as_kl__scaled };
+    kl_t47 = &kl_l_45;
 #line 146 "codegen/operator_bounds.kl"
-    kl_t48 = kl__7doubled__6scaled( kl_t47 );
+    kl_t48 = ( struct kl__scaled__ref ) { ( void* ) kl_t47, &kl__length__as_kl__scaled };
 #line 146 "codegen/operator_bounds.kl"
-    kl_t49 = kl_t48 != 3.0;
+    kl_t49 = kl__7doubled__6scaled( kl_t48 );
 #line 146 "codegen/operator_bounds.kl"
-    if ( kl_t49 ) goto bb21; else goto bb22;
+    kl_t50 = kl_t49 != 3.0;
+#line 146 "codegen/operator_bounds.kl"
+    if ( kl_t50 ) goto bb21; else goto bb22;
     bb21:
     kl_t0 = 6;
 #line 148 "codegen/operator_bounds.kl"
@@ -582,6 +577,31 @@ void kl__4fill__I5votes_4boolE__R5votes_4bool( struct kl__votes* kl_acc_1, bool*
     kl__19operator_add_assign__S5votes_4bool( kl_t5, ( *kl_value_2 ) );
     return;
 #line 101 "codegen/operator_bounds.kl"
+}
+
+void kl__length__drop( void* kl_t1 )
+{
+    struct kl__length* kl_t2;
+    ( void ) kl_t2;
+#line 55 "codegen/operator_bounds.kl"
+    kl_t2 = ( struct kl__length* ) kl_t1;
+#line 55 "codegen/operator_bounds.kl"
+    return;
+#line 55 "codegen/operator_bounds.kl"
+}
+
+#line 23 "codegen/operator_bounds.kl"
+double kl__length__as_kl__scaled__kl__12operator_mul__3f64( void* kl_t1, double kl_t2 )
+{
+    double kl_t0;
+    struct kl__length* kl_t3;
+#line 59 "codegen/operator_bounds.kl"
+    kl_t3 = ( struct kl__length* ) kl_t1;
+#line 59 "codegen/operator_bounds.kl"
+    kl_t0 = kl__12operator_mul__S6length_3f64( kl_t3, kl_t2 );
+#line 59 "codegen/operator_bounds.kl"
+    return kl_t0;
+#line 23 "codegen/operator_bounds.kl"
 }
 
 #line 108 "codegen/operator_bounds.kl"

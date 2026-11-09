@@ -14,7 +14,7 @@
 namespace keel
 {
 
-// An instance or a synthesised function: placed by which module reaches it, so several may define it.
+// An instance or a synthesised function, a D41 guard among them: placed by which module reaches it, so several may define it.
 // A module's build and drop functions are its own.
 inline bool placed_by_reach( const Function& function )
 {
@@ -54,7 +54,12 @@ public:
 
 private:
     // The function `declaration` lowers to at `type_arguments`, or k_invalid_kir_id.
-    u32 find( Node_id declaration, std::span<const Type_id> type_arguments ) const;
+    u32 find(
+        Node_id                  declaration,
+        std::span<const Type_id> type_arguments,
+        Token_kind               compares = Token_kind::Unknown,
+        Type_id                  thunk_of = {}
+    ) const;
 
     const Ast&                        ast_;
     const std::vector<Function>&      functions_;

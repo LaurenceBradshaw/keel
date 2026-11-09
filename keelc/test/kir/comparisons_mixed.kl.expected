@@ -28,16 +28,143 @@ fn main {
         _6 = copy _1 as i64
         _7 = copy _2 as i64
         _8 = copy _6 < copy _7
-        _9 = copy _3 < copy _4
+        _9 = call <i64 < u64>(copy _3, copy _4)
         _10 = copy _5 as f64
-        _11 = copy _3 >= copy _10
+        _11 = call <i64 >= f64>(copy _3, copy _10)
         _12 = copy _5 as f64
-        _13 = copy _4 != copy _12
+        _13 = call <u64 != f64>(copy _4, copy _12)
         _0 = const 0
         storage_dead _5
         storage_dead _4
         storage_dead _3
         storage_dead _2
         storage_dead _1
+        return
+}
+fn <i64 < u64> {
+    let _0: bool; // return slot
+    let _1: i64; // parameter
+    let _2: u64; // parameter
+    let _3: bool;
+    let _4: u64;
+
+    bb0:
+        _3 = copy _1 < const 0
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _4 = copy _1 as u64
+        _0 = copy _4 < copy _2
+        return
+}
+fn <i64 >= f64> {
+    let _0: bool; // return slot
+    let _1: i64; // parameter
+    let _2: f64; // parameter
+    let _3: bool;
+    let _4: bool;
+    let _5: bool;
+    let _6: i64;
+    let _7: bool;
+    let _8: bool;
+    let _9: f64;
+
+    bb0:
+        _3 = copy _2 != copy _2
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        _0 = const 0
+        return
+
+    bb2:
+        _4 = copy _2 >= const 9.223372036854776e+18
+        branch copy _4 -> bb3, bb4
+
+    bb3:
+        _0 = const 0
+        return
+
+    bb4:
+        _5 = copy _2 < const -9.223372036854776e+18
+        branch copy _5 -> bb5, bb6
+
+    bb5:
+        _0 = const 1
+        return
+
+    bb6:
+        _6 = copy _2 as i64
+        _7 = copy _1 > copy _6
+        branch copy _7 -> bb7, bb8
+
+    bb7:
+        _0 = const 1
+        return
+
+    bb8:
+        _8 = copy _1 != copy _6
+        branch copy _8 -> bb9, bb10
+
+    bb9:
+        _0 = const 0
+        return
+
+    bb10:
+        _9 = copy _6 as f64
+        _0 = copy _2 <= copy _9
+        return
+}
+fn <u64 != f64> {
+    let _0: bool; // return slot
+    let _1: u64; // parameter
+    let _2: f64; // parameter
+    let _3: bool;
+    let _4: bool;
+    let _5: bool;
+    let _6: u64;
+    let _7: bool;
+    let _8: f64;
+
+    bb0:
+        _3 = copy _2 != copy _2
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _4 = copy _2 >= const 1.8446744073709552e+19
+        branch copy _4 -> bb3, bb4
+
+    bb3:
+        _0 = const 1
+        return
+
+    bb4:
+        _5 = copy _2 < const 0
+        branch copy _5 -> bb5, bb6
+
+    bb5:
+        _0 = const 1
+        return
+
+    bb6:
+        _6 = copy _2 as u64
+        _7 = copy _1 != copy _6
+        branch copy _7 -> bb7, bb8
+
+    bb7:
+        _0 = const 1
+        return
+
+    bb8:
+        _8 = copy _6 as f64
+        _0 = copy _2 != copy _8
         return
 }

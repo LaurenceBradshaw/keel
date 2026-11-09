@@ -152,37 +152,19 @@ void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stri
 void kl_2kl4list_20reallocate_if_needed__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( struct kl_2kl4list_list__IQ2kl6stringE*, uint64_t );
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
-void kl_2kl6string_string__drop( struct kl_2kl6string_string* );
+void kl_2kl6string_string__drop( void* );
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_7prelude_11joined_text__dtor( struct kl_7prelude_joined_text* );
 uint64_t kl_7prelude_4size__SQ7prelude11joined_text( struct kl_7prelude_joined_text* );
 uint8_t* kl_7prelude_7release__SQ7prelude11joined_text( struct kl_7prelude_joined_text* );
 void kl_7prelude_11write_bytes__SQ7prelude6hasher_L2u8( struct kl_7prelude_hasher*, uint8_t*, uint64_t );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
-
-static void kl_2kl6string_string__as_kl_7prelude_textual__drop( void* self )
-{
-    kl_2kl6string_string__drop( ( struct kl_2kl6string_string* ) self );
-}
-
-static struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_2kl6string_7as_text__SQ2kl6string( ( struct kl_2kl6string_string* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__as_kl_7prelude_textual__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 27 "../../src/string.kl"
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* kl_this_1 )
@@ -391,28 +373,31 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_MQ7prelude3str( st
     struct kl_2kl6string_string kl_t0;
     struct kl_2kl6string_string kl_t2;
     struct kl_2kl6string_string* kl_t3;
-    struct kl_7prelude_textual__ref kl_t4;
-    bool kl_t6;
+    struct kl_7prelude_str* kl_t4;
+    struct kl_7prelude_textual__ref kl_t5;
+    bool kl_t7;
 #line 90 "../../src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../src/string.kl"
     kl_t3 = &kl_t2;
 #line 90 "../../src/string.kl"
-    kl_t6 = true;
+    kl_t7 = true;
 #line 90 "../../src/string.kl"
-    kl_t4 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_text_1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t4 = &kl_text_1;
 #line 90 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t4 );
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 90 "../../src/string.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t3, kl_t5 );
 #line 90 "../../src/string.kl"
     kl_t0 = kl_t2;
 #line 90 "../../src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../src/string.kl"
-    if ( kl_t6 ) kl_2kl6string_6string__dtor( &kl_t2 );
+    if ( kl_t7 ) kl_2kl6string_6string__dtor( &kl_t2 );
 #line 90 "../../src/string.kl"
-    kl_t6 = false;
+    kl_t7 = false;
 #line 90 "../../src/string.kl"
     return kl_t0;
 }
@@ -427,50 +412,51 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     struct kl_7prelude_str kl_t5;
     struct kl_7prelude_str* kl_t6;
     uint8_t* kl_t7;
-    struct kl_7prelude_textual__ref kl_t9;
-    struct kl_2kl6string_string kl_result_11;
-    struct kl_2kl6string_string* kl_t12;
-    bool kl_t14;
-    struct kl_2kl6string_string* kl_t15;
-    uint64_t kl_t16;
-    bool kl_t17;
-    uint64_t kl_t18;
-    uint8_t kl_t19;
-    uint64_t kl_t20;
-    bool kl_t21;
-    uint64_t kl_i_23;
-    uint64_t kl_t24;
-    bool kl_t25;
-    uint8_t kl_low_26;
-    uint8_t* kl_t27;
+    struct kl_7prelude_str* kl_t9;
+    struct kl_7prelude_textual__ref kl_t10;
+    struct kl_2kl6string_string kl_result_12;
+    struct kl_2kl6string_string* kl_t13;
+    bool kl_t15;
+    struct kl_2kl6string_string* kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    uint64_t kl_t19;
+    uint8_t kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    uint64_t kl_i_24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    uint8_t kl_low_27;
     uint8_t* kl_t28;
-    bool kl_t29;
-    uint64_t kl_t30;
-    bool kl_t31;
-    uint64_t kl_t32;
-    uint8_t* kl_t33;
-    bool kl_t34;
-    uint64_t kl_t35;
-    bool kl_t36;
-    uint64_t kl_t37;
-    uint8_t* kl_t38;
-    bool kl_t39;
+    uint8_t* kl_t29;
+    bool kl_t30;
+    uint64_t kl_t31;
+    bool kl_t32;
+    uint64_t kl_t33;
+    uint8_t* kl_t34;
+    bool kl_t35;
+    uint64_t kl_t36;
+    bool kl_t37;
+    uint64_t kl_t38;
+    uint8_t* kl_t39;
     bool kl_t40;
     bool kl_t41;
-#line 96 "../../src/string.kl"
-    kl_t40 = false;
+    bool kl_t42;
 #line 96 "../../src/string.kl"
     kl_t41 = false;
+#line 96 "../../src/string.kl"
+    kl_t42 = false;
 #line 96 "../../src/string.kl"
     kl_t2 = kl_value_1 == 0;
 #line 96 "../../src/string.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../src/string.kl"
     kl_t4 = &kl_t3;
 #line 98 "../../src/string.kl"
-    kl_t40 = true;
+    kl_t41 = true;
 #line 98 "../../src/string.kl"
     kl_t6 = &kl_t5;
 #line 98 "../../src/string.kl"
@@ -478,45 +464,47 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
 #line 98 "../../src/string.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 1 );
 #line 98 "../../src/string.kl"
-    kl_t9 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t5, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t9 = &kl_t5;
 #line 98 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t9 );
+    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 98 "../../src/string.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t4, kl_t10 );
 #line 98 "../../src/string.kl"
     kl_t0 = kl_t3;
 #line 98 "../../src/string.kl"
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../src/string.kl"
-    if ( kl_t40 ) kl_2kl6string_6string__dtor( &kl_t3 );
+    if ( kl_t41 ) kl_2kl6string_6string__dtor( &kl_t3 );
 #line 98 "../../src/string.kl"
-    kl_t40 = false;
+    kl_t41 = false;
 #line 98 "../../src/string.kl"
     return kl_t0;
     bb2:
 #line 101 "../../src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 101 "../../src/string.kl"
-    kl_t12 = &kl_result_11;
+    kl_t13 = &kl_result_12;
 #line 101 "../../src/string.kl"
-    kl_t41 = true;
+    kl_t42 = true;
 #line 101 "../../src/string.kl"
-    kl_2kl6string_6string__RQ2kl6string__ctor( kl_t12 );
+    kl_2kl6string_6string__RQ2kl6string__ctor( kl_t13 );
     goto bb3;
     bb3:
 #line 102 "../../src/string.kl"
-    kl_t14 = kl_value_1 > 0;
+    kl_t15 = kl_value_1 > 0;
 #line 102 "../../src/string.kl"
-    if ( kl_t14 ) goto bb4; else goto bb5;
+    if ( kl_t15 ) goto bb4; else goto bb5;
     bb4:
-    kl_t15 = &kl_result_11;
+    kl_t16 = &kl_result_12;
 #line 104 "../../src/string.kl"
-    kl_t16 = kl_value_1 % 10;
+    kl_t17 = kl_value_1 % 10;
 #line 104 "../../src/string.kl"
-    kl_t17 = __builtin_add_overflow( 48, kl_t16, &( uint64_t ) { 0 } );
+    kl_t18 = __builtin_add_overflow( 48, kl_t17, &( uint64_t ) { 0 } );
 #line 104 "../../src/string.kl"
-    if ( kl_t17 ) goto bb6; else goto bb7;
+    if ( kl_t18 ) goto bb6; else goto bb7;
     bb5:
 #line 108 "../../src/string.kl"
-    kl_i_23 = 0;
+    kl_i_24 = 0;
 #line 108 "../../src/string.kl"
     goto bb10;
     bb6:
@@ -524,50 +512,50 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     kl_rt_panic( "../../src/string.kl", 104, "arithmetic overflow: 48 + value % 10" );
     bb7:
 #line 104 "../../src/string.kl"
-    kl_t18 = 48 + kl_t16;
+    kl_t19 = 48 + kl_t17;
 #line 104 "../../src/string.kl"
-    kl_t19 = ( uint8_t ) kl_t18;
+    kl_t20 = ( uint8_t ) kl_t19;
 #line 104 "../../src/string.kl"
-    kl_t20 = ( uint64_t ) kl_t19;
+    kl_t21 = ( uint64_t ) kl_t20;
 #line 104 "../../src/string.kl"
-    kl_t21 = kl_t20 == kl_t18;
+    kl_t22 = kl_t21 == kl_t19;
 #line 104 "../../src/string.kl"
-    if ( kl_t21 ) goto bb9; else goto bb8;
+    if ( kl_t22 ) goto bb9; else goto bb8;
     bb8:
 #line 104 "../../src/string.kl"
     kl_rt_panic( "../../src/string.kl", 104, "cast out of range: cast<u8>( 48 + value % 10 )" );
     bb9:
 #line 104 "../../src/string.kl"
-    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t15, kl_t19 );
+    kl_2kl6string_4push__SQ2kl6string_2u8( kl_t16, kl_t20 );
     kl_value_1 = kl_value_1 / 10;
 #line 102 "../../src/string.kl"
     goto bb3;
     bb10:
 #line 108 "../../src/string.kl"
-    kl_t24 = kl_result_11.kl_size_ / 2;
+    kl_t25 = kl_result_12.kl_size_ / 2;
 #line 108 "../../src/string.kl"
-    kl_t25 = kl_i_23 < kl_t24;
+    kl_t26 = kl_i_24 < kl_t25;
 #line 108 "../../src/string.kl"
-    if ( kl_t25 ) goto bb11; else goto bb12;
+    if ( kl_t26 ) goto bb11; else goto bb12;
     bb11:
 #line 112 "../../src/string.kl"
-    kl_t27 = kl_result_11.kl_data_ + kl_i_23;
+    kl_t28 = kl_result_12.kl_data_ + kl_i_24;
 #line 112 "../../src/string.kl"
-    kl_low_26 = ( *kl_t27 );
-    kl_t28 = kl_result_11.kl_data_ + kl_i_23;
+    kl_low_27 = ( *kl_t28 );
+    kl_t29 = kl_result_12.kl_data_ + kl_i_24;
 #line 113 "../../src/string.kl"
-    kl_t29 = __builtin_sub_overflow( kl_result_11.kl_size_, 1, &( uint64_t ) { 0 } );
+    kl_t30 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
 #line 113 "../../src/string.kl"
-    if ( kl_t29 ) goto bb13; else goto bb14;
+    if ( kl_t30 ) goto bb13; else goto bb14;
     bb12:
 #line 118 "../../src/string.kl"
-    kl_t0 = kl_result_11;
+    kl_t0 = kl_result_12;
 #line 118 "../../src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 118 "../../src/string.kl"
-    if ( kl_t41 ) kl_2kl6string_6string__dtor( &kl_result_11 );
+    if ( kl_t42 ) kl_2kl6string_6string__dtor( &kl_result_12 );
 #line 118 "../../src/string.kl"
-    kl_t41 = false;
+    kl_t42 = false;
 #line 118 "../../src/string.kl"
     return kl_t0;
     bb13:
@@ -575,57 +563,57 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3u64( uint64_t kl
     kl_rt_panic( "../../src/string.kl", 113, "arithmetic overflow: result.size_ - 1" );
     bb14:
 #line 113 "../../src/string.kl"
-    kl_t30 = kl_result_11.kl_size_ - 1;
+    kl_t31 = kl_result_12.kl_size_ - 1;
 #line 113 "../../src/string.kl"
-    kl_t31 = __builtin_sub_overflow( kl_t30, kl_i_23, &( uint64_t ) { 0 } );
+    kl_t32 = __builtin_sub_overflow( kl_t31, kl_i_24, &( uint64_t ) { 0 } );
 #line 113 "../../src/string.kl"
-    if ( kl_t31 ) goto bb15; else goto bb16;
+    if ( kl_t32 ) goto bb15; else goto bb16;
     bb15:
 #line 113 "../../src/string.kl"
     kl_rt_panic( "../../src/string.kl", 113, "arithmetic overflow: result.size_ - 1 - i" );
     bb16:
 #line 113 "../../src/string.kl"
-    kl_t32 = kl_t30 - kl_i_23;
+    kl_t33 = kl_t31 - kl_i_24;
 #line 113 "../../src/string.kl"
-    kl_t33 = kl_result_11.kl_data_ + kl_t32;
+    kl_t34 = kl_result_12.kl_data_ + kl_t33;
 #line 113 "../../src/string.kl"
-    ( *kl_t28 ) = ( *kl_t33 );
-    kl_t34 = __builtin_sub_overflow( kl_result_11.kl_size_, 1, &( uint64_t ) { 0 } );
+    ( *kl_t29 ) = ( *kl_t34 );
+    kl_t35 = __builtin_sub_overflow( kl_result_12.kl_size_, 1, &( uint64_t ) { 0 } );
 #line 114 "../../src/string.kl"
-    if ( kl_t34 ) goto bb17; else goto bb18;
+    if ( kl_t35 ) goto bb17; else goto bb18;
     bb17:
 #line 114 "../../src/string.kl"
     kl_rt_panic( "../../src/string.kl", 114, "arithmetic overflow: result.size_ - 1" );
     bb18:
 #line 114 "../../src/string.kl"
-    kl_t35 = kl_result_11.kl_size_ - 1;
+    kl_t36 = kl_result_12.kl_size_ - 1;
 #line 114 "../../src/string.kl"
-    kl_t36 = __builtin_sub_overflow( kl_t35, kl_i_23, &( uint64_t ) { 0 } );
+    kl_t37 = __builtin_sub_overflow( kl_t36, kl_i_24, &( uint64_t ) { 0 } );
 #line 114 "../../src/string.kl"
-    if ( kl_t36 ) goto bb19; else goto bb20;
+    if ( kl_t37 ) goto bb19; else goto bb20;
     bb19:
 #line 114 "../../src/string.kl"
     kl_rt_panic( "../../src/string.kl", 114, "arithmetic overflow: result.size_ - 1 - i" );
     bb20:
 #line 114 "../../src/string.kl"
-    kl_t37 = kl_t35 - kl_i_23;
+    kl_t38 = kl_t36 - kl_i_24;
 #line 114 "../../src/string.kl"
-    kl_t38 = kl_result_11.kl_data_ + kl_t37;
+    kl_t39 = kl_result_12.kl_data_ + kl_t38;
 #line 114 "../../src/string.kl"
-    ( *kl_t38 ) = kl_low_26;
+    ( *kl_t39 ) = kl_low_27;
 #line 108 "../../src/string.kl"
     goto bb21;
     bb21:
 #line 108 "../../src/string.kl"
-    kl_t39 = __builtin_add_overflow( kl_i_23, 1, &( uint64_t ) { 0 } );
+    kl_t40 = __builtin_add_overflow( kl_i_24, 1, &( uint64_t ) { 0 } );
 #line 108 "../../src/string.kl"
-    if ( kl_t39 ) goto bb22; else goto bb23;
+    if ( kl_t40 ) goto bb22; else goto bb23;
     bb22:
 #line 108 "../../src/string.kl"
     kl_rt_panic( "../../src/string.kl", 108, "arithmetic overflow: i++" );
     bb23:
 #line 108 "../../src/string.kl"
-    kl_i_23 = kl_i_23 + 1;
+    kl_i_24 = kl_i_24 + 1;
 #line 108 "../../src/string.kl"
     goto bb10;
 #line 119 "../../src/string.kl"
@@ -647,13 +635,14 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
     struct kl_2kl6string_string* kl_t12;
     struct kl_2kl6string_string* kl_t14;
     struct kl_2kl6string_string kl_t15;
-    struct kl_7prelude_textual__ref kl_t16;
-    bool kl_t18;
+    struct kl_2kl6string_string* kl_t16;
+    struct kl_7prelude_textual__ref kl_t17;
     bool kl_t19;
-#line 124 "../../src/string.kl"
-    kl_t18 = false;
+    bool kl_t20;
 #line 124 "../../src/string.kl"
     kl_t19 = false;
+#line 124 "../../src/string.kl"
+    kl_t20 = false;
 #line 124 "../../src/string.kl"
     kl_t2 = kl_value_1 >= 0;
 #line 124 "../../src/string.kl"
@@ -671,15 +660,15 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
 #line 126 "../../src/string.kl"
     kl_t5 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_t3 );
 #line 126 "../../src/string.kl"
-    kl_t18 = true;
+    kl_t19 = true;
 #line 126 "../../src/string.kl"
     kl_t0 = kl_t5;
 #line 126 "../../src/string.kl"
-    kl_t18 = false;
+    kl_t19 = false;
 #line 126 "../../src/string.kl"
-    if ( kl_t18 ) kl_2kl6string_6string__dtor( &kl_t5 );
+    if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_t5 );
 #line 126 "../../src/string.kl"
-    kl_t18 = false;
+    kl_t19 = false;
 #line 126 "../../src/string.kl"
     return kl_t0;
     bb4:
@@ -689,11 +678,11 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
     kl_t8 = ( uint64_t ) kl_t7;
 #line 129 "../../src/string.kl"
     kl_magnitude_6 = kl_t8;
-    kl_t19 = false;
+    kl_t20 = false;
 #line 130 "../../src/string.kl"
     kl_t10 = &kl_result_9;
 #line 130 "../../src/string.kl"
-    kl_t19 = true;
+    kl_t20 = true;
 #line 130 "../../src/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t10 );
     kl_t12 = &kl_result_9;
@@ -703,19 +692,21 @@ struct kl_2kl6string_string kl_2kl6string_4from__SQ2kl6string_M3i64( int64_t kl_
 #line 132 "../../src/string.kl"
     kl_t15 = kl_2kl6string_4from__SQ2kl6string_M3u64( kl_magnitude_6 );
 #line 132 "../../src/string.kl"
-    kl_t16 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t16 = &kl_t15;
 #line 132 "../../src/string.kl"
-    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t16 );
+    kl_t17 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t16, &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 132 "../../src/string.kl"
+    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t14, kl_t17 );
 #line 132 "../../src/string.kl"
     kl_2kl6string_6string__dtor( &kl_t15 );
 #line 134 "../../src/string.kl"
     kl_t0 = kl_result_9;
 #line 134 "../../src/string.kl"
-    kl_t19 = false;
+    kl_t20 = false;
 #line 134 "../../src/string.kl"
-    if ( kl_t19 ) kl_2kl6string_6string__dtor( &kl_result_9 );
+    if ( kl_t20 ) kl_2kl6string_6string__dtor( &kl_result_9 );
 #line 134 "../../src/string.kl"
-    kl_t19 = false;
+    kl_t20 = false;
 #line 134 "../../src/string.kl"
     return kl_t0;
 }
@@ -3895,13 +3886,30 @@ void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_opti
 #line 11 "../../src/optional.kl"
 }
 
-void kl_2kl6string_string__drop( struct kl_2kl6string_string* kl_t1 )
+void kl_2kl6string_string__drop( void* kl_t1 )
 {
+    struct kl_2kl6string_string* kl_t2;
 #line 21 "../../src/string.kl"
-    kl_2kl6string_6string__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+#line 21 "../../src/string.kl"
+    kl_2kl6string_6string__dtor( &( *kl_t2 ) );
 #line 21 "../../src/string.kl"
     return;
 #line 21 "../../src/string.kl"
+}
+
+#line 11 "<prelude>"
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl6string_string* kl_t2;
+#line 154 "../../src/string.kl"
+    kl_t2 = ( struct kl_2kl6string_string* ) kl_t1;
+#line 154 "../../src/string.kl"
+    kl_t0 = kl_2kl6string_7as_text__SQ2kl6string( kl_t2 );
+#line 154 "../../src/string.kl"
+    return kl_t0;
+#line 11 "<prelude>"
 }
 
 // ../../src/os.kl
@@ -4163,7 +4171,8 @@ void kl_7prelude_6result__IQ2kl4file_Q2kl10file_errorE__dtor( struct kl_7prelude
 void kl_7prelude_6result__IQ2kl6string_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE* );
 void kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE* );
 void kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE* );
-void kl_2kl2os_path__drop( struct kl_2kl2os_path* );
+void kl_2kl2os_path__drop( void* );
+struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* );
 void kl_2kl6string_6string__RQ2kl6string__ctor( struct kl_2kl6string_string* );
 void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_string*, struct kl_7prelude_textual__ref );
 struct kl_2kl6string_string kl_2kl6string_13with_capacity__SQ2kl6string_3u64( uint64_t );
@@ -4180,45 +4189,17 @@ void kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( struct kl_2kl6s
 void kl_2kl6string_5clear__SQ2kl6string( struct kl_2kl6string_string* );
 bool kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_2kl8optional_8optional__IQ2kl6stringE__dtor( struct kl_2kl8optional_optional__IQ2kl6stringE* );
-void kl_2kl6string_string__drop( struct kl_2kl6string_string* );
+void kl_2kl6string_string__drop( void* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
+static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
 
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
-
-static void kl_2kl6string_string__as_kl_7prelude_textual__drop( void* self )
-{
-    kl_2kl6string_string__drop( ( struct kl_2kl6string_string* ) self );
-}
-
-static struct kl__run__L2u8__ref kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_2kl6string_7as_text__SQ2kl6string( ( struct kl_2kl6string_string* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_2kl6string_string__as_kl_7prelude_textual = { kl_2kl6string_string__as_kl_7prelude_textual__drop, kl_2kl6string_string__as_kl_7prelude_textual__kl__7as_text__ };
-
-static void kl_2kl2os_path__as_kl_7prelude_textual__drop( void* self )
-{
-    kl_2kl2os_path__drop( ( struct kl_2kl2os_path* ) self );
-}
-
-static struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_2kl2os_7as_text__SQ2kl4path( ( struct kl_2kl2os_path* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_2kl2os_path__as_kl_7prelude_textual = { kl_2kl2os_path__as_kl_7prelude_textual__drop, kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_2kl2os_path__as_kl_7prelude_textual = { kl_2kl2os_path__drop, kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 65 "../../src/os.kl"
 struct kl_2kl2os_os_error kl_2kl2os_11os_error_of__3i32( int32_t kl_code_1 )
@@ -4455,25 +4436,28 @@ void kl_2kl2os_4path__RQ2kl4path_MQ2kl6string__ctor( struct kl_2kl2os_path* kl_t
 struct kl_2kl2os_path kl_2kl2os_4from__SQ2kl4path_MQ7prelude3str( struct kl_7prelude_str kl_text_1 )
 {
     struct kl_2kl2os_path kl_t0;
-    struct kl_7prelude_textual__ref kl_t2;
-    struct kl_2kl2os_path kl_t3;
-    bool kl_t4;
+    struct kl_7prelude_str* kl_t2;
+    struct kl_7prelude_textual__ref kl_t3;
+    struct kl_2kl2os_path kl_t4;
+    bool kl_t5;
 #line 144 "../../src/os.kl"
-    kl_t4 = false;
+    kl_t5 = false;
 #line 144 "../../src/os.kl"
-    kl_t2 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_text_1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t2 = &kl_text_1;
 #line 144 "../../src/os.kl"
-    kl_t3 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t2 );
+    kl_t3 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 144 "../../src/os.kl"
-    kl_t4 = true;
+    kl_t4 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t3 );
 #line 144 "../../src/os.kl"
-    kl_t0 = kl_t3;
+    kl_t5 = true;
 #line 144 "../../src/os.kl"
-    kl_t4 = false;
+    kl_t0 = kl_t4;
 #line 144 "../../src/os.kl"
-    if ( kl_t4 ) kl_2kl6string_6string__dtor( &kl_t3.kl_text_ );
+    kl_t5 = false;
 #line 144 "../../src/os.kl"
-    kl_t4 = false;
+    if ( kl_t5 ) kl_2kl6string_6string__dtor( &kl_t4.kl_text_ );
+#line 144 "../../src/os.kl"
+    kl_t5 = false;
 #line 144 "../../src/os.kl"
     return kl_t0;
 }
@@ -4568,35 +4552,38 @@ struct kl_2kl2os_path kl_2kl2os_12operator_div__SQ2kl4path_7textual( struct kl_2
     struct kl_2kl2os_path kl_t19;
     struct kl_2kl6string_string kl_joined_20;
     struct kl_2kl6string_string* kl_t21;
-    struct kl_7prelude_textual__ref kl_t22;
-    struct kl_2kl6string_string* kl_t24;
-    struct kl_7prelude_str kl_t25;
-    struct kl_2kl6string_string* kl_t26;
-    struct kl_7prelude_str kl_t27;
-    struct kl_7prelude_str* kl_t28;
-    uint8_t* kl_t29;
-    struct kl_7prelude_textual__ref kl_t31;
-    bool kl_t32;
-    struct kl_7prelude_str kl_t33;
-    struct kl_7prelude_str* kl_t34;
-    uint8_t* kl_t35;
-    struct kl_7prelude_str kl_t37;
-    struct kl_7prelude_str* kl_t38;
-    uint8_t* kl_t39;
-    struct kl_7prelude_textual__ref kl_t41;
-    struct kl_2kl6string_string* kl_t43;
-    struct kl__run__L2u8__ref kl_t44;
-    struct kl_2kl2os_path kl_t46;
-    struct kl_2kl2os_path* kl_t47;
-    bool kl_t49;
-    bool kl_t50;
-    bool kl_t51;
+    struct kl_2kl6string_string* kl_t22;
+    struct kl_7prelude_textual__ref kl_t23;
+    struct kl_2kl6string_string* kl_t25;
+    struct kl_7prelude_str kl_t26;
+    struct kl_2kl6string_string* kl_t27;
+    struct kl_7prelude_str kl_t28;
+    struct kl_7prelude_str* kl_t29;
+    uint8_t* kl_t30;
+    struct kl_7prelude_str* kl_t32;
+    struct kl_7prelude_textual__ref kl_t33;
+    bool kl_t34;
+    struct kl_7prelude_str kl_t35;
+    struct kl_7prelude_str* kl_t36;
+    uint8_t* kl_t37;
+    struct kl_7prelude_str kl_t39;
+    struct kl_7prelude_str* kl_t40;
+    uint8_t* kl_t41;
+    struct kl_7prelude_str* kl_t43;
+    struct kl_7prelude_textual__ref kl_t44;
+    struct kl_2kl6string_string* kl_t46;
+    struct kl__run__L2u8__ref kl_t47;
+    struct kl_2kl2os_path kl_t49;
+    struct kl_2kl2os_path* kl_t50;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
 #line 162 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t52 = false;
 #line 162 "../../src/os.kl"
-    kl_t50 = false;
+    kl_t53 = false;
 #line 162 "../../src/os.kl"
-    kl_t51 = false;
+    kl_t54 = false;
 #line 162 "../../src/os.kl"
     kl_t4 = kl_part_2;
 #line 162 "../../src/os.kl"
@@ -4655,96 +4642,102 @@ struct kl_2kl2os_path kl_2kl2os_12operator_div__SQ2kl4path_7textual( struct kl_2
 #line 165 "../../src/os.kl"
     kl_t19 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t18 );
 #line 165 "../../src/os.kl"
-    kl_t49 = true;
+    kl_t52 = true;
 #line 165 "../../src/os.kl"
     kl_t0 = kl_t19;
 #line 165 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t52 = false;
 #line 165 "../../src/os.kl"
-    if ( kl_t49 ) kl_2kl6string_6string__dtor( &kl_t19.kl_text_ );
+    if ( kl_t52 ) kl_2kl6string_6string__dtor( &kl_t19.kl_text_ );
 #line 165 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t52 = false;
 #line 165 "../../src/os.kl"
     return kl_t0;
     bb8:
 #line 168 "../../src/os.kl"
-    kl_t50 = false;
+    kl_t53 = false;
 #line 168 "../../src/os.kl"
     kl_t21 = &kl_joined_20;
 #line 168 "../../src/os.kl"
-    kl_t50 = true;
+    kl_t53 = true;
 #line 168 "../../src/os.kl"
-    kl_t22 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_this_1 ).kl_text_, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t22 = &( *kl_this_1 ).kl_text_;
 #line 168 "../../src/os.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t21, kl_t22 );
-    kl_t24 = &kl_joined_20;
+    kl_t23 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t22, &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 168 "../../src/os.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t21, kl_t23 );
+    kl_t25 = &kl_joined_20;
 #line 169 "../../src/os.kl"
-    kl_t26 = &( *kl_this_1 ).kl_text_;
+    kl_t27 = &( *kl_this_1 ).kl_text_;
 #line 169 "../../src/os.kl"
-    kl_t28 = &kl_t27;
+    kl_t29 = &kl_t28;
 #line 169 "../../src/os.kl"
-    kl_t29 = ( uint8_t* ) "/";
+    kl_t30 = ( uint8_t* ) "/";
 #line 169 "../../src/os.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t28, kl_t29, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t29, kl_t30, 1 );
 #line 169 "../../src/os.kl"
-    kl_t31 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t27, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t32 = &kl_t28;
 #line 169 "../../src/os.kl"
-    kl_t32 = kl_2kl6string_9ends_with__SQ2kl6string_7textual( kl_t26, kl_t31 );
+    kl_t33 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t32, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 169 "../../src/os.kl"
-    if ( kl_t32 ) goto bb9; else goto bb10;
+    kl_t34 = kl_2kl6string_9ends_with__SQ2kl6string_7textual( kl_t27, kl_t33 );
+#line 169 "../../src/os.kl"
+    if ( kl_t34 ) goto bb9; else goto bb10;
     bb9:
 #line 169 "../../src/os.kl"
-    kl_t34 = &kl_t33;
+    kl_t36 = &kl_t35;
 #line 169 "../../src/os.kl"
-    kl_t35 = ( uint8_t* ) "";
+    kl_t37 = ( uint8_t* ) "";
 #line 169 "../../src/os.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t34, kl_t35, 0 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t36, kl_t37, 0 );
 #line 169 "../../src/os.kl"
-    kl_t25 = kl_t33;
+    kl_t26 = kl_t35;
 #line 169 "../../src/os.kl"
     goto bb11;
     bb10:
 #line 169 "../../src/os.kl"
-    kl_t38 = &kl_t37;
+    kl_t40 = &kl_t39;
 #line 169 "../../src/os.kl"
-    kl_t39 = ( uint8_t* ) "/";
+    kl_t41 = ( uint8_t* ) "/";
 #line 169 "../../src/os.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t38, kl_t39, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t40, kl_t41, 1 );
 #line 169 "../../src/os.kl"
-    kl_t25 = kl_t37;
+    kl_t26 = kl_t39;
 #line 169 "../../src/os.kl"
     goto bb11;
     bb11:
 #line 169 "../../src/os.kl"
-    kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t25, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t43 = &kl_t26;
 #line 169 "../../src/os.kl"
-    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t24, kl_t41 );
-    kl_t43 = &kl_joined_20;
+    kl_t44 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t43, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 169 "../../src/os.kl"
+    kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( kl_t25, kl_t44 );
+    kl_t46 = &kl_joined_20;
 #line 170 "../../src/os.kl"
-    kl_t44 = kl_part_bytes_3;
+    kl_t47 = kl_part_bytes_3;
 #line 170 "../../src/os.kl"
-    kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t43, ( kl_t44 ).data, ( kl_t44 ).size );
-    kl_t51 = false;
+    kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t46, ( kl_t47 ).data, ( kl_t47 ).size );
+    kl_t54 = false;
 #line 171 "../../src/os.kl"
-    kl_t47 = &kl_t46;
+    kl_t50 = &kl_t49;
 #line 171 "../../src/os.kl"
-    kl_t51 = true;
+    kl_t54 = true;
 #line 171 "../../src/os.kl"
-    kl_2kl2os_4path__RQ2kl4path_MQ2kl6string__ctor( kl_t47, kl_joined_20 );
+    kl_2kl2os_4path__RQ2kl4path_MQ2kl6string__ctor( kl_t50, kl_joined_20 );
 #line 171 "../../src/os.kl"
-    kl_t50 = false;
+    kl_t53 = false;
 #line 171 "../../src/os.kl"
-    kl_t0 = kl_t46;
+    kl_t0 = kl_t49;
 #line 171 "../../src/os.kl"
-    kl_t51 = false;
+    kl_t54 = false;
 #line 171 "../../src/os.kl"
-    if ( kl_t51 ) kl_2kl6string_6string__dtor( &kl_t46.kl_text_ );
+    if ( kl_t54 ) kl_2kl6string_6string__dtor( &kl_t49.kl_text_ );
 #line 171 "../../src/os.kl"
-    kl_t51 = false;
+    kl_t54 = false;
 #line 171 "../../src/os.kl"
-    if ( kl_t50 ) kl_2kl6string_6string__dtor( &kl_joined_20 );
+    if ( kl_t53 ) kl_2kl6string_6string__dtor( &kl_joined_20 );
 #line 171 "../../src/os.kl"
-    kl_t50 = false;
+    kl_t53 = false;
 #line 171 "../../src/os.kl"
     return kl_t0;
 }
@@ -4764,23 +4757,24 @@ struct kl_2kl2os_path kl_2kl2os_6parent__SQ2kl4path( struct kl_2kl2os_path* kl_t
     struct kl_7prelude_str kl_t10;
     struct kl_7prelude_str* kl_t11;
     uint8_t* kl_t12;
-    struct kl_7prelude_textual__ref kl_t14;
-    struct kl_2kl2os_path kl_t15;
+    struct kl_7prelude_str* kl_t14;
+    struct kl_7prelude_textual__ref kl_t15;
     struct kl_2kl2os_path kl_t16;
-    struct kl_2kl2os_path* kl_t17;
-    struct kl_2kl6string_string* kl_t18;
-    uint64_t kl_t19;
-    bool kl_t20;
-    struct kl_2kl6string_string kl_t21;
-    bool kl_t23;
+    struct kl_2kl2os_path kl_t17;
+    struct kl_2kl2os_path* kl_t18;
+    struct kl_2kl6string_string* kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    struct kl_2kl6string_string kl_t22;
     bool kl_t24;
     bool kl_t25;
-#line 178 "../../src/os.kl"
-    kl_t23 = false;
+    bool kl_t26;
 #line 178 "../../src/os.kl"
     kl_t24 = false;
 #line 178 "../../src/os.kl"
     kl_t25 = false;
+#line 178 "../../src/os.kl"
+    kl_t26 = false;
 #line 178 "../../src/os.kl"
     kl_t3 = &( *kl_this_1 ).kl_text_;
 #line 178 "../../src/os.kl"
@@ -4805,65 +4799,67 @@ struct kl_2kl2os_path kl_2kl2os_6parent__SQ2kl4path( struct kl_2kl2os_path* kl_t
 #line 183 "../../src/os.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 0 );
 #line 183 "../../src/os.kl"
-    kl_t14 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t14 = &kl_t10;
 #line 183 "../../src/os.kl"
-    kl_t15 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t14 );
+    kl_t15 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t14, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 183 "../../src/os.kl"
-    kl_t23 = true;
+    kl_t16 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t15 );
 #line 183 "../../src/os.kl"
-    kl_t0 = kl_t15;
+    kl_t24 = true;
 #line 183 "../../src/os.kl"
-    kl_t23 = false;
+    kl_t0 = kl_t16;
 #line 183 "../../src/os.kl"
-    if ( kl_t23 ) kl_2kl6string_6string__dtor( &kl_t15.kl_text_ );
+    kl_t24 = false;
 #line 183 "../../src/os.kl"
-    kl_t23 = false;
+    if ( kl_t24 ) kl_2kl6string_6string__dtor( &kl_t16.kl_text_ );
+#line 183 "../../src/os.kl"
+    kl_t24 = false;
 #line 183 "../../src/os.kl"
     return kl_t0;
     bb2:
 #line 186 "../../src/os.kl"
-    kl_t24 = false;
+    kl_t25 = false;
 #line 186 "../../src/os.kl"
-    kl_t17 = &kl_t16;
+    kl_t18 = &kl_t17;
 #line 186 "../../src/os.kl"
-    kl_t24 = true;
+    kl_t25 = true;
 #line 186 "../../src/os.kl"
-    kl_t18 = &( *kl_this_1 ).kl_text_;
+    kl_t19 = &( *kl_this_1 ).kl_text_;
 #line 186 "../../src/os.kl"
-    kl_t20 = kl_slash_5 == 0;
+    kl_t21 = kl_slash_5 == 0;
 #line 186 "../../src/os.kl"
-    if ( kl_t20 ) goto bb3; else goto bb4;
+    if ( kl_t21 ) goto bb3; else goto bb4;
     bb3:
 #line 186 "../../src/os.kl"
-    kl_t19 = 1;
+    kl_t20 = 1;
 #line 186 "../../src/os.kl"
     goto bb5;
     bb4:
 #line 186 "../../src/os.kl"
-    kl_t19 = kl_slash_5;
+    kl_t20 = kl_slash_5;
 #line 186 "../../src/os.kl"
     goto bb5;
     bb5:
 #line 186 "../../src/os.kl"
-    kl_t21 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t18, 0, kl_t19 );
+    kl_t22 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t19, 0, kl_t20 );
 #line 186 "../../src/os.kl"
-    kl_t25 = true;
+    kl_t26 = true;
 #line 186 "../../src/os.kl"
-    kl_2kl2os_4path__RQ2kl4path_MQ2kl6string__ctor( kl_t17, kl_t21 );
+    kl_2kl2os_4path__RQ2kl4path_MQ2kl6string__ctor( kl_t18, kl_t22 );
 #line 186 "../../src/os.kl"
-    kl_t25 = false;
+    kl_t26 = false;
 #line 186 "../../src/os.kl"
-    kl_t0 = kl_t16;
-#line 186 "../../src/os.kl"
-    kl_t24 = false;
-#line 186 "../../src/os.kl"
-    if ( kl_t24 ) kl_2kl6string_6string__dtor( &kl_t16.kl_text_ );
-#line 186 "../../src/os.kl"
-    if ( kl_t25 ) kl_2kl6string_6string__dtor( &kl_t21 );
+    kl_t0 = kl_t17;
 #line 186 "../../src/os.kl"
     kl_t25 = false;
 #line 186 "../../src/os.kl"
-    kl_t24 = false;
+    if ( kl_t25 ) kl_2kl6string_6string__dtor( &kl_t17.kl_text_ );
+#line 186 "../../src/os.kl"
+    if ( kl_t26 ) kl_2kl6string_6string__dtor( &kl_t22 );
+#line 186 "../../src/os.kl"
+    kl_t26 = false;
+#line 186 "../../src/os.kl"
+    kl_t25 = false;
 #line 186 "../../src/os.kl"
     return kl_t0;
 }
@@ -4882,22 +4878,23 @@ struct kl_2kl6string_string kl_2kl2os_9file_name__SQ2kl4path( struct kl_2kl2os_p
     bool kl_t9;
     struct kl_2kl6string_string kl_t10;
     struct kl_2kl6string_string* kl_t11;
-    struct kl_7prelude_textual__ref kl_t12;
-    struct kl_2kl6string_string* kl_t14;
-    bool kl_t15;
-    uint64_t kl_t16;
+    struct kl_2kl6string_string* kl_t12;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_2kl6string_string* kl_t15;
+    bool kl_t16;
     uint64_t kl_t17;
-    bool kl_t18;
-    uint64_t kl_t19;
-    bool kl_t20;
-    uint64_t kl_t21;
-    struct kl_2kl6string_string kl_t22;
-    bool kl_t23;
+    uint64_t kl_t18;
+    bool kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    uint64_t kl_t22;
+    struct kl_2kl6string_string kl_t23;
     bool kl_t24;
-#line 192 "../../src/os.kl"
-    kl_t23 = false;
+    bool kl_t25;
 #line 192 "../../src/os.kl"
     kl_t24 = false;
+#line 192 "../../src/os.kl"
+    kl_t25 = false;
 #line 192 "../../src/os.kl"
     kl_t3 = &( *kl_this_1 ).kl_text_;
 #line 192 "../../src/os.kl"
@@ -4916,72 +4913,74 @@ struct kl_2kl6string_string kl_2kl2os_9file_name__SQ2kl4path( struct kl_2kl2os_p
 #line 195 "../../src/os.kl"
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
-    kl_t23 = false;
+    kl_t24 = false;
 #line 197 "../../src/os.kl"
     kl_t11 = &kl_t10;
 #line 197 "../../src/os.kl"
-    kl_t23 = true;
+    kl_t24 = true;
 #line 197 "../../src/os.kl"
-    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_this_1 ).kl_text_, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t12 = &( *kl_this_1 ).kl_text_;
 #line 197 "../../src/os.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t11, kl_t12 );
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t12, &kl_2kl6string_string__as_kl_7prelude_textual };
+#line 197 "../../src/os.kl"
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t11, kl_t13 );
 #line 197 "../../src/os.kl"
     kl_t0 = kl_t10;
 #line 197 "../../src/os.kl"
-    kl_t23 = false;
+    kl_t24 = false;
 #line 197 "../../src/os.kl"
-    if ( kl_t23 ) kl_2kl6string_6string__dtor( &kl_t10 );
+    if ( kl_t24 ) kl_2kl6string_6string__dtor( &kl_t10 );
 #line 197 "../../src/os.kl"
-    kl_t23 = false;
+    kl_t24 = false;
 #line 197 "../../src/os.kl"
     return kl_t0;
     bb2:
 #line 200 "../../src/os.kl"
-    kl_t14 = &( *kl_this_1 ).kl_text_;
+    kl_t15 = &( *kl_this_1 ).kl_text_;
 #line 200 "../../src/os.kl"
-    kl_t15 = __builtin_add_overflow( kl_slash_5, 1, &( uint64_t ) { 0 } );
+    kl_t16 = __builtin_add_overflow( kl_slash_5, 1, &( uint64_t ) { 0 } );
 #line 200 "../../src/os.kl"
-    if ( kl_t15 ) goto bb3; else goto bb4;
+    if ( kl_t16 ) goto bb3; else goto bb4;
     bb3:
 #line 200 "../../src/os.kl"
     kl_rt_panic( "../../src/os.kl", 200, "arithmetic overflow: slash + 1" );
     bb4:
 #line 200 "../../src/os.kl"
-    kl_t16 = kl_slash_5 + 1;
+    kl_t17 = kl_slash_5 + 1;
 #line 200 "../../src/os.kl"
-    kl_t17 = ( kl_bytes_2 ).size;
+    kl_t18 = ( kl_bytes_2 ).size;
 #line 200 "../../src/os.kl"
-    kl_t18 = __builtin_sub_overflow( kl_t17, kl_slash_5, &( uint64_t ) { 0 } );
+    kl_t19 = __builtin_sub_overflow( kl_t18, kl_slash_5, &( uint64_t ) { 0 } );
 #line 200 "../../src/os.kl"
-    if ( kl_t18 ) goto bb5; else goto bb6;
+    if ( kl_t19 ) goto bb5; else goto bb6;
     bb5:
 #line 200 "../../src/os.kl"
     kl_rt_panic( "../../src/os.kl", 200, "arithmetic overflow: bytes.size - slash" );
     bb6:
 #line 200 "../../src/os.kl"
-    kl_t19 = kl_t17 - kl_slash_5;
+    kl_t20 = kl_t18 - kl_slash_5;
 #line 200 "../../src/os.kl"
-    kl_t20 = __builtin_sub_overflow( kl_t19, 1, &( uint64_t ) { 0 } );
+    kl_t21 = __builtin_sub_overflow( kl_t20, 1, &( uint64_t ) { 0 } );
 #line 200 "../../src/os.kl"
-    if ( kl_t20 ) goto bb7; else goto bb8;
+    if ( kl_t21 ) goto bb7; else goto bb8;
     bb7:
 #line 200 "../../src/os.kl"
     kl_rt_panic( "../../src/os.kl", 200, "arithmetic overflow: bytes.size - slash - 1" );
     bb8:
 #line 200 "../../src/os.kl"
-    kl_t21 = kl_t19 - 1;
+    kl_t22 = kl_t20 - 1;
 #line 200 "../../src/os.kl"
-    kl_t22 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t14, kl_t16, kl_t21 );
+    kl_t23 = kl_2kl6string_9substring__SQ2kl6string_3u64_3u64( kl_t15, kl_t17, kl_t22 );
 #line 200 "../../src/os.kl"
-    kl_t24 = true;
+    kl_t25 = true;
 #line 200 "../../src/os.kl"
-    kl_t0 = kl_t22;
+    kl_t0 = kl_t23;
 #line 200 "../../src/os.kl"
-    kl_t24 = false;
+    kl_t25 = false;
 #line 200 "../../src/os.kl"
-    if ( kl_t24 ) kl_2kl6string_6string__dtor( &kl_t22 );
+    if ( kl_t25 ) kl_2kl6string_6string__dtor( &kl_t23 );
 #line 200 "../../src/os.kl"
-    kl_t24 = false;
+    kl_t25 = false;
 #line 200 "../../src/os.kl"
     return kl_t0;
 }
@@ -6647,55 +6646,57 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_18create_directori
     struct kl__run__L2u8__ref kl_t10;
     uint64_t kl_t11;
     bool kl_t12;
-    struct kl_7prelude_textual__ref kl_t13;
-    bool kl_t14;
+    struct kl_2kl2os_path* kl_t13;
+    struct kl_7prelude_textual__ref kl_t14;
     bool kl_t15;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t16;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t18;
-    struct kl_2kl2os_path* kl_t19;
+    bool kl_t16;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t17;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t19;
     struct kl_2kl2os_path* kl_t20;
-    struct kl_2kl2os_path kl_t21;
-    uint64_t kl_i_22;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t23;
-    uint64_t kl_t24;
-    bool kl_t25;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t26;
-    bool kl_t27;
-    uint64_t kl_t28;
-    struct kl_2kl2os_path* kl_t29;
-    struct kl_7prelude_textual__ref kl_t30;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t31;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t32;
-    bool kl_t33;
-    bool kl_t34;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t35;
+    struct kl_2kl2os_path* kl_t21;
+    struct kl_2kl2os_path kl_t22;
+    uint64_t kl_i_23;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t27;
+    bool kl_t28;
+    uint64_t kl_t29;
+    struct kl_2kl2os_path* kl_t30;
+    struct kl_2kl2os_path* kl_t31;
+    struct kl_7prelude_textual__ref kl_t32;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t33;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t34;
+    bool kl_t35;
     bool kl_t36;
-    bool kl_t37;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t37;
     bool kl_t38;
-#line 671 "../../src/os.kl"
-    kl_t36 = false;
-#line 671 "../../src/os.kl"
-    kl_t37 = false;
+    bool kl_t39;
+    bool kl_t40;
 #line 671 "../../src/os.kl"
     kl_t38 = false;
 #line 671 "../../src/os.kl"
-    kl_t36 = false;
+    kl_t39 = false;
+#line 671 "../../src/os.kl"
+    kl_t40 = false;
+#line 671 "../../src/os.kl"
+    kl_t38 = false;
 #line 671 "../../src/os.kl"
     kl_t3 = kl_name_1;
 #line 671 "../../src/os.kl"
     kl_t4 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t3 );
 #line 671 "../../src/os.kl"
-    kl_t37 = true;
+    kl_t39 = true;
 #line 671 "../../src/os.kl"
     kl_p_2 = kl_t4;
 #line 671 "../../src/os.kl"
-    kl_t37 = false;
+    kl_t39 = false;
 #line 671 "../../src/os.kl"
-    kl_t36 = true;
+    kl_t38 = true;
 #line 671 "../../src/os.kl"
-    if ( kl_t37 ) kl_2kl6string_6string__dtor( &kl_t4.kl_text_ );
+    if ( kl_t39 ) kl_2kl6string_6string__dtor( &kl_t4.kl_text_ );
 #line 671 "../../src/os.kl"
-    kl_t37 = false;
+    kl_t39 = false;
     kl_t6 = &kl_parents_5;
 #line 672 "../../src/os.kl"
     kl_2kl4list_4list__IQ2kl4pathE__RQ2kl4listIQ2kl4pathE__ctor( kl_t6 );
@@ -6715,43 +6716,45 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_18create_directori
 #line 674 "../../src/os.kl"
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb2:
-    kl_t16 = &kl_parents_5;
+    kl_t17 = &kl_parents_5;
 #line 676 "../../src/os.kl"
-    kl_2kl4list_4push__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_MQ2kl4path( kl_t16, kl_p_2 );
+    kl_2kl4list_4push__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_MQ2kl4path( kl_t17, kl_p_2 );
 #line 676 "../../src/os.kl"
-    kl_t36 = false;
-    kl_t18 = &kl_parents_5;
+    kl_t38 = false;
+    kl_t19 = &kl_parents_5;
 #line 677 "../../src/os.kl"
-    kl_t19 = kl_2kl4list_4last__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t18 );
+    kl_t20 = kl_2kl4list_4last__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t19 );
 #line 677 "../../src/os.kl"
-    kl_t20 = &( *kl_t19 );
+    kl_t21 = &( *kl_t20 );
 #line 677 "../../src/os.kl"
-    kl_t21 = kl_2kl2os_6parent__SQ2kl4path( kl_t20 );
+    kl_t22 = kl_2kl2os_6parent__SQ2kl4path( kl_t21 );
+#line 677 "../../src/os.kl"
+    kl_t40 = true;
+#line 677 "../../src/os.kl"
+    if ( kl_t38 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
+#line 677 "../../src/os.kl"
+    kl_p_2 = kl_t22;
+#line 677 "../../src/os.kl"
+    kl_t40 = false;
 #line 677 "../../src/os.kl"
     kl_t38 = true;
 #line 677 "../../src/os.kl"
-    if ( kl_t36 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
+    if ( kl_t40 ) kl_2kl6string_6string__dtor( &kl_t22.kl_text_ );
 #line 677 "../../src/os.kl"
-    kl_p_2 = kl_t21;
-#line 677 "../../src/os.kl"
-    kl_t38 = false;
-#line 677 "../../src/os.kl"
-    kl_t36 = true;
-#line 677 "../../src/os.kl"
-    if ( kl_t38 ) kl_2kl6string_6string__dtor( &kl_t21.kl_text_ );
-#line 677 "../../src/os.kl"
-    kl_t38 = false;
+    kl_t40 = false;
 #line 674 "../../src/os.kl"
     goto bb1;
     bb3:
 #line 674 "../../src/os.kl"
-    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_p_2, &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t13 = &kl_p_2;
 #line 674 "../../src/os.kl"
-    kl_t14 = kl_2kl2os_6exists__7textual( kl_t13 );
+    kl_t14 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t13, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 674 "../../src/os.kl"
-    kl_t15 = !kl_t14;
+    kl_t15 = kl_2kl2os_6exists__7textual( kl_t14 );
 #line 674 "../../src/os.kl"
-    kl_t8 = kl_t15;
+    kl_t16 = !kl_t15;
+#line 674 "../../src/os.kl"
+    kl_t8 = kl_t16;
 #line 674 "../../src/os.kl"
     goto bb4;
     bb4:
@@ -6759,35 +6762,35 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_18create_directori
     if ( kl_t8 ) goto bb2; else goto bb5;
     bb5:
 #line 680 "../../src/os.kl"
-    kl_t23 = &kl_parents_5;
+    kl_t24 = &kl_parents_5;
 #line 680 "../../src/os.kl"
-    kl_t24 = kl_2kl4list_4size__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t23 );
+    kl_t25 = kl_2kl4list_4size__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t24 );
 #line 680 "../../src/os.kl"
-    kl_i_22 = kl_t24;
+    kl_i_23 = kl_t25;
 #line 680 "../../src/os.kl"
     goto bb6;
     bb6:
 #line 680 "../../src/os.kl"
-    kl_t25 = kl_i_22 > 0;
+    kl_t26 = kl_i_23 > 0;
 #line 680 "../../src/os.kl"
-    if ( kl_t25 ) goto bb7; else goto bb8;
+    if ( kl_t26 ) goto bb7; else goto bb8;
     bb7:
-    kl_t26 = &kl_parents_5;
+    kl_t27 = &kl_parents_5;
 #line 682 "../../src/os.kl"
-    kl_t27 = __builtin_sub_overflow( kl_i_22, 1, &( uint64_t ) { 0 } );
+    kl_t28 = __builtin_sub_overflow( kl_i_23, 1, &( uint64_t ) { 0 } );
 #line 682 "../../src/os.kl"
-    if ( kl_t27 ) goto bb9; else goto bb10;
+    if ( kl_t28 ) goto bb9; else goto bb10;
     bb8:
 #line 685 "../../src/os.kl"
-    kl_t35.tag = 0;
+    kl_t37.tag = 0;
 #line 685 "../../src/os.kl"
-    kl_t0 = kl_t35;
+    kl_t0 = kl_t37;
 #line 685 "../../src/os.kl"
     kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_parents_5 );
 #line 685 "../../src/os.kl"
-    if ( kl_t36 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
+    if ( kl_t38 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
 #line 685 "../../src/os.kl"
-    kl_t36 = false;
+    kl_t38 = false;
 #line 685 "../../src/os.kl"
     return kl_t0;
     bb9:
@@ -6795,43 +6798,45 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_18create_directori
     kl_rt_panic( "../../src/os.kl", 682, "arithmetic overflow: i - 1" );
     bb10:
 #line 682 "../../src/os.kl"
-    kl_t28 = kl_i_22 - 1;
+    kl_t29 = kl_i_23 - 1;
 #line 682 "../../src/os.kl"
-    kl_t29 = kl_2kl4list_14operator_index__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( kl_t26, kl_t28 );
+    kl_t30 = kl_2kl4list_14operator_index__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( kl_t27, kl_t29 );
 #line 682 "../../src/os.kl"
-    kl_t30 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_t29 ), &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t31 = &( *kl_t30 );
 #line 682 "../../src/os.kl"
-    kl_t31 = kl_2kl2os_16create_directory__7textual( kl_t30 );
+    kl_t32 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t31, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 682 "../../src/os.kl"
-    kl_t32 = kl_t31;
+    kl_t33 = kl_2kl2os_16create_directory__7textual( kl_t32 );
 #line 682 "../../src/os.kl"
-    kl_t33 = kl_t32.tag == 0;
+    kl_t34 = kl_t33;
 #line 682 "../../src/os.kl"
-    if ( kl_t33 ) goto bb12; else goto bb11;
+    kl_t35 = kl_t34.tag == 0;
+#line 682 "../../src/os.kl"
+    if ( kl_t35 ) goto bb12; else goto bb11;
     bb11:
 #line 682 "../../src/os.kl"
     kl_t0.tag = 1;
 #line 682 "../../src/os.kl"
-    kl_t0.kl_3err_error = kl_t32.kl_3err_error;
+    kl_t0.kl_3err_error = kl_t34.kl_3err_error;
 #line 682 "../../src/os.kl"
     kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_parents_5 );
 #line 682 "../../src/os.kl"
-    if ( kl_t36 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
+    if ( kl_t38 ) kl_2kl6string_6string__dtor( &kl_p_2.kl_text_ );
 #line 682 "../../src/os.kl"
-    kl_t36 = false;
+    kl_t38 = false;
 #line 682 "../../src/os.kl"
     return kl_t0;
     bb12:
 #line 680 "../../src/os.kl"
-    kl_t34 = __builtin_sub_overflow( kl_i_22, 1, &( uint64_t ) { 0 } );
+    kl_t36 = __builtin_sub_overflow( kl_i_23, 1, &( uint64_t ) { 0 } );
 #line 680 "../../src/os.kl"
-    if ( kl_t34 ) goto bb13; else goto bb14;
+    if ( kl_t36 ) goto bb13; else goto bb14;
     bb13:
 #line 680 "../../src/os.kl"
     kl_rt_panic( "../../src/os.kl", 680, "arithmetic overflow: i--" );
     bb14:
 #line 680 "../../src/os.kl"
-    kl_i_22 = kl_i_22 - 1;
+    kl_i_23 = kl_i_23 - 1;
 #line 680 "../../src/os.kl"
     goto bb6;
 #line 686 "../../src/os.kl"
@@ -6923,20 +6928,19 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
     bool kl_t36;
     struct kl_2kl4list_list__IQ2kl4pathE* kl_t37;
     struct kl_2kl2os_path* kl_t38;
-    struct kl_7prelude_textual__ref kl_t39;
-    struct kl_2kl2os_path kl_t40;
-    bool kl_t43;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t44;
-    struct kl_2kl2os_file_error kl_t45;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t46;
-    bool kl_t47;
+    struct kl_2kl6string_string* kl_t39;
+    struct kl_7prelude_textual__ref kl_t40;
+    struct kl_2kl2os_path kl_t41;
+    bool kl_t44;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t45;
+    struct kl_2kl2os_file_error kl_t46;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t47;
     bool kl_t48;
     bool kl_t49;
     bool kl_t50;
     bool kl_t51;
     bool kl_t52;
-#line 710 "../../src/os.kl"
-    kl_t47 = false;
+    bool kl_t53;
 #line 710 "../../src/os.kl"
     kl_t48 = false;
 #line 710 "../../src/os.kl"
@@ -6947,6 +6951,8 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
     kl_t51 = false;
 #line 710 "../../src/os.kl"
     kl_t52 = false;
+#line 710 "../../src/os.kl"
+    kl_t53 = false;
 #line 710 "../../src/os.kl"
     kl_handle_2 = 0;
     kl_status_3 = 0;
@@ -6971,19 +6977,19 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
 #line 720 "../../src/os.kl"
     kl_t10.tag = 1;
 #line 720 "../../src/os.kl"
-    kl_t47 = true;
+    kl_t48 = true;
 #line 720 "../../src/os.kl"
     kl_t10.kl_3err_error = kl_t11;
 #line 720 "../../src/os.kl"
-    kl_t47 = true;
+    kl_t48 = true;
 #line 720 "../../src/os.kl"
     kl_t0 = kl_t10;
 #line 720 "../../src/os.kl"
-    kl_t47 = false;
+    kl_t48 = false;
 #line 720 "../../src/os.kl"
-    if ( kl_t47 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t10 );
+    if ( kl_t48 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t10 );
 #line 720 "../../src/os.kl"
-    kl_t47 = false;
+    kl_t48 = false;
 #line 720 "../../src/os.kl"
     return kl_t0;
     bb2:
@@ -6992,20 +6998,20 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
 #line 723 "../../src/os.kl"
     kl_t14 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t13 );
 #line 723 "../../src/os.kl"
-    kl_t48 = true;
+    kl_t49 = true;
 #line 723 "../../src/os.kl"
     kl_base_12 = kl_t14;
 #line 723 "../../src/os.kl"
-    kl_t48 = false;
-#line 723 "../../src/os.kl"
-    if ( kl_t48 ) kl_2kl6string_6string__dtor( &kl_t14.kl_text_ );
-#line 723 "../../src/os.kl"
-    kl_t48 = false;
     kl_t49 = false;
+#line 723 "../../src/os.kl"
+    if ( kl_t49 ) kl_2kl6string_6string__dtor( &kl_t14.kl_text_ );
+#line 723 "../../src/os.kl"
+    kl_t49 = false;
+    kl_t50 = false;
 #line 724 "../../src/os.kl"
     kl_t16 = &kl_entries_15;
 #line 724 "../../src/os.kl"
-    kl_t49 = true;
+    kl_t50 = true;
 #line 724 "../../src/os.kl"
     kl_2kl4list_4list__IQ2kl4pathE__RQ2kl4listIQ2kl4pathE__ctor( kl_t16 );
 #line 726 "../../src/os.kl"
@@ -7036,9 +7042,9 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
 #line 749 "../../src/os.kl"
     kl_rt_directory_close( kl_handle_2 );
 #line 752 "../../src/os.kl"
-    kl_t43 = kl_status_3 != 0;
+    kl_t44 = kl_status_3 != 0;
 #line 752 "../../src/os.kl"
-    if ( kl_t43 ) goto bb11; else goto bb12;
+    if ( kl_t44 ) goto bb11; else goto bb12;
     bb5:
 #line 736 "../../src/os.kl"
     kl_rt_panic( "../../src/os.kl", 736, "out of bounds: bytes[0..size]" );
@@ -7079,72 +7085,74 @@ struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14l
 #line 744 "../../src/os.kl"
     kl_t38 = &kl_base_12;
 #line 744 "../../src/os.kl"
-    kl_t39 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_entry_20, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t39 = &kl_entry_20;
 #line 744 "../../src/os.kl"
-    kl_t40 = kl_2kl2os_12operator_div__SQ2kl4path_7textual( kl_t38, kl_t39 );
+    kl_t40 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t39, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 744 "../../src/os.kl"
-    kl_t50 = true;
+    kl_t41 = kl_2kl2os_12operator_div__SQ2kl4path_7textual( kl_t38, kl_t40 );
 #line 744 "../../src/os.kl"
-    kl_2kl4list_4push__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_MQ2kl4path( kl_t37, kl_t40 );
+    kl_t51 = true;
 #line 744 "../../src/os.kl"
-    kl_t50 = false;
+    kl_2kl4list_4push__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_MQ2kl4path( kl_t37, kl_t41 );
 #line 744 "../../src/os.kl"
-    if ( kl_t50 ) kl_2kl6string_6string__dtor( &kl_t40.kl_text_ );
+    kl_t51 = false;
 #line 744 "../../src/os.kl"
-    kl_t50 = false;
+    if ( kl_t51 ) kl_2kl6string_6string__dtor( &kl_t41.kl_text_ );
+#line 744 "../../src/os.kl"
+    kl_t51 = false;
     kl_2kl6string_6string__dtor( &kl_entry_20 );
 #line 726 "../../src/os.kl"
     goto bb3;
     bb11:
 #line 754 "../../src/os.kl"
-    kl_t45 = kl_2kl2os_13file_error_of__3i32( kl_status_3 );
+    kl_t46 = kl_2kl2os_13file_error_of__3i32( kl_status_3 );
 #line 754 "../../src/os.kl"
-    kl_t44.tag = 1;
+    kl_t45.tag = 1;
 #line 754 "../../src/os.kl"
-    kl_t51 = true;
+    kl_t52 = true;
 #line 754 "../../src/os.kl"
-    kl_t44.kl_3err_error = kl_t45;
+    kl_t45.kl_3err_error = kl_t46;
 #line 754 "../../src/os.kl"
-    kl_t51 = true;
+    kl_t52 = true;
 #line 754 "../../src/os.kl"
-    kl_t0 = kl_t44;
+    kl_t0 = kl_t45;
 #line 754 "../../src/os.kl"
-    kl_t51 = false;
+    kl_t52 = false;
 #line 754 "../../src/os.kl"
-    if ( kl_t51 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t44 );
+    if ( kl_t52 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t45 );
 #line 754 "../../src/os.kl"
-    kl_t51 = false;
+    kl_t52 = false;
 #line 754 "../../src/os.kl"
-    if ( kl_t49 ) kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_15 );
+    if ( kl_t50 ) kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_15 );
 #line 754 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t50 = false;
 #line 754 "../../src/os.kl"
     kl_2kl6string_6string__dtor( &kl_base_12.kl_text_ );
 #line 754 "../../src/os.kl"
     return kl_t0;
     bb12:
 #line 757 "../../src/os.kl"
-    kl_t46.tag = 0;
+    kl_t47.tag = 0;
 #line 757 "../../src/os.kl"
-    kl_t52 = true;
+    kl_t53 = true;
 #line 757 "../../src/os.kl"
-    kl_t46.kl_2ok_value = kl_entries_15;
+    kl_t47.kl_2ok_value = kl_entries_15;
 #line 757 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t50 = false;
 #line 757 "../../src/os.kl"
-    kl_t52 = true;
+    kl_t53 = true;
 #line 757 "../../src/os.kl"
-    kl_t0 = kl_t46;
+    kl_t0 = kl_t47;
 #line 757 "../../src/os.kl"
-    kl_t52 = false;
+    kl_t53 = false;
 #line 757 "../../src/os.kl"
-    if ( kl_t52 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t46 );
+    if ( kl_t53 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t47 );
 #line 757 "../../src/os.kl"
-    kl_t52 = false;
+    kl_t53 = false;
 #line 757 "../../src/os.kl"
-    if ( kl_t49 ) kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_15 );
+    if ( kl_t50 ) kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_15 );
 #line 757 "../../src/os.kl"
-    kl_t49 = false;
+    kl_t50 = false;
 #line 757 "../../src/os.kl"
     kl_2kl6string_6string__dtor( &kl_base_12.kl_text_ );
 #line 757 "../../src/os.kl"
@@ -7663,20 +7671,21 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_12program_path__(
     struct kl__run__L2u8__ref kl_t36;
     struct kl__run__L2u8__ref kl_t37;
     struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_t40;
-    struct kl_7prelude_textual__ref kl_t41;
-    struct kl_2kl2os_path kl_t42;
-    bool kl_t43;
+    struct kl_2kl6string_string* kl_t41;
+    struct kl_7prelude_textual__ref kl_t42;
+    struct kl_2kl2os_path kl_t43;
     bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-#line 1000 "../../src/os.kl"
-    kl_t43 = false;
+    bool kl_t47;
 #line 1000 "../../src/os.kl"
     kl_t44 = false;
 #line 1000 "../../src/os.kl"
     kl_t45 = false;
 #line 1000 "../../src/os.kl"
     kl_t46 = false;
+#line 1000 "../../src/os.kl"
+    kl_t47 = false;
 #line 1000 "../../src/os.kl"
     kl_size_1 = 4096;
     kl_bytes_2 = NULL;
@@ -7767,34 +7776,34 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_12program_path__(
 #line 1023 "../../src/os.kl"
     kl_t27.tag = 1;
 #line 1023 "../../src/os.kl"
-    kl_t43 = true;
+    kl_t44 = true;
 #line 1023 "../../src/os.kl"
     kl_t27.kl_3err_error = kl_t28;
 #line 1023 "../../src/os.kl"
-    kl_t43 = true;
+    kl_t44 = true;
 #line 1023 "../../src/os.kl"
     kl_t0 = kl_t27;
 #line 1023 "../../src/os.kl"
-    kl_t43 = false;
+    kl_t44 = false;
 #line 1023 "../../src/os.kl"
-    if ( kl_t43 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t27 );
+    if ( kl_t44 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t27 );
 #line 1023 "../../src/os.kl"
-    kl_t43 = false;
+    kl_t44 = false;
 #line 1023 "../../src/os.kl"
     return kl_t0;
     bb11:
 #line 1026 "../../src/os.kl"
     kl_t30 = kl_2kl6string_13with_capacity__SQ2kl6string_3u64( kl_size_1 );
 #line 1026 "../../src/os.kl"
-    kl_t44 = true;
+    kl_t45 = true;
 #line 1026 "../../src/os.kl"
     kl_text_29 = kl_t30;
 #line 1026 "../../src/os.kl"
-    kl_t44 = false;
+    kl_t45 = false;
 #line 1026 "../../src/os.kl"
-    if ( kl_t44 ) kl_2kl6string_6string__dtor( &kl_t30 );
+    if ( kl_t45 ) kl_2kl6string_6string__dtor( &kl_t30 );
 #line 1026 "../../src/os.kl"
-    kl_t44 = false;
+    kl_t45 = false;
 #line 1029 "../../src/os.kl"
     kl_t31 = &kl_text_29;
 #line 1029 "../../src/os.kl"
@@ -7819,33 +7828,35 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_12program_path__(
     kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t31, ( kl_t37 ).data, ( kl_t37 ).size );
     kl_rt_free( kl_bytes_2 );
 #line 1032 "../../src/os.kl"
-    kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_text_29, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t41 = &kl_text_29;
 #line 1032 "../../src/os.kl"
-    kl_t42 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t41 );
+    kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t41, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 1032 "../../src/os.kl"
-    kl_t46 = true;
+    kl_t43 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t42 );
+#line 1032 "../../src/os.kl"
+    kl_t47 = true;
 #line 1032 "../../src/os.kl"
     kl_t40.tag = 0;
 #line 1032 "../../src/os.kl"
-    kl_t45 = true;
+    kl_t46 = true;
 #line 1032 "../../src/os.kl"
-    kl_t40.kl_2ok_value = kl_t42;
+    kl_t40.kl_2ok_value = kl_t43;
 #line 1032 "../../src/os.kl"
-    kl_t46 = false;
+    kl_t47 = false;
 #line 1032 "../../src/os.kl"
-    kl_t45 = true;
+    kl_t46 = true;
 #line 1032 "../../src/os.kl"
     kl_t0 = kl_t40;
 #line 1032 "../../src/os.kl"
-    kl_t45 = false;
-#line 1032 "../../src/os.kl"
-    if ( kl_t45 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t40 );
-#line 1032 "../../src/os.kl"
-    if ( kl_t46 ) kl_2kl6string_6string__dtor( &kl_t42.kl_text_ );
-#line 1032 "../../src/os.kl"
     kl_t46 = false;
 #line 1032 "../../src/os.kl"
-    kl_t45 = false;
+    if ( kl_t46 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t40 );
+#line 1032 "../../src/os.kl"
+    if ( kl_t47 ) kl_2kl6string_6string__dtor( &kl_t43.kl_text_ );
+#line 1032 "../../src/os.kl"
+    kl_t47 = false;
+#line 1032 "../../src/os.kl"
+    kl_t46 = false;
 #line 1032 "../../src/os.kl"
     kl_2kl6string_6string__dtor( &kl_text_29 );
 #line 1032 "../../src/os.kl"
@@ -7892,20 +7903,21 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_17current_directo
     struct kl__run__L2u8__ref kl_t36;
     struct kl__run__L2u8__ref kl_t37;
     struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_t40;
-    struct kl_7prelude_textual__ref kl_t41;
-    struct kl_2kl2os_path kl_t42;
-    bool kl_t43;
+    struct kl_2kl6string_string* kl_t41;
+    struct kl_7prelude_textual__ref kl_t42;
+    struct kl_2kl2os_path kl_t43;
     bool kl_t44;
     bool kl_t45;
     bool kl_t46;
-#line 1038 "../../src/os.kl"
-    kl_t43 = false;
+    bool kl_t47;
 #line 1038 "../../src/os.kl"
     kl_t44 = false;
 #line 1038 "../../src/os.kl"
     kl_t45 = false;
 #line 1038 "../../src/os.kl"
     kl_t46 = false;
+#line 1038 "../../src/os.kl"
+    kl_t47 = false;
 #line 1038 "../../src/os.kl"
     kl_size_1 = 4096;
     kl_bytes_2 = NULL;
@@ -7996,34 +8008,34 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_17current_directo
 #line 1061 "../../src/os.kl"
     kl_t27.tag = 1;
 #line 1061 "../../src/os.kl"
-    kl_t43 = true;
+    kl_t44 = true;
 #line 1061 "../../src/os.kl"
     kl_t27.kl_3err_error = kl_t28;
 #line 1061 "../../src/os.kl"
-    kl_t43 = true;
+    kl_t44 = true;
 #line 1061 "../../src/os.kl"
     kl_t0 = kl_t27;
 #line 1061 "../../src/os.kl"
-    kl_t43 = false;
+    kl_t44 = false;
 #line 1061 "../../src/os.kl"
-    if ( kl_t43 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t27 );
+    if ( kl_t44 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t27 );
 #line 1061 "../../src/os.kl"
-    kl_t43 = false;
+    kl_t44 = false;
 #line 1061 "../../src/os.kl"
     return kl_t0;
     bb11:
 #line 1064 "../../src/os.kl"
     kl_t30 = kl_2kl6string_13with_capacity__SQ2kl6string_3u64( kl_size_1 );
 #line 1064 "../../src/os.kl"
-    kl_t44 = true;
+    kl_t45 = true;
 #line 1064 "../../src/os.kl"
     kl_text_29 = kl_t30;
 #line 1064 "../../src/os.kl"
-    kl_t44 = false;
+    kl_t45 = false;
 #line 1064 "../../src/os.kl"
-    if ( kl_t44 ) kl_2kl6string_6string__dtor( &kl_t30 );
+    if ( kl_t45 ) kl_2kl6string_6string__dtor( &kl_t30 );
 #line 1064 "../../src/os.kl"
-    kl_t44 = false;
+    kl_t45 = false;
 #line 1067 "../../src/os.kl"
     kl_t31 = &kl_text_29;
 #line 1067 "../../src/os.kl"
@@ -8048,33 +8060,35 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_17current_directo
     kl_2kl6string_6append__SQ2kl6string_L2u8( kl_t31, ( kl_t37 ).data, ( kl_t37 ).size );
     kl_rt_free( kl_bytes_2 );
 #line 1070 "../../src/os.kl"
-    kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_text_29, &kl_2kl6string_string__as_kl_7prelude_textual };
+    kl_t41 = &kl_text_29;
 #line 1070 "../../src/os.kl"
-    kl_t42 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t41 );
+    kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t41, &kl_2kl6string_string__as_kl_7prelude_textual };
 #line 1070 "../../src/os.kl"
-    kl_t46 = true;
+    kl_t43 = kl_2kl2os_2of__SQ2kl4path_7textual( kl_t42 );
+#line 1070 "../../src/os.kl"
+    kl_t47 = true;
 #line 1070 "../../src/os.kl"
     kl_t40.tag = 0;
 #line 1070 "../../src/os.kl"
-    kl_t45 = true;
+    kl_t46 = true;
 #line 1070 "../../src/os.kl"
-    kl_t40.kl_2ok_value = kl_t42;
+    kl_t40.kl_2ok_value = kl_t43;
 #line 1070 "../../src/os.kl"
-    kl_t46 = false;
+    kl_t47 = false;
 #line 1070 "../../src/os.kl"
-    kl_t45 = true;
+    kl_t46 = true;
 #line 1070 "../../src/os.kl"
     kl_t0 = kl_t40;
 #line 1070 "../../src/os.kl"
-    kl_t45 = false;
-#line 1070 "../../src/os.kl"
-    if ( kl_t45 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t40 );
-#line 1070 "../../src/os.kl"
-    if ( kl_t46 ) kl_2kl6string_6string__dtor( &kl_t42.kl_text_ );
-#line 1070 "../../src/os.kl"
     kl_t46 = false;
 #line 1070 "../../src/os.kl"
-    kl_t45 = false;
+    if ( kl_t46 ) kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( &kl_t40 );
+#line 1070 "../../src/os.kl"
+    if ( kl_t47 ) kl_2kl6string_6string__dtor( &kl_t43.kl_text_ );
+#line 1070 "../../src/os.kl"
+    kl_t47 = false;
+#line 1070 "../../src/os.kl"
+    kl_t46 = false;
 #line 1070 "../../src/os.kl"
     kl_2kl6string_6string__dtor( &kl_text_29 );
 #line 1070 "../../src/os.kl"
@@ -8482,13 +8496,30 @@ void kl_7prelude_6result__IQ2kl4path_Q2kl8os_errorE__dtor( struct kl_7prelude_re
 #line 149 "<prelude>"
 }
 
-void kl_2kl2os_path__drop( struct kl_2kl2os_path* kl_t1 )
+void kl_2kl2os_path__drop( void* kl_t1 )
 {
+    struct kl_2kl2os_path* kl_t2;
 #line 134 "../../src/os.kl"
-    kl_2kl6string_6string__dtor( &( *kl_t1 ).kl_text_ );
+    kl_t2 = ( struct kl_2kl2os_path* ) kl_t1;
+#line 134 "../../src/os.kl"
+    kl_2kl6string_6string__dtor( &( *kl_t2 ).kl_text_ );
 #line 134 "../../src/os.kl"
     return;
 #line 134 "../../src/os.kl"
+}
+
+#line 11 "<prelude>"
+struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* kl_t1 )
+{
+    struct kl__run__L2u8__ref kl_t0;
+    struct kl_2kl2os_path* kl_t2;
+#line 154 "../../src/os.kl"
+    kl_t2 = ( struct kl_2kl2os_path* ) kl_t1;
+#line 154 "../../src/os.kl"
+    kl_t0 = kl_2kl2os_7as_text__SQ2kl4path( kl_t2 );
+#line 154 "../../src/os.kl"
+    return kl_t0;
+#line 11 "<prelude>"
 }
 
 // os_directory/main.kl
@@ -8624,12 +8655,11 @@ void kl_2kl4list_8truncate__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( struct kl_2
 void kl_2kl4list_4swap__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64_3u64( struct kl_2kl4list_list__IQ2kl4pathE*, uint64_t, uint64_t );
 void kl_7prelude_6result__IQ2kl7process_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE* );
 void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE* );
-void kl_2kl4list_list__IQ2kl6stringE__drop( struct kl_2kl4list_list__IQ2kl6stringE* );
-void kl_2kl4list_list__IQ2kl4pathE__drop( struct kl_2kl4list_list__IQ2kl4pathE* );
+void kl_2kl4list_list__IQ2kl6stringE__drop( void* );
+void kl_2kl4list_list__IQ2kl4pathE__drop( void* );
 void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_string*, struct kl_7prelude_textual__ref );
 void kl_2kl6string_6string__dtor( struct kl_2kl6string_string* );
 bool kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( struct kl_2kl6string_string*, struct kl_2kl6string_string* );
-struct kl__run__L2u8__ref kl_2kl2os_7as_text__SQ2kl4path( struct kl_2kl2os_path* );
 bool kl_2kl2os_6exists__7textual( struct kl_7prelude_textual__ref );
 bool kl_2kl2os_7is_file__7textual( struct kl_7prelude_textual__ref );
 bool kl_2kl2os_12is_directory__7textual( struct kl_7prelude_textual__ref );
@@ -8640,37 +8670,19 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_16delete_directory
 struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_2kl2os_14list_directory__7textual( struct kl_7prelude_textual__ref );
 void kl_2kl2os_7process__dtor( struct kl_2kl2os_process* );
 void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
-struct kl__run__L2u8__ref kl_7prelude_7as_text__SQ7prelude3str( struct kl_7prelude_str* );
 void kl_2kl2os_0build( void );
 void kl_2kl2os_0drop( void );
 void kl_2kl4list_4list__IQ2kl6stringE__dtor( struct kl_2kl4list_list__IQ2kl6stringE* );
 void kl_2kl4list_4list__IQ2kl4pathE__dtor( struct kl_2kl4list_list__IQ2kl4pathE* );
 void kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE* );
-void kl_2kl2os_path__drop( struct kl_2kl2os_path* );
+void kl_2kl2os_path__drop( void* );
+void kl_7prelude_str__drop( void* );
+struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* );
+struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* );
 
-static void kl_7prelude_str__as_kl_7prelude_textual__drop( void* self )
-{
-    ( void ) self;
-}
+static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
 
-static struct kl__run__L2u8__ref kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_7prelude_7as_text__SQ7prelude3str( ( struct kl_7prelude_str* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_7prelude_str__as_kl_7prelude_textual = { kl_7prelude_str__as_kl_7prelude_textual__drop, kl_7prelude_str__as_kl_7prelude_textual__kl__7as_text__ };
-
-static void kl_2kl2os_path__as_kl_7prelude_textual__drop( void* self )
-{
-    kl_2kl2os_path__drop( ( struct kl_2kl2os_path* ) self );
-}
-
-static struct kl__run__L2u8__ref kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__( void* self )
-{
-    return kl_2kl2os_7as_text__SQ2kl4path( ( struct kl_2kl2os_path* ) self );
-}
-
-static const struct kl_7prelude_textual__vtable kl_2kl2os_path__as_kl_7prelude_textual = { kl_2kl2os_path__as_kl_7prelude_textual__drop, kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__ };
+static const struct kl_7prelude_textual__vtable kl_2kl2os_path__as_kl_7prelude_textual = { kl_2kl2os_path__drop, kl_2kl2os_path__as_kl_7prelude_textual__kl__7as_text__ };
 
 #line 9 "os_directory/main.kl"
 int32_t kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_r_1 )
@@ -8756,78 +8768,81 @@ int32_t kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( struct kl_7prelud
 int32_t kl__11list_reason__Q7prelude3str( struct kl_7prelude_str kl_name_1 )
 {
     int32_t kl_t0;
-    struct kl_7prelude_textual__ref kl_t2;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t3;
+    struct kl_7prelude_str* kl_t2;
+    struct kl_7prelude_textual__ref kl_t3;
     struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t4;
-    bool kl_t5;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t6;
-    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_7;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t8;
-    struct kl_2kl2os_file_error kl_e_9;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t10;
-    int32_t kl_t11;
-    bool kl_t12;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t5;
+    bool kl_t6;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t7;
+    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_8;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t9;
+    struct kl_2kl2os_file_error kl_e_10;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t11;
+    int32_t kl_t12;
     bool kl_t13;
-#line 39 "os_directory/main.kl"
-    kl_t12 = false;
-#line 39 "os_directory/main.kl"
-    kl_t13 = false;
-#line 39 "os_directory/main.kl"
-    kl_t2 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_name_1, &kl_7prelude_str__as_kl_7prelude_textual };
-#line 39 "os_directory/main.kl"
-    kl_t3 = kl_2kl2os_14list_directory__7textual( kl_t2 );
-#line 39 "os_directory/main.kl"
-    kl_t12 = true;
+    bool kl_t14;
 #line 39 "os_directory/main.kl"
     kl_t13 = false;
 #line 39 "os_directory/main.kl"
-    kl_t4 = kl_t3;
+    kl_t14 = false;
 #line 39 "os_directory/main.kl"
-    kl_t12 = false;
+    kl_t2 = &kl_name_1;
+#line 39 "os_directory/main.kl"
+    kl_t3 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 39 "os_directory/main.kl"
+    kl_t4 = kl_2kl2os_14list_directory__7textual( kl_t3 );
 #line 39 "os_directory/main.kl"
     kl_t13 = true;
 #line 39 "os_directory/main.kl"
-    if ( kl_t12 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t3 );
+    kl_t14 = false;
 #line 39 "os_directory/main.kl"
-    kl_t12 = false;
+    kl_t5 = kl_t4;
+#line 39 "os_directory/main.kl"
+    kl_t13 = false;
+#line 39 "os_directory/main.kl"
+    kl_t14 = true;
+#line 39 "os_directory/main.kl"
+    if ( kl_t13 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t4 );
+#line 39 "os_directory/main.kl"
+    kl_t13 = false;
 #line 41 "os_directory/main.kl"
-    kl_t5 = kl_t4.tag == 0;
+    kl_t6 = kl_t5.tag == 0;
 #line 41 "os_directory/main.kl"
-    if ( kl_t5 ) goto bb1; else goto bb2;
+    if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
 #line 41 "os_directory/main.kl"
-    kl_t6 = kl_t4;
+    kl_t7 = kl_t5;
 #line 41 "os_directory/main.kl"
-    kl_t13 = false;
+    kl_t14 = false;
 #line 41 "os_directory/main.kl"
-    kl_entries_7 = kl_t6.kl_2ok_value;
+    kl_entries_8 = kl_t7.kl_2ok_value;
     kl_t0 = 0;
 #line 42 "os_directory/main.kl"
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_7 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_8 );
 #line 42 "os_directory/main.kl"
-    if ( kl_t13 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t4 );
+    if ( kl_t14 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t5 );
 #line 42 "os_directory/main.kl"
-    kl_t13 = false;
+    kl_t14 = false;
 #line 42 "os_directory/main.kl"
     return kl_t0;
     bb2:
 #line 43 "os_directory/main.kl"
-    kl_t8 = kl_t4;
+    kl_t9 = kl_t5;
 #line 43 "os_directory/main.kl"
-    kl_t13 = false;
+    kl_t14 = false;
 #line 43 "os_directory/main.kl"
-    kl_e_9 = kl_t8.kl_3err_error;
-    kl_t10.tag = 1;
+    kl_e_10 = kl_t9.kl_3err_error;
+    kl_t11.tag = 1;
 #line 44 "os_directory/main.kl"
-    kl_t10.kl_3err_error = kl_e_9;
+    kl_t11.kl_3err_error = kl_e_10;
 #line 44 "os_directory/main.kl"
-    kl_t11 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t10 );
+    kl_t12 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t11 );
 #line 44 "os_directory/main.kl"
-    kl_t0 = kl_t11;
+    kl_t0 = kl_t12;
 #line 44 "os_directory/main.kl"
-    if ( kl_t13 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t4 );
+    if ( kl_t14 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t5 );
 #line 44 "os_directory/main.kl"
-    kl_t13 = false;
+    kl_t14 = false;
 #line 44 "os_directory/main.kl"
     return kl_t0;
 #line 46 "os_directory/main.kl"
@@ -8843,9 +8858,10 @@ bool kl__2is__7textual_Q7prelude3str( struct kl_7prelude_textual__ref kl_got_1, 
     struct kl_2kl6string_string* kl_t7;
     struct kl_2kl6string_string kl_t8;
     struct kl_2kl6string_string* kl_t9;
-    struct kl_7prelude_textual__ref kl_t10;
-    struct kl_2kl6string_string* kl_t12;
-    bool kl_t13;
+    struct kl_7prelude_str* kl_t10;
+    struct kl_7prelude_textual__ref kl_t11;
+    struct kl_2kl6string_string* kl_t13;
+    bool kl_t14;
 #line 50 "os_directory/main.kl"
     kl_t4 = &kl_t3;
 #line 50 "os_directory/main.kl"
@@ -8857,15 +8873,17 @@ bool kl__2is__7textual_Q7prelude3str( struct kl_7prelude_textual__ref kl_got_1, 
 #line 50 "os_directory/main.kl"
     kl_t9 = &kl_t8;
 #line 50 "os_directory/main.kl"
-    kl_t10 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_want_2, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t10 = &kl_want_2;
 #line 50 "os_directory/main.kl"
-    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t9, kl_t10 );
+    kl_t11 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 50 "os_directory/main.kl"
-    kl_t12 = &kl_t8;
+    kl_2kl6string_6string__RQ2kl6string_7textual__ctor( kl_t9, kl_t11 );
 #line 50 "os_directory/main.kl"
-    kl_t13 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t7, kl_t12 );
+    kl_t13 = &kl_t8;
 #line 50 "os_directory/main.kl"
-    kl_t0 = kl_t13;
+    kl_t14 = kl_2kl6string_11operator_eq__SQ2kl6string_Q2kl6string( kl_t7, kl_t13 );
+#line 50 "os_directory/main.kl"
+    kl_t0 = kl_t14;
 #line 50 "os_directory/main.kl"
     kl_2kl6string_6string__dtor( &kl_t8 );
 #line 50 "os_directory/main.kl"
@@ -8881,226 +8899,229 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str kl_t1;
     struct kl_7prelude_str* kl_t2;
     uint8_t* kl_t3;
-    struct kl_7prelude_textual__ref kl_t5;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t6;
-    int32_t kl_t7;
-    bool kl_t8;
-    struct kl_7prelude_str kl_t9;
-    struct kl_7prelude_str* kl_t10;
-    uint8_t* kl_t11;
-    struct kl_7prelude_textual__ref kl_t13;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t14;
-    int32_t kl_t15;
-    bool kl_t16;
-    struct kl_7prelude_str kl_t17;
-    struct kl_7prelude_str* kl_t18;
-    uint8_t* kl_t19;
-    struct kl_7prelude_textual__ref kl_t21;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t22;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t23;
-    bool kl_t24;
+    struct kl_7prelude_str* kl_t5;
+    struct kl_7prelude_textual__ref kl_t6;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    struct kl_7prelude_str kl_t10;
+    struct kl_7prelude_str* kl_t11;
+    uint8_t* kl_t12;
+    struct kl_7prelude_str* kl_t14;
+    struct kl_7prelude_textual__ref kl_t15;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+    struct kl_7prelude_str* kl_t23;
+    struct kl_7prelude_textual__ref kl_t24;
     struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t25;
-    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_26;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t27;
-    bool kl_t28;
-    bool kl_t29;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t30;
-    struct kl_2kl2os_file_error kl_e_31;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t26;
+    bool kl_t27;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t28;
+    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_29;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t30;
+    bool kl_t31;
     bool kl_t32;
-    struct kl_7prelude_str kl_t33;
-    struct kl_7prelude_str* kl_t34;
-    uint8_t* kl_t35;
-    struct kl_7prelude_textual__ref kl_t37;
-    struct kl_7prelude_str kl_t38;
-    struct kl_7prelude_str* kl_t39;
-    uint8_t* kl_t40;
-    struct kl_7prelude_textual__ref kl_t42;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t43;
-    int32_t kl_t44;
-    bool kl_t45;
-    struct kl_7prelude_str kl_t46;
-    struct kl_7prelude_str* kl_t47;
-    uint8_t* kl_t48;
-    struct kl_7prelude_textual__ref kl_t50;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t33;
+    struct kl_2kl2os_file_error kl_e_34;
+    bool kl_t35;
+    struct kl_7prelude_str kl_t36;
+    struct kl_7prelude_str* kl_t37;
+    uint8_t* kl_t38;
+    struct kl_7prelude_str* kl_t40;
+    struct kl_7prelude_textual__ref kl_t41;
+    struct kl_7prelude_str kl_t42;
+    struct kl_7prelude_str* kl_t43;
+    uint8_t* kl_t44;
+    struct kl_7prelude_str* kl_t46;
+    struct kl_7prelude_textual__ref kl_t47;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t48;
+    int32_t kl_t49;
+    bool kl_t50;
     struct kl_7prelude_str kl_t51;
     struct kl_7prelude_str* kl_t52;
     uint8_t* kl_t53;
-    struct kl_7prelude_textual__ref kl_t55;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t56;
-    int32_t kl_t57;
-    bool kl_t58;
-    struct kl_7prelude_str kl_t59;
-    struct kl_7prelude_str* kl_t60;
-    uint8_t* kl_t61;
-    struct kl_7prelude_textual__ref kl_t63;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t64;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t65;
-    bool kl_t66;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t67;
-    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_68;
-    struct kl__run__LQ2kl4path__ref kl_run_69;
-    struct kl_2kl4list_list__IQ2kl4pathE* kl_t70;
-    struct kl__run__LQ2kl4path__ref kl_t71;
-    uint64_t kl_t72;
-    bool kl_t73;
+    struct kl_7prelude_str* kl_t55;
+    struct kl_7prelude_textual__ref kl_t56;
+    struct kl_7prelude_str kl_t57;
+    struct kl_7prelude_str* kl_t58;
+    uint8_t* kl_t59;
+    struct kl_7prelude_str* kl_t61;
+    struct kl_7prelude_textual__ref kl_t62;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t63;
+    int32_t kl_t64;
+    bool kl_t65;
+    struct kl_7prelude_str kl_t66;
+    struct kl_7prelude_str* kl_t67;
+    uint8_t* kl_t68;
+    struct kl_7prelude_str* kl_t70;
+    struct kl_7prelude_textual__ref kl_t71;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t72;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t73;
     bool kl_t74;
-    bool kl_t75;
-    uint64_t kl_t76;
-    struct kl_2kl2os_path* kl_t77;
-    uint64_t kl_t78;
-    bool kl_t79;
-    struct kl_2kl2os_path* kl_t80;
-    struct kl_7prelude_textual__ref kl_t81;
-    struct kl_7prelude_str kl_t82;
-    struct kl_7prelude_str* kl_t83;
-    uint8_t* kl_t84;
-    bool kl_t86;
-    uint64_t kl_t87;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t75;
+    struct kl_2kl4list_list__IQ2kl4pathE kl_entries_76;
+    struct kl__run__LQ2kl4path__ref kl_run_77;
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t78;
+    struct kl__run__LQ2kl4path__ref kl_t79;
+    uint64_t kl_t80;
+    bool kl_t81;
+    bool kl_t82;
+    bool kl_t83;
+    uint64_t kl_t84;
+    struct kl_2kl2os_path* kl_t85;
+    uint64_t kl_t86;
+    bool kl_t87;
     struct kl_2kl2os_path* kl_t88;
-    uint64_t kl_t89;
-    bool kl_t90;
-    struct kl_2kl2os_path* kl_t91;
-    struct kl_7prelude_textual__ref kl_t92;
-    struct kl_7prelude_str kl_t93;
-    struct kl_7prelude_str* kl_t94;
-    uint8_t* kl_t95;
-    bool kl_t97;
-    bool kl_t98;
+    struct kl_2kl2os_path* kl_t89;
+    struct kl_7prelude_textual__ref kl_t90;
+    struct kl_7prelude_str kl_t91;
+    struct kl_7prelude_str* kl_t92;
+    uint8_t* kl_t93;
+    bool kl_t95;
+    uint64_t kl_t96;
+    struct kl_2kl2os_path* kl_t97;
+    uint64_t kl_t98;
     bool kl_t99;
-    uint64_t kl_t100;
+    struct kl_2kl2os_path* kl_t100;
     struct kl_2kl2os_path* kl_t101;
-    uint64_t kl_t102;
-    bool kl_t103;
-    struct kl_2kl2os_path* kl_t104;
-    struct kl_7prelude_textual__ref kl_t105;
-    struct kl_7prelude_str kl_t106;
-    struct kl_7prelude_str* kl_t107;
-    uint8_t* kl_t108;
-    bool kl_t110;
-    uint64_t kl_t111;
-    struct kl_2kl2os_path* kl_t112;
-    uint64_t kl_t113;
-    bool kl_t114;
+    struct kl_7prelude_textual__ref kl_t102;
+    struct kl_7prelude_str kl_t103;
+    struct kl_7prelude_str* kl_t104;
+    uint8_t* kl_t105;
+    bool kl_t107;
+    bool kl_t108;
+    bool kl_t109;
+    uint64_t kl_t110;
+    struct kl_2kl2os_path* kl_t111;
+    uint64_t kl_t112;
+    bool kl_t113;
+    struct kl_2kl2os_path* kl_t114;
     struct kl_2kl2os_path* kl_t115;
     struct kl_7prelude_textual__ref kl_t116;
     struct kl_7prelude_str kl_t117;
     struct kl_7prelude_str* kl_t118;
     uint8_t* kl_t119;
     bool kl_t121;
-    bool kl_t122;
-    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t123;
-    struct kl_2kl2os_file_error kl_e_124;
+    uint64_t kl_t122;
+    struct kl_2kl2os_path* kl_t123;
+    uint64_t kl_t124;
     bool kl_t125;
-    bool kl_t126;
-    struct kl_7prelude_str kl_t127;
-    struct kl_7prelude_str* kl_t128;
-    uint8_t* kl_t129;
-    struct kl_7prelude_textual__ref kl_t131;
-    bool kl_t132;
+    struct kl_2kl2os_path* kl_t126;
+    struct kl_2kl2os_path* kl_t127;
+    struct kl_7prelude_textual__ref kl_t128;
+    struct kl_7prelude_str kl_t129;
+    struct kl_7prelude_str* kl_t130;
+    uint8_t* kl_t131;
     bool kl_t133;
-    struct kl_7prelude_str kl_t134;
-    struct kl_7prelude_str* kl_t135;
-    uint8_t* kl_t136;
-    struct kl_7prelude_textual__ref kl_t138;
-    bool kl_t139;
-    bool kl_t140;
-    struct kl_7prelude_str kl_t141;
-    struct kl_7prelude_str* kl_t142;
-    uint8_t* kl_t143;
-    struct kl_7prelude_textual__ref kl_t145;
+    bool kl_t134;
+    struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE kl_t135;
+    struct kl_2kl2os_file_error kl_e_136;
+    bool kl_t137;
+    bool kl_t138;
+    struct kl_7prelude_str kl_t139;
+    struct kl_7prelude_str* kl_t140;
+    uint8_t* kl_t141;
+    struct kl_7prelude_str* kl_t143;
+    struct kl_7prelude_textual__ref kl_t144;
+    bool kl_t145;
     bool kl_t146;
-    bool kl_t147;
-    struct kl_7prelude_str kl_t148;
-    struct kl_7prelude_str* kl_t149;
-    uint8_t* kl_t150;
+    struct kl_7prelude_str kl_t147;
+    struct kl_7prelude_str* kl_t148;
+    uint8_t* kl_t149;
+    struct kl_7prelude_str* kl_t151;
     struct kl_7prelude_textual__ref kl_t152;
     bool kl_t153;
     bool kl_t154;
     struct kl_7prelude_str kl_t155;
     struct kl_7prelude_str* kl_t156;
     uint8_t* kl_t157;
-    struct kl_7prelude_textual__ref kl_t159;
-    bool kl_t160;
+    struct kl_7prelude_str* kl_t159;
+    struct kl_7prelude_textual__ref kl_t160;
     bool kl_t161;
-    struct kl_7prelude_str kl_t162;
-    struct kl_7prelude_str* kl_t163;
-    uint8_t* kl_t164;
-    struct kl_7prelude_textual__ref kl_t166;
-    bool kl_t167;
-    struct kl_7prelude_str kl_t168;
-    struct kl_7prelude_str* kl_t169;
-    uint8_t* kl_t170;
-    struct kl_7prelude_textual__ref kl_t172;
-    bool kl_t173;
-    bool kl_t174;
-    bool kl_t175;
-    struct kl_7prelude_str kl_t176;
-    struct kl_7prelude_str* kl_t177;
-    uint8_t* kl_t178;
-    struct kl_7prelude_textual__ref kl_t180;
-    bool kl_t181;
-    bool kl_t182;
-    struct kl_7prelude_str kl_t183;
-    struct kl_7prelude_str* kl_t184;
-    uint8_t* kl_t185;
-    struct kl_7prelude_textual__ref kl_t187;
-    bool kl_t188;
-    struct kl_7prelude_str kl_t189;
+    bool kl_t162;
+    struct kl_7prelude_str kl_t163;
+    struct kl_7prelude_str* kl_t164;
+    uint8_t* kl_t165;
+    struct kl_7prelude_str* kl_t167;
+    struct kl_7prelude_textual__ref kl_t168;
+    bool kl_t169;
+    bool kl_t170;
+    struct kl_7prelude_str kl_t171;
+    struct kl_7prelude_str* kl_t172;
+    uint8_t* kl_t173;
+    struct kl_7prelude_str* kl_t175;
+    struct kl_7prelude_textual__ref kl_t176;
+    bool kl_t177;
+    bool kl_t178;
+    struct kl_7prelude_str kl_t179;
+    struct kl_7prelude_str* kl_t180;
+    uint8_t* kl_t181;
+    struct kl_7prelude_str* kl_t183;
+    struct kl_7prelude_textual__ref kl_t184;
+    bool kl_t185;
+    struct kl_7prelude_str kl_t186;
+    struct kl_7prelude_str* kl_t187;
+    uint8_t* kl_t188;
     struct kl_7prelude_str* kl_t190;
-    uint8_t* kl_t191;
-    struct kl_7prelude_textual__ref kl_t193;
+    struct kl_7prelude_textual__ref kl_t191;
+    bool kl_t192;
+    bool kl_t193;
     bool kl_t194;
-    bool kl_t195;
-    struct kl_7prelude_str kl_t196;
-    struct kl_7prelude_str* kl_t197;
-    uint8_t* kl_t198;
-    int32_t kl_t200;
+    struct kl_7prelude_str kl_t195;
+    struct kl_7prelude_str* kl_t196;
+    uint8_t* kl_t197;
+    struct kl_7prelude_str* kl_t199;
+    struct kl_7prelude_textual__ref kl_t200;
     bool kl_t201;
-    struct kl_7prelude_str kl_t202;
-    struct kl_7prelude_str* kl_t203;
-    uint8_t* kl_t204;
-    int32_t kl_t206;
-    bool kl_t207;
-    bool kl_t208;
-    struct kl_7prelude_str kl_t209;
-    struct kl_7prelude_str* kl_t210;
-    uint8_t* kl_t211;
-    struct kl_7prelude_textual__ref kl_t213;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t214;
-    int32_t kl_t215;
+    bool kl_t202;
+    struct kl_7prelude_str kl_t203;
+    struct kl_7prelude_str* kl_t204;
+    uint8_t* kl_t205;
+    struct kl_7prelude_str* kl_t207;
+    struct kl_7prelude_textual__ref kl_t208;
+    bool kl_t209;
+    struct kl_7prelude_str kl_t210;
+    struct kl_7prelude_str* kl_t211;
+    uint8_t* kl_t212;
+    struct kl_7prelude_str* kl_t214;
+    struct kl_7prelude_textual__ref kl_t215;
     bool kl_t216;
-    struct kl_7prelude_str kl_t217;
-    struct kl_7prelude_str* kl_t218;
-    uint8_t* kl_t219;
-    struct kl_7prelude_textual__ref kl_t221;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t222;
-    int32_t kl_t223;
-    bool kl_t224;
-    struct kl_7prelude_str kl_t225;
-    struct kl_7prelude_str* kl_t226;
-    uint8_t* kl_t227;
-    struct kl_7prelude_textual__ref kl_t229;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t230;
-    int32_t kl_t231;
-    bool kl_t232;
-    struct kl_7prelude_str kl_t233;
-    struct kl_7prelude_str* kl_t234;
-    uint8_t* kl_t235;
-    struct kl_7prelude_textual__ref kl_t237;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t238;
-    int32_t kl_t239;
-    bool kl_t240;
-    struct kl_7prelude_str kl_t241;
-    struct kl_7prelude_str* kl_t242;
-    uint8_t* kl_t243;
+    bool kl_t217;
+    struct kl_7prelude_str kl_t218;
+    struct kl_7prelude_str* kl_t219;
+    uint8_t* kl_t220;
+    int32_t kl_t222;
+    bool kl_t223;
+    struct kl_7prelude_str kl_t224;
+    struct kl_7prelude_str* kl_t225;
+    uint8_t* kl_t226;
+    int32_t kl_t228;
+    bool kl_t229;
+    bool kl_t230;
+    struct kl_7prelude_str kl_t231;
+    struct kl_7prelude_str* kl_t232;
+    uint8_t* kl_t233;
+    struct kl_7prelude_str* kl_t235;
+    struct kl_7prelude_textual__ref kl_t236;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t237;
+    int32_t kl_t238;
+    bool kl_t239;
+    struct kl_7prelude_str kl_t240;
+    struct kl_7prelude_str* kl_t241;
+    uint8_t* kl_t242;
+    struct kl_7prelude_str* kl_t244;
     struct kl_7prelude_textual__ref kl_t245;
     struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t246;
     int32_t kl_t247;
     bool kl_t248;
-    bool kl_t249;
-    struct kl_7prelude_str kl_t250;
-    struct kl_7prelude_str* kl_t251;
-    uint8_t* kl_t252;
+    struct kl_7prelude_str kl_t249;
+    struct kl_7prelude_str* kl_t250;
+    uint8_t* kl_t251;
+    struct kl_7prelude_str* kl_t253;
     struct kl_7prelude_textual__ref kl_t254;
     struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t255;
     int32_t kl_t256;
@@ -9108,51 +9129,81 @@ int32_t kl__4main__( void )
     struct kl_7prelude_str kl_t258;
     struct kl_7prelude_str* kl_t259;
     uint8_t* kl_t260;
-    struct kl_7prelude_textual__ref kl_t262;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t263;
-    int32_t kl_t264;
-    bool kl_t265;
-    struct kl_7prelude_str kl_t266;
-    struct kl_7prelude_str* kl_t267;
-    uint8_t* kl_t268;
-    struct kl_7prelude_textual__ref kl_t270;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t271;
-    int32_t kl_t272;
-    bool kl_t273;
-    bool kl_t274;
-    struct kl_7prelude_str kl_t275;
-    struct kl_7prelude_str* kl_t276;
-    uint8_t* kl_t277;
-    struct kl_7prelude_textual__ref kl_t279;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t280;
-    int32_t kl_t281;
-    bool kl_t282;
-    struct kl_7prelude_str kl_t283;
-    struct kl_7prelude_str* kl_t284;
-    uint8_t* kl_t285;
-    struct kl_7prelude_textual__ref kl_t287;
-    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t288;
-    int32_t kl_t289;
-    bool kl_t290;
-    struct kl_7prelude_str kl_t291;
-    struct kl_7prelude_str* kl_t292;
-    uint8_t* kl_t293;
-    struct kl_7prelude_textual__ref kl_t295;
-    bool kl_t296;
-    bool kl_t297;
-    bool kl_t298;
-    bool kl_t299;
-    bool kl_t300;
-    ( void ) kl_e_31;
-    ( void ) kl_e_124;
+    struct kl_7prelude_str* kl_t262;
+    struct kl_7prelude_textual__ref kl_t263;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t264;
+    int32_t kl_t265;
+    bool kl_t266;
+    struct kl_7prelude_str kl_t267;
+    struct kl_7prelude_str* kl_t268;
+    uint8_t* kl_t269;
+    struct kl_7prelude_str* kl_t271;
+    struct kl_7prelude_textual__ref kl_t272;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t273;
+    int32_t kl_t274;
+    bool kl_t275;
+    bool kl_t276;
+    struct kl_7prelude_str kl_t277;
+    struct kl_7prelude_str* kl_t278;
+    uint8_t* kl_t279;
+    struct kl_7prelude_str* kl_t281;
+    struct kl_7prelude_textual__ref kl_t282;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t283;
+    int32_t kl_t284;
+    bool kl_t285;
+    struct kl_7prelude_str kl_t286;
+    struct kl_7prelude_str* kl_t287;
+    uint8_t* kl_t288;
+    struct kl_7prelude_str* kl_t290;
+    struct kl_7prelude_textual__ref kl_t291;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t292;
+    int32_t kl_t293;
+    bool kl_t294;
+    struct kl_7prelude_str kl_t295;
+    struct kl_7prelude_str* kl_t296;
+    uint8_t* kl_t297;
+    struct kl_7prelude_str* kl_t299;
+    struct kl_7prelude_textual__ref kl_t300;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t301;
+    int32_t kl_t302;
+    bool kl_t303;
+    bool kl_t304;
+    struct kl_7prelude_str kl_t305;
+    struct kl_7prelude_str* kl_t306;
+    uint8_t* kl_t307;
+    struct kl_7prelude_str* kl_t309;
+    struct kl_7prelude_textual__ref kl_t310;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t311;
+    int32_t kl_t312;
+    bool kl_t313;
+    struct kl_7prelude_str kl_t314;
+    struct kl_7prelude_str* kl_t315;
+    uint8_t* kl_t316;
+    struct kl_7prelude_str* kl_t318;
+    struct kl_7prelude_textual__ref kl_t319;
+    struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_t320;
+    int32_t kl_t321;
+    bool kl_t322;
+    struct kl_7prelude_str kl_t323;
+    struct kl_7prelude_str* kl_t324;
+    uint8_t* kl_t325;
+    struct kl_7prelude_str* kl_t327;
+    struct kl_7prelude_textual__ref kl_t328;
+    bool kl_t329;
+    bool kl_t330;
+    bool kl_t331;
+    bool kl_t332;
+    bool kl_t333;
+    ( void ) kl_e_34;
+    ( void ) kl_e_136;
 #line 55 "os_directory/main.kl"
-    kl_t297 = false;
+    kl_t330 = false;
 #line 55 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 55 "os_directory/main.kl"
-    kl_t299 = false;
+    kl_t332 = false;
 #line 55 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 55 "os_directory/main.kl"
     kl_t2 = &kl_t1;
 #line 55 "os_directory/main.kl"
@@ -9160,366 +9211,388 @@ int32_t kl__4main__( void )
 #line 55 "os_directory/main.kl"
     kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 1 );
 #line 55 "os_directory/main.kl"
-    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t5 = &kl_t1;
 #line 55 "os_directory/main.kl"
-    kl_t6 = kl_2kl2os_16create_directory__7textual( kl_t5 );
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t5, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 55 "os_directory/main.kl"
-    kl_t7 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t6 );
+    kl_t7 = kl_2kl2os_16create_directory__7textual( kl_t6 );
 #line 55 "os_directory/main.kl"
-    kl_t8 = kl_t7 != 0;
+    kl_t8 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t7 );
 #line 55 "os_directory/main.kl"
-    if ( kl_t8 ) goto bb1; else goto bb2;
+    kl_t9 = kl_t8 != 0;
+#line 55 "os_directory/main.kl"
+    if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
     kl_t0 = 1;
 #line 57 "os_directory/main.kl"
     return kl_t0;
     bb2:
 #line 60 "os_directory/main.kl"
-    kl_t10 = &kl_t9;
+    kl_t11 = &kl_t10;
 #line 60 "os_directory/main.kl"
-    kl_t11 = ( uint8_t* ) "d";
+    kl_t12 = ( uint8_t* ) "d";
 #line 60 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 1 );
 #line 60 "os_directory/main.kl"
-    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t14 = &kl_t10;
 #line 60 "os_directory/main.kl"
-    kl_t14 = kl_2kl2os_16create_directory__7textual( kl_t13 );
+    kl_t15 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t14, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 60 "os_directory/main.kl"
-    kl_t15 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t14 );
+    kl_t16 = kl_2kl2os_16create_directory__7textual( kl_t15 );
 #line 60 "os_directory/main.kl"
-    kl_t16 = kl_t15 != 3;
+    kl_t17 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t16 );
 #line 60 "os_directory/main.kl"
-    if ( kl_t16 ) goto bb3; else goto bb4;
+    kl_t18 = kl_t17 != 3;
+#line 60 "os_directory/main.kl"
+    if ( kl_t18 ) goto bb3; else goto bb4;
     bb3:
     kl_t0 = 2;
 #line 62 "os_directory/main.kl"
     return kl_t0;
     bb4:
 #line 66 "os_directory/main.kl"
-    kl_t18 = &kl_t17;
+    kl_t20 = &kl_t19;
 #line 66 "os_directory/main.kl"
-    kl_t19 = ( uint8_t* ) "d";
+    kl_t21 = ( uint8_t* ) "d";
 #line 66 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t18, kl_t19, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 1 );
 #line 66 "os_directory/main.kl"
-    kl_t21 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t17, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t23 = &kl_t19;
 #line 66 "os_directory/main.kl"
-    kl_t22 = kl_2kl2os_14list_directory__7textual( kl_t21 );
+    kl_t24 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t23, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 66 "os_directory/main.kl"
-    kl_t297 = true;
+    kl_t25 = kl_2kl2os_14list_directory__7textual( kl_t24 );
 #line 66 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t330 = true;
 #line 66 "os_directory/main.kl"
-    kl_t23 = kl_t22;
+    kl_t331 = false;
 #line 66 "os_directory/main.kl"
-    kl_t297 = false;
+    kl_t26 = kl_t25;
 #line 66 "os_directory/main.kl"
-    kl_t298 = true;
+    kl_t330 = false;
 #line 66 "os_directory/main.kl"
-    if ( kl_t297 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t22 );
+    kl_t331 = true;
 #line 66 "os_directory/main.kl"
-    kl_t297 = false;
+    if ( kl_t330 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t25 );
+#line 66 "os_directory/main.kl"
+    kl_t330 = false;
 #line 68 "os_directory/main.kl"
-    kl_t24 = kl_t23.tag == 0;
+    kl_t27 = kl_t26.tag == 0;
 #line 68 "os_directory/main.kl"
-    if ( kl_t24 ) goto bb5; else goto bb6;
+    if ( kl_t27 ) goto bb5; else goto bb6;
     bb5:
 #line 68 "os_directory/main.kl"
-    kl_t25 = kl_t23;
+    kl_t28 = kl_t26;
 #line 68 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 68 "os_directory/main.kl"
-    kl_entries_26 = kl_t25.kl_2ok_value;
-    kl_t27 = &kl_entries_26;
+    kl_entries_29 = kl_t28.kl_2ok_value;
+    kl_t30 = &kl_entries_29;
 #line 69 "os_directory/main.kl"
-    kl_t28 = kl_2kl4list_8is_empty__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t27 );
+    kl_t31 = kl_2kl4list_8is_empty__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t30 );
 #line 69 "os_directory/main.kl"
-    kl_t29 = !kl_t28;
+    kl_t32 = !kl_t31;
 #line 69 "os_directory/main.kl"
-    if ( kl_t29 ) goto bb7; else goto bb8;
+    if ( kl_t32 ) goto bb7; else goto bb8;
     bb6:
 #line 74 "os_directory/main.kl"
-    kl_t30 = kl_t23;
+    kl_t33 = kl_t26;
 #line 74 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 74 "os_directory/main.kl"
-    kl_e_31 = kl_t30.kl_3err_error;
+    kl_e_34 = kl_t33.kl_3err_error;
     kl_t0 = 4;
 #line 75 "os_directory/main.kl"
-    if ( kl_t298 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t23 );
+    if ( kl_t331 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t26 );
 #line 75 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 75 "os_directory/main.kl"
     return kl_t0;
     bb7:
 #line 71 "os_directory/main.kl"
     kl_t0 = 3;
 #line 71 "os_directory/main.kl"
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_26 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_29 );
 #line 71 "os_directory/main.kl"
-    if ( kl_t298 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t23 );
+    if ( kl_t331 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t26 );
 #line 71 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 71 "os_directory/main.kl"
     return kl_t0;
     bb8:
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_26 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_29 );
 #line 73 "os_directory/main.kl"
     goto bb9;
     bb9:
 #line 66 "os_directory/main.kl"
-    if ( kl_t298 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t23 );
+    if ( kl_t331 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t26 );
 #line 66 "os_directory/main.kl"
-    kl_t298 = false;
+    kl_t331 = false;
 #line 78 "os_directory/main.kl"
-    kl_t34 = &kl_t33;
+    kl_t37 = &kl_t36;
 #line 78 "os_directory/main.kl"
-    kl_t35 = ( uint8_t* ) "d/a.txt";
+    kl_t38 = ( uint8_t* ) "d/a.txt";
 #line 78 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t34, kl_t35, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t37, kl_t38, 7 );
 #line 78 "os_directory/main.kl"
-    kl_t37 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t33, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t40 = &kl_t36;
 #line 78 "os_directory/main.kl"
-    kl_t39 = &kl_t38;
+    kl_t41 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t40, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 78 "os_directory/main.kl"
-    kl_t40 = ( uint8_t* ) "a";
+    kl_t43 = &kl_t42;
 #line 78 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t39, kl_t40, 1 );
+    kl_t44 = ( uint8_t* ) "a";
 #line 78 "os_directory/main.kl"
-    kl_t42 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t38, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t43, kl_t44, 1 );
 #line 78 "os_directory/main.kl"
-    kl_t43 = kl_2kl2os_10write_file__7textual_7textual( kl_t37, kl_t42 );
+    kl_t46 = &kl_t42;
 #line 78 "os_directory/main.kl"
-    kl_t44 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t43 );
+    kl_t47 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t46, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 78 "os_directory/main.kl"
-    kl_t45 = kl_t44 != 0;
+    kl_t48 = kl_2kl2os_10write_file__7textual_7textual( kl_t41, kl_t47 );
 #line 78 "os_directory/main.kl"
-    kl_t32 = kl_t45;
+    kl_t49 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t48 );
 #line 78 "os_directory/main.kl"
-    if ( kl_t32 ) goto bb11; else goto bb10;
+    kl_t50 = kl_t49 != 0;
+#line 78 "os_directory/main.kl"
+    kl_t35 = kl_t50;
+#line 78 "os_directory/main.kl"
+    if ( kl_t35 ) goto bb11; else goto bb10;
     bb10:
-#line 78 "os_directory/main.kl"
-    kl_t47 = &kl_t46;
-#line 78 "os_directory/main.kl"
-    kl_t48 = ( uint8_t* ) "d/b.txt";
-#line 78 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t47, kl_t48, 7 );
-#line 78 "os_directory/main.kl"
-    kl_t50 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t46, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 78 "os_directory/main.kl"
     kl_t52 = &kl_t51;
 #line 78 "os_directory/main.kl"
-    kl_t53 = ( uint8_t* ) "b";
+    kl_t53 = ( uint8_t* ) "d/b.txt";
 #line 78 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t52, kl_t53, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t52, kl_t53, 7 );
 #line 78 "os_directory/main.kl"
-    kl_t55 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t51, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t55 = &kl_t51;
 #line 78 "os_directory/main.kl"
-    kl_t56 = kl_2kl2os_10write_file__7textual_7textual( kl_t50, kl_t55 );
+    kl_t56 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t55, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 78 "os_directory/main.kl"
-    kl_t57 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t56 );
+    kl_t58 = &kl_t57;
 #line 78 "os_directory/main.kl"
-    kl_t58 = kl_t57 != 0;
+    kl_t59 = ( uint8_t* ) "b";
 #line 78 "os_directory/main.kl"
-    kl_t32 = kl_t58;
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t58, kl_t59, 1 );
+#line 78 "os_directory/main.kl"
+    kl_t61 = &kl_t57;
+#line 78 "os_directory/main.kl"
+    kl_t62 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t61, &kl_7prelude_str__as_kl_7prelude_textual };
+#line 78 "os_directory/main.kl"
+    kl_t63 = kl_2kl2os_10write_file__7textual_7textual( kl_t56, kl_t62 );
+#line 78 "os_directory/main.kl"
+    kl_t64 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t63 );
+#line 78 "os_directory/main.kl"
+    kl_t65 = kl_t64 != 0;
+#line 78 "os_directory/main.kl"
+    kl_t35 = kl_t65;
 #line 78 "os_directory/main.kl"
     goto bb11;
     bb11:
 #line 78 "os_directory/main.kl"
-    if ( kl_t32 ) goto bb12; else goto bb13;
+    if ( kl_t35 ) goto bb12; else goto bb13;
     bb12:
     kl_t0 = 5;
 #line 80 "os_directory/main.kl"
     return kl_t0;
     bb13:
 #line 84 "os_directory/main.kl"
-    kl_t60 = &kl_t59;
+    kl_t67 = &kl_t66;
 #line 84 "os_directory/main.kl"
-    kl_t61 = ( uint8_t* ) "d";
+    kl_t68 = ( uint8_t* ) "d";
 #line 84 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t60, kl_t61, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t67, kl_t68, 1 );
 #line 84 "os_directory/main.kl"
-    kl_t63 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t59, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t70 = &kl_t66;
 #line 84 "os_directory/main.kl"
-    kl_t64 = kl_2kl2os_14list_directory__7textual( kl_t63 );
+    kl_t71 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t70, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 84 "os_directory/main.kl"
-    kl_t299 = true;
+    kl_t72 = kl_2kl2os_14list_directory__7textual( kl_t71 );
 #line 84 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t332 = true;
 #line 84 "os_directory/main.kl"
-    kl_t65 = kl_t64;
+    kl_t333 = false;
 #line 84 "os_directory/main.kl"
-    kl_t299 = false;
+    kl_t73 = kl_t72;
 #line 84 "os_directory/main.kl"
-    kl_t300 = true;
+    kl_t332 = false;
 #line 84 "os_directory/main.kl"
-    if ( kl_t299 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t64 );
+    kl_t333 = true;
 #line 84 "os_directory/main.kl"
-    kl_t299 = false;
+    if ( kl_t332 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t72 );
+#line 84 "os_directory/main.kl"
+    kl_t332 = false;
 #line 86 "os_directory/main.kl"
-    kl_t66 = kl_t65.tag == 0;
+    kl_t74 = kl_t73.tag == 0;
 #line 86 "os_directory/main.kl"
-    if ( kl_t66 ) goto bb14; else goto bb15;
+    if ( kl_t74 ) goto bb14; else goto bb15;
     bb14:
 #line 86 "os_directory/main.kl"
-    kl_t67 = kl_t65;
+    kl_t75 = kl_t73;
 #line 86 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 86 "os_directory/main.kl"
-    kl_entries_68 = kl_t67.kl_2ok_value;
-    kl_t70 = &kl_entries_68;
+    kl_entries_76 = kl_t75.kl_2ok_value;
+    kl_t78 = &kl_entries_76;
 #line 87 "os_directory/main.kl"
-    kl_t71 = kl_2kl4list_6as_run__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t70 );
+    kl_t79 = kl_2kl4list_6as_run__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE( kl_t78 );
 #line 87 "os_directory/main.kl"
-    kl_run_69 = kl_t71;
-    kl_t72 = ( kl_run_69 ).size;
+    kl_run_77 = kl_t79;
+    kl_t80 = ( kl_run_77 ).size;
 #line 88 "os_directory/main.kl"
-    kl_t73 = kl_t72 != 2;
+    kl_t81 = kl_t80 != 2;
 #line 88 "os_directory/main.kl"
-    if ( kl_t73 ) goto bb16; else goto bb17;
+    if ( kl_t81 ) goto bb16; else goto bb17;
     bb15:
 #line 98 "os_directory/main.kl"
-    kl_t123 = kl_t65;
+    kl_t135 = kl_t73;
 #line 98 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 98 "os_directory/main.kl"
-    kl_e_124 = kl_t123.kl_3err_error;
+    kl_e_136 = kl_t135.kl_3err_error;
     kl_t0 = 8;
 #line 99 "os_directory/main.kl"
-    if ( kl_t300 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t65 );
+    if ( kl_t333 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t73 );
 #line 99 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 99 "os_directory/main.kl"
     return kl_t0;
     bb16:
 #line 90 "os_directory/main.kl"
     kl_t0 = 6;
 #line 90 "os_directory/main.kl"
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_68 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_76 );
 #line 90 "os_directory/main.kl"
-    if ( kl_t300 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t65 );
+    if ( kl_t333 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t73 );
 #line 90 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 90 "os_directory/main.kl"
     return kl_t0;
     bb17:
-    kl_t76 = ( kl_run_69 ).size;
+    kl_t84 = ( kl_run_77 ).size;
 #line 92 "os_directory/main.kl"
-    kl_t77 = ( kl_run_69 ).data;
+    kl_t85 = ( kl_run_77 ).data;
 #line 92 "os_directory/main.kl"
-    kl_t78 = ( uint64_t ) 0;
+    kl_t86 = ( uint64_t ) 0;
 #line 92 "os_directory/main.kl"
-    kl_t79 = kl_t78 < kl_t76;
+    kl_t87 = kl_t86 < kl_t84;
 #line 92 "os_directory/main.kl"
-    if ( kl_t79 ) goto bb19; else goto bb18;
+    if ( kl_t87 ) goto bb19; else goto bb18;
     bb18:
 #line 92 "os_directory/main.kl"
     kl_rt_panic( "os_directory/main.kl", 92, "out of bounds: run[0]" );
     bb19:
 #line 92 "os_directory/main.kl"
-    kl_t80 = kl_t77 + kl_t78;
+    kl_t88 = kl_t85 + kl_t86;
 #line 92 "os_directory/main.kl"
-    kl_t81 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_t80 ), &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t89 = &( *kl_t88 );
 #line 92 "os_directory/main.kl"
-    kl_t83 = &kl_t82;
+    kl_t90 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t89, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 92 "os_directory/main.kl"
-    kl_t84 = ( uint8_t* ) "d/a.txt";
+    kl_t92 = &kl_t91;
 #line 92 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t83, kl_t84, 7 );
+    kl_t93 = ( uint8_t* ) "d/a.txt";
 #line 92 "os_directory/main.kl"
-    kl_t86 = kl__2is__7textual_Q7prelude3str( kl_t81, kl_t82 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t92, kl_t93, 7 );
 #line 92 "os_directory/main.kl"
-    kl_t75 = kl_t86;
+    kl_t95 = kl__2is__7textual_Q7prelude3str( kl_t90, kl_t91 );
 #line 92 "os_directory/main.kl"
-    if ( kl_t75 ) goto bb20; else goto bb21;
+    kl_t83 = kl_t95;
+#line 92 "os_directory/main.kl"
+    if ( kl_t83 ) goto bb20; else goto bb21;
     bb20:
 #line 92 "os_directory/main.kl"
-    kl_t87 = ( kl_run_69 ).size;
+    kl_t96 = ( kl_run_77 ).size;
 #line 92 "os_directory/main.kl"
-    kl_t88 = ( kl_run_69 ).data;
+    kl_t97 = ( kl_run_77 ).data;
 #line 92 "os_directory/main.kl"
-    kl_t89 = ( uint64_t ) 1;
+    kl_t98 = ( uint64_t ) 1;
 #line 92 "os_directory/main.kl"
-    kl_t90 = kl_t89 < kl_t87;
+    kl_t99 = kl_t98 < kl_t96;
 #line 92 "os_directory/main.kl"
-    if ( kl_t90 ) goto bb23; else goto bb22;
+    if ( kl_t99 ) goto bb23; else goto bb22;
     bb21:
 #line 92 "os_directory/main.kl"
-    kl_t98 = !kl_t75;
+    kl_t108 = !kl_t83;
 #line 92 "os_directory/main.kl"
-    kl_t74 = kl_t98;
+    kl_t82 = kl_t108;
 #line 92 "os_directory/main.kl"
-    if ( kl_t74 ) goto bb24; else goto bb25;
+    if ( kl_t82 ) goto bb24; else goto bb25;
     bb22:
 #line 92 "os_directory/main.kl"
     kl_rt_panic( "os_directory/main.kl", 92, "out of bounds: run[1]" );
     bb23:
 #line 92 "os_directory/main.kl"
-    kl_t91 = kl_t88 + kl_t89;
+    kl_t100 = kl_t97 + kl_t98;
 #line 92 "os_directory/main.kl"
-    kl_t92 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_t91 ), &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t101 = &( *kl_t100 );
 #line 92 "os_directory/main.kl"
-    kl_t94 = &kl_t93;
+    kl_t102 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t101, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 92 "os_directory/main.kl"
-    kl_t95 = ( uint8_t* ) "d/b.txt";
+    kl_t104 = &kl_t103;
 #line 92 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t94, kl_t95, 7 );
+    kl_t105 = ( uint8_t* ) "d/b.txt";
 #line 92 "os_directory/main.kl"
-    kl_t97 = kl__2is__7textual_Q7prelude3str( kl_t92, kl_t93 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t104, kl_t105, 7 );
 #line 92 "os_directory/main.kl"
-    kl_t75 = kl_t97;
+    kl_t107 = kl__2is__7textual_Q7prelude3str( kl_t102, kl_t103 );
+#line 92 "os_directory/main.kl"
+    kl_t83 = kl_t107;
 #line 92 "os_directory/main.kl"
     goto bb21;
     bb24:
 #line 93 "os_directory/main.kl"
-    kl_t100 = ( kl_run_69 ).size;
+    kl_t110 = ( kl_run_77 ).size;
 #line 93 "os_directory/main.kl"
-    kl_t101 = ( kl_run_69 ).data;
+    kl_t111 = ( kl_run_77 ).data;
 #line 93 "os_directory/main.kl"
-    kl_t102 = ( uint64_t ) 0;
+    kl_t112 = ( uint64_t ) 0;
 #line 93 "os_directory/main.kl"
-    kl_t103 = kl_t102 < kl_t100;
+    kl_t113 = kl_t112 < kl_t110;
 #line 93 "os_directory/main.kl"
-    if ( kl_t103 ) goto bb27; else goto bb26;
+    if ( kl_t113 ) goto bb27; else goto bb26;
     bb25:
 #line 92 "os_directory/main.kl"
-    if ( kl_t74 ) goto bb32; else goto bb33;
+    if ( kl_t82 ) goto bb32; else goto bb33;
     bb26:
 #line 93 "os_directory/main.kl"
     kl_rt_panic( "os_directory/main.kl", 93, "out of bounds: run[0]" );
     bb27:
 #line 93 "os_directory/main.kl"
-    kl_t104 = kl_t101 + kl_t102;
+    kl_t114 = kl_t111 + kl_t112;
 #line 93 "os_directory/main.kl"
-    kl_t105 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_t104 ), &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t115 = &( *kl_t114 );
 #line 93 "os_directory/main.kl"
-    kl_t107 = &kl_t106;
+    kl_t116 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t115, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 93 "os_directory/main.kl"
-    kl_t108 = ( uint8_t* ) "d/b.txt";
+    kl_t118 = &kl_t117;
 #line 93 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t107, kl_t108, 7 );
+    kl_t119 = ( uint8_t* ) "d/b.txt";
 #line 93 "os_directory/main.kl"
-    kl_t110 = kl__2is__7textual_Q7prelude3str( kl_t105, kl_t106 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t118, kl_t119, 7 );
 #line 93 "os_directory/main.kl"
-    kl_t99 = kl_t110;
+    kl_t121 = kl__2is__7textual_Q7prelude3str( kl_t116, kl_t117 );
 #line 93 "os_directory/main.kl"
-    if ( kl_t99 ) goto bb28; else goto bb29;
+    kl_t109 = kl_t121;
+#line 93 "os_directory/main.kl"
+    if ( kl_t109 ) goto bb28; else goto bb29;
     bb28:
 #line 93 "os_directory/main.kl"
-    kl_t111 = ( kl_run_69 ).size;
+    kl_t122 = ( kl_run_77 ).size;
 #line 93 "os_directory/main.kl"
-    kl_t112 = ( kl_run_69 ).data;
+    kl_t123 = ( kl_run_77 ).data;
 #line 93 "os_directory/main.kl"
-    kl_t113 = ( uint64_t ) 1;
+    kl_t124 = ( uint64_t ) 1;
 #line 93 "os_directory/main.kl"
-    kl_t114 = kl_t113 < kl_t111;
+    kl_t125 = kl_t124 < kl_t122;
 #line 93 "os_directory/main.kl"
-    if ( kl_t114 ) goto bb31; else goto bb30;
+    if ( kl_t125 ) goto bb31; else goto bb30;
     bb29:
 #line 93 "os_directory/main.kl"
-    kl_t122 = !kl_t99;
+    kl_t134 = !kl_t109;
 #line 92 "os_directory/main.kl"
-    kl_t74 = kl_t122;
+    kl_t82 = kl_t134;
 #line 92 "os_directory/main.kl"
     goto bb25;
     bb30:
@@ -9527,504 +9600,548 @@ int32_t kl__4main__( void )
     kl_rt_panic( "os_directory/main.kl", 93, "out of bounds: run[1]" );
     bb31:
 #line 93 "os_directory/main.kl"
-    kl_t115 = kl_t112 + kl_t113;
+    kl_t126 = kl_t123 + kl_t124;
 #line 93 "os_directory/main.kl"
-    kl_t116 = ( struct kl_7prelude_textual__ref ) { ( void* ) &( *kl_t115 ), &kl_2kl2os_path__as_kl_7prelude_textual };
+    kl_t127 = &( *kl_t126 );
 #line 93 "os_directory/main.kl"
-    kl_t118 = &kl_t117;
+    kl_t128 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t127, &kl_2kl2os_path__as_kl_7prelude_textual };
 #line 93 "os_directory/main.kl"
-    kl_t119 = ( uint8_t* ) "d/a.txt";
+    kl_t130 = &kl_t129;
 #line 93 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t118, kl_t119, 7 );
+    kl_t131 = ( uint8_t* ) "d/a.txt";
 #line 93 "os_directory/main.kl"
-    kl_t121 = kl__2is__7textual_Q7prelude3str( kl_t116, kl_t117 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t130, kl_t131, 7 );
 #line 93 "os_directory/main.kl"
-    kl_t99 = kl_t121;
+    kl_t133 = kl__2is__7textual_Q7prelude3str( kl_t128, kl_t129 );
+#line 93 "os_directory/main.kl"
+    kl_t109 = kl_t133;
 #line 93 "os_directory/main.kl"
     goto bb29;
     bb32:
     kl_t0 = 7;
 #line 95 "os_directory/main.kl"
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_68 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_76 );
 #line 95 "os_directory/main.kl"
-    if ( kl_t300 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t65 );
+    if ( kl_t333 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t73 );
 #line 95 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 95 "os_directory/main.kl"
     return kl_t0;
     bb33:
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_68 );
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &kl_entries_76 );
 #line 97 "os_directory/main.kl"
     goto bb34;
     bb34:
 #line 84 "os_directory/main.kl"
-    if ( kl_t300 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t65 );
+    if ( kl_t333 ) kl_7prelude_6result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE__dtor( &kl_t73 );
 #line 84 "os_directory/main.kl"
-    kl_t300 = false;
+    kl_t333 = false;
 #line 102 "os_directory/main.kl"
-    kl_t128 = &kl_t127;
+    kl_t140 = &kl_t139;
 #line 102 "os_directory/main.kl"
-    kl_t129 = ( uint8_t* ) "d";
+    kl_t141 = ( uint8_t* ) "d";
 #line 102 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t128, kl_t129, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t140, kl_t141, 1 );
 #line 102 "os_directory/main.kl"
-    kl_t131 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t127, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t143 = &kl_t139;
 #line 102 "os_directory/main.kl"
-    kl_t132 = kl_2kl2os_6exists__7textual( kl_t131 );
+    kl_t144 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t143, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 102 "os_directory/main.kl"
-    kl_t133 = !kl_t132;
+    kl_t145 = kl_2kl2os_6exists__7textual( kl_t144 );
 #line 102 "os_directory/main.kl"
-    kl_t126 = kl_t133;
+    kl_t146 = !kl_t145;
 #line 102 "os_directory/main.kl"
-    if ( kl_t126 ) goto bb36; else goto bb35;
+    kl_t138 = kl_t146;
+#line 102 "os_directory/main.kl"
+    if ( kl_t138 ) goto bb36; else goto bb35;
     bb35:
 #line 102 "os_directory/main.kl"
-    kl_t135 = &kl_t134;
+    kl_t148 = &kl_t147;
 #line 102 "os_directory/main.kl"
-    kl_t136 = ( uint8_t* ) "d";
+    kl_t149 = ( uint8_t* ) "d";
 #line 102 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t135, kl_t136, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t148, kl_t149, 1 );
 #line 102 "os_directory/main.kl"
-    kl_t138 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t134, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t151 = &kl_t147;
 #line 102 "os_directory/main.kl"
-    kl_t139 = kl_2kl2os_12is_directory__7textual( kl_t138 );
+    kl_t152 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t151, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 102 "os_directory/main.kl"
-    kl_t140 = !kl_t139;
+    kl_t153 = kl_2kl2os_12is_directory__7textual( kl_t152 );
 #line 102 "os_directory/main.kl"
-    kl_t126 = kl_t140;
+    kl_t154 = !kl_t153;
+#line 102 "os_directory/main.kl"
+    kl_t138 = kl_t154;
 #line 102 "os_directory/main.kl"
     goto bb36;
     bb36:
 #line 102 "os_directory/main.kl"
-    kl_t125 = kl_t126;
+    kl_t137 = kl_t138;
 #line 102 "os_directory/main.kl"
-    if ( kl_t125 ) goto bb38; else goto bb37;
+    if ( kl_t137 ) goto bb38; else goto bb37;
     bb37:
 #line 102 "os_directory/main.kl"
-    kl_t142 = &kl_t141;
+    kl_t156 = &kl_t155;
 #line 102 "os_directory/main.kl"
-    kl_t143 = ( uint8_t* ) "d";
+    kl_t157 = ( uint8_t* ) "d";
 #line 102 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t142, kl_t143, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t156, kl_t157, 1 );
 #line 102 "os_directory/main.kl"
-    kl_t145 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t141, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t159 = &kl_t155;
 #line 102 "os_directory/main.kl"
-    kl_t146 = kl_2kl2os_7is_file__7textual( kl_t145 );
+    kl_t160 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t159, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 102 "os_directory/main.kl"
-    kl_t125 = kl_t146;
+    kl_t161 = kl_2kl2os_7is_file__7textual( kl_t160 );
+#line 102 "os_directory/main.kl"
+    kl_t137 = kl_t161;
 #line 102 "os_directory/main.kl"
     goto bb38;
     bb38:
 #line 102 "os_directory/main.kl"
-    if ( kl_t125 ) goto bb39; else goto bb40;
+    if ( kl_t137 ) goto bb39; else goto bb40;
     bb39:
     kl_t0 = 9;
 #line 104 "os_directory/main.kl"
     return kl_t0;
     bb40:
 #line 107 "os_directory/main.kl"
-    kl_t149 = &kl_t148;
+    kl_t164 = &kl_t163;
 #line 107 "os_directory/main.kl"
-    kl_t150 = ( uint8_t* ) "d/a.txt";
+    kl_t165 = ( uint8_t* ) "d/a.txt";
 #line 107 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t149, kl_t150, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t164, kl_t165, 7 );
 #line 107 "os_directory/main.kl"
-    kl_t152 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t148, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t167 = &kl_t163;
 #line 107 "os_directory/main.kl"
-    kl_t153 = kl_2kl2os_7is_file__7textual( kl_t152 );
+    kl_t168 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t167, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 107 "os_directory/main.kl"
-    kl_t154 = !kl_t153;
+    kl_t169 = kl_2kl2os_7is_file__7textual( kl_t168 );
 #line 107 "os_directory/main.kl"
-    kl_t147 = kl_t154;
+    kl_t170 = !kl_t169;
 #line 107 "os_directory/main.kl"
-    if ( kl_t147 ) goto bb42; else goto bb41;
+    kl_t162 = kl_t170;
+#line 107 "os_directory/main.kl"
+    if ( kl_t162 ) goto bb42; else goto bb41;
     bb41:
 #line 107 "os_directory/main.kl"
-    kl_t156 = &kl_t155;
+    kl_t172 = &kl_t171;
 #line 107 "os_directory/main.kl"
-    kl_t157 = ( uint8_t* ) "d/a.txt";
+    kl_t173 = ( uint8_t* ) "d/a.txt";
 #line 107 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t156, kl_t157, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t172, kl_t173, 7 );
 #line 107 "os_directory/main.kl"
-    kl_t159 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t155, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t175 = &kl_t171;
 #line 107 "os_directory/main.kl"
-    kl_t160 = kl_2kl2os_12is_directory__7textual( kl_t159 );
+    kl_t176 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t175, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 107 "os_directory/main.kl"
-    kl_t147 = kl_t160;
+    kl_t177 = kl_2kl2os_12is_directory__7textual( kl_t176 );
+#line 107 "os_directory/main.kl"
+    kl_t162 = kl_t177;
 #line 107 "os_directory/main.kl"
     goto bb42;
     bb42:
 #line 107 "os_directory/main.kl"
-    if ( kl_t147 ) goto bb43; else goto bb44;
+    if ( kl_t162 ) goto bb43; else goto bb44;
     bb43:
     kl_t0 = 10;
 #line 109 "os_directory/main.kl"
     return kl_t0;
     bb44:
 #line 113 "os_directory/main.kl"
-    kl_t163 = &kl_t162;
+    kl_t180 = &kl_t179;
 #line 113 "os_directory/main.kl"
-    kl_t164 = ( uint8_t* ) "missing";
+    kl_t181 = ( uint8_t* ) "missing";
 #line 113 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t163, kl_t164, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t180, kl_t181, 7 );
 #line 113 "os_directory/main.kl"
-    kl_t166 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t162, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t183 = &kl_t179;
 #line 113 "os_directory/main.kl"
-    kl_t167 = kl_2kl2os_6exists__7textual( kl_t166 );
+    kl_t184 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t183, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 113 "os_directory/main.kl"
-    kl_t161 = kl_t167;
+    kl_t185 = kl_2kl2os_6exists__7textual( kl_t184 );
 #line 113 "os_directory/main.kl"
-    if ( kl_t161 ) goto bb46; else goto bb45;
+    kl_t178 = kl_t185;
+#line 113 "os_directory/main.kl"
+    if ( kl_t178 ) goto bb46; else goto bb45;
     bb45:
 #line 113 "os_directory/main.kl"
-    kl_t169 = &kl_t168;
+    kl_t187 = &kl_t186;
 #line 113 "os_directory/main.kl"
-    kl_t170 = ( uint8_t* ) "d/a.txt/x";
+    kl_t188 = ( uint8_t* ) "d/a.txt/x";
 #line 113 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t169, kl_t170, 9 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t187, kl_t188, 9 );
 #line 113 "os_directory/main.kl"
-    kl_t172 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t168, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t190 = &kl_t186;
 #line 113 "os_directory/main.kl"
-    kl_t173 = kl_2kl2os_6exists__7textual( kl_t172 );
+    kl_t191 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t190, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 113 "os_directory/main.kl"
-    kl_t161 = kl_t173;
+    kl_t192 = kl_2kl2os_6exists__7textual( kl_t191 );
+#line 113 "os_directory/main.kl"
+    kl_t178 = kl_t192;
 #line 113 "os_directory/main.kl"
     goto bb46;
     bb46:
 #line 113 "os_directory/main.kl"
-    if ( kl_t161 ) goto bb47; else goto bb48;
+    if ( kl_t178 ) goto bb47; else goto bb48;
     bb47:
     kl_t0 = 11;
 #line 115 "os_directory/main.kl"
     return kl_t0;
     bb48:
 #line 119 "os_directory/main.kl"
-    kl_t177 = &kl_t176;
+    kl_t196 = &kl_t195;
 #line 119 "os_directory/main.kl"
-    kl_t178 = ( uint8_t* ) "/dev/null";
+    kl_t197 = ( uint8_t* ) "/dev/null";
 #line 119 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t177, kl_t178, 9 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t196, kl_t197, 9 );
 #line 119 "os_directory/main.kl"
-    kl_t180 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t176, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t199 = &kl_t195;
 #line 119 "os_directory/main.kl"
-    kl_t181 = kl_2kl2os_6exists__7textual( kl_t180 );
+    kl_t200 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t199, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 119 "os_directory/main.kl"
-    kl_t182 = !kl_t181;
+    kl_t201 = kl_2kl2os_6exists__7textual( kl_t200 );
 #line 119 "os_directory/main.kl"
-    kl_t175 = kl_t182;
+    kl_t202 = !kl_t201;
 #line 119 "os_directory/main.kl"
-    if ( kl_t175 ) goto bb50; else goto bb49;
+    kl_t194 = kl_t202;
+#line 119 "os_directory/main.kl"
+    if ( kl_t194 ) goto bb50; else goto bb49;
     bb49:
 #line 119 "os_directory/main.kl"
-    kl_t184 = &kl_t183;
+    kl_t204 = &kl_t203;
 #line 119 "os_directory/main.kl"
-    kl_t185 = ( uint8_t* ) "/dev/null";
+    kl_t205 = ( uint8_t* ) "/dev/null";
 #line 119 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t184, kl_t185, 9 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t204, kl_t205, 9 );
 #line 119 "os_directory/main.kl"
-    kl_t187 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t183, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t207 = &kl_t203;
 #line 119 "os_directory/main.kl"
-    kl_t188 = kl_2kl2os_7is_file__7textual( kl_t187 );
+    kl_t208 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t207, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 119 "os_directory/main.kl"
-    kl_t175 = kl_t188;
+    kl_t209 = kl_2kl2os_7is_file__7textual( kl_t208 );
+#line 119 "os_directory/main.kl"
+    kl_t194 = kl_t209;
 #line 119 "os_directory/main.kl"
     goto bb50;
     bb50:
 #line 119 "os_directory/main.kl"
-    kl_t174 = kl_t175;
+    kl_t193 = kl_t194;
 #line 119 "os_directory/main.kl"
-    if ( kl_t174 ) goto bb52; else goto bb51;
+    if ( kl_t193 ) goto bb52; else goto bb51;
     bb51:
 #line 119 "os_directory/main.kl"
-    kl_t190 = &kl_t189;
+    kl_t211 = &kl_t210;
 #line 119 "os_directory/main.kl"
-    kl_t191 = ( uint8_t* ) "/dev/null";
+    kl_t212 = ( uint8_t* ) "/dev/null";
 #line 119 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t190, kl_t191, 9 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t211, kl_t212, 9 );
 #line 119 "os_directory/main.kl"
-    kl_t193 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t189, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t214 = &kl_t210;
 #line 119 "os_directory/main.kl"
-    kl_t194 = kl_2kl2os_12is_directory__7textual( kl_t193 );
+    kl_t215 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t214, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 119 "os_directory/main.kl"
-    kl_t174 = kl_t194;
+    kl_t216 = kl_2kl2os_12is_directory__7textual( kl_t215 );
+#line 119 "os_directory/main.kl"
+    kl_t193 = kl_t216;
 #line 119 "os_directory/main.kl"
     goto bb52;
     bb52:
 #line 119 "os_directory/main.kl"
-    if ( kl_t174 ) goto bb53; else goto bb54;
+    if ( kl_t193 ) goto bb53; else goto bb54;
     bb53:
     kl_t0 = 12;
 #line 121 "os_directory/main.kl"
     return kl_t0;
     bb54:
 #line 125 "os_directory/main.kl"
-    kl_t197 = &kl_t196;
+    kl_t219 = &kl_t218;
 #line 125 "os_directory/main.kl"
-    kl_t198 = ( uint8_t* ) "missing";
+    kl_t220 = ( uint8_t* ) "missing";
 #line 125 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t197, kl_t198, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t219, kl_t220, 7 );
 #line 125 "os_directory/main.kl"
-    kl_t200 = kl__11list_reason__Q7prelude3str( kl_t196 );
+    kl_t222 = kl__11list_reason__Q7prelude3str( kl_t218 );
 #line 125 "os_directory/main.kl"
-    kl_t201 = kl_t200 != 1;
+    kl_t223 = kl_t222 != 1;
 #line 125 "os_directory/main.kl"
-    kl_t195 = kl_t201;
+    kl_t217 = kl_t223;
 #line 125 "os_directory/main.kl"
-    if ( kl_t195 ) goto bb56; else goto bb55;
+    if ( kl_t217 ) goto bb56; else goto bb55;
     bb55:
 #line 125 "os_directory/main.kl"
-    kl_t203 = &kl_t202;
+    kl_t225 = &kl_t224;
 #line 125 "os_directory/main.kl"
-    kl_t204 = ( uint8_t* ) "d/a.txt";
+    kl_t226 = ( uint8_t* ) "d/a.txt";
 #line 125 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t203, kl_t204, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t225, kl_t226, 7 );
 #line 125 "os_directory/main.kl"
-    kl_t206 = kl__11list_reason__Q7prelude3str( kl_t202 );
+    kl_t228 = kl__11list_reason__Q7prelude3str( kl_t224 );
 #line 125 "os_directory/main.kl"
-    kl_t207 = kl_t206 != 5;
+    kl_t229 = kl_t228 != 5;
 #line 125 "os_directory/main.kl"
-    kl_t195 = kl_t207;
+    kl_t217 = kl_t229;
 #line 125 "os_directory/main.kl"
     goto bb56;
     bb56:
 #line 125 "os_directory/main.kl"
-    if ( kl_t195 ) goto bb57; else goto bb58;
+    if ( kl_t217 ) goto bb57; else goto bb58;
     bb57:
     kl_t0 = 13;
 #line 127 "os_directory/main.kl"
     return kl_t0;
     bb58:
 #line 130 "os_directory/main.kl"
-    kl_t210 = &kl_t209;
+    kl_t232 = &kl_t231;
 #line 130 "os_directory/main.kl"
-    kl_t211 = ( uint8_t* ) "d/a.txt";
+    kl_t233 = ( uint8_t* ) "d/a.txt";
 #line 130 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t210, kl_t211, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t232, kl_t233, 7 );
 #line 130 "os_directory/main.kl"
-    kl_t213 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t209, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t235 = &kl_t231;
 #line 130 "os_directory/main.kl"
-    kl_t214 = kl_2kl2os_16create_directory__7textual( kl_t213 );
+    kl_t236 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t235, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 130 "os_directory/main.kl"
-    kl_t215 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t214 );
+    kl_t237 = kl_2kl2os_16create_directory__7textual( kl_t236 );
 #line 130 "os_directory/main.kl"
-    kl_t216 = kl_t215 != 3;
+    kl_t238 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t237 );
 #line 130 "os_directory/main.kl"
-    kl_t208 = kl_t216;
+    kl_t239 = kl_t238 != 3;
 #line 130 "os_directory/main.kl"
-    if ( kl_t208 ) goto bb60; else goto bb59;
+    kl_t230 = kl_t239;
+#line 130 "os_directory/main.kl"
+    if ( kl_t230 ) goto bb60; else goto bb59;
     bb59:
 #line 130 "os_directory/main.kl"
-    kl_t218 = &kl_t217;
+    kl_t241 = &kl_t240;
 #line 130 "os_directory/main.kl"
-    kl_t219 = ( uint8_t* ) "missing/x";
+    kl_t242 = ( uint8_t* ) "missing/x";
 #line 130 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t218, kl_t219, 9 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t241, kl_t242, 9 );
 #line 130 "os_directory/main.kl"
-    kl_t221 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t217, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t244 = &kl_t240;
 #line 130 "os_directory/main.kl"
-    kl_t222 = kl_2kl2os_16create_directory__7textual( kl_t221 );
+    kl_t245 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t244, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 130 "os_directory/main.kl"
-    kl_t223 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t222 );
+    kl_t246 = kl_2kl2os_16create_directory__7textual( kl_t245 );
 #line 130 "os_directory/main.kl"
-    kl_t224 = kl_t223 != 1;
+    kl_t247 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t246 );
 #line 130 "os_directory/main.kl"
-    kl_t208 = kl_t224;
+    kl_t248 = kl_t247 != 1;
+#line 130 "os_directory/main.kl"
+    kl_t230 = kl_t248;
 #line 130 "os_directory/main.kl"
     goto bb60;
     bb60:
 #line 130 "os_directory/main.kl"
-    if ( kl_t208 ) goto bb61; else goto bb62;
+    if ( kl_t230 ) goto bb61; else goto bb62;
     bb61:
     kl_t0 = 14;
 #line 132 "os_directory/main.kl"
     return kl_t0;
     bb62:
 #line 135 "os_directory/main.kl"
-    kl_t226 = &kl_t225;
+    kl_t250 = &kl_t249;
 #line 135 "os_directory/main.kl"
-    kl_t227 = ( uint8_t* ) "d";
+    kl_t251 = ( uint8_t* ) "d";
 #line 135 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t226, kl_t227, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t250, kl_t251, 1 );
 #line 135 "os_directory/main.kl"
-    kl_t229 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t225, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t253 = &kl_t249;
 #line 135 "os_directory/main.kl"
-    kl_t230 = kl_2kl2os_16delete_directory__7textual( kl_t229 );
+    kl_t254 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t253, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 135 "os_directory/main.kl"
-    kl_t231 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t230 );
+    kl_t255 = kl_2kl2os_16delete_directory__7textual( kl_t254 );
 #line 135 "os_directory/main.kl"
-    kl_t232 = kl_t231 != 8;
+    kl_t256 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t255 );
 #line 135 "os_directory/main.kl"
-    if ( kl_t232 ) goto bb63; else goto bb64;
+    kl_t257 = kl_t256 != 8;
+#line 135 "os_directory/main.kl"
+    if ( kl_t257 ) goto bb63; else goto bb64;
     bb63:
     kl_t0 = 15;
 #line 137 "os_directory/main.kl"
     return kl_t0;
     bb64:
 #line 140 "os_directory/main.kl"
-    kl_t234 = &kl_t233;
+    kl_t259 = &kl_t258;
 #line 140 "os_directory/main.kl"
-    kl_t235 = ( uint8_t* ) "d";
+    kl_t260 = ( uint8_t* ) "d";
 #line 140 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t234, kl_t235, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t259, kl_t260, 1 );
 #line 140 "os_directory/main.kl"
-    kl_t237 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t233, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t262 = &kl_t258;
 #line 140 "os_directory/main.kl"
-    kl_t238 = kl_2kl2os_11delete_file__7textual( kl_t237 );
+    kl_t263 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t262, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 140 "os_directory/main.kl"
-    kl_t239 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t238 );
+    kl_t264 = kl_2kl2os_11delete_file__7textual( kl_t263 );
 #line 140 "os_directory/main.kl"
-    kl_t240 = kl_t239 != 4;
+    kl_t265 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t264 );
 #line 140 "os_directory/main.kl"
-    if ( kl_t240 ) goto bb65; else goto bb66;
+    kl_t266 = kl_t265 != 4;
+#line 140 "os_directory/main.kl"
+    if ( kl_t266 ) goto bb65; else goto bb66;
     bb65:
     kl_t0 = 16;
 #line 142 "os_directory/main.kl"
     return kl_t0;
     bb66:
 #line 145 "os_directory/main.kl"
-    kl_t242 = &kl_t241;
+    kl_t268 = &kl_t267;
 #line 145 "os_directory/main.kl"
-    kl_t243 = ( uint8_t* ) "d/a.txt";
+    kl_t269 = ( uint8_t* ) "d/a.txt";
 #line 145 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t242, kl_t243, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t268, kl_t269, 7 );
 #line 145 "os_directory/main.kl"
-    kl_t245 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t241, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t271 = &kl_t267;
 #line 145 "os_directory/main.kl"
-    kl_t246 = kl_2kl2os_16delete_directory__7textual( kl_t245 );
+    kl_t272 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t271, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 145 "os_directory/main.kl"
-    kl_t247 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t246 );
+    kl_t273 = kl_2kl2os_16delete_directory__7textual( kl_t272 );
 #line 145 "os_directory/main.kl"
-    kl_t248 = kl_t247 != 5;
+    kl_t274 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t273 );
 #line 145 "os_directory/main.kl"
-    if ( kl_t248 ) goto bb67; else goto bb68;
+    kl_t275 = kl_t274 != 5;
+#line 145 "os_directory/main.kl"
+    if ( kl_t275 ) goto bb67; else goto bb68;
     bb67:
     kl_t0 = 17;
 #line 147 "os_directory/main.kl"
     return kl_t0;
     bb68:
 #line 151 "os_directory/main.kl"
-    kl_t251 = &kl_t250;
+    kl_t278 = &kl_t277;
 #line 151 "os_directory/main.kl"
-    kl_t252 = ( uint8_t* ) "d/a.txt";
+    kl_t279 = ( uint8_t* ) "d/a.txt";
 #line 151 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t251, kl_t252, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t278, kl_t279, 7 );
 #line 151 "os_directory/main.kl"
-    kl_t254 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t250, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t281 = &kl_t277;
 #line 151 "os_directory/main.kl"
-    kl_t255 = kl_2kl2os_11delete_file__7textual( kl_t254 );
+    kl_t282 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t281, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 151 "os_directory/main.kl"
-    kl_t256 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t255 );
+    kl_t283 = kl_2kl2os_11delete_file__7textual( kl_t282 );
 #line 151 "os_directory/main.kl"
-    kl_t257 = kl_t256 != 0;
+    kl_t284 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t283 );
 #line 151 "os_directory/main.kl"
-    kl_t249 = kl_t257;
+    kl_t285 = kl_t284 != 0;
 #line 151 "os_directory/main.kl"
-    if ( kl_t249 ) goto bb70; else goto bb69;
+    kl_t276 = kl_t285;
+#line 151 "os_directory/main.kl"
+    if ( kl_t276 ) goto bb70; else goto bb69;
     bb69:
 #line 151 "os_directory/main.kl"
-    kl_t259 = &kl_t258;
+    kl_t287 = &kl_t286;
 #line 151 "os_directory/main.kl"
-    kl_t260 = ( uint8_t* ) "d/b.txt";
+    kl_t288 = ( uint8_t* ) "d/b.txt";
 #line 151 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t259, kl_t260, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t287, kl_t288, 7 );
 #line 151 "os_directory/main.kl"
-    kl_t262 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t258, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t290 = &kl_t286;
 #line 151 "os_directory/main.kl"
-    kl_t263 = kl_2kl2os_11delete_file__7textual( kl_t262 );
+    kl_t291 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t290, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 151 "os_directory/main.kl"
-    kl_t264 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t263 );
+    kl_t292 = kl_2kl2os_11delete_file__7textual( kl_t291 );
 #line 151 "os_directory/main.kl"
-    kl_t265 = kl_t264 != 0;
+    kl_t293 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t292 );
 #line 151 "os_directory/main.kl"
-    kl_t249 = kl_t265;
+    kl_t294 = kl_t293 != 0;
+#line 151 "os_directory/main.kl"
+    kl_t276 = kl_t294;
 #line 151 "os_directory/main.kl"
     goto bb70;
     bb70:
 #line 151 "os_directory/main.kl"
-    if ( kl_t249 ) goto bb71; else goto bb72;
+    if ( kl_t276 ) goto bb71; else goto bb72;
     bb71:
     kl_t0 = 18;
 #line 153 "os_directory/main.kl"
     return kl_t0;
     bb72:
 #line 156 "os_directory/main.kl"
-    kl_t267 = &kl_t266;
+    kl_t296 = &kl_t295;
 #line 156 "os_directory/main.kl"
-    kl_t268 = ( uint8_t* ) "d/a.txt";
+    kl_t297 = ( uint8_t* ) "d/a.txt";
 #line 156 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t267, kl_t268, 7 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t296, kl_t297, 7 );
 #line 156 "os_directory/main.kl"
-    kl_t270 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t266, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t299 = &kl_t295;
 #line 156 "os_directory/main.kl"
-    kl_t271 = kl_2kl2os_11delete_file__7textual( kl_t270 );
+    kl_t300 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t299, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 156 "os_directory/main.kl"
-    kl_t272 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t271 );
+    kl_t301 = kl_2kl2os_11delete_file__7textual( kl_t300 );
 #line 156 "os_directory/main.kl"
-    kl_t273 = kl_t272 != 1;
+    kl_t302 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t301 );
 #line 156 "os_directory/main.kl"
-    if ( kl_t273 ) goto bb73; else goto bb74;
+    kl_t303 = kl_t302 != 1;
+#line 156 "os_directory/main.kl"
+    if ( kl_t303 ) goto bb73; else goto bb74;
     bb73:
     kl_t0 = 19;
 #line 158 "os_directory/main.kl"
     return kl_t0;
     bb74:
 #line 161 "os_directory/main.kl"
-    kl_t276 = &kl_t275;
+    kl_t306 = &kl_t305;
 #line 161 "os_directory/main.kl"
-    kl_t277 = ( uint8_t* ) "d";
+    kl_t307 = ( uint8_t* ) "d";
 #line 161 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t276, kl_t277, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t306, kl_t307, 1 );
 #line 161 "os_directory/main.kl"
-    kl_t279 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t275, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t309 = &kl_t305;
 #line 161 "os_directory/main.kl"
-    kl_t280 = kl_2kl2os_16delete_directory__7textual( kl_t279 );
+    kl_t310 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t309, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 161 "os_directory/main.kl"
-    kl_t281 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t280 );
+    kl_t311 = kl_2kl2os_16delete_directory__7textual( kl_t310 );
 #line 161 "os_directory/main.kl"
-    kl_t282 = kl_t281 != 0;
+    kl_t312 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t311 );
 #line 161 "os_directory/main.kl"
-    kl_t274 = kl_t282;
+    kl_t313 = kl_t312 != 0;
 #line 161 "os_directory/main.kl"
-    if ( kl_t274 ) goto bb76; else goto bb75;
+    kl_t304 = kl_t313;
+#line 161 "os_directory/main.kl"
+    if ( kl_t304 ) goto bb76; else goto bb75;
     bb75:
 #line 161 "os_directory/main.kl"
-    kl_t284 = &kl_t283;
+    kl_t315 = &kl_t314;
 #line 161 "os_directory/main.kl"
-    kl_t285 = ( uint8_t* ) "d";
+    kl_t316 = ( uint8_t* ) "d";
 #line 161 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t284, kl_t285, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t315, kl_t316, 1 );
 #line 161 "os_directory/main.kl"
-    kl_t287 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t283, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t318 = &kl_t314;
 #line 161 "os_directory/main.kl"
-    kl_t288 = kl_2kl2os_16delete_directory__7textual( kl_t287 );
+    kl_t319 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t318, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 161 "os_directory/main.kl"
-    kl_t289 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t288 );
+    kl_t320 = kl_2kl2os_16delete_directory__7textual( kl_t319 );
 #line 161 "os_directory/main.kl"
-    kl_t290 = kl_t289 != 1;
+    kl_t321 = kl__6reason__Q7prelude6resultI4void_Q2kl10file_errorE( kl_t320 );
 #line 161 "os_directory/main.kl"
-    kl_t274 = kl_t290;
+    kl_t322 = kl_t321 != 1;
+#line 161 "os_directory/main.kl"
+    kl_t304 = kl_t322;
 #line 161 "os_directory/main.kl"
     goto bb76;
     bb76:
 #line 161 "os_directory/main.kl"
-    if ( kl_t274 ) goto bb77; else goto bb78;
+    if ( kl_t304 ) goto bb77; else goto bb78;
     bb77:
     kl_t0 = 20;
 #line 163 "os_directory/main.kl"
     return kl_t0;
     bb78:
 #line 166 "os_directory/main.kl"
-    kl_t292 = &kl_t291;
+    kl_t324 = &kl_t323;
 #line 166 "os_directory/main.kl"
-    kl_t293 = ( uint8_t* ) "d";
+    kl_t325 = ( uint8_t* ) "d";
 #line 166 "os_directory/main.kl"
-    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t292, kl_t293, 1 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t324, kl_t325, 1 );
 #line 166 "os_directory/main.kl"
-    kl_t295 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t291, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t327 = &kl_t323;
 #line 166 "os_directory/main.kl"
-    kl_t296 = kl_2kl2os_6exists__7textual( kl_t295 );
+    kl_t328 = ( struct kl_7prelude_textual__ref ) { ( void* ) kl_t327, &kl_7prelude_str__as_kl_7prelude_textual };
 #line 166 "os_directory/main.kl"
-    if ( kl_t296 ) goto bb79; else goto bb80;
+    kl_t329 = kl_2kl2os_6exists__7textual( kl_t328 );
+#line 166 "os_directory/main.kl"
+    if ( kl_t329 ) goto bb79; else goto bb80;
     bb79:
     kl_t0 = 21;
 #line 168 "os_directory/main.kl"
@@ -10430,19 +10547,25 @@ void kl_7prelude_6result__IQ2kl8captured_Q2kl10file_errorE__dtor( struct kl_7pre
 #line 149 "<prelude>"
 }
 
-void kl_2kl4list_list__IQ2kl6stringE__drop( struct kl_2kl4list_list__IQ2kl6stringE* kl_t1 )
+void kl_2kl4list_list__IQ2kl6stringE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__IQ2kl6stringE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__IQ2kl6stringE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__IQ2kl6stringE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__IQ2kl6stringE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
 }
 
-void kl_2kl4list_list__IQ2kl4pathE__drop( struct kl_2kl4list_list__IQ2kl4pathE* kl_t1 )
+void kl_2kl4list_list__IQ2kl4pathE__drop( void* kl_t1 )
 {
+    struct kl_2kl4list_list__IQ2kl4pathE* kl_t2;
 #line 11 "../../src/list.kl"
-    kl_2kl4list_4list__IQ2kl4pathE__dtor( &( *kl_t1 ) );
+    kl_t2 = ( struct kl_2kl4list_list__IQ2kl4pathE* ) kl_t1;
+#line 11 "../../src/list.kl"
+    kl_2kl4list_4list__IQ2kl4pathE__dtor( &( *kl_t2 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"

@@ -243,7 +243,47 @@ std::string Spelling::function( const Function& function ) const
         return fmt::format( "kl_{}_0{}", module_slot( owner( function.globals ) ), function.drops_globals ? "drop" : "build" );
     }
 
+    if( function.compares != Token_kind::Unknown )
+    {
+        return guard( function.compares, function.type_arguments );
+    }
+
+    if( function.thunk_of.is_valid() )
+    {
+        return thunk( function.type_arguments[0], function.thunk_of, function.declaration );
+    }
+
     return this->function( function.declaration, function.type_arguments );
+}
+
+std::string Spelling::callee( const Rvalue& value ) const
+{
+    return value.op != Token_kind::Unknown ? guard( value.op, value.type_arguments )
+                                           : function( value.callee, value.type_arguments );
+}
+
+std::string Spelling::guard( Token_kind op, std::span<const Type_id> operands ) const
+{
+    const auto suffix = [&]
+    {
+        switch( op )
+        {
+        case Token_kind::Less:
+            return "lt";
+        case Token_kind::Less_equal:
+            return "le";
+        case Token_kind::Greater:
+            return "gt";
+        case Token_kind::Greater_equal:
+            return "ge";
+        case Token_kind::Equal_equal:
+            return "eq";
+        default:
+            return "ne";
+        }
+    };
+
+    return fmt::format( "kl_cmp_{}_{}_{}", suffix(), types.table().name( operands[0] ), types.table().name( operands[1] ) );
 }
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const

@@ -32,6 +32,11 @@ lower(
 );
 
 // Whether `functions` holds `declaration` at `type_arguments`.
-bool provided( std::span<const Function> functions, Node_id declaration, std::span<const Type_id> type_arguments );
+bool provided(
+    std::span<const Function> functions,
+    Node_id                   declaration,
+    std::span<const Type_id>  type_arguments,
+    Token_kind                compares = Token_kind::Unknown
+);
 
 } // namespace keel

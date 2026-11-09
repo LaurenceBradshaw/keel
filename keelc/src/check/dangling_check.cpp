@@ -112,8 +112,9 @@ struct Walk
         {
             gained.push_back( Aim { .pointer = place.local, .target = value.a.place.local } );
         }
-        else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast ) && value.a.has_place() &&
-                 value.a.place.is_whole_local() )
+        else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast ||
+                   value.kind == Rvalue_kind::Make_interface ) &&
+                 value.a.has_place() && value.a.place.is_whole_local() )
         {
             for( const Aim& aim : aims )
             {

@@ -4,6 +4,9 @@
 #include <stddef.h>
 
 int32_t kl__4main__( void );
+bool kl_cmp_gt_i64_u64( int64_t, uint64_t );
+bool kl_cmp_eq_i64_u64( int64_t, uint64_t );
+bool kl_cmp_ge_i64_u64( int64_t, uint64_t );
 
 #line 2 "opt/mixed_sign_compare.kl"
 int32_t kl__4main__( void )
@@ -13,6 +16,78 @@ int32_t kl__4main__( void )
     kl_t0 = 0;
 #line 10 "opt/mixed_sign_compare.kl"
     return kl_t0;
+}
+
+bool kl_cmp_gt_i64_u64( int64_t kl_t1, uint64_t kl_t2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+    uint64_t kl_t4;
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t3 = kl_t1 < 0;
+#line 6 "opt/mixed_sign_compare.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t0 = false;
+#line 6 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+    bb2:
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t4 = ( uint64_t ) kl_t1;
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t0 = kl_t4 > kl_t2;
+#line 6 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+#line 6 "opt/mixed_sign_compare.kl"
+}
+
+bool kl_cmp_eq_i64_u64( int64_t kl_t1, uint64_t kl_t2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+    uint64_t kl_t4;
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t3 = kl_t1 < 0;
+#line 6 "opt/mixed_sign_compare.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t0 = false;
+#line 6 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+    bb2:
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t4 = ( uint64_t ) kl_t1;
+#line 6 "opt/mixed_sign_compare.kl"
+    kl_t0 = kl_t4 == kl_t2;
+#line 6 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+#line 6 "opt/mixed_sign_compare.kl"
+}
+
+bool kl_cmp_ge_i64_u64( int64_t kl_t1, uint64_t kl_t2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+    uint64_t kl_t4;
+#line 9 "opt/mixed_sign_compare.kl"
+    kl_t3 = kl_t1 < 0;
+#line 9 "opt/mixed_sign_compare.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 9 "opt/mixed_sign_compare.kl"
+    kl_t0 = false;
+#line 9 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+    bb2:
+#line 9 "opt/mixed_sign_compare.kl"
+    kl_t4 = ( uint64_t ) kl_t1;
+#line 9 "opt/mixed_sign_compare.kl"
+    kl_t0 = kl_t4 >= kl_t2;
+#line 9 "opt/mixed_sign_compare.kl"
+    return kl_t0;
+#line 9 "opt/mixed_sign_compare.kl"
 }
 
 #line 2 "opt/mixed_sign_compare.kl"

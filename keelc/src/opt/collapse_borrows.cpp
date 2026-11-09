@@ -101,14 +101,17 @@ TEST_CASE( "collapse_borrows_copies_the_pointer_a_deref_borrows", "[opt][collaps
     REQUIRE( p.deref_borrows() == 0 );
 }
 
-// Its `&` builds the interface's pair, which is not the pointer. Not inlined, so the call is not
-// made direct and the pair stays.
+// The interface's pair is a Make_interface of the pointer, so the `&(*b)` under it collapses to
+// `b`. Not inlined, so the call is not made direct and the pair stays.
 TEST_CASE( "collapse_borrows_keeps_a_class_pointer_becoming_an_interface_one", "[opt][collapse]" )
 {
     const Collapsed p( "i32 f( const ref Box b ) { return measure( b ); }\n", std::nullopt );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
-    REQUIRE( p.deref_borrows() == 1 );
+    REQUIRE( p.deref_borrows() == 0 );
+    REQUIRE( std::ranges::any_of(
+        p.first().statements, [&]( const Statement& s ) { return p.first().rvalue( s ).kind == Rvalue_kind::Make_interface; }
+    ) );
 }
 
 TEST_CASE( "collapse_borrows_keeps_a_field_through_a_pointer", "[opt][collapse]" )

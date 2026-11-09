@@ -422,6 +422,7 @@ private:
                 case Rvalue_kind::Use:
                 case Rvalue_kind::Binary:
                 case Rvalue_kind::Cast:
+                case Rvalue_kind::Make_interface:
                 case Rvalue_kind::Run_of:
                 case Rvalue_kind::Run_data:
                 case Rvalue_kind::Field_read:

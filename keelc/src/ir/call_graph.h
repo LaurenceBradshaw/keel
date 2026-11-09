@@ -15,7 +15,7 @@ inline bool calls( const Function& caller, const Statement& statement, const Fun
     const bool    call  = statement.kind == Statement_kind::Assign && value.kind == Rvalue_kind::Call;
     const bool    drop  = statement.kind == Statement_kind::Drop && value.callee.is_valid();
 
-    return ( call || drop ) && value.callee == callee.declaration && value.type_arguments == callee.type_arguments;
+    return ( call || drop ) && names( value, callee );
 }
 
 // Indices into `functions`, grouped into the sets that call each other (Tarjan), each group after

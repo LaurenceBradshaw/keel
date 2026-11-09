@@ -59,6 +59,12 @@ struct Printer
         return name.is_valid() ? interner.text( name ) : "<unnamed>";
     }
 
+    // D41: `i64 < u64`, the comparison a guard answers.
+    std::string guard( Token_kind op, std::span<const Type_id> operands ) const
+    {
+        return fmt::format( "<{} {} {}>", type_name( operands[0] ), token_kind_spelling( op ), type_name( operands[1] ) );
+    }
+
     std::string_view type_name( Type_id type ) const
     {
         return type.is_valid() ? types.name( type ) : "<none>";
@@ -156,6 +162,9 @@ struct Printer
         case Rvalue_kind::Bits:
             return fmt::format( "bits {}", operand( value.a ) );
 
+        case Rvalue_kind::Make_interface:
+            return fmt::format( "interface {} as {}", operand( value.a ), type_name( value.type ) );
+
         case Rvalue_kind::Run_of:
             return fmt::format( "run( {}, {} )", operand( value.a ), operand( value.b ) );
 
@@ -189,7 +198,11 @@ struct Printer
             }
 
             return fmt::format(
-                "call {}({})", value.kind == Rvalue_kind::Call ? name_of( value.callee ) : operand( value.a ), arguments
+                "call {}({})",
+                value.kind == Rvalue_kind::Indirect_call ? operand( value.a )
+                : value.op != Token_kind::Unknown        ? guard( value.op, value.type_arguments )
+                                                         : std::string( name_of( value.callee ) ),
+                arguments
             );
         }
         case Rvalue_kind::Allocate:
@@ -316,22 +329,31 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
 
     // Declared by nothing, and named for its type argument: a union's destructor, or an implementer's
     // drop function, which is not its `~` and so does not print as one.
-    const bool synthesised = !func.declaration.is_valid() && !func.type_arguments.empty();
+    const bool synthesised =
+        !func.declaration.is_valid() && !func.type_arguments.empty() && func.compares == Token_kind::Unknown;
     const bool united = synthesised && ( types.is_union( func.type_arguments[0] ) || types.is_array( func.type_arguments[0] ) );
 
     // D80: a module's, named for its first built global.
     std::string out =
         func.globals.is_valid()
             ? fmt::format( "fn {} {} {{\n", func.drops_globals ? "drop" : "build", printer.name_of( func.globals ) )
-            : fmt::format(
-                  "fn {}{} {{\n",
-                  destructor || united ? "~"
-                  : synthesised        ? "drop "
-                                       : "",
-                  synthesised                   ? types.name( func.type_arguments[0] )
-                  : func.declaration.is_valid() ? printer.name_of( func.declaration )
-                                                : "<unnamed>"
-              );
+        : func.compares != Token_kind::Unknown
+            ? fmt::format( "fn {} {{\n", printer.guard( func.compares, func.type_arguments ) )
+        : func.thunk_of.is_valid() ? fmt::format(
+                                         "fn {} as {}.{} {{\n",
+                                         types.name( func.type_arguments[0] ),
+                                         types.name( func.thunk_of ),
+                                         printer.name_of( func.declaration )
+                                     )
+                                   : fmt::format(
+                                         "fn {}{} {{\n",
+                                         destructor || united ? "~"
+                                         : synthesised        ? "drop "
+                                                              : "",
+                                         synthesised                   ? types.name( func.type_arguments[0] )
+                                         : func.declaration.is_valid() ? printer.name_of( func.declaration )
+                                                                       : "<unnamed>"
+                                     );
 
     for( const Local_id i : func.locals.ids() )
     {

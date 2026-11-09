@@ -9,9 +9,9 @@
 #include <unordered_set>
 #include "codegen_c/mangle.h"
 #include "codegen_c/spelling.h"
-#include "codegen_c/vtables.h"
 #include "common/types.h"
 #include "ir/instances.h"
+#include "ir/vtables.h"
 
 namespace keel
 {
@@ -57,46 +57,6 @@ void add_addresses( const Constant_value& value, std::vector<Node_id>& targets )
     }
 }
 
-// D41: a comparison whose operands meet in no type at all reaches the backend with each side at
-// its own widest, and every such pair is one of three shapes. Named in the canonical operand
-// order the guard is written in; a pair arriving the other way round is the same guard with the
-// operator mirrored, which holds for all six including the unordered float cases.
-enum class Guard : u8
-{
-    None,
-    Signed_unsigned, // int64_t against uint64_t
-    Signed_float,    // int64_t against double
-    Unsigned_float,  // uint64_t against double
-};
-
-constexpr Token_kind guard_operators[] = {
-    Token_kind::Less,
-    Token_kind::Less_equal,
-    Token_kind::Greater,
-    Token_kind::Greater_equal,
-    Token_kind::Equal_equal,
-    Token_kind::Bang_equal,
-};
-
-// `a < b` is `b > a`, and `a == b` is `b == a`. True of a NaN operand too, where both sides of
-// every one of these is false - which is why the mirror is a table and not a negation.
-Token_kind mirrored( Token_kind op )
-{
-    switch( op )
-    {
-    case Token_kind::Less:
-        return Token_kind::Greater;
-    case Token_kind::Greater:
-        return Token_kind::Less;
-    case Token_kind::Less_equal:
-        return Token_kind::Greater_equal;
-    case Token_kind::Greater_equal:
-        return Token_kind::Less_equal;
-    default:
-        return op; // `==` and `!=` read the same both ways
-    }
-}
-
 std::string_view failure_prefix( Failure failure )
 {
     switch( failure )
@@ -120,141 +80,6 @@ std::string_view failure_prefix( Failure failure )
     case Failure::Overflow:
         return "arithmetic overflow: ";
     }
-}
-
-std::string_view guard_suffix( Token_kind op )
-{
-    switch( op )
-    {
-    case Token_kind::Less:
-        return "lt";
-    case Token_kind::Less_equal:
-        return "le";
-    case Token_kind::Greater:
-        return "gt";
-    case Token_kind::Greater_equal:
-        return "ge";
-    case Token_kind::Equal_equal:
-        return "eq";
-    case Token_kind::Bang_equal:
-        return "ne";
-
-    default:
-        assert( false && "not a comparison" );
-        return "??";
-    }
-}
-
-std::string_view guard_shape_name( Guard guard )
-{
-    switch( guard )
-    {
-    case Guard::Signed_unsigned:
-        return "i64_u64";
-    case Guard::Signed_float:
-        return "i64_f64";
-    case Guard::Unsigned_float:
-        return "u64_f64";
-
-    default:
-        assert( false && "not a guard shape" );
-        return "??";
-    }
-}
-
-std::string guard_name( Guard guard, Token_kind op )
-{
-    return fmt::format( "kl_cmp_{}_{}", guard_suffix( op ), guard_shape_name( guard ) );
-}
-
-// Whether the answer is already settled once the operands are known to be ordered this way round.
-bool answers_less( Token_kind op )
-{
-    return op == Token_kind::Less || op == Token_kind::Less_equal || op == Token_kind::Bang_equal;
-}
-
-bool answers_greater( Token_kind op )
-{
-    return op == Token_kind::Greater || op == Token_kind::Greater_equal || op == Token_kind::Bang_equal;
-}
-
-const char* c_bool( bool value )
-{
-    return value ? "true" : "false";
-}
-
-// The whole of the mixed-signedness guard: a negative left operand is below every unsigned value,
-// so the answer is settled without comparing. Otherwise the reinterpretation is exact, because a
-// non-negative int64_t and a uint64_t name the same number.
-std::string signed_unsigned_guard( Token_kind op )
-{
-    return fmt::format(
-        "static inline bool {}( int64_t a, uint64_t b )\n"
-        "{{\n"
-        "    return a < 0 ? {} : ( uint64_t ) a {} b;\n"
-        "}}",
-        guard_name( Guard::Signed_unsigned, op ),
-        c_bool( answers_less( op ) ),
-        token_kind_spelling( op )
-    );
-}
-
-// The float guards, which cannot be one expression: the truncation below is undefined for a NaN
-// or an out-of-range double, so the two tests above it are not an optimisation but the thing that
-// makes the cast legal. Past them `t` is exact - a double of magnitude 2^53 or more is already a
-// whole number, and one below it converts exactly - so `b` against `( double ) t` is the fraction
-// the integer comparison cannot see, and it is what breaks a tie.
-std::string float_guard( Guard guard, Token_kind op )
-{
-    const bool        is_signed = guard == Guard::Signed_float;
-    const char* const integer   = is_signed ? "int64_t" : "uint64_t";
-    const char* const above     = is_signed ? "9223372036854775808.0" : "18446744073709551616.0";
-    const char* const below     = is_signed ? "-9223372036854775808.0" : "0.0";
-
-    std::string tail;
-
-    switch( op )
-    {
-    case Token_kind::Less:
-        tail = "a < t || ( a == t && b > ( double ) t )";
-        break;
-    case Token_kind::Less_equal:
-        tail = "a < t || ( a == t && b >= ( double ) t )";
-        break;
-    case Token_kind::Greater:
-        tail = "a > t || ( a == t && b < ( double ) t )";
-        break;
-    case Token_kind::Greater_equal:
-        tail = "a > t || ( a == t && b <= ( double ) t )";
-        break;
-    case Token_kind::Equal_equal:
-        tail = "a == t && b == ( double ) t";
-        break;
-    default:
-        tail = "a != t || b != ( double ) t";
-        break;
-    }
-
-    return fmt::format(
-        "static inline bool {}( {} a, double b )\n"
-        "{{\n"
-        "    if( b != b ) return {};\n"
-        "    if( b >= {} ) return {};\n"
-        "    if( b < {} ) return {};\n"
-        "    {} t = ( {} ) b;\n"
-        "    return {};\n"
-        "}}",
-        guard_name( guard, op ),
-        integer,
-        c_bool( op == Token_kind::Bang_equal ), // a NaN is unordered: nothing but `!=` holds
-        above,
-        c_bool( answers_less( op ) ), // every value of the integer type is below `b`
-        below,
-        c_bool( answers_greater( op ) ),
-        integer,
-        integer,
-        tail
-    );
 }
 
 class Kir_emitter
@@ -292,7 +117,6 @@ private:
     void                         emit_globals();
     void                         emit_prototypes();
     void                         emit_runtime_prototypes();
-    void                         emit_comparison_guards();
     void                         emit_externs();
     void                         emit_functions();
     void                         emit_main_shim();
@@ -318,10 +142,6 @@ private:
     // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
     bool ends_a_block( Terminator_kind kind, bool with_message = false, bool located = false ) const;
     bool uses_counted_allocation() const;
-
-    // Which of D41's three guards a Binary needs, or None for the ordinary infix case. `mirror` is
-    // set when the operands arrive in the opposite order to the one the guard is written in.
-    Guard guard_for( const Rvalue& value, bool& mirror ) const;
 
     // A void local is never declared: C has no such object, and nothing reads one. Testing the
     // *kind* rather than is_valid() - a void local's Type_id is perfectly valid, it just names the
@@ -416,7 +236,6 @@ Emitted Kir_emitter::run()
     emit_vtable_types();
     emit_globals();
     emit_runtime_prototypes();
-    emit_comparison_guards();
     emit_externs();
     emit_prototypes();
     emit_vtables();
@@ -760,88 +579,17 @@ void Kir_emitter::emit_vtable_types()
     }
 }
 
-// For each implementer seen as an interface: a thunk per slot, turning the `void*` back into the
-// implementer's address, and the table of them. After the prototypes, which name what each calls.
+// For each implementer seen as an interface, the table of its drop function and its thunks, which
+// lowering made. After the prototypes, which name them.
 void Kir_emitter::emit_vtables()
 {
     for( const Vtable& vtable : vtables_ )
     {
-        const std::string self_type = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
+        std::string table = spelling_.drop_function( vtable.implementer );
 
-        std::vector<std::string> slots;
-
-        // Dropping through the interface: the implementer's drop function, or nothing if it owns nothing.
-        const std::string drop = fmt::format( "{}__drop", spelling_.vtable( vtable.implementer, vtable.interface ) );
-
-        write_line( fmt::format( "static void {}( void* self )", drop ) );
-        write_line( "{" );
-        indent_ += 4;
-        if( instance_owns( ast_, types_.table(), vtable.implementer, types_.recorded() ) )
+        for( const Node_id requirement : vtable.requirements )
         {
-            write_line( fmt::format( "{}( ( {} ) self );", spelling_.drop_function( vtable.implementer ), self_type ) );
-        }
-        else
-        {
-            write_line( "( void ) self;" );
-        }
-        indent_ -= 4;
-        write_line( "}" );
-        write_line( "" );
-
-        slots.push_back( drop );
-
-        const Bindings bindings    = types_.table().instance_bindings( vtable.interface );
-        const auto     at_instance = [&]( Node_id node )
-        { return types_.table().substitute( binding_type( ast_, types_, node ), bindings ); };
-
-        for( std::size_t i = 0; i < vtable.requirements.size(); ++i )
-        {
-            const Node_id requirement = vtable.requirements[i];
-            const Type_id returned    = at_instance( requirement );
-            const Thunk   called =
-                thunk_for( ast_, types_, vtable.implementer, vtable.interface, requirement, vtable.methods[i] );
-
-            std::string parameters = "void* self";
-            std::string arguments  = fmt::format( "( {} ) self", self_type );
-
-            for( std::size_t p = 0; p < ast_.explicit_params( requirement ).size(); ++p )
-            {
-                const Type_id type = at_instance( ast_.explicit_params( requirement )[p] );
-
-                if( !is_void( type ) )
-                {
-                    // A run's two halves go straight on, never rebuilt.
-                    const std::string name = fmt::format( "p{}", p );
-                    parameters += fmt::format( ", {}", spelling_.parameter( type, name ) );
-                    arguments += types_.table().is_run_pointer( type ) ? fmt::format( ", {0}_data, {0}_size", name )
-                                 : called.copied[p]                    ? fmt::format( ", *{}", name )
-                                                                       : fmt::format( ", {}", name );
-                }
-            }
-
-            const std::string thunk = spelling_.thunk( vtable.implementer, vtable.interface, requirement );
-
-            write_line( fmt::format( "static {} {}( {} )", spelling_.type( returned ), thunk, parameters ) );
-            write_line( "{" );
-            indent_ += 4;
-            write_line( fmt::format(
-                "{}{}( {} );",
-                is_void( returned ) ? "" : "return ",
-                spelling_.function( vtable.methods[i], called.type_arguments ),
-                arguments
-            ) );
-            indent_ -= 4;
-            write_line( "}" );
-            write_line( "" );
-
-            slots.push_back( thunk );
-        }
-
-        std::string table;
-
-        for( const std::string& slot : slots )
-        {
-            table += fmt::format( "{}{}", table.empty() ? "" : ", ", slot );
+            table += fmt::format( ", {}", spelling_.thunk( vtable.implementer, vtable.interface, requirement ) );
         }
 
         write_line( fmt::format(
@@ -984,103 +732,6 @@ void Kir_emitter::emit_runtime_prototypes()
     if( any )
     {
         write_line( "" );
-    }
-}
-
-Guard Kir_emitter::guard_for( const Rvalue& value, bool& mirror ) const
-{
-    mirror = false;
-
-    // Equal types are the whole of the ordinary case, and a comparison is the only binary allowed
-    // to arrive with unequal ones - see Lowering::lower_binary.
-    if( value.kind != Rvalue_kind::Binary || value.a.type == value.b.type || !is_comparison( value.op ) )
-    {
-        return Guard::None;
-    }
-
-    const Type_table& table = types_.table();
-
-    const bool left_float  = table.is_float( value.a.type );
-    const bool right_float = table.is_float( value.b.type );
-
-    if( left_float != right_float )
-    {
-        mirror = left_float;
-
-        const Type_id integer = left_float ? value.b.type : value.a.type;
-
-        return table.get( integer ).is_signed ? Guard::Signed_float : Guard::Unsigned_float;
-    }
-
-    // Two integers, and lowering has already widened each to 64 bits - so differing types here
-    // means differing signedness and nothing else.
-    assert( !left_float && !right_float && "two floats always meet in f64" );
-
-    mirror = !table.get( value.a.type ).is_signed;
-
-    return Guard::Signed_unsigned;
-}
-
-// Emitted only for the shapes and operators the body actually uses: a definition nothing calls is
-// noise in what a reader of the output has to skip, and the set is small enough to scan for.
-void Kir_emitter::emit_comparison_guards()
-{
-    bool used[3][std::size( guard_operators )] = {};
-    bool any                                   = false;
-
-    for( const Function& function : functions_ )
-    {
-        for( const Statement& statement : function.statements )
-        {
-            const Rvalue& value = function.rvalue( statement );
-
-            if( statement.kind != Statement_kind::Assign )
-            {
-                continue;
-            }
-
-            bool        mirror = false;
-            const Guard guard  = guard_for( value, mirror );
-
-            if( guard == Guard::None )
-            {
-                continue;
-            }
-
-            const Token_kind op = mirror ? mirrored( value.op ) : value.op;
-
-            for( u32 i = 0; i < std::size( guard_operators ); ++i )
-            {
-                if( guard_operators[i] == op )
-                {
-                    used[static_cast<u32>( guard ) - 1][i] = true;
-                    any                                    = true;
-                }
-            }
-        }
-    }
-
-    if( !any )
-    {
-        return;
-    }
-
-    const Guard shapes[] = { Guard::Signed_unsigned, Guard::Signed_float, Guard::Unsigned_float };
-
-    for( const Guard shape : shapes )
-    {
-        for( u32 i = 0; i < std::size( guard_operators ); ++i )
-        {
-            if( !used[static_cast<u32>( shape ) - 1][i] )
-            {
-                continue;
-            }
-
-            const Token_kind op = guard_operators[i];
-
-            write_line( shape == Guard::Signed_unsigned ? signed_unsigned_guard( op ) : float_guard( shape, op ) );
-            write_line( "" );
-        }
     }
 }
 
@@ -2203,20 +1854,6 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
     case Rvalue_kind::Binary:
     {
-        bool mirror = false;
-
-        if( const Guard guard = guard_for( rvalue, mirror ); guard != Guard::None )
-        {
-            const Token_kind op = mirror ? mirrored( rvalue.op ) : rvalue.op;
-
-            return fmt::format(
-                "{}( {}, {} )",
-                guard_name( guard, op ),
-                operand( mirror ? rvalue.b : rvalue.a ),
-                operand( mirror ? rvalue.a : rvalue.b )
-            );
-        }
-
         // Two `Shape*` are the same pointer when they hold the same object.
         if( types_.table().is_interface_pointer( rvalue.a.type ) )
         {
@@ -2264,32 +1901,16 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         );
     }
 
+    case Rvalue_kind::Make_interface:
+        return interface_reference(
+            types_.table().get( rvalue.type ).element, types_.table().get( rvalue.a.type ).element, operand( rvalue.a )
+        );
+
     case Rvalue_kind::Cast:
+        // A `const Shape*` from a `Shape*` is the same pair.
         if( types_.table().is_interface_pointer( rvalue.type ) )
         {
-            const Type_id from = types_.table().get( rvalue.a.type ).element;
-
-            return types_.table().is_interface( from )
-                       ? operand( rvalue.a )
-                       : interface_reference( types_.table().get( rvalue.type ).element, from, operand( rvalue.a ) );
-        }
-
-        // `box<Circle>` to `box<Shape>`: the same allocation, its pointer widened to a `Shape*`.
-        // Positional, so it relies on `box` having one field.
-        if( types_.table().is_box( rvalue.type ) )
-        {
-            const Type&   to      = types_.table().get( rvalue.type );
-            const Node_id pointer = ast_.contained_fields( to.declaration )[0];
-
-            return fmt::format(
-                "( {} ) {{ {} }}",
-                spelling_.type( rvalue.type ),
-                interface_reference(
-                    to.arguments[0],
-                    types_.table().get( rvalue.a.type ).arguments[0],
-                    fmt::format( "{}.{}", operand( rvalue.a ), spelling_.field( pointer ) )
-                )
-            );
+            return operand( rvalue.a );
         }
 
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), operand( rvalue.a ) );
@@ -2307,15 +1928,6 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         if( is_void( type_of( rvalue.a.place ) ) )
         {
             return fmt::format( "( {} ) 0", spelling_.type( rvalue.type ) );
-        }
-
-        if( types_.table().is_interface_pointer( rvalue.type ) && !types_.table().is_interface( type_of( rvalue.a.place ) ) )
-        {
-            return interface_reference(
-                types_.table().get( rvalue.type ).element,
-                type_of( rvalue.a.place ),
-                fmt::format( "&{}", place( rvalue.a.place ) )
-            );
         }
 
         // `&(*s)` of a `Shape*` or a `u8[]*` is `s` itself: neither an interface nor a run is a
@@ -2368,8 +1980,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
             args += fmt::format( "{}{}", args.empty() ? "" : ", ", spelling_.argument( argument.type, operand( argument ) ) );
         }
-        std::string callee_name =
-            rvalue.kind == Rvalue_kind::Call ? spelling_.function( rvalue.callee, rvalue.type_arguments ) : operand( rvalue.a );
+        std::string callee_name = rvalue.kind == Rvalue_kind::Call ? spelling_.callee( rvalue ) : operand( rvalue.a );
         return fmt::format( "{}( {} )", callee_name, args );
     }
     case Rvalue_kind::Allocate:
@@ -4103,9 +3714,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
     }
 }
 
-// D41: the backend's half. A comparison whose operands meet in no type arrives with each side at
-// its own widest, and the answer comes from a guard rather than from C's own comparison - which
-// for these pairs is the wrong answer, not merely a warning.
+// D41. A comparison whose operands meet in no type calls a guard, a KIR function lowering made, rather
+// than C's own comparison - which for these pairs is the wrong answer, not merely a warning.
 TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" )
 {
     SECTION( "a comparison that meets in a type is still infix" )
@@ -4127,8 +3737,9 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "static inline bool kl_cmp_lt_i64_u64( int64_t a, uint64_t b )" ) );
-        REQUIRE( g.has( "return a < 0 ? true : ( uint64_t ) a < b;" ) );
+        REQUIRE( g.has( "bool kl_cmp_lt_i64_u64( int64_t kl_t1, uint64_t kl_t2 )" ) );
+        REQUIRE( g.has( "kl_t3 = kl_t1 < 0;" ) );
+        REQUIRE( g.has( "kl_t4 = ( uint64_t ) kl_t1;" ) );
         REQUIRE( g.has( "kl_cmp_lt_i64_u64( kl_a_1, kl_b_2 )" ) );
     }
 
@@ -4150,11 +3761,11 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "static inline bool kl_cmp_lt_i64_f64( int64_t a, double b )" ) );
-        REQUIRE( g.has( "if( b != b ) return false;" ) );
-        REQUIRE( g.has( "if( b >= 9223372036854775808.0 ) return true;" ) );
-        REQUIRE( g.has( "int64_t t = ( int64_t ) b;" ) );
-        REQUIRE( g.has( "return a < t || ( a == t && b > ( double ) t );" ) );
+        REQUIRE( g.has( "bool kl_cmp_lt_i64_f64( int64_t kl_t1, double kl_t2 )" ) );
+        REQUIRE( g.has( "kl_t3 = kl_t2 != kl_t2;" ) );
+        REQUIRE( g.has( "kl_t4 = kl_t2 >= 9.223372036854776e+18;" ) );
+        REQUIRE( g.has( "kl_t6 = ( int64_t ) kl_t2;" ) );
+        REQUIRE( g.has( "kl_t0 = kl_t2 > kl_t9;" ) );
     }
 
     SECTION( "u64 against a float has its own bounds" )
@@ -4163,9 +3774,9 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "if( b >= 18446744073709551616.0 ) return false;" ) );
-        REQUIRE( g.has( "if( b < 0.0 ) return true;" ) );
-        REQUIRE( g.has( "uint64_t t = ( uint64_t ) b;" ) );
+        REQUIRE( g.has( "kl_t4 = kl_t2 >= 1.8446744073709552e+19;" ) );
+        REQUIRE( g.has( "kl_t5 = kl_t2 < 0.0;" ) );
+        REQUIRE( g.has( "kl_t6 = ( uint64_t ) kl_t2;" ) );
     }
 
     // Each side widens as far as its own kind reaches before the guard sees it, which is why three
@@ -4183,8 +3794,7 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
         REQUIRE( g.has( "kl_cmp_lt_u64_f64(" ) );
     }
 
-    // Emitted from a scan of KIR, so a program that needs none carries none - the same rule the
-    // runtime prototypes follow.
+    // Lowered only for a comparison that calls one.
     SECTION( "a program needing no guard gets none" )
     {
         Generated g( "i32 main() { i64 a = 1; i64 b = 2; if( a < b ) { return 1; } return 0; }" );
@@ -4507,7 +4117,7 @@ TEST_CASE( "emit_kir_emits_a_generic_static_field_per_instantiation", "[codegen]
 }
 
 // §6.7: a `box<Shape>` is dropped through the vtable's first slot and freed through `.self`. The
-// slot calls the implementer's drop function when it owns, and nothing when it does not.
+// slot is the implementer's drop function, which drops nothing when it owns nothing.
 TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen][kir][interfaces]" )
 {
     Generated g( "interface Shape { f64 area() const; };\n"
@@ -4526,12 +4136,12 @@ TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen]
     REQUIRE( g.clean() );
 
     REQUIRE( g.has( "void ( *drop )( void* );" ) );
-    REQUIRE( g.has( "static const struct kl__Shape__vtable kl__Sq__as_kl__Shape = { kl__Sq__as_kl__Shape__drop," ) );
-    REQUIRE( g.has( "kl__Framed__drop( ( struct kl__Framed* ) self );" ) );
-    REQUIRE( g.has( "void kl__Framed__drop( struct kl__Framed* " ) );
+    REQUIRE( g.has( "static const struct kl__Shape__vtable kl__Sq__as_kl__Shape = { kl__Sq__drop," ) );
+    REQUIRE( g.has( "void kl__Framed__drop( void* kl_t1 )" ) );
+    REQUIRE( g.has( "kl_t2 = ( struct kl__Framed* ) kl_t1;" ) );
     REQUIRE( g.has( ".vtable->drop( " ) );
     REQUIRE( g.has( ".self )" ) );
-    REQUIRE_FALSE( g.has( "void kl__Sq__drop(" ) );
+    REQUIRE( g.has( "void kl__Sq__drop( void* kl_t1 )" ) );
 }
 
 // A slot is named by its requirement's parameters, so two overloads get two slots and no node id.
@@ -4548,8 +4158,7 @@ TEST_CASE( "emit_kir_names_each_overloaded_requirement_s_slot", "[codegen][kir][
 
     REQUIRE( g.has( "double ( *kl__4area__ )( void* );" ) );
     REQUIRE( g.has( "double ( *kl__4area__3i32 )( void*, int32_t );" ) );
-    REQUIRE( g.has( "{ kl__Sq__as_kl__Shape__drop, kl__Sq__as_kl__Shape__kl__4area__, kl__Sq__as_kl__Shape__kl__4area__3i32 };"
-    ) );
+    REQUIRE( g.has( "{ kl__Sq__drop, kl__Sq__as_kl__Shape__kl__4area__, kl__Sq__as_kl__Shape__kl__4area__3i32 };" ) );
     REQUIRE( g.has( ".vtable->kl__4area__( " ) );
     REQUIRE( g.has( ".vtable->kl__4area__3i32( " ) );
 }
