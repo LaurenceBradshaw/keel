@@ -13,6 +13,10 @@ struct kl_7prelude_str
     uint64_t kl_size;
 };
 
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
 int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 
 #line 2 "codegen/main_no_arguments.kl"
@@ -47,22 +51,99 @@ int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint6
     return kl_t0;
 }
 
-#line 2 "codegen/main_no_arguments.kl"
-void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
-void  kl_rt_free( void* );
-size_t strlen( const char* );
-
 int main( int argc, char** argv )
 {
-    uint64_t count = argc > 0 ? ( uint64_t ) argc - 1 : 0;
-    struct kl_7prelude_str* args = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) count, sizeof( struct kl_7prelude_str ), "<main>", 0, "out of memory building `main`'s arguments" );
-    for( uint64_t i = 0; i < count; ++i )
-    {
-        args[i].kl_data = ( uint8_t* ) argv[i + 1];
-        args[i].kl_size = strlen( argv[i + 1] );
-    }
+    int32_t kl_t1 = ( int32_t ) argc;
+    uint8_t** kl_t2 = ( uint8_t** ) argv;
+    int32_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
+    uint64_t kl_t6;
+    struct kl_7prelude_str* kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    uint64_t kl_t11;
+    uint8_t** kl_t12;
+    uint8_t* kl_t13;
+    uint8_t kl_t14;
+    bool kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    struct kl__run__LQ7prelude3str__ref kl_t17;
 #line 2 "codegen/main_no_arguments.kl"
-    int result = (int) kl__4main__LQ7prelude3str( args, count );
-    kl_rt_free( args );
-    return result;
+    kl_t8 = kl_t1 > 0;
+#line 2 "codegen/main_no_arguments.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t9 = ( uint64_t ) kl_t1;
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t3 = kl_t9 - 1;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb3;
+    bb2:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t3 = 0;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb3;
+    bb3:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t7 = ( struct kl_7prelude_str* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( struct kl_7prelude_str ), "codegen/main_no_arguments.kl", 2, "out of memory: main" );
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t4 = 0;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb4;
+    bb4:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t10 = kl_t4 < kl_t3;
+#line 2 "codegen/main_no_arguments.kl"
+    if ( kl_t10 ) goto bb5; else goto bb9;
+    bb5:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t11 = kl_t4 + 1;
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t12 = kl_t2 + kl_t11;
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t5 = ( *kl_t12 );
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t6 = 0;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb6;
+    bb6:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t13 = kl_t5 + kl_t6;
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t14 = ( *kl_t13 );
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t15 = kl_t14 != 0;
+#line 2 "codegen/main_no_arguments.kl"
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t6 = kl_t6 + 1;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb6;
+    bb8:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t16 = kl_t7 + kl_t4;
+#line 2 "codegen/main_no_arguments.kl"
+    ( *kl_t16 ).kl_data = kl_t5;
+#line 2 "codegen/main_no_arguments.kl"
+    ( *kl_t16 ).kl_size = kl_t6;
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t4 = kl_t4 + 1;
+#line 2 "codegen/main_no_arguments.kl"
+    goto bb4;
+    bb9:
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t17 = ( struct kl__run__LQ7prelude3str__ref ) { ( struct kl_7prelude_str* ) kl_t7, kl_t3 };
+#line 2 "codegen/main_no_arguments.kl"
+    kl_t0 = kl__4main__LQ7prelude3str( ( kl_t17 ).data, ( kl_t17 ).size );
+#line 2 "codegen/main_no_arguments.kl"
+    kl_rt_free( kl_t7 );
+#line 2 "codegen/main_no_arguments.kl"
+    return kl_t0;
+#line 2 "codegen/main_no_arguments.kl"
 }
+

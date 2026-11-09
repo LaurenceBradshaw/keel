@@ -5474,7 +5474,7 @@ Function thunk_function( const Ast& ast, Types& types, const Vtable& vtable, std
 // none yet, unless an object holds them.
 void append_thunks( const Ast& ast, Types& types, std::vector<Function>& functions )
 {
-    for( const Vtable& vtable : vtables_needed( ast, types, functions ) )
+    for( const Vtable& vtable : vtables_needed( types, functions ) )
     {
         if( !provided( functions, {}, std::span( &vtable.implementer, 1 ) ) )
         {

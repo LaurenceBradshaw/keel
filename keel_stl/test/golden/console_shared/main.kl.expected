@@ -10062,12 +10062,17 @@ void kl_2kl4list_list__IQ2kl4pathE__drop( void* kl_t1 )
 #line 11 "../../src/list.kl"
 }
 
-#line 9 "console_shared/main.kl"
 int main( void )
 {
-    kl_2kl2os_0build();
+    int32_t kl_t0;
 #line 9 "console_shared/main.kl"
-    int result = (int) kl__4main__();
-    kl_2kl2os_0drop();
-    return result;
+    kl_2kl2os_0build(  );
+#line 9 "console_shared/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 9 "console_shared/main.kl"
+    kl_2kl2os_0drop(  );
+#line 9 "console_shared/main.kl"
+    return kl_t0;
+#line 9 "console_shared/main.kl"
 }
+

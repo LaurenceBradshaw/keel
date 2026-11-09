@@ -145,9 +145,13 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 5 "codegen/tilde_adopts.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 5 "codegen/tilde_adopts.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 5 "codegen/tilde_adopts.kl"
+    return kl_t0;
+#line 5 "codegen/tilde_adopts.kl"
 }
+

@@ -539,7 +539,7 @@ int main( int argc, char** argv )
     // A release program build has every function, so it drops what `main` never reaches.
     if( !debug && !as_module && !args.count( "keep-unreached" ) )
     {
-        keel::remove_unreached( front.functions, front.provided, ast, types, prog.modules, file_id.value(), interner );
+        keel::remove_unreached( front.functions, front.provided, ast, types, prog.modules, file_id.value() );
         clock.lap( "remove unreached" );
     }
 
@@ -579,8 +579,9 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const auto part_c = [&]( keel::File_id part )
-    { return keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.modules, &parts, part ).c; };
+    const keel::Description program = keel::describe( ast, types, interner );
+    const auto              part_c  = [&]( keel::File_id part )
+    { return keel::emit_c_from_kir( functions, program, types, literals, sm, interner, prog.modules, &parts, part ).c; };
 
     // What each module's object will compile, dependencies first.
     if( stop == Stop::C )
@@ -639,7 +640,7 @@ int main( int argc, char** argv )
     }
 
     const std::filesystem::path& executable = output;
-    const keel::Spelling         spelling { ast, types, interner, prog.modules, sm };
+    const keel::Spelling         spelling { program, types, interner, prog.modules, sm };
 
     const auto c_name = [&]( keel::File_id part )
     {

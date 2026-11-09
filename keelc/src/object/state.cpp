@@ -484,7 +484,7 @@ std::optional<Loaded_state> read_state(
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
-#include "codegen_c/parts.h"
+#include "codegen/parts.h"
 #include "common/temp_dir.h"
 #include "front_end.h"
 #include "ir/print.h"

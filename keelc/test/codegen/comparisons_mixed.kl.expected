@@ -1816,9 +1816,13 @@ bool kl_cmp_gt_i64_u64( int64_t kl_t1, uint64_t kl_t2 )
 #line 131 "codegen/comparisons_mixed.kl"
 }
 
-#line 14 "codegen/comparisons_mixed.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 14 "codegen/comparisons_mixed.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 14 "codegen/comparisons_mixed.kl"
+    return kl_t0;
+#line 14 "codegen/comparisons_mixed.kl"
 }
+

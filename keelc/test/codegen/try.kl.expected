@@ -2887,9 +2887,13 @@ void kl_7prelude_6result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4
 #line 149 "<prelude>"
 }
 
-#line 241 "codegen/try.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 241 "codegen/try.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 241 "codegen/try.kl"
+    return kl_t0;
+#line 241 "codegen/try.kl"
 }
+

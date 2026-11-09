@@ -4043,9 +4043,13 @@ void kl__A4_1P__dtor( struct kl__A4_1P* kl_t1 )
 #line 11 "codegen/dynamic_drops.kl"
 }
 
-#line 224 "codegen/dynamic_drops.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 224 "codegen/dynamic_drops.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 224 "codegen/dynamic_drops.kl"
+    return kl_t0;
+#line 224 "codegen/dynamic_drops.kl"
 }
+

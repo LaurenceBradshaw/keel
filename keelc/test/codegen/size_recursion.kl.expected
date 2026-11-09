@@ -613,9 +613,13 @@ uint64_t kl__6length__IV2_E__4RingIV2_E( struct kl__Ring__IV2_E* kl_r_1 )
 #line 18 "codegen/size_recursion.kl"
 }
 
-#line 20 "codegen/size_recursion.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 20 "codegen/size_recursion.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 20 "codegen/size_recursion.kl"
+    return kl_t0;
+#line 20 "codegen/size_recursion.kl"
 }
+

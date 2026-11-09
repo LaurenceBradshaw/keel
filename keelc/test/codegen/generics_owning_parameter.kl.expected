@@ -253,9 +253,13 @@ void kl__3Box__I3u64E__dtor( struct kl__Box__I3u64E* kl_this_1 )
 #line 20 "codegen/generics_owning_parameter.kl"
 }
 
-#line 62 "codegen/generics_owning_parameter.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 62 "codegen/generics_owning_parameter.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 62 "codegen/generics_owning_parameter.kl"
+    return kl_t0;
+#line 62 "codegen/generics_owning_parameter.kl"
 }
+

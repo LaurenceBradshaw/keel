@@ -812,9 +812,13 @@ void kl__6buffer__I5pointE__dtor( struct kl__buffer__I5pointE* kl_this_1 )
 #line 33 "codegen/operator_index.kl"
 }
 
-#line 104 "codegen/operator_index.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 104 "codegen/operator_index.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 104 "codegen/operator_index.kl"
+    return kl_t0;
+#line 104 "codegen/operator_index.kl"
 }
+

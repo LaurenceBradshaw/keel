@@ -207,7 +207,9 @@ struct Printer
                 "call {}({})",
                 value.kind == Rvalue_kind::Indirect_call ? operand( value.a )
                 : value.op != Token_kind::Unknown        ? guard( value.op, value.type_arguments )
-                                                         : std::string( name_of( value.callee ) ),
+                : value.globals != Globals_call::None
+                    ? fmt::format( "{} {}", value.globals == Globals_call::Drop ? "drop" : "build", name_of( value.callee ) )
+                    : std::string( name_of( value.callee ) ),
                 arguments
             );
         }
@@ -341,7 +343,8 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
 
     // D80: a module's, named for its first built global.
     std::string out =
-        func.globals.is_valid()
+        func.entry ? std::string( "fn entry {\n" )
+        : func.globals.is_valid()
             ? fmt::format( "fn {} {} {{\n", func.drops_globals ? "drop" : "build", printer.name_of( func.globals ) )
         : func.compares != Token_kind::Unknown
             ? fmt::format( "fn {} {{\n", printer.guard( func.compares, func.type_arguments ) )

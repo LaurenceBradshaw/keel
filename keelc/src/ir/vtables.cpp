@@ -9,7 +9,7 @@
 namespace keel
 {
 
-std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, std::span<const Function> functions )
+std::vector<Vtable> vtables_needed( Types& types, std::span<const Function> functions )
 {
     std::vector<Vtable> needed;
 

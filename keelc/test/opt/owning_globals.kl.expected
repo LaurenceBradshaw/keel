@@ -166,12 +166,17 @@ void kl__0drop( void )
 #line 33 "opt/owning_globals.kl"
 }
 
-#line 35 "opt/owning_globals.kl"
 int main( void )
 {
-    kl__0build();
+    int32_t kl_t0;
 #line 35 "opt/owning_globals.kl"
-    int result = (int) kl__4main__();
-    kl__0drop();
-    return result;
+    kl__0build(  );
+#line 35 "opt/owning_globals.kl"
+    kl_t0 = kl__4main__(  );
+#line 35 "opt/owning_globals.kl"
+    kl__0drop(  );
+#line 35 "opt/owning_globals.kl"
+    return kl_t0;
+#line 35 "opt/owning_globals.kl"
 }
+

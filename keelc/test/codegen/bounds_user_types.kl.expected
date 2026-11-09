@@ -1405,9 +1405,13 @@ bool kl__11operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32
     return kl_t0;
 }
 
-#line 83 "codegen/bounds_user_types.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 83 "codegen/bounds_user_types.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 83 "codegen/bounds_user_types.kl"
+    return kl_t0;
+#line 83 "codegen/bounds_user_types.kl"
 }
+

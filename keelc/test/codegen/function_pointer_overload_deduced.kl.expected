@@ -95,9 +95,13 @@ int64_t kl__5apply__I3i32_3i64E__F3i32E3i64_3i32( kl__fn__F3i32E3i64 kl_f_1, int
     return kl_t0;
 }
 
-#line 18 "codegen/function_pointer_overload_deduced.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 18 "codegen/function_pointer_overload_deduced.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 18 "codegen/function_pointer_overload_deduced.kl"
+    return kl_t0;
+#line 18 "codegen/function_pointer_overload_deduced.kl"
 }
+

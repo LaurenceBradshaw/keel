@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "codegen_c/mangle.h"
+#include "codegen/mangle.h"
 #include <fmt/format.h>
 #include <utility>
 

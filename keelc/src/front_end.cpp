@@ -9,6 +9,7 @@
 #include "ir/call_graph.h"
 #include "ir/lower.h"
 #include "ir/lower_dispatch.h"
+#include "ir/main_shim.h"
 #include "ir/simplify.h"
 #include "ir/verify_types.h"
 #include "opt/coalesce_moves.h"
@@ -337,6 +338,17 @@ Front_end run_front_end(
         }
     }
     lap( build.optimise ? "optimise" : "drops" );
+
+    // Last, so no pass inlines the Keel `main` into it.
+    if( !as_module )
+    {
+        if( std::optional<Function> shim =
+                main_shim( ast, front.types, literals, interner, front.program.modules, input, front.functions ) )
+        {
+            verified( *shim, "main_shim" ); // before the push, which moves what the verifier reads
+            front.functions.push_back( std::move( *shim ) );
+        }
+    }
 
     return front;
 }

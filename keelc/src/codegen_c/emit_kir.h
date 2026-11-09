@@ -4,8 +4,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "ast/ast.h"
-#include "codegen_c/parts.h"
+#include "codegen/description.h"
+#include "codegen/parts.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
@@ -23,10 +23,10 @@ struct Emitted
 };
 
 // `part`'s C, complete without any other part's; a null `parts` writes the whole compile as one.
-// Types is mutable only for its table, which a struct reached only through a field grows.
+// Types is mutable only for its table, which a symbol's substituted parameters may grow.
 Emitted emit_c_from_kir(
     const std::vector<Function>& functions,
-    const Ast&                   ast,
+    const Description&           program,
     Types&                       types,
     const Literal_pool&          literals,
     const Source_manager&        sm,

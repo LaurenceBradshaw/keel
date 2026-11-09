@@ -5135,9 +5135,13 @@ void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 #line 11 "../../src/list.kl"
 }
 
-#line 6 "list_walk/main.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 6 "list_walk/main.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 6 "list_walk/main.kl"
+    return kl_t0;
+#line 6 "list_walk/main.kl"
 }
+

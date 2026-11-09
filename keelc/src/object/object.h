@@ -6,7 +6,7 @@
 #include <optional>
 #include <span>
 #include <string>
-#include "codegen_c/parts.h"
+#include "codegen/parts.h"
 #include "front_end.h"
 #include "object/manifest.h"
 

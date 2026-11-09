@@ -74,6 +74,7 @@ void put_rvalue( Byte_writer& out, Ref_writer& refs, const Rvalue& value )
     }
     put_types( out, refs, value.type_arguments );
     out.put_u8( u8( value.address_purpose ) );
+    out.put_u8( u8( value.globals ) );
 }
 
 void put_terminator( Byte_writer& out, Ref_writer& refs, const Terminator& terminator )
@@ -157,6 +158,7 @@ Rvalue get_rvalue( Byte_reader& in, Ref_reader& refs )
     value.arguments       = get_all<Operand>( in, refs, [&] { return get_operand( in, refs ); } );
     value.type_arguments  = get_types( in, refs );
     value.address_purpose = Address_purpose( in.get_u8() );
+    value.globals         = Globals_call( in.get_u8() );
     return value;
 }
 
@@ -193,6 +195,7 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
     }
     refs.node( out, function.globals );
     out.put_u8( function.drops_globals );
+    out.put_u8( function.entry );
     out.put_u32( u32( function.compares ) );
     refs.type( out, function.thunk_of );
 
@@ -267,6 +270,7 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
     function.defaulted_fields     = get_all<Node_id>( in, refs, [&] { return refs.node(); } );
     function.globals              = refs.node();
     function.drops_globals        = in.get_u8() != 0;
+    function.entry                = in.get_u8() != 0;
     function.compares             = Token_kind( in.get_u32() );
     function.thunk_of             = refs.type();
 

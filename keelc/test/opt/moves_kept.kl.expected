@@ -434,9 +434,13 @@ int32_t kl__4main__( void )
 #line 141 "opt/moves_kept.kl"
 }
 
-#line 105 "opt/moves_kept.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 105 "opt/moves_kept.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 105 "opt/moves_kept.kl"
+    return kl_t0;
+#line 105 "opt/moves_kept.kl"
 }
+

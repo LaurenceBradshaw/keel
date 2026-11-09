@@ -567,9 +567,13 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 28 "codegen/positional_literal_in_class.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 28 "codegen/positional_literal_in_class.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 28 "codegen/positional_literal_in_class.kl"
+    return kl_t0;
+#line 28 "codegen/positional_literal_in_class.kl"
 }
+

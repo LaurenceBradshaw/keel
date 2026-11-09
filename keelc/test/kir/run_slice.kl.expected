@@ -196,3 +196,10 @@ fn main {
         _0 = const 0
         return
 }
+fn entry {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = call main()
+        return
+}

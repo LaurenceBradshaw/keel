@@ -9844,12 +9844,17 @@ void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 #line 11 "../../src/list.kl"
 }
 
-#line 6 "list_first_empty/main.kl"
 int main( void )
 {
-    kl_2kl2os_0build();
+    int32_t kl_t0;
 #line 6 "list_first_empty/main.kl"
-    int result = (int) kl__4main__();
-    kl_2kl2os_0drop();
-    return result;
+    kl_2kl2os_0build(  );
+#line 6 "list_first_empty/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 6 "list_first_empty/main.kl"
+    kl_2kl2os_0drop(  );
+#line 6 "list_first_empty/main.kl"
+    return kl_t0;
+#line 6 "list_first_empty/main.kl"
 }
+

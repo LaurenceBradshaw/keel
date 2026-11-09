@@ -339,9 +339,13 @@ int32_t kl__100lambda367__( int32_t kl_x_1 )
 #line 12 "codegen/lambdas.kl"
 }
 
-#line 10 "codegen/lambdas.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 10 "codegen/lambdas.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 10 "codegen/lambdas.kl"
+    return kl_t0;
+#line 10 "codegen/lambdas.kl"
 }
+

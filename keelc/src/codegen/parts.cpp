@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "codegen_c/parts.h"
+#include "codegen/parts.h"
 #include <algorithm>
 #include "ir/place_type.h"
 #include "ir/vtables.h"
@@ -44,8 +44,13 @@ Parts::Parts(
         {
             const Rvalue& value = functions[f].rvalue( statement );
 
-            if( statement.kind == Statement_kind::Assign &&
-                ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) )
+            if( statement.kind == Statement_kind::Assign && value.globals != Globals_call::None )
+            {
+                const auto built = std::ranges::find_if( functions, [&]( const Function& g ) { return names( value, g ); } );
+                reach( built == functions.end() ? k_invalid_kir_id : narrow_cast<u32>( built - functions.begin() ) );
+            }
+            else if( statement.kind == Statement_kind::Assign &&
+                     ( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Function_address ) )
             {
                 reach( find( value.callee, value.type_arguments, value.op ) );
             }
@@ -69,7 +74,7 @@ Parts::Parts(
             }
         }
 
-        for( const Vtable& vtable : vtables_needed( ast, types, std::span( &functions[f], 1 ) ) )
+        for( const Vtable& vtable : vtables_needed( types, std::span( &functions[f], 1 ) ) )
         {
             for( const Node_id requirement : vtable.requirements )
             {
@@ -143,6 +148,11 @@ Parts::Parts(
 
 File_id Parts::of( const Function& function ) const
 {
+    if( function.entry )
+    {
+        return input();
+    }
+
     if( function.globals.is_valid() )
     {
         return of( function.globals );
@@ -213,8 +223,7 @@ void remove_unreached(
     const Ast&             ast,
     Types&                 types,
     const Module_graph&    modules,
-    File_id                input,
-    const Interner&        interner
+    File_id                input
 )
 {
     std::vector<u32>  stack;
@@ -234,12 +243,9 @@ void remove_unreached(
         for( u32 f = 0; f < functions.size(); ++f )
         {
             const Node_id decl = functions[f].declaration;
-            const bool    main = decl.is_valid() && ast.kind( decl ) == Node_kind::Function_decl && parts.of( decl ) == input &&
-                              interner.text( ast.name( decl ) ) == "main";
 
-            has_main = has_main || main;
-            if( main || functions[f].globals.is_valid() ||
-                ( decl.is_valid() && std::ranges::find( addressed, decl ) != addressed.end() ) )
+            has_main = has_main || functions[f].entry;
+            if( functions[f].entry || ( decl.is_valid() && std::ranges::find( addressed, decl ) != addressed.end() ) )
             {
                 reached[f] = true;
                 stack.push_back( f );
@@ -363,9 +369,10 @@ public:
     // The C `main` the input's part ends with.
     std::string shim()
     {
-        const std::string c = emit_c_from_kir(
+        const Description program = describe( front_->program.ast, front_->types, interner_ );
+        const std::string c       = emit_c_from_kir(
                                   front_->functions,
-                                  front_->program.ast,
+                                  program,
                                   front_->types,
                                   literals_,
                                   sm_,
@@ -428,7 +435,7 @@ constexpr std::string_view k_shapes =
 
 } // namespace
 
-TEST_CASE( "parts_gives_a_function_its_declaration_s_module", "[codegen_c][parts]" )
+TEST_CASE( "parts_gives_a_function_its_declaration_s_module", "[codegen][parts]" )
 {
     const Split split( {
         { "main.kl", "import a;\ni32 main() { return fa(); }\n" },
@@ -440,7 +447,7 @@ TEST_CASE( "parts_gives_a_function_its_declaration_s_module", "[codegen_c][parts
     REQUIRE( split.part_of( "fa" ) == "a.kl" );
 }
 
-TEST_CASE( "parts_gives_an_instance_to_the_first_module_that_reaches_it", "[codegen_c][parts][generics]" )
+TEST_CASE( "parts_gives_an_instance_to_the_first_module_that_reaches_it", "[codegen][parts][generics]" )
 {
     SECTION( "a module and the module that imports it: the dependency" )
     {
@@ -481,7 +488,7 @@ TEST_CASE( "parts_gives_an_instance_to_the_first_module_that_reaches_it", "[code
     }
 }
 
-TEST_CASE( "the_shim_builds_modules_dependencies_first_and_drops_them_in_reverse", "[codegen_c][parts][globals]" )
+TEST_CASE( "the_shim_builds_modules_dependencies_first_and_drops_them_in_reverse", "[codegen][parts][globals]" )
 {
     constexpr std::string_view k_buf =
         "class Buf { u8[*] b; public Buf() { unsafe { b = alloc<u8>( 1 ); } } ~Buf() { unsafe { free( b ); } } };\n";
@@ -496,16 +503,16 @@ TEST_CASE( "the_shim_builds_modules_dependencies_first_and_drops_them_in_reverse
     const std::string shim = split.shim();
     const auto        at   = [&]( std::string_view call ) { return shim.find( call ); };
 
-    REQUIRE( at( "kl_1a_0build();" ) < at( "kl_1b_0build();" ) );
-    REQUIRE( at( "kl_1b_0build();" ) < at( "kl__0build();" ) );
-    REQUIRE( at( "kl__0build();" ) < at( "int result" ) );
-    REQUIRE( at( "int result" ) < at( "kl__0drop();" ) );
-    REQUIRE( at( "kl__0drop();" ) < at( "kl_1b_0drop();" ) );
-    REQUIRE( at( "kl_1b_0drop();" ) < at( "kl_1a_0drop();" ) );
-    REQUIRE( at( "kl_1a_0drop();" ) < at( "return result;" ) );
+    REQUIRE( at( "kl_1a_0build(  );" ) < at( "kl_1b_0build(  );" ) );
+    REQUIRE( at( "kl_1b_0build(  );" ) < at( "kl__0build(  );" ) );
+    REQUIRE( at( "kl__0build(  );" ) < at( "kl__4main__(  );" ) );
+    REQUIRE( at( "kl__4main__(  );" ) < at( "kl__0drop(  );" ) );
+    REQUIRE( at( "kl__0drop(  );" ) < at( "kl_1b_0drop(  );" ) );
+    REQUIRE( at( "kl_1b_0drop(  );" ) < at( "kl_1a_0drop(  );" ) );
+    REQUIRE( at( "kl_1a_0drop(  );" ) < at( "return result;" ) );
 }
 
-TEST_CASE( "parts_follows_a_vtable_to_its_drop_function", "[codegen_c][parts][interfaces]" )
+TEST_CASE( "parts_follows_a_vtable_to_its_drop_function", "[codegen][parts][interfaces]" )
 {
     // `made` drops a `box<Shape>`, which reaches `Framed`'s drop function only through the vtable.
     const Split split( {
@@ -517,7 +524,7 @@ TEST_CASE( "parts_follows_a_vtable_to_its_drop_function", "[codegen_c][parts][in
     REQUIRE( split.drop_part_of( "Framed" ) == "s.kl" );
 }
 
-TEST_CASE( "parts_gives_an_unreached_destructor_to_the_input", "[codegen_c][parts][interfaces]" )
+TEST_CASE( "parts_gives_an_unreached_destructor_to_the_input", "[codegen][parts][interfaces]" )
 {
     // Every owning implementer has a drop function, and nothing boxes a `Spare`.
     const Split split( {
@@ -530,7 +537,7 @@ TEST_CASE( "parts_gives_an_unreached_destructor_to_the_input", "[codegen_c][part
 }
 
 // `made` reaches `Framed`'s drop only through its vtable; nothing reaches `Spare` or `unused`.
-TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen_c][parts][interfaces]" )
+TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen][parts][interfaces]" )
 {
     Compiled p(
         std::string( k_shapes ) + "i32 unused() { return 1; }\ni32 main() { return made(); }\n", Stage::Elaborated, Build {}
@@ -538,7 +545,7 @@ TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen_c][parts][inter
     REQUIRE( p.clean() );
 
     std::vector<File_id> provided;
-    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file, p.interner );
+    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file );
 
     const Type_table& table = p.types.table();
     const auto        kept  = [&]( std::string_view name )
@@ -573,14 +580,14 @@ TEST_CASE( "remove_unreached_keeps_what_main_reaches", "[codegen_c][parts][inter
 }
 
 // A library, with no `main`, keeps every function.
-TEST_CASE( "remove_unreached_keeps_everything_without_main", "[codegen_c][parts]" )
+TEST_CASE( "remove_unreached_keeps_everything_without_main", "[codegen][parts]" )
 {
     Compiled p( "i32 one() { return 1; }\n", Stage::Elaborated, Build {} );
     REQUIRE( p.clean() );
 
     const std::size_t    before = p.all.size();
     std::vector<File_id> provided;
-    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file, p.interner );
+    remove_unreached( p.all, provided, p.ast, p.types, p.modules, p.file );
     REQUIRE( p.all.size() == before );
 }
 

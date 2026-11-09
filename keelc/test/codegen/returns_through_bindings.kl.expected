@@ -5101,9 +5101,13 @@ void kl_2kl4list_list__I3i32E__drop( void* kl_t1 )
 #line 11 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
 }
 
-#line 60 "codegen/returns_through_bindings.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 60 "codegen/returns_through_bindings.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 60 "codegen/returns_through_bindings.kl"
+    return kl_t0;
+#line 60 "codegen/returns_through_bindings.kl"
 }
+

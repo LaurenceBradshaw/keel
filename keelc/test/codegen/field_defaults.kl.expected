@@ -9906,12 +9906,17 @@ void kl_2kl4list_list__IQ2kl4pathE__drop( void* kl_t1 )
 #line 11 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
 }
 
-#line 37 "codegen/field_defaults.kl"
 int main( void )
 {
-    kl_2kl2os_0build();
+    int32_t kl_t0;
 #line 37 "codegen/field_defaults.kl"
-    int result = (int) kl__4main__();
-    kl_2kl2os_0drop();
-    return result;
+    kl_2kl2os_0build(  );
+#line 37 "codegen/field_defaults.kl"
+    kl_t0 = kl__4main__(  );
+#line 37 "codegen/field_defaults.kl"
+    kl_2kl2os_0drop(  );
+#line 37 "codegen/field_defaults.kl"
+    return kl_t0;
+#line 37 "codegen/field_defaults.kl"
 }
+

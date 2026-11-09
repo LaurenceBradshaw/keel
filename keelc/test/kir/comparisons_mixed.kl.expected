@@ -168,3 +168,10 @@ fn <u64 != f64> {
         _0 = copy _2 != copy _8
         return
 }
+fn entry {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = call main()
+        return
+}

@@ -615,9 +615,13 @@ int32_t kl__4pick__I3Fix_3i32E__D3Fix3i32_3Fix( size_t kl_p_1, struct kl__Fix* k
     return kl_t0;
 }
 
-#line 105 "codegen/sample_m7.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 105 "codegen/sample_m7.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 105 "codegen/sample_m7.kl"
+    return kl_t0;
+#line 105 "codegen/sample_m7.kl"
 }
+

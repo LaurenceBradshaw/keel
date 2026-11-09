@@ -69,18 +69,16 @@ private:
     std::vector<File_id>              owners_;
 };
 
-// A release program build's sweep: drops every function that neither the input's `main` nor a build
-// or drop function reaches through calls, `&f`, drops, vtables or a global's initialiser, so their
-// types and vtables go too. Keeps
-// `provided` in step; a program without `main` keeps everything.
+// A release program build's sweep: drops every function the entry does not reach through calls,
+// `&f`, drops, vtables or a global's initialiser, so their types and vtables go too. Keeps
+// `provided` in step; a program without an entry keeps everything.
 void remove_unreached(
     std::vector<Function>& functions,
     std::vector<File_id>&  provided,
     const Ast&             ast,
     Types&                 types,
     const Module_graph&    modules,
-    File_id                input,
-    const Interner&        interner
+    File_id                input
 );
 
 } // namespace keel

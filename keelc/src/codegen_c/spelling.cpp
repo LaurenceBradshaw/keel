@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include "codegen_c/mangle.h"
+#include "codegen/mangle.h"
 #include "ir/kir.h"
 #include "lex/token.h"
 
@@ -16,50 +16,14 @@ namespace keel
 
 namespace
 {
-std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types, Node_id decl )
+// The declaration's type parameters against this instance's arguments.
+Bindings instance_bindings( const Described& declaration, std::span<const Type_id> type_arguments )
 {
-    std::vector<Type_id> params;
-
-    for( const Node_id param : ast.params( decl ) )
-    {
-        // The type is recorded on the Param_decl itself, by the declaration pass - not on the type
-        // annotation beneath it, which is never typed.
-        params.push_back( binding_type( ast, types, param ) );
-    }
-
-    return params;
-}
-// What tells two overloads of one name apart: each parameter's *declared* type and the marker a
-// call site writes for it. Not binding_type, which is the pointer a borrow travels as - that would
-// spell `ref i32` and `i32*` alike, and they are two parameters a call site distinguishes.
-std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& types, Node_id decl )
-{
-    std::vector<Mangled_parameter> params;
-
-    for( const Node_id param : ast.params( decl ) )
-    {
-        const Keyword mode = ast.call_marker( param );
-
-        const char marker = mode == Keyword::Ref ? 'R' : mode == Keyword::Move ? 'M' : mode == Keyword::Out ? 'O' : '\0';
-
-        params.push_back( Mangled_parameter { .type = types.type_of( param ), .marker = marker } );
-    }
-
-    return params;
-}
-
-// The declaration's type parameters against this instance's arguments. The same map the worklist
-// builds when it emits the instance - written again here because a symbol is computed from the
-// declaration and must come back through the instance, like everything else that reaches that way.
-Bindings instance_bindings( const Ast& ast, const Types& types, Node_id declaration, std::span<const Type_id> type_arguments )
-{
-    const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( declaration ) );
-
     Bindings bindings;
 
-    for( std::size_t i = 0; i < parameters.size() && i < type_arguments.size(); ++i )
+    for( std::size_t i = 0; i < declaration.type_parameters.size() && i < type_arguments.size(); ++i )
     {
-        bindings.emplace( types.type_of( parameters[i] ).v, type_arguments[i] );
+        bindings.emplace( declaration.type_parameters[i].v, type_arguments[i] );
     }
 
     return bindings;
@@ -93,7 +57,7 @@ std::string Spelling::type( Type_id type ) const
 
     // A closure of nothing is the constant 0 in a byte.
     case Type_kind::Closure:
-        return ast.captures( described.declaration ).empty() ? "uint8_t" : structure( type );
+        return program.fields( type ).empty() ? "uint8_t" : structure( type );
 
     case Type_kind::Pointer:
         if( types.table().is_interface( described.element ) )
@@ -122,7 +86,7 @@ std::string Spelling::type( Type_id type ) const
     // implementation-defined and which would buy nothing, since by here Keel has already erased the
     // distinction the tag existed for. One carrying payloads is a struct: a tag and the fields.
     case Type_kind::Enum:
-        return ast.enum_has_payload( described.declaration ) ? structure( type ) : this->type( described.element );
+        return program[described.declaration].payload ? structure( type ) : this->type( described.element );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -230,17 +194,19 @@ std::string Spelling::drop_function( Type_id implementer ) const
 
 std::string Spelling::field( Node_id declaration ) const
 {
-    const Node_id variant = ast.variant_of( declaration );
-    return variant.is_valid()
-               ? mangle_payload_field( interner.text( ast.name( variant ) ), interner.text( ast.name( declaration ) ) )
-               : mangle_field( interner.text( ast.name( declaration ) ) );
+    return program[declaration].symbol;
 }
 
 std::string Spelling::function( const Function& function ) const
 {
+    if( function.entry )
+    {
+        return "main";
+    }
+
     if( function.globals.is_valid() )
     {
-        return fmt::format( "kl_{}_0{}", module_slot( owner( function.globals ) ), function.drops_globals ? "drop" : "build" );
+        return globals_function( function.globals, function.drops_globals );
     }
 
     if( function.compares != Token_kind::Unknown )
@@ -258,8 +224,14 @@ std::string Spelling::function( const Function& function ) const
 
 std::string Spelling::callee( const Rvalue& value ) const
 {
-    return value.op != Token_kind::Unknown ? guard( value.op, value.type_arguments )
-                                           : function( value.callee, value.type_arguments );
+    return value.op != Token_kind::Unknown       ? guard( value.op, value.type_arguments )
+           : value.globals != Globals_call::None ? globals_function( value.callee, value.globals == Globals_call::Drop )
+                                                 : function( value.callee, value.type_arguments );
+}
+
+std::string Spelling::globals_function( Node_id first, bool drops ) const
+{
+    return fmt::format( "kl_{}_0{}", module_slot( owner( first ) ), drops ? "drop" : "build" );
 }
 
 std::string Spelling::guard( Token_kind op, std::span<const Type_id> operands ) const
@@ -297,108 +269,94 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
                    : drop_function( type_arguments[0] );
     }
 
+    const Described& described = program[declaration];
+
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
     // would not link against anything.
-    if( ast.is_extern( declaration ) )
+    if( described.is_extern )
     {
-        return std::string( interner.text( ast.name( declaration ) ) );
+        return described.name;
     }
 
     // A lambda is named by its site, and its instance by the enclosing function's bindings; a
     // name starting with a digit is one no declaration has.
-    if( ast.kind( declaration ) == Node_kind::Lambda_expr )
+    if( described.kind == Declared::Lambda )
     {
-        return mangle_function(
-            owner( declaration ), fmt::format( "0lambda{}", ast.span( declaration ).start ), {}, types.table(), type_arguments
-        );
+        return mangle_function( owner( declaration ), described.name, {}, types.table(), type_arguments );
     }
 
-    // A destructor's aux is the type's own name, and an instantiation is told apart by its type
+    // A destructor's name is the type's own, and an instantiation is told apart by its type
     // arguments alone - the same rule mangle_function follows. An enum names its synthesised one.
-    if( ast.kind( declaration ) == Node_kind::Destructor_decl || ast.kind( declaration ) == Node_kind::Enum_decl )
+    if( described.kind == Declared::Destructor || described.kind == Declared::Enum )
     {
-        return mangle_destructor(
-            owner( declaration ), interner.text( ast.name( declaration ) ), type_arguments, types.table()
-        );
+        return mangle_destructor( owner( declaration ), described.name, type_arguments, types.table() );
     }
-
-    std::vector<Mangled_parameter> params = mangled_parameters( ast, types, declaration );
 
     // The parameters are written in the declaration's own `T`, so without this an instance's symbol
     // would name a type parameter rather than the type it was instantiated at.
-    const Bindings bindings = instance_bindings( ast, types, declaration, type_arguments );
+    std::vector<Mangled_parameter> params   = described.parameters;
+    const Bindings                 bindings = instance_bindings( described, type_arguments );
 
     for( Mangled_parameter& param : params )
     {
         param.type = types.table().substitute( param.type, bindings );
     }
 
-    if( ast.kind( declaration ) == Node_kind::Constructor_decl )
+    if( described.kind == Declared::Constructor )
     {
-        return mangle_constructor(
-            owner( declaration ), interner.text( ast.name( declaration ) ), type_arguments, params, types.table()
-        );
+        return mangle_constructor( owner( declaration ), described.name, type_arguments, params, types.table() );
     }
 
-    if( ast.kind( declaration ) == Node_kind::Method_decl )
+    if( described.kind == Declared::Method )
     {
         // The receiver, substituted above - so the tag names `Box<i32>` rather than `Box<T>` - and
         // then dropped from the parameters, since it can never be what tells two members apart. A
         // static method has no receiver to read either from, so the tag is built from the aggregate
         // and every written parameter stays: that is why the tag leads the argtypes rather than
         // sitting on parameter 0, and it is the whole of what M7 asked of this scheme. The tag takes
-        // only the aggregate's arguments; a generic method's own follow them.
-        const bool        receiver      = ast.has_receiver( declaration );
-        const Node_id     owner         = receiver ? Node_id {} : ast.enclosing_aggregate( declaration );
-        const std::size_t num_type_args = receiver ? 0 : ast.type_parameters( ast.type_param_list( owner ) ).size();
-        // A block's static method is tagged with the type the block is for.
-        const Type_id enclosing =
-            receiver ? params.front().type
-            : ast.kind( owner ) == Node_kind::Implements_decl
-                ? types.type_of( owner )
-                : types.table().structure(
-                      owner, std::span( type_arguments ).first( num_type_args ), interner.text( ast.name( owner ) )
-                  );
-
-        const Node_id block = ast.enclosing_aggregate( declaration );
-        const Type_id conformed =
-            ast.kind( block ) == Node_kind::Implements_decl ? types.type_of( ast.implemented( block )[0] ) : Type_id {};
+        // only the aggregate's arguments; a generic method's own follow them. A block's static
+        // method is tagged with the type the block is for.
+        const Type_id enclosing = described.receiver ? params.front().type
+                                  : described.implementer.is_valid()
+                                      ? described.implementer
+                                      : types.table().structure(
+                                            described.aggregate,
+                                            std::span( type_arguments ).first( described.aggregate_arity ),
+                                            described.aggregate_name
+                                        );
 
         return mangle_function(
-            Spelling::owner( declaration ),
-            interner.text( ast.name( declaration ) ),
-            std::span( params ).subspan( receiver ? 1 : 0 ),
+            owner( declaration ),
+            described.name,
+            std::span( params ).subspan( described.receiver ? 1 : 0 ),
             types.table(),
             type_arguments,
             enclosing,
-            conformed
+            described.conformed
         );
     }
 
-    return mangle_function(
-        owner( declaration ), interner.text( ast.name( declaration ) ), params, types.table(), type_arguments
-    );
+    return mangle_function( owner( declaration ), described.name, params, types.table(), type_arguments );
 }
 
 std::string Spelling::slot( Node_id requirement ) const
 {
     // In the interface's own `T` and `self`, so a slot has one name across every instance.
-    const bool                     receiver = ast.has_receiver( requirement );
-    std::vector<Mangled_parameter> params   = mangled_parameters( ast, types, requirement );
+    const Described& described = program[requirement];
     return mangle_function(
-        {}, interner.text( ast.name( requirement ) ), std::span( params ).subspan( receiver ? 1 : 0 ), types.table()
+        {}, described.name, std::span( described.parameters ).subspan( described.receiver ? 1 : 0 ), types.table()
     );
 }
 
 std::string Spelling::global( Node_id declaration, Type_id owner ) const
 {
     // A generic's static is named by its instance, a non-generic's by its aggregate.
-    const Node_id aggregate = ast.enclosing_aggregate( declaration );
-    const Type_id enclosing = owner.is_valid() || !aggregate.is_valid()
-                                  ? owner
-                                  : types.table().structure( aggregate, {}, interner.text( ast.name( aggregate ) ) );
+    const Described& described = program[declaration];
+    const Type_id    enclosing = owner.is_valid() || !described.aggregate.is_valid()
+                                     ? owner
+                                     : types.table().structure( described.aggregate, {}, described.aggregate_name );
 
-    return mangle_global( Spelling::owner( declaration ), interner.text( ast.name( declaration ) ), enclosing, types.table() );
+    return mangle_global( Spelling::owner( declaration ), described.name, enclosing, types.table() );
 }
 
 std::string Spelling::destructor_of( Type_id type ) const
@@ -420,27 +378,18 @@ std::string Spelling::destructor_of( Type_id type ) const
         return function( declaration, types.table().get( type ).arguments );
     }
 
-    for( const Node_id member : ast.members( declaration ) )
-    {
-        if( ast.kind( member ) == Node_kind::Destructor_decl )
-        {
-            return function( member, types.table().get( type ).arguments );
-        }
-    }
-
-    assert( false && "a Drop names a type with no destructor of its own" );
-    return {};
+    assert( program[declaration].destructor.is_valid() && "a Drop names a type with no destructor of its own" );
+    return function( program[declaration].destructor, types.table().get( type ).arguments );
 }
 
 std::string Spelling::return_type( Node_id declaration ) const
 {
-    return type( binding_type( ast, types, declaration ) );
+    return type( program[declaration].type );
 }
 
 std::string Spelling::parameter_types( Node_id declaration ) const
 {
-
-    std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
+    const std::vector<Type_id>& params = program[declaration].passed;
 
     std::string rendered;
 
@@ -549,13 +498,12 @@ std::string Spelling::constant( const Constant_value& value, Type_id of ) const
         // `str`'s fields by name: its bytes, cast as a literal's are, and their count.
         std::string text;
 
-        for( const Node_id field : ast.contained_fields( table.get( of ).declaration ) )
+        for( const Held_field& field : program.fields( of ) )
         {
-            const std::string_view field_name = interner.text( ast.name( field ) );
-            const std::string      part       = field_name == "data"
-                                                    ? fmt::format( "( {} ) {}", type( types.type_of( field ) ), c_string( value.text ) )
-                                                    : c_integer( value.text.size() );
-            text += fmt::format( "{}.{} = {}", text.empty() ? "{ " : ", ", this->field( field ), part );
+            const std::string part = program[field.declaration].name == "data"
+                                         ? fmt::format( "( {} ) {}", type( field.type ), c_string( value.text ) )
+                                         : c_integer( value.text.size() );
+            text += fmt::format( "{}.{} = {}", text.empty() ? "{ " : ", ", this->field( field.declaration ), part );
         }
         return text + " }";
     }
@@ -568,7 +516,7 @@ std::string Spelling::constant( const Constant_value& value, Type_id of ) const
     // A function's name is already its address in C.
     if( value.kind == Constant_value::Kind::Address )
     {
-        return ast.kind( value.target ) == Node_kind::Var_decl ? "&" + global( value.target ) : function( value.target );
+        return program[value.target].kind == Declared::Global ? "&" + global( value.target ) : function( value.target );
     }
 
     if( table.is_pointer( of ) || table.is_many_pointer( of ) )
@@ -597,7 +545,7 @@ Mangled_owner Spelling::owner( Node_id decl ) const
         return {};
     }
 
-    return owner( ast.span( decl ).file );
+    return owner( program[decl].span.file );
 }
 
 Mangled_owner Spelling::owner( File_id file ) const
@@ -679,12 +627,12 @@ TEST_CASE( "c_string_escapes_every_byte_c_could_misread", "[codegen][spelling]" 
 // A borrowed run crosses a C call as two parameters, so no ABI passes a struct by hidden pointer.
 TEST_CASE( "a_run_parameter_is_spelled_as_two", "[codegen][spelling]" )
 {
-    const Ast            ast;
+    const Description    program;
     Types                types;
     const Interner       interner;
     const Module_graph   modules;
     const Source_manager sm;
-    const Spelling       spelling { ast, types, interner, modules, sm };
+    const Spelling       spelling { program, types, interner, modules, sm };
 
     Type_table&   table = types.table();
     const Type_id i32   = table.integer( 32, true );

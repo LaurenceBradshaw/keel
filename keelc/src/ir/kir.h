@@ -174,6 +174,14 @@ enum class Rvalue_kind : u8
     Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
 };
 
+// D80: a Call of a module's build or drop function, which no declaration has; `callee` is its first global.
+enum class Globals_call : u8
+{
+    None,
+    Build,
+    Drop
+};
+
 enum class Address_purpose : u8
 {
     Borrow,
@@ -200,6 +208,7 @@ struct Rvalue
     // every other field here, so the designated-initialiser factories below need not list it.
     std::vector<Type_id> type_arguments {};
     Address_purpose      address_purpose = Address_purpose::Borrow;
+    Globals_call         globals         = Globals_call::None;
 };
 
 enum class Statement_kind : u8
@@ -394,6 +403,7 @@ struct Function
     Token_kind            compares = Token_kind::Unknown; // D41: a guard's comparison; its type arguments are the operands'
     Type_id thunk_of {}; // §6.7: the interface a thunk's vtable slot is in; declared by the requirement, at the implementer
     bool    drops_globals = false;       // which of the two
+    bool    entry         = false;       // the program's `main`, which builds the globals and calls the Keel `main`
     std::vector<Field_slot>      fields; // ir/slots reads them
     Id_vector<Local_id, Local>   locals;
     Id_vector<Block_id, Block>   blocks;
@@ -490,8 +500,14 @@ inline bool same_function( const Function& a, const Function& b )
 // Whether `value`, a call or a function's address, names `function`. Only a vtable names a thunk.
 inline bool names( const Rvalue& value, const Function& function )
 {
-    return value.callee == function.declaration && value.op == function.compares && !function.thunk_of.is_valid() &&
-           value.type_arguments == function.type_arguments;
+    if( function.globals.is_valid() )
+    {
+        return value.callee == function.globals &&
+               value.globals == ( function.drops_globals ? Globals_call::Drop : Globals_call::Build );
+    }
+
+    return value.globals == Globals_call::None && value.callee == function.declaration && value.op == function.compares &&
+           !function.thunk_of.is_valid() && value.type_arguments == function.type_arguments;
 }
 
 inline bool has_deref_projection( const Function& func, const Place& place )
@@ -839,6 +855,16 @@ inline Rvalue guard_call( Token_kind op, Operand a, Operand b, Type_id boolean )
         .op             = op,
         .arguments      = { a, b },
         .type_arguments = { a.type, b.type },
+    };
+}
+
+inline Rvalue globals_call( Node_id first, bool drops, Type_id nothing )
+{
+    return Rvalue {
+        .kind    = Rvalue_kind::Call,
+        .type    = nothing,
+        .callee  = first,
+        .globals = drops ? Globals_call::Drop : Globals_call::Build,
     };
 }
 

@@ -673,9 +673,13 @@ void kl_6shapes5kinds_Tracked__as_kl__Measured__kl__4grow__3i64( void* kl_t1, in
 #line 9 "codegen/implements_for_packages/main.kl"
 }
 
-#line 39 "codegen/implements_for_packages/main.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 39 "codegen/implements_for_packages/main.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 39 "codegen/implements_for_packages/main.kl"
+    return kl_t0;
+#line 39 "codegen/implements_for_packages/main.kl"
 }
+

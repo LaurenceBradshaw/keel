@@ -9893,18 +9893,29 @@ void kl_2kl4list_list__IQ2kl4pathE__drop( void* kl_t1 )
 #line 11 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
 }
 
-#line 8 "codegen/global_order/main.kl"
 int main( void )
 {
-    kl_2kl2os_0build();
-    kl_1b_0build();
-    kl_1a_0build();
-    kl__0build();
+    int32_t kl_t0;
 #line 8 "codegen/global_order/main.kl"
-    int result = (int) kl__4main__();
-    kl__0drop();
-    kl_1a_0drop();
-    kl_1b_0drop();
-    kl_2kl2os_0drop();
-    return result;
+    kl_2kl2os_0build(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_1b_0build(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_1a_0build(  );
+#line 8 "codegen/global_order/main.kl"
+    kl__0build(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 8 "codegen/global_order/main.kl"
+    kl__0drop(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_1a_0drop(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_1b_0drop(  );
+#line 8 "codegen/global_order/main.kl"
+    kl_2kl2os_0drop(  );
+#line 8 "codegen/global_order/main.kl"
+    return kl_t0;
+#line 8 "codegen/global_order/main.kl"
 }
+

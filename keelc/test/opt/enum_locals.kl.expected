@@ -127,9 +127,13 @@ int32_t kl__4main__( void )
 #line 79 "opt/enum_locals.kl"
 }
 
-#line 59 "opt/enum_locals.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 59 "opt/enum_locals.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 59 "opt/enum_locals.kl"
+    return kl_t0;
+#line 59 "opt/enum_locals.kl"
 }
+

@@ -189,9 +189,13 @@ int32_t kl__square__as_kl__shape__kl__4area__3i32( void* kl_t1, int32_t kl_t2 )
 #line 5 "codegen/unnamed_parameters.kl"
 }
 
-#line 33 "codegen/unnamed_parameters.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 33 "codegen/unnamed_parameters.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 33 "codegen/unnamed_parameters.kl"
+    return kl_t0;
+#line 33 "codegen/unnamed_parameters.kl"
 }
+

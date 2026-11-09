@@ -10175,12 +10175,17 @@ double kl__Square__as_kl__Shape__kl__4area__( void* kl_t1 )
 #line 8 "codegen/bound_interface.kl"
 }
 
-#line 42 "codegen/bound_interface.kl"
 int main( void )
 {
-    kl_2kl2os_0build();
+    int32_t kl_t0;
 #line 42 "codegen/bound_interface.kl"
-    int result = (int) kl__4main__();
-    kl_2kl2os_0drop();
-    return result;
+    kl_2kl2os_0build(  );
+#line 42 "codegen/bound_interface.kl"
+    kl_t0 = kl__4main__(  );
+#line 42 "codegen/bound_interface.kl"
+    kl_2kl2os_0drop(  );
+#line 42 "codegen/bound_interface.kl"
+    return kl_t0;
+#line 42 "codegen/bound_interface.kl"
 }
+

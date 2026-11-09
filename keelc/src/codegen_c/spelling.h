@@ -5,8 +5,8 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include "ast/ast.h"
-#include "codegen_c/mangle.h"
+#include "codegen/description.h"
+#include "codegen/mangle.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/types.h"
@@ -20,7 +20,7 @@ struct Function;
 struct Rvalue;
 struct Spelling
 {
-    const Ast&            ast;
+    const Description&    program;
     Types&                types; // mutable only for its table: an instance's symbol interns its types
     const Interner&       interner;
     const Module_graph&   modules;
@@ -50,6 +50,8 @@ struct Spelling
     std::string guard( Token_kind op, std::span<const Type_id> operands ) const;
     // As above, or a module's build or drop function: "kl_2kl2os_0build". No name starts with a digit.
     std::string function( const Function& function ) const;
+    // A module's build or drop function, by its first built global.
+    std::string globals_function( Node_id first, bool drops ) const;
     // A vtable slot: the requirement's name and parameters, so an overloaded requirement has two.
     std::string slot( Node_id requirement ) const;
     // A global or static field. `owner` is the instance whose static this is, invalid otherwise.

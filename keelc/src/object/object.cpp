@@ -9,9 +9,9 @@
 #include <iterator>
 #include <optional>
 #include <vector>
+#include "codegen/mangle.h"
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
-#include "codegen_c/mangle.h"
 #include "codegen_c/spelling.h"
 #include "common/archive.h"
 #include "common/bytes.h"
@@ -111,8 +111,9 @@ int write_object(
     // A release build compiles each part in the program that links it, optimised across modules.
     if( options.debug )
     {
-        const Emitted emitted = emit_c_from_kir(
-            front.functions, program.ast, front.types, literals, sm, interner, program.modules, &parts, input, true
+        const Description description = describe( program.ast, front.types, interner );
+        const Emitted     emitted     = emit_c_from_kir(
+            front.functions, description, front.types, literals, sm, interner, program.modules, &parts, input, true
         );
 
         if( !write_file( options.c, emitted.c ) )
@@ -133,7 +134,7 @@ int write_object(
             return 1;
         }
 
-        const Spelling spelling { program.ast, front.types, interner, program.modules, sm };
+        const Spelling spelling { description, front.types, interner, program.modules, sm };
         members.push_back( { .name = module_slot( spelling.owner( input ) ) + ".o", .data = *bytes, .symbols = emitted.defined }
         );
     }
@@ -352,7 +353,8 @@ Built build_clock( const Temp_dir& dir, bool debug )
         ) == 0
     );
 
-    const Spelling spelling { front.program.ast, front.types, interner, front.program.modules, sm };
+    const Description description = describe( front.program.ast, front.types, interner );
+    const Spelling    spelling { description, front.types, interner, front.program.modules, sm };
     for( const Function& function : front.functions )
     {
         const std::string name = spelling.function( function );

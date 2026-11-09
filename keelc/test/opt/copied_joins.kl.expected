@@ -200,9 +200,13 @@ int32_t kl__4main__( void )
 #line 49 "opt/copied_joins.kl"
 }
 
-#line 29 "opt/copied_joins.kl"
 int main( void )
 {
+    int32_t kl_t0;
 #line 29 "opt/copied_joins.kl"
-    return (int) kl__4main__();
+    kl_t0 = kl__4main__(  );
+#line 29 "opt/copied_joins.kl"
+    return kl_t0;
+#line 29 "opt/copied_joins.kl"
 }
+
