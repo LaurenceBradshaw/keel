@@ -4,6 +4,11 @@
   "dependencies": [
     "cxxopts",
     "fmt",
-    "catch2"
+    "catch2",
+    {
+      "name": "llvm",
+      "default-features": false,
+      "features": [ "target-x86", "lld" ]
+    }
   ]
 }

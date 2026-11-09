@@ -42,10 +42,20 @@ list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp)
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
 
+# LLVM and lld, statically linked. Every configuration takes vcpkg's release libraries: the debug
+# ones are 30 times the size, and the installed headers are the release build's.
+set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
+find_package(LLVM CONFIG REQUIRED)
+find_package(LLD CONFIG REQUIRED)
+unset(CMAKE_MAP_IMPORTED_CONFIG_DEBUG)
+set(keel_llvm_libs lldELF lldCommon LLVMCore LLVMSupport LLVMTarget LLVMMC LLVMPasses
+    LLVMX86CodeGen LLVMX86AsmParser LLVMX86Desc LLVMX86Info)
+
 add_executable(keelc ${keel_sources})
 target_include_directories(keelc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(keelc SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS} ${LLD_INCLUDE_DIRS})
 target_compile_definitions(keelc PRIVATE KEEL_VERSION="${PROJECT_VERSION}")
-target_link_libraries(keelc PRIVATE keel_options fmt::fmt cxxopts::cxxopts)
+target_link_libraries(keelc PRIVATE keel_options fmt::fmt cxxopts::cxxopts ${keel_llvm_libs})
 
 # Unit tests live at the bottom of the .cpp file they exercise, inside `#ifdef ENABLE_UNIT_TESTS`.
 # The test binary is therefore the same source set compiled a second time with that define, rather
@@ -63,7 +73,8 @@ if(KEEL_TESTS)
     add_executable(keel_tests ${keel_sources})
     target_compile_definitions(keel_tests PRIVATE ENABLE_UNIT_TESTS KEEL_VERSION="${PROJECT_VERSION}")
     target_include_directories(keel_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-    target_link_libraries(keel_tests PRIVATE keel_options fmt::fmt cxxopts::cxxopts Catch2::Catch2WithMain)
+    target_include_directories(keel_tests SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS} ${LLD_INCLUDE_DIRS})
+    target_link_libraries(keel_tests PRIVATE keel_options fmt::fmt cxxopts::cxxopts Catch2::Catch2WithMain ${keel_llvm_libs})
 
     add_test(NAME unit COMMAND keel_tests)
 endif()
