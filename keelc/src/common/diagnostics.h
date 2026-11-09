@@ -80,6 +80,7 @@ public:
 
     bool   has_errors() const;
     size_t error_count() const;
+    size_t warning_count() const;
 
     // colour is the caller's decision: render() writes to any ostream, and only the driver knows
     // whether its destination is a terminal. See colour_supported().
@@ -90,6 +91,7 @@ public:
     void render_json( const Source_manager& sm, std::ostream& out ) const;
 
 private:
+    size_t            count( Severity severity ) const;
     std::vector<u32>  in_source_order() const;
     std::vector<bool> kept() const;
     void              drop_silenced( std::vector<bool>& keep ) const;

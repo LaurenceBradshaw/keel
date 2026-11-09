@@ -76,6 +76,8 @@ int main( int argc, char** argv )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
         ( "keep-unreached",  "Without --debug, keep the functions main never reaches" )
+        ( "q,quiet",         "Print only diagnostics: no summary line" )
+        ( "verbose",         "Also print each phase as it ends, with its time" )
         ( "runtime",         "Link this runtime library instead of the one keelc carries", cxxopts::value<std::string>() )
         ( "l,library",       "Link this C library, as -l does; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "L,library-path",  "Search this directory for -l libraries; may be repeated", cxxopts::value<std::vector<std::string>>() )
@@ -190,6 +192,12 @@ int main( int argc, char** argv )
         return 2;
     }
 
+    if( args.count( "quiet" ) && args.count( "verbose" ) )
+    {
+        fmt::print( stderr, "keelc: --quiet and --verbose cannot both be given\n" );
+        return 2;
+    }
+
     if( args.count( "with-prelude" ) && !args.count( "declarations" ) )
     {
         fmt::print( stderr, "keelc: --with-prelude needs --declarations\n" );
@@ -285,6 +293,7 @@ int main( int argc, char** argv )
         }
     }
 
+    keel::Phase_clock            clock( args.count( "verbose" ) > 0 );
     keel::Source_manager         sm;
     std::optional<keel::File_id> file_id = sm.load_file( std::filesystem::path( args["input"].as<std::string>() ) );
 
@@ -313,6 +322,42 @@ int main( int argc, char** argv )
         }
     }
 
+    // One line on what was done, unless a tool reads the output or the mode only prints a view.
+    const bool summary = !args.count( "quiet" ) && diagnostics_format == "human" &&
+                         ( stop == Stop::Check || stop == Stop::Object || stop == Stop::Executable );
+    std::filesystem::path output = std::filesystem::path( args["input"].as<std::string>() ).stem();
+    if( args.count( "output" ) )
+    {
+        output = args["output"].as<std::string>();
+    }
+    else if( stop == Stop::Object )
+    {
+        output += ".klo";
+    }
+
+    const auto summarise = [&]
+    {
+        if( !summary )
+        {
+            return;
+        }
+        const std::size_t errors   = diagnostics.error_count();
+        const std::size_t warnings = diagnostics.warning_count();
+        fmt::print(
+            stderr,
+            "keelc: {}: {} error{}, {} warning{}, {} files ({:.2f}s)\n",
+            stop == Stop::Check ? "checked " + args["input"].as<std::string>()
+            : errors == 0       ? "built " + output.string()
+                                : "did not build " + output.string(),
+            errors,
+            errors == 1 ? "" : "s",
+            warnings,
+            warnings == 1 ? "" : "s",
+            sm.file_count(),
+            clock.seconds()
+        );
+    };
+
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
     {
@@ -332,12 +377,14 @@ int main( int argc, char** argv )
 
         if( !diagnostics.has_errors() )
         {
+            summarise();
             return 0;
         }
 
         // A count at the end, so it is obvious whether output was truncated by a pager.
         const std::size_t count = diagnostics.error_count();
         fmt::print( stderr, "\n{} error{} generated\n", count, count == 1 ? "" : "s" );
+        summarise();
         return 1;
     };
 
@@ -446,7 +493,8 @@ int main( int argc, char** argv )
         given,
         // Its own text under its own path, beneath an empty program, so it is declared once.
         as_prelude ? sm.file( *file_id ).text : keel::prelude_source(),
-        as_prelude ? sm.file( *file_id ).path : keel::prelude_path
+        as_prelude ? sm.file( *file_id ).path : keel::prelude_path,
+        &clock
     );
     const keel::Program&               prog      = front.program;
     const keel::Ast&                   ast       = prog.ast;
@@ -477,6 +525,10 @@ int main( int argc, char** argv )
         }
         package_docs = prog.package_docs;
     }
+    if( args.count( "names" ) || args.count( "declarations" ) )
+    {
+        clock.lap( "editor lists" );
+    }
 
     if( diagnostics.has_errors() || stop == Stop::Check )
     {
@@ -487,6 +539,7 @@ int main( int argc, char** argv )
     if( !debug && !as_module && !args.count( "keep-unreached" ) )
     {
         keel::remove_unreached( front.functions, front.provided, ast, types, prog.modules, file_id.value(), interner );
+        clock.lap( "remove unreached" );
     }
 
     const keel::Parts parts( ast, types, prog.modules, file_id.value(), functions, front.provided );
@@ -538,6 +591,7 @@ int main( int argc, char** argv )
                 std::cout << fmt::format( "// {}\n", sm.file( part ).path ) << part_c( part );
             }
         }
+        clock.lap( "emit C" );
 
         return finish();
     }
@@ -556,16 +610,6 @@ int main( int argc, char** argv )
     {
         cflags += cflags.empty() ? "" : " ";
         cflags += c_warnings;
-    }
-
-    std::filesystem::path output = std::filesystem::path( args["input"].as<std::string>() ).stem();
-    if( args.count( "output" ) )
-    {
-        output = args["output"].as<std::string>();
-    }
-    else if( stop == Stop::Object )
-    {
-        output += ".klo";
     }
 
     // Each part's .c is written beside the output and kept: its #line directives point back at the
@@ -589,6 +633,7 @@ int main( int argc, char** argv )
         {
             return status;
         }
+        clock.lap( "write object" );
         return finish();
     }
 
@@ -639,6 +684,7 @@ int main( int argc, char** argv )
         sources.push_back( path );
         objects.push_back( object_dir.path / std::filesystem::path( c_name( part ) ).replace_extension( ".o" ) );
     }
+    clock.lap( "emit C" );
 
     // Concurrently, so the wall time is about the largest part's.
     std::vector<std::future<int>> compiles;
@@ -666,6 +712,7 @@ int main( int argc, char** argv )
     {
         return 1;
     }
+    clock.lap( "cc" );
 
     const std::filesystem::path generated_path = sources.back();
 
@@ -694,6 +741,7 @@ int main( int argc, char** argv )
         }
         return 1;
     }
+    clock.lap( "link" );
 
     return finish();
 }

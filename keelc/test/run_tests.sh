@@ -228,7 +228,7 @@ build_objects()
             continue
         fi
 
-        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "$@" -c "${built[@]}" -o "$object" \
+        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet "$@" -c "${built[@]}" -o "$object" \
             > "${build_dir}/objects.log" 2>&1; then
             echo "    keelc did not build ${object##*/}:"
             sed 's/^/      /' < "${build_dir}/objects.log"
@@ -267,7 +267,7 @@ check_run()
         done < "${src}.link"
     fi
 
-    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
@@ -412,7 +412,7 @@ run_one()
         return
     fi
 
-    "$keelc" "${suite_flags[@]}" "$src" "${klos[@]}" > "$out" 2> "$err"
+    "$keelc" --quiet "${suite_flags[@]}" "$src" "${klos[@]}" > "$out" 2> "$err"
     local code=$?
 
     # An object is named by its path, which is in the build directory wherever that is.

@@ -222,6 +222,8 @@ class Builder
         {
             args.push( "--debug" );
         }
+        // keelb says what it compiles; keelc adds its phases only when asked.
+        args.push( verbose_ ? "--verbose" : "--quiet" );
 
         const ref kl::list<kl::pair<kl::string, kl::path>> packages = project_.packages();
         for( u64 i : 0..packages.size() )

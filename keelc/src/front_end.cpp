@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "front_end.h"
+#include <fmt/core.h>
 #include "check/drop_flags.h"
 #include "check/report.h"
 #include "ir/call_graph.h"
@@ -27,6 +28,21 @@
 namespace keel
 {
 
+void Phase_clock::lap( std::string_view phase )
+{
+    const Clock::time_point now = Clock::now();
+    if( print_ )
+    {
+        fmt::print( stderr, "keelc: {:<16} {:.2f}s\n", phase, std::chrono::duration<double>( now - last_ ).count() );
+    }
+    last_ = now;
+}
+
+double Phase_clock::seconds() const
+{
+    return std::chrono::duration<double>( Clock::now() - start_ ).count();
+}
+
 Front_end run_front_end(
     File_id                  input,
     Stage                    through,
@@ -39,16 +55,28 @@ Front_end run_front_end(
     bool                     as_module,
     std::span<const Object>  objects,
     std::string_view         prelude,
-    std::string_view         prelude_name
+    std::string_view         prelude_name,
+    Phase_clock*             clock
 )
 {
+    const auto lap = [&]( std::string_view phase )
+    {
+        if( clock != nullptr )
+        {
+            clock->lap( phase );
+        }
+    };
+
     Front_end front;
-    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module, objects, prelude, prelude_name );
+    front.program = load_program( input, sm, interner, literals, diags, packages, as_module, objects, prelude, prelude_name );
+    lap( "load" );
     const Ast& ast = front.program.ast;
 
     const std::span<const Loaded_state> states = front.program.states;
     front.resolution                           = resolve( ast, sm, interner, diags, front.program.modules, states );
+    lap( "resolve" );
     front.types = type_check( ast, front.resolution, literals, sm, interner, diags, std::move( front.program.types ), states );
+    lap( "type check" );
 
     // The emitter takes no Diagnostics: past here there is nothing left for it to object to.
     if( diags.has_errors() )
@@ -76,6 +104,7 @@ Front_end run_front_end(
     // the same functions.
     front.functions =
         lower( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks, std::move( loaded ) );
+    lap( "lower" );
 
     if( through == Stage::Lowered )
     {
@@ -86,6 +115,7 @@ Front_end run_front_end(
     {
         simplify( function, literals );
     }
+    lap( "simplify" );
 
     if( through == Stage::Simplified )
     {
@@ -106,6 +136,7 @@ Front_end run_front_end(
         front.types,
         diags
     );
+    lap( "dataflow checks" );
 
     if( build.keep_checked && !diags.has_errors() )
     {
@@ -257,6 +288,7 @@ Front_end run_front_end(
             }
         }
     }
+    lap( build.optimise ? "optimise" : "drops" );
 
     return front;
 }

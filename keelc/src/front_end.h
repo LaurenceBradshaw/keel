@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <chrono>
 #include <span>
+#include <string_view>
 #include <vector>
 #include "common/diagnostics.h"
 #include "common/interner.h"
@@ -53,6 +55,26 @@ struct Build
     bool keep_checked = false;
 };
 
+// Times each phase of a run; under --verbose, prints each as it ends.
+class Phase_clock
+{
+public:
+    explicit Phase_clock( bool print )
+        : print_( print )
+    {
+    }
+
+    void   lap( std::string_view phase );
+    double seconds() const; // since the clock was made
+
+private:
+    using Clock = std::chrono::steady_clock;
+
+    bool              print_;
+    Clock::time_point start_ = Clock::now();
+    Clock::time_point last_  = start_;
+};
+
 struct Front_end
 {
     Program               program;
@@ -76,7 +98,8 @@ Front_end run_front_end(
     bool                     as_module    = false,
     std::span<const Object>  objects      = {},
     std::string_view         prelude      = prelude_source(),
-    std::string_view         prelude_name = prelude_path
+    std::string_view         prelude_name = prelude_path,
+    Phase_clock*             clock        = nullptr
 );
 
 } // namespace keel

@@ -63,7 +63,7 @@ run_one()
     mkdir -p "$build_dir"
 
     {
-        if ! "$keelc" "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -o "${build_dir}/program" \
+        if ! "$keelc" --quiet "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -o "${build_dir}/program" \
             > "${build_dir}/build.log" 2>&1; then
             echo "    keelc did not build it:"
             sed 's/^/      /' < "${build_dir}/build.log"

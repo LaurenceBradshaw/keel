@@ -230,12 +230,22 @@ bool Diagnostics::has_errors() const
 
 size_t Diagnostics::error_count() const
 {
+    return count( Severity::Error );
+}
+
+size_t Diagnostics::warning_count() const
+{
+    return count( Severity::Warning );
+}
+
+size_t Diagnostics::count( Severity severity ) const
+{
     std::vector<bool> kept_diagnostics = kept();
     size_t            count            = 0;
     for( u32 i = 0; i < items_.size(); ++i )
     {
         const Diagnostic& d = items_[i];
-        if( kept_diagnostics[i] && d.severity == Severity::Error )
+        if( kept_diagnostics[i] && d.severity == severity )
         {
             ++count;
         }

@@ -373,6 +373,8 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--emit-c` | Print the generated C and stop |
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
+| `-q` / `--quiet` | Print only diagnostics. Without it, a check or build ends with one line on stderr: errors, warnings, files and seconds |
+| `--verbose` | Also print each phase as it ends, with its time |
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--print-config` | Print this keelc's build id and package folders, and exit |
 | `--runtime <path>` | Link this runtime library instead of the one keelc carries |
