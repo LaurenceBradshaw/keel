@@ -472,11 +472,12 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    // A release object stops where its state is taken: the program that links it optimises it.
+    // --check and a release object stop once every diagnostic is in: the program that links the object optimises it.
     const bool        as_module = stop == Stop::Object;
-    const keel::Stage through   = as_module && !debug ? keel::Stage::Reported : keel::Stage::Elaborated;
+    const keel::Stage through =
+        stop == Stop::Check || ( as_module && !debug ) ? keel::Stage::Reported : keel::Stage::Elaborated;
 
-    // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
+    // Every other mode needs the whole front end.
     const keel::File_id input = as_prelude ? sm.add_file( sm.file( *file_id ).path, "" ) : file_id.value();
     keel::Front_end     front = keel::run_front_end(
         input,
