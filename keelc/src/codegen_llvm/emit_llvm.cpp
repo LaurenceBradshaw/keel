@@ -59,13 +59,17 @@ public:
         const Literal_pool&          literals,
         const Source_manager&        sm,
         const Interner&              interner,
-        const Module_graph&          modules
+        const Module_graph&          modules,
+        const Parts*                 parts,
+        File_id                      part,
+        bool                         klo
     );
 
     llvm::Module& run();
 
 private:
     const Type_table& table() const;
+    bool              defines( Node_id declaration ) const;
 
     Held        held( Type_id type ) const;
     bool        is_void( Type_id type ) const;
@@ -128,6 +132,9 @@ private:
     const Spelling               spelling_;
     const Layout                 layout_;
     const std::vector<Vtable>    vtables_;
+    const Parts*                 parts_; // null emits the whole compile
+    const File_id                part_;
+    const bool                   klo_;
 
     std::unique_ptr<llvm::LLVMContext> context_;
     std::unique_ptr<llvm::Module>      module_;
@@ -151,7 +158,10 @@ Llvm_emitter::Llvm_emitter(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Module_graph&          modules
+    const Module_graph&          modules,
+    const Parts*                 parts,
+    File_id                      part,
+    bool                         klo
 )
     : functions_( functions ),
       program_( program ),
@@ -162,6 +172,9 @@ Llvm_emitter::Llvm_emitter(
       spelling_( Spelling { program, types, interner, modules, sm } ),
       layout_( program, types.table() ),
       vtables_( vtables_needed( types, functions ) ),
+      parts_( parts ),
+      part_( part ),
+      klo_( klo ),
       context_( std::make_unique<llvm::LLVMContext>() ),
       module_( std::make_unique<llvm::Module>( "keel", *context_ ) ),
       builder_( *context_ )
@@ -177,12 +190,36 @@ llvm::Module& Llvm_emitter::run()
         declared.push_back( declare( function ) );
     }
 
+    // This part's globals, named here or not, as another part may.
+    for( const Node_id global : program_.globals() )
+    {
+        if( defines( global ) )
+        {
+            this->global( global, {} );
+        }
+    }
+
     for( std::size_t i = 0; i < functions_.size(); ++i )
     {
-        define( functions_[i], declared[i] );
+        const Function& function = functions_[i];
+        if( parts_ != nullptr && parts_->of( function ) != part_ )
+        {
+            continue;
+        }
+        if( klo_ && placed_by_reach( function ) )
+        {
+            declared[i]->setLinkage( llvm::GlobalValue::WeakODRLinkage );
+            declared[i]->setComdat( module_->getOrInsertComdat( declared[i]->getName() ) );
+        }
+        define( function, declared[i] );
     }
 
     return *module_;
+}
+
+bool Llvm_emitter::defines( Node_id declaration ) const
+{
+    return parts_ == nullptr || parts_->of( declaration ) == part_;
 }
 
 const Type_table& Llvm_emitter::table() const
@@ -1403,7 +1440,8 @@ llvm::Function* Llvm_emitter::defined( const std::string& name )
     return function;
 }
 
-// Each global once, at its layout's alignment; a generic's static is weak, as in C.
+// Each global once, at its layout's alignment; a generic's static is weak, as in C, and another
+// part's is only declared.
 llvm::GlobalVariable* Llvm_emitter::global( Node_id declaration, Type_id owner )
 {
     const std::string name = spelling_.global( declaration, owner );
@@ -1412,7 +1450,15 @@ llvm::GlobalVariable* Llvm_emitter::global( Node_id declaration, Type_id owner )
         return found;
     }
 
-    const Type_id                       type  = types_.type_of( declaration );
+    const Type_id type = types_.type_of( declaration );
+    if( !owner.is_valid() && !defines( declaration ) )
+    {
+        auto* declared =
+            new llvm::GlobalVariable( *module_, memory_type( type ), false, llvm::GlobalValue::ExternalLinkage, nullptr, name );
+        declared->setAlignment( align( type ) );
+        return declared;
+    }
+
     const std::optional<Constant_value> value = types_.constant_of( declaration );
     llvm::Constant* const init = value ? initial( *value, type ) : llvm::Constant::getNullValue( memory_type( type ) );
     auto*                 made = new llvm::GlobalVariable(
@@ -1581,10 +1627,13 @@ Llvm_output emit_llvm(
     const Interner&              interner,
     const Module_graph&          modules,
     const std::filesystem::path& object,
-    bool                         print
+    bool                         print,
+    const Parts*                 parts,
+    File_id                      part,
+    bool                         klo
 )
 {
-    Llvm_emitter emitter( functions, program, types, literals, sm, interner, modules );
+    Llvm_emitter emitter( functions, program, types, literals, sm, interner, modules, parts, part, klo );
     Llvm_output  output;
 
     try
@@ -1596,6 +1645,14 @@ Llvm_output emit_llvm(
         if( llvm::verifyModule( module, &report ) )
         {
             output.error = "internal error: the LLVM module is malformed:\n" + problems;
+        }
+
+        for( const llvm::GlobalValue& value : module.global_values() )
+        {
+            if( !value.isDeclaration() && !value.hasLocalLinkage() )
+            {
+                output.defined.push_back( value.getName().str() );
+            }
         }
 
         if( print )

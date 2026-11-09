@@ -245,12 +245,6 @@ int main( int argc, char** argv )
         chose = flag;
     }
 
-    if( backend == "llvm" && ( stop == Stop::Object || ( stop == Stop::Executable && !klos.empty() ) ) )
-    {
-        fmt::print( stderr, "keelc: --backend llvm cannot write or link a .klo yet\n" );
-        return 2;
-    }
-
     keel::Interner             interner;
     std::vector<keel::Package> packages;
 
@@ -661,6 +655,7 @@ int main( int argc, char** argv )
             .overflow = overflow_checks,
             .compiler = compiler,
             .cflags   = cflags,
+            .llvm     = backend == "llvm",
             .objects  = given,
         };
 
@@ -698,16 +693,31 @@ int main( int argc, char** argv )
         }
     }
 
-    // One object for the whole program; the user's C is still compiled by $CC.
+    // An object per part, as the C backend's; the user's C is still compiled by $CC.
     if( backend == "llvm" )
     {
-        const std::filesystem::path object = object_dir.path / ( input_name + ".o" );
-        const keel::Llvm_output     built =
-            keel::emit_llvm( functions, program, types, literals, sm, interner, prog.modules, object );
-        if( !built.error.empty() )
+        for( const keel::File_id part : parts.order() )
         {
-            fmt::print( stderr, "keelc: {}\n", built.error );
-            return 1;
+            if( debug && prog.modules.is_loaded( part ) )
+            {
+                continue;
+            }
+            objects.push_back( object_dir.path / std::filesystem::path( c_name( part ) ).replace_extension( ".o" ) );
+            const keel::Llvm_output built = keel::emit_llvm(
+                functions, program, types, literals, sm, interner, prog.modules, objects.back(), false, &parts, part
+            );
+            if( !built.error.empty() )
+            {
+                fmt::print( stderr, "keelc: {}\n", built.error );
+                return 1;
+            }
+        }
+        if( debug )
+        {
+            for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
+            {
+                objects.push_back( state->object );
+            }
         }
         clock.lap( "emit LLVM" );
 
@@ -729,9 +739,7 @@ int main( int argc, char** argv )
             inputs.push_back( compiled.string() );
         }
 
-        const std::filesystem::path program_object[] = { object };
-        if( const std::string failed = keel::link_executable( program_object, runtime.path, executable, inputs );
-            !failed.empty() )
+        if( const std::string failed = keel::link_executable( objects, runtime.path, executable, inputs ); !failed.empty() )
         {
             fmt::print( stderr, "keelc: linking failed:\n{}", failed );
             return 1;

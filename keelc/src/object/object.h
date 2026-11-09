@@ -24,6 +24,7 @@ struct Object_options
     bool                  overflow = false;
     std::string           compiler = "cc";
     std::string           cflags {};
+    bool                  llvm = false; // the native part from the LLVM backend instead of $CC
 
     std::span<const Object> objects {}; // the module's imports, as the front end loaded them
 };

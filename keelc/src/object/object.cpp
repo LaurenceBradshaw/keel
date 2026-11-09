@@ -13,6 +13,7 @@
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
 #include "codegen_c/spelling.h"
+#include "codegen_llvm/emit_llvm.h"
 #include "common/archive.h"
 #include "common/bytes.h"
 #include "common/temp_dir.h"
@@ -111,31 +112,64 @@ int write_object(
     // A release build compiles each part in the program that links it, optimised across modules.
     if( options.debug )
     {
-        const Description description = describe( program.ast, front.types, interner );
-        const Emitted     emitted     = emit_c_from_kir(
-            front.functions, description, front.types, literals, sm, interner, program.modules, &parts, input, true
-        );
-
-        if( !write_file( options.c, emitted.c ) )
-        {
-            fmt::print( stderr, "keelc: cannot write {}\n", options.c.string() );
-            return 1;
-        }
-
+        const Description           description = describe( program.ast, front.types, interner );
+        const Spelling              spelling { description, front.types, interner, program.modules, sm };
         const Temp_dir              object_dir;
         const std::filesystem::path native = object_dir.path / "part.o";
+        std::vector<std::string>    defined;
 
-        // The program type-checked, so the C it produced should always compile: this is a compiler bug.
-        const std::string                command = compile_command( options.compiler, options.cflags, options.c, native );
-        const std::optional<std::string> bytes   = std::system( command.c_str() ) == 0 ? read_file( native ) : std::nullopt;
-        if( !bytes )
+        if( options.llvm )
         {
-            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", options.c.string() );
-            return 1;
+            Llvm_output built = emit_llvm(
+                front.functions,
+                description,
+                front.types,
+                literals,
+                sm,
+                interner,
+                program.modules,
+                native,
+                false,
+                &parts,
+                input,
+                true
+            );
+            if( !built.error.empty() )
+            {
+                fmt::print( stderr, "keelc: {}\n", built.error );
+                return 1;
+            }
+            defined = std::move( built.defined );
+        }
+        else
+        {
+            Emitted emitted = emit_c_from_kir(
+                front.functions, description, front.types, literals, sm, interner, program.modules, &parts, input, true
+            );
+            if( !write_file( options.c, emitted.c ) )
+            {
+                fmt::print( stderr, "keelc: cannot write {}\n", options.c.string() );
+                return 1;
+            }
+
+            // The program type-checked, so the C it produced should always compile: this is a compiler bug.
+            const std::string command = compile_command( options.compiler, options.cflags, options.c, native );
+            if( std::system( command.c_str() ) != 0 )
+            {
+                fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", options.c.string() );
+                return 1;
+            }
+            defined = std::move( emitted.defined );
         }
 
-        const Spelling spelling { description, front.types, interner, program.modules, sm };
-        members.push_back( { .name = module_slot( spelling.owner( input ) ) + ".o", .data = *bytes, .symbols = emitted.defined }
+        const std::optional<std::string> bytes = read_file( native );
+        if( !bytes )
+        {
+            fmt::print( stderr, "keelc: cannot read {}\n", native.string() );
+            return 1;
+        }
+        members.push_back(
+            { .name = module_slot( spelling.owner( input ) ) + ".o", .data = *bytes, .symbols = std::move( defined ) }
         );
     }
 
