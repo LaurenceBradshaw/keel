@@ -4,11 +4,11 @@ error: `over` is overloaded, so its address names no one function
 42 |     auto           a = &over;
    |                        ^^^^^ assigning it to a variable of one signature will choose between them
 
-error: no overload of `over` has the type `fn( i32 ) -> f64`
+error: no overload of `over` has the type `fn(i32) -> f64`
   --> sema/errors_function_pointers.kl:43:24
    |
 43 |     fn( i32 )->f64 b = &over;
-   |                        ^^^^^ its overloads are `fn( i32 ) -> i32` and `fn( f64 ) -> f64`
+   |                        ^^^^^ its overloads are `fn(i32) -> i32` and `fn(f64) -> f64`
 
 error: `bounded` is generic, so its address names no one function
   --> sema/errors_function_pointers.kl:46:14
@@ -46,25 +46,25 @@ error: `unbounded` takes `T`, which is not known to be copyable, so its address 
 56 |     auto j = &unbounded<i32>;
    |              ^^^^^^^^^^^^^^^ add `where T : copyable` to `unbounded`, whose parameter is at sema/errors_function_pointers.kl:34:19
 
-error: expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`
+error: expected `fn(i32) -> i32`, but got `fn(u8) -> u8`
   --> sema/errors_function_pointers.kl:59:24
    |
 59 |     fn( i32 )->i32 k = &narrow;
    |                        ^^^^^^^ one signature is never widened into another, so the two have to match exactly
 
-error: expected `fn( i32 ) -> i32`, but got `fn( ref i32 ) -> i32`
+error: expected `fn(i32) -> i32`, but got `fn(ref i32) -> i32`
   --> sema/errors_function_pointers.kl:63:28
    |
 63 |     fn( i32 )->i32     o = &borrows;
    |                            ^^^^^^^^ one signature is never widened into another, so the two have to match exactly
 
-error: expected `fn( ref i32 ) -> i32`, but got `fn( i32 ) -> i32`
+error: expected `fn(ref i32) -> i32`, but got `fn(i32) -> i32`
   --> sema/errors_function_pointers.kl:64:28
    |
 64 |     fn( ref i32 )->i32 r = &plain;
    |                            ^^^^^^ one signature is never widened into another, so the two have to match exactly
 
-error: `fn( i32 ) -> i32` is already an address, so it has none of its own
+error: `fn(i32) -> i32` is already an address, so it has none of its own
   --> sema/errors_function_pointers.kl:68:24
    |
 68 |     auto           n = &m;

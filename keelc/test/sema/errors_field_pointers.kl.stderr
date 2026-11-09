@@ -76,7 +76,7 @@ error: expected `P`, but got `Holder`
 58 |     i32 g = x( h );
    |                ^
 
-error: expected `field( Holder ) -> i32`, but got `field( P ) -> i32`
+error: expected `field(Holder) -> i32`, but got `field(P) -> i32`
   --> sema/errors_field_pointers.kl:60:36
    |
 60 |     field( Holder ) -> i32 wrong = &P::x;

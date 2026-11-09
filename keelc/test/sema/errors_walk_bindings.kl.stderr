@@ -20,7 +20,7 @@ error: this walk yields 2 values
   --> sema/errors_walk_bindings.kl:58:10
    |
 58 |     for( const ref i32 key : p ) // error: two values
-   |          ^^^^^^^^^^^^^^^^^^^^^ bind them by name: `for( [ const ref key, ref value ] : m )`
+   |          ^^^^^^^^^^^^^^^^^^^^^ bind them by name: `for([const ref key, ref value] : m)`
 
 error: `key` shadows an outer declaration
   --> sema/errors_walk_bindings.kl:65:16

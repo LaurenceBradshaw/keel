@@ -2,7 +2,7 @@ error: a walk returns nothing
  --> sema/errors_walk_declaration.kl:6:5
   |
 6 |     i32 operator:( const ref i32 item ) const // error: a walk returns nothing
-  |     ^^^ write `void operator:( ... )`
+  |     ^^^ write `void operator:(...)`
 
 error: a walk hands the loop at least one value
   --> sema/errors_walk_declaration.kl:16:19

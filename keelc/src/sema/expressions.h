@@ -117,7 +117,8 @@ public:
     {
         return std::exchange( lambdas_, {} );
     }
-    Type_id returned_by( Node_id function ) const; // a function's return type, or a lambda's
+    Type_id returned_by( Node_id function ) const;   // a function's return type, or a lambda's
+    bool    return_left_out( Node_id lambda ) const; // no `-> R`, and no `fn` type expected to give one
 
     bool is_result( Type_id type ) const; // an instance of the prelude's `result`
 
@@ -339,9 +340,10 @@ private:
     Node_id default_owner_;    // the function whose parameter's default is being checked
     Node_id discarded_ {};     // set by infer_discarded while it runs
 
-    std::vector<Node_id>             lambdas_;        // typed, body not yet checked
-    std::unordered_map<u32, Node_id> lambda_homes_;   // Lambda_expr -> home_function where it is written
-    std::unordered_map<u32, Type_id> lambda_returns_; // Lambda_expr -> what its body returns
+    std::vector<Node_id>             lambdas_;         // typed, body not yet checked
+    std::unordered_map<u32, Node_id> lambda_homes_;    // Lambda_expr -> home_function where it is written
+    std::unordered_map<u32, Type_id> lambda_returns_;  // Lambda_expr -> what its body returns
+    std::unordered_set<u32>          lambda_left_out_; // Lambda_expr whose `void` no one said
 
     // The markers a call or `yield` passes: the only places `ref` and `out` mean something.
     std::unordered_set<u32> received_;

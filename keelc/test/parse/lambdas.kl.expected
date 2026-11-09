@@ -1,0 +1,124 @@
+Source_file                             1:1-22:1
+  Struct_decl                           2:1-11:3    name=P
+    <none>                              -
+    <none>                              -
+    Field_decl                          4:5-4:11    name=v
+      Named_type                        4:5-4:8     "i32"
+    Method_decl                         6:5-10:6
+      Named_type                        6:5-6:9     "void"
+      Param_list                        6:11-6:13
+        Param_decl                      6:5-6:9     name=this
+          Mode_type                     6:5-6:9     mode=ref
+            Named_type                  6:5-6:9     "void"  name=P
+      Block                             7:5-10:6
+        Expr_stmt                       8:9-8:50
+          Call_expr                     8:9-8:49
+            Name_expr                   8:9-8:12    "run"
+            Arg_list                    8:12-8:49
+              Lambda_expr               8:14-8:47
+                Named_type              8:30-8:33   "i32"
+                Param_list              8:24-8:26   "()"
+                Block                   8:34-8:47
+                  Return_stmt           8:36-8:45
+                    Name_expr           8:43-8:44   "v"
+                Capture_list            8:16-8:24
+                  Capture_decl          8:18-8:22
+                    Name_expr           8:18-8:22   "this"
+            <none>                      -
+        Expr_stmt                       9:9-9:44
+          Call_expr                     9:9-9:43
+            Name_expr                   9:9-9:12    "run"
+            Arg_list                    9:12-9:43
+              Lambda_expr               9:14-9:41
+                <none>                  -
+                Param_list              9:28-9:30   "()"
+                Block                   9:31-9:41
+                  Assign_stmt           9:33-9:39   op==
+                    Name_expr           9:33-9:34   "v"
+                    Int_literal         9:37-9:38   "1"
+                Capture_list            9:16-9:28
+                  Capture_decl          9:18-9:26
+                    Marker_expr         9:18-9:26   marker=ref
+                      Name_expr         9:22-9:26   "this"
+            <none>                      -
+      <none>                            -
+      <none>                            -
+  Function_decl                         13:1-21:2   name=f
+    Named_type                          13:1-13:5   "void"
+    Param_list                          13:7-13:9   "()"
+    Block                               14:1-21:2
+      Var_decl                          15:5-15:15  name=a
+        Named_type                      15:5-15:8   "i32"
+        Int_literal                     15:13-15:14 "1"
+      Var_decl                          16:5-16:15  name=b
+        Named_type                      16:5-16:8   "i32"
+        Int_literal                     16:13-16:14 "2"
+      Var_decl                          17:5-17:36  name=none
+        Function_type                   17:5-17:17
+          Named_type                    17:13-17:17 "void"
+          Param_list                    17:7-17:9   "()"
+        Lambda_expr                     17:25-17:35
+          <none>                        -
+          Param_list                    17:29-17:31 "()"
+          Block                         17:32-17:35 "{ }"
+          Capture_list                  17:27-17:29 "[]"
+      Expr_stmt                         18:5-18:80
+        Call_expr                       18:5-18:79
+          Name_expr                     18:5-18:8   "run"
+          Arg_list                      18:8-18:79
+            Lambda_expr                 18:10-18:77
+              Named_type                18:48-18:51 "i32"
+              Param_list                18:24-18:44
+                Param_decl              18:26-18:31 name=x
+                  Named_type            18:26-18:29 "i32"
+                Param_decl              18:33-18:42 name=y
+                  Mode_type             18:33-18:36 mode=ref
+                    Named_type          18:37-18:40 "i32"
+              Block                     18:52-18:77
+                Assign_stmt             18:54-18:61 op=+=
+                  Name_expr             18:54-18:55 "b"
+                  Name_expr             18:59-18:60 "x"
+                Return_stmt             18:62-18:75
+                  Binary_expr           18:69-18:74 op=+
+                    Name_expr           18:69-18:70 "a"
+                    Name_expr           18:73-18:74 "y"
+              Capture_list              18:12-18:24
+                Capture_decl            18:14-18:15
+                  Name_expr             18:14-18:15 "a"
+                Capture_decl            18:17-18:22
+                  Marker_expr           18:17-18:22 marker=ref
+                    Name_expr           18:21-18:22 "b"
+          <none>                        -
+      Expr_stmt                         19:5-19:39
+        Call_expr                       19:5-19:38
+          Name_expr                     19:5-19:8   "run"
+          Arg_list                      19:8-19:38
+            Lambda_expr                 19:10-19:36
+              <none>                    -
+              Param_list                19:14-19:22
+                Param_decl              19:16-19:17 name=x
+                  <none>                -
+                Param_decl              19:19-19:20 name=<missing>
+                  <none>                -
+              Block                     19:23-19:36
+                Return_stmt             19:25-19:34
+                  Name_expr             19:32-19:33 "x"
+              Capture_list              19:12-19:14 "[]"
+          <none>                        -
+      Expr_stmt                         20:5-20:57
+        Call_expr                       20:5-20:56
+          Name_expr                     20:5-20:8   "run"
+          Arg_list                      20:8-20:56
+            Lambda_expr                 20:10-20:54
+              Const_type                20:27-20:40
+                Mode_type               20:27-20:36 mode=ref
+                  Named_type            20:37-20:40 "i32"
+              Param_list                20:14-20:23
+                Param_decl              20:16-20:21 name=x
+                  Named_type            20:16-20:19 "i32"
+              Block                     20:41-20:54
+                Return_stmt             20:43-20:52
+                  Name_expr             20:50-20:51 "x"
+              Capture_list              20:12-20:14 "[]"
+          <none>                        -
+    <none>                              -

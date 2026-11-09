@@ -436,7 +436,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
                     site.name
                 ),
                 fmt::format(
-                    "it implements {}; write the type arguments, as in `{}<{}>( ... )`",
+                    "it implements {}; write the type arguments, as in `{}<{}>(...)`",
                     instances,
                     site.name,
                     example_arguments( parameters, first )
@@ -459,7 +459,7 @@ std::optional<Deduction> Overloads::deduce_type_arguments(
                           interner_.text( ast_.name( literal->declaration ) )
                       )
                     : fmt::format(
-                          "write the type arguments, as in `{}<{}>( ... )`", site.name, example_arguments( parameters, {} )
+                          "write the type arguments, as in `{}<{}>(...)`", site.name, example_arguments( parameters, {} )
                       )
             );
 
@@ -924,7 +924,7 @@ Node_id Overloads::select_overload(
         fmt::format(
             "more than one matches: {}; {}",
             candidate_list( matching_candidates, aggregates_.bindings_of( site.instance ) ),
-            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
+            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>(...)`", site.name )
                         : std::string( "write a type the call can be told by" )
         )
     );
@@ -1667,7 +1667,7 @@ std::string Overloads::signature_of( Node_id callable, const Bindings& bindings 
 
         text += fmt::format(
             "{}{}{}",
-            i == 0 ? " " : ", ",
+            i == 0 ? "" : ", ",
             marker == Keyword::Count ? "" : fmt::format( "{} ", interner_.text( Interner::keyword( marker ) ) ),
             table_.name( bound ? table_.substitute( types_.type_of( params[i] ), bindings ) : types_.type_of( params[i] ) )
         );
@@ -1678,7 +1678,7 @@ std::string Overloads::signature_of( Node_id callable, const Bindings& bindings 
         }
     }
 
-    return text + ( params.empty() ? ")" : " )" );
+    return text + ")";
 }
 
 u32 Overloads::receiver_params( Node_id method ) const
@@ -2201,7 +2201,7 @@ TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i32, i64 )` and `( i64, i32 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`(i32, i64)` and `(i64, i32)`" ) != std::string::npos );
     }
 
     SECTION( "a `const ref` does not widen" )
@@ -2504,7 +2504,7 @@ TEST_CASE( "overloads_keep_the_program's_set_when_it_takes_the_call", "[sema][ov
 TEST_CASE( "overloads_report_a_call_neither_set_takes", "[sema][overload][prelude]" )
 {
     constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\nbool f( bool b ) { return b; }\n";
-    constexpr std::string_view both    = "the ones declared take `( Point )`; the prelude's take `( i64 )` and `( bool )`";
+    constexpr std::string_view both    = "the ones declared take `(Point)`; the prelude's take `(i64)` and `(bool)`";
 
     SECTION( "by type, listing both sets" )
     {
@@ -2561,7 +2561,7 @@ TEST_CASE( "overloads_report_a_call_neither_set_takes", "[sema][overload][prelud
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i32, i64 )` and `( i64, i32 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`(i32, i64)` and `(i64, i32)`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "Point" ) == std::string::npos );
     }
 }
@@ -3187,7 +3187,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
                        "i32 main() { Box<i32> b = Box( ); return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "the ones declared take `( i32 )` and `( i32, i32 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the ones declared take `(i32)` and `(i32, i32)`" ) != std::string::npos );
     }
 
     SECTION( "a method list takes them from the receiver" )
@@ -3201,7 +3201,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
                        "i32 main() { Box<i32> b = Box { 7 }; return b.pick( ); }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "the ones declared take `( i32 )` and `( i32, i32 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the ones declared take `(i32)` and `(i32, i32)`" ) != std::string::npos );
     }
 
     SECTION( "the no-match list takes them too" )
@@ -3216,7 +3216,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "no `Box` matches these arguments" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "the ones declared take `( i32, u8 )` and `( i32, bool )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the ones declared take `(i32, u8)` and `(i32, bool)`" ) != std::string::npos );
     }
 
     SECTION( "and so does the ambiguity list" )
@@ -3231,7 +3231,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "this call to `Box` is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i32, u8, u16 )` and `( i32, u16, u8 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`(i32, u8, u16)` and `(i32, u16, u8)`" ) != std::string::npos );
     }
 
     SECTION( "with no instance to name, the declaration is what the author wrote" )
@@ -3247,7 +3247,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "the ones declared take `( U )` and `( U, U )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the ones declared take `(U)` and `(U, U)`" ) != std::string::npos );
     }
 }
 

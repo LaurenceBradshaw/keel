@@ -2,7 +2,7 @@ warning: unused variable `x` [-Wunused-variable]
   --> sema/errors_walk_loans.kl:65:24
    |
 65 |     for( const ref i32 x : c )
-   |                        ^ write `_` in its place: `for( _ : c )`
+   |                        ^ write `_` in its place: `for(_ : c)`
 
 error: this could change `c` while a loop walks it
   --> sema/errors_walk_loans.kl:67:9
@@ -14,7 +14,7 @@ warning: unused variable `x` [-Wunused-variable]
   --> sema/errors_walk_loans.kl:70:24
    |
 70 |     for( const ref i32 x : c )
-   |                        ^ write `_` in its place: `for( _ : c )`
+   |                        ^ write `_` in its place: `for(_ : c)`
 
 error: this could change `c` while a loop walks it
   --> sema/errors_walk_loans.kl:72:9
@@ -26,6 +26,6 @@ warning: unused variable `x` [-Wunused-variable]
   --> sema/errors_walk_loans.kl:84:24
    |
 84 |     for( const ref i32 x : c )
-   |                        ^ write `_` in its place: `for( _ : c )`
+   |                        ^ write `_` in its place: `for(_ : c)`
 
 2 errors generated

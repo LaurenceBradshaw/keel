@@ -34,16 +34,16 @@ error: `keep` takes `T`, which is not known to be copyable, so its address has n
 70 |     auto k = &Open<i32>::keep;
    |              ^^^^^^^^^^^^^^^^ add `where T : copyable` to `Open`; the parameter of `keep` is at sema/errors_method_pointers.kl:57:15
 
-error: no overload of `pick` has the type `fn( ref C, bool ) -> i32`
+error: no overload of `pick` has the type `fn(ref C, bool) -> i32`
   --> sema/errors_method_pointers.kl:72:32
    |
 72 |     fn( ref C, bool )->i32 g = &C::pick;
-   |                                ^^^^^^^^ its overloads are `fn( ref C, i32 ) -> i32` and `fn( ref C, f64 ) -> i32`
+   |                                ^^^^^^^^ its overloads are `fn(ref C, i32) -> i32` and `fn(ref C, f64) -> i32`
 
 error: `add` is a function, not a value
   --> sema/errors_method_pointers.kl:74:14
    |
 74 |     auto h = C::add;
-   |              ^^^^^^ take its address as `&C::add`, or call it as `value.add( ... )`
+   |              ^^^^^^ take its address as `&C::add`, or call it as `value.add(...)`
 
 8 errors generated

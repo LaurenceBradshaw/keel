@@ -8,9 +8,9 @@ error: `@functions_of` fills a struct of a `str` and a function type, which `wro
   --> sema/errors_functions_of.kl:30:18
    |
 30 |     wrong[1] a = @functions_of( wrong );
-   |                  ^^^^^^^^^^^^^^^^^^^^^^ as in `struct entry { str name; fn( ref context ) -> void body; };`
+   |                  ^^^^^^^^^^^^^^^^^^^^^^ as in `struct entry { str name; fn(ref context) -> void body; };`
 
-error: no function in this package has the type `fn( u8 ) -> u8`
+error: no function in this package has the type `fn(u8) -> u8`
   --> sema/errors_functions_of.kl:31:22
    |
 31 |     unmatched[1] b = @functions_of( unmatched );

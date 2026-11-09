@@ -58,7 +58,7 @@ error: a run cannot be returned from C
 17 | extern const ref u8[] read_all();
    |        ^^^^^^^^^^^^^^ return a `u8[*]` and take the count through a `u64*`
 
-error: `fn( str ) -> i32` cannot be passed to C by value
+error: `fn(str) -> i32` cannot be passed to C by value
   --> sema/errors_extern_types.kl:18:19
    |
 18 | extern void call( fn( str ) -> i32 cb );

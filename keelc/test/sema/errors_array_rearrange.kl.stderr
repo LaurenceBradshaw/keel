@@ -14,12 +14,12 @@ error: `swap` takes 2 arguments
   --> sema/errors_array_rearrange.kl:13:5
    |
 13 |     names.swap( 0 );
-   |     ^^^^^^^^^^ an array has `size()`, `swap( i, j )` and `replace( i, move v )`
+   |     ^^^^^^^^^^ an array has `size()`, `swap(i, j)` and `replace(i, move v)`
 
 error: `kl::string[2]` has no method `sort`
   --> sema/errors_array_rearrange.kl:14:5
    |
 14 |     names.sort();
-   |     ^^^^^^^^^^ an array has `size()`, `swap( i, j )` and `replace( i, move v )`
+   |     ^^^^^^^^^^ an array has `size()`, `swap(i, j)` and `replace(i, move v)`
 
 4 errors generated

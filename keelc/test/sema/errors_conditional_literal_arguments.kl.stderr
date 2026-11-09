@@ -2,6 +2,6 @@ error: no `small` matches these arguments
   --> sema/errors_conditional_literal_arguments.kl:17:5
    |
 17 |     small( c ? -1 : 200 );                          // error: no `small` holds both arms
-   |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( u8 )` and `( i8 )`
+   |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `(u8)` and `(i8)`
 
 1 error generated

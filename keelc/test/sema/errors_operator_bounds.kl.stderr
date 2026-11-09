@@ -2,7 +2,7 @@ error: `wrong`'s `operator+` does not match the one `addable` declares
   --> sema/errors_operator_bounds.kl:13:25
    |
 13 | struct wrong implements addable
-   |                         ^^^^^^^ `addable` wants `wrong operator+( const ref wrong other ) const`
+   |                         ^^^^^^^ `addable` wants `wrong operator+(const ref wrong other) const`
 
 error: `missing` implements `negatable` but has no method `operator-`
   --> sema/errors_operator_bounds.kl:20:27

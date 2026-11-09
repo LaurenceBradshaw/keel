@@ -32,12 +32,12 @@ error: expected `u64`, but got `i32`
   --> sema/errors_constant_hints.kl:14:19
    |
 14 |     i32 named = a[K];
-   |                   ^ write `cast<u64>( K )`, or declare `K` `u64`
+   |                   ^ write `cast<u64>(K)`, or declare `K` `u64`
 
 error: expected `u64`, but got `i32`
   --> sema/errors_constant_hints.kl:15:17
    |
 15 |     i32 sum = a[K - 1];
-   |                 ^^^^^ write `cast<u64>( K - 1 )`
+   |                 ^^^^^ write `cast<u64>(K - 1)`
 
 7 errors generated

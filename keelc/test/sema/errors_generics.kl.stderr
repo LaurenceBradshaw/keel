@@ -80,7 +80,7 @@ error: a `where` clause needs type parameters
   --> sema/errors_generics.kl:70:33
    |
 70 | i32 no_type_parameters( i32 a ) where T : copyable
-   |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>( T a ) where T : copyable`
+   |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>(T a) where T : copyable`
 
 error: duplicate where clause for type parameter `T`
   --> sema/errors_generics.kl:75:47

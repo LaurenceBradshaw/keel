@@ -26,13 +26,13 @@ error: `yield` is only allowed in a walk
   --> sema/errors_walk.kl:72:5
    |
 72 |     yield( 1 ); // error: only allowed in a walk
-   |     ^^^^^^^^^^^ declare `void operator:( ... )`
+   |     ^^^^^^^^^^^ declare `void operator:(...)`
 
 error: `i32[*]` has no walk
   --> sema/errors_walk.kl:78:28
    |
 78 |     for( const ref i32 x : raw ) // error: has no walk
-   |                            ^^^ count over it: `for( u64 i : 0..raw.size() )`
+   |                            ^^^ count over it: `for(u64 i : 0..raw.size())`
 
 error: `Reading` has no writing walk
   --> sema/errors_walk.kl:83:22

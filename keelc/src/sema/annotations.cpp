@@ -1450,9 +1450,9 @@ TEST_CASE( "annotations_read_a_function_type", "[sema][annotation][m7]" )
 {
     Written p( "void g( fn( i32 ) -> bool a, fn() -> void b, fn( fn( i32 ) -> i32 ) -> i32 c ) { }" );
 
-    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> bool" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn(i32) -> bool" );
     REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 1 ) ) ) == "fn() -> void" );
-    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 2 ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 2 ) ) ) == "fn(fn(i32) -> i32) -> i32" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 0 );
@@ -1462,8 +1462,8 @@ TEST_CASE( "annotations_read_a_field_type", "[sema][annotation][m7][field]" )
 {
     Written p( "struct P { i32 x; };\nvoid g( field( P ) -> i32 a, const field( P ) -> i32 b ) { }" );
 
-    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 0 ) ) ) == "field( P ) -> i32" );
-    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 1 ) ) ) == "field( P ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 0 ) ) ) == "field(P) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 1 ) ) ) == "field(P) -> i32" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 0 );
@@ -1478,15 +1478,15 @@ TEST_CASE( "annotations_refuse_a_field_type_that_is_not_a_read", "[sema][annotat
     };
 
     for( const Case c :
-         { Case { "field( ref P ) -> i32", "the aggregate of a field type takes no mode" },
-           Case { "field( const ref P ) -> i32", "the aggregate of a field type takes no mode" },
-           Case { "field( i32 ) -> i32", "`i32` has no fields" },
-           Case { "field( P ) -> ref i32", "writing through a field type is not supported yet" },
-           Case { "field( P ) -> const ref i32", "a field type that borrows is not supported yet" },
-           Case { "field( P ) -> out i32", "`out` is not a return mode" },
-           Case { "field( P ) -> const i32", "a `const` here binds nothing, because a field type only reads" },
-           Case { "field( Nope ) -> i32", "`Nope`" },
-           Case { "field( P ) -> Nope", "`Nope`" } } )
+         { Case { "field(ref P) -> i32", "the aggregate of a field type takes no mode" },
+           Case { "field(const ref P) -> i32", "the aggregate of a field type takes no mode" },
+           Case { "field(i32) -> i32", "`i32` has no fields" },
+           Case { "field(P) -> ref i32", "writing through a field type is not supported yet" },
+           Case { "field(P) -> const ref i32", "a field type that borrows is not supported yet" },
+           Case { "field(P) -> out i32", "`out` is not a return mode" },
+           Case { "field(P) -> const i32", "a `const` here binds nothing, because a field type only reads" },
+           Case { "field(Nope) -> i32", "`Nope`" },
+           Case { "field(P) -> Nope", "`Nope`" } } )
     {
         Written p( fmt::format( "struct P {{ i32 x; }};\nvoid g( {} a ) {{ }}", c.type ) );
 
@@ -1532,7 +1532,7 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
     {
         Written p( "void g( const fn( i32 ) -> i32 a ) { }" );
 
-        REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn(i32) -> i32" );
         REQUIRE( p.errors() == 0 );
     }
 
@@ -1598,7 +1598,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     SECTION( "each mode is accepted and spells itself back" )
     {
         for( const char* spelling :
-             { "fn( ref i32 ) -> i32", "fn( const ref i32 ) -> i32", "fn( out i32 ) -> i32", "fn( move i32 ) -> i32" } )
+             { "fn(ref i32) -> i32", "fn(const ref i32) -> i32", "fn(out i32) -> i32", "fn(move i32) -> i32" } )
         {
             Written p( fmt::format( "void g( {} a ) {{ }}", spelling ) );
 
@@ -1689,7 +1689,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE_FALSE( p.table().is_error( type ) );
-        REQUIRE( p.table().name( type ) == "fn( i32 ) -> const ref i32" );
+        REQUIRE( p.table().name( type ) == "fn(i32) -> const ref i32" );
     }
 
     SECTION( "and a returning borrow is not a returning value" )
@@ -2136,7 +2136,7 @@ TEST_CASE( "type_checker_resolves_a_many_item_pointer_annotation", "[sema][many]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32[*] ) -> i32[*]" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn(i32[*]) -> i32[*]" );
     }
 }
 

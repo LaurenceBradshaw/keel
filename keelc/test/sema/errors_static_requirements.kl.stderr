@@ -2,7 +2,7 @@ error: `instance_count`'s `count` must be `static`, as `counted` declares it
   --> sema/errors_static_requirements.kl:18:34
    |
 18 | struct instance_count implements counted
-   |                                  ^^^^^^^ it is called as `instance_count::count( ... )`, with no object
+   |                                  ^^^^^^^ it is called as `instance_count::count(...)`, with no object
 
 error: `absent` implements `counted` but has no method `count`
   --> sema/errors_static_requirements.kl:26:26
@@ -38,7 +38,7 @@ error: `count` is a `static` method of `T`, so it takes no object
   --> sema/errors_static_requirements.kl:51:12
    |
 51 |     return t.count();
-   |            ^^^^^^^ call it as `T::count( ... )`
+   |            ^^^^^^^ call it as `T::count(...)`
 
 error: `T` has no static method `count`
   --> sema/errors_static_requirements.kl:57:12
@@ -56,7 +56,7 @@ error: `area` needs an object
   --> sema/errors_static_requirements.kl:69:12
    |
 69 |     return T::area();
-   |            ^^^^^^^ call it as `value.area( ... )`
+   |            ^^^^^^^ call it as `value.area(...)`
 
 error: `i32` has no member `count`
   --> sema/errors_static_requirements.kl:80:12

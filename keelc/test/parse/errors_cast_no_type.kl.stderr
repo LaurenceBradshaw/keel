@@ -2,12 +2,12 @@ error: `cast` needs a target type
  --> parse/errors_cast_no_type.kl:4:17
   |
 4 |     i32 a = cast( 1 ); // error
-  |                 ^ write it in angle brackets, as in `cast<T>( x )`
+  |                 ^ write it in angle brackets, as in `cast<T>(x)`
 
 error: `wrap` needs a target type
  --> parse/errors_cast_no_type.kl:5:17
   |
 5 |     i32 b = wrap( 2 ); // error
-  |                 ^ write it in angle brackets, as in `wrap<T>( x )`
+  |                 ^ write it in angle brackets, as in `wrap<T>(x)`
 
 2 errors generated

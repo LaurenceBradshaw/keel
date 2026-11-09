@@ -3144,7 +3144,7 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
         REQUIRE( g.has( "typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );" ) );
     }
 
-    SECTION( "the enclosing instance's own signature, written as `fn( T ) -> T`" )
+    SECTION( "the enclosing instance's own signature, written as `fn(T) -> T`" )
     {
         Generated g( "T bounded<T>( T a ) where T : integral { return a; }\n"
                      "void use<T>( T a ) where T : integral { fn( T ) -> T p = &bounded<T>; }\n"

@@ -2,13 +2,13 @@ error: nothing here says what `T` is in `id`
   --> sema/errors_inference.kl:49:5
    |
 49 |     id( 1 );
-   |     ^^ write the type arguments, as in `id<i32>( ... )`
+   |     ^^ write the type arguments, as in `id<i32>(...)`
 
 error: nothing here says what `T` is in `zeroed`
   --> sema/errors_inference.kl:55:5
    |
 55 |     zeroed();
-   |     ^^^^^^ write the type arguments, as in `zeroed<i32>( ... )`
+   |     ^^^^^^ write the type arguments, as in `zeroed<i32>(...)`
 
 error: `T` cannot be both `i32` and `bool`
   --> sema/errors_inference.kl:62:21
@@ -26,7 +26,7 @@ error: nothing here says what `U` is in `second`
   --> sema/errors_inference.kl:79:5
    |
 79 |     second( a );
-   |     ^^^^^^ write the type arguments, as in `second<i32, i32>( ... )`
+   |     ^^^^^^ write the type arguments, as in `second<i32, i32>(...)`
 
 error: expected `Box<i32>`, but got `i32`
   --> sema/errors_inference.kl:86:19
@@ -44,7 +44,7 @@ error: this call to `which` is ambiguous
    --> sema/errors_inference.kl:111:12
     |
 111 |     return which( b );
-    |            ^^^^^^^^^^ more than one matches: `( T )` and `( Box<T> )`; write the type arguments, as in `which<i32>( ... )`
+    |            ^^^^^^^^^^ more than one matches: `(T)` and `(Box<T>)`; write the type arguments, as in `which<i32>(...)`
 
 error: nothing here says what `T` is in `unbox`
    --> sema/errors_inference.kl:118:5

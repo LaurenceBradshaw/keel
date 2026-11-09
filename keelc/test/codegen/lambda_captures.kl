@@ -1,0 +1,42 @@
+// A closure holds a copy for a bare copyable capture and a pointer for every other.
+void run<F>( F f ) where F : fn() -> void { f(); }
+i32 get<F>( F f ) where F : fn() -> i32 { return f(); }
+
+class Owned
+{
+    i32* p;
+    Owned( i32 v ) { unsafe { p = alloc<i32>(); *p = v; } }
+    ~Owned() { unsafe { free( p ); } }
+    i32 value() const { return *p; }
+};
+
+struct Counter
+{
+    i32 n;
+
+    void add( i32 k ) { n += k; }
+    i32 doubled() const { return get( fn[ this ]() -> i32 { return n * 2; } ); }
+    void twice() { run( fn[ ref this ]() { add( 1 ); n += 1; } ); }
+};
+
+i32 main()
+{
+    i32 a = 2;
+    i32 b = 0;
+    run( fn[ a, ref b ]() { b = a * 10; } );
+    if( b != 20 ) { return 1; }
+
+    Owned o = Owned( 7 );
+    if( get( fn[ o ]() -> i32 { return o.value(); } ) != 7 ) { return 2; }
+
+    Counter c = Counter { 3 };
+    if( c.doubled() != 6 ) { return 3; }
+    c.twice();
+    if( c.n != 5 ) { return 4; }
+
+    i32 total = 0;
+    run( fn[ a, ref total ]() { run( fn[ a, ref total ]() { total += a; } ); total += 1; } );
+    if( total != 3 ) { return 5; }
+
+    return 0;
+}

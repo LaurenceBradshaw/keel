@@ -2,7 +2,7 @@ error: `Two` implements `from` more than once, so nothing says what `T` is in `m
   --> sema/errors_deduce_through_bound.kl:32:5
    |
 32 |     make( t );
-   |     ^^^^ it implements `from<str>` and `from<u64>`; write the type arguments, as in `make<Two, str>( ... )`
+   |     ^^^^ it implements `from<str>` and `from<u64>`; write the type arguments, as in `make<Two, str>(...)`
 
 error: `flip` needs a `C` that implements `fixed_memory<T>`, but `None` does not
   --> sema/errors_deduce_through_bound.kl:34:5
@@ -14,6 +14,6 @@ error: nothing here says what `T` is in `lone`
   --> sema/errors_deduce_through_bound.kl:35:5
    |
 35 |     lone( n );
-   |     ^^^^ write the type arguments, as in `lone<i32, i32>( ... )`
+   |     ^^^^ write the type arguments, as in `lone<i32, i32>(...)`
 
 3 errors generated

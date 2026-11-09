@@ -74,7 +74,7 @@ error: `Circle` carries a payload
    --> sema/errors_enums.kl:128:15
     |
 128 |     Shape s = Shape::Circle;
-    |               ^^^^^^^^^^^^^ write `Shape::Circle( ... )` with a value for each field
+    |               ^^^^^^^^^^^^^ write `Shape::Circle(...)` with a value for each field
 
 error: `Dot` carries no payload
    --> sema/errors_enums.kl:135:15

@@ -2,13 +2,13 @@ error: `void*` is opaque, so there is nothing to dereference
   --> sema/errors_void_pointer.kl:14:22
    |
 14 |         auto  read = *raw;
-   |                      ^^^^ cast it to the pointer it really is, as in `cast<u8*>( p )`
+   |                      ^^^^ cast it to the pointer it really is, as in `cast<u8*>(p)`
 
 error: `void*` is opaque, so there is nothing to dereference
   --> sema/errors_void_pointer.kl:15:9
    |
 15 |         *raw = 1;
-   |         ^^^^ cast it to the pointer it really is, as in `cast<u8*>( p )`
+   |         ^^^^ cast it to the pointer it really is, as in `cast<u8*>(p)`
 
 error: `void*` points at one `void`, so it has no arithmetic
   --> sema/errors_void_pointer.kl:16:22

@@ -323,12 +323,12 @@ Type_id Type_table::function( Type_id return_type, std::span<const Parameter> pa
 
     for( std::size_t i = 0; i < stored_args.size(); ++i )
     {
-        spelling += i == 0 ? " " : ", ";
+        spelling += i == 0 ? "" : ", ";
         spelling += param_spelling( stored_modes[i] );
         spelling += name( stored_args[i] );
     }
 
-    spelling += stored_args.empty() ? ") -> " : " ) -> ";
+    spelling += ") -> ";
     spelling += param_spelling( return_mode );
     spelling += name( return_type );
 
@@ -353,7 +353,7 @@ Type_id Type_table::field( Type_id aggregate, Type_id member )
     // Stored where function() stores its arguments: a Type's span must outlive this call.
     const std::vector<Type_id>& stored = arguments_.emplace_back( std::vector<Type_id> { aggregate } );
 
-    const std::string spelling = fmt::format( "field( {} ) -> {}", name( aggregate ), name( member ) );
+    const std::string spelling = fmt::format( "field({}) -> {}", name( aggregate ), name( member ) );
 
     const Type_id id = add( { Type_kind::Field, 0, false, member, Node_id {}, stored }, spelling );
     fields_.push_back( id );
@@ -2571,7 +2571,7 @@ TEST_CASE( "type_table_interns_a_function_type_by_its_signature", "[sema][type][
 
         REQUIRE( table.get( interned ).arguments.size() == 1 );
         REQUIRE( table.get( interned ).arguments[0] == i32 );
-        REQUIRE( table.name( interned ) == "fn( i32 ) -> i32" );
+        REQUIRE( table.name( interned ) == "fn(i32) -> i32" );
     }
 }
 
@@ -2584,7 +2584,7 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
     const Type_id f64 = table.floating( 64 );
 
     REQUIRE(
-        table.name( table.function( table.builtin( Type_kind::Bool ), by_value( { i32, f64 } ) ) ) == "fn( i32, f64 ) -> bool"
+        table.name( table.function( table.builtin( Type_kind::Bool ), by_value( { i32, f64 } ) ) ) == "fn(i32, f64) -> bool"
     );
     REQUIRE( table.name( table.function( table.builtin( Type_kind::Void ), {} ) ) == "fn() -> void" );
 
@@ -2592,8 +2592,8 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
     {
         const Type_id inner = table.function( i32, by_value( { i32 } ) );
 
-        REQUIRE( table.name( table.function( i32, by_value( { inner } ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
-        REQUIRE( table.name( table.function( inner, by_value( { i32 } ) ) ) == "fn( i32 ) -> fn( i32 ) -> i32" );
+        REQUIRE( table.name( table.function( i32, by_value( { inner } ) ) ) == "fn(fn(i32) -> i32) -> i32" );
+        REQUIRE( table.name( table.function( inner, by_value( { i32 } ) ) ) == "fn(i32) -> fn(i32) -> i32" );
     }
 
     // The mode is written where the parameter is, which is what a diagnostic has to print for the
@@ -2607,10 +2607,10 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
         };
 
         for( const Case c :
-             { Case { Param_mode::Ref, "fn( ref i32 ) -> i32" },
-               Case { Param_mode::Const_ref, "fn( const ref i32 ) -> i32" },
-               Case { Param_mode::Out, "fn( out i32 ) -> i32" },
-               Case { Param_mode::Move, "fn( move i32 ) -> i32" } } )
+             { Case { Param_mode::Ref, "fn(ref i32) -> i32" },
+               Case { Param_mode::Const_ref, "fn(const ref i32) -> i32" },
+               Case { Param_mode::Out, "fn(out i32) -> i32" },
+               Case { Param_mode::Move, "fn(move i32) -> i32" } } )
         {
             REQUIRE( table.name( table.function( i32, std::array { Parameter { i32, c.mode } } ) ) == c.spelling );
         }
@@ -2632,7 +2632,7 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
     {
         table.function( i32, by_value( { i32 } ) );
 
-        REQUIRE_FALSE( table.from_spelling( "fn( i32 ) -> i32" ).is_valid() );
+        REQUIRE_FALSE( table.from_spelling( "fn(i32) -> i32" ).is_valid() );
     }
 }
 
@@ -2696,7 +2696,7 @@ TEST_CASE( "type_table_carries_a_parameter_mode_through_substitution_and_deducti
     SECTION( "substitution replaces the type and keeps the mode" )
     {
         REQUIRE( table.substitute( open, bound ) == closed );
-        REQUIRE( table.name( table.substitute( open, bound ) ) == "fn( ref i32 ) -> i32" );
+        REQUIRE( table.name( table.substitute( open, bound ) ) == "fn(ref i32) -> i32" );
     }
 
     SECTION( "and deduction refuses a signature that differs only in a mode" )
@@ -2739,7 +2739,7 @@ TEST_CASE( "type_table_carries_a_return_mode", "[sema][type][m7][mode]" )
         REQUIRE( table.name( returns_borrow ) == "fn() -> const ref i32" );
         const Type_id one = table.function( i32, by_value( { i32 } ), Param_mode::Const_ref );
 
-        REQUIRE( table.name( one ) == "fn( i32 ) -> const ref i32" );
+        REQUIRE( table.name( one ) == "fn(i32) -> const ref i32" );
     }
 
     SECTION( "and is readable back off the type" )
@@ -2797,7 +2797,7 @@ TEST_CASE( "type_table_interns_a_field_type_by_its_pair", "[sema][type][m7][fiel
 
     SECTION( "it is named as it is written" )
     {
-        REQUIRE( table.name( reads_i32 ) == "field( P ) -> i32" );
+        REQUIRE( table.name( reads_i32 ) == "field(P) -> i32" );
     }
 
     // The aggregate is read back through a span; interning more afterwards must not move what it views.

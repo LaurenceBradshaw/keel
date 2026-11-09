@@ -30,7 +30,7 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
     // clang-format off
     constexpr std::array<Word_hint, 7> hints = {
         Word_hint { "protected", "a member is `public` or `private`", Hint_place::Member },
-        Word_hint { "template", "type parameters are written after the name, as in `class Box<T>` or `T f<T>( T a )`", std::nullopt },
+        Word_hint { "template", "type parameters are written after the name, as in `class Box<T>` or `T f<T>(T a)`", std::nullopt },
         Word_hint { "mutable", "remove it: a field is mutable unless it is `const`", Hint_place::Member },
         Word_hint { "unsigned", "write a sized type, such as `u32`", std::nullopt },
         Word_hint { "long", "write a sized type, such as `i64`", std::nullopt },
@@ -97,7 +97,7 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
     SECTION( "for a dropped word" )
     {
         REQUIRE( has( dropped_word_hint( "protected", member ), "`public` or `private`" ) );
-        REQUIRE( has( dropped_word_hint( "template", member ), "`T f<T>( T a )`" ) );
+        REQUIRE( has( dropped_word_hint( "template", member ), "`T f<T>(T a)`" ) );
         REQUIRE( has( dropped_word_hint( "mutable", member ), "a field is mutable unless it is `const`" ) );
         REQUIRE_FALSE( has( dropped_word_hint( "mutable", member ), "yet" ) );
         REQUIRE( has( dropped_word_hint( "unsigned", member ), "`u32`" ) );
@@ -115,7 +115,7 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
 
     SECTION( "a word that is not about members holds at file scope too" )
     {
-        REQUIRE( has( dropped_word_hint( "template", declaration ), "`T f<T>( T a )`" ) );
+        REQUIRE( has( dropped_word_hint( "template", declaration ), "`T f<T>(T a)`" ) );
         REQUIRE( has( dropped_word_hint( "unsigned", declaration ), "`u32`" ) );
         REQUIRE( has( dropped_word_hint( "long", declaration ), "`i64`" ) );
         REQUIRE( has( dropped_word_hint( "short", declaration ), "`i16`" ) );

@@ -34,13 +34,13 @@ error: `get` is not a generic method
 43 |     i32 g = b.get<i64>();
    |             ^^^^^
 
-error: expected `fn( const ref i32 ) -> i64`, but got `fn( const ref i64 ) -> i64`
+error: expected `fn(const ref i32) -> i64`, but got `fn(const ref i64) -> i64`
   --> sema/errors_generic_methods.kl:46:25
    |
 46 |     i64 w = b.map<i64>( &wide );
    |                         ^^^^^ one signature is never widened into another, so the two have to match exactly
 
-error: expected `fn( const ref i32 ) -> i64`, but got `fn( const ref i64 ) -> i64`
+error: expected `fn(const ref i32) -> i64`, but got `fn(const ref i64) -> i64`
   --> sema/errors_generic_methods.kl:47:20
    |
 47 |     i64 d = b.map( &wide );
@@ -68,13 +68,13 @@ error: nothing here says what `U` is in `make`
   --> sema/errors_generic_methods.kl:57:5
    |
 57 |     b.make();
-   |     ^^^^^^ write the type arguments, as in `make<i32>( ... )`
+   |     ^^^^^^ write the type arguments, as in `make<i32>(...)`
 
 error: nothing here says what `T` is in `mk`
   --> sema/errors_generic_methods.kl:60:13
    |
 60 |     i32 n = mk().get();
-   |             ^^ write the type arguments, as in `mk<i32>( ... )`
+   |             ^^ write the type arguments, as in `mk<i32>(...)`
 
 error: `map` has type parameters of its own, so its address names no one function
   --> sema/errors_generic_methods.kl:63:14

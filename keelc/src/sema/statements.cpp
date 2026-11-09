@@ -27,7 +27,7 @@ std::string plain_fill( const Type_table& table, Type_id type )
     if( table.is_array( type ) )
     {
         const std::string inner = plain_fill( table, table.get( type ).element );
-        return inner.empty() ? inner : fmt::format( "[ {}, .. ]", inner );
+        return inner.empty() ? inner : fmt::format( "[{}, ..]", inner );
     }
 
     if( table.is_integer( type ) || table.is_float( type ) )
@@ -312,7 +312,7 @@ void Statements::visit_return( Node_id id )
         const Node_id function = expressions_.current_function();
 
         // `-> R` left out: inferred, a literal too, for the help to name what it returns.
-        if( ast_.kind( function ) == Node_kind::Lambda_expr && !ast_.return_type( function ).is_valid() )
+        if( ast_.kind( function ) == Node_kind::Lambda_expr && expressions_.return_left_out( function ) )
         {
             const Type_id returned = expressions_.infer( value );
 
@@ -333,7 +333,11 @@ void Statements::visit_return( Node_id id )
 
         if( !absorbed.is_valid() || !table_.is_error( absorbed ) )
         {
-            reporter_.error_at( ast_.span( value ), "a `void` function cannot return a value" );
+            reporter_.error_at(
+                ast_.span( value ),
+                ast_.kind( function ) == Node_kind::Lambda_expr ? "this lambda returns `void`, so `return` cannot take a value"
+                                                                : "a `void` function cannot return a value"
+            );
         }
 
         return;
@@ -489,7 +493,7 @@ void Statements::visit_var( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 fmt::format( "`{}` needs a value for every element", interner_.text( ast_.name( id ) ) ),
-                fill.empty() ? "give it a literal listing every element, or a fill, `[ value, .. ]`"
+                fill.empty() ? "give it a literal listing every element, or a fill, `[value, ..]`"
                              : fmt::format(
                                    "fill it, as in `{} {} = {};`",
                                    reporter_.text( ast_.span( annotation ) ),
@@ -895,7 +899,7 @@ void Statements::visit_walk( Node_id id )
                 ast_.span( binding ),
                 fmt::format( "`{}` yields its elements without names", table_.name( held ) ),
                 fmt::format(
-                    "bind each one alone: `for( const ref {} x : {} )`",
+                    "bind each one alone: `for(const ref {} x : {})`",
                     table_.name( element ),
                     reporter_.text( ast_.span( ast_.container( id ) ) )
                 )
@@ -916,7 +920,7 @@ void Statements::visit_walk( Node_id id )
             reporter_.error_at(
                 ast_.span( binding ),
                 fmt::format( "this walk yields {} values", yielded.size() ),
-                "bind them by name: `for( [ const ref key, ref value ] : m )`"
+                "bind them by name: `for([const ref key, ref value] : m)`"
             );
         }
         else

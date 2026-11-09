@@ -470,7 +470,7 @@ std::string Operators::compare_help( Type_id type, Node_id operand ) const
     const bool      loose = !grouped && ( kind == Node_kind::Binary_expr || kind == Node_kind::Conditional_expr );
 
     return fmt::format(
-        "compare explicitly, as in `{}{}{} != {}`", loose ? "( " : "", text, loose ? " )" : "", pointer ? "nullptr" : "0"
+        "compare explicitly, as in `{}{}{} != {}`", loose ? "(" : "", text, loose ? ")" : "", pointer ? "nullptr" : "0"
     );
 }
 
@@ -1511,7 +1511,7 @@ TEST_CASE( "type_checker_types_a_three_way_comparison", "[sema][operator][orderi
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`plain` has no `operator<=>`" ) != std::string::npos );
         REQUIRE(
-            p.rendered().find( "declare `ordering operator<=>( const ref plain other ) const` in it" ) != std::string::npos
+            p.rendered().find( "declare `ordering operator<=>(const ref plain other) const` in it" ) != std::string::npos
         );
     }
 

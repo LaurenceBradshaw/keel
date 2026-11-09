@@ -2,7 +2,7 @@ error: `Counter` has a constructor, so it cannot be built from a literal
   --> sema/errors_literal_spans.kl:30:17
    |
 30 |     Counter c = Counter { 1 };
-   |                 ^^^^^^^ write `Counter( ... )`
+   |                 ^^^^^^^ write `Counter(...)`
 
 error: `Hidden` keeps `v` private, so it cannot be built from a literal
   --> sema/errors_literal_spans.kl:31:17

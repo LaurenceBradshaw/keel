@@ -38,7 +38,7 @@ error: `plain` has no `operator==`
    --> sema/errors_operator_equal.kl:106:9
     |
 106 |     if( one == two )
-    |         ^^^^^^^^^^ declare `bool operator==( const ref plain other ) const` in it
+    |         ^^^^^^^^^^ declare `bool operator==(const ref plain other) const` in it
 
 error: `operator==` is private to `hidden`
    --> sema/errors_operator_equal.kl:111:9
@@ -50,7 +50,7 @@ error: `plain` has no `operator==`
    --> sema/errors_operator_equal.kl:116:9
     |
 116 |     if( one == 5 )
-    |         ^^^^^^^^ declare `bool operator==( const ref plain other ) const` in it
+    |         ^^^^^^^^ declare `bool operator==(const ref plain other) const` in it
 
 error: expected `point`, but got an integer literal
    --> sema/errors_operator_equal.kl:121:14

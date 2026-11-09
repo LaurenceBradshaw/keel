@@ -914,15 +914,15 @@ std::string substituted_requirement(
     for( std::size_t i = 0; i < params.size(); ++i )
     {
         text += fmt::format(
-            "{} {}{} {}",
-            i == 0 ? "" : ",",
+            "{}{}{} {}",
+            i == 0 ? "" : ", ",
             param_spelling( parameter_mode_of( ast, params[i] ) ),
             table.name( table.substitute( recorded_type( recorded, params[i] ), self ) ),
             interner.text( ast.name( params[i] ) )
         );
     }
 
-    text += params.empty() ? ")" : " )";
+    text += ")";
     return ast.is_const_method( error.requirement ) ? text + " const" : text;
 }
 
@@ -1053,7 +1053,7 @@ void report_conformance_errors(
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}`'s `{}` must be `static`, as `{}` declares it", type, method, interface ),
-                fmt::format( "it is called as `{}::{}( ... )`, with no object", type, method )
+                fmt::format( "it is called as `{}::{}(...)`, with no object", type, method )
             );
             break;
         case Conformance_problem::Generic:
@@ -1358,19 +1358,19 @@ TEST_CASE( "conformances_report_each_problem", "[sema][interfaces]" )
         { "f64 area() const { return s; }",
           Conformance_problem::Missing,
           "`Sq` implements `Shape` but has no method `grow`",
-          "add `void grow( f64 by )` to `Sq`" },
+          "add `void grow(f64 by)` to `Sq`" },
         { "f64 area() const { return s; } void grow( f32 by ) { }",
           Conformance_problem::Mismatched,
           "`Sq`'s `grow` does not match the one `Shape` declares",
-          "`Shape` wants `void grow( f64 by )`" },
+          "`Shape` wants `void grow(f64 by)`" },
         { "f64 area() const { return s; } void grow( const ref f64 by ) { }",
           Conformance_problem::Mismatched,
           "`Sq`'s `grow` does not match the one `Shape` declares",
-          "`Shape` wants `void grow( f64 by )`" },
+          "`Shape` wants `void grow(f64 by)`" },
         { "f64 area() const { return s; } void grow() { }",
           Conformance_problem::Mismatched,
           "`Sq`'s `grow` does not match the one `Shape` declares",
-          "`Shape` wants `void grow( f64 by )`" },
+          "`Shape` wants `void grow(f64 by)`" },
         { "f32 area() const { return 0.0; } void grow( f64 by ) { }",
           Conformance_problem::Mismatched,
           "`Sq`'s `area` does not match the one `Shape` declares",
@@ -1536,8 +1536,8 @@ TEST_CASE( "conformances_quote_a_static_requirement_as_static", "[sema][interfac
                    "i32 main() { return 0; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.rendered().find( "add `static Sq zero( i32 n )` to `Sq`" ) != std::string::npos );
-    REQUIRE( p.rendered().find( "`Zero` wants `static Bad zero( i32 n )`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "add `static Sq zero(i32 n)` to `Sq`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "`Zero` wants `static Bad zero(i32 n)`" ) != std::string::npos );
 }
 
 // Each was refused already, so the conformance stage adds nothing to it.
@@ -1626,7 +1626,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "add `bool same( const ref P other ) const` to `P`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "add `bool same(const ref P other) const` to `P`" ) != std::string::npos );
     }
 
     SECTION( "a mismatch quotes the requirement as the implementer must write it" )
@@ -1641,7 +1641,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Same` wants `bool same( const ref P other ) const`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Same` wants `bool same(const ref P other) const`" ) != std::string::npos );
 
         const std::span<const Conformance_error> errors = p.types().conformances().errors();
         REQUIRE( errors.size() == 1 );

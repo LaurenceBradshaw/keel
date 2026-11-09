@@ -2,6 +2,6 @@ error: a variant's field takes no default
  --> sema/errors_variant_default.kl:4:24
   |
 4 |     Circle( f64 radius = 1.0 ),
-  |                        ^ give its value where the variant is built, as in `Circle( ... )`
+  |                        ^ give its value where the variant is built, as in `Circle(...)`
 
 1 error generated

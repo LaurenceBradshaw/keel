@@ -278,6 +278,12 @@ Type_id Expressions::infer_name( Node_id id )
 
     if( decl_kind == Node_kind::Field_decl && !places_.receiver_of( current_function_ ).is_valid() )
     {
+        // A lambda without `this` was refused by the resolver.
+        if( ast_.kind( current_function_ ) == Node_kind::Lambda_expr )
+        {
+            return types_.poison( id );
+        }
+
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` is a field, and there is no object here to read it from", interner_.text( ast_.name( id ) ) ),
@@ -486,7 +492,7 @@ Type_id Expressions::infer_call( Node_id id )
             reporter_.error_at(
                 ast_.span( callee ),
                 fmt::format( "`{}` is a value, not a function", reporter_.text( ast_.span( callee ) ) ),
-                fmt::format( "write `{}` without the `( )`", reporter_.text( ast_.span( callee ) ) )
+                fmt::format( "write `{}` without the `()`", reporter_.text( ast_.span( callee ) ) )
             );
 
             take_call_expectation();
@@ -864,8 +870,8 @@ Type_id Expressions::infer_array_method( Node_id id, Node_id object, Type_id arr
         ast_.span( callee ),
         known ? fmt::format( "`{}` takes {} arguments", name, name == "size" ? "no" : "2" )
               : fmt::format( "`{}` has no method `{}`", table_.name( array ), name ),
-        run ? "a run has the field `size`, and `swap( i, j )` and `replace( i, move v )`"
-            : "an array has `size()`, `swap( i, j )` and `replace( i, move v )`"
+        run ? "a run has the field `size`, and `swap(i, j)` and `replace(i, move v)`"
+            : "an array has `size()`, `swap(i, j)` and `replace(i, move v)`"
     );
     return types_.poison( id );
 }
@@ -1169,7 +1175,7 @@ Type_id Expressions::infer_method_call( Node_id id )
                 interner_.text( ast_.name( callee ) ),
                 table_.name( object_type )
             ),
-            fmt::format( "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
+            fmt::format( "call it as `{}::{}(...)`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
         );
 
         return refuse_call( id, shapes );
@@ -1301,7 +1307,7 @@ void Expressions::check_yield( Node_id id )
 
     if( !ast_.is_walk( current_function_ ) )
     {
-        reporter_.error_at( ast_.span( id ), "`yield` is only allowed in a walk", "declare `void operator:( ... )`" );
+        reporter_.error_at( ast_.span( id ), "`yield` is only allowed in a walk", "declare `void operator:(...)`" );
 
         for( const Node_id argument : ast_.arguments( id ) )
         {
@@ -1429,9 +1435,8 @@ Node_id Expressions::check_walk( Node_id walk_stmt, bool writes, Type_id& owner 
             reporter_.error_at(
                 ast_.span( container ),
                 fmt::format( "`{}` has no walk", table_.name( type ) ),
-                bounded
-                    ? std::string( "bound it by an interface that requires `operator:`" )
-                    : fmt::format( "count over it: `for( u64 i : 0..{}.size() )`", reporter_.text( ast_.span( container ) ) )
+                bounded ? std::string( "bound it by an interface that requires `operator:`" )
+                        : fmt::format( "count over it: `for(u64 i : 0..{}.size())`", reporter_.text( ast_.span( container ) ) )
             );
         }
         return Node_id {};
@@ -2266,7 +2271,7 @@ Type_id Expressions::infer_unary( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 fmt::format( "`{}` is opaque, so there is nothing to dereference", table_.name( operand_type ) ),
-                "cast it to the pointer it really is, as in `cast<u8*>( p )`"
+                "cast it to the pointer it really is, as in `cast<u8*>(p)`"
             );
 
             return types_.record( id, error );
@@ -2307,7 +2312,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         argument,
         name,
         fmt::format(
-            "{} {}( const ref {} other ) const",
+            "{} {}(const ref {} other) const",
             equality     ? "bool"
             : comparison ? "ordering"
                          : type_name,
@@ -2415,7 +2420,7 @@ bool Expressions::check_compound_operator( Node_id id, Node_id value, Type_id ta
                 type_name,
                 table_.name( returned )
             ),
-            fmt::format( "declare `void operator{}=( {} other )` on `{}`", sym, table_.name( param ), type_name )
+            fmt::format( "declare `void operator{}=({} other)` on `{}`", sym, table_.name( param ), type_name )
         );
     }
 
@@ -2692,7 +2697,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
     if( !first.is_valid() && aggregates_.names_constructor( aggregate, name ) )
     {
         reporter_.error_at(
-            ast_.span( path ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
+            ast_.span( path ), "a constructor is not a static method", fmt::format( "construct it as `{}(...)`", owner )
         );
 
         return refuse_call( id, shapes );
@@ -2727,7 +2732,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
         reporter_.error_at(
             ast_.span( path ),
             fmt::format( "`{}` needs an object", interner_.text( name ) ),
-            fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+            fmt::format( "call it as `value.{}(...)`", interner_.text( name ) )
         );
 
         return refuse_call( id, shapes );
@@ -2802,7 +2807,7 @@ Type_id Expressions::infer_bound_static_call( Node_id id, Node_id parameter )
         reporter_.error_at(
             ast_.span( path ),
             fmt::format( "`{}` needs an object", interner_.text( name ) ),
-            fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+            fmt::format( "call it as `value.{}(...)`", interner_.text( name ) )
         );
 
         return refuse_call( id, shapes );
@@ -3022,7 +3027,7 @@ Type_id Expressions::infer_destroy( Node_id id )
     if( table_.is_many_pointer( pointer ) && !has_count )
     {
         reporter_.error_at(
-            ast_.span( id ), "`destroy` of a `T[*]` needs a count", "write `destroy( p, n )` to end the first `n` slots"
+            ast_.span( id ), "`destroy` of a `T[*]` needs a count", "write `destroy(p, n)` to end the first `n` slots"
         );
         return types_.poison( id );
     }
@@ -3030,7 +3035,7 @@ Type_id Expressions::infer_destroy( Node_id id )
     if( table_.is_pointer( pointer ) && has_count )
     {
         reporter_.error_at(
-            ast_.span( ast_.count( id ) ), "a `T*` holds one value, so `destroy` takes no count", "write `destroy( p )`"
+            ast_.span( ast_.count( id ) ), "a `T*` holds one value, so `destroy` takes no count", "write `destroy(p)`"
         );
         return types_.poison( id );
     }
@@ -3301,7 +3306,7 @@ Type_id Expressions::infer_path( Node_id id )
         if( !method.is_valid() && aggregates_.names_constructor( decl, name ) )
         {
             reporter_.error_at(
-                ast_.span( id ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
+                ast_.span( id ), "a constructor is not a static method", fmt::format( "construct it as `{}(...)`", owner )
             );
 
             return types_.poison( id );
@@ -3328,9 +3333,9 @@ Type_id Expressions::infer_path( Node_id id )
             ast_.span( id ),
             fmt::format( "`{}` is a function, not a value", interner_.text( name ) ),
             ast_.is_static_method( method )
-                ? fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
+                ? fmt::format( "call it as `{}::{}(...)`", owner, interner_.text( name ) )
                 : fmt::format(
-                      "take its address as `&{0}::{1}`, or call it as `value.{1}( ... )`", owner, interner_.text( name )
+                      "take its address as `&{0}::{1}`, or call it as `value.{1}(...)`", owner, interner_.text( name )
                   )
         );
 
@@ -3375,7 +3380,7 @@ Type_id Expressions::infer_path( Node_id id )
                 "{}::{}{}",
                 reporter_.text( ast_.span( qualifier ) ),
                 interner_.text( name ),
-                ast_.payload( variants[i] ).empty() ? "" : "( ... )"
+                ast_.payload( variants[i] ).empty() ? "" : "(...)"
             );
 
             reporter_.error_at(
@@ -3401,7 +3406,7 @@ Type_id Expressions::infer_path( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 fmt::format( "`{}` carries a payload", interner_.text( name ) ),
-                fmt::format( "write `{}( ... )` with a value for each field", reporter_.text( ast_.span( id ) ) )
+                fmt::format( "write `{}(...)` with a value for each field", reporter_.text( ast_.span( id ) ) )
             );
 
             return types_.poison( id );
@@ -3686,8 +3691,8 @@ Type_id Expressions::expected_array( Node_id id )
             reporter_.error_at(
                 ast_.span( id ),
                 "an array literal needs a type to fill",
-                ast_.kind( id ) == Node_kind::Array_fill ? "write its type on the variable, as in `u64[2] a = [ 0, .. ];`"
-                                                         : "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`"
+                ast_.kind( id ) == Node_kind::Array_fill ? "write its type on the variable, as in `u64[2] a = [0, ..];`"
+                                                         : "write its type on the variable, as in `i32[3] a = [1, 2, 3];`"
             );
         }
 
@@ -3723,7 +3728,7 @@ Type_id Expressions::infer_array_literal( Node_id id )
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}`'s length is known only per instance", table_.name( expectation ) ),
-            "fill it with `[ x, .. ]`"
+            "fill it with `[x, ..]`"
         );
 
         for( const Node_id value : elements )
@@ -3784,7 +3789,7 @@ Type_id Expressions::infer_array_fill( Node_id id )
         reporter_.error_at(
             ast_.span( value ),
             "a fill evaluates its value once per element, so one value cannot go to each",
-            fmt::format( "build a new one each time, as in `[ {}(), .. ]`", table_.name( element ) )
+            fmt::format( "build a new one each time, as in `[{}(), ..]`", table_.name( element ) )
         );
     }
 
@@ -3934,7 +3939,7 @@ std::string Expressions::free_function_hint( Node_id call, Type_id object_type )
         const bool             qualified = package != resolution_.package_of( from );
 
         return fmt::format(
-            "`{0}` is a function: write `{1}{0}( {2}{3}{4} )`",
+            "`{0}` is a function: write `{1}{0}({2}{3}{4})`",
             interner_.text( name ),
             qualified ? fmt::format( "{}::", interner_.text( package ) ) : std::string {},
             marker,
@@ -3961,7 +3966,7 @@ void Expressions::report_literal_of_non_struct( Node_id id, Node_id decl )
         if( !variants.empty() )
         {
             const bool payload = !ast_.children( variants[0] ).empty();
-            help += fmt::format( ", `{}::{}{}`", name, interner_.text( ast_.name( variants[0] ) ), payload ? "( ... )" : "" );
+            help += fmt::format( ", `{}::{}{}`", name, interner_.text( ast_.name( variants[0] ) ), payload ? "(...)" : "" );
         }
         reporter_.error_at( at, fmt::format( "`{}` is an `enum`, so it cannot be built from a literal", name ), help );
         return;
@@ -4024,7 +4029,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         reporter_.error_at(
             ast_.type_name_span( id ),
             fmt::format( "`{}` has a constructor, so it cannot be built from a literal", name ),
-            fmt::format( "write `{}( ... )`", name )
+            fmt::format( "write `{}(...)`", name )
         );
 
         for( const Node_id init : ast_.initialisers( id ) )
@@ -4402,6 +4407,10 @@ Type_id Expressions::infer_lambda( Node_id id, Type_id expected, bool slot )
                                                              : table_.builtin( Type_kind::Void );
 
     lambda_returns_[id.v] = return_type;
+    if( !written_return.is_valid() && !fn_expected )
+    {
+        lambda_left_out_.insert( id.v );
+    }
 
     if( absorbing || poisoned || table_.is_error( return_type ) )
     {
@@ -4523,6 +4532,11 @@ Type_id Expressions::returned_by( Node_id function ) const
         return lambda_returns_.at( function.v );
     }
     return types_.type_of( function );
+}
+
+bool Expressions::return_left_out( Node_id lambda ) const
+{
+    return lambda_left_out_.contains( lambda.v );
 }
 
 Type_id Expressions::infer_marker( Node_id id )
@@ -5080,7 +5094,7 @@ std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual
     if( table_.is_integer( expected ) && table_.is_integer( actual ) )
     {
         const std::string cast =
-            fmt::format( "write `cast<{}>( {} )`", table_.name( expected ), reporter_.text( ast_.span( id ) ) );
+            fmt::format( "write `cast<{}>({})`", table_.name( expected ), reporter_.text( ast_.span( id ) ) );
         const Node_id decl = constant_folder_.constant_named( id );
 
         return decl.is_valid()
@@ -5116,7 +5130,7 @@ std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual
 
     if( bounds_.adopts_text( expected, actual ) )
     {
-        return fmt::format( "only a string literal becomes a `{0}`; write `{0}::from( ... )`", name );
+        return fmt::format( "only a string literal becomes a `{0}`; write `{0}::from(...)`", name );
     }
 
     return mismatch_hint( table_, expected, actual );
@@ -5919,7 +5933,7 @@ TEST_CASE( "expressions_name_the_fix_for_a_misspelt_literal", "[sema][types]" )
         one_error(
             "i32 main() { i32 a = i32 { 1 }; return a; }",
             "`i32` is not a struct, so it cannot be built from a literal",
-            "write the value, or `cast<i32>( ... )`"
+            "write the value, or `cast<i32>(...)`"
         );
     }
 
@@ -5928,7 +5942,7 @@ TEST_CASE( "expressions_name_the_fix_for_a_misspelt_literal", "[sema][types]" )
         one_error(
             "i32 main() { Shape s = Shape::Circle { 1.0 }; return 0; }",
             "`Shape::Circle` is a variant, not a struct",
-            "write `Shape::Circle( ... )`"
+            "write `Shape::Circle(...)`"
         );
         one_error( "i32 main() { Shape s = Shape::Dot {}; return 0; }", "`Shape::Dot` is a variant", "write `Shape::Dot`" );
         one_error( "i32 main() { Shape s = Shape::Line { 1 }; return 0; }", "`Shape` has no variant `Line`", "" );
@@ -5962,26 +5976,26 @@ TEST_CASE( "expressions_name_the_fix_for_a_misspelt_literal", "[sema][types]" )
         one_error(
             "f64 id( f64 v ) { return v; }\ni32 main() { Shape s = Shape::Dot; f64 a = id( s.area() ); return 0; }",
             "`Shape` has no methods",
-            "`area` is a function: write `area( s )`"
+            "`area` is a function: write `area(s)`"
         );
         one_error(
             "i32 main() { Shape s = Shape::Dot; f64 b = s.grow( 2.0 ); return 0; }",
             "`Shape` has no methods",
-            "`grow` is a function: write `grow( ref s, ... )`"
+            "`grow` is a function: write `grow(ref s, ...)`"
         );
         one_error(
             "i32 main() { Shape s = Shape::Dot; Shape* p = &s; f64 b = p.grow( 2.0 ); return 0; }",
             "`Shape` has no methods",
-            "write `grow( ref *p, ... )`"
+            "write `grow(ref *p, ...)`"
         );
     }
 
     SECTION( "a function suggested only where it would be accepted" )
     {
         one_error(
-            "i32 main() { Opt<i64> o = Opt::None; bool v = o.take(); return 0; }", "no methods", "write `take( move o )`"
+            "i32 main() { Opt<i64> o = Opt::None; bool v = o.take(); return 0; }", "no methods", "write `take(move o)`"
         );
-        one_error( "i32 main() { bool v = make().take(); return 0; }", "no methods", "write `take( make() )`" );
+        one_error( "i32 main() { bool v = make().take(); return 0; }", "no methods", "write `take(make())`" );
 
         const auto silent = [types]( std::string_view main )
         {
@@ -6166,8 +6180,8 @@ TEST_CASE( "type_checker_types_the_address_of_a_function", "[sema][types][m7]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
-        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(i32) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "a function taking nothing and returning nothing" )
@@ -6185,12 +6199,12 @@ TEST_CASE( "type_checker_types_the_address_of_a_function", "[sema][types][m7]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "a signature that disagrees is the ordinary assignment error" )
     {
-        for( const char* annotation : { "fn( i32 ) -> f64", "fn( f64 ) -> i32", "fn() -> i32", "i32", "i32*" } )
+        for( const char* annotation : { "fn(i32) -> f64", "fn(f64) -> i32", "fn() -> i32", "i32", "i32*" } )
         {
             const Typed p(
                 std::string( "i32 f( i32 a ) { return a; }\ni32 main() { " ) + annotation + " p = &f; return 0; }\n"
@@ -6228,9 +6242,9 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
         };
 
         for( const Case c :
-             { Case { "ref i32 a", "fn( ref i32 ) -> i32" },
-               Case { "const ref i32 a", "fn( const ref i32 ) -> i32" },
-               Case { "out i32 a", "fn( out i32 ) -> i32" } } )
+             { Case { "ref i32 a", "fn(ref i32) -> i32" },
+               Case { "const ref i32 a", "fn(const ref i32) -> i32" },
+               Case { "out i32 a", "fn(out i32) -> i32" } } )
         {
             const Typed p( fmt::format( "i32 f( {} ) {{ return 1; }}\ni32 main() {{ auto p = &f; return 0; }}\n", c.parameter )
             );
@@ -6251,7 +6265,7 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( move B ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(move B) -> i32" );
     }
 
     // One signature is never widened into another, and a mode is now part of one.
@@ -6262,7 +6276,7 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "expected `fn( i32 ) -> i32`, but got `fn( ref i32 ) -> i32`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "expected `fn(i32) -> i32`, but got `fn(ref i32) -> i32`" ) != std::string::npos );
     }
 
     // `mangled_parameters` already tells these two apart, so they are two overloads. Now the
@@ -6275,13 +6289,13 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
 
         INFO( by_value.rendered() );
         REQUIRE( by_value.clean() );
-        REQUIRE( by_value.type_name( by_value.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( by_value.type_name( by_value.nth( Node_kind::Unary_expr, 0 ) ) == "fn(i32) -> i32" );
 
         const Typed by_borrow( std::string( pair ) + "i32 main() { fn( ref i32 ) -> i32 p = &f; return 0; }\n" );
 
         INFO( by_borrow.rendered() );
         REQUIRE( by_borrow.clean() );
-        REQUIRE( by_borrow.type_name( by_borrow.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref i32 ) -> i32" );
+        REQUIRE( by_borrow.type_name( by_borrow.nth( Node_kind::Unary_expr, 0 ) ) == "fn(ref i32) -> i32" );
     }
 
     // The return slot says how the result travels now, so the refusal the parameter refusal was
@@ -6294,7 +6308,7 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref P ) -> const ref P" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(const ref P) -> const ref P" );
     }
 
     SECTION( "and a returning borrow is not the returning copy" )
@@ -6305,7 +6319,7 @@ TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][ty
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE(
-            p.rendered().find( "expected `fn( const ref i32 ) -> i32`, but got `fn( const ref i32 ) -> const ref i32`" ) !=
+            p.rendered().find( "expected `fn(const ref i32) -> i32`, but got `fn(const ref i32) -> const ref i32`" ) !=
             std::string::npos
         );
     }
@@ -6372,7 +6386,7 @@ TEST_CASE( "type_checker_gives_a_function_taking_an_owning_parameter_its_address
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( B ) -> u64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(B) -> u64" );
     }
 
     SECTION( "and so is one among several" )
@@ -6384,7 +6398,7 @@ TEST_CASE( "type_checker_gives_a_function_taking_an_owning_parameter_its_address
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32, B ) -> u64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(i32, B) -> u64" );
     }
 
     // The bare form is a borrow the author did not choose and the `move` form is a transfer, so the
@@ -6399,8 +6413,8 @@ TEST_CASE( "type_checker_gives_a_function_taking_an_owning_parameter_its_address
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( B ) -> u64" );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( move B ) -> u64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(B) -> u64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn(move B) -> u64" );
     }
 
     // The three boundaries, so the refusal is no wider than the disagreement it is about.
@@ -6447,7 +6461,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "and the other annotation the other one" )
@@ -6456,7 +6470,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "a parameter's type chooses it" )
@@ -6468,7 +6482,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "a field's type chooses it" )
@@ -6480,7 +6494,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "an assignment chooses it" )
@@ -6489,8 +6503,8 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "a generic overload is not a candidate" )
@@ -6500,7 +6514,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "an overload whose mode does not match is not chosen" )
@@ -6543,7 +6557,7 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "no overload of `f` has the type `fn( i32 ) -> f64`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no overload of `f` has the type `fn(i32) -> f64`" ) != std::string::npos );
     }
 
     SECTION( "the ones it has are listed" )
@@ -6552,8 +6566,8 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "its overloads are" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`fn( i32 ) -> i32`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`fn( f64 ) -> f64`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`fn(i32) -> i32`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`fn(f64) -> f64`" ) != std::string::npos );
         REQUIRE( p.rendered().find( " and " ) != std::string::npos );
     }
 
@@ -6567,7 +6581,7 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no overload of `f`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`fn( ref i32 ) -> i32`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`fn(ref i32) -> i32`" ) != std::string::npos );
     }
 
     SECTION( "an arity nobody has" )
@@ -6596,7 +6610,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "and another instance is another signature" )
@@ -6605,7 +6619,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(f64) -> f64" );
     }
 
     SECTION( "a parameter chooses one the same way an annotation does" )
@@ -6656,7 +6670,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( P ) -> P" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(P) -> P" );
     }
 
     SECTION( "without them the generic is still refused" )
@@ -6779,7 +6793,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref C, i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(ref C, i32) -> i32" );
     }
 
     SECTION( "a const method's receiver is a read-only borrow" )
@@ -6788,7 +6802,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref C ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(const ref C) -> i32" );
     }
 
     SECTION( "a returned borrow keeps its mode" )
@@ -6797,7 +6811,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref C ) -> const ref i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(const ref C) -> const ref i32" );
     }
 
     SECTION( "an instance's receiver and parameters are substituted" )
@@ -6806,7 +6820,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref Box<i32>, i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(const ref Box<i32>, i32) -> i32" );
     }
 
     SECTION( "the expected signature chooses an overload" )
@@ -6815,7 +6829,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref C, f64 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(ref C, f64) -> i32" );
     }
 
     SECTION( "and chooses one on a generic instance" )
@@ -6826,7 +6840,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref Box<i32>, f64 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn(const ref Box<i32>, f64) -> i32" );
     }
 
     SECTION( "it is called with the receiver first" )
@@ -6866,7 +6880,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_static_method", "[sema][types][s
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "it is called like a free function's" )
@@ -6883,7 +6897,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_static_method", "[sema][types][s
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( f64 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn(f64) -> i32" );
     }
 
     SECTION( "a private one is named from inside its type" )
@@ -6909,7 +6923,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_static_method", "[sema][types][s
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( i32 ) -> Box<i32>" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn(i32) -> Box<i32>" );
     }
 
     // Nothing passes through a receiver, so the address is the only seed for this instance.
@@ -6972,8 +6986,7 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema
            Case { "auto p = &Box::value;", "`Box` needs its type arguments here" },
            Case { "auto p = &C::pick;", "`pick` is overloaded, so its address names no one function" },
            Case { "auto p = &Open<i32>::keep;", "`keep` takes `T`, which is not known to be copyable" },
-           Case { "fn( ref C, bool ) -> i32 p = &C::pick;", "no overload of `pick` has the type `fn( ref C, bool ) -> i32`" }
-         } )
+           Case { "fn( ref C, bool ) -> i32 p = &C::pick;", "no overload of `pick` has the type `fn(ref C, bool) -> i32`" } } )
     {
         const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", counter, c.body ) );
 
@@ -6996,10 +7009,10 @@ TEST_CASE( "type_checker_refuses_to_name_a_constructor_through_its_type", "[sema
     };
 
     for( const Case k :
-         { Case { "auto p = &C::C;", "a constructor has no address", "take the address of a function that returns `C( ... )`" },
-           Case { "fn( i32 ) -> C p = &C::C;", "a constructor has no address", "a function that returns `C( ... )`" },
-           Case { "C a = C::C( 1 );", "a constructor is not a static method", "construct it as `C( ... )`" },
-           Case { "auto p = C::C;", "a constructor is not a static method", "construct it as `C( ... )`" } } )
+         { Case { "auto p = &C::C;", "a constructor has no address", "take the address of a function that returns `C(...)`" },
+           Case { "fn( i32 ) -> C p = &C::C;", "a constructor has no address", "a function that returns `C(...)`" },
+           Case { "C a = C::C( 1 );", "a constructor is not a static method", "construct it as `C(...)`" },
+           Case { "auto p = C::C;", "a constructor is not a static method", "construct it as `C(...)`" } } )
     {
         const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", c, k.body ) );
 
@@ -7026,7 +7039,7 @@ TEST_CASE( "type_checker_offers_the_address_of_a_method_named_without_one", "[se
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
-    REQUIRE( p.rendered().find( "take its address as `&C::add`, or call it as `value.add( ... )`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "take its address as `&C::add`, or call it as `value.add(...)`" ) != std::string::npos );
 }
 
 // M7 slice 7. A field's address is its offset, typed by the aggregate it is into and the field it reads.
@@ -7041,7 +7054,7 @@ TEST_CASE( "type_checker_types_the_offset_of_a_field", "[sema][types][m7][field]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field( P ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field(P) -> f64" );
     }
 
     SECTION( "a generic's field is read at the qualifier's instance" )
@@ -7050,7 +7063,7 @@ TEST_CASE( "type_checker_types_the_offset_of_a_field", "[sema][types][m7][field]
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field( Box<i32> ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field(Box<i32>) -> i32" );
     }
 
     SECTION( "applying one reads the field's type" )
@@ -7095,7 +7108,7 @@ TEST_CASE( "type_checker_refuses_the_offset_of_a_field_it_cannot_read", "[sema][
            Case { "field( P ) -> i32 o = &P::x; P q; i32 r = o( ref q );", "does not modify this argument" },
            Case { "field( P ) -> i32 o = &P::x; P q; i32 r = o( q, q );", "reads a field of one object, but 2 were given" },
            Case { "field( P ) -> i32 o = &P::x; Holder h; i32 r = o( h );", "expected `P`, but got `Holder`" },
-           Case { "field( Holder ) -> i32 o = &P::x;", "expected `field( Holder ) -> i32`, but got `field( P ) -> i32`" } } )
+           Case { "field( Holder ) -> i32 o = &P::x;", "expected `field(Holder) -> i32`, but got `field(P) -> i32`" } } )
     {
         const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", types, c.body ) );
 
@@ -8120,7 +8133,7 @@ TEST_CASE( "type_checker_rejects_a_literal_of_a_name_that_is_not_a_struct", "[se
         refused(
             "enum Shape { Circle( f64 r ), Dot };\ni32 main() { Shape s = Shape { 1.0 }; return 0; }",
             "`Shape` is an `enum`",
-            "`Shape::Circle( ... )`"
+            "`Shape::Circle(...)`"
         );
     }
 
@@ -8592,7 +8605,7 @@ TEST_CASE( "type_checker_refuses_type_arguments_on_a_variant", "[sema][payload][
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( fmt::format( "{}, not from `<bool>`", instance ) ) != std::string::npos );
-        REQUIRE( p.rendered().find( "write `Opt::Some( ... )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `Opt::Some(...)`" ) != std::string::npos );
     }
 
     SECTION( "agreeing, without a payload" )
@@ -11508,23 +11521,23 @@ TEST_CASE( "type_checker_refuses_what_a_fixed_array_cannot_do", "[sema][fixed_ar
         { "void f() { i32[3] a = [ 1, 2 ]; }", "`i32[3]` holds 3 values, but this lists 2", "a literal lists every element" },
         { "void f() { auto a = [ 1, 2 ]; }",
           "an array literal needs a type to fill",
-          "write its type on the variable, as in `i32[3] a = [ 1, 2, 3 ];`" },
+          "write its type on the variable, as in `i32[3] a = [1, 2, 3];`" },
         { "void f() { i32 a = [ 1 ]; }", "an array literal cannot become `i32`", "" },
         { "void f() { u8[2] a = [ 1, 300 ]; }", "300", "" },
 
         // The fill, and a local with neither.
         { "void f() { auto a = [ 1, .. ]; }",
           "an array literal needs a type to fill",
-          "write its type on the variable, as in `u64[2] a = [ 0, .. ];`" },
+          "write its type on the variable, as in `u64[2] a = [0, ..];`" },
         { "void f() { Tok t = Tok(); Tok[2] a = [ move t, .. ]; }",
           "a fill evaluates its value once per element, so one value cannot go to each",
-          "build a new one each time, as in `[ Tok(), .. ]`" },
-        { "void f() { i32[4] a; }", "`a` needs a value for every element", "fill it, as in `i32[4] a = [ 0, .. ];`" },
-        { "void f() { bool[2][3] a; }", "`a` needs a value for every element", "`bool[2][3] a = [ [ false, .. ], .. ];`" },
-        { "void f() { u8*[2] a; }", "`a` needs a value for every element", "`u8*[2] a = [ nullptr, .. ];`" },
+          "build a new one each time, as in `[Tok(), ..]`" },
+        { "void f() { i32[4] a; }", "`a` needs a value for every element", "fill it, as in `i32[4] a = [0, ..];`" },
+        { "void f() { bool[2][3] a; }", "`a` needs a value for every element", "`bool[2][3] a = [[false, ..], ..];`" },
+        { "void f() { u8*[2] a; }", "`a` needs a value for every element", "`u8*[2] a = [nullptr, ..];`" },
         { "void f() { Tok[2] a; }",
           "`a` needs a value for every element",
-          "give it a literal listing every element, or a fill, `[ value, .. ]`" },
+          "give it a literal listing every element, or a fill, `[value, ..]`" },
 
         // The conversion is to a borrowed run of the same element, and only that.
         { "void f( i32[2] a ) { const ref i64[] r = a; }", "expected `i64[]`, but got `i32[2]`", "" },
@@ -11609,14 +11622,14 @@ TEST_CASE( "expressions_check_a_lambda", "[sema][lambda]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 2 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Lambda_expr, 2 ) ) == "fn(i32) -> i32" );
     }
 
     SECTION( "refused where its type cannot come from" )
     {
         refuses( "auto b = fn[]( x ) -> i32 { return x; };", "`x` has no type" );
         refuses( "fn( i32 ) -> i32 d = fn[]( i32 p, i32 q ) -> i32 { return p; };", "this lambda takes 2 parameters" );
-        refuses( "fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; };", "expected `fn( i32 ) -> i32`, but got" );
+        refuses( "fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; };", "expected `fn(i32) -> i32`, but got" );
         refuses( "auto c = fn[]() { return 3; };", "say what it returns: `-> i32` after its parameters" );
     }
 
@@ -11723,10 +11736,10 @@ TEST_CASE( "expressions_check_fn_bounds", "[sema][lambda]" )
             "i32 main() { first( 1, fn[]( x ) {} ); return 0; }",
             "nothing here says what `T` is in `first`"
         );
-        refuses( "i32 main() { return apply( fn[]( a ) -> bool { return true; }, 1 ); }", "but got `fn( i32 ) -> bool`" );
+        refuses( "i32 main() { return apply( fn[]( a ) -> bool { return true; }, 1 ); }", "but got `fn(i32) -> bool`" );
         refuses( "i32 main() { return apply( fn[]( a, b ) -> i32 { return a; }, 1 ); }", "this lambda takes 2 parameters" );
-        refuses( "bool odd( i32 x ) { return true; }\ni32 main() { return apply( &odd, 1 ); }", "but got `fn( i32 ) -> bool`" );
-        refuses( "i32 main() { return apply( 5, 1 ); }", "expected `fn( i32 ) -> i32`, but got an integer literal" );
+        refuses( "bool odd( i32 x ) { return true; }\ni32 main() { return apply( &odd, 1 ); }", "but got `fn(i32) -> bool`" );
+        refuses( "i32 main() { return apply( 5, 1 ); }", "expected `fn(i32) -> i32`, but got an integer literal" );
         refuses(
             "void two<F>( F a, F b ) where F : fn() -> void { a(); }\ni32 main() { two( fn[]() {}, fn[]() {} ); return 0; }",
             "each lambda has a type of its own"

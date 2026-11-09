@@ -14,7 +14,7 @@ error: a payload field needs a name
   --> sema/errors_nameless_enum_parts.kl:19:11
    |
 19 |     Both( f64, f64 ),
-   |           ^^^ write one after its type, as in `Circle( f64 radius )`
+   |           ^^^ write one after its type, as in `Circle(f64 radius)`
 
 warning: this statement is never reached [-Wunreachable-code]
   --> sema/errors_nameless_enum_parts.kl:30:5

@@ -8,7 +8,7 @@ error: `i32[N]`'s length is known only per instance
   --> sema/errors_size_param_uses.kl:15:21
    |
 15 |     i32[N] listed = [ 1, 2 ];                       // error: listed against T[N]
-   |                     ^^^^^^^^ fill it with `[ x, .. ]`
+   |                     ^^^^^^^^ fill it with `[x, ..]`
 
 error: cannot assign to this expression
   --> sema/errors_size_param_uses.kl:16:5

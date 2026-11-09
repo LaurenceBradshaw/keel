@@ -14,7 +14,7 @@ error: `Dot`'s `grow` does not match the one `Shape` declares
   --> sema/errors_interfaces.kl:22:23
    |
 22 | struct Dot implements Shape, Named, Shape
-   |                       ^^^^^ `Shape` wants `void grow( f64 by )`
+   |                       ^^^^^ `Shape` wants `void grow(f64 by)`
 
 error: `Dot` implements `Named` but has no method `id`
   --> sema/errors_interfaces.kl:22:30

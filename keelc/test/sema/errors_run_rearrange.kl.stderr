@@ -14,6 +14,6 @@ error: `i32[]` has no method `size`
   --> sema/errors_run_rearrange.kl:17:12
    |
 17 |     return numbers.size();
-   |            ^^^^^^^^^^^^ a run has the field `size`, and `swap( i, j )` and `replace( i, move v )`
+   |            ^^^^^^^^^^^^ a run has the field `size`, and `swap(i, j)` and `replace(i, move v)`
 
 3 errors generated

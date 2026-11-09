@@ -32,19 +32,19 @@ error: `plain` has no `operator<=>`
   --> sema/errors_operator_compare.kl:76:9
    |
 76 |     if( one < two )
-   |         ^^^^^^^^^ declare `ordering operator<=>( const ref plain other ) const` in it
+   |         ^^^^^^^^^ declare `ordering operator<=>(const ref plain other) const` in it
 
 error: `plain` has no `operator<=>`
   --> sema/errors_operator_compare.kl:81:18
    |
 81 |     ordering o = one <=> two;
-   |                  ^^^^^^^^^^^ declare `ordering operator<=>( const ref plain other ) const` in it
+   |                  ^^^^^^^^^^^ declare `ordering operator<=>(const ref plain other) const` in it
 
 error: `version` has no `operator==`
   --> sema/errors_operator_compare.kl:83:9
    |
 83 |     if( v == w )
-   |         ^^^^^^ declare `bool operator==( const ref version other ) const` in it
+   |         ^^^^^^ declare `bool operator==(const ref version other) const` in it
 
 error: expected `version`, but got an integer literal
   --> sema/errors_operator_compare.kl:88:13

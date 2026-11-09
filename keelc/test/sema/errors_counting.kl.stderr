@@ -2,37 +2,37 @@ error: `i` counts the loop, so it cannot be modified
   --> sema/errors_counting.kl:13:9
    |
 13 |         i += 1;
-   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+   |         ^ step it yourself with `for(u64 i = a; i < b; i++)`
 
 error: `i` counts the loop, so it cannot be modified
   --> sema/errors_counting.kl:14:9
    |
 14 |         i++;
-   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+   |         ^ step it yourself with `for(u64 i = a; i < b; i++)`
 
 error: `i` counts the loop, so it cannot be modified
   --> sema/errors_counting.kl:15:9
    |
 15 |         i = 0;
-   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+   |         ^ step it yourself with `for(u64 i = a; i < b; i++)`
 
 error: `i` counts the loop, so it cannot be modified
   --> sema/errors_counting.kl:16:21
    |
 16 |         ref u64 r = i;
-   |                     ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+   |                     ^ step it yourself with `for(u64 i = a; i < b; i++)`
 
 error: `i` counts the loop, so it cannot be modified
   --> sema/errors_counting.kl:18:19
    |
 18 |         take( ref i );
-   |                   ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+   |                   ^ step it yourself with `for(u64 i = a; i < b; i++)`
 
 error: expected `i32`, but got `u64`
   --> sema/errors_counting.kl:21:21
    |
 21 |     for( i32 i : 0..n )
-   |                     ^ write `cast<i32>( n )`
+   |                     ^ write `cast<i32>(n)`
 
 error: a counting loop counts in an integer type
   --> sema/errors_counting.kl:25:18

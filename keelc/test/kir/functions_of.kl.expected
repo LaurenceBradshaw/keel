@@ -24,7 +24,7 @@ fn main {
     let _4: str*;
     let _5: const u8[*];
     let _6: void;
-    let _7: fn( i32 ) -> i32;
+    let _7: fn(i32) -> i32;
     let _8: u64;
     let _9: i32;
 

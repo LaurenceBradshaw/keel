@@ -34,7 +34,7 @@ error: `secret` is private to `helper`
 20 |     i32 s = secret();
    |             ^^^^^^ only that module's own declarations may name it
 
-error: expected `fn( i32 ) -> i32`, but got `fn( i64 ) -> i32`
+error: expected `fn(i32) -> i32`, but got `fn(i64) -> i32`
   --> sema/errors_module_private/main.kl:21:26
    |
 21 |     fn( i32 ) -> i32 g = &scale; // only scale( i64 ) is visible

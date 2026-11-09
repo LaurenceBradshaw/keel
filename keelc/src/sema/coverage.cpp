@@ -575,7 +575,7 @@ void Coverage::check_arm_structure( Node_id id )
             reporter_.error_at(
                 ast_.span( arm ),
                 "a `case` that destructures cannot share its body with another",
-                "give it an arm of its own, or drop the `( ... )` to match the variant without its payload"
+                "give it an arm of its own, or drop the `(...)` to match the variant without its payload"
             );
         }
 

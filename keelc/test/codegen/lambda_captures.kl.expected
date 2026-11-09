@@ -1,0 +1,570 @@
+// codegen/lambda_captures.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Owned;
+struct kl__Counter;
+struct kl__Z15lambda_captures_460_;
+struct kl__Z15lambda_captures_527_;
+struct kl__Z15lambda_captures_627_;
+struct kl__Z15lambda_captures_735_;
+struct kl__Z15lambda_captures_947_;
+struct kl__Z15lambda_captures_975_;
+
+typedef void ( *kl__fn__FE4void )( void );
+typedef int32_t ( *kl__fn__FE3i32 )( void );
+
+struct kl__Owned
+{
+    int32_t* kl_p;
+};
+
+struct kl__Counter
+{
+    int32_t kl_n;
+};
+
+struct kl__Z15lambda_captures_460_
+{
+    struct kl__Counter* kl_this;
+};
+
+struct kl__Z15lambda_captures_527_
+{
+    struct kl__Counter* kl_this;
+};
+
+struct kl__Z15lambda_captures_627_
+{
+    int32_t kl_a;
+    int32_t* kl_b;
+};
+
+struct kl__Z15lambda_captures_735_
+{
+    struct kl__Owned* kl_o;
+};
+
+struct kl__Z15lambda_captures_947_
+{
+    int32_t kl_a;
+    int32_t* kl_total;
+};
+
+struct kl__Z15lambda_captures_975_
+{
+    int32_t kl_a;
+    int32_t* kl_total;
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__Owned__R5Owned_3i32__ctor( struct kl__Owned*, int32_t );
+void kl__Owned__dtor( struct kl__Owned* );
+int32_t kl__value__S5Owned( struct kl__Owned* );
+void kl__add__S7Counter_3i32( struct kl__Counter*, int32_t );
+int32_t kl__doubled__S7Counter( struct kl__Counter* );
+int32_t kl__0lambda460__( struct kl__Z15lambda_captures_460_* );
+void kl__twice__S7Counter( struct kl__Counter* );
+void kl__0lambda527__( struct kl__Z15lambda_captures_527_* );
+int32_t kl__main__( void );
+void kl__0lambda947__( struct kl__Z15lambda_captures_947_* );
+void kl__0lambda975__( struct kl__Z15lambda_captures_975_* );
+int32_t kl__0lambda735__( struct kl__Z15lambda_captures_735_* );
+void kl__0lambda627__( struct kl__Z15lambda_captures_627_* );
+int32_t kl__get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( struct kl__Z15lambda_captures_460_* );
+void kl__run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( struct kl__Z15lambda_captures_527_* );
+void kl__run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( struct kl__Z15lambda_captures_627_* );
+int32_t kl__get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( struct kl__Z15lambda_captures_735_* );
+void kl__run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( struct kl__Z15lambda_captures_947_* );
+void kl__run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( struct kl__Z15lambda_captures_975_* );
+
+#line 8 "codegen/lambda_captures.kl"
+void kl__Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_v_2 )
+{
+    int32_t* kl_t3;
+#line 8 "codegen/lambda_captures.kl"
+    kl_t3 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/lambda_captures.kl", 8, "out of memory: alloc<i32>()" );
+#line 8 "codegen/lambda_captures.kl"
+    ( *kl_this_1 ).kl_p = kl_t3;
+#line 8 "codegen/lambda_captures.kl"
+    ( *( *kl_this_1 ).kl_p ) = kl_v_2;
+#line 8 "codegen/lambda_captures.kl"
+    return;
+#line 8 "codegen/lambda_captures.kl"
+}
+
+#line 9 "codegen/lambda_captures.kl"
+void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+{
+#line 9 "codegen/lambda_captures.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_p );
+#line 9 "codegen/lambda_captures.kl"
+    return;
+#line 9 "codegen/lambda_captures.kl"
+}
+
+#line 10 "codegen/lambda_captures.kl"
+int32_t kl__value__S5Owned( struct kl__Owned* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 10 "codegen/lambda_captures.kl"
+    kl_t0 = ( *( *kl_this_1 ).kl_p );
+#line 10 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 10 "codegen/lambda_captures.kl"
+}
+
+#line 17 "codegen/lambda_captures.kl"
+void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_k_2 )
+{
+    bool kl_t3;
+#line 17 "codegen/lambda_captures.kl"
+    kl_t3 = __builtin_add_overflow( ( *kl_this_1 ).kl_n, kl_k_2, &( int32_t ) { 0 } );
+#line 17 "codegen/lambda_captures.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 17 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 17, "arithmetic overflow: n += k;" );
+    bb2:
+#line 17 "codegen/lambda_captures.kl"
+    ( *kl_this_1 ).kl_n = ( *kl_this_1 ).kl_n + kl_k_2;
+#line 17 "codegen/lambda_captures.kl"
+    return;
+#line 17 "codegen/lambda_captures.kl"
+}
+
+#line 18 "codegen/lambda_captures.kl"
+int32_t kl__doubled__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+    struct kl__Z15lambda_captures_460_ kl_t2;
+    struct kl__Counter* kl_t3;
+    struct kl__Z15lambda_captures_460_* kl_t4;
+    int32_t kl_t5;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t3 = &( *kl_this_1 );
+#line 18 "codegen/lambda_captures.kl"
+    kl_t2.kl_this = kl_t3;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t4 = &kl_t2;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t5 = kl__get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( kl_t4 );
+#line 18 "codegen/lambda_captures.kl"
+    kl_t0 = kl_t5;
+#line 18 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 18 "codegen/lambda_captures.kl"
+}
+
+#line 18 "codegen/lambda_captures.kl"
+int32_t kl__0lambda460__( struct kl__Z15lambda_captures_460_* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Counter* kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_this;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t3 = __builtin_mul_overflow( ( *kl_t2 ).kl_n, 2, &( int32_t ) { 0 } );
+#line 18 "codegen/lambda_captures.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 18 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 18, "arithmetic overflow: n * 2" );
+    bb2:
+#line 18 "codegen/lambda_captures.kl"
+    kl_t4 = ( *kl_t2 ).kl_n * 2;
+#line 18 "codegen/lambda_captures.kl"
+    kl_t0 = kl_t4;
+#line 18 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 18 "codegen/lambda_captures.kl"
+}
+
+#line 19 "codegen/lambda_captures.kl"
+void kl__twice__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    struct kl__Z15lambda_captures_527_ kl_t2;
+    struct kl__Counter* kl_t3;
+    struct kl__Z15lambda_captures_527_* kl_t4;
+#line 19 "codegen/lambda_captures.kl"
+    kl_t3 = &( *kl_this_1 );
+#line 19 "codegen/lambda_captures.kl"
+    kl_t2.kl_this = kl_t3;
+#line 19 "codegen/lambda_captures.kl"
+    kl_t4 = &kl_t2;
+#line 19 "codegen/lambda_captures.kl"
+    kl__run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( kl_t4 );
+#line 19 "codegen/lambda_captures.kl"
+    return;
+#line 19 "codegen/lambda_captures.kl"
+}
+
+#line 19 "codegen/lambda_captures.kl"
+void kl__0lambda527__( struct kl__Z15lambda_captures_527_* kl_t1 )
+{
+    struct kl__Counter* kl_t2;
+    struct kl__Counter* kl_t3;
+    bool kl_t5;
+#line 19 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_this;
+#line 19 "codegen/lambda_captures.kl"
+    kl_t3 = &( *kl_t2 );
+#line 19 "codegen/lambda_captures.kl"
+    kl__add__S7Counter_3i32( kl_t3, 1 );
+#line 19 "codegen/lambda_captures.kl"
+    kl_t5 = __builtin_add_overflow( ( *kl_t2 ).kl_n, 1, &( int32_t ) { 0 } );
+#line 19 "codegen/lambda_captures.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 19 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 19, "arithmetic overflow: n += 1;" );
+    bb2:
+#line 19 "codegen/lambda_captures.kl"
+    ( *kl_t2 ).kl_n = ( *kl_t2 ).kl_n + 1;
+#line 19 "codegen/lambda_captures.kl"
+    return;
+#line 19 "codegen/lambda_captures.kl"
+}
+
+#line 22 "codegen/lambda_captures.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_a_1;
+    int32_t kl_b_2;
+    struct kl__Z15lambda_captures_627_ kl_t3;
+    int32_t* kl_t4;
+    struct kl__Z15lambda_captures_627_* kl_t5;
+    bool kl_t7;
+    struct kl__Owned kl_o_8;
+    struct kl__Owned* kl_t9;
+    struct kl__Z15lambda_captures_735_ kl_t11;
+    struct kl__Owned* kl_t12;
+    struct kl__Z15lambda_captures_735_* kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    struct kl__Counter kl_c_16;
+    struct kl__Counter kl_t17;
+    struct kl__Counter* kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    struct kl__Counter* kl_t21;
+    bool kl_t23;
+    int32_t kl_total_24;
+    struct kl__Z15lambda_captures_947_ kl_t25;
+    int32_t* kl_t26;
+    struct kl__Z15lambda_captures_947_* kl_t27;
+    bool kl_t29;
+#line 24 "codegen/lambda_captures.kl"
+    kl_a_1 = 2;
+    kl_b_2 = 0;
+    kl_t4 = &kl_b_2;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t3.kl_a = kl_a_1;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t3.kl_b = kl_t4;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t5 = &kl_t3;
+#line 26 "codegen/lambda_captures.kl"
+    kl__run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( kl_t5 );
+    kl_t7 = kl_b_2 != 20;
+#line 27 "codegen/lambda_captures.kl"
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 27 "codegen/lambda_captures.kl"
+    kl_t0 = 1;
+#line 27 "codegen/lambda_captures.kl"
+    return kl_t0;
+    bb2:
+    kl_t9 = &kl_o_8;
+#line 29 "codegen/lambda_captures.kl"
+    kl__Owned__R5Owned_3i32__ctor( kl_t9, 7 );
+    kl_t12 = &kl_o_8;
+#line 30 "codegen/lambda_captures.kl"
+    kl_t11.kl_o = kl_t12;
+#line 30 "codegen/lambda_captures.kl"
+    kl_t13 = &kl_t11;
+#line 30 "codegen/lambda_captures.kl"
+    kl_t14 = kl__get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( kl_t13 );
+#line 30 "codegen/lambda_captures.kl"
+    kl_t15 = kl_t14 != 7;
+#line 30 "codegen/lambda_captures.kl"
+    if ( kl_t15 ) goto bb3; else goto bb4;
+    bb3:
+#line 30 "codegen/lambda_captures.kl"
+    kl_t0 = 2;
+#line 30 "codegen/lambda_captures.kl"
+    kl__Owned__dtor( &kl_o_8 );
+#line 30 "codegen/lambda_captures.kl"
+    return kl_t0;
+    bb4:
+    kl_t17.kl_n = 3;
+#line 32 "codegen/lambda_captures.kl"
+    kl_c_16 = kl_t17;
+    kl_t18 = &kl_c_16;
+#line 33 "codegen/lambda_captures.kl"
+    kl_t19 = kl__doubled__S7Counter( kl_t18 );
+#line 33 "codegen/lambda_captures.kl"
+    kl_t20 = kl_t19 != 6;
+#line 33 "codegen/lambda_captures.kl"
+    if ( kl_t20 ) goto bb5; else goto bb6;
+    bb5:
+#line 33 "codegen/lambda_captures.kl"
+    kl_t0 = 3;
+#line 33 "codegen/lambda_captures.kl"
+    kl__Owned__dtor( &kl_o_8 );
+#line 33 "codegen/lambda_captures.kl"
+    return kl_t0;
+    bb6:
+#line 34 "codegen/lambda_captures.kl"
+    kl_t21 = &kl_c_16;
+#line 34 "codegen/lambda_captures.kl"
+    kl__twice__S7Counter( kl_t21 );
+    kl_t23 = kl_c_16.kl_n != 5;
+#line 35 "codegen/lambda_captures.kl"
+    if ( kl_t23 ) goto bb7; else goto bb8;
+    bb7:
+#line 35 "codegen/lambda_captures.kl"
+    kl_t0 = 4;
+#line 35 "codegen/lambda_captures.kl"
+    kl__Owned__dtor( &kl_o_8 );
+#line 35 "codegen/lambda_captures.kl"
+    return kl_t0;
+    bb8:
+    kl_total_24 = 0;
+    kl_t26 = &kl_total_24;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t25.kl_a = kl_a_1;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t25.kl_total = kl_t26;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t27 = &kl_t25;
+#line 38 "codegen/lambda_captures.kl"
+    kl__run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( kl_t27 );
+    kl_t29 = kl_total_24 != 3;
+#line 39 "codegen/lambda_captures.kl"
+    if ( kl_t29 ) goto bb9; else goto bb10;
+    bb9:
+#line 39 "codegen/lambda_captures.kl"
+    kl_t0 = 5;
+#line 39 "codegen/lambda_captures.kl"
+    kl__Owned__dtor( &kl_o_8 );
+#line 39 "codegen/lambda_captures.kl"
+    return kl_t0;
+    bb10:
+    kl_t0 = 0;
+#line 41 "codegen/lambda_captures.kl"
+    kl__Owned__dtor( &kl_o_8 );
+#line 41 "codegen/lambda_captures.kl"
+    return kl_t0;
+}
+
+#line 38 "codegen/lambda_captures.kl"
+void kl__0lambda947__( struct kl__Z15lambda_captures_947_* kl_t1 )
+{
+    int32_t kl_t2;
+    int32_t* kl_t3;
+    struct kl__Z15lambda_captures_975_ kl_t4;
+    int32_t* kl_t5;
+    struct kl__Z15lambda_captures_975_* kl_t6;
+    bool kl_t8;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_a;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t3 = ( *kl_t1 ).kl_total;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t5 = &( *kl_t3 );
+#line 38 "codegen/lambda_captures.kl"
+    kl_t4.kl_a = kl_t2;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t4.kl_total = kl_t5;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t6 = &kl_t4;
+#line 38 "codegen/lambda_captures.kl"
+    kl__run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( kl_t6 );
+#line 38 "codegen/lambda_captures.kl"
+    kl_t8 = __builtin_add_overflow( ( *kl_t3 ), 1, &( int32_t ) { 0 } );
+#line 38 "codegen/lambda_captures.kl"
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 38 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 38, "arithmetic overflow: total += 1;" );
+    bb2:
+#line 38 "codegen/lambda_captures.kl"
+    ( *kl_t3 ) = ( *kl_t3 ) + 1;
+#line 38 "codegen/lambda_captures.kl"
+    return;
+#line 38 "codegen/lambda_captures.kl"
+}
+
+#line 38 "codegen/lambda_captures.kl"
+void kl__0lambda975__( struct kl__Z15lambda_captures_975_* kl_t1 )
+{
+    int32_t kl_t2;
+    int32_t* kl_t3;
+    bool kl_t4;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_a;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t3 = ( *kl_t1 ).kl_total;
+#line 38 "codegen/lambda_captures.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_t3 ), kl_t2, &( int32_t ) { 0 } );
+#line 38 "codegen/lambda_captures.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 38 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 38, "arithmetic overflow: total += a;" );
+    bb2:
+#line 38 "codegen/lambda_captures.kl"
+    ( *kl_t3 ) = ( *kl_t3 ) + kl_t2;
+#line 38 "codegen/lambda_captures.kl"
+    return;
+#line 38 "codegen/lambda_captures.kl"
+}
+
+#line 30 "codegen/lambda_captures.kl"
+int32_t kl__0lambda735__( struct kl__Z15lambda_captures_735_* kl_t1 )
+{
+    int32_t kl_t0;
+    struct kl__Owned* kl_t2;
+    struct kl__Owned* kl_t3;
+    int32_t kl_t4;
+#line 30 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_o;
+#line 30 "codegen/lambda_captures.kl"
+    kl_t3 = &( *kl_t2 );
+#line 30 "codegen/lambda_captures.kl"
+    kl_t4 = kl__value__S5Owned( kl_t3 );
+#line 30 "codegen/lambda_captures.kl"
+    kl_t0 = kl_t4;
+#line 30 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 30 "codegen/lambda_captures.kl"
+}
+
+#line 26 "codegen/lambda_captures.kl"
+void kl__0lambda627__( struct kl__Z15lambda_captures_627_* kl_t1 )
+{
+    int32_t kl_t2;
+    int32_t* kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t2 = ( *kl_t1 ).kl_a;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t3 = ( *kl_t1 ).kl_b;
+#line 26 "codegen/lambda_captures.kl"
+    kl_t4 = __builtin_mul_overflow( kl_t2, 10, &( int32_t ) { 0 } );
+#line 26 "codegen/lambda_captures.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 26 "codegen/lambda_captures.kl"
+    kl_rt_panic( "codegen/lambda_captures.kl", 26, "arithmetic overflow: a * 10" );
+    bb2:
+#line 26 "codegen/lambda_captures.kl"
+    kl_t5 = kl_t2 * 10;
+#line 26 "codegen/lambda_captures.kl"
+    ( *kl_t3 ) = kl_t5;
+#line 26 "codegen/lambda_captures.kl"
+    return;
+#line 26 "codegen/lambda_captures.kl"
+}
+
+#line 3 "codegen/lambda_captures.kl"
+int32_t kl__get__IZ15lambda_captures_460_E__Z15lambda_captures_460_( struct kl__Z15lambda_captures_460_* kl_f_1 )
+{
+    int32_t kl_t0;
+    struct kl__Z15lambda_captures_460_* kl_t2;
+    int32_t kl_t3;
+#line 3 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 3 "codegen/lambda_captures.kl"
+    kl_t3 = kl__0lambda460__( kl_t2 );
+#line 3 "codegen/lambda_captures.kl"
+    kl_t0 = kl_t3;
+#line 3 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 3 "codegen/lambda_captures.kl"
+}
+
+#line 2 "codegen/lambda_captures.kl"
+void kl__run__IZ15lambda_captures_527_E__Z15lambda_captures_527_( struct kl__Z15lambda_captures_527_* kl_f_1 )
+{
+    struct kl__Z15lambda_captures_527_* kl_t2;
+#line 2 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 2 "codegen/lambda_captures.kl"
+    kl__0lambda527__( kl_t2 );
+#line 2 "codegen/lambda_captures.kl"
+    return;
+#line 2 "codegen/lambda_captures.kl"
+}
+
+#line 2 "codegen/lambda_captures.kl"
+void kl__run__IZ15lambda_captures_627_E__Z15lambda_captures_627_( struct kl__Z15lambda_captures_627_* kl_f_1 )
+{
+    struct kl__Z15lambda_captures_627_* kl_t2;
+#line 2 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 2 "codegen/lambda_captures.kl"
+    kl__0lambda627__( kl_t2 );
+#line 2 "codegen/lambda_captures.kl"
+    return;
+#line 2 "codegen/lambda_captures.kl"
+}
+
+#line 3 "codegen/lambda_captures.kl"
+int32_t kl__get__IZ15lambda_captures_735_E__Z15lambda_captures_735_( struct kl__Z15lambda_captures_735_* kl_f_1 )
+{
+    int32_t kl_t0;
+    struct kl__Z15lambda_captures_735_* kl_t2;
+    int32_t kl_t3;
+#line 3 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 3 "codegen/lambda_captures.kl"
+    kl_t3 = kl__0lambda735__( kl_t2 );
+#line 3 "codegen/lambda_captures.kl"
+    kl_t0 = kl_t3;
+#line 3 "codegen/lambda_captures.kl"
+    return kl_t0;
+#line 3 "codegen/lambda_captures.kl"
+}
+
+#line 2 "codegen/lambda_captures.kl"
+void kl__run__IZ15lambda_captures_947_E__Z15lambda_captures_947_( struct kl__Z15lambda_captures_947_* kl_f_1 )
+{
+    struct kl__Z15lambda_captures_947_* kl_t2;
+#line 2 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 2 "codegen/lambda_captures.kl"
+    kl__0lambda947__( kl_t2 );
+#line 2 "codegen/lambda_captures.kl"
+    return;
+#line 2 "codegen/lambda_captures.kl"
+}
+
+#line 2 "codegen/lambda_captures.kl"
+void kl__run__IZ15lambda_captures_975_E__Z15lambda_captures_975_( struct kl__Z15lambda_captures_975_* kl_f_1 )
+{
+    struct kl__Z15lambda_captures_975_* kl_t2;
+#line 2 "codegen/lambda_captures.kl"
+    kl_t2 = &( *kl_f_1 );
+#line 2 "codegen/lambda_captures.kl"
+    kl__0lambda975__( kl_t2 );
+#line 2 "codegen/lambda_captures.kl"
+    return;
+#line 2 "codegen/lambda_captures.kl"
+}
+
+#line 22 "codegen/lambda_captures.kl"
+int main( void )
+{
+#line 22 "codegen/lambda_captures.kl"
+    return (int) kl__main__();
+}

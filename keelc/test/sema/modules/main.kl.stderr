@@ -22,11 +22,11 @@ error: `secret` is in `hidden`, which this file does not import
 14 |     return secret(); // hidden.kl is loaded through twin.kl, which is not an import of this file
    |            ^^^^^^ write `import hidden;` at the top of the file
 
-error: no overload of `pick` has the type `fn( i32 ) -> i32`
+error: no overload of `pick` has the type `fn(i32) -> i32`
   --> sema/modules/main.kl:29:26
    |
 29 |     fn( i32 ) -> i32 g = &pick; // hidden.kl's pick( i32 ) matches, and this file cannot see it
-   |                          ^^^^^ its overloads are `fn( i64 ) -> i32` and `fn( u8 ) -> i32`
+   |                          ^^^^^ its overloads are `fn(i64) -> i32` and `fn(u8) -> i32`
 
 error: `Pair` is already declared
   --> sema/modules/main.kl:33:8

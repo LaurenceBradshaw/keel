@@ -392,7 +392,7 @@ void report_unused(
             Warning::Unused_variable,
             ast.name_span( unused ),
             fmt::format( "unused variable `{}`", name ),
-            walk ? "write `_` in its place: `for( _ : c )`"
+            walk ? "write `_` in its place: `for(_ : c)`"
             : may_act( ast, types, init )
                 ? fmt::format( "write `_ = {};` if only the initialiser is wanted", reporter.text( ast.span( init ) ) )
                 : "remove it"

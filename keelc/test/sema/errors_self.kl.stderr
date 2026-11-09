@@ -2,7 +2,7 @@ error: `P`'s `same` does not match the one `Same` declares
   --> sema/errors_self.kl:10:21
    |
 10 | struct P implements Same
-   |                     ^^^^ `Same` wants `bool same( const ref P other ) const`
+   |                     ^^^^ `Same` wants `bool same(const ref P other) const`
 
 error: `Q`'s `same` must be `const`, as `Same` declares it
   --> sema/errors_self.kl:18:21

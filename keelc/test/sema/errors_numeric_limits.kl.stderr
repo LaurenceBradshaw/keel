@@ -8,7 +8,7 @@ error: `i32::max` is a value, not a function
  --> sema/errors_numeric_limits.kl:6:13
   |
 6 |     i32 a = i32::max();
-  |             ^^^^^^^^ write `i32::max` without the `( )`
+  |             ^^^^^^^^ write `i32::max` without the `()`
 
 error: `i32` has no member `biggest`
  --> sema/errors_numeric_limits.kl:7:13
@@ -26,7 +26,7 @@ error: expected `i8`, but got `i32`
  --> sema/errors_numeric_limits.kl:9:12
   |
 9 |     i8 d = i32::max;
-  |            ^^^^^^^^ write `cast<i8>( i32::max )`
+  |            ^^^^^^^^ write `cast<i8>(i32::max)`
 
 error: `2147483648` does not fit in `i32`
   --> sema/errors_numeric_limits.kl:10:13

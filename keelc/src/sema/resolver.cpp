@@ -458,7 +458,7 @@ void Resolver::visit( Node_id id )
                 ast_.type_name_span( id ),
                 fmt::format( "`{}` is not a struct, so it cannot be built from a literal", interner_.text( name ) ),
                 ast_.initialisers( id ).size() == 1
-                    ? fmt::format( "write the value, or `cast<{}>( ... )`", interner_.text( name ) )
+                    ? fmt::format( "write the value, or `cast<{}>(...)`", interner_.text( name ) )
                     : std::string {}
             );
         }
@@ -822,7 +822,7 @@ void Resolver::refuse_capture( Node_id capture )
         reporter_.error_at(
             ast_.span( named ),
             fmt::format( "`{}` is a member, so a lambda reaches it through `this`", interner_.text( name ) ),
-            "capture `this`: `fn[ this ]` reads it, `fn[ ref this ]` writes it"
+            "capture `this`: `fn[this]` reads it, `fn[ref this]` writes it"
         );
     }
     else if( !is_local( name, decl ) )
@@ -861,7 +861,7 @@ void Resolver::refuse_uncaptured( Node_id use, Symbol_id name, Node_id decl, con
         reporter_.error_at(
             ast_.span( use ),
             fmt::format( "`{}` is a member, and this lambda does not capture `this`", text ),
-            "capture it: `fn[ this ]` reads through it, `fn[ ref this ]` writes through it"
+            "capture it: `fn[this]` reads through it, `fn[ref this]` writes through it"
         );
     }
     else
@@ -869,8 +869,8 @@ void Resolver::refuse_uncaptured( Node_id use, Symbol_id name, Node_id decl, con
         reporter_.error_at(
             ast_.span( use ),
             fmt::format( "`{}` is not captured by this lambda", text ),
-            receiver ? "capture it: `fn[ this ]` reads through it, `fn[ ref this ]` writes through it"
-                     : fmt::format( "capture it: `fn[ {0} ]` reads it, `fn[ ref {0} ]` writes it", text )
+            receiver ? "capture it: `fn[this]` reads through it, `fn[ref this]` writes through it"
+                     : fmt::format( "capture it: `fn[{0}]` reads it, `fn[ref {0}]` writes it", text )
         );
     }
 }
@@ -1390,7 +1390,7 @@ void Resolver::refuse_member_literal( Node_id literal, Node_id owner )
     reporter_.error_at(
         span,
         fmt::format( "`{}::{}` is a variant, not a struct", owner_spelt, name ),
-        fmt::format( "write `{}::{}{}`", owner_spelt, name, ast_.payload( *variant ).empty() ? "" : "( ... )" )
+        fmt::format( "write `{}::{}{}`", owner_spelt, name, ast_.payload( *variant ).empty() ? "" : "(...)" )
     );
 }
 
@@ -4099,7 +4099,7 @@ TEST_CASE( "resolver_refuses_what_a_lambda_does_not_capture", "[sema][resolve][l
 {
     static const std::pair<const char*, const char*> cases[] = {
         { "i32 main() { i32 x = 0; f( fn[]() { x += 1; x += 2; } ); return x; }", "`x` is not captured by this lambda" },
-        { "i32 main( i32 x ) { f( fn[]() -> i32 { return x; } ); return 0; }", "`fn[ ref x ]` writes it" },
+        { "i32 main( i32 x ) { f( fn[]() -> i32 { return x; } ); return 0; }", "`fn[ref x]` writes it" },
         { "i32 main() { i32 x = 0; f( fn[ x ]() { f( fn[]() -> i32 { return x; } ); } ); return x; }",
           "`x` is not captured by this lambda" },
         { "struct P { i32 v; void m() { f( fn[]() -> i32 { return v; } ); } };",

@@ -26,25 +26,25 @@ error: no `pick` takes 2 arguments
   --> sema/errors_overloads.kl:45:5
    |
 45 |     pick( whole, whole );
-   |     ^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
+   |     ^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i32)` and `(f64)`
 
 error: no `pick` matches these arguments
   --> sema/errors_overloads.kl:48:5
    |
 48 |     pick( true );
-   |     ^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
+   |     ^^^^^^^^^^^^ the ones declared take `(i32)` and `(f64)`
 
 error: no `ambiguous` matches these arguments
   --> sema/errors_overloads.kl:52:5
    |
 52 |     ambiguous( 9223372036854775808 );
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( i64 )`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i32)` and `(i64)`
 
 error: no `ambiguous` matches these arguments
   --> sema/errors_overloads.kl:55:5
    |
 55 |     ambiguous( fraction );
-   |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( i64 )`
+   |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i32)` and `(i64)`
 
 error: expected `i32`, but got `bool`
   --> sema/errors_overloads.kl:59:12

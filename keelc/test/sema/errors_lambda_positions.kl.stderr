@@ -1,0 +1,25 @@
+error: a lambda that captures can only be passed straight to a call
+ --> sema/errors_lambda_positions.kl:6:35
+  |
+6 | void held() { i32 k = 1; auto a = fn[ k ]() -> i32 { return k; }; }
+  |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ pass it as an argument, to a parameter whose type is bound by an `fn` type
+
+error: a lambda that captures can only be passed straight to a call
+ --> sema/errors_lambda_positions.kl:7:43
+  |
+7 | void typed() { i32 k = 1; fn() -> i32 e = fn[ k ]() -> i32 { return k; }; }
+  |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `fn() -> i32` value holds no captures; take a type parameter bound by it
+
+error: a lambda that captures can only be passed straight to a call
+ --> sema/errors_lambda_positions.kl:8:41
+  |
+8 | i32 passed() { i32 k = 1; return apply( fn[ k ]() -> i32 { return k; } ); }
+  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `fn() -> i32` value holds no captures; take a type parameter bound by it
+
+error: a lambda that captures can only be passed straight to a call
+ --> sema/errors_lambda_positions.kl:9:50
+  |
+9 | void in_field() { i32 k = 1; Holder h = Holder { fn[ k ]() -> i32 { return k; } }; }
+  |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `fn() -> i32` value holds no captures; take a type parameter bound by it
+
+4 errors generated

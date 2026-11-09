@@ -180,7 +180,7 @@ Type_id Addresses::functions_of( Node_id id, std::span<const Node_id> candidates
             fmt::format(
                 "`@functions_of` fills a struct of a `str` and a function type, which `{}` is not", table_.name( listed )
             ),
-            "as in `struct entry { str name; fn( ref context ) -> void body; };`"
+            "as in `struct entry { str name; fn(ref context) -> void body; };`"
         );
         return types_.record( id, error );
     }
@@ -253,7 +253,7 @@ Type_id Addresses::method_address( Node_id id, Node_id aggregate, Type_id expect
             reporter_.error_at(
                 ast_.span( id ),
                 "a constructor has no address",
-                fmt::format( "take the address of a function that returns `{}( ... )`", owner )
+                fmt::format( "take the address of a function that returns `{}(...)`", owner )
             );
 
             return types_.poison( id );

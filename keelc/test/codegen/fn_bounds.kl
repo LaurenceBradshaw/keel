@@ -1,0 +1,40 @@
+// A type parameter with an `fn` bound takes a lambda, or `&f`, each at a type of its own.
+i32 apply<F>( F f, i32 x ) where F : fn( i32 ) -> i32 { return f( x ); }
+i32 again<G>( G g ) where G : fn( i32 ) -> i32 { return apply( g, 1 ) + g( 2 ); }
+
+struct Pair
+{
+    i32 a;
+    i32 b;
+    i32 pick<F>( F better ) where F : fn( i32, i32 ) -> bool { return better( a, b ) ? a : b; }
+};
+
+i32 twice( i32 x ) { return x * 2; }
+i32 pick( i32 x ) { return x + 100; }
+i32 pick( bool _ ) { return 0; }
+
+void each<F>( i32 n, F f ) where F : fn( i32 ) -> void
+{
+    for( i32 i = 0; i < n; i++ ) { f( i ); }
+}
+
+i32 main()
+{
+    i32 k = 3;
+    if( apply( fn[ k ]( a ) -> i32 { return a + k; }, 4 ) != 7 ) { return 1; }
+    if( apply( fn[]( a ) { return a * 2; }, 4 ) != 8 ) { return 2; }
+    if( apply( &twice, 5 ) != 10 ) { return 3; }
+    if( apply( &pick, 1 ) != 101 ) { return 4; }
+    if( again( fn[ k ]( x ) -> i32 { return x + k; } ) != 9 ) { return 5; }
+    if( again( &twice ) != 6 ) { return 6; }
+
+    Pair p = Pair { 1, 2 };
+    if( p.pick( fn[]( x, y ) -> bool { return x > y; } ) != 2 ) { return 7; }
+    if( p.pick( fn[ k ]( x, y ) -> bool { return x + k > y; } ) != 1 ) { return 8; }
+
+    i32 sum = 0;
+    each( 4, fn[ ref sum ]( i ) { sum += i; } );
+    if( sum != 6 ) { return 9; }
+
+    return 0;
+}

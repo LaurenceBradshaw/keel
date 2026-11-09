@@ -1,0 +1,37 @@
+// Lambdas in generics: one in a generic's body, one whose types a bound over `T` gives, `&f<T>` at a bound.
+T same<T>( T x ) where T : copyable { return x; }
+
+T through<T>( T x ) where T : copyable
+{
+    fn( T ) -> T id = fn[]( T y ) -> T { return y; };
+    return id( x );
+}
+
+T least<T, F>( T a, T b, F less ) where T : copyable, where F : fn( T, T ) -> bool
+{
+    return less( b, a ) ? b : a;
+}
+
+T onto<T, F>( T x, F f ) where T : copyable, where F : fn( T ) -> T { return f( x ); }
+T both<T>( T x ) where T : copyable { return onto( x, &same<T> ); }
+
+T scaled<T>( T x, T by ) where T : numeric
+{
+    return onto( x, fn[ by ]( y ) -> T { return y * by; } );
+}
+
+i32 main()
+{
+    if( through<i32>( 7 ) != 7 ) { return 1; }
+    if( through<bool>( true ) != true ) { return 2; }
+    i32 five = 5;
+    i32 three = 3;
+    if( least( five, three, fn[]( x, y ) -> bool { return x < y; } ) != 3 ) { return 3; }
+    f64 big = 2.5;
+    f64 small = 1.5;
+    if( least( big, small, fn[]( x, y ) -> bool { return x > y; } ) != 2.5 ) { return 4; }
+    if( both<i32>( 9 ) != 9 ) { return 5; }
+    if( scaled<i64>( 4, 5 ) != 20 ) { return 6; }
+
+    return 0;
+}

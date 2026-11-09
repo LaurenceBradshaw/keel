@@ -1,0 +1,37 @@
+error: `x` has no type
+ --> sema/errors_lambda_types.kl:2:33
+  |
+2 | void untyped() { auto b = fn[]( x ) -> i32 { return x; }; }
+  |                                 ^ write one; only a lambda passed where an `fn` type is expected may leave it out
+
+error: this lambda takes 2 parameters, but `fn(i32) -> i32` takes 1
+ --> sema/errors_lambda_types.kl:3:41
+  |
+3 | void count() { fn( i32 ) -> i32 d = fn[]( i32 p, i32 q ) -> i32 { return p; }; }
+  |                                         ^^^^^^^^^^^^^^^^
+
+error: expected `fn(i32) -> i32`, but got `fn(i64) -> i32`
+ --> sema/errors_lambda_types.kl:4:41
+  |
+4 | void parameter() { fn( i32 ) -> i32 f = fn[]( i64 p ) -> i32 { return 0; }; }
+  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: this lambda returns `void`, so `return` cannot take a value
+ --> sema/errors_lambda_types.kl:5:42
+  |
+5 | void unsaid() { auto c = fn[]() { return 3; }; }
+  |                                          ^ say what it returns: `-> i32` after its parameters
+
+error: this lambda returns `void`, so `return` cannot take a value
+ --> sema/errors_lambda_types.kl:6:51
+  |
+6 | void nothing() { fn() -> void v = fn[]() { return 3; }; }
+  |                                                   ^
+
+error: expected `fn() -> i32`, but got `fn() -> bool`
+ --> sema/errors_lambda_types.kl:7:33
+  |
+7 | void result() { fn() -> i32 r = fn[]() -> bool { return true; }; }
+  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ one signature is never widened into another, so the two have to match exactly
+
+6 errors generated

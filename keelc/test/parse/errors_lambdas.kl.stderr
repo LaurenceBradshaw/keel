@@ -1,0 +1,19 @@
+error: a lambda cannot capture by `move`
+ --> parse/errors_lambdas.kl:5:14
+  |
+5 |     run( fn[ move a ]() { } );
+  |              ^^^^ a capture is a copy, written bare, or a borrow, written `ref`
+
+error: a lambda cannot capture by `out`
+ --> parse/errors_lambdas.kl:6:14
+  |
+6 |     run( fn[ out a ]() { } );
+  |              ^^^ a capture is a copy, written bare, or a borrow, written `ref`
+
+error: a lambda's parameter takes no default
+ --> parse/errors_lambdas.kl:7:24
+  |
+7 |     run( fn[]( i32 x = 1 ) { } );
+  |                        ^
+
+3 errors generated

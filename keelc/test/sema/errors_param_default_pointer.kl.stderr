@@ -1,13 +1,13 @@
-error: a default is not part of `one`'s type, so `&one` is `fn( i32, i32 ) -> i32`
+error: a default is not part of `one`'s type, so `&one` is `fn(i32, i32) -> i32`
   --> sema/errors_param_default_pointer.kl:10:35
    |
 10 |     fn( i32 ) -> i32      short = &one;
-   |                                   ^^^^ call `one` from a function of type `fn( i32 ) -> i32` instead
+   |                                   ^^^^ call `one` from a function of type `fn(i32) -> i32` instead
 
-error: no overload of `two` has the type `fn( i32 ) -> i32`
+error: no overload of `two` has the type `fn(i32) -> i32`
   --> sema/errors_param_default_pointer.kl:11:35
    |
 11 |     fn( i32 ) -> i32      over  = &two;
-   |                                   ^^^^ its overloads are `fn( i32, i32 ) -> i32` and `fn( f64 ) -> i32`, and a default is not part of a type
+   |                                   ^^^^ its overloads are `fn(i32, i32) -> i32` and `fn(f64) -> i32`, and a default is not part of a type
 
 2 errors generated

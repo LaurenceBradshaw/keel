@@ -2,12 +2,12 @@ error: no `print` matches these arguments
   --> sema/errors_textual.kl:12:5
    |
 12 |     t::print( p );
-   |     ^^^^^^^^^^^^^ the ones declared take `( textual, textual = "\n" )`, `( i64, textual = "\n" )`, `( u64, textual = "\n" )`, `( f64, textual = "\n" )` and `( bool, textual = "\n" )`
+   |     ^^^^^^^^^^^^^ the ones declared take `(textual, textual = "\n")`, `(i64, textual = "\n")`, `(u64, textual = "\n")`, `(f64, textual = "\n")` and `(bool, textual = "\n")`
 
 error: no `eprint` matches these arguments
   --> sema/errors_textual.kl:13:5
    |
 13 |     t::eprint( &p, "" );
-   |     ^^^^^^^^^^^^^^^^^^^ the ones declared take `( textual, textual = "\n" )`, `( i64, textual = "\n" )`, `( u64, textual = "\n" )`, `( f64, textual = "\n" )` and `( bool, textual = "\n" )`
+   |     ^^^^^^^^^^^^^^^^^^^ the ones declared take `(textual, textual = "\n")`, `(i64, textual = "\n")`, `(u64, textual = "\n")`, `(f64, textual = "\n")` and `(bool, textual = "\n")`
 
 2 errors generated

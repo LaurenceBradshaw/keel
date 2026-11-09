@@ -825,7 +825,7 @@ Parser::Directives Parser::parse_directives()
         {
             recovery_.error_at(
                 span,
-                "`@functions_of( T )` is an expression, not a declaration's directive",
+                "`@functions_of(T)` is an expression, not a declaration's directive",
                 "the directive a declaration takes is `@located`"
             );
         }
@@ -906,7 +906,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
-    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : copyable`" );
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>(T a) where T : copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -999,7 +999,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     }
 
     parse_where_clauses(
-        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : copyable`", type_params
+        generic, generics, generic_span, "write them on the name, as in `U map<U>(U a) where U : copyable`", type_params
     );
 
     reach_commit( head.commit );
@@ -1348,7 +1348,7 @@ Node_id Parser::parse_aggregate_decl()
 
     const Node_id implements = parse_implements();
 
-    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : copyable`" );
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>(T a) where T : copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -2062,7 +2062,7 @@ Node_id Parser::parse_variant_decl()
             if( unnamed && list_errors == diags_.error_count() )
             {
                 recovery_.error_at(
-                    ast_.span( type ), "a payload field needs a name", "write one after its type, as in `Circle( f64 radius )`"
+                    ast_.span( type ), "a payload field needs a name", "write one after its type, as in `Circle(f64 radius)`"
                 );
             }
 
@@ -2078,7 +2078,7 @@ Node_id Parser::parse_variant_decl()
                 recovery_.error_at(
                     equal,
                     "a variant's field takes no default",
-                    fmt::format( "give its value where the variant is built, as in `{}( ... )`", sm_.text( name_span ) )
+                    fmt::format( "give its value where the variant is built, as in `{}(...)`", sm_.text( name_span ) )
                 );
             }
 
@@ -3330,7 +3330,7 @@ Node_id Parser::parse_do_stmt()
     if( !cursor_.match_keyword( Keyword::While ) )
     {
         recovery_.fail_at(
-            cursor_.previous().span, "expected `while` after a `do` body", "write `do { ... } while( condition );`"
+            cursor_.previous().span, "expected `while` after a `do` body", "write `do { ... } while(condition);`"
         );
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
@@ -4099,7 +4099,7 @@ Node_id Parser::parse_keyword_prefix( Span start )
             recovery_.fail_at(
                 cursor_.peek().span,
                 fmt::format( "`{}` needs a target type", word ),
-                fmt::format( "write it in angle brackets, as in `{}<T>( x )`", word )
+                fmt::format( "write it in angle brackets, as in `{}<T>(x)`", word )
             );
 
             if( cursor_.match( Token_kind::L_paren ) )
@@ -4377,7 +4377,7 @@ Node_id Parser::parse_prefix()
             recovery_.error_at(
                 span,
                 "expected a directive's name after `@`",
-                "the directives in an expression are `@caller()` and `@functions_of( T )`"
+                "the directives in an expression are `@caller()` and `@functions_of(T)`"
             );
         }
         else
@@ -4385,7 +4385,7 @@ Node_id Parser::parse_prefix()
             recovery_.error_at(
                 span,
                 fmt::format( "there is no directive `@{}`", name ),
-                "the directives in an expression are `@caller()` and `@functions_of( T )`"
+                "the directives in an expression are `@caller()` and `@functions_of(T)`"
             );
         }
 
@@ -4595,7 +4595,7 @@ Node_id Parser::parse_array_literal()
                 return ast_.add( Node_kind::Array_fill, Span::merge( start, cursor_.previous().span ), 0, elements );
             }
 
-            recovery_.error_at( dots, "`..` fills from the first element, so it comes straight after it", "write `[ x, .. ]`" );
+            recovery_.error_at( dots, "`..` fills from the first element, so it comes straight after it", "write `[x, ..]`" );
             cursor_.match( Token_kind::Comma );
             continue;
         }
@@ -6874,7 +6874,7 @@ TEST_CASE( "parser_refuses_a_misplaced_directive", "[parse][directive]" )
     refuses( "@located\nextern void f();\n", "an `extern` function cannot be `@located`" );
     refuses( "@located @located\nvoid f() { }\n", "`@located` is written twice" );
     refuses( "@caller\nvoid f() { }\n", "`@caller()` is an expression" );
-    refuses( "@functions_of\nvoid f() { }\n", "`@functions_of( T )` is an expression" );
+    refuses( "@functions_of\nvoid f() { }\n", "`@functions_of(T)` is an expression" );
     refuses( "@inline\nvoid f() { }\n", "there is no directive `@inline`" );
     refuses( "void f() { i32 a = @located; }\n", "`@located` marks a declaration" );
     refuses( "void f() { i32 a = @inline(); }\n", "there is no directive `@inline`" );
@@ -7092,7 +7092,7 @@ TEST_CASE( "parser_rejects_a_malformed_alloc", "[parse][alloc]" )
 // alone; `alloc<T>()` has none that survives - the pointer is dropped and the memory leaks.
 TEST_CASE( "parser_applies_d15_to_alloc_and_free", "[parse][alloc]" )
 {
-    SECTION( "`free( p );` is a statement" )
+    SECTION( "`free(p);` is a statement" )
     {
         const Parsed p( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
 
@@ -10175,7 +10175,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
 
     // Only the class's own name opens a constructor here: a function's head run into a method's
     // last line is not one.
-    SECTION( "another name before `( ) {` is not a constructor" )
+    SECTION( "another name before `() {` is not a constructor" )
     {
         const Parsed p( "class C { i32 x; i32 a() { return f( x  main()\n{ return 0; } };\n" );
         INFO( p.errors() );
@@ -11977,7 +11977,7 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
         const Parsed p( "class Box<T> { T v; T get() const where U : copyable { return v; } };" );
 
         REQUIRE( p.errors().find( "a `where` clause needs type parameters" ) != std::string::npos );
-        REQUIRE( p.errors().find( "U map<U>( U a ) where U : copyable" ) != std::string::npos );
+        REQUIRE( p.errors().find( "U map<U>(U a) where U : copyable" ) != std::string::npos );
     }
 
     SECTION( "a generic method's clause on the aggregate's parameter is refused in the parser" )
@@ -12240,7 +12240,7 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
         REQUIRE( has( p, "expected a member, found `template<typename T>`" ) );
-        REQUIRE( has( p, "`T f<T>( T a )`" ) );
+        REQUIRE( has( p, "`T f<T>(T a)`" ) );
         REQUIRE( member_names( p ) == "a id" );
     }
 
@@ -12621,7 +12621,7 @@ TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recove
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
         REQUIRE( has( p, "expected a declaration, found `template<typename T>`" ) );
-        REQUIRE( has( p, "`T f<T>( T a )`" ) );
+        REQUIRE( has( p, "`T f<T>(T a)`" ) );
         REQUIRE( names( p ) == "id g" );
     }
 

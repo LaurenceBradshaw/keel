@@ -2,7 +2,7 @@ error: `Ranked` implements `equatable` but has no method `operator==`
   --> sema/errors_bounds.kl:14:26
    |
 14 | struct Ranked implements comparable
-   |                          ^^^^^^^^^^ add `bool operator==( const ref Ranked other ) const` to `Ranked`
+   |                          ^^^^^^^^^^ add `bool operator==(const ref Ranked other) const` to `Ranked`
 
 error: no operator `<` for `T` and `T`
   --> sema/errors_bounds.kl:53:12

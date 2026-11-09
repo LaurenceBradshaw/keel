@@ -1571,7 +1571,7 @@ void Signatures::check_walk_operator( Node_id decl )
 
     if( !table_.is_error( types_.type_of( decl ) ) && !table_.is_void( types_.type_of( decl ) ) )
     {
-        reporter_.error_at( ast_.span( annotation ), "a walk returns nothing", "write `void operator:( ... )`" );
+        reporter_.error_at( ast_.span( annotation ), "a walk returns nothing", "write `void operator:(...)`" );
     }
 
     const std::span<const Node_id> yielded = ast_.params( decl ).subspan( 1 );
@@ -3204,7 +3204,7 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
         };
 
         const Case cases[] = {
-            { "fn( i32 ) -> i32", "`fn( i32 ) -> i32` cannot implement an interface through a block" },
+            { "fn(i32) -> i32", "`fn(i32) -> i32` cannot implement an interface through a block" },
             { "Hashable", "`Hashable` cannot implement an interface through a block" },
             { "Hashable*", "`Hashable*` cannot implement an interface through a block" },
         };

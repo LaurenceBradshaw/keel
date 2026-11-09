@@ -14,7 +14,7 @@ error: expected `label`, but got `str`
   --> sema/errors_string_literal_adopts.kl:51:15
    |
 51 |     label l = text;
-   |               ^^^^ only a string literal becomes a `label`; write `label::from( ... )`
+   |               ^^^^ only a string literal becomes a `label`; write `label::from(...)`
 
 error: expected `number`, but got an integer literal
   --> sema/errors_string_literal_adopts.kl:54:16
@@ -26,7 +26,7 @@ error: this call to `both` is ambiguous
   --> sema/errors_string_literal_adopts.kl:57:5
    |
 57 |     both( "x" );
-   |     ^^^^^^^^^^^ more than one matches: `( label )` and `( width )`; write a type the call can be told by
+   |     ^^^^^^^^^^^ more than one matches: `(label)` and `(width)`; write a type the call can be told by
 
 error: `edit` may modify this argument
   --> sema/errors_string_literal_adopts.kl:60:11

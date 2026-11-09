@@ -1,0 +1,21 @@
+// Lambda forms: captures by copy and by `ref`, `this`, bare and typed parameters, with and without `-> R`.
+struct P
+{
+    i32 v;
+
+    void m()
+    {
+        run( fn[ this ]() -> i32 { return v; } );
+        run( fn[ ref this ]() { v = 1; } );
+    }
+};
+
+void f()
+{
+    i32 a = 1;
+    i32 b = 2;
+    fn() -> void none = fn[]() { };
+    run( fn[ a, ref b ]( i32 x, ref i32 y ) -> i32 { b += x; return a + y; } );
+    run( fn[]( x, _ ) { return x; } );
+    run( fn[]( i32 x ) -> const ref i32 { return x; } );
+}

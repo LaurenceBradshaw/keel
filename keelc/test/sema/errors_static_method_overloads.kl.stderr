@@ -2,30 +2,30 @@ error: no `from` matches these arguments
   --> sema/errors_static_method_overloads.kl:33:16
    |
 33 |         return from( 0.5 );
-   |                ^^^^^^^^^^^ the ones declared take `( i64 )` and `( u64 )`
+   |                ^^^^^^^^^^^ the ones declared take `(i64)` and `(u64)`
 
 error: no `from` matches these arguments
   --> sema/errors_static_method_overloads.kl:40:12
    |
 40 |     return Number::from( 0.5 );
-   |            ^^^^^^^^^^^^^^^^^^^ the ones declared take `( i64 )` and `( u64 )`
+   |            ^^^^^^^^^^^^^^^^^^^ the ones declared take `(i64)` and `(u64)`
 
 error: no `from` matches these arguments
   --> sema/errors_static_method_overloads.kl:45:12
    |
 45 |     return Number::from( true );
-   |            ^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i64 )` and `( u64 )`
+   |            ^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i64)` and `(u64)`
 
 error: no `from` takes 2 arguments
   --> sema/errors_static_method_overloads.kl:50:12
    |
 50 |     return Number::from( 1, 2 );
-   |            ^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i64 )` and `( u64 )`
+   |            ^^^^^^^^^^^^^^^^^^^^ the ones declared take `(i64)` and `(u64)`
 
 error: `mixed` needs an object
   --> sema/errors_static_method_overloads.kl:57:12
    |
 57 |     return Number::mixed( n );
-   |            ^^^^^^^^^^^^^ call it as `value.mixed( ... )`
+   |            ^^^^^^^^^^^^^ call it as `value.mixed(...)`
 
 5 errors generated

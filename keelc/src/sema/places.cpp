@@ -306,7 +306,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         reporter_.error_at(
             ast_.span( target ),
             fmt::format( "`{}` counts the loop, so it cannot be modified", interner_.text( ast_.name( root ) ) ),
-            "step it yourself with `for( u64 i = a; i < b; i++ )`"
+            "step it yourself with `for(u64 i = a; i < b; i++)`"
         );
 
         return false;

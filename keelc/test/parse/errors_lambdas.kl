@@ -1,0 +1,8 @@
+// A capture is a copy or a `ref`; a lambda's parameter takes no default.
+void f()
+{
+    i32 a = 1;
+    run( fn[ move a ]() { } );
+    run( fn[ out a ]() { } );
+    run( fn[]( i32 x = 1 ) { } );
+}

@@ -1,0 +1,27 @@
+// What a lambda may reach: only what it captures, each capture once, a bare one read-only.
+void run<F>( F f ) where F : fn() -> void { f(); }
+
+i32 g = 0;
+
+struct P
+{
+    i32 v;
+
+    void bump() { v++; }
+
+    void member() { run( fn[]() { v = 1; } ); }
+    void through_this() { run( fn[]() { this.v = 1; } ); }
+    void field_capture() { run( fn[ v ]() { } ); }
+    void read_only_this() { run( fn[ this ]() { v = 1; } ); }
+    void read_only_call() { run( fn[ this ]() { bump(); } ); }
+    i32 peek() const { run( fn[ ref this ]() { } ); return v; }
+};
+
+void uncaptured() { i32 x = 0; run( fn[]() { x += 1; } ); }
+void uncaptured_param( i32 x ) { run( fn[]() { x += 1; } ); }
+void nested() { i32 x = 0; run( fn[ x ]() { run( fn[]() { i32 y = x; } ); } ); }
+void global() { run( fn[ g ]() { } ); }
+void twice() { i32 x = 0; run( fn[ x, ref x ]() { } ); }
+void shadowed() { i32 x = 0; run( fn[ x ]() { i32 x = 1; } ); }
+void read_only() { i32 x = 0; run( fn[ x ]() { x = 2; } ); }
+void moved() { i32 x = 0; run( fn[ x ]() { i32 z = move x; } ); }

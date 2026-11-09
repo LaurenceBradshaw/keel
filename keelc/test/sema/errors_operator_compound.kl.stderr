@@ -14,7 +14,7 @@ error: `m /= 2.0` is `m = m / 2.0`, but `/` on `meters` gives `speed`
   --> sema/errors_operator_compound.kl:40:5
    |
 40 |     m /= 2.0;
-   |     ^^^^^^^^^ declare `void operator/=( f64 other )` on `meters`
+   |     ^^^^^^^^^ declare `void operator/=(f64 other)` on `meters`
 
 error: `fixed` is `const`
   --> sema/errors_operator_compound.kl:43:5

@@ -8,7 +8,7 @@ error: a `T*` holds one value, so `destroy` takes no count
   --> sema/errors_destroy.kl:12:23
    |
 12 |         destroy( one, 1 );
-   |                       ^ write `destroy( p )`
+   |                       ^ write `destroy(p)`
 
 error: `destroy` cannot end a `const i32[*]`, which points to `const`
   --> sema/errors_destroy.kl:20:18

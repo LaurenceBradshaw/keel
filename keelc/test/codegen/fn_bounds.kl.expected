@@ -1,0 +1,736 @@
+// codegen/fn_bounds.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Pair;
+struct kl__Z9fn_bounds_640_;
+struct kl__Z9fn_bounds_886_;
+struct kl__Z9fn_bounds_1115_;
+struct kl__Z9fn_bounds_1215_;
+
+typedef bool ( *kl__fn__F3i323i32E4bool )( int32_t, int32_t );
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef void ( *kl__fn__F3i32E4void )( int32_t );
+
+struct kl__Pair
+{
+    int32_t kl_a;
+    int32_t kl_b;
+};
+
+struct kl__Z9fn_bounds_640_
+{
+    int32_t kl_k;
+};
+
+struct kl__Z9fn_bounds_886_
+{
+    int32_t kl_k;
+};
+
+struct kl__Z9fn_bounds_1115_
+{
+    int32_t kl_k;
+};
+
+struct kl__Z9fn_bounds_1215_
+{
+    int32_t* kl_sum;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__twice__3i32( int32_t );
+int32_t kl__pick__3i32( int32_t );
+int32_t kl__pick__4bool( bool );
+int32_t kl__main__( void );
+void kl__0lambda1215__( struct kl__Z9fn_bounds_1215_*, int32_t );
+bool kl__0lambda1115__( struct kl__Z9fn_bounds_1115_*, int32_t, int32_t );
+bool kl__0lambda1037__( int32_t, int32_t );
+int32_t kl__0lambda886__( struct kl__Z9fn_bounds_886_*, int32_t );
+int32_t kl__0lambda719__( int32_t );
+int32_t kl__0lambda640__( struct kl__Z9fn_bounds_640_*, int32_t );
+int32_t kl__apply__IZ9fn_bounds_640_E__Z9fn_bounds_640__3i32( struct kl__Z9fn_bounds_640_*, int32_t );
+int32_t kl__apply__IZ9fn_bounds_719_E__Z9fn_bounds_719__3i32( uint8_t*, int32_t );
+int32_t kl__apply__IZ9fn_bounds_788_E__Z9fn_bounds_788__3i32( uint8_t*, int32_t );
+int32_t kl__apply__IZ9fn_bounds_837_E__Z9fn_bounds_837__3i32( uint8_t*, int32_t );
+int32_t kl__again__IZ9fn_bounds_886_E__Z9fn_bounds_886_( struct kl__Z9fn_bounds_886_* );
+int32_t kl__again__IZ9fn_bounds_962_E__Z9fn_bounds_962_( uint8_t* );
+int32_t kl__pick__IZ9fn_bounds_1037_E__S4Pair_Z9fn_bounds_1037_( struct kl__Pair*, uint8_t* );
+int32_t kl__pick__IZ9fn_bounds_1115_E__S4Pair_Z9fn_bounds_1115_( struct kl__Pair*, struct kl__Z9fn_bounds_1115_* );
+void kl__each__IZ9fn_bounds_1215_E__3i32_Z9fn_bounds_1215_( int32_t, struct kl__Z9fn_bounds_1215_* );
+int32_t kl__apply__IZ9fn_bounds_886_E__Z9fn_bounds_886__3i32( struct kl__Z9fn_bounds_886_*, int32_t );
+int32_t kl__apply__IZ9fn_bounds_962_E__Z9fn_bounds_962__3i32( uint8_t*, int32_t );
+
+#line 12 "codegen/fn_bounds.kl"
+int32_t kl__twice__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 12 "codegen/fn_bounds.kl"
+    kl_t2 = __builtin_mul_overflow( kl_x_1, 2, &( int32_t ) { 0 } );
+#line 12 "codegen/fn_bounds.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 12, "arithmetic overflow: x * 2" );
+    bb2:
+#line 12 "codegen/fn_bounds.kl"
+    kl_t3 = kl_x_1 * 2;
+#line 12 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 12 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 12 "codegen/fn_bounds.kl"
+}
+
+#line 13 "codegen/fn_bounds.kl"
+int32_t kl__pick__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 13 "codegen/fn_bounds.kl"
+    kl_t2 = __builtin_add_overflow( kl_x_1, 100, &( int32_t ) { 0 } );
+#line 13 "codegen/fn_bounds.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 13 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 13, "arithmetic overflow: x + 100" );
+    bb2:
+#line 13 "codegen/fn_bounds.kl"
+    kl_t3 = kl_x_1 + 100;
+#line 13 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 13 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 13 "codegen/fn_bounds.kl"
+}
+
+#line 14 "codegen/fn_bounds.kl"
+int32_t kl__pick__4bool( bool kl_t1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_t1;
+#line 14 "codegen/fn_bounds.kl"
+    kl_t0 = 0;
+#line 14 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 14 "codegen/fn_bounds.kl"
+}
+
+#line 21 "codegen/fn_bounds.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_k_1;
+    struct kl__Z9fn_bounds_640_ kl_t2;
+    struct kl__Z9fn_bounds_640_* kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    uint8_t kl_t6;
+    uint8_t* kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    uint8_t kl_t10;
+    uint8_t* kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    uint8_t kl_t14;
+    uint8_t* kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+    struct kl__Z9fn_bounds_886_ kl_t18;
+    struct kl__Z9fn_bounds_886_* kl_t19;
+    int32_t kl_t20;
+    bool kl_t21;
+    uint8_t kl_t22;
+    uint8_t* kl_t23;
+    int32_t kl_t24;
+    bool kl_t25;
+    struct kl__Pair kl_p_26;
+    struct kl__Pair kl_t27;
+    struct kl__Pair* kl_t28;
+    uint8_t kl_t29;
+    uint8_t* kl_t30;
+    int32_t kl_t31;
+    bool kl_t32;
+    struct kl__Pair* kl_t33;
+    struct kl__Z9fn_bounds_1115_ kl_t34;
+    struct kl__Z9fn_bounds_1115_* kl_t35;
+    int32_t kl_t36;
+    bool kl_t37;
+    int32_t kl_sum_38;
+    struct kl__Z9fn_bounds_1215_ kl_t39;
+    int32_t* kl_t40;
+    struct kl__Z9fn_bounds_1215_* kl_t41;
+    bool kl_t43;
+#line 23 "codegen/fn_bounds.kl"
+    kl_k_1 = 3;
+    kl_t2.kl_k = kl_k_1;
+#line 24 "codegen/fn_bounds.kl"
+    kl_t3 = &kl_t2;
+#line 24 "codegen/fn_bounds.kl"
+    kl_t4 = kl__apply__IZ9fn_bounds_640_E__Z9fn_bounds_640__3i32( kl_t3, 4 );
+#line 24 "codegen/fn_bounds.kl"
+    kl_t5 = kl_t4 != 7;
+#line 24 "codegen/fn_bounds.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 24 "codegen/fn_bounds.kl"
+    kl_t0 = 1;
+#line 24 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb2:
+#line 25 "codegen/fn_bounds.kl"
+    kl_t6 = 0;
+#line 25 "codegen/fn_bounds.kl"
+    kl_t7 = &kl_t6;
+#line 25 "codegen/fn_bounds.kl"
+    kl_t8 = kl__apply__IZ9fn_bounds_719_E__Z9fn_bounds_719__3i32( kl_t7, 4 );
+#line 25 "codegen/fn_bounds.kl"
+    kl_t9 = kl_t8 != 8;
+#line 25 "codegen/fn_bounds.kl"
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+#line 25 "codegen/fn_bounds.kl"
+    kl_t0 = 2;
+#line 25 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb4:
+#line 26 "codegen/fn_bounds.kl"
+    kl_t10 = 0;
+#line 26 "codegen/fn_bounds.kl"
+    kl_t11 = &kl_t10;
+#line 26 "codegen/fn_bounds.kl"
+    kl_t12 = kl__apply__IZ9fn_bounds_788_E__Z9fn_bounds_788__3i32( kl_t11, 5 );
+#line 26 "codegen/fn_bounds.kl"
+    kl_t13 = kl_t12 != 10;
+#line 26 "codegen/fn_bounds.kl"
+    if ( kl_t13 ) goto bb5; else goto bb6;
+    bb5:
+#line 26 "codegen/fn_bounds.kl"
+    kl_t0 = 3;
+#line 26 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb6:
+#line 27 "codegen/fn_bounds.kl"
+    kl_t14 = 0;
+#line 27 "codegen/fn_bounds.kl"
+    kl_t15 = &kl_t14;
+#line 27 "codegen/fn_bounds.kl"
+    kl_t16 = kl__apply__IZ9fn_bounds_837_E__Z9fn_bounds_837__3i32( kl_t15, 1 );
+#line 27 "codegen/fn_bounds.kl"
+    kl_t17 = kl_t16 != 101;
+#line 27 "codegen/fn_bounds.kl"
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
+#line 27 "codegen/fn_bounds.kl"
+    kl_t0 = 4;
+#line 27 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb8:
+#line 28 "codegen/fn_bounds.kl"
+    kl_t18.kl_k = kl_k_1;
+#line 28 "codegen/fn_bounds.kl"
+    kl_t19 = &kl_t18;
+#line 28 "codegen/fn_bounds.kl"
+    kl_t20 = kl__again__IZ9fn_bounds_886_E__Z9fn_bounds_886_( kl_t19 );
+#line 28 "codegen/fn_bounds.kl"
+    kl_t21 = kl_t20 != 9;
+#line 28 "codegen/fn_bounds.kl"
+    if ( kl_t21 ) goto bb9; else goto bb10;
+    bb9:
+#line 28 "codegen/fn_bounds.kl"
+    kl_t0 = 5;
+#line 28 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb10:
+#line 29 "codegen/fn_bounds.kl"
+    kl_t22 = 0;
+#line 29 "codegen/fn_bounds.kl"
+    kl_t23 = &kl_t22;
+#line 29 "codegen/fn_bounds.kl"
+    kl_t24 = kl__again__IZ9fn_bounds_962_E__Z9fn_bounds_962_( kl_t23 );
+#line 29 "codegen/fn_bounds.kl"
+    kl_t25 = kl_t24 != 6;
+#line 29 "codegen/fn_bounds.kl"
+    if ( kl_t25 ) goto bb11; else goto bb12;
+    bb11:
+#line 29 "codegen/fn_bounds.kl"
+    kl_t0 = 6;
+#line 29 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb12:
+    kl_t27.kl_a = 1;
+#line 31 "codegen/fn_bounds.kl"
+    kl_t27.kl_b = 2;
+#line 31 "codegen/fn_bounds.kl"
+    kl_p_26 = kl_t27;
+    kl_t28 = &kl_p_26;
+#line 32 "codegen/fn_bounds.kl"
+    kl_t29 = 0;
+#line 32 "codegen/fn_bounds.kl"
+    kl_t30 = &kl_t29;
+#line 32 "codegen/fn_bounds.kl"
+    kl_t31 = kl__pick__IZ9fn_bounds_1037_E__S4Pair_Z9fn_bounds_1037_( kl_t28, kl_t30 );
+#line 32 "codegen/fn_bounds.kl"
+    kl_t32 = kl_t31 != 2;
+#line 32 "codegen/fn_bounds.kl"
+    if ( kl_t32 ) goto bb13; else goto bb14;
+    bb13:
+#line 32 "codegen/fn_bounds.kl"
+    kl_t0 = 7;
+#line 32 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb14:
+#line 33 "codegen/fn_bounds.kl"
+    kl_t33 = &kl_p_26;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t34.kl_k = kl_k_1;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t35 = &kl_t34;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t36 = kl__pick__IZ9fn_bounds_1115_E__S4Pair_Z9fn_bounds_1115_( kl_t33, kl_t35 );
+#line 33 "codegen/fn_bounds.kl"
+    kl_t37 = kl_t36 != 1;
+#line 33 "codegen/fn_bounds.kl"
+    if ( kl_t37 ) goto bb15; else goto bb16;
+    bb15:
+#line 33 "codegen/fn_bounds.kl"
+    kl_t0 = 8;
+#line 33 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb16:
+    kl_sum_38 = 0;
+    kl_t40 = &kl_sum_38;
+#line 36 "codegen/fn_bounds.kl"
+    kl_t39.kl_sum = kl_t40;
+#line 36 "codegen/fn_bounds.kl"
+    kl_t41 = &kl_t39;
+#line 36 "codegen/fn_bounds.kl"
+    kl__each__IZ9fn_bounds_1215_E__3i32_Z9fn_bounds_1215_( 4, kl_t41 );
+    kl_t43 = kl_sum_38 != 6;
+#line 37 "codegen/fn_bounds.kl"
+    if ( kl_t43 ) goto bb17; else goto bb18;
+    bb17:
+#line 37 "codegen/fn_bounds.kl"
+    kl_t0 = 9;
+#line 37 "codegen/fn_bounds.kl"
+    return kl_t0;
+    bb18:
+    kl_t0 = 0;
+#line 39 "codegen/fn_bounds.kl"
+    return kl_t0;
+}
+
+#line 36 "codegen/fn_bounds.kl"
+void kl__0lambda1215__( struct kl__Z9fn_bounds_1215_* kl_t1, int32_t kl_i_2 )
+{
+    int32_t* kl_t3;
+    bool kl_t4;
+#line 36 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_t1 ).kl_sum;
+#line 36 "codegen/fn_bounds.kl"
+    kl_t4 = __builtin_add_overflow( ( *kl_t3 ), kl_i_2, &( int32_t ) { 0 } );
+#line 36 "codegen/fn_bounds.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 36 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 36, "arithmetic overflow: sum += i;" );
+    bb2:
+#line 36 "codegen/fn_bounds.kl"
+    ( *kl_t3 ) = ( *kl_t3 ) + kl_i_2;
+#line 36 "codegen/fn_bounds.kl"
+    return;
+#line 36 "codegen/fn_bounds.kl"
+}
+
+#line 33 "codegen/fn_bounds.kl"
+bool kl__0lambda1115__( struct kl__Z9fn_bounds_1115_* kl_t1, int32_t kl_x_2, int32_t kl_y_3 )
+{
+    bool kl_t0;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t4 = ( *kl_t1 ).kl_k;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t5 = __builtin_add_overflow( kl_x_2, kl_t4, &( int32_t ) { 0 } );
+#line 33 "codegen/fn_bounds.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 33 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 33, "arithmetic overflow: x + k" );
+    bb2:
+#line 33 "codegen/fn_bounds.kl"
+    kl_t6 = kl_x_2 + kl_t4;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t7 = kl_t6 > kl_y_3;
+#line 33 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t7;
+#line 33 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 33 "codegen/fn_bounds.kl"
+}
+
+#line 32 "codegen/fn_bounds.kl"
+bool kl__0lambda1037__( int32_t kl_x_1, int32_t kl_y_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 32 "codegen/fn_bounds.kl"
+    kl_t3 = kl_x_1 > kl_y_2;
+#line 32 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 32 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 32 "codegen/fn_bounds.kl"
+}
+
+#line 28 "codegen/fn_bounds.kl"
+int32_t kl__0lambda886__( struct kl__Z9fn_bounds_886_* kl_t1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 28 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_t1 ).kl_k;
+#line 28 "codegen/fn_bounds.kl"
+    kl_t4 = __builtin_add_overflow( kl_x_2, kl_t3, &( int32_t ) { 0 } );
+#line 28 "codegen/fn_bounds.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 28 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 28, "arithmetic overflow: x + k" );
+    bb2:
+#line 28 "codegen/fn_bounds.kl"
+    kl_t5 = kl_x_2 + kl_t3;
+#line 28 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t5;
+#line 28 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 28 "codegen/fn_bounds.kl"
+}
+
+#line 25 "codegen/fn_bounds.kl"
+int32_t kl__0lambda719__( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 25 "codegen/fn_bounds.kl"
+    kl_t2 = __builtin_mul_overflow( kl_a_1, 2, &( int32_t ) { 0 } );
+#line 25 "codegen/fn_bounds.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 25 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 25, "arithmetic overflow: a * 2" );
+    bb2:
+#line 25 "codegen/fn_bounds.kl"
+    kl_t3 = kl_a_1 * 2;
+#line 25 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 25 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 25 "codegen/fn_bounds.kl"
+}
+
+#line 24 "codegen/fn_bounds.kl"
+int32_t kl__0lambda640__( struct kl__Z9fn_bounds_640_* kl_t1, int32_t kl_a_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+#line 24 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_t1 ).kl_k;
+#line 24 "codegen/fn_bounds.kl"
+    kl_t4 = __builtin_add_overflow( kl_a_2, kl_t3, &( int32_t ) { 0 } );
+#line 24 "codegen/fn_bounds.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 24 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 24, "arithmetic overflow: a + k" );
+    bb2:
+#line 24 "codegen/fn_bounds.kl"
+    kl_t5 = kl_a_2 + kl_t3;
+#line 24 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t5;
+#line 24 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 24 "codegen/fn_bounds.kl"
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_640_E__Z9fn_bounds_640__3i32( struct kl__Z9fn_bounds_640_* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    struct kl__Z9fn_bounds_640_* kl_t3;
+    int32_t kl_t4;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = &( *kl_f_1 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t4 = kl__0lambda640__( kl_t3, kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t4;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_719_E__Z9fn_bounds_719__3i32( uint8_t* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    ( void ) kl_f_1;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = kl__0lambda719__( kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_788_E__Z9fn_bounds_788__3i32( uint8_t* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    ( void ) kl_f_1;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = kl__twice__3i32( kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_837_E__Z9fn_bounds_837__3i32( uint8_t* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    ( void ) kl_f_1;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = kl__pick__3i32( kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 3 "codegen/fn_bounds.kl"
+int32_t kl__again__IZ9fn_bounds_886_E__Z9fn_bounds_886_( struct kl__Z9fn_bounds_886_* kl_g_1 )
+{
+    int32_t kl_t0;
+    struct kl__Z9fn_bounds_886_* kl_t2;
+    int32_t kl_t3;
+    struct kl__Z9fn_bounds_886_* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_t7;
+#line 3 "codegen/fn_bounds.kl"
+    kl_t2 = &( *kl_g_1 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t3 = kl__apply__IZ9fn_bounds_886_E__Z9fn_bounds_886__3i32( kl_t2, 1 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t4 = &( *kl_g_1 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t5 = kl__0lambda886__( kl_t4, 2 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t6 = __builtin_add_overflow( kl_t3, kl_t5, &( int32_t ) { 0 } );
+#line 3 "codegen/fn_bounds.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 3 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 3, "arithmetic overflow: apply( g, 1 ) + g( 2 )" );
+    bb2:
+#line 3 "codegen/fn_bounds.kl"
+    kl_t7 = kl_t3 + kl_t5;
+#line 3 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t7;
+#line 3 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 3 "codegen/fn_bounds.kl"
+}
+
+#line 3 "codegen/fn_bounds.kl"
+int32_t kl__again__IZ9fn_bounds_962_E__Z9fn_bounds_962_( uint8_t* kl_g_1 )
+{
+    int32_t kl_t0;
+    uint8_t* kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+#line 3 "codegen/fn_bounds.kl"
+    kl_t2 = &( *kl_g_1 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t3 = kl__apply__IZ9fn_bounds_962_E__Z9fn_bounds_962__3i32( kl_t2, 1 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t4 = kl__twice__3i32( 2 );
+#line 3 "codegen/fn_bounds.kl"
+    kl_t5 = __builtin_add_overflow( kl_t3, kl_t4, &( int32_t ) { 0 } );
+#line 3 "codegen/fn_bounds.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 3 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 3, "arithmetic overflow: apply( g, 1 ) + g( 2 )" );
+    bb2:
+#line 3 "codegen/fn_bounds.kl"
+    kl_t6 = kl_t3 + kl_t4;
+#line 3 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t6;
+#line 3 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 3 "codegen/fn_bounds.kl"
+}
+
+#line 9 "codegen/fn_bounds.kl"
+int32_t kl__pick__IZ9fn_bounds_1037_E__S4Pair_Z9fn_bounds_1037_( struct kl__Pair* kl_this_1, uint8_t* kl_better_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    bool kl_t4;
+    ( void ) kl_better_2;
+#line 9 "codegen/fn_bounds.kl"
+    kl_t4 = kl__0lambda1037__( ( *kl_this_1 ).kl_a, ( *kl_this_1 ).kl_b );
+#line 9 "codegen/fn_bounds.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_this_1 ).kl_a;
+#line 9 "codegen/fn_bounds.kl"
+    goto bb3;
+    bb2:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_this_1 ).kl_b;
+#line 9 "codegen/fn_bounds.kl"
+    goto bb3;
+    bb3:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 9 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 9 "codegen/fn_bounds.kl"
+}
+
+#line 9 "codegen/fn_bounds.kl"
+int32_t kl__pick__IZ9fn_bounds_1115_E__S4Pair_Z9fn_bounds_1115_( struct kl__Pair* kl_this_1, struct kl__Z9fn_bounds_1115_* kl_better_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    struct kl__Z9fn_bounds_1115_* kl_t4;
+    bool kl_t5;
+#line 9 "codegen/fn_bounds.kl"
+    kl_t4 = &( *kl_better_2 );
+#line 9 "codegen/fn_bounds.kl"
+    kl_t5 = kl__0lambda1115__( kl_t4, ( *kl_this_1 ).kl_a, ( *kl_this_1 ).kl_b );
+#line 9 "codegen/fn_bounds.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_this_1 ).kl_a;
+#line 9 "codegen/fn_bounds.kl"
+    goto bb3;
+    bb2:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t3 = ( *kl_this_1 ).kl_b;
+#line 9 "codegen/fn_bounds.kl"
+    goto bb3;
+    bb3:
+#line 9 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 9 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 9 "codegen/fn_bounds.kl"
+}
+
+#line 16 "codegen/fn_bounds.kl"
+void kl__each__IZ9fn_bounds_1215_E__3i32_Z9fn_bounds_1215_( int32_t kl_n_1, struct kl__Z9fn_bounds_1215_* kl_f_2 )
+{
+    int32_t kl_i_3;
+    bool kl_t4;
+    struct kl__Z9fn_bounds_1215_* kl_t5;
+    bool kl_t7;
+#line 18 "codegen/fn_bounds.kl"
+    kl_i_3 = 0;
+#line 18 "codegen/fn_bounds.kl"
+    goto bb1;
+    bb1:
+#line 18 "codegen/fn_bounds.kl"
+    kl_t4 = kl_i_3 < kl_n_1;
+#line 18 "codegen/fn_bounds.kl"
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+#line 18 "codegen/fn_bounds.kl"
+    kl_t5 = &( *kl_f_2 );
+#line 18 "codegen/fn_bounds.kl"
+    kl__0lambda1215__( kl_t5, kl_i_3 );
+#line 18 "codegen/fn_bounds.kl"
+    goto bb4;
+    bb3:
+#line 19 "codegen/fn_bounds.kl"
+    return;
+    bb4:
+#line 18 "codegen/fn_bounds.kl"
+    kl_t7 = __builtin_add_overflow( kl_i_3, 1, &( int32_t ) { 0 } );
+#line 18 "codegen/fn_bounds.kl"
+    if ( kl_t7 ) goto bb5; else goto bb6;
+    bb5:
+#line 18 "codegen/fn_bounds.kl"
+    kl_rt_panic( "codegen/fn_bounds.kl", 18, "arithmetic overflow: i++" );
+    bb6:
+#line 18 "codegen/fn_bounds.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 18 "codegen/fn_bounds.kl"
+    goto bb1;
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_886_E__Z9fn_bounds_886__3i32( struct kl__Z9fn_bounds_886_* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    struct kl__Z9fn_bounds_886_* kl_t3;
+    int32_t kl_t4;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = &( *kl_f_1 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t4 = kl__0lambda886__( kl_t3, kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t4;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 2 "codegen/fn_bounds.kl"
+int32_t kl__apply__IZ9fn_bounds_962_E__Z9fn_bounds_962__3i32( uint8_t* kl_f_1, int32_t kl_x_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    ( void ) kl_f_1;
+#line 2 "codegen/fn_bounds.kl"
+    kl_t3 = kl__twice__3i32( kl_x_2 );
+#line 2 "codegen/fn_bounds.kl"
+    kl_t0 = kl_t3;
+#line 2 "codegen/fn_bounds.kl"
+    return kl_t0;
+#line 2 "codegen/fn_bounds.kl"
+}
+
+#line 21 "codegen/fn_bounds.kl"
+int main( void )
+{
+#line 21 "codegen/fn_bounds.kl"
+    return (int) kl__main__();
+}

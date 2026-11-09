@@ -8,7 +8,7 @@ error: a `case` that destructures cannot share its body with another
   --> sema/errors_switch_arms.kl:27:9
    |
 27 |         case Shape::Circle( r ):
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^ give it an arm of its own, or drop the `( ... )` to match the variant without its payload
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^ give it an arm of its own, or drop the `(...)` to match the variant without its payload
 
 error: `fallthrough` into a `case` that destructures
   --> sema/errors_switch_arms.kl:40:13

@@ -1,0 +1,405 @@
+// codegen/lambda_generic.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Z14lambda_generic_620_I3i64E;
+
+typedef bool ( *kl__fn__F3i323i32E4bool )( int32_t, int32_t );
+typedef bool ( *kl__fn__F3f643f64E4bool )( double, double );
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef bool ( *kl__fn__F4boolE4bool )( bool );
+typedef int64_t ( *kl__fn__F3i64E3i64 )( int64_t );
+
+struct kl__Z14lambda_generic_620_I3i64E
+{
+    int64_t kl_by;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+bool kl__0lambda972__( double, double );
+bool kl__0lambda843__( int32_t, int32_t );
+int32_t kl__through__I3i32E__3i32( int32_t );
+int32_t kl__0lambda223__I3i32E__( int32_t );
+bool kl__through__I4boolE__4bool( bool );
+bool kl__0lambda223__I4boolE__( bool );
+int32_t kl__least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( int32_t, int32_t, uint8_t* );
+double kl__least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( double, double, uint8_t* );
+int32_t kl__both__I3i32E__3i32( int32_t );
+int64_t kl__scaled__I3i64E__3i64_3i64( int64_t, int64_t );
+int64_t kl__0lambda620__I3i64E__( struct kl__Z14lambda_generic_620_I3i64E*, int64_t );
+int32_t kl__same__I3i32E__3i32( int32_t );
+int32_t kl__onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( int32_t, uint8_t* );
+int64_t kl__onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( int64_t, struct kl__Z14lambda_generic_620_I3i64E* );
+
+#line 23 "codegen/lambda_generic.kl"
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    int32_t kl_five_5;
+    int32_t kl_three_6;
+    uint8_t kl_t7;
+    uint8_t* kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    double kl_big_11;
+    double kl_small_12;
+    uint8_t kl_t13;
+    uint8_t* kl_t14;
+    double kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    int64_t kl_t19;
+    bool kl_t20;
+#line 25 "codegen/lambda_generic.kl"
+    kl_t1 = kl__through__I3i32E__3i32( 7 );
+#line 25 "codegen/lambda_generic.kl"
+    kl_t2 = kl_t1 != 7;
+#line 25 "codegen/lambda_generic.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 25 "codegen/lambda_generic.kl"
+    kl_t0 = 1;
+#line 25 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb2:
+#line 26 "codegen/lambda_generic.kl"
+    kl_t3 = kl__through__I4boolE__4bool( true );
+#line 26 "codegen/lambda_generic.kl"
+    kl_t4 = kl_t3 != true;
+#line 26 "codegen/lambda_generic.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 26 "codegen/lambda_generic.kl"
+    kl_t0 = 2;
+#line 26 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb4:
+#line 27 "codegen/lambda_generic.kl"
+    kl_five_5 = 5;
+    kl_three_6 = 3;
+    kl_t7 = 0;
+#line 29 "codegen/lambda_generic.kl"
+    kl_t8 = &kl_t7;
+#line 29 "codegen/lambda_generic.kl"
+    kl_t9 = kl__least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( kl_five_5, kl_three_6, kl_t8 );
+#line 29 "codegen/lambda_generic.kl"
+    kl_t10 = kl_t9 != 3;
+#line 29 "codegen/lambda_generic.kl"
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 29 "codegen/lambda_generic.kl"
+    kl_t0 = 3;
+#line 29 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb6:
+#line 30 "codegen/lambda_generic.kl"
+    kl_big_11 = 2.5;
+    kl_small_12 = 1.5;
+    kl_t13 = 0;
+#line 32 "codegen/lambda_generic.kl"
+    kl_t14 = &kl_t13;
+#line 32 "codegen/lambda_generic.kl"
+    kl_t15 = kl__least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( kl_big_11, kl_small_12, kl_t14 );
+#line 32 "codegen/lambda_generic.kl"
+    kl_t16 = kl_t15 != 2.5;
+#line 32 "codegen/lambda_generic.kl"
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
+#line 32 "codegen/lambda_generic.kl"
+    kl_t0 = 4;
+#line 32 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb8:
+#line 33 "codegen/lambda_generic.kl"
+    kl_t17 = kl__both__I3i32E__3i32( 9 );
+#line 33 "codegen/lambda_generic.kl"
+    kl_t18 = kl_t17 != 9;
+#line 33 "codegen/lambda_generic.kl"
+    if ( kl_t18 ) goto bb9; else goto bb10;
+    bb9:
+#line 33 "codegen/lambda_generic.kl"
+    kl_t0 = 5;
+#line 33 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb10:
+#line 34 "codegen/lambda_generic.kl"
+    kl_t19 = kl__scaled__I3i64E__3i64_3i64( 4, 5 );
+#line 34 "codegen/lambda_generic.kl"
+    kl_t20 = kl_t19 != 20;
+#line 34 "codegen/lambda_generic.kl"
+    if ( kl_t20 ) goto bb11; else goto bb12;
+    bb11:
+#line 34 "codegen/lambda_generic.kl"
+    kl_t0 = 6;
+#line 34 "codegen/lambda_generic.kl"
+    return kl_t0;
+    bb12:
+    kl_t0 = 0;
+#line 36 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 32 "codegen/lambda_generic.kl"
+bool kl__0lambda972__( double kl_x_1, double kl_y_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 32 "codegen/lambda_generic.kl"
+    kl_t3 = kl_x_1 > kl_y_2;
+#line 32 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t3;
+#line 32 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 32 "codegen/lambda_generic.kl"
+}
+
+#line 29 "codegen/lambda_generic.kl"
+bool kl__0lambda843__( int32_t kl_x_1, int32_t kl_y_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 29 "codegen/lambda_generic.kl"
+    kl_t3 = kl_x_1 < kl_y_2;
+#line 29 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t3;
+#line 29 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 29 "codegen/lambda_generic.kl"
+}
+
+#line 4 "codegen/lambda_generic.kl"
+int32_t kl__through__I3i32E__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    kl__fn__F3i32E3i32 kl_id_2;
+    kl__fn__F3i32E3i32 kl_t3;
+    int32_t kl_t4;
+#line 6 "codegen/lambda_generic.kl"
+    kl_t3 = kl__0lambda223__I3i32E__;
+#line 6 "codegen/lambda_generic.kl"
+    kl_id_2 = kl_t3;
+    kl_t4 = kl_id_2( kl_x_1 );
+#line 7 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 7 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 6 "codegen/lambda_generic.kl"
+int32_t kl__0lambda223__I3i32E__( int32_t kl_y_1 )
+{
+    int32_t kl_t0;
+#line 6 "codegen/lambda_generic.kl"
+    kl_t0 = kl_y_1;
+#line 6 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 6 "codegen/lambda_generic.kl"
+}
+
+#line 4 "codegen/lambda_generic.kl"
+bool kl__through__I4boolE__4bool( bool kl_x_1 )
+{
+    bool kl_t0;
+    kl__fn__F4boolE4bool kl_id_2;
+    kl__fn__F4boolE4bool kl_t3;
+    bool kl_t4;
+#line 6 "codegen/lambda_generic.kl"
+    kl_t3 = kl__0lambda223__I4boolE__;
+#line 6 "codegen/lambda_generic.kl"
+    kl_id_2 = kl_t3;
+    kl_t4 = kl_id_2( kl_x_1 );
+#line 7 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 7 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 6 "codegen/lambda_generic.kl"
+bool kl__0lambda223__I4boolE__( bool kl_y_1 )
+{
+    bool kl_t0;
+#line 6 "codegen/lambda_generic.kl"
+    kl_t0 = kl_y_1;
+#line 6 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 6 "codegen/lambda_generic.kl"
+}
+
+#line 10 "codegen/lambda_generic.kl"
+int32_t kl__least__I3i32_Z14lambda_generic_843_E__3i32_3i32_Z14lambda_generic_843_( int32_t kl_a_1, int32_t kl_b_2, uint8_t* kl_less_3 )
+{
+    int32_t kl_t0;
+    int32_t kl_t4;
+    bool kl_t5;
+    ( void ) kl_less_3;
+#line 12 "codegen/lambda_generic.kl"
+    kl_t5 = kl__0lambda843__( kl_b_2, kl_a_1 );
+#line 12 "codegen/lambda_generic.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t4 = kl_b_2;
+#line 12 "codegen/lambda_generic.kl"
+    goto bb3;
+    bb2:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t4 = kl_a_1;
+#line 12 "codegen/lambda_generic.kl"
+    goto bb3;
+    bb3:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 12 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 10 "codegen/lambda_generic.kl"
+double kl__least__I3f64_Z14lambda_generic_972_E__3f64_3f64_Z14lambda_generic_972_( double kl_a_1, double kl_b_2, uint8_t* kl_less_3 )
+{
+    double kl_t0;
+    double kl_t4;
+    bool kl_t5;
+    ( void ) kl_less_3;
+#line 12 "codegen/lambda_generic.kl"
+    kl_t5 = kl__0lambda972__( kl_b_2, kl_a_1 );
+#line 12 "codegen/lambda_generic.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t4 = kl_b_2;
+#line 12 "codegen/lambda_generic.kl"
+    goto bb3;
+    bb2:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t4 = kl_a_1;
+#line 12 "codegen/lambda_generic.kl"
+    goto bb3;
+    bb3:
+#line 12 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 12 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 16 "codegen/lambda_generic.kl"
+int32_t kl__both__I3i32E__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+    uint8_t kl_t2;
+    uint8_t* kl_t3;
+    int32_t kl_t4;
+#line 16 "codegen/lambda_generic.kl"
+    kl_t2 = 0;
+#line 16 "codegen/lambda_generic.kl"
+    kl_t3 = &kl_t2;
+#line 16 "codegen/lambda_generic.kl"
+    kl_t4 = kl__onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( kl_x_1, kl_t3 );
+#line 16 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 16 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 16 "codegen/lambda_generic.kl"
+}
+
+#line 18 "codegen/lambda_generic.kl"
+int64_t kl__scaled__I3i64E__3i64_3i64( int64_t kl_x_1, int64_t kl_by_2 )
+{
+    int64_t kl_t0;
+    struct kl__Z14lambda_generic_620_I3i64E kl_t3;
+    struct kl__Z14lambda_generic_620_I3i64E* kl_t4;
+    int64_t kl_t5;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t3.kl_by = kl_by_2;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t4 = &kl_t3;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t5 = kl__onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( kl_x_1, kl_t4 );
+#line 20 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t5;
+#line 20 "codegen/lambda_generic.kl"
+    return kl_t0;
+}
+
+#line 20 "codegen/lambda_generic.kl"
+int64_t kl__0lambda620__I3i64E__( struct kl__Z14lambda_generic_620_I3i64E* kl_t1, int64_t kl_y_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_t3;
+    bool kl_t4;
+    int64_t kl_t5;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t3 = ( *kl_t1 ).kl_by;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t4 = __builtin_mul_overflow( kl_y_2, kl_t3, &( int64_t ) { 0 } );
+#line 20 "codegen/lambda_generic.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 20 "codegen/lambda_generic.kl"
+    kl_rt_panic( "codegen/lambda_generic.kl", 20, "arithmetic overflow: y * by" );
+    bb2:
+#line 20 "codegen/lambda_generic.kl"
+    kl_t5 = kl_y_2 * kl_t3;
+#line 20 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t5;
+#line 20 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 20 "codegen/lambda_generic.kl"
+}
+
+#line 2 "codegen/lambda_generic.kl"
+int32_t kl__same__I3i32E__3i32( int32_t kl_x_1 )
+{
+    int32_t kl_t0;
+#line 2 "codegen/lambda_generic.kl"
+    kl_t0 = kl_x_1;
+#line 2 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 2 "codegen/lambda_generic.kl"
+}
+
+#line 15 "codegen/lambda_generic.kl"
+int32_t kl__onto__I3i32_Z14lambda_generic_540_I3i32EE__3i32_Z14lambda_generic_540_I3i32E( int32_t kl_x_1, uint8_t* kl_f_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    ( void ) kl_f_2;
+#line 15 "codegen/lambda_generic.kl"
+    kl_t3 = kl__same__I3i32E__3i32( kl_x_1 );
+#line 15 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t3;
+#line 15 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 15 "codegen/lambda_generic.kl"
+}
+
+#line 15 "codegen/lambda_generic.kl"
+int64_t kl__onto__I3i64_Z14lambda_generic_620_I3i64EE__3i64_Z14lambda_generic_620_I3i64E( int64_t kl_x_1, struct kl__Z14lambda_generic_620_I3i64E* kl_f_2 )
+{
+    int64_t kl_t0;
+    struct kl__Z14lambda_generic_620_I3i64E* kl_t3;
+    int64_t kl_t4;
+#line 15 "codegen/lambda_generic.kl"
+    kl_t3 = &( *kl_f_2 );
+#line 15 "codegen/lambda_generic.kl"
+    kl_t4 = kl__0lambda620__I3i64E__( kl_t3, kl_x_1 );
+#line 15 "codegen/lambda_generic.kl"
+    kl_t0 = kl_t4;
+#line 15 "codegen/lambda_generic.kl"
+    return kl_t0;
+#line 15 "codegen/lambda_generic.kl"
+}
+
+#line 23 "codegen/lambda_generic.kl"
+int main( void )
+{
+#line 23 "codegen/lambda_generic.kl"
+    return (int) kl__main__();
+}

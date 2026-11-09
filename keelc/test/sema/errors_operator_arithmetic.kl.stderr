@@ -2,7 +2,7 @@ error: `vec` has no `operator+`
   --> sema/errors_operator_arithmetic.kl:25:16
    |
 25 |     vec sum  = v + w;
-   |                ^^^^^ declare `vec operator+( const ref vec other ) const` in it
+   |                ^^^^^ declare `vec operator+(const ref vec other) const` in it
 
 error: expected `f64`, but got `vec`
   --> sema/errors_operator_arithmetic.kl:26:20

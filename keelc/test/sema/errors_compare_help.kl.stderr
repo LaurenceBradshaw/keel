@@ -14,7 +14,7 @@ error: expected `bool`, but got `i32`
   --> sema/errors_compare_help.kl:16:9
    |
 16 |     if( a + b ) { } // error
-   |         ^^^^^ there is no conversion to `bool`: compare explicitly, as in `( a + b ) != 0`
+   |         ^^^^^ there is no conversion to `bool`: compare explicitly, as in `(a + b) != 0`
 
 error: expected `bool`, but got `i32`
   --> sema/errors_compare_help.kl:17:9

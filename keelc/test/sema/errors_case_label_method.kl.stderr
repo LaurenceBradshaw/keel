@@ -2,6 +2,6 @@ error: `boom` is a function, not a value
   --> sema/errors_case_label_method.kl:14:14
    |
 14 |         case K::boom: return 1;
-   |              ^^^^^^^ take its address as `&K::boom`, or call it as `value.boom( ... )`
+   |              ^^^^^^^ take its address as `&K::boom`, or call it as `value.boom(...)`
 
 1 error generated

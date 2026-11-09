@@ -14,6 +14,6 @@ error: this call to `near` is ambiguous
   --> sema/errors_overload_widening.kl:34:5
    |
 34 |     near( small, small );
-   |     ^^^^^^^^^^^^^^^^^^^^ more than one matches: `( i32, i64 )` and `( i64, i32 )`; write a type the call can be told by
+   |     ^^^^^^^^^^^^^^^^^^^^ more than one matches: `(i32, i64)` and `(i64, i32)`; write a type the call can be told by
 
 3 errors generated
