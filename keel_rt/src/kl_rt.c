@@ -616,19 +616,59 @@ int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
     return 0;
 }
 
-int32_t kl_rt_fork( int64_t* pid )
+// When `errors` is not null, the child's stderr is a pipe and `*errors` its read end.
+int32_t kl_rt_fork( int64_t* pid, int32_t* errors )
 {
+    int ends[2] = { -1, -1 };
+    if( errors != NULL )
+    {
+        int error = pipe_cloexec( ends );
+        if( error != 0 )
+        {
+            return error;
+        }
+    }
+
     // So what the parent printed comes before what the child prints.
     fflush( NULL );
 
     // Both processes return from fork: the child sees 0, the parent the child's pid.
     pid_t child = fork();
 
-    if( child == -1 )
+    if( child == 0 )
     {
-        return errno;
+        if( errors != NULL )
+        {
+            if( dup2( ends[1], STDERR_FILENO ) == -1 )
+            {
+                _exit( 127 );
+            }
+            close( ends[0] );
+            close( ends[1] );
+        }
+        *pid = 0;
+        return 0;
     }
 
+    int saved = errno;
+    if( errors != NULL )
+    {
+        close( ends[1] );
+    }
+
+    if( child == -1 )
+    {
+        if( errors != NULL )
+        {
+            close( ends[0] );
+        }
+        return saved;
+    }
+
+    if( errors != NULL )
+    {
+        *errors = ends[0];
+    }
     *pid = child;
     return 0;
 }

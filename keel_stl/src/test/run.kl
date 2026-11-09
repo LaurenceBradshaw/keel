@@ -10,7 +10,7 @@ import kl::optional;
 import kl::string;
 
 // The runtime's calls.
-private extern i32 kl_rt_fork( i64* pid );
+private extern i32 kl_rt_fork( i64* pid, i32* errors );
 private extern never kl_rt_exit( i32 code );
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 
@@ -58,7 +58,7 @@ private i32 run_one( const ref entry t, bool fork )
     i64 pid = 0;
     unsafe
     {
-        i32 result = kl_rt_fork( &pid );
+        i32 result = kl_rt_fork( &pid, nullptr );
         if( result != 0 )
         {
             panic( "cannot fork" );

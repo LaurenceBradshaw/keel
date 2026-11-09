@@ -421,7 +421,7 @@ static void fork_exit( void )
     int32_t status = -1;
 
     printf( "before|" );
-    kl_rt_fork( &pid );
+    kl_rt_fork( &pid, NULL );
     if( pid == 0 )
     {
         printf( "child" );
@@ -431,13 +431,38 @@ static void fork_exit( void )
     printf( "%d ", status );
 
     pid = 7;
-    kl_rt_fork( &pid );
+    kl_rt_fork( &pid, NULL );
     if( pid == 0 )
     {
         kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
     }
     kl_rt_process_wait( pid, &status );
     printf( "%d|after", status );
+}
+
+// With a pipe, the child's panic report reaches the parent and not the real stderr.
+static void fork_errors( void )
+{
+    int64_t pid    = 7;
+    int32_t fd     = -1;
+    int32_t status = -1;
+
+    kl_rt_fork( &pid, &fd );
+    if( pid == 0 )
+    {
+        kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
+    }
+
+    char     buf[64];
+    uint64_t size  = 0;
+    uint64_t count = 0;
+    while( kl_rt_file_read( fd, (uint8_t*) buf + size, sizeof buf - size, &count ) == 0 && count != 0 )
+    {
+        size += count;
+    }
+    kl_rt_file_close( fd );
+    kl_rt_process_wait( pid, &status );
+    printf( "%d %.*s", status, (int) size - 1, buf );
 }
 
 // A variable reads back, an empty one is size 0, and an unset name, `=` in one and a 0 byte in one
@@ -555,12 +580,17 @@ int main( void )
     check( "fork_exit", "stdout", r.out, "before|child3 134|after" );
     check_exit( "fork_exit", &r, false );
 
+    r = run( fork_errors );
+    check( "fork_errors", "stdout", r.out, "134 test.kl:1: panic: x" );
+    check( "fork_errors", "stderr", r.err, "" );
+    check_exit( "fork_errors", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "20 runtime tests passed\n" );
+    printf( "21 runtime tests passed\n" );
     return 0;
 }
