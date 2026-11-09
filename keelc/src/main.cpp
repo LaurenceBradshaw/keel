@@ -63,6 +63,7 @@ int main( int argc, char** argv )
         ( "dump-ast",        "Print the parsed AST and stop" )
         ( "dump-kir",        "Print the lowered KIR and stop" )
         ( "emit-c",          "Print the generated C and stop" )
+        ( "backend",         "The code generator: c, the only one yet", cxxopts::value<std::string>()->default_value( "c" ) )
         ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
         ( "imports",         "Print the input's imports as written, one per line, and stop" )
@@ -195,6 +196,12 @@ int main( int argc, char** argv )
     if( args.count( "quiet" ) && args.count( "verbose" ) )
     {
         fmt::print( stderr, "keelc: --quiet and --verbose cannot both be given\n" );
+        return 2;
+    }
+
+    if( const std::string backend = args["backend"].as<std::string>(); backend != "c" )
+    {
+        fmt::print( stderr, "keelc: --backend takes c, not '{}'\n", backend );
         return 2;
     }
 

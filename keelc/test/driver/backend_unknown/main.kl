@@ -1,0 +1,5 @@
+// A backend keelc does not have is refused before the front end runs.
+i32 main()
+{
+    return 0;
+}

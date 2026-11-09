@@ -35,6 +35,8 @@
 # run, and must give the same exit code and output. A <name>.kl.debug_only marker skips that, for a
 # fixture whose answer is a --debug check's.
 #
+#   KEEL_BACKEND  the backend a run fixture is built with, as --backend (default: c). A fixture's
+#               .out and .run are checked with it; .expected stays the C backend's output.
 #   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
@@ -98,6 +100,8 @@ if [ ! -f "$runtime" ]; then
 fi
 
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
+
+backend="${KEEL_BACKEND:-c}"
 
 # keelc runs the C compiler; the runner only configures it.
 cc="${CC:-cc}"
@@ -228,7 +232,7 @@ build_objects()
             continue
         fi
 
-        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet "$@" -c "${built[@]}" -o "$object" \
+        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --backend "$backend" "$@" -c "${built[@]}" -o "$object" \
             > "${build_dir}/objects.log" 2>&1; then
             echo "    keelc did not build ${object##*/}:"
             sed 's/^/      /' < "${build_dir}/objects.log"
@@ -267,7 +271,7 @@ check_run()
         done < "${src}.link"
     fi
 
-    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --backend "$backend" "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
