@@ -22,15 +22,15 @@ uint64_t kl__freed__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__B__R1B_3u64__ctor( struct kl__B*, uint64_t );
-void kl__B__dtor( struct kl__B* );
-uint64_t kl__peek__1B( struct kl__B* );
-uint64_t kl__forward__1B( struct kl__B* );
-int32_t kl__sum__3Big( struct kl__Big* );
-int32_t kl__main__( void );
+void kl__1B__R1B_3u64__ctor( struct kl__B*, uint64_t );
+void kl__1B__dtor( struct kl__B* );
+uint64_t kl__4peek__1B( struct kl__B* );
+uint64_t kl__7forward__1B( struct kl__B* );
+int32_t kl__3sum__3Big( struct kl__Big* );
+int32_t kl__4main__( void );
 
 #line 14 "codegen/const_ref.kl"
-void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+void kl__1B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
     ( *kl_this_1 ).kl_n = kl_x_2;
     return;
@@ -38,7 +38,7 @@ void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 }
 
 #line 19 "codegen/const_ref.kl"
-void kl__B__dtor( struct kl__B* kl_this_1 )
+void kl__1B__dtor( struct kl__B* kl_this_1 )
 {
     bool kl_t2;
     uint64_t kl_t3;
@@ -60,7 +60,7 @@ void kl__B__dtor( struct kl__B* kl_this_1 )
 }
 
 #line 32 "codegen/const_ref.kl"
-uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
+uint64_t kl__4peek__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 34 "codegen/const_ref.kl"
@@ -70,7 +70,7 @@ uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
 }
 
 #line 38 "codegen/const_ref.kl"
-uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
+uint64_t kl__7forward__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
     struct kl__B* kl_t2;
@@ -78,7 +78,7 @@ uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
 #line 40 "codegen/const_ref.kl"
     kl_t2 = &( *kl_b_1 );
 #line 40 "codegen/const_ref.kl"
-    kl_t3 = kl__peek__1B( kl_t2 );
+    kl_t3 = kl__4peek__1B( kl_t2 );
 #line 40 "codegen/const_ref.kl"
     kl_t0 = kl_t3;
 #line 40 "codegen/const_ref.kl"
@@ -86,7 +86,7 @@ uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
 }
 
 #line 43 "codegen/const_ref.kl"
-int32_t kl__sum__3Big( struct kl__Big* kl_g_1 )
+int32_t kl__3sum__3Big( struct kl__Big* kl_g_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -120,7 +120,7 @@ int32_t kl__sum__3Big( struct kl__Big* kl_g_1 )
 }
 
 #line 48 "codegen/const_ref.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_total_1;
@@ -153,11 +153,11 @@ int32_t kl__main__( void )
 #line 53 "codegen/const_ref.kl"
     kl_t3 = &kl_a_2;
 #line 53 "codegen/const_ref.kl"
-    kl__B__R1B_3u64__ctor( kl_t3, 5 );
+    kl__1B__R1B_3u64__ctor( kl_t3, 5 );
 #line 55 "codegen/const_ref.kl"
     kl_t5 = &kl_a_2;
 #line 55 "codegen/const_ref.kl"
-    kl_t6 = kl__forward__1B( kl_t5 );
+    kl_t6 = kl__7forward__1B( kl_t5 );
 #line 55 "codegen/const_ref.kl"
     kl_t7 = ( int32_t ) kl_t6;
 #line 55 "codegen/const_ref.kl"
@@ -172,7 +172,7 @@ int32_t kl__main__( void )
     kl_t9 = kl_total_1 + kl_t7;
 #line 55 "codegen/const_ref.kl"
     kl_total_1 = kl_t9;
-    kl__B__dtor( &kl_a_2 );
+    kl__1B__dtor( &kl_a_2 );
 #line 58 "codegen/const_ref.kl"
     kl_t11.kl_a = 1;
 #line 58 "codegen/const_ref.kl"
@@ -184,7 +184,7 @@ int32_t kl__main__( void )
 #line 60 "codegen/const_ref.kl"
     kl_t12 = &kl_g_10;
 #line 60 "codegen/const_ref.kl"
-    kl_t13 = kl__sum__3Big( kl_t12 );
+    kl_t13 = kl__3sum__3Big( kl_t12 );
 #line 60 "codegen/const_ref.kl"
     kl_t14 = __builtin_add_overflow( kl_total_1, kl_t13, &( int32_t ) { 0 } );
 #line 60 "codegen/const_ref.kl"
@@ -208,7 +208,7 @@ int32_t kl__main__( void )
 #line 65 "codegen/const_ref.kl"
     kl_t18 = &kl_frozen_16;
 #line 65 "codegen/const_ref.kl"
-    kl_t19 = kl__sum__3Big( kl_t18 );
+    kl_t19 = kl__3sum__3Big( kl_t18 );
 #line 65 "codegen/const_ref.kl"
     kl_t20 = __builtin_add_overflow( kl_total_1, kl_t19, &( int32_t ) { 0 } );
 #line 65 "codegen/const_ref.kl"
@@ -253,5 +253,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 48 "codegen/const_ref.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

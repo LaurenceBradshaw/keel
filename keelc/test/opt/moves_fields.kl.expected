@@ -36,18 +36,18 @@ struct kl__Shape
 int32_t kl__live__G;
 int32_t kl__destroyed__G;
 
-void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__Box__dtor( struct kl__Box* );
-struct kl__Line kl__line__3i32( int32_t );
-int32_t kl__declared__3i32( int32_t );
-int32_t kl__borrowed__3i32( int32_t );
-struct kl__Shape kl__wrapped__3i32( int32_t );
-int32_t kl__opened__M5Shape( struct kl__Shape );
-int32_t kl__main__( void );
-void kl__Shape__dtor( struct kl__Shape* );
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
+void kl__3Box__dtor( struct kl__Box* );
+struct kl__Line kl__4line__3i32( int32_t );
+int32_t kl__8declared__3i32( int32_t );
+int32_t kl__8borrowed__3i32( int32_t );
+struct kl__Shape kl__7wrapped__3i32( int32_t );
+int32_t kl__6opened__M5Shape( struct kl__Shape );
+int32_t kl__4main__( void );
+void kl__5Shape__dtor( struct kl__Shape* );
 
 #line 10 "opt/moves_fields.kl"
-void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     kl__live__G = kl__live__G + 1;
@@ -56,7 +56,7 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 16 "opt/moves_fields.kl"
-void kl__Box__dtor( struct kl__Box* kl_this_1 )
+void kl__3Box__dtor( struct kl__Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 18 "opt/moves_fields.kl"
@@ -67,7 +67,7 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
 }
 
 #line 45 "opt/moves_fields.kl"
-struct kl__Line kl__line__3i32( int32_t kl_v_1 )
+struct kl__Line kl__4line__3i32( int32_t kl_v_1 )
 {
     struct kl__Line kl_t0;
 #line 47 "opt/moves_fields.kl"
@@ -83,7 +83,7 @@ struct kl__Line kl__line__3i32( int32_t kl_v_1 )
 }
 
 #line 51 "opt/moves_fields.kl"
-int32_t kl__declared__3i32( int32_t kl_v_1 )
+int32_t kl__8declared__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     kl_t0 = kl_v_1 + kl_v_1;
@@ -92,7 +92,7 @@ int32_t kl__declared__3i32( int32_t kl_v_1 )
 }
 
 #line 58 "opt/moves_fields.kl"
-int32_t kl__borrowed__3i32( int32_t kl_v_1 )
+int32_t kl__8borrowed__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
 #line 62 "opt/moves_fields.kl"
@@ -102,7 +102,7 @@ int32_t kl__borrowed__3i32( int32_t kl_v_1 )
 }
 
 #line 66 "opt/moves_fields.kl"
-struct kl__Shape kl__wrapped__3i32( int32_t kl_v_1 )
+struct kl__Shape kl__7wrapped__3i32( int32_t kl_v_1 )
 {
     struct kl__Shape kl_t0;
 #line 12 "opt/moves_fields.kl"
@@ -115,7 +115,7 @@ struct kl__Shape kl__wrapped__3i32( int32_t kl_v_1 )
 }
 
 #line 72 "opt/moves_fields.kl"
-int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
+int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -154,7 +154,7 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 85 "opt/moves_fields.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -172,7 +172,7 @@ int32_t kl__main__( void )
 #line 68 "opt/moves_fields.kl"
     kl_t2.tag = 0;
 #line 98 "opt/moves_fields.kl"
-    kl_t3 = kl__opened__M5Shape( kl_t2 );
+    kl_t3 = kl__6opened__M5Shape( kl_t2 );
 #line 98 "opt/moves_fields.kl"
     kl_t1 = kl_t3 != 6;
 #line 98 "opt/moves_fields.kl"
@@ -204,7 +204,7 @@ int32_t kl__main__( void )
 #line 103 "opt/moves_fields.kl"
     kl_t5.kl_6paired_second.kl_value = 2;
 #line 103 "opt/moves_fields.kl"
-    kl_t6 = kl__opened__M5Shape( kl_t5 );
+    kl_t6 = kl__6opened__M5Shape( kl_t5 );
 #line 103 "opt/moves_fields.kl"
     kl_t4 = kl_t6 != 12;
 #line 103 "opt/moves_fields.kl"
@@ -230,7 +230,7 @@ int32_t kl__main__( void )
 #line 108 "opt/moves_fields.kl"
     kl_t8.tag = 2;
 #line 108 "opt/moves_fields.kl"
-    kl_t9 = kl__opened__M5Shape( kl_t8 );
+    kl_t9 = kl__6opened__M5Shape( kl_t8 );
 #line 108 "opt/moves_fields.kl"
     kl_t7 = kl_t9 == 0;
 #line 108 "opt/moves_fields.kl"
@@ -261,7 +261,7 @@ int32_t kl__main__( void )
 }
 
 #line 37 "opt/moves_fields.kl"
-void kl__Shape__dtor( struct kl__Shape* kl_t1 )
+void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
 {
     bool kl_t2;
     bool kl_t3;
@@ -294,5 +294,5 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
 int main( void )
 {
 #line 85 "opt/moves_fields.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -16,18 +16,18 @@ struct kl__Sq
 struct kl__Shape__vtable
 {
     void ( *drop )( void* );
-    double ( *kl__area__ )( void* );
+    double ( *kl__4area__ )( void* );
 };
 
-double kl__area__S2Sq( struct kl__Sq* );
-double kl__dyn_area__5Shape( struct kl__Shape__ref );
-double kl__local_ref__3f64( double );
-double kl__through_call__3f64( double );
-double kl__through_ptr__3f64( double );
-int32_t kl__main__( void );
+double kl__4area__S2Sq( struct kl__Sq* );
+double kl__8dyn_area__5Shape( struct kl__Shape__ref );
+double kl__9local_ref__3f64( double );
+double kl__12through_call__3f64( double );
+double kl__11through_ptr__3f64( double );
+int32_t kl__4main__( void );
 
 #line 14 "opt/devirtualised.kl"
-double kl__area__S2Sq( struct kl__Sq* kl_this_1 )
+double kl__4area__S2Sq( struct kl__Sq* kl_this_1 )
 {
     double kl_t0;
 #line 16 "opt/devirtualised.kl"
@@ -37,17 +37,17 @@ double kl__area__S2Sq( struct kl__Sq* kl_this_1 )
 }
 
 #line 20 "opt/devirtualised.kl"
-double kl__dyn_area__5Shape( struct kl__Shape__ref kl_s_1 )
+double kl__8dyn_area__5Shape( struct kl__Shape__ref kl_s_1 )
 {
     double kl_t0;
 #line 22 "opt/devirtualised.kl"
-    kl_t0 = kl_s_1.vtable->kl__area__( kl_s_1.self );
+    kl_t0 = kl_s_1.vtable->kl__4area__( kl_s_1.self );
 #line 22 "opt/devirtualised.kl"
     return kl_t0;
 }
 
 #line 25 "opt/devirtualised.kl"
-double kl__local_ref__3f64( double kl_x_1 )
+double kl__9local_ref__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 16 "opt/devirtualised.kl"
@@ -57,7 +57,7 @@ double kl__local_ref__3f64( double kl_x_1 )
 }
 
 #line 32 "opt/devirtualised.kl"
-double kl__through_call__3f64( double kl_x_1 )
+double kl__12through_call__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 16 "opt/devirtualised.kl"
@@ -67,7 +67,7 @@ double kl__through_call__3f64( double kl_x_1 )
 }
 
 #line 38 "opt/devirtualised.kl"
-double kl__through_ptr__3f64( double kl_x_1 )
+double kl__11through_ptr__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 16 "opt/devirtualised.kl"
@@ -77,7 +77,7 @@ double kl__through_ptr__3f64( double kl_x_1 )
 }
 
 #line 45 "opt/devirtualised.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     double kl_t1;
@@ -119,5 +119,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 45 "opt/devirtualised.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

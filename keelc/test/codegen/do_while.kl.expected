@@ -14,13 +14,13 @@ int32_t kl__drops__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
-void kl__Counted__dtor( struct kl__Counted* );
-void kl__assigned_in_body__O3i32_3i32( int32_t*, int32_t );
-int32_t kl__main__( void );
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
+void kl__7Counted__dtor( struct kl__Counted* );
+void kl__16assigned_in_body__O3i32_3i32( int32_t*, int32_t );
+int32_t kl__4main__( void );
 
 #line 12 "codegen/do_while.kl"
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -28,7 +28,7 @@ void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t k
 }
 
 #line 17 "codegen/do_while.kl"
-void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+void kl__7Counted__dtor( struct kl__Counted* kl_this_1 )
 {
     bool kl_t2;
     ( void ) kl_this_1;
@@ -47,7 +47,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 }
 
 #line 24 "codegen/do_while.kl"
-void kl__assigned_in_body__O3i32_3i32( int32_t* kl_n_1, int32_t kl_c_2 )
+void kl__16assigned_in_body__O3i32_3i32( int32_t* kl_n_1, int32_t kl_c_2 )
 {
     bool kl_t3;
     bool kl_t4;
@@ -80,7 +80,7 @@ void kl__assigned_in_body__O3i32_3i32( int32_t* kl_n_1, int32_t kl_c_2 )
 }
 
 #line 33 "codegen/do_while.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_runs_1;
@@ -298,7 +298,7 @@ int32_t kl__main__( void )
     bb39:
     kl_t28 = &kl_c_27;
 #line 92 "codegen/do_while.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t28, kl_k_25 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t28, kl_k_25 );
     kl_t30 = __builtin_add_overflow( kl_c_27.kl_value, 1, &( int32_t ) { 0 } );
 #line 93 "codegen/do_while.kl"
     if ( kl_t30 ) goto bb41; else goto bb42;
@@ -323,7 +323,7 @@ int32_t kl__main__( void )
     bb44:
 #line 93 "codegen/do_while.kl"
     kl_k_25 = kl_k_25 + kl_t31;
-    kl__Counted__dtor( &kl_c_27 );
+    kl__7Counted__dtor( &kl_c_27 );
 #line 90 "codegen/do_while.kl"
     goto bb38;
     bb45:
@@ -335,7 +335,7 @@ int32_t kl__main__( void )
     kl_assigned_34 = 0;
     kl_t35 = &kl_assigned_34;
 #line 99 "codegen/do_while.kl"
-    kl__assigned_in_body__O3i32_3i32( kl_t35, 2 );
+    kl__16assigned_in_body__O3i32_3i32( kl_t35, 2 );
     kl_t37 = kl_assigned_34 != 1;
 #line 100 "codegen/do_while.kl"
     if ( kl_t37 ) goto bb47; else goto bb48;
@@ -354,5 +354,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 33 "codegen/do_while.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

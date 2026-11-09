@@ -20,27 +20,27 @@ struct kl__Pair__I3i32E
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-bool kl__operator_eq__S7Version_7Version( struct kl__Version*, struct kl__Version* );
-int32_t kl__operator_compare__S7Version_7Version( struct kl__Version*, struct kl__Version* );
-bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t*, int32_t* );
-int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t*, int32_t* );
-int32_t kl__main__( void );
-bool kl__before__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
-bool kl__same__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
-bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
-bool kl__before__I3i32E__3i32_3i32( int32_t*, int32_t* );
-bool kl__same__I3i32E__3i32_3i32( int32_t*, int32_t* );
-bool kl__differ__I3i32E__3i32_3i32( int32_t*, int32_t* );
-bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
-bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
-bool kl__same__I4SuitE__4Suit_4Suit( int32_t*, int32_t* );
-bool kl__differ__I4SuitE__4Suit_4Suit( int32_t*, int32_t* );
-bool kl__before__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
-bool kl__same__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
-bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
+bool kl__11operator_eq__S7Version_7Version( struct kl__Version*, struct kl__Version* );
+int32_t kl__16operator_compare__S7Version_7Version( struct kl__Version*, struct kl__Version* );
+bool kl__11operator_eq__S4SuitC9equatable_4Suit( int32_t*, int32_t* );
+int32_t kl__16operator_compare__S4RankC10comparable_4Rank( int32_t*, int32_t* );
+int32_t kl__4main__( void );
+bool kl__6before__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
+bool kl__4same__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
+bool kl__6differ__I7VersionE__7Version_7Version( struct kl__Version*, struct kl__Version* );
+bool kl__6before__I3i32E__3i32_3i32( int32_t*, int32_t* );
+bool kl__4same__I3i32E__3i32_3i32( int32_t*, int32_t* );
+bool kl__6differ__I3i32E__3i32_3i32( int32_t*, int32_t* );
+bool kl__4same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
+bool kl__6differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
+bool kl__4same__I4SuitE__4Suit_4Suit( int32_t*, int32_t* );
+bool kl__6differ__I4SuitE__4Suit_4Suit( int32_t*, int32_t* );
+bool kl__6before__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
+bool kl__4same__I4RankE__4Rank_4Rank( int32_t*, int32_t* );
+bool kl__11operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*, struct kl__Pair__I3i32E* );
 
 #line 11 "codegen/bounds_user_types.kl"
-bool kl__operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
+bool kl__11operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -67,7 +67,7 @@ bool kl__operator_eq__S7Version_7Version( struct kl__Version* kl_this_1, struct 
 }
 
 #line 16 "codegen/bounds_user_types.kl"
-int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
+int32_t kl__16operator_compare__S7Version_7Version( struct kl__Version* kl_this_1, struct kl__Version* kl_other_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -143,7 +143,7 @@ int32_t kl__operator_compare__S7Version_7Version( struct kl__Version* kl_this_1,
 }
 
 #line 48 "codegen/bounds_user_types.kl"
-bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_other_2 )
+bool kl__11operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -194,7 +194,7 @@ bool kl__operator_eq__S4SuitC9equatable_4Suit( int32_t* kl_this_1, int32_t* kl_o
 }
 
 #line 62 "codegen/bounds_user_types.kl"
-int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int32_t* kl_other_2 )
+int32_t kl__16operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int32_t* kl_other_2 )
 {
     int32_t kl_t0;
     uint8_t kl_t3;
@@ -238,7 +238,7 @@ int32_t kl__operator_compare__S4RankC10comparable_4Rank( int32_t* kl_this_1, int
 }
 
 #line 83 "codegen/bounds_user_types.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Version kl_a_1;
@@ -393,7 +393,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/bounds_user_types.kl"
     kl_t10 = &kl_b_3;
 #line 88 "codegen/bounds_user_types.kl"
-    kl_t11 = kl__before__I7VersionE__7Version_7Version( kl_t9, kl_t10 );
+    kl_t11 = kl__6before__I7VersionE__7Version_7Version( kl_t9, kl_t10 );
 #line 88 "codegen/bounds_user_types.kl"
     kl_t12 = !kl_t11;
 #line 88 "codegen/bounds_user_types.kl"
@@ -406,7 +406,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/bounds_user_types.kl"
     kl_t14 = &kl_a_1;
 #line 88 "codegen/bounds_user_types.kl"
-    kl_t15 = kl__before__I7VersionE__7Version_7Version( kl_t13, kl_t14 );
+    kl_t15 = kl__6before__I7VersionE__7Version_7Version( kl_t13, kl_t14 );
 #line 88 "codegen/bounds_user_types.kl"
     kl_t8 = kl_t15;
 #line 88 "codegen/bounds_user_types.kl"
@@ -422,7 +422,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/bounds_user_types.kl"
     kl_t17 = &kl_a_1;
 #line 88 "codegen/bounds_user_types.kl"
-    kl_t18 = kl__same__I7VersionE__7Version_7Version( kl_t16, kl_t17 );
+    kl_t18 = kl__4same__I7VersionE__7Version_7Version( kl_t16, kl_t17 );
 #line 88 "codegen/bounds_user_types.kl"
     kl_t19 = !kl_t18;
 #line 88 "codegen/bounds_user_types.kl"
@@ -440,7 +440,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/bounds_user_types.kl"
     kl_t21 = &kl_b_3;
 #line 88 "codegen/bounds_user_types.kl"
-    kl_t22 = kl__same__I7VersionE__7Version_7Version( kl_t20, kl_t21 );
+    kl_t22 = kl__4same__I7VersionE__7Version_7Version( kl_t20, kl_t21 );
 #line 88 "codegen/bounds_user_types.kl"
     kl_t6 = kl_t22;
 #line 88 "codegen/bounds_user_types.kl"
@@ -456,7 +456,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/bounds_user_types.kl"
     kl_t24 = &kl_b_3;
 #line 88 "codegen/bounds_user_types.kl"
-    kl_t25 = kl__differ__I7VersionE__7Version_7Version( kl_t23, kl_t24 );
+    kl_t25 = kl__6differ__I7VersionE__7Version_7Version( kl_t23, kl_t24 );
 #line 88 "codegen/bounds_user_types.kl"
     kl_t26 = !kl_t25;
 #line 88 "codegen/bounds_user_types.kl"
@@ -479,7 +479,7 @@ int32_t kl__main__( void )
 #line 96 "codegen/bounds_user_types.kl"
     kl_t33 = &kl_y_28;
 #line 96 "codegen/bounds_user_types.kl"
-    kl_t34 = kl__before__I3i32E__3i32_3i32( kl_t32, kl_t33 );
+    kl_t34 = kl__6before__I3i32E__3i32_3i32( kl_t32, kl_t33 );
 #line 96 "codegen/bounds_user_types.kl"
     kl_t35 = !kl_t34;
 #line 96 "codegen/bounds_user_types.kl"
@@ -492,7 +492,7 @@ int32_t kl__main__( void )
 #line 96 "codegen/bounds_user_types.kl"
     kl_t37 = &kl_x_27;
 #line 96 "codegen/bounds_user_types.kl"
-    kl_t38 = kl__before__I3i32E__3i32_3i32( kl_t36, kl_t37 );
+    kl_t38 = kl__6before__I3i32E__3i32_3i32( kl_t36, kl_t37 );
 #line 96 "codegen/bounds_user_types.kl"
     kl_t31 = kl_t38;
 #line 96 "codegen/bounds_user_types.kl"
@@ -508,7 +508,7 @@ int32_t kl__main__( void )
 #line 96 "codegen/bounds_user_types.kl"
     kl_t40 = &kl_x_27;
 #line 96 "codegen/bounds_user_types.kl"
-    kl_t41 = kl__same__I3i32E__3i32_3i32( kl_t39, kl_t40 );
+    kl_t41 = kl__4same__I3i32E__3i32_3i32( kl_t39, kl_t40 );
 #line 96 "codegen/bounds_user_types.kl"
     kl_t42 = !kl_t41;
 #line 96 "codegen/bounds_user_types.kl"
@@ -526,7 +526,7 @@ int32_t kl__main__( void )
 #line 96 "codegen/bounds_user_types.kl"
     kl_t44 = &kl_x_27;
 #line 96 "codegen/bounds_user_types.kl"
-    kl_t45 = kl__differ__I3i32E__3i32_3i32( kl_t43, kl_t44 );
+    kl_t45 = kl__6differ__I3i32E__3i32_3i32( kl_t43, kl_t44 );
 #line 96 "codegen/bounds_user_types.kl"
     kl_t29 = kl_t45;
 #line 96 "codegen/bounds_user_types.kl"
@@ -555,7 +555,7 @@ int32_t kl__main__( void )
 #line 104 "codegen/bounds_user_types.kl"
     kl_t53 = &kl_p_46;
 #line 104 "codegen/bounds_user_types.kl"
-    kl_t54 = kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t52, kl_t53 );
+    kl_t54 = kl__4same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t52, kl_t53 );
 #line 104 "codegen/bounds_user_types.kl"
     kl_t55 = !kl_t54;
 #line 104 "codegen/bounds_user_types.kl"
@@ -568,7 +568,7 @@ int32_t kl__main__( void )
 #line 104 "codegen/bounds_user_types.kl"
     kl_t57 = &kl_q_48;
 #line 104 "codegen/bounds_user_types.kl"
-    kl_t58 = kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t56, kl_t57 );
+    kl_t58 = kl__4same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t56, kl_t57 );
 #line 104 "codegen/bounds_user_types.kl"
     kl_t51 = kl_t58;
 #line 104 "codegen/bounds_user_types.kl"
@@ -584,7 +584,7 @@ int32_t kl__main__( void )
 #line 104 "codegen/bounds_user_types.kl"
     kl_t60 = &kl_q_48;
 #line 104 "codegen/bounds_user_types.kl"
-    kl_t61 = kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t59, kl_t60 );
+    kl_t61 = kl__6differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( kl_t59, kl_t60 );
 #line 104 "codegen/bounds_user_types.kl"
     kl_t62 = !kl_t61;
 #line 104 "codegen/bounds_user_types.kl"
@@ -608,7 +608,7 @@ int32_t kl__main__( void )
 #line 113 "codegen/bounds_user_types.kl"
     kl_t70 = &kl_d_64;
 #line 113 "codegen/bounds_user_types.kl"
-    kl_t71 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t69, kl_t70 );
+    kl_t71 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t69, kl_t70 );
 #line 113 "codegen/bounds_user_types.kl"
     kl_t72 = !kl_t71;
 #line 113 "codegen/bounds_user_types.kl"
@@ -621,7 +621,7 @@ int32_t kl__main__( void )
 #line 113 "codegen/bounds_user_types.kl"
     kl_t74 = &kl_d_64;
 #line 113 "codegen/bounds_user_types.kl"
-    kl_t75 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t73, kl_t74 );
+    kl_t75 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t73, kl_t74 );
 #line 113 "codegen/bounds_user_types.kl"
     kl_t76 = !kl_t75;
 #line 113 "codegen/bounds_user_types.kl"
@@ -639,7 +639,7 @@ int32_t kl__main__( void )
 #line 113 "codegen/bounds_user_types.kl"
     kl_t78 = &kl_s_65;
 #line 113 "codegen/bounds_user_types.kl"
-    kl_t79 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t77, kl_t78 );
+    kl_t79 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t77, kl_t78 );
 #line 113 "codegen/bounds_user_types.kl"
     kl_t67 = kl_t79;
 #line 113 "codegen/bounds_user_types.kl"
@@ -655,7 +655,7 @@ int32_t kl__main__( void )
 #line 113 "codegen/bounds_user_types.kl"
     kl_t81 = &kl_s_65;
 #line 113 "codegen/bounds_user_types.kl"
-    kl_t82 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t80, kl_t81 );
+    kl_t82 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t80, kl_t81 );
 #line 113 "codegen/bounds_user_types.kl"
     kl_t83 = !kl_t82;
 #line 113 "codegen/bounds_user_types.kl"
@@ -677,7 +677,7 @@ int32_t kl__main__( void )
 #line 118 "codegen/bounds_user_types.kl"
     kl_t89 = &kl_d_64;
 #line 118 "codegen/bounds_user_types.kl"
-    kl_t90 = kl__same__I4SuitE__4Suit_4Suit( kl_t88, kl_t89 );
+    kl_t90 = kl__4same__I4SuitE__4Suit_4Suit( kl_t88, kl_t89 );
 #line 118 "codegen/bounds_user_types.kl"
     kl_t91 = !kl_t90;
 #line 118 "codegen/bounds_user_types.kl"
@@ -690,7 +690,7 @@ int32_t kl__main__( void )
 #line 118 "codegen/bounds_user_types.kl"
     kl_t93 = &kl_s_65;
 #line 118 "codegen/bounds_user_types.kl"
-    kl_t94 = kl__same__I4SuitE__4Suit_4Suit( kl_t92, kl_t93 );
+    kl_t94 = kl__4same__I4SuitE__4Suit_4Suit( kl_t92, kl_t93 );
 #line 118 "codegen/bounds_user_types.kl"
     kl_t87 = kl_t94;
 #line 118 "codegen/bounds_user_types.kl"
@@ -706,7 +706,7 @@ int32_t kl__main__( void )
 #line 118 "codegen/bounds_user_types.kl"
     kl_t96 = &kl_d_64;
 #line 118 "codegen/bounds_user_types.kl"
-    kl_t97 = kl__differ__I4SuitE__4Suit_4Suit( kl_t95, kl_t96 );
+    kl_t97 = kl__6differ__I4SuitE__4Suit_4Suit( kl_t95, kl_t96 );
 #line 118 "codegen/bounds_user_types.kl"
     kl_t86 = kl_t97;
 #line 118 "codegen/bounds_user_types.kl"
@@ -722,7 +722,7 @@ int32_t kl__main__( void )
 #line 118 "codegen/bounds_user_types.kl"
     kl_t99 = &kl_s_65;
 #line 118 "codegen/bounds_user_types.kl"
-    kl_t100 = kl__differ__I4SuitE__4Suit_4Suit( kl_t98, kl_t99 );
+    kl_t100 = kl__6differ__I4SuitE__4Suit_4Suit( kl_t98, kl_t99 );
 #line 118 "codegen/bounds_user_types.kl"
     kl_t101 = !kl_t100;
 #line 118 "codegen/bounds_user_types.kl"
@@ -746,7 +746,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/bounds_user_types.kl"
     kl_t109 = &kl_high_104;
 #line 127 "codegen/bounds_user_types.kl"
-    kl_t110 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t108, kl_t109 );
+    kl_t110 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t108, kl_t109 );
 #line 127 "codegen/bounds_user_types.kl"
     kl_t111 = kl_t110 == 0;
 #line 127 "codegen/bounds_user_types.kl"
@@ -761,7 +761,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/bounds_user_types.kl"
     kl_t114 = &kl_low_102;
 #line 127 "codegen/bounds_user_types.kl"
-    kl_t115 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t113, kl_t114 );
+    kl_t115 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t113, kl_t114 );
 #line 127 "codegen/bounds_user_types.kl"
     kl_t116 = kl_t115 != 2;
 #line 127 "codegen/bounds_user_types.kl"
@@ -779,7 +779,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/bounds_user_types.kl"
     kl_t118 = &kl_high_104;
 #line 127 "codegen/bounds_user_types.kl"
-    kl_t119 = kl__before__I4RankE__4Rank_4Rank( kl_t117, kl_t118 );
+    kl_t119 = kl__6before__I4RankE__4Rank_4Rank( kl_t117, kl_t118 );
 #line 127 "codegen/bounds_user_types.kl"
     kl_t120 = !kl_t119;
 #line 127 "codegen/bounds_user_types.kl"
@@ -797,7 +797,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/bounds_user_types.kl"
     kl_t122 = &kl_low_102;
 #line 127 "codegen/bounds_user_types.kl"
-    kl_t123 = kl__before__I4RankE__4Rank_4Rank( kl_t121, kl_t122 );
+    kl_t123 = kl__6before__I4RankE__4Rank_4Rank( kl_t121, kl_t122 );
 #line 127 "codegen/bounds_user_types.kl"
     kl_t105 = kl_t123;
 #line 127 "codegen/bounds_user_types.kl"
@@ -836,7 +836,7 @@ int32_t kl__main__( void )
 #line 132 "codegen/bounds_user_types.kl"
     kl_t131 = &kl_high_104;
 #line 132 "codegen/bounds_user_types.kl"
-    kl_t132 = kl__same__I4RankE__4Rank_4Rank( kl_t130, kl_t131 );
+    kl_t132 = kl__4same__I4RankE__4Rank_4Rank( kl_t130, kl_t131 );
 #line 132 "codegen/bounds_user_types.kl"
     kl_t133 = !kl_t132;
 #line 132 "codegen/bounds_user_types.kl"
@@ -854,7 +854,7 @@ int32_t kl__main__( void )
 #line 132 "codegen/bounds_user_types.kl"
     kl_t135 = &kl_high_104;
 #line 132 "codegen/bounds_user_types.kl"
-    kl_t136 = kl__same__I4RankE__4Rank_4Rank( kl_t134, kl_t135 );
+    kl_t136 = kl__4same__I4RankE__4Rank_4Rank( kl_t134, kl_t135 );
 #line 132 "codegen/bounds_user_types.kl"
     kl_t124 = kl_t136;
 #line 132 "codegen/bounds_user_types.kl"
@@ -874,7 +874,7 @@ int32_t kl__main__( void )
 }
 
 #line 78 "codegen/bounds_user_types.kl"
-bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
+bool kl__6before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -908,7 +908,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 80 "codegen/bounds_user_types.kl"
     kl_t8 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t9 = kl__operator_compare__S7Version_7Version( kl_t7, kl_t8 );
+    kl_t9 = kl__16operator_compare__S7Version_7Version( kl_t7, kl_t8 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t10 = kl_t9 == 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -921,7 +921,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 80 "codegen/bounds_user_types.kl"
     kl_t12 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t13 = kl__operator_compare__S7Version_7Version( kl_t11, kl_t12 );
+    kl_t13 = kl__16operator_compare__S7Version_7Version( kl_t11, kl_t12 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t14 = kl_t13 != 2;
 #line 80 "codegen/bounds_user_types.kl"
@@ -939,7 +939,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 80 "codegen/bounds_user_types.kl"
     kl_t16 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t17 = kl__operator_compare__S7Version_7Version( kl_t15, kl_t16 );
+    kl_t17 = kl__16operator_compare__S7Version_7Version( kl_t15, kl_t16 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t18 = kl_t17 == 2;
 #line 80 "codegen/bounds_user_types.kl"
@@ -959,7 +959,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 80 "codegen/bounds_user_types.kl"
     kl_t21 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t22 = kl__operator_compare__S7Version_7Version( kl_t20, kl_t21 );
+    kl_t22 = kl__16operator_compare__S7Version_7Version( kl_t20, kl_t21 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t23 = kl_t22 != 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -979,7 +979,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 80 "codegen/bounds_user_types.kl"
     kl_t26 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t27 = kl__operator_compare__S7Version_7Version( kl_t25, kl_t26 );
+    kl_t27 = kl__16operator_compare__S7Version_7Version( kl_t25, kl_t26 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t28 = kl_t27 == 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -994,7 +994,7 @@ bool kl__before__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 }
 
 #line 68 "codegen/bounds_user_types.kl"
-bool kl__same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
+bool kl__4same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
     struct kl__Version* kl_t3;
@@ -1005,7 +1005,7 @@ bool kl__same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct
 #line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 70 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__S7Version_7Version( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__S7Version_7Version( kl_t3, kl_t4 );
 #line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
@@ -1013,7 +1013,7 @@ bool kl__same__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct
 }
 
 #line 73 "codegen/bounds_user_types.kl"
-bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
+bool kl__6differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, struct kl__Version* kl_b_2 )
 {
     bool kl_t0;
     struct kl__Version* kl_t3;
@@ -1025,7 +1025,7 @@ bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 #line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 75 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__S7Version_7Version( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__S7Version_7Version( kl_t3, kl_t4 );
 #line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
 #line 75 "codegen/bounds_user_types.kl"
@@ -1035,7 +1035,7 @@ bool kl__differ__I7VersionE__7Version_7Version( struct kl__Version* kl_a_1, stru
 }
 
 #line 78 "codegen/bounds_user_types.kl"
-bool kl__before__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__6before__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1138,7 +1138,7 @@ bool kl__before__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 68 "codegen/bounds_user_types.kl"
-bool kl__same__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__4same__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1151,7 +1151,7 @@ bool kl__same__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 73 "codegen/bounds_user_types.kl"
-bool kl__differ__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__6differ__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1164,7 +1164,7 @@ bool kl__differ__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 68 "codegen/bounds_user_types.kl"
-bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
+bool kl__4same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
 {
     bool kl_t0;
     struct kl__Pair__I3i32E* kl_t3;
@@ -1175,7 +1175,7 @@ bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* 
 #line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 70 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
 #line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
@@ -1183,7 +1183,7 @@ bool kl__same__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* 
 }
 
 #line 73 "codegen/bounds_user_types.kl"
-bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
+bool kl__6differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_a_1, struct kl__Pair__I3i32E* kl_b_2 )
 {
     bool kl_t0;
     struct kl__Pair__I3i32E* kl_t3;
@@ -1195,7 +1195,7 @@ bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E
 #line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 75 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( kl_t3, kl_t4 );
 #line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
 #line 75 "codegen/bounds_user_types.kl"
@@ -1205,7 +1205,7 @@ bool kl__differ__I4PairI3i32EE__4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E
 }
 
 #line 68 "codegen/bounds_user_types.kl"
-bool kl__same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__4same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     int32_t* kl_t3;
@@ -1216,7 +1216,7 @@ bool kl__same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 70 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 70 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
 #line 70 "codegen/bounds_user_types.kl"
     kl_t0 = kl_t5;
 #line 70 "codegen/bounds_user_types.kl"
@@ -1224,7 +1224,7 @@ bool kl__same__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 73 "codegen/bounds_user_types.kl"
-bool kl__differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__6differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     int32_t* kl_t3;
@@ -1236,7 +1236,7 @@ bool kl__differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 75 "codegen/bounds_user_types.kl"
     kl_t4 = &( *kl_b_2 );
 #line 75 "codegen/bounds_user_types.kl"
-    kl_t5 = kl__operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
+    kl_t5 = kl__11operator_eq__S4SuitC9equatable_4Suit( kl_t3, kl_t4 );
 #line 75 "codegen/bounds_user_types.kl"
     kl_t6 = !kl_t5;
 #line 75 "codegen/bounds_user_types.kl"
@@ -1246,7 +1246,7 @@ bool kl__differ__I4SuitE__4Suit_4Suit( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 78 "codegen/bounds_user_types.kl"
-bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__6before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1280,7 +1280,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 80 "codegen/bounds_user_types.kl"
     kl_t8 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t9 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t7, kl_t8 );
+    kl_t9 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t7, kl_t8 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t10 = kl_t9 == 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -1293,7 +1293,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 80 "codegen/bounds_user_types.kl"
     kl_t12 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t13 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t11, kl_t12 );
+    kl_t13 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t11, kl_t12 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t14 = kl_t13 != 2;
 #line 80 "codegen/bounds_user_types.kl"
@@ -1311,7 +1311,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 80 "codegen/bounds_user_types.kl"
     kl_t16 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t17 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t15, kl_t16 );
+    kl_t17 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t15, kl_t16 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t18 = kl_t17 == 2;
 #line 80 "codegen/bounds_user_types.kl"
@@ -1331,7 +1331,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 80 "codegen/bounds_user_types.kl"
     kl_t21 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t22 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t20, kl_t21 );
+    kl_t22 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t20, kl_t21 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t23 = kl_t22 != 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -1351,7 +1351,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 #line 80 "codegen/bounds_user_types.kl"
     kl_t26 = &( *kl_b_2 );
 #line 80 "codegen/bounds_user_types.kl"
-    kl_t27 = kl__operator_compare__S4RankC10comparable_4Rank( kl_t25, kl_t26 );
+    kl_t27 = kl__16operator_compare__S4RankC10comparable_4Rank( kl_t25, kl_t26 );
 #line 80 "codegen/bounds_user_types.kl"
     kl_t28 = kl_t27 == 0;
 #line 80 "codegen/bounds_user_types.kl"
@@ -1366,7 +1366,7 @@ bool kl__before__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 68 "codegen/bounds_user_types.kl"
-bool kl__same__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__4same__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1379,7 +1379,7 @@ bool kl__same__I4RankE__4Rank_4Rank( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 32 "codegen/bounds_user_types.kl"
-bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_this_1, struct kl__Pair__I3i32E* kl_other_2 )
+bool kl__11operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E* kl_this_1, struct kl__Pair__I3i32E* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -1409,5 +1409,5 @@ bool kl__operator_eq__I3i32E__S4PairI3i32E_4PairI3i32E( struct kl__Pair__I3i32E*
 int main( void )
 {
 #line 83 "codegen/bounds_user_types.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -22,17 +22,17 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Counter__R7Counter__ctor( struct kl__Counter* );
-int32_t kl__peek__S7Counter( struct kl__Counter* );
-int32_t* kl__at__S7Counter( struct kl__Counter* );
-int32_t kl__sum__NK3i32_3u64( int32_t*, uint64_t );
-int32_t kl__read__PK5Point( struct kl__Point* );
-int32_t kl__pick__P3i32( int32_t* );
-int32_t kl__pick__PK3i32( int32_t* );
-int32_t kl__main__( void );
+void kl__7Counter__R7Counter__ctor( struct kl__Counter* );
+int32_t kl__4peek__S7Counter( struct kl__Counter* );
+int32_t* kl__2at__S7Counter( struct kl__Counter* );
+int32_t kl__3sum__NK3i32_3u64( int32_t*, uint64_t );
+int32_t kl__4read__PK5Point( struct kl__Point* );
+int32_t kl__4pick__P3i32( int32_t* );
+int32_t kl__4pick__PK3i32( int32_t* );
+int32_t kl__4main__( void );
 
 #line 13 "codegen/pointer_to_const.kl"
-void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
+void kl__7Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n = 4;
     return;
@@ -40,7 +40,7 @@ void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 }
 
 #line 18 "codegen/pointer_to_const.kl"
-int32_t kl__peek__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t kl__4peek__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t0;
 #line 20 "codegen/pointer_to_const.kl"
@@ -50,7 +50,7 @@ int32_t kl__peek__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 23 "codegen/pointer_to_const.kl"
-int32_t* kl__at__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t* kl__2at__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t* kl_t0;
     int32_t* kl_t2;
@@ -63,7 +63,7 @@ int32_t* kl__at__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 31 "codegen/pointer_to_const.kl"
-int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
+int32_t kl__3sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
 {
     int32_t kl_t0;
     int32_t kl_total_3;
@@ -120,7 +120,7 @@ int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
 }
 
 #line 46 "codegen/pointer_to_const.kl"
-int32_t kl__read__PK5Point( struct kl__Point* kl_p_1 )
+int32_t kl__4read__PK5Point( struct kl__Point* kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -142,7 +142,7 @@ int32_t kl__read__PK5Point( struct kl__Point* kl_p_1 )
 }
 
 #line 51 "codegen/pointer_to_const.kl"
-int32_t kl__pick__P3i32( int32_t* kl_t1 )
+int32_t kl__4pick__P3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -153,7 +153,7 @@ int32_t kl__pick__P3i32( int32_t* kl_t1 )
 }
 
 #line 56 "codegen/pointer_to_const.kl"
-int32_t kl__pick__PK3i32( int32_t* kl_t1 )
+int32_t kl__4pick__PK3i32( int32_t* kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -164,7 +164,7 @@ int32_t kl__pick__PK3i32( int32_t* kl_t1 )
 }
 
 #line 61 "codegen/pointer_to_const.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -319,7 +319,7 @@ int32_t kl__main__( void )
     kl_t25 = &kl_p_22;
 #line 79 "codegen/pointer_to_const.kl"
     kl_pp_24 = kl_t25;
-    kl_t26 = kl__read__PK5Point( kl_pp_24 );
+    kl_t26 = kl__4read__PK5Point( kl_pp_24 );
 #line 80 "codegen/pointer_to_const.kl"
     kl_t27 = kl_t26 != 30;
 #line 80 "codegen/pointer_to_const.kl"
@@ -332,11 +332,11 @@ int32_t kl__main__( void )
     bb14:
     kl_t29 = &kl_c_28;
 #line 82 "codegen/pointer_to_const.kl"
-    kl__Counter__R7Counter__ctor( kl_t29 );
+    kl__7Counter__R7Counter__ctor( kl_t29 );
     kl_t32 = &kl_c_28;
 #line 83 "codegen/pointer_to_const.kl"
     kl_cp_31 = kl_t32;
-    kl_t34 = kl__peek__S7Counter( kl_cp_31 );
+    kl_t34 = kl__4peek__S7Counter( kl_cp_31 );
 #line 84 "codegen/pointer_to_const.kl"
     kl_t35 = kl_t34 != 4;
 #line 84 "codegen/pointer_to_const.kl"
@@ -347,7 +347,7 @@ int32_t kl__main__( void )
 #line 84 "codegen/pointer_to_const.kl"
     kl_t36 = &kl_c_28;
 #line 84 "codegen/pointer_to_const.kl"
-    kl_t37 = kl__at__S7Counter( kl_t36 );
+    kl_t37 = kl__2at__S7Counter( kl_t36 );
 #line 84 "codegen/pointer_to_const.kl"
     kl_t38 = ( *kl_t37 ) != 4;
 #line 84 "codegen/pointer_to_const.kl"
@@ -381,7 +381,7 @@ int32_t kl__main__( void )
     kl_view_44 = kl_many_39;
     kl_t46 = ( int32_t* ) kl_many_39;
 #line 95 "codegen/pointer_to_const.kl"
-    kl_t47 = kl__sum__NK3i32_3u64( kl_t46, 3 );
+    kl_t47 = kl__3sum__NK3i32_3u64( kl_t46, 3 );
 #line 95 "codegen/pointer_to_const.kl"
     kl_t48 = kl_t47 != 6;
 #line 95 "codegen/pointer_to_const.kl"
@@ -390,7 +390,7 @@ int32_t kl__main__( void )
     if ( kl_t45 ) goto bb20; else goto bb19;
     bb19:
 #line 95 "codegen/pointer_to_const.kl"
-    kl_t49 = kl__sum__NK3i32_3u64( kl_view_44, 3 );
+    kl_t49 = kl__3sum__NK3i32_3u64( kl_view_44, 3 );
 #line 95 "codegen/pointer_to_const.kl"
     kl_t50 = kl_t49 != 6;
 #line 95 "codegen/pointer_to_const.kl"
@@ -411,7 +411,7 @@ int32_t kl__main__( void )
 #line 101 "codegen/pointer_to_const.kl"
     kl_t53 = &kl_a_1;
 #line 101 "codegen/pointer_to_const.kl"
-    kl_t54 = kl__pick__P3i32( kl_t53 );
+    kl_t54 = kl__4pick__P3i32( kl_t53 );
 #line 101 "codegen/pointer_to_const.kl"
     kl_t55 = kl_t54 != 1;
 #line 101 "codegen/pointer_to_const.kl"
@@ -420,7 +420,7 @@ int32_t kl__main__( void )
     if ( kl_t52 ) goto bb24; else goto bb23;
     bb23:
 #line 101 "codegen/pointer_to_const.kl"
-    kl_t56 = kl__pick__PK3i32( kl_r_5 );
+    kl_t56 = kl__4pick__PK3i32( kl_r_5 );
 #line 101 "codegen/pointer_to_const.kl"
     kl_t57 = kl_t56 != 2;
 #line 101 "codegen/pointer_to_const.kl"
@@ -467,5 +467,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 61 "codegen/pointer_to_const.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

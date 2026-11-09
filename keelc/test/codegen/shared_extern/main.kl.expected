@@ -5,10 +5,10 @@
 
 int32_t abs( int32_t );
 
-int32_t kl_6helper_magnitude__3i32( int32_t );
+int32_t kl_6helper_9magnitude__3i32( int32_t );
 
 #line 4 "codegen/shared_extern/helper.kl"
-int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_9magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -27,11 +27,11 @@ int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 
 int32_t abs( int32_t );
 
-int32_t kl__main__( void );
-int32_t kl_6helper_magnitude__3i32( int32_t );
+int32_t kl__4main__( void );
+int32_t kl_6helper_9magnitude__3i32( int32_t );
 
 #line 6 "codegen/shared_extern/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -39,7 +39,7 @@ int32_t kl__main__( void )
     int32_t kl_t3;
     bool kl_t4;
 #line 8 "codegen/shared_extern/main.kl"
-    kl_t1 = kl_6helper_magnitude__3i32( -4 );
+    kl_t1 = kl_6helper_9magnitude__3i32( -4 );
 #line 8 "codegen/shared_extern/main.kl"
     kl_t2 = kl_t1 != 4;
 #line 8 "codegen/shared_extern/main.kl"
@@ -72,5 +72,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/shared_extern/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

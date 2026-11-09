@@ -47,13 +47,13 @@ uint64_t kl__SIDE__G = 3;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__sum__L3i32( int32_t*, uint64_t );
-struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 );
-void kl__bump__RA4_3i32( struct kl__A4_3i32* );
-int32_t kl__main__( void );
+int32_t kl__3sum__L3i32( int32_t*, uint64_t );
+struct kl__A4_3i32 kl__7doubled__A4_3i32( struct kl__A4_3i32 );
+void kl__4bump__RA4_3i32( struct kl__A4_3i32* );
+int32_t kl__4main__( void );
 
 #line 17 "codegen/fixed_arrays.kl"
-int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 17 "codegen/fixed_arrays.kl"
@@ -123,7 +123,7 @@ int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 29 "codegen/fixed_arrays.kl"
-struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
+struct kl__A4_3i32 kl__7doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
 {
     struct kl__A4_3i32 kl_t0;
     uint64_t kl_i_2;
@@ -194,7 +194,7 @@ struct kl__A4_3i32 kl__doubled__A4_3i32( struct kl__A4_3i32 kl_values_1 )
 }
 
 #line 39 "codegen/fixed_arrays.kl"
-void kl__bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
+void kl__4bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
 {
     uint64_t kl_t2;
     bool kl_t3;
@@ -216,7 +216,7 @@ void kl__bump__RA4_3i32( struct kl__A4_3i32* kl_values_1 )
 }
 
 #line 44 "codegen/fixed_arrays.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i32 kl_a_1;
@@ -376,7 +376,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 57 "codegen/fixed_arrays.kl"
-    kl_t15 = kl__doubled__A4_3i32( kl_a_1 );
+    kl_t15 = kl__7doubled__A4_3i32( kl_a_1 );
 #line 57 "codegen/fixed_arrays.kl"
     kl_d_14 = kl_t15;
 #line 59 "codegen/fixed_arrays.kl"
@@ -411,7 +411,7 @@ int32_t kl__main__( void )
 #line 64 "codegen/fixed_arrays.kl"
     kl_t23 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t22, 4 };
 #line 64 "codegen/fixed_arrays.kl"
-    kl_t24 = kl__sum__L3i32( ( kl_t23 ).data, ( kl_t23 ).size );
+    kl_t24 = kl__3sum__L3i32( ( kl_t23 ).data, ( kl_t23 ).size );
 #line 64 "codegen/fixed_arrays.kl"
     kl_t25 = kl_t24 != 10;
 #line 64 "codegen/fixed_arrays.kl"
@@ -541,7 +541,7 @@ int32_t kl__main__( void )
 #line 85 "codegen/fixed_arrays.kl"
     kl_t58 = &kl_a_1;
 #line 85 "codegen/fixed_arrays.kl"
-    kl__bump__RA4_3i32( kl_t58 );
+    kl__4bump__RA4_3i32( kl_t58 );
 #line 87 "codegen/fixed_arrays.kl"
     kl_t60 = 0;
 #line 87 "codegen/fixed_arrays.kl"
@@ -592,7 +592,7 @@ int32_t kl__main__( void )
 #line 104 "codegen/fixed_arrays.kl"
     kl_t74 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t73, 3 };
 #line 104 "codegen/fixed_arrays.kl"
-    kl_t75 = kl__sum__L3i32( ( kl_t74 ).data, ( kl_t74 ).size );
+    kl_t75 = kl__3sum__L3i32( ( kl_t74 ).data, ( kl_t74 ).size );
 #line 104 "codegen/fixed_arrays.kl"
     kl_t76 = kl_t75 != 24;
 #line 104 "codegen/fixed_arrays.kl"
@@ -612,5 +612,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 44 "codegen/fixed_arrays.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

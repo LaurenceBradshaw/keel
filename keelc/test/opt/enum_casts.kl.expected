@@ -3,13 +3,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-uint8_t kl__darkest__( void );
-int32_t kl__tag__( void );
-int64_t kl__inlined__( void );
-int32_t kl__main__( void );
+uint8_t kl__7darkest__( void );
+int32_t kl__3tag__( void );
+int64_t kl__7inlined__( void );
+int32_t kl__4main__( void );
 
 #line 5 "opt/enum_casts.kl"
-uint8_t kl__darkest__( void )
+uint8_t kl__7darkest__( void )
 {
     uint8_t kl_t0;
 #line 5 "opt/enum_casts.kl"
@@ -20,7 +20,7 @@ uint8_t kl__darkest__( void )
 }
 
 #line 8 "opt/enum_casts.kl"
-int32_t kl__tag__( void )
+int32_t kl__3tag__( void )
 {
     int32_t kl_t0;
 #line 8 "opt/enum_casts.kl"
@@ -31,7 +31,7 @@ int32_t kl__tag__( void )
 }
 
 #line 11 "opt/enum_casts.kl"
-int64_t kl__inlined__( void )
+int64_t kl__7inlined__( void )
 {
     int64_t kl_t0;
 #line 11 "opt/enum_casts.kl"
@@ -42,7 +42,7 @@ int64_t kl__inlined__( void )
 }
 
 #line 13 "opt/enum_casts.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 24 "opt/enum_casts.kl"
@@ -55,5 +55,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 13 "opt/enum_casts.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

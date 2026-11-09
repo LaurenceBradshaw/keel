@@ -22,12 +22,12 @@ struct kl__Slot
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__area__5Shape( struct kl__Shape );
-int32_t kl__unwrap__4Slot_3i32( struct kl__Slot, int32_t );
-int32_t kl__main__( void );
+double kl__4area__5Shape( struct kl__Shape );
+int32_t kl__6unwrap__4Slot_3i32( struct kl__Slot, int32_t );
+int32_t kl__4main__( void );
 
 #line 19 "codegen/payloads.kl"
-double kl__area__5Shape( struct kl__Shape kl_s_1 )
+double kl__4area__5Shape( struct kl__Shape kl_s_1 )
 {
     double kl_t0;
     bool kl_t2;
@@ -74,7 +74,7 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 32 "codegen/payloads.kl"
-int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
+int32_t kl__6unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -97,7 +97,7 @@ int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
 }
 
 #line 43 "codegen/payloads.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_total_1;
@@ -133,7 +133,7 @@ int32_t kl__main__( void )
 #line 49 "codegen/payloads.kl"
     kl_t2.kl_4Rect_height = 5.0;
 #line 49 "codegen/payloads.kl"
-    kl_t3 = kl__area__5Shape( kl_t2 );
+    kl_t3 = kl__4area__5Shape( kl_t2 );
 #line 49 "codegen/payloads.kl"
     kl_t4 = kl_t3 != 10.0;
 #line 49 "codegen/payloads.kl"
@@ -149,7 +149,7 @@ int32_t kl__main__( void )
 #line 50 "codegen/payloads.kl"
     kl_t5.kl_6Circle_radius = 2.0;
 #line 50 "codegen/payloads.kl"
-    kl_t6 = kl__area__5Shape( kl_t5 );
+    kl_t6 = kl__4area__5Shape( kl_t5 );
 #line 50 "codegen/payloads.kl"
     kl_t7 = kl_t6 != 12.0;
 #line 50 "codegen/payloads.kl"
@@ -163,7 +163,7 @@ int32_t kl__main__( void )
 #line 51 "codegen/payloads.kl"
     kl_t8.tag = 2;
 #line 51 "codegen/payloads.kl"
-    kl_t9 = kl__area__5Shape( kl_t8 );
+    kl_t9 = kl__4area__5Shape( kl_t8 );
 #line 51 "codegen/payloads.kl"
     kl_t10 = kl_t9 != 0.0;
 #line 51 "codegen/payloads.kl"
@@ -179,7 +179,7 @@ int32_t kl__main__( void )
 #line 55 "codegen/payloads.kl"
     kl_t11.kl_5Taken_value = 7;
 #line 55 "codegen/payloads.kl"
-    kl_t12 = kl__unwrap__4Slot_3i32( kl_t11, 99 );
+    kl_t12 = kl__6unwrap__4Slot_3i32( kl_t11, 99 );
 #line 55 "codegen/payloads.kl"
     kl_t13 = kl_t12 != 7;
 #line 55 "codegen/payloads.kl"
@@ -193,7 +193,7 @@ int32_t kl__main__( void )
 #line 56 "codegen/payloads.kl"
     kl_t14.tag = 0;
 #line 56 "codegen/payloads.kl"
-    kl_t15 = kl__unwrap__4Slot_3i32( kl_t14, 99 );
+    kl_t15 = kl__6unwrap__4Slot_3i32( kl_t14, 99 );
 #line 56 "codegen/payloads.kl"
     kl_t16 = kl_t15 != 99;
 #line 56 "codegen/payloads.kl"
@@ -208,7 +208,7 @@ int32_t kl__main__( void )
 #line 58 "codegen/payloads.kl"
     kl_t17.kl_5Taken_value = 5;
 #line 58 "codegen/payloads.kl"
-    kl_t18 = kl__unwrap__4Slot_3i32( kl_t17, 0 );
+    kl_t18 = kl__6unwrap__4Slot_3i32( kl_t17, 0 );
 #line 58 "codegen/payloads.kl"
     kl_t19 = __builtin_mul_overflow( kl_t18, 10, &( int32_t ) { 0 } );
 #line 58 "codegen/payloads.kl"
@@ -222,7 +222,7 @@ int32_t kl__main__( void )
 #line 58 "codegen/payloads.kl"
     kl_t21.tag = 0;
 #line 58 "codegen/payloads.kl"
-    kl_t22 = kl__unwrap__4Slot_3i32( kl_t21, 3 );
+    kl_t22 = kl__6unwrap__4Slot_3i32( kl_t21, 3 );
 #line 58 "codegen/payloads.kl"
     kl_t23 = __builtin_add_overflow( kl_t20, kl_t22, &( int32_t ) { 0 } );
 #line 58 "codegen/payloads.kl"
@@ -245,5 +245,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 43 "codegen/payloads.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

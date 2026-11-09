@@ -42,11 +42,11 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-int32_t kl__main__( void );
-void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
+int32_t kl__4main__( void );
+void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E*, uint64_t );
 
 #line 4 "list_bounds_release/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I3i32E kl_values_1;
@@ -140,7 +140,7 @@ int32_t kl__main__( void )
     goto bb8;
     bb8:
 #line 478 "../../src/list.kl"
-    kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t2, kl_t14 );
+    kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t2, kl_t14 );
 #line 476 "../../src/list.kl"
     goto bb9;
     bb9:
@@ -176,7 +176,7 @@ int32_t kl__main__( void )
     goto bb13;
     bb13:
 #line 478 "../../src/list.kl"
-    kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t21 );
+    kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( kl_t3, kl_t21 );
 #line 476 "../../src/list.kl"
     goto bb14;
     bb14:
@@ -225,7 +225,7 @@ int32_t kl__main__( void )
 }
 
 #line 444 "../../src/list.kl"
-void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_list__I3i32E* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_new_data_3;
     bool kl_t4;
@@ -276,5 +276,5 @@ void kl_2kl4list_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list_l
 int main( void )
 {
 #line 4 "list_bounds_release/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

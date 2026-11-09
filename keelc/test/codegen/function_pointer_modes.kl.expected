@@ -19,15 +19,15 @@ struct kl__P
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__bump__R3i32( int32_t* );
-int32_t kl__fill__O3i32( int32_t* );
-int32_t kl__total__1P( struct kl__P* );
-int32_t kl__twice__3i32( int32_t );
-int32_t kl__taken__M3i32( int32_t );
-int32_t kl__main__( void );
+int32_t kl__4bump__R3i32( int32_t* );
+int32_t kl__4fill__O3i32( int32_t* );
+int32_t kl__5total__1P( struct kl__P* );
+int32_t kl__5twice__3i32( int32_t );
+int32_t kl__5taken__M3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 7 "codegen/function_pointer_modes.kl"
-int32_t kl__bump__R3i32( int32_t* kl_a_1 )
+int32_t kl__4bump__R3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -50,7 +50,7 @@ int32_t kl__bump__R3i32( int32_t* kl_a_1 )
 }
 
 #line 13 "codegen/function_pointer_modes.kl"
-int32_t kl__fill__O3i32( int32_t* kl_a_1 )
+int32_t kl__4fill__O3i32( int32_t* kl_a_1 )
 {
     int32_t kl_t0;
 #line 15 "codegen/function_pointer_modes.kl"
@@ -61,7 +61,7 @@ int32_t kl__fill__O3i32( int32_t* kl_a_1 )
 }
 
 #line 19 "codegen/function_pointer_modes.kl"
-int32_t kl__total__1P( struct kl__P* kl_p_1 )
+int32_t kl__5total__1P( struct kl__P* kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -83,7 +83,7 @@ int32_t kl__total__1P( struct kl__P* kl_p_1 )
 }
 
 #line 24 "codegen/function_pointer_modes.kl"
-int32_t kl__twice__3i32( int32_t kl_a_1 )
+int32_t kl__5twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -105,7 +105,7 @@ int32_t kl__twice__3i32( int32_t kl_a_1 )
 }
 
 #line 29 "codegen/function_pointer_modes.kl"
-int32_t kl__taken__M3i32( int32_t kl_a_1 )
+int32_t kl__5taken__M3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 31 "codegen/function_pointer_modes.kl"
@@ -115,7 +115,7 @@ int32_t kl__taken__M3i32( int32_t kl_a_1 )
 }
 
 #line 34 "codegen/function_pointer_modes.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     kl__fn__FR3i32E3i32 kl_b_1;
@@ -148,19 +148,19 @@ int32_t kl__main__( void )
     int32_t kl_t28;
     bool kl_t29;
 #line 36 "codegen/function_pointer_modes.kl"
-    kl_t2 = kl__bump__R3i32;
+    kl_t2 = kl__4bump__R3i32;
 #line 36 "codegen/function_pointer_modes.kl"
     kl_b_1 = kl_t2;
-    kl_t4 = kl__fill__O3i32;
+    kl_t4 = kl__4fill__O3i32;
 #line 37 "codegen/function_pointer_modes.kl"
     kl_f_3 = kl_t4;
-    kl_t6 = kl__total__1P;
+    kl_t6 = kl__5total__1P;
 #line 38 "codegen/function_pointer_modes.kl"
     kl_t_5 = kl_t6;
-    kl_t8 = kl__twice__3i32;
+    kl_t8 = kl__5twice__3i32;
 #line 39 "codegen/function_pointer_modes.kl"
     kl_d_7 = kl_t8;
-    kl_t10 = kl__taken__M3i32;
+    kl_t10 = kl__5taken__M3i32;
 #line 40 "codegen/function_pointer_modes.kl"
     kl_v_9 = kl_t10;
 #line 42 "codegen/function_pointer_modes.kl"
@@ -253,5 +253,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 34 "codegen/function_pointer_modes.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

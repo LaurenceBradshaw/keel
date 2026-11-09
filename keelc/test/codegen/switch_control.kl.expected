@@ -12,18 +12,18 @@ struct kl__Counter
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__falls__1E( int32_t );
-int32_t kl__breaks_the_switch__( void );
-int32_t kl__breaks_the_loop__( void );
-int32_t kl__continues_the_loop__( void );
-void kl__Counter__R7Counter_P3i32__ctor( struct kl__Counter*, int32_t* );
-void kl__Counter__dtor( struct kl__Counter* );
-int32_t kl__drops_on_continue__( void );
-int32_t kl__drops_on_break__( void );
-int32_t kl__main__( void );
+int32_t kl__5falls__1E( int32_t );
+int32_t kl__17breaks_the_switch__( void );
+int32_t kl__15breaks_the_loop__( void );
+int32_t kl__18continues_the_loop__( void );
+void kl__7Counter__R7Counter_P3i32__ctor( struct kl__Counter*, int32_t* );
+void kl__7Counter__dtor( struct kl__Counter* );
+int32_t kl__17drops_on_continue__( void );
+int32_t kl__14drops_on_break__( void );
+int32_t kl__4main__( void );
 
 #line 6 "codegen/switch_control.kl"
-int32_t kl__falls__1E( int32_t kl_e_1 )
+int32_t kl__5falls__1E( int32_t kl_e_1 )
 {
     int32_t kl_t0;
     int32_t kl_t_2;
@@ -82,7 +82,7 @@ int32_t kl__falls__1E( int32_t kl_e_1 )
 }
 
 #line 27 "codegen/switch_control.kl"
-int32_t kl__breaks_the_switch__( void )
+int32_t kl__17breaks_the_switch__( void )
 {
     int32_t kl_t0;
     int32_t kl_count_1;
@@ -160,7 +160,7 @@ int32_t kl__breaks_the_switch__( void )
 }
 
 #line 52 "codegen/switch_control.kl"
-int32_t kl__breaks_the_loop__( void )
+int32_t kl__15breaks_the_loop__( void )
 {
     int32_t kl_t0;
     int32_t kl_n_1;
@@ -200,7 +200,7 @@ int32_t kl__breaks_the_loop__( void )
 }
 
 #line 74 "codegen/switch_control.kl"
-int32_t kl__continues_the_loop__( void )
+int32_t kl__18continues_the_loop__( void )
 {
     int32_t kl_t0;
     int32_t kl_count_1;
@@ -278,7 +278,7 @@ int32_t kl__continues_the_loop__( void )
 }
 
 #line 102 "codegen/switch_control.kl"
-void kl__Counter__R7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
+void kl__7Counter__R7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
 {
 #line 102 "codegen/switch_control.kl"
     ( *kl_this_1 ).kl_slot = kl_s_2;
@@ -288,7 +288,7 @@ void kl__Counter__R7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t*
 }
 
 #line 103 "codegen/switch_control.kl"
-void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
+void kl__7Counter__dtor( struct kl__Counter* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -310,7 +310,7 @@ void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
 }
 
 #line 109 "codegen/switch_control.kl"
-int32_t kl__drops_on_continue__( void )
+int32_t kl__17drops_on_continue__( void )
 {
     int32_t kl_t0;
     int32_t kl_drops_1;
@@ -356,14 +356,14 @@ int32_t kl__drops_on_continue__( void )
 #line 118 "codegen/switch_control.kl"
     kl_t8 = &kl_drops_1;
 #line 118 "codegen/switch_control.kl"
-    kl__Counter__R7Counter_P3i32__ctor( kl_t7, kl_t8 );
+    kl__7Counter__R7Counter_P3i32__ctor( kl_t7, kl_t8 );
 #line 122 "codegen/switch_control.kl"
     kl_t10 = 0 == 0;
 #line 122 "codegen/switch_control.kl"
     if ( kl_t10 ) goto bb6; else goto bb7;
     bb6:
 #line 123 "codegen/switch_control.kl"
-    kl__Counter__dtor( &kl_outer_6 );
+    kl__7Counter__dtor( &kl_outer_6 );
 #line 123 "codegen/switch_control.kl"
     goto bb1;
     bb7:
@@ -383,14 +383,14 @@ int32_t kl__drops_on_continue__( void )
     goto bb10;
     bb10:
 #line 128 "codegen/switch_control.kl"
-    kl__Counter__dtor( &kl_outer_6 );
+    kl__7Counter__dtor( &kl_outer_6 );
 #line 114 "codegen/switch_control.kl"
     goto bb1;
 #line 131 "codegen/switch_control.kl"
 }
 
 #line 134 "codegen/switch_control.kl"
-int32_t kl__drops_on_break__( void )
+int32_t kl__14drops_on_break__( void )
 {
     int32_t kl_t0;
     int32_t kl_drops_1;
@@ -411,8 +411,8 @@ int32_t kl__drops_on_break__( void )
 #line 142 "codegen/switch_control.kl"
     kl_t5 = &kl_drops_1;
 #line 142 "codegen/switch_control.kl"
-    kl__Counter__R7Counter_P3i32__ctor( kl_t4, kl_t5 );
-    kl__Counter__dtor( &kl_inner_3 );
+    kl__7Counter__R7Counter_P3i32__ctor( kl_t4, kl_t5 );
+    kl__7Counter__dtor( &kl_inner_3 );
 #line 143 "codegen/switch_control.kl"
     goto bb3;
     bb2:
@@ -439,7 +439,7 @@ int32_t kl__drops_on_break__( void )
 }
 
 #line 153 "codegen/switch_control.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_total_1;
@@ -462,9 +462,9 @@ int32_t kl__main__( void )
     int32_t kl_t18;
     bool kl_t19;
 #line 156 "codegen/switch_control.kl"
-    kl_t2 = kl__falls__1E( 0 );
+    kl_t2 = kl__5falls__1E( 0 );
 #line 156 "codegen/switch_control.kl"
-    kl_t3 = kl__falls__1E( 1 );
+    kl_t3 = kl__5falls__1E( 1 );
 #line 156 "codegen/switch_control.kl"
     kl_t4 = __builtin_add_overflow( kl_t2, kl_t3, &( int32_t ) { 0 } );
 #line 156 "codegen/switch_control.kl"
@@ -476,7 +476,7 @@ int32_t kl__main__( void )
 #line 156 "codegen/switch_control.kl"
     kl_t5 = kl_t2 + kl_t3;
 #line 156 "codegen/switch_control.kl"
-    kl_t6 = kl__falls__1E( 2 );
+    kl_t6 = kl__5falls__1E( 2 );
 #line 156 "codegen/switch_control.kl"
     kl_t7 = __builtin_add_overflow( kl_t5, kl_t6, &( int32_t ) { 0 } );
 #line 156 "codegen/switch_control.kl"
@@ -499,7 +499,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 163 "codegen/switch_control.kl"
-    kl_t10 = kl__breaks_the_switch__(  );
+    kl_t10 = kl__17breaks_the_switch__(  );
 #line 163 "codegen/switch_control.kl"
     kl_t11 = kl_t10 != 3;
 #line 163 "codegen/switch_control.kl"
@@ -510,7 +510,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 168 "codegen/switch_control.kl"
-    kl_t12 = kl__breaks_the_loop__(  );
+    kl_t12 = kl__15breaks_the_loop__(  );
 #line 168 "codegen/switch_control.kl"
     kl_t13 = kl_t12 != 7;
 #line 168 "codegen/switch_control.kl"
@@ -521,7 +521,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 173 "codegen/switch_control.kl"
-    kl_t14 = kl__continues_the_loop__(  );
+    kl_t14 = kl__18continues_the_loop__(  );
 #line 173 "codegen/switch_control.kl"
     kl_t15 = kl_t14 != 0;
 #line 173 "codegen/switch_control.kl"
@@ -532,7 +532,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 178 "codegen/switch_control.kl"
-    kl_t16 = kl__drops_on_continue__(  );
+    kl_t16 = kl__17drops_on_continue__(  );
 #line 178 "codegen/switch_control.kl"
     kl_t17 = kl_t16 != 3;
 #line 178 "codegen/switch_control.kl"
@@ -543,7 +543,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 183 "codegen/switch_control.kl"
-    kl_t18 = kl__drops_on_break__(  );
+    kl_t18 = kl__14drops_on_break__(  );
 #line 183 "codegen/switch_control.kl"
     kl_t19 = kl_t18 != 1;
 #line 183 "codegen/switch_control.kl"
@@ -563,5 +563,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 153 "codegen/switch_control.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

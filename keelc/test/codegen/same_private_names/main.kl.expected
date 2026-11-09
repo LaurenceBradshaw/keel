@@ -12,11 +12,11 @@ struct kl_1a_node
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_1a_push__3i32( int32_t );
-int32_t kl_1a_from_a__( void );
+int32_t kl_1a_4push__3i32( int32_t );
+int32_t kl_1a_6from_a__( void );
 
 #line 8 "codegen/same_private_names/a.kl"
-int32_t kl_1a_push__3i32( int32_t kl_v_1 )
+int32_t kl_1a_4push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -38,14 +38,14 @@ int32_t kl_1a_push__3i32( int32_t kl_v_1 )
 }
 
 #line 13 "codegen/same_private_names/a.kl"
-int32_t kl_1a_from_a__( void )
+int32_t kl_1a_6from_a__( void )
 {
     int32_t kl_t0;
     struct kl_1a_node kl_n_1;
     struct kl_1a_node kl_t2;
     int32_t kl_t3;
 #line 15 "codegen/same_private_names/a.kl"
-    kl_t3 = kl_1a_push__3i32( 1 );
+    kl_t3 = kl_1a_4push__3i32( 1 );
 #line 15 "codegen/same_private_names/a.kl"
     kl_t2.kl_value = kl_t3;
 #line 15 "codegen/same_private_names/a.kl"
@@ -70,11 +70,11 @@ struct kl_1b_node
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_1b_push__3i32( int32_t );
-int32_t kl_1b_from_b__( void );
+int32_t kl_1b_4push__3i32( int32_t );
+int32_t kl_1b_6from_b__( void );
 
 #line 9 "codegen/same_private_names/b.kl"
-int32_t kl_1b_push__3i32( int32_t kl_v_1 )
+int32_t kl_1b_4push__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -96,7 +96,7 @@ int32_t kl_1b_push__3i32( int32_t kl_v_1 )
 }
 
 #line 14 "codegen/same_private_names/b.kl"
-int32_t kl_1b_from_b__( void )
+int32_t kl_1b_6from_b__( void )
 {
     int32_t kl_t0;
     struct kl_1b_node kl_n_1;
@@ -105,7 +105,7 @@ int32_t kl_1b_from_b__( void )
     bool kl_t4;
     int32_t kl_t5;
 #line 16 "codegen/same_private_names/b.kl"
-    kl_t3 = kl_1b_push__3i32( 1 );
+    kl_t3 = kl_1b_4push__3i32( 1 );
 #line 16 "codegen/same_private_names/b.kl"
     kl_t2.kl_value = kl_t3;
 #line 16 "codegen/same_private_names/b.kl"
@@ -132,12 +132,12 @@ int32_t kl_1b_from_b__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__main__( void );
-int32_t kl_1b_from_b__( void );
-int32_t kl_1a_from_a__( void );
+int32_t kl__4main__( void );
+int32_t kl_1b_6from_b__( void );
+int32_t kl_1a_6from_a__( void );
 
 #line 6 "codegen/same_private_names/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -145,7 +145,7 @@ int32_t kl__main__( void )
     int32_t kl_t3;
     bool kl_t4;
 #line 8 "codegen/same_private_names/main.kl"
-    kl_t1 = kl_1a_from_a__(  );
+    kl_t1 = kl_1a_6from_a__(  );
 #line 8 "codegen/same_private_names/main.kl"
     kl_t2 = kl_t1 != 2;
 #line 8 "codegen/same_private_names/main.kl"
@@ -156,7 +156,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 13 "codegen/same_private_names/main.kl"
-    kl_t3 = kl_1b_from_b__(  );
+    kl_t3 = kl_1b_6from_b__(  );
 #line 13 "codegen/same_private_names/main.kl"
     kl_t4 = kl_t3 != 11;
 #line 13 "codegen/same_private_names/main.kl"
@@ -176,5 +176,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/same_private_names/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

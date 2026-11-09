@@ -36,18 +36,18 @@ struct kl_7prelude_result__I3i32_5FaultE
 int32_t kl__live__G;
 int32_t kl__destroyed__G;
 
-void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__Box__dtor( struct kl__Box* );
-int32_t kl__opened__M5Shape( struct kl__Shape );
-int32_t kl__local__4bool( bool );
-struct kl_7prelude_result__I3Box_5FaultE kl__found__4bool( bool );
-struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool );
-int32_t kl__main__( void );
-void kl__Shape__dtor( struct kl__Shape* );
-void kl_7prelude_result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* );
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
+void kl__3Box__dtor( struct kl__Box* );
+int32_t kl__6opened__M5Shape( struct kl__Shape );
+int32_t kl__5local__4bool( bool );
+struct kl_7prelude_result__I3Box_5FaultE kl__5found__4bool( bool );
+struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool );
+int32_t kl__4main__( void );
+void kl__5Shape__dtor( struct kl__Shape* );
+void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* );
 
 #line 10 "opt/moves_scrutinee.kl"
-void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     kl__live__G = kl__live__G + 1;
@@ -56,7 +56,7 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 16 "opt/moves_scrutinee.kl"
-void kl__Box__dtor( struct kl__Box* kl_this_1 )
+void kl__3Box__dtor( struct kl__Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 18 "opt/moves_scrutinee.kl"
@@ -67,7 +67,7 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
 }
 
 #line 38 "opt/moves_scrutinee.kl"
-int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
+int32_t kl__6opened__M5Shape( struct kl__Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -90,7 +90,7 @@ int32_t kl__opened__M5Shape( struct kl__Shape kl_s_1 )
 }
 
 #line 50 "opt/moves_scrutinee.kl"
-int32_t kl__local__4bool( bool kl_full_1 )
+int32_t kl__5local__4bool( bool kl_full_1 )
 {
     int32_t kl_t0;
 #line 52 "opt/moves_scrutinee.kl"
@@ -110,7 +110,7 @@ int32_t kl__local__4bool( bool kl_full_1 )
 }
 
 #line 62 "opt/moves_scrutinee.kl"
-struct kl_7prelude_result__I3Box_5FaultE kl__found__4bool( bool kl_ok_1 )
+struct kl_7prelude_result__I3Box_5FaultE kl__5found__4bool( bool kl_ok_1 )
 {
     struct kl_7prelude_result__I3Box_5FaultE kl_t0;
 #line 64 "opt/moves_scrutinee.kl"
@@ -133,7 +133,7 @@ struct kl_7prelude_result__I3Box_5FaultE kl__found__4bool( bool kl_ok_1 )
 }
 
 #line 72 "opt/moves_scrutinee.kl"
-struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
+struct kl_7prelude_result__I3i32_5FaultE kl__5tried__4bool( bool kl_ok_1 )
 {
     struct kl_7prelude_result__I3i32_5FaultE kl_t0;
 #line 64 "opt/moves_scrutinee.kl"
@@ -158,7 +158,7 @@ struct kl_7prelude_result__I3i32_5FaultE kl__tried__4bool( bool kl_ok_1 )
 }
 
 #line 78 "opt/moves_scrutinee.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -234,7 +234,7 @@ int32_t kl__main__( void )
 }
 
 #line 25 "opt/moves_scrutinee.kl"
-void kl__Shape__dtor( struct kl__Shape* kl_t1 )
+void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
 {
     bool kl_t2;
 #line 25 "opt/moves_scrutinee.kl"
@@ -253,7 +253,7 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
 }
 
 #line 143 "<prelude>"
-void kl_7prelude_result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* kl_t1 )
+void kl_7prelude_6result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5FaultE* kl_t1 )
 {
     bool kl_t2;
 #line 143 "<prelude>"
@@ -275,5 +275,5 @@ void kl_7prelude_result__I3Box_5FaultE__dtor( struct kl_7prelude_result__I3Box_5
 int main( void )
 {
 #line 78 "opt/moves_scrutinee.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

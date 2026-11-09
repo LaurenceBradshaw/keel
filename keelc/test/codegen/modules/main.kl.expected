@@ -13,10 +13,10 @@ struct kl_5shape_Point
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_5shape_area__5Point( struct kl_5shape_Point );
+int32_t kl_5shape_4area__5Point( struct kl_5shape_Point );
 
 #line 8 "codegen/modules/shape.kl"
-int32_t kl_5shape_area__5Point( struct kl_5shape_Point kl_p_1 )
+int32_t kl_5shape_4area__5Point( struct kl_5shape_Point kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -46,11 +46,11 @@ int32_t kl_5tally_count__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_5tally_twice__3i32( int32_t );
-int32_t kl_5tally_bump__3i32( int32_t );
+int32_t kl_5tally_5twice__3i32( int32_t );
+int32_t kl_5tally_4bump__3i32( int32_t );
 
 #line 4 "codegen/modules/tally.kl"
-int32_t kl_5tally_twice__3i32( int32_t kl_v_1 )
+int32_t kl_5tally_5twice__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -72,14 +72,14 @@ int32_t kl_5tally_twice__3i32( int32_t kl_v_1 )
 }
 
 #line 9 "codegen/modules/tally.kl"
-int32_t kl_5tally_bump__3i32( int32_t kl_by_1 )
+int32_t kl_5tally_4bump__3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     bool kl_t3;
     int32_t kl_t4;
 #line 11 "codegen/modules/tally.kl"
-    kl_t2 = kl_5tally_twice__3i32( kl_by_1 );
+    kl_t2 = kl_5tally_5twice__3i32( kl_by_1 );
 #line 11 "codegen/modules/tally.kl"
     kl_t3 = __builtin_add_overflow( kl_5tally_count__G, kl_t2, &( int32_t ) { 0 } );
 #line 11 "codegen/modules/tally.kl"
@@ -112,12 +112,12 @@ struct kl_5shape_Point
 
 extern int32_t kl_5tally_count__G;
 
-int32_t kl__main__( void );
-int32_t kl_5tally_bump__3i32( int32_t );
-int32_t kl_5shape_area__5Point( struct kl_5shape_Point );
+int32_t kl__4main__( void );
+int32_t kl_5tally_4bump__3i32( int32_t );
+int32_t kl_5shape_4area__5Point( struct kl_5shape_Point );
 
 #line 6 "codegen/modules/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl_5shape_Point kl_p_1;
@@ -135,7 +135,7 @@ int32_t kl__main__( void )
     kl_t2.kl_y = 4;
 #line 8 "codegen/modules/main.kl"
     kl_p_1 = kl_t2;
-    kl_t3 = kl_5shape_area__5Point( kl_p_1 );
+    kl_t3 = kl_5shape_4area__5Point( kl_p_1 );
 #line 9 "codegen/modules/main.kl"
     kl_t4 = kl_t3 != 12;
 #line 9 "codegen/modules/main.kl"
@@ -146,7 +146,7 @@ int32_t kl__main__( void )
 #line 9 "codegen/modules/main.kl"
     return kl_t0;
     bb2:
-    kl_t5 = kl_5tally_bump__3i32( 1 );
+    kl_t5 = kl_5tally_4bump__3i32( 1 );
 #line 11 "codegen/modules/main.kl"
     kl_t6 = kl_t5 != 2;
 #line 11 "codegen/modules/main.kl"
@@ -158,7 +158,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 12 "codegen/modules/main.kl"
-    kl_t7 = kl_5tally_bump__3i32( 2 );
+    kl_t7 = kl_5tally_4bump__3i32( 2 );
 #line 12 "codegen/modules/main.kl"
     kl_t8 = kl_t7 != 6;
 #line 12 "codegen/modules/main.kl"
@@ -188,5 +188,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/modules/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

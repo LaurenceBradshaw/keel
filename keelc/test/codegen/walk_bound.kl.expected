@@ -30,14 +30,14 @@ struct kl__Bag__I3f64E
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__main__( void );
-void kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E*, struct kl__A3_3i32 );
-int32_t kl__sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* );
-void kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E*, struct kl__A3_3f64 );
-double kl__first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* );
+int32_t kl__4main__( void );
+void kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E*, struct kl__A3_3i32 );
+int32_t kl__3sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* );
+void kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E*, struct kl__A3_3f64 );
+double kl__11first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* );
 
 #line 63 "codegen/walk_bound.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Bag__I3i32E kl_b_1;
@@ -91,11 +91,11 @@ int32_t kl__main__( void )
 #line 65 "codegen/walk_bound.kl"
     kl_t3.e[kl_t6] = 3;
 #line 65 "codegen/walk_bound.kl"
-    kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
+    kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( kl_t2, kl_t3 );
 #line 67 "codegen/walk_bound.kl"
     kl_t8 = &kl_b_1;
 #line 67 "codegen/walk_bound.kl"
-    kl_t9 = kl__sum__I3BagI3i32EE__3BagI3i32E( kl_t8 );
+    kl_t9 = kl__3sum__I3BagI3i32EE__3BagI3i32E( kl_t8 );
 #line 67 "codegen/walk_bound.kl"
     kl_t10 = kl_t9 != 6;
 #line 67 "codegen/walk_bound.kl"
@@ -153,7 +153,7 @@ int32_t kl__main__( void )
 #line 78 "codegen/walk_bound.kl"
     kl_t20 = &kl_b_1;
 #line 78 "codegen/walk_bound.kl"
-    kl_t21 = kl__sum__I3BagI3i32EE__3BagI3i32E( kl_t20 );
+    kl_t21 = kl__3sum__I3BagI3i32EE__3BagI3i32E( kl_t20 );
 #line 78 "codegen/walk_bound.kl"
     kl_t22 = kl_t21 != 60;
 #line 78 "codegen/walk_bound.kl"
@@ -178,11 +178,11 @@ int32_t kl__main__( void )
 #line 83 "codegen/walk_bound.kl"
     kl_t25.e[kl_t28] = 4.0;
 #line 83 "codegen/walk_bound.kl"
-    kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
+    kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( kl_t24, kl_t25 );
 #line 85 "codegen/walk_bound.kl"
     kl_t30 = &kl_f_23;
 #line 85 "codegen/walk_bound.kl"
-    kl_t31 = kl__first_large__I3BagI3f64EE__3BagI3f64E( kl_t30 );
+    kl_t31 = kl__11first_large__I3BagI3f64EE__3BagI3f64E( kl_t30 );
 #line 85 "codegen/walk_bound.kl"
     kl_t32 = kl_t31 != 2.5;
 #line 85 "codegen/walk_bound.kl"
@@ -199,7 +199,7 @@ int32_t kl__main__( void )
 }
 
 #line 12 "codegen/walk_bound.kl"
-void kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_this_1, struct kl__A3_3i32 kl_given_2 )
+void kl__3Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_this_1, struct kl__A3_3i32 kl_given_2 )
 {
     ( *kl_this_1 ).kl_items = kl_given_2;
     return;
@@ -207,7 +207,7 @@ void kl__Bag__I3i32E__R3BagI3i32E_A3_3i32__ctor( struct kl__Bag__I3i32E* kl_this
 }
 
 #line 34 "codegen/walk_bound.kl"
-int32_t kl__sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
+int32_t kl__3sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -274,7 +274,7 @@ int32_t kl__sum__I3BagI3i32EE__3BagI3i32E( struct kl__Bag__I3i32E* kl_c_1 )
 }
 
 #line 12 "codegen/walk_bound.kl"
-void kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_this_1, struct kl__A3_3f64 kl_given_2 )
+void kl__3Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_this_1, struct kl__A3_3f64 kl_given_2 )
 {
     ( *kl_this_1 ).kl_items = kl_given_2;
     return;
@@ -282,7 +282,7 @@ void kl__Bag__I3f64E__R3BagI3f64E_A3_3f64__ctor( struct kl__Bag__I3f64E* kl_this
 }
 
 #line 47 "codegen/walk_bound.kl"
-double kl__first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* kl_c_1 )
+double kl__11first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* kl_c_1 )
 {
     double kl_t0;
     double kl_found_2;
@@ -350,5 +350,5 @@ double kl__first_large__I3BagI3f64EE__3BagI3f64E( struct kl__Bag__I3f64E* kl_c_1
 int main( void )
 {
 #line 63 "codegen/walk_bound.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

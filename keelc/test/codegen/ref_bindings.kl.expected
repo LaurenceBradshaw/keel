@@ -13,11 +13,11 @@ struct kl__Point
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__bump_twice__R3i32( int32_t* );
-int32_t kl__main__( void );
+void kl__10bump_twice__R3i32( int32_t* );
+int32_t kl__4main__( void );
 
 #line 12 "codegen/ref_bindings.kl"
-void kl__bump_twice__R3i32( int32_t* kl_n_1 )
+void kl__10bump_twice__R3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_inner_2;
     bool kl_t3;
@@ -54,7 +54,7 @@ void kl__bump_twice__R3i32( int32_t* kl_n_1 )
 }
 
 #line 20 "codegen/ref_bindings.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -93,7 +93,7 @@ int32_t kl__main__( void )
 #line 28 "codegen/ref_bindings.kl"
     kl_t5 = &kl_a_1;
 #line 28 "codegen/ref_bindings.kl"
-    kl__bump_twice__R3i32( kl_t5 );
+    kl__10bump_twice__R3i32( kl_t5 );
 #line 30 "codegen/ref_bindings.kl"
     kl_t8.kl_x = 2;
 #line 30 "codegen/ref_bindings.kl"
@@ -152,5 +152,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 20 "codegen/ref_bindings.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

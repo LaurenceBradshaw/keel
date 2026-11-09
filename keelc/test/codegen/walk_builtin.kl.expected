@@ -41,15 +41,15 @@ int32_t kl__drops__G = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
-void kl__Counted__dtor( struct kl__Counted* );
-int32_t kl__sum__L3i32( int32_t*, uint64_t );
-void kl__double_all__RL3i32( int32_t*, uint64_t );
-int32_t kl__main__( void );
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
+void kl__7Counted__dtor( struct kl__Counted* );
+int32_t kl__3sum__L3i32( int32_t*, uint64_t );
+void kl__10double_all__RL3i32( int32_t*, uint64_t );
+int32_t kl__4main__( void );
 void kl__A3_7Counted__dtor( struct kl__A3_7Counted* );
 
 #line 10 "codegen/walk_builtin.kl"
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -57,7 +57,7 @@ void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t k
 }
 
 #line 15 "codegen/walk_builtin.kl"
-void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+void kl__7Counted__dtor( struct kl__Counted* kl_this_1 )
 {
     bool kl_t2;
     ( void ) kl_this_1;
@@ -76,7 +76,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 }
 
 #line 27 "codegen/walk_builtin.kl"
-int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+int32_t kl__3sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
 #line 27 "codegen/walk_builtin.kl"
@@ -141,7 +141,7 @@ int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 }
 
 #line 39 "codegen/walk_builtin.kl"
-void kl__double_all__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
+void kl__10double_all__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
 #line 39 "codegen/walk_builtin.kl"
     struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
@@ -199,7 +199,7 @@ void kl__double_all__RL3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_siz
 }
 
 #line 47 "codegen/walk_builtin.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__A4_3i32 kl_a_1;
@@ -378,7 +378,7 @@ int32_t kl__main__( void )
 #line 63 "codegen/walk_builtin.kl"
     kl_t17 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t16, 4 };
 #line 63 "codegen/walk_builtin.kl"
-    kl_t18 = kl__sum__L3i32( ( kl_t17 ).data, ( kl_t17 ).size );
+    kl_t18 = kl__3sum__L3i32( ( kl_t17 ).data, ( kl_t17 ).size );
 #line 63 "codegen/walk_builtin.kl"
     kl_t19 = kl_t18 != 10;
 #line 63 "codegen/walk_builtin.kl"
@@ -395,7 +395,7 @@ int32_t kl__main__( void )
 #line 68 "codegen/walk_builtin.kl"
     kl_t22 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t21, 4 };
 #line 68 "codegen/walk_builtin.kl"
-    kl__double_all__RL3i32( ( kl_t22 ).data, ( kl_t22 ).size );
+    kl__10double_all__RL3i32( ( kl_t22 ).data, ( kl_t22 ).size );
 #line 70 "codegen/walk_builtin.kl"
     kl_t25 = 0;
 #line 70 "codegen/walk_builtin.kl"
@@ -430,7 +430,7 @@ int32_t kl__main__( void )
 #line 76 "codegen/walk_builtin.kl"
     kl_t87 = true;
 #line 76 "codegen/walk_builtin.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t32, 1 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t32, 1 );
 #line 76 "codegen/walk_builtin.kl"
     kl_t88 = false;
 #line 76 "codegen/walk_builtin.kl"
@@ -438,7 +438,7 @@ int32_t kl__main__( void )
 #line 76 "codegen/walk_builtin.kl"
     kl_t88 = true;
 #line 76 "codegen/walk_builtin.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t35, 2 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t35, 2 );
 #line 76 "codegen/walk_builtin.kl"
     kl_t89 = false;
 #line 76 "codegen/walk_builtin.kl"
@@ -446,7 +446,7 @@ int32_t kl__main__( void )
 #line 76 "codegen/walk_builtin.kl"
     kl_t89 = true;
 #line 76 "codegen/walk_builtin.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t38, 3 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t38, 3 );
 #line 76 "codegen/walk_builtin.kl"
     kl_t40 = 0;
 #line 76 "codegen/walk_builtin.kl"
@@ -478,11 +478,11 @@ int32_t kl__main__( void )
 #line 76 "codegen/walk_builtin.kl"
     if ( kl_t86 ) kl__A3_7Counted__dtor( &kl_t30 );
 #line 76 "codegen/walk_builtin.kl"
-    if ( kl_t89 ) kl__Counted__dtor( &kl_t37 );
+    if ( kl_t89 ) kl__7Counted__dtor( &kl_t37 );
 #line 76 "codegen/walk_builtin.kl"
-    if ( kl_t88 ) kl__Counted__dtor( &kl_t34 );
+    if ( kl_t88 ) kl__7Counted__dtor( &kl_t34 );
 #line 76 "codegen/walk_builtin.kl"
-    if ( kl_t87 ) kl__Counted__dtor( &kl_t31 );
+    if ( kl_t87 ) kl__7Counted__dtor( &kl_t31 );
 #line 76 "codegen/walk_builtin.kl"
     kl_t87 = false;
 #line 76 "codegen/walk_builtin.kl"
@@ -748,7 +748,7 @@ void kl__A3_7Counted__dtor( struct kl__A3_7Counted* kl_t1 )
 #line 6 "codegen/walk_builtin.kl"
     kl_t2 = kl_t2 - 1;
 #line 6 "codegen/walk_builtin.kl"
-    kl__Counted__dtor( &( *kl_t1 ).e[kl_t2] );
+    kl__7Counted__dtor( &( *kl_t1 ).e[kl_t2] );
 #line 6 "codegen/walk_builtin.kl"
     goto bb1;
     bb3:
@@ -761,5 +761,5 @@ void kl__A3_7Counted__dtor( struct kl__A3_7Counted* kl_t1 )
 int main( void )
 {
 #line 47 "codegen/walk_builtin.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

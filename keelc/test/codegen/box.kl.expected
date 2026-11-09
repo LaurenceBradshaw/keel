@@ -54,8 +54,8 @@ struct kl_7prelude_box__I6SquareE
 struct kl__Shape__vtable
 {
     void ( *drop )( void* );
-    double ( *kl__area__ )( void* );
-    void ( *kl__grow__3f64 )( void*, double );
+    double ( *kl__4area__ )( void* );
+    void ( *kl__4grow__3f64 )( void*, double );
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -63,26 +63,26 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__area__S6Square( struct kl__Square* );
-void kl__grow__S6Square_3f64( struct kl__Square*, double );
-void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
-void kl__Buffer__dtor( struct kl__Buffer* );
-uint64_t kl__count__S6Buffer( struct kl__Buffer* );
-void kl__Framed__R6Framed_3u64__ctor( struct kl__Framed*, uint64_t );
-double kl__area__S6Framed( struct kl__Framed* );
-void kl__grow__S6Framed_3f64( struct kl__Framed*, double );
-void kl__Scene__R5Scene__ctor( struct kl__Scene* );
-double kl__area__S5Scene( struct kl__Scene* );
-struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool );
-double kl__measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE );
-int32_t kl__main__( void );
-void kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct kl_7prelude_box__I6FramedE*, struct kl__Framed );
-struct kl__Shape__ref kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* );
-void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE*, struct kl__Square );
-struct kl__Square* kl_7prelude_get__I6SquareE__SQ7prelude3boxI6SquareE( struct kl_7prelude_box__I6SquareE* );
-void kl_7prelude_box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* );
-void kl_7prelude_box__I6FramedE__dtor( struct kl_7prelude_box__I6FramedE* );
-void kl_7prelude_box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* );
+double kl__4area__S6Square( struct kl__Square* );
+void kl__4grow__S6Square_3f64( struct kl__Square*, double );
+void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
+void kl__6Buffer__dtor( struct kl__Buffer* );
+uint64_t kl__5count__S6Buffer( struct kl__Buffer* );
+void kl__6Framed__R6Framed_3u64__ctor( struct kl__Framed*, uint64_t );
+double kl__4area__S6Framed( struct kl__Framed* );
+void kl__4grow__S6Framed_3f64( struct kl__Framed*, double );
+void kl__5Scene__R5Scene__ctor( struct kl__Scene* );
+double kl__4area__S5Scene( struct kl__Scene* );
+struct kl_7prelude_box__I5ShapeE kl__4make__4bool( bool );
+double kl__7measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE );
+int32_t kl__4main__( void );
+void kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct kl_7prelude_box__I6FramedE*, struct kl__Framed );
+struct kl__Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* );
+void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE*, struct kl__Square );
+struct kl__Square* kl_7prelude_3get__I6SquareE__SQ7prelude3boxI6SquareE( struct kl_7prelude_box__I6SquareE* );
+void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* );
+void kl_7prelude_3box__I6FramedE__dtor( struct kl_7prelude_box__I6FramedE* );
+void kl_7prelude_3box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* );
 void kl__Framed__drop( struct kl__Framed* );
 
 static void kl__Framed__as_kl__Shape__drop( void* self )
@@ -90,37 +90,37 @@ static void kl__Framed__as_kl__Shape__drop( void* self )
     kl__Framed__drop( ( struct kl__Framed* ) self );
 }
 
-static double kl__Framed__as_kl__Shape__kl__area__( void* self )
+static double kl__Framed__as_kl__Shape__kl__4area__( void* self )
 {
-    return kl__area__S6Framed( ( struct kl__Framed* ) self );
+    return kl__4area__S6Framed( ( struct kl__Framed* ) self );
 }
 
-static void kl__Framed__as_kl__Shape__kl__grow__3f64( void* self, double p0 )
+static void kl__Framed__as_kl__Shape__kl__4grow__3f64( void* self, double p0 )
 {
-    kl__grow__S6Framed_3f64( ( struct kl__Framed* ) self, p0 );
+    kl__4grow__S6Framed_3f64( ( struct kl__Framed* ) self, p0 );
 }
 
-static const struct kl__Shape__vtable kl__Framed__as_kl__Shape = { kl__Framed__as_kl__Shape__drop, kl__Framed__as_kl__Shape__kl__area__, kl__Framed__as_kl__Shape__kl__grow__3f64 };
+static const struct kl__Shape__vtable kl__Framed__as_kl__Shape = { kl__Framed__as_kl__Shape__drop, kl__Framed__as_kl__Shape__kl__4area__, kl__Framed__as_kl__Shape__kl__4grow__3f64 };
 
 static void kl__Square__as_kl__Shape__drop( void* self )
 {
     ( void ) self;
 }
 
-static double kl__Square__as_kl__Shape__kl__area__( void* self )
+static double kl__Square__as_kl__Shape__kl__4area__( void* self )
 {
-    return kl__area__S6Square( ( struct kl__Square* ) self );
+    return kl__4area__S6Square( ( struct kl__Square* ) self );
 }
 
-static void kl__Square__as_kl__Shape__kl__grow__3f64( void* self, double p0 )
+static void kl__Square__as_kl__Shape__kl__4grow__3f64( void* self, double p0 )
 {
-    kl__grow__S6Square_3f64( ( struct kl__Square* ) self, p0 );
+    kl__4grow__S6Square_3f64( ( struct kl__Square* ) self, p0 );
 }
 
-static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__drop, kl__Square__as_kl__Shape__kl__area__, kl__Square__as_kl__Shape__kl__grow__3f64 };
+static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__drop, kl__Square__as_kl__Shape__kl__4area__, kl__Square__as_kl__Shape__kl__4grow__3f64 };
 
 #line 16 "codegen/box.kl"
-double kl__area__S6Square( struct kl__Square* kl_this_1 )
+double kl__4area__S6Square( struct kl__Square* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -134,7 +134,7 @@ double kl__area__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 17 "codegen/box.kl"
-void kl__grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
+void kl__4grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
 {
     double kl_t3;
 #line 17 "codegen/box.kl"
@@ -147,7 +147,7 @@ void kl__grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
 }
 
 #line 25 "codegen/box.kl"
-void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_n_2 )
+void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_n_2 )
 {
     uint8_t* kl_t3;
 #line 29 "codegen/box.kl"
@@ -161,7 +161,7 @@ void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_
 }
 
 #line 34 "codegen/box.kl"
-void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
+void kl__6Buffer__dtor( struct kl__Buffer* kl_this_1 )
 {
 #line 38 "codegen/box.kl"
     kl_rt_free( ( *kl_this_1 ).kl_bytes );
@@ -171,7 +171,7 @@ void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
 }
 
 #line 42 "codegen/box.kl"
-uint64_t kl__count__S6Buffer( struct kl__Buffer* kl_this_1 )
+uint64_t kl__5count__S6Buffer( struct kl__Buffer* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 42 "codegen/box.kl"
@@ -182,7 +182,7 @@ uint64_t kl__count__S6Buffer( struct kl__Buffer* kl_this_1 )
 }
 
 #line 50 "codegen/box.kl"
-void kl__Framed__R6Framed_3u64__ctor( struct kl__Framed* kl_this_1, uint64_t kl_n_2 )
+void kl__6Framed__R6Framed_3u64__ctor( struct kl__Framed* kl_this_1, uint64_t kl_n_2 )
 {
     struct kl__Buffer kl_t3;
     struct kl__Buffer* kl_t4;
@@ -196,13 +196,13 @@ void kl__Framed__R6Framed_3u64__ctor( struct kl__Framed* kl_this_1, uint64_t kl_
 #line 52 "codegen/box.kl"
     kl_t6 = true;
 #line 52 "codegen/box.kl"
-    kl__Buffer__R6Buffer_3u64__ctor( kl_t4, kl_n_2 );
+    kl__6Buffer__R6Buffer_3u64__ctor( kl_t4, kl_n_2 );
 #line 52 "codegen/box.kl"
     ( *kl_this_1 ).kl_frame = kl_t3;
 #line 52 "codegen/box.kl"
     kl_t6 = false;
 #line 52 "codegen/box.kl"
-    if ( kl_t6 ) kl__Buffer__dtor( &kl_t3 );
+    if ( kl_t6 ) kl__6Buffer__dtor( &kl_t3 );
 #line 52 "codegen/box.kl"
     kl_t6 = false;
     ( *kl_this_1 ).kl_extra = 0.0;
@@ -211,7 +211,7 @@ void kl__Framed__R6Framed_3u64__ctor( struct kl__Framed* kl_this_1, uint64_t kl_
 }
 
 #line 56 "codegen/box.kl"
-double kl__area__S6Framed( struct kl__Framed* kl_this_1 )
+double kl__4area__S6Framed( struct kl__Framed* kl_this_1 )
 {
     double kl_t0;
     struct kl__Buffer* kl_t2;
@@ -224,7 +224,7 @@ double kl__area__S6Framed( struct kl__Framed* kl_this_1 )
 #line 56 "codegen/box.kl"
     kl_t2 = &( *kl_this_1 ).kl_frame;
 #line 56 "codegen/box.kl"
-    kl_t3 = kl__count__S6Buffer( kl_t2 );
+    kl_t3 = kl__5count__S6Buffer( kl_t2 );
 #line 56 "codegen/box.kl"
     kl_t4 = ( double ) kl_t3;
 #line 56 "codegen/box.kl"
@@ -252,7 +252,7 @@ double kl__area__S6Framed( struct kl__Framed* kl_this_1 )
 }
 
 #line 57 "codegen/box.kl"
-void kl__grow__S6Framed_3f64( struct kl__Framed* kl_this_1, double kl_by_2 )
+void kl__4grow__S6Framed_3f64( struct kl__Framed* kl_this_1, double kl_by_2 )
 {
     double kl_t3;
 #line 57 "codegen/box.kl"
@@ -265,7 +265,7 @@ void kl__grow__S6Framed_3f64( struct kl__Framed* kl_this_1, double kl_by_2 )
 }
 
 #line 64 "codegen/box.kl"
-void kl__Scene__R5Scene__ctor( struct kl__Scene* kl_this_1 )
+void kl__5Scene__R5Scene__ctor( struct kl__Scene* kl_this_1 )
 {
     struct kl_7prelude_box__I6FramedE kl_t2;
     struct kl_7prelude_box__I6FramedE* kl_t3;
@@ -291,9 +291,9 @@ void kl__Scene__R5Scene__ctor( struct kl__Scene* kl_this_1 )
 #line 64 "codegen/box.kl"
     kl_t10 = true;
 #line 64 "codegen/box.kl"
-    kl__Framed__R6Framed_3u64__ctor( kl_t5, 2 );
+    kl__6Framed__R6Framed_3u64__ctor( kl_t5, 2 );
 #line 64 "codegen/box.kl"
-    kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t3, kl_t4 );
+    kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t3, kl_t4 );
 #line 64 "codegen/box.kl"
     kl_t10 = false;
 #line 64 "codegen/box.kl"
@@ -303,9 +303,9 @@ void kl__Scene__R5Scene__ctor( struct kl__Scene* kl_this_1 )
 #line 64 "codegen/box.kl"
     ( *kl_this_1 ).kl_main = kl_t8;
 #line 64 "codegen/box.kl"
-    if ( kl_t9 ) kl_7prelude_box__I6FramedE__dtor( &kl_t2 );
+    if ( kl_t9 ) kl_7prelude_3box__I6FramedE__dtor( &kl_t2 );
 #line 64 "codegen/box.kl"
-    if ( kl_t10 ) kl__Buffer__dtor( &kl_t4.kl_frame );
+    if ( kl_t10 ) kl__6Buffer__dtor( &kl_t4.kl_frame );
 #line 64 "codegen/box.kl"
     kl_t10 = false;
 #line 64 "codegen/box.kl"
@@ -316,7 +316,7 @@ void kl__Scene__R5Scene__ctor( struct kl__Scene* kl_this_1 )
 }
 
 #line 66 "codegen/box.kl"
-double kl__area__S5Scene( struct kl__Scene* kl_this_1 )
+double kl__4area__S5Scene( struct kl__Scene* kl_this_1 )
 {
     double kl_t0;
     struct kl_7prelude_box__I5ShapeE* kl_t2;
@@ -326,11 +326,11 @@ double kl__area__S5Scene( struct kl__Scene* kl_this_1 )
 #line 66 "codegen/box.kl"
     kl_t2 = &( *kl_this_1 ).kl_main;
 #line 66 "codegen/box.kl"
-    kl_t3 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t2 );
+    kl_t3 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t2 );
 #line 66 "codegen/box.kl"
     kl_t4 = kl_t3;
 #line 66 "codegen/box.kl"
-    kl_t5 = kl_t4.vtable->kl__area__( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl__4area__( kl_t4.self );
 #line 66 "codegen/box.kl"
     kl_t0 = kl_t5;
 #line 66 "codegen/box.kl"
@@ -339,7 +339,7 @@ double kl__area__S5Scene( struct kl__Scene* kl_this_1 )
 }
 
 #line 69 "codegen/box.kl"
-struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
+struct kl_7prelude_box__I5ShapeE kl__4make__4bool( bool kl_square_1 )
 {
     struct kl_7prelude_box__I5ShapeE kl_t0;
     struct kl_7prelude_box__I6SquareE kl_t2;
@@ -371,7 +371,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
 #line 73 "codegen/box.kl"
     kl_t4.kl_side = 3.0;
 #line 73 "codegen/box.kl"
-    kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t3, kl_t4 );
+    kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t3, kl_t4 );
 #line 73 "codegen/box.kl"
     kl_t6 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_t2.kl_p_, &kl__Square__as_kl__Shape } };
 #line 73 "codegen/box.kl"
@@ -379,7 +379,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
 #line 73 "codegen/box.kl"
     kl_t0 = kl_t6;
 #line 73 "codegen/box.kl"
-    if ( kl_t14 ) kl_7prelude_box__I6SquareE__dtor( &kl_t2 );
+    if ( kl_t14 ) kl_7prelude_3box__I6SquareE__dtor( &kl_t2 );
 #line 73 "codegen/box.kl"
     kl_t14 = false;
 #line 73 "codegen/box.kl"
@@ -398,13 +398,13 @@ struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
 #line 76 "codegen/box.kl"
     kl_t16 = true;
 #line 76 "codegen/box.kl"
-    kl__Framed__R6Framed_3u64__ctor( kl_t10, 4 );
+    kl__6Framed__R6Framed_3u64__ctor( kl_t10, 4 );
 #line 76 "codegen/box.kl"
-    kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t8, kl_t9 );
+    kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t8, kl_t9 );
 #line 76 "codegen/box.kl"
     kl_t16 = false;
 #line 76 "codegen/box.kl"
-    if ( kl_t16 ) kl__Buffer__dtor( &kl_t9.kl_frame );
+    if ( kl_t16 ) kl__6Buffer__dtor( &kl_t9.kl_frame );
 #line 76 "codegen/box.kl"
     kl_t16 = false;
     kl_t13 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_framed_7.kl_p_, &kl__Framed__as_kl__Shape } };
@@ -413,7 +413,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
 #line 77 "codegen/box.kl"
     kl_t0 = kl_t13;
 #line 77 "codegen/box.kl"
-    if ( kl_t15 ) kl_7prelude_box__I6FramedE__dtor( &kl_framed_7 );
+    if ( kl_t15 ) kl_7prelude_3box__I6FramedE__dtor( &kl_framed_7 );
 #line 77 "codegen/box.kl"
     kl_t15 = false;
 #line 77 "codegen/box.kl"
@@ -421,7 +421,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__4bool( bool kl_square_1 )
 }
 
 #line 80 "codegen/box.kl"
-double kl__measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE kl_shape_1 )
+double kl__7measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE kl_shape_1 )
 {
     double kl_t0;
     struct kl_7prelude_box__I5ShapeE* kl_t2;
@@ -431,21 +431,21 @@ double kl__measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE kl_
 #line 82 "codegen/box.kl"
     kl_t2 = &kl_shape_1;
 #line 82 "codegen/box.kl"
-    kl_t3 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t2 );
+    kl_t3 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t2 );
 #line 82 "codegen/box.kl"
     kl_t4 = kl_t3;
 #line 82 "codegen/box.kl"
-    kl_t5 = kl_t4.vtable->kl__area__( kl_t4.self );
+    kl_t5 = kl_t4.vtable->kl__4area__( kl_t4.self );
 #line 82 "codegen/box.kl"
     kl_t0 = kl_t5;
 #line 82 "codegen/box.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_shape_1 );
+    kl_7prelude_3box__I5ShapeE__dtor( &kl_shape_1 );
 #line 82 "codegen/box.kl"
     return kl_t0;
 }
 
 #line 85 "codegen/box.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl_7prelude_box__I6SquareE kl_plain_1;
@@ -560,14 +560,14 @@ int32_t kl__main__( void )
 #line 87 "codegen/box.kl"
     kl_t3.kl_side = 1.0;
 #line 87 "codegen/box.kl"
-    kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t2, kl_t3 );
+    kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t2, kl_t3 );
     kl_t5 = &kl_plain_1;
 #line 88 "codegen/box.kl"
-    kl_t6 = kl_7prelude_get__I6SquareE__SQ7prelude3boxI6SquareE( kl_t5 );
+    kl_t6 = kl_7prelude_3get__I6SquareE__SQ7prelude3boxI6SquareE( kl_t5 );
 #line 88 "codegen/box.kl"
     kl_t7 = &( *kl_t6 );
 #line 88 "codegen/box.kl"
-    kl_t8 = kl__area__S6Square( kl_t7 );
+    kl_t8 = kl__4area__S6Square( kl_t7 );
 #line 88 "codegen/box.kl"
     kl_t9 = kl_t8 != 1.0;
 #line 88 "codegen/box.kl"
@@ -576,7 +576,7 @@ int32_t kl__main__( void )
 #line 88 "codegen/box.kl"
     kl_t0 = 1;
 #line 88 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 88 "codegen/box.kl"
     kl_t80 = false;
 #line 88 "codegen/box.kl"
@@ -593,19 +593,19 @@ int32_t kl__main__( void )
     kl_t81 = true;
     kl_t13 = &kl_one_10;
 #line 91 "codegen/box.kl"
-    kl_t14 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t13 );
+    kl_t14 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t13 );
 #line 91 "codegen/box.kl"
     kl_s_12 = kl_t14;
     kl_t15 = kl_s_12;
 #line 92 "codegen/box.kl"
-    kl_t15.vtable->kl__grow__3f64( kl_t15.self, 1.0 );
+    kl_t15.vtable->kl__4grow__3f64( kl_t15.self, 1.0 );
     kl_t17 = &kl_one_10;
 #line 93 "codegen/box.kl"
-    kl_t18 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t17 );
+    kl_t18 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t17 );
 #line 93 "codegen/box.kl"
     kl_t19 = kl_t18;
 #line 93 "codegen/box.kl"
-    kl_t20 = kl_t19.vtable->kl__area__( kl_t19.self );
+    kl_t20 = kl_t19.vtable->kl__4area__( kl_t19.self );
 #line 93 "codegen/box.kl"
     kl_t21 = kl_t20 != 4.0;
 #line 93 "codegen/box.kl"
@@ -614,11 +614,11 @@ int32_t kl__main__( void )
 #line 93 "codegen/box.kl"
     kl_t0 = 2;
 #line 93 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 93 "codegen/box.kl"
     kl_t81 = false;
 #line 93 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 93 "codegen/box.kl"
     kl_t80 = false;
 #line 93 "codegen/box.kl"
@@ -626,7 +626,7 @@ int32_t kl__main__( void )
     bb4:
     kl_t82 = false;
 #line 95 "codegen/box.kl"
-    kl_t23 = kl__make__4bool( false );
+    kl_t23 = kl__4make__4bool( false );
 #line 95 "codegen/box.kl"
     kl_t83 = true;
 #line 95 "codegen/box.kl"
@@ -636,24 +636,24 @@ int32_t kl__main__( void )
 #line 95 "codegen/box.kl"
     kl_t82 = true;
 #line 95 "codegen/box.kl"
-    if ( kl_t83 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t23 );
+    if ( kl_t83 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_t23 );
 #line 95 "codegen/box.kl"
     kl_t83 = false;
     kl_t25 = &kl_framed_22;
 #line 96 "codegen/box.kl"
-    kl_t26 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t25 );
+    kl_t26 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t25 );
 #line 96 "codegen/box.kl"
     kl_f_24 = kl_t26;
     kl_t27 = kl_f_24;
 #line 97 "codegen/box.kl"
-    kl_t27.vtable->kl__grow__3f64( kl_t27.self, 2.0 );
+    kl_t27.vtable->kl__4grow__3f64( kl_t27.self, 2.0 );
     kl_t29 = &kl_framed_22;
 #line 98 "codegen/box.kl"
-    kl_t30 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t29 );
+    kl_t30 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t29 );
 #line 98 "codegen/box.kl"
     kl_t31 = kl_t30;
 #line 98 "codegen/box.kl"
-    kl_t32 = kl_t31.vtable->kl__area__( kl_t31.self );
+    kl_t32 = kl_t31.vtable->kl__4area__( kl_t31.self );
 #line 98 "codegen/box.kl"
     kl_t33 = kl_t32 != 6.0;
 #line 98 "codegen/box.kl"
@@ -662,31 +662,31 @@ int32_t kl__main__( void )
 #line 98 "codegen/box.kl"
     kl_t0 = 3;
 #line 98 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 98 "codegen/box.kl"
     kl_t82 = false;
 #line 98 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 98 "codegen/box.kl"
     kl_t81 = false;
 #line 98 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 98 "codegen/box.kl"
     kl_t80 = false;
 #line 98 "codegen/box.kl"
     return kl_t0;
     bb6:
-    kl_t34 = kl__make__4bool( true );
+    kl_t34 = kl__4make__4bool( true );
 #line 100 "codegen/box.kl"
     kl_t84 = true;
 #line 100 "codegen/box.kl"
-    kl_t35 = kl__measure__MQ7prelude3boxI5ShapeE( kl_t34 );
+    kl_t35 = kl__7measure__MQ7prelude3boxI5ShapeE( kl_t34 );
 #line 100 "codegen/box.kl"
     kl_t84 = false;
 #line 100 "codegen/box.kl"
     kl_t36 = kl_t35 != 9.0;
 #line 100 "codegen/box.kl"
-    if ( kl_t84 ) kl_7prelude_box__I5ShapeE__dtor( &kl_t34 );
+    if ( kl_t84 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_t34 );
 #line 100 "codegen/box.kl"
     kl_t84 = false;
 #line 100 "codegen/box.kl"
@@ -695,15 +695,15 @@ int32_t kl__main__( void )
 #line 100 "codegen/box.kl"
     kl_t0 = 4;
 #line 100 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 100 "codegen/box.kl"
     kl_t82 = false;
 #line 100 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 100 "codegen/box.kl"
     kl_t81 = false;
 #line 100 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 100 "codegen/box.kl"
     kl_t80 = false;
 #line 100 "codegen/box.kl"
@@ -722,9 +722,9 @@ int32_t kl__main__( void )
 #line 101 "codegen/box.kl"
     kl_t86 = true;
 #line 101 "codegen/box.kl"
-    kl__Framed__R6Framed_3u64__ctor( kl_t40, 7 );
+    kl__6Framed__R6Framed_3u64__ctor( kl_t40, 7 );
 #line 101 "codegen/box.kl"
-    kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t38, kl_t39 );
+    kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t38, kl_t39 );
 #line 101 "codegen/box.kl"
     kl_t86 = false;
 #line 101 "codegen/box.kl"
@@ -732,13 +732,13 @@ int32_t kl__main__( void )
 #line 101 "codegen/box.kl"
     kl_t85 = false;
 #line 101 "codegen/box.kl"
-    kl_t44 = kl__measure__MQ7prelude3boxI5ShapeE( kl_t43 );
+    kl_t44 = kl__7measure__MQ7prelude3boxI5ShapeE( kl_t43 );
 #line 101 "codegen/box.kl"
     kl_t45 = kl_t44 != 7.0;
 #line 101 "codegen/box.kl"
-    if ( kl_t85 ) kl_7prelude_box__I6FramedE__dtor( &kl_t37 );
+    if ( kl_t85 ) kl_7prelude_3box__I6FramedE__dtor( &kl_t37 );
 #line 101 "codegen/box.kl"
-    if ( kl_t86 ) kl__Buffer__dtor( &kl_t39.kl_frame );
+    if ( kl_t86 ) kl__6Buffer__dtor( &kl_t39.kl_frame );
 #line 101 "codegen/box.kl"
     kl_t86 = false;
 #line 101 "codegen/box.kl"
@@ -749,21 +749,21 @@ int32_t kl__main__( void )
 #line 101 "codegen/box.kl"
     kl_t0 = 5;
 #line 101 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 101 "codegen/box.kl"
     kl_t82 = false;
 #line 101 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 101 "codegen/box.kl"
     kl_t81 = false;
 #line 101 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 101 "codegen/box.kl"
     kl_t80 = false;
 #line 101 "codegen/box.kl"
     return kl_t0;
     bb10:
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 103 "codegen/box.kl"
     kl_one_10 = kl_framed_22;
 #line 103 "codegen/box.kl"
@@ -772,11 +772,11 @@ int32_t kl__main__( void )
     kl_t81 = true;
     kl_t46 = &kl_one_10;
 #line 104 "codegen/box.kl"
-    kl_t47 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t46 );
+    kl_t47 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t46 );
 #line 104 "codegen/box.kl"
     kl_t48 = kl_t47;
 #line 104 "codegen/box.kl"
-    kl_t49 = kl_t48.vtable->kl__area__( kl_t48.self );
+    kl_t49 = kl_t48.vtable->kl__4area__( kl_t48.self );
 #line 104 "codegen/box.kl"
     kl_t50 = kl_t49 != 6.0;
 #line 104 "codegen/box.kl"
@@ -785,15 +785,15 @@ int32_t kl__main__( void )
 #line 104 "codegen/box.kl"
     kl_t0 = 6;
 #line 104 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 104 "codegen/box.kl"
     kl_t82 = false;
 #line 104 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 104 "codegen/box.kl"
     kl_t81 = false;
 #line 104 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 104 "codegen/box.kl"
     kl_t80 = false;
 #line 104 "codegen/box.kl"
@@ -809,7 +809,7 @@ int32_t kl__main__( void )
 #line 106 "codegen/box.kl"
     kl_t54.kl_side = 2.0;
 #line 106 "codegen/box.kl"
-    kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t53, kl_t54 );
+    kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t53, kl_t54 );
 #line 106 "codegen/box.kl"
     kl_t56 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_t52.kl_p_, &kl__Square__as_kl__Shape } };
 #line 106 "codegen/box.kl"
@@ -819,16 +819,16 @@ int32_t kl__main__( void )
 #line 106 "codegen/box.kl"
     kl_t87 = true;
 #line 106 "codegen/box.kl"
-    if ( kl_t88 ) kl_7prelude_box__I6SquareE__dtor( &kl_t52 );
+    if ( kl_t88 ) kl_7prelude_3box__I6SquareE__dtor( &kl_t52 );
 #line 106 "codegen/box.kl"
     kl_t88 = false;
     kl_t57 = &kl_direct_51;
 #line 107 "codegen/box.kl"
-    kl_t58 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t57 );
+    kl_t58 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t57 );
 #line 107 "codegen/box.kl"
     kl_t59 = kl_t58;
 #line 107 "codegen/box.kl"
-    kl_t60 = kl_t59.vtable->kl__area__( kl_t59.self );
+    kl_t60 = kl_t59.vtable->kl__4area__( kl_t59.self );
 #line 107 "codegen/box.kl"
     kl_t61 = kl_t60 != 4.0;
 #line 107 "codegen/box.kl"
@@ -837,19 +837,19 @@ int32_t kl__main__( void )
 #line 107 "codegen/box.kl"
     kl_t0 = 7;
 #line 107 "codegen/box.kl"
-    if ( kl_t87 ) kl_7prelude_box__I5ShapeE__dtor( &kl_direct_51 );
+    if ( kl_t87 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_direct_51 );
 #line 107 "codegen/box.kl"
     kl_t87 = false;
 #line 107 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 107 "codegen/box.kl"
     kl_t82 = false;
 #line 107 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 107 "codegen/box.kl"
     kl_t81 = false;
 #line 107 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 107 "codegen/box.kl"
     kl_t80 = false;
 #line 107 "codegen/box.kl"
@@ -867,9 +867,9 @@ int32_t kl__main__( void )
 #line 109 "codegen/box.kl"
     kl_t90 = true;
 #line 109 "codegen/box.kl"
-    kl__Framed__R6Framed_3u64__ctor( kl_t65, 5 );
+    kl__6Framed__R6Framed_3u64__ctor( kl_t65, 5 );
 #line 109 "codegen/box.kl"
-    kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t63, kl_t64 );
+    kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( kl_t63, kl_t64 );
 #line 109 "codegen/box.kl"
     kl_t90 = false;
 #line 109 "codegen/box.kl"
@@ -877,26 +877,26 @@ int32_t kl__main__( void )
 #line 109 "codegen/box.kl"
     kl_t89 = false;
 #line 109 "codegen/box.kl"
-    if ( kl_t87 ) kl_7prelude_box__I5ShapeE__dtor( &kl_direct_51 );
+    if ( kl_t87 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_direct_51 );
 #line 109 "codegen/box.kl"
     kl_direct_51 = kl_t68;
 #line 109 "codegen/box.kl"
     kl_t87 = true;
 #line 109 "codegen/box.kl"
-    if ( kl_t89 ) kl_7prelude_box__I6FramedE__dtor( &kl_t62 );
+    if ( kl_t89 ) kl_7prelude_3box__I6FramedE__dtor( &kl_t62 );
 #line 109 "codegen/box.kl"
-    if ( kl_t90 ) kl__Buffer__dtor( &kl_t64.kl_frame );
+    if ( kl_t90 ) kl__6Buffer__dtor( &kl_t64.kl_frame );
 #line 109 "codegen/box.kl"
     kl_t90 = false;
 #line 109 "codegen/box.kl"
     kl_t89 = false;
     kl_t69 = &kl_direct_51;
 #line 110 "codegen/box.kl"
-    kl_t70 = kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t69 );
+    kl_t70 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t69 );
 #line 110 "codegen/box.kl"
     kl_t71 = kl_t70;
 #line 110 "codegen/box.kl"
-    kl_t72 = kl_t71.vtable->kl__area__( kl_t71.self );
+    kl_t72 = kl_t71.vtable->kl__4area__( kl_t71.self );
 #line 110 "codegen/box.kl"
     kl_t73 = kl_t72 != 5.0;
 #line 110 "codegen/box.kl"
@@ -905,19 +905,19 @@ int32_t kl__main__( void )
 #line 110 "codegen/box.kl"
     kl_t0 = 8;
 #line 110 "codegen/box.kl"
-    if ( kl_t87 ) kl_7prelude_box__I5ShapeE__dtor( &kl_direct_51 );
+    if ( kl_t87 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_direct_51 );
 #line 110 "codegen/box.kl"
     kl_t87 = false;
 #line 110 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 110 "codegen/box.kl"
     kl_t82 = false;
 #line 110 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 110 "codegen/box.kl"
     kl_t81 = false;
 #line 110 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 110 "codegen/box.kl"
     kl_t80 = false;
 #line 110 "codegen/box.kl"
@@ -925,10 +925,10 @@ int32_t kl__main__( void )
     bb16:
     kl_t75 = &kl_scene_74;
 #line 112 "codegen/box.kl"
-    kl__Scene__R5Scene__ctor( kl_t75 );
+    kl__5Scene__R5Scene__ctor( kl_t75 );
     kl_t77 = &kl_scene_74;
 #line 113 "codegen/box.kl"
-    kl_t78 = kl__area__S5Scene( kl_t77 );
+    kl_t78 = kl__4area__S5Scene( kl_t77 );
 #line 113 "codegen/box.kl"
     kl_t79 = kl_t78 != 2.0;
 #line 113 "codegen/box.kl"
@@ -937,21 +937,21 @@ int32_t kl__main__( void )
 #line 113 "codegen/box.kl"
     kl_t0 = 9;
 #line 113 "codegen/box.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_scene_74.kl_main );
+    kl_7prelude_3box__I5ShapeE__dtor( &kl_scene_74.kl_main );
 #line 113 "codegen/box.kl"
-    if ( kl_t87 ) kl_7prelude_box__I5ShapeE__dtor( &kl_direct_51 );
+    if ( kl_t87 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_direct_51 );
 #line 113 "codegen/box.kl"
     kl_t87 = false;
 #line 113 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 113 "codegen/box.kl"
     kl_t82 = false;
 #line 113 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 113 "codegen/box.kl"
     kl_t81 = false;
 #line 113 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 113 "codegen/box.kl"
     kl_t80 = false;
 #line 113 "codegen/box.kl"
@@ -959,21 +959,21 @@ int32_t kl__main__( void )
     bb18:
     kl_t0 = 0;
 #line 115 "codegen/box.kl"
-    kl_7prelude_box__I5ShapeE__dtor( &kl_scene_74.kl_main );
+    kl_7prelude_3box__I5ShapeE__dtor( &kl_scene_74.kl_main );
 #line 115 "codegen/box.kl"
-    if ( kl_t87 ) kl_7prelude_box__I5ShapeE__dtor( &kl_direct_51 );
+    if ( kl_t87 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_direct_51 );
 #line 115 "codegen/box.kl"
     kl_t87 = false;
 #line 115 "codegen/box.kl"
-    if ( kl_t82 ) kl_7prelude_box__I5ShapeE__dtor( &kl_framed_22 );
+    if ( kl_t82 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_framed_22 );
 #line 115 "codegen/box.kl"
     kl_t82 = false;
 #line 115 "codegen/box.kl"
-    if ( kl_t81 ) kl_7prelude_box__I5ShapeE__dtor( &kl_one_10 );
+    if ( kl_t81 ) kl_7prelude_3box__I5ShapeE__dtor( &kl_one_10 );
 #line 115 "codegen/box.kl"
     kl_t81 = false;
 #line 115 "codegen/box.kl"
-    if ( kl_t80 ) kl_7prelude_box__I6SquareE__dtor( &kl_plain_1 );
+    if ( kl_t80 ) kl_7prelude_3box__I6SquareE__dtor( &kl_plain_1 );
 #line 115 "codegen/box.kl"
     kl_t80 = false;
 #line 115 "codegen/box.kl"
@@ -981,7 +981,7 @@ int32_t kl__main__( void )
 }
 
 #line 382 "<prelude>"
-void kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct kl_7prelude_box__I6FramedE* kl_this_1, struct kl__Framed kl_value_2 )
+void kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct kl_7prelude_box__I6FramedE* kl_this_1, struct kl__Framed kl_value_2 )
 {
     struct kl__Framed* kl_slot_3;
     struct kl__Framed* kl_t4;
@@ -1006,7 +1006,7 @@ void kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct 
 #line 389 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
 #line 391 "<prelude>"
-    if ( kl_t8 ) kl__Buffer__dtor( &kl_value_2.kl_frame );
+    if ( kl_t8 ) kl__6Buffer__dtor( &kl_value_2.kl_frame );
 #line 391 "<prelude>"
     kl_t8 = false;
 #line 391 "<prelude>"
@@ -1015,7 +1015,7 @@ void kl_7prelude_box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct 
 }
 
 #line 403 "<prelude>"
-struct kl__Shape__ref kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
+struct kl__Shape__ref kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t0;
 #line 405 "<prelude>"
@@ -1025,7 +1025,7 @@ struct kl__Shape__ref kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct 
 }
 
 #line 382 "<prelude>"
-void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE* kl_this_1, struct kl__Square kl_value_2 )
+void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct kl_7prelude_box__I6SquareE* kl_this_1, struct kl__Square kl_value_2 )
 {
     struct kl__Square* kl_slot_3;
     struct kl__Square* kl_t4;
@@ -1050,7 +1050,7 @@ void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct 
 }
 
 #line 403 "<prelude>"
-struct kl__Square* kl_7prelude_get__I6SquareE__SQ7prelude3boxI6SquareE( struct kl_7prelude_box__I6SquareE* kl_this_1 )
+struct kl__Square* kl_7prelude_3get__I6SquareE__SQ7prelude3boxI6SquareE( struct kl_7prelude_box__I6SquareE* kl_this_1 )
 {
     struct kl__Square* kl_t0;
 #line 405 "<prelude>"
@@ -1060,7 +1060,7 @@ struct kl__Square* kl_7prelude_get__I6SquareE__SQ7prelude3boxI6SquareE( struct k
 }
 
 #line 393 "<prelude>"
-void kl_7prelude_box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
+void kl_7prelude_3box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t2;
 #line 397 "<prelude>"
@@ -1074,13 +1074,13 @@ void kl_7prelude_box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_
 }
 
 #line 393 "<prelude>"
-void kl_7prelude_box__I6FramedE__dtor( struct kl_7prelude_box__I6FramedE* kl_this_1 )
+void kl_7prelude_3box__I6FramedE__dtor( struct kl_7prelude_box__I6FramedE* kl_this_1 )
 {
     struct kl__Framed* kl_t2;
 #line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 397 "<prelude>"
-    kl__Buffer__dtor( &( *kl_t2 ).kl_frame );
+    kl__6Buffer__dtor( &( *kl_t2 ).kl_frame );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
 #line 400 "<prelude>"
     return;
@@ -1088,7 +1088,7 @@ void kl_7prelude_box__I6FramedE__dtor( struct kl_7prelude_box__I6FramedE* kl_thi
 }
 
 #line 393 "<prelude>"
-void kl_7prelude_box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_this_1 )
+void kl_7prelude_3box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_this_1 )
 {
 #line 398 "<prelude>"
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
@@ -1100,7 +1100,7 @@ void kl_7prelude_box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_thi
 void kl__Framed__drop( struct kl__Framed* kl_t1 )
 {
 #line 45 "codegen/box.kl"
-    kl__Buffer__dtor( &( *kl_t1 ).kl_frame );
+    kl__6Buffer__dtor( &( *kl_t1 ).kl_frame );
 #line 45 "codegen/box.kl"
     return;
 #line 45 "codegen/box.kl"
@@ -1110,5 +1110,5 @@ void kl__Framed__drop( struct kl__Framed* kl_t1 )
 int main( void )
 {
 #line 85 "codegen/box.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -24,18 +24,18 @@ struct kl__Node__I3i32E
     struct kl__Node__I3i32E* kl_next;
 };
 
-bool kl__same__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
-struct kl__Plain kl__larger__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
-int32_t kl__main__( void );
-struct kl__Plain kl__biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain*, struct kl__Plain*, struct kl__Plain* );
-struct kl__Pair__I3i64E kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
-bool kl__all_same__I5PlainE__5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
-bool kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
-bool kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
-struct kl__Pair__I3i64E kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
+bool kl__4same__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
+struct kl__Plain kl__6larger__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
+int32_t kl__4main__( void );
+struct kl__Plain kl__7biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain*, struct kl__Plain*, struct kl__Plain* );
+struct kl__Pair__I3i64E kl__7biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
+bool kl__8all_same__I5PlainE__5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
+bool kl__8all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
+bool kl__4same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
+struct kl__Pair__I3i64E kl__6larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E*, struct kl__Pair__I3i64E* );
 
 #line 15 "codegen/self.kl"
-bool kl__same__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl_other_2 )
+bool kl__4same__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -49,7 +49,7 @@ bool kl__same__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl
 }
 
 #line 17 "codegen/self.kl"
-struct kl__Plain kl__larger__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl_other_2 )
+struct kl__Plain kl__6larger__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct kl__Plain* kl_other_2 )
 {
     struct kl__Plain kl_t0;
     bool kl_t3;
@@ -74,7 +74,7 @@ struct kl__Plain kl__larger__S5Plain_5Plain( struct kl__Plain* kl_this_1, struct
 }
 
 #line 60 "codegen/self.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Plain kl_p_1;
@@ -129,7 +129,7 @@ int32_t kl__main__( void )
 #line 62 "codegen/self.kl"
     kl_t7 = &kl_t6;
 #line 62 "codegen/self.kl"
-    kl_t8 = kl__biggest__I5PlainE__5Plain_5Plain_5Plain( kl_t3, kl_t5, kl_t7 );
+    kl_t8 = kl__7biggest__I5PlainE__5Plain_5Plain_5Plain( kl_t3, kl_t5, kl_t7 );
 #line 62 "codegen/self.kl"
     kl_p_1 = kl_t8;
     kl_t9 = kl_p_1.kl_v != 9;
@@ -159,7 +159,7 @@ int32_t kl__main__( void )
 #line 65 "codegen/self.kl"
     kl_t16 = &kl_t15;
 #line 65 "codegen/self.kl"
-    kl_t17 = kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( kl_t12, kl_t14, kl_t16 );
+    kl_t17 = kl__7biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( kl_t12, kl_t14, kl_t16 );
 #line 65 "codegen/self.kl"
     kl_q_10 = kl_t17;
     kl_t19 = kl_q_10.kl_first != 5;
@@ -200,7 +200,7 @@ int32_t kl__main__( void )
 #line 71 "codegen/self.kl"
     kl_t28 = &kl_seven_21;
 #line 71 "codegen/self.kl"
-    kl_t29 = kl__all_same__I5PlainE__5Plain_5Plain( kl_t27, kl_t28 );
+    kl_t29 = kl__8all_same__I5PlainE__5Plain_5Plain( kl_t27, kl_t28 );
 #line 71 "codegen/self.kl"
     kl_t30 = !kl_t29;
 #line 71 "codegen/self.kl"
@@ -216,7 +216,7 @@ int32_t kl__main__( void )
 #line 72 "codegen/self.kl"
     kl_t32 = &kl_other_25;
 #line 72 "codegen/self.kl"
-    kl_t33 = kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( kl_t31, kl_t32 );
+    kl_t33 = kl__8all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( kl_t31, kl_t32 );
 #line 72 "codegen/self.kl"
     if ( kl_t33 ) goto bb9; else goto bb10;
     bb9:
@@ -252,7 +252,7 @@ int32_t kl__main__( void )
 }
 
 #line 50 "codegen/self.kl"
-struct kl__Plain kl__biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl__Plain* kl_b_2, struct kl__Plain* kl_c_3 )
+struct kl__Plain kl__7biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl__Plain* kl_b_2, struct kl__Plain* kl_c_3 )
 {
     struct kl__Plain kl_t0;
     struct kl__Plain* kl_t4;
@@ -266,13 +266,13 @@ struct kl__Plain kl__biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain* 
 #line 52 "codegen/self.kl"
     kl_t5 = &( *kl_b_2 );
 #line 52 "codegen/self.kl"
-    kl_t6 = kl__larger__S5Plain_5Plain( kl_t4, kl_t5 );
+    kl_t6 = kl__6larger__S5Plain_5Plain( kl_t4, kl_t5 );
 #line 52 "codegen/self.kl"
     kl_t7 = &kl_t6;
 #line 52 "codegen/self.kl"
     kl_t8 = &( *kl_c_3 );
 #line 52 "codegen/self.kl"
-    kl_t9 = kl__larger__S5Plain_5Plain( kl_t7, kl_t8 );
+    kl_t9 = kl__6larger__S5Plain_5Plain( kl_t7, kl_t8 );
 #line 52 "codegen/self.kl"
     kl_t0 = kl_t9;
 #line 52 "codegen/self.kl"
@@ -280,7 +280,7 @@ struct kl__Plain kl__biggest__I5PlainE__5Plain_5Plain_5Plain( struct kl__Plain* 
 }
 
 #line 50 "codegen/self.kl"
-struct kl__Pair__I3i64E kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_a_1, struct kl__Pair__I3i64E* kl_b_2, struct kl__Pair__I3i64E* kl_c_3 )
+struct kl__Pair__I3i64E kl__7biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_a_1, struct kl__Pair__I3i64E* kl_b_2, struct kl__Pair__I3i64E* kl_c_3 )
 {
     struct kl__Pair__I3i64E kl_t0;
     struct kl__Pair__I3i64E* kl_t4;
@@ -294,13 +294,13 @@ struct kl__Pair__I3i64E kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4Pai
 #line 52 "codegen/self.kl"
     kl_t5 = &( *kl_b_2 );
 #line 52 "codegen/self.kl"
-    kl_t6 = kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t4, kl_t5 );
+    kl_t6 = kl__6larger__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t4, kl_t5 );
 #line 52 "codegen/self.kl"
     kl_t7 = &kl_t6;
 #line 52 "codegen/self.kl"
     kl_t8 = &( *kl_c_3 );
 #line 52 "codegen/self.kl"
-    kl_t9 = kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t7, kl_t8 );
+    kl_t9 = kl__6larger__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t7, kl_t8 );
 #line 52 "codegen/self.kl"
     kl_t0 = kl_t9;
 #line 52 "codegen/self.kl"
@@ -308,7 +308,7 @@ struct kl__Pair__I3i64E kl__biggest__I4PairI3i64EE__4PairI3i64E_4PairI3i64E_4Pai
 }
 
 #line 55 "codegen/self.kl"
-bool kl__all_same__I5PlainE__5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl__Plain* kl_b_2 )
+bool kl__8all_same__I5PlainE__5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl__Plain* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -323,7 +323,7 @@ bool kl__all_same__I5PlainE__5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl_
 #line 57 "codegen/self.kl"
     kl_t5 = &( *kl_b_2 );
 #line 57 "codegen/self.kl"
-    kl_t6 = kl__same__S5Plain_5Plain( kl_t4, kl_t5 );
+    kl_t6 = kl__4same__S5Plain_5Plain( kl_t4, kl_t5 );
 #line 57 "codegen/self.kl"
     kl_t3 = kl_t6;
 #line 57 "codegen/self.kl"
@@ -334,7 +334,7 @@ bool kl__all_same__I5PlainE__5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl_
 #line 57 "codegen/self.kl"
     kl_t8 = &( *kl_a_1 );
 #line 57 "codegen/self.kl"
-    kl_t9 = kl__same__S5Plain_5Plain( kl_t7, kl_t8 );
+    kl_t9 = kl__4same__S5Plain_5Plain( kl_t7, kl_t8 );
 #line 57 "codegen/self.kl"
     kl_t3 = kl_t9;
 #line 57 "codegen/self.kl"
@@ -347,7 +347,7 @@ bool kl__all_same__I5PlainE__5Plain_5Plain( struct kl__Plain* kl_a_1, struct kl_
 }
 
 #line 55 "codegen/self.kl"
-bool kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_a_1, struct kl__Pair__I3i64E* kl_b_2 )
+bool kl__8all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_a_1, struct kl__Pair__I3i64E* kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -362,7 +362,7 @@ bool kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i6
 #line 57 "codegen/self.kl"
     kl_t5 = &( *kl_b_2 );
 #line 57 "codegen/self.kl"
-    kl_t6 = kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t4, kl_t5 );
+    kl_t6 = kl__4same__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t4, kl_t5 );
 #line 57 "codegen/self.kl"
     kl_t3 = kl_t6;
 #line 57 "codegen/self.kl"
@@ -373,7 +373,7 @@ bool kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i6
 #line 57 "codegen/self.kl"
     kl_t8 = &( *kl_a_1 );
 #line 57 "codegen/self.kl"
-    kl_t9 = kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t7, kl_t8 );
+    kl_t9 = kl__4same__I3i64E__S4PairI3i64E_4PairI3i64E( kl_t7, kl_t8 );
 #line 57 "codegen/self.kl"
     kl_t3 = kl_t9;
 #line 57 "codegen/self.kl"
@@ -386,7 +386,7 @@ bool kl__all_same__I4PairI3i64EE__4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i6
 }
 
 #line 32 "codegen/self.kl"
-bool kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_this_1, struct kl__Pair__I3i64E* kl_other_2 )
+bool kl__4same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_this_1, struct kl__Pair__I3i64E* kl_other_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -414,7 +414,7 @@ bool kl__same__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_thi
 }
 
 #line 34 "codegen/self.kl"
-struct kl__Pair__I3i64E kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_this_1, struct kl__Pair__I3i64E* kl_other_2 )
+struct kl__Pair__I3i64E kl__6larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl__Pair__I3i64E* kl_this_1, struct kl__Pair__I3i64E* kl_other_2 )
 {
     struct kl__Pair__I3i64E kl_t0;
     bool kl_t3;
@@ -446,5 +446,5 @@ struct kl__Pair__I3i64E kl__larger__I3i64E__S4PairI3i64E_4PairI3i64E( struct kl_
 int main( void )
 {
 #line 60 "codegen/self.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

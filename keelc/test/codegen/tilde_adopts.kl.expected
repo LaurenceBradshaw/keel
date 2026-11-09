@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-uint8_t kl__mask__( void );
-int32_t kl__main__( void );
+uint8_t kl__4mask__( void );
+int32_t kl__4main__( void );
 
 #line 3 "codegen/tilde_adopts.kl"
-uint8_t kl__mask__( void )
+uint8_t kl__4mask__( void )
 {
     uint8_t kl_t0;
     uint8_t kl_t1;
@@ -21,7 +21,7 @@ uint8_t kl__mask__( void )
 }
 
 #line 5 "codegen/tilde_adopts.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     uint8_t kl_m_1;
@@ -124,7 +124,7 @@ int32_t kl__main__( void )
     if ( kl_t13 ) goto bb10; else goto bb9;
     bb9:
 #line 13 "codegen/tilde_adopts.kl"
-    kl_t23 = kl__mask__(  );
+    kl_t23 = kl__4mask__(  );
 #line 13 "codegen/tilde_adopts.kl"
     kl_t24 = kl_t23 != 255;
 #line 13 "codegen/tilde_adopts.kl"
@@ -149,5 +149,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 5 "codegen/tilde_adopts.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

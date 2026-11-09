@@ -17,12 +17,12 @@ struct kl_7prelude_str
     uint64_t kl_size;
 };
 
-void kl__str__R3str__ctor( struct kl__str* );
-int32_t kl__main__( void );
-void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl__3str__R3str__ctor( struct kl__str* );
+int32_t kl__4main__( void );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 6 "codegen/str_shadowed.kl"
-void kl__str__R3str__ctor( struct kl__str* kl_this_1 )
+void kl__3str__R3str__ctor( struct kl__str* kl_this_1 )
 {
     ( *kl_this_1 ).kl_n = 7;
     return;
@@ -30,7 +30,7 @@ void kl__str__R3str__ctor( struct kl__str* kl_this_1 )
 }
 
 #line 12 "codegen/str_shadowed.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__str kl_mine_1;
@@ -44,12 +44,12 @@ int32_t kl__main__( void )
 #line 14 "codegen/str_shadowed.kl"
     kl_t2 = &kl_mine_1;
 #line 14 "codegen/str_shadowed.kl"
-    kl__str__R3str__ctor( kl_t2 );
+    kl__3str__R3str__ctor( kl_t2 );
     kl_t6 = &kl_t5;
 #line 15 "codegen/str_shadowed.kl"
     kl_t7 = ( uint8_t* ) "abc";
 #line 15 "codegen/str_shadowed.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 3 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 3 );
 #line 15 "codegen/str_shadowed.kl"
     kl_literal_4 = kl_t5;
 #line 17 "codegen/str_shadowed.kl"
@@ -80,5 +80,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 12 "codegen/str_shadowed.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

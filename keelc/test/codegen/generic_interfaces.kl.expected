@@ -34,31 +34,31 @@ struct kl__last__I3i64E
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__tally__R5tally__ctor( struct kl__tally* );
-void kl__put__S5tally_3i64( struct kl__tally*, int64_t );
-void kl__put__S5tally_4bool( struct kl__tally*, bool );
-uint64_t kl__count__S5tally( struct kl__tally* );
-int64_t kl__sum__S5tally( struct kl__tally* );
-uint64_t kl__trues__S5tally( struct kl__tally* );
-bool kl__same_as__S7exactly_3i32( struct kl__exactly*, int32_t* );
-bool kl__same_as__S7exactly_3i64( struct kl__exactly*, int64_t* );
-int32_t kl__main__( void );
-void kl__feed__I5tallyE__R5tally_3i64_3i64( struct kl__tally*, int64_t, int64_t );
-void kl__flag__I5tallyE__R5tally( struct kl__tally* );
-void kl__both__I5tallyE__R5tally( struct kl__tally* );
-void kl__put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E*, int32_t );
-uint64_t kl__drain__I4lastI3i32EE__R4lastI3i32E( struct kl__last__I3i32E* );
-uint64_t kl__count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* );
-void kl__feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( struct kl__last__I3i64E*, int64_t, int64_t );
-uint64_t kl__count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* );
-bool kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly*, int32_t*, int32_t* );
-bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly*, int64_t*, int64_t* );
-void kl__reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* );
-void kl__reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* );
-void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E*, int64_t );
+void kl__5tally__R5tally__ctor( struct kl__tally* );
+void kl__3put__S5tally_3i64( struct kl__tally*, int64_t );
+void kl__3put__S5tally_4bool( struct kl__tally*, bool );
+uint64_t kl__5count__S5tally( struct kl__tally* );
+int64_t kl__3sum__S5tally( struct kl__tally* );
+uint64_t kl__5trues__S5tally( struct kl__tally* );
+bool kl__7same_as__S7exactly_3i32( struct kl__exactly*, int32_t* );
+bool kl__7same_as__S7exactly_3i64( struct kl__exactly*, int64_t* );
+int32_t kl__4main__( void );
+void kl__4feed__I5tallyE__R5tally_3i64_3i64( struct kl__tally*, int64_t, int64_t );
+void kl__4flag__I5tallyE__R5tally( struct kl__tally* );
+void kl__4both__I5tallyE__R5tally( struct kl__tally* );
+void kl__3put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E*, int32_t );
+uint64_t kl__5drain__I4lastI3i32EE__R4lastI3i32E( struct kl__last__I3i32E* );
+uint64_t kl__5count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* );
+void kl__4feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( struct kl__last__I3i64E*, int64_t, int64_t );
+uint64_t kl__5count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* );
+bool kl__9any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly*, int32_t*, int32_t* );
+bool kl__9any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly*, int64_t*, int64_t* );
+void kl__5reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* );
+void kl__5reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* );
+void kl__3put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E*, int64_t );
 
 #line 27 "codegen/generic_interfaces.kl"
-void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
+void kl__5tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 {
     ( *kl_this_1 ).kl_sum_ = 0;
     ( *kl_this_1 ).kl_trues_ = 0;
@@ -68,7 +68,7 @@ void kl__tally__R5tally__ctor( struct kl__tally* kl_this_1 )
 }
 
 #line 34 "codegen/generic_interfaces.kl"
-void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
+void kl__3put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
 {
     bool kl_t3;
     bool kl_t4;
@@ -96,7 +96,7 @@ void kl__put__S5tally_3i64( struct kl__tally* kl_this_1, int64_t kl_value_2 )
 }
 
 #line 40 "codegen/generic_interfaces.kl"
-void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
+void kl__3put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
 {
     bool kl_t3;
     bool kl_t4;
@@ -130,7 +130,7 @@ void kl__put__S5tally_4bool( struct kl__tally* kl_this_1, bool kl_value_2 )
 }
 
 #line 49 "codegen/generic_interfaces.kl"
-uint64_t kl__count__S5tally( struct kl__tally* kl_this_1 )
+uint64_t kl__5count__S5tally( struct kl__tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 49 "codegen/generic_interfaces.kl"
@@ -141,7 +141,7 @@ uint64_t kl__count__S5tally( struct kl__tally* kl_this_1 )
 }
 
 #line 50 "codegen/generic_interfaces.kl"
-int64_t kl__sum__S5tally( struct kl__tally* kl_this_1 )
+int64_t kl__3sum__S5tally( struct kl__tally* kl_this_1 )
 {
     int64_t kl_t0;
 #line 50 "codegen/generic_interfaces.kl"
@@ -152,7 +152,7 @@ int64_t kl__sum__S5tally( struct kl__tally* kl_this_1 )
 }
 
 #line 51 "codegen/generic_interfaces.kl"
-uint64_t kl__trues__S5tally( struct kl__tally* kl_this_1 )
+uint64_t kl__5trues__S5tally( struct kl__tally* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 51 "codegen/generic_interfaces.kl"
@@ -163,7 +163,7 @@ uint64_t kl__trues__S5tally( struct kl__tally* kl_this_1 )
 }
 
 #line 73 "codegen/generic_interfaces.kl"
-bool kl__same_as__S7exactly_3i32( struct kl__exactly* kl_this_1, int32_t* kl_key_2 )
+bool kl__7same_as__S7exactly_3i32( struct kl__exactly* kl_this_1, int32_t* kl_key_2 )
 {
     bool kl_t0;
     int64_t kl_t3;
@@ -180,7 +180,7 @@ bool kl__same_as__S7exactly_3i32( struct kl__exactly* kl_this_1, int32_t* kl_key
 }
 
 #line 74 "codegen/generic_interfaces.kl"
-bool kl__same_as__S7exactly_3i64( struct kl__exactly* kl_this_1, int64_t* kl_key_2 )
+bool kl__7same_as__S7exactly_3i64( struct kl__exactly* kl_this_1, int64_t* kl_key_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -194,7 +194,7 @@ bool kl__same_as__S7exactly_3i64( struct kl__exactly* kl_this_1, int64_t* kl_key
 }
 
 #line 109 "codegen/generic_interfaces.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__tally kl_t_1;
@@ -262,16 +262,16 @@ int32_t kl__main__( void )
 #line 111 "codegen/generic_interfaces.kl"
     kl_t2 = &kl_t_1;
 #line 111 "codegen/generic_interfaces.kl"
-    kl__tally__R5tally__ctor( kl_t2 );
+    kl__5tally__R5tally__ctor( kl_t2 );
     kl_t4 = &kl_t_1;
 #line 112 "codegen/generic_interfaces.kl"
-    kl__feed__I5tallyE__R5tally_3i64_3i64( kl_t4, 3, 4 );
+    kl__4feed__I5tallyE__R5tally_3i64_3i64( kl_t4, 3, 4 );
     kl_t6 = &kl_t_1;
 #line 113 "codegen/generic_interfaces.kl"
-    kl__flag__I5tallyE__R5tally( kl_t6 );
+    kl__4flag__I5tallyE__R5tally( kl_t6 );
     kl_t10 = &kl_t_1;
 #line 114 "codegen/generic_interfaces.kl"
-    kl_t11 = kl__sum__S5tally( kl_t10 );
+    kl_t11 = kl__3sum__S5tally( kl_t10 );
 #line 114 "codegen/generic_interfaces.kl"
     kl_t12 = kl_t11 != 7;
 #line 114 "codegen/generic_interfaces.kl"
@@ -282,7 +282,7 @@ int32_t kl__main__( void )
 #line 114 "codegen/generic_interfaces.kl"
     kl_t13 = &kl_t_1;
 #line 114 "codegen/generic_interfaces.kl"
-    kl_t14 = kl__trues__S5tally( kl_t13 );
+    kl_t14 = kl__5trues__S5tally( kl_t13 );
 #line 114 "codegen/generic_interfaces.kl"
     kl_t15 = kl_t14 != 1;
 #line 114 "codegen/generic_interfaces.kl"
@@ -298,7 +298,7 @@ int32_t kl__main__( void )
 #line 114 "codegen/generic_interfaces.kl"
     kl_t16 = &kl_t_1;
 #line 114 "codegen/generic_interfaces.kl"
-    kl_t17 = kl__count__S5tally( kl_t16 );
+    kl_t17 = kl__5count__S5tally( kl_t16 );
 #line 114 "codegen/generic_interfaces.kl"
     kl_t18 = kl_t17 != 3;
 #line 114 "codegen/generic_interfaces.kl"
@@ -316,10 +316,10 @@ int32_t kl__main__( void )
     bb6:
     kl_t19 = &kl_t_1;
 #line 116 "codegen/generic_interfaces.kl"
-    kl__both__I5tallyE__R5tally( kl_t19 );
+    kl__4both__I5tallyE__R5tally( kl_t19 );
     kl_t23 = &kl_t_1;
 #line 117 "codegen/generic_interfaces.kl"
-    kl_t24 = kl__sum__S5tally( kl_t23 );
+    kl_t24 = kl__3sum__S5tally( kl_t23 );
 #line 117 "codegen/generic_interfaces.kl"
     kl_t25 = kl_t24 != 12;
 #line 117 "codegen/generic_interfaces.kl"
@@ -330,7 +330,7 @@ int32_t kl__main__( void )
 #line 117 "codegen/generic_interfaces.kl"
     kl_t26 = &kl_t_1;
 #line 117 "codegen/generic_interfaces.kl"
-    kl_t27 = kl__trues__S5tally( kl_t26 );
+    kl_t27 = kl__5trues__S5tally( kl_t26 );
 #line 117 "codegen/generic_interfaces.kl"
     kl_t28 = kl_t27 != 1;
 #line 117 "codegen/generic_interfaces.kl"
@@ -346,7 +346,7 @@ int32_t kl__main__( void )
 #line 117 "codegen/generic_interfaces.kl"
     kl_t29 = &kl_t_1;
 #line 117 "codegen/generic_interfaces.kl"
-    kl_t30 = kl__count__S5tally( kl_t29 );
+    kl_t30 = kl__5count__S5tally( kl_t29 );
 #line 117 "codegen/generic_interfaces.kl"
     kl_t31 = kl_t30 != 5;
 #line 117 "codegen/generic_interfaces.kl"
@@ -369,10 +369,10 @@ int32_t kl__main__( void )
     kl_l_32 = kl_t33;
     kl_t34 = &kl_l_32;
 #line 120 "codegen/generic_interfaces.kl"
-    kl__put__I3i32E__S4lastI3i32E_3i32( kl_t34, 8 );
+    kl__3put__I3i32E__S4lastI3i32E_3i32( kl_t34, 8 );
     kl_t36 = &kl_l_32;
 #line 121 "codegen/generic_interfaces.kl"
-    kl__put__I3i32E__S4lastI3i32E_3i32( kl_t36, 9 );
+    kl__3put__I3i32E__S4lastI3i32E_3i32( kl_t36, 9 );
     kl_t38 = kl_l_32.kl_value != 9;
 #line 122 "codegen/generic_interfaces.kl"
     if ( kl_t38 ) goto bb13; else goto bb14;
@@ -385,7 +385,7 @@ int32_t kl__main__( void )
 #line 123 "codegen/generic_interfaces.kl"
     kl_t40 = &kl_l_32;
 #line 123 "codegen/generic_interfaces.kl"
-    kl_t41 = kl__drain__I4lastI3i32EE__R4lastI3i32E( kl_t40 );
+    kl_t41 = kl__5drain__I4lastI3i32EE__R4lastI3i32E( kl_t40 );
 #line 123 "codegen/generic_interfaces.kl"
     kl_t42 = kl_t41 != 2;
 #line 123 "codegen/generic_interfaces.kl"
@@ -396,7 +396,7 @@ int32_t kl__main__( void )
 #line 123 "codegen/generic_interfaces.kl"
     kl_t43 = &kl_l_32;
 #line 123 "codegen/generic_interfaces.kl"
-    kl_t44 = kl__count__I3i32E__S4lastI3i32E( kl_t43 );
+    kl_t44 = kl__5count__I3i32E__S4lastI3i32E( kl_t43 );
 #line 123 "codegen/generic_interfaces.kl"
     kl_t45 = kl_t44 != 0;
 #line 123 "codegen/generic_interfaces.kl"
@@ -419,7 +419,7 @@ int32_t kl__main__( void )
     kl_wide_46 = kl_t47;
     kl_t48 = &kl_wide_46;
 #line 126 "codegen/generic_interfaces.kl"
-    kl__feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( kl_t48, 1, 2 );
+    kl__4feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( kl_t48, 1, 2 );
     kl_t51 = kl_wide_46.kl_value != 2;
 #line 127 "codegen/generic_interfaces.kl"
     kl_t50 = kl_t51;
@@ -429,7 +429,7 @@ int32_t kl__main__( void )
 #line 127 "codegen/generic_interfaces.kl"
     kl_t52 = &kl_wide_46;
 #line 127 "codegen/generic_interfaces.kl"
-    kl_t53 = kl__count__I3i64E__S4lastI3i64E( kl_t52 );
+    kl_t53 = kl__5count__I3i64E__S4lastI3i64E( kl_t52 );
 #line 127 "codegen/generic_interfaces.kl"
     kl_t54 = kl_t53 != 2;
 #line 127 "codegen/generic_interfaces.kl"
@@ -458,7 +458,7 @@ int32_t kl__main__( void )
 #line 134 "codegen/generic_interfaces.kl"
     kl_t63 = &kl_small_b_58;
 #line 134 "codegen/generic_interfaces.kl"
-    kl_t64 = kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( kl_t61, kl_t62, kl_t63 );
+    kl_t64 = kl__9any_match__I7exactly_3i32E__7exactly_3i32_3i32( kl_t61, kl_t62, kl_t63 );
 #line 134 "codegen/generic_interfaces.kl"
     kl_t65 = !kl_t64;
 #line 134 "codegen/generic_interfaces.kl"
@@ -476,7 +476,7 @@ int32_t kl__main__( void )
 #line 135 "codegen/generic_interfaces.kl"
     kl_t68 = &kl_big_b_60;
 #line 135 "codegen/generic_interfaces.kl"
-    kl_t69 = kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( kl_t66, kl_t67, kl_t68 );
+    kl_t69 = kl__9any_match__I7exactly_3i64E__7exactly_3i64_3i64( kl_t66, kl_t67, kl_t68 );
 #line 135 "codegen/generic_interfaces.kl"
     if ( kl_t69 ) goto bb25; else goto bb26;
     bb25:
@@ -491,51 +491,51 @@ int32_t kl__main__( void )
 }
 
 #line 77 "codegen/generic_interfaces.kl"
-void kl__feed__I5tallyE__R5tally_3i64_3i64( struct kl__tally* kl_s_1, int64_t kl_a_2, int64_t kl_b_3 )
+void kl__4feed__I5tallyE__R5tally_3i64_3i64( struct kl__tally* kl_s_1, int64_t kl_a_2, int64_t kl_b_3 )
 {
     struct kl__tally* kl_t4;
     struct kl__tally* kl_t6;
 #line 79 "codegen/generic_interfaces.kl"
     kl_t4 = &( *kl_s_1 );
 #line 79 "codegen/generic_interfaces.kl"
-    kl__put__S5tally_3i64( kl_t4, kl_a_2 );
+    kl__3put__S5tally_3i64( kl_t4, kl_a_2 );
     kl_t6 = &( *kl_s_1 );
 #line 80 "codegen/generic_interfaces.kl"
-    kl__put__S5tally_3i64( kl_t6, kl_b_3 );
+    kl__3put__S5tally_3i64( kl_t6, kl_b_3 );
     return;
 #line 81 "codegen/generic_interfaces.kl"
 }
 
 #line 83 "codegen/generic_interfaces.kl"
-void kl__flag__I5tallyE__R5tally( struct kl__tally* kl_s_1 )
+void kl__4flag__I5tallyE__R5tally( struct kl__tally* kl_s_1 )
 {
     struct kl__tally* kl_t2;
 #line 85 "codegen/generic_interfaces.kl"
     kl_t2 = &( *kl_s_1 );
 #line 85 "codegen/generic_interfaces.kl"
-    kl__put__S5tally_4bool( kl_t2, true );
+    kl__3put__S5tally_4bool( kl_t2, true );
     return;
 #line 86 "codegen/generic_interfaces.kl"
 }
 
 #line 89 "codegen/generic_interfaces.kl"
-void kl__both__I5tallyE__R5tally( struct kl__tally* kl_s_1 )
+void kl__4both__I5tallyE__R5tally( struct kl__tally* kl_s_1 )
 {
     struct kl__tally* kl_t2;
     struct kl__tally* kl_t4;
 #line 91 "codegen/generic_interfaces.kl"
     kl_t2 = &( *kl_s_1 );
 #line 91 "codegen/generic_interfaces.kl"
-    kl__put__S5tally_3i64( kl_t2, 5 );
+    kl__3put__S5tally_3i64( kl_t2, 5 );
     kl_t4 = &( *kl_s_1 );
 #line 92 "codegen/generic_interfaces.kl"
-    kl__put__S5tally_4bool( kl_t4, false );
+    kl__3put__S5tally_4bool( kl_t4, false );
     return;
 #line 93 "codegen/generic_interfaces.kl"
 }
 
 #line 59 "codegen/generic_interfaces.kl"
-void kl__put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E* kl_this_1, int32_t kl_v_2 )
+void kl__3put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E* kl_this_1, int32_t kl_v_2 )
 {
     bool kl_t3;
 #line 61 "codegen/generic_interfaces.kl"
@@ -554,7 +554,7 @@ void kl__put__I3i32E__S4lastI3i32E_3i32( struct kl__last__I3i32E* kl_this_1, int
 }
 
 #line 102 "codegen/generic_interfaces.kl"
-uint64_t kl__drain__I4lastI3i32EE__R4lastI3i32E( struct kl__last__I3i32E* kl_s_1 )
+uint64_t kl__5drain__I4lastI3i32EE__R4lastI3i32E( struct kl__last__I3i32E* kl_s_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_seen_2;
@@ -564,19 +564,19 @@ uint64_t kl__drain__I4lastI3i32EE__R4lastI3i32E( struct kl__last__I3i32E* kl_s_1
 #line 104 "codegen/generic_interfaces.kl"
     kl_t3 = &( *kl_s_1 );
 #line 104 "codegen/generic_interfaces.kl"
-    kl_t4 = kl__count__I3i32E__S4lastI3i32E( kl_t3 );
+    kl_t4 = kl__5count__I3i32E__S4lastI3i32E( kl_t3 );
 #line 104 "codegen/generic_interfaces.kl"
     kl_seen_2 = kl_t4;
     kl_t5 = &( *kl_s_1 );
 #line 105 "codegen/generic_interfaces.kl"
-    kl__reset__I3i32E__S4lastI3i32E( kl_t5 );
+    kl__5reset__I3i32E__S4lastI3i32E( kl_t5 );
     kl_t0 = kl_seen_2;
 #line 106 "codegen/generic_interfaces.kl"
     return kl_t0;
 }
 
 #line 65 "codegen/generic_interfaces.kl"
-uint64_t kl__count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
+uint64_t kl__5count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
@@ -587,23 +587,23 @@ uint64_t kl__count__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 }
 
 #line 77 "codegen/generic_interfaces.kl"
-void kl__feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( struct kl__last__I3i64E* kl_s_1, int64_t kl_a_2, int64_t kl_b_3 )
+void kl__4feed__I4lastI3i64EE__R4lastI3i64E_3i64_3i64( struct kl__last__I3i64E* kl_s_1, int64_t kl_a_2, int64_t kl_b_3 )
 {
     struct kl__last__I3i64E* kl_t4;
     struct kl__last__I3i64E* kl_t6;
 #line 79 "codegen/generic_interfaces.kl"
     kl_t4 = &( *kl_s_1 );
 #line 79 "codegen/generic_interfaces.kl"
-    kl__put__I3i64E__S4lastI3i64E_3i64( kl_t4, kl_a_2 );
+    kl__3put__I3i64E__S4lastI3i64E_3i64( kl_t4, kl_a_2 );
     kl_t6 = &( *kl_s_1 );
 #line 80 "codegen/generic_interfaces.kl"
-    kl__put__I3i64E__S4lastI3i64E_3i64( kl_t6, kl_b_3 );
+    kl__3put__I3i64E__S4lastI3i64E_3i64( kl_t6, kl_b_3 );
     return;
 #line 81 "codegen/generic_interfaces.kl"
 }
 
 #line 65 "codegen/generic_interfaces.kl"
-uint64_t kl__count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
+uint64_t kl__5count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 65 "codegen/generic_interfaces.kl"
@@ -614,7 +614,7 @@ uint64_t kl__count__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 }
 
 #line 96 "codegen/generic_interfaces.kl"
-bool kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly* kl_query_1, int32_t* kl_a_2, int32_t* kl_b_3 )
+bool kl__9any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly* kl_query_1, int32_t* kl_a_2, int32_t* kl_b_3 )
 {
     bool kl_t0;
     bool kl_t4;
@@ -629,7 +629,7 @@ bool kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly* kl_
 #line 98 "codegen/generic_interfaces.kl"
     kl_t6 = &( *kl_a_2 );
 #line 98 "codegen/generic_interfaces.kl"
-    kl_t7 = kl__same_as__S7exactly_3i32( kl_t5, kl_t6 );
+    kl_t7 = kl__7same_as__S7exactly_3i32( kl_t5, kl_t6 );
 #line 98 "codegen/generic_interfaces.kl"
     kl_t4 = kl_t7;
 #line 98 "codegen/generic_interfaces.kl"
@@ -640,7 +640,7 @@ bool kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly* kl_
 #line 98 "codegen/generic_interfaces.kl"
     kl_t9 = &( *kl_b_3 );
 #line 98 "codegen/generic_interfaces.kl"
-    kl_t10 = kl__same_as__S7exactly_3i32( kl_t8, kl_t9 );
+    kl_t10 = kl__7same_as__S7exactly_3i32( kl_t8, kl_t9 );
 #line 98 "codegen/generic_interfaces.kl"
     kl_t4 = kl_t10;
 #line 98 "codegen/generic_interfaces.kl"
@@ -653,7 +653,7 @@ bool kl__any_match__I7exactly_3i32E__7exactly_3i32_3i32( struct kl__exactly* kl_
 }
 
 #line 96 "codegen/generic_interfaces.kl"
-bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_query_1, int64_t* kl_a_2, int64_t* kl_b_3 )
+bool kl__9any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_query_1, int64_t* kl_a_2, int64_t* kl_b_3 )
 {
     bool kl_t0;
     bool kl_t4;
@@ -668,7 +668,7 @@ bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_
 #line 98 "codegen/generic_interfaces.kl"
     kl_t6 = &( *kl_a_2 );
 #line 98 "codegen/generic_interfaces.kl"
-    kl_t7 = kl__same_as__S7exactly_3i64( kl_t5, kl_t6 );
+    kl_t7 = kl__7same_as__S7exactly_3i64( kl_t5, kl_t6 );
 #line 98 "codegen/generic_interfaces.kl"
     kl_t4 = kl_t7;
 #line 98 "codegen/generic_interfaces.kl"
@@ -679,7 +679,7 @@ bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_
 #line 98 "codegen/generic_interfaces.kl"
     kl_t9 = &( *kl_b_3 );
 #line 98 "codegen/generic_interfaces.kl"
-    kl_t10 = kl__same_as__S7exactly_3i64( kl_t8, kl_t9 );
+    kl_t10 = kl__7same_as__S7exactly_3i64( kl_t8, kl_t9 );
 #line 98 "codegen/generic_interfaces.kl"
     kl_t4 = kl_t10;
 #line 98 "codegen/generic_interfaces.kl"
@@ -692,7 +692,7 @@ bool kl__any_match__I7exactly_3i64E__7exactly_3i64_3i64( struct kl__exactly* kl_
 }
 
 #line 66 "codegen/generic_interfaces.kl"
-void kl__reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
+void kl__5reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 {
 #line 66 "codegen/generic_interfaces.kl"
     ( *kl_this_1 ).kl_n = 0;
@@ -702,7 +702,7 @@ void kl__reset__I3i32E__S4lastI3i32E( struct kl__last__I3i32E* kl_this_1 )
 }
 
 #line 66 "codegen/generic_interfaces.kl"
-void kl__reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
+void kl__5reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 {
 #line 66 "codegen/generic_interfaces.kl"
     ( *kl_this_1 ).kl_n = 0;
@@ -712,7 +712,7 @@ void kl__reset__I3i64E__S4lastI3i64E( struct kl__last__I3i64E* kl_this_1 )
 }
 
 #line 59 "codegen/generic_interfaces.kl"
-void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E* kl_this_1, int64_t kl_v_2 )
+void kl__3put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E* kl_this_1, int64_t kl_v_2 )
 {
     bool kl_t3;
 #line 61 "codegen/generic_interfaces.kl"
@@ -734,5 +734,5 @@ void kl__put__I3i64E__S4lastI3i64E_3i64( struct kl__last__I3i64E* kl_this_1, int
 int main( void )
 {
 #line 109 "codegen/generic_interfaces.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

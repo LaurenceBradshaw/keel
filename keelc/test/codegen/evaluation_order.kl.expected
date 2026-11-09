@@ -18,12 +18,12 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__note__3i32( int32_t );
-int32_t kl__first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
-int32_t kl__main__( void );
+int32_t kl__4note__3i32( int32_t );
+int32_t kl__5first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl__4main__( void );
 
 #line 6 "codegen/evaluation_order.kl"
-int32_t kl__note__3i32( int32_t kl_digit_1 )
+int32_t kl__4note__3i32( int32_t kl_digit_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -58,7 +58,7 @@ int32_t kl__note__3i32( int32_t kl_digit_1 )
 }
 
 #line 12 "codegen/evaluation_order.kl"
-int32_t kl__first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 )
+int32_t kl__5first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 )
 {
     int32_t kl_t0;
     ( void ) kl_t2;
@@ -70,7 +70,7 @@ int32_t kl__first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_t2, int32_t kl_t3 
 }
 
 #line 23 "codegen/evaluation_order.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -102,13 +102,13 @@ int32_t kl__main__( void )
     int32_t kl_t28;
     bool kl_t30;
 #line 25 "codegen/evaluation_order.kl"
-    kl_t1 = kl__note__3i32( 1 );
+    kl_t1 = kl__4note__3i32( 1 );
 #line 25 "codegen/evaluation_order.kl"
-    kl_t2 = kl__note__3i32( 2 );
+    kl_t2 = kl__4note__3i32( 2 );
 #line 25 "codegen/evaluation_order.kl"
-    kl_t3 = kl__note__3i32( 3 );
+    kl_t3 = kl__4note__3i32( 3 );
 #line 25 "codegen/evaluation_order.kl"
-    kl__first__3i32_3i32_3i32( kl_t1, kl_t2, kl_t3 );
+    kl__5first__3i32_3i32_3i32( kl_t1, kl_t2, kl_t3 );
     kl_t5 = kl__trace__G != 123;
 #line 26 "codegen/evaluation_order.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
@@ -119,11 +119,11 @@ int32_t kl__main__( void )
     bb2:
 #line 31 "codegen/evaluation_order.kl"
     kl__trace__G = 0;
-    kl_t7 = kl__note__3i32( 1 );
+    kl_t7 = kl__4note__3i32( 1 );
 #line 32 "codegen/evaluation_order.kl"
-    kl_t8 = kl__note__3i32( 2 );
+    kl_t8 = kl__4note__3i32( 2 );
 #line 32 "codegen/evaluation_order.kl"
-    kl_t9 = kl__note__3i32( 3 );
+    kl_t9 = kl__4note__3i32( 3 );
 #line 32 "codegen/evaluation_order.kl"
     kl_t10 = __builtin_mul_overflow( kl_t8, kl_t9, &( int32_t ) { 0 } );
 #line 32 "codegen/evaluation_order.kl"
@@ -168,9 +168,9 @@ int32_t kl__main__( void )
     bb10:
 #line 38 "codegen/evaluation_order.kl"
     kl__trace__G = 0;
-    kl_t19 = kl__note__3i32( 1 );
+    kl_t19 = kl__4note__3i32( 1 );
 #line 39 "codegen/evaluation_order.kl"
-    kl_t20 = kl__note__3i32( 2 );
+    kl_t20 = kl__4note__3i32( 2 );
 #line 39 "codegen/evaluation_order.kl"
     kl_t18.kl_a = kl_t19;
 #line 39 "codegen/evaluation_order.kl"
@@ -203,11 +203,11 @@ int32_t kl__main__( void )
     kl_t25 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/evaluation_order.kl", 49, "out of memory: alloc<i32>( 4 )" );
 #line 49 "codegen/evaluation_order.kl"
     kl_slots_24 = kl_t25;
-    kl_t26 = kl__note__3i32( 1 );
+    kl_t26 = kl__4note__3i32( 1 );
 #line 50 "codegen/evaluation_order.kl"
     kl_t27 = kl_slots_24 + kl_t26;
 #line 50 "codegen/evaluation_order.kl"
-    kl_t28 = kl__note__3i32( 2 );
+    kl_t28 = kl__4note__3i32( 2 );
 #line 50 "codegen/evaluation_order.kl"
     ( *kl_t27 ) = kl_t28;
     kl_rt_free( kl_slots_24 );
@@ -230,5 +230,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 23 "codegen/evaluation_order.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

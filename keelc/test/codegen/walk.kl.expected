@@ -42,18 +42,18 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
-void kl__Counted__dtor( struct kl__Counted* );
-void kl__Bag__R3Bag_3u64__ctor( struct kl__Bag*, uint64_t );
-void kl__Bag__dtor( struct kl__Bag* );
-void kl__Pair__R4Pair_3i32__ctor( struct kl__Pair*, int32_t );
-int32_t kl__first_even__3Bag( struct kl__Bag* );
-int32_t kl__main__( void );
-void kl__Box__I3i32E__R3BoxI3i32E_M3i32__ctor( struct kl__Box__I3i32E*, int32_t );
-void kl__Box__I4boolE__R3BoxI4boolE_M4bool__ctor( struct kl__Box__I4boolE*, bool );
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted*, int32_t );
+void kl__7Counted__dtor( struct kl__Counted* );
+void kl__3Bag__R3Bag_3u64__ctor( struct kl__Bag*, uint64_t );
+void kl__3Bag__dtor( struct kl__Bag* );
+void kl__4Pair__R4Pair_3i32__ctor( struct kl__Pair*, int32_t );
+int32_t kl__10first_even__3Bag( struct kl__Bag* );
+int32_t kl__4main__( void );
+void kl__3Box__I3i32E__R3BoxI3i32E_M3i32__ctor( struct kl__Box__I3i32E*, int32_t );
+void kl__3Box__I4boolE__R3BoxI4boolE_M4bool__ctor( struct kl__Box__I4boolE*, bool );
 
 #line 11 "codegen/walk.kl"
-void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
+void kl__7Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     return;
@@ -61,7 +61,7 @@ void kl__Counted__R7Counted_3i32__ctor( struct kl__Counted* kl_this_1, int32_t k
 }
 
 #line 16 "codegen/walk.kl"
-void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+void kl__7Counted__dtor( struct kl__Counted* kl_this_1 )
 {
     bool kl_t2;
     ( void ) kl_this_1;
@@ -80,7 +80,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 }
 
 #line 27 "codegen/walk.kl"
-void kl__Bag__R3Bag_3u64__ctor( struct kl__Bag* kl_this_1, uint64_t kl_n_2 )
+void kl__3Bag__R3Bag_3u64__ctor( struct kl__Bag* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_t3;
     uint64_t kl_i_4;
@@ -153,7 +153,7 @@ void kl__Bag__R3Bag_3u64__ctor( struct kl__Bag* kl_this_1, uint64_t kl_n_2 )
 }
 
 #line 40 "codegen/walk.kl"
-void kl__Bag__dtor( struct kl__Bag* kl_this_1 )
+void kl__3Bag__dtor( struct kl__Bag* kl_this_1 )
 {
 #line 44 "codegen/walk.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
@@ -163,7 +163,7 @@ void kl__Bag__dtor( struct kl__Bag* kl_this_1 )
 }
 
 #line 79 "codegen/walk.kl"
-void kl__Pair__R4Pair_3i32__ctor( struct kl__Pair* kl_this_1, int32_t kl_a_2 )
+void kl__4Pair__R4Pair_3i32__ctor( struct kl__Pair* kl_this_1, int32_t kl_a_2 )
 {
     ( *kl_this_1 ).kl_a_ = kl_a_2;
     return;
@@ -171,7 +171,7 @@ void kl__Pair__R4Pair_3i32__ctor( struct kl__Pair* kl_this_1, int32_t kl_a_2 )
 }
 
 #line 108 "codegen/walk.kl"
-int32_t kl__first_even__3Bag( struct kl__Bag* kl_b_1 )
+int32_t kl__10first_even__3Bag( struct kl__Bag* kl_b_1 )
 {
     int32_t kl_t0;
     struct kl__Bag* kl_t2;
@@ -190,7 +190,7 @@ int32_t kl__first_even__3Bag( struct kl__Bag* kl_b_1 )
 #line 51 "codegen/walk.kl"
     kl_t4 = &kl_marker_3;
 #line 51 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t4, 0 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t4, 0 );
 #line 53 "codegen/walk.kl"
     kl_i_6 = 0;
 #line 53 "codegen/walk.kl"
@@ -217,14 +217,14 @@ int32_t kl__first_even__3Bag( struct kl__Bag* kl_b_1 )
     if ( kl_t13 ) goto bb4; else goto bb5;
     bb3:
 #line 60 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_3 );
+    kl__7Counted__dtor( &kl_marker_3 );
 #line 110 "codegen/walk.kl"
     goto bb7;
     bb4:
 #line 114 "codegen/walk.kl"
     kl_t0 = ( *kl_x_11 );
 #line 114 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_3 );
+    kl__7Counted__dtor( &kl_marker_3 );
 #line 114 "codegen/walk.kl"
     return kl_t0;
     bb5:
@@ -243,7 +243,7 @@ int32_t kl__first_even__3Bag( struct kl__Bag* kl_b_1 )
 }
 
 #line 121 "codegen/walk.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Bag kl_b_1;
@@ -363,14 +363,14 @@ int32_t kl__main__( void )
 #line 123 "codegen/walk.kl"
     kl_t2 = &kl_b_1;
 #line 123 "codegen/walk.kl"
-    kl__Bag__R3Bag_3u64__ctor( kl_t2, 4 );
+    kl__3Bag__R3Bag_3u64__ctor( kl_t2, 4 );
 #line 125 "codegen/walk.kl"
     kl_sum_4 = 0;
     kl_t5 = &kl_b_1;
 #line 51 "codegen/walk.kl"
     kl_t7 = &kl_marker_6;
 #line 51 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t7, 0 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t7, 0 );
 #line 53 "codegen/walk.kl"
     kl_i_9 = 0;
 #line 53 "codegen/walk.kl"
@@ -395,7 +395,7 @@ int32_t kl__main__( void )
     if ( kl_t15 ) goto bb4; else goto bb5;
     bb3:
 #line 60 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_6 );
+    kl__7Counted__dtor( &kl_marker_6 );
 #line 126 "codegen/walk.kl"
     goto bb8;
     bb4:
@@ -422,7 +422,7 @@ int32_t kl__main__( void )
 #line 130 "codegen/walk.kl"
     kl_t0 = 1;
 #line 130 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 130 "codegen/walk.kl"
     return kl_t0;
     bb10:
@@ -434,7 +434,7 @@ int32_t kl__main__( void )
 #line 131 "codegen/walk.kl"
     kl_t0 = 2;
 #line 131 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 131 "codegen/walk.kl"
     return kl_t0;
     bb12:
@@ -486,7 +486,7 @@ int32_t kl__main__( void )
 #line 51 "codegen/walk.kl"
     kl_t28 = &kl_marker_27;
 #line 51 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t28, 0 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t28, 0 );
 #line 53 "codegen/walk.kl"
     kl_i_30 = 0;
 #line 53 "codegen/walk.kl"
@@ -511,7 +511,7 @@ int32_t kl__main__( void )
     if ( kl_t36 ) goto bb24; else goto bb25;
     bb23:
 #line 60 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_27 );
+    kl__7Counted__dtor( &kl_marker_27 );
 #line 140 "codegen/walk.kl"
     goto bb27;
     bb24:
@@ -524,7 +524,7 @@ int32_t kl__main__( void )
     if ( kl_t37 ) goto bb26; else goto bb28;
     bb26:
 #line 143 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_27 );
+    kl__7Counted__dtor( &kl_marker_27 );
 #line 143 "codegen/walk.kl"
     goto bb27;
     bb27:
@@ -554,7 +554,7 @@ int32_t kl__main__( void )
 #line 146 "codegen/walk.kl"
     kl_t0 = 3;
 #line 146 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 146 "codegen/walk.kl"
     return kl_t0;
     bb33:
@@ -566,14 +566,14 @@ int32_t kl__main__( void )
 #line 147 "codegen/walk.kl"
     kl_t0 = 4;
 #line 147 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 147 "codegen/walk.kl"
     return kl_t0;
     bb35:
 #line 150 "codegen/walk.kl"
     kl_t41 = &kl_b_1;
 #line 150 "codegen/walk.kl"
-    kl_t42 = kl__first_even__3Bag( kl_t41 );
+    kl_t42 = kl__10first_even__3Bag( kl_t41 );
 #line 150 "codegen/walk.kl"
     kl_t43 = kl_t42 != 2;
 #line 150 "codegen/walk.kl"
@@ -582,7 +582,7 @@ int32_t kl__main__( void )
 #line 150 "codegen/walk.kl"
     kl_t0 = 5;
 #line 150 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 150 "codegen/walk.kl"
     return kl_t0;
     bb37:
@@ -594,14 +594,14 @@ int32_t kl__main__( void )
 #line 151 "codegen/walk.kl"
     kl_t0 = 6;
 #line 151 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 151 "codegen/walk.kl"
     return kl_t0;
     bb39:
     kl_sum_4 = 0;
     kl_t46 = &kl_t45;
 #line 154 "codegen/walk.kl"
-    kl__Pair__R4Pair_3i32__ctor( kl_t46, 10 );
+    kl__4Pair__R4Pair_3i32__ctor( kl_t46, 10 );
 #line 154 "codegen/walk.kl"
     kl_t48 = &kl_t45;
 #line 86 "codegen/walk.kl"
@@ -655,7 +655,7 @@ int32_t kl__main__( void )
 #line 158 "codegen/walk.kl"
     kl_t0 = 7;
 #line 158 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 158 "codegen/walk.kl"
     return kl_t0;
     bb50:
@@ -663,13 +663,13 @@ int32_t kl__main__( void )
     kl_sum_4 = 0;
     kl_t57 = &kl_t56;
 #line 162 "codegen/walk.kl"
-    kl__Bag__R3Bag_3u64__ctor( kl_t57, 3 );
+    kl__3Bag__R3Bag_3u64__ctor( kl_t57, 3 );
 #line 162 "codegen/walk.kl"
     kl_t59 = &kl_t56;
 #line 51 "codegen/walk.kl"
     kl_t61 = &kl_marker_60;
 #line 51 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t61, 0 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t61, 0 );
 #line 53 "codegen/walk.kl"
     kl_i_63 = 0;
 #line 53 "codegen/walk.kl"
@@ -694,7 +694,7 @@ int32_t kl__main__( void )
     if ( kl_t69 ) goto bb54; else goto bb55;
     bb53:
 #line 60 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_60 );
+    kl__7Counted__dtor( &kl_marker_60 );
 #line 162 "codegen/walk.kl"
     goto bb58;
     bb54:
@@ -714,7 +714,7 @@ int32_t kl__main__( void )
     goto bb51;
     bb58:
 #line 162 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_t56 );
+    kl__3Bag__dtor( &kl_t56 );
 #line 166 "codegen/walk.kl"
     kl_t70 = kl_sum_4 != 6;
 #line 166 "codegen/walk.kl"
@@ -723,7 +723,7 @@ int32_t kl__main__( void )
 #line 166 "codegen/walk.kl"
     kl_t0 = 8;
 #line 166 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 166 "codegen/walk.kl"
     return kl_t0;
     bb60:
@@ -731,7 +731,7 @@ int32_t kl__main__( void )
     kl_got_71 = 0;
     kl_t73 = &kl_t72;
 #line 170 "codegen/walk.kl"
-    kl__Box__I3i32E__R3BoxI3i32E_M3i32__ctor( kl_t73, 5 );
+    kl__3Box__I3i32E__R3BoxI3i32E_M3i32__ctor( kl_t73, 5 );
 #line 170 "codegen/walk.kl"
     kl_t75 = &kl_t72;
 #line 104 "codegen/walk.kl"
@@ -750,7 +750,7 @@ int32_t kl__main__( void )
     kl_flag_78 = false;
     kl_t80 = &kl_t79;
 #line 175 "codegen/walk.kl"
-    kl__Box__I4boolE__R3BoxI4boolE_M4bool__ctor( kl_t80, true );
+    kl__3Box__I4boolE__R3BoxI4boolE_M4bool__ctor( kl_t80, true );
 #line 175 "codegen/walk.kl"
     kl_t82 = &kl_t79;
 #line 104 "codegen/walk.kl"
@@ -785,7 +785,7 @@ int32_t kl__main__( void )
 #line 179 "codegen/walk.kl"
     kl_t0 = 9;
 #line 179 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 179 "codegen/walk.kl"
     return kl_t0;
     bb68:
@@ -796,7 +796,7 @@ int32_t kl__main__( void )
 #line 51 "codegen/walk.kl"
     kl_t91 = &kl_marker_90;
 #line 51 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t91, 0 );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t91, 0 );
 #line 53 "codegen/walk.kl"
     kl_i_93 = 0;
 #line 53 "codegen/walk.kl"
@@ -818,10 +818,10 @@ int32_t kl__main__( void )
 #line 186 "codegen/walk.kl"
     kl_t100 = &kl_c_99;
 #line 186 "codegen/walk.kl"
-    kl__Counted__R7Counted_3i32__ctor( kl_t100, ( *kl_x_98 ) );
+    kl__7Counted__R7Counted_3i32__ctor( kl_t100, ( *kl_x_98 ) );
     kl_t103 = &kl_t102;
 #line 187 "codegen/walk.kl"
-    kl__Pair__R4Pair_3i32__ctor( kl_t103, kl_c_99.kl_value );
+    kl__4Pair__R4Pair_3i32__ctor( kl_t103, kl_c_99.kl_value );
 #line 187 "codegen/walk.kl"
     kl_t105 = &kl_t102;
 #line 86 "codegen/walk.kl"
@@ -832,7 +832,7 @@ int32_t kl__main__( void )
     if ( kl_t108 ) goto bb75; else goto bb76;
     bb71:
 #line 60 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_marker_90 );
+    kl__7Counted__dtor( &kl_marker_90 );
 #line 184 "codegen/walk.kl"
     goto bb97;
     bb72:
@@ -943,7 +943,7 @@ int32_t kl__main__( void )
     goto bb94;
     bb94:
 #line 191 "codegen/walk.kl"
-    kl__Counted__dtor( &kl_c_99 );
+    kl__7Counted__dtor( &kl_c_99 );
 #line 57 "codegen/walk.kl"
     goto bb95;
     bb95:
@@ -963,7 +963,7 @@ int32_t kl__main__( void )
 #line 192 "codegen/walk.kl"
     kl_t0 = 10;
 #line 192 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 192 "codegen/walk.kl"
     return kl_t0;
     bb99:
@@ -975,19 +975,19 @@ int32_t kl__main__( void )
 #line 193 "codegen/walk.kl"
     kl_t0 = 11;
 #line 193 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 193 "codegen/walk.kl"
     return kl_t0;
     bb101:
     kl_t0 = 0;
 #line 195 "codegen/walk.kl"
-    kl__Bag__dtor( &kl_b_1 );
+    kl__3Bag__dtor( &kl_b_1 );
 #line 195 "codegen/walk.kl"
     return kl_t0;
 }
 
 #line 97 "codegen/walk.kl"
-void kl__Box__I3i32E__R3BoxI3i32E_M3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_value_2 )
+void kl__3Box__I3i32E__R3BoxI3i32E_M3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     ( *kl_this_1 ).kl_value_ = kl_value_2;
     return;
@@ -995,7 +995,7 @@ void kl__Box__I3i32E__R3BoxI3i32E_M3i32__ctor( struct kl__Box__I3i32E* kl_this_1
 }
 
 #line 97 "codegen/walk.kl"
-void kl__Box__I4boolE__R3BoxI4boolE_M4bool__ctor( struct kl__Box__I4boolE* kl_this_1, bool kl_value_2 )
+void kl__3Box__I4boolE__R3BoxI4boolE_M4bool__ctor( struct kl__Box__I4boolE* kl_this_1, bool kl_value_2 )
 {
     ( *kl_this_1 ).kl_value_ = kl_value_2;
     return;
@@ -1006,5 +1006,5 @@ void kl__Box__I4boolE__R3BoxI4boolE_M4bool__ctor( struct kl__Box__I4boolE* kl_th
 int main( void )
 {
 #line 121 "codegen/walk.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -20,14 +20,14 @@ int32_t kl__live__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
-void kl__Owned__dtor( struct kl__Owned* );
-void kl__Shadowed__R8Shadowed_3i32__ctor( struct kl__Shadowed*, int32_t );
-int32_t kl__early__3i32( int32_t );
-int32_t kl__main__( void );
+void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
+void kl__5Owned__dtor( struct kl__Owned* );
+void kl__8Shadowed__R8Shadowed_3i32__ctor( struct kl__Shadowed*, int32_t );
+int32_t kl__5early__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 13 "codegen/constructors.kl"
-void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
@@ -49,7 +49,7 @@ void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2
 }
 
 #line 20 "codegen/constructors.kl"
-void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+void kl__5Owned__dtor( struct kl__Owned* kl_this_1 )
 {
     bool kl_t2;
     int32_t kl_t3;
@@ -71,7 +71,7 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 }
 
 #line 31 "codegen/constructors.kl"
-void kl__Shadowed__R8Shadowed_3i32__ctor( struct kl__Shadowed* kl_this_1, int32_t kl_id_2 )
+void kl__8Shadowed__R8Shadowed_3i32__ctor( struct kl__Shadowed* kl_this_1, int32_t kl_id_2 )
 {
     ( *kl_this_1 ).kl_id = kl_id_2;
     return;
@@ -79,7 +79,7 @@ void kl__Shadowed__R8Shadowed_3i32__ctor( struct kl__Shadowed* kl_this_1, int32_
 }
 
 #line 38 "codegen/constructors.kl"
-int32_t kl__early__3i32( int32_t kl_n_1 )
+int32_t kl__5early__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     struct kl__Owned kl_o_2;
@@ -88,7 +88,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
 #line 40 "codegen/constructors.kl"
     kl_t3 = &kl_o_2;
 #line 40 "codegen/constructors.kl"
-    kl__Owned__R5Owned_3u64__ctor( kl_t3, 1 );
+    kl__5Owned__R5Owned_3u64__ctor( kl_t3, 1 );
 #line 42 "codegen/constructors.kl"
     kl_t5 = kl_n_1 == 0;
 #line 42 "codegen/constructors.kl"
@@ -96,20 +96,20 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     bb1:
     kl_t0 = 0;
 #line 44 "codegen/constructors.kl"
-    kl__Owned__dtor( &kl_o_2 );
+    kl__5Owned__dtor( &kl_o_2 );
 #line 44 "codegen/constructors.kl"
     return kl_t0;
     bb2:
 #line 47 "codegen/constructors.kl"
     kl_t0 = 1;
 #line 47 "codegen/constructors.kl"
-    kl__Owned__dtor( &kl_o_2 );
+    kl__5Owned__dtor( &kl_o_2 );
 #line 47 "codegen/constructors.kl"
     return kl_t0;
 }
 
 #line 50 "codegen/constructors.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Owned kl_a_1;
@@ -129,8 +129,8 @@ int32_t kl__main__( void )
 #line 54 "codegen/constructors.kl"
     kl_t2 = &kl_a_1;
 #line 54 "codegen/constructors.kl"
-    kl__Owned__R5Owned_3u64__ctor( kl_t2, 1 );
-    kl__Owned__dtor( &kl_a_1 );
+    kl__5Owned__R5Owned_3u64__ctor( kl_t2, 1 );
+    kl__5Owned__dtor( &kl_a_1 );
 #line 58 "codegen/constructors.kl"
     kl_i_4 = 0;
     goto bb1;
@@ -142,18 +142,18 @@ int32_t kl__main__( void )
     bb2:
     kl_t7 = &kl_b_6;
 #line 61 "codegen/constructors.kl"
-    kl__Owned__R5Owned_3u64__ctor( kl_t7, 2 );
+    kl__5Owned__R5Owned_3u64__ctor( kl_t7, 2 );
     kl_t9 = __builtin_add_overflow( kl_i_4, 1, &( int32_t ) { 0 } );
 #line 62 "codegen/constructors.kl"
     if ( kl_t9 ) goto bb4; else goto bb5;
     bb3:
 #line 65 "codegen/constructors.kl"
-    kl__early__3i32( 0 );
-    kl__early__3i32( 1 );
+    kl__5early__3i32( 0 );
+    kl__5early__3i32( 1 );
 #line 69 "codegen/constructors.kl"
     kl_t14 = &kl_s_13;
 #line 69 "codegen/constructors.kl"
-    kl__Shadowed__R8Shadowed_3i32__ctor( kl_t14, 9 );
+    kl__8Shadowed__R8Shadowed_3i32__ctor( kl_t14, 9 );
 #line 73 "codegen/constructors.kl"
     kl_t16 = __builtin_add_overflow( 33, kl__live__G, &( int32_t ) { 0 } );
 #line 73 "codegen/constructors.kl"
@@ -166,7 +166,7 @@ int32_t kl__main__( void )
     kl_t10 = kl_i_4 + 1;
 #line 62 "codegen/constructors.kl"
     kl_i_4 = kl_t10;
-    kl__Owned__dtor( &kl_b_6 );
+    kl__5Owned__dtor( &kl_b_6 );
 #line 59 "codegen/constructors.kl"
     goto bb1;
     bb6:
@@ -195,5 +195,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 50 "codegen/constructors.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

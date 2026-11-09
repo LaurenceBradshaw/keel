@@ -23,21 +23,21 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t abs( int32_t );
 
-void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter*, int32_t );
-int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* );
-int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* );
-int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of );
-int32_t kl_6helper_scale__3i32( int32_t );
-int32_t kl_6helper_scale__3i64( int64_t );
-int32_t kl_6helper_scale_here__3i32( int32_t );
-int32_t kl_6helper_magnitude__3i32( int32_t );
-int32_t kl_6helper_total__( void );
-int32_t kl_6helper_count_twice__( void );
-int32_t kl_6helper_darkness__( void );
-int32_t kl_6helper_measure__( void );
+void kl_6helper_7counter__R7counter_3i32__ctor( struct kl_6helper_counter*, int32_t );
+int32_t kl_6helper_4next__S7counter( struct kl_6helper_counter* );
+int32_t kl_6helper_4size__S7pair_of( struct kl_6helper_pair_of* );
+int32_t kl_6helper_3add__7pair_of( struct kl_6helper_pair_of );
+int32_t kl_6helper_5scale__3i32( int32_t );
+int32_t kl_6helper_5scale__3i64( int64_t );
+int32_t kl_6helper_10scale_here__3i32( int32_t );
+int32_t kl_6helper_9magnitude__3i32( int32_t );
+int32_t kl_6helper_5total__( void );
+int32_t kl_6helper_11count_twice__( void );
+int32_t kl_6helper_8darkness__( void );
+int32_t kl_6helper_7measure__( void );
 
 #line 13 "codegen/module_private/helper.kl"
-void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
+void kl_6helper_7counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_this_1, int32_t kl_start_2 )
 {
     ( *kl_this_1 ).kl_n = kl_start_2;
     return;
@@ -45,7 +45,7 @@ void kl_6helper_counter__R7counter_3i32__ctor( struct kl_6helper_counter* kl_thi
 }
 
 #line 18 "codegen/module_private/helper.kl"
-int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
+int32_t kl_6helper_4next__S7counter( struct kl_6helper_counter* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -65,7 +65,7 @@ int32_t kl_6helper_next__S7counter( struct kl_6helper_counter* kl_this_1 )
 }
 
 #line 41 "codegen/module_private/helper.kl"
-int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
+int32_t kl_6helper_4size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -87,7 +87,7 @@ int32_t kl_6helper_size__S7pair_of( struct kl_6helper_pair_of* kl_this_1 )
 }
 
 #line 47 "codegen/module_private/helper.kl"
-int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
+int32_t kl_6helper_3add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -109,7 +109,7 @@ int32_t kl_6helper_add__7pair_of( struct kl_6helper_pair_of kl_p_1 )
 }
 
 #line 53 "codegen/module_private/helper.kl"
-int32_t kl_6helper_scale__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_5scale__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -131,7 +131,7 @@ int32_t kl_6helper_scale__3i32( int32_t kl_v_1 )
 }
 
 #line 58 "codegen/module_private/helper.kl"
-int32_t kl_6helper_scale__3i64( int64_t kl_t1 )
+int32_t kl_6helper_5scale__3i64( int64_t kl_t1 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -142,12 +142,12 @@ int32_t kl_6helper_scale__3i64( int64_t kl_t1 )
 }
 
 #line 63 "codegen/module_private/helper.kl"
-int32_t kl_6helper_scale_here__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_10scale_here__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
 #line 65 "codegen/module_private/helper.kl"
-    kl_t2 = kl_6helper_scale__3i32( kl_v_1 );
+    kl_t2 = kl_6helper_5scale__3i32( kl_v_1 );
 #line 65 "codegen/module_private/helper.kl"
     kl_t0 = kl_t2;
 #line 65 "codegen/module_private/helper.kl"
@@ -155,7 +155,7 @@ int32_t kl_6helper_scale_here__3i32( int32_t kl_v_1 )
 }
 
 #line 68 "codegen/module_private/helper.kl"
-int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_9magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -168,7 +168,7 @@ int32_t kl_6helper_magnitude__3i32( int32_t kl_v_1 )
 }
 
 #line 76 "codegen/module_private/helper.kl"
-int32_t kl_6helper_total__( void )
+int32_t kl_6helper_5total__( void )
 {
     int32_t kl_t0;
     struct kl_6helper_pair_of kl_t1;
@@ -180,7 +180,7 @@ int32_t kl_6helper_total__( void )
 #line 78 "codegen/module_private/helper.kl"
     kl_t1.kl_b = 1;
 #line 78 "codegen/module_private/helper.kl"
-    kl_t2 = kl_6helper_add__7pair_of( kl_t1 );
+    kl_t2 = kl_6helper_3add__7pair_of( kl_t1 );
 #line 78 "codegen/module_private/helper.kl"
     kl_t3 = __builtin_add_overflow( 40, kl_t2, &( int32_t ) { 0 } );
 #line 78 "codegen/module_private/helper.kl"
@@ -198,7 +198,7 @@ int32_t kl_6helper_total__( void )
 }
 
 #line 81 "codegen/module_private/helper.kl"
-int32_t kl_6helper_count_twice__( void )
+int32_t kl_6helper_11count_twice__( void )
 {
     int32_t kl_t0;
     struct kl_6helper_counter kl_c_1;
@@ -209,13 +209,13 @@ int32_t kl_6helper_count_twice__( void )
 #line 83 "codegen/module_private/helper.kl"
     kl_t2 = &kl_c_1;
 #line 83 "codegen/module_private/helper.kl"
-    kl_6helper_counter__R7counter_3i32__ctor( kl_t2, 5 );
+    kl_6helper_7counter__R7counter_3i32__ctor( kl_t2, 5 );
     kl_t4 = &kl_c_1;
 #line 84 "codegen/module_private/helper.kl"
-    kl_6helper_next__S7counter( kl_t4 );
+    kl_6helper_4next__S7counter( kl_t4 );
     kl_t6 = &kl_c_1;
 #line 85 "codegen/module_private/helper.kl"
-    kl_t7 = kl_6helper_next__S7counter( kl_t6 );
+    kl_t7 = kl_6helper_4next__S7counter( kl_t6 );
 #line 85 "codegen/module_private/helper.kl"
     kl_t0 = kl_t7;
 #line 85 "codegen/module_private/helper.kl"
@@ -223,7 +223,7 @@ int32_t kl_6helper_count_twice__( void )
 }
 
 #line 88 "codegen/module_private/helper.kl"
-int32_t kl_6helper_darkness__( void )
+int32_t kl_6helper_8darkness__( void )
 {
     int32_t kl_t0;
     int32_t kl_s_1;
@@ -238,7 +238,7 @@ int32_t kl_6helper_darkness__( void )
 }
 
 #line 94 "codegen/module_private/helper.kl"
-int32_t kl_6helper_measure__( void )
+int32_t kl_6helper_7measure__( void )
 {
     int32_t kl_t0;
     struct kl_6helper_pair_of kl_p_1;
@@ -253,7 +253,7 @@ int32_t kl_6helper_measure__( void )
     kl_p_1 = kl_t2;
     kl_t3 = &kl_p_1;
 #line 97 "codegen/module_private/helper.kl"
-    kl_t4 = kl_6helper_size__S7pair_of( kl_t3 );
+    kl_t4 = kl_6helper_4size__S7pair_of( kl_t3 );
 #line 97 "codegen/module_private/helper.kl"
     kl_t0 = kl_t4;
 #line 97 "codegen/module_private/helper.kl"
@@ -267,18 +267,18 @@ int32_t kl_6helper_measure__( void )
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__main__( void );
-int32_t kl_6helper_keep__I3i32E__3i32( int32_t );
-int32_t kl_6helper_scale__3i64( int64_t );
-int32_t kl_6helper_scale_here__3i32( int32_t );
-int32_t kl_6helper_magnitude__3i32( int32_t );
-int32_t kl_6helper_total__( void );
-int32_t kl_6helper_count_twice__( void );
-int32_t kl_6helper_darkness__( void );
-int32_t kl_6helper_measure__( void );
+int32_t kl__4main__( void );
+int32_t kl_6helper_4keep__I3i32E__3i32( int32_t );
+int32_t kl_6helper_5scale__3i64( int64_t );
+int32_t kl_6helper_10scale_here__3i32( int32_t );
+int32_t kl_6helper_9magnitude__3i32( int32_t );
+int32_t kl_6helper_5total__( void );
+int32_t kl_6helper_11count_twice__( void );
+int32_t kl_6helper_8darkness__( void );
+int32_t kl_6helper_7measure__( void );
 
 #line 5 "codegen/module_private/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -298,7 +298,7 @@ int32_t kl__main__( void )
     int32_t kl_t15;
     bool kl_t16;
 #line 8 "codegen/module_private/main.kl"
-    kl_t1 = kl_6helper_scale__3i64( 3 );
+    kl_t1 = kl_6helper_5scale__3i64( 3 );
 #line 8 "codegen/module_private/main.kl"
     kl_t2 = kl_t1 != 1;
 #line 8 "codegen/module_private/main.kl"
@@ -310,7 +310,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 9 "codegen/module_private/main.kl"
-    kl_t3 = kl_6helper_scale_here__3i32( 3 );
+    kl_t3 = kl_6helper_10scale_here__3i32( 3 );
 #line 9 "codegen/module_private/main.kl"
     kl_t4 = kl_t3 != 30;
 #line 9 "codegen/module_private/main.kl"
@@ -321,7 +321,7 @@ int32_t kl__main__( void )
 #line 9 "codegen/module_private/main.kl"
     return kl_t0;
     bb4:
-    kl_t5 = kl_6helper_magnitude__3i32( -4 );
+    kl_t5 = kl_6helper_9magnitude__3i32( -4 );
 #line 11 "codegen/module_private/main.kl"
     kl_t6 = kl_t5 != 4;
 #line 11 "codegen/module_private/main.kl"
@@ -333,7 +333,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 12 "codegen/module_private/main.kl"
-    kl_t7 = kl_6helper_total__(  );
+    kl_t7 = kl_6helper_5total__(  );
 #line 12 "codegen/module_private/main.kl"
     kl_t8 = kl_t7 != 42;
 #line 12 "codegen/module_private/main.kl"
@@ -345,7 +345,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 13 "codegen/module_private/main.kl"
-    kl_t9 = kl_6helper_count_twice__(  );
+    kl_t9 = kl_6helper_11count_twice__(  );
 #line 13 "codegen/module_private/main.kl"
     kl_t10 = kl_t9 != 7;
 #line 13 "codegen/module_private/main.kl"
@@ -357,7 +357,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 14 "codegen/module_private/main.kl"
-    kl_t11 = kl_6helper_darkness__(  );
+    kl_t11 = kl_6helper_8darkness__(  );
 #line 14 "codegen/module_private/main.kl"
     kl_t12 = kl_t11 != 1;
 #line 14 "codegen/module_private/main.kl"
@@ -369,7 +369,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 15 "codegen/module_private/main.kl"
-    kl_t13 = kl_6helper_measure__(  );
+    kl_t13 = kl_6helper_7measure__(  );
 #line 15 "codegen/module_private/main.kl"
     kl_t14 = kl_t13 != 5;
 #line 15 "codegen/module_private/main.kl"
@@ -381,7 +381,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 16 "codegen/module_private/main.kl"
-    kl_t15 = kl_6helper_keep__I3i32E__3i32( 9 );
+    kl_t15 = kl_6helper_4keep__I3i32E__3i32( 9 );
 #line 16 "codegen/module_private/main.kl"
     kl_t16 = kl_t15 != 9;
 #line 16 "codegen/module_private/main.kl"
@@ -398,7 +398,7 @@ int32_t kl__main__( void )
 }
 
 #line 101 "codegen/module_private/helper.kl"
-int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
+int32_t kl_6helper_4keep__I3i32E__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -426,5 +426,5 @@ int32_t kl_6helper_keep__I3i32E__3i32( int32_t kl_v_1 )
 int main( void )
 {
 #line 5 "codegen/module_private/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

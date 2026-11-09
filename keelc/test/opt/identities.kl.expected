@@ -3,20 +3,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool kl__equal__3i32_3i32( int32_t, int32_t );
-bool kl__below__3i32_3i32( int32_t, int32_t );
-bool kl__both__4bool_4bool( bool, bool );
-bool kl__at__P3i32_P3i32( int32_t*, int32_t* );
-bool kl__equal_f__3f64_3f64( double, double );
-int32_t kl__compared__3i32( int32_t );
-int32_t kl__pointed__3i32( int32_t );
-int32_t kl__identities__3i32( int32_t );
-int32_t kl__not_a_number__3f64( double );
-int32_t kl__negative_zero__3f64( double );
-int32_t kl__main__( void );
+bool kl__5equal__3i32_3i32( int32_t, int32_t );
+bool kl__5below__3i32_3i32( int32_t, int32_t );
+bool kl__4both__4bool_4bool( bool, bool );
+bool kl__2at__P3i32_P3i32( int32_t*, int32_t* );
+bool kl__7equal_f__3f64_3f64( double, double );
+int32_t kl__8compared__3i32( int32_t );
+int32_t kl__7pointed__3i32( int32_t );
+int32_t kl__10identities__3i32( int32_t );
+int32_t kl__12not_a_number__3f64( double );
+int32_t kl__13negative_zero__3f64( double );
+int32_t kl__4main__( void );
 
 #line 6 "opt/identities.kl"
-bool kl__equal__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+bool kl__5equal__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
 #line 8 "opt/identities.kl"
@@ -26,7 +26,7 @@ bool kl__equal__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 11 "opt/identities.kl"
-bool kl__below__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+bool kl__5below__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
 #line 13 "opt/identities.kl"
@@ -36,7 +36,7 @@ bool kl__below__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 16 "opt/identities.kl"
-bool kl__both__4bool_4bool( bool kl_a_1, bool kl_b_2 )
+bool kl__4both__4bool_4bool( bool kl_a_1, bool kl_b_2 )
 {
     bool kl_t0;
 #line 18 "opt/identities.kl"
@@ -46,7 +46,7 @@ bool kl__both__4bool_4bool( bool kl_a_1, bool kl_b_2 )
 }
 
 #line 21 "opt/identities.kl"
-bool kl__at__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+bool kl__2at__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     bool kl_t0;
 #line 23 "opt/identities.kl"
@@ -56,7 +56,7 @@ bool kl__at__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 }
 
 #line 26 "opt/identities.kl"
-bool kl__equal_f__3f64_3f64( double kl_a_1, double kl_b_2 )
+bool kl__7equal_f__3f64_3f64( double kl_a_1, double kl_b_2 )
 {
     bool kl_t0;
 #line 28 "opt/identities.kl"
@@ -66,7 +66,7 @@ bool kl__equal_f__3f64_3f64( double kl_a_1, double kl_b_2 )
 }
 
 #line 31 "opt/identities.kl"
-int32_t kl__compared__3i32( int32_t kl_x_1 )
+int32_t kl__8compared__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
@@ -77,7 +77,7 @@ int32_t kl__compared__3i32( int32_t kl_x_1 )
 }
 
 #line 38 "opt/identities.kl"
-int32_t kl__pointed__3i32( int32_t kl_x_1 )
+int32_t kl__7pointed__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
@@ -88,7 +88,7 @@ int32_t kl__pointed__3i32( int32_t kl_x_1 )
 }
 
 #line 45 "opt/identities.kl"
-int32_t kl__identities__3i32( int32_t kl_x_1 )
+int32_t kl__10identities__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     ( void ) kl_x_1;
@@ -99,7 +99,7 @@ int32_t kl__identities__3i32( int32_t kl_x_1 )
 }
 
 #line 58 "opt/identities.kl"
-int32_t kl__not_a_number__3f64( double kl_nought_1 )
+int32_t kl__12not_a_number__3f64( double kl_nought_1 )
 {
     int32_t kl_t0;
     double kl_nan_2;
@@ -126,7 +126,7 @@ int32_t kl__not_a_number__3f64( double kl_nought_1 )
 }
 
 #line 65 "opt/identities.kl"
-int32_t kl__negative_zero__3f64( double kl_x_1 )
+int32_t kl__13negative_zero__3f64( double kl_x_1 )
 {
     int32_t kl_t0;
     double kl_sum_2;
@@ -155,7 +155,7 @@ int32_t kl__negative_zero__3f64( double kl_x_1 )
 }
 
 #line 72 "opt/identities.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -216,5 +216,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 72 "opt/identities.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

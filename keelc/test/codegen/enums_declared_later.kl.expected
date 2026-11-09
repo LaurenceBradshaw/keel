@@ -19,10 +19,10 @@ struct kl__Shape
     struct kl__Wrap__I6ColourE kl_7Wrapped_w;
 };
 
-int32_t kl__main__( void );
+int32_t kl__4main__( void );
 
 #line 21 "codegen/enums_declared_later.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Shape kl_a_1;
@@ -108,5 +108,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 21 "codegen/enums_declared_later.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -5,11 +5,11 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int64_t kl__id__3i64( int64_t );
-int32_t kl__main__( void );
+int64_t kl__2id__3i64( int64_t );
+int32_t kl__4main__( void );
 
 #line 5 "codegen/division_and_shifts.kl"
-int64_t kl__id__3i64( int64_t kl_x_1 )
+int64_t kl__2id__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 7 "codegen/division_and_shifts.kl"
@@ -19,7 +19,7 @@ int64_t kl__id__3i64( int64_t kl_x_1 )
 }
 
 #line 10 "codegen/division_and_shifts.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_neg_one_1;
@@ -151,7 +151,7 @@ int32_t kl__main__( void )
     int32_t kl_t127;
     bool kl_t128;
 #line 12 "codegen/division_and_shifts.kl"
-    kl_t2 = kl__id__3i64( -1 );
+    kl_t2 = kl__2id__3i64( -1 );
 #line 12 "codegen/division_and_shifts.kl"
     kl_t3 = ( int32_t ) kl_t2;
 #line 12 "codegen/division_and_shifts.kl"
@@ -338,7 +338,7 @@ int32_t kl__main__( void )
     kl_t37 = -9223372036854775807 - 1;
 #line 22 "codegen/division_and_shifts.kl"
     kl_min64_36 = kl_t37;
-    kl_t38 = kl__id__3i64( -1 );
+    kl_t38 = kl__2id__3i64( -1 );
 #line 23 "codegen/division_and_shifts.kl"
     kl_t39 = kl_t38 != 0;
 #line 23 "codegen/division_and_shifts.kl"
@@ -375,7 +375,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb41:
 #line 24 "codegen/division_and_shifts.kl"
-    kl_t44 = kl__id__3i64( -1 );
+    kl_t44 = kl__2id__3i64( -1 );
 #line 24 "codegen/division_and_shifts.kl"
     kl_t45 = kl_t44 != 0;
 #line 24 "codegen/division_and_shifts.kl"
@@ -412,7 +412,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb48:
 #line 27 "codegen/division_and_shifts.kl"
-    kl_t51 = kl__id__3i64( 2 );
+    kl_t51 = kl__2id__3i64( 2 );
 #line 27 "codegen/division_and_shifts.kl"
     kl_t52 = ( int32_t ) kl_t51;
 #line 27 "codegen/division_and_shifts.kl"
@@ -596,7 +596,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb84:
 #line 42 "codegen/division_and_shifts.kl"
-    kl_t82 = kl__id__3i64( 33 );
+    kl_t82 = kl__2id__3i64( 33 );
 #line 42 "codegen/division_and_shifts.kl"
     kl_t83 = ( int32_t ) kl_t82;
 #line 42 "codegen/division_and_shifts.kl"
@@ -639,7 +639,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb90:
     kl_one8_92 = 1;
-    kl_t93 = kl__id__3i64( 9 );
+    kl_t93 = kl__2id__3i64( 9 );
 #line 47 "codegen/division_and_shifts.kl"
     kl_t94 = ( uint8_t ) kl_t93;
 #line 47 "codegen/division_and_shifts.kl"
@@ -666,9 +666,9 @@ int32_t kl__main__( void )
 #line 47 "codegen/division_and_shifts.kl"
     return kl_t0;
     bb94:
-    kl_t100 = kl__id__3i64( 1 );
+    kl_t100 = kl__2id__3i64( 1 );
 #line 49 "codegen/division_and_shifts.kl"
-    kl_t101 = kl__id__3i64( 65 );
+    kl_t101 = kl__2id__3i64( 65 );
 #line 49 "codegen/division_and_shifts.kl"
     kl_t102 = kl_t101 & 63;
 #line 49 "codegen/division_and_shifts.kl"
@@ -684,9 +684,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb96:
 #line 52 "codegen/division_and_shifts.kl"
-    kl_t105 = kl__id__3i64( 1 );
+    kl_t105 = kl__2id__3i64( 1 );
 #line 52 "codegen/division_and_shifts.kl"
-    kl_t106 = kl__id__3i64( 70 );
+    kl_t106 = kl__2id__3i64( 70 );
 #line 52 "codegen/division_and_shifts.kl"
     kl_t107 = ( uint8_t ) kl_t106;
 #line 52 "codegen/division_and_shifts.kl"
@@ -728,7 +728,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb102:
     kl_y_116 = 5;
-    kl_t117 = kl__id__3i64( 32 );
+    kl_t117 = kl__2id__3i64( 32 );
 #line 58 "codegen/division_and_shifts.kl"
     kl_t118 = ( int32_t ) kl_t117;
 #line 58 "codegen/division_and_shifts.kl"
@@ -754,7 +754,7 @@ int32_t kl__main__( void )
 #line 59 "codegen/division_and_shifts.kl"
     return kl_t0;
     bb106:
-    kl_t123 = kl__id__3i64( 34 );
+    kl_t123 = kl__2id__3i64( 34 );
 #line 61 "codegen/division_and_shifts.kl"
     kl_t124 = ( int32_t ) kl_t123;
 #line 61 "codegen/division_and_shifts.kl"
@@ -789,5 +789,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 10 "codegen/division_and_shifts.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

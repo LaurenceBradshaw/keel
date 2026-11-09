@@ -5,16 +5,16 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__main__( void );
-int32_t kl__abs__I3i32E__3i32( int32_t );
-double kl__abs__I3f64E__3f64( double );
-double kl__bump__I3f64E__3f64( double );
-double kl__scale__I3f64E__3f64( double );
-uint8_t kl__clamp_low__I2u8E__2u8( uint8_t );
-int64_t kl__clamp_low__I3i64E__3i64( int64_t );
+int32_t kl__4main__( void );
+int32_t kl__3abs__I3i32E__3i32( int32_t );
+double kl__3abs__I3f64E__3f64( double );
+double kl__4bump__I3f64E__3f64( double );
+double kl__5scale__I3f64E__3f64( double );
+uint8_t kl__9clamp_low__I2u8E__2u8( uint8_t );
+int64_t kl__9clamp_low__I3i64E__3i64( int64_t );
 
 #line 41 "codegen/generics_literals.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -38,7 +38,7 @@ int32_t kl__main__( void )
     int64_t kl_t19;
     bool kl_t20;
 #line 43 "codegen/generics_literals.kl"
-    kl_t1 = kl__abs__I3i32E__3i32( -7 );
+    kl_t1 = kl__3abs__I3i32E__3i32( -7 );
 #line 43 "codegen/generics_literals.kl"
     kl_t2 = kl_t1 != 7;
 #line 43 "codegen/generics_literals.kl"
@@ -49,7 +49,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 48 "codegen/generics_literals.kl"
-    kl_t3 = kl__abs__I3i32E__3i32( 7 );
+    kl_t3 = kl__3abs__I3i32E__3i32( 7 );
 #line 48 "codegen/generics_literals.kl"
     kl_t4 = kl_t3 != 7;
 #line 48 "codegen/generics_literals.kl"
@@ -60,7 +60,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 53 "codegen/generics_literals.kl"
-    kl_t6 = kl__abs__I3f64E__3f64( -2.5 );
+    kl_t6 = kl__3abs__I3f64E__3f64( -2.5 );
 #line 53 "codegen/generics_literals.kl"
     kl_magnitude_5 = kl_t6;
 #line 55 "codegen/generics_literals.kl"
@@ -82,7 +82,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 67 "codegen/generics_literals.kl"
-    kl_t10 = kl__bump__I3f64E__3f64( 1.5 );
+    kl_t10 = kl__4bump__I3f64E__3f64( 1.5 );
 #line 67 "codegen/generics_literals.kl"
     kl_bumped_9 = kl_t10;
 #line 69 "codegen/generics_literals.kl"
@@ -104,7 +104,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 79 "codegen/generics_literals.kl"
-    kl_t14 = kl__scale__I3f64E__3f64( 4.0 );
+    kl_t14 = kl__5scale__I3f64E__3f64( 4.0 );
 #line 79 "codegen/generics_literals.kl"
     kl_scaled_13 = kl_t14;
 #line 81 "codegen/generics_literals.kl"
@@ -126,7 +126,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 91 "codegen/generics_literals.kl"
-    kl_t17 = kl__clamp_low__I2u8E__2u8( 3 );
+    kl_t17 = kl__9clamp_low__I2u8E__2u8( 3 );
 #line 91 "codegen/generics_literals.kl"
     kl_t18 = kl_t17 != 100;
 #line 91 "codegen/generics_literals.kl"
@@ -137,7 +137,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 96 "codegen/generics_literals.kl"
-    kl_t19 = kl__clamp_low__I3i64E__3i64( 500 );
+    kl_t19 = kl__9clamp_low__I3i64E__3i64( 500 );
 #line 96 "codegen/generics_literals.kl"
     kl_t20 = kl_t19 != 500;
 #line 96 "codegen/generics_literals.kl"
@@ -154,7 +154,7 @@ int32_t kl__main__( void )
 }
 
 #line 7 "codegen/generics_literals.kl"
-int32_t kl__abs__I3i32E__3i32( int32_t kl_a_1 )
+int32_t kl__3abs__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -186,7 +186,7 @@ int32_t kl__abs__I3i32E__3i32( int32_t kl_a_1 )
 }
 
 #line 7 "codegen/generics_literals.kl"
-double kl__abs__I3f64E__3f64( double kl_a_1 )
+double kl__3abs__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
     bool kl_t2;
@@ -209,7 +209,7 @@ double kl__abs__I3f64E__3f64( double kl_a_1 )
 }
 
 #line 19 "codegen/generics_literals.kl"
-double kl__bump__I3f64E__3f64( double kl_a_1 )
+double kl__4bump__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -222,7 +222,7 @@ double kl__bump__I3f64E__3f64( double kl_a_1 )
 }
 
 #line 24 "codegen/generics_literals.kl"
-double kl__scale__I3f64E__3f64( double kl_a_1 )
+double kl__5scale__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -235,7 +235,7 @@ double kl__scale__I3f64E__3f64( double kl_a_1 )
 }
 
 #line 31 "codegen/generics_literals.kl"
-uint8_t kl__clamp_low__I2u8E__2u8( uint8_t kl_a_1 )
+uint8_t kl__9clamp_low__I2u8E__2u8( uint8_t kl_a_1 )
 {
     uint8_t kl_t0;
     bool kl_t2;
@@ -255,7 +255,7 @@ uint8_t kl__clamp_low__I2u8E__2u8( uint8_t kl_a_1 )
 }
 
 #line 31 "codegen/generics_literals.kl"
-int64_t kl__clamp_low__I3i64E__3i64( int64_t kl_a_1 )
+int64_t kl__9clamp_low__I3i64E__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -278,5 +278,5 @@ int64_t kl__clamp_low__I3i64E__3i64( int64_t kl_a_1 )
 int main( void )
 {
 #line 41 "codegen/generics_literals.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

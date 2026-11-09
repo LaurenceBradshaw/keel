@@ -15,13 +15,13 @@ int32_t kl__scale__G = 10;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__doubled__3i32( int32_t );
-int32_t kl__through_a_const_pointer__3i32( int32_t );
-int32_t kl__through_a_field_pointer__( void );
-int32_t kl__main__( void );
+int32_t kl__7doubled__3i32( int32_t );
+int32_t kl__23through_a_const_pointer__3i32( int32_t );
+int32_t kl__23through_a_field_pointer__( void );
+int32_t kl__4main__( void );
 
 #line 13 "codegen/const_bindings.kl"
-int32_t kl__doubled__3i32( int32_t kl_n_1 )
+int32_t kl__7doubled__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -43,7 +43,7 @@ int32_t kl__doubled__3i32( int32_t kl_n_1 )
 }
 
 #line 19 "codegen/const_bindings.kl"
-int32_t kl__through_a_const_pointer__3i32( int32_t kl_seed_1 )
+int32_t kl__23through_a_const_pointer__3i32( int32_t kl_seed_1 )
 {
     int32_t kl_t0;
     int32_t kl_v_2;
@@ -76,7 +76,7 @@ int32_t kl__through_a_const_pointer__3i32( int32_t kl_seed_1 )
 }
 
 #line 31 "codegen/const_bindings.kl"
-int32_t kl__through_a_field_pointer__( void )
+int32_t kl__23through_a_field_pointer__( void )
 {
     int32_t kl_t0;
     struct kl__Point kl_v_1;
@@ -111,7 +111,7 @@ int32_t kl__through_a_field_pointer__( void )
 }
 
 #line 42 "codegen/const_bindings.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_base_1;
@@ -140,7 +140,7 @@ int32_t kl__main__( void )
 #line 46 "codegen/const_bindings.kl"
     kl_p_2 = kl_t3;
 #line 48 "codegen/const_bindings.kl"
-    kl_t5 = kl__doubled__3i32( kl_base_1 );
+    kl_t5 = kl__7doubled__3i32( kl_base_1 );
 #line 48 "codegen/const_bindings.kl"
     kl_total_4 = kl_t5;
     kl_t6 = __builtin_add_overflow( kl_total_4, kl_p_2.kl_x, &( int32_t ) { 0 } );
@@ -175,7 +175,7 @@ int32_t kl__main__( void )
     kl_t11 = kl_total_4 + 10;
 #line 50 "codegen/const_bindings.kl"
     kl_total_4 = kl_t11;
-    kl_t12 = kl__through_a_const_pointer__3i32( 6 );
+    kl_t12 = kl__23through_a_const_pointer__3i32( 6 );
 #line 51 "codegen/const_bindings.kl"
     kl_t13 = __builtin_add_overflow( kl_total_4, kl_t12, &( int32_t ) { 0 } );
 #line 51 "codegen/const_bindings.kl"
@@ -188,7 +188,7 @@ int32_t kl__main__( void )
     kl_t14 = kl_total_4 + kl_t12;
 #line 51 "codegen/const_bindings.kl"
     kl_total_4 = kl_t14;
-    kl_t15 = kl__through_a_field_pointer__(  );
+    kl_t15 = kl__23through_a_field_pointer__(  );
 #line 52 "codegen/const_bindings.kl"
     kl_t16 = __builtin_add_overflow( kl_total_4, kl_t15, &( int32_t ) { 0 } );
 #line 52 "codegen/const_bindings.kl"
@@ -211,5 +211,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 42 "codegen/const_bindings.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

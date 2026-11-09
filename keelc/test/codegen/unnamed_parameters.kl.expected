@@ -16,31 +16,31 @@ struct kl__square
 struct kl__shape__vtable
 {
     void ( *drop )( void* );
-    int32_t ( *kl__area__3i32 )( void*, int32_t );
+    int32_t ( *kl__4area__3i32 )( void*, int32_t );
 };
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__square__R6square_3i32__ctor( struct kl__square*, int32_t );
-int32_t kl__area__S6square_3i32( struct kl__square*, int32_t );
-int32_t kl__second__3i32_3i32( int32_t, int32_t );
-int32_t kl__third__3i32_3i32_3i32( int32_t, int32_t, int32_t );
-int32_t kl__main__( void );
+void kl__6square__R6square_3i32__ctor( struct kl__square*, int32_t );
+int32_t kl__4area__S6square_3i32( struct kl__square*, int32_t );
+int32_t kl__6second__3i32_3i32( int32_t, int32_t );
+int32_t kl__5third__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl__4main__( void );
 
 static void kl__square__as_kl__shape__drop( void* self )
 {
     ( void ) self;
 }
 
-static int32_t kl__square__as_kl__shape__kl__area__3i32( void* self, int32_t p0 )
+static int32_t kl__square__as_kl__shape__kl__4area__3i32( void* self, int32_t p0 )
 {
-    return kl__area__S6square_3i32( ( struct kl__square* ) self, p0 );
+    return kl__4area__S6square_3i32( ( struct kl__square* ) self, p0 );
 }
 
-static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__as_kl__shape__drop, kl__square__as_kl__shape__kl__area__3i32 };
+static const struct kl__shape__vtable kl__square__as_kl__shape = { kl__square__as_kl__shape__drop, kl__square__as_kl__shape__kl__4area__3i32 };
 
 #line 12 "codegen/unnamed_parameters.kl"
-void kl__square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_side_2 )
+void kl__6square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_side_2 )
 {
     ( *kl_this_1 ).kl_side = kl_side_2;
     return;
@@ -48,7 +48,7 @@ void kl__square__R6square_3i32__ctor( struct kl__square* kl_this_1, int32_t kl_s
 }
 
 #line 17 "codegen/unnamed_parameters.kl"
-int32_t kl__area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
+int32_t kl__4area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -71,7 +71,7 @@ int32_t kl__area__S6square_3i32( struct kl__square* kl_this_1, int32_t kl_t2 )
 }
 
 #line 23 "codegen/unnamed_parameters.kl"
-int32_t kl__second__3i32_3i32( int32_t kl_t1, int32_t kl_b_2 )
+int32_t kl__6second__3i32_3i32( int32_t kl_t1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -82,7 +82,7 @@ int32_t kl__second__3i32_3i32( int32_t kl_t1, int32_t kl_b_2 )
 }
 
 #line 28 "codegen/unnamed_parameters.kl"
-int32_t kl__third__3i32_3i32_3i32( int32_t kl_t1, int32_t kl_t2, int32_t kl_c_3 )
+int32_t kl__5third__3i32_3i32_3i32( int32_t kl_t1, int32_t kl_t2, int32_t kl_c_3 )
 {
     int32_t kl_t0;
     ( void ) kl_t1;
@@ -94,7 +94,7 @@ int32_t kl__third__3i32_3i32_3i32( int32_t kl_t1, int32_t kl_t2, int32_t kl_c_3 
 }
 
 #line 33 "codegen/unnamed_parameters.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__square kl_s_1;
@@ -113,14 +113,14 @@ int32_t kl__main__( void )
 #line 35 "codegen/unnamed_parameters.kl"
     kl_t2 = &kl_s_1;
 #line 35 "codegen/unnamed_parameters.kl"
-    kl__square__R6square_3i32__ctor( kl_t2, 3 );
+    kl__6square__R6square_3i32__ctor( kl_t2, 3 );
     kl_t5 = &kl_s_1;
 #line 36 "codegen/unnamed_parameters.kl"
     kl_t6 = ( struct kl__shape__ref ) { ( void* ) kl_t5, &kl__square__as_kl__shape };
 #line 36 "codegen/unnamed_parameters.kl"
     kl_as_shape_4 = kl_t6;
 #line 38 "codegen/unnamed_parameters.kl"
-    kl_t9 = kl__second__3i32_3i32( 1, 2 );
+    kl_t9 = kl__6second__3i32_3i32( 1, 2 );
 #line 38 "codegen/unnamed_parameters.kl"
     kl_t10 = kl_t9 != 2;
 #line 38 "codegen/unnamed_parameters.kl"
@@ -129,7 +129,7 @@ int32_t kl__main__( void )
     if ( kl_t8 ) goto bb2; else goto bb1;
     bb1:
 #line 38 "codegen/unnamed_parameters.kl"
-    kl_t11 = kl__third__3i32_3i32_3i32( 1, 2, 3 );
+    kl_t11 = kl__5third__3i32_3i32_3i32( 1, 2, 3 );
 #line 38 "codegen/unnamed_parameters.kl"
     kl_t12 = kl_t11 != 3;
 #line 38 "codegen/unnamed_parameters.kl"
@@ -143,7 +143,7 @@ int32_t kl__main__( void )
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
 #line 38 "codegen/unnamed_parameters.kl"
-    kl_t13 = kl_as_shape_4.vtable->kl__area__3i32( kl_as_shape_4.self, 10 );
+    kl_t13 = kl_as_shape_4.vtable->kl__4area__3i32( kl_as_shape_4.self, 10 );
 #line 38 "codegen/unnamed_parameters.kl"
     kl_t14 = kl_t13 != 9;
 #line 38 "codegen/unnamed_parameters.kl"
@@ -168,5 +168,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 33 "codegen/unnamed_parameters.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

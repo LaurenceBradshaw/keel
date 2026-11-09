@@ -46,8 +46,8 @@ named="$( gdb -batch -nx -ex "source editors/gdb/keel.py" -ex "kbreak manhattan"
     -ex "info breakpoints" build/examples/debugging 2>&1 )"
 for expected in \
     'Breakpoint 1, .* at examples/debugging.kl:16' \
-    'in kl_2kl7console_print__3i64_7textual at' \
-    'in kl_2kl7console_print__7textual_7textual at'; do
+    'in kl_2kl7console_5print__3i64_7textual at' \
+    'in kl_2kl7console_5print__7textual_7textual at'; do
     grep -q -- "$expected" <<< "$named" || { echo "kbreak missing: $expected"; status=1; }
 done
 

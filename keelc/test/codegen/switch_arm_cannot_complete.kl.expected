@@ -5,12 +5,12 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__nested__5Shape_5Shape( int32_t, int32_t );
-int32_t kl__spins__3i32( int32_t );
-int32_t kl__main__( void );
+int32_t kl__6nested__5Shape_5Shape( int32_t, int32_t );
+int32_t kl__5spins__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 9 "codegen/switch_arm_cannot_complete.kl"
-int32_t kl__nested__5Shape_5Shape( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__6nested__5Shape_5Shape( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -43,7 +43,7 @@ int32_t kl__nested__5Shape_5Shape( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 23 "codegen/switch_arm_cannot_complete.kl"
-int32_t kl__spins__3i32( int32_t kl_n_1 )
+int32_t kl__5spins__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -83,7 +83,7 @@ int32_t kl__spins__3i32( int32_t kl_n_1 )
 }
 
 #line 40 "codegen/switch_arm_cannot_complete.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -97,7 +97,7 @@ int32_t kl__main__( void )
     int32_t kl_t9;
     bool kl_t10;
 #line 42 "codegen/switch_arm_cannot_complete.kl"
-    kl_t1 = kl__nested__5Shape_5Shape( 0, 0 );
+    kl_t1 = kl__6nested__5Shape_5Shape( 0, 0 );
 #line 42 "codegen/switch_arm_cannot_complete.kl"
     kl_t2 = kl_t1 != 1;
 #line 42 "codegen/switch_arm_cannot_complete.kl"
@@ -107,7 +107,7 @@ int32_t kl__main__( void )
 #line 44 "codegen/switch_arm_cannot_complete.kl"
     return kl_t0;
     bb2:
-    kl_t3 = kl__nested__5Shape_5Shape( 0, 1 );
+    kl_t3 = kl__6nested__5Shape_5Shape( 0, 1 );
 #line 46 "codegen/switch_arm_cannot_complete.kl"
     kl_t4 = kl_t3 != 2;
 #line 46 "codegen/switch_arm_cannot_complete.kl"
@@ -117,7 +117,7 @@ int32_t kl__main__( void )
 #line 48 "codegen/switch_arm_cannot_complete.kl"
     return kl_t0;
     bb4:
-    kl_t5 = kl__nested__5Shape_5Shape( 1, 0 );
+    kl_t5 = kl__6nested__5Shape_5Shape( 1, 0 );
 #line 50 "codegen/switch_arm_cannot_complete.kl"
     kl_t6 = kl_t5 != 3;
 #line 50 "codegen/switch_arm_cannot_complete.kl"
@@ -127,7 +127,7 @@ int32_t kl__main__( void )
 #line 52 "codegen/switch_arm_cannot_complete.kl"
     return kl_t0;
     bb6:
-    kl_t7 = kl__spins__3i32( 0 );
+    kl_t7 = kl__5spins__3i32( 0 );
 #line 54 "codegen/switch_arm_cannot_complete.kl"
     kl_t8 = kl_t7 != 5;
 #line 54 "codegen/switch_arm_cannot_complete.kl"
@@ -137,7 +137,7 @@ int32_t kl__main__( void )
 #line 56 "codegen/switch_arm_cannot_complete.kl"
     return kl_t0;
     bb8:
-    kl_t9 = kl__spins__3i32( 1 );
+    kl_t9 = kl__5spins__3i32( 1 );
 #line 58 "codegen/switch_arm_cannot_complete.kl"
     kl_t10 = kl_t9 != -1;
 #line 58 "codegen/switch_arm_cannot_complete.kl"
@@ -156,5 +156,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 40 "codegen/switch_arm_cannot_complete.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

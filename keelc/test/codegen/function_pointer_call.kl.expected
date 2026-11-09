@@ -9,14 +9,14 @@ typedef void ( *kl__fn__FE4void )( void );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__twice__3i32( int32_t );
-int32_t kl__add__3i32_3i32( int32_t, int32_t );
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
-void kl__nothing__( void );
-int32_t kl__main__( void );
+int32_t kl__5twice__3i32( int32_t );
+int32_t kl__3add__3i32_3i32( int32_t, int32_t );
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+void kl__7nothing__( void );
+int32_t kl__4main__( void );
 
 #line 4 "codegen/function_pointer_call.kl"
-int32_t kl__twice__3i32( int32_t kl_a_1 )
+int32_t kl__5twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -38,7 +38,7 @@ int32_t kl__twice__3i32( int32_t kl_a_1 )
 }
 
 #line 9 "codegen/function_pointer_call.kl"
-int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__3add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -60,7 +60,7 @@ int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 14 "codegen/function_pointer_call.kl"
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -73,7 +73,7 @@ int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
 }
 
 #line 19 "codegen/function_pointer_call.kl"
-void kl__nothing__( void )
+void kl__7nothing__( void )
 {
 #line 19 "codegen/function_pointer_call.kl"
     return;
@@ -81,7 +81,7 @@ void kl__nothing__( void )
 }
 
 #line 21 "codegen/function_pointer_call.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_p_1;
@@ -101,13 +101,13 @@ int32_t kl__main__( void )
     int32_t kl_t16;
     bool kl_t17;
 #line 23 "codegen/function_pointer_call.kl"
-    kl_t2 = kl__twice__3i32;
+    kl_t2 = kl__5twice__3i32;
 #line 23 "codegen/function_pointer_call.kl"
     kl_p_1 = kl_t2;
-    kl_t4 = kl__add__3i32_3i32;
+    kl_t4 = kl__3add__3i32_3i32;
 #line 24 "codegen/function_pointer_call.kl"
     kl_q_3 = kl_t4;
-    kl_t6 = kl__nothing__;
+    kl_t6 = kl__7nothing__;
 #line 25 "codegen/function_pointer_call.kl"
     kl_r_5 = kl_t6;
 #line 27 "codegen/function_pointer_call.kl"
@@ -137,7 +137,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 41 "codegen/function_pointer_call.kl"
-    kl_t13 = kl__apply__F3i32E3i32_3i32( kl_p_1, 4 );
+    kl_t13 = kl__5apply__F3i32E3i32_3i32( kl_p_1, 4 );
 #line 41 "codegen/function_pointer_call.kl"
     kl_t14 = kl_t13 != 8;
 #line 41 "codegen/function_pointer_call.kl"
@@ -170,5 +170,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 21 "codegen/function_pointer_call.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

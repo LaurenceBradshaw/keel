@@ -14,15 +14,15 @@ int32_t kl__live__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__release__( void );
-void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
-void kl__Owned__dtor( struct kl__Owned* );
-void kl__consume__M5Owned( struct kl__Owned );
-int32_t kl__run__3i32( int32_t );
-int32_t kl__main__( void );
+void kl__7release__( void );
+void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
+void kl__5Owned__dtor( struct kl__Owned* );
+void kl__7consume__M5Owned( struct kl__Owned );
+int32_t kl__3run__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 7 "codegen/drop_flags.kl"
-void kl__release__( void )
+void kl__7release__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
@@ -43,7 +43,7 @@ void kl__release__( void )
 }
 
 #line 16 "codegen/drop_flags.kl"
-void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+void kl__5Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
@@ -65,26 +65,26 @@ void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2
 }
 
 #line 22 "codegen/drop_flags.kl"
-void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+void kl__5Owned__dtor( struct kl__Owned* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 24 "codegen/drop_flags.kl"
-    kl__release__(  );
+    kl__7release__(  );
     return;
 #line 25 "codegen/drop_flags.kl"
 }
 
 #line 30 "codegen/drop_flags.kl"
-void kl__consume__M5Owned( struct kl__Owned kl_t1 )
+void kl__7consume__M5Owned( struct kl__Owned kl_t1 )
 {
-    kl__Owned__dtor( &kl_t1 );
+    kl__5Owned__dtor( &kl_t1 );
 #line 32 "codegen/drop_flags.kl"
     return;
 #line 32 "codegen/drop_flags.kl"
 }
 
 #line 35 "codegen/drop_flags.kl"
-int32_t kl__run__3i32( int32_t kl_c_1 )
+int32_t kl__3run__3i32( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     struct kl__Owned kl_o_2;
@@ -100,13 +100,13 @@ int32_t kl__run__3i32( int32_t kl_c_1 )
 #line 37 "codegen/drop_flags.kl"
     kl_t7 = true;
 #line 37 "codegen/drop_flags.kl"
-    kl__Owned__R5Owned_3u64__ctor( kl_t3, 1 );
+    kl__5Owned__R5Owned_3u64__ctor( kl_t3, 1 );
 #line 39 "codegen/drop_flags.kl"
     kl_t5 = kl_c_1 == 0;
 #line 39 "codegen/drop_flags.kl"
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl__consume__M5Owned( kl_o_2 );
+    kl__7consume__M5Owned( kl_o_2 );
 #line 41 "codegen/drop_flags.kl"
     kl_t7 = false;
 #line 39 "codegen/drop_flags.kl"
@@ -115,7 +115,7 @@ int32_t kl__run__3i32( int32_t kl_c_1 )
 #line 44 "codegen/drop_flags.kl"
     kl_t0 = 0;
 #line 44 "codegen/drop_flags.kl"
-    if ( kl_t7 ) kl__Owned__dtor( &kl_o_2 );
+    if ( kl_t7 ) kl__5Owned__dtor( &kl_o_2 );
 #line 44 "codegen/drop_flags.kl"
     kl_t7 = false;
 #line 44 "codegen/drop_flags.kl"
@@ -123,7 +123,7 @@ int32_t kl__run__3i32( int32_t kl_c_1 )
 }
 
 #line 47 "codegen/drop_flags.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_after_kept_2;
@@ -133,10 +133,10 @@ int32_t kl__main__( void )
     bool kl_t7;
     int32_t kl_t8;
 #line 51 "codegen/drop_flags.kl"
-    kl__run__3i32( 1 );
+    kl__3run__3i32( 1 );
     kl_after_kept_2 = kl__live__G;
 #line 56 "codegen/drop_flags.kl"
-    kl__run__3i32( 0 );
+    kl__3run__3i32( 0 );
     kl_after_moved_4 = kl__live__G;
 #line 60 "codegen/drop_flags.kl"
     kl_t5 = __builtin_mul_overflow( kl_after_kept_2, 10, &( int32_t ) { 0 } );
@@ -168,5 +168,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 47 "codegen/drop_flags.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

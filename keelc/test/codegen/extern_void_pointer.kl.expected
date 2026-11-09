@@ -10,10 +10,10 @@ _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 void* malloc( uint64_t );
 void* memset( void*, int32_t, uint64_t );
 
-int32_t kl__main__( void );
+int32_t kl__4main__( void );
 
 #line 6 "codegen/extern_void_pointer.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_total_1;
@@ -86,5 +86,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/extern_void_pointer.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

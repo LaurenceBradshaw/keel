@@ -18,18 +18,18 @@ struct kl__Held
     int32_t kl_n;
 };
 
-void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair*, int32_t, bool );
-void kl__Pair__dtor( struct kl__Pair* );
-void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held*, int32_t*, int32_t );
-void kl__Held__dtor( struct kl__Held* );
-struct kl__Pair kl__pass__M4Pair( struct kl__Pair );
-struct kl__Held kl__hold__M4Held( struct kl__Held );
-int32_t kl__numbers__3i32( int32_t );
-int32_t kl__pointers__3i32( int32_t );
-int32_t kl__main__( void );
+void kl__4Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair*, int32_t, bool );
+void kl__4Pair__dtor( struct kl__Pair* );
+void kl__4Held__R4Held_P3i32_3i32__ctor( struct kl__Held*, int32_t*, int32_t );
+void kl__4Held__dtor( struct kl__Held* );
+struct kl__Pair kl__4pass__M4Pair( struct kl__Pair );
+struct kl__Held kl__4hold__M4Held( struct kl__Held );
+int32_t kl__7numbers__3i32( int32_t );
+int32_t kl__8pointers__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 7 "opt/scalars_moved.kl"
-void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair* kl_this_1, int32_t kl_v_2, bool kl_b_3 )
+void kl__4Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair* kl_this_1, int32_t kl_v_2, bool kl_b_3 )
 {
     ( *kl_this_1 ).kl_n = kl_v_2;
     ( *kl_this_1 ).kl_on = kl_b_3;
@@ -38,7 +38,7 @@ void kl__Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair* kl_this_1, int32_t kl_v
 }
 
 #line 13 "opt/scalars_moved.kl"
-void kl__Pair__dtor( struct kl__Pair* kl_this_1 )
+void kl__4Pair__dtor( struct kl__Pair* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 13 "opt/scalars_moved.kl"
@@ -47,7 +47,7 @@ void kl__Pair__dtor( struct kl__Pair* kl_this_1 )
 }
 
 #line 21 "opt/scalars_moved.kl"
-void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held* kl_this_1, int32_t* kl_p_2, int32_t kl_v_3 )
+void kl__4Held__R4Held_P3i32_3i32__ctor( struct kl__Held* kl_this_1, int32_t* kl_p_2, int32_t kl_v_3 )
 {
     ( *kl_this_1 ).kl_at = kl_p_2;
     ( *kl_this_1 ).kl_n = kl_v_3;
@@ -56,7 +56,7 @@ void kl__Held__R4Held_P3i32_3i32__ctor( struct kl__Held* kl_this_1, int32_t* kl_
 }
 
 #line 27 "opt/scalars_moved.kl"
-void kl__Held__dtor( struct kl__Held* kl_this_1 )
+void kl__4Held__dtor( struct kl__Held* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 27 "opt/scalars_moved.kl"
@@ -65,7 +65,7 @@ void kl__Held__dtor( struct kl__Held* kl_this_1 )
 }
 
 #line 33 "opt/scalars_moved.kl"
-struct kl__Pair kl__pass__M4Pair( struct kl__Pair kl_p_1 )
+struct kl__Pair kl__4pass__M4Pair( struct kl__Pair kl_p_1 )
 {
     struct kl__Pair kl_t0;
 #line 35 "opt/scalars_moved.kl"
@@ -75,7 +75,7 @@ struct kl__Pair kl__pass__M4Pair( struct kl__Pair kl_p_1 )
 }
 
 #line 38 "opt/scalars_moved.kl"
-struct kl__Held kl__hold__M4Held( struct kl__Held kl_h_1 )
+struct kl__Held kl__4hold__M4Held( struct kl__Held kl_h_1 )
 {
     struct kl__Held kl_t0;
 #line 40 "opt/scalars_moved.kl"
@@ -85,7 +85,7 @@ struct kl__Held kl__hold__M4Held( struct kl__Held kl_h_1 )
 }
 
 #line 44 "opt/scalars_moved.kl"
-int32_t kl__numbers__3i32( int32_t kl_a_1 )
+int32_t kl__7numbers__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     ( void ) kl_a_1;
@@ -96,7 +96,7 @@ int32_t kl__numbers__3i32( int32_t kl_a_1 )
 }
 
 #line 51 "opt/scalars_moved.kl"
-int32_t kl__pointers__3i32( int32_t kl_a_1 )
+int32_t kl__8pointers__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     ( void ) kl_a_1;
@@ -106,7 +106,7 @@ int32_t kl__pointers__3i32( int32_t kl_a_1 )
 }
 
 #line 58 "opt/scalars_moved.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 55 "opt/scalars_moved.kl"
@@ -119,5 +119,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 58 "opt/scalars_moved.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

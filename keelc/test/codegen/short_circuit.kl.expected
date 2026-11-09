@@ -3,13 +3,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool kl__positive__3i32( int32_t );
-bool kl__both__3i32_3i32( int32_t, int32_t );
-bool kl__either__3i32_3i32( int32_t, int32_t );
-int32_t kl__main__( void );
+bool kl__8positive__3i32( int32_t );
+bool kl__4both__3i32_3i32( int32_t, int32_t );
+bool kl__6either__3i32_3i32( int32_t, int32_t );
+int32_t kl__4main__( void );
 
 #line 2 "codegen/short_circuit.kl"
-bool kl__positive__3i32( int32_t kl_n_1 )
+bool kl__8positive__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -23,21 +23,21 @@ bool kl__positive__3i32( int32_t kl_n_1 )
 }
 
 #line 4 "codegen/short_circuit.kl"
-bool kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+bool kl__4both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
     bool kl_t4;
     bool kl_t5;
 #line 4 "codegen/short_circuit.kl"
-    kl_t4 = kl__positive__3i32( kl_a_1 );
+    kl_t4 = kl__8positive__3i32( kl_a_1 );
 #line 4 "codegen/short_circuit.kl"
     kl_t3 = kl_t4;
 #line 4 "codegen/short_circuit.kl"
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 4 "codegen/short_circuit.kl"
-    kl_t5 = kl__positive__3i32( kl_b_2 );
+    kl_t5 = kl__8positive__3i32( kl_b_2 );
 #line 4 "codegen/short_circuit.kl"
     kl_t3 = kl_t5;
 #line 4 "codegen/short_circuit.kl"
@@ -51,21 +51,21 @@ bool kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 5 "codegen/short_circuit.kl"
-bool kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+bool kl__6either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
     bool kl_t4;
     bool kl_t5;
 #line 5 "codegen/short_circuit.kl"
-    kl_t4 = kl__positive__3i32( kl_a_1 );
+    kl_t4 = kl__8positive__3i32( kl_a_1 );
 #line 5 "codegen/short_circuit.kl"
     kl_t3 = kl_t4;
 #line 5 "codegen/short_circuit.kl"
     if ( kl_t3 ) goto bb2; else goto bb1;
     bb1:
 #line 5 "codegen/short_circuit.kl"
-    kl_t5 = kl__positive__3i32( kl_b_2 );
+    kl_t5 = kl__8positive__3i32( kl_b_2 );
 #line 5 "codegen/short_circuit.kl"
     kl_t3 = kl_t5;
 #line 5 "codegen/short_circuit.kl"
@@ -79,7 +79,7 @@ bool kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 7 "codegen/short_circuit.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 7 "codegen/short_circuit.kl"
@@ -93,5 +93,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 7 "codegen/short_circuit.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

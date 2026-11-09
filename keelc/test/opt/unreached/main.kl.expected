@@ -18,31 +18,31 @@ struct kl__Circle
 struct kl__Shape__vtable
 {
     void ( *drop )( void* );
-    int32_t ( *kl__area__ )( void* );
+    int32_t ( *kl__4area__ )( void* );
 };
 
-int32_t kl__seven__( void );
-kl__fn__FE3i32 kl__named__G = kl__seven__;
+int32_t kl__5seven__( void );
+kl__fn__FE3i32 kl__named__G = kl__5seven__;
 
-int32_t kl__area__S6Circle( struct kl__Circle* );
-int32_t kl__seven__( void );
-int32_t kl__total__5Shape_3i32( struct kl__Shape__ref, int32_t );
-int32_t kl__main__( void );
+int32_t kl__4area__S6Circle( struct kl__Circle* );
+int32_t kl__5seven__( void );
+int32_t kl__5total__5Shape_3i32( struct kl__Shape__ref, int32_t );
+int32_t kl__4main__( void );
 
 static void kl__Circle__as_kl__Shape__drop( void* self )
 {
     ( void ) self;
 }
 
-static int32_t kl__Circle__as_kl__Shape__kl__area__( void* self )
+static int32_t kl__Circle__as_kl__Shape__kl__4area__( void* self )
 {
-    return kl__area__S6Circle( ( struct kl__Circle* ) self );
+    return kl__4area__S6Circle( ( struct kl__Circle* ) self );
 }
 
-static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__as_kl__Shape__drop, kl__Circle__as_kl__Shape__kl__area__ };
+static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__as_kl__Shape__drop, kl__Circle__as_kl__Shape__kl__4area__ };
 
 #line 24 "opt/unreached/main.kl"
-int32_t kl__area__S6Circle( struct kl__Circle* kl_this_1 )
+int32_t kl__4area__S6Circle( struct kl__Circle* kl_this_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -55,7 +55,7 @@ int32_t kl__area__S6Circle( struct kl__Circle* kl_this_1 )
 }
 
 #line 30 "opt/unreached/main.kl"
-int32_t kl__seven__( void )
+int32_t kl__5seven__( void )
 {
     int32_t kl_t0;
 #line 32 "opt/unreached/main.kl"
@@ -65,7 +65,7 @@ int32_t kl__seven__( void )
 }
 
 #line 51 "opt/unreached/main.kl"
-int32_t kl__total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
+int32_t kl__5total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -83,11 +83,11 @@ int32_t kl__total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
     goto bb3;
     bb2:
 #line 53 "opt/unreached/main.kl"
-    kl_t4 = kl_s_1.vtable->kl__area__( kl_s_1.self );
+    kl_t4 = kl_s_1.vtable->kl__4area__( kl_s_1.self );
 #line 53 "opt/unreached/main.kl"
     kl_t5 = kl_n_2 - 1;
 #line 53 "opt/unreached/main.kl"
-    kl_t6 = kl__total__5Shape_3i32( kl_s_1, kl_t5 );
+    kl_t6 = kl__5total__5Shape_3i32( kl_s_1, kl_t5 );
 #line 53 "opt/unreached/main.kl"
     kl_t0 = kl_t4 + kl_t6;
 #line 53 "opt/unreached/main.kl"
@@ -98,7 +98,7 @@ int32_t kl__total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
 }
 
 #line 56 "opt/unreached/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Circle kl_c_1;
@@ -111,7 +111,7 @@ int32_t kl__main__( void )
     kl_c_1.kl_r = 1;
     kl_t2 = ( struct kl__Shape__ref ) { ( void* ) &kl_c_1, &kl__Circle__as_kl__Shape };
 #line 59 "opt/unreached/main.kl"
-    kl_t3 = kl__total__5Shape_3i32( kl_t2, 2 );
+    kl_t3 = kl__5total__5Shape_3i32( kl_t2, 2 );
 #line 59 "opt/unreached/main.kl"
     kl_t4 = kl__named__G(  );
 #line 59 "opt/unreached/main.kl"
@@ -139,5 +139,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 56 "opt/unreached/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

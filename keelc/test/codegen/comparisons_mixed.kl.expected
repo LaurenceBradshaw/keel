@@ -141,13 +141,13 @@ static inline bool kl_cmp_ne_u64_f64( uint64_t a, double b )
     return a != t || b != ( double ) t;
 }
 
-int32_t kl__main__( void );
-bool kl__below__I3u64E__3u64_3i64( uint64_t, int64_t );
-bool kl__below__I3f64E__3f64_3i64( double, int64_t );
-bool kl__below__I3i32E__3i32_3i64( int32_t, int64_t );
+int32_t kl__4main__( void );
+bool kl__5below__I3u64E__3u64_3i64( uint64_t, int64_t );
+bool kl__5below__I3f64E__3f64_3i64( double, int64_t );
+bool kl__5below__I3i32E__3i32_3i64( int32_t, int64_t );
 
 #line 14 "codegen/comparisons_mixed.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_neg_1;
@@ -906,7 +906,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb98:
 #line 138 "codegen/comparisons_mixed.kl"
-    kl_t131 = kl__below__I3u64E__3u64_3i64( kl_plus_one_27, kl_minus_one_26 );
+    kl_t131 = kl__5below__I3u64E__3u64_3i64( kl_plus_one_27, kl_minus_one_26 );
 #line 138 "codegen/comparisons_mixed.kl"
     if ( kl_t131 ) goto bb99; else goto bb100;
     bb99:
@@ -916,7 +916,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb100:
 #line 139 "codegen/comparisons_mixed.kl"
-    kl_t132 = kl__below__I3f64E__3f64_3i64( kl_half_61, kl_minus_one_26 );
+    kl_t132 = kl__5below__I3f64E__3f64_3i64( kl_half_61, kl_minus_one_26 );
 #line 139 "codegen/comparisons_mixed.kl"
     if ( kl_t132 ) goto bb101; else goto bb102;
     bb101:
@@ -926,7 +926,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb102:
 #line 140 "codegen/comparisons_mixed.kl"
-    kl_t133 = kl__below__I3i32E__3i32_3i64( kl_neg_1, kl_three_32 );
+    kl_t133 = kl__5below__I3i32E__3i32_3i64( kl_neg_1, kl_three_32 );
 #line 140 "codegen/comparisons_mixed.kl"
     kl_t134 = !kl_t133;
 #line 140 "codegen/comparisons_mixed.kl"
@@ -943,7 +943,7 @@ int32_t kl__main__( void )
 }
 
 #line 7 "codegen/comparisons_mixed.kl"
-bool kl__below__I3u64E__3u64_3i64( uint64_t kl_a_1, int64_t kl_limit_2 )
+bool kl__5below__I3u64E__3u64_3i64( uint64_t kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -956,7 +956,7 @@ bool kl__below__I3u64E__3u64_3i64( uint64_t kl_a_1, int64_t kl_limit_2 )
 }
 
 #line 7 "codegen/comparisons_mixed.kl"
-bool kl__below__I3f64E__3f64_3i64( double kl_a_1, int64_t kl_limit_2 )
+bool kl__5below__I3f64E__3f64_3i64( double kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -969,7 +969,7 @@ bool kl__below__I3f64E__3f64_3i64( double kl_a_1, int64_t kl_limit_2 )
 }
 
 #line 7 "codegen/comparisons_mixed.kl"
-bool kl__below__I3i32E__3i32_3i64( int32_t kl_a_1, int64_t kl_limit_2 )
+bool kl__5below__I3i32E__3i32_3i64( int32_t kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     int64_t kl_t3;
@@ -988,5 +988,5 @@ bool kl__below__I3i32E__3i32_3i64( int32_t kl_a_1, int64_t kl_limit_2 )
 int main( void )
 {
 #line 14 "codegen/comparisons_mixed.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

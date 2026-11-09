@@ -12,18 +12,18 @@ struct kl__Square
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__id__S6Square( struct kl__Square* );
-double kl__area__S6Square( struct kl__Square* );
-int32_t kl__id__S4TileC5Named( int32_t* );
-double kl__area__S4TileC5Shape( int32_t* );
-int32_t kl__main__( void );
-double kl__weigh__I6SquareE__6Square( struct kl__Square* );
-double kl__weigh__I4TileE__4Tile( int32_t* );
-int32_t kl__identify__I6SquareE__6Square( struct kl__Square* );
-int32_t kl__identify__I4TileE__4Tile( int32_t* );
+int32_t kl__2id__S6Square( struct kl__Square* );
+double kl__4area__S6Square( struct kl__Square* );
+int32_t kl__2id__S4TileC5Named( int32_t* );
+double kl__4area__S4TileC5Shape( int32_t* );
+int32_t kl__4main__( void );
+double kl__5weigh__I6SquareE__6Square( struct kl__Square* );
+double kl__5weigh__I4TileE__4Tile( int32_t* );
+int32_t kl__8identify__I6SquareE__6Square( struct kl__Square* );
+int32_t kl__8identify__I4TileE__4Tile( int32_t* );
 
 #line 18 "codegen/refinement.kl"
-int32_t kl__id__S6Square( struct kl__Square* kl_this_1 )
+int32_t kl__2id__S6Square( struct kl__Square* kl_this_1 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -35,7 +35,7 @@ int32_t kl__id__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 19 "codegen/refinement.kl"
-double kl__area__S6Square( struct kl__Square* kl_this_1 )
+double kl__4area__S6Square( struct kl__Square* kl_this_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -49,7 +49,7 @@ double kl__area__S6Square( struct kl__Square* kl_this_1 )
 }
 
 #line 30 "codegen/refinement.kl"
-int32_t kl__id__S4TileC5Named( int32_t* kl_this_1 )
+int32_t kl__2id__S4TileC5Named( int32_t* kl_this_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -69,7 +69,7 @@ int32_t kl__id__S4TileC5Named( int32_t* kl_this_1 )
 }
 
 #line 44 "codegen/refinement.kl"
-double kl__area__S4TileC5Shape( int32_t* kl_this_1 )
+double kl__4area__S4TileC5Shape( int32_t* kl_this_1 )
 {
     double kl_t0;
     ( void ) kl_this_1;
@@ -81,7 +81,7 @@ double kl__area__S4TileC5Shape( int32_t* kl_this_1 )
 }
 
 #line 57 "codegen/refinement.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Square kl_s_1;
@@ -108,7 +108,7 @@ int32_t kl__main__( void )
 #line 62 "codegen/refinement.kl"
     kl_t4 = &kl_s_1;
 #line 62 "codegen/refinement.kl"
-    kl_t5 = kl__weigh__I6SquareE__6Square( kl_t4 );
+    kl_t5 = kl__5weigh__I6SquareE__6Square( kl_t4 );
 #line 62 "codegen/refinement.kl"
     kl_t6 = kl_t5 != 32.0;
 #line 62 "codegen/refinement.kl"
@@ -121,7 +121,7 @@ int32_t kl__main__( void )
 #line 67 "codegen/refinement.kl"
     kl_t7 = &kl_w_3;
 #line 67 "codegen/refinement.kl"
-    kl_t8 = kl__weigh__I4TileE__4Tile( kl_t7 );
+    kl_t8 = kl__5weigh__I4TileE__4Tile( kl_t7 );
 #line 67 "codegen/refinement.kl"
     kl_t9 = kl_t8 != 4.0;
 #line 67 "codegen/refinement.kl"
@@ -134,7 +134,7 @@ int32_t kl__main__( void )
 #line 72 "codegen/refinement.kl"
     kl_t11 = &kl_s_1;
 #line 72 "codegen/refinement.kl"
-    kl_t12 = kl__identify__I6SquareE__6Square( kl_t11 );
+    kl_t12 = kl__8identify__I6SquareE__6Square( kl_t11 );
 #line 72 "codegen/refinement.kl"
     kl_t13 = kl_t12 != 4;
 #line 72 "codegen/refinement.kl"
@@ -145,7 +145,7 @@ int32_t kl__main__( void )
 #line 72 "codegen/refinement.kl"
     kl_t14 = &kl_w_3;
 #line 72 "codegen/refinement.kl"
-    kl_t15 = kl__identify__I4TileE__4Tile( kl_t14 );
+    kl_t15 = kl__8identify__I4TileE__4Tile( kl_t14 );
 #line 72 "codegen/refinement.kl"
     kl_t16 = kl_t15 != 2;
 #line 72 "codegen/refinement.kl"
@@ -167,7 +167,7 @@ int32_t kl__main__( void )
 }
 
 #line 52 "codegen/refinement.kl"
-double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
+double kl__5weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
 {
     double kl_t0;
     struct kl__Square* kl_t2;
@@ -183,15 +183,15 @@ double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
 #line 54 "codegen/refinement.kl"
     kl_t2 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t3 = kl__area__S6Square( kl_t2 );
+    kl_t3 = kl__4area__S6Square( kl_t2 );
 #line 54 "codegen/refinement.kl"
     kl_t4 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t5 = kl__id__S6Square( kl_t4 );
+    kl_t5 = kl__2id__S6Square( kl_t4 );
 #line 54 "codegen/refinement.kl"
     kl_t6 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t7 = kl__identify__I6SquareE__6Square( kl_t6 );
+    kl_t7 = kl__8identify__I6SquareE__6Square( kl_t6 );
 #line 54 "codegen/refinement.kl"
     kl_t8 = __builtin_add_overflow( kl_t5, kl_t7, &( int32_t ) { 0 } );
 #line 54 "codegen/refinement.kl"
@@ -213,7 +213,7 @@ double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
 }
 
 #line 52 "codegen/refinement.kl"
-double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
+double kl__5weigh__I4TileE__4Tile( int32_t* kl_t_1 )
 {
     double kl_t0;
     int32_t* kl_t2;
@@ -229,15 +229,15 @@ double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
 #line 54 "codegen/refinement.kl"
     kl_t2 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t3 = kl__area__S4TileC5Shape( kl_t2 );
+    kl_t3 = kl__4area__S4TileC5Shape( kl_t2 );
 #line 54 "codegen/refinement.kl"
     kl_t4 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t5 = kl__id__S4TileC5Named( kl_t4 );
+    kl_t5 = kl__2id__S4TileC5Named( kl_t4 );
 #line 54 "codegen/refinement.kl"
     kl_t6 = &( *kl_t_1 );
 #line 54 "codegen/refinement.kl"
-    kl_t7 = kl__identify__I4TileE__4Tile( kl_t6 );
+    kl_t7 = kl__8identify__I4TileE__4Tile( kl_t6 );
 #line 54 "codegen/refinement.kl"
     kl_t8 = __builtin_add_overflow( kl_t5, kl_t7, &( int32_t ) { 0 } );
 #line 54 "codegen/refinement.kl"
@@ -259,7 +259,7 @@ double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
 }
 
 #line 47 "codegen/refinement.kl"
-int32_t kl__identify__I6SquareE__6Square( struct kl__Square* kl_u_1 )
+int32_t kl__8identify__I6SquareE__6Square( struct kl__Square* kl_u_1 )
 {
     int32_t kl_t0;
     struct kl__Square* kl_t2;
@@ -267,7 +267,7 @@ int32_t kl__identify__I6SquareE__6Square( struct kl__Square* kl_u_1 )
 #line 49 "codegen/refinement.kl"
     kl_t2 = &( *kl_u_1 );
 #line 49 "codegen/refinement.kl"
-    kl_t3 = kl__id__S6Square( kl_t2 );
+    kl_t3 = kl__2id__S6Square( kl_t2 );
 #line 49 "codegen/refinement.kl"
     kl_t0 = kl_t3;
 #line 49 "codegen/refinement.kl"
@@ -275,7 +275,7 @@ int32_t kl__identify__I6SquareE__6Square( struct kl__Square* kl_u_1 )
 }
 
 #line 47 "codegen/refinement.kl"
-int32_t kl__identify__I4TileE__4Tile( int32_t* kl_u_1 )
+int32_t kl__8identify__I4TileE__4Tile( int32_t* kl_u_1 )
 {
     int32_t kl_t0;
     int32_t* kl_t2;
@@ -283,7 +283,7 @@ int32_t kl__identify__I4TileE__4Tile( int32_t* kl_u_1 )
 #line 49 "codegen/refinement.kl"
     kl_t2 = &( *kl_u_1 );
 #line 49 "codegen/refinement.kl"
-    kl_t3 = kl__id__S4TileC5Named( kl_t2 );
+    kl_t3 = kl__2id__S4TileC5Named( kl_t2 );
 #line 49 "codegen/refinement.kl"
     kl_t0 = kl_t3;
 #line 49 "codegen/refinement.kl"
@@ -294,5 +294,5 @@ int32_t kl__identify__I4TileE__4Tile( int32_t* kl_u_1 )
 int main( void )
 {
 #line 57 "codegen/refinement.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

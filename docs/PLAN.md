@@ -1005,13 +1005,13 @@ optional.
 4. **Emission order:** type forward declarations, then type definitions in containment order (C
    requires complete types for by-value members; a cycle needs a pointer and is refused otherwise),
    then function prototypes, then bodies. Each module's C is a separate file (D46).
-5. **Mangle every symbol**, length-prefixed so the encoding is injective: `kl__main__`,
-   `kl_2kl_area__3i32` for a package's function, a member tagged by its type, an instance carrying its
+5. **Mangle every symbol**, length-prefixed so the encoding is injective: `kl__4main__`,
+   `kl_2kl_4area__3i32` for a package's function, its own name prefixed too since it may hold `__`, a member tagged by its type, an instance carrying its
    type arguments and substituted parameters, and each parameter encoded with the marker a call writes.
    A global is `kl_<module>_<name>__G`, and a static field `kl_<module>_<name>__GS<enclosing type>`.
    A generic's static field is defined weakly in every part that uses it, so the linker keeps one.
    No exported name carries a node id, so an edit elsewhere leaves a module's symbols alone. A field
-   is `kl_<name>`, a payload field `kl_<variant>_<name>` with its variant length-prefixed (`kl_1A_x`), a vtable slot its requirement's name and parameters (`kl__area__3i32`), and a
+   is `kl_<name>`, a payload field `kl_<variant>_<name>` with its variant length-prefixed (`kl_1A_x`), a vtable slot its requirement's name and parameters (`kl__4area__3i32`), and a
    local `kl_<name>_<Local_id>`. `extern` names are not mangled (D36). The `kl_` prefix keeps user identifiers away from C keywords
    and the runtime.
 6. **Emit `#line` directives** mapping back to `.kl` files. Free debugger and
@@ -1639,11 +1639,6 @@ major), no longer blocked now that D81 has settled lambdas.
   `list<path>`'s `size`, `[]`, `swap` and `truncate` in debug; release drops them as unreached.
   Queuing a conformance's methods where a vtable is built or a bound call is lowered would make it
   lazy.
-- **A function's own name is mangled raw**, so `i32 g__I2SqE( Sq x )` beside `g<T>` at `Sq` passes
-  `--check` and the C compiler then refuses a redefinition of `kl__g__I2SqE__2Sq`: §7's injective
-  encoding holds for the module, not the name. Either refuse a declared name containing `__` (no
-  golden changes) or length-prefix it in `mangle_function`, `mangle_constructor` and
-  `mangle_destructor` (every `.c` golden changes). Settle it if a real name ever collides.
 
 - **A node that carries a name must not be built without one**: if `aux` is a `Symbol_id`, the parser
   guarantees it is valid, so no reader needs a guard.

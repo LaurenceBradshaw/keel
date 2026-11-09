@@ -5,13 +5,13 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__weight__6Colour( uint8_t );
-uint8_t kl__turn__6Colour( uint8_t );
-int32_t kl__heading__9Direction( int32_t );
-int32_t kl__main__( void );
+int32_t kl__6weight__6Colour( uint8_t );
+uint8_t kl__4turn__6Colour( uint8_t );
+int32_t kl__7heading__9Direction( int32_t );
+int32_t kl__4main__( void );
 
 #line 21 "codegen/enums.kl"
-int32_t kl__weight__6Colour( uint8_t kl_c_1 )
+int32_t kl__6weight__6Colour( uint8_t kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -41,7 +41,7 @@ int32_t kl__weight__6Colour( uint8_t kl_c_1 )
 }
 
 #line 36 "codegen/enums.kl"
-uint8_t kl__turn__6Colour( uint8_t kl_c_1 )
+uint8_t kl__4turn__6Colour( uint8_t kl_c_1 )
 {
     uint8_t kl_t0;
     bool kl_t2;
@@ -61,7 +61,7 @@ uint8_t kl__turn__6Colour( uint8_t kl_c_1 )
 }
 
 #line 46 "codegen/enums.kl"
-int32_t kl__heading__9Direction( int32_t kl_d_1 )
+int32_t kl__7heading__9Direction( int32_t kl_d_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -81,7 +81,7 @@ int32_t kl__heading__9Direction( int32_t kl_d_1 )
 }
 
 #line 56 "codegen/enums.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     uint8_t kl_c_1;
@@ -100,13 +100,13 @@ int32_t kl__main__( void )
 #line 58 "codegen/enums.kl"
     kl_c_1 = 1;
 #line 60 "codegen/enums.kl"
-    kl_t3 = kl__weight__6Colour( kl_c_1 );
+    kl_t3 = kl__6weight__6Colour( kl_c_1 );
 #line 60 "codegen/enums.kl"
     kl_total_2 = kl_t3;
 #line 62 "codegen/enums.kl"
-    kl_t4 = kl__turn__6Colour( kl_c_1 );
+    kl_t4 = kl__4turn__6Colour( kl_c_1 );
 #line 62 "codegen/enums.kl"
-    kl_t5 = kl__weight__6Colour( kl_t4 );
+    kl_t5 = kl__6weight__6Colour( kl_t4 );
 #line 62 "codegen/enums.kl"
     kl_t6 = __builtin_add_overflow( kl_total_2, kl_t5, &( int32_t ) { 0 } );
 #line 62 "codegen/enums.kl"
@@ -120,7 +120,7 @@ int32_t kl__main__( void )
 #line 62 "codegen/enums.kl"
     kl_total_2 = kl_t7;
 #line 64 "codegen/enums.kl"
-    kl_t8 = kl__weight__6Colour( 2 );
+    kl_t8 = kl__6weight__6Colour( 2 );
 #line 64 "codegen/enums.kl"
     kl_t9 = __builtin_add_overflow( kl_total_2, kl_t8, &( int32_t ) { 0 } );
 #line 64 "codegen/enums.kl"
@@ -134,7 +134,7 @@ int32_t kl__main__( void )
 #line 64 "codegen/enums.kl"
     kl_total_2 = kl_t10;
 #line 66 "codegen/enums.kl"
-    kl_t11 = kl__heading__9Direction( 3 );
+    kl_t11 = kl__7heading__9Direction( 3 );
 #line 66 "codegen/enums.kl"
     kl_t12 = __builtin_add_overflow( kl_total_2, kl_t11, &( int32_t ) { 0 } );
 #line 66 "codegen/enums.kl"
@@ -157,5 +157,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 56 "codegen/enums.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

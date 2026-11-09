@@ -22,15 +22,15 @@ struct kl__Shape
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Counted__R7Counted_P3i64__ctor( struct kl__Counted*, int64_t* );
-void kl__Counted__dtor( struct kl__Counted* );
-double kl__height__5Shape( struct kl__Shape* );
-int64_t kl__take__P3i64( int64_t* );
-int32_t kl__main__( void );
-void kl__Shape__dtor( struct kl__Shape* );
+void kl__7Counted__R7Counted_P3i64__ctor( struct kl__Counted*, int64_t* );
+void kl__7Counted__dtor( struct kl__Counted* );
+double kl__6height__5Shape( struct kl__Shape* );
+int64_t kl__4take__P3i64( int64_t* );
+int32_t kl__4main__( void );
+void kl__5Shape__dtor( struct kl__Shape* );
 
 #line 6 "codegen/switch_pattern_discard.kl"
-void kl__Counted__R7Counted_P3i64__ctor( struct kl__Counted* kl_this_1, int64_t* kl_drops_2 )
+void kl__7Counted__R7Counted_P3i64__ctor( struct kl__Counted* kl_this_1, int64_t* kl_drops_2 )
 {
 #line 6 "codegen/switch_pattern_discard.kl"
     ( *kl_this_1 ).kl_drops_ = kl_drops_2;
@@ -40,7 +40,7 @@ void kl__Counted__R7Counted_P3i64__ctor( struct kl__Counted* kl_this_1, int64_t*
 }
 
 #line 7 "codegen/switch_pattern_discard.kl"
-void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
+void kl__7Counted__dtor( struct kl__Counted* kl_this_1 )
 {
     bool kl_t2;
     int64_t kl_t3;
@@ -62,7 +62,7 @@ void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 }
 
 #line 16 "codegen/switch_pattern_discard.kl"
-double kl__height__5Shape( struct kl__Shape* kl_s_1 )
+double kl__6height__5Shape( struct kl__Shape* kl_s_1 )
 {
     double kl_t0;
     bool kl_t2;
@@ -99,7 +99,7 @@ double kl__height__5Shape( struct kl__Shape* kl_s_1 )
 }
 
 #line 25 "codegen/switch_pattern_discard.kl"
-int64_t kl__take__P3i64( int64_t* kl_drops_1 )
+int64_t kl__4take__P3i64( int64_t* kl_drops_1 )
 {
     int64_t kl_t0;
     struct kl__Shape kl_t2;
@@ -131,7 +131,7 @@ int64_t kl__take__P3i64( int64_t* kl_drops_1 )
 #line 27 "codegen/switch_pattern_discard.kl"
     kl_t15 = true;
 #line 27 "codegen/switch_pattern_discard.kl"
-    kl__Counted__R7Counted_P3i64__ctor( kl_t4, kl_drops_1 );
+    kl__7Counted__R7Counted_P3i64__ctor( kl_t4, kl_drops_1 );
 #line 27 "codegen/switch_pattern_discard.kl"
     kl_t2.tag = 1;
 #line 27 "codegen/switch_pattern_discard.kl"
@@ -155,9 +155,9 @@ int64_t kl__take__P3i64( int64_t* kl_drops_1 )
 #line 27 "codegen/switch_pattern_discard.kl"
     kl_t16 = true;
 #line 27 "codegen/switch_pattern_discard.kl"
-    if ( kl_t14 ) kl__Shape__dtor( &kl_t2 );
+    if ( kl_t14 ) kl__5Shape__dtor( &kl_t2 );
 #line 27 "codegen/switch_pattern_discard.kl"
-    if ( kl_t15 ) kl__Counted__dtor( &kl_t3 );
+    if ( kl_t15 ) kl__7Counted__dtor( &kl_t3 );
 #line 27 "codegen/switch_pattern_discard.kl"
     kl_t15 = false;
 #line 27 "codegen/switch_pattern_discard.kl"
@@ -178,9 +178,9 @@ int64_t kl__take__P3i64( int64_t* kl_drops_1 )
 #line 29 "codegen/switch_pattern_discard.kl"
     kl_t0 = kl_n_10;
 #line 29 "codegen/switch_pattern_discard.kl"
-    kl__Counted__dtor( &kl_t9 );
+    kl__7Counted__dtor( &kl_t9 );
 #line 29 "codegen/switch_pattern_discard.kl"
-    if ( kl_t16 ) kl__Shape__dtor( &kl_t6 );
+    if ( kl_t16 ) kl__5Shape__dtor( &kl_t6 );
 #line 29 "codegen/switch_pattern_discard.kl"
     kl_t16 = false;
 #line 29 "codegen/switch_pattern_discard.kl"
@@ -197,7 +197,7 @@ int64_t kl__take__P3i64( int64_t* kl_drops_1 )
 #line 30 "codegen/switch_pattern_discard.kl"
     kl_t0 = 0;
 #line 30 "codegen/switch_pattern_discard.kl"
-    if ( kl_t16 ) kl__Shape__dtor( &kl_t6 );
+    if ( kl_t16 ) kl__5Shape__dtor( &kl_t6 );
 #line 30 "codegen/switch_pattern_discard.kl"
     kl_t16 = false;
 #line 30 "codegen/switch_pattern_discard.kl"
@@ -206,7 +206,7 @@ int64_t kl__take__P3i64( int64_t* kl_drops_1 )
 }
 
 #line 34 "codegen/switch_pattern_discard.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Shape kl_t1;
@@ -227,11 +227,11 @@ int32_t kl__main__( void )
 #line 36 "codegen/switch_pattern_discard.kl"
     kl_t2 = &kl_t1;
 #line 36 "codegen/switch_pattern_discard.kl"
-    kl_t3 = kl__height__5Shape( kl_t2 );
+    kl_t3 = kl__6height__5Shape( kl_t2 );
 #line 36 "codegen/switch_pattern_discard.kl"
     kl_t4 = kl_t3 != 2.0;
 #line 36 "codegen/switch_pattern_discard.kl"
-    kl__Shape__dtor( &kl_t1 );
+    kl__5Shape__dtor( &kl_t1 );
 #line 36 "codegen/switch_pattern_discard.kl"
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
@@ -244,7 +244,7 @@ int32_t kl__main__( void )
     kl_drops_5 = 0;
     kl_t6 = &kl_drops_5;
 #line 38 "codegen/switch_pattern_discard.kl"
-    kl_t7 = kl__take__P3i64( kl_t6 );
+    kl_t7 = kl__4take__P3i64( kl_t6 );
 #line 38 "codegen/switch_pattern_discard.kl"
     kl_t8 = kl_t7 != 7;
 #line 38 "codegen/switch_pattern_discard.kl"
@@ -272,7 +272,7 @@ int32_t kl__main__( void )
 }
 
 #line 10 "codegen/switch_pattern_discard.kl"
-void kl__Shape__dtor( struct kl__Shape* kl_t1 )
+void kl__5Shape__dtor( struct kl__Shape* kl_t1 )
 {
     bool kl_t2;
 #line 10 "codegen/switch_pattern_discard.kl"
@@ -284,7 +284,7 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
     return;
     bb2:
 #line 10 "codegen/switch_pattern_discard.kl"
-    kl__Counted__dtor( &( *kl_t1 ).kl_6Tagged_c );
+    kl__7Counted__dtor( &( *kl_t1 ).kl_6Tagged_c );
 #line 10 "codegen/switch_pattern_discard.kl"
     goto bb1;
 #line 14 "codegen/switch_pattern_discard.kl"
@@ -294,5 +294,5 @@ void kl__Shape__dtor( struct kl__Shape* kl_t1 )
 int main( void )
 {
 #line 34 "codegen/switch_pattern_discard.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -17,11 +17,11 @@ struct kl__Reading
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__read__7Reading( struct kl__Reading* );
-int32_t kl__main__( void );
+int32_t kl__4read__7Reading( struct kl__Reading* );
+int32_t kl__4main__( void );
 
 #line 10 "codegen/shared_payload_names.kl"
-int32_t kl__read__7Reading( struct kl__Reading* kl_r_1 )
+int32_t kl__4read__7Reading( struct kl__Reading* kl_r_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -107,7 +107,7 @@ int32_t kl__read__7Reading( struct kl__Reading* kl_r_1 )
 }
 
 #line 20 "codegen/shared_payload_names.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Reading kl_t1;
@@ -129,7 +129,7 @@ int32_t kl__main__( void )
 #line 22 "codegen/shared_payload_names.kl"
     kl_t2 = &kl_t1;
 #line 22 "codegen/shared_payload_names.kl"
-    kl_t3 = kl__read__7Reading( kl_t2 );
+    kl_t3 = kl__4read__7Reading( kl_t2 );
 #line 22 "codegen/shared_payload_names.kl"
     kl_t4 = kl_t3 != 4;
 #line 22 "codegen/shared_payload_names.kl"
@@ -147,7 +147,7 @@ int32_t kl__main__( void )
 #line 26 "codegen/shared_payload_names.kl"
     kl_t6 = &kl_t5;
 #line 26 "codegen/shared_payload_names.kl"
-    kl_t7 = kl__read__7Reading( kl_t6 );
+    kl_t7 = kl__4read__7Reading( kl_t6 );
 #line 26 "codegen/shared_payload_names.kl"
     kl_t8 = kl_t7 != 14;
 #line 26 "codegen/shared_payload_names.kl"
@@ -165,7 +165,7 @@ int32_t kl__main__( void )
 #line 30 "codegen/shared_payload_names.kl"
     kl_t10 = &kl_t9;
 #line 30 "codegen/shared_payload_names.kl"
-    kl_t11 = kl__read__7Reading( kl_t10 );
+    kl_t11 = kl__4read__7Reading( kl_t10 );
 #line 30 "codegen/shared_payload_names.kl"
     kl_t12 = kl_t11 != 6;
 #line 30 "codegen/shared_payload_names.kl"
@@ -185,5 +185,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 20 "codegen/shared_payload_names.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

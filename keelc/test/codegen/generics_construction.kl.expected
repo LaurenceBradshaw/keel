@@ -32,13 +32,13 @@ struct kl__Outer__I3f64E
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E );
-int32_t kl__main__( void );
-struct kl__Box__I3i32E kl__hold__I3i32E__3i32( int32_t );
-struct kl__Box__I3f64E kl__hold__I3f64E__3f64( double );
+double kl__9unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E );
+int32_t kl__4main__( void );
+struct kl__Box__I3i32E kl__4hold__I3i32E__3i32( int32_t );
+struct kl__Box__I3f64E kl__4hold__I3f64E__3f64( double );
 
 #line 30 "codegen/generics_construction.kl"
-double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
+double kl__9unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
 {
     double kl_t0;
 #line 32 "codegen/generics_construction.kl"
@@ -48,7 +48,7 @@ double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
 }
 
 #line 35 "codegen/generics_construction.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Box__I3i32E kl_a_1;
@@ -164,7 +164,7 @@ int32_t kl__main__( void )
 #line 81 "codegen/generics_construction.kl"
     kl_t15.kl_v = 3.0;
 #line 81 "codegen/generics_construction.kl"
-    kl_t16 = kl__unbox_f64__3BoxI3f64E( kl_t15 );
+    kl_t16 = kl__9unbox_f64__3BoxI3f64E( kl_t15 );
 #line 81 "codegen/generics_construction.kl"
     kl_t17 = kl_t16 != 3.0;
 #line 81 "codegen/generics_construction.kl"
@@ -218,10 +218,10 @@ int32_t kl__main__( void )
     return kl_t0;
     bb20:
 #line 109 "codegen/generics_construction.kl"
-    kl_t28 = kl__hold__I3i32E__3i32( 5 );
+    kl_t28 = kl__4hold__I3i32E__3i32( 5 );
 #line 109 "codegen/generics_construction.kl"
     kl_held_27 = kl_t28;
-    kl_t30 = kl__hold__I3f64E__3f64( 2.5 );
+    kl_t30 = kl__4hold__I3f64E__3f64( 2.5 );
 #line 110 "codegen/generics_construction.kl"
     kl_held_wide_29 = kl_t30;
 #line 112 "codegen/generics_construction.kl"
@@ -289,7 +289,7 @@ int32_t kl__main__( void )
 }
 
 #line 25 "codegen/generics_construction.kl"
-struct kl__Box__I3i32E kl__hold__I3i32E__3i32( int32_t kl_v_1 )
+struct kl__Box__I3i32E kl__4hold__I3i32E__3i32( int32_t kl_v_1 )
 {
     struct kl__Box__I3i32E kl_t0;
     struct kl__Box__I3i32E kl_t2;
@@ -302,7 +302,7 @@ struct kl__Box__I3i32E kl__hold__I3i32E__3i32( int32_t kl_v_1 )
 }
 
 #line 25 "codegen/generics_construction.kl"
-struct kl__Box__I3f64E kl__hold__I3f64E__3f64( double kl_v_1 )
+struct kl__Box__I3f64E kl__4hold__I3f64E__3f64( double kl_v_1 )
 {
     struct kl__Box__I3f64E kl_t0;
     struct kl__Box__I3f64E kl_t2;
@@ -318,5 +318,5 @@ struct kl__Box__I3f64E kl__hold__I3f64E__3f64( double kl_v_1 )
 int main( void )
 {
 #line 35 "codegen/generics_construction.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

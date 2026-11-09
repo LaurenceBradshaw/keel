@@ -5,16 +5,16 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint64_t kl__fnv_byte__3u64_2u8( uint64_t, uint8_t );
-uint64_t kl__fnv_u32__3u64_3u32( uint64_t, uint32_t );
-uint64_t kl__fnv_basis__( void );
-uint32_t kl__xorshift__3u32( uint32_t );
-uint32_t kl__lcg__3u32( uint32_t );
-uint32_t kl__checksum__3u32( uint32_t );
-int32_t kl__main__( void );
+uint64_t kl__8fnv_byte__3u64_2u8( uint64_t, uint8_t );
+uint64_t kl__7fnv_u32__3u64_3u32( uint64_t, uint32_t );
+uint64_t kl__9fnv_basis__( void );
+uint32_t kl__8xorshift__3u32( uint32_t );
+uint32_t kl__3lcg__3u32( uint32_t );
+uint32_t kl__8checksum__3u32( uint32_t );
+int32_t kl__4main__( void );
 
 #line 11 "codegen/hashing.kl"
-uint64_t kl__fnv_byte__3u64_2u8( uint64_t kl_hash_1, uint8_t kl_value_2 )
+uint64_t kl__8fnv_byte__3u64_2u8( uint64_t kl_hash_1, uint8_t kl_value_2 )
 {
     uint64_t kl_t0;
     uint64_t kl_mixed_3;
@@ -36,7 +36,7 @@ uint64_t kl__fnv_byte__3u64_2u8( uint64_t kl_hash_1, uint8_t kl_value_2 )
 }
 
 #line 20 "codegen/hashing.kl"
-uint64_t kl__fnv_u32__3u64_3u32( uint64_t kl_hash_1, uint32_t kl_value_2 )
+uint64_t kl__7fnv_u32__3u64_3u32( uint64_t kl_hash_1, uint32_t kl_value_2 )
 {
     uint64_t kl_t0;
     uint64_t kl_result_3;
@@ -54,7 +54,7 @@ uint64_t kl__fnv_u32__3u64_3u32( uint64_t kl_hash_1, uint32_t kl_value_2 )
 #line 22 "codegen/hashing.kl"
     kl_t4 = ( uint8_t ) kl_value_2;
 #line 22 "codegen/hashing.kl"
-    kl_t5 = kl__fnv_byte__3u64_2u8( kl_hash_1, kl_t4 );
+    kl_t5 = kl__8fnv_byte__3u64_2u8( kl_hash_1, kl_t4 );
 #line 22 "codegen/hashing.kl"
     kl_result_3 = kl_t5;
 #line 24 "codegen/hashing.kl"
@@ -62,21 +62,21 @@ uint64_t kl__fnv_u32__3u64_3u32( uint64_t kl_hash_1, uint32_t kl_value_2 )
 #line 24 "codegen/hashing.kl"
     kl_t7 = ( uint8_t ) kl_t6;
 #line 24 "codegen/hashing.kl"
-    kl_t8 = kl__fnv_byte__3u64_2u8( kl_result_3, kl_t7 );
+    kl_t8 = kl__8fnv_byte__3u64_2u8( kl_result_3, kl_t7 );
 #line 24 "codegen/hashing.kl"
     kl_result_3 = kl_t8;
     kl_t9 = kl_value_2 >> 16;
 #line 25 "codegen/hashing.kl"
     kl_t10 = ( uint8_t ) kl_t9;
 #line 25 "codegen/hashing.kl"
-    kl_t11 = kl__fnv_byte__3u64_2u8( kl_result_3, kl_t10 );
+    kl_t11 = kl__8fnv_byte__3u64_2u8( kl_result_3, kl_t10 );
 #line 25 "codegen/hashing.kl"
     kl_result_3 = kl_t11;
     kl_t12 = kl_value_2 >> 24;
 #line 26 "codegen/hashing.kl"
     kl_t13 = ( uint8_t ) kl_t12;
 #line 26 "codegen/hashing.kl"
-    kl_t14 = kl__fnv_byte__3u64_2u8( kl_result_3, kl_t13 );
+    kl_t14 = kl__8fnv_byte__3u64_2u8( kl_result_3, kl_t13 );
 #line 26 "codegen/hashing.kl"
     kl_result_3 = kl_t14;
 #line 28 "codegen/hashing.kl"
@@ -86,7 +86,7 @@ uint64_t kl__fnv_u32__3u64_3u32( uint64_t kl_hash_1, uint32_t kl_value_2 )
 }
 
 #line 31 "codegen/hashing.kl"
-uint64_t kl__fnv_basis__( void )
+uint64_t kl__9fnv_basis__( void )
 {
     uint64_t kl_t0;
 #line 33 "codegen/hashing.kl"
@@ -96,7 +96,7 @@ uint64_t kl__fnv_basis__( void )
 }
 
 #line 38 "codegen/hashing.kl"
-uint32_t kl__xorshift__3u32( uint32_t kl_state_1 )
+uint32_t kl__8xorshift__3u32( uint32_t kl_state_1 )
 {
     uint32_t kl_t0;
     uint32_t kl_x_2;
@@ -131,7 +131,7 @@ uint32_t kl__xorshift__3u32( uint32_t kl_state_1 )
 }
 
 #line 51 "codegen/hashing.kl"
-uint32_t kl__lcg__3u32( uint32_t kl_state_1 )
+uint32_t kl__3lcg__3u32( uint32_t kl_state_1 )
 {
     uint32_t kl_t0;
     uint32_t kl_t2;
@@ -147,7 +147,7 @@ uint32_t kl__lcg__3u32( uint32_t kl_state_1 )
 }
 
 #line 58 "codegen/hashing.kl"
-uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
+uint32_t kl__8checksum__3u32( uint32_t kl_limit_1 )
 {
     uint32_t kl_t0;
     uint32_t kl_total_2;
@@ -197,7 +197,7 @@ uint32_t kl__checksum__3u32( uint32_t kl_limit_1 )
 }
 
 #line 70 "codegen/hashing.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     uint64_t kl_t1;
@@ -278,9 +278,9 @@ int32_t kl__main__( void )
     uint32_t kl_t76;
     bool kl_t77;
 #line 73 "codegen/hashing.kl"
-    kl_t1 = kl__fnv_basis__(  );
+    kl_t1 = kl__9fnv_basis__(  );
 #line 73 "codegen/hashing.kl"
-    kl_t2 = kl__fnv_u32__3u64_3u32( kl_t1, 305419896 );
+    kl_t2 = kl__7fnv_u32__3u64_3u32( kl_t1, 305419896 );
 #line 73 "codegen/hashing.kl"
     kl_t3 = kl_t2 != 14758243562650612581ull;
 #line 73 "codegen/hashing.kl"
@@ -292,9 +292,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 74 "codegen/hashing.kl"
-    kl_t4 = kl__fnv_basis__(  );
+    kl_t4 = kl__9fnv_basis__(  );
 #line 74 "codegen/hashing.kl"
-    kl_t5 = kl__fnv_u32__3u64_3u32( kl_t4, 3735928559 );
+    kl_t5 = kl__7fnv_u32__3u64_3u32( kl_t4, 3735928559 );
 #line 74 "codegen/hashing.kl"
     kl_t6 = kl_t5 != 11839450912400667691ull;
 #line 74 "codegen/hashing.kl"
@@ -306,9 +306,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 75 "codegen/hashing.kl"
-    kl_t7 = kl__fnv_basis__(  );
+    kl_t7 = kl__9fnv_basis__(  );
 #line 75 "codegen/hashing.kl"
-    kl_t8 = kl__fnv_u32__3u64_3u32( kl_t7, 0 );
+    kl_t8 = kl__7fnv_u32__3u64_3u32( kl_t7, 0 );
 #line 75 "codegen/hashing.kl"
     kl_t9 = kl_t8 != 5558979605539197941;
 #line 75 "codegen/hashing.kl"
@@ -320,11 +320,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 78 "codegen/hashing.kl"
-    kl_t11 = kl__fnv_basis__(  );
+    kl_t11 = kl__9fnv_basis__(  );
 #line 78 "codegen/hashing.kl"
-    kl_t12 = kl__fnv_u32__3u64_3u32( kl_t11, 305419896 );
+    kl_t12 = kl__7fnv_u32__3u64_3u32( kl_t11, 305419896 );
 #line 78 "codegen/hashing.kl"
-    kl_t13 = kl__fnv_u32__3u64_3u32( kl_t12, 3735928559 );
+    kl_t13 = kl__7fnv_u32__3u64_3u32( kl_t12, 3735928559 );
 #line 78 "codegen/hashing.kl"
     kl_chained_10 = kl_t13;
 #line 80 "codegen/hashing.kl"
@@ -350,13 +350,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 86 "codegen/hashing.kl"
-    kl_t17 = kl__fnv_basis__(  );
+    kl_t17 = kl__9fnv_basis__(  );
 #line 86 "codegen/hashing.kl"
-    kl_t18 = kl__fnv_u32__3u64_3u32( kl_t17, 7 );
+    kl_t18 = kl__7fnv_u32__3u64_3u32( kl_t17, 7 );
 #line 86 "codegen/hashing.kl"
-    kl_t19 = kl__fnv_basis__(  );
+    kl_t19 = kl__9fnv_basis__(  );
 #line 86 "codegen/hashing.kl"
-    kl_t20 = kl__fnv_u32__3u64_3u32( kl_t19, 7 );
+    kl_t20 = kl__7fnv_u32__3u64_3u32( kl_t19, 7 );
 #line 86 "codegen/hashing.kl"
     kl_t21 = kl_t18 != kl_t20;
 #line 86 "codegen/hashing.kl"
@@ -368,13 +368,13 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 87 "codegen/hashing.kl"
-    kl_t22 = kl__fnv_basis__(  );
+    kl_t22 = kl__9fnv_basis__(  );
 #line 87 "codegen/hashing.kl"
-    kl_t23 = kl__fnv_u32__3u64_3u32( kl_t22, 0 );
+    kl_t23 = kl__7fnv_u32__3u64_3u32( kl_t22, 0 );
 #line 87 "codegen/hashing.kl"
-    kl_t24 = kl__fnv_basis__(  );
+    kl_t24 = kl__9fnv_basis__(  );
 #line 87 "codegen/hashing.kl"
-    kl_t25 = kl__fnv_u32__3u64_3u32( kl_t24, 1 );
+    kl_t25 = kl__7fnv_u32__3u64_3u32( kl_t24, 1 );
 #line 87 "codegen/hashing.kl"
     kl_t26 = kl_t23 == kl_t25;
 #line 87 "codegen/hashing.kl"
@@ -388,7 +388,7 @@ int32_t kl__main__( void )
 #line 90 "codegen/hashing.kl"
     kl_state_27 = 1;
 #line 92 "codegen/hashing.kl"
-    kl_t28 = kl__xorshift__3u32( kl_state_27 );
+    kl_t28 = kl__8xorshift__3u32( kl_state_27 );
 #line 92 "codegen/hashing.kl"
     kl_state_27 = kl_t28;
     kl_t29 = kl_state_27 != 270369;
@@ -400,7 +400,7 @@ int32_t kl__main__( void )
 #line 93 "codegen/hashing.kl"
     return kl_t0;
     bb16:
-    kl_t30 = kl__xorshift__3u32( kl_state_27 );
+    kl_t30 = kl__8xorshift__3u32( kl_state_27 );
 #line 95 "codegen/hashing.kl"
     kl_state_27 = kl_t30;
     kl_t31 = kl_state_27 != 67634689;
@@ -412,7 +412,7 @@ int32_t kl__main__( void )
 #line 96 "codegen/hashing.kl"
     return kl_t0;
     bb18:
-    kl_t32 = kl__xorshift__3u32( kl_state_27 );
+    kl_t32 = kl__8xorshift__3u32( kl_state_27 );
 #line 98 "codegen/hashing.kl"
     kl_state_27 = kl_t32;
     kl_t33 = kl_state_27 != 2647435461;
@@ -424,7 +424,7 @@ int32_t kl__main__( void )
 #line 99 "codegen/hashing.kl"
     return kl_t0;
     bb20:
-    kl_t34 = kl__xorshift__3u32( kl_state_27 );
+    kl_t34 = kl__8xorshift__3u32( kl_state_27 );
 #line 101 "codegen/hashing.kl"
     kl_state_27 = kl_t34;
     kl_t35 = kl_state_27 != 307599695;
@@ -436,7 +436,7 @@ int32_t kl__main__( void )
 #line 102 "codegen/hashing.kl"
     return kl_t0;
     bb22:
-    kl_t36 = kl__xorshift__3u32( kl_state_27 );
+    kl_t36 = kl__8xorshift__3u32( kl_state_27 );
 #line 104 "codegen/hashing.kl"
     kl_state_27 = kl_t36;
     kl_t37 = kl_state_27 != 2398689233;
@@ -449,7 +449,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb24:
 #line 108 "codegen/hashing.kl"
-    kl_t39 = kl__lcg__3u32( 42 );
+    kl_t39 = kl__3lcg__3u32( 42 );
 #line 108 "codegen/hashing.kl"
     kl_seeded_38 = kl_t39;
 #line 110 "codegen/hashing.kl"
@@ -462,7 +462,7 @@ int32_t kl__main__( void )
 #line 110 "codegen/hashing.kl"
     return kl_t0;
     bb26:
-    kl_t41 = kl__lcg__3u32( kl_seeded_38 );
+    kl_t41 = kl__3lcg__3u32( kl_seeded_38 );
 #line 112 "codegen/hashing.kl"
     kl_seeded_38 = kl_t41;
     kl_t42 = kl_seeded_38 != 3263785912;
@@ -475,7 +475,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb28:
 #line 116 "codegen/hashing.kl"
-    kl_t43 = kl__checksum__3u32( 2000 );
+    kl_t43 = kl__8checksum__3u32( 2000 );
 #line 116 "codegen/hashing.kl"
     kl_t44 = kl_t43 != 2668667000;
 #line 116 "codegen/hashing.kl"
@@ -487,7 +487,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb30:
 #line 119 "codegen/hashing.kl"
-    kl_t45 = kl__checksum__3u32( 3000 );
+    kl_t45 = kl__8checksum__3u32( 3000 );
 #line 119 "codegen/hashing.kl"
     kl_t46 = kl_t45 != 414565908;
 #line 119 "codegen/hashing.kl"
@@ -613,5 +613,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 70 "codegen/hashing.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

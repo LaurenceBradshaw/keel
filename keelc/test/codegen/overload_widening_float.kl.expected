@@ -3,16 +3,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-double kl__root__3f64( double );
-double kl__root__3f32( float );
-double kl__narrow__3f64( double );
-double kl__narrow__3f32( float );
-int64_t kl__kind__3i64( int64_t );
-int64_t kl__kind__3f32( float );
-int32_t kl__main__( void );
+double kl__4root__3f64( double );
+double kl__4root__3f32( float );
+double kl__6narrow__3f64( double );
+double kl__6narrow__3f32( float );
+int64_t kl__4kind__3i64( int64_t );
+int64_t kl__4kind__3f32( float );
+int32_t kl__4main__( void );
 
 #line 5 "codegen/overload_widening_float.kl"
-double kl__root__3f64( double kl_x_1 )
+double kl__4root__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 7 "codegen/overload_widening_float.kl"
@@ -22,7 +22,7 @@ double kl__root__3f64( double kl_x_1 )
 }
 
 #line 10 "codegen/overload_widening_float.kl"
-double kl__root__3f32( float kl_t1 )
+double kl__4root__3f32( float kl_t1 )
 {
     double kl_t0;
     ( void ) kl_t1;
@@ -33,7 +33,7 @@ double kl__root__3f32( float kl_t1 )
 }
 
 #line 15 "codegen/overload_widening_float.kl"
-double kl__narrow__3f64( double kl_t1 )
+double kl__6narrow__3f64( double kl_t1 )
 {
     double kl_t0;
     ( void ) kl_t1;
@@ -44,7 +44,7 @@ double kl__narrow__3f64( double kl_t1 )
 }
 
 #line 20 "codegen/overload_widening_float.kl"
-double kl__narrow__3f32( float kl_x_1 )
+double kl__6narrow__3f32( float kl_x_1 )
 {
     double kl_t0;
 #line 22 "codegen/overload_widening_float.kl"
@@ -54,7 +54,7 @@ double kl__narrow__3f32( float kl_x_1 )
 }
 
 #line 25 "codegen/overload_widening_float.kl"
-int64_t kl__kind__3i64( int64_t kl_x_1 )
+int64_t kl__4kind__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 27 "codegen/overload_widening_float.kl"
@@ -64,7 +64,7 @@ int64_t kl__kind__3i64( int64_t kl_x_1 )
 }
 
 #line 30 "codegen/overload_widening_float.kl"
-int64_t kl__kind__3f32( float kl_t1 )
+int64_t kl__4kind__3f32( float kl_t1 )
 {
     int64_t kl_t0;
     ( void ) kl_t1;
@@ -75,7 +75,7 @@ int64_t kl__kind__3f32( float kl_t1 )
 }
 
 #line 35 "codegen/overload_widening_float.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_whole_1;
@@ -97,7 +97,7 @@ int32_t kl__main__( void )
 #line 42 "codegen/overload_widening_float.kl"
     kl_t4 = ( double ) kl_whole_1;
 #line 42 "codegen/overload_widening_float.kl"
-    kl_t5 = kl__root__3f64( kl_t4 );
+    kl_t5 = kl__4root__3f64( kl_t4 );
 #line 42 "codegen/overload_widening_float.kl"
     kl_t6 = kl_t5 != -123456789.0;
 #line 42 "codegen/overload_widening_float.kl"
@@ -111,7 +111,7 @@ int32_t kl__main__( void )
 #line 45 "codegen/overload_widening_float.kl"
     kl_t7 = ( float ) kl_small_2;
 #line 45 "codegen/overload_widening_float.kl"
-    kl_t8 = kl__narrow__3f32( kl_t7 );
+    kl_t8 = kl__6narrow__3f32( kl_t7 );
 #line 45 "codegen/overload_widening_float.kl"
     kl_t9 = kl_t8 != 65535.0;
 #line 45 "codegen/overload_widening_float.kl"
@@ -125,7 +125,7 @@ int32_t kl__main__( void )
 #line 48 "codegen/overload_widening_float.kl"
     kl_t10 = ( int64_t ) kl_tiny_3;
 #line 48 "codegen/overload_widening_float.kl"
-    kl_t11 = kl__kind__3i64( kl_t10 );
+    kl_t11 = kl__4kind__3i64( kl_t10 );
 #line 48 "codegen/overload_widening_float.kl"
     kl_t12 = kl_t11 != -7;
 #line 48 "codegen/overload_widening_float.kl"
@@ -145,5 +145,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 35 "codegen/overload_widening_float.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -136,7 +136,7 @@ def demangle_function(symbol, signature=True):
     try:
         reader = _Reader(symbol)
         package = reader.owner()
-        name = reader.name()
+        name = reader.word()
         arguments = ""
         if reader.peek("__I"):
             reader.take("__")

@@ -5,11 +5,11 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__gcd__3i32_3i32( int32_t, int32_t );
-int32_t kl__main__( void );
+int32_t kl__3gcd__3i32_3i32( int32_t, int32_t );
+int32_t kl__4main__( void );
 
 #line 3 "codegen/gcd.kl"
-int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__3gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -65,12 +65,12 @@ int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 15 "codegen/gcd.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
 #line 17 "codegen/gcd.kl"
-    kl_t1 = kl__gcd__3i32_3i32( 1071, 462 );
+    kl_t1 = kl__3gcd__3i32_3i32( 1071, 462 );
 #line 17 "codegen/gcd.kl"
     kl_t0 = kl_t1;
 #line 17 "codegen/gcd.kl"
@@ -81,5 +81,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 15 "codegen/gcd.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

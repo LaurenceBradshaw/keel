@@ -8,18 +8,18 @@ typedef int64_t ( *kl__fn__F3i64E3i64 )( int64_t );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__twice32__3i32( int32_t );
-int64_t kl__twice64__3i64( int64_t );
-int32_t kl__main__( void );
-int32_t kl__through__I3i32E__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
-int64_t kl__through__I3i64E__F3i64E3i64_3i64( kl__fn__F3i64E3i64, int64_t );
-int32_t kl__forwarded__I3i32E__3i32( int32_t );
-int64_t kl__forwarded__I3i64E__3i64( int64_t );
-int32_t kl__bounded__I3i32E__3i32( int32_t );
-int64_t kl__bounded__I3i64E__3i64( int64_t );
+int32_t kl__7twice32__3i32( int32_t );
+int64_t kl__7twice64__3i64( int64_t );
+int32_t kl__4main__( void );
+int32_t kl__7through__I3i32E__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+int64_t kl__7through__I3i64E__F3i64E3i64_3i64( kl__fn__F3i64E3i64, int64_t );
+int32_t kl__9forwarded__I3i32E__3i32( int32_t );
+int64_t kl__9forwarded__I3i64E__3i64( int64_t );
+int32_t kl__7bounded__I3i32E__3i32( int32_t );
+int64_t kl__7bounded__I3i64E__3i64( int64_t );
 
 #line 25 "codegen/function_pointer_open_signature.kl"
-int32_t kl__twice32__3i32( int32_t kl_a_1 )
+int32_t kl__7twice32__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -41,7 +41,7 @@ int32_t kl__twice32__3i32( int32_t kl_a_1 )
 }
 
 #line 30 "codegen/function_pointer_open_signature.kl"
-int64_t kl__twice64__3i64( int64_t kl_a_1 )
+int64_t kl__7twice64__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -63,7 +63,7 @@ int64_t kl__twice64__3i64( int64_t kl_a_1 )
 }
 
 #line 35 "codegen/function_pointer_open_signature.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_t1;
@@ -77,9 +77,9 @@ int32_t kl__main__( void )
     int64_t kl_t9;
     bool kl_t10;
 #line 38 "codegen/function_pointer_open_signature.kl"
-    kl_t1 = kl__twice32__3i32;
+    kl_t1 = kl__7twice32__3i32;
 #line 38 "codegen/function_pointer_open_signature.kl"
-    kl_t2 = kl__through__I3i32E__F3i32E3i32_3i32( kl_t1, 3 );
+    kl_t2 = kl__7through__I3i32E__F3i32E3i32_3i32( kl_t1, 3 );
 #line 38 "codegen/function_pointer_open_signature.kl"
     kl_t3 = kl_t2 != 6;
 #line 38 "codegen/function_pointer_open_signature.kl"
@@ -91,9 +91,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 39 "codegen/function_pointer_open_signature.kl"
-    kl_t4 = kl__twice64__3i64;
+    kl_t4 = kl__7twice64__3i64;
 #line 39 "codegen/function_pointer_open_signature.kl"
-    kl_t5 = kl__through__I3i64E__F3i64E3i64_3i64( kl_t4, 4 );
+    kl_t5 = kl__7through__I3i64E__F3i64E3i64_3i64( kl_t4, 4 );
 #line 39 "codegen/function_pointer_open_signature.kl"
     kl_t6 = kl_t5 != 8;
 #line 39 "codegen/function_pointer_open_signature.kl"
@@ -104,7 +104,7 @@ int32_t kl__main__( void )
 #line 39 "codegen/function_pointer_open_signature.kl"
     return kl_t0;
     bb4:
-    kl_t7 = kl__forwarded__I3i32E__3i32( 5 );
+    kl_t7 = kl__9forwarded__I3i32E__3i32( 5 );
 #line 41 "codegen/function_pointer_open_signature.kl"
     kl_t8 = kl_t7 != 10;
 #line 41 "codegen/function_pointer_open_signature.kl"
@@ -116,7 +116,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 42 "codegen/function_pointer_open_signature.kl"
-    kl_t9 = kl__forwarded__I3i64E__3i64( 6 );
+    kl_t9 = kl__9forwarded__I3i64E__3i64( 6 );
 #line 42 "codegen/function_pointer_open_signature.kl"
     kl_t10 = kl_t9 != 12;
 #line 42 "codegen/function_pointer_open_signature.kl"
@@ -133,7 +133,7 @@ int32_t kl__main__( void )
 }
 
 #line 12 "codegen/function_pointer_open_signature.kl"
-int32_t kl__through__I3i32E__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_a_2 )
+int32_t kl__7through__I3i32E__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_a_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -146,7 +146,7 @@ int32_t kl__through__I3i32E__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t
 }
 
 #line 12 "codegen/function_pointer_open_signature.kl"
-int64_t kl__through__I3i64E__F3i64E3i64_3i64( kl__fn__F3i64E3i64 kl_f_1, int64_t kl_a_2 )
+int64_t kl__7through__I3i64E__F3i64E3i64_3i64( kl__fn__F3i64E3i64 kl_f_1, int64_t kl_a_2 )
 {
     int64_t kl_t0;
     int64_t kl_t3;
@@ -159,14 +159,14 @@ int64_t kl__through__I3i64E__F3i64E3i64_3i64( kl__fn__F3i64E3i64 kl_f_1, int64_t
 }
 
 #line 18 "codegen/function_pointer_open_signature.kl"
-int32_t kl__forwarded__I3i32E__3i32( int32_t kl_a_1 )
+int32_t kl__9forwarded__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_p_2;
     kl__fn__F3i32E3i32 kl_t3;
     int32_t kl_t4;
 #line 20 "codegen/function_pointer_open_signature.kl"
-    kl_t3 = kl__bounded__I3i32E__3i32;
+    kl_t3 = kl__7bounded__I3i32E__3i32;
 #line 20 "codegen/function_pointer_open_signature.kl"
     kl_p_2 = kl_t3;
 #line 22 "codegen/function_pointer_open_signature.kl"
@@ -178,14 +178,14 @@ int32_t kl__forwarded__I3i32E__3i32( int32_t kl_a_1 )
 }
 
 #line 18 "codegen/function_pointer_open_signature.kl"
-int64_t kl__forwarded__I3i64E__3i64( int64_t kl_a_1 )
+int64_t kl__9forwarded__I3i64E__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
     kl__fn__F3i64E3i64 kl_p_2;
     kl__fn__F3i64E3i64 kl_t3;
     int64_t kl_t4;
 #line 20 "codegen/function_pointer_open_signature.kl"
-    kl_t3 = kl__bounded__I3i64E__3i64;
+    kl_t3 = kl__7bounded__I3i64E__3i64;
 #line 20 "codegen/function_pointer_open_signature.kl"
     kl_p_2 = kl_t3;
 #line 22 "codegen/function_pointer_open_signature.kl"
@@ -197,7 +197,7 @@ int64_t kl__forwarded__I3i64E__3i64( int64_t kl_a_1 )
 }
 
 #line 5 "codegen/function_pointer_open_signature.kl"
-int32_t kl__bounded__I3i32E__3i32( int32_t kl_a_1 )
+int32_t kl__7bounded__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -219,7 +219,7 @@ int32_t kl__bounded__I3i32E__3i32( int32_t kl_a_1 )
 }
 
 #line 5 "codegen/function_pointer_open_signature.kl"
-int64_t kl__bounded__I3i64E__3i64( int64_t kl_a_1 )
+int64_t kl__7bounded__I3i64E__3i64( int64_t kl_a_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -244,5 +244,5 @@ int64_t kl__bounded__I3i64E__3i64( int64_t kl_a_1 )
 int main( void )
 {
 #line 35 "codegen/function_pointer_open_signature.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

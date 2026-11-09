@@ -11,13 +11,13 @@ struct kl__Point
     int32_t kl_y;
 };
 
-struct kl__Point kl__built__3i32( int32_t );
-struct kl__Point kl__either__3i32_4bool( int32_t, bool );
-struct kl__Point kl__written__3i32( int32_t );
-int32_t kl__main__( void );
+struct kl__Point kl__5built__3i32( int32_t );
+struct kl__Point kl__6either__3i32_4bool( int32_t, bool );
+struct kl__Point kl__7written__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 12 "opt/scalars_returned.kl"
-struct kl__Point kl__built__3i32( int32_t kl_a_1 )
+struct kl__Point kl__5built__3i32( int32_t kl_a_1 )
 {
     struct kl__Point kl_t0;
     kl_t0.kl_y = kl_a_1 + 1;
@@ -27,7 +27,7 @@ struct kl__Point kl__built__3i32( int32_t kl_a_1 )
 }
 
 #line 20 "opt/scalars_returned.kl"
-struct kl__Point kl__either__3i32_4bool( int32_t kl_a_1, bool kl_c_2 )
+struct kl__Point kl__6either__3i32_4bool( int32_t kl_a_1, bool kl_c_2 )
 {
     struct kl__Point kl_t0;
     int32_t kl_t3;
@@ -50,7 +50,7 @@ struct kl__Point kl__either__3i32_4bool( int32_t kl_a_1, bool kl_c_2 )
 }
 
 #line 32 "opt/scalars_returned.kl"
-struct kl__Point kl__written__3i32( int32_t kl_a_1 )
+struct kl__Point kl__7written__3i32( int32_t kl_a_1 )
 {
     struct kl__Point kl_t0;
 #line 34 "opt/scalars_returned.kl"
@@ -62,7 +62,7 @@ struct kl__Point kl__written__3i32( int32_t kl_a_1 )
 }
 
 #line 37 "opt/scalars_returned.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 54 "opt/scalars_returned.kl"
@@ -75,5 +75,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 37 "opt/scalars_returned.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

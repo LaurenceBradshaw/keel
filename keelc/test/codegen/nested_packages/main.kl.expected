@@ -5,10 +5,10 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_6shapes4cube_volume__3i32( int32_t );
+int32_t kl_6shapes4cube_6volume__3i32( int32_t );
 
 #line 2 "codegen/nested_packages/shapes/cube.kl"
-int32_t kl_6shapes4cube_volume__3i32( int32_t kl_side_1 )
+int32_t kl_6shapes4cube_6volume__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -43,11 +43,11 @@ struct kl_6shapes5solid4cube_cube
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_6shapes5solid4cube_volume__3i32( int32_t );
-int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
+int32_t kl_6shapes5solid4cube_6volume__3i32( int32_t );
+int32_t kl_6shapes5solid4cube_6volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
 
 #line 6 "codegen/nested_packages/shapes/solid/cube.kl"
-int32_t kl_6shapes5solid4cube_volume__3i32( int32_t kl_side_1 )
+int32_t kl_6shapes5solid4cube_6volume__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -81,12 +81,12 @@ int32_t kl_6shapes5solid4cube_volume__3i32( int32_t kl_side_1 )
 }
 
 #line 11 "codegen/nested_packages/shapes/solid/cube.kl"
-int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube kl_c_1 )
+int32_t kl_6shapes5solid4cube_6volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube kl_c_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
 #line 13 "codegen/nested_packages/shapes/solid/cube.kl"
-    kl_t2 = kl_6shapes5solid4cube_volume__3i32( kl_c_1.kl_side );
+    kl_t2 = kl_6shapes5solid4cube_6volume__3i32( kl_c_1.kl_side );
 #line 13 "codegen/nested_packages/shapes/solid/cube.kl"
     kl_t0 = kl_t2;
 #line 13 "codegen/nested_packages/shapes/solid/cube.kl"
@@ -105,13 +105,13 @@ struct kl_6shapes5solid4cube_cube
     int32_t kl_side;
 };
 
-int32_t kl__main__( void );
-int32_t kl_6shapes5solid4cube_volume__3i32( int32_t );
-int32_t kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
-int32_t kl_6shapes4cube_volume__3i32( int32_t );
+int32_t kl__4main__( void );
+int32_t kl_6shapes5solid4cube_6volume__3i32( int32_t );
+int32_t kl_6shapes5solid4cube_6volume__Q6shapesQ5solid4cube( struct kl_6shapes5solid4cube_cube );
+int32_t kl_6shapes4cube_6volume__3i32( int32_t );
 
 #line 6 "codegen/nested_packages/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -123,7 +123,7 @@ int32_t kl__main__( void )
     int32_t kl_t7;
     bool kl_t8;
 #line 8 "codegen/nested_packages/main.kl"
-    kl_t1 = kl_6shapes4cube_volume__3i32( 2 );
+    kl_t1 = kl_6shapes4cube_6volume__3i32( 2 );
 #line 8 "codegen/nested_packages/main.kl"
     kl_t2 = kl_t1 != 4;
 #line 8 "codegen/nested_packages/main.kl"
@@ -135,7 +135,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 9 "codegen/nested_packages/main.kl"
-    kl_t3 = kl_6shapes5solid4cube_volume__3i32( 2 );
+    kl_t3 = kl_6shapes5solid4cube_6volume__3i32( 2 );
 #line 9 "codegen/nested_packages/main.kl"
     kl_t4 = kl_t3 != 8;
 #line 9 "codegen/nested_packages/main.kl"
@@ -150,7 +150,7 @@ int32_t kl__main__( void )
     kl_t6.kl_side = 3;
 #line 10 "codegen/nested_packages/main.kl"
     kl_c_5 = kl_t6;
-    kl_t7 = kl_6shapes5solid4cube_volume__Q6shapesQ5solid4cube( kl_c_5 );
+    kl_t7 = kl_6shapes5solid4cube_6volume__Q6shapesQ5solid4cube( kl_c_5 );
 #line 11 "codegen/nested_packages/main.kl"
     kl_t8 = kl_t7 != 27;
 #line 11 "codegen/nested_packages/main.kl"
@@ -171,5 +171,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/nested_packages/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

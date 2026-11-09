@@ -13,16 +13,16 @@ struct kl__Node
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__length__P4Node( struct kl__Node* );
-int32_t kl__sum__P4Node( struct kl__Node* );
-int32_t kl__largest__P4Node( struct kl__Node* );
-int32_t kl__at__P4Node_3i32_3i32( struct kl__Node*, int32_t, int32_t );
-struct kl__Node* kl__tail__P4Node( struct kl__Node* );
-struct kl__Node* kl__reverse__P4Node( struct kl__Node* );
-int32_t kl__main__( void );
+int32_t kl__6length__P4Node( struct kl__Node* );
+int32_t kl__3sum__P4Node( struct kl__Node* );
+int32_t kl__7largest__P4Node( struct kl__Node* );
+int32_t kl__2at__P4Node_3i32_3i32( struct kl__Node*, int32_t, int32_t );
+struct kl__Node* kl__4tail__P4Node( struct kl__Node* );
+struct kl__Node* kl__7reverse__P4Node( struct kl__Node* );
+int32_t kl__4main__( void );
 
 #line 15 "codegen/linked_list.kl"
-int32_t kl__length__P4Node( struct kl__Node* kl_head_1 )
+int32_t kl__6length__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
     int32_t kl_count_2;
@@ -61,7 +61,7 @@ int32_t kl__length__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 29 "codegen/linked_list.kl"
-int32_t kl__sum__P4Node( struct kl__Node* kl_head_1 )
+int32_t kl__3sum__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -100,7 +100,7 @@ int32_t kl__sum__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 45 "codegen/linked_list.kl"
-int32_t kl__largest__P4Node( struct kl__Node* kl_head_1 )
+int32_t kl__7largest__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
     int32_t kl_best_2;
@@ -140,7 +140,7 @@ int32_t kl__largest__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 64 "codegen/linked_list.kl"
-int32_t kl__at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2, int32_t kl_fallback_3 )
+int32_t kl__2at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2, int32_t kl_fallback_3 )
 {
     int32_t kl_t0;
     struct kl__Node* kl_step_4;
@@ -190,7 +190,7 @@ int32_t kl__at__P4Node_3i32_3i32( struct kl__Node* kl_head_1, int32_t kl_index_2
 }
 
 #line 85 "codegen/linked_list.kl"
-struct kl__Node* kl__tail__P4Node( struct kl__Node* kl_head_1 )
+struct kl__Node* kl__4tail__P4Node( struct kl__Node* kl_head_1 )
 {
     struct kl__Node* kl_t0;
     struct kl__Node* kl_step_2;
@@ -223,7 +223,7 @@ struct kl__Node* kl__tail__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 104 "codegen/linked_list.kl"
-struct kl__Node* kl__reverse__P4Node( struct kl__Node* kl_head_1 )
+struct kl__Node* kl__7reverse__P4Node( struct kl__Node* kl_head_1 )
 {
     struct kl__Node* kl_t0;
     struct kl__Node* kl_earlier_2;
@@ -256,7 +256,7 @@ struct kl__Node* kl__reverse__P4Node( struct kl__Node* kl_head_1 )
 }
 
 #line 121 "codegen/linked_list.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Node kl_fifth_1;
@@ -352,7 +352,7 @@ int32_t kl__main__( void )
 #line 130 "codegen/linked_list.kl"
     kl_head_15 = kl_t16;
 #line 132 "codegen/linked_list.kl"
-    kl_t17 = kl__length__P4Node( kl_head_15 );
+    kl_t17 = kl__6length__P4Node( kl_head_15 );
 #line 132 "codegen/linked_list.kl"
     kl_t18 = kl_t17 != 5;
 #line 132 "codegen/linked_list.kl"
@@ -364,7 +364,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 133 "codegen/linked_list.kl"
-    kl_t19 = kl__sum__P4Node( kl_head_15 );
+    kl_t19 = kl__3sum__P4Node( kl_head_15 );
 #line 133 "codegen/linked_list.kl"
     kl_t20 = kl_t19 != 15;
 #line 133 "codegen/linked_list.kl"
@@ -376,7 +376,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 134 "codegen/linked_list.kl"
-    kl_t21 = kl__largest__P4Node( kl_head_15 );
+    kl_t21 = kl__7largest__P4Node( kl_head_15 );
 #line 134 "codegen/linked_list.kl"
     kl_t22 = kl_t21 != 5;
 #line 134 "codegen/linked_list.kl"
@@ -388,7 +388,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 135 "codegen/linked_list.kl"
-    kl_t23 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+    kl_t23 = kl__2at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
 #line 135 "codegen/linked_list.kl"
     kl_t24 = kl_t23 != 1;
 #line 135 "codegen/linked_list.kl"
@@ -400,7 +400,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 136 "codegen/linked_list.kl"
-    kl_t25 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+    kl_t25 = kl__2at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
 #line 136 "codegen/linked_list.kl"
     kl_t26 = kl_t25 != 5;
 #line 136 "codegen/linked_list.kl"
@@ -412,7 +412,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 137 "codegen/linked_list.kl"
-    kl_t27 = kl__at__P4Node_3i32_3i32( kl_head_15, 9, 99 );
+    kl_t27 = kl__2at__P4Node_3i32_3i32( kl_head_15, 9, 99 );
 #line 137 "codegen/linked_list.kl"
     kl_t28 = kl_t27 != 99;
 #line 137 "codegen/linked_list.kl"
@@ -424,7 +424,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 140 "codegen/linked_list.kl"
-    kl_t29 = kl__length__P4Node( NULL );
+    kl_t29 = kl__6length__P4Node( NULL );
 #line 140 "codegen/linked_list.kl"
     kl_t30 = kl_t29 != 0;
 #line 140 "codegen/linked_list.kl"
@@ -436,7 +436,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 141 "codegen/linked_list.kl"
-    kl_t31 = kl__sum__P4Node( NULL );
+    kl_t31 = kl__3sum__P4Node( NULL );
 #line 141 "codegen/linked_list.kl"
     kl_t32 = kl_t31 != 0;
 #line 141 "codegen/linked_list.kl"
@@ -447,11 +447,11 @@ int32_t kl__main__( void )
 #line 141 "codegen/linked_list.kl"
     return kl_t0;
     bb16:
-    kl_t33 = kl__reverse__P4Node( kl_head_15 );
+    kl_t33 = kl__7reverse__P4Node( kl_head_15 );
 #line 143 "codegen/linked_list.kl"
     kl_head_15 = kl_t33;
 #line 145 "codegen/linked_list.kl"
-    kl_t34 = kl__length__P4Node( kl_head_15 );
+    kl_t34 = kl__6length__P4Node( kl_head_15 );
 #line 145 "codegen/linked_list.kl"
     kl_t35 = kl_t34 != 5;
 #line 145 "codegen/linked_list.kl"
@@ -463,7 +463,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 146 "codegen/linked_list.kl"
-    kl_t36 = kl__sum__P4Node( kl_head_15 );
+    kl_t36 = kl__3sum__P4Node( kl_head_15 );
 #line 146 "codegen/linked_list.kl"
     kl_t37 = kl_t36 != 15;
 #line 146 "codegen/linked_list.kl"
@@ -475,7 +475,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb20:
 #line 147 "codegen/linked_list.kl"
-    kl_t38 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+    kl_t38 = kl__2at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
 #line 147 "codegen/linked_list.kl"
     kl_t39 = kl_t38 != 5;
 #line 147 "codegen/linked_list.kl"
@@ -487,7 +487,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb22:
 #line 148 "codegen/linked_list.kl"
-    kl_t40 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+    kl_t40 = kl__2at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
 #line 148 "codegen/linked_list.kl"
     kl_t41 = kl_t40 != 1;
 #line 148 "codegen/linked_list.kl"
@@ -499,11 +499,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb24:
 #line 151 "codegen/linked_list.kl"
-    kl_t42 = kl__reverse__P4Node( kl_head_15 );
+    kl_t42 = kl__7reverse__P4Node( kl_head_15 );
 #line 151 "codegen/linked_list.kl"
     kl_head_15 = kl_t42;
 #line 153 "codegen/linked_list.kl"
-    kl_t43 = kl__at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
+    kl_t43 = kl__2at__P4Node_3i32_3i32( kl_head_15, 0, 0 );
 #line 153 "codegen/linked_list.kl"
     kl_t44 = kl_t43 != 1;
 #line 153 "codegen/linked_list.kl"
@@ -515,7 +515,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb26:
 #line 154 "codegen/linked_list.kl"
-    kl_t45 = kl__at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
+    kl_t45 = kl__2at__P4Node_3i32_3i32( kl_head_15, 4, 0 );
 #line 154 "codegen/linked_list.kl"
     kl_t46 = kl_t45 != 5;
 #line 154 "codegen/linked_list.kl"
@@ -527,7 +527,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb28:
 #line 155 "codegen/linked_list.kl"
-    kl_t47 = kl__length__P4Node( kl_head_15 );
+    kl_t47 = kl__6length__P4Node( kl_head_15 );
 #line 155 "codegen/linked_list.kl"
     kl_t48 = kl_t47 != 5;
 #line 155 "codegen/linked_list.kl"
@@ -539,7 +539,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb30:
 #line 158 "codegen/linked_list.kl"
-    kl_t49 = kl__tail__P4Node( kl_head_15 );
+    kl_t49 = kl__4tail__P4Node( kl_head_15 );
 #line 158 "codegen/linked_list.kl"
     kl_t50 = ( *kl_t49 ).kl_value != 5;
 #line 158 "codegen/linked_list.kl"
@@ -551,7 +551,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb32:
 #line 159 "codegen/linked_list.kl"
-    kl_t51 = kl__tail__P4Node( kl_head_15 );
+    kl_t51 = kl__4tail__P4Node( kl_head_15 );
 #line 159 "codegen/linked_list.kl"
     kl_t52 = ( *kl_t51 ).kl_next != NULL;
 #line 159 "codegen/linked_list.kl"
@@ -563,7 +563,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb34:
 #line 160 "codegen/linked_list.kl"
-    kl_t53 = kl__tail__P4Node( NULL );
+    kl_t53 = kl__4tail__P4Node( NULL );
 #line 160 "codegen/linked_list.kl"
     kl_t54 = kl_t53 != NULL;
 #line 160 "codegen/linked_list.kl"
@@ -583,5 +583,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 121 "codegen/linked_list.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

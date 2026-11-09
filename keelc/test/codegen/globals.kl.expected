@@ -24,15 +24,15 @@ uint32_t kl__all_ones__G = 4294967295;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__read_counter__( void );
-void kl__bump__( void );
-int32_t kl__read_later__( void );
-int32_t* kl__address_of_counter__( void );
-int32_t kl__shadowed__3i32( int32_t );
-int32_t kl__main__( void );
+int32_t kl__12read_counter__( void );
+void kl__4bump__( void );
+int32_t kl__10read_later__( void );
+int32_t* kl__18address_of_counter__( void );
+int32_t kl__8shadowed__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 40 "codegen/globals.kl"
-int32_t kl__read_counter__( void )
+int32_t kl__12read_counter__( void )
 {
     int32_t kl_t0;
 #line 42 "codegen/globals.kl"
@@ -42,7 +42,7 @@ int32_t kl__read_counter__( void )
 }
 
 #line 46 "codegen/globals.kl"
-void kl__bump__( void )
+void kl__4bump__( void )
 {
     bool kl_t1;
 #line 48 "codegen/globals.kl"
@@ -60,7 +60,7 @@ void kl__bump__( void )
 }
 
 #line 51 "codegen/globals.kl"
-int32_t kl__read_later__( void )
+int32_t kl__10read_later__( void )
 {
     int32_t kl_t0;
 #line 53 "codegen/globals.kl"
@@ -70,7 +70,7 @@ int32_t kl__read_later__( void )
 }
 
 #line 58 "codegen/globals.kl"
-int32_t* kl__address_of_counter__( void )
+int32_t* kl__18address_of_counter__( void )
 {
     int32_t* kl_t0;
     int32_t* kl_t1;
@@ -83,7 +83,7 @@ int32_t* kl__address_of_counter__( void )
 }
 
 #line 64 "codegen/globals.kl"
-int32_t kl__shadowed__3i32( int32_t kl_counter_1 )
+int32_t kl__8shadowed__3i32( int32_t kl_counter_1 )
 {
     int32_t kl_t0;
 #line 66 "codegen/globals.kl"
@@ -93,7 +93,7 @@ int32_t kl__shadowed__3i32( int32_t kl_counter_1 )
 }
 
 #line 69 "codegen/globals.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -210,7 +210,7 @@ int32_t kl__main__( void )
 #line 77 "codegen/globals.kl"
     return kl_t0;
     bb14:
-    kl_t8 = kl__read_counter__(  );
+    kl_t8 = kl__12read_counter__(  );
 #line 79 "codegen/globals.kl"
     kl_t9 = kl_t8 != 1;
 #line 79 "codegen/globals.kl"
@@ -222,7 +222,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 80 "codegen/globals.kl"
-    kl_t10 = kl__read_later__(  );
+    kl_t10 = kl__10read_later__(  );
 #line 80 "codegen/globals.kl"
     kl_t11 = kl_t10 != 7;
 #line 80 "codegen/globals.kl"
@@ -234,7 +234,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 83 "codegen/globals.kl"
-    kl__bump__(  );
+    kl__4bump__(  );
     kl_t13 = kl__counter__G != 2;
 #line 84 "codegen/globals.kl"
     if ( kl_t13 ) goto bb19; else goto bb20;
@@ -245,7 +245,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb20:
 #line 85 "codegen/globals.kl"
-    kl_t14 = kl__read_counter__(  );
+    kl_t14 = kl__12read_counter__(  );
 #line 85 "codegen/globals.kl"
     kl_t15 = kl_t14 != 2;
 #line 85 "codegen/globals.kl"
@@ -256,8 +256,8 @@ int32_t kl__main__( void )
 #line 85 "codegen/globals.kl"
     return kl_t0;
     bb22:
-    kl__bump__(  );
-    kl__bump__(  );
+    kl__4bump__(  );
+    kl__4bump__(  );
     kl_t18 = kl__counter__G != 4;
 #line 89 "codegen/globals.kl"
     if ( kl_t18 ) goto bb23; else goto bb24;
@@ -269,7 +269,7 @@ int32_t kl__main__( void )
     bb24:
 #line 92 "codegen/globals.kl"
     kl__counter__G = 10;
-    kl_t19 = kl__read_counter__(  );
+    kl_t19 = kl__12read_counter__(  );
 #line 93 "codegen/globals.kl"
     kl_t20 = kl_t19 != 10;
 #line 93 "codegen/globals.kl"
@@ -281,7 +281,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb26:
 #line 97 "codegen/globals.kl"
-    kl_t21 = kl__address_of_counter__(  );
+    kl_t21 = kl__18address_of_counter__(  );
 #line 97 "codegen/globals.kl"
     ( *kl_t21 ) = 20;
     kl_t22 = kl__counter__G != 20;
@@ -293,7 +293,7 @@ int32_t kl__main__( void )
 #line 98 "codegen/globals.kl"
     return kl_t0;
     bb28:
-    kl_t24 = kl__address_of_counter__(  );
+    kl_t24 = kl__18address_of_counter__(  );
 #line 100 "codegen/globals.kl"
     kl_held_23 = kl_t24;
 #line 102 "codegen/globals.kl"
@@ -343,7 +343,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb36:
 #line 118 "codegen/globals.kl"
-    kl_t31 = kl__shadowed__3i32( 5 );
+    kl_t31 = kl__8shadowed__3i32( 5 );
 #line 118 "codegen/globals.kl"
     kl_t32 = kl_t31 != 5;
 #line 118 "codegen/globals.kl"
@@ -523,5 +523,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 69 "codegen/globals.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

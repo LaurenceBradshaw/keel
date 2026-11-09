@@ -13,17 +13,17 @@ struct kl__Box
 int32_t kl__live__G;
 int64_t kl__trace__G;
 
-void kl__Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
-void kl__Box__dtor( struct kl__Box* );
-int32_t kl__reassigned__( void );
-struct kl__Box kl__early__4bool( bool );
-int32_t kl__one_path__4bool( bool );
-int32_t kl__copied__( void );
-int32_t kl__looped__( void );
-int32_t kl__main__( void );
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
+void kl__3Box__dtor( struct kl__Box* );
+int32_t kl__10reassigned__( void );
+struct kl__Box kl__5early__4bool( bool );
+int32_t kl__8one_path__4bool( bool );
+int32_t kl__6copied__( void );
+int32_t kl__6looped__( void );
+int32_t kl__4main__( void );
 
 #line 13 "opt/moves_kept.kl"
-void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
+void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     int64_t kl_t3;
     int64_t kl_t4;
@@ -43,7 +43,7 @@ void kl__Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 }
 
 #line 20 "opt/moves_kept.kl"
-void kl__Box__dtor( struct kl__Box* kl_this_1 )
+void kl__3Box__dtor( struct kl__Box* kl_this_1 )
 {
     int64_t kl_t2;
     int64_t kl_t3;
@@ -60,7 +60,7 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
 }
 
 #line 36 "opt/moves_kept.kl"
-int32_t kl__reassigned__( void )
+int32_t kl__10reassigned__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -87,7 +87,7 @@ int32_t kl__reassigned__( void )
 }
 
 #line 52 "opt/moves_kept.kl"
-struct kl__Box kl__early__4bool( bool kl_c_1 )
+struct kl__Box kl__5early__4bool( bool kl_c_1 )
 {
     struct kl__Box kl_t0;
     int64_t kl_t2;
@@ -132,7 +132,7 @@ struct kl__Box kl__early__4bool( bool kl_c_1 )
 }
 
 #line 64 "opt/moves_kept.kl"
-int32_t kl__one_path__4bool( bool kl_c_1 )
+int32_t kl__8one_path__4bool( bool kl_c_1 )
 {
     int32_t kl_t0;
     struct kl__Box kl_kept_2;
@@ -176,7 +176,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
 #line 23 "opt/moves_kept.kl"
     kl__trace__G = kl_t9;
 #line 73 "opt/moves_kept.kl"
-    if ( kl_t7 ) kl__Box__dtor( &kl_kept_2 );
+    if ( kl_t7 ) kl__3Box__dtor( &kl_kept_2 );
 #line 73 "opt/moves_kept.kl"
     return kl_t0;
     bb2:
@@ -197,7 +197,7 @@ int32_t kl__one_path__4bool( bool kl_c_1 )
 }
 
 #line 77 "opt/moves_kept.kl"
-int32_t kl__copied__( void )
+int32_t kl__6copied__( void )
 {
     int32_t kl_t0;
 #line 82 "opt/moves_kept.kl"
@@ -207,7 +207,7 @@ int32_t kl__copied__( void )
 }
 
 #line 86 "opt/moves_kept.kl"
-int32_t kl__looped__( void )
+int32_t kl__6looped__( void )
 {
     int32_t kl_t0;
     int32_t kl_i_1;
@@ -298,7 +298,7 @@ int32_t kl__looped__( void )
 }
 
 #line 105 "opt/moves_kept.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Box kl_x_1;
@@ -357,7 +357,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb5:
 #line 123 "opt/moves_kept.kl"
-    kl_t6 = kl__one_path__4bool( false );
+    kl_t6 = kl__8one_path__4bool( false );
 #line 123 "opt/moves_kept.kl"
     kl_t4 = kl_t6 != 6;
 #line 123 "opt/moves_kept.kl"
@@ -373,7 +373,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 134 "opt/moves_kept.kl"
-    kl_t0 = kl__looped__(  );
+    kl_t0 = kl__6looped__(  );
     kl_t7 = kl_t0 != 0;
 #line 135 "opt/moves_kept.kl"
     if ( kl_t7 ) goto bb9; else goto bb10;
@@ -408,8 +408,8 @@ int32_t kl__main__( void )
 #line 113 "opt/moves_kept.kl"
     kl__trace__G = 0;
 #line 115 "opt/moves_kept.kl"
-    kl_x_1 = kl__early__4bool( true );
-    kl_y_2 = kl__early__4bool( false );
+    kl_x_1 = kl__5early__4bool( true );
+    kl_y_2 = kl__5early__4bool( false );
     kl_t3 = kl_x_1.kl_value != 4;
 #line 117 "opt/moves_kept.kl"
     if ( kl_t3 ) goto bb4; else goto bb1;
@@ -426,7 +426,7 @@ int32_t kl__main__( void )
 #line 23 "opt/moves_kept.kl"
     kl__trace__G = kl_t13;
 #line 123 "opt/moves_kept.kl"
-    kl_t5 = kl__one_path__4bool( true );
+    kl_t5 = kl__8one_path__4bool( true );
 #line 123 "opt/moves_kept.kl"
     kl_t4 = kl_t5 != 5;
 #line 123 "opt/moves_kept.kl"
@@ -438,5 +438,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 105 "opt/moves_kept.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

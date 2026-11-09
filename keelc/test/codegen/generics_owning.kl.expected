@@ -17,15 +17,15 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Cell__R4Cell__ctor( struct kl__Cell* );
-void kl__Cell__dtor( struct kl__Cell* );
-int32_t kl__main__( void );
-void kl__consume__I4CellE__M4Cell( struct kl__Cell );
-struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell );
-void kl__inspect__I4CellE__4Cell( struct kl__Cell* );
+void kl__4Cell__R4Cell__ctor( struct kl__Cell* );
+void kl__4Cell__dtor( struct kl__Cell* );
+int32_t kl__4main__( void );
+void kl__7consume__I4CellE__M4Cell( struct kl__Cell );
+struct kl__Cell kl__5relay__I4CellE__M4Cell( struct kl__Cell );
+void kl__7inspect__I4CellE__4Cell( struct kl__Cell* );
 
 #line 14 "codegen/generics_owning.kl"
-void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
+void kl__4Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
 {
     int32_t* kl_t2;
     bool kl_t3;
@@ -50,7 +50,7 @@ void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
 }
 
 #line 20 "codegen/generics_owning.kl"
-void kl__Cell__dtor( struct kl__Cell* kl_this_1 )
+void kl__4Cell__dtor( struct kl__Cell* kl_this_1 )
 {
     bool kl_t3;
     int32_t kl_t4;
@@ -72,7 +72,7 @@ void kl__Cell__dtor( struct kl__Cell* kl_this_1 )
 }
 
 #line 44 "codegen/generics_owning.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Cell kl_a_1;
@@ -102,8 +102,8 @@ int32_t kl__main__( void )
 #line 47 "codegen/generics_owning.kl"
     kl_t17 = true;
 #line 47 "codegen/generics_owning.kl"
-    kl__Cell__R4Cell__ctor( kl_t2 );
-    kl__consume__I4CellE__M4Cell( kl_a_1 );
+    kl__4Cell__R4Cell__ctor( kl_t2 );
+    kl__7consume__I4CellE__M4Cell( kl_a_1 );
 #line 48 "codegen/generics_owning.kl"
     kl_t17 = false;
 #line 51 "codegen/generics_owning.kl"
@@ -113,8 +113,8 @@ int32_t kl__main__( void )
 #line 51 "codegen/generics_owning.kl"
     kl_t18 = true;
 #line 51 "codegen/generics_owning.kl"
-    kl__Cell__R4Cell__ctor( kl_t6 );
-    kl_t9 = kl__relay__I4CellE__M4Cell( kl_b_5 );
+    kl__4Cell__R4Cell__ctor( kl_t6 );
+    kl_t9 = kl__5relay__I4CellE__M4Cell( kl_b_5 );
 #line 52 "codegen/generics_owning.kl"
     kl_t18 = false;
 #line 52 "codegen/generics_owning.kl"
@@ -124,16 +124,16 @@ int32_t kl__main__( void )
 #line 52 "codegen/generics_owning.kl"
     kl_t19 = false;
 #line 52 "codegen/generics_owning.kl"
-    if ( kl_t19 ) kl__Cell__dtor( &kl_t9 );
+    if ( kl_t19 ) kl__4Cell__dtor( &kl_t9 );
 #line 52 "codegen/generics_owning.kl"
     kl_t19 = false;
 #line 55 "codegen/generics_owning.kl"
     kl_t11 = &kl_d_10;
 #line 55 "codegen/generics_owning.kl"
-    kl__Cell__R4Cell__ctor( kl_t11 );
+    kl__4Cell__R4Cell__ctor( kl_t11 );
     kl_t13 = &kl_d_10;
 #line 56 "codegen/generics_owning.kl"
-    kl__inspect__I4CellE__4Cell( kl_t13 );
+    kl__7inspect__I4CellE__4Cell( kl_t13 );
 #line 59 "codegen/generics_owning.kl"
     kl_t15 = kl__built__G != 3;
 #line 59 "codegen/generics_owning.kl"
@@ -141,15 +141,15 @@ int32_t kl__main__( void )
     bb1:
     kl_t0 = 1;
 #line 61 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_d_10 );
+    kl__4Cell__dtor( &kl_d_10 );
 #line 61 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_c_8 );
+    kl__4Cell__dtor( &kl_c_8 );
 #line 61 "codegen/generics_owning.kl"
-    if ( kl_t18 ) kl__Cell__dtor( &kl_b_5 );
+    if ( kl_t18 ) kl__4Cell__dtor( &kl_b_5 );
 #line 61 "codegen/generics_owning.kl"
     kl_t18 = false;
 #line 61 "codegen/generics_owning.kl"
-    if ( kl_t17 ) kl__Cell__dtor( &kl_a_1 );
+    if ( kl_t17 ) kl__4Cell__dtor( &kl_a_1 );
 #line 61 "codegen/generics_owning.kl"
     kl_t17 = false;
 #line 61 "codegen/generics_owning.kl"
@@ -162,15 +162,15 @@ int32_t kl__main__( void )
     bb3:
     kl_t0 = 2;
 #line 66 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_d_10 );
+    kl__4Cell__dtor( &kl_d_10 );
 #line 66 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_c_8 );
+    kl__4Cell__dtor( &kl_c_8 );
 #line 66 "codegen/generics_owning.kl"
-    if ( kl_t18 ) kl__Cell__dtor( &kl_b_5 );
+    if ( kl_t18 ) kl__4Cell__dtor( &kl_b_5 );
 #line 66 "codegen/generics_owning.kl"
     kl_t18 = false;
 #line 66 "codegen/generics_owning.kl"
-    if ( kl_t17 ) kl__Cell__dtor( &kl_a_1 );
+    if ( kl_t17 ) kl__4Cell__dtor( &kl_a_1 );
 #line 66 "codegen/generics_owning.kl"
     kl_t17 = false;
 #line 66 "codegen/generics_owning.kl"
@@ -179,15 +179,15 @@ int32_t kl__main__( void )
 #line 69 "codegen/generics_owning.kl"
     kl_t0 = 42;
 #line 69 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_d_10 );
+    kl__4Cell__dtor( &kl_d_10 );
 #line 69 "codegen/generics_owning.kl"
-    kl__Cell__dtor( &kl_c_8 );
+    kl__4Cell__dtor( &kl_c_8 );
 #line 69 "codegen/generics_owning.kl"
-    if ( kl_t18 ) kl__Cell__dtor( &kl_b_5 );
+    if ( kl_t18 ) kl__4Cell__dtor( &kl_b_5 );
 #line 69 "codegen/generics_owning.kl"
     kl_t18 = false;
 #line 69 "codegen/generics_owning.kl"
-    if ( kl_t17 ) kl__Cell__dtor( &kl_a_1 );
+    if ( kl_t17 ) kl__4Cell__dtor( &kl_a_1 );
 #line 69 "codegen/generics_owning.kl"
     kl_t17 = false;
 #line 69 "codegen/generics_owning.kl"
@@ -195,16 +195,16 @@ int32_t kl__main__( void )
 }
 
 #line 29 "codegen/generics_owning.kl"
-void kl__consume__I4CellE__M4Cell( struct kl__Cell kl_t1 )
+void kl__7consume__I4CellE__M4Cell( struct kl__Cell kl_t1 )
 {
-    kl__Cell__dtor( &kl_t1 );
+    kl__4Cell__dtor( &kl_t1 );
 #line 31 "codegen/generics_owning.kl"
     return;
 #line 31 "codegen/generics_owning.kl"
 }
 
 #line 33 "codegen/generics_owning.kl"
-struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
+struct kl__Cell kl__5relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 {
     struct kl__Cell kl_t0;
     bool kl_t2;
@@ -215,7 +215,7 @@ struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 #line 35 "codegen/generics_owning.kl"
     kl_t2 = false;
 #line 35 "codegen/generics_owning.kl"
-    if ( kl_t2 ) kl__Cell__dtor( &kl_a_1 );
+    if ( kl_t2 ) kl__4Cell__dtor( &kl_a_1 );
 #line 35 "codegen/generics_owning.kl"
     kl_t2 = false;
 #line 35 "codegen/generics_owning.kl"
@@ -223,7 +223,7 @@ struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 }
 
 #line 40 "codegen/generics_owning.kl"
-void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_t1 )
+void kl__7inspect__I4CellE__4Cell( struct kl__Cell* kl_t1 )
 {
     ( void ) kl_t1;
 #line 42 "codegen/generics_owning.kl"
@@ -235,5 +235,5 @@ void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_t1 )
 int main( void )
 {
 #line 44 "codegen/generics_owning.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

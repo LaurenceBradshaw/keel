@@ -5,12 +5,12 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__id__3i32( int32_t );
-int64_t kl__wide__3i64( int64_t );
-int32_t kl__main__( void );
+int32_t kl__2id__3i32( int32_t );
+int64_t kl__4wide__3i64( int64_t );
+int32_t kl__4main__( void );
 
 #line 2 "codegen/overflow_min_div.kl"
-int32_t kl__id__3i32( int32_t kl_x_1 )
+int32_t kl__2id__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 4 "codegen/overflow_min_div.kl"
@@ -20,7 +20,7 @@ int32_t kl__id__3i32( int32_t kl_x_1 )
 }
 
 #line 7 "codegen/overflow_min_div.kl"
-int64_t kl__wide__3i64( int64_t kl_x_1 )
+int64_t kl__4wide__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 9 "codegen/overflow_min_div.kl"
@@ -30,7 +30,7 @@ int64_t kl__wide__3i64( int64_t kl_x_1 )
 }
 
 #line 12 "codegen/overflow_min_div.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int64_t kl_min_1;
@@ -46,10 +46,10 @@ int32_t kl__main__( void )
 #line 14 "codegen/overflow_min_div.kl"
     kl_t2 = -9223372036854775807 - 1;
 #line 14 "codegen/overflow_min_div.kl"
-    kl_t3 = kl__wide__3i64( kl_t2 );
+    kl_t3 = kl__4wide__3i64( kl_t2 );
 #line 14 "codegen/overflow_min_div.kl"
     kl_min_1 = kl_t3;
-    kl_t4 = kl__wide__3i64( -1 );
+    kl_t4 = kl__4wide__3i64( -1 );
 #line 15 "codegen/overflow_min_div.kl"
     kl_t5 = kl_t4 != 0;
 #line 15 "codegen/overflow_min_div.kl"
@@ -93,5 +93,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 12 "codegen/overflow_min_div.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -1,0 +1,22 @@
+// PLAN §7.5. A declared name may hold `__`, so `g__I2SqE` written by hand must not spell the same
+// symbol as `g<T>` at `Sq`. Each answers with a different number.
+struct Sq
+{
+    i32 side;
+};
+
+i32 g<T>( T _ )
+{
+    return 1;
+}
+
+i32 g__I2SqE( Sq _ )
+{
+    return 2;
+}
+
+i32 main()
+{
+    Sq s = Sq { 3 };
+    return g<Sq>( s ) * 10 + g__I2SqE( s );
+}

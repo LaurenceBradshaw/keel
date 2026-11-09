@@ -3,16 +3,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool kl__big__3i32( int32_t );
-int32_t kl__both__3i32_3i32( int32_t, int32_t );
-int32_t kl__either__3i32_3i32( int32_t, int32_t );
-int32_t kl__decided__3i32( int32_t );
-int32_t kl__any__3i32_3i32_3i32( int32_t, int32_t, int32_t );
-int32_t kl__compared__3i32_3i32_4bool( int32_t, int32_t, bool );
-int32_t kl__main__( void );
+bool kl__3big__3i32( int32_t );
+int32_t kl__4both__3i32_3i32( int32_t, int32_t );
+int32_t kl__6either__3i32_3i32( int32_t, int32_t );
+int32_t kl__7decided__3i32( int32_t );
+int32_t kl__3any__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl__8compared__3i32_3i32_4bool( int32_t, int32_t, bool );
+int32_t kl__4main__( void );
 
 #line 5 "opt/threading.kl"
-bool kl__big__3i32( int32_t kl_x_1 )
+bool kl__3big__3i32( int32_t kl_x_1 )
 {
     bool kl_t0;
 #line 7 "opt/threading.kl"
@@ -22,7 +22,7 @@ bool kl__big__3i32( int32_t kl_x_1 )
 }
 
 #line 11 "opt/threading.kl"
-int32_t kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__4both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -46,7 +46,7 @@ int32_t kl__both__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 21 "opt/threading.kl"
-int32_t kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__6either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -70,7 +70,7 @@ int32_t kl__either__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 31 "opt/threading.kl"
-int32_t kl__decided__3i32( int32_t kl_a_1 )
+int32_t kl__7decided__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -89,7 +89,7 @@ int32_t kl__decided__3i32( int32_t kl_a_1 )
 }
 
 #line 41 "opt/threading.kl"
-int32_t kl__any__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
+int32_t kl__3any__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
 {
     int32_t kl_t0;
     bool kl_t4;
@@ -118,7 +118,7 @@ int32_t kl__any__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 
 }
 
 #line 51 "opt/threading.kl"
-int32_t kl__compared__3i32_3i32_4bool( int32_t kl_a_1, int32_t kl_b_2, bool kl_c_3 )
+int32_t kl__8compared__3i32_3i32_4bool( int32_t kl_a_1, int32_t kl_b_2, bool kl_c_3 )
 {
     int32_t kl_t0;
     bool kl_t4;
@@ -148,7 +148,7 @@ int32_t kl__compared__3i32_3i32_4bool( int32_t kl_a_1, int32_t kl_b_2, bool kl_c
 }
 
 #line 60 "opt/threading.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 87 "opt/threading.kl"
@@ -161,5 +161,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 60 "opt/threading.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

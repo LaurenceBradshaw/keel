@@ -7,11 +7,11 @@ int32_t kl__count__G;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__four__( void );
-int32_t kl__main__( void );
+int32_t kl__4four__( void );
+int32_t kl__4main__( void );
 
 #line 8 "opt/combined_checked/main.kl"
-int32_t kl__four__( void )
+int32_t kl__4four__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -64,14 +64,14 @@ int32_t kl__four__( void )
 }
 
 #line 17 "opt/combined_checked/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
     int32_t kl_t2;
 #line 19 "opt/combined_checked/main.kl"
     kl__count__G = 1;
-    kl_t2 = kl__four__(  );
+    kl_t2 = kl__4four__(  );
 #line 20 "opt/combined_checked/main.kl"
     kl_t1 = kl_t2 != 5;
 #line 20 "opt/combined_checked/main.kl"
@@ -88,7 +88,7 @@ int32_t kl__main__( void )
     bb3:
 #line 25 "opt/combined_checked/main.kl"
     kl__count__G = 2147483645;
-    kl__four__(  );
+    kl__4four__(  );
     kl_t0 = 2;
 #line 27 "opt/combined_checked/main.kl"
     return kl_t0;
@@ -98,5 +98,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 17 "opt/combined_checked/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

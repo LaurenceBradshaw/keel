@@ -13,10 +13,10 @@ __attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl_1a_bump_a__( void );
+void kl_1a_6bump_a__( void );
 
 #line 3 "codegen/generic_statics_two_modules/a.kl"
-void kl_1a_bump_a__( void )
+void kl_1a_6bump_a__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
@@ -45,10 +45,10 @@ __attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl_1b_bump_b__( void );
+void kl_1b_6bump_b__( void );
 
 #line 3 "codegen/generic_statics_two_modules/b.kl"
-void kl_1b_bump_b__( void )
+void kl_1b_6bump_b__( void )
 {
     bool kl_t1;
     int32_t kl_t2;
@@ -75,18 +75,18 @@ void kl_1b_bump_b__( void )
 
 __attribute__((weak)) int32_t kl_7counter_total__GS7CounterI3i32E = 0;
 
-int32_t kl__main__( void );
-void kl_1b_bump_b__( void );
-void kl_1a_bump_a__( void );
+int32_t kl__4main__( void );
+void kl_1b_6bump_b__( void );
+void kl_1a_6bump_a__( void );
 
 #line 7 "codegen/generic_statics_two_modules/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t3;
 #line 9 "codegen/generic_statics_two_modules/main.kl"
-    kl_1a_bump_a__(  );
-    kl_1b_bump_b__(  );
+    kl_1a_6bump_a__(  );
+    kl_1b_6bump_b__(  );
 #line 12 "codegen/generic_statics_two_modules/main.kl"
     kl_t3 = kl_7counter_total__GS7CounterI3i32E != 2;
 #line 12 "codegen/generic_statics_two_modules/main.kl"
@@ -106,5 +106,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 7 "codegen/generic_statics_two_modules/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -21,12 +21,12 @@ struct kl__Holder
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__twice__3i32( int32_t );
-struct kl__P kl__bump__1P( struct kl__P );
-int32_t kl__main__( void );
+int32_t kl__5twice__3i32( int32_t );
+struct kl__P kl__4bump__1P( struct kl__P );
+int32_t kl__4main__( void );
 
 #line 11 "codegen/function_pointer_in_struct.kl"
-int32_t kl__twice__3i32( int32_t kl_a_1 )
+int32_t kl__5twice__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -48,7 +48,7 @@ int32_t kl__twice__3i32( int32_t kl_a_1 )
 }
 
 #line 16 "codegen/function_pointer_in_struct.kl"
-struct kl__P kl__bump__1P( struct kl__P kl_v_1 )
+struct kl__P kl__4bump__1P( struct kl__P kl_v_1 )
 {
     struct kl__P kl_t0;
     struct kl__P kl_t2;
@@ -73,7 +73,7 @@ struct kl__P kl__bump__1P( struct kl__P kl_v_1 )
 }
 
 #line 26 "codegen/function_pointer_in_struct.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Holder kl_h_1;
@@ -89,14 +89,14 @@ int32_t kl__main__( void )
     struct kl__P kl_t11;
     bool kl_t12;
 #line 28 "codegen/function_pointer_in_struct.kl"
-    kl_t3 = kl__twice__3i32;
+    kl_t3 = kl__5twice__3i32;
 #line 28 "codegen/function_pointer_in_struct.kl"
     kl_t2.kl_cb = kl_t3;
 #line 28 "codegen/function_pointer_in_struct.kl"
     kl_h_1 = kl_t2;
 #line 31 "codegen/function_pointer_in_struct.kl"
     kl_p_4 = kl_h_1.kl_cb;
-    kl_t6 = kl__bump__1P;
+    kl_t6 = kl__4bump__1P;
 #line 32 "codegen/function_pointer_in_struct.kl"
     kl_q_5 = kl_t6;
 #line 34 "codegen/function_pointer_in_struct.kl"
@@ -136,5 +136,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 26 "codegen/function_pointer_in_struct.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

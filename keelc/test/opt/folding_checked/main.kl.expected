@@ -5,11 +5,11 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__add__3i32_3i32( int32_t, int32_t );
-int32_t kl__main__( void );
+int32_t kl__3add__3i32_3i32( int32_t, int32_t );
+int32_t kl__4main__( void );
 
 #line 3 "opt/folding_checked/main.kl"
-int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__3add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -28,7 +28,7 @@ int32_t kl__add__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 8 "opt/folding_checked/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
 #line 15 "opt/folding_checked/main.kl"
@@ -41,5 +41,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 8 "opt/folding_checked/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

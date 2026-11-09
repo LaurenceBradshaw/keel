@@ -43,33 +43,33 @@ void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__nothing__( void );
-int32_t kl__main__( void );
-void kl_2kl4list_list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4list_list__I4voidE*, uint64_t );
-void kl_2kl4list_remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
-uint64_t kl_2kl4list_size__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
-uint64_t kl_2kl4list_capacity__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_list__I4voidE__dtor( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_truncate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
-void* kl_2kl4list_operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
-void kl_2kl4list_swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t, uint64_t );
-void kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
-void kl_2kl4list_reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
+void kl__7nothing__( void );
+int32_t kl__4main__( void );
+void kl_2kl4list_4list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_4push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_3pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_6insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4list_list__I4voidE*, uint64_t );
+void kl_2kl4list_6remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
+uint64_t kl_2kl4list_4size__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
+uint64_t kl_2kl4list_8capacity__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_4list__I4voidE__dtor( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_8truncate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
+void* kl_2kl4list_14operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
+void kl_2kl4list_4swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t, uint64_t );
+void kl_2kl4list_20reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* );
+void kl_2kl4list_10reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE*, uint64_t );
 void kl_2kl4list_list__I4voidE__drop( struct kl_2kl4list_list__I4voidE* );
-void kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
+void kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( struct kl_7prelude_str*, uint8_t*, uint64_t );
 
 #line 5 "void_list/main.kl"
-void kl__nothing__( void )
+void kl__7nothing__( void )
 {
     return;
 #line 7 "void_list/main.kl"
 }
 
 #line 9 "void_list/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl_2kl4list_list__I4voidE kl_xs_1;
@@ -91,7 +91,7 @@ int32_t kl__main__( void )
 #line 11 "void_list/main.kl"
     kl_t2 = &kl_xs_1;
 #line 11 "void_list/main.kl"
-    kl_2kl4list_list__I4voidE__RQ2kl4listI4voidE__ctor( kl_t2 );
+    kl_2kl4list_4list__I4voidE__RQ2kl4listI4voidE__ctor( kl_t2 );
     kl_i_4 = 0;
 #line 12 "void_list/main.kl"
     goto bb1;
@@ -103,24 +103,24 @@ int32_t kl__main__( void )
     bb2:
     kl_t6 = &kl_xs_1;
 #line 14 "void_list/main.kl"
-    kl__nothing__(  );
+    kl__7nothing__(  );
 #line 14 "void_list/main.kl"
-    kl_2kl4list_push__I4voidE__SQ2kl4listI4voidE_M4void( kl_t6 );
+    kl_2kl4list_4push__I4voidE__SQ2kl4listI4voidE_M4void( kl_t6 );
 #line 12 "void_list/main.kl"
     goto bb4;
     bb3:
 #line 16 "void_list/main.kl"
     kl_t10 = &kl_xs_1;
 #line 16 "void_list/main.kl"
-    kl_2kl4list_pop__I4voidE__SQ2kl4listI4voidE( kl_t10 );
+    kl_2kl4list_3pop__I4voidE__SQ2kl4listI4voidE( kl_t10 );
     kl_t12 = &kl_xs_1;
 #line 17 "void_list/main.kl"
-    kl__nothing__(  );
+    kl__7nothing__(  );
 #line 17 "void_list/main.kl"
-    kl_2kl4list_insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( kl_t12, 1 );
+    kl_2kl4list_6insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( kl_t12, 1 );
     kl_t15 = &kl_xs_1;
 #line 18 "void_list/main.kl"
-    kl_2kl4list_remove__I4voidE__SQ2kl4listI4voidE_3u64( kl_t15, 0 );
+    kl_2kl4list_6remove__I4voidE__SQ2kl4listI4voidE_3u64( kl_t15, 0 );
     goto bb7;
     bb4:
 #line 12 "void_list/main.kl"
@@ -139,7 +139,7 @@ int32_t kl__main__( void )
 #line 19 "void_list/main.kl"
     kl_t18 = &kl_xs_1;
 #line 19 "void_list/main.kl"
-    kl_t19 = kl_2kl4list_size__I4voidE__SQ2kl4listI4voidE( kl_t18 );
+    kl_t19 = kl_2kl4list_4size__I4voidE__SQ2kl4listI4voidE( kl_t18 );
 #line 19 "void_list/main.kl"
     kl_t20 = kl_t19 == 4;
 #line 19 "void_list/main.kl"
@@ -150,7 +150,7 @@ int32_t kl__main__( void )
 #line 20 "void_list/main.kl"
     kl_t0 = 0;
 #line 20 "void_list/main.kl"
-    kl_2kl4list_list__I4voidE__dtor( &kl_xs_1 );
+    kl_2kl4list_4list__I4voidE__dtor( &kl_xs_1 );
 #line 20 "void_list/main.kl"
     return kl_t0;
     bb9:
@@ -160,7 +160,7 @@ int32_t kl__main__( void )
 #line 19 "void_list/main.kl"
     kl_t21 = &kl_xs_1;
 #line 19 "void_list/main.kl"
-    kl_t22 = kl_2kl4list_capacity__I4voidE__SQ2kl4listI4voidE( kl_t21 );
+    kl_t22 = kl_2kl4list_8capacity__I4voidE__SQ2kl4listI4voidE( kl_t21 );
 #line 19 "void_list/main.kl"
     kl_t23 = kl_t22 == 8;
 #line 19 "void_list/main.kl"
@@ -174,7 +174,7 @@ int32_t kl__main__( void )
 }
 
 #line 16 "../../src/list.kl"
-void kl_2kl4list_list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+void kl_2kl4list_4list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     ( *kl_this_1 ).kl_data_ = NULL;
     ( *kl_this_1 ).kl_count_ = 0;
@@ -184,7 +184,7 @@ void kl_2kl4list_list__I4voidE__RQ2kl4listI4voidE__ctor( struct kl_2kl4list_list
 }
 
 #line 213 "../../src/list.kl"
-void kl_2kl4list_push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+void kl_2kl4list_4push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     struct kl_2kl4list_list__I4voidE* kl_t3;
     void* kl_t5;
@@ -193,7 +193,7 @@ void kl_2kl4list_push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_lis
 #line 215 "../../src/list.kl"
     kl_t3 = &( *kl_this_1 );
 #line 215 "../../src/list.kl"
-    kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( kl_t3 );
+    kl_2kl4list_20reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( kl_t3 );
 #line 219 "../../src/list.kl"
     kl_t5 = ( ( void ) ( *kl_this_1 ).kl_count_, ( *kl_this_1 ).kl_data_ );
 #line 221 "../../src/list.kl"
@@ -211,7 +211,7 @@ void kl_2kl4list_push__I4voidE__SQ2kl4listI4voidE_M4void( struct kl_2kl4list_lis
 }
 
 #line 275 "../../src/list.kl"
-void kl_2kl4list_pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+void kl_2kl4list_3pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     bool kl_t2;
     struct kl_7prelude_str kl_t3;
@@ -229,7 +229,7 @@ void kl_2kl4list_pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voi
 #line 279 "../../src/list.kl"
     kl_t5 = ( uint8_t* ) "the list is empty";
 #line 279 "../../src/list.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 17 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 17 );
 #line 279 "../../src/list.kl"
     kl_rt_panic_message( "../../src/list.kl", 279, kl_t3.kl_data, kl_t3.kl_size );
     bb2:
@@ -250,7 +250,7 @@ void kl_2kl4list_pop__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voi
 }
 
 #line 229 "../../src/list.kl"
-void kl_2kl4list_insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
+void kl_2kl4list_6insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
 {
     bool kl_t4;
     struct kl_7prelude_str kl_t5;
@@ -278,14 +278,14 @@ void kl_2kl4list_insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4l
 #line 233 "../../src/list.kl"
     kl_t7 = ( uint8_t* ) "index out of range";
 #line 233 "../../src/list.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 18 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 18 );
 #line 233 "../../src/list.kl"
     kl_rt_panic_message( "../../src/list.kl", 233, kl_t5.kl_data, kl_t5.kl_size );
     bb2:
 #line 236 "../../src/list.kl"
     kl_t9 = &( *kl_this_1 );
 #line 236 "../../src/list.kl"
-    kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( kl_t9 );
+    kl_2kl4list_20reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( kl_t9 );
 #line 240 "../../src/list.kl"
     kl_i_11 = ( *kl_this_1 ).kl_count_;
 #line 240 "../../src/list.kl"
@@ -342,7 +342,7 @@ void kl_2kl4list_insert__I4voidE__SQ2kl4listI4voidE_3u64_M4void( struct kl_2kl4l
 }
 
 #line 305 "../../src/list.kl"
-void kl_2kl4list_remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
+void kl_2kl4list_6remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
 {
     bool kl_t3;
     struct kl_7prelude_str kl_t4;
@@ -371,7 +371,7 @@ void kl_2kl4list_remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_lis
 #line 309 "../../src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
 #line 309 "../../src/list.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
 #line 309 "../../src/list.kl"
     kl_rt_panic_message( "../../src/list.kl", 309, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
@@ -441,7 +441,7 @@ void kl_2kl4list_remove__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_lis
 }
 
 #line 53 "../../src/list.kl"
-uint64_t kl_2kl4list_size__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+uint64_t kl_2kl4list_4size__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 55 "../../src/list.kl"
@@ -451,7 +451,7 @@ uint64_t kl_2kl4list_size__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__
 }
 
 #line 65 "../../src/list.kl"
-uint64_t kl_2kl4list_capacity__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+uint64_t kl_2kl4list_8capacity__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     uint64_t kl_t0;
 #line 67 "../../src/list.kl"
@@ -461,7 +461,7 @@ uint64_t kl_2kl4list_capacity__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_li
 }
 
 #line 38 "../../src/list.kl"
-void kl_2kl4list_list__I4voidE__dtor( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+void kl_2kl4list_4list__I4voidE__dtor( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     bool kl_t2;
 #line 40 "../../src/list.kl"
@@ -480,7 +480,7 @@ void kl_2kl4list_list__I4voidE__dtor( struct kl_2kl4list_list__I4voidE* kl_this_
 }
 
 #line 355 "../../src/list.kl"
-void kl_2kl4list_truncate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_8truncate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_n_2 )
 {
     bool kl_t3;
     void* kl_t4;
@@ -514,7 +514,7 @@ void kl_2kl4list_truncate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_l
 }
 
 #line 154 "../../src/list.kl"
-void* kl_2kl4list_operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
+void* kl_2kl4list_14operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_index_2 )
 {
     void* kl_t0;
     bool kl_t3;
@@ -532,7 +532,7 @@ void* kl_2kl4list_operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl
 #line 158 "../../src/list.kl"
     kl_t6 = ( uint8_t* ) "index out of range";
 #line 158 "../../src/list.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 18 );
 #line 158 "../../src/list.kl"
     kl_rt_panic_message( "../../src/list.kl", 158, kl_t4.kl_data, kl_t4.kl_size );
     bb2:
@@ -546,7 +546,7 @@ void* kl_2kl4list_operator_index__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl
 }
 
 #line 407 "../../src/list.kl"
-void kl_2kl4list_swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+void kl_2kl4list_4swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
     bool kl_t5;
@@ -584,7 +584,7 @@ void kl_2kl4list_swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_
 #line 411 "../../src/list.kl"
     kl_t9 = ( uint8_t* ) "index out of range";
 #line 411 "../../src/list.kl"
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
+    kl_7prelude_3str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 18 );
 #line 411 "../../src/list.kl"
     kl_rt_panic_message( "../../src/list.kl", 411, kl_t7.kl_data, kl_t7.kl_size );
     bb4:
@@ -607,7 +607,7 @@ void kl_2kl4list_swap__I4voidE__SQ2kl4listI4voidE_3u64_3u64( struct kl_2kl4list_
 }
 
 #line 474 "../../src/list.kl"
-void kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
+void kl_2kl4list_20reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl4list_list__I4voidE* kl_this_1 )
 {
     bool kl_t2;
     struct kl_2kl4list_list__I4voidE* kl_t3;
@@ -637,7 +637,7 @@ void kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl
     goto bb4;
     bb4:
 #line 478 "../../src/list.kl"
-    kl_2kl4list_reallocate__I4voidE__SQ2kl4listI4voidE_3u64( kl_t3, kl_t4 );
+    kl_2kl4list_10reallocate__I4voidE__SQ2kl4listI4voidE_3u64( kl_t3, kl_t4 );
 #line 476 "../../src/list.kl"
     goto bb7;
     bb5:
@@ -655,7 +655,7 @@ void kl_2kl4list_reallocate_if_needed__I4voidE__SQ2kl4listI4voidE( struct kl_2kl
 }
 
 #line 444 "../../src/list.kl"
-void kl_2kl4list_reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_n_2 )
+void kl_2kl4list_10reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list_list__I4voidE* kl_this_1, uint64_t kl_n_2 )
 {
     void* kl_new_data_3;
     void* kl_t4;
@@ -719,7 +719,7 @@ void kl_2kl4list_reallocate__I4voidE__SQ2kl4listI4voidE_3u64( struct kl_2kl4list
 void kl_2kl4list_list__I4voidE__drop( struct kl_2kl4list_list__I4voidE* kl_t1 )
 {
 #line 11 "../../src/list.kl"
-    kl_2kl4list_list__I4voidE__dtor( &( *kl_t1 ) );
+    kl_2kl4list_4list__I4voidE__dtor( &( *kl_t1 ) );
 #line 11 "../../src/list.kl"
     return;
 #line 11 "../../src/list.kl"
@@ -729,5 +729,5 @@ void kl_2kl4list_list__I4voidE__drop( struct kl_2kl4list_list__I4voidE* kl_t1 )
 int main( void )
 {
 #line 9 "void_list/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

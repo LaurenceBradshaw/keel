@@ -3,12 +3,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__top__3u64( uint64_t );
-int32_t kl__signed_top__3i64( int64_t );
-int32_t kl__main__( void );
+int32_t kl__3top__3u64( uint64_t );
+int32_t kl__10signed_top__3i64( int64_t );
+int32_t kl__4main__( void );
 
 #line 4 "codegen/switch_extremes_64.kl"
-int32_t kl__top__3u64( uint64_t kl_n_1 )
+int32_t kl__3top__3u64( uint64_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -69,7 +69,7 @@ int32_t kl__top__3u64( uint64_t kl_n_1 )
 }
 
 #line 16 "codegen/switch_extremes_64.kl"
-int32_t kl__signed_top__3i64( int64_t kl_n_1 )
+int32_t kl__10signed_top__3i64( int64_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -125,7 +125,7 @@ int32_t kl__signed_top__3i64( int64_t kl_n_1 )
 }
 
 #line 28 "codegen/switch_extremes_64.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -149,7 +149,7 @@ int32_t kl__main__( void )
     int32_t kl_t19;
     bool kl_t20;
 #line 30 "codegen/switch_extremes_64.kl"
-    kl_t1 = kl__top__3u64( 0 );
+    kl_t1 = kl__3top__3u64( 0 );
 #line 30 "codegen/switch_extremes_64.kl"
     kl_t2 = kl_t1 != 1;
 #line 30 "codegen/switch_extremes_64.kl"
@@ -161,7 +161,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 31 "codegen/switch_extremes_64.kl"
-    kl_t3 = kl__top__3u64( 18446744073709551615ull );
+    kl_t3 = kl__3top__3u64( 18446744073709551615ull );
 #line 31 "codegen/switch_extremes_64.kl"
     kl_t4 = kl_t3 != 2;
 #line 31 "codegen/switch_extremes_64.kl"
@@ -173,7 +173,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 32 "codegen/switch_extremes_64.kl"
-    kl_t5 = kl__top__3u64( 18446744073709551614ull );
+    kl_t5 = kl__3top__3u64( 18446744073709551614ull );
 #line 32 "codegen/switch_extremes_64.kl"
     kl_t6 = kl_t5 != 3;
 #line 32 "codegen/switch_extremes_64.kl"
@@ -185,7 +185,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 33 "codegen/switch_extremes_64.kl"
-    kl_t7 = kl__top__3u64( 9223372036854775808ull );
+    kl_t7 = kl__3top__3u64( 9223372036854775808ull );
 #line 33 "codegen/switch_extremes_64.kl"
     kl_t8 = kl_t7 != 3;
 #line 33 "codegen/switch_extremes_64.kl"
@@ -197,7 +197,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 34 "codegen/switch_extremes_64.kl"
-    kl_t9 = kl__top__3u64( 9223372036854775807 );
+    kl_t9 = kl__3top__3u64( 9223372036854775807 );
 #line 34 "codegen/switch_extremes_64.kl"
     kl_t10 = kl_t9 != 4;
 #line 34 "codegen/switch_extremes_64.kl"
@@ -209,7 +209,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 35 "codegen/switch_extremes_64.kl"
-    kl_t11 = kl__top__3u64( 5 );
+    kl_t11 = kl__3top__3u64( 5 );
 #line 35 "codegen/switch_extremes_64.kl"
     kl_t12 = kl_t11 != 0;
 #line 35 "codegen/switch_extremes_64.kl"
@@ -221,7 +221,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb12:
 #line 36 "codegen/switch_extremes_64.kl"
-    kl_t13 = kl__signed_top__3i64( INT64_MIN );
+    kl_t13 = kl__10signed_top__3i64( INT64_MIN );
 #line 36 "codegen/switch_extremes_64.kl"
     kl_t14 = kl_t13 != 1;
 #line 36 "codegen/switch_extremes_64.kl"
@@ -233,7 +233,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 37 "codegen/switch_extremes_64.kl"
-    kl_t15 = kl__signed_top__3i64( 9223372036854775807 );
+    kl_t15 = kl__10signed_top__3i64( 9223372036854775807 );
 #line 37 "codegen/switch_extremes_64.kl"
     kl_t16 = kl_t15 != 3;
 #line 37 "codegen/switch_extremes_64.kl"
@@ -245,7 +245,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb16:
 #line 38 "codegen/switch_extremes_64.kl"
-    kl_t17 = kl__signed_top__3i64( -9223372036854775807 );
+    kl_t17 = kl__10signed_top__3i64( -9223372036854775807 );
 #line 38 "codegen/switch_extremes_64.kl"
     kl_t18 = kl_t17 != 4;
 #line 38 "codegen/switch_extremes_64.kl"
@@ -257,7 +257,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb18:
 #line 39 "codegen/switch_extremes_64.kl"
-    kl_t19 = kl__signed_top__3i64( 0 );
+    kl_t19 = kl__10signed_top__3i64( 0 );
 #line 39 "codegen/switch_extremes_64.kl"
     kl_t20 = kl_t19 != 0;
 #line 39 "codegen/switch_extremes_64.kl"
@@ -278,5 +278,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 28 "codegen/switch_extremes_64.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

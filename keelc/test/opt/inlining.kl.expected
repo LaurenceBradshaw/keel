@@ -28,26 +28,26 @@ int64_t kl__live__G;
 
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
-void kl__Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
-void kl__Box__dtor( struct kl__Box* );
-int32_t kl__twice__3i32( int32_t );
-int32_t kl__both__3i32( int32_t );
-int64_t kl__take__M3Box( struct kl__Box );
-struct kl__Box kl__pass__M3Box( struct kl__Box );
-int64_t kl__looped__3i64( int64_t );
-int32_t kl__sum__5Point( struct kl__Point* );
-int32_t kl__halve__3i32( int32_t );
-int64_t kl__factorial__3i64( int64_t );
-int64_t kl__forward__3i64( int64_t );
-bool kl__is_even__3u32( uint32_t );
-bool kl__is_odd__3u32( uint32_t );
-int32_t kl__mixed__3i32_3i32( int32_t, int32_t );
-void kl__set__O3i32( int32_t* );
-int32_t kl__through__3i32( int32_t );
-int32_t kl__main__( void );
+void kl__3Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
+void kl__3Box__dtor( struct kl__Box* );
+int32_t kl__5twice__3i32( int32_t );
+int32_t kl__4both__3i32( int32_t );
+int64_t kl__4take__M3Box( struct kl__Box );
+struct kl__Box kl__4pass__M3Box( struct kl__Box );
+int64_t kl__6looped__3i64( int64_t );
+int32_t kl__3sum__5Point( struct kl__Point* );
+int32_t kl__5halve__3i32( int32_t );
+int64_t kl__9factorial__3i64( int64_t );
+int64_t kl__7forward__3i64( int64_t );
+bool kl__7is_even__3u32( uint32_t );
+bool kl__6is_odd__3u32( uint32_t );
+int32_t kl__5mixed__3i32_3i32( int32_t, int32_t );
+void kl__3set__O3i32( int32_t* );
+int32_t kl__7through__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 10 "opt/inlining.kl"
-void kl__Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
+void kl__3Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
 {
     ( *kl_this_1 ).kl_value = kl_v_2;
     kl__live__G = kl__live__G + 1;
@@ -56,7 +56,7 @@ void kl__Box__R3Box_3i64__ctor( struct kl__Box* kl_this_1, int64_t kl_v_2 )
 }
 
 #line 16 "opt/inlining.kl"
-void kl__Box__dtor( struct kl__Box* kl_this_1 )
+void kl__3Box__dtor( struct kl__Box* kl_this_1 )
 {
     ( void ) kl_this_1;
 #line 18 "opt/inlining.kl"
@@ -66,7 +66,7 @@ void kl__Box__dtor( struct kl__Box* kl_this_1 )
 }
 
 #line 30 "opt/inlining.kl"
-int32_t kl__twice__3i32( int32_t kl_x_1 )
+int32_t kl__5twice__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 32 "opt/inlining.kl"
@@ -76,7 +76,7 @@ int32_t kl__twice__3i32( int32_t kl_x_1 )
 }
 
 #line 36 "opt/inlining.kl"
-int32_t kl__both__3i32( int32_t kl_a_1 )
+int32_t kl__4both__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -95,7 +95,7 @@ int32_t kl__both__3i32( int32_t kl_a_1 )
 }
 
 #line 42 "opt/inlining.kl"
-int64_t kl__take__M3Box( struct kl__Box kl_b_1 )
+int64_t kl__4take__M3Box( struct kl__Box kl_b_1 )
 {
     int64_t kl_t0;
 #line 44 "opt/inlining.kl"
@@ -107,7 +107,7 @@ int64_t kl__take__M3Box( struct kl__Box kl_b_1 )
 }
 
 #line 48 "opt/inlining.kl"
-struct kl__Box kl__pass__M3Box( struct kl__Box kl_b_1 )
+struct kl__Box kl__4pass__M3Box( struct kl__Box kl_b_1 )
 {
     struct kl__Box kl_t0;
 #line 50 "opt/inlining.kl"
@@ -117,7 +117,7 @@ struct kl__Box kl__pass__M3Box( struct kl__Box kl_b_1 )
 }
 
 #line 54 "opt/inlining.kl"
-int64_t kl__looped__3i64( int64_t kl_n_1 )
+int64_t kl__6looped__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     int64_t kl_i_2;
@@ -144,7 +144,7 @@ int64_t kl__looped__3i64( int64_t kl_n_1 )
 }
 
 #line 65 "opt/inlining.kl"
-int32_t kl__sum__5Point( struct kl__Point* kl_p_1 )
+int32_t kl__3sum__5Point( struct kl__Point* kl_p_1 )
 {
     int32_t kl_t0;
 #line 67 "opt/inlining.kl"
@@ -154,7 +154,7 @@ int32_t kl__sum__5Point( struct kl__Point* kl_p_1 )
 }
 
 #line 71 "opt/inlining.kl"
-int32_t kl__halve__3i32( int32_t kl_a_1 )
+int32_t kl__5halve__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -176,7 +176,7 @@ int32_t kl__halve__3i32( int32_t kl_a_1 )
 }
 
 #line 81 "opt/inlining.kl"
-int64_t kl__factorial__3i64( int64_t kl_n_1 )
+int64_t kl__9factorial__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -193,7 +193,7 @@ int64_t kl__factorial__3i64( int64_t kl_n_1 )
     bb2:
     kl_t3 = kl_n_1 - 1;
 #line 87 "opt/inlining.kl"
-    kl_t4 = kl__factorial__3i64( kl_t3 );
+    kl_t4 = kl__9factorial__3i64( kl_t3 );
 #line 87 "opt/inlining.kl"
     kl_t0 = kl_n_1 * kl_t4;
 #line 87 "opt/inlining.kl"
@@ -201,7 +201,7 @@ int64_t kl__factorial__3i64( int64_t kl_n_1 )
 }
 
 #line 91 "opt/inlining.kl"
-int64_t kl__forward__3i64( int64_t kl_n_1 )
+int64_t kl__7forward__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -218,7 +218,7 @@ int64_t kl__forward__3i64( int64_t kl_n_1 )
     bb2:
     kl_t3 = kl_n_1 - 1;
 #line 87 "opt/inlining.kl"
-    kl_t4 = kl__factorial__3i64( kl_t3 );
+    kl_t4 = kl__9factorial__3i64( kl_t3 );
 #line 87 "opt/inlining.kl"
     kl_t0 = kl_n_1 * kl_t4;
 #line 87 "opt/inlining.kl"
@@ -229,7 +229,7 @@ int64_t kl__forward__3i64( int64_t kl_n_1 )
 }
 
 #line 96 "opt/inlining.kl"
-bool kl__is_even__3u32( uint32_t kl_n_1 )
+bool kl__7is_even__3u32( uint32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -245,13 +245,13 @@ bool kl__is_even__3u32( uint32_t kl_n_1 )
     bb2:
     kl_t3 = kl_n_1 - 1;
 #line 102 "opt/inlining.kl"
-    kl_t0 = kl__is_odd__3u32( kl_t3 );
+    kl_t0 = kl__6is_odd__3u32( kl_t3 );
 #line 102 "opt/inlining.kl"
     return kl_t0;
 }
 
 #line 105 "opt/inlining.kl"
-bool kl__is_odd__3u32( uint32_t kl_n_1 )
+bool kl__6is_odd__3u32( uint32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -267,13 +267,13 @@ bool kl__is_odd__3u32( uint32_t kl_n_1 )
     bb2:
     kl_t3 = kl_n_1 - 1;
 #line 111 "opt/inlining.kl"
-    kl_t0 = kl__is_even__3u32( kl_t3 );
+    kl_t0 = kl__7is_even__3u32( kl_t3 );
 #line 111 "opt/inlining.kl"
     return kl_t0;
 }
 
 #line 115 "opt/inlining.kl"
-int32_t kl__mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__5mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     int32_t kl_c_3;
@@ -322,7 +322,7 @@ int32_t kl__mixed__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 126 "opt/inlining.kl"
-void kl__set__O3i32( int32_t* kl_n_1 )
+void kl__3set__O3i32( int32_t* kl_n_1 )
 {
     ( *kl_n_1 ) = 9;
     return;
@@ -330,7 +330,7 @@ void kl__set__O3i32( int32_t* kl_n_1 )
 }
 
 #line 131 "opt/inlining.kl"
-int32_t kl__through__3i32( int32_t kl_a_1 )
+int32_t kl__7through__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 32 "opt/inlining.kl"
@@ -340,7 +340,7 @@ int32_t kl__through__3i32( int32_t kl_a_1 )
 }
 
 #line 137 "opt/inlining.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -376,7 +376,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb3:
 #line 87 "opt/inlining.kl"
-    kl_t14 = kl__factorial__3i64( 4 );
+    kl_t14 = kl__9factorial__3i64( 4 );
 #line 87 "opt/inlining.kl"
     kl_t3 = 5 * kl_t14;
 #line 159 "opt/inlining.kl"
@@ -389,14 +389,14 @@ int32_t kl__main__( void )
     return kl_t0;
     bb5:
 #line 102 "opt/inlining.kl"
-    kl_t6 = kl__is_odd__3u32( 9 );
+    kl_t6 = kl__6is_odd__3u32( 9 );
 #line 164 "opt/inlining.kl"
     kl_t5 = !kl_t6;
 #line 164 "opt/inlining.kl"
     if ( kl_t5 ) goto bb7; else goto bb6;
     bb6:
 #line 111 "opt/inlining.kl"
-    kl_t5 = kl__is_even__3u32( 9 );
+    kl_t5 = kl__7is_even__3u32( 9 );
 #line 164 "opt/inlining.kl"
     if ( kl_t5 ) goto bb7; else goto bb8;
     bb7:
@@ -405,7 +405,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 169 "opt/inlining.kl"
-    kl_t7 = kl__mixed__3i32_3i32( 2, 3 );
+    kl_t7 = kl__5mixed__3i32_3i32( 2, 3 );
 #line 169 "opt/inlining.kl"
     kl_t8 = kl_t7 != -35;
 #line 169 "opt/inlining.kl"
@@ -419,7 +419,7 @@ int32_t kl__main__( void )
     kl_n_9 = 0;
     kl_t10 = &kl_n_9;
 #line 175 "opt/inlining.kl"
-    kl__set__O3i32( kl_t10 );
+    kl__3set__O3i32( kl_t10 );
     kl_t12 = kl_n_9 != 9;
 #line 176 "opt/inlining.kl"
     if ( kl_t12 ) goto bb11; else goto bb12;
@@ -466,5 +466,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 137 "opt/inlining.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

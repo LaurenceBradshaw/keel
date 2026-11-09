@@ -12,16 +12,16 @@ int32_t kl__TOP__G = 1;
 int32_t kl__plain__G = 3;
 int32_t kl__LIMIT__GS1C = 3;
 
-int32_t kl__scaled__3i32( int32_t );
-int32_t kl__lowered__3i32( int32_t );
-double kl__halved__3f64( double );
-int32_t kl__switched__( void );
-int32_t kl__topped__( void );
-int32_t kl__kept__3i32( int32_t );
-int32_t kl__main__( void );
+int32_t kl__6scaled__3i32( int32_t );
+int32_t kl__7lowered__3i32( int32_t );
+double kl__6halved__3f64( double );
+int32_t kl__8switched__( void );
+int32_t kl__6topped__( void );
+int32_t kl__4kept__3i32( int32_t );
+int32_t kl__4main__( void );
 
 #line 26 "opt/const_reads.kl"
-int32_t kl__scaled__3i32( int32_t kl_x_1 )
+int32_t kl__6scaled__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -34,7 +34,7 @@ int32_t kl__scaled__3i32( int32_t kl_x_1 )
 }
 
 #line 31 "opt/const_reads.kl"
-int32_t kl__lowered__3i32( int32_t kl_x_1 )
+int32_t kl__7lowered__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 33 "opt/const_reads.kl"
@@ -44,7 +44,7 @@ int32_t kl__lowered__3i32( int32_t kl_x_1 )
 }
 
 #line 36 "opt/const_reads.kl"
-double kl__halved__3f64( double kl_x_1 )
+double kl__6halved__3f64( double kl_x_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -57,7 +57,7 @@ double kl__halved__3f64( double kl_x_1 )
 }
 
 #line 42 "opt/const_reads.kl"
-int32_t kl__switched__( void )
+int32_t kl__8switched__( void )
 {
     int32_t kl_t0;
 #line 46 "opt/const_reads.kl"
@@ -68,7 +68,7 @@ int32_t kl__switched__( void )
 }
 
 #line 51 "opt/const_reads.kl"
-int32_t kl__topped__( void )
+int32_t kl__6topped__( void )
 {
     int32_t kl_t0;
 #line 58 "opt/const_reads.kl"
@@ -79,7 +79,7 @@ int32_t kl__topped__( void )
 }
 
 #line 63 "opt/const_reads.kl"
-int32_t kl__kept__3i32( int32_t kl_x_1 )
+int32_t kl__4kept__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 65 "opt/const_reads.kl"
@@ -89,7 +89,7 @@ int32_t kl__kept__3i32( int32_t kl_x_1 )
 }
 
 #line 68 "opt/const_reads.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     double kl_t1;
@@ -131,5 +131,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 68 "opt/const_reads.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

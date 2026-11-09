@@ -18,15 +18,15 @@ void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
-uint64_t kl__depth__3u64( uint64_t );
-void kl__Store__R5Store_3u64__ctor( struct kl__Store*, uint64_t );
-void kl__Store__dtor( struct kl__Store* );
-int32_t kl__main__( void );
+uint64_t kl__5depth__3u64( uint64_t );
+void kl__5Store__R5Store_3u64__ctor( struct kl__Store*, uint64_t );
+void kl__5Store__dtor( struct kl__Store* );
+int32_t kl__4main__( void );
 void kl__0build( void );
 void kl__0drop( void );
 
 #line 3 "opt/owning_globals.kl"
-uint64_t kl__depth__3u64( uint64_t kl_n_1 )
+uint64_t kl__5depth__3u64( uint64_t kl_n_1 )
 {
     uint64_t kl_t0;
     bool kl_t2;
@@ -45,7 +45,7 @@ uint64_t kl__depth__3u64( uint64_t kl_n_1 )
 #line 5 "opt/owning_globals.kl"
     kl_t3 = kl_n_1 - 1;
 #line 5 "opt/owning_globals.kl"
-    kl_t4 = kl__depth__3u64( kl_t3 );
+    kl_t4 = kl__5depth__3u64( kl_t3 );
 #line 5 "opt/owning_globals.kl"
     kl_t0 = kl_t4 + 1;
 #line 5 "opt/owning_globals.kl"
@@ -56,7 +56,7 @@ uint64_t kl__depth__3u64( uint64_t kl_n_1 )
 }
 
 #line 13 "opt/owning_globals.kl"
-void kl__Store__R5Store_3u64__ctor( struct kl__Store* kl_this_1, uint64_t kl_n_2 )
+void kl__5Store__R5Store_3u64__ctor( struct kl__Store* kl_this_1, uint64_t kl_n_2 )
 {
     uint8_t* kl_t3;
 #line 17 "opt/owning_globals.kl"
@@ -70,7 +70,7 @@ void kl__Store__R5Store_3u64__ctor( struct kl__Store* kl_this_1, uint64_t kl_n_2
 }
 
 #line 22 "opt/owning_globals.kl"
-void kl__Store__dtor( struct kl__Store* kl_this_1 )
+void kl__5Store__dtor( struct kl__Store* kl_this_1 )
 {
     uint64_t kl_t2;
     uint64_t kl_n_4;
@@ -92,7 +92,7 @@ void kl__Store__dtor( struct kl__Store* kl_this_1 )
 #line 5 "opt/owning_globals.kl"
     kl_t6 = kl_n_4 - 1;
 #line 5 "opt/owning_globals.kl"
-    kl_t7 = kl__depth__3u64( kl_t6 );
+    kl_t7 = kl__5depth__3u64( kl_t6 );
 #line 5 "opt/owning_globals.kl"
     kl_t2 = kl_t7 + 1;
 #line 5 "opt/owning_globals.kl"
@@ -108,7 +108,7 @@ void kl__Store__dtor( struct kl__Store* kl_this_1 )
 }
 
 #line 35 "opt/owning_globals.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     uint64_t kl_t1;
@@ -158,9 +158,9 @@ void kl__0build( void )
 void kl__0drop( void )
 {
 #line 33 "opt/owning_globals.kl"
-    kl__Store__dtor( &kl__second__G );
+    kl__5Store__dtor( &kl__second__G );
 #line 33 "opt/owning_globals.kl"
-    kl__Store__dtor( &kl__first__G );
+    kl__5Store__dtor( &kl__first__G );
 #line 33 "opt/owning_globals.kl"
     return;
 #line 33 "opt/owning_globals.kl"
@@ -171,7 +171,7 @@ int main( void )
 {
     kl__0build();
 #line 35 "opt/owning_globals.kl"
-    int result = (int) kl__main__();
+    int result = (int) kl__4main__();
     kl__0drop();
     return result;
 }

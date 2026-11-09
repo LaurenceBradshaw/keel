@@ -5,13 +5,13 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__id32__3i32( int32_t );
-int64_t kl__id__3i64( int64_t );
-double kl__idf__3f64( double );
-int32_t kl__main__( void );
+int32_t kl__4id32__3i32( int32_t );
+int64_t kl__2id__3i64( int64_t );
+double kl__3idf__3f64( double );
+int32_t kl__4main__( void );
 
 #line 4 "codegen/cast_float_checked.kl"
-int32_t kl__id32__3i32( int32_t kl_x_1 )
+int32_t kl__4id32__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 4 "codegen/cast_float_checked.kl"
@@ -22,7 +22,7 @@ int32_t kl__id32__3i32( int32_t kl_x_1 )
 }
 
 #line 5 "codegen/cast_float_checked.kl"
-int64_t kl__id__3i64( int64_t kl_x_1 )
+int64_t kl__2id__3i64( int64_t kl_x_1 )
 {
     int64_t kl_t0;
 #line 5 "codegen/cast_float_checked.kl"
@@ -33,7 +33,7 @@ int64_t kl__id__3i64( int64_t kl_x_1 )
 }
 
 #line 6 "codegen/cast_float_checked.kl"
-double kl__idf__3f64( double kl_x_1 )
+double kl__3idf__3f64( double kl_x_1 )
 {
     double kl_t0;
 #line 6 "codegen/cast_float_checked.kl"
@@ -44,7 +44,7 @@ double kl__idf__3f64( double kl_x_1 )
 }
 
 #line 8 "codegen/cast_float_checked.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -147,7 +147,7 @@ int32_t kl__main__( void )
     bool kl_t98;
     bool kl_t99;
 #line 10 "codegen/cast_float_checked.kl"
-    kl_t2 = kl__id32__3i32( 16777216 );
+    kl_t2 = kl__4id32__3i32( 16777216 );
 #line 10 "codegen/cast_float_checked.kl"
     kl_t3 = ( float ) kl_t2;
 #line 10 "codegen/cast_float_checked.kl"
@@ -173,7 +173,7 @@ int32_t kl__main__( void )
     if ( kl_t1 ) goto bb5; else goto bb4;
     bb4:
 #line 10 "codegen/cast_float_checked.kl"
-    kl_t8 = kl__id32__3i32( -2147483648 );
+    kl_t8 = kl__4id32__3i32( -2147483648 );
 #line 10 "codegen/cast_float_checked.kl"
     kl_t9 = ( float ) kl_t8;
 #line 10 "codegen/cast_float_checked.kl"
@@ -206,7 +206,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 15 "codegen/cast_float_checked.kl"
-    kl_t15 = kl__id__3i64( 9007199254740992 );
+    kl_t15 = kl__2id__3i64( 9007199254740992 );
 #line 15 "codegen/cast_float_checked.kl"
     kl_t16 = ( double ) kl_t15;
 #line 15 "codegen/cast_float_checked.kl"
@@ -234,7 +234,7 @@ int32_t kl__main__( void )
 #line 16 "codegen/cast_float_checked.kl"
     kl_t21 = -9223372036854775807 - 1;
 #line 16 "codegen/cast_float_checked.kl"
-    kl_t22 = kl__id__3i64( kl_t21 );
+    kl_t22 = kl__2id__3i64( kl_t21 );
 #line 16 "codegen/cast_float_checked.kl"
     kl_t23 = ( double ) kl_t22;
 #line 16 "codegen/cast_float_checked.kl"
@@ -268,7 +268,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb20:
 #line 21 "codegen/cast_float_checked.kl"
-    kl_t29 = kl__idf__3f64( 1e-50 );
+    kl_t29 = kl__3idf__3f64( 1e-50 );
 #line 21 "codegen/cast_float_checked.kl"
     kl_t30 = ( float ) kl_t29;
 #line 21 "codegen/cast_float_checked.kl"
@@ -304,7 +304,7 @@ int32_t kl__main__( void )
     if ( kl_t35 ) goto bb22; else goto bb21;
     bb26:
 #line 21 "codegen/cast_float_checked.kl"
-    kl_t37 = kl__idf__3f64( 1.1 );
+    kl_t37 = kl__3idf__3f64( 1.1 );
 #line 21 "codegen/cast_float_checked.kl"
     kl_t38 = ( float ) kl_t37;
 #line 21 "codegen/cast_float_checked.kl"
@@ -349,7 +349,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb34:
 #line 26 "codegen/cast_float_checked.kl"
-    kl_t47 = kl__idf__3f64( 3.40282356e+38 );
+    kl_t47 = kl__3idf__3f64( 3.40282356e+38 );
 #line 26 "codegen/cast_float_checked.kl"
     kl_t48 = ( float ) kl_t47;
 #line 26 "codegen/cast_float_checked.kl"
@@ -385,7 +385,7 @@ int32_t kl__main__( void )
     if ( kl_t53 ) goto bb36; else goto bb35;
     bb40:
 #line 26 "codegen/cast_float_checked.kl"
-    kl_t55 = kl__idf__3f64( -3.40282356e+38 );
+    kl_t55 = kl__3idf__3f64( -3.40282356e+38 );
 #line 26 "codegen/cast_float_checked.kl"
     kl_t56 = ( float ) kl_t55;
 #line 26 "codegen/cast_float_checked.kl"
@@ -428,9 +428,9 @@ int32_t kl__main__( void )
     return kl_t0;
     bb48:
 #line 31 "codegen/cast_float_checked.kl"
-    kl_t64 = kl__idf__3f64( 1.0 );
+    kl_t64 = kl__3idf__3f64( 1.0 );
 #line 31 "codegen/cast_float_checked.kl"
-    kl_t65 = kl__idf__3f64( 0.0 );
+    kl_t65 = kl__3idf__3f64( 0.0 );
 #line 31 "codegen/cast_float_checked.kl"
     kl_t66 = kl_t64 / kl_t65;
 #line 31 "codegen/cast_float_checked.kl"
@@ -591,5 +591,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 8 "codegen/cast_float_checked.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

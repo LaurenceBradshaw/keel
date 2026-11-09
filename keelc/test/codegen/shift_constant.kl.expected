@@ -5,14 +5,14 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint64_t kl__high_flag__3u64( uint64_t );
-int64_t kl__bit_i64__3i64( int64_t );
-uint32_t kl__bit_u32__3u32( uint32_t );
-uint64_t kl__without_byte__3u64_3u64( uint64_t, uint64_t );
-int32_t kl__main__( void );
+uint64_t kl__9high_flag__3u64( uint64_t );
+int64_t kl__7bit_i64__3i64( int64_t );
+uint32_t kl__7bit_u32__3u32( uint32_t );
+uint64_t kl__12without_byte__3u64_3u64( uint64_t, uint64_t );
+int32_t kl__4main__( void );
 
 #line 4 "codegen/shift_constant.kl"
-uint64_t kl__high_flag__3u64( uint64_t kl_byte_1 )
+uint64_t kl__9high_flag__3u64( uint64_t kl_byte_1 )
 {
     uint64_t kl_t0;
     bool kl_t2;
@@ -40,7 +40,7 @@ uint64_t kl__high_flag__3u64( uint64_t kl_byte_1 )
 }
 
 #line 9 "codegen/shift_constant.kl"
-int64_t kl__bit_i64__3i64( int64_t kl_n_1 )
+int64_t kl__7bit_i64__3i64( int64_t kl_n_1 )
 {
     int64_t kl_t0;
     int64_t kl_t2;
@@ -56,7 +56,7 @@ int64_t kl__bit_i64__3i64( int64_t kl_n_1 )
 }
 
 #line 14 "codegen/shift_constant.kl"
-uint32_t kl__bit_u32__3u32( uint32_t kl_n_1 )
+uint32_t kl__7bit_u32__3u32( uint32_t kl_n_1 )
 {
     uint32_t kl_t0;
     uint32_t kl_t2;
@@ -72,7 +72,7 @@ uint32_t kl__bit_u32__3u32( uint32_t kl_n_1 )
 }
 
 #line 19 "codegen/shift_constant.kl"
-uint64_t kl__without_byte__3u64_3u64( uint64_t kl_word_1, uint64_t kl_shift_2 )
+uint64_t kl__12without_byte__3u64_3u64( uint64_t kl_word_1, uint64_t kl_shift_2 )
 {
     uint64_t kl_t0;
     uint64_t kl_t3;
@@ -94,7 +94,7 @@ uint64_t kl__without_byte__3u64_3u64( uint64_t kl_word_1, uint64_t kl_shift_2 )
 }
 
 #line 24 "codegen/shift_constant.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -109,7 +109,7 @@ int32_t kl__main__( void )
     uint64_t kl_t10;
     bool kl_t11;
 #line 26 "codegen/shift_constant.kl"
-    kl_t2 = kl__high_flag__3u64( 4 );
+    kl_t2 = kl__9high_flag__3u64( 4 );
 #line 26 "codegen/shift_constant.kl"
     kl_t3 = kl_t2 != 549755813888;
 #line 26 "codegen/shift_constant.kl"
@@ -118,7 +118,7 @@ int32_t kl__main__( void )
     if ( kl_t1 ) goto bb2; else goto bb1;
     bb1:
 #line 26 "codegen/shift_constant.kl"
-    kl_t4 = kl__high_flag__3u64( 7 );
+    kl_t4 = kl__9high_flag__3u64( 7 );
 #line 26 "codegen/shift_constant.kl"
     kl_t5 = kl_t4 != 9223372036854775808ull;
 #line 26 "codegen/shift_constant.kl"
@@ -134,7 +134,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 31 "codegen/shift_constant.kl"
-    kl_t6 = kl__bit_i64__3i64( 40 );
+    kl_t6 = kl__7bit_i64__3i64( 40 );
 #line 31 "codegen/shift_constant.kl"
     kl_t7 = kl_t6 != 1099511627776;
 #line 31 "codegen/shift_constant.kl"
@@ -145,7 +145,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 36 "codegen/shift_constant.kl"
-    kl_t8 = kl__bit_u32__3u32( 31 );
+    kl_t8 = kl__7bit_u32__3u32( 31 );
 #line 36 "codegen/shift_constant.kl"
     kl_t9 = kl_t8 != 2147483648;
 #line 36 "codegen/shift_constant.kl"
@@ -156,7 +156,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 41 "codegen/shift_constant.kl"
-    kl_t10 = kl__without_byte__3u64_3u64( 18446744073709551615ull, 40 );
+    kl_t10 = kl__12without_byte__3u64_3u64( 18446744073709551615ull, 40 );
 #line 41 "codegen/shift_constant.kl"
     kl_t11 = kl_t10 != 18446463698244468735ull;
 #line 41 "codegen/shift_constant.kl"
@@ -176,5 +176,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 24 "codegen/shift_constant.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

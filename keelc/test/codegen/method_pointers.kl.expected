@@ -24,17 +24,17 @@ struct kl__Box__I3i32E
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__add__S7Counter_3i32( struct kl__Counter*, int32_t );
-int32_t kl__get__S7Counter( struct kl__Counter* );
-int32_t kl__pick__S7Counter_3i32( struct kl__Counter*, int32_t );
-int32_t kl__pick__S7Counter_3f64( struct kl__Counter*, double );
-int32_t kl__apply__FK7CounterE3i32_7Counter( kl__fn__FK7CounterE3i32, struct kl__Counter* );
-int32_t kl__main__( void );
-int32_t kl__value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* );
-int32_t kl__pick__I3i32E__S3BoxI3i32E_3f64( struct kl__Box__I3i32E*, double );
+void kl__3add__S7Counter_3i32( struct kl__Counter*, int32_t );
+int32_t kl__3get__S7Counter( struct kl__Counter* );
+int32_t kl__4pick__S7Counter_3i32( struct kl__Counter*, int32_t );
+int32_t kl__4pick__S7Counter_3f64( struct kl__Counter*, double );
+int32_t kl__5apply__FK7CounterE3i32_7Counter( kl__fn__FK7CounterE3i32, struct kl__Counter* );
+int32_t kl__4main__( void );
+int32_t kl__5value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* );
+int32_t kl__4pick__I3i32E__S3BoxI3i32E_3f64( struct kl__Box__I3i32E*, double );
 
 #line 8 "codegen/method_pointers.kl"
-void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
+void kl__3add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
 {
     bool kl_t3;
     int32_t kl_t4;
@@ -55,7 +55,7 @@ void kl__add__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
 }
 
 #line 13 "codegen/method_pointers.kl"
-int32_t kl__get__S7Counter( struct kl__Counter* kl_this_1 )
+int32_t kl__3get__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t0;
 #line 15 "codegen/method_pointers.kl"
@@ -65,7 +65,7 @@ int32_t kl__get__S7Counter( struct kl__Counter* kl_this_1 )
 }
 
 #line 18 "codegen/method_pointers.kl"
-int32_t kl__pick__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_t2 )
+int32_t kl__4pick__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -77,7 +77,7 @@ int32_t kl__pick__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t kl_t2 )
 }
 
 #line 23 "codegen/method_pointers.kl"
-int32_t kl__pick__S7Counter_3f64( struct kl__Counter* kl_this_1, double kl_t2 )
+int32_t kl__4pick__S7Counter_3f64( struct kl__Counter* kl_this_1, double kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -89,7 +89,7 @@ int32_t kl__pick__S7Counter_3f64( struct kl__Counter* kl_this_1, double kl_t2 )
 }
 
 #line 49 "codegen/method_pointers.kl"
-int32_t kl__apply__FK7CounterE3i32_7Counter( kl__fn__FK7CounterE3i32 kl_f_1, struct kl__Counter* kl_c_2 )
+int32_t kl__5apply__FK7CounterE3i32_7Counter( kl__fn__FK7CounterE3i32 kl_f_1, struct kl__Counter* kl_c_2 )
 {
     int32_t kl_t0;
     struct kl__Counter* kl_t3;
@@ -105,7 +105,7 @@ int32_t kl__apply__FK7CounterE3i32_7Counter( kl__fn__FK7CounterE3i32 kl_f_1, str
 }
 
 #line 54 "codegen/method_pointers.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Counter kl_c_1;
@@ -139,10 +139,10 @@ int32_t kl__main__( void )
 #line 57 "codegen/method_pointers.kl"
     kl_c_1.kl_n = 1;
 #line 59 "codegen/method_pointers.kl"
-    kl_t3 = kl__add__S7Counter_3i32;
+    kl_t3 = kl__3add__S7Counter_3i32;
 #line 59 "codegen/method_pointers.kl"
     kl_bump_2 = kl_t3;
-    kl_t5 = kl__get__S7Counter;
+    kl_t5 = kl__3get__S7Counter;
 #line 60 "codegen/method_pointers.kl"
     kl_read_4 = kl_t5;
 #line 62 "codegen/method_pointers.kl"
@@ -165,7 +165,7 @@ int32_t kl__main__( void )
 #line 69 "codegen/method_pointers.kl"
     kl_t11 = &kl_c_1;
 #line 69 "codegen/method_pointers.kl"
-    kl_t12 = kl__apply__FK7CounterE3i32_7Counter( kl_read_4, kl_t11 );
+    kl_t12 = kl__5apply__FK7CounterE3i32_7Counter( kl_read_4, kl_t11 );
 #line 69 "codegen/method_pointers.kl"
     kl_t13 = kl_t12 != 5;
 #line 69 "codegen/method_pointers.kl"
@@ -176,7 +176,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 74 "codegen/method_pointers.kl"
-    kl_t15 = kl__pick__S7Counter_3f64;
+    kl_t15 = kl__4pick__S7Counter_3f64;
 #line 74 "codegen/method_pointers.kl"
     kl_choose_14 = kl_t15;
 #line 76 "codegen/method_pointers.kl"
@@ -195,10 +195,10 @@ int32_t kl__main__( void )
 #line 82 "codegen/method_pointers.kl"
     kl_b_19.kl_v = 7;
 #line 84 "codegen/method_pointers.kl"
-    kl_t21 = kl__value__I3i32E__S3BoxI3i32E;
+    kl_t21 = kl__5value__I3i32E__S3BoxI3i32E;
 #line 84 "codegen/method_pointers.kl"
     kl_unwrap_20 = kl_t21;
-    kl_t23 = kl__pick__I3i32E__S3BoxI3i32E_3f64;
+    kl_t23 = kl__4pick__I3i32E__S3BoxI3i32E_3f64;
 #line 85 "codegen/method_pointers.kl"
     kl_choose_box_22 = kl_t23;
 #line 87 "codegen/method_pointers.kl"
@@ -234,7 +234,7 @@ int32_t kl__main__( void )
 }
 
 #line 33 "codegen/method_pointers.kl"
-int32_t kl__value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
+int32_t kl__5value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 35 "codegen/method_pointers.kl"
@@ -244,7 +244,7 @@ int32_t kl__value__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 }
 
 #line 43 "codegen/method_pointers.kl"
-int32_t kl__pick__I3i32E__S3BoxI3i32E_3f64( struct kl__Box__I3i32E* kl_this_1, double kl_t2 )
+int32_t kl__4pick__I3i32E__S3BoxI3i32E_3f64( struct kl__Box__I3i32E* kl_this_1, double kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_this_1;
@@ -259,5 +259,5 @@ int32_t kl__pick__I3i32E__S3BoxI3i32E_3f64( struct kl__Box__I3i32E* kl_this_1, d
 int main( void )
 {
 #line 54 "codegen/method_pointers.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

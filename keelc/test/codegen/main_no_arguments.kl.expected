@@ -13,10 +13,10 @@ struct kl_7prelude_str
     uint64_t kl_size;
 };
 
-int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str*, uint64_t );
 
 #line 2 "codegen/main_no_arguments.kl"
-int32_t kl__main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
+int32_t kl__4main__LQ7prelude3str( struct kl_7prelude_str* kl_args_1_data, uint64_t kl_args_1_size )
 {
     int32_t kl_t0;
 #line 2 "codegen/main_no_arguments.kl"
@@ -62,7 +62,7 @@ int main( int argc, char** argv )
         args[i].kl_size = strlen( argv[i + 1] );
     }
 #line 2 "codegen/main_no_arguments.kl"
-    int result = (int) kl__main__LQ7prelude3str( args, count );
+    int result = (int) kl__4main__LQ7prelude3str( args, count );
     kl_rt_free( args );
     return result;
 }

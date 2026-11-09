@@ -2666,7 +2666,7 @@ TEST_CASE( "emit_kir_keeps_the_plain_shim_when_every_global_folds", "[codegen][k
     REQUIRE( g.clean() );
 
     const std::string shim = g.c.substr( g.c.find( "int main(" ) );
-    REQUIRE( shim == "int main( void )\n{\n#line 2 \"t.kl\"\n    return (int) kl__main__();\n}\n" );
+    REQUIRE( shim == "int main( void )\n{\n#line 2 \"t.kl\"\n    return (int) kl__4main__();\n}\n" );
 }
 
 TEST_CASE( "emit_kir_writes_a_function", "[codegen][kir]" )
@@ -2677,8 +2677,8 @@ TEST_CASE( "emit_kir_writes_a_function", "[codegen][kir]" )
     REQUIRE( g.clean() );
 
     // The definition's symbol matches the prototype's, because both come from Spelling::function.
-    REQUIRE( g.has( "int32_t kl__main__( void );" ) );
-    REQUIRE( g.has( "int32_t kl__main__( void )" ) );
+    REQUIRE( g.has( "int32_t kl__4main__( void );" ) );
+    REQUIRE( g.has( "int32_t kl__4main__( void )" ) );
 
     // The return slot is local 0, declared like any other local. The terminator carries no value.
     REQUIRE( g.has( "int32_t kl_t0;" ) );
@@ -2699,8 +2699,8 @@ TEST_CASE( "emit_kir_writes_a_function_address_as_a_bare_symbol", "[codegen][kir
 
     // A function name already decays to its address in C, so the operator would be a second
     // spelling of one thing - and `&` on a typedef'd pointer would be the address of the variable.
-    REQUIRE( g.has( "kl__f__3i32;" ) );
-    REQUIRE_FALSE( g.has( "&kl__f__3i32" ) );
+    REQUIRE( g.has( "kl__1f__3i32;" ) );
+    REQUIRE_FALSE( g.has( "&kl__1f__3i32" ) );
 
     SECTION( "the typedef is written once for a signature used twice" )
     {
@@ -2744,7 +2744,7 @@ TEST_CASE( "emit_kir_writes_a_function_address_as_a_bare_symbol", "[codegen][kir
     // definitions are ordered: C reads a file once, top to bottom.
     SECTION( "and before anything that uses it" )
     {
-        REQUIRE( g.c.find( "typedef" ) < g.c.find( "int32_t kl__f__3i32(" ) );
+        REQUIRE( g.c.find( "typedef" ) < g.c.find( "int32_t kl__1f__3i32(" ) );
     }
 }
 
@@ -2762,8 +2762,8 @@ TEST_CASE( "emit_kir_writes_the_address_of_the_chosen_overload", "[codegen][kir]
         REQUIRE( g.clean() );
 
         // The `= ` and the `;` are both needed: each name is also written as a forward declaration.
-        REQUIRE( g.has( "= kl__f__3f64;" ) );
-        REQUIRE_FALSE( g.has( "= kl__f__3i32;" ) );
+        REQUIRE( g.has( "= kl__1f__3f64;" ) );
+        REQUIRE_FALSE( g.has( "= kl__1f__3i32;" ) );
     }
 
     SECTION( "and the i32 one when that is what was asked for" )
@@ -2774,8 +2774,8 @@ TEST_CASE( "emit_kir_writes_the_address_of_the_chosen_overload", "[codegen][kir]
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__f__3i32;" ) );
-        REQUIRE_FALSE( g.has( "= kl__f__3f64;" ) );
+        REQUIRE( g.has( "= kl__1f__3i32;" ) );
+        REQUIRE_FALSE( g.has( "= kl__1f__3f64;" ) );
     }
 
     // Every interned signature becomes a typedef, and a generic candidate's mentions its type
@@ -2788,7 +2788,7 @@ TEST_CASE( "emit_kir_writes_the_address_of_the_chosen_overload", "[codegen][kir]
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__f__3f64;" ) );
+        REQUIRE( g.has( "= kl__1f__3f64;" ) );
     }
 }
 
@@ -2804,7 +2804,7 @@ TEST_CASE( "emit_kir_writes_the_address_of_a_generic_instance", "[codegen][kir][
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__id__I3i32E__3i32;" ) );
+        REQUIRE( g.has( "= kl__2id__I3i32E__3i32;" ) );
     }
 
     // Nothing calls it, so the seed is the only thing that put a body in the file.
@@ -2814,7 +2814,7 @@ TEST_CASE( "emit_kir_writes_the_address_of_a_generic_instance", "[codegen][kir][
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )" ) );
+        REQUIRE( g.has( "int32_t kl__2id__I3i32E__3i32( int32_t kl_a_1 )" ) );
     }
 
     SECTION( "the signature it was chosen for is a typedef" )
@@ -2834,9 +2834,9 @@ TEST_CASE( "emit_kir_writes_the_address_of_a_generic_instance", "[codegen][kir][
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__id__I3i32E__3i32;" ) );
-        REQUIRE( g.has( "= kl__id__I3f64E__3f64;" ) );
-        REQUIRE( g.has( "double kl__id__I3f64E__3f64( double kl_a_1 )" ) );
+        REQUIRE( g.has( "= kl__2id__I3i32E__3i32;" ) );
+        REQUIRE( g.has( "= kl__2id__I3f64E__3f64;" ) );
+        REQUIRE( g.has( "double kl__2id__I3f64E__3f64( double kl_a_1 )" ) );
     }
 }
 
@@ -2852,7 +2852,7 @@ TEST_CASE( "emit_kir_calls_through_a_function_typed_variable", "[codegen][kir][m
 
     REQUIRE( g.has( "kl_p_1( 21 )" ) );
     REQUIRE_FALSE( g.has( "( *kl_p_1 )" ) );
-    REQUIRE_FALSE( g.has( "= kl__twice__3i32( " ) );
+    REQUIRE_FALSE( g.has( "= kl__5twice__3i32( " ) );
 
     SECTION( "a void one is a statement of its own" )
     {
@@ -2872,7 +2872,7 @@ TEST_CASE( "emit_kir_calls_through_a_function_typed_variable", "[codegen][kir][m
         INFO( a.c );
         REQUIRE( a.clean() );
         REQUIRE( a.has( "kl_f_1( kl_v_2 )" ) );
-        REQUIRE( a.c.find( "typedef" ) < a.c.find( "kl__apply__" ) );
+        REQUIRE( a.c.find( "typedef" ) < a.c.find( "kl__5apply__" ) );
     }
 }
 
@@ -3111,7 +3111,7 @@ TEST_CASE( "emit_kir_spells_an_owning_parameter_as_an_address", "[codegen][kir][
         INFO( g.c );
         REQUIRE( g.clean() );
         REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F3BoxI3u64EE3u64 )( struct kl__Box__I3u64E* );" ) );
-        REQUIRE( g.has( "uint64_t kl__peek__3BoxI3u64E( struct kl__Box__I3u64E* );" ) );
+        REQUIRE( g.has( "uint64_t kl__4peek__3BoxI3u64E( struct kl__Box__I3u64E* );" ) );
     }
 
     // The boundary: a class owns only when something in it does, and a value parameter is still a
@@ -3201,8 +3201,8 @@ TEST_CASE( "emit_kir_names_parameters_from_kir_locals", "[codegen][kir]" )
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    REQUIRE( g.has( "int32_t kl__add__3i32_3i32( int32_t, int32_t );" ) ); // the prototype, unnamed
-    REQUIRE( g.has( "int32_t kl_a_1, int32_t kl_b_2" ) );                  // the definition, named
+    REQUIRE( g.has( "int32_t kl__3add__3i32_3i32( int32_t, int32_t );" ) ); // the prototype, unnamed
+    REQUIRE( g.has( "int32_t kl_a_1, int32_t kl_b_2" ) );                   // the definition, named
 
     // Declared once, by the signature - not again as locals.
     REQUIRE_FALSE( g.has( "int32_t kl_a_1;" ) );
@@ -3298,9 +3298,9 @@ TEST_CASE( "emit_kir_drops_the_destination_of_a_void_call", "[codegen][kir]" )
     // Two spaces: the argument list is empty and the format keeps its padding. The AST backend
     // spells it the same way, which is what matters - the two need to agree in behaviour, and here
     // they happen to agree in text as well.
-    REQUIRE( g.has( "kl__nothing__(  );" ) );
+    REQUIRE( g.has( "kl__7nothing__(  );" ) );
     REQUIRE_FALSE( g.has( "void kl_t" ) ); // no void local is declared
-    REQUIRE( g.has( "void kl__nothing__( void )" ) );
+    REQUIRE( g.has( "void kl__7nothing__( void )" ) );
 }
 
 // A discarded result is not stored, so C has no local to call set but unused.
@@ -3312,8 +3312,8 @@ TEST_CASE( "emit_kir_calls_a_discarded_result_bare", "[codegen][kir]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__seven__(  );" ) );
-        REQUIRE_FALSE( g.has( "= kl__seven__(" ) );
+        REQUIRE( g.has( "kl__5seven__(  );" ) );
+        REQUIRE_FALSE( g.has( "= kl__5seven__(" ) );
     }
 
     SECTION( "through a function pointer" )
@@ -3350,7 +3350,7 @@ TEST_CASE( "emit_kir_leaves_an_extern_unmangled", "[codegen][kir][extern]" )
 
     SECTION( "an ordinary function beside it is still mangled" )
     {
-        REQUIRE( g.has( "kl__main__" ) );
+        REQUIRE( g.has( "kl__4main__" ) );
     }
 }
 
@@ -3407,7 +3407,7 @@ TEST_CASE( "emit_kir_declares_every_extern", "[codegen][kir][extern]" )
         REQUIRE( g.clean() );
 
         // C needs the declaration first, and the emitter's order is what guarantees it.
-        REQUIRE( g.c.find( "int32_t abs( int32_t );" ) < g.c.find( "int32_t kl__main__( void )\n{" ) );
+        REQUIRE( g.c.find( "int32_t abs( int32_t );" ) < g.c.find( "int32_t kl__4main__( void )\n{" ) );
     }
 }
 
@@ -3429,9 +3429,9 @@ TEST_CASE( "emit_kir_passes_a_function_address_to_an_extern", "[codegen][kir][m7
 
     SECTION( "and the argument is the mangled Keel symbol, bare" )
     {
-        REQUIRE( g.has( "= kl__f__3i32;" ) );
+        REQUIRE( g.has( "= kl__1f__3i32;" ) );
         REQUIRE( g.has( "register_cb( kl_t" ) );
-        REQUIRE_FALSE( g.has( "&kl__f__3i32" ) );
+        REQUIRE_FALSE( g.has( "&kl__1f__3i32" ) );
     }
 
     // The same channel slice 4 selects through, arriving from a declaration written in C.
@@ -3446,8 +3446,8 @@ TEST_CASE( "emit_kir_passes_a_function_address_to_an_extern", "[codegen][kir][m7
 
         INFO( over.c );
         REQUIRE( over.clean() );
-        REQUIRE( over.has( "= kl__f__3i32;" ) );
-        REQUIRE_FALSE( over.has( "= kl__f__3f64;" ) );
+        REQUIRE( over.has( "= kl__1f__3i32;" ) );
+        REQUIRE_FALSE( over.has( "= kl__1f__3f64;" ) );
     }
 }
 
@@ -3549,11 +3549,11 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
         REQUIRE( g.clean() );
 
         // The destructor is still *defined* - `C` has one - but nothing in main calls it.
-        const std::size_t body = g.c.find( "int32_t kl__main__( void )\n{" );
+        const std::size_t body = g.c.find( "int32_t kl__4main__( void )\n{" );
 
         REQUIRE( body != std::string::npos );
         const std::string main_body = g.c.substr( body, g.c.find( "\n}\n", body ) - body );
-        REQUIRE( main_body.find( "kl__C__dtor(" ) == std::string::npos );
+        REQUIRE( main_body.find( "kl__1C__dtor(" ) == std::string::npos );
         REQUIRE( main_body.find( "ctor" ) == std::string::npos );
     }
 }
@@ -3841,7 +3841,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__twice__3i32" ) );
+        REQUIRE( g.has( "kl__5twice__3i32" ) );
     }
 
     SECTION( "arithmetic on a `T` is emitted at the substituted type" )
@@ -3855,7 +3855,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__f__I3i32E__3i32( int32_t" ) );
+        REQUIRE( g.has( "int32_t kl__1f__I3i32E__3i32( int32_t" ) );
     }
 
     SECTION( "an integer literal adopting a floating `T` comes out of the integer pool" )
@@ -3868,7 +3868,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "double kl__f__I3f64E__3f64( double" ) );
+        REQUIRE( g.has( "double kl__1f__I3f64E__3f64( double" ) );
     }
 
     SECTION( "a numeric bound carries `copyable`, so the parameter travels by value" )
@@ -3884,8 +3884,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         // The C signature rather than the symbol: an instantiation is named by its type arguments
         // alone, so the convention is no longer visible in the name - which is the right place for
         // it to be invisible, and the wrong place to test it from.
-        REQUIRE( g.has( "void kl__f__I3i32E__3i32( int32_t )" ) );
-        REQUIRE_FALSE( g.has( "void kl__f__I3i32E__3i32( int32_t* )" ) );
+        REQUIRE( g.has( "void kl__1f__I3i32E__3i32( int32_t )" ) );
+        REQUIRE_FALSE( g.has( "void kl__1f__I3i32E__3i32( int32_t* )" ) );
     }
 
     SECTION( "a bound that does not carry `copyable` borrows, and a constant is materialised" )
@@ -3897,7 +3897,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "void kl__f__I3i32E__3i32( int32_t* )" ) );
+        REQUIRE( g.has( "void kl__1f__I3i32E__3i32( int32_t* )" ) );
     }
 
     SECTION( "at its caller's own parameter, which no call site ever wrote" )
@@ -3911,11 +3911,11 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__outer__I3i32E__3i32" ) );
-        REQUIRE( g.has( "kl__inner__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__5outer__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__5inner__I3i32E__3i32" ) );
 
         // And not the template it was written as.
-        REQUIRE_FALSE( g.has( "kl__inner__T__T" ) );
+        REQUIRE_FALSE( g.has( "kl__5inner__T__T" ) );
     }
 
     SECTION( "the closure follows each instance separately" )
@@ -3928,8 +3928,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__I3i32E__3i32" ) );
-        REQUIRE( g.has( "kl__inner__I3f64E__3f64" ) );
+        REQUIRE( g.has( "kl__5inner__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__5inner__I3f64E__3f64" ) );
     }
 
     SECTION( "a generic reached only through another is still emitted" )
@@ -3942,7 +3942,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__third__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__5third__I3i32E__3i32" ) );
     }
 
     SECTION( "an uninstantiated generic contributes nothing" )
@@ -3969,7 +3969,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__IP3i32E__P3i32" ) );
+        REQUIRE( g.has( "kl__5inner__IP3i32E__P3i32" ) );
     }
 
     SECTION( "another generic, at a different type" )
@@ -3982,8 +3982,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.clean() );
 
         // The inner call is `id<i32>` whatever `relay` was instantiated at.
-        REQUIRE( g.has( "kl__id__I3i32E__3i32" ) );
-        REQUIRE( g.has( "kl__relay__I4boolE__4bool" ) );
+        REQUIRE( g.has( "kl__2id__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__5relay__I4boolE__4bool" ) );
     }
 }
 
@@ -3997,7 +3997,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__I1PE__1P" ) );
+        REQUIRE( g.has( "kl__2id__I1PE__1P" ) );
     }
 
     SECTION( "a pointer type argument" )
@@ -4007,7 +4007,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__IP3i32E__P3i32" ) );
+        REQUIRE( g.has( "kl__2id__IP3i32E__P3i32" ) );
     }
 
     SECTION( "an enum type argument" )
@@ -4029,8 +4029,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__I3i32E__3i32" ) );
-        REQUIRE( g.has( "kl__id__I4boolE__4bool" ) );
+        REQUIRE( g.has( "kl__2id__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__2id__I4boolE__4bool" ) );
     }
 
     SECTION( "each call site names the one it meant" )
@@ -4039,8 +4039,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "= kl__id__I3i32E__3i32( 1 )" ) );
-        REQUIRE( g.has( "= kl__id__I4boolE__4bool( true )" ) );
+        REQUIRE( g.has( "= kl__2id__I3i32E__3i32( 1 )" ) );
+        REQUIRE( g.has( "= kl__2id__I4boolE__4bool( true )" ) );
     }
 
     SECTION( "the same type twice is one function" )
@@ -4052,12 +4052,12 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         // Once as a prototype and once as a definition, and no more.
         std::size_t definitions = 0;
-        std::size_t at          = g.c.find( "int32_t kl__id__I3i32E__3i32( int32_t kl_" );
+        std::size_t at          = g.c.find( "int32_t kl__2id__I3i32E__3i32( int32_t kl_" );
 
         while( at != std::string::npos )
         {
             definitions += 1;
-            at = g.c.find( "int32_t kl__id__I3i32E__3i32( int32_t kl_", at + 1 );
+            at = g.c.find( "int32_t kl__2id__I3i32E__3i32( int32_t kl_", at + 1 );
         }
 
         REQUIRE( definitions == 1 );
@@ -4070,7 +4070,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE_FALSE( g.has( "kl__id__( " ) );
+        REQUIRE_FALSE( g.has( "kl__2id__( " ) );
     }
 
     SECTION( "several parameters" )
@@ -4080,7 +4080,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__pick__I3i32_4boolE__3i32_4bool" ) );
+        REQUIRE( g.has( "kl__4pick__I3i32_4boolE__3i32_4bool" ) );
     }
 
     SECTION( "the parameter and return types are the substituted ones" )
@@ -4090,7 +4090,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
         Generated g( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "int32_t kl__id__I3i32E__3i32( int32_t );" ) );
+        REQUIRE( g.has( "int32_t kl__2id__I3i32E__3i32( int32_t );" ) );
     }
 
     SECTION( "a non-generic program is unchanged" )
@@ -4099,7 +4099,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__f__3i32( int32_t );" ) );
+        REQUIRE( g.has( "int32_t kl__1f__3i32( int32_t );" ) );
     }
 }
 
@@ -4207,11 +4207,11 @@ TEST_CASE( "emit_kir_names_a_static_method", "[codegen][kir][static]" )
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    REQUIRE( g.has( "struct kl__P kl__make__S1P_3i32( int32_t );" ) );
+    REQUIRE( g.has( "struct kl__P kl__4make__S1P_3i32( int32_t );" ) );
 
     // The tag is what tells it from the free function of the same name and parameters - the
     // collision M6.5 closed for methods, reopened by a member with no receiver to encode.
-    REQUIRE_FALSE( g.has( "kl__make__3i32(" ) );
+    REQUIRE_FALSE( g.has( "kl__4make__3i32(" ) );
 }
 
 // A static and a plain method of one type are told apart by their written parameters alone, since
@@ -4224,8 +4224,8 @@ TEST_CASE( "emit_kir_tells_a_static_from_a_plain_method", "[codegen][kir][static
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    REQUIRE( g.has( "kl__make__S1P_3i32" ) );
-    REQUIRE( g.has( "kl__get__S1P" ) );
+    REQUIRE( g.has( "kl__4make__S1P_3i32" ) );
+    REQUIRE( g.has( "kl__3get__S1P" ) );
 }
 
 // The seed §12 warns about, in the form that fails silently: a static call is what puts this
@@ -4241,7 +4241,7 @@ TEST_CASE( "emit_kir_emits_a_generic_static_method_instantiation", "[codegen][ki
 
     // The tag names the instance rather than the open form, so `Box<i32>` and `Box<f64>` would be
     // two symbols - and the type arguments lead the argtypes, as they do for any instantiation.
-    REQUIRE( g.has( "kl__of__I3i32E__S3BoxI3i32E_3i32" ) );
+    REQUIRE( g.has( "kl__2of__I3i32E__S3BoxI3i32E_3i32" ) );
 }
 
 // A static method's address is its bare symbol, as a free function's is.
@@ -4254,7 +4254,7 @@ TEST_CASE( "emit_kir_writes_a_static_method_address", "[codegen][kir][static]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__make__S1P_3i32;" ) );
+        REQUIRE( g.has( "= kl__4make__S1P_3i32;" ) );
     }
 
     // The address alone seeds each instance, and each reads its own static storage.
@@ -4271,10 +4271,10 @@ TEST_CASE( "emit_kir_writes_a_static_method_address", "[codegen][kir][static]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "= kl__count__I3i32E__S3BoxI3i32E_3i32;" ) );
-        REQUIRE( g.has( "= kl__count__I3f64E__S3BoxI3f64E_3f64;" ) );
-        REQUIRE( g.has( "int32_t kl__count__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_" ) );
-        REQUIRE( g.has( "int32_t kl__count__I3f64E__S3BoxI3f64E_3f64( double kl_x_" ) );
+        REQUIRE( g.has( "= kl__5count__I3i32E__S3BoxI3i32E_3i32;" ) );
+        REQUIRE( g.has( "= kl__5count__I3f64E__S3BoxI3f64E_3f64;" ) );
+        REQUIRE( g.has( "int32_t kl__5count__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_" ) );
+        REQUIRE( g.has( "int32_t kl__5count__I3f64E__S3BoxI3f64E_3f64( double kl_x_" ) );
         REQUIRE( g.has( "kl__made__GS3BoxI3i32E = 0;" ) );
         REQUIRE( g.has( "kl__made__GS3BoxI3f64E = 0;" ) );
     }
@@ -4360,7 +4360,7 @@ TEST_CASE( "emit_kir_spells_a_many_item_pointer", "[codegen][kir][many]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t* kl__pass__N3i32( int32_t* kl_p_1 )" ) );
+        REQUIRE( g.has( "int32_t* kl__4pass__N3i32( int32_t* kl_p_1 )" ) );
     }
 
     SECTION( "nested, either way round" )
@@ -4382,8 +4382,8 @@ TEST_CASE( "emit_kir_spells_a_many_item_pointer", "[codegen][kir][many]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__which__P3i32(" ) );
-        REQUIRE( g.has( "kl__which__N3i32(" ) );
+        REQUIRE( g.has( "kl__5which__P3i32(" ) );
+        REQUIRE( g.has( "kl__5which__N3i32(" ) );
     }
 
     SECTION( "as a field" )
@@ -4411,7 +4411,7 @@ TEST_CASE( "emit_kir_spells_a_many_item_pointer", "[codegen][kir][many]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__same__I3i32E__N3i32(" ) );
+        REQUIRE( g.has( "kl__4same__I3i32E__N3i32(" ) );
     }
 }
 
@@ -4546,12 +4546,12 @@ TEST_CASE( "emit_kir_names_each_overloaded_requirement_s_slot", "[codegen][kir][
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    REQUIRE( g.has( "double ( *kl__area__ )( void* );" ) );
-    REQUIRE( g.has( "double ( *kl__area__3i32 )( void*, int32_t );" ) );
-    REQUIRE( g.has( "{ kl__Sq__as_kl__Shape__drop, kl__Sq__as_kl__Shape__kl__area__, kl__Sq__as_kl__Shape__kl__area__3i32 };" )
-    );
-    REQUIRE( g.has( ".vtable->kl__area__( " ) );
-    REQUIRE( g.has( ".vtable->kl__area__3i32( " ) );
+    REQUIRE( g.has( "double ( *kl__4area__ )( void* );" ) );
+    REQUIRE( g.has( "double ( *kl__4area__3i32 )( void*, int32_t );" ) );
+    REQUIRE( g.has( "{ kl__Sq__as_kl__Shape__drop, kl__Sq__as_kl__Shape__kl__4area__, kl__Sq__as_kl__Shape__kl__4area__3i32 };"
+    ) );
+    REQUIRE( g.has( ".vtable->kl__4area__( " ) );
+    REQUIRE( g.has( ".vtable->kl__4area__3i32( " ) );
 }
 
 // The epilogue is the closing brace's, so stepping out of a function stops there last.
@@ -4633,8 +4633,8 @@ TEST_CASE( "emit_kir_marks_an_instance_weak_in_an_object", "[codegen][kir][gener
 
     INFO( g.c );
     REQUIRE( g.clean() );
-    REQUIRE( g.has( "\n__attribute__((weak)) int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )\n" ) );
-    REQUIRE( g.has( "\nint32_t kl__plain__( void )\n" ) );
+    REQUIRE( g.has( "\n__attribute__((weak)) int32_t kl__2id__I3i32E__3i32( int32_t kl_a_1 )\n" ) );
+    REQUIRE( g.has( "\nint32_t kl__5plain__( void )\n" ) );
 
     SECTION( "but not outside one" )
     {

@@ -8,10 +8,10 @@ int32_t kl_1a_total__GS6Holder = 1;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_1a_bump_a__( void );
+int32_t kl_1a_6bump_a__( void );
 
 #line 10 "codegen/module_globals/a.kl"
-int32_t kl_1a_bump_a__( void )
+int32_t kl_1a_6bump_a__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -56,10 +56,10 @@ int32_t kl_1b_total__GS6Holder = 11;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl_1b_bump_b__( void );
+int32_t kl_1b_6bump_b__( void );
 
 #line 10 "codegen/module_globals/b.kl"
-int32_t kl_1b_bump_b__( void )
+int32_t kl_1b_6bump_b__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -111,16 +111,16 @@ int32_t kl_1b_bump_b__( void )
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl_1c_from_b__( void );
-int32_t kl_1b_bump_b__( void );
+int32_t kl_1c_6from_b__( void );
+int32_t kl_1b_6bump_b__( void );
 
 #line 4 "codegen/module_globals/c.kl"
-int32_t kl_1c_from_b__( void )
+int32_t kl_1c_6from_b__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
 #line 6 "codegen/module_globals/c.kl"
-    kl_t1 = kl_1b_bump_b__(  );
+    kl_t1 = kl_1b_6bump_b__(  );
 #line 6 "codegen/module_globals/c.kl"
     kl_t0 = kl_t1;
 #line 6 "codegen/module_globals/c.kl"
@@ -135,12 +135,12 @@ int32_t kl_1c_from_b__( void )
 extern int32_t kl_1a_count__G;
 extern int32_t kl_1a_total__GS6Holder;
 
-int32_t kl__main__( void );
-int32_t kl_1c_from_b__( void );
-int32_t kl_1a_bump_a__( void );
+int32_t kl__4main__( void );
+int32_t kl_1c_6from_b__( void );
+int32_t kl_1a_6bump_a__( void );
 
 #line 6 "codegen/module_globals/main.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_t1;
@@ -151,7 +151,7 @@ int32_t kl__main__( void )
     bool kl_t6;
     bool kl_t7;
 #line 8 "codegen/module_globals/main.kl"
-    kl_t1 = kl_1a_bump_a__(  );
+    kl_t1 = kl_1a_6bump_a__(  );
 #line 8 "codegen/module_globals/main.kl"
     kl_t2 = kl_t1 != 4;
 #line 8 "codegen/module_globals/main.kl"
@@ -162,7 +162,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 13 "codegen/module_globals/main.kl"
-    kl_t3 = kl_1c_from_b__(  );
+    kl_t3 = kl_1c_6from_b__(  );
 #line 13 "codegen/module_globals/main.kl"
     kl_t4 = kl_t3 != 23;
 #line 13 "codegen/module_globals/main.kl"
@@ -203,5 +203,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 6 "codegen/module_globals/main.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

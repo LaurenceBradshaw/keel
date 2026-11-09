@@ -11,14 +11,14 @@ struct kl__Point
     int32_t kl_y;
 };
 
-int32_t kl__written__5Point( struct kl__Point );
-int32_t kl__dead__5Point( struct kl__Point );
-int32_t kl__read__5Point( struct kl__Point );
-int32_t kl__counted__5Point( struct kl__Point );
-int32_t kl__main__( void );
+int32_t kl__7written__5Point( struct kl__Point );
+int32_t kl__4dead__5Point( struct kl__Point );
+int32_t kl__4read__5Point( struct kl__Point );
+int32_t kl__7counted__5Point( struct kl__Point );
+int32_t kl__4main__( void );
 
 #line 12 "opt/scalars_parameters.kl"
-int32_t kl__written__5Point( struct kl__Point kl_p_1 )
+int32_t kl__7written__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
     kl_t0 = kl_p_1.kl_y;
@@ -27,7 +27,7 @@ int32_t kl__written__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 19 "opt/scalars_parameters.kl"
-int32_t kl__dead__5Point( struct kl__Point kl_p_1 )
+int32_t kl__4dead__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
     kl_t0 = kl_p_1.kl_y;
@@ -36,7 +36,7 @@ int32_t kl__dead__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 25 "opt/scalars_parameters.kl"
-int32_t kl__read__5Point( struct kl__Point kl_p_1 )
+int32_t kl__4read__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
 #line 27 "opt/scalars_parameters.kl"
@@ -46,7 +46,7 @@ int32_t kl__read__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 31 "opt/scalars_parameters.kl"
-int32_t kl__counted__5Point( struct kl__Point kl_p_1 )
+int32_t kl__7counted__5Point( struct kl__Point kl_p_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -69,7 +69,7 @@ int32_t kl__counted__5Point( struct kl__Point kl_p_1 )
 }
 
 #line 40 "opt/scalars_parameters.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
@@ -114,5 +114,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 40 "opt/scalars_parameters.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

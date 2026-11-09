@@ -17,20 +17,20 @@ struct kl__Op
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
-void kl__bump__FR3i32E4void_R3i32( kl__fn__FR3i32E4void, int32_t* );
-kl__fn__F3i32E3i32 kl__doubler__( void );
-int32_t kl__0lambda295__( int32_t );
-int32_t kl__main__( void );
-void kl__0lambda920__( void );
-int32_t kl__0lambda810__( int32_t );
-int32_t kl__0lambda633__( int32_t, int32_t );
-void kl__0lambda549__( int32_t* );
-int32_t kl__0lambda461__( int32_t );
-int32_t kl__0lambda367__( int32_t );
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+void kl__4bump__FR3i32E4void_R3i32( kl__fn__FR3i32E4void, int32_t* );
+kl__fn__F3i32E3i32 kl__7doubler__( void );
+int32_t kl__100lambda295__( int32_t );
+int32_t kl__4main__( void );
+void kl__100lambda920__( void );
+int32_t kl__100lambda810__( int32_t );
+int32_t kl__100lambda633__( int32_t, int32_t );
+void kl__100lambda549__( int32_t* );
+int32_t kl__100lambda461__( int32_t );
+int32_t kl__100lambda367__( int32_t );
 
 #line 2 "codegen/lambdas.kl"
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -44,7 +44,7 @@ int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
 }
 
 #line 4 "codegen/lambdas.kl"
-void kl__bump__FR3i32E4void_R3i32( kl__fn__FR3i32E4void kl_f_1, int32_t* kl_x_2 )
+void kl__4bump__FR3i32E4void_R3i32( kl__fn__FR3i32E4void kl_f_1, int32_t* kl_x_2 )
 {
     int32_t* kl_t3;
 #line 4 "codegen/lambdas.kl"
@@ -57,12 +57,12 @@ void kl__bump__FR3i32E4void_R3i32( kl__fn__FR3i32E4void kl_f_1, int32_t* kl_x_2 
 }
 
 #line 8 "codegen/lambdas.kl"
-kl__fn__F3i32E3i32 kl__doubler__( void )
+kl__fn__F3i32E3i32 kl__7doubler__( void )
 {
     kl__fn__F3i32E3i32 kl_t0;
     kl__fn__F3i32E3i32 kl_t1;
 #line 8 "codegen/lambdas.kl"
-    kl_t1 = kl__0lambda295__;
+    kl_t1 = kl__100lambda295__;
 #line 8 "codegen/lambdas.kl"
     kl_t0 = kl_t1;
 #line 8 "codegen/lambdas.kl"
@@ -71,7 +71,7 @@ kl__fn__F3i32E3i32 kl__doubler__( void )
 }
 
 #line 8 "codegen/lambdas.kl"
-int32_t kl__0lambda295__( int32_t kl_x_1 )
+int32_t kl__100lambda295__( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -94,7 +94,7 @@ int32_t kl__0lambda295__( int32_t kl_x_1 )
 }
 
 #line 10 "codegen/lambdas.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_inc_1;
@@ -124,7 +124,7 @@ int32_t kl__main__( void )
     kl__fn__FE4void kl_nothing_26;
     kl__fn__FE4void kl_t27;
 #line 12 "codegen/lambdas.kl"
-    kl_t2 = kl__0lambda367__;
+    kl_t2 = kl__100lambda367__;
 #line 12 "codegen/lambdas.kl"
     kl_inc_1 = kl_t2;
     kl_t3 = kl_inc_1( 1 );
@@ -138,9 +138,9 @@ int32_t kl__main__( void )
 #line 13 "codegen/lambdas.kl"
     return kl_t0;
     bb2:
-    kl_t5 = kl__0lambda461__;
+    kl_t5 = kl__100lambda461__;
 #line 15 "codegen/lambdas.kl"
-    kl_t6 = kl__apply__F3i32E3i32_3i32( kl_t5, 5 );
+    kl_t6 = kl__5apply__F3i32E3i32_3i32( kl_t5, 5 );
 #line 15 "codegen/lambdas.kl"
     kl_t7 = kl_t6 != 25;
 #line 15 "codegen/lambdas.kl"
@@ -152,11 +152,11 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
     kl_n_8 = 1;
-    kl_t9 = kl__0lambda549__;
+    kl_t9 = kl__100lambda549__;
 #line 18 "codegen/lambdas.kl"
     kl_t10 = &kl_n_8;
 #line 18 "codegen/lambdas.kl"
-    kl__bump__FR3i32E4void_R3i32( kl_t9, kl_t10 );
+    kl__4bump__FR3i32E4void_R3i32( kl_t9, kl_t10 );
     kl_t12 = kl_n_8 != 11;
 #line 19 "codegen/lambdas.kl"
     if ( kl_t12 ) goto bb5; else goto bb6;
@@ -166,7 +166,7 @@ int32_t kl__main__( void )
 #line 19 "codegen/lambdas.kl"
     return kl_t0;
     bb6:
-    kl_t15 = kl__0lambda633__;
+    kl_t15 = kl__100lambda633__;
 #line 21 "codegen/lambdas.kl"
     kl_t14.kl_combine = kl_t15;
 #line 21 "codegen/lambdas.kl"
@@ -182,7 +182,7 @@ int32_t kl__main__( void )
 #line 22 "codegen/lambdas.kl"
     return kl_t0;
     bb8:
-    kl_t19 = kl__doubler__(  );
+    kl_t19 = kl__7doubler__(  );
 #line 24 "codegen/lambdas.kl"
     kl_d_18 = kl_t19;
     kl_t20 = kl_d_18( 21 );
@@ -196,7 +196,7 @@ int32_t kl__main__( void )
 #line 25 "codegen/lambdas.kl"
     return kl_t0;
     bb10:
-    kl_t23 = kl__0lambda810__;
+    kl_t23 = kl__100lambda810__;
 #line 27 "codegen/lambdas.kl"
     kl_square_22 = kl_t23;
     kl_t24 = kl_square_22( 6 );
@@ -210,7 +210,7 @@ int32_t kl__main__( void )
 #line 28 "codegen/lambdas.kl"
     return kl_t0;
     bb12:
-    kl_t27 = kl__0lambda920__;
+    kl_t27 = kl__100lambda920__;
 #line 30 "codegen/lambdas.kl"
     kl_nothing_26 = kl_t27;
     kl_nothing_26(  );
@@ -221,7 +221,7 @@ int32_t kl__main__( void )
 }
 
 #line 30 "codegen/lambdas.kl"
-void kl__0lambda920__( void )
+void kl__100lambda920__( void )
 {
 #line 30 "codegen/lambdas.kl"
     return;
@@ -229,7 +229,7 @@ void kl__0lambda920__( void )
 }
 
 #line 27 "codegen/lambdas.kl"
-int32_t kl__0lambda810__( int32_t kl_x_1 )
+int32_t kl__100lambda810__( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -252,7 +252,7 @@ int32_t kl__0lambda810__( int32_t kl_x_1 )
 }
 
 #line 21 "codegen/lambdas.kl"
-int32_t kl__0lambda633__( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__100lambda633__( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -275,7 +275,7 @@ int32_t kl__0lambda633__( int32_t kl_a_1, int32_t kl_b_2 )
 }
 
 #line 18 "codegen/lambdas.kl"
-void kl__0lambda549__( int32_t* kl_y_1 )
+void kl__100lambda549__( int32_t* kl_y_1 )
 {
     bool kl_t2;
 #line 18 "codegen/lambdas.kl"
@@ -294,7 +294,7 @@ void kl__0lambda549__( int32_t* kl_y_1 )
 }
 
 #line 15 "codegen/lambdas.kl"
-int32_t kl__0lambda461__( int32_t kl_x_1 )
+int32_t kl__100lambda461__( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -317,7 +317,7 @@ int32_t kl__0lambda461__( int32_t kl_x_1 )
 }
 
 #line 12 "codegen/lambdas.kl"
-int32_t kl__0lambda367__( int32_t kl_x_1 )
+int32_t kl__100lambda367__( int32_t kl_x_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -343,5 +343,5 @@ int32_t kl__0lambda367__( int32_t kl_x_1 )
 int main( void )
 {
 #line 10 "codegen/lambdas.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

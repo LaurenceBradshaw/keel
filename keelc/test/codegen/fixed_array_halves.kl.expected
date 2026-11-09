@@ -28,12 +28,12 @@ struct kl__A3_A2_3i32
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool );
-uint64_t kl__count__LA2_3i32( struct kl__A2_3i32*, uint64_t );
-int32_t kl__main__( void );
+struct kl_7prelude_result__IA2_3i32_3i32E kl__4make__4bool( bool );
+uint64_t kl__5count__LA2_3i32( struct kl__A2_3i32*, uint64_t );
+int32_t kl__4main__( void );
 
 #line 3 "codegen/fixed_array_halves.kl"
-struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool kl_ok_1 )
+struct kl_7prelude_result__IA2_3i32_3i32E kl__4make__4bool( bool kl_ok_1 )
 {
     struct kl_7prelude_result__IA2_3i32_3i32E kl_t0;
     struct kl_7prelude_result__IA2_3i32_3i32E kl_t2;
@@ -72,7 +72,7 @@ struct kl_7prelude_result__IA2_3i32_3i32E kl__make__4bool( bool kl_ok_1 )
 }
 
 #line 12 "codegen/fixed_array_halves.kl"
-uint64_t kl__count__LA2_3i32( struct kl__A2_3i32* kl_rows_1_data, uint64_t kl_rows_1_size )
+uint64_t kl__5count__LA2_3i32( struct kl__A2_3i32* kl_rows_1_data, uint64_t kl_rows_1_size )
 {
     uint64_t kl_t0;
 #line 12 "codegen/fixed_array_halves.kl"
@@ -86,7 +86,7 @@ uint64_t kl__count__LA2_3i32( struct kl__A2_3i32* kl_rows_1_data, uint64_t kl_ro
 }
 
 #line 17 "codegen/fixed_array_halves.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__A3_A2_3i32 kl_rows_1;
@@ -167,7 +167,7 @@ int32_t kl__main__( void )
     kl_t2.e[kl_t14] = kl_t9;
 #line 19 "codegen/fixed_array_halves.kl"
     kl_rows_1 = kl_t2;
-    kl_t15 = kl__make__4bool( true );
+    kl_t15 = kl__4make__4bool( true );
 #line 22 "codegen/fixed_array_halves.kl"
     kl_t16 = kl_t15.tag == 0;
 #line 22 "codegen/fixed_array_halves.kl"
@@ -201,7 +201,7 @@ int32_t kl__main__( void )
 #line 22 "codegen/fixed_array_halves.kl"
     kl_t24 = ( struct kl__run__LA2_3i32__ref ) { ( struct kl__A2_3i32* ) kl_t23, 3 };
 #line 22 "codegen/fixed_array_halves.kl"
-    kl_t25 = kl__count__LA2_3i32( ( kl_t24 ).data, ( kl_t24 ).size );
+    kl_t25 = kl__5count__LA2_3i32( ( kl_t24 ).data, ( kl_t24 ).size );
 #line 22 "codegen/fixed_array_halves.kl"
     kl_t26 = kl_t25 == 3;
 #line 22 "codegen/fixed_array_halves.kl"
@@ -238,5 +238,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 17 "codegen/fixed_array_halves.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

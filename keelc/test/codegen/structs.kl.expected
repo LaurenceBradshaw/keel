@@ -18,12 +18,12 @@ struct kl__Line
     struct kl__Point kl_b;
 };
 
-double kl__abs__3f64( double );
-double kl__distance__4Line( struct kl__Line );
-int32_t kl__main__( void );
+double kl__3abs__3f64( double );
+double kl__8distance__4Line( struct kl__Line );
+int32_t kl__4main__( void );
 
 #line 16 "codegen/structs.kl"
-double kl__abs__3f64( double kl_v_1 )
+double kl__3abs__3f64( double kl_v_1 )
 {
     double kl_t0;
     bool kl_t2;
@@ -47,7 +47,7 @@ double kl__abs__3f64( double kl_v_1 )
 }
 
 #line 23 "codegen/structs.kl"
-double kl__distance__4Line( struct kl__Line kl_l_1 )
+double kl__8distance__4Line( struct kl__Line kl_l_1 )
 {
     double kl_t0;
     double kl_t2;
@@ -58,11 +58,11 @@ double kl__distance__4Line( struct kl__Line kl_l_1 )
 #line 25 "codegen/structs.kl"
     kl_t2 = kl_l_1.kl_b.kl_x - kl_l_1.kl_a.kl_x;
 #line 25 "codegen/structs.kl"
-    kl_t3 = kl__abs__3f64( kl_t2 );
+    kl_t3 = kl__3abs__3f64( kl_t2 );
 #line 25 "codegen/structs.kl"
     kl_t4 = kl_l_1.kl_b.kl_y - kl_l_1.kl_a.kl_y;
 #line 25 "codegen/structs.kl"
-    kl_t5 = kl__abs__3f64( kl_t4 );
+    kl_t5 = kl__3abs__3f64( kl_t4 );
 #line 25 "codegen/structs.kl"
     kl_t6 = kl_t3 + kl_t5;
 #line 25 "codegen/structs.kl"
@@ -72,7 +72,7 @@ double kl__distance__4Line( struct kl__Line kl_l_1 )
 }
 
 #line 29 "codegen/structs.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__Line kl_l_1;
@@ -107,7 +107,7 @@ int32_t kl__main__( void )
 #line 31 "codegen/structs.kl"
     kl_l_1 = kl_t2;
 #line 33 "codegen/structs.kl"
-    kl_t5 = kl__distance__4Line( kl_l_1 );
+    kl_t5 = kl__8distance__4Line( kl_l_1 );
 #line 33 "codegen/structs.kl"
     kl_t6 = kl_t5 != 7.0;
 #line 33 "codegen/structs.kl"
@@ -133,7 +133,7 @@ int32_t kl__main__( void )
 #line 37 "codegen/structs.kl"
     kl_flipped_7 = kl_t8;
 #line 39 "codegen/structs.kl"
-    kl_t11 = kl__distance__4Line( kl_flipped_7 );
+    kl_t11 = kl__8distance__4Line( kl_flipped_7 );
 #line 39 "codegen/structs.kl"
     kl_t12 = kl_t11 != 7.0;
 #line 39 "codegen/structs.kl"
@@ -192,5 +192,5 @@ int32_t kl__main__( void )
 int main( void )
 {
 #line 29 "codegen/structs.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

@@ -5,18 +5,18 @@
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__doubled__3i32( int32_t );
-int32_t kl__main__( void );
-int32_t kl__id__I3i32E__3i32( int32_t );
-bool kl__id__I4boolE__4bool( bool );
-int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t, bool );
-void kl__set_to__I3i32E__R3i32_3i32( int32_t*, int32_t );
-int32_t* kl__peek__I3i32E__3i32( int32_t* );
-void kl__first_write__I3i32E__O3i32_3i32( int32_t*, int32_t );
-int32_t kl__relay__I4boolE__4bool( bool );
+int32_t kl__7doubled__3i32( int32_t );
+int32_t kl__4main__( void );
+int32_t kl__2id__I3i32E__3i32( int32_t );
+bool kl__2id__I4boolE__4bool( bool );
+int32_t kl__4pick__I3i32_4boolE__3i32_4bool( int32_t, bool );
+void kl__6set_to__I3i32E__R3i32_3i32( int32_t*, int32_t );
+int32_t* kl__4peek__I3i32E__3i32( int32_t* );
+void kl__11first_write__I3i32E__O3i32_3i32( int32_t*, int32_t );
+int32_t kl__5relay__I4boolE__4bool( bool );
 
 #line 33 "codegen/generics.kl"
-int32_t kl__doubled__3i32( int32_t kl_v_1 )
+int32_t kl__7doubled__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -38,7 +38,7 @@ int32_t kl__doubled__3i32( int32_t kl_v_1 )
 }
 
 #line 43 "codegen/generics.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     int32_t kl_a_1;
@@ -69,18 +69,18 @@ int32_t kl__main__( void )
     bool kl_t28;
     int32_t kl_t29;
 #line 45 "codegen/generics.kl"
-    kl_t2 = kl__id__I3i32E__3i32( 7 );
+    kl_t2 = kl__2id__I3i32E__3i32( 7 );
 #line 45 "codegen/generics.kl"
     kl_a_1 = kl_t2;
-    kl_t4 = kl__id__I4boolE__4bool( true );
+    kl_t4 = kl__2id__I4boolE__4bool( true );
 #line 46 "codegen/generics.kl"
     kl_b_3 = kl_t4;
 #line 49 "codegen/generics.kl"
-    kl_t6 = kl__id__I3i32E__3i32( 30 );
+    kl_t6 = kl__2id__I3i32E__3i32( 30 );
 #line 49 "codegen/generics.kl"
     kl_c_5 = kl_t6;
 #line 51 "codegen/generics.kl"
-    kl_t8 = kl__pick__I3i32_4boolE__3i32_4bool( 4, false );
+    kl_t8 = kl__4pick__I3i32_4boolE__3i32_4bool( 4, false );
 #line 51 "codegen/generics.kl"
     kl_d_7 = kl_t8;
 #line 53 "codegen/generics.kl"
@@ -97,11 +97,11 @@ int32_t kl__main__( void )
 #line 60 "codegen/generics.kl"
     kl_t11 = &kl_e_10;
 #line 60 "codegen/generics.kl"
-    kl__set_to__I3i32E__R3i32_3i32( kl_t11, 4 );
+    kl__6set_to__I3i32E__R3i32_3i32( kl_t11, 4 );
 #line 62 "codegen/generics.kl"
     kl_t13 = &kl_e_10;
 #line 62 "codegen/generics.kl"
-    kl_t14 = kl__peek__I3i32E__3i32( kl_t13 );
+    kl_t14 = kl__4peek__I3i32E__3i32( kl_t13 );
 #line 62 "codegen/generics.kl"
     kl_t15 = ( *kl_t14 ) != 4;
 #line 62 "codegen/generics.kl"
@@ -114,7 +114,7 @@ int32_t kl__main__( void )
 #line 69 "codegen/generics.kl"
     kl_t17 = &kl_f_16;
 #line 69 "codegen/generics.kl"
-    kl__first_write__I3i32E__O3i32_3i32( kl_t17, 1 );
+    kl__11first_write__I3i32E__O3i32_3i32( kl_t17, 1 );
 #line 72 "codegen/generics.kl"
     kl_t19 = __builtin_add_overflow( kl_a_1, kl_c_5, &( int32_t ) { 0 } );
 #line 72 "codegen/generics.kl"
@@ -156,7 +156,7 @@ int32_t kl__main__( void )
 #line 72 "codegen/generics.kl"
     kl_t26 = kl_t24 + kl_f_16;
 #line 72 "codegen/generics.kl"
-    kl_t27 = kl__relay__I4boolE__4bool( true );
+    kl_t27 = kl__5relay__I4boolE__4bool( true );
 #line 72 "codegen/generics.kl"
     kl_t28 = __builtin_sub_overflow( kl_t26, kl_t27, &( int32_t ) { 0 } );
 #line 72 "codegen/generics.kl"
@@ -174,7 +174,7 @@ int32_t kl__main__( void )
 }
 
 #line 4 "codegen/generics.kl"
-int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )
+int32_t kl__2id__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 6 "codegen/generics.kl"
@@ -184,7 +184,7 @@ int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )
 }
 
 #line 4 "codegen/generics.kl"
-bool kl__id__I4boolE__4bool( bool kl_a_1 )
+bool kl__2id__I4boolE__4bool( bool kl_a_1 )
 {
     bool kl_t0;
 #line 6 "codegen/generics.kl"
@@ -194,7 +194,7 @@ bool kl__id__I4boolE__4bool( bool kl_a_1 )
 }
 
 #line 9 "codegen/generics.kl"
-int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_t2 )
+int32_t kl__4pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_t2 )
 {
     int32_t kl_t0;
     ( void ) kl_t2;
@@ -205,7 +205,7 @@ int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_t2 )
 }
 
 #line 17 "codegen/generics.kl"
-void kl__set_to__I3i32E__R3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
+void kl__6set_to__I3i32E__R3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
     ( *kl_target_1 ) = kl_value_2;
     return;
@@ -213,7 +213,7 @@ void kl__set_to__I3i32E__R3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 }
 
 #line 22 "codegen/generics.kl"
-int32_t* kl__peek__I3i32E__3i32( int32_t* kl_a_1 )
+int32_t* kl__4peek__I3i32E__3i32( int32_t* kl_a_1 )
 {
     int32_t* kl_t0;
 #line 24 "codegen/generics.kl"
@@ -223,7 +223,7 @@ int32_t* kl__peek__I3i32E__3i32( int32_t* kl_a_1 )
 }
 
 #line 27 "codegen/generics.kl"
-void kl__first_write__I3i32E__O3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
+void kl__11first_write__I3i32E__O3i32_3i32( int32_t* kl_target_1, int32_t kl_value_2 )
 {
     ( *kl_target_1 ) = kl_value_2;
     return;
@@ -231,16 +231,16 @@ void kl__first_write__I3i32E__O3i32_3i32( int32_t* kl_target_1, int32_t kl_value
 }
 
 #line 38 "codegen/generics.kl"
-int32_t kl__relay__I4boolE__4bool( bool kl_t1 )
+int32_t kl__5relay__I4boolE__4bool( bool kl_t1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
     ( void ) kl_t1;
 #line 40 "codegen/generics.kl"
-    kl_t2 = kl__id__I3i32E__3i32( 2 );
+    kl_t2 = kl__2id__I3i32E__3i32( 2 );
 #line 40 "codegen/generics.kl"
-    kl_t3 = kl__doubled__3i32( kl_t2 );
+    kl_t3 = kl__7doubled__3i32( kl_t2 );
 #line 40 "codegen/generics.kl"
     kl_t0 = kl_t3;
 #line 40 "codegen/generics.kl"
@@ -251,5 +251,5 @@ int32_t kl__relay__I4boolE__4bool( bool kl_t1 )
 int main( void )
 {
 #line 43 "codegen/generics.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

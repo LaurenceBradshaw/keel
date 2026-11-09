@@ -30,19 +30,19 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked*, uint64_t* );
-void kl__Tracked__dtor( struct kl__Tracked* );
-void kl__Holder__R6Holder__ctor( struct kl__Holder* );
-void kl__take__S6Holder_M7Tracked( struct kl__Holder*, struct kl__Tracked );
-void kl__own__S6Holder_M7Tracked( struct kl__Tracked );
-void kl__consume__M7Tracked( struct kl__Tracked );
-struct kl__Tracked kl__make__P3u64( uint64_t* );
-int32_t kl__main__( void );
-void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE*, struct kl__Tracked );
-void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* );
+void kl__7Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked*, uint64_t* );
+void kl__7Tracked__dtor( struct kl__Tracked* );
+void kl__6Holder__R6Holder__ctor( struct kl__Holder* );
+void kl__4take__S6Holder_M7Tracked( struct kl__Holder*, struct kl__Tracked );
+void kl__3own__S6Holder_M7Tracked( struct kl__Tracked );
+void kl__7consume__M7Tracked( struct kl__Tracked );
+struct kl__Tracked kl__4make__P3u64( uint64_t* );
+int32_t kl__4main__( void );
+void kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE*, struct kl__Tracked );
+void kl_7prelude_3box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* );
 
 #line 6 "codegen/bare_temporary.kl"
-void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t* kl_drops_2 )
+void kl__7Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t* kl_drops_2 )
 {
     uint8_t* kl_t3;
 #line 8 "codegen/bare_temporary.kl"
@@ -57,7 +57,7 @@ void kl__Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_t
 }
 
 #line 15 "codegen/bare_temporary.kl"
-void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
+void kl__7Tracked__dtor( struct kl__Tracked* kl_this_1 )
 {
     bool kl_t2;
 #line 17 "codegen/bare_temporary.kl"
@@ -78,7 +78,7 @@ void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
 }
 
 #line 30 "codegen/bare_temporary.kl"
-void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
+void kl__6Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 {
     ( *kl_this_1 ).kl_taken_ = 0;
     return;
@@ -86,7 +86,7 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
 }
 
 #line 35 "codegen/bare_temporary.kl"
-void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t2 )
+void kl__4take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Tracked kl_t2 )
 {
     bool kl_t3;
 #line 37 "codegen/bare_temporary.kl"
@@ -99,32 +99,32 @@ void kl__take__S6Holder_M7Tracked( struct kl__Holder* kl_this_1, struct kl__Trac
     bb2:
 #line 37 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_taken_ = ( *kl_this_1 ).kl_taken_ + 1;
-    kl__Tracked__dtor( &kl_t2 );
+    kl__7Tracked__dtor( &kl_t2 );
 #line 38 "codegen/bare_temporary.kl"
     return;
 #line 38 "codegen/bare_temporary.kl"
 }
 
 #line 40 "codegen/bare_temporary.kl"
-void kl__own__S6Holder_M7Tracked( struct kl__Tracked kl_t1 )
+void kl__3own__S6Holder_M7Tracked( struct kl__Tracked kl_t1 )
 {
-    kl__Tracked__dtor( &kl_t1 );
+    kl__7Tracked__dtor( &kl_t1 );
 #line 42 "codegen/bare_temporary.kl"
     return;
 #line 42 "codegen/bare_temporary.kl"
 }
 
 #line 47 "codegen/bare_temporary.kl"
-void kl__consume__M7Tracked( struct kl__Tracked kl_t1 )
+void kl__7consume__M7Tracked( struct kl__Tracked kl_t1 )
 {
-    kl__Tracked__dtor( &kl_t1 );
+    kl__7Tracked__dtor( &kl_t1 );
 #line 49 "codegen/bare_temporary.kl"
     return;
 #line 49 "codegen/bare_temporary.kl"
 }
 
 #line 51 "codegen/bare_temporary.kl"
-struct kl__Tracked kl__make__P3u64( uint64_t* kl_drops_1 )
+struct kl__Tracked kl__4make__P3u64( uint64_t* kl_drops_1 )
 {
     struct kl__Tracked kl_t0;
     struct kl__Tracked kl_t2;
@@ -139,13 +139,13 @@ struct kl__Tracked kl__make__P3u64( uint64_t* kl_drops_1 )
 #line 53 "codegen/bare_temporary.kl"
     kl_t5 = true;
 #line 53 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_drops_1 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_drops_1 );
 #line 53 "codegen/bare_temporary.kl"
     kl_t0 = kl_t2;
 #line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
 #line 53 "codegen/bare_temporary.kl"
-    if ( kl_t5 ) kl__Tracked__dtor( &kl_t2 );
+    if ( kl_t5 ) kl__7Tracked__dtor( &kl_t2 );
 #line 53 "codegen/bare_temporary.kl"
     kl_t5 = false;
 #line 53 "codegen/bare_temporary.kl"
@@ -153,7 +153,7 @@ struct kl__Tracked kl__make__P3u64( uint64_t* kl_drops_1 )
 }
 
 #line 56 "codegen/bare_temporary.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     uint64_t kl_drops_1;
@@ -223,13 +223,13 @@ int32_t kl__main__( void )
 #line 60 "codegen/bare_temporary.kl"
     kl_t4 = &kl_drops_1;
 #line 60 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_t4 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t3, kl_t4 );
 #line 60 "codegen/bare_temporary.kl"
-    kl__consume__M7Tracked( kl_t2 );
+    kl__7consume__M7Tracked( kl_t2 );
 #line 60 "codegen/bare_temporary.kl"
     kl_t50 = false;
 #line 60 "codegen/bare_temporary.kl"
-    if ( kl_t50 ) kl__Tracked__dtor( &kl_t2 );
+    if ( kl_t50 ) kl__7Tracked__dtor( &kl_t2 );
 #line 60 "codegen/bare_temporary.kl"
     kl_t50 = false;
     goto bb1;
@@ -241,15 +241,15 @@ int32_t kl__main__( void )
     bb2:
     kl_t8 = &kl_drops_1;
 #line 63 "codegen/bare_temporary.kl"
-    kl_t9 = kl__make__P3u64( kl_t8 );
+    kl_t9 = kl__4make__P3u64( kl_t8 );
 #line 63 "codegen/bare_temporary.kl"
     kl_t51 = true;
 #line 63 "codegen/bare_temporary.kl"
-    kl__consume__M7Tracked( kl_t9 );
+    kl__7consume__M7Tracked( kl_t9 );
 #line 63 "codegen/bare_temporary.kl"
     kl_t51 = false;
 #line 63 "codegen/bare_temporary.kl"
-    if ( kl_t51 ) kl__Tracked__dtor( &kl_t9 );
+    if ( kl_t51 ) kl__7Tracked__dtor( &kl_t9 );
 #line 63 "codegen/bare_temporary.kl"
     kl_t51 = false;
     goto bb4;
@@ -264,7 +264,7 @@ int32_t kl__main__( void )
     bb5:
     kl_t13 = &kl_h_12;
 #line 66 "codegen/bare_temporary.kl"
-    kl__Holder__R6Holder__ctor( kl_t13 );
+    kl__6Holder__R6Holder__ctor( kl_t13 );
     kl_t15 = &kl_h_12;
 #line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
@@ -275,13 +275,13 @@ int32_t kl__main__( void )
 #line 67 "codegen/bare_temporary.kl"
     kl_t18 = &kl_drops_1;
 #line 67 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t17, kl_t18 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t17, kl_t18 );
 #line 67 "codegen/bare_temporary.kl"
-    kl__take__S6Holder_M7Tracked( kl_t15, kl_t16 );
+    kl__4take__S6Holder_M7Tracked( kl_t15, kl_t16 );
 #line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
 #line 67 "codegen/bare_temporary.kl"
-    if ( kl_t52 ) kl__Tracked__dtor( &kl_t16 );
+    if ( kl_t52 ) kl__7Tracked__dtor( &kl_t16 );
 #line 67 "codegen/bare_temporary.kl"
     kl_t52 = false;
     kl_t53 = false;
@@ -292,13 +292,13 @@ int32_t kl__main__( void )
 #line 68 "codegen/bare_temporary.kl"
     kl_t23 = &kl_drops_1;
 #line 68 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t22, kl_t23 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t22, kl_t23 );
 #line 68 "codegen/bare_temporary.kl"
-    kl__own__S6Holder_M7Tracked( kl_t21 );
+    kl__3own__S6Holder_M7Tracked( kl_t21 );
 #line 68 "codegen/bare_temporary.kl"
     kl_t53 = false;
 #line 68 "codegen/bare_temporary.kl"
-    if ( kl_t53 ) kl__Tracked__dtor( &kl_t21 );
+    if ( kl_t53 ) kl__7Tracked__dtor( &kl_t21 );
 #line 68 "codegen/bare_temporary.kl"
     kl_t53 = false;
     goto bb7;
@@ -311,7 +311,7 @@ int32_t kl__main__( void )
 #line 69 "codegen/bare_temporary.kl"
     if ( kl_t26 ) goto bb8; else goto bb9;
     bb8:
-    kl_t28 = kl__consume__M7Tracked;
+    kl_t28 = kl__7consume__M7Tracked;
 #line 71 "codegen/bare_temporary.kl"
     kl_through_27 = kl_t28;
     kl_t54 = false;
@@ -322,13 +322,13 @@ int32_t kl__main__( void )
 #line 72 "codegen/bare_temporary.kl"
     kl_t31 = &kl_drops_1;
 #line 72 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t30, kl_t31 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t30, kl_t31 );
 #line 72 "codegen/bare_temporary.kl"
     kl_through_27( kl_t29 );
 #line 72 "codegen/bare_temporary.kl"
     kl_t54 = false;
 #line 72 "codegen/bare_temporary.kl"
-    if ( kl_t54 ) kl__Tracked__dtor( &kl_t29 );
+    if ( kl_t54 ) kl__7Tracked__dtor( &kl_t29 );
 #line 72 "codegen/bare_temporary.kl"
     kl_t54 = false;
     goto bb10;
@@ -352,13 +352,13 @@ int32_t kl__main__( void )
 #line 77 "codegen/bare_temporary.kl"
     kl_t39 = &kl_drops_1;
 #line 77 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t38, kl_t39 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t38, kl_t39 );
 #line 77 "codegen/bare_temporary.kl"
-    kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( kl_t36, kl_t37 );
+    kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( kl_t36, kl_t37 );
 #line 77 "codegen/bare_temporary.kl"
     kl_t55 = false;
 #line 77 "codegen/bare_temporary.kl"
-    if ( kl_t55 ) kl__Tracked__dtor( &kl_t37 );
+    if ( kl_t55 ) kl__7Tracked__dtor( &kl_t37 );
 #line 77 "codegen/bare_temporary.kl"
     kl_t55 = false;
     goto bb13;
@@ -372,7 +372,7 @@ int32_t kl__main__( void )
     if ( kl_t42 ) goto bb14; else goto bb15;
     bb14:
 #line 79 "codegen/bare_temporary.kl"
-    kl_7prelude_box__I7TrackedE__dtor( &kl_b_35 );
+    kl_7prelude_3box__I7TrackedE__dtor( &kl_b_35 );
     goto bb16;
     bb15:
 #line 78 "codegen/bare_temporary.kl"
@@ -391,13 +391,13 @@ int32_t kl__main__( void )
 #line 83 "codegen/bare_temporary.kl"
     kl_t46 = &kl_drops_1;
 #line 83 "codegen/bare_temporary.kl"
-    kl__Tracked__R7Tracked_P3u64__ctor( kl_t45, kl_t46 );
+    kl__7Tracked__R7Tracked_P3u64__ctor( kl_t45, kl_t46 );
 #line 83 "codegen/bare_temporary.kl"
-    kl__consume__M7Tracked( kl_t44 );
+    kl__7consume__M7Tracked( kl_t44 );
 #line 83 "codegen/bare_temporary.kl"
     kl_t56 = false;
 #line 83 "codegen/bare_temporary.kl"
-    if ( kl_t56 ) kl__Tracked__dtor( &kl_t44 );
+    if ( kl_t56 ) kl__7Tracked__dtor( &kl_t44 );
 #line 83 "codegen/bare_temporary.kl"
     kl_t56 = false;
     goto bb19;
@@ -420,7 +420,7 @@ int32_t kl__main__( void )
 }
 
 #line 382 "<prelude>"
-void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE* kl_this_1, struct kl__Tracked kl_value_2 )
+void kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE* kl_this_1, struct kl__Tracked kl_value_2 )
 {
     struct kl__Tracked* kl_slot_3;
     struct kl__Tracked* kl_t4;
@@ -445,7 +445,7 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
 #line 389 "<prelude>"
     ( *kl_this_1 ).kl_p_ = kl_t7;
 #line 391 "<prelude>"
-    if ( kl_t8 ) kl__Tracked__dtor( &kl_value_2 );
+    if ( kl_t8 ) kl__7Tracked__dtor( &kl_value_2 );
 #line 391 "<prelude>"
     kl_t8 = false;
 #line 391 "<prelude>"
@@ -454,13 +454,13 @@ void kl_7prelude_box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( stru
 }
 
 #line 393 "<prelude>"
-void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_this_1 )
+void kl_7prelude_3box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_this_1 )
 {
     struct kl__Tracked* kl_t2;
 #line 397 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
 #line 397 "<prelude>"
-    kl__Tracked__dtor( &( *kl_t2 ) );
+    kl__7Tracked__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
 #line 400 "<prelude>"
     return;
@@ -471,5 +471,5 @@ void kl_7prelude_box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_t
 int main( void )
 {
 #line 56 "codegen/bare_temporary.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

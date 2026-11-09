@@ -27,18 +27,18 @@ __attribute__((weak)) int32_t kl__made__GS3BoxI3f64E = 0;
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__bump__S7Counter_3i32( int32_t );
-int32_t kl__twice__S7Counter_3i32( int32_t );
-kl__fn__F3i32E3i32 kl__doubler__S7Counter( void );
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
-int32_t kl__main__( void );
-struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t );
-struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double );
-int32_t kl__count__I3i32E__S3BoxI3i32E( void );
-int32_t kl__count__I3f64E__S3BoxI3f64E( void );
+int32_t kl__4bump__S7Counter_3i32( int32_t );
+int32_t kl__5twice__S7Counter_3i32( int32_t );
+kl__fn__F3i32E3i32 kl__7doubler__S7Counter( void );
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+int32_t kl__4main__( void );
+struct kl__Box__I3i32E kl__2of__I3i32E__S3BoxI3i32E_3i32( int32_t );
+struct kl__Box__I3f64E kl__2of__I3f64E__S3BoxI3f64E_3f64( double );
+int32_t kl__5count__I3i32E__S3BoxI3i32E( void );
+int32_t kl__5count__I3f64E__S3BoxI3f64E( void );
 
 #line 9 "codegen/static_method_pointers.kl"
-int32_t kl__bump__S7Counter_3i32( int32_t kl_by_1 )
+int32_t kl__4bump__S7Counter_3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -61,7 +61,7 @@ int32_t kl__bump__S7Counter_3i32( int32_t kl_by_1 )
 }
 
 #line 15 "codegen/static_method_pointers.kl"
-int32_t kl__twice__S7Counter_3i32( int32_t kl_by_1 )
+int32_t kl__5twice__S7Counter_3i32( int32_t kl_by_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -83,12 +83,12 @@ int32_t kl__twice__S7Counter_3i32( int32_t kl_by_1 )
 }
 
 #line 20 "codegen/static_method_pointers.kl"
-kl__fn__F3i32E3i32 kl__doubler__S7Counter( void )
+kl__fn__F3i32E3i32 kl__7doubler__S7Counter( void )
 {
     kl__fn__F3i32E3i32 kl_t0;
     kl__fn__F3i32E3i32 kl_t1;
 #line 22 "codegen/static_method_pointers.kl"
-    kl_t1 = kl__twice__S7Counter_3i32;
+    kl_t1 = kl__5twice__S7Counter_3i32;
 #line 22 "codegen/static_method_pointers.kl"
     kl_t0 = kl_t1;
 #line 22 "codegen/static_method_pointers.kl"
@@ -96,7 +96,7 @@ kl__fn__F3i32E3i32 kl__doubler__S7Counter( void )
 }
 
 #line 44 "codegen/static_method_pointers.kl"
-int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
+int32_t kl__5apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -109,7 +109,7 @@ int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_x_2 )
 }
 
 #line 49 "codegen/static_method_pointers.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     kl__fn__F3i32E3i32 kl_bump_1;
@@ -155,14 +155,14 @@ int32_t kl__main__( void )
     bool kl_t43;
     int32_t kl_t44;
 #line 51 "codegen/static_method_pointers.kl"
-    kl_t2 = kl__bump__S7Counter_3i32;
+    kl_t2 = kl__4bump__S7Counter_3i32;
 #line 51 "codegen/static_method_pointers.kl"
     kl_bump_1 = kl_t2;
 #line 53 "codegen/static_method_pointers.kl"
     kl_bump_1( 2 );
-    kl__apply__F3i32E3i32_3i32( kl_bump_1, 3 );
+    kl__5apply__F3i32E3i32_3i32( kl_bump_1, 3 );
 #line 56 "codegen/static_method_pointers.kl"
-    kl_t6 = kl__bump__S7Counter_3i32( 0 );
+    kl_t6 = kl__4bump__S7Counter_3i32( 0 );
 #line 56 "codegen/static_method_pointers.kl"
     kl_t7 = kl_t6 != 5;
 #line 56 "codegen/static_method_pointers.kl"
@@ -171,9 +171,9 @@ int32_t kl__main__( void )
     if ( kl_t5 ) goto bb2; else goto bb1;
     bb1:
 #line 56 "codegen/static_method_pointers.kl"
-    kl_t8 = kl__doubler__S7Counter(  );
+    kl_t8 = kl__7doubler__S7Counter(  );
 #line 56 "codegen/static_method_pointers.kl"
-    kl_t9 = kl__apply__F3i32E3i32_3i32( kl_t8, 4 );
+    kl_t9 = kl__5apply__F3i32E3i32_3i32( kl_t8, 4 );
 #line 56 "codegen/static_method_pointers.kl"
     kl_t10 = kl_t9 != 8;
 #line 56 "codegen/static_method_pointers.kl"
@@ -189,16 +189,16 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 61 "codegen/static_method_pointers.kl"
-    kl_t12 = kl__of__I3i32E__S3BoxI3i32E_3i32;
+    kl_t12 = kl__2of__I3i32E__S3BoxI3i32E_3i32;
 #line 61 "codegen/static_method_pointers.kl"
     kl_make_int_11 = kl_t12;
-    kl_t14 = kl__of__I3f64E__S3BoxI3f64E_3f64;
+    kl_t14 = kl__2of__I3f64E__S3BoxI3f64E_3f64;
 #line 62 "codegen/static_method_pointers.kl"
     kl_make_float_13 = kl_t14;
-    kl_t16 = kl__count__I3i32E__S3BoxI3i32E;
+    kl_t16 = kl__5count__I3i32E__S3BoxI3i32E;
 #line 63 "codegen/static_method_pointers.kl"
     kl_ints_15 = kl_t16;
-    kl_t18 = kl__count__I3f64E__S3BoxI3f64E;
+    kl_t18 = kl__5count__I3f64E__S3BoxI3f64E;
 #line 64 "codegen/static_method_pointers.kl"
     kl_floats_17 = kl_t18;
 #line 66 "codegen/static_method_pointers.kl"
@@ -271,7 +271,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 75 "codegen/static_method_pointers.kl"
-    kl_t36 = kl__bump__S7Counter_3i32( 0 );
+    kl_t36 = kl__4bump__S7Counter_3i32( 0 );
 #line 75 "codegen/static_method_pointers.kl"
     kl_t37 = kl_ints_15(  );
 #line 75 "codegen/static_method_pointers.kl"
@@ -313,7 +313,7 @@ int32_t kl__main__( void )
 }
 
 #line 32 "codegen/static_method_pointers.kl"
-struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
+struct kl__Box__I3i32E kl__2of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
 {
     struct kl__Box__I3i32E kl_t0;
     bool kl_t2;
@@ -339,7 +339,7 @@ struct kl__Box__I3i32E kl__of__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_1 )
 }
 
 #line 32 "codegen/static_method_pointers.kl"
-struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
+struct kl__Box__I3f64E kl__2of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
 {
     struct kl__Box__I3f64E kl_t0;
     bool kl_t2;
@@ -365,7 +365,7 @@ struct kl__Box__I3f64E kl__of__I3f64E__S3BoxI3f64E_3f64( double kl_x_1 )
 }
 
 #line 38 "codegen/static_method_pointers.kl"
-int32_t kl__count__I3i32E__S3BoxI3i32E( void )
+int32_t kl__5count__I3i32E__S3BoxI3i32E( void )
 {
     int32_t kl_t0;
 #line 40 "codegen/static_method_pointers.kl"
@@ -375,7 +375,7 @@ int32_t kl__count__I3i32E__S3BoxI3i32E( void )
 }
 
 #line 38 "codegen/static_method_pointers.kl"
-int32_t kl__count__I3f64E__S3BoxI3f64E( void )
+int32_t kl__5count__I3f64E__S3BoxI3f64E( void )
 {
     int32_t kl_t0;
 #line 40 "codegen/static_method_pointers.kl"
@@ -388,5 +388,5 @@ int32_t kl__count__I3f64E__S3BoxI3f64E( void )
 int main( void )
 {
 #line 49 "codegen/static_method_pointers.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }

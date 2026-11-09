@@ -18,14 +18,14 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
-void kl__owned__dtor( struct kl__owned* );
-int32_t kl__main__( void );
-void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned*, uint64_t );
-void kl__end_all__I3i32E__N3i32_3u64( int32_t*, uint64_t );
+void kl__5owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
+void kl__5owned__dtor( struct kl__owned* );
+int32_t kl__4main__( void );
+void kl__7end_all__I5ownedE__N5owned_3u64( struct kl__owned*, uint64_t );
+void kl__7end_all__I3i32E__N3i32_3u64( int32_t*, uint64_t );
 
 #line 8 "codegen/destroy.kl"
-void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
+void kl__5owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
     bool kl_t4;
@@ -50,7 +50,7 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
 }
 
 #line 18 "codegen/destroy.kl"
-void kl__owned__dtor( struct kl__owned* kl_this_1 )
+void kl__5owned__dtor( struct kl__owned* kl_this_1 )
 {
     bool kl_t3;
 #line 22 "codegen/destroy.kl"
@@ -70,7 +70,7 @@ void kl__owned__dtor( struct kl__owned* kl_this_1 )
 }
 
 #line 40 "codegen/destroy.kl"
-int32_t kl__main__( void )
+int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     struct kl__owned* kl_slots_1;
@@ -121,13 +121,13 @@ int32_t kl__main__( void )
 #line 47 "codegen/destroy.kl"
     kl_t35 = true;
 #line 47 "codegen/destroy.kl"
-    kl__owned__R5owned_3u64__ctor( kl_t5, 1 );
+    kl__5owned__R5owned_3u64__ctor( kl_t5, 1 );
 #line 47 "codegen/destroy.kl"
     ( *kl_t3 ) = kl_t4;
 #line 47 "codegen/destroy.kl"
     kl_t35 = false;
 #line 47 "codegen/destroy.kl"
-    if ( kl_t35 ) kl__owned__dtor( &kl_t4 );
+    if ( kl_t35 ) kl__5owned__dtor( &kl_t4 );
 #line 47 "codegen/destroy.kl"
     kl_t35 = false;
     kl_t7 = kl_slots_1 + 1;
@@ -138,13 +138,13 @@ int32_t kl__main__( void )
 #line 48 "codegen/destroy.kl"
     kl_t36 = true;
 #line 48 "codegen/destroy.kl"
-    kl__owned__R5owned_3u64__ctor( kl_t9, 2 );
+    kl__5owned__R5owned_3u64__ctor( kl_t9, 2 );
 #line 48 "codegen/destroy.kl"
     ( *kl_t7 ) = kl_t8;
 #line 48 "codegen/destroy.kl"
     kl_t36 = false;
 #line 48 "codegen/destroy.kl"
-    if ( kl_t36 ) kl__owned__dtor( &kl_t8 );
+    if ( kl_t36 ) kl__5owned__dtor( &kl_t8 );
 #line 48 "codegen/destroy.kl"
     kl_t36 = false;
     kl_t11 = kl_slots_1 + 2;
@@ -155,13 +155,13 @@ int32_t kl__main__( void )
 #line 49 "codegen/destroy.kl"
     kl_t37 = true;
 #line 49 "codegen/destroy.kl"
-    kl__owned__R5owned_3u64__ctor( kl_t13, 3 );
+    kl__5owned__R5owned_3u64__ctor( kl_t13, 3 );
 #line 49 "codegen/destroy.kl"
     ( *kl_t11 ) = kl_t12;
 #line 49 "codegen/destroy.kl"
     kl_t37 = false;
 #line 49 "codegen/destroy.kl"
-    if ( kl_t37 ) kl__owned__dtor( &kl_t12 );
+    if ( kl_t37 ) kl__5owned__dtor( &kl_t12 );
 #line 49 "codegen/destroy.kl"
     kl_t37 = false;
 #line 52 "codegen/destroy.kl"
@@ -192,7 +192,7 @@ int32_t kl__main__( void )
 #line 61 "codegen/destroy.kl"
     kl_t21 = kl_t17 + kl_t19;
 #line 61 "codegen/destroy.kl"
-    kl__owned__dtor( &( *kl_t21 ) );
+    kl__5owned__dtor( &( *kl_t21 ) );
 #line 61 "codegen/destroy.kl"
     kl_t19 = kl_t19 + 1;
 #line 61 "codegen/destroy.kl"
@@ -208,7 +208,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb7:
 #line 69 "codegen/destroy.kl"
-    kl__end_all__I5ownedE__N5owned_3u64( kl_slots_1, 2 );
+    kl__7end_all__I5ownedE__N5owned_3u64( kl_slots_1, 2 );
 #line 71 "codegen/destroy.kl"
     kl_t24 = kl__live__G != 0;
 #line 71 "codegen/destroy.kl"
@@ -235,7 +235,7 @@ int32_t kl__main__( void )
 #line 79 "codegen/destroy.kl"
     kl_t29 = kl_t25 + kl_t27;
 #line 79 "codegen/destroy.kl"
-    kl__owned__dtor( &( *kl_t29 ) );
+    kl__5owned__dtor( &( *kl_t29 ) );
 #line 79 "codegen/destroy.kl"
     kl_t27 = kl_t27 + 1;
 #line 79 "codegen/destroy.kl"
@@ -248,7 +248,7 @@ int32_t kl__main__( void )
 #line 87 "codegen/destroy.kl"
     kl_numbers_31 = kl_t32;
 #line 90 "codegen/destroy.kl"
-    kl__end_all__I3i32E__N3i32_3u64( kl_numbers_31, 2 );
+    kl__7end_all__I3i32E__N3i32_3u64( kl_numbers_31, 2 );
 #line 94 "codegen/destroy.kl"
     kl_rt_free( kl_numbers_31 );
 #line 97 "codegen/destroy.kl"
@@ -258,7 +258,7 @@ int32_t kl__main__( void )
 }
 
 #line 32 "codegen/destroy.kl"
-void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t kl_count_2 )
+void kl__7end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t kl_count_2 )
 {
     struct kl__owned* kl_t3;
     uint64_t kl_t4;
@@ -282,7 +282,7 @@ void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t
 #line 36 "codegen/destroy.kl"
     kl_t7 = kl_t3 + kl_t5;
 #line 36 "codegen/destroy.kl"
-    kl__owned__dtor( &( *kl_t7 ) );
+    kl__5owned__dtor( &( *kl_t7 ) );
 #line 36 "codegen/destroy.kl"
     kl_t5 = kl_t5 + 1;
 #line 36 "codegen/destroy.kl"
@@ -293,7 +293,7 @@ void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t
 }
 
 #line 32 "codegen/destroy.kl"
-void kl__end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
+void kl__7end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
 {
     ( void ) kl_slots_1;
     ( void ) kl_count_2;
@@ -306,5 +306,5 @@ void kl__end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
 int main( void )
 {
 #line 40 "codegen/destroy.kl"
-    return (int) kl__main__();
+    return (int) kl__4main__();
 }
