@@ -36,7 +36,8 @@ u32 inline_cost( const Function& callee, const Inline_weights& weights )
                 cost += weights.call;
                 call_like++;
             }
-            else
+            // A dynamic call's own operands, which lower_dispatch spelt out: the call already counts them.
+            else if( kind != Rvalue_kind::Vtable_slot && kind != Rvalue_kind::Interface_self )
             {
                 cost += weights.statement;
             }

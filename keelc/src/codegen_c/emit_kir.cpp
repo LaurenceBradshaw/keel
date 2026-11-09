@@ -161,7 +161,6 @@ private:
 
     // A `Shape*` made from the address of an implementer: the address beside its vtable's.
     std::string interface_reference( Type_id interface, Type_id implementer, std::string_view address ) const;
-    std::string dynamic_call( const Rvalue& rvalue ) const;
 
     std::string prototype( Node_id decl, std::span<const Type_id> type_arguments = {} ) const;
     std::string prototype( const Function& function ) const;
@@ -1906,6 +1905,12 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             types_.table().get( rvalue.type ).element, types_.table().get( rvalue.a.type ).element, operand( rvalue.a )
         );
 
+    case Rvalue_kind::Vtable_slot:
+        return fmt::format( "( {} ).vtable->{}", operand( rvalue.a ), spelling_.slot( rvalue.callee ) );
+
+    case Rvalue_kind::Interface_self:
+        return fmt::format( "( {} ).self", operand( rvalue.a ) );
+
     case Rvalue_kind::Cast:
         // A `const Shape*` from a `Shape*` is the same pair.
         if( types_.table().is_interface_pointer( rvalue.type ) )
@@ -1963,10 +1968,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), c_string( literal_pool_.string( rvalue.a.constant ) ) );
 
     case Rvalue_kind::Call:
-        if( ast_.is_requirement( rvalue.callee ) )
-        {
-            return dynamic_call( rvalue );
-        }
+        assert( !ast_.is_requirement( rvalue.callee ) && "lower_dispatch made each dynamic call indirect" );
         [[fallthrough]];
     case Rvalue_kind::Indirect_call:
     {
@@ -2052,26 +2054,6 @@ std::string Kir_emitter::interface_reference( Type_id interface, Type_id impleme
         address,
         spelling_.vtable( implementer, interface )
     );
-}
-
-// `s.area()` on a `Shape*`: the slot of the receiver's vtable, given the receiver's object.
-std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
-{
-    const std::string receiver = operand( rvalue.arguments[0] );
-
-    std::string args = fmt::format( "{}.self", receiver );
-
-    for( std::size_t i = 1; i < rvalue.arguments.size(); ++i )
-    {
-        const Operand& argument = rvalue.arguments[i];
-
-        if( !is_void( argument ) )
-        {
-            args += fmt::format( ", {}", spelling_.argument( argument.type, operand( argument ) ) );
-        }
-    }
-
-    return fmt::format( "{}.vtable->{}( {} )", receiver, spelling_.slot( rvalue.callee ), args );
 }
 
 } // namespace
@@ -2315,8 +2297,12 @@ TEST_CASE( "emit_kir_writes_a_function_address_as_a_bare_symbol", "[codegen][kir
 
     SECTION( "the typedef is written once for a signature used twice" )
     {
-        Generated twice( "i32 f( i32 a ) { return a; }\n"
-                         "i32 main() { fn( i32 ) -> i32 p = &f; fn( i32 ) -> i32 q = &f; return 0; }\n" );
+        Generated twice(
+            "i32 f( i32 a ) { return a; }\n"
+            "i32 main() { fn( i32 ) -> i32 p = &f; fn( i32 ) -> i32 q = &f; return 0; }\n",
+            false,
+            Emitting::Input
+        );
 
         INFO( twice.c );
         REQUIRE( twice.clean() );
@@ -2606,20 +2592,24 @@ TEST_CASE( "emit_kir_spells_a_mode_in_a_function_typedef", "[codegen][kir][m7][m
     // still be two names, or one of the two variables below would be declared with the other's type.
     SECTION( "every form gets a typedef of its own" )
     {
-        const Generated g( "i32 plain( i32 a ) { return a; }\n"
-                           "i32 borrow( ref i32 a ) { return a; }\n"
-                           "i32 peek( const ref i32 a ) { return a; }\n"
-                           "i32 fill( out i32 a ) { a = 1; return a; }\n"
-                           "i32 taken( move i32 a ) { return a; }\n"
-                           "i32 main()\n"
-                           "{\n"
-                           "    fn( i32 ) -> i32           a = &plain;\n"
-                           "    fn( ref i32 ) -> i32       b = &borrow;\n"
-                           "    fn( const ref i32 ) -> i32 c = &peek;\n"
-                           "    fn( out i32 ) -> i32       d = &fill;\n"
-                           "    fn( move i32 ) -> i32      e = &taken;\n"
-                           "    return 0;\n"
-                           "}\n" );
+        const Generated g(
+            "i32 plain( i32 a ) { return a; }\n"
+            "i32 borrow( ref i32 a ) { return a; }\n"
+            "i32 peek( const ref i32 a ) { return a; }\n"
+            "i32 fill( out i32 a ) { a = 1; return a; }\n"
+            "i32 taken( move i32 a ) { return a; }\n"
+            "i32 main()\n"
+            "{\n"
+            "    fn( i32 ) -> i32           a = &plain;\n"
+            "    fn( ref i32 ) -> i32       b = &borrow;\n"
+            "    fn( const ref i32 ) -> i32 c = &peek;\n"
+            "    fn( out i32 ) -> i32       d = &fill;\n"
+            "    fn( move i32 ) -> i32      e = &taken;\n"
+            "    return 0;\n"
+            "}\n",
+            false,
+            Emitting::Input
+        );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -2768,9 +2758,13 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
 
     SECTION( "one typedef per instance, and the open form is none" )
     {
-        Generated g( "T bounded<T>( T a ) where T : integral { return a; }\n"
-                     "T use<T>( T a ) where T : integral { fn( T ) -> T p = &bounded<T>; return p( a ); }\n"
-                     "i32 main() { i32 x = use<i32>( 1 ); i64 y = use<i64>( 2 ); return x + 1; }\n" );
+        Generated g(
+            "T bounded<T>( T a ) where T : integral { return a; }\n"
+            "T use<T>( T a ) where T : integral { fn( T ) -> T p = &bounded<T>; return p( a ); }\n"
+            "i32 main() { i32 x = use<i32>( 1 ); i64 y = use<i64>( 2 ); return x + 1; }\n",
+            false,
+            Emitting::Input
+        );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -2792,8 +2786,12 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
     // blank line.
     SECTION( "an open signature on its own leaves the section out entirely" )
     {
-        Generated g( "void unused<T>( fn( T ) -> T f, T a ) where T : integral { T r = f( a ); }\n"
-                     "i32 main() { return 0; }\n" );
+        Generated g(
+            "void unused<T>( fn( T ) -> T f, T a ) where T : integral { T r = f( a ); }\n"
+            "i32 main() { return 0; }\n",
+            false,
+            Emitting::Input
+        );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -4159,8 +4157,8 @@ TEST_CASE( "emit_kir_names_each_overloaded_requirement_s_slot", "[codegen][kir][
     REQUIRE( g.has( "double ( *kl__4area__ )( void* );" ) );
     REQUIRE( g.has( "double ( *kl__4area__3i32 )( void*, int32_t );" ) );
     REQUIRE( g.has( "{ kl__Sq__drop, kl__Sq__as_kl__Shape__kl__4area__, kl__Sq__as_kl__Shape__kl__4area__3i32 };" ) );
-    REQUIRE( g.has( ".vtable->kl__4area__( " ) );
-    REQUIRE( g.has( ".vtable->kl__4area__3i32( " ) );
+    REQUIRE( g.has( ".vtable->kl__4area__;" ) );
+    REQUIRE( g.has( ".vtable->kl__4area__3i32;" ) );
 }
 
 // The epilogue is the closing brace's, so stepping out of a function stops there last.

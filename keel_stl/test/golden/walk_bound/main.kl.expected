@@ -4051,6 +4051,8 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
+typedef struct kl__run__L2u8__ref ( *kl__fn__FMP4voidEPL2u8 )( void* );
+
 struct kl_2kl6string_string
 {
     uint8_t* kl_data_;
@@ -4210,10 +4212,16 @@ void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_st
     bool kl_t16;
     uint8_t* kl_t17;
     bool kl_t18;
+    kl__fn__FMP4voidEPL2u8 kl_t19;
+    void* kl_t20;
 #line 37 "../../src/string.kl"
     kl_t4 = kl_text_2;
 #line 37 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t19 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 37 "../../src/string.kl"
+    kl_t20 = ( kl_t4 ).self;
+#line 37 "../../src/string.kl"
+    kl_t5 = kl_t19( kl_t20 );
 #line 37 "../../src/string.kl"
     kl_bytes_3 = kl_t5;
 #line 41 "../../src/string.kl"
@@ -4972,10 +4980,16 @@ bool kl_2kl6string_11starts_with__SQ2kl6string_7textual( struct kl_2kl6string_st
     struct kl_2kl6string_string* kl_t6;
     struct kl__run__L2u8__ref kl_t7;
     bool kl_t8;
+    kl__fn__FMP4voidEPL2u8 kl_t9;
+    void* kl_t10;
 #line 209 "../../src/string.kl"
     kl_t4 = kl_prefix_2;
 #line 209 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 209 "../../src/string.kl"
+    kl_t10 = ( kl_t4 ).self;
+#line 209 "../../src/string.kl"
+    kl_t5 = kl_t9( kl_t10 );
 #line 209 "../../src/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = &( *kl_this_1 );
@@ -5008,10 +5022,16 @@ bool kl_2kl6string_9ends_with__SQ2kl6string_7textual( struct kl_2kl6string_strin
     uint64_t kl_t15;
     struct kl__run__L2u8__ref kl_t16;
     bool kl_t17;
+    kl__fn__FMP4voidEPL2u8 kl_t18;
+    void* kl_t19;
 #line 216 "../../src/string.kl"
     kl_t4 = kl_suffix_2;
 #line 216 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t18 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 216 "../../src/string.kl"
+    kl_t19 = ( kl_t4 ).self;
+#line 216 "../../src/string.kl"
+    kl_t5 = kl_t18( kl_t19 );
 #line 216 "../../src/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = ( kl_text_3 ).size;
@@ -5081,10 +5101,16 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_4find__SQ2kl6string_7textu
     struct kl_2kl8optional_optional__I3u64E kl_t21;
     bool kl_t22;
     struct kl_2kl8optional_optional__I3u64E kl_t23;
+    kl__fn__FMP4voidEPL2u8 kl_t24;
+    void* kl_t25;
 #line 228 "../../src/string.kl"
     kl_t4 = kl_needle_2;
 #line 228 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t24 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 228 "../../src/string.kl"
+    kl_t25 = ( kl_t4 ).self;
+#line 228 "../../src/string.kl"
+    kl_t5 = kl_t24( kl_t25 );
 #line 228 "../../src/string.kl"
     kl_text_3 = kl_t5;
 #line 230 "../../src/string.kl"
@@ -5194,10 +5220,16 @@ struct kl_2kl8optional_optional__I3u64E kl_2kl6string_5rfind__SQ2kl6string_7text
     bool kl_t21;
     bool kl_t22;
     struct kl_2kl8optional_optional__I3u64E kl_t23;
+    kl__fn__FMP4voidEPL2u8 kl_t24;
+    void* kl_t25;
 #line 249 "../../src/string.kl"
     kl_t4 = kl_needle_2;
 #line 249 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t24 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 249 "../../src/string.kl"
+    kl_t25 = ( kl_t4 ).self;
+#line 249 "../../src/string.kl"
+    kl_t5 = kl_t24( kl_t25 );
 #line 249 "../../src/string.kl"
     kl_text_3 = kl_t5;
 #line 251 "../../src/string.kl"
@@ -5329,6 +5361,8 @@ struct kl_2kl4list_list__IQ2kl6stringE kl_2kl6string_5split__SQ2kl6string_7textu
     bool kl_t48;
     bool kl_t49;
     bool kl_t50;
+    kl__fn__FMP4voidEPL2u8 kl_t51;
+    void* kl_t52;
 #line 283 "../../src/string.kl"
     kl_t48 = false;
 #line 283 "../../src/string.kl"
@@ -5338,7 +5372,11 @@ struct kl_2kl4list_list__IQ2kl6stringE kl_2kl6string_5split__SQ2kl6string_7textu
 #line 283 "../../src/string.kl"
     kl_t4 = kl_separator_2;
 #line 283 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t51 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 283 "../../src/string.kl"
+    kl_t52 = ( kl_t4 ).self;
+#line 283 "../../src/string.kl"
+    kl_t5 = kl_t51( kl_t52 );
 #line 283 "../../src/string.kl"
     kl_text_3 = kl_t5;
 #line 285 "../../src/string.kl"
@@ -5550,6 +5588,10 @@ struct kl_2kl6string_string kl_2kl6string_7replace__SQ2kl6string_7textual_7textu
     bool kl_t35;
     bool kl_t36;
     bool kl_t37;
+    kl__fn__FMP4voidEPL2u8 kl_t38;
+    void* kl_t39;
+    kl__fn__FMP4voidEPL2u8 kl_t40;
+    void* kl_t41;
 #line 314 "../../src/string.kl"
     kl_t36 = false;
 #line 314 "../../src/string.kl"
@@ -5557,12 +5599,20 @@ struct kl_2kl6string_string kl_2kl6string_7replace__SQ2kl6string_7textual_7textu
 #line 314 "../../src/string.kl"
     kl_t5 = kl_pattern_2;
 #line 314 "../../src/string.kl"
-    kl_t6 = kl_t5.vtable->kl__7as_text__( kl_t5.self );
+    kl_t38 = ( kl_t5 ).vtable->kl__7as_text__;
+#line 314 "../../src/string.kl"
+    kl_t39 = ( kl_t5 ).self;
+#line 314 "../../src/string.kl"
+    kl_t6 = kl_t38( kl_t39 );
 #line 314 "../../src/string.kl"
     kl_pattern_bytes_4 = kl_t6;
     kl_t8 = kl_replacement_3;
 #line 315 "../../src/string.kl"
-    kl_t9 = kl_t8.vtable->kl__7as_text__( kl_t8.self );
+    kl_t40 = ( kl_t8 ).vtable->kl__7as_text__;
+#line 315 "../../src/string.kl"
+    kl_t41 = ( kl_t8 ).self;
+#line 315 "../../src/string.kl"
+    kl_t9 = kl_t40( kl_t41 );
 #line 315 "../../src/string.kl"
     kl_replacement_bytes_7 = kl_t9;
 #line 317 "../../src/string.kl"
@@ -6103,6 +6153,8 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_prefix__SQ2
     bool kl_t18;
     bool kl_t19;
     bool kl_t20;
+    kl__fn__FMP4voidEPL2u8 kl_t21;
+    void* kl_t22;
 #line 392 "../../src/string.kl"
     kl_t18 = false;
 #line 392 "../../src/string.kl"
@@ -6120,7 +6172,11 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_prefix__SQ2
     bb1:
     kl_t7 = kl_prefix_2;
 #line 394 "../../src/string.kl"
-    kl_t8 = kl_t7.vtable->kl__7as_text__( kl_t7.self );
+    kl_t21 = ( kl_t7 ).vtable->kl__7as_text__;
+#line 394 "../../src/string.kl"
+    kl_t22 = ( kl_t7 ).self;
+#line 394 "../../src/string.kl"
+    kl_t8 = kl_t21( kl_t22 );
 #line 394 "../../src/string.kl"
     kl_t9 = ( kl_t8 ).size;
 #line 394 "../../src/string.kl"
@@ -6207,6 +6263,8 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_suffix__SQ2
     bool kl_t18;
     bool kl_t19;
     bool kl_t20;
+    kl__fn__FMP4voidEPL2u8 kl_t21;
+    void* kl_t22;
 #line 404 "../../src/string.kl"
     kl_t18 = false;
 #line 404 "../../src/string.kl"
@@ -6224,7 +6282,11 @@ struct kl_2kl8optional_optional__IQ2kl6stringE kl_2kl6string_12strip_suffix__SQ2
     bb1:
     kl_t7 = kl_suffix_2;
 #line 406 "../../src/string.kl"
-    kl_t8 = kl_t7.vtable->kl__7as_text__( kl_t7.self );
+    kl_t21 = ( kl_t7 ).vtable->kl__7as_text__;
+#line 406 "../../src/string.kl"
+    kl_t22 = ( kl_t7 ).self;
+#line 406 "../../src/string.kl"
+    kl_t8 = kl_t21( kl_t22 );
 #line 406 "../../src/string.kl"
     kl_t9 = ( kl_t8 ).size;
 #line 406 "../../src/string.kl"
@@ -6465,10 +6527,16 @@ void kl_2kl6string_19operator_add_assign__SQ2kl6string_7textual( struct kl_2kl6s
     struct kl__run__L2u8__ref kl_t5;
     struct kl_2kl6string_string* kl_t6;
     struct kl__run__L2u8__ref kl_t7;
+    kl__fn__FMP4voidEPL2u8 kl_t9;
+    void* kl_t10;
 #line 460 "../../src/string.kl"
     kl_t4 = kl_other_2;
 #line 460 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t9 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 460 "../../src/string.kl"
+    kl_t10 = ( kl_t4 ).self;
+#line 460 "../../src/string.kl"
+    kl_t5 = kl_t9( kl_t10 );
 #line 460 "../../src/string.kl"
     kl_text_3 = kl_t5;
     kl_t6 = &( *kl_this_1 );
@@ -6517,6 +6585,8 @@ struct kl_2kl6string_string kl_2kl6string_12operator_add__SQ2kl6string_7textual(
     bool kl_t35;
     bool kl_t36;
     bool kl_t37;
+    kl__fn__FMP4voidEPL2u8 kl_t38;
+    void* kl_t39;
 #line 467 "../../src/string.kl"
     kl_t36 = false;
 #line 467 "../../src/string.kl"
@@ -6524,7 +6594,11 @@ struct kl_2kl6string_string kl_2kl6string_12operator_add__SQ2kl6string_7textual(
 #line 467 "../../src/string.kl"
     kl_t4 = kl_other_2;
 #line 467 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t38 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 467 "../../src/string.kl"
+    kl_t39 = ( kl_t4 ).self;
+#line 467 "../../src/string.kl"
+    kl_t5 = kl_t38( kl_t39 );
 #line 467 "../../src/string.kl"
     kl_text_3 = kl_t5;
     kl_t36 = false;
@@ -7551,15 +7625,27 @@ bool kl_2kl6string_9same_text__7textual_7textual( struct kl_7prelude_textual__re
     bool kl_t22;
     uint8_t* kl_t23;
     bool kl_t24;
+    kl__fn__FMP4voidEPL2u8 kl_t25;
+    void* kl_t26;
+    kl__fn__FMP4voidEPL2u8 kl_t27;
+    void* kl_t28;
 #line 644 "../../src/string.kl"
     kl_t4 = kl_a_1;
 #line 644 "../../src/string.kl"
-    kl_t5 = kl_t4.vtable->kl__7as_text__( kl_t4.self );
+    kl_t25 = ( kl_t4 ).vtable->kl__7as_text__;
+#line 644 "../../src/string.kl"
+    kl_t26 = ( kl_t4 ).self;
+#line 644 "../../src/string.kl"
+    kl_t5 = kl_t25( kl_t26 );
 #line 644 "../../src/string.kl"
     kl_a_bytes_3 = kl_t5;
     kl_t7 = kl_b_2;
 #line 645 "../../src/string.kl"
-    kl_t8 = kl_t7.vtable->kl__7as_text__( kl_t7.self );
+    kl_t27 = ( kl_t7 ).vtable->kl__7as_text__;
+#line 645 "../../src/string.kl"
+    kl_t28 = ( kl_t7 ).self;
+#line 645 "../../src/string.kl"
+    kl_t8 = kl_t27( kl_t28 );
 #line 645 "../../src/string.kl"
     kl_b_bytes_6 = kl_t8;
 #line 647 "../../src/string.kl"

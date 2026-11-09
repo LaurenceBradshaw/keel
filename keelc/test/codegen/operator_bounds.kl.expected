@@ -11,6 +11,8 @@ struct kl__length;
 struct kl__scaled__vtable;
 struct kl__scaled__ref { void* self; const struct kl__scaled__vtable* vtable; };
 
+typedef double ( *kl__fn__FMP4voidM3f64E3f64 )( void*, double );
+
 struct kl__vec
 {
     int32_t kl_x;
@@ -222,10 +224,16 @@ double kl__7doubled__6scaled( struct kl__scaled__ref kl_s_1 )
     double kl_t0;
     struct kl__scaled__ref kl_t2;
     double kl_t3;
+    kl__fn__FMP4voidM3f64E3f64 kl_t4;
+    void* kl_t5;
 #line 105 "codegen/operator_bounds.kl"
     kl_t2 = kl_s_1;
 #line 105 "codegen/operator_bounds.kl"
-    kl_t3 = kl_t2.vtable->kl__12operator_mul__3f64( kl_t2.self, 2.0 );
+    kl_t4 = ( kl_t2 ).vtable->kl__12operator_mul__3f64;
+#line 105 "codegen/operator_bounds.kl"
+    kl_t5 = ( kl_t2 ).self;
+#line 105 "codegen/operator_bounds.kl"
+    kl_t3 = kl_t4( kl_t5, 2.0 );
 #line 105 "codegen/operator_bounds.kl"
     kl_t0 = kl_t3;
 #line 105 "codegen/operator_bounds.kl"

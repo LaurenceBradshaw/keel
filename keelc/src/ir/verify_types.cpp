@@ -131,6 +131,18 @@ public:
             }
             return;
 
+        case Rvalue_kind::Vtable_slot:
+        case Rvalue_kind::Interface_self:
+            operand( value.a, at );
+            if( !table_.is_interface_pointer( value.a.type ) ||
+                ( value.kind == Rvalue_kind::Vtable_slot
+                      ? !table_.is_function( value.type )
+                      : !table_.is_pointer( value.type ) || !table_.is_void( table_.get( value.type ).element ) ) )
+            {
+                errors_.push_back( fmt::format( "{}: {} is read from {}", at, name( value.type ), name( value.a.type ) ) );
+            }
+            return;
+
         case Rvalue_kind::Address_of:
             address( value, at );
             return;

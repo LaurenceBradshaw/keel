@@ -311,13 +311,17 @@ struct Devirtualised : Compiled
     {
     }
 
+    // Direct or, once lower_dispatch has run, through a vtable.
     std::size_t calls() const
     {
         const Function& first = functions.front();
         return static_cast<std::size_t>( std::ranges::count_if(
             first.statements,
             [&]( const Statement& s )
-            { return s.kind == Statement_kind::Assign && first.rvalue( s ).kind == Rvalue_kind::Call; }
+            {
+                return s.kind == Statement_kind::Assign &&
+                       ( first.rvalue( s ).kind == Rvalue_kind::Call || first.rvalue( s ).kind == Rvalue_kind::Indirect_call );
+            }
         ) );
     }
 };

@@ -8,6 +8,9 @@ struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable
 struct kl__sink__I4boolE__vtable;
 struct kl__sink__I4boolE__ref { void* self; const struct kl__sink__I4boolE__vtable* vtable; };
 
+typedef uint64_t ( *kl__fn__FMP4voidE3u64 )( void* );
+typedef void ( *kl__fn__FMP4voidMP3i64E4void )( void*, int64_t* );
+
 struct kl__sink__I3i64E__vtable
 {
     void ( *drop )( void* );
@@ -89,10 +92,16 @@ uint64_t kl__5flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
     uint64_t kl_t0;
     struct kl__sink__I4boolE__ref kl_t2;
     uint64_t kl_t3;
+    kl__fn__FMP4voidE3u64 kl_t4;
+    void* kl_t5;
 #line 30 "codegen/generic_interface_blocks.kl"
     kl_t2 = kl_s_1;
 #line 30 "codegen/generic_interface_blocks.kl"
-    kl_t3 = kl_t2.vtable->kl__5count__( kl_t2.self );
+    kl_t4 = ( kl_t2 ).vtable->kl__5count__;
+#line 30 "codegen/generic_interface_blocks.kl"
+    kl_t5 = ( kl_t2 ).self;
+#line 30 "codegen/generic_interface_blocks.kl"
+    kl_t3 = kl_t4( kl_t5 );
 #line 30 "codegen/generic_interface_blocks.kl"
     kl_t0 = kl_t3;
 #line 30 "codegen/generic_interface_blocks.kl"
@@ -119,6 +128,10 @@ int32_t kl__4main__( void )
     int64_t* kl_t13;
     uint64_t kl_t15;
     bool kl_t16;
+    kl__fn__FMP4voidMP3i64E4void kl_t17;
+    void* kl_t18;
+    kl__fn__FMP4voidE3u64 kl_t19;
+    void* kl_t20;
 #line 34 "codegen/generic_interface_blocks.kl"
     kl_l_1 = 1;
     kl_t2 = &kl_l_1;
@@ -159,8 +172,16 @@ int32_t kl__4main__( void )
 #line 39 "codegen/generic_interface_blocks.kl"
     kl_t13 = &kl_t12;
 #line 39 "codegen/generic_interface_blocks.kl"
-    kl_p_9.vtable->kl__3put__1T( kl_p_9.self, kl_t13 );
-    kl_t15 = kl_p_9.vtable->kl__5count__( kl_p_9.self );
+    kl_t17 = ( kl_p_9 ).vtable->kl__3put__1T;
+#line 39 "codegen/generic_interface_blocks.kl"
+    kl_t18 = ( kl_p_9 ).self;
+#line 39 "codegen/generic_interface_blocks.kl"
+    kl_t17( kl_t18, kl_t13 );
+    kl_t19 = ( kl_p_9 ).vtable->kl__5count__;
+#line 40 "codegen/generic_interface_blocks.kl"
+    kl_t20 = ( kl_p_9 ).self;
+#line 40 "codegen/generic_interface_blocks.kl"
+    kl_t15 = kl_t19( kl_t20 );
 #line 40 "codegen/generic_interface_blocks.kl"
     kl_t16 = kl_t15 != 7;
 #line 40 "codegen/generic_interface_blocks.kl"

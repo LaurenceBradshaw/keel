@@ -165,6 +165,12 @@ struct Printer
         case Rvalue_kind::Make_interface:
             return fmt::format( "interface {} as {}", operand( value.a ), type_name( value.type ) );
 
+        case Rvalue_kind::Vtable_slot:
+            return fmt::format( "slot {} of {}", name_of( value.callee ), operand( value.a ) );
+
+        case Rvalue_kind::Interface_self:
+            return fmt::format( "self {}", operand( value.a ) );
+
         case Rvalue_kind::Run_of:
             return fmt::format( "run( {}, {} )", operand( value.a ), operand( value.b ) );
 

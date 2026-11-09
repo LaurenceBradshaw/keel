@@ -8,6 +8,7 @@
 #include "check/report.h"
 #include "ir/call_graph.h"
 #include "ir/lower.h"
+#include "ir/lower_dispatch.h"
 #include "ir/simplify.h"
 #include "ir/verify_types.h"
 #include "opt/coalesce_moves.h"
@@ -322,6 +323,9 @@ Front_end run_front_end(
                 remove_unused_locals( function );
                 verified( function, "remove_unused_locals" );
             }
+
+            lower_dispatch( function, ast, front.types.table() );
+            verified( function, "lower_dispatch" );
         }
 
         if( build.optimise && build.inlining )

@@ -14,6 +14,9 @@ struct kl_7prelude_box__I6SquareE;
 struct kl__Shape__vtable;
 struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
 
+typedef double ( *kl__fn__FMP4voidE3f64 )( void* );
+typedef void ( *kl__fn__FMP4voidM3f64E4void )( void*, double );
+
 struct kl__Square
 {
     double kl_side;
@@ -304,6 +307,8 @@ double kl__4area__S5Scene( struct kl__Scene* kl_this_1 )
     struct kl__Shape__ref kl_t3;
     struct kl__Shape__ref kl_t4;
     double kl_t5;
+    kl__fn__FMP4voidE3f64 kl_t6;
+    void* kl_t7;
 #line 66 "codegen/box.kl"
     kl_t2 = &( *kl_this_1 ).kl_main;
 #line 66 "codegen/box.kl"
@@ -311,7 +316,11 @@ double kl__4area__S5Scene( struct kl__Scene* kl_this_1 )
 #line 66 "codegen/box.kl"
     kl_t4 = kl_t3;
 #line 66 "codegen/box.kl"
-    kl_t5 = kl_t4.vtable->kl__4area__( kl_t4.self );
+    kl_t6 = ( kl_t4 ).vtable->kl__4area__;
+#line 66 "codegen/box.kl"
+    kl_t7 = ( kl_t4 ).self;
+#line 66 "codegen/box.kl"
+    kl_t5 = kl_t6( kl_t7 );
 #line 66 "codegen/box.kl"
     kl_t0 = kl_t5;
 #line 66 "codegen/box.kl"
@@ -421,6 +430,8 @@ double kl__7measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE kl
     struct kl__Shape__ref kl_t3;
     struct kl__Shape__ref kl_t4;
     double kl_t5;
+    kl__fn__FMP4voidE3f64 kl_t6;
+    void* kl_t7;
 #line 82 "codegen/box.kl"
     kl_t2 = &kl_shape_1;
 #line 82 "codegen/box.kl"
@@ -428,7 +439,11 @@ double kl__7measure__MQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE kl
 #line 82 "codegen/box.kl"
     kl_t4 = kl_t3;
 #line 82 "codegen/box.kl"
-    kl_t5 = kl_t4.vtable->kl__4area__( kl_t4.self );
+    kl_t6 = ( kl_t4 ).vtable->kl__4area__;
+#line 82 "codegen/box.kl"
+    kl_t7 = ( kl_t4 ).self;
+#line 82 "codegen/box.kl"
+    kl_t5 = kl_t6( kl_t7 );
 #line 82 "codegen/box.kl"
     kl_t0 = kl_t5;
 #line 82 "codegen/box.kl"
@@ -530,6 +545,20 @@ int32_t kl__4main__( void )
     bool kl_t96;
     bool kl_t97;
     bool kl_t98;
+    kl__fn__FMP4voidM3f64E4void kl_t99;
+    void* kl_t100;
+    kl__fn__FMP4voidE3f64 kl_t101;
+    void* kl_t102;
+    kl__fn__FMP4voidM3f64E4void kl_t103;
+    void* kl_t104;
+    kl__fn__FMP4voidE3f64 kl_t105;
+    void* kl_t106;
+    kl__fn__FMP4voidE3f64 kl_t107;
+    void* kl_t108;
+    kl__fn__FMP4voidE3f64 kl_t109;
+    void* kl_t110;
+    kl__fn__FMP4voidE3f64 kl_t111;
+    void* kl_t112;
 #line 87 "codegen/box.kl"
     kl_t88 = false;
 #line 87 "codegen/box.kl"
@@ -603,14 +632,22 @@ int32_t kl__4main__( void )
     kl_s_14 = kl_t16;
     kl_t17 = kl_s_14;
 #line 92 "codegen/box.kl"
-    kl_t17.vtable->kl__4grow__3f64( kl_t17.self, 1.0 );
+    kl_t99 = ( kl_t17 ).vtable->kl__4grow__3f64;
+#line 92 "codegen/box.kl"
+    kl_t100 = ( kl_t17 ).self;
+#line 92 "codegen/box.kl"
+    kl_t99( kl_t100, 1.0 );
     kl_t19 = &kl_one_10;
 #line 93 "codegen/box.kl"
     kl_t20 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t19 );
 #line 93 "codegen/box.kl"
     kl_t21 = kl_t20;
 #line 93 "codegen/box.kl"
-    kl_t22 = kl_t21.vtable->kl__4area__( kl_t21.self );
+    kl_t101 = ( kl_t21 ).vtable->kl__4area__;
+#line 93 "codegen/box.kl"
+    kl_t102 = ( kl_t21 ).self;
+#line 93 "codegen/box.kl"
+    kl_t22 = kl_t101( kl_t102 );
 #line 93 "codegen/box.kl"
     kl_t23 = kl_t22 != 4.0;
 #line 93 "codegen/box.kl"
@@ -651,14 +688,22 @@ int32_t kl__4main__( void )
     kl_f_26 = kl_t28;
     kl_t29 = kl_f_26;
 #line 97 "codegen/box.kl"
-    kl_t29.vtable->kl__4grow__3f64( kl_t29.self, 2.0 );
+    kl_t103 = ( kl_t29 ).vtable->kl__4grow__3f64;
+#line 97 "codegen/box.kl"
+    kl_t104 = ( kl_t29 ).self;
+#line 97 "codegen/box.kl"
+    kl_t103( kl_t104, 2.0 );
     kl_t31 = &kl_framed_24;
 #line 98 "codegen/box.kl"
     kl_t32 = kl_7prelude_3get__I5ShapeE__SQ7prelude3boxI5ShapeE( kl_t31 );
 #line 98 "codegen/box.kl"
     kl_t33 = kl_t32;
 #line 98 "codegen/box.kl"
-    kl_t34 = kl_t33.vtable->kl__4area__( kl_t33.self );
+    kl_t105 = ( kl_t33 ).vtable->kl__4area__;
+#line 98 "codegen/box.kl"
+    kl_t106 = ( kl_t33 ).self;
+#line 98 "codegen/box.kl"
+    kl_t34 = kl_t105( kl_t106 );
 #line 98 "codegen/box.kl"
     kl_t35 = kl_t34 != 6.0;
 #line 98 "codegen/box.kl"
@@ -785,7 +830,11 @@ int32_t kl__4main__( void )
 #line 104 "codegen/box.kl"
     kl_t52 = kl_t51;
 #line 104 "codegen/box.kl"
-    kl_t53 = kl_t52.vtable->kl__4area__( kl_t52.self );
+    kl_t107 = ( kl_t52 ).vtable->kl__4area__;
+#line 104 "codegen/box.kl"
+    kl_t108 = ( kl_t52 ).self;
+#line 104 "codegen/box.kl"
+    kl_t53 = kl_t107( kl_t108 );
 #line 104 "codegen/box.kl"
     kl_t54 = kl_t53 != 6.0;
 #line 104 "codegen/box.kl"
@@ -841,7 +890,11 @@ int32_t kl__4main__( void )
 #line 107 "codegen/box.kl"
     kl_t65 = kl_t64;
 #line 107 "codegen/box.kl"
-    kl_t66 = kl_t65.vtable->kl__4area__( kl_t65.self );
+    kl_t109 = ( kl_t65 ).vtable->kl__4area__;
+#line 107 "codegen/box.kl"
+    kl_t110 = ( kl_t65 ).self;
+#line 107 "codegen/box.kl"
+    kl_t66 = kl_t109( kl_t110 );
 #line 107 "codegen/box.kl"
     kl_t67 = kl_t66 != 4.0;
 #line 107 "codegen/box.kl"
@@ -913,7 +966,11 @@ int32_t kl__4main__( void )
 #line 110 "codegen/box.kl"
     kl_t79 = kl_t78;
 #line 110 "codegen/box.kl"
-    kl_t80 = kl_t79.vtable->kl__4area__( kl_t79.self );
+    kl_t111 = ( kl_t79 ).vtable->kl__4area__;
+#line 110 "codegen/box.kl"
+    kl_t112 = ( kl_t79 ).self;
+#line 110 "codegen/box.kl"
+    kl_t80 = kl_t111( kl_t112 );
 #line 110 "codegen/box.kl"
     kl_t81 = kl_t80 != 5.0;
 #line 110 "codegen/box.kl"

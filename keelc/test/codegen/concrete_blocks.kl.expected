@@ -9,6 +9,8 @@ struct kl__Pair__I2u8_2u8E;
 struct kl__Named__vtable;
 struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
 
+typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
+
 struct kl__Wrap__I3i32E
 {
     int32_t kl_v;
@@ -88,8 +90,14 @@ int32_t kl__7through__PK5Named( struct kl__Named__ref kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
+    kl__fn__FMP4voidE3i32 kl_t3;
+    void* kl_t4;
 #line 49 "codegen/concrete_blocks.kl"
-    kl_t2 = kl_n_1.vtable->kl__4code__( kl_n_1.self );
+    kl_t3 = ( kl_n_1 ).vtable->kl__4code__;
+#line 49 "codegen/concrete_blocks.kl"
+    kl_t4 = ( kl_n_1 ).self;
+#line 49 "codegen/concrete_blocks.kl"
+    kl_t2 = kl_t3( kl_t4 );
 #line 49 "codegen/concrete_blocks.kl"
     kl_t0 = kl_t2;
 #line 49 "codegen/concrete_blocks.kl"

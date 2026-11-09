@@ -8,6 +8,8 @@ struct kl__Square;
 struct kl__shape__vtable;
 struct kl__shape__ref { void* self; const struct kl__shape__vtable* vtable; };
 
+typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
+
 struct kl__Square
 {
     int32_t kl_side_;
@@ -96,8 +98,14 @@ struct kl__Square* kl__4keep__6Square( struct kl__Square* kl_s_1 )
 int32_t kl__7measure__5shape( struct kl__shape__ref kl_s_1 )
 {
     int32_t kl_t0;
+    kl__fn__FMP4voidE3i32 kl_t2;
+    void* kl_t3;
 #line 50 "opt/borrows.kl"
-    kl_t0 = kl_s_1.vtable->kl__4area__( kl_s_1.self );
+    kl_t2 = ( kl_s_1 ).vtable->kl__4area__;
+#line 50 "opt/borrows.kl"
+    kl_t3 = ( kl_s_1 ).self;
+#line 50 "opt/borrows.kl"
+    kl_t0 = kl_t2( kl_t3 );
 #line 50 "opt/borrows.kl"
     return kl_t0;
 }

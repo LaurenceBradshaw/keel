@@ -8,6 +8,8 @@ struct kl__square;
 struct kl__shape__vtable;
 struct kl__shape__ref { void* self; const struct kl__shape__vtable* vtable; };
 
+typedef int32_t ( *kl__fn__FMP4voidM3i32E3i32 )( void*, int32_t );
+
 struct kl__square
 {
     int32_t kl_side;
@@ -102,6 +104,8 @@ int32_t kl__4main__( void )
     bool kl_t12;
     int32_t kl_t13;
     bool kl_t14;
+    kl__fn__FMP4voidM3i32E3i32 kl_t15;
+    void* kl_t16;
 #line 35 "codegen/unnamed_parameters.kl"
     kl_t2 = &kl_s_1;
 #line 35 "codegen/unnamed_parameters.kl"
@@ -135,7 +139,11 @@ int32_t kl__4main__( void )
     if ( kl_t7 ) goto bb4; else goto bb3;
     bb3:
 #line 38 "codegen/unnamed_parameters.kl"
-    kl_t13 = kl_as_shape_4.vtable->kl__4area__3i32( kl_as_shape_4.self, 10 );
+    kl_t15 = ( kl_as_shape_4 ).vtable->kl__4area__3i32;
+#line 38 "codegen/unnamed_parameters.kl"
+    kl_t16 = ( kl_as_shape_4 ).self;
+#line 38 "codegen/unnamed_parameters.kl"
+    kl_t13 = kl_t15( kl_t16, 10 );
 #line 38 "codegen/unnamed_parameters.kl"
     kl_t14 = kl_t13 != 9;
 #line 38 "codegen/unnamed_parameters.kl"

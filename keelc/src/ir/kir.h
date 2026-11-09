@@ -170,6 +170,8 @@ enum class Rvalue_kind : u8
     Field_read,     // a is the object's address, b the offset
     Literal_bytes,  // the address of a string literal's bytes; a is the literal
     Make_interface, // §6.7: `a` is an implementer's address, and the type the interface pointer of it and its vtable
+    Vtable_slot,    // §6.7: `a` is an interface pointer, callee the requirement, and the type the slot's function
+    Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
 };
 
 enum class Address_purpose : u8
@@ -791,6 +793,16 @@ inline Rvalue function_address( Node_id callee, Type_id type, std::vector<Type_i
 inline Rvalue make_interface( Operand address, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Make_interface, .type = type, .a = address };
+}
+
+inline Rvalue vtable_slot( Operand reference, Node_id requirement, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Vtable_slot, .type = type, .a = reference, .callee = requirement };
+}
+
+inline Rvalue interface_self( Operand reference, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Interface_self, .type = type, .a = reference };
 }
 
 inline Rvalue literal_bytes( Literal_id literal, Type_id type )

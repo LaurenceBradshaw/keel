@@ -9,6 +9,7 @@ struct kl__Shape__vtable;
 struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
 
 typedef int32_t ( *kl__fn__FE3i32 )( void );
+typedef int32_t ( *kl__fn__FMP4voidE3i32 )( void* );
 
 struct kl__Circle
 {
@@ -50,6 +51,8 @@ int32_t kl__5total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
     int32_t kl_t4;
     int32_t kl_t5;
     int32_t kl_t6;
+    kl__fn__FMP4voidE3i32 kl_t7;
+    void* kl_t8;
 #line 53 "opt/unreached/main.kl"
     kl_t3 = kl_n_2 == 0;
 #line 53 "opt/unreached/main.kl"
@@ -61,7 +64,11 @@ int32_t kl__5total__5Shape_3i32( struct kl__Shape__ref kl_s_1, int32_t kl_n_2 )
     goto bb3;
     bb2:
 #line 53 "opt/unreached/main.kl"
-    kl_t4 = kl_s_1.vtable->kl__4area__( kl_s_1.self );
+    kl_t7 = ( kl_s_1 ).vtable->kl__4area__;
+#line 53 "opt/unreached/main.kl"
+    kl_t8 = ( kl_s_1 ).self;
+#line 53 "opt/unreached/main.kl"
+    kl_t4 = kl_t7( kl_t8 );
 #line 53 "opt/unreached/main.kl"
     kl_t5 = kl_n_2 - 1;
 #line 53 "opt/unreached/main.kl"

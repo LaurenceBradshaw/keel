@@ -14,6 +14,10 @@ struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable
 struct kl__sink__I4boolE__vtable;
 struct kl__sink__I4boolE__ref { void* self; const struct kl__sink__I4boolE__vtable* vtable; };
 
+typedef void ( *kl__fn__FMP4voidMP3i64E4void )( void*, int64_t* );
+typedef void ( *kl__fn__FMP4voidMP4boolE4void )( void*, bool* );
+typedef uint64_t ( *kl__fn__FMP4voidE3u64 )( void* );
+
 struct kl__tally
 {
     int64_t kl_sum_;
@@ -249,12 +253,18 @@ void kl__4feed__R4sinkI3i64E_3i64( struct kl__sink__I3i64E__ref kl_s_1, int64_t 
 {
     struct kl__sink__I3i64E__ref kl_t3;
     int64_t* kl_t4;
+    kl__fn__FMP4voidMP3i64E4void kl_t6;
+    void* kl_t7;
 #line 69 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = kl_s_1;
 #line 69 "codegen/generic_interfaces_dynamic.kl"
     kl_t4 = &kl_v_2;
 #line 69 "codegen/generic_interfaces_dynamic.kl"
-    kl_t3.vtable->kl__3put__1T( kl_t3.self, kl_t4 );
+    kl_t6 = ( kl_t3 ).vtable->kl__3put__1T;
+#line 69 "codegen/generic_interfaces_dynamic.kl"
+    kl_t7 = ( kl_t3 ).self;
+#line 69 "codegen/generic_interfaces_dynamic.kl"
+    kl_t6( kl_t7, kl_t4 );
 #line 69 "codegen/generic_interfaces_dynamic.kl"
     return;
 #line 69 "codegen/generic_interfaces_dynamic.kl"
@@ -265,12 +275,18 @@ void kl__4flag__P4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
 {
     bool kl_t2;
     bool* kl_t3;
+    kl__fn__FMP4voidMP4boolE4void kl_t5;
+    void* kl_t6;
 #line 71 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = true;
 #line 71 "codegen/generic_interfaces_dynamic.kl"
     kl_t3 = &kl_t2;
 #line 71 "codegen/generic_interfaces_dynamic.kl"
-    kl_s_1.vtable->kl__3put__1T( kl_s_1.self, kl_t3 );
+    kl_t5 = ( kl_s_1 ).vtable->kl__3put__1T;
+#line 71 "codegen/generic_interfaces_dynamic.kl"
+    kl_t6 = ( kl_s_1 ).self;
+#line 71 "codegen/generic_interfaces_dynamic.kl"
+    kl_t5( kl_t6, kl_t3 );
 #line 71 "codegen/generic_interfaces_dynamic.kl"
     return;
 #line 71 "codegen/generic_interfaces_dynamic.kl"
@@ -282,10 +298,16 @@ uint64_t kl__7counted__4sinkI3i64E( struct kl__sink__I3i64E__ref kl_s_1 )
     uint64_t kl_t0;
     struct kl__sink__I3i64E__ref kl_t2;
     uint64_t kl_t3;
+    kl__fn__FMP4voidE3u64 kl_t4;
+    void* kl_t5;
 #line 73 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = kl_s_1;
 #line 73 "codegen/generic_interfaces_dynamic.kl"
-    kl_t3 = kl_t2.vtable->kl__5count__( kl_t2.self );
+    kl_t4 = ( kl_t2 ).vtable->kl__5count__;
+#line 73 "codegen/generic_interfaces_dynamic.kl"
+    kl_t5 = ( kl_t2 ).self;
+#line 73 "codegen/generic_interfaces_dynamic.kl"
+    kl_t3 = kl_t4( kl_t5 );
 #line 73 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = kl_t3;
 #line 73 "codegen/generic_interfaces_dynamic.kl"
@@ -299,10 +321,16 @@ uint64_t kl__13counted_flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1
     uint64_t kl_t0;
     struct kl__sink__I4boolE__ref kl_t2;
     uint64_t kl_t3;
+    kl__fn__FMP4voidE3u64 kl_t4;
+    void* kl_t5;
 #line 75 "codegen/generic_interfaces_dynamic.kl"
     kl_t2 = kl_s_1;
 #line 75 "codegen/generic_interfaces_dynamic.kl"
-    kl_t3 = kl_t2.vtable->kl__5count__( kl_t2.self );
+    kl_t4 = ( kl_t2 ).vtable->kl__5count__;
+#line 75 "codegen/generic_interfaces_dynamic.kl"
+    kl_t5 = ( kl_t2 ).self;
+#line 75 "codegen/generic_interfaces_dynamic.kl"
+    kl_t3 = kl_t4( kl_t5 );
 #line 75 "codegen/generic_interfaces_dynamic.kl"
     kl_t0 = kl_t3;
 #line 75 "codegen/generic_interfaces_dynamic.kl"
@@ -386,6 +414,16 @@ int32_t kl__4main__( void )
     bool kl_t81;
     bool kl_t82;
     bool kl_t83;
+    kl__fn__FMP4voidMP3i64E4void kl_t84;
+    void* kl_t85;
+    kl__fn__FMP4voidMP3i64E4void kl_t86;
+    void* kl_t87;
+    kl__fn__FMP4voidE3u64 kl_t88;
+    void* kl_t89;
+    kl__fn__FMP4voidMP3i64E4void kl_t90;
+    void* kl_t91;
+    kl__fn__FMP4voidE3u64 kl_t92;
+    void* kl_t93;
 #line 79 "codegen/generic_interfaces_dynamic.kl"
     kl_t80 = false;
 #line 79 "codegen/generic_interfaces_dynamic.kl"
@@ -464,7 +502,11 @@ int32_t kl__4main__( void )
 #line 86 "codegen/generic_interfaces_dynamic.kl"
     kl_t26 = &kl_t25;
 #line 86 "codegen/generic_interfaces_dynamic.kl"
-    kl_as_int_22.vtable->kl__3put__1T( kl_as_int_22.self, kl_t26 );
+    kl_t84 = ( kl_as_int_22 ).vtable->kl__3put__1T;
+#line 86 "codegen/generic_interfaces_dynamic.kl"
+    kl_t85 = ( kl_as_int_22 ).self;
+#line 86 "codegen/generic_interfaces_dynamic.kl"
+    kl_t84( kl_t85, kl_t26 );
     kl_t29 = &kl_t_1;
 #line 87 "codegen/generic_interfaces_dynamic.kl"
     kl_t30 = kl__3sum__S5tally( kl_t29 );
@@ -550,14 +592,22 @@ int32_t kl__4main__( void )
 #line 91 "codegen/generic_interfaces_dynamic.kl"
     kl_t53 = &kl_t52;
 #line 91 "codegen/generic_interfaces_dynamic.kl"
-    kl_t51.vtable->kl__3put__1T( kl_t51.self, kl_t53 );
+    kl_t86 = ( kl_t51 ).vtable->kl__3put__1T;
+#line 91 "codegen/generic_interfaces_dynamic.kl"
+    kl_t87 = ( kl_t51 ).self;
+#line 91 "codegen/generic_interfaces_dynamic.kl"
+    kl_t86( kl_t87, kl_t53 );
     kl_t55 = &kl_b_35;
 #line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t56 = kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t55 );
 #line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t57 = kl_t56;
 #line 92 "codegen/generic_interfaces_dynamic.kl"
-    kl_t58 = kl_t57.vtable->kl__5count__( kl_t57.self );
+    kl_t88 = ( kl_t57 ).vtable->kl__5count__;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
+    kl_t89 = ( kl_t57 ).self;
+#line 92 "codegen/generic_interfaces_dynamic.kl"
+    kl_t58 = kl_t88( kl_t89 );
 #line 92 "codegen/generic_interfaces_dynamic.kl"
     kl_t59 = kl_t58 != 2;
 #line 92 "codegen/generic_interfaces_dynamic.kl"
@@ -611,14 +661,22 @@ int32_t kl__4main__( void )
 #line 95 "codegen/generic_interfaces_dynamic.kl"
     kl_t73 = &kl_t72;
 #line 95 "codegen/generic_interfaces_dynamic.kl"
-    kl_t71.vtable->kl__3put__1T( kl_t71.self, kl_t73 );
+    kl_t90 = ( kl_t71 ).vtable->kl__3put__1T;
+#line 95 "codegen/generic_interfaces_dynamic.kl"
+    kl_t91 = ( kl_t71 ).self;
+#line 95 "codegen/generic_interfaces_dynamic.kl"
+    kl_t90( kl_t91, kl_t73 );
     kl_t75 = &kl_b_35;
 #line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t76 = kl_7prelude_3get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( kl_t75 );
 #line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t77 = kl_t76;
 #line 96 "codegen/generic_interfaces_dynamic.kl"
-    kl_t78 = kl_t77.vtable->kl__5count__( kl_t77.self );
+    kl_t92 = ( kl_t77 ).vtable->kl__5count__;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
+    kl_t93 = ( kl_t77 ).self;
+#line 96 "codegen/generic_interfaces_dynamic.kl"
+    kl_t78 = kl_t92( kl_t93 );
 #line 96 "codegen/generic_interfaces_dynamic.kl"
     kl_t79 = kl_t78 != 1;
 #line 96 "codegen/generic_interfaces_dynamic.kl"

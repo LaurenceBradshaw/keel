@@ -10,6 +10,8 @@ struct kl__run__L2u8__ref { uint8_t* data; uint64_t size; };
 struct kl_7prelude_textual__vtable;
 struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__vtable* vtable; };
 
+typedef struct kl__run__L2u8__ref ( *kl__fn__FMP4voidEPL2u8 )( void* );
+
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
@@ -49,8 +51,14 @@ void kl_1t7console_10write_text__3i32_7textual( int32_t kl_stream_1, struct kl_7
     struct kl__run__L2u8__ref kl_r_3;
     uint8_t* kl_t4;
     uint64_t kl_t5;
+    kl__fn__FMP4voidEPL2u8 kl_t7;
+    void* kl_t8;
 #line 14 "../test_lib/console.kl"
-    kl_r_3 = kl_text_2.vtable->kl__7as_text__( kl_text_2.self );
+    kl_t7 = ( kl_text_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t8 = ( kl_text_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t7( kl_t8 );
 #line 17 "../test_lib/console.kl"
     kl_t4 = ( kl_r_3 ).data;
 #line 17 "../test_lib/console.kl"
@@ -71,8 +79,16 @@ void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref kl
     struct kl__run__L2u8__ref kl_r_7;
     uint8_t* kl_t8;
     uint64_t kl_t9;
+    kl__fn__FMP4voidEPL2u8 kl_t11;
+    void* kl_t12;
+    kl__fn__FMP4voidEPL2u8 kl_t13;
+    void* kl_t14;
 #line 14 "../test_lib/console.kl"
-    kl_r_3 = kl_text_1.vtable->kl__7as_text__( kl_text_1.self );
+    kl_t11 = ( kl_text_1 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t12 = ( kl_text_1 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t11( kl_t12 );
 #line 17 "../test_lib/console.kl"
     kl_t4 = ( kl_r_3 ).data;
 #line 17 "../test_lib/console.kl"
@@ -80,7 +96,11 @@ void kl_1t7console_5print__7textual_7textual( struct kl_7prelude_textual__ref kl
 #line 17 "../test_lib/console.kl"
     kl_rt_write( 1, kl_t4, kl_t5 );
 #line 14 "../test_lib/console.kl"
-    kl_r_7 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t13 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t14 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_7 = kl_t13( kl_t14 );
 #line 17 "../test_lib/console.kl"
     kl_t8 = ( kl_r_7 ).data;
 #line 17 "../test_lib/console.kl"
@@ -98,10 +118,16 @@ void kl_1t7console_5print__3i64_7textual( int64_t kl_value_1, struct kl_7prelude
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 35 "../test_lib/console.kl"
     kl_rt_write_i64( 1, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
@@ -119,10 +145,16 @@ void kl_1t7console_5print__3u64_7textual( uint64_t kl_value_1, struct kl_7prelud
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 45 "../test_lib/console.kl"
     kl_rt_write_u64( 1, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
@@ -140,10 +172,16 @@ void kl_1t7console_5print__3f64_7textual( double kl_value_1, struct kl_7prelude_
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 57 "../test_lib/console.kl"
     kl_rt_write_f64( 1, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
@@ -197,8 +235,16 @@ void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref k
     struct kl__run__L2u8__ref kl_r_7;
     uint8_t* kl_t8;
     uint64_t kl_t9;
+    kl__fn__FMP4voidEPL2u8 kl_t11;
+    void* kl_t12;
+    kl__fn__FMP4voidEPL2u8 kl_t13;
+    void* kl_t14;
 #line 14 "../test_lib/console.kl"
-    kl_r_3 = kl_text_1.vtable->kl__7as_text__( kl_text_1.self );
+    kl_t11 = ( kl_text_1 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t12 = ( kl_text_1 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_3 = kl_t11( kl_t12 );
 #line 17 "../test_lib/console.kl"
     kl_t4 = ( kl_r_3 ).data;
 #line 17 "../test_lib/console.kl"
@@ -206,7 +252,11 @@ void kl_1t7console_6eprint__7textual_7textual( struct kl_7prelude_textual__ref k
 #line 17 "../test_lib/console.kl"
     kl_rt_write( 2, kl_t4, kl_t5 );
 #line 14 "../test_lib/console.kl"
-    kl_r_7 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t13 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t14 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_7 = kl_t13( kl_t14 );
 #line 17 "../test_lib/console.kl"
     kl_t8 = ( kl_r_7 ).data;
 #line 17 "../test_lib/console.kl"
@@ -224,10 +274,16 @@ void kl_1t7console_6eprint__3i64_7textual( int64_t kl_value_1, struct kl_7prelud
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 82 "../test_lib/console.kl"
     kl_rt_write_i64( 2, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
@@ -245,10 +301,16 @@ void kl_1t7console_6eprint__3u64_7textual( uint64_t kl_value_1, struct kl_7prelu
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 92 "../test_lib/console.kl"
     kl_rt_write_u64( 2, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
@@ -266,10 +328,16 @@ void kl_1t7console_6eprint__3f64_7textual( double kl_value_1, struct kl_7prelude
     struct kl__run__L2u8__ref kl_r_4;
     uint8_t* kl_t5;
     uint64_t kl_t6;
+    kl__fn__FMP4voidEPL2u8 kl_t8;
+    void* kl_t9;
 #line 104 "../test_lib/console.kl"
     kl_rt_write_f64( 2, kl_value_1 );
 #line 14 "../test_lib/console.kl"
-    kl_r_4 = kl_end_2.vtable->kl__7as_text__( kl_end_2.self );
+    kl_t8 = ( kl_end_2 ).vtable->kl__7as_text__;
+#line 14 "../test_lib/console.kl"
+    kl_t9 = ( kl_end_2 ).self;
+#line 14 "../test_lib/console.kl"
+    kl_r_4 = kl_t8( kl_t9 );
 #line 17 "../test_lib/console.kl"
     kl_t5 = ( kl_r_4 ).data;
 #line 17 "../test_lib/console.kl"
