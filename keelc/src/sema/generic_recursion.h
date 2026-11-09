@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <optional>
 #include <span>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include "ast/ast.h"
@@ -75,6 +76,8 @@ private:
     // Every declaration on a cycle already named. One cycle is one mistake, and the walk below
     // starts from each of its own members in turn - so without this it is reported once per member.
     std::unordered_set<u32> expanding_;
+
+    std::unordered_map<u32, std::vector<std::size_t>> leaving_; // check()'s edges by `from`, in order
 
     std::unordered_set<u32>   seen_;    // the types record_bodies already took from the current body
     std::vector<Generic_call> implied_; // edges for check() alone: types named in bodies, and destructors

@@ -74,52 +74,65 @@ void step_back_terminator( const Terminator& terminator, Live& live )
     use_operand( terminator.at, live );
 }
 
-// Live on leaving `block`: live on entering any successor.
-Live live_out( const Function& func, Block_id block, const std::vector<Live>& in )
+// Live on leaving `block`, into `out`: live on entering any successor.
+void live_out( const Function& func, Block_id block, const std::vector<Live>& in, Live& out, std::vector<Block_id>& next )
 {
-    Live out( func.locals.size(), false );
+    out.assign( func.locals.size(), false );
 
-    std::vector<Block_id> next;
+    next.clear();
     successors( func.blocks[block].terminator, next );
 
-    for( std::size_t i = 0; i < next.size(); ++i )
+    for( const Block_id target : next )
     {
-        const Block_id target = next[i];
-
-        for( const Local_id k : func.locals.ids() )
+        const Live& entering = in[target.v];
+        for( std::size_t k = 0; k < out.size(); ++k )
         {
-            out[k.v] = out[k.v] || in[target.v][k.v];
+            if( entering[k] )
+            {
+                out[k] = true;
+            }
         }
     }
+}
 
+Live live_out( const Function& func, Block_id block, const std::vector<Live>& in )
+{
+    Live                  out;
+    std::vector<Block_id> next;
+    live_out( func, block, in, out, next );
     return out;
 }
 
-// Live on entering each block. Backward, to a fixpoint; ends because a bit is only ever set.
+// Live on entering each block. Backward, to a fixpoint; ends because a bit is only ever set. Last
+// block first, since most edges run forward.
 std::vector<Live> live_in( const Function& func )
 {
     std::vector<Live> in( func.blocks.size(), Live( func.locals.size(), false ) );
+
+    Live                  live;
+    std::vector<Block_id> next;
 
     bool changed = true;
     while( changed )
     {
         changed = false;
 
-        for( const Block_id b : func.blocks.ids() )
+        for( std::size_t i = func.blocks.size(); i > 0; --i )
         {
-            const Block& block = func.blocks[b];
+            const Block_id b { narrow_cast<u32>( i - 1 ) };
+            const Block&   block = func.blocks[b];
 
-            Live live = live_out( func, b, in );
+            live_out( func, b, in, live, next );
             step_back_terminator( block.terminator, live );
 
-            for( u32 i = block.statement_count; i > 0; --i )
+            for( u32 s = block.statement_count; s > 0; --s )
             {
-                step_back( func, func.statements_of( block )[i - 1], live );
+                step_back( func, func.statements_of( block )[s - 1], live );
             }
 
             if( live != in[b.v] )
             {
-                in[b.v] = std::move( live );
+                in[b.v].swap( live );
                 changed = true;
             }
         }

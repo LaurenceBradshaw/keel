@@ -124,9 +124,12 @@ struct Walk
             }
         }
 
+        // Erasing keeps the order; `gained` is one pointer's, so none of it is already here.
         std::erase_if( aims, [&]( const Aim& aim ) { return aim.pointer == place.local; } );
-        aims.insert( aims.end(), gained.begin(), gained.end() );
-        normalise( aims );
+        for( const Aim& aim : gained )
+        {
+            aims.insert( std::ranges::upper_bound( aims, aim ), aim );
+        }
     }
 
     void end( Aims& aims, Local_id local ) const
@@ -138,7 +141,8 @@ struct Walk
             aim.ended = aim.ended || aim.target == local;
         }
 
-        normalise( aims );
+        // Ending only lifts a pair to its `ended` twin, which sorts next to it.
+        aims.erase( std::ranges::unique( aims ).begin(), aims.end() );
     }
 
     void block( Block_id index, Aims& aims ) const

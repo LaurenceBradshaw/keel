@@ -230,6 +230,7 @@ private:
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
     std::unordered_map<u32, u32>    variants_;        // payload field to its variant
+    std::vector<Node_id>            owners_;          // member to its aggregate, interface or block
 
     std::vector<bool> broken_;
     std::vector<Span> failures_;

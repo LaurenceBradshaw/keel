@@ -203,6 +203,12 @@ bool Generic_recursion::check()
     const std::size_t exported = generic_calls_.size();
     generic_calls_.insert( generic_calls_.end(), implied_.begin(), implied_.end() );
 
+    leaving_.clear();
+    for( std::size_t i = 0; i < generic_calls_.size(); ++i )
+    {
+        leaving_[generic_calls_[i].from.v].push_back( i );
+    }
+
     std::vector<Step> path;
 
     for( const Generic_call& edge : generic_calls_ )
@@ -228,10 +234,18 @@ bool Generic_recursion::check()
 // once per way round it.
 bool Generic_recursion::expands_forever( Node_id generic, std::vector<Step>& path )
 {
-    for( const Generic_call& edge : generic_calls_ )
+    const auto found = leaving_.find( generic.v );
+    if( found == leaving_.end() )
     {
+        return false;
+    }
+
+    for( const std::size_t index : found->second )
+    {
+        const Generic_call& edge = generic_calls_[index];
+
         // Into a cycle already named, from a generic that only leads to it.
-        if( edge.from != generic || expanding_.contains( edge.to.v ) )
+        if( expanding_.contains( edge.to.v ) )
         {
             continue;
         }

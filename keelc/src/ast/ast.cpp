@@ -28,6 +28,20 @@ Node_id Ast::add( Node_kind kind, Span span, u32 aux, std::span<const Node_id> c
             variants_[field.v] = id.v;
         }
     }
+    else if( has_members( kind ) )
+    {
+        // members()'s slots, which a test's hand-built aggregate may not have.
+        const std::size_t slots = kind == Node_kind::Implements_decl ? 3 : 2;
+
+        owners_.resize( nodes_.size() );
+        for( const Node_id member : children.subspan( std::min( slots, children.size() ) ) )
+        {
+            if( member.is_valid() )
+            {
+                owners_[member.v] = id;
+            }
+        }
+    }
 
     return id;
 }
@@ -934,28 +948,7 @@ Node_id Ast::unwrap_const( Node_id annotation ) const
 
 Node_id Ast::enclosing_aggregate( Node_id member ) const
 {
-    if( !member.is_valid() )
-    {
-        return Node_id {};
-    }
-
-    for( const Node_id decl : declarations( root() ) )
-    {
-        if( !has_members( kind( decl ) ) )
-        {
-            continue;
-        }
-
-        for( const Node_id candidate : members( decl ) )
-        {
-            if( candidate == member )
-            {
-                return decl;
-            }
-        }
-    }
-
-    return Node_id {};
+    return member.is_valid() && member.v < owners_.size() ? owners_[member.v] : Node_id {};
 }
 
 bool Ast::is_walk( Node_id decl ) const
