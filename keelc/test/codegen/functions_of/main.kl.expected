@@ -118,8 +118,11 @@ int32_t kl__7negates__3i32( int32_t kl_v_1 )
 int64_t kl__5wider__3i32( int32_t kl_v_1 )
 {
     int64_t kl_t0;
+    int64_t kl_t2;
 #line 31 "codegen/functions_of/main.kl"
-    kl_t0 = kl_v_1;
+    kl_t2 = ( int64_t ) kl_v_1;
+#line 31 "codegen/functions_of/main.kl"
+    kl_t0 = kl_t2;
 #line 31 "codegen/functions_of/main.kl"
     return kl_t0;
 }

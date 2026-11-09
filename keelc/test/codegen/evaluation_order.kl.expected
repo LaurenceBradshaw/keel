@@ -98,9 +98,10 @@ int32_t kl__4main__( void )
     int32_t* kl_slots_24;
     int32_t* kl_t25;
     int32_t kl_t26;
-    int32_t* kl_t27;
-    int32_t kl_t28;
-    bool kl_t30;
+    int64_t kl_t27;
+    int32_t* kl_t28;
+    int32_t kl_t29;
+    bool kl_t31;
 #line 25 "codegen/evaluation_order.kl"
     kl_t1 = kl__4note__3i32( 1 );
 #line 25 "codegen/evaluation_order.kl"
@@ -205,16 +206,18 @@ int32_t kl__4main__( void )
     kl_slots_24 = kl_t25;
     kl_t26 = kl__4note__3i32( 1 );
 #line 50 "codegen/evaluation_order.kl"
-    kl_t27 = kl_slots_24 + kl_t26;
+    kl_t27 = ( int64_t ) kl_t26;
 #line 50 "codegen/evaluation_order.kl"
-    kl_t28 = kl__4note__3i32( 2 );
+    kl_t28 = kl_slots_24 + kl_t27;
 #line 50 "codegen/evaluation_order.kl"
-    ( *kl_t27 ) = kl_t28;
+    kl_t29 = kl__4note__3i32( 2 );
+#line 50 "codegen/evaluation_order.kl"
+    ( *kl_t28 ) = kl_t29;
     kl_rt_free( kl_slots_24 );
 #line 53 "codegen/evaluation_order.kl"
-    kl_t30 = kl__trace__G != 12;
+    kl_t31 = kl__trace__G != 12;
 #line 53 "codegen/evaluation_order.kl"
-    if ( kl_t30 ) goto bb15; else goto bb16;
+    if ( kl_t31 ) goto bb15; else goto bb16;
     bb15:
     kl_t0 = 4;
 #line 55 "codegen/evaluation_order.kl"

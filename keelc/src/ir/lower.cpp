@@ -298,8 +298,13 @@ private:
     Type_id operation_type( Node_id node );
     Type_id comparison_width( Type_id type ) const;
     Operand converted( Operand operand, Type_id to, Span span );
-    // §6.7: a member into a union holding it, in a temporary of the union; anything else as it is.
+    // §6.7: a member into a union holding it, in a temporary of the union; a number cast to `to`;
+    // anything else as it is.
     Operand united( Operand operand, Type_id to, Span span );
+    // A shift count or pointer offset at the integer type `to`.
+    Operand counted( Operand operand, Type_id to, Span span );
+    // An integer constant holding the same value at the integer type `to`, if `to` holds it.
+    std::optional<Operand> retyped( const Operand& operand, Type_id to );
     // An error written into `target` as it is, into a union holding it, or into a wider union
     // keeping its tag. `source` is storage nothing drops.
     void    write_error( Place target, Type_id to, Place source, Type_id from, Span span );
@@ -866,6 +871,41 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
     return temporary( cast_to( operand, to ), to, span );
 }
 
+Operand Lowering::counted( Operand operand, Type_id to, Span span )
+{
+    if( std::optional<Operand> same = retyped( operand, to ) )
+    {
+        return *same;
+    }
+
+    return converted( operand, to, span );
+}
+
+std::optional<Operand> Lowering::retyped( const Operand& operand, Type_id to )
+{
+    const Type_table& table = types_.table();
+
+    if( operand.kind != Operand_kind::Constant || !table.is_integer( operand.type ) || !table.is_integer( to ) )
+    {
+        return std::nullopt;
+    }
+
+    const Type& from  = table.get( operand.type );
+    const u64   bits  = literal_pool_.integer( operand.constant );
+    const i64   value = from.is_signed ? as_signed( bits, from.width ) : static_cast<i64>( bits );
+    const bool  below = from.is_signed && value < 0;
+
+    if( !table.fits( below ? 0 - static_cast<u64>( value ) : bits, below, to ) )
+    {
+        return std::nullopt;
+    }
+
+    Operand same  = operand;
+    same.constant = literal_pool_.add_integer( truncate( static_cast<u64>( value ), table.get( to ).width ) );
+    same.type     = to;
+    return same;
+}
+
 Operand Lowering::united( Operand operand, Type_id to, Span span )
 {
     if( adopts_joined( operand.type, to ) )
@@ -884,7 +924,19 @@ Operand Lowering::united( Operand operand, Type_id to, Span span )
         return move( builder_.place( builder_.into_temp( cast_to( moved_if_owning( operand ), to ), to, span ) ), to );
     }
 
-    if( operand.type == to || !types_.table().is_union( to ) )
+    const Type_table& table  = types_.table();
+    const auto        number = [&]( Type_id type ) { return table.is_integer( type ) || table.is_float( type ); };
+
+    if( operand.type != to && number( operand.type ) && number( to ) )
+    {
+        if( std::optional<Operand> same = retyped( operand, to ) )
+        {
+            return *same;
+        }
+        return temporary( cast_to( operand, to ), to, span );
+    }
+
+    if( operand.type == to || !table.is_union( to ) )
     {
         return operand;
     }
@@ -2160,19 +2212,22 @@ Operand Lowering::lower_binary( Node_id id )
     const Operand raw_left  = lower_expression( ast_.lhs( id ) );
     const Operand raw_right = lower_expression( ast_.rhs( id ) );
 
-    // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
+    // A shift's count is a width, not a value meeting the left operand: it is cast to the left type.
     const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
 
     // D41's other case: no common type, so each operand widens within its own kind and the backend
-    // compares them as they are. The only binary whose operands reach KIR with different types.
+    // compares them as they are. The only binary whose operands reach KIR with different types,
+    // besides a pointer and its 64-bit offset.
     const bool by_cases = is_comparison( op ) && !operation.is_valid();
 
     const bool offsets = types_.table().is_many_pointer( raw_left.type );
 
     const Operand left  = converted( raw_left, by_cases ? comparison_width( raw_left.type ) : operation, span );
-    const Operand right = is_shift || offsets
-                              ? raw_right
-                              : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
+    const Operand right = is_shift ? counted( raw_right, operation, span )
+                          : offsets && types_.table().is_integer( raw_right.type )
+                              ? counted( raw_right, comparison_width( raw_right.type ), span )
+                          : offsets ? raw_right
+                                    : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
 
     // The type the operation *produces*, which for a comparison is bool and for `<=>` is ordering.
     const Type_id type = type_of( id );
@@ -3693,7 +3748,8 @@ Place Lowering::lower_place( Node_id id )
         }
 
         const Operand pointer   = lower_expression( ast_.object( id ) );
-        const Operand index     = lower_expression( ast_.index( id ) );
+        const Operand raw_index = lower_expression( ast_.index( id ) );
+        const Operand index     = counted( raw_index, comparison_width( raw_index.type ), ast_.span( id ) );
         const Type_id base_type = type_of( ast_.object( id ) );
 
         const Place place = builder_.place(
@@ -3910,7 +3966,7 @@ void Lowering::lower_assign( Node_id id )
         const bool offsets = types_.table().is_many_pointer( type );
 
         const Operand left  = copy( target, type );
-        const Operand right = offsets ? value : converted( value, type, span );
+        const Operand right = offsets ? counted( value, comparison_width( value.type ), span ) : converted( value, type, span );
 
         builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span, false ), span );
     }
@@ -6075,8 +6131,8 @@ TEST_CASE( "lower_makes_conversions_explicit", "[ir][lower]" )
         REQUIRE( text.find( "_4 = copy _3 < copy _2" ) != std::string::npos );
     }
 
-    // A shift's operands do not meet: the result is the left one's type and the count is a width.
-    SECTION( "a shift count keeps its own type" )
+    // A shift's result is the left operand's type, and the count is cast to it, then masked.
+    SECTION( "a shift count is cast to the left operand's type" )
     {
         Lowered p( "u32 f( u32 a, u8 n ) { return a << n; }\ni32 main() { return 0; }" );
 
@@ -6086,9 +6142,9 @@ TEST_CASE( "lower_makes_conversions_explicit", "[ir][lower]" )
         const std::string text = p.text( 0 );
 
         INFO( text );
-        REQUIRE( text.find( " as " ) == std::string::npos );
-        REQUIRE( text.find( "_3 = copy _2 & const 31" ) != std::string::npos );
-        REQUIRE( text.find( "_4 = copy _1 << copy _3" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = copy _2 as u32" ) != std::string::npos );
+        REQUIRE( text.find( "_4 = copy _3 & const 31" ) != std::string::npos );
+        REQUIRE( text.find( "_5 = copy _1 << copy _4" ) != std::string::npos );
     }
 }
 

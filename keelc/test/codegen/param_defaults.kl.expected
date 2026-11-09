@@ -3047,23 +3047,24 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ
     uint64_t kl_digit_41;
     bool kl_t42;
     uint8_t kl_t43;
-    bool kl_t44;
-    uint64_t kl_t45;
+    uint64_t kl_t44;
+    bool kl_t45;
     uint64_t kl_t46;
-    bool kl_t47;
-    struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_t48;
-    struct kl_2kl6string_parse_error kl_t49;
-    bool kl_t50;
-    uint64_t kl_t51;
-    bool kl_t52;
-    uint64_t kl_t53;
-    bool kl_t54;
-    struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_t55;
-    int64_t kl_t56;
-    uint64_t kl_t57;
-    int64_t kl_t58;
+    uint64_t kl_t47;
+    bool kl_t48;
+    struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_t49;
+    struct kl_2kl6string_parse_error kl_t50;
+    bool kl_t51;
+    uint64_t kl_t52;
+    bool kl_t53;
+    uint64_t kl_t54;
+    bool kl_t55;
+    struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_t56;
+    int64_t kl_t57;
+    uint64_t kl_t58;
     int64_t kl_t59;
-    bool kl_t60;
+    int64_t kl_t60;
+    bool kl_t61;
 #line 565 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t4 = &( *kl_this_1 );
 #line 565 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -3227,63 +3228,65 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ
 #line 583 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t43 = kl_byte_29 - 48;
 #line 583 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_digit_41 = kl_t43;
+    kl_t44 = ( uint64_t ) kl_t43;
+#line 583 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
+    kl_digit_41 = kl_t44;
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t44 = __builtin_sub_overflow( kl_limit_17, kl_digit_41, &( uint64_t ) { 0 } );
+    kl_t45 = __builtin_sub_overflow( kl_limit_17, kl_digit_41, &( uint64_t ) { 0 } );
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t44 ) goto bb24; else goto bb25;
+    if ( kl_t45 ) goto bb24; else goto bb25;
     bb24:
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 585, "arithmetic overflow: (limit - digit)" );
     bb25:
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t45 = kl_limit_17 - kl_digit_41;
+    kl_t46 = kl_limit_17 - kl_digit_41;
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t46 = kl_t45 / 10;
+    kl_t47 = kl_t46 / 10;
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t47 = kl_magnitude_24 > kl_t46;
+    kl_t48 = kl_magnitude_24 > kl_t47;
 #line 585 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t47 ) goto bb26; else goto bb27;
+    if ( kl_t48 ) goto bb26; else goto bb27;
     bb26:
-    kl_t49.tag = 2;
+    kl_t50.tag = 2;
 #line 587 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t48.tag = 1;
+    kl_t49.tag = 1;
 #line 587 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t48.kl_3err_error = kl_t49;
+    kl_t49.kl_3err_error = kl_t50;
 #line 587 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t0 = kl_t48;
+    kl_t0 = kl_t49;
 #line 587 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
     bb27:
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t50 = __builtin_mul_overflow( kl_magnitude_24, 10, &( uint64_t ) { 0 } );
+    kl_t51 = __builtin_mul_overflow( kl_magnitude_24, 10, &( uint64_t ) { 0 } );
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t50 ) goto bb28; else goto bb29;
+    if ( kl_t51 ) goto bb28; else goto bb29;
     bb28:
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 590, "arithmetic overflow: magnitude * 10" );
     bb29:
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t51 = kl_magnitude_24 * 10;
+    kl_t52 = kl_magnitude_24 * 10;
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t52 = __builtin_add_overflow( kl_t51, kl_digit_41, &( uint64_t ) { 0 } );
+    kl_t53 = __builtin_add_overflow( kl_t52, kl_digit_41, &( uint64_t ) { 0 } );
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t52 ) goto bb30; else goto bb31;
+    if ( kl_t53 ) goto bb30; else goto bb31;
     bb30:
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 590, "arithmetic overflow: magnitude * 10 + digit" );
     bb31:
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t53 = kl_t51 + kl_digit_41;
+    kl_t54 = kl_t52 + kl_digit_41;
 #line 590 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_magnitude_24 = kl_t53;
+    kl_magnitude_24 = kl_t54;
 #line 575 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     goto bb32;
     bb32:
 #line 575 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t54 = __builtin_add_overflow( kl_i_25, 1, &( uint64_t ) { 0 } );
+    kl_t55 = __builtin_add_overflow( kl_i_25, 1, &( uint64_t ) { 0 } );
 #line 575 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t54 ) goto bb33; else goto bb34;
+    if ( kl_t55 ) goto bb33; else goto bb34;
     bb33:
 #line 575 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 575, "arithmetic overflow: i++" );
@@ -3294,27 +3297,27 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ
     goto bb13;
     bb35:
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t57 = 0 - kl_magnitude_24;
+    kl_t58 = 0 - kl_magnitude_24;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t58 = ( int64_t ) kl_t57;
+    kl_t59 = ( int64_t ) kl_t58;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t56 = kl_t58;
+    kl_t57 = kl_t59;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     goto bb37;
     bb36:
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t59 = ( int64_t ) kl_magnitude_24;
+    kl_t60 = ( int64_t ) kl_magnitude_24;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t60 = kl_t59 >= 0;
+    kl_t61 = kl_t60 >= 0;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    if ( kl_t60 ) goto bb39; else goto bb38;
+    if ( kl_t61 ) goto bb39; else goto bb38;
     bb37:
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t55.tag = 0;
+    kl_t56.tag = 0;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t55.kl_2ok_value = kl_t56;
+    kl_t56.kl_2ok_value = kl_t57;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t0 = kl_t55;
+    kl_t0 = kl_t56;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     return kl_t0;
     bb38:
@@ -3322,7 +3325,7 @@ struct kl_7prelude_result__I3i64_Q2kl11parse_errorE kl_2kl6string_9parse_i64__SQ
     kl_rt_panic( "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 593, "cast out of range: cast<i64>( magnitude )" );
     bb39:
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t56 = kl_t59;
+    kl_t57 = kl_t60;
 #line 593 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     goto bb37;
 }

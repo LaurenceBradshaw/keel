@@ -131,25 +131,26 @@ int32_t kl__4main__( void )
     uint8_t kl_t107;
     int64_t kl_t108;
     bool kl_t109;
-    uint8_t kl_t110;
+    int64_t kl_t110;
     int64_t kl_t111;
-    bool kl_t112;
-    int32_t kl_t113;
+    int64_t kl_t112;
+    bool kl_t113;
     int32_t kl_t114;
-    bool kl_t115;
-    int32_t kl_y_116;
-    int64_t kl_t117;
-    int32_t kl_t118;
-    int64_t kl_t119;
-    bool kl_t120;
-    int32_t kl_t121;
-    bool kl_t122;
-    int64_t kl_t123;
-    int32_t kl_t124;
-    int64_t kl_t125;
-    bool kl_t126;
-    int32_t kl_t127;
-    bool kl_t128;
+    int32_t kl_t115;
+    bool kl_t116;
+    int32_t kl_y_117;
+    int64_t kl_t118;
+    int32_t kl_t119;
+    int64_t kl_t120;
+    bool kl_t121;
+    int32_t kl_t122;
+    bool kl_t123;
+    int64_t kl_t124;
+    int32_t kl_t125;
+    int64_t kl_t126;
+    bool kl_t127;
+    int32_t kl_t128;
+    bool kl_t129;
 #line 12 "codegen/division_and_shifts.kl"
     kl_t2 = kl__2id__3i64( -1 );
 #line 12 "codegen/division_and_shifts.kl"
@@ -700,13 +701,15 @@ int32_t kl__4main__( void )
     kl_rt_panic( "codegen/division_and_shifts.kl", 52, "cast out of range: cast<u8>( id( 70 ) )" );
     bb98:
 #line 52 "codegen/division_and_shifts.kl"
-    kl_t110 = kl_t107 & 63;
+    kl_t110 = ( int64_t ) kl_t107;
 #line 52 "codegen/division_and_shifts.kl"
-    kl_t111 = kl_t105 << kl_t110;
+    kl_t111 = kl_t110 & 63;
 #line 52 "codegen/division_and_shifts.kl"
-    kl_t112 = kl_t111 != 64;
+    kl_t112 = kl_t105 << kl_t111;
 #line 52 "codegen/division_and_shifts.kl"
-    if ( kl_t112 ) goto bb99; else goto bb100;
+    kl_t113 = kl_t112 != 64;
+#line 52 "codegen/division_and_shifts.kl"
+    if ( kl_t113 ) goto bb99; else goto bb100;
     bb99:
 #line 52 "codegen/division_and_shifts.kl"
     kl_t0 = 16;
@@ -714,66 +717,66 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb100:
 #line 55 "codegen/division_and_shifts.kl"
-    kl_t113 = kl_neg_one_1 & 31;
+    kl_t114 = kl_neg_one_1 & 31;
 #line 55 "codegen/division_and_shifts.kl"
-    kl_t114 = ( int32_t ) 1 << kl_t113;
+    kl_t115 = ( int32_t ) 1 << kl_t114;
 #line 55 "codegen/division_and_shifts.kl"
-    kl_t115 = kl_t114 != kl_min32_24;
+    kl_t116 = kl_t115 != kl_min32_24;
 #line 55 "codegen/division_and_shifts.kl"
-    if ( kl_t115 ) goto bb101; else goto bb102;
+    if ( kl_t116 ) goto bb101; else goto bb102;
     bb101:
 #line 55 "codegen/division_and_shifts.kl"
     kl_t0 = 17;
 #line 55 "codegen/division_and_shifts.kl"
     return kl_t0;
     bb102:
-    kl_y_116 = 5;
-    kl_t117 = kl__2id__3i64( 32 );
+    kl_y_117 = 5;
+    kl_t118 = kl__2id__3i64( 32 );
 #line 58 "codegen/division_and_shifts.kl"
-    kl_t118 = ( int32_t ) kl_t117;
+    kl_t119 = ( int32_t ) kl_t118;
 #line 58 "codegen/division_and_shifts.kl"
-    kl_t119 = ( int64_t ) kl_t118;
+    kl_t120 = ( int64_t ) kl_t119;
 #line 58 "codegen/division_and_shifts.kl"
-    kl_t120 = kl_t119 == kl_t117;
+    kl_t121 = kl_t120 == kl_t118;
 #line 58 "codegen/division_and_shifts.kl"
-    if ( kl_t120 ) goto bb104; else goto bb103;
+    if ( kl_t121 ) goto bb104; else goto bb103;
     bb103:
 #line 58 "codegen/division_and_shifts.kl"
     kl_rt_panic( "codegen/division_and_shifts.kl", 58, "cast out of range: cast<i32>( id( 32 ) )" );
     bb104:
 #line 58 "codegen/division_and_shifts.kl"
-    kl_t121 = kl_t118 & 31;
+    kl_t122 = kl_t119 & 31;
 #line 58 "codegen/division_and_shifts.kl"
-    kl_y_116 = kl_y_116 << kl_t121;
-    kl_t122 = kl_y_116 != 5;
+    kl_y_117 = kl_y_117 << kl_t122;
+    kl_t123 = kl_y_117 != 5;
 #line 59 "codegen/division_and_shifts.kl"
-    if ( kl_t122 ) goto bb105; else goto bb106;
+    if ( kl_t123 ) goto bb105; else goto bb106;
     bb105:
 #line 59 "codegen/division_and_shifts.kl"
     kl_t0 = 18;
 #line 59 "codegen/division_and_shifts.kl"
     return kl_t0;
     bb106:
-    kl_t123 = kl__2id__3i64( 34 );
+    kl_t124 = kl__2id__3i64( 34 );
 #line 61 "codegen/division_and_shifts.kl"
-    kl_t124 = ( int32_t ) kl_t123;
+    kl_t125 = ( int32_t ) kl_t124;
 #line 61 "codegen/division_and_shifts.kl"
-    kl_t125 = ( int64_t ) kl_t124;
+    kl_t126 = ( int64_t ) kl_t125;
 #line 61 "codegen/division_and_shifts.kl"
-    kl_t126 = kl_t125 == kl_t123;
+    kl_t127 = kl_t126 == kl_t124;
 #line 61 "codegen/division_and_shifts.kl"
-    if ( kl_t126 ) goto bb108; else goto bb107;
+    if ( kl_t127 ) goto bb108; else goto bb107;
     bb107:
 #line 61 "codegen/division_and_shifts.kl"
     kl_rt_panic( "codegen/division_and_shifts.kl", 61, "cast out of range: cast<i32>( id( 34 ) )" );
     bb108:
 #line 61 "codegen/division_and_shifts.kl"
-    kl_t127 = kl_t124 & 31;
+    kl_t128 = kl_t125 & 31;
 #line 61 "codegen/division_and_shifts.kl"
-    kl_y_116 = kl_y_116 >> kl_t127;
-    kl_t128 = kl_y_116 != 1;
+    kl_y_117 = kl_y_117 >> kl_t128;
+    kl_t129 = kl_y_117 != 1;
 #line 62 "codegen/division_and_shifts.kl"
-    if ( kl_t128 ) goto bb109; else goto bb110;
+    if ( kl_t129 ) goto bb109; else goto bb110;
     bb109:
 #line 62 "codegen/division_and_shifts.kl"
     kl_t0 = 19;

@@ -8,7 +8,7 @@
 #include "ir/call_graph.h"
 #include "ir/lower.h"
 #include "ir/simplify.h"
-#include "ir/verify.h"
+#include "ir/verify_types.h"
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
 #include "opt/devirtualise_calls.h"
@@ -106,6 +106,22 @@ Front_end run_front_end(
         lower( ast, front.resolution, front.types, literals, sm, interner, build.overflow_checks, std::move( loaded ) );
     lap( "lower" );
 
+    // A debug keelc checks what each pass leaves, so a malformed statement names the pass that made it.
+    const Type_verifier verifier( ast, front.types, interner, front.functions );
+    const auto          verified = [&]( [[maybe_unused]] const Function& function, [[maybe_unused]] std::string_view pass )
+    {
+#ifndef NDEBUG
+        verifier.require( function, pass );
+#endif
+    };
+
+#ifndef NDEBUG
+    for( const Function& function : std::span( front.functions ).subspan( given ) )
+    {
+        verifier.require_types( function, "lowering" );
+    }
+#endif
+
     if( through == Stage::Lowered )
     {
         return front;
@@ -114,6 +130,7 @@ Front_end run_front_end(
     for( Function& function : std::span( front.functions ).subspan( given ) )
     {
         simplify( function, literals );
+        verified( function, "simplify" );
     }
     lap( "simplify" );
 
@@ -183,21 +200,26 @@ Front_end run_front_end(
 
             settle_debug( function, debug );
             simplify( function, literals );
+            verified( function, "settle_debug" );
 
             if( build.optimise )
             {
                 if( build.inlining )
                 {
                     inline_calls( function, saved, front.functions, literals, *build.inlining );
+                    verified( function, "inline_calls" );
                     // An inlined body's dispatch may now see its implementer.
                     if( devirtualise_calls( function, ast, front.types ) )
                     {
+                        verified( function, "devirtualise_calls" );
                         inline_calls( function, saved, front.functions, literals, *build.inlining );
+                        verified( function, "inline_calls" );
                     }
                 }
                 collapse_borrows( function, front.types.table() );
+                verified( function, "collapse_borrows" );
                 coalesce_moves( function );
-                assert( verify( function ).empty() );
+                verified( function, "coalesce_moves" );
             }
         }
 
@@ -221,13 +243,16 @@ Front_end run_front_end(
             Function& function = front.functions[f];
 
             elaborate_drops( function, vocabulary );
+            verified( function, "elaborate_drops" );
 
             if( build.optimise )
             {
                 settle_drops( function );
+                verified( function, "settle_drops" );
                 if( build.inlining )
                 {
                     inline_drops( function, front.functions, finished, literals, *build.inlining );
+                    verified( function, "inline_drops" );
                 }
                 // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.
                 for( u32 round = 0; round < build.rounds; ++round )
@@ -236,47 +261,64 @@ Front_end run_front_end(
                     if( build.forwarding )
                     {
                         forward_borrows( function, front.types.table() );
+                        verified( function, "forward_borrows" );
                     }
                     if( build.splitting )
                     {
                         split_aggregates( function, ast, front.types );
+                        verified( function, "split_aggregates" );
                         // Again, for a borrow of a field that splitting made a whole local.
                         if( build.forwarding )
                         {
                             forward_borrows( function, front.types.table() );
+                            verified( function, "forward_borrows" );
                         }
                         shadow_tags( function );
+                        verified( function, "shadow_tags" );
                     }
                     // Folds a local compared with itself, so SCCP branches on the constant.
                     propagate_values( function, front.types.table(), literals );
+                    verified( function, "propagate_values" );
                     propagate_constants( function, front.types.table(), literals );
+                    verified( function, "propagate_constants" );
                     if( thread_jumps( function, front.types.table(), literals ) )
                     {
+                        verified( function, "thread_jumps" );
                         propagate_constants( function, front.types.table(), literals );
+                        verified( function, "propagate_constants" );
                     }
                     // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
                     if( forward_globals( function, front.types.table(), literals ) )
                     {
+                        verified( function, "forward_globals" );
                         propagate_constants( function, front.types.table(), literals );
+                        verified( function, "propagate_constants" );
                     }
                     // Again, as a join SCCP left fewer paths into may now agree.
                     propagate_values( function, front.types.table(), literals );
+                    verified( function, "propagate_values" );
                     remove_dead_stores( function );
+                    verified( function, "remove_dead_stores" );
                     // Dead store removal can empty a block, so threading goes first.
                     simplify( function, literals );
+                    verified( function, "simplify" );
                     merge_blocks( function );
+                    verified( function, "merge_blocks" );
                     // So no marker of a local a pass removed is left for the next round.
                     remove_unused_locals( function );
+                    verified( function, "remove_unused_locals" );
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )
                 {
                     coalesce_moves( function );
+                    verified( function, "coalesce_moves" );
                     // Merging two locals can make `a != a`.
                     fold_identities( function, front.types.table(), literals );
+                    verified( function, "fold_identities" );
                 }
                 remove_unused_locals( function );
-                assert( verify( function ).empty() );
+                verified( function, "remove_unused_locals" );
             }
         }
 

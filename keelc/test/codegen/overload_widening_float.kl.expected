@@ -47,8 +47,11 @@ double kl__6narrow__3f64( double kl_t1 )
 double kl__6narrow__3f32( float kl_x_1 )
 {
     double kl_t0;
+    double kl_t2;
 #line 22 "codegen/overload_widening_float.kl"
-    kl_t0 = kl_x_1;
+    kl_t2 = ( double ) kl_x_1;
+#line 22 "codegen/overload_widening_float.kl"
+    kl_t0 = kl_t2;
 #line 22 "codegen/overload_widening_float.kl"
     return kl_t0;
 }

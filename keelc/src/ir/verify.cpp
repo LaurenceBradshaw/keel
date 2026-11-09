@@ -14,7 +14,7 @@ namespace
 // A place, wherever it appears. Places live in four places - a statement's target, an rvalue's
 // operands, a call's argument list, and a branch's condition - so this is shared rather than
 // repeated, which is how the operand ones came to be missed.
-void check_place( const Function& func, const Place& place, std::string_view where, std::vector<std::string>& errors )
+void check_place( const Function& func, const Place& place, const At& where, std::vector<std::string>& errors )
 {
     const bool rooted_in_local  = place.local.is_valid();
     const bool rooted_in_global = place.global.is_valid();
@@ -37,7 +37,7 @@ void check_place( const Function& func, const Place& place, std::string_view whe
     }
 }
 
-void check_operand( const Function& func, const Operand& operand, std::string_view where, std::vector<std::string>& errors )
+void check_operand( const Function& func, const Operand& operand, const At& where, std::vector<std::string>& errors )
 {
     switch( operand.kind )
     {
@@ -60,10 +60,10 @@ void check_operand( const Function& func, const Operand& operand, std::string_vi
 
 // Which fields an rvalue means is decided by its kind, so only those are read. Checking the others
 // would report on whatever a lowerer left in them, which is nothing.
-void check_rvalue( const Function& func, const Rvalue& value, std::string_view where, std::vector<std::string>& errors )
+void check_rvalue( const Function& func, const Rvalue& value, const At& where, std::vector<std::string>& errors )
 {
     const auto operand_at = [&]( const Operand& operand, std::string_view which )
-    { check_operand( func, operand, fmt::format( "{} {}", where, which ), errors ); };
+    { check_operand( func, operand, where( which ), errors ); };
 
     switch( value.kind )
     {
@@ -103,7 +103,7 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
     // The address of a place, not a copy of what lives there - so the place is what matters and
     // the operand's kind does not.
     case Rvalue_kind::Address_of:
-        check_place( func, value.a.place, fmt::format( "{} operand", where ), errors );
+        check_place( func, value.a.place, where( "operand" ), errors );
         return;
 
     case Rvalue_kind::Call:
@@ -120,7 +120,7 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
 
         for( std::size_t i = 0; i < value.arguments.size(); ++i )
         {
-            check_operand( func, value.arguments[i], fmt::format( "{} argument {}", where, i ), errors );
+            check_operand( func, value.arguments[i], where( "argument", narrow_cast<i64>( i ) ), errors );
         }
 
         return;
@@ -159,11 +159,7 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
 // Whether `statement`'s rvalue is its own: one moved in from another function names an id of that
 // function's table.
 bool check_owner(
-    const Function&           func,
-    const Statement&          statement,
-    std::vector<bool>&        held,
-    const std::string&        where,
-    std::vector<std::string>& errors
+    const Function& func, const Statement& statement, std::vector<bool>& held, const At& where, std::vector<std::string>& errors
 )
 {
     if( !statement.value.is_valid() )
@@ -195,8 +191,8 @@ void check_statements( const Function& func, std::vector<std::string>& errors )
 
     for( u32 i = 0; i < func.statements.size(); ++i )
     {
-        const Statement&  statement = func.statements[i];
-        const std::string where     = fmt::format( "statement {}", i );
+        const Statement& statement = func.statements[i];
+        const At         where { "statement", i };
 
         check_place( func, statement.place, where, errors );
 
@@ -242,7 +238,7 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
     for( const Block_id i : func.blocks.ids() )
     {
         const Terminator& terminator = func.blocks[i].terminator;
-        const std::string where      = fmt::format( "block {}", i.v );
+        const At          where { "block", i.v };
 
         const auto check_target = [&]( Block_id target, std::string_view what )
         {
@@ -268,7 +264,7 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
             break;
 
         case Terminator_kind::Branch:
-            check_operand( func, terminator.condition, fmt::format( "{} condition", where ), errors );
+            check_operand( func, terminator.condition, where( "condition" ), errors );
             check_target( terminator.targets[0], "Branch true target" );
             check_target( terminator.targets[1], "Branch false target" );
             break;
@@ -276,11 +272,11 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
         case Terminator_kind::Panic:
             if( terminator.failure == Failure::Message )
             {
-                check_operand( func, terminator.message, fmt::format( "{} message", where ), errors );
+                check_operand( func, terminator.message, where( "message" ), errors );
 
                 if( terminator.at.type.is_valid() )
                 {
-                    check_operand( func, terminator.at, fmt::format( "{} location", where ), errors );
+                    check_operand( func, terminator.at, where( "location" ), errors );
                 }
             }
             break;

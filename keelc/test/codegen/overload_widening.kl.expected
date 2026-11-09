@@ -109,6 +109,7 @@ int32_t kl__9narrowest__3i16( int16_t kl_a_1 )
     int32_t kl_t0;
     bool kl_t2;
     int16_t kl_t3;
+    int32_t kl_t4;
 #line 32 "codegen/overload_widening.kl"
     kl_t2 = __builtin_add_overflow( 10, kl_a_1, &( int16_t ) { 0 } );
 #line 32 "codegen/overload_widening.kl"
@@ -120,7 +121,9 @@ int32_t kl__9narrowest__3i16( int16_t kl_a_1 )
 #line 32 "codegen/overload_widening.kl"
     kl_t3 = 10 + kl_a_1;
 #line 32 "codegen/overload_widening.kl"
-    kl_t0 = kl_t3;
+    kl_t4 = ( int32_t ) kl_t3;
+#line 32 "codegen/overload_widening.kl"
+    kl_t0 = kl_t4;
 #line 32 "codegen/overload_widening.kl"
     return kl_t0;
 }
