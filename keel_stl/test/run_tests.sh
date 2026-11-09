@@ -14,6 +14,9 @@
 #   run_tests.sh <path-to-keelc> [--update]
 #
 #   KEEL_VALGRIND=1   run each program under valgrind too, failing on any error it reports
+#   KEEL_BACKEND      the backend each program is built with, as --backend (default: c)
+#   KEEL_COMPARE      a second backend: each program is built and run with it too, and must pass the
+#                     same checks and print what the first backend's build did
 #   KEEL_JOBS, KEEL_RUN_TIMEOUT, CC, KEEL_CFLAGS, KEEL_C_WARNINGS, KEEL_RT   as for keelc's runner
 
 set -uo pipefail
@@ -31,6 +34,8 @@ update=0
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
+backend="${KEEL_BACKEND:-c}"
+compare="${KEEL_COMPARE:-}"
 export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
 
 # Paths appear in panics and reports, so they are relative to here.
@@ -50,11 +55,13 @@ results="$( mktemp -d )"
 trap 'rm -rf "$results"' EXIT
 
 # Builds and runs one program in one mode, writing any problem to $results/<index>.
-# $1 the index  $2 the program's directory  $3 debug or release
+# $1 the index  $2 the program's directory  $3 debug or release  $4 first or compare
 run_one()
 {
-    local index="$1" dir="$2" mode="$3"
+    local index="$1" dir="$2" mode="$3" role="$4"
     local build_dir="${artifacts}/$( tr '/' '_' <<< "$dir" )_${mode}"
+    local with="$backend"
+    [ "$role" = compare ] && { with="$compare"; build_dir+="_compare"; }
     local src="${dir}/main.kl"
     local flags=()
     [ "$mode" = debug ] && flags=( --debug )
@@ -63,7 +70,7 @@ run_one()
     mkdir -p "$build_dir"
 
     {
-        if ! "$keelc" --quiet "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -o "${build_dir}/program" \
+        if ! "$keelc" --quiet --backend "$with" "${flags[@]}" --package kl=../src "$src" --runtime "$runtime" -o "${build_dir}/program" \
             > "${build_dir}/build.log" 2>&1; then
             echo "    keelc did not build it:"
             sed 's/^/      /' < "${build_dir}/build.log"
@@ -111,10 +118,15 @@ run_one()
     } > "${results}/${index}"
 }
 
+roles=( first )
+[ -n "$compare" ] && [ "$update" -eq 0 ] && roles+=( compare )
+
 jobs=()
 for dir in "${programs[@]}"; do
     for mode in debug release; do
-        jobs+=( "${dir} ${mode}" )
+        for role in "${roles[@]}"; do
+            jobs+=( "${dir} ${mode} ${role}" )
+        done
     done
 done
 
@@ -132,14 +144,23 @@ wait
 pass=0
 fail=0
 for index in "${!jobs[@]}"; do
+    # A second backend's build must print what the first's did, .out or not.
+    read -r dir mode role <<< "${jobs[$index]}"
+    first_dir="${artifacts}/$( tr '/' '_' <<< "$dir" )_${mode}"
+    if [ "$role" = compare ] && [ ! -s "${results}/${index}" ] && [ -f "${first_dir}/run.log" ]; then
+        if ! diff -u "${first_dir}/run.log" "${first_dir}_compare/run.log" > "${results}/${index}.diff"; then
+            { echo "    its output differs from --backend ${backend}'s:"; sed 's/^/      /' < "${results}/${index}.diff"; } > "${results}/${index}"
+        fi
+    fi
+
     if [ "$update" -eq 1 ]; then
-        echo "  ${dim}updated${reset}  ${jobs[$index]}"
+        echo "  ${dim}updated${reset}  ${jobs[$index]% first}"
     elif [ -s "${results}/${index}" ]; then
-        echo "  ${red}FAIL${reset}     ${jobs[$index]}"
+        echo "  ${red}FAIL${reset}     ${jobs[$index]% first}"
         cat "${results}/${index}"
         fail=$(( fail + 1 ))
     else
-        echo "  ${green}pass${reset}     ${jobs[$index]}"
+        echo "  ${green}pass${reset}     ${jobs[$index]% first}"
         pass=$(( pass + 1 ))
     fi
 done

@@ -37,6 +37,8 @@
 #
 #   KEEL_BACKEND  the backend a run fixture is built with, as --backend (default: c). A fixture's
 #               .out and .run are checked with it; .expected stays the C backend's output.
+#   KEEL_COMPARE  a second backend: each run fixture is built and run with it too, objects and the
+#               release build included, and must pass the same checks and print what the first did.
 #   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
@@ -102,6 +104,7 @@ fi
 runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 
 backend="${KEEL_BACKEND:-c}"
+compare="${KEEL_COMPARE:-}"
 
 # keelc runs the C compiler; the runner only configures it.
 cc="${CC:-cc}"
@@ -382,6 +385,44 @@ check_release()
     return 0
 }
 
+# Builds and runs the fixture again with $compare's backend, in a directory of its own. It must pass
+# check_run and check_release as the first build did, and print the same, which a fixture without a
+# .out has checked nowhere else. Skipped under --update, which records the first backend's answer.
+# $1 the fixture path  $2 the first build's directory  $3.. the build flags  -> echoes any problem
+check_compare()
+{
+    local src="$1" first_dir="$2"
+    shift 2
+
+    [ -n "$compare" ] && [ "$update" -eq 0 ] || return 0
+
+    local compare_dir="${first_dir}_${compare}"
+    rm -rf "$compare_dir"
+    mkdir -p "$compare_dir"
+
+    local messages
+    messages="$(
+        first="$backend"
+        backend="$compare"
+        klos=()
+        if [ ! -f "${src}.objects" ] || build_objects "$src" "$compare_dir" "$@"; then
+            check_run "$src" "$compare_dir" "$@"
+            check_release "$src" "$compare_dir" "$@"
+
+            for suffix in "" _release; do
+                [ -f "${first_dir}${suffix}/run.log" ] && [ -f "${compare_dir}${suffix}/run.log" ] || continue
+                if ! diff -u "${first_dir}${suffix}/run.log" "${compare_dir}${suffix}/run.log" > "${compare_dir}/compare.diff"; then
+                    echo "    the output${suffix:+ without --debug} differs from --backend ${first}'s:"
+                    sed 's/^/      /' < "${compare_dir}/compare.diff"
+                fi
+            done
+        fi
+    )"
+
+    [ -n "$messages" ] && { echo "    with --backend ${compare}:"; echo "$messages"; }
+    return 0
+}
+
 # Checks one fixture, and writes its verdict to $results/<index>: "pass", "FAIL" or "updated" on the
 # first line, then any messages. $out and $err are its own, so fixtures can run side by side.
 # $1 the index  $2 the fixture path
@@ -447,6 +488,7 @@ run_one()
         if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
             check_run "$src" "$build_dir" "${build_flags[@]}"
             check_release "$src" "$build_dir" "${build_flags[@]}"
+            check_compare "$src" "$build_dir" "${build_flags[@]}"
         fi
     )"
 
