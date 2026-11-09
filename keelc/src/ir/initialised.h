@@ -3,6 +3,7 @@
 
 #pragma once
 #include <vector>
+#include "ir/bit_set.h"
 #include "ir/kir.h"
 #include "ir/slots.h"
 
@@ -13,7 +14,7 @@ namespace keel
 // optimisations to tell when two locals' values are never alive at once.
 
 // Indexed by Local_id::v.
-using Local_set = std::vector<bool>;
+using Local_set = Bit_set;
 
 // Indexed by slot: a local's own entry covers the whole local, a field's entry that field alone.
 struct Occupancy

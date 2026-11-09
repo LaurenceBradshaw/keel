@@ -543,19 +543,22 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
     // Values only rise, a range that grows again is widened to Varying, and a block is reached once, so this ends.
     bool                                                       changed = true;
     std::vector<std::pair<Block_id, std::optional<Narrowing>>> targets;
+    std::vector<bool>                                          dirty( func.blocks.size(), true );
+    Values                                                     state;
     while( changed )
     {
         changed = false;
 
         for( const Block_id b : func.blocks.ids() )
         {
-            if( !values[b.v] )
+            if( !values[b.v] || !dirty[b.v] )
             {
                 continue;
             }
+            dirty[b.v] = false;
 
             const Block& block = func.blocks[b];
-            Values       state = *values[b.v];
+            state              = *values[b.v];
 
             for( const Statement& statement : func.statements_of( block ) )
             {
@@ -615,7 +618,8 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
                     {
                         ( *entry )[narrowed->local.v] = *tested;
                     }
-                    changed = true;
+                    changed         = true;
+                    dirty[target.v] = true;
                     continue;
                 }
 
@@ -631,6 +635,7 @@ std::vector<std::optional<Values>> values_on_entry( const Analysis& analysis )
                         }
                         ( *entry )[l.v] = joined;
                         changed         = true;
+                        dirty[target.v] = true;
                     }
                 }
             }

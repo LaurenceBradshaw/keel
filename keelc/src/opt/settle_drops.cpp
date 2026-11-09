@@ -21,7 +21,7 @@ void settle_drops( Function& func )
         }
     }
 
-    if( std::ranges::find( flags, true ) == flags.end() )
+    if( !flags.any() )
     {
         return;
     }

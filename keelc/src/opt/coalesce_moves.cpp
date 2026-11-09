@@ -348,12 +348,37 @@ std::optional<Candidate> candidate_at( const Function& func, u32 index )
     return field;
 }
 
+// Each whole local's occupancy just after each statement, indexed like `func.statements`: one walk a round
+// serves every candidate.
+std::vector<Occupancy> occupancy_after( const Function& func, const Slot_map& slots, const std::vector<Occupancy>& entry )
+{
+    std::vector<Occupancy> after( func.statements.size() );
+    Occupancy              state;
+    for( const Block_id b : func.blocks.ids() )
+    {
+        const Block& block = func.blocks[b];
+        state              = entry[b.v];
+
+        for( u32 i = 0; i < block.statement_count; ++i )
+        {
+            const u32 at = func.statements_of( block ).position( i );
+            step( func, slots, func.statements[at], state );
+
+            after[at] = Occupancy { .initialised = state.initialised, .storage_dead = state.storage_dead, .uninitialised = {} };
+            after[at].initialised.resize( func.locals.size(), false );
+            after[at].storage_dead.resize( func.locals.size(), false );
+        }
+    }
+
+    return after;
+}
+
 bool interferes(
     const Function&               func,
     Local_id                      kept,
     Local_id                      gone,
-    const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
+    const std::vector<Occupancy>& after,
     const Liveness&               live,
     const Local_set&              addressed
 )
@@ -367,10 +392,10 @@ bool interferes(
 
     for( const Block_id b : func.blocks.ids() )
     {
-        const Block& block = func.blocks[b];
-        Occupancy    state = entry[b.v];
+        const Block&     block = func.blocks[b];
+        const Occupancy* state = &entry[b.v];
 
-        if( clash( state, live.on_entry[b.v], false, false ) )
+        if( clash( *state, live.on_entry[b.v], false, false ) )
         {
             return true;
         }
@@ -383,15 +408,15 @@ bool interferes(
             // A drop the merge keeps loses the move that guarded it, so on another path it would destroy
             // the other's value: a `switch( move … )` arm that falls through to the scrutinee's drop.
             if( statement.kind == Statement_kind::Drop &&
-                ( names( statement.place, gone ) || names( statement.place, kept ) ) && state.initialised[gone.v] &&
-                state.initialised[kept.v] )
+                ( names( statement.place, gone ) || names( statement.place, kept ) ) && state->initialised[gone.v] &&
+                state->initialised[kept.v] )
             {
                 return true;
             }
 
-            step( func, slots, statement, state );
+            state = &after[at];
 
-            if( clash( state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ) ) )
+            if( clash( *state, live.after[at], writes( func, statement, gone ), writes( func, statement, kept ) ) )
             {
                 return true;
             }
@@ -503,8 +528,8 @@ bool reaches(
 bool field_interferes(
     const Function&               func,
     const Candidate&              c,
-    const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
+    const std::vector<Occupancy>& after,
     const Liveness&               live,
     const Local_set&              addressed
 )
@@ -515,16 +540,13 @@ bool field_interferes(
     for( const Block_id b : func.blocks.ids() )
     {
         const Block& block = func.blocks[b];
-        Occupancy    state = entry[b.v];
-        bool         was   = occupied( state, live.on_entry[b.v], addressed, c.gone, false );
+        bool         was   = occupied( entry[b.v], live.on_entry[b.v], addressed, c.gone, false );
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
             const u32        at        = func.statements_of( block ).position( i );
             const Statement& statement = func.statements[at];
-            step( func, slots, statement, state );
-
-            const bool now = occupied( state, live.after[at], addressed, c.gone, writes( func, statement, c.gone ) );
+            const bool       now = occupied( after[at], live.after[at], addressed, c.gone, writes( func, statement, c.gone ) );
             // `was` catches the statement that reads `gone` for the last time.
             in_life[at] = was || now;
 
@@ -534,7 +556,7 @@ bool field_interferes(
                 return true;
             }
 
-            if( now && state.storage_dead[c.kept.v] )
+            if( now && after[at].storage_dead[c.kept.v] )
             {
                 return true;
             }
@@ -661,8 +683,8 @@ void rename( Function& func, Local_id gone, const Place& into )
 bool mark_deletions(
     const Function&               func,
     const Candidate&              chosen,
-    const Slot_map&               slots,
     const std::vector<Occupancy>& entry,
+    const std::vector<Occupancy>& after,
     std::vector<bool>&            deleted,
     bool&                         flag_lost
 )
@@ -670,8 +692,8 @@ bool mark_deletions(
     bool gone_drop_kept = false;
     for( const Block_id b : func.blocks.ids() )
     {
-        const Block& block = func.blocks[b];
-        Occupancy    state = entry[b.v];
+        const Block&     block = func.blocks[b];
+        const Occupancy* state = &entry[b.v];
 
         for( u32 i = 0; i < block.statement_count; ++i )
         {
@@ -689,8 +711,8 @@ bool mark_deletions(
             }
             else if( statement.kind == Statement_kind::Drop )
             {
-                if( ( names( statement.place, chosen.gone ) && !state.initialised[chosen.gone.v] ) ||
-                    ( names( statement.place, chosen.kept ) && !state.initialised[chosen.kept.v] ) )
+                if( ( names( statement.place, chosen.gone ) && !state->initialised[chosen.gone.v] ) ||
+                    ( names( statement.place, chosen.kept ) && !state->initialised[chosen.kept.v] ) )
                 {
                     deleted[at] = true;
                     flag_lost   = flag_lost || ( statement.replacing && !has_deref_projection( func, statement.place ) );
@@ -701,7 +723,7 @@ bool mark_deletions(
                 }
             }
 
-            step( func, slots, statement, state );
+            state = &after[at];
         }
     }
 
@@ -712,12 +734,13 @@ bool mark_deletions(
 // changes facts only about its own locals, so one analysis judges them all. Answers whether any merged.
 bool coalesce_round( Function& func )
 {
-    const Slot_map         slots( func );
-    std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
-    std::vector<Candidate> chosen;
-    Local_set              taken( func.locals.size(), false );
-    const Liveness         live      = live_locals( func );
-    const Local_set        addressed = addressed_locals( func );
+    const Slot_map               slots( func );
+    const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
+    const std::vector<Occupancy> after = occupancy_after( func, slots, entry );
+    std::vector<Candidate>       chosen;
+    Local_set                    taken( func.locals.size(), false );
+    const Liveness               live      = live_locals( func );
+    const Local_set              addressed = addressed_locals( func );
     for( u32 index = 0; index < func.statements.size(); ++index )
     {
         const std::optional<Candidate> candidate = candidate_at( func, index );
@@ -732,8 +755,8 @@ bool coalesce_round( Function& func )
         }
 
         const bool clash = candidate->into.num_projections == 0
-                               ? interferes( func, candidate->kept, candidate->gone, slots, entry, live, addressed )
-                               : field_interferes( func, *candidate, slots, entry, live, addressed );
+                               ? interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed )
+                               : field_interferes( func, *candidate, entry, after, live, addressed );
         if( !clash )
         {
             taken[candidate->kept.v]       = true;
@@ -755,7 +778,7 @@ bool coalesce_round( Function& func )
     for( u32 c = 0; c < chosen.size(); ++c )
     {
         bool lost         = false;
-        gone_drop_kept[c] = mark_deletions( func, chosen[c], slots, entry, deleted, lost );
+        gone_drop_kept[c] = mark_deletions( func, chosen[c], entry, after, deleted, lost );
         flag_lost[c]      = lost;
     }
 

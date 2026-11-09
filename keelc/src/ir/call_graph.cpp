@@ -3,6 +3,7 @@
 
 #include "ir/call_graph.h"
 #include <algorithm>
+#include <unordered_map>
 
 namespace keel
 {
@@ -24,15 +25,27 @@ bool addresses( const Function& caller, const Statement& statement, const Functi
 }
 
 // Which functions each one calls or takes the address of; a call to a body-less extern has no edge.
-// Calls × functions, a map by declaration if it shows.
 std::vector<std::vector<u32>> call_edges( const std::vector<Function>& functions )
 {
+    // Only a function of the statement's declaration can match: each declaration's instances, in order.
+    std::unordered_map<u32, std::vector<u32>> by_declaration;
+    for( u32 c = 0; c < functions.size(); c++ )
+    {
+        by_declaration[functions[c].declaration.v].push_back( c );
+    }
+
     std::vector<std::vector<u32>> edges( functions.size() );
     for( u32 f = 0; f < functions.size(); f++ )
     {
         for( const Statement& statement : functions[f].statements )
         {
-            for( u32 c = 0; c < functions.size(); c++ )
+            const auto instances = by_declaration.find( functions[f].rvalue( statement ).callee.v );
+            if( instances == by_declaration.end() )
+            {
+                continue;
+            }
+
+            for( const u32 c : instances->second )
             {
                 const Function& callee = functions[c];
 

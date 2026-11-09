@@ -120,19 +120,22 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
     // Facts only go away, and a block is reached once, so this ends.
     bool                  changed = true;
     std::vector<Block_id> targets;
+    std::vector<bool>     dirty( func.blocks.size(), true );
+    Values                state;
     while( changed )
     {
         changed = false;
 
         for( const Block_id b : func.blocks.ids() )
         {
-            if( !values[b.v] )
+            if( !values[b.v] || !dirty[b.v] )
             {
                 continue;
             }
+            dirty[b.v] = false;
 
             const Block& block = func.blocks[b];
-            Values       state = *values[b.v];
+            state              = *values[b.v];
 
             for( const Statement& statement : func.statements_of( block ) )
             {
@@ -147,8 +150,9 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
 
                 if( !entry )
                 {
-                    entry   = state;
-                    changed = true;
+                    entry           = state;
+                    changed         = true;
+                    dirty[target.v] = true;
                     continue;
                 }
 
@@ -159,6 +163,7 @@ std::vector<std::optional<Values>> values_on_entry( const Function& func, const 
                     {
                         ( *entry )[l.v] = std::nullopt;
                         changed         = true;
+                        dirty[target.v] = true;
                     }
                 }
             }

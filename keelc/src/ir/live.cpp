@@ -136,9 +136,22 @@ Liveness live_locals( const Function& func )
         statement_live.resize( func.locals.size(), false );
     }
 
-    // Bits only go from false to true across rounds, so this ends; the last round rewrites every `after`.
-    std::vector<Block_id> targets;
-    bool                  changed = true;
+    // A block is walked again only when a successor's entry grew; bits only go from false to true, so this ends.
+    std::vector<Block_id>              targets;
+    std::vector<std::vector<Block_id>> predecessors( func.blocks.size() );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        targets.clear();
+        successors( func.blocks[b].terminator, targets );
+        for( const Block_id target : targets )
+        {
+            predecessors[target.v].push_back( b );
+        }
+    }
+
+    std::vector<bool> dirty( func.blocks.size(), true );
+    Local_set         state;
+    bool              changed = true;
     while( changed )
     {
         changed = false;
@@ -146,21 +159,21 @@ Liveness live_locals( const Function& func )
         // Any order reaches the same answer; backward needs fewer rounds.
         for( u32 b = static_cast<u32>( func.blocks.size() ); b-- > 0; )
         {
+            if( !dirty[b] )
+            {
+                continue;
+            }
+            dirty[b] = false;
+
             const Block& block = func.blocks[Block_id { b }];
             // Live at the exit: whatever any successor reads.
-            Local_set state( func.locals.size(), false );
+            state = Local_set( func.locals.size(), false );
             targets.clear();
             successors( block.terminator, targets );
 
             for( Block_id target : targets )
             {
-                for( const Local_id l : func.locals.ids() )
-                {
-                    if( live.on_entry[target.v][l.v] )
-                    {
-                        state[l.v] = true;
-                    }
-                }
+                state.join( live.on_entry[target.v] );
             }
 
             step_back( func, block.terminator, state );
@@ -176,6 +189,10 @@ Liveness live_locals( const Function& func )
             {
                 live.on_entry[b] = state;
                 changed          = true;
+                for( const Block_id from : predecessors[b] )
+                {
+                    dirty[from.v] = true;
+                }
             }
         }
     }

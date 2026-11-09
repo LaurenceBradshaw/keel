@@ -180,22 +180,31 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func, const Slot_map&
     for( u32 i = 1; i < func.blocks.size(); ++i )
     {
         entry[i] = Occupancy {
-            .initialised   = std::vector<bool>( slots.count(), false ),
-            .storage_dead  = std::vector<bool>( slots.count(), false ),
-            .uninitialised = std::vector<bool>( slots.count(), false )
+            .initialised   = Local_set( slots.count(), false ),
+            .storage_dead  = Local_set( slots.count(), false ),
+            .uninitialised = Local_set( slots.count(), false )
         };
     }
 
-    bool                  changed = true;
+    // Bits only go from false to true, so this ends; a block is walked again only when its entry grew.
+    std::vector<bool>     dirty( func.blocks.size(), true );
     std::vector<Block_id> targets;
+    Occupancy             state;
+    bool                  changed = true;
     while( changed )
     {
         changed = false;
 
         for( const Block_id i : func.blocks.ids() )
         {
+            if( !dirty[i.v] )
+            {
+                continue;
+            }
+            dirty[i.v] = false;
+
             const Block& block = func.blocks[i];
-            Occupancy    state = entry[i.v];
+            state              = entry[i.v];
 
             for( const Statement& statement : func.statements_of( block ) )
             {
@@ -208,25 +217,14 @@ std::vector<Occupancy> occupancy_on_entry( const Function& func, const Slot_map&
             successors( block.terminator, targets );
             for( const Block_id target : targets )
             {
-                for( u32 l = 0; l < slots.count(); ++l )
+                Occupancy& into = entry[target.v];
+                bool       grew = into.initialised.join( state.initialised );
+                grew            = into.storage_dead.join( state.storage_dead ) || grew;
+                grew            = into.uninitialised.join( state.uninitialised ) || grew;
+                if( grew )
                 {
-                    if( state.initialised[l] && !entry[target.v].initialised[l] )
-                    {
-                        entry[target.v].initialised[l] = true;
-                        changed                        = true;
-                    }
-
-                    if( state.storage_dead[l] && !entry[target.v].storage_dead[l] )
-                    {
-                        entry[target.v].storage_dead[l] = true;
-                        changed                         = true;
-                    }
-
-                    if( state.uninitialised[l] && !entry[target.v].uninitialised[l] )
-                    {
-                        entry[target.v].uninitialised[l] = true;
-                        changed                          = true;
-                    }
+                    dirty[target.v] = true;
+                    changed         = true;
                 }
             }
         }

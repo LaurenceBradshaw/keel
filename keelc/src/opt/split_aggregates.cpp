@@ -459,7 +459,7 @@ void split_aggregates( Function& func, const Ast& ast, Types& types )
     {
         const Local_set split = splittable( func, types.table(), func.parameter_count + 1 );
 
-        if( std::ranges::none_of( split, []( bool s ) { return s; } ) )
+        if( !split.any() )
         {
             return;
         }
