@@ -337,17 +337,17 @@ void effects_of(
     }
 }
 
-// A `ref` binding of a place or of a call's result. An argument's temporary is the one-call rule's,
-// and a named pointer is assigned a copy of an address, never the address itself.
+// A `ref` binding of a place or of a call's result, or an argument's temporary, which holds its loan
+// until its call: `set( ref x, grow( ref v ) )`. A named pointer is assigned a copy of an address,
+// never the address itself.
 bool is_walked( const Function& func, Local_id local )
 {
     return std::find( func.walked.begin(), func.walked.end(), local ) != func.walked.end();
 }
 
-bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
+bool is_holder( const Borrow& borrow )
 {
-    return ( func.locals[local].name.is_valid() || is_walked( func, local ) ) &&
-           ( borrow.assignments == 1 || !borrow.choices.empty() ) && borrow.bound &&
+    return ( borrow.assignments == 1 || !borrow.choices.empty() ) && borrow.bound &&
            ( borrow.holds_place() || borrow.through != nullptr || !borrow.choices.empty() ) &&
            borrow.purpose != Address_purpose::Initialise;
 }
@@ -441,12 +441,18 @@ std::vector<Loan_error> check_loans(
     const std::vector<Borrow> borrows = borrows_of( func, addressing, literals, globals );
     const std::vector<Live>   live    = live_in( func );
 
+    // Named and walked holders first, so an argument's temporary is reported only when no binding is.
+    const auto is_argument = [&]( Local_id l ) { return !func.locals[l].name.is_valid() && !is_walked( func, l ); };
+
     std::vector<Local_id> holders;
-    for( const Local_id l : func.locals.ids() )
+    for( const bool arguments : { false, true } )
     {
-        if( is_holder( func, borrows[l.v], l ) )
+        for( const Local_id l : func.locals.ids() )
         {
-            holders.push_back( l );
+            if( is_argument( l ) == arguments && is_holder( borrows[l.v] ) )
+            {
+                holders.push_back( l );
+            }
         }
     }
 
@@ -476,21 +482,25 @@ std::vector<Loan_error> check_loans(
 
             for( const Effect& effect : effects )
             {
+                bool hit_here = false;
+
                 for( const Local_id holder : holders )
                 {
-                    if( !after[i][holder.v] || reported[holder.v] )
+                    const bool argument = is_argument( holder );
+
+                    if( !after[i][holder.v] || reported[holder.v] || ( argument && hit_here ) )
                     {
                         continue;
                     }
 
                     const bool walked = is_walked( func, holder );
 
-                    // D75: a chosen binding's first arm that conflicts.
+                    // D75: a chosen binding's first arm that conflicts; D81: or a closure's capture.
                     const Borrow* hit = nullptr;
-                    for_each_choice(
+                    for_each_carried(
                         borrows,
-                        borrows[holder.v],
-                        [&]( const Borrow& choice )
+                        holder,
+                        [&]( const Borrow& choice, Local_id )
                         {
                             if( hit == nullptr &&
                                 ( walked ? walk_conflicts( func, borrows, owning, globals, choice, holder, effect )
@@ -518,9 +528,11 @@ std::vector<Loan_error> check_loans(
                             .taken    = loan.at,
                             .writer   = effect.writer,
                             .conflict = effect.conflict,
-                            .walked   = walked
+                            .walked   = walked,
+                            .argument = argument
                         } );
                         reported[holder.v] = true;
+                        hit_here           = true;
                     }
                 }
             }

@@ -34,6 +34,7 @@ struct Loan_error
     Node_id       writer {};   // D80: the callee whose write set ended the loan, when one did
     Loan_conflict conflict = Loan_conflict::Moved;
     bool          walked   = false; // the holder is a walk's receiver (D74), and has no name
+    bool          argument = false; // the holder is an earlier argument's temporary, passed after `at`
 };
 
 // Per local, whether what it is, or points at, owns anything: only an owner can free or relocate

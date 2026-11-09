@@ -1,0 +1,37 @@
+error: this could change `v` while an earlier argument still borrows from it
+  --> sema/errors_argument_loans.kl:25:23
+   |
+25 |     set( ref x, grow( ref v ) );                          // error
+   |                       ^^^^^ that argument is passed after this; it was taken at 25:10
+
+error: this could change `v` while an earlier argument still borrows from it
+  --> sema/errors_argument_loans.kl:26:26
+   |
+26 |     set( ref v[0], grow( ref v ) );                       // error
+   |                          ^^^^^ that argument is passed after this; it was taken at 26:10
+
+error: this could change `v` while an earlier argument still borrows from it
+  --> sema/errors_argument_loans.kl:27:30
+   |
+27 |     set( ref v[0], c ? grow( ref v ) : 0 );               // error
+   |                              ^^^^^ that argument is passed after this; it was taken at 27:10
+
+error: this could change `v` while an earlier argument still borrows from it
+  --> sema/errors_argument_loans.kl:29:48
+   |
+29 |     both( fn[ref y]( i32 n ) { y = n; }, grow( ref v ) ); // error
+   |                                                ^^^^^ that argument is passed after this; it was taken at 29:14
+
+error: this could change `ll` while an earlier argument still borrows from it
+  --> sema/errors_argument_loans.kl:30:27
+   |
+30 |     ll[0].push( grow_all( ref ll ) );                     // error
+   |                           ^^^^^^ that argument is passed after this; it was taken at 30:5
+
+error: `v` is moved while an earlier argument still borrows it
+  --> sema/errors_argument_loans.kl:37:26
+   |
+37 |     set( ref v[0], take( move v ) ); // error
+   |                          ^^^^^^ that argument is passed after this; it was taken at 37:10
+
+6 errors generated

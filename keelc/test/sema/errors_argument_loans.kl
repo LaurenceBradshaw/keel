@@ -1,0 +1,54 @@
+// D54: an earlier argument holds its loan until its own call, so a later argument may not change
+// what it borrows: through a `ref` binding, an element, a conditional, a lambda's `ref` capture, a
+// receiver, or a move. A loan of storage that stays put, as a local's own or an element's slot,
+// and a value read before the change are accepted. One error per marked line.
+import kl::list;
+
+i32 grow( ref kl::list<i32> v )
+{
+    v.push( 7 );
+    return 1;
+}
+i32 grow_all( ref kl::list<kl::list<i32>> ll )
+{
+    ll.push( kl::list<i32>() );
+    return 1;
+}
+i32 take( move kl::list<i32> v ) { return cast<i32>( v.size() ); }
+void set( ref i32 x, i32 n ) { x = n; }
+void both<F>( F f, i32 n ) where F : fn( i32 ) -> void { f( n ); }
+i32 add( i32 a, i32 b ) { return a + b; }
+
+void refused( ref kl::list<i32> v, ref kl::list<kl::list<i32>> ll, bool c )
+{
+    ref i32 x = v[0];
+    set( ref x, grow( ref v ) );                          // error
+    set( ref v[0], grow( ref v ) );                       // error
+    set( ref v[0], c ? grow( ref v ) : 0 );               // error
+    ref i32 y = v[0];
+    both( fn[ref y]( i32 n ) { y = n; }, grow( ref v ) ); // error
+    ll[0].push( grow_all( ref ll ) );                     // error
+}
+
+void moved()
+{
+    kl::list<i32> v = kl::list<i32>();
+    v.push( 1 );
+    set( ref v[0], take( move v ) ); // error
+}
+
+void accepted( ref kl::list<i32> v, ref kl::list<kl::list<i32>> ll )
+{
+    ll[0].push( grow( ref ll[0] ) );
+    ref i32 x = v[0];
+    set( ref x, 3 );
+    v.push( grow( ref v ) );
+    i32 n = 0;
+    set( ref n, grow( ref v ) );
+    set( ref v[0], add( v[0], 1 ) );
+    i32 g = grow( ref v );
+    ref i32 y = v[0];
+    set( ref y, g );
+}
+
+i32 main() { return 0; }

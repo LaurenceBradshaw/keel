@@ -282,6 +282,19 @@ void report_loan_errors(
                 continue;
             }
 
+            // An earlier argument holds its loan until its own call.
+            if( error.argument )
+            {
+                diagnostics.error(
+                    error.at,
+                    error.conflict == Loan_conflict::Moved
+                        ? fmt::format( "{} is moved while an earlier argument still borrows {}", object, borrowed )
+                        : fmt::format( "this could change {} while an earlier argument still borrows from it", object ),
+                    fmt::format( "that argument is passed after this; it was taken at {}:{}", taken.line, taken.col )
+                );
+                continue;
+            }
+
             const std::string_view holder = interner.text( function.locals[error.holder].name );
 
             std::string message;
