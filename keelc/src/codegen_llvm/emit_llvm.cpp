@@ -4,6 +4,7 @@
 #include "codegen_llvm/emit_llvm.h"
 #include <fmt/format.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
@@ -19,6 +20,7 @@
 #include "codegen/failure.h"
 #include "codegen/layout.h"
 #include "codegen_c/spelling.h"
+#include "ir/vtables.h"
 
 namespace keel
 {
@@ -77,6 +79,8 @@ private:
     llvm::Align align( Type_id type ) const;
 
     // Keel's convention: an aggregate travels by `byval` and returns through `sret`.
+    std::pair<llvm::FunctionType*, llvm::AttributeList>
+                    signature( Type_id result, std::span<const Type_id> parameters, bool diverges );
     llvm::Function* declare( std::string_view name, Type_id result, std::span<const Type_id> parameters, bool diverges );
     llvm::Function* declare( const Function& function );
     llvm::Function* callee( const Rvalue& value );
@@ -105,9 +109,14 @@ private:
     llvm::Value* cast( const Rvalue& value );
     llvm::Value* address_of( const Rvalue& value );
     llvm::Value* call( const Rvalue& value, llvm::Value* result );
+    llvm::Value* allocate( const Rvalue& value, Span span );
     void         assign_memory( const Rvalue& value, const Place& place );
 
-    llvm::Constant* c_string( const std::string& text );
+    llvm::Constant*       c_string( const std::string& text );
+    llvm::GlobalVariable* global( Node_id declaration, Type_id owner );
+    llvm::Constant*       initial( const Constant_value& value, Type_id type );
+    llvm::Function*       defined( const std::string& name );
+    llvm::Constant*       vtable( Type_id implementer, Type_id interface );
 
     const std::vector<Function>& functions_;
     const Description&           program_;
@@ -117,6 +126,7 @@ private:
     const Interner&              interner_;
     const Spelling               spelling_;
     const Layout                 layout_;
+    const std::vector<Vtable>    vtables_;
 
     std::unique_ptr<llvm::LLVMContext> context_;
     std::unique_ptr<llvm::Module>      module_;
@@ -129,7 +139,8 @@ private:
     llvm::Function*                defined_ = nullptr;
     llvm::BasicBlock*              entry_   = nullptr; // its allocas
     std::vector<llvm::BasicBlock*> blocks_;
-    std::vector<llvm::Value*>      locals_; // each local's address, null for one holding nothing
+    std::vector<llvm::Value*>      locals_;  // each local's address, null for one holding nothing
+    Span                           span_ {}; // the statement being emitted
 };
 
 Llvm_emitter::Llvm_emitter(
@@ -149,6 +160,7 @@ Llvm_emitter::Llvm_emitter(
       interner_( interner ),
       spelling_( Spelling { program, types, interner, modules, sm } ),
       layout_( program, types.table() ),
+      vtables_( vtables_needed( types, functions ) ),
       context_( std::make_unique<llvm::LLVMContext>() ),
       module_( std::make_unique<llvm::Module>( "keel", *context_ ) ),
       builder_( *context_ )
@@ -273,8 +285,8 @@ llvm::Align Llvm_emitter::align( Type_id type ) const
     return llvm::Align( layout_.align( type ) );
 }
 
-llvm::Function*
-Llvm_emitter::declare( std::string_view name, Type_id result, std::span<const Type_id> parameters, bool diverges )
+std::pair<llvm::FunctionType*, llvm::AttributeList>
+Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bool diverges )
 {
     llvm::LLVMContext& context = *context_;
 
@@ -345,17 +357,24 @@ Llvm_emitter::declare( std::string_view name, Type_id result, std::span<const Ty
         whole.addAttribute( llvm::Attribute::NoReturn );
     }
 
-    llvm::Function* function = llvm::Function::Create(
-        llvm::FunctionType::get( returned, types, false ), llvm::GlobalValue::ExternalLinkage, name, *module_
-    );
+    return {
+        llvm::FunctionType::get( returned, types, false ),
+        llvm::AttributeList::get(
+            context, llvm::AttributeSet::get( context, whole ), llvm::AttributeSet::get( context, returns ), attributes
+        )
+    };
+}
+
+llvm::Function*
+Llvm_emitter::declare( std::string_view name, Type_id result, std::span<const Type_id> parameters, bool diverges )
+{
+    const auto [type, attributes] = signature( result, parameters, diverges );
+    llvm::Function* function      = llvm::Function::Create( type, llvm::GlobalValue::ExternalLinkage, name, *module_ );
     if( function->getName() != llvm::StringRef( name.data(), name.size() ) )
     {
         malformed( fmt::format( "two functions named `{}`", name ) );
     }
-
-    function->setAttributes( llvm::AttributeList::get(
-        context, llvm::AttributeSet::get( context, whole ), llvm::AttributeSet::get( context, returns ), attributes
-    ) );
+    function->setAttributes( attributes );
     return function;
 }
 
@@ -501,6 +520,7 @@ void Llvm_emitter::statement( const Statement& statement )
     {
         const Rvalue& value  = current_->rvalue( statement );
         const Type_id target = type_of( statement.place );
+        span_                = statement.span;
 
         if( held( target ) == Held::Memory )
         {
@@ -702,13 +722,8 @@ Type_id Llvm_emitter::field_type( Type_id aggregate, Node_id field ) const
 // A place's address, walked as Description::type_of walks its type.
 llvm::Value* Llvm_emitter::address( const Place& place )
 {
-    if( place.is_global() )
-    {
-        not_yet( "a global" );
-    }
-
-    Type_id      type = current_->locals[place.local].type;
-    llvm::Value* at   = locals_[place.local.v];
+    Type_id      type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local].type;
+    llvm::Value* at   = place.is_global() ? global( place.global, place.owner ) : locals_[place.local.v];
     if( at == nullptr )
     {
         malformed( "a place in a local that holds nothing" );
@@ -861,33 +876,99 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
         llvm::Value* result = call( value, nullptr );
         return result->getType()->isVoidTy() ? nullptr : result;
     }
-    case Rvalue_kind::Overflows:
-        not_yet( "an overflow check" );
-    case Rvalue_kind::Bits:
-        not_yet( "a float's bits" );
-    case Rvalue_kind::Run_of:
-    case Rvalue_kind::Run_data:
-    case Rvalue_kind::Run_size:
-        not_yet( "a run" );
-    case Rvalue_kind::Allocate:
-        not_yet( "an allocation" );
-    case Rvalue_kind::Release:
-        not_yet( "a release" );
-    case Rvalue_kind::Function_address:
-        not_yet( "a function's address" );
     case Rvalue_kind::Indirect_call:
-        not_yet( "a call through a pointer" );
-    case Rvalue_kind::Field_offset:
-    case Rvalue_kind::Field_read:
-        not_yet( "a field offset" );
-    case Rvalue_kind::Literal_bytes:
-        not_yet( "a string literal" );
-    case Rvalue_kind::Make_interface:
-    case Rvalue_kind::Vtable_slot:
+    {
+        llvm::Value* result = call( value, nullptr );
+        return result->getType()->isVoidTy() ? nullptr : result;
+    }
+    case Rvalue_kind::Overflows:
+    {
+        const bool   signed_ = is_signed( value.a.type );
+        const auto   id      = value.op == Token_kind::Plus
+                                   ? ( signed_ ? llvm::Intrinsic::sadd_with_overflow : llvm::Intrinsic::uadd_with_overflow )
+                               : value.op == Token_kind::Minus
+                                   ? ( signed_ ? llvm::Intrinsic::ssub_with_overflow : llvm::Intrinsic::usub_with_overflow )
+                                   : ( signed_ ? llvm::Intrinsic::smul_with_overflow : llvm::Intrinsic::umul_with_overflow );
+        llvm::Value* a       = operand( value.a );
+        return builder_.CreateExtractValue( builder_.CreateIntrinsic( id, { a->getType() }, { a, operand( value.b ) } ), 1 );
+    }
+    case Rvalue_kind::Bits:
+        return builder_.CreateBitCast( operand( value.a ), value_type( value.type ) );
+    case Rvalue_kind::Run_of:
+    {
+        llvm::Value* run = llvm::PoisonValue::get( value_type( value.type ) );
+        run              = builder_.CreateInsertValue( run, operand( value.a ), 0 );
+        return builder_.CreateInsertValue( run, operand( value.b ), 1 );
+    }
+    case Rvalue_kind::Run_data:
     case Rvalue_kind::Interface_self:
-        not_yet( "an interface" );
+        return builder_.CreateExtractValue( operand( value.a ), 0 );
+    case Rvalue_kind::Run_size:
+        return builder_.CreateExtractValue( operand( value.a ), 1 );
+    case Rvalue_kind::Allocate:
+        return allocate( value, span_ );
+    // A `Shape*` frees the object it carries, not the reference.
+    case Rvalue_kind::Release:
+    {
+        llvm::Value* freed = operand( value.a );
+        if( table().is_interface_pointer( value.a.type ) )
+        {
+            freed = builder_.CreateExtractValue( freed, 0 );
+        }
+        builder_.CreateCall( runtime( "kl_rt_free", builder_.getVoidTy(), { builder_.getPtrTy() }, false ), { freed } );
+        return nullptr;
+    }
+    case Rvalue_kind::Function_address:
+        return defined( spelling_.function( value.callee, value.type_arguments ) );
+    case Rvalue_kind::Field_offset:
+        return llvm::ConstantInt::get(
+            value_type( value.type ), layout_.offset( table().get( value.type ).arguments[0], value.callee )
+        );
+    case Rvalue_kind::Field_read:
+        return load( value.type, builder_.CreateGEP( builder_.getInt8Ty(), operand( value.a ), operand( value.b ) ) );
+    case Rvalue_kind::Literal_bytes:
+        return c_string( std::string( literals_.string( value.a.constant ) ) );
+    case Rvalue_kind::Make_interface:
+    {
+        llvm::Value* reference = llvm::PoisonValue::get( value_type( value.type ) );
+        reference              = builder_.CreateInsertValue( reference, operand( value.a ), 0 );
+        return builder_.CreateInsertValue(
+            reference, vtable( table().get( value.a.type ).element, table().get( value.type ).element ), 1
+        );
+    }
+    // Slot 0 drops; each requirement follows in its interface's order.
+    case Rvalue_kind::Vtable_slot:
+    {
+        const Type_id               interface = table().get( value.a.type ).element;
+        const std::vector<Node_id>& members   = program_[table().get( interface ).declaration].members;
+        const auto                  slot     = static_cast<u64>( std::ranges::find( members, value.callee ) - members.begin() );
+        llvm::Value*                table_at = builder_.CreateExtractValue( operand( value.a ), 1 );
+        return builder_.CreateAlignedLoad( builder_.getPtrTy(), offset( table_at, 8 * ( 1 + slot ) ), llvm::Align( 8 ) );
+    }
     }
     return nullptr;
+}
+
+// kl_rt_alloc( size, file, line, message ), or kl_rt_alloc_many with the count first.
+llvm::Value* Llvm_emitter::allocate( const Rvalue& value, Span span )
+{
+    llvm::Type* const         pointer = builder_.getPtrTy();
+    llvm::Type* const         word    = builder_.getInt64Ty();
+    llvm::Type* const         line    = builder_.getInt32Ty();
+    std::vector<llvm::Value*> arguments {
+        builder_.getInt64( layout_.size( table().get( value.type ).element ) ),
+        c_string( sm_.file( span.file ).path ),
+        builder_.getInt32( sm_.line_col( span.file, span.start ).line ),
+        c_string( "out of memory: " + as_written( sm_, span ) ),
+    };
+    if( !value.a.type.is_valid() )
+    {
+        return builder_.CreateCall( runtime( "kl_rt_alloc", pointer, { word, pointer, line, pointer }, false ), arguments );
+    }
+    arguments.insert( arguments.begin(), builder_.CreateIntCast( operand( value.a ), word, is_signed( value.a.type ) ) );
+    return builder_.CreateCall(
+        runtime( "kl_rt_alloc_many", pointer, { word, word, pointer, line, pointer }, false ), arguments
+    );
 }
 
 // C's operator at the operands' type: no `nsw` or `nuw` (§7.1), and KIR has guarded the divisor and the count.
@@ -1065,14 +1146,34 @@ llvm::Value* Llvm_emitter::address_of( const Rvalue& value )
 // An aggregate result goes into `result`, which nothing the callee reads may alias.
 llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
 {
-    llvm::Function* function = callee( value );
+    llvm::FunctionType* signed_as = nullptr;
+    llvm::AttributeList attributes;
+    llvm::Value*        target = nullptr;
+    if( value.kind == Rvalue_kind::Call )
+    {
+        llvm::Function* function = callee( value );
+        signed_as                = function->getFunctionType();
+        attributes               = function->getAttributes();
+        target                   = function;
+    }
+    else
+    {
+        std::vector<Type_id> parameters;
+        for( const Operand& argument : value.arguments )
+        {
+            parameters.push_back( operand_type( argument ) );
+        }
+        std::tie( signed_as, attributes ) = signature( value.type, parameters, false );
+        target                            = operand( value.a );
+    }
+    const bool returns_memory = attributes.hasParamAttr( 0, llvm::Attribute::StructRet );
 
     // A discarded aggregate still needs somewhere to land.
-    if( result == nullptr && function->hasStructRetAttr() )
+    if( result == nullptr && returns_memory )
     {
         llvm::IRBuilder<> at( entry_, entry_->begin() );
-        llvm::AllocaInst* slot = at.CreateAlloca( function->getParamStructRetType( 0 ) );
-        slot->setAlignment( function->getParamAlign( 0 ).valueOrOne() );
+        llvm::AllocaInst* slot = at.CreateAlloca( attributes.getParamStructRetType( 0 ) );
+        slot->setAlignment( attributes.getParamAlignment( 0 ).valueOrOne() );
         result = slot;
     }
 
@@ -1091,13 +1192,13 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
         arguments.push_back( held( type ) == Held::Memory ? address( argument.place ) : operand( argument ) );
     }
 
-    if( arguments.size() != function->arg_size() )
+    if( arguments.size() != signed_as->getNumParams() )
     {
-        malformed( fmt::format( "a call of `{}` with {} arguments", function->getName().str(), arguments.size() ) );
+        malformed( fmt::format( "a call of `{}` with {} arguments", target->getName().str(), arguments.size() ) );
     }
 
-    llvm::CallInst* made = builder_.CreateCall( function, arguments );
-    made->setAttributes( function->getAttributes() );
+    llvm::CallInst* made = builder_.CreateCall( signed_as, target, arguments );
+    made->setAttributes( attributes );
     return made;
 }
 
@@ -1114,6 +1215,7 @@ void Llvm_emitter::assign_memory( const Rvalue& value, const Place& place )
     }
     // Through a temporary: an argument may borrow the place being assigned.
     case Rvalue_kind::Call:
+    case Rvalue_kind::Indirect_call:
     {
         llvm::Value* result = temporary( type );
         call( value, result );
@@ -1135,6 +1237,144 @@ llvm::Constant* Llvm_emitter::c_string( const std::string& text )
         found->second = builder_.CreateGlobalStringPtr( text, "", 0, module_.get() );
     }
     return found->second;
+}
+
+// A function this module defines or declares, by name.
+llvm::Function* Llvm_emitter::defined( const std::string& name )
+{
+    llvm::Function* function = module_->getFunction( name );
+    if( function == nullptr )
+    {
+        malformed( fmt::format( "the address of `{}`, which has no body here", name ) );
+    }
+    return function;
+}
+
+// Each global once, at its layout's alignment; a generic's static is weak, as in C.
+llvm::GlobalVariable* Llvm_emitter::global( Node_id declaration, Type_id owner )
+{
+    const std::string name = spelling_.global( declaration, owner );
+    if( llvm::GlobalVariable* found = module_->getNamedGlobal( name ) )
+    {
+        return found;
+    }
+
+    const Type_id                       type  = types_.type_of( declaration );
+    const std::optional<Constant_value> value = types_.constant_of( declaration );
+    llvm::Constant* const init = value ? initial( *value, type ) : llvm::Constant::getNullValue( memory_type( type ) );
+    auto*                 made = new llvm::GlobalVariable(
+        *module_,
+        init->getType(),
+        false,
+        owner.is_valid() ? llvm::GlobalValue::WeakAnyLinkage : llvm::GlobalValue::ExternalLinkage,
+        init,
+        name
+    );
+    made->setAlignment( align( type ) );
+    return made;
+}
+
+// The checker's value as bytes at `type`'s layout: an aggregate is a packed struct of its parts and
+// zero padding, sized as the layout says.
+llvm::Constant* Llvm_emitter::initial( const Constant_value& value, Type_id type )
+{
+    const Type& described = table().get( type );
+    const auto  packed    = [&]( std::vector<std::pair<u64, llvm::Constant*>> parts )
+    {
+        const llvm::DataLayout&      layout = module_->getDataLayout();
+        std::vector<llvm::Constant*> elements;
+        u64                          at     = 0;
+        const auto                   pad_to = [&]( u64 to )
+        {
+            if( to > at )
+            {
+                elements.push_back( llvm::Constant::getNullValue( llvm::ArrayType::get( builder_.getInt8Ty(), to - at ) ) );
+                at = to;
+            }
+        };
+        for( const auto& [offset, part] : parts )
+        {
+            pad_to( offset );
+            elements.push_back( part );
+            at += layout.getTypeStoreSize( part->getType() );
+        }
+        pad_to( layout_.size( type ) );
+        return llvm::ConstantStruct::getAnon( *context_, elements, true );
+    };
+
+    switch( value.kind )
+    {
+    case Constant_value::Kind::Array:
+    case Constant_value::Kind::Fill:
+    {
+        const u64                                    size = layout_.size( described.element );
+        std::vector<std::pair<u64, llvm::Constant*>> parts;
+        for( u64 i = 0; i < described.count; ++i )
+        {
+            const Constant_value& part = value.kind == Constant_value::Kind::Fill ? value.elements[0] : value.elements[i];
+            parts.emplace_back( i * size, initial( part, described.element ) );
+        }
+        return packed( std::move( parts ) );
+    }
+    // `str`'s fields by name: its bytes and their count.
+    case Constant_value::Kind::Text:
+    {
+        std::vector<std::pair<u64, llvm::Constant*>> parts;
+        for( const Held_field& field : program_.fields( type ) )
+        {
+            parts.emplace_back(
+                layout_.offset( type, field.declaration ),
+                program_[field.declaration].name == "data"
+                    ? c_string( value.text )
+                    : llvm::ConstantInt::get( memory_type( field.type ), value.text.size() )
+            );
+        }
+        return packed( std::move( parts ) );
+    }
+    case Constant_value::Kind::Float:
+        return llvm::ConstantFP::get( value_type( type ), value.floating );
+    case Constant_value::Kind::Address:
+        return program_[value.target].kind == Declared::Global ? static_cast<llvm::Constant*>( global( value.target, {} ) )
+                                                               : defined( spelling_.function( value.target ) );
+    case Constant_value::Kind::Integer:
+        break;
+    }
+
+    if( held( type ) != Held::Scalar || !memory_type( type )->isIntegerTy() )
+    {
+        return llvm::Constant::getNullValue( memory_type( type ) ); // a null pointer, the only one there is
+    }
+    const auto magnitude = llvm::ConstantInt::get( memory_type( type ), value.magnitude );
+    return value.negative ? llvm::ConstantExpr::getNeg( magnitude ) : magnitude;
+}
+
+// The implementer's drop function, then its thunk for each requirement.
+llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
+{
+    const std::string name = spelling_.vtable( implementer, interface );
+    if( llvm::GlobalVariable* found = module_->getNamedGlobal( name ) )
+    {
+        return found;
+    }
+
+    const auto made = std::ranges::find_if(
+        vtables_, [&]( const Vtable& v ) { return v.implementer == implementer && v.interface == interface; }
+    );
+    if( made == vtables_.end() )
+    {
+        malformed( fmt::format( "`{}`, a vtable no function needs", name ) );
+    }
+
+    std::vector<llvm::Constant*> slots { defined( spelling_.drop_function( implementer ) ) };
+    for( const Node_id requirement : made->requirements )
+    {
+        slots.push_back( defined( spelling_.thunk( implementer, interface, requirement ) ) );
+    }
+    llvm::Constant* init = llvm::ConstantArray::get( llvm::ArrayType::get( builder_.getPtrTy(), slots.size() ), slots );
+    auto*           table_global =
+        new llvm::GlobalVariable( *module_, init->getType(), true, llvm::GlobalValue::InternalLinkage, init, name );
+    table_global->setAlignment( llvm::Align( 8 ) );
+    return table_global;
 }
 
 // x86-64 Linux at -O3's machine passes, and none of LLVM's IR passes (§2.2): Keel optimises its own IR.
