@@ -368,6 +368,7 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--names` | With `--diagnostics=json`, also report what each name refers to |
 | `--declarations` | With `--diagnostics=json`, also list every declaration with its signature and doc |
 | `--with-prelude` | With `--declarations`, list the prelude's declarations too |
+| `--as-prelude` | With `--check`, check the input as the prelude, in place of the one keelc carries |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
 | `--debug` | Run each `assert`, check overflow as `--overflow-checks` does, and skip Keel's optimisations, so a debugger steps through the program as written; without it an assert's condition is checked but never run |

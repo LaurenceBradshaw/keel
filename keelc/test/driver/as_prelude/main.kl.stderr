@@ -1,0 +1,7 @@
+error: `nope` is not declared
+  --> driver/as_prelude/main.kl:26:17
+   |
+26 |     return a != nope;
+   |                 ^^^^
+
+1 error generated

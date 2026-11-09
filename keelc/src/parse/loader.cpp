@@ -166,10 +166,11 @@ Program load_program(
     std::span<const Package> packages,
     bool                     as_module,
     std::span<const Object>  objects,
-    std::string_view         prelude
+    std::string_view         prelude,
+    std::string_view         prelude_name
 )
 {
-    const File_id prelude_file = sm.add_file( std::string( prelude_path ), std::string( prelude ) );
+    const File_id prelude_file = sm.add_file( std::string( prelude_name ), std::string( prelude ) );
 
     // A stack: the prelude is parsed last, so the program's node ids do not move as it grows.
     std::vector<File_id>    pending { prelude_file, input };

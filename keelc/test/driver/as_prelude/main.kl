@@ -1,0 +1,27 @@
+// Checked as the prelude, `equatable` is declared once, so `!=` finds the bound on `T`; only
+// `nope` is reported, at this file.
+interface equatable
+{
+    bool operator==( const ref self other ) const;
+};
+
+implements<T, u64 N> equatable for T[N] where T : equatable
+{
+    bool operator==( const ref T[N] other ) const
+    {
+        for( u64 i : 0..N )
+        {
+            if( this[i] != other[i] )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+bool same( i32 a, i32 b )
+{
+    return a != nope;
+}

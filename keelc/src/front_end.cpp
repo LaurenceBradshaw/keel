@@ -37,11 +37,13 @@ Front_end run_front_end(
     Diagnostics&             diags,
     std::span<const Package> packages,
     bool                     as_module,
-    std::span<const Object>  objects
+    std::span<const Object>  objects,
+    std::string_view         prelude,
+    std::string_view         prelude_name
 )
 {
     Front_end front;
-    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module, objects );
+    front.program  = load_program( input, sm, interner, literals, diags, packages, as_module, objects, prelude, prelude_name );
     const Ast& ast = front.program.ast;
 
     const std::span<const Loaded_state> states = front.program.states;

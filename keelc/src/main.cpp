@@ -70,6 +70,7 @@ int main( int argc, char** argv )
         ( "names",           "With --diagnostics=json, also say what each name refers to" )
         ( "declarations",    "With --diagnostics=json, also list every declaration with its signature and doc" )
         ( "with-prelude",    "With --declarations, list the prelude's declarations too" )
+        ( "as-prelude",      "With --check, check the input as the prelude, in place of the one keelc carries" )
         ( "package",         "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
@@ -180,6 +181,13 @@ int main( int argc, char** argv )
             fmt::print( stderr, "keelc: --{} needs --diagnostics=json\n", flag );
             return 2;
         }
+    }
+
+    const bool as_prelude = args.count( "as-prelude" ) > 0;
+    if( as_prelude && !args.count( "check" ) )
+    {
+        fmt::print( stderr, "keelc: --as-prelude needs --check\n" );
+        return 2;
     }
 
     if( args.count( "with-prelude" ) && !args.count( "declarations" ) )
@@ -422,11 +430,12 @@ int main( int argc, char** argv )
     const keel::Stage through   = as_module && !debug ? keel::Stage::Reported : keel::Stage::Elaborated;
 
     // Every other mode needs the whole front end; --check stops after it, leaving no artefacts behind.
-    keel::Front_end front = keel::run_front_end(
-        file_id.value(),
+    const keel::File_id input = as_prelude ? sm.add_file( sm.file( *file_id ).path, "" ) : file_id.value();
+    keel::Front_end     front = keel::run_front_end(
+        input,
         through,
         keel::Build {
-            .asserts = debug, .overflow_checks = overflow_checks, .optimise = !debug, .keep_checked = as_module && debug
+                .asserts = debug, .overflow_checks = overflow_checks, .optimise = !debug, .keep_checked = as_module && debug
         },
         sm,
         interner,
@@ -434,7 +443,10 @@ int main( int argc, char** argv )
         diagnostics,
         packages,
         as_module,
-        given
+        given,
+        // Its own text under its own path, beneath an empty program, so it is declared once.
+        as_prelude ? sm.file( *file_id ).text : keel::prelude_source(),
+        as_prelude ? sm.file( *file_id ).path : keel::prelude_path
     );
     const keel::Program&               prog      = front.program;
     const keel::Ast&                   ast       = prog.ast;
@@ -446,7 +458,10 @@ int main( int argc, char** argv )
         names = keel::collect_names( ast, front.resolution, types, sm, interner );
 
         // The prelude is not on disk for an editor to open; a use of it still names it.
-        std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.modules.prelude_file(); } );
+        if( !as_prelude )
+        {
+            std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.modules.prelude_file(); } );
+        }
     }
 
     if( args.count( "declarations" ) )
@@ -454,7 +469,7 @@ int main( int argc, char** argv )
         declarations = keel::collect_declarations( ast, front.resolution, types, sm, interner );
 
         // The prelude belongs to no package, so only a doc tool writing its page asks for it.
-        if( !args.count( "with-prelude" ) )
+        if( !args.count( "with-prelude" ) && !as_prelude )
         {
             std::erase_if(
                 declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.modules.prelude_file(); }

@@ -45,17 +45,19 @@ struct Package
 // every file's declarations. A module is `name.kl` beside the input file, and each is loaded once.
 // `as_module` compiles the input as a module rather than a program: in the package whose folder
 // holds it, if any, and with its names given a module slot. A module given as an object is read from
-// its state, never parsed, and under `as_module` every import must be one.
+// its state, never parsed, and under `as_module` every import must be one. The prelude's file is
+// called `prelude_name`.
 Program load_program(
     File_id                  input,
     Source_manager&          sm,
     Interner&                interner,
     Literal_pool&            literals,
     Diagnostics&             diags,
-    std::span<const Package> packages  = {},
-    bool                     as_module = false,
-    std::span<const Object>  objects   = {},
-    std::string_view         prelude   = prelude_source()
+    std::span<const Package> packages     = {},
+    bool                     as_module    = false,
+    std::span<const Object>  objects      = {},
+    std::string_view         prelude      = prelude_source(),
+    std::string_view         prelude_name = prelude_path
 );
 
 // Why `name` cannot be given to `--package`, or nothing when it can.

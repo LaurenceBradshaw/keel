@@ -64,6 +64,9 @@ A name declared in the prelude, such as `str`, opens `prelude.kl` read-only. It 
 disk: its text comes from `keelc --print-prelude`, run with `keel.compilerPath`, and is asked again
 when that compiler is rebuilt.
 
+`keelc/src/prelude/prelude.kl` itself is checked with `--as-prelude`, so it stands in for keelc's
+own copy rather than declaring every prelude name a second time.
+
 ## Header view
 
 *Keel: Show Header*, or the list button in a `.kl` file's title bar, opens `name (header).kl`

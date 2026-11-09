@@ -78,6 +78,9 @@ function split_lines( bytes )
 // read-only document under its own scheme, which keeps the `.kl` name and so Keel's highlighting.
 const prelude_path = '<prelude>';
 const prelude_scheme = 'keel-prelude';
+
+// The prelude's source, checked as the prelude rather than beside keelc's own copy.
+const prelude_source = path.join( 'keelc', 'src', 'prelude', 'prelude.kl' );
 const preludes = new Map(); // compiler -> { mtime, bytes }
 
 function prelude_uri( compiler )
@@ -449,6 +452,10 @@ function activate( context )
         {
             args.push( '--package', spec );
         }
+        if( path.relative( cwd, saved ) === prelude_source )
+        {
+            args.push( '--as-prelude' );
+        }
         args.push( path.relative( cwd, saved ) );
 
         names.delete( saved );
@@ -622,6 +629,10 @@ function activate( context )
         for( const spec of config.get( 'packages' ) )
         {
             args.push( '--package', spec );
+        }
+        if( path.relative( cwd, source ) === prelude_source )
+        {
+            args.push( '--as-prelude' );
         }
         args.push( path.relative( cwd, source ) );
 
