@@ -126,6 +126,7 @@ private:
     llvm::Value* load( Type_id type, llvm::Value* from );
     void         store( Type_id type, llvm::Value* value, llvm::Value* to );
     void         copy( Type_id type, llvm::Value* to, llvm::Value* from );
+    void         copy_parts( Type_id type, llvm::Value* to, llvm::Value* from, u64 at, u64 size );
     llvm::Value* temporary( Type_id type, u64 bytes = 0 ); // `bytes`: a padded size instead
 
     llvm::Value* operand( const Operand& operand );
@@ -184,6 +185,7 @@ private:
 
     // Its promotion, by block.
     std::vector<bool>                                             promoted_;
+    std::vector<bool>                                             addressed_; // a pointer may reach it
     std::vector<std::vector<u32>>                                 predecessors_;
     std::vector<llvm::BasicBlock*>                                exits_; // where a filled block's terminator is
     std::vector<bool>                                             filled_;
@@ -1009,6 +1011,7 @@ llvm::DIType* Llvm_emitter::debug_type( Type_id type )
 void Llvm_emitter::promote( const Function& function )
 {
     promoted_.assign( function.locals.size(), false );
+    addressed_.assign( function.locals.size(), false );
     for( const Local_id i : function.locals.ids() )
     {
         const Local& local = function.locals[i];
@@ -1045,6 +1048,12 @@ void Llvm_emitter::promote( const Function& function )
         if( value.kind == Rvalue_kind::Address_of ) // whatever its operand's kind
         {
             check( value.a.place, true );
+            if( !value.a.place.is_global() && value.a.place.local.is_valid() &&
+                ( value.a.place.num_projections == 0 ||
+                  function.projections_of( value.a.place )[0].kind != Projection_kind::Deref ) )
+            {
+                addressed_[value.a.place.local.v] = true;
+            }
         }
         check_operand( value.a );
         check_operand( value.b );
@@ -1483,9 +1492,72 @@ void Llvm_emitter::store( Type_id type, llvm::Value* value, llvm::Value* to )
     builder_.CreateAlignedStore( value, to, align( type ) );
 }
 
+// A small aggregate by its parts, so each load reads what one store wrote and the store forwards.
 void Llvm_emitter::copy( Type_id type, llvm::Value* to, llvm::Value* from )
 {
-    builder_.CreateMemCpy( to, align( type ), from, align( type ), layout_.size( type ) );
+    if( layout_.size( type ) > 32 )
+    {
+        builder_.CreateMemCpy( to, align( type ), from, align( type ), layout_.size( type ) );
+        return;
+    }
+    copy_parts( type, to, from, 0, layout_.size( type ) );
+}
+
+// `size` bytes of `type` at `at`: a field at a time, a payload's bytes a word at a time.
+void Llvm_emitter::copy_parts( Type_id type, llvm::Value* to, llvm::Value* from, u64 at, u64 size )
+{
+    const Type& described = table().get( type );
+    switch( held( type ) )
+    {
+    case Held::Nothing:
+        return;
+    case Held::Scalar:
+    case Held::Pair:
+    {
+        llvm::Type*       part  = memory_type( type );
+        const llvm::Align place = align( type );
+        builder_.CreateAlignedStore( builder_.CreateAlignedLoad( part, offset( from, at ), place ), offset( to, at ), place );
+        return;
+    }
+    case Held::Memory:
+        break;
+    }
+
+    switch( described.kind )
+    {
+    case Type_kind::Struct:
+    case Type_kind::Closure:
+        for( const Held_field& field : program_.fields( type ) )
+        {
+            copy_parts( field.type, to, from, at + layout_.offset( type, field.declaration ), layout_.size( field.type ) );
+        }
+        return;
+    case Type_kind::Array:
+        for( u64 i = 0; i < described.count; ++i )
+        {
+            const u64 each = layout_.size( described.element );
+            copy_parts( described.element, to, from, at + i * each, each );
+        }
+        return;
+    default: // the tag, then the union a word at a time
+    {
+        copy_parts( described.element, to, from, at, layout_.size( described.element ) );
+        for( u64 byte = at + layout_.payload( type ); byte < at + size; )
+        {
+            u64 width = 8;
+            while( byte % width != 0 || byte + width > at + size )
+            {
+                width /= 2;
+            }
+            llvm::Type*       part  = builder_.getIntNTy( static_cast<u32>( 8 * width ) );
+            const llvm::Align place = llvm::Align( std::min<u64>( width, layout_.align( type ) ) );
+            builder_.CreateAlignedStore(
+                builder_.CreateAlignedLoad( part, offset( from, byte ), place ), offset( to, byte ), place
+            );
+            byte += width;
+        }
+    }
+    }
 }
 
 // Marks each eightbyte that holds anything but a float.
@@ -2022,10 +2094,15 @@ void Llvm_emitter::assign_memory( const Rvalue& value, const Place& place )
         copy( type, address( place ), from );
         return;
     }
-    // Through a temporary: an argument may borrow the place being assigned.
+    // Through a temporary unless no pointer reaches the place: an argument may borrow it.
     case Rvalue_kind::Call:
     case Rvalue_kind::Indirect_call:
     {
+        if( place.is_whole_local() && !addressed_[place.local.v] )
+        {
+            call( value, address( place ) );
+            return;
+        }
         llvm::Value* result = temporary( type );
         call( value, result );
         copy( type, address( place ), result );
