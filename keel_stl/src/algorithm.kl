@@ -49,8 +49,14 @@ void sort<C, T, F>( ref C items, F less ) where C : fixed_memory<T>, where F : f
     }
 }
 
+/// Orders `items` from least to greatest, as `sort( ref items, less )` with `<`.
+void sort<C, T>( ref C items ) where C : fixed_memory<T>, where T : comparable
+{
+    sort( ref items, fn[]( a, b ) { return a < b; } );
+}
+
 /// The index of the first element `matches` picks, or none.
-optional<u64> index_of<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
+optional<u64> index_if<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
 {
     for( u64 i = 0; i < items.size(); i++ )
     {
@@ -63,17 +69,29 @@ optional<u64> index_of<C, T, F>( const ref C items, F matches ) where C : fixed_
     return optional::none;
 }
 
-/// Whether `matches` picks any element.
-bool contains<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
+/// The index of the first element equal to `value`, or none.
+optional<u64> index_of<C, T>( const ref C items, const ref T value ) where C : fixed_memory<T>, where T : equatable
 {
-    return is_some( index_of( items, matches ) );
+    return index_if( items, fn[ value ]( x ) { return x == value; } );
+}
+
+/// Whether `matches` picks any element.
+bool contains_if<C, T, F>( const ref C items, F matches ) where C : fixed_memory<T>, where F : fn( const ref T ) -> bool
+{
+    return is_some( index_if( items, matches ) );
+}
+
+/// Whether any element equals `value`.
+bool contains<C, T>( const ref C items, const ref T value ) where C : fixed_memory<T>, where T : equatable
+{
+    return is_some( index_of( items, value ) );
 }
 
 /// The index of an element `compare` calls `equal`, or none.
 ///
 /// `compare` says how each element orders against the one sought, and `items` must already be in
 /// that order. Which of several equal elements it finds is unspecified.
-optional<u64> binary_search<C, T, F>( const ref C items, F compare ) where C : fixed_memory<T>, where F : fn( const ref T ) -> ordering
+optional<u64> binary_search_by<C, T, F>( const ref C items, F compare ) where C : fixed_memory<T>, where F : fn( const ref T ) -> ordering
 {
     u64 low = 0;
     u64 high = items.size();
@@ -89,15 +107,23 @@ optional<u64> binary_search<C, T, F>( const ref C items, F compare ) where C : f
         }
         else if( cmp == ordering::less )
         {
-            high = mid;
+            low = mid + 1;
         }
         else
         {
-            low = mid + 1;
+            high = mid;
         }
     }
 
     return optional::none;
+}
+
+/// The index of an element equal to `value`, or none.
+///
+/// `items` must already be in order. Which of several equal elements it finds is unspecified.
+optional<u64> binary_search<C, T>( const ref C items, const ref T value ) where C : fixed_memory<T>, where T : comparable
+{
+    return binary_search_by( items, fn[ value ]( x ) { return x <=> value; } );
 }
 
 /// Drops every element `drop` picks, keeping the rest in order.
@@ -115,6 +141,12 @@ void remove_if<C, T, F>( ref C items, F drop ) where C : dynamic_memory<T>, wher
     }
 
     items.truncate( kept );
+}
+
+/// Drops every element equal to `value`, keeping the rest in order.
+void remove<C, T>( ref C items, const ref T value ) where C : dynamic_memory<T>, where T : equatable
+{
+    remove_if( ref items, fn[ value ]( x ) { return x == value; } );
 }
 
 /// Drops each element `same` calls equal to the one kept before it, so sorted `items` keep one
@@ -138,6 +170,12 @@ void dedup<C, T, F>( ref C items, F same ) where C : dynamic_memory<T>, where F 
     }
 
     items.truncate( kept );
+}
+
+/// Drops each element equal to the one kept before it, so sorted `items` keep one of each value.
+void dedup<C, T>( ref C items ) where C : dynamic_memory<T>, where T : equatable
+{
+    dedup( ref items, fn[]( a, b ) { return a == b; } );
 }
 
 // `next`, then counts it on.

@@ -1509,6 +1509,9 @@ major), which waits for the lambda decision (§12).
 - **A struct whose conformance failed also fails its wrappers' `==`**: `struct K implements
   hashable` with no `==` is refused, and then `==` on a `K[2]` or a `kl::optional<K>` adds *no
   operator `==`*. The refused conformance should count as met for what depends on it.
+- **A failed argument poisons a later argument's bound**: `kl::binary_search( a, v )` inside
+  `for( i32 v : [ 1, 3 ] )` says *an array literal needs a type to fill*, then that `i32[6]` does
+  not implement `fixed_memory<<error>>`. A bound naming a poisoned type should count as met.
 
 ### Tooling
 
@@ -1531,6 +1534,13 @@ major), which waits for the lambda decision (§12).
 
 ### Language rules not yet stated
 
+- **Two generic overloads of one arity cannot be told apart by their bounds.** With
+  `contains( items, F matches ) where F : fn( const ref T ) -> bool` beside `contains( items, const
+  ref T value ) where T : equatable`, a lambda argument takes the second and fails as not a `T`: a
+  candidate whose deduction or bounds fail stays in the set, and an untyped lambda's parameters
+  take their types only from a single candidate. So `kl::algorithm` names the two forms apart
+  (`contains` and `contains_if`, `binary_search` and `binary_search_by`). Dropping such candidates,
+  and typing a lambda against each survivor, would let them share a name.
 - **A block's `where` cannot yet name its own parameters inside a bound, or `numeric`, `integral`
   or `floating`.** `implements<K, V> I for M<K, V> where K : matches<V>` and `where T : numeric` are
   refused as not yet: the conformance model matches without substituting a bound and cannot ask a
