@@ -1,1 +1,1 @@
-keelc: --backend takes c, not 'llvm'
+keelc: --backend takes c or llvm, not 'wasm'

@@ -1,1 +1,1 @@
---check --backend=llvm
+--check --backend=wasm

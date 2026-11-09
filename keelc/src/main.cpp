@@ -19,6 +19,8 @@
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
 #include "codegen_c/spelling.h"
+#include "codegen_llvm/emit_llvm.h"
+#include "codegen_llvm/link.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
@@ -46,6 +48,7 @@ enum class Stop : keel::u8
     Check,
     Kir,
     C,
+    Llvm,
     Object,
     Executable,
     Imports
@@ -63,7 +66,8 @@ int main( int argc, char** argv )
         ( "dump-ast",        "Print the parsed AST and stop" )
         ( "dump-kir",        "Print the lowered KIR and stop" )
         ( "emit-c",          "Print the generated C and stop" )
-        ( "backend",         "The code generator: c, the only one yet", cxxopts::value<std::string>()->default_value( "c" ) )
+        ( "emit-llvm",       "Print the generated LLVM IR and stop" )
+        ( "backend",         "The code generator: c or llvm", cxxopts::value<std::string>()->default_value( "c" ) )
         ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
         ( "imports",         "Print the input's imports as written, one per line, and stop" )
@@ -199,9 +203,10 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    if( const std::string backend = args["backend"].as<std::string>(); backend != "c" )
+    const std::string backend = args["backend"].as<std::string>();
+    if( backend != "c" && backend != "llvm" )
     {
-        fmt::print( stderr, "keelc: --backend takes c, not '{}'\n", backend );
+        fmt::print( stderr, "keelc: --backend takes c or llvm, not '{}'\n", backend );
         return 2;
     }
 
@@ -219,6 +224,7 @@ int main( int argc, char** argv )
         { "check", Stop::Check },
         { "dump-kir", Stop::Kir },
         { "emit-c", Stop::C },
+        { "emit-llvm", Stop::Llvm },
         { "object", Stop::Object },
         { "imports", Stop::Imports },
     };
@@ -237,6 +243,12 @@ int main( int argc, char** argv )
         }
         stop  = mode;
         chose = flag;
+    }
+
+    if( backend == "llvm" && ( stop == Stop::Object || ( stop == Stop::Executable && !klos.empty() ) ) )
+    {
+        fmt::print( stderr, "keelc: --backend llvm cannot write or link a .klo yet\n" );
+        return 2;
     }
 
     keel::Interner             interner;
@@ -605,6 +617,20 @@ int main( int argc, char** argv )
         return finish();
     }
 
+    if( stop == Stop::Llvm )
+    {
+        const keel::Llvm_output ir =
+            keel::emit_llvm( functions, program, types, literals, sm, interner, prog.modules, {}, true );
+        std::cout << ir.ir;
+        if( !ir.error.empty() )
+        {
+            fmt::print( stderr, "keelc: {}\n", ir.error );
+            return 1;
+        }
+        clock.lap( "emit LLVM" );
+        return finish();
+    }
+
     // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.
     const char* const configured = std::getenv( "CC" );
     const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
@@ -670,6 +696,48 @@ int main( int argc, char** argv )
             fmt::print( stderr, "keelc: {}\n", runtime.error );
             return 1;
         }
+    }
+
+    // One object for the whole program; the user's C is still compiled by $CC.
+    if( backend == "llvm" )
+    {
+        const std::filesystem::path object = object_dir.path / ( input_name + ".o" );
+        const keel::Llvm_output     built =
+            keel::emit_llvm( functions, program, types, literals, sm, interner, prog.modules, object );
+        if( !built.error.empty() )
+        {
+            fmt::print( stderr, "keelc: {}\n", built.error );
+            return 1;
+        }
+        clock.lap( "emit LLVM" );
+
+        std::vector<std::string> inputs;
+        for( const std::string& file : linked )
+        {
+            if( !file.ends_with( ".c" ) )
+            {
+                inputs.push_back( file );
+                continue;
+            }
+            const std::filesystem::path compiled =
+                object_dir.path / std::filesystem::path( file ).filename().replace_extension( ".o" );
+            if( std::system( keel::compile_command( compiler, cflags, file, compiled ).c_str() ) != 0 )
+            {
+                fmt::print( stderr, "keelc: compiling {} failed\n", file );
+                return 1;
+            }
+            inputs.push_back( compiled.string() );
+        }
+
+        const std::filesystem::path program_object[] = { object };
+        if( const std::string failed = keel::link_executable( program_object, runtime.path, executable, inputs );
+            !failed.empty() )
+        {
+            fmt::print( stderr, "keelc: linking failed:\n{}", failed );
+            return 1;
+        }
+        clock.lap( "link" );
+        return finish();
     }
 
     for( const keel::File_id part : parts.order() )

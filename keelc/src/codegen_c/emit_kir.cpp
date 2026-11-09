@@ -7,6 +7,7 @@
 #include <optional>
 #include <span>
 #include <unordered_set>
+#include "codegen/failure.h"
 #include "codegen/layout.h"
 #include "codegen/mangle.h"
 #include "codegen_c/spelling.h"
@@ -40,31 +41,6 @@ void add_addresses( const Constant_value& value, std::vector<Node_id>& targets )
     for( const Constant_value& element : value.elements )
     {
         add_addresses( element, targets );
-    }
-}
-
-std::string_view failure_prefix( Failure failure )
-{
-    switch( failure )
-    {
-    case Failure::Assert:
-        return "assertion failed: ";
-    case Failure::Message:
-        return "panic: ";
-    case Failure::Cast:
-        return "cast out of range: ";
-    case Failure::Division:
-        return "division by zero: ";
-    case Failure::Remainder:
-        return "remainder by zero: ";
-    case Failure::Unordered:
-        return "NaN has no order: ";
-    case Failure::Unhashable:
-        return "NaN has no hash: ";
-    case Failure::Bounds:
-        return "out of bounds: ";
-    case Failure::Overflow:
-        return "arithmetic overflow: ";
     }
 }
 
@@ -151,7 +127,6 @@ private:
     std::string prototype( const Function& function ) const;
 
     std::string location( Span span ) const;
-    std::string as_written( Span span ) const;
 
     std::string              out_;
     std::vector<std::string> defined_; // the symbols this part defines
@@ -969,7 +944,7 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
         write_line( fmt::format(
             "kl_rt_panic( {}, {} );",
             location( terminator.span ),
-            c_string( std::string( failure_prefix( terminator.failure ) ) + as_written( terminator.span ) )
+            c_string( std::string( failure_prefix( terminator.failure ) ) + as_written( sm_, terminator.span ) )
         ) );
         return;
     }
@@ -1265,26 +1240,6 @@ std::string Kir_emitter::prototype( const Function& function ) const
 std::string Kir_emitter::location( Span span ) const
 {
     return fmt::format( "{}, {}", c_string( sm_.file( span.file ).path ), sm_.line_col( span.file, span.start ).line );
-}
-
-// The source as written, on one line: each run of whitespace becomes one space.
-std::string Kir_emitter::as_written( Span span ) const
-{
-    std::string text;
-
-    for( const char c : sm_.text( span ) )
-    {
-        if( c != ' ' && c != '\t' && c != '\n' && c != '\r' )
-        {
-            text.push_back( c );
-        }
-        else if( !text.empty() && text.back() != ' ' )
-        {
-            text.push_back( ' ' );
-        }
-    }
-
-    return text;
 }
 
 std::string Kir_emitter::local_name( u32 index ) const
@@ -1834,7 +1789,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
                 operand( rvalue.a ),
                 size,
                 location( span ),
-                c_string( "out of memory: " + as_written( span ) )
+                c_string( "out of memory: " + as_written( sm_, span ) )
             );
         }
         else
@@ -1844,7 +1799,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
                 spelling_.type( rvalue.type ),
                 size,
                 location( span ),
-                c_string( "out of memory: " + as_written( span ) )
+                c_string( "out of memory: " + as_written( sm_, span ) )
             );
         }
     }
