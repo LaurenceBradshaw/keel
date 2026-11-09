@@ -15,11 +15,13 @@ struct kl__Wrap__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Wrap__I3i32E ) == 4 && _Alignof( struct kl__Wrap__I3i32E ) == 4 && offsetof( struct kl__Wrap__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Wrap__I4WrapI3i32EE
 {
     struct kl__Wrap__I3i32E kl_v;
 };
+_Static_assert( sizeof( struct kl__Wrap__I4WrapI3i32EE ) == 4 && _Alignof( struct kl__Wrap__I4WrapI3i32EE ) == 4 && offsetof( struct kl__Wrap__I4WrapI3i32EE, kl_v ) == 0, "layout" );
 
 struct kl__Named__vtable
 {

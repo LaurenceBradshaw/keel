@@ -11,18 +11,21 @@ struct kl__Box
 {
     int64_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 8 && _Alignof( struct kl__Box ) == 8 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 int64_t kl__live__G;
 

@@ -10,11 +10,13 @@ struct kl__Owned
 {
     uint8_t* kl_p;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_p ) == 0, "layout" );
 
 struct kl__Holder
 {
     struct kl__Owned kl_b;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_b ) == 0, "layout" );
 
 int32_t kl__dropped__GS5Owned = 0;
 
@@ -38,7 +40,7 @@ void kl__5Owned__R5Owned__ctor( struct kl__Owned* kl_this_1 )
 {
     uint8_t* kl_t2;
 #line 13 "codegen/reassignment_drops.kl"
-    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "codegen/reassignment_drops.kl", 13, "out of memory: alloc<u8>( 4 )" );
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, 1, "codegen/reassignment_drops.kl", 13, "out of memory: alloc<u8>( 4 )" );
 #line 13 "codegen/reassignment_drops.kl"
     ( *kl_this_1 ).kl_p = kl_t2;
 #line 15 "codegen/reassignment_drops.kl"

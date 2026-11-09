@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -314,28 +315,45 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I4void_3BadE ) == 8 && _Alignof( struct kl_7prelude_result__I4void_3BadE ) == 4 && offsetof( struct kl_7prelude_result__I4void_3BadE, kl_3err_error ) == 4, "layout" );
 
 struct kl__Box__I4voidE
 {
     unsigned char kl_empty;
 };
+_Static_assert( sizeof( struct kl__Box__I4voidE ) == 1 && _Alignof( struct kl__Box__I4voidE ) == 1, "layout" );
 
 struct kl__Pair__I4voidE
 {
     int32_t kl_second;
 };
+_Static_assert( sizeof( struct kl__Pair__I4voidE ) == 4 && _Alignof( struct kl__Pair__I4voidE ) == 4 && offsetof( struct kl__Pair__I4voidE, kl_second ) == 0, "layout" );
 
 struct kl__Two__I4voidE
 {
     int32_t tag;
-    int32_t kl_1a_y;
+    union
+    {
+        struct
+        {
+            int32_t kl_1a_y;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Two__I4voidE ) == 8 && _Alignof( struct kl__Two__I4voidE ) == 4 && offsetof( struct kl__Two__I4voidE, kl_1a_y ) == 4, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

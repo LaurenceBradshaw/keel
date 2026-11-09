@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -322,66 +323,79 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__A3_3i32
 {
     int32_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
 struct kl__A4_3i32
 {
     int32_t e[4];
 };
+_Static_assert( sizeof( struct kl__A4_3i32 ) == 16 && _Alignof( struct kl__A4_3i32 ) == 4, "layout" );
 
 struct kl__A1000_2u8
 {
     uint8_t e[1000];
 };
+_Static_assert( sizeof( struct kl__A1000_2u8 ) == 1000 && _Alignof( struct kl__A1000_2u8 ) == 1, "layout" );
 
 struct kl__A2_3f64
 {
     double e[2];
 };
+_Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f64 ) == 8, "layout" );
 
 struct kl__A2_4bool
 {
     bool e[2];
 };
+_Static_assert( sizeof( struct kl__A2_4bool ) == 2 && _Alignof( struct kl__A2_4bool ) == 1, "layout" );
 
 struct kl__A2_6colour
 {
     int32_t e[2];
 };
+_Static_assert( sizeof( struct kl__A2_6colour ) == 8 && _Alignof( struct kl__A2_6colour ) == 4, "layout" );
 
 struct kl__A2_Q7prelude3str
 {
     struct kl_7prelude_str e[2];
 };
+_Static_assert( sizeof( struct kl__A2_Q7prelude3str ) == 32 && _Alignof( struct kl__A2_Q7prelude3str ) == 8, "layout" );
 
 struct kl__A2_A3_3i32
 {
     struct kl__A3_3i32 e[2];
 };
+_Static_assert( sizeof( struct kl__A2_A3_3i32 ) == 24 && _Alignof( struct kl__A2_A3_3i32 ) == 4, "layout" );
 
 struct kl__A2_3i32
 {
     int32_t e[2];
 };
+_Static_assert( sizeof( struct kl__A2_3i32 ) == 8 && _Alignof( struct kl__A2_3i32 ) == 4, "layout" );
 
 struct kl__A2_A2_3i32
 {
     struct kl__A2_3i32 e[2];
 };
+_Static_assert( sizeof( struct kl__A2_A2_3i32 ) == 16 && _Alignof( struct kl__A2_A2_3i32 ) == 4, "layout" );
 
 struct kl__A2_P3i32
 {
     int32_t* e[2];
 };
+_Static_assert( sizeof( struct kl__A2_P3i32 ) == 16 && _Alignof( struct kl__A2_P3i32 ) == 8, "layout" );
 
 struct kl__A3_3u16
 {
     uint16_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3u16 ) == 6 && _Alignof( struct kl__A3_3u16 ) == 2, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

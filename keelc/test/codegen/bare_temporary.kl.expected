@@ -14,16 +14,19 @@ struct kl__Tracked
     uint64_t* kl_drops_;
     uint8_t* kl_block_;
 };
+_Static_assert( sizeof( struct kl__Tracked ) == 16 && _Alignof( struct kl__Tracked ) == 8 && offsetof( struct kl__Tracked, kl_drops_ ) == 0 && offsetof( struct kl__Tracked, kl_block_ ) == 8, "layout" );
 
 struct kl__Holder
 {
     uint64_t kl_taken_;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_taken_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I7TrackedE
 {
     struct kl__Tracked* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I7TrackedE ) == 8 && _Alignof( struct kl_7prelude_box__I7TrackedE ) == 8 && offsetof( struct kl_7prelude_box__I7TrackedE, kl_p_ ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -48,7 +51,7 @@ void kl__7Tracked__R7Tracked_P3u64__ctor( struct kl__Tracked* kl_this_1, uint64_
 #line 8 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_drops_ = kl_drops_2;
 #line 11 "codegen/bare_temporary.kl"
-    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 16, sizeof( uint8_t ), "codegen/bare_temporary.kl", 11, "out of memory: alloc<u8>( 16 )" );
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 16, 1, "codegen/bare_temporary.kl", 11, "out of memory: alloc<u8>( 16 )" );
 #line 11 "codegen/bare_temporary.kl"
     ( *kl_this_1 ).kl_block_ = kl_t3;
 #line 13 "codegen/bare_temporary.kl"
@@ -431,7 +434,7 @@ void kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( str
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Tracked ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 1, 16, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -310,6 +311,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -410,7 +412,7 @@ int32_t kl__4main__( void )
 #line 12 "codegen/run_bounds.kl"
     kl_data_1 = NULL;
 #line 16 "codegen/run_bounds.kl"
-    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "codegen/run_bounds.kl", 16, "out of memory: alloc<u8>( 4 )" );
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, 1, "codegen/run_bounds.kl", 16, "out of memory: alloc<u8>( 4 )" );
 #line 16 "codegen/run_bounds.kl"
     kl_data_1 = kl_t2;
     kl_t3 = kl_data_1 + 3;

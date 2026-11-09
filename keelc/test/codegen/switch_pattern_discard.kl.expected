@@ -10,15 +10,26 @@ struct kl__Counted
 {
     int64_t* kl_drops_;
 };
+_Static_assert( sizeof( struct kl__Counted ) == 8 && _Alignof( struct kl__Counted ) == 8 && offsetof( struct kl__Counted, kl_drops_ ) == 0, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    double kl_4Rect_w;
-    double kl_4Rect_h;
-    struct kl__Counted kl_6Tagged_c;
-    int64_t kl_6Tagged_n;
+    union
+    {
+        struct
+        {
+            double kl_4Rect_w;
+            double kl_4Rect_h;
+        };
+        struct
+        {
+            struct kl__Counted kl_6Tagged_c;
+            int64_t kl_6Tagged_n;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 24 && _Alignof( struct kl__Shape ) == 8 && offsetof( struct kl__Shape, kl_4Rect_w ) == 8 && offsetof( struct kl__Shape, kl_4Rect_h ) == 16 && offsetof( struct kl__Shape, kl_6Tagged_c ) == 8 && offsetof( struct kl__Shape, kl_6Tagged_n ) == 16, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

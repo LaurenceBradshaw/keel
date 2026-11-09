@@ -12,6 +12,7 @@ struct kl__B
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__B ) == 8 && _Alignof( struct kl__B ) == 8 && offsetof( struct kl__B, kl_n ) == 0, "layout" );
 
 void kl__1B__R1B_3u64__ctor( struct kl__B*, uint64_t );
 void kl__1B__dtor( struct kl__B* );

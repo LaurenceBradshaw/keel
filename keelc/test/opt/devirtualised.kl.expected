@@ -14,6 +14,7 @@ struct kl__Sq
 {
     double kl_s;
 };
+_Static_assert( sizeof( struct kl__Sq ) == 8 && _Alignof( struct kl__Sq ) == 8 && offsetof( struct kl__Sq, kl_s ) == 0, "layout" );
 
 struct kl__Shape__vtable
 {

@@ -8,8 +8,15 @@ struct kl__Opt__I3i32E;
 struct kl__Opt__I3i32E
 {
     int32_t tag;
-    int32_t kl_4Some_v;
+    union
+    {
+        struct
+        {
+            int32_t kl_4Some_v;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Opt__I3i32E ) == 8 && _Alignof( struct kl__Opt__I3i32E ) == 4 && offsetof( struct kl__Opt__I3i32E, kl_4Some_v ) == 4, "layout" );
 
 int32_t kl__4main__( void );
 int32_t kl__6unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E, int32_t );

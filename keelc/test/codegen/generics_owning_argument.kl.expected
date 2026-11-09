@@ -13,16 +13,19 @@ struct kl__Tracked
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Tracked ) == 4 && _Alignof( struct kl__Tracked ) == 4 && offsetof( struct kl__Tracked, kl_n ) == 0, "layout" );
 
 struct kl__Wrap__I7TrackedE
 {
     struct kl__Tracked kl_v;
 };
+_Static_assert( sizeof( struct kl__Wrap__I7TrackedE ) == 4 && _Alignof( struct kl__Wrap__I7TrackedE ) == 4 && offsetof( struct kl__Wrap__I7TrackedE, kl_v ) == 0, "layout" );
 
 struct kl__Holder
 {
     struct kl__Wrap__I7TrackedE kl_w;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 4 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_w ) == 0, "layout" );
 
 int32_t kl__destroyed__G = 0;
 

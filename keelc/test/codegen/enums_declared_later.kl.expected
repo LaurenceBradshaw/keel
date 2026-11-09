@@ -9,15 +9,32 @@ struct kl__Shape;
 struct kl__Wrap__I6ColourE
 {
     int32_t tag;
-    int32_t kl_4Held_v;
+    union
+    {
+        struct
+        {
+            int32_t kl_4Held_v;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Wrap__I6ColourE ) == 8 && _Alignof( struct kl__Wrap__I6ColourE ) == 4 && offsetof( struct kl__Wrap__I6ColourE, kl_4Held_v ) == 4, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    int32_t kl_6Filled_c;
-    struct kl__Wrap__I6ColourE kl_7Wrapped_w;
+    union
+    {
+        struct
+        {
+            int32_t kl_6Filled_c;
+        };
+        struct
+        {
+            struct kl__Wrap__I6ColourE kl_7Wrapped_w;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_6Filled_c ) == 4 && offsetof( struct kl__Shape, kl_7Wrapped_w ) == 4, "layout" );
 
 int32_t kl__4main__( void );
 

@@ -10,6 +10,7 @@ struct kl__Node
     int32_t kl_value;
     struct kl__Node* kl_next;
 };
+_Static_assert( sizeof( struct kl__Node ) == 16 && _Alignof( struct kl__Node ) == 8 && offsetof( struct kl__Node, kl_value ) == 0 && offsetof( struct kl__Node, kl_next ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

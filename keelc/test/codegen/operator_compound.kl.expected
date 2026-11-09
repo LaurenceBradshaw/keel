@@ -16,37 +16,44 @@ struct kl__tally
     int32_t kl_total;
     int32_t kl_in_place;
 };
+_Static_assert( sizeof( struct kl__tally ) == 8 && _Alignof( struct kl__tally ) == 4 && offsetof( struct kl__tally, kl_total ) == 0 && offsetof( struct kl__tally, kl_in_place ) == 4, "layout" );
 
 struct kl__only_compound
 {
     int32_t kl_x;
 };
+_Static_assert( sizeof( struct kl__only_compound ) == 4 && _Alignof( struct kl__only_compound ) == 4 && offsetof( struct kl__only_compound, kl_x ) == 0, "layout" );
 
 struct kl__only_binary
 {
     int32_t kl_x;
 };
+_Static_assert( sizeof( struct kl__only_binary ) == 4 && _Alignof( struct kl__only_binary ) == 4 && offsetof( struct kl__only_binary, kl_x ) == 0, "layout" );
 
 struct kl__mixed
 {
     double kl_x;
 };
+_Static_assert( sizeof( struct kl__mixed ) == 8 && _Alignof( struct kl__mixed ) == 8 && offsetof( struct kl__mixed, kl_x ) == 0, "layout" );
 
 struct kl__shelf
 {
     struct kl__only_binary* kl_cells;
 };
+_Static_assert( sizeof( struct kl__shelf ) == 8 && _Alignof( struct kl__shelf ) == 8 && offsetof( struct kl__shelf, kl_cells ) == 0, "layout" );
 
 struct kl__label
 {
     uint8_t* kl_bytes;
     uint64_t kl_length;
 };
+_Static_assert( sizeof( struct kl__label ) == 16 && _Alignof( struct kl__label ) == 8 && offsetof( struct kl__label, kl_bytes ) == 0 && offsetof( struct kl__label, kl_length ) == 8, "layout" );
 
 struct kl__holder
 {
     struct kl__tally kl_t;
 };
+_Static_assert( sizeof( struct kl__holder ) == 8 && _Alignof( struct kl__holder ) == 4 && offsetof( struct kl__holder, kl_t ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -233,7 +240,7 @@ void kl__5shelf__R5shelf_11only_binary_11only_binary__ctor( struct kl__shelf* kl
     struct kl__only_binary* kl_t5;
     struct kl__only_binary* kl_t6;
 #line 47 "codegen/operator_compound.kl"
-    kl_t4 = ( struct kl__only_binary* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__only_binary ), "codegen/operator_compound.kl", 47, "out of memory: alloc<only_binary>( 2 )" );
+    kl_t4 = ( struct kl__only_binary* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/operator_compound.kl", 47, "out of memory: alloc<only_binary>( 2 )" );
 #line 47 "codegen/operator_compound.kl"
     ( *kl_this_1 ).kl_cells = kl_t4;
     kl_t5 = ( *kl_this_1 ).kl_cells + 0;
@@ -287,7 +294,7 @@ void kl__5label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_
 #line 73 "codegen/operator_compound.kl"
     kl_t4 = kl_n_2 + 1;
 #line 73 "codegen/operator_compound.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/operator_compound.kl", 73, "out of memory: alloc<u8>( n + 1 )" );
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, 1, "codegen/operator_compound.kl", 73, "out of memory: alloc<u8>( n + 1 )" );
 #line 73 "codegen/operator_compound.kl"
     ( *kl_this_1 ).kl_bytes = kl_t5;
     ( *kl_this_1 ).kl_length = kl_n_2;

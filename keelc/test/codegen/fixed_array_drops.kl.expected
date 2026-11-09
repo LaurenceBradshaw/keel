@@ -12,21 +12,25 @@ struct kl__Token
 {
     int32_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Token ) == 4 && _Alignof( struct kl__Token ) == 4 && offsetof( struct kl__Token, kl_id ) == 0, "layout" );
 
 struct kl__A2_5Token
 {
     struct kl__Token e[2];
 };
+_Static_assert( sizeof( struct kl__A2_5Token ) == 8 && _Alignof( struct kl__A2_5Token ) == 4, "layout" );
 
 struct kl__Holder
 {
     struct kl__A2_5Token kl_tokens;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_tokens ) == 0, "layout" );
 
 struct kl__A3_5Token
 {
     struct kl__Token e[3];
 };
+_Static_assert( sizeof( struct kl__A3_5Token ) == 12 && _Alignof( struct kl__A3_5Token ) == 4, "layout" );
 
 int32_t kl__dropped__G;
 

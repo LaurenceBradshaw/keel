@@ -10,6 +10,7 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 void kl__3set__O3i32( int32_t* );
 int32_t kl__6copied__3i32( int32_t );

@@ -10,11 +10,13 @@ struct kl__Wrap__I3i64E
 {
     int64_t kl_x;
 };
+_Static_assert( sizeof( struct kl__Wrap__I3i64E ) == 8 && _Alignof( struct kl__Wrap__I3i64E ) == 8 && offsetof( struct kl__Wrap__I3i64E, kl_x ) == 0, "layout" );
 
 struct kl__Wrap__I3i32E
 {
     int32_t kl_x;
 };
+_Static_assert( sizeof( struct kl__Wrap__I3i32E ) == 4 && _Alignof( struct kl__Wrap__I3i32E ) == 4 && offsetof( struct kl__Wrap__I3i32E, kl_x ) == 0, "layout" );
 
 int32_t kl__4main__( void );
 int32_t kl__4once__I3i32E__3i32( int32_t );

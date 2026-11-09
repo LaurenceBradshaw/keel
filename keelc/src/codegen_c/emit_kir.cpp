@@ -7,6 +7,7 @@
 #include <optional>
 #include <span>
 #include <unordered_set>
+#include "codegen/layout.h"
 #include "codegen/mangle.h"
 #include "codegen_c/spelling.h"
 #include "common/types.h"
@@ -143,6 +144,9 @@ private:
     // A `Shape*` made from the address of an implementer: the address beside its vtable's.
     std::string interface_reference( Type_id interface, Type_id implementer, std::string_view address ) const;
 
+    // C must agree with the layout module, or the C compile stops.
+    std::string layout_check( Type_id type ) const;
+
     std::string prototype( Node_id decl, std::span<const Type_id> type_arguments = {} ) const;
     std::string prototype( const Function& function ) const;
 
@@ -164,6 +168,7 @@ private:
     const Source_manager&        sm_;
     const Interner&              interner_;
     const Spelling               spelling_;
+    const Layout                 layout_;
     const Parts*                 parts_; // null writes the whole compile
     File_id                      part_;
     const bool                   object_;
@@ -193,6 +198,7 @@ Kir_emitter::Kir_emitter(
       sm_( sm ),
       interner_( interner ),
       spelling_( Spelling { program, types, interner, modules, sm } ),
+      layout_( program, types.table() ),
       parts_( parts ),
       part_( part ),
       object_( object ),
@@ -341,12 +347,8 @@ void Kir_emitter::emit_function_types()
     write_line( "" );
 }
 
-// One C struct per instantiation, in containment order. An enum with a payload is a struct too: a
-// tag followed by every payload field of every variant, side by side rather than in a union. The
-// field names are already mangled with their node id, so two variants cannot collide, and the only
-// cost is the space a union would have saved - invisible, because nothing guarantees an enum's
-// layout and no FFI can see one. Moving to a union later is a change to this function and nothing
-// else.
+// One C struct per instantiation, in containment order, each followed by its layout check. An enum
+// with a payload is a struct too: its tag, then a union of each variant's fields.
 //
 // One pass over both kinds rather than one each: a struct can hold an enum by value and an enum a
 // struct, so any order that finishes one kind before starting the other puts some definition before
@@ -431,6 +433,7 @@ void Kir_emitter::emit_composites()
             write_line( "};" );
             indent_ -= 4;
             write_line( "};" );
+            write_line( layout_check( type ) );
             write_line( "" );
             continue;
         }
@@ -442,14 +445,62 @@ void Kir_emitter::emit_composites()
             ) );
             indent_ -= 4;
             write_line( "};" );
+            write_line( layout_check( type ) );
             write_line( "" );
             continue;
         }
 
-        // Which variant is held is not a field of any variant, so it is written first and once.
+        // The tag, then a union of each variant's fields, anonymous so a field is named as a struct's.
         if( types_.table().is_enum( type ) )
         {
             write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( type ).element ) ) );
+
+            const std::span<const Held_field> fields = program_.fields( type );
+            const bool any = std::ranges::any_of( fields, [&]( const Held_field& f ) { return !is_void( f.type ); } );
+            if( any )
+            {
+                write_line( "union" );
+                write_line( "{" );
+                indent_ += 4;
+            }
+            for( std::size_t i = 0; i < fields.size(); )
+            {
+                std::size_t j = i;
+                while( j < fields.size() && fields[j].variant == fields[i].variant )
+                {
+                    ++j;
+                }
+                const std::span<const Held_field> arm = fields.subspan( i, j - i );
+                i                                     = j;
+                if( std::ranges::all_of( arm, [&]( const Held_field& f ) { return is_void( f.type ); } ) )
+                {
+                    continue;
+                }
+
+                write_line( "struct" );
+                write_line( "{" );
+                indent_ += 4;
+                for( const Held_field& field : arm )
+                {
+                    if( !is_void( field.type ) )
+                    {
+                        write_line( fmt::format( "{} {};", spelling_.type( field.type ), spelling_.field( field.declaration ) )
+                        );
+                    }
+                }
+                indent_ -= 4;
+                write_line( "};" );
+            }
+            if( any )
+            {
+                indent_ -= 4;
+                write_line( "};" );
+            }
+            indent_ -= 4;
+            write_line( "};" );
+            write_line( layout_check( type ) );
+            write_line( "" );
+            continue;
         }
 
         // Each field's type through *this* instance: what the declaration says is `T`, which is
@@ -470,6 +521,7 @@ void Kir_emitter::emit_composites()
 
         indent_ -= 4;
         write_line( "};" );
+        write_line( layout_check( type ) );
         write_line( "" );
     }
 }
@@ -1773,8 +1825,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
     {
         // The element type gives the size, which is the whole reason `alloc` is a keyword rather
         // than a function: no `sizeof` is written and none can be got wrong.
-        const Type_id     element = types_.table().get( rvalue.type ).element;
-        const std::string size    = is_void( element ) ? "0" : fmt::format( "sizeof( {} )", spelling_.type( element ) );
+        const std::string size = std::to_string( layout_.size( types_.table().get( rvalue.type ).element ) );
         if( rvalue.a.type.is_valid() )
         {
             return fmt::format(
@@ -1812,11 +1863,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         return spelling_.function( rvalue.callee, rvalue.type_arguments );
 
     case Rvalue_kind::Field_offset:
-        return fmt::format(
-            "offsetof( {}, {} )",
-            spelling_.type( types_.table().get( rvalue.type ).arguments[0] ),
-            spelling_.field( rvalue.callee )
-        );
+        return std::to_string( layout_.offset( types_.table().get( rvalue.type ).arguments[0], rvalue.callee ) );
 
     // Through `char*` because an offset counts bytes, and never as arithmetic Keel can spell.
     case Rvalue_kind::Field_read:
@@ -1828,6 +1875,41 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         assert( false && "unknown rvalue kind" );
         return "<unknown>";
     }
+}
+
+std::string Kir_emitter::layout_check( Type_id type ) const
+{
+    const std::string spelled = spelling_.structure( type );
+    std::string       check   = fmt::format(
+        "_Static_assert( sizeof( {0} ) == {1} && _Alignof( {0} ) == {2}", spelled, layout_.size( type ), layout_.align( type )
+    );
+
+    if( types_.table().is_union( type ) )
+    {
+        for( const Type_id member : types_.table().get( type ).arguments )
+        {
+            check += fmt::format(
+                " && offsetof( {}, e{} ) == {}", spelled, types_.table().error_tag( member ), layout_.payload( type )
+            );
+        }
+    }
+    else if( !types_.table().is_array( type ) )
+    {
+        for( const Held_field& field : program_.fields( type ) )
+        {
+            if( !is_void( field.type ) )
+            {
+                check += fmt::format(
+                    " && offsetof( {}, {} ) == {}",
+                    spelled,
+                    spelling_.field( field.declaration ),
+                    layout_.offset( type, field.declaration )
+                );
+            }
+        }
+    }
+
+    return check + ", \"layout\" );";
 }
 
 std::string Kir_emitter::interface_reference( Type_id interface, Type_id implementer, std::string_view address ) const
@@ -2887,8 +2969,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc( sizeof( struct kl__N ), \"t.kl\", 2, \"out of memory: alloc<N>()\" )" )
-        );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc( 4, \"t.kl\", 2, \"out of memory: alloc<N>()\" )" ) );
     }
 
     SECTION( "a builtin" )
@@ -2897,7 +2978,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc( sizeof( int32_t ), \"t.kl\", 1, \"out of memory: alloc<i32>()\" )" ) );
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc( 4, \"t.kl\", 1, \"out of memory: alloc<i32>()\" )" ) );
     }
 
     SECTION( "a pointer" )
@@ -2906,7 +2987,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( sizeof( int32_t* ), \"t.kl\", 1, \"out of memory: alloc<i32*>()\" )" ) );
+        REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( 8, \"t.kl\", 1, \"out of memory: alloc<i32*>()\" )" ) );
     }
 
     SECTION( "a `void` element is allocated at size 0" )
@@ -3055,7 +3136,7 @@ TEST_CASE( "emit_kir_declares_the_runtime_when_it_is_used", "[codegen][kir][allo
         REQUIRE( g.clean() );
 
         // C needs them first, and the emitter's ordering in run() is the only thing that says so.
-        REQUIRE( g.c.find( alloc_prototype ) < g.c.find( "kl_rt_alloc( sizeof" ) );
+        REQUIRE( g.c.find( alloc_prototype ) < g.c.find( "kl_rt_alloc( 4" ) );
         REQUIRE( g.c.find( free_prototype ) < g.c.find( "kl_rt_free( kl_" ) );
     }
 }
@@ -3683,7 +3764,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ), \"t.kl\", 1, \"out of memory: "
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, 4, \"t.kl\", 1, \"out of memory: "
                         "alloc<i32>( n )\" )" ) );
     }
 
@@ -3693,7 +3774,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t )," ) );
+        REQUIRE( g.has( "kl_rt_alloc_many( ( size_t ) 4, 4," ) );
     }
 
     SECTION( "a struct element" )
@@ -3702,7 +3783,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__N )," ) );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc_many( ( size_t ) 2, 4," ) );
     }
 
     SECTION( "a many-item element" )
@@ -3711,7 +3792,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* )," ) );
+        REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, 8," ) );
     }
 
     SECTION( "a `void` element is allocated at size 0, and an offset into the run is the run" )

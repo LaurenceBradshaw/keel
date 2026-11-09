@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -311,13 +312,21 @@ struct kl_7prelude_textual__ref { void* self; const struct kl_7prelude_textual__
 struct kl__P
 {
     int32_t tag;
-    int32_t kl_4Some_n;
+    union
+    {
+        struct
+        {
+            int32_t kl_4Some_n;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_4Some_n ) == 4, "layout" );
 
 struct kl__A3_3i32
 {
     int32_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
 struct kl__N
 {
@@ -326,12 +335,14 @@ struct kl__N
     struct kl__P kl_p;
     struct kl__A3_3i32 kl_items;
 };
+_Static_assert( sizeof( struct kl__N ) == 28 && _Alignof( struct kl__N ) == 4 && offsetof( struct kl__N, kl_v ) == 0 && offsetof( struct kl__N, kl_k ) == 4 && offsetof( struct kl__N, kl_p ) == 8 && offsetof( struct kl__N, kl_items ) == 16, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

@@ -12,21 +12,25 @@ struct kl__A3_3i32
 {
     int32_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
 struct kl__Bag__I3i32E
 {
     struct kl__A3_3i32 kl_items;
 };
+_Static_assert( sizeof( struct kl__Bag__I3i32E ) == 12 && _Alignof( struct kl__Bag__I3i32E ) == 4 && offsetof( struct kl__Bag__I3i32E, kl_items ) == 0, "layout" );
 
 struct kl__A3_3f64
 {
     double e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3f64 ) == 24 && _Alignof( struct kl__A3_3f64 ) == 8, "layout" );
 
 struct kl__Bag__I3f64E
 {
     struct kl__A3_3f64 kl_items;
 };
+_Static_assert( sizeof( struct kl__Bag__I3f64E ) == 24 && _Alignof( struct kl__Bag__I3f64E ) == 8 && offsetof( struct kl__Bag__I3f64E, kl_items ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

@@ -11,17 +11,26 @@ struct kl__Box
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Holder
 {
     struct kl__Box kl_b;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 4 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_b ) == 0, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    struct kl__Box kl_5boxed_b;
+    union
+    {
+        struct
+        {
+            struct kl__Box kl_5boxed_b;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 8 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_5boxed_b ) == 4, "layout" );
 
 int32_t kl__live__G;
 int64_t kl__trace__G;

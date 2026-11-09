@@ -6,6 +6,7 @@
 #include <cassert>
 #include <functional>
 #include <optional>
+#include "ast/ast.h"
 #include "ir/initialised.h"
 #include "ir/live.h"
 #include "ir/simplify.h"
@@ -58,7 +59,8 @@ bool field_place( const Function& func, const Place& place )
     return only_field_or_member;
 }
 
-bool overlaps( const Function& func, const Place& a, const Place& b )
+// Two fields of one payload enum's different variants share its union.
+bool overlaps( const Ast& ast, const Function& func, const Place& a, const Place& b )
 {
     if( a.is_global() || b.is_global() )
     {
@@ -79,7 +81,8 @@ bool overlaps( const Function& func, const Place& a, const Place& b )
         if( a_projection.kind == Projection_kind::Field && b_projection.kind == Projection_kind::Field &&
             a_projection.field != b_projection.field )
         {
-            return false;
+            const Node_id variant = ast.variant_of( a_projection.field );
+            return variant.is_valid() && variant != ast.variant_of( b_projection.field );
         }
 
         if( a_projection.kind == Projection_kind::Member && b_projection.kind == Projection_kind::Member &&
@@ -132,9 +135,9 @@ bool copies_itself( const Function& func, const Statement& statement )
     return true;
 }
 
-bool reads( const Function& func, const Rvalue& value, const Place& into )
+bool reads( const Ast& ast, const Function& func, const Rvalue& value, const Place& into )
 {
-    if( value.kind == Rvalue_kind::Address_of && overlaps( func, value.a.place, into ) )
+    if( value.kind == Rvalue_kind::Address_of && overlaps( ast, func, value.a.place, into ) )
     {
         return true;
     }
@@ -144,7 +147,7 @@ bool reads( const Function& func, const Rvalue& value, const Place& into )
         value,
         [&]( const Operand& operand )
         {
-            if( operand.has_place() && overlaps( func, operand.place, into ) )
+            if( operand.has_place() && overlaps( ast, func, operand.place, into ) )
             {
                 found = true;
             }
@@ -154,9 +157,9 @@ bool reads( const Function& func, const Rvalue& value, const Place& into )
     return found;
 }
 
-bool mentions( const Function& func, const Statement& statement, const Place& into )
+bool mentions( const Ast& ast, const Function& func, const Statement& statement, const Place& into )
 {
-    return overlaps( func, statement.place, into ) || reads( func, func.rvalue( statement ), into );
+    return overlaps( ast, func, statement.place, into ) || reads( ast, func, func.rvalue( statement ), into );
 }
 
 // Whether `statement` overwrites all of `into`: its place is `into` or a prefix of it.
@@ -180,19 +183,19 @@ bool covers( const Function& func, const Statement& statement, const Place& into
     return true;
 }
 
-bool mentions( const Function& func, const Terminator& terminator, const Place& into )
+bool mentions( const Ast& ast, const Function& func, const Terminator& terminator, const Place& into )
 {
-    if( terminator.condition.has_place() && overlaps( func, terminator.condition.place, into ) )
+    if( terminator.condition.has_place() && overlaps( ast, func, terminator.condition.place, into ) )
     {
         return true;
     }
 
-    if( terminator.message.has_place() && overlaps( func, terminator.message.place, into ) )
+    if( terminator.message.has_place() && overlaps( ast, func, terminator.message.place, into ) )
     {
         return true;
     }
 
-    if( terminator.at.has_place() && overlaps( func, terminator.at.place, into ) )
+    if( terminator.at.has_place() && overlaps( ast, func, terminator.at.place, into ) )
     {
         return true;
     }
@@ -526,6 +529,7 @@ bool reaches(
 
 // Whether building `c.gone` in `c.into` could change what anything reads.
 bool field_interferes(
+    const Ast&                    ast,
     const Function&               func,
     const Candidate&              c,
     const std::vector<Occupancy>& entry,
@@ -551,7 +555,7 @@ bool field_interferes(
             in_life[at] = was || now;
 
             // Something else touches the field while `gone` is in it.
-            if( at != c.statement && in_life[at] && mentions( func, statement, c.into ) )
+            if( at != c.statement && in_life[at] && mentions( ast, func, statement, c.into ) )
             {
                 return true;
             }
@@ -564,7 +568,7 @@ bool field_interferes(
             was = now;
         }
 
-        if( was && mentions( func, block.terminator, c.into ) )
+        if( was && mentions( ast, func, block.terminator, c.into ) )
         {
             return true;
         }
@@ -595,10 +599,10 @@ bool field_interferes(
             return false;
         }
 
-        return covers( func, statement, c.into ) ? reads( func, func.rvalue( statement ), c.into )
-                                                 : mentions( func, statement, c.into );
+        return covers( func, statement, c.into ) ? reads( ast, func, func.rvalue( statement ), c.into )
+                                                 : mentions( ast, func, statement, c.into );
     };
-    const auto read_at_end = [&]( const Terminator& terminator ) { return mentions( func, terminator, c.into ); };
+    const auto read_at_end = [&]( const Terminator& terminator ) { return mentions( ast, func, terminator, c.into ); };
 
     for( u32 at = 0; at < func.statements.size(); ++at )
     {
@@ -732,7 +736,7 @@ bool mark_deletions(
 
 // Merges every candidate that does not clash and shares no local with one already taken; a merge
 // changes facts only about its own locals, so one analysis judges them all. Answers whether any merged.
-bool coalesce_round( Function& func )
+bool coalesce_round( Function& func, const Ast& ast )
 {
     const Slot_map               slots( func );
     const std::vector<Occupancy> entry = occupancy_on_entry( func, slots );
@@ -756,7 +760,7 @@ bool coalesce_round( Function& func )
 
         const bool clash = candidate->into.num_projections == 0
                                ? interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed )
-                               : field_interferes( func, *candidate, entry, after, live, addressed );
+                               : field_interferes( ast, func, *candidate, entry, after, live, addressed );
         if( !clash )
         {
             taken[candidate->kept.v]       = true;
@@ -824,9 +828,9 @@ bool coalesce_round( Function& func )
 
 } // namespace
 
-void coalesce_moves( Function& func )
+void coalesce_moves( Function& func, const Ast& ast )
 {
-    while( coalesce_round( func ) )
+    while( coalesce_round( func, ast ) )
     {
         // A round leaves for the next any candidate sharing a local with a merge.
     }
@@ -944,7 +948,7 @@ u32 rounds_of( std::string_view source )
     settle_debug( func, p.literals.add_integer( 0 ) );
     simplify( func, p.literals );
     u32 rounds = 0;
-    while( coalesce_round( func ) )
+    while( coalesce_round( func, p.ast ) )
     {
         ++rounds;
     }

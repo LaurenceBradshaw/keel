@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -311,6 +312,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_hasher
 {
@@ -320,6 +322,7 @@ struct kl_7prelude_hasher
     uint64_t kl_v3_;
     uint64_t kl_bytes_;
 };
+_Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

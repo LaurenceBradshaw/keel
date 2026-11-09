@@ -11,20 +11,38 @@ struct kl__Res
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Res ) == 4 && _Alignof( struct kl__Res ) == 4 && offsetof( struct kl__Res, kl_v ) == 0, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    int32_t kl_6circle_r;
-    int32_t kl_4rect_w;
-    int32_t kl_4rect_h;
+    union
+    {
+        struct
+        {
+            int32_t kl_6circle_r;
+        };
+        struct
+        {
+            int32_t kl_4rect_w;
+            int32_t kl_4rect_h;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_6circle_r ) == 4 && offsetof( struct kl__Shape, kl_4rect_w ) == 4 && offsetof( struct kl__Shape, kl_4rect_h ) == 8, "layout" );
 
 struct kl__Held
 {
     int32_t tag;
-    struct kl__Res kl_4full_r;
+    union
+    {
+        struct
+        {
+            struct kl__Res kl_4full_r;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_4full_r ) == 4, "layout" );
 
 int32_t kl__dropped__G = 0;
 

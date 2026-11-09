@@ -12,22 +12,32 @@ struct kl__Buf
 {
     uint64_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__Buf ) == 8 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_data ) == 0, "layout" );
 
 struct kl__buffer
 {
     int32_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__buffer ) == 8 && _Alignof( struct kl__buffer ) == 8 && offsetof( struct kl__buffer, kl_data ) == 0, "layout" );
 
 struct kl__W
 {
     struct kl__Buf kl_one;
 };
+_Static_assert( sizeof( struct kl__W ) == 8 && _Alignof( struct kl__W ) == 8 && offsetof( struct kl__W, kl_one ) == 0, "layout" );
 
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_4Full_b;
+    union
+    {
+        struct
+        {
+            struct kl__Buf kl_4Full_b;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Holder ) == 16 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_4Full_b ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -53,7 +63,7 @@ void kl__3Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 8 "codegen/loan_boundaries.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/loan_boundaries.kl", 8, "out of memory: alloc<u64>()" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( 8, "codegen/loan_boundaries.kl", 8, "out of memory: alloc<u64>()" );
 #line 8 "codegen/loan_boundaries.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
     ( *( *kl_this_1 ).kl_data ) = kl_n_2;
@@ -85,7 +95,7 @@ void kl__6buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
     int32_t* kl_t2;
     int32_t* kl_t3;
 #line 33 "codegen/loan_boundaries.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/loan_boundaries.kl", 33, "out of memory: alloc<i32>( 4 )" );
+    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, 4, "codegen/loan_boundaries.kl", 33, "out of memory: alloc<i32>( 4 )" );
 #line 33 "codegen/loan_boundaries.kl"
     ( *kl_this_1 ).kl_data = kl_t2;
 #line 33 "codegen/loan_boundaries.kl"
@@ -125,7 +135,7 @@ void kl__4grow__S6buffer( struct kl__buffer* kl_this_1 )
 #line 48 "codegen/loan_boundaries.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data );
 #line 48 "codegen/loan_boundaries.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/loan_boundaries.kl", 48, "out of memory: alloc<i32>( 4 )" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, 4, "codegen/loan_boundaries.kl", 48, "out of memory: alloc<i32>( 4 )" );
 #line 48 "codegen/loan_boundaries.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 48 "codegen/loan_boundaries.kl"

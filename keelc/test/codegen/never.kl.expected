@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -314,23 +315,33 @@ struct kl__Noisy
 {
     int32_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Noisy ) == 4 && _Alignof( struct kl__Noisy ) == 4 && offsetof( struct kl__Noisy, kl_id ) == 0, "layout" );
 
 struct kl__Gauge
 {
     int32_t kl_level;
 };
+_Static_assert( sizeof( struct kl__Gauge ) == 4 && _Alignof( struct kl__Gauge ) == 4 && offsetof( struct kl__Gauge, kl_level ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__opt__I5NoisyE
 {
     int32_t tag;
-    struct kl__Noisy kl_4some_value;
+    union
+    {
+        struct
+        {
+            struct kl__Noisy kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__opt__I5NoisyE ) == 8 && _Alignof( struct kl__opt__I5NoisyE ) == 4 && offsetof( struct kl__opt__I5NoisyE, kl_4some_value ) == 4, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

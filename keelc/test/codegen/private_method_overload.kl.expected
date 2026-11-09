@@ -9,6 +9,7 @@ struct kl__Acct
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Acct ) == 4 && _Alignof( struct kl__Acct ) == 4 && offsetof( struct kl__Acct, kl_n ) == 0, "layout" );
 
 int32_t kl__4pick__S4Acct_3i32( struct kl__Acct*, int32_t );
 int32_t kl__4pick__S4Acct_3i64( struct kl__Acct*, int64_t );

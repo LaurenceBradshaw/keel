@@ -10,12 +10,14 @@ struct kl_6helper_counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl_6helper_counter ) == 4 && _Alignof( struct kl_6helper_counter ) == 4 && offsetof( struct kl_6helper_counter, kl_n ) == 0, "layout" );
 
 struct kl_6helper_pair_of
 {
     int32_t kl_a;
     int32_t kl_b;
 };
+_Static_assert( sizeof( struct kl_6helper_pair_of ) == 8 && _Alignof( struct kl_6helper_pair_of ) == 4 && offsetof( struct kl_6helper_pair_of, kl_a ) == 0 && offsetof( struct kl_6helper_pair_of, kl_b ) == 4, "layout" );
 
 int32_t kl_6helper_BASE__G = 40;
 

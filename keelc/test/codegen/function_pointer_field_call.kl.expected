@@ -15,16 +15,19 @@ struct kl__Holder
 {
     kl__fn__F3i32E3i32 kl_cb;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_cb ) == 0, "layout" );
 
 struct kl__Counter
 {
     kl__fn__FR3i32E4void kl_step;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_step ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     kl__fn__FM3i32E3i32 kl_f;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 8 && _Alignof( struct kl__Box__I3i32E ) == 8 && offsetof( struct kl__Box__I3i32E, kl_f ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

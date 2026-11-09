@@ -10,6 +10,7 @@ struct kl__owned
     uint64_t kl_id;
     uint64_t* kl_block;
 };
+_Static_assert( sizeof( struct kl__owned ) == 16 && _Alignof( struct kl__owned ) == 8 && offsetof( struct kl__owned, kl_id ) == 0 && offsetof( struct kl__owned, kl_block ) == 8, "layout" );
 
 int32_t kl__live__G;
 
@@ -32,7 +33,7 @@ void kl__5owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_
 #line 10 "codegen/destroy.kl"
     ( *kl_this_1 ).kl_id = kl_n_2;
 #line 13 "codegen/destroy.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "codegen/destroy.kl", 13, "out of memory: alloc<u64>( 1 )" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "codegen/destroy.kl", 13, "out of memory: alloc<u64>( 1 )" );
 #line 13 "codegen/destroy.kl"
     ( *kl_this_1 ).kl_block = kl_t3;
 #line 15 "codegen/destroy.kl"
@@ -110,7 +111,7 @@ int32_t kl__4main__( void )
 #line 46 "codegen/destroy.kl"
     kl_t37 = false;
 #line 46 "codegen/destroy.kl"
-    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( struct kl__owned ), "codegen/destroy.kl", 46, "out of memory: alloc<owned>( 4 )" );
+    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 4, 16, "codegen/destroy.kl", 46, "out of memory: alloc<owned>( 4 )" );
 #line 46 "codegen/destroy.kl"
     kl_slots_1 = kl_t2;
     kl_t3 = kl_slots_1 + 0;
@@ -244,7 +245,7 @@ int32_t kl__4main__( void )
 #line 80 "codegen/destroy.kl"
     kl_rt_free( kl_slots_1 );
 #line 87 "codegen/destroy.kl"
-    kl_t32 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ), "codegen/destroy.kl", 87, "out of memory: alloc<i32>( 2 )" );
+    kl_t32 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/destroy.kl", 87, "out of memory: alloc<i32>( 2 )" );
 #line 87 "codegen/destroy.kl"
     kl_numbers_31 = kl_t32;
 #line 90 "codegen/destroy.kl"

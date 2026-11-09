@@ -10,11 +10,13 @@ struct kl__Owned
 {
     uint64_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_id ) == 0, "layout" );
 
 struct kl__Shadowed
 {
     int32_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Shadowed ) == 4 && _Alignof( struct kl__Shadowed ) == 4 && offsetof( struct kl__Shadowed, kl_id ) == 0, "layout" );
 
 int32_t kl__live__G;
 

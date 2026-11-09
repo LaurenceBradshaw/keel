@@ -11,11 +11,13 @@ struct kl__Pair
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Pair ) == 8 && _Alignof( struct kl__Pair ) == 4 && offsetof( struct kl__Pair, kl_x ) == 0 && offsetof( struct kl__Pair, kl_y ) == 4, "layout" );
 
 struct kl__Owner
 {
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Owner ) == 4 && _Alignof( struct kl__Owner ) == 4 && offsetof( struct kl__Owner, kl_tag ) == 0, "layout" );
 
 int32_t kl__calls__G;
 int32_t kl__drops__G;

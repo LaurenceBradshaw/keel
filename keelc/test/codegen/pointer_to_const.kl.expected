@@ -11,11 +11,13 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -365,7 +367,7 @@ int32_t kl__4main__( void )
     bb18:
     kl_many_39 = NULL;
 #line 89 "codegen/pointer_to_const.kl"
-    kl_t40 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( int32_t ), "codegen/pointer_to_const.kl", 89, "out of memory: alloc<i32>( 3 )" );
+    kl_t40 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 3, 4, "codegen/pointer_to_const.kl", 89, "out of memory: alloc<i32>( 3 )" );
 #line 89 "codegen/pointer_to_const.kl"
     kl_many_39 = kl_t40;
     kl_t41 = kl_many_39 + 0;

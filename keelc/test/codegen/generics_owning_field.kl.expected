@@ -12,21 +12,25 @@ struct kl__Buf
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Buf ) == 4 && _Alignof( struct kl__Buf ) == 4 && offsetof( struct kl__Buf, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3BufE
 {
     struct kl__Buf kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3BufE ) == 4 && _Alignof( struct kl__Box__I3BufE ) == 4 && offsetof( struct kl__Box__I3BufE, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3BoxI3BufEE
 {
     struct kl__Box__I3BufE kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3BoxI3BufEE ) == 4 && _Alignof( struct kl__Box__I3BoxI3BufEE ) == 4 && offsetof( struct kl__Box__I3BoxI3BufEE, kl_v ) == 0, "layout" );
 
 int32_t kl__destroyed__G = 0;
 

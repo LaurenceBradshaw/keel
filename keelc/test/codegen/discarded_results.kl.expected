@@ -11,6 +11,7 @@ struct kl__Counter
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 int32_t kl__drops__G = 0;
 

@@ -10,6 +10,7 @@ struct kl__P
     int32_t kl_a;
     int32_t kl_b;
 };
+_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_a ) == 0 && offsetof( struct kl__P, kl_b ) == 4, "layout" );
 
 int32_t kl__trace__G;
 
@@ -201,7 +202,7 @@ int32_t kl__4main__( void )
 #line 45 "codegen/evaluation_order.kl"
     kl__trace__G = 0;
 #line 49 "codegen/evaluation_order.kl"
-    kl_t25 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/evaluation_order.kl", 49, "out of memory: alloc<i32>( 4 )" );
+    kl_t25 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, 4, "codegen/evaluation_order.kl", 49, "out of memory: alloc<i32>( 4 )" );
 #line 49 "codegen/evaluation_order.kl"
     kl_slots_24 = kl_t25;
     kl_t26 = kl__4note__3i32( 1 );

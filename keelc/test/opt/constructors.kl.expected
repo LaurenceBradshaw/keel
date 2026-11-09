@@ -11,17 +11,20 @@ struct kl__Box
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Held
 {
     struct kl__Box kl_box;
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Held ) == 8 && _Alignof( struct kl__Held ) == 4 && offsetof( struct kl__Held, kl_box ) == 0 && offsetof( struct kl__Held, kl_n ) == 4, "layout" );
 
 struct kl__Logged
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Logged ) == 4 && _Alignof( struct kl__Logged ) == 4 && offsetof( struct kl__Logged, kl_value ) == 0, "layout" );
 
 int32_t kl__live__G;
 

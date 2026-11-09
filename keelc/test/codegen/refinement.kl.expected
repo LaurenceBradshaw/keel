@@ -9,6 +9,7 @@ struct kl__Square
 {
     double kl_side;
 };
+_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

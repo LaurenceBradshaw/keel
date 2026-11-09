@@ -44,18 +44,21 @@ struct kl_2kl6string_string
     uint64_t kl_size_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_joined_text
 {
     uint8_t* kl_data_;
     uint64_t kl_size_;
 };
+_Static_assert( sizeof( struct kl_7prelude_joined_text ) == 16 && _Alignof( struct kl_7prelude_joined_text ) == 8 && offsetof( struct kl_7prelude_joined_text, kl_data_ ) == 0 && offsetof( struct kl_7prelude_joined_text, kl_size_ ) == 8, "layout" );
 
 struct kl_7prelude_hasher
 {
@@ -65,18 +68,33 @@ struct kl_7prelude_hasher
     uint64_t kl_v3_;
     uint64_t kl_bytes_;
 };
+_Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
 struct kl_2kl6string_parse_error
 {
     int32_t tag;
-    uint64_t kl_13invalid_digit_index;
+    union
+    {
+        struct
+        {
+            uint64_t kl_13invalid_digit_index;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl6string_parse_error ) == 16 && _Alignof( struct kl_2kl6string_parse_error ) == 8 && offsetof( struct kl_2kl6string_parse_error, kl_13invalid_digit_index ) == 8, "layout" );
 
 struct kl_2kl8optional_optional__I3u64E
 {
     int32_t tag;
-    uint64_t kl_4some_value;
+    union
+    {
+        struct
+        {
+            uint64_t kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I3u64E ) == 16 && _Alignof( struct kl_2kl8optional_optional__I3u64E ) == 8 && offsetof( struct kl_2kl8optional_optional__I3u64E, kl_4some_value ) == 8, "layout" );
 
 struct kl_2kl4list_list__IQ2kl6stringE
 {
@@ -84,19 +102,37 @@ struct kl_2kl4list_list__IQ2kl6stringE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ2kl6stringE ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl8optional_optional__IQ2kl6stringE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_4some_value;
+    union
+    {
+        struct
+        {
+            struct kl_2kl6string_string kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__IQ2kl6stringE ) == 32 && _Alignof( struct kl_2kl8optional_optional__IQ2kl6stringE ) == 8 && offsetof( struct kl_2kl8optional_optional__IQ2kl6stringE, kl_4some_value ) == 8, "layout" );
 
 struct kl_7prelude_result__I3i64_Q2kl11parse_errorE
 {
     int32_t tag;
-    int64_t kl_2ok_value;
-    struct kl_2kl6string_parse_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            int64_t kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl6string_parse_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3i64_Q2kl11parse_errorE ) == 24 && _Alignof( struct kl_7prelude_result__I3i64_Q2kl11parse_errorE ) == 8 && offsetof( struct kl_7prelude_result__I3i64_Q2kl11parse_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__I3i64_Q2kl11parse_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -212,7 +248,7 @@ void kl_2kl6string_6string__RQ2kl6string_7textual__ctor( struct kl_2kl6string_st
 #line 41 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_t6 = ( kl_bytes_3 ).size;
 #line 41 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t7 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t6, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 41, "out of memory: alloc<u8>( bytes.size )" );
+    kl_t7 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t6, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 41, "out of memory: alloc<u8>( bytes.size )" );
 #line 41 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     ( *kl_this_1 ).kl_data_ = kl_t7;
 #line 44 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -291,7 +327,7 @@ struct kl_2kl6string_string kl_2kl6string_13with_capacity__SQ2kl6string_3u64( ui
 #line 58 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t3 );
 #line 61 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 61, "out of memory: alloc<u8>( capacity )" );
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 61, "out of memory: alloc<u8>( capacity )" );
 #line 61 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_result_2.kl_data_ = kl_t5;
 #line 61 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
@@ -3542,7 +3578,7 @@ void kl_2kl6string_10reallocate__SQ2kl6string_3u64( struct kl_2kl6string_string*
     uint8_t* kl_t8;
     bool kl_t9;
 #line 623 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 623, "out of memory: alloc<u8>( n )" );
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl", 623, "out of memory: alloc<u8>( n )" );
 #line 623 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/string.kl"
     kl_new_data_3 = kl_t4;
     kl_i_5 = 0;
@@ -3903,7 +3939,7 @@ void kl_2kl4list_10reallocate__IQ2kl6stringE__SQ2kl4listIQ2kl6stringE_3u64( stru
     struct kl_2kl6string_string* kl_t9;
     bool kl_t10;
 #line 449 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
-    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl_2kl6string_string ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( struct kl_2kl6string_string* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
@@ -4037,11 +4073,13 @@ struct kl_2kl6string_string
     uint64_t kl_size_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl2os_path
 {
     struct kl_2kl6string_string kl_text_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_path ) == 24 && _Alignof( struct kl_2kl2os_path ) == 8 && offsetof( struct kl_2kl2os_path, kl_text_ ) == 0, "layout" );
 
 struct kl_2kl2os_input_buffer
 {
@@ -4049,6 +4087,7 @@ struct kl_2kl2os_input_buffer
     uint64_t kl_start;
     uint64_t kl_end;
 };
+_Static_assert( sizeof( struct kl_2kl2os_input_buffer ) == 24 && _Alignof( struct kl_2kl2os_input_buffer ) == 8 && offsetof( struct kl_2kl2os_input_buffer, kl_data ) == 0 && offsetof( struct kl_2kl2os_input_buffer, kl_start ) == 8 && offsetof( struct kl_2kl2os_input_buffer, kl_end ) == 16, "layout" );
 
 struct kl_2kl2os_file
 {
@@ -4059,6 +4098,7 @@ struct kl_2kl2os_file
     uint64_t kl_end_;
     bool kl_shared_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_file ) == 40 && _Alignof( struct kl_2kl2os_file ) == 8 && offsetof( struct kl_2kl2os_file, kl_fd_ ) == 0 && offsetof( struct kl_2kl2os_file, kl_owns_ ) == 4 && offsetof( struct kl_2kl2os_file, kl_buffer_ ) == 8 && offsetof( struct kl_2kl2os_file, kl_start_ ) == 16 && offsetof( struct kl_2kl2os_file, kl_end_ ) == 24 && offsetof( struct kl_2kl2os_file, kl_shared_ ) == 32, "layout" );
 
 struct kl_2kl2os_process
 {
@@ -4067,84 +4107,175 @@ struct kl_2kl2os_process
     int32_t kl_status_;
     int32_t kl_output_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_process ) == 24 && _Alignof( struct kl_2kl2os_process ) == 8 && offsetof( struct kl_2kl2os_process, kl_pid_ ) == 0 && offsetof( struct kl_2kl2os_process, kl_waited_ ) == 8 && offsetof( struct kl_2kl2os_process, kl_status_ ) == 12 && offsetof( struct kl_2kl2os_process, kl_output_ ) == 16, "layout" );
 
 struct kl_2kl2os_captured
 {
     int32_t kl_code;
     struct kl_2kl6string_string kl_output;
 };
+_Static_assert( sizeof( struct kl_2kl2os_captured ) == 32 && _Alignof( struct kl_2kl2os_captured ) == 8 && offsetof( struct kl_2kl2os_captured, kl_code ) == 0 && offsetof( struct kl_2kl2os_captured, kl_output ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl2os_os_error
 {
     int32_t tag;
-    int32_t kl_5other_code;
+    union
+    {
+        struct
+        {
+            int32_t kl_5other_code;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_os_error ) == 8 && _Alignof( struct kl_2kl2os_os_error ) == 4 && offsetof( struct kl_2kl2os_os_error, kl_5other_code ) == 4, "layout" );
 
 struct kl_2kl2os_file_error
 {
     int32_t tag;
-    struct kl_2kl2os_os_error kl_2os_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_os_error kl_2os_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_file_error ) == 12 && _Alignof( struct kl_2kl2os_file_error ) == 4 && offsetof( struct kl_2kl2os_file_error, kl_2os_error ) == 4, "layout" );
 
 struct kl_2kl8optional_optional__IQ2kl6stringE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_4some_value;
+    union
+    {
+        struct
+        {
+            struct kl_2kl6string_string kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__IQ2kl6stringE ) == 32 && _Alignof( struct kl_2kl8optional_optional__IQ2kl6stringE ) == 8 && offsetof( struct kl_2kl8optional_optional__IQ2kl6stringE, kl_4some_value ) == 8, "layout" );
 
 struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl2os_file kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_file kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE ) == 48 && _Alignof( struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4file_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__I3u64_Q2kl10file_errorE
 {
     int32_t tag;
-    uint64_t kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            uint64_t kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3u64_Q2kl10file_errorE ) == 24 && _Alignof( struct kl_7prelude_result__I3u64_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__I3u64_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__I3u64_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl6string_string kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl6string_string kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE ) == 32 && _Alignof( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__I4bool_Q2kl10file_errorE
 {
     int32_t tag;
-    bool kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            bool kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE ) == 16 && _Alignof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE ) == 4 && offsetof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_result__I4void_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I4void_Q2kl10file_errorE ) == 16 && _Alignof( struct kl_7prelude_result__I4void_Q2kl10file_errorE ) == 4 && offsetof( struct kl_7prelude_result__I4void_Q2kl10file_errorE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_result__I3i32_Q2kl8os_errorE
 {
     int32_t tag;
-    int32_t kl_2ok_value;
-    struct kl_2kl2os_os_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_os_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3i32_Q2kl8os_errorE ) == 12 && _Alignof( struct kl_7prelude_result__I3i32_Q2kl8os_errorE ) == 4 && offsetof( struct kl_7prelude_result__I3i32_Q2kl8os_errorE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_Q2kl8os_errorE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE
 {
     int32_t tag;
-    int32_t kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE ) == 16 && _Alignof( struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE ) == 4 && offsetof( struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__IQ2kl9path_kind_Q2kl10file_errorE, kl_3err_error ) == 4, "layout" );
 
 struct kl_2kl4list_list__IQ2kl4pathE
 {
@@ -4152,20 +4283,41 @@ struct kl_2kl4list_list__IQ2kl4pathE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl4pathE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ2kl4pathE ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_cap_ ) == 16, "layout" );
 
 struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl4list_list__IQ2kl4pathE kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl4list_list__IQ2kl4pathE kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE ) == 32 && _Alignof( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4listIQ2kl4pathE_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE
 {
     int32_t tag;
-    struct kl_2kl2os_path kl_2ok_value;
-    struct kl_2kl2os_os_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_path kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_os_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE ) == 32 && _Alignof( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -6328,7 +6480,7 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_4fill__SQ2kl4file(
 #line 548 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
-    kl_t6 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 550, "out of memory: alloc<u8>( FILE_BUFFER )" );
+    kl_t6 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 550, "out of memory: alloc<u8>( FILE_BUFFER )" );
 #line 550 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_2kl2os_input__G.kl_data = kl_t6;
 #line 548 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -6400,7 +6552,7 @@ struct kl_7prelude_result__I4void_Q2kl10file_errorE kl_2kl2os_4fill__SQ2kl4file(
 #line 576 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     if ( kl_t21 ) goto bb12; else goto bb13;
     bb12:
-    kl_t22 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 578, "out of memory: alloc<u8>( FILE_BUFFER )" );
+    kl_t22 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 578, "out of memory: alloc<u8>( FILE_BUFFER )" );
 #line 578 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     ( *kl_this_1 ).kl_buffer_ = kl_t22;
 #line 576 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
@@ -7497,7 +7649,7 @@ struct kl_7prelude_result__IQ2kl6string_Q2kl10file_errorE kl_2kl2os_11read_outpu
 #line 851 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_2kl6string_6string__RQ2kl6string__ctor( kl_t9 );
 #line 854 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t11 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 854, "out of memory: alloc<u8>( FILE_BUFFER )" );
+    kl_t11 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 65536, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 854, "out of memory: alloc<u8>( FILE_BUFFER )" );
 #line 854 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_buffer_7 = kl_t11;
     goto bb3;
@@ -7833,7 +7985,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_12program_path__(
     kl_bytes_2 = NULL;
     kl_status_3 = 0;
 #line 1005 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1005, "out of memory: alloc<u8>( size )" );
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1005, "out of memory: alloc<u8>( size )" );
 #line 1005 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_bytes_2 = kl_t4;
     kl_t5 = ( uint64_t ) 0;
@@ -7882,7 +8034,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_12program_path__(
     bb7:
 #line 1011 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_size_1 = kl_size_1 * 2;
-    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1012, "out of memory: alloc<u8>( size )" );
+    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1012, "out of memory: alloc<u8>( size )" );
 #line 1012 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_bytes_2 = kl_t16;
     kl_t17 = ( uint64_t ) 0;
@@ -8065,7 +8217,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_17current_directo
     kl_bytes_2 = NULL;
     kl_status_3 = 0;
 #line 1043 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1043, "out of memory: alloc<u8>( size )" );
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1043, "out of memory: alloc<u8>( size )" );
 #line 1043 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_bytes_2 = kl_t4;
     kl_t5 = ( uint64_t ) 0;
@@ -8114,7 +8266,7 @@ struct kl_7prelude_result__IQ2kl4path_Q2kl8os_errorE kl_2kl2os_17current_directo
     bb7:
 #line 1049 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_size_1 = kl_size_1 * 2;
-    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, sizeof( uint8_t ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1050, "out of memory: alloc<u8>( size )" );
+    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_1, 1, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl", 1050, "out of memory: alloc<u8>( size )" );
 #line 1050 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/os.kl"
     kl_bytes_2 = kl_t16;
     kl_t17 = ( uint64_t ) 0;
@@ -8512,7 +8664,7 @@ void kl_2kl4list_10reallocate__IQ2kl4pathE__SQ2kl4listIQ2kl4pathE_3u64( struct k
     struct kl_2kl2os_path* kl_t9;
     bool kl_t10;
 #line 449 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
-    kl_t4 = ( struct kl_2kl2os_path* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl_2kl2os_path ), "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( struct kl_2kl2os_path* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 24, "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/list.kl"
@@ -8689,6 +8841,7 @@ struct kl_2kl6string_string
     uint64_t kl_size_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl2os_file
 {
@@ -8699,31 +8852,57 @@ struct kl_2kl2os_file
     uint64_t kl_end_;
     bool kl_shared_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_file ) == 40 && _Alignof( struct kl_2kl2os_file ) == 8 && offsetof( struct kl_2kl2os_file, kl_fd_ ) == 0 && offsetof( struct kl_2kl2os_file, kl_owns_ ) == 4 && offsetof( struct kl_2kl2os_file, kl_buffer_ ) == 8 && offsetof( struct kl_2kl2os_file, kl_start_ ) == 16 && offsetof( struct kl_2kl2os_file, kl_end_ ) == 24 && offsetof( struct kl_2kl2os_file, kl_shared_ ) == 32, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl2os_os_error
 {
     int32_t tag;
-    int32_t kl_5other_code;
+    union
+    {
+        struct
+        {
+            int32_t kl_5other_code;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_os_error ) == 8 && _Alignof( struct kl_2kl2os_os_error ) == 4 && offsetof( struct kl_2kl2os_os_error, kl_5other_code ) == 4, "layout" );
 
 struct kl_2kl2os_file_error
 {
     int32_t tag;
-    struct kl_2kl2os_os_error kl_2os_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_os_error kl_2os_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_file_error ) == 12 && _Alignof( struct kl_2kl2os_file_error ) == 4 && offsetof( struct kl_2kl2os_file_error, kl_2os_error ) == 4, "layout" );
 
 struct kl_7prelude_result__I4bool_Q2kl10file_errorE
 {
     int32_t tag;
-    bool kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            bool kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE ) == 16 && _Alignof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE ) == 4 && offsetof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I4bool_Q2kl10file_errorE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -9094,6 +9273,7 @@ struct kl__Square
 {
     double kl_side;
 };
+_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
 
 struct kl_2kl6string_string
 {
@@ -9101,11 +9281,13 @@ struct kl_2kl6string_string
     uint64_t kl_size_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl6string_string ) == 24 && _Alignof( struct kl_2kl6string_string ) == 8 && offsetof( struct kl_2kl6string_string, kl_data_ ) == 0 && offsetof( struct kl_2kl6string_string, kl_size_ ) == 8 && offsetof( struct kl_2kl6string_string, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl2os_path
 {
     struct kl_2kl6string_string kl_text_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_path ) == 24 && _Alignof( struct kl_2kl2os_path ) == 8 && offsetof( struct kl_2kl2os_path, kl_text_ ) == 0, "layout" );
 
 struct kl_2kl2os_process
 {
@@ -9114,30 +9296,47 @@ struct kl_2kl2os_process
     int32_t kl_status_;
     int32_t kl_output_;
 };
+_Static_assert( sizeof( struct kl_2kl2os_process ) == 24 && _Alignof( struct kl_2kl2os_process ) == 8 && offsetof( struct kl_2kl2os_process, kl_pid_ ) == 0 && offsetof( struct kl_2kl2os_process, kl_waited_ ) == 8 && offsetof( struct kl_2kl2os_process, kl_status_ ) == 12 && offsetof( struct kl_2kl2os_process, kl_output_ ) == 16, "layout" );
 
 struct kl_2kl2os_captured
 {
     int32_t kl_code;
     struct kl_2kl6string_string kl_output;
 };
+_Static_assert( sizeof( struct kl_2kl2os_captured ) == 32 && _Alignof( struct kl_2kl2os_captured ) == 8 && offsetof( struct kl_2kl2os_captured, kl_code ) == 0 && offsetof( struct kl_2kl2os_captured, kl_output ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl2os_os_error
 {
     int32_t tag;
-    int32_t kl_5other_code;
+    union
+    {
+        struct
+        {
+            int32_t kl_5other_code;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_os_error ) == 8 && _Alignof( struct kl_2kl2os_os_error ) == 4 && offsetof( struct kl_2kl2os_os_error, kl_5other_code ) == 4, "layout" );
 
 struct kl_2kl2os_file_error
 {
     int32_t tag;
-    struct kl_2kl2os_os_error kl_2os_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_os_error kl_2os_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl2os_file_error ) == 12 && _Alignof( struct kl_2kl2os_file_error ) == 4 && offsetof( struct kl_2kl2os_file_error, kl_2os_error ) == 4, "layout" );
 
 struct kl_2kl4list_list__IQ2kl6stringE
 {
@@ -9145,18 +9344,30 @@ struct kl_2kl4list_list__IQ2kl6stringE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl6stringE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ2kl6stringE ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl6stringE, kl_cap_ ) == 16, "layout" );
 
 struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl2os_process kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_process kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE ) == 32 && _Alignof( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl7process_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_box__I5ShapeE
 {
     struct kl__Shape__ref kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I5ShapeE ) == 16 && _Alignof( struct kl_7prelude_box__I5ShapeE ) == 8 && offsetof( struct kl_7prelude_box__I5ShapeE, kl_p_ ) == 0, "layout" );
 
 struct kl_2kl4list_list__IQ2kl4pathE
 {
@@ -9164,18 +9375,30 @@ struct kl_2kl4list_list__IQ2kl4pathE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__IQ2kl4pathE ) == 24 && _Alignof( struct kl_2kl4list_list__IQ2kl4pathE ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__IQ2kl4pathE, kl_cap_ ) == 16, "layout" );
 
 struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE
 {
     int32_t tag;
-    struct kl_2kl2os_captured kl_2ok_value;
-    struct kl_2kl2os_file_error kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl_2kl2os_captured kl_2ok_value;
+        };
+        struct
+        {
+            struct kl_2kl2os_file_error kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 40 && _Alignof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__IQ2kl8captured_Q2kl10file_errorE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_box__I6SquareE
 {
     struct kl__Square* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I6SquareE ) == 8 && _Alignof( struct kl_7prelude_box__I6SquareE ) == 8 && offsetof( struct kl_7prelude_box__I6SquareE, kl_p_ ) == 0, "layout" );
 
 struct kl__Shape__vtable
 {
@@ -9680,7 +9903,7 @@ void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct
     struct kl__Square* kl_t6;
     struct kl__Square* kl_t7;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, 8, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

@@ -9,6 +9,7 @@ struct kl_6shapes5kinds_Tracked
 {
     int64_t kl_n;
 };
+_Static_assert( sizeof( struct kl_6shapes5kinds_Tracked ) == 8 && _Alignof( struct kl_6shapes5kinds_Tracked ) == 8 && offsetof( struct kl_6shapes5kinds_Tracked, kl_n ) == 0, "layout" );
 
 int32_t kl_6shapes5kinds_drops__G = 0;
 
@@ -70,21 +71,25 @@ struct kl_6shapes5kinds_Rod
 {
     int64_t kl_length;
 };
+_Static_assert( sizeof( struct kl_6shapes5kinds_Rod ) == 8 && _Alignof( struct kl_6shapes5kinds_Rod ) == 8 && offsetof( struct kl_6shapes5kinds_Rod, kl_length ) == 0, "layout" );
 
 struct kl_6shapes5kinds_Tracked
 {
     int64_t kl_n;
 };
+_Static_assert( sizeof( struct kl_6shapes5kinds_Tracked ) == 8 && _Alignof( struct kl_6shapes5kinds_Tracked ) == 8 && offsetof( struct kl_6shapes5kinds_Tracked, kl_n ) == 0, "layout" );
 
 struct kl_7prelude_box__I8MeasuredE
 {
     struct kl__Measured__ref kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I8MeasuredE ) == 16 && _Alignof( struct kl_7prelude_box__I8MeasuredE ) == 8 && offsetof( struct kl_7prelude_box__I8MeasuredE, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__IQ6shapes7TrackedE
 {
     struct kl_6shapes5kinds_Tracked* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__IQ6shapes7TrackedE ) == 8 && _Alignof( struct kl_7prelude_box__IQ6shapes7TrackedE ) == 8 && offsetof( struct kl_7prelude_box__IQ6shapes7TrackedE, kl_p_ ) == 0, "layout" );
 
 struct kl__Measured__vtable
 {
@@ -536,7 +541,7 @@ void kl_7prelude_3box__IQ6shapes7TrackedE__RQ7prelude3boxIQ6shapes7TrackedE_MQ6s
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl_6shapes5kinds_Tracked* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl_6shapes5kinds_Tracked ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl_6shapes5kinds_Tracked* ) kl_rt_alloc_many( ( size_t ) 1, 8, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

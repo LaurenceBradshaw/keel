@@ -69,6 +69,7 @@ struct Held_field
 {
     Node_id declaration {};
     Type_id type {};
+    Node_id variant {}; // a payload field's variant, else invalid
 };
 
 // The program as every backend is told it: each declaration's symbol and parameters and each

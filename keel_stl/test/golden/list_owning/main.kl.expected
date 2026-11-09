@@ -31,12 +31,14 @@ struct kl__owned
     uint64_t kl_id;
     uint64_t* kl_block;
 };
+_Static_assert( sizeof( struct kl__owned ) == 16 && _Alignof( struct kl__owned ) == 8 && offsetof( struct kl__owned, kl_id ) == 0 && offsetof( struct kl__owned, kl_block ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl4list_list__I5ownedE
 {
@@ -44,6 +46,7 @@ struct kl_2kl4list_list__I5ownedE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__I5ownedE ) == 24 && _Alignof( struct kl_2kl4list_list__I5ownedE ) == 8 && offsetof( struct kl_2kl4list_list__I5ownedE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I5ownedE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I5ownedE, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl4list_list__I3i32E
 {
@@ -51,6 +54,7 @@ struct kl_2kl4list_list__I3i32E
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__I3i32E ) == 24 && _Alignof( struct kl_2kl4list_list__I3i32E ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I3i32E, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_cap_ ) == 16, "layout" );
 
 int32_t kl__live__G;
 
@@ -109,7 +113,7 @@ void kl__5owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_
 #line 12 "list_owning/main.kl"
     ( *kl_this_1 ).kl_id = kl_n_2;
 #line 15 "list_owning/main.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "list_owning/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "list_owning/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
 #line 15 "list_owning/main.kl"
     ( *kl_this_1 ).kl_block = kl_t3;
 #line 17 "list_owning/main.kl"
@@ -1729,7 +1733,7 @@ struct kl_2kl4list_list__I5ownedE kl_2kl4list_13with_capacity__I5ownedE__SQ2kl4l
 #line 28 "../../src/list.kl"
     kl_t6 = true;
 #line 32 "../../src/list.kl"
-    kl_t5 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( struct kl__owned ), "../../src/list.kl", 32, "out of memory: alloc<T>( capacity )" );
+    kl_t5 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, 16, "../../src/list.kl", 32, "out of memory: alloc<T>( capacity )" );
 #line 32 "../../src/list.kl"
     kl_result_2.kl_data_ = kl_t5;
 #line 32 "../../src/list.kl"
@@ -2298,7 +2302,7 @@ void kl_2kl4list_10reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl4
     struct kl__owned* kl_t9;
     bool kl_t10;
 #line 449 "../../src/list.kl"
-    kl_t4 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__owned ), "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 16, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "../../src/list.kl"
@@ -2360,7 +2364,7 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t9;
     bool kl_t10;
 #line 449 "../../src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "../../src/list.kl"

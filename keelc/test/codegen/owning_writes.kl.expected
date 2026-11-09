@@ -11,12 +11,14 @@ struct kl__owned
     uint64_t kl_id;
     uint64_t* kl_block;
 };
+_Static_assert( sizeof( struct kl__owned ) == 16 && _Alignof( struct kl__owned ) == 8 && offsetof( struct kl__owned, kl_id ) == 0 && offsetof( struct kl__owned, kl_block ) == 8, "layout" );
 
 struct kl__slots
 {
     struct kl__owned* kl_data;
     uint64_t kl_count;
 };
+_Static_assert( sizeof( struct kl__slots ) == 16 && _Alignof( struct kl__slots ) == 8 && offsetof( struct kl__slots, kl_data ) == 0 && offsetof( struct kl__slots, kl_count ) == 8, "layout" );
 
 int32_t kl__live__G;
 
@@ -43,7 +45,7 @@ void kl__5owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_
 #line 11 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_id = kl_n_2;
 #line 14 "codegen/owning_writes.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "codegen/owning_writes.kl", 14, "out of memory: alloc<u64>( 1 )" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "codegen/owning_writes.kl", 14, "out of memory: alloc<u64>( 1 )" );
 #line 14 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_block = kl_t3;
 #line 16 "codegen/owning_writes.kl"
@@ -95,7 +97,7 @@ void kl__5slots__R5slots__ctor( struct kl__slots* kl_this_1 )
 {
     struct kl__owned* kl_t2;
 #line 43 "codegen/owning_writes.kl"
-    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__owned ), "codegen/owning_writes.kl", 43, "out of memory: alloc<owned>( 2 )" );
+    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 2, 16, "codegen/owning_writes.kl", 43, "out of memory: alloc<owned>( 2 )" );
 #line 43 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_data = kl_t2;
 #line 45 "codegen/owning_writes.kl"

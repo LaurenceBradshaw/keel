@@ -12,23 +12,33 @@ struct kl__Counted
 {
     int64_t* kl_drops_;
 };
+_Static_assert( sizeof( struct kl__Counted ) == 8 && _Alignof( struct kl__Counted ) == 8 && offsetof( struct kl__Counted, kl_drops_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I4ListE
 {
     struct kl__List* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I4ListE ) == 8 && _Alignof( struct kl_7prelude_box__I4ListE ) == 8 && offsetof( struct kl_7prelude_box__I4ListE, kl_p_ ) == 0, "layout" );
 
 struct kl__List
 {
     int32_t tag;
-    int64_t kl_4Cons_v;
-    struct kl_7prelude_box__I4ListE kl_4Cons_rest;
+    union
+    {
+        struct
+        {
+            int64_t kl_4Cons_v;
+            struct kl_7prelude_box__I4ListE kl_4Cons_rest;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__List ) == 24 && _Alignof( struct kl__List ) == 8 && offsetof( struct kl__List, kl_4Cons_v ) == 8 && offsetof( struct kl__List, kl_4Cons_rest ) == 16, "layout" );
 
 struct kl_7prelude_box__I7CountedE
 {
     struct kl__Counted* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I7CountedE ) == 8 && _Alignof( struct kl_7prelude_box__I7CountedE ) == 8 && offsetof( struct kl_7prelude_box__I7CountedE, kl_p_ ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -512,7 +522,7 @@ void kl_7prelude_3box__I4ListE__RQ7prelude3boxI4ListE_M4List__ctor( struct kl_7p
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__List ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__List* ) kl_rt_alloc_many( ( size_t ) 1, 24, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
@@ -546,7 +556,7 @@ void kl_7prelude_3box__I7CountedE__RQ7prelude3boxI7CountedE_M7Counted__ctor( str
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Counted* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Counted ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Counted* ) kl_rt_alloc_many( ( size_t ) 1, 8, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

@@ -9,16 +9,33 @@ struct kl__Slot;
 struct kl__Shape
 {
     int32_t tag;
-    double kl_6Circle_radius;
-    double kl_4Rect_width;
-    double kl_4Rect_height;
+    union
+    {
+        struct
+        {
+            double kl_6Circle_radius;
+        };
+        struct
+        {
+            double kl_4Rect_width;
+            double kl_4Rect_height;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 24 && _Alignof( struct kl__Shape ) == 8 && offsetof( struct kl__Shape, kl_6Circle_radius ) == 8 && offsetof( struct kl__Shape, kl_4Rect_width ) == 8 && offsetof( struct kl__Shape, kl_4Rect_height ) == 16, "layout" );
 
 struct kl__Slot
 {
     int32_t tag;
-    int32_t kl_5Taken_value;
+    union
+    {
+        struct
+        {
+            int32_t kl_5Taken_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Slot ) == 8 && _Alignof( struct kl__Slot ) == 4 && offsetof( struct kl__Slot, kl_5Taken_value ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

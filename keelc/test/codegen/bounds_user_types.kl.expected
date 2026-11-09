@@ -11,12 +11,14 @@ struct kl__Version
     int32_t kl_major;
     int32_t kl_minor;
 };
+_Static_assert( sizeof( struct kl__Version ) == 8 && _Alignof( struct kl__Version ) == 4 && offsetof( struct kl__Version, kl_major ) == 0 && offsetof( struct kl__Version, kl_minor ) == 4, "layout" );
 
 struct kl__Pair__I3i32E
 {
     int32_t kl_left;
     int32_t kl_right;
 };
+_Static_assert( sizeof( struct kl__Pair__I3i32E ) == 8 && _Alignof( struct kl__Pair__I3i32E ) == 4 && offsetof( struct kl__Pair__I3i32E, kl_left ) == 0 && offsetof( struct kl__Pair__I3i32E, kl_right ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

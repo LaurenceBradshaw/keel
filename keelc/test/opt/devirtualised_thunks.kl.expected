@@ -18,11 +18,13 @@ struct kl__tally
 {
     int64_t kl_sum_;
 };
+_Static_assert( sizeof( struct kl__tally ) == 8 && _Alignof( struct kl__tally ) == 8 && offsetof( struct kl__tally, kl_sum_ ) == 0, "layout" );
 
 struct kl__Wrap__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Wrap__I3i32E ) == 4 && _Alignof( struct kl__Wrap__I3i32E ) == 4 && offsetof( struct kl__Wrap__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Named__vtable
 {

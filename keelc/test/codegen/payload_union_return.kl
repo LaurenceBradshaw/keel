@@ -1,0 +1,82 @@
+// A payload enum's variants share one union. A local the release build would construct in place in
+// one variant's payload of the return slot must not be there when the other variant is returned,
+// or writing that variant overwrites it and its drop frees what was written.
+import t::console;
+
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        t::print( "drop ", "" );
+        t::print( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+class Held
+{
+    public Buf buf;
+
+    public Held( move Buf b )
+    {
+        buf = move b;
+    }
+};
+
+enum Outcome
+{
+    good( Held held ),
+    bad( Buf why ),
+};
+
+Outcome parse( bool fail )
+{
+    Buf kept = Buf( 1 );
+    if( fail )
+    {
+        return Outcome::bad( Buf( 2 ) );
+    }
+    return Outcome::good( Held( move kept ) );
+}
+
+i32 main()
+{
+    switch( parse( true ) )
+    {
+        case Outcome::good( held ):
+            return 1;
+        case Outcome::bad( why ):
+            t::print( why.get() );
+            break;
+    }
+    switch( parse( false ) )
+    {
+        case Outcome::good( held ):
+            t::print( held.buf.get() );
+            break;
+        case Outcome::bad( why ):
+            return 2;
+    }
+    return 0;
+}

@@ -13,23 +13,27 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Buffer
 {
     uint64_t kl_size;
     uint64_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_size ) == 0 && offsetof( struct kl__Buffer, kl_data ) == 8, "layout" );
 
 struct kl__Owner
 {
     struct kl__Buffer kl_buffer;
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Owner ) == 24 && _Alignof( struct kl__Owner ) == 8 && offsetof( struct kl__Owner, kl_buffer ) == 0 && offsetof( struct kl__Owner, kl_tag ) == 16, "layout" );
 
 struct kl__Holder__I3i32E
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Holder__I3i32E ) == 4 && _Alignof( struct kl__Holder__I3i32E ) == 4 && offsetof( struct kl__Holder__I3i32E, kl_value ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -51,7 +55,7 @@ void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl
 #line 18 "codegen/const_field.kl"
     ( *kl_this_1 ).kl_size = kl_n_2;
 #line 21 "codegen/const_field.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ), "codegen/const_field.kl", 21, "out of memory: alloc<u64>( n )" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 8, "codegen/const_field.kl", 21, "out of memory: alloc<u64>( n )" );
 #line 21 "codegen/const_field.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 23 "codegen/const_field.kl"

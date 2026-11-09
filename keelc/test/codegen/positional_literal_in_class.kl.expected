@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -312,24 +313,28 @@ struct kl__noisy
 {
     int32_t kl_n_;
 };
+_Static_assert( sizeof( struct kl__noisy ) == 4 && _Alignof( struct kl__noisy ) == 4 && offsetof( struct kl__noisy, kl_n_ ) == 0, "layout" );
 
 struct kl__pair
 {
     int32_t kl_a_;
     struct kl__noisy kl_b_;
 };
+_Static_assert( sizeof( struct kl__pair ) == 8 && _Alignof( struct kl__pair ) == 4 && offsetof( struct kl__pair, kl_a_ ) == 0 && offsetof( struct kl__pair, kl_b_ ) == 4, "layout" );
 
 struct kl__point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__point ) == 8 && _Alignof( struct kl__point ) == 4 && offsetof( struct kl__point, kl_x ) == 0 && offsetof( struct kl__point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

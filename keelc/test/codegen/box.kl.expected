@@ -21,38 +21,45 @@ struct kl__Square
 {
     double kl_side;
 };
+_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
 
 struct kl__Buffer
 {
     uint8_t* kl_bytes;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_bytes ) == 0 && offsetof( struct kl__Buffer, kl_size ) == 8, "layout" );
 
 struct kl__Framed
 {
     struct kl__Buffer kl_frame;
     double kl_extra;
 };
+_Static_assert( sizeof( struct kl__Framed ) == 24 && _Alignof( struct kl__Framed ) == 8 && offsetof( struct kl__Framed, kl_frame ) == 0 && offsetof( struct kl__Framed, kl_extra ) == 16, "layout" );
 
 struct kl_7prelude_box__I5ShapeE
 {
     struct kl__Shape__ref kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I5ShapeE ) == 16 && _Alignof( struct kl_7prelude_box__I5ShapeE ) == 8 && offsetof( struct kl_7prelude_box__I5ShapeE, kl_p_ ) == 0, "layout" );
 
 struct kl__Scene
 {
     struct kl_7prelude_box__I5ShapeE kl_main;
 };
+_Static_assert( sizeof( struct kl__Scene ) == 16 && _Alignof( struct kl__Scene ) == 8 && offsetof( struct kl__Scene, kl_main ) == 0, "layout" );
 
 struct kl_7prelude_box__I6FramedE
 {
     struct kl__Framed* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I6FramedE ) == 8 && _Alignof( struct kl_7prelude_box__I6FramedE ) == 8 && offsetof( struct kl_7prelude_box__I6FramedE, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I6SquareE
 {
     struct kl__Square* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I6SquareE ) == 8 && _Alignof( struct kl_7prelude_box__I6SquareE ) == 8 && offsetof( struct kl_7prelude_box__I6SquareE, kl_p_ ) == 0, "layout" );
 
 struct kl__Shape__vtable
 {
@@ -129,7 +136,7 @@ void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl
 {
     uint8_t* kl_t3;
 #line 29 "codegen/box.kl"
-    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "codegen/box.kl", 29, "out of memory: alloc<u8>( n )" );
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "codegen/box.kl", 29, "out of memory: alloc<u8>( n )" );
 #line 29 "codegen/box.kl"
     ( *kl_this_1 ).kl_bytes = kl_t3;
 #line 31 "codegen/box.kl"
@@ -1066,7 +1073,7 @@ void kl_7prelude_3box__I6FramedE__RQ7prelude3boxI6FramedE_M6Framed__ctor( struct
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Framed* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Framed ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Framed* ) kl_rt_alloc_many( ( size_t ) 1, 24, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
@@ -1107,7 +1114,7 @@ void kl_7prelude_3box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct
     struct kl__Square* kl_t6;
     struct kl__Square* kl_t7;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, 8, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -314,30 +315,47 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_box__I5chainI3i64EE
 {
     struct kl__chain__I3i64E* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I5chainI3i64EE ) == 8 && _Alignof( struct kl_7prelude_box__I5chainI3i64EE ) == 8 && offsetof( struct kl_7prelude_box__I5chainI3i64EE, kl_p_ ) == 0, "layout" );
 
 struct kl__chain__I3i64E
 {
     int32_t tag;
-    int64_t kl_4link_head;
-    struct kl_7prelude_box__I5chainI3i64EE kl_4link_rest;
+    union
+    {
+        struct
+        {
+            int64_t kl_4link_head;
+            struct kl_7prelude_box__I5chainI3i64EE kl_4link_rest;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__chain__I3i64E ) == 24 && _Alignof( struct kl__chain__I3i64E ) == 8 && offsetof( struct kl__chain__I3i64E, kl_4link_head ) == 8 && offsetof( struct kl__chain__I3i64E, kl_4link_rest ) == 16, "layout" );
 
 struct kl_7prelude_box__I5chainI3f64EE
 {
     struct kl__chain__I3f64E* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I5chainI3f64EE ) == 8 && _Alignof( struct kl_7prelude_box__I5chainI3f64EE ) == 8 && offsetof( struct kl_7prelude_box__I5chainI3f64EE, kl_p_ ) == 0, "layout" );
 
 struct kl__chain__I3f64E
 {
     int32_t tag;
-    double kl_4link_head;
-    struct kl_7prelude_box__I5chainI3f64EE kl_4link_rest;
+    union
+    {
+        struct
+        {
+            double kl_4link_head;
+            struct kl_7prelude_box__I5chainI3f64EE kl_4link_rest;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__chain__I3f64E ) == 24 && _Alignof( struct kl__chain__I3f64E ) == 8 && offsetof( struct kl__chain__I3f64E, kl_4link_head ) == 8 && offsetof( struct kl__chain__I3f64E, kl_4link_rest ) == 16, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -792,7 +810,7 @@ void kl_7prelude_3box__I5chainI3i64EE__RQ7prelude3boxI5chainI3i64EE_M5chainI3i64
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__chain__I3i64E* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__chain__I3i64E ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__chain__I3i64E* ) kl_rt_alloc_many( ( size_t ) 1, 24, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

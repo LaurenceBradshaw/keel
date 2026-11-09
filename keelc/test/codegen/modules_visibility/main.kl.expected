@@ -34,6 +34,7 @@ struct kl_4geom_Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl_4geom_Point ) == 8 && _Alignof( struct kl_4geom_Point ) == 4 && offsetof( struct kl_4geom_Point, kl_x ) == 0 && offsetof( struct kl_4geom_Point, kl_y ) == 4, "layout" );
 
 int32_t kl_5route_3via__3i32( int32_t );
 struct kl_4geom_Point kl_5route_6origin__( void );
@@ -81,6 +82,7 @@ struct kl_4geom_Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl_4geom_Point ) == 8 && _Alignof( struct kl_4geom_Point ) == 4 && offsetof( struct kl_4geom_Point, kl_x ) == 0 && offsetof( struct kl_4geom_Point, kl_y ) == 4, "layout" );
 
 int32_t kl__4pick__3i64( int64_t );
 int32_t kl__4main__( void );

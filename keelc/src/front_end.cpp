@@ -222,7 +222,7 @@ Front_end run_front_end(
                 }
                 collapse_borrows( function, front.types.table() );
                 verified( function, "collapse_borrows" );
-                coalesce_moves( function );
+                coalesce_moves( function, ast );
                 verified( function, "coalesce_moves" );
             }
         }
@@ -315,7 +315,7 @@ Front_end run_front_end(
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )
                 {
-                    coalesce_moves( function );
+                    coalesce_moves( function, ast );
                     verified( function, "coalesce_moves" );
                     // Merging two locals can make `a != a`.
                     fold_identities( function, front.types.table(), literals );

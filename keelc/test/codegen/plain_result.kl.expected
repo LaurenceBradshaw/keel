@@ -12,17 +12,20 @@ struct kl__span
     uint64_t kl_from;
     uint64_t kl_count;
 };
+_Static_assert( sizeof( struct kl__span ) == 16 && _Alignof( struct kl__span ) == 8 && offsetof( struct kl__span, kl_from ) == 0 && offsetof( struct kl__span, kl_count ) == 8, "layout" );
 
 struct kl__moves
 {
     struct kl__span kl_first;
     struct kl__span kl_second;
 };
+_Static_assert( sizeof( struct kl__moves ) == 32 && _Alignof( struct kl__moves ) == 8 && offsetof( struct kl__moves, kl_first ) == 0 && offsetof( struct kl__moves, kl_second ) == 16, "layout" );
 
 struct kl__counter
 {
     uint64_t kl_total_;
 };
+_Static_assert( sizeof( struct kl__counter ) == 8 && _Alignof( struct kl__counter ) == 8 && offsetof( struct kl__counter, kl_total_ ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

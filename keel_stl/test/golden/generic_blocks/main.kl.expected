@@ -43,6 +43,7 @@ struct kl_2kl12hash_control_hash_control
     uint64_t kl_key_low_;
     uint64_t kl_key_high_;
 };
+_Static_assert( sizeof( struct kl_2kl12hash_control_hash_control ) == 64 && _Alignof( struct kl_2kl12hash_control_hash_control ) == 8 && offsetof( struct kl_2kl12hash_control_hash_control, kl_groups_ ) == 0 && offsetof( struct kl_2kl12hash_control_hash_control, kl_entries_ ) == 8 && offsetof( struct kl_2kl12hash_control_hash_control, kl_hashes_ ) == 16 && offsetof( struct kl_2kl12hash_control_hash_control, kl_slots_ ) == 24 && offsetof( struct kl_2kl12hash_control_hash_control, kl_count_ ) == 32 && offsetof( struct kl_2kl12hash_control_hash_control, kl_growth_left_ ) == 40 && offsetof( struct kl_2kl12hash_control_hash_control, kl_key_low_ ) == 48 && offsetof( struct kl_2kl12hash_control_hash_control, kl_key_high_ ) == 56, "layout" );
 
 struct kl_2kl12hash_control_hash_probe
 {
@@ -55,12 +56,14 @@ struct kl_2kl12hash_control_hash_probe
     uint64_t kl_matches_;
     uint64_t kl_end_;
 };
+_Static_assert( sizeof( struct kl_2kl12hash_control_hash_probe ) == 64 && _Alignof( struct kl_2kl12hash_control_hash_probe ) == 8 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_groups_ ) == 0 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_mask_ ) == 8 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_group_ ) == 16 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_stride_ ) == 24 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_tags_ ) == 32 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_word_ ) == 40 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_matches_ ) == 48 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_end_ ) == 56, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_hasher
 {
@@ -70,6 +73,7 @@ struct kl_7prelude_hasher
     uint64_t kl_v3_;
     uint64_t kl_bytes_;
 };
+_Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
 uint64_t kl_2kl12hash_control_BYTE_ONES__G = 72340172838076673;
 uint64_t kl_2kl12hash_control_BYTE_MSB_MASK__G = 9259542123273814144ull;
@@ -147,7 +151,7 @@ void kl_2kl12hash_control_12hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ct
 #line 51 "../../src/hash_control.kl"
     kl_t7 = kl_slots_2 / 8;
 #line 51 "../../src/hash_control.kl"
-    kl_t8 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t7, sizeof( uint64_t ), "../../src/hash_control.kl", 51, "out of memory: alloc<u64>( slots / 8 )" );
+    kl_t8 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t7, 8, "../../src/hash_control.kl", 51, "out of memory: alloc<u64>( slots / 8 )" );
 #line 51 "../../src/hash_control.kl"
     ( *kl_this_1 ).kl_groups_ = kl_t8;
 #line 53 "../../src/hash_control.kl"
@@ -169,12 +173,12 @@ void kl_2kl12hash_control_12hash_control__RQ2kl12hash_control_3u64_3u64_3u64__ct
     goto bb5;
     bb4:
 #line 58 "../../src/hash_control.kl"
-    kl_t14 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_slots_2, sizeof( uint64_t ), "../../src/hash_control.kl", 58, "out of memory: alloc<u64>( slots )" );
+    kl_t14 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_slots_2, 8, "../../src/hash_control.kl", 58, "out of memory: alloc<u64>( slots )" );
 #line 58 "../../src/hash_control.kl"
     ( *kl_this_1 ).kl_entries_ = kl_t14;
     kl_t15 = kl_2kl12hash_control_6usable__SQ2kl12hash_control_3u64( kl_slots_2 );
 #line 59 "../../src/hash_control.kl"
-    kl_t16 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t15, sizeof( uint64_t ), "../../src/hash_control.kl", 59, "out of memory: alloc<u64>( usable( slots ) )" );
+    kl_t16 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t15, 8, "../../src/hash_control.kl", 59, "out of memory: alloc<u64>( usable( slots ) )" );
 #line 59 "../../src/hash_control.kl"
     ( *kl_this_1 ).kl_hashes_ = kl_t16;
 #line 47 "../../src/hash_control.kl"
@@ -1436,6 +1440,7 @@ struct kl_2kl12hash_control_hash_control
     uint64_t kl_key_low_;
     uint64_t kl_key_high_;
 };
+_Static_assert( sizeof( struct kl_2kl12hash_control_hash_control ) == 64 && _Alignof( struct kl_2kl12hash_control_hash_control ) == 8 && offsetof( struct kl_2kl12hash_control_hash_control, kl_groups_ ) == 0 && offsetof( struct kl_2kl12hash_control_hash_control, kl_entries_ ) == 8 && offsetof( struct kl_2kl12hash_control_hash_control, kl_hashes_ ) == 16 && offsetof( struct kl_2kl12hash_control_hash_control, kl_slots_ ) == 24 && offsetof( struct kl_2kl12hash_control_hash_control, kl_count_ ) == 32 && offsetof( struct kl_2kl12hash_control_hash_control, kl_growth_left_ ) == 40 && offsetof( struct kl_2kl12hash_control_hash_control, kl_key_low_ ) == 48 && offsetof( struct kl_2kl12hash_control_hash_control, kl_key_high_ ) == 56, "layout" );
 
 struct kl_2kl12hash_control_hash_probe
 {
@@ -1448,12 +1453,14 @@ struct kl_2kl12hash_control_hash_probe
     uint64_t kl_matches_;
     uint64_t kl_end_;
 };
+_Static_assert( sizeof( struct kl_2kl12hash_control_hash_probe ) == 64 && _Alignof( struct kl_2kl12hash_control_hash_probe ) == 8 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_groups_ ) == 0 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_mask_ ) == 8 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_group_ ) == 16 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_stride_ ) == 24 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_tags_ ) == 32 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_word_ ) == 40 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_matches_ ) == 48 && offsetof( struct kl_2kl12hash_control_hash_probe, kl_end_ ) == 56, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_hasher
 {
@@ -1463,6 +1470,7 @@ struct kl_7prelude_hasher
     uint64_t kl_v3_;
     uint64_t kl_bytes_;
 };
+_Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
 struct kl_2kl4list_list__I3i32E
 {
@@ -1470,36 +1478,48 @@ struct kl_2kl4list_list__I3i32E
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__I3i32E ) == 24 && _Alignof( struct kl_2kl4list_list__I3i32E ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I3i32E, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I3i32E, kl_cap_ ) == 16, "layout" );
 
 struct kl_2kl4pair_pair__I3i32_3i32E
 {
     int32_t kl_first;
     int32_t kl_second;
 };
+_Static_assert( sizeof( struct kl_2kl4pair_pair__I3i32_3i32E ) == 8 && _Alignof( struct kl_2kl4pair_pair__I3i32_3i32E ) == 4 && offsetof( struct kl_2kl4pair_pair__I3i32_3i32E, kl_first ) == 0 && offsetof( struct kl_2kl4pair_pair__I3i32_3i32E, kl_second ) == 4, "layout" );
 
 struct kl_2kl3set_set__IQ2kl4pairI3i32_3i32EE
 {
     struct kl_2kl12hash_control_hash_control kl_control_;
     struct kl_2kl4pair_pair__I3i32_3i32E* kl_keys_;
 };
+_Static_assert( sizeof( struct kl_2kl3set_set__IQ2kl4pairI3i32_3i32EE ) == 72 && _Alignof( struct kl_2kl3set_set__IQ2kl4pairI3i32_3i32EE ) == 8 && offsetof( struct kl_2kl3set_set__IQ2kl4pairI3i32_3i32EE, kl_control_ ) == 0 && offsetof( struct kl_2kl3set_set__IQ2kl4pairI3i32_3i32EE, kl_keys_ ) == 64, "layout" );
 
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_4some_value;
+    union
+    {
+        struct
+        {
+            int32_t kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I3i32E ) == 8 && _Alignof( struct kl_2kl8optional_optional__I3i32E ) == 4 && offsetof( struct kl_2kl8optional_optional__I3i32E, kl_4some_value ) == 4, "layout" );
 
 struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE
 {
     struct kl_2kl4list_list__I3i32E kl_first;
     bool kl_second;
 };
+_Static_assert( sizeof( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE ) == 32 && _Alignof( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE ) == 8 && offsetof( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE, kl_first ) == 0 && offsetof( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE, kl_second ) == 24, "layout" );
 
 struct kl_2kl3set_set__IQ2kl4pairIQ2kl4listI3i32E_4boolEE
 {
     struct kl_2kl12hash_control_hash_control kl_control_;
     struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* kl_keys_;
 };
+_Static_assert( sizeof( struct kl_2kl3set_set__IQ2kl4pairIQ2kl4listI3i32E_4boolEE ) == 72 && _Alignof( struct kl_2kl3set_set__IQ2kl4pairIQ2kl4listI3i32E_4boolEE ) == 8 && offsetof( struct kl_2kl3set_set__IQ2kl4pairIQ2kl4listI3i32E_4boolEE, kl_control_ ) == 0 && offsetof( struct kl_2kl3set_set__IQ2kl4pairIQ2kl4listI3i32E_4boolEE, kl_keys_ ) == 64, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -3136,7 +3156,7 @@ void kl_2kl3set_6resize__IQ2kl4pairI3i32_3i32EE__SQ2kl3setIQ2kl4pairI3i32_3i32EE
 #line 230 "../../src/set.kl"
     kl_t4 = kl_2kl12hash_control_6usable__SQ2kl12hash_control_3u64( kl_slots_2 );
 #line 230 "../../src/set.kl"
-    kl_t5 = ( struct kl_2kl4pair_pair__I3i32_3i32E* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( struct kl_2kl4pair_pair__I3i32_3i32E ), "../../src/set.kl", 230, "out of memory: alloc<K>( hash_control::usable( slots ) )" );
+    kl_t5 = ( struct kl_2kl4pair_pair__I3i32_3i32E* ) kl_rt_alloc_many( ( size_t ) kl_t4, 8, "../../src/set.kl", 230, "out of memory: alloc<K>( hash_control::usable( slots ) )" );
 #line 230 "../../src/set.kl"
     kl_keys_3 = kl_t5;
 #line 233 "../../src/set.kl"
@@ -3401,7 +3421,7 @@ void kl_2kl3set_6resize__IQ2kl4pairIQ2kl4listI3i32E_4boolEE__SQ2kl3setIQ2kl4pair
 #line 230 "../../src/set.kl"
     kl_t4 = kl_2kl12hash_control_6usable__SQ2kl12hash_control_3u64( kl_slots_2 );
 #line 230 "../../src/set.kl"
-    kl_t5 = ( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE ), "../../src/set.kl", 230, "out of memory: alloc<K>( hash_control::usable( slots ) )" );
+    kl_t5 = ( struct kl_2kl4pair_pair__IQ2kl4listI3i32E_4boolE* ) kl_rt_alloc_many( ( size_t ) kl_t4, 32, "../../src/set.kl", 230, "out of memory: alloc<K>( hash_control::usable( slots ) )" );
 #line 230 "../../src/set.kl"
     kl_keys_3 = kl_t5;
 #line 233 "../../src/set.kl"
@@ -3729,7 +3749,7 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
     int32_t* kl_t9;
     bool kl_t10;
 #line 449 "../../src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "../../src/list.kl", 449, "out of memory: alloc<T>( n )" );
 #line 449 "../../src/list.kl"
     kl_new_data_3 = kl_t4;
 #line 452 "../../src/list.kl"

@@ -10,6 +10,7 @@ struct kl__Node
     int32_t kl_value;
     struct kl__Node* kl_next;
 };
+_Static_assert( sizeof( struct kl__Node ) == 16 && _Alignof( struct kl__Node ) == 8 && offsetof( struct kl__Node, kl_value ) == 0 && offsetof( struct kl__Node, kl_next ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -28,7 +29,7 @@ struct kl__Node* kl__4push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_
 #line 14 "codegen/alloc_free.kl"
     kl_node_3 = NULL;
 #line 18 "codegen/alloc_free.kl"
-    kl_t4 = ( struct kl__Node* ) kl_rt_alloc( sizeof( struct kl__Node ), "codegen/alloc_free.kl", 18, "out of memory: alloc<Node>()" );
+    kl_t4 = ( struct kl__Node* ) kl_rt_alloc( 16, "codegen/alloc_free.kl", 18, "out of memory: alloc<Node>()" );
 #line 18 "codegen/alloc_free.kl"
     kl_node_3 = kl_t4;
 #line 23 "codegen/alloc_free.kl"

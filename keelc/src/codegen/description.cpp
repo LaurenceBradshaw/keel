@@ -299,7 +299,9 @@ Description describe( const Ast& ast, Types& types, const Interner& interner )
         Description::Instance described { .owns = instance_owns( ast, table, type, types.recorded() ) };
         for( const Node_id field : held )
         {
-            described.fields.push_back( { field, field_type( ast, table, type, field, types.recorded() ) } );
+            described.fields.push_back(
+                { field, field_type( ast, table, type, field, types.recorded() ), ast.variant_of( field ) }
+            );
         }
         description.instances_.emplace( type.v, std::move( described ) );
     };

@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -312,25 +313,44 @@ struct kl__Counter
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_result__I7Counter_3BadE
 {
     int32_t tag;
-    struct kl__Counter kl_2ok_value;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl__Counter kl_2ok_value;
+        };
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I7Counter_3BadE ) == 16 && _Alignof( struct kl_7prelude_result__I7Counter_3BadE ) == 8 && offsetof( struct kl_7prelude_result__I7Counter_3BadE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__I7Counter_3BadE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I4void_3BadE ) == 8 && _Alignof( struct kl_7prelude_result__I4void_3BadE ) == 4 && offsetof( struct kl_7prelude_result__I4void_3BadE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

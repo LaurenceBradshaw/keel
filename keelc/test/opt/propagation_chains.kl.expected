@@ -12,17 +12,20 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Line
 {
     struct kl__Point kl_a;
     struct kl__Point kl_b;
 };
+_Static_assert( sizeof( struct kl__Line ) == 16 && _Alignof( struct kl__Line ) == 4 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 8, "layout" );
 
 struct kl__Box
 {
     int64_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 8 && _Alignof( struct kl__Box ) == 8 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 void kl__3Box__R3Box_3i64__ctor( struct kl__Box*, int64_t );
 void kl__3Box__dtor( struct kl__Box* );

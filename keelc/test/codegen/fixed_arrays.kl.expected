@@ -17,31 +17,37 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__A3_3i32
 {
     int32_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3i32 ) == 12 && _Alignof( struct kl__A3_3i32 ) == 4, "layout" );
 
 struct kl__Row
 {
     struct kl__A3_3i32 kl_cells;
 };
+_Static_assert( sizeof( struct kl__Row ) == 12 && _Alignof( struct kl__Row ) == 4 && offsetof( struct kl__Row, kl_cells ) == 0, "layout" );
 
 struct kl__A4_3i32
 {
     int32_t e[4];
 };
+_Static_assert( sizeof( struct kl__A4_3i32 ) == 16 && _Alignof( struct kl__A4_3i32 ) == 4, "layout" );
 
 struct kl__A2_5Point
 {
     struct kl__Point e[2];
 };
+_Static_assert( sizeof( struct kl__A2_5Point ) == 16 && _Alignof( struct kl__A2_5Point ) == 4, "layout" );
 
 struct kl__A2_A3_3i32
 {
     struct kl__A3_3i32 e[2];
 };
+_Static_assert( sizeof( struct kl__A2_A3_3i32 ) == 24 && _Alignof( struct kl__A2_A3_3i32 ) == 4, "layout" );
 
 uint64_t kl__SIDE__G = 3;
 

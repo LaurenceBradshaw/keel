@@ -18,18 +18,27 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_location
 {
     struct kl_7prelude_str kl_file;
     uint32_t kl_line;
 };
+_Static_assert( sizeof( struct kl_7prelude_location ) == 24 && _Alignof( struct kl_7prelude_location ) == 8 && offsetof( struct kl_7prelude_location, kl_file ) == 0 && offsetof( struct kl_7prelude_location, kl_line ) == 16, "layout" );
 
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_4some_value;
+    union
+    {
+        struct
+        {
+            int32_t kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I3i32E ) == 8 && _Alignof( struct kl_2kl8optional_optional__I3i32E ) == 4 && offsetof( struct kl_2kl8optional_optional__I3i32E, kl_4some_value ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic_at( const uint8_t*, uint64_t, uint32_t, const uint8_t*, uint64_t );
 

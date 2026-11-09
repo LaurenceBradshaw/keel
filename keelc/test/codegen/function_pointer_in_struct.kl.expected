@@ -13,11 +13,13 @@ struct kl__P
 {
     int32_t kl_t;
 };
+_Static_assert( sizeof( struct kl__P ) == 4 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_t ) == 0, "layout" );
 
 struct kl__Holder
 {
     kl__fn__F3i32E3i32 kl_cb;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 8 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_cb ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

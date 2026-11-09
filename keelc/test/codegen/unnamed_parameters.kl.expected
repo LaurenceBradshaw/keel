@@ -14,6 +14,7 @@ struct kl__square
 {
     int32_t kl_side;
 };
+_Static_assert( sizeof( struct kl__square ) == 4 && _Alignof( struct kl__square ) == 4 && offsetof( struct kl__square, kl_side ) == 0, "layout" );
 
 struct kl__shape__vtable
 {

@@ -11,12 +11,14 @@ struct kl__Pair
     int32_t kl_n;
     bool kl_on;
 };
+_Static_assert( sizeof( struct kl__Pair ) == 8 && _Alignof( struct kl__Pair ) == 4 && offsetof( struct kl__Pair, kl_n ) == 0 && offsetof( struct kl__Pair, kl_on ) == 4, "layout" );
 
 struct kl__Held
 {
     int32_t* kl_at;
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Held ) == 16 && _Alignof( struct kl__Held ) == 8 && offsetof( struct kl__Held, kl_at ) == 0 && offsetof( struct kl__Held, kl_n ) == 8, "layout" );
 
 void kl__4Pair__R4Pair_3i32_4bool__ctor( struct kl__Pair*, int32_t, bool );
 void kl__4Pair__dtor( struct kl__Pair* );

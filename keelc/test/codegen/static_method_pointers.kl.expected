@@ -15,11 +15,13 @@ struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3f64E
 {
     double kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
 
 int32_t kl__total__GS7Counter = 0;
 __attribute__((weak)) int32_t kl__made__GS3BoxI3i32E = 0;

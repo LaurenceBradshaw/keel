@@ -18,26 +18,31 @@ struct kl__Pair
     int32_t kl_a;
     int32_t kl_b;
 };
+_Static_assert( sizeof( struct kl__Pair ) == 8 && _Alignof( struct kl__Pair ) == 4 && offsetof( struct kl__Pair, kl_a ) == 0 && offsetof( struct kl__Pair, kl_b ) == 4, "layout" );
 
 struct kl__Z9fn_bounds_640_
 {
     int32_t kl_k;
 };
+_Static_assert( sizeof( struct kl__Z9fn_bounds_640_ ) == 4 && _Alignof( struct kl__Z9fn_bounds_640_ ) == 4 && offsetof( struct kl__Z9fn_bounds_640_, kl_k ) == 0, "layout" );
 
 struct kl__Z9fn_bounds_886_
 {
     int32_t kl_k;
 };
+_Static_assert( sizeof( struct kl__Z9fn_bounds_886_ ) == 4 && _Alignof( struct kl__Z9fn_bounds_886_ ) == 4 && offsetof( struct kl__Z9fn_bounds_886_, kl_k ) == 0, "layout" );
 
 struct kl__Z9fn_bounds_1115_
 {
     int32_t kl_k;
 };
+_Static_assert( sizeof( struct kl__Z9fn_bounds_1115_ ) == 4 && _Alignof( struct kl__Z9fn_bounds_1115_ ) == 4 && offsetof( struct kl__Z9fn_bounds_1115_, kl_k ) == 0, "layout" );
 
 struct kl__Z9fn_bounds_1215_
 {
     int32_t* kl_sum;
 };
+_Static_assert( sizeof( struct kl__Z9fn_bounds_1215_ ) == 8 && _Alignof( struct kl__Z9fn_bounds_1215_ ) == 8 && offsetof( struct kl__Z9fn_bounds_1215_, kl_sum ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

@@ -13,26 +13,31 @@ struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Holder
 {
     struct kl__Box__I3i32E kl_b;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 4 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_b ) == 0, "layout" );
 
 struct kl__Box__I3BoxI3i32EE
 {
     struct kl__Box__I3i32E kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3BoxI3i32EE ) == 4 && _Alignof( struct kl__Box__I3BoxI3i32EE ) == 4 && offsetof( struct kl__Box__I3BoxI3i32EE, kl_v ) == 0, "layout" );
 
 struct kl__Nested
 {
     struct kl__Box__I3BoxI3i32EE kl_b;
 };
+_Static_assert( sizeof( struct kl__Nested ) == 4 && _Alignof( struct kl__Nested ) == 4 && offsetof( struct kl__Nested, kl_b ) == 0, "layout" );
 
 struct kl__Counted__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Counted__I3i32E ) == 4 && _Alignof( struct kl__Counted__I3i32E ) == 4 && offsetof( struct kl__Counted__I3i32E, kl_v ) == 0, "layout" );
 
 int32_t kl__destroyed__G = 0;
 

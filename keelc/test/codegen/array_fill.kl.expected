@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -315,37 +316,44 @@ struct kl__Buf
 {
     uint64_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__Buf ) == 8 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_data ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__A4_3u64
 {
     uint64_t e[4];
 };
+_Static_assert( sizeof( struct kl__A4_3u64 ) == 32 && _Alignof( struct kl__A4_3u64 ) == 8, "layout" );
 
 struct kl__A3_3Buf
 {
     struct kl__Buf e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3Buf ) == 24 && _Alignof( struct kl__A3_3Buf ) == 8, "layout" );
 
 struct kl__A3_3u64
 {
     uint64_t e[3];
 };
+_Static_assert( sizeof( struct kl__A3_3u64 ) == 24 && _Alignof( struct kl__A3_3u64 ) == 8, "layout" );
 
 struct kl__A2_3u64
 {
     uint64_t e[2];
 };
+_Static_assert( sizeof( struct kl__A2_3u64 ) == 16 && _Alignof( struct kl__A2_3u64 ) == 8, "layout" );
 
 struct kl__A3_A2_3u64
 {
     struct kl__A2_3u64 e[3];
 };
+_Static_assert( sizeof( struct kl__A3_A2_3u64 ) == 48 && _Alignof( struct kl__A3_A2_3u64 ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -382,7 +390,7 @@ void kl__3Buf__R3Buf__ctor( struct kl__Buf* kl_this_1 )
     bool kl_t3;
     uint64_t kl_t4;
 #line 16 "codegen/array_fill.kl"
-    kl_t2 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/array_fill.kl", 16, "out of memory: alloc<u64>()" );
+    kl_t2 = ( uint64_t* ) kl_rt_alloc( 8, "codegen/array_fill.kl", 16, "out of memory: alloc<u64>()" );
 #line 16 "codegen/array_fill.kl"
     ( *kl_this_1 ).kl_data = kl_t2;
 #line 19 "codegen/array_fill.kl"
@@ -407,7 +415,7 @@ void kl__3Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 27 "codegen/array_fill.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/array_fill.kl", 27, "out of memory: alloc<u64>()" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( 8, "codegen/array_fill.kl", 27, "out of memory: alloc<u64>()" );
 #line 27 "codegen/array_fill.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 30 "codegen/array_fill.kl"

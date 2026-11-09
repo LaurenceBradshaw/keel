@@ -8,9 +8,19 @@ struct kl_7prelude_result__I3i32_3i32E;
 struct kl_7prelude_result__I3i32_3i32E
 {
     int32_t tag;
-    int32_t kl_2ok_value;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_2ok_value;
+        };
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3i32_3i32E ) == 8 && _Alignof( struct kl_7prelude_result__I3i32_3i32E ) == 4 && offsetof( struct kl_7prelude_result__I3i32_3i32E, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_3i32E, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_result__I3i32_3i32E kl__4make__3i32( int32_t );
 struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t );

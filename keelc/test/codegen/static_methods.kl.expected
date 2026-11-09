@@ -13,21 +13,25 @@ struct kl__Vec
     int32_t kl_a;
     int32_t kl_b;
 };
+_Static_assert( sizeof( struct kl__Vec ) == 8 && _Alignof( struct kl__Vec ) == 4 && offsetof( struct kl__Vec, kl_a ) == 0 && offsetof( struct kl__Vec, kl_b ) == 4, "layout" );
 
 struct kl__Owned
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_n ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3f64E
 {
     double kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
 
 uint64_t kl__freed__G = 0;
 

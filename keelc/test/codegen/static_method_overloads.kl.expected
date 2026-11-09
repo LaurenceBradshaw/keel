@@ -9,6 +9,7 @@ struct kl__Number
 {
     int32_t kl_x;
 };
+_Static_assert( sizeof( struct kl__Number ) == 4 && _Alignof( struct kl__Number ) == 4 && offsetof( struct kl__Number, kl_x ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

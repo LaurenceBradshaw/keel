@@ -10,12 +10,14 @@ struct kl__Box
 {
     int32_t* kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 8 && _Alignof( struct kl__Box ) == 8 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Inner
 {
     struct kl__Box kl_n;
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Inner ) == 16 && _Alignof( struct kl__Inner ) == 8 && offsetof( struct kl__Inner, kl_n ) == 0 && offsetof( struct kl__Inner, kl_v ) == 8, "layout" );
 
 int32_t kl__live__G;
 
@@ -34,7 +36,7 @@ void kl__3Box__R3Box_3i32__ctor( struct kl__Box* kl_this_1, int32_t kl_v_2 )
 {
     int32_t* kl_t3;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc( 4, "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 12 "opt/moves_after_splitting.kl"
     ( *kl_this_1 ).kl_value = kl_t3;
 #line 14 "opt/moves_after_splitting.kl"
@@ -86,12 +88,12 @@ int32_t kl__7rebuilt__( void )
     int32_t* kl_t6;
     int32_t* kl_o_7;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_t6 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_t6 = ( int32_t* ) kl_rt_alloc( 4, "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
     ( *kl_t6 ) = 3;
     kl__live__G = kl__live__G + 1;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_o_7 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_o_7 = ( int32_t* ) kl_rt_alloc( 4, "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
     ( *kl_o_7 ) = 4;
     kl__live__G = kl__live__G + 1;
@@ -100,7 +102,7 @@ int32_t kl__7rebuilt__( void )
 #line 24 "opt/moves_after_splitting.kl"
     kl__live__G = kl__live__G - 1;
 #line 12 "opt/moves_after_splitting.kl"
-    kl_t6 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
+    kl_t6 = ( int32_t* ) kl_rt_alloc( 4, "opt/moves_after_splitting.kl", 12, "out of memory: alloc<i32>()" );
 #line 14 "opt/moves_after_splitting.kl"
     ( *kl_t6 ) = 5;
     kl__live__G = kl__live__G + 1;

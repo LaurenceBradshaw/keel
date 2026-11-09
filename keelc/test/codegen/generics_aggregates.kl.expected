@@ -14,34 +14,40 @@ struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3f64E
 {
     double kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
 
 struct kl__Pair__I3i32_3f64E
 {
     int32_t kl_first;
     double kl_second;
 };
+_Static_assert( sizeof( struct kl__Pair__I3i32_3f64E ) == 16 && _Alignof( struct kl__Pair__I3i32_3f64E ) == 8 && offsetof( struct kl__Pair__I3i32_3f64E, kl_first ) == 0 && offsetof( struct kl__Pair__I3i32_3f64E, kl_second ) == 8, "layout" );
 
 struct kl__Box__I3BoxI3i32EE
 {
     struct kl__Box__I3i32E kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3BoxI3i32EE ) == 4 && _Alignof( struct kl__Box__I3BoxI3i32EE ) == 4 && offsetof( struct kl__Box__I3BoxI3i32EE, kl_v ) == 0, "layout" );
 
 struct kl__Holder__I3i32E
 {
     struct kl__Box__I3i32E kl_inner;
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Holder__I3i32E ) == 8 && _Alignof( struct kl__Holder__I3i32E ) == 4 && offsetof( struct kl__Holder__I3i32E, kl_inner ) == 0 && offsetof( struct kl__Holder__I3i32E, kl_tag ) == 4, "layout" );
 
 struct kl__Node__I3i32E
 {
     int32_t kl_value;
     struct kl__Node__I3i32E* kl_next;
 };
+_Static_assert( sizeof( struct kl__Node__I3i32E ) == 16 && _Alignof( struct kl__Node__I3i32E ) == 8 && offsetof( struct kl__Node__I3i32E, kl_value ) == 0 && offsetof( struct kl__Node__I3i32E, kl_next ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

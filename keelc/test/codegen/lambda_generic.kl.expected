@@ -15,6 +15,7 @@ struct kl__Z14lambda_generic_620_I3i64E
 {
     int64_t kl_by;
 };
+_Static_assert( sizeof( struct kl__Z14lambda_generic_620_I3i64E ) == 8 && _Alignof( struct kl__Z14lambda_generic_620_I3i64E ) == 8 && offsetof( struct kl__Z14lambda_generic_620_I3i64E, kl_by ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

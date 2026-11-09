@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -310,6 +311,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -372,7 +374,7 @@ int32_t kl__4main__( void )
 #line 8 "codegen/alloc_too_large.kl"
     kl_n_14 = 4611686018427387904;
 #line 12 "codegen/alloc_too_large.kl"
-    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_14, sizeof( uint8_t ), "codegen/alloc_too_large.kl", 12, "out of memory: alloc<u8>( n )" );
+    kl_t16 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_14, 1, "codegen/alloc_too_large.kl", 12, "out of memory: alloc<u8>( n )" );
 #line 12 "codegen/alloc_too_large.kl"
     kl_bytes_15 = kl_t16;
 #line 15 "codegen/alloc_too_large.kl"

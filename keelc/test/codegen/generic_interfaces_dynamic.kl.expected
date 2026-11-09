@@ -23,27 +23,32 @@ struct kl__tally
     int64_t kl_sum_;
     uint64_t kl_count_;
 };
+_Static_assert( sizeof( struct kl__tally ) == 16 && _Alignof( struct kl__tally ) == 8 && offsetof( struct kl__tally, kl_sum_ ) == 0 && offsetof( struct kl__tally, kl_count_ ) == 8, "layout" );
 
 struct kl__held
 {
     int64_t* kl_slot_;
     uint64_t kl_count_;
 };
+_Static_assert( sizeof( struct kl__held ) == 16 && _Alignof( struct kl__held ) == 8 && offsetof( struct kl__held, kl_slot_ ) == 0 && offsetof( struct kl__held, kl_count_ ) == 8, "layout" );
 
 struct kl_7prelude_box__I4sinkI3i64EE
 {
     struct kl__sink__I3i64E__ref kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I4sinkI3i64EE ) == 16 && _Alignof( struct kl_7prelude_box__I4sinkI3i64EE ) == 8 && offsetof( struct kl_7prelude_box__I4sinkI3i64EE, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I4heldE
 {
     struct kl__held* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I4heldE ) == 8 && _Alignof( struct kl_7prelude_box__I4heldE ) == 8 && offsetof( struct kl_7prelude_box__I4heldE, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I5tallyE
 {
     struct kl__tally* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I5tallyE ) == 8 && _Alignof( struct kl_7prelude_box__I5tallyE ) == 8 && offsetof( struct kl_7prelude_box__I5tallyE, kl_p_ ) == 0, "layout" );
 
 struct kl__sink__I3i64E__vtable
 {
@@ -183,7 +188,7 @@ void kl__4held__R4held__ctor( struct kl__held* kl_this_1 )
 {
     int64_t* kl_t2;
     int64_t* kl_t3;
-    kl_t2 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "codegen/generic_interfaces_dynamic.kl", 43, "out of memory: alloc<i64>( 1 )" );
+    kl_t2 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "codegen/generic_interfaces_dynamic.kl", 43, "out of memory: alloc<i64>( 1 )" );
 #line 43 "codegen/generic_interfaces_dynamic.kl"
     ( *kl_this_1 ).kl_slot_ = kl_t2;
     kl_t3 = ( *kl_this_1 ).kl_slot_ + 0;
@@ -712,7 +717,7 @@ void kl_7prelude_3box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7p
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__held ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__held* ) kl_rt_alloc_many( ( size_t ) 1, 16, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
@@ -753,7 +758,7 @@ void kl_7prelude_3box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl
     struct kl__tally* kl_t6;
     struct kl__tally* kl_t7;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__tally* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__tally ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__tally* ) kl_rt_alloc_many( ( size_t ) 1, 16, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

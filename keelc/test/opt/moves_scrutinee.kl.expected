@@ -12,26 +12,54 @@ struct kl__Box
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    struct kl__Box kl_5boxed_b;
+    union
+    {
+        struct
+        {
+            struct kl__Box kl_5boxed_b;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 8 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_5boxed_b ) == 4, "layout" );
 
 struct kl_7prelude_result__I3Box_5FaultE
 {
     int32_t tag;
-    struct kl__Box kl_2ok_value;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            struct kl__Box kl_2ok_value;
+        };
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3Box_5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__I3Box_5FaultE ) == 4 && offsetof( struct kl_7prelude_result__I3Box_5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3Box_5FaultE, kl_3err_error ) == 4, "layout" );
 
 struct kl_7prelude_result__I3i32_5FaultE
 {
     int32_t tag;
-    int32_t kl_2ok_value;
-    int32_t kl_3err_error;
+    union
+    {
+        struct
+        {
+            int32_t kl_2ok_value;
+        };
+        struct
+        {
+            int32_t kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3i32_5FaultE ) == 8 && _Alignof( struct kl_7prelude_result__I3i32_5FaultE ) == 4 && offsetof( struct kl_7prelude_result__I3i32_5FaultE, kl_2ok_value ) == 4 && offsetof( struct kl_7prelude_result__I3i32_5FaultE, kl_3err_error ) == 4, "layout" );
 
 int32_t kl__live__G;
 int32_t kl__destroyed__G;

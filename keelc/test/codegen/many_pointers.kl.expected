@@ -14,17 +14,20 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Tracked
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Tracked ) == 4 && _Alignof( struct kl__Tracked ) == 4 && offsetof( struct kl__Tracked, kl_n ) == 0, "layout" );
 
 struct kl__Ints
 {
     int32_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl__Ints ) == 16 && _Alignof( struct kl__Ints ) == 8 && offsetof( struct kl__Ints, kl_data ) == 0 && offsetof( struct kl__Ints, kl_size ) == 8, "layout" );
 
 int32_t kl__live__G = 0;
 
@@ -119,7 +122,7 @@ void kl__4Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_t3;
 #line 44 "codegen/many_pointers.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/many_pointers.kl", 44, "out of memory: alloc<i32>( n )" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "codegen/many_pointers.kl", 44, "out of memory: alloc<i32>( n )" );
 #line 44 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 46 "codegen/many_pointers.kl"
@@ -474,7 +477,7 @@ int32_t kl__4main__( void )
 #line 140 "codegen/many_pointers.kl"
     kl_a_1 = NULL;
 #line 144 "codegen/many_pointers.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 5, sizeof( int32_t ), "codegen/many_pointers.kl", 144, "out of memory: alloc<i32>( 5 )" );
+    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 5, 4, "codegen/many_pointers.kl", 144, "out of memory: alloc<i32>( 5 )" );
 #line 144 "codegen/many_pointers.kl"
     kl_a_1 = kl_t2;
 #line 146 "codegen/many_pointers.kl"
@@ -748,7 +751,7 @@ int32_t kl__4main__( void )
     kl_points_62 = NULL;
     kl_points_sum_63 = 0;
 #line 210 "codegen/many_pointers.kl"
-    kl_t64 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Point ), "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
+    kl_t64 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, 8, "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
 #line 210 "codegen/many_pointers.kl"
     kl_points_62 = kl_t64;
     kl_t65 = kl_points_62 + 0;
@@ -802,17 +805,17 @@ int32_t kl__4main__( void )
     kl_rows_79 = NULL;
     kl_corner_80 = 0;
 #line 224 "codegen/many_pointers.kl"
-    kl_t81 = ( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ), "codegen/many_pointers.kl", 224, "out of memory: alloc<u8[*]>( 2 )" );
+    kl_t81 = ( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, 8, "codegen/many_pointers.kl", 224, "out of memory: alloc<u8[*]>( 2 )" );
 #line 224 "codegen/many_pointers.kl"
     kl_rows_79 = kl_t81;
     kl_t82 = kl_rows_79 + 0;
 #line 225 "codegen/many_pointers.kl"
-    kl_t83 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 225, "out of memory: alloc<u8>( 3 )" );
+    kl_t83 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, 1, "codegen/many_pointers.kl", 225, "out of memory: alloc<u8>( 3 )" );
 #line 225 "codegen/many_pointers.kl"
     ( *kl_t82 ) = kl_t83;
     kl_t84 = kl_rows_79 + 1;
 #line 226 "codegen/many_pointers.kl"
-    kl_t85 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 226, "out of memory: alloc<u8>( 3 )" );
+    kl_t85 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, 1, "codegen/many_pointers.kl", 226, "out of memory: alloc<u8>( 3 )" );
 #line 226 "codegen/many_pointers.kl"
     ( *kl_t84 ) = kl_t85;
     kl_t86 = kl_rows_79 + 1;
@@ -845,7 +848,7 @@ int32_t kl__4main__( void )
 #line 236 "codegen/many_pointers.kl"
     kl_halves_96 = NULL;
     kl_total_97 = 0.0;
-    kl_t98 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( double ), "codegen/many_pointers.kl", 238, "out of memory: alloc<f64>( 4 )" );
+    kl_t98 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, 8, "codegen/many_pointers.kl", 238, "out of memory: alloc<f64>( 4 )" );
 #line 238 "codegen/many_pointers.kl"
     kl_halves_96 = kl_t98;
     kl__4fill__I3f64E__N3f64_3u64_3f64( kl_halves_96, 4, 0.5 );
@@ -883,7 +886,7 @@ int32_t kl__4main__( void )
     kl_two_111 = NULL;
     kl_through_pointer_112 = 0;
 #line 253 "codegen/many_pointers.kl"
-    kl_t113 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ), "codegen/many_pointers.kl", 253, "out of memory: alloc<i32>( 2 )" );
+    kl_t113 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/many_pointers.kl", 253, "out of memory: alloc<i32>( 2 )" );
 #line 253 "codegen/many_pointers.kl"
     kl_two_111 = kl_t113;
     kl_t114 = kl_two_111 + 0;
@@ -949,7 +952,7 @@ int32_t kl__4main__( void )
     kl__4Ints__dtor( &kl_ints_119 );
 #line 272 "codegen/many_pointers.kl"
     kl_cs_133 = NULL;
-    kl_t134 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Tracked ), "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
+    kl_t134 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, 4, "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
 #line 273 "codegen/many_pointers.kl"
     kl_cs_133 = kl_t134;
 #line 275 "codegen/many_pointers.kl"
@@ -1027,7 +1030,7 @@ int32_t kl__4main__( void )
     bb60:
 #line 292 "codegen/many_pointers.kl"
     kl_none_151 = NULL;
-    kl_t152 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 0, sizeof( uint8_t ), "codegen/many_pointers.kl", 293, "out of memory: alloc<u8>( 0 )" );
+    kl_t152 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 0, 1, "codegen/many_pointers.kl", 293, "out of memory: alloc<u8>( 0 )" );
 #line 293 "codegen/many_pointers.kl"
     kl_none_151 = kl_t152;
     kl_t153 = kl_none_151 == NULL;

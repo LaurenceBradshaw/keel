@@ -15,27 +15,32 @@ struct kl__Counted
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Counted ) == 4 && _Alignof( struct kl__Counted ) == 4 && offsetof( struct kl__Counted, kl_value ) == 0, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__A4_3i32
 {
     int32_t e[4];
 };
+_Static_assert( sizeof( struct kl__A4_3i32 ) == 16 && _Alignof( struct kl__A4_3i32 ) == 4, "layout" );
 
 struct kl__A3_7Counted
 {
     struct kl__Counted e[3];
 };
+_Static_assert( sizeof( struct kl__A3_7Counted ) == 12 && _Alignof( struct kl__A3_7Counted ) == 4, "layout" );
 
 struct kl__A2_5Point
 {
     struct kl__Point e[2];
 };
+_Static_assert( sizeof( struct kl__A2_5Point ) == 16 && _Alignof( struct kl__A2_5Point ) == 4, "layout" );
 
 int32_t kl__drops__G = 0;
 

@@ -12,18 +12,21 @@ struct kl__Vec2
     double kl_x;
     double kl_y;
 };
+_Static_assert( sizeof( struct kl__Vec2 ) == 16 && _Alignof( struct kl__Vec2 ) == 8 && offsetof( struct kl__Vec2, kl_x ) == 0 && offsetof( struct kl__Vec2, kl_y ) == 8, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Rect
 {
     struct kl__Point kl_low;
     struct kl__Point kl_high;
 };
+_Static_assert( sizeof( struct kl__Rect ) == 16 && _Alignof( struct kl__Rect ) == 4 && offsetof( struct kl__Rect, kl_low ) == 0 && offsetof( struct kl__Rect, kl_high ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

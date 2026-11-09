@@ -16,22 +16,26 @@ struct kl__Plain
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Plain ) == 4 && _Alignof( struct kl__Plain ) == 4 && offsetof( struct kl__Plain, kl_n ) == 0, "layout" );
 
 struct kl__Buffer
 {
     uint8_t* kl_bytes;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_bytes ) == 0 && offsetof( struct kl__Buffer, kl_size ) == 8, "layout" );
 
 struct kl__Holder
 {
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Holder ) == 4 && _Alignof( struct kl__Holder ) == 4 && offsetof( struct kl__Holder, kl_tag ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_value ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -94,7 +98,7 @@ void kl__6Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl
 {
     uint8_t* kl_t3;
 #line 47 "codegen/generic_methods.kl"
-    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "codegen/generic_methods.kl", 47, "out of memory: alloc<u8>( n )" );
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "codegen/generic_methods.kl", 47, "out of memory: alloc<u8>( n )" );
 #line 47 "codegen/generic_methods.kl"
     ( *kl_this_1 ).kl_bytes = kl_t3;
     ( *kl_this_1 ).kl_size = kl_n_2;

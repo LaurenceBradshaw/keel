@@ -29,6 +29,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_2kl4list_list__I4voidE
 {
@@ -36,6 +37,7 @@ struct kl_2kl4list_list__I4voidE
     uint64_t kl_count_;
     uint64_t kl_cap_;
 };
+_Static_assert( sizeof( struct kl_2kl4list_list__I4voidE ) == 24 && _Alignof( struct kl_2kl4list_list__I4voidE ) == 8 && offsetof( struct kl_2kl4list_list__I4voidE, kl_data_ ) == 0 && offsetof( struct kl_2kl4list_list__I4voidE, kl_count_ ) == 8 && offsetof( struct kl_2kl4list_list__I4voidE, kl_cap_ ) == 16, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );

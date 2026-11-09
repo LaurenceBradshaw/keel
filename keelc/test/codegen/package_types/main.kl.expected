@@ -11,11 +11,13 @@ struct kl_5kinds6shapes_Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Point ) == 8 && _Alignof( struct kl_5kinds6shapes_Point ) == 4 && offsetof( struct kl_5kinds6shapes_Point, kl_x ) == 0 && offsetof( struct kl_5kinds6shapes_Point, kl_y ) == 4, "layout" );
 
 struct kl_5kinds6shapes_Counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Counter ) == 4 && _Alignof( struct kl_5kinds6shapes_Counter ) == 4 && offsetof( struct kl_5kinds6shapes_Counter, kl_n ) == 0, "layout" );
 
 int32_t kl_5kinds6shapes_made__G = 0;
 
@@ -104,34 +106,49 @@ struct kl__Point
 {
     int32_t kl_x;
 };
+_Static_assert( sizeof( struct kl__Point ) == 4 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0, "layout" );
 
 struct kl_5kinds6shapes_Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Point ) == 8 && _Alignof( struct kl_5kinds6shapes_Point ) == 4 && offsetof( struct kl_5kinds6shapes_Point, kl_x ) == 0 && offsetof( struct kl_5kinds6shapes_Point, kl_y ) == 4, "layout" );
 
 struct kl_5kinds6shapes_Counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Counter ) == 4 && _Alignof( struct kl_5kinds6shapes_Counter ) == 4 && offsetof( struct kl_5kinds6shapes_Counter, kl_n ) == 0, "layout" );
 
 struct kl_5kinds6shapes_Shape
 {
     int32_t tag;
-    int32_t kl_6Circle_radius;
-    int32_t kl_6Square_side;
+    union
+    {
+        struct
+        {
+            int32_t kl_6Circle_radius;
+        };
+        struct
+        {
+            int32_t kl_6Square_side;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Shape ) == 8 && _Alignof( struct kl_5kinds6shapes_Shape ) == 4 && offsetof( struct kl_5kinds6shapes_Shape, kl_6Circle_radius ) == 4 && offsetof( struct kl_5kinds6shapes_Shape, kl_6Square_side ) == 4, "layout" );
 
 struct kl_5kinds6shapes_Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Box__I3i32E ) == 4 && _Alignof( struct kl_5kinds6shapes_Box__I3i32E ) == 4 && offsetof( struct kl_5kinds6shapes_Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl_5kinds6shapes_Box__IQ5kinds5PointE
 {
     struct kl_5kinds6shapes_Point kl_v;
 };
+_Static_assert( sizeof( struct kl_5kinds6shapes_Box__IQ5kinds5PointE ) == 8 && _Alignof( struct kl_5kinds6shapes_Box__IQ5kinds5PointE ) == 4 && offsetof( struct kl_5kinds6shapes_Box__IQ5kinds5PointE, kl_v ) == 0, "layout" );
 
 extern int32_t kl_5kinds6shapes_made__G;
 

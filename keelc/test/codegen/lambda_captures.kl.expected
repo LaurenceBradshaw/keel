@@ -19,44 +19,52 @@ struct kl__Owned
 {
     int32_t* kl_p;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_p ) == 0, "layout" );
 
 struct kl__Counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 struct kl__Z15lambda_captures_460_
 {
     struct kl__Counter* kl_this;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_460_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_460_ ) == 8 && offsetof( struct kl__Z15lambda_captures_460_, kl_this ) == 0, "layout" );
 
 struct kl__Z15lambda_captures_527_
 {
     struct kl__Counter* kl_this;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_527_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_527_ ) == 8 && offsetof( struct kl__Z15lambda_captures_527_, kl_this ) == 0, "layout" );
 
 struct kl__Z15lambda_captures_627_
 {
     int32_t kl_a;
     int32_t* kl_b;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_627_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_627_ ) == 8 && offsetof( struct kl__Z15lambda_captures_627_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_627_, kl_b ) == 8, "layout" );
 
 struct kl__Z15lambda_captures_735_
 {
     struct kl__Owned* kl_o;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_735_ ) == 8 && _Alignof( struct kl__Z15lambda_captures_735_ ) == 8 && offsetof( struct kl__Z15lambda_captures_735_, kl_o ) == 0, "layout" );
 
 struct kl__Z15lambda_captures_947_
 {
     int32_t kl_a;
     int32_t* kl_total;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_947_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_947_ ) == 8 && offsetof( struct kl__Z15lambda_captures_947_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_947_, kl_total ) == 8, "layout" );
 
 struct kl__Z15lambda_captures_975_
 {
     int32_t kl_a;
     int32_t* kl_total;
 };
+_Static_assert( sizeof( struct kl__Z15lambda_captures_975_ ) == 16 && _Alignof( struct kl__Z15lambda_captures_975_ ) == 8 && offsetof( struct kl__Z15lambda_captures_975_, kl_a ) == 0 && offsetof( struct kl__Z15lambda_captures_975_, kl_total ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -87,7 +95,7 @@ void kl__5Owned__R5Owned_3i32__ctor( struct kl__Owned* kl_this_1, int32_t kl_v_2
 {
     int32_t* kl_t3;
 #line 8 "codegen/lambda_captures.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/lambda_captures.kl", 8, "out of memory: alloc<i32>()" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc( 4, "codegen/lambda_captures.kl", 8, "out of memory: alloc<i32>()" );
 #line 8 "codegen/lambda_captures.kl"
     ( *kl_this_1 ).kl_p = kl_t3;
 #line 8 "codegen/lambda_captures.kl"

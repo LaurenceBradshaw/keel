@@ -16,6 +16,7 @@ struct kl__P
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__P ) == 8 && _Alignof( struct kl__P ) == 4 && offsetof( struct kl__P, kl_x ) == 0 && offsetof( struct kl__P, kl_y ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

@@ -11,18 +11,33 @@ struct kl__D
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__D ) == 4 && _Alignof( struct kl__D ) == 4 && offsetof( struct kl__D, kl_v ) == 0, "layout" );
 
 struct kl__E
 {
     int32_t tag;
-    struct kl__D kl_4full_d;
+    union
+    {
+        struct
+        {
+            struct kl__D kl_4full_d;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__E ) == 8 && _Alignof( struct kl__E ) == 4 && offsetof( struct kl__E, kl_4full_d ) == 4, "layout" );
 
 struct kl__O
 {
     int32_t tag;
-    struct kl__E kl_4some_e;
+    union
+    {
+        struct
+        {
+            struct kl__E kl_4some_e;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__O ) == 12 && _Alignof( struct kl__O ) == 4 && offsetof( struct kl__O, kl_4some_e ) == 4, "layout" );
 
 void kl__1D__R1D_3i32__ctor( struct kl__D*, int32_t );
 void kl__1D__dtor( struct kl__D* );

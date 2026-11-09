@@ -8,12 +8,25 @@ struct kl__Reading;
 struct kl__Reading
 {
     int32_t tag;
-    int32_t kl_5Short_x;
-    int32_t kl_4Long_x;
-    int64_t kl_4Long_y;
-    int32_t kl_4Pair_y;
-    int32_t kl_4Pair_x;
+    union
+    {
+        struct
+        {
+            int32_t kl_5Short_x;
+        };
+        struct
+        {
+            int32_t kl_4Long_x;
+            int64_t kl_4Long_y;
+        };
+        struct
+        {
+            int32_t kl_4Pair_y;
+            int32_t kl_4Pair_x;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Reading ) == 24 && _Alignof( struct kl__Reading ) == 8 && offsetof( struct kl__Reading, kl_5Short_x ) == 8 && offsetof( struct kl__Reading, kl_4Long_x ) == 8 && offsetof( struct kl__Reading, kl_4Long_y ) == 16 && offsetof( struct kl__Reading, kl_4Pair_y ) == 8 && offsetof( struct kl__Reading, kl_4Pair_x ) == 12, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

@@ -19,27 +19,32 @@ struct kl__label
     uint8_t* kl_bytes;
     uint64_t kl_length;
 };
+_Static_assert( sizeof( struct kl__label ) == 16 && _Alignof( struct kl__label ) == 8 && offsetof( struct kl__label, kl_bytes ) == 0 && offsetof( struct kl__label, kl_length ) == 8, "layout" );
 
 struct kl__width
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__width ) == 8 && _Alignof( struct kl__width ) == 8 && offsetof( struct kl__width, kl_n ) == 0, "layout" );
 
 struct kl__framed
 {
     struct kl__width kl_w;
 };
+_Static_assert( sizeof( struct kl__framed ) == 8 && _Alignof( struct kl__framed ) == 8 && offsetof( struct kl__framed, kl_w ) == 0, "layout" );
 
 struct kl__holder
 {
     struct kl__label kl_held;
 };
+_Static_assert( sizeof( struct kl__holder ) == 16 && _Alignof( struct kl__holder ) == 8 && offsetof( struct kl__holder, kl_held ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -92,7 +97,7 @@ void kl__5label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_
 #line 12 "codegen/string_literal_adopts.kl"
     kl_t4 = kl_n_2 + 1;
 #line 12 "codegen/string_literal_adopts.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, 1, "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
 #line 12 "codegen/string_literal_adopts.kl"
     ( *kl_this_1 ).kl_bytes = kl_t5;
     ( *kl_this_1 ).kl_length = kl_n_2;

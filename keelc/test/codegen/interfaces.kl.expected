@@ -17,17 +17,20 @@ struct kl__Circle
 {
     double kl_r;
 };
+_Static_assert( sizeof( struct kl__Circle ) == 8 && _Alignof( struct kl__Circle ) == 8 && offsetof( struct kl__Circle, kl_r ) == 0, "layout" );
 
 struct kl__Square
 {
     double kl_side;
 };
+_Static_assert( sizeof( struct kl__Square ) == 8 && _Alignof( struct kl__Square ) == 8 && offsetof( struct kl__Square, kl_side ) == 0, "layout" );
 
 struct kl__Pair__I3i32E
 {
     int32_t kl_a;
     int32_t kl_b;
 };
+_Static_assert( sizeof( struct kl__Pair__I3i32E ) == 8 && _Alignof( struct kl__Pair__I3i32E ) == 4 && offsetof( struct kl__Pair__I3i32E, kl_a ) == 0 && offsetof( struct kl__Pair__I3i32E, kl_b ) == 4, "layout" );
 
 struct kl__Shape__vtable
 {

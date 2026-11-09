@@ -11,12 +11,14 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__Named
 {
     struct kl_7prelude_str kl_name;
     int32_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Named ) == 24 && _Alignof( struct kl__Named ) == 8 && offsetof( struct kl__Named, kl_name ) == 0 && offsetof( struct kl__Named, kl_id ) == 16, "layout" );
 
 uint64_t kl__6length__Q7prelude3str( struct kl_7prelude_str );
 struct kl_7prelude_str kl__4pick__4bool( bool );

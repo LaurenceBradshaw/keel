@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -314,36 +315,57 @@ struct kl__Noisy
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Noisy ) == 8 && _Alignof( struct kl__Noisy ) == 8 && offsetof( struct kl__Noisy, kl_n ) == 0, "layout" );
 
 struct kl__Quiet
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Quiet ) == 8 && _Alignof( struct kl__Quiet ) == 8 && offsetof( struct kl__Quiet, kl_n ) == 0, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__Lost
 {
     int32_t tag;
-    struct kl__Noisy kl_4gone_why;
+    union
+    {
+        struct
+        {
+            struct kl__Noisy kl_4gone_why;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Lost ) == 16 && _Alignof( struct kl__Lost ) == 8 && offsetof( struct kl__Lost, kl_4gone_why ) == 8, "layout" );
 
 struct kl_7prelude_result__I3u64_4LostE
 {
     int32_t tag;
-    uint64_t kl_2ok_value;
-    struct kl__Lost kl_3err_error;
+    union
+    {
+        struct
+        {
+            uint64_t kl_2ok_value;
+        };
+        struct
+        {
+            struct kl__Lost kl_3err_error;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_7prelude_result__I3u64_4LostE ) == 24 && _Alignof( struct kl_7prelude_result__I3u64_4LostE ) == 8 && offsetof( struct kl_7prelude_result__I3u64_4LostE, kl_2ok_value ) == 8 && offsetof( struct kl_7prelude_result__I3u64_4LostE, kl_3err_error ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {

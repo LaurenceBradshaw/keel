@@ -11,12 +11,14 @@ struct kl__Point
     double kl_x;
     double kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 16 && _Alignof( struct kl__Point ) == 8 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 8, "layout" );
 
 struct kl__Line
 {
     struct kl__Point kl_a;
     struct kl__Point kl_b;
 };
+_Static_assert( sizeof( struct kl__Line ) == 32 && _Alignof( struct kl__Line ) == 8 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 16, "layout" );
 
 double kl__3abs__3f64( double );
 double kl__8distance__4Line( struct kl__Line );

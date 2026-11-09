@@ -12,11 +12,13 @@ struct kl__Box__I3u64E
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Box__I3u64E ) == 8 && _Alignof( struct kl__Box__I3u64E ) == 8 && offsetof( struct kl__Box__I3u64E, kl_n ) == 0, "layout" );
 
 struct kl__Holder__I3u64E
 {
     struct kl__Box__I3u64E kl_inner;
 };
+_Static_assert( sizeof( struct kl__Holder__I3u64E ) == 8 && _Alignof( struct kl__Holder__I3u64E ) == 8 && offsetof( struct kl__Holder__I3u64E, kl_inner ) == 0, "layout" );
 
 int32_t kl__destroyed__G = 0;
 

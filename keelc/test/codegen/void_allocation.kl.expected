@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -310,6 +311,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -445,10 +447,10 @@ bool kl__10same_start__I3i32E__3u64( uint64_t kl_n_1 )
     int32_t* kl_t9;
     bool kl_t10;
 #line 13 "codegen/void_allocation.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/void_allocation.kl", 13, "out of memory: alloc<U>()" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc( 4, "codegen/void_allocation.kl", 13, "out of memory: alloc<U>()" );
 #line 13 "codegen/void_allocation.kl"
     kl_one_2 = kl_t3;
-    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ), "codegen/void_allocation.kl", 14, "out of memory: alloc<U>( n )" );
+    kl_t5 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, 4, "codegen/void_allocation.kl", 14, "out of memory: alloc<U>( n )" );
 #line 14 "codegen/void_allocation.kl"
     kl_run_4 = kl_t5;
     kl_t7 = __builtin_sub_overflow( kl_n_1, 1, &( uint64_t ) { 0 } );

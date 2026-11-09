@@ -18,12 +18,14 @@ struct kl__Fix
     double kl_y;
     int32_t kl_sats;
 };
+_Static_assert( sizeof( struct kl__Fix ) == 24 && _Alignof( struct kl__Fix ) == 8 && offsetof( struct kl__Fix, kl_x ) == 0 && offsetof( struct kl__Fix, kl_y ) == 8 && offsetof( struct kl__Fix, kl_sats ) == 16, "layout" );
 
 struct kl__Window
 {
     double kl_lo;
     double kl_hi;
 };
+_Static_assert( sizeof( struct kl__Window ) == 16 && _Alignof( struct kl__Window ) == 8 && offsetof( struct kl__Window, kl_lo ) == 0 && offsetof( struct kl__Window, kl_hi ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -408,7 +410,7 @@ int32_t kl__4main__( void )
 #line 109 "codegen/sample_m7.kl"
     kl_c_5 = kl_t6;
 #line 111 "codegen/sample_m7.kl"
-    kl_t7 = offsetof( struct kl__Fix, kl_x );
+    kl_t7 = 0;
 #line 111 "codegen/sample_m7.kl"
     kl_t8 = &kl_a_1;
 #line 111 "codegen/sample_m7.kl"
@@ -427,7 +429,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb2:
 #line 116 "codegen/sample_m7.kl"
-    kl_t14 = offsetof( struct kl__Fix, kl_y );
+    kl_t14 = 8;
 #line 116 "codegen/sample_m7.kl"
     kl_axis_13 = kl_t14;
 #line 118 "codegen/sample_m7.kl"
@@ -448,7 +450,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb4:
 #line 123 "codegen/sample_m7.kl"
-    kl_t20 = offsetof( struct kl__Fix, kl_sats );
+    kl_t20 = 16;
 #line 123 "codegen/sample_m7.kl"
     kl_t21 = &kl_b_3;
 #line 123 "codegen/sample_m7.kl"
@@ -473,7 +475,7 @@ int32_t kl__4main__( void )
 #line 133 "codegen/sample_m7.kl"
     kl_t29 = &kl_w_24;
 #line 133 "codegen/sample_m7.kl"
-    kl_t30 = offsetof( struct kl__Fix, kl_x );
+    kl_t30 = 0;
 #line 133 "codegen/sample_m7.kl"
     kl_t31 = &kl_a_1;
 #line 133 "codegen/sample_m7.kl"
@@ -538,7 +540,7 @@ int32_t kl__4main__( void )
 #line 144 "codegen/sample_m7.kl"
     kl_t52 = &kl_w_24;
 #line 144 "codegen/sample_m7.kl"
-    kl_t53 = offsetof( struct kl__Fix, kl_x );
+    kl_t53 = 0;
 #line 144 "codegen/sample_m7.kl"
     kl_t54 = &kl_a_1;
 #line 144 "codegen/sample_m7.kl"

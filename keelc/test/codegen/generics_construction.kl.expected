@@ -12,23 +12,27 @@ struct kl__Box__I3f64E
 {
     double kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Outer__I3i32E
 {
     struct kl__Box__I3i32E kl_inner;
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Outer__I3i32E ) == 8 && _Alignof( struct kl__Outer__I3i32E ) == 4 && offsetof( struct kl__Outer__I3i32E, kl_inner ) == 0 && offsetof( struct kl__Outer__I3i32E, kl_tag ) == 4, "layout" );
 
 struct kl__Outer__I3f64E
 {
     struct kl__Box__I3f64E kl_inner;
     int32_t kl_tag;
 };
+_Static_assert( sizeof( struct kl__Outer__I3f64E ) == 16 && _Alignof( struct kl__Outer__I3f64E ) == 8 && offsetof( struct kl__Outer__I3f64E, kl_inner ) == 0 && offsetof( struct kl__Outer__I3f64E, kl_tag ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

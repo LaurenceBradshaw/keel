@@ -10,11 +10,13 @@ struct kl__Box__I3i32E
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_value ) == 0, "layout" );
 
 struct kl__Box__I3f64E
 {
     double kl_value;
 };
+_Static_assert( sizeof( struct kl__Box__I3f64E ) == 8 && _Alignof( struct kl__Box__I3f64E ) == 8 && offsetof( struct kl__Box__I3f64E, kl_value ) == 0, "layout" );
 
 int32_t kl__live__G;
 

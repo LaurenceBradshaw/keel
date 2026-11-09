@@ -11,16 +11,19 @@ struct kl__Box__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_v ) == 0, "layout" );
 
 struct kl__Box__I3BoxI3i32EE
 {
     struct kl__Box__I3i32E kl_v;
 };
+_Static_assert( sizeof( struct kl__Box__I3BoxI3i32EE ) == 4 && _Alignof( struct kl__Box__I3BoxI3i32EE ) == 4 && offsetof( struct kl__Box__I3BoxI3i32EE, kl_v ) == 0, "layout" );
 
 struct kl__Held__I3i32E
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Held__I3i32E ) == 4 && _Alignof( struct kl__Held__I3i32E ) == 4 && offsetof( struct kl__Held__I3i32E, kl_v ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

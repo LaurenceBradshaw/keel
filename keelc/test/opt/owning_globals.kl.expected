@@ -10,6 +10,7 @@ struct kl__Store
     uint8_t* kl_bytes;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl__Store ) == 16 && _Alignof( struct kl__Store ) == 8 && offsetof( struct kl__Store, kl_bytes ) == 0 && offsetof( struct kl__Store, kl_size ) == 8, "layout" );
 
 struct kl__Store kl__first__G;
 struct kl__Store kl__second__G;
@@ -60,7 +61,7 @@ void kl__5Store__R5Store_3u64__ctor( struct kl__Store* kl_this_1, uint64_t kl_n_
 {
     uint8_t* kl_t3;
 #line 17 "opt/owning_globals.kl"
-    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 1, "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
 #line 17 "opt/owning_globals.kl"
     ( *kl_this_1 ).kl_bytes = kl_t3;
 #line 19 "opt/owning_globals.kl"
@@ -139,13 +140,13 @@ void kl__0build( void )
     uint8_t* kl_t1;
     uint8_t* kl_t2;
 #line 17 "opt/owning_globals.kl"
-    kl_t1 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+    kl_t1 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, 1, "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
 #line 17 "opt/owning_globals.kl"
     kl__first__G.kl_bytes = kl_t1;
 #line 19 "opt/owning_globals.kl"
     kl__first__G.kl_size = 4;
 #line 17 "opt/owning_globals.kl"
-    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 8, sizeof( uint8_t ), "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 8, 1, "opt/owning_globals.kl", 17, "out of memory: alloc<u8>( n )" );
 #line 17 "opt/owning_globals.kl"
     kl__second__G.kl_bytes = kl_t2;
 #line 19 "opt/owning_globals.kl"

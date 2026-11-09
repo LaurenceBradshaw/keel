@@ -11,6 +11,7 @@ struct kl__Owned
 {
     uint64_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_id ) == 0, "layout" );
 
 struct kl__big
 {
@@ -18,12 +19,14 @@ struct kl__big
     int64_t kl_b;
     int64_t kl_c;
 };
+_Static_assert( sizeof( struct kl__big ) == 24 && _Alignof( struct kl__big ) == 8 && offsetof( struct kl__big, kl_a ) == 0 && offsetof( struct kl__big, kl_b ) == 8 && offsetof( struct kl__big, kl_c ) == 16, "layout" );
 
 struct kl__holder
 {
     int64_t kl_sum;
     struct kl__Owned kl_kept;
 };
+_Static_assert( sizeof( struct kl__holder ) == 16 && _Alignof( struct kl__holder ) == 8 && offsetof( struct kl__holder, kl_sum ) == 0 && offsetof( struct kl__holder, kl_kept ) == 8, "layout" );
 
 int32_t kl__live__G;
 

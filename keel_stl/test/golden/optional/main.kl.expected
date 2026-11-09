@@ -20,30 +20,47 @@ struct kl__owned
     uint64_t kl_id;
     uint64_t* kl_block;
 };
+_Static_assert( sizeof( struct kl__owned ) == 16 && _Alignof( struct kl__owned ) == 8 && offsetof( struct kl__owned, kl_id ) == 0 && offsetof( struct kl__owned, kl_block ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_location
 {
     struct kl_7prelude_str kl_file;
     uint32_t kl_line;
 };
+_Static_assert( sizeof( struct kl_7prelude_location ) == 24 && _Alignof( struct kl_7prelude_location ) == 8 && offsetof( struct kl_7prelude_location, kl_file ) == 0 && offsetof( struct kl_7prelude_location, kl_line ) == 16, "layout" );
 
 struct kl_2kl8optional_optional__I5ownedE
 {
     int32_t tag;
-    struct kl__owned kl_4some_value;
+    union
+    {
+        struct
+        {
+            struct kl__owned kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I5ownedE ) == 24 && _Alignof( struct kl_2kl8optional_optional__I5ownedE ) == 8 && offsetof( struct kl_2kl8optional_optional__I5ownedE, kl_4some_value ) == 8, "layout" );
 
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_4some_value;
+    union
+    {
+        struct
+        {
+            int32_t kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I3i32E ) == 8 && _Alignof( struct kl_2kl8optional_optional__I3i32E ) == 4 && offsetof( struct kl_2kl8optional_optional__I3i32E, kl_4some_value ) == 4, "layout" );
 
 int32_t kl__live__G;
 
@@ -84,7 +101,7 @@ void kl__5owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_
 #line 12 "optional/main.kl"
     ( *kl_this_1 ).kl_id = kl_n_2;
 #line 15 "optional/main.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "optional/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "optional/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
 #line 15 "optional/main.kl"
     ( *kl_this_1 ).kl_block = kl_t3;
 #line 17 "optional/main.kl"

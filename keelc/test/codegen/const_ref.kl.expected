@@ -10,6 +10,7 @@ struct kl__B
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__B ) == 8 && _Alignof( struct kl__B ) == 8 && offsetof( struct kl__B, kl_n ) == 0, "layout" );
 
 struct kl__Big
 {
@@ -17,6 +18,7 @@ struct kl__Big
     int32_t kl_b;
     int32_t kl_c;
 };
+_Static_assert( sizeof( struct kl__Big ) == 12 && _Alignof( struct kl__Big ) == 4 && offsetof( struct kl__Big, kl_a ) == 0 && offsetof( struct kl__Big, kl_b ) == 4 && offsetof( struct kl__Big, kl_c ) == 8, "layout" );
 
 uint64_t kl__freed__G = 0;
 

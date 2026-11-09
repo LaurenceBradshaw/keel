@@ -9,6 +9,7 @@ struct kl__Counter
 {
     int32_t kl_id;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_id ) == 0, "layout" );
 
 int32_t kl__made__GS7Counter = 0;
 int32_t kl__limit__GS7Counter = 10;

@@ -18,21 +18,25 @@ struct kl__vec
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__vec ) == 8 && _Alignof( struct kl__vec ) == 4 && offsetof( struct kl__vec, kl_x ) == 0 && offsetof( struct kl__vec, kl_y ) == 4, "layout" );
 
 struct kl__bag
 {
     int32_t kl_total;
 };
+_Static_assert( sizeof( struct kl__bag ) == 4 && _Alignof( struct kl__bag ) == 4 && offsetof( struct kl__bag, kl_total ) == 0, "layout" );
 
 struct kl__votes
 {
     int32_t kl_yes;
 };
+_Static_assert( sizeof( struct kl__votes ) == 4 && _Alignof( struct kl__votes ) == 4 && offsetof( struct kl__votes, kl_yes ) == 0, "layout" );
 
 struct kl__length
 {
     double kl_m;
 };
+_Static_assert( sizeof( struct kl__length ) == 8 && _Alignof( struct kl__length ) == 8 && offsetof( struct kl__length, kl_m ) == 0, "layout" );
 
 struct kl__scaled__vtable
 {

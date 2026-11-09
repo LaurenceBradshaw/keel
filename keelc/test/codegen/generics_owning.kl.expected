@@ -9,6 +9,7 @@ struct kl__Cell
 {
     int32_t* kl_slot;
 };
+_Static_assert( sizeof( struct kl__Cell ) == 8 && _Alignof( struct kl__Cell ) == 8 && offsetof( struct kl__Cell, kl_slot ) == 0, "layout" );
 
 int32_t kl__built__G = 0;
 int32_t kl__destroyed__G = 0;
@@ -31,7 +32,7 @@ void kl__4Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
     bool kl_t3;
     int32_t kl_t4;
 #line 16 "codegen/generics_owning.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/generics_owning.kl", 16, "out of memory: alloc<i32>()" );
+    kl_t2 = ( int32_t* ) kl_rt_alloc( 4, "codegen/generics_owning.kl", 16, "out of memory: alloc<i32>()" );
 #line 16 "codegen/generics_owning.kl"
     ( *kl_this_1 ).kl_slot = kl_t2;
     kl_t3 = __builtin_add_overflow( kl__built__G, 1, &( int32_t ) { 0 } );

@@ -11,18 +11,21 @@ struct kl__Plain
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Plain ) == 4 && _Alignof( struct kl__Plain ) == 4 && offsetof( struct kl__Plain, kl_v ) == 0, "layout" );
 
 struct kl__Pair__I3i64E
 {
     int64_t kl_first;
     int64_t kl_second;
 };
+_Static_assert( sizeof( struct kl__Pair__I3i64E ) == 16 && _Alignof( struct kl__Pair__I3i64E ) == 8 && offsetof( struct kl__Pair__I3i64E, kl_first ) == 0 && offsetof( struct kl__Pair__I3i64E, kl_second ) == 8, "layout" );
 
 struct kl__Node__I3i32E
 {
     int32_t kl_v;
     struct kl__Node__I3i32E* kl_next;
 };
+_Static_assert( sizeof( struct kl__Node__I3i32E ) == 16 && _Alignof( struct kl__Node__I3i32E ) == 8 && offsetof( struct kl__Node__I3i32E, kl_v ) == 0 && offsetof( struct kl__Node__I3i32E, kl_next ) == 8, "layout" );
 
 bool kl__4same__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
 struct kl__Plain kl__6larger__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );

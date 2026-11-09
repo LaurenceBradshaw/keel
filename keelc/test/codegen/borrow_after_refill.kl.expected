@@ -9,6 +9,7 @@ struct kl__Counted
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counted ) == 8 && _Alignof( struct kl__Counted ) == 8 && offsetof( struct kl__Counted, kl_n ) == 0, "layout" );
 
 int32_t kl__alive__G = 0;
 

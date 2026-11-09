@@ -40,6 +40,7 @@ struct kl_6shapes5solid4cube_cube
 {
     int32_t kl_side;
 };
+_Static_assert( sizeof( struct kl_6shapes5solid4cube_cube ) == 4 && _Alignof( struct kl_6shapes5solid4cube_cube ) == 4 && offsetof( struct kl_6shapes5solid4cube_cube, kl_side ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -104,6 +105,7 @@ struct kl_6shapes5solid4cube_cube
 {
     int32_t kl_side;
 };
+_Static_assert( sizeof( struct kl_6shapes5solid4cube_cube ) == 4 && _Alignof( struct kl_6shapes5solid4cube_cube ) == 4 && offsetof( struct kl_6shapes5solid4cube_cube, kl_side ) == 0, "layout" );
 
 int32_t kl__4main__( void );
 int32_t kl_6shapes5solid4cube_6volume__3i32( int32_t );

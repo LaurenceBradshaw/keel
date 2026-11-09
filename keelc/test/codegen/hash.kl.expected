@@ -11,6 +11,7 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_hasher
 {
@@ -20,6 +21,7 @@ struct kl_7prelude_hasher
     uint64_t kl_v3_;
     uint64_t kl_bytes_;
 };
+_Static_assert( sizeof( struct kl_7prelude_hasher ) == 40 && _Alignof( struct kl_7prelude_hasher ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v0_ ) == 0 && offsetof( struct kl_7prelude_hasher, kl_v1_ ) == 8 && offsetof( struct kl_7prelude_hasher, kl_v2_ ) == 16 && offsetof( struct kl_7prelude_hasher, kl_v3_ ) == 24 && offsetof( struct kl_7prelude_hasher, kl_bytes_ ) == 32, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

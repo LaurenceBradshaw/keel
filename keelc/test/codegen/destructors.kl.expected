@@ -15,33 +15,39 @@ struct kl__Buffer
     uint8_t* kl_ptr;
     uint64_t kl_len;
 };
+_Static_assert( sizeof( struct kl__Buffer ) == 16 && _Alignof( struct kl__Buffer ) == 8 && offsetof( struct kl__Buffer, kl_ptr ) == 0 && offsetof( struct kl__Buffer, kl_len ) == 8, "layout" );
 
 struct kl__Counter
 {
     uint64_t kl_count;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_count ) == 0, "layout" );
 
 struct kl__Guarded
 {
     uint64_t kl_len;
     uint8_t* kl_ptr;
 };
+_Static_assert( sizeof( struct kl__Guarded ) == 16 && _Alignof( struct kl__Guarded ) == 8 && offsetof( struct kl__Guarded, kl_len ) == 0 && offsetof( struct kl__Guarded, kl_ptr ) == 8, "layout" );
 
 struct kl__Handle
 {
     uint64_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Handle ) == 8 && _Alignof( struct kl__Handle ) == 8 && offsetof( struct kl__Handle, kl_value ) == 0, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Wrapper
 {
     struct kl__Buffer kl_inner;
 };
+_Static_assert( sizeof( struct kl__Wrapper ) == 16 && _Alignof( struct kl__Wrapper ) == 8 && offsetof( struct kl__Wrapper, kl_inner ) == 0, "layout" );
 
 int32_t kl__released__G;
 

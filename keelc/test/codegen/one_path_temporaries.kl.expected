@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -311,12 +312,14 @@ struct kl__Buf
     uint64_t kl_n;
     uint64_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__Buf ) == 16 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_n ) == 0 && offsetof( struct kl__Buf, kl_data ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -359,7 +362,7 @@ void kl__3Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_v_2 )
 #line 13 "codegen/one_path_temporaries.kl"
     ( *kl_this_1 ).kl_n = kl_v_2;
 #line 17 "codegen/one_path_temporaries.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/one_path_temporaries.kl", 17, "out of memory: alloc<u64>()" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( 8, "codegen/one_path_temporaries.kl", 17, "out of memory: alloc<u64>()" );
 #line 17 "codegen/one_path_temporaries.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 20 "codegen/one_path_temporaries.kl"

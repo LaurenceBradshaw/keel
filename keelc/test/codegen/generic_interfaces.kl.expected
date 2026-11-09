@@ -14,23 +14,27 @@ struct kl__tally
     uint64_t kl_trues_;
     uint64_t kl_count_;
 };
+_Static_assert( sizeof( struct kl__tally ) == 24 && _Alignof( struct kl__tally ) == 8 && offsetof( struct kl__tally, kl_sum_ ) == 0 && offsetof( struct kl__tally, kl_trues_ ) == 8 && offsetof( struct kl__tally, kl_count_ ) == 16, "layout" );
 
 struct kl__exactly
 {
     int64_t kl_v;
 };
+_Static_assert( sizeof( struct kl__exactly ) == 8 && _Alignof( struct kl__exactly ) == 8 && offsetof( struct kl__exactly, kl_v ) == 0, "layout" );
 
 struct kl__last__I3i32E
 {
     int32_t kl_value;
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__last__I3i32E ) == 16 && _Alignof( struct kl__last__I3i32E ) == 8 && offsetof( struct kl__last__I3i32E, kl_value ) == 0 && offsetof( struct kl__last__I3i32E, kl_n ) == 8, "layout" );
 
 struct kl__last__I3i64E
 {
     int64_t kl_value;
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__last__I3i64E ) == 16 && _Alignof( struct kl__last__I3i64E ) == 8 && offsetof( struct kl__last__I3i64E, kl_value ) == 0 && offsetof( struct kl__last__I3i64E, kl_n ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

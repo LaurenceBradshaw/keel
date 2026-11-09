@@ -45,17 +45,20 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__step
 {
     struct kl_7prelude_str kl_name;
     kl__fn__F3i32E3i32 kl_run;
 };
+_Static_assert( sizeof( struct kl__step ) == 24 && _Alignof( struct kl__step ) == 8 && offsetof( struct kl__step, kl_name ) == 0 && offsetof( struct kl__step, kl_run ) == 16, "layout" );
 
 struct kl__A3_4step
 {
     struct kl__step e[3];
 };
+_Static_assert( sizeof( struct kl__A3_4step ) == 72 && _Alignof( struct kl__A3_4step ) == 8, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

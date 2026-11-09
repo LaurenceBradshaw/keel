@@ -11,11 +11,13 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Box
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 void kl__3Box__R3Box_3i32__ctor( struct kl__Box*, int32_t );
 int32_t kl__5mixed__3i32_3i32( int32_t, int32_t );

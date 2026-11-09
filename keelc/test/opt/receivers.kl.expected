@@ -11,6 +11,7 @@ struct kl__Counter
 {
     int64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 8 && _Alignof( struct kl__Counter ) == 8 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 void kl__7Counter__R7Counter__ctor( struct kl__Counter* );
 void kl__5times__S7Counter_3i64( struct kl__Counter*, int64_t );

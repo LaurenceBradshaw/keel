@@ -11,17 +11,20 @@ struct kl__Counter
 {
     int32_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_n ) == 0, "layout" );
 
 struct kl__Sealed
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__Sealed ) == 4 && _Alignof( struct kl__Sealed ) == 4 && offsetof( struct kl__Sealed, kl_v ) == 0, "layout" );
 
 struct kl__Pair
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Pair ) == 8 && _Alignof( struct kl__Pair ) == 4 && offsetof( struct kl__Pair, kl_x ) == 0 && offsetof( struct kl__Pair, kl_y ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

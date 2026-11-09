@@ -12,22 +12,26 @@ struct kl__meter
 {
     int32_t kl_v;
 };
+_Static_assert( sizeof( struct kl__meter ) == 4 && _Alignof( struct kl__meter ) == 4 && offsetof( struct kl__meter, kl_v ) == 0, "layout" );
 
 struct kl__Owner
 {
     uint8_t* kl_bytes;
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Owner ) == 16 && _Alignof( struct kl__Owner ) == 8 && offsetof( struct kl__Owner, kl_bytes ) == 0 && offsetof( struct kl__Owner, kl_n ) == 8, "layout" );
 
 struct kl__cell__I2u8E
 {
     uint8_t kl_v;
 };
+_Static_assert( sizeof( struct kl__cell__I2u8E ) == 1 && _Alignof( struct kl__cell__I2u8E ) == 1 && offsetof( struct kl__cell__I2u8E, kl_v ) == 0, "layout" );
 
 struct kl__cell__I3f64E
 {
     double kl_v;
 };
+_Static_assert( sizeof( struct kl__cell__I3f64E ) == 8 && _Alignof( struct kl__cell__I3f64E ) == 8 && offsetof( struct kl__cell__I3f64E, kl_v ) == 0, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -138,7 +142,7 @@ void kl__5Owner__R5Owner_3u64__ctor( struct kl__Owner* kl_this_1, uint64_t kl_si
 {
     uint8_t* kl_t3;
 #line 53 "codegen/static_requirements.kl"
-    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_2, sizeof( uint8_t ), "codegen/static_requirements.kl", 53, "out of memory: alloc<u8>( size )" );
+    kl_t3 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_size_2, 1, "codegen/static_requirements.kl", 53, "out of memory: alloc<u8>( size )" );
 #line 53 "codegen/static_requirements.kl"
     ( *kl_this_1 ).kl_bytes = kl_t3;
     ( *kl_this_1 ).kl_n = kl_size_2;

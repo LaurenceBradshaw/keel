@@ -14,6 +14,7 @@ struct kl_2kl15ordered_control_key_run
     uint64_t kl_to;
     uint64_t kl_count;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_key_run ) == 24 && _Alignof( struct kl_2kl15ordered_control_key_run ) == 8 && offsetof( struct kl_2kl15ordered_control_key_run, kl_from ) == 0 && offsetof( struct kl_2kl15ordered_control_key_run, kl_to ) == 8 && offsetof( struct kl_2kl15ordered_control_key_run, kl_count ) == 16, "layout" );
 
 struct kl_2kl15ordered_control_key_moves
 {
@@ -21,6 +22,7 @@ struct kl_2kl15ordered_control_key_moves
     struct kl_2kl15ordered_control_key_run kl_second;
     struct kl_2kl15ordered_control_key_run kl_third;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_key_moves ) == 72 && _Alignof( struct kl_2kl15ordered_control_key_moves ) == 8 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_first ) == 0 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_second ) == 24 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_third ) == 48, "layout" );
 
 struct kl_2kl15ordered_control_ordered_control
 {
@@ -34,12 +36,14 @@ struct kl_2kl15ordered_control_ordered_control
     uint64_t kl_free_;
     uint64_t kl_free_count_;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_ordered_control ) == 72 && _Alignof( struct kl_2kl15ordered_control_ordered_control ) == 8 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_children_ ) == 0 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_counts_ ) == 8 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_totals_ ) == 16 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_root_ ) == 24 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_height_ ) == 32 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_used_ ) == 40 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_capacity_ ) == 48 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_free_ ) == 56 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_free_count_ ) == 64, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 uint8_t kl_2kl15ordered_control_ORDERED_KEYS__G = 11;
 uint8_t kl_2kl15ordered_control_ORDERED_MIN__G = 5;
@@ -362,13 +366,13 @@ void kl_2kl15ordered_control_4grow__SQ2kl15ordered_control_3u64( struct kl_2kl15
 #line 144 "../../src/ordered_control.kl"
     kl_t9 = kl_nodes_2 * kl_t7;
 #line 144 "../../src/ordered_control.kl"
-    kl_t10 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, sizeof( uint64_t ), "../../src/ordered_control.kl", 144, "out of memory: alloc<u64>( nodes * ( ORDERED_KEYS + 1 ) )" );
+    kl_t10 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, 8, "../../src/ordered_control.kl", 144, "out of memory: alloc<u64>( nodes * ( ORDERED_KEYS + 1 ) )" );
 #line 144 "../../src/ordered_control.kl"
     kl_children_3 = kl_t10;
-    kl_t11 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 145, "out of memory: alloc<u64>( nodes )" );
+    kl_t11 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, 8, "../../src/ordered_control.kl", 145, "out of memory: alloc<u64>( nodes )" );
 #line 145 "../../src/ordered_control.kl"
     kl_counts_4 = kl_t11;
-    kl_t12 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, sizeof( uint64_t ), "../../src/ordered_control.kl", 146, "out of memory: alloc<u64>( nodes )" );
+    kl_t12 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_nodes_2, 8, "../../src/ordered_control.kl", 146, "out of memory: alloc<u64>( nodes )" );
 #line 146 "../../src/ordered_control.kl"
     kl_totals_5 = kl_t12;
 #line 149 "../../src/ordered_control.kl"
@@ -2663,6 +2667,7 @@ struct kl_2kl15ordered_control_key_run
     uint64_t kl_to;
     uint64_t kl_count;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_key_run ) == 24 && _Alignof( struct kl_2kl15ordered_control_key_run ) == 8 && offsetof( struct kl_2kl15ordered_control_key_run, kl_from ) == 0 && offsetof( struct kl_2kl15ordered_control_key_run, kl_to ) == 8 && offsetof( struct kl_2kl15ordered_control_key_run, kl_count ) == 16, "layout" );
 
 struct kl_2kl15ordered_control_key_moves
 {
@@ -2670,6 +2675,7 @@ struct kl_2kl15ordered_control_key_moves
     struct kl_2kl15ordered_control_key_run kl_second;
     struct kl_2kl15ordered_control_key_run kl_third;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_key_moves ) == 72 && _Alignof( struct kl_2kl15ordered_control_key_moves ) == 8 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_first ) == 0 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_second ) == 24 && offsetof( struct kl_2kl15ordered_control_key_moves, kl_third ) == 48, "layout" );
 
 struct kl_2kl15ordered_control_ordered_control
 {
@@ -2683,12 +2689,14 @@ struct kl_2kl15ordered_control_ordered_control
     uint64_t kl_free_;
     uint64_t kl_free_count_;
 };
+_Static_assert( sizeof( struct kl_2kl15ordered_control_ordered_control ) == 72 && _Alignof( struct kl_2kl15ordered_control_ordered_control ) == 8 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_children_ ) == 0 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_counts_ ) == 8 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_totals_ ) == 16 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_root_ ) == 24 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_height_ ) == 32 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_used_ ) == 40 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_capacity_ ) == 48 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_free_ ) == 56 && offsetof( struct kl_2kl15ordered_control_ordered_control, kl_free_count_ ) == 64, "layout" );
 
 struct kl_2kl11ordered_set_ordered_set__I3i32E
 {
     struct kl_2kl15ordered_control_ordered_control kl_control_;
     int32_t* kl_keys_;
 };
+_Static_assert( sizeof( struct kl_2kl11ordered_set_ordered_set__I3i32E ) == 80 && _Alignof( struct kl_2kl11ordered_set_ordered_set__I3i32E ) == 8 && offsetof( struct kl_2kl11ordered_set_ordered_set__I3i32E, kl_control_ ) == 0 && offsetof( struct kl_2kl11ordered_set_ordered_set__I3i32E, kl_keys_ ) == 72, "layout" );
 
 struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E
 {
@@ -2696,17 +2704,26 @@ struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E
     int32_t* kl_keys_;
     int32_t* kl_values_;
 };
+_Static_assert( sizeof( struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E ) == 88 && _Alignof( struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E ) == 8 && offsetof( struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E, kl_control_ ) == 0 && offsetof( struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E, kl_keys_ ) == 72 && offsetof( struct kl_2kl11ordered_map_ordered_map__I3i32_3i32E, kl_values_ ) == 80, "layout" );
 
 struct kl_2kl8optional_optional__I3i32E
 {
     int32_t tag;
-    int32_t kl_4some_value;
+    union
+    {
+        struct
+        {
+            int32_t kl_4some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl_2kl8optional_optional__I3i32E ) == 8 && _Alignof( struct kl_2kl8optional_optional__I3i32E ) == 4 && offsetof( struct kl_2kl8optional_optional__I3i32E, kl_4some_value ) == 4, "layout" );
 
 struct kl__A32_3u64
 {
     uint64_t e[32];
 };
+_Static_assert( sizeof( struct kl__A32_3u64 ) == 256 && _Alignof( struct kl__A32_3u64 ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -6205,7 +6222,7 @@ void kl_2kl11ordered_set_4grow__I3i32E__SQ2kl11ordered_setI3i32E( struct kl_2kl1
 #line 380 "../../src/ordered_set.kl"
     kl_t8 = kl_nodes_2 * kl_t6;
 #line 380 "../../src/ordered_set.kl"
-    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, sizeof( int32_t ), "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
+    kl_t9 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t8, 4, "../../src/ordered_set.kl", 380, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
 #line 380 "../../src/ordered_set.kl"
     kl_keys_5 = kl_t9;
 #line 383 "../../src/ordered_set.kl"
@@ -6953,7 +6970,7 @@ void kl_2kl11ordered_map_4grow__I3i32_3i32E__SQ2kl11ordered_mapI3i32_3i32E( stru
 #line 466 "../../src/ordered_map.kl"
     kl_t9 = kl_nodes_2 * kl_t7;
 #line 466 "../../src/ordered_map.kl"
-    kl_t10 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, sizeof( int32_t ), "../../src/ordered_map.kl", 466, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
+    kl_t10 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t9, 4, "../../src/ordered_map.kl", 466, "out of memory: alloc<K>( nodes * ORDERED_KEYS )" );
 #line 466 "../../src/ordered_map.kl"
     kl_keys_5 = kl_t10;
     kl_t11 = ( uint64_t ) 11;
@@ -6968,7 +6985,7 @@ void kl_2kl11ordered_map_4grow__I3i32_3i32E__SQ2kl11ordered_mapI3i32_3i32E( stru
 #line 467 "../../src/ordered_map.kl"
     kl_t13 = kl_nodes_2 * kl_t11;
 #line 467 "../../src/ordered_map.kl"
-    kl_t14 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t13, sizeof( int32_t ), "../../src/ordered_map.kl", 467, "out of memory: alloc<V>( nodes * ORDERED_KEYS )" );
+    kl_t14 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_t13, 4, "../../src/ordered_map.kl", 467, "out of memory: alloc<V>( nodes * ORDERED_KEYS )" );
 #line 467 "../../src/ordered_map.kl"
     kl_values_6 = kl_t14;
 #line 470 "../../src/ordered_map.kl"

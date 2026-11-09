@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -313,12 +314,14 @@ struct kl__Point
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -781,10 +784,10 @@ int32_t kl__4main__( void )
     kl_data_1 = NULL;
     kl_points_2 = NULL;
 #line 59 "codegen/runs.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 6, sizeof( int32_t ), "codegen/runs.kl", 59, "out of memory: alloc<i32>( 6 )" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 6, 4, "codegen/runs.kl", 59, "out of memory: alloc<i32>( 6 )" );
 #line 59 "codegen/runs.kl"
     kl_data_1 = kl_t3;
-    kl_t4 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( struct kl__Point ), "codegen/runs.kl", 60, "out of memory: alloc<Point>( 3 )" );
+    kl_t4 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 3, 8, "codegen/runs.kl", 60, "out of memory: alloc<Point>( 3 )" );
 #line 60 "codegen/runs.kl"
     kl_points_2 = kl_t4;
 #line 65 "codegen/runs.kl"

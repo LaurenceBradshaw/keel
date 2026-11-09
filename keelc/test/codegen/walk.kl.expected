@@ -13,27 +13,32 @@ struct kl__Counted
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Counted ) == 4 && _Alignof( struct kl__Counted ) == 4 && offsetof( struct kl__Counted, kl_value ) == 0, "layout" );
 
 struct kl__Bag
 {
     int32_t* kl_data_;
     uint64_t kl_count_;
 };
+_Static_assert( sizeof( struct kl__Bag ) == 16 && _Alignof( struct kl__Bag ) == 8 && offsetof( struct kl__Bag, kl_data_ ) == 0 && offsetof( struct kl__Bag, kl_count_ ) == 8, "layout" );
 
 struct kl__Pair
 {
     int32_t kl_a_;
 };
+_Static_assert( sizeof( struct kl__Pair ) == 4 && _Alignof( struct kl__Pair ) == 4 && offsetof( struct kl__Pair, kl_a_ ) == 0, "layout" );
 
 struct kl__Box__I3i32E
 {
     int32_t kl_value_;
 };
+_Static_assert( sizeof( struct kl__Box__I3i32E ) == 4 && _Alignof( struct kl__Box__I3i32E ) == 4 && offsetof( struct kl__Box__I3i32E, kl_value_ ) == 0, "layout" );
 
 struct kl__Box__I4boolE
 {
     bool kl_value_;
 };
+_Static_assert( sizeof( struct kl__Box__I4boolE ) == 1 && _Alignof( struct kl__Box__I4boolE ) == 1 && offsetof( struct kl__Box__I4boolE, kl_value_ ) == 0, "layout" );
 
 int32_t kl__drops__G = 0;
 
@@ -94,7 +99,7 @@ void kl__3Bag__R3Bag_3u64__ctor( struct kl__Bag* kl_this_1, uint64_t kl_n_2 )
     bool kl_t12;
     int32_t kl_t13;
 #line 31 "codegen/walk.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/walk.kl", 31, "out of memory: alloc<i32>( n )" );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, 4, "codegen/walk.kl", 31, "out of memory: alloc<i32>( n )" );
 #line 31 "codegen/walk.kl"
     ( *kl_this_1 ).kl_data_ = kl_t3;
     kl_i_4 = 0;

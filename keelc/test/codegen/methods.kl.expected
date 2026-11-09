@@ -10,11 +10,13 @@ struct kl__Counter
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Counter ) == 4 && _Alignof( struct kl__Counter ) == 4 && offsetof( struct kl__Counter, kl_value ) == 0, "layout" );
 
 struct kl__Owned
 {
     uint64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Owned ) == 8 && _Alignof( struct kl__Owned ) == 8 && offsetof( struct kl__Owned, kl_n ) == 0, "layout" );
 
 uint64_t kl__freed__G = 0;
 

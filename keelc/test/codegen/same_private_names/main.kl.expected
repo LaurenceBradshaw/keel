@@ -9,6 +9,7 @@ struct kl_1a_node
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl_1a_node ) == 4 && _Alignof( struct kl_1a_node ) == 4 && offsetof( struct kl_1a_node, kl_value ) == 0, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -67,6 +68,7 @@ struct kl_1b_node
     int32_t kl_value;
     int32_t kl_extra;
 };
+_Static_assert( sizeof( struct kl_1b_node ) == 8 && _Alignof( struct kl_1b_node ) == 4 && offsetof( struct kl_1b_node, kl_value ) == 0 && offsetof( struct kl_1b_node, kl_extra ) == 4, "layout" );
 
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

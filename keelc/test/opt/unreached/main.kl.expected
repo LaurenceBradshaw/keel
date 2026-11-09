@@ -15,6 +15,7 @@ struct kl__Circle
 {
     int32_t kl_r;
 };
+_Static_assert( sizeof( struct kl__Circle ) == 4 && _Alignof( struct kl__Circle ) == 4 && offsetof( struct kl__Circle, kl_r ) == 0, "layout" );
 
 struct kl__Shape__vtable
 {

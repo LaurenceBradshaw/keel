@@ -17,6 +17,7 @@ struct kl_7prelude_str
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -314,38 +315,65 @@ struct kl__Buf
 {
     uint64_t* kl_data;
 };
+_Static_assert( sizeof( struct kl__Buf ) == 8 && _Alignof( struct kl__Buf ) == 8 && offsetof( struct kl__Buf, kl_data ) == 0, "layout" );
 
 struct kl__Holder
 {
     int32_t tag;
-    struct kl__Buf kl_4Full_b;
-    uint64_t kl_4Pair_extra;
-    struct kl__Buf kl_4Pair_left;
-    struct kl__Buf kl_4Pair_right;
+    union
+    {
+        struct
+        {
+            struct kl__Buf kl_4Full_b;
+        };
+        struct
+        {
+            uint64_t kl_4Pair_extra;
+            struct kl__Buf kl_4Pair_left;
+            struct kl__Buf kl_4Pair_right;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Holder ) == 32 && _Alignof( struct kl__Holder ) == 8 && offsetof( struct kl__Holder, kl_4Full_b ) == 8 && offsetof( struct kl__Holder, kl_4Pair_extra ) == 8 && offsetof( struct kl__Holder, kl_4Pair_left ) == 16 && offsetof( struct kl__Holder, kl_4Pair_right ) == 24, "layout" );
 
 struct kl__Keeper
 {
     struct kl__Holder kl_held;
 };
+_Static_assert( sizeof( struct kl__Keeper ) == 32 && _Alignof( struct kl__Keeper ) == 8 && offsetof( struct kl__Keeper, kl_held ) == 0, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__Option__I6HolderE
 {
     int32_t tag;
-    struct kl__Holder kl_4Some_value;
+    union
+    {
+        struct
+        {
+            struct kl__Holder kl_4Some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Option__I6HolderE ) == 40 && _Alignof( struct kl__Option__I6HolderE ) == 8 && offsetof( struct kl__Option__I6HolderE, kl_4Some_value ) == 8, "layout" );
 
 struct kl__Option__I3BufE
 {
     int32_t tag;
-    struct kl__Buf kl_4Some_value;
+    union
+    {
+        struct
+        {
+            struct kl__Buf kl_4Some_value;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Option__I3BufE ) == 16 && _Alignof( struct kl__Option__I3BufE ) == 8 && offsetof( struct kl__Option__I3BufE, kl_4Some_value ) == 8, "layout" );
 
 struct kl_7prelude_textual__vtable
 {
@@ -383,7 +411,7 @@ void kl__3Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 14 "codegen/owning_payloads.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/owning_payloads.kl", 14, "out of memory: alloc<u64>()" );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( 8, "codegen/owning_payloads.kl", 14, "out of memory: alloc<u64>()" );
 #line 14 "codegen/owning_payloads.kl"
     ( *kl_this_1 ).kl_data = kl_t3;
 #line 17 "codegen/owning_payloads.kl"

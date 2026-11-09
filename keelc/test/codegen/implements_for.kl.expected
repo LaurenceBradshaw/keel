@@ -19,27 +19,38 @@ struct kl__Tracked
 {
     int64_t kl_n;
 };
+_Static_assert( sizeof( struct kl__Tracked ) == 8 && _Alignof( struct kl__Tracked ) == 8 && offsetof( struct kl__Tracked, kl_n ) == 0, "layout" );
 
 struct kl__Held
 {
     int32_t tag;
-    struct kl__Tracked kl_4Full_t;
+    union
+    {
+        struct
+        {
+            struct kl__Tracked kl_4Full_t;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Held ) == 16 && _Alignof( struct kl__Held ) == 8 && offsetof( struct kl__Held, kl_4Full_t ) == 8, "layout" );
 
 struct kl_7prelude_box__I8MeasuredE
 {
     struct kl__Measured__ref kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I8MeasuredE ) == 16 && _Alignof( struct kl_7prelude_box__I8MeasuredE ) == 8 && offsetof( struct kl_7prelude_box__I8MeasuredE, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I3i64E
 {
     int64_t* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I3i64E ) == 8 && _Alignof( struct kl_7prelude_box__I3i64E ) == 8 && offsetof( struct kl_7prelude_box__I3i64E, kl_p_ ) == 0, "layout" );
 
 struct kl_7prelude_box__I4HeldE
 {
     struct kl__Held* kl_p_;
 };
+_Static_assert( sizeof( struct kl_7prelude_box__I4HeldE ) == 8 && _Alignof( struct kl_7prelude_box__I4HeldE ) == 8 && offsetof( struct kl_7prelude_box__I4HeldE, kl_p_ ) == 0, "layout" );
 
 struct kl__Measured__vtable
 {
@@ -847,7 +858,7 @@ void kl_7prelude_3box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( struct kl_7prel
     int64_t* kl_t6;
     int64_t* kl_t7;
 #line 387 "<prelude>"
-    kl_t4 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( int64_t ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( int64_t* ) kl_rt_alloc_many( ( size_t ) 1, 8, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;
@@ -885,7 +896,7 @@ void kl_7prelude_3box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7p
 #line 387 "<prelude>"
     kl_t8 = true;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
+    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, 16, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
 #line 387 "<prelude>"
     kl_slot_3 = kl_t4;
     kl_t5 = kl_slot_3 + 0;

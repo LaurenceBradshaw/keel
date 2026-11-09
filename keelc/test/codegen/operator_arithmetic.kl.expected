@@ -19,55 +19,65 @@ struct kl__vec
     double kl_x;
     double kl_y;
 };
+_Static_assert( sizeof( struct kl__vec ) == 16 && _Alignof( struct kl__vec ) == 8 && offsetof( struct kl__vec, kl_x ) == 0 && offsetof( struct kl__vec, kl_y ) == 8, "layout" );
 
 struct kl__bits
 {
     uint8_t kl_v;
 };
+_Static_assert( sizeof( struct kl__bits ) == 1 && _Alignof( struct kl__bits ) == 1 && offsetof( struct kl__bits, kl_v ) == 0, "layout" );
 
 struct kl__hours
 {
     int64_t kl_h;
 };
+_Static_assert( sizeof( struct kl__hours ) == 8 && _Alignof( struct kl__hours ) == 8 && offsetof( struct kl__hours, kl_h ) == 0, "layout" );
 
 struct kl__seconds
 {
     double kl_s;
 };
+_Static_assert( sizeof( struct kl__seconds ) == 8 && _Alignof( struct kl__seconds ) == 8 && offsetof( struct kl__seconds, kl_s ) == 0, "layout" );
 
 struct kl__speed
 {
     double kl_per_second;
 };
+_Static_assert( sizeof( struct kl__speed ) == 8 && _Alignof( struct kl__speed ) == 8 && offsetof( struct kl__speed, kl_per_second ) == 0, "layout" );
 
 struct kl__meters
 {
     double kl_m;
 };
+_Static_assert( sizeof( struct kl__meters ) == 8 && _Alignof( struct kl__meters ) == 8 && offsetof( struct kl__meters, kl_m ) == 0, "layout" );
 
 struct kl__label
 {
     uint8_t* kl_bytes;
     uint64_t kl_length;
 };
+_Static_assert( sizeof( struct kl__label ) == 16 && _Alignof( struct kl__label ) == 8 && offsetof( struct kl__label, kl_bytes ) == 0 && offsetof( struct kl__label, kl_length ) == 8, "layout" );
 
 struct kl_7prelude_str
 {
     uint8_t* kl_data;
     uint64_t kl_size;
 };
+_Static_assert( sizeof( struct kl_7prelude_str ) == 16 && _Alignof( struct kl_7prelude_str ) == 8 && offsetof( struct kl_7prelude_str, kl_data ) == 0 && offsetof( struct kl_7prelude_str, kl_size ) == 8, "layout" );
 
 struct kl__pair__I3i32E
 {
     int32_t kl_left;
     int32_t kl_right;
 };
+_Static_assert( sizeof( struct kl__pair__I3i32E ) == 8 && _Alignof( struct kl__pair__I3i32E ) == 4 && offsetof( struct kl__pair__I3i32E, kl_left ) == 0 && offsetof( struct kl__pair__I3i32E, kl_right ) == 4, "layout" );
 
 struct kl__pair__I3f64E
 {
     double kl_left;
     double kl_right;
 };
+_Static_assert( sizeof( struct kl__pair__I3f64E ) == 16 && _Alignof( struct kl__pair__I3f64E ) == 8 && offsetof( struct kl__pair__I3f64E, kl_left ) == 0 && offsetof( struct kl__pair__I3f64E, kl_right ) == 8, "layout" );
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
@@ -382,7 +392,7 @@ void kl__5label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_
 #line 74 "codegen/operator_arithmetic.kl"
     kl_t4 = kl_n_2 + 1;
 #line 74 "codegen/operator_arithmetic.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, sizeof( uint8_t ), "codegen/operator_arithmetic.kl", 74, "out of memory: alloc<u8>( n + 1 )" );
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t4, 1, "codegen/operator_arithmetic.kl", 74, "out of memory: alloc<u8>( n + 1 )" );
 #line 74 "codegen/operator_arithmetic.kl"
     ( *kl_this_1 ).kl_bytes = kl_t5;
     ( *kl_this_1 ).kl_length = kl_n_2;

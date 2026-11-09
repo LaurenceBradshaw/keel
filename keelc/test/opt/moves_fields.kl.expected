@@ -12,26 +12,39 @@ struct kl__Box
 {
     int32_t kl_value;
 };
+_Static_assert( sizeof( struct kl__Box ) == 4 && _Alignof( struct kl__Box ) == 4 && offsetof( struct kl__Box, kl_value ) == 0, "layout" );
 
 struct kl__Point
 {
     int32_t kl_x;
     int32_t kl_y;
 };
+_Static_assert( sizeof( struct kl__Point ) == 8 && _Alignof( struct kl__Point ) == 4 && offsetof( struct kl__Point, kl_x ) == 0 && offsetof( struct kl__Point, kl_y ) == 4, "layout" );
 
 struct kl__Line
 {
     struct kl__Point kl_a;
     struct kl__Point kl_b;
 };
+_Static_assert( sizeof( struct kl__Line ) == 16 && _Alignof( struct kl__Line ) == 4 && offsetof( struct kl__Line, kl_a ) == 0 && offsetof( struct kl__Line, kl_b ) == 8, "layout" );
 
 struct kl__Shape
 {
     int32_t tag;
-    struct kl__Box kl_5boxed_b;
-    struct kl__Box kl_6paired_first;
-    struct kl__Box kl_6paired_second;
+    union
+    {
+        struct
+        {
+            struct kl__Box kl_5boxed_b;
+        };
+        struct
+        {
+            struct kl__Box kl_6paired_first;
+            struct kl__Box kl_6paired_second;
+        };
+    };
 };
+_Static_assert( sizeof( struct kl__Shape ) == 12 && _Alignof( struct kl__Shape ) == 4 && offsetof( struct kl__Shape, kl_5boxed_b ) == 4 && offsetof( struct kl__Shape, kl_6paired_first ) == 4 && offsetof( struct kl__Shape, kl_6paired_second ) == 8, "layout" );
 
 int32_t kl__live__G;
 int32_t kl__destroyed__G;
