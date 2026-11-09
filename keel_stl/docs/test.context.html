@@ -70,6 +70,15 @@ that called it.</p>
 <p>Ends the test if <code>condition</code> is false, as a <code>panic</code> at the line that called it.</p>
 </div>
 </div>
+<div class="group" id="context.expect_panic">
+<pre class="signature"><a class="anchor" href="#context.expect_panic" aria-label="Link to expect_panic">#</a><code>@located <span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">expect_panic</span>&lt;F&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="prelude.html#textual">textual</a> message, F body ) <span class="kw">where</span> F : <span class="kw">fn</span>() -&gt; <a class="prim" href="prelude.html#void">void</a></code></pre>
+<div class="doc">
+<p>Counts a failure unless <code>body</code> panics with a message containing <code>message</code>, reporting the
+line that called it.</p>
+<p><code>body</code> runs in a process of its own, so nothing it changes, checks on this context included,
+reaches the test. Only a <code>panic</code> is expected: an <code>assert</code> is off in release builds.</p>
+</div>
+</div>
 </section>
 </main>
 <footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
