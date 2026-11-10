@@ -9,6 +9,10 @@ Install by linking this folder into VS Code's extensions directory, then reloadi
     ln -s "$PWD" ~/.vscode/extensions/keel.keel-0.0.1          # VS Code running locally
     ln -s "$PWD" ~/.vscode-server/extensions/keel.keel-0.0.1   # VS Code attached to WSL or SSH
 
+On Windows, from PowerShell in this folder (a junction needs no administrator rights):
+
+    New-Item -ItemType Junction -Path "$env:USERPROFILE\.vscode\extensions\keel.keel-0.0.1" -Target $PWD
+
 Edits to the grammar or to `extension.js` take effect on the next reload.
 
 ## Errors
