@@ -19,6 +19,24 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            // The same with the windows-debug preset's keelc, writing a .pdb beside the .exe.
+            "label": "keelc: build examples/debugging.kl on Windows",
+            "type": "process",
+            "command": "${workspaceFolder}/build/windows-debug/bin/keelc.exe",
+            "args": [
+                "--debug",
+                "--package",
+                "kl=keel_stl/src",
+                "examples/debugging.kl",
+                "-o",
+                "build/examples/debugging.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
         }
     ]
 }

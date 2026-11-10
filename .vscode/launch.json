@@ -25,6 +25,20 @@
             ]
         },
         {
+            // Windows' counterpart: the Visual Studio debugger (cpptools) reads the .pdb that
+            // --debug writes, so breakpoints go in the .kl file and names are Keel's.
+            "name": "Debug a Keel program on Windows (examples/debugging.kl)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "keelc: build examples/debugging.kl on Windows",
+            "program": "${workspaceFolder}/build/examples/debugging.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             // Uses the CMake Tools launch target, so it follows whichever preset is selected
             // rather than hard-coding build/debug/bin/keelc.
             "name": "Debug keelc (examples/hello.kl)",
