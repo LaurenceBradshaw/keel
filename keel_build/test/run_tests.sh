@@ -57,8 +57,11 @@ for which in "${!bins[@]}"; do
         mkdir -p "$root"
         cp -r "$case_dir" "${root}/${name}"
         work="$( cd "${root}/${name}" && pwd -P )"
+        # keelc names it C:/... under Git Bash.
+        named="$work"
+        case "$( uname -s )" in MINGW* | MSYS* ) named="$( cd "$work" && pwd -W )" ;; esac
 
-        ( cd "$work" && PATH="${bin}:${PATH}" bash steps < /dev/null 2>&1 ) | sed "s#${work}/##g" > "${work}/steps.log"
+        ( cd "$work" && PATH="${bin}:${PATH}" bash steps < /dev/null 2>&1 ) | sed -e "s#${work}/##g" -e "s#${named}/##g" > "${work}/steps.log"
 
         if [ "$update" -eq 1 ]; then
             cp "${work}/steps.log" "${case_dir}/steps.out"

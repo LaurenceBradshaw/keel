@@ -18,12 +18,22 @@ enum Command
     Error( kl::string message )
 };
 
+// `name` as this platform names a program: with `.exe` on Windows.
+kl::string program( move kl::string name )
+{
+    if( kl::get_platform() == kl::platform::windows )
+    {
+        name += ".exe";
+    }
+    return name;
+}
+
 kl::path find_keelc()
 {
     switch( move kl::program_path() )
     {
         case result::ok( path ):
-            kl::path keelc = path.parent() / "keelc";
+            kl::path keelc = path.parent() / program( "keelc" );
             if( kl::is_file( keelc ) )
             {
                 return keelc;
@@ -71,11 +81,11 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
     // Relative to the project root, unless --cache gives an absolute path.
     kl::path cache = project.root() / cache_dir / ( debug ? "debug" : "release" );
     kl::path main_file = project.root() / "src/main.kl";
-    kl::path output = cache / project.name();
+    kl::path output = cache / program( kl::string( project.name() ) );
     if( testing )
     {
         main_file = project.root() / "test/main.kl";
-        output = cache / ( project.name() + "_tests" );
+        output = cache / program( project.name() + "_tests" );
     }
 
     Builder builder = Builder( move keelc, move project, move kl_folder, move cache, debug, testing, verbose );
