@@ -24,7 +24,13 @@ failed <code>require</code> ends it.</p>
 <div class="group" id="context.context">
 <pre class="signature"><a class="anchor" href="#context.context" aria-label="Link to context">#</a><code><span class="kw">public</span> <span class="type">context</span>()</code></pre>
 <div class="doc">
-<p>A context with no failures.</p>
+<p>A context with no failures. <code>expect_panic</code> needs one <code>run</code> made.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#context.context" aria-label="Link to context">#</a><code><span class="kw">public</span> <span class="type">context</span>( <a class="prim" href="prelude.html#u64">u64</a> index, <a class="prim" href="prelude.html#u64">u64</a> call )</code></pre>
+<div class="doc">
+<p>The context <code>run</code> gives the test at <code>index</code> in its list. A <code>call</code> above 0 makes the
+process one <code>expect_panic</code> started, which runs only that call's body, counting from 1, and
+skips the calls before it. For <code>run</code>; a test never needs it.</p>
 </div>
 </div>
 <h3>Methods</h3>
@@ -75,8 +81,11 @@ that called it.</p>
 <div class="doc">
 <p>Counts a failure unless <code>body</code> panics with a message containing <code>message</code>, reporting the
 line that called it.</p>
-<p><code>body</code> runs in a process of its own, so nothing it changes, checks on this context included,
-reaches the test. Only a <code>panic</code> is expected: an <code>assert</code> is off in release builds.</p>
+<p><code>body</code> runs in a process of its own: this program started again, running the test from
+its start but skipping the bodies of the calls before this one. Nothing <code>body</code> changes,
+checks on this context included, reaches the test, and a test whose path to this call can
+differ from one run to the next, by a clock or a random key, may not reach it there. Only
+a <code>panic</code> is expected: an <code>assert</code> is off in release builds.</p>
 </div>
 </div>
 </section>

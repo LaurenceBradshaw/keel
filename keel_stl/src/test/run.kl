@@ -1,18 +1,21 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// The runner, which gives each test a process of its own.
+// The runner, which gives each test a process of its own: this program, started again.
 
 import context;
 import kl::console;
 import kl::list;
 import kl::optional;
+import kl::os;
 import kl::string;
 
 // The runtime's calls.
-private extern i32 kl_rt_fork( i64* pid, i32* errors );
 private extern never kl_rt_exit( i32 code );
-private extern i32 kl_rt_process_wait( i64 pid, i32* status );
+
+// A child's first argument, then the test's place in the list, then for one `expect_panic`
+// started, which call it is for (context.kl starts those).
+private const str CHILD = "--kl-test-child";
 
 /// A test and the name `run` reports it by.
 struct entry
@@ -45,51 +48,77 @@ private bool selected( str name, const ref kl::list<kl::string> filters )
     return false;
 }
 
-// Runs `t` and answers how it ended: 0 passed, 1 a check failed, 134 a panic, or 128 and a signal.
-private i32 run_one( const ref entry t, bool fork )
+// Runs the test at `index` and answers how it ended: 0 passed, 1 a check failed, 134 a panic, or
+// 128 and a signal.
+private i32 run_one( const ref entry[] tests, u64 index, bool fork )
 {
     if( !fork )
     {
-        context checks = context();
-        t.body( ref checks );
+        context checks = context( index, 0 );
+        tests[index].body( ref checks );
         return checks.failed() ? 1 : 0;
     }
 
-    i64 pid = 0;
-    unsafe
+    kl::string program = kl::string();
+    switch( kl::program_path() )
     {
-        i32 result = kl_rt_fork( &pid, nullptr );
-        if( result != 0 )
-        {
-            panic( "cannot fork" );
-        }
+        case result::ok( found ):
+            program.append( found.as_text() );
+            break;
+        case result::err( e ):
+            panic( "cannot find this program to run a test" );
     }
 
-    if( pid == 0 )
+    kl::string[2] arguments = [ kl::string::from( CHILD ), kl::string::from( index ) ];
+    switch( kl::run( program, arguments ) )
     {
-        context checks = context();
-        t.body( ref checks );
+        case result::ok( code ):
+            return code;
+        case result::err( e ):
+            panic( "cannot start this program again for a test" );
+    }
+}
+
+// `text` as a number, or `fallback` when it is not one.
+private u64 number_or( str text, u64 fallback )
+{
+    switch( kl::string::from( text ).parse_i64() )
+    {
+        case result::ok( n ):
+            return n < 0 ? fallback : cast<u64>( n );
+        case result::err( e ):
+            return fallback;
+    }
+}
+
+// In a child: the one test, or one `expect_panic`'s body within it, then the end of the program.
+private never run_child( const ref entry[] tests, const ref str[] args )
+{
+    const u64 bad = 0xFFFFFFFFFFFFFFFF;
+    const u64 index = number_or( args[1], bad );
+    const u64 call = args.size == 3 ? number_or( args[2], bad ) : 0;
+    if( args.size > 3 || index >= tests.size || call == bad )
+    {
+        kl::eprint( "kl::test: a child's arguments are a test and a call" );
         unsafe
         {
-            kl_rt_exit( checks.failed() ? 1 : 0 );
+            kl_rt_exit( 2 );
         }
     }
 
-    i32 code = 0;
+    context checks = context( index, call );
+    tests[index].body( ref checks );
     unsafe
     {
-        i32 result = kl_rt_process_wait( pid, &code );
-        if( result != 0 )
-        {
-            panic( "cannot wait for test" );
-        }
+        kl_rt_exit( checks.failed() ? 1 : 0 );
     }
-
-    return code;
 }
 
 /// Runs the tests that `args` selects, each in a process of its own, and answers `main`'s exit
 /// code: 0 when every test passed, 1 when any failed, 2 for an unknown option.
+///
+/// The process is this program started again with arguments of `run`'s own, so `main` must hand
+/// `run` its arguments unchanged, and what `main` does before calling `run` happens in each.
 ///
 /// Each argument is an option or a filter. A test runs when its name contains any filter, or when
 /// there is none.
@@ -99,6 +128,11 @@ private i32 run_one( const ref entry t, bool fork )
 /// Each test's result is a line on stdout, `pass <name>` or `FAIL <name>`, then the counts.
 i32 run( const ref entry[] tests, const ref str[] args )
 {
+    if( args.size >= 2 && kl::same_text( args[0], CHILD ) )
+    {
+        run_child( tests, args );
+    }
+
     bool listing = false;
     bool fork = true;
     kl::list<kl::string> filters = kl::list<kl::string>();
@@ -146,9 +180,8 @@ i32 run( const ref entry[] tests, const ref str[] args )
             continue;
         }
 
-        const ref entry t = tests[i];
-        kl::string name = kl::string::from( t.name );
-        i32 code = run_one( t, fork );
+        kl::string name = kl::string::from( tests[i].name );
+        i32 code = run_one( tests, i, fork );
         if( code == 0 )
         {
             kl::print( "pass " + name );

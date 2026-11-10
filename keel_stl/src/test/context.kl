@@ -5,10 +5,11 @@
 
 import kl::console;
 import kl::optional;
+import kl::os;
 import kl::string;
 
 // The runtime's calls.
-private extern i32 kl_rt_fork( i64* pid, i32* errors );
+private extern i32 kl_rt_process_capture( const ref u8[] packed, u64 count, i64* pid, i32* output );
 private extern never kl_rt_exit( i32 code );
 private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 private extern i32 kl_rt_file_read( i32 fd, ref u8[] buffer, u64* count );
@@ -18,10 +19,24 @@ private extern i32 kl_rt_file_close( i32 fd );
 /// failed `require` ends it.
 class context
 {
-    /// A context with no failures.
+    /// A context with no failures. `expect_panic` needs one `run` made.
     public context()
     {
         failures_ = 0;
+        test_ = 0;
+        only_ = 0;
+        panics_ = 0;
+    }
+
+    /// The context `run` gives the test at `index` in its list. A `call` above 0 makes the
+    /// process one `expect_panic` started, which runs only that call's body, counting from 1, and
+    /// skips the calls before it. For `run`; a test never needs it.
+    public context( u64 index, u64 call )
+    {
+        failures_ = 0;
+        test_ = index + 1;
+        only_ = call;
+        panics_ = 0;
     }
 
     /// Whether any check has failed.
@@ -133,13 +148,36 @@ class context
     /// Counts a failure unless `body` panics with a message containing `message`, reporting the
     /// line that called it.
     ///
-    /// `body` runs in a process of its own, so nothing it changes, checks on this context included,
-    /// reaches the test. Only a `panic` is expected: an `assert` is off in release builds.
+    /// `body` runs in a process of its own: this program started again, running the test from
+    /// its start but skipping the bodies of the calls before this one. Nothing `body` changes,
+    /// checks on this context included, reaches the test, and a test whose path to this call can
+    /// differ from one run to the next, by a clock or a random key, may not reach it there. Only
+    /// a `panic` is expected: an `assert` is off in release builds.
     @located
     public void expect_panic<F>( const ref textual message, F body ) where F : fn() -> void
     {
+        panics_ += 1;
+        if( only_ != 0 )
+        {
+            // The process is for one call, and an earlier one's own process checks it.
+            if( panics_ == only_ )
+            {
+                body();
+                unsafe
+                {
+                    kl_rt_exit( 0 );
+                }
+            }
+            return;
+        }
+
+        if( test_ == 0 )
+        {
+            panic( "expect_panic needs a context kl::test::run made" );
+        }
+
         kl::string errors = kl::string();
-        const i32 code = run_capturing( body, ref errors );
+        const i32 code = run_capturing( test_ - 1, panics_, ref errors );
 
         if( code == 134 && kl::is_some( errors.find( message ) ) )
         {
@@ -177,28 +215,42 @@ class context
     }
 
     private u64 failures_;
+    private u64 test_; // the test's place in `run`'s list, plus 1; 0 when `run` did not make this
+    private u64 only_; // the call this process runs the body of, or 0
+    private u64 panics_; // the `expect_panic` calls so far
 };
 
-// Runs `body` in a forked child whose stderr is captured onto `errors`; answers its exit code,
-// 134 for a panic.
-private i32 run_capturing<F>( F body, ref kl::string errors ) where F : fn() -> void
+// What `run` reads as a child's first argument.
+private const str CHILD = "--kl-test-child";
+
+// Starts this program again for `test`'s `call`th `expect_panic`, its stdout and stderr captured
+// onto `errors`; answers its exit code, 134 for a panic.
+private i32 run_capturing( u64 test, u64 call, ref kl::string errors )
 {
+    kl::string packed = kl::string();
+    switch( kl::program_path() )
+    {
+        case result::ok( program ):
+            packed.append( program.as_text() );
+            break;
+        case result::err( e ):
+            panic( "cannot find this program to run expect_panic" );
+    }
+    packed.push( '\0' );
+    packed.append( CHILD.as_text() );
+    packed.push( '\0' );
+    packed.append( kl::string::from( test ).as_text() );
+    packed.push( '\0' );
+    packed.append( kl::string::from( call ).as_text() );
+    packed.push( '\0' );
+
     i64 pid = 0;
     i32 read_end = -1;
     unsafe
     {
-        if( kl_rt_fork( &pid, &read_end ) != 0 )
+        if( kl_rt_process_capture( packed.as_text(), 4, &pid, &read_end ) != 0 )
         {
-            panic( "cannot fork" );
-        }
-    }
-
-    if( pid == 0 )
-    {
-        body();
-        unsafe
-        {
-            kl_rt_exit( 0 );
+            panic( "cannot start this program again for expect_panic" );
         }
     }
 

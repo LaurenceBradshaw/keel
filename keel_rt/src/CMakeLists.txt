@@ -8,11 +8,13 @@
 # nothing about build directories, presets, or configurations. This library exists to keep the
 # runtime under the project's warning settings and to give keel_rt's own tests something to link.
 file(GLOB keel_rt_sources CONFIGURE_DEPENDS "*.c")
+if(NOT WIN32)
+    list(FILTER keel_rt_sources EXCLUDE REGEX "_win32\.c$")
+endif()
 
 # Still a shell. Returning rather than failing is what lets keelc build before the runtime exists,
-# and is the same conditional shape keel_rt/test and keel_stl already use. Windows has no runtime
-# until its Win32 half lands; keelc embeds an empty one until then.
-if(NOT keel_rt_sources OR WIN32)
+# and is the same conditional shape keel_rt/test and keel_stl already use.
+if(NOT keel_rt_sources)
     return()
 endif()
 
@@ -34,7 +36,11 @@ target_include_directories(keel_rt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(keel_rt PRIVATE keel_options)
 
 # DWARF 4: the library's debug info ends up in every Keel program, and valgrind before 3.20 cannot
-# read clang's DWARF 5.
-if(NOT MSVC)
+# read clang's DWARF 5. On Windows a program links only ucrt.lib and kernel32.lib, so the library
+# names no default library (/Zl) and calls no security-cookie check (/GS-); keel_rt/CMakeLists.txt
+# drops /RTC1, whose checks are the MSVC runtime's too.
+if(MSVC)
+    target_compile_options(keel_rt PRIVATE /Zl /GS-)
+else()
     target_compile_options(keel_rt PRIVATE -gdwarf-4)
 endif()

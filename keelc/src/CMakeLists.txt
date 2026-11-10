@@ -31,15 +31,8 @@ list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp)
 
 # keelc carries the runtime it was built with, so it links without --runtime.
 set(keel_embed_script ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/embed.cmake)
-if(WIN32)
-    # No Windows runtime yet, so keelc embeds an empty one.
-    set(keel_runtime_archive ${CMAKE_CURRENT_BINARY_DIR}/kl_rt_empty.lib)
-    file(TOUCH ${keel_runtime_archive})
-    set(keel_runtime_target)
-else()
-    set(keel_runtime_archive $<TARGET_FILE:keel_rt>)
-    set(keel_runtime_target keel_rt)
-endif()
+set(keel_runtime_archive $<TARGET_FILE:keel_rt>)
+set(keel_runtime_target keel_rt)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
     COMMAND ${CMAKE_COMMAND} -DINPUT=${keel_runtime_archive} -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp

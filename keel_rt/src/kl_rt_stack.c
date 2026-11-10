@@ -3,6 +3,14 @@
 //
 // D76: a drop that can reach itself checks the stack at entry, and runs on a fresh segment when low.
 
+enum
+{
+    k_margin  = 64 * 1024,  // left below the check for the drop and what it calls
+    k_segment = 1024 * 1024 // each fresh segment, its guard page included
+};
+
+#ifndef _WIN32
+
 #define _GNU_SOURCE
 #include <pthread.h>
 #include <sys/mman.h>
@@ -15,12 +23,6 @@
 #define VALGRIND_STACK_REGISTER( start, end ) 0
 #define VALGRIND_STACK_DEREGISTER( id ) ( (void) ( id ) )
 #endif
-
-enum
-{
-    k_margin  = 64 * 1024,  // left below the check for the drop and what it calls
-    k_segment = 1024 * 1024 // each fresh segment, its guard page included
-};
 
 _Thread_local uintptr_t kl_rt_stack_low;
 
@@ -77,3 +79,67 @@ void kl_rt_deeper( void ( *drop )( void* ), void* value )
     VALGRIND_STACK_DEREGISTER( id );
     munmap( segment, k_segment );
 }
+
+#else // _WIN32: fibers, so Windows knows each segment's limits as it does a thread's
+
+#define WIN32_LEAN_AND_MEAN
+#include <stdbool.h>
+#include <windows.h>
+#include "kl_rt.h"
+
+_Thread_local uintptr_t kl_rt_stack_low;
+
+// The limit on the stack running now; the entry point calls it for the main thread.
+void kl_rt_find_stack( void )
+{
+    ULONG_PTR low  = 0;
+    ULONG_PTR high = 0;
+    GetCurrentThreadStackLimits( &low, &high );
+    if( high - low > 2 * k_margin )
+    {
+        kl_rt_stack_low = (uintptr_t) low + k_margin;
+    }
+}
+
+typedef struct
+{
+    void ( *drop )( void* );
+    void* value;
+    void* back;
+} Job;
+
+static void WINAPI run_job( void* parameter )
+{
+    Job* job = parameter;
+    kl_rt_find_stack();
+    job->drop( job->value );
+    SwitchToFiber( job->back ); // a fiber's function never returns
+}
+
+void kl_rt_deeper( void ( *drop )( void* ), void* value )
+{
+    const bool converted = !IsThreadAFiber();
+    if( converted && ConvertThreadToFiber( NULL ) == NULL )
+    {
+        kl_rt_panic( "", 0, "out of memory growing the stack for a drop" );
+    }
+
+    Job   job   = { drop, value, GetCurrentFiber() };
+    void* fiber = CreateFiberEx( 0, k_segment, FIBER_FLAG_FLOAT_SWITCH, run_job, &job );
+    if( fiber == NULL )
+    {
+        kl_rt_panic( "", 0, "out of memory growing the stack for a drop" );
+    }
+
+    const uintptr_t outer = kl_rt_stack_low;
+    SwitchToFiber( fiber );
+    DeleteFiber( fiber );
+    kl_rt_stack_low = outer;
+
+    if( converted )
+    {
+        ConvertFiberToThread();
+    }
+}
+
+#endif // _WIN32

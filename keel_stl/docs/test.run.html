@@ -44,6 +44,8 @@
 <div class="doc">
 <p>Runs the tests that <code>args</code> selects, each in a process of its own, and answers <code>main</code>'s exit
 code: 0 when every test passed, 1 when any failed, 2 for an unknown option.</p>
+<p>The process is this program started again with arguments of <code>run</code>'s own, so <code>main</code> must hand
+<code>run</code> its arguments unchanged, and what <code>main</code> does before calling <code>run</code> happens in each.</p>
 <p>Each argument is an option or a filter. A test runs when its name contains any filter, or when
 there is none.</p>
 <ul>

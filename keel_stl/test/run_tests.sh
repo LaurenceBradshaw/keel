@@ -45,7 +45,8 @@ update=0
 
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 runtime="$( absolute "$( dirname "$runtime" )" )/$( basename "$runtime" )"
-run_timeout="${KEEL_RUN_TIMEOUT:-10}"
+# Longer under valgrind, which starts afresh for each kl::test child.
+run_timeout="${KEEL_RUN_TIMEOUT:-$( [ -n "${KEEL_VALGRIND:-}" ] && echo 120 || echo 10 )}"
 backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
 export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
@@ -96,7 +97,8 @@ run_one()
 
         local runner=()
         if [ -n "${KEEL_VALGRIND:-}" ] && [ "$expected" -ne 134 ]; then
-            runner=( valgrind -q --leak-check=full --log-file="${build_dir}/vg.%p.log" )
+            # kl::test runs each test in the program started again, so the children are followed.
+            runner=( valgrind -q --leak-check=full --trace-children=yes --log-file="${build_dir}/vg.%p.log" )
         fi
 
         # The program's streams only: timeout's own word on a signal is not the program's output.

@@ -1,11 +1,12 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// The portable half, then POSIX's; Win32's is kl_rt_win32.c.
+
 #define _DEFAULT_SOURCE
+#define _CRT_RAND_S
 #include "kl_rt.h"
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
@@ -13,10 +14,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
+#include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#endif
+
+// A panic's end: SIGABRT on POSIX, which a shell reports as 134; Windows exits 134 itself, since
+// its `abort` can stop for Windows Error Reporting.
+_Noreturn static void kl_rt_abort( void )
+{
+#ifdef _WIN32
+    _exit( 134 );
+#else
+    abort();
+#endif
+}
 
 void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
 {
@@ -56,7 +72,7 @@ _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message
 {
     fflush( stdout );
     fprintf( stderr, "%s:%u: %s\n", file, (unsigned) line, message );
-    abort();
+    kl_rt_abort();
 }
 
 _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8_t* data, uint64_t size )
@@ -65,7 +81,7 @@ _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8
     fprintf( stderr, "%s:%u: panic: ", file, (unsigned) line );
     fwrite( data, 1, size, stderr );
     fputc( '\n', stderr );
-    abort();
+    kl_rt_abort();
 }
 
 // `panic( message, at )`: the file is a `str`, so it has a length and no terminator.
@@ -75,7 +91,7 @@ _Noreturn void kl_rt_panic_at( const uint8_t* file, uint64_t file_size, uint32_t
     fprintf( stderr, "%.*s:%u: panic: ", (int) file_size, (const char*) file, (unsigned) line );
     fwrite( data, 1, size, stderr );
     fputc( '\n', stderr );
-    abort();
+    kl_rt_abort();
 }
 
 // Reached only if a `never` function returned, which its body check refuses.
@@ -83,7 +99,7 @@ _Noreturn void kl_rt_unreachable( void )
 {
     fflush( stdout );
     fputs( "a `never` call returned\n", stderr );
-    abort();
+    kl_rt_abort();
 }
 
 _Noreturn void kl_rt_exit( int32_t code )
@@ -147,7 +163,7 @@ void kl_rt_write_f64( int32_t stream, double value )
     }
 
     // `%g` writes 10 at one digit as `1e+01`; up to 1e15, print every integer digit instead.
-    const char* e = strchr( buf, 'e' );
+    const char* e = memchr( buf, 'e', strlen( buf ) ); // the UCRT has no strchr
     if( e != NULL )
     {
         const int exponent = atoi( e + 1 );
@@ -175,10 +191,23 @@ void kl_rt_hash_key( uint64_t* low, uint64_t* high )
 
     if( !drawn )
     {
+#ifdef _WIN32
+        unsigned parts[4];
+        for( int i = 0; i < 4; ++i )
+        {
+            if( rand_s( &parts[i] ) != 0 )
+            {
+                kl_rt_panic( __FILE__, __LINE__, "no random bytes for a map's key" );
+            }
+        }
+        key[0] = (uint64_t) parts[0] << 32 | parts[1];
+        key[1] = (uint64_t) parts[2] << 32 | parts[3];
+#else
         if( getentropy( key, sizeof key ) != 0 )
         {
             kl_rt_panic( __FILE__, __LINE__, "no random bytes for a map's key" );
         }
+#endif
 
         drawn = true;
     }
@@ -186,6 +215,34 @@ void kl_rt_hash_key( uint64_t* low, uint64_t* high )
     *low  = key[0]++;
     *high = key[1];
 }
+
+int32_t kl_rt_error_kind( int32_t code )
+{
+    switch( code )
+    {
+    case ENOENT:
+        return KL_RT_NOT_FOUND;
+    case EACCES:
+    case EPERM:
+        return KL_RT_DENIED;
+    case EEXIST:
+        return KL_RT_EXISTS;
+    case EISDIR:
+        return KL_RT_IS_DIRECTORY;
+    case ENOTDIR:
+        return KL_RT_NOT_DIRECTORY;
+    case EINTR:
+        return KL_RT_INTERRUPTED;
+    case ENOMEM:
+        return KL_RT_OUT_OF_MEMORY;
+    case ENOTEMPTY:
+        return KL_RT_NOT_EMPTY;
+    default:
+        return KL_RT_OTHER;
+    }
+}
+
+#ifndef _WIN32
 
 static char* c_path( const uint8_t* data, uint64_t size, int* error )
 {
@@ -298,32 +355,6 @@ int32_t kl_rt_file_write( int32_t fd, const uint8_t* data, uint64_t size )
 int32_t kl_rt_file_close( int32_t fd )
 {
     return close( fd ) == -1 ? errno : 0;
-}
-
-int32_t kl_rt_error_kind( int32_t code )
-{
-    switch( code )
-    {
-    case ENOENT:
-        return KL_RT_NOT_FOUND;
-    case EACCES:
-    case EPERM:
-        return KL_RT_DENIED;
-    case EEXIST:
-        return KL_RT_EXISTS;
-    case EISDIR:
-        return KL_RT_IS_DIRECTORY;
-    case ENOTDIR:
-        return KL_RT_NOT_DIRECTORY;
-    case EINTR:
-        return KL_RT_INTERRUPTED;
-    case ENOMEM:
-        return KL_RT_OUT_OF_MEMORY;
-    case ENOTEMPTY:
-        return KL_RT_NOT_EMPTY;
-    default:
-        return KL_RT_OTHER;
-    }
 }
 
 int32_t kl_rt_path_kind( const uint8_t* path, uint64_t size, int32_t* kind )
@@ -482,8 +513,9 @@ static int pipe_cloexec( int ends[2] )
     return 0;
 }
 
-// When `output` is not null, the child's stdout is a pipe and `*output` its read end.
-int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output )
+// When `output` is not null, the child's stdout is a pipe and `*output` its read end; its stderr too
+// when `errors` is set.
+static int32_t start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output, bool errors )
 {
     if( count == 0 )
     {
@@ -548,7 +580,7 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
 
         // dup2's copy is not close-on-exec, so the program keeps it. execvp returns only on failure;
         // `_exit` so the child never flushes or runs the parent's handlers.
-        if( output == NULL || dup2( out[1], STDOUT_FILENO ) != -1 )
+        if( output == NULL || ( dup2( out[1], STDOUT_FILENO ) != -1 && ( !errors || dup2( out[1], STDERR_FILENO ) != -1 ) ) )
         {
             execvp( argv[0], argv );
         }
@@ -604,6 +636,17 @@ int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t coun
     return error;
 }
 
+int32_t kl_rt_process_start( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output )
+{
+    return start( packed, size, count, pid, output, false );
+}
+
+// Both of the child's streams into one pipe, `*output` its read end.
+int32_t kl_rt_process_capture( const uint8_t* packed, uint64_t size, uint64_t count, int64_t* pid, int32_t* output )
+{
+    return start( packed, size, count, pid, output, true );
+}
+
 int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
 {
     int st = 0;
@@ -613,63 +656,6 @@ int32_t kl_rt_process_wait( int64_t pid, int32_t* status )
     }
 
     *status = WIFEXITED( st ) ? WEXITSTATUS( st ) : 128 + WTERMSIG( st );
-    return 0;
-}
-
-// When `errors` is not null, the child's stderr is a pipe and `*errors` its read end.
-int32_t kl_rt_fork( int64_t* pid, int32_t* errors )
-{
-    int ends[2] = { -1, -1 };
-    if( errors != NULL )
-    {
-        int error = pipe_cloexec( ends );
-        if( error != 0 )
-        {
-            return error;
-        }
-    }
-
-    // So what the parent printed comes before what the child prints.
-    fflush( NULL );
-
-    // Both processes return from fork: the child sees 0, the parent the child's pid.
-    pid_t child = fork();
-
-    if( child == 0 )
-    {
-        if( errors != NULL )
-        {
-            if( dup2( ends[1], STDERR_FILENO ) == -1 )
-            {
-                _exit( 127 );
-            }
-            close( ends[0] );
-            close( ends[1] );
-        }
-        *pid = 0;
-        return 0;
-    }
-
-    int saved = errno;
-    if( errors != NULL )
-    {
-        close( ends[1] );
-    }
-
-    if( child == -1 )
-    {
-        if( errors != NULL )
-        {
-            close( ends[0] );
-        }
-        return saved;
-    }
-
-    if( errors != NULL )
-    {
-        *errors = ends[0];
-    }
-    *pid = child;
     return 0;
 }
 
@@ -759,3 +745,5 @@ int32_t kl_rt_environment( const uint8_t* name, uint64_t size, uint8_t** value, 
     }
     return ENOENT;
 }
+
+#endif // _WIN32

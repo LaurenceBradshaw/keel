@@ -1,108 +1,152 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// The runtime's edge cases. Each runs in a child whose stdout and stderr are pipes, so a panic's
-// output and its abort can be checked too.
+// The runtime's edge cases. Each runs in a child, this binary started again with the case's name,
+// its stdout and stderr one pipe, so a panic's output and its exit can be checked too.
 
+#ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #include <errno.h>
-#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "kl_rt.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <direct.h>
+#include <fcntl.h>
+#include <io.h>
+#include <windows.h>
+#define os_close _close
+#define os_dup2 _dup2
+#define os_getcwd _getcwd
+#define os_write( fd, data, size ) _write( fd, data, (unsigned) ( size ) )
+#define os_chdir _chdir
+#define os_rmdir _rmdir
+#define os_unlink _unlink
+#define PROGRAM_NAME "\\keel_rt_tests.exe"
+#define NULL_DEVICE "NUL"
+#else
 #include <sys/wait.h>
 #include <unistd.h>
-#include "kl_rt.h"
+#define os_close close
+#define os_dup2 dup2
+#define os_getcwd getcwd
+#define os_write( fd, data, size ) write( fd, data, size )
+#define os_chdir chdir
+#define os_rmdir rmdir
+#define os_unlink unlink
+#define PROGRAM_NAME "/keel_rt_tests"
+#define NULL_DEVICE "/dev/null"
+#endif
+
+static int os_pipe( int ends[2] )
+{
+#ifdef _WIN32
+    return _pipe( ends, 4096, _O_BINARY );
+#else
+    return pipe( ends );
+#endif
+}
+
+static void os_setenv( const char* name, const char* value )
+{
+#ifdef _WIN32
+    SetEnvironmentVariableA( name, value ); // the UCRT's _putenv_s takes "" as unset
+#else
+    setenv( name, value, 1 );
+#endif
+}
+
+// Makes a fresh directory under the system's temporary one, and enters it.
+static void enter_scratch( char* dir, size_t size )
+{
+#ifdef _WIN32
+    char base[MAX_PATH];
+    if( GetTempPathA( sizeof base, base ) == 0 ||
+        snprintf( dir, size, "%skl_rt_%lu_%lu", base, GetCurrentProcessId(), GetTickCount() ) <= 0 || _mkdir( dir ) != 0 ||
+        _chdir( dir ) != 0 )
+    {
+        exit( 2 );
+    }
+#else
+    snprintf( dir, size, "/tmp/kl_rt_XXXXXX" );
+    if( mkdtemp( dir ) == NULL || chdir( dir ) != 0 )
+    {
+        exit( 2 );
+    }
+#endif
+}
+
+// Leaves the directory and removes it, which Windows refuses while it is the current one.
+static void leave_scratch( const char* dir )
+{
+    if( os_chdir( ".." ) != 0 || os_rmdir( dir ) != 0 )
+    {
+        exit( 2 );
+    }
+}
+
+// This binary's path, as packed arguments start.
+static char     self[4096];
+static uint64_t self_size = 0;
+
+// This binary and `argument`, packed; answers the size.
+static uint64_t packed_self( char* out, const char* argument )
+{
+    memcpy( out, self, self_size );
+    out[self_size] = '\0';
+    strcpy( out + self_size + 1, argument );
+    return self_size + 1 + strlen( argument ) + 1;
+}
 
 typedef struct
 {
-    char out[256];
-    char err[256];
-    int  status;
+    char    out[256];
+    int32_t status;
 } Run;
 
 static int failures = 0;
 
-static void read_all( int fd, char* buf, size_t size )
+static void read_all( int32_t fd, char* buf, size_t size )
 {
-    size_t used = 0;
-    while( used + 1 < size )
+    size_t   used  = 0;
+    uint64_t count = 0;
+    while( used + 1 < size && kl_rt_file_read( fd, (uint8_t*) buf + used, size - 1 - used, &count ) == 0 && count != 0 )
     {
-        const ssize_t got = read( fd, buf + used, size - 1 - used );
-        if( got <= 0 )
-        {
-            break;
-        }
-        used += (size_t) got;
+        used += count;
     }
     buf[used] = '\0';
 }
 
-static Run run( void ( *body )( void ) )
+static Run run( const char* name )
 {
     Run r;
     memset( &r, 0, sizeof r );
 
-    int out[2];
-    int err[2];
-    if( pipe( out ) != 0 || pipe( err ) != 0 )
+    char           packed[sizeof self + 64];
+    const uint64_t size = packed_self( packed, name );
+    int64_t        pid  = 0;
+    int32_t        fd   = -1;
+    if( kl_rt_process_capture( (const uint8_t*) packed, size, 2, &pid, &fd ) != 0 )
     {
-        perror( "pipe" );
+        fprintf( stderr, "%s: cannot start the child\n", name );
         exit( 2 );
     }
 
-    fflush( stdout );
-    fflush( stderr );
-    const pid_t pid = fork();
-    if( pid < 0 )
+    read_all( fd, r.out, sizeof r.out );
+    kl_rt_file_close( fd );
+    if( kl_rt_process_wait( pid, &r.status ) != 0 )
     {
-        perror( "fork" );
+        fprintf( stderr, "%s: cannot wait for the child\n", name );
         exit( 2 );
     }
-
-    if( pid == 0 )
-    {
-        dup2( out[1], 1 );
-        dup2( err[1], 2 );
-        close( out[0] );
-        close( out[1] );
-        close( err[0] );
-        close( err[1] );
-        body();
-        exit( 0 );
-    }
-
-    close( out[1] );
-    close( err[1] );
-    read_all( out[0], r.out, sizeof r.out );
-    read_all( err[0], r.err, sizeof r.err );
-    close( out[0] );
-    close( err[0] );
-    waitpid( pid, &r.status, 0 );
     return r;
-}
-
-static void check( const char* test, const char* what, const char* got, const char* want )
-{
-    if( strcmp( got, want ) != 0 )
-    {
-        fprintf( stderr, "%s: %s was \"%s\", expected \"%s\"\n", test, what, got, want );
-        failures++;
-    }
-}
-
-static void check_exit( const char* test, const Run* r, bool aborted )
-{
-    const bool ok = aborted ? WIFSIGNALED( r->status ) && WTERMSIG( r->status ) == SIGABRT
-                            : WIFEXITED( r->status ) && WEXITSTATUS( r->status ) == 0;
-    if( !ok )
-    {
-        fprintf( stderr, "%s: expected the child to %s\n", test, aborted ? "abort" : "exit 0" );
-        failures++;
-    }
 }
 
 static void lowest_i64( void )
@@ -118,7 +162,7 @@ static void largest_u64( void )
 // The message is a count of bytes, not a C string, and what was printed before shows first.
 static void panic_message( void )
 {
-    kl_rt_write( 1, (const uint8_t*) "before", 6 );
+    kl_rt_write( 1, (const uint8_t*) "before|", 7 );
     kl_rt_panic_message( "main.kl", 7, (const uint8_t*) "emptyXYZ", 5 );
 }
 
@@ -149,16 +193,18 @@ static void hash_key_varies( void )
 // A path holding a 0 byte, and a mode out of range, are refused before `open` runs.
 static void file_open_refusals( void )
 {
-    int32_t fd = -1;
-    printf( "%d %d ", kl_rt_file_open( (const uint8_t*) "a\0b", 3, 0, &fd ), fd );
-    printf( "%d %d", kl_rt_file_open( (const uint8_t*) "a", 1, 4, &fd ), fd );
+    int32_t       fd   = -1;
+    const int32_t zero = kl_rt_file_open( (const uint8_t*) "a\0b", 3, 0, &fd ); // before `fd` is read
+    printf( "%d %d ", zero, fd );
+    const int32_t mode = kl_rt_file_open( (const uint8_t*) "a", 1, 4, &fd );
+    printf( "%d %d", mode, fd );
 }
 
 // Bytes written through a pipe come back in pieces, then the end of the file as a count of 0.
 static void file_round_trip( void )
 {
     int ends[2];
-    if( pipe( ends ) != 0 )
+    if( os_pipe( ends ) != 0 )
     {
         exit( 2 );
     }
@@ -211,13 +257,13 @@ static void error_kinds( void )
 static void pipe_stdin( const char* text )
 {
     int ends[2];
-    if( pipe( ends ) != 0 || write( ends[1], text, strlen( text ) ) != (ssize_t) strlen( text ) )
+    if( os_pipe( ends ) != 0 || os_write( ends[1], text, strlen( text ) ) != (int) strlen( text ) )
     {
         exit( 2 );
     }
-    close( ends[1] );
-    dup2( ends[0], 0 );
-    close( ends[0] );
+    os_close( ends[1] );
+    os_dup2( ends[0], 0 );
+    os_close( ends[0] );
 }
 
 // Reading standard input flushes a prompt first; a raw write after it lands after it.
@@ -229,7 +275,7 @@ static void input_flushes_stdout( void )
     uint64_t size = 0;
     kl_rt_write( 1, (const uint8_t*) "prompt", 6 );
     kl_rt_file_read( 0, data, sizeof data, &size );
-    if( write( 1, "|after", 6 ) != 6 )
+    if( os_write( 1, "|after", 6 ) != 6 )
     {
         exit( 2 );
     }
@@ -240,7 +286,7 @@ static void file_write_keeps_order( void )
 {
     kl_rt_write( 1, (const uint8_t*) "a", 1 );
     kl_rt_file_write( 1, (const uint8_t*) "b", 1 );
-    if( write( 1, "c", 1 ) != 1 )
+    if( os_write( 1, "c", 1 ) != 1 )
     {
         exit( 2 );
     }
@@ -249,11 +295,8 @@ static void file_write_keeps_order( void )
 // Each answer of `kl_rt_path_kind`, inside a fresh directory: missing covers `ENOTDIR` too.
 static void path_kinds( void )
 {
-    char dir[] = "/tmp/kl_rt_XXXXXX";
-    if( mkdtemp( dir ) == NULL || chdir( dir ) != 0 )
-    {
-        exit( 2 );
-    }
+    char dir[512];
+    enter_scratch( dir, sizeof dir );
 
     int32_t fd = -1;
     if( kl_rt_file_open( (const uint8_t*) "a", 1, 1, &fd ) != 0 || kl_rt_file_close( fd ) != 0 )
@@ -261,7 +304,7 @@ static void path_kinds( void )
         exit( 2 );
     }
 
-    const char* paths[] = { ".", "a", "a/b", "none", "/dev/null" };
+    const char* paths[] = { ".", "a", "a/b", "none", NULL_DEVICE };
     for( size_t i = 0; i < sizeof paths / sizeof paths[0]; i++ )
     {
         int32_t       kind   = 9;
@@ -272,18 +315,15 @@ static void path_kinds( void )
     int32_t kind = 9;
     printf( "%d %d", kl_rt_path_kind( (const uint8_t*) "a\0b", 3, &kind ), kind );
 
-    unlink( "a" );
-    rmdir( dir );
+    os_unlink( "a" );
+    leave_scratch( dir );
 }
 
 // A directory made, refused twice, listed, each delete refusing the other kind, then emptied.
 static void directory_round_trip( void )
 {
-    char dir[] = "/tmp/kl_rt_XXXXXX";
-    if( mkdtemp( dir ) == NULL || chdir( dir ) != 0 )
-    {
-        exit( 2 );
-    }
+    char dir[512];
+    enter_scratch( dir, sizeof dir );
 
     const uint8_t* d = (const uint8_t*) "d";
     printf( "%d ", kl_rt_create_directory( d, 1 ) );
@@ -302,7 +342,8 @@ static void directory_round_trip( void )
     uint64_t size = 9;
     printf( "%d ", kl_rt_directory_next( handle, &name, &size ) );
     printf( "%.*s ", (int) size, (const char*) name );
-    printf( "%d %llu ", kl_rt_directory_next( handle, &name, &size ), (unsigned long long) size );
+    const int32_t last = kl_rt_directory_next( handle, &name, &size ); // before `size` is read
+    printf( "%d %llu ", last, (unsigned long long) size );
     kl_rt_directory_close( handle );
 
     const uint8_t* x = (const uint8_t*) "d/x";
@@ -315,68 +356,113 @@ static void directory_round_trip( void )
     printf( "%d ", kl_rt_delete_directory( d, 1 ) == ENOENT );
     printf( "%d", kl_rt_directory_open( d, 1, &handle ) == ENOENT );
 
-    rmdir( dir );
+    leave_scratch( dir );
 }
+
+// Programs for the process cases: this binary again, printing or exiting 3.
+static void child_prints( void )
+{
+    printf( "child" );
+}
+
+static void child_exits( void )
+{
+    fflush( stdout );
+    exit( 3 );
+}
+
+static void child_panics( void )
+{
+    kl_rt_write( 1, (const uint8_t*) "out|", 4 );
+    kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
+}
+
+// Its bytes and size, the size leaving out the 0 byte C adds to every literal.
+#define PACKED( text ) (const uint8_t*) text, sizeof text - 1
 
 // A process started and waited for, a missing program refused and reaped, each malformed `packed`
 // refused, and the parent's output flushed before the child's.
 static void process_round_trip( void )
 {
-// Its bytes and size, the size leaving out the 0 byte C adds to every literal.
-#define PACKED( text ) (const uint8_t*) text, sizeof text - 1
-
     int64_t pid    = 0;
     int32_t status = -1;
+    char    packed[sizeof self + 64];
 
     printf( "before|" );
-    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid, NULL ) );
-    printf( "%d %d ", kl_rt_process_wait( pid, &status ), status );
+    uint64_t size = packed_self( packed, "child_prints" );
+    printf( "%d ", kl_rt_process_start( (const uint8_t*) packed, size, 2, &pid, NULL ) );
+    const int32_t waited = kl_rt_process_wait( pid, &status ); // before `status` is read
+    printf( "%d %d ", waited, status );
 
-    kl_rt_process_start( PACKED( "sh\0-c\0exit 3\0" ), 3, &pid, NULL );
+    size = packed_self( packed, "child_exits" );
+    kl_rt_process_start( (const uint8_t*) packed, size, 2, &pid, NULL );
     kl_rt_process_wait( pid, &status );
     printf( "%d ", status );
 
+#ifndef _WIN32
     kl_rt_process_start( PACKED( "sh\0-c\0kill -9 $$\0" ), 3, &pid, NULL );
     kl_rt_process_wait( pid, &status );
     printf( "%d ", status );
+#endif
 
-    pid = 7;
-    printf( "%d %d ", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, NULL ) == ENOENT, (int) pid );
+    pid                = 7;
+    const bool missing = kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, NULL ) == ENOENT;
+    printf( "%d %d ", missing, (int) pid );
 
     // Miscounted, unterminated, an argument holding a 0 byte, and nothing at all.
     printf( "%d ", kl_rt_process_start( PACKED( "true\0" ), 2, &pid, NULL ) == EINVAL );
     printf( "%d ", kl_rt_process_start( PACKED( "true" ), 1, &pid, NULL ) == EINVAL );
     printf( "%d ", kl_rt_process_start( PACKED( "true\0a\0b\0" ), 2, &pid, NULL ) == EINVAL );
-    printf( "%d ", kl_rt_process_start( PACKED( "" ), 0, &pid, NULL ) == EINVAL );
+    printf( "%d", kl_rt_process_start( PACKED( "" ), 0, &pid, NULL ) == EINVAL );
 
+#ifndef _WIN32
     // Every child was reaped, the failed one included.
-    printf( "%d|after", waitpid( -1, NULL, WNOHANG ) == -1 && errno == ECHILD );
-
-#undef PACKED
+    printf( " %d", waitpid( -1, NULL, WNOHANG ) == -1 && errno == ECHILD );
+#endif
+    printf( "|after" );
 }
 
 // A child's stdout read back through the fd it answers, and the read end left open for the caller
 // alone.
 static void process_output( void )
 {
-#define PACKED( text ) (const uint8_t*) text, sizeof text - 1
-
     int64_t pid    = 0;
     int32_t status = -1;
     int32_t fd     = -1;
     char    got[16];
+    char    packed[sizeof self + 64];
 
-    printf( "%d ", kl_rt_process_start( PACKED( "sh\0-c\0printf child\0" ), 3, &pid, &fd ) );
+    const uint64_t size = packed_self( packed, "child_prints" );
+    printf( "%d ", kl_rt_process_start( (const uint8_t*) packed, size, 2, &pid, &fd ) );
     read_all( fd, got, sizeof got );
-    printf( "%s %d %d ", got, kl_rt_process_wait( pid, &status ), status );
-    printf( "%d ", close( fd ) );
+    const int32_t waited = kl_rt_process_wait( pid, &status );
+    printf( "%s %d %d ", got, waited, status );
+    printf( "%d ", kl_rt_file_close( fd ) );
 
     // A failed start leaves no fd behind.
-    fd = -1;
-    printf( "%d %d", kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, &fd ) == ENOENT, fd );
+    fd                 = -1;
+    const bool missing = kl_rt_process_start( PACKED( "kl-rt-no-such-program\0" ), 1, &pid, &fd ) == ENOENT;
+    printf( "%d %d", missing, fd );
+}
+
+// Both of a panicking child's streams through one pipe, in the order written, and its exit 134.
+static void process_capture( void )
+{
+    int64_t pid    = 0;
+    int32_t status = -1;
+    int32_t fd     = -1;
+    char    got[64];
+    char    packed[sizeof self + 64];
+
+    const uint64_t size = packed_self( packed, "child_panics" );
+    printf( "%d ", kl_rt_process_capture( (const uint8_t*) packed, size, 2, &pid, &fd ) );
+    read_all( fd, got, sizeof got );
+    kl_rt_file_close( fd );
+    const int32_t waited = kl_rt_process_wait( pid, &status );
+    printf( "%d %d %s", waited, status, got );
+}
 
 #undef PACKED
-}
 
 // The path ends in this binary's name, and a buffer it fills is refused.
 static void program_path( void )
@@ -385,7 +471,7 @@ static void program_path( void )
     uint64_t length = 0;
     printf( "%d ", kl_rt_program_path( buffer, sizeof buffer, &length ) );
 
-    const char name[] = "/keel_rt_tests";
+    const char name[] = PROGRAM_NAME;
     printf( "%d ", length >= sizeof name - 1 && memcmp( buffer + length - ( sizeof name - 1 ), name, sizeof name - 1 ) == 0 );
     printf( "%d", kl_rt_program_path( buffer, 4, &length ) == ERANGE );
 }
@@ -397,7 +483,7 @@ static void current_directory( void )
     uint64_t length = 0;
     char     want[4096];
     printf( "%d ", kl_rt_current_directory( buffer, sizeof buffer, &length ) );
-    printf( "%d ", getcwd( want, sizeof want ) != NULL && length == strlen( want ) && memcmp( buffer, want, length ) == 0 );
+    printf( "%d ", os_getcwd( want, sizeof want ) != NULL && length == strlen( want ) && memcmp( buffer, want, length ) == 0 );
     printf( "%d", kl_rt_current_directory( buffer, 1, &length ) == ERANGE );
 }
 
@@ -413,72 +499,21 @@ static void clocks( void )
     printf( "%d %d", kl_rt_clock( 3, &ns ) == EINVAL, kl_rt_clock_resolution( -1, &ns ) == EINVAL );
 }
 
-// The child sees pid 0 and its exit code reaches the parent; a panicking child is 134 (SIGABRT), and
-// nothing the parent printed is printed twice.
-static void fork_exit( void )
-{
-    int64_t pid    = 7;
-    int32_t status = -1;
-
-    printf( "before|" );
-    kl_rt_fork( &pid, NULL );
-    if( pid == 0 )
-    {
-        printf( "child" );
-        kl_rt_exit( 3 );
-    }
-    kl_rt_process_wait( pid, &status );
-    printf( "%d ", status );
-
-    pid = 7;
-    kl_rt_fork( &pid, NULL );
-    if( pid == 0 )
-    {
-        kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
-    }
-    kl_rt_process_wait( pid, &status );
-    printf( "%d|after", status );
-}
-
-// With a pipe, the child's panic report reaches the parent and not the real stderr.
-static void fork_errors( void )
-{
-    int64_t pid    = 7;
-    int32_t fd     = -1;
-    int32_t status = -1;
-
-    kl_rt_fork( &pid, &fd );
-    if( pid == 0 )
-    {
-        kl_rt_panic_message( "test.kl", 1, (const uint8_t*) "x", 1 );
-    }
-
-    char     buf[64];
-    uint64_t size  = 0;
-    uint64_t count = 0;
-    while( kl_rt_file_read( fd, (uint8_t*) buf + size, sizeof buf - size, &count ) == 0 && count != 0 )
-    {
-        size += count;
-    }
-    kl_rt_file_close( fd );
-    kl_rt_process_wait( pid, &status );
-    printf( "%d %.*s", status, (int) size - 1, buf );
-}
-
 // A variable reads back, an empty one is size 0, and an unset name, `=` in one and a 0 byte in one
 // are refused.
 static void environment( void )
 {
 #define NAME( text ) (const uint8_t*) text, sizeof text - 1
 
-    setenv( "KL_RT_SET", "value", 1 );
-    setenv( "KL_RT_EMPTY", "", 1 );
+    os_setenv( "KL_RT_SET", "value" );
+    os_setenv( "KL_RT_EMPTY", "" );
 
     uint8_t* value = NULL;
     uint64_t size  = 9;
     printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET" ), &value, &size ) );
     printf( "%.*s ", (int) size, (const char*) value );
-    printf( "%d %d ", kl_rt_environment( NAME( "KL_RT_EMPTY" ), &value, &size ), (int) size );
+    const int32_t empty = kl_rt_environment( NAME( "KL_RT_EMPTY" ), &value, &size );
+    printf( "%d %d ", empty, (int) size );
     printf( "%d ", kl_rt_environment( NAME( "KL_RT" ), &value, &size ) == ENOENT );
     printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET=value" ), &value, &size ) == ENOENT );
     printf( "%d ", kl_rt_environment( NAME( "KL_RT_SET\0" ), &value, &size ) == ENOENT );
@@ -487,103 +522,154 @@ static void environment( void )
 #undef NAME
 }
 
-int main( void )
+// A chain far deeper than one stack, dropped as keelc emits a deep drop (D76): a check against
+// `kl_rt_stack_low` at entry, and the rest on a fresh segment under it.
+typedef struct Link
 {
-    Run r = run( lowest_i64 );
-    check( "lowest_i64", "stdout", r.out, "-9223372036854775808" );
-    check_exit( "lowest_i64", &r, false );
+    struct Link* next;
+} Link;
 
-    r = run( largest_u64 );
-    check( "largest_u64", "stdout", r.out, "18446744073709551615" );
-    check_exit( "largest_u64", &r, false );
+static uint64_t dropped = 0;
 
-    r = run( panic_message );
-    check( "panic_message", "stdout", r.out, "before" );
-    check( "panic_message", "stderr", r.err, "main.kl:7: panic: empty\n" );
-    check_exit( "panic_message", &r, true );
+static void drop_link( void* value )
+{
+    if( (uintptr_t) __builtin_frame_address( 0 ) < kl_rt_stack_low )
+    {
+        kl_rt_deeper( drop_link, value );
+        return;
+    }
 
-    r = run( panic_at );
-    check( "panic_at", "stderr", r.err, "caller.kl:12: panic: empty\n" );
-    check_exit( "panic_at", &r, true );
+    Link* link = value;
+    if( link->next != NULL )
+    {
+        drop_link( link->next );
+    }
+    free( link );
+    ++dropped;
+}
 
-    const Run first  = run( hash_key );
-    const Run second = run( hash_key );
-    check_exit( "hash_key", &first, false );
+static void deep_drop( void )
+{
+    Link* head = NULL;
+    for( int i = 0; i < 1000000; ++i )
+    {
+        Link* link = malloc( sizeof( Link ) );
+        if( link == NULL )
+        {
+            exit( 2 );
+        }
+        link->next = head;
+        head       = link;
+    }
 
+    drop_link( head );
+    printf( "%llu", (unsigned long long) dropped );
+}
+
+// A frame over a page, which on Windows calls __chkstk to touch each page in order.
+static void large_frame( void )
+{
+    volatile char big[64 * 1024];
+    big[0]              = 'a';
+    big[sizeof big - 1] = 'z';
+    printf( "%c%c", big[0], big[sizeof big - 1] );
+}
+
+typedef struct
+{
+    const char* name;
+    void ( *body )( void );
+    const char* want; // stdout and stderr together; NULL when the output varies
+    int32_t     status;
+} Case;
+
+#ifdef _WIN32
+#define ROUND_TRIP "before|child0 0 0 3 1 7 1 1 1 1|after"
+#else
+#define ROUND_TRIP "before|child0 0 0 3 137 1 7 1 1 1 1 1|after"
+#endif
+
+static const Case cases[] = {
+    { "lowest_i64", lowest_i64, "-9223372036854775808", 0 },
+    { "largest_u64", largest_u64, "18446744073709551615", 0 },
+    { "panic_message", panic_message, "before|main.kl:7: panic: empty\n", 134 },
+    { "panic_at", panic_at, "caller.kl:12: panic: empty\n", 134 },
+    { "hash_key", hash_key, NULL, 0 },
+    { "hash_key_varies", hash_key_varies, "varies", 0 },
+    { "file_open_refusals", file_open_refusals, "22 -1 22 -1", 0 },
+    { "file_round_trip", file_round_trip, "0 0 0 0 0 3 2 0", 0 },
+    { "file_bad_descriptor", file_bad_descriptor, "1 1 1", 0 },
+    { "error_kinds", error_kinds, "1223456780", 0 },
+    { "input_flushes_stdout", input_flushes_stdout, "prompt|after", 0 },
+    { "file_write_keeps_order", file_write_keeps_order, "abc", 0 },
+    { "path_kinds", path_kinds, "02 01 00 00 03 22 9", 0 },
+    { "directory_round_trip", directory_round_trip, "0 1 0 0 x 0 0 1 1 1 0 1 0 1 1", 0 },
+    { "child_prints", child_prints, "child", 0 },
+    { "child_exits", child_exits, "", 3 },
+    { "child_panics", child_panics, "out|test.kl:1: panic: x\n", 134 },
+    { "process_round_trip", process_round_trip, ROUND_TRIP, 0 },
+    { "process_output", process_output, "0 child 0 0 0 1 -1", 0 },
+    { "process_capture", process_capture, "0 0 134 out|test.kl:1: panic: x\n", 0 },
+    { "program_path", program_path, "0 1 1", 0 },
+    { "current_directory", current_directory, "0 1 1", 0 },
+    { "clocks", clocks, "11 11 11 1 1", 0 },
+    { "environment", environment, "0 value 0 0 1 1 1 1", 0 },
+    { "deep_drop", deep_drop, "1000000", 0 },
+    { "large_frame", large_frame, "az", 0 },
+};
+
+enum
+{
+    k_cases = sizeof cases / sizeof cases[0]
+};
+
+int main( int argc, char** argv )
+{
+    if( kl_rt_program_path( (uint8_t*) self, sizeof self, &self_size ) != 0 )
+    {
+        fprintf( stderr, "cannot find this program's path\n" );
+        return 2;
+    }
+
+    // A child: run the one case named.
+    if( argc == 2 )
+    {
+        for( size_t i = 0; i < k_cases; ++i )
+        {
+            if( strcmp( argv[1], cases[i].name ) == 0 )
+            {
+                cases[i].body();
+                return 0;
+            }
+        }
+        fprintf( stderr, "no case named %s\n", argv[1] );
+        return 2;
+    }
+
+    for( size_t i = 0; i < k_cases; ++i )
+    {
+        const Case* c = &cases[i];
+        const Run   r = run( c->name );
+        if( c->want != NULL && strcmp( r.out, c->want ) != 0 )
+        {
+            fprintf( stderr, "%s: output was \"%s\", expected \"%s\"\n", c->name, r.out, c->want );
+            failures++;
+        }
+        if( r.status != c->status )
+        {
+            fprintf( stderr, "%s: exit was %d, expected %d\n", c->name, r.status, c->status );
+            failures++;
+        }
+    }
+
+    // Each process draws its own key.
+    const Run first  = run( "hash_key" );
+    const Run second = run( "hash_key" );
     if( strlen( first.out ) != 32 || strcmp( first.out, second.out ) == 0 )
     {
         fprintf( stderr, "hash_key: two processes drew \"%s\" and \"%s\"\n", first.out, second.out );
         failures++;
     }
-
-    r = run( hash_key_varies );
-    check( "hash_key_varies", "stdout", r.out, "varies" );
-    check_exit( "hash_key_varies", &r, false );
-
-    r = run( file_open_refusals );
-    check( "file_open_refusals", "stdout", r.out, "22 -1 22 -1" );
-    check_exit( "file_open_refusals", &r, false );
-
-    r = run( file_round_trip );
-    check( "file_round_trip", "stdout", r.out, "0 0 0 0 0 3 2 0" );
-    check_exit( "file_round_trip", &r, false );
-
-    r = run( file_bad_descriptor );
-    check( "file_bad_descriptor", "stdout", r.out, "1 1 1" );
-    check_exit( "file_bad_descriptor", &r, false );
-
-    r = run( error_kinds );
-    check( "error_kinds", "stdout", r.out, "1223456780" );
-    check_exit( "error_kinds", &r, false );
-
-    r = run( input_flushes_stdout );
-    check( "input_flushes_stdout", "stdout", r.out, "prompt|after" );
-    check_exit( "input_flushes_stdout", &r, false );
-
-    r = run( file_write_keeps_order );
-    check( "file_write_keeps_order", "stdout", r.out, "abc" );
-    check_exit( "file_write_keeps_order", &r, false );
-
-    r = run( path_kinds );
-    check( "path_kinds", "stdout", r.out, "02 01 00 00 03 22 9" );
-    check_exit( "path_kinds", &r, false );
-
-    r = run( directory_round_trip );
-    check( "directory_round_trip", "stdout", r.out, "0 1 0 0 x 0 0 1 1 1 0 1 0 1 1" );
-    check_exit( "directory_round_trip", &r, false );
-
-    r = run( process_round_trip );
-    check( "process_round_trip", "stdout", r.out, "before|child0 0 0 3 137 1 7 1 1 1 1 1|after" );
-    check_exit( "process_round_trip", &r, false );
-
-    r = run( process_output );
-    check( "process_output", "stdout", r.out, "0 child 0 0 0 1 -1" );
-    check_exit( "process_output", &r, false );
-
-    r = run( program_path );
-    check( "program_path", "stdout", r.out, "0 1 1" );
-    check_exit( "program_path", &r, false );
-
-    r = run( current_directory );
-    check( "current_directory", "stdout", r.out, "0 1 1" );
-    check_exit( "current_directory", &r, false );
-
-    r = run( clocks );
-    check( "clocks", "stdout", r.out, "11 11 11 1 1" );
-    check_exit( "clocks", &r, false );
-
-    r = run( environment );
-    check( "environment", "stdout", r.out, "0 value 0 0 1 1 1 1" );
-    check_exit( "environment", &r, false );
-
-    r = run( fork_exit );
-    check( "fork_exit", "stdout", r.out, "before|child3 134|after" );
-    check_exit( "fork_exit", &r, false );
-
-    r = run( fork_errors );
-    check( "fork_errors", "stdout", r.out, "134 test.kl:1: panic: x" );
-    check( "fork_errors", "stderr", r.err, "" );
-    check_exit( "fork_errors", &r, false );
 
     if( failures != 0 )
     {
@@ -591,6 +677,6 @@ int main( void )
         return 1;
     }
 
-    printf( "21 runtime tests passed\n" );
+    printf( "%d runtime tests passed\n", (int) k_cases );
     return 0;
 }
