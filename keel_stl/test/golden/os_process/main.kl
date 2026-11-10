@@ -109,17 +109,23 @@ i32 main( const ref str[] args )
         return 8;
     }
 
-    // A signal is 128 and its number, and a second `wait` answers the same.
+    // A signal is 128 and its number, and a second `wait` answers the same. Windows has no
+    // signals, so there the code is whatever sh makes of one, but still not 0, and the same twice.
     str[2] kill = [ "-c", "kill -9 $$" ];
     switch( move kl::process::start( "sh", kill ) )
     {
         case result::ok( p ):
+            i32 first = 0;
             for( u64 i : 0..2 )
             {
                 switch( p.wait() )
                 {
                     case result::ok( c ):
-                        if( c != 137 )
+                        if( i == 0 )
+                        {
+                            first = c;
+                        }
+                        if( c == 0 || c != first || ( kl::get_platform() == kl::platform::linux && c != 137 ) )
                         {
                             return 9;
                         }

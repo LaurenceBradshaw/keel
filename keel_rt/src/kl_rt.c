@@ -216,6 +216,16 @@ void kl_rt_hash_key( uint64_t* low, uint64_t* high )
     *high = key[1];
 }
 
+// The system this runtime was built for: 0 Linux, 1 Windows.
+int32_t kl_rt_platform( void )
+{
+#ifdef _WIN32
+    return 1;
+#else
+    return 0;
+#endif
+}
+
 int32_t kl_rt_error_kind( int32_t code )
 {
     switch( code )

@@ -39,7 +39,7 @@
 #               .out and .run are checked with it; .expected stays the C backend's output.
 #   KEEL_COMPARE  a second backend: each run fixture is built and run with it too, objects and the
 #               release build included, and must pass the same checks and print what the first did.
-#   CC          the C compiler keelc runs         (default: cc)
+#   CC          the C compiler keelc runs         (default: cc; clang on Windows)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
 #   KEEL_VALGRIND=1   run each fixture under valgrind too, failing on any error it reports.
@@ -116,7 +116,9 @@ fi
 
 # The runtime from the same build as keelc, so the preset under test links its own. keelc is handed
 # it with --runtime and does the linking, which is what a run fixture is testing.
-runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
+runtime_name=libkeel_rt.a
+[ "$windows" = 1 ] && runtime_name=keel_rt.lib
+runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/${runtime_name}}"
 
 if [ "$run_programs" != 0 ]; then
     if [ ! -f "$runtime" ]; then
@@ -131,7 +133,7 @@ backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
 
 # keelc runs the C compiler; the runner only configures it.
-cc="${CC:-cc}"
+cc="${CC:-$( [ "$windows" = 1 ] && echo clang || echo cc )}"
 # -Werror, because a warning in emitted C is the compiler saying the code means something other
 # than intended - that is the whole reason for building it here. The unused-* family included: a
 # name the program never reads is marked used in the C, and `codegen/unused_names` checks it. Its own

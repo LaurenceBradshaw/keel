@@ -22,9 +22,13 @@ struct Object_options
     std::filesystem::path c {};   // the part's C, kept beside it for its #lines; debug only
     bool                  debug    = false;
     bool                  overflow = false;
-    std::string           compiler = "cc";
-    std::string           cflags {};
-    bool                  llvm = false; // the native part from the LLVM backend instead of $CC
+#ifdef _WIN32
+    std::string compiler = "clang"; // as keelc's own fallback for $CC
+#else
+    std::string compiler = "cc";
+#endif
+    std::string cflags {};
+    bool        llvm = false; // the native part from the LLVM backend instead of $CC
 
     std::span<const Object> objects {}; // the module's imports, as the front end loaded them
 };

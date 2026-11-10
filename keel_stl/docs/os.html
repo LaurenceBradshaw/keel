@@ -39,6 +39,8 @@
 <li><a href="#run"><code>run</code></a> <span class="kind">function</span></li>
 <li><a href="#capture"><code>capture</code></a> <span class="kind">function</span></li>
 <li class="divider">Environment</li>
+<li><a href="#platform"><code>platform</code></a> <span class="kind">enum</span></li>
+<li><a href="#get_platform"><code>get_platform</code></a> <span class="kind">function</span></li>
 <li><a href="#environment"><code>environment</code></a> <span class="kind">function</span></li>
 <li><a href="#program_path"><code>program_path</code></a> <span class="kind">function</span></li>
 <li><a href="#current_directory"><code>current_directory</code></a> <span class="kind">function</span></li>
@@ -513,6 +515,37 @@ Its standard error is still this program's.</p>
 </div>
 </section>
 <h2 class="divider">Environment</h2>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">platform</span></h2>
+<div class="group" id="platform">
+<pre class="signature"><a class="anchor" href="#platform" aria-label="Link to platform">#</a><code><span class="kw">enum</span> <span class="type">platform</span></code></pre>
+<div class="doc">
+<p>An operating system a program can be built for.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="platform.linux">
+<pre class="signature"><a class="anchor" href="#platform.linux" aria-label="Link to linux">#</a><code>linux</code></pre>
+<div class="doc">
+<p>x86-64 Linux, on glibc.</p>
+</div>
+</div>
+<div class="group" id="platform.windows">
+<pre class="signature"><a class="anchor" href="#platform.windows" aria-label="Link to windows">#</a><code>windows</code></pre>
+<div class="doc">
+<p>x86-64 Windows 10 or later.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">get_platform</span></h2>
+<div class="group" id="get_platform">
+<pre class="signature"><a class="anchor" href="#get_platform" aria-label="Link to get_platform">#</a><code><a class="type" href="#platform">platform</a> <span class="fn">get_platform</span>()</code></pre>
+<div class="doc">
+<p>The operating system this program was built for.</p>
+</div>
+</div>
+</section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">environment</span></h2>
 <div class="group" id="environment">

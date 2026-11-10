@@ -83,7 +83,18 @@ private void started_process_shares_streams( ref kl::test::context c )
             break;
     }
 
-    c.check( kl::exists( "/proc/self/fd/0" ) );
+    c.check( windows() || kl::exists( "/proc/self/fd/0" ) );
+}
+
+private bool windows()
+{
+    return kl::get_platform() == kl::platform::windows;
+}
+
+// What the runner names the program it builds.
+private str program_name()
+{
+    return windows() ? "program.exe" : "program";
 }
 
 private void program_path_names_this_program( ref kl::test::context c )
@@ -91,7 +102,7 @@ private void program_path_names_this_program( ref kl::test::context c )
     switch( kl::program_path() )
     {
         case result::ok( p ):
-            c.check_eq( p.file_name(), "program" );
+            c.check_eq( p.file_name(), program_name() );
             c.check( kl::is_file( p ) );
             break;
         case result::err( e ):
@@ -105,8 +116,8 @@ private void current_directory_holds_this_program( ref kl::test::context c )
     switch( kl::current_directory() )
     {
         case result::ok( d ):
-            c.check( d.as_text()[0] == '/' );
-            c.check( kl::is_file( d / "program" ) );
+            c.check( windows() ? d.as_text()[1] == ':' : d.as_text()[0] == '/' );
+            c.check( kl::is_file( d / program_name() ) );
             break;
         case result::err( e ):
             c.check( false );

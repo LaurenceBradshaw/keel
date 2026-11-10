@@ -109,16 +109,56 @@ static int32_t narrow_into( const wchar_t* text, uint8_t* buffer, uint64_t size,
     return 0;
 }
 
+// As narrow_into, with `/` for each `\`, as kl::path splits a path.
+static int32_t narrow_path_into( wchar_t* text, uint8_t* buffer, uint64_t size, uint64_t* length )
+{
+    for( wchar_t* at = text; *at != L'\0'; ++at )
+    {
+        if( *at == L'\\' )
+        {
+            *at = L'/';
+        }
+    }
+    return narrow_into( text, buffer, size, length );
+}
+
 static bool is_directory( const wchar_t* name )
 {
     const DWORD attributes = GetFileAttributesW( name );
     return attributes != INVALID_FILE_ATTRIBUTES && ( attributes & FILE_ATTRIBUTE_DIRECTORY ) != 0;
 }
 
-// A failure on `name`, telling a directory where a file was wanted apart from a plain refusal.
-static int file_error( const wchar_t* name, DWORD error )
+// Whether a folder `name` passes through is a file, which POSIX calls ENOTDIR and Windows a
+// missing path.
+static bool under_file( wchar_t* name )
 {
-    return error == ERROR_ACCESS_DENIED && is_directory( name ) ? EISDIR : errno_of( error );
+    for( wchar_t* at = name; *at != L'\0'; ++at )
+    {
+        if( ( *at == L'/' || *at == L'\\' ) && at != name && at[-1] != L':' )
+        {
+            const wchar_t separator = *at;
+            *at                     = L'\0';
+            const DWORD attributes  = GetFileAttributesW( name );
+            *at                     = separator;
+            if( attributes != INVALID_FILE_ATTRIBUTES && ( attributes & FILE_ATTRIBUTE_DIRECTORY ) == 0 )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// A failure on `name`, telling a file where a folder was wanted apart from a missing path.
+static int path_error( wchar_t* name, DWORD error )
+{
+    return error == ERROR_PATH_NOT_FOUND && under_file( name ) ? ENOTDIR : errno_of( error );
+}
+
+// As path_error, and telling a directory where a file was wanted apart from a plain refusal.
+static int file_error( wchar_t* name, DWORD error )
+{
+    return error == ERROR_ACCESS_DENIED && is_directory( name ) ? EISDIR : path_error( name, error );
 }
 
 int32_t kl_rt_file_open( const uint8_t* path, uint64_t size, int32_t mode, int32_t* fd )
@@ -299,7 +339,7 @@ int32_t kl_rt_create_directory( const uint8_t* path, uint64_t size )
         return error;
     }
 
-    error = CreateDirectoryW( name, NULL ) ? 0 : errno_of( GetLastError() );
+    error = CreateDirectoryW( name, NULL ) ? 0 : path_error( name, GetLastError() );
     free( name );
     return error;
 }
@@ -313,7 +353,7 @@ int32_t kl_rt_delete_directory( const uint8_t* path, uint64_t size )
         return error;
     }
 
-    error = RemoveDirectoryW( name ) ? 0 : errno_of( GetLastError() );
+    error = RemoveDirectoryW( name ) ? 0 : path_error( name, GetLastError() );
     free( name );
     return error;
 }
@@ -387,7 +427,7 @@ int32_t kl_rt_directory_open( const uint8_t* path, uint64_t size, uint64_t* hand
         {
             error = attributes != INVALID_FILE_ATTRIBUTES && ( attributes & FILE_ATTRIBUTE_DIRECTORY ) == 0
                         ? ENOTDIR
-                        : errno_of( failure );
+                        : path_error( name, failure );
             free( dir );
             free( name );
             return error;
@@ -723,8 +763,8 @@ int32_t kl_rt_program_path( uint8_t* buffer, uint64_t size, uint64_t* length )
         return ENOMEM;
     }
 
-    const DWORD got   = GetModuleFileNameW( NULL, path, k_longest );
-    int32_t     error = got == 0 || got == k_longest ? errno_of( GetLastError() ) : narrow_into( path, buffer, size, length );
+    const DWORD got = GetModuleFileNameW( NULL, path, k_longest );
+    int32_t error = got == 0 || got == k_longest ? errno_of( GetLastError() ) : narrow_path_into( path, buffer, size, length );
     free( path );
     return error;
 }
@@ -739,7 +779,7 @@ int32_t kl_rt_current_directory( uint8_t* buffer, uint64_t size, uint64_t* lengt
     }
 
     const DWORD got   = GetCurrentDirectoryW( needed, path );
-    int32_t     error = got == 0 || got >= needed ? errno_of( GetLastError() ) : narrow_into( path, buffer, size, length );
+    int32_t     error = got == 0 || got >= needed ? errno_of( GetLastError() ) : narrow_path_into( path, buffer, size, length );
     free( path );
     return error;
 }

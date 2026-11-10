@@ -115,8 +115,9 @@ i32 main()
         return 11;
     }
 
-    // `/dev/null` is a device: there, but neither a file nor a directory.
-    if( !kl::exists( "/dev/null" ) || kl::is_file( "/dev/null" ) || kl::is_directory( "/dev/null" ) )
+    // The null device is a device: there, but neither a file nor a directory.
+    str null_device = kl::get_platform() == kl::platform::windows ? "NUL" : "/dev/null";
+    if( !kl::exists( null_device ) || kl::is_file( null_device ) || kl::is_directory( null_device ) )
     {
         return 12;
     }

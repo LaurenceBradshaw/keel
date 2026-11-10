@@ -38,6 +38,7 @@ int32_t        kl_rt_file_read( int32_t fd, uint8_t* data, uint64_t size, uint64
 int32_t        kl_rt_file_write( int32_t fd, const uint8_t* data, uint64_t size );
 int32_t        kl_rt_file_close( int32_t fd );
 int32_t        kl_rt_error_kind( int32_t code );
+int32_t        kl_rt_platform( void );
 int32_t        kl_rt_path_kind( const uint8_t* path, uint64_t size, int32_t* kind );
 int32_t        kl_rt_create_directory( const uint8_t* path, uint64_t size );
 int32_t        kl_rt_delete_directory( const uint8_t* path, uint64_t size );

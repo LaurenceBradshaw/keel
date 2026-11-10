@@ -1,7 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Files, paths, directories, processes and the environment, through the runtime's calls. Each
+// Files, paths, directories, processes, the environment and the platform, through the runtime's calls. Each
 // call answers 0 or an `errno` value, which only the runtime turns into a kind, since the numbers
 // differ between systems.
 
@@ -27,6 +27,7 @@ private extern i32 kl_rt_process_wait( i64 pid, i32* status );
 private extern i32 kl_rt_environment( const ref u8[] name, u8[*]* value, u64* size );
 private extern i32 kl_rt_program_path( ref u8[] buffer, u64* length );
 private extern i32 kl_rt_current_directory( ref u8[] buffer, u64* length );
+private extern i32 kl_rt_platform();
 
 /// --- Errors ---
 
@@ -966,6 +967,26 @@ result<captured, file_error> capture<T>( const ref textual program, const ref T[
 }
 
 /// --- Environment ---
+
+/// An operating system a program can be built for.
+enum platform
+{
+    /// x86-64 Linux, on glibc.
+    linux,
+    /// x86-64 Windows 10 or later.
+    windows
+};
+
+/// The operating system this program was built for.
+platform get_platform()
+{
+    i32 which = 0;
+    unsafe
+    {
+        which = kl_rt_platform();
+    }
+    return which == 1 ? platform::windows : platform::linux;
+}
 
 /// The value of the environment variable `name`, or `none` when it is not set; a name that is
 /// empty or holds `=` never is.

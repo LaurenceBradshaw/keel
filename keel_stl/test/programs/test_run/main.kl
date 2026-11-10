@@ -1,6 +1,7 @@
 // `kl::test::run` with no arguments: every way a test can end, each reported on its own line, and
 // every check naming the test's line, through a helper of its own too.
 import kl::console;
+import kl::os;
 import kl::test::context;
 import kl::test::run;
 
@@ -57,6 +58,11 @@ void signalled( ref kl::test::context _ )
 {
     unsafe
     {
+        // Windows has no signals, so there the code one gives on Linux.
+        if( kl::get_platform() == kl::platform::windows )
+        {
+            exit( 128 + 9 );
+        }
         _ = raise( 9 );
     }
 }

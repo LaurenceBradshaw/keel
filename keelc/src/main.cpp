@@ -357,6 +357,13 @@ int main( int argc, char** argv )
     {
         output += ".klo";
     }
+#ifdef _WIN32
+    // As link.exe names it, so the program starts by the name it was given.
+    if( stop == Stop::Executable && !output.has_extension() )
+    {
+        output += ".exe";
+    }
+#endif
 
     const auto summarise = [&]
     {
@@ -636,9 +643,22 @@ int main( int argc, char** argv )
         return finish();
     }
 
+#ifdef _WIN32
+    if( backend == "c" )
+    {
+        fmt::print( stderr, "keelc: --backend c builds only on Linux; --emit-c still writes the C\n" );
+        return 2;
+    }
+#endif
+
     // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.
     const char* const configured = std::getenv( "CC" );
-    const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
+#ifdef _WIN32
+    const char* const fallback = "clang"; // Windows has no cc; clang takes its flags
+#else
+    const char* const fallback = "cc";
+#endif
+    const std::string compiler = configured != nullptr && *configured != '\0' ? configured : fallback;
 
     // $CFLAGS without its warnings, then $KEEL_C_WARNINGS as given: only keelc's tests ask the C
     // compiler to judge the C.
@@ -757,7 +777,8 @@ int main( int argc, char** argv )
             inputs.push_back( compiled.generic_string() );
         }
 
-        if( const std::string failed = keel::link_executable( objects, runtime.path, executable, inputs ); !failed.empty() )
+        if( const std::string failed = keel::link_executable( objects, runtime.path, executable, inputs, debug );
+            !failed.empty() )
         {
             fmt::print( stderr, "keelc: linking failed:\n{}", failed );
             return 1;

@@ -54,7 +54,12 @@ unset(CMAKE_MAP_IMPORTED_CONFIG_DEBUG)
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
 endif()
-set(keel_llvm_libs lldELF lldCommon LLVMCore LLVMSupport LLVMTarget LLVMMC LLVMPasses
+if(WIN32)
+    set(keel_lld lldCOFF)
+else()
+    set(keel_lld lldELF)
+endif()
+set(keel_llvm_libs ${keel_lld} lldCommon LLVMCore LLVMSupport LLVMTarget LLVMMC LLVMPasses
     LLVMX86CodeGen LLVMX86AsmParser LLVMX86Desc LLVMX86Info)
 
 add_executable(keelc ${keel_sources})

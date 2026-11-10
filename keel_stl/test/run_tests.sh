@@ -39,17 +39,23 @@ absolute()
     esac
 }
 
+mkdir -p "$artifacts" || exit 2
+artifacts="$( absolute "$artifacts" )"
 keelc="$( absolute "$( dirname "$1" )" )/$( basename "$1" )"
 update=0
 [ "${2:-}" = "--update" ] && update=1
 
-runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
+windows=0
+case "$( uname -s )" in MINGW* | MSYS* ) windows=1 ;; esac
+runtime_name=libkeel_rt.a
+[ "$windows" = 1 ] && runtime_name=keel_rt.lib
+runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/${runtime_name}}"
 runtime="$( absolute "$( dirname "$runtime" )" )/$( basename "$runtime" )"
 # Longer under valgrind, which starts afresh for each kl::test child.
 run_timeout="${KEEL_RUN_TIMEOUT:-$( [ -n "${KEEL_VALGRIND:-}" ] && echo 120 || echo 10 )}"
 backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
-export CC="${CC:-cc}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
+export CC="${CC:-$( [ "$windows" = 1 ] && echo clang || echo cc )}" CFLAGS="${KEEL_CFLAGS:--std=c11}" KEEL_C_WARNINGS="${KEEL_C_WARNINGS:--Wall -Wextra -Wpointer-arith -Werror}"
 
 # Paths appear in panics and reports, so they are relative to here.
 cd "$here" || exit 2

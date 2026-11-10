@@ -29,8 +29,9 @@
 #define os_chdir _chdir
 #define os_rmdir _rmdir
 #define os_unlink _unlink
-#define PROGRAM_NAME "\\keel_rt_tests.exe"
+#define PROGRAM_NAME "/keel_rt_tests.exe"
 #define NULL_DEVICE "NUL"
+#define PLATFORM "1"
 #else
 #include <sys/wait.h>
 #include <unistd.h>
@@ -43,6 +44,7 @@
 #define os_unlink unlink
 #define PROGRAM_NAME "/keel_rt_tests"
 #define NULL_DEVICE "/dev/null"
+#define PLATFORM "0"
 #endif
 
 static int os_pipe( int ends[2] )
@@ -483,7 +485,12 @@ static void current_directory( void )
     uint64_t length = 0;
     char     want[4096];
     printf( "%d ", kl_rt_current_directory( buffer, sizeof buffer, &length ) );
-    printf( "%d ", os_getcwd( want, sizeof want ) != NULL && length == strlen( want ) && memcmp( buffer, want, length ) == 0 );
+    const bool got = os_getcwd( want, sizeof want ) != NULL;
+    for( char* at = want; got && *at != '\0'; ++at )
+    {
+        *at = *at == '\\' ? '/' : *at; // the runtime's paths use '/' alone
+    }
+    printf( "%d ", got && length == strlen( want ) && memcmp( buffer, want, length ) == 0 );
     printf( "%d", kl_rt_current_directory( buffer, 1, &length ) == ERANGE );
 }
 
@@ -575,6 +582,11 @@ static void large_frame( void )
     printf( "%c%c", big[0], big[sizeof big - 1] );
 }
 
+static void platform( void )
+{
+    printf( "%d", kl_rt_platform() );
+}
+
 typedef struct
 {
     const char* name;
@@ -616,6 +628,7 @@ static const Case cases[] = {
     { "environment", environment, "0 value 0 0 1 1 1 1", 0 },
     { "deep_drop", deep_drop, "1000000", 0 },
     { "large_frame", large_frame, "az", 0 },
+    { "platform", platform, PLATFORM, 0 },
 };
 
 enum

@@ -614,7 +614,11 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
     defined_ = defined;
 
     // As the C is compiled: stack probes (§7 rule 7), and unwind tables for a debugger's backtrace.
-    defined->addFnAttr( "probe-stack", "inline-asm" );
+    // Windows probes every large frame already, through __chkstk.
+    if( !windows_ )
+    {
+        defined->addFnAttr( "probe-stack", "inline-asm" );
+    }
     defined->setUWTableKind( llvm::UWTableKind::Async );
     if( debug_ )
     {
