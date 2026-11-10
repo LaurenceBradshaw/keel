@@ -420,7 +420,8 @@ point `KEEL_RT` at a library built without sanitizers, such as the `debug` one. 
 to run every executed fixture under valgrind.
 
 `.githooks/pre-commit` runs formatting, every suite, the docs check and the release build; install it
-with `git config core.hooksPath .githooks`.
+with `git config core.hooksPath .githooks`, once in each clone, as git keeps the setting per clone.
+On Windows it runs under Git Bash, with the `windows-` presets.
 
 Unit tests live in the source file they test, behind `ENABLE_UNIT_TESTS`. Golden-file tests under
 `keelc/test/` cover language behaviour: one `.kl` fixture per topic, with its expected diagnostics,
