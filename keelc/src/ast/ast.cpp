@@ -607,6 +607,7 @@ Node_id Ast::value( Node_id id ) const
     switch( kind( id ) )
     {
     case Node_kind::Assign_stmt:
+    case Node_kind::Ptr_init_expr:
         return child( id, 1 );
     default:
         assert( ( kind( id ) == Node_kind::Return_stmt || kind( id ) == Node_kind::Field_init ) && "this kind has no value" );
@@ -632,7 +633,11 @@ Node_id Ast::written_type( Node_id id ) const
 
 Node_id Ast::pointer( Node_id id ) const
 {
-    assert( ( kind( id ) == Node_kind::Free_expr || kind( id ) == Node_kind::Destroy_expr ) && "this kind has no pointer" );
+    assert(
+        ( kind( id ) == Node_kind::Free_expr || kind( id ) == Node_kind::Destroy_expr || kind( id ) == Node_kind::Ptr_init_expr
+        ) &&
+        "this kind has no pointer"
+    );
     return child( id, 0 );
 }
 

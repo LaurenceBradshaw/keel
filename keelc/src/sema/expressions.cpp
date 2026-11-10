@@ -127,6 +127,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Destroy_expr:
         return infer_destroy( id );
 
+    case Node_kind::Ptr_init_expr:
+        return infer_ptr_init( id );
+
     case Node_kind::Assert_expr:
         check_condition( ast_.condition( id ) );
         return types_.record( id, table_.builtin( Type_kind::Void ) );
@@ -3048,6 +3051,46 @@ Type_id Expressions::infer_destroy( Node_id id )
         );
         return types_.poison( id );
     }
+
+    return types_.record( id, table_.builtin( Type_kind::Void ) );
+}
+
+// Writes the first value behind a `T*`, dropping nothing: what `*p = v` would drop is not there yet.
+Type_id Expressions::infer_ptr_init( Node_id id )
+{
+    const Type_id pointer = infer( ast_.pointer( id ) );
+
+    require_unsafe( id, "`ptr_init` needs an `unsafe` block", "the compiler cannot tell that no value is there yet" );
+
+    bool refused = false;
+    if( !table_.is_error( pointer ) && !table_.is_pointer( pointer ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.pointer( id ) ),
+            fmt::format( "`ptr_init` needs a `T*`, but got `{}`", table_.name( pointer ) ),
+            table_.is_many_pointer( pointer ) ? "a `T[*]` slot is raw storage, so `p[i] = v` already drops nothing"
+                                              : "it writes the first value a `T*` points at"
+        );
+        refused = true;
+    }
+    else if( !table_.is_error( pointer ) && table_.points_to_const( pointer ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.pointer( id ) ),
+            fmt::format( "`ptr_init` cannot write through a `{}`, which points to `const`", table_.name( pointer ) )
+        );
+        refused = true;
+    }
+
+    if( table_.is_error( pointer ) || refused )
+    {
+        absorb( ast_.value( id ) );
+        return types_.poison( id );
+    }
+
+    const Type_id element = table_.get( pointer ).element;
+    check( ast_.value( id ), element );
+    places_.check_owning_source( ast_.value( id ), element );
 
     return types_.record( id, table_.builtin( Type_kind::Void ) );
 }

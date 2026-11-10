@@ -203,6 +203,8 @@ enum class Node_kind : u16
     // aux: the name (`this` for `[ this ]`); children: what is captured, a Name_expr or a `ref`
     // Marker_expr around one.
     Capture_decl,
+    // `ptr_init( p, v )`; children: the pointer, then the value.
+    Ptr_init_expr,
 
     Count
 };

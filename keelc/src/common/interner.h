@@ -86,6 +86,7 @@ enum class Keyword : u32
     Implements,
     Do,
     Yield,
+    Ptr_init,
 
     Count
 };

@@ -365,7 +365,6 @@ struct kl_7prelude_textual__vtable
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 extern _Thread_local uintptr_t kl_rt_stack_low;
 void kl_rt_deeper( void ( * )( void* ), void* );
@@ -600,13 +599,13 @@ int32_t kl__4main__( void )
     return kl_t0;
 }
 
-#line 403 "<prelude>"
+#line 401 "<prelude>"
 struct kl__chain__I3i64E* kl_7prelude_3get__I5chainI3i64EE__SQ7prelude3boxI5chainI3i64EE( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1 )
 {
     struct kl__chain__I3i64E* kl_t0;
-#line 405 "<prelude>"
+#line 403 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 405 "<prelude>"
+#line 403 "<prelude>"
     return kl_t0;
 }
 
@@ -772,7 +771,7 @@ int32_t kl__5count__I3f64E__5chainI3f64E( struct kl__chain__I3f64E* kl_c_1 )
 #line 25 "codegen/generic_recursive_enum.kl"
 }
 
-#line 393 "<prelude>"
+#line 391 "<prelude>"
 void kl_7prelude_3box__I5chainI3i64EE__dtor( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1 )
 {
     struct kl__chain__I3i64E* kl_t2;
@@ -781,17 +780,17 @@ void kl_7prelude_3box__I5chainI3i64EE__dtor( struct kl_7prelude_box__I5chainI3i6
         kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3i64EE__dtor, kl_this_1 );
         return;
     }
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl__5chain__I3i64E__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 400 "<prelude>"
+#line 398 "<prelude>"
     return;
-#line 400 "<prelude>"
+#line 398 "<prelude>"
 }
 
-#line 393 "<prelude>"
+#line 391 "<prelude>"
 void kl_7prelude_3box__I5chainI3f64EE__dtor( struct kl_7prelude_box__I5chainI3f64EE* kl_this_1 )
 {
     struct kl__chain__I3f64E* kl_t2;
@@ -800,57 +799,49 @@ void kl_7prelude_3box__I5chainI3f64EE__dtor( struct kl_7prelude_box__I5chainI3f6
         kl_rt_deeper( ( void ( * )( void* ) ) ( void ( * )( void ) ) kl_7prelude_3box__I5chainI3f64EE__dtor, kl_this_1 );
         return;
     }
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl__5chain__I3f64E__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 400 "<prelude>"
+#line 398 "<prelude>"
     return;
-#line 400 "<prelude>"
+#line 398 "<prelude>"
 }
 
 #line 382 "<prelude>"
 void kl_7prelude_3box__I5chainI3i64EE__RQ7prelude3boxI5chainI3i64EE_M5chainI3i64E__ctor( struct kl_7prelude_box__I5chainI3i64EE* kl_this_1, struct kl__chain__I3i64E kl_value_2 )
 {
-    struct kl__chain__I3i64E* kl_slot_3;
+    struct kl__chain__I3i64E* kl_t3;
     struct kl__chain__I3i64E* kl_t4;
-    struct kl__chain__I3i64E* kl_t5;
-    struct kl__chain__I3i64E* kl_t6;
-    struct kl__chain__I3i64E* kl_t7;
-    bool kl_t8;
+    bool kl_t5;
+#line 386 "<prelude>"
+    kl_t5 = true;
+#line 386 "<prelude>"
+    kl_t3 = ( struct kl__chain__I3i64E* ) kl_rt_alloc( 24, "<prelude>", 386, "out of memory: alloc<T>()" );
+#line 386 "<prelude>"
+    ( *kl_this_1 ).kl_p_ = kl_t3;
+    kl_t4 = ( *kl_this_1 ).kl_p_;
 #line 387 "<prelude>"
-    kl_t8 = true;
+    ( *kl_t4 ) = kl_value_2;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__chain__I3i64E* ) kl_rt_alloc_many( ( size_t ) 1, 24, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
-#line 387 "<prelude>"
-    kl_slot_3 = kl_t4;
-    kl_t5 = kl_slot_3 + 0;
-#line 388 "<prelude>"
-    ( *kl_t5 ) = kl_value_2;
-#line 388 "<prelude>"
-    kl_t8 = false;
-    kl_t6 = kl_slot_3 + 0;
+    kl_t5 = false;
 #line 389 "<prelude>"
-    kl_t7 = &( *kl_t6 );
+    if ( kl_t5 ) kl__5chain__I3i64E__dtor( &kl_value_2 );
 #line 389 "<prelude>"
-    ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 391 "<prelude>"
-    if ( kl_t8 ) kl__5chain__I3i64E__dtor( &kl_value_2 );
-#line 391 "<prelude>"
-    kl_t8 = false;
-#line 391 "<prelude>"
+    kl_t5 = false;
+#line 389 "<prelude>"
     return;
-#line 391 "<prelude>"
+#line 389 "<prelude>"
 }
 
-#line 403 "<prelude>"
+#line 401 "<prelude>"
 struct kl__chain__I3f64E* kl_7prelude_3get__I5chainI3f64EE__SQ7prelude3boxI5chainI3f64EE( struct kl_7prelude_box__I5chainI3f64EE* kl_this_1 )
 {
     struct kl__chain__I3f64E* kl_t0;
-#line 405 "<prelude>"
+#line 403 "<prelude>"
     kl_t0 = &( *( *kl_this_1 ).kl_p_ );
-#line 405 "<prelude>"
+#line 403 "<prelude>"
     return kl_t0;
 }
 

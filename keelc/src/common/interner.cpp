@@ -27,7 +27,7 @@ Interner::Interner()
         "extern",   "alloc",    "free",      "fallthrough", "where",   "static",
         "private",  "public",   "fn",        "field",       "assert",  "operator", "destroy",
         "_",        "panic",    "interface", "implements",
-        "do",       "yield"
+        "do",       "yield",    "ptr_init"
     };
     // clang-format on
 

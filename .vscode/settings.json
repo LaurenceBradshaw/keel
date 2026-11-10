@@ -31,6 +31,8 @@
     "[c]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
+    // New files too, on Windows: .gitattributes keeps the index LF, this keeps the editor from writing CRLF.
+    "files.eol": "\n",
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
     // .kl files are Keel, from editors/vscode. Keel has no formatter, and saving must not change a

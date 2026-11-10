@@ -168,8 +168,8 @@ is written in Keel: `list`, `string`, `optional`, `pair`, `ring`, `map`, `set`, 
   pointers.
 - **Errors:** `result<T, E>` with `try` and anonymous error unions, `panic` and `never`, `assert`, and
   overflow checks under `--debug`.
-- **Ownership:** move checking and a borrow check on the IR's CFG, `unsafe`, and `alloc`, `free` and
-  `destroy`.
+- **Ownership:** move checking and a borrow check on the IR's CFG, `unsafe`, and `alloc`, `free`,
+  `ptr_init` and `destroy`.
 - **Programs:** modules, packages and module-private declarations, string literals that become any
   type implementing `from<str>`, counting `for` loops, named warnings, `extern` functions checked
   against what C can read, and linking the program's own C.
@@ -304,7 +304,7 @@ noted in its row.
 | No `new`/`delete` in safe code. `alloc<T>( n )`, `free( p )` and `destroy( p, n )` are keywords needing `unsafe`: memory, its release, and ending the values in it are three separate steps. A failed `alloc` panics rather than answering null. | `new`/`delete`, and owning raw pointers as an idiom. | An address says nothing about who frees it. Manual allocation is the exception, spelled as one. |
 | `unsafe` is a block, and it permits operations rather than disabling checks. | Unmarked, and available everywhere. | The permission is always a pair of braces you can see, and everything checked outside one is checked inside. |
 | `T*` points at exactly one live `T` and has no arithmetic. `T[*]` points at many slots of raw storage; indexing it and `+` need `unsafe`. | Any pointer is an iterator. | `p + 1` on a single-item pointer is not dangerous, it is nonsense. |
-| Writing through a `T*` destroys the old value first; writing a `T[*]` slot initialises it. | `*p = x` assigns, and raw memory needs placement `new`. | The pointer's type already says whether a live value is there. |
+| Writing through a `T*` destroys the old value first; writing a `T[*]` slot initialises it, and so does `ptr_init( p, v )` for the first value behind a fresh `T*`. | `*p = x` assigns, and raw memory needs placement `new`. | The pointer's type already says whether a live value is there. |
 | An owning value leaves a place only by `move`, and only a local, a parameter or a raw slot may be moved out. `return field;` is an error. | Copies, or moves anything `std::move` names. | A field or an element outlives the return, so copying it would destroy it twice, and moving it would leave a hole its owner still counts. |
 | `extern` declares a C function, is not mangled, and calling one needs `unsafe`. Its parameters and return must be something C can read: numbers, pointers, C-like enums and plain structs by value, anything else behind a borrow. | `extern "C"`, and calls are unchecked but unmarked. | The FFI boundary is where the compiler's guarantees stop, so the marker goes there, and a type whose layout is Keel's never reaches C by value. |
 | No exceptions and no unwinding. Errors are `result<T, E>`, propagated with a `try` prefix, and `E` may be an anonymous union of error enums, `Io_error \| Parse_error`, matched leaf by leaf. | Exceptions and exception safety as a discipline. | An invisible second path through every call is the feature most C++ code bases turn off. |

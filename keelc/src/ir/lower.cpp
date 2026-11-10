@@ -377,6 +377,7 @@ private:
     lower_owning_outs( std::span<const Node_id> arguments, std::span<const Type_id> addresses, std::vector<Operand>& operands );
 
     void lower_destroy( Node_id id );
+    void lower_ptr_init( Node_id id );
 
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
@@ -1618,6 +1619,20 @@ void Lowering::lower_owning_outs(
         operands[i] =
             temporary( borrow_of( places[i], type, addresses[i], Address_purpose::Initialise, span ), addresses[i], span );
     }
+}
+
+// `*p = v` with nothing dropped first.
+void Lowering::lower_ptr_init( Node_id id )
+{
+    const Span     span         = ast_.span( id );
+    const Operand  pointer      = lower_expression( ast_.pointer( id ) );
+    const Local_id pointer_temp = builder_.into_temp( use( pointer ), pointer.type, span );
+    const Type_id  element_type = types_.table().get( pointer.type ).element;
+    const Operand  value        = lower_expression( ast_.value( id ) );
+
+    builder_.assign(
+        builder_.deref( builder_.place( pointer_temp ) ), use( moved_if_owning( united( value, element_type, span ) ) ), span
+    );
 }
 
 // A loop dropping `p[0]` to `p[n - 1]`, or only the operands for a `T` that owns nothing.
@@ -3624,6 +3639,9 @@ Operand Lowering::lower_unspanned( Node_id id )
     }
     case Node_kind::Destroy_expr:
         lower_destroy( id );
+        return Operand { .type = types_.table().builtin( Type_kind::Void ) };
+    case Node_kind::Ptr_init_expr:
+        lower_ptr_init( id );
         return Operand { .type = types_.table().builtin( Type_kind::Void ) };
     // Reading a place is a copy of it - no temporary, because a place is already readable. That is
     // the whole of what lower_place buys in value position.

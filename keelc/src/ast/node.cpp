@@ -184,6 +184,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Capture_list";
     case Node_kind::Capture_decl:
         return "Capture_decl";
+    case Node_kind::Ptr_init_expr:
+        return "Ptr_init_expr";
 
     case Node_kind::Count:
         break;

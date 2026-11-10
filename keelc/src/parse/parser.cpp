@@ -2800,7 +2800,8 @@ bool Parser::can_start_expression() const
                cursor_.check_keyword( Keyword::This ) || cursor_.check_keyword( Keyword::Alloc ) ||
                cursor_.check_keyword( Keyword::Free ) || cursor_.check_keyword( Keyword::Assert ) ||
                cursor_.check_keyword( Keyword::Destroy ) || cursor_.check_keyword( Keyword::Try ) ||
-               cursor_.check_keyword( Keyword::Underscore ) || cursor_.check_keyword( Keyword::Panic );
+               cursor_.check_keyword( Keyword::Ptr_init ) || cursor_.check_keyword( Keyword::Underscore ) ||
+               cursor_.check_keyword( Keyword::Panic );
 
     default:
         return false;
@@ -3182,12 +3183,12 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
-    // A call, an assert, a panic, a destroy and a `free` are the effectful expression kinds; everything else computes a value
-    // the statement then discards, which is D15's rule.
+    // A call, an assert, a panic, a destroy, a `ptr_init` and a `free` are the effectful expression kinds; everything else
+    // computes a value the statement then discards, which is D15's rule.
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
              ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr &&
              ast_.kind( expr ) != Node_kind::Destroy_expr && ast_.kind( expr ) != Node_kind::Try_expr &&
-             ast_.kind( expr ) != Node_kind::Panic_expr )
+             ast_.kind( expr ) != Node_kind::Panic_expr && ast_.kind( expr ) != Node_kind::Ptr_init_expr )
     {
         discarded = true;
     }
@@ -4059,6 +4060,18 @@ Node_id Parser::parse_keyword_prefix( Span start )
         }
 
         return ast_.add( Node_kind::Destroy_expr, Span::merge( start, cursor_.previous().span ), 0, { pointer, count } );
+    }
+
+    if( cursor_.check_keyword( Keyword::Ptr_init ) )
+    {
+        cursor_.advance();
+        recovery_.expect( Token_kind::L_paren );
+        const Node_id pointer = parse_expression( 0 );
+        recovery_.expect( Token_kind::Comma );
+        const Node_id value = parse_expression( 0 );
+        recovery_.expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Ptr_init_expr, Span::merge( start, cursor_.previous().span ), 0, { pointer, value } );
     }
 
     if( cursor_.check_keyword( Keyword::Assert ) )

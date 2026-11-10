@@ -1,0 +1,65 @@
+// `ptr_init( p, v )` writes the first value behind a fresh `T*` and drops nothing; `destroy( p )`
+// then ends it once. Exits with the failing check.
+i64 made;
+i64 dropped;
+
+class Tracked
+{
+    public i64 id;
+
+    public Tracked( i64 x )
+    {
+        id = x;
+        made += 1;
+    }
+
+    ~Tracked()
+    {
+        dropped += 1;
+    }
+};
+
+i32 main()
+{
+    Tracked* one = nullptr;
+    Tracked* two = nullptr;
+    i32*     plain = nullptr;
+    unsafe
+    {
+        one = alloc<Tracked>();
+        Tracked named = Tracked( 7 );
+        ptr_init( one, move named );
+
+        two = alloc<Tracked>();
+        ptr_init( two, Tracked( 9 ) );
+
+        plain = alloc<i32>();
+        ptr_init( plain, 5 );
+    }
+
+    if( dropped != 0 )
+    {
+        return 1;
+    }
+
+    if( one.id != 7 || two.id != 9 || *plain != 5 )
+    {
+        return 2;
+    }
+
+    unsafe
+    {
+        destroy( one );
+        free( one );
+        destroy( two );
+        free( two );
+        free( plain );
+    }
+
+    if( made != 2 || dropped != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

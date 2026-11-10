@@ -425,49 +425,41 @@ int32_t kl__4main__( void )
 #line 382 "<prelude>"
 void kl_7prelude_3box__I7TrackedE__RQ7prelude3boxI7TrackedE_M7Tracked__ctor( struct kl_7prelude_box__I7TrackedE* kl_this_1, struct kl__Tracked kl_value_2 )
 {
-    struct kl__Tracked* kl_slot_3;
+    struct kl__Tracked* kl_t3;
     struct kl__Tracked* kl_t4;
-    struct kl__Tracked* kl_t5;
-    struct kl__Tracked* kl_t6;
-    struct kl__Tracked* kl_t7;
-    bool kl_t8;
+    bool kl_t5;
+#line 386 "<prelude>"
+    kl_t5 = true;
+#line 386 "<prelude>"
+    kl_t3 = ( struct kl__Tracked* ) kl_rt_alloc( 16, "<prelude>", 386, "out of memory: alloc<T>()" );
+#line 386 "<prelude>"
+    ( *kl_this_1 ).kl_p_ = kl_t3;
+    kl_t4 = ( *kl_this_1 ).kl_p_;
 #line 387 "<prelude>"
-    kl_t8 = true;
+    ( *kl_t4 ) = kl_value_2;
 #line 387 "<prelude>"
-    kl_t4 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 1, 16, "<prelude>", 387, "out of memory: alloc<T>( 1 )" );
-#line 387 "<prelude>"
-    kl_slot_3 = kl_t4;
-    kl_t5 = kl_slot_3 + 0;
-#line 388 "<prelude>"
-    ( *kl_t5 ) = kl_value_2;
-#line 388 "<prelude>"
-    kl_t8 = false;
-    kl_t6 = kl_slot_3 + 0;
+    kl_t5 = false;
 #line 389 "<prelude>"
-    kl_t7 = &( *kl_t6 );
+    if ( kl_t5 ) kl__7Tracked__dtor( &kl_value_2 );
 #line 389 "<prelude>"
-    ( *kl_this_1 ).kl_p_ = kl_t7;
-#line 391 "<prelude>"
-    if ( kl_t8 ) kl__7Tracked__dtor( &kl_value_2 );
-#line 391 "<prelude>"
-    kl_t8 = false;
-#line 391 "<prelude>"
+    kl_t5 = false;
+#line 389 "<prelude>"
     return;
-#line 391 "<prelude>"
+#line 389 "<prelude>"
 }
 
-#line 393 "<prelude>"
+#line 391 "<prelude>"
 void kl_7prelude_3box__I7TrackedE__dtor( struct kl_7prelude_box__I7TrackedE* kl_this_1 )
 {
     struct kl__Tracked* kl_t2;
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl_t2 = ( *kl_this_1 ).kl_p_;
-#line 397 "<prelude>"
+#line 395 "<prelude>"
     kl__7Tracked__dtor( &( *kl_t2 ) );
     kl_rt_free( ( *kl_this_1 ).kl_p_ );
-#line 400 "<prelude>"
+#line 398 "<prelude>"
     return;
-#line 400 "<prelude>"
+#line 398 "<prelude>"
 }
 
 int main( void )

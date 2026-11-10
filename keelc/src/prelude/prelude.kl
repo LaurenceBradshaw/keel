@@ -383,10 +383,8 @@ class box<T>
     {
         unsafe
         {
-            // A raw slot, so the write drops nothing: there is nothing there yet.
-            T[*] slot = alloc<T>( 1 );
-            slot[0] = move value;
-            p_ = &slot[0];
+            p_ = alloc<T>();
+            ptr_init( p_, move value );
         }
     }
 
