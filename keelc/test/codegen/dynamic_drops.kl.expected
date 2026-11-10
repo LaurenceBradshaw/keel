@@ -294,7 +294,7 @@ void kl_1t7console_6eprint__4bool_7textual( bool kl_value_1, struct kl_7prelude_
 #line 113 "../test_lib/console.kl"
 }
 
-// /home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl
+// <kl>/optional.kl
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -4029,23 +4029,23 @@ void kl_7prelude_6result__I1P_3i32E__dtor( struct kl_7prelude_result__I1P_3i32E*
 #line 149 "<prelude>"
 }
 
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
 void kl_2kl8optional_8optional__I1PE__dtor( struct kl_2kl8optional_optional__I1PE* kl_t1 )
 {
     bool kl_t2;
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
     return;
     bb2:
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
     kl__1P__dtor( &( *kl_t1 ).kl_4some_value );
-#line 5 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 5 "<kl>/optional.kl"
     goto bb1;
-#line 11 "/home/lozing/src/keel/build/debug/lib/keel/0.1.0/kl/optional.kl"
+#line 11 "<kl>/optional.kl"
 }
 
 void kl__A4_1P__dtor( struct kl__A4_1P* kl_t1 )

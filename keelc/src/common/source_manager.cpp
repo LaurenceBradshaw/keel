@@ -30,7 +30,7 @@ std::optional<File_id> Source_manager::load_file( const std::filesystem::path& p
         return std::nullopt;
     }
 
-    if( auto it = by_path_.find( canonical_path.string() ); it != by_path_.end() )
+    if( auto it = by_path_.find( canonical_path.generic_string() ); it != by_path_.end() )
     {
         return it->second;
     }
@@ -65,8 +65,8 @@ std::optional<File_id> Source_manager::load_file( const std::filesystem::path& p
     }
 
     // Store the path as given for display, but use the canonical path for dedup.
-    File_id id = add_file( path.string(), std::move( text ) );
-    by_path_.emplace( canonical_path.string(), id );
+    File_id id = add_file( path.generic_string(), std::move( text ) );
+    by_path_.emplace( canonical_path.generic_string(), id );
 
     return id;
 }

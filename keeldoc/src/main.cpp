@@ -1,6 +1,13 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #include <fmt/core.h>
 #include <cxxopts.hpp>
 #include <filesystem>
@@ -19,15 +26,27 @@ namespace
 // The keelc beside this binary, which is where a build puts both.
 std::filesystem::path default_keelc()
 {
+#ifdef _WIN32
+    std::wstring self( 32768, L'\0' );
+    self.resize( GetModuleFileNameW( nullptr, self.data(), static_cast<DWORD>( self.size() ) ) );
+    return self.empty() ? std::filesystem::path( "keelc" ) : std::filesystem::path( self ).parent_path() / "keelc.exe";
+#else
     std::error_code             ec;
     const std::filesystem::path self = std::filesystem::read_symlink( "/proc/self/exe", ec );
     return ec ? std::filesystem::path( "keelc" ) : self.parent_path() / "keelc";
+#endif
 }
 
 } // namespace
 
 int main( int argc, char** argv )
 {
+#ifdef _WIN32
+    // Exactly the bytes written: no CR before each LF.
+    _setmode( _fileno( stdout ), _O_BINARY );
+    _setmode( _fileno( stderr ), _O_BINARY );
+#endif
+
     cxxopts::Options options( "keeldoc", "Writes a Keel package's documentation as HTML pages" );
 
     // clang-format off
@@ -130,7 +149,7 @@ int main( int argc, char** argv )
         out.write( contents.data(), static_cast<std::streamsize>( contents.size() ) );
         if( !out )
         {
-            fmt::print( stderr, "keeldoc: cannot write '{}'\n", ( output / file ).string() );
+            fmt::print( stderr, "keeldoc: cannot write '{}'\n", ( output / file ).generic_string() );
             return 1;
         }
     }

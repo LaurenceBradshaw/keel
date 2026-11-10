@@ -5,6 +5,11 @@
 #include <fmt/format.h>
 #include <fstream>
 #include "common/version.h"
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 namespace keel
 {
@@ -18,7 +23,7 @@ Runtime find_runtime( const std::optional<std::string>& flag, const std::filesys
         out.write( reinterpret_cast<const char*>( k_runtime ), static_cast<std::streamsize>( k_runtime_size ) );
         if( !out.flush() )
         {
-            return Runtime { path, fmt::format( "could not write the runtime to '{}'", path.string() ) };
+            return Runtime { path, fmt::format( "could not write the runtime to '{}'", path.generic_string() ) };
         }
         return Runtime { path, "" };
     }
@@ -27,15 +32,21 @@ Runtime find_runtime( const std::optional<std::string>& flag, const std::filesys
     std::error_code             ec;
     if( !std::filesystem::is_regular_file( path, ec ) )
     {
-        return Runtime { path, fmt::format( "--runtime names '{}', which is not a file", path.string() ) };
+        return Runtime { path, fmt::format( "--runtime names '{}', which is not a file", path.generic_string() ) };
     }
     return Runtime { path, "" };
 }
 
 std::filesystem::path library_folder()
 {
+#ifdef _WIN32
+    std::wstring self( 32768, L'\0' );
+    self.resize( GetModuleFileNameW( nullptr, self.data(), static_cast<DWORD>( self.size() ) ) );
+    const std::filesystem::path exe = self;
+#else
     std::error_code             ec;
     const std::filesystem::path exe = std::filesystem::read_symlink( "/proc/self/exe", ec );
+#endif
     return ( exe.parent_path() / ".." / "lib" / "keel" / k_version ).lexically_normal();
 }
 
@@ -57,7 +68,9 @@ std::string compile_command(
     std::string_view compiler, std::string_view cflags, const std::filesystem::path& source, const std::filesystem::path& object
 )
 {
-    return fmt::format( "{} -c \"{}\" -o \"{}\"", compiler_and_flags( compiler, cflags ), source.string(), object.string() );
+    return fmt::format(
+        "{} -c \"{}\" -o \"{}\"", compiler_and_flags( compiler, cflags ), source.generic_string(), object.generic_string()
+    );
 }
 
 std::string link_command(
@@ -72,17 +85,17 @@ std::string link_command(
     std::string inputs;
     for( const std::filesystem::path& object : objects )
     {
-        inputs += fmt::format( " \"{}\"", object.string() );
+        inputs += fmt::format( " \"{}\"", object.generic_string() );
     }
 
-    inputs += fmt::format( " \"{}\"", runtime.string() );
+    inputs += fmt::format( " \"{}\"", runtime.generic_string() );
 
     for( const std::string& word : linked )
     {
         inputs += fmt::format( " \"{}\"", word );
     }
 
-    return fmt::format( "{}{} -o \"{}\"", compiler_and_flags( compiler, cflags ), inputs, executable.string() );
+    return fmt::format( "{}{} -o \"{}\"", compiler_and_flags( compiler, cflags ), inputs, executable.generic_string() );
 }
 
 std::string without_warning_flags( std::string_view cflags )
@@ -126,7 +139,7 @@ TEST_CASE( "find_runtime_prefers_the_flag", "[codegen_c][link]" )
 {
     const keel::Temp_dir        dir;
     const std::filesystem::path named   = dir.write( "named.a", "" );
-    const keel::Runtime         runtime = keel::find_runtime( named.string(), dir.path );
+    const keel::Runtime         runtime = keel::find_runtime( named.generic_string(), dir.path );
 
     REQUIRE( runtime.error.empty() );
     REQUIRE( runtime.path == named );
@@ -164,23 +177,23 @@ TEST_CASE( "find_runtime_refuses_what_is_not_a_file", "[codegen_c][link]" )
 
     SECTION( "a missing --runtime is named as the flag's" )
     {
-        const keel::Runtime runtime = keel::find_runtime( absent.string(), dir.path );
+        const keel::Runtime runtime = keel::find_runtime( absent.generic_string(), dir.path );
 
-        REQUIRE( runtime.error == "--runtime names '" + absent.string() + "', which is not a file" );
+        REQUIRE( runtime.error == "--runtime names '" + absent.generic_string() + "', which is not a file" );
     }
 
     SECTION( "a directory is not a library" )
     {
-        const keel::Runtime runtime = keel::find_runtime( dir.path.string(), dir.path );
+        const keel::Runtime runtime = keel::find_runtime( dir.path.generic_string(), dir.path );
 
-        REQUIRE( runtime.error == "--runtime names '" + dir.path.string() + "', which is not a file" );
+        REQUIRE( runtime.error == "--runtime names '" + dir.path.generic_string() + "', which is not a file" );
     }
 
     SECTION( "the carried runtime needs a folder to land in" )
     {
         const keel::Runtime runtime = keel::find_runtime( std::nullopt, absent );
 
-        REQUIRE( runtime.error == "could not write the runtime to '" + ( absent / "libkeel_rt.a" ).string() + "'" );
+        REQUIRE( runtime.error == "could not write the runtime to '" + ( absent / "libkeel_rt.a" ).generic_string() + "'" );
     }
 }
 

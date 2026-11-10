@@ -64,7 +64,7 @@ std::optional<std::string> module_of( const std::filesystem::path& dir, std::str
     std::string name;
     for( const std::filesystem::path& part : relative.parent_path() / relative.stem() )
     {
-        name += ( name.empty() ? "" : "::" ) + part.string();
+        name += ( name.empty() ? "" : "::" ) + part.generic_string();
     }
 
     return name;
@@ -94,7 +94,9 @@ Notice read_notice( std::istream& in )
 
     for( std::string line; std::getline( in, line ) && line.starts_with( "// " ); )
     {
-        const std::string_view text = std::string_view( line ).substr( 3 );
+        // A CRLF file's lines end in CR.
+        const std::string_view text =
+            std::string_view( line ).substr( 3, line.ends_with( '\r' ) ? line.size() - 4 : std::string::npos );
 
         if( text.starts_with( "Copyright " ) )
         {
@@ -119,7 +121,7 @@ Package build_package(
     std::vector<std::string>&    errors
 )
 {
-    std::ifstream      packageinfo( dir / "packageinfo.kl" );
+    std::ifstream      packageinfo( dir / "packageinfo.kl", std::ios::binary );
     std::istringstream prelude( std::string { prelude_source } );
 
     Package package { name, {}, {}, read_notice( packageinfo ), { {}, {}, read_notice( prelude ) } };
@@ -377,11 +379,11 @@ TEST_CASE( "package_reads_its_notice_and_the_prelude's", "[package]" )
     const std::filesystem::path dir = std::filesystem::temp_directory_path() / "keeldoc_test_notice";
     std::filesystem::remove_all( dir );
     std::filesystem::create_directories( dir );
-    std::ofstream( dir / "packageinfo.kl" ) << "// Copyright 2026 A. Author\n"
-                                               "// SPDX-License-Identifier: MIT\n"
-                                               "\n"
-                                               "//! The package.\n"
-                                               "// Copyright 1999 Not this one\n";
+    std::ofstream( dir / "packageinfo.kl", std::ios::binary ) << "// Copyright 2026 A. Author\n"
+                                                                 "// SPDX-License-Identifier: MIT\n"
+                                                                 "\n"
+                                                                 "//! The package.\n"
+                                                                 "// Copyright 1999 Not this one\n";
 
     std::vector<std::string> errors;
     const Package            package = build_package( "geo", dir, {}, "// Copyright 2025 B\n", errors );

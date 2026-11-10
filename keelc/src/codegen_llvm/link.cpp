@@ -42,9 +42,9 @@ std::string link_executable(
         "-dynamic-linker",
         "/lib64/ld-linux-x86-64.so.2",
         "-o",
-        executable.string(),
-        ( start / "Scrt1.o" ).string(),
-        ( start / "crti.o" ).string(),
+        executable.generic_string(),
+        ( start / "Scrt1.o" ).generic_string(),
+        ( start / "crti.o" ).generic_string(),
     };
     for( const char* folder :
          { "/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu", "/usr/lib64", "/lib64", "/usr/lib", "/lib", "/usr/local/lib"
@@ -57,12 +57,12 @@ std::string link_executable(
     }
     for( const std::filesystem::path& object : objects )
     {
-        words.push_back( object.string() );
+        words.push_back( object.generic_string() );
     }
-    words.push_back( runtime.string() );
+    words.push_back( runtime.generic_string() );
     words.insert( words.end(), linked.begin(), linked.end() );
     words.push_back( "-lc" );
-    words.push_back( ( start / "crtn.o" ).string() );
+    words.push_back( ( start / "crtn.o" ).generic_string() );
 
     std::vector<const char*> arguments;
     for( const std::string& word : words )

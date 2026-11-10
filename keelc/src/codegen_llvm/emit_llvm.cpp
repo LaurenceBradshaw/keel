@@ -761,7 +761,7 @@ llvm::DIFile* Llvm_emitter::file( File_id id )
     if( found == nullptr )
     {
         const std::filesystem::path path = std::filesystem::absolute( sm_.file( id ).path ).lexically_normal();
-        found                            = di_->createFile( path.filename().string(), path.parent_path().string() );
+        found = di_->createFile( path.filename().generic_string(), path.parent_path().generic_string() );
     }
     return found;
 }
@@ -2304,10 +2304,10 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     module.setPIELevel( llvm::PIELevel::Large );
 
     std::error_code      failed;
-    llvm::raw_fd_ostream out( object.string(), failed, llvm::sys::fs::OF_None );
+    llvm::raw_fd_ostream out( object.generic_string(), failed, llvm::sys::fs::OF_None );
     if( failed )
     {
-        return fmt::format( "cannot write {}: {}", object.string(), failed.message() );
+        return fmt::format( "cannot write {}: {}", object.generic_string(), failed.message() );
     }
 
     llvm::legacy::PassManager passes;

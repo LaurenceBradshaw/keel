@@ -112,9 +112,9 @@ std::vector<std::string> package_modules( const std::string& name, const std::fi
         const std::filesystem::path& path = entry.path();
         if( entry.is_regular_file() && path.extension() == ".kl" && path.filename() != "packageinfo.kl" )
         {
-            modules.push_back( name + "::" + path.stem().string() );
+            modules.push_back( name + "::" + path.stem().generic_string() );
         }
-        else if( entry.is_directory() && is_identifier( path.filename().string() ) && holds_keel( path ) )
+        else if( entry.is_directory() && is_identifier( path.filename().generic_string() ) && holds_keel( path ) )
         {
             folders.push_back( path );
         }
@@ -122,7 +122,9 @@ std::vector<std::string> package_modules( const std::string& name, const std::fi
 
     for( const std::filesystem::path& folder : folders )
     {
-        std::ranges::copy( package_modules( name + "::" + folder.filename().string(), folder ), std::back_inserter( modules ) );
+        std::ranges::copy(
+            package_modules( name + "::" + folder.filename().generic_string(), folder ), std::back_inserter( modules )
+        );
     }
 
     std::ranges::sort( modules );
@@ -135,7 +137,7 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     const std::vector<std::string> modules = package_modules( name, dir );
     if( modules.empty() )
     {
-        error = fmt::format( "'{}' holds no module", dir.string() );
+        error = fmt::format( "'{}' holds no module", dir.generic_string() );
         return {};
     }
 
@@ -148,7 +150,7 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
 
     const std::filesystem::path root = root_dir / "root.kl";
     {
-        std::ofstream out( root );
+        std::ofstream out( root, std::ios::binary );
         for( const std::string& module : modules )
         {
             out << "import " << module << ";\n";
@@ -157,9 +159,9 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
 
     const std::string command = fmt::format(
         "{} --check --diagnostics=json --declarations --with-prelude --package {} {} 2>&1",
-        shell_quote( keelc.string() ),
-        shell_quote( name + "=" + dir.string() ),
-        shell_quote( root.string() )
+        shell_quote( keelc.generic_string() ),
+        shell_quote( name + "=" + dir.generic_string() ),
+        shell_quote( root.generic_string() )
     );
 
     std::vector<Record> records;
@@ -191,13 +193,13 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
         if( records.empty() )
         {
             error = fmt::format(
-                "'{}' gave no records (status {}){}", keelc.string(), status, unparsed.empty() ? "" : ":\n" + unparsed
+                "'{}' gave no records (status {}){}", keelc.generic_string(), status, unparsed.empty() ? "" : ":\n" + unparsed
             );
         }
     }
     else
     {
-        error = fmt::format( "cannot run '{}'", keelc.string() );
+        error = fmt::format( "cannot run '{}'", keelc.generic_string() );
     }
 
     std::error_code ec;
@@ -207,13 +209,13 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
 
 std::string print_prelude( const std::filesystem::path& keelc, std::string& error )
 {
-    const std::string command = shell_quote( keelc.string() ) + " --print-prelude 2>&1";
+    const std::string command = shell_quote( keelc.generic_string() ) + " --print-prelude 2>&1";
 
     std::string source;
     FILE*       pipe = open_pipe( command );
     if( pipe == nullptr )
     {
-        error = fmt::format( "cannot run '{}'", keelc.string() );
+        error = fmt::format( "cannot run '{}'", keelc.generic_string() );
         return {};
     }
 
@@ -225,7 +227,7 @@ std::string print_prelude( const std::filesystem::path& keelc, std::string& erro
 
     if( const int status = close_pipe( pipe ); status != 0 )
     {
-        error = fmt::format( "'{}' could not print the prelude (status {}): {}", keelc.string(), status, source );
+        error = fmt::format( "'{}' could not print the prelude (status {}): {}", keelc.generic_string(), status, source );
         return {};
     }
 
@@ -279,15 +281,15 @@ TEST_CASE( "keelc_says_when_it_cannot_run", "[keelc]" )
 
     std::string error;
     REQUIRE( run_keelc( dir / "no-such-keelc", "geo", dir, error ).empty() );
-    REQUIRE( error.starts_with( "'" + ( dir / "no-such-keelc" ).string() + "' gave no records" ) );
+    REQUIRE( error.starts_with( "'" + ( dir / "no-such-keelc" ).generic_string() + "' gave no records" ) );
 
     REQUIRE( run_keelc( "keelc", "geo", dir / "missing", error ).empty() );
-    REQUIRE( error == "'" + ( dir / "missing" ).string() + "' holds no module" );
+    REQUIRE( error == "'" + ( dir / "missing" ).generic_string() + "' holds no module" );
 
     std::filesystem::remove_all( dir );
 
     REQUIRE( print_prelude( dir / "no-such-keelc", error ).empty() );
-    REQUIRE( error.starts_with( "'" + ( dir / "no-such-keelc" ).string() + "' could not print the prelude" ) );
+    REQUIRE( error.starts_with( "'" + ( dir / "no-such-keelc" ).generic_string() + "' could not print the prelude" ) );
 }
 
 } // namespace

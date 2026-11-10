@@ -145,7 +145,7 @@ int write_object(
             );
             if( !write_file( options.c, emitted.c ) )
             {
-                fmt::print( stderr, "keelc: cannot write {}\n", options.c.string() );
+                fmt::print( stderr, "keelc: cannot write {}\n", options.c.generic_string() );
                 return 1;
             }
 
@@ -153,7 +153,7 @@ int write_object(
             const std::string command = compile_command( options.compiler, options.cflags, options.c, native );
             if( std::system( command.c_str() ) != 0 )
             {
-                fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", options.c.string() );
+                fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", options.c.generic_string() );
                 return 1;
             }
             defined = std::move( emitted.defined );
@@ -162,7 +162,7 @@ int write_object(
         const std::optional<std::string> bytes = read_file( native );
         if( !bytes )
         {
-            fmt::print( stderr, "keelc: cannot read {}\n", native.string() );
+            fmt::print( stderr, "keelc: cannot read {}\n", native.generic_string() );
             return 1;
         }
         members.push_back(
@@ -183,7 +183,7 @@ int write_object(
 
     if( !written )
     {
-        fmt::print( stderr, "keelc: cannot write {}\n", options.out.string() );
+        fmt::print( stderr, "keelc: cannot write {}\n", options.out.generic_string() );
         return 1;
     }
 
@@ -195,11 +195,11 @@ std::optional<Object> read_object( const std::filesystem::path& path, std::strin
     const std::optional<std::string> bytes = read_file( path );
     if( !bytes )
     {
-        error = fmt::format( "cannot open '{}'", path.string() );
+        error = fmt::format( "cannot open '{}'", path.generic_string() );
         return std::nullopt;
     }
 
-    Object object { .path = path.string(), .hash = fnv1a( *bytes ) };
+    Object object { .path = path.generic_string(), .hash = fnv1a( *bytes ) };
 
     const std::optional<std::vector<Archive_member>> members = read_archive( *bytes );
     const auto                                       member  = [&]( std::string_view name ) -> const Archive_member*
@@ -213,7 +213,7 @@ std::optional<Object> read_object( const std::filesystem::path& path, std::strin
     const std::optional<Manifest> read     = manifest ? read_manifest( manifest->data ) : std::nullopt;
     if( !read || !state )
     {
-        error = fmt::format( "'{}' is not a Keel object", path.string() );
+        error = fmt::format( "'{}' is not a Keel object", path.generic_string() );
         return std::nullopt;
     }
 
@@ -534,7 +534,7 @@ std::filesystem::path compile_object( const Temp_dir& dir, const std::string& re
     REQUIRE( !diags.has_errors() );
 
     const Parts parts( front.program.ast, front.types, front.program.modules, input, front.functions, front.provided );
-    const std::filesystem::path out = dir.path / ( std::filesystem::path( relative ).stem().string() + ".klo" );
+    const std::filesystem::path out = dir.path / ( std::filesystem::path( relative ).stem().generic_string() + ".klo" );
     REQUIRE( write_object( front, parts, literals, sm, interner, { .out = out, .objects = objects } ) == 0 );
     return out;
 }
@@ -817,11 +817,11 @@ TEST_CASE( "read_object_refuses_what_is_not_an_object", "[object]" )
     std::string    error;
 
     REQUIRE( !read_object( dir.path / "absent.klo", error ) );
-    REQUIRE( error == fmt::format( "cannot open '{}'", ( dir.path / "absent.klo" ).string() ) );
+    REQUIRE( error == fmt::format( "cannot open '{}'", ( dir.path / "absent.klo" ).generic_string() ) );
 
     const std::filesystem::path text = dir.write( "text.klo", "hello\n" );
     REQUIRE( !read_object( text, error ) );
-    REQUIRE( error == fmt::format( "'{}' is not a Keel object", text.string() ) );
+    REQUIRE( error == fmt::format( "'{}' is not a Keel object", text.generic_string() ) );
 }
 
 TEST_CASE( "refused_names_the_first_object_that_cannot_be_built_with", "[object]" )

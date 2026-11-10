@@ -72,7 +72,7 @@ void add_nested_packages(
     std::error_code                    ignored;
     for( const auto& entry : std::filesystem::directory_iterator( root, ignored ) )
     {
-        const std::string name = entry.path().filename().string();
+        const std::string name = entry.path().filename().generic_string();
         if( entry.is_directory( ignored ) && !package_name_error( name, interner ) && holds_keel( entry.path() ) )
         {
             folders.push_back( entry.path() );
@@ -82,7 +82,7 @@ void add_nested_packages(
 
     for( const std::filesystem::path& folder : folders )
     {
-        const std::string name    = folder.filename().string();
+        const std::string name    = folder.filename().generic_string();
         const Symbol_id   package = interner.intern( qualified( interner, parent, name ) );
 
         if( const std::optional<File_id> module = sm.load_file( root / ( name + ".kl" ) ) )

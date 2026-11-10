@@ -559,7 +559,7 @@ Mangled_owner Spelling::owner( File_id file ) const
     }
     if( !modules.is_program( file ) && file != modules.prelude_file() )
     {
-        owner.module = std::filesystem::path( sm.file( file ).path ).stem().string();
+        owner.module = std::filesystem::path( sm.file( file ).path ).stem().generic_string();
     }
     return owner;
 }

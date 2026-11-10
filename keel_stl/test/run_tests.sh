@@ -17,7 +17,7 @@
 #   KEEL_BACKEND      the backend each program is built with, as --backend (default: llvm)
 #   KEEL_COMPARE      a second backend: each program is built and run with it too, and must pass the
 #                     same checks and print what the first backend's build did
-#   KEEL_JOBS, KEEL_RUN_TIMEOUT, CC, KEEL_CFLAGS, KEEL_C_WARNINGS, KEEL_RT   as for keelc's runner
+#   KEEL_JOBS, KEEL_RUN_TIMEOUT, CC, KEEL_CFLAGS, KEEL_C_WARNINGS, KEEL_RT, KEEL_RUN   as for keelc's runner
 
 set -uo pipefail
 
@@ -27,12 +27,24 @@ artifacts="${KEEL_ARTIFACTS:-${here}/../../build/test-artifacts/keel_stl}"
 KEEL_ARTIFACTS="${artifacts}/golden" "${here}/../../keelc/test/run_tests.sh" "$@" --tests "${here}/golden"
 golden=$?
 
-keelc="$( cd "$( dirname "$1" )" && pwd )/$( basename "$1" )"
+# Every other test is a program.
+[ "${KEEL_RUN:-1}" = 0 ] && exit "$golden"
+
+# An absolute path, as keelc names it: C:/... under Git Bash.
+absolute()
+{
+    case "$( uname -s )" in
+        MINGW* | MSYS* ) ( cd "$1" && pwd -W ) ;;
+        * ) ( cd "$1" && pwd ) ;;
+    esac
+}
+
+keelc="$( absolute "$( dirname "$1" )" )/$( basename "$1" )"
 update=0
 [ "${2:-}" = "--update" ] && update=1
 
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
-runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
+runtime="$( absolute "$( dirname "$runtime" )" )/$( basename "$runtime" )"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
 backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"

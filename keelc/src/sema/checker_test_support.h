@@ -147,7 +147,7 @@ public:
         }
 
         const Span span = ast_.span( callable );
-        return std::filesystem::path( sm_.file( span.file ).path ).stem().string() + ":" +
+        return std::filesystem::path( sm_.file( span.file ).path ).stem().generic_string() + ":" +
                std::to_string( sm_.line_col( span.file, span.start ).line );
     }
 

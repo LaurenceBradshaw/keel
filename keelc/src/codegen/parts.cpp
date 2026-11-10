@@ -412,7 +412,7 @@ private:
 
     std::string name( File_id file ) const
     {
-        return std::filesystem::path( sm_.file( file ).path ).filename().string();
+        return std::filesystem::path( sm_.file( file ).path ).filename().generic_string();
     }
 
     Temp_dir                 dir_;

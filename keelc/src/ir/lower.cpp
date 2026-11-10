@@ -2126,7 +2126,7 @@ Operand Lowering::lower_functions_of( Node_id id )
 
         const std::string name = fmt::format(
             "{}.{}",
-            std::filesystem::path( sm_.file( ast_.span( decl ).file ).path ).stem().string(),
+            std::filesystem::path( sm_.file( ast_.span( decl ).file ).path ).stem().generic_string(),
             sm_.text( ast_.name_span( decl ) )
         );
 
@@ -3021,7 +3021,9 @@ Operand Lowering::lower_array_rearrange( Node_id id, Node_id object, Type_id arr
         const Local_id held_first = builder_.add_local( element, span );
         builder_.storage_live( held_first, span );
         builder_.assign( builder_.place( held_first ), use( move( slot( first ), element ) ), span );
-        builder_.assign( slot( first ), use( move( slot( second ), element ) ), span );
+        // Each slot a temporary, so first before second on every ABI.
+        const Place first_slot = slot( first );
+        builder_.assign( first_slot, use( move( slot( second ), element ) ), span );
         builder_.assign( slot( second ), use( move( builder_.place( held_first ), element ) ), span );
         builder_.storage_dead( held_first, span );
         builder_.terminate_goto( done, span );
@@ -4607,7 +4609,9 @@ void Lowering::lower_for( Node_id id )
     }
     else if( condition.is_valid() )
     {
-        builder_.terminate_branch( lower_expression( condition ), body_block, break_target(), span );
+        // Lowered before break_target() makes the exit, so blocks number the same on every ABI.
+        const Operand test = lower_expression( condition );
+        builder_.terminate_branch( test, body_block, break_target(), span );
     }
     else
     {

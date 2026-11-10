@@ -1,6 +1,10 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <algorithm>
@@ -57,6 +61,12 @@ enum class Stop : keel::u8
 
 int main( int argc, char** argv )
 {
+#ifdef _WIN32
+    // Exactly the bytes written: no CR before each LF.
+    _setmode( _fileno( stdout ), _O_BINARY );
+    _setmode( _fileno( stderr ), _O_BINARY );
+#endif
+
     cxxopts::Options options( "keelc", "The Keel compiler" );
 
     // clang-format off
@@ -141,7 +151,7 @@ int main( int argc, char** argv )
     {
         for( const std::string& file : args["link"].as<std::vector<std::string>>() )
         {
-            const std::string extension = std::filesystem::path( file ).extension().string();
+            const std::string extension = std::filesystem::path( file ).extension().generic_string();
             if( extension == ".kl" )
             {
                 fmt::print(
@@ -286,7 +296,7 @@ int main( int argc, char** argv )
         fmt::print( "build {}\n", keel::build_id() );
         if( kl != packages.end() )
         {
-            fmt::print( "package kl {}\n", kl->root.string() );
+            fmt::print( "package kl {}\n", kl->root.generic_string() );
         }
         return 0;
     }
@@ -360,8 +370,8 @@ int main( int argc, char** argv )
             stderr,
             "keelc: {}: {} error{}, {} warning{}, {} files ({:.2f}s)\n",
             stop == Stop::Check ? "checked " + args["input"].as<std::string>()
-            : errors == 0       ? "built " + output.string()
-                                : "did not build " + output.string(),
+            : errors == 0       ? "built " + output.generic_string()
+                                : "did not build " + output.generic_string(),
             errors,
             errors == 1 ? "" : "s",
             warnings,
@@ -645,7 +655,7 @@ int main( int argc, char** argv )
     // Each part's .c is written beside the output and kept: its #line directives point back at the
     // .kl, so it is the thing to read when the output is wrong. Named after the input, so two
     // programs built side by side do not share one.
-    const std::string input_name = std::filesystem::path( args["input"].as<std::string>() ).filename().string();
+    const std::string input_name = std::filesystem::path( args["input"].as<std::string>() ).filename().generic_string();
 
     if( stop == Stop::Object )
     {
@@ -744,7 +754,7 @@ int main( int argc, char** argv )
                 fmt::print( stderr, "keelc: compiling {} failed\n", file );
                 return 1;
             }
-            inputs.push_back( compiled.string() );
+            inputs.push_back( compiled.generic_string() );
         }
 
         if( const std::string failed = keel::link_executable( objects, runtime.path, executable, inputs ); !failed.empty() )
@@ -765,11 +775,11 @@ int main( int argc, char** argv )
         }
 
         const std::filesystem::path path = executable.parent_path() / c_name( part );
-        std::ofstream               out( path );
+        std::ofstream               out( path, std::ios::binary );
 
         if( !out )
         {
-            fmt::print( stderr, "keelc: cannot write {}\n", path.string() );
+            fmt::print( stderr, "keelc: cannot write {}\n", path.generic_string() );
             return 1;
         }
 
@@ -796,7 +806,7 @@ int main( int argc, char** argv )
         // The program type-checked, so the C it produced should always compile: this is a compiler bug.
         if( compiles[i].get() != 0 )
         {
-            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", sources[i].string() );
+            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", sources[i].generic_string() );
             compiled = false;
         }
     }
@@ -826,11 +836,13 @@ int main( int argc, char** argv )
         // inspected. With it, the user's C or a missing symbol is the likelier cause.
         if( linked.empty() )
         {
-            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", generated_path.string() );
+            fmt::print( stderr, "keelc: the generated C failed to compile - see {}\n", generated_path.generic_string() );
         }
         else
         {
-            fmt::print( stderr, "keelc: compiling or linking the C failed - the generated C is {}\n", generated_path.string() );
+            fmt::print(
+                stderr, "keelc: compiling or linking the C failed - the generated C is {}\n", generated_path.generic_string()
+            );
         }
         return 1;
     }

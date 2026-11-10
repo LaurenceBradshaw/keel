@@ -320,6 +320,8 @@ inline std::string package_text( const Ast& ast, const Interner& interner, Node_
 // A file's module, as `kl::ring`: its package and its stem.
 inline std::string module_name( const Module_graph& modules, const Source_manager& sm, const Interner& interner, File_id file )
 {
-    return qualified( interner, modules.package_of( file ), std::filesystem::path( sm.file( file ).path ).stem().string() );
+    return qualified(
+        interner, modules.package_of( file ), std::filesystem::path( sm.file( file ).path ).stem().generic_string()
+    );
 }
 } // namespace keel

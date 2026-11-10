@@ -2606,9 +2606,9 @@ Node_id Parser::parse_type_with_mode()
         cursor_.advance();
     }
 
-    Node_id type = ast_.add(
-        Node_kind::Mode_type, Span::merge( start, cursor_.previous().span ), static_cast<u32>( mode ), { parse_type() }
-    );
+    // The mode's span, read before parse_type() moves the cursor.
+    const Span mode_span = Span::merge( start, cursor_.previous().span );
+    Node_id    type      = ast_.add( Node_kind::Mode_type, mode_span, static_cast<u32>( mode ), { parse_type() } );
 
     if( leading_const )
     {

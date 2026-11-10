@@ -50,6 +50,7 @@
 #   KEEL_RT     the runtime library, as --runtime (default: the one built beside keelc; an ASan
 #               build needs one built without sanitizers)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
+#   KEEL_RUN=0  check a run fixture's keelc output only, building and running nothing
 #
 #   run_tests.sh <path-to-keelc>            check
 #   run_tests.sh <path-to-keelc> --update   rewrite every expectation from current behaviour
@@ -59,13 +60,25 @@
 
 set -uo pipefail
 
+# Git Bash on Windows. Paths handed to keelc are C:/..., which both it and bash read.
+case "$( uname -s )" in
+    MINGW* | MSYS* ) windows=1 ;;
+    * ) windows=0 ;;
+esac
+
+# An absolute path, as keelc names it.
+absolute()
+{
+    if [ "$windows" -eq 1 ]; then ( cd "$1" && pwd -W ); else ( cd "$1" && pwd ); fi
+}
+
 if [ $# -lt 1 ]; then
     echo "usage: run_tests.sh <path-to-keelc> [--update]" >&2
     exit 2
 fi
 
 # Resolve before cd, since the caller's path is relative to their working directory.
-keelc="$( cd "$( dirname "$1" )" && pwd )/$( basename "$1" )"
+keelc="$( absolute "$( dirname "$1" )" )/$( basename "$1" )"
 shift
 
 update=0
@@ -92,16 +105,27 @@ cd "$tests" || exit 2
 # is slow enough to make a link ten times slower, which is most of the suite's runtime.
 PATH="$( tr ':' '\n' <<< "$PATH" | grep -v '^/mnt/' | paste -sd: )"
 
+run_programs="${KEEL_RUN:-1}"
+
+# kl's files are named by where this build keeps kl, which a golden calls <kl>.
+kl_root="$( "$keelc" --print-config | sed -n 's/^package kl //p' )"
+if [ -z "$kl_root" ]; then
+    echo "run_tests.sh: '$keelc' names no kl in --print-config" >&2
+    exit 2
+fi
+
 # The runtime from the same build as keelc, so the preset under test links its own. keelc is handed
 # it with --runtime and does the linking, which is what a run fixture is testing.
 runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 
-if [ ! -f "$runtime" ]; then
-    echo "run_tests.sh: no runtime library at '$runtime'; build keel_rt, or name one with KEEL_RT" >&2
-    exit 2
-fi
+if [ "$run_programs" != 0 ]; then
+    if [ ! -f "$runtime" ]; then
+        echo "run_tests.sh: no runtime library at '$runtime'; build keel_rt, or name one with KEEL_RT" >&2
+        exit 2
+    fi
 
-runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
+    runtime="$( absolute "$( dirname "$runtime" )" )/$( basename "$runtime" )"
+fi
 
 backend="${KEEL_BACKEND:-llvm}"
 compare="${KEEL_COMPARE:-}"
@@ -128,7 +152,7 @@ valgrind_run="${KEEL_VALGRIND:-}"
 ulimit -c 0
 mkdir -p "$artifacts" || exit 2
 # Absolute, since a program runs inside its own build directory.
-artifacts="$( cd "$artifacts" && pwd )"
+artifacts="$( absolute "$artifacts" )"
 
 if [ -t 1 ]; then
     red=$'\033[31m'; green=$'\033[32m'; dim=$'\033[2m'; reset=$'\033[0m'
@@ -464,6 +488,7 @@ run_one()
     [ ${#klos[@]} -gt 0 ] && sed -i "s|${build_dir}/||g" "$out" "$err"
     # The build id changes with every edit to keelc.
     sed -i -E 's/^build [0-9a-f]{64}$/build <id>/' "$out"
+    sed -i "s|${kl_root}/|<kl>/|g" "$out" "$err"
 
     local messages
     messages="$(
@@ -485,7 +510,7 @@ run_one()
 
         # Only when keelc succeeded: there is no C to build otherwise, and the failure above
         # already says so.
-        if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
+        if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ] && [ "$run_programs" != 0 ]; then
             check_run "$src" "$build_dir" "${build_flags[@]}"
             check_release "$src" "$build_dir" "${build_flags[@]}"
             check_compare "$src" "$build_dir" "${build_flags[@]}"

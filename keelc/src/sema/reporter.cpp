@@ -39,7 +39,7 @@ std::string Reporter::line_col( Span span ) const
 
 std::string Reporter::module_name( File_id file ) const
 {
-    return std::filesystem::path( sm_.file( file ).path ).stem().string();
+    return std::filesystem::path( sm_.file( file ).path ).stem().generic_string();
 }
 
 std::string_view Reporter::text( Span span ) const
