@@ -1,6 +1,7 @@
 {
   "name": "keel",
   "version-string": "0.1.0",
+  "builtin-baseline": "8f28427e139dc155faa17ce0055dd612019866ba",
   "dependencies": [
     "cxxopts",
     "fmt",
