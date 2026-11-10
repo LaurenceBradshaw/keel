@@ -9,6 +9,7 @@
 #include "codegen/parts.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
+#include "common/platform.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
 #include "parse/module_graph.h"
@@ -27,12 +28,13 @@ struct Llvm_output
 
 struct Llvm_options
 {
-    std::filesystem::path object {};       // written there unless empty
-    bool                  print = false;   // into Llvm_output::ir
-    const Parts*          parts = nullptr; // null emits the whole compile as one module
-    File_id               part {};         // else the part this module is
-    bool                  klo   = false;   // an instance is a COMDAT, as several objects may define it
-    bool                  debug = false;   // a named local stays in memory, for a debugger
+    std::filesystem::path object {};         // written there unless empty
+    bool                  print = false;     // into Llvm_output::ir
+    const Parts*          parts = nullptr;   // null emits the whole compile as one module
+    File_id               part {};           // else the part this module is
+    bool                  klo      = false;  // an instance is a COMDAT, as several objects may define it
+    bool                  debug    = false;  // a named local stays in memory, for a debugger
+    Platform              platform = k_host; // its triple, C ABI and debug format
 };
 
 // The compile as one LLVM module. Types is mutable only for its table.

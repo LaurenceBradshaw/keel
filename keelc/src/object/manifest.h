@@ -7,6 +7,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include "common/platform.h"
 #include "common/types.h"
 
 // An object's `__.KEEL` member: what it was built from and against, one fact per line, so
@@ -22,7 +23,8 @@ struct Manifest
     bool        debug    = false;
     bool        overflow = false;
     bool        llvm     = false; // the native part's backend
-    std::string module {};        // qualified, as `kl::time`
+    Platform    platform = k_host;
+    std::string module {}; // qualified, as `kl::time`
     std::string source {};
     u64         source_hash = 0;
 

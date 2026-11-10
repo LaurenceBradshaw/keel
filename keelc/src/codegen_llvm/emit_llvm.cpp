@@ -54,6 +54,11 @@ enum class Held : u8
     Memory
 };
 
+const char* triple( Platform platform )
+{
+    return platform == Platform::Windows ? "x86_64-pc-windows-msvc" : "x86_64-pc-linux-gnu";
+}
+
 class Llvm_emitter
 {
 public:
@@ -81,10 +86,14 @@ private:
     llvm::Type* memory_type( Type_id type ) const;
     llvm::Align align( Type_id type ) const;
 
-    // The SysV x86-64 C ABI, for Keel's own calls too: an aggregate of at most 16 bytes travels as
-    // its eightbytes while registers last, else by `byval`, and returns through `sret` when larger.
+    // The target's C ABI, for Keel's own calls too (D70). SysV: an aggregate of at most 16 bytes
+    // travels as its eightbytes while registers last, else by `byval`, and returns through `sret`
+    // when larger. Win64: one of 1, 2, 4 or 8 bytes travels as an integer that wide; any other, an
+    // interface reference included, by a pointer to the caller's copy, and returns through `sret`,
+    // as a two-word reference does. A run parameter is two words on both.
     void                      classify( Type_id type, u64 at, std::array<bool, 2>& integer ) const;
     std::vector<llvm::Type*>  eightbytes( Type_id type ) const;
+    bool                      by_reference( Type_id type ) const;
     std::vector<llvm::Value*> split( Type_id type, llvm::Value* from, const std::vector<llvm::Type*>& parts );
     void                      join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to );
     std::pair<llvm::FunctionType*, llvm::AttributeList>
@@ -160,6 +169,7 @@ private:
     const File_id                part_;
     const bool                   klo_;
     const bool                   debug_;
+    const bool                   windows_;
 
     std::unique_ptr<llvm::LLVMContext> context_;
     std::unique_ptr<llvm::Module>      module_;
@@ -220,10 +230,12 @@ Llvm_emitter::Llvm_emitter(
       part_( options.part ),
       klo_( options.klo ),
       debug_( options.debug ),
+      windows_( options.platform == Platform::Windows ),
       context_( std::make_unique<llvm::LLVMContext>() ),
       module_( std::make_unique<llvm::Module>( "keel", *context_ ) ),
       builder_( *context_ )
 {
+    module_->setTargetTriple( triple( options.platform ) );
 }
 
 llvm::Module& Llvm_emitter::run()
@@ -254,7 +266,14 @@ llvm::Module& Llvm_emitter::run()
             llvm::DICompileUnit::DebugNameTableKind::None // lld's merged index is one gdb rejects
         );
         module_->addModuleFlag( llvm::Module::Warning, "Debug Info Version", llvm::DEBUG_METADATA_VERSION );
-        module_->addModuleFlag( llvm::Module::Warning, "Dwarf Version", 4 ); // valgrind reads no DWARF 5 string forms
+        if( windows_ )
+        {
+            module_->addModuleFlag( llvm::Module::Warning, "CodeView", 1 ); // for a .pdb
+        }
+        else
+        {
+            module_->addModuleFlag( llvm::Module::Warning, "Dwarf Version", 4 ); // valgrind reads no DWARF 5 string forms
+        }
     }
 
     // Every signature first, so a body may call one defined below it.
@@ -406,11 +425,11 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
 {
     llvm::LLVMContext& context = *context_;
 
-    // C widens a narrow integer or `bool` it passes.
+    // C widens a narrow integer or `bool` it passes; Win64 C only a `bool`.
     const auto widened = [&]( llvm::AttrBuilder& attributes, Type_id type )
     {
         const llvm::Type* value = value_type( type );
-        if( value->isIntegerTy() && value->getIntegerBitWidth() < 32 )
+        if( value->isIntegerTy() && value->getIntegerBitWidth() < ( windows_ ? 2 : 32 ) )
         {
             attributes.addAttribute( is_signed( type ) ? llvm::Attribute::SExt : llvm::Attribute::ZExt );
         }
@@ -432,10 +451,13 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
         widened( returns, result );
         break;
     case Held::Pair:
-        returned = value_type( result );
-        break;
     case Held::Memory:
     {
+        if( held( result ) == Held::Pair && !windows_ )
+        {
+            returned = value_type( result );
+            break;
+        }
         const std::vector<llvm::Type*> parts = eightbytes( result );
         if( !parts.empty() )
         {
@@ -468,11 +490,19 @@ Llvm_emitter::signature( Type_id result, std::span<const Type_id> parameters, bo
             }
             break;
         case Held::Pair:
-            types.push_back( value_type( parameter ) );
-            integers -= std::min<u64>( integers, 2 );
-            break;
         case Held::Memory:
         {
+            if( by_reference( parameter ) )
+            {
+                types.push_back( builder_.getPtrTy() ); // the callee's to change
+                break;
+            }
+            if( held( parameter ) == Held::Pair )
+            {
+                types.push_back( value_type( parameter ) );
+                integers -= std::min<u64>( integers, 2 );
+                break;
+            }
             const std::vector<llvm::Type*> parts = eightbytes( parameter );
             const u64                      wide =
                 static_cast<u64>( std::ranges::count_if( parts, []( llvm::Type* part ) { return part->isIntegerTy(); } ) );
@@ -655,7 +685,7 @@ void Llvm_emitter::define( const Function& function, llvm::Function* defined )
             }
             continue;
         }
-        if( parameter && kind == Held::Memory && argument->hasByValAttr() )
+        if( parameter && ( ( kind == Held::Memory && argument->hasByValAttr() ) || by_reference( local.type ) ) )
         {
             locals_[i.v] = &*argument++; // the callee's own copy
             describe_local( i, locals_[i.v] );
@@ -1590,10 +1620,19 @@ void Llvm_emitter::classify( Type_id type, u64 at, std::array<bool, 2>& integer 
     }
 }
 
-// An `i64` or `double` per eightbyte of an aggregate passed in registers; none when it is in memory.
+// An `i64` or `double` per eightbyte of an aggregate passed in registers, or Win64's one integer;
+// none when it is in memory.
 std::vector<llvm::Type*> Llvm_emitter::eightbytes( Type_id type ) const
 {
     const u64 size = layout_.size( type );
+    if( windows_ )
+    {
+        if( held( type ) == Held::Memory && ( size == 1 || size == 2 || size == 4 || size == 8 ) )
+        {
+            return { builder_.getIntNTy( narrow_cast<u32>( 8 * size ) ) };
+        }
+        return {};
+    }
     if( size == 0 || size > 16 )
     {
         return {};
@@ -1608,12 +1647,37 @@ std::vector<llvm::Type*> Llvm_emitter::eightbytes( Type_id type ) const
     return parts;
 }
 
-// A whole number of eightbytes, so the last part never reads or writes past the aggregate.
+// Win64 passes an interface reference, or an aggregate not of a register's width, by a pointer to a
+// copy. A run stays two parameters, data then size, as C spells it (D70).
+bool Llvm_emitter::by_reference( Type_id type ) const
+{
+    if( !windows_ )
+    {
+        return false;
+    }
+    if( held( type ) == Held::Pair )
+    {
+        return !table().is_run( table().get( type ).element );
+    }
+    return held( type ) == Held::Memory && eightbytes( type ).empty();
+}
+
+u64 bytes_of( const std::vector<llvm::Type*>& parts )
+{
+    u64 bytes = 0;
+    for( const llvm::Type* part : parts )
+    {
+        bytes += part->getPrimitiveSizeInBits() / 8;
+    }
+    return bytes;
+}
+
+// Through a padded copy when the parts are wider, so the last never reads or writes past the aggregate.
 std::vector<llvm::Value*> Llvm_emitter::split( Type_id type, llvm::Value* from, const std::vector<llvm::Type*>& parts )
 {
-    if( layout_.size( type ) % 8 != 0 )
+    if( layout_.size( type ) < bytes_of( parts ) )
     {
-        llvm::Value* padded = temporary( type, 8 * parts.size() );
+        llvm::Value* padded = temporary( type, bytes_of( parts ) );
         copy( type, padded, from );
         from = padded;
     }
@@ -1629,7 +1693,12 @@ std::vector<llvm::Value*> Llvm_emitter::split( Type_id type, llvm::Value* from, 
 
 void Llvm_emitter::join( Type_id type, std::span<llvm::Value* const> parts, llvm::Value* to )
 {
-    llvm::Value* into = layout_.size( type ) % 8 != 0 ? temporary( type, 8 * parts.size() ) : to;
+    std::vector<llvm::Type*> types;
+    for( llvm::Value* part : parts )
+    {
+        types.push_back( part->getType() );
+    }
+    llvm::Value* into = layout_.size( type ) < bytes_of( types ) ? temporary( type, bytes_of( types ) ) : to;
     for( u64 i = 0; i < parts.size(); ++i )
     {
         builder_.CreateAlignedStore(
@@ -2043,7 +2112,20 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
         {
             continue;
         }
-        if( held( type ) != Held::Memory )
+        if( by_reference( type ) ) // a fresh copy each call, as the callee may change it
+        {
+            llvm::Value* copied = temporary( type );
+            if( held( type ) == Held::Pair )
+            {
+                store( type, operand( argument ), copied );
+            }
+            else
+            {
+                copy( type, copied, address( argument.place ) );
+            }
+            arguments.push_back( copied );
+        }
+        else if( held( type ) != Held::Memory )
         {
             arguments.push_back( operand( argument ) );
         }
@@ -2067,6 +2149,10 @@ llvm::Value* Llvm_emitter::call( const Rvalue& value, llvm::Value* result )
 
     llvm::CallInst* made = builder_.CreateCall( signed_as, target, arguments );
     made->setAttributes( attributes );
+    if( returns_memory && held( value.type ) == Held::Pair )
+    {
+        return load( value.type, result );
+    }
     if( result != nullptr && !returns_memory )
     {
         std::vector<llvm::Value*> parts = { made };
@@ -2166,6 +2252,10 @@ llvm::GlobalVariable* Llvm_emitter::global( Node_id declaration, Type_id owner )
         name
     );
     made->setAlignment( align( type ) );
+    if( owner.is_valid() && windows_ ) // COFF keeps one of several weak definitions only in a COMDAT
+    {
+        made->setComdat( module_->getOrInsertComdat( name ) );
+    }
     return made;
 }
 
@@ -2272,8 +2362,8 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
-// x86-64 Linux at -O3's machine passes (none under --debug, so each line keeps its code), and none of LLVM's IR passes (§2.2):
-// Keel optimises its own IR.
+// x86-64, COFF or ELF by the module's triple, at -O3's machine passes (none under --debug, so each line keeps its code), and
+// none of LLVM's IR passes (§2.2): Keel optimises its own IR.
 std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug )
 {
     LLVMInitializeX86TargetInfo();
@@ -2281,7 +2371,7 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
     LLVMInitializeX86TargetMC();
     LLVMInitializeX86AsmPrinter();
 
-    const std::string   triple = "x86_64-pc-linux-gnu";
+    const std::string   triple = module.getTargetTriple();
     std::string         error;
     const llvm::Target* target = llvm::TargetRegistry::lookupTarget( triple, error );
     if( target == nullptr )
@@ -2298,10 +2388,12 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
         std::nullopt,
         debug ? llvm::CodeGenOptLevel::None : llvm::CodeGenOptLevel::Aggressive
     ) );
-    module.setTargetTriple( triple );
     module.setDataLayout( machine->createDataLayout() );
     module.setPICLevel( llvm::PICLevel::BigPIC );
-    module.setPIELevel( llvm::PIELevel::Large );
+    if( machine->getTargetTriple().isOSLinux() )
+    {
+        module.setPIELevel( llvm::PIELevel::Large );
+    }
 
     std::error_code      failed;
     llvm::raw_fd_ostream out( object.generic_string(), failed, llvm::sys::fs::OF_None );
@@ -2377,7 +2469,9 @@ Llvm_output emit_llvm(
 
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
+#include <fstream>
 #include "check/pipeline_test_support.h"
+#include "common/temp_dir.h"
 
 namespace keel
 {
@@ -2440,6 +2534,103 @@ TEST_CASE( "emit_llvm_describes_functions_and_locals_only_under_debug", "[codege
     REQUIRE( debug.ir.find( "!DILocalVariable(name: \"i\"" ) != std::string::npos );
     REQUIRE( debug.ir.find( "name: \"i32\", size: 32, encoding: DW_ATE_signed" ) != std::string::npos );
     REQUIRE( release.ir.find( "!dbg" ) == std::string::npos );
+}
+
+TEST_CASE( "emit_llvm_follows_each_targets_c_abi", "[codegen][llvm]" )
+{
+    Compiled p(
+        "struct Tiny { u8 a; i16 b; };\n"
+        "struct Three { f32 x; f32 y; f32 z; };\n"
+        "Tiny tiny( Tiny t ) { return t; }\n"
+        "Three three( Three t ) { return t; }\n"
+        "bool flip( bool b, i8 c ) { return !b; }\n"
+        "u64 count( const ref i32[] values ) { return values.size; }\n"
+        "const ref i32[] echo( const ref i32[] values ) { return values; }\n"
+        "interface Shape { f64 area() const; };\n"
+        "struct Square implements Shape { f64 side; f64 area() const { return side * side; } };\n"
+        "f64 measure( const ref Shape s ) { return s.area(); }\n"
+        "i32 main()\n"
+        "{\n"
+        "    Tiny s = tiny( Tiny { 7, -300 } );\n"
+        "    Three t = three( Three { 1.0, 2.0, 3.0 } );\n"
+        "    i32[3] a = [ 1, 2, 3 ];\n"
+        "    Square q = Square { 2.0 };\n"
+        "    return flip( true, 1 ) && count( a ) == 3 && echo( a ).size == 3 && measure( q ) == 4.0 ? 0 : 1;\n"
+        "}\n",
+        Stage::Elaborated
+    );
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const Description program = describe( p.ast, p.types, p.interner );
+    const auto        emit    = [&]( Platform platform, bool debug, const std::filesystem::path& object = {} )
+    {
+        return emit_llvm(
+            p.functions,
+            program,
+            p.types,
+            p.literals,
+            p.sm,
+            p.interner,
+            p.modules,
+            { .object = object, .print = true, .debug = debug, .platform = platform }
+        );
+    };
+    // The signature of the function whose name holds `name`.
+    const auto defined = []( const std::string& ir, std::string_view name )
+    {
+        for( std::size_t at = ir.find( "define " ); at != std::string::npos; at = ir.find( "define ", at + 1 ) )
+        {
+            const std::string line = ir.substr( at, ir.find( '\n', at ) - at );
+            if( line.find( name ) != std::string::npos )
+            {
+                return line;
+            }
+        }
+        return std::string();
+    };
+
+    const Llvm_output sysv  = emit( Platform::Linux, false );
+    const Llvm_output win64 = emit( Platform::Windows, false );
+    INFO( sysv.ir );
+    INFO( win64.ir );
+    REQUIRE( sysv.error.empty() );
+    REQUIRE( win64.error.empty() );
+
+    REQUIRE( sysv.ir.find( "target triple = \"x86_64-pc-linux-gnu\"" ) != std::string::npos );
+    REQUIRE( win64.ir.find( "target triple = \"x86_64-pc-windows-msvc\"" ) != std::string::npos );
+
+    // SysV: eightbytes in registers, every narrow integer widened.
+    REQUIRE( defined( sysv.ir, "tiny" ).find( "i64 @" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "three" ).find( "{ double, double } @" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "flip" ).find( "(i1 zeroext %0, i8 signext %1)" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "count" ).find( "({ ptr, i64 } %0)" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "echo" ).find( "{ ptr, i64 } @" ) != std::string::npos );
+    REQUIRE( defined( sysv.ir, "measure" ).find( "({ ptr, ptr } %0)" ) != std::string::npos );
+
+    // Win64: one integer of a register's width, else a pointer to a copy; only a `bool` widened; a
+    // run parameter still two words, as C's two parameters.
+    REQUIRE( defined( win64.ir, "tiny" ).find( "i32 @" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "tiny" ).find( "(i32 %0)" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "three" ).find( "void @" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "three" ).find( "(ptr sret([12 x i8]) align 4 %0, ptr %1)" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "flip" ).find( "(i1 zeroext %0, i8 %1)" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "count" ).find( "({ ptr, i64 } %0)" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "echo" ).find( "(ptr sret({ ptr, i64 }) align 8 %0, { ptr, i64 } %1)" ) != std::string::npos );
+    REQUIRE( defined( win64.ir, "measure" ).find( "(ptr %0)" ) != std::string::npos );
+
+    // COFF objects, with CodeView under --debug.
+    const Temp_dir    dir;
+    const Llvm_output object = emit( Platform::Windows, true, dir.path / "main.obj" );
+    INFO( object.error );
+    REQUIRE( object.error.empty() );
+    REQUIRE( object.ir.find( "\"CodeView\"" ) != std::string::npos );
+    REQUIRE( object.ir.find( "\"Dwarf Version\"" ) == std::string::npos );
+
+    std::ifstream     in( dir.path / "main.obj", std::ios::binary );
+    const std::string bytes( ( std::istreambuf_iterator<char>( in ) ), std::istreambuf_iterator<char>() );
+    REQUIRE( bytes.substr( 0, 2 ) == std::string( "\x64\x86", 2 ) ); // IMAGE_FILE_MACHINE_AMD64
+    REQUIRE( bytes.find( ".debug$S" ) != std::string::npos );
 }
 
 } // namespace keel

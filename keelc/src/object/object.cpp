@@ -240,6 +240,17 @@ std::optional<std::string> refused( std::span<const Object> objects, bool debug,
     {
         const Manifest& manifest = object.manifest;
 
+        // First: the same sources give both hosts' keelc one build id.
+        if( manifest.platform != k_host )
+        {
+            return fmt::format(
+                "'{}' was built for {}, and this build is for {}",
+                object.path,
+                platform_name( manifest.platform ),
+                platform_name( k_host )
+            );
+        }
+
         if( manifest.build != build_id() )
         {
             return fmt::format( "'{}' was built by another keelc; build it again", object.path );
@@ -843,6 +854,18 @@ TEST_CASE( "refused_names_the_first_object_that_cannot_be_built_with", "[object]
     REQUIRE(
         refused( std::vector { optional, list }, true, true, true ) ==
         "'optional.klo' was built by the C backend, and this build uses LLVM"
+    );
+
+    Object foreign            = optional;
+    foreign.manifest.platform = k_host == Platform::Linux ? Platform::Windows : Platform::Linux;
+    foreign.manifest.build += "0";
+    REQUIRE(
+        refused( std::vector { foreign }, true, true, false ) ==
+        fmt::format(
+            "'optional.klo' was built for {}, and this build is for {}",
+            platform_name( foreign.manifest.platform ),
+            platform_name( k_host )
+        )
     );
 
     Object other = optional;
