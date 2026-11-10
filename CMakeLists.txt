@@ -39,9 +39,12 @@ if(MSVC)
         $<$<BOOL:${KEEL_WERROR}>:/WX>
     )
     # The CRT's "use getenv_s" deprecations name functions the Linux build uses as they are.
+    # _CONTAINER_DEBUG_LEVEL is _GLIBCXX_ASSERTIONS' counterpart in the pinned 14.42 STL (/MT sets
+    # no _DEBUG, so it is off by default). 14.44 and later refuse it for _MSVC_STL_HARDENING=1,
+    # which needs clang 19: switch when the presets' toolset pin moves.
     target_compile_definitions(keel_options INTERFACE
         _CRT_SECURE_NO_WARNINGS
-        $<$<CONFIG:Debug>:_MSVC_STL_HARDENING=1>
+        $<$<CONFIG:Debug>:_CONTAINER_DEBUG_LEVEL=1>
     )
 else()
     target_compile_options(keel_options INTERFACE
