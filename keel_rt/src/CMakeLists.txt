@@ -10,8 +10,9 @@
 file(GLOB keel_rt_sources CONFIGURE_DEPENDS "*.c")
 
 # Still a shell. Returning rather than failing is what lets keelc build before the runtime exists,
-# and is the same conditional shape keel_rt/test and keel_stl already use.
-if(NOT keel_rt_sources)
+# and is the same conditional shape keel_rt/test and keel_stl already use. Windows has no runtime
+# until its Win32 half lands; keelc embeds an empty one until then.
+if(NOT keel_rt_sources OR WIN32)
     return()
 endif()
 
@@ -34,4 +35,6 @@ target_link_libraries(keel_rt PRIVATE keel_options)
 
 # DWARF 4: the library's debug info ends up in every Keel program, and valgrind before 3.20 cannot
 # read clang's DWARF 5.
-target_compile_options(keel_rt PRIVATE -gdwarf-4)
+if(NOT MSVC)
+    target_compile_options(keel_rt PRIVATE -gdwarf-4)
+endif()

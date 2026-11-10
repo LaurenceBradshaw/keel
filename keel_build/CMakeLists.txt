@@ -1,5 +1,11 @@
 # keelb, the build tool, written in Keel. It is built by one keelc command from source, so the tool
 # never builds itself, and it lands beside keelc, where it looks for keelc first.
+
+# keelc cannot link a program on Windows yet.
+if(WIN32)
+    return()
+endif()
+
 file(GLOB keelb_inputs CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.kl"
     "${CMAKE_SOURCE_DIR}/keel_stl/src/*.kl"

@@ -17,15 +17,18 @@ namespace
 // Every number any integer type holds.
 __extension__ typedef __int128 Wide;
 
-struct Bounds
+// alignas: clang-cl lays the MSVC STL out under pack(8), so std::optional of a Wide-holding struct
+// is 8-aligned while reads of a Wide assume 16 and may use movaps. Only a struct's own alignas
+// survives the pack.
+struct alignas( 16 ) Bounds
 {
     Wide lo;
     Wide hi;
 };
 
 // What a local holds: no write reached yet, one value as its bits at its type's width, numbers within bounds, or
-// any its type holds.
-struct Value
+// any its type holds. alignas as Bounds'.
+struct alignas( 16 ) Value
 {
     enum class State : u8
     {

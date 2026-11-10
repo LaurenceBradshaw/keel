@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#ifdef _WIN32
+#include <process.h>
+#else
 #include <unistd.h>
+#endif
 #include <atomic>
 #include <filesystem>
 #include <fstream>
@@ -11,6 +15,15 @@
 
 namespace keel
 {
+
+inline int pid()
+{
+#ifdef _WIN32
+    return ::_getpid();
+#else
+    return ::getpid();
+#endif
+}
 
 // A directory of its own, named for the process so two keelcs never share one. Removes itself on
 // scope exit. Tests write real files in one; the driver compiles its objects in one.
@@ -21,8 +34,8 @@ struct Temp_dir
     Temp_dir()
     {
         static std::atomic<int> counter { 0 };
-        path = std::filesystem::temp_directory_path() /
-               ( "keel_" + std::to_string( ::getpid() ) + "_" + std::to_string( counter++ ) );
+        path =
+            std::filesystem::temp_directory_path() / ( "keel_" + std::to_string( pid() ) + "_" + std::to_string( counter++ ) );
         std::filesystem::remove_all( path );
         std::filesystem::create_directories( path );
     }

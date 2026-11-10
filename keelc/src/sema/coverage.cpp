@@ -17,6 +17,28 @@ namespace keel::sema
 namespace
 {
 
+// A Wide in decimal. fmt has no __int128 under clang-cl, whose fmt was built by MSVC.
+std::string wide_text( Wide value )
+{
+    using Unsigned_wide = unsigned __int128;
+    Unsigned_wide magnitude =
+        value < 0 ? Unsigned_wide( 0 ) - static_cast<Unsigned_wide>( value ) : static_cast<Unsigned_wide>( value );
+
+    std::string digits;
+    do
+    {
+        digits += static_cast<char>( '0' + static_cast<int>( magnitude % 10 ) );
+        magnitude /= 10;
+    } while( magnitude != 0 );
+
+    if( value < 0 )
+    {
+        digits += '-';
+    }
+
+    return { digits.rbegin(), digits.rend() };
+}
+
 // "`A`", "`A` and `B`", "`A`, `B` and `C`" - a list a person would read aloud. Worth the twelve
 // lines because the message it builds, naming the variants a `switch` has missed, is the one
 // exhaustiveness checking exists to produce: "not exhaustive" would leave the author to work out
@@ -258,11 +280,11 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 
         if( is_range )
         {
-            const std::optional<Wide> low  = fold_bound( ast_.lower( label ), state.type );
-            const std::optional<Wide> high = fold_bound( ast_.upper( label ), state.type, true );
+            const std::optional<Case_bound> low  = fold_bound( ast_.lower( label ), state.type );
+            const std::optional<Case_bound> high = fold_bound( ast_.upper( label ), state.type, true );
 
             // fold_bound leaves a fractional bound to here, so the label is reported once.
-            const auto fractional = [&]( Node_id bound, const std::optional<Wide>& value )
+            const auto fractional = [&]( Node_id bound, const std::optional<Case_bound>& value )
             { return !value.has_value() && constant_folder_.fold_float( bound ).has_value(); };
 
             if( state.floating && ( fractional( ast_.lower( label ), low ) || fractional( ast_.upper( label ), high ) ) )
@@ -282,20 +304,20 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
             // Half-open, so `low == high` is empty and `low > high` is backwards. Both are
             // certainly a mistake, and both are visible without running anything - which is the
             // whole of what D34 asks the checker to catch.
-            if( *low >= *high )
+            if( low->value >= high->value )
             {
                 reporter_.error_at(
                     ast_.span( label ),
-                    fmt::format( "`{}..{}` matches nothing", *low, *high ),
-                    *low == *high ? "a range excludes its upper bound, so this one is empty"
-                                  : "a range runs upwards; the lower bound comes first"
+                    fmt::format( "`{}..{}` matches nothing", wide_text( low->value ), wide_text( high->value ) ),
+                    low->value == high->value ? "a range excludes its upper bound, so this one is empty"
+                                              : "a range runs upwards; the lower bound comes first"
                 );
 
                 continue;
             }
 
-            interval.low  = *low;
-            interval.high = *high;
+            interval.low  = low->value;
+            interval.high = high->value;
 
             // For lowering, which leaves out a test the scrutinee's type already settles.
             const auto record = [&]( Node_id bound, Wide value )
@@ -305,12 +327,12 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
                 );
             };
 
-            record( ast_.lower( label ), *low );
-            record( ast_.upper( label ), *high );
+            record( ast_.lower( label ), low->value );
+            record( ast_.upper( label ), high->value );
         }
         else
         {
-            const std::optional<Wide> value = fold_bound( label, state.type );
+            const std::optional<Case_bound> value = fold_bound( label, state.type );
 
             if( !value.has_value() )
             {
@@ -319,8 +341,8 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 
             // A single value is the interval it covers, so everything below treats the two the
             // same.
-            interval.low  = *value;
-            interval.high = *value + 1;
+            interval.low  = value->value;
+            interval.high = value->value + 1;
         }
 
         // Pairwise rather than sorted: a `switch` has a handful of arms, and reporting against
@@ -471,7 +493,7 @@ std::optional<std::size_t> Coverage::member_offset( const Switch_coverage& state
 // A `case` bound is always an integer, whatever the scrutinee is - D34 gives `..` one meaning, and
 // the meaning it will need for slicing is an integer one. So `case 1..5:` reads the same over an
 // `f64` as over an `i32`, and `1.5..7.3` has no spelling.
-std::optional<Wide> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool past_end )
+std::optional<Case_bound> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool past_end )
 {
     // Types the bound as well as reading it: fold_integer only folds, and lowering needs the node
     // to carry a type. Against the *scrutinee's* type, so `case 1..5:` over an `f64` compares
@@ -535,7 +557,7 @@ std::optional<Wide> Coverage::fold_bound( Node_id bound, Type_id scrutinee, bool
 
     const Wide magnitude = folded.value.magnitude;
 
-    return folded.value.negative ? -magnitude : magnitude;
+    return Case_bound { folded.value.negative ? -magnitude : magnitude };
 }
 
 bool Coverage::arm_binds( Node_id arm ) const

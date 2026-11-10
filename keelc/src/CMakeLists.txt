@@ -31,11 +31,20 @@ list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/build_id.cpp)
 
 # keelc carries the runtime it was built with, so it links without --runtime.
 set(keel_embed_script ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/embed.cmake)
+if(WIN32)
+    # No Windows runtime yet, so keelc embeds an empty one.
+    set(keel_runtime_archive ${CMAKE_CURRENT_BINARY_DIR}/kl_rt_empty.lib)
+    file(TOUCH ${keel_runtime_archive})
+    set(keel_runtime_target)
+else()
+    set(keel_runtime_archive $<TARGET_FILE:keel_rt>)
+    set(keel_runtime_target keel_rt)
+endif()
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
-    COMMAND ${CMAKE_COMMAND} -DINPUT=$<TARGET_FILE:keel_rt> -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${keel_runtime_archive} -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp
             -DNAME=k_runtime -P ${keel_embed_script}
-    DEPENDS keel_rt ${keel_embed_script}
+    DEPENDS ${keel_runtime_target} ${keel_embed_script}
     COMMENT "Embedding the runtime")
 list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/runtime.cpp)
 
@@ -48,6 +57,10 @@ set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
 find_package(LLVM CONFIG REQUIRED)
 find_package(LLD CONFIG REQUIRED)
 unset(CMAKE_MAP_IMPORTED_CONFIG_DEBUG)
+# LLVMConfig.cmake sets the Debug CRT for Debug; vcpkg's libraries are release-CRT (Q2).
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+endif()
 set(keel_llvm_libs lldELF lldCommon LLVMCore LLVMSupport LLVMTarget LLVMMC LLVMPasses
     LLVMX86CodeGen LLVMX86AsmParser LLVMX86Desc LLVMX86Info)
 

@@ -7,6 +7,7 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_C_COMPILER": "/usr/bin/clang-18",
@@ -42,12 +43,53 @@
                 "KEEL_TESTS": "OFF",
                 "KEEL_WERROR": "ON"
             }
+        },
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+            "architecture": { "value": "x64", "strategy": "external" },
+            "toolset": { "value": "v143,host=x64,version=14.42", "strategy": "external" },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-release",
+                "VCPKG_HOST_TRIPLET": "x64-windows-static-release",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
+                "VCPKG_INSTALL_OPTIONS": "--clean-after-build",
+                "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang-cl.exe",
+                "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang-cl.exe",
+                "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Debug (clang-cl)",
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "KEEL_TESTS": "ON"
+            }
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Release (clang-cl)",
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "KEEL_TESTS": "OFF",
+                "KEEL_WERROR": "ON"
+            }
         }
     ],
     "buildPresets": [
         { "name": "debug",   "configurePreset": "debug" },
         { "name": "asan",    "configurePreset": "asan" },
-        { "name": "release", "configurePreset": "release" }
+        { "name": "release", "configurePreset": "release" },
+        { "name": "windows-debug",   "configurePreset": "windows-debug" },
+        { "name": "windows-release", "configurePreset": "windows-release" }
     ],
     "testPresets": [
         {
@@ -58,6 +100,11 @@
         {
             "name": "asan",
             "configurePreset": "asan",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "windows-debug",
+            "configurePreset": "windows-debug",
             "output": { "outputOnFailure": true }
         }
     ]

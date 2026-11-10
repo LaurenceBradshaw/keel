@@ -10,12 +10,16 @@ static_assert( sizeof( Local ) == 24, "Local changed: update kir_state.cpp's wal
 static_assert( sizeof( Projection ) == 16, "Projection changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Place ) == 20, "Place changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Operand ) == 44, "Operand changed: update kir_state.cpp's walk" );
+#ifdef __GLIBCXX__ // holds std containers, whose sizes are libstdc++'s
 static_assert( sizeof( Rvalue ) == 160, "Rvalue changed: update kir_state.cpp's walk" );
+#endif
 static_assert( sizeof( Statement ) == 44, "Statement changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Terminator ) == 156, "Terminator changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Block ) == 164, "Block changed: update kir_state.cpp's walk" );
 static_assert( sizeof( Field_slot ) == 20, "Field_slot changed: update kir_state.cpp's walk" );
+#ifdef __GLIBCXX__ // holds std containers, whose sizes are libstdc++'s
 static_assert( sizeof( Function ) == 336, "Function changed: update kir_state.cpp's walk" );
+#endif
 
 namespace
 {

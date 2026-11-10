@@ -3,7 +3,9 @@
 
 #include "keelc.h"
 #include <fmt/format.h>
+#ifndef _WIN32
 #include <sys/wait.h>
+#endif
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -11,11 +13,42 @@
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <random>
 
 namespace keeldoc
 {
 namespace
 {
+
+#ifdef _WIN32
+// `text` as one word to cmd.exe. A Windows path cannot hold a double quote.
+std::string shell_quote( std::string_view text )
+{
+    return "\"" + std::string( text ) + "\"";
+}
+
+// cmd /c strips the outer pair of quotes, so the whole command gets one more.
+FILE* open_pipe( const std::string& command )
+{
+    return _popen( ( "\"" + command + "\"" ).c_str(), "rb" );
+}
+
+int close_pipe( FILE* pipe )
+{
+    return _pclose( pipe );
+}
+#else
+FILE* open_pipe( const std::string& command )
+{
+    return popen( command.c_str(), "r" );
+}
+
+// The child's exit code.
+int close_pipe( FILE* pipe )
+{
+    const int status = pclose( pipe );
+    return WIFEXITED( status ) ? WEXITSTATUS( status ) : status;
+}
 
 // `text` as one word to the shell.
 std::string shell_quote( std::string_view text )
@@ -27,6 +60,25 @@ std::string shell_quote( std::string_view text )
     }
 
     return quoted + "'";
+}
+#endif
+
+// A fresh directory under the system's temporary one, or empty.
+std::filesystem::path make_temp_dir()
+{
+    std::random_device random;
+    std::error_code    ec;
+    for( int attempt = 0; attempt < 100; ++attempt )
+    {
+        const std::filesystem::path dir =
+            std::filesystem::temp_directory_path( ec ) / fmt::format( "keeldoc_{:08x}", random() );
+        if( std::filesystem::create_directory( dir, ec ) )
+        {
+            return dir;
+        }
+    }
+
+    return {};
 }
 
 // A folder name keelc could take as a package.
@@ -87,14 +139,14 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
         return {};
     }
 
-    std::string root_dir = ( std::filesystem::temp_directory_path() / "keeldoc_XXXXXX" ).string();
-    if( mkdtemp( root_dir.data() ) == nullptr )
+    const std::filesystem::path root_dir = make_temp_dir();
+    if( root_dir.empty() )
     {
         error = "cannot make a temporary directory";
         return {};
     }
 
-    const std::filesystem::path root = std::filesystem::path( root_dir ) / "root.kl";
+    const std::filesystem::path root = root_dir / "root.kl";
     {
         std::ofstream out( root );
         for( const std::string& module : modules )
@@ -113,7 +165,7 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     std::vector<Record> records;
     std::string         unparsed;
 
-    if( FILE* pipe = popen( command.c_str(), "r" ); pipe != nullptr )
+    if( FILE* pipe = open_pipe( command ); pipe != nullptr )
     {
         std::string            line;
         std::array<char, 4096> buffer {};
@@ -135,14 +187,11 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
             }
         }
 
-        const int status = pclose( pipe );
+        const int status = close_pipe( pipe );
         if( records.empty() )
         {
             error = fmt::format(
-                "'{}' gave no records (status {}){}",
-                keelc.string(),
-                WEXITSTATUS( status ),
-                unparsed.empty() ? "" : ":\n" + unparsed
+                "'{}' gave no records (status {}){}", keelc.string(), status, unparsed.empty() ? "" : ":\n" + unparsed
             );
         }
     }
@@ -161,7 +210,7 @@ std::string print_prelude( const std::filesystem::path& keelc, std::string& erro
     const std::string command = shell_quote( keelc.string() ) + " --print-prelude 2>&1";
 
     std::string source;
-    FILE*       pipe = popen( command.c_str(), "r" );
+    FILE*       pipe = open_pipe( command );
     if( pipe == nullptr )
     {
         error = fmt::format( "cannot run '{}'", keelc.string() );
@@ -174,10 +223,9 @@ std::string print_prelude( const std::filesystem::path& keelc, std::string& erro
         source.append( buffer.data(), n );
     }
 
-    if( const int status = pclose( pipe ); status != 0 )
+    if( const int status = close_pipe( pipe ); status != 0 )
     {
-        error =
-            fmt::format( "'{}' could not print the prelude (status {}): {}", keelc.string(), WEXITSTATUS( status ), source );
+        error = fmt::format( "'{}' could not print the prelude (status {}): {}", keelc.string(), status, source );
         return {};
     }
 

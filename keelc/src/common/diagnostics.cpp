@@ -9,7 +9,11 @@
 #include <ostream>
 #include "common/json.h"
 
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <string>
 
 namespace keel
@@ -530,7 +534,12 @@ void Diagnostics::render_json( const Source_manager& sm, std::ostream& out ) con
 
 bool colour_supported()
 {
-    return isatty( STDERR_FILENO ) != 0 && std::getenv( "NO_COLOR" ) == nullptr;
+#ifdef _WIN32
+    const bool tty = _isatty( _fileno( stderr ) ) != 0;
+#else
+    const bool tty = isatty( STDERR_FILENO ) != 0;
+#endif
+    return tty && std::getenv( "NO_COLOR" ) == nullptr;
 }
 
 } // namespace keel

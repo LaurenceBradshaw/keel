@@ -26,22 +26,41 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # be identical at compile and link time, propagate automatically.
 add_library(keel_options INTERFACE)
 
-target_compile_options(keel_options INTERFACE
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wshadow                # shadowed locals are a real hazard in deeply nested tree walks
-    -Wconversion            # silent narrowing corrupts u32 node handles and span offsets
-    -Wsign-conversion
-    -Wno-unused-parameter   # relaxed: stub visitors and interface methods routinely ignore args
-    $<$<BOOL:${KEEL_WERROR}>:-Werror>
-)
+if(MSVC)
+    # clang-cl: /W4 is clang's -Wall -Wextra, and its -Wall would be -Weverything.
+    target_compile_options(keel_options INTERFACE
+        /W4
+        /utf-8
+        -Wpedantic
+        -Wshadow
+        -Wconversion
+        -Wsign-conversion
+        -Wno-unused-parameter
+        $<$<BOOL:${KEEL_WERROR}>:/WX>
+    )
+    # The CRT's "use getenv_s" deprecations name functions the Linux build uses as they are.
+    target_compile_definitions(keel_options INTERFACE
+        _CRT_SECURE_NO_WARNINGS
+        $<$<CONFIG:Debug>:_MSVC_STL_HARDENING=1>
+    )
+else()
+    target_compile_options(keel_options INTERFACE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wshadow                # shadowed locals are a real hazard in deeply nested tree walks
+        -Wconversion            # silent narrowing corrupts u32 node handles and span offsets
+        -Wsign-conversion
+        -Wno-unused-parameter   # relaxed: stub visitors and interface methods routinely ignore args
+        $<$<BOOL:${KEEL_WERROR}>:-Werror>
+    )
 
-# A misused standard container (back() on an empty vector, an index out of range) aborts in a Debug
-# build rather than being undefined behaviour only the sanitizer build sees.
-target_compile_definitions(keel_options INTERFACE $<$<CONFIG:Debug>:_GLIBCXX_ASSERTIONS>)
+    # A misused standard container (back() on an empty vector, an index out of range) aborts in a
+    # Debug build rather than being undefined behaviour only the sanitizer build sees.
+    target_compile_definitions(keel_options INTERFACE $<$<CONFIG:Debug>:_GLIBCXX_ASSERTIONS>)
+endif()
 
-if(KEEL_SANITIZE)
+if(KEEL_SANITIZE AND NOT MSVC)
     target_compile_options(keel_options INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
     target_link_options(keel_options INTERFACE -fsanitize=address,undefined)
 endif()

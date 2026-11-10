@@ -23,6 +23,14 @@ namespace keel::sema
 // Wider than any scrutinee, so every value of `u64` and `i64` has an interval.
 using Wide = __int128;
 
+// A folded `case` bound. Not std::optional<Wide>: clang-cl lays the MSVC STL out under pack(8), so
+// that is 8-aligned while reads of a Wide assume 16 and may use movaps. A struct's own alignas
+// survives the pack.
+struct alignas( 16 ) Case_bound
+{
+    Wide value;
+};
+
 struct Interval
 {
     Wide    low  = 0;
@@ -118,7 +126,7 @@ private:
     std::optional<std::size_t> member_offset( const Switch_coverage& state, Type_id label_type, Node_id label );
 
     // `past_end` for a range's upper bound, which may be one past the type's last value.
-    std::optional<Wide> fold_bound( Node_id bound, Type_id expected, bool past_end = false );
+    std::optional<Case_bound> fold_bound( Node_id bound, Type_id expected, bool past_end = false );
 
     // Whether any of an arm's labels destructures a payload. What "this arm binds" means for the
     // two rules that ask it: labels may not be stacked when one does, and nothing may fall into one.
