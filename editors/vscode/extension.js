@@ -13,6 +13,7 @@ const vscode = require( 'vscode' );
 const child_process = require( 'child_process' );
 const fs = require( 'fs' );
 const path = require( 'path' );
+const os = require( 'os' );
 
 const severities = {
     error: vscode.DiagnosticSeverity.Error,
@@ -77,6 +78,19 @@ function split_lines( bytes )
 
 // The prelude is compiled into keelc, so its text comes from the compiler that checked the file: a
 // read-only document under its own scheme, which keeps the `.kl` name and so Keel's highlighting.
+// keel.compilerPath, or where scripts/install.sh and install.ps1 put keelc.
+function compiler_path( cwd, config )
+{
+    const setting = config.get( 'compilerPath' );
+    if( setting )
+    {
+        return path.resolve( cwd, setting );
+    }
+    return process.platform === 'win32'
+        ? path.join( process.env.LOCALAPPDATA || '', 'Programs', 'keel', 'bin', 'keelc.exe' )
+        : path.join( os.homedir(), '.local', 'bin', 'keelc' );
+}
+
 const prelude_path = '<prelude>';
 const prelude_scheme = 'keel-prelude';
 
@@ -487,7 +501,7 @@ function activate( context )
         const cwd = folder ? folder.uri.fsPath : path.dirname( saved );
 
         const config = vscode.workspace.getConfiguration( 'keel', document.uri );
-        const compiler = path.resolve( cwd, config.get( 'compilerPath' ) );
+        const compiler = compiler_path( cwd, config );
 
         const args = [ '--check', '--diagnostics=json', '--names' ];
         for( const spec of config.get( 'packages' ) )
@@ -522,7 +536,7 @@ function activate( context )
                 if( !warned_missing )
                 {
                     warned_missing = true;
-                    vscode.window.showWarningMessage( `Keel: no compiler at ${compiler}; set keel.compilerPath.` );
+                    vscode.window.showWarningMessage( `Keel: no compiler at ${compiler}; run scripts/install.sh (or install.ps1), or set keel.compilerPath.` );
                 }
                 return;
             }
@@ -668,7 +682,7 @@ function activate( context )
         const cwd = folder ? folder.uri.fsPath : path.dirname( source );
 
         const config = vscode.workspace.getConfiguration( 'keel', vscode.Uri.file( source ) );
-        const compiler = path.resolve( cwd, config.get( 'compilerPath' ) );
+        const compiler = compiler_path( cwd, config );
 
         const args = [ '--check', '--diagnostics=json', '--declarations' ];
         for( const spec of config.get( 'packages' ) )
@@ -784,7 +798,7 @@ function activate( context )
         const folder = vscode.workspace.getWorkspaceFolder( editor.document.uri );
         const cwd = folder ? folder.uri.fsPath : path.dirname( root );
         const config = vscode.workspace.getConfiguration( 'keel', editor.document.uri );
-        const compiler = path.resolve( cwd, config.get( 'compilerPath' ) );
+        const compiler = compiler_path( cwd, config );
         const args = [ '--check', '--diagnostics=json' ];
         for( const spec of config.get( 'packages' ) )
         {

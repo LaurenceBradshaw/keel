@@ -15,14 +15,66 @@ On Windows, from PowerShell in this folder (a junction needs no administrator ri
 
 Edits to the grammar or to `extension.js` take effect on the next reload.
 
+## Building and debugging a project
+
+Debugging needs Microsoft's C/C++ extension (`ms-vscode.cpptools`), and on Linux gdb. For a project
+whose program is `src/main.kl`, as `keelb` lays it out, `.vscode/tasks.json` builds it with debug
+information:
+
+    {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "keelb build --debug",
+                "type": "process",
+                "command": "${userHome}/.local/bin/keelb",
+                "windows": { "command": "${env:LOCALAPPDATA}/Programs/keel/bin/keelb.exe" },
+                "args": [ "build", "--debug" ],
+                "options": { "cwd": "${workspaceFolder}" },
+                "problemMatcher": []
+            }
+        ]
+    }
+
+and `.vscode/launch.json` runs it under the debugger, with breakpoints in the `.kl` files:
+
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Debug (Linux)",
+                "type": "cppdbg",
+                "request": "launch",
+                "preLaunchTask": "keelb build --debug",
+                "program": "${workspaceFolder}/build/debug/${workspaceFolderBasename}",
+                "cwd": "${workspaceFolder}",
+                "MIMode": "gdb"
+            },
+            {
+                "name": "Debug (Windows)",
+                "type": "cppvsdbg",
+                "request": "launch",
+                "preLaunchTask": "keelb build --debug",
+                "program": "${workspaceFolder}/build/debug/${workspaceFolderBasename}.exe",
+                "cwd": "${workspaceFolder}",
+                "console": "integratedTerminal"
+            }
+        ]
+    }
+
+The paths are the installed ones, so a VS Code started before the install needs no restart. The
+program is named after the project folder.
+
 ## Errors
 
 When a `.kl` file is opened or saved, the extension runs `keelc --check --diagnostics=json --names` on it
 from the workspace folder, and underlines what keelc reports in every file the program loaded.
 It has no dependencies and needs no build step. Two settings:
 
-- `keel.compilerPath`: the keelc to run, relative to the workspace folder. It defaults to
-  `build/debug/bin/keelc`, so build keelc first.
+- `keel.compilerPath`: the keelc to run, relative to the workspace folder. Empty, the default, runs
+  the one `scripts/install.sh` or `install.ps1` installed: `~/.local/bin/keelc`, or
+  `%LOCALAPPDATA%\Programs\keel\bin\keelc.exe`. Working on keelc, install with `--link` so this is
+  the debug build.
 - `keel.packages`: the packages to pass, each as `name=<dir>`, the same as keelc's `--package`.
 
 The saved file is checked alone, with what it imports but not the file importing it, so it reports

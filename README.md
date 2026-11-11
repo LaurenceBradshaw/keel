@@ -342,14 +342,24 @@ cmake --build build/debug
 
 Presets are `debug`, `asan` (ASan + UBSan) and `release`.
 
-`keelc` links every program against the runtime library, and looks for it where an install would put
-it: `/usr/local/lib/keel/libkeel_rt.a`. Nothing installs it yet, so link the release build's there
-once:
+On Windows, the `windows-debug` and `windows-release` presets build `keelc.exe` with clang-cl;
+programs it builds link against the Windows SDK, so install that (Visual Studio Build Tools has it).
+
+## Installing
 
 ```sh
-sudo mkdir -p /usr/local/lib/keel
-sudo ln -s "$PWD/build/release/keel_rt/src/libkeel_rt.a" /usr/local/lib/keel/libkeel_rt.a
+scripts/install.sh                     # Linux: build/release into ~/.local
+scripts/install.sh --build debug --link   # working on keelc: link the debug build instead of copying it
 ```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1   # Windows: into %LOCALAPPDATA%\Programs\keel
+```
+
+Each installs `keelc`, `keelb` and the `kl` package and puts their `bin` on `PATH` (Linux through
+`~/.profile`, so log in again). `--link` (`-Link`) links them to the build and to `keel_stl/src`, so a
+rebuild needs no reinstall; on Windows a linked file needs Developer Mode. The VS Code extension runs
+the installed `keelc` unless `keel.compilerPath` names another.
 
 ## Using
 
