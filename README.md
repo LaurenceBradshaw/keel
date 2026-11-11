@@ -2,8 +2,9 @@
 
 A systems language that keeps C++'s notation and throws away its object model.
 
-Keel compiles to portable C11, which is then handed to `cc`. The source extension is `.kl`, the
-compiler is `keelc`.
+Keel compiles through LLVM to native code and links it in-process with lld, so building a program
+needs no C compiler. A C11 backend stays beside it. The source extension is `.kl`, the compiler is
+`keelc`, and the build tool is `keelb`. It runs on x86-64 Linux and x86-64 Windows.
 
 ```cpp
 // A class owns what it allocates, and its destructor is the one place it is freed.
@@ -152,31 +153,36 @@ the ownership and lifetime model is that member here.
 ## Status
 
 This is an in-progress compiler, not a released language. The front end, the IR and its optimiser,
-the move and borrow checks and both backends, LLVM and C, all work, and the standard library, the `kl` package,
-is written in Keel: `list`, `string`, `optional`, `pair`, `ring`, `map`, `set`, `ordered_map`,
-`ordered_set`, files, paths and processes, time, and a unit test runner.
+the move and borrow checks and both backends, LLVM and C, all work, and so does the build tool. The
+standard library, the `kl` package, is written in Keel: `list`, `string`, `optional`, `pair`, `ring`,
+`map`, `set`, `ordered_map`, `ordered_set`, `bitset`, sorting and searching, files, paths and
+processes, time, command-line parsing, and a unit test runner. `keelb` is written in Keel too.
 
 **Working today:**
 
 - **Types:** fixed-width primitives, `struct` and `class` with constructors, destructors, access
   control, `const` fields and static members, payload-carrying `enum`s with exhaustive `switch`,
-  `T[N]` arrays, runs (`T[]`, a checked pointer and count), single-item and many-item pointers, and
-  pointer to `const`.
+  `T[N]` arrays, runs (`T[]`, a checked pointer and count), single-item and many-item pointers,
+  pointer to `const`, default field values and default construction, and globals that own.
 - **Abstraction:** generics by monomorphisation, checked at the definition against their bounds,
-  generic methods, interfaces with dynamic dispatch through `ref`, a pointer or `box<T>`, overloading,
-  operators as methods (arithmetic, bitwise, `==`, `<=>` and `[]`), and function, method and field
-  pointers.
+  with size parameters (`bitset<N>`), generic methods, interfaces with dynamic dispatch through
+  `ref`, a pointer or `box<T>`, generic `implements` blocks with conditional conformance,
+  overloading, default arguments, operators as methods (arithmetic, bitwise, `==`, `<=>` and `[]`),
+  lambdas with their captures written `fn[ x ]( … )`, and function, method and field pointers.
 - **Errors:** `result<T, E>` with `try` and anonymous error unions, `panic` and `never`, `assert`, and
   overflow checks under `--debug`.
 - **Ownership:** move checking and a borrow check on the IR's CFG, `unsafe`, and `alloc`, `free`,
   `ptr_init` and `destroy`.
 - **Programs:** modules, packages and module-private declarations, string literals that become any
-  type implementing `from<str>`, counting `for` loops, named warnings, `extern` functions checked
-  against what C can read, and linking the program's own C.
-- **Tools:** native executables via `cc`, optimised in KIR in a release build, doc comments with
-  generated pages, a VS Code extension, and a gdb script that shows values and frames in Keel.
+  type implementing `from<str>`, counting `for` loops and `for` over a container, named warnings,
+  `extern` functions checked against what C can read, and linking the program's own C.
+- **Tools:** native executables through LLVM and lld, optimised in KIR in a release build; `keelb`,
+  which builds a project and its packages from cached objects and runs its tests; doc comments with
+  generated pages; a VS Code extension; and debug information in Keel's names, for gdb on Linux and
+  the Visual Studio debugger on Windows.
 
 ```cpp
+import kl::algorithm;
 import kl::console;
 import kl::list;
 import kl::string;
@@ -185,9 +191,9 @@ import kl::string;
 result<i64, kl::parse_error> sum( const ref kl::list<kl::string> numbers )
 {
     i64 total = 0;
-    for( u64 i = 0; i < numbers.size(); i++ )
+    for( const ref kl::string n : numbers )
     {
-        total += try numbers[i].parse_i64();
+        total += try n.parse_i64();
     }
     return result::ok( total );
 }
@@ -195,8 +201,9 @@ result<i64, kl::parse_error> sum( const ref kl::list<kl::string> numbers )
 i32 main()
 {
     kl::list<kl::string> numbers = kl::list<kl::string>();
-    numbers.push( move kl::string( "40" ) );
-    numbers.push( move kl::string( "2" ) );
+    numbers.push( "2" );                     // a literal becomes the kl::string the parameter wants
+    numbers.push( "40" );
+    kl::sort( ref numbers, fn[]( a, b ) { return a.size() > b.size(); } );   // a lambda, typed by the call
 
     switch( sum( numbers ) )
     {
@@ -210,9 +217,9 @@ i32 main()
 }
 ```
 
-**Not yet built:** a build tool, which is next; lambdas, and with them a `for` over a container;
-and a printing interface, so a generic body can print a `T`.
-`docs/PLAN.md` §12 has the open questions.
+**Not yet built:** optimisation levels, `-O0` to `-O3`, which are next; a printing interface, so a
+generic body can print a `T`; and targets other than x86-64. `docs/PLAN.md` §12 has the open
+questions and §15 the open work.
 
 ---
 
@@ -267,7 +274,7 @@ noted in its row.
 | Top-level declarations are visible throughout the file. | Needs a forward declaration. | Accepts what C++ rejects, and never changes the meaning of anything accepted. |
 | A declaration may not shadow another reachable by the same name. | Legal at every scope. | Shadowing is a bug more often than a technique. Function bodies are barriers, so file-scope names may be reused. |
 | Reading an uninitialised variable is a compile error. | Undefined behaviour. | Strictly rejects programs C++ accepts. |
-| `main` is `i32 main()`; any other signature is an error. | Several signatures. | Anything else produces a `cc` error in generated code instead of a diagnostic in yours. |
+| `main` is `i32 main()` or `i32 main( const ref str[] args )`; any other signature is an error. | Several signatures, and `argc`/`argv`. | The arguments arrive as `str`s with their lengths, and a wrong signature is a diagnostic in your code rather than a link error. |
 | No headers and no preprocessor; `#include` is an error directing to `import`. | Textual inclusion. | A header is not a translation unit, which is why C++ needs `namespace` as a second mechanism. A module is one. |
 | `import kl::list;` loads a module; the package is the namespace, so its names are written `kl::list<i32>`. Imports are not transitive, and there is no `using`. | `#include`, `namespace` and `using`, three mechanisms. | A file's imports list what it uses, and a library name can never collide with a local one. |
 | A few declarations every program needs, `str` among them, live in a prelude seen without an import. A program's own declaration of the same name shadows it, except a function's overloads, which fall back: a call goes to the prelude's set only when the program's has no candidate for it, so declaring `print( Point )` leaves `print( "hi" )` working. `--print-prelude` shows it. | The language and `std` are separate; overloads in different namespaces are merged into one set. | Adding to the prelude must never break a program that already used the name, and a merged set would let a closer prelude overload silently take a call. |
@@ -333,17 +340,21 @@ noted in its row.
 
 ## Building
 
-Requires CMake 3.24+, Ninja, clang-18, and vcpkg (for `fmt`, `cxxopts` and `catch2`).
+Requires CMake 3.24+, Ninja, clang-18, and vcpkg cloned at `~/vcpkg`, which supplies `fmt`,
+`cxxopts`, `catch2` and LLVM with lld. vcpkg builds LLVM from source on the first configure, which
+takes an hour or more; later configures reuse it.
 
 ```sh
 cmake --preset debug
 cmake --build build/debug
 ```
 
-Presets are `debug`, `asan` (ASan + UBSan) and `release`.
+Presets are `debug`, `asan` (ASan + UBSan) and `release`. Programs keelc builds link against glibc's
+start files, so the C library's development package (`libc6-dev`) must be installed.
 
-On Windows, the `windows-debug` and `windows-release` presets build `keelc.exe` with clang-cl;
-programs it builds link against the Windows SDK, so install that (Visual Studio Build Tools has it).
+On Windows, the `windows-debug` and `windows-release` presets build one standalone `keelc.exe` with
+clang-cl, the v143 toolset at 14.42, and vcpkg cloned at `C:/dev/vcpkg`. Programs it builds link
+against the Windows SDK, so install that (Visual Studio Build Tools has it).
 
 ## Installing
 
@@ -363,8 +374,23 @@ the installed `keelc` unless `keel.compilerPath` names another.
 
 ## Using
 
+A project is a folder holding `src/main.kl`, and `test/main.kl` if it has tests. Each other folder
+in the root or in `src/` that holds a `.kl` is a package the project can import by the folder's name.
+
 ```sh
-build/debug/bin/keelc examples/hello.kl -o hello && ./hello
+keelb build             # build/release/<project>
+keelb build --debug     # build/debug/<project>, unoptimised, with debug information
+keelb test              # build and run test/main.kl
+```
+
+keelb runs the keelc beside it, compiles each module to an object once, and rebuilds only what a
+change reaches. `--cache <dir>` moves the build folder and `--verbose` prints each keelc it runs.
+[`editors/vscode`](editors/vscode)'s README has a `tasks.json` and `launch.json` for a project.
+
+keelc builds a single program on its own:
+
+```sh
+keelc examples/hello.kl -o hello && ./hello
 ```
 
 keelc finds the library, `kl`, at `../lib/keel/<version>/kl` from its own folder, which the build
@@ -402,8 +428,9 @@ the user's to fix. A `.c` given after the `.kl` is compiled with `$CC` on either
 [`editors/vscode`](editors/vscode) is a VS Code extension: highlighting, keelc's errors underlined on
 save, names coloured by what they refer to, hovers, and go-to-definition. Its README says how to install it.
 
-A `--debug` build carries DWARF in Keel's names, so gdb shows functions, locals and fields as the
-`.kl` writes them. `examples/debugging.kl` is a program to step through. For `--backend c`, build with
+A `--debug` build carries debug information in Keel's names, DWARF on Linux and a `.pdb` on
+Windows, so gdb and the Visual Studio debugger show functions, locals and fields as the `.kl` writes
+them. `examples/debugging.kl` is a program to step through. For `--backend c`, build with
 `CFLAGS=-g` too and `source editors/gdb/keel_c.py`.
 
 `keeldoc` writes a package's documentation as HTML pages from its `///` and `//!` comments. The
@@ -416,14 +443,19 @@ build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
 ## Testing
 
 ```sh
-ctest --preset debug                                    # all of the below
+ctest --preset debug                                    # the first six below
 build/debug/bin/keel_tests                              # unit tests
 keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
 keel_stl/test/run_tests.sh build/debug/bin/keelc        # the kl package's tests
 build/debug/bin/keel_rt_tests                           # the runtime's edge cases
 build/debug/bin/keeldoc_tests                           # keeldoc's unit tests
 keeldoc/test/run_tests.sh build/debug/bin/keeldoc build/debug/bin/keelc   # keeldoc's pages
+( cd keel_build && ../build/release/bin/keelb test )    # keelb's unit tests, built by keelb
+keel_build/test/run_tests.sh build/release/bin/keelb    # keelb's goldens
 ```
+
+`ctest` covers all but keelb's two. The golden runners build with LLVM; `KEEL_BACKEND=c` picks the
+C backend, and `KEEL_COMPARE=c` builds and runs every program with both and compares them.
 
 The golden runner links the runtime built beside the `keelc` it is given. Under the `asan` preset,
 point `KEEL_RT` at a library built without sanitizers, such as the `debug` one. Set `KEEL_VALGRIND=1`
@@ -449,13 +481,19 @@ keelc/src/sema       name resolution, bidirectional type checking, overloads, ge
 keelc/src/ir         lowering to KIR and simplification
 keelc/src/opt        KIR optimisation passes, release builds only
 keelc/src/check      move checking and definite assignment over the KIR CFG
+keelc/src/codegen    what both backends share: layout, mangling, descriptions
+keelc/src/codegen_llvm  KIR to LLVM IR, and linking with lld
 keelc/src/codegen_c  KIR to C11
+keelc/src/object     objects and their manifests, for building a module once
 keelc/src/prelude    the prelude, Keel source built into the compiler
-keel_rt              the runtime floor (allocation, writing, panics), and its tests
+keel_rt              the runtime floor (allocation, writing, panics), POSIX and Win32, and its tests
 keel_stl             the standard library, the `kl` package, and its pages in docs/
+keel_build           keelb, the build tool, written in Keel
 keeldoc              the doc tool: keelc's --declarations to HTML pages
 editors/vscode       the VS Code extension
 editors/gdb          the gdb checks, and a script for the C backend
+editors/lldb         the debugger check on Windows
+scripts              the install scripts
 ```
 
 Neither backend is the portability boundary — KIR is. LLVM is the default and links in-process with
