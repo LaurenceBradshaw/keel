@@ -283,7 +283,7 @@ struct Propagated : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .rounds = rounds, .recoalescing = false }
+              Build { .level = 2, .rounds = rounds, .recoalescing = false }
           )
     {
     }

@@ -31,7 +31,7 @@
 # is one an earlier line wrote, and any other word is a flag. keelc is given every object written, or
 # only those of a line holding nothing but .klo words, and the build directory is cut from its output.
 #
-# A run fixture whose FLAGS hold --debug is built and run a second time without it, so the KIR passes
+# A run fixture whose FLAGS hold --debug is built and run a second time without it or its -O0, so the KIR passes
 # run, and must give the same exit code and output. A <name>.kl.debug_only marker skips that, for a
 # fixture whose answer is a --debug check's.
 #
@@ -392,7 +392,8 @@ check_release()
 
     local flags=() flag debug=0
     for flag in "$@"; do
-        if [ "$flag" = "--debug" ]; then debug=1; else flags+=( "$flag" ); fi
+        # Its -O0 too, so the rerun builds at the default -O2.
+        if [ "$flag" = "--debug" ]; then debug=1; elif [ "$flag" != "-O0" ]; then flags+=( "$flag" ); fi
     done
     [ "$debug" -eq 1 ] || return 0
 

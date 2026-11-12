@@ -1,1 +1,1 @@
---debug --emit-c --package plane=codegen/packages/plane
+--debug -O0 --emit-c --package plane=codegen/packages/plane

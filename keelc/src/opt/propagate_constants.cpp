@@ -841,7 +841,7 @@ namespace
 struct Propagated : Compiled
 {
     explicit Propagated( std::string_view source )
-        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .optimise = true } )
+        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .level = 2 } )
     {
         INFO( rendered() );
         REQUIRE( clean() );

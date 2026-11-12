@@ -830,7 +830,7 @@ TEST_CASE( "thread_jumps_drops_nothing_on_a_default_arm", "[opt][threading]" )
         "i32 f( move E s ) { switch( move s ) { case E::full( d ): return d.v; default: return 1; } }\n"
         "i32 main() { return 0; }\n",
         Stage::Elaborated,
-        Build { .optimise = true }
+        Build { .level = 2 }
     );
 
     INFO( p.rendered() );
@@ -849,7 +849,7 @@ TEST_CASE( "thread_jumps_leaves_one_test_of_an_and", "[opt][threading]" )
         "i32 f( i32 i ) { if( i % 2 == 0 && big( 20 ) ) { return 1; } return 2; }\n"
         "i32 main() { return 0; }\n",
         Stage::Elaborated,
-        Build { .optimise = true }
+        Build { .level = 2 }
     );
 
     INFO( p.rendered() );

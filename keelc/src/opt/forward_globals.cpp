@@ -681,7 +681,7 @@ namespace
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Forwarded : Compiled
 {
-    explicit Forwarded( std::string_view source, Build build = Build { .optimise = true } )
+    explicit Forwarded( std::string_view source, Build build = Build { .level = 2 } )
         : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, build )
     {
     }
@@ -731,7 +731,7 @@ TEST_CASE( "forward_globals_keeps_a_read_after_a_call", "[opt][globals]" )
 {
     const Forwarded p(
         "i32 g;\ni32 f() { g = 5; touch(); return g; }\nvoid touch() { g = 1; }\n",
-        Build { .optimise = true, .inlining = std::nullopt }
+        Build { .level = 2, .inlining = std::nullopt }
     );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
@@ -751,9 +751,7 @@ TEST_CASE( "forward_globals_keeps_a_write_a_join_reads", "[opt][globals]" )
 // round, as the next finds `x = 7` gone.
 TEST_CASE( "forward_globals_keeps_a_sum_whose_source_changed", "[opt][globals]" )
 {
-    const Forwarded p(
-        "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n", Build { .optimise = true, .rounds = 1 }
-    );
+    const Forwarded p( "i32 f( i32 x ) { i32 t = x + 3; x = 7; return t - 3 + x; }\n", Build { .level = 2, .rounds = 1 } );
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.count( Rvalue_kind::Binary, Token_kind::Plus ) == 2 );

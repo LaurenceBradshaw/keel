@@ -1,1 +1,1 @@
---debug --emit-c --package kinds=codegen/package_types/kinds
+--debug -O0 --emit-c --package kinds=codegen/package_types/kinds

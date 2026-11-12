@@ -186,9 +186,7 @@ TEST_CASE( "merge_blocks_keeps_the_entry_a_loop_returns_to", "[opt][merge]" )
 TEST_CASE( "merge_blocks_joins_a_release_assert", "[opt][merge]" )
 {
     const Compiled p(
-        "i32 f( i32 a ) { assert( a > 0 ); return a + 1; }\ni32 main() { return 0; }\n",
-        Stage::Elaborated,
-        Build { .optimise = true }
+        "i32 f( i32 a ) { assert( a > 0 ); return a + 1; }\ni32 main() { return 0; }\n", Stage::Elaborated, Build { .level = 2 }
     );
 
     INFO( p.rendered() );

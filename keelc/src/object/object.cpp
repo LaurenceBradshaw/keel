@@ -374,7 +374,7 @@ Built build_clock( const Temp_dir& dir, bool debug )
     Front_end front = run_front_end(
         input,
         debug ? Stage::Elaborated : Stage::Reported,
-        { .asserts = debug, .overflow_checks = debug, .optimise = !debug, .keep_checked = debug },
+        { .asserts = debug, .overflow_checks = debug, .level = debug ? 0u : 2u, .reuse_loaded = debug, .keep_checked = debug },
         sm,
         interner,
         literals,
@@ -684,7 +684,7 @@ TEST_CASE( "a_module_given_as_an_object_is_not_lowered_again", "[object]" )
     Diagnostics    diags;
     const File_id  input = *sm.load_file( main );
     Front_end      front = run_front_end(
-        input, Stage::Elaborated, { .optimise = true }, sm, interner, literals, diags, {}, false, std::span( &*counter, 1 )
+        input, Stage::Elaborated, { .level = 2 }, sm, interner, literals, diags, {}, false, std::span( &*counter, 1 )
     );
     std::ostringstream rendered;
     diags.render( sm, rendered );
@@ -739,7 +739,7 @@ TEST_CASE( "a_module_given_as_an_object_keeps_its_guards", "[object][guard]" )
     Diagnostics    diags;
     const File_id  input = *sm.load_file( main );
     Front_end      front = run_front_end(
-        input, Stage::Elaborated, { .optimise = true }, sm, interner, literals, diags, {}, false, std::span( &*order, 1 )
+        input, Stage::Elaborated, { .level = 2 }, sm, interner, literals, diags, {}, false, std::span( &*order, 1 )
     );
     std::ostringstream rendered;
     diags.render( sm, rendered );

@@ -292,7 +292,7 @@ struct Shadowed : Compiled
 {
     const Function* func = nullptr;
 
-    explicit Shadowed( std::string_view source, Build build = { .optimise = true } )
+    explicit Shadowed( std::string_view source, Build build = { .level = 2 } )
         : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, build )
     {
         INFO( rendered() );
@@ -347,7 +347,7 @@ TEST_CASE( "shadow_tags_leaves_a_tag_a_reference_reaches", "[opt][tags]" )
         "void touch( ref E e ) { e = E::empty; }\n"
         "i32 f( i32 x ) { E h = E::full( D( x ) ); touch( ref h ); "
         "switch( h ) { case E::full( d ): return d.v; case E::empty: return 0; } }\n",
-        Build { .optimise = true, .inlining = std::nullopt }
+        Build { .level = 2, .inlining = std::nullopt }
     );
     REQUIRE( p.branches() == 1 );
 }

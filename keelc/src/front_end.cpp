@@ -179,7 +179,7 @@ Front_end run_front_end(
     const Literal_id debug = build.asserts ? vocabulary.true_literal : vocabulary.false_literal;
 
     // Settled only after the checks, so they saw both paths; simplified again so elaboration sees
-    // only this build's. A release build optimises before elaboration makes drops explicit and again
+    // only this build's. Above -O0 the passes run before elaboration makes drops explicit and again
     // after, splitting aggregates first.
     // Callees first, so a callee's body is ready when its callers inline it.
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
@@ -187,7 +187,7 @@ Front_end run_front_end(
 
     // A call made direct, before or after inlining, finds its callee optimised already.
     const std::vector<std::vector<u32>> dispatched =
-        build.optimise ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
+        build.level >= 2 ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
 
     for( const std::vector<u32>& group : callees_first( front.functions, dispatched ) )
     {
@@ -195,7 +195,7 @@ Front_end run_front_end(
         {
             // A debug build links the loaded ones from their objects; a release build optimises
             // them with the rest.
-            if( f < given && !build.optimise )
+            if( f < given && build.reuse_loaded )
             {
                 continue;
             }
@@ -206,9 +206,9 @@ Front_end run_front_end(
             simplify( function, literals );
             verified( function, "settle_debug" );
 
-            if( build.optimise )
+            if( build.level >= 1 )
             {
-                if( build.inlining )
+                if( build.level >= 2 && build.inlining )
                 {
                     inline_calls( function, saved, front.functions, literals, *build.inlining );
                     verified( function, "inline_calls" );
@@ -222,14 +222,17 @@ Front_end run_front_end(
                 }
                 collapse_borrows( function, front.types.table() );
                 verified( function, "collapse_borrows" );
-                coalesce_moves( function, ast );
-                verified( function, "coalesce_moves" );
+                if( build.level >= 2 )
+                {
+                    coalesce_moves( function, ast );
+                    verified( function, "coalesce_moves" );
+                }
             }
         }
 
         // Saved only once the whole group has inlined, so no member inlines another: that is what
         // stops recursion.
-        if( build.optimise && build.inlining )
+        if( build.level >= 2 && build.inlining )
         {
             for( const u32 f : group )
             {
@@ -239,7 +242,7 @@ Front_end run_front_end(
 
         for( const u32 f : group )
         {
-            if( f < given && !build.optimise )
+            if( f < given && build.reuse_loaded )
             {
                 continue;
             }
@@ -249,11 +252,11 @@ Front_end run_front_end(
             elaborate_drops( function, vocabulary );
             verified( function, "elaborate_drops" );
 
-            if( build.optimise )
+            if( build.level >= 1 )
             {
                 settle_drops( function );
                 verified( function, "settle_drops" );
-                if( build.inlining )
+                if( build.level >= 2 && build.inlining )
                 {
                     inline_drops( function, front.functions, finished, literals, *build.inlining );
                     verified( function, "inline_drops" );
@@ -267,7 +270,7 @@ Front_end run_front_end(
                         forward_borrows( function, front.types.table() );
                         verified( function, "forward_borrows" );
                     }
-                    if( build.splitting )
+                    if( build.level >= 2 && build.splitting )
                     {
                         split_aggregates( function, ast, front.types );
                         verified( function, "split_aggregates" );
@@ -315,8 +318,11 @@ Front_end run_front_end(
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )
                 {
-                    coalesce_moves( function, ast );
-                    verified( function, "coalesce_moves" );
+                    if( build.level >= 2 )
+                    {
+                        coalesce_moves( function, ast );
+                        verified( function, "coalesce_moves" );
+                    }
                     // Merging two locals can make `a != a`.
                     fold_identities( function, front.types.table(), literals );
                     verified( function, "fold_identities" );
@@ -329,7 +335,7 @@ Front_end run_front_end(
             verified( function, "lower_dispatch" );
         }
 
-        if( build.optimise && build.inlining )
+        if( build.level >= 2 && build.inlining )
         {
             for( const u32 f : group )
             {
@@ -337,7 +343,7 @@ Front_end run_front_end(
             }
         }
     }
-    lap( build.optimise ? "optimise" : "drops" );
+    lap( build.level >= 1 ? "optimise" : "drops" );
 
     // Last, so no pass inlines the Keel `main` into it.
     if( !as_module )

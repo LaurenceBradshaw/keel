@@ -34,9 +34,12 @@ struct Build
 {
     bool asserts         = false;
     bool overflow_checks = false;
-    bool optimise        = false; // M11's optimisations; release only, so a debug build is the program as lowered.
+    u32  level           = 0; // -O<n>: 0 is the program as lowered; which passes run at each is in §3.3.
 
-    // How an optimised build inlines; none leaves every call a call.
+    // The loaded parts link from their objects' code, so are not lowered again.
+    bool reuse_loaded = false;
+
+    // How an `-O2` build inlines; none leaves every call a call.
     std::optional<Inline_weights> inlining = Inline_weights {};
 
     // Scalar replacement; a test of an earlier pass turns it off to see that pass's fields.

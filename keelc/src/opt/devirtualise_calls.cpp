@@ -306,7 +306,7 @@ struct Devirtualised : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = Inline_weights {} }
+              Build { .level = 2, .inlining = Inline_weights {} }
           )
     {
     }

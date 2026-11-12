@@ -870,9 +870,7 @@ struct Optimised : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build {
-                  .optimise = true, .inlining = inlining, .splitting = splitting, .rounds = rounds, .recoalescing = recoalescing
-              }
+              Build { .level = 2, .inlining = inlining, .splitting = splitting, .rounds = rounds, .recoalescing = recoalescing }
           )
     {
     }

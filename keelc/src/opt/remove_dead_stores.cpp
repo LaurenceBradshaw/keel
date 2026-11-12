@@ -77,7 +77,7 @@ struct Stored : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining, .forwarding = false }
+              Build { .level = 2, .inlining = inlining, .forwarding = false }
           )
     {
     }

@@ -1,1 +1,1 @@
---debug --emit-c
+--debug -O0 --emit-c

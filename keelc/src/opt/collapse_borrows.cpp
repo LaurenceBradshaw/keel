@@ -62,9 +62,7 @@ struct Collapsed : Compiled
 {
     explicit Collapsed( std::string_view source, std::optional<Inline_weights> inlining = Inline_weights {} )
         : Compiled(
-              std::string( source ) + std::string( k_types ),
-              Stage::Elaborated,
-              Build { .optimise = true, .inlining = inlining }
+              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = 2, .inlining = inlining }
           )
     {
     }
