@@ -50,6 +50,7 @@ int64_t kl__3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E* kl_xs_1
     int64_t kl_t7;
     int64_t kl_t8;
     int64_t* kl_t9;
+    int64_t* kl_t10;
 #line 10 "opt/forwarded_reads/main.kl"
     kl_t0 = 0;
     kl_i_3 = 0;
@@ -58,13 +59,13 @@ int64_t kl__3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E* kl_xs_1
 #line 11 "opt/forwarded_reads/main.kl"
     kl_t5 = 0 < kl_t4;
 #line 11 "opt/forwarded_reads/main.kl"
-    if ( kl_t5 ) goto bb2; else goto bb1;
+    if ( kl_t5 ) goto bb3; else goto bb1;
     bb1:
 #line 15 "opt/forwarded_reads/main.kl"
     return kl_t0;
     bb2:
 #line 163 "<kl>/list.kl"
-    kl_t9 = ( *kl_xs_1 ).kl_data_ + kl_i_3;
+    kl_t9 = kl_t10 + kl_i_3;
 #line 163 "<kl>/list.kl"
     kl_t6 = &( *kl_t9 );
 #line 13 "opt/forwarded_reads/main.kl"
@@ -79,6 +80,11 @@ int64_t kl__3sum__Q2kl4listI3i64E_3i64( struct kl_2kl4list_list__I3i64E* kl_xs_1
     kl_t5 = kl_i_3 < kl_t4;
 #line 11 "opt/forwarded_reads/main.kl"
     if ( kl_t5 ) goto bb2; else goto bb1;
+    bb3:
+#line 163 "<kl>/list.kl"
+    kl_t10 = ( *kl_xs_1 ).kl_data_;
+#line 11 "opt/forwarded_reads/main.kl"
+    goto bb2;
 #line 16 "opt/forwarded_reads/main.kl"
 }
 

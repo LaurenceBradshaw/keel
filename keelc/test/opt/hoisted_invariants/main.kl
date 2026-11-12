@@ -1,0 +1,107 @@
+// M16's -O3: a statement or read the loop never changes moves to the loop's preheader. A read through
+// a pointer, or a division, moves only when it runs on the first turn with nothing visible before it.
+// Each check returns its own code.
+
+import kl::list;
+
+i64 calls = 0;
+
+void count() { calls += 1; }
+
+// `data_` read once, before the loop, beside `count_` and `k * 4`.
+i64 sum( const ref kl::list<i64> xs, i64 k )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < xs.size(); i += 1 )
+    {
+        total += xs[ i ] * ( k * 4 );
+    }
+    return total;
+}
+
+// The division stays after the call, which a program can see.
+i64 divided( i64 n, i64 k )
+{
+    i64 total = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        count();
+        total += k / 3;
+    }
+    return total;
+}
+
+// A test of two parts is not rotated: the body may not run, so the read of `data_` stays.
+i64 unrotated( const ref kl::list<i64> xs, bool go )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < xs.size() && go; i += 1 )
+    {
+        total += xs[ i ];
+    }
+    return total;
+}
+
+class Probe
+{
+    u64 v;
+
+    Probe( u64 value )
+    {
+        v = value;
+    }
+
+    ~Probe()
+    {
+        drops += 1;
+    }
+
+    bool positive() const
+    {
+        return v > 0;
+    }
+};
+
+i64 drops = 0;
+
+// The temporary's drop flag is cleared after its drop in an inner loop, whose preheader builds it:
+// the clear stays after the drop.
+u64 guarded()
+{
+    u64 i = 0;
+    while( i < 2 && Probe( 30 + i ).positive() )
+    {
+        i += 1;
+    }
+    return i;
+}
+
+i32 main()
+{
+    kl::list<i64> xs = kl::list<i64>();
+    xs.push( 1 );
+    xs.push( 2 );
+    xs.push( 3 );
+
+    if( sum( xs, 3 ) != 72 )
+    {
+        return 1;
+    }
+
+    if( divided( 4, xs[ 2 ] * 3 ) != 12 || calls != 4 )
+    {
+        return 2;
+    }
+
+    if( unrotated( xs, true ) != 6 || unrotated( xs, false ) != 0 )
+    {
+        return 3;
+    }
+
+    if( guarded() != 2 || drops != 2 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

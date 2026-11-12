@@ -19,6 +19,7 @@
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
 #include "opt/forward_reads.h"
+#include "opt/hoist_invariants.h"
 #include "opt/inline_calls.h"
 #include "opt/loop_self_calls.h"
 #include "opt/merge_blocks.h"
@@ -371,6 +372,12 @@ Front_end run_front_end(
                     forward_reads( function );
                     verified( function, "forward_reads" );
                     optimise_round( function );
+                    // After the round folds the checks that would exit before an invariant.
+                    if( hoist_invariants( function ) )
+                    {
+                        verified( function, "hoist_invariants" );
+                        optimise_round( function );
+                    }
                 }
             }
 

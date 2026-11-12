@@ -12,13 +12,6 @@
 namespace keel
 {
 
-namespace
-{
-// A place read through a pointer, and the local holding what it read. A place without a deref is
-// propagate_values's, which forwards the other way.
-using Reads = std::vector<std::pair<Place, Local_id>>;
-
-// Whether `place` is rooted at `local` or indexes by it.
 bool mentions( const Function& func, const Place& place, Local_id local )
 {
     if( !place.is_global() && place.local == local )
@@ -32,29 +25,6 @@ bool mentions( const Function& func, const Place& place, Local_id local )
     );
 }
 
-void forget( const Function& func, Reads& reads, Local_id local )
-{
-    std::erase_if(
-        reads,
-        [&]( const std::pair<Place, Local_id>& read ) { return read.second == local || mentions( func, read.first, local ); }
-    );
-}
-
-const Local_id* held( const Function& func, const Reads& reads, const Place& place )
-{
-    for( const std::pair<Place, Local_id>& read : reads )
-    {
-        if( same_place( func, read.first, place ) )
-        {
-            return &read.second;
-        }
-    }
-
-    return nullptr;
-}
-
-// Locals a pointer reaches. `&(*p)` is not one of `p`'s, unlike `addressed_locals`; `&init` keeps no
-// pointer past its call.
 Local_set addressed_locals_of( const Function& func )
 {
     Local_set addressed( func.locals.size(), false );
@@ -81,8 +51,6 @@ bool is_addressed( const Local_set& addressed, Local_id local )
     return local.v < addressed.size() && addressed[local.v];
 }
 
-// Whether `statement` may change what a pointer reaches: a call, a drop, or a store through a pointer,
-// to a global, or to a local a pointer reaches.
 bool clobbers( const Function& func, const Local_set& addressed, const Statement& statement )
 {
     if( statement.kind == Statement_kind::Drop )
@@ -104,6 +72,33 @@ bool clobbers( const Function& func, const Local_set& addressed, const Statement
 
     const Place& place = statement.place;
     return place.is_global() || has_deref_projection( func, place ) || is_addressed( addressed, place.local );
+}
+
+namespace
+{
+// A place read through a pointer, and the local holding what it read. A place without a deref is
+// propagate_values's, which forwards the other way.
+using Reads = std::vector<std::pair<Place, Local_id>>;
+
+void forget( const Function& func, Reads& reads, Local_id local )
+{
+    std::erase_if(
+        reads,
+        [&]( const std::pair<Place, Local_id>& read ) { return read.second == local || mentions( func, read.first, local ); }
+    );
+}
+
+const Local_id* held( const Function& func, const Reads& reads, const Place& place )
+{
+    for( const std::pair<Place, Local_id>& read : reads )
+    {
+        if( same_place( func, read.first, place ) )
+        {
+            return &read.second;
+        }
+    }
+
+    return nullptr;
 }
 
 void step( const Function& func, const Local_set& addressed, const Statement& statement, Reads& reads )
