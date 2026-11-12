@@ -50,4 +50,7 @@ Llvm_output emit_llvm(
     const Llvm_options&          options
 );
 
+// Options for LLVM's code generator, as llc takes them (`-disable-lsr`); the error, or empty.
+std::string set_llvm_options( const std::vector<std::string>& options );
+
 } // namespace keel

@@ -13,6 +13,7 @@
 #include <llvm/IR/ValueHandle.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
@@ -2420,6 +2421,22 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
 }
 
 } // namespace
+
+std::string set_llvm_options( const std::vector<std::string>& options )
+{
+    std::vector<const char*> argv { "keelc --llvm-option" }; // how LLVM's errors name us
+    for( const std::string& option : options )
+    {
+        argv.push_back( option.c_str() );
+    }
+    std::string              error;
+    llvm::raw_string_ostream errors( error );
+    if( !llvm::cl::ParseCommandLineOptions( static_cast<int>( argv.size() ), argv.data(), "", &errors ) )
+    {
+        return error;
+    }
+    return {};
+}
 
 Llvm_output emit_llvm(
     const std::vector<Function>& functions,

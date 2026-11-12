@@ -78,6 +78,7 @@ int main( int argc, char** argv )
         ( "emit-c",          "Print the generated C and stop" )
         ( "emit-llvm",       "Print the generated LLVM IR and stop" )
         ( "backend",         "The code generator: c or llvm", cxxopts::value<std::string>()->default_value( "llvm" ) )
+        ( "llvm-option",     "Pass an option to LLVM's code generator, as llc takes it; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "c,object",        "Compile the input as a module into a .klo" )
         ( "check",           "Run the front end and report diagnostics, emitting nothing" )
         ( "imports",         "Print the input's imports as written, one per line, and stop" )
@@ -219,6 +220,15 @@ int main( int argc, char** argv )
     {
         fmt::print( stderr, "keelc: --backend takes c or llvm, not '{}'\n", backend );
         return 2;
+    }
+    if( args.count( "llvm-option" ) )
+    {
+        if( const std::string error = keel::set_llvm_options( args["llvm-option"].as<std::vector<std::string>>() );
+            !error.empty() )
+        {
+            fmt::print( stderr, "{}", error );
+            return 2;
+        }
     }
 
     if( args.count( "with-prelude" ) && !args.count( "declarations" ) )
