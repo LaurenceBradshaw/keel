@@ -383,7 +383,8 @@ manifest records that level; a link at the same level reuses the code, and one a
 the object from its kept KIR. keelb's caches stay `build/release` and `build/debug`.
 
 **Floats fold as exact IEEE** in the operand's own type, rounding to nearest: `f32` in `float`,
-`f64` in `double`. An operation whose result is NaN stays for run time; comparisons fold by IEEE.
+`f64` in `double`. An operation whose result is NaN or infinite stays for run time; comparisons fold
+by IEEE. A cast to or from a float is not folded.
 `x + 0.0`, `x * 0.0` and `x == x` are not folded, as they fail at −0.0 or NaN; `x * 1.0`,
 `x - 0.0` and `x / 1.0` are. No reassociation or distribution. An opt-in real-arithmetic region
 may later allow both.

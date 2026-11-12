@@ -91,37 +91,8 @@ double kl__11through_ptr__3f64( double kl_x_1 )
 int32_t kl__4main__( void )
 {
     int32_t kl_t0;
-    double kl_t1;
-    double kl_t2;
-    double kl_t3;
-    double kl_t4;
-    double kl_t5;
-    bool kl_t6;
-#line 16 "opt/devirtualised.kl"
-    kl_t1 = 2.0 * 2.0;
-#line 16 "opt/devirtualised.kl"
-    kl_t2 = 2.0 * 2.0;
-#line 47 "opt/devirtualised.kl"
-    kl_t3 = kl_t1 + kl_t2;
-#line 16 "opt/devirtualised.kl"
-    kl_t4 = 2.0 * 2.0;
-#line 47 "opt/devirtualised.kl"
-    kl_t5 = kl_t3 + kl_t4;
-#line 47 "opt/devirtualised.kl"
-    kl_t6 = kl_t5 == 12.0;
-#line 47 "opt/devirtualised.kl"
-    if ( kl_t6 ) goto bb1; else goto bb2;
-    bb1:
 #line 47 "opt/devirtualised.kl"
     kl_t0 = 0;
-#line 47 "opt/devirtualised.kl"
-    goto bb3;
-    bb2:
-#line 47 "opt/devirtualised.kl"
-    kl_t0 = 1;
-#line 47 "opt/devirtualised.kl"
-    goto bb3;
-    bb3:
 #line 47 "opt/devirtualised.kl"
     return kl_t0;
 }

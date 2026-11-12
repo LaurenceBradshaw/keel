@@ -92,35 +92,19 @@ int32_t kl__4kept__3i32( int32_t kl_x_1 )
 int32_t kl__4main__( void )
 {
     int32_t kl_t0;
-    double kl_t1;
+    int32_t kl_t1;
     bool kl_t2;
-    int32_t kl_t3;
-    bool kl_t4;
-    double kl_t5;
-#line 38 "opt/const_reads.kl"
-    kl_t5 = 3.0 * 0.5;
-#line 38 "opt/const_reads.kl"
-    kl_t1 = kl_t5 + -0.25;
-#line 78 "opt/const_reads.kl"
-    kl_t2 = kl_t1 != 1.25;
-#line 78 "opt/const_reads.kl"
+#line 65 "opt/const_reads.kl"
+    kl_t1 = 1 + kl__plain__G;
+#line 86 "opt/const_reads.kl"
+    kl_t2 = kl_t1 != 4;
+#line 86 "opt/const_reads.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-    kl_t0 = 3;
-#line 80 "opt/const_reads.kl"
-    return kl_t0;
-    bb2:
-#line 65 "opt/const_reads.kl"
-    kl_t3 = 1 + kl__plain__G;
-#line 86 "opt/const_reads.kl"
-    kl_t4 = kl_t3 != 4;
-#line 86 "opt/const_reads.kl"
-    if ( kl_t4 ) goto bb3; else goto bb4;
-    bb3:
     kl_t0 = 5;
 #line 88 "opt/const_reads.kl"
     return kl_t0;
-    bb4:
+    bb2:
 #line 91 "opt/const_reads.kl"
     kl_t0 = 0;
 #line 91 "opt/const_reads.kl"

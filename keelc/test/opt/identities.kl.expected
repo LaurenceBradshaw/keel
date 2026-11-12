@@ -159,25 +159,23 @@ int32_t kl__4main__( void )
 {
     int32_t kl_t0;
     bool kl_t1;
-    double kl_sum_2;
-    double kl_t3;
-    bool kl_t4;
-    double kl_nan_5;
-    bool kl_t6;
+    double kl_t2;
+    bool kl_t3;
+    double kl_nan_4;
+    bool kl_t5;
 #line 60 "opt/identities.kl"
-    kl_nan_5 = 0.0 / 0.0;
+    kl_nan_4 = 0.0 / 0.0;
 #line 28 "opt/identities.kl"
-    kl_t6 = kl_nan_5 == kl_nan_5;
+    kl_t5 = kl_nan_4 == kl_nan_4;
 #line 61 "opt/identities.kl"
-    if ( kl_t6 ) goto bb6; else goto bb7;
+    if ( kl_t5 ) goto bb5; else goto bb6;
     bb1:
-#line 68 "opt/identities.kl"
-    kl_sum_2 = -0.0 + 0.0;
-    kl_t3 = 1.0 / kl_sum_2;
 #line 69 "opt/identities.kl"
-    kl_t4 = kl_t3 > 0.0;
+    kl_t2 = 1.0 / 0.0;
 #line 69 "opt/identities.kl"
-    if ( kl_t4 ) goto bb3; else goto bb4;
+    kl_t3 = kl_t2 > 0.0;
+#line 69 "opt/identities.kl"
+    if ( kl_t3 ) goto bb3; else goto bb4;
     bb2:
 #line 92 "opt/identities.kl"
     return kl_t0;
@@ -185,26 +183,23 @@ int32_t kl__4main__( void )
 #line 69 "opt/identities.kl"
     kl_t0 = 0;
 #line 69 "opt/identities.kl"
-    goto bb5;
+    goto bb2;
     bb4:
 #line 69 "opt/identities.kl"
     kl_t0 = 5;
 #line 69 "opt/identities.kl"
-    goto bb5;
-    bb5:
-#line 69 "opt/identities.kl"
     goto bb2;
-    bb6:
+    bb5:
 #line 61 "opt/identities.kl"
     kl_t0 = 4;
 #line 61 "opt/identities.kl"
-    goto bb8;
-    bb7:
+    goto bb7;
+    bb6:
 #line 61 "opt/identities.kl"
     kl_t0 = 0;
 #line 61 "opt/identities.kl"
-    goto bb8;
-    bb8:
+    goto bb7;
+    bb7:
 #line 87 "opt/identities.kl"
     kl_t1 = kl_t0 == 0;
 #line 87 "opt/identities.kl"

@@ -90,7 +90,7 @@ int32_t kl__4zero__4bool( bool kl_c_1 )
 double kl__7floated__( void )
 {
     double kl_t0;
-    kl_t0 = 0.5 + 0.25;
+    kl_t0 = 0.75;
 #line 66 "opt/folding.kl"
     return kl_t0;
 }
@@ -109,19 +109,6 @@ int32_t kl__8negative__( void )
 int32_t kl__4main__( void )
 {
     int32_t kl_t0;
-    double kl_t1;
-    bool kl_t2;
-#line 66 "opt/folding.kl"
-    kl_t1 = 0.5 + 0.25;
-#line 109 "opt/folding.kl"
-    kl_t2 = kl_t1 != 0.75;
-#line 109 "opt/folding.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
-    bb1:
-    kl_t0 = 7;
-#line 111 "opt/folding.kl"
-    return kl_t0;
-    bb2:
 #line 119 "opt/folding.kl"
     kl_t0 = 0;
 #line 119 "opt/folding.kl"

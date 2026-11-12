@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/fold_constants.h"
+#include <cmath>
 
 namespace keel
 {
@@ -204,7 +205,109 @@ bool overflows( Token_kind op, u64 a, u64 b, Integer type )
     }
 }
 
+bool is_constant( const Operand& x )
+{
+    return x.kind == Operand_kind::Constant && x.constant.is_valid();
+}
+
+// A float constant's value in its own type.
+f64 float_value( const Operand& x, const Type_table& types, const Literal_pool& literals )
+{
+    return types.get( x.type ).width == 32 ? literals.narrow( x.constant ) : literals.floating( x.constant );
+}
+
+template <typename T>
+std::optional<Rvalue> floated_as( const Rvalue& value, T a, T b, const Type_table& types, Literal_pool& literals )
+{
+    // Of the unary operators only `-` takes a float.
+    if( value.kind == Rvalue_kind::Unary && value.op != Token_kind::Minus )
+    {
+        return std::nullopt;
+    }
+
+    T result;
+    switch( value.op )
+    {
+    case Token_kind::Equal_equal:
+        return value_of( a == b, value.type, types, literals );
+    case Token_kind::Bang_equal:
+        return value_of( a != b, value.type, types, literals );
+    case Token_kind::Less:
+        return value_of( a < b, value.type, types, literals );
+    case Token_kind::Greater:
+        return value_of( a > b, value.type, types, literals );
+    case Token_kind::Less_equal:
+        return value_of( a <= b, value.type, types, literals );
+    case Token_kind::Greater_equal:
+        return value_of( a >= b, value.type, types, literals );
+    case Token_kind::Plus:
+        result = a + b;
+        break;
+    case Token_kind::Minus:
+        result = value.kind == Rvalue_kind::Unary ? -a : a - b;
+        break;
+    case Token_kind::Star:
+        result = a * b;
+        break;
+    case Token_kind::Slash:
+        result = a / b;
+        break;
+    default:
+        return std::nullopt;
+    }
+
+    if( !std::isfinite( result ) )
+    {
+        return std::nullopt;
+    }
+
+    return use( constant( literals.add_float( static_cast<f64>( result ), static_cast<f32>( result ) ), value.type ) );
+}
+
 } // namespace
+
+std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Literal_pool& literals )
+{
+    const bool pair = value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows;
+    if( ( !pair && value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast ) || !is_constant( value.a ) ||
+        ( pair && !is_constant( value.b ) ) )
+    {
+        return std::nullopt;
+    }
+
+    // Float casts are not folded.
+    if( types.is_float( value.a.type ) )
+    {
+        if( value.kind == Rvalue_kind::Cast || value.kind == Rvalue_kind::Overflows )
+        {
+            return std::nullopt;
+        }
+
+        const f64 a = float_value( value.a, types, literals );
+        const f64 b = pair ? float_value( value.b, types, literals ) : 0.0;
+        return types.get( value.a.type ).width == 32
+                   ? floated_as<f32>( value, static_cast<f32>( a ), static_cast<f32>( b ), types, literals )
+                   : floated_as<f64>( value, a, b, types, literals );
+    }
+
+    const auto bits = [&]( const Operand& x ) -> std::optional<u64>
+    {
+        if( literals.kind( x.constant ) != Literal_kind::Integer )
+        {
+            return std::nullopt;
+        }
+
+        return literals.integer( x.constant );
+    };
+
+    const std::optional<u64> result = evaluate( value, bits( value.a ), pair ? bits( value.b ) : std::nullopt, types );
+    if( !result )
+    {
+        return std::nullopt;
+    }
+
+    return value_of( *result, value.type, types, literals );
+}
 
 std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::optional<u64> b, const Type_table& types )
 {
@@ -342,7 +445,29 @@ std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const
         }
     }
 
-    // Not a float's: `-0.0 + 0` is `0.0`.
+    // Exact for every float: not `x + 0.0` or `x - -0.0`, which make `-0.0` `0.0`, nor `x * 0.0`.
+    if( kind == Type_kind::Float )
+    {
+        const auto is = [&]( const Operand& x, f64 n ) {
+            return is_constant( x ) && float_value( x, types, literals ) == n &&
+                   !std::signbit( float_value( x, types, literals ) );
+        };
+
+        if( ( value.op == Token_kind::Star || value.op == Token_kind::Slash ) && is( value.b, 1.0 ) )
+        {
+            return use( value.a );
+        }
+        if( value.op == Token_kind::Star && is( value.a, 1.0 ) )
+        {
+            return use( value.b );
+        }
+        if( value.op == Token_kind::Minus && is( value.b, 0.0 ) )
+        {
+            return use( value.a );
+        }
+        return std::nullopt;
+    }
+
     if( kind != Type_kind::Int )
     {
         return std::nullopt;
@@ -569,6 +694,80 @@ TEST_CASE( "fold_constants_folds_a_local_compared_with_itself", "[opt][fold]" )
     const std::optional<Rvalue> below = identity( func, binary( Token_kind::Less, x, x, boolean ), types, literals );
     REQUIRE( below );
     REQUIRE( literals.integer( below->a.constant ) == 0 );
+}
+
+TEST_CASE( "fold_constants_folds_an_integer_pair", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    i32 = types.integer( 32, true );
+
+    const std::optional<Rvalue> sum = folded(
+        binary( Token_kind::Plus, constant( literals.add_integer( 1 ), i32 ), constant( literals.add_integer( 2 ), i32 ), i32 ),
+        types,
+        literals
+    );
+    REQUIRE( sum );
+    REQUIRE( literals.integer( sum->a.constant ) == 3 );
+}
+
+// `16777216 + 1` is `16777217` in a `double` but rounds back in a `float`.
+TEST_CASE( "fold_constants_folds_a_float_in_its_own_type", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    f32_type = types.floating( 32 );
+    const Type_id    f64_type = types.floating( 64 );
+    const auto       f        = [&]( f64 v, Type_id type ) { return constant( literals.add_float( v, f32( v ) ), type ); };
+
+    const std::optional<Rvalue> narrow =
+        folded( binary( Token_kind::Plus, f( 16777216.0, f32_type ), f( 1.0, f32_type ), f32_type ), types, literals );
+    REQUIRE( narrow );
+    REQUIRE( literals.narrow( narrow->a.constant ) == 16777216.0f );
+
+    const std::optional<Rvalue> wide =
+        folded( binary( Token_kind::Plus, f( 16777216.0, f64_type ), f( 1.0, f64_type ), f64_type ), types, literals );
+    REQUIRE( wide );
+    REQUIRE( literals.floating( wide->a.constant ) == 16777217.0 );
+
+    const std::optional<Rvalue> less = folded(
+        binary( Token_kind::Less, f( 1.0, f64_type ), f( 3.0, f64_type ), types.builtin( Type_kind::Bool ) ), types, literals
+    );
+    REQUIRE( less );
+    REQUIRE( literals.integer( less->a.constant ) == 1 );
+}
+
+TEST_CASE( "fold_constants_keeps_a_nan_or_infinite_result", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    f64_type = types.floating( 64 );
+    const auto       f        = [&]( f64 v ) { return constant( literals.add_float( v, f32( v ) ), f64_type ); };
+
+    REQUIRE( !folded( binary( Token_kind::Slash, f( 0.0 ), f( 0.0 ), f64_type ), types, literals ) );
+    REQUIRE( !folded( binary( Token_kind::Slash, f( 1.0 ), f( 0.0 ), f64_type ), types, literals ) );
+    REQUIRE( !folded( binary( Token_kind::Star, f( 1e300 ), f( 1e300 ), f64_type ), types, literals ) );
+}
+
+// `x * 1.0`, `x / 1.0` and `x - 0.0` reduce; `x + 0.0`, `x * 0.0` and `x - -0.0` do not.
+TEST_CASE( "fold_constants_reduces_only_exact_float_identities", "[opt][fold]" )
+{
+    const Type_table types;
+    const Function   func;
+    Literal_pool     literals;
+    const Type_id    f64_type = types.floating( 64 );
+    const Operand    x        = copy( Place { .local = Local_id { 1 } }, f64_type );
+    const auto       f        = [&]( f64 v ) { return constant( literals.add_float( v, f32( v ) ), f64_type ); };
+    const auto       reduces  = [&]( Token_kind op, Operand a, Operand b )
+    { return identity( func, binary( op, a, b, f64_type ), types, literals ).has_value(); };
+
+    REQUIRE( reduces( Token_kind::Star, x, f( 1.0 ) ) );
+    REQUIRE( reduces( Token_kind::Star, f( 1.0 ), x ) );
+    REQUIRE( reduces( Token_kind::Slash, x, f( 1.0 ) ) );
+    REQUIRE( reduces( Token_kind::Minus, x, f( 0.0 ) ) );
+    REQUIRE( !reduces( Token_kind::Plus, x, f( 0.0 ) ) );
+    REQUIRE( !reduces( Token_kind::Star, x, f( 0.0 ) ) );
+    REQUIRE( !reduces( Token_kind::Minus, x, f( -0.0 ) ) );
 }
 
 // A NaN is unequal to itself.

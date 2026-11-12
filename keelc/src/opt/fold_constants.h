@@ -13,6 +13,10 @@ namespace keel
 // does not fold; wrapped as §12 says, and a `bool` is 0 or 1.
 std::optional<u64> evaluate( const Rvalue& value, std::optional<u64> a, std::optional<u64> b, const Type_table& types );
 
+// The constant `value` computes when every operand it reads is one; a float as exact IEEE in its own
+// type, except a NaN or an infinity, which stays for run time. nullopt where it does not fold.
+std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Literal_pool& literals );
+
 // `bits` of `from` as a `to`: a signed source sign-extends.
 std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table& types );
 

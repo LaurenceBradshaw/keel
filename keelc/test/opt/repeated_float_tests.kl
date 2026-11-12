@@ -1,4 +1,4 @@
-// The same float test twice: jump threading compares the two constants as floats.
+// The same float test twice: on a known argument both tests fold, so `main` returns 0.
 
 i32 classify( f64 x )
 {

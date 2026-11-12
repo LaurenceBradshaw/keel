@@ -1,6 +1,6 @@
 // M11's constant folding, in a release build: an operation whose operands propagation made
 // constants becomes its value, wrapped at its type's width, and propagation then spreads that value.
-// A zero divisor and a float pair stay as they are. Each check returns its own code.
+// A zero divisor stays as it is; a float pair folds in its own type. Each check returns its own code.
 
 // `b` is `7` in both arms, so each return is a constant.
 i32 chained( i32 n )
@@ -59,7 +59,7 @@ i32 zero( bool c )
     return 1;
 }
 
-// A float pair is left to the C compiler.
+// A float pair folds as exact IEEE.
 f64 floated()
 {
     f64 a = 0.5;
