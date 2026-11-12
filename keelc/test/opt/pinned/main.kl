@@ -1,0 +1,49 @@
+// M16's -O1: a named local keeps every store, so a debugger finds its current value, while a
+// temporary is optimised as at -O2. Each check returns its own code.
+
+i32 count;
+
+// `x`'s first value is overwritten unread, and stays; the unread sum is a temporary, and goes.
+i32 overwritten( i32 a )
+{
+    i32 x = a + 1;
+    x     = a * 2;
+    _     = a + 3;
+    return x;
+}
+
+// `p` keeps its borrow of `x`, rather than reading `x` itself.
+i32 borrowed( i32 a )
+{
+    i32  x = a;
+    i32* p = &x;
+    return *p;
+}
+
+// A global is named too: the `1` every path overwrites stays.
+i32 counted( i32 a )
+{
+    count = 1;
+    count = a;
+    return count;
+}
+
+i32 main()
+{
+    if( overwritten( 4 ) != 8 )
+    {
+        return 1;
+    }
+
+    if( borrowed( 5 ) != 5 )
+    {
+        return 2;
+    }
+
+    if( counted( 6 ) != 6 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

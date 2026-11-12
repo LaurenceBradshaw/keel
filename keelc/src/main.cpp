@@ -89,7 +89,7 @@ int main( int argc, char** argv )
         ( "package",         "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "W",               "Warnings: -W<name>, -Wno-<name>, -Werror, -Werror=<name>", cxxopts::value<std::vector<std::string>>() )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
-        ( "O",               "Optimisation level, -O0 to -O3: -O0 is the program as lowered; -O2 by default", cxxopts::value<keel::u32>() )
+        ( "O",               "Optimisation level, -O0 to -O3: -O0 is the program as lowered; -O2 by default, -O1 under --debug", cxxopts::value<keel::u32>() )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
         ( "keep-unreached",  "Without --debug, keep the functions main never reaches" )
         ( "q,quiet",         "Print only diagnostics: no summary line" )
@@ -483,14 +483,14 @@ int main( int argc, char** argv )
 
     const bool      debug           = args.count( "debug" ) > 0;
     const bool      overflow_checks = debug || args.count( "overflow-checks" ) > 0;
-    const keel::u32 level           = args.count( "O" ) ? args["O"].as<keel::u32>() : debug ? 0 : 2;
+    const keel::u32 level           = args.count( "O" ) ? args["O"].as<keel::u32>() : debug ? 1 : 2;
     if( level > 3 )
     {
         fmt::print( stderr, "keelc: there is no -O{}; the levels are -O0 to -O3\n", level );
         return 2;
     }
-    // Until named locals are pinned, -O1 would lose them; -O3's passes are not written yet.
-    if( level == 1 || level == 3 )
+    // -O3's passes are not written yet.
+    if( level == 3 )
     {
         fmt::print( stderr, "keelc: -O{} is not implemented yet\n", level );
         return 2;

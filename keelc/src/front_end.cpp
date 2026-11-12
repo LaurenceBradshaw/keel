@@ -185,6 +185,9 @@ Front_end run_front_end(
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
     std::vector<bool> finished( front.functions.size(), false ); // each function once optimised, as its droppers inline it
 
+    // At -O1 a named local keeps its stores, so a debugger finds its current value.
+    const bool pin_named = build.level == 1;
+
     // A call made direct, before or after inlining, finds its callee optimised already.
     const std::vector<std::vector<u32>> dispatched =
         build.level >= 2 ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
@@ -267,7 +270,7 @@ Front_end run_front_end(
                     // First, so the local it frees is split and propagated this round.
                     if( build.forwarding )
                     {
-                        forward_borrows( function, front.types.table() );
+                        forward_borrows( function, front.types.table(), pin_named );
                         verified( function, "forward_borrows" );
                     }
                     if( build.level >= 2 && build.splitting )
@@ -277,7 +280,7 @@ Front_end run_front_end(
                         // Again, for a borrow of a field that splitting made a whole local.
                         if( build.forwarding )
                         {
-                            forward_borrows( function, front.types.table() );
+                            forward_borrows( function, front.types.table(), pin_named );
                             verified( function, "forward_borrows" );
                         }
                         shadow_tags( function );
@@ -295,7 +298,7 @@ Front_end run_front_end(
                         verified( function, "propagate_constants" );
                     }
                     // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
-                    if( forward_globals( function, front.types.table(), literals ) )
+                    if( forward_globals( function, front.types.table(), literals, pin_named ) )
                     {
                         verified( function, "forward_globals" );
                         propagate_constants( function, front.types.table(), literals );
@@ -304,7 +307,7 @@ Front_end run_front_end(
                     // Again, as a join SCCP left fewer paths into may now agree.
                     propagate_values( function, front.types.table(), literals );
                     verified( function, "propagate_values" );
-                    remove_dead_stores( function );
+                    remove_dead_stores( function, pin_named );
                     verified( function, "remove_dead_stores" );
                     // Dead store removal can empty a block, so threading goes first.
                     simplify( function, literals );
@@ -312,7 +315,7 @@ Front_end run_front_end(
                     merge_blocks( function );
                     verified( function, "merge_blocks" );
                     // So no marker of a local a pass removed is left for the next round.
-                    remove_unused_locals( function );
+                    remove_unused_locals( function, pin_named );
                     verified( function, "remove_unused_locals" );
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
@@ -327,7 +330,7 @@ Front_end run_front_end(
                     fold_identities( function, front.types.table(), literals );
                     verified( function, "fold_identities" );
                 }
-                remove_unused_locals( function );
+                remove_unused_locals( function, pin_named );
                 verified( function, "remove_unused_locals" );
             }
 

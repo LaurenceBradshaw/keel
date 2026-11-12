@@ -9,7 +9,7 @@ namespace keel
 {
 namespace
 {
-bool remove_once( Function& func )
+bool remove_once( Function& func, bool pin_named )
 {
     const Liveness    live      = live_locals( func );
     const Local_set   addressed = addressed_locals( func );
@@ -25,9 +25,9 @@ bool remove_once( Function& func )
         // allocation, which does more than write.
         if( statement.kind != Statement_kind::Assign || statement.place.is_global() ||
             has_deref_projection( func, statement.place ) || addressed[statement.place.local.v] ||
-            value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call ||
-            value.kind == Rvalue_kind::Allocate || value.kind == Rvalue_kind::Release ||
-            live.after[s][statement.place.local.v] )
+            ( pin_named && func.locals[statement.place.local].name.is_valid() ) || value.kind == Rvalue_kind::Call ||
+            value.kind == Rvalue_kind::Indirect_call || value.kind == Rvalue_kind::Allocate ||
+            value.kind == Rvalue_kind::Release || live.after[s][statement.place.local.v] )
         {
             continue;
         }
@@ -47,9 +47,9 @@ bool remove_once( Function& func )
 
 // A write that only fed a dead one is dead next round.
 // Liveness is recomputed per round, quadratic at worst; a backward walk deleting in place if it shows.
-void remove_dead_stores( Function& func )
+void remove_dead_stores( Function& func, bool pin_named )
 {
-    while( remove_once( func ) )
+    while( remove_once( func, pin_named ) )
     {
     }
 }

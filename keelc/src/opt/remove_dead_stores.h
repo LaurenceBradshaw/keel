@@ -7,6 +7,6 @@
 namespace keel
 {
 // After elaborate_drops, so every drop's read is explicit: a write to a local no path reads again
-// goes; release only.
-void remove_dead_stores( Function& func );
+// goes, unless `pin_named` keeps a named local's.
+void remove_dead_stores( Function& func, bool pin_named );
 } // namespace keel

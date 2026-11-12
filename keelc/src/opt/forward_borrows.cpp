@@ -12,7 +12,7 @@ namespace
 {
 // The local each pointer can only point at, where the pointer never escapes. A pointer assigned
 // once, a copy of another, points where that one does.
-std::vector<Local_id> forwarded_to( const Function& func, const Type_table& table )
+std::vector<Local_id> forwarded_to( const Function& func, const Type_table& table, bool pin_named )
 {
     std::vector<Local_id>         to( func.locals.size() );
     std::vector<Local_id>         copy_of( func.locals.size() );
@@ -74,7 +74,7 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
 
     for( u32 p = 0; p < uses.size(); ++p )
     {
-        refused[p] = refused[p] || uses[p] > 0;
+        refused[p] = refused[p] || uses[p] > 0 || ( pin_named && func.locals[Local_id { p }].name.is_valid() );
     }
 
     refused[k_return_slot.v] = true;
@@ -122,9 +122,9 @@ std::vector<Local_id> forwarded_to( const Function& func, const Type_table& tabl
 }
 } // namespace
 
-void forward_borrows( Function& func, const Type_table& table )
+void forward_borrows( Function& func, const Type_table& table, bool pin_named )
 {
-    const std::vector<Local_id> to = forwarded_to( func, table );
+    const std::vector<Local_id> to = forwarded_to( func, table, pin_named );
 
     if( std::ranges::none_of( to, []( Local_id k ) { return k.is_valid(); } ) )
     {

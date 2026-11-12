@@ -374,7 +374,7 @@ Built build_clock( const Temp_dir& dir, bool debug )
     Front_end front = run_front_end(
         input,
         debug ? Stage::Elaborated : Stage::Reported,
-        { .asserts = debug, .overflow_checks = debug, .level = debug ? 0u : 2u, .reuse_loaded = debug, .keep_checked = debug },
+        { .asserts = debug, .overflow_checks = debug, .level = debug ? 1u : 2u, .reuse_loaded = debug, .keep_checked = debug },
         sm,
         interner,
         literals,

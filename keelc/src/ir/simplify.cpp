@@ -272,7 +272,7 @@ void every_place( Func& func, Fn fn )
 }
 } // namespace
 
-void remove_unused_locals( Function& func )
+void remove_unused_locals( Function& func, bool pin_named )
 {
     const u32         count = narrow_cast<u32>( func.locals.size() );
     std::vector<bool> used( count, false );
@@ -285,6 +285,10 @@ void remove_unused_locals( Function& func )
     if( func.constructed.is_valid() )
     {
         used[func.constructed.v] = true;
+    }
+    for( u32 l = 0; pin_named && l < count; ++l )
+    {
+        used[l] = used[l] || func.locals[Local_id { l }].name.is_valid();
     }
 
     const auto mark = [&]( const Place& place )

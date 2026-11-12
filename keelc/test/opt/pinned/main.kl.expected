@@ -1,0 +1,122 @@
+// opt/pinned/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__count__G;
+
+int32_t kl__11overwritten__3i32( int32_t );
+int32_t kl__8borrowed__3i32( int32_t );
+int32_t kl__7counted__3i32( int32_t );
+int32_t kl__4main__( void );
+
+#line 7 "opt/pinned/main.kl"
+int32_t kl__11overwritten__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_x_2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    ( void ) kl_x_2;
+#line 9 "opt/pinned/main.kl"
+    kl_t3 = kl_a_1 + 1;
+#line 9 "opt/pinned/main.kl"
+    kl_x_2 = kl_t3;
+    kl_t4 = kl_a_1 * 2;
+#line 10 "opt/pinned/main.kl"
+    kl_x_2 = kl_t4;
+#line 12 "opt/pinned/main.kl"
+    kl_t0 = kl_t4;
+#line 12 "opt/pinned/main.kl"
+    return kl_t0;
+}
+
+#line 16 "opt/pinned/main.kl"
+int32_t kl__8borrowed__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_x_2;
+    int32_t* kl_p_3;
+    int32_t* kl_t4;
+    ( void ) kl_p_3;
+#line 18 "opt/pinned/main.kl"
+    kl_x_2 = kl_a_1;
+    kl_t4 = &kl_x_2;
+#line 19 "opt/pinned/main.kl"
+    kl_p_3 = kl_t4;
+    kl_t0 = ( *kl_t4 );
+#line 20 "opt/pinned/main.kl"
+    return kl_t0;
+}
+
+#line 24 "opt/pinned/main.kl"
+int32_t kl__7counted__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+#line 26 "opt/pinned/main.kl"
+    kl__count__G = 1;
+    kl__count__G = kl_a_1;
+    kl_t0 = kl_a_1;
+#line 28 "opt/pinned/main.kl"
+    return kl_t0;
+}
+
+#line 31 "opt/pinned/main.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 33 "opt/pinned/main.kl"
+    kl_t1 = kl__11overwritten__3i32( 4 );
+#line 33 "opt/pinned/main.kl"
+    kl_t2 = kl_t1 != 8;
+#line 33 "opt/pinned/main.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 35 "opt/pinned/main.kl"
+    return kl_t0;
+    bb2:
+#line 38 "opt/pinned/main.kl"
+    kl_t3 = kl__8borrowed__3i32( 5 );
+#line 38 "opt/pinned/main.kl"
+    kl_t4 = kl_t3 != 5;
+#line 38 "opt/pinned/main.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 40 "opt/pinned/main.kl"
+    return kl_t0;
+    bb4:
+#line 43 "opt/pinned/main.kl"
+    kl_t5 = kl__7counted__3i32( 6 );
+#line 43 "opt/pinned/main.kl"
+    kl_t6 = kl_t5 != 6;
+#line 43 "opt/pinned/main.kl"
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+#line 45 "opt/pinned/main.kl"
+    return kl_t0;
+    bb6:
+#line 48 "opt/pinned/main.kl"
+    kl_t0 = 0;
+#line 48 "opt/pinned/main.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 31 "opt/pinned/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 31 "opt/pinned/main.kl"
+    return kl_t0;
+#line 31 "opt/pinned/main.kl"
+}
+

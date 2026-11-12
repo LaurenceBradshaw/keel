@@ -651,7 +651,7 @@ bool remove_overwritten( Function& func, const Type_table& types )
 } // namespace
 
 // Each round's sweep can leave a sum unchanged for the next round's walk to undo.
-bool forward_globals( Function& func, const Type_table& types, Literal_pool& literals )
+bool forward_globals( Function& func, const Type_table& types, Literal_pool& literals, bool pin_named )
 {
     bool any     = false;
     bool changed = true;
@@ -659,7 +659,7 @@ bool forward_globals( Function& func, const Type_table& types, Literal_pool& lit
     {
         const Local_set addressed = addressed_locals( func );
         changed                   = forward_round( func, types, literals, addressed );
-        changed |= remove_overwritten( func, types );
+        changed |= !pin_named && remove_overwritten( func, types );
         any |= changed;
     }
 
@@ -804,7 +804,7 @@ TEST_CASE( "forward_globals_learns_nothing_on_a_true_arm", "[opt][globals]" )
         Block { .first_statement = 3, .statement_count = 2, .terminator = done },
     };
 
-    REQUIRE( forward_globals( func, types, literals ) );
+    REQUIRE( forward_globals( func, types, literals, false ) );
 
     const auto checks = [&]( u32 block )
     {
