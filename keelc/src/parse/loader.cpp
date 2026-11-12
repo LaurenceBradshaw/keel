@@ -438,6 +438,7 @@ Program load_program(
         }
 
         state->object = object->path;
+        state->level  = object->manifest.debug ? std::optional( object->manifest.level ) : std::nullopt;
         decls.insert( decls.end(), state->declarations.begin(), state->declarations.end() );
         prog.states.push_back( std::move( *state ) );
     }

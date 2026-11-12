@@ -1,0 +1,9 @@
+// Built at -O0, so a program at -O1 optimises it again from its kept KIR.
+i32 counted = 0;
+
+i32 count( i32 by )
+{
+    i32 next = counted + by;
+    counted  = next;
+    return next;
+}

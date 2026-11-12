@@ -531,11 +531,7 @@ int main( int argc, char** argv )
         input,
         through,
         keel::Build {
-                .asserts         = debug,
-                .overflow_checks = overflow_checks,
-                .level           = level,
-                .reuse_loaded    = debug,
-                .keep_checked    = as_module && debug
+                .asserts = debug, .overflow_checks = overflow_checks, .level = level, .keep_checked = as_module && debug
         },
         sm,
         interner,
@@ -752,7 +748,7 @@ int main( int argc, char** argv )
     {
         for( const keel::File_id part : parts.order() )
         {
-            if( debug && prog.modules.is_loaded( part ) )
+            if( front.reuses( part ) )
             {
                 continue;
             }
@@ -773,9 +769,9 @@ int main( int argc, char** argv )
                 return 1;
             }
         }
-        if( debug )
+        for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
         {
-            for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
+            if( front.reuses( state->file ) )
             {
                 objects.push_back( state->object );
             }
@@ -812,8 +808,8 @@ int main( int argc, char** argv )
 
     for( const keel::File_id part : parts.order() )
     {
-        // A debug object holds its part compiled; a release one is optimised with the program.
-        if( debug && prog.modules.is_loaded( part ) )
+        // A debug object at this level holds its part compiled; any other is optimised with the program.
+        if( front.reuses( part ) )
         {
             continue;
         }
@@ -864,9 +860,9 @@ int main( int argc, char** argv )
     const std::filesystem::path generated_path = sources.back();
 
     // After the parts, dependents first, so one pass of the linker resolves each into the next.
-    if( debug )
+    for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
     {
-        for( auto state = prog.states.rbegin(); state != prog.states.rend(); ++state )
+        if( front.reuses( state->file ) )
         {
             objects.push_back( state->object );
         }

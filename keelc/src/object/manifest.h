@@ -18,9 +18,10 @@ namespace keel
 
 struct Manifest
 {
-    u32         format = 1;
+    u32         format = 2;
     std::string build {}; // the keelc's build_id()
     bool        debug    = false;
+    u32         level    = 0; // -O<n> its native part was built at; debug only
     bool        overflow = false;
     bool        llvm     = false; // the native part's backend
     Platform    platform = k_host;

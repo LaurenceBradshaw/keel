@@ -104,6 +104,20 @@ Front_end run_front_end(
     }
     const std::size_t given = loaded.size();
 
+    for( const Loaded_state& state : states )
+    {
+        if( state.level == build.level )
+        {
+            front.reused.push_back( state.file );
+        }
+    }
+    // A module's object holds only its own part, so the loaded ones are never optimised for it.
+    std::vector<bool> kept( given );
+    for( std::size_t f = 0; f < given; ++f )
+    {
+        kept[f] = as_module || front.reuses( front.provided[f] );
+    }
+
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions.
     front.functions =
@@ -196,9 +210,8 @@ Front_end run_front_end(
     {
         for( const u32 f : group )
         {
-            // A debug build links the loaded ones from their objects; a release build optimises
-            // them with the rest.
-            if( f < given && build.reuse_loaded )
+            // A reused part links from its object; any other is optimised with the rest.
+            if( f < given && kept[f] )
             {
                 continue;
             }
@@ -245,7 +258,7 @@ Front_end run_front_end(
 
         for( const u32 f : group )
         {
-            if( f < given && build.reuse_loaded )
+            if( f < given && kept[f] )
             {
                 continue;
             }

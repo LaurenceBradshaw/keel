@@ -1,0 +1,11 @@
+// count's object is at -O0 and twice's at the program's -O1; both link.
+import count;
+import twice;
+
+i32 main()
+{
+    if( twice( 3 ) != 6 ) { return 1; }
+    if( count( 1 ) != 7 ) { return 2; }
+    if( counted != 7 ) { return 3; }
+    return 0;
+}

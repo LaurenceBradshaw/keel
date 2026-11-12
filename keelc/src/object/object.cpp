@@ -95,6 +95,7 @@ int write_object(
     const Manifest manifest {
         .build       = std::string( build_id() ),
         .debug       = options.debug,
+        .level       = options.level,
         .overflow    = options.overflow,
         .llvm        = options.llvm,
         .module      = module_name( program.modules, sm, interner, input ),
@@ -374,7 +375,7 @@ Built build_clock( const Temp_dir& dir, bool debug )
     Front_end front = run_front_end(
         input,
         debug ? Stage::Elaborated : Stage::Reported,
-        { .asserts = debug, .overflow_checks = debug, .level = debug ? 1u : 2u, .reuse_loaded = debug, .keep_checked = debug },
+        { .asserts = debug, .overflow_checks = debug, .level = debug ? 1u : 2u, .keep_checked = debug },
         sm,
         interner,
         literals,
@@ -475,6 +476,46 @@ TEST_CASE( "write_object_in_release_writes_no_native_part", "[object]" )
 
     REQUIRE( built.members.size() == 2 );
     REQUIRE( !read_manifest( built.members[0].data )->debug );
+}
+
+TEST_CASE( "a_debug_object_links_its_code_only_at_its_own_level", "[object]" )
+{
+    const Temp_dir dir;
+    const Built    built = build_clock( dir, true );
+    INFO( built.rendered );
+    REQUIRE( built.rendered.empty() );
+    REQUIRE( read_manifest( built.members[0].data )->level == 1 );
+
+    const std::filesystem::path main =
+        dir.write( "main.kl", "import kl::clock;\n\ni32 main()\n{\n    return kl::advance( 1 ) - 2;\n}\n" );
+    std::string                 error;
+    const std::optional<Object> clock = read_object( dir.path / "clock.klo", error );
+    REQUIRE( clock );
+
+    for( const u32 level : { 0u, 1u } )
+    {
+        Source_manager  sm;
+        Interner        interner;
+        Literal_pool    literals;
+        Diagnostics     diags;
+        const File_id   input = *sm.load_file( main );
+        const Front_end front = run_front_end(
+            input,
+            Stage::Elaborated,
+            { .asserts = true, .overflow_checks = true, .level = level },
+            sm,
+            interner,
+            literals,
+            diags,
+            {},
+            false,
+            std::span( &*clock, 1 )
+        );
+        INFO( level );
+        REQUIRE( !diags.has_errors() );
+        REQUIRE( !front.provided.empty() );
+        REQUIRE( front.reuses( front.provided[0] ) == ( level == 1 ) );
+    }
 }
 
 namespace

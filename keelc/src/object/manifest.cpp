@@ -36,7 +36,7 @@ std::pair<std::string_view, std::string_view> split( std::string_view line )
 std::string write_manifest( const Manifest& manifest )
 {
     std::string out = fmt::format( "keel object {}\nbuild {}\n", manifest.format, manifest.build );
-    out += manifest.debug ? "mode debug\n" : "mode release\n";
+    out += manifest.debug ? fmt::format( "mode debug\nlevel {}\n", manifest.level ) : "mode release\n";
     out += manifest.overflow ? "overflow\n" : "";
     out += manifest.llvm ? "backend llvm\n" : "backend c\n";
     out += fmt::format( "target {}\n", platform_name( manifest.platform ) );
@@ -52,8 +52,8 @@ std::string write_manifest( const Manifest& manifest )
 std::optional<Manifest> read_manifest( std::string_view text )
 {
     Manifest manifest;
-    bool has_format = false, has_build = false, has_mode = false, has_backend = false, has_target = false, has_module = false,
-         has_source = false;
+    bool has_format = false, has_build = false, has_mode = false, has_level = false, has_backend = false, has_target = false,
+         has_module = false, has_source = false;
 
     while( !text.empty() )
     {
@@ -86,6 +86,11 @@ std::optional<Manifest> read_manifest( std::string_view text )
         {
             manifest.debug = rest == "debug";
             has_mode       = true;
+        }
+        else if( key == "level" && rest.size() == 1 && rest[0] >= '0' && rest[0] <= '3' )
+        {
+            manifest.level = u32( rest[0] - '0' );
+            has_level      = true;
         }
         else if( key == "overflow" && rest.empty() )
         {
@@ -134,7 +139,7 @@ std::optional<Manifest> read_manifest( std::string_view text )
         }
     }
 
-    if( !has_build || !has_mode || !has_backend || !has_target || !has_module || !has_source )
+    if( !has_build || !has_mode || has_level != manifest.debug || !has_backend || !has_target || !has_module || !has_source )
     {
         return std::nullopt;
     }
@@ -154,6 +159,7 @@ TEST_CASE( "manifest_round_trips", "[object][manifest]" )
     const Manifest written {
         .build       = "abc123",
         .debug       = true,
+        .level       = 1,
         .overflow    = true,
         .llvm        = true,
         .platform    = Platform::Windows,
@@ -165,16 +171,17 @@ TEST_CASE( "manifest_round_trips", "[object][manifest]" )
 
     const std::string text = write_manifest( written );
     REQUIRE(
-        text == "keel object 1\nbuild abc123\nmode debug\noverflow\nbackend llvm\ntarget x86_64-windows\nmodule "
+        text == "keel object 2\nbuild abc123\nmode debug\nlevel 1\noverflow\nbackend llvm\ntarget x86_64-windows\nmodule "
                 "kl::list\nsource /src/my kl/list.kl "
                 "0123456789abcdef\ndepends kl::optional 000000000000002a\n"
     );
 
     const std::optional<Manifest> read = read_manifest( text );
     REQUIRE( read.has_value() );
-    REQUIRE( read->format == 1 );
+    REQUIRE( read->format == 2 );
     REQUIRE( read->build == written.build );
     REQUIRE( read->debug );
+    REQUIRE( read->level == 1 );
     REQUIRE( read->overflow );
     REQUIRE( read->llvm );
     REQUIRE( read->platform == Platform::Windows );
@@ -193,10 +200,14 @@ TEST_CASE( "manifest_refuses_what_it_did_not_write", "[object][manifest]" )
     REQUIRE( !read_manifest( "keel object\n" ).has_value() );
     REQUIRE( !read_manifest( good.substr( 0, good.size() - 1 ) ).has_value() ); // no final newline
     REQUIRE( !read_manifest( good + "colour blue\n" ).has_value() );
-    const std::string_view head = "keel object 1\nbuild b\nmode debug\n";
+    const std::string_view head = "keel object 2\nbuild b\nmode debug\nlevel 0\n";
     REQUIRE( read_manifest( std::string( head ) + "backend c\ntarget x86_64-linux\nmodule m\nsource m.kl 0\n" ).has_value() );
-    REQUIRE( !read_manifest( "keel object 1\nbuild b\nmode fast\nbackend c\ntarget x86_64-linux\nmodule m\nsource m.kl 0\n" )
+    REQUIRE( !read_manifest( "keel object 2\nbuild b\nmode fast\nbackend c\ntarget x86_64-linux\nmodule m\nsource m.kl 0\n" )
                   .has_value() );
+    const std::string_view tail = "backend c\ntarget x86_64-linux\nmodule m\nsource m.kl 0\n";
+    REQUIRE( !read_manifest( "keel object 2\nbuild b\nmode debug\n" + std::string( tail ) ).has_value() ); // no level
+    REQUIRE( !read_manifest( "keel object 2\nbuild b\nmode release\nlevel 2\n" + std::string( tail ) ).has_value() );
+    REQUIRE( !read_manifest( "keel object 2\nbuild b\nmode debug\nlevel 4\n" + std::string( tail ) ).has_value() );
     REQUIRE( !read_manifest( std::string( head ) + "target x86_64-linux\nmodule m\nsource m.kl 0\n" ).has_value()
     );                                                                                                     // no backend
     REQUIRE( !read_manifest( std::string( head ) + "backend c\nmodule m\nsource m.kl 0\n" ).has_value() ); // no target

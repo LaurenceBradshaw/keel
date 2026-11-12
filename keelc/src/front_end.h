@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <algorithm>
 #include <chrono>
 #include <span>
 #include <string_view>
@@ -35,9 +36,6 @@ struct Build
     bool asserts         = false;
     bool overflow_checks = false;
     u32  level           = 0; // -O<n>: 0 is the program as lowered; which passes run at each is in §3.3.
-
-    // The loaded parts link from their objects' code, so are not lowered again.
-    bool reuse_loaded = false;
 
     // How an `-O2` build inlines; none leaves every call a call.
     std::optional<Inline_weights> inlining = Inline_weights {};
@@ -85,7 +83,13 @@ struct Front_end
     Types                 types;
     std::vector<Function> functions; // every function lowered, the prelude's included
     std::vector<File_id>  provided;  // the module each of the first functions was loaded from
+    std::vector<File_id>  reused;    // the loaded parts linked from their objects' code: debug, at this level
     std::vector<Function> checked;   // under keep_checked: the same, before elaboration
+
+    bool reuses( File_id part ) const
+    {
+        return std::find( reused.begin(), reused.end(), part ) != reused.end();
+    }
 };
 
 // The driver and the test fixture both run this, so the tests run the compiler's own pipeline.

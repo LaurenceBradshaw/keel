@@ -1,0 +1,8 @@
+// Built at -O1 against count.klo, so a program at -O1 links its code.
+import count;
+
+i32 twice( i32 by )
+{
+    count( by );
+    return count( by );
+}
