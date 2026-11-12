@@ -18,6 +18,7 @@
 #include "opt/fold_constants.h"
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
+#include "opt/forward_reads.h"
 #include "opt/inline_calls.h"
 #include "opt/loop_self_calls.h"
 #include "opt/merge_blocks.h"
@@ -366,6 +367,9 @@ Front_end run_front_end(
                 {
                     rotate_loops( function, *build.loops );
                     verified( function, "rotate_loops" );
+                    // After rotation, so the guard's read and the latch's both reach the body.
+                    forward_reads( function );
+                    verified( function, "forward_reads" );
                     optimise_round( function );
                 }
             }

@@ -1,0 +1,37 @@
+// M16's -O3: a read through a pointer that every path already copied to a local reads the local. The
+// list's size, read by the rotated loop's guard, reaches the body, so its bounds check folds against
+// the loop test and the latch reads no size. Each check returns its own code.
+
+import kl::list;
+
+// One read of `count_`, in the guard; no bounds check.
+i64 sum( const ref kl::list<i64> xs, i64 k )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < xs.size(); i += 1 )
+    {
+        total += xs[ i ] * k * 4;
+    }
+    return total;
+}
+
+i32 main()
+{
+    kl::list<i64> xs = kl::list<i64>();
+    xs.push( 1 );
+    xs.push( 2 );
+    xs.push( 3 );
+
+    if( sum( xs, 3 ) != 72 )
+    {
+        return 1;
+    }
+
+    kl::list<i64> none = kl::list<i64>();
+    if( sum( none, 3 ) != 0 )
+    {
+        return 2;
+    }
+
+    return 0;
+}
