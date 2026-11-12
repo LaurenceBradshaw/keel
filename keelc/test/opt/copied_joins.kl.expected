@@ -54,7 +54,7 @@ struct kl_7prelude_result__I3i32_3i32E kl__4make__3i32( int32_t kl_x_1 )
 struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t kl_s_1 )
 {
     struct kl_7prelude_result__I3i32_3i32E kl_t0;
-    int32_t kl_t2;
+    int32_t kl_x_2;
     bool kl_t3;
     bool kl_t4;
     int32_t kl_t5;
@@ -79,7 +79,7 @@ struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t kl_s_1 )
     return kl_t0;
     bb3:
 #line 10 "opt/copied_joins.kl"
-    kl_t6 = kl_t2 * 2;
+    kl_t6 = kl_x_2 * 2;
 #line 15 "opt/copied_joins.kl"
     kl_t0.kl_2ok_value = kl_t5 + kl_t6;
 #line 15 "opt/copied_joins.kl"
@@ -90,9 +90,9 @@ struct kl_7prelude_result__I3i32_3i32E kl__3sum__3i32( int32_t kl_s_1 )
 #line 10 "opt/copied_joins.kl"
     kl_t5 = kl_s_1 * 2;
 #line 15 "opt/copied_joins.kl"
-    kl_t2 = kl_s_1 + 1;
+    kl_x_2 = kl_s_1 + 1;
 #line 6 "opt/copied_joins.kl"
-    kl_t3 = kl_t2 == 3;
+    kl_t3 = kl_x_2 == 3;
 #line 6 "opt/copied_joins.kl"
     if ( kl_t3 ) goto bb2; else goto bb3;
 #line 16 "opt/copied_joins.kl"

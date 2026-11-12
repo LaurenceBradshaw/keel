@@ -70,23 +70,23 @@ int64_t kl__5seven__S7Counter( void )
 void kl__3all__S7Counter_R7Counter( struct kl__Counter* kl_this_1, struct kl__Counter* kl_other_2 )
 {
     struct kl__Counter* kl_this_3;
-    int64_t kl_t4;
-    struct kl__Counter* kl_this_5;
+    struct kl__Counter* kl_this_4;
+    int64_t kl_t5;
     int64_t kl_t6;
     int64_t kl_t7;
     int64_t kl_t8;
 #line 15 "opt/receivers.kl"
     kl_this_3 = kl_this_1;
 #line 10 "opt/receivers.kl"
-    kl_t4 = ( *kl_this_1 ).kl_n * 2;
+    kl_t5 = ( *kl_this_1 ).kl_n * 2;
 #line 10 "opt/receivers.kl"
-    ( *kl_this_3 ).kl_n = kl_t4;
+    ( *kl_this_3 ).kl_n = kl_t5;
 #line 16 "opt/receivers.kl"
-    kl_this_5 = kl_this_1;
+    kl_this_4 = kl_this_1;
 #line 10 "opt/receivers.kl"
     kl_t6 = ( *kl_this_1 ).kl_n * 3;
 #line 10 "opt/receivers.kl"
-    ( *kl_this_5 ).kl_n = kl_t6;
+    ( *kl_this_4 ).kl_n = kl_t6;
 #line 10 "opt/receivers.kl"
     kl_t7 = ( *kl_other_2 ).kl_n * 5;
 #line 10 "opt/receivers.kl"

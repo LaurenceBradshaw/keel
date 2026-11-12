@@ -143,11 +143,11 @@ void kl__Square__drop( void* kl_t1 )
 int32_t kl__Square__as_kl__shape__kl__4area__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Square* kl_t2;
+    struct kl__Square* kl_this_2;
 #line 18 "opt/borrows.kl"
-    kl_t2 = ( struct kl__Square* ) kl_t1;
+    kl_this_2 = ( struct kl__Square* ) kl_t1;
 #line 20 "opt/borrows.kl"
-    kl_t0 = ( *kl_t2 ).kl_side_ * ( *kl_t2 ).kl_side_;
+    kl_t0 = ( *kl_this_2 ).kl_side_ * ( *kl_this_2 ).kl_side_;
 #line 18 "opt/borrows.kl"
     return kl_t0;
 #line 8 "opt/borrows.kl"

@@ -149,17 +149,14 @@ void kl__tally__drop( void* kl_t1 )
 #line 5 "opt/devirtualised_thunks.kl"
 void kl__tally__as_kl__sink__I3i64E__kl__3put__1T( void* kl_t1, int64_t* kl_t2 )
 {
-    struct kl__tally* kl_t3;
-    struct kl__tally* kl_this_4;
-    int64_t kl_value_5;
+    struct kl__tally* kl_this_3;
+    int64_t kl_value_4;
 #line 12 "opt/devirtualised_thunks.kl"
-    kl_t3 = ( struct kl__tally* ) kl_t1;
+    kl_this_3 = ( struct kl__tally* ) kl_t1;
 #line 12 "opt/devirtualised_thunks.kl"
-    kl_this_4 = kl_t3;
+    kl_value_4 = ( *kl_t2 );
 #line 12 "opt/devirtualised_thunks.kl"
-    kl_value_5 = ( *kl_t2 );
-#line 12 "opt/devirtualised_thunks.kl"
-    ( *kl_this_4 ).kl_sum_ = ( *kl_t3 ).kl_sum_ + kl_value_5;
+    ( *kl_this_3 ).kl_sum_ = ( *kl_this_3 ).kl_sum_ + kl_value_4;
 #line 12 "opt/devirtualised_thunks.kl"
     return;
 #line 5 "opt/devirtualised_thunks.kl"
@@ -177,11 +174,11 @@ void kl__Wrap__I3i32E__drop( void* kl_t1 )
 int32_t kl__Wrap__I3i32E__as_kl__Named__kl__4code__( void* kl_t1 )
 {
     int32_t kl_t0;
-    struct kl__Wrap__I3i32E* kl_t2;
+    struct kl__Wrap__I3i32E* kl_this_2;
 #line 30 "opt/devirtualised_thunks.kl"
-    kl_t2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
+    kl_this_2 = ( struct kl__Wrap__I3i32E* ) kl_t1;
 #line 30 "opt/devirtualised_thunks.kl"
-    kl_t0 = ( *kl_t2 ).kl_v + 2;
+    kl_t0 = ( *kl_this_2 ).kl_v + 2;
 #line 30 "opt/devirtualised_thunks.kl"
     return kl_t0;
 #line 20 "opt/devirtualised_thunks.kl"

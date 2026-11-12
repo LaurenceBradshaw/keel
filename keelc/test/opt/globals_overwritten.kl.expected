@@ -111,7 +111,7 @@ int32_t kl__4main__( void )
     int32_t kl_t0;
     int32_t kl_t1;
     bool kl_t2;
-    int32_t* kl_t3;
+    int32_t* kl_p_3;
     int32_t kl_t4;
     bool kl_t5;
 #line 40 "opt/globals_overwritten.kl"
@@ -132,10 +132,10 @@ int32_t kl__4main__( void )
 #line 49 "opt/globals_overwritten.kl"
     kl__seen__G = 6;
 #line 19 "opt/globals_overwritten.kl"
-    kl_t3 = &kl__seen__G;
+    kl_p_3 = &kl__seen__G;
 #line 60 "opt/globals_overwritten.kl"
     kl__seen__G = 8;
-    kl_t4 = ( *kl_t3 );
+    kl_t4 = ( *kl_p_3 );
     kl__seen__G = 0;
 #line 87 "opt/globals_overwritten.kl"
     kl_t5 = kl_t4 != 8;

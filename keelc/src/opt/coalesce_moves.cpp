@@ -257,6 +257,14 @@ bool moved_whole( const Function& func, Local_id local, u32 except )
     return false;
 }
 
+bool dropped( const Function& func, Local_id local )
+{
+    return std::ranges::any_of(
+        func.statements,
+        [&]( const Statement& statement ) { return statement.kind == Statement_kind::Drop && names( statement.place, local ); }
+    );
+}
+
 bool indexes( const Function& func, Local_id local )
 {
     for( const Projection& projection : func.projections )
@@ -747,7 +755,7 @@ bool coalesce_round( Function& func, const Ast& ast )
     const Local_set              addressed = addressed_locals( func );
     for( u32 index = 0; index < func.statements.size(); ++index )
     {
-        const std::optional<Candidate> candidate = candidate_at( func, index );
+        std::optional<Candidate> candidate = candidate_at( func, index );
         if( !candidate.has_value() )
         {
             continue;
@@ -758,9 +766,29 @@ bool coalesce_round( Function& func, const Ast& ast )
             continue;
         }
 
-        const bool clash = candidate->into.num_projections == 0
-                               ? interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed )
-                               : field_interferes( ast, func, *candidate, entry, after, live, addressed );
+        bool clash = candidate->into.num_projections == 0
+                         ? interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed )
+                         : field_interferes( ast, func, *candidate, entry, after, live, addressed );
+
+        // `_6 = call f(); storage_live _10; _10 = move _6`: `_10`'s storage is not live for all of `_6`'s
+        // value, so `_6` keeps it instead. Neither may be dropped: `_10` may pass its value on without a
+        // move, as a payload copy does, which `_6`'s drop would not see.
+        if( clash && candidate->into.num_projections == 0 && !is_fixed( func, candidate->kept ) &&
+            !is_fixed( func, candidate->gone ) && !dropped( func, candidate->kept ) && !dropped( func, candidate->gone ) )
+        {
+            std::swap( candidate->kept, candidate->gone );
+            candidate->into = Place { .local = candidate->kept };
+            clash           = interferes( func, candidate->kept, candidate->gone, entry, after, live, addressed );
+
+            // The temporary becomes the named local it moved into.
+            Local& kept = func.locals[candidate->kept];
+            if( !clash && !kept.name.is_valid() )
+            {
+                kept.name = func.locals[candidate->gone].name;
+                kept.span = func.locals[candidate->gone].span;
+            }
+        }
+
         if( !clash )
         {
             taken[candidate->kept.v]       = true;
@@ -1276,6 +1304,24 @@ TEST_CASE( "coalesce_moves_leaves_no_self_copy", "[opt][coalesce]" )
     REQUIRE( p.well_formed() );
     REQUIRE( std::ranges::none_of( p.first().statements, [&]( const Statement& s ) { return copies_itself( p.first(), s ); } )
     );
+}
+
+// The inlined `s` comes alive only after the call has filled `_t`, so `_t` keeps the value.
+TEST_CASE( "coalesce_moves_keeps_a_call_result_where_it_lies", "[opt][coalesce]" )
+{
+    const Optimised p(
+        "i32 f( i32 v ) { return open( shape( v ) ); }\n"
+        "Shape shape( i32 v ) { if( v == 0 ) { return Shape::empty; } return Shape::boxed( Box( v ) ); }\n"
+        "i32 open( move Shape s ) { switch( move s ) { case Shape::boxed( b ): return b.v; case Shape::empty: return 0; } }\n"
+        "enum Shape { boxed( Box b ), empty };\n",
+        Inline_weights {},
+        true,
+        2,
+        true
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( p.well_formed() );
+    REQUIRE( p.local_copies() == 0 );
 }
 
 TEST_CASE( "coalesce_moves_merges_independent_moves_in_one_round", "[opt][coalesce]" )
