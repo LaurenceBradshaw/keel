@@ -203,6 +203,9 @@ Front_end run_front_end(
     // At -O1 a named local keeps its stores, so a debugger finds its current value.
     const bool pin_named = build.level == 1;
 
+    // Comparisons of two locals fold at -O3 only, until measured.
+    const bool relating = build.level >= 3;
+
     // The passes after drop elaboration, run `build.rounds` times and once more after the loop phase.
     const auto optimise_round = [&]( Function& function )
     {
@@ -228,19 +231,19 @@ Front_end run_front_end(
         // Folds a local compared with itself, so SCCP branches on the constant.
         propagate_values( function, front.types.table(), literals );
         verified( function, "propagate_values" );
-        propagate_constants( function, front.types.table(), literals );
+        propagate_constants( function, front.types.table(), literals, relating );
         verified( function, "propagate_constants" );
         if( thread_jumps( function, front.types.table(), literals ) )
         {
             verified( function, "thread_jumps" );
-            propagate_constants( function, front.types.table(), literals );
+            propagate_constants( function, front.types.table(), literals, relating );
             verified( function, "propagate_constants" );
         }
         // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
         if( forward_globals( function, front.types.table(), literals, pin_named ) )
         {
             verified( function, "forward_globals" );
-            propagate_constants( function, front.types.table(), literals );
+            propagate_constants( function, front.types.table(), literals, relating );
             verified( function, "propagate_constants" );
         }
         // Again, as a join SCCP left fewer paths into may now agree.

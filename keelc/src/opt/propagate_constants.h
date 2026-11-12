@@ -10,6 +10,6 @@ namespace keel
 {
 // After settle_drops: a local holding one constant on every path that runs reads as that constant, an
 // operation on constants becomes its value, and a branch on a constant loses the arm it never takes;
-// release only.
-void propagate_constants( Function& func, const Type_table& types, Literal_pool& literals );
+// release only. `relating`: a test of two locals an earlier one on the path decides folds too.
+void propagate_constants( Function& func, const Type_table& types, Literal_pool& literals, bool relating = false );
 } // namespace keel
