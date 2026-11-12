@@ -22,6 +22,7 @@ struct Object_options
     std::filesystem::path c {};   // the part's C, kept beside it for its #lines; debug only
     bool                  debug    = false;
     bool                  overflow = false;
+    u32                   level    = 2; // a debug object's native code is built at it
 #ifdef _WIN32
     std::string compiler = "clang"; // as keelc's own fallback for $CC
 #else

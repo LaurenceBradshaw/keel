@@ -33,7 +33,8 @@ struct Llvm_options
     const Parts*          parts = nullptr;   // null emits the whole compile as one module
     File_id               part {};           // else the part this module is
     bool                  klo      = false;  // an instance is a COMDAT, as several objects may define it
-    bool                  debug    = false;  // a named local stays in memory, for a debugger
+    bool                  debug    = false;  // described for a debugger
+    u32                   level    = 2;      // -O<n>: at 1 or less a described named local stays in memory
     Platform              platform = k_host; // its triple, C ABI and debug format
 };
 

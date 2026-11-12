@@ -169,6 +169,7 @@ private:
     const File_id                part_;
     const bool                   klo_;
     const bool                   debug_;
+    const u32                    level_;
     const bool                   windows_;
 
     std::unique_ptr<llvm::LLVMContext> context_;
@@ -230,6 +231,7 @@ Llvm_emitter::Llvm_emitter(
       part_( options.part ),
       klo_( options.klo ),
       debug_( options.debug ),
+      level_( options.level ),
       windows_( options.platform == Platform::Windows ),
       context_( std::make_unique<llvm::LLVMContext>() ),
       module_( std::make_unique<llvm::Module>( "keel", *context_ ) ),
@@ -1049,7 +1051,7 @@ void Llvm_emitter::promote( const Function& function )
     for( const Local_id i : function.locals.ids() )
     {
         const Local& local = function.locals[i];
-        promoted_[i.v]     = held( local.type ) == Held::Scalar && !( debug_ && local.name.is_valid() );
+        promoted_[i.v]     = held( local.type ) == Held::Scalar && !( debug_ && level_ <= 1 && local.name.is_valid() );
     }
 
     const auto check = [&]( const Place& place, bool addressed )
@@ -2366,9 +2368,9 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
-// x86-64, COFF or ELF by the module's triple, at -O3's machine passes (none under --debug, so each line keeps its code), and
-// none of LLVM's IR passes (§2.2): Keel optimises its own IR.
-std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug )
+// x86-64, COFF or ELF by the module's triple, at the machine passes of its level (none at -O0, so each line keeps its code),
+// and none of LLVM's IR passes (§2.2): Keel optimises its own IR.
+std::string write_object( llvm::Module& module, const std::filesystem::path& object, u32 level )
 {
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
@@ -2390,7 +2392,9 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
         llvm::TargetOptions {},
         llvm::Reloc::PIC_,
         std::nullopt,
-        debug ? llvm::CodeGenOptLevel::None : llvm::CodeGenOptLevel::Aggressive
+        level == 0   ? llvm::CodeGenOptLevel::None
+        : level == 1 ? llvm::CodeGenOptLevel::Less
+                     : llvm::CodeGenOptLevel::Aggressive
     ) );
     module.setDataLayout( machine->createDataLayout() );
     module.setPICLevel( llvm::PICLevel::BigPIC );
@@ -2458,7 +2462,7 @@ Llvm_output emit_llvm(
 
         if( output.error.empty() && !options.object.empty() )
         {
-            output.error = write_object( module, options.object, options.debug );
+            output.error = write_object( module, options.object, options.level );
         }
     }
     catch( const Refusal& refusal )
@@ -2497,7 +2501,7 @@ TEST_CASE( "emit_llvm_writes_a_function_the_verifier_accepts", "[codegen][llvm]"
     REQUIRE( out.ir.find( " nsw " ) == std::string::npos );
 }
 
-TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_names_it", "[codegen][llvm]" )
+TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_at_O1_names_it", "[codegen][llvm]" )
 {
     Compiled p(
         "i32 count( i32 n ) { i32 i = 0; while( i < n ) { i = i + 1; } return i; }\n"
@@ -2509,8 +2513,9 @@ TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_names_it", "[codegen]
     const Description program = describe( p.ast, p.types, p.interner );
     const Llvm_output promoted =
         emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
-    const Llvm_output kept =
-        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true } );
+    const Llvm_output kept = emit_llvm(
+        p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true, .level = 1 }
+    );
 
     INFO( promoted.ir );
     REQUIRE( promoted.error.empty() );
@@ -2518,6 +2523,12 @@ TEST_CASE( "emit_llvm_promotes_a_scalar_local_unless_debug_names_it", "[codegen]
     REQUIRE( promoted.ir.find( "alloca" ) == std::string::npos );
     REQUIRE( kept.error.empty() );
     REQUIRE( kept.ir.find( "%i = alloca i32" ) != std::string::npos );
+
+    // Above -O1 the KIR no longer keeps a named local's stores, so neither does its alloca.
+    const Llvm_output optimised = emit_llvm(
+        p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true, .level = 2 }
+    );
+    REQUIRE( optimised.ir.find( "alloca" ) == std::string::npos );
 }
 
 TEST_CASE( "emit_llvm_describes_functions_and_locals_only_under_debug", "[codegen][llvm]" )
@@ -2528,8 +2539,9 @@ TEST_CASE( "emit_llvm_describes_functions_and_locals_only_under_debug", "[codege
     const Description program = describe( p.ast, p.types, p.interner );
     const Llvm_output release =
         emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true } );
-    const Llvm_output debug =
-        emit_llvm( p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true } );
+    const Llvm_output debug = emit_llvm(
+        p.functions, program, p.types, p.literals, p.sm, p.interner, p.modules, { .print = true, .debug = true, .level = 1 }
+    );
 
     INFO( debug.ir );
     REQUIRE( debug.error.empty() );
@@ -2577,7 +2589,7 @@ TEST_CASE( "emit_llvm_follows_each_targets_c_abi", "[codegen][llvm]" )
             p.sm,
             p.interner,
             p.modules,
-            { .object = object, .print = true, .debug = debug, .platform = platform }
+            { .object = object, .print = true, .debug = debug, .level = debug ? 1u : 2u, .platform = platform }
         );
     };
     // The signature of the function whose name holds `name`.

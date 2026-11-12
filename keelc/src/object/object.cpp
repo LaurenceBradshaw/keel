@@ -129,7 +129,7 @@ int write_object(
                 sm,
                 interner,
                 program.modules,
-                { .object = native, .parts = &parts, .part = input, .klo = true, .debug = true }
+                { .object = native, .parts = &parts, .part = input, .klo = true, .debug = true, .level = options.level }
             );
             if( !built.error.empty() )
             {
@@ -401,7 +401,7 @@ Built build_clock( const Temp_dir& dir, bool debug )
             literals,
             sm,
             interner,
-            { .out = out, .c = dir.path / "clock.kl.c", .debug = debug, .overflow = debug }
+            { .out = out, .c = dir.path / "clock.kl.c", .debug = debug, .overflow = debug, .level = debug ? 1u : 2u }
         ) == 0
     );
 

@@ -653,7 +653,7 @@ int main( int argc, char** argv )
     if( stop == Stop::Llvm )
     {
         const keel::Llvm_output ir = keel::emit_llvm(
-            functions, program, types, literals, sm, interner, prog.modules, { .print = true, .debug = debug }
+            functions, program, types, literals, sm, interner, prog.modules, { .print = true, .debug = debug, .level = level }
         );
         std::cout << ir.ir;
         if( !ir.error.empty() )
@@ -706,6 +706,7 @@ int main( int argc, char** argv )
             .c        = output.parent_path() / ( input_name + ".c" ),
             .debug    = debug,
             .overflow = overflow_checks,
+            .level    = level,
             .compiler = compiler,
             .cflags   = cflags,
             .llvm     = backend == "llvm",
@@ -764,7 +765,7 @@ int main( int argc, char** argv )
                 sm,
                 interner,
                 prog.modules,
-                { .object = objects.back(), .parts = &parts, .part = part, .debug = debug }
+                { .object = objects.back(), .parts = &parts, .part = part, .debug = debug, .level = level }
             );
             if( !built.error.empty() )
             {
