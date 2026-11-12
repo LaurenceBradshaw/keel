@@ -1,0 +1,87 @@
+// M16's -O3: a loop that tests at its top gets the test copied in front of it as a guard and moved
+// to the bottom, so each turn ends in the test. A test over the budget, and a loop with no test at
+// its top, stay as written. Each check returns its own code.
+
+// The guard skips the loop when `n` is not positive; each turn ends in `i < n`.
+i64 sum( i64 n )
+{
+    i64 total = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        total += i;
+    }
+    return total;
+}
+
+// Two ways back and a `break`: normalising joins them in one latch, which then takes the test.
+i64 odds( i64 n, i64 limit )
+{
+    i64 count = 0;
+    i64 i     = 0;
+    while( i < n )
+    {
+        i += 1;
+        if( i % 2 == 0 )
+        {
+            continue;
+        }
+        if( count == limit )
+        {
+            break;
+        }
+        count += 1;
+    }
+    return count;
+}
+
+// More statements in the test than the budget: kept at the top.
+i64 wide( i64 n )
+{
+    i64 i = 0;
+    while( i * 3 + i * 5 + i * 7 + i * 11 + i * 13 + i * 17 < n )
+    {
+        i += 1;
+    }
+    return i;
+}
+
+// Already tested at the bottom.
+i64 halve( i64 n )
+{
+    i64 steps = 0;
+    while( true )
+    {
+        n /= 2;
+        steps += 1;
+        if( n == 0 )
+        {
+            break;
+        }
+    }
+    return steps;
+}
+
+i32 main()
+{
+    if( sum( 100 ) != 4950 || sum( 0 ) != 0 )
+    {
+        return 1;
+    }
+
+    if( odds( 10, 100 ) != 5 || odds( 10, 2 ) != 2 )
+    {
+        return 2;
+    }
+
+    if( wide( 560 ) != 10 )
+    {
+        return 3;
+    }
+
+    if( halve( 8 ) != 4 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

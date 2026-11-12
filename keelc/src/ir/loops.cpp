@@ -144,6 +144,41 @@ bool normalise( Function& func, const Loop& loop, const std::vector<std::vector<
     return added;
 }
 
+// A copy of the header's test at the latch, when the header exits and the latch only jumps back.
+bool rotate( Function& func, const Loop& loop, const Loop_weights& weights )
+{
+    const Block      header = func.blocks[loop.header];
+    const Terminator test   = header.terminator;
+    if( !loop.preheader.is_valid() || !loop.latch.is_valid() ||
+        func.blocks[loop.latch].terminator.kind != Terminator_kind::Goto || test.kind != Terminator_kind::Branch ||
+        loop.contains( test.targets[0] ) == loop.contains( test.targets[1] ) )
+    {
+        return false;
+    }
+
+    u32 size = 0;
+    for( const Statement& statement : func.statements_of( header ) )
+    {
+        size += statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop;
+    }
+    if( size > weights.rotation )
+    {
+        return false;
+    }
+
+    const u32 first = narrow_cast<u32>( func.statements.size() );
+    for( u32 s = 0; s < header.statement_count; ++s )
+    {
+        Statement copy = func.clone( func.statements[header.first_statement + s] );
+        func.statements.push_back( std::move( copy ) );
+    }
+    const Block_id bottom =
+        func.blocks.push_back( Block { .first_statement = first, .statement_count = header.statement_count, .terminator = test }
+        );
+    func.blocks[loop.latch].terminator.targets[0] = bottom;
+    return true;
+}
+
 } // namespace
 
 bool Dominators::dominates( Block_id a, Block_id b ) const
@@ -346,6 +381,25 @@ bool normalise_loops( Function& func )
     return added;
 }
 
+bool rotate_loops( Function& func, const Loop_weights& weights )
+{
+    bool rotated = false;
+    for( bool again = true; again; )
+    {
+        again = false;
+        normalise_loops( func );
+        for( const Loop& loop : find_loops( func ).loops )
+        {
+            if( rotate( func, loop, weights ) )
+            {
+                again = rotated = true;
+                break;
+            }
+        }
+    }
+    return rotated;
+}
+
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
@@ -388,6 +442,17 @@ std::vector<Block_id> ids( std::initializer_list<u32> vs )
         out.push_back( Block_id { v } );
     }
     return out;
+}
+
+// `count` assignments, the block's statements, appended.
+void fill( Function& func, u32 block, u32 count )
+{
+    func.blocks[Block_id { block }].first_statement = narrow_cast<u32>( func.statements.size() );
+    func.blocks[Block_id { block }].statement_count = count;
+    for( u32 s = 0; s < count; ++s )
+    {
+        func.statements.push_back( Statement { .value = func.add_rvalue( Rvalue {} ) } );
+    }
 }
 
 // Every loop has a preheader and one latch, and only it enters each of its exits.
@@ -468,6 +533,43 @@ TEST_CASE( "find_loops_leaves_an_irreducible_region", "[ir][loops]" )
     Function func = graph( { branch( 1, 2 ), branch( 2, 3 ), branch( 1, 3 ), done() } );
     REQUIRE( find_loops( func ).loops.empty() );
     REQUIRE( !normalise_loops( func ) );
+}
+
+// 0 → 1 (header: test) → 2 (body) → 3 (latch) → 1; 1 → 4. The test moves to the bottom.
+TEST_CASE( "rotate_loops_copies_the_test_to_the_latch", "[ir][loops]" )
+{
+    Function func = graph( { jump( 1 ), branch( 2, 4 ), jump( 3 ), jump( 1 ), done() } );
+    fill( func, 1, 2 );
+    REQUIRE( rotate_loops( func, Loop_weights {} ) );
+    require_normal( func );
+
+    const Loops found = find_loops( func );
+    REQUIRE( found.loops.size() == 1 );
+    const Loop& loop = found.loops[0];
+    REQUIRE( loop.header == Block_id { 2 } );
+    REQUIRE( !loop.contains( Block_id { 1 } ) );
+    const Block& bottom = func.blocks[loop.latch];
+    REQUIRE( bottom.terminator.kind == Terminator_kind::Branch );
+    REQUIRE( bottom.statement_count == 2 );
+    REQUIRE( bottom.first_statement != func.blocks[Block_id { 1 }].first_statement );
+    REQUIRE( func.blocks[Block_id { 1 }].terminator.kind == Terminator_kind::Branch );
+    REQUIRE( !rotate_loops( func, Loop_weights {} ) );
+}
+
+TEST_CASE( "rotate_loops_leaves_a_test_over_the_budget", "[ir][loops]" )
+{
+    Function func = graph( { jump( 1 ), branch( 2, 4 ), jump( 3 ), jump( 1 ), done() } );
+    fill( func, 1, 3 );
+    REQUIRE( !rotate_loops( func, Loop_weights { .rotation = 2 } ) );
+    REQUIRE( find_loops( func ).loops[0].header == Block_id { 1 } );
+}
+
+// `while( true )` with a `break` at the bottom: the header has no test, and the latch already tests.
+TEST_CASE( "rotate_loops_leaves_a_loop_with_no_test", "[ir][loops]" )
+{
+    Function func = graph( { jump( 1 ), jump( 2 ), branch( 1, 3 ), done() } );
+    REQUIRE( !rotate_loops( func, Loop_weights {} ) );
+    REQUIRE( func.blocks.size() == 4 );
 }
 
 } // namespace keel

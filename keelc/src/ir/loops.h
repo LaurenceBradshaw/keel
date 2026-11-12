@@ -11,6 +11,7 @@ namespace keel
 // How far `-O3`'s loop passes may grow a function; each budget arrives with its pass.
 struct Loop_weights
 {
+    u32 rotation = 8; // the most statements a loop's test may hold, storage markers aside, to be copied
 };
 
 // Each block's immediate dominator, Cooper–Harvey–Kennedy over reverse postorder.
@@ -50,5 +51,9 @@ Loops find_loops( const Function& func );
 
 // Gives each loop a preheader, one latch, and exits nothing outside it enters; whether it added a block.
 bool normalise_loops( Function& func );
+
+// Each normalised loop that tests at its header gets the test copied to its latch, so the header
+// becomes a guard before the loop; then normalises again. Whether it rotated any.
+bool rotate_loops( Function& func, const Loop_weights& weights );
 
 } // namespace keel
