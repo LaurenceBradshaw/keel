@@ -19,6 +19,7 @@
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
 #include "opt/inline_calls.h"
+#include "opt/loop_self_calls.h"
 #include "opt/merge_blocks.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
@@ -330,6 +331,12 @@ Front_end run_front_end(
                     // So no marker of a local a pass removed is left for the next round.
                     remove_unused_locals( function, pin_named );
                     verified( function, "remove_unused_locals" );
+                    // Once borrows are forwarded, as a borrowed local stops it; the next round tidies its copies.
+                    if( build.level >= 2 )
+                    {
+                        loop_self_calls( function );
+                        verified( function, "loop_self_calls" );
+                    }
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )

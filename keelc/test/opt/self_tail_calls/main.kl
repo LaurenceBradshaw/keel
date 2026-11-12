@@ -1,0 +1,109 @@
+// M16's -O2: a function that returns its own call's result jumps back to its entry instead, so
+// `acc( 10000000, 0 )` runs in one frame. A call a drop follows, or one passed a local's address,
+// stays a call. Each check returns its own code. Needs -O2: at -O0 and -O1 `acc` overflows the stack.
+
+i64 dropped;
+i64 ticks;
+
+class Box
+{
+    public Box( i64 v )
+    {
+        value = v;
+    }
+
+    ~Box()
+    {
+        dropped += 1;
+    }
+
+    public i64 value;
+};
+
+i64 acc( i64 n, i64 total )
+{
+    if( n == 0 )
+    {
+        return total;
+    }
+
+    return acc( n - 1, total + n );
+}
+
+// No result: the call is the last statement.
+void tick( i64 n )
+{
+    if( n == 0 )
+    {
+        return;
+    }
+
+    ticks += 1;
+    tick( n - 1 );
+}
+
+// An owning parameter moved into the call is the next turn's.
+i64 last( move Box b, i64 n )
+{
+    if( n == 0 )
+    {
+        return b.value;
+    }
+
+    return last( move b, n - 1 );
+}
+
+// `b` drops after the call returns, so the call stays.
+i64 kept( move Box b, i64 n )
+{
+    if( n == 0 )
+    {
+        return b.value;
+    }
+
+    return kept( Box( n ), n - 1 );
+}
+
+// A deeper call reads this frame's `x`, so the call stays.
+i64 pointed( i64 n, i64* p )
+{
+    if( n == 0 )
+    {
+        return *p;
+    }
+
+    i64 x = n;
+    return pointed( n - 1, &x );
+}
+
+i32 main()
+{
+    if( acc( 10000000, 0 ) != 50000005000000 )
+    {
+        return 1;
+    }
+
+    tick( 10000000 );
+    if( ticks != 10000000 )
+    {
+        return 2;
+    }
+
+    if( last( Box( 7 ), 10000000 ) != 7 || dropped != 1 )
+    {
+        return 3;
+    }
+
+    if( kept( Box( 9 ), 3 ) != 1 || dropped != 5 )
+    {
+        return 4;
+    }
+
+    i64 start = 0;
+    if( pointed( 3, &start ) != 1 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

@@ -13,7 +13,11 @@ cd "$( dirname "$0" )/../.."
 keelc="${1:-./build/debug/bin/keelc}"
 
 if [ $# -lt 2 ]; then
-    fixtures=( keelc/test/opt/*.kl keelc/test/opt/*/main.kl )
+    fixtures=( keelc/test/opt/*.kl )
+    # A program whose FLAGS ask for -O2 needs it to run.
+    for main in keelc/test/opt/*/main.kl; do
+        grep -qw -- -O2 "$( dirname "$main" )/FLAGS" 2>/dev/null || fixtures+=( "$main" )
+    done
     printf '%s\0' "${fixtures[@]}" | xargs -0 -n 1 -P "$( nproc )" "$0" "$keelc" || exit 1
     echo "pass: ${#fixtures[@]} fixtures"
     exit 0

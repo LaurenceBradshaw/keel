@@ -369,7 +369,7 @@ function's `-O1` code depends on nothing outside it.
 | `inline_calls`, `inline_drops`, `devirtualise_calls` | `-O2` | Cross function boundaries; frames go. |
 | `coalesce_moves` | `-O2` | Merging locals is its whole job. |
 | `split_aggregates`, `shadow_tags` | `-O2` | A split local is no longer whole for the debugger. |
-| self tail calls into loops | `-O2` | Without it a deep tail-recursive call overflows the stack, so the default level must have it. Frames go. |
+| `loop_self_calls` | `-O2` | A call of the function itself whose result it returns jumps back to the entry. Without it a deep tail-recursive call overflows the stack, so the default level must have it. Frames go. |
 | unrolling, LICM, induction variables, strength reduction | `-O3` | New and unmeasured; not yet a default. |
 
 **LLVM runs no IR pass at any level** (§2.2). Its codegen level is `None` at `-O0`, `Less` at `-O1`

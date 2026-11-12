@@ -1202,11 +1202,13 @@ void Kir_emitter::emit_function( const Function& function )
         write_line( "}" );
     }
 
+    // The entry falls through from the opening brace, so it is labelled only when an edge enters it.
+    const bool entered = predecessor_counts( function )[0] > 1;
     for( const Block_id i : function.blocks.ids() )
     {
         const Block& block = function.blocks[i];
 
-        if( i.v != 0 )
+        if( i.v != 0 || entered )
         {
             write_line( fmt::format( "bb{}:", i.v ) );
         }
