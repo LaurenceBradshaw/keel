@@ -203,6 +203,67 @@ Front_end run_front_end(
     // At -O1 a named local keeps its stores, so a debugger finds its current value.
     const bool pin_named = build.level == 1;
 
+    // The passes after drop elaboration, run `build.rounds` times and once more after the loop phase.
+    const auto optimise_round = [&]( Function& function )
+    {
+        // First, so the local it frees is split and propagated this round.
+        if( build.forwarding )
+        {
+            forward_borrows( function, front.types.table(), pin_named );
+            verified( function, "forward_borrows" );
+        }
+        if( build.level >= 2 && build.splitting )
+        {
+            split_aggregates( function, ast, front.types );
+            verified( function, "split_aggregates" );
+            // Again, for a borrow of a field that splitting made a whole local.
+            if( build.forwarding )
+            {
+                forward_borrows( function, front.types.table(), pin_named );
+                verified( function, "forward_borrows" );
+            }
+            shadow_tags( function );
+            verified( function, "shadow_tags" );
+        }
+        // Folds a local compared with itself, so SCCP branches on the constant.
+        propagate_values( function, front.types.table(), literals );
+        verified( function, "propagate_values" );
+        propagate_constants( function, front.types.table(), literals );
+        verified( function, "propagate_constants" );
+        if( thread_jumps( function, front.types.table(), literals ) )
+        {
+            verified( function, "thread_jumps" );
+            propagate_constants( function, front.types.table(), literals );
+            verified( function, "propagate_constants" );
+        }
+        // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
+        if( forward_globals( function, front.types.table(), literals, pin_named ) )
+        {
+            verified( function, "forward_globals" );
+            propagate_constants( function, front.types.table(), literals );
+            verified( function, "propagate_constants" );
+        }
+        // Again, as a join SCCP left fewer paths into may now agree.
+        propagate_values( function, front.types.table(), literals );
+        verified( function, "propagate_values" );
+        remove_dead_stores( function, pin_named );
+        verified( function, "remove_dead_stores" );
+        // Dead store removal can empty a block, so threading goes first.
+        simplify( function, literals );
+        verified( function, "simplify" );
+        merge_blocks( function );
+        verified( function, "merge_blocks" );
+        // So no marker of a local a pass removed is left for the next round.
+        remove_unused_locals( function, pin_named );
+        verified( function, "remove_unused_locals" );
+        // Once borrows are forwarded, as a borrowed local stops it; the next round tidies its copies.
+        if( build.level >= 2 )
+        {
+            loop_self_calls( function );
+            verified( function, "loop_self_calls" );
+        }
+    };
+
     // A call made direct, before or after inlining, finds its callee optimised already.
     const std::vector<std::vector<u32>> dispatched =
         build.level >= 2 ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
@@ -281,62 +342,7 @@ Front_end run_front_end(
                 // Twice by default, as a late pass uncovers work for an earlier one; a third round finds none.
                 for( u32 round = 0; round < build.rounds; ++round )
                 {
-                    // First, so the local it frees is split and propagated this round.
-                    if( build.forwarding )
-                    {
-                        forward_borrows( function, front.types.table(), pin_named );
-                        verified( function, "forward_borrows" );
-                    }
-                    if( build.level >= 2 && build.splitting )
-                    {
-                        split_aggregates( function, ast, front.types );
-                        verified( function, "split_aggregates" );
-                        // Again, for a borrow of a field that splitting made a whole local.
-                        if( build.forwarding )
-                        {
-                            forward_borrows( function, front.types.table(), pin_named );
-                            verified( function, "forward_borrows" );
-                        }
-                        shadow_tags( function );
-                        verified( function, "shadow_tags" );
-                    }
-                    // Folds a local compared with itself, so SCCP branches on the constant.
-                    propagate_values( function, front.types.table(), literals );
-                    verified( function, "propagate_values" );
-                    propagate_constants( function, front.types.table(), literals );
-                    verified( function, "propagate_constants" );
-                    if( thread_jumps( function, front.types.table(), literals ) )
-                    {
-                        verified( function, "thread_jumps" );
-                        propagate_constants( function, front.types.table(), literals );
-                        verified( function, "propagate_constants" );
-                    }
-                    // Once SCCP has folded the branches it can; SCCP again folds the constants and checks it leaves.
-                    if( forward_globals( function, front.types.table(), literals, pin_named ) )
-                    {
-                        verified( function, "forward_globals" );
-                        propagate_constants( function, front.types.table(), literals );
-                        verified( function, "propagate_constants" );
-                    }
-                    // Again, as a join SCCP left fewer paths into may now agree.
-                    propagate_values( function, front.types.table(), literals );
-                    verified( function, "propagate_values" );
-                    remove_dead_stores( function, pin_named );
-                    verified( function, "remove_dead_stores" );
-                    // Dead store removal can empty a block, so threading goes first.
-                    simplify( function, literals );
-                    verified( function, "simplify" );
-                    merge_blocks( function );
-                    verified( function, "merge_blocks" );
-                    // So no marker of a local a pass removed is left for the next round.
-                    remove_unused_locals( function, pin_named );
-                    verified( function, "remove_unused_locals" );
-                    // Once borrows are forwarded, as a borrowed local stops it; the next round tidies its copies.
-                    if( build.level >= 2 )
-                    {
-                        loop_self_calls( function );
-                        verified( function, "loop_self_calls" );
-                    }
+                    optimise_round( function );
                 }
                 // Again, for the copy chains into a field that splitting and inlining leave.
                 if( build.recoalescing )
@@ -352,6 +358,11 @@ Front_end run_front_end(
                 }
                 remove_unused_locals( function, pin_named );
                 verified( function, "remove_unused_locals" );
+                // The loop passes, and a round to tidy what they leave.
+                if( build.level >= 3 && build.loops )
+                {
+                    optimise_round( function );
+                }
             }
 
             lower_dispatch( function, ast, front.types.table() );
@@ -383,3 +394,41 @@ Front_end run_front_end(
 }
 
 } // namespace keel
+
+#ifdef ENABLE_UNIT_TESTS
+#include <catch2/catch_test_macros.hpp>
+
+#include "check/pipeline_test_support.h"
+#include "ir/print.h"
+
+namespace keel
+{
+namespace
+{
+
+std::string printed( const Compiled& p )
+{
+    std::string text;
+    for( const Function& function : p.functions )
+    {
+        text += print( function, p.ast, p.types.table(), p.literals, p.interner );
+    }
+    return text;
+}
+
+} // namespace
+
+TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
+{
+    constexpr std::string_view source =
+        "i64 sum( i64 n ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) { t += i * 3; } return t; }\n"
+        "i32 main() { return cast<i32>( sum( 10 ) ); }\n";
+    const Compiled o2( source, Stage::Elaborated, Build { .level = 2 } );
+    const Compiled o3( source, Stage::Elaborated, Build { .level = 3, .loops = std::nullopt } );
+    REQUIRE( o2.clean() );
+    REQUIRE( o3.clean() );
+    REQUIRE( printed( o3 ) == printed( o2 ) );
+}
+
+} // namespace keel
+#endif

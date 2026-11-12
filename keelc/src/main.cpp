@@ -499,12 +499,6 @@ int main( int argc, char** argv )
         fmt::print( stderr, "keelc: there is no -O{}; the levels are -O0 to -O3\n", level );
         return 2;
     }
-    // -O3's passes are not written yet.
-    if( level == 3 )
-    {
-        fmt::print( stderr, "keelc: -O{} is not implemented yet\n", level );
-        return 2;
-    }
     if( debug && level > 1 )
     {
         fmt::print( stderr, "keelc: --debug takes -O0 or -O1, not -O{}\n", level );

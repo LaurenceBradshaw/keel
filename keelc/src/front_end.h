@@ -12,6 +12,7 @@
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/kir.h"
+#include "ir/loops.h"
 #include "opt/inline_calls.h"
 #include "parse/loader.h"
 #include "sema/resolver.h"
@@ -39,6 +40,9 @@ struct Build
 
     // How an `-O2` build inlines; none leaves every call a call.
     std::optional<Inline_weights> inlining = Inline_weights {};
+
+    // How an `-O3` build's loop phase runs; none skips it.
+    std::optional<Loop_weights> loops = Loop_weights {};
 
     // Scalar replacement; a test of an earlier pass turns it off to see that pass's fields.
     bool splitting = true;
