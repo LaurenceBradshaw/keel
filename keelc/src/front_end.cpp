@@ -361,6 +361,8 @@ Front_end run_front_end(
                 // The loop passes, and a round to tidy what they leave.
                 if( build.level >= 3 && build.loops )
                 {
+                    normalise_loops( function );
+                    verified( function, "normalise_loops" );
                     optimise_round( function );
                 }
             }

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <vector>
+#include "ir/kir.h"
 
 namespace keel
 {
@@ -10,5 +12,43 @@ namespace keel
 struct Loop_weights
 {
 };
+
+// Each block's immediate dominator, Cooper–Harvey–Kennedy over reverse postorder.
+struct Dominators
+{
+    std::vector<Block_id> idom;  // invalid for an unreachable block; the entry is its own
+    std::vector<u32>      order; // reverse postorder position; unreachable blocks have none
+
+    bool dominates( Block_id a, Block_id b ) const;
+};
+
+Dominators find_dominators( const Function& func );
+
+constexpr u32 k_no_loop = ~u32 { 0 };
+
+// A natural loop: its header and every block that reaches a back edge without passing the header.
+struct Loop
+{
+    Block_id              header {};
+    std::vector<Block_id> blocks;       // ascending, the header among them
+    std::vector<Block_id> exits;        // ascending: the blocks outside that an edge from inside enters
+    Block_id              preheader {}; // the one block outside entering the header, by a goto; invalid if none
+    Block_id              latch {};     // the one block a back edge leaves; invalid if several
+    u32                   parent = k_no_loop;
+
+    bool contains( Block_id block ) const;
+};
+
+// Innermost first, so a loop's parent comes after it. A cycle with no back edge is not a loop.
+struct Loops
+{
+    Dominators        dominators;
+    std::vector<Loop> loops;
+};
+
+Loops find_loops( const Function& func );
+
+// Gives each loop a preheader, one latch, and exits nothing outside it enters; whether it added a block.
+bool normalise_loops( Function& func );
 
 } // namespace keel
