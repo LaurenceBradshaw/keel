@@ -2,7 +2,7 @@
 # Copyright 2026 Laurence Bradshaw
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
-# Windows' editors/gdb/check.sh: builds examples/debugging.kl with --debug, and checks lldb reads
+# Windows' editors/gdb/check.sh: builds examples/debugging.kl with --debug at -O1, and checks lldb reads
 # the .pdb with functions, locals and fields named as Keel does. Run from Git Bash after the
 # windows-debug preset is built. Not in pre-commit, which should not need a debugger.
 #
@@ -16,7 +16,7 @@ cd "$( dirname "$0" )/../.."
 lldb="$( command -v lldb || echo "/c/Program Files/LLVM/bin/lldb.exe" )"
 export LLDB_USE_NATIVE_PDB_READER=1
 
-./build/windows-debug/bin/keelc.exe --debug --package kl=keel_stl/src examples/debugging.kl \
+./build/windows-debug/bin/keelc.exe --debug -O1 --package kl=keel_stl/src examples/debugging.kl \
     -o build/examples/debugging.exe
 
 # -F: lldb resolves a qualified name from a .pdb only as the full name.

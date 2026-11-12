@@ -195,6 +195,9 @@ step "unit tests"          "${debug_bin}/keel_tests${exe}"           || exit 1
 step "keeldoc unit tests"  "${debug_bin}/keeldoc_tests${exe}"        || exit 1
 step "runtime tests"       "${debug_bin}/keel_rt_tests${exe}"        || exit 1
 step "golden tests"        check_goldens                             || exit 1
+if [ -z "$prefix" ]; then # Windows has lldb, checked by hand
+    step "debug -O1 stepping"  editors/gdb/check_levels.sh "${debug_bin}/keelc" || exit 1
+fi
 step "docs up to date"     check_docs                                || exit 1
 step "build (release -Werror)" cmake --build --preset "${prefix}release" || exit 1
 step "keel_build tests"    check_keel_build                          || exit 1

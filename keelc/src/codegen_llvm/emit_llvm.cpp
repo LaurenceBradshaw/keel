@@ -2368,9 +2368,9 @@ llvm::Constant* Llvm_emitter::vtable( Type_id implementer, Type_id interface )
     return table_global;
 }
 
-// x86-64, COFF or ELF by the module's triple, at the machine passes of its level (none at -O0, so each line keeps its code),
-// and none of LLVM's IR passes (§2.2): Keel optimises its own IR.
-std::string write_object( llvm::Module& module, const std::filesystem::path& object, u32 level )
+// x86-64, COFF or ELF by the module's triple, at the machine passes of its level, and none of LLVM's IR passes (§2.2):
+// Keel optimises its own IR. None at -O0 and at a debug -O1, so each line keeps its code and every store.
+std::string write_object( llvm::Module& module, const std::filesystem::path& object, bool debug, u32 level )
 {
     LLVMInitializeX86TargetInfo();
     LLVMInitializeX86Target();
@@ -2392,9 +2392,9 @@ std::string write_object( llvm::Module& module, const std::filesystem::path& obj
         llvm::TargetOptions {},
         llvm::Reloc::PIC_,
         std::nullopt,
-        level == 0   ? llvm::CodeGenOptLevel::None
-        : level == 1 ? llvm::CodeGenOptLevel::Less
-                     : llvm::CodeGenOptLevel::Aggressive
+        level == 0 || ( debug && level == 1 ) ? llvm::CodeGenOptLevel::None
+        : level == 1                          ? llvm::CodeGenOptLevel::Less
+                                              : llvm::CodeGenOptLevel::Aggressive
     ) );
     module.setDataLayout( machine->createDataLayout() );
     module.setPICLevel( llvm::PICLevel::BigPIC );
@@ -2462,7 +2462,7 @@ Llvm_output emit_llvm(
 
         if( output.error.empty() && !options.object.empty() )
         {
-            output.error = write_object( module, options.object, options.level );
+            output.error = write_object( module, options.object, options.debug, options.level );
         }
     }
     catch( const Refusal& refusal )

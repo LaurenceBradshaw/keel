@@ -24,7 +24,7 @@ for expected in \
     '#0  str (.*) at /.*/keelc/src/prelude/prelude.kl:27' \
     'kl_name_5 = "keel"' \
     'kl_xs_14 = kl::list<i32> (count 4) = {7, 14, 21, 28}' \
-    'kl_sum_24 = 70' \
+    'kl_sum_23 = 70' \
     '= {x = 3, y = -4}'; do
     grep -q -- "$expected" <<< "$out" || { echo "missing: $expected"; status=1; }
 done
