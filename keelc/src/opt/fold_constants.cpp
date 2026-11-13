@@ -517,6 +517,24 @@ std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const
         {
             return use( value.a );
         }
+        if( !func.real_arithmetic )
+        {
+            return std::nullopt;
+        }
+        // Under `@real_arithmetic` a float is a real: no -0.0, NaN or infinity.
+        const auto zero = [&]( const Operand& x ) { return is_constant( x ) && float_value( x, types, literals ) == 0.0; };
+        if( ( value.op == Token_kind::Plus || value.op == Token_kind::Minus ) && zero( value.b ) )
+        {
+            return use( value.a );
+        }
+        if( value.op == Token_kind::Plus && zero( value.a ) )
+        {
+            return use( value.b );
+        }
+        if( value.op == Token_kind::Star && ( zero( value.a ) || zero( value.b ) ) )
+        {
+            return use( zero( value.a ) ? value.a : value.b );
+        }
         return std::nullopt;
     }
 
@@ -848,6 +866,27 @@ TEST_CASE( "fold_constants_reduces_only_exact_float_identities", "[opt][fold]" )
     REQUIRE( !reduces( Token_kind::Plus, x, f( 0.0 ) ) );
     REQUIRE( !reduces( Token_kind::Star, x, f( 0.0 ) ) );
     REQUIRE( !reduces( Token_kind::Minus, x, f( -0.0 ) ) );
+}
+
+// Under `@real_arithmetic`, `x + 0.0`, `x - -0.0` and `x * 0.0` reduce too.
+TEST_CASE( "fold_constants_reduces_real_identities_under_real_arithmetic", "[opt][fold]" )
+{
+    const Type_table types;
+    Function         func;
+    func.real_arithmetic = true;
+    Literal_pool  literals;
+    const Type_id f64_type = types.floating( 64 );
+    const Operand x        = copy( Place { .local = Local_id { 1 } }, f64_type );
+    const auto    f        = [&]( f64 v ) { return constant( literals.add_float( v, f32( v ) ), f64_type ); };
+    const auto    reduced  = [&]( Token_kind op, Operand a, Operand b )
+    { return identity( func, binary( op, a, b, f64_type ), types, literals ); };
+
+    REQUIRE( reduced( Token_kind::Plus, x, f( 0.0 ) )->a.kind == Operand_kind::Copy );
+    REQUIRE( reduced( Token_kind::Plus, f( -0.0 ), x )->a.kind == Operand_kind::Copy );
+    REQUIRE( reduced( Token_kind::Minus, x, f( -0.0 ) )->a.kind == Operand_kind::Copy );
+    REQUIRE( reduced( Token_kind::Star, x, f( 0.0 ) )->a.kind == Operand_kind::Constant );
+    REQUIRE( reduced( Token_kind::Star, f( 0.0 ), x )->a.kind == Operand_kind::Constant );
+    REQUIRE( !reduced( Token_kind::Minus, f( 0.0 ), x ) );
 }
 
 // An unrolled `a[ i ] * i` is `a[ 0 ] * 0` in its first copy.

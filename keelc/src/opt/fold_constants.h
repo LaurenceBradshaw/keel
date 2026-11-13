@@ -24,7 +24,8 @@ std::optional<u64> convert( u64 bits, Type_id from, Type_id to, const Type_table
 Rvalue value_of( u64 bits, Type_id type, const Type_table& types, Literal_pool& literals );
 
 // What `value` reduces to without knowing its operands: a place compared with itself, or `x + 0`,
-// `x - 0` or `x * 1`; nullopt otherwise.
+// `x - 0` or `x * 1`, and for a float in a `@real_arithmetic` function `x * 0` and any signed zero
+// added; nullopt otherwise.
 std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const Type_table& types, Literal_pool& literals );
 
 // Every identity in `func`, for a pass that can make one after the last propagate_values.
