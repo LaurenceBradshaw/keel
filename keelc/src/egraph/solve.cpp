@@ -1910,6 +1910,7 @@ Solution solve( Field& field, const std::vector<Row>& rows, const Solve_options&
 #include <random>
 #include <sstream>
 #include <string>
+#include "egraph/lower_circuit.h"
 
 namespace keel
 {
@@ -2037,6 +2038,26 @@ bool computes( const Circuit& c, const Field& field, const std::vector<Row>& row
     return true;
 }
 
+// Lowering checks itself on random input in a debug build.
+void lower( const Circuit& c, const Field& field, const std::vector<Row>& rows )
+{
+    const Type_table types;
+    const Type_id    type =
+        field.kind() == Ring_kind::Integer ? types.integer( static_cast<u8>( field.width() ), false ) : types.floating( 64 );
+    Literal_pool             literals;
+    Function                 func;
+    std::vector<Value_place> in, out;
+    const auto               value = [&]
+    {
+        const Place re { .local = func.locals.push_back( Local { .type = type } ) };
+        const Place im { .local = func.locals.push_back( Local { .type = type } ) };
+        return Value_place { re, im };
+    };
+    std::generate_n( std::back_inserter( in ), rows[0].size(), value );
+    std::generate_n( std::back_inserter( out ), rows.size(), value );
+    CHECK( lower_circuit( func, c, field, rows, in, out, type, literals, {} ).size() >= rows.size() );
+}
+
 void check_specs( const std::vector<std::string>& names )
 {
     const std::map<std::string, Cost> want = expected();
@@ -2049,6 +2070,7 @@ void check_specs( const std::vector<std::string>& names )
         CHECK( no_worse( got.cost, want.at( name ) ) );
         CHECK( no_worse( got.cost, got.input ) );
         CHECK( computes( got.circuit, *spec.field, spec.rows ) );
+        lower( got.circuit, *spec.field, spec.rows );
     }
 }
 } // namespace
@@ -2085,6 +2107,7 @@ TEST_CASE( "solve_keeps_zero_and_unit_multiple_rows", "[egraph][solve]" )
     CHECK( got.circuit.outputs.size() == 3 );
     CHECK( got.cost == Cost { 6, 0 } );
     CHECK( computes( got.circuit, field, rows ) );
+    lower( got.circuit, field, rows );
 }
 
 TEST_CASE( "solve_integers_without_halves", "[egraph][solve]" )
@@ -2102,6 +2125,7 @@ TEST_CASE( "solve_integers_without_halves", "[egraph][solve]" )
     const Solution w = solve( field, wht );
     CHECK( w.cost == Cost { 8, 0 } );
     CHECK( computes( w.circuit, field, wht ) );
+    lower( w.circuit, field, wht );
 
     std::vector<Row> fir;
     for( i64 i = 0; i < 5; ++i )
@@ -2116,6 +2140,7 @@ TEST_CASE( "solve_integers_without_halves", "[egraph][solve]" )
     const Solution f = solve( field, fir );
     CHECK( no_worse( f.cost, f.input ) );
     CHECK( computes( f.circuit, field, fir ) );
+    lower( f.circuit, field, fir );
 }
 } // namespace keel
 #endif // ENABLE_UNIT_TESTS

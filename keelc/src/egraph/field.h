@@ -49,6 +49,12 @@ public:
         return n_;
     }
 
+    // An integer ring's bits; 64 otherwise.
+    u32 width() const
+    {
+        return width_;
+    }
+
     // totient(n), the length of an element's vector.
     u32 degree() const
     {

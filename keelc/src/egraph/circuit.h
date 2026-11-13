@@ -74,6 +74,15 @@ public:
         return constants_[c].value;
     }
 
+    // An integer ring's constant, exact.
+    Element exact( u32 c ) const
+    {
+        return constants_[c].exact;
+    }
+
+    // The nodes some output reaches.
+    std::vector<bool> live() const;
+
     std::map<Row, u32> outputs;
 
 private:
@@ -83,14 +92,13 @@ private:
         Element           exact; // in `integers_` only
     };
 
-    u32               put( Op op );
-    u32               scale_by( u32 a, Constant c );
-    u32               scale_node( u32 a, Constant c );
-    Constant          make( std::complex<f64> c ) const;
-    Constant          make( Element c ) const;
-    Constant          times( Constant x, Constant y ) const;
-    bool              is_unit( Constant c ) const;
-    std::vector<bool> live() const;
+    u32      put( Op op );
+    u32      scale_by( u32 a, Constant c );
+    u32      scale_node( u32 a, Constant c );
+    Constant make( std::complex<f64> c ) const;
+    Constant make( Element c ) const;
+    Constant times( Constant x, Constant y ) const;
+    bool     is_unit( Constant c ) const;
 
     bool   real_;
     Field* integers_ = nullptr;
