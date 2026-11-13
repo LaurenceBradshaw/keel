@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <optional>
 #include "ir/live.h"
+#include "ir/loops.h"
 #include "ir/simplify.h"
 #include "sema/type.h"
 
@@ -448,6 +449,122 @@ bool repeat_tests( Function& func, const Local_set& addressed, const Literal_poo
     return changed;
 }
 
+// A local written once, below an edge a branch on it took, whose write is above that branch: the
+// edge decides it, wherever the paths between join. `eliminate_common` leaves `a / b + a / b`'s
+// second zero and `-1` tests this way, each after the first division's join. A branch on it there
+// becomes a goto, and an edge into a block that only branches on it goes past that block. Each
+// change only skips empty blocks, so every fact this pass found still holds after it.
+bool decide_once( Function& func, const Local_set& addressed )
+{
+    std::vector<u32>      writes( func.locals.size(), 0 );
+    std::vector<Block_id> written( func.locals.size() );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        for( const Statement& statement : func.statements_of( func.blocks[b] ) )
+        {
+            // A storage marker writes nothing a read may see.
+            if( ( statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop ) &&
+                !statement.place.is_global() && statement.place.local.is_valid() )
+            {
+                writes[statement.place.local.v] += 1;
+                written[statement.place.local.v] = b;
+            }
+        }
+    }
+
+    const std::vector<u32> counts = predecessor_counts( func );
+    std::vector<Block_id>  from( func.blocks.size() );
+    std::vector<Block_id>  targets;
+    for( const Block_id b : func.blocks.ids() )
+    {
+        targets.clear();
+        successors( func.blocks[b].terminator, targets );
+        for( const Block_id target : targets )
+        {
+            from[target.v] = b;
+        }
+    }
+
+    const Dominators dominators = find_dominators( func );
+    // Which way the edge deciding `condition` at the end of `at` went, if one does.
+    const auto decided = [&]( Block_id at, const Operand& condition ) -> std::optional<u32>
+    {
+        if( !whole_local( condition ) || !dominators.idom[at.v].is_valid() )
+        {
+            return std::nullopt;
+        }
+        const Local_id local = condition.place.local;
+        if( writes[local.v] != 1 || addressed[local.v] )
+        {
+            return std::nullopt;
+        }
+        for( Block_id on = at; on.v != 0; on = dominators.idom[on.v] )
+        {
+            const Terminator& up = func.blocks[from[on.v]].terminator;
+            if( counts[on.v] == 1 && up.kind == Terminator_kind::Branch && whole_local( up.condition ) &&
+                up.condition.place.local == local && up.targets[0] != up.targets[1] &&
+                dominators.dominates( written[local.v], from[on.v] ) )
+            {
+                return up.targets[0] == on ? 0 : 1;
+            }
+        }
+        return std::nullopt;
+    };
+
+    bool changed = false;
+    for( const Block_id b : func.blocks.ids() )
+    {
+        Terminator& terminator = func.blocks[b].terminator;
+        if( terminator.kind == Terminator_kind::Branch )
+        {
+            if( const std::optional<u32> taken = decided( b, terminator.condition ) )
+            {
+                terminator = Terminator {
+                    .kind = Terminator_kind::Goto, .span = terminator.span, .targets = { terminator.targets[*taken] }
+                };
+                changed = true;
+            }
+        }
+        if( terminator.kind != Terminator_kind::Branch && terminator.kind != Terminator_kind::Goto )
+        {
+            continue;
+        }
+        for( u32 i = 0; i < ( terminator.kind == Terminator_kind::Branch ? 2u : 1u ); ++i )
+        {
+            // Past empty gotos, as a test this just decided leaves one.
+            Block_id next = terminator.targets[i];
+            for( u32 steps = 0; steps < func.blocks.size() && func.blocks[next].statement_count == 0 &&
+                                func.blocks[next].terminator.kind == Terminator_kind::Goto && next != b;
+                 ++steps )
+            {
+                next = func.blocks[next].terminator.targets[0];
+            }
+            const Block& into = func.blocks[next];
+            if( only_branches( into ) && next != b )
+            {
+                if( const std::optional<u32> taken = decided( b, into.terminator.condition ) )
+                {
+                    terminator.targets[i] = into.terminator.targets[*taken];
+                    changed               = true;
+                }
+            }
+        }
+    }
+
+    return changed;
+}
+
+// Again, as a branch made a goto leaves an edge into it to go past.
+bool decided_tests( Function& func, const Local_set& addressed )
+{
+    bool changed = false;
+    for( u32 n = 0; n < func.blocks.size() && decide_once( func, addressed ); ++n )
+    {
+        changed = true;
+    }
+    return changed;
+}
+
 } // namespace
 
 bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& literals )
@@ -506,7 +623,8 @@ bool thread_jumps( Function& func, const Type_table& types, const Literal_pool& 
     // A join every edge now goes past has no predecessor left, nor a selected flag's false arm.
     const bool copied   = copy_joins( func, types, literals );
     const bool repeated = repeat_tests( func, addressed, literals );
-    if( select_flags( func, types, literals ) || changed || copied || repeated )
+    const bool decided  = decided_tests( func, addressed );
+    if( decided || select_flags( func, types, literals ) || changed || copied || repeated )
     {
         remove_unreachable_blocks( func );
     }

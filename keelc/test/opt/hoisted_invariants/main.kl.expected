@@ -337,21 +337,13 @@ int32_t kl__4main__( void )
 #line 29 "opt/hoisted_invariants/main.kl"
     kl_t25 = kl_k_10 / 3;
 #line 29 "opt/hoisted_invariants/main.kl"
-    kl_t11 = kl_t25;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t25 = kl_k_10 / 3;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t11 = kl_t11 + kl_t25;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t25 = kl_k_10 / 3;
+    kl_t11 = kl_t25 + kl_t25;
 #line 29 "opt/hoisted_invariants/main.kl"
     kl_t11 = kl_t11 + kl_t25;
 #line 9 "opt/hoisted_invariants/main.kl"
     kl_t55 = kl__calls__G + 4;
 #line 9 "opt/hoisted_invariants/main.kl"
     kl__calls__G = kl_t55;
-#line 29 "opt/hoisted_invariants/main.kl"
-    kl_t25 = kl_k_10 / 3;
 #line 29 "opt/hoisted_invariants/main.kl"
     kl_t11 = kl_t11 + kl_t25;
 #line 91 "opt/hoisted_invariants/main.kl"

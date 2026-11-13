@@ -15,6 +15,7 @@
 #include "opt/coalesce_moves.h"
 #include "opt/collapse_borrows.h"
 #include "opt/devirtualise_calls.h"
+#include "opt/eliminate_common.h"
 #include "opt/fold_constants.h"
 #include "opt/forward_borrows.h"
 #include "opt/forward_globals.h"
@@ -231,6 +232,11 @@ Front_end run_front_end(
             }
             shadow_tags( function );
             verified( function, "shadow_tags" );
+        }
+        // Before propagation, which forwards the copies it leaves.
+        if( build.level >= 3 && eliminate_common( function, literals ) )
+        {
+            verified( function, "eliminate_common" );
         }
         // Folds a local compared with itself, so SCCP branches on the constant.
         propagate_values( function, front.types.table(), literals );
