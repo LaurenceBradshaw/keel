@@ -853,9 +853,10 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
         std::optional<Relation>  related;
     };
 
-    // Values only rise, a range that grows again is widened to the next stop, relations only weaken, and a block is
-    // reached once, so this ends.
+    // Values only rise, a range that grows again at a join is widened to the next stop (every cycle has one),
+    // relations only weaken, and a block is reached once, so this ends; a block with one way in keeps exact ranges.
     const std::vector<Wide> stops   = stops_of( analysis );
+    const std::vector<u32>  ways_in = predecessor_counts( func );
     bool                    changed = true;
     std::vector<Edge>       targets;
     std::vector<bool>       dirty( func.blocks.size(), true );
@@ -955,7 +956,8 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
                     Value       joined = join( old, arriving.values[l.v], func.locals[l].type, analysis.types );
                     if( joined != old )
                     {
-                        if( old.state == Value::State::Range && joined.state == Value::State::Range )
+                        if( ways_in[edge.target.v] > 1 && old.state == Value::State::Range &&
+                            joined.state == Value::State::Range )
                         {
                             joined = widened( old, joined, stops, func.locals[l].type, analysis.types );
                         }
@@ -1427,6 +1429,14 @@ TEST_CASE( "propagate_constants_widens_to_a_tested_bound", "[opt][constants]" )
     const Propagated p( "i64 f( const ref i64[256] a, u64 i ) { i64 s = 0; if( i < 16 ) { for( u64 k = 0; k < 16; k += 1 ) "
                         "{ s += a[i * 16 + k]; } } return s; }\n" );
     REQUIRE( p.branches() == 2 );
+}
+
+// `t` is read past the cast's checks, in a block with one way in, so it keeps `[0, 4092]` and `a[t + 3]`'s check goes.
+TEST_CASE( "propagate_constants_widens_only_at_a_join", "[opt][constants]" )
+{
+    const Propagated p( "void f( ref f64[4096] a ) { for( u64 i = 0; i < 1024; i += 1 ) "
+                        "{ const u64 t = 4 * i; a[t] = cast<f64>( i % 32 ); a[t + 3] = 1.0; } }\n" );
+    REQUIRE( p.branches() == 3 );
 }
 
 } // namespace keel
