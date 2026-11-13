@@ -1819,10 +1819,11 @@ major), no longer blocked now that D81 has settled lambdas.
   emitter), and missing one fails silently.
 - **`found_text()` returns a formatted fragment, not raw text**, which its name hides; a caller adding
   its own backticks would double-quote.
-- **Inlining refuses a constructor, a callee with an `out` parameter, and one with owed fields.**
-  Each is reached through `&init`. `addressed_locals` leaves that pointer out, because it dies with
-  its call. Inlining the callee would keep the pointer alive as a local, so these need the `&init`
-  turned into a plain borrow first. Until then, every `T( … )` stays a call.
+- **Inlining refuses a callee with an `out` parameter**, reached through `&init`, whose pointer
+  `addressed_locals` trusts to die with its call; inlining would need it turned into a plain borrow
+  first. A constructor inlines when its `&init` is in the call's block. Neither keel_build nor the
+  benchmarks has such a callee (measured 2026-11-13): their kept constructors are over the cost
+  threshold.
 - **The dataflow analyses cost statements × locals.** `live_locals` keeps a set per statement,
   and `coalesce_moves` and `remove_dead_stores` read only a few of those sets. Each `coalesce_round`
   also renames over the whole function once per merge. Every set is a `std::vector<bool>`, which is
