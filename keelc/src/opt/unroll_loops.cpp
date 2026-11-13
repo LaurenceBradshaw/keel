@@ -48,22 +48,38 @@ bool unroll( Function& func, const Type_table& types, const Literal_pool& litera
     {
         return false;
     }
-    u64 size = 0;
+    const Local_set addressed = addressed_locals_of( func );
+    // An element of a local array, which split_aggregates makes a local once every index is constant.
+    const auto element = [&]( const Place& place )
+    {
+        return !place.is_global() && place.local.is_valid() && place.num_projections == 1 &&
+               func.projections[place.first_projection].kind == Projection_kind::Index && !addressed[place.local.v] &&
+               types.is_sized_array( func.locals[place.local].type );
+    };
+
+    u64 size  = 0;
+    u64 moves = 0; // statements that copy into or out of such an element: copies of locals once unrolled
     for( const Block_id b : loop.blocks )
     {
         for( const Statement& statement : func.statements_of( b ) )
         {
             size += statement.kind == Statement_kind::Assign || statement.kind == Statement_kind::Drop;
+            if( statement.kind == Statement_kind::Assign && func.rvalue( statement ).kind == Rvalue_kind::Use )
+            {
+                const Operand& from = func.rvalue( statement ).a;
+                moves += element( statement.place ) || ( from.has_place() && element( from.place ) );
+            }
         }
     }
 
-    const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed_locals_of( func ) );
+    const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed );
     if( !trip || trip->turns > budget || size * trip->turns > budget )
     {
         return false;
     }
     // Each copy's step and test fold.
-    if( !growing && ( size - std::min<u64>( size, 2 ) ) * trip->turns > size )
+    const u64 kept = size - moves;
+    if( !growing && ( kept - std::min<u64>( kept, 2 ) ) * trip->turns > size )
     {
         return false;
     }
@@ -135,12 +151,12 @@ namespace
 {
 
 // Loops left in the first function, optimised and elaborated at -O3.
-std::size_t loops_left( std::string_view source, u32 unrolling = Loop_weights {}.unrolling )
+std::size_t loops_left( std::string_view source, u32 unrolling = Loop_weights {}.unrolling, u32 level = 3 )
 {
     const Compiled c(
         std::string( source ) + "i32 main() { return 0; }\n",
         Stage::Elaborated,
-        Build { .level = 3, .loops = Loop_weights { .unrolling = unrolling } }
+        Build { .level = level, .loops = Loop_weights { .unrolling = unrolling } }
     );
     INFO( c.rendered() );
     REQUIRE( c.clean() );
@@ -156,6 +172,17 @@ TEST_CASE( "unroll_loops_copies_a_loop_with_a_constant_count", "[opt][unroll_loo
         "i64 f( const ref i64[4] a ) { i64 t = 0; for( u64 i = 0; i < 4; i += 1 ) { t += a[ i ]; } return t; }\n";
     REQUIRE( loops_left( source ) == 0 );
     REQUIRE( loops_left( source, 0 ) == 1 );
+}
+
+// At -O2 a loop only moving elements of a local array is copied: split_aggregates makes each a local.
+TEST_CASE( "unroll_loops_copies_a_local_array_fill_at_O2", "[opt][unroll_loops]" )
+{
+    REQUIRE( loops_left( "f64 f( f64 x ) { f64[8] m = [ 0.0, .. ]; m[ 1 ] = x; return m[ 0 ] + m[ 1 ]; }\n", 200, 2 ) == 0 );
+    REQUIRE(
+        loops_left(
+            "i64 f( const ref i64[4] a ) { i64 t = 0; for( u64 i = 0; i < 4; i += 1 ) { t += a[ i ]; } return t; }\n", 200, 2
+        ) == 1
+    );
 }
 
 TEST_CASE( "unroll_loops_keeps_a_loop_over_its_budget", "[opt][unroll_loops]" )

@@ -235,7 +235,7 @@ Front_end run_front_end(
         }
         if( build.level >= 2 && build.splitting )
         {
-            split_aggregates( function, ast, front.types );
+            split_aggregates( function, ast, front.types, literals );
             verified( function, "split_aggregates" );
             // Again, for a borrow of a field that splitting made a whole local.
             if( build.forwarding )

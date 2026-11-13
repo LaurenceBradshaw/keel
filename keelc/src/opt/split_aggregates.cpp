@@ -4,9 +4,11 @@
 #include "opt/split_aggregates.h"
 #include <algorithm>
 #include <map>
+#include <ranges>
 #include "ir/live.h"
 #include "ir/place_type.h"
 #include "ir/simplify.h"
+#include "opt/forward_reads.h"
 
 namespace keel
 {
@@ -30,11 +32,182 @@ bool initialises_whole( const Function& func, const Statement& statement )
            value.address_purpose == Address_purpose::Initialise && value.a.place.is_whole_local();
 }
 
+constexpr u64 k_no_index = ~u64 { 0 };
+
+// Each Index projection's value: its local's last write in the block, or its only write, was a
+// constant or a known local plus one, and it is never addressed; k_no_index where not. A place sharing
+// its projections with one whose value differs, as unrolled copies do, gets its own.
+std::vector<u64> constant_indices( Function& func, const Literal_pool& literals )
+{
+    constexpr u64    k_unset   = k_no_index - 1;
+    const Local_set  addressed = addressed_locals_of( func );
+    std::vector<u64> known( func.locals.size(), k_no_index );
+
+    const auto operand_value = [&]( const Operand& operand )
+    {
+        if( operand.kind == Operand_kind::Constant )
+        {
+            return operand.constant.is_valid() && literals.kind( operand.constant ) == Literal_kind::Integer
+                       ? literals.integer( operand.constant )
+                       : k_no_index;
+        }
+        return operand.has_place() && !operand.place.is_global() && operand.place.num_projections == 0
+                   ? known[operand.place.local.v]
+                   : k_no_index;
+    };
+
+    const auto constant_of = [&]( const Statement& statement )
+    {
+        const Rvalue& value = func.rvalue( statement );
+        if( addressed[statement.place.local.v] || statement.place.num_projections != 0 )
+        {
+            return k_no_index;
+        }
+        if( value.kind == Rvalue_kind::Use )
+        {
+            return operand_value( value.a );
+        }
+        const u64  a   = operand_value( value.a );
+        const u64  b   = operand_value( value.b );
+        const bool sum = value.kind == Rvalue_kind::Binary && value.op == Token_kind::Plus && a < k_unset && b < k_unset;
+        return sum && a + b >= a ? a + b : k_no_index;
+    };
+
+    const auto writes_local = []( const Statement& statement )
+    { return statement.kind == Statement_kind::Assign && !statement.place.is_global() && statement.place.local.is_valid(); };
+
+    std::vector<u64> once( func.locals.size(), k_no_index );
+    std::vector<u32> writes( func.locals.size(), 0 );
+    for( const Statement& statement : func.statements )
+    {
+        if( writes_local( statement ) )
+        {
+            writes[statement.place.local.v] += 1;
+            once[statement.place.local.v] = constant_of( statement );
+        }
+    }
+    for( u32 l = 0; l < func.locals.size(); ++l )
+    {
+        once[l] = writes[l] == 1 && l > func.parameter_count ? once[l] : k_no_index;
+    }
+
+    std::vector<u64> indices( func.projections.size(), k_unset );
+    std::vector<u32> touched;
+    known = once;
+
+    const auto record = [&]( Place& place )
+    {
+        if( place.is_global() || !place.local.is_valid() )
+        {
+            return;
+        }
+        const u32  end     = place.first_projection + place.num_projections;
+        const auto differs = [&]( u32 p )
+        {
+            return func.projections[p].kind == Projection_kind::Index && indices[p] != k_unset &&
+                   indices[p] != known[func.projections[p].index.v];
+        };
+        if( std::ranges::any_of( std::views::iota( place.first_projection, end ), differs ) )
+        {
+            const u32 first = narrow_cast<u32>( func.projections.size() );
+            for( u32 p = place.first_projection; p < end; ++p )
+            {
+                func.projections.push_back( func.projections[p] );
+                indices.push_back( k_unset );
+            }
+            place.first_projection = first;
+        }
+        for( u32 p = place.first_projection; p < place.first_projection + place.num_projections; ++p )
+        {
+            if( func.projections[p].kind == Projection_kind::Index )
+            {
+                indices[p] = known[func.projections[p].index.v];
+            }
+        }
+    };
+
+    // A goto into a block nothing else enters carries what is known into it, as unrolled copies are.
+    std::vector<u32> entries( func.blocks.size(), 0 );
+    for( const Block& block : func.blocks )
+    {
+        for( const Block_id target : block.terminator.targets )
+        {
+            if( target.is_valid() )
+            {
+                entries[target.v] += 1;
+            }
+        }
+    }
+    const auto carries = [&]( Block_id b )
+    {
+        const Terminator& terminator = func.blocks[b].terminator;
+        return terminator.kind == Terminator_kind::Goto && entries[terminator.targets[0].v] == 1;
+    };
+    std::vector<bool> continued( func.blocks.size(), false );
+    for( const Block_id b : func.blocks.ids() )
+    {
+        if( carries( b ) )
+        {
+            continued[func.blocks[b].terminator.targets[0].v] = true;
+        }
+    }
+
+    for( const Block_id head : func.blocks.ids() )
+    {
+        if( continued[head.v] )
+        {
+            continue;
+        }
+        for( Block_id b = head;; b = func.blocks[b].terminator.targets[0] )
+        {
+            for( Statement& statement : func.statements_of( b ) )
+            {
+                record( statement.place );
+                if( statement.kind == Statement_kind::Assign )
+                {
+                    Rvalue& value = func.rvalue( statement );
+                    record( value.a.place );
+                    record( value.b.place );
+                    for( Operand& argument : value.arguments )
+                    {
+                        record( argument.place );
+                    }
+                }
+
+                if( !statement.place.is_global() && statement.place.local.is_valid() && statement.kind != Statement_kind::Drop )
+                {
+                    known[statement.place.local.v] = writes_local( statement ) ? constant_of( statement ) : k_no_index;
+                    touched.push_back( statement.place.local.v );
+                }
+            }
+
+            Terminator& terminator = func.blocks[b].terminator;
+            record( terminator.condition.place );
+            record( terminator.message.place );
+            record( terminator.at.place );
+
+            if( carries( b ) )
+            {
+                continue;
+            }
+            for( const u32 l : touched )
+            {
+                known[l] = once[l];
+            }
+            touched.clear();
+            break;
+        }
+    }
+
+    std::ranges::replace( indices, k_unset, k_no_index );
+    return indices;
+}
+
 // The locals to split, from `first`. A local's storage markers don't count, nor does an `&init` of it
 // whose pointer nothing else names: an inlined constructor's, left after its body; and a whole copy
 // doesn't count on a side that is a whole local. An enum is never split at a whole copy, so only past the
-// parameters, whose split would add one.
-Local_set splittable( const Function& func, const Type_table& table, u32 first )
+// parameters, whose split would add one; nor an array, which is never split at one.
+Local_set splittable( const Function& func, const Type_table& table, const std::vector<u64>& indices, u32 first )
 {
     Local_set        split( func.locals.size(), false );
     std::vector<u32> mentions( func.locals.size(), 0 );
@@ -43,7 +216,8 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
     for( u32 l = first; l < func.locals.size(); ++l )
     {
         const Type_id type = func.locals[Local_id { l }].type;
-        split[l]           = table.is_struct( type ) || ( l > func.parameter_count && table.is_enum( type ) );
+        split[l]           = table.is_struct( type ) ||
+                   ( l > func.parameter_count && ( table.is_enum( type ) || table.is_sized_array( type ) ) );
     }
 
     const auto use = [&]( const Place& place )
@@ -55,8 +229,13 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
 
         mentions[place.local.v] += 1;
 
-        if( place.num_projections == 0 || ( func.projections[place.first_projection].kind != Projection_kind::Field &&
-                                            func.projections[place.first_projection].kind != Projection_kind::Tag ) )
+        const Projection_kind kind =
+            place.num_projections == 0 ? Projection_kind::Deref : func.projections[place.first_projection].kind;
+        const bool part = kind == Projection_kind::Field || kind == Projection_kind::Tag ||
+                          ( kind == Projection_kind::Index &&
+                            indices[place.first_projection] < table.get( func.locals[place.local].type ).count );
+
+        if( !part )
         {
             split[place.local.v] = false;
         }
@@ -110,6 +289,12 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
             if( value.kind == Rvalue_kind::Address_of )
             {
                 use( value.a.place );
+                // An element's address reaches the rest.
+                if( !value.a.place.is_global() && value.a.place.num_projections > 0 &&
+                    func.projections[value.a.place.first_projection].kind == Projection_kind::Index )
+                {
+                    split[value.a.place.local.v] = false;
+                }
             }
         }
     }
@@ -153,13 +338,22 @@ Local_set splittable( const Function& func, const Type_table& table, u32 first )
     return split;
 }
 
-// One new local per split local and field or tag named, keyed by both (a tag's field is node 0); each place loses its first
-// projection, the split locals' markers and `&init`s go, and a whole copy of a split local becomes one
-// copy per field. Rebuilt block by block.
-void split_locals( Function& func, const Local_set& split, const Ast& ast, Types& types )
+// One new local per split local and field, tag or index named, keyed by both (a tag's field is node 0); each place loses its
+// first projection, the split locals' markers and `&init`s go, and a whole copy of a split local becomes one copy per field.
+// Rebuilt block by block.
+void split_locals( Function& func, const Local_set& split, std::vector<u64> indices, const Ast& ast, Types& types )
 {
-    std::map<std::pair<u32, u32>, Local_id> parts;
-    std::vector<Statement>                  statements;
+    std::map<std::pair<u32, u64>, Local_id> parts;
+
+    // As projected, the copy keeping each index's value.
+    const auto field_of = [&]( const Place& base, Node_id member )
+    {
+        const Place place = projected( func, base, Projection { .kind = Projection_kind::Field, .field = member } );
+        indices.resize( func.projections.size(), k_no_index );
+        std::copy_n( indices.begin() + base.first_projection, base.num_projections, indices.begin() + place.first_projection );
+        return place;
+    };
+    std::vector<Statement> statements;
     statements.reserve( func.statements.size() );
 
     const auto rewrite = [&]( Place& place )
@@ -169,9 +363,10 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
             return;
         }
 
-        const Node_id field = func.projections[place.first_projection].field;
+        const Projection& first = func.projections[place.first_projection];
+        const u64         key   = first.kind == Projection_kind::Index ? indices[place.first_projection] : first.field.v;
 
-        if( !parts.contains( { place.local.v, field.v } ) )
+        if( !parts.contains( { place.local.v, key } ) )
         {
             const Local   whole = func.locals[place.local];
             const Type_id type  = place_type(
@@ -180,11 +375,11 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
                 func,
                 Place { .local = place.local, .first_projection = place.first_projection, .num_projections = 1 }
             );
-            parts[{ place.local.v, field.v }] = Local_id { narrow_cast<u32>( func.locals.size() ) };
+            parts[{ place.local.v, key }] = Local_id { narrow_cast<u32>( func.locals.size() ) };
             func.locals.push_back( Local { .type = type, .span = whole.span, .name = whole.name } );
         }
 
-        place.local = parts[{ place.local.v, field.v }];
+        place.local = parts[{ place.local.v, key }];
         place.first_projection += 1;
         place.num_projections -= 1;
     };
@@ -227,13 +422,11 @@ void split_locals( Function& func, const Local_set& split, const Ast& ast, Types
                         continue;
                     }
 
-                    Rvalue value = func.rvalue( statement );
-                    Place  place =
-                        projected( func, statement.place, Projection { .kind = Projection_kind::Field, .field = member } );
-                    value.a.place =
-                        projected( func, value.a.place, Projection { .kind = Projection_kind::Field, .field = member } );
-                    value.type   = place_type( ast, types, func, place );
-                    value.a.type = place_type( ast, types, func, value.a.place );
+                    Rvalue value  = func.rvalue( statement );
+                    Place  place  = field_of( statement.place, member );
+                    value.a.place = field_of( value.a.place, member );
+                    value.type    = place_type( ast, types, func, place );
+                    value.a.type  = place_type( ast, types, func, value.a.place );
 
                     if( types.table().is_builtin( value.a.type ) )
                     {
@@ -445,9 +638,9 @@ void move_into_return_slot( Function& func )
 
 } // namespace
 
-void split_aggregates( Function& func, const Ast& ast, Types& types )
+void split_aggregates( Function& func, const Ast& ast, Types& types, const Literal_pool& literals )
 {
-    const Local_set whole = splittable( func, types.table(), 0 );
+    const Local_set whole = splittable( func, types.table(), constant_indices( func, literals ), 0 );
     copy_parameters( func, whole );
     if( whole[0] && reads_a_field( func, k_return_slot ) )
     {
@@ -457,14 +650,15 @@ void split_aggregates( Function& func, const Ast& ast, Types& types )
     // A field's new local may be a struct named only through its own fields in turn.
     while( true )
     {
-        const Local_set split = splittable( func, types.table(), func.parameter_count + 1 );
+        const std::vector<u64> indices = constant_indices( func, literals );
+        const Local_set        split   = splittable( func, types.table(), indices, func.parameter_count + 1 );
 
         if( !split.any() )
         {
             return;
         }
 
-        split_locals( func, split, ast, types );
+        split_locals( func, split, indices, ast, types );
     }
 }
 
@@ -493,11 +687,16 @@ struct Split : Compiled
     Function func;
     Local_id local {};
 
-    explicit Split( std::string_view source, std::string_view name, std::optional<Inline_weights> inlining = Inline_weights {} )
+    explicit Split(
+        std::string_view              source,
+        std::string_view              name,
+        std::optional<Inline_weights> inlining = Inline_weights {},
+        std::optional<Loop_weights>   loops    = std::nullopt
+    )
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .level = 2, .inlining = inlining, .loops = std::nullopt, .splitting = false, .forwarding = false }
+              Build { .level = 2, .inlining = inlining, .loops = loops, .splitting = false, .forwarding = false }
           )
     {
         for( const Function& f : functions )
@@ -513,7 +712,7 @@ struct Split : Compiled
         }
 
         before = func;
-        split_aggregates( func, ast, types );
+        split_aggregates( func, ast, types, literals );
     }
 
     // Whether anything but a storage marker still names the local.
@@ -756,7 +955,7 @@ TEST_CASE( "split_aggregates_copies_a_parameter_once", "[opt][split]" )
     func.blocks[k_entry_block].terminator.targets[0] = p.before.blocks[k_entry_block].terminator.targets[0];
     REQUIRE( verify( func ).empty() );
 
-    split_aggregates( func, p.ast, p.types );
+    split_aggregates( func, p.ast, p.types, p.literals );
     p.func = func;
 
     REQUIRE( verify( p.func ).empty() );
@@ -852,6 +1051,64 @@ TEST_CASE( "split_aggregates_keeps_a_local_a_constructor_still_builds", "[opt][s
     REQUIRE( verify( p.func ).empty() );
     REQUIRE( p.initialises() );
     REQUIRE( p.named() );
+}
+
+// Every index is a constant, from the literal or written.
+TEST_CASE( "split_aggregates_splits_an_array_indexed_by_constants", "[opt][split]" )
+{
+    const Split p( "i32 f( i32 a ) { i32[3] v = [ a, 2, 3 ]; v[ 1 ] = a + 1; return v[ 0 ] + v[ 1 ] + v[ 2 ]; }\n", "v" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE_FALSE( p.named() );
+}
+
+TEST_CASE( "split_aggregates_keeps_an_array_indexed_at_run_time", "[opt][split]" )
+{
+    const Split p( "i32 f( u64 i ) { i32[3] v = [ 1, 2, 3 ]; return v[ i ]; }\n", "v" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE( p.named() );
+}
+
+// `q = copy ps[ 1 ]` becomes one copy per field, each keeping its index: `ps` splits, then its parts.
+TEST_CASE( "split_aggregates_splits_an_array_of_structs_copied_whole", "[opt][split]" )
+{
+    const Split p(
+        "i32 f( i32 a ) { Point[2] ps = [ Point { a, 1 }, Point { 2, a } ]; Point q = ps[ 1 ]; return q.y + ps[ 0 ].x; }\n",
+        "ps"
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE_FALSE( p.named() );
+    REQUIRE( p.struct_locals_named() == 0 );
+}
+
+// `&read v[ 0 ]` is where the run starts, so `v` stays whole.
+TEST_CASE( "split_aggregates_keeps_an_array_an_element_address_reaches", "[opt][split]" )
+{
+    const Split p(
+        "i32 sum( const ref i32[] r ) { return r[ 0 ] + r[ 2 ]; }\n"
+        "i32 f( i32 a ) { i32[3] v = [ a, 2, 3 ]; return sum( v ); }\n",
+        "v",
+        std::nullopt
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE( p.named() );
+}
+
+// Unrolled copies of `v[ i ] = 0` share one projection: each gets its own, by the index it has there.
+TEST_CASE( "split_aggregates_splits_an_unrolled_fill", "[opt][split]" )
+{
+    const Split p(
+        "f64 f( f64 x ) { f64[4] v = [ 0.0, .. ]; v[ 2 ] = x; return v[ 0 ] + v[ 2 ]; }\n",
+        "v",
+        Inline_weights {},
+        Loop_weights {}
+    );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.func ).empty() );
+    REQUIRE_FALSE( p.named() );
 }
 
 } // namespace keel

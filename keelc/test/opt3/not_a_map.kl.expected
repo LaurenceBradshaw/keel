@@ -54,63 +54,25 @@ double kl__6energy__A2_3f64( struct kl__A2_3f64* kl_x_1 )
 int32_t kl__4main__( void )
 {
     int32_t kl_t0;
-    struct kl__A2_3f64 kl_x_1;
-    uint64_t kl_t2;
-    uint64_t kl_t3;
+    double kl_t1;
+    double kl_t2;
+    double kl_t3;
     double kl_t4;
-    double kl_t5;
+    bool kl_t5;
     double kl_t6;
-    double kl_t7;
-    double kl_t8;
+    bool kl_t7;
+    uint64_t kl_t8;
     bool kl_t9;
-    uint64_t kl_t10;
-    uint64_t kl_t11;
-    double kl_t12;
-    uint64_t kl_t13;
-    uint64_t kl_t14;
-    double kl_t15;
-    double kl_t16;
-    bool kl_t17;
-    uint64_t kl_t18;
-    bool kl_t19;
-    double kl_t20;
-    bool kl_t21;
-    uint64_t kl_t22;
-    bool kl_t23;
-    ( void ) kl_t2;
-    ( void ) kl_t3;
-    ( void ) kl_t10;
-    ( void ) kl_t11;
-    ( void ) kl_t13;
-    ( void ) kl_t14;
-#line 18 "opt3/not_a_map.kl"
-    kl_t2 = 0;
-#line 18 "opt3/not_a_map.kl"
-    kl_x_1.e[kl_t2] = 3.0;
-#line 18 "opt3/not_a_map.kl"
-    kl_t3 = 1;
-#line 18 "opt3/not_a_map.kl"
-    kl_x_1.e[kl_t3] = 4.0;
-#line 7 "opt3/not_a_map.kl"
-    kl_t10 = 0;
-#line 7 "opt3/not_a_map.kl"
-    kl_t11 = 0;
-#line 7 "opt3/not_a_map.kl"
-    kl_t12 = kl_x_1.e[kl_t10] * kl_x_1.e[kl_t11];
-#line 7 "opt3/not_a_map.kl"
-    kl_t13 = 1;
-#line 7 "opt3/not_a_map.kl"
-    kl_t14 = 1;
-#line 7 "opt3/not_a_map.kl"
-    kl_t15 = kl_x_1.e[kl_t13] * kl_x_1.e[kl_t14];
-#line 7 "opt3/not_a_map.kl"
-    kl_t4 = kl_t12 + kl_t15;
+    double kl_t10;
+    bool kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
 #line 13 "opt3/not_a_map.kl"
-    kl_t16 = ( double ) 2;
+    kl_t6 = ( double ) 2;
 #line 13 "opt3/not_a_map.kl"
-    kl_t17 = kl_t16 < 1.8446744073709552e+19;
+    kl_t7 = kl_t6 < 1.8446744073709552e+19;
 #line 13 "opt3/not_a_map.kl"
-    if ( kl_t17 ) goto bb5; else goto bb4;
+    if ( kl_t7 ) goto bb5; else goto bb4;
     bb1:
 #line 19 "opt3/not_a_map.kl"
     kl_t0 = 0;
@@ -129,41 +91,41 @@ int32_t kl__4main__( void )
     kl_rt_panic( "opt3/not_a_map.kl", 13, "cast out of range: cast<f64>( N )" );
     bb5:
 #line 13 "opt3/not_a_map.kl"
-    kl_t18 = ( uint64_t ) kl_t16;
+    kl_t8 = ( uint64_t ) kl_t6;
 #line 13 "opt3/not_a_map.kl"
-    kl_t19 = kl_t18 == 2;
+    kl_t9 = kl_t8 == 2;
 #line 13 "opt3/not_a_map.kl"
-    if ( kl_t19 ) goto bb6; else goto bb4;
+    if ( kl_t9 ) goto bb6; else goto bb4;
     bb6:
 #line 13 "opt3/not_a_map.kl"
-    kl_t5 = kl_t16 + 1.0;
+    kl_t1 = kl_t6 + 1.0;
 #line 19 "opt3/not_a_map.kl"
-    kl_t6 = kl_t4 + kl_t5;
+    kl_t2 = 25.0 + kl_t1;
 #line 13 "opt3/not_a_map.kl"
-    kl_t20 = ( double ) 3;
+    kl_t10 = ( double ) 3;
 #line 13 "opt3/not_a_map.kl"
-    kl_t21 = kl_t20 < 1.8446744073709552e+19;
+    kl_t11 = kl_t10 < 1.8446744073709552e+19;
 #line 13 "opt3/not_a_map.kl"
-    if ( kl_t21 ) goto bb8; else goto bb7;
+    if ( kl_t11 ) goto bb8; else goto bb7;
     bb7:
 #line 13 "opt3/not_a_map.kl"
     kl_rt_panic( "opt3/not_a_map.kl", 13, "cast out of range: cast<f64>( N )" );
     bb8:
 #line 13 "opt3/not_a_map.kl"
-    kl_t22 = ( uint64_t ) kl_t20;
+    kl_t12 = ( uint64_t ) kl_t10;
 #line 13 "opt3/not_a_map.kl"
-    kl_t23 = kl_t22 == 3;
+    kl_t13 = kl_t12 == 3;
 #line 13 "opt3/not_a_map.kl"
-    if ( kl_t23 ) goto bb9; else goto bb7;
+    if ( kl_t13 ) goto bb9; else goto bb7;
     bb9:
 #line 13 "opt3/not_a_map.kl"
-    kl_t7 = kl_t20 + 1.0;
+    kl_t3 = kl_t10 + 1.0;
 #line 19 "opt3/not_a_map.kl"
-    kl_t8 = kl_t6 + kl_t7;
+    kl_t4 = kl_t2 + kl_t3;
 #line 19 "opt3/not_a_map.kl"
-    kl_t9 = kl_t8 == 32.0;
+    kl_t5 = kl_t4 == 32.0;
 #line 19 "opt3/not_a_map.kl"
-    if ( kl_t9 ) goto bb1; else goto bb2;
+    if ( kl_t5 ) goto bb1; else goto bb2;
 }
 
 #line 11 "opt3/not_a_map.kl"
