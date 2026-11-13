@@ -27,11 +27,12 @@ public:
 
     // Also certain to return: no loop, no recursion and no panic, here or in what it calls.
     bool removable( const Rvalue& call ) const;
+    // The function a Call names, by its index.
+    std::optional<u32> callee( const Rvalue& call ) const;
 
 private:
-    std::optional<u32> callee( const Rvalue& call ) const;
-    bool               pure_body( const Function& func ) const;
-    bool               returns( const Function& func ) const;
+    bool pure_body( const Function& func ) const;
+    bool returns( const Function& func ) const;
 
     const std::vector<Function>&              functions_;
     const Ast&                                ast_;
