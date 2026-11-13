@@ -5,6 +5,7 @@
 #include <optional>
 #include "ir/live.h"
 #include "opt/fold_constants.h"
+#include "opt/forward_reads.h"
 
 namespace keel
 {
@@ -38,13 +39,13 @@ bool same( const Operand& a, const Operand& b )
     return a.kind == Operand_kind::Constant ? a.constant == b.constant : a.place.local == b.place.local;
 }
 
-// `local` changed: its own fact goes, and so does every fact naming it, a field of it included.
-void kill( Values& values, Local_id local )
+// `local` changed: its own fact goes, and so does every fact naming it, a field of it or an index by it included.
+void kill( const Function& func, Values& values, Local_id local )
 {
     values[local.v] = std::nullopt;
     for( u32 i = 0; i < values.size(); ++i )
     {
-        if( values[i].has_value() && values[i]->kind == Operand_kind::Copy && values[i]->place.local == local )
+        if( values[i].has_value() && values[i]->kind == Operand_kind::Copy && mentions( func, values[i]->place, local ) )
         {
             values[i] = std::nullopt;
         }
@@ -63,13 +64,13 @@ void step(
         // A field write changes its local too; a write through a pointer reaches only an addressed one.
         if( !statement.place.is_global() && !has_deref_projection( func, statement.place ) )
         {
-            kill( values, statement.place.local );
+            kill( func, values, statement.place.local );
         }
         // `addressed_locals` leaves out `&init`, but the call it feeds writes the local.
         if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Initialise &&
             !value.a.place.is_global() )
         {
-            kill( values, value.a.place.local );
+            kill( func, values, value.a.place.local );
         }
         break;
     // A copy must not outlive its source's storage.
@@ -78,7 +79,7 @@ void step(
     case Statement_kind::Storage_dead:
         if( !statement.place.is_global() )
         {
-            kill( values, statement.place.local );
+            kill( func, values, statement.place.local );
         }
         break;
     }
@@ -399,6 +400,15 @@ TEST_CASE( "propagate_values_keeps_two_fields_apart_at_a_join", "[opt][propagate
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.reads( "a" ) == 2 );
+}
+
+// `a` is `p[k]` for the old `k`; once `k` is `j`, the read of `a` stays.
+TEST_CASE( "propagate_values_keeps_an_element_copy_its_index_changed", "[opt][propagate]" )
+{
+    const Propagated p( "i64 f( i64[4] p, u64 i, u64 j ) { u64 k = i; i64 a = p[ k ]; k = j; return a * 10 + p[ k ]; }\n" );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    REQUIRE( p.reads( "a" ) == 1 );
 }
 
 // `w` widens `n`, so `w * w` stays an `i64` multiply of `w`.

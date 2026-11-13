@@ -386,8 +386,8 @@ function's `-O1` code depends on nothing outside it.
 | the loop passes | `-O3` | Landing, per the rule above. Once measured: rotation, LICM (pinned: temporaries only, a hoisted statement on the loop head's line), read forwarding and the fold of a test two variables decide go to `-O1`; induction variables and full unrolling within a small budget to `-O2`; full unrolling within a larger one stays. |
 
 **Loop passes** run once per function after the rounds: rotation, read forwarding, a round, then
-LICM, induction variables and another round, as LICM needs the checks the first round folds gone;
-full unrolling comes later. A loop has one preheader, one latch and exits only it enters. LICM
+LICM, induction variables, full unrolling and another round, as LICM needs the checks the first
+round folds gone, and unrolling last lets that round fold each copy's index. A loop has one preheader, one latch and exits only it enters. LICM
 hoists a read through a reference only when the loop has no store to that place, a call or a store
 through a `T*` counting as a store to every place that is not a local. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
@@ -399,7 +399,13 @@ beside the index, and the index itself goes when its only other reads are `i + c
 or `i * 2^k`, which are then stepped too, and the constants show the latch's test can read one of
 them without wrapping. Otherwise those forms stay as they are: a stepped one costs the add it saves,
 and a scaled address is free where the target has one, which only `LoopStrengthReduce` knows.
-Unrolling is full only, for a constant trip count.
+Unrolling is full only, for a constant trip count: the index's entry value, its step and the test's
+bound are constants, the step and the test sit in the header or the latch, and no value the test sees
+wraps. A `break` or `return` in the body leaves each copy for the same place, so it does not stop
+unrolling. The budget is the loop's statements times its trip count. A KIR statement costs about 1.5
+of LLVM's code-size units, so LLVM's full-unroll thresholds of 150 (`-O2`) and 300 (`-O3`) are about
+100 and 200 statements; GCC's `-O3` allows 200 instructions, and at `-O2` only unrolling that does
+not grow the code. The larger budget is 200.
 
 **LLVM runs no IR pass at any level** (§2.2). Its codegen level is `None` at `-O0`, `Less` at `-O1`
 and `Aggressive` at `-O2` and `-O3`, except a debug `-O1`, which is `None` too: `Less` drops a store

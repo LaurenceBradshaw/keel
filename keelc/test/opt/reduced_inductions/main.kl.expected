@@ -62,49 +62,172 @@ int64_t kl__4rows__A256_3i64( struct kl__A256_3i64* kl_a_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
-    uint64_t kl_j_3;
+    uint64_t kl_t3;
     bool kl_t4;
     uint64_t kl_t5;
-    bool kl_t6;
-    uint64_t kl_t7;
 #line 21 "opt/reduced_inductions/main.kl"
     kl_t0 = 0;
 #line 26 "opt/reduced_inductions/main.kl"
-    kl_t7 = 0;
+    kl_t5 = 0;
 #line 22 "opt/reduced_inductions/main.kl"
     goto bb1;
     bb1:
-    kl_j_3 = 0;
-#line 24 "opt/reduced_inductions/main.kl"
-    goto bb3;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t5 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb3; else goto bb4;
     bb2:
 #line 29 "opt/reduced_inductions/main.kl"
     return kl_t0;
     bb3:
 #line 26 "opt/reduced_inductions/main.kl"
-    kl_t5 = kl_t7 + kl_j_3;
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
 #line 26 "opt/reduced_inductions/main.kl"
-    kl_t6 = kl_t5 < 256;
+    kl_t3 = kl_t5 + 1;
 #line 26 "opt/reduced_inductions/main.kl"
-    if ( kl_t6 ) goto bb5; else goto bb6;
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb5; else goto bb4;
     bb4:
-#line 22 "opt/reduced_inductions/main.kl"
-    kl_t7 = kl_t7 + 16;
-#line 22 "opt/reduced_inductions/main.kl"
-    kl_t2 = kl_t7 < 256;
-#line 22 "opt/reduced_inductions/main.kl"
-    if ( kl_t2 ) goto bb1; else goto bb2;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_rt_panic( "opt/reduced_inductions/main.kl", 26, "out of bounds: a[ i * 16 + j ]" );
     bb5:
 #line 26 "opt/reduced_inductions/main.kl"
-    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t5];
-#line 24 "opt/reduced_inductions/main.kl"
-    kl_j_3 = kl_j_3 + 1;
-#line 24 "opt/reduced_inductions/main.kl"
-    kl_t4 = kl_j_3 < 16;
-#line 24 "opt/reduced_inductions/main.kl"
-    if ( kl_t4 ) goto bb3; else goto bb4;
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 2;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb6; else goto bb4;
     bb6:
-    kl_rt_panic( "opt/reduced_inductions/main.kl", 26, "out of bounds: a[ i * 16 + j ]" );
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 3;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb7; else goto bb4;
+    bb7:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 4;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb8; else goto bb4;
+    bb8:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 5;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb9; else goto bb4;
+    bb9:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 6;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb10; else goto bb4;
+    bb10:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 7;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb11; else goto bb4;
+    bb11:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 8;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb12; else goto bb4;
+    bb12:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 9;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb13; else goto bb4;
+    bb13:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 10;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb14; else goto bb4;
+    bb14:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 11;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb15; else goto bb4;
+    bb15:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 12;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb16; else goto bb4;
+    bb16:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 13;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb17; else goto bb4;
+    bb17:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 14;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb18; else goto bb4;
+    bb18:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t3 = kl_t5 + 15;
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t4 = kl_t3 < 256;
+#line 26 "opt/reduced_inductions/main.kl"
+    if ( kl_t4 ) goto bb19; else goto bb4;
+    bb19:
+#line 26 "opt/reduced_inductions/main.kl"
+    kl_t0 = kl_t0 + ( *kl_a_1 ).e[kl_t3];
+#line 22 "opt/reduced_inductions/main.kl"
+    kl_t5 = kl_t5 + 16;
+#line 22 "opt/reduced_inductions/main.kl"
+    kl_t2 = kl_t5 < 256;
+#line 22 "opt/reduced_inductions/main.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
 #line 30 "opt/reduced_inductions/main.kl"
 }
 
@@ -510,7 +633,7 @@ int32_t kl__4main__( void )
     return kl_t0;
     bb44:
 #line 13 "opt/reduced_inductions/main.kl"
-    kl_t64 = 0 * kl_k_9;
+    kl_t64 = 0;
 #line 11 "opt/reduced_inductions/main.kl"
     goto bb22;
 #line 89 "opt/reduced_inductions/main.kl"

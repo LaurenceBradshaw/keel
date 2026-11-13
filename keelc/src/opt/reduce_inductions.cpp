@@ -390,6 +390,73 @@ Wide number( u64 bits, const Type_table& types, Type_id type )
     return t.is_signed ? Wide( as_signed( bits, t.width ) ) : Wide( truncate( bits, t.width ) );
 }
 
+// `at`'s `t = i < n`, after `i`'s step there, with the entry value, step and `n` constants, the step
+// positive, and no value the test sees wrapping.
+struct Counted
+{
+    u32   test; // in `at`
+    Range range;
+    Wide  start;
+    Wide  step;
+    Wide  n;
+    Wide  last; // no less than the last value the test sees
+};
+
+std::optional<Counted> counted(
+    const Function& func, const Type_table& types, const Literal_pool& literals, const Scope& scope, const Basic& i, Block_id at
+)
+{
+    if( !at.is_valid() || i.block != at || func.blocks[at].terminator.kind != Terminator_kind::Branch )
+    {
+        return std::nullopt;
+    }
+    const Operand& condition = func.blocks[at].terminator.condition;
+    if( condition.kind != Operand_kind::Copy || !condition.place.is_whole_local() ||
+        is_addressed( scope.addressed, condition.place.local ) )
+    {
+        return std::nullopt;
+    }
+
+    // The last write of the condition, after the step.
+    const Run<const Statement> statements = func.statements_of( at );
+    u32                        test       = statements.size();
+    for( u32 s = statements.size(); s-- > i.index + 1; )
+    {
+        if( !statements[s].place.is_global() && statements[s].place.local == condition.place.local )
+        {
+            test = s;
+            break;
+        }
+    }
+    if( test == statements.size() || !statements[test].place.is_whole_local() ||
+        statements[test].kind != Statement_kind::Assign )
+    {
+        return std::nullopt;
+    }
+
+    const Rvalue&                compare = func.rvalue( statements[test] );
+    const Type_id                type    = func.locals[i.local].type;
+    const std::optional<Range>   range   = range_of( types, type );
+    const std::optional<Operand> entry   = entry_constant( func, scope.loop, i.local );
+    if( compare.kind != Rvalue_kind::Binary || compare.op != Token_kind::Less || !Scope::is_local( compare.a, i.local ) ||
+        compare.b.kind != Operand_kind::Constant || compare.b.type != type || i.step.kind != Operand_kind::Constant || !range ||
+        !entry )
+    {
+        return std::nullopt;
+    }
+
+    const Wide start = number( literals.integer( entry->constant ), types, type );
+    const Wide step  = number( literals.integer( i.step.constant ), types, type );
+    const Wide n     = number( literals.integer( compare.b.constant ), types, type );
+    // The tests see `start + step`, `start + 2 step`, … up to the first at or past `n`.
+    const Wide last = std::max( start, n - 1 ) + step;
+    if( step <= 0 || !range->holds( last ) )
+    {
+        return std::nullopt;
+    }
+    return Counted { test, *range, start, step, n, last };
+}
+
 // The latch's `t = i < n` reads a derived local instead, and `i`'s step goes, when nothing else reads `i`
 // and the constants show the derived local passes `a * n + b` exactly when `i` passes `n`. Whether it did.
 bool retire_one(
@@ -402,59 +469,16 @@ bool retire_one(
 )
 {
     const Block_id latch = scope.loop.latch;
-    if( !latch.is_valid() || func.blocks[latch].terminator.kind != Terminator_kind::Branch )
-    {
-        return false;
-    }
-    const Operand& condition = func.blocks[latch].terminator.condition;
-    if( condition.kind != Operand_kind::Copy || !condition.place.is_whole_local() )
-    {
-        return false;
-    }
-
-    const Run<const Statement> statements = func.statements_of( latch );
     for( const Basic& i : scope.basics )
     {
-        if( i.local != only )
+        const std::optional<Counted> count = i.local == only ? counted( func, types, literals, scope, i, latch ) : std::nullopt;
+        if( !count )
         {
             continue;
         }
-        // The last write of the condition, after the step.
-        u32 test = statements.size();
-        for( u32 s = statements.size(); s-- > i.index + 1; )
-        {
-            if( !statements[s].place.is_global() && statements[s].place.local == condition.place.local )
-            {
-                test = s;
-                break;
-            }
-        }
-        if( i.block != latch || test == statements.size() || !statements[test].place.is_whole_local() ||
-            statements[test].kind != Statement_kind::Assign )
-        {
-            continue;
-        }
-
-        const Rvalue&                compare = func.rvalue( statements[test] );
-        const Type_id                type    = func.locals[i.local].type;
-        const std::optional<Range>   range   = range_of( types, type );
-        const std::optional<Operand> entry   = entry_constant( func, scope.loop, i.local );
-        if( compare.kind != Rvalue_kind::Binary || compare.op != Token_kind::Less || !Scope::is_local( compare.a, i.local ) ||
-            compare.b.kind != Operand_kind::Constant || compare.b.type != type || i.step.kind != Operand_kind::Constant ||
-            !range || !entry )
-        {
-            continue;
-        }
-
-        const Wide start = number( literals.integer( entry->constant ), types, type );
-        const Wide step  = number( literals.integer( i.step.constant ), types, type );
-        const Wide n     = number( literals.integer( compare.b.constant ), types, type );
-        // The tests see `start + step`, `start + 2 step`, … up to the first at or past `n`.
-        const Wide last = std::max( start, n - 1 ) + step;
-        if( step <= 0 || !range->holds( last ) )
-        {
-            continue;
-        }
+        const auto [test, range, start, step, n, last] = *count;
+        const Type_id type                             = func.locals[i.local].type;
+        const Type_id result                           = func.rvalue( func.statements_of( latch )[test] ).type;
 
         const Derived* chosen = nullptr;
         Wide           bound  = 0;
@@ -470,7 +494,7 @@ bool retire_one(
             Wide       low = 0, high = 0, at = 0;
             if( scale <= 0 || __builtin_mul_overflow( scale, start + step, &low ) ||
                 __builtin_mul_overflow( scale, last, &high ) || __builtin_mul_overflow( scale, n, &at ) ||
-                !range->holds( low + offset ) || !range->holds( high + offset ) || !range->holds( at + offset ) )
+                !range.holds( low + offset ) || !range.holds( high + offset ) || !range.holds( at + offset ) )
             {
                 continue;
             }
@@ -509,7 +533,7 @@ bool retire_one(
             Token_kind::Less,
             copy( Place { .local = chosen->local }, type ),
             constant( literals.add_integer( truncate( static_cast<u64>( bound ), types.get( type ).width ) ), type ),
-            compare.type
+            result
         );
         std::vector<bool> deleted( func.statements.size(), false );
         deleted[first + i.index] = true;
@@ -519,6 +543,29 @@ bool retire_one(
     return false;
 }
 } // namespace
+
+std::optional<Trip> trip_count(
+    const Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, const Local_set& addressed
+)
+{
+    const Scope scope( func, loop, addressed );
+    for( const Block_id at : { loop.header, loop.latch } )
+    {
+        if( !at.is_valid() || func.blocks[at].terminator.kind != Terminator_kind::Branch ||
+            !loop.contains( func.blocks[at].terminator.targets[0] ) || loop.contains( func.blocks[at].terminator.targets[1] ) )
+        {
+            continue;
+        }
+        for( const Basic& i : scope.basics )
+        {
+            if( const std::optional<Counted> c = counted( func, types, literals, scope, i, at ) )
+            {
+                return Trip { static_cast<u64>( c->start >= c->n ? 1 : ( c->n - c->start + c->step - 1 ) / c->step ), at };
+            }
+        }
+    }
+    return std::nullopt;
+}
 
 bool reduce_inductions( Function& func, const Type_table& types, Literal_pool& literals )
 {
@@ -579,11 +626,15 @@ namespace keel
 namespace
 {
 
-// Optimised and elaborated, as a release build emits it. The function under test is always the first.
+// Optimised and elaborated, as a release build emits it, without unrolling. The function under test is always the first.
 struct Reduced : Compiled
 {
     explicit Reduced( std::string_view source, u32 level = 3 )
-        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .level = level } )
+        : Compiled(
+              std::string( source ) + "i32 main() { return 0; }\n",
+              Stage::Elaborated,
+              Build { .level = level, .loops = Loop_weights { .unrolling = 0 } }
+          )
     {
         INFO( rendered() );
         REQUIRE( clean() );

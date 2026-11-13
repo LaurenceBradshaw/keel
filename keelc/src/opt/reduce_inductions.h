@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
 #include "common/literal_pool.h"
+#include "ir/initialised.h"
 #include "ir/kir.h"
 #include "sema/type.h"
 
@@ -15,4 +17,16 @@ namespace keel
 // constants show a stepped local cannot wrap, the test reads that local and the step goes. What only
 // some targets gain from is left to the backend. Whether it changed the function.
 bool reduce_inductions( Function& func, const Type_table& types, Literal_pool& literals );
+
+struct Loop;
+struct Trip
+{
+    u64      turns;
+    Block_id test; // the header or the latch: continues on true, leaves on false
+};
+// How many turns a normalised loop takes, when its header or latch steps `i` by a constant and then
+// continues on `i < n`, with `i`'s entry value and `n` constants and no value the test sees wrapping.
+std::optional<Trip> trip_count(
+    const Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, const Local_set& addressed
+);
 } // namespace keel

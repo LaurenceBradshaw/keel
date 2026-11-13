@@ -1,0 +1,79 @@
+// M16's -O3: a loop with a constant trip count and a small body becomes that many copies of its
+// body, and each copy's index folds. Each check returns its own code.
+
+// Four copies; each reads a constant element and multiplies by a constant.
+i64 weighted( const ref i64[4] a )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < 4; i += 1 )
+    {
+        total += a[ i ] * cast<i64>( i + 1 );
+    }
+    return total;
+}
+
+// A `break` leaves each copy for the same block.
+i64 before( const ref i64[4] a, i64 stop )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < 4; i += 1 )
+    {
+        if( a[ i ] == stop )
+        {
+            break;
+        }
+        total += a[ i ];
+    }
+    return total;
+}
+
+// The inner loop is copied three times, then the outer twice.
+i64 grid( const ref i64[6] a )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < 2; i += 1 )
+    {
+        for( u64 j = 0; j < 3; j += 1 )
+        {
+            total += a[ i * 3 + j ] * cast<i64>( j );
+        }
+    }
+    return total;
+}
+
+// Too many turns for the budget: the loop stays.
+i64 long_sum( const ref i64[200] a )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < 200; i += 1 )
+    {
+        total += a[ i ];
+    }
+    return total;
+}
+
+i32 main()
+{
+    i64[4] a = [ 1, 2, 3, 4 ];
+    if( weighted( a ) != 30 )
+    {
+        return 1;
+    }
+    if( before( a, 3 ) != 3 || before( a, 9 ) != 10 )
+    {
+        return 2;
+    }
+
+    i64[6] g = [ 1, 2, 3, 4, 5, 6 ];
+    if( grid( g ) != 25 )
+    {
+        return 3;
+    }
+
+    i64[200] b = [ 1, .. ];
+    if( long_sum( b ) != 200 )
+    {
+        return 4;
+    }
+    return 0;
+}

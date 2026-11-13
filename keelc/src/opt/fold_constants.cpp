@@ -505,6 +505,10 @@ std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const
         {
             return use( value.b );
         }
+        if( is( value.a, 0 ) || is( value.b, 0 ) )
+        {
+            return value_of( 0, value.type, types, literals );
+        }
         break;
 
     default:
@@ -768,6 +772,25 @@ TEST_CASE( "fold_constants_reduces_only_exact_float_identities", "[opt][fold]" )
     REQUIRE( !reduces( Token_kind::Plus, x, f( 0.0 ) ) );
     REQUIRE( !reduces( Token_kind::Star, x, f( 0.0 ) ) );
     REQUIRE( !reduces( Token_kind::Minus, x, f( -0.0 ) ) );
+}
+
+// An unrolled `a[ i ] * i` is `a[ 0 ] * 0` in its first copy.
+TEST_CASE( "fold_constants_folds_an_integer_times_zero", "[opt][fold]" )
+{
+    const Type_table types;
+    const Function   func;
+    Literal_pool     literals;
+    const Type_id    i64  = types.integer( 64, true );
+    const Operand    x    = copy( Place { .local = Local_id { 1 } }, i64 );
+    const Operand    zero = constant( literals.add_integer( 0 ), i64 );
+
+    for( const Rvalue& product : { binary( Token_kind::Star, x, zero, i64 ), binary( Token_kind::Star, zero, x, i64 ) } )
+    {
+        const std::optional<Rvalue> reduced = identity( func, product, types, literals );
+        REQUIRE( reduced );
+        REQUIRE( reduced->a.kind == Operand_kind::Constant );
+        REQUIRE( literals.integer( reduced->a.constant ) == 0 );
+    }
 }
 
 // A NaN is unequal to itself.
