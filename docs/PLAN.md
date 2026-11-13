@@ -390,6 +390,7 @@ function's `-O1` code depends on nothing outside it.
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
 | `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements. |
 | `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
+| `solve_linear_maps` | `-O3` | Landing. On an `@real_arithmetic` function, after the rounds and before the loop passes, a body that computes a linear map becomes the cheapest circuit the solve finds, or the cache holds (D86). A cold solve took up to 1.85 s (an 8-point DCT); a cached one costs about what `-O2` does. Whether `-O2` should read the cache without solving is open. |
 
 **Pure functions** (`ir/purity`): a function is pure when its result depends on its arguments
 alone. It writes only its own locals, so no `out` or `ref` write; it reads no pointee, and no global
@@ -442,9 +443,9 @@ the object from its kept KIR. keelb's caches stay `build/release` and `build/deb
 **Floats fold as exact IEEE** in the operand's own type, rounding to nearest: `f32` in `float`,
 `f64` in `double`. An operation whose result is NaN or infinite stays for run time; comparisons fold
 by IEEE. A cast to or from a float is not folded.
-`x + 0.0`, `x * 0.0` and `x == x` are not folded, as they fail at −0.0 or NaN; `x * 1.0`,
-`x - 0.0` and `x / 1.0` are. No reassociation or distribution. An opt-in real-arithmetic region
-may later allow both.
+`x + 0.0`, `x * 0.0` and `x == x` are not folded, as they fail at −0.0 or NaN; `x + -0.0`,
+`x * 1.0`, `x - 0.0` and `x / 1.0` are. No reassociation or distribution outside an
+`@real_arithmetic` function (D86), which also folds `x * 0.0` and any zero added.
 
 ---
 
@@ -1866,13 +1867,17 @@ major), no longer blocked now that D81 has settled lambdas.
   call, or type-based aliasing, would let `eliminate_common` keep the first; both are language rules.
 - **An unread pure call with a loop stays.** `remove_dead_stores` removes an unread call only when
   its callee surely returns (§3.3), so `_ = kl::sin( x )` stays a call, as Payne–Hanek reduction
-  loops. Proving a loop ends would remove it; merging repeated calls, which is what the e-graph
-  pass needs, does not wait on that.
+  loops. Proving a loop ends would remove it; merging repeated calls (`eliminate_common`) does not
+  need that.
+- **The linear-map pass has no limit on rounding error.** It takes the circuit with the fewest adds
+  and multiplies whatever its rounding (D86); a prime-length convolution's error can reach 10x the
+  written loop's. A bound per output, from the coefficients along the circuit's paths, would let the
+  solve refuse a candidate past it; how tight a bound to ask for is a language question.
 - **No FMA, by rule and by target.** §7.1 forbids contraction, and the LLVM backend emits plain
   `fmul`/`fadd`. Two things would allow it (noted 2026-11-12):
   1. Permission per operation: the `contract` flag on an `fmul` and the `fadd` it feeds (or
      `llvm.fmuladd`). Fusing rounds once instead of twice, so it is a language rule: a region that
-     already consents to rounding changes (the planned linear-map optimiser's directive) could set it
+     already consents to rounding changes, an `@real_arithmetic` function (D86), could set it
      there, leaving §7.1 as it is everywhere else.
   2. A CPU with FMA: `emit_llvm` creates its target machine for `x86-64`, the baseline, which has
      none; `contract` then does not fuse, and `llvm.fma` becomes a libm call. Wants a target option
