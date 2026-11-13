@@ -517,6 +517,18 @@ std::optional<Rvalue> identity( const Function& func, const Rvalue& value, const
         {
             return use( value.a );
         }
+        const auto negative_zero = [&]( const Operand& x ) {
+            return is_constant( x ) && float_value( x, types, literals ) == 0.0 &&
+                   std::signbit( float_value( x, types, literals ) );
+        };
+        if( value.op == Token_kind::Plus && negative_zero( value.b ) )
+        {
+            return use( value.a );
+        }
+        if( value.op == Token_kind::Plus && negative_zero( value.a ) )
+        {
+            return use( value.b );
+        }
         if( !func.real_arithmetic )
         {
             return std::nullopt;
@@ -847,7 +859,7 @@ TEST_CASE( "fold_constants_folds_a_square_root", "[opt][fold]" )
     REQUIRE( !folded( sqrt_of( f( -1.0, f64_type ) ), types, literals ) );
 }
 
-// `x * 1.0`, `x / 1.0` and `x - 0.0` reduce; `x + 0.0`, `x * 0.0` and `x - -0.0` do not.
+// `x * 1.0`, `x / 1.0`, `x - 0.0` and `x + -0.0` reduce; `x + 0.0`, `x * 0.0` and `x - -0.0` do not.
 TEST_CASE( "fold_constants_reduces_only_exact_float_identities", "[opt][fold]" )
 {
     const Type_table types;
@@ -863,7 +875,10 @@ TEST_CASE( "fold_constants_reduces_only_exact_float_identities", "[opt][fold]" )
     REQUIRE( reduces( Token_kind::Star, f( 1.0 ), x ) );
     REQUIRE( reduces( Token_kind::Slash, x, f( 1.0 ) ) );
     REQUIRE( reduces( Token_kind::Minus, x, f( 0.0 ) ) );
+    REQUIRE( reduces( Token_kind::Plus, x, f( -0.0 ) ) );
+    REQUIRE( reduces( Token_kind::Plus, f( -0.0 ), x ) );
     REQUIRE( !reduces( Token_kind::Plus, x, f( 0.0 ) ) );
+    REQUIRE( !reduces( Token_kind::Plus, f( 0.0 ), x ) );
     REQUIRE( !reduces( Token_kind::Star, x, f( 0.0 ) ) );
     REQUIRE( !reduces( Token_kind::Minus, x, f( -0.0 ) ) );
 }
@@ -882,7 +897,7 @@ TEST_CASE( "fold_constants_reduces_real_identities_under_real_arithmetic", "[opt
     { return identity( func, binary( op, a, b, f64_type ), types, literals ); };
 
     REQUIRE( reduced( Token_kind::Plus, x, f( 0.0 ) )->a.kind == Operand_kind::Copy );
-    REQUIRE( reduced( Token_kind::Plus, f( -0.0 ), x )->a.kind == Operand_kind::Copy );
+    REQUIRE( reduced( Token_kind::Plus, f( 0.0 ), x )->a.kind == Operand_kind::Copy );
     REQUIRE( reduced( Token_kind::Minus, x, f( -0.0 ) )->a.kind == Operand_kind::Copy );
     REQUIRE( reduced( Token_kind::Star, x, f( 0.0 ) )->a.kind == Operand_kind::Constant );
     REQUIRE( reduced( Token_kind::Star, f( 0.0 ), x )->a.kind == Operand_kind::Constant );
