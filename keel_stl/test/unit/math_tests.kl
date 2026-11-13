@@ -1,4 +1,4 @@
-// `kl::math`: the bits of a float, both ways, for each width.
+// `kl::math`: the bits of a float, both ways, for each width, and the trigonometry.
 import kl::math;
 import kl::test::context;
 
@@ -32,4 +32,165 @@ private void bits_round_trip( ref kl::test::context c )
     {
         c.check_eq( cast<u64>( kl::bits_of( kl::from_bits( narrow[i] ) ) ), cast<u64>( narrow[i] ) );
     }
+}
+
+// Trigonometry, against C's, within an ulp.
+extern f64 sin( f64 x );
+extern f64 cos( f64 x );
+extern f64 tan( f64 x );
+extern f64 asin( f64 x );
+extern f64 acos( f64 x );
+extern f64 atan( f64 x );
+
+private f64 ours( u64 which, f64 x )
+{
+    f64[6] y = [ kl::sin( x ), kl::cos( x ), kl::tan( x ), kl::asin( x ), kl::acos( x ), kl::atan( x ) ];
+    return y[which];
+}
+
+private f64 theirs( u64 which, f64 x )
+{
+    unsafe
+    {
+        f64[6] y = [ sin( x ), cos( x ), tan( x ), asin( x ), acos( x ), atan( x ) ];
+        return y[which];
+    }
+}
+
+// Each float's place in order, so that neighbours differ by one.
+private i64 ordinal( f64 x )
+{
+    u64 b = kl::bits_of( x );
+    return ( b >> 63 ) == 0 ? wrap<i64>( b ) : wrap<i64>( 0x8000000000000000 - b );
+}
+
+// 1 when `which` is more than an ulp from C's at `x`, or differs in NaN or a zero's sign.
+private u64 miss( u64 which, f64 x )
+{
+    f64 a = ours( which, x );
+    f64 b = theirs( which, x );
+    if( a != a || b != b )
+    {
+        return a != a && b != b ? 0 : 1;
+    }
+    if( a == 0.0 && b == 0.0 )
+    {
+        return kl::bits_of( a ) == kl::bits_of( b ) ? 0 : 1;
+    }
+    i64 d = ordinal( a ) - ordinal( b );
+    return d >= -1 && d <= 1 ? 0 : 1;
+}
+
+private u64 misses_around( u64 which, f64 x )
+{
+    return miss( which, kl::from_bits( kl::bits_of( x ) - 1 ) ) + miss( which, x ) + miss( which, kl::from_bits( kl::bits_of( x ) + 1 ) );
+}
+
+private u64 next_random( ref u64 seed )
+{
+    seed = wrap<u64>( seed * 6364136223846793005 + 1442695040888963407 );
+    return seed;
+}
+
+private const f64 PI = 3.141592653589793;
+
+private void trig_matches_libm( ref kl::test::context c )
+{
+    u64 seed = 1;
+    for( u64 which = 0; which < 3; which++ )
+    {
+        u64 missed = 0;
+        for( i64 i = -20000; i <= 20000; i++ )
+        {
+            missed += miss( which, cast<f64>( i ) * ( 4.0 * PI / 20000.0 ) );
+        }
+        // the hard cases for reduction, nearest each multiple of π/2 below 2^20
+        for( u64 k = 1; k < 667544; k++ )
+        {
+            missed += miss( which, cast<f64>( k ) * ( PI / 2.0 ) );
+        }
+        // either side of where Cody–Waite hands over to Payne–Hanek, 2^20·π/2
+        for( i64 i = -500; i <= 500; i++ )
+        {
+            missed += miss( which, 1647099.3291652855 + cast<f64>( i ) * 0.001 );
+        }
+        missed += misses_around( which, kl::from_bits( 0x413921fb00000000 ) );
+        f64 p = 1.0;
+        for( u64 e = 0; e < 1024; e++ )
+        {
+            missed += misses_around( which, p ) + misses_around( which, -p );
+            p *= 2.0;
+        }
+        for( u64 n = 0; n < 20000; n++ )
+        {
+            missed += miss( which, kl::from_bits( next_random( ref seed ) & 0xffef_ffff_ffff_ffff ) );
+        }
+        c.check_eq( missed, 0 );
+    }
+}
+
+private void inverse_trig_matches_libm( ref kl::test::context c )
+{
+    u64 seed = 2;
+    for( u64 which = 3; which < 5; which++ )
+    {
+        u64 missed = 0;
+        for( i64 i = -100000; i <= 100000; i++ )
+        {
+            missed += miss( which, cast<f64>( i ) / 100000.0 );
+        }
+        // where each takes another path
+        f64[5] edges = [ 1.0, 0.5, 0.975, 1.3877787807814457e-17, 1.4901161193847656e-08 ];
+        for( u64 i = 0; i < 5; i++ )
+        {
+            missed += misses_around( which, edges[i] ) + misses_around( which, -edges[i] );
+        }
+        for( u64 n = 0; n < 20000; n++ )
+        {
+            missed += miss( which, kl::from_bits( next_random( ref seed ) & 0xbfef_ffff_ffff_ffff ) );
+        }
+        c.check_eq( missed, 0 );
+    }
+
+    u64 missed = 0;
+    for( i64 i = -100000; i <= 100000; i++ )
+    {
+        missed += miss( 5, cast<f64>( i ) / 5000.0 );
+    }
+    f64[6] edges = [ 0.4375, 0.6875, 1.1875, 2.4375, 7.378697629483821e+19, 7.450580596923828e-09 ];
+    for( u64 i = 0; i < 6; i++ )
+    {
+        missed += misses_around( 5, edges[i] ) + misses_around( 5, -edges[i] );
+    }
+    for( u64 n = 0; n < 20000; n++ )
+    {
+        missed += miss( 5, kl::from_bits( next_random( ref seed ) & 0xffef_ffff_ffff_ffff ) );
+    }
+    c.check_eq( missed, 0 );
+}
+
+// Signed zeros, infinities, NaN, subnormals and the values that come out exact.
+private void trig_special_values( ref kl::test::context c )
+{
+    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
+    f64[9] inputs = [ 0.0, -0.0, infinity, -infinity, kl::from_bits( 0x7ff8000000000000 ), kl::from_bits( 1 ), -kl::from_bits( 1 ), 2.0, -2.0 ];
+    u64 missed = 0;
+    for( u64 which = 0; which < 6; which++ )
+    {
+        for( u64 i = 0; i < 9; i++ )
+        {
+            missed += miss( which, inputs[i] );
+        }
+    }
+    c.check_eq( missed, 0 );
+
+    c.check_eq( kl::bits_of( kl::sin( -0.0 ) ), 0x8000000000000000 );
+    c.check_eq( kl::cos( 0.0 ), 1.0 );
+    c.check( kl::sin( infinity ) != kl::sin( infinity ) );
+    c.check( kl::asin( 1.5 ) != kl::asin( 1.5 ) );
+    c.check_eq( kl::asin( 1.0 ), PI / 2.0 );
+    c.check_eq( kl::acos( -1.0 ), PI );
+    c.check_eq( kl::acos( 1.0 ), 0.0 );
+    c.check_eq( kl::atan( infinity ), PI / 2.0 );
+    c.check_eq( kl::atan( -infinity ), -PI / 2.0 );
 }

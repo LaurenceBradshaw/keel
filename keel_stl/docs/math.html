@@ -15,6 +15,13 @@
 <li class="divider">Bits</li>
 <li><a href="#bits_of"><code>bits_of</code></a> <span class="kind">function</span></li>
 <li><a href="#from_bits"><code>from_bits</code></a> <span class="kind">function</span></li>
+<li class="divider">Trigonometry</li>
+<li><a href="#sin"><code>sin</code></a> <span class="kind">function</span></li>
+<li><a href="#cos"><code>cos</code></a> <span class="kind">function</span></li>
+<li><a href="#tan"><code>tan</code></a> <span class="kind">function</span></li>
+<li><a href="#asin"><code>asin</code></a> <span class="kind">function</span></li>
+<li><a href="#acos"><code>acos</code></a> <span class="kind">function</span></li>
+<li><a href="#atan"><code>atan</code></a> <span class="kind">function</span></li>
 </ul>
 <h2 class="divider">Bits</h2>
 <section class="entry">
@@ -40,6 +47,67 @@
 <pre class="signature"><a class="anchor" href="#from_bits" aria-label="Link to from_bits">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">from_bits</span>( <a class="prim" href="prelude.html#u32">u32</a> x )</code></pre>
 <div class="doc">
 <p>The <code>f32</code> whose bits are <code>x</code>.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Trigonometry</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sin</span></h2>
+<div class="group" id="sin">
+<pre class="signature"><a class="anchor" href="#sin" aria-label="Link to sin">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">sin</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The sine of an angle in radians.</p>
+<p>Within an ulp of the true value. An infinity or a NaN gives NaN, and <code>-0.0</code> stays <code>-0.0</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">cos</span></h2>
+<div class="group" id="cos">
+<pre class="signature"><a class="anchor" href="#cos" aria-label="Link to cos">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">cos</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The cosine of an angle in radians.</p>
+<p>Within an ulp of the true value. An infinity or a NaN gives NaN.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">tan</span></h2>
+<div class="group" id="tan">
+<pre class="signature"><a class="anchor" href="#tan" aria-label="Link to tan">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">tan</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The tangent of an angle in radians.</p>
+<p>Within an ulp of the true value. An infinity or a NaN gives NaN, and <code>-0.0</code> stays <code>-0.0</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">asin</span></h2>
+<div class="group" id="asin">
+<pre class="signature"><a class="anchor" href="#asin" aria-label="Link to asin">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">asin</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The angle in [-π/2, π/2] whose sine is given.</p>
+<p>Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">acos</span></h2>
+<div class="group" id="acos">
+<pre class="signature"><a class="anchor" href="#acos" aria-label="Link to acos">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">acos</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The angle in [0, π] whose cosine is given.</p>
+<p>Within an ulp of the true value. Outside [-1, 1], or at NaN, it is NaN.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">atan</span></h2>
+<div class="group" id="atan">
+<pre class="signature"><a class="anchor" href="#atan" aria-label="Link to atan">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">atan</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The angle in [-π/2, π/2] whose tangent is given.</p>
+<p>Within an ulp of the true value. NaN gives NaN, and <code>-0.0</code> stays <code>-0.0</code>.</p>
 </div>
 </div>
 </section>
