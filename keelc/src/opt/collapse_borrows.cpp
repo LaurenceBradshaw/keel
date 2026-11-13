@@ -5,8 +5,115 @@
 
 namespace keel
 {
+namespace
+{
+// Each local's one assignment, or null where it has none or more, or is addressed.
+std::vector<const Statement*> only_assignments( const Function& func )
+{
+    std::vector<const Statement*> only( func.locals.size(), nullptr );
+    std::vector<bool>             refused( func.locals.size(), false );
+
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.kind != Statement_kind::Assign )
+        {
+            continue;
+        }
+
+        const Rvalue& value = func.rvalue( statement );
+        if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() )
+        {
+            refused[value.a.place.local.v] = true;
+        }
+
+        if( !statement.place.is_global() )
+        {
+            const u32 p = statement.place.local.v;
+            refused[p]  = refused[p] || only[p] != nullptr || !statement.place.is_whole_local();
+            only[p]     = &statement;
+        }
+    }
+
+    for( u32 p = 0; p < only.size(); ++p )
+    {
+        only[p] = refused[p] ? nullptr : only[p];
+    }
+
+    return only;
+}
+
+// The value `copy (*p)` reads, where `p = copy q as T*` and `q = &x`, with `x` a whole local and a
+// builtin of `T`'s size: its bits, a cast, or `x` itself.
+std::optional<Rvalue>
+reinterpreted( const Function& func, const Rvalue& read, const std::vector<const Statement*>& only, const Type_table& table )
+{
+    const auto assigned = [&]( const Place& place ) -> const Rvalue*
+    {
+        if( place.is_global() || !place.is_whole_local() || only[place.local.v] == nullptr )
+        {
+            return nullptr;
+        }
+
+        return &func.rvalue( *only[place.local.v] );
+    };
+
+    const Place& place = read.a.place;
+    if( read.kind != Rvalue_kind::Use || !read.a.has_place() || place.is_global() || place.num_projections != 1 ||
+        func.projections[place.first_projection].kind != Projection_kind::Deref )
+    {
+        return std::nullopt;
+    }
+
+    const Rvalue* cast = assigned( Place { .local = place.local } );
+    if( cast == nullptr || cast->kind != Rvalue_kind::Cast || !cast->a.has_place() )
+    {
+        return std::nullopt;
+    }
+
+    const Rvalue* address = assigned( cast->a.place );
+    if( address == nullptr || address->kind != Rvalue_kind::Address_of || address->a.place.is_global() ||
+        !address->a.place.is_whole_local() )
+    {
+        return std::nullopt;
+    }
+
+    const Local_id x       = address->a.place.local;
+    const Type_id  from    = func.locals[x].type;
+    const Type_id  to      = read.a.type;
+    const Type&    f       = table.get( from );
+    const Type&    t       = table.get( to );
+    const auto     builtin = []( const Type& type ) { return type.kind == Type_kind::Int || type.kind == Type_kind::Float; };
+    if( !builtin( f ) || !builtin( t ) || f.width != t.width )
+    {
+        return std::nullopt;
+    }
+
+    const Operand value = copy( Place { .local = x }, from );
+    if( from == to )
+    {
+        return use( value );
+    }
+
+    return f.kind == t.kind ? cast_to( value, to ) : bits_of( value, to );
+}
+} // namespace
+
 void collapse_borrows( Function& func, const Type_table& table )
 {
+    const std::vector<const Statement*> only = only_assignments( func );
+    for( Statement& statement : func.statements )
+    {
+        if( statement.kind != Statement_kind::Assign )
+        {
+            continue;
+        }
+
+        if( std::optional<Rvalue> value = reinterpreted( func, func.rvalue( statement ), only, table ) )
+        {
+            func.rvalue( statement ) = *value;
+        }
+    }
+
     for( Statement& statement : func.statements )
     {
         if( statement.kind != Statement_kind::Assign || func.rvalue( statement ).kind != Rvalue_kind::Address_of )
@@ -118,6 +225,22 @@ TEST_CASE( "collapse_borrows_keeps_a_field_through_a_pointer", "[opt][collapse]"
     REQUIRE( p.clean() );
     REQUIRE( verify( p.first() ).empty() );
     REQUIRE( p.deref_borrows() == 1 );
+}
+
+// Not inlined, so `f` keeps its own read.
+TEST_CASE( "collapse_borrows_reads_a_cast_float_as_its_bits", "[opt][collapse]" )
+{
+    const Collapsed p( "u64 f( f64 x ) { unsafe { return *cast<u64*>( &x ); } }\n", std::nullopt );
+    REQUIRE( p.clean() );
+    REQUIRE( verify( p.first() ).empty() );
+    const auto has = [&]( Rvalue_kind kind )
+    {
+        return std::ranges::any_of(
+            p.first().statements, [&]( const Statement& s ) { return p.first().rvalue( s ).kind == kind; }
+        );
+    };
+    REQUIRE( has( Rvalue_kind::Bits ) );
+    REQUIRE( !has( Rvalue_kind::Address_of ) );
 }
 
 } // namespace keel

@@ -1,0 +1,127 @@
+// opt/bits.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+uint64_t kl__7bits_of__3f64( double );
+double kl__9from_bits__3u64( uint64_t );
+uint32_t kl__11narrow_bits__3f32( float );
+uint64_t kl__11unsigned_of__3i64( int64_t );
+int64_t kl__4same__3i64( int64_t );
+uint32_t kl__8low_half__3u64( uint64_t );
+int32_t kl__4main__( void );
+
+#line 5 "opt/bits.kl"
+uint64_t kl__7bits_of__3f64( double kl_x_1 )
+{
+    uint64_t kl_t0;
+#line 5 "opt/bits.kl"
+    kl_t0 = ( ( union { double f; uint64_t u; } ) { .f = kl_x_1 } ).u;
+#line 5 "opt/bits.kl"
+    return kl_t0;
+#line 5 "opt/bits.kl"
+}
+
+#line 7 "opt/bits.kl"
+double kl__9from_bits__3u64( uint64_t kl_x_1 )
+{
+    double kl_t0;
+#line 7 "opt/bits.kl"
+    kl_t0 = ( ( union { uint64_t f; double u; } ) { .f = kl_x_1 } ).u;
+#line 7 "opt/bits.kl"
+    return kl_t0;
+#line 7 "opt/bits.kl"
+}
+
+#line 9 "opt/bits.kl"
+uint32_t kl__11narrow_bits__3f32( float kl_x_1 )
+{
+    uint32_t kl_t0;
+#line 9 "opt/bits.kl"
+    kl_t0 = ( ( union { float f; uint32_t u; } ) { .f = kl_x_1 } ).u;
+#line 9 "opt/bits.kl"
+    return kl_t0;
+#line 9 "opt/bits.kl"
+}
+
+#line 12 "opt/bits.kl"
+uint64_t kl__11unsigned_of__3i64( int64_t kl_x_1 )
+{
+    uint64_t kl_t0;
+#line 12 "opt/bits.kl"
+    kl_t0 = ( uint64_t ) kl_x_1;
+#line 12 "opt/bits.kl"
+    return kl_t0;
+#line 12 "opt/bits.kl"
+}
+
+#line 15 "opt/bits.kl"
+int64_t kl__4same__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+#line 15 "opt/bits.kl"
+    kl_t0 = kl_x_1;
+#line 15 "opt/bits.kl"
+    return kl_t0;
+#line 15 "opt/bits.kl"
+}
+
+#line 18 "opt/bits.kl"
+uint32_t kl__8low_half__3u64( uint64_t kl_x_1 )
+{
+    uint32_t kl_t0;
+    uint64_t* kl_t2;
+    uint32_t* kl_t3;
+#line 18 "opt/bits.kl"
+    kl_t2 = &kl_x_1;
+#line 18 "opt/bits.kl"
+    kl_t3 = ( uint32_t* ) kl_t2;
+#line 18 "opt/bits.kl"
+    kl_t0 = ( *kl_t3 );
+#line 18 "opt/bits.kl"
+    return kl_t0;
+#line 18 "opt/bits.kl"
+}
+
+#line 20 "opt/bits.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    uint32_t kl_t1;
+    bool kl_t2;
+    uint64_t kl_x_3;
+    uint64_t* kl_t4;
+    uint32_t* kl_t5;
+#line 44 "opt/bits.kl"
+    kl_x_3 = 4294967298;
+#line 18 "opt/bits.kl"
+    kl_t4 = &kl_x_3;
+#line 18 "opt/bits.kl"
+    kl_t5 = ( uint32_t* ) kl_t4;
+#line 18 "opt/bits.kl"
+    kl_t1 = ( *kl_t5 );
+#line 44 "opt/bits.kl"
+    kl_t2 = kl_t1 != 2;
+#line 44 "opt/bits.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 6;
+#line 46 "opt/bits.kl"
+    return kl_t0;
+    bb2:
+#line 49 "opt/bits.kl"
+    kl_t0 = 0;
+#line 49 "opt/bits.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 20 "opt/bits.kl"
+    kl_t0 = kl__4main__(  );
+#line 20 "opt/bits.kl"
+    return kl_t0;
+#line 20 "opt/bits.kl"
+}
+

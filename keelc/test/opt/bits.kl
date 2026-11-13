@@ -1,0 +1,50 @@
+// A read through a pointer cast of a builtin local's address, in a release build: a float and an
+// integer of one width read as `Bits`, two integers as a cast, one type as a copy. No address is
+// left, and a constant's bits fold. Each check returns its own code.
+
+u64 bits_of( f64 x ) { unsafe { return *cast<u64*>( &x ); } }
+
+f64 from_bits( u64 x ) { unsafe { return *cast<f64*>( &x ); } }
+
+u32 narrow_bits( f32 x ) { unsafe { return *cast<u32*>( &x ); } }
+
+// A cast.
+u64 unsigned_of( i64 x ) { unsafe { return *cast<u64*>( &x ); } }
+
+// A copy.
+i64 same( i64 x ) { unsafe { return *cast<i64*>( &x ); } }
+
+// Different sizes: the address stays.
+u32 low_half( u64 x ) { unsafe { return *cast<u32*>( &x ); } }
+
+i32 main()
+{
+    // Folds to `0x3FF0000000000000`.
+    if( bits_of( 1.0 ) != 0x3FF0000000000000 )
+    {
+        return 1;
+    }
+    if( from_bits( 0x4000000000000000 ) != 2.0 )
+    {
+        return 2;
+    }
+    f32 half = 0.5;
+    if( narrow_bits( half ) != 0x3F000000 )
+    {
+        return 3;
+    }
+    if( unsigned_of( -1 ) != 0xFFFFFFFFFFFFFFFF )
+    {
+        return 4;
+    }
+    if( same( -7 ) != -7 )
+    {
+        return 5;
+    }
+    if( low_half( 0x100000002 ) != 2 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

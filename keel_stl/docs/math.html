@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::math</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::math</h1>
+<ul class="contents">
+<li class="divider">Bits</li>
+<li><a href="#bits_of"><code>bits_of</code></a> <span class="kind">function</span></li>
+<li><a href="#from_bits"><code>from_bits</code></a> <span class="kind">function</span></li>
+</ul>
+<h2 class="divider">Bits</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">bits_of</span></h2>
+<div class="group" id="bits_of">
+<pre class="signature"><a class="anchor" href="#bits_of" aria-label="Link to bits_of">#</a><code><a class="prim" href="prelude.html#u64">u64</a> <span class="fn">bits_of</span>( <a class="prim" href="prelude.html#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The bits of <code>x</code>, sign first: <code>bits_of( 1.0 )</code> is <code>0x3FF0000000000000</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#bits_of" aria-label="Link to bits_of">#</a><code><a class="prim" href="prelude.html#u32">u32</a> <span class="fn">bits_of</span>( <a class="prim" href="prelude.html#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The bits of <code>x</code>, sign first: the <code>f32</code> 1.0 has <code>0x3F800000</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">from_bits</span></h2>
+<div class="group" id="from_bits">
+<pre class="signature"><a class="anchor" href="#from_bits" aria-label="Link to from_bits">#</a><code><a class="prim" href="prelude.html#f64">f64</a> <span class="fn">from_bits</span>( <a class="prim" href="prelude.html#u64">u64</a> x )</code></pre>
+<div class="doc">
+<p>The <code>f64</code> whose bits are <code>x</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#from_bits" aria-label="Link to from_bits">#</a><code><a class="prim" href="prelude.html#f32">f32</a> <span class="fn">from_bits</span>( <a class="prim" href="prelude.html#u32">u32</a> x )</code></pre>
+<div class="doc">
+<p>The <code>f32</code> whose bits are <code>x</code>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

@@ -156,7 +156,7 @@ enum class Rvalue_kind : u8
     Unary,
     Overflows, // bool: whether `a op b` overflows `a`'s type; `op` is `+`, `-` or `*`
     Cast,
-    Bits,     // a float's bits as the unsigned integer of its width; a is the float
+    Bits,     // `a` reinterpreted as the other of a float and an integer of its width
     Run_of,   // `a` is the T[*] data, `b` is the u64 count, and the type is the run pointer
     Run_data, // `a` is the run pointer, and the type is T[*]
     Run_size, // `a` is the run pointer, and the type is u64

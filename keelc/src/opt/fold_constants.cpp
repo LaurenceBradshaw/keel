@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/fold_constants.h"
+
+#include <bit>
 #include <cmath>
 
 namespace keel
@@ -264,10 +266,47 @@ std::optional<Rvalue> floated_as( const Rvalue& value, T a, T b, const Type_tabl
     return use( constant( literals.add_float( static_cast<f64>( result ), static_cast<f32>( result ) ), value.type ) );
 }
 
+// A constant's `Bits`; to a float only where it is finite, which is all a constant spells.
+std::optional<Rvalue> reinterpreted( const Rvalue& value, const Type_table& types, Literal_pool& literals )
+{
+    const bool narrow = types.get( value.type ).width == 32;
+    if( types.is_float( value.a.type ) )
+    {
+        if( literals.kind( value.a.constant ) != Literal_kind::Float )
+        {
+            return std::nullopt;
+        }
+
+        const f64 a = float_value( value.a, types, literals );
+        return value_of(
+            narrow ? std::bit_cast<u32>( static_cast<f32>( a ) ) : std::bit_cast<u64>( a ), value.type, types, literals
+        );
+    }
+
+    if( literals.kind( value.a.constant ) != Literal_kind::Integer )
+    {
+        return std::nullopt;
+    }
+
+    const u64 bits   = literals.integer( value.a.constant );
+    const f64 result = narrow ? static_cast<f64>( std::bit_cast<f32>( static_cast<u32>( bits ) ) ) : std::bit_cast<f64>( bits );
+    if( !std::isfinite( result ) )
+    {
+        return std::nullopt;
+    }
+
+    return use( constant( literals.add_float( result, static_cast<f32>( result ) ), value.type ) );
+}
+
 } // namespace
 
 std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Literal_pool& literals )
 {
+    if( value.kind == Rvalue_kind::Bits && is_constant( value.a ) )
+    {
+        return reinterpreted( value, types, literals );
+    }
+
     const bool pair = value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows;
     if( ( !pair && value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast ) || !is_constant( value.a ) ||
         ( pair && !is_constant( value.b ) ) )

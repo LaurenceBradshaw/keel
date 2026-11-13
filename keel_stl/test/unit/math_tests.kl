@@ -1,0 +1,35 @@
+// `kl::math`: the bits of a float, both ways, for each width.
+import kl::math;
+import kl::test::context;
+
+private void bits_of_known_values( ref kl::test::context c )
+{
+    c.check_eq( kl::bits_of( 1.0 ), 0x3FF0000000000000 );
+    c.check_eq( kl::bits_of( -0.0 ), 0x8000000000000000 );
+    c.check_eq( kl::bits_of( 0.0 ), 0 );
+    c.check_eq( kl::from_bits( 0x4000000000000000 ), 2.0 );
+
+    f32 one = 1.0;
+    c.check_eq( cast<u64>( kl::bits_of( one ) ), 0x3F800000 );
+    c.check_eq( cast<f64>( kl::from_bits( wrap<u32>( 0xC0000000 ) ) ), -2.0 );
+}
+
+// A NaN keeps its payload, and a subnormal its one bit.
+private void bits_round_trip( ref kl::test::context c )
+{
+    u64[5] patterns = [ 0x7FF8000000000123, 0xFFF0000000000001, 1, 0x8000000000000000, 0x7FEFFFFFFFFFFFFF ];
+    for( u64 i = 0; i < 5; i++ )
+    {
+        c.check_eq( kl::bits_of( kl::from_bits( patterns[i] ) ), patterns[i] );
+    }
+
+    f64 nan = kl::from_bits( 0x7FF8000000000123 );
+    c.check( nan != nan );
+    c.check( kl::from_bits( 1 ) > 0.0 && kl::from_bits( 1 ) * 2.0 == kl::from_bits( 2 ) );
+
+    u32[3] narrow = [ 0x7FC00042, 1, 0x80000000 ];
+    for( u64 i = 0; i < 3; i++ )
+    {
+        c.check_eq( cast<u64>( kl::bits_of( kl::from_bits( narrow[i] ) ) ), cast<u64>( narrow[i] ) );
+    }
+}
