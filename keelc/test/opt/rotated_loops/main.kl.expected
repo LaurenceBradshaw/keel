@@ -87,45 +87,57 @@ int64_t kl__4wide__3i64( int64_t kl_n_1 )
     int64_t kl_t4;
     int64_t kl_t5;
     int64_t kl_t6;
-    int64_t kl_t7;
+    bool kl_t7;
     int64_t kl_t8;
     int64_t kl_t9;
     int64_t kl_t10;
     int64_t kl_t11;
     int64_t kl_t12;
-    bool kl_t13;
+    int64_t kl_t13;
 #line 40 "opt/rotated_loops/main.kl"
     kl_t0 = 0;
+    kl_t8 = 0;
+#line 41 "opt/rotated_loops/main.kl"
+    kl_t9 = 0;
+#line 41 "opt/rotated_loops/main.kl"
+    kl_t10 = 0;
+#line 41 "opt/rotated_loops/main.kl"
+    kl_t11 = 0;
+#line 41 "opt/rotated_loops/main.kl"
+    kl_t12 = 0;
+#line 41 "opt/rotated_loops/main.kl"
+    kl_t13 = 0;
+#line 41 "opt/rotated_loops/main.kl"
     goto bb1;
     bb1:
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t2 = kl_t0 * 3;
+    kl_t2 = kl_t8 + kl_t9;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t3 = kl_t0 * 5;
+    kl_t3 = kl_t2 + kl_t10;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t4 = kl_t2 + kl_t3;
+    kl_t4 = kl_t3 + kl_t11;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t5 = kl_t0 * 7;
+    kl_t5 = kl_t4 + kl_t12;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t6 = kl_t4 + kl_t5;
+    kl_t6 = kl_t5 + kl_t13;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t7 = kl_t0 * 11;
+    kl_t7 = kl_t6 < kl_n_1;
 #line 41 "opt/rotated_loops/main.kl"
-    kl_t8 = kl_t6 + kl_t7;
-#line 41 "opt/rotated_loops/main.kl"
-    kl_t9 = kl_t0 * 13;
-#line 41 "opt/rotated_loops/main.kl"
-    kl_t10 = kl_t8 + kl_t9;
-#line 41 "opt/rotated_loops/main.kl"
-    kl_t11 = kl_t0 * 17;
-#line 41 "opt/rotated_loops/main.kl"
-    kl_t12 = kl_t10 + kl_t11;
-#line 41 "opt/rotated_loops/main.kl"
-    kl_t13 = kl_t12 < kl_n_1;
-#line 41 "opt/rotated_loops/main.kl"
-    if ( kl_t13 ) goto bb2; else goto bb3;
+    if ( kl_t7 ) goto bb2; else goto bb3;
     bb2:
     kl_t0 = kl_t0 + 1;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t13 = kl_t13 + 17;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t12 = kl_t12 + 13;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t11 = kl_t11 + 11;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t10 = kl_t10 + 7;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t9 = kl_t9 + 5;
+#line 43 "opt/rotated_loops/main.kl"
+    kl_t8 = kl_t8 + 3;
 #line 41 "opt/rotated_loops/main.kl"
     goto bb1;
     bb3:

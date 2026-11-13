@@ -12,9 +12,13 @@ namespace keel
 // addressed local between them keeps the read. Whether it changed anything.
 bool forward_reads( Function& func );
 
-// Shared with hoist_invariants.
+// Shared with the other loop passes.
 // Whether `place` is rooted at `local` or indexes by it.
 bool mentions( const Function& func, const Place& place, Local_id local );
+// Whether `statement` or `terminator` reads `local`; a write of the whole local is not a read, and a
+// drop reads its place and its flag.
+bool reads( const Function& func, const Statement& statement, Local_id local );
+bool reads( const Function& func, const Terminator& terminator, Local_id local );
 // Locals a pointer reaches. `&(*p)` is not one of `p`'s, unlike `addressed_locals`; `&init` keeps no
 // pointer past its call.
 Local_set addressed_locals_of( const Function& func );

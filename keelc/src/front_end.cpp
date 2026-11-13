@@ -25,6 +25,7 @@
 #include "opt/merge_blocks.h"
 #include "opt/propagate_constants.h"
 #include "opt/propagate_values.h"
+#include "opt/reduce_inductions.h"
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
 #include "opt/shadow_tags.h"
@@ -373,9 +374,19 @@ Front_end run_front_end(
                     verified( function, "forward_reads" );
                     optimise_round( function );
                     // After the round folds the checks that would exit before an invariant.
-                    if( hoist_invariants( function ) )
+                    bool moved = hoist_invariants( function );
+                    if( moved )
                     {
                         verified( function, "hoist_invariants" );
+                    }
+                    // After hoisting, so `i * n` has an invariant `n`; one round tidies both.
+                    if( reduce_inductions( function, front.types.table(), literals ) )
+                    {
+                        verified( function, "reduce_inductions" );
+                        moved = true;
+                    }
+                    if( moved )
+                    {
                         optimise_round( function );
                     }
                 }

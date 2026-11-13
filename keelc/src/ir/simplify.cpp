@@ -219,6 +219,23 @@ void remove_statements( Function& func, const std::vector<bool>& deleted )
     func.statements = std::move( statements );
 }
 
+void insert_statement( Function& func, Block_id block, u32 at, Statement statement )
+{
+    std::vector<Statement> moved;
+    for( Statement& s : func.statements_of( block ) )
+    {
+        moved.push_back( std::move( s ) );
+    }
+    moved.insert( moved.begin() + at, std::move( statement ) );
+
+    func.blocks[block].first_statement = narrow_cast<u32>( func.statements.size() );
+    func.blocks[block].statement_count = narrow_cast<u32>( moved.size() );
+    for( Statement& s : moved )
+    {
+        func.statements.push_back( std::move( s ) );
+    }
+}
+
 void remove_unreachable_blocks( Function& func )
 {
     prune( func, reachable( func ) );

@@ -1,0 +1,89 @@
+// M16's -O3: a multiply by the loop's index becomes an add stepped beside it. The other forms are
+// stepped only when that lets the index go: its test then reads a stepped local. Each check returns
+// its own code.
+
+import kl::list;
+
+// `i * k` is a local stepped by `k`; `i` stays for the test against `n`.
+i64 scaled( i64 n, i64 k )
+{
+    i64 total = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        total += i * k;
+    }
+    return total;
+}
+
+// `i * 16` is a shift, stepped only because `i` then goes: the test reads it against 256.
+i64 rows( const ref i64[256] a )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < 16; i += 1 )
+    {
+        for( u64 j = 0; j < 16; j += 1 )
+        {
+            total += a[ i * 16 + j ];
+        }
+    }
+    return total;
+}
+
+// `i` stays for the test against the size, so `data_ + i` stays too.
+i64 walked( const ref kl::list<i64> xs )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < xs.size(); i += 1 )
+    {
+        total += xs[ i ];
+    }
+    return total;
+}
+
+// Read only by `i * 2`, but the test's `i < 200` would be `twice < 400`, past a u8, so the test keeps
+// `i`; the loop ends on `total` first.
+u64 bounded( u64 stop )
+{
+    u64 total = 0;
+    for( u8 i = 0; i < 200; i += 1 )
+    {
+        if( total >= stop )
+        {
+            break;
+        }
+        const u8 twice = i * 2;
+        total += cast<u64>( twice );
+    }
+    return total;
+}
+
+i32 main()
+{
+    kl::list<i64> xs = kl::list<i64>();
+    xs.push( 4 );
+    xs.push( 5 );
+    if( walked( xs ) != 9 )
+    {
+        return 1;
+    }
+
+    // Read from the list, so the calls are not folded.
+    if( scaled( xs[ 1 ], xs[ 0 ] - 1 ) != 30 )
+    {
+        return 2;
+    }
+
+    i64[256] a = [ 1, .. ];
+    a[ 17 ] = 2;
+    if( rows( a ) != 257 )
+    {
+        return 3;
+    }
+
+    if( bounded( cast<u64>( xs[ 1 ] ) * 1980 ) != 9900 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

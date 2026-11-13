@@ -25,6 +25,39 @@ bool mentions( const Function& func, const Place& place, Local_id local )
     );
 }
 
+bool reads( const Function& func, const Statement& statement, Local_id local )
+{
+    if( statement.kind == Statement_kind::Drop )
+    {
+        return statement.drop_flag == local || mentions( func, statement.place, local );
+    }
+    if( !statement.place.is_whole_local() && mentions( func, statement.place, local ) )
+    {
+        return true;
+    }
+    if( !statement.value.is_valid() )
+    {
+        return false;
+    }
+
+    bool read = false;
+    for_each_operand(
+        func.rvalue( statement ),
+        [&]( const Operand& operand ) { read |= operand.has_place() && mentions( func, operand.place, local ); }
+    );
+    return read;
+}
+
+bool reads( const Function& func, const Terminator& terminator, Local_id local )
+{
+    bool read = false;
+    for( const Operand* operand : { &terminator.condition, &terminator.message, &terminator.at } )
+    {
+        read |= operand->has_place() && mentions( func, operand->place, local );
+    }
+    return read;
+}
+
 Local_set addressed_locals_of( const Function& func )
 {
     Local_set addressed( func.locals.size(), false );

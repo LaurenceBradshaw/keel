@@ -210,41 +210,6 @@ bool traps( const Function& func, const Rvalue& value )
     return through;
 }
 
-// Whether `statement` or `terminator` reads `local`; a write of the whole local is not a read, and a
-// drop reads its place and its flag.
-bool reads( const Function& func, const Statement& statement, Local_id local )
-{
-    if( statement.kind == Statement_kind::Drop )
-    {
-        return statement.drop_flag == local || mentions( func, statement.place, local );
-    }
-    if( !statement.place.is_whole_local() && mentions( func, statement.place, local ) )
-    {
-        return true;
-    }
-    if( !statement.value.is_valid() )
-    {
-        return false;
-    }
-
-    bool read = false;
-    for_each_operand(
-        func.rvalue( statement ),
-        [&]( const Operand& operand ) { read |= operand.has_place() && mentions( func, operand.place, local ); }
-    );
-    return read;
-}
-
-bool reads( const Function& func, const Terminator& terminator, Local_id local )
-{
-    bool read = false;
-    for( const Operand* operand : { &terminator.condition, &terminator.message, &terminator.at } )
-    {
-        read |= operand->has_place() && mentions( func, operand->place, local );
-    }
-    return read;
-}
-
 // Whether `local`, written by the statement at `index` in `block`, is read in the loop only after it,
 // and, unless that statement runs on every entry, not read outside it.
 bool read_only_after( const Scope& scope, Block_id block, u32 index, Local_id local, bool every_entry )
@@ -280,22 +245,9 @@ bool read_only_after( const Scope& scope, Block_id block, u32 index, Local_id lo
     return true;
 }
 
-// `statement` appended to `block`'s statements, which move to the end.
 void append( Function& func, Block_id block, Statement statement )
 {
-    std::vector<Statement> moved;
-    for( Statement& s : func.statements_of( block ) )
-    {
-        moved.push_back( std::move( s ) );
-    }
-    moved.push_back( std::move( statement ) );
-
-    func.blocks[block].first_statement = narrow_cast<u32>( func.statements.size() );
-    func.blocks[block].statement_count = narrow_cast<u32>( moved.size() );
-    for( Statement& s : moved )
-    {
-        func.statements.push_back( std::move( s ) );
-    }
+    insert_statement( func, block, func.blocks[block].statement_count, std::move( statement ) );
 }
 
 // Moves one invariant statement or read to the preheader; whether it found one.

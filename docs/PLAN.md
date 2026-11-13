@@ -386,15 +386,20 @@ function's `-O1` code depends on nothing outside it.
 | the loop passes | `-O3` | Landing, per the rule above. Once measured: rotation, LICM (pinned: temporaries only, a hoisted statement on the loop head's line), read forwarding and the fold of a test two variables decide go to `-O1`; induction variables and full unrolling within a small budget to `-O2`; full unrolling within a larger one stays. |
 
 **Loop passes** run once per function after the rounds: rotation, read forwarding, a round, then
-LICM and another round, as LICM needs the checks the first round folds gone; induction variables
-and full unrolling come later. A loop has one preheader, one latch and exits only it enters. LICM
+LICM, induction variables and another round, as LICM needs the checks the first round folds gone;
+full unrolling comes later. A loop has one preheader, one latch and exits only it enters. LICM
 hoists a read through a reference only when the loop has no store to that place, a call or a store
 through a `T*` counting as a store to every place that is not a local. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
 the first turn, with nothing observable before it in the loop: a panic's message comes after the
 output that precedes it. In practice that means a rotated loop.
-Induction variables are integers and pointers; no closed forms. Unrolling is full only, for a
-constant trip count.
+Induction variables are integers and pointers; no closed forms. Only what is cheaper on every target
+is reduced: a multiply of the index by an invariant that is not a power of two becomes an add stepped
+beside the index, and the index itself goes when its only other reads are `i + c`, `i - c`, `p + i`
+or `i * 2^k`, which are then stepped too, and the constants show the latch's test can read one of
+them without wrapping. Otherwise those forms stay as they are: a stepped one costs the add it saves,
+and a scaled address is free where the target has one, which only `LoopStrengthReduce` knows.
+Unrolling is full only, for a constant trip count.
 
 **LLVM runs no IR pass at any level** (§2.2). Its codegen level is `None` at `-O0`, `Less` at `-O1`
 and `Aggressive` at `-O2` and `-O3`, except a debug `-O1`, which is `None` too: `Less` drops a store
