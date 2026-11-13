@@ -384,7 +384,7 @@ void Sum_graph::contain()
     }
 }
 
-// Complex: +-1, +-i free, real or imaginary 0+2, |Re| = |Im| 2+2, else 2+4. Real: 0+1.
+// Complex: +-1, +-i free, real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1.
 Cost Sum_graph::scale_cost( Element a )
 {
     const Element s = field_->mul( a, a );
@@ -401,7 +401,10 @@ Cost Sum_graph::scale_cost( Element a )
     {
         return { 0, 2 };
     }
-    if( field_->conjugate( s ) == field_->neg( s ) )
+    const Element re = field_->add( a, c );                // 2 Re
+    const Element im = field_->add( a, field_->neg( c ) ); // 2i Im
+    if( field_->conjugate( s ) == field_->neg( s ) || re == field_->rational( 2 ) || re == field_->rational( -2 ) ||
+        field_->mul( im, im ) == field_->rational( -4 ) )
     {
         return { 2, 2 };
     }

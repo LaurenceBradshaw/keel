@@ -278,7 +278,7 @@ Cost Circuit::cost() const
             continue;
         }
 
-        // Complex: real or imaginary 0+2, |Re| = |Im| 2+2, else 2+4. Real: 0+1.
+        // Complex: real or imaginary 0+2, |Re| = |Im| or a part +-1 2+2, else 2+4. Real: 0+1.
         const Constant& c = constants_[ops_[o].b];
         const f64       x = std::abs( c.value.real() );
         const f64       y = std::abs( c.value.imag() );
@@ -290,15 +290,11 @@ Cost Circuit::cost() const
         {
             total.muls += 1;
         }
-        else if( std::abs( x - 1 ) < 1e-9 || std::abs( y - 1 ) < 1e-9 )
-        {
-            // Free as the experiment counted it, though (1 + ti)z costs 2+2.
-        }
         else if( x < 1e-9 || y < 1e-9 )
         {
             total.muls += 2;
         }
-        else if( std::abs( x - y ) < 1e-9 )
+        else if( std::abs( x - y ) < 1e-9 || std::abs( x - 1 ) < 1e-9 || std::abs( y - 1 ) < 1e-9 )
         {
             total.adds += 2;
             total.muls += 2;
@@ -432,6 +428,8 @@ TEST_CASE( "circuit_costs_by_the_constant", "[egraph][circuit]" )
     CHECK( scaled_cost( { 0, 3 } ) == Cost { 0, 2 } );
     CHECK( scaled_cost( std::complex<f64> { 1, -1 } / std::sqrt( 2.0 ) ) == Cost { 2, 2 } );
     CHECK( scaled_cost( std::polar( 1.0, -2 * std::numbers::pi / 3 ) ) == Cost { 2, 4 } );
+    CHECK( scaled_cost( { 1, 0.5 } ) == Cost { 2, 2 } );
+    CHECK( scaled_cost( { 0.5, -1 } ) == Cost { 2, 2 } );
 
     Circuit real( true );
     real.outputs.emplace( k_row0, real.scale( real.input( 0 ), 3.0 ) );
