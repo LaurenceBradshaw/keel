@@ -1,0 +1,108 @@
+// An integer WHT16 at two widths, solved at -O3, gives what the same loop unmarked gives.
+
+@real_arithmetic
+void solved32( ref i32[16] x )
+{
+    i32[16] y = [ 0, .. ];
+    for( u64 k = 0; k < 16; k += 1 )
+    {
+        i32 s = 0;
+        for( u64 j = 0; j < 16; j += 1 )
+        {
+            // The parity of the bits k and j share.
+            u64 b = k & j;
+            b ^= b >> 2;
+            b ^= b >> 1;
+            s = ( b & 1 ) == 0 ? s + x[j] : s - x[j];
+        }
+        y[k] = s;
+    }
+    x = y;
+}
+
+void naive32( ref i32[16] x )
+{
+    i32[16] y = [ 0, .. ];
+    for( u64 k = 0; k < 16; k += 1 )
+    {
+        i32 s = 0;
+        for( u64 j = 0; j < 16; j += 1 )
+        {
+            u64 b = k & j;
+            b ^= b >> 2;
+            b ^= b >> 1;
+            s = ( b & 1 ) == 0 ? s + x[j] : s - x[j];
+        }
+        y[k] = s;
+    }
+    x = y;
+}
+
+bool agrees32()
+{
+    i32[16] a = [ 0, .. ];
+    for( u64 i = 0; i < 16; i += 1 )
+    {
+        a[i] = cast<i32>( i * i * 977 % 4093 ) - 2000;
+    }
+    i32[16] b = a;
+    solved32( ref a );
+    naive32( ref b );
+    return a == b;
+}
+
+@real_arithmetic
+void solved64( ref i64[16] x )
+{
+    i64[16] y = [ 0, .. ];
+    for( u64 k = 0; k < 16; k += 1 )
+    {
+        i64 s = 0;
+        for( u64 j = 0; j < 16; j += 1 )
+        {
+            // The parity of the bits k and j share.
+            u64 b = k & j;
+            b ^= b >> 2;
+            b ^= b >> 1;
+            s = ( b & 1 ) == 0 ? s + x[j] : s - x[j];
+        }
+        y[k] = s;
+    }
+    x = y;
+}
+
+void naive64( ref i64[16] x )
+{
+    i64[16] y = [ 0, .. ];
+    for( u64 k = 0; k < 16; k += 1 )
+    {
+        i64 s = 0;
+        for( u64 j = 0; j < 16; j += 1 )
+        {
+            u64 b = k & j;
+            b ^= b >> 2;
+            b ^= b >> 1;
+            s = ( b & 1 ) == 0 ? s + x[j] : s - x[j];
+        }
+        y[k] = s;
+    }
+    x = y;
+}
+
+bool agrees64()
+{
+    i64[16] a = [ 0, .. ];
+    for( u64 i = 0; i < 16; i += 1 )
+    {
+        a[i] = cast<i64>( i * i * 977 % 4093 ) - 2000;
+    }
+    i64[16] b = a;
+    solved64( ref a );
+    naive64( ref b );
+    return a == b;
+}
+
+i32 main()
+{
+    return agrees32() && agrees64() ? 0 : 1;
+}

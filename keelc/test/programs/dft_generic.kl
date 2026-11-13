@@ -1,0 +1,79 @@
+// A generic DFT, solved at -O3 for each N, gives what the same loop unmarked gives.
+
+import kl::console;
+import kl::math;
+
+@real_arithmetic
+void solved<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi )
+{
+    for( u64 k = 0; k < N; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j = 0; j < N; j += 1 )
+        {
+            const f64 t = -2.0 * kl::pi * cast<f64>( j * k % N ) / cast<f64>( N );
+            const f64 c = kl::cos( t );
+            const f64 s = kl::sin( t );
+            sr += re[j] * c - im[j] * s;
+            si += re[j] * s + im[j] * c;
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+void naive<u64 N>( const ref f64[N] re, const ref f64[N] im, ref f64[N] yr, ref f64[N] yi )
+{
+    for( u64 k = 0; k < N; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j = 0; j < N; j += 1 )
+        {
+            const f64 t = -2.0 * kl::pi * cast<f64>( j * k % N ) / cast<f64>( N );
+            const f64 c = kl::cos( t );
+            const f64 s = kl::sin( t );
+            sr += re[j] * c - im[j] * s;
+            si += re[j] * s + im[j] * c;
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+f64 gap( f64 a, f64 b )
+{
+    return a > b ? a - b : b - a;
+}
+
+bool agrees<u64 N>()
+{
+    f64[N] re = [ 0.0, .. ];
+    f64[N] im = [ 0.0, .. ];
+    for( u64 i = 0; i < N; i += 1 )
+    {
+        re[i] = cast<f64>( i % 7 ) * 0.5 + 1.0;
+        im[i] = 2.0 - cast<f64>( i % 5 ) * 0.25;
+    }
+    f64[N] ar = [ 0.0, .. ];
+    f64[N] ai = [ 0.0, .. ];
+    f64[N] br = [ 0.0, .. ];
+    f64[N] bi = [ 0.0, .. ];
+    solved<N>( re, im, ref ar, ref ai );
+    naive<N>( re, im, ref br, ref bi );
+    for( u64 k = 0; k < N; k += 1 )
+    {
+        if( gap( ar[k], br[k] ) > 1e-9 || gap( ai[k], bi[k] ) > 1e-9 )
+        {
+            kl::print( k );
+            return false;
+        }
+    }
+    return true;
+}
+
+i32 main()
+{
+    return agrees<8>() && agrees<16>() && agrees<64>() ? 0 : 1;
+}
