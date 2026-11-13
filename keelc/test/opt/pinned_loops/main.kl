@@ -1,0 +1,48 @@
+// M16's -O1 loop phase: rotation, read forwarding and LICM run, LICM pinned, so a debugger stepping
+// a loop sees each named local where the source puts it. Each check returns its own code.
+
+struct Pair
+{
+    i64 a;
+    i64 b;
+};
+
+// Rotated. `k * 3` and the read of `p.a` are temporaries, hoisted onto the `for` line; `step` is
+// named, and stays in the body. `i * step` is not stepped: induction variables are -O2's.
+i64 scaled( const ref Pair p, i64 n, i64 k )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < n; i += 1 )
+    {
+        i64 step = k * 2;
+        t += i * step + p.a * ( k * 3 );
+    }
+    return t;
+}
+
+// A constant count of three, left rolled: unrolling is -O2's.
+i64 thrice( i64 x )
+{
+    i64 t = 0;
+    for( i64 i = 0; i < 3; i += 1 )
+    {
+        t += x;
+    }
+    return t;
+}
+
+i32 main()
+{
+    const Pair p = Pair { 2, 0 };
+    if( scaled( p, 3, 1 ) != 24 )
+    {
+        return 1;
+    }
+
+    if( thrice( 5 ) != 15 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

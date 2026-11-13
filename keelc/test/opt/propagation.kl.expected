@@ -77,19 +77,18 @@ int32_t kl__6looped__3i32( int32_t kl_n_1 )
     kl_t0 = 0;
     kl_i_2 = 0;
 #line 48 "opt/propagation.kl"
-    goto bb1;
+    kl_t3 = 0 < kl_n_1;
+#line 48 "opt/propagation.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 48 "opt/propagation.kl"
-    kl_t3 = kl_i_2 < kl_n_1;
-#line 48 "opt/propagation.kl"
-    if ( kl_t3 ) goto bb2; else goto bb3;
-    bb2:
     kl_t0 = kl_t0 + 2;
 #line 48 "opt/propagation.kl"
     kl_i_2 = kl_i_2 + 1;
 #line 48 "opt/propagation.kl"
-    goto bb1;
-    bb3:
+    kl_t3 = kl_i_2 < kl_n_1;
+#line 48 "opt/propagation.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb2:
 #line 52 "opt/propagation.kl"
     return kl_t0;
 }
@@ -181,60 +180,29 @@ int32_t kl__7written__5Point( struct kl__Point kl_p_1 )
 int32_t kl__4main__( void )
 {
     int32_t kl_t0;
-    bool kl_t1;
-    int32_t kl_t2;
-    int32_t kl_t3;
-    bool kl_t4;
-    int32_t kl_x_5;
-    int32_t* kl_t6;
-    int32_t kl_i_8;
-    bool kl_t9;
-#line 47 "opt/propagation.kl"
-    kl_t2 = 0;
-    kl_i_8 = 0;
-#line 48 "opt/propagation.kl"
-    goto bb5;
+    int32_t kl_t1;
+    bool kl_t2;
+    int32_t kl_x_3;
+    int32_t* kl_t4;
+#line 81 "opt/propagation.kl"
+    kl_x_3 = 0;
+    kl_t4 = &kl_x_3;
+#line 82 "opt/propagation.kl"
+    kl__3set__O3i32( kl_t4 );
+    kl_t1 = kl_x_3 + 1;
+#line 150 "opt/propagation.kl"
+    kl_t2 = kl_t1 != 10;
+#line 150 "opt/propagation.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 132 "opt/propagation.kl"
-    kl_t0 = 4;
-#line 132 "opt/propagation.kl"
-    return kl_t0;
-    bb2:
-#line 152 "opt/propagation.kl"
     kl_t0 = 8;
 #line 152 "opt/propagation.kl"
     return kl_t0;
-    bb3:
+    bb2:
 #line 170 "opt/propagation.kl"
     kl_t0 = 0;
 #line 170 "opt/propagation.kl"
     return kl_t0;
-    bb4:
-#line 81 "opt/propagation.kl"
-    kl_x_5 = 0;
-    kl_t6 = &kl_x_5;
-#line 82 "opt/propagation.kl"
-    kl__3set__O3i32( kl_t6 );
-    kl_t3 = kl_x_5 + 1;
-#line 150 "opt/propagation.kl"
-    kl_t4 = kl_t3 != 10;
-#line 150 "opt/propagation.kl"
-    if ( kl_t4 ) goto bb2; else goto bb3;
-    bb5:
-#line 50 "opt/propagation.kl"
-    kl_t2 = kl_t2 + 2;
-#line 48 "opt/propagation.kl"
-    kl_i_8 = kl_i_8 + 1;
-#line 48 "opt/propagation.kl"
-    kl_t9 = kl_i_8 < 3;
-#line 48 "opt/propagation.kl"
-    if ( kl_t9 ) goto bb5; else goto bb6;
-    bb6:
-#line 130 "opt/propagation.kl"
-    kl_t1 = kl_t2 != 6;
-#line 130 "opt/propagation.kl"
-    if ( kl_t1 ) goto bb1; else goto bb4;
-#line 171 "opt/propagation.kl"
 }
 
 int main( void )

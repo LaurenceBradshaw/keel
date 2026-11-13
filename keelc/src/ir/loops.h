@@ -12,7 +12,7 @@ namespace keel
 struct Loop_weights
 {
     u32 rotation  = 8;   // the most statements a loop's test may hold, storage markers aside, to be copied
-    u32 unrolling = 200; // the most statements a fully unrolled loop may hold, its trip count times its body
+    u32 unrolling = 200; // the most statements a fully unrolled loop may hold, its trip count times its body (-O3)
 };
 
 // Each block's immediate dominator, Cooper–Harvey–Kennedy over reverse postorder.

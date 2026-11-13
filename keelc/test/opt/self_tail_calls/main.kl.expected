@@ -47,7 +47,6 @@ int64_t kl__3acc__3i64_3i64( int64_t kl_n_1, int64_t kl_total_2 )
     int64_t kl_t0;
     bool kl_t3;
     int64_t kl_t4;
-    bb0:
 #line 25 "opt/self_tail_calls/main.kl"
     kl_t3 = kl_n_1 == 0;
 #line 25 "opt/self_tail_calls/main.kl"
@@ -63,15 +62,17 @@ int64_t kl__3acc__3i64_3i64( int64_t kl_n_1, int64_t kl_total_2 )
     kl_total_2 = kl_total_2 + kl_n_1;
 #line 30 "opt/self_tail_calls/main.kl"
     kl_n_1 = kl_t4;
-#line 30 "opt/self_tail_calls/main.kl"
-    goto bb0;
+#line 25 "opt/self_tail_calls/main.kl"
+    kl_t3 = kl_n_1 == 0;
+#line 25 "opt/self_tail_calls/main.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+#line 31 "opt/self_tail_calls/main.kl"
 }
 
 #line 34 "opt/self_tail_calls/main.kl"
 void kl__4tick__3i64( int64_t kl_n_1 )
 {
     bool kl_t2;
-    bb0:
 #line 36 "opt/self_tail_calls/main.kl"
     kl_t2 = kl_n_1 == 0;
 #line 36 "opt/self_tail_calls/main.kl"
@@ -82,7 +83,10 @@ void kl__4tick__3i64( int64_t kl_n_1 )
 #line 41 "opt/self_tail_calls/main.kl"
     kl__ticks__G = kl__ticks__G + 1;
     kl_n_1 = kl_n_1 - 1;
-    goto bb0;
+#line 36 "opt/self_tail_calls/main.kl"
+    kl_t2 = kl_n_1 == 0;
+#line 36 "opt/self_tail_calls/main.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
 #line 43 "opt/self_tail_calls/main.kl"
 }
 
@@ -91,7 +95,6 @@ int64_t kl__4last__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
 {
     int64_t kl_t0;
     bool kl_t3;
-    bb0:
 #line 48 "opt/self_tail_calls/main.kl"
     kl_t3 = kl_n_2 == 0;
 #line 48 "opt/self_tail_calls/main.kl"
@@ -105,8 +108,11 @@ int64_t kl__4last__M3Box_3i64( struct kl__Box kl_b_1, int64_t kl_n_2 )
     bb2:
 #line 53 "opt/self_tail_calls/main.kl"
     kl_n_2 = kl_n_2 - 1;
-#line 53 "opt/self_tail_calls/main.kl"
-    goto bb0;
+#line 48 "opt/self_tail_calls/main.kl"
+    kl_t3 = kl_n_2 == 0;
+#line 48 "opt/self_tail_calls/main.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+#line 54 "opt/self_tail_calls/main.kl"
 }
 
 #line 57 "opt/self_tail_calls/main.kl"

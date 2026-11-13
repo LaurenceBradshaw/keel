@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "opt/unroll_loops.h"
+#include <algorithm>
 #include <vector>
 #include "ir/simplify.h"
 #include "opt/forward_reads.h"
@@ -41,7 +42,7 @@ void clone_blocks( Function& func, const Loop& loop, std::vector<Block_id>& map 
     }
 }
 
-bool unroll( Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, u32 budget )
+bool unroll( Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, u32 budget, bool growing )
 {
     if( !loop.preheader.is_valid() || !loop.latch.is_valid() )
     {
@@ -58,6 +59,11 @@ bool unroll( Function& func, const Type_table& types, const Literal_pool& litera
 
     const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed_locals_of( func ) );
     if( !trip || trip->turns > budget || size * trip->turns > budget )
+    {
+        return false;
+    }
+    // Each copy's step and test fold.
+    if( !growing && ( size - std::min<u64>( size, 2 ) ) * trip->turns > size )
     {
         return false;
     }
@@ -94,7 +100,9 @@ bool unroll( Function& func, const Type_table& types, const Literal_pool& litera
 
 } // namespace
 
-bool unroll_loops( Function& func, const Type_table& types, const Literal_pool& literals, const Loop_weights& weights )
+bool unroll_loops(
+    Function& func, const Type_table& types, const Literal_pool& literals, const Loop_weights& weights, bool growing
+)
 {
     bool unrolled = false;
     for( bool again = true; again; )
@@ -102,7 +110,7 @@ bool unroll_loops( Function& func, const Type_table& types, const Literal_pool& 
         again = false;
         for( const Loop& loop : find_loops( func ).loops )
         {
-            if( unroll( func, types, literals, loop, weights.unrolling ) )
+            if( unroll( func, types, literals, loop, weights.unrolling, growing ) )
             {
                 // The last copy's latch, when the test is the header's.
                 remove_unreachable_blocks( func );

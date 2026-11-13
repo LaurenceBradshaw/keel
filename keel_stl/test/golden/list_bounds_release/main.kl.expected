@@ -234,17 +234,14 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
 #line 452 "../../src/list.kl"
     kl_t4 = ( *kl_this_1 ).kl_data_ != NULL;
 #line 452 "../../src/list.kl"
-    if ( kl_t4 ) goto bb1; else goto bb5;
+    if ( kl_t4 ) goto bb1; else goto bb4;
     bb1:
     kl_i_5 = 0;
 #line 454 "../../src/list.kl"
-    goto bb2;
+    kl_t6 = 0 < ( *kl_this_1 ).kl_count_;
+#line 454 "../../src/list.kl"
+    if ( kl_t6 ) goto bb2; else goto bb3;
     bb2:
-#line 454 "../../src/list.kl"
-    kl_t6 = kl_i_5 < ( *kl_this_1 ).kl_count_;
-#line 454 "../../src/list.kl"
-    if ( kl_t6 ) goto bb3; else goto bb4;
-    bb3:
 #line 458 "../../src/list.kl"
     kl_t7 = kl_new_data_3 + kl_i_5;
 #line 458 "../../src/list.kl"
@@ -254,13 +251,15 @@ void kl_2kl4list_10reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl4list
 #line 454 "../../src/list.kl"
     kl_i_5 = kl_i_5 + 1;
 #line 454 "../../src/list.kl"
-    goto bb2;
-    bb4:
+    kl_t6 = kl_i_5 < ( *kl_this_1 ).kl_count_;
+#line 454 "../../src/list.kl"
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb3:
 #line 465 "../../src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data_ );
 #line 452 "../../src/list.kl"
-    goto bb5;
-    bb5:
+    goto bb4;
+    bb4:
 #line 469 "../../src/list.kl"
     ( *kl_this_1 ).kl_data_ = kl_new_data_3;
     ( *kl_this_1 ).kl_cap_ = kl_n_2;

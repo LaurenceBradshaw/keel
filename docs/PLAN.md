@@ -346,8 +346,8 @@ statements inside an expression. The readability work that addresses the rest is
 
 ### 3.3 Optimisation levels
 
-Decided for M16, partly built: keelc takes `-O0` to `-O3`, though `-O3` adds no pass yet over
-`-O2`; keelb takes no level yet. keelc and keelb take `-O0` to `-O3`. `--debug` defaults to `-O1`
+Decided for M16, partly built: keelc takes `-O0` to `-O3`; keelb takes no level yet. keelc and
+keelb take `-O0` to `-O3`. `--debug` defaults to `-O1`
 and a plain build to `-O2`; `-O<n>` overrides either. `--debug` means `assert` and overflow checks
 and nothing else. `-O0` is never a default: it is the KIR as lowered, which the goldens ask for.
 Whether `--debug` accepts `-O2` and `-O3` is open.
@@ -375,7 +375,7 @@ function's `-O1` code depends on nothing outside it.
 | `settle_drops` | `-O1` | Removes drop flags, which are temporaries. |
 | `forward_borrows` | `-O1` | Pinned: a named `ref` keeps its local. |
 | `propagate_values`, `fold_constants` | `-O1` | Pinned: a named local's store stays, so its value is still there. |
-| `propagate_constants`, `thread_jumps` | `-O1` | Removes only statements that never run. |
+| `propagate_constants`, `thread_jumps` | `-O1` | Removes only statements that never run, including a test a dominating test of the same two locals decides. |
 | `forward_globals` | `-O1` | A global is named: its store stays, even one every path overwrites; only reads are forwarded. |
 | `remove_dead_stores`, `remove_unused_locals` | `-O1` | Pinned: they remove temporaries only. |
 | `merge_blocks`, `fold_identities` | `-O1` | Block shape and rvalues; no local goes. |
@@ -383,14 +383,19 @@ function's `-O1` code depends on nothing outside it.
 | `coalesce_moves` | `-O2` | Merging locals is its whole job. |
 | `split_aggregates`, `shadow_tags` | `-O2` | A split local is no longer whole for the debugger. |
 | `loop_self_calls` | `-O2` | A call of the function itself whose result it returns jumps back to the entry. Without it a deep tail-recursive call overflows the stack, so the default level must have it. Frames go. |
-| the loop passes | `-O3` | Landing, per the rule above. Once measured: rotation, LICM (pinned: temporaries only, a hoisted statement on the loop head's line), read forwarding and the fold of a test two variables decide go to `-O1`; induction variables and full unrolling within a small budget to `-O2`; full unrolling within a larger one stays. |
+| `rotate_loops`, `forward_reads` | `-O1` | Block shape, and a temporary's read; the test's copy keeps its line, so stepping is still the test, the body, the test. |
+| `hoist_invariants` | `-O1` | Pinned: a named local's statement stays in the loop, and what moves takes the loop test's line, or stepping would go back to a body line before the loop starts. |
+| `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
+| `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements. |
 | `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
 
-**Loop passes** run once per function after the rounds: rotation, read forwarding, a round, then
-LICM, induction variables, full unrolling and another round, as LICM needs the checks the first
-round folds gone, and unrolling last lets that round fold each copy's index. The last round runs
-only when induction variables or unrolling changed something; after a hoist alone, only the empty
-blocks it leaves are merged, as the round found nothing more. A loop has one preheader, one latch and exits only it enters. LICM
+**Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
+table: rotation, read forwarding, a round, then LICM, induction variables, full unrolling and another
+round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
+each copy's index. The first round runs only when rotation or forwarding changed something, and at
+`-O3` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
+only when induction variables or unrolling changed something; otherwise only the empty blocks
+normalising added and a hoist went through are merged, as the round found nothing more. A loop has one preheader, one latch and exits only it enters. LICM
 hoists a read through a reference only when the loop has no store to that place, a call or a store
 through a `T*` counting as a store to every place that is not a local. A read through a pointer, or
 an operation that can panic, is hoisted only from a block that dominates every exit, so it runs on
@@ -408,7 +413,8 @@ wraps. A `break` or `return` in the body leaves each copy for the same place, so
 unrolling. The budget is the loop's statements times its trip count. A KIR statement costs about 1.5
 of LLVM's code-size units, so LLVM's full-unroll thresholds of 150 (`-O2`) and 300 (`-O3`) are about
 100 and 200 statements; GCC's `-O3` allows 200 instructions, and at `-O2` only unrolling that does
-not grow the code. The larger budget is 200.
+not grow the code. The larger budget, `-O3`'s, is 200. `-O2`'s is no growth: the copies, each less
+the step and test that fold, are no bigger than the loop.
 
 **LLVM runs no IR pass at any level** (§2.2). Its codegen level is `None` at `-O0`, `Less` at `-O1`
 and `Aggressive` at `-O2` and `-O3`, except a debug `-O1`, which is `None` too: `Less` drops a store

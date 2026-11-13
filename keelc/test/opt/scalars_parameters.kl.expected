@@ -54,17 +54,16 @@ int32_t kl__7counted__5Point( struct kl__Point kl_p_1 )
 #line 31 "opt/scalars_parameters.kl"
     kl_t0 = kl_p_1.kl_x;
 #line 33 "opt/scalars_parameters.kl"
-    goto bb1;
+    kl_t2 = kl_p_1.kl_x < 10;
+#line 33 "opt/scalars_parameters.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
+    kl_t0 = kl_t0 + kl_p_1.kl_y;
 #line 33 "opt/scalars_parameters.kl"
     kl_t2 = kl_t0 < 10;
 #line 33 "opt/scalars_parameters.kl"
-    if ( kl_t2 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb2:
-    kl_t0 = kl_t0 + kl_p_1.kl_y;
-#line 33 "opt/scalars_parameters.kl"
-    goto bb1;
-    bb3:
 #line 37 "opt/scalars_parameters.kl"
     return kl_t0;
 }

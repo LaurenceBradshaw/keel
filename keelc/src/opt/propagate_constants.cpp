@@ -1094,8 +1094,10 @@ namespace
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Propagated : Compiled
 {
-    explicit Propagated( std::string_view source, u32 level = 2 )
-        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .level = level } )
+    explicit Propagated( std::string_view source, u32 level = 2, std::optional<Loop_weights> loops = Loop_weights {} )
+        : Compiled(
+              std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .level = level, .loops = loops }
+          )
     {
         INFO( rendered() );
         REQUIRE( clean() );
@@ -1171,19 +1173,25 @@ TEST_CASE( "propagate_constants_takes_only_the_arm_that_runs", "[opt][constants]
     REQUIRE( p.first().blocks.size() == 1 );
 }
 
-// `k` is `1` round the loop: the only arm that changes it tests `k != 1`, which never holds.
+// `k` is `1` round the loop: the only arm that changes it tests `k != 1`, which never holds. Unrotated.
 TEST_CASE( "propagate_constants_keeps_a_constant_a_dead_arm_would_change", "[opt][constants]" )
 {
-    const Propagated p( "i32 f( i32 n ) { i32 k = 1; i32 t = 0; for( i32 i = 0; i < n; i++ ) { if( k != 1 ) { k = 2; } "
-                        "t = t + k; } return t; }\n" );
+    const Propagated p(
+        "i32 f( i32 n ) { i32 k = 1; i32 t = 0; for( i32 i = 0; i < n; i++ ) { if( k != 1 ) { k = 2; } "
+        "t = t + k; } return t; }\n",
+        2,
+        std::nullopt
+    );
     REQUIRE( p.branches() == 1 );
     REQUIRE( p.reads( "k" ) == 0 );
 }
 
-// `i` is `0` from the entry, but `1` round the back edge, so the loop keeps reading it.
+// `i` is `0` from the entry, but `1` round the back edge, so the loop keeps reading it. Unrotated.
 TEST_CASE( "propagate_constants_keeps_a_loop_counter", "[opt][constants]" )
 {
-    const Propagated p( "i32 f( i32 n ) { i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + i; } return t; }\n" );
+    const Propagated p(
+        "i32 f( i32 n ) { i32 t = 0; for( i32 i = 0; i < n; i++ ) { t = t + i; } return t; }\n", 2, std::nullopt
+    );
     REQUIRE( p.branches() == 1 );
     REQUIRE( p.reads( "i" ) == 3 );
 }
@@ -1290,7 +1298,7 @@ TEST_CASE( "propagate_constants_folds_a_test_of_two_locals_a_dominating_one_deci
     }
 }
 
-// `x` is written between the two tests, so the second stays; `-O2` keeps both.
+// `x` is written between the two tests, so the second stays; `-O0` keeps both.
 TEST_CASE( "propagate_constants_keeps_a_test_of_two_locals_a_store_separates", "[opt][constants]" )
 {
     const Propagated stored(
@@ -1298,8 +1306,8 @@ TEST_CASE( "propagate_constants_keeps_a_test_of_two_locals_a_store_separates", "
     );
     REQUIRE( stored.branches() == 2 );
 
-    const Propagated O2( "i32 f( i32 x, i32 y ) { if( x < y ) { if( x <= y ) { return 1; } return 2; } return 3; }\n" );
-    REQUIRE( O2.branches() == 2 );
+    const Propagated O0( "i32 f( i32 x, i32 y ) { if( x < y ) { if( x <= y ) { return 1; } return 2; } return 3; }\n", 0 );
+    REQUIRE( O0.branches() == 2 );
 }
 
 // One path tests `i < n`, the other enters with `i` 0 and `n` at least 1, so `i < n` holds at the join.

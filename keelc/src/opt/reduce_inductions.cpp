@@ -680,7 +680,7 @@ TEST_CASE( "reduce_inductions_steps_a_product_by_an_invariant", "[opt][reduce_in
     constexpr std::string_view source =
         "i64 f( i64 n, i64 k ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) { t += i * k; } return t; }\n";
     REQUIRE( Reduced( source ).in_loops( Token_kind::Star ) == 0 );
-    REQUIRE( Reduced( source, 2 ).in_loops( Token_kind::Star ) == 1 );
+    REQUIRE( Reduced( source, 1 ).in_loops( Token_kind::Star ) == 1 );
 }
 
 // A shift costs what its step would, so it stays while `i` does.
@@ -718,7 +718,7 @@ TEST_CASE( "reduce_inductions_keeps_an_address_its_index_stays", "[opt][reduce_i
 {
     constexpr std::string_view source = "i64 f( const i64[*] p, u64 n ) { i64 t = 0; for( u64 i = 0; i < n; i += 1 ) { unsafe "
                                         "{ t += ( p + i )[0]; } } return t; }\n";
-    REQUIRE( Reduced( source ).in_loops( Token_kind::Plus ) == Reduced( source, 2 ).in_loops( Token_kind::Plus ) );
+    REQUIRE( Reduced( source ).in_loops( Token_kind::Plus ) == Reduced( source, 1 ).in_loops( Token_kind::Plus ) );
 }
 
 } // namespace keel

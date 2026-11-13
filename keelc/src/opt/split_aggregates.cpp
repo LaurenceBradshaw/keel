@@ -497,7 +497,7 @@ struct Split : Compiled
         : Compiled(
               std::string( source ) + std::string( k_types ),
               Stage::Elaborated,
-              Build { .level = 2, .inlining = inlining, .splitting = false, .forwarding = false }
+              Build { .level = 2, .inlining = inlining, .loops = std::nullopt, .splitting = false, .forwarding = false }
           )
     {
         for( const Function& f : functions )

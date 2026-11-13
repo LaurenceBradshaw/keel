@@ -251,9 +251,14 @@ void append( Function& func, Block_id block, Statement statement )
 }
 
 // Moves one invariant statement or read to the preheader; whether it found one.
-bool hoist_one( Function& func, const Scope& scope )
+bool hoist_one( Function& func, const Scope& scope, bool pin_named )
 {
     const Block_id preheader = scope.loop.preheader;
+    // The loop test's: a rotated loop tests in its latch.
+    const Block_id latch = scope.loop.latch;
+    const Block_id head =
+        latch.is_valid() && func.blocks[latch].terminator.kind == Terminator_kind::Branch ? latch : scope.loop.header;
+    const auto moved_at = [&]( Span span ) { return pin_named ? func.blocks[head].terminator.span : span; };
     for( const Block_id b : scope.loop.blocks )
     {
         if( !scope.own[b.v] )
@@ -271,12 +276,14 @@ bool hoist_one( Function& func, const Scope& scope )
             {
                 const Rvalue&  value = func.rvalue( *statement );
                 const Local_id local = statement->place.local;
-                if( scope.writes[local.v] == 1 && !is_addressed( scope.addressed, local ) && scope.invariant( value ) )
+                if( scope.writes[local.v] == 1 && !is_addressed( scope.addressed, local ) && scope.invariant( value ) &&
+                    !( pin_named && func.locals[local].name.is_valid() ) )
                 {
                     const bool every_entry = scope.runs_unobserved( b, s );
                     if( ( every_entry || !traps( func, value ) ) && read_only_after( scope, b, s, local, every_entry ) )
                     {
-                        const u32 index = block.first_statement + s;
+                        const u32 index             = block.first_statement + s;
+                        func.statements[index].span = moved_at( statement->span );
                         append( func, preheader, std::move( func.statements[index] ) );
                         std::vector<bool> deleted( func.statements.size(), false );
                         deleted[index] = true;
@@ -316,7 +323,7 @@ bool hoist_one( Function& func, const Scope& scope )
                 const Local_id local = func.locals.push_back( Local { .type = from.type, .span = span } );
                 *operand             = copy( Place { .local = local }, from.type );
                 Statement read {
-                    .span  = span,
+                    .span  = moved_at( span ),
                     .place = Place { .local = local },
                     .value = func.add_rvalue( Rvalue { .kind = Rvalue_kind::Use, .type = from.type, .a = from } )
                 };
@@ -330,7 +337,7 @@ bool hoist_one( Function& func, const Scope& scope )
 }
 } // namespace
 
-bool hoist_invariants( Function& func )
+bool hoist_invariants( Function& func, bool pin_named )
 {
     // The round before merged the preheaders away.
     bool            changed   = normalise_loops( func );
@@ -355,7 +362,7 @@ bool hoist_invariants( Function& func )
         {
             continue;
         }
-        while( hoist_one( func, Scope( func, found, l, innermost, addressed ) ) )
+        while( hoist_one( func, Scope( func, found, l, innermost, addressed ), pin_named ) )
         {
             changed = true;
         }
@@ -383,8 +390,10 @@ constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; };\n"
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Hoisted : Compiled
 {
-    explicit Hoisted( std::string_view source, u32 level = 3 )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = level } )
+    explicit Hoisted( std::string_view source, u32 level = 3, std::optional<Loop_weights> loops = Loop_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = level, .loops = loops }
+          )
     {
         INFO( rendered() );
         REQUIRE( clean() );
@@ -451,9 +460,9 @@ TEST_CASE( "hoist_invariants_hoists_a_read_through_a_reference_and_a_product", "
     REQUIRE( f.reads_through() == 0 );
     REQUIRE( f.by( Token_kind::Star ) == 0 );
 
-    const Hoisted o2( source, 2 );
-    REQUIRE( o2.reads_through() == 1 );
-    REQUIRE( o2.by( Token_kind::Star ) == 1 );
+    const Hoisted off( source, 3, std::nullopt );
+    REQUIRE( off.reads_through() == 1 );
+    REQUIRE( off.by( Token_kind::Star ) == 1 );
 }
 
 // `touch` writes a global, which `p` may reach, so the next turn's read sees what it wrote.

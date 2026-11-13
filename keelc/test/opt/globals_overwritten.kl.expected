@@ -19,16 +19,18 @@ int32_t kl__5twice__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
-    bb0:
 #line 10 "opt/globals_overwritten.kl"
     kl_t2 = kl_n_1 > 0;
 #line 10 "opt/globals_overwritten.kl"
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_n_1 = kl_n_1 - 1;
-#line 12 "opt/globals_overwritten.kl"
-    goto bb0;
+#line 10 "opt/globals_overwritten.kl"
+    kl_t2 = kl_n_1 > 0;
+#line 10 "opt/globals_overwritten.kl"
+    if ( kl_t2 ) goto bb1; else goto bb2;
     bb2:
+#line 14 "opt/globals_overwritten.kl"
     kl_t0 = kl__seen__G * 2;
 #line 14 "opt/globals_overwritten.kl"
     return kl_t0;

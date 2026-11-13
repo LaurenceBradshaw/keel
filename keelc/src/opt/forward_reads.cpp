@@ -320,8 +320,10 @@ constexpr std::string_view k_types = "struct Pair { i32 a; i32 b; i32 size() con
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Forwarded : Compiled
 {
-    explicit Forwarded( std::string_view source, u32 level = 3 )
-        : Compiled( std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = level } )
+    explicit Forwarded( std::string_view source, u32 level = 3, std::optional<Loop_weights> loops = Loop_weights {} )
+        : Compiled(
+              std::string( source ) + std::string( k_types ), Stage::Elaborated, Build { .level = level, .loops = loops }
+          )
     {
         INFO( rendered() );
         REQUIRE( clean() );
@@ -345,7 +347,7 @@ constexpr std::string_view k_checked =
 TEST_CASE( "forward_reads_folds_a_test_a_read_through_a_reference_repeats", "[opt][forward_reads]" )
 {
     REQUIRE( Forwarded( k_checked ).branches() == 1 );
-    REQUIRE( Forwarded( k_checked, 2 ).branches() == 2 );
+    REQUIRE( Forwarded( k_checked, 3, std::nullopt ).branches() == 2 );
 }
 
 // `touch` writes a global, which `p` may reach.

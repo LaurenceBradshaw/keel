@@ -208,8 +208,8 @@ Front_end run_front_end(
     // At -O1 a named local keeps its stores, so a debugger finds its current value.
     const bool pin_named = build.level == 1;
 
-    // Comparisons of two locals fold at -O3 only, until measured.
-    const bool relating = build.level >= 3;
+    // Comparisons of two locals fold from -O1, beside the loop phase.
+    const bool relating = build.level >= 1;
 
     // The passes after drop elaboration, run `build.rounds` times and once more after the loop phase.
     const auto optimise_round = [&]( Function& function )
@@ -371,29 +371,36 @@ Front_end run_front_end(
                 }
                 remove_unused_locals( function, pin_named );
                 verified( function, "remove_unused_locals" );
-                // The loop passes, and a round to tidy what they leave.
-                if( build.level >= 3 && build.loops )
+                // The loop passes, and a round to tidy what they leave; §3.3 gives each its level.
+                if( build.loops )
                 {
-                    rotate_loops( function, *build.loops );
+                    bool shaped = rotate_loops( function, *build.loops );
                     verified( function, "rotate_loops" );
                     // After rotation, so the guard's read and the latch's both reach the body.
-                    forward_reads( function );
-                    verified( function, "forward_reads" );
-                    optimise_round( function );
+                    if( forward_reads( function ) )
+                    {
+                        verified( function, "forward_reads" );
+                        shaped = true;
+                    }
+                    // At -O3 always: a repeat eliminate_common finds is threaded only by a third round.
+                    if( shaped || build.level >= 3 )
+                    {
+                        optimise_round( function );
+                    }
                     // After the round folds the checks that would exit before an invariant.
-                    const bool hoisted = hoist_invariants( function );
-                    if( hoisted )
+                    if( hoist_invariants( function, pin_named ) )
                     {
                         verified( function, "hoist_invariants" );
                     }
                     // After hoisting, so `i * n` has an invariant `n`.
-                    bool moved = reduce_inductions( function, front.types.table(), literals );
+                    bool moved = build.level >= 2 && reduce_inductions( function, front.types.table(), literals );
                     if( moved )
                     {
                         verified( function, "reduce_inductions" );
                     }
                     // Last, so the round after folds each copy's index.
-                    if( unroll_loops( function, front.types.table(), literals, *build.loops ) )
+                    if( build.level >= 2 &&
+                        unroll_loops( function, front.types.table(), literals, *build.loops, build.level >= 3 ) )
                     {
                         verified( function, "unroll_loops" );
                         moved = true;
@@ -402,8 +409,8 @@ Front_end run_front_end(
                     {
                         optimise_round( function );
                     }
-                    // A hoist alone leaves only the empty blocks it went through.
-                    else if( hoisted )
+                    // Else only the empty blocks normalising added and a hoist went through are left.
+                    else
                     {
                         simplify( function, literals );
                         verified( function, "simplify" );
@@ -471,7 +478,7 @@ TEST_CASE( "front_end_O3_without_the_loop_phase_is_O2", "[front_end]" )
     constexpr std::string_view source =
         "i64 sum( i64 n ) { i64 t = 0; for( i64 i = 0; i < n; i += 1 ) { t += i * 3; } return t; }\n"
         "i32 main() { return cast<i32>( sum( 10 ) ); }\n";
-    const Compiled o2( source, Stage::Elaborated, Build { .level = 2 } );
+    const Compiled o2( source, Stage::Elaborated, Build { .level = 2, .loops = std::nullopt } );
     const Compiled o3( source, Stage::Elaborated, Build { .level = 3, .loops = std::nullopt } );
     REQUIRE( o2.clean() );
     REQUIRE( o3.clean() );

@@ -78,9 +78,13 @@ def parse( path ):
 # shared stop every local both show holds the same value.
 def compare( base_path, level_path ):
     base = parse( base_path )
-    # A line split into two pieces stops twice, the same values at each: one stop to a reader.
-    level = parse( level_path )
-    level = [ stop for n, stop in enumerate( level ) if n == 0 or stop != level[ n - 1 ] ]
+    # A line split into two pieces stops twice, the same values at each, perhaps with a call's stops
+    # between: one stop to a reader.
+    level = []
+    for stop in parse( level_path ):
+        function = stop[ 0 ].rsplit( ":", 1 )[ 0 ]
+        if next( ( s for s in reversed( level ) if s[ 0 ].rsplit( ":", 1 )[ 0 ] == function ), None ) != stop:
+            level.append( stop )
     errors = []
     i = 0
     for where, names in level:

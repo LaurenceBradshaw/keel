@@ -129,19 +129,18 @@ int64_t kl__6looped__3i64( int64_t kl_n_1 )
     kl_t0 = 0;
     kl_i_2 = 0;
 #line 57 "opt/inlining.kl"
-    goto bb1;
+    kl_t3 = 0 < kl_n_1;
+#line 57 "opt/inlining.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-#line 57 "opt/inlining.kl"
-    kl_t3 = kl_i_2 < kl_n_1;
-#line 57 "opt/inlining.kl"
-    if ( kl_t3 ) goto bb2; else goto bb3;
-    bb2:
     kl_t0 = kl_t0 + kl_i_2;
 #line 57 "opt/inlining.kl"
     kl_i_2 = kl_i_2 + 1;
 #line 57 "opt/inlining.kl"
-    goto bb1;
-    bb3:
+    kl_t3 = kl_i_2 < kl_n_1;
+#line 57 "opt/inlining.kl"
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb2:
 #line 61 "opt/inlining.kl"
     return kl_t0;
 }
@@ -366,6 +365,8 @@ int32_t kl__4main__( void )
 #line 56 "opt/inlining.kl"
     kl_t2 = 0;
     kl_i_15 = 0;
+#line 18 "opt/inlining.kl"
+    kl_t17 = kl__live__G;
 #line 57 "opt/inlining.kl"
     goto bb15;
     bb1:
@@ -447,8 +448,6 @@ int32_t kl__4main__( void )
 #line 192 "opt/inlining.kl"
     return kl_t0;
     bb15:
-#line 18 "opt/inlining.kl"
-    kl_t17 = kl__live__G;
 #line 59 "opt/inlining.kl"
     kl_t2 = kl_t2 + kl_i_15;
 #line 57 "opt/inlining.kl"

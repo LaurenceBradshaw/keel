@@ -1,0 +1,152 @@
+// opt/pinned_loops/main.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Pair;
+
+struct kl__Pair
+{
+    int64_t kl_a;
+    int64_t kl_b;
+};
+_Static_assert( sizeof( struct kl__Pair ) == 16 && _Alignof( struct kl__Pair ) == 8 && offsetof( struct kl__Pair, kl_a ) == 0 && offsetof( struct kl__Pair, kl_b ) == 8, "layout" );
+
+int64_t kl__6scaled__4Pair_3i64_3i64( struct kl__Pair*, int64_t, int64_t );
+int64_t kl__6thrice__3i64( int64_t );
+int32_t kl__4main__( void );
+
+#line 12 "opt/pinned_loops/main.kl"
+int64_t kl__6scaled__4Pair_3i64_3i64( struct kl__Pair* kl_p_1, int64_t kl_n_2, int64_t kl_k_3 )
+{
+    int64_t kl_t0;
+    int64_t kl_t_4;
+    int64_t kl_i_5;
+    bool kl_t6;
+    int64_t kl_step_7;
+    int64_t kl_t8;
+    int64_t kl_t9;
+    int64_t kl_t10;
+    int64_t kl_t11;
+    int64_t kl_t12;
+    ( void ) kl_step_7;
+#line 14 "opt/pinned_loops/main.kl"
+    kl_t_4 = 0;
+    kl_i_5 = 0;
+#line 15 "opt/pinned_loops/main.kl"
+    kl_t6 = 0 < kl_n_2;
+#line 15 "opt/pinned_loops/main.kl"
+    if ( kl_t6 ) goto bb3; else goto bb2;
+    bb1:
+    kl_step_7 = kl_t8;
+    kl_t9 = kl_i_5 * kl_t8;
+#line 18 "opt/pinned_loops/main.kl"
+    kl_t12 = kl_t9 + kl_t11;
+#line 18 "opt/pinned_loops/main.kl"
+    kl_t_4 = kl_t_4 + kl_t12;
+#line 15 "opt/pinned_loops/main.kl"
+    kl_i_5 = kl_i_5 + 1;
+#line 15 "opt/pinned_loops/main.kl"
+    kl_t6 = kl_i_5 < kl_n_2;
+#line 15 "opt/pinned_loops/main.kl"
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb2:
+#line 20 "opt/pinned_loops/main.kl"
+    kl_t0 = kl_t_4;
+#line 20 "opt/pinned_loops/main.kl"
+    return kl_t0;
+    bb3:
+#line 15 "opt/pinned_loops/main.kl"
+    kl_t8 = kl_k_3 * 2;
+#line 15 "opt/pinned_loops/main.kl"
+    kl_t10 = kl_k_3 * 3;
+#line 15 "opt/pinned_loops/main.kl"
+    kl_t11 = ( *kl_p_1 ).kl_a * kl_t10;
+#line 15 "opt/pinned_loops/main.kl"
+    goto bb1;
+#line 21 "opt/pinned_loops/main.kl"
+}
+
+#line 24 "opt/pinned_loops/main.kl"
+int64_t kl__6thrice__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+    int64_t kl_t_2;
+    int64_t kl_i_3;
+    bool kl_t4;
+#line 26 "opt/pinned_loops/main.kl"
+    kl_t_2 = 0;
+    kl_i_3 = 0;
+#line 27 "opt/pinned_loops/main.kl"
+    goto bb1;
+    bb1:
+    kl_t_2 = kl_t_2 + kl_x_1;
+#line 27 "opt/pinned_loops/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+#line 27 "opt/pinned_loops/main.kl"
+    kl_t4 = kl_i_3 < 3;
+#line 27 "opt/pinned_loops/main.kl"
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb2:
+#line 31 "opt/pinned_loops/main.kl"
+    kl_t0 = kl_t_2;
+#line 31 "opt/pinned_loops/main.kl"
+    return kl_t0;
+}
+
+#line 34 "opt/pinned_loops/main.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Pair kl_p_1;
+    struct kl__Pair kl_t2;
+    struct kl__Pair* kl_t3;
+    int64_t kl_t4;
+    bool kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+#line 36 "opt/pinned_loops/main.kl"
+    kl_t2.kl_a = 2;
+#line 36 "opt/pinned_loops/main.kl"
+    kl_t2.kl_b = 0;
+#line 36 "opt/pinned_loops/main.kl"
+    kl_p_1 = kl_t2;
+    kl_t3 = &kl_p_1;
+#line 37 "opt/pinned_loops/main.kl"
+    kl_t4 = kl__6scaled__4Pair_3i64_3i64( kl_t3, 3, 1 );
+#line 37 "opt/pinned_loops/main.kl"
+    kl_t5 = kl_t4 != 24;
+#line 37 "opt/pinned_loops/main.kl"
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+#line 39 "opt/pinned_loops/main.kl"
+    return kl_t0;
+    bb2:
+#line 42 "opt/pinned_loops/main.kl"
+    kl_t6 = kl__6thrice__3i64( 5 );
+#line 42 "opt/pinned_loops/main.kl"
+    kl_t7 = kl_t6 != 15;
+#line 42 "opt/pinned_loops/main.kl"
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+#line 44 "opt/pinned_loops/main.kl"
+    return kl_t0;
+    bb4:
+#line 47 "opt/pinned_loops/main.kl"
+    kl_t0 = 0;
+#line 47 "opt/pinned_loops/main.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 34 "opt/pinned_loops/main.kl"
+    kl_t0 = kl__4main__(  );
+#line 34 "opt/pinned_loops/main.kl"
+    return kl_t0;
+#line 34 "opt/pinned_loops/main.kl"
+}
+
