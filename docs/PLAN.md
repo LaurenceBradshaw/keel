@@ -1453,6 +1453,7 @@ keel/
       ir/                 KIR (kir.h), Builder, Lowering (file-local) and monomorphisation, simplify, verify, print
       check/              check_moves, check_assignment, elaborate_drops: one pass per file, over kir.h's successors()
       opt/                M11's optimisations over KIR, one pass per file, run in release only
+      egraph/             the linear-map solver, one class per file: Field, its coefficient ring (i64; an overflow drops the candidate that met it)
       codegen/            what every backend is told: the program description, the layout, mangling, the part rule
       codegen_c/          the C backend: Kir_emitter, Spelling, linking the runtime
       prelude/            prelude.kl, embedded into keelc at build time
