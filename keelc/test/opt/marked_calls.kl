@@ -1,0 +1,25 @@
+// Below -O3 a `@real_arithmetic` or `@trig_` function is inlined like any other, even into an
+// `@real_arithmetic` caller.
+
+@real_arithmetic
+f64 halved( f64 x )
+{
+    return x * 0.5;
+}
+
+@trig_sin
+f64 sine( f64 x )
+{
+    return x;
+}
+
+@real_arithmetic
+f64 shifted( f64 x )
+{
+    return sine( x ) + 1.0;
+}
+
+i32 main()
+{
+    return halved( 3.0 ) + sine( 1.0 ) + shifted( 2.0 ) < 6.0 ? 0 : 1;
+}

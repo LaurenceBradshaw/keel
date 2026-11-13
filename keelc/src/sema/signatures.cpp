@@ -771,6 +771,8 @@ void Signatures::declare_functions()
             extern_types_.check( child );
         }
 
+        check_trig( child );
+
         if( ast_.is_intrinsic( child ) && child != table_.prelude().sqrt_f64 && child != table_.prelude().sqrt_f32 )
         {
             reporter_.error_at(
@@ -886,8 +888,55 @@ void Signatures::declare_member_functions()
                     generic_recursion_.record_generic_uses( child, param_type, ast_.span( param_type_node ) );
                 }
             }
+
+            check_trig( member );
         }
     }
+}
+
+void Signatures::check_trig( Node_id decl )
+{
+    if( ast_.trig( decl ) == Trig::None )
+    {
+        return;
+    }
+
+    const Type_id f64    = table_.floating( 64 );
+    const auto    params = ast_.params( decl );
+    bool          fits   = types_.type_of( decl ) == f64 && params.size() == 1;
+    std::string   taken;
+
+    for( const Node_id param : params )
+    {
+        const Keyword mode = ast_.parameter_mode( param );
+        const Type_id type = types_.type_of( param );
+
+        fits = fits && mode == Keyword::Count && type == f64;
+
+        taken += taken.empty() ? "" : ", ";
+        const Node_id annotation = ast_.annotation( param );
+        taken += annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Const_type ? "const " : "";
+        taken += mode == Keyword::Count ? "" : std::string( interner_.text( Interner::keyword( mode ) ) ) + " ";
+        taken += table_.is_error( type ) ? "?" : table_.name( type );
+    }
+
+    if( fits )
+    {
+        return;
+    }
+
+    const Type_id returned = types_.type_of( decl );
+
+    reporter_.error_at(
+        ast_.trig_span( decl ),
+        fmt::format(
+            "`{}` is `{}{}`, but a `@trig_` function is `f64( f64 )`",
+            interner_.text( ast_.name( decl ) ),
+            table_.is_error( returned ) ? "?" : table_.name( returned ),
+            taken.empty() ? "()" : "( " + taken + " )"
+        ),
+        "it takes one `f64` by value and returns an `f64`"
+    );
 }
 
 Node_id Signatures::bare_type( Node_id annotation ) const

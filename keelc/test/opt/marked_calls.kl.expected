@@ -1,0 +1,60 @@
+// opt/marked_calls.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+double kl__6halved__3f64( double );
+double kl__4sine__3f64( double );
+double kl__7shifted__3f64( double );
+int32_t kl__4main__( void );
+
+#line 5 "opt/marked_calls.kl"
+double kl__6halved__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 7 "opt/marked_calls.kl"
+    kl_t0 = kl_x_1 * 0.5;
+#line 7 "opt/marked_calls.kl"
+    return kl_t0;
+}
+
+#line 11 "opt/marked_calls.kl"
+double kl__4sine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 13 "opt/marked_calls.kl"
+    kl_t0 = kl_x_1;
+#line 13 "opt/marked_calls.kl"
+    return kl_t0;
+}
+
+#line 17 "opt/marked_calls.kl"
+double kl__7shifted__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 19 "opt/marked_calls.kl"
+    kl_t0 = kl_x_1 + 1.0;
+#line 19 "opt/marked_calls.kl"
+    return kl_t0;
+}
+
+#line 22 "opt/marked_calls.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+#line 24 "opt/marked_calls.kl"
+    kl_t0 = 0;
+#line 24 "opt/marked_calls.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 22 "opt/marked_calls.kl"
+    kl_t0 = kl__4main__(  );
+#line 22 "opt/marked_calls.kl"
+    return kl_t0;
+#line 22 "opt/marked_calls.kl"
+}
+

@@ -98,6 +98,7 @@ f32 sqrt( f32 x )
 /// The sine of an angle in radians.
 ///
 /// Within an ulp of the true value. An infinity or a NaN gives NaN, and `-0.0` stays `-0.0`.
+@trig_sin
 f64 sin( f64 x )
 {
     u32 ix = high_word( x ) & 0x7fffffff;
@@ -133,6 +134,7 @@ f64 sin( f64 x )
 /// The cosine of an angle in radians.
 ///
 /// Within an ulp of the true value. An infinity or a NaN gives NaN.
+@trig_cos
 f64 cos( f64 x )
 {
     u32 ix = high_word( x ) & 0x7fffffff;
@@ -168,6 +170,7 @@ f64 cos( f64 x )
 /// The tangent of an angle in radians.
 ///
 /// Within an ulp of the true value. An infinity or a NaN gives NaN, and `-0.0` stays `-0.0`.
+@trig_tan
 f64 tan( f64 x )
 {
     u32 ix = high_word( x ) & 0x7fffffff;

@@ -6,6 +6,7 @@
 #include <span>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 #include "ast/node.h"
 #include "common/interner.h"
@@ -40,6 +41,8 @@ public:
     void set_access( Node_id id, Access access );
     void set_located( Node_id decl );
     void set_intrinsic( Node_id decl );
+    void set_real_arithmetic( Node_id decl );
+    void set_trig( Node_id decl, Trig trig, Span directive );
     void set_name_span( Node_id decl, Span span );
     void set_type_name_span( Node_id literal, Span span );
     void set_span( Node_id id, Span span ); // a grouping's parentheses, which leave no node
@@ -66,6 +69,13 @@ public:
 
     // Written `@intrinsic`: the compiler gives its body, and lowers a call to the operation.
     bool is_intrinsic( Node_id decl ) const;
+
+    // Written `@real_arithmetic`: its body may be solved as a linear map at -O3.
+    bool is_real_arithmetic( Node_id decl ) const;
+
+    // Its `@trig_*` directive, and that directive's span; Trig::None and an invalid span without one.
+    Trig trig( Node_id decl ) const;
+    Span trig_span( Node_id decl ) const;
 
     // The span of a declaration's name, else of the whole declaration.
     Span name_span( Node_id decl ) const;
@@ -229,13 +239,15 @@ private:
     std::vector<Node_id> children_; // every child of every node, back to back
     Node_id              root_;
 
-    std::unordered_map<u32, Access> access_; // absence means public
-    std::unordered_set<u32>         located_;
-    std::unordered_set<u32>         intrinsic_;
-    std::unordered_map<u32, Span>   name_spans_;
-    std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
-    std::unordered_map<u32, u32>    variants_;        // payload field to its variant
-    std::vector<Node_id>            owners_;          // member to its aggregate, interface or block
+    std::unordered_map<u32, Access>                access_; // absence means public
+    std::unordered_set<u32>                        located_;
+    std::unordered_set<u32>                        intrinsic_;
+    std::unordered_set<u32>                        real_arithmetic_;
+    std::unordered_map<u32, std::pair<Trig, Span>> trig_;
+    std::unordered_map<u32, Span>                  name_spans_;
+    std::unordered_map<u32, Span>                  type_name_spans_; // struct literals only
+    std::unordered_map<u32, u32>                   variants_;        // payload field to its variant
+    std::vector<Node_id>                           owners_;          // member to its aggregate, interface or block
 
     std::vector<bool> broken_;
     std::vector<Span> failures_;

@@ -560,7 +560,10 @@ Function Lowering::run()
         builder_.terminate_return( span );
     }
 
-    return finished();
+    Function function        = finished();
+    function.real_arithmetic = ast_.is_real_arithmetic( declaration_ );
+    function.trig            = ast_.trig( declaration_ );
+    return function;
 }
 
 Function Lowering::run_build( std::span<const Node_id> globals )

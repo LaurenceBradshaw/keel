@@ -25,11 +25,13 @@ struct Inline_weights
 // Release only: a call to a small saved body becomes that body. A body not saved yet, as one in the
 // caller's own group, is never taken, which is what stops recursion. Small is measured on the callee
 // as `functions` holds it, finished, since the saved body is what its passes have yet to shrink.
+// With `keep_trig`, a call to a `@trig_` function stays a call.
 void inline_calls(
     Function&                                   caller,
     const std::vector<std::optional<Function>>& saved,
     const std::vector<Function>&                functions,
     const Literal_pool&                         literals,
+    bool                                        keep_trig,
     const Inline_weights&                       weights = {}
 );
 

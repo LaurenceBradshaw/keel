@@ -69,6 +69,9 @@ private:
     {
         std::optional<Span> located;
         std::optional<Span> intrinsic;
+        std::optional<Span> real_arithmetic;
+        std::optional<Span> trig_span;
+        Trig                trig = Trig::None;
     };
 
     Directives parse_directives();
@@ -800,7 +803,11 @@ Parser::Directives Parser::parse_directives()
 
         if( !cursor_.check( Token_kind::Identifier ) )
         {
-            recovery_.error_at( at, "expected a directive's name after `@`", "the directive here is `@located`" );
+            recovery_.error_at(
+                at,
+                "expected a directive's name after `@`",
+                "the directives here are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and `@trig_tan`"
+            );
             continue;
         }
 
@@ -825,6 +832,35 @@ Parser::Directives Parser::parse_directives()
 
             directives.intrinsic = span;
         }
+        else if( name == "real_arithmetic" )
+        {
+            if( directives.real_arithmetic )
+            {
+                recovery_.error_at( span, "`@real_arithmetic` is written twice" );
+            }
+
+            directives.real_arithmetic = span;
+        }
+        else if( name == "trig_sin" || name == "trig_cos" || name == "trig_tan" )
+        {
+            const Trig trig = name == "trig_sin" ? Trig::Sin : name == "trig_cos" ? Trig::Cos : Trig::Tan;
+
+            if( directives.trig == trig )
+            {
+                recovery_.error_at( span, fmt::format( "`@{}` is written twice", name ) );
+            }
+            else if( directives.trig != Trig::None )
+            {
+                recovery_.error_at(
+                    span, fmt::format( "`@{}` after another `@trig_` directive", name ), "a function is one of sin, cos and tan"
+                );
+            }
+            else
+            {
+                directives.trig_span = span;
+                directives.trig      = trig;
+            }
+        }
         else if( name == "caller" )
         {
             recovery_.error_at(
@@ -836,13 +872,17 @@ Parser::Directives Parser::parse_directives()
             recovery_.error_at(
                 span,
                 "`@functions_of(T)` is an expression, not a declaration's directive",
-                "the directive a declaration takes is `@located`"
+                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and "
+                "`@trig_tan`"
             );
         }
         else
         {
             recovery_.error_at(
-                span, fmt::format( "there is no directive `@{}`", name ), "the directive a declaration takes is `@located`"
+                span,
+                fmt::format( "there is no directive `@{}`", name ),
+                "the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and "
+                "`@trig_tan`"
             );
         }
     }
@@ -866,14 +906,44 @@ void Parser::apply_directives( Node_id decl, const Directives& directives )
         }
     }
 
-    if( !directives.located || ast_.kind( decl ) == Node_kind::Error )
+    if( ast_.kind( decl ) == Node_kind::Error )
     {
         return;
     }
 
-    const Node_kind kind = ast_.kind( decl );
+    const Node_kind kind     = ast_.kind( decl );
+    const bool      function = kind == Node_kind::Function_decl || kind == Node_kind::Method_decl;
 
-    if( kind != Node_kind::Function_decl && kind != Node_kind::Method_decl )
+    if( directives.real_arithmetic )
+    {
+        if( !function )
+        {
+            recovery_.error_at( *directives.real_arithmetic, "`@real_arithmetic` marks a function or a method" );
+        }
+        else
+        {
+            ast_.set_real_arithmetic( decl );
+        }
+    }
+
+    if( directives.trig_span )
+    {
+        if( !function )
+        {
+            recovery_.error_at( *directives.trig_span, "a `@trig_` directive marks a function or a method" );
+        }
+        else
+        {
+            ast_.set_trig( decl, directives.trig, *directives.trig_span );
+        }
+    }
+
+    if( !directives.located )
+    {
+        return;
+    }
+
+    if( !function )
     {
         recovery_.error_at( *directives.located, "`@located` marks a function or a method" );
         return;

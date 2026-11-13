@@ -236,6 +236,15 @@ enum class Aux_meaning : u8
 
 Aux_meaning aux_meaning( Node_kind kind );
 
+// Which of `@trig_sin`, `@trig_cos` and `@trig_tan` a function is written with.
+enum class Trig : u8
+{
+    None,
+    Sin,
+    Cos,
+    Tan
+};
+
 // D29: a struct and a class differ in rules, not shape. Field layout, containment ordering and C
 // emission treat them identically; only the rule checks read the kind directly.
 constexpr bool is_aggregate( Node_kind kind )

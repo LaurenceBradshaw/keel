@@ -93,6 +93,7 @@ private:
     void    declare_fields();
     void    declare_functions();
     void    declare_member_functions();
+    void    check_trig( Node_id decl );
     void    declare_globals();
     void    declare_enums();
     void    declare_payloads(); // an enum's variant fields

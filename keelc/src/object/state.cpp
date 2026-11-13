@@ -183,6 +183,19 @@ std::string write_state(
     );
     write_table( tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_located( id ); } ), []( Node_id ) {} );
     write_table(
+        tree, refs, nodes_where( refs, [&]( Node_id id ) { return ast.is_real_arithmetic( id ); } ), []( Node_id ) {}
+    );
+    write_table(
+        tree,
+        refs,
+        nodes_where( refs, [&]( Node_id id ) { return ast.trig( id ) != Trig::None; } ),
+        [&]( Node_id id )
+        {
+            tree.put_u8( u8( ast.trig( id ) ) );
+            put_span( ast.trig_span( id ) );
+        }
+    );
+    write_table(
         tree,
         refs,
         nodes_where( refs, [&]( Node_id id ) { return ast.name_span( id ) != ast.span( id ); } ),
@@ -403,6 +416,16 @@ std::optional<Loaded_state> read_state(
 
     read_table( in, refs, [&]( Node_id id ) { ast.set_access( id, Access( in.get_u8() ) ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_located( id ); } );
+    read_table( in, refs, [&]( Node_id id ) { ast.set_real_arithmetic( id ); } );
+    read_table(
+        in,
+        refs,
+        [&]( Node_id id )
+        {
+            const Trig trig = Trig( in.get_u8() );
+            ast.set_trig( id, trig, get_span() );
+        }
+    );
     read_table( in, refs, [&]( Node_id id ) { ast.set_name_span( id, get_span() ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_type_name_span( id, get_span() ); } );
     read_table( in, refs, [&]( Node_id id ) { ast.set_doc_span( id, get_span() ); } );
@@ -525,6 +548,7 @@ T pick_first<T>( T a ) where T : copyable
 }
 
 i32 twice( i32 x ) { return x * 2; }
+@real_arithmetic @trig_cos
 f64 twice( f64 x ) { return x * 2.0; }
 
 private i32 hidden( i32 x ) { return x; }
@@ -707,6 +731,9 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
         REQUIRE( a.children( x ).size() == b.children( y ).size() );
         REQUIRE( a.access( x ) == b.access( y ) );
         REQUIRE( a.doc_span( x ).is_valid() == b.doc_span( y ).is_valid() );
+        REQUIRE( a.is_real_arithmetic( x ) == b.is_real_arithmetic( y ) );
+        REQUIRE( a.trig( x ) == b.trig( y ) );
+        REQUIRE( a.trig_span( x ).start == b.trig_span( y ).start );
 
         const Type_id type_a = front.types.type_of( x );
         const Type_id type_b = types_b.contains( y.v ) ? types_b.at( y.v ) : Type_id {};
@@ -763,6 +790,9 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
     }
     REQUIRE( named );
 
+    // `twice( f64 )` keeps both marks.
+    REQUIRE( std::ranges::count_if( loaded->functions, []( const Function& f ) { return f.trig == Trig::Cos; } ) == 1 );
+
     // The part's KIR reads as it did, from the same declarations and types.
     REQUIRE( loaded->functions.size() == built.printed.size() );
     REQUIRE( !loaded->functions.empty() );
@@ -770,6 +800,7 @@ TEST_CASE( "state_round_trips_a_module_through_another_compile", "[object][state
     {
         const Function& function = loaded->functions[f];
         REQUIRE( print( function, b, types.table(), second.literals, second.interner ) == built.printed[f] );
+        REQUIRE( function.real_arithmetic == ( function.trig == Trig::Cos ) ); // only `twice( f64 )` is marked
         REQUIRE( verify( function ).empty() );
     }
 }

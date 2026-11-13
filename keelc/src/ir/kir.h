@@ -418,6 +418,9 @@ struct Function
 
     bool diverges = false; // returns `never`, so no path may reach a Return
 
+    bool real_arithmetic = false;      // written `@real_arithmetic`
+    Trig trig            = Trig::None; // written `@trig_sin`, `@trig_cos` or `@trig_tan`
+
     Run<Statement> statements_of( const Block& block )
     {
         return Run<Statement>( statements, block.first_statement, block.statement_count );

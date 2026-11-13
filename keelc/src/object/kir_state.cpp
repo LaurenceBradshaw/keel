@@ -258,6 +258,8 @@ void write_function( Byte_writer& out, Ref_writer& refs, const Function& functio
 
     out.put_u8( function.returns_a_value );
     out.put_u8( function.diverges );
+    out.put_u8( function.real_arithmetic );
+    out.put_u8( u8( function.trig ) );
 }
 
 Function read_function( Byte_reader& in, Ref_reader& refs )
@@ -357,6 +359,8 @@ Function read_function( Byte_reader& in, Ref_reader& refs )
 
     function.returns_a_value = in.get_u8() != 0;
     function.diverges        = in.get_u8() != 0;
+    function.real_arithmetic = in.get_u8() != 0;
+    function.trig            = Trig( in.get_u8() );
     return function;
 }
 

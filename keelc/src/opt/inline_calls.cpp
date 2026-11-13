@@ -528,6 +528,7 @@ void inline_calls(
     const std::vector<std::optional<Function>>& saved,
     const std::vector<Function>&                functions,
     const Literal_pool&                         literals,
+    bool                                        keep_trig,
     const Inline_weights&                       weights
 )
 {
@@ -566,7 +567,7 @@ void inline_calls(
                     const Function&      callee   = *saved[j];
                     const Function&      finished = functions[j];
                     std::optional<Place> receiver;
-                    bool                 fits = inlinable( callee ) &&
+                    bool                 fits = !( keep_trig && callee.trig != Trig::None ) && inlinable( callee ) &&
                                 inline_cost( finished, weights ) <= threshold( statement_count, finished, weights );
                     if( fits && callee.constructed.is_valid() )
                     {

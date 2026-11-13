@@ -20,7 +20,7 @@ error: there is no directive `@inline`
   --> parse/errors_directives.kl:11:1
    |
 11 | @inline
-   | ^^^^^^^ the directive a declaration takes is `@located`
+   | ^^^^^^^ the directives a declaration takes are `@located`, `@real_arithmetic`, `@trig_sin`, `@trig_cos` and `@trig_tan`
 
 error: `@caller()` is an expression, not a declaration's directive
   --> parse/errors_directives.kl:14:1

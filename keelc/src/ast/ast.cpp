@@ -66,6 +66,16 @@ void Ast::set_intrinsic( Node_id decl )
     intrinsic_.insert( decl.v );
 }
 
+void Ast::set_real_arithmetic( Node_id decl )
+{
+    real_arithmetic_.insert( decl.v );
+}
+
+void Ast::set_trig( Node_id decl, Trig trig, Span directive )
+{
+    trig_[decl.v] = { trig, directive };
+}
+
 void Ast::set_name_span( Node_id decl, Span span )
 {
     name_spans_[decl.v] = span;
@@ -146,6 +156,23 @@ bool Ast::is_located( Node_id decl ) const
 bool Ast::is_intrinsic( Node_id decl ) const
 {
     return intrinsic_.contains( decl.v );
+}
+
+bool Ast::is_real_arithmetic( Node_id decl ) const
+{
+    return real_arithmetic_.contains( decl.v );
+}
+
+Trig Ast::trig( Node_id decl ) const
+{
+    const auto found = trig_.find( decl.v );
+    return found == trig_.end() ? Trig::None : found->second.first;
+}
+
+Span Ast::trig_span( Node_id decl ) const
+{
+    const auto found = trig_.find( decl.v );
+    return found == trig_.end() ? Span {} : found->second.second;
 }
 
 Span Ast::name_span( Node_id decl ) const
