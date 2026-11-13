@@ -1757,6 +1757,14 @@ major), no longer blocked now that D81 has settled lambdas.
   to panic. Per instance it must name the caller's argument with a note in the body, as D78's
   suffix check does. Undecided: where the proof runs (sema's folding, or KIR after constant
   propagation, which sees through inlining) and whether a path that only might run counts.
+- **An `extern` should name the C header it comes from, and that header must be allowed.** Today
+  any program can write `extern f64 sin( f64 x );` and reach C's libm behind one `unsafe`, so
+  nothing limits which C a program binds. An `extern` would say which header declares it, a
+  package or program would list the headers it may bind (a `-l` alone does not allow one), and an
+  `extern` naming any other header, or none, would be refused. Checking the signature against the
+  header itself is a further step: D36 emits its own declaration and never includes one.
+  Undecided: the spelling, where the allowed list lives (keelb, the package, the command line), and
+  whether `kl_rt`'s externs need it.
 
 ### Library
 
