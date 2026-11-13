@@ -35,8 +35,9 @@ class Builder
         build_order_ = kl::list<kl::string>();
     }
 
-    // Builds `main`'s imports, then links `main` with every object into `output`.
-    public result<void, i32> link( const ref kl::path main, const ref kl::path output )
+    // Builds `main`'s imports, then links `main` with every object into `output`, at `level` unless
+    // it is empty.
+    public result<void, i32> link( const ref kl::path main, const ref kl::path output, const ref kl::string level )
     {
         kl::list<kl::string> imports = try imports_of( main, kl::string() );
         for( u64 i : 0..imports.size() )
@@ -56,7 +57,11 @@ class Builder
         }
         args.push( "-o" );
         args.push( kl::string( output ) );
-        
+        if( level.size() > 0 )
+        {
+            args.push( kl::string( level ) );
+        }
+
         return call_keelc( move args );
     }
 
@@ -229,11 +234,8 @@ class Builder
         for( u64 i : 0..packages.size() )
         {
             const ref kl::pair<kl::string, kl::path> package = packages.as_run()[i];
-            kl::string spec = kl::string( package.first );
-            spec += "=";
-            spec += package.second;
             args.push( "--package" );
-            args.push( move spec );
+            args.push( package.first + "=" + package.second );
         }
 
         if( verbose_ )
@@ -343,17 +345,7 @@ class Builder
     // `a::b::c` as `a/b/c`.
     private static kl::string folders( const ref kl::string module )
     {
-        kl::list<kl::string> pieces = module.split( "::" );
-        kl::string joined = kl::string();
-        for( u64 i : 0..pieces.size() )
-        {
-            if( i > 0 )
-            {
-                joined += "/";
-            }
-            joined += pieces.as_run()[i];
-        }
-        return joined;
+        return kl::join( module.split( "::" ).as_run(), "/" );
     }
 
     private static result<kl::string, i32> read( const ref kl::path file )

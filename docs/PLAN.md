@@ -346,10 +346,9 @@ statements inside an expression. The readability work that addresses the rest is
 
 ### 3.3 Optimisation levels
 
-Decided for M16, partly built: keelc takes `-O0` to `-O3`; keelb takes no level yet. keelc and
-keelb take `-O0` to `-O3`. `--debug` defaults to `-O1`
-and a plain build to `-O2`; `-O<n>` overrides either. `--debug` means `assert` and overflow checks
-and nothing else. `-O0` is never a default: it is the KIR as lowered, which the goldens ask for.
+Built in M16: keelc and keelb take `-O0` to `-O3`, keelb passing it to the link alone. `--debug`
+defaults to `-O1` and a plain build to `-O2`; `-O<n>` overrides either. `--debug` means `assert` and
+overflow checks and nothing else. `-O0` is never a default: it is the KIR as lowered, which the goldens ask for.
 Whether `--debug` accepts `-O2` and `-O3` is open.
 
 **Each level is defined by what it promises.**

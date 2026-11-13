@@ -57,8 +57,10 @@
 <pre class="signature"><a class="anchor" href="#command_line" aria-label="Link to command_line">#</a><code><span class="kw">class</span> <span class="type">command_line</span></code></pre>
 <div class="doc">
 <p>The options a program accepts, which parse its arguments and describe them in a usage text.</p>
-<p><code>--name</code> sets a flag. <code>--name value</code> and <code>--name=value</code> set an option. <code>--</code> ends the options, and
-every other argument is a positional.</p>
+<p><code>--name</code> sets a flag. <code>--name value</code> and <code>--name=value</code> set an option. A declaration may also
+have a short name: <code>-d</code> sets a flag, <code>-c value</code> and <code>-cvalue</code> set an option, and <code>-dc value</code>
+sets both, the first option taking the rest. <code>--</code> ends the options, and every other argument is
+a positional.</p>
 </div>
 </div>
 <h3>Constructors</h3>
@@ -75,12 +77,25 @@ every other argument is a positional.</p>
 <p>Declares <code>--name</code>, which <code>help</code> describes. <code>name</code> is written without the dashes.</p>
 <p>Panics when <code>name</code> is empty, starts with <code>-</code>, or is already declared.</p>
 </div>
+<pre class="signature"><a class="anchor" href="#command_line.add_flag" aria-label="Link to add_flag">#</a><code>@located <span class="kw">public</span> <a class="type" href="#flag">flag</a> <span class="fn">add_flag</span>( <a class="prim" href="prelude.html#u8">u8</a> short_name, <a class="type" href="prelude.html#str">str</a> name, <a class="type" href="prelude.html#str">str</a> help )</code></pre>
+<div class="doc">
+<p>Declares <code>-s</code> and, unless <code>name</code> is empty, <code>--name</code>, which <code>help</code> describes.</p>
+<p>Panics when <code>short_name</code> is not a letter or digit, <code>name</code> starts with <code>-</code>, or either is
+already declared.</p>
+</div>
 </div>
 <div class="group" id="command_line.add_option">
 <pre class="signature"><a class="anchor" href="#command_line.add_option" aria-label="Link to add_option">#</a><code>@located <span class="kw">public</span> <a class="type" href="#option">option</a> <span class="fn">add_option</span>( <a class="type" href="prelude.html#str">str</a> name, <a class="type" href="prelude.html#str">str</a> placeholder, <a class="type" href="prelude.html#str">str</a> help )</code></pre>
 <div class="doc">
 <p>Declares <code>--name &lt;placeholder&gt;</code>, which <code>help</code> describes. <code>name</code> is written without the dashes.</p>
 <p>Panics when <code>name</code> is empty, starts with <code>-</code>, or is already declared.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#command_line.add_option" aria-label="Link to add_option">#</a><code>@located <span class="kw">public</span> <a class="type" href="#option">option</a> <span class="fn">add_option</span>( <a class="prim" href="prelude.html#u8">u8</a> short_name, <a class="type" href="prelude.html#str">str</a> name, <a class="type" href="prelude.html#str">str</a> placeholder, <a class="type" href="prelude.html#str">str</a> help )</code></pre>
+<div class="doc">
+<p>Declares <code>-s &lt;placeholder&gt;</code> and, unless <code>name</code> is empty, <code>--name &lt;placeholder&gt;</code>, which <code>help</code>
+describes.</p>
+<p>Panics when <code>short_name</code> is not a letter or digit, <code>name</code> starts with <code>-</code>, or either is
+already declared.</p>
 </div>
 </div>
 <div class="group" id="command_line.usage">
@@ -94,8 +109,8 @@ every other argument is a positional.</p>
 <div class="doc">
 <p>Reads <code>main</code>'s arguments, or answers why they cannot be read, as a sentence to print after
 the program's name.</p>
-<p>Refuses an unknown or short option, an option without its value, a flag with one, and
-anything given twice. An option's value is the next argument even when it starts with <code>-</code>.</p>
+<p>Refuses an unknown option, an option without its value, a flag with one, and anything given
+twice. An option's value is the next argument even when it starts with <code>-</code>.</p>
 </div>
 </div>
 </section>

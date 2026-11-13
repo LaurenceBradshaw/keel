@@ -1,0 +1,6 @@
+# `-O<n>` reaches only the link; a level that is not one, or above -O1 under --debug, is refused.
+keelb build -O7; echo "exit $?"
+keelb build --debug -O2; echo "exit $?"
+keelb build --verbose -O 3 > log 2>&1; echo "exit $?"
+grep -c -- ' -O3 ' log
+grep -- ' -O3 ' log | grep -c -- ' -c '

@@ -145,3 +145,82 @@ private void usage_aligns_the_help( ref kl::test::context c )
     kl::command_line bare = kl::command_line( "t" );
     c.check_eq( bare.usage(), "usage: t\n" );
 }
+
+// `-d`, `-c x`, `-cx`, `-dcx` and a short-only `-O2`; the long names still work.
+private void short_names( ref kl::test::context c )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    kl::flag debug = cl.add_flag( 'd', "debug", "checks" );
+    kl::flag verbose = cl.add_flag( 'v', "verbose", "talks" );
+    kl::option cache = cl.add_option( 'c', "cache", "dir", "where" );
+    kl::option level = cl.add_option( 'O', "", "n", "how hard" );
+
+    str[4] args = [ "-dc", "x", "-O2", "a" ];
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( p.has( debug ) );
+            c.check( !p.has( verbose ) );
+            c.check_eq( p.value( cache ), "x" );
+            c.check_eq( p.value( level ), "2" );
+            c.require( p.positionals().size() == 1 );
+            c.check_eq( p.positionals().as_run()[0], "a" );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+
+    str[4] mixed = [ "-vcx", "--debug", "-O", "-1" ];
+    switch( cl.parse( mixed ) )
+    {
+        case result::ok( p ):
+            c.check( p.has( debug ) );
+            c.check( p.has( verbose ) );
+            c.check_eq( p.value( cache ), "x" );
+            c.check_eq( p.value( level ), "-1" );
+            break;
+        case result::err( e ):
+            c.check( false );
+            break;
+    }
+}
+
+// Parses `args` against `-d, --debug` and `-c, --cache <dir>`, expecting `message`.
+private void check_short_refused( ref kl::test::context c, const ref str[] args, str message )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    _ = cl.add_flag( 'd', "debug", "checks" );
+    _ = cl.add_option( 'c', "cache", "dir", "where" );
+
+    switch( cl.parse( args ) )
+    {
+        case result::ok( p ):
+            c.check( false );
+            break;
+        case result::err( e ):
+            c.check_eq( e, message );
+            break;
+    }
+}
+
+private void short_refusals( ref kl::test::context c )
+{
+    str[1] unknown = [ "-dx" ];
+    check_short_refused( ref c, unknown, "unknown option `-x`" );
+    str[1] missing = [ "-dc" ];
+    check_short_refused( ref c, missing, "`-c` needs a value" );
+    str[2] twice = [ "--debug", "-d" ];
+    check_short_refused( ref c, twice, "`-d` is given twice" );
+    str[1] bundled_twice = [ "-dd" ];
+    check_short_refused( ref c, bundled_twice, "`-d` is given twice" );
+}
+
+private void usage_with_short_names( ref kl::test::context c )
+{
+    kl::command_line cl = kl::command_line( "t" );
+    _ = cl.add_flag( 'd', "debug", "checks" );
+    _ = cl.add_option( "cache", "dir", "where" );
+    _ = cl.add_option( 'O', "", "n", "how hard" );
+    c.check_eq( cl.usage(), "usage: t\n\noptions:\n  -d, --debug        checks\n      --cache <dir>  where\n  -O<n>              how hard\n" );
+}

@@ -48,7 +48,8 @@ kl::path find_keelc()
 }
 
 // Builds the program, or under `testing` builds and runs the tests, and answers the exit code.
-result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool debug, bool verbose )
+// `level` is empty, or the `-O<n>` the link is given.
+result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool debug, const ref kl::string level, bool verbose )
 {
     kl::path current_dir;
     switch( move kl::current_directory() )
@@ -89,7 +90,7 @@ result<i32, kl::string> run( bool testing, const ref kl::path cache_dir, bool de
     }
 
     Builder builder = Builder( move keelc, move project, move kl_folder, move cache, debug, testing, verbose );
-    switch( builder.link( main_file, output ) )
+    switch( builder.link( main_file, output, level ) )
     {
         case result::ok():
             break;
@@ -118,11 +119,13 @@ i32 main( const ref str[] args )
     kl::flag debug_flag = cl.add_flag( "debug", "build with debug information" );
     kl::flag verbose_flag = cl.add_flag( "verbose", "print the commands that are run" );
     kl::option cache_option = cl.add_option( "cache", "dir", "where to store the build cache" );
+    kl::option level_option = cl.add_option( 'O', "", "n", "optimisation level, 0 to 3: 2, or 1 under --debug" );
 
     Command mode = Command::Error( "no command given" );
     kl::path cache_dir = kl::path::from( "build" );
     bool debug = false;
     bool verbose = false;
+    kl::string level = kl::string();
 
     switch( cl.parse( args ) )
     {
@@ -159,6 +162,19 @@ i32 main( const ref str[] args )
             {
                 verbose = true;
             }
+            if( parsed.has( level_option ) )
+            {
+                const ref kl::string n = parsed.value( level_option );
+                if( n != "0" && n != "1" && n != "2" && n != "3" )
+                {
+                    mode = Command::Error( "there is no -O" + n + "; the levels are -O0 to -O3" );
+                }
+                else if( debug && ( n == "2" || n == "3" ) )
+                {
+                    mode = Command::Error( "--debug takes -O0 or -O1, not -O" + n );
+                }
+                level = "-O" + n;
+            }
             break;
         case result::err( error ):
             kl::eprint( "keelb: " + error );
@@ -180,7 +196,7 @@ i32 main( const ref str[] args )
             return 2;
     }
 
-    switch( run( testing, cache_dir, debug, verbose ) )
+    switch( run( testing, cache_dir, debug, level, verbose ) )
     {
         case result::ok( code ):
             return code;

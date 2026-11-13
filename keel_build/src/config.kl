@@ -20,9 +20,7 @@ class Keelc
     {
         str[1] args = [ "--print-config" ];
 
-        kl::string command = kl::string();
-        command += keelc;
-        command += " --print-config";
+        kl::string command = kl::string( keelc ) + " --print-config";
 
         if( verbose )
         {

@@ -1,0 +1,7 @@
+// The program `levels` builds: a module so that there is something to compile before the link.
+import doubling;
+
+i32 main()
+{
+    return twice( 21 ) == 42 ? 0 : 1;
+}
