@@ -1,0 +1,5 @@
+warning: `shifted` is `@real_arithmetic` but computes no linear map: it does something recognition cannot follow [-Wlinear-map]
+  --> opt3/marked_calls.kl:13:12
+   |
+13 |     return sine( x ) * x;
+   |            ^^^^^^^^^ each output must be a sum of inputs scaled by constants

@@ -1,0 +1,198 @@
+// opt3/marked_calls.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A3_3f64;
+struct kl__A2_3f64;
+
+struct kl__A3_3f64
+{
+    double e[3];
+};
+_Static_assert( sizeof( struct kl__A3_3f64 ) == 24 && _Alignof( struct kl__A3_3f64 ) == 8, "layout" );
+
+struct kl__A2_3f64
+{
+    double e[2];
+};
+_Static_assert( sizeof( struct kl__A2_3f64 ) == 16 && _Alignof( struct kl__A2_3f64 ) == 8, "layout" );
+
+double kl__4sine__3f64( double );
+double kl__7shifted__3f64( double );
+void kl__4sums__A3_3f64_RA2_3f64( struct kl__A3_3f64*, struct kl__A2_3f64* );
+int32_t kl__4main__( void );
+
+#line 5 "opt3/marked_calls.kl"
+double kl__4sine__3f64( double kl_x_1 )
+{
+    double kl_t0;
+#line 7 "opt3/marked_calls.kl"
+    kl_t0 = kl_x_1;
+#line 7 "opt3/marked_calls.kl"
+    return kl_t0;
+}
+
+#line 11 "opt3/marked_calls.kl"
+double kl__7shifted__3f64( double kl_x_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 13 "opt3/marked_calls.kl"
+    kl_t2 = kl__4sine__3f64( kl_x_1 );
+#line 13 "opt3/marked_calls.kl"
+    kl_t0 = kl_t2 * kl_x_1;
+#line 13 "opt3/marked_calls.kl"
+    return kl_t0;
+}
+
+#line 18 "opt3/marked_calls.kl"
+void kl__4sums__A3_3f64_RA2_3f64( struct kl__A3_3f64* kl_x_1, struct kl__A2_3f64* kl_y_2 )
+{
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    double kl_t6;
+    double kl_t7;
+    double kl_t8;
+    double kl_t9;
+    double kl_t10;
+    double kl_t11;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+#line 20 "opt3/marked_calls.kl"
+    kl_t3 = 0;
+#line 20 "opt3/marked_calls.kl"
+    kl_t4 = 1;
+#line 20 "opt3/marked_calls.kl"
+    kl_t5 = 2;
+#line 20 "opt3/marked_calls.kl"
+    kl_t6 = ( *kl_x_1 ).e[kl_t3];
+#line 20 "opt3/marked_calls.kl"
+    kl_t7 = ( *kl_x_1 ).e[kl_t4];
+#line 20 "opt3/marked_calls.kl"
+    kl_t8 = ( *kl_x_1 ).e[kl_t5];
+#line 20 "opt3/marked_calls.kl"
+    kl_t9 = kl_t6 + kl_t7;
+#line 20 "opt3/marked_calls.kl"
+    kl_t10 = kl_t9 + kl_t8;
+#line 20 "opt3/marked_calls.kl"
+    kl_t11 = kl_t9 - kl_t8;
+#line 20 "opt3/marked_calls.kl"
+    ( *kl_y_2 ).e[kl_t3] = kl_t10;
+#line 20 "opt3/marked_calls.kl"
+    ( *kl_y_2 ).e[kl_t4] = kl_t11;
+#line 20 "opt3/marked_calls.kl"
+    return;
+#line 22 "opt3/marked_calls.kl"
+}
+
+#line 24 "opt3/marked_calls.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    struct kl__A3_3f64 kl_x_1;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    struct kl__A2_3f64 kl_y_5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    double kl_t9;
+    double kl_t10;
+    double kl_t11;
+    bool kl_t12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    uint64_t kl_t15;
+    double kl_t16;
+    double kl_t17;
+    double kl_t18;
+    double kl_t19;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t6;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t13;
+    ( void ) kl_t14;
+    ( void ) kl_t15;
+#line 26 "opt3/marked_calls.kl"
+    kl_t2 = 0;
+#line 26 "opt3/marked_calls.kl"
+    kl_x_1.e[kl_t2] = 1.0;
+#line 26 "opt3/marked_calls.kl"
+    kl_t3 = 1;
+#line 26 "opt3/marked_calls.kl"
+    kl_x_1.e[kl_t3] = 2.0;
+#line 26 "opt3/marked_calls.kl"
+    kl_t4 = 2;
+#line 26 "opt3/marked_calls.kl"
+    kl_x_1.e[kl_t4] = 3.0;
+    kl_t6 = 0;
+#line 27 "opt3/marked_calls.kl"
+    kl_y_5.e[kl_t6] = 0.0;
+#line 27 "opt3/marked_calls.kl"
+    kl_t6 = 1;
+#line 27 "opt3/marked_calls.kl"
+    kl_y_5.e[kl_t6] = 0.0;
+#line 20 "opt3/marked_calls.kl"
+    kl_t13 = 0;
+#line 20 "opt3/marked_calls.kl"
+    kl_t14 = 1;
+#line 20 "opt3/marked_calls.kl"
+    kl_t15 = 2;
+#line 20 "opt3/marked_calls.kl"
+    kl_t16 = kl_x_1.e[kl_t13] + kl_x_1.e[kl_t14];
+#line 20 "opt3/marked_calls.kl"
+    kl_t17 = kl_t16 + kl_x_1.e[kl_t15];
+#line 20 "opt3/marked_calls.kl"
+    kl_t18 = kl_t16 - kl_x_1.e[kl_t15];
+#line 20 "opt3/marked_calls.kl"
+    kl_y_5.e[kl_t13] = kl_t17;
+#line 20 "opt3/marked_calls.kl"
+    kl_y_5.e[kl_t14] = kl_t18;
+#line 29 "opt3/marked_calls.kl"
+    kl_t7 = 0;
+#line 29 "opt3/marked_calls.kl"
+    kl_t8 = 1;
+#line 29 "opt3/marked_calls.kl"
+    kl_t9 = kl_y_5.e[kl_t7] + kl_y_5.e[kl_t8];
+#line 13 "opt3/marked_calls.kl"
+    kl_t19 = kl__4sine__3f64( 0.5 );
+#line 13 "opt3/marked_calls.kl"
+    kl_t10 = kl_t19 * 0.5;
+#line 29 "opt3/marked_calls.kl"
+    kl_t11 = kl_t9 + kl_t10;
+#line 29 "opt3/marked_calls.kl"
+    kl_t12 = kl_t11 == 6.25;
+#line 29 "opt3/marked_calls.kl"
+    if ( kl_t12 ) goto bb1; else goto bb2;
+    bb1:
+#line 29 "opt3/marked_calls.kl"
+    kl_t0 = 0;
+#line 29 "opt3/marked_calls.kl"
+    goto bb3;
+    bb2:
+#line 29 "opt3/marked_calls.kl"
+    kl_t0 = 1;
+#line 29 "opt3/marked_calls.kl"
+    goto bb3;
+    bb3:
+#line 29 "opt3/marked_calls.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 24 "opt3/marked_calls.kl"
+    kl_t0 = kl__4main__(  );
+#line 24 "opt3/marked_calls.kl"
+    return kl_t0;
+#line 24 "opt3/marked_calls.kl"
+}
+

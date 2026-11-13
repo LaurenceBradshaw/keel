@@ -1,0 +1,39 @@
+// At -O3 a DFT8 loop is recognised and lowered to its circuit: 52 adds and 4 multiplies, the split
+// radix count, where the loop ran 448 and 256.
+
+@trig_cos
+f64 cosine( f64 x )
+{
+    return x;
+}
+
+@trig_sin
+f64 sine( f64 x )
+{
+    return x;
+}
+
+@real_arithmetic
+void dft( const ref f64[8] re, const ref f64[8] im, ref f64[8] yr, ref f64[8] yi )
+{
+    for( u64 k = 0; k < 8; k += 1 )
+    {
+        f64 sr = 0.0;
+        f64 si = 0.0;
+        for( u64 j = 0; j < 8; j += 1 )
+        {
+            const f64 t = -2.0 * 3.141592653589793 * cast<f64>( j * k ) / 8.0;
+            const f64 c = cosine( t );
+            const f64 s = sine( t );
+            sr += re[j] * c - im[j] * s;
+            si += re[j] * s + im[j] * c;
+        }
+        yr[k] = sr;
+        yi[k] = si;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

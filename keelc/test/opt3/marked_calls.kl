@@ -1,0 +1,30 @@
+// At -O3 a caller inlines a solved `@real_arithmetic` function's circuit, and a trig call in an
+// `@real_arithmetic` function stays a call. Below -O3 both inline as usual (opt/marked_calls.kl).
+
+@trig_sin
+f64 sine( f64 x )
+{
+    return x;
+}
+
+@real_arithmetic
+f64 shifted( f64 x )
+{
+    return sine( x ) * x;
+}
+
+// Three adds, where the body runs four.
+@real_arithmetic
+void sums( const ref f64[3] x, ref f64[2] y )
+{
+    y[0] = x[0] + x[1] + x[2];
+    y[1] = x[0] + x[1] - x[2];
+}
+
+i32 main()
+{
+    const f64[3] x = [ 1.0, 2.0, 3.0 ];
+    f64[2]       y = [ 0.0, .. ];
+    sums( x, ref y );
+    return y[0] + y[1] + shifted( 0.5 ) == 6.25 ? 0 : 1;
+}

@@ -31,6 +31,7 @@
 #include "opt/remove_dead_stores.h"
 #include "opt/settle_drops.h"
 #include "opt/shadow_tags.h"
+#include "opt/solve_linear_maps.h"
 #include "opt/split_aggregates.h"
 #include "opt/thread_jumps.h"
 #include "opt/unroll_loops.h"
@@ -282,6 +283,8 @@ Front_end run_front_end(
     };
 
     // A call made direct, before or after inlining, finds its callee optimised already.
+    std::vector<Node_id> warned_maps; // once a declaration, however many instances it has
+
     const std::vector<std::vector<u32>> dispatched =
         build.level >= 2 ? dispatch_edges( front.functions, ast, front.types ) : std::vector<std::vector<u32>> {};
 
@@ -333,11 +336,7 @@ Front_end run_front_end(
         {
             for( const u32 f : group )
             {
-                // At -O3 a `@real_arithmetic` body waits for the pass, which saves its circuit.
-                if( !( build.level >= 3 && front.functions[f].real_arithmetic ) )
-                {
-                    saved[f] = front.functions[f];
-                }
+                saved[f] = front.functions[f];
             }
         }
 
@@ -384,6 +383,35 @@ Front_end run_front_end(
                 // The loop passes, and a round to tidy what they leave; §3.3 gives each its level.
                 if( build.loops )
                 {
+                    if( build.level >= 3 && function.real_arithmetic )
+                    {
+                        const Map_outcome outcome =
+                            solve_linear_maps( function, front.functions, purity, front.types.table(), literals );
+                        if( outcome.solved )
+                        {
+                            verified( function, "solve_linear_maps" );
+                            remove_unused_locals( function, pin_named );
+                            verified( function, "remove_unused_locals" );
+                            // Callers inline the circuit; it has no owning locals, so no drops to elaborate.
+                            saved[f] = function;
+                        }
+                        else if( outcome.ending && std::ranges::find( warned_maps, function.declaration ) == warned_maps.end() )
+                        {
+                            warned_maps.push_back( function.declaration );
+                            const Span at =
+                                outcome.ending->span.is_valid() ? outcome.ending->span : ast.name_span( function.declaration );
+                            diags.warning(
+                                Warning::Linear_map,
+                                at,
+                                fmt::format(
+                                    "`{}` is `@real_arithmetic` but computes no linear map: it {}",
+                                    interner.text( ast.name( function.declaration ) ),
+                                    describe( outcome.ending->why )
+                                ),
+                                "each output must be a sum of inputs scaled by constants"
+                            );
+                        }
+                    }
                     bool shaped = rotate_loops( function, *build.loops );
                     verified( function, "rotate_loops" );
                     // After rotation, so the guard's read and the latch's both reach the body.

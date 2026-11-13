@@ -1,0 +1,188 @@
+// opt3/wht8.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__A8_3i32;
+
+struct kl__A8_3i32
+{
+    int32_t e[8];
+};
+_Static_assert( sizeof( struct kl__A8_3i32 ) == 32 && _Alignof( struct kl__A8_3i32 ) == 4, "layout" );
+
+void kl__3wht__RA8_3i32( struct kl__A8_3i32* );
+int32_t kl__4main__( void );
+
+#line 4 "opt3/wht8.kl"
+void kl__3wht__RA8_3i32( struct kl__A8_3i32* kl_x_1 )
+{
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    uint64_t kl_t7;
+    uint64_t kl_t8;
+    uint64_t kl_t9;
+    int32_t kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    int32_t kl_t13;
+    int32_t kl_t14;
+    int32_t kl_t15;
+    int32_t kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    int32_t kl_t21;
+    int32_t kl_t22;
+    int32_t kl_t23;
+    int32_t kl_t24;
+    int32_t kl_t25;
+    int32_t kl_t26;
+    int32_t kl_t27;
+    int32_t kl_t28;
+    int32_t kl_t29;
+    int32_t kl_t30;
+    int32_t kl_t31;
+    int32_t kl_t32;
+    int32_t kl_t33;
+    int32_t kl_t34;
+    int32_t kl_t35;
+    int32_t kl_t36;
+    int32_t kl_t37;
+    int32_t kl_t38;
+    int32_t kl_t39;
+    int32_t kl_t40;
+    int32_t kl_t41;
+    ( void ) kl_t2;
+    ( void ) kl_t3;
+    ( void ) kl_t4;
+    ( void ) kl_t5;
+    ( void ) kl_t6;
+    ( void ) kl_t7;
+    ( void ) kl_t8;
+    ( void ) kl_t9;
+#line 6 "opt3/wht8.kl"
+    kl_t2 = 0;
+#line 6 "opt3/wht8.kl"
+    kl_t3 = 1;
+#line 6 "opt3/wht8.kl"
+    kl_t4 = 2;
+#line 6 "opt3/wht8.kl"
+    kl_t5 = 3;
+#line 6 "opt3/wht8.kl"
+    kl_t6 = 4;
+#line 6 "opt3/wht8.kl"
+    kl_t7 = 5;
+#line 6 "opt3/wht8.kl"
+    kl_t8 = 6;
+#line 6 "opt3/wht8.kl"
+    kl_t9 = 7;
+#line 6 "opt3/wht8.kl"
+    kl_t10 = ( *kl_x_1 ).e[kl_t2];
+#line 6 "opt3/wht8.kl"
+    kl_t11 = ( *kl_x_1 ).e[kl_t4];
+#line 6 "opt3/wht8.kl"
+    kl_t12 = ( *kl_x_1 ).e[kl_t6];
+#line 6 "opt3/wht8.kl"
+    kl_t13 = ( *kl_x_1 ).e[kl_t8];
+#line 6 "opt3/wht8.kl"
+    kl_t14 = ( *kl_x_1 ).e[kl_t3];
+#line 6 "opt3/wht8.kl"
+    kl_t15 = ( *kl_x_1 ).e[kl_t5];
+#line 6 "opt3/wht8.kl"
+    kl_t16 = ( *kl_x_1 ).e[kl_t7];
+#line 6 "opt3/wht8.kl"
+    kl_t17 = ( *kl_x_1 ).e[kl_t9];
+#line 6 "opt3/wht8.kl"
+    kl_t18 = kl_t10 + kl_t12;
+#line 6 "opt3/wht8.kl"
+    kl_t19 = kl_t10 - kl_t12;
+#line 6 "opt3/wht8.kl"
+    kl_t20 = kl_t11 + kl_t13;
+#line 6 "opt3/wht8.kl"
+    kl_t21 = kl_t11 - kl_t13;
+#line 6 "opt3/wht8.kl"
+    kl_t22 = kl_t18 + kl_t20;
+#line 6 "opt3/wht8.kl"
+    kl_t23 = kl_t18 - kl_t20;
+#line 6 "opt3/wht8.kl"
+    kl_t24 = kl_t19 + kl_t21;
+#line 6 "opt3/wht8.kl"
+    kl_t25 = kl_t19 - kl_t21;
+#line 6 "opt3/wht8.kl"
+    kl_t26 = kl_t14 + kl_t16;
+#line 6 "opt3/wht8.kl"
+    kl_t27 = kl_t14 - kl_t16;
+#line 6 "opt3/wht8.kl"
+    kl_t28 = kl_t15 + kl_t17;
+#line 6 "opt3/wht8.kl"
+    kl_t29 = kl_t15 - kl_t17;
+#line 6 "opt3/wht8.kl"
+    kl_t30 = kl_t26 + kl_t28;
+#line 6 "opt3/wht8.kl"
+    kl_t31 = kl_t26 - kl_t28;
+#line 6 "opt3/wht8.kl"
+    kl_t32 = kl_t27 + kl_t29;
+#line 6 "opt3/wht8.kl"
+    kl_t33 = kl_t27 - kl_t29;
+#line 6 "opt3/wht8.kl"
+    kl_t34 = kl_t22 + kl_t30;
+#line 6 "opt3/wht8.kl"
+    kl_t35 = kl_t22 - kl_t30;
+#line 6 "opt3/wht8.kl"
+    kl_t36 = kl_t23 + kl_t31;
+#line 6 "opt3/wht8.kl"
+    kl_t37 = kl_t23 - kl_t31;
+#line 6 "opt3/wht8.kl"
+    kl_t38 = kl_t24 + kl_t32;
+#line 6 "opt3/wht8.kl"
+    kl_t39 = kl_t24 - kl_t32;
+#line 6 "opt3/wht8.kl"
+    kl_t40 = kl_t25 + kl_t33;
+#line 6 "opt3/wht8.kl"
+    kl_t41 = kl_t25 - kl_t33;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t2] = kl_t34;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t3] = kl_t35;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t4] = kl_t36;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t5] = kl_t37;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t6] = kl_t38;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t7] = kl_t39;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t8] = kl_t40;
+#line 6 "opt3/wht8.kl"
+    ( *kl_x_1 ).e[kl_t9] = kl_t41;
+#line 6 "opt3/wht8.kl"
+    return;
+#line 21 "opt3/wht8.kl"
+}
+
+#line 23 "opt3/wht8.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+#line 25 "opt3/wht8.kl"
+    kl_t0 = 0;
+#line 25 "opt3/wht8.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 23 "opt3/wht8.kl"
+    kl_t0 = kl__4main__(  );
+#line 23 "opt3/wht8.kl"
+    return kl_t0;
+#line 23 "opt3/wht8.kl"
+}
+

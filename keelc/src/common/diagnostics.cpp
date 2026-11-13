@@ -134,6 +134,8 @@ std::string_view warning_name( Warning which )
         return "unused-import";
     case Warning::Unused_private:
         return "unused-private";
+    case Warning::Linear_map:
+        return "linear-map";
     case Warning::Large_local:
         return "large-local";
     }

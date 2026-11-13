@@ -1,0 +1,11 @@
+warning: `energy` is `@real_arithmetic` but computes no linear map: it multiplies two inputs [-Wlinear-map]
+ --> opt3/not_a_map.kl:7:12
+  |
+7 |     return x[0] * x[0] + x[1] * x[1];
+  |            ^^^^^^^^^^^ each output must be a sum of inputs scaled by constants
+
+warning: `scaled` is `@real_arithmetic` but computes no linear map: it adds a constant to an input, or writes one to an output [-Wlinear-map]
+  --> opt3/not_a_map.kl:13:12
+   |
+13 |     return x * cast<f64>( N ) + 1.0;
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^ each output must be a sum of inputs scaled by constants

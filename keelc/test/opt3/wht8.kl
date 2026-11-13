@@ -1,0 +1,26 @@
+// At -O3 an integer WHT8 written as its matrix is lowered to the butterfly: 24 wrapping adds.
+
+@real_arithmetic
+void wht( ref i32[8] x )
+{
+    i32[8] y = [ 0, .. ];
+    for( u64 k = 0; k < 8; k += 1 )
+    {
+        i32 s = 0;
+        for( u64 j = 0; j < 8; j += 1 )
+        {
+            // The parity of the bits k and j share.
+            u64 b = k & j;
+            b ^= b >> 2;
+            b ^= b >> 1;
+            s = ( b & 1 ) == 0 ? s + x[j] : s - x[j];
+        }
+        y[k] = s;
+    }
+    x = y;
+}
+
+i32 main()
+{
+    return 0;
+}
