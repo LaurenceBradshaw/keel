@@ -1,0 +1,19 @@
+error: only the prelude's square roots are `@intrinsic`
+ --> sema/errors_intrinsic.kl:4:1
+  |
+4 | f64 own_root( f64 x );
+  | ^^^^^^^^^^^^^^^^^^^^^^ write the body, or declare it `extern`
+
+error: `@intrinsic` marks a function with no body
+ --> sema/errors_intrinsic.kl:6:1
+  |
+6 | @intrinsic
+  | ^^^^^^^^^^ the compiler gives its body
+
+error: `@intrinsic` marks a function with no body
+ --> sema/errors_intrinsic.kl:9:1
+  |
+9 | @intrinsic
+  | ^^^^^^^^^^ the compiler gives its body
+
+3 errors generated

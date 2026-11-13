@@ -39,6 +39,7 @@ public:
     void set_root( Node_id id );
     void set_access( Node_id id, Access access );
     void set_located( Node_id decl );
+    void set_intrinsic( Node_id decl );
     void set_name_span( Node_id decl, Span span );
     void set_type_name_span( Node_id literal, Span span );
     void set_span( Node_id id, Span span ); // a grouping's parentheses, which leave no node
@@ -62,6 +63,9 @@ public:
 
     // D69: written `@located`, so it receives its caller's location.
     bool is_located( Node_id decl ) const;
+
+    // Written `@intrinsic`: the compiler gives its body, and lowers a call to the operation.
+    bool is_intrinsic( Node_id decl ) const;
 
     // The span of a declaration's name, else of the whole declaration.
     Span name_span( Node_id decl ) const;
@@ -177,7 +181,7 @@ public:
     // ---- Questions about a declaration ----
 
     bool    is_generic( Node_id decl ) const;
-    bool    is_extern( Node_id decl ) const;          // a function with no body; `extern` is the only way to write one
+    bool    is_extern( Node_id decl ) const;          // a function with no body that is not `@intrinsic`
     bool    has_receiver( Node_id decl ) const;       // parameter 0 is the synthesised `this`
     bool    is_static_method( Node_id method ) const; // a method with no receiver (PLAN §6.7)
     bool    is_const_method( Node_id method ) const;  // written with a trailing `const`: a `const ref` receiver
@@ -227,6 +231,7 @@ private:
 
     std::unordered_map<u32, Access> access_; // absence means public
     std::unordered_set<u32>         located_;
+    std::unordered_set<u32>         intrinsic_;
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
     std::unordered_map<u32, u32>    variants_;        // payload field to its variant

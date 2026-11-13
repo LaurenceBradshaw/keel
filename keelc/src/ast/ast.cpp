@@ -61,6 +61,11 @@ void Ast::set_located( Node_id decl )
     located_.insert( decl.v );
 }
 
+void Ast::set_intrinsic( Node_id decl )
+{
+    intrinsic_.insert( decl.v );
+}
+
 void Ast::set_name_span( Node_id decl, Span span )
 {
     name_spans_[decl.v] = span;
@@ -136,6 +141,11 @@ Node_id Ast::panic_location( Node_id id ) const
 bool Ast::is_located( Node_id decl ) const
 {
     return located_.contains( decl.v );
+}
+
+bool Ast::is_intrinsic( Node_id decl ) const
+{
+    return intrinsic_.contains( decl.v );
 }
 
 Span Ast::name_span( Node_id decl ) const
@@ -825,7 +835,7 @@ bool Ast::is_generic( Node_id decl ) const
 
 bool Ast::is_extern( Node_id decl ) const
 {
-    return kind( decl ) == Node_kind::Function_decl && !body( decl ).is_valid();
+    return kind( decl ) == Node_kind::Function_decl && !body( decl ).is_valid() && !is_intrinsic( decl );
 }
 
 bool Ast::has_receiver( Node_id decl ) const

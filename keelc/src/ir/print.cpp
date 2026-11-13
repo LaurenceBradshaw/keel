@@ -162,6 +162,9 @@ struct Printer
         case Rvalue_kind::Bits:
             return fmt::format( "bits {}", operand( value.a ) );
 
+        case Rvalue_kind::Sqrt:
+            return fmt::format( "sqrt {}", operand( value.a ) );
+
         case Rvalue_kind::Make_interface:
             return fmt::format( "interface {} as {}", operand( value.a ), type_name( value.type ) );
 

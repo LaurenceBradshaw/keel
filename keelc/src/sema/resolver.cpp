@@ -1516,6 +1516,7 @@ Prelude_items Resolver::prelude_items() const
     const auto any          = []( Node_kind ) { return true; };
     const auto an_interface = []( Node_kind kind ) { return kind == Node_kind::Interface_decl; };
     const auto an_enum      = []( Node_kind kind ) { return kind == Node_kind::Enum_decl; };
+    const auto a_function   = []( Node_kind kind ) { return kind == Node_kind::Function_decl; };
     const auto an_aggregate = []( Node_kind kind ) { return is_aggregate( kind ); };
 
     Prelude_items items;
@@ -1531,6 +1532,8 @@ Prelude_items Resolver::prelude_items() const
     items.hashable       = named( "hashable", an_interface );
     items.fixed_memory   = named( "fixed_memory", an_interface );
     items.dynamic_memory = named( "dynamic_memory", an_interface );
+    items.sqrt_f64       = named( "sqrt_f64", a_function );
+    items.sqrt_f32       = named( "sqrt_f32", a_function );
 
     if( const Node_id hasher = named( "hasher", an_aggregate ); hasher.is_valid() )
     {

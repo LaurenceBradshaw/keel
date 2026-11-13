@@ -79,6 +79,20 @@ f32 from_bits( u32 x )
     }
 }
 
+/// --- Roots ---
+
+/// The square root of `x`, correctly rounded: NaN below zero, and `-0.0` for `-0.0`.
+f64 sqrt( f64 x )
+{
+    return sqrt_f64( x );
+}
+
+/// The square root of `x`, correctly rounded: NaN below zero, and `-0.0` for `-0.0`.
+f32 sqrt( f32 x )
+{
+    return sqrt_f32( x );
+}
+
 /// --- Trigonometry ---
 
 /// The sine of an angle in radians.
@@ -197,7 +211,7 @@ f64 asin( f64 x )
         return x + x * arcsine_ratio( x * x );
     }
     f64 t = ( 1.0 - magnitude( x ) ) * 0.5;
-    f64 s = square_root( t );
+    f64 s = sqrt( t );
     f64 angle = 0.0;
     if( ix >= 0x3fef3333 )
     {
@@ -240,12 +254,12 @@ f64 acos( f64 x )
     if( ( hx >> 31 ) != 0 )
     {
         f64 z = ( 1.0 + x ) * 0.5;
-        f64 s = square_root( z );
+        f64 s = sqrt( z );
         f64 w = arcsine_ratio( z ) * s - PIO2_LO;
         return PI - 2.0 * ( s + w );
     }
     f64 z = ( 1.0 - x ) * 0.5;
-    f64 s = square_root( z );
+    f64 s = sqrt( z );
     f64 df = low_word_cleared( s );
     f64 c = ( z - df * df ) / ( s + df );
     f64 w = arcsine_ratio( z ) * s + c;
@@ -688,35 +702,6 @@ private reduction reduced_large( const ref f64[4] x, i32 e0, i32 nx )
         sum += fq[at( i, 32 )];
     }
     return reduction { n & 7, hi, ih == 0 ? sum : -sum };
-}
-
-// The square root of a positive normal `x`, rounded to nearest: digit by digit, so slow but exact.
-private f64 square_root( f64 x )
-{
-    u64 b = bits_of( x );
-    i64 k = wrap<i64>( b >> 52 ) - 1075;
-    u64 f = ( b & 0x000f_ffff_ffff_ffff ) | 0x0010_0000_0000_0000;
-    if( ( k & 1 ) != 0 )
-    {
-        f = f << 1;
-        k -= 1;
-    }
-    // x is f·2^k, k even and f below 2^54; q is the root of f·2^54 truncated, one bit past the 53 kept.
-    u64 q = 0;
-    u64 rest = 0;
-    for( u64 i = 0; i < 54; i++ )
-    {
-        rest = ( rest << 2 ) | ( i < 27 ? ( f >> ( 52 - 2 * i ) ) & 3 : cast<u64>( 0 ) );
-        u64 trial = ( q << 2 ) | 1;
-        q = q << 1;
-        if( rest >= trial )
-        {
-            rest -= trial;
-            q = q | 1;
-        }
-    }
-    // An exact root has at most 27 bits, so the extra bit is never a tie.
-    return from_bits( ( wrap<u64>( k / 2 + 1048 ) << 52 ) + ( q >> 1 ) + ( q & 1 ) );
 }
 
 private u32 high_word( f64 x )

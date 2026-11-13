@@ -29,6 +29,7 @@ bool pure( Rvalue_kind kind )
     case Rvalue_kind::Overflows:
     case Rvalue_kind::Cast:
     case Rvalue_kind::Bits:
+    case Rvalue_kind::Sqrt:
     case Rvalue_kind::Run_of:
     case Rvalue_kind::Run_data:
     case Rvalue_kind::Run_size:

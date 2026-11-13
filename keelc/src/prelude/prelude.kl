@@ -429,3 +429,11 @@ struct location
     /// The call's line, counting from 1.
     u32 line;
 };
+
+/// --- Numbers ---
+
+/// The square root of `x`, correctly rounded: the target's instruction. `kl::sqrt` is the name to use.
+@intrinsic f64 sqrt_f64( f64 x );
+
+/// The square root of `x`, correctly rounded: the target's instruction. `kl::sqrt` is the name to use.
+@intrinsic f32 sqrt_f32( f32 x );

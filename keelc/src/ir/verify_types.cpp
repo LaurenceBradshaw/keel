@@ -100,6 +100,7 @@ public:
             return;
 
         case Rvalue_kind::Bits:
+        case Rvalue_kind::Sqrt:
         case Rvalue_kind::Run_data:
         case Rvalue_kind::Run_size:
         case Rvalue_kind::Release:

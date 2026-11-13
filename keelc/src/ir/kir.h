@@ -172,6 +172,7 @@ enum class Rvalue_kind : u8
     Make_interface, // §6.7: `a` is an implementer's address, and the type the interface pointer of it and its vtable
     Vtable_slot,    // §6.7: `a` is an interface pointer, callee the requirement, and the type the slot's function
     Interface_self, // §6.7: `a` is an interface pointer, and the type the `void*` of its object
+    Sqrt,           // the correctly rounded square root of the float `a`
 };
 
 // D80: a Call of a module's build or drop function, which no declaration has; `callee` is its first global.
@@ -755,6 +756,11 @@ inline Rvalue cast_to( Operand a, Type_id type )
 inline Rvalue bits_of( Operand a, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Bits, .type = type, .a = a };
+}
+
+inline Rvalue sqrt_of( Operand a )
+{
+    return Rvalue { .kind = Rvalue_kind::Sqrt, .type = a.type, .a = a };
 }
 
 inline Rvalue run_of( Operand data, Operand count, Type_id type )

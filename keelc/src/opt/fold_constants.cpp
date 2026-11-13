@@ -307,6 +307,19 @@ std::optional<Rvalue> folded( const Rvalue& value, const Type_table& types, Lite
         return reinterpreted( value, types, literals );
     }
 
+    // Correctly rounded on every host, as the instruction is; a negative's NaN has no spelling.
+    if( value.kind == Rvalue_kind::Sqrt && is_constant( value.a ) && literals.kind( value.a.constant ) == Literal_kind::Float )
+    {
+        const f64 a = float_value( value.a, types, literals );
+        if( !( a >= 0.0 ) || !std::isfinite( a ) )
+        {
+            return std::nullopt;
+        }
+        const f64 root =
+            types.get( value.type ).width == 32 ? static_cast<f64>( std::sqrt( static_cast<f32>( a ) ) ) : std::sqrt( a );
+        return use( constant( literals.add_float( root, static_cast<f32>( root ) ), value.type ) );
+    }
+
     const bool pair = value.kind == Rvalue_kind::Binary || value.kind == Rvalue_kind::Overflows;
     if( ( !pair && value.kind != Rvalue_kind::Unary && value.kind != Rvalue_kind::Cast ) || !is_constant( value.a ) ||
         ( pair && !is_constant( value.b ) ) )
@@ -790,6 +803,30 @@ TEST_CASE( "fold_constants_keeps_a_nan_or_infinite_result", "[opt][fold]" )
     REQUIRE( !folded( binary( Token_kind::Slash, f( 0.0 ), f( 0.0 ), f64_type ), types, literals ) );
     REQUIRE( !folded( binary( Token_kind::Slash, f( 1.0 ), f( 0.0 ), f64_type ), types, literals ) );
     REQUIRE( !folded( binary( Token_kind::Star, f( 1e300 ), f( 1e300 ), f64_type ), types, literals ) );
+}
+
+// A root in its own type; a negative's NaN stays for the instruction.
+TEST_CASE( "fold_constants_folds_a_square_root", "[opt][fold]" )
+{
+    const Type_table types;
+    Literal_pool     literals;
+    const Type_id    f32_type = types.floating( 32 );
+    const Type_id    f64_type = types.floating( 64 );
+    const auto       f        = [&]( f64 v, Type_id type ) { return constant( literals.add_float( v, f32( v ) ), type ); };
+
+    const std::optional<Rvalue> wide = folded( sqrt_of( f( 2.0, f64_type ) ), types, literals );
+    REQUIRE( wide );
+    REQUIRE( literals.floating( wide->a.constant ) == std::sqrt( 2.0 ) );
+
+    const std::optional<Rvalue> narrow = folded( sqrt_of( f( 2.0, f32_type ) ), types, literals );
+    REQUIRE( narrow );
+    REQUIRE( literals.narrow( narrow->a.constant ) == std::sqrt( 2.0f ) );
+
+    const std::optional<Rvalue> zero = folded( sqrt_of( f( -0.0, f64_type ) ), types, literals );
+    REQUIRE( zero );
+    REQUIRE( std::signbit( literals.floating( zero->a.constant ) ) );
+
+    REQUIRE( !folded( sqrt_of( f( -1.0, f64_type ) ), types, literals ) );
 }
 
 // `x * 1.0`, `x / 1.0` and `x - 0.0` reduce; `x + 0.0`, `x * 0.0` and `x - -0.0` do not.

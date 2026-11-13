@@ -1,4 +1,4 @@
-// `kl::math`: the bits of a float, both ways, for each width, and the trigonometry.
+// `kl::math`: the bits of a float, both ways, for each width, the square root and the trigonometry.
 import kl::math;
 import kl::test::context;
 
@@ -32,6 +32,44 @@ private void bits_round_trip( ref kl::test::context c )
     {
         c.check_eq( cast<u64>( kl::bits_of( kl::from_bits( narrow[i] ) ) ), cast<u64>( narrow[i] ) );
     }
+}
+
+// The square root, against C's, bit for bit: every class of input, from random bits.
+extern f64 sqrt( f64 x );
+extern f32 sqrtf( f32 x );
+
+private void sqrt_matches_libm( ref kl::test::context c )
+{
+    u64 seed = 7;
+    u64 missed = 0;
+    for( u64 i = 0; i < 200000; i++ )
+    {
+        u64 b = next_random( ref seed );
+        f64 x = kl::from_bits( b );
+        f32 y = kl::from_bits( wrap<u32>( b >> 32 ) );
+        unsafe
+        {
+            f64 want = sqrt( x );
+            f32 narrow = sqrtf( y );
+            if( want == want ? kl::bits_of( kl::sqrt( x ) ) != kl::bits_of( want ) : kl::sqrt( x ) == kl::sqrt( x ) )
+            {
+                missed++;
+            }
+            if( narrow == narrow ? kl::bits_of( kl::sqrt( y ) ) != kl::bits_of( narrow ) : kl::sqrt( y ) == kl::sqrt( y ) )
+            {
+                missed++;
+            }
+        }
+    }
+    c.check_eq( missed, 0 );
+
+    f64 infinity = kl::from_bits( 0x7ff0000000000000 );
+    c.check_eq( kl::bits_of( kl::sqrt( -0.0 ) ), 0x8000000000000000 );
+    c.check_eq( kl::sqrt( infinity ), infinity );
+    c.check( kl::sqrt( -1.0 ) != kl::sqrt( -1.0 ) );
+    c.check( kl::sqrt( -infinity ) != kl::sqrt( -infinity ) );
+    c.check_eq( kl::sqrt( kl::from_bits( cast<u64>( 4 ) ) ), kl::from_bits( 0x1e70000000000000 ) );
+    c.check_eq( kl::sqrt( 0.25 ), 0.5 );
 }
 
 // Trigonometry, against C's, within an ulp.

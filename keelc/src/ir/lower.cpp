@@ -540,7 +540,16 @@ Function Lowering::run()
         drops_.end_statement( ast_.span( field ) ); // each default is a statement of its own
     }
 
-    lower_statement( ast_.body( declaration_ ) );
+    if( ast_.is_intrinsic( declaration_ ) )
+    {
+        // Its address was taken: the body is the operation on its parameter.
+        const Operand x = copy( builder_.place( Local_id { 1 } ), builder_.type_of( Local_id { 1 } ) );
+        builder_.assign( builder_.place( k_return_slot ), sqrt_of( x ), span );
+    }
+    else
+    {
+        lower_statement( ast_.body( declaration_ ) );
+    }
 
     // The fall-off-the-end path: a `return` has already unwound to 0, and unwind_to is a no-op on a
     // terminated block, so this only fires where nothing returned.
@@ -3249,6 +3258,11 @@ Operand Lowering::emit_call(
     Type_id                  given
 )
 {
+    if( ast_.is_intrinsic( callee ) )
+    {
+        return temporary( sqrt_of( operands[0] ), operands[0].type, ast_.span( id ) );
+    }
+
     std::vector<Operand> all( operands.begin(), operands.end() );
 
     // Built before the call, since building it lays out statements of its own.
@@ -5969,8 +5983,8 @@ std::vector<Function> lower(
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
         // A walk has none either: it is lowered where each loop over it is written (D74).
-        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) && !ast.is_walk( id ) &&
-            !resolution.modules().is_loaded( ast.span( id ).file ) )
+        if( is_function_like( ast.kind( id ) ) && ( ast.body( id ).is_valid() || ast.is_intrinsic( id ) ) &&
+            !ast.is_generic( id ) && !ast.is_walk( id ) && !resolution.modules().is_loaded( ast.span( id ).file ) )
         {
             functions.push_back( lower_function( id, ast, resolution, types, literals, sm, interner, overflow_checks, {} ) );
             add( lower_lambdas( id, {} ) );
@@ -10534,6 +10548,23 @@ TEST_CASE( "lower_gives_folded_globals_no_build_function", "[ir][lower][globals]
     // Built, but owning nothing: a build function and no drop.
     REQUIRE_FALSE( p.named( "build b" ).empty() );
     REQUIRE( p.named( "drop b" ).empty() );
+}
+
+// A call of a prelude square root is the instruction.
+TEST_CASE( "lower_makes_a_prelude_square_root_the_instruction", "[ir][lower][prelude]" )
+{
+    Lowered p( "f64 f( f64 x ) { return sqrt_f64( x ); }\n"
+               "f32 g( f32 x ) { return sqrt_f32( x ); }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    for( const std::string_view name : { "f", "g" } )
+    {
+        const std::string body = p.named( name );
+        REQUIRE( body.find( "sqrt copy _1" ) != std::string::npos );
+        REQUIRE( body.find( "sqrt_f" ) == std::string::npos );
+    }
 }
 
 } // namespace keel

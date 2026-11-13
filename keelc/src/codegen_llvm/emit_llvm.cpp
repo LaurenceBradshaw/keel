@@ -1824,6 +1824,11 @@ llvm::Value* Llvm_emitter::rvalue( const Rvalue& value )
     }
     case Rvalue_kind::Bits:
         return builder_.CreateBitCast( operand( value.a ), value_type( value.type ) );
+    case Rvalue_kind::Sqrt:
+    {
+        llvm::Value* a = operand( value.a );
+        return builder_.CreateIntrinsic( llvm::Intrinsic::sqrt, { a->getType() }, { a } );
+    }
     case Rvalue_kind::Run_of:
     {
         llvm::Value* run = llvm::PoisonValue::get( value_type( value.type ) );

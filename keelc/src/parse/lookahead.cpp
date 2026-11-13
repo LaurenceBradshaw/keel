@@ -117,8 +117,9 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     };
 
     cursor_.seek( at );
-    failure_ = Scan_failure {};
-    site_    = site;
+    failure_  = Scan_failure {};
+    site_     = site;
+    directed_ = false;
 
     if( site == Scan_site::File )
     {
@@ -200,7 +201,7 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
             return make_head( Declaration_kind::Function, at );
         }
 
-        if( is_extern && cursor_.check( Token_kind::Semicolon ) )
+        if( ( is_extern || directed_ ) && cursor_.check( Token_kind::Semicolon ) )
         {
             return make_head( Declaration_kind::Function, at );
         }
@@ -1217,6 +1218,7 @@ bool Lookahead::scan_where_clauses()
 
 void Lookahead::skip_directives()
 {
+    directed_ = cursor_.check( Token_kind::At );
     while( cursor_.match( Token_kind::At ) )
     {
         cursor_.match( Token_kind::Identifier );

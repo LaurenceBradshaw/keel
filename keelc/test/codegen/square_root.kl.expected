@@ -1,0 +1,131 @@
+// codegen/square_root.kl
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef double ( *kl__fn__F3f64E3f64 )( double );
+typedef float ( *kl__fn__F3f32E3f32 )( float );
+
+int32_t kl__4main__( void );
+double kl_7prelude_8sqrt_f64__3f64( double );
+float kl_7prelude_8sqrt_f32__3f32( float );
+
+#line 2 "codegen/square_root.kl"
+int32_t kl__4main__( void )
+{
+    int32_t kl_t0;
+    kl__fn__F3f64E3f64 kl_wide_1;
+    kl__fn__F3f64E3f64 kl_t2;
+    kl__fn__F3f32E3f32 kl_narrow_3;
+    kl__fn__F3f32E3f32 kl_t4;
+    double kl_two_5;
+    bool kl_t6;
+    bool kl_t7;
+    double kl_t8;
+    double kl_t9;
+    bool kl_t10;
+    double kl_t11;
+    bool kl_t12;
+    float kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    double kl_t16;
+    bool kl_t17;
+    double kl_t18;
+    double kl_t19;
+    double kl_t20;
+    double kl_t21;
+    bool kl_t22;
+#line 4 "codegen/square_root.kl"
+    kl_t2 = kl_7prelude_8sqrt_f64__3f64;
+#line 4 "codegen/square_root.kl"
+    kl_wide_1 = kl_t2;
+    kl_t4 = kl_7prelude_8sqrt_f32__3f32;
+#line 5 "codegen/square_root.kl"
+    kl_narrow_3 = kl_t4;
+    kl_two_5 = 2.0;
+    kl_t8 = kl_two_5 * kl_two_5;
+#line 7 "codegen/square_root.kl"
+    kl_t9 = __builtin_sqrt( kl_t8 );
+#line 7 "codegen/square_root.kl"
+    kl_t10 = kl_t9 != kl_two_5;
+#line 7 "codegen/square_root.kl"
+    kl_t7 = kl_t10;
+#line 7 "codegen/square_root.kl"
+    if ( kl_t7 ) goto bb2; else goto bb1;
+    bb1:
+#line 7 "codegen/square_root.kl"
+    kl_t11 = kl_wide_1( 9.0 );
+#line 7 "codegen/square_root.kl"
+    kl_t12 = kl_t11 != 3.0;
+#line 7 "codegen/square_root.kl"
+    kl_t7 = kl_t12;
+#line 7 "codegen/square_root.kl"
+    goto bb2;
+    bb2:
+#line 7 "codegen/square_root.kl"
+    kl_t6 = kl_t7;
+#line 7 "codegen/square_root.kl"
+    if ( kl_t6 ) goto bb4; else goto bb3;
+    bb3:
+#line 7 "codegen/square_root.kl"
+    kl_t13 = kl_narrow_3( 0.25 );
+#line 7 "codegen/square_root.kl"
+    kl_t14 = kl_t13 != 0.5;
+#line 7 "codegen/square_root.kl"
+    kl_t6 = kl_t14;
+#line 7 "codegen/square_root.kl"
+    goto bb4;
+    bb4:
+#line 7 "codegen/square_root.kl"
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 1;
+#line 9 "codegen/square_root.kl"
+    return kl_t0;
+    bb6:
+    kl_t16 = __builtin_sqrt( -0.0 );
+#line 11 "codegen/square_root.kl"
+    kl_t17 = kl_t16 != 0.0;
+#line 11 "codegen/square_root.kl"
+    kl_t15 = kl_t17;
+#line 11 "codegen/square_root.kl"
+    if ( kl_t15 ) goto bb8; else goto bb7;
+    bb7:
+#line 11 "codegen/square_root.kl"
+    kl_t18 = -kl_two_5;
+#line 11 "codegen/square_root.kl"
+    kl_t19 = __builtin_sqrt( kl_t18 );
+#line 11 "codegen/square_root.kl"
+    kl_t20 = -kl_two_5;
+#line 11 "codegen/square_root.kl"
+    kl_t21 = __builtin_sqrt( kl_t20 );
+#line 11 "codegen/square_root.kl"
+    kl_t22 = kl_t19 == kl_t21;
+#line 11 "codegen/square_root.kl"
+    kl_t15 = kl_t22;
+#line 11 "codegen/square_root.kl"
+    goto bb8;
+    bb8:
+#line 11 "codegen/square_root.kl"
+    if ( kl_t15 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 2;
+#line 13 "codegen/square_root.kl"
+    return kl_t0;
+    bb10:
+    kl_t0 = 0;
+#line 15 "codegen/square_root.kl"
+    return kl_t0;
+}
+
+int main( void )
+{
+    int32_t kl_t0;
+#line 2 "codegen/square_root.kl"
+    kl_t0 = kl__4main__(  );
+#line 2 "codegen/square_root.kl"
+    return kl_t0;
+#line 2 "codegen/square_root.kl"
+}
+

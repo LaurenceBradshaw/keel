@@ -68,6 +68,7 @@ private:
     struct Directives
     {
         std::optional<Span> located;
+        std::optional<Span> intrinsic;
     };
 
     Directives parse_directives();
@@ -77,7 +78,7 @@ private:
 
     Node_id parse_import();
     Node_id parse_declaration( const Declaration_head& head );
-    Node_id parse_function_decl( std::optional<u32> commit = std::nullopt );
+    Node_id parse_function_decl( std::optional<u32> commit = std::nullopt, bool intrinsic = false );
     Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, const Member_head& head );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
@@ -766,7 +767,7 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
         decl = parse_enum_decl();
         break;
     case Declaration_kind::Function:
-        decl = parse_function_decl( head.commit );
+        decl = parse_function_decl( head.commit, directives.intrinsic.has_value() );
         break;
     case Declaration_kind::Variable:
         decl = parse_var_decl( head.commit );
@@ -815,6 +816,15 @@ Parser::Directives Parser::parse_directives()
 
             directives.located = span;
         }
+        else if( name == "intrinsic" )
+        {
+            if( directives.intrinsic )
+            {
+                recovery_.error_at( span, "`@intrinsic` is written twice" );
+            }
+
+            directives.intrinsic = span;
+        }
         else if( name == "caller" )
         {
             recovery_.error_at(
@@ -842,6 +852,20 @@ Parser::Directives Parser::parse_directives()
 
 void Parser::apply_directives( Node_id decl, const Directives& directives )
 {
+    if( directives.intrinsic && ast_.kind( decl ) != Node_kind::Error )
+    {
+        if( ast_.kind( decl ) != Node_kind::Function_decl || ast_.body( decl ).is_valid() )
+        {
+            recovery_.error_at(
+                *directives.intrinsic, "`@intrinsic` marks a function with no body", "the compiler gives its body"
+            );
+        }
+        else
+        {
+            ast_.set_intrinsic( decl );
+        }
+    }
+
     if( !directives.located || ast_.kind( decl ) == Node_kind::Error )
     {
         return;
@@ -866,7 +890,7 @@ void Parser::apply_directives( Node_id decl, const Directives& directives )
     ast_.set_located( decl );
 }
 
-Node_id Parser::parse_function_decl( std::optional<u32> commit )
+Node_id Parser::parse_function_decl( std::optional<u32> commit, bool intrinsic )
 {
     const Span start = cursor_.peek().span;
 
@@ -928,12 +952,11 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
         is_extern = false;
     }
 
-    if( is_extern )
+    if( is_extern || ( intrinsic && cursor_.check( Token_kind::Semicolon ) ) )
     {
         recovery_.expect( Token_kind::Semicolon );
 
-        // The absent body is what marks it: `extern` is the only rule that can produce one, so
-        // nothing needs a flag to read it back.
+        // The absent body is what marks it as `extern`, unless apply_directives marks it `@intrinsic`.
         const Node_id node = name.is_valid() ? ast_.add(
                                                    Node_kind::Function_decl,
                                                    Span::merge( start, cursor_.previous().span ),

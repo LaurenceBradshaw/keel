@@ -771,6 +771,13 @@ void Signatures::declare_functions()
             extern_types_.check( child );
         }
 
+        if( ast_.is_intrinsic( child ) && child != table_.prelude().sqrt_f64 && child != table_.prelude().sqrt_f32 )
+        {
+            reporter_.error_at(
+                ast_.span( child ), "only the prelude's square roots are `@intrinsic`", "write the body, or declare it `extern`"
+            );
+        }
+
         if( interner_.text( ast_.name( child ) ) == "main" )
         {
             // Main may not be marked `extern`

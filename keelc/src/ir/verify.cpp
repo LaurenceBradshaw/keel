@@ -73,6 +73,7 @@ void check_rvalue( const Function& func, const Rvalue& value, const At& where, s
     case Rvalue_kind::Vtable_slot:
     case Rvalue_kind::Interface_self:
     case Rvalue_kind::Bits:
+    case Rvalue_kind::Sqrt:
     case Rvalue_kind::Run_data:
     case Rvalue_kind::Run_size:
         operand_at( value.a, "operand" );

@@ -1752,6 +1752,13 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             operand( rvalue.a )
         );
 
+    case Rvalue_kind::Sqrt:
+        return fmt::format(
+            "{}( {} )",
+            types_.table().get( rvalue.type ).width == 32 ? "__builtin_sqrtf" : "__builtin_sqrt",
+            operand( rvalue.a )
+        );
+
     case Rvalue_kind::Address_of:
         // Nothing is there to point at, and nothing reads a `void` through it.
         if( is_void( type_of( rvalue.a.place ) ) )

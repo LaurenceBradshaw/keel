@@ -53,6 +53,9 @@ functions.</p>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li class="divider">Call sites</li>
 <li><a href="#location"><code>location</code></a> <span class="kind">struct</span></li>
+<li class="divider">Numbers</li>
+<li><a href="#sqrt_f64"><code>sqrt_f64</code></a> <span class="kind">function</span></li>
+<li><a href="#sqrt_f32"><code>sqrt_f32</code></a> <span class="kind">function</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">primitive</span> <span class="prim">bool</span></h2>
@@ -594,6 +597,25 @@ interface as its type argument.</p>
 <pre class="signature"><a class="anchor" href="#location.line" aria-label="Link to line">#</a><code><span class="kw">public</span> <a class="prim" href="#u32">u32</a> line</code></pre>
 <div class="doc">
 <p>The call's line, counting from 1.</p>
+</div>
+</div>
+</section>
+<h2 class="divider">Numbers</h2>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sqrt_f64</span></h2>
+<div class="group" id="sqrt_f64">
+<pre class="signature"><a class="anchor" href="#sqrt_f64" aria-label="Link to sqrt_f64">#</a><code><a class="prim" href="#f64">f64</a> <span class="fn">sqrt_f64</span>( <a class="prim" href="#f64">f64</a> x )</code></pre>
+<div class="doc">
+<p>The square root of <code>x</code>, correctly rounded: the target's instruction. <code>kl::sqrt</code> is the name to use.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> <span class="fn">sqrt_f32</span></h2>
+<div class="group" id="sqrt_f32">
+<pre class="signature"><a class="anchor" href="#sqrt_f32" aria-label="Link to sqrt_f32">#</a><code><a class="prim" href="#f32">f32</a> <span class="fn">sqrt_f32</span>( <a class="prim" href="#f32">f32</a> x )</code></pre>
+<div class="doc">
+<p>The square root of <code>x</code>, correctly rounded: the target's instruction. <code>kl::sqrt</code> is the name to use.</p>
 </div>
 </div>
 </section>

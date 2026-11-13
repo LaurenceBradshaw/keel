@@ -1,0 +1,16 @@
+// The prelude's square roots: called, and through their addresses, which reach the body keelc gives them.
+i32 main()
+{
+    fn( f64 ) -> f64 wide = &sqrt_f64;
+    fn( f32 ) -> f32 narrow = &sqrt_f32;
+    f64 two = 2.0;
+    if( sqrt_f64( two * two ) != two || wide( 9.0 ) != 3.0 || narrow( cast<f32>( 0.25 ) ) != cast<f32>( 0.5 ) )
+    {
+        return 1;
+    }
+    if( sqrt_f64( -0.0 ) != 0.0 || sqrt_f64( -two ) == sqrt_f64( -two ) )
+    {
+        return 2;
+    }
+    return 0;
+}

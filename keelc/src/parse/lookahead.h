@@ -208,6 +208,7 @@ private:
     Scan_failure failure_;
     Scan_site    site_        = Scan_site::File;
     Member_site  member_site_ = Member_site::Aggregate;
+    bool         directed_    = false; // directives came first, so `@intrinsic`'s `;` may end the head
 };
 
 } // namespace keel

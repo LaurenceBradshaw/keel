@@ -1,0 +1,12 @@
+// Each refusal of `@intrinsic`, one error apiece.
+
+@intrinsic
+f64 own_root( f64 x );
+
+@intrinsic
+f64 with_body( f64 x ) { return x; }
+
+@intrinsic
+i32 counted = 1;
+
+i32 main() { return 0; }
