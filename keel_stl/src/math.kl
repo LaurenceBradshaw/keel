@@ -512,7 +512,7 @@ private reduction medium( f64 x, u32 ix )
 }
 
 // Payne–Hanek: `x` is |x| in `nx` 24-bit pieces, scaled by 2^-e0, multiplied by enough bits of 2/π.
-private reduction reduced_large( const ref f64[4] x, i32 e0, i32 nx )
+private reduction reduced_large( f64[4] x, i32 e0, i32 nx )
 {
     i32 jk = 4;
     i32 jp = jk;

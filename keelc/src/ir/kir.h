@@ -615,6 +615,15 @@ void for_each_operand( const Rvalue& value, Fn fn )
     }
 }
 
+// Whether any operand `value` reads passes `test`.
+template <typename Test>
+bool any_operand( const Rvalue& value, Test test )
+{
+    bool any = false;
+    for_each_operand( value, [&]( const Operand& operand ) { any = any || test( operand ); } );
+    return any;
+}
+
 // Every place in the function, with the statement it is the target of, or null. `Func` is `Function` or
 // `const Function`, so `fn` may rewrite them. An rvalue's own operands go regardless of kind, since an
 // address's carries its place under any kind.

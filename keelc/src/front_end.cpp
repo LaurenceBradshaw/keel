@@ -10,6 +10,7 @@
 #include "ir/lower.h"
 #include "ir/lower_dispatch.h"
 #include "ir/main_shim.h"
+#include "ir/purity.h"
 #include "ir/simplify.h"
 #include "ir/verify_types.h"
 #include "opt/coalesce_moves.h"
@@ -205,6 +206,9 @@ Front_end run_front_end(
     std::vector<std::optional<Function>> saved( front.functions.size() ); // each function as its callers inline it
     std::vector<bool> finished( front.functions.size(), false ); // each function once optimised, as its droppers inline it
 
+    // Decided a group at a time as the loop below finishes it, so a caller sees its callees'.
+    Purity purity( front.functions, ast );
+
     // At -O1 a named local keeps its stores, so a debugger finds its current value.
     const bool pin_named = build.level == 1;
 
@@ -234,7 +238,7 @@ Front_end run_front_end(
             verified( function, "shadow_tags" );
         }
         // Before propagation, which forwards the copies it leaves.
-        if( build.level >= 3 && eliminate_common( function, literals ) )
+        if( build.level >= 3 && eliminate_common( function, literals, purity ) )
         {
             verified( function, "eliminate_common" );
         }
@@ -259,7 +263,7 @@ Front_end run_front_end(
         // Again, as a join SCCP left fewer paths into may now agree.
         propagate_values( function, front.types.table(), literals );
         verified( function, "propagate_values" );
-        remove_dead_stores( function, pin_named );
+        remove_dead_stores( function, pin_named, purity );
         verified( function, "remove_dead_stores" );
         // Dead store removal can empty a block, so threading goes first.
         simplify( function, literals );
@@ -431,6 +435,7 @@ Front_end run_front_end(
                 finished[f] = true;
             }
         }
+        purity.decide( group );
     }
     lap( build.level >= 1 ? "optimise" : "drops" );
 

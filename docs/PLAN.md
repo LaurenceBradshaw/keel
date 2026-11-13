@@ -379,7 +379,7 @@ function's `-O1` code depends on nothing outside it.
 | `propagate_values`, `fold_constants` | `-O1` | Pinned: a named local's store stays, so its value is still there. |
 | `propagate_constants`, `thread_jumps` | `-O1` | Removes only statements that never run, including a test a dominating test of the same two locals decides. |
 | `forward_globals` | `-O1` | A global is named: its store stays, even one every path overwrites; only reads are forwarded. |
-| `remove_dead_stores`, `remove_unused_locals` | `-O1` | Pinned: they remove temporaries only. |
+| `remove_dead_stores`, `remove_unused_locals` | `-O1` | Pinned: they remove temporaries only. An unread call goes only when its callee is pure and surely returns (below). |
 | `merge_blocks`, `fold_identities` | `-O1` | Block shape and rvalues; no local goes. |
 | `inline_calls`, `inline_drops`, `devirtualise_calls` | `-O2` | Cross function boundaries; frames go. |
 | `coalesce_moves` | `-O2` | Merging locals is its whole job. |
@@ -389,7 +389,18 @@ function's `-O1` code depends on nothing outside it.
 | `hoist_invariants` | `-O1` | Pinned: a named local's statement stays in the loop, and what moves takes the loop test's line, or stepping would go back to a body line before the loop starts. |
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
 | `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements. |
-| `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
+| `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
+
+**Pure functions** (`ir/purity`): a function is pure when its result depends on its arguments
+alone. It writes only its own locals, so no `out` or `ref` write; it reads no pointee, and no global
+but a `const` one that no function assigns, drops, moves out of or lends to write; and it calls only
+pure functions, with no call through a pointer, allocation, release or drop. An `extern` and a
+function returning `never` are not pure; a panic is allowed. Each group of `callees_first` is decided
+once its bodies are final, every member taken as pure until its body refutes it, so a recursive
+function can be pure. A pure function also surely returns when it has no cycle in its blocks, no
+panic, is alone in its group without calling itself, and calls only functions that surely return:
+removing an unread call of anything else could end a program that would have run forever or
+panicked.
 
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
 table: rotation, read forwarding, a round, then LICM, induction variables, full unrolling and another
@@ -1850,6 +1861,10 @@ major), no longer blocked now that D81 has settled lambdas.
   between, `p` an `i32*`, checks `0 >= (*_1).count_` and computes `data_ + 0` twice: with no TBAA
   (§7.1) the store may reach `l`'s fields. A `const ref` that nothing may write through for the
   call, or type-based aliasing, would let `eliminate_common` keep the first; both are language rules.
+- **An unread pure call with a loop stays.** `remove_dead_stores` removes an unread call only when
+  its callee surely returns (§3.3), so `_ = kl::sin( x )` stays a call, as Payne–Hanek reduction
+  loops. Proving a loop ends would remove it; merging repeated calls, which is what the e-graph
+  pass needs, does not wait on that.
 - **No FMA, by rule and by target.** §7.1 forbids contraction, and the LLVM backend emits plain
   `fmul`/`fadd`. Two things would allow it (noted 2026-11-12):
   1. Permission per operation: the `contract` flag on an `fmul` and the `fadd` it feeds (or

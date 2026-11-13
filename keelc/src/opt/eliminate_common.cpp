@@ -60,21 +60,40 @@ bool same_operand( const Function& func, const Literal_pool& literals, const Ope
 
 bool same_value( const Function& func, const Literal_pool& literals, const Rvalue& a, const Rvalue& b )
 {
-    return a.kind == b.kind && a.type == b.type && a.op == b.op && same_operand( func, literals, a.a, b.a ) &&
-           ( !uses_b( a.kind ) || same_operand( func, literals, a.b, b.b ) );
+    if( a.kind != b.kind || a.type != b.type || a.op != b.op || a.callee != b.callee || a.type_arguments != b.type_arguments ||
+        a.arguments.size() != b.arguments.size() ||
+        ( a.kind != Rvalue_kind::Call && !same_operand( func, literals, a.a, b.a ) ) ||
+        ( uses_b( a.kind ) && !same_operand( func, literals, a.b, b.b ) ) )
+    {
+        return false;
+    }
+    for( std::size_t i = 0; i < a.arguments.size(); ++i )
+    {
+        if( !same_operand( func, literals, a.arguments[i], b.arguments[i] ) )
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 // Copies of places and constants only: a move or a debug flag is not a value to share.
-bool sharable( const Rvalue& value )
+bool sharable( const Rvalue& value, const Purity& purity )
 {
     const auto plain = []( const Operand& operand )
     { return operand.kind == Operand_kind::Copy || operand.kind == Operand_kind::Constant; };
+    if( value.kind == Rvalue_kind::Call )
+    {
+        return purity.pure( value ) && std::ranges::all_of( value.arguments, plain );
+    }
     return pure( value.kind ) && plain( value.a ) && ( !uses_b( value.kind ) || plain( value.b ) );
 }
 
-bool reads_local( const Function& func, const Operand& operand, Local_id local )
+bool reads_local( const Function& func, const Rvalue& value, Local_id local )
 {
-    return operand.has_place() && mentions( func, operand.place, local );
+    return any_operand(
+        value, [&]( const Operand& operand ) { return operand.has_place() && mentions( func, operand.place, local ); }
+    );
 }
 
 // Whether a call or a store through a pointer may change what `operand` reads.
@@ -100,6 +119,7 @@ struct Walk
 {
     const Function&     func;
     const Literal_pool& literals;
+    const Purity&       purity;
     const Local_set     addressed;
 
     void step( const Statement& statement, Table& table ) const
@@ -108,19 +128,18 @@ struct Walk
         {
             std::erase_if(
                 table,
-                [&]( const Made& made )
-                { return in_memory( func, addressed, made.value.a ) || in_memory( func, addressed, made.value.b ); }
+                [&]( const Made& made ) {
+                    return any_operand(
+                        made.value, [&]( const Operand& operand ) { return in_memory( func, addressed, operand ); }
+                    );
+                }
             );
         }
         if( !statement.place.is_global() && statement.place.local.is_valid() )
         {
             const Local_id local = statement.place.local;
             std::erase_if(
-                table,
-                [&]( const Made& made ) {
-                    return made.local == local || reads_local( func, made.value.a, local ) ||
-                           reads_local( func, made.value.b, local );
-                }
+                table, [&]( const Made& made ) { return made.local == local || reads_local( func, made.value, local ); }
             );
         }
 
@@ -131,9 +150,8 @@ struct Walk
 
         const Rvalue&  value = func.rvalue( statement );
         const Local_id into  = statement.place.local;
-        if( sharable( value ) && value.type == func.locals[into].type && !is_addressed( addressed, into ) &&
-            !reads_local( func, value.a, into ) && !reads_local( func, value.b, into ) &&
-            !held( func, literals, table, value ) )
+        if( sharable( value, purity ) && value.type == func.locals[into].type && !is_addressed( addressed, into ) &&
+            !reads_local( func, value, into ) && !held( func, literals, table, value ) )
         {
             table.push_back( Made { .value = value, .local = into } );
         }
@@ -205,9 +223,9 @@ struct Walk
 };
 } // namespace
 
-bool eliminate_common( Function& func, const Literal_pool& literals )
+bool eliminate_common( Function& func, const Literal_pool& literals, const Purity& purity )
 {
-    const Walk walk { .func = func, .literals = literals, .addressed = addressed_locals_of( func ) };
+    const Walk walk { .func = func, .literals = literals, .purity = purity, .addressed = addressed_locals_of( func ) };
     const std::vector<std::optional<Table>> entry   = walk.on_entry();
     bool                                    changed = false;
     std::vector<bool>                       deleted( func.statements.size(), false );
@@ -226,11 +244,10 @@ bool eliminate_common( Function& func, const Literal_pool& literals )
             Statement& statement = func.statements_of( block )[s];
             // `i = i + 1` stays a step the loop passes see, though a cast's `i + 1` made it.
             if( statement.kind == Statement_kind::Assign && statement.place.is_whole_local() &&
-                !reads_local( func, func.rvalue( statement ).a, statement.place.local ) &&
-                !reads_local( func, func.rvalue( statement ).b, statement.place.local ) )
+                !reads_local( func, func.rvalue( statement ), statement.place.local ) )
             {
                 Rvalue& value = func.rvalue( statement );
-                if( const Made* made = sharable( value ) ? held( func, literals, table, value ) : nullptr;
+                if( const Made* made = sharable( value, purity ) ? held( func, literals, table, value ) : nullptr;
                     made && func.locals[made->local].type == func.locals[statement.place.local].type )
                 {
                     changed = true;
@@ -270,8 +287,12 @@ namespace
 // Optimised and elaborated, as a release build emits it. The function under test is always the first.
 struct Eliminated : Compiled
 {
-    explicit Eliminated( std::string_view source, u32 level = 3 )
-        : Compiled( std::string( source ) + "i32 main() { return 0; }\n", Stage::Elaborated, Build { .level = level } )
+    explicit Eliminated( std::string_view source, u32 level = 3, std::optional<Inline_weights> inlining = Inline_weights {} )
+        : Compiled(
+              std::string( source ) + "i32 main() { return 0; }\n",
+              Stage::Elaborated,
+              Build { .level = level, .inlining = inlining }
+          )
     {
         INFO( rendered() );
         REQUIRE( clean() );
@@ -290,7 +311,23 @@ struct Eliminated : Compiled
             }
         ) );
     }
+
+    std::size_t calls() const
+    {
+        const Function& f = functions.front();
+        return static_cast<std::size_t>( std::ranges::count_if(
+            f.statements,
+            [&]( const Statement& statement )
+            { return statement.kind == Statement_kind::Assign && f.rvalue( statement ).kind == Rvalue_kind::Call; }
+        ) );
+    }
 };
+
+// Not inlined, so `g`'s calls are still calls.
+std::size_t calls_of( std::string_view g, std::string_view f = "i64 f( i64 a ) { return g( a ) + g( a ); }\n" )
+{
+    return Eliminated( std::string( f ) + std::string( g ), 3, std::nullopt ).calls();
+}
 
 } // namespace
 
@@ -342,6 +379,23 @@ TEST_CASE( "eliminate_common_keeps_a_read_a_store_through_a_pointer_separates", 
                     "struct Pair { i32 a; i32 b; };\n" )
             .divisions() == 2
     );
+}
+
+// Its result depends on its argument alone; recursion and a `const` table do not change that.
+TEST_CASE( "eliminate_common_calls_a_pure_function_once", "[opt][eliminate_common]" )
+{
+    REQUIRE( calls_of( "i64 g( i64 a ) { return a * a + 1; }\n" ) == 1 );
+    REQUIRE( calls_of( "i64 g( i64 n ) { return n <= 0 ? 0 : g( n - 1 ) + 1; }\n" ) == 1 );
+    REQUIRE( calls_of( "const i64[2] t = [ 3, 5 ];\ni64 g( i64 a ) { return t[cast<u64>( a & 1 )]; }\n" ) == 1 );
+}
+
+// An extern, a write to a global, a read of one that changes, and a read through a reference.
+TEST_CASE( "eliminate_common_calls_an_impure_function_each_time", "[opt][eliminate_common]" )
+{
+    REQUIRE( calls_of( "extern i64 g( i64 a );\n", "i64 f( i64 a ) { unsafe { return g( a ) + g( a ); } }\n" ) == 2 );
+    REQUIRE( calls_of( "i64 t = 0;\ni64 g( i64 a ) { t += a; return a; }\n" ) == 2 );
+    REQUIRE( calls_of( "i64 t = 0;\ni64 g( i64 a ) { return a + t; }\nvoid h() { t = 1; }\n" ) == 2 );
+    REQUIRE( calls_of( "i64 g( const ref i64 a ) { return a; }\n" ) == 2 );
 }
 
 } // namespace keel

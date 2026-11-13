@@ -1,0 +1,66 @@
+// Two calls of a pure function with the same arguments are one; an extern's stay two. Inlining
+// leaves bump's and first's effects, which the answers check.
+
+extern i64 labs( i64 n );
+
+const i64[4] primes = [ 3, 5, 7, 11 ];
+i64 total = 1;
+
+// Pure, with a loop.
+i64 mix( i64 n )
+{
+    i64 s = n;
+    for( u64 i : 0..cast<u64>( n & 15 ) )
+    {
+        s = s * 31 + primes[i & 3];
+        s = s ^ ( s >> 7 );
+        s = s * 17 + 5;
+        s = s ^ ( s >> 11 );
+        s = s * 13 + 3;
+        s = s ^ ( s >> 5 );
+    }
+    return s;
+}
+
+// Writes a global.
+i64 bump( i64 n )
+{
+    total += n;
+    return mix( n ) + 1;
+}
+
+// Reads through a reference, which may change between calls.
+i64 first( const ref i64[4] a )
+{
+    return mix( a[0] ) + a[1];
+}
+
+i64 twice( i64 n )
+{
+    return mix( n ) + mix( n );
+}
+
+i64 twice_kept( i64 n )
+{
+    i64[4] a = [ n, n, n, n ];
+    i64 x = first( a );
+    a[0] = n + 1;
+    unsafe
+    {
+        return bump( n ) + bump( n ) + labs( n ) + labs( n ) + x + first( a );
+    }
+}
+
+i32 main()
+{
+    if( twice( 27 ) != 2 * mix( 27 ) )
+    {
+        return 1;
+    }
+    i64 kept = twice_kept( -3 );
+    if( total != -5 || kept != 2 * mix( -3 ) + 2 + 6 + mix( -3 ) - 3 + mix( -2 ) - 3 )
+    {
+        return 2;
+    }
+    return 0;
+}
