@@ -381,16 +381,16 @@ Front_end run_front_end(
                     verified( function, "forward_reads" );
                     optimise_round( function );
                     // After the round folds the checks that would exit before an invariant.
-                    bool moved = hoist_invariants( function );
-                    if( moved )
+                    const bool hoisted = hoist_invariants( function );
+                    if( hoisted )
                     {
                         verified( function, "hoist_invariants" );
                     }
-                    // After hoisting, so `i * n` has an invariant `n`; one round tidies both.
-                    if( reduce_inductions( function, front.types.table(), literals ) )
+                    // After hoisting, so `i * n` has an invariant `n`.
+                    bool moved = reduce_inductions( function, front.types.table(), literals );
+                    if( moved )
                     {
                         verified( function, "reduce_inductions" );
-                        moved = true;
                     }
                     // Last, so the round after folds each copy's index.
                     if( unroll_loops( function, front.types.table(), literals, *build.loops ) )
@@ -401,6 +401,14 @@ Front_end run_front_end(
                     if( moved )
                     {
                         optimise_round( function );
+                    }
+                    // A hoist alone leaves only the empty blocks it went through.
+                    else if( hoisted )
+                    {
+                        simplify( function, literals );
+                        verified( function, "simplify" );
+                        merge_blocks( function );
+                        verified( function, "merge_blocks" );
                     }
                 }
             }
