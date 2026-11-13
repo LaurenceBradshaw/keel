@@ -690,13 +690,13 @@ TEST_CASE( "reduce_inductions_keeps_a_shift_its_index_stays", "[opt][reduce_indu
     REQUIRE( f.in_loops( Token_kind::Star ) == 1 );
 }
 
-// `i * 16 + j` is stepped, and the outer test reads it against 256.
+// `i * 16 + j` is stepped, its bounds check folds, and the outer test reads it against 256.
 TEST_CASE( "reduce_inductions_retires_an_index_its_steps_replace", "[opt][reduce_inductions]" )
 {
     const Reduced f( "i64 f( const ref i64[256] a ) { i64 t = 0; for( u64 i = 0; i < 16; i += 1 ) { for( u64 j = 0; j < 16; "
                      "j += 1 ) { t += a[ i * 16 + j ]; } } return t; }\n" );
     REQUIRE( f.in_loops( Token_kind::Star ) == 0 );
-    REQUIRE( f.in_loops( Token_kind::Less, 256 ) == 2 );
+    REQUIRE( f.in_loops( Token_kind::Less, 256 ) == 1 );
 }
 
 // At 200 the test would be `twice < 400`, past a u8; at 100 it fits.

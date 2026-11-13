@@ -100,13 +100,11 @@ int64_t kl__4grid__A6_3i64( struct kl__A6_3i64* kl_a_1 )
     int64_t kl_t3;
     ( void ) kl_t2;
 #line 38 "opt/unrolled_loops/main.kl"
-    kl_t0 = 0;
-#line 38 "opt/unrolled_loops/main.kl"
     kl_t2 = 1;
 #line 38 "opt/unrolled_loops/main.kl"
     kl_t3 = ( *kl_a_1 ).e[kl_t2];
 #line 38 "opt/unrolled_loops/main.kl"
-    kl_t0 = kl_t0 + kl_t3;
+    kl_t0 = kl_t3;
 #line 38 "opt/unrolled_loops/main.kl"
     kl_t2 = 2;
 #line 38 "opt/unrolled_loops/main.kl"
@@ -308,12 +306,9 @@ int32_t kl__4main__( void )
 #line 78 "opt/unrolled_loops/main.kl"
     return kl_t0;
     bb11:
-#line 50 "opt/unrolled_loops/main.kl"
-    kl_t30 = 0;
-#line 50 "opt/unrolled_loops/main.kl"
-    kl_t26 = kl_b_23.e[kl_t30];
-#line 48 "opt/unrolled_loops/main.kl"
-    kl_i_28 = 1;
+#line 47 "opt/unrolled_loops/main.kl"
+    kl_t26 = 0;
+    kl_i_28 = 0;
 #line 48 "opt/unrolled_loops/main.kl"
     goto bb12;
     bb12:

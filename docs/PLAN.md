@@ -124,7 +124,10 @@ benchmark also runs with `-disable-lsr` to show it.
 
 **Three boundary cases.** **Auto-vectorisation is LLVM's**, because the transformation depends on
 the target's vector width, which KIR cannot know. Nothing runs it yet: keelc's codegen pipeline has
-no vectoriser, so no Keel code is vectorised. **Tail-call elimination is Keel's**, because
+no vectoriser, so no Keel code is vectorised. **What general vectorisation needs outside the
+e-graph is open to look at even where it breaks this rule**, because vectorised loops are among
+the largest speed-ups left: LLVM's loop and SLP vectorisers, the IR passes they assume have run,
+and the `noalias` that Keel's borrow rules can prove. **Tail-call elimination is Keel's**, because
 turning self-recursion into a loop has nothing target-specific in it; the backend's sibling-call
 optimisation stays the backend's. **Anything gated on undefined behaviour is nobody's**: no `nsw`,
 `nuw`, `noalias`, `dereferenceable` or `!tbaa` is emitted unless Keel can prove the claim, because

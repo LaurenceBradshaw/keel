@@ -326,8 +326,8 @@ Value read( const Analysis& analysis, const Operand& operand, const Values& valu
     return Value { .state = Value::State::Varying };
 }
 
-// The numbers `value` gives from its operands' bounds: a cast that keeps them, `&` with a non-negative side,
-// `>>` or `%` by a constant, and a comparison the bounds decide.
+// The numbers `value` gives from its operands' bounds: a cast that keeps them, `+`, `-` and `*`, `&` with a
+// non-negative side, `>>` or `%` by a constant, and a comparison the bounds decide.
 Value ranged( const Analysis& analysis, const Rvalue& value, Value a, Value b )
 {
     const Type_table&           types = analysis.types;
@@ -363,9 +363,27 @@ Value ranged( const Analysis& analysis, const Rvalue& value, Value a, Value b )
         return decided ? Value { .state = Value::State::Constant, .bits = *decided ? 1u : 0u } : any;
     }
 
+    // Bounds past 2^63 could overflow a product; a result the type cannot hold is Varying.
+    const Wide big     = Wide( 1 ) << 63;
+    const bool smaller = x->lo > -big && x->hi < big && y->lo > -big && y->hi < big;
+
     const bool by_constant = y->lo == y->hi;
     switch( value.op )
     {
+    case Token_kind::Plus:
+        return smaller ? of_bounds( { x->lo + y->lo, x->hi + y->hi }, value.type, types ) : any;
+
+    case Token_kind::Minus:
+        return smaller ? of_bounds( { x->lo - y->hi, x->hi - y->lo }, value.type, types ) : any;
+
+    case Token_kind::Star:
+        if( smaller )
+        {
+            const Wide p[] = { x->lo * y->lo, x->lo * y->hi, x->hi * y->lo, x->hi * y->hi };
+            return of_bounds( { *std::ranges::min_element( p ), *std::ranges::max_element( p ) }, value.type, types );
+        }
+        return any;
+
     case Token_kind::Amp:
         if( x->lo >= 0 || y->lo >= 0 )
         {
@@ -760,6 +778,63 @@ std::optional<Narrowing> narrowing( const Analysis& analysis, const Block& block
     }
 }
 
+// Each side of every comparison with a constant `k`, as `k - 1`, `k` and `k + 1`, sorted.
+std::vector<Wide> stops_of( const Analysis& analysis )
+{
+    std::vector<Wide> stops;
+    for( const Block& block : analysis.func.blocks )
+    {
+        for( const Statement& statement : analysis.func.statements_of( block ) )
+        {
+            if( statement.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+            const Rvalue& test = analysis.func.rvalue( statement );
+            if( test.kind != Rvalue_kind::Binary || !is_comparison( test.op ) )
+            {
+                continue;
+            }
+            for( const Operand* k : { &test.a, &test.b } )
+            {
+                if( k->kind != Operand_kind::Constant || !k->constant.is_valid() || !is_integer( analysis.types, k->type ) )
+                {
+                    continue;
+                }
+                const std::optional<Bounds> n = bounds(
+                    Value { .state = Value::State::Constant, .bits = analysis.literals.integer( k->constant ) },
+                    k->type,
+                    analysis.types
+                );
+                if( n )
+                {
+                    stops.insert( stops.end(), { n->lo - 1, n->lo, n->lo + 1 } );
+                }
+            }
+        }
+    }
+    std::ranges::sort( stops );
+    return stops;
+}
+
+// `now`, which grew from the range `old`, with each side that moved pushed out to the next stop or the type's end.
+Value widened( Value old, Value now, const std::vector<Wide>& stops, Type_id type, const Type_table& types )
+{
+    const Bounds all = *limits( types, type );
+    Bounds       b { now.lo, now.hi };
+    if( b.lo < old.lo )
+    {
+        const auto at = std::ranges::upper_bound( stops, b.lo );
+        b.lo          = at == stops.begin() ? all.lo : std::max( all.lo, *( at - 1 ) );
+    }
+    if( b.hi > old.hi )
+    {
+        const auto at = std::ranges::lower_bound( stops, b.hi );
+        b.hi          = at == stops.end() ? all.hi : std::min( all.hi, *at );
+    }
+    return of_bounds( b, type, types );
+}
+
 std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
 {
     const Function& func = analysis.func;
@@ -778,13 +853,14 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
         std::optional<Relation>  related;
     };
 
-    // Values only rise, a range that grows again is widened to Varying, relations only weaken, and a block is reached
-    // once, so this ends.
-    bool              changed = true;
-    std::vector<Edge> targets;
-    std::vector<bool> dirty( func.blocks.size(), true );
-    State             state;
-    State             arriving;
+    // Values only rise, a range that grows again is widened to the next stop, relations only weaken, and a block is
+    // reached once, so this ends.
+    const std::vector<Wide> stops   = stops_of( analysis );
+    bool                    changed = true;
+    std::vector<Edge>       targets;
+    std::vector<bool>       dirty( func.blocks.size(), true );
+    State                   state;
+    State                   arriving;
     while( changed )
     {
         changed = false;
@@ -879,9 +955,9 @@ std::vector<std::optional<State>> values_on_entry( const Analysis& analysis )
                     Value       joined = join( old, arriving.values[l.v], func.locals[l].type, analysis.types );
                     if( joined != old )
                     {
-                        if( old.state == Value::State::Range )
+                        if( old.state == Value::State::Range && joined.state == Value::State::Range )
                         {
-                            joined = Value { .state = Value::State::Varying };
+                            joined = widened( old, joined, stops, func.locals[l].type, analysis.types );
                         }
                         entry->values[l.v]   = joined;
                         changed              = true;
@@ -1338,10 +1414,18 @@ TEST_CASE( "propagate_constants_reads_the_constant_an_equality_tested", "[opt][c
     REQUIRE( p.reads( "x" ) == 1 );
 }
 
-// `i` grows round the loop until its range is widened away, so the check stays and the pass ends.
+// `i` grows round the loop until it is widened to the test's 300, past a `u8`, so the check stays and the pass ends.
 TEST_CASE( "propagate_constants_widens_a_growing_range", "[opt][constants]" )
 {
     const Propagated p( "u8 f() { u8 t = 0; for( i32 i = 0; i < 300; i++ ) { t = cast<u8>( i ); } return t; }\n" );
+    REQUIRE( p.branches() == 2 );
+}
+
+// `k` widens to the test's 16, not to any `u64`, so `i * 16 + k` stays under 256 and the bounds check goes.
+TEST_CASE( "propagate_constants_widens_to_a_tested_bound", "[opt][constants]" )
+{
+    const Propagated p( "i64 f( const ref i64[256] a, u64 i ) { i64 s = 0; if( i < 16 ) { for( u64 k = 0; k < 16; k += 1 ) "
+                        "{ s += a[i * 16 + k]; } } return s; }\n" );
     REQUIRE( p.branches() == 2 );
 }
 
