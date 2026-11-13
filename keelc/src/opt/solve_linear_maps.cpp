@@ -4,6 +4,7 @@
 #include "opt/solve_linear_maps.h"
 #include <map>
 #include <utility>
+#include "egraph/circuit_cache.h"
 #include "egraph/lower_circuit.h"
 
 namespace keel
@@ -101,6 +102,7 @@ Map_outcome solve_linear_maps(
     const Purity&                purity,
     const Type_table&            types,
     Literal_pool&                literals,
+    const std::filesystem::path& cache,
     const Solve_options&         options
 )
 {
@@ -110,11 +112,20 @@ Map_outcome solve_linear_maps(
         return { .ending = *u };
     }
 
-    Recognised&    map      = std::get<Recognised>( attempt );
-    const Solution solution = solve( map.field, map.rows, options );
-    if( !cheaper( solution.cost, map.input ) )
+    Recognised&            map    = std::get<Recognised>( attempt );
+    std::optional<Circuit> found  = cache.empty() ? std::nullopt : cached_circuit( cache, map.field, map.rows, options );
+    const bool             cached = found.has_value();
+    if( !found )
     {
-        return {};
+        found = solve( map.field, map.rows, options ).circuit;
+        if( !cache.empty() )
+        {
+            cache_circuit( cache, map.field, map.rows, options, *found );
+        }
+    }
+    if( !cheaper( found->cost(), map.input ) )
+    {
+        return { .cached = cached };
     }
 
     const Span               span = body_span( func );
@@ -130,8 +141,7 @@ Map_outcome solve_linear_maps(
     }
 
     std::vector<Statement> body = places.take_prologue();
-    for( Statement& s :
-         lower_circuit( func, solution.circuit, map.field, map.rows, inputs, outputs, map.type, literals, span ) )
+    for( Statement& s : lower_circuit( func, *found, map.field, map.rows, inputs, outputs, map.type, literals, span ) )
     {
         body.push_back( std::move( s ) );
     }
@@ -144,6 +154,6 @@ Map_outcome solve_linear_maps(
         .first_statement = 0, .statement_count = count, .terminator = { .kind = Terminator_kind::Return, .span = span }
     } );
     func.compact_rvalues();
-    return { .solved = true, .ending = std::nullopt };
+    return { .solved = true, .cached = cached, .ending = std::nullopt };
 }
 } // namespace keel

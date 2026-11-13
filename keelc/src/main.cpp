@@ -28,6 +28,7 @@
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
+#include "common/platform.h"
 #include "common/source_manager.h"
 #include "common/temp_dir.h"
 #include "common/version.h"
@@ -92,6 +93,7 @@ int main( int argc, char** argv )
         ( "debug",           "Keep assert and overflow checks; without it an assert's condition is checked but never run" )
         ( "O",               "Optimisation level, -O0 to -O3: -O0 is the program as lowered; -O2 by default, -O1 under --debug", cxxopts::value<keel::u32>() )
         ( "overflow-checks", "Panic when +, -, * or unary - overflows; on under --debug" )
+        ( "cache",           "Keep -O3's solved circuits here (default: the user's cache folder, keel/)", cxxopts::value<std::string>() )
         ( "keep-unreached",  "Without --debug, keep the functions main never reaches" )
         ( "q,quiet",         "Print only diagnostics: no summary line" )
         ( "verbose",         "Also print each phase as it ends, with its time" )
@@ -535,7 +537,11 @@ int main( int argc, char** argv )
         input,
         through,
         keel::Build {
-                .asserts = debug, .overflow_checks = overflow_checks, .level = level, .keep_checked = as_module && debug
+                .asserts         = debug,
+                .overflow_checks = overflow_checks,
+                .level           = level,
+                .keep_checked    = as_module && debug,
+                .cache = args.count( "cache" ) ? std::filesystem::path( args["cache"].as<std::string>() ) : keel::cache_folder(),
         },
         sm,
         interner,

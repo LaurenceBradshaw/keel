@@ -49,6 +49,14 @@ void Phase_clock::lap( std::string_view phase )
     last_ = now;
 }
 
+void Phase_clock::note( std::string_view line ) const
+{
+    if( print_ )
+    {
+        fmt::print( stderr, "keelc: {}\n", line );
+    }
+}
+
 double Phase_clock::seconds() const
 {
     return std::chrono::duration<double>( Clock::now() - start_ ).count();
@@ -386,7 +394,15 @@ Front_end run_front_end(
                     if( build.level >= 3 && function.real_arithmetic )
                     {
                         const Map_outcome outcome =
-                            solve_linear_maps( function, front.functions, purity, front.types.table(), literals );
+                            solve_linear_maps( function, front.functions, purity, front.types.table(), literals, build.cache );
+                        if( clock != nullptr && !outcome.ending )
+                        {
+                            clock->note( fmt::format(
+                                "linear map `{}` {}",
+                                interner.text( ast.name( function.declaration ) ),
+                                outcome.cached ? "from the cache" : "solved"
+                            ) );
+                        }
                         if( outcome.solved )
                         {
                             verified( function, "solve_linear_maps" );

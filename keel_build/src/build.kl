@@ -229,6 +229,9 @@ class Builder
         }
         // keelb says what it compiles; keelc adds its phases only when asked.
         args.push( verbose_ ? "--verbose" : "--quiet" );
+        // -O3's circuits beside the objects, so a clean build forgets them too.
+        args.push( "--cache" );
+        args.push( kl::string( cache_ ) );
 
         const ref kl::list<kl::pair<kl::string, kl::path>> packages = project_.packages();
         for( u64 i : 0..packages.size() )

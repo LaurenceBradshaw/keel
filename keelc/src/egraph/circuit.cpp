@@ -4,6 +4,7 @@
 #include "egraph/circuit.h"
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <cmath>
 #include <span>
 #include <sstream>
@@ -37,6 +38,21 @@ std::complex<f64> snap( std::complex<f64> c )
 std::pair<f64, f64> key( std::complex<f64> c )
 {
     return { std::round( c.real() * 1e9 ) + 0.0, std::round( c.imag() * 1e9 ) + 0.0 };
+}
+
+// An op as saved() writes it.
+std::string op_line( const Op& op )
+{
+    switch( op.kind )
+    {
+    case Op_kind::Input:
+        return "x " + std::to_string( op.a ) + '\n';
+    case Op_kind::Add:
+        return "a " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
+    case Op_kind::Scale:
+        return "m " + std::to_string( op.a ) + ' ' + std::to_string( op.b ) + '\n';
+    }
+    return {};
 }
 } // namespace
 
@@ -360,6 +376,169 @@ std::string Circuit::text() const
         out << '\n';
     }
     return out.str();
+}
+
+std::string Circuit::saved( const std::vector<Row>& rows ) const
+{
+    std::string out    = std::to_string( ops_.size() ) + ' ' + std::to_string( constants_.size() ) + '\n';
+    const auto  number = [&]( f64 v )
+    {
+        char       buffer[32];
+        const auto end = std::to_chars( buffer, buffer + sizeof buffer, v ).ptr;
+        out += ' ';
+        out.append( buffer, end );
+    };
+    for( const Constant& c : constants_ )
+    {
+        out += 'c';
+        if( integers_ )
+        {
+            for( u32 k = 0; k < integers_->degree(); ++k )
+            {
+                out += ' ' + std::to_string( integers_->coefficient( c.exact, k ).first );
+            }
+        }
+        else
+        {
+            number( c.value.real() );
+            number( c.value.imag() );
+        }
+        out += '\n';
+    }
+    for( const Op& op : ops_ )
+    {
+        out += op_line( op );
+    }
+    for( size_t i = 0; i < rows.size(); ++i )
+    {
+        if( const auto found = outputs.find( rows[i] ); found != outputs.end() )
+        {
+            out += "y " + std::to_string( i ) + ' ' + std::to_string( found->second ) + '\n';
+        }
+    }
+    return out + "end\n";
+}
+
+std::optional<Circuit> Circuit::load( std::string_view text, Field& field, const std::vector<Row>& rows )
+{
+    Circuit            c = field.kind() == Ring_kind::Integer ? Circuit( field ) : Circuit( field.kind() == Ring_kind::Real );
+    std::istringstream in { std::string( text ) };
+    const auto         word = [&]
+    {
+        std::string w;
+        in >> w;
+        return w;
+    };
+    const auto whole = [&]( u64 below ) -> std::optional<u32>
+    {
+        const std::string w     = word();
+        u64               v     = 0;
+        const auto [end, error] = std::from_chars( w.data(), w.data() + w.size(), v );
+        if( w.empty() || error != std::errc {} || end != w.data() + w.size() || v >= below )
+        {
+            return std::nullopt;
+        }
+        return static_cast<u32>( v );
+    };
+    const auto real = [&]() -> std::optional<f64>
+    {
+        const std::string w     = word();
+        f64               v     = 0;
+        const auto [end, error] = std::from_chars( w.data(), w.data() + w.size(), v );
+        if( w.empty() || error != std::errc {} || end != w.data() + w.size() || !std::isfinite( v ) )
+        {
+            return std::nullopt;
+        }
+        return v;
+    };
+
+    const std::optional<u32> ops = whole( 1u << 31 ), constants = whole( 1u << 31 );
+    if( !ops || !constants )
+    {
+        return std::nullopt;
+    }
+    for( u32 k = 0; k < *constants; ++k )
+    {
+        if( word() != "c" )
+        {
+            return std::nullopt;
+        }
+        Constant made;
+        if( c.integers_ )
+        {
+            std::vector<i64> coefficients;
+            for( u32 d = 0; d < field.degree(); ++d )
+            {
+                i64               v     = 0;
+                const std::string w     = word();
+                const auto [end, error] = std::from_chars( w.data(), w.data() + w.size(), v );
+                if( w.empty() || error != std::errc {} || end != w.data() + w.size() )
+                {
+                    return std::nullopt;
+                }
+                coefficients.push_back( v );
+            }
+            made = c.make( field.polynomial( std::move( coefficients ) ) );
+        }
+        else
+        {
+            const std::optional<f64> re = real(), im = real();
+            if( !re || !im )
+            {
+                return std::nullopt;
+            }
+            made = { { *re, *im }, {} };
+        }
+        const std::pair<f64, f64> k_of =
+            c.integers_ ? std::pair<f64, f64> { static_cast<f64>( made.exact.v ), 0 } : key( made.value );
+        if( !c.constant_ids_.try_emplace( k_of, k ).second )
+        {
+            return std::nullopt;
+        }
+        c.constants_.push_back( made );
+    }
+
+    const u64 columns = rows.empty() ? 0 : rows.front().size();
+    for( u32 o = 0; o < *ops; ++o )
+    {
+        const std::string  kind = word();
+        std::optional<u32> a, b = 0;
+        Op_kind            k {};
+        if( kind == "x" )
+        {
+            k = Op_kind::Input;
+            a = whole( columns );
+        }
+        else if( kind == "a" )
+        {
+            k = Op_kind::Add;
+            a = whole( o );
+            b = whole( o );
+        }
+        else if( kind == "m" )
+        {
+            k = Op_kind::Scale;
+            a = whole( o );
+            b = whole( *constants );
+        }
+        if( !a || !b || c.put( { k, *a, *b } ) != o )
+        {
+            return std::nullopt;
+        }
+    }
+
+    for( std::string w = word();; w = word() )
+    {
+        if( w == "end" )
+        {
+            return word().empty() ? std::optional<Circuit>( std::move( c ) ) : std::nullopt;
+        }
+        const std::optional<u32> i = whole( rows.size() ), node = whole( *ops );
+        if( w != "y" || !i || !node || !c.outputs.try_emplace( rows[*i], *node ).second )
+        {
+            return std::nullopt;
+        }
+    }
 }
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS

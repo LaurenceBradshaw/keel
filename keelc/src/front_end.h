@@ -4,6 +4,7 @@
 #pragma once
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -58,6 +59,9 @@ struct Build
 
     // Keep each function as the dataflow checks left it, which a module's object holds.
     bool keep_checked = false;
+
+    // Where -O3 keeps the circuits it solves; empty for nowhere.
+    std::filesystem::path cache = {};
 };
 
 // Times each phase of a run; under --verbose, prints each as it ends.
@@ -70,7 +74,8 @@ public:
     }
 
     void   lap( std::string_view phase );
-    double seconds() const; // since the clock was made
+    void   note( std::string_view line ) const; // printed as it comes, untimed
+    double seconds() const;                     // since the clock was made
 
 private:
     using Clock = std::chrono::steady_clock;

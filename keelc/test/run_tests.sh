@@ -201,6 +201,8 @@ pass=0
 fail=0
 parallel_jobs="${KEEL_JOBS:-$( nproc )}"
 results="$( mktemp -d )"
+# -O3's solved circuits, shared by every fixture of this run and none before it.
+circuits="$( absolute "$results" )/circuits_cache"
 trap 'rm -rf "$results"' EXIT
 
 # Compares one stream against its expectation, or rewrites it under --update.
@@ -261,7 +263,7 @@ build_objects()
             continue
         fi
 
-        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --backend "$backend" "$@" -c "${built[@]}" -o "$object" \
+        if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --cache "$circuits" --backend "$backend" "$@" -c "${built[@]}" -o "$object" \
             > "${build_dir}/objects.log" 2>&1; then
             echo "    keelc did not build ${object##*/}:"
             sed 's/^/      /' < "${build_dir}/objects.log"
@@ -300,7 +302,7 @@ check_run()
         done < "${src}.link"
     fi
 
-    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --backend "$backend" "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
+    if ! CC="$cc" CFLAGS="$cflags" KEEL_C_WARNINGS="$c_warnings" "$keelc" --quiet --cache "$circuits" --backend "$backend" "$@" "$src" "${linked[@]}" "${klos[@]}" --runtime "$runtime" -o "$stem" \
         > "$build_log" 2>&1; then
         echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
@@ -484,7 +486,7 @@ run_one()
         return
     fi
 
-    "$keelc" --quiet "${suite_flags[@]}" "$src" "${klos[@]}" > "$out" 2> "$err"
+    "$keelc" --quiet --cache "$circuits" "${suite_flags[@]}" "$src" "${klos[@]}" > "$out" 2> "$err"
     local code=$?
 
     # An object is named by its path, which is in the build directory wherever that is.

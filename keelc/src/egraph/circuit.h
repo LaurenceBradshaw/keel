@@ -4,7 +4,9 @@
 #pragma once
 #include <complex>
 #include <map>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 #include "common/types.h"
@@ -63,6 +65,11 @@ public:
     std::vector<std::complex<f64>> evaluate( const std::vector<std::complex<f64>>& inputs ) const;
 
     std::string text() const;
+
+    // Every op and constant verbatim, and each of `rows`' outputs by its index; load() reads it back
+    // as the same circuit, or nothing for text it did not write.
+    std::string                   saved( const std::vector<Row>& rows ) const;
+    static std::optional<Circuit> load( std::string_view text, Field& field, const std::vector<Row>& rows );
 
     const std::vector<Op>& ops() const
     {

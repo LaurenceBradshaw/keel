@@ -412,6 +412,7 @@ links to `keel_stl/src`; `--package kl=<dir>` names another.
 | `--overflow-checks` | Panic when an integer `+`, `-`, `*` or unary `-` overflows; `wrap<T>( … )` around arithmetic wraps it on purpose |
 | `-q` / `--quiet` | Print only diagnostics. Without it, a check or build ends with one line on stderr: errors, warnings, files and seconds |
 | `--verbose` | Also print each phase as it ends, with its time |
+| `--cache <dir>` | Keep `-O3`'s solved circuits here, so a later build reads them in place of solving again (default: `$XDG_CACHE_HOME/keel`, `~/.cache/keel`, or `%LOCALAPPDATA%\keel` on Windows) |
 | `--print-prelude` | Print the prelude every program sees, and exit |
 | `--print-config` | Print this keelc's build id and package folders, and exit |
 | `--runtime <path>` | Link this runtime library instead of the one keelc carries |
