@@ -76,13 +76,23 @@ public:
     }
 
     Element rational( i64 numerator, i64 denominator = 1 );
-    Element add( Element a, Element b );
-    Element neg( Element a );
-    Element mul( Element a, Element b );
-    bool    invertible( Element a );
-    Element inv( Element a );
-    Element div( Element a, Element b );
-    Element conjugate( Element a );
+    // The polynomial with these coefficients, low first, reduced mod Phi_n.
+    Element polynomial( std::vector<i64> coefficients );
+    // Coefficient k of `a` in the power basis, as numerator and denominator.
+    std::pair<i64, i64> coefficient( Element a, u32 k ) const;
+    Element             add( Element a, Element b );
+    Element             neg( Element a );
+    Element             mul( Element a, Element b );
+    bool                invertible( Element a );
+    Element             inv( Element a );
+    Element             div( Element a, Element b );
+    Element             conjugate( Element a );
+
+    // Phi_n, low coefficient first, monic.
+    const std::vector<i64>& phi() const
+    {
+        return phi_;
+    }
 
     // +-1, and +-W^(n/4) unless real.
     const std::vector<Element>& units() const

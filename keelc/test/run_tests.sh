@@ -567,13 +567,14 @@ fi
 
 # A suite whose FLAGS stop before emission must leave nothing behind. Nothing above would notice
 # otherwise: a driver that wrongly compiles a --check fixture writes a .c file and an executable,
-# and every stream comparison still passes because neither appears on stdout or stderr.
-stray="$( find . -type f \
+# and every stream comparison still passes because neither appears on stdout or stderr. egraph/
+# holds the linear-map solver's specs, read by its unit tests.
+stray="$( find . -path ./egraph -prune -o -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' ! -name '*.kl.out' ! -name '*.kl.args' ! -name '*.kl.stdin' ! -name '*.kl.link' \
     ! -name '*.kl.objects' ! -name '*.kl.debug_only' \
     \( ! -name '*.c' -o -name '*.kl.c' -o -name '*.prelude.c' \) \
-    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
+    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt -print | sort )"
 
 if [ -n "$stray" ]; then
     echo

@@ -222,6 +222,22 @@ Element Field::rational( i64 numerator, i64 denominator )
     return denominator == 1 ? whole : div( whole, rational( denominator ) );
 }
 
+Element Field::polynomial( std::vector<i64> coefficients )
+{
+    for( i64& c : coefficients )
+    {
+        c = plus( c, 0 );
+    }
+    reduce( coefficients );
+    return intern( std::move( coefficients ), 1 );
+}
+
+std::pair<i64, i64> Field::coefficient( Element a, u32 k ) const
+{
+    const Entry& entry = entries_[a.v];
+    return { entry.numerator[k], entry.denominator };
+}
+
 Element Field::add( Element a, Element b )
 {
     if( a > b )
