@@ -224,14 +224,13 @@ int main( int argc, char** argv )
         fmt::print( stderr, "keelc: --backend takes c or llvm, not '{}'\n", backend );
         return 2;
     }
-    if( args.count( "llvm-option" ) )
+    if( const std::string error = keel::set_llvm_options(
+            args.count( "llvm-option" ) ? args["llvm-option"].as<std::vector<std::string>>() : std::vector<std::string> {}
+        );
+        !error.empty() )
     {
-        if( const std::string error = keel::set_llvm_options( args["llvm-option"].as<std::vector<std::string>>() );
-            !error.empty() )
-        {
-            fmt::print( stderr, "{}", error );
-            return 2;
-        }
+        fmt::print( stderr, "{}", error );
+        return 2;
     }
 
     if( args.count( "with-prelude" ) && !args.count( "declarations" ) )

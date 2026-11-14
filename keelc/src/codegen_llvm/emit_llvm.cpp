@@ -2521,7 +2521,8 @@ std::string set_target_cpu( const std::string& cpu )
 
 std::string set_llvm_options( const std::vector<std::string>& options )
 {
-    std::vector<const char*> argv { "keelc --llvm-option" }; // how LLVM's errors name us
+    // how LLVM's errors name us; then SLP's threshold, before the user's so theirs wins
+    std::vector<const char*> argv { "keelc --llvm-option", "-slp-threshold=1" };
     for( const std::string& option : options )
     {
         argv.push_back( option.c_str() );

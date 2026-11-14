@@ -126,7 +126,10 @@ benchmark also runs with `-disable-lsr` to show it.
 **Three boundary cases.** **Auto-vectorisation is LLVM's**, because the transformation depends on
 the target's vector width, which KIR cannot know. At `-O3` the object writer runs the loop vectoriser
 then the SLP vectoriser before codegen, costed by the target machine, with none of the clean-up
-passes LLVM's own pipeline runs beside them; below `-O3` nothing is vectorised. **What general
+passes LLVM's own pipeline runs beside them; below `-O3` nothing is vectorised. SLP's threshold is 1,
+not LLVM's 0, so a tree it prices as saving only one unit stays scalar: those are the trees its cost
+model gets wrong, as when wide loads cannot take their value from a narrower store just before them.
+`--llvm-option=-slp-threshold=N` sets it back. **What general
 vectorisation needs outside the e-graph is open to look at even where it breaks this rule**,
 because vectorised loops are among the largest speed-ups left: LLVM's loop and SLP vectorisers, the
 IR passes they assume have run, and the `noalias` that Keel's borrow rules can prove. **Tail-call
