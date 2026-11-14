@@ -154,23 +154,36 @@ bool version(
         return false;
     }
 
-    // `local`'s one write in the loop, at an index before `before` in `block`.
-    const auto assignment = [&]( Local_id local, Block_id block, u32 before ) -> std::optional<u32>
+    // `local`'s one write in the loop, before `before` in `block` or in a block of the turn dominating it.
+    struct Def
+    {
+        Block_id block;
+        u32      index;
+    };
+    const auto assignment = [&]( Local_id local, Block_id block, u32 before ) -> std::optional<Def>
     {
         if( inside[local.v] != 1 || is_addressed( addressed, local ) )
         {
             return std::nullopt;
         }
-        const Run<const Statement> statements = func.statements_of( block );
-        for( u32 s = 0; s < before; ++s )
+        for( ;; )
         {
-            if( statements[s].kind == Statement_kind::Assign && statements[s].place.is_whole_local() &&
-                statements[s].place.local == local )
+            const Run<const Statement> statements = func.statements_of( block );
+            for( u32 s = 0; s < before; ++s )
             {
-                return s;
+                if( statements[s].kind == Statement_kind::Assign && statements[s].place.is_whole_local() &&
+                    statements[s].place.local == local )
+                {
+                    return Def { block, s };
+                }
             }
+            if( block == loop.header )
+            {
+                return std::nullopt;
+            }
+            block  = found.dominators.idom[block.v];
+            before = func.blocks[block].statement_count;
         }
-        return std::nullopt;
     };
     const auto read_of = [&]( const Place& place ) -> std::optional<Source>
     {
@@ -203,12 +216,12 @@ bool version(
         {
             return Source { .operand = operand };
         }
-        const std::optional<u32> at = assignment( local, block, before );
+        const std::optional<Def> at = assignment( local, block, before );
         if( !at )
         {
             return std::nullopt;
         }
-        const Rvalue& value = func.rvalue( func.statements_of( block )[*at] );
+        const Rvalue& value = func.rvalue( func.statements_of( at->block )[at->index] );
         return value.kind == Rvalue_kind::Use && value.a.kind == Operand_kind::Copy ? read_of( value.a.place ) : std::nullopt;
     };
 
@@ -218,20 +231,20 @@ bool version(
     std::optional<Source>        limit;
     const Local_id               condition  = test.condition.place.local;
     const u32                    latch_size = func.blocks[loop.latch].statement_count;
-    const std::optional<u32>     tested     = assignment( condition, loop.latch, latch_size );
+    const std::optional<Def>     tested     = assignment( condition, loop.latch, latch_size );
     for( const Induction& candidate : inductions )
     {
         const Type& type = types.get( func.locals[candidate.local].type );
-        if( !tested || candidate.block != loop.latch || candidate.index >= *tested || type.kind != Type_kind::Int ||
-            type.width != 64 || candidate.step.kind != Operand_kind::Constant ||
+        if( !tested || tested->block != loop.latch || candidate.block != loop.latch || candidate.index >= tested->index ||
+            type.kind != Type_kind::Int || type.width != 64 || candidate.step.kind != Operand_kind::Constant ||
             literals.integer( candidate.step.constant ) != 1 )
         {
             continue;
         }
-        const Rvalue& value = func.rvalue( func.statements_of( loop.latch )[*tested] );
+        const Rvalue& value = func.rvalue( func.statements_of( loop.latch )[tested->index] );
         if( value.kind == Rvalue_kind::Binary && value.op == Token_kind::Less && is_local( value.a, candidate.local ) )
         {
-            limit = source( value.b, loop.latch, *tested );
+            limit = source( value.b, loop.latch, tested->index );
             i     = &candidate;
             break;
         }
@@ -259,15 +272,15 @@ bool version(
             }
             std::optional<Source> found_base;
             Local_id              q = store.place.local;
-            for( u32 at = s;; )
+            for( Def at { b, s };; )
             {
-                const std::optional<u32> d = assignment( q, b, at );
-                if( !d || ( b == loop.latch && *d > i->index ) )
+                const std::optional<Def> d = assignment( q, at.block, at.index );
+                if( !d || ( d->block == loop.latch && d->index > i->index ) )
                 {
                     return false;
                 }
                 at                  = *d;
-                const Rvalue& value = func.rvalue( statements[at] );
+                const Rvalue& value = func.rvalue( func.statements_of( at.block )[at.index] );
                 if( value.kind == Rvalue_kind::Address_of && fields_after_deref( func, value.a.place ) )
                 {
                     q = value.a.place.local;
@@ -280,7 +293,7 @@ bool version(
                 else if( value.kind == Rvalue_kind::Binary && value.op == Token_kind::Plus && is_local( value.b, i->local ) &&
                          types.is_many_pointer( value.a.type ) )
                 {
-                    found_base = source( value.a, b, at );
+                    found_base = source( value.a, at.block, at.index );
                     break;
                 }
                 else
@@ -492,6 +505,17 @@ TEST_CASE( "version_loops_copies_a_loop_reading_and_storing_one_reference", "[op
     REQUIRE(
         reads_by_loop( "void f( ref Buf b ) { for( u64 i = 0; i < b.count; i += 1 ) "
                        "{ unsafe { b.data[ i ] = b.data[ i ] * 2; } } }\n" ) == std::vector<std::size_t> { 1, 3 }
+    );
+}
+
+// `ys.data[ i ]`'s address is taken before `at`'s check splits the turn, as `kl::list`'s `ys[ i ] = a * xs[ i ]` does.
+TEST_CASE( "version_loops_follows_a_store_address_taken_before_a_check", "[opt][version_loops]" )
+{
+    REQUIRE(
+        reads_by_loop( "void f( ref Buf ys, const ref Buf xs ) { for( u64 i = 0; i < xs.count; i += 1 ) "
+                       "{ unsafe { ys.data[ i ] = at( xs, i ) + 1; } } }\n"
+                       "i64 at( const ref Buf b, u64 i ) { if( i >= b.count ) { panic( \"short\" ); } "
+                       "unsafe { return b.data[ i ]; } }\n" ) == std::vector<std::size_t> { 1, 5 }
     );
 }
 
