@@ -77,9 +77,15 @@ private:
     std::mt19937                                  rng_;
     u64                                           work_ = 0; // edges relaxed this restart
 
-    // best_trees' results.
-    std::vector<f64> best_;
-    Choice           pick_;
+    // best_trees' results, and its scratch: per node, flat by first_[orbit] + index.
+    std::vector<f64>  best_;
+    Choice            pick_;
+    std::vector<u32>  first_;
+    std::vector<f64>  partial_;
+    std::vector<u32>  left_;
+    std::vector<bool> done_;
+
+    std::vector<std::pair<f64, u32>> heap_;
 };
 
 Extractor::Extractor( const Sum_graph& graph, const Extract_options& options )
@@ -175,6 +181,13 @@ Extractor::Extractor( const Sum_graph& graph, const Extract_options& options )
         amortised_.push_back( 1.0 / std::max( 1, std::popcount( reach[o] ) ) );
     }
     flat_.assign( orbits, 1.0 );
+    first_.resize( orbits + 1, 0 );
+    for( u32 o = 0; o < orbits; ++o )
+    {
+        first_[o + 1] = first_[o] + static_cast<u32>( orb_[o].size() );
+    }
+    partial_.resize( first_[orbits] );
+    left_.resize( first_[orbits] );
 }
 
 f64 Extractor::uniform( f64 hi )
@@ -203,55 +216,60 @@ void Extractor::best_trees( const std::vector<bool>& free, const std::vector<f64
     const size_t O = orb_.size();
     best_.assign( O, 1e300 );
     pick_.assign( O, -1 );
-    std::vector<bool>             done( O, false );
-    std::vector<std::vector<f64>> partial( O );
-    std::vector<std::vector<u32>> left( O );
-    using Item = std::pair<f64, u32>;
-    std::priority_queue<Item, std::vector<Item>, std::greater<>> queue;
+    done_.assign( O, false );
+    using Item       = std::pair<f64, u32>;
+    const auto later = std::greater<Item> {};
+    heap_.clear();
+    const auto push = [&]( f64 c, u32 o )
+    {
+        heap_.emplace_back( c, o );
+        std::push_heap( heap_.begin(), heap_.end(), later );
+    };
     for( u32 o = 0; o < O; ++o )
     {
-        partial[o].resize( orb_[o].size() );
-        left[o].resize( orb_[o].size() );
         for( u32 i = 0; i < orb_[o].size(); ++i )
         {
-            const Orbit_node& n = orb_[o][i];
-            partial[o][i]       = weight( n ) * w[o] * ( 1 + ( noise > 0 ? uniform( noise ) : 0 ) );
-            left[o][i]          = static_cast<u32>( n.kids.size() );
-            if( n.kids.empty() && best_[o] > partial[o][i] )
+            const Orbit_node& n  = orb_[o][i];
+            const u32         at = first_[o] + i;
+            partial_[at]         = weight( n ) * w[o] * ( 1 + ( noise > 0 ? uniform( noise ) : 0 ) );
+            left_[at]            = static_cast<u32>( n.kids.size() );
+            if( n.kids.empty() && best_[o] > partial_[at] )
             {
-                best_[o] = partial[o][i];
+                best_[o] = partial_[at];
                 pick_[o] = static_cast<i32>( i );
-                queue.emplace( best_[o], o );
+                push( best_[o], o );
             }
         }
         if( free[o] )
         {
             best_[o] = 0;
-            queue.emplace( 0, o );
+            push( 0, o );
         }
     }
-    while( !queue.empty() )
+    while( !heap_.empty() )
     {
-        const auto [c, o] = queue.top();
-        queue.pop();
-        if( done[o] || c > best_[o] )
+        std::pop_heap( heap_.begin(), heap_.end(), later );
+        const auto [c, o] = heap_.back();
+        heap_.pop_back();
+        if( done_[o] || c > best_[o] )
         {
             continue;
         }
-        done[o] = true;
+        done_[o] = true;
         work_ += parents_[o].size();
         for( const auto [p, i] : parents_[o] )
         {
-            if( done[p] )
+            if( done_[p] )
             {
                 continue;
             }
-            partial[p][i] += best_[o];
-            if( --left[p][i] == 0 && partial[p][i] < best_[p] && !free[p] )
+            const u32 at = first_[p] + i;
+            partial_[at] += best_[o];
+            if( --left_[at] == 0 && partial_[at] < best_[p] && !free[p] )
             {
-                best_[p] = partial[p][i];
+                best_[p] = partial_[at];
                 pick_[p] = static_cast<i32>( i );
-                queue.emplace( best_[p], p );
+                push( best_[p], p );
             }
         }
     }

@@ -123,11 +123,36 @@ public:
     }
 
 private:
+    static constexpr u32 k_unknown = ~u32 { 0 };
+
     struct Entry
     {
         std::vector<i64>  numerator;
         i64               denominator;
         std::complex<f64> value;
+        u32               root_k     = k_unknown; // +-W^k as (k, sign)
+        i32               root_sign  = 0;
+        u32               inverse    = k_unknown;
+        u32               orbit      = k_unknown;
+        u32               orbit_unit = k_unknown;
+    };
+
+    // Open addressing on a key that is never ~0: sums and products of two ids.
+    class Pair_memo
+    {
+    public:
+        u32  find( u64 key ) const;
+        void put( u64 key, u32 value );
+
+    private:
+        struct Slot
+        {
+            u64 key = ~u64 { 0 };
+            u32 value;
+        };
+        size_t            index( u64 key ) const;
+        std::vector<Slot> slots_ = std::vector<Slot>( 1024 );
+        size_t            used_  = 0;
     };
 
     struct Key_hash
@@ -140,6 +165,7 @@ private:
     i64     plus( i64 a, i64 b ) const;
     i64     times( i64 a, i64 b ) const;
     Element shift( Element a, u32 k );
+    void    mark_root( Element a, u32 k, i32 sign ); // the first k and sign set win
 
     Ring_kind        kind_;
     u32              n_;
@@ -147,13 +173,10 @@ private:
     u32              degree_;
     std::vector<i64> phi_; // Phi_n, low coefficient first, monic
 
-    std::vector<Entry>                                   entries_;
-    std::unordered_map<std::vector<i64>, u32, Key_hash>  ids_; // numerator, then denominator
-    std::unordered_map<u64, u32>                         products_;
-    std::unordered_map<u64, u32>                         sums_;
-    std::unordered_map<u32, u32>                         inverses_;
-    std::unordered_map<u32, std::pair<u32, i32>>         as_root_; // +-W^k as (k, sign)
-    std::unordered_map<u32, std::pair<Element, Element>> orbits_;
+    std::vector<Entry>                                  entries_;
+    std::unordered_map<std::vector<i64>, u32, Key_hash> ids_; // numerator, then denominator
+    Pair_memo                                           products_;
+    Pair_memo                                           sums_;
 
     Element              zero_, one_, minus_one_;
     std::vector<Element> roots_;

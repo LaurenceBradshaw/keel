@@ -101,16 +101,17 @@ u64 Sum_graph::support( const Form& f ) const
 // The distinct constants `f` needs, up to free units: over the inputs, or relative to `r`.
 u32 Sum_graph::groups( const Form& f, const Form* r )
 {
-    std::vector<Element> g;
+    std::array<Element, 64> g;
+    u32                     size = 0;
     for( u32 j = 0; j < n_; ++j )
     {
         if( f[j] != field_->zero() )
         {
-            g.push_back( field_->orbit( r ? field_->div( f[j], ( *r )[j] ) : f[j] ).first );
+            g[size++] = field_->orbit( r ? field_->div( f[j], ( *r )[j] ) : f[j] ).first;
         }
     }
-    std::ranges::sort( g );
-    return static_cast<u32>( std::unique( g.begin(), g.end() ) - g.begin() );
+    std::sort( g.begin(), g.begin() + size );
+    return static_cast<u32>( std::unique( g.begin(), g.begin() + size ) - g.begin() );
 }
 
 void Sum_graph::activate( u32 c )

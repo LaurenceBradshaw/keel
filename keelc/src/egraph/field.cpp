@@ -78,7 +78,7 @@ Field::Field( Ring_kind kind, u32 n, u32 width )
     }
     for( u32 k = 0; k < n_; ++k )
     {
-        as_root_.try_emplace( roots_[k].v, k, 1 );
+        mark_root( roots_[k], k, 1 );
     }
     for( u32 k = 0; k < n_; ++k )
     {
@@ -86,7 +86,7 @@ Field::Field( Ring_kind kind, u32 n, u32 width )
         std::vector<i64> negated( entry.numerator.size() );
         std::ranges::transform( entry.numerator, negated.begin(), [&]( i64 c ) { return times( c, -1 ); } );
         negated_roots_.push_back( intern( std::move( negated ), entry.denominator ) );
-        as_root_.try_emplace( negated_roots_.back().v, k, -1 );
+        mark_root( negated_roots_.back(), k, -1 );
     }
 
     units_ = { one_, minus_one_ };
@@ -250,9 +250,9 @@ Element Field::add( Element a, Element b )
     }
 
     const u64 key = u64 { a.v } << 32 | b.v;
-    if( const auto found = sums_.find( key ); found != sums_.end() )
+    if( const u32 found = sums_.find( key ); found != k_unknown )
     {
-        return Element { found->second };
+        return Element { found };
     }
 
     const Entry& x  = entries_[a.v];
@@ -268,7 +268,7 @@ Element Field::add( Element a, Element b )
         p[k] = plus( times( x.numerator[k], sx ), times( y.numerator[k], sy ) );
     }
     const Element r = intern( std::move( p ), l );
-    sums_.emplace( key, r.v );
+    sums_.put( key, r.v );
     return r;
 }
 
@@ -292,27 +292,30 @@ Element Field::mul( Element a, Element b )
         return b;
     }
 
-    const auto ra = as_root_.find( a.v );
-    const auto rb = as_root_.find( b.v );
-    if( ra != as_root_.end() && rb != as_root_.end() )
+    const Entry& ea = entries_[a.v];
+    const Entry& eb = entries_[b.v];
+    const bool   ra = ea.root_k != k_unknown;
+    const bool   rb = eb.root_k != k_unknown;
+    if( ra && rb )
     {
-        const u32 k = ( ra->second.first + rb->second.first ) % n_;
-        return ra->second.second * rb->second.second > 0 ? roots_[k] : negated_roots_[k];
+        const u32 k = ( ea.root_k + eb.root_k ) % n_;
+        return ea.root_sign * eb.root_sign > 0 ? roots_[k] : negated_roots_[k];
     }
 
     const u64 key = u64 { a.v } << 32 | b.v;
-    if( const auto found = products_.find( key ); found != products_.end() )
+    if( const u32 found = products_.find( key ); found != k_unknown )
     {
-        return Element { found->second };
+        return Element { found };
     }
     spent_ += 1 + u64 { degree_ } * degree_ / k_field_steps_per_unit;
 
     Element r;
-    if( ra != as_root_.end() || rb != as_root_.end() )
+    if( ra || rb )
     {
-        const auto [k, sign] = ra != as_root_.end() ? ra->second : rb->second;
-        const Element other  = ra != as_root_.end() ? b : a;
-        r                    = shift( other, k );
+        const u32     k     = ra ? ea.root_k : eb.root_k;
+        const i32     sign  = ra ? ea.root_sign : eb.root_sign;
+        const Element other = ra ? b : a;
+        r                   = shift( other, k );
         if( sign < 0 )
         {
             const Entry&     entry = entries_[r.v];
@@ -340,7 +343,7 @@ Element Field::mul( Element a, Element b )
         reduce( p );
         r = intern( std::move( p ), times( x.denominator, y.denominator ) );
     }
-    products_.emplace( key, r.v );
+    products_.put( key, r.v );
     return r;
 }
 
@@ -357,14 +360,14 @@ bool Field::invertible( Element a )
 Element Field::inv( Element a )
 {
     assert( invertible( a ) );
-    if( const auto root = as_root_.find( a.v ); root != as_root_.end() )
+    if( const Entry& e = entries_[a.v]; e.root_k != k_unknown )
     {
-        const u32 k = ( n_ - root->second.first ) % n_;
-        return root->second.second > 0 ? roots_[k] : negated_roots_[k];
+        const u32 k = ( n_ - e.root_k ) % n_;
+        return e.root_sign > 0 ? roots_[k] : negated_roots_[k];
     }
-    if( const auto found = inverses_.find( a.v ); found != inverses_.end() )
+    if( const u32 found = entries_[a.v].inverse; found != k_unknown )
     {
-        return Element { found->second };
+        return Element { found };
     }
     spent_ += 1 + u64 { degree_ } * degree_ * degree_ / k_field_steps_per_unit;
 
@@ -470,7 +473,7 @@ Element Field::inv( Element a )
         }
         r = intern( std::move( p ), l );
     }
-    inverses_.emplace( a.v, r.v );
+    entries_[a.v].inverse = r.v;
     return r;
 }
 
@@ -498,9 +501,9 @@ bool Field::is_unit( Element a ) const
 
 std::pair<Element, Element> Field::orbit( Element a )
 {
-    if( const auto found = orbits_.find( a.v ); found != orbits_.end() )
+    if( const Entry& e = entries_[a.v]; e.orbit != k_unknown )
     {
-        return found->second;
+        return { Element { e.orbit }, Element { e.orbit_unit } };
     }
 
     std::pair<Element, Element> best { mul( units_[0], a ), units_[0] };
@@ -508,8 +511,62 @@ std::pair<Element, Element> Field::orbit( Element a )
     {
         best = std::min( best, std::pair { mul( u, a ), u } );
     }
-    orbits_.emplace( a.v, best );
+    entries_[a.v].orbit      = best.first.v;
+    entries_[a.v].orbit_unit = best.second.v;
     return best;
+}
+
+void Field::mark_root( Element a, u32 k, i32 sign )
+{
+    if( entries_[a.v].root_k == k_unknown )
+    {
+        entries_[a.v].root_k    = k;
+        entries_[a.v].root_sign = sign;
+    }
+}
+
+size_t Field::Pair_memo::index( u64 key ) const
+{
+    return static_cast<size_t>( ( key * 0x9E3779B97F4A7C15ull ) >> 32 ) & ( slots_.size() - 1 );
+}
+
+u32 Field::Pair_memo::find( u64 key ) const
+{
+    for( size_t i = index( key );; i = ( i + 1 ) & ( slots_.size() - 1 ) )
+    {
+        if( slots_[i].key == key )
+        {
+            return slots_[i].value;
+        }
+        if( slots_[i].key == ~u64 { 0 } )
+        {
+            return k_unknown;
+        }
+    }
+}
+
+// Kept at most half full, so a probe ends.
+void Field::Pair_memo::put( u64 key, u32 value )
+{
+    if( 2 * ( used_ + 1 ) > slots_.size() )
+    {
+        std::vector<Slot> old = std::exchange( slots_, std::vector<Slot>( 2 * slots_.size() ) );
+        used_                 = 0;
+        for( const Slot& s : old )
+        {
+            if( s.key != ~u64 { 0 } )
+            {
+                put( s.key, s.value );
+            }
+        }
+    }
+    size_t i = index( key );
+    while( slots_[i].key != ~u64 { 0 } && slots_[i].key != key )
+    {
+        i = ( i + 1 ) & ( slots_.size() - 1 );
+    }
+    used_ += slots_[i].key == ~u64 { 0 };
+    slots_[i] = { key, value };
 }
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
