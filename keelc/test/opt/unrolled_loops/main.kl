@@ -41,7 +41,7 @@ i64 grid( const ref i64[6] a )
     return total;
 }
 
-// Too many turns for the budget: the loop stays.
+// Too many turns for the budget: the loop stays, four turns a test.
 i64 long_sum( const ref i64[200] a )
 {
     i64 total = 0;

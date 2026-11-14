@@ -402,7 +402,7 @@ function's `-O1` code depends on nothing outside it.
 | `hoist_invariants` | `-O1` | Pinned: a named local's statement stays in the loop, and what moves takes the loop test's line, or stepping would go back to a body line before the loop starts. |
 | `version_loops` | `-O3` | Landing. A second copy of a loop, under a budget of 200 statements, and a check before it (below). |
 | `reduce_inductions` | `-O2` | Its gain is removing the index, which `-O1` pins; it would only add a second live variable. |
-| `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements. |
+| `unroll_loops` | `-O2`, `-O3` | `-O2` only where the copies, less each one's step and test, are no bigger than the loop; `-O3` trades size for speed within 200 statements, and unrolls a longer innermost loop by 4 or 2. |
 | `eliminate_common` | `-O3` | Landing, per the rule above. In each round, before `propagate_values`: a pure computation every path to it already made, into a local still holding it, copies that local. Exact repeats only, so no float is reassociated; a read through a pointer, of a global or of an addressed local is forgotten at a call, a drop or a store through a pointer, as Keel has no TBAA. A call of a pure function (below) is such a computation, keyed by its callee and its arguments, each a copy or a constant. `i = i + 1` is left as the loop passes' step. `thread_jumps` then decides a branch on a local written once below an edge that branched on it, so a repeated division's zero and `-1` tests and their join go. |
 | `solve_linear_maps` | `-O3` | Landing. On an `@real_arithmetic` function, after the rounds and before the loop passes, a body that computes a linear map becomes the cheapest circuit the solve finds, or the cache holds (D86). A cold solve took up to 1.85 s (an 8-point DCT); a cached one costs about what `-O2` does. `-O2` never reads the cache, so a build at one level makes the same program whatever the cache holds. |
 
@@ -418,7 +418,7 @@ removing an unread call of anything else could end a program that would have run
 panicked.
 
 **Loop passes** run once per function after the rounds, from `-O1`, each at its level in the
-table: rotation, read forwarding, a round, then LICM, versioning, induction variables, full unrolling and another
+table: rotation, read forwarding, a round, then LICM, versioning, induction variables, unrolling and another
 round, as LICM needs the checks the first round folds gone, and unrolling last lets that round fold
 each copy's index. The first round runs only when rotation or forwarding changed something, and at
 `-O3` always, as a repeat `eliminate_common` finds is threaded only by a third round. The last runs
@@ -458,7 +458,7 @@ beside the index, and the index itself goes when its only other reads are `i + c
 or `i * 2^k`, which are then stepped too, and the constants show the latch's test can read one of
 them without wrapping. Otherwise those forms stay as they are: a stepped one costs the add it saves,
 and a scaled address is free where the target has one, which only `LoopStrengthReduce` knows.
-Unrolling is full only, for a constant trip count: the index's entry value, its step and the test's
+Unrolling is for a constant trip count: the index's entry value, its step and the test's
 bound are constants, the step and the test sit in the header or the latch, and no value the test sees
 wraps. A `break` or `return` in the body leaves each copy for the same place, so it does not stop
 unrolling. The budget is the loop's statements times its trip count. A KIR statement costs about 1.5
@@ -466,6 +466,15 @@ of LLVM's code-size units, so LLVM's full-unroll thresholds of 150 (`-O2`) and 3
 100 and 200 statements; GCC's `-O3` allows 200 instructions, and at `-O2` only unrolling that does
 not grow the code. The larger budget, `-O3`'s, is 200. `-O2`'s is no growth: the copies, each less
 the step and test that fold, are no bigger than the loop.
+At `-O3` a loop over that budget is unrolled in part, once, innermost only: when 4 or 2 divides its
+trip count, and that many copies of its body hold at most 16 statements, it becomes that many copies
+with one test, so no remainder loop is needed. The copy where the count runs out keeps the test: the
+first when the header tests, the last when the latch does. The cap of 16 keeps a loop inlined into a
+caller, whose loop passes run again, from being unrolled again past a small body. This is LLVM's
+partial unroll; clang unrolls a 64-trip `k` loop of an `i64` matrix multiply by 2 this way, which
+made it 1.65x as fast as Keel at `x86-64-v2`, and Keel now matches its instruction count. It runs
+before LLVM's loop vectoriser, unlike clang's; measured at `x86-64` to `-v3`, no vectorised loop
+changed.
 
 **LLVM runs no IR pass at any level** (§2.2). Its codegen level is `None` at `-O0`, `Less` at `-O1`
 and `Aggressive` at `-O2` and `-O3`, except a debug `-O1`, which is `None` too: `Less` drops a store

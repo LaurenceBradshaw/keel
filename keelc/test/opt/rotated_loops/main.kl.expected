@@ -253,6 +253,18 @@ int32_t kl__4main__( void )
     kl_t2 = kl_t2 + kl_i_12;
 #line 9 "opt/rotated_loops/main.kl"
     kl_i_12 = kl_i_12 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_12;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_12 = kl_i_12 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_12;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_12 = kl_i_12 + 1;
+#line 11 "opt/rotated_loops/main.kl"
+    kl_t2 = kl_t2 + kl_i_12;
+#line 9 "opt/rotated_loops/main.kl"
+    kl_i_12 = kl_i_12 + 1;
 #line 9 "opt/rotated_loops/main.kl"
     kl_t13 = kl_i_12 < 100;
 #line 9 "opt/rotated_loops/main.kl"

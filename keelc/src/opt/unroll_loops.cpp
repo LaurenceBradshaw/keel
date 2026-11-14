@@ -13,7 +13,19 @@ namespace keel
 namespace
 {
 
-bool unroll( Function& func, const Type_table& types, const Literal_pool& literals, const Loop& loop, u32 budget, bool growing )
+// A partial unroll's copies hold at most this many statements, so a loop inlined again is not copied again.
+constexpr u64 k_partial = 16;
+
+// Fully, or at -O3 by 2 or 4 when the count is over budget and divisible: one copy keeps the test.
+bool unroll(
+    Function&           func,
+    const Type_table&   types,
+    const Literal_pool& literals,
+    const Loop&         loop,
+    u32                 budget,
+    bool                growing,
+    bool                partial
+)
 {
     if( !loop.preheader.is_valid() || !loop.latch.is_valid() )
     {
@@ -44,7 +56,20 @@ bool unroll( Function& func, const Type_table& types, const Literal_pool& litera
     }
 
     const std::optional<Trip> trip = trip_count( func, types, literals, loop, addressed );
-    if( !trip || trip->turns > budget || size * trip->turns > budget )
+    if( !trip )
+    {
+        return false;
+    }
+    const bool full  = trip->turns <= budget && size * trip->turns <= budget;
+    u64        count = full ? trip->turns : 0;
+    for( const u64 f : { u64 { 4 }, u64 { 2 } } )
+    {
+        if( !full && partial && count == 0 && trip->turns % f == 0 && size * f <= std::min<u64>( k_partial, budget ) )
+        {
+            count = f;
+        }
+    }
+    if( count == 0 )
     {
         return false;
     }
@@ -55,30 +80,36 @@ bool unroll( Function& func, const Type_table& types, const Literal_pool& litera
         return false;
     }
 
-    // Each turn's test passes but the last's, and its back edge enters the next copy.
-    const Terminator test = func.blocks[trip->test].terminator;
-    const auto       jump = [&]( Block_id to )
+    // Each turn's test passes but the last's, and its back edge enters the next copy. Partially, the copy
+    // where the count runs out keeps it: the last when the latch tests, else the first; the last's
+    // back edge enters the first.
+    const Terminator test   = func.blocks[trip->test].terminator;
+    const u64        keeper = full ? count : trip->test == loop.latch ? count - 1 : 0;
+    const auto       jump   = [&]( Block_id to )
     { return Terminator { .kind = Terminator_kind::Goto, .span = test.span, .targets = { to } }; };
-    std::vector<std::vector<Block_id>> copies( trip->turns );
+    std::vector<std::vector<Block_id>> copies( count );
     copies[0].resize( func.blocks.size() );
     for( const Block_id b : loop.blocks )
     {
         copies[0][b.v] = b;
     }
-    for( u64 k = 1; k < trip->turns; ++k )
+    for( u64 k = 1; k < count; ++k )
     {
         clone_blocks( func, loop, copies[k] );
     }
-    for( u64 k = 0; k < trip->turns; ++k )
+    for( u64 k = 0; k < count; ++k )
     {
-        const std::vector<Block_id>& map          = copies[k];
-        const bool                   last         = k + 1 == trip->turns;
-        func.blocks[map[trip->test.v]].terminator = jump( last ? test.targets[1] : map[test.targets[0].v] );
+        const std::vector<Block_id>& map  = copies[k];
+        const bool                   exit = full && k + 1 == count;
+        if( k != keeper )
+        {
+            func.blocks[map[trip->test.v]].terminator = jump( exit ? test.targets[1] : map[test.targets[0].v] );
+        }
         for( Block_id& target : func.blocks[map[loop.latch.v]].terminator.targets )
         {
             if( target == map[loop.header.v] )
             {
-                target = last ? test.targets[1] : copies[k + 1][loop.header.v];
+                target = exit ? test.targets[1] : copies[( k + 1 ) % count][loop.header.v];
             }
         }
     }
@@ -97,11 +128,38 @@ bool unroll_loops(
         again = false;
         for( const Loop& loop : find_loops( func ).loops )
         {
-            if( unroll( func, types, literals, loop, weights.unrolling, growing ) )
+            if( unroll( func, types, literals, loop, weights.unrolling, growing, false ) )
             {
                 // The last copy's latch, when the test is the header's.
                 remove_unreachable_blocks( func );
                 again = unrolled = true;
+                break;
+            }
+        }
+    }
+    if( !growing )
+    {
+        return unrolled;
+    }
+    // Then each innermost loop left, once: a partial unroll leaves a loop.
+    std::vector<Block_id> innermost;
+    {
+        const Loops forest = find_loops( func );
+        for( u32 l = 0; l < forest.loops.size(); ++l )
+        {
+            if( std::ranges::none_of( forest.loops, [&]( const Loop& other ) { return other.parent == l; } ) )
+            {
+                innermost.push_back( forest.loops[l].header );
+            }
+        }
+    }
+    for( const Block_id header : innermost )
+    {
+        for( const Loop& loop : find_loops( func ).loops )
+        {
+            if( loop.header == header && unroll( func, types, literals, loop, weights.unrolling, growing, true ) )
+            {
+                unrolled = true;
                 break;
             }
         }
@@ -135,6 +193,29 @@ std::size_t loops_left( std::string_view source, u32 unrolling = Loop_weights {}
     return find_loops( c.functions.front() ).loops.size();
 }
 
+// The statements in the first function's loops, at -O3.
+std::size_t loop_statements( std::string_view source, u32 unrolling )
+{
+    const Compiled c(
+        std::string( source ) + "i32 main() { return 0; }\n",
+        Stage::Elaborated,
+        Build { .level = 3, .loops = Loop_weights { .unrolling = unrolling } }
+    );
+    INFO( c.rendered() );
+    REQUIRE( c.clean() );
+    const Function& func = c.functions.front();
+    REQUIRE( verify( func ).empty() );
+    std::size_t n = 0;
+    for( const Loop& loop : find_loops( func ).loops )
+    {
+        for( const Block_id b : loop.blocks )
+        {
+            n += func.statements_of( b ).size();
+        }
+    }
+    return n;
+}
+
 } // namespace
 
 TEST_CASE( "unroll_loops_copies_a_loop_with_a_constant_count", "[opt][unroll_loops]" )
@@ -163,6 +244,15 @@ TEST_CASE( "unroll_loops_keeps_a_loop_over_its_budget", "[opt][unroll_loops]" )
             "i64 f( const ref i64[200] a ) { i64 t = 0; for( u64 i = 0; i < 200; i += 1 ) { t += a[ i ]; } return t; }\n"
         ) == 1
     );
+}
+
+// Over budget but divisible: two or four turns a test, still one loop.
+TEST_CASE( "unroll_loops_copies_a_long_loop_in_part", "[opt][unroll_loops]" )
+{
+    constexpr std::string_view source =
+        "i64 f( const ref i64[64] a ) { i64 t = 0; for( u64 i = 0; i < 64; i += 1 ) { t += a[ i ]; } return t; }\n";
+    REQUIRE( loops_left( source ) == 1 );
+    REQUIRE( loop_statements( source, 200 ) > loop_statements( source, 1 ) );
 }
 
 TEST_CASE( "unroll_loops_keeps_a_loop_with_a_run_time_count", "[opt][unroll_loops]" )
